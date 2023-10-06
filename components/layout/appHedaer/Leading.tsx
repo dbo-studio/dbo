@@ -1,18 +1,24 @@
-import {EuiButtonIcon, EuiIcon, EuiToken} from "@elastic/eui";
-import {useEuiTheme} from '@elastic/eui';
+import { EuiButtonIcon, EuiFlexGroup, useEuiTheme } from "@elastic/eui";
 
 export default function Leading() {
-    const {euiTheme} = useEuiTheme();
+  const { euiTheme } = useEuiTheme();
 
-    return (
-        <div className={"flex"}>
-            <EuiButtonIcon
-                css={{
-                    marginRight: euiTheme.size.base,
-                }}
-
-                aria-label="Help" iconType={"/icons/user.svg"} size={"m"} color={"text"}/>
-            <EuiButtonIcon aria-label="Help" iconType={"/icons/settings.svg"} size={"m"} color={"text"}/>
-        </div>
-    )
+  return (
+    <EuiFlexGroup justifyContent="flexStart">
+      <EuiButtonIcon
+        aria-label="user"
+        iconType={"/icons/user.svg"}
+        size={"s"}
+        iconSize="m"
+        color={"text"}
+      />
+      <EuiButtonIcon
+        aria-label="setting"
+        iconType={"/icons/settings.svg"}
+        size={"s"}
+        iconSize="m"
+        color={"text"}
+      />
+    </EuiFlexGroup>
+  );
 }
