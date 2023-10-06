@@ -1,6 +1,6 @@
 import { EuiFlexGroup, EuiFlexItem, useEuiTheme } from "@elastic/eui";
 import Leading from "./Leading";
-import ConnectionInfo from "./ConnectionInfo/ConnectionInfo";
+import ConnectionInfo from "./connection-info/ConnectionInfo";
 import Actions from "./Actions";
 import { css } from "@emotion/css";
 export default function AppHeader() {

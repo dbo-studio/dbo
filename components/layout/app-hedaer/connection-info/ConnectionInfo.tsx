@@ -4,7 +4,7 @@ import {
   EuiFlexItem,
   useEuiTheme,
 } from "@elastic/eui";
-import { ConnectionBox } from "@/components/layout/appHedaer/ConnectionInfo/ConnectionBox";
+import { ConnectionBox } from "@/components/layout/app-hedaer/connection-info/ConnectionBox";
 import { css } from "@emotion/css";
 
 export default function ConnectionInfo() {
