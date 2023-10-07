@@ -8,6 +8,8 @@ import MainContainer from "@/components/layout/main-container";
 import styled from "@emotion/styled";
 
 const GlobalStyles = styled.div({
+  overflow: "hidden",
+  height: "100vh",
   "*:focus:focus-visible": {
     outlineStyle: "none",
   },
