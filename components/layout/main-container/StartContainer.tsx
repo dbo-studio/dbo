@@ -21,7 +21,7 @@ const tabs = [
   },
   {
     id: "dextrose--id",
-    name: "Dextrose",
+    name: "Queries",
     content: (
       <Fragment>
         <EuiSpacer />
@@ -37,7 +37,7 @@ const tabs = [
   },
   {
     id: "hydrogen--id",
-    name: "Hydrogen",
+    name: "History",
     content: (
       <Fragment>
         <EuiSpacer />
@@ -54,7 +54,7 @@ const tabs = [
 ];
 
 export default function StartContainer() {
-  const [selectedTabId, setSelectedTabId] = useState("cobalt--id");
+  const [selectedTabId, setSelectedTabId] = useState("db-tree-view-id");
   const selectedTabContent = useMemo(() => {
     return tabs.find((obj) => obj.id === selectedTabId)?.content;
   }, [selectedTabId]);
