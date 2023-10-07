@@ -6,7 +6,8 @@
     "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:e2e": "playwright test --ui"
   },
   "dependencies": {
     "@elastic/datemath": "^5.0.3",
@@ -17,17 +18,17 @@
     "moment": "^2.29.4",
     "next": "13.5.4",
     "prop-types": "^15.8.1",
-    "react": "^18",
-    "react-dom": "^18",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "swr": "^2.2.4"
   },
   "devDependencies": {
-    "@faker-js/faker": "^8.1.0",
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "eslint": "^8",
+    "@playwright/test": "^1.38.1",
+    "@types/node": "^20.8.3",
+    "@types/react": "^18.2.25",
+    "@types/react-dom": "^18.2.11",
+    "eslint": "^8.51.0",
     "eslint-config-next": "13.5.4",
-    "typescript": "^5"
+    "typescript": "^5.2.2"
   }
 }

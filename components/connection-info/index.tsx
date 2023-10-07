@@ -1,15 +1,7 @@
-import {
-  EuiButtonIcon,
-  EuiFlexGroup,
-  EuiFlexItem,
-  useEuiTheme,
-} from "@elastic/eui";
-import { ConnectionBox } from "@/components/layout/app-hedaer/connection-info/ConnectionBox";
-import { css } from "@emotion/css";
+import { EuiButtonIcon, EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
+import { ConnectionBox } from "@/components/connection-info/ConnectionBox";
 
 export default function ConnectionInfo() {
-  const { euiTheme } = useEuiTheme();
-
   return (
     <EuiFlexGroup>
       <EuiFlexItem>
