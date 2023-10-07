@@ -1,5 +1,4 @@
 import { EuiIcon, EuiTreeView, EuiToken } from "@elastic/eui";
-import { css } from "@emotion/css";
 
 export default function TreeView() {
   const items = [
