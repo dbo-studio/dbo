@@ -11,7 +11,7 @@ const connectionBoxStyle = {
 
 import { Box, Typography } from "@mui/material";
 
-export function ConnectionBox() {
+export default function ConnectionBox() {
   return (
     <Box sx={connectionBoxStyle}>
       <Typography variant="body1" component="h6">
