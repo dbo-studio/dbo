@@ -3,7 +3,7 @@ import { IconButton, Stack } from "@mui/material";
 
 export default function Actions() {
   return (
-    <Stack direction="row" justifyContent="flex-end">
+    <Stack spacing={2} direction="row" justifyContent="flex-end">
       <IconButton aria-label="sideLeft">
         <Icon type={"sideLeft"} size={"s"} />
       </IconButton>
