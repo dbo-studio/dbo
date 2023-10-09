@@ -1,31 +1,18 @@
-import { EuiButtonIcon, EuiFlexGroup, useEuiTheme } from "@elastic/eui";
+import Icon from "@/components/icon/Index";
+import { IconButton, Stack } from "@mui/material";
 
 export default function Actions() {
-  const { euiTheme } = useEuiTheme();
-
   return (
-    <EuiFlexGroup justifyContent="flexEnd">
-      <EuiButtonIcon
-        aria-label="sideLeft"
-        iconType={"/icons/sideLeft.svg"}
-        size={"s"}
-        iconSize="m"
-        color={"text"}
-      />
-      <EuiButtonIcon
-        aria-label="sideBottom"
-        iconType={"/icons/sideBottom.svg"}
-        size={"s"}
-        iconSize="m"
-        color={"text"}
-      />
-      <EuiButtonIcon
-        aria-label="sideRight"
-        iconType={"/icons/sideRight.svg"}
-        size={"s"}
-        iconSize="m"
-        color={"text"}
-      />
-    </EuiFlexGroup>
+    <Stack direction="row" justifyContent="flex-end">
+      <IconButton aria-label="sideLeft">
+        <Icon type={"sideLeft"} size={"s"} />
+      </IconButton>
+      <IconButton aria-label="sideBottom">
+        <Icon type={"sideBottom"} size={"s"} />
+      </IconButton>
+      <IconButton aria-label="sideRight">
+        <Icon type={"sideRight"} size={"s"} />
+      </IconButton>
+    </Stack>
   );
 }

@@ -1,24 +1,16 @@
-import { EuiButtonIcon, EuiFlexGroup, useEuiTheme } from "@elastic/eui";
+import Icon from "@/components/icon/Index";
+import { IconButton, Stack } from "@mui/material";
 
 export default function Leading() {
-  const { euiTheme } = useEuiTheme();
-
   return (
-    <EuiFlexGroup justifyContent="flexStart">
-      <EuiButtonIcon
-        aria-label="user"
-        iconType={"/icons/user.svg"}
-        size={"s"}
-        iconSize="m"
-        color={"text"}
-      />
-      <EuiButtonIcon
-        aria-label="setting"
-        iconType={"/icons/settings.svg"}
-        size={"s"}
-        iconSize="m"
-        color={"text"}
-      />
-    </EuiFlexGroup>
+    <Stack direction="row" justifyContent="flex-start">
+      <IconButton aria-label="user">
+        <Icon type={"user"} size={"s"} />
+      </IconButton>
+
+      <IconButton aria-label="settings">
+        <Icon type={"settings"} size={"s"} />
+      </IconButton>
+    </Stack>
   );
 }

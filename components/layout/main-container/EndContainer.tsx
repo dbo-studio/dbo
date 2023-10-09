@@ -1,92 +1,71 @@
-import React, { useState, useMemo } from "react";
-import {
-  EuiIcon,
-  EuiTabs,
-  EuiTab,
-  EuiSpacer,
-  EuiText,
-  EuiNotificationBadge,
-} from "@elastic/eui";
+import { Box, Tab, Tabs } from "@mui/material";
+import React, { useMemo, useState } from "react";
 
 const tabs = [
   {
-    id: "cobalt--id",
+    id: 0,
     name: "Cobalt",
     content: (
       <>
-        <EuiSpacer />
-        <EuiText>
-          <p>
-            Cobalt is a chemical element with symbol Co and atomic number 27.
-            Like nickel, cobalt is found in the Earth&rsquo;s crust only in
-            chemically combined form, save for small deposits found in alloys of
-            natural meteoric iron. The free element, produced by reductive
-            smelting, is a hard, lustrous, silver-gray metal.
-          </p>
-        </EuiText>
+        <p>
+          Cobalt is a chemical element with symbol Co and atomic number 27. Like
+          nickel, cobalt is found in the Earth&rsquo;s crust only in chemically
+          combined form, save for small deposits found in alloys of natural
+          meteoric iron. The free element, produced by reductive smelting, is a
+          hard, lustrous, silver-gray metal.
+        </p>
       </>
     ),
   },
   {
-    id: "dextrose--id",
+    id: 1,
     name: "Dextrose",
     content: (
       <>
-        <EuiSpacer />
-        <EuiText>
-          <p>
-            Intravenous sugar solution, also known as dextrose solution, is a
-            mixture of dextrose (glucose) and water. It is used to treat low
-            blood sugar or water loss without electrolyte loss.
-          </p>
-        </EuiText>
+        <p>
+          Intravenous sugar solution, also known as dextrose solution, is a
+          mixture of dextrose (glucose) and water. It is used to treat low blood
+          sugar or water loss without electrolyte loss.
+        </p>
       </>
     ),
   },
   {
-    id: "hydrogen--id",
+    id: 2,
     name: "Hydrogen",
     content: (
       <>
-        <EuiSpacer />
-        <EuiText>
-          <p>
-            Hydrogen is a chemical element with symbol H and atomic number 1.
-            With a standard atomic weight of 1.008, hydrogen is the lightest
-            element on the periodic table
-          </p>
-        </EuiText>
+        <p>
+          Hydrogen is a chemical element with symbol H and atomic number 1. With
+          a standard atomic weight of 1.008, hydrogen is the lightest element on
+          the periodic table
+        </p>
       </>
     ),
   },
 ];
 
 export default function EndContainer() {
-  const [selectedTabId, setSelectedTabId] = useState("cobalt--id");
+  const [selectedTabId, setSelectedTabId] = useState(0);
+
   const selectedTabContent = useMemo(() => {
-    return tabs.find((obj) => obj.id === selectedTabId)?.content;
+    return tabs.find((obj) => obj.id === Number(selectedTabId))?.content;
   }, [selectedTabId]);
 
-  const onSelectedTabChanged = (id: string) => {
+  const onSelectedTabChanged = (event: React.SyntheticEvent, id: number) => {
     setSelectedTabId(id);
   };
 
-  const renderTabs = () => {
-    return tabs.map((tab, index) => (
-      <EuiTab
-        key={index}
-        onClick={() => onSelectedTabChanged(tab.id)}
-        isSelected={tab.id === selectedTabId}
-      >
-        {tab.name}
-      </EuiTab>
-    ));
-  };
-
   return (
-    <>
-      <EuiTabs>{renderTabs()}</EuiTabs>
-      {selectedTabContent}
-    </>
+    <Box sx={{ width: "100%" }}>
+      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <Tabs value={selectedTabId} onChange={onSelectedTabChanged}>
+          <Tab label="Item One" />
+          <Tab label="Item Two" />
+          <Tab label="Item Three" />
+        </Tabs>
+      </Box>
+      <Box role="tabpanel">{selectedTabContent}</Box>
+    </Box>
   );
 }

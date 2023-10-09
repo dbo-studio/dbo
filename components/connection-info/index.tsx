@@ -1,63 +1,41 @@
-import { EuiButtonIcon, EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
 import { ConnectionBox } from "@/components/connection-info/ConnectionBox";
+import { IconButton, Stack } from "@mui/material";
+import Grid from "@mui/material/Unstable_Grid2";
+import Icon from "../icon/Index";
 
 export default function ConnectionInfo() {
   return (
-    <EuiFlexGroup>
-      <EuiFlexItem>
-        <EuiFlexGroup justifyContent="flexEnd">
-          <EuiButtonIcon
-            aria-label="connection"
-            iconType={"/icons/connection.svg"}
-            size={"s"}
-            iconSize="m"
-            color={"text"}
-          />
-          <EuiButtonIcon
-            aria-label="lock"
-            iconType={"/icons/lock.svg"}
-            size={"s"}
-            iconSize="m"
-            color={"text"}
-          />
-          <EuiButtonIcon
-            aria-label="database"
-            iconType={"/icons/database.svg"}
-            size={"s"}
-            iconSize="m"
-            color={"text"}
-          />
-        </EuiFlexGroup>
-      </EuiFlexItem>
-      <EuiFlexItem grow={2}>
+    <Grid container>
+      <Grid>
+        <Stack justifyContent="flex-end">
+          <IconButton aria-label="connection">
+            <Icon type={"connection"} size={"s"} />
+          </IconButton>
+          <IconButton aria-label="lock">
+            <Icon type={"lock"} size={"s"} />
+          </IconButton>
+          <IconButton aria-label="database">
+            <Icon type={"database"} size={"s"} />
+          </IconButton>
+        </Stack>
+      </Grid>
+      <Grid md={2}>
         <ConnectionBox />
-      </EuiFlexItem>
+      </Grid>
 
-      <EuiFlexItem>
-        <EuiFlexGroup justifyContent="flexStart">
-          <EuiButtonIcon
-            aria-label="refresh"
-            iconType={"/icons/refresh.svg"}
-            size={"s"}
-            iconSize="m"
-            color={"text"}
-          />
-          <EuiButtonIcon
-            aria-label="search"
-            iconType={"/icons/search.svg"}
-            size={"s"}
-            iconSize="m"
-            color={"text"}
-          />
-          <EuiButtonIcon
-            aria-label="sql"
-            iconType={"/icons/sql.svg"}
-            size={"s"}
-            iconSize="m"
-            color={"text"}
-          />
-        </EuiFlexGroup>
-      </EuiFlexItem>
-    </EuiFlexGroup>
+      <Grid>
+        <Stack justifyContent="flex-start">
+          <IconButton aria-label="refresh">
+            <Icon type={"refresh"} size={"s"} />
+          </IconButton>
+          <IconButton aria-label="search">
+            <Icon type={"search"} size={"s"} />
+          </IconButton>
+          <IconButton aria-label="sql">
+            <Icon type={"sql"} size={"s"} />
+          </IconButton>
+        </Stack>
+      </Grid>
+    </Grid>
   );
 }

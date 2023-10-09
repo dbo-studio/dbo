@@ -3,19 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:e2e": "playwright test --ui"
+    "test:e2e": "playwright test --ui",
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
   },
   "dependencies": {
-    "@elastic/datemath": "^5.0.3",
-    "@elastic/eui": "^88.5.4",
-    "@emotion/css": "^11.11.2",
-    "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
-    "bootstrap": "^5.3.2",
+    "@mui/material": "^5.14.12",
+    "@mui/x-tree-view": "6.0.0-beta.0",
+    "clsx": "^2.0.0",
     "moment": "^2.29.4",
     "next": "13.5.4",
     "prop-types": "^15.8.1",
@@ -30,6 +32,10 @@
     "@types/react-dom": "^18.2.11",
     "eslint": "^8.51.0",
     "eslint-config-next": "13.5.4",
+    "husky": "^8.0.3",
+    "lint-staged": "^14.0.1",
+    "prettier": "3.0.3",
+    "prettier-plugin-organize-imports": "^3.2.3",
     "typescript": "^5.2.2"
   }
 }

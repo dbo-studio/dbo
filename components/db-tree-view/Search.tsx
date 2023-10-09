@@ -1,8 +1,8 @@
-import { EuiFieldNumber, EuiFieldSearch, useEuiTheme } from "@elastic/eui";
+import { Input, InputAdornment } from "@mui/material";
 import { ChangeEvent, useState } from "react";
+import Icon from "../icon/Index";
 
 export default function Search() {
-  const { euiTheme } = useEuiTheme();
   const [value, setValue] = useState("");
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -11,12 +11,13 @@ export default function Search() {
   };
 
   return (
-    <EuiFieldSearch
-      compressed={true}
-      placeholder="Placeholder text"
-      value={value}
-      onChange={(e) => onChange(e)}
-      aria-label="Use aria labels when no actual label is in use"
+    <Input
+      id="input-with-icon-adornment"
+      startAdornment={
+        <InputAdornment position="start">
+          <Icon type="search" />
+        </InputAdornment>
+      }
     />
   );
 }

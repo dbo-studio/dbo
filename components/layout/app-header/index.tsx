@@ -1,27 +1,20 @@
-import { EuiFlexGroup, EuiFlexItem, useEuiTheme } from "@elastic/eui";
-import Leading from "./Leading";
-import ConnectionInfo from "../../connection-info";
+import ConnectionInfo from "@/components/connection-info";
+import Grid from "@mui/material/Unstable_Grid2";
 import Actions from "./Actions";
-import { css } from "@emotion/css";
+import Leading from "./Leading";
 
 export default function AppHeader() {
-  const { euiTheme } = useEuiTheme();
-
   return (
-    <EuiFlexGroup
-      className={css`
-        padding: ${euiTheme.base}px;
-      `}
-    >
-      <EuiFlexItem grow={2}>
+    <Grid container spacing={0}>
+      <Grid md={2}>
         <Leading />
-      </EuiFlexItem>
-      <EuiFlexItem grow={8}>
+      </Grid>
+      <Grid md={8}>
         <ConnectionInfo />
-      </EuiFlexItem>
-      <EuiFlexItem grow={2}>
+      </Grid>
+      <Grid md={2}>
         <Actions />
-      </EuiFlexItem>
-    </EuiFlexGroup>
+      </Grid>
+    </Grid>
   );
 }

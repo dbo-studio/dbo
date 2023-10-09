@@ -1,42 +1,34 @@
-import React, { useState, Fragment, useMemo } from "react";
-import { EuiSpacer, EuiText } from "@elastic/eui";
 import DBTreeView from "@/components/db-tree-view";
-import { css } from "@emotion/css";
-import Tabs from "@/components/ui/tabs/Tabs";
 import styled from "@emotion/styled";
+import { Box, Tab, Tabs } from "@mui/material";
+import { useMemo, useState } from "react";
 
 const tabs = [
   {
-    id: "db-tree-view-id",
+    id: 0,
     name: "Items",
     content: (
-      <Fragment>
+      <>
         <DBTreeView />
-      </Fragment>
+      </>
     ),
   },
   {
-    id: "queries--id",
+    id: 1,
     name: "Queries",
     content: (
-      <Fragment>
-        <EuiSpacer />
-        <EuiText>
-          <p>Queries</p>
-        </EuiText>
-      </Fragment>
+      <>
+        <p>Queries</p>
+      </>
     ),
   },
   {
-    id: "history--id",
+    id: 2,
     name: "History",
     content: (
-      <Fragment>
-        <EuiSpacer />
-        <EuiText>
-          <p>History</p>
-        </EuiText>
-      </Fragment>
+      <>
+        <p>History</p>
+      </>
     ),
   },
 ];
@@ -50,9 +42,26 @@ const StartContainerStyle = styled.div({
 });
 
 export default function StartContainer() {
+  const [selectedTabId, setSelectedTabId] = useState(0);
+
+  const selectedTabContent = useMemo(() => {
+    return tabs.find((obj) => obj.id === Number(selectedTabId))?.content;
+  }, [selectedTabId]);
+
+  const onSelectedTabChanged = (event: React.SyntheticEvent, id: number) => {
+    setSelectedTabId(id);
+  };
+
   return (
-    <StartContainerStyle className="eui-scrollBar">
-      <Tabs tabs={tabs} />
-    </StartContainerStyle>
+    <Box sx={{ width: "100%" }}>
+      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <Tabs value={selectedTabId} onChange={onSelectedTabChanged}>
+          <Tab label="Item One" />
+          <Tab label="Item Two" />
+          <Tab label="Item Three" />
+        </Tabs>
+      </Box>
+      <Box role="tabpanel">{selectedTabContent}</Box>
+    </Box>
   );
 }

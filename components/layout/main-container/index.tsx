@@ -1,4 +1,4 @@
-import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
+import Grid from "@mui/material/Unstable_Grid2";
 import CenterContainer from "./CenterContainer";
 import DBContainer from "./DBContainer";
 import EndContainer from "./EndContainer";
@@ -6,19 +6,19 @@ import StartContainer from "./StartContainer";
 
 export default function MainContainer() {
   return (
-    <EuiFlexGroup>
-      <EuiFlexItem>
+    <Grid container spacing={0}>
+      <Grid md={1}>
         <DBContainer />
-      </EuiFlexItem>
-      <EuiFlexItem grow={2}>
+      </Grid>
+      <Grid md={2}>
         <StartContainer />
-      </EuiFlexItem>
-      <EuiFlexItem grow={5}>
+      </Grid>
+      <Grid md={6}>
         <CenterContainer />
-      </EuiFlexItem>
-      <EuiFlexItem grow={2}>
+      </Grid>
+      <Grid md={2}>
         <EndContainer />
-      </EuiFlexItem>
-    </EuiFlexGroup>
+      </Grid>
+    </Grid>
   );
 }
