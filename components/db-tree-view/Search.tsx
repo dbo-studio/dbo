@@ -13,6 +13,7 @@ export default function Search() {
   return (
     <Box mt={1}>
       <InputBase
+        fullWidth={true}
         placeholder="Search"
         startAdornment={
           <InputAdornment position="start">

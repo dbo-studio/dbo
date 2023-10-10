@@ -17,7 +17,7 @@ const GREY = {
 };
 
 const PRIMARY = {
-  lighter: "#D1E9FC",
+  lighter: "#0077CC",
   light: "#76B0F1",
   main: "#2065D1",
   dark: "#103996",
@@ -85,12 +85,10 @@ const palette = {
     primary: GREY[800],
     secondary: GREY[600],
     disabled: GREY[500],
-    focus: GREY[900],
   },
   background: {
-    paper: "#fff",
+    paper: "#E6F1FA",
     default: GREY[100],
-    neutral: GREY[200],
   },
   action: {
     active: GREY[600],

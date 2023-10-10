@@ -1,6 +1,6 @@
 import DBTreeView from "@/components/db-tree-view";
 import styled from "@emotion/styled";
-import { Box, Tab, Tabs } from "@mui/material";
+import { Box, Tab, Tabs, useTheme } from "@mui/material";
 import { useMemo, useState } from "react";
 
 const tabs = [
@@ -33,15 +33,8 @@ const tabs = [
   },
 ];
 
-const StartContainerStyle = styled.div({
-  padding: "8px 0",
-  border: "1px solid #CCD7E1",
-  height: "100vh",
-  overflow: "auto",
-  paddingBottom: "80px",
-});
-
 export default function StartContainer() {
+  const theme = useTheme();
   const [selectedTabId, setSelectedTabId] = useState(0);
 
   const selectedTabContent = useMemo(() => {
@@ -52,20 +45,23 @@ export default function StartContainer() {
     setSelectedTabId(id);
   };
 
+  const StartContainerStyle = styled(Box)({
+    padding: "8px",
+    border: `1px solid ${theme.palette.divider}`,
+    height: "100vh",
+    overflow: "auto",
+    paddingBottom: "80px",
+  });
+
   return (
-    <Box sx={{ width: "100%" }}>
-      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-        <Tabs
-          variant="fullWidth"
-          value={selectedTabId}
-          onChange={onSelectedTabChanged}
-        >
-          <Tab label="Item One" />
-          <Tab label="Item Two" />
-          <Tab label="Item Three" />
-        </Tabs>
-      </Box>
+    <StartContainerStyle>
+      <Tabs value={selectedTabId} onChange={onSelectedTabChanged}>
+        <Tab label="Tables" />
+        <Tab label="Queries" />
+        <Tab label="History" />
+      </Tabs>
+
       <Box role="tabpanel">{selectedTabContent}</Box>
-    </Box>
+    </StartContainerStyle>
   );
 }
