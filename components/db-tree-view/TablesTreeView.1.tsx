@@ -1,4 +1,5 @@
-import { TreeItem, TreeView } from "@mui/x-tree-view";
+import { TreeItem } from "@mui/x-tree-view/TreeItem";
+import { TreeView } from "@mui/x-tree-view/TreeView";
 import Icon from "../icon/Index";
 
 export default function TablesTreeView() {
@@ -7,7 +8,6 @@ export default function TablesTreeView() {
       aria-label="file system navigator"
       defaultCollapseIcon={<Icon type={"arrowDown"} />}
       defaultExpandIcon={<Icon type={"arrowRight"} />}
-      sx={{ height: 240, flexGrow: 1, maxWidth: 400, overflowY: "auto" }}
     >
       <TreeItem nodeId="1" label="Applications">
         <TreeItem nodeId="2" label="Calendar" />

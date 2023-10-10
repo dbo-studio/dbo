@@ -1,7 +1,5 @@
 import { Components, Theme } from "@mui/material/styles";
 
-// ----------------------------------------------------------------------
-
 export default function Input(theme: Theme): Components {
   return {
     MuiInputBase: {

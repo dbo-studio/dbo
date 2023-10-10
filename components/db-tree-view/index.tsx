@@ -1,5 +1,5 @@
 import Search from "./Search";
-import TablesTreeView from "./TablesTreeView";
+import TablesTreeView from "./TablesTreeView.1";
 
 type Props = {};
 

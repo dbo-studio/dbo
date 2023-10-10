@@ -10,7 +10,7 @@ const iconTypes = {
   refresh: "refresh",
   search: "search",
   sql: "sql",
-  arrowBottom: "arrowBottom",
+  arrowDown: "arrowDown",
   arrowRight: "arrowRight",
 };
 
