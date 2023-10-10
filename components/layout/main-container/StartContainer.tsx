@@ -55,7 +55,11 @@ export default function StartContainer() {
   return (
     <Box sx={{ width: "100%" }}>
       <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-        <Tabs value={selectedTabId} onChange={onSelectedTabChanged}>
+        <Tabs
+          variant="fullWidth"
+          value={selectedTabId}
+          onChange={onSelectedTabChanged}
+        >
           <Tab label="Item One" />
           <Tab label="Item Two" />
           <Tab label="Item Three" />

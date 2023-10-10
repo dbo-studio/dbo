@@ -1,8 +1,8 @@
-import { alpha } from "@mui/material/styles";
+import { Components, Theme, alpha } from "@mui/material/styles";
 
 // ----------------------------------------------------------------------
 
-export default function Button(theme) {
+export default function Button(theme: Theme): Components {
   return {
     MuiButton: {
       styleOverrides: {
@@ -16,16 +16,16 @@ export default function Button(theme) {
         },
         containedInherit: {
           color: theme.palette.grey[800],
-          boxShadow: theme.customShadows.z8,
+          // boxShadow: theme.customShadows.z8,
           "&:hover": {
             backgroundColor: theme.palette.grey[400],
           },
         },
         containedPrimary: {
-          boxShadow: theme.customShadows.primary,
+          // boxShadow: theme.customShadows.primary,
         },
         containedSecondary: {
-          boxShadow: theme.customShadows.secondary,
+          // boxShadow: theme.customShadows.secondary,
         },
         outlinedInherit: {
           border: `1px solid ${alpha(theme.palette.grey[500], 0.32)}`,

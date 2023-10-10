@@ -1,4 +1,4 @@
-import { Input, InputAdornment } from "@mui/material";
+import { Box, InputAdornment, InputBase } from "@mui/material";
 import { ChangeEvent, useState } from "react";
 import Icon from "../icon/Index";
 
@@ -11,13 +11,15 @@ export default function Search() {
   };
 
   return (
-    <Input
-      id="input-with-icon-adornment"
-      startAdornment={
-        <InputAdornment position="start">
-          <Icon type="search" />
-        </InputAdornment>
-      }
-    />
+    <Box mt={1}>
+      <InputBase
+        placeholder="Search"
+        startAdornment={
+          <InputAdornment position="start">
+            <Icon type="search" />
+          </InputAdornment>
+        }
+      />
+    </Box>
   );
 }

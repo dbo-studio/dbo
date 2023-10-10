@@ -1,6 +1,6 @@
-// ----------------------------------------------------------------------
+import { Components, Theme } from "@mui/material/styles";
 
-export default function Typography(theme) {
+export default function Typography(theme: Theme): Components {
   return {
     MuiTypography: {
       styleOverrides: {

@@ -79,11 +79,13 @@ const palette = {
   warning: WARNING,
   error: ERROR,
   grey: GREY,
-  divider: alpha(GREY[500], 0.24),
+  // divider: alpha(GREY[500], 0.24),
+  divider: "#CCD7E1",
   text: {
     primary: GREY[800],
     secondary: GREY[600],
     disabled: GREY[500],
+    focus: GREY[900],
   },
   background: {
     paper: "#fff",
