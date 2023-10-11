@@ -16,9 +16,11 @@
   },
   "dependencies": {
     "@emotion/styled": "^11.11.0",
+    "@fontsource/roboto": "^5.0.8",
     "@mui/material": "^5.14.12",
     "@mui/x-tree-view": "6.0.0-beta.0",
     "clsx": "^2.0.0",
+    "install": "^0.13.0",
     "moment": "^2.29.4",
     "next": "13.5.4",
     "react": "^18.2.0",

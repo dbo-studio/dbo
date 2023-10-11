@@ -1,25 +1,19 @@
 "use client";
 
+import "@fontsource/roboto/300.css";
+import "@fontsource/roboto/400.css";
+import "@fontsource/roboto/500.css";
+import "@fontsource/roboto/700.css";
+
 import AppHeader from "@/components/layout/app-header";
 import MainContainer from "@/components/layout/main-container";
 import ThemeProvider from "@/theme/index";
-import styled from "@emotion/styled";
-
-const GlobalStyles = styled.div({
-  overflow: "hidden",
-  height: "100vh",
-  "*:focus:focus-visible": {
-    outlineStyle: "none",
-  },
-});
 
 export default function Home() {
   return (
     <ThemeProvider>
-      <GlobalStyles>
-        <AppHeader />
-        <MainContainer />
-      </GlobalStyles>
+      <AppHeader />
+      <MainContainer />
     </ThemeProvider>
   );
 }

@@ -1,3 +1,4 @@
+import DBFields from "@/components/db-felids";
 import { Box, Tab, Tabs, styled, useTheme } from "@mui/material";
 import React, { useMemo, useState } from "react";
 
@@ -7,7 +8,7 @@ const tabs = [
     name: "Fields",
     content: (
       <>
-        <p>Fields</p>
+        <DBFields />
       </>
     ),
   },

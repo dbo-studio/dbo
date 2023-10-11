@@ -5,14 +5,23 @@ export default function Input(theme: Theme): Components {
     MuiInputBase: {
       styleOverrides: {
         root: {
-          "&.Mui-disabled": {
-            "& svg": { color: theme.palette.text.disabled },
-          },
           height: 32,
           border: `1px solid ${theme.palette.divider}`,
           color: theme.palette.text.primary,
           borderRadius: 4,
           padding: "0 8px",
+          "&.Mui-disabled": {
+            "& svg": { color: theme.palette.text.disabled },
+          },
+          "&.Mui-focused": {
+            borderColor: theme.palette.action.active,
+          },
+          ":before": {
+            borderBottom: "none !important",
+          },
+          ":after": {
+            borderBottom: "none !important",
+          },
         },
         input: {
           "&::placeholder": {
