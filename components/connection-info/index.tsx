@@ -6,7 +6,7 @@ import Icon from "../icon/Index";
 export default function ConnectionInfo() {
   return (
     <Stack direction={"row"} justifyContent={"center"} alignItems={"center"}>
-      <Grid>
+      <Grid md={4}>
         <Stack direction={"row"} spacing={2} justifyContent="flex-end">
           <IconButton aria-label="connection">
             <Icon type={"connection"} size={"s"} />
@@ -19,11 +19,11 @@ export default function ConnectionInfo() {
           </IconButton>
         </Stack>
       </Grid>
-      <Grid md={4} mx={2}>
+      <Grid md={8} mx={2}>
         <ConnectionBox />
       </Grid>
 
-      <Grid>
+      <Grid md={4}>
         <Stack direction={"row"} spacing={2} justifyContent="flex-start">
           <IconButton aria-label="refresh">
             <Icon type={"refresh"} size={"s"} />

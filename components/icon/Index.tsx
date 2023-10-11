@@ -12,6 +12,7 @@ const iconTypes = {
   sql: "sql",
   arrowDown: "arrowDown",
   arrowRight: "arrowRight",
+  columnToken: "columnToken",
 };
 
 type sizeTypes = "m" | "s";

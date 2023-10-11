@@ -10,13 +10,13 @@ export default function MainContainer() {
       <Grid md={1}>
         <DBContainer />
       </Grid>
-      <Grid md={2}>
+      <Grid md={2.5}>
         <StartContainer />
       </Grid>
       <Grid md={6}>
         <CenterContainer />
       </Grid>
-      <Grid md={2}>
+      <Grid md={2.5}>
         <EndContainer />
       </Grid>
     </Grid>

@@ -1,9 +1,8 @@
 import { Components, Theme } from "@mui/material";
-import Icon from "./Icon";
 import Input from "./Input";
 import Tabs from "./Tabs";
 import TreeView from "./TreeView";
 
 export default function ComponentsOverrides(theme: Theme): Components {
-  return Object.assign(TreeView(theme), Input(theme), Icon(theme), Tabs(theme));
+  return Object.assign(TreeView(theme), Input(theme), Tabs(theme));
 }

@@ -1,13 +1,19 @@
-import { Components, Theme } from "@mui/material/styles";
+import { Components, Theme } from "@mui/material";
 
-export default function TreeView(theme: Theme): Components {
+type MuiTree = {};
+
+export default function TreeView(theme: Theme): Components | MuiTree {
   return {
     MuiTreeItem: {
       styleOverrides: {
         root: {
-          // Customize your TreeView style here
-          backgroundColor: "lightblue", // Example background color
-          color: "black", // Example text color
+          borderRadius: "4px",
+          backgroundColor: theme.palette.background,
+          color: theme.palette.text.primary,
+          "& .MuiTreeItem-content": {
+            borderRadius: "4px",
+            height: 32,
+          },
         },
       },
     },
