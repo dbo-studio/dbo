@@ -12,6 +12,8 @@ const iconTypes = {
   sql: "sql",
   arrowDown: "arrowDown",
   arrowRight: "arrowRight",
+  arrowLeft: "arrowLeft",
+  arrowUp: "arrowUp",
   columnToken: "columnToken",
 };
 

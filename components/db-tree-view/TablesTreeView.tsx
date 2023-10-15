@@ -11,7 +11,7 @@ export default function TablesTreeView() {
         defaultExpandIcon={<Icon type={"arrowRight"} />}
         defaultEndIcon={<Icon type={"columnToken"} />}
       >
-        <TreeItem nodeId="1" label="Applications">
+        <TreeItem nodeId="1" label="Tables">
           <TreeItem nodeId="231" label="orders" />
           <TreeItem nodeId="232" label="users" />
           <TreeItem nodeId="233" label="products" />

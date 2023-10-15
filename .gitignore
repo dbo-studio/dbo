@@ -35,6 +35,5 @@ yarn-error.log*
 next-env.d.ts
 
 .idea
-
 /test-results
 /playwright-report
