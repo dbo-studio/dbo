@@ -1,22 +1,28 @@
-import { TextField } from "@mui/material";
+import { ClickAwayListener, InputBase, Typography } from "@mui/material";
 import { Cell } from "@table-library/react-table-library";
+import { useState } from "react";
 
 // TODO fix type
-export default function CRowCell({ value, type, onChange }: any) {
+export default function CRowCell({ value, type, id, select, onChange }: any) {
+  const [showInput, setShowInput] = useState(false);
+
+  const onClickHandler = (e: unknown) => {
+    if (e.detail == 2) {
+      setShowInput(true);
+    } else if (!showInput) {
+      select.fns.onToggleByIdExclusively(id);
+    }
+  };
+
   return (
-    <Cell>
-      <TextField
-        type={type}
-        value={value}
-        style={{
-          width: "100%",
-          border: "none",
-          fontSize: "1rem",
-          padding: 0,
-          margin: 0,
-        }}
-        onChange={onChange}
-      />
+    <Cell onClick={onClickHandler}>
+      {showInput ? (
+        <ClickAwayListener onClickAway={() => setShowInput(false)}>
+          <InputBase type={type} value={value} onChange={onChange} />
+        </ClickAwayListener>
+      ) : (
+        <Typography variant="body1">{value}</Typography>
+      )}
     </Cell>
   );
 }

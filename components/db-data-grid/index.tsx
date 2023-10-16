@@ -2,7 +2,6 @@ import {
   Body,
   Header,
   HeaderRow,
-  Row,
   Table,
   TableNode,
 } from "@table-library/react-table-library";
@@ -17,9 +16,7 @@ import {
   useRowSelect,
 } from "@table-library/react-table-library/select";
 import CHeaderCell from "./CHeaderCell";
-import CHeaderSelect from "./CHeaderSelect";
-import CRowCell from "./CRowCell";
-import CRowSelect from "./CRowSelect";
+import CRow from "./CRow";
 
 export default function CDataGrid() {
   const [data, setData] = useState({ nodes });
@@ -98,8 +95,8 @@ export default function CDataGrid() {
       },
     },
     {
-      rowSelect: SelectTypes.MultiSelect,
-      buttonSelect: SelectTypes.MultiSelect,
+      rowSelect: SelectTypes.SingleSelect,
+      buttonSelect: SelectTypes.SingleSelect,
     },
   );
 
@@ -114,7 +111,6 @@ export default function CDataGrid() {
         <>
           <Header>
             <HeaderRow>
-              <CHeaderSelect select={select} />
               <CHeaderCell sort={sort} sortKey={"TASK"} />
               <CHeaderCell sort={sort} sortKey={"DEADLINE"} />
               <CHeaderCell sort={sort} sortKey={"TYPE"} />
@@ -125,55 +121,19 @@ export default function CDataGrid() {
 
           <Body>
             {tableList.map((item: TableNode) => (
-              <Row key={item.id} item={item}>
-                <CRowSelect select={select} id={item.id} />
-                <CRowCell
-                  value={item.name}
-                  id={item.id}
-                  type={"text"}
-                  onChange={(event: any) =>
-                    handleUpdate(event.target.value, item.id, "name")
-                  }
-                />
-                <CRowCell
-                  value={item.deadline.toISOString().substr(0, 10)}
-                  id={item.id}
-                  type={"date"}
-                  onChange={(event: any) =>
-                    handleUpdate(
-                      new Date(event.target.value),
-                      item.id,
-                      "deadline",
-                    )
-                  }
-                />
-                <CRowCell
-                  value={item.type}
-                  id={item.id}
-                  type={"text"}
-                  onChange={(event: any) =>
-                    handleUpdate(event.target.value, item.id, "type")
-                  }
-                />
-
-                <CRowCell
-                  value={item.isComplete.toString()}
-                  id={item.id}
-                  type={"text"}
-                  onChange={(event: any) =>
-                    handleUpdate(event.target.value, item.id, "isComplete")
-                  }
-                />
-
-                <CRowCell
-                  value={item.nodes?.length}
-                  id={item.id}
-                  type={"text"}
-                  onChange={(event: any) =>
-                    handleUpdate(event.target.value, item.id, "node")
-                  }
-                />
-              </Row>
+              <CRow
+                key={item.id}
+                item={item}
+                select={select}
+                onChange={(event: any) => {
+                  handleUpdate(event.target.value, item.id, "name");
+                  // handleUpdate(
+                  //     new Date(event.target.value),
+                  //     item.id,
+                  //     "deadline",
+                  //   )
+                }}
+              />
             ))}
           </Body>
         </>
