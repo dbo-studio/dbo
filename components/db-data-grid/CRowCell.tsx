@@ -6,7 +6,11 @@ import { useState } from "react";
 export default function CRowCell({ value, type, id, select, onChange }: any) {
   const [showInput, setShowInput] = useState(false);
 
-  const onClickHandler = (e: unknown) => {
+  if (type == "date") {
+    value = value.toISOString().substr(0, 10);
+  }
+
+  const onClickHandler = (e: any) => {
     if (e.detail == 2) {
       setShowInput(true);
     } else if (!showInput) {

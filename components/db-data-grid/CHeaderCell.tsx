@@ -17,18 +17,18 @@ export default function CHeaderCell({ sort, sortKey }: any) {
   };
 
   return (
-    <HeaderCell>
+    <HeaderCell resize={{ minWidth: 50 }}>
       <Button
-        fullWidth
-        style={{ justifyContent: "flex-start" }}
+        size="small"
+        style={{ justifyContent: "center" }}
         endIcon={getIcon(sortKey)}
-        onClick={() =>
+        onClick={() => {
           sort.fns.onToggleSort({
             sortKey: sortKey,
-          })
-        }
+          });
+        }}
       >
-        Task
+        {sortKey}
       </Button>
     </HeaderCell>
   );

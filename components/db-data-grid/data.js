@@ -1,4 +1,4 @@
-export const nodes = [
+export const nodes1 = [
   {
     id: 1,
     name: "Operating System",
@@ -50,116 +50,95 @@ export const nodes = [
   },
 ];
 
-export const serverData = [
+export const nodes = [
   {
-    id: {
-      type: "number",
-      value: 1,
-    },
-    name: {
-      type: "string",
-      value: 1,
-    },
-    deadline: {
-      type: "date",
-      value: new Date(2020, 1, 15),
-    },
-    type: {
-      type: "select",
-      value: "test1",
-      options: ["test1", "test2", "test3"],
-    },
-    isComplete: {
-      type: "boolean",
-      value: true,
+    id: "1",
+    fields: {
+      name: {
+        type: "string",
+        value: 1,
+      },
+      deadline: {
+        type: "date",
+        value: new Date(2020, 1, 15),
+      },
+      type: {
+        type: "string",
+        value: "test1",
+        options: ["test1", "test2", "test3"],
+      },
+      isComplete: {
+        type: "number",
+        value: 1,
+      },
     },
   },
   {
-    id: {
-      type: "number",
-      value: 1,
-    },
-    name: {
-      type: "string",
-      value: 1,
-    },
-    deadline: {
-      type: "date",
-      value: new Date(2020, 1, 15),
-    },
-    type: {
-      type: "select",
-      value: "test1",
-      options: ["test1", "test2", "test3"],
-    },
-    isComplete: {
-      type: "boolean",
-      value: true,
-    },
-  },
-  {
-    id: {
-      type: "number",
-      value: 1,
-    },
-    name: {
-      type: "string",
-      value: 1,
-    },
-    deadline: {
-      type: "date",
-      value: new Date(2020, 1, 15),
-    },
-    type: {
-      type: "select",
-      value: "test1",
-      options: ["test1", "test2", "test3"],
-    },
-    isComplete: {
-      type: "boolean",
-      value: true,
+    id: "2",
+    fields: {
+      name: {
+        type: "string",
+        value: 1,
+      },
+      deadline: {
+        type: "date",
+        value: new Date(2020, 1, 15),
+      },
+      type: {
+        type: "string",
+        value: "test1",
+        options: ["test1", "test2", "test3"],
+      },
+      isComplete: {
+        type: "number",
+        value: 1,
+      },
     },
   },
-  {
-    id: {
-      type: "number",
-      value: 1,
-    },
-    name: {
-      type: "string",
-      value: 1,
-    },
-    deadline: {
-      type: "date",
-      value: new Date(2020, 1, 15),
-    },
-    type: {
-      type: "select",
-      value: "test1",
-      options: ["test1", "test2", "test3"],
-    },
-    isComplete: {
-      type: "boolean",
-      value: true,
-    },
-  },
-];
 
-export const testNode = [
   {
-    id: "5",
-    name: "Node",
-    deadline: new Date(2020, 5, 18),
-    type: "LEARN",
-    isComplete: true,
-    nodes: [],
+    id: "3",
+    fields: {
+      name: {
+        type: "string",
+        value: 1,
+      },
+      deadline: {
+        type: "date",
+        value: new Date(2020, 1, 15),
+      },
+      type: {
+        type: "string",
+        value: "test1",
+        options: ["test1", "test2", "test3"],
+      },
+      isComplete: {
+        type: "number",
+        value: 1,
+      },
+    },
   },
+
   {
-    id: "6",
-    name: "Node",
-    deadline: new Date(2020, 5, 18),
-    type: "LEARN",
-    isComplete: true,
-    nodes: [],
+    id: "4",
+    fields: {
+      name: {
+        type: "string",
+        value: 1,
+      },
+      deadline: {
+        type: "date",
+        value: new Date(2020, 1, 15),
+      },
+      type: {
+        type: "string",
+        value: "test1",
+        options: ["test1", "test2", "test3"],
+      },
+      isComplete: {
+        type: "number",
+        value: 1,
+      },
+    },
   },
 ];

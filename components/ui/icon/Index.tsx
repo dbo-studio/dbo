@@ -17,7 +17,7 @@ const iconTypes = {
   columnToken: "columnToken",
 };
 
-type sizeTypes = "m" | "s";
+type sizeTypes = "m" | "s" | "xs";
 
 interface IconProps {
   type: keyof typeof iconTypes;
@@ -25,5 +25,15 @@ interface IconProps {
 }
 
 export default function Icon({ type, size = "s" }: IconProps) {
-  return <img src={`/icons/${type}.svg`} alt={type} width={16} height={16} />;
+  var width = 16;
+  var height = 16;
+
+  if (size == "xs") {
+    width = 11;
+    height = 11;
+  }
+
+  return (
+    <img src={`/icons/${type}.svg`} alt={type} width={width} height={height} />
+  );
 }
