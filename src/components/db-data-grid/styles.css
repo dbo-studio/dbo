@@ -152,12 +152,6 @@
   }
 }
 
-@layer rdg.Cell {
-  .ch2wcw87-0-0-beta-40 {
-    box-shadow: calc(2px * var(--rdg-sign)) 0 5px -2px rgba(136, 136, 136, 0.3);
-  }
-}
-
 @layer rdg.CheckboxLabel {
   .c1bn88vv7-0-0-beta-40 {
     cursor: pointer;
