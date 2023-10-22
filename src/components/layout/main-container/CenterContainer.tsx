@@ -1,4 +1,4 @@
-import DBDataGridReactGrid from "@/src/components/db-data-grid-react-grid";
+import DBDataGrid from "@/src/components/db-data-grid-react-grid";
 import styled from "@emotion/styled";
 import { Box, useTheme } from "@mui/material";
 
@@ -8,13 +8,13 @@ export default function CenterContainer() {
   const DBContainerStyle = styled(Box)({
     borderTop: `1px solid ${theme.palette.divider}`,
     borderBottom: `1px solid ${theme.palette.divider}`,
-    height: window.screen.height - 64,
+    height: "100vh",
     overflow: "auto",
   });
 
   return (
     <DBContainerStyle>
-      <DBDataGridReactGrid />
+      <DBDataGrid />
     </DBContainerStyle>
   );
 }

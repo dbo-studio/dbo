@@ -7,7 +7,7 @@ import DataGrid, {
 import { ServerColumn, makeData } from "./makeData";
 import "./styles.css";
 
-export default function DBDataGridReactGrid() {
+export default function DBDataGrid() {
   const [selectedRows, setSelectedRows] = useState(
     (): ReadonlySet<number> => new Set(),
   );
