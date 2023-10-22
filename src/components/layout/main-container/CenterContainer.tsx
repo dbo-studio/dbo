@@ -1,4 +1,4 @@
-import DBDataGridReactGrid from "@/components/db-data-grid-react-grid";
+import DBDataGridReactGrid from "@/src/components/db-data-grid-react-grid";
 import styled from "@emotion/styled";
 import { Box, useTheme } from "@mui/material";
 

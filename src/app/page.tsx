@@ -5,9 +5,9 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 
-import AppHeader from "@/components/layout/app-header";
-import MainContainer from "@/components/layout/main-container";
-import ThemeProvider from "@/theme/index";
+import AppHeader from "@/src/components/layout/app-header";
+import MainContainer from "@/src/components/layout/main-container";
+import ThemeProvider from "@/src/theme/index";
 
 export default function Home() {
   return (

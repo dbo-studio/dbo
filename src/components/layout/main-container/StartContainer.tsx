@@ -1,43 +1,44 @@
-import DBFields from "@/components/db-felids";
-import { Box, Tab, Tabs, styled, useTheme } from "@mui/material";
-import React, { useMemo, useState } from "react";
+import DBTreeView from "@/src/components/db-tree-view";
+import styled from "@emotion/styled";
+import { Box, Tab, Tabs, useTheme } from "@mui/material";
+import { useMemo, useState } from "react";
 
 const tabs = [
   {
     id: 0,
-    name: "Fields",
+    name: "Items",
     content: (
       <>
-        <DBFields />
+        <DBTreeView />
       </>
     ),
   },
   {
     id: 1,
-    name: "DDL",
+    name: "Queries",
     content: (
       <>
-        <p>DDL</p>
+        <p>Queries</p>
       </>
     ),
   },
   {
     id: 2,
-    name: "Info",
+    name: "History",
     content: (
       <>
-        <p>Info</p>
+        <p>History</p>
       </>
     ),
   },
 ];
 
-export default function EndContainer() {
+export default function StartContainer() {
   const theme = useTheme();
-  const [selectedTabId, setSelectedTabId] = useState(tabs[0].id);
+  const [selectedTabId, setSelectedTabId] = useState(0);
 
   const selectedTabContent = useMemo(() => {
-    return tabs.find((obj) => obj.id === selectedTabId)?.content;
+    return tabs.find((obj) => obj.id === Number(selectedTabId))?.content;
   }, [selectedTabId]);
 
   const onSelectedTabChanged = (event: React.SyntheticEvent, id: number) => {
@@ -55,9 +56,9 @@ export default function EndContainer() {
   return (
     <StartContainerStyle>
       <Tabs value={selectedTabId} onChange={onSelectedTabChanged}>
-        <Tab label="Fields" />
-        <Tab label="DDL" />
-        <Tab label="Info" />
+        <Tab label="Tables" />
+        <Tab label="Queries" />
+        <Tab label="History" />
       </Tabs>
 
       <Box role="tabpanel">{selectedTabContent}</Box>

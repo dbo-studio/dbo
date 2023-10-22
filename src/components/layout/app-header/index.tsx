@@ -1,4 +1,4 @@
-import ConnectionInfo from "@/components/connection-info";
+import ConnectionInfo from "@/src/components/connection-info";
 import Grid from "@mui/material/Unstable_Grid2";
 import Actions from "./Actions";
 import Leading from "./Leading";

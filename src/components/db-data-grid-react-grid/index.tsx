@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import DataGrid, { SelectColumn, textEditor } from "react-data-grid";
+import DataGrid, {
+  ColumnOrColumnGroup,
+  SelectColumn,
+  textEditor,
+} from "react-data-grid";
 import "react-data-grid/lib/styles.css";
 import { ServerColumn, makeData } from "./makeData";
 
@@ -8,8 +12,10 @@ export default function DBDataGridReactGrid() {
     (): ReadonlySet<number> => new Set(),
   );
 
-  const [rows, setRows] = useState();
-  const [columns, setColumns] = useState();
+  const [rows, setRows] = useState<readonly unknown[]>([]);
+  const [columns, setColumns] = useState<
+    readonly ColumnOrColumnGroup<any, unknown>[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
