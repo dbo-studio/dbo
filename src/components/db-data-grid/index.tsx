@@ -53,6 +53,7 @@ export default function DBDataGrid() {
       rows={rows}
       rowHeight={30}
       onRowsChange={setRows}
+      headerRowHeight={30}
     />
   );
 }

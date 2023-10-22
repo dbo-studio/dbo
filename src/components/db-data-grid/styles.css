@@ -27,13 +27,15 @@
       --rdg-color: #000;
       --rdg-border-color: #d3dae6;
       --rdg-summary-border-color: #aaa;
-      --rdg-background-color: hsl(0deg 0% 100%);
+      --rdg-background-color: #fff;
+      --rdg-background-color-odd: #fafbfd;
       --rdg-header-background-color: #fff;
       --rdg-header-draggable-background-color: hsl(0deg 0% 90.5%);
-      --rdg-row-hover-background-color: hsl(0deg 0% 96%);
+      --rdg-row-hover-background-color: #e5f1fa;
       --rdg-row-selected-background-color: hsl(207deg 76% 92%);
       --rdg-row-selected-hover-background-color: #e5f1fa;
       --rdg-checkbox-color: hsl(207deg 100% 29%);
+      --rdg-checkbox-border-color: #c9cbcd;
       --rdg-checkbox-focus-color: hsl(207deg 100% 69%);
       --rdg-checkbox-disabled-border-color: #ccc;
       --rdg-checkbox-disabled-background-color: #ddd;
@@ -52,6 +54,11 @@
       color: var(--rdg-color);
       font-size: var(--rdg-font-size);
       height: 100%;
+      cursor: pointer;
+    }
+
+    .rdg-row-odd .cj343x07-0-0-beta-40 {
+      background-color: var(--rdg-background-color-odd) !important;
     }
 
     .rnvodz57-0-0-beta-40::before {
@@ -111,14 +118,7 @@
 
 @layer rdg.Cell {
   .cj343x07-0-0-beta-40 {
-    /* max-content does not work with size containment
-     * dynamically switching between different containment styles incurs a heavy relayout penalty
-     * Chromium bug: at odd zoom levels or subpixel positioning,
-     * layout/paint/style containment can make cell borders disappear
-     *   https://bugs.chromium.org/p/chromium/issues/detail?id=1326946
-     */
     position: relative;
-    /* needed for absolute positioning to work */
     padding-block: 0;
     padding-inline: 8px;
     border-inline-end: 1px solid var(--rdg-border-color);
@@ -148,7 +148,6 @@
 @layer rdg.Cell {
   .csofj7r7-0-0-beta-40 {
     position: sticky;
-    /* Should have a higher value than 0 to show up above unfrozen cells */
     z-index: 1;
   }
 }
@@ -182,7 +181,7 @@
     content: "";
     inline-size: 20px;
     block-size: 20px;
-    border: 2px solid var(--rdg-border-color);
+    border: 1px solid var(--rdg-checkbox-border-color);
     background-color: var(--rdg-background-color);
     border-radius: 4px;
   }
