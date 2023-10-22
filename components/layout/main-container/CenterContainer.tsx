@@ -1,4 +1,4 @@
-import DBDataGridReactTable from "@/components/db-data-grid-react-table";
+import DBDataGridReactGrid from "@/components/db-data-grid-react-grid";
 import styled from "@emotion/styled";
 import { Box, useTheme } from "@mui/material";
 
@@ -15,7 +15,7 @@ export default function CenterContainer() {
 
   return (
     <DBContainerStyle>
-      <DBDataGridReactTable />
+      <DBDataGridReactGrid />
     </DBContainerStyle>
   );
 }

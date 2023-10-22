@@ -17,12 +17,6 @@ dependencies:
   "@mui/x-tree-view":
     specifier: 6.0.0-beta.0
     version: 6.0.0-beta.0(@emotion/react@11.11.1)(@emotion/styled@11.11.0)(@mui/material@5.14.13)(@mui/system@5.14.13)(@types/react@18.2.28)(react-dom@18.2.0)(react@18.2.0)
-  "@table-library/react-table-library":
-    specifier: ^4.1.7
-    version: 4.1.7(@emotion/react@11.11.1)(react-dom@18.2.0)(react@18.2.0)
-  "@tanstack/react-table":
-    specifier: ^8.10.7
-    version: 8.10.7(react-dom@18.2.0)(react@18.2.0)
   clsx:
     specifier: ^2.0.0
     version: 2.0.0
@@ -38,6 +32,9 @@ dependencies:
   react:
     specifier: ^18.2.0
     version: 18.2.0
+  react-data-grid:
+    specifier: 7.0.0-beta.40
+    version: 7.0.0-beta.40(react-dom@18.2.0)(react@18.2.0)
   react-dom:
     specifier: ^18.2.0
     version: 18.2.0(react@18.2.0)
@@ -1584,47 +1581,6 @@ packages:
       tslib: 2.6.2
     dev: false
 
-  /@table-library/react-table-library@4.1.7(@emotion/react@11.11.1)(react-dom@18.2.0)(react@18.2.0):
-    resolution:
-      {
-        integrity: sha512-KKFjdACvEUeD9yhgXBjZUJSdE9pxUbJdou4Pp71FW8dxQWc7LcMcSxpveSfGXw8KlcWY0hThJOwyjQb+UKOmnw==,
-      }
-    peerDependencies:
-      "@emotion/react": ">= 11"
-      react: ">=16.8.0"
-      react-dom: ">=16.8.0"
-    dependencies:
-      "@emotion/react": 11.11.1(@types/react@18.2.28)(react@18.2.0)
-      clsx: 1.1.1
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-      react-virtualized-auto-sizer: 1.0.7(react-dom@18.2.0)(react@18.2.0)
-      react-window: 1.8.7(react-dom@18.2.0)(react@18.2.0)
-    dev: false
-
-  /@tanstack/react-table@8.10.7(react-dom@18.2.0)(react@18.2.0):
-    resolution:
-      {
-        integrity: sha512-bXhjA7xsTcsW8JPTTYlUg/FuBpn8MNjiEPhkNhIGCUR6iRQM2+WEco4OBpvDeVcR9SE+bmWLzdfiY7bCbCSVuA==,
-      }
-    engines: { node: ">=12" }
-    peerDependencies:
-      react: ">=16"
-      react-dom: ">=16"
-    dependencies:
-      "@tanstack/table-core": 8.10.7
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-    dev: false
-
-  /@tanstack/table-core@8.10.7:
-    resolution:
-      {
-        integrity: sha512-KQk5OMg5OH6rmbHZxuNROvdI+hKDIUxANaHlV+dPlNN7ED3qYQ/WkpY2qlXww1SIdeMlkIhpN/2L00rof0fXFw==,
-      }
-    engines: { node: ">=12" }
-    dev: false
-
   /@testing-library/dom@9.3.3:
     resolution:
       {
@@ -2604,14 +2560,6 @@ packages:
       strip-ansi: 6.0.1
       wrap-ansi: 7.0.0
     dev: true
-
-  /clsx@1.1.1:
-    resolution:
-      {
-        integrity: sha512-6/bPho624p3S2pMyvP5kKBPXnI3ufHLObBFCfgx+LkeR5lg2XYy2hqZqUf45ypD8COn2bhgGJSUE+l5dhNBieA==,
-      }
-    engines: { node: ">=6" }
-    dev: false
 
   /clsx@2.0.0:
     resolution:
@@ -5512,13 +5460,6 @@ packages:
       tmpl: 1.0.5
     dev: true
 
-  /memoize-one@5.2.1:
-    resolution:
-      {
-        integrity: sha512-zYiwtZUcYyXKo/np96AGZAckk+FWWsUdJ3cHGGmld7+AhvcWmQyGCYUh1hc4Q/pkOhb65dQR/pqCyK0cOaHz4Q==,
-      }
-    dev: false
-
   /merge-stream@2.0.0:
     resolution:
       {
@@ -6193,6 +6134,20 @@ packages:
       }
     dev: true
 
+  /react-data-grid@7.0.0-beta.40(react-dom@18.2.0)(react@18.2.0):
+    resolution:
+      {
+        integrity: sha512-2jgF56UfmHL9LhZ4teB+qR1WzAGGq3SL1ux8heiTYR8k8gQM1NFww6+EgKRlSU9fVR9yx+k/w3b6Y9aa+NpW0g==,
+      }
+    peerDependencies:
+      react: ^18.0
+      react-dom: ^18.0
+    dependencies:
+      clsx: 2.0.0
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
   /react-dom@18.2.0(react@18.2.0):
     resolution:
       {
@@ -6237,36 +6192,6 @@ packages:
       dom-helpers: 5.2.1
       loose-envify: 1.4.0
       prop-types: 15.8.1
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-    dev: false
-
-  /react-virtualized-auto-sizer@1.0.7(react-dom@18.2.0)(react@18.2.0):
-    resolution:
-      {
-        integrity: sha512-Mxi6lwOmjwIjC1X4gABXMJcKHsOo0xWl3E3ugOgufB8GJU+MqrtY35aBuvCYv/razQ1Vbp7h1gWJjGjoNN5pmA==,
-      }
-    engines: { node: ">8.0.0" }
-    peerDependencies:
-      react: ^15.3.0 || ^16.0.0-alpha || ^17.0.0 || ^18.0.0-rc
-      react-dom: ^15.3.0 || ^16.0.0-alpha || ^17.0.0 || ^18.0.0-rc
-    dependencies:
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-    dev: false
-
-  /react-window@1.8.7(react-dom@18.2.0)(react@18.2.0):
-    resolution:
-      {
-        integrity: sha512-JHEZbPXBpKMmoNO1bNhoXOOLg/ujhL/BU4IqVU9r8eQPcy5KQnGHIHDRkJ0ns9IM5+Aq5LNwt3j8t3tIrePQzA==,
-      }
-    engines: { node: ">8.0.0" }
-    peerDependencies:
-      react: ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0
-      react-dom: ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0
-    dependencies:
-      "@babel/runtime": 7.23.2
-      memoize-one: 5.2.1
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
     dev: false
