@@ -14,7 +14,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <main>{children}</main>
+        <main style={{ maxHeight: "100vh", overflow: "hidden" }}>
+          {children}
+        </main>
       </body>
     </html>
   );

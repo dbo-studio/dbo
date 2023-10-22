@@ -8,9 +8,8 @@ export default function CenterContainer() {
   const DBContainerStyle = styled(Box)({
     borderTop: `1px solid ${theme.palette.divider}`,
     borderBottom: `1px solid ${theme.palette.divider}`,
-    height: "100vh",
+    height: window.screen.height - 64,
     overflow: "auto",
-    paddingBottom: "80px",
   });
 
   return (

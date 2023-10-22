@@ -48,9 +48,8 @@ export default function StartContainer() {
   const StartContainerStyle = styled(Box)({
     padding: "8px",
     border: `1px solid ${theme.palette.divider}`,
-    height: "100vh",
+    height: window.screen.height - 64,
     overflow: "auto",
-    paddingBottom: "80px",
   });
 
   return (

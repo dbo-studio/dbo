@@ -4,8 +4,8 @@ import DataGrid, {
   SelectColumn,
   textEditor,
 } from "react-data-grid";
-import "react-data-grid/lib/styles.css";
 import { ServerColumn, makeData } from "./makeData";
+import "./styles.css";
 
 export default function DBDataGridReactGrid() {
   const [selectedRows, setSelectedRows] = useState(
@@ -25,7 +25,7 @@ export default function DBDataGridReactGrid() {
       setRows(data.rows);
       setColumns(getColumns(data.columns));
       setIsLoading(false);
-    }, 3000);
+    }, 0);
   }, []);
 
   function getColumns(serverColumns: ServerColumn[]): any {
@@ -51,7 +51,7 @@ export default function DBDataGridReactGrid() {
       onSelectedRowsChange={setSelectedRows}
       columns={columns}
       rows={rows}
-      rowHeight={22}
+      rowHeight={30}
       onRowsChange={setRows}
     />
   );
