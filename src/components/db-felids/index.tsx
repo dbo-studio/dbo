@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import FelidInput, { InputTypes } from "../ui/FelidInput";
+import FelidInput, { InputTypes } from "../ui/felid-input";
 import Search from "../ui/search";
 
 const felids = [

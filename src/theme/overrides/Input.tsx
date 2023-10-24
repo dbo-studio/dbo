@@ -8,7 +8,7 @@ export default function Input(theme: Theme): Components {
           height: 32,
           border: `1px solid ${theme.palette.divider}`,
           color: theme.palette.text.primary,
-          borderRadius: 4,
+          borderRadius: 5,
           padding: "0 8px",
           "&.Mui-disabled": {
             "& svg": { color: theme.palette.text.disabled },
