@@ -1,3 +1,5 @@
+import { Box } from "@mui/material";
+
 const fields = [
   {
     label: "id",

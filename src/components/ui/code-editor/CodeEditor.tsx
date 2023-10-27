@@ -1,3 +1,9 @@
+import { sql, StandardSQL } from "@codemirror/lang-sql";
+import { Theme, useTheme } from "@mui/material";
+import { githubLight } from "@uiw/codemirror-theme-github";
+import CodeMirror from "@uiw/react-codemirror";
+import { CSSProperties } from "react";
+
 interface CodeEditorProps {
   value: string;
   editable: boolean;
