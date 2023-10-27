@@ -1,9 +1,10 @@
+import QueryPreview from "@/components/query-preview";
 import DBDataGrid from "@/src/components/db-data-grid";
 import styled from "@emotion/styled";
-import { Box, useTheme } from "@mui/material";
+import { Box, Theme, useTheme } from "@mui/material";
 
 export default function CenterContainer() {
-  const theme = useTheme();
+  const theme: Theme = useTheme();
 
   const DBContainerStyle = styled(Box)({
     borderTop: `1px solid ${theme.palette.divider}`,

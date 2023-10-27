@@ -1,3 +1,4 @@
+import CodeEditor from "@/components/ui/code-editor/CodeEditor";
 import { Box } from "@mui/material";
 import { useState } from "react";
 
