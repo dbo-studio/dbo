@@ -1,8 +1,4 @@
-import { Box } from "@mui/material";
-import FelidInput, { InputTypes } from "../ui/felid-input";
-import Search from "../ui/search";
-
-const felids = [
+const fields = [
   {
     label: "id",
     type: "number" as InputTypes,
@@ -17,13 +13,13 @@ const felids = [
   },
 ];
 
-export default function DBFelids() {
+export default function DBFields() {
   return (
     <>
       <Search />
       <Box mt={1}>
-        {felids.map((item, index) => (
-          <FelidInput key={index} label={item.label} inputType={item.type} />
+        {fields.map((item, index) => (
+          <FieldInput key={index} label={item.label} inputType={item.type} />
         ))}
       </Box>
     </>

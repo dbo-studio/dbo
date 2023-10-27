@@ -1,5 +1,4 @@
 import DBDataGrid from "@/src/components/db-data-grid";
-import TextEditor from "@/src/components/text-editor/TextEditor";
 import styled from "@emotion/styled";
 import { Box, useTheme } from "@mui/material";
 
@@ -15,7 +14,7 @@ export default function CenterContainer() {
 
   return (
     <DBContainerStyle>
-      <TextEditor />
+      <QueryPreview />
       <DBDataGrid />
     </DBContainerStyle>
   );

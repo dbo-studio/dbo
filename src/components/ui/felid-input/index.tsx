@@ -1,13 +1,11 @@
-import { Box, InputBase, Typography, useTheme } from "@mui/material";
-
 export type InputTypes = "string" | "number";
 
-export interface FelidInputProps {
+export interface FieldInputProps {
   label: string;
   inputType: InputTypes;
 }
 
-export default function FelidInput({ label, inputType }: FelidInputProps) {
+export default function FieldInput({ label, inputType }: FieldInputProps) {
   const theme = useTheme();
 
   return (
