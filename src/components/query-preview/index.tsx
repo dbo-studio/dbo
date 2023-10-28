@@ -1,4 +1,4 @@
-import CodeEditor from "@/components/ui/code-editor/CodeEditor";
+import Index from "@/components/ui/code-editor";
 import { Box } from "@mui/material";
 import { useState } from "react";
 
@@ -7,7 +7,7 @@ export default function QueryPreview() {
 
   return (
     <Box>
-      <CodeEditor value={value} editable={false} />
+      <Index value={value} editable={false} />
     </Box>
   );
 }

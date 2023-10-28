@@ -15,6 +15,12 @@ const iconTypes = {
   arrowLeft: "arrowLeft",
   arrowUp: "arrowUp",
   columnToken: "columnToken",
+  grid: "grid",
+  filter: "filter",
+  sort: "sort",
+  code: "code",
+  export: "export",
+  import: "import",
 };
 
 type sizeTypes = "m" | "s" | "xs";

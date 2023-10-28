@@ -1,6 +1,6 @@
 import { Box, InputAdornment, InputBase } from "@mui/material";
 import { ChangeEvent, useState } from "react";
-import Icon from "../icon/Index";
+import Icon from "../icon";
 
 export default function Search() {
   const [value, setValue] = useState("");

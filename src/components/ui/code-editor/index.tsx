@@ -9,10 +9,7 @@ interface CodeEditorProps {
   editable: boolean;
 }
 
-export default function CodeEditor({
-  value,
-  editable = true,
-}: CodeEditorProps) {
+export default function Index({ value, editable = true }: CodeEditorProps) {
   const theme: Theme = useTheme();
 
   const styles: CSSProperties = {

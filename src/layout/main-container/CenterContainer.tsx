@@ -1,3 +1,5 @@
+import ActionBar from "@/components/action-bar";
+import EditorTab from "@/components/editor-tab";
 import QueryPreview from "@/components/query-preview";
 import DBDataGrid from "@/src/components/db-data-grid";
 import styled from "@emotion/styled";
@@ -15,8 +17,11 @@ export default function CenterContainer() {
 
   return (
     <DBContainerStyle>
-      <QueryPreview />
-      <DBDataGrid />
+      <EditorTab>
+        <ActionBar />
+        <QueryPreview />
+        <DBDataGrid />
+      </EditorTab>
     </DBContainerStyle>
   );
 }

@@ -1,7 +1,7 @@
 import ConnectionBox from "@/src/components/connection-info/ConnectionBox";
 import { IconButton, Stack } from "@mui/material";
 import Grid from "@mui/material/Unstable_Grid2";
-import Icon from "../ui/icon/Index";
+import Icon from "../ui/icon";
 
 export default function ConnectionInfo() {
   return (
