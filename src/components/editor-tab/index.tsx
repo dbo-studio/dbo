@@ -1,79 +1,71 @@
-import Icon from "@/components/ui/icon";
-import { Box, Tab, Tabs } from "@mui/material";
-import React, { useState } from "react";
+import { Box, Button, Tab, Tabs } from "@mui/material";
+import { ReactNode, useState } from "react";
+import TabPanel from "./TabPanel";
 
-interface EditorTabProps {
-  children: React.ReactNode;
-}
+let maxTabIndex = 5;
 
-let maxTabIndex = 0;
-let currentTabIndex = 0;
+export default function EditorTab() {
+  const [tabId, setTabId] = useState<number>(-1);
+  const [tabs, setTabs] = useState<ReactNode[]>([]);
+  const [currentContent, setCurrentContent] = useState<ReactNode | null>(null);
+  const [tabsContent, setTabsContent] = useState<ReactNode[]>([]);
 
-export default function EditorTab({ children }: EditorTabProps) {
-  const [tabId, setTabId] = useState(0);
-  const handleTabChange = (event: any, newTabId: any) => {
-    if (newTabId === "tabProperties") {
-      handleAddTab();
-    } else {
-      currentTabIndex = newTabId;
-      setTabId(newTabId);
-    }
+  const handleTabChange = (event: any, newTabId: number) => {
+    setTabId(newTabId);
+    setCurrentContent(tabsContent[newTabId]);
   };
 
-  const [tabs, setAddTab] = React.useState([]);
   const handleAddTab = () => {
-    maxTabIndex = maxTabIndex + 1;
-    setAddTab([
-      ...tabs,
-      <Tab label={`New Tab ${maxTabIndex}`} key={maxTabIndex} />,
-    ]);
-    handleTabsContent();
+    const newTabId = tabs.length >= maxTabIndex ? 0 : tabs.length + 1;
+    console.log("🚀 ~ file: index.tsx:21 ~ handleAddTab ~ newTabId:", newTabId);
+    setTabId(newTabId);
+    if (newTabId == 0) {
+      setTabs([
+        <Tab
+          sx={{ flex: 1 }}
+          label={`New Tab ${newTabId}`}
+          key={newTabId}
+          value={newTabId}
+        />,
+        ...tabs.slice(1),
+      ]);
+    } else {
+      setTabs([
+        ...tabs,
+        <Tab
+          sx={{ flex: 1 }}
+          label={`New Tab ${newTabId}`}
+          key={newTabId}
+          value={newTabId}
+        />,
+      ]);
+    }
+
+    addContent();
   };
 
-  const [tabsContent, setTabsContent] = React.useState([
-    <TabPanel key={1} tabId={tabId}>
-      Default Panel - {Math.random()}
-    </TabPanel>,
-  ]);
+  const addContent = () => {
+    const newContent = <TabPanel key={tabId + Math.random()} />;
 
-  const handleTabsContent = () => {
-    const contents = tabsContent;
-    contents[tabId] = (
-      <TabPanel key={tabId} tabId={tabId}>
-        New Tab Panel - {Math.random()}
-      </TabPanel>
-    );
-
-    console.log(contents);
-
-    setTabsContent(contents);
+    if (tabId == 0) {
+      setTabsContent([newContent, ...tabsContent.slice(1)]);
+    } else {
+      setTabsContent([...tabsContent, newContent]);
+    }
+    setCurrentContent(newContent);
   };
 
   return (
     <Box>
-      <Tabs value={tabId} onChange={handleTabChange} variant="scrollable">
-        <Tab label="Default" />
-        {tabs.map((child) => child)}
-        <Tab icon={<Icon type={"user"} />} value="tabProperties" />
-      </Tabs>
+      <Button onClick={handleAddTab}>Add Tab</Button>
 
-      <Box padding={2}>{tabsContent[currentTabIndex]}</Box>
+      {tabs.length > 0 && (
+        <Tabs value={tabId} onChange={handleTabChange} variant="scrollable">
+          {tabs.map((child: ReactNode) => child)}
+        </Tabs>
+      )}
+
+      <Box padding={2}>{currentContent}</Box>
     </Box>
-  );
-}
-
-function TabPanel(props: any) {
-  const { children, tabId } = props;
-  return (
-    // <Box
-    //   value={maxTabIndex}
-    //   index={maxTabIndex}
-    //   hidden={tabId !== currentTablIndex}
-    //   key={maxTabIndex}
-    // >
-    //   {children}
-    // </Box>
-
-    <Box hidd>{children}</Box>
   );
 }
