@@ -37,6 +37,18 @@ export default function Tabs(theme: Theme): Components {
             fontWeight: theme.typography.fontWeightMedium,
             backgroundColor: theme.palette.background.paper,
           },
+
+          "&:hover": {
+            img: {
+              opacity: 1,
+            },
+          },
+          img: {
+            position: "relative",
+            right: "16px",
+            opacity: 0,
+            transition: "opacity 10ms ease-in",
+          },
         },
       },
     },

@@ -64,6 +64,8 @@ export default function EditorTab() {
     }
 
     setItems(newItems);
+    // setTabIndex(index);
+    // setTabsContent([...tabsContent, ]);
   };
 
   const handleRemoveTab = () => {

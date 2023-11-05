@@ -21,6 +21,7 @@ const iconTypes = {
   code: "code",
   export: "export",
   import: "import",
+  close: "close",
 };
 
 type sizeTypes = "m" | "s" | "xs";
@@ -28,9 +29,10 @@ type sizeTypes = "m" | "s" | "xs";
 interface IconProps {
   type: keyof typeof iconTypes;
   size?: sizeTypes;
+  onClick?: Function;
 }
 
-export default function Icon({ type, size = "s" }: IconProps) {
+export default function Icon({ type, size = "s", onClick }: IconProps) {
   var width = 16;
   var height = 16;
 
@@ -40,6 +42,12 @@ export default function Icon({ type, size = "s" }: IconProps) {
   }
 
   return (
-    <img src={`/icons/${type}.svg`} alt={type} width={width} height={height} />
+    <img
+      onClick={onClick}
+      src={`/icons/${type}.svg`}
+      alt={type}
+      width={width}
+      height={height}
+    />
   );
 }
