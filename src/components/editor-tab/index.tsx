@@ -1,115 +1,103 @@
-import { useUUID } from "@/src/hooks";
-import { Box, Button, Tab, Tabs } from "@mui/material";
-import { useState } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { Box, Tab, Tabs } from "@mui/material";
+import { createElement, useState } from "react";
 import Icon from "../ui/icon";
 import TabPanel from "./TabPanel";
 
-let maxTabLength = 5;
+const maxTabs = 5;
 
-type ItemType = {
-  id: number;
-  key: string;
-  title: string;
+type TabData = {
+  label: string;
+  content: any;
+  value: string;
+  onChange: (content: string) => void;
 };
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function MyTabPanel(props: TabPanelProps) {
-  const { children, value, index } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`full-width-tabpanel-${index}`}
-      aria-labelledby={`full-width-tab-${index}`}
-    >
-      {value === index && <>{children}</>}
-    </div>
-  );
-}
-
 export default function EditorTab() {
-  const [value, setValue] = useState(0);
-  const [items, setItems] = useState<ItemType[]>([]);
-  const keys = useUUID(maxTabLength);
+  const [tabs, setTabs] = useState<TabData[]>([]);
+  const [selectedTab, setSelectedTab] = useState<number>(0);
 
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
+  const handleTabChange = (index: number, content: any) => {
+    const newTabs = [...tabs];
+    newTabs[index].content = content;
+    setTabs(newTabs);
   };
 
-  const itemMaker = (id: number, key: string) => ({
-    id: id,
-    key: key,
-    title: `new item ${key.substring(0, 8)}`,
-  });
-
   const handleAddTab = () => {
-    const index = maxTabLength - (maxTabLength - items.length);
-    let key;
-
-    let newItems: any[] = [];
-
-    if (index < maxTabLength) {
-      key = keys[index];
-      newItems = [...items, itemMaker(index, key)];
+    if (tabs.length < maxTabs) {
+      const newTabs = [...tabs, createNewTab(tabs.length + 1)];
+      setTabs(newTabs);
+      setSelectedTab(newTabs.length - 1);
     } else {
-      key = uuidv4();
-      newItems = [itemMaker(index, key), ...items.slice(1)];
-    }
+      const oldestTab = tabs[0];
+      const newTabs = [...tabs.slice(1), createNewTab(tabs.length + 1)];
+      setTabs(newTabs);
+      setSelectedTab(tabs.length - 1);
 
-    setItems(newItems);
+      // Optionally, you can handle the content of the replaced tab here
+      console.log("Replacing tab:", oldestTab);
+    }
   };
 
   const handleRemoveTab = () => {
-    // console.log("🚀 ~ file: index.tsx:77 ~ handleRemoveTab ~ tabId:", tabId);
-    // const newTabs = tabs;
-    // newTabs.splice(tabId, 1);
-    // console.log(
-    //   "🚀 ~ file: index.tsx:79 ~ handleRemoveTab ~ newTabs:",
-    //   newTabs,
-    // );
-    // setTabs(newTabs);
-    // setTabsContent(tabs.filter((tab, index) => index !== tabId));
-    // console.log(tabs);
+    if (tabs.length > 1) {
+      const newTabs = [...tabs];
+      newTabs.splice(selectedTab, 1);
+      setTabs(newTabs);
+      setSelectedTab(Math.min(selectedTab, newTabs.length - 1));
+    }
+  };
+
+  const createNewTab = (index: number): TabData => {
+    return {
+      label: `Tab ${index}`,
+      value: "",
+      content: () => <TabPanel />,
+      onChange: (content) => handleTabChange(index, content),
+    };
+  };
+
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+    setSelectedTab(newValue);
   };
 
   return (
     <Box>
-      <Button onClick={handleAddTab}>Add Tab</Button>
-
-      {items.length > 0 && (
-        <Tabs value={value} onChange={handleChange} variant="scrollable">
-          {items.map(({ id, key, title }: ItemType) => (
+      <Box>
+        <Tabs value={selectedTab} onChange={handleChange} variant="scrollable">
+          {tabs.map((tab, index) => (
             <Tab
               sx={{ flex: 1 }}
               label={
                 <div>
                   <Icon type="close" size="xs" onClick={handleRemoveTab} />
-                  {title}
+                  {tab.label}
                 </div>
               }
-              key={key}
+              key={index}
             />
           ))}
         </Tabs>
-      )}
+        {tabs.map((tab, index) => (
+          <div key={index} hidden={selectedTab !== index}>
+            {selectedTab === index && <div>{tab.content}</div>}
+          </div>
+        ))}
+        <div>
+          <button onClick={handleAddTab}>Add Tab</button>
 
-      <Box p={2}>
-        {items.length > 0 &&
-          items.map(
-            ({ id, key }: ItemType) =>
-              id === value && (
-                <MyTabPanel key={key} value={value} index={id}>
-                  <TabPanel />
-                </MyTabPanel>
-              ),
-          )}
+          {tabs.map((tab, index) => (
+            <div key={index} hidden={selectedTab !== index}>
+              {selectedTab === index && (
+                <div>
+                  {createElement(tab.content, {
+                    value: tab.value,
+                    onChange: (content: string) => tab.onChange(content),
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </Box>
     </Box>
   );
