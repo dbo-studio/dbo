@@ -5,7 +5,7 @@ import { Box, Theme, useTheme } from "@mui/material";
 export default function CenterContainer() {
   const theme: Theme = useTheme();
 
-  const DBContainerStyle = styled(Box)({
+  const CenterContainerStyle = styled(Box)({
     borderTop: `1px solid ${theme.palette.divider}`,
     borderBottom: `1px solid ${theme.palette.divider}`,
     height: "100vh",
@@ -13,8 +13,8 @@ export default function CenterContainer() {
   });
 
   return (
-    <DBContainerStyle>
+    <CenterContainerStyle>
       <EditorTab />
-    </DBContainerStyle>
+    </CenterContainerStyle>
   );
 }

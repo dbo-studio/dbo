@@ -22,9 +22,10 @@ const iconTypes = {
   export: "export",
   import: "import",
   close: "close",
+  databaseOutline: "databaseOutline",
 };
 
-type sizeTypes = "m" | "s" | "xs";
+type sizeTypes = "l" | "m" | "s" | "xs";
 
 interface IconProps {
   type: keyof typeof iconTypes;
@@ -32,22 +33,29 @@ interface IconProps {
   onClick?: Function;
 }
 
+const sizes = {
+  l: {
+    width: 30,
+    height: 30,
+  },
+  s: {
+    width: 16,
+    height: 16,
+  },
+  xs: {
+    width: 11,
+    height: 11,
+  },
+};
+
 export default function Icon({ type, size = "s", onClick }: IconProps) {
-  var width = 16;
-  var height = 16;
-
-  if (size == "xs") {
-    width = 11;
-    height = 11;
-  }
-
   return (
     <img
       onClick={onClick}
       src={`/icons/${type}.svg`}
       alt={type}
-      width={width}
-      height={height}
+      width={sizes[size].width}
+      height={sizes[size].height}
     />
   );
 }
