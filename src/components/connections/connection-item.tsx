@@ -15,21 +15,22 @@ export default function ConnectionItem({
 
   const ConnectionItemStyles = styled(Box)({
     cursor: "pointer",
+    position: "relative",
+    borderBottom: `1px solid ${theme.palette.divider}`,
+    borderRight: selected ? "unset" : `1px solid ${theme.palette.divider}`,
+    justifyContent: "center",
+    display: "flex",
+    alignItems: "center",
+    flexDirection: "column",
+    background: selected ? theme.palette.background.paper : "",
+    padding: theme.spacing(2),
     ":hover": {
       background: theme.palette.background.paper,
     },
   });
 
   return (
-    <ConnectionItemStyles
-      borderBottom={`1px solid ${theme.palette.divider}`}
-      borderRight={selected ? "unset" : `1px solid ${theme.palette.divider}`}
-      p={2}
-      justifyContent={"center"}
-      display={"flex"}
-      alignItems={"center"}
-      flexDirection={"column"}
-    >
+    <ConnectionItemStyles>
       <Box maxWidth={80} textAlign={"center"}>
         <Icon type="databaseOutline" size="l" />
         <Typography mt={1} variant="body1" noWrap>
