@@ -17,7 +17,7 @@ export default function Search() {
         placeholder="Search"
         startAdornment={
           <InputAdornment position="start">
-            <Icon type="search" />
+            <Icon type="search" height={12} width={12} />
           </InputAdornment>
         }
       />

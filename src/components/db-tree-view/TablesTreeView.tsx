@@ -7,9 +7,9 @@ export default function TablesTreeView() {
     <Box mt={1}>
       <TreeView
         aria-label="file system navigator"
-        defaultCollapseIcon={<Icon size="s" type={"arrowDown"} />}
-        defaultExpandIcon={<Icon size="s" type={"arrowRight"} />}
-        defaultEndIcon={<Icon size="s" type={"columnToken"} />}
+        defaultCollapseIcon={<Icon width={10} height={13} type={"arrowDown"} />}
+        defaultExpandIcon={<Icon width={10} height={13} type={"arrowRight"} />}
+        defaultEndIcon={<Icon width={10} height={13} type={"columnToken"} />}
       >
         <TreeItem nodeId="1" label="Tables">
           <TreeItem nodeId="231" label="orders" />

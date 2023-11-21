@@ -34,6 +34,8 @@ interface IconProps {
   type: keyof typeof iconTypes;
   size?: sizeTypes;
   onClick?: Function;
+  width?: number;
+  height?: number;
 }
 
 const sizes = {
@@ -55,7 +57,20 @@ const sizes = {
   },
 };
 
-export default function Icon({ type, size = "s", onClick }: IconProps) {
+export default function Icon({
+  type,
+  size = "s",
+  width,
+  height,
+  onClick,
+}: IconProps) {
+  if (width) {
+    sizes[size].width = width;
+  }
+  if (height) {
+    sizes[size].height = height;
+  }
+
   return (
     <img
       onClick={onClick}
