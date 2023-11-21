@@ -23,6 +23,8 @@ export default function ConnectionItem({
     alignItems: "center",
     flexDirection: "column",
     padding: theme.spacing(2),
+    maxWidth: "98px",
+    maxHeight: "82px",
     ":hover": {
       background: theme.palette.background.paper,
     },
@@ -30,9 +32,9 @@ export default function ConnectionItem({
 
   return (
     <ConnectionItemStyles>
-      <Box maxWidth={80} textAlign={"center"}>
+      <Box maxHeight={50} maxWidth={50} textAlign={"center"}>
         <Icon type="databaseOutline" size="l" />
-        <Typography mt={1} variant="body1" noWrap>
+        <Typography component={"p"} mt={1} variant="caption" noWrap>
           {label}
         </Typography>
       </Box>

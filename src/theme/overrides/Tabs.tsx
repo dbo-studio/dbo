@@ -38,6 +38,11 @@ export default function Tabs(theme: Theme): Components {
             backgroundColor: theme.palette.background.paper,
           },
 
+          "&.Mui-flat": {
+            borderRadius: 0,
+            borderTop: "unset",
+          },
+
           "&:hover": {
             img: {
               opacity: 1,
@@ -47,7 +52,7 @@ export default function Tabs(theme: Theme): Components {
             position: "relative",
             right: "16px",
             opacity: 0,
-            transition: "opacity 10ms ease-in",
+            transition: "opacity 0.1s",
           },
         },
       },

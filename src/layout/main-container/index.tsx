@@ -7,16 +7,16 @@ import StartContainer from "./StartContainer";
 export default function MainContainer() {
   return (
     <Grid container spacing={0}>
-      <Grid md={1}>
+      <Grid>
         <StartContainer />
       </Grid>
-      <Grid md={2.5}>
+      <Grid>
         <ExplorerContainer />
       </Grid>
-      <Grid md={6}>
+      <Grid flex={1}>
         <CenterContainer />
       </Grid>
-      <Grid md={2.5}>
+      <Grid>
         <EndContainer />
       </Grid>
     </Grid>

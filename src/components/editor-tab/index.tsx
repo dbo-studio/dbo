@@ -66,6 +66,7 @@ export default function EditorTab() {
         <Tabs value={selectedTab} onChange={handleChange} variant="scrollable">
           {tabs.map((tab, index) => (
             <Tab
+              className="Mui-flat"
               sx={{ flex: 1 }}
               label={
                 <div>

@@ -23,6 +23,9 @@ const iconTypes = {
   import: "import",
   close: "close",
   databaseOutline: "databaseOutline",
+  columnFillGreen: "columnFillGreen",
+  filterBrown: "filterBrown",
+  sortBlue: "sortBlue",
 };
 
 type sizeTypes = "l" | "m" | "s" | "xs";
@@ -37,6 +40,10 @@ const sizes = {
   l: {
     width: 30,
     height: 30,
+  },
+  m: {
+    width: 24,
+    height: 24,
   },
   s: {
     width: 16,

@@ -51,6 +51,7 @@ export default function ExplorerContainer() {
     borderBottom: `1px solid ${theme.palette.divider}`,
     borderRight: `1px solid ${theme.palette.divider}`,
     height: "100vh",
+    maxWidth: "285px",
     overflow: "auto",
   });
 

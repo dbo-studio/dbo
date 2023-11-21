@@ -15,7 +15,7 @@ export default function ConnectionInfo() {
             <Icon type={"lock"} size={"s"} />
           </IconButton>
           <IconButton aria-label="database">
-            <Icon type={"database"} size={"s"} />
+            <Icon type={"databaseOutline"} size={"s"} />
           </IconButton>
         </Stack>
       </Grid>

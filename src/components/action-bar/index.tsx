@@ -8,20 +8,21 @@ export default function ActionBar() {
   return (
     <Stack
       borderBottom={`1px solid ${theme.palette.divider}`}
-      padding={"8px 16px"}
+      padding={"0 8px"}
+      maxHeight={40}
       direction={"row"}
       justifyContent={"space-between"}
       alignItems={"center"}
     >
       <Grid md={8} display={"flex"} justifyContent={"flex-start"}>
         <IconButton color={"secondary"} aria-label="grid">
-          <Icon type={"grid"} size={"s"} />
+          <Icon type={"columnFillGreen"} size={"m"} />
         </IconButton>
         <IconButton style={{ margin: "0 16px" }} aria-label="filter">
-          <Icon type={"filter"} size={"s"} />
+          <Icon type={"filterBrown"} size={"m"} />
         </IconButton>
         <IconButton aria-label="sort">
-          <Icon type={"sort"} size={"s"} />
+          <Icon type={"sortBlue"} size={"m"} />
         </IconButton>
       </Grid>
       <Grid md={8} mx={2} display={"flex"} justifyContent={"flex-end"}>
