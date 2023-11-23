@@ -1,4 +1,3 @@
-import DBFields from "@/components/db-felids";
 import type { Metadata } from "next";
 import { Viewport } from "next";
 import React from "react";
@@ -12,36 +11,6 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
 };
-
-const tabs = [
-  {
-    id: 0,
-    name: "Fields",
-    content: (
-      <>
-        <DBFields />
-      </>
-    ),
-  },
-  {
-    id: 1,
-    name: "DDL",
-    content: (
-      <>
-        <p>DDL</p>
-      </>
-    ),
-  },
-  {
-    id: 2,
-    name: "Info",
-    content: (
-      <>
-        <p>Info</p>
-      </>
-    ),
-  },
-];
 
 export default function RootLayout({
   children,

@@ -16,10 +16,14 @@
   },
   "dependencies": {
     "@codemirror/lang-sql": "^6.5.4",
+    "@emotion/cache": "^11.11.0",
+    "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@fontsource/roboto": "^5.0.8",
+    "@mui/icons-material": "^5.14.18",
     "@mui/material": "^5.14.15",
     "@mui/x-tree-view": "6.17.0",
+    "@reduxjs/toolkit": "^1.9.7",
     "@uiw/codemirror-theme-github": "^4.21.20",
     "@uiw/react-codemirror": "^4.21.20",
     "clsx": "^2.0.0",
@@ -29,6 +33,7 @@
     "react": "^18.2.0",
     "react-data-grid": "7.0.0-beta.40",
     "react-dom": "^18.2.0",
+    "react-hook-form": "^7.48.2",
     "swr": "^2.2.4",
     "uuid": "^9.0.1"
   },
