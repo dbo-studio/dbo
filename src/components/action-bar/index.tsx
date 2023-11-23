@@ -18,7 +18,7 @@ export default function ActionBar() {
         <IconButton color={"secondary"} aria-label="grid">
           <Icon type={"columnFillGreen"} size={"m"} />
         </IconButton>
-        <IconButton style={{ margin: "0 16px" }} aria-label="filter">
+        <IconButton aria-label="filter">
           <Icon type={"filterBrown"} size={"m"} />
         </IconButton>
         <IconButton aria-label="sort">
@@ -29,7 +29,7 @@ export default function ActionBar() {
         <IconButton aria-label="code">
           <Icon type={"code"} size={"s"} />
         </IconButton>
-        <IconButton style={{ margin: "0 16px" }} aria-label="export">
+        <IconButton aria-label="export">
           <Icon type={"export"} size={"s"} />
         </IconButton>
         <IconButton aria-label="import">

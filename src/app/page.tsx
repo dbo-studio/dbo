@@ -5,15 +5,24 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 
-import AppHeader from "@/src/layout/app-header";
-import MainContainer from "@/src/layout/main-container";
-import ThemeProvider from "@/src/theme/index";
+import { Box, styled } from "@mui/material";
+import AppHeader from "../layout/app-header";
+import MainContainer from "../layout/main-container";
 
-export default function Home() {
+const Wrapper = styled(Box)(({ theme }) => ({
+  height: "100vh",
+  backgroundColor: theme.palette.background.default,
+  maxHeight: "100vh",
+  overflow: "hidden",
+}));
+
+const Page = () => {
   return (
-    <ThemeProvider>
+    <Wrapper>
       <AppHeader />
       <MainContainer />
-    </ThemeProvider>
+    </Wrapper>
   );
-}
+};
+
+export default Page;

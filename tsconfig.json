@@ -24,7 +24,11 @@
       "@/*": ["./*"],
       "@/components/*": ["src/components/*"],
       "@/pages/*": ["pages/*"],
-      "@/theme/*": ["src/theme/*"]
+      "@/theme/*": ["src/theme/*"],
+      "@/core/*": ["src/core/*"],
+      "@/redux/*": ["src/redux/*"],
+      "@/sections/*": ["src/sections/*"],
+      "@/hooks/*": ["src/hooks/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
