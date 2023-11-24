@@ -1,4 +1,4 @@
-import Connections from "@/src/components/common/connections";
+import Connections from "@/src/components/common/Connections/Connections";
 import styled from "@emotion/styled";
 import { Box, useTheme } from "@mui/material";
 

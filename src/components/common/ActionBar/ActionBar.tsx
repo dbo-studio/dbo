@@ -1,6 +1,6 @@
 import { IconButton, Stack, useTheme } from "@mui/material";
 import Grid from "@mui/material/Unstable_Grid2";
-import Icon from "../../base/icon";
+import Icon from "../../base/icon/Icon";
 
 export default function ActionBar() {
   const theme = useTheme();

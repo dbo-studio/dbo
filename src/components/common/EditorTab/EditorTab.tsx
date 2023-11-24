@@ -1,16 +1,9 @@
 import { Box, Tab, Tabs } from "@mui/material";
 import { createElement, useState } from "react";
-import Icon from "../../base/icon";
+import Icon from "../../base/icon/Icon";
 import TabPanel from "./TabPanel";
 
 const maxTabs = 5;
-
-type TabData = {
-  label: string;
-  content: any;
-  value: string;
-  onChange: (content: string) => void;
-};
 
 export default function EditorTab() {
   const [tabs, setTabs] = useState<TabData[]>([]);

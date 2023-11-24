@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { Box, Theme, useTheme } from "@mui/material";
-import ConnectionItem from "./connection-item";
+import ConnectionItem from "./ConnectionItem";
 
 export default function Connections() {
   const theme: Theme = useTheme();

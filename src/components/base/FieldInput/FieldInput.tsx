@@ -1,12 +1,5 @@
 import { Box, InputBase, Typography, useTheme } from "@mui/material";
 
-export type InputTypes = "string" | "number";
-
-export interface FieldInputProps {
-  label: string;
-  inputType: InputTypes;
-}
-
 export default function FieldInput({ label, inputType }: FieldInputProps) {
   const theme = useTheme();
 

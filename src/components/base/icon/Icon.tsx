@@ -64,12 +64,12 @@ export default function Icon({
   height,
   onClick,
 }: IconProps) {
-  if (width) {
-    sizes[size].width = width;
-  }
-  if (height) {
-    sizes[size].height = height;
-  }
+  // if (width) {
+  //   sizes[size].width = width;
+  // }
+  // if (height) {
+  //   sizes[size].height = height;
+  // }
 
   return (
     <img

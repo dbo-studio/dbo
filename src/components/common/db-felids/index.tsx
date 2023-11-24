@@ -1,5 +1,7 @@
-import FieldInput, { InputTypes } from "@/src/components/base/felid-input";
-import Search from "@/src/components/base/search";
+import FieldInput, {
+  InputTypes,
+} from "@/src/components/base/FieldInput/FieldInput";
+import Search from "@/src/components/base/search/Search";
 import { Box } from "@mui/material";
 
 const fields = [

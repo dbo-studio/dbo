@@ -1,7 +1,7 @@
 import { Box } from "@mui/material";
-import ActionBar from "../action-bar";
-import DBDataGrid from "../db-data-grid";
-import QueryPreview from "../query-preview";
+import ActionBar from "../ActionBar/ActionBar";
+import DBDataGrid from "../DBDataGrid/DBDataGrid";
+import QueryPreview from "../QueryPreview/QueryPreview";
 
 interface TabPanelProps {}
 

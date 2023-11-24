@@ -1,4 +1,4 @@
-import Icon from "@/src/components/base/icon";
+import Icon from "@/src/components/base/icon/Icon";
 import { IconButton, Stack } from "@mui/material";
 
 export default function Leading() {
