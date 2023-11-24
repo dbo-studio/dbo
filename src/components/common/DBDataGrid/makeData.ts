@@ -1,15 +1,5 @@
 import { faker } from "@faker-js/faker";
 
-export interface ServerColumn {
-  felid: string;
-  type: string;
-}
-
-export interface ServerData {
-  columns: ServerColumn[];
-  rows: any;
-}
-
 const fakeColumn: ServerColumn[] = [
   {
     felid: "id",

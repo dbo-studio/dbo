@@ -1,4 +1,5 @@
 import { Box, InputBase, Typography, useTheme } from "@mui/material";
+import { FieldInputProps } from "./types";
 
 export default function FieldInput({ label, inputType }: FieldInputProps) {
   const theme = useTheme();

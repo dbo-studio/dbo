@@ -1,6 +1,6 @@
-interface FieldInputProps {
+export interface FieldInputProps {
   label: string;
   inputType: InputTypes;
 }
 
-type InputTypes = "string" | "number";
+export type InputTypes = "string" | "number";
