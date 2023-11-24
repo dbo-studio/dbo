@@ -6,8 +6,8 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 
 import { Box, styled } from "@mui/material";
-import AppHeader from "../components/layout/AppHeader";
-import MainContainer from "../components/layout/MainContainer";
+import AppHeader from "../components/layout/AppHeader/AppHeader";
+import MainContainer from "../components/layout/MainContainer/MainContainer";
 
 const Wrapper = styled(Box)(({ theme }) => ({
   height: "100vh",
