@@ -1,4 +1,4 @@
-import DBTreeView from "@/src/components/common/db-tree-view";
+import DBTreeView from "@/src/components/common/DBTreeView/DBTreeView";
 import styled from "@emotion/styled";
 import { Box, Tab, Tabs, useTheme } from "@mui/material";
 import { useMemo, useState } from "react";
