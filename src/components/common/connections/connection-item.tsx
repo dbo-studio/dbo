@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { Box, Theme, Typography, useTheme } from "@mui/material";
-import Icon from "../ui/icon";
+import Icon from "../../base/icon";
 
 type ConnectionItemProps = {
   label: string;

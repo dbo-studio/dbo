@@ -1,6 +1,6 @@
 import { Box, Tab, Tabs } from "@mui/material";
 import { createElement, useState } from "react";
-import Icon from "../ui/icon";
+import Icon from "../../base/icon";
 import TabPanel from "./TabPanel";
 
 const maxTabs = 5;

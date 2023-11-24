@@ -1,4 +1,4 @@
-import Search from "../ui/search";
+import Search from "../../base/search";
 import TablesTreeView from "./TablesTreeView";
 
 type Props = {};

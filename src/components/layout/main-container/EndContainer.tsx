@@ -1,4 +1,4 @@
-import DBFields from "@/src/components/db-felids";
+import DBFields from "@/src/components/common/db-felids";
 import { Box, Tab, Tabs, styled, useTheme } from "@mui/material";
 import React, { useMemo, useState } from "react";
 

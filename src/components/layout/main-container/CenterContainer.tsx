@@ -1,4 +1,4 @@
-import EditorTab from "@/components/editor-tab";
+import EditorTab from "@/src/components/common/editor-tab";
 import styled from "@emotion/styled";
 import { Box, Theme, useTheme } from "@mui/material";
 

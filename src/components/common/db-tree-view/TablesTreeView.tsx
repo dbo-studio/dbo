@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
 import { TreeItem, TreeView } from "@mui/x-tree-view";
-import Icon from "../ui/icon";
+import Icon from "../../base/icon";
 
 export default function TablesTreeView() {
   return (
