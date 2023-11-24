@@ -1,4 +1,4 @@
-import Icon from "@/src/components/base/icon/Icon";
+import Icon from "@/src/components/base/CustomIcon/CustomIcon";
 import { IconButton, Stack } from "@mui/material";
 
 export default function Actions() {

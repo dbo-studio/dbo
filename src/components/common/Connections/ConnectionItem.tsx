@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { Box, Theme, Typography, useTheme } from "@mui/material";
-import Icon from "../../base/icon/Icon";
+import Icon from "../../base/CustomIcon/CustomIcon";
 
 export default function ConnectionItem({
   label,
