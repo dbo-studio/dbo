@@ -1,17 +1,17 @@
-import Icon from "@/src/components/base/CustomIcon/CustomIcon";
 import { IconButton, Stack } from "@mui/material";
+import CustomIcon from "../../base/CustomIcon/CustomIcon";
 
 export default function Actions() {
   return (
     <Stack spacing={2} direction="row" justifyContent="flex-end">
       <IconButton aria-label="sideLeft">
-        <Icon type={"sideLeft"} size={"s"} />
+        <CustomIcon type={"sideLeft"} size={"s"} />
       </IconButton>
       <IconButton aria-label="sideBottom">
-        <Icon type={"sideBottom"} size={"s"} />
+        <CustomIcon type={"sideBottom"} size={"s"} />
       </IconButton>
       <IconButton aria-label="sideRight">
-        <Icon type={"sideRight"} size={"s"} />
+        <CustomIcon type={"sideRight"} size={"s"} />
       </IconButton>
     </Stack>
   );

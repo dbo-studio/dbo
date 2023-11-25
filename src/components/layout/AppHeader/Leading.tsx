@@ -1,14 +1,14 @@
-import Icon from "@/src/components/base/CustomIcon/CustomIcon";
 import { IconButton, Stack } from "@mui/material";
+import CustomIcon from "../../base/CustomIcon/CustomIcon";
 
 export default function Leading() {
   return (
     <Stack spacing={2} direction="row" justifyContent="flex-start">
       <IconButton aria-label="user">
-        <Icon type={"user"} size={"s"} />
+        <CustomIcon type={"user"} size={"s"} />
       </IconButton>
       <IconButton aria-label="settings">
-        <Icon type={"settings"} size={"s"} />
+        <CustomIcon type={"settings"} size={"s"} />
       </IconButton>
     </Stack>
   );

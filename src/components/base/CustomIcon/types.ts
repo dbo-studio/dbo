@@ -1,12 +1,14 @@
-type sizeTypes = "l" | "m" | "s" | "xs";
+import { MouseEventHandler } from "react";
 
-interface IconProps {
+export type sizeTypes = "l" | "m" | "s" | "xs";
+
+export type IconProps = {
   type: keyof typeof iconTypes;
   size?: sizeTypes;
-  onClick?: Function;
+  onClick?: MouseEventHandler | undefined;
   width?: number;
   height?: number;
-}
+};
 
 const iconTypes = {
   user: "user",

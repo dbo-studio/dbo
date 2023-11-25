@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { IconProps } from "./types";
 
 const sizes = {
   l: {
@@ -19,26 +20,30 @@ const sizes = {
   },
 };
 
-export default function Icon({
+export default function CustomIcon({
   type,
   size = "s",
   width,
   height,
   onClick,
 }: IconProps) {
-  // if (width) {
-  //   sizes[size].width = width;
-  // }
-  // if (height) {
-  //   sizes[size].height = height;
-  // }
+  var w = sizes[size].width;
+  var h = sizes[size].height;
+
+  if (width) {
+    w = width;
+  }
+  if (height) {
+    h = height;
+  }
 
   return (
     <Image
+      onClick={onClick}
       src={`/icons/${type}.svg`}
       alt={type}
-      width={sizes[size].width}
-      height={sizes[size].height}
+      width={w}
+      height={h}
     />
   );
 }

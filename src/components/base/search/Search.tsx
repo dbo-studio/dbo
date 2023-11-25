@@ -1,6 +1,6 @@
 import { Box, InputAdornment, InputBase } from "@mui/material";
 import { ChangeEvent, useState } from "react";
-import Icon from "../CustomIcon/CustomIcon";
+import CustomIcon from "../CustomIcon/CustomIcon";
 
 export default function Search() {
   const [value, setValue] = useState("");
@@ -17,7 +17,7 @@ export default function Search() {
         placeholder="Search"
         startAdornment={
           <InputAdornment position="start">
-            <Icon type="search" height={12} width={12} />
+            <CustomIcon type="search" height={12} width={12} />
           </InputAdornment>
         }
       />

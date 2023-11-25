@@ -1,6 +1,6 @@
 import { Box, Tab, Tabs } from "@mui/material";
 import { createElement, useState } from "react";
-import Icon from "../../base/CustomIcon/CustomIcon";
+import CustomIcon from "../../base/CustomIcon/CustomIcon";
 import TabPanel from "./TabPanel";
 
 const maxTabs = 5;
@@ -63,7 +63,11 @@ export default function EditorTab() {
               sx={{ flex: 1 }}
               label={
                 <div>
-                  <Icon type="close" size="xs" onClick={handleRemoveTab} />
+                  <CustomIcon
+                    type="close"
+                    size="xs"
+                    onClick={handleRemoveTab}
+                  />
                   {tab.label}
                 </div>
               }

@@ -1,15 +1,19 @@
 import { Box } from "@mui/material";
 import { TreeItem, TreeView } from "@mui/x-tree-view";
-import Icon from "../../base/CustomIcon/CustomIcon";
+import CustomIcon from "../../base/CustomIcon/CustomIcon";
 
 export default function TablesTreeView() {
   return (
     <Box mt={1}>
       <TreeView
         aria-label="file system navigator"
-        defaultCollapseIcon={<Icon width={10} height={13} type={"arrowDown"} />}
-        defaultExpandIcon={<Icon width={10} height={13} type={"arrowRight"} />}
-        defaultEndIcon={<Icon width={10} height={13} type={"columnToken"} />}
+        defaultCollapseIcon={
+          <CustomIcon width={10} height={13} type={"arrowDown"} />
+        }
+        defaultExpandIcon={
+          <CustomIcon width={10} height={13} type={"arrowRight"} />
+        }
+        defaultEndIcon={<CustomIcon type={"columnToken"} />}
       >
         <TreeItem nodeId="1" label="Tables">
           <TreeItem nodeId="231" label="orders" />
