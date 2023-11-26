@@ -4,8 +4,9 @@ import DataGrid, {
   SelectColumn,
   textEditor,
 } from "react-data-grid";
-import { ServerColumn, makeData } from "./makeData";
+import { makeData } from "./makeData";
 import "./styles.css";
+import { ServerColumn } from "./types";
 
 export default function DBDataGrid() {
   const [selectedRows, setSelectedRows] = useState(

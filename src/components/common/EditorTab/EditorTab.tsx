@@ -81,7 +81,12 @@ export default function EditorTab() {
           </div>
         ))}
         <div>
-          <button onClick={handleAddTab}>Add Tab</button>
+          <button
+            style={{ position: "absolute", right: 0, bottom: 0 }}
+            onClick={handleAddTab}
+          >
+            Add Tab
+          </button>
 
           {tabs.map((tab, index) => (
             <div key={index} hidden={selectedTab !== index}>

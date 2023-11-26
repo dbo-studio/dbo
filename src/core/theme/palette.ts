@@ -74,7 +74,7 @@ const colorPalette = {
   warning: WARNING,
   error: ERROR,
   grey: GREY,
-  light: [GREY[100], "#E6F1FA", "#AAAAAA"],
+  light: ["#f9fafb", "#E6F1FA", "#AAAAAA"],
   dark: ["#111111", "#333333", "#666666"],
   disabled: { light: "#CCCCCC", dark: "#AAAAAA" },
   constant: { white: "#FFFFFF", black: "#222222" },

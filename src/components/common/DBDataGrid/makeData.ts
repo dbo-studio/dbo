@@ -1,4 +1,5 @@
 import { faker } from "@faker-js/faker";
+import { ServerColumn, ServerData } from "./types";
 
 const fakeColumn: ServerColumn[] = [
   {

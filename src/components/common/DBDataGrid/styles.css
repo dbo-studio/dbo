@@ -46,19 +46,23 @@
       color-scheme: var(--rdg-color-scheme, light dark);
       contain: content;
       content-visibility: auto;
-      block-size: 350px;
-      border: 1px solid var(--rdg-border-color);
+      border-top: 1px solid var(--rdg-border-color);
+      border-bottom: 1px solid var(--rdg-border-color);
       box-sizing: border-box;
       overflow: auto;
       background-color: var(--rdg-background-color);
       color: var(--rdg-color);
       font-size: var(--rdg-font-size);
-      height: 100%;
       cursor: pointer;
+      max-height: calc(100vh - 64px - 30px - 40px);
     }
 
-    .rdg-row-odd .cj343x07-0-0-beta-40 {
-      background-color: var(--rdg-background-color-odd) !important;
+    .rdg-row-odd {
+      background-color: var(--rdg-background-color-odd);
+    }
+
+    .rdg-row-odd:hover{
+      background-color: var(--rdg-row-selected-background-color)!important;
     }
 
     .rnvodz57-0-0-beta-40::before {

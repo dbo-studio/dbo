@@ -9,7 +9,7 @@ export default function CenterContainer() {
     borderTop: `1px solid ${theme.palette.divider}`,
     borderBottom: `1px solid ${theme.palette.divider}`,
     height: "100vh",
-    overflow: "auto",
+    overflow: "hidden",
   });
 
   return (
