@@ -22,10 +22,10 @@ export default function Input(theme: Theme): Components {
           ":after": {
             borderBottom: "none !important",
           },
-        },
-        input: {
-          "&::placeholder": {
-            color: theme.palette.text.primary,
+          input: {
+            "&::placeholder": {
+              color: theme.palette.text.primary,
+            },
           },
         },
       },
