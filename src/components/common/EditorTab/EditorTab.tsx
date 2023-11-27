@@ -82,7 +82,7 @@ export default function EditorTab() {
         ))}
         <div>
           <button
-            style={{ position: "absolute", right: 0, bottom: 0 }}
+            style={{ position: "absolute", right: 0, bottom: 0, zIndex: 9999 }}
             onClick={handleAddTab}
           >
             Add Tab

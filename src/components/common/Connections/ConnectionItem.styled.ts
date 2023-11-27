@@ -12,7 +12,6 @@ export const ConnectionItemStyles = styled(Box)<ConnectionItemStylesProps>(
     alignItems: "center",
     flexDirection: "column",
     padding: theme.spacing(2),
-    maxWidth: "98px",
     maxHeight: "82px",
     ":hover": {
       background: theme.palette.background.paper,

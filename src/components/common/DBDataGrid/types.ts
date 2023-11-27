@@ -1,9 +1,9 @@
-export interface ServerColumn {
+export type ServerColumn = {
   felid: string;
   type: string;
-}
+};
 
-export interface ServerData {
+export type ServerData = {
   columns: ServerColumn[];
   rows: any;
-}
+};

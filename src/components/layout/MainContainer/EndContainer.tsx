@@ -1,6 +1,7 @@
 import DBFields from "@/src/components/common/DBFelids/DBFelids";
 import { Box, Tab, Tabs, styled, useTheme } from "@mui/material";
 import React, { useMemo, useState } from "react";
+import ResizableXBox from "../../base/ResizableBox/ResizableXBox";
 
 const tabs = [
   {
@@ -49,18 +50,19 @@ export default function EndContainer() {
     border: `1px solid ${theme.palette.divider}`,
     height: "100vh",
     overflow: "auto",
-    maxWidth: "285px",
   });
 
   return (
-    <StartContainerStyle>
-      <Tabs value={selectedTabId} onChange={onSelectedTabChanged}>
-        <Tab label="Fields" />
-        <Tab label="DDL" />
-        <Tab label="Info" />
-      </Tabs>
+    <ResizableXBox width={285} direction="ltr" maxWidth={500}>
+      <StartContainerStyle>
+        <Tabs value={selectedTabId} onChange={onSelectedTabChanged}>
+          <Tab label="Fields" />
+          <Tab label="DDL" />
+          <Tab label="Info" />
+        </Tabs>
 
-      <Box role="tabpanel">{selectedTabContent}</Box>
-    </StartContainerStyle>
+        <Box role="tabpanel">{selectedTabContent}</Box>
+      </StartContainerStyle>
+    </ResizableXBox>
   );
 }

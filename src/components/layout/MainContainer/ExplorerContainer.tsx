@@ -2,6 +2,7 @@ import DBTreeView from "@/src/components/common/DBTreeView/DBTreeView";
 import styled from "@emotion/styled";
 import { Box, Tab, Tabs, useTheme } from "@mui/material";
 import { useMemo, useState } from "react";
+import ResizableXBox from "../../base/ResizableBox/ResizableXBox";
 
 const tabs = [
   {
@@ -51,19 +52,20 @@ export default function ExplorerContainer() {
     borderBottom: `1px solid ${theme.palette.divider}`,
     borderRight: `1px solid ${theme.palette.divider}`,
     height: "100vh",
-    maxWidth: "285px",
     overflow: "auto",
   });
 
   return (
-    <ExplorerContainerStyle>
-      <Tabs value={selectedTabId} onChange={onSelectedTabChanged}>
-        <Tab label="Tables" />
-        <Tab label="Queries" />
-        <Tab label="History" />
-      </Tabs>
+    <ResizableXBox width={285} direction="rtl" maxWidth={500}>
+      <ExplorerContainerStyle>
+        <Tabs value={selectedTabId} onChange={onSelectedTabChanged}>
+          <Tab label="Tables" />
+          <Tab label="Queries" />
+          <Tab label="History" />
+        </Tabs>
 
-      <Box role="tabpanel">{selectedTabContent}</Box>
-    </ExplorerContainerStyle>
+        <Box role="tabpanel">{selectedTabContent}</Box>
+      </ExplorerContainerStyle>
+    </ResizableXBox>
   );
 }

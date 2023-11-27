@@ -1,6 +1,6 @@
 import { Box, styled } from "@mui/material";
 
-export const ConnectionBoxStyle = styled(Box)(({ theme }) => ({
+export const ConnectionBoxStyled = styled(Box)(({ theme }) => ({
   background: "#E6F9F7",
   height: "32px",
   textAlign: "center",
