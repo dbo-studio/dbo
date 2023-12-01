@@ -1,5 +1,5 @@
 const tools = {
-  toDo: () => 'to do',
+  screenMaxHeight: () => window.screen.height - 64 - 30 - 40 - 32 - 14,
 };
 
 export default tools;

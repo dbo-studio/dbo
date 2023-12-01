@@ -25,6 +25,8 @@ export default function ResizableXBox({
   };
 
   const handleMouseMove = (event: any) => {
+    console.log("asd");
+
     if (!isResizing) return;
 
     const newWidth =
@@ -50,10 +52,7 @@ export default function ResizableXBox({
 
   return (
     <Box position={"relative"} overflow={"hidden"} width={boxWidth}>
-      <ResizableToggle
-        onMouseDown={() => handleMouseDown}
-        direction={direction}
-      />
+      <ResizableToggle onMouseDown={handleMouseDown} direction={direction} />
       <div>{children}</div>
     </Box>
   );
