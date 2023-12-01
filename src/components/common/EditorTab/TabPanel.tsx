@@ -1,17 +1,28 @@
 import { Box } from "@mui/material";
+import dynamic from "next/dynamic";
 import ActionBar from "../ActionBar/ActionBar";
-import DBDataGrid from "../DBDataGrid/DBDataGrid";
-import QueryPreview from "../QueryPreview/QueryPreview";
-import StatusBar from "../StatusBar/StatusBar";
+
+const DynamicQueryPreview = dynamic(
+  () => import("../QueryPreview/QueryPreview"),
+  {
+    loading: () => null,
+  },
+);
+const DynamicDBDataGrid = dynamic(() => import("../DBDataGrid/DBDataGrid"), {
+  loading: () => null,
+});
+const DynamicStatusBar = dynamic(() => import("../StatusBar/StatusBar"), {
+  loading: () => null,
+});
 
 export default function TabPanel({}) {
   return (
     <Box>
       <ActionBar />
       <Box position={"relative"}>
-        <QueryPreview />
-        <DBDataGrid />
-        <StatusBar />
+        <DynamicQueryPreview />
+        <DynamicDBDataGrid />
+        <DynamicStatusBar />
       </Box>
     </Box>
   );

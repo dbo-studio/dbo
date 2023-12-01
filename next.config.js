@@ -11,6 +11,8 @@ const nextConfig = {
       },
     ],
   },
+  reactStrictMode: true,
+  profiler: true,
 };
 
 module.exports = nextConfig;

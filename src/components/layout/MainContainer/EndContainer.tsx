@@ -1,7 +1,14 @@
-import DBFields from "@/src/components/common/DBFelids/DBFelids";
 import { Box, Tab, Tabs, styled, useTheme } from "@mui/material";
+import dynamic from "next/dynamic";
 import React, { useMemo, useState } from "react";
 import ResizableXBox from "../../base/ResizableBox/ResizableXBox";
+
+const DynamicDBFields = dynamic(
+  () => import("@/src/components/common/DBFelids/DBFelids"),
+  {
+    loading: () => null,
+  },
+);
 
 const tabs = [
   {
@@ -9,7 +16,7 @@ const tabs = [
     name: "Fields",
     content: (
       <>
-        <DBFields />
+        <DynamicDBFields />
       </>
     ),
   },

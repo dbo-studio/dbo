@@ -1,3 +1,4 @@
+import { EventFor } from "@/src/core/@types";
 import { Box } from "@mui/material";
 import { useEffect, useState } from "react";
 import ResizableToggle from "./ResizableToggle";
@@ -13,7 +14,7 @@ export default function ResizableXBox({
   const [isResizing, setIsResizing] = useState(false);
   const [initialX, setInitialX] = useState(0);
 
-  const handleMouseDown = (event: any) => {
+  const handleMouseDown = (event: EventFor<"div", "onMouseDown">) => {
     event.preventDefault();
     setIsResizing(true);
     setInitialX(event.clientX);
@@ -49,7 +50,10 @@ export default function ResizableXBox({
 
   return (
     <Box position={"relative"} overflow={"hidden"} width={boxWidth}>
-      <ResizableToggle onMouseDown={handleMouseDown} direction={direction} />
+      <ResizableToggle
+        onMouseDown={() => handleMouseDown}
+        direction={direction}
+      />
       <div>{children}</div>
     </Box>
   );

@@ -1,8 +1,15 @@
-import DBTreeView from "@/src/components/common/DBTreeView/DBTreeView";
 import styled from "@emotion/styled";
 import { Box, Tab, Tabs, useTheme } from "@mui/material";
+import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 import ResizableXBox from "../../base/ResizableBox/ResizableXBox";
+
+const DynamicDBTreeView = dynamic(
+  () => import("@/src/components/common/DBTreeView/DBTreeView"),
+  {
+    loading: () => null,
+  },
+);
 
 const tabs = [
   {
@@ -10,7 +17,7 @@ const tabs = [
     name: "Items",
     content: (
       <>
-        <DBTreeView />
+        <DynamicDBTreeView />
       </>
     ),
   },

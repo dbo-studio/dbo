@@ -1,11 +1,12 @@
+import { EventFor } from "@/src/core/@types";
 import { Box, InputAdornment, InputBase } from "@mui/material";
-import { ChangeEvent, useState } from "react";
+import { useState } from "react";
 import CustomIcon from "../CustomIcon/CustomIcon";
 
 export default function Search() {
   const [value, setValue] = useState("");
 
-  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const onChange = (e: EventFor<"input", "onChange">) => {
     console.log("search input e", e.target.value);
     setValue(e.target.value);
   };

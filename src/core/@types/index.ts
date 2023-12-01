@@ -1,1 +1,2 @@
-export * from './product.type';
+export * from "./event.type";
+export * from "./product.type";

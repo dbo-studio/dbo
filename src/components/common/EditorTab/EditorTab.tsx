@@ -1,9 +1,13 @@
 import { Box, Tab, Tabs } from "@mui/material";
+import dynamic from "next/dynamic";
 import { createElement, useState } from "react";
 import CustomIcon from "../../base/CustomIcon/CustomIcon";
-import TabPanel from "./TabPanel";
 
 const maxTabs = 5;
+
+const DynamicTabPanel = dynamic(() => import("./TabPanel"), {
+  loading: () => null,
+});
 
 export default function EditorTab() {
   const [tabs, setTabs] = useState<TabData[]>([]);
@@ -44,7 +48,7 @@ export default function EditorTab() {
     return {
       label: `Tab ${index}`,
       value: "",
-      content: () => <TabPanel />,
+      content: () => <DynamicTabPanel />,
       onChange: (content) => handleTabChange(index, content),
     };
   };
