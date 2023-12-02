@@ -10,15 +10,12 @@ export default function ResizableYBox(props: ResizableBoxYProps) {
   const [initialY, setInitialY] = useState(0);
 
   const handleMouseDown = (event: EventFor<"div", "onMouseDown">) => {
-    console.log("handleMouseDown");
-
     event.preventDefault();
     setIsResizing(true);
     setInitialY(event.clientY);
   };
 
   const handleMouseUp = () => {
-    console.log("handleMouseUp");
     setIsResizing(false);
   };
 
@@ -29,8 +26,6 @@ export default function ResizableYBox(props: ResizableBoxYProps) {
       props.direction == "ttb"
         ? boxHeight + (event.clientY - initialY)
         : boxHeight - (event.clientY - initialY);
-
-    console.log(newHeight);
 
     setBoxHeight(
       Math.min(

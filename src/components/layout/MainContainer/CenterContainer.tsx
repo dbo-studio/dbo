@@ -1,6 +1,13 @@
-import EditorTab from "@/src/components/common/EditorTab/EditorTab";
 import styled from "@emotion/styled";
 import { Box, Theme, useTheme } from "@mui/material";
+import dynamic from "next/dynamic";
+
+const DynamicEditorTab = dynamic(
+  () => import("@/src/components/common/EditorTab/EditorTab"),
+  {
+    loading: () => null,
+  },
+);
 
 export default function CenterContainer() {
   const theme: Theme = useTheme();
@@ -14,7 +21,7 @@ export default function CenterContainer() {
 
   return (
     <CenterContainerStyle>
-      <EditorTab />
+      <DynamicEditorTab />
     </CenterContainerStyle>
   );
 }
