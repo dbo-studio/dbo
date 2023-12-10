@@ -7,3 +7,7 @@ export type StatusBarTabTypes = {
   iconActive: keyof typeof IconTypes;
   content: any;
 };
+
+export type StatusBarTabProps = {
+  onTabChange: Function;
+};

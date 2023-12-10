@@ -1,9 +1,8 @@
 import { useUUID } from "@/src/hooks";
-import { useTheme } from "@emotion/react";
 import { Tab, Tabs } from "@mui/material";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import CustomIcon from "../../base/CustomIcon/CustomIcon";
-import { StatusBarTabTypes } from "./types";
+import { StatusBarTabProps, StatusBarTabTypes } from "./types";
 
 const tabs: StatusBarTabTypes[] = [
   {
@@ -11,19 +10,18 @@ const tabs: StatusBarTabTypes[] = [
     name: "Data",
     icon: "grid",
     iconActive: "gridBlue",
-    content: "",
+    content: "test content grid data",
   },
   {
     id: 1,
     name: "Structure",
     icon: "structure",
     iconActive: "structureBlue",
-    content: "",
+    content: "test content Structure",
   },
 ];
 
-export default function StatusBarTabs() {
-  const theme = useTheme();
+export default function StatusBarTabs({ onTabChange }: StatusBarTabProps) {
   const [selectedTabId, setSelectedTabId] = useState(0);
   const uuids = useUUID(2);
 
@@ -33,7 +31,12 @@ export default function StatusBarTabs() {
 
   const onSelectedTabChanged = (event: React.SyntheticEvent, id: number) => {
     setSelectedTabId(id);
+    onTabChange(selectedTabContent);
   };
+
+  useEffect(() => {
+    onTabChange(selectedTabContent);
+  });
 
   return (
     <>
@@ -55,8 +58,6 @@ export default function StatusBarTabs() {
           />
         ))}
       </Tabs>
-
-      {/* <Box role="tabpanel">{selectedTabContent}</Box> */}
     </>
   );
 }

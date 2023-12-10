@@ -57,7 +57,7 @@ export default function ResizableYBox(props: ResizableBoxYProps) {
         onMouseDown={handleMouseDown}
         direction={props.direction}
       />
-      <div>{props.children}</div>
+      {props.children}
     </Box>
   );
 }

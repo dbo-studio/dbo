@@ -10,4 +10,5 @@ export const StatusBarStyled = styled("div")(({ theme }) => ({
   borderTop: `1px solid ${theme.palette.divider}`,
   alignItems: "center",
   padding: "0 8px",
+  position: "absolute",
 }));
