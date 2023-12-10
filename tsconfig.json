@@ -26,7 +26,7 @@
       "@/pages/*": ["pages/*"],
       "@/theme/*": ["src/theme/*"],
       "@/core/*": ["src/core/*"],
-      "@/redux/*": ["src/redux/*"],
+      "@/store/*": ["src/store/*"],
       "@/sections/*": ["src/sections/*"],
       "@/hooks/*": ["src/hooks/*"]
     }

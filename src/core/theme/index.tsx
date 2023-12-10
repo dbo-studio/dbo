@@ -1,11 +1,11 @@
 import { AppConfig } from "@/core/utils";
-import { useAppSelector } from "@/redux/hooks";
 import {
   ThemeProvider as MUIThemeProvider,
   ThemeOptions,
   createTheme,
 } from "@mui/material/styles";
 import React from "react";
+import { ThemeModeEnum } from "../enums";
 import componentsOverride from "./overrides";
 import palette from "./palette";
 import typography from "./typography";
@@ -15,11 +15,11 @@ type Props = {
 };
 
 export default function ThemeProvider({ children }: Props) {
-  const status = useAppSelector((state: any) => state.themeReducer.value);
+  // const status = useAppSelector((state: any) => state.themeReducer.value);
 
   const themeOptions: ThemeOptions = {
     typography,
-    palette: palette(status),
+    palette: palette(ThemeModeEnum.Light),
     direction: AppConfig.direction,
   };
 

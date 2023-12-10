@@ -2,10 +2,9 @@
 
 import ThemeProvider from "@/core/theme";
 import { AppConfig } from "@/core/utils";
-import { Providers } from "@/redux/provider";
 import { CssBaseline } from "@mui/material";
 import { Viewport } from "next";
-import React, { useEffect } from "react";
+import React from "react";
 
 // export const metadata: Metadata = {
 //   title: "DBO",
@@ -22,29 +21,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").then(
-        (registration) => {
-          console.log(
-            "Service Worker registration successful with scope: ",
-            registration.scope,
-          );
-        },
-        (err) => {
-          console.log("Service Worker registration failed: ", err);
-        },
-      );
-    }
-  }, []);
-
   return (
     <html lang={AppConfig.locale} dir={AppConfig.direction}>
       <body>
         <CssBaseline />
-        <Providers>
-          <ThemeProvider>{children}</ThemeProvider>
-        </Providers>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );
