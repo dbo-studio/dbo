@@ -69,6 +69,10 @@ export const createTabSlice: StateCreator<TabSlice> = (set, get, store) => ({
     set({ tabs: newTabs });
   },
   switchTab: (tabId: string | null) => {
+    if (!tabId) {
+      set({ selectedTab: null });
+    }
+
     const findTab = get().tabs.find((t) => t.id === tabId);
     if (findTab) {
       set({ selectedTab: tabId });
