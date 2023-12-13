@@ -15,7 +15,7 @@ const DynamicStatusBar = dynamic(() => import("../StatusBar/StatusBar"), {
   loading: () => null,
 });
 
-export default function TabPanel({}) {
+export default function TabPanel({ tab }: any) {
   return (
     <Box>
       <ActionBar />

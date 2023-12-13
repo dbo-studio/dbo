@@ -1,4 +1,5 @@
 type TabData = {
+  id: string;
   label: string;
   content: any;
   value: string;

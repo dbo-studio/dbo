@@ -1,6 +1,8 @@
+import { Tab as TabData } from "@/src/store/slices/createTabSlice";
+import { useAppStore } from "@/src/store/zustand";
+import { faker } from "@faker-js/faker";
 import { Box, Tab, Tabs } from "@mui/material";
 import dynamic from "next/dynamic";
-import { createElement, useState } from "react";
 import CustomIcon from "../../base/CustomIcon/CustomIcon";
 
 const maxTabs = 5;
@@ -10,100 +12,49 @@ const DynamicTabPanel = dynamic(() => import("./TabPanel"), {
 });
 
 export default function EditorTab() {
-  const [tabs, setTabs] = useState<TabData[]>([]);
-  const [selectedTab, setSelectedTab] = useState<number>(0);
-
-  const handleTabChange = (index: number, content: any) => {
-    const newTabs = [...tabs];
-    newTabs[index].content = content;
-    setTabs(newTabs);
-  };
-
-  const handleAddTab = () => {
-    if (tabs.length < maxTabs) {
-      const newTabs = [...tabs, createNewTab(tabs.length + 1)];
-      setTabs(newTabs);
-      setSelectedTab(newTabs.length - 1);
-    } else {
-      const oldestTab = tabs[0];
-      const newTabs = [...tabs.slice(1), createNewTab(tabs.length + 1)];
-      setTabs(newTabs);
-      setSelectedTab(tabs.length - 1);
-
-      // Optionally, you can handle the content of the replaced tab here
-      console.log("Replacing tab:", oldestTab);
-    }
-  };
-
-  const handleRemoveTab = () => {
-    if (tabs.length > 1) {
-      const newTabs = [...tabs];
-      newTabs.splice(selectedTab, 1);
-      setTabs(newTabs);
-      setSelectedTab(Math.min(selectedTab, newTabs.length - 1));
-    }
-  };
-
-  const createNewTab = (index: number): TabData => {
-    return {
-      label: `Tab ${index}`,
-      value: "",
-      content: () => <DynamicTabPanel />,
-      onChange: (content) => handleTabChange(index, content),
-    };
-  };
-
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setSelectedTab(newValue);
-  };
+  const { addTab, removeTab, switchTab, tabs, selectedTab } = useAppStore();
 
   return (
     <Box>
       <Box>
-        <Tabs value={selectedTab} onChange={handleChange} variant="scrollable">
-          {tabs.map((tab, index) => (
-            <Tab
-              className="Mui-flat"
-              sx={{ flex: 1 }}
-              label={
-                <div>
-                  <CustomIcon
-                    type="close"
-                    size="xs"
-                    onClick={handleRemoveTab}
-                  />
-                  {tab.label}
-                </div>
+        {selectedTab ? (
+          <>
+            <Tabs
+              value={selectedTab}
+              onChange={(_: React.SyntheticEvent, tabId: string) =>
+                switchTab(tabId)
               }
-              key={index}
-            />
-          ))}
-        </Tabs>
-        {tabs.map((tab, index) => (
-          <div key={index} hidden={selectedTab !== index}>
-            {selectedTab === index && <div>{tab.content}</div>}
-          </div>
-        ))}
+              variant="scrollable"
+            >
+              {tabs.map((tab: TabData, index) => (
+                <Tab
+                  value={tab.id}
+                  className="Mui-flat"
+                  sx={{ flex: 1 }}
+                  label={
+                    <div>
+                      <CustomIcon
+                        type="close"
+                        size="xs"
+                        onClick={() => removeTab(tab.id)}
+                      />
+                      {tab.table}
+                    </div>
+                  }
+                  key={index}
+                />
+              ))}
+            </Tabs>
+            <DynamicTabPanel />
+          </>
+        ) : null}
         <div>
           <button
             style={{ position: "absolute", right: 0, bottom: 0, zIndex: 9999 }}
-            onClick={handleAddTab}
+            onClick={() => addTab(faker.database.collation())}
           >
             Add Tab
           </button>
-
-          {tabs.map((tab, index) => (
-            <div key={index} hidden={selectedTab !== index}>
-              {selectedTab === index && (
-                <div>
-                  {createElement(tab.content, {
-                    value: tab.value,
-                    onChange: (content: string) => tab.onChange(content),
-                  })}
-                </div>
-              )}
-            </div>
-          ))}
         </div>
       </Box>
     </Box>
