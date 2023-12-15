@@ -1,4 +1,4 @@
-import { IProduct } from '@/core/@types';
+import { IProduct } from "@/src/types";
 
 export const productMock: IProduct[] = [
   {

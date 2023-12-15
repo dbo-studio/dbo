@@ -1,7 +1,7 @@
-import { EventFor } from "@/src/core/@types";
 import { Box, InputAdornment, InputBase } from "@mui/material";
 import { useState } from "react";
 import CustomIcon from "../CustomIcon/CustomIcon";
+import { EventFor } from "@/src/types";
 
 export default function Search() {
   const [value, setValue] = useState("");
