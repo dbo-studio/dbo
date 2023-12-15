@@ -1,8 +1,8 @@
-import { EventFor } from "@/src/core/@types";
 import { Box } from "@mui/material";
 import { useEffect, useState } from "react";
 import ResizableToggle from "./ResizableToggle";
 import { ResizableBoxXProps } from "./types";
+import { EventFor } from "@/src/types";
 
 export default function ResizableXBox({
   direction,

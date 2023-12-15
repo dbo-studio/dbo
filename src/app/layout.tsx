@@ -1,10 +1,10 @@
 "use client";
 
 import ThemeProvider from "@/core/theme";
-import { AppConfig } from "@/core/utils";
 import { CssBaseline } from "@mui/material";
 import { Viewport } from "next";
 import React from "react";
+import { AppConfig } from "../AppConfig";
 
 // export const metadata: Metadata = {
 //   title: "DBO",

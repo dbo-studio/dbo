@@ -9,7 +9,7 @@ interface IAppConfig {
   version: string;
 }
 
-const AppConfig: IAppConfig = {
+export const AppConfig: IAppConfig = {
   siteName: "DBO",
   title: "DBO",
   description: "test",
@@ -18,4 +18,3 @@ const AppConfig: IAppConfig = {
   version: version,
 };
 
-export default AppConfig;

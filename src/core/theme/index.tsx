@@ -1,14 +1,13 @@
-import { AppConfig } from "@/core/utils";
 import {
   ThemeProvider as MUIThemeProvider,
   ThemeOptions,
   createTheme,
 } from "@mui/material/styles";
-import React from "react";
 import { ThemeModeEnum } from "../enums";
 import componentsOverride from "./overrides";
 import palette from "./palette";
 import typography from "./typography";
+import { AppConfig } from "@/src/AppConfig";
 
 type Props = {
   children: React.ReactNode;

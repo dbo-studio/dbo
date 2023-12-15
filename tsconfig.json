@@ -28,9 +28,11 @@
       "@/core/*": ["src/core/*"],
       "@/store/*": ["src/store/*"],
       "@/sections/*": ["src/sections/*"],
-      "@/hooks/*": ["src/hooks/*"]
+      "@/hooks/*": ["src/hooks/*"],
+      "@/types/*": ["src/types/*"],
     }
   },
+  
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }
