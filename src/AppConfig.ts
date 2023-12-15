@@ -1,4 +1,4 @@
-const { version } = require("../../../package.json");
+const { version } = require("../package.json");
 
 interface IAppConfig {
   siteName: string;
@@ -17,4 +17,3 @@ export const AppConfig: IAppConfig = {
   direction: "ltr",
   version: version,
 };
-
