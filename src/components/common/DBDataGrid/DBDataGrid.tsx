@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import DataGrid, {
+  Column,
   ColumnOrColumnGroup,
   SelectColumn,
   textEditor,
@@ -7,6 +8,7 @@ import DataGrid, {
 import { makeData } from "./makeData";
 import "./styles.css";
 import { ServerColumn } from "./types";
+import { Box } from "@mui/material";
 
 export default function DBDataGrid() {
   const [selectedRows, setSelectedRows] = useState(
@@ -29,10 +31,10 @@ export default function DBDataGrid() {
     }, 0);
   }, []);
 
-  function getColumns(serverColumns: ServerColumn[]): any {
-    const arr = [SelectColumn];
-    serverColumns!.forEach((column: ServerColumn) => {
-      arr.push({
+  function getColumns(serverColumns: ServerColumn[]): Column<any, any>[] {
+    const selectedColumns = [SelectColumn];
+     serverColumns.forEach((column: ServerColumn) => {
+      selectedColumns.push({
         key: column.felid,
         name: column.felid,
         resizable: true,
@@ -40,25 +42,29 @@ export default function DBDataGrid() {
       });
     });
 
-    return arr;
+    return selectedColumns;
   }
 
+
+  function rowKeyGetter(row: any) {
+    return row?.id;
+  }
   return isLoading ? (
     <span>Loading</span>
   ) : (
-    <DataGrid
-      rowKeyGetter={rowKeyGetter}
-      selectedRows={selectedRows}
-      onSelectedRowsChange={setSelectedRows}
-      columns={columns}
-      rows={rows}
-      rowHeight={30}
-      onRowsChange={setRows}
-      headerRowHeight={30}
-    />
+    <Box height='calc(100vh - 285px)' overflow='scroll'>
+      <DataGrid
+          rowKeyGetter={rowKeyGetter}
+          selectedRows={selectedRows}
+          onSelectedRowsChange={setSelectedRows}
+          columns={columns}
+          rows={rows}
+          rowHeight={30}
+          onRowsChange={setRows}
+          headerRowHeight={30}
+        />
+    </Box>
+     
   );
 }
 
-function rowKeyGetter(row: any) {
-  return row.id;
-}

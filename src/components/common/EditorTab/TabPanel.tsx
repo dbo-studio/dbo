@@ -15,15 +15,13 @@ const DynamicStatusBar = dynamic(() => import("../StatusBar/StatusBar"), {
   loading: () => null,
 });
 
-export default function TabPanel({ tab }: any) {
+export default function TabPanel() {
   return (
-    <Box>
-      <ActionBar />
-      <Box position={"relative"}>
-        <DynamicQueryPreview />
-        <DynamicDBDataGrid />
-        <DynamicStatusBar />
-      </Box>
+    <Box  position='relative' height="calc(100% - 100px)">
+          <ActionBar />
+          <DynamicQueryPreview />
+          <DynamicDBDataGrid />
+          <DynamicStatusBar />
     </Box>
   );
 }

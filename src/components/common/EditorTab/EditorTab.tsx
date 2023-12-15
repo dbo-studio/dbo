@@ -15,8 +15,7 @@ export default function EditorTab() {
   const { addTab, removeTab, switchTab, tabs, selectedTab } = useAppStore();
 
   return (
-    <Box>
-      <Box>
+    <>
         {selectedTab ? (
           <>
             <Tabs
@@ -55,8 +54,7 @@ export default function EditorTab() {
           >
             Add Tab
           </button>
-        </div>
-      </Box>
-    </Box>
+      </div>
+      </>
   );
 }
