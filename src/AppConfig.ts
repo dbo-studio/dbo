@@ -1,19 +1,19 @@
-const { version } = require("../package.json");
+const { version } = require('../package.json');
 
 interface IAppConfig {
   siteName: string;
   title: string;
   description: string;
   locale: string;
-  direction: "ltr" | "rtl";
+  direction: 'ltr' | 'rtl';
   version: string;
 }
 
-export const AppConfig: IAppConfig = {
-  siteName: "DBO",
-  title: "DBO",
-  description: "test",
-  locale: "en",
-  direction: "ltr",
-  version: version,
+export const appConfig: IAppConfig = {
+  siteName: 'DBO',
+  title: 'DBO',
+  description: 'test',
+  locale: 'en',
+  direction: 'ltr',
+  version: version
 };

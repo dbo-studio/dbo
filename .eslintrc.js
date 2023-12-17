@@ -16,12 +16,12 @@ module.exports = {
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:react-hooks/recommended',
-    'plugin:storybook/recommended',
     'prettier',
-    'plugin:react/jsx-runtime'
+    'plugin:react/jsx-runtime',
+    'next/core-web-vitals',
+    'plugin:prettier/recommended'
   ],
   root: true,
-  extends: ["next/core-web-vitals" , 'plugin:prettier/recommended',],
   rules: {
     'consistent-return': ['error', { treatUndefinedAsUnspecified: false }],
     indent: 0,
@@ -33,8 +33,7 @@ module.exports = {
     'react/display-name': 'off',
     'prettier/prettier': 'error',
     'arrow-body-style': 'off',
-    'prefer-arrow-callback': 'off',
-
+    'prefer-arrow-callback': 'off'
   },
   plugins: ['react', 'prettier', '@typescript-eslint', 'unused-imports'],
 
@@ -45,4 +44,4 @@ module.exports = {
     ecmaVersion: 12,
     sourceType: 'module'
   }
-}
+};

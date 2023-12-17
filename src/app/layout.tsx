@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import ThemeProvider from "@/core/theme";
-import { CssBaseline } from "@mui/material";
-import { Viewport } from "next";
-import React from "react";
-import { AppConfig } from "../AppConfig";
+import ThemeProvider from '@/core/theme';
+import { CssBaseline } from '@mui/material';
+import { Viewport } from 'next';
+import React from 'react';
+import { appConfig } from '../appConfig';
 
 // export const metadata: Metadata = {
 //   title: "DBO",
@@ -12,17 +12,13 @@ import { AppConfig } from "../AppConfig";
 // };
 
 export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
+  width: 'device-width',
+  initialScale: 1
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang={AppConfig.locale} dir={AppConfig.direction}>
+    <html lang={appConfig.locale} dir={appConfig.direction}>
       <body>
         <CssBaseline />
         <ThemeProvider>{children}</ThemeProvider>

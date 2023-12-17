@@ -1,13 +1,9 @@
-import {
-  ThemeProvider as MUIThemeProvider,
-  ThemeOptions,
-  createTheme,
-} from "@mui/material/styles";
-import { ThemeModeEnum } from "../enums";
-import componentsOverride from "./overrides";
-import palette from "./palette";
-import typography from "./typography";
-import { AppConfig } from "@/src/AppConfig";
+import { appConfig } from '@/src/appConfig';
+import { ThemeProvider as MUIThemeProvider, ThemeOptions, createTheme } from '@mui/material/styles';
+import { ThemeModeEnum } from '../enums';
+import componentsOverride from './overrides';
+import palette from './palette';
+import typography from './typography';
 
 type Props = {
   children: React.ReactNode;
@@ -19,7 +15,7 @@ export default function ThemeProvider({ children }: Props) {
   const themeOptions: ThemeOptions = {
     typography,
     palette: palette(ThemeModeEnum.Light),
-    direction: AppConfig.direction,
+    direction: appConfig.direction
   };
 
   const theme = createTheme(themeOptions);

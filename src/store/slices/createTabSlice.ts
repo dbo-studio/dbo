@@ -1,33 +1,19 @@
-import { v4 as uuidv4 } from "uuid";
-import { StateCreator } from "zustand";
-
-interface Sort {}
-interface Filter {}
-
-export interface Tab {
-  id: string;
-  table: string;
-  query: string;
-  showQuery: boolean;
-  showColumns: boolean;
-  showFilters: boolean;
-  showSorts: boolean;
-  sorts: Sort[];
-  filters: Filter[];
-}
+import { v4 as uuidv4 } from 'uuid';
+import { StateCreator } from 'zustand';
+import { Filter, Sort, Tab } from '../types';
 
 const maxTabs = 5;
 
 export interface TabSlice {
   tabs: Tab[];
-  selectedTab: string | null;
+  selectedTab: Tab | undefined;
 
   addTab: (table: string) => void;
   removeTab: (tabId: string) => void;
   switchTab: (tabId: string | null) => void;
   updateQuery: (tabId: string, query: string) => void;
   updateSorts: (tabId: string, sort: Sort) => void;
-  updateFilters: (tabId: string, filter: Filter) => void;
+  upsertFilters: (tabId: string, filter: Filter) => void;
   setShowQueryPreview: (tabId: string, show: boolean) => void;
   setShowSorts: (tabId: string, show: boolean) => void;
   setShowFilters: (tabId: string, show: boolean) => void;
@@ -36,7 +22,7 @@ export interface TabSlice {
 
 export const createTabSlice: StateCreator<TabSlice> = (set, get, store) => ({
   tabs: [],
-  selectedTab: null,
+  selectedTab: undefined,
 
   addTab: (table: string) => {
     const tabs = get().tabs;
@@ -46,10 +32,12 @@ export const createTabSlice: StateCreator<TabSlice> = (set, get, store) => ({
       query: `SELECT * FROM ${table}`,
       filters: [],
       sorts: [],
+      rows: [],
+      columns: [],
       showColumns: false,
       showFilters: false,
       showQuery: false,
-      showSorts: false,
+      showSorts: false
     };
 
     if (tabs.length < maxTabs) {
@@ -70,17 +58,47 @@ export const createTabSlice: StateCreator<TabSlice> = (set, get, store) => ({
   },
   switchTab: (tabId: string | null) => {
     if (!tabId) {
-      set({ selectedTab: null });
+      set({ selectedTab: undefined });
     }
 
     const findTab = get().tabs.find((t) => t.id === tabId);
     if (findTab) {
-      set({ selectedTab: tabId });
+      set({ selectedTab: findTab });
     }
   },
   updateQuery: (tabId: string, query: string) => {},
-  updateSorts: (tabId: string, sort: Sort) => {},
-  updateFilters: (tabId: string, filter: Filter) => {},
+  updateSorts: (tabId: string, sort: Sort) => {
+    const tabs = get().tabs;
+    const findTab = tabs.find((t: Tab) => t.id === tabId);
+    if (!findTab) {
+      return;
+    }
+
+    const findSort = findTab.sorts.find((f) => f.column === sort.column);
+    if (!findSort) {
+      findTab.sorts.push(sort);
+    } else {
+      findSort.value = sort.value;
+      findSort.condition = sort.condition;
+    }
+    set({ tabs });
+  },
+  upsertFilters: (tabId: string, filter: Filter) => {
+    const tabs = get().tabs;
+    const findTab = tabs.find((t: Tab) => t.id === tabId);
+    if (!findTab) {
+      return;
+    }
+
+    const findFilter = findTab.filters.find((f) => f.column === filter.column);
+    if (!findFilter) {
+      findTab.filters.push(filter);
+    } else {
+      findFilter.value = filter.value;
+      findFilter.condition = filter.condition;
+    }
+    set({ tabs });
+  },
   setShowQueryPreview: (tabId: string, show: boolean) => {
     const tabs = get().tabs;
     const findTab = tabs.find((t) => t.id === tabId);
@@ -93,5 +111,5 @@ export const createTabSlice: StateCreator<TabSlice> = (set, get, store) => ({
   },
   setShowSorts: (tabId: string, show: boolean) => {},
   setShowFilters: (tabId: string, show: boolean) => {},
-  setShowColumns: (tabId: string, sort: Sort) => {},
+  setShowColumns: (tabId: string, show: boolean) => {}
 });
