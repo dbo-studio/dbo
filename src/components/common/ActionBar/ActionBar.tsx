@@ -5,10 +5,14 @@ import CustomIcon from '../../base/CustomIcon/CustomIcon';
 
 export default function ActionBar() {
   const theme = useTheme();
-  const { selectedTab, setShowQueryPreview } = useAppStore();
+  const { selectedTab, setShowQueryPreview, setShowFilters } = useAppStore();
 
   const handleShowQueryPreview = () => {
-    setShowQueryPreview(selectedTab!.id, !selectedTab!.showQuery);
+    setShowQueryPreview(!selectedTab!.showQuery);
+  };
+
+  const handleShowFilters = () => {
+    setShowFilters(!selectedTab!.showFilters);
   };
 
   return (
@@ -24,7 +28,7 @@ export default function ActionBar() {
         <IconButton color='secondary' aria-label='grid'>
           <CustomIcon type='columnFillGreen' size='m' />
         </IconButton>
-        <IconButton aria-label='filter'>
+        <IconButton aria-label='filter' onClick={handleShowFilters}>
           <CustomIcon type='filterBrown' size='m' />
         </IconButton>
         <IconButton aria-label='sort'>

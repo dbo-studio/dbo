@@ -6,6 +6,9 @@ import ActionBar from '../ActionBar/ActionBar';
 const DynamicQueryPreview = dynamic(() => import('../QueryPreview/QueryPreview'), {
   loading: () => null
 });
+const DynamicFilters = dynamic(() => import('../Filters/Filters'), {
+  loading: () => null
+});
 const DynamicDBDataGrid = dynamic(() => import('../DBDataGrid/DBDataGrid'), {
   loading: () => null
 });
@@ -18,6 +21,7 @@ export default function TabPanel() {
   return (
     <Box position='relative' height='calc(100% - 100px)'>
       <ActionBar />
+      {selectedTab!.showFilters && <DynamicFilters />}
       {selectedTab!.showQuery && <DynamicQueryPreview />}
       <DynamicDBDataGrid />
       <DynamicStatusBar />
