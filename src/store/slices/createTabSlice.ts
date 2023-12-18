@@ -1,27 +1,27 @@
+import { FilterType, SortType, TabType } from '@/src/types/Tab';
 import { ColumnOrColumnGroup } from 'react-data-grid';
 import { v4 as uuidv4 } from 'uuid';
 import { StateCreator } from 'zustand';
-import { Filter, Sort, Tab } from '../types';
 
 const maxTabs = 5;
 
 export interface TabSlice {
-  tabs: Tab[];
-  selectedTab: Tab | undefined;
+  tabs: TabType[];
+  selectedTab: TabType | undefined;
 
   addTab: (table: string) => void;
   removeTab: (tabId: string) => void;
   switchTab: (tabId: string | null) => void;
   updateQuery: (query: string) => void;
-  updateSorts: (sort: Sort) => void;
-  upsertFilters: (filter: Filter) => void;
+  upsertSorts: (sort: SortType) => void;
+  upsertFilters: (filter: FilterType) => void;
   updateRows: (rows: any[]) => void;
   updateColumns: (columns: any[]) => void;
   setShowQueryPreview: (show: boolean) => void;
   setShowSorts: (show: boolean) => void;
   setShowFilters: (show: boolean) => void;
   setShowColumns: (show: boolean) => void;
-  updateSelectedTab: (selectedTab: Tab) => void;
+  updateSelectedTab: (selectedTab: TabType) => void;
 }
 
 export const createTabSlice: StateCreator<TabSlice> = (set, get, store) => ({
@@ -52,7 +52,7 @@ export const createTabSlice: StateCreator<TabSlice> = (set, get, store) => ({
     get().switchTab(newTab.id);
   },
   removeTab: (tabId: string) => {
-    const newTabs = get().tabs.filter((t: Tab) => t.id !== tabId);
+    const newTabs = get().tabs.filter((t: TabType) => t.id !== tabId);
     if (newTabs.length > 0) {
       get().switchTab(newTabs[newTabs.length - 1].id);
     } else {
@@ -79,7 +79,7 @@ export const createTabSlice: StateCreator<TabSlice> = (set, get, store) => ({
     selectedTab.query = query;
     get().updateSelectedTab(selectedTab);
   },
-  updateSorts: (sort: Sort) => {
+  upsertSorts: (sort: SortType) => {
     const selectedTab = get().selectedTab;
     if (!selectedTab) {
       return;
@@ -90,14 +90,14 @@ export const createTabSlice: StateCreator<TabSlice> = (set, get, store) => ({
       selectedTab.sorts.push(sort);
     } else {
       findSort.value = sort.value;
-      findSort.condition = sort.condition;
+      findSort.operator = sort.operator;
     }
 
     get().updateSelectedTab(selectedTab);
   },
-  upsertFilters: (filter: Filter) => {
+  upsertFilters: (filter: FilterType) => {
     const selectedTab = get().selectedTab;
-    if (!selectedTab) {
+    if (!selectedTab || filter.column == '') {
       return;
     }
 
@@ -106,7 +106,8 @@ export const createTabSlice: StateCreator<TabSlice> = (set, get, store) => ({
       selectedTab.filters.push(filter);
     } else {
       findFilter.value = filter.value;
-      findFilter.condition = filter.condition;
+      findFilter.operator = filter.operator;
+      findFilter.isActive = filter.isActive;
     }
 
     get().updateSelectedTab(selectedTab);
@@ -118,7 +119,6 @@ export const createTabSlice: StateCreator<TabSlice> = (set, get, store) => ({
     }
 
     selectedTab.rows = rows;
-    console.log(selectedTab);
 
     get().updateSelectedTab(selectedTab);
   },
@@ -169,10 +169,10 @@ export const createTabSlice: StateCreator<TabSlice> = (set, get, store) => ({
     get().updateSelectedTab(selectedTab);
   },
 
-  updateSelectedTab: (selectedTab: Tab) => {
+  updateSelectedTab: (selectedTab: TabType) => {
     const tabs = get().tabs;
 
-    tabs.map((t: Tab) => {
+    tabs.map((t: TabType) => {
       if (t.id == selectedTab.id) {
         return selectedTab;
       }

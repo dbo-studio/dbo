@@ -1,20 +1,20 @@
 import { ColumnOrColumnGroup } from 'react-data-grid';
 
-export type FilterConditions = '=' | '!=' | '<' | '>';
-
-export type Sort = {
+export type SortType = {
   column: string;
-  condition: FilterConditions;
+  operator: string;
   value: string | number;
+  isActive: boolean;
 };
 
-export type Filter = {
+export type FilterType = {
   column: string;
-  condition: FilterConditions;
+  operator: string;
   value: string | number;
+  isActive: boolean;
 };
 
-export type Tab = {
+export type TabType = {
   id: string;
   table: string;
   query: string;
@@ -24,6 +24,6 @@ export type Tab = {
   showColumns: boolean;
   showFilters: boolean;
   showSorts: boolean;
-  sorts: Sort[];
-  filters: Filter[];
+  sorts: SortType[];
+  filters: FilterType[];
 };

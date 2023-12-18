@@ -1,7 +1,7 @@
 export const constants = {
-  companyName: 'FK8',
+  companyName: '',
   copyright: '© Copyright',
   version: 'v',
   test: 'Test',
-  darkMode: 'Dark Mode',
+  darkMode: 'Dark Mode'
 };
