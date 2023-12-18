@@ -1,3 +1,5 @@
+import { ColumnOrColumnGroup } from 'react-data-grid';
+
 export type FilterConditions = '=' | '!=' | '<' | '>';
 
 export type Sort = {
@@ -17,7 +19,7 @@ export type Tab = {
   table: string;
   query: string;
   rows: any[];
-  columns: any[];
+  columns: ColumnOrColumnGroup<any, any>[];
   showQuery: boolean;
   showColumns: boolean;
   showFilters: boolean;

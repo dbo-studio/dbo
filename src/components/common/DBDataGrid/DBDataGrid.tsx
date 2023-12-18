@@ -1,23 +1,23 @@
+import { useAppStore } from '@/src/store/zustand';
 import { Box } from '@mui/material';
 import { useEffect, useState } from 'react';
-import DataGrid, { ColumnOrColumnGroup, SelectColumn, textEditor } from 'react-data-grid';
+import DataGrid, { SelectColumn, textEditor } from 'react-data-grid';
 import { makeData } from './makeData';
 import './styles.css';
 import { ServerColumn } from './types';
 
 export default function DBDataGrid() {
   const [selectedRows, setSelectedRows] = useState((): ReadonlySet<number> => new Set());
-
-  const [rows, setRows] = useState<readonly unknown[]>([]);
-  const [columns, setColumns] = useState<readonly ColumnOrColumnGroup<any, unknown>[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const { updateRows, updateColumns, selectedTab } = useAppStore();
 
   useEffect(() => {
     setIsLoading(true);
     setTimeout(() => {
       const data = makeData(250);
-      setRows(data.rows);
-      setColumns(getColumns(data.columns));
+      updateRows(data.rows);
+      updateColumns(getColumns(data.columns));
       setIsLoading(false);
     }, 0);
   }, []);
@@ -40,16 +40,18 @@ export default function DBDataGrid() {
     <span>Loading</span>
   ) : (
     <Box height='calc(100vh - 285px)' overflow='scroll'>
-      <DataGrid
-        rowKeyGetter={rowKeyGetter}
-        selectedRows={selectedRows}
-        onSelectedRowsChange={setSelectedRows}
-        columns={columns}
-        rows={rows}
-        rowHeight={30}
-        onRowsChange={setRows}
-        headerRowHeight={30}
-      />
+      {selectedTab && (
+        <DataGrid
+          rowKeyGetter={rowKeyGetter}
+          selectedRows={selectedRows}
+          onSelectedRowsChange={setSelectedRows}
+          columns={selectedTab.columns}
+          rows={selectedTab.rows}
+          rowHeight={30}
+          onRowsChange={updateRows}
+          headerRowHeight={30}
+        />
+      )}
     </Box>
   );
 }

@@ -1,3 +1,4 @@
+import { ColumnOrColumnGroup } from 'react-data-grid';
 import { v4 as uuidv4 } from 'uuid';
 import { StateCreator } from 'zustand';
 import { Filter, Sort, Tab } from '../types';
@@ -11,13 +12,16 @@ export interface TabSlice {
   addTab: (table: string) => void;
   removeTab: (tabId: string) => void;
   switchTab: (tabId: string | null) => void;
-  updateQuery: (tabId: string, query: string) => void;
-  updateSorts: (tabId: string, sort: Sort) => void;
-  upsertFilters: (tabId: string, filter: Filter) => void;
-  setShowQueryPreview: (tabId: string, show: boolean) => void;
-  setShowSorts: (tabId: string, show: boolean) => void;
-  setShowFilters: (tabId: string, show: boolean) => void;
-  setShowColumns: (tabId: string, show: boolean) => void;
+  updateQuery: (query: string) => void;
+  updateSorts: (sort: Sort) => void;
+  upsertFilters: (filter: Filter) => void;
+  updateRows: (rows: any[]) => void;
+  updateColumns: (columns: any[]) => void;
+  setShowQueryPreview: (show: boolean) => void;
+  setShowSorts: (show: boolean) => void;
+  setShowFilters: (show: boolean) => void;
+  setShowColumns: (show: boolean) => void;
+  updateSelectedTab: (selectedTab: Tab) => void;
 }
 
 export const createTabSlice: StateCreator<TabSlice> = (set, get, store) => ({
@@ -66,50 +70,114 @@ export const createTabSlice: StateCreator<TabSlice> = (set, get, store) => ({
       set({ selectedTab: findTab });
     }
   },
-  updateQuery: (tabId: string, query: string) => {},
-  updateSorts: (tabId: string, sort: Sort) => {
-    const tabs = get().tabs;
-    const findTab = tabs.find((t: Tab) => t.id === tabId);
-    if (!findTab) {
+  updateQuery: (query: string) => {
+    const selectedTab = get().selectedTab;
+    if (!selectedTab) {
       return;
     }
 
-    const findSort = findTab.sorts.find((f) => f.column === sort.column);
+    selectedTab.query = query;
+    get().updateSelectedTab(selectedTab);
+  },
+  updateSorts: (sort: Sort) => {
+    const selectedTab = get().selectedTab;
+    if (!selectedTab) {
+      return;
+    }
+
+    const findSort = selectedTab.sorts.find((f) => f.column === sort.column);
     if (!findSort) {
-      findTab.sorts.push(sort);
+      selectedTab.sorts.push(sort);
     } else {
       findSort.value = sort.value;
       findSort.condition = sort.condition;
     }
-    set({ tabs });
+
+    get().updateSelectedTab(selectedTab);
   },
-  upsertFilters: (tabId: string, filter: Filter) => {
-    const tabs = get().tabs;
-    const findTab = tabs.find((t: Tab) => t.id === tabId);
-    if (!findTab) {
+  upsertFilters: (filter: Filter) => {
+    const selectedTab = get().selectedTab;
+    if (!selectedTab) {
       return;
     }
 
-    const findFilter = findTab.filters.find((f) => f.column === filter.column);
+    const findFilter = selectedTab.filters.find((f) => f.column === filter.column);
     if (!findFilter) {
-      findTab.filters.push(filter);
+      selectedTab.filters.push(filter);
     } else {
       findFilter.value = filter.value;
       findFilter.condition = filter.condition;
     }
-    set({ tabs });
+
+    get().updateSelectedTab(selectedTab);
   },
-  setShowQueryPreview: (tabId: string, show: boolean) => {
-    const tabs = get().tabs;
-    const findTab = tabs.find((t) => t.id === tabId);
-    if (!findTab) {
+  updateRows: (rows: any[]) => {
+    const selectedTab = get().selectedTab;
+    if (!selectedTab) {
       return;
     }
 
-    findTab.showQuery = show;
-    set({ tabs });
+    selectedTab.rows = rows;
+    console.log(selectedTab);
+
+    get().updateSelectedTab(selectedTab);
   },
-  setShowSorts: (tabId: string, show: boolean) => {},
-  setShowFilters: (tabId: string, show: boolean) => {},
-  setShowColumns: (tabId: string, show: boolean) => {}
+  updateColumns: (columns: ColumnOrColumnGroup<any, any>[]) => {
+    const selectedTab = get().selectedTab;
+    if (!selectedTab) {
+      return;
+    }
+
+    selectedTab.columns = columns;
+
+    get().updateSelectedTab(selectedTab);
+  },
+  setShowQueryPreview: (show: boolean) => {
+    const selectedTab = get().selectedTab;
+    if (!selectedTab) {
+      return;
+    }
+
+    selectedTab.showQuery = show;
+    get().updateSelectedTab(selectedTab);
+  },
+  setShowSorts: (show: boolean) => {
+    const selectedTab = get().selectedTab;
+    if (!selectedTab) {
+      return;
+    }
+
+    selectedTab.showSorts = show;
+    get().updateSelectedTab(selectedTab);
+  },
+  setShowFilters: (show: boolean) => {
+    const selectedTab = get().selectedTab;
+    if (!selectedTab) {
+      return;
+    }
+
+    selectedTab.showFilters = show;
+    get().updateSelectedTab(selectedTab);
+  },
+  setShowColumns: (show: boolean) => {
+    const selectedTab = get().selectedTab;
+    if (!selectedTab) {
+      return;
+    }
+
+    selectedTab.showColumns = show;
+    get().updateSelectedTab(selectedTab);
+  },
+
+  updateSelectedTab: (selectedTab: Tab) => {
+    const tabs = get().tabs;
+
+    tabs.map((t: Tab) => {
+      if (t.id == selectedTab.id) {
+        return selectedTab;
+      }
+    });
+
+    set({ tabs, selectedTab });
+  }
 });
