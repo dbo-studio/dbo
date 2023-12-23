@@ -8,6 +8,7 @@ export type SortType = {
 };
 
 export type FilterType = {
+  index: string;
   column: string;
   operator: string;
   value: string | number;

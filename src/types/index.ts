@@ -1,2 +1,2 @@
-export * from './Product'
-export * from './Events'
+export * from './Events';
+export * from './Tab';

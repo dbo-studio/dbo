@@ -15,6 +15,7 @@ export interface TabSlice {
   updateQuery: (query: string) => void;
   upsertSorts: (sort: SortType) => void;
   upsertFilters: (filter: FilterType) => void;
+  removeFilter: (filter: FilterType) => void;
   updateRows: (rows: any[]) => void;
   updateColumns: (columns: any[]) => void;
   setShowQueryPreview: (show: boolean) => void;
@@ -85,7 +86,7 @@ export const createTabSlice: StateCreator<TabSlice> = (set, get, store) => ({
       return;
     }
 
-    const findSort = selectedTab.sorts.find((f) => f.column === sort.column);
+    const findSort = selectedTab.sorts.find((s) => s.column === sort.column);
     if (!findSort) {
       selectedTab.sorts.push(sort);
     } else {
@@ -97,11 +98,11 @@ export const createTabSlice: StateCreator<TabSlice> = (set, get, store) => ({
   },
   upsertFilters: (filter: FilterType) => {
     const selectedTab = get().selectedTab;
-    if (!selectedTab || filter.column == '') {
+    if (!selectedTab) {
       return;
     }
 
-    const findFilter = selectedTab.filters.find((f) => f.column === filter.column);
+    const findFilter = selectedTab.filters.find((f) => f.index === filter.index);
     if (!findFilter) {
       selectedTab.filters.push(filter);
     } else {
@@ -111,6 +112,15 @@ export const createTabSlice: StateCreator<TabSlice> = (set, get, store) => ({
     }
 
     get().updateSelectedTab(selectedTab);
+  },
+  removeFilter: (filter: FilterType) => {
+    const selectedTab = get().selectedTab;
+    if (!selectedTab) {
+      return;
+    }
+
+    (selectedTab.filters = selectedTab.filters.filter((f: FilterType) => f.index !== filter.index)),
+      get().updateSelectedTab(selectedTab);
   },
   updateRows: (rows: any[]) => {
     const selectedTab = get().selectedTab;
