@@ -1,5 +1,5 @@
-import { Tab as TabData } from '@/src/store/types';
 import { useAppStore } from '@/src/store/zustand';
+import { TabType as TabData } from '@/src/types';
 import { faker } from '@faker-js/faker';
 import { Tab, Tabs } from '@mui/material';
 import dynamic from 'next/dynamic';
