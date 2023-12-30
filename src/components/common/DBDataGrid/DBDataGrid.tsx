@@ -8,19 +8,18 @@ import { ServerColumn } from './types';
 
 export default function DBDataGrid() {
   const [selectedRows, setSelectedRows] = useState((): ReadonlySet<number> => new Set());
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { updateRows, updateColumns, selectedTab } = useAppStore();
 
   useEffect(() => {
-    setIsLoading(true);
-    setTimeout(() => {
+    if (selectedTab?.rows.length == 0) {
       const data = makeData(250);
       updateRows(data.rows);
       updateColumns(getColumns(data.columns));
       setIsLoading(false);
-    }, 0);
-  }, []);
+    }
+  }, [selectedTab]);
 
   function getColumns(serverColumns: ServerColumn[]): any {
     const arr = [SelectColumn];

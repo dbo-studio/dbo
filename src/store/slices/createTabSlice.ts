@@ -3,7 +3,7 @@ import { ColumnOrColumnGroup } from 'react-data-grid';
 import { v4 as uuidv4 } from 'uuid';
 import { StateCreator } from 'zustand';
 
-const maxTabs = 5;
+const maxTabs = 10;
 
 export interface TabSlice {
   tabs: TabType[];

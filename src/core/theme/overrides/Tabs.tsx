@@ -1,65 +1,70 @@
-import { Components, Theme } from "@mui/material/styles";
+import { Components, Theme } from '@mui/material/styles';
 
 export default function Tabs(theme: Theme): Components {
   return {
     MuiTabs: {
       styleOverrides: {
         root: {
-          display: "flex",
-          alignItems: "center",
+          display: 'flex',
+          alignItems: 'center',
           padding: 0,
-          minHeight: "30px",
+          minHeight: '30px'
         },
         indicator: {
-          display: "none",
-        },
-      },
+          display: 'none'
+        }
+      }
     },
     MuiTab: {
       styleOverrides: {
         root: {
-          backgroundImage: "none",
+          backgroundImage: 'none',
           minHeight: 30,
           height: 30,
           borderRadius: 4,
-          "& .MuiTabs-indicator": {
-            display: "none",
-            background: "#fff",
+          '& .MuiTabs-indicator': {
+            display: 'none',
+            background: '#fff'
           },
-          "& .MuiTabs-indicatorSpan": {
+          '& .MuiTabs-indicatorSpan': {
             maxWidth: 40,
-            width: "100%",
-            backgroundColor: "red",
+            width: '100%',
+            backgroundColor: 'red'
           },
-          "&.Mui-selected": {
+          '&.Mui-selected': {
             border: `1px solid ${theme.palette.divider}`,
             color: theme.palette.text.primary,
             fontWeight: theme.typography.fontWeightMedium,
-            backgroundColor: theme.palette.background.paper,
+            backgroundColor: theme.palette.background.paper
           },
 
           img: {
-            marginRight: "8px",
+            marginRight: '8px'
           },
 
-          "&.Mui-flat": {
+          '&.Mui-flat': {
             borderRadius: 0,
-            borderTop: "unset",
+            borderTop: 'unset',
             img: {
-              position: "relative",
-              right: "16px",
+              position: 'relative',
+              right: '16px',
               opacity: 0,
-              transition: "opacity 0.1s",
+              transition: 'opacity 0.1s'
             },
 
-            "&:hover": {
+            '&:hover': {
               img: {
-                opacity: 1,
-              },
-            },
+                opacity: 1
+              }
+            }
           },
-        },
-      },
-    },
+          '&.grid-tab': {
+            flex: 1,
+            minWidth: '250px',
+            borderBottom: `1px solid ${theme.palette.divider}`
+          }
+        }
+      }
+    }
   };
 }
