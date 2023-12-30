@@ -1,5 +1,4 @@
 import { FilterType, SortType, TabType } from '@/src/types/Tab';
-import { ColumnOrColumnGroup } from 'react-data-grid';
 import { v4 as uuidv4 } from 'uuid';
 import { StateCreator } from 'zustand';
 
@@ -132,14 +131,13 @@ export const createTabSlice: StateCreator<TabSlice> = (set, get, store) => ({
 
     get().updateSelectedTab(selectedTab);
   },
-  updateColumns: (columns: ColumnOrColumnGroup<any, any>[]) => {
+  updateColumns: (columns: any[]) => {
     const selectedTab = get().selectedTab;
     if (!selectedTab) {
       return;
     }
 
     selectedTab.columns = columns;
-
     get().updateSelectedTab(selectedTab);
   },
   setShowQueryPreview: (show: boolean) => {

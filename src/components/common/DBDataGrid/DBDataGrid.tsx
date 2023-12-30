@@ -9,7 +9,6 @@ import { ServerColumn } from './types';
 export default function DBDataGrid() {
   const [selectedRows, setSelectedRows] = useState((): ReadonlySet<number> => new Set());
   const [isLoading, setIsLoading] = useState(false);
-
   const { updateRows, updateColumns, selectedTab } = useAppStore();
 
   useEffect(() => {
@@ -17,12 +16,11 @@ export default function DBDataGrid() {
       const data = makeData(250);
       updateRows(data.rows);
       updateColumns(getColumns(data.columns));
-      setIsLoading(false);
     }
   }, [selectedTab]);
 
   function getColumns(serverColumns: ServerColumn[]): any {
-    const arr = [SelectColumn];
+    const arr: any = [];
     serverColumns!.forEach((column: ServerColumn) => {
       arr.push({
         key: column.felid,
@@ -35,6 +33,16 @@ export default function DBDataGrid() {
     return arr;
   }
 
+  function formatColumns(serverColumns: any[]): any {
+    if (serverColumns[0] != SelectColumn) {
+      serverColumns[0] = SelectColumn;
+    }
+
+    console.log(serverColumns);
+
+    return serverColumns;
+  }
+
   return isLoading ? (
     <span>Loading</span>
   ) : (
@@ -44,7 +52,7 @@ export default function DBDataGrid() {
           rowKeyGetter={rowKeyGetter}
           selectedRows={selectedRows}
           onSelectedRowsChange={setSelectedRows}
-          columns={selectedTab.columns}
+          columns={formatColumns(selectedTab.columns)}
           rows={selectedTab.rows}
           rowHeight={30}
           onRowsChange={updateRows}
