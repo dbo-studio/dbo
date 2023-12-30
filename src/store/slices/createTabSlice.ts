@@ -30,6 +30,13 @@ export const createTabSlice: StateCreator<TabSlice> = (set, get, store) => ({
 
   addTab: (table: string) => {
     const tabs = get().tabs;
+
+    const findTab = tabs.filter((t: TabType) => t.table == table);
+    if (findTab.length > 0) {
+      get().switchTab(findTab[0].id);
+      return;
+    }
+
     const newTab = {
       id: uuidv4(),
       table: table,

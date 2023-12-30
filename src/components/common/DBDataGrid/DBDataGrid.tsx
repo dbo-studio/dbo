@@ -37,9 +37,6 @@ export default function DBDataGrid() {
     if (serverColumns[0] != SelectColumn) {
       serverColumns[0] = SelectColumn;
     }
-
-    console.log(serverColumns);
-
     return serverColumns;
   }
 
