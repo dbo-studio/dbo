@@ -59,9 +59,14 @@ export default function Tabs(theme: Theme): Components {
             }
           },
           '&.grid-tab': {
+            borderRight: `1px solid ${theme.palette.divider}`,
+            borderBottom: 'unset',
             flex: 1,
             minWidth: '250px',
-            borderBottom: `1px solid ${theme.palette.divider}`
+            '&.Mui-selected': {
+              borderRight: `1px solid ${theme.palette.divider}`,
+              borderLeft: 'unset'
+            }
           }
         }
       }

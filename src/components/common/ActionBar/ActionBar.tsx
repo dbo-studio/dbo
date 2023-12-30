@@ -18,6 +18,7 @@ export default function ActionBar() {
   return (
     <Stack
       borderBottom={`1px solid ${theme.palette.divider}`}
+      borderTop={`1px solid ${theme.palette.divider}`}
       padding='0 8px'
       maxHeight={40}
       direction='row'
