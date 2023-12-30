@@ -1,15 +1,16 @@
 import { useAppStore } from '@/src/store/zustand';
 import { FilterType } from '@/src/types/Tab';
-import { Box, Button } from '@mui/material';
+import { Box, Button, Theme, useTheme } from '@mui/material';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import AddFilterButton from './AddFilterButton';
 import FilterItem from './FilterItem';
 
 export default function Filters() {
   const { selectedTab } = useAppStore();
+  const theme: Theme = useTheme();
 
   return (
-    <Box p={1}>
+    <Box p={1} borderBottom={`1px solid ${theme.palette.divider}`}>
       {selectedTab?.filters.length == 0 ? (
         <AddFilterButton filterLength={selectedTab.filters.length} />
       ) : (

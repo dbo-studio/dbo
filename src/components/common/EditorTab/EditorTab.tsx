@@ -2,15 +2,21 @@ import { useAppStore } from '@/src/store/zustand';
 import { TabType as TabData } from '@/src/types';
 import { faker } from '@faker-js/faker';
 import { Box, Tab, Tabs, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import TabPanel from './TabPanel';
 
 export default function EditorTab() {
   const { addTab, removeTab, switchTab, tabs, selectedTab } = useAppStore();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   return (
     <>
-      {selectedTab ? (
+      {selectedTab && isMounted ? (
         <>
           <Tabs
             value={selectedTab.id}

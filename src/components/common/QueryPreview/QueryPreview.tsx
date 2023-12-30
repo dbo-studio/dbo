@@ -1,13 +1,14 @@
-import { Box } from "@mui/material";
-import { useState } from "react";
-import CodeEditor from "../../base/CodeEditor/CodeEditor";
+import { useAppStore } from '@/src/store/zustand';
+import { Box, Theme, useTheme } from '@mui/material';
+import CodeEditor from '../../base/CodeEditor/CodeEditor';
 
 export default function QueryPreview() {
-  const [value, setValue] = useState("SELECT * FROM 'orders';");
+  const { selectedTab } = useAppStore();
+  const theme: Theme = useTheme();
 
   return (
-    <Box>
-      <CodeEditor value={value} editable={false} />
+    <Box borderBottom={`1px solid ${theme.palette.divider}`}>
+      {selectedTab && <CodeEditor value={selectedTab?.query} editable={false} />}
     </Box>
   );
 }

@@ -1,20 +1,21 @@
 @layer rdg {
   @layer Defaults,
-    FocusSink,
-    CheckboxInput,
-    CheckboxIcon,
-    CheckboxLabel,
-    Cell,
-    HeaderCell,
-    SummaryCell,
-    EditCell,
-    Row,
-    HeaderRow,
-    SummaryRow,
-    GroupedRow,
-    Root;
+  FocusSink,
+  CheckboxInput,
+  CheckboxIcon,
+  CheckboxLabel,
+  Cell,
+  HeaderCell,
+  SummaryCell,
+  EditCell,
+  Row,
+  HeaderRow,
+  SummaryRow,
+  GroupedRow,
+  Root;
 
   @layer Defaults {
+
     .rnvodz57-0-0-beta-40 *,
     .rnvodz57-0-0-beta-40 *::before,
     .rnvodz57-0-0-beta-40 *::after {
@@ -46,7 +47,6 @@
       color-scheme: var(--rdg-color-scheme, light dark);
       contain: content;
       content-visibility: auto;
-      border-top: 1px solid var(--rdg-border-color);
       border-bottom: 1px solid var(--rdg-border-color);
       box-sizing: border-box;
       overflow: auto;
@@ -57,12 +57,32 @@
       max-height: calc(100vh - 64px - 30px - 40px);
     }
 
+    .rnvodz57-0-0-beta-40::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    /* Track */
+    .rnvodz57-0-0-beta-40::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    /* Handle */
+    .rnvodz57-0-0-beta-40::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+
+    /* Handle on hover */
+    .rnvodz57-0-0-beta-40::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
     .rdg-row-odd {
       background-color: var(--rdg-background-color-odd);
     }
 
-    .rdg-row-odd:hover{
-      background-color: var(--rdg-row-selected-background-color)!important;
+    .rdg-row-odd:hover {
+      background-color: var(--rdg-row-selected-background-color) !important;
     }
 
     .rnvodz57-0-0-beta-40::before {
@@ -184,13 +204,13 @@
     border-radius: 4px;
   }
 
-  .c1qt073l7-0-0-beta-40:checked + .cf71kmq7-0-0-beta-40 {
+  .c1qt073l7-0-0-beta-40:checked+.cf71kmq7-0-0-beta-40 {
     background-color: var(--rdg-checkbox-color);
     outline: 4px solid var(--rdg-background-color);
     outline-offset: -6px;
   }
 
-  .c1qt073l7-0-0-beta-40:focus + .cf71kmq7-0-0-beta-40 {
+  .c1qt073l7-0-0-beta-40:focus+.cf71kmq7-0-0-beta-40 {
     border-color: var(--rdg-checkbox-focus-color);
   }
 }
@@ -221,7 +241,7 @@
     vertical-align: middle;
   }
 
-  .cz54e4y7-0-0-beta-40 > path {
+  .cz54e4y7-0-0-beta-40>path {
     transition: d 0.1s;
   }
 }
@@ -348,13 +368,13 @@
     font-weight: bold;
   }
 
-  .h10tskcx7-0-0-beta-40 > .cj343x07-0-0-beta-40 {
+  .h10tskcx7-0-0-beta-40>.cj343x07-0-0-beta-40 {
     /* Should have a higher value than 1 to show up above regular cells and the focus sink */
     z-index: 2;
     position: sticky;
   }
 
-  .h10tskcx7-0-0-beta-40 > .csofj7r7-0-0-beta-40 {
+  .h10tskcx7-0-0-beta-40>.csofj7r7-0-0-beta-40 {
     z-index: 3;
   }
 }
@@ -380,7 +400,7 @@
     fill: currentColor;
   }
 
-  .a3ejtar7-0-0-beta-40 > path {
+  .a3ejtar7-0-0-beta-40>path {
     transition: d 0.1s;
   }
 }
@@ -423,29 +443,29 @@
     line-height: var(--rdg-summary-row-height);
   }
 
-  .skuhp557-0-0-beta-40 > .cj343x07-0-0-beta-40 {
+  .skuhp557-0-0-beta-40>.cj343x07-0-0-beta-40 {
     position: sticky;
   }
 }
 
 @layer rdg.SummaryRow {
-  .tf8l5ub7-0-0-beta-40 > .cj343x07-0-0-beta-40 {
+  .tf8l5ub7-0-0-beta-40>.cj343x07-0-0-beta-40 {
     z-index: 2;
   }
 
-  .tf8l5ub7-0-0-beta-40 > .csofj7r7-0-0-beta-40 {
+  .tf8l5ub7-0-0-beta-40>.csofj7r7-0-0-beta-40 {
     z-index: 3;
   }
 }
 
 @layer rdg.SummaryRow {
-  .tb9ughf7-0-0-beta-40 > .cj343x07-0-0-beta-40 {
+  .tb9ughf7-0-0-beta-40>.cj343x07-0-0-beta-40 {
     border-block-end: 2px solid var(--rdg-summary-border-color);
   }
 }
 
 @layer rdg.SummaryRow {
-  .b1yssfnt7-0-0-beta-40 > .cj343x07-0-0-beta-40 {
+  .b1yssfnt7-0-0-beta-40>.cj343x07-0-0-beta-40 {
     border-block-start: 2px solid var(--rdg-summary-border-color);
   }
 }
@@ -455,8 +475,7 @@
     background-color: var(--rdg-header-background-color);
   }
 
-  .g1yxluv37-0-0-beta-40
-    > .cj343x07-0-0-beta-40:not(:last-child):not(.ch2wcw87-0-0-beta-40) {
+  .g1yxluv37-0-0-beta-40>.cj343x07-0-0-beta-40:not(:last-child):not(.ch2wcw87-0-0-beta-40) {
     border-inline-end: none;
   }
 }
