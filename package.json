@@ -8,7 +8,6 @@
     "start": "next start",
     "lint": "next lint",
     "test:e2e": "playwright test --ui",
-    "test": "jest --watch",
     "prepare": "husky install"
   },
   "lint-staged": {
@@ -41,8 +40,6 @@
   "devDependencies": {
     "@faker-js/faker": "^8.3.1",
     "@playwright/test": "^1.40.1",
-    "@testing-library/jest-dom": "^6.1.6",
-    "@testing-library/react": "^14.1.2",
     "@types/node": "^20.10.6",
     "@types/react": "^18.2.46",
     "@types/react-dom": "^18.2.18",
@@ -50,8 +47,6 @@
     "eslint": "^8.56.0",
     "eslint-config-next": "14.0.0",
     "husky": "^8.0.3",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
     "lint-staged": "^15.2.0",
     "prettier": "3.0.3",
     "prettier-plugin-organize-imports": "^3.2.4",

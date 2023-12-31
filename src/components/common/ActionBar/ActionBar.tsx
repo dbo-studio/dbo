@@ -7,11 +7,11 @@ export default function ActionBar() {
   const theme = useTheme();
   const { selectedTab, setShowQueryPreview, setShowFilters } = useTabStore();
 
-  const handleShowQueryPreview = () => {
+  const toggleQueryPreview = () => {
     setShowQueryPreview(!selectedTab!.showQuery);
   };
 
-  const handleShowFilters = () => {
+  const toggleFilters = () => {
     setShowFilters(!selectedTab!.showFilters);
   };
 
@@ -29,7 +29,7 @@ export default function ActionBar() {
         <IconButton color='secondary' aria-label='grid'>
           <CustomIcon type='columnFillGreen' size='m' />
         </IconButton>
-        <IconButton aria-label='filter' onClick={handleShowFilters}>
+        <IconButton aria-label='filter' onClick={toggleFilters}>
           <CustomIcon type='filterBrown' size='m' />
         </IconButton>
         <IconButton aria-label='sort'>
@@ -37,7 +37,7 @@ export default function ActionBar() {
         </IconButton>
       </Grid>
       <Grid md={8} mx={2} display='flex' justifyContent='flex-end'>
-        <IconButton aria-label='code' onClick={handleShowQueryPreview}>
+        <IconButton aria-label='code' onClick={toggleQueryPreview}>
           <CustomIcon type='code' size='s' />
         </IconButton>
         <IconButton aria-label='export'>
