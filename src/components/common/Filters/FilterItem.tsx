@@ -40,7 +40,7 @@ export default function FilterItem({ filter, columns, filterLength }: FilterItem
   };
 
   return (
-    <Box display='flex' flexDirection='row' alignItems='center'>
+    <Box className='filter-item' display='flex' flexDirection='row' alignItems='center'>
       <Box>
         <Checkbox size='small' checked={currentFilter.isActive} onChange={(e) => handleChange('isActive', e)} />
       </Box>

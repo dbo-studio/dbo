@@ -10,7 +10,7 @@ export default function Filters() {
   const theme: Theme = useTheme();
 
   return (
-    <Box p={1} borderBottom={`1px solid ${theme.palette.divider}`}>
+    <Box id='#filters' p={1} borderBottom={`1px solid ${theme.palette.divider}`}>
       {selectedTab?.filters.length == 0 ? (
         <AddFilterButton filterLength={selectedTab.filters.length} />
       ) : (

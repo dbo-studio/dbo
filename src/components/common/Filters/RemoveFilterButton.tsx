@@ -10,7 +10,7 @@ export default function RemoveFilterButton({ filter }: RemoveFilterButtonProps) 
     removeFilter(filter);
   };
   return (
-    <IconButton onClick={handleRemoveFilter}>
+    <IconButton className='remove-filter-btn' onClick={handleRemoveFilter}>
       <CustomIcon type='mines' size='xs' />
     </IconButton>
   );
