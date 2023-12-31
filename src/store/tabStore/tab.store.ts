@@ -2,18 +2,19 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
 import { TabType } from '@/src/types';
-import { TabDataSlice, createTabDataSlice } from './slices/tabData.slice';
-import { TabFilterSlice, createTabFilterSlice } from './slices/tabFilter.slice';
-import { TabQuerySlice, createTabQuerySlice } from './slices/tabQuery.slice';
-import { TabSettingSlice, createTabSettingSlice } from './slices/tabSetting.slice';
-import { TabSortSlice, createTabSortSlice } from './slices/tabSort.slice';
-
-export type TabStore = {
-  tabs: TabType[];
-  selectedTab: TabType | undefined;
-  updateTabs: (tabs: TabType[]) => void;
-  updateSelectedTab: (selectedTab: TabType | undefined) => void;
-};
+import {
+  TabDataSlice,
+  TabFilterSlice,
+  TabQuerySlice,
+  TabSettingSlice,
+  TabSortSlice,
+  TabStore
+} from '@/src/types/TabStore';
+import { createTabDataSlice } from './slices/tabData.slice';
+import { createTabFilterSlice } from './slices/tabFilter.slice';
+import { createTabQuerySlice } from './slices/tabQuery.slice';
+import { createTabSettingSlice } from './slices/tabSetting.slice';
+import { createTabSortSlice } from './slices/tabSort.slice';
 
 type TabState = TabStore & TabSettingSlice & TabQuerySlice & TabFilterSlice & TabSortSlice & TabDataSlice;
 

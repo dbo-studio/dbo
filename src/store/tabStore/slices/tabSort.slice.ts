@@ -1,12 +1,6 @@
 import { SortType } from '@/src/types';
+import { TabSortSlice, TabStore } from '@/src/types/TabStore';
 import { StateCreator } from 'zustand';
-import { TabStore } from '../tab.store';
-
-export type TabSortSlice = {
-  upsertSorts: (sort: SortType) => void;
-  removeSort: (sort: SortType) => void;
-  setShowSorts: (show: boolean) => void;
-};
 
 export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], TabSortSlice> = (set, get) => ({
   upsertSorts: (sort: SortType) => {
@@ -15,7 +9,7 @@ export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], T
       return;
     }
 
-    const findSort = selectedTab.sorts.find((s) => s.index === sort.index);
+    const findSort = selectedTab.sorts.find((s: SortType) => s.index === sort.index);
     if (!findSort) {
       selectedTab.sorts.push(sort);
     } else {

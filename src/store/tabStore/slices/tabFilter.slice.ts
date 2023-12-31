@@ -1,12 +1,6 @@
 import { FilterType } from '@/src/types';
+import { TabFilterSlice, TabStore } from '@/src/types/TabStore';
 import { StateCreator } from 'zustand';
-import { TabStore } from '../tab.store';
-
-export type TabFilterSlice = {
-  upsertFilters: (filter: FilterType) => void;
-  removeFilter: (filter: FilterType) => void;
-  setShowFilters: (show: boolean) => void;
-};
 
 export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [], TabFilterSlice> = (set, get) => ({
   upsertFilters: (filter: FilterType) => {
@@ -15,7 +9,7 @@ export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [
       return;
     }
 
-    const findFilter = selectedTab.filters.find((f) => f.index === filter.index);
+    const findFilter = selectedTab.filters.find((f: FilterType) => f.index === filter.index);
     if (!findFilter) {
       selectedTab.filters.push(filter);
     } else {

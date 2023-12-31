@@ -1,15 +1,9 @@
 import { TabType } from '@/src/types/Tab';
+import { TabSettingSlice, TabStore } from '@/src/types/TabStore';
 import { v4 as uuidv4 } from 'uuid';
 import { StateCreator } from 'zustand';
-import { TabStore } from '../tab.store';
 
-const maxTabs = 10;
-
-export type TabSettingSlice = {
-  addTab: (table: string) => void;
-  removeTab: (tabId: string) => void;
-  switchTab: (tabId: string | null) => void;
-};
+const maxTabs = 15;
 
 export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [], [], TabSettingSlice> = (
   set,

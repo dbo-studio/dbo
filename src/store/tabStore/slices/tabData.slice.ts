@@ -1,11 +1,5 @@
+import { TabDataSlice, TabStore } from '@/src/types/TabStore';
 import { StateCreator } from 'zustand';
-import { TabStore } from '../tab.store';
-
-export type TabDataSlice = {
-  updateRows: (rows: any[]) => void;
-  updateColumns: (columns: any[]) => void;
-  setShowColumns: (show: boolean) => void;
-};
 
 export const createTabDataSlice: StateCreator<TabStore & TabDataSlice, [], [], TabDataSlice> = (set, get) => ({
   updateRows: (rows: any[]) => {
