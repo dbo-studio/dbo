@@ -17,7 +17,7 @@ export default function AddFilterButton({ filterLength }: AddFilterButtonProps) 
     });
   };
   return (
-    <IconButton onClick={handleAddNewFilter}>
+    <IconButton className='add-filter-btn' onClick={handleAddNewFilter}>
       <CustomIcon type='plus' size='xs' />
     </IconButton>
   );

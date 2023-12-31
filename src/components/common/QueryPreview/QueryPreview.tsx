@@ -7,7 +7,7 @@ export default function QueryPreview() {
   const theme: Theme = useTheme();
 
   return (
-    <Box borderBottom={`1px solid ${theme.palette.divider}`}>
+    <Box className='query-preview' borderBottom={`1px solid ${theme.palette.divider}`}>
       {selectedTab && <CodeEditor value={selectedTab?.query} editable={false} />}
     </Box>
   );

@@ -17,6 +17,7 @@ export default function ActionBar() {
 
   return (
     <Stack
+      id='action-bar'
       borderBottom={`1px solid ${theme.palette.divider}`}
       borderTop={`1px solid ${theme.palette.divider}`}
       padding='0 8px'
@@ -29,7 +30,7 @@ export default function ActionBar() {
         <IconButton color='secondary' aria-label='grid'>
           <CustomIcon type='columnFillGreen' size='m' />
         </IconButton>
-        <IconButton aria-label='filter' onClick={toggleFilters}>
+        <IconButton className='toggle-filters' onClick={toggleFilters}>
           <CustomIcon type='filterBrown' size='m' />
         </IconButton>
         <IconButton aria-label='sort'>
@@ -37,7 +38,7 @@ export default function ActionBar() {
         </IconButton>
       </Grid>
       <Grid md={8} mx={2} display='flex' justifyContent='flex-end'>
-        <IconButton aria-label='code' onClick={toggleQueryPreview}>
+        <IconButton className='toggle-code-preview' onClick={toggleQueryPreview}>
           <CustomIcon type='code' size='s' />
         </IconButton>
         <IconButton aria-label='export'>
