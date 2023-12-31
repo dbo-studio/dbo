@@ -1,4 +1,4 @@
-import { useAppStore } from '@/src/store/zustand';
+import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { TabType as TabData } from '@/src/types';
 import { faker } from '@faker-js/faker';
 import { Box, Tab, Tabs, Typography } from '@mui/material';
@@ -7,7 +7,7 @@ import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import TabPanel from './TabPanel';
 
 export default function EditorTab() {
-  const { addTab, removeTab, switchTab, tabs, selectedTab } = useAppStore();
+  const { removeTab, switchTab, tabs, selectedTab, addTab } = useTabStore();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {

@@ -1,4 +1,5 @@
 export type SortType = {
+  index: string;
   column: string;
   operator: string;
   value: string | number;

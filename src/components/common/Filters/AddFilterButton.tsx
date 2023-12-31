@@ -1,11 +1,11 @@
-import { useAppStore } from '@/src/store/zustand';
+import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { IconButton } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import { AddFilterButtonProps } from './types';
 
 export default function AddFilterButton({ filterLength }: AddFilterButtonProps) {
-  const { upsertFilters } = useAppStore();
+  const { upsertFilters } = useTabStore();
 
   const handleAddNewFilter = () => {
     upsertFilters({

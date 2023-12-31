@@ -1,4 +1,4 @@
-import { useAppStore } from '@/src/store/zustand';
+import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { FilterType } from '@/src/types/Tab';
 import { Box, Button, Theme, useTheme } from '@mui/material';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
@@ -6,7 +6,7 @@ import AddFilterButton from './AddFilterButton';
 import FilterItem from './FilterItem';
 
 export default function Filters() {
-  const { selectedTab } = useAppStore();
+  const { selectedTab } = useTabStore();
   const theme: Theme = useTheme();
 
   return (

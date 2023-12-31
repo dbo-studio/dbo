@@ -1,11 +1,11 @@
-import { useAppStore } from '@/src/store/zustand';
+import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { IconButton, Stack, useTheme } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 
 export default function ActionBar() {
   const theme = useTheme();
-  const { selectedTab, setShowQueryPreview, setShowFilters } = useAppStore();
+  const { selectedTab, setShowQueryPreview, setShowFilters } = useTabStore();
 
   const handleShowQueryPreview = () => {
     setShowQueryPreview(!selectedTab!.showQuery);

@@ -1,4 +1,4 @@
-import { useAppStore } from '@/src/store/zustand';
+import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { Box } from '@mui/material';
 import { useEffect, useState } from 'react';
 import DataGrid, { SelectColumn, textEditor } from 'react-data-grid';
@@ -9,7 +9,7 @@ import { ServerColumn } from './types';
 export default function DBDataGrid() {
   const [selectedRows, setSelectedRows] = useState((): ReadonlySet<number> => new Set());
   const [isLoading, setIsLoading] = useState(false);
-  const { updateRows, updateColumns, selectedTab } = useAppStore();
+  const { updateRows, updateColumns, selectedTab } = useTabStore();
 
   useEffect(() => {
     if (selectedTab?.rows.length == 0) {

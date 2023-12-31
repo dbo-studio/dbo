@@ -1,6 +1,6 @@
 import { PgsqlFilterConditions } from '@/src/core/constants';
 import { useUUID } from '@/src/hooks';
-import { useAppStore } from '@/src/store/zustand';
+import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { EventFor } from '@/src/types';
 import { FilterType } from '@/src/types/Tab';
 import { Box, Checkbox, Input, NativeSelect } from '@mui/material';
@@ -11,7 +11,7 @@ import RemoveFilterButton from './RemoveFilterButton';
 import { FilterItemProps } from './types';
 
 export default function FilterItem({ filter, columns, filterLength }: FilterItemProps) {
-  const { upsertFilters } = useAppStore();
+  const { upsertFilters } = useTabStore();
   const [currentFilter, setCurrentFilter] = useState<FilterType>({
     index: filter.index,
     column: filter.column,

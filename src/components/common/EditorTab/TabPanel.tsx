@@ -1,4 +1,4 @@
-import { useAppStore } from '@/src/store/zustand';
+import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { Box } from '@mui/material';
 import ActionBar from '../ActionBar/ActionBar';
 import DBDataGrid from '../DBDataGrid/DBDataGrid';
@@ -7,7 +7,7 @@ import QueryPreview from '../QueryPreview/QueryPreview';
 import StatusBar from '../StatusBar/StatusBar';
 
 export default function TabPanel() {
-  const { selectedTab } = useAppStore();
+  const { selectedTab } = useTabStore();
   return (
     <Box position='relative' height='calc(100% - 100px)'>
       <ActionBar />

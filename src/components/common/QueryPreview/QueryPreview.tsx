@@ -1,9 +1,9 @@
-import { useAppStore } from '@/src/store/zustand';
+import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { Box, Theme, useTheme } from '@mui/material';
 import CodeEditor from '../../base/CodeEditor/CodeEditor';
 
 export default function QueryPreview() {
-  const { selectedTab } = useAppStore();
+  const { selectedTab } = useTabStore();
   const theme: Theme = useTheme();
 
   return (
