@@ -1,25 +1,39 @@
-import { Box, InputAdornment, InputBase } from "@mui/material";
-import { useState } from "react";
-import CustomIcon from "../CustomIcon/CustomIcon";
-import { EventFor } from "@/src/types";
+import { EventFor } from '@/src/types';
+import { Box, InputAdornment, InputBase } from '@mui/material';
+import { useState } from 'react';
+import CustomIcon from '../CustomIcon/CustomIcon';
 
-export default function Search() {
-  const [value, setValue] = useState("");
+export default function Search({ onChange }: { onChange: Function }) {
+  const [value, setValue] = useState('');
 
-  const onChange = (e: EventFor<"input", "onChange">) => {
-    console.log("search input e", e.target.value);
+  const onChangeHandler = (e: EventFor<'input', 'onChange'>) => {
     setValue(e.target.value);
+    onChange(e.target.value);
+  };
+
+  const handleClear = () => {
+    setValue('');
+    onChange('');
   };
 
   return (
     <Box mt={1}>
       <InputBase
+        value={value}
+        onChange={onChangeHandler}
         fullWidth={true}
-        placeholder="Search"
+        placeholder='Search'
         startAdornment={
-          <InputAdornment position="start">
-            <CustomIcon type="search" height={12} width={12} />
+          <InputAdornment position='start'>
+            <CustomIcon type='search' height={12} width={12} />
           </InputAdornment>
+        }
+        endAdornment={
+          value.length > 0 && (
+            <InputAdornment position='end' onClick={handleClear} sx={{ cursor: 'pointer' }}>
+              <CustomIcon type='close' height={12} width={12} />
+            </InputAdornment>
+          )
         }
       />
     </Box>

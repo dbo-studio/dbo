@@ -2,6 +2,7 @@
 
 import ThemeProvider from '@/core/theme';
 import { CssBaseline } from '@mui/material';
+import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
 import { Viewport } from 'next';
 import React from 'react';
 import { appConfig } from '../appConfig';
@@ -20,8 +21,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang={appConfig.locale} dir={appConfig.direction}>
       <body>
-        <CssBaseline />
-        <ThemeProvider>{children}</ThemeProvider>
+        <AppRouterCacheProvider options={{ enableCssLayer: true }}>
+          <CssBaseline />
+          <ThemeProvider>{children}</ThemeProvider>
+        </AppRouterCacheProvider>
       </body>
     </html>
   );
