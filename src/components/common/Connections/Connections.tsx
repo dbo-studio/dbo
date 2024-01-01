@@ -1,23 +1,19 @@
-import styled from "@emotion/styled";
-import { Box, Theme, useTheme } from "@mui/material";
-import ConnectionItem from "./ConnectionItem";
+import { useUUID } from '@/src/hooks';
+import { useConnectionStore } from '@/src/store/tabStore/connection.store';
+import { ConnectionType } from '@/src/types/Connection';
+import { Box } from '@mui/material';
+import ConnectionItem from './ConnectionItem';
+import { EmptySpaceStyle } from './EmptySpace.styled';
 
 export default function Connections() {
-  const theme: Theme = useTheme();
-
-  const EmptySpaceStyle = styled("div")({
-    width: "100%",
-    flex: 1,
-    borderRight: `1px solid ${theme.palette.divider}`,
-  });
+  const { connections, currentConnection } = useConnectionStore();
+  const uuids = useUUID(connections.length);
 
   return (
-    <Box height={"100%"} display={"flex"} flexDirection={"column"}>
-      <ConnectionItem label="address-service" />
-      <ConnectionItem label="order-service" selected={true} />
-      <ConnectionItem label="user-service" />
-      <ConnectionItem label="product-service" />
-      <ConnectionItem label="price-service" />
+    <Box height={'100%'} display={'flex'} flexDirection={'column'}>
+      {connections.map((c: ConnectionType, index: number) => (
+        <ConnectionItem key={uuids[index]} selected={c.info.name == currentConnection.info.name} label={c.info.name} />
+      ))}
       <EmptySpaceStyle />
     </Box>
   );
