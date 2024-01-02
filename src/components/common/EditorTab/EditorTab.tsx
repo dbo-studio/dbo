@@ -1,6 +1,5 @@
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { TabType as TabData } from '@/src/types';
-import { faker } from '@faker-js/faker';
 import { Box, Tab, Tabs, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
@@ -50,14 +49,6 @@ export default function EditorTab() {
           <TabPanel />
         </>
       ) : null}
-      <div>
-        <button
-          style={{ position: 'absolute', right: 0, bottom: 0, zIndex: 9999 }}
-          onClick={() => addTab(faker.database.collation())}
-        >
-          Add Tab
-        </button>
-      </div>
     </>
   );
 }

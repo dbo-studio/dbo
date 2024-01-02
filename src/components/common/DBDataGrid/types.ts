@@ -1,9 +1,9 @@
-export type ServerColumn = {
+export type ColumnType = {
   felid: string;
   type: string;
 };
 
 export type ServerData = {
-  columns: ServerColumn[];
+  columns: ColumnType[];
   rows: any;
 };

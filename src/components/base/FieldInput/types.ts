@@ -1,6 +1,4 @@
 export type FieldInputProps = {
   label: string;
-  inputType: InputTypes;
+  inputType: string | undefined;
 };
-
-export type InputTypes = "string" | "number";

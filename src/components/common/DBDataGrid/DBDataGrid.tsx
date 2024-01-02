@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import DataGrid, { SelectColumn, textEditor } from 'react-data-grid';
 import { makeData } from './makeData';
 import './styles.css';
-import { ServerColumn } from './types';
+import { ColumnType } from './types';
 
 export default function DBDataGrid() {
   const [selectedRows, setSelectedRows] = useState((): ReadonlySet<number> => new Set());
@@ -19,12 +19,13 @@ export default function DBDataGrid() {
     }
   }, [selectedTab]);
 
-  function getColumns(serverColumns: ServerColumn[]): any {
+  function getColumns(serverColumns: ColumnType[]): any {
     const arr: any = [];
-    serverColumns!.forEach((column: ServerColumn) => {
+    serverColumns!.forEach((column: ColumnType) => {
       arr.push({
         key: column.felid,
         name: column.felid,
+        type: column.type,
         resizable: true,
         renderEditCell: textEditor
       });
@@ -34,10 +35,11 @@ export default function DBDataGrid() {
   }
 
   function formatColumns(serverColumns: any[]): any {
-    if (serverColumns[0] != SelectColumn) {
-      serverColumns[0] = SelectColumn;
+    const newColumns = serverColumns;
+    if (newColumns[0] != SelectColumn) {
+      newColumns[0] = SelectColumn;
     }
-    return serverColumns;
+    return newColumns;
   }
 
   return isLoading ? (
