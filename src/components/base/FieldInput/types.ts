@@ -1,4 +1,5 @@
-export type FieldInputProps = {
+import { InputBaseProps } from '@mui/material';
+
+export interface FieldInputProps extends InputBaseProps {
   label: string;
-  inputType: string | undefined;
-};
+}

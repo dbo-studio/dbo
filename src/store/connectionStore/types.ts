@@ -1,4 +1,4 @@
-import { ConnectionType, SchemaType } from './Connection';
+import { ConnectionType, SchemaType } from '@/src/types/Connection';
 
 export type ConnectionStore = {
   connections: ConnectionType[];

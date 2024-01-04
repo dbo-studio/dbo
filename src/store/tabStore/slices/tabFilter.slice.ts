@@ -1,6 +1,6 @@
 import { FilterType } from '@/src/types';
-import { TabFilterSlice, TabStore } from '@/src/types/TabStore';
 import { StateCreator } from 'zustand';
+import { TabFilterSlice, TabStore } from '../types';
 
 export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [], TabFilterSlice> = (set, get) => ({
   upsertFilters: (filter: FilterType) => {

@@ -1,39 +1,39 @@
-import { faker } from "@faker-js/faker";
-import { ServerColumn, ServerData } from "./types";
+import { faker } from '@faker-js/faker';
+import { ColumnType, ServerData } from './types';
 
-const fakeColumn: ServerColumn[] = [
+const fakeColumn: ColumnType[] = [
   {
-    felid: "id",
-    type: "string",
+    felid: 'id',
+    type: 'string'
   },
   {
-    felid: "first_name",
-    type: "string",
+    felid: 'first_name',
+    type: 'string'
   },
   {
-    felid: "last_name",
-    type: "string",
+    felid: 'last_name',
+    type: 'string'
   },
   {
-    felid: "age",
-    type: "number",
+    felid: 'age',
+    type: 'number'
   },
   {
-    felid: "visits",
-    type: "number",
+    felid: 'visits',
+    type: 'number'
   },
   {
-    felid: "country",
-    type: "string",
+    felid: 'country',
+    type: 'string'
   },
   {
-    felid: "created_at",
-    type: "date",
+    felid: 'created_at',
+    type: 'date'
   },
   {
-    felid: "updated_at",
-    type: "date",
-  },
+    felid: 'updated_at',
+    type: 'date'
+  }
 ];
 
 function fakeRow(): any {
@@ -44,8 +44,8 @@ function fakeRow(): any {
     age: faker.number.int(40),
     visits: faker.number.int(1000),
     country: faker.location.city(),
-    created_at: "2022-04-23 10:23:20",
-    updated_at: "2022-04-23 10:23:20",
+    created_at: '2022-04-23 10:23:20',
+    updated_at: '2022-04-23 10:23:20'
   };
 }
 
@@ -57,6 +57,6 @@ export function makeData(len: number): ServerData {
 
   return {
     columns: fakeColumn,
-    rows: arr,
+    rows: arr
   };
 }

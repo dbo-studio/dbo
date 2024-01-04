@@ -18,8 +18,6 @@ export type TabType = {
   id: string;
   table: string;
   query: string;
-  rows: any[];
-  columns: any[];
   showQuery: boolean;
   showColumns: boolean;
   showFilters: boolean;

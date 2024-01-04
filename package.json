@@ -25,6 +25,7 @@
     "@mui/x-tree-view": "6.17.0",
     "@uiw/codemirror-theme-github": "^4.21.21",
     "@uiw/react-codemirror": "^4.21.21",
+    "dayjs": "^1.11.10",
     "eslint-plugin-prettier": "^5.1.2",
     "install": "^0.13.0",
     "moment": "^2.30.1",

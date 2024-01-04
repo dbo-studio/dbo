@@ -2,19 +2,13 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
 import { TabType } from '@/src/types';
-import {
-  TabDataSlice,
-  TabFilterSlice,
-  TabQuerySlice,
-  TabSettingSlice,
-  TabSortSlice,
-  TabStore
-} from '@/src/types/TabStore';
-import { createTabDataSlice } from './slices/tabData.slice';
+
+import { createTabColumnSlice } from './slices/tabColumn.slice';
 import { createTabFilterSlice } from './slices/tabFilter.slice';
 import { createTabQuerySlice } from './slices/tabQuery.slice';
 import { createTabSettingSlice } from './slices/tabSetting.slice';
 import { createTabSortSlice } from './slices/tabSort.slice';
+import { TabDataSlice, TabFilterSlice, TabQuerySlice, TabSettingSlice, TabSortSlice, TabStore } from './types';
 
 type TabState = TabStore & TabSettingSlice & TabQuerySlice & TabFilterSlice & TabSortSlice & TabDataSlice;
 
@@ -24,7 +18,6 @@ export const useTabStore = create<TabState>()(
       (set, get, ...state) => ({
         tabs: [],
         selectedTab: undefined,
-
         updateTabs: (tabs: TabType[]) => {
           set({ tabs });
         },
@@ -43,12 +36,11 @@ export const useTabStore = create<TabState>()(
           });
           set({ tabs, selectedTab });
         },
-
         ...createTabSettingSlice(set, get, ...state),
         ...createTabQuerySlice(set, get, ...state),
         ...createTabFilterSlice(set, get, ...state),
         ...createTabSortSlice(set, get, ...state),
-        ...createTabDataSlice(set, get, ...state)
+        ...createTabColumnSlice(set, get, ...state)
       }),
       { name: 'tabs' }
     )

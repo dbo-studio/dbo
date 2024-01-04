@@ -1,6 +1,6 @@
 import { SortType } from '@/src/types';
-import { TabSortSlice, TabStore } from '@/src/types/TabStore';
 import { StateCreator } from 'zustand';
+import { TabSortSlice, TabStore } from '../types';
 
 export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], TabSortSlice> = (set, get) => ({
   upsertSorts: (sort: SortType) => {

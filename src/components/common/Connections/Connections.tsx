@@ -1,5 +1,5 @@
 import { useUUID } from '@/src/hooks';
-import { useConnectionStore } from '@/src/store/tabStore/connection.store';
+import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
 import { ConnectionType } from '@/src/types/Connection';
 import { Box } from '@mui/material';
 import ConnectionItem from './ConnectionItem';

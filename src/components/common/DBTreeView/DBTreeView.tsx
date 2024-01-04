@@ -1,4 +1,4 @@
-import { useConnectionStore } from '@/src/store/tabStore/connection.store';
+import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
 import { TableType } from '@/src/types/Connection';
 import { useState } from 'react';
 import Search from '../../base/Search/Search';

@@ -1,7 +1,7 @@
 import { TabType } from '@/src/types/Tab';
-import { TabSettingSlice, TabStore } from '@/src/types/TabStore';
 import { v4 as uuidv4 } from 'uuid';
 import { StateCreator } from 'zustand';
+import { TabSettingSlice, TabStore } from '../types';
 
 const maxTabs = 15;
 
@@ -25,8 +25,6 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       query: `SELECT * FROM ${table}`,
       filters: [],
       sorts: [],
-      rows: [],
-      columns: [],
       showColumns: false,
       showFilters: false,
       showQuery: false,

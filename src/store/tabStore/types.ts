@@ -1,4 +1,4 @@
-import { FilterType, SortType, TabType } from './Tab';
+import { FilterType, SortType, TabType } from '@/src/types/Tab';
 
 export type TabFilterSlice = {
   upsertFilters: (filter: FilterType) => void;
@@ -24,8 +24,6 @@ export type TabQuerySlice = {
 };
 
 export type TabDataSlice = {
-  updateRows: (rows: any[]) => void;
-  updateColumns: (columns: any[]) => void;
   setShowColumns: (show: boolean) => void;
 };
 

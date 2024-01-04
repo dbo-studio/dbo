@@ -1,37 +1,56 @@
 import Search from '@/src/components/base/Search/Search';
-import { useTabStore } from '@/src/store/tabStore/tab.store';
+import { useDataStore } from '@/src/store/dataStore/data.store';
 import { Box } from '@mui/material';
 import { useEffect, useState } from 'react';
 import FieldInput from '../../base/FieldInput/FieldInput';
 
 export default function DBFields() {
-  const { selectedTab } = useTabStore();
+  const { getColumns, getSelectedRow } = useDataStore();
   const [fields, setFields] = useState<any[]>([]);
+  const [search, setSearch] = useState<string>('');
 
   useEffect(() => {
-    if (!selectedTab || !selectedTab.columns) {
-      return;
-    }
-    setFields(selectedTab.columns!);
-  }, [selectedTab]);
+    generateFields();
+  }, [getSelectedRow()]);
 
   const handleSearch = (name: string) => {
-    if (!selectedTab || !selectedTab.columns) {
+    setSearch(name);
+    generateFields();
+  };
+
+  function generateFields() {
+    const row = getSelectedRow();
+    if (!row) {
       return;
     }
 
-    setFields(
-      selectedTab.columns.filter((c: any) => {
-        return c.name.includes(name);
+    const data: any[] = [];
+    getColumns()
+      .filter((c: any) => {
+        return c.name.includes(search);
       })
-    );
-  };
+      .map((c: any, index: number) => {
+        if (!row.hasOwnProperty(c.key)) return;
+        data.push({
+          value: row[c.key] ?? null,
+          ...c
+        });
+      });
+
+    setFields(data);
+  }
 
   return (
     <>
       <Search onChange={handleSearch} />
       <Box mt={1}>
-        {fields.map((item, index) => item.name && <FieldInput key={index} label={item.name} inputType={item.type} />)}
+        {getSelectedRow() &&
+          fields.map(
+            (item, index) =>
+              item.name && (
+                <FieldInput value={item.value} fullWidth={true} key={index} label={item.name} type={item.type} />
+              )
+          )}
       </Box>
     </>
   );

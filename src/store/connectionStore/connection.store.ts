@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-
-import { ConnectionStore } from '@/src/types/ConnectionStore';
+import { ConnectionStore } from './types';
 
 type ConnectionState = ConnectionStore;
 

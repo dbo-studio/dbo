@@ -6,7 +6,7 @@ import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import TabPanel from './TabPanel';
 
 export default function EditorTab() {
-  const { removeTab, switchTab, tabs, selectedTab, addTab } = useTabStore();
+  const { removeTab, switchTab, tabs, selectedTab } = useTabStore();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
