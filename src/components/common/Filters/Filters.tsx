@@ -1,3 +1,4 @@
+import { useDataStore } from '@/src/store/dataStore/data.store';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { FilterType } from '@/src/types/Tab';
 import { Box, Button, Theme, useTheme } from '@mui/material';
@@ -7,6 +8,7 @@ import FilterItem from './FilterItem';
 
 export default function Filters() {
   const { selectedTab } = useTabStore();
+  const { getColumns } = useDataStore();
   const theme: Theme = useTheme();
 
   return (
@@ -18,7 +20,7 @@ export default function Filters() {
           return (
             <FilterItem
               key={filter.index}
-              columns={selectedTab.columns}
+              columns={getColumns()}
               filterLength={selectedTab.filters.length}
               filter={filter}
             />

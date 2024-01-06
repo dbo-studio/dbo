@@ -1,11 +1,20 @@
 import { Components, Theme } from '@mui/material';
+import Baseline from './Baseline';
 import Button from './Button';
+import CheckBox from './CheckBox';
 import Input from './Input';
+import Select from './Select';
 import Tabs from './Tabs';
 import TreeView from './TreeView';
-import CheckBox from './checkBox';
-import Select from './select';
 
 export default function ComponentsOverrides(theme: Theme): Components {
-  return Object.assign(TreeView(theme), Input(theme), Tabs(theme), Select(theme), CheckBox(theme), Button(theme));
+  return Object.assign(
+    Baseline(theme),
+    TreeView(theme),
+    Input(theme),
+    Tabs(theme),
+    Select(theme),
+    CheckBox(theme),
+    Button(theme)
+  );
 }

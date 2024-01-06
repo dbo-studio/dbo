@@ -8,8 +8,12 @@ export default function CenterContainer() {
   const CenterContainerStyle = styled(Box)({
     borderTop: `1px solid ${theme.palette.divider}`,
     borderBottom: `1px solid ${theme.palette.divider}`,
+    maxHeight: '100vh',
+    minHeight: '100vh',
     height: '100vh',
-    overflow: 'hidden'
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column'
   });
 
   return (

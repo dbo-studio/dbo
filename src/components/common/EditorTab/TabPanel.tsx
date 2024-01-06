@@ -9,7 +9,7 @@ import StatusBar from '../StatusBar/StatusBar';
 export default function TabPanel() {
   const { selectedTab } = useTabStore();
   return (
-    <Box position='relative' height='calc(100% - 100px)'>
+    <Box overflow='hidden' display='flex' flexDirection='column'>
       <ActionBar />
       {selectedTab!.showFilters && <Filters />}
       {selectedTab!.showQuery && <QueryPreview />}

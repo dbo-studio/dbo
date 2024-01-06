@@ -19,7 +19,7 @@ export default function DBDataGrid() {
     }
 
     if (getRows().length == 0 || getColumns().length == 0) {
-      const data = makeData(250);
+      const data = makeData(100);
       updateRows(data.rows);
       updateColumns(getServerColumns(data.columns));
     }
@@ -58,7 +58,7 @@ export default function DBDataGrid() {
   return isLoading ? (
     <span>Loading</span>
   ) : (
-    <Box height='calc(100vh - 285px)' overflow='scroll'>
+    <Box overflow='hidden' display={'flex'} flexDirection={'column'} flex={1}>
       {selectedTab && (
         <DataGrid
           onSelectedCellChange={handleOnCellClick}

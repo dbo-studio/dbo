@@ -22,8 +22,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang={appConfig.locale} dir={appConfig.direction}>
       <body>
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-          <CssBaseline />
-          <ThemeProvider>{children}</ThemeProvider>
+          <ThemeProvider>
+            <CssBaseline />
+            {children}
+          </ThemeProvider>
         </AppRouterCacheProvider>
       </body>
     </html>

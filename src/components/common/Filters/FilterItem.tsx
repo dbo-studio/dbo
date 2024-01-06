@@ -5,7 +5,7 @@ import { EventFor } from '@/src/types';
 import { FilterType } from '@/src/types/Tab';
 import { Box, Checkbox, Input, NativeSelect } from '@mui/material';
 import { useState } from 'react';
-import { ColumnOrColumnGroup } from 'react-data-grid';
+import { ColumnType } from '../DBDataGrid/types';
 import AddFilterButton from './AddFilterButton';
 import RemoveFilterButton from './RemoveFilterButton';
 import { FilterItemProps } from './types';
@@ -46,9 +46,9 @@ export default function FilterItem({ filter, columns, filterLength }: FilterItem
       </Box>
       <Box>
         <NativeSelect size='small' value={currentFilter.column} onChange={(e) => handleChange('column', e)}>
-          {columns.map((c: ColumnOrColumnGroup<any, any>, index: number) => (
-            <option key={uuidColumns[index]} value={c.name as string}>
-              {c.name}
+          {columns.map((c: ColumnType, index: number) => (
+            <option key={uuidColumns[index]} value={c.felid as string}>
+              {c.felid}
             </option>
           ))}
         </NativeSelect>

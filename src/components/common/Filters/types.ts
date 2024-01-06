@@ -1,9 +1,9 @@
 import { FilterType } from '@/src/types';
-import { ColumnOrColumnGroup } from 'react-data-grid';
+import { ColumnType } from '../DBDataGrid/types';
 
 export type FilterItemProps = {
   filter: FilterType;
-  columns: ColumnOrColumnGroup<any, any>[];
+  columns: ColumnType[];
   filterLength: number;
 };
 
