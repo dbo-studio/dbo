@@ -35,6 +35,8 @@ export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], T
     }
 
     selectedTab.showSorts = show;
+    selectedTab.showFilters = false;
+    selectedTab.showQuery = false;
     get().updateSelectedTab(selectedTab);
   }
 });
