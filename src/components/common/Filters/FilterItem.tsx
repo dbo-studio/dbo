@@ -2,10 +2,11 @@ import { PgsqlFilterConditions } from '@/src/core/constants';
 import { useUUID } from '@/src/hooks';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { EventFor } from '@/src/types';
+import { ColumnType } from '@/src/types/Data';
 import { FilterType } from '@/src/types/Tab';
 import { Box, Checkbox, Input, NativeSelect } from '@mui/material';
 import { useState } from 'react';
-import { ColumnType } from '../DBDataGrid/types';
+import { v4 as uuidv4 } from 'uuid';
 import AddFilterButton from './AddFilterButton';
 import RemoveFilterButton from './RemoveFilterButton';
 import { FilterItemProps } from './types';
@@ -20,8 +21,7 @@ export default function FilterItem({ filter, columns, filterLength }: FilterItem
     isActive: filter.isActive
   });
 
-  const uuidColumns = useUUID(columns.length);
-  const uuidOperators = useUUID(columns.length);
+  const uuidOperators = useUUID(PgsqlFilterConditions.length);
 
   const handleChange = (
     type: 'column' | 'operator' | 'value' | 'isActive',
@@ -35,6 +35,7 @@ export default function FilterItem({ filter, columns, filterLength }: FilterItem
       value: type == 'value' ? value : currentFilter.value,
       isActive: type == 'isActive' ? e.target.checked : currentFilter.isActive
     };
+
     setCurrentFilter(newFilter);
     upsertFilters(newFilter);
   };
@@ -47,8 +48,8 @@ export default function FilterItem({ filter, columns, filterLength }: FilterItem
       <Box>
         <NativeSelect size='small' value={currentFilter.column} onChange={(e) => handleChange('column', e)}>
           {columns.map((c: ColumnType, index: number) => (
-            <option key={uuidColumns[index]} value={c.felid as string}>
-              {c.felid}
+            <option key={uuidv4()} value={c.key as string}>
+              {c.name}
             </option>
           ))}
         </NativeSelect>

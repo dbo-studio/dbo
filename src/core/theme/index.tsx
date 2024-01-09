@@ -20,7 +20,6 @@ export default function ThemeProvider({ children }: Props) {
 
   const theme = createTheme(themeOptions);
   theme.components = componentsOverride(theme);
-  console.log(theme.components.MuiCssBaseline);
 
   return <MUIThemeProvider theme={theme}>{children}</MUIThemeProvider>;
 }

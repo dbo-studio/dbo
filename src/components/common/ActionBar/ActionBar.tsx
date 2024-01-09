@@ -5,7 +5,7 @@ import CustomIcon from '../../base/CustomIcon/CustomIcon';
 
 export default function ActionBar() {
   const theme = useTheme();
-  const { selectedTab, setShowQueryPreview, setShowFilters } = useTabStore();
+  const { selectedTab, setShowQueryPreview, setShowFilters, setShowSorts } = useTabStore();
 
   const toggleQueryPreview = () => {
     setShowQueryPreview(!selectedTab!.showQuery);
@@ -13,6 +13,10 @@ export default function ActionBar() {
 
   const toggleFilters = () => {
     setShowFilters(!selectedTab!.showFilters);
+  };
+
+  const toggleSorts = () => {
+    setShowSorts(!selectedTab!.showSorts);
   };
 
   return (
@@ -33,7 +37,7 @@ export default function ActionBar() {
         <IconButton className='toggle-filters' onClick={toggleFilters}>
           <CustomIcon type='filterBrown' size='m' />
         </IconButton>
-        <IconButton aria-label='sort'>
+        <IconButton aria-label='sort' onClick={toggleSorts}>
           <CustomIcon type='sortBlue' size='m' />
         </IconButton>
       </Grid>

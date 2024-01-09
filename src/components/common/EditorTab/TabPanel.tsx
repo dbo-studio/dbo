@@ -4,6 +4,7 @@ import ActionBar from '../ActionBar/ActionBar';
 import DBDataGrid from '../DBDataGrid/DBDataGrid';
 import Filters from '../Filters/Filters';
 import QueryPreview from '../QueryPreview/QueryPreview';
+import Sorts from '../Sorts/Sorts';
 import StatusBar from '../StatusBar/StatusBar';
 
 export default function TabPanel() {
@@ -12,6 +13,7 @@ export default function TabPanel() {
     <Box overflow='hidden' display='flex' flexDirection='column'>
       <ActionBar />
       {selectedTab!.showFilters && <Filters />}
+      {selectedTab!.showSorts && <Sorts />}
       {selectedTab!.showQuery && <QueryPreview />}
       <DBDataGrid />
       <StatusBar />

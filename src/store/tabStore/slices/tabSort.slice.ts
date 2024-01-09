@@ -13,7 +13,6 @@ export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], T
     if (!findSort) {
       selectedTab.sorts.push(sort);
     } else {
-      findSort.value = sort.value;
       findSort.operator = sort.operator;
       findSort.isActive = sort.isActive;
     }
