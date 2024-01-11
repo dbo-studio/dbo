@@ -23,6 +23,7 @@ export default function Tabs(theme: Theme): Components {
           minHeight: 30,
           height: 30,
           borderRadius: variables.radius.small,
+          border: `1px solid transparent`,
           '& .MuiTabs-indicator': {
             display: 'none',
             background: '#fff'

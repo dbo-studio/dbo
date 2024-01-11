@@ -44,7 +44,6 @@
       --rdg-font-size: 15px;
       --rdg-row-height: 30px;
       display: grid;
-      color-scheme: var(--rdg-color-scheme, light dark);
       contain: content;
       content-visibility: auto;
       border-bottom: 1px solid var(--rdg-border-color);
