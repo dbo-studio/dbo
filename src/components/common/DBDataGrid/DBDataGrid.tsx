@@ -44,9 +44,11 @@ export default function DBDataGrid() {
   function formatColumns(serverColumns: any[]): any {
     const newColumns = serverColumns;
     if (newColumns[0] != SelectColumn) {
-      newColumns.unshift(SelectColumn);
+      newColumns.unshift({
+        ...SelectColumn,
+        isActive: true
+      });
     }
-
     return newColumns.filter((c: any) => c.isActive);
   }
 
