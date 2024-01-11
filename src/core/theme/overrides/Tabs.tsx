@@ -1,4 +1,5 @@
 import { Components, Theme } from '@mui/material/styles';
+import { variables } from '../variables';
 
 export default function Tabs(theme: Theme): Components {
   return {
@@ -21,7 +22,7 @@ export default function Tabs(theme: Theme): Components {
           backgroundImage: 'none',
           minHeight: 30,
           height: 30,
-          borderRadius: 4,
+          borderRadius: variables.radius.small,
           '& .MuiTabs-indicator': {
             display: 'none',
             background: '#fff'

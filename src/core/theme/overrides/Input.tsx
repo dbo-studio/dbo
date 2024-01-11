@@ -1,4 +1,5 @@
 import { Components, Theme } from '@mui/material/styles';
+import { variables } from '../variables';
 
 export default function Input(theme: Theme): Components {
   return {
@@ -8,7 +9,7 @@ export default function Input(theme: Theme): Components {
           height: 32,
           border: `1px solid ${theme.palette.divider}`,
           color: theme.palette.text.primary,
-          borderRadius: 5,
+          borderRadius: variables.radius.medium,
           padding: '0 8px',
           '&.Mui-disabled': {
             '& svg': { color: theme.palette.text.disabled }

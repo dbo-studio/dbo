@@ -1,5 +1,5 @@
 import { TabType } from '@/src/types';
-import { RowType } from '@/src/types/Data';
+import { ColumnType, RowType } from '@/src/types/Data';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { useTabStore } from '../tabStore/tab.store';
@@ -26,7 +26,7 @@ export const useDataStore = create<DataState>()(
       if (!selectedTab || !columns.hasOwnProperty(selectedTab.id)) {
         return [];
       }
-      return columns[selectedTab.id];
+      return columns[selectedTab.id].filter((c: ColumnType) => c.key != 'select-row');
     },
     getSelectedRow: (): RowType | undefined => {
       const selectedTab = get().selectedTab();

@@ -33,6 +33,7 @@ export default function DBDataGrid() {
         name: column.felid,
         type: column.type,
         resizable: true,
+        isActive: true,
         renderEditCell: textEditor
       });
     });
@@ -43,9 +44,10 @@ export default function DBDataGrid() {
   function formatColumns(serverColumns: any[]): any {
     const newColumns = serverColumns;
     if (newColumns[0] != SelectColumn) {
-      newColumns[0] = SelectColumn;
+      newColumns.unshift(SelectColumn);
     }
-    return newColumns;
+
+    return newColumns.filter((c: any) => c.isActive);
   }
 
   const handleOnCellClick = (e: any) => {

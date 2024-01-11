@@ -1,4 +1,5 @@
-import { Components, Theme } from "@mui/material";
+import { Components, Theme } from '@mui/material';
+import { variables } from '../variables';
 
 type MuiTree = {};
 
@@ -7,15 +8,15 @@ export default function TreeView(theme: Theme): Components | MuiTree {
     MuiTreeItem: {
       styleOverrides: {
         root: {
-          borderRadius: "4px",
+          borderRadius: variables.radius.medium,
           backgroundColor: theme.palette.background,
           color: theme.palette.text.primary,
-          "& .MuiTreeItem-content": {
-            borderRadius: "4px",
-            height: 32,
-          },
-        },
-      },
-    },
+          '& .MuiTreeItem-content': {
+            borderRadius: variables.radius.small,
+            height: 32
+          }
+        }
+      }
+    }
   };
 }

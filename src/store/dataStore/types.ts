@@ -5,8 +5,8 @@ export type DataStore = {
   selectedRow: DataSelectedRowType;
   rows: DataRowsType;
   columns: DataColumnsType;
-  getRows(): any[];
-  getColumns(): any[];
+  getRows(): RowType[];
+  getColumns(): ColumnType[];
   getSelectedRow(): RowType | undefined;
   updateSelectedRow: (selectedRow: any | undefined) => void;
   updateRows: (items: any[]) => void;

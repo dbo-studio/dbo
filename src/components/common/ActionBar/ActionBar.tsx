@@ -5,18 +5,23 @@ import CustomIcon from '../../base/CustomIcon/CustomIcon';
 
 export default function ActionBar() {
   const theme = useTheme();
-  const { selectedTab, setShowQueryPreview, setShowFilters, setShowSorts } = useTabStore();
+  const { selectedTab, setShowQueryPreview, setShowFilters, setShowSorts, setShowColumns } = useTabStore();
 
-  const toggleQueryPreview = () => {
-    setShowQueryPreview(!selectedTab!.showQuery);
-  };
-
-  const toggleFilters = () => {
-    setShowFilters(!selectedTab!.showFilters);
-  };
-
-  const toggleSorts = () => {
-    setShowSorts(!selectedTab!.showSorts);
+  const handleToggle = (type: 'filter' | 'query' | 'sort' | 'column') => {
+    switch (type) {
+      case 'filter':
+        setShowFilters(!selectedTab!.showFilters);
+        break;
+      case 'query':
+        setShowQueryPreview(!selectedTab!.showQuery);
+        break;
+      case 'sort':
+        setShowSorts(!selectedTab!.showSorts);
+        break;
+      case 'column':
+        setShowColumns(!selectedTab!.showColumns);
+        break;
+    }
   };
 
   return (
@@ -31,18 +36,18 @@ export default function ActionBar() {
       alignItems='center'
     >
       <Grid md={8} display='flex' justifyContent='flex-start'>
-        <IconButton color='secondary' aria-label='grid'>
+        <IconButton color='secondary' aria-label='grid' onClick={() => handleToggle('column')}>
           <CustomIcon type='columnFillGreen' size='m' />
         </IconButton>
-        <IconButton className='toggle-filters' onClick={toggleFilters}>
+        <IconButton className='toggle-filters' onClick={() => handleToggle('filter')}>
           <CustomIcon type='filterBrown' size='m' />
         </IconButton>
-        <IconButton aria-label='sort' onClick={toggleSorts}>
+        <IconButton aria-label='sort' onClick={() => handleToggle('sort')}>
           <CustomIcon type='sortBlue' size='m' />
         </IconButton>
       </Grid>
       <Grid md={8} mx={2} display='flex' justifyContent='flex-end'>
-        <IconButton className='toggle-code-preview' onClick={toggleQueryPreview}>
+        <IconButton className='toggle-code-preview' onClick={() => handleToggle('query')}>
           <CustomIcon type='code' size='s' />
         </IconButton>
         <IconButton aria-label='export'>
