@@ -1,5 +1,5 @@
 import { useUUID } from '@/src/hooks';
-import { Tab, Tabs } from '@mui/material';
+import { Box, Tab, Tabs } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import { StatusBarTabProps, StatusBarTabTypes } from './types';
@@ -39,15 +39,17 @@ export default function StatusBarTabs({ onTabChange }: StatusBarTabProps) {
   });
 
   return (
-    <Tabs value={selectedTabId} onChange={onSelectedTabChanged}>
-      {tabs.map((tabItem, index) => (
-        <Tab
-          iconPosition='start'
-          icon={<CustomIcon type={selectedTabId == tabItem.id ? tabItem.iconActive : tabItem.icon} />}
-          label={tabItem.name}
-          key={uuids[index]}
-        />
-      ))}
-    </Tabs>
+    <Box mb={'5px'}>
+      <Tabs value={selectedTabId} onChange={onSelectedTabChanged}>
+        {tabs.map((tabItem, index) => (
+          <Tab
+            iconPosition='start'
+            icon={<CustomIcon type={selectedTabId == tabItem.id ? tabItem.iconActive : tabItem.icon} />}
+            label={tabItem.name}
+            key={uuids[index]}
+          />
+        ))}
+      </Tabs>
+    </Box>
   );
 }

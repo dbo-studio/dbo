@@ -1,34 +1,34 @@
-import { Box, IconButton, Stack } from "@mui/material";
-import CustomIcon from "../../base/CustomIcon/CustomIcon";
+import { Box, IconButton, Stack } from '@mui/material';
+import CustomIcon from '../../base/CustomIcon/CustomIcon';
 
 export default function StatusBarActions() {
   return (
-    <Stack direction={"row"} justifyContent={"space-between"} width={208}>
+    <Stack direction={'row'} mb={'5px'} justifyContent={'space-between'} width={208}>
       <Box>
         <IconButton>
-          <CustomIcon type="plus" width={14} />
+          <CustomIcon type='plus' size='s' />
         </IconButton>
 
         <IconButton>
-          <CustomIcon type="mines" width={14} />
+          <CustomIcon type='mines' size='s' />
         </IconButton>
       </Box>
       <Box ml={1} mr={1}>
         <IconButton>
-          <CustomIcon type="check" width={14} />
+          <CustomIcon type='check' size='s' />
         </IconButton>
 
         <IconButton>
-          <CustomIcon type="close" width={14} />
+          <CustomIcon type='close' size='s' />
         </IconButton>
       </Box>
       <Box>
         <IconButton>
-          <CustomIcon type="refresh" width={14} />
+          <CustomIcon type='refresh' size='s' />
         </IconButton>
 
         <IconButton>
-          <CustomIcon type="stop" width={14} />
+          <CustomIcon type='stop' size='s' />
         </IconButton>
       </Box>
     </Stack>

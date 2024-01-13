@@ -40,14 +40,14 @@ export default function Tabs(theme: Theme): Components {
             backgroundColor: theme.palette.background.paper
           },
 
-          img: {
+          svg: {
             marginRight: '8px'
           },
 
           '&.Mui-flat': {
             borderRadius: 0,
             borderTop: 'unset',
-            img: {
+            svg: {
               position: 'relative',
               right: '16px',
               opacity: 0,
@@ -55,7 +55,7 @@ export default function Tabs(theme: Theme): Components {
             },
 
             '&:hover': {
-              img: {
+              svg: {
                 opacity: 1
               }
             }

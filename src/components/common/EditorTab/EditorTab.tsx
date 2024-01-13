@@ -29,7 +29,7 @@ export default function EditorTab() {
                 className='Mui-flat grid-tab'
                 label={
                   <Box display={'flex'} alignItems={'center'}>
-                    <CustomIcon type='close' size='xs' onClick={() => removeTab(tab.id)} />
+                    <CustomIcon type='close' size='s' onClick={() => removeTab(tab.id)} />
                     <Typography
                       display={'inline-block'}
                       component={'span'}

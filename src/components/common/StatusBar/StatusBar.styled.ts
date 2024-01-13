@@ -2,7 +2,7 @@ import { styled } from '@mui/material';
 
 export const StatusBarStyled = styled('div')(({ theme }) => ({
   background: theme.palette.background.default,
-  height: '41px',
+  height: '60px',
   width: '100%',
   display: 'flex',
   justifyContent: 'space-between',

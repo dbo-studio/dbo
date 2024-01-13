@@ -1,4 +1,5 @@
-import { IconProps } from './types';
+import { icons } from 'lucide-react';
+import { IconProps, IconTypes } from './types';
 
 const sizes = {
   l: {
@@ -30,5 +31,11 @@ export default function CustomIcon({ type, size = 's', width, height, onClick }:
     h = height;
   }
 
-  return <img onClick={onClick} src={`/icons/${type}.svg`} alt={type} width={w} height={h} />;
+  // @ts-ignore
+  const LucideIcon = icons[IconTypes[type]];
+  if (!LucideIcon) {
+    return <img onClick={onClick} src={`/icons/${type}.svg`} alt={type} width={w} height={h} />;
+  }
+
+  return <LucideIcon onClick={onClick} strokeWidth={2} size={w} />;
 }
