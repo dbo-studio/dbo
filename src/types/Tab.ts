@@ -23,4 +23,10 @@ export type TabType = {
   showSorts: boolean;
   sorts: SortType[];
   filters: FilterType[];
+  mode: TabMode;
 };
+
+export enum TabMode {
+  Data = 0,
+  Structure = 1
+}

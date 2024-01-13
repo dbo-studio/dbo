@@ -1,4 +1,4 @@
-import { IconTypes } from "../../base/CustomIcon/types";
+import { IconTypes } from '../../base/CustomIcon/types';
 
 export type StatusBarTabTypes = {
   id: number;
@@ -6,8 +6,4 @@ export type StatusBarTabTypes = {
   icon: keyof typeof IconTypes;
   iconActive: keyof typeof IconTypes;
   content: any;
-};
-
-export type StatusBarTabProps = {
-  onTabChange: Function;
 };

@@ -1,4 +1,4 @@
-import { TabType } from '@/src/types/Tab';
+import { TabMode, TabType } from '@/src/types/Tab';
 import { v4 as uuidv4 } from 'uuid';
 import { StateCreator } from 'zustand';
 import { TabSettingSlice, TabStore } from '../types';
@@ -28,7 +28,8 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       showColumns: false,
       showFilters: false,
       showQuery: false,
-      showSorts: false
+      showSorts: false,
+      mode: TabMode.Data
     };
 
     if (tabs.length < maxTabs) {

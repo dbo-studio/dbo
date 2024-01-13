@@ -1,8 +1,10 @@
 import { useUUID } from '@/src/hooks';
+import { useTabStore } from '@/src/store/tabStore/tab.store';
+import { TabMode } from '@/src/types';
 import { Box, Tab, Tabs } from '@mui/material';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
-import { StatusBarTabProps, StatusBarTabTypes } from './types';
+import { StatusBarTabTypes } from './types';
 
 const tabs: StatusBarTabTypes[] = [
   {
@@ -21,22 +23,30 @@ const tabs: StatusBarTabTypes[] = [
   }
 ];
 
-export default function StatusBarTabs({ onTabChange }: StatusBarTabProps) {
-  const [selectedTabId, setSelectedTabId] = useState(0);
+export default function StatusBarTabs() {
+  const [selectedTabId, setSelectedTabId] = useState(TabMode.Data);
   const uuids = useUUID(2);
-
-  const selectedTabContent = useMemo(() => {
-    return tabs.find((obj) => obj.id === Number(selectedTabId))?.content;
-  }, [selectedTabId]);
+  const { selectedTab, updateSelectedTab } = useTabStore();
 
   const onSelectedTabChanged = (event: React.SyntheticEvent, id: number) => {
+    if (!selectedTab) {
+      return;
+    }
+
     setSelectedTabId(id);
-    onTabChange(selectedTabContent);
+    updateSelectedTab({
+      ...selectedTab,
+      mode: id == TabMode.Data ? TabMode.Data : TabMode.Structure
+    });
   };
 
   useEffect(() => {
-    onTabChange(selectedTabContent);
-  });
+    if (!selectedTab) {
+      return;
+    }
+
+    setSelectedTabId(selectedTab.mode);
+  }, [selectedTab]);
 
   return (
     <Box mb={'5px'}>
