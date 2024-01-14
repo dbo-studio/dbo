@@ -1,3 +1,4 @@
+import { TabMode } from '@/src/types';
 import { IconTypes } from '../../base/CustomIcon/types';
 
 export type StatusBarTabTypes = {
@@ -6,4 +7,8 @@ export type StatusBarTabTypes = {
   icon: keyof typeof IconTypes;
   iconActive: keyof typeof IconTypes;
   content: any;
+};
+
+export type StatusBarStylesProps = {
+  mode: TabMode;
 };

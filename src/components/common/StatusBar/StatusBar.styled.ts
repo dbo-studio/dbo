@@ -1,8 +1,10 @@
-import { styled } from '@mui/material';
+import { TabMode } from '@/src/types';
+import { Box, styled } from '@mui/material';
+import { StatusBarStylesProps } from './types';
 
-export const StatusBarStyled = styled('div')(({ theme }) => ({
+export const StatusBarStyled = styled(Box)<StatusBarStylesProps>(({ theme, mode }) => ({
   background: theme.palette.background.default,
-  height: '60px',
+  height: mode == TabMode.Data ? '60px' : '47px',
   width: '100%',
   display: 'flex',
   justifyContent: 'space-between',

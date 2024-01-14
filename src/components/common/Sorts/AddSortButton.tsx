@@ -12,13 +12,12 @@ export default function AddSortButton({ sortLength }: AddSortButtonProps) {
       index: uuidv4(),
       column: '',
       operator: '',
-      value: '',
       isActive: true
     });
   };
   return (
     <IconButton className='add-sort-btn' onClick={handleAddNewSort}>
-      <CustomIcon type='plus' size='xs' />
+      <CustomIcon type='plus' size='s' />
     </IconButton>
   );
 }
