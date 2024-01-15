@@ -1,66 +1,72 @@
-export const fakeColumn: any[] = [
+import { StructureType } from '@/src/types/Data';
+
+export const fakeColumn: StructureType[] = [
   {
-    felid: 'id',
+    name: 'id',
     type: 'varchar',
-    isNull: false,
+    notNull: false,
     length: 255,
     decimal: 0,
     default: "nextval('cargo_addons_id_seq'::regclass)"
   },
   {
-    felid: 'first_name',
+    name: 'first_name',
     type: 'varchar',
-    isNull: true,
+    notNull: true,
     length: 255,
     decimal: 0,
     default: ''
   },
   {
-    felid: 'last_name',
+    name: 'last_name',
     type: 'varchar(255)',
-    isNull: true,
+    notNull: true,
     length: 255,
     decimal: 0,
     default: ''
   },
   {
-    felid: 'age',
+    name: 'age',
     type: 'int8',
-    isNull: true,
+    notNull: true,
     length: 64,
     decimal: 0,
     default: ''
   },
   {
-    felid: 'visits',
+    name: 'visits',
     type: 'int8',
-    isNull: true,
+    notNull: true,
     length: 64,
     decimal: 0,
     default: ''
   },
   {
-    felid: 'country',
+    name: 'country',
     type: 'varchar(255)',
-    isNull: true,
+    notNull: true,
     length: 255,
     decimal: 0,
     default: ''
   },
   {
-    felid: 'created_at',
+    name: 'created_at',
     type: 'timestamp',
-    isNull: true,
+    notNull: true,
     length: 0,
     decimal: 0,
     default: ''
   },
   {
-    felid: 'updated_at',
+    name: 'updated_at',
     type: 'timestamp',
-    isNull: true,
+    notNull: true,
     length: 0,
     decimal: 0,
     default: ''
   }
 ];
+
+export const fakeStructureTypes = (): string[] => {
+  return ['int8', 'bigserial', 'bit', 'bool', 'varchar', 'json', 'xml', 'uuid', 'line'];
+};

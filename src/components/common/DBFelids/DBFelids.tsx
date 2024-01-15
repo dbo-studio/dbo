@@ -48,7 +48,14 @@ export default function DBFields() {
           fields.map(
             (item, index) =>
               item.name && (
-                <FieldInput value={item.value} fullWidth={true} key={index} label={item.name} type={item.type} />
+                <FieldInput
+                  value={item.value}
+                  fullWidth={true}
+                  key={index}
+                  label={item.name}
+                  typeLabel={item.type}
+                  type={item.type}
+                />
               )
           )}
       </Box>

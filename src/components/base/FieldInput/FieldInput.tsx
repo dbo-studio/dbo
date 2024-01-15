@@ -30,7 +30,7 @@ export default function FieldInput(props: FieldInputProps) {
           {props.label}
         </Typography>
         <Typography color={theme.palette.text.secondary} variant='caption'>
-          {props.type}
+          {props.typeLabel}
         </Typography>
       </Box>
       <InputBase

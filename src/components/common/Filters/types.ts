@@ -1,5 +1,5 @@
 import { FilterType } from '@/src/types';
-import { ColumnType } from '../DBDataGrid/types';
+import { ColumnType } from '@/src/types/Data';
 
 export type FilterItemProps = {
   filter: FilterType;

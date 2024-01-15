@@ -1,5 +1,6 @@
 import { InputBaseProps } from '@mui/material';
 
 export interface FieldInputProps extends InputBaseProps {
-  label: string;
+  label?: string;
+  typeLabel?: string;
 }
