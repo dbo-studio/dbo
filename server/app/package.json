@@ -3,15 +3,16 @@
   "version": "1.0.50",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "bun run --watch src/index.ts"
+    "dev": "bun --watch src/index.ts"
   },
   "dependencies": {
     "@elysiajs/cors": "^0.8.0",
     "@elysiajs/swagger": "^0.8.3",
     "elysia": "latest",
-    "zod": "^3.22.4"
+    "pg": "^8.11.3"
   },
   "devDependencies": {
+    "@types/pg": "^8.10.9",
     "bun-types": "latest"
   },
   "module": "src/index.js"

@@ -17,7 +17,12 @@ const querySchema = {
     columns: t.Optional(t.Array(t.String())),
     filters: t.Optional(t.Array(filterSchema)),
     sorts: t.Optional(t.Array(sortSchema))
-  })
+  }),
+  transform({ body }: any) {
+    if (!body.columns) {
+      body.columns = ['*'];
+    }
+  }
 };
 
 export { querySchema };
