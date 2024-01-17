@@ -129,6 +129,12 @@
         --rdg-checkbox-disabled-background-color: #333;
       }
     }
+
+    .edit-highlight{
+      .rdg-cell {
+          background-color: #FFE16A; 
+        }
+    }
   }
 }
 
@@ -334,7 +340,7 @@
   }
 
   .r1upfr807-0-0-beta-40[aria-selected="true"] {
-    background-color: var(--rdg-row-selected-background-color);
+    background-color: var(--rdg-row-selected-background-color) !important;
   }
 
   .r1upfr807-0-0-beta-40[aria-selected="true"]:hover {

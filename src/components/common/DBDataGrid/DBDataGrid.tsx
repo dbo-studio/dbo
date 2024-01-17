@@ -1,8 +1,8 @@
 import { useDataStore } from '@/src/store/dataStore/data.store';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
-import { Box } from '@mui/material';
+import { Box, Checkbox } from '@mui/material';
 import { useEffect, useState } from 'react';
-import DataGrid, { SelectColumn, textEditor } from 'react-data-grid';
+import DataGrid, { RenderCheckboxProps, RowsChangeData, SelectColumn, textEditor } from 'react-data-grid';
 import { makeData } from './makeData';
 import './styles.css';
 import { ColumnType } from './types';
@@ -12,6 +12,8 @@ export default function DBDataGrid() {
   const [isLoading, setIsLoading] = useState(false);
   const { selectedTab } = useTabStore();
   const { updateRows, updateColumns, updateSelectedRow, getRows, getColumns } = useDataStore();
+  const [editHighlight, setEditHighlight] = useState<number | undefined>(undefined);
+  const [removeHighlight, setRemoveHighlight] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     if (!selectedTab) {
@@ -59,6 +61,15 @@ export default function DBDataGrid() {
     updateSelectedRow(e.row);
   };
 
+  const handleRowsChange = (rows: any[], data: RowsChangeData<any, unknown>) => {
+    const oldRow = getRows()[data.indexes[0]];
+    const newRow = rows[data.indexes[0]];
+
+    setEditHighlight(data.indexes[0]);
+
+    updateRows(rows);
+  };
+
   return isLoading ? (
     <span>Loading</span>
   ) : (
@@ -72,8 +83,10 @@ export default function DBDataGrid() {
           columns={formatColumns(getColumns())}
           rows={getRows()}
           rowHeight={30}
-          onRowsChange={updateRows}
+          onRowsChange={handleRowsChange}
           headerRowHeight={30}
+          renderers={{ renderCheckbox }}
+          rowClass={(row, index) => (index == editHighlight ? 'edit-highlight' : undefined)}
         />
       )}
     </Box>
@@ -82,4 +95,12 @@ export default function DBDataGrid() {
 
 function rowKeyGetter(row: any) {
   return row.id;
+}
+
+function renderCheckbox({ onChange, ...props }: RenderCheckboxProps) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onChange(e.target.checked, (e.nativeEvent as MouseEvent).shiftKey);
+  }
+
+  return <Checkbox size='small' style={{ padding: 0 }} {...props} onChange={handleChange} />;
 }
