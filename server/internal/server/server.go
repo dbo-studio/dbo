@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -18,7 +19,9 @@ type Server struct {
 func New(isLocal bool) *Server {
 	return &Server{
 		app: fiber.New(fiber.Config{
-			Prefork: !isLocal,
+			JSONEncoder: json.Marshal,
+			JSONDecoder: json.Unmarshal,
+			Prefork:     !isLocal,
 			ErrorHandler: func(ctx *fiber.Ctx, err error) error {
 				app.Log().Error(err)
 				return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

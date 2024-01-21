@@ -1,8 +1,10 @@
 package validator
 
-import "github.com/go-playground/validator/v10"
+import (
+	"github.com/go-playground/validator/v10"
+)
 
-var validate = validator.New()
+var validate = validator.New(validator.WithRequiredStructEnabled())
 
 type ErrorResponse struct {
 	Field string `json:"field"`

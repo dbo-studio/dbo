@@ -1,6 +1,0 @@
-{"level":"ERROR","ts":"2024-01-19T05:03:13.330+0330","msg":"Cannot GET /"}
-{"level":"ERROR","ts":"2024-01-19T05:04:46.684+0330","msg":"error happen while serving: failed to listen: listen tcp4 :8080: bind: address already in use"}
-{"level":"ERROR","ts":"2024-01-19T05:04:56.641+0330","msg":"error happen while serving: failed to listen: listen tcp4 :8080: bind: address already in use"}
-{"level":"ERROR","ts":"2024-01-19T05:06:53.881+0330","msg":"Cannot GET /"}
-{"level":"ERROR","ts":"2024-01-19T05:06:53.963+0330","msg":"Cannot GET /favicon.ico"}
-{"level":"ERROR","ts":"2024-01-19T05:06:58.286+0330","msg":"Cannot POST /query"}

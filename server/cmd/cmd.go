@@ -4,9 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/khodemobin/dbo/app"
 	"github.com/khodemobin/dbo/internal/server"
@@ -27,21 +24,10 @@ func ServeCommand() *cobra.Command {
 
 func Execute() {
 	restServer := server.New(helper.IsLocal())
-	go func() {
-		if err := restServer.Start(helper.IsLocal(), app.Config().App.Port); err != nil {
-			msg := fmt.Sprintf("error happen while serving: %v", err)
-			app.Log().Error(errors.New(msg))
-			log.Println(msg)
-		}
-	}()
 
-	// wait for close signal
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
-	<-signalChan
-	fmt.Println("Received an interrupt, closing connections...")
-
-	if err := restServer.Shutdown(); err != nil {
-		fmt.Println("Rest server doesn't shutdown in 10 seconds")
+	if err := restServer.Start(helper.IsLocal(), app.Config().App.Port); err != nil {
+		msg := fmt.Sprintf("error happen while serving: %v", err)
+		app.Log().Error(errors.New(msg))
+		log.Println(msg)
 	}
 }
