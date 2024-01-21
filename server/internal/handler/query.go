@@ -8,9 +8,9 @@ import (
 	"github.com/khodemobin/dbo/pkg/types"
 )
 
-type QueryHandlers struct{}
+type QueryHandler struct{}
 
-func (h *QueryHandlers) RunQuery(c *fiber.Ctx) error {
+func (h *QueryHandler) RunQuery(c *fiber.Ctx) error {
 	req := new(types.RunQueryRequest)
 
 	if err := c.BodyParser(req); err != nil {

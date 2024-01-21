@@ -8,12 +8,13 @@ import (
 	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/khodemobin/dbo/app"
-	handler "github.com/khodemobin/dbo/internal/handlers"
+	"github.com/khodemobin/dbo/internal/handler"
 )
 
 type Server struct {
-	app      *fiber.App
-	handlers handler.QueryHandlers
+	app               *fiber.App
+	queryHandler      handler.QueryHandler
+	connectionHandler handler.ConnectionHandler
 }
 
 func New(isLocal bool) *Server {
@@ -29,7 +30,8 @@ func New(isLocal bool) *Server {
 				})
 			},
 		}),
-		handlers: handler.QueryHandlers{},
+		queryHandler:      handler.QueryHandler{},
+		connectionHandler: handler.ConnectionHandler{},
 	}
 }
 

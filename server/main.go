@@ -18,7 +18,7 @@ func main() {
 			cmd.Execute()
 		},
 	}
-	rootCmd.AddCommand(cmd.ServeCommand())
+	rootCmd.AddCommand(cmd.ServeCommand(), cmd.SeedCommand())
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
