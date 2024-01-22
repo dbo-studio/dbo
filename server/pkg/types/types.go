@@ -1,3 +1,3 @@
 package types
 
-type QueryResult map[string]interface{}
+type QueryResult map[string]any

@@ -1,19 +1,19 @@
 package drivers
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/khodemobin/dbo/app"
 	"github.com/khodemobin/dbo/internal/model"
 	"github.com/khodemobin/dbo/pkg/types"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-func Connect(connectionId int32) (*pgx.Conn, error) {
+func Connect(connectionId int32) (*gorm.DB, error) {
 	var connection model.Connection
 	result := app.DB().Where("id", "=", connectionId).First(&connection)
 	if result.Error != nil {
@@ -28,10 +28,12 @@ func Connect(connectionId int32) (*pgx.Conn, error) {
 		connection.Password.String,
 	)
 
-	return pgx.Connect(context.Background(), dsn)
+	return gorm.Open(postgres.New(postgres.Config{
+		DSN: dsn,
+	}), &gorm.Config{})
 }
 
-func RunQuery(req *types.RunQueryRequest) ([]types.QueryResult, error) {
+func RunQuery(req *types.RunQueryRequest) ([]map[string]interface{}, error) {
 	query, err := queryGenerator(req)
 	if err != nil {
 		return nil, errors.New("Generate query error: " + err.Error())
@@ -41,47 +43,12 @@ func RunQuery(req *types.RunQueryRequest) ([]types.QueryResult, error) {
 	if err != nil {
 		return nil, errors.New("Connection error: " + err.Error())
 	}
-	defer db.Close(context.Background())
 
-	var results []types.QueryResult
+	var results []map[string]interface{}
+	result := db.Raw(query).Scan(&results)
 
-	rows, err := db.Query(context.Background(), query)
-	if err != nil {
-		return nil, errors.New("QueryRow failed: " + err.Error())
-	}
-	defer rows.Close()
-
-	// Get the column names
-	columns := rows.FieldDescriptions()
-	if err != nil {
-		return nil, errors.New("Get FieldDescriptions: " + err.Error())
-	}
-
-	values := make([]interface{}, len(columns))
-	for i := range values {
-		values[i] = new(interface{})
-	}
-
-	for rows.Next() {
-		if err := rows.Scan(values...); err != nil {
-			return nil, errors.New("Scan: " + err.Error())
-		}
-
-		// Create a map to store the result for this row
-		rowResult := make(map[string]interface{})
-
-		// Fill the map with column name - value pairs
-		for i, column := range columns {
-			columnName := string(column.Name)
-			rowResult[columnName] = *(values[i].(*interface{}))
-		}
-
-		// Append the result to the slice
-		results = append(results, rowResult)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, errors.New("Rows: " + err.Error())
+	if result.Error != nil {
+		return nil, result.Error
 	}
 
 	return results, nil
@@ -135,12 +102,15 @@ func ConnectionSchema(connectionId int32) ([]map[string]interface{}, error) {
 	if err != nil {
 		return nil, errors.New("Connection error: " + err.Error())
 	}
-	defer db.Close(context.Background())
 
-	data, err := db.Query(context.Background(), "SELECT n.nspname AS schema_name,t.tablename AS table_name FROM pg_namespace n LEFT JOIN pg_tables t ON n.nspname=t.schemaname::name WHERE n.nspname NOT LIKE'pg_%' AND n.nspname!='information_schema' ORDER BY schema_name,table_name;").Scan()
-	if err != nil {
-		return nil, err
+	query := "SELECT n.nspname AS schema_name,t.tablename AS table_name FROM pg_namespace n LEFT JOIN pg_tables t ON n.nspname=t.schemaname::name WHERE n.nspname NOT LIKE'pg_%' AND n.nspname!='information_schema' ORDER BY schema_name,table_name;"
+
+	var results []map[string]interface{}
+	result := db.Raw(query).Scan(&results)
+
+	if result.Error != nil {
+		return nil, result.Error
 	}
-	rdata := data["rows"].([]map[string]interface{})
-	return rdata, nil
+
+	return results, nil
 }
