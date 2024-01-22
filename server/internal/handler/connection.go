@@ -13,8 +13,26 @@ import (
 
 type ConnectionHandler struct{}
 
+func (h *ConnectionHandler) Connections(c *fiber.Ctx) error {
+	var connections []model.Connection
+
+	result := app.DB().Find(&connections)
+
+	if result.Error != nil {
+		return c.JSON(helper.DefaultResponse(nil, result.Error.Error(), 0))
+	}
+
+	var data []*model.ConnectionResource
+
+	for _, c := range connections {
+		data = append(data, c.ToResource())
+	}
+
+	return c.JSON(helper.DefaultResponse(data, "", 1))
+}
+
 func (h *ConnectionHandler) AddConnection(c *fiber.Ctx) error {
-	req := new(types.AddConnectionRequest)
+	req := new(types.ConnectionRequest)
 
 	if err := c.BodyParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(helper.DefaultResponse(nil, err.Error(), 0))
@@ -25,19 +43,18 @@ func (h *ConnectionHandler) AddConnection(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
 	}
 
-	connection := model.Connection{
-		Name:     req.Name,
-		Host:     req.Host,
-		Username: req.Username,
-		Password: sql.NullString{
-			Valid:  true,
-			String: req.Password,
-		},
-		Port:     uint(req.Port),
-		Database: req.Database,
+	var connection model.Connection
+	connection.Name = req.Name
+	connection.Host = req.Host
+	connection.Username = req.Username
+	connection.Password = sql.NullString{
+		Valid:  true,
+		String: req.Password,
 	}
+	connection.Port = uint(req.Port)
+	connection.Database = req.Database
 
-	result := app.DB().Create(&connection)
+	result := app.DB().Save(&connection)
 
 	if result.Error != nil {
 		return c.JSON(helper.DefaultResponse(nil, result.Error.Error(), 0))
@@ -47,7 +64,7 @@ func (h *ConnectionHandler) AddConnection(c *fiber.Ctx) error {
 }
 
 func (h *ConnectionHandler) UpdateConnection(c *fiber.Ctx) error {
-	req := new(types.RunQueryRequest)
+	req := new(types.ConnectionRequest)
 
 	if err := c.BodyParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(helper.DefaultResponse(nil, err.Error(), 0))
@@ -58,20 +75,35 @@ func (h *ConnectionHandler) UpdateConnection(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
 	}
 
-	return c.JSON("")
+	connectionId := c.Params("id")
+	var connection model.Connection
+	result := app.DB().Where("id", "=", connectionId).First(&connection)
+	if result.Error != nil {
+		return c.Status(fiber.StatusNotFound).JSON(result.Error.Error())
+	}
+
+	connection.Name = req.Name
+	connection.Host = req.Host
+	connection.Username = req.Username
+	connection.Password = sql.NullString{
+		Valid:  true,
+		String: req.Password,
+	}
+	connection.Port = uint(req.Port)
+	connection.Database = req.Database
+
+	result = app.DB().Save(&connection)
+
+	if result.Error != nil {
+		return c.JSON(helper.DefaultResponse(nil, result.Error.Error(), 0))
+	}
+
+	return c.JSON(helper.DefaultResponse(connection.ToResource(), "", 1))
 }
 
 func (h *ConnectionHandler) DeleteConnection(c *fiber.Ctx) error {
-	req := new(types.RunQueryRequest)
+	connectionId := c.Params("id")
+	app.DB().Delete(&model.Connection{}, connectionId)
 
-	if err := c.BodyParser(req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(helper.DefaultResponse(nil, err.Error(), 0))
-	}
-
-	errors := validator.Check(req)
-	if errors != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
-	}
-
-	return c.JSON("")
+	return c.JSON(helper.DefaultResponse("", "", 1))
 }
