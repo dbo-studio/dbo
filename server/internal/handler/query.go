@@ -24,8 +24,8 @@ func (h *QueryHandler) RunQuery(c *fiber.Ctx) error {
 
 	result, err := drivers.RunQuery(req)
 	if err != nil {
-		return c.Send([]byte(err.Error()))
+		return c.JSON(helper.DefaultResponse("", err.Error(), 0))
 	}
 
-	return c.JSON(result)
+	return c.JSON(helper.DefaultResponse(result, "", 1))
 }

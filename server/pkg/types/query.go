@@ -2,8 +2,8 @@ package types
 
 type RunQueryRequest struct {
 	Table   string          `json:"table" validate:"required"`
-	Limit   int32           `json:"limit" validate:"gte=1"`
-	Offset  int32           `json:"offset" validate:"gte=0"`
+	Limit   int32           `json:"limit" validate:"gte=1,numeric"`
+	Offset  int32           `json:"offset" validate:"gte=0,numeric"`
 	Filters []FilterRequest `json:"filters" validate:"dive"`
 	Sorts   []SortRequest   `json:"sorts" validate:"dive"`
 	Columns []string

@@ -8,23 +8,23 @@ import (
 )
 
 type Connection struct {
-	ID        uint `gorm:"primaryKey"`
+	ID        uint `gorm:"primaryKey,autoIncrement"`
 	Name      string
 	Host      string
 	Username  string
 	Password  sql.NullString
-	Port      int32
+	Port      uint
 	Database  string
 	CreatedAt sql.NullTime `gorm:"autoCreateTime"`
 	UpdatedAt sql.NullTime `gorm:"autoUpdateTime"`
 }
 
 type ConnectionResource struct {
-	ID       string `json:"id"`
+	ID       uint   `json:"id"`
 	Name     string `json:"name"`
 	Host     string `json:"host"`
 	Username string `json:"username"`
-	Port     string `json:"port"`
+	Port     uint   `json:"port"`
 	Database string `json:"database"`
 }
 
@@ -39,7 +39,7 @@ func (c Connection) FakeConnection() *Connection {
 			Valid:  true,
 			String: faker.Password(),
 		},
-		Port:      int32(port),
+		Port:      uint(port),
 		Database:  faker.Name(),
 		CreatedAt: sql.NullTime{},
 		UpdatedAt: sql.NullTime{},
@@ -54,4 +54,15 @@ func (c Connection) SeedConnection(count int) ([]*Connection, error) {
 	}
 
 	return results, nil
+}
+
+func (c Connection) ToResource() *ConnectionResource {
+	return &ConnectionResource{
+		ID:       c.ID,
+		Name:     c.Name,
+		Host:     c.Host,
+		Username: c.Username,
+		Port:     c.Port,
+		Database: c.Database,
+	}
 }
