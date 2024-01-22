@@ -129,3 +129,18 @@ func queryGenerator(req *types.RunQueryRequest) (string, error) {
 
 	return query, nil
 }
+
+func ConnectionSchema(connectionId int32) ([]map[string]interface{}, error) {
+	db, err := Connect(connectionId)
+	if err != nil {
+		return nil, errors.New("Connection error: " + err.Error())
+	}
+	defer db.Close(context.Background())
+
+	data, err := db.Query(context.Background(), "SELECT n.nspname AS schema_name,t.tablename AS table_name FROM pg_namespace n LEFT JOIN pg_tables t ON n.nspname=t.schemaname::name WHERE n.nspname NOT LIKE'pg_%' AND n.nspname!='information_schema' ORDER BY schema_name,table_name;").Scan()
+	if err != nil {
+		return nil, err
+	}
+	rdata := data["rows"].([]map[string]interface{})
+	return rdata, nil
+}

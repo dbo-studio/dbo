@@ -4,4 +4,5 @@ export type ConnectionStore = {
   connections: ConnectionType[];
   currentConnection: ConnectionType;
   currentSchema: SchemaType;
+  updateConnections: (connections: ConnectionType[]) => void;
 };

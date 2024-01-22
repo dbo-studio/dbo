@@ -8,3 +8,8 @@ type ConnectionRequest struct {
 	Port     int    `json:"port" validate:"required,gte=0,numeric"`
 	Database string `json:"database" validate:"required"`
 }
+
+type ConnectionSchema struct {
+	SchemaName string
+	TableName  string
+}

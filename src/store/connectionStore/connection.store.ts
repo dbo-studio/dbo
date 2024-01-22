@@ -1,3 +1,4 @@
+import { ConnectionType } from '@/src/types';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { ConnectionStore } from './types';
@@ -58,10 +59,13 @@ const c = {
 export const useConnectionStore = create<ConnectionState>()(
   devtools(
     persist(
-      (set, get, ...state) => ({
+      (set, get) => ({
         connections: [c],
         currentConnection: c,
-        currentSchema: c.databases[0].schemes[0]
+        currentSchema: c.databases[0].schemes[0],
+        updateConnections: (connections: ConnectionType[]) => {
+          set({ connections });
+        }
       }),
       { name: 'connections' }
     )
