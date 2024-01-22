@@ -2,7 +2,7 @@
 import Logo from '@/public/logo.png';
 
 const ImageFile = {
-  Logo,
+  Logo
 };
 
 export default ImageFile;

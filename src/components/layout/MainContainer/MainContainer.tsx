@@ -1,8 +1,8 @@
-import Grid from "@mui/material/Unstable_Grid2";
-import CenterContainer from "./CenterContainer";
-import EndContainer from "./EndContainer";
-import ExplorerContainer from "./ExplorerContainer";
-import StartContainer from "./StartContainer";
+import Grid from '@mui/material/Unstable_Grid2';
+import CenterContainer from './CenterContainer';
+import EndContainer from './EndContainer';
+import ExplorerContainer from './ExplorerContainer';
+import StartContainer from './StartContainer';
 
 export default function MainContainer() {
   return (

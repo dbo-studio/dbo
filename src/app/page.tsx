@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import "@fontsource/roboto/300.css";
-import "@fontsource/roboto/400.css";
-import "@fontsource/roboto/500.css";
-import "@fontsource/roboto/700.css";
+import '@fontsource/roboto/300.css';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
 
-import { Box, styled } from "@mui/material";
-import AppHeader from "../components/layout/AppHeader/AppHeader";
-import MainContainer from "../components/layout/MainContainer/MainContainer";
+import { Box, styled } from '@mui/material';
+import AppHeader from '../components/layout/AppHeader/AppHeader';
+import MainContainer from '../components/layout/MainContainer/MainContainer';
 
 const Wrapper = styled(Box)(({ theme }) => ({
-  height: "100vh",
+  height: '100vh',
   backgroundColor: theme.palette.background.default,
-  maxHeight: "100vh",
-  overflow: "hidden",
+  maxHeight: '100vh',
+  overflow: 'hidden'
 }));
 
 const Page = () => {

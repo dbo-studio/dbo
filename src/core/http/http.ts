@@ -3,7 +3,7 @@ import axios from 'axios';
 // const getToken = () => store.getters.user.token;
 
 const http = axios.create({
-  // baseURL: process.env.APP_BASE_URL,
+  baseURL: process.env.NEXT_PUBLIC_SERVER_URL,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -34,22 +34,5 @@ const responseInterceptor = (response: any) => {
 };
 
 http.interceptors.response.use(responseInterceptor, errorInterceptor);
-
-// const post = async <T extends ResponseType>(url: string, payload: object): Promise<T> => {
-//   const res: AxiosResponse = await http.post<T>(url, payload);
-//   const data: T = res.data;
-// };
-
-// const get = async (url: string, payload: object) => {
-//   url +=
-//     '?' +
-//     Object.entries(payload)
-//       .map(([key, val]) => `${key}=${encodeURIComponent(val)}`)
-//       .join('&');
-
-//   const response = await http.post(url, payload);
-
-//   return response;
-// };
 
 export { http };
