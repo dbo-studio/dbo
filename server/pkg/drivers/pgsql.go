@@ -8,17 +8,25 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/khodemobin/dbo/app"
+	"github.com/khodemobin/dbo/internal/model"
 	"github.com/khodemobin/dbo/pkg/types"
 )
 
-func Connect() (*pgx.Conn, error) {
-	host := "localhost"
-	port := 9041
-	password := "secret"
-	user := "default"
-	database := "default"
+func Connect(connectionId int32) (*pgx.Conn, error) {
+	var connection model.Connection
+	result := app.DB().Where("id", "=", connectionId).First(&connection)
+	if result.Error != nil {
+		return nil, errors.New("connection not found")
+	}
 
-	dsn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s", host, strconv.Itoa(int(port)), database, user, password)
+	dsn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s",
+		connection.Host,
+		strconv.Itoa(int(connection.Port)),
+		connection.Database,
+		connection.Username,
+		connection.Password.String,
+	)
 
 	return pgx.Connect(context.Background(), dsn)
 }
@@ -29,20 +37,19 @@ func RunQuery(req *types.RunQueryRequest) ([]types.QueryResult, error) {
 		return nil, errors.New("Generate query error: " + err.Error())
 	}
 
-	db, err := Connect()
-	defer db.Close(context.Background())
+	db, err := Connect(req.ConnectionId)
 	if err != nil {
 		return nil, errors.New("Connection error: " + err.Error())
 	}
+	defer db.Close(context.Background())
 
 	var results []types.QueryResult
 
 	rows, err := db.Query(context.Background(), query)
-	defer rows.Close()
-
 	if err != nil {
 		return nil, errors.New("QueryRow failed: " + err.Error())
 	}
+	defer rows.Close()
 
 	// Get the column names
 	columns := rows.FieldDescriptions()
