@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/khodemobin/dbo/app"
 	"github.com/khodemobin/dbo/internal/model"
+	"github.com/khodemobin/dbo/pkg/drivers"
 	"github.com/khodemobin/dbo/pkg/helper"
 	"github.com/khodemobin/dbo/pkg/helper/validator"
 	"github.com/khodemobin/dbo/pkg/types"
@@ -22,13 +23,51 @@ func (h *ConnectionHandler) Connections(c *fiber.Ctx) error {
 		return c.JSON(helper.DefaultResponse(nil, result.Error.Error(), 0))
 	}
 
-	var data []*model.ConnectionResource
-
+	var data []map[string]interface{}
 	for _, c := range connections {
-		data = append(data, c.ToResource())
+		item := make(map[string]interface{})
+		item["name"] = c.Name
+		item["type"] = "SQL"
+		item["driver"] = "PostgreSQL"
+		item["auth"] = map[string]interface{}{
+			"database": c.Database,
+			"host":     c.Host,
+			"port":     c.Port,
+		}
+
+		data = append(data, item)
 	}
 
 	return c.JSON(helper.DefaultResponse(data, "", 1))
+}
+
+func (h *ConnectionHandler) Connection(c *fiber.Ctx) error {
+	connectionId := c.Params("id")
+	var connection model.Connection
+	result := app.DB().Where("id", "=", connectionId).First(&connection)
+	if result.Error != nil {
+		return c.Status(fiber.StatusNotFound).JSON(result.Error.Error())
+	}
+
+	connectionInfo, err := drivers.ConnectionSchema(int32(connection.ID), connection.Database)
+	if err != nil {
+		return c.JSON(helper.DefaultResponse(nil, err.Error(), 0))
+	}
+
+	item := make(map[string]interface{})
+	item["info"] = map[string]interface{}{
+		"driver": "PostgreSQL",
+		"type":   "SQL",
+		"name":   connection.Name,
+	}
+	item["auth"] = map[string]interface{}{
+		"database": connection.Database,
+		"host":     connection.Host,
+		"port":     connection.Port,
+	}
+	item["databases"] = connectionInfo
+
+	return c.JSON(helper.DefaultResponse(item, "", 1))
 }
 
 func (h *ConnectionHandler) AddConnection(c *fiber.Ctx) error {

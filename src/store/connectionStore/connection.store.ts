@@ -6,11 +6,9 @@ import { ConnectionStore } from './types';
 type ConnectionState = ConnectionStore;
 
 const c = {
-  info: {
-    driver: 'PostgreSQL',
-    type: 'SQL',
-    name: 'order-service'
-  },
+  driver: 'PostgreSQL',
+  type: 'SQL',
+  name: 'order-service',
   auth: {
     database: 'default',
     host: 'localhost',
@@ -59,7 +57,7 @@ const c = {
 export const useConnectionStore = create<ConnectionState>()(
   devtools(
     persist(
-      (set, get) => ({
+      (set) => ({
         connections: [c],
         currentConnection: c,
         currentSchema: c.databases[0].schemes[0],

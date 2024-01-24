@@ -10,6 +10,25 @@ type ConnectionRequest struct {
 }
 
 type ConnectionSchema struct {
-	SchemaName string
-	TableName  string
+	Database string
+	Schemes  []Schema
+}
+
+type Schema struct {
+	Name   string
+	Tables []Table
+}
+type Table struct {
+	Name    string
+	DDL     string
+	Columns []Column
+}
+
+type Column struct {
+	Name    string
+	Type    string
+	NotNull bool
+	Length  int32
+	Decimal int32
+	Default string
 }

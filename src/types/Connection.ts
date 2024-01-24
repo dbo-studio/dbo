@@ -1,14 +1,10 @@
 export type ConnectionType = {
-  info: ConnectionInfoType;
-  auth: ConnectionAuthType;
-  databases: DatabaseType[];
-};
-
-export interface ConnectionInfoType {
   name: string;
   type: string;
   driver: string;
-}
+  auth: ConnectionAuthType;
+  databases: DatabaseType[];
+};
 
 export type ConnectionAuthType = {
   host: string;

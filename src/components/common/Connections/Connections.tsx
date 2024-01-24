@@ -12,7 +12,7 @@ export default function Connections() {
   return (
     <Box height={'100%'} display={'flex'} flexDirection={'column'}>
       {connections.map((c: ConnectionType, index: number) => (
-        <ConnectionItem key={uuids[index]} selected={c.info.name == currentConnection.info.name} label={c.info.name} />
+        <ConnectionItem key={uuids[index]} selected={c.name == currentConnection.name} label={c.name} />
       ))}
       <EmptySpaceStyle />
     </Box>
