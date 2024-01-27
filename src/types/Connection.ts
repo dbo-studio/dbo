@@ -1,16 +1,17 @@
 export type ConnectionType = {
+  id: number;
   name: string;
   type: string;
   driver: string;
   auth: ConnectionAuthType;
-  databases: DatabaseType[];
+  database: DatabaseType;
 };
 
 export type ConnectionAuthType = {
   host: string;
   port: number;
   database: string | null;
-  passport: string | null;
+  passport?: string | null;
 };
 
 export type DatabaseType = {

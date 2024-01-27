@@ -1,3 +1,4 @@
+import { useUUID } from '@/src/hooks';
 import { StructureType } from '@/src/types/Data';
 import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { DBStructureStyled } from './DBStructure.styled';
@@ -6,6 +7,7 @@ import { fakeColumn } from './makeData';
 
 export default function DBStructure() {
   const data = fakeColumn;
+  const uuids = useUUID(data.length);
 
   return (
     <DBStructureStyled>
@@ -21,8 +23,8 @@ export default function DBStructure() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map((item: StructureType) => (
-              <DBStructureItem item={item} />
+            {data.map((item: StructureType, index: number) => (
+              <DBStructureItem key={uuids[index]} item={item} />
             ))}
           </TableBody>
         </Table>

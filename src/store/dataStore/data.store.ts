@@ -8,7 +8,7 @@ import { DataStore } from './types';
 type DataState = DataStore;
 
 export const useDataStore = create<DataState>()(
-  devtools((set, get, ...state) => ({
+  devtools((set, get) => ({
     selectedRow: {},
     rows: {},
     columns: {},
@@ -36,7 +36,7 @@ export const useDataStore = create<DataState>()(
       }
       return rows[selectedTab.id];
     },
-    updateSelectedRow: (selectedRow: any | undefined) => {
+    updateSelectedRow: (selectedRow: RowType | undefined) => {
       const selectedTab = get().selectedTab();
       if (!selectedTab) {
         return;
@@ -47,7 +47,7 @@ export const useDataStore = create<DataState>()(
 
       set({ selectedRow: rows });
     },
-    updateRows: (items: any[]) => {
+    updateRows: (items: RowType[]) => {
       const selectedTab = get().selectedTab();
       if (!selectedTab) {
         return;
@@ -58,7 +58,7 @@ export const useDataStore = create<DataState>()(
 
       set({ rows });
     },
-    updateColumns: (items: any[]) => {
+    updateColumns: (items: RowType[]) => {
       const selectedTab = get().selectedTab();
       if (!selectedTab) {
         return;

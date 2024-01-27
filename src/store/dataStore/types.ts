@@ -8,9 +8,9 @@ export type DataStore = {
   getRows(): RowType[];
   getColumns(): ColumnType[];
   getSelectedRow(): RowType | undefined;
-  updateSelectedRow: (selectedRow: any | undefined) => void;
-  updateRows: (items: any[]) => void;
-  updateColumns: (items: any[]) => void;
+  updateSelectedRow: (selectedRow: RowType | undefined) => void;
+  updateRows: (items: RowType[]) => void;
+  updateColumns: (items: RowType[]) => void;
   selectedTab: () => TabType | undefined;
 };
 

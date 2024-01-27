@@ -8,4 +8,5 @@ export type ConnectionItemStylesProps = {
 export type ConnectionItemProps = {
   label: string;
   selected?: boolean;
+  onClick: any;
 };

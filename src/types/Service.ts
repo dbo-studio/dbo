@@ -1,14 +1,19 @@
+import { ConnectionType } from './Connection';
+
 export interface QueryResponseType extends ResponseType {
   table: number;
 }
 
-export interface ConnectionResponseType extends ResponseType {
-  id: number;
-  name: string;
-  host: string;
-  username: string;
-  port: number;
-  database: string;
+export interface ConnectionsResponseType extends ResponseType {
+  data: ConnectionType[];
 }
 
-export type ResponseType = {};
+export interface ConnectionResponseType extends ResponseType {
+  data: ConnectionType;
+}
+
+export type ResponseType = {
+  code: number;
+  data: unknown;
+  message: string;
+};

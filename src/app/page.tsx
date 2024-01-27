@@ -6,11 +6,8 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
 import { Box, styled } from '@mui/material';
-import useSWR from 'swr';
 import AppHeader from '../components/layout/AppHeader/AppHeader';
 import MainContainer from '../components/layout/MainContainer/MainContainer';
-import { getConnections } from '../core/services';
-import { useConnectionStore } from '../store/connectionStore/connection.store';
 
 const Wrapper = styled(Box)(({ theme }) => ({
   height: '100vh',
@@ -20,12 +17,6 @@ const Wrapper = styled(Box)(({ theme }) => ({
 }));
 
 const Page = () => {
-  const { data, mutate, error } = useSWR('api_connections_get', getConnections);
-  const { updateConnections } = useConnectionStore();
-
-  if (data && !error) {
-  }
-
   return (
     <Wrapper>
       <AppHeader />

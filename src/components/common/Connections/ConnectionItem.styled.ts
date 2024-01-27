@@ -6,6 +6,7 @@ export const ConnectionItemStyles = styled(Box)<ConnectionItemStylesProps>(({ th
   position: 'relative',
   borderBottom: `1px solid ${theme.palette.divider}`,
   borderRight: selected ? 'unset' : `1px solid ${theme.palette.divider}`,
+  background: selected ? theme.palette.background.paper : 'unset',
   justifyContent: 'center',
   display: 'flex',
   alignItems: 'center',
