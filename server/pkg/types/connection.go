@@ -10,25 +10,25 @@ type ConnectionRequest struct {
 }
 
 type ConnectionSchema struct {
-	Database string
-	Schemes  []Schema
+	Database string   `json:"database"`
+	Schemes  []Schema `json:"schemes"`
 }
 
 type Schema struct {
-	Name   string
-	Tables []Table
+	Name   string  `json:"name"`
+	Tables []Table `json:"tables"`
 }
 type Table struct {
-	Name    string
-	DDL     string
-	Columns []Column
+	Name    string   `json:"name"`
+	DDL     string   `json:"ddl"`
+	Columns []Column `json:"columns"`
 }
 
 type Column struct {
-	Name    string
-	Type    string
-	NotNull bool
-	Length  int32
-	Decimal int32
-	Default string
+	Name    string `json:"name"`
+	Type    string `json:"types"`
+	NotNull bool   `json:"not_null"`
+	Length  int32  `json:"length"`
+	Decimal int32  `json:"decimal"`
+	Default string `json:"default"`
 }

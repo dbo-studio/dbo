@@ -26,6 +26,7 @@ func (h *ConnectionHandler) Connections(c *fiber.Ctx) error {
 	var data []map[string]interface{}
 	for _, c := range connections {
 		item := make(map[string]interface{})
+		item["id"] = c.ID
 		item["name"] = c.Name
 		item["type"] = "SQL"
 		item["driver"] = "PostgreSQL"
@@ -55,17 +56,16 @@ func (h *ConnectionHandler) Connection(c *fiber.Ctx) error {
 	}
 
 	item := make(map[string]interface{})
-	item["info"] = map[string]interface{}{
-		"driver": "PostgreSQL",
-		"type":   "SQL",
-		"name":   connection.Name,
-	}
+	item["id"] = connection.ID
+	item["name"] = connection.Name
+	item["type"] = "SQL"
+	item["driver"] = "PostgreSQL"
 	item["auth"] = map[string]interface{}{
 		"database": connection.Database,
 		"host":     connection.Host,
 		"port":     connection.Port,
 	}
-	item["databases"] = connectionInfo
+	item["database"] = connectionInfo
 
 	return c.JSON(helper.DefaultResponse(item, "", 1))
 }
