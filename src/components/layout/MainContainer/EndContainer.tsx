@@ -1,8 +1,9 @@
 import DBFelids from '@/src/components/common/DBFelids/DBFelids';
-import { tools } from '@/src/core/utils';
-import { Box, Tab, Tabs, styled, useTheme } from '@mui/material';
+import { useSettingStore } from '@/src/store/settingStore/setting.store';
+import { Box, Tab, Tabs } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
+import { EndContainerStyled } from './Container.styled';
 
 const tabs = [
   {
@@ -35,8 +36,8 @@ const tabs = [
 ];
 
 export default function EndContainer() {
-  const theme = useTheme();
   const [selectedTabId, setSelectedTabId] = useState(tabs[0].id);
+  const { sidebar, updateSidebar } = useSettingStore();
 
   const selectedTabContent = useMemo(() => {
     return tabs.find((obj) => obj.id === selectedTabId)?.content;
@@ -46,16 +47,14 @@ export default function EndContainer() {
     setSelectedTabId(id);
   };
 
-  const StartContainerStyle = styled(Box)({
-    padding: theme.spacing(1),
-    border: `1px solid ${theme.palette.divider}`,
-    height: tools.screenMaxHeight(),
-    overflow: 'auto'
-  });
-
   return (
-    <ResizableXBox width={285} direction='ltr' maxWidth={500}>
-      <StartContainerStyle>
+    <ResizableXBox
+      onChange={(width: number) => updateSidebar({ rightWidth: width })}
+      width={sidebar.rightWidth}
+      direction='ltr'
+      maxWidth={500}
+    >
+      <EndContainerStyled>
         <Tabs value={selectedTabId} onChange={onSelectedTabChanged}>
           <Tab label='Fields' />
           <Tab label='DDL' />
@@ -63,7 +62,7 @@ export default function EndContainer() {
         </Tabs>
 
         <Box role='tabpanel'>{selectedTabContent}</Box>
-      </StartContainerStyle>
+      </EndContainerStyled>
     </ResizableXBox>
   );
 }

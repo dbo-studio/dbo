@@ -3,5 +3,6 @@ export const constants = {
   copyright: '© Copyright',
   version: 'v',
   test: 'Test',
-  darkMode: 'Dark Mode'
+  darkMode: 'Dark Mode',
+  defaultSidebarWidth: 285
 };

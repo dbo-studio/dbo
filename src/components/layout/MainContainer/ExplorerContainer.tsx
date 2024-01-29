@@ -1,9 +1,9 @@
 import DBTreeView from '@/src/components/common/DBTreeView/DBTreeView';
-import { tools } from '@/src/core/utils';
-import styled from '@emotion/styled';
-import { Box, Tab, Tabs, useTheme } from '@mui/material';
+import { useSettingStore } from '@/src/store/settingStore/setting.store';
+import { Box, Tab, Tabs } from '@mui/material';
 import { useMemo, useState } from 'react';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
+import { ExplorerContainerStyled } from './Container.styled';
 
 const tabs = [
   {
@@ -36,8 +36,8 @@ const tabs = [
 ];
 
 export default function ExplorerContainer() {
-  const theme = useTheme();
   const [selectedTabId, setSelectedTabId] = useState(0);
+  const { sidebar, updateSidebar } = useSettingStore();
 
   const selectedTabContent = useMemo(() => {
     return tabs.find((obj) => obj.id === Number(selectedTabId))?.content;
@@ -47,18 +47,14 @@ export default function ExplorerContainer() {
     setSelectedTabId(id);
   };
 
-  const ExplorerContainerStyle = styled(Box)({
-    padding: theme.spacing(1),
-    borderTop: `1px solid ${theme.palette.divider}`,
-    borderBottom: `1px solid ${theme.palette.divider}`,
-    borderRight: `1px solid ${theme.palette.divider}`,
-    height: tools.screenMaxHeight(),
-    overflow: 'auto'
-  });
-
   return (
-    <ResizableXBox width={285} direction='rtl' maxWidth={500}>
-      <ExplorerContainerStyle>
+    <ResizableXBox
+      onChange={(width: number) => updateSidebar({ leftWidth: width })}
+      width={sidebar.leftWidth}
+      direction='rtl'
+      maxWidth={500}
+    >
+      <ExplorerContainerStyled>
         <Tabs value={selectedTabId} onChange={onSelectedTabChanged}>
           <Tab label='Tables' />
           <Tab label='Queries' />
@@ -66,7 +62,7 @@ export default function ExplorerContainer() {
         </Tabs>
 
         <Box role='tabpanel'>{selectedTabContent}</Box>
-      </ExplorerContainerStyle>
+      </ExplorerContainerStyled>
     </ResizableXBox>
   );
 }

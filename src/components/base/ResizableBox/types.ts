@@ -6,6 +6,7 @@ export interface ResizableBoxXProps {
   width: number;
   maxWidth?: number;
   children: React.ReactNode;
+  onChange?: any;
 }
 
 export interface ResizableBoxYProps extends BoxProps {

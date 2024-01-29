@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import ResizableToggle from './ResizableToggle';
 import { ResizableBoxXProps } from './types';
 
-export default function ResizableXBox({ direction, width, maxWidth, children }: ResizableBoxXProps) {
+export default function ResizableXBox({ direction, width, maxWidth, children, onChange }: ResizableBoxXProps) {
   const [boxWidth, setBoxWidth] = useState(width);
   const [isResizing, setIsResizing] = useState(false);
   const [initialX, setInitialX] = useState(0);
@@ -26,6 +26,10 @@ export default function ResizableXBox({ direction, width, maxWidth, children }: 
 
     setBoxWidth(Math.min(Math.max(newWidth, width ?? 50), maxWidth ?? width * 2));
     setInitialX(event.clientX);
+
+    if (onChange) {
+      onChange(newWidth);
+    }
   };
 
   useEffect(() => {

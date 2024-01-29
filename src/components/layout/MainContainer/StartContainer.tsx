@@ -1,24 +1,10 @@
 import Connections from '@/src/components/common/Connections/Connections';
-import { tools } from '@/src/core/utils';
-import styled from '@emotion/styled';
-import { Box, useTheme } from '@mui/material';
-import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
+import { StartContainerStyled } from './Container.styled';
 
 export default function StartContainer() {
-  const theme = useTheme();
-
-  const StartContainerStyle = styled(Box)({
-    borderTop: `1px solid ${theme.palette.divider}`,
-    borderLeft: `1px solid ${theme.palette.divider}`,
-    height: tools.screenMaxHeight(),
-    overflow: 'auto'
-  });
-
   return (
-    <ResizableXBox width={98} direction='rtl'>
-      <StartContainerStyle>
-        <Connections />
-      </StartContainerStyle>
-    </ResizableXBox>
+    <StartContainerStyled>
+      <Connections />
+    </StartContainerStyled>
   );
 }

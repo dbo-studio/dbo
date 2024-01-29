@@ -1,4 +1,4 @@
-const { version } = require('../package.json');
+import { version } from '../package.json';
 
 interface IAppConfig {
   siteName: string;

@@ -33,6 +33,7 @@ export const useTabStore = create<TabState>()(
             if (t.id == selectedTab.id) {
               return selectedTab;
             }
+            return t;
           });
           set({ tabs, selectedTab });
         },
