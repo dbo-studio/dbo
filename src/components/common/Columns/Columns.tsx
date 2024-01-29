@@ -1,3 +1,4 @@
+import { tools } from '@/src/core/utils';
 import { useDataStore } from '@/src/store/dataStore/data.store';
 import { ColumnType } from '@/src/types/Data';
 import { Box, Theme, useTheme } from '@mui/material';
@@ -23,9 +24,9 @@ export default function Columns() {
     <Box
       padding={theme.spacing(1)}
       borderRight={`1px solid ${theme.palette.divider}`}
-      height={'100vh'}
-      maxHeight={'100vh'}
-      minHeight={'100vh'}
+      height={tools.screenMaxHeight()}
+      maxHeight={tools.screenMaxHeight()}
+      minHeight={tools.screenMaxHeight()}
       overflow={'auto'}
       display={'flex'}
       flexDirection={'column'}

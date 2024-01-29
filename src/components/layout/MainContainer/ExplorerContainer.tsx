@@ -1,4 +1,5 @@
 import DBTreeView from '@/src/components/common/DBTreeView/DBTreeView';
+import { tools } from '@/src/core/utils';
 import styled from '@emotion/styled';
 import { Box, Tab, Tabs, useTheme } from '@mui/material';
 import { useMemo, useState } from 'react';
@@ -51,7 +52,7 @@ export default function ExplorerContainer() {
     borderTop: `1px solid ${theme.palette.divider}`,
     borderBottom: `1px solid ${theme.palette.divider}`,
     borderRight: `1px solid ${theme.palette.divider}`,
-    height: '100vh',
+    height: tools.screenMaxHeight(),
     overflow: 'auto'
   });
 

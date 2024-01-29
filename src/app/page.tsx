@@ -8,11 +8,12 @@ import '@fontsource/roboto/700.css';
 import { Box, styled } from '@mui/material';
 import AppHeader from '../components/layout/AppHeader/AppHeader';
 import MainContainer from '../components/layout/MainContainer/MainContainer';
+import { tools } from '../core/utils';
 
 const Wrapper = styled(Box)(({ theme }) => ({
-  height: '100vh',
+  height: tools.screenFullHeight(),
   backgroundColor: theme.palette.background.default,
-  maxHeight: '100vh',
+  maxHeight: tools.screenFullHeight(),
   overflow: 'hidden'
 }));
 

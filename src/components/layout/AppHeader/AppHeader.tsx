@@ -5,7 +5,7 @@ import Leading from './Leading';
 
 export default function AppHeader() {
   return (
-    <Grid className={'app-header'} p={2} container spacing={0} justifyContent={'space-between'}>
+    <Grid className={'app-header'} pt={1} pb={1} pr={2} pl={2} container spacing={0} justifyContent={'space-between'}>
       <Grid md={2}>
         <Leading />
       </Grid>

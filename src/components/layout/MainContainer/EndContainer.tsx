@@ -1,4 +1,5 @@
 import DBFelids from '@/src/components/common/DBFelids/DBFelids';
+import { tools } from '@/src/core/utils';
 import { Box, Tab, Tabs, styled, useTheme } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
@@ -48,7 +49,7 @@ export default function EndContainer() {
   const StartContainerStyle = styled(Box)({
     padding: theme.spacing(1),
     border: `1px solid ${theme.palette.divider}`,
-    height: '100vh',
+    height: tools.screenMaxHeight(),
     overflow: 'auto'
   });
 

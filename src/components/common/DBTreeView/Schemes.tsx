@@ -2,6 +2,7 @@ import { useUUID } from '@/src/hooks';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
 import { EventFor, SchemaType } from '@/src/types';
 import { Box, NativeSelect } from '@mui/material';
+import { SchemaStyled } from './DBTreeView.styled';
 
 export default function Schemes({ schemes }: { schemes: SchemaType[] }) {
   const uuids = useUUID(schemes.length);
@@ -16,19 +17,21 @@ export default function Schemes({ schemes }: { schemes: SchemaType[] }) {
   };
 
   return (
-    <Box>
-      <NativeSelect
-        size='medium'
-        fullWidth={true}
-        onChange={handleChangeSchema}
-        defaultValue={getCurrentSchema()?.name}
-      >
-        {schemes.map((s: SchemaType, index: number) => (
-          <option key={uuids[index]} value={s.name}>
-            {s.name}
-          </option>
-        ))}
-      </NativeSelect>
-    </Box>
+    <SchemaStyled>
+      <Box>
+        <NativeSelect
+          size='medium'
+          fullWidth={true}
+          onChange={handleChangeSchema}
+          defaultValue={getCurrentSchema()?.name}
+        >
+          {schemes.map((s: SchemaType, index: number) => (
+            <option key={uuids[index]} value={s.name}>
+              {s.name}
+            </option>
+          ))}
+        </NativeSelect>
+      </Box>
+    </SchemaStyled>
   );
 }
