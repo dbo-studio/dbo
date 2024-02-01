@@ -16,7 +16,7 @@ export const useConnectionStore = create<ConnectionState>()(
         getCurrentSchema: () => {
           const currentConnection = get().currentConnection;
           const currentSchema = get().currentSchema;
-          if (!currentConnection || !currentSchema.hasOwnProperty(currentConnection.id)) {
+          if (!currentConnection || !Object.prototype.hasOwnProperty.call(currentSchema, currentConnection.id)) {
             return undefined;
           }
           return currentSchema[currentConnection.id];

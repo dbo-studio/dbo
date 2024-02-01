@@ -15,7 +15,7 @@ export const useDataStore = create<DataState>()(
     getRows: () => {
       const selectedTab = get().selectedTab();
       const rows = get().rows;
-      if (!selectedTab || !rows.hasOwnProperty(selectedTab.id)) {
+      if (!selectedTab || !Object.prototype.hasOwnProperty.call(rows, selectedTab.id)) {
         return [];
       }
       return rows[selectedTab.id];
@@ -23,7 +23,7 @@ export const useDataStore = create<DataState>()(
     getColumns: () => {
       const selectedTab = get().selectedTab();
       const columns = get().columns;
-      if (!selectedTab || !columns.hasOwnProperty(selectedTab.id)) {
+      if (!selectedTab || !Object.prototype.hasOwnProperty.call(columns, selectedTab.id)) {
         return [];
       }
       return columns[selectedTab.id].filter((c: ColumnType) => c.key != 'select-row');
@@ -31,7 +31,7 @@ export const useDataStore = create<DataState>()(
     getSelectedRow: (): RowType | undefined => {
       const selectedTab = get().selectedTab();
       const rows = get().selectedRow;
-      if (!selectedTab || !rows.hasOwnProperty(selectedTab.id)) {
+      if (!selectedTab || !Object.prototype.hasOwnProperty.call(rows, selectedTab.id)) {
         return undefined;
       }
       return rows[selectedTab.id];

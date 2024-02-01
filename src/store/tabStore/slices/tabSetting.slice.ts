@@ -5,11 +5,7 @@ import { TabSettingSlice, TabStore } from '../types';
 
 const maxTabs = 15;
 
-export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [], [], TabSettingSlice> = (
-  set,
-  get,
-  store
-) => ({
+export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [], [], TabSettingSlice> = (set, get) => ({
   addTab: (table: string) => {
     const tabs = get().tabs;
 

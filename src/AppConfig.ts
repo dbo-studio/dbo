@@ -1,5 +1,3 @@
-import { version } from '../package.json';
-
 interface IAppConfig {
   siteName: string;
   title: string;
@@ -15,5 +13,5 @@ export const appConfig: IAppConfig = {
   description: 'test',
   locale: 'en',
   direction: 'ltr',
-  version: version
+  version: '0'
 };
