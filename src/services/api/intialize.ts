@@ -2,8 +2,8 @@
 import axios from 'axios';
 
 const $axios = axios.create({
-//   baseURL: isProduction ? process.env.NEXT_PUBLIC_BACKEND_URL : process.env.NEXT_PUBLIC_BACKEND_URL_DEMO,
-  baseURL:  process.env.NEXT_PUBLIC_BACKEND_URL ,
+  //   baseURL: isProduction ? process.env.NEXT_PUBLIC_BACKEND_URL : process.env.NEXT_PUBLIC_BACKEND_URL_DEMO,
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,
   headers: {
     'Content-Type': 'application/json'
   },
@@ -20,4 +20,4 @@ $axios.interceptors.response.use((response) => {
 });
 const servicePost = $axios.post;
 const serviceGet = $axios.get;
-export { servicePost, serviceGet };
+export { serviceGet, servicePost };

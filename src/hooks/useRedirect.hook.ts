@@ -1,7 +1,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
-const useRedirect = (redirectTo: string, seconds = 1) => {
+export const useRedirect = (redirectTo: string, seconds = 1) => {
   const router = useRouter();
 
   useEffect(() => {
@@ -12,7 +12,5 @@ const useRedirect = (redirectTo: string, seconds = 1) => {
     return () => {
       clearInterval(timer);
     };
-  }, [router]);
+  }, [redirectTo, router, seconds]);
 };
-
-export default useRedirect;

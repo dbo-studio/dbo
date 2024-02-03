@@ -1,6 +1,5 @@
-import { serviceGet, servicePost } from '@/services/api/initialize';
 import { AxiosRequestHeaders } from 'axios';
-import Router from 'next/router';
+import { serviceGet, servicePost } from './intialize';
 
 // const REQUEST_UNIQUE_ID_KEY = 'X-Request-UUID';
 // const GLOBAL_BOTTOM_SHEET_DATA_KEY = 'global_bottom_sheet';
@@ -35,11 +34,11 @@ import Router from 'next/router';
 // };
 
 const messageHandler = (response: any) => {
-//   const message = response?.data?.data?.message;
-//   message &&
-//     toast(message, {
-//       closeButton: true
-//     });
+  //   const message = response?.data?.data?.message;
+  //   message &&
+  //     toast(message, {
+  //       closeButton: true
+  //     });
   // store.dispatch(
   //   addAlertAction({
   //     text: message,

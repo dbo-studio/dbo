@@ -1,4 +1,4 @@
-import { SimpleObject } from '@/types';
+import { SimpleObject } from '@/src/types';
 
 export function isObject<T>(val: unknown): val is SimpleObject<T> {
   return (

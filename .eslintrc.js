@@ -33,7 +33,8 @@ module.exports = {
     'react/display-name': 'off',
     'prettier/prettier': 'error',
     'arrow-body-style': 'off',
-    'prefer-arrow-callback': 'off'
+    'prefer-arrow-callback': 'off',
+    '@typescript-eslint/no-explicit-any': 0
   },
   plugins: ['react', 'prettier', '@typescript-eslint', 'unused-imports'],
 

@@ -1,7 +1,7 @@
-import { cleanObject } from "@/utils"
+import { tools } from '@/src/core/utils';
 
 export const transformTableData = (data: any) => {
-    return cleanObject({
-        columns : data?.column_data,
-    })
-}
+  return tools.cleanObject({
+    columns: data?.column_data
+  });
+};

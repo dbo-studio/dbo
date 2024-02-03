@@ -30,8 +30,8 @@
       "@/sections/*": ["src/sections/*"],
       "@/hooks/*": ["src/hooks/*"],
       "@/types/*": ["src/types/*"],
-      "@/services/*": ["src/services/*"],
-      "@/utils/*": ["src/utils/*"]
+      "@/services/*": ["src/core/services/*"],
+      "@/utils/*": ["src/core/utils/*"]
     }
   },
 

@@ -1,11 +1,11 @@
-import useSWR from 'swr';
-import type { MutatorOptions } from 'swr';
-import { apiHandler } from '@/services';
 import { useRouter } from 'next/router';
 import { DependencyList, useEffect, useMemo } from 'react';
-import { useMount } from '@/hooks';
-import { ArgumentType, MethodType, SimpleFunction } from '@/types';
-import { isEmpty } from '@/utils';
+import type { MutatorOptions } from 'swr';
+import useSWR from 'swr';
+import { tools } from '../core/utils';
+import { apiHandler } from '../services';
+import { ArgumentType, MethodType, SimpleFunction } from '../types';
+import { useMount } from './useMount';
 
 interface UsePageData<T, M extends MethodType> {
   apiMethod: (data?: ArgumentType<M>) => Promise<T & { message?: string }>;
@@ -30,7 +30,7 @@ interface UsePageDataReturnType<T> {
   cacheKey: Array<unknown>;
 }
 
-export default function usePageData<T, M extends MethodType>({
+export function usePageData<T, M extends MethodType>({
   apiMethod,
   apiData,
   dependencies,
@@ -66,7 +66,7 @@ export default function usePageData<T, M extends MethodType>({
   } = useSWR(isReady ? memoizedDependenciesOnLoad : null, fetcher, {
     onError: failedCallback,
     revalidateIfStale,
-    revalidateOnMount: revalidateOnEmptyCache ? isEmpty(cachedData) : revalidateOnMount,
+    revalidateOnMount: revalidateOnEmptyCache ? tools.isEmpty(cachedData) : revalidateOnMount,
     revalidateOnFocus,
     revalidateOnReconnect
   });
@@ -76,7 +76,7 @@ export default function usePageData<T, M extends MethodType>({
   useEffect(() => {
     if ((!isMounted && !pageData) || pending) return;
     successCallback?.(pageData);
-  }, [pageData, pending]);
+  }, [isMounted, pageData, pending, successCallback]);
 
   const reload = () => mutate?.();
 
