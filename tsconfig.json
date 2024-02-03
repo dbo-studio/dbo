@@ -29,7 +29,9 @@
       "@/store/*": ["src/store/*"],
       "@/sections/*": ["src/sections/*"],
       "@/hooks/*": ["src/hooks/*"],
-      "@/types/*": ["src/types/*"]
+      "@/types/*": ["src/types/*"],
+      "@/services/*": ["src/services/*"],
+      "@/utils/*": ["src/utils/*"]
     }
   },
 
