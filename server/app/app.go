@@ -1,6 +1,10 @@
 package app
 
 import (
+	"errors"
+	"log"
+	"os"
+
 	"github.com/khodemobin/dbo/internal/config"
 	"github.com/khodemobin/dbo/internal/model"
 	"github.com/khodemobin/dbo/pkg/db"
@@ -23,6 +27,15 @@ var Container *AppContainer = nil
 func New() {
 	config := config.New()
 	var logger logger.Logger
+
+	path := "logs"
+	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		err := os.Mkdir(path, os.ModePerm)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+
 	if helper.IsLocal() {
 		logger = zap.New()
 	} else if config.App.Env == "test" {
