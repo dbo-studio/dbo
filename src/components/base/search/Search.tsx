@@ -4,7 +4,7 @@ import { Box, InputAdornment, InputBase } from '@mui/material';
 import { useState } from 'react';
 import CustomIcon from '../CustomIcon/CustomIcon';
 
-export default function Search({ onChange }: { onChange: Function }) {
+export default function Search({ onChange }: { onChange: (value: string) => void }) {
   const [value, setValue] = useState('');
 
   const onChangeHandler = (e: EventFor<'input', 'onChange'>) => {

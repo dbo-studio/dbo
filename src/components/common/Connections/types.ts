@@ -1,3 +1,4 @@
+import { ConnectionType } from '@/src/types';
 import { Theme } from '@mui/material';
 
 export type ConnectionItemStyledProps = {
@@ -8,5 +9,5 @@ export type ConnectionItemStyledProps = {
 export type ConnectionItemProps = {
   label: string;
   selected?: boolean;
-  onClick: any;
+  onClick: (c: ConnectionType) => void;
 };

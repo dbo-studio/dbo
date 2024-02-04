@@ -14,7 +14,7 @@ export default function TabPanel() {
   const { selectedTab } = useTabStore();
   return (
     <Box overflow='hidden' height={'100%'} display='flex' flexDirection='column'>
-      {!selectedTab ? null : selectedTab.mode == TabMode.Data ? DataMode(selectedTab) : StructureMode(selectedTab)}
+      {!selectedTab ? null : selectedTab.mode == TabMode.Data ? DataMode(selectedTab) : StructureMode()}
       <StatusBar />
     </Box>
   );
@@ -35,6 +35,6 @@ function DataMode(selectedTab: TabType) {
   );
 }
 
-function StructureMode(selectedTab: TabType) {
+function StructureMode() {
   return <DBStructure />;
 }
