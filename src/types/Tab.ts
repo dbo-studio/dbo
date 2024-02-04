@@ -10,6 +10,7 @@ export type FilterType = {
   column: string;
   operator: string;
   value: string | number;
+  next: string;
   isActive: boolean;
 };
 

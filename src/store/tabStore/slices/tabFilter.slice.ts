@@ -15,6 +15,7 @@ export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [
     } else {
       findFilter.value = filter.value;
       findFilter.operator = filter.operator;
+      findFilter.next = filter.next;
       findFilter.isActive = filter.isActive;
     }
 

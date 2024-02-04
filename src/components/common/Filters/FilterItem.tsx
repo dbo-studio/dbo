@@ -1,4 +1,4 @@
-import { PgsqlFilterConditions } from '@/src/core/constants';
+import { PgsqlFilterConditions, PgsqlFilterNext } from '@/src/core/constants';
 import { useUUID } from '@/src/hooks';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { ColumnType, EventFor, FilterType } from '@/src/types';
@@ -16,13 +16,14 @@ export default function FilterItem({ filter, columns, filterLength }: FilterItem
     column: filter.column,
     operator: filter.operator,
     value: filter.value,
+    next: filter.next,
     isActive: filter.isActive
   });
 
   const uuidOperators = useUUID(PgsqlFilterConditions.length);
 
   const handleChange = (
-    type: 'column' | 'operator' | 'value' | 'isActive',
+    type: 'column' | 'operator' | 'value' | 'next' | 'isActive',
     e: EventFor<'select', 'onChange'> | EventFor<'input', 'onChange'> | any
   ) => {
     const value = e.target.value as string;
@@ -31,6 +32,7 @@ export default function FilterItem({ filter, columns, filterLength }: FilterItem
       column: type == 'column' ? value : currentFilter.column,
       operator: type == 'operator' ? value : currentFilter.operator,
       value: type == 'value' ? value : currentFilter.value,
+      next: type == 'next' ? value : currentFilter.next,
       isActive: type == 'isActive' ? e.target.checked : currentFilter.isActive
     };
 
@@ -45,7 +47,7 @@ export default function FilterItem({ filter, columns, filterLength }: FilterItem
       </Box>
       <Box>
         <NativeSelect size='small' value={currentFilter.column} onChange={(e) => handleChange('column', e)}>
-          {columns.map((c: ColumnType, index: number) => (
+          {columns.map((c: ColumnType) => (
             <option key={uuidv4()} value={c.key as string}>
               {c.name}
             </option>
@@ -61,13 +63,22 @@ export default function FilterItem({ filter, columns, filterLength }: FilterItem
           ))}
         </NativeSelect>
       </Box>
-      <Box flex={1}>
+      <Box flex={1} mr={1}>
         <Input
           fullWidth
           size='small'
           value={currentFilter.value}
           onChange={(e: EventFor<'input', 'onChange'>) => handleChange('value', e)}
         />
+      </Box>
+      <Box>
+        <NativeSelect size='small' value={currentFilter.next} onChange={(e) => handleChange('next', e)}>
+          {PgsqlFilterNext.map((c: string, index: number) => (
+            <option key={uuidOperators[index]} value={c}>
+              {c}
+            </option>
+          ))}
+        </NativeSelect>
       </Box>
       <Box ml={1} mr={1}>
         <RemoveFilterButton filter={filter} />
