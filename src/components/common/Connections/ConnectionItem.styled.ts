@@ -1,7 +1,7 @@
 import { Box, styled } from '@mui/material';
-import { ConnectionItemStylesProps } from './types';
+import { ConnectionItemStyledProps } from './types';
 
-export const ConnectionItemStyles = styled(Box)<ConnectionItemStylesProps>(({ theme, selected }) => ({
+export const ConnectionItemStyled = styled(Box)<ConnectionItemStyledProps>(({ theme, selected }) => ({
   cursor: 'pointer',
   position: 'relative',
   borderBottom: `1px solid ${theme.palette.divider}`,
