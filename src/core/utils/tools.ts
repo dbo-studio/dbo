@@ -1,8 +1,8 @@
-import { isNumber, isObject } from './type';
+import { isNumber, isObject, isServerSide } from '.';
 
 export const tools = {
-  screenMaxHeight: (): string => (window ? window.innerHeight - 56 + 'px' : '0px'),
-  screenFullHeight: (): string => (window ? window.innerHeight + 'px' : '0px'),
+  screenMaxHeight: (): string => (!isServerSide ? window.innerHeight - 56 + 'px' : '0px'),
+  screenFullHeight: (): string => (!isServerSide ? window.innerHeight + 'px' : '0px'),
   isEmpty: (data: unknown): data is never | undefined | null => {
     return (
       (!data && !isNumber(data)) ||
