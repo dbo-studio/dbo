@@ -1,5 +1,5 @@
-import { ConnectionType } from '@/src/types';
 import { Theme } from '@mui/material';
+import { MouseEventHandler } from 'react';
 
 export type ConnectionItemStyledProps = {
   theme: Theme;
@@ -9,5 +9,5 @@ export type ConnectionItemStyledProps = {
 export type ConnectionItemProps = {
   label: string;
   selected?: boolean;
-  onClick: (c: ConnectionType) => void;
+  onClick: MouseEventHandler | undefined;
 };

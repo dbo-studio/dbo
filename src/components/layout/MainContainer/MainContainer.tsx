@@ -1,6 +1,5 @@
 import { useSettingStore } from '@/src/store/settingStore/setting.store';
 import Grid from '@mui/material/Unstable_Grid2';
-import AddConnection from '../../common/AddConnection/AddConnection';
 import CenterContainer from './CenterContainer';
 import EndContainer from './EndContainer';
 import ExplorerContainer from './ExplorerContainer';
@@ -21,7 +20,6 @@ export default function MainContainer() {
       )}
       <Grid flex={1}>
         <CenterContainer />
-        <AddConnection />
       </Grid>
       {sidebar.showRight && (
         <Grid>

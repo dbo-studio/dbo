@@ -1,8 +1,8 @@
 import { isNumber, isObject } from './type';
 
 export const tools = {
-  screenMaxHeight: () => window.innerHeight - 56 + 'px',
-  screenFullHeight: () => window.innerHeight + 'px',
+  screenMaxHeight: (): string => (window ? window.innerHeight - 56 + 'px' : '0px'),
+  screenFullHeight: (): string => (window ? window.innerHeight + 'px' : '0px'),
   isEmpty: (data: unknown): data is never | undefined | null => {
     return (
       (!data && !isNumber(data)) ||

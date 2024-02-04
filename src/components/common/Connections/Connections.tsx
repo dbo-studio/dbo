@@ -4,6 +4,7 @@ import { useConnectionStore } from '@/src/store/connectionStore/connection.store
 import { ConnectionResponseType, ConnectionType, ConnectionsResponseType } from '@/src/types';
 import { Box } from '@mui/material';
 import { useEffect } from 'react';
+import AddConnection from '../AddConnection/AddConnection';
 import ConnectionItem from './ConnectionItem';
 import { EmptySpaceStyle } from './EmptySpace.styled';
 
@@ -36,6 +37,8 @@ export default function Connections() {
 
   return (
     <Box height={'100%'} display={'flex'} flexDirection={'column'}>
+      <AddConnection />
+
       {connections?.map((c: ConnectionType, index: number) => (
         <ConnectionItem
           onClick={() => handleChangeCurrentConnection(c)}

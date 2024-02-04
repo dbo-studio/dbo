@@ -1,15 +1,20 @@
-import { Box, styled } from '@mui/material';
+import { variables } from '@/src/core/theme/variables';
+import { Box, Modal, styled } from '@mui/material';
 
-export const AddConnectionStyled = styled(Box)(() => ({
-  position: 'fixed',
-  left: 0,
-  right: 0,
-  top: 0,
-  bottom: 0,
+export const AddConnectionModalStyled = styled(Modal)(() => ({
+  background: 'rgba(228, 228, 228, 0.50)'
+}));
+
+export const AddConnectionStyled = styled(Box)(({ theme }) => ({
+  height: '400px',
+  width: '400px',
+  borderRadius: variables.radius.medium,
+  background: theme.palette.background.default,
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  padding: theme.spacing(2),
   display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  zIndex: 99,
-  background: 'rgba(228, 228, 228, 0.50)',
-  backdropFilter: 'blur(2px)'
+  flexDirection: 'column'
 }));

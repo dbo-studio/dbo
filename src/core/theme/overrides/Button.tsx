@@ -8,7 +8,6 @@ export default function Button(theme: Theme): Components {
         root: {
           height: 32,
           border: `1px solid ${theme.palette.divider}`,
-          color: theme.palette.text.primary,
           borderRadius: variables.radius.medium,
           padding: '0 8px',
           '&.Mui-disabled': {
@@ -26,6 +25,7 @@ export default function Button(theme: Theme): Components {
 
           '&.MuiButton-sizeSmall': {
             height: 24,
+            padding: '5px 16px',
             fontSize: theme.typography.caption.fontSize
           }
         }

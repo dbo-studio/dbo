@@ -9,5 +9,8 @@
     "queries": "Queries",
     "history": "History",
     "apply": "Apply",
-    "search": "Search"
+    "search": "Search",
+    "new_connection": "New Connection",
+    "cancel": "Cancel",
+    "create": "Create"
 }

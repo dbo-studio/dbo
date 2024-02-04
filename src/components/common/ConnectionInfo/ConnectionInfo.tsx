@@ -1,14 +1,17 @@
 import ConnectionBox from '@/src/components/common/ConnectionInfo/ConnectionBox';
+import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
 import { IconButton, Stack } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 
 export default function ConnectionInfo() {
+  const { updateShowAddConnection } = useConnectionStore();
+
   return (
     <Stack direction={'row'} justifyContent={'center'} alignItems={'center'}>
       <Grid md={4}>
         <Stack direction={'row'} spacing={2} justifyContent='flex-end'>
-          <IconButton aria-label='connection'>
+          <IconButton aria-label='connection' onClick={() => updateShowAddConnection(true)}>
             <CustomIcon type={'connection'} size={'m'} />
           </IconButton>
           <IconButton aria-label='lock'>

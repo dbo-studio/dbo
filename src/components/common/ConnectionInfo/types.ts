@@ -1,3 +1,3 @@
 export type ConnectionBoxStyledProps = {
-  active: boolean;
+  active?: boolean | string;
 };
