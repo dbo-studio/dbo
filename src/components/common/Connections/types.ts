@@ -1,6 +1,6 @@
 import { Theme } from '@mui/material';
 
-export type ConnectionItemStylesProps = {
+export type ConnectionItemStyledProps = {
   theme: Theme;
   selected?: boolean;
 };

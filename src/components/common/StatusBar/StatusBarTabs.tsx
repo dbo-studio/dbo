@@ -1,4 +1,5 @@
 import { useUUID } from '@/src/hooks';
+import locales from '@/src/locales';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { TabMode } from '@/src/types';
 import { Box, Tab, Tabs } from '@mui/material';
@@ -9,17 +10,15 @@ import { StatusBarTabTypes } from './types';
 const tabs: StatusBarTabTypes[] = [
   {
     id: 0,
-    name: 'Data',
+    name: locales.data,
     icon: 'grid',
-    iconActive: 'gridBlue',
-    content: 'test content grid data'
+    iconActive: 'gridBlue'
   },
   {
     id: 1,
-    name: 'Structure',
+    name: locales.structure,
     icon: 'structure',
-    iconActive: 'structureBlue',
-    content: 'test content Structure'
+    iconActive: 'structureBlue'
   }
 ];
 

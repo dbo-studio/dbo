@@ -1,4 +1,5 @@
 import DBFelids from '@/src/components/common/DBFelids/DBFelids';
+import locales from '@/src/locales';
 import { useSettingStore } from '@/src/store/settingStore/setting.store';
 import { Box, Tab, Tabs } from '@mui/material';
 import React, { useMemo, useState } from 'react';
@@ -8,7 +9,7 @@ import { EndContainerStyled } from './Container.styled';
 const tabs = [
   {
     id: 0,
-    name: 'Fields',
+    name: locales.tables,
     content: (
       <>
         <DBFelids />
@@ -17,7 +18,7 @@ const tabs = [
   },
   {
     id: 1,
-    name: 'DDL',
+    name: locales.ddl,
     content: (
       <>
         <p>DDL</p>
@@ -26,7 +27,7 @@ const tabs = [
   },
   {
     id: 2,
-    name: 'Info',
+    name: locales.info,
     content: (
       <>
         <p>Info</p>

@@ -1,3 +1,4 @@
+import locales from '@/src/locales';
 import { EventFor } from '@/src/types';
 import { Box, InputAdornment, InputBase } from '@mui/material';
 import { useState } from 'react';
@@ -22,7 +23,7 @@ export default function Search({ onChange }: { onChange: Function }) {
         value={value}
         onChange={onChangeHandler}
         fullWidth={true}
-        placeholder='Search'
+        placeholder={locales.search}
         startAdornment={
           <InputAdornment position='start'>
             <CustomIcon type='search' height={12} width={12} />

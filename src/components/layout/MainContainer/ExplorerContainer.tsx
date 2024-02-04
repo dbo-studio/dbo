@@ -1,4 +1,5 @@
 import DBTreeView from '@/src/components/common/DBTreeView/DBTreeView';
+import locales from '@/src/locales';
 import { useSettingStore } from '@/src/store/settingStore/setting.store';
 import { Box, Tab, Tabs } from '@mui/material';
 import { useMemo, useState } from 'react';
@@ -8,7 +9,6 @@ import { ExplorerContainerStyled } from './Container.styled';
 const tabs = [
   {
     id: 0,
-    name: 'Items',
     content: (
       <>
         <DBTreeView />
@@ -17,7 +17,6 @@ const tabs = [
   },
   {
     id: 1,
-    name: 'Queries',
     content: (
       <>
         <p>Queries</p>
@@ -26,7 +25,6 @@ const tabs = [
   },
   {
     id: 2,
-    name: 'History',
     content: (
       <>
         <p>History</p>
@@ -56,9 +54,9 @@ export default function ExplorerContainer() {
     >
       <ExplorerContainerStyled>
         <Tabs value={selectedTabId} onChange={onSelectedTabChanged}>
-          <Tab label='Tables' />
-          <Tab label='Queries' />
-          <Tab label='History' />
+          <Tab label={locales.fields} />
+          <Tab label={locales.queries} />
+          <Tab label={locales.history} />
         </Tabs>
 
         <Box role='tabpanel'>{selectedTabContent}</Box>

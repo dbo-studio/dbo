@@ -6,9 +6,8 @@ export type StatusBarTabTypes = {
   name: string;
   icon: keyof typeof IconTypes;
   iconActive: keyof typeof IconTypes;
-  content: any;
 };
 
 export type StatusBarStylesProps = {
-  mode: TabMode;
+  mode?: TabMode;
 };

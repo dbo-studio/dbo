@@ -1,0 +1,13 @@
+{
+    "no_active_connection": "No Active Connection",
+    "data": "Data",
+    "structure": "Structure",
+    "fields": "Fields",
+    "ddl": "DDL",
+    "info": "Info",
+    "tables": "Tables",
+    "queries": "Queries",
+    "history": "History",
+    "apply": "Apply",
+    "search": "Search"
+}

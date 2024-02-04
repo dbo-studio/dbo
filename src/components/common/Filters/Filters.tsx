@@ -1,3 +1,4 @@
+import locales from '@/src/locales';
 import { useDataStore } from '@/src/store/dataStore/data.store';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { FilterType } from '@/src/types/Tab';
@@ -31,7 +32,7 @@ export default function Filters() {
       {selectedTab && selectedTab.filters.length > 0 ? (
         <Box display='flex' justifyContent='flex-start' mx={1} mt={1}>
           <Button size='small' variant='outlined' endIcon={<CustomIcon type='check' size='xs' />}>
-            Apply
+            {locales.apply}
           </Button>
         </Box>
       ) : null}

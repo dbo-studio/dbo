@@ -8,7 +8,7 @@ export default function StatusBar() {
   const { selectedTab } = useTabStore();
 
   return (
-    <StatusBarStyled mode={selectedTab?.mode!}>
+    <StatusBarStyled mode={selectedTab?.mode}>
       <StatusBarActions />
       <StatusBarTabs />
       <StatusBarPagination />
