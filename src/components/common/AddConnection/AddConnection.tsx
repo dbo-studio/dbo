@@ -1,24 +1,23 @@
-import { variables } from '@/src/core/theme/variables';
-import { useUUID } from '@/src/hooks';
 import locales from '@/src/locales';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
 import { Box, Button, Typography } from '@mui/material';
-import { useEffect } from 'react';
-import Search from '../../base/Search/Search';
+import { useEffect, useState } from 'react';
 import { AddConnectionModalStyled, AddConnectionStyled } from './AddConnection.styled';
-import ConnectionItem from './ConnectionItem';
+import ConnectionSelection from './ConnectionSelection';
+import ConnectionSetting from './ConnectionSettings';
 import { ConnectionType } from './types';
 
 const connectionTypes: ConnectionType[] = [
   {
     name: 'PostgreSQL',
-    logo: '/images/connections/postgresql_logo.png'
+    logo: '/images/connections/postgresql_logo.svg'
   }
 ];
 
 export default function AddConnection() {
   const { connections, updateShowAddConnection, showAddConnection } = useConnectionStore();
-  const uuids = useUUID(connectionTypes.length);
+  const [connectionType, setConnectionType] = useState<ConnectionType | undefined>(undefined);
+  const [step, setStep] = useState(0);
 
   useEffect(() => {
     if (!connections || connections.length == 0) {
@@ -28,10 +27,15 @@ export default function AddConnection() {
     }
   }, [connections]);
 
-  const handleClose = () => updateShowAddConnection(false);
+  const handleClose = () => {
+    setConnectionType(undefined);
+    updateShowAddConnection(false);
+  };
 
-  const handleSearch = (value: string) => {
-    console.log(value);
+  const handleStep = () => {
+    if (step == 0) {
+      setStep(1);
+    }
   };
 
   return (
@@ -40,20 +44,13 @@ export default function AddConnection() {
         <Box>
           <Typography variant='h6'>{locales.new_connection}</Typography>
         </Box>
-        <Box flex={1}>
-          <Search onChange={handleSearch} />
-
-          <Box border={`1px solid black`} borderRadius={variables.radius.medium}>
-            {connectionTypes.map((c, index: number) => (
-              <ConnectionItem key={uuids[index]} connection={c} />
-            ))}
-          </Box>
-        </Box>
+        {step == 0 && <ConnectionSelection connections={connectionTypes} onChange={setConnectionType} />}
+        {step == 1 && <ConnectionSetting connection={connectionType} />}
         <Box display={'flex'} justifyContent={'space-between'}>
           <Button size='small' onClick={handleClose}>
             {locales.cancel}
           </Button>
-          <Button size='small' variant='contained'>
+          <Button onClick={handleStep} disabled={!connectionType} size='small' variant='contained'>
             {locales.create}
           </Button>
         </Box>
