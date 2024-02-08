@@ -1,8 +1,18 @@
 import { isNumber, isObject, isServerSide } from '.';
 
 export const tools = {
-  screenMaxHeight: (): string => (!isServerSide ? window.innerHeight - 56 + 'px' : '0px'),
-  screenFullHeight: (): string => (!isServerSide ? window.innerHeight + 'px' : '0px'),
+  screenMaxHeight: (): string => {
+    if (!isServerSide) {
+      return window?.innerHeight - 56 + 'px';
+    }
+    return '100vh';
+  },
+  screenFullHeight: (): string => {
+    if (!isServerSide) {
+      return window?.innerHeight + 'px';
+    }
+    return '100vh';
+  },
   isEmpty: (data: unknown): data is never | undefined | null => {
     return (
       (!data && !isNumber(data)) ||
@@ -17,3 +27,11 @@ export const tools = {
     return newObj;
   }
 };
+export const isEmpty = (data: unknown): data is never | undefined | null => {
+  return (
+    (!data && !isNumber(data)) ||
+    (Array.isArray(data) && data.length === 0) ||
+    (isObject(data) && Object.keys(data).length === 0)
+  );
+};
+//please don't add itt to toooolssss , auto import does not work with this
