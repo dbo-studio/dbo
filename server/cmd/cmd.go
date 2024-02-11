@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/khodemobin/dbo/api/server"
 	"github.com/khodemobin/dbo/app"
-	"github.com/khodemobin/dbo/internal/server"
-	"github.com/khodemobin/dbo/pkg/helper"
+	"github.com/khodemobin/dbo/helper"
 	"github.com/spf13/cobra"
 )
 

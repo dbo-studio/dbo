@@ -4,7 +4,7 @@ import (
 	l "log"
 	"os"
 
-	"github.com/khodemobin/dbo/pkg/logger"
+	"github.com/khodemobin/dbo/logger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

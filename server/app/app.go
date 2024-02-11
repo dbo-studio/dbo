@@ -5,14 +5,14 @@ import (
 	"log"
 	"os"
 
-	"github.com/khodemobin/dbo/internal/config"
-	"github.com/khodemobin/dbo/internal/model"
-	"github.com/khodemobin/dbo/pkg/db"
-	"github.com/khodemobin/dbo/pkg/helper"
-	"github.com/khodemobin/dbo/pkg/logger"
-	"github.com/khodemobin/dbo/pkg/logger/sentry"
-	"github.com/khodemobin/dbo/pkg/logger/syslog"
-	"github.com/khodemobin/dbo/pkg/logger/zap"
+	"github.com/khodemobin/dbo/config"
+	"github.com/khodemobin/dbo/db"
+	"github.com/khodemobin/dbo/helper"
+	"github.com/khodemobin/dbo/logger"
+	"github.com/khodemobin/dbo/logger/sentry"
+	"github.com/khodemobin/dbo/logger/syslog"
+	"github.com/khodemobin/dbo/logger/zap"
+	"github.com/khodemobin/dbo/model"
 	"gorm.io/gorm"
 )
 
