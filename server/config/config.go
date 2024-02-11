@@ -45,7 +45,7 @@ func New() *Config {
 
 func readConfig() {
 	_, b, _, _ := runtime.Caller(0)
-	path := filepath.Join(filepath.Dir(b), "../..")
+	path := filepath.Join(filepath.Dir(b), "../")
 	err := godotenv.Load(path + "/.env")
 	if err != nil {
 		log.Println("error load config", err)

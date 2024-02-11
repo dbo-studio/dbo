@@ -6,7 +6,7 @@ type ConnectionRequest struct {
 	Username string `json:"username" validate:"required"`
 	Password string `json:"password"`
 	Port     int    `json:"port" validate:"required,gte=0,numeric"`
-	Database string `json:"database" validate:"required"`
+	Database string `json:"database"`
 }
 
 type ConnectionSchema struct {

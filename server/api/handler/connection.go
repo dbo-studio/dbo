@@ -4,8 +4,9 @@ import (
 	"database/sql"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/khodemobin/dbo/api/response"
 	"github.com/khodemobin/dbo/app"
-	"github.com/khodemobin/dbo/drivers"
+	"github.com/khodemobin/dbo/drivers/pgsql"
 	"github.com/khodemobin/dbo/helper"
 	"github.com/khodemobin/dbo/model"
 	"github.com/khodemobin/dbo/types"
@@ -19,61 +20,47 @@ func (h *ConnectionHandler) Connections(c *fiber.Ctx) error {
 	result := app.DB().Find(&connections)
 
 	if result.Error != nil {
-		return c.JSON(helper.DefaultResponse(nil, result.Error.Error(), 0))
+		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(result.Error.Error()))
 	}
 
-	var data []map[string]interface{}
-	for _, c := range connections {
-		item := make(map[string]interface{})
-		item["id"] = c.ID
-		item["name"] = c.Name
-		item["type"] = "SQL"
-		item["driver"] = "PostgreSQL"
-		item["auth"] = map[string]interface{}{
-			"database": c.Database,
-			"host":     c.Host,
-			"port":     c.Port,
-		}
-
-		data = append(data, item)
-	}
-
-	return c.JSON(helper.DefaultResponse(data, "", 1))
+	return c.JSON(response.Success(response.Connections(connections)))
 }
 
 func (h *ConnectionHandler) Connection(c *fiber.Ctx) error {
 	connectionId := c.Params("id")
+
 	var connection model.Connection
 	result := app.DB().Where("id", "=", connectionId).First(&connection)
 	if result.Error != nil {
 		return c.Status(fiber.StatusNotFound).JSON(result.Error.Error())
 	}
 
-	connectionInfo, err := drivers.ConnectionSchema(int32(connection.ID), connection.Database)
-	if err != nil {
-		return c.JSON(helper.DefaultResponse(nil, err.Error(), 0))
+	databases, _ := pgsql.Databases(int32(connection.ID))
+	schemas, _ := pgsql.Schemas(int32(connection.ID))
+	currentDb := c.Query("database", connection.Database)
+	currentSchema := c.Query("schema")
+	var tables []string
+	var err error
+
+	if currentSchema == "" && len(schemas) > 0 {
+		currentSchema = schemas[0]
 	}
 
-	item := make(map[string]interface{})
-	item["id"] = connection.ID
-	item["name"] = connection.Name
-	item["type"] = "SQL"
-	item["driver"] = "PostgreSQL"
-	item["auth"] = map[string]interface{}{
-		"database": connection.Database,
-		"host":     connection.Host,
-		"port":     connection.Port,
+	if currentDb != "" || currentSchema != "" {
+		tables, err = pgsql.SchemaTables(int32(connection.ID), currentSchema)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(err.Error())
+		}
 	}
-	item["database"] = connectionInfo
 
-	return c.JSON(helper.DefaultResponse(item, "", 1))
+	return c.JSON(response.Success(response.Connection(connection, databases, schemas, currentDb, currentSchema, tables)))
 }
 
 func (h *ConnectionHandler) AddConnection(c *fiber.Ctx) error {
 	req := new(types.ConnectionRequest)
 
 	if err := c.BodyParser(req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(helper.DefaultResponse(nil, err.Error(), 0))
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
 
 	errors := helper.Validate(req)
@@ -95,17 +82,17 @@ func (h *ConnectionHandler) AddConnection(c *fiber.Ctx) error {
 	result := app.DB().Save(&connection)
 
 	if result.Error != nil {
-		return c.JSON(helper.DefaultResponse(nil, result.Error.Error(), 0))
+		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(result.Error.Error()))
 	}
 
-	return c.JSON(helper.DefaultResponse(connection.ToResource(), "", 1))
+	return c.JSON(response.Success(response.Connection(connection, []string{}, []string{}, "", "", []string{})))
 }
 
 func (h *ConnectionHandler) UpdateConnection(c *fiber.Ctx) error {
 	req := new(types.ConnectionRequest)
 
 	if err := c.BodyParser(req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(helper.DefaultResponse(nil, err.Error(), 0))
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
 
 	errors := helper.Validate(req)
@@ -133,15 +120,15 @@ func (h *ConnectionHandler) UpdateConnection(c *fiber.Ctx) error {
 	result = app.DB().Save(&connection)
 
 	if result.Error != nil {
-		return c.JSON(helper.DefaultResponse(nil, result.Error.Error(), 0))
+		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(result.Error.Error()))
 	}
 
-	return c.JSON(helper.DefaultResponse(connection.ToResource(), "", 1))
+	return c.JSON(response.Success(response.Connection(connection, []string{}, []string{}, "", "", []string{})))
 }
 
 func (h *ConnectionHandler) DeleteConnection(c *fiber.Ctx) error {
 	connectionId := c.Params("id")
 	app.DB().Delete(&model.Connection{}, connectionId)
 
-	return c.JSON(helper.DefaultResponse("", "", 1))
+	return c.JSON(response.Success(""))
 }
