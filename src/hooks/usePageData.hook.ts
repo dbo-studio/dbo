@@ -5,7 +5,7 @@ import useSWR from 'swr';
 import { tools } from '../core/utils';
 import { apiHandler } from '../services';
 import { ArgumentType, MethodType, SimpleFunction } from '../types';
-import { useMount } from './useMount';
+import { useMount } from './useMount.hook';
 
 interface UsePageData<T, M extends MethodType> {
   apiMethod: (data?: ArgumentType<M>) => Promise<T & { message?: string }>;
