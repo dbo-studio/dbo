@@ -4,8 +4,8 @@ import (
 	sysLog "log"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/khodemobin/dbo/internal/config"
-	"github.com/khodemobin/dbo/pkg/logger"
+	"github.com/khodemobin/dbo/config"
+	"github.com/khodemobin/dbo/logger"
 )
 
 type log struct{}

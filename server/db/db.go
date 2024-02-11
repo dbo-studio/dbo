@@ -3,8 +3,8 @@ package db
 import (
 	"log"
 
-	"github.com/khodemobin/dbo/internal/config"
-	"github.com/khodemobin/dbo/pkg/logger"
+	"github.com/khodemobin/dbo/config"
+	"github.com/khodemobin/dbo/logger"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/khodemobin/dbo/app"
-	"github.com/khodemobin/dbo/internal/model"
-	"github.com/khodemobin/dbo/pkg/types"
+	"github.com/khodemobin/dbo/model"
+	"github.com/khodemobin/dbo/types"
 	"github.com/samber/lo"
 	lop "github.com/samber/lo/parallel"
 	"gorm.io/driver/postgres"

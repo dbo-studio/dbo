@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/khodemobin/dbo/app"
-	"github.com/khodemobin/dbo/internal/model"
+	"github.com/khodemobin/dbo/model"
 	"github.com/spf13/cobra"
 )
 

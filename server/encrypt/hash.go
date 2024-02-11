@@ -14,7 +14,7 @@ func Hash(text string) (string, error) {
 }
 
 // Check hashed password with plaintext string
-func Check(encryptedPassword string, password string) bool {
+func HashCheck(encryptedPassword string, password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(encryptedPassword), []byte(password))
 	return err == nil
 }

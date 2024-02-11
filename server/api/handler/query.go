@@ -2,10 +2,9 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/khodemobin/dbo/pkg/drivers"
-	"github.com/khodemobin/dbo/pkg/helper"
-	"github.com/khodemobin/dbo/pkg/helper/validator"
-	"github.com/khodemobin/dbo/pkg/types"
+	"github.com/khodemobin/dbo/drivers"
+	"github.com/khodemobin/dbo/helper"
+	"github.com/khodemobin/dbo/types"
 )
 
 type QueryHandler struct{}
@@ -17,7 +16,7 @@ func (h *QueryHandler) RunQuery(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(helper.DefaultResponse(nil, err.Error(), 0))
 	}
 
-	errors := validator.Check(req)
+	errors := helper.Validate(req)
 	if errors != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
 	}
