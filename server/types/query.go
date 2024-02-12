@@ -3,6 +3,7 @@ package types
 type RunQueryRequest struct {
 	ConnectionId int32           `json:"connection_id" validate:"required,gte=0"`
 	Table        string          `json:"table" validate:"required"`
+	Schema       string          `json:"schema" validate:"required"`
 	Limit        int32           `json:"limit" validate:"gte=1,numeric"`
 	Offset       int32           `json:"offset" validate:"gte=0,numeric"`
 	Filters      []FilterRequest `json:"filters" validate:"dive"`

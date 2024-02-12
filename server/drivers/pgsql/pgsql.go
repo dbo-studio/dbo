@@ -8,7 +8,12 @@ import (
 	"github.com/khodemobin/dbo/types"
 )
 
-func RunQuery(req *types.RunQueryRequest) ([]map[string]interface{}, error) {
+type RunQueryResult struct {
+	Query string
+	Data  []map[string]interface{}
+}
+
+func RunQuery(req *types.RunQueryRequest) (*RunQueryResult, error) {
 	query, err := queryGenerator(req)
 	if err != nil {
 		return nil, errors.New("Generate query error: " + err.Error())
@@ -19,14 +24,16 @@ func RunQuery(req *types.RunQueryRequest) ([]map[string]interface{}, error) {
 		return nil, errors.New("Connection error: " + err.Error())
 	}
 
-	var results []map[string]interface{}
-	result := db.Raw(query).Scan(&results)
-
+	var queryResults []map[string]interface{}
+	result := db.Raw(query).Scan(&queryResults)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
-	return results, nil
+	return &RunQueryResult{
+		Query: query,
+		Data:  queryResults,
+	}, nil
 }
 
 func Databases(connectionId int32) ([]string, error) {
@@ -73,7 +80,7 @@ func Schemas(connectionId int32) ([]string, error) {
 	return names, result.Error
 }
 
-func SchemaTables(connectionId int32, schema string) ([]string, error) {
+func Tables(connectionId int32, schema string) ([]string, error) {
 	db, err := Connect(connectionId)
 	if err != nil {
 		return nil, errors.New("Connection error: " + err.Error())
@@ -102,4 +109,31 @@ func SchemaTables(connectionId int32, schema string) ([]string, error) {
 	}
 
 	return tables, err
+}
+
+type Structure struct {
+	OrdinalPosition        int32          `gorm:"column:ordinal_position"`
+	ColumnName             string         `gorm:"column:column_name"`
+	DataType               string         `gorm:"column:data_type"`
+	IsNullable             string         `gorm:"column:is_nullable"`
+	ColumnDefault          sql.NullString `gorm:"column:column_default"`
+	CharacterMaximumLength sql.NullInt32  `gorm:"column:character_maximum_length"`
+}
+
+func TableStructure(connectionId int32, table string, schema string) ([]Structure, error) {
+	db, err := Connect(connectionId)
+	if err != nil {
+		return nil, errors.New("Connection error: " + err.Error())
+	}
+
+	query := fmt.Sprintf("SELECT ordinal_position,column_name,data_type,is_nullable,column_default,character_maximum_length FROM information_schema.columns WHERE table_schema='%s' AND table_name='%s' ORDER BY ordinal_position;", schema, table)
+
+	var structures []Structure
+	result := db.Raw(query).Scan(&structures)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return structures, err
 }

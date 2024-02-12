@@ -47,7 +47,7 @@ func (h *ConnectionHandler) Connection(c *fiber.Ctx) error {
 	}
 
 	if currentDb != "" || currentSchema != "" {
-		tables, err = pgsql.SchemaTables(int32(connection.ID), currentSchema)
+		tables, err = pgsql.Tables(int32(connection.ID), currentSchema)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(err.Error())
 		}
