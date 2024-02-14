@@ -1,2 +1,1 @@
-export * from './connection.service';
-export * from './query.service';
+export * from './apiHandler';

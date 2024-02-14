@@ -1,15 +1,15 @@
 import { useUUID } from '@/src/hooks';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
-import { EventFor, SchemaType } from '@/src/types';
+import { EventFor } from '@/src/types';
 import { Box, NativeSelect } from '@mui/material';
 import { SchemaStyled } from './DBTreeView.styled';
 
-export default function Schemes({ schemes }: { schemes: SchemaType[] }) {
+export default function Schemes({ schemes }: { schemes: string[] }) {
   const uuids = useUUID(schemes.length);
   const { updateCurrentSchema, currentConnection, getCurrentSchema } = useConnectionStore();
 
   const handleChangeSchema = (e: EventFor<'select', 'onChange'>) => {
-    const schema = currentConnection?.database.schemes.filter((s: SchemaType) => s.name == e.target.value);
+    const schema = currentConnection?.schemas?.filter((s: string) => s == e.target.value);
     if (!schema || schema?.length == 0) {
       return;
     }
@@ -19,15 +19,10 @@ export default function Schemes({ schemes }: { schemes: SchemaType[] }) {
   return (
     <SchemaStyled>
       <Box>
-        <NativeSelect
-          size='medium'
-          fullWidth={true}
-          onChange={handleChangeSchema}
-          defaultValue={getCurrentSchema()?.name}
-        >
-          {schemes.map((s: SchemaType, index: number) => (
-            <option key={uuids[index]} value={s.name}>
-              {s.name}
+        <NativeSelect size='medium' fullWidth={true} onChange={handleChangeSchema} defaultValue={getCurrentSchema()}>
+          {schemes.map((s: string, index: number) => (
+            <option key={uuids[index]} value={s}>
+              {s}
             </option>
           ))}
         </NativeSelect>

@@ -1,5 +1,4 @@
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
-import { TableType } from '@/src/types/Connection';
 import { useEffect, useState } from 'react';
 import Search from '../../base/Search/Search';
 import Schemes from './Schemes';
@@ -7,22 +6,26 @@ import TablesTreeView from './TablesTreeView';
 
 export default function DBTreeView() {
   const { getCurrentSchema, currentConnection } = useConnectionStore();
-  const [tables, setTables] = useState<TableType[]>([]);
+  const [tables, setTables] = useState<string[]>([]);
 
   useEffect(() => {
     if (!getCurrentSchema()) {
       return;
     }
-    setTables(getCurrentSchema()!.tables);
+    setTables(currentConnection?.tables ?? []);
   }, [getCurrentSchema()]);
 
   const handleSearch = (name: string) => {
+    if (!currentConnection?.tables) {
+      return;
+    }
     if (!getCurrentSchema()) {
       return;
     }
+
     setTables(
-      getCurrentSchema()!.tables.filter((c: TableType) => {
-        return c.name.includes(name);
+      currentConnection.tables.filter((c: string) => {
+        return c.includes(name);
       })
     );
   };
@@ -33,7 +36,7 @@ export default function DBTreeView() {
         <>
           <Search onChange={handleSearch} />
           <TablesTreeView tables={tables} />
-          <Schemes schemes={currentConnection?.database.schemes ?? []} />
+          <Schemes schemes={currentConnection?.schemas ?? []} />
         </>
       )}
     </>

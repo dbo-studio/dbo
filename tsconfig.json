@@ -31,7 +31,8 @@
       "@/hooks/*": ["src/hooks/*"],
       "@/types/*": ["src/types/*"],
       "@/services/*": ["src/core/services/*"],
-      "@/utils/*": ["src/core/utils/*"]
+      "@/utils/*": ["src/core/utils/*"],
+      "@/api/*": ["src/api/*"]
     }
   },
 

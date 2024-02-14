@@ -1,7 +1,7 @@
 import locales from '@/src/locales';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
 import { Box, Button, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AddConnectionModalStyled, AddConnectionStyled } from './AddConnection.styled';
 import ConnectionSelection from './ConnectionSelection';
 import ConnectionSetting from './ConnectionSettings';
@@ -15,17 +15,9 @@ const connectionTypes: ConnectionType[] = [
 ];
 
 export default function AddConnection() {
-  const { connections, updateShowAddConnection, showAddConnection } = useConnectionStore();
+  const { updateShowAddConnection, showAddConnection } = useConnectionStore();
   const [connectionType, setConnectionType] = useState<ConnectionType | undefined>(undefined);
   const [step, setStep] = useState(0);
-
-  useEffect(() => {
-    if (!connections || connections.length == 0) {
-      updateShowAddConnection(true);
-    } else {
-      updateShowAddConnection(false);
-    }
-  }, [connections]);
 
   const handleClose = () => {
     setConnectionType(undefined);

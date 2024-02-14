@@ -1,46 +1,44 @@
-import { ConnectionType, SchemaType } from '@/src/types';
+import { ConnectionType } from '@/src/types';
 import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
+import { devtools } from 'zustand/middleware';
 import { ConnectionStore } from './types';
 
 type ConnectionState = ConnectionStore;
 
 export const useConnectionStore = create<ConnectionState>()(
   devtools(
-    persist(
-      (set, get) => ({
-        showAddConnection: false,
-        connections: undefined,
-        currentConnection: undefined,
-        currentSchema: {},
-        getCurrentSchema: () => {
-          const currentConnection = get().currentConnection;
-          const currentSchema = get().currentSchema;
-          if (!currentConnection || !Object.prototype.hasOwnProperty.call(currentSchema, currentConnection.id)) {
-            return undefined;
-          }
-          return currentSchema[currentConnection.id];
-        },
-        updateConnections: (connections: ConnectionType[]) => {
-          set({ connections });
-        },
-        updateShowAddConnection: (show: boolean) => {
-          set({ showAddConnection: show });
-        },
-        updateCurrentSchema: (currentSchema: SchemaType) => {
-          const currentConnection = get().currentConnection;
-          if (!currentConnection) {
-            return;
-          }
-          const schemes = get().currentSchema;
-          schemes[currentConnection.id] = currentSchema;
-          set({ currentSchema: schemes });
-        },
-        updateCurrentConnection: (currentConnection: ConnectionType) => {
-          set({ currentConnection });
+    (set, get) => ({
+      showAddConnection: false,
+      connections: undefined,
+      currentConnection: undefined,
+      currentSchema: {},
+      getCurrentSchema: () => {
+        const currentConnection = get().currentConnection;
+        const currentSchema = get().currentSchema;
+        if (!currentConnection || !Object.prototype.hasOwnProperty.call(currentSchema, currentConnection.id)) {
+          return undefined;
         }
-      }),
-      { name: 'connections' }
-    )
+        return currentSchema[currentConnection.id];
+      },
+      updateConnections: (connections: ConnectionType[]) => {
+        set({ connections });
+      },
+      updateShowAddConnection: (show: boolean) => {
+        set({ showAddConnection: show });
+      },
+      updateCurrentSchema: (currentSchema: string) => {
+        const currentConnection = get().currentConnection;
+        if (!currentConnection) {
+          return;
+        }
+        const schemes = get().currentSchema;
+        schemes[currentConnection.id] = currentSchema;
+        set({ currentSchema: schemes });
+      },
+      updateCurrentConnection: (currentConnection: ConnectionType) => {
+        set({ currentConnection });
+      }
+    }),
+    { name: 'connections' }
   )
 );

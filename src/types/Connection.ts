@@ -1,31 +1,18 @@
-export type ConnectionType = {
+export interface ConnectionType {
   id: number;
   name: string;
   type: string;
   driver: string;
+  current_database?: string;
+  current_schema?: string;
   auth: ConnectionAuthType;
-  database: DatabaseType;
-};
+  databases?: string[];
+  schemas?: string[];
+  tables?: string[];
+}
 
-export type ConnectionAuthType = {
+export interface ConnectionAuthType {
+  database: string;
   host: string;
   port: number;
-  database: string | null;
-  passport?: string | null;
-};
-
-export type DatabaseType = {
-  name: string;
-  schemes: SchemaType[];
-};
-
-export type SchemaType = {
-  name: string;
-  tables: TableType[];
-};
-
-export type TableType = {
-  name: string;
-  dll: string;
-  fields: any[];
-};
+}

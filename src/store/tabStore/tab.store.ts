@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
+import { devtools } from 'zustand/middleware';
 
 import { TabType } from '@/src/types';
 
@@ -14,36 +14,34 @@ type TabState = TabStore & TabSettingSlice & TabQuerySlice & TabFilterSlice & Ta
 
 export const useTabStore = create<TabState>()(
   devtools(
-    persist(
-      (set, get, ...state) => ({
-        tabs: [],
-        selectedTab: undefined,
-        updateTabs: (tabs: TabType[]) => {
-          set({ tabs });
-        },
+    (set, get, ...state) => ({
+      tabs: [],
+      selectedTab: undefined,
+      updateTabs: (tabs: TabType[]) => {
+        set({ tabs });
+      },
 
-        updateSelectedTab: (selectedTab: TabType | undefined) => {
-          if (selectedTab == undefined) {
-            set({ selectedTab });
-            return;
+      updateSelectedTab: (selectedTab: TabType | undefined) => {
+        if (selectedTab == undefined) {
+          set({ selectedTab });
+          return;
+        }
+
+        const tabs = get().tabs;
+        tabs.map((t: TabType) => {
+          if (t.id == selectedTab.id) {
+            return selectedTab;
           }
-
-          const tabs = get().tabs;
-          tabs.map((t: TabType) => {
-            if (t.id == selectedTab.id) {
-              return selectedTab;
-            }
-            return t;
-          });
-          set({ tabs, selectedTab });
-        },
-        ...createTabSettingSlice(set, get, ...state),
-        ...createTabQuerySlice(set, get, ...state),
-        ...createTabFilterSlice(set, get, ...state),
-        ...createTabSortSlice(set, get, ...state),
-        ...createTabColumnSlice(set, get, ...state)
-      }),
-      { name: 'tabs' }
-    )
+          return t;
+        });
+        set({ tabs, selectedTab });
+      },
+      ...createTabSettingSlice(set, get, ...state),
+      ...createTabQuerySlice(set, get, ...state),
+      ...createTabFilterSlice(set, get, ...state),
+      ...createTabSortSlice(set, get, ...state),
+      ...createTabColumnSlice(set, get, ...state)
+    }),
+    { name: 'tabs' }
   )
 );

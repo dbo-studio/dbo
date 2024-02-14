@@ -1,11 +1,10 @@
 import api from '@/src/api';
-import { getConnection, getConnections } from '@/src/core/services';
-import { useUUID } from '@/src/hooks';
 import useAPI from '@/src/hooks/useApi.hook';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
-import { ConnectionResponseType, ConnectionType, ConnectionsResponseType } from '@/src/types';
+import { ConnectionType } from '@/src/types';
 import { Box } from '@mui/material';
 import { useEffect } from 'react';
+import { v4 as uuid } from 'uuid';
 import AddConnection from '../AddConnection/AddConnection';
 import ConnectionItem from './ConnectionItem';
 import { EmptySpaceStyle } from './EmptySpace.styled';
@@ -17,29 +16,34 @@ export default function Connections() {
     getCurrentSchema,
     updateCurrentConnection,
     updateConnections,
-    updateCurrentSchema
+    updateCurrentSchema,
+    updateShowAddConnection
   } = useConnectionStore();
-  const { request: getConnectionData } = useAPI({
-    apiMethod: api.connection.getConnectionData
+
+  const { request: getConnectionList } = useAPI({
+    apiMethod: api.connection.getConnectionList
+  });
+
+  const { request: getConnectionDetail } = useAPI({
+    apiMethod: api.connection.getConnectionDetail
   });
 
   useEffect(() => {
-    if (connections == undefined) {
-      getConnections().then((res: ConnectionsResponseType) => {
-        updateConnections(res.data);
-      });
-    }
+    getConnectionList().then((res) => {
+      if (res.length > 0) {
+        updateConnections(res);
+      } else {
+        updateShowAddConnection(true);
+      }
+    });
   }, []);
 
-  const uuids = useUUID(connections?.length);
-
   const handleChangeCurrentConnection = (c: ConnectionType) => {
-    const data = getConnectionData(c?.id);
-    console.log(data);
-
-    getConnection(c.id).then((res: ConnectionResponseType) => {
-      updateCurrentConnection(res.data);
-      if (!getCurrentSchema()) updateCurrentSchema(res.data.database.schemes[0]);
+    getConnectionDetail(c?.id).then((res) => {
+      updateCurrentConnection(res);
+      if (res.schemas && res.schemas.length > 0 && !getCurrentSchema()) {
+        updateCurrentSchema(res.schemas[0]);
+      }
     });
   };
 
@@ -47,10 +51,10 @@ export default function Connections() {
     <Box height={'100%'} display={'flex'} flexDirection={'column'}>
       <AddConnection />
 
-      {connections?.map((c: ConnectionType, index: number) => (
+      {connections?.map((c: ConnectionType) => (
         <ConnectionItem
           onClick={() => handleChangeCurrentConnection(c)}
-          key={uuids[index]}
+          key={uuid()}
           selected={c.name == currentConnection?.name}
           label={c.name}
         />

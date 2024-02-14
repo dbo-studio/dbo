@@ -1,3 +1,7 @@
 import * as connection from './connection';
 
-export default { connection };
+const api = {
+  connection
+};
+
+export default api;

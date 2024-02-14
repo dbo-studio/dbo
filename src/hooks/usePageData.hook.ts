@@ -2,8 +2,8 @@ import { useRouter } from 'next/router';
 import { DependencyList, useEffect, useMemo } from 'react';
 import type { MutatorOptions } from 'swr';
 import useSWR from 'swr';
+import { apiHandler } from '../core/services';
 import { tools } from '../core/utils';
-import { apiHandler } from '../services';
 import { ArgumentType, MethodType, SimpleFunction } from '../types';
 import { useMount } from './useMount.hook';
 

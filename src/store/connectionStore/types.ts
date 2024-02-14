@@ -1,17 +1,17 @@
-import { ConnectionType, SchemaType } from '@/src/types/Connection';
+import { ConnectionType } from '@/src/types';
 
 export type ConnectionStore = {
   showAddConnection: boolean;
   connections: ConnectionType[] | undefined;
   currentConnection: ConnectionType | undefined;
   currentSchema: DataCurrentSchemaType;
-  getCurrentSchema: () => SchemaType | undefined;
+  getCurrentSchema: () => string | undefined;
   updateConnections: (connections: ConnectionType[]) => void;
   updateCurrentConnection: (connections: ConnectionType) => void;
-  updateCurrentSchema: (currentSchema: SchemaType) => void;
+  updateCurrentSchema: (currentSchema: string) => void;
   updateShowAddConnection: (show: boolean) => void;
 };
 
 export type DataCurrentSchemaType = {
-  [key: string]: SchemaType | undefined;
+  [key: string]: string | undefined;
 };

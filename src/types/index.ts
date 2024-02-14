@@ -3,5 +3,4 @@ export * from './Connection';
 export * from './Data';
 export * from './Events';
 export * from './General';
-export * from './Service';
 export * from './Tab';

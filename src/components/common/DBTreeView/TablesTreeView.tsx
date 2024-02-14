@@ -1,11 +1,10 @@
 import { useTabStore } from '@/src/store/tabStore/tab.store';
-import { TableType } from '@/src/types/Connection';
 import { Box, useTheme } from '@mui/material';
 import { TreeItem, TreeView } from '@mui/x-tree-view';
 import { v4 as uuid } from 'uuid';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 
-export default function TablesTreeView({ tables }: { tables: TableType[] }) {
+export default function TablesTreeView({ tables }: { tables: string[] }) {
   const theme = useTheme();
   const { addTab } = useTabStore();
 
@@ -23,13 +22,8 @@ export default function TablesTreeView({ tables }: { tables: TableType[] }) {
         defaultEndIcon={<CustomIcon type={'columnToken'} />}
       >
         <TreeItem nodeId='1' label='Tables'>
-          {tables.map((table: TableType, index: number) => (
-            <TreeItem
-              onClick={() => handleTableClick(table.name)}
-              key={uuid()}
-              nodeId={index + '100'}
-              label={table.name}
-            />
+          {tables.map((table: string, index: number) => (
+            <TreeItem onClick={() => handleTableClick(table)} key={uuid()} nodeId={index + '100'} label={table} />
           ))}
         </TreeItem>
         {/* <TreeItem nodeId='3' label='Functions'>
