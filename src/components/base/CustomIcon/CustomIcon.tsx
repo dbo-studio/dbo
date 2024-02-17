@@ -21,8 +21,8 @@ const sizes = {
 };
 
 export default function CustomIcon({ type, size = 's', width, height, onClick }: IconProps) {
-  var w = sizes[size].width;
-  var h = sizes[size].height;
+  let w = sizes[size].width;
+  let h = sizes[size].height;
 
   if (width) {
     w = width;

@@ -56,7 +56,7 @@ export default function Connections() {
           onClick={() => handleChangeCurrentConnection(c)}
           key={uuid()}
           selected={c.name == currentConnection?.name}
-          label={c.name}
+          connection={c}
         />
       ))}
       <EmptySpaceStyle />

@@ -1,19 +1,42 @@
 import { Box, Theme, Typography, useTheme } from '@mui/material';
+import { useState } from 'react';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
+import ConnectionContextMenu from './ConnectionContextMenu';
 import { ConnectionItemStyled } from './ConnectionItem.styled';
 import { ConnectionItemProps } from './types';
 
-export default function ConnectionItem({ label, selected = false, onClick }: ConnectionItemProps) {
+export default function ConnectionItem({ connection, selected = false, onClick }: ConnectionItemProps) {
   const theme: Theme = useTheme();
+  const [contextMenu, setContextMenu] = useState<{
+    mouseX: number;
+    mouseY: number;
+  } | null>(null);
+
+  const handleContextMenu = (event: React.MouseEvent) => {
+    event.preventDefault();
+    setContextMenu(
+      contextMenu === null
+        ? {
+            mouseX: event.clientX + 2,
+            mouseY: event.clientY - 6
+          }
+        : null
+    );
+  };
+
+  const handleClose = () => {
+    setContextMenu(null);
+  };
 
   return (
-    <ConnectionItemStyled theme={theme} selected={selected} onClick={onClick}>
+    <ConnectionItemStyled onContextMenu={handleContextMenu} theme={theme} selected={selected} onClick={onClick}>
       <Box maxHeight={50} maxWidth={50} textAlign={'center'}>
         <CustomIcon type='databaseOutline' size='l' />
         <Typography component={'p'} mt={1} variant='caption' noWrap>
-          {label}
+          {connection.name}
         </Typography>
       </Box>
+      <ConnectionContextMenu connection={connection} contextMenu={contextMenu} onClose={handleClose} />
     </ConnectionItemStyled>
   );
 }

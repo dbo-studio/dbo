@@ -1,5 +1,5 @@
 import { AxiosRequestHeaders } from 'axios';
-import { serviceGet, servicePost } from './intialize';
+import { serviceDelete, serviceGet, servicePost } from './intialize';
 
 // const REQUEST_UNIQUE_ID_KEY = 'X-Request-UUID';
 // const GLOBAL_BOTTOM_SHEET_DATA_KEY = 'global_bottom_sheet';
@@ -126,7 +126,42 @@ function post<T = any>(
   });
 }
 
+function del<T = any>(url: string, params = {}, { headers = {}, isPublic, ...options }: ApiOptions = {}): Promise<T> {
+  const completeHeaders = {
+    ...headers
+  };
+  // TODO: set csrf token
+  // if (!isPublic) completeHeaders.Authorization = getToken();
+  return new Promise(function (resolve, reject) {
+    serviceDelete(url, { ...options, params: { ...params }, headers: completeHeaders })
+      .then(function (response) {
+        // deepLinkHandler(response?.data?.url);
+
+        if (response?.status === 200) {
+          // const globalBottomSheetData = response?.data?.data?.[GLOBAL_BOTTOM_SHEET_DATA_KEY];
+
+          // if (globalBottomSheetData) {
+          //   store.dispatch(openGlobalBottomSheetAction(transformGlobalBottomSheet(globalBottomSheetData)));
+          // }
+
+          // messageHandler(response);
+          // dataLayerResponseHandler(response);
+          // inTrackResponseHandler(response);
+          const responseData = response?.data?.data;
+
+          resolve(responseData);
+        } else reject(response);
+
+        // if (response?.status === 404) Router.push(URLS.ERROR_404);
+      })
+      .catch(function (error) {
+        reject(error);
+      });
+  });
+}
+
 export default {
   get,
-  post
+  post,
+  del
 };

@@ -20,5 +20,8 @@
     "password": "Password",
     "database": "Database",
     "test": "Test",
-    "connection_create_success": "The connection created successfully"
+    "connection_create_success": "The connection created successfully",
+    "connection_delete_success": "The connection deleted successfully",
+    "edit": "Edit",
+    "delete": "Delete"
 }

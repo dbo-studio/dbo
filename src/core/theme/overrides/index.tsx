@@ -3,6 +3,7 @@ import Baseline from './Baseline';
 import Button from './Button';
 import CheckBox from './CheckBox';
 import Input from './Input';
+import Menu from './Menu';
 import Select from './Select';
 import Tabs from './Tabs';
 import TreeView from './TreeView';
@@ -15,6 +16,7 @@ export default function ComponentsOverrides(theme: Theme): Components {
     Tabs(theme),
     Select(theme),
     CheckBox(theme),
-    Button(theme)
+    Button(theme),
+    Menu(theme)
   );
 }

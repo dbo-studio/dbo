@@ -44,5 +44,6 @@ export const IconTypes = {
   mines: 'Minus',
   plus: 'Plus',
   structure: 'Grid3x3',
-  structureBlue: 'Grid3x3'
+  structureBlue: 'Grid3x3',
+  delete: 'Trash2'
 };
