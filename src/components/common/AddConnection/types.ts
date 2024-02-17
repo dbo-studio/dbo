@@ -15,5 +15,11 @@ export type ConnectionItemStyledProps = {
 
 export type ConnectionSelectionProps = {
   connections: ConnectionType[];
-  onChange: (connection: ConnectionType | undefined) => void;
+  onSubmit: (connection: ConnectionType | undefined) => void;
+  onClose: () => void;
+};
+
+export type ConnectionSettingsProps = {
+  connection: ConnectionType | undefined;
+  onClose: () => void;
 };

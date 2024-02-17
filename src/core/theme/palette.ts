@@ -40,7 +40,7 @@ const PRIMARY = {
 };
 
 const SECONDARY = {
-  light: '#84A9FF',
+  light: '#F04E98',
   dark: '#1939B7'
 };
 
@@ -60,8 +60,8 @@ const WARNING = {
 };
 
 const ERROR = {
-  light: '#FFA48D',
-  dark: '#B72136'
+  light: '#d32f2f',
+  dark: '#d32f2f'
 };
 
 const colorPalette = {

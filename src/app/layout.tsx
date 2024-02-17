@@ -5,6 +5,7 @@ import { CssBaseline } from '@mui/material';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
 import { Viewport } from 'next';
 import React from 'react';
+import { Toaster } from 'sonner';
 import { appConfig } from '../appConfig';
 
 // export const metadata: Metadata = {
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ThemeProvider>
             <CssBaseline />
             {children}
+            <Toaster position='bottom-center' duration={5000} richColors />
           </ThemeProvider>
         </AppRouterCacheProvider>
       </body>

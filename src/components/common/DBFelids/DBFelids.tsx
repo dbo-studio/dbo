@@ -49,6 +49,7 @@ export default function DBFields() {
             (item, index) =>
               item.name && (
                 <FieldInput
+                  size='small'
                   value={item.value}
                   fullWidth={true}
                   key={index}

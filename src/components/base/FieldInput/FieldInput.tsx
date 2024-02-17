@@ -34,13 +34,19 @@ export default function FieldInput(props: FieldInputProps) {
         </Typography>
       </Box>
       <InputBase
-        size='small'
-        sx={{ marginBottom: '8px' }}
+        size={props.size}
         fullWidth={props.fullWidth}
         type={props.type}
         value={value}
         onChange={handleOnChange}
+        sx={{
+          borderColor: props.error ? theme.palette.error.light : theme.palette.divider,
+          marginBottom: props.error ? '0px' : theme.spacing(1)
+        }}
       />
+      <Typography mb={theme.spacing(1)} color={theme.palette.error.light} variant='caption'>
+        {props.helperText}
+      </Typography>
     </Box>
   );
 }

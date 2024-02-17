@@ -1,6 +1,6 @@
 import locales from '@/src/locales';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { useState } from 'react';
 import { AddConnectionModalStyled, AddConnectionStyled } from './AddConnection.styled';
 import ConnectionSelection from './ConnectionSelection';
@@ -22,12 +22,12 @@ export default function AddConnection() {
   const handleClose = () => {
     setConnectionType(undefined);
     updateShowAddConnection(false);
+    setStep(0);
   };
 
-  const handleStep = () => {
-    if (step == 0) {
-      setStep(1);
-    }
+  const handleSetConnection = (connection: ConnectionType | undefined) => {
+    setConnectionType(connection);
+    setStep(1);
   };
 
   return (
@@ -36,16 +36,10 @@ export default function AddConnection() {
         <Box>
           <Typography variant='h6'>{locales.new_connection}</Typography>
         </Box>
-        {step == 0 && <ConnectionSelection connections={connectionTypes} onChange={setConnectionType} />}
-        {step == 1 && <ConnectionSetting connection={connectionType} />}
-        <Box display={'flex'} justifyContent={'space-between'}>
-          <Button size='small' onClick={handleClose}>
-            {locales.cancel}
-          </Button>
-          <Button onClick={handleStep} disabled={!connectionType} size='small' variant='contained'>
-            {locales.create}
-          </Button>
-        </Box>
+        {step == 0 && (
+          <ConnectionSelection onClose={handleClose} onSubmit={handleSetConnection} connections={connectionTypes} />
+        )}
+        {step == 1 && connectionTypes && <ConnectionSetting onClose={handleClose} connection={connectionType} />}
       </AddConnectionStyled>
     </AddConnectionModalStyled>
   );

@@ -12,5 +12,13 @@
     "search": "Search",
     "new_connection": "New Connection",
     "cancel": "Cancel",
-    "create": "Create"
+    "create": "Create",
+    "name": "Name",
+    "host": "Host",
+    "port": "Port",
+    "username": "Username",
+    "password": "Password",
+    "database": "Database",
+    "test": "Test",
+    "connection_create_success": "The connection created successfully"
 }
