@@ -19,12 +19,15 @@ interface IFormInput {
 }
 
 const formSchema = z.object({
-  name: z.string(),
-  host: z.string(),
-  port: z.string().refine((val) => !Number.isNaN(parseInt(val, 10)), {
-    message: 'Expected number, received a string'
-  }),
-  username: z.string(),
+  name: z.string().min(1),
+  host: z.string().min(1),
+  port: z
+    .string()
+    .min(1)
+    .refine((val) => !Number.isNaN(parseInt(val, 10)), {
+      message: 'Expected number, received a string'
+    }),
+  username: z.string().min(1),
   password: z.string().optional(),
   database: z.string().optional()
 });
@@ -35,7 +38,6 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
   const {
     control,
     handleSubmit,
-    reset,
     formState: { errors }
   } = useForm<ValidationSchema>({
     resolver: zodResolver(formSchema),
@@ -61,9 +63,11 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
     e?.preventDefault();
     try {
       //todo: add loading
-      await updateConnection(connection?.id, data);
+      await updateConnection({
+        ...data,
+        id: connection?.id
+      });
       toast.success(locales.connection_create_success);
-      reset({ ...data });
       onClose();
     } catch (err) {
       console.log(err);

@@ -8,7 +8,7 @@ import {
   UPDATE_CONNECTION
 } from './endpoints';
 import { transformConnectionDetail, transformConnections } from './transformers';
-import { createConnectionType } from './types';
+import { createConnectionType, updateConnectionType } from './types';
 
 export const getConnectionList = () => {
   return api.get(GET_CONNECTION_LIST()).then(transformConnections);
@@ -25,8 +25,8 @@ export const createConnection = (data: createConnectionType) => {
   });
 };
 
-export const updateConnection = (connectionID: string | number, data: createConnectionType) => {
-  return api.patch(UPDATE_CONNECTION(connectionID), {
+export const updateConnection = (data: updateConnectionType) => {
+  return api.patch(UPDATE_CONNECTION(data.id), {
     ...data,
     port: Number(data.port)
   });
@@ -37,5 +37,8 @@ export const deleteConnection = (connectionId: string | number) => {
 };
 
 export const testConnection = (data: createConnectionType) => {
-  return api.post(TEST_CONNECTION(), data);
+  return api.post(TEST_CONNECTION(), {
+    ...data,
+    port: Number(data.port)
+  });
 };
