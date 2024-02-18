@@ -1,12 +1,15 @@
 import api from '@/src/api';
 import useAPI from '@/src/hooks/useApi.hook';
 import locales from '@/src/locales';
+import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
 import { Menu, MenuItem, Stack } from '@mui/material';
 import { toast } from 'sonner';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import { ConnectionContextMenuProps } from './types';
 
 export default function ConnectionContextMenu({ connection, contextMenu, onClose }: ConnectionContextMenuProps) {
+  const { updateShowEditConnection } = useConnectionStore();
+
   const { request: deleteConnection } = useAPI({
     apiMethod: api.connection.deleteConnection
   });
@@ -21,6 +24,10 @@ export default function ConnectionContextMenu({ connection, contextMenu, onClose
     }
   };
 
+  const handleEditConnection = () => {
+    updateShowEditConnection(connection);
+  };
+
   return (
     <Menu
       open={contextMenu !== null}
@@ -28,7 +35,7 @@ export default function ConnectionContextMenu({ connection, contextMenu, onClose
       anchorReference='anchorPosition'
       anchorPosition={contextMenu !== null ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
     >
-      <MenuItem onClick={onClose}>
+      <MenuItem onClick={handleEditConnection}>
         <Stack width={'100%'} alignItems={'center'} justifyContent={'space-between'} direction={'row'}>
           {locales.edit}
           <CustomIcon type='settings' />

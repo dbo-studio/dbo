@@ -1,5 +1,12 @@
 import api from '@/src/core/services/api';
-import { CREATE_CONNECTION, DELETE_CONNECTION, GET_CONNECTION_DETAIL, GET_CONNECTION_LIST } from './endpoints';
+import {
+  CREATE_CONNECTION,
+  DELETE_CONNECTION,
+  GET_CONNECTION_DETAIL,
+  GET_CONNECTION_LIST,
+  TEST_CONNECTION,
+  UPDATE_CONNECTION
+} from './endpoints';
 import { transformConnectionDetail, transformConnections } from './transformers';
 import { createConnectionType } from './types';
 
@@ -18,6 +25,17 @@ export const createConnection = (data: createConnectionType) => {
   });
 };
 
+export const updateConnection = (connectionID: string | number, data: createConnectionType) => {
+  return api.patch(UPDATE_CONNECTION(connectionID), {
+    ...data,
+    port: Number(data.port)
+  });
+};
+
 export const deleteConnection = (connectionId: string | number) => {
   return api.del(DELETE_CONNECTION(connectionId));
+};
+
+export const testConnection = (data: createConnectionType) => {
+  return api.post(TEST_CONNECTION(), data);
 };

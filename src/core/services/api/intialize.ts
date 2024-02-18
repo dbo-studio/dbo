@@ -21,4 +21,5 @@ $axios.interceptors.response.use((response) => {
 const servicePost = $axios.post;
 const serviceGet = $axios.get;
 const serviceDelete = $axios.delete;
-export { serviceDelete, serviceGet, servicePost };
+const servicePatch = $axios.patch;
+export { serviceDelete, serviceGet, servicePatch, servicePost };

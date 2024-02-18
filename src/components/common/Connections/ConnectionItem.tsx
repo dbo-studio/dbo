@@ -24,12 +24,18 @@ export default function ConnectionItem({ connection, selected = false, onClick }
     );
   };
 
+  const handleClick = () => {
+    if (contextMenu == null) {
+      onClick();
+    }
+  };
+
   const handleClose = () => {
     setContextMenu(null);
   };
 
   return (
-    <ConnectionItemStyled onContextMenu={handleContextMenu} theme={theme} selected={selected} onClick={onClick}>
+    <ConnectionItemStyled onContextMenu={handleContextMenu} theme={theme} selected={selected} onClick={handleClick}>
       <Box maxHeight={50} maxWidth={50} textAlign={'center'}>
         <CustomIcon type='databaseOutline' size='l' />
         <Typography component={'p'} mt={1} variant='caption' noWrap>

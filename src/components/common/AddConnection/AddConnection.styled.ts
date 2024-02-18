@@ -17,7 +17,10 @@ export const AddConnectionStyled = styled(Box)(({ theme }) => ({
   transform: 'translate(-50%, -50%)',
   padding: theme.spacing(2),
   display: 'flex',
-  flexDirection: 'column'
+  flexDirection: 'column',
+  ':focus-visible': {
+    outline: 'unset'
+  }
 }));
 
 export const ConnectionItemStyled = styled(Box)<ConnectionItemStyledProps>(({ theme, selected }) => ({

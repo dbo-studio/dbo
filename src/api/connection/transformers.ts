@@ -34,6 +34,7 @@ const transformAuthData = (data: any): ConnectionAuthType => {
   return {
     database: data?.database,
     host: data?.host,
-    port: data?.port
+    port: data?.port,
+    username: data.username
   };
 };

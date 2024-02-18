@@ -132,3 +132,29 @@ func (h *ConnectionHandler) DeleteConnection(c *fiber.Ctx) error {
 
 	return c.JSON(response.Success(""))
 }
+
+func (h *ConnectionHandler) TestConnection(c *fiber.Ctx) error {
+	req := new(types.ConnectionRequest)
+
+	if err := c.BodyParser(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
+	}
+
+	errors := helper.Validate(req)
+	if errors != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
+	}
+
+	_, err := pgsql.ConnectWithOptions(pgsql.ConnectionOption{
+		Host:     req.Host,
+		Port:     int32(req.Port),
+		User:     req.Username,
+		Password: req.Password,
+		Database: req.Database,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
+	}
+
+	return c.JSON(response.Success(""))
+}

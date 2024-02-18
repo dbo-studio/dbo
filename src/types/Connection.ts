@@ -15,4 +15,5 @@ export interface ConnectionAuthType {
   database: string;
   host: string;
   port: number;
+  username: string;
 }

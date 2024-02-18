@@ -30,3 +30,25 @@ func Connect(connectionId int32) (*gorm.DB, error) {
 		DSN: dsn,
 	}), &gorm.Config{})
 }
+
+type ConnectionOption struct {
+	Host     string
+	Port     int32
+	User     string
+	Password string
+	Database string
+}
+
+func ConnectWithOptions(options ConnectionOption) (*gorm.DB, error) {
+	dsn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s",
+		options.Host,
+		strconv.Itoa(int(options.Port)),
+		options.Database,
+		options.User,
+		options.Password,
+	)
+
+	return gorm.Open(postgres.New(postgres.Config{
+		DSN: dsn,
+	}), &gorm.Config{})
+}

@@ -11,8 +11,10 @@
     "apply": "Apply",
     "search": "Search",
     "new_connection": "New Connection",
+    "edit_connection": "Edit Connection",
     "cancel": "Cancel",
     "create": "Create",
+    "update": "Update",
     "name": "Name",
     "host": "Host",
     "port": "Port",
@@ -22,6 +24,7 @@
     "test": "Test",
     "connection_create_success": "The connection created successfully",
     "connection_delete_success": "The connection deleted successfully",
+    "connection_test_success": "Connect successfully",
     "edit": "Edit",
     "delete": "Delete"
 }

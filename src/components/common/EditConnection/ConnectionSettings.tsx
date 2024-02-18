@@ -38,11 +38,19 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
     reset,
     formState: { errors }
   } = useForm<ValidationSchema>({
-    resolver: zodResolver(formSchema)
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      database: connection?.auth.database,
+      host: connection?.auth.host ?? '',
+      port: connection?.auth.port + '' ?? '',
+      name: connection?.name ?? '',
+      username: connection?.auth.username ?? '',
+      password: ''
+    }
   });
 
-  const { request: createConnection } = useAPI({
-    apiMethod: api.connection.createConnection
+  const { request: updateConnection } = useAPI({
+    apiMethod: api.connection.updateConnection
   });
 
   const { request: testConnection } = useAPI({
@@ -53,7 +61,7 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
     e?.preventDefault();
     try {
       //todo: add loading
-      await createConnection(data);
+      await updateConnection(connection?.id, data);
       toast.success(locales.connection_create_success);
       reset({ ...data });
       onClose();
@@ -162,7 +170,7 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
               {locales.test}
             </Button>
             <Button onClick={handleSubmit(onSubmit)} size='small' variant='contained'>
-              {locales.create}
+              {locales.update}
             </Button>
           </Stack>
         </Box>

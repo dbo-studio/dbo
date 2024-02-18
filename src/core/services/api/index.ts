@@ -1,5 +1,5 @@
 import { AxiosRequestHeaders } from 'axios';
-import { serviceDelete, serviceGet, servicePost } from './intialize';
+import { serviceDelete, serviceGet, servicePatch, servicePost } from './intialize';
 
 // const REQUEST_UNIQUE_ID_KEY = 'X-Request-UUID';
 // const GLOBAL_BOTTOM_SHEET_DATA_KEY = 'global_bottom_sheet';
@@ -126,6 +126,42 @@ function post<T = any>(
   });
 }
 
+function patch<T = any>(
+  url: string,
+  data = {},
+  { headers = {}, isPublic, isLocationBased, ...options }: ApiOptions = {}
+): Promise<T> {
+  const completeHeaders = {
+    ...headers
+  };
+  // Note: This because of handling FormData objects
+  // TODO: Find a better way so we can have formData and location data together if it is needed
+  const completeData = isLocationBased ? { ...data, ...location } : data;
+
+  // TODO: set csrf token
+  // if (!isPublic) completeHeaders.Authorization = getToken();
+  return new Promise(function (resolve, reject) {
+    servicePatch(url, completeData, { ...options, headers: completeHeaders })
+      .then(function (response) {
+        // if (url !== LOGIN_EP) {
+        //   //FIXME: this is a temporary solution for new register navigation
+        //   // the backend shouldn't send deep link for login endpoint
+        //   deepLinkHandler(response?.data?.url);
+        // }
+        if (response?.data?.status === 200) {
+          messageHandler(response);
+          // dataLayerResponseHandler(response);
+          // inTrackResponseHandler(response);
+          resolve(response?.data?.data);
+        } else reject(response);
+      })
+      .catch(function (error) {
+        // deepLinkHandler(error?.data?.url);
+        reject(error);
+      });
+  });
+}
+
 function del<T = any>(url: string, params = {}, { headers = {}, isPublic, ...options }: ApiOptions = {}): Promise<T> {
   const completeHeaders = {
     ...headers
@@ -163,5 +199,6 @@ function del<T = any>(url: string, params = {}, { headers = {}, isPublic, ...opt
 export default {
   get,
   post,
-  del
+  del,
+  patch
 };

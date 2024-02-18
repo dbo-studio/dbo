@@ -9,6 +9,7 @@ export const useConnectionStore = create<ConnectionState>()(
   devtools(
     (set, get) => ({
       showAddConnection: false,
+      showEditConnection: undefined,
       connections: undefined,
       currentConnection: undefined,
       currentSchema: {},
@@ -25,6 +26,9 @@ export const useConnectionStore = create<ConnectionState>()(
       },
       updateShowAddConnection: (show: boolean) => {
         set({ showAddConnection: show });
+      },
+      updateShowEditConnection: (connection: ConnectionType | undefined) => {
+        set({ showEditConnection: connection });
       },
       updateCurrentSchema: (currentSchema: string) => {
         const currentConnection = get().currentConnection;

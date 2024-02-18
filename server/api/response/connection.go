@@ -29,6 +29,7 @@ type authDetails struct {
 	Database string `json:"database"`
 	Host     string `json:"host"`
 	Port     int    `json:"port"`
+	Username string `json:"username"`
 }
 
 func Connections(connections []model.Connection) any {
@@ -43,6 +44,7 @@ func Connections(connections []model.Connection) any {
 				Database: c.Database,
 				Host:     c.Host,
 				Port:     int(c.Port),
+				Username: c.Username,
 			},
 		})
 	}
@@ -61,6 +63,7 @@ func Connection(connection model.Connection, databases []string, schemas []strin
 		Auth: authDetails{
 			Database: connection.Database,
 			Host:     connection.Host,
+			Username: connection.Username,
 			Port:     int(connection.Port),
 		},
 		Databases: databases,

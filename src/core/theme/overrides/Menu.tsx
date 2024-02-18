@@ -6,19 +6,28 @@ export default function Menu(theme: Theme): Components {
     MuiMenu: {
       styleOverrides: {
         root: {
-          borderRadius: variables.radius.medium,
-          marginTop: theme.spacing(1),
-          minWidth: 180,
-          color: theme.palette.mode === 'light' ? 'rgb(55, 65, 81)' : theme.palette.grey[300],
-          boxShadow:
-            'rgb(255, 255, 255) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.05) 0px 4px 6px -2px',
-          padding: '8px'
+          color: theme.palette.mode === 'light' ? 'rgb(55, 65, 81)' : theme.palette.grey[300]
         },
         paper: {
-          background: theme.palette.background.default
+          background: theme.palette.background.default,
+          boxShadow: '0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1)',
+          border: `1px solid ${theme.palette.divider}`,
+          minWidth: 180,
+          padding: '4px',
+          borderRadius: variables.radius.medium
         },
         list: {
           background: theme.palette.background.default
+        }
+      }
+    },
+    MuiMenuItem: {
+      styleOverrides: {
+        root: {
+          borderRadius: variables.radius.medium,
+          '&:hover': {
+            backgroundColor: theme.palette.background.paper
+          }
         }
       }
     }
