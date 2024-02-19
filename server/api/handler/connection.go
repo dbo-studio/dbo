@@ -112,10 +112,10 @@ func (h *ConnectionHandler) UpdateConnection(c *fiber.Ctx) error {
 	connection.Username = req.Username
 	connection.Password = sql.NullString{
 		Valid:  true,
-		String: req.Password,
+		String: helper.OptionalString(req.Password, connection.Password.String),
 	}
 	connection.Port = uint(req.Port)
-	connection.Database = req.Database
+	connection.Database = helper.OptionalString(req.Database, connection.Database)
 
 	result = app.DB().Save(&connection)
 
