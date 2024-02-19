@@ -55,7 +55,7 @@ const SUCCESS = {
 };
 
 const WARNING = {
-  light: '#FFE16A',
+  light: '#FEC514',
   dark: '#B78103'
 };
 

@@ -14,6 +14,7 @@
     "edit_connection": "Edit Connection",
     "cancel": "Cancel",
     "create": "Create",
+    "yes": "Yes",
     "update": "Update",
     "name": "Name",
     "host": "Host",
@@ -26,6 +27,7 @@
     "connection_update_success": "The connection updated successfully",
     "connection_delete_success": "The connection deleted successfully",
     "connection_test_success": "Connect successfully",
+    "connection_delete_confirm": "Are your sure delete connection",
     "edit": "Edit",
     "delete": "Delete"
 }

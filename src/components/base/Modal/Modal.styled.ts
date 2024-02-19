@@ -1,11 +1,11 @@
 import { variables } from '@/src/core/theme/variables';
 import { Box, Modal, styled } from '@mui/material';
 
-export const AddConnectionModalStyled = styled(Modal)(() => ({
+export const ModalStyled = styled(Modal)(() => ({
   background: 'rgba(228, 228, 228, 0.50)'
 }));
 
-export const AddConnectionStyled = styled(Box)(({ theme }) => ({
+export const ModalWrapperStyled = styled(Box)(({ theme }) => ({
   minHeight: '400px',
   minWidth: '400px',
   borderRadius: variables.radius.medium,
@@ -20,4 +20,9 @@ export const AddConnectionStyled = styled(Box)(({ theme }) => ({
   ':focus-visible': {
     outline: 'unset'
   }
+}));
+
+export const ConfirmModalWrapperStyled = styled(ModalWrapperStyled)(() => ({
+  minHeight: '120px',
+  minWidth: '150px'
 }));

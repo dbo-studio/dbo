@@ -1,11 +1,10 @@
+import Modal from '@/src/components/base/Modal/Modal';
 import locales from '@/src/locales';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
-import { Box, Modal, Typography } from '@mui/material';
 import { useState } from 'react';
 import ConnectionSelection from '../ConnectionSelection/ConnectionSelection';
 import ConnectionSetting from '../ConnectionSettings/ConnectionSettings';
 import { ConnectionType } from '../types';
-import { AddConnectionStyled } from './AddConnection.styled';
 
 const connectionTypes: ConnectionType[] = [
   {
@@ -31,16 +30,11 @@ export default function AddConnection() {
   };
 
   return (
-    <Modal open={showAddConnection}>
-      <AddConnectionStyled>
-        <Box>
-          <Typography variant='h6'>{locales.new_connection}</Typography>
-        </Box>
-        {step == 0 && (
-          <ConnectionSelection onClose={handleClose} onSubmit={handleSetConnection} connections={connectionTypes} />
-        )}
-        {step == 1 && connectionTypes && <ConnectionSetting onClose={handleClose} connection={connectionType} />}
-      </AddConnectionStyled>
+    <Modal open={showAddConnection} title={locales.new_connection}>
+      {step == 0 && (
+        <ConnectionSelection onClose={handleClose} onSubmit={handleSetConnection} connections={connectionTypes} />
+      )}
+      {step == 1 && connectionTypes && <ConnectionSetting onClose={handleClose} connection={connectionType} />}
     </Modal>
   );
 }

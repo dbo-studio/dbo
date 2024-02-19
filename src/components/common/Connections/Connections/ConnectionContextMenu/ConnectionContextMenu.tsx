@@ -1,18 +1,26 @@
 import api from '@/src/api';
+import CustomIcon from '@/src/components/base/CustomIcon/CustomIcon';
+import ConfirmModal from '@/src/components/base/Modal/ConfirmModal';
 import useAPI from '@/src/hooks/useApi.hook';
 import locales from '@/src/locales';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
-import { Menu, MenuItem, Stack } from '@mui/material';
+import { Box, Menu, MenuItem, Stack } from '@mui/material';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import CustomIcon from '../../../../base/CustomIcon/CustomIcon';
 import { ConnectionContextMenuProps } from '../../types';
 
 export default function ConnectionContextMenu({ connection, contextMenu, onClose }: ConnectionContextMenuProps) {
   const { updateShowEditConnection } = useConnectionStore();
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const { request: deleteConnection } = useAPI({
     apiMethod: api.connection.deleteConnection
   });
+
+  const handleOpenConfirm = () => {
+    setShowConfirm(!showConfirm);
+    onClose();
+  };
 
   const handleDeleteConnection = async () => {
     try {
@@ -29,24 +37,27 @@ export default function ConnectionContextMenu({ connection, contextMenu, onClose
   };
 
   return (
-    <Menu
-      open={contextMenu !== null}
-      onClose={onClose}
-      anchorReference='anchorPosition'
-      anchorPosition={contextMenu !== null ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
-    >
-      <MenuItem onClick={handleEditConnection}>
-        <Stack width={'100%'} alignItems={'center'} justifyContent={'space-between'} direction={'row'}>
-          {locales.edit}
-          <CustomIcon type='settings' />
-        </Stack>
-      </MenuItem>
-      <MenuItem onClick={handleDeleteConnection}>
-        <Stack width={'100%'} alignItems={'center'} justifyContent={'space-between'} direction={'row'}>
-          {locales.delete}
-          <CustomIcon type='delete' />
-        </Stack>
-      </MenuItem>
-    </Menu>
+    <Box>
+      <ConfirmModal open={showConfirm} title={locales.connection_delete_confirm} onConfirm={handleDeleteConnection} />
+      <Menu
+        open={contextMenu !== null}
+        onClose={onClose}
+        anchorReference='anchorPosition'
+        anchorPosition={contextMenu !== null ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
+      >
+        <MenuItem onClick={handleEditConnection}>
+          <Stack width={'100%'} alignItems={'center'} justifyContent={'space-between'} direction={'row'}>
+            {locales.edit}
+            <CustomIcon type='settings' />
+          </Stack>
+        </MenuItem>
+        <MenuItem onClick={handleOpenConfirm}>
+          <Stack width={'100%'} alignItems={'center'} justifyContent={'space-between'} direction={'row'}>
+            {locales.delete}
+            <CustomIcon type='delete' />
+          </Stack>
+        </MenuItem>
+      </Menu>
+    </Box>
   );
 }
