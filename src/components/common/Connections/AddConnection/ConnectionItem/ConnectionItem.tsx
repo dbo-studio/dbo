@@ -1,7 +1,7 @@
 import { Typography } from '@mui/material';
 import Image from 'next/image';
-import { ConnectionItemLogoStyled, ConnectionItemStyled } from './AddConnection.styled';
-import { ConnectionItemProps } from './types';
+import { ConnectionItemProps } from '../types';
+import { ConnectionItemLogoStyled, ConnectionItemStyled } from './ConnectionItem.styled';
 
 export default function ConnectionItem({ connection, selected, onClick }: ConnectionItemProps) {
   return (

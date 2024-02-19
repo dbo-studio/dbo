@@ -5,9 +5,9 @@ import { ConnectionType } from '@/src/types';
 import { Box } from '@mui/material';
 import { useEffect } from 'react';
 import { v4 as uuid } from 'uuid';
-import AddConnection from '../AddConnection/AddConnection';
-import EditConnection from '../EditConnection/EditConnection';
-import ConnectionItem from './ConnectionItem';
+import AddConnection from './AddConnection/AddConnection/AddConnection';
+import ConnectionItem from './ConnectionItem/ConnectionItem';
+import EditConnection from './EditConnection/EditConnection';
 import { EmptySpaceStyle } from './EmptySpace.styled';
 
 export default function Connections() {

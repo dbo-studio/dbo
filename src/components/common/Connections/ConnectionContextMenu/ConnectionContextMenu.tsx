@@ -4,8 +4,8 @@ import locales from '@/src/locales';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
 import { Menu, MenuItem, Stack } from '@mui/material';
 import { toast } from 'sonner';
-import CustomIcon from '../../base/CustomIcon/CustomIcon';
-import { ConnectionContextMenuProps } from './types';
+import CustomIcon from '../../../base/CustomIcon/CustomIcon';
+import { ConnectionContextMenuProps } from '../types';
 
 export default function ConnectionContextMenu({ connection, contextMenu, onClose }: ConnectionContextMenuProps) {
   const { updateShowEditConnection } = useConnectionStore();

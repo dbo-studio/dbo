@@ -1,10 +1,11 @@
 import { EventFor } from '@/src/types';
 import { Box, InputBase, Typography, useTheme } from '@mui/material';
 import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
 import { FieldInputProps } from './types';
 
-export default function FieldInput(props: FieldInputProps) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default forwardRef(function FieldInput(props: FieldInputProps, ref) {
   const theme = useTheme();
   const [value, setValue] = useState('');
 
@@ -14,7 +15,7 @@ export default function FieldInput(props: FieldInputProps) {
     } else {
       setValue(props.value as '');
     }
-  }, [props.value]);
+  }, [props.type, props.value]);
 
   const handleOnChange = (e: EventFor<'input', 'onChange'>) => {
     setValue(e.target.value);
@@ -49,4 +50,4 @@ export default function FieldInput(props: FieldInputProps) {
       </Typography>
     </Box>
   );
-}
+});

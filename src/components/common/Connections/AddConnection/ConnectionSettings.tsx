@@ -6,7 +6,7 @@ import { Box, Button, Stack } from '@mui/material';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import FieldInput from '../../base/FieldInput/FieldInput';
+import FieldInput from '../../../base/FieldInput/FieldInput';
 import { ConnectionSettingsProps } from './types';
 
 interface IFormInput {

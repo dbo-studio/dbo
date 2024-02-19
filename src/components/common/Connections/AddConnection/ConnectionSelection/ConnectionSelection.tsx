@@ -2,10 +2,10 @@ import { useUUID } from '@/src/hooks';
 import locales from '@/src/locales';
 import { Box, Button } from '@mui/material';
 import { useState } from 'react';
-import Search from '../../base/Search/Search';
-import { ConnectionWrapperStyled } from './AddConnection.styled';
-import ConnectionItem from './ConnectionItem';
-import { ConnectionSelectionProps, ConnectionType } from './types';
+import Search from '../../../../base/Search/Search';
+import ConnectionItem from '../ConnectionItem/ConnectionItem';
+import { ConnectionSelectionProps, ConnectionType } from '../types';
+import { ConnectionWrapperStyled } from './ConnectionSelection.styled';
 
 export default function ConnectionSelection({ connections, onSubmit, onClose }: ConnectionSelectionProps) {
   const uuids = useUUID(connections.length);

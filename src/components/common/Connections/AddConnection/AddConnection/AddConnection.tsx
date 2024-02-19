@@ -2,10 +2,10 @@ import locales from '@/src/locales';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
 import { Box, Typography } from '@mui/material';
 import { useState } from 'react';
+import ConnectionSelection from '../ConnectionSelection/ConnectionSelection';
+import ConnectionSetting from '../ConnectionSettings';
+import { ConnectionType } from '../types';
 import { AddConnectionModalStyled, AddConnectionStyled } from './AddConnection.styled';
-import ConnectionSelection from './ConnectionSelection';
-import ConnectionSetting from './ConnectionSettings';
-import { ConnectionType } from './types';
 
 const connectionTypes: ConnectionType[] = [
   {

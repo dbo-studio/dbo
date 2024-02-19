@@ -23,6 +23,7 @@
     "database": "Database",
     "test": "Test",
     "connection_create_success": "The connection created successfully",
+    "connection_update_success": "The connection updated successfully",
     "connection_delete_success": "The connection deleted successfully",
     "connection_test_success": "Connect successfully",
     "edit": "Edit",
