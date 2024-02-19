@@ -1,6 +1,6 @@
 import { variables } from '@/src/core/theme/variables';
 import { Box, styled } from '@mui/material';
-import { ConnectionItemStyledProps } from '../types';
+import { ConnectionItemStyledProps } from '../../types';
 
 export const ConnectionItemStyled = styled(Box)<ConnectionItemStyledProps>(({ theme, selected }) => ({
   borderRadius: variables.radius.medium,

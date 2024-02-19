@@ -14,6 +14,18 @@ export type ConnectionStore = {
   updateShowEditConnection: (connections: ConnectionType | undefined) => void;
 };
 
+export type DatabaseSlice = {
+  showSelectDatabase: boolean;
+  currentDatabase: DataCurrentDatabaseType;
+  updateShowSelectDatabase: (show: boolean) => void;
+  getCurrentDatabase: () => string | undefined;
+  updateCurrentDatabase: (database: string) => void;
+};
+
 export type DataCurrentSchemaType = {
+  [key: string]: string | undefined;
+};
+
+export type DataCurrentDatabaseType = {
   [key: string]: string | undefined;
 };

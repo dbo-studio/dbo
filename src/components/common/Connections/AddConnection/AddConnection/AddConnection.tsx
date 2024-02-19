@@ -1,11 +1,11 @@
 import locales from '@/src/locales';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
-import { Box, Typography } from '@mui/material';
+import { Box, Modal, Typography } from '@mui/material';
 import { useState } from 'react';
 import ConnectionSelection from '../ConnectionSelection/ConnectionSelection';
-import ConnectionSetting from '../ConnectionSettings';
+import ConnectionSetting from '../ConnectionSettings/ConnectionSettings';
 import { ConnectionType } from '../types';
-import { AddConnectionModalStyled, AddConnectionStyled } from './AddConnection.styled';
+import { AddConnectionStyled } from './AddConnection.styled';
 
 const connectionTypes: ConnectionType[] = [
   {
@@ -31,7 +31,7 @@ export default function AddConnection() {
   };
 
   return (
-    <AddConnectionModalStyled open={showAddConnection}>
+    <Modal open={showAddConnection}>
       <AddConnectionStyled>
         <Box>
           <Typography variant='h6'>{locales.new_connection}</Typography>
@@ -41,6 +41,6 @@ export default function AddConnection() {
         )}
         {step == 1 && connectionTypes && <ConnectionSetting onClose={handleClose} connection={connectionType} />}
       </AddConnectionStyled>
-    </AddConnectionModalStyled>
+    </Modal>
   );
 }

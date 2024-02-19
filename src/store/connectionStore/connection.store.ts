@@ -1,13 +1,14 @@
 import { ConnectionType } from '@/src/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { ConnectionStore } from './types';
+import { createDatabaseSlice } from './slices/database.slices';
+import { ConnectionStore, DatabaseSlice } from './types';
 
-type ConnectionState = ConnectionStore;
+type ConnectionState = ConnectionStore & DatabaseSlice;
 
 export const useConnectionStore = create<ConnectionState>()(
   devtools(
-    (set, get) => ({
+    (set, get, ...state) => ({
       showAddConnection: false,
       showEditConnection: undefined,
       connections: undefined,
@@ -41,7 +42,8 @@ export const useConnectionStore = create<ConnectionState>()(
       },
       updateCurrentConnection: (currentConnection: ConnectionType) => {
         set({ currentConnection });
-      }
+      },
+      ...createDatabaseSlice(set, get, ...state)
     }),
     { name: 'connections' }
   )

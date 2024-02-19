@@ -1,9 +1,5 @@
 import { variables } from '@/src/core/theme/variables';
-import { Box, Modal, styled } from '@mui/material';
-
-export const EditConnectionModalStyled = styled(Modal)(() => ({
-  background: 'rgba(228, 228, 228, 0.50)'
-}));
+import { Box, styled } from '@mui/material';
 
 export const EditConnectionStyled = styled(Box)(({ theme }) => ({
   height: '400px',

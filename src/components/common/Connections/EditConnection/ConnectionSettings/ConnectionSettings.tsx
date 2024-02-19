@@ -6,8 +6,8 @@ import { Box, Button, Stack } from '@mui/material';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import FieldInput from '../../../base/FieldInput/FieldInput';
-import { ConnectionSettingsProps } from './types';
+import FieldInput from '../../../../base/FieldInput/FieldInput';
+import { ConnectionSettingsProps } from '../types';
 
 interface IFormInput {
   name: string;
@@ -19,12 +19,15 @@ interface IFormInput {
 }
 
 const formSchema = z.object({
-  name: z.string(),
-  host: z.string(),
-  port: z.string().refine((val) => !Number.isNaN(parseInt(val, 10)), {
-    message: 'Expected number, received a string'
-  }),
-  username: z.string(),
+  name: z.string().min(1),
+  host: z.string().min(1),
+  port: z
+    .string()
+    .min(1)
+    .refine((val) => !Number.isNaN(parseInt(val, 10)), {
+      message: 'Expected number, received a string'
+    }),
+  username: z.string().min(1),
   password: z.string().optional(),
   database: z.string().optional()
 });
@@ -35,14 +38,21 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
   const {
     control,
     handleSubmit,
-    reset,
     formState: { errors }
   } = useForm<ValidationSchema>({
-    resolver: zodResolver(formSchema)
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      database: connection?.auth.database,
+      host: connection?.auth.host ?? '',
+      port: connection?.auth.port + '' ?? '',
+      name: connection?.name ?? '',
+      username: connection?.auth.username ?? '',
+      password: ''
+    }
   });
 
-  const { request: createConnection } = useAPI({
-    apiMethod: api.connection.createConnection
+  const { request: updateConnection } = useAPI({
+    apiMethod: api.connection.updateConnection
   });
 
   const { request: testConnection } = useAPI({
@@ -53,9 +63,11 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
     e?.preventDefault();
     try {
       //todo: add loading
-      await createConnection(data);
-      toast.success(locales.connection_create_success);
-      reset({ ...data });
+      await updateConnection({
+        ...data,
+        id: connection?.id
+      });
+      toast.success(locales.connection_update_success);
       onClose();
     } catch (err) {
       console.log(err);
@@ -162,7 +174,7 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
               {locales.test}
             </Button>
             <Button onClick={handleSubmit(onSubmit)} size='small' variant='contained'>
-              {locales.create}
+              {locales.update}
             </Button>
           </Stack>
         </Box>

@@ -1,8 +1,8 @@
 import { Box, Theme, Typography, useTheme } from '@mui/material';
 import { useState } from 'react';
-import CustomIcon from '../../../base/CustomIcon/CustomIcon';
+import CustomIcon from '../../../../base/CustomIcon/CustomIcon';
+import { ConnectionItemProps } from '../../types';
 import ConnectionContextMenu from '../ConnectionContextMenu/ConnectionContextMenu';
-import { ConnectionItemProps } from '../types';
 import { ConnectionItemStyled } from './ConnectionItem.styled';
 
 export default function ConnectionItem({ connection, selected = false, onClick }: ConnectionItemProps) {

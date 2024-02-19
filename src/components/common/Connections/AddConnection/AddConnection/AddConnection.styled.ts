@@ -6,8 +6,8 @@ export const AddConnectionModalStyled = styled(Modal)(() => ({
 }));
 
 export const AddConnectionStyled = styled(Box)(({ theme }) => ({
-  height: '400px',
-  width: '400px',
+  minHeight: '400px',
+  minWidth: '400px',
   borderRadius: variables.radius.medium,
   background: theme.palette.background.default,
   position: 'absolute',
