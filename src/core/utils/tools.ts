@@ -1,17 +1,17 @@
-import { isNumber, isObject, isServerSide } from '.';
+import { isNumber, isObject } from '.';
 
 export const tools = {
   screenMaxHeight: (): string => {
-    if (!isServerSide) {
-      return window?.innerHeight - 56 + 'px';
-    }
-    return '100vh';
+    // if (!isServerSide) {
+    return window?.innerHeight - 56 + 'px';
+    // }
+    // return '100%';
   },
   screenFullHeight: (): string => {
-    if (!isServerSide) {
-      return window?.innerHeight + 'px';
-    }
-    return '100vh';
+    // if (!isServerSide) {
+    return window?.innerHeight + 'px';
+    // }
+    // return '100%';
   },
   isEmpty: (data: unknown): data is never | undefined | null => {
     return (

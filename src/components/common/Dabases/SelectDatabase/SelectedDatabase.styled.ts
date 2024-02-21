@@ -1,0 +1,15 @@
+import { variables } from '@/src/core/theme/variables';
+import { Box, styled } from '@mui/material';
+import { DatabaseItemStyledProps } from '../types';
+
+export const DatabaseItemStyled = styled(Box)<DatabaseItemStyledProps>(({ theme, selected }) => ({
+  cursor: 'pointer',
+  padding: `${theme.spacing(1)} ${theme.spacing(2)}`,
+  borderRadius: variables.radius.medium,
+  background: selected ? theme.palette.background.paper : 'unset',
+  marginBottom: theme.spacing(1),
+  border: `1px solid ${theme.palette.divider}`,
+  ':hover': {
+    background: theme.palette.background.paper
+  }
+}));

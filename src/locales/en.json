@@ -1,5 +1,5 @@
 {
-    "no_active_connection": "No Active Connection",
+    "no_active_connection": "No active connection",
     "data": "Data",
     "structure": "Structure",
     "fields": "Fields",
@@ -10,8 +10,8 @@
     "history": "History",
     "apply": "Apply",
     "search": "Search",
-    "new_connection": "New Connection",
-    "edit_connection": "Edit Connection",
+    "new_connection": "New connection",
+    "edit_connection": "Edit connection",
     "cancel": "Cancel",
     "create": "Create",
     "yes": "Yes",
@@ -29,5 +29,8 @@
     "connection_test_success": "Connect successfully",
     "connection_delete_confirm": "Are your sure delete connection",
     "edit": "Edit",
-    "delete": "Delete"
+    "delete": "Delete",
+    "select_database": "Select database",
+    "open": "Open",
+    "new": "New"
 }

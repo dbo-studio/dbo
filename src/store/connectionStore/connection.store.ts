@@ -13,15 +13,6 @@ export const useConnectionStore = create<ConnectionState>()(
       showEditConnection: undefined,
       connections: undefined,
       currentConnection: undefined,
-      currentSchema: {},
-      getCurrentSchema: () => {
-        const currentConnection = get().currentConnection;
-        const currentSchema = get().currentSchema;
-        if (!currentConnection || !Object.prototype.hasOwnProperty.call(currentSchema, currentConnection.id)) {
-          return undefined;
-        }
-        return currentSchema[currentConnection.id];
-      },
       updateConnections: (connections: ConnectionType[]) => {
         set({ connections });
       },
@@ -31,17 +22,20 @@ export const useConnectionStore = create<ConnectionState>()(
       updateShowEditConnection: (connection: ConnectionType | undefined) => {
         set({ showEditConnection: connection });
       },
-      updateCurrentSchema: (currentSchema: string) => {
-        const currentConnection = get().currentConnection;
-        if (!currentConnection) {
+      updateCurrentConnection: (currentConnection: ConnectionType) => {
+        const connections = get().connections;
+        if (!connections) {
           return;
         }
-        const schemes = get().currentSchema;
-        schemes[currentConnection.id] = currentSchema;
-        set({ currentSchema: schemes });
-      },
-      updateCurrentConnection: (currentConnection: ConnectionType) => {
-        set({ currentConnection });
+
+        connections.map((c: ConnectionType) => {
+          if (c.id == currentConnection.id) {
+            return currentConnection;
+          }
+          return c;
+        });
+
+        set({ currentConnection, connections });
       },
       ...createDatabaseSlice(set, get, ...state)
     }),

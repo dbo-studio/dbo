@@ -3,12 +3,14 @@ import { useConnectionStore } from '@/src/store/connectionStore/connection.store
 import { IconButton, Stack } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
+import Databases from '../Dabases/Databases';
 
 export default function ConnectionInfo() {
-  const { updateShowAddConnection } = useConnectionStore();
+  const { updateShowAddConnection, showSelectDatabase, updateShowSelectDatabase } = useConnectionStore();
 
   return (
     <Stack direction={'row'} justifyContent={'center'} alignItems={'center'}>
+      <Databases open={showSelectDatabase} />
       <Grid md={4}>
         <Stack direction={'row'} spacing={2} justifyContent='flex-end'>
           <IconButton aria-label='connection' onClick={() => updateShowAddConnection(true)}>
@@ -17,7 +19,7 @@ export default function ConnectionInfo() {
           <IconButton aria-label='lock'>
             <CustomIcon type={'lock'} size={'m'} />
           </IconButton>
-          <IconButton aria-label='database'>
+          <IconButton aria-label='database' onClick={() => updateShowSelectDatabase(!showSelectDatabase)}>
             <CustomIcon type={'databaseOutline'} size={'m'} />
           </IconButton>
         </Stack>

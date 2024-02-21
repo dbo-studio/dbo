@@ -11,15 +11,8 @@ import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { EmptySpaceStyle } from './EmptySpace.styled';
 
 export default function Connections() {
-  const {
-    connections,
-    currentConnection,
-    getCurrentSchema,
-    updateCurrentConnection,
-    updateConnections,
-    updateCurrentSchema,
-    updateShowAddConnection
-  } = useConnectionStore();
+  const { connections, currentConnection, updateCurrentConnection, updateConnections, updateShowAddConnection } =
+    useConnectionStore();
 
   const { request: getConnectionList } = useAPI({
     apiMethod: api.connection.getConnectionList
@@ -42,9 +35,6 @@ export default function Connections() {
   const handleChangeCurrentConnection = (c: ConnectionType) => {
     getConnectionDetail(c?.id).then((res) => {
       updateCurrentConnection(res);
-      if (res.schemas && res.schemas.length > 0 && !getCurrentSchema()) {
-        updateCurrentSchema(res.schemas[0]);
-      }
     });
   };
 

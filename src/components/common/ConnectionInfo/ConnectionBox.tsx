@@ -5,21 +5,26 @@ import { useEffect, useState } from 'react';
 import { ConnectionBoxStyled } from './ConnectionBox.styled';
 
 export default function ConnectionBox() {
-  const { currentConnection, getCurrentSchema } = useConnectionStore();
+  const { currentConnection } = useConnectionStore();
   const [info, setInfo] = useState('');
   const [active, setActive] = useState('false');
 
   useEffect(() => {
-    if (!currentConnection || !getCurrentSchema()) {
+    if (!currentConnection || !currentConnection.current_schema) {
       setInfo(locales.no_active_connection);
       setActive('false');
     } else {
       setInfo(
-        currentConnection?.driver + ' 15.1: ' + getCurrentSchema()?.name + ': ' + currentConnection?.name + ' SQL Query'
+        currentConnection?.driver +
+          ' 15.1: ' +
+          currentConnection.current_schema +
+          ': ' +
+          currentConnection?.name +
+          ' SQL Query'
       );
       setActive('true');
     }
-  }, [getCurrentSchema()]);
+  }, [currentConnection]);
 
   return (
     <ConnectionBoxStyled active={active}>
