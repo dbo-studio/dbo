@@ -26,7 +26,7 @@ export default function SelectDatabase({ onClose }: SelectDatabaseProps) {
 
   return (
     <>
-      <Box flex={1}>
+      <Box flex={1} maxHeight={300} overflow={'scroll'}>
         {currentConnection?.databases?.map((db: string) => (
           <DatabaseItem onClick={() => setSelectedDB(db)} name={db} key={uuid()} selected={db == selectedDB} />
         ))}
