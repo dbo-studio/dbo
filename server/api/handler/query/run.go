@@ -1,17 +1,15 @@
-package handler
+package handler_query
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/khodemobin/dbo/api/dto"
 	"github.com/khodemobin/dbo/api/response"
 	"github.com/khodemobin/dbo/drivers/pgsql"
 	"github.com/khodemobin/dbo/helper"
-	"github.com/khodemobin/dbo/types"
 )
 
-type QueryHandler struct{}
-
 func (h *QueryHandler) RunQuery(c *fiber.Ctx) error {
-	req := new(types.RunQueryRequest)
+	req := new(dto.RunQueryDto)
 
 	if err := c.BodyParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))

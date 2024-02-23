@@ -7,14 +7,15 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/khodemobin/dbo/api/handler"
+	handler_connection "github.com/khodemobin/dbo/api/handler/connection"
+	handler_query "github.com/khodemobin/dbo/api/handler/query"
 	"github.com/khodemobin/dbo/app"
 )
 
 type Server struct {
 	app               *fiber.App
-	queryHandler      handler.QueryHandler
-	connectionHandler handler.ConnectionHandler
+	queryHandler      handler_query.QueryHandler
+	connectionHandler handler_connection.ConnectionHandler
 }
 
 func New(isLocal bool) *Server {
@@ -22,7 +23,6 @@ func New(isLocal bool) *Server {
 		app: fiber.New(fiber.Config{
 			JSONEncoder: json.Marshal,
 			JSONDecoder: json.Unmarshal,
-			Prefork:     !isLocal,
 			ErrorHandler: func(ctx *fiber.Ctx, err error) error {
 				app.Log().Error(err)
 				return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -30,8 +30,8 @@ func New(isLocal bool) *Server {
 				})
 			},
 		}),
-		queryHandler:      handler.QueryHandler{},
-		connectionHandler: handler.ConnectionHandler{},
+		queryHandler:      handler_query.QueryHandler{},
+		connectionHandler: handler_connection.ConnectionHandler{},
 	}
 }
 

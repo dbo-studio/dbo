@@ -7,3 +7,11 @@ func OptionalString(value string, defaultValue string) string {
 		return defaultValue
 	}
 }
+
+func OptionalBool(value *bool, defaultValue bool) bool {
+	if value != nil {
+		return *value
+	} else {
+		return defaultValue
+	}
+}

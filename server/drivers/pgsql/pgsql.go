@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/khodemobin/dbo/types"
+	"github.com/khodemobin/dbo/api/dto"
 )
 
 type RunQueryResult struct {
@@ -13,7 +13,7 @@ type RunQueryResult struct {
 	Data  []map[string]interface{}
 }
 
-func RunQuery(req *types.RunQueryRequest) (*RunQueryResult, error) {
+func RunQuery(req *dto.RunQueryDto) (*RunQueryResult, error) {
 	query, err := queryGenerator(req)
 	if err != nil {
 		return nil, errors.New("Generate query error: " + err.Error())

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/khodemobin/dbo/types"
+	"github.com/khodemobin/dbo/api/dto"
 )
 
-func queryGenerator(req *types.RunQueryRequest) (string, error) {
+func queryGenerator(req *dto.RunQueryDto) (string, error) {
 	query := ""
 
 	if len(req.Columns) == 0 {

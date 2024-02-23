@@ -8,15 +8,18 @@ import (
 )
 
 type Connection struct {
-	ID        uint `gorm:"primaryKey,autoIncrement"`
-	Name      string
-	Host      string
-	Username  string
-	Password  sql.NullString
-	Port      uint
-	Database  string
-	CreatedAt sql.NullTime `gorm:"autoCreateTime"`
-	UpdatedAt sql.NullTime `gorm:"autoUpdateTime"`
+	ID              uint `gorm:"primaryKey,autoIncrement"`
+	Name            string
+	Host            string
+	Username        string
+	Password        sql.NullString
+	Port            uint
+	Database        string
+	IsActive        bool
+	CurrentSchema   sql.NullString
+	CurrentDatabase sql.NullString
+	CreatedAt       sql.NullTime `gorm:"autoCreateTime"`
+	UpdatedAt       sql.NullTime `gorm:"autoUpdateTime"`
 }
 
 type ConnectionResource struct {
@@ -43,6 +46,14 @@ func (c Connection) FakeConnection() *Connection {
 		Database:  faker.Name(),
 		CreatedAt: sql.NullTime{},
 		UpdatedAt: sql.NullTime{},
+		CurrentSchema: sql.NullString{
+			Valid:  true,
+			String: faker.Name(),
+		},
+		CurrentDatabase: sql.NullString{
+			Valid:  true,
+			String: faker.Name(),
+		},
 	}
 }
 
@@ -54,15 +65,4 @@ func (c Connection) SeedConnection(count int) ([]*Connection, error) {
 	}
 
 	return results, nil
-}
-
-func (c Connection) ToResource() *ConnectionResource {
-	return &ConnectionResource{
-		ID:       c.ID,
-		Name:     c.Name,
-		Host:     c.Host,
-		Username: c.Username,
-		Port:     c.Port,
-		Database: c.Database,
-	}
 }
