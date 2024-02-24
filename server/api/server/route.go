@@ -2,12 +2,20 @@ package server
 
 func (r *Server) routing() {
 	api := r.app.Group("/api")
-	api.Post("/query", r.queryHandler.RunQuery)
 
-	api.Get("/connections/:id", r.connectionHandler.Connection)
-	api.Get("/connections", r.connectionHandler.Connections)
-	api.Post("/connections", r.connectionHandler.AddConnection)
-	api.Post("/connections/test", r.connectionHandler.TestConnection)
-	api.Patch("/connections/:id", r.connectionHandler.UpdateConnection)
-	api.Delete("/connections/:id", r.connectionHandler.DeleteConnection)
+	query := api.Group("query")
+	query.Post("/", r.queryHandler.RunQuery)
+
+	connection := api.Group("connections")
+	connection.Get("/:id", r.connectionHandler.Connection)
+	connection.Get("/", r.connectionHandler.Connections)
+	connection.Post("/", r.connectionHandler.AddConnection)
+	connection.Post("/test", r.connectionHandler.TestConnection)
+	connection.Patch("/:id", r.connectionHandler.UpdateConnection)
+	connection.Delete("/:id", r.connectionHandler.DeleteConnection)
+
+	database := api.Group("databases")
+	database.Get("/metadata", r.databaseHandler.DatabaseMetaData)
+	database.Post("/", r.databaseHandler.AddDatabase)
+	database.Delete("/", r.databaseHandler.DeleteDatabase)
 }

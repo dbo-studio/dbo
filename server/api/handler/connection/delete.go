@@ -1,15 +1,19 @@
-package handler_connection
+package connection_handler
 
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/khodemobin/dbo/api/response"
 	"github.com/khodemobin/dbo/app"
-	"github.com/khodemobin/dbo/model"
 )
 
 func (h *ConnectionHandler) DeleteConnection(c *fiber.Ctx) error {
 	connectionId := c.Params("id")
-	app.DB().Delete(&model.Connection{}, connectionId)
+	connection, err := h.FindConnection(connectionId)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(err.Error())
+	}
+
+	app.DB().Delete(connection)
 
 	return c.JSON(response.Success(""))
 }

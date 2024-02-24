@@ -7,15 +7,17 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	handler_connection "github.com/khodemobin/dbo/api/handler/connection"
-	handler_query "github.com/khodemobin/dbo/api/handler/query"
+	connection_handler "github.com/khodemobin/dbo/api/handler/connection"
+	database_handler "github.com/khodemobin/dbo/api/handler/database"
+	query_handler "github.com/khodemobin/dbo/api/handler/query"
 	"github.com/khodemobin/dbo/app"
 )
 
 type Server struct {
 	app               *fiber.App
-	queryHandler      handler_query.QueryHandler
-	connectionHandler handler_connection.ConnectionHandler
+	queryHandler      query_handler.QueryHandler
+	connectionHandler connection_handler.ConnectionHandler
+	databaseHandler   database_handler.DatabaseHandler
 }
 
 func New(isLocal bool) *Server {
@@ -30,8 +32,9 @@ func New(isLocal bool) *Server {
 				})
 			},
 		}),
-		queryHandler:      handler_query.QueryHandler{},
-		connectionHandler: handler_connection.ConnectionHandler{},
+		queryHandler:      query_handler.QueryHandler{},
+		connectionHandler: connection_handler.ConnectionHandler{},
+		databaseHandler:   database_handler.DatabaseHandler{},
 	}
 }
 
@@ -42,9 +45,7 @@ func (r *Server) Start(isLocal bool, port string) error {
 		r.app.Use(recover.New(), compress.New())
 	}
 
-	r.app.Use(cors.New(cors.Config{
-		AllowCredentials: true,
-	}))
+	r.app.Use(cors.New())
 
 	r.routing()
 	return r.app.Listen(":" + port)

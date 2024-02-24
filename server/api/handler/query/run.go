@@ -1,4 +1,4 @@
-package handler_query
+package query_handler
 
 import (
 	"github.com/gofiber/fiber/v2"

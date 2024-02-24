@@ -1,4 +1,4 @@
-package handler_connection
+package connection_handler
 
 import (
 	"github.com/gofiber/fiber/v2"

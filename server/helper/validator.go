@@ -11,9 +11,9 @@ type ErrorResponse struct {
 	Tag   string `json:"tag"`
 }
 
-func Validate(s interface{}) []*ErrorResponse {
+func Validate(dto interface{}) []*ErrorResponse {
 	var errors []*ErrorResponse
-	err := validate.Struct(s)
+	err := validate.Struct(dto)
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
 			var element ErrorResponse

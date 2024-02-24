@@ -1,4 +1,4 @@
-package handler_connection
+package connection_handler
 
 import (
 	"database/sql"
@@ -27,7 +27,7 @@ func (h *ConnectionHandler) AddConnection(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
 	}
 
-	return c.JSON(response.Success(response.Connection(*connection, []string{}, []string{}, []string{})))
+	return c.JSON(response.Success(response.Connection(connection, []string{}, []string{}, []string{})))
 }
 
 func createConnection(req *dto.ConnectionDto) (*model.Connection, error) {

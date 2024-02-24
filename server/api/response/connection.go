@@ -55,7 +55,7 @@ func Connections(connections []model.Connection) any {
 	return data
 }
 
-func Connection(connection model.Connection, databases []string, schemas []string, tables []string) any {
+func Connection(connection *model.Connection, databases []string, schemas []string, tables []string) any {
 	return connectionInfo{
 		ID:              int64(connection.ID),
 		Name:            connection.Name,

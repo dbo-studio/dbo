@@ -1,27 +1,21 @@
-package handler_connection
+package connection_handler
 
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/khodemobin/dbo/api/response"
-	"github.com/khodemobin/dbo/app"
 	"github.com/khodemobin/dbo/drivers/pgsql"
-	"github.com/khodemobin/dbo/model"
 )
 
 func (h *ConnectionHandler) Connection(c *fiber.Ctx) error {
-	connectionId := c.Params("id")
-
-	var connection model.Connection
-	result := app.DB().Where("id", "=", connectionId).First(&connection)
-	if result.Error != nil {
-		return c.Status(fiber.StatusNotFound).JSON(result.Error.Error())
+	connection, err := h.FindConnection(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(err.Error())
 	}
 
-	databases, _ := pgsql.Databases(int32(connection.ID))
+	databases, _ := pgsql.Databases(int32(connection.ID), false)
 	schemas, _ := pgsql.Schemas(int32(connection.ID))
 	currentSchema := connection.CurrentSchema.String
 	var tables []string
-	var err error
 
 	if !connection.CurrentSchema.Valid && len(schemas) > 0 {
 		currentSchema = schemas[0]
