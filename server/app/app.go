@@ -45,7 +45,10 @@ func New() {
 	}
 
 	db := db.New(config, logger).DB
-	db.AutoMigrate(&model.Connection{})
+	err := db.AutoMigrate(&model.Connection{})
+	if err != nil {
+		logger.Fatal(err)
+	}
 
 	Container = &AppContainer{
 		DB:     db,

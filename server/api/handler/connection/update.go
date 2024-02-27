@@ -34,7 +34,6 @@ func (h *ConnectionHandler) UpdateConnection(c *fiber.Ctx) error {
 	}
 
 	err = makeAllConnectionsNotDefault(connection, req)
-
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
 	}

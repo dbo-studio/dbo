@@ -1,6 +1,6 @@
 module github.com/khodemobin/dbo
 
-go 1.21
+go 1.22
 
 require (
 	github.com/getsentry/sentry-go v0.27.0

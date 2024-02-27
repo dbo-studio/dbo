@@ -20,16 +20,15 @@ func (h *ConnectionHandler) Connection(c *fiber.Ctx) error {
 }
 
 func connectionDetail(c *fiber.Ctx, connection *model.Connection) error {
-	var databases []string = []string{}
 	var schemas []string = []string{}
 	var tables []string = []string{}
 	var err error
 
+	databases, _ := pgsql.Databases(int32(connection.ID), false)
 	if connection.CurrentDatabase.String == "" {
 		return c.JSON(response.Success(response.Connection(connection, databases, schemas, tables)))
 	}
 
-	databases, _ = pgsql.Databases(int32(connection.ID), false)
 	schemas, _ = pgsql.Schemas(int32(connection.ID), connection.CurrentDatabase.String)
 	currentSchema := connection.CurrentSchema.String
 

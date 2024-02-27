@@ -21,7 +21,7 @@ func queryGenerator(dto *dto.RunQueryDto) (string, error) {
 	if len(dto.Filters) > 0 {
 		query += "WHERE "
 		for index, filter := range dto.Filters {
-			query += fmt.Sprintf("%q %s %s ", filter.Column, filter.Operator, filter.Value)
+			query += fmt.Sprintf("%q %s '%s' ", filter.Column, filter.Operator, filter.Value)
 			if index != len(dto.Filters)-1 {
 				query += fmt.Sprintf("%s ", filter.Next)
 			}
