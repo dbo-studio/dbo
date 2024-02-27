@@ -62,13 +62,12 @@ func Databases(connectionId int32, withTemplates bool) ([]string, error) {
 	return names, result.Error
 }
 
-func Schemas(connectionId int32) ([]string, error) {
+func Schemas(connectionId int32, database string) ([]string, error) {
 	db, err := Connect(connectionId)
 	if err != nil {
 		return nil, errors.New("Connection error: " + err.Error())
 	}
-	query := "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema') AND schema_name NOT LIKE 'pg_%';"
-
+	query := "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema') " + fmt.Sprintf("AND catalog_name = '%s'", database) + " AND schema_name NOT LIKE 'pg_%';"
 	type Database struct {
 		Name string `gorm:"column:schema_name"`
 	}

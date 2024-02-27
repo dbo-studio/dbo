@@ -4,8 +4,8 @@ type RunQueryDto struct {
 	ConnectionId int32       `json:"connection_id" validate:"required,gte=0"`
 	Table        string      `json:"table" validate:"required"`
 	Schema       string      `json:"schema" validate:"required"`
-	Limit        int32       `json:"limit" validate:"gte=1,numeric"`
-	Offset       int32       `json:"offset" validate:"gte=0,numeric"`
+	Limit        int32       `json:"limit" validate:"gte=1,numeric,omitempty"`
+	Offset       int32       `json:"offset" validate:"gte=0,numeric,omitempty"`
 	Filters      []FilterDto `json:"filters" validate:"dive"`
 	Sorts        []SortDto   `json:"sorts" validate:"dive"`
 	Columns      []string

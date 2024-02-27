@@ -9,7 +9,7 @@ import (
 )
 
 func (h *ConnectionHandler) TestConnection(c *fiber.Ctx) error {
-	req := new(dto.ConnectionDto)
+	req := new(dto.CreateConnectionDto)
 
 	if err := c.BodyParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))

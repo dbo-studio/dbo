@@ -12,7 +12,7 @@ import (
 )
 
 func (h *ConnectionHandler) UpdateConnection(c *fiber.Ctx) error {
-	req := new(dto.ConnectionDto)
+	req := new(dto.UpdateConnectionDto)
 
 	if err := c.BodyParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
@@ -39,18 +39,18 @@ func (h *ConnectionHandler) UpdateConnection(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
 	}
 
-	return c.JSON(response.Success(response.Connection(updatedConnection, []string{}, []string{}, []string{})))
+	return connectionDetail(c, updatedConnection)
 }
 
-func updateConnection(connection *model.Connection, req *dto.ConnectionDto) (*model.Connection, error) {
-	connection.Name = req.Name
-	connection.Host = req.Host
-	connection.Username = req.Username
+func updateConnection(connection *model.Connection, req *dto.UpdateConnectionDto) (*model.Connection, error) {
+	connection.Name = helper.OptionalString(req.Name, connection.Name)
+	connection.Host = helper.OptionalString(req.Host, connection.Host)
+	connection.Username = helper.OptionalString(req.Username, connection.Username)
 	connection.Password = sql.NullString{
 		Valid:  true,
 		String: helper.OptionalString(req.Password, connection.Password.String),
 	}
-	connection.Port = uint(req.Port)
+	connection.Port = helper.OptionalUint(req.Port, connection.Port)
 	connection.Database = helper.OptionalString(req.Database, connection.Database)
 	connection.IsActive = helper.OptionalBool(req.IsActive, connection.IsActive)
 	connection.CurrentDatabase = sql.NullString{
@@ -67,8 +67,8 @@ func updateConnection(connection *model.Connection, req *dto.ConnectionDto) (*mo
 	return connection, result.Error
 }
 
-func makeAllConnectionsNotDefault(connection *model.Connection, req *dto.ConnectionDto) error {
-	if *req.IsActive {
+func makeAllConnectionsNotDefault(connection *model.Connection, req *dto.UpdateConnectionDto) error {
+	if req.IsActive != nil && *req.IsActive == true {
 		result := app.DB().Model(&model.Connection{}).Not("id", connection.ID).Update("is_active", false)
 		return result.Error
 	}

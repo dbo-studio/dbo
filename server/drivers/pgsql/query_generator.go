@@ -52,15 +52,15 @@ func queryGenerator(dto *dto.RunQueryDto) (string, error) {
 
 func createDBQuery(dto *dto.DatabaseDto) string {
 	query := fmt.Sprintf("CREATE DATABASE %s ", dto.Name)
-	if dto.Template != nil {
+	if dto.Template != nil && len(*dto.Template) > 0 {
 		query += fmt.Sprintf("WITH TEMPLATE = %s ", *dto.Template)
 	}
 
-	if dto.Encoding != nil {
+	if dto.Encoding != nil && len(*dto.Encoding) > 0 {
 		query += fmt.Sprintf("ENCODING = %s ", *dto.Encoding)
 	}
 
-	if dto.TableSpace != nil {
+	if dto.TableSpace != nil && len(*dto.TableSpace) > 0 {
 		query += fmt.Sprintf("TABLESPACE = %s ", *dto.TableSpace)
 	}
 

@@ -12,7 +12,7 @@ import (
 )
 
 func (h *ConnectionHandler) AddConnection(c *fiber.Ctx) error {
-	req := new(dto.ConnectionDto)
+	req := new(dto.CreateConnectionDto)
 	if err := c.BodyParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
@@ -27,10 +27,10 @@ func (h *ConnectionHandler) AddConnection(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
 	}
 
-	return c.JSON(response.Success(response.Connection(connection, []string{}, []string{}, []string{})))
+	return connectionDetail(c, connection)
 }
 
-func createConnection(req *dto.ConnectionDto) (*model.Connection, error) {
+func createConnection(req *dto.CreateConnectionDto) (*model.Connection, error) {
 	var connection model.Connection
 	connection.Name = req.Name
 	connection.Host = req.Host
@@ -41,6 +41,10 @@ func createConnection(req *dto.ConnectionDto) (*model.Connection, error) {
 	}
 	connection.Port = uint(req.Port)
 	connection.Database = req.Database
+	connection.CurrentDatabase = sql.NullString{
+		String: req.Database,
+		Valid:  true,
+	}
 
 	result := app.DB().Save(&connection)
 

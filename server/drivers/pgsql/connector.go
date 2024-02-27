@@ -13,6 +13,7 @@ import (
 
 func Connect(connectionId int32) (*gorm.DB, error) {
 	var connection model.Connection
+	//todo should check if connection exists return that
 	result := app.DB().Where("id", "=", connectionId).First(&connection)
 	if result.Error != nil {
 		return nil, errors.New("connection not found")
@@ -26,9 +27,11 @@ func Connect(connectionId int32) (*gorm.DB, error) {
 		connection.Password.String,
 	)
 
-	return gorm.Open(postgres.New(postgres.Config{
+	db, err := gorm.Open(postgres.New(postgres.Config{
 		DSN: dsn,
 	}), &gorm.Config{})
+
+	return db, err
 }
 
 type ConnectionOption struct {
