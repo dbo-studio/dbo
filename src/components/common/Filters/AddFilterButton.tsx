@@ -2,9 +2,8 @@ import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { IconButton } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
-import { AddFilterButtonProps } from './types';
 
-export default function AddFilterButton({ filterLength }: AddFilterButtonProps) {
+export default function AddFilterButton() {
   const { upsertFilters } = useTabStore();
 
   const handleAddNewFilter = () => {
@@ -13,7 +12,8 @@ export default function AddFilterButton({ filterLength }: AddFilterButtonProps) 
       column: '',
       operator: '',
       value: '',
-      isActive: true
+      isActive: true,
+      next: ''
     });
   };
   return (

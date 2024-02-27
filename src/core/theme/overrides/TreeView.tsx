@@ -1,7 +1,7 @@
 import { Components, Theme } from '@mui/material';
 import { variables } from '../variables';
 
-type MuiTree = {};
+type MuiTree = object;
 
 export default function TreeView(theme: Theme): Components | MuiTree {
   return {

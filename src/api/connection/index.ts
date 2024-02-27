@@ -19,17 +19,21 @@ export const getConnectionDetail = (connectionID: string | number) => {
 };
 
 export const createConnection = (data: createConnectionType) => {
-  return api.post(CREATE_CONNECTION(), {
-    ...data,
-    port: Number(data.port)
-  });
+  return api
+    .post(CREATE_CONNECTION(), {
+      ...data,
+      port: Number(data.port)
+    })
+    .then(transformConnectionDetail);
 };
 
 export const updateConnection = (data: updateConnectionType) => {
-  return api.patch(UPDATE_CONNECTION(data.id), {
-    ...data,
-    port: Number(data.port)
-  });
+  return api
+    .patch(UPDATE_CONNECTION(data.id), {
+      ...data,
+      port: Number(data.port)
+    })
+    .then(transformConnectionDetail);
 };
 
 export const deleteConnection = (connectionId: string | number) => {

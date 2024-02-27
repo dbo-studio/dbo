@@ -1,7 +1,9 @@
 import { StructureType } from '@/src/types/Data';
-import { Checkbox, NativeSelect, TableCell, TableRow } from '@mui/material';
+import { Checkbox, TableCell, TableRow } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
 import FieldInput from '../../base/FieldInput/FieldInput';
+import SelectInput from '../../base/SelectInput/SelectInput';
+import SelectOption from '../../base/SelectInput/SelectOption';
 import { fakeStructureTypes } from './makeData';
 
 export default function DBStructureItem({ item }: { item: StructureType }) {
@@ -13,11 +15,13 @@ export default function DBStructureItem({ item }: { item: StructureType }) {
         <FieldInput value={item.name} type='string' />
       </TableCell>
       <TableCell align='left'>
-        <NativeSelect size='small'>
+        <SelectInput size='small'>
           {types.map((t: string) => (
-            <option key={uuidv4()}>{t}</option>
+            <SelectOption value={t} key={uuidv4()}>
+              {t}
+            </SelectOption>
           ))}
-        </NativeSelect>
+        </SelectInput>
       </TableCell>
       <TableCell align='left'>
         <FieldInput value={item.length} type='number' />

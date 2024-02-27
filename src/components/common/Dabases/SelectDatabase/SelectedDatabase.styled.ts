@@ -3,6 +3,9 @@ import { Box, styled } from '@mui/material';
 import { DatabaseItemStyledProps } from '../types';
 
 export const DatabaseItemStyled = styled(Box)<DatabaseItemStyledProps>(({ theme, selected }) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
   cursor: 'pointer',
   padding: `${theme.spacing(1)} ${theme.spacing(2)}`,
   borderRadius: variables.radius.medium,

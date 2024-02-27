@@ -8,5 +8,6 @@ export const useUUID = (arraySize = 1) => {
     ids.push(uuidv4());
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => ids, []);
 };

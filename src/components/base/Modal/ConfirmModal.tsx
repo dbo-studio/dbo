@@ -1,23 +1,41 @@
 import locales from '@/src/locales';
-import { Box, Button, Typography, useTheme } from '@mui/material';
+import { useConfirmModalStore } from '@/src/store/confirmModal/confirm_modal.store';
+import { Box, Button, Divider, Typography, useTheme } from '@mui/material';
 import { ConfirmModalWrapperStyled, ModalStyled } from './Modal.styled';
-import { ConfirmModalProps } from './types';
 
-export default function ConfirmModal({ open, title, onConfirm }: ConfirmModalProps) {
+export default function ConfirmModal() {
+  const { isOpen, title, description, onCancel, onSuccess, close } = useConfirmModalStore();
   const theme = useTheme();
+
+  const handleCancel = () => {
+    onCancel && onCancel();
+    close();
+  };
+
+  const handleConfirm = () => {
+    onSuccess && onSuccess();
+    close();
+  };
+
   return (
-    <ModalStyled open={open}>
+    <ModalStyled open={isOpen}>
       <ConfirmModalWrapperStyled>
         <Box flex={1} mt={theme.spacing(1)} mb={theme.spacing(1)}>
-          <Typography color={theme.palette.error.main} variant='h6'>
-            {title}
-          </Typography>
+          <Box mb={theme.spacing(2)}>
+            <Typography color={theme.palette.error.main} variant='h6'>
+              {title}
+            </Typography>
+            <Divider sx={{ marginBottom: theme.spacing(1) }} />
+            <Typography color={theme.palette.text.default} variant='body1'>
+              {description}
+            </Typography>
+          </Box>
         </Box>
         <Box display={'flex'} justifyContent={'space-between'}>
-          <Button size='small' onClick={() => {}}>
+          <Button size='small' onClick={handleCancel}>
             {locales.cancel}
           </Button>
-          <Button onClick={onConfirm} size='small' variant='contained'>
+          <Button onClick={handleConfirm} size='small' variant='contained'>
             {locales.yes}
           </Button>
         </Box>

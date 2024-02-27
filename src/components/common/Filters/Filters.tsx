@@ -15,17 +15,10 @@ export default function Filters() {
   return (
     <Box id='#filters' p={1} borderBottom={`1px solid ${theme.palette.divider}`}>
       {selectedTab?.filters.length == 0 ? (
-        <AddFilterButton filterLength={selectedTab.filters.length} />
+        <AddFilterButton />
       ) : (
         selectedTab?.filters.map((filter: FilterType) => {
-          return (
-            <FilterItem
-              key={filter.index}
-              columns={getColumns()}
-              filterLength={selectedTab.filters.length}
-              filter={filter}
-            />
-          );
+          return <FilterItem key={filter.index} columns={getColumns()} filter={filter} />;
         })
       )}
 

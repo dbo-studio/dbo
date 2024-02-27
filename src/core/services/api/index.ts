@@ -92,14 +92,14 @@ function patch<T = any>(
   });
 }
 
-function del<T = any>(url: string, params = {}, { headers = {}, isPublic, ...options }: ApiOptions = {}): Promise<T> {
+function del<T = any>(url: string, data = {}, { headers = {}, isPublic, ...options }: ApiOptions = {}): Promise<T> {
   const completeHeaders = {
     ...headers
   };
   // TODO: set csrf token
   // if (!isPublic) completeHeaders.Authorization = getToken();
   return new Promise(function (resolve, reject) {
-    serviceDelete(url, { ...options, params: { ...params }, headers: completeHeaders })
+    serviceDelete(url, { ...options, data: { ...data }, headers: completeHeaders })
       .then(function (response) {
         const responseData = response?.data?.data;
         messageHandler(response);

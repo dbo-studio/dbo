@@ -1,5 +1,6 @@
 export type SelectDatabaseProps = {
   onClose: () => void;
+  onChangeStep: () => void;
 };
 
 export type DatabaseItemStyledProps = {
@@ -10,4 +11,5 @@ export type DatabaseItemProps = {
   selected: boolean;
   name: string;
   onClick: () => void;
+  onDelete: () => void;
 };

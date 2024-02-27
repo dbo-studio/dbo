@@ -17,13 +17,11 @@ export default function Sorts() {
   return (
     <Box id='#sorts' p={1} borderBottom={`1px solid ${theme.palette.divider}`}>
       {selectedTab?.sorts.length == 0 ? (
-        <AddSortButton sortLength={selectedTab.sorts.length} />
+        <AddSortButton />
       ) : (
         uuids.length > 0 &&
         selectedTab?.sorts.map((sort: SortType, index: number) => {
-          return (
-            <SortItem key={uuids[index]} columns={getColumns()} sortLength={selectedTab.sorts.length} sort={sort} />
-          );
+          return <SortItem key={uuids[index]} columns={getColumns()} sort={sort} />;
         })
       )}
 

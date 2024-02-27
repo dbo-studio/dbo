@@ -1,25 +1,26 @@
 import api from '@/src/api';
 import CustomIcon from '@/src/components/base/CustomIcon/CustomIcon';
-import ConfirmModal from '@/src/components/base/Modal/ConfirmModal';
 import useAPI from '@/src/hooks/useApi.hook';
 import locales from '@/src/locales';
+import { useConfirmModalStore } from '@/src/store/confirmModal/confirm_modal.store';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
 import { Box, Menu, MenuItem, Stack } from '@mui/material';
-import { useState } from 'react';
 import { toast } from 'sonner';
 import { ConnectionContextMenuProps } from '../../types';
 
 export default function ConnectionContextMenu({ connection, contextMenu, onClose }: ConnectionContextMenuProps) {
   const { updateShowEditConnection } = useConnectionStore();
-  const [showConfirm, setShowConfirm] = useState(false);
+  const showModal = useConfirmModalStore((state) => state.show);
 
   const { request: deleteConnection } = useAPI({
     apiMethod: api.connection.deleteConnection
   });
 
   const handleOpenConfirm = () => {
-    setShowConfirm(!showConfirm);
     onClose();
+    showModal(locales.delete_action, locales.connection_delete_confirm, () => {
+      handleDeleteConnection();
+    });
   };
 
   const handleDeleteConnection = async () => {
@@ -38,7 +39,6 @@ export default function ConnectionContextMenu({ connection, contextMenu, onClose
 
   return (
     <Box>
-      <ConfirmModal open={showConfirm} title={locales.connection_delete_confirm} onConfirm={handleDeleteConnection} />
       <Menu
         open={contextMenu !== null}
         onClose={onClose}

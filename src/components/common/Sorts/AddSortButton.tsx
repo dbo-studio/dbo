@@ -2,9 +2,8 @@ import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { IconButton } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
-import { AddSortButtonProps } from './types';
 
-export default function AddSortButton({ sortLength }: AddSortButtonProps) {
+export default function AddSortButton() {
   const { upsertSorts } = useTabStore();
 
   const handleAddNewSort = () => {

@@ -10,14 +10,14 @@ export default function ConnectionBox() {
   const [active, setActive] = useState('false');
 
   useEffect(() => {
-    if (!currentConnection || !currentConnection.current_schema) {
+    if (!currentConnection || !currentConnection.currentSchema) {
       setInfo(locales.no_active_connection);
       setActive('false');
     } else {
       setInfo(
         currentConnection?.driver +
           ' 15.1: ' +
-          currentConnection.current_schema +
+          currentConnection.currentSchema +
           ': ' +
           currentConnection?.name +
           ' SQL Query'
@@ -30,7 +30,6 @@ export default function ConnectionBox() {
     <ConnectionBoxStyled active={active}>
       <Typography variant='body1' component='h6'>
         {info}
-        {/* PostgreSQL 15.1: public: orders: SQL Query */}
       </Typography>
     </ConnectionBoxStyled>
   );

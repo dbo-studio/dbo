@@ -5,9 +5,3 @@ export type ModalProps = {
   title?: string;
   children: React.ReactNode;
 };
-
-export type ConfirmModalProps = {
-  open: boolean;
-  title: string;
-  onConfirm: () => void;
-};

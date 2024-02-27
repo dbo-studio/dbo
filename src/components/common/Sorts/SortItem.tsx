@@ -4,14 +4,16 @@ import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { EventFor } from '@/src/types';
 import { ColumnType } from '@/src/types/Data';
 import { SortType } from '@/src/types/Tab';
-import { Box, Checkbox, NativeSelect } from '@mui/material';
+import { Box, Checkbox } from '@mui/material';
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import SelectInput from '../../base/SelectInput/SelectInput';
+import SelectOption from '../../base/SelectInput/SelectOption';
 import AddSortButton from './AddSortButton';
 import RemoveSortButton from './RemoveSortButton';
 import { SortItemProps } from './types';
 
-export default function SortItem({ sort, columns, sortLength }: SortItemProps) {
+export default function SortItem({ sort, columns }: SortItemProps) {
   const { upsertSorts } = useTabStore();
   const [currentSort, setCurrentSort] = useState<SortType>({
     index: sort.index,
@@ -43,26 +45,26 @@ export default function SortItem({ sort, columns, sortLength }: SortItemProps) {
         <Checkbox size='small' checked={currentSort.isActive} onChange={(e) => handleChange('isActive', e)} />
       </Box>
       <Box>
-        <NativeSelect size='small' value={currentSort.column} onChange={(e) => handleChange('column', e)}>
+        <SelectInput size='small' value={currentSort.column} onChange={(e) => handleChange('column', e)}>
           {columns.map((c: ColumnType) => (
-            <option key={uuidv4()} value={c.key as string}>
+            <SelectOption key={uuidv4()} value={c.key as string}>
               {c.name}
-            </option>
+            </SelectOption>
           ))}
-        </NativeSelect>
+        </SelectInput>
       </Box>
       <Box mr={1} ml={1}>
-        <NativeSelect size='small' value={currentSort.operator} onChange={(e) => handleChange('operator', e)}>
+        <SelectInput size='small' value={currentSort.operator} onChange={(e) => handleChange('operator', e)}>
           {PgsqlSorts.map((c: string, index) => (
-            <option key={uuidOperators[index]} value={c}>
+            <SelectOption key={uuidOperators[index]} value={c}>
               {c}
-            </option>
+            </SelectOption>
           ))}
-        </NativeSelect>
+        </SelectInput>
       </Box>
       <Box ml={1} mr={1}>
         <RemoveSortButton sort={sort} />
-        <AddSortButton sortLength={sortLength} />
+        <AddSortButton />
       </Box>
     </Box>
   );

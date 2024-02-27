@@ -4,7 +4,6 @@ import { ColumnType } from '@/src/types/Data';
 export type SortItemProps = {
   sort: SortType;
   columns: ColumnType[];
-  sortLength: number;
 };
 
 export type AddSortButtonProps = {

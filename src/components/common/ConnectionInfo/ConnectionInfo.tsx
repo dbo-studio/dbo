@@ -6,7 +6,8 @@ import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import Databases from '../Dabases/Databases';
 
 export default function ConnectionInfo() {
-  const { updateShowAddConnection, showSelectDatabase, updateShowSelectDatabase } = useConnectionStore();
+  const { updateShowAddConnection, showSelectDatabase, updateShowSelectDatabase, currentConnection } =
+    useConnectionStore();
 
   return (
     <Stack direction={'row'} justifyContent={'center'} alignItems={'center'}>
@@ -19,7 +20,11 @@ export default function ConnectionInfo() {
           <IconButton aria-label='lock'>
             <CustomIcon type={'lock'} size={'m'} />
           </IconButton>
-          <IconButton aria-label='database' onClick={() => updateShowSelectDatabase(!showSelectDatabase)}>
+          <IconButton
+            disabled={!currentConnection}
+            aria-label='database'
+            onClick={() => updateShowSelectDatabase(!showSelectDatabase)}
+          >
             <CustomIcon type={'databaseOutline'} size={'m'} />
           </IconButton>
         </Stack>

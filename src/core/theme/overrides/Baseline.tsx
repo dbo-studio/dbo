@@ -1,6 +1,6 @@
-import { Components, Theme } from '@mui/material/styles';
+import { Components } from '@mui/material/styles';
 
-export default function Baseline(theme: Theme): Components {
+export default function Baseline(): Components {
   return {
     MuiCssBaseline: {
       styleOverrides: {

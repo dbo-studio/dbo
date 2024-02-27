@@ -3,8 +3,9 @@ export interface ConnectionType {
   name: string;
   type: string;
   driver: string;
-  current_database?: string;
-  current_schema?: string;
+  currentDatabase?: string;
+  currentSchema?: string;
+  isActive: boolean;
   auth: ConnectionAuthType;
   databases?: string[];
   schemas?: string[];
