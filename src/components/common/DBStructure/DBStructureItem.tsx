@@ -12,7 +12,7 @@ export default function DBStructureItem({ item }: { item: StructureType }) {
   return (
     <TableRow sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
       <TableCell component='th' scope='row'>
-        <FieldInput value={item.name} type='string' />
+        <FieldInput size='small' value={item.name} type='string' />
       </TableCell>
       <TableCell align='left'>
         <SelectInput size='small'>
@@ -24,10 +24,10 @@ export default function DBStructureItem({ item }: { item: StructureType }) {
         </SelectInput>
       </TableCell>
       <TableCell align='left'>
-        <FieldInput value={item.length} type='number' />
+        <FieldInput value={item.length} size='small' type='number' />
       </TableCell>
       <TableCell align='left'>
-        <FieldInput value={item.decimal} type='number' />
+        <FieldInput value={item.decimal} size='small' type='number' />
       </TableCell>
       <TableCell align='left'>
         <Checkbox checked={item.notNull} size='small' />

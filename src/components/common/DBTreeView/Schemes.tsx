@@ -1,3 +1,5 @@
+import api from '@/src/api';
+import useAPI from '@/src/hooks/useApi.hook';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
 import { EventFor } from '@/src/types';
 import { Box } from '@mui/material';
@@ -9,6 +11,10 @@ import { SchemaStyled } from './DBTreeView.styled';
 export default function Schemes() {
   const { currentConnection, updateCurrentConnection } = useConnectionStore();
 
+  const { request: updateConnection } = useAPI({
+    apiMethod: api.connection.updateConnection
+  });
+
   const handleChangeSchema = (e: EventFor<'select', 'onChange'>) => {
     const schema = currentConnection?.schemas?.filter((s: string) => s == e.target.value);
     if (!currentConnection || !schema || schema?.length == 0) {
@@ -16,7 +22,12 @@ export default function Schemes() {
     }
 
     currentConnection.currentSchema = schema[0];
-    updateCurrentConnection(currentConnection);
+    updateConnection({
+      id: currentConnection.id,
+      current_schema: schema[0]
+    }).then((res) => {
+      updateCurrentConnection(res);
+    });
   };
 
   return (

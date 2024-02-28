@@ -18,8 +18,6 @@ export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [],
     }
 
     selectedTab.showQuery = show;
-    selectedTab.showFilters = false;
-    selectedTab.showSorts = false;
     get().updateSelectedTab(selectedTab);
   }
 });

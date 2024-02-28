@@ -3,7 +3,7 @@ import { StateCreator } from 'zustand';
 import { TabFilterSlice, TabStore } from '../types';
 
 export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [], TabFilterSlice> = (set, get) => ({
-  upsertFilters: (filter: FilterType) => {
+  upsertFilters: async (filter: FilterType) => {
     const selectedTab = get().selectedTab;
     if (!selectedTab) {
       return;
@@ -37,7 +37,6 @@ export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [
     }
 
     selectedTab.showFilters = show;
-    selectedTab.showQuery = false;
     selectedTab.showSorts = false;
     get().updateSelectedTab(selectedTab);
   }

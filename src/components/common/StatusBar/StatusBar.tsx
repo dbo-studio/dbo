@@ -8,10 +8,10 @@ export default function StatusBar() {
   const { selectedTab } = useTabStore();
 
   return (
-    <StatusBarStyled mode={selectedTab?.mode}>
+    <StatusBarStyled mode={selectedTab?.mode} direction={'row'} justifyContent={'space-between'}>
       <StatusBarActions />
       <StatusBarTabs />
-      <StatusBarPagination />
+      <StatusBarPagination mode={selectedTab?.mode} />
     </StatusBarStyled>
   );
 }

@@ -3,7 +3,7 @@ import { StateCreator } from 'zustand';
 import { TabSortSlice, TabStore } from '../types';
 
 export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], TabSortSlice> = (set, get) => ({
-  upsertSorts: (sort: SortType) => {
+  upsertSorts: async (sort: SortType) => {
     const selectedTab = get().selectedTab;
     if (!selectedTab) {
       return;
@@ -13,6 +13,7 @@ export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], T
     if (!findSort) {
       selectedTab.sorts.push(sort);
     } else {
+      findSort.column = sort.column;
       findSort.operator = sort.operator;
       findSort.isActive = sort.isActive;
     }
@@ -36,7 +37,6 @@ export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], T
 
     selectedTab.showSorts = show;
     selectedTab.showFilters = false;
-    selectedTab.showQuery = false;
     get().updateSelectedTab(selectedTab);
   }
 });

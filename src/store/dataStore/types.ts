@@ -9,9 +9,10 @@ export type DataStore = {
   getColumns(): ColumnType[];
   getSelectedRow(): RowType | undefined;
   updateSelectedRow: (selectedRow: RowType | undefined) => void;
-  updateRows: (items: RowType[]) => void;
-  updateColumns: (items: RowType[]) => void;
+  updateRows: (items: RowType[]) => Promise<void>;
+  updateColumns: (items: RowType[]) => Promise<void>;
   selectedTab: () => TabType | undefined;
+  runQuery: () => Promise<void>;
 };
 
 export type DataRowsType = {

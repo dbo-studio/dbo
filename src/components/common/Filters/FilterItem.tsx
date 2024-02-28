@@ -2,9 +2,10 @@ import { PgsqlFilterConditions, PgsqlFilterNext } from '@/src/core/constants';
 import { useUUID } from '@/src/hooks';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { ColumnType, EventFor, FilterType } from '@/src/types';
-import { Box, Checkbox, Input } from '@mui/material';
+import { Box, Checkbox } from '@mui/material';
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import FieldInput from '../../base/FieldInput/FieldInput';
 import SelectInput from '../../base/SelectInput/SelectInput';
 import SelectOption from '../../base/SelectInput/SelectOption';
 import AddFilterButton from './AddFilterButton';
@@ -13,6 +14,8 @@ import { FilterItemProps } from './types';
 
 export default function FilterItem({ filter, columns }: FilterItemProps) {
   const { upsertFilters } = useTabStore();
+  const uuidOperators = useUUID(PgsqlFilterConditions.length);
+  let timeoutId: NodeJS.Timeout | null = null;
   const [currentFilter, setCurrentFilter] = useState<FilterType>({
     index: filter.index,
     column: filter.column,
@@ -22,9 +25,7 @@ export default function FilterItem({ filter, columns }: FilterItemProps) {
     isActive: filter.isActive
   });
 
-  const uuidOperators = useUUID(PgsqlFilterConditions.length);
-
-  const handleChange = (
+  const handleChange = async (
     type: 'column' | 'operator' | 'value' | 'next' | 'isActive',
     e: EventFor<'select', 'onChange'> | EventFor<'input', 'onChange'> | any
   ) => {
@@ -37,9 +38,13 @@ export default function FilterItem({ filter, columns }: FilterItemProps) {
       next: type == 'next' ? value : currentFilter.next,
       isActive: type == 'isActive' ? e.target.checked : currentFilter.isActive
     };
-
     setCurrentFilter(newFilter);
-    upsertFilters(newFilter);
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(() => {
+      upsertFilters(newFilter);
+    }, 500);
   };
 
   return (
@@ -66,7 +71,7 @@ export default function FilterItem({ filter, columns }: FilterItemProps) {
         </SelectInput>
       </Box>
       <Box flex={1} mr={1}>
-        <Input
+        <FieldInput
           fullWidth
           size='small'
           value={currentFilter.value}
@@ -84,7 +89,7 @@ export default function FilterItem({ filter, columns }: FilterItemProps) {
       </Box>
       <Box ml={1} mr={1}>
         <RemoveFilterButton filter={filter} />
-        <AddFilterButton />
+        <AddFilterButton columns={columns} />
       </Box>
     </Box>
   );

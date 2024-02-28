@@ -2,16 +2,14 @@ import { useDataStore } from '@/src/store/dataStore/data.store';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { Box, Checkbox } from '@mui/material';
 import { useEffect, useState } from 'react';
-import DataGrid, { RenderCheckboxProps, RowsChangeData, SelectColumn, textEditor } from 'react-data-grid';
-import { makeData } from './makeData';
+import DataGrid, { RenderCheckboxProps, RowsChangeData, SelectColumn } from 'react-data-grid';
 import './styles.css';
-import { ColumnType } from './types';
 
 export default function DBDataGrid() {
   const [selectedRows, setSelectedRows] = useState((): ReadonlySet<number> => new Set());
   const [isLoading, setIsLoading] = useState(false);
   const { selectedTab } = useTabStore();
-  const { updateRows, updateColumns, updateSelectedRow, getRows, getColumns } = useDataStore();
+  const { updateRows, updateColumns, updateSelectedRow, getRows, getColumns, runQuery } = useDataStore();
   const [editHighlight, setEditHighlight] = useState<number | undefined>(undefined);
   const [removeHighlight, setRemoveHighlight] = useState<number | undefined>(undefined);
 
@@ -21,27 +19,9 @@ export default function DBDataGrid() {
     }
 
     if (getRows().length == 0 || getColumns().length == 0) {
-      const data = makeData(100);
-      updateRows(data.rows);
-      updateColumns(getServerColumns(data.columns));
+      runQuery();
     }
   }, [selectedTab]);
-
-  function getServerColumns(serverColumns: ColumnType[]): any {
-    const arr: any = [];
-    serverColumns!.forEach((column: ColumnType) => {
-      arr.push({
-        key: column.felid,
-        name: column.felid,
-        type: column.type,
-        resizable: true,
-        isActive: true,
-        renderEditCell: textEditor
-      });
-    });
-
-    return arr;
-  }
 
   function formatColumns(serverColumns: any[]): any {
     const newColumns = serverColumns;

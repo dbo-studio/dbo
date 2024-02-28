@@ -3,7 +3,7 @@ import { useConnectionStore } from '@/src/store/connectionStore/connection.store
 import { IconButton, Stack } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
-import Databases from '../Dabases/Databases';
+import Databases from '../Databases/Databases';
 
 export default function ConnectionInfo() {
   const { updateShowAddConnection, showSelectDatabase, updateShowSelectDatabase, currentConnection } =

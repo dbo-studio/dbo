@@ -6,6 +6,10 @@ export type FilterItemProps = {
   columns: ColumnType[];
 };
 
+export type AddFilterButtonProps = {
+  columns: ColumnType[];
+};
+
 export type RemoveFilterButtonProps = {
   filter: FilterType;
 };

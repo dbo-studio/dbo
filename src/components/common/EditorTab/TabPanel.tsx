@@ -27,7 +27,7 @@ function DataMode(selectedTab: TabType) {
       {selectedTab.showFilters && <Filters />}
       {selectedTab.showSorts && <Sorts />}
       {selectedTab.showQuery && <QueryPreview />}
-      <Box overflow='hidden' display='flex' flexDirection='row'>
+      <Box overflow='hidden' flex={1} display='flex' flexDirection='row'>
         {selectedTab.showColumns && <Columns />}
         <DBDataGrid />
       </Box>

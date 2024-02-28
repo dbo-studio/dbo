@@ -15,14 +15,13 @@ import { SortItemProps } from './types';
 
 export default function SortItem({ sort, columns }: SortItemProps) {
   const { upsertSorts } = useTabStore();
+  const uuidOperators = useUUID(columns.length);
   const [currentSort, setCurrentSort] = useState<SortType>({
     index: sort.index,
     column: sort.column,
     operator: sort.operator,
     isActive: sort.isActive
   });
-
-  const uuidOperators = useUUID(columns.length);
 
   const handleChange = (
     type: 'column' | 'operator' | 'isActive',
@@ -35,6 +34,7 @@ export default function SortItem({ sort, columns }: SortItemProps) {
       operator: type == 'operator' ? value : currentSort.operator,
       isActive: type == 'isActive' ? e.target.checked : currentSort.isActive
     };
+
     setCurrentSort(newSort);
     upsertSorts(newSort);
   };
@@ -64,7 +64,7 @@ export default function SortItem({ sort, columns }: SortItemProps) {
       </Box>
       <Box ml={1} mr={1}>
         <RemoveSortButton sort={sort} />
-        <AddSortButton />
+        <AddSortButton columns={columns} />
       </Box>
     </Box>
   );

@@ -1,13 +1,13 @@
 import { FilterType, SortType, TabType } from '@/src/types/Tab';
 
 export type TabFilterSlice = {
-  upsertFilters: (filter: FilterType) => void;
+  upsertFilters: (filter: FilterType) => Promise<void>;
   removeFilter: (filter: FilterType) => void;
   setShowFilters: (show: boolean) => void;
 };
 
 export type TabSortSlice = {
-  upsertSorts: (sort: SortType) => void;
+  upsertSorts: (sort: SortType) => Promise<void>;
   removeSort: (sort: SortType) => void;
   setShowSorts: (show: boolean) => void;
 };

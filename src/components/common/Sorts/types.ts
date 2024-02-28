@@ -7,7 +7,7 @@ export type SortItemProps = {
 };
 
 export type AddSortButtonProps = {
-  sortLength: number;
+  columns: ColumnType[];
 };
 
 export type RemoveSortButtonProps = {
