@@ -24,7 +24,7 @@ func RunQuery(dto *dto.RunQueryDto) (*RunQueryResult, error) {
 		return nil, errors.New("Connection error: " + err.Error())
 	}
 
-	var queryResults []map[string]interface{}
+	queryResults := []map[string]interface{}{}
 	result := db.Raw(query).Scan(&queryResults)
 	if result.Error != nil {
 		return nil, result.Error
@@ -131,7 +131,7 @@ func TableStructure(connectionId int32, table string, schema string) ([]Structur
 
 	query := fmt.Sprintf("SELECT ordinal_position,column_name,data_type,is_nullable,column_default,character_maximum_length FROM information_schema.columns WHERE table_schema='%s' AND table_name='%s' ORDER BY ordinal_position;", schema, table)
 
-	var structures []Structure
+	structures := []Structure{}
 	result := db.Raw(query).Scan(&structures)
 
 	if result.Error != nil {
