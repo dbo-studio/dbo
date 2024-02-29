@@ -6,7 +6,7 @@ export type DataStore = {
   rows: DataRowsType;
   columns: DataColumnsType;
   getRows(): RowType[];
-  getColumns(): ColumnType[];
+  getColumns(withSelect?: boolean): ColumnType[];
   getSelectedRow(): RowType | undefined;
   updateSelectedRow: (selectedRow: RowType | undefined) => void;
   updateRows: (items: RowType[]) => Promise<void>;

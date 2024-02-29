@@ -1,38 +1,29 @@
 import { useDataStore } from '@/src/store/dataStore/data.store';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
-import { Box, Checkbox } from '@mui/material';
+import { Box, Checkbox, CircularProgress } from '@mui/material';
 import { useEffect, useState } from 'react';
-import DataGrid, { RenderCheckboxProps, RowsChangeData, SelectColumn } from 'react-data-grid';
+import DataGrid, { RenderCheckboxProps, RowsChangeData } from 'react-data-grid';
 import './styles.css';
 
 export default function DBDataGrid() {
   const [selectedRows, setSelectedRows] = useState((): ReadonlySet<number> => new Set());
   const [isLoading, setIsLoading] = useState(false);
   const { selectedTab } = useTabStore();
-  const { updateRows, updateColumns, updateSelectedRow, getRows, getColumns, runQuery } = useDataStore();
+  const { updateRows, updateSelectedRow, getRows, getColumns, runQuery } = useDataStore();
   const [editHighlight, setEditHighlight] = useState<number | undefined>(undefined);
   const [removeHighlight, setRemoveHighlight] = useState<number | undefined>(undefined);
 
-  useEffect(() => {
-    if (!selectedTab) {
-      return;
-    }
+  const getData = async () => {
+    setIsLoading(true);
+    await runQuery();
+    setIsLoading(false);
+  };
 
+  useEffect(() => {
     if (getRows().length == 0 || getColumns().length == 0) {
-      runQuery();
+      getData();
     }
   }, [selectedTab]);
-
-  function formatColumns(serverColumns: any[]): any {
-    const newColumns = serverColumns;
-    if (newColumns[0] != SelectColumn) {
-      newColumns.unshift({
-        ...SelectColumn,
-        isActive: true
-      });
-    }
-    return newColumns.filter((c: any) => c.isActive);
-  }
 
   const handleOnCellClick = (e: any) => {
     if (e.rowIdx == -1) {
@@ -51,7 +42,9 @@ export default function DBDataGrid() {
   };
 
   return isLoading ? (
-    <span>Loading</span>
+    <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
+      <CircularProgress size={30} />
+    </Box>
   ) : (
     <Box overflow='hidden' display={'flex'} flexDirection={'column'} flex={1}>
       {selectedTab && (
@@ -60,7 +53,7 @@ export default function DBDataGrid() {
           rowKeyGetter={rowKeyGetter}
           selectedRows={selectedRows}
           onSelectedRowsChange={setSelectedRows}
-          columns={formatColumns(getColumns())}
+          columns={getColumns(true)}
           rows={getRows()}
           rowHeight={30}
           onRowsChange={handleRowsChange}

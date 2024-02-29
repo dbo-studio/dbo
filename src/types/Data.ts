@@ -1,18 +1,16 @@
+import { Column } from 'react-data-grid';
+
 export type RowType = any;
-export type ColumnType = {
+
+export interface ColumnType extends Column<RowType> {
   key: string;
   name: string;
   renderEditCell: any;
   resizable: boolean;
   type: string;
   isActive: boolean;
-};
-
-export type StructureType = {
-  name: string;
-  type: string;
   notNull: boolean;
-  length: number;
+  length: string;
   decimal: number;
   default: string;
-};
+}

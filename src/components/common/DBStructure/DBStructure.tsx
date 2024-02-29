@@ -1,13 +1,13 @@
-import { useUUID } from '@/src/hooks';
-import { StructureType } from '@/src/types/Data';
+import locales from '@/src/locales';
+import { useDataStore } from '@/src/store/dataStore/data.store';
+import { ColumnType } from '@/src/types/Data';
 import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { v4 as uuid } from 'uuid';
 import { DBStructureStyled } from './DBStructure.styled';
 import DBStructureItem from './DBStructureItem';
-import { fakeColumn } from './makeData';
 
 export default function DBStructure() {
-  const data = fakeColumn;
-  const uuids = useUUID(data.length);
+  const { getColumns } = useDataStore();
 
   return (
     <DBStructureStyled>
@@ -15,16 +15,17 @@ export default function DBStructure() {
         <Table size='small'>
           <TableHead>
             <TableRow>
-              <TableCell align='left'>Name</TableCell>
-              <TableCell align='left'>Type</TableCell>
-              <TableCell align='left'>Length</TableCell>
-              <TableCell align='left'>Decimal</TableCell>
-              <TableCell align='left'>Not Null</TableCell>
+              <TableCell align='left'>{locales.name}</TableCell>
+              <TableCell align='left'>{locales.type}</TableCell>
+              <TableCell align='left'>{locales.default}</TableCell>
+              <TableCell align='left'>{locales.length}</TableCell>
+              <TableCell align='left'>{locales.decimal}</TableCell>
+              <TableCell align='left'>{locales.not_null}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map((item: StructureType, index: number) => (
-              <DBStructureItem key={uuids[index]} item={item} />
+            {getColumns().map((item: ColumnType) => (
+              <DBStructureItem key={uuid()} item={item} />
             ))}
           </TableBody>
         </Table>

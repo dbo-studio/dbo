@@ -40,5 +40,10 @@
     "new": "New",
     "template": "Template",
     "encoding": "Encoding",
-    "table_space": "Tablespace"
+    "table_space": "Tablespace",
+    "type": "type",
+    "default": "Default",
+    "length": "Length",
+    "decimal": "Decimal",
+    "not_null": "Not Null"
 }

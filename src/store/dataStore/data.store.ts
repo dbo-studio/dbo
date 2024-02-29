@@ -24,12 +24,13 @@ export const useDataStore = create<DataState>()(
         }
         return rows[selectedTab.id];
       },
-      getColumns: () => {
+      getColumns: (withSelect: boolean) => {
         const selectedTab = get().selectedTab();
         const columns = get().columns;
         if (!selectedTab || !Object.prototype.hasOwnProperty.call(columns, selectedTab.id)) {
           return [];
         }
+        if (withSelect) return columns[selectedTab.id];
         return columns[selectedTab.id].filter((c: ColumnType) => c.key != 'select-row');
       },
       getSelectedRow: (): RowType | undefined => {
@@ -108,9 +109,8 @@ export const useDataStore = create<DataState>()(
 
           useTabStore.getState().updateQuery(res.query);
           Promise.all([get().updateRows(res.data), get().updateColumns(res.structures)]);
-          console.log(res);
         } catch (error) {
-          console.log(error);
+          console.log('🚀 ~ runQuery: ~ error:', error);
         }
       }
     }),

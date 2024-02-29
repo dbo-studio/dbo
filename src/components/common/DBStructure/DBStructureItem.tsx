@@ -1,4 +1,4 @@
-import { StructureType } from '@/src/types/Data';
+import { ColumnType } from '@/src/types/Data';
 import { Checkbox, TableCell, TableRow } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
 import FieldInput from '../../base/FieldInput/FieldInput';
@@ -6,7 +6,7 @@ import SelectInput from '../../base/SelectInput/SelectInput';
 import SelectOption from '../../base/SelectInput/SelectOption';
 import { fakeStructureTypes } from './makeData';
 
-export default function DBStructureItem({ item }: { item: StructureType }) {
+export default function DBStructureItem({ item }: { item: ColumnType }) {
   const types = fakeStructureTypes();
 
   return (
@@ -24,7 +24,10 @@ export default function DBStructureItem({ item }: { item: StructureType }) {
         </SelectInput>
       </TableCell>
       <TableCell align='left'>
-        <FieldInput value={item.length} size='small' type='number' />
+        <FieldInput value={item.default} size='small' type='string' />
+      </TableCell>
+      <TableCell align='left'>
+        <FieldInput value={item.length} size='small' type='string' />
       </TableCell>
       <TableCell align='left'>
         <FieldInput value={item.decimal} size='small' type='number' />
