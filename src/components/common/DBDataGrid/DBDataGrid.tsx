@@ -1,3 +1,4 @@
+import { handelRowChangeLog } from '@/src/core/utils';
 import { useDataStore } from '@/src/store/dataStore/data.store';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { Box, Checkbox, CircularProgress } from '@mui/material';
@@ -8,10 +9,8 @@ import './styles.css';
 export default function DBDataGrid() {
   const [selectedRows, setSelectedRows] = useState((): ReadonlySet<number> => new Set());
   const [isLoading, setIsLoading] = useState(false);
-  const { selectedTab } = useTabStore();
+  const { selectedTab, updateSelectedTab } = useTabStore();
   const { updateRows, updateSelectedRow, getRows, getColumns, runQuery } = useDataStore();
-  const [editHighlight, setEditHighlight] = useState<number | undefined>(undefined);
-  const [removeHighlight, setRemoveHighlight] = useState<number | undefined>(undefined);
 
   const getData = async () => {
     setIsLoading(true);
@@ -35,9 +34,8 @@ export default function DBDataGrid() {
   const handleRowsChange = (rows: any[], data: RowsChangeData<any, unknown>) => {
     const oldRow = getRows()[data.indexes[0]];
     const newRow = rows[data.indexes[0]];
-
-    setEditHighlight(data.indexes[0]);
-
+    selectedTab!.editedRows = handelRowChangeLog(selectedTab!.editedRows, oldRow, newRow);
+    updateSelectedTab(selectedTab);
     updateRows(rows);
   };
 
@@ -59,7 +57,9 @@ export default function DBDataGrid() {
           onRowsChange={handleRowsChange}
           headerRowHeight={30}
           renderers={{ renderCheckbox }}
-          rowClass={(row, index) => (index == editHighlight ? 'edit-highlight' : undefined)}
+          rowClass={(_, index) =>
+            selectedTab.editedRows.some((v) => v.dboIndex == index) == true ? 'edit-highlight' : undefined
+          }
         />
       )}
     </Box>
@@ -67,7 +67,7 @@ export default function DBDataGrid() {
 }
 
 function rowKeyGetter(row: any) {
-  return row.id;
+  return row.dbo_index;
 }
 
 function renderCheckbox({ onChange, ...props }: RenderCheckboxProps) {

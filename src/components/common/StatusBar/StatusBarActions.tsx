@@ -1,7 +1,12 @@
+import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { Box, IconButton, Stack } from '@mui/material';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 
 export default function StatusBarActions() {
+  const { selectedTab } = useTabStore();
+
+  const handleSave = () => {};
+
   return (
     <Stack direction={'row'} mb={'5px'} justifyContent={'space-between'} width={208}>
       <Box>

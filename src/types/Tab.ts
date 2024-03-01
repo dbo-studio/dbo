@@ -1,3 +1,5 @@
+import { RowType } from './Data';
+
 export type SortType = {
   index: string;
   column: string;
@@ -25,9 +27,18 @@ export type TabType = {
   sorts: SortType[];
   filters: FilterType[];
   mode: TabMode;
+  editedRows: EditedRow[];
+  removedRow: RowType[];
 };
 
 export enum TabMode {
   Data = 0,
   Structure = 1
 }
+
+export type EditedRow = {
+  dboIndex: number;
+  id: number | undefined;
+  old: RowType;
+  new: RowType;
+};

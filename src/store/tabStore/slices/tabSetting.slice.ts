@@ -15,7 +15,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       return;
     }
 
-    const newTab = {
+    const newTab: TabType = {
       id: uuidv4(),
       table: table,
       query: `SELECT * FROM ${table}`,
@@ -25,7 +25,9 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       showFilters: false,
       showQuery: false,
       showSorts: false,
-      mode: TabMode.Data
+      mode: TabMode.Data,
+      editedRows: [],
+      removedRow: []
     };
 
     if (tabs.length < maxTabs) {

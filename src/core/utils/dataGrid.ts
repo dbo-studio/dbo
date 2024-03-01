@@ -1,4 +1,5 @@
-import { ColumnType } from '@/src/types';
+import { ColumnType, EditedRow, RowType } from '@/src/types';
+import { updatedDiff } from 'deep-object-diff';
 import { SelectColumn, textEditor } from 'react-data-grid';
 
 export const formatServerColumns = (serverColumns: ColumnType[]): any => {
@@ -33,4 +34,37 @@ export const formatServerColumns = (serverColumns: ColumnType[]): any => {
   });
 
   return arr;
+};
+
+export const handelRowChangeLog = (editedRows: EditedRow[], oldValue: RowType, newValue: RowType): EditedRow[] => {
+  const findValueIndex = editedRows.findIndex((x) => x.dboIndex == newValue.dbo_index);
+  const findValue = editedRows[findValueIndex];
+  const diff = updatedDiff(oldValue, newValue);
+  const diffKey = Object.keys(diff)[0];
+  let o: RowType = {};
+  let n: RowType = {};
+
+  if (!findValue) {
+    o[diffKey] = oldValue[diffKey];
+    n[diffKey] = newValue[diffKey];
+    editedRows.push({
+      dboIndex: newValue.dbo_index,
+      id: n.id,
+      old: o,
+      new: n
+    });
+  } else {
+    o = findValue.old;
+    n = findValue.new;
+    o[diffKey] = oldValue[diffKey];
+    n[diffKey] = newValue[diffKey];
+    editedRows[findValueIndex] = {
+      dboIndex: newValue.dbo_index,
+      id: n.id,
+      old: o,
+      new: n
+    };
+  }
+
+  return editedRows;
 };

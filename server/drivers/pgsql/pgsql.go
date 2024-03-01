@@ -30,6 +30,10 @@ func RunQuery(dto *dto.RunQueryDto) (*RunQueryResult, error) {
 		return nil, result.Error
 	}
 
+	for i := range queryResults {
+		queryResults[i]["dbo_index"] = i
+	}
+
 	return &RunQueryResult{
 		Query: query,
 		Data:  queryResults,
