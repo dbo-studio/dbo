@@ -6,7 +6,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/khodemobin/dbo/api/response"
 	"github.com/khodemobin/dbo/app"
-	"github.com/khodemobin/dbo/drivers/pgsql"
 	"github.com/khodemobin/dbo/model"
 )
 
@@ -24,12 +23,12 @@ func connectionDetail(c *fiber.Ctx, connection *model.Connection) error {
 	var tables []string = []string{}
 	var err error
 
-	databases, _ := pgsql.Databases(int32(connection.ID), false)
+	databases, _ := app.Drivers().Pgsql.Databases(int32(connection.ID), false)
 	if connection.CurrentDatabase.String == "" {
 		return c.JSON(response.Success(response.Connection(connection, databases, schemas, tables)))
 	}
 
-	schemas, _ = pgsql.Schemas(int32(connection.ID), connection.CurrentDatabase.String)
+	schemas, _ = app.Drivers().Pgsql.Schemas(int32(connection.ID), connection.CurrentDatabase.String)
 	currentSchema := connection.CurrentSchema.String
 
 	if connection.CurrentSchema.String == "" && len(schemas) > 0 {
@@ -37,7 +36,7 @@ func connectionDetail(c *fiber.Ctx, connection *model.Connection) error {
 	}
 
 	if currentSchema != "" {
-		tables, err = pgsql.Tables(int32(connection.ID), currentSchema)
+		tables, err = app.Drivers().Pgsql.Tables(int32(connection.ID), currentSchema)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(err.Error())
 		}

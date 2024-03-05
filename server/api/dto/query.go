@@ -11,6 +11,21 @@ type RunQueryDto struct {
 	Columns      []string
 }
 
+type RawQueryDto struct {
+	ConnectionId int32  `json:"connection_id" validate:"required,gte=0"`
+	Query        string `json:"query" validate:"required,gte=0"`
+}
+
+type UpdateQueryDto struct {
+	ConnectionId int32  `json:"connection_id" validate:"required,gte=0"`
+	Query        string `json:"query" validate:"required,gte=0"`
+}
+
+type DeleteQueryDto struct {
+	ConnectionId int32  `json:"connection_id" validate:"required,gte=0"`
+	Query        string `json:"query" validate:"required,gte=0"`
+}
+
 type FilterDto struct {
 	Column   string `json:"column" validate:"required"`
 	Operator string `json:"operator" validate:"required"`

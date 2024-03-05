@@ -7,6 +7,7 @@ import (
 
 	"github.com/khodemobin/dbo/config"
 	"github.com/khodemobin/dbo/db"
+	"github.com/khodemobin/dbo/drivers"
 	"github.com/khodemobin/dbo/helper"
 	"github.com/khodemobin/dbo/logger"
 	"github.com/khodemobin/dbo/logger/sentry"
@@ -17,9 +18,10 @@ import (
 )
 
 type AppContainer struct {
-	DB     *gorm.DB
-	Log    logger.Logger
-	Config *config.Config
+	DB      *gorm.DB
+	Log     logger.Logger
+	Config  *config.Config
+	Drivers *drivers.DriverEngine
 }
 
 var Container *AppContainer = nil
@@ -51,9 +53,10 @@ func New() {
 	}
 
 	Container = &AppContainer{
-		DB:     db,
-		Config: config,
-		Log:    logger,
+		DB:      db,
+		Config:  config,
+		Log:     logger,
+		Drivers: drivers.InitDrivers(db),
 	}
 }
 
@@ -67,4 +70,8 @@ func Log() logger.Logger {
 
 func Config() *config.Config {
 	return Container.Config
+}
+
+func Drivers() *drivers.DriverEngine {
+	return Container.Drivers
 }

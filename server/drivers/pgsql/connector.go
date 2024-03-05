@@ -5,16 +5,28 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/khodemobin/dbo/app"
 	"github.com/khodemobin/dbo/model"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-func Connect(connectionId int32) (*gorm.DB, error) {
+func (p *PostgresQueryEngine) Connect(connectionId int32) (*gorm.DB, error) {
+	if conn, exists := p.OpenConnections[connectionId]; exists {
+		return conn, nil
+	}
+
+	conn, err := p.Open(connectionId)
+	if err != nil {
+		return nil, err
+	}
+
+	p.OpenConnections[connectionId] = conn
+	return conn, nil
+}
+
+func (p *PostgresQueryEngine) Open(connectionId int32) (*gorm.DB, error) {
 	var connection model.Connection
-	// todo should check if connection exists return that
-	result := app.DB().Where("id", "=", connectionId).First(&connection)
+	result := p.DB.Where("id", "=", connectionId).First(&connection)
 	if result.Error != nil {
 		return nil, errors.New("connection not found")
 	}
@@ -40,7 +52,7 @@ type ConnectionOption struct {
 	Database string
 }
 
-func ConnectWithOptions(options ConnectionOption) (*gorm.DB, error) {
+func (p *PostgresQueryEngine) ConnectWithOptions(options ConnectionOption) (*gorm.DB, error) {
 	dsn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s",
 		options.Host,
 		strconv.Itoa(int(options.Port)),

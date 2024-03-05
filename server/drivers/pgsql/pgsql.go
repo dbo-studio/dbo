@@ -2,33 +2,54 @@ package pgsql
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/khodemobin/dbo/api/dto"
+	"gorm.io/gorm"
 )
+
+type PostgresQueryEngine struct {
+	OpenConnections map[int32]*gorm.DB
+	DB              *gorm.DB
+}
 
 type RunQueryResult struct {
 	Query string
 	Data  []map[string]interface{}
 }
 
-func RunQuery(dto *dto.RunQueryDto) (*RunQueryResult, error) {
-	query, err := queryGenerator(dto)
+func InitPostgresEngine(db *gorm.DB) *PostgresQueryEngine {
+	return &PostgresQueryEngine{
+		OpenConnections: map[int32]*gorm.DB{},
+		DB:              db,
+	}
+}
+
+func (p *PostgresQueryEngine) RunQuery(dto *dto.RunQueryDto) (*RunQueryResult, error) {
+	query, err := p.queryGenerator(dto)
 	if err != nil {
 		return nil, errors.New("Generate query error: " + err.Error())
 	}
 
-	db, err := Connect(dto.ConnectionId)
+	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {
 		return nil, errors.New("Connection error: " + err.Error())
 	}
 
 	queryResults := []map[string]interface{}{}
-	result := db.Raw(query).Scan(&queryResults)
+	result := db.Raw(query).Find(&queryResults)
 	if result.Error != nil {
 		return nil, result.Error
 	}
+
+	dump, err := json.Marshal(queryResults)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("%s\n", string(dump))
 
 	for i := range queryResults {
 		queryResults[i]["dbo_index"] = i
@@ -40,8 +61,27 @@ func RunQuery(dto *dto.RunQueryDto) (*RunQueryResult, error) {
 	}, nil
 }
 
-func Databases(connectionId int32, withTemplates bool) ([]string, error) {
-	db, err := Connect(connectionId)
+func (p *PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) ([]map[string]interface{}, error) {
+	db, err := p.Connect(dto.ConnectionId)
+	if err != nil {
+		return nil, errors.New("Connection error: " + err.Error())
+	}
+
+	queryResults := []map[string]interface{}{}
+	result := db.Raw(dto.Query).Find(&queryResults)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	for i := range queryResults {
+		queryResults[i]["dbo_index"] = i
+	}
+
+	return queryResults, nil
+}
+
+func (p *PostgresQueryEngine) Databases(connectionId int32, withTemplates bool) ([]string, error) {
+	db, err := p.Connect(connectionId)
 	if err != nil {
 		return nil, errors.New("Connection error: " + err.Error())
 	}
@@ -55,8 +95,8 @@ func Databases(connectionId int32, withTemplates bool) ([]string, error) {
 		Name string `gorm:"column:datname"`
 	}
 
-	var databases []Database
-	result := db.Raw(query).Scan(&databases)
+	databases := []Database{}
+	result := db.Raw(query).Find(&databases)
 
 	var names []string
 	for _, v := range databases {
@@ -66,29 +106,29 @@ func Databases(connectionId int32, withTemplates bool) ([]string, error) {
 	return names, result.Error
 }
 
-func Schemas(connectionId int32, database string) ([]string, error) {
-	db, err := Connect(connectionId)
+func (p *PostgresQueryEngine) Schemas(connectionId int32, database string) ([]string, error) {
+	db, err := p.Connect(connectionId)
 	if err != nil {
 		return nil, errors.New("Connection error: " + err.Error())
 	}
 	query := "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema') " + fmt.Sprintf("AND catalog_name = '%s'", database) + " AND schema_name NOT LIKE 'pg_%';"
-	type Database struct {
+	type Schema struct {
 		Name string `gorm:"column:schema_name"`
 	}
 
-	var databases []Database
-	result := db.Raw(query).Scan(&databases)
+	schemas := []Schema{}
+	result := db.Raw(query).Find(&schemas)
 
-	var names []string
-	for _, v := range databases {
+	names := []string{}
+	for _, v := range schemas {
 		names = append(names, v.Name)
 	}
 
 	return names, result.Error
 }
 
-func Tables(connectionId int32, schema string) ([]string, error) {
-	db, err := Connect(connectionId)
+func (p *PostgresQueryEngine) Tables(connectionId int32, schema string) ([]string, error) {
+	db, err := p.Connect(connectionId)
 	if err != nil {
 		return nil, errors.New("Connection error: " + err.Error())
 	}
@@ -99,8 +139,8 @@ func Tables(connectionId int32, schema string) ([]string, error) {
 		TableName sql.NullString `gorm:"column:table_name"`
 	}
 
-	var info []Info
-	result := db.Raw(query).Scan(&info)
+	info := []Info{}
+	result := db.Raw(query).Find(&info)
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -127,8 +167,8 @@ type Structure struct {
 	CharacterMaximumLength sql.NullInt32  `gorm:"column:character_maximum_length"`
 }
 
-func TableStructure(connectionId int32, table string, schema string) ([]Structure, error) {
-	db, err := Connect(connectionId)
+func (p *PostgresQueryEngine) TableStructure(connectionId int32, table string, schema string) ([]Structure, error) {
+	db, err := p.Connect(connectionId)
 	if err != nil {
 		return nil, errors.New("Connection error: " + err.Error())
 	}
@@ -136,7 +176,7 @@ func TableStructure(connectionId int32, table string, schema string) ([]Structur
 	query := fmt.Sprintf("SELECT ordinal_position,column_name,data_type,is_nullable,column_default,character_maximum_length FROM information_schema.columns WHERE table_schema='%s' AND table_name='%s' ORDER BY ordinal_position;", schema, table)
 
 	structures := []Structure{}
-	result := db.Raw(query).Scan(&structures)
+	result := db.Raw(query).Find(&structures)
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -145,8 +185,8 @@ func TableStructure(connectionId int32, table string, schema string) ([]Structur
 	return structures, err
 }
 
-func TableSpaces(connectionId int32) ([]string, error) {
-	db, err := Connect(connectionId)
+func (p *PostgresQueryEngine) TableSpaces(connectionId int32) ([]string, error) {
+	db, err := p.Connect(connectionId)
 	if err != nil {
 		return nil, errors.New("Connection error: " + err.Error())
 	}
@@ -157,8 +197,8 @@ func TableSpaces(connectionId int32) ([]string, error) {
 		Name string `gorm:"column:spcname"`
 	}
 
-	var tablespacesResult []tableSpace
-	result := db.Raw(query).Scan(&tablespacesResult)
+	tablespacesResult := []tableSpace{}
+	result := db.Raw(query).Find(&tablespacesResult)
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -172,7 +212,7 @@ func TableSpaces(connectionId int32) ([]string, error) {
 	return tablespaces, err
 }
 
-func Encodes() []string {
+func (p *PostgresQueryEngine) Encodes() []string {
 	return []string{
 		"BIG5",
 		"EUC_CN",
@@ -229,10 +269,10 @@ func Encodes() []string {
 	}
 }
 
-func CreateDatabase(dto *dto.DatabaseDto) error {
-	query := createDBQuery(dto)
+func (p *PostgresQueryEngine) CreateDatabase(dto *dto.DatabaseDto) error {
+	query := p.createDBQuery(dto)
 
-	db, err := Connect(dto.ConnectionId)
+	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {
 		return errors.New("Connection error: " + err.Error())
 	}
@@ -242,10 +282,10 @@ func CreateDatabase(dto *dto.DatabaseDto) error {
 	return result.Error
 }
 
-func DropDatabase(dto *dto.DeleteDatabaseDto) error {
+func (p *PostgresQueryEngine) DropDatabase(dto *dto.DeleteDatabaseDto) error {
 	query := fmt.Sprintf("DROP DATABASE %s", dto.Name)
 
-	db, err := Connect(dto.ConnectionId)
+	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {
 		return errors.New("Connection error: " + err.Error())
 	}

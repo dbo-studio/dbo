@@ -1,4 +1,4 @@
-package database_handler
+package query_handler
 
 import (
 	"github.com/gofiber/fiber/v2"
@@ -8,21 +8,22 @@ import (
 	"github.com/khodemobin/dbo/helper"
 )
 
-func (h *DatabaseHandler) DeleteDatabase(c *fiber.Ctx) error {
-	dto := new(dto.DeleteDatabaseDto)
-	if err := c.BodyParser(dto); err != nil {
+func (QueryHandler) Raw(c *fiber.Ctx) error {
+	req := new(dto.RawQueryDto)
+
+	if err := c.BodyParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
 
-	errors := helper.Validate(dto)
+	errors := helper.Validate(req)
 	if errors != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
 	}
 
-	err := app.Drivers().Pgsql.DropDatabase(dto)
+	runQueryResult, err := app.Drivers().Pgsql.RawQuery(req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
+		return c.JSON(response.Error(err.Error()))
 	}
 
-	return c.JSON(response.Success(""))
+	return c.JSON(response.Success(runQueryResult))
 }

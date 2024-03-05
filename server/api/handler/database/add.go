@@ -4,7 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/khodemobin/dbo/api/dto"
 	"github.com/khodemobin/dbo/api/response"
-	"github.com/khodemobin/dbo/drivers/pgsql"
+	"github.com/khodemobin/dbo/app"
 	"github.com/khodemobin/dbo/helper"
 )
 
@@ -19,7 +19,7 @@ func (h *DatabaseHandler) AddDatabase(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
 	}
 
-	err := pgsql.CreateDatabase(dto)
+	err := app.Drivers().Pgsql.CreateDatabase(dto)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
 	}

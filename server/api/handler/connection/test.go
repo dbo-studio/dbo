@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/khodemobin/dbo/api/dto"
 	"github.com/khodemobin/dbo/api/response"
+	"github.com/khodemobin/dbo/app"
 	"github.com/khodemobin/dbo/drivers/pgsql"
 	"github.com/khodemobin/dbo/helper"
 )
@@ -20,7 +21,7 @@ func (h *ConnectionHandler) TestConnection(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
 	}
 
-	_, err := pgsql.ConnectWithOptions(pgsql.ConnectionOption{
+	_, err := app.Drivers().Pgsql.ConnectWithOptions(pgsql.ConnectionOption{
 		Host:     req.Host,
 		Port:     int32(req.Port),
 		User:     req.Username,

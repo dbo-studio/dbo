@@ -7,7 +7,7 @@ import (
 	"github.com/khodemobin/dbo/api/dto"
 )
 
-func queryGenerator(dto *dto.RunQueryDto) (string, error) {
+func (p *PostgresQueryEngine) queryGenerator(dto *dto.RunQueryDto) (string, error) {
 	query := ""
 
 	if len(dto.Columns) == 0 {
@@ -50,7 +50,7 @@ func queryGenerator(dto *dto.RunQueryDto) (string, error) {
 	return query, nil
 }
 
-func createDBQuery(dto *dto.DatabaseDto) string {
+func (p *PostgresQueryEngine) createDBQuery(dto *dto.DatabaseDto) string {
 	query := fmt.Sprintf("CREATE DATABASE %s ", dto.Name)
 	if dto.Template != nil && len(*dto.Template) > 0 {
 		query += fmt.Sprintf("WITH TEMPLATE = %s ", *dto.Template)
