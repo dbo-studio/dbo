@@ -2,6 +2,7 @@ import api from '@/src/api';
 import useAPI from '@/src/hooks/useApi.hook';
 import locales from '@/src/locales';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { LoadingButton } from '@mui/lab';
 import { Box, Button, Stack } from '@mui/material';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -41,18 +42,20 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
     resolver: zodResolver(formSchema)
   });
 
-  const { request: createConnection } = useAPI({
+  const { request: createConnection, pending: createConnectionPending } = useAPI({
     apiMethod: api.connection.createConnection
   });
 
-  const { request: testConnection } = useAPI({
+  const { request: testConnection, pending: testConnectionPending } = useAPI({
     apiMethod: api.connection.testConnection
   });
 
   const onSubmit: SubmitHandler<IFormInput> = async (data, e) => {
     e?.preventDefault();
+    if (createConnectionPending) {
+      return;
+    }
     try {
-      //todo: add loading
       await createConnection(data);
       toast.success(locales.connection_create_success);
       reset({ ...data });
@@ -64,6 +67,9 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
 
   const handleTestConnection: SubmitHandler<IFormInput> = async (data, e) => {
     e?.preventDefault();
+    if (testConnectionPending) {
+      return;
+    }
     try {
       await testConnection(data);
       toast.success(locales.connection_test_success);
@@ -158,12 +164,23 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
             {locales.cancel}
           </Button>
           <Stack spacing={1} direction={'row'}>
-            <Button onClick={handleSubmit(handleTestConnection)} size='small' variant='contained' color='secondary'>
-              {locales.test}
-            </Button>
-            <Button onClick={handleSubmit(onSubmit)} size='small' variant='contained'>
-              {locales.create}
-            </Button>
+            <LoadingButton
+              loading={testConnectionPending}
+              onClick={handleSubmit(handleTestConnection)}
+              size='small'
+              variant='contained'
+              color='secondary'
+            >
+              <span>{locales.test}</span>
+            </LoadingButton>
+            <LoadingButton
+              loading={createConnectionPending}
+              onClick={handleSubmit(onSubmit)}
+              size='small'
+              variant='contained'
+            >
+              <span>{locales.create}</span>
+            </LoadingButton>
           </Stack>
         </Box>
       </Box>

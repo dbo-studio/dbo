@@ -63,6 +63,13 @@ export const useDataStore = create<DataState>()(
 
         set({ rows });
       },
+      addEmptyRow: () => {
+        const rows = get().getRows();
+        const columns = get().getColumns();
+
+        const newRow = {};
+        console.log(columns);
+      },
       updateColumns: async (items: RowType[]) => {
         const selectedTab = get().selectedTab();
         if (!selectedTab) {
@@ -73,11 +80,9 @@ export const useDataStore = create<DataState>()(
 
         set({ columns });
       },
-
       selectedTab: (): TabType | undefined => {
         return useTabStore.getState().selectedTab;
       },
-
       runQuery: async () => {
         const currentConnection = useConnectionStore.getState().currentConnection;
         const selectedTab = useTabStore.getState().selectedTab;

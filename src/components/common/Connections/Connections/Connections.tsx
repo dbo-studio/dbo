@@ -49,7 +49,7 @@ export default function Connections() {
         <ConnectionItem
           onClick={() => handleChangeCurrentConnection(c)}
           key={uuid()}
-          selected={c.name == currentConnection?.name}
+          selected={c.id == currentConnection?.id}
           connection={c}
         />
       ))}

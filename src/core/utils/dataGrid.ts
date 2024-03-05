@@ -6,7 +6,7 @@ export const formatServerColumns = (serverColumns: ColumnType[]): any => {
   const arr: ColumnType[] = [
     {
       ...SelectColumn,
-      key: 'key',
+      key: 'select-row',
       name: 'name',
       type: 'type',
       resizable: true,
