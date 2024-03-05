@@ -10,6 +10,7 @@ export type DataStore = {
   getSelectedRow(): RowType | undefined;
   updateSelectedRow: (selectedRow: RowType | undefined) => void;
   updateRows: (items: RowType[]) => Promise<void>;
+  addEmptyRow: () => void;
   updateColumns: (items: RowType[]) => Promise<void>;
   selectedTab: () => TabType | undefined;
   runQuery: () => Promise<void>;
