@@ -21,6 +21,7 @@
     "@fontsource/roboto": "^5.0.8",
     "@hookform/resolvers": "^3.3.4",
     "@mui/icons-material": "^5.15.10",
+    "@mui/lab": "5.0.0-alpha.166",
     "@mui/material": "^5.15.10",
     "@mui/material-nextjs": "^5.15.11",
     "@mui/x-tree-view": "6.17.0",
