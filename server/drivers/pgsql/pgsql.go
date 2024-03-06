@@ -2,10 +2,8 @@ package pgsql
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/khodemobin/dbo/api/dto"
 	"gorm.io/gorm"
@@ -16,16 +14,16 @@ type PostgresQueryEngine struct {
 	DB              *gorm.DB
 }
 
-type RunQueryResult struct {
-	Query string
-	Data  []map[string]interface{}
-}
-
 func InitPostgresEngine(db *gorm.DB) *PostgresQueryEngine {
 	return &PostgresQueryEngine{
 		OpenConnections: map[int32]*gorm.DB{},
 		DB:              db,
 	}
+}
+
+type RunQueryResult struct {
+	Query string
+	Data  []map[string]interface{}
 }
 
 func (p *PostgresQueryEngine) RunQuery(dto *dto.RunQueryDto) (*RunQueryResult, error) {
@@ -45,12 +43,6 @@ func (p *PostgresQueryEngine) RunQuery(dto *dto.RunQueryDto) (*RunQueryResult, e
 		return nil, result.Error
 	}
 
-	dump, err := json.Marshal(queryResults)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("%s\n", string(dump))
-
 	for i := range queryResults {
 		queryResults[i]["dbo_index"] = i
 	}
@@ -61,7 +53,13 @@ func (p *PostgresQueryEngine) RunQuery(dto *dto.RunQueryDto) (*RunQueryResult, e
 	}, nil
 }
 
-func (p *PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) ([]map[string]interface{}, error) {
+type RawQueryResult struct {
+	Query   string
+	Data    []map[string]interface{}
+	Columns []Structure
+}
+
+func (p *PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) (*RawQueryResult, error) {
 	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {
 		return nil, errors.New("Connection error: " + err.Error())
@@ -73,11 +71,40 @@ func (p *PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) ([]map[string]inter
 		return nil, result.Error
 	}
 
+	rows, err := db.Raw(dto.Query).Rows()
+	if err != nil {
+		return nil, err
+	}
+
+	columns, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+
+	columnTypes, err := rows.ColumnTypes()
+	if err != nil {
+		return nil, err
+	}
+
 	for i := range queryResults {
 		queryResults[i]["dbo_index"] = i
 	}
 
-	return queryResults, nil
+	structures := []Structure{}
+
+	for i, column := range columns {
+		structures = append(structures, Structure{
+			ColumnName: column,
+			DataType:   columnTypes[i].Name(),
+			MappedType: p.columnMappedFormat(columnTypes[i].Name()),
+		})
+	}
+
+	return &RawQueryResult{
+		Query:   dto.Query,
+		Data:    queryResults,
+		Columns: structures,
+	}, nil
 }
 
 func (p *PostgresQueryEngine) Databases(connectionId int32, withTemplates bool) ([]string, error) {
@@ -165,6 +192,7 @@ type Structure struct {
 	IsNullable             string         `gorm:"column:is_nullable"`
 	ColumnDefault          sql.NullString `gorm:"column:column_default"`
 	CharacterMaximumLength sql.NullInt32  `gorm:"column:character_maximum_length"`
+	MappedType             string         `gorm:"_:"`
 }
 
 func (p *PostgresQueryEngine) TableStructure(connectionId int32, table string, schema string) ([]Structure, error) {
@@ -177,6 +205,10 @@ func (p *PostgresQueryEngine) TableStructure(connectionId int32, table string, s
 
 	structures := []Structure{}
 	result := db.Raw(query).Find(&structures)
+
+	for i, structure := range structures {
+		structures[i].MappedType = p.columnMappedFormat(structure.DataType)
+	}
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -293,4 +325,18 @@ func (p *PostgresQueryEngine) DropDatabase(dto *dto.DeleteDatabaseDto) error {
 	result := db.Exec(query)
 
 	return result.Error
+}
+
+// convert pgsql type to simple types for fronted
+func (p *PostgresQueryEngine) columnMappedFormat(dataType string) string {
+	switch dataType {
+	case "VARCHAR", "TEXT", "UUID", "TIMESTAMP", "VARBIT":
+		return "string"
+	case "BOOL":
+		return "boolean"
+	case "INT", "INTEGER", "BIT", "FLOAT":
+		return "number"
+	default:
+		return "string"
+	}
 }

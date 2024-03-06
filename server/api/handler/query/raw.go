@@ -20,10 +20,10 @@ func (QueryHandler) Raw(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
 	}
 
-	runQueryResult, err := app.Drivers().Pgsql.RawQuery(req)
+	rawQueryResult, err := app.Drivers().Pgsql.RawQuery(req)
 	if err != nil {
 		return c.JSON(response.Error(err.Error()))
 	}
 
-	return c.JSON(response.Success(runQueryResult))
+	return c.JSON(response.Success(response.RawQuery(rawQueryResult)))
 }

@@ -9,11 +9,12 @@ type runQuery struct {
 }
 
 type structureResponse struct {
-	Name    string  `json:"name"`
-	Type    string  `json:"type"`
-	NotNull bool    `json:"not_null"`
-	Length  *int32  `json:"length"`
-	Default *string `json:"default"`
+	Name       string  `json:"name"`
+	Type       string  `json:"type"`
+	NotNull    bool    `json:"not_null"`
+	Length     *int32  `json:"length"`
+	Default    *string `json:"default"`
+	MappedType string  `json:"mapped_type"`
 }
 
 func RunQuery(queryResult *pgsql.RunQueryResult, structures []pgsql.Structure) any {
@@ -23,6 +24,7 @@ func RunQuery(queryResult *pgsql.RunQueryResult, structures []pgsql.Structure) a
 
 		s.Name = structure.ColumnName
 		s.Type = structure.DataType
+		s.MappedType = structure.MappedType
 
 		if structure.IsNullable == "NO" {
 			s.NotNull = false
@@ -43,6 +45,27 @@ func RunQuery(queryResult *pgsql.RunQueryResult, structures []pgsql.Structure) a
 		} else {
 			s.Default = nil
 		}
+
+		newStructures = append(newStructures, s)
+	}
+
+	return runQuery{
+		Query:      queryResult.Query,
+		Data:       queryResult.Data,
+		Structures: newStructures,
+	}
+}
+
+func RawQuery(queryResult *pgsql.RawQueryResult) any {
+	var newStructures []structureResponse
+	for _, structure := range queryResult.Columns {
+		var s structureResponse
+		s.Name = structure.ColumnName
+		s.Type = structure.DataType
+		s.MappedType = structure.MappedType
+		s.NotNull = false
+		s.Length = nil
+		s.Default = nil
 
 		newStructures = append(newStructures, s)
 	}
