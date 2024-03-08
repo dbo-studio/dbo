@@ -18,7 +18,7 @@ export const createDataSelectedRowsSlice: StateCreator<
 
     return new Set(rows[selectedTab.id]);
   },
-  updateSelectedRows: (selectedRows) => {
+  updateSelectedRows: (selectedRows): void => {
     const selectedTab = useTabStore.getState().selectedTab;
     if (!selectedTab) {
       return;

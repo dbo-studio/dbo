@@ -9,17 +9,18 @@ import LoadingIconButton from '../../base/LoadingIconButton/LoadingIconButton';
 
 export default function StatusBarActions() {
   const { selectedTab } = useTabStore();
-  const { addEmptyRow } = useDataStore();
+  const { addEmptyRow, getEditedRows, getSelectedRows, updateRemovedRows, updateEditedRows, discardUnsavedRows } =
+    useDataStore();
 
   const { request: updateQuery, pending: updateQueryPending } = useAPI({
     apiMethod: api.query.updateQuery
   });
 
   const handleSave = async () => {
-    if (selectedTab?.editedRows.length == 0) {
+    if (getEditedRows().length == 0) {
       return;
     }
-    await updateQuery(selectedTab?.editedRows);
+    await updateQuery(getEditedRows());
   };
 
   const handleAddAction = () => {
@@ -30,7 +31,15 @@ export default function StatusBarActions() {
 
   const handleRemoveAction = () => {
     if (selectedTab?.mode == TabMode.Data) {
-      // addEmptyRow();
+      updateRemovedRows(Array.from(getSelectedRows()));
+    }
+  };
+
+  const handleDiscardChanges = () => {
+    if (selectedTab?.mode == TabMode.Data) {
+      updateRemovedRows([]);
+      updateEditedRows([]);
+      discardUnsavedRows();
     }
   };
 
@@ -53,7 +62,7 @@ export default function StatusBarActions() {
         >
           <CustomIcon type='check' size='s' />
         </LoadingIconButton>
-        <IconButton>
+        <IconButton onClick={handleDiscardChanges}>
           <CustomIcon type='close' size='s' />
         </IconButton>
       </Box>

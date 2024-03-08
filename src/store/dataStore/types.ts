@@ -5,9 +5,6 @@ export type DataStore = object;
 
 export type DataRowSlice = {
   rows: DataRowsType;
-  editedRows: DataEditedRowsType;
-  removedRows: DataRemovedRowsType;
-  unSavedRows: DataRowsType;
   getRows(): RowType[];
   updateRows: (items: RowType[]) => Promise<void>;
   addEmptyRow: () => void;
@@ -31,6 +28,25 @@ export type DataColumnSlice = {
   updateColumns: (items: ColumnType[]) => Promise<void>;
 };
 
+export type DataEditedRowsSlice = {
+  editedRows: DataEditedRowsType;
+  getEditedRows(): EditedRow[];
+  updateEditedRows: (rows: EditedRow[]) => void;
+};
+
+export type DataRemovedRowsSlice = {
+  removedRows: DataRemovedRowsType;
+  getRemovedRows(): RowType[];
+  updateRemovedRows(rowsIndex: number[]): void;
+};
+
+export type DataUnsavedRowsSlice = {
+  unSavedRows: DataRowsType;
+  getUnsavedRows(): RowType[];
+  updateUnsavedRows(row: RowType): void;
+  discardUnsavedRows(): void;
+};
+
 export type DataQuerySlice = {
   runQuery: () => Promise<void>;
 };
@@ -48,7 +64,7 @@ export type DataEditedRowsType = {
 };
 
 export type DataRemovedRowsType = {
-  [key: string]: number[];
+  [key: string]: RowType[];
 };
 
 export type DataHightedRowType = {

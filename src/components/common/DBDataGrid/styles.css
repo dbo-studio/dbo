@@ -135,6 +135,16 @@
           background-color: #FFE16A; 
         }
     }
+    .unsaved-highlight{
+      .rdg-cell {
+          background-color: gray; 
+        }
+    }
+    .removed-highlight{
+      .rdg-cell {
+          background-color: red; 
+        }
+    }
   }
 }
 

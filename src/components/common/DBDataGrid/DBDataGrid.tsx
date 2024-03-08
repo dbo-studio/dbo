@@ -8,9 +8,20 @@ import './styles.css';
 
 export default function DBDataGrid() {
   const [isLoading, setIsLoading] = useState(false);
-  const { selectedTab, updateSelectedTab } = useTabStore();
-  const { updateRows, updateHightedRow, getRows, getColumns, runQuery, getSelectedRows, updateSelectedRows } =
-    useDataStore();
+  const { selectedTab } = useTabStore();
+  const {
+    updateRows,
+    updateHightedRow,
+    getRows,
+    getColumns,
+    runQuery,
+    getSelectedRows,
+    updateSelectedRows,
+    getEditedRows,
+    updateEditedRows,
+    getUnsavedRows,
+    getRemovedRows
+  } = useDataStore();
 
   const getData = async () => {
     setIsLoading(true);
@@ -34,8 +45,8 @@ export default function DBDataGrid() {
   const handleRowsChange = (rows: any[], data: RowsChangeData<any, unknown>) => {
     const oldRow = getRows()[data.indexes[0]];
     const newRow = rows[data.indexes[0]];
-    selectedTab!.editedRows = handelRowChangeLog(selectedTab!.editedRows, oldRow, newRow);
-    updateSelectedTab(selectedTab);
+    const editedRows = handelRowChangeLog(getEditedRows(), oldRow, newRow);
+    updateEditedRows(editedRows);
     updateRows(rows);
   };
 
@@ -57,9 +68,18 @@ export default function DBDataGrid() {
           onRowsChange={handleRowsChange}
           headerRowHeight={30}
           renderers={{ renderCheckbox }}
-          rowClass={(_, index) =>
-            selectedTab.editedRows.some((v) => v.dboIndex == index) == true ? 'edit-highlight' : undefined
-          }
+          rowClass={(_, index) => {
+            if (getRemovedRows().some((v) => v.dbo_index == index) == true) {
+              return 'removed-highlight';
+            }
+            if (getUnsavedRows().some((v) => v.dbo_index == index) == true) {
+              return 'unsaved-highlight';
+            }
+            if (getEditedRows().some((v) => v.dboIndex == index) == true) {
+              return 'edit-highlight';
+            }
+            return undefined;
+          }}
         />
       )}
     </Box>

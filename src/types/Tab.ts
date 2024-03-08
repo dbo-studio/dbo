@@ -27,8 +27,6 @@ export type TabType = {
   sorts: SortType[];
   filters: FilterType[];
   mode: TabMode;
-  editedRows: EditedRow[];
-  removedRow: RowType[];
 };
 
 export enum TabMode {
