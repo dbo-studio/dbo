@@ -2,6 +2,7 @@ import api from '@/src/api';
 import useAPI from '@/src/hooks/useApi.hook';
 import { useDataStore } from '@/src/store/dataStore/data.store';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
+import { TabMode } from '@/src/types';
 import { Box, IconButton, Stack } from '@mui/material';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import LoadingIconButton from '../../base/LoadingIconButton/LoadingIconButton';
@@ -21,23 +22,35 @@ export default function StatusBarActions() {
     await updateQuery(selectedTab?.editedRows);
   };
 
-  const handleAddRow = () => {
-    addEmptyRow();
+  const handleAddAction = () => {
+    if (selectedTab?.mode == TabMode.Data) {
+      addEmptyRow();
+    }
+  };
+
+  const handleRemoveAction = () => {
+    if (selectedTab?.mode == TabMode.Data) {
+      // addEmptyRow();
+    }
   };
 
   return (
     <Stack direction={'row'} mb={'5px'} justifyContent={'space-between'} width={208}>
       <Box>
-        <IconButton onClick={handleAddRow}>
+        <IconButton onClick={handleAddAction}>
           <CustomIcon type='plus' size='s' />
         </IconButton>
 
-        <IconButton>
+        <IconButton onClick={handleRemoveAction}>
           <CustomIcon type='mines' size='s' />
         </IconButton>
       </Box>
       <Box ml={1} mr={1}>
-        <LoadingIconButton loading={updateQueryPending} disabled={updateQueryPending} onClick={handleSave}>
+        <LoadingIconButton
+          loading={updateQueryPending ? true : undefined}
+          disabled={updateQueryPending}
+          onClick={handleSave}
+        >
           <CustomIcon type='check' size='s' />
         </LoadingIconButton>
         <IconButton>

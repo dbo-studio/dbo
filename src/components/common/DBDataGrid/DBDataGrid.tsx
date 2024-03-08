@@ -7,10 +7,10 @@ import DataGrid, { RenderCheckboxProps, RowsChangeData } from 'react-data-grid';
 import './styles.css';
 
 export default function DBDataGrid() {
-  const [selectedRows, setSelectedRows] = useState((): ReadonlySet<number> => new Set());
   const [isLoading, setIsLoading] = useState(false);
   const { selectedTab, updateSelectedTab } = useTabStore();
-  const { updateRows, updateSelectedRow, getRows, getColumns, runQuery } = useDataStore();
+  const { updateRows, updateHightedRow, getRows, getColumns, runQuery, getSelectedRows, updateSelectedRows } =
+    useDataStore();
 
   const getData = async () => {
     setIsLoading(true);
@@ -28,7 +28,7 @@ export default function DBDataGrid() {
     if (e.rowIdx == -1) {
       return;
     }
-    updateSelectedRow(e.row);
+    updateHightedRow(e.row);
   };
 
   const handleRowsChange = (rows: any[], data: RowsChangeData<any, unknown>) => {
@@ -49,8 +49,8 @@ export default function DBDataGrid() {
         <DataGrid
           onSelectedCellChange={handleOnCellClick}
           rowKeyGetter={rowKeyGetter}
-          selectedRows={selectedRows}
-          onSelectedRowsChange={setSelectedRows}
+          selectedRows={getSelectedRows()}
+          onSelectedRowsChange={updateSelectedRows}
           columns={getColumns(true)}
           rows={getRows()}
           rowHeight={30}

@@ -8,7 +8,9 @@ export const createDataRowSlice: StateCreator<DataStore & DataRowSlice & DataCol
   set,
   get
 ) => ({
-  selectedRow: {},
+  editedRows: {},
+  removedRows: {},
+  unSavedRows: {},
   rows: {},
   getRows: () => {
     const selectedTab = useTabStore.getState().selectedTab;
@@ -17,25 +19,6 @@ export const createDataRowSlice: StateCreator<DataStore & DataRowSlice & DataCol
       return [];
     }
     return rows[selectedTab.id];
-  },
-  getSelectedRow: (): RowType | undefined => {
-    const selectedTab = useTabStore.getState().selectedTab;
-    const rows = get().selectedRow;
-    if (!selectedTab || !Object.prototype.hasOwnProperty.call(rows, selectedTab.id)) {
-      return undefined;
-    }
-    return rows[selectedTab.id];
-  },
-  updateSelectedRow: (selectedRow: RowType | undefined) => {
-    const selectedTab = useTabStore.getState().selectedTab;
-    if (!selectedTab) {
-      return;
-    }
-
-    const rows = get().selectedRow;
-    rows[selectedTab.id] = selectedRow;
-
-    set({ selectedRow: rows });
   },
   updateRows: async (items: RowType[]) => {
     const selectedTab = useTabStore.getState().selectedTab;
@@ -51,6 +34,7 @@ export const createDataRowSlice: StateCreator<DataStore & DataRowSlice & DataCol
   addEmptyRow: () => {
     const rows = get().rows;
     const columns = get().getColumns();
+    const unSavedRows = get().unSavedRows;
     const selectedTab = useTabStore.getState().selectedTab;
     if (!selectedTab) {
       return;
@@ -59,6 +43,12 @@ export const createDataRowSlice: StateCreator<DataStore & DataRowSlice & DataCol
     newRow.dbo_index = rows[selectedTab.id][rows[selectedTab.id].length - 1]!.dbo_index + 1;
     rows[selectedTab.id].push(newRow);
 
-    set({ rows });
+    if (!Object.prototype.hasOwnProperty.call(unSavedRows, selectedTab.id)) {
+      unSavedRows[selectedTab.id] = [newRow];
+    } else {
+      unSavedRows[selectedTab.id].push(newRow);
+    }
+
+    set({ rows, unSavedRows });
   }
 });
