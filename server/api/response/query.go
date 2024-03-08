@@ -14,6 +14,7 @@ type structureResponse struct {
 	NotNull    bool    `json:"not_null"`
 	Length     *int32  `json:"length"`
 	Default    *string `json:"default"`
+	Comment    *string `json:"comment"`
 	MappedType string  `json:"mapped_type"`
 }
 
@@ -44,6 +45,13 @@ func RunQuery(queryResult *pgsql.RunQueryResult, structures []pgsql.Structure) a
 			s.Default = &defaultString
 		} else {
 			s.Default = nil
+		}
+
+		if structure.Comment.Valid {
+			defaultString := structure.Comment.String
+			s.Comment = &defaultString
+		} else {
+			s.Comment = nil
 		}
 
 		newStructures = append(newStructures, s)

@@ -45,5 +45,6 @@
     "default": "Default",
     "length": "Length",
     "decimal": "Decimal",
-    "not_null": "Not Null"
+    "not_null": "Not Null",
+    "comment": "Comment"
 }

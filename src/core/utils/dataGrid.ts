@@ -14,8 +14,9 @@ export const formatServerColumns = (serverColumns: ColumnType[]): any => {
       renderEditCell: textEditor,
       notNull: false,
       length: 'null',
-      decimal: 0,
-      default: 'null'
+      comment: 'null',
+      default: 'null',
+      mappedType: 'string'
     }
   ];
   serverColumns!.forEach((column: ColumnType) => {
@@ -28,8 +29,9 @@ export const formatServerColumns = (serverColumns: ColumnType[]): any => {
       renderEditCell: textEditor,
       notNull: column.notNull,
       length: column.length ?? 'null',
-      decimal: column.decimal,
-      default: column.default ?? 'null'
+      comment: column.comment ?? 'null',
+      default: column.default ?? 'null',
+      mappedType: column.mappedType
     });
   });
 
@@ -67,4 +69,27 @@ export const handelRowChangeLog = (editedRows: EditedRow[], oldValue: RowType, n
   }
 
   return editedRows;
+};
+
+export const createEmptyRow = (columns: ColumnType[]): RowType => {
+  const newRow: RowType = {};
+  columns.forEach((column) => {
+    if (!column.notNull) {
+      newRow[column.name] = null;
+    } else {
+      switch (column.mappedType) {
+        case 'boolean':
+          newRow[column.name] = false;
+          break;
+        case 'number':
+          newRow[column.name] = 0;
+          break;
+        default:
+          newRow[column.name] = '';
+          break;
+      }
+    }
+  });
+
+  return newRow;
 };

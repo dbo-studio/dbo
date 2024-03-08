@@ -30,10 +30,10 @@ export default function DBStructureItem({ item }: { item: ColumnType }) {
         <FieldInput value={item.length} size='small' type='string' />
       </TableCell>
       <TableCell align='left'>
-        <FieldInput value={item.decimal} size='small' type='number' />
+        <Checkbox checked={item.notNull} size='small' />
       </TableCell>
       <TableCell align='left'>
-        <Checkbox checked={item.notNull} size='small' />
+        <FieldInput value={item.comment} size='small' type='string' />
       </TableCell>
     </TableRow>
   );

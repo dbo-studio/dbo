@@ -19,8 +19,8 @@ export default function DBStructure() {
               <TableCell align='left'>{locales.type}</TableCell>
               <TableCell align='left'>{locales.default}</TableCell>
               <TableCell align='left'>{locales.length}</TableCell>
-              <TableCell align='left'>{locales.decimal}</TableCell>
               <TableCell align='left'>{locales.not_null}</TableCell>
+              <TableCell align='left'>{locales.comment}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

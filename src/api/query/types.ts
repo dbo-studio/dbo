@@ -14,5 +14,5 @@ export type RunQueryType = {
 export type RunQueryResponseType = {
   query: string;
   data: any[];
-  structures: any[];
+  structures: ColumnType[];
 };

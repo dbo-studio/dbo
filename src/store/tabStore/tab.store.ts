@@ -20,7 +20,6 @@ export const useTabStore = create<TabState>()(
       updateTabs: (tabs: TabType[]) => {
         set({ tabs });
       },
-
       updateSelectedTab: (selectedTab: TabType | undefined) => {
         if (selectedTab == undefined) {
           set({ selectedTab });

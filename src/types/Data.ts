@@ -11,6 +11,7 @@ export interface ColumnType extends Column<RowType> {
   isActive: boolean;
   notNull: boolean;
   length: string;
-  decimal: number;
+  comment: string;
   default: string;
+  mappedType: string;
 }

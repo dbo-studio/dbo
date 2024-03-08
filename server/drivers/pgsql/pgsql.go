@@ -192,6 +192,7 @@ type Structure struct {
 	IsNullable             string         `gorm:"column:is_nullable"`
 	ColumnDefault          sql.NullString `gorm:"column:column_default"`
 	CharacterMaximumLength sql.NullInt32  `gorm:"column:character_maximum_length"`
+	Comment                sql.NullString `gorm:"column:column_comment"`
 	MappedType             string         `gorm:"_:"`
 }
 
@@ -201,7 +202,7 @@ func (p *PostgresQueryEngine) TableStructure(connectionId int32, table string, s
 		return nil, errors.New("Connection error: " + err.Error())
 	}
 
-	query := fmt.Sprintf("SELECT ordinal_position,column_name,data_type,is_nullable,column_default,character_maximum_length FROM information_schema.columns WHERE table_schema='%s' AND table_name='%s' ORDER BY ordinal_position;", schema, table)
+	query := fmt.Sprintf("SELECT cols.ordinal_position,cols.column_name,cols.data_type,cols.is_nullable,cols.column_default,cols.character_maximum_length,des.description AS column_comment FROM information_schema.columns AS cols LEFT JOIN pg_catalog.pg_description AS des ON(des.objoid=(SELECT c.oid FROM pg_catalog.pg_class AS c WHERE c.relname=cols.table_name)AND des.objsubid=cols.ordinal_position)WHERE cols.table_schema='%s' AND cols.table_name='%s' ORDER BY cols.ordinal_position;", schema, table)
 
 	structures := []Structure{}
 	result := db.Raw(query).Find(&structures)

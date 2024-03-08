@@ -1,1 +1,1 @@
-export const RUN_QUERY = () => `/query`;
+export const RUN_QUERY = () => `/query/run`;
