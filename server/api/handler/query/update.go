@@ -8,7 +8,7 @@ import (
 )
 
 func (QueryHandler) Update(c *fiber.Ctx) error {
-	req := new(dto.RunQueryDto)
+	req := new(dto.UpdateQueryDto)
 
 	if err := c.BodyParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
@@ -18,5 +18,5 @@ func (QueryHandler) Update(c *fiber.Ctx) error {
 	if errors != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
 	}
-	return c.JSON(response.Success(""))
+	return c.JSON(response.Success(req))
 }

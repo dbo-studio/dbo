@@ -1,13 +1,21 @@
 import ConnectionBox from '@/src/components/common/ConnectionInfo/ConnectionBox';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
-import { IconButton, Stack } from '@mui/material';
+import { IconButton, Stack, Tab } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import Databases from '../Databases/Databases';
+import { useTabStore } from '@/src/store/tabStore/tab.store';
+import { TabMode } from '@/src/types';
 
 export default function ConnectionInfo() {
   const { updateShowAddConnection, showSelectDatabase, updateShowSelectDatabase, currentConnection } =
     useConnectionStore();
+
+  const {addTab} = useTabStore()
+
+  const handleAddEditorTab = () => {
+    addTab("Editor",TabMode.Query)
+  };
 
   return (
     <Stack direction={'row'} justifyContent={'center'} alignItems={'center'}>
@@ -41,7 +49,7 @@ export default function ConnectionInfo() {
           <IconButton aria-label='search'>
             <CustomIcon type={'search'} size={'m'} />
           </IconButton>
-          <IconButton aria-label='sql'>
+          <IconButton aria-label='sql' onClick={handleAddEditorTab}>
             <CustomIcon type={'sql'} size={'m'} />
           </IconButton>
         </Stack>

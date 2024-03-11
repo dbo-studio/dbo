@@ -17,8 +17,15 @@ type RawQueryDto struct {
 }
 
 type UpdateQueryDto struct {
-	ConnectionId int32  `json:"connection_id" validate:"required,gte=0"`
-	Query        string `json:"query" validate:"required,gte=0"`
+	ConnectionId int32        `json:"connection_id" validate:"required,gte=0"`
+	Table        string       `json:"table" validate:"required"`
+	Schema       string       `json:"schema" validate:"required"`
+	EditedItems  []EditedItem `json:"items" validate:"dive"`
+}
+
+type EditedItem struct {
+	ID    string `json:"id"`
+	Value []map[string]interface{}
 }
 
 type DeleteQueryDto struct {

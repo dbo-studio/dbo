@@ -1,4 +1,4 @@
-import { FilterType, SortType, TabType } from '@/src/types/Tab';
+import { FilterType, SortType, TabMode, TabType } from '@/src/types/Tab';
 
 export type TabFilterSlice = {
   upsertFilters: (filter: FilterType) => Promise<void>;
@@ -13,7 +13,7 @@ export type TabSortSlice = {
 };
 
 export type TabSettingSlice = {
-  addTab: (table: string) => void;
+  addTab: (table: string,mode? :TabMode) => void;
   removeTab: (tabId: string) => void;
   switchTab: (tabId: string | null) => void;
 };

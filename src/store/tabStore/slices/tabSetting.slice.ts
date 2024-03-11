@@ -6,7 +6,7 @@ import { TabSettingSlice, TabStore } from '../types';
 const maxTabs = 15;
 
 export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [], [], TabSettingSlice> = (set, get) => ({
-  addTab: (table: string) => {
+  addTab: (table: string,mode? :TabMode) => {
     const tabs = get().tabs;
 
     const findTab = tabs.filter((t: TabType) => t.table == table);
@@ -25,9 +25,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       showFilters: false,
       showQuery: false,
       showSorts: false,
-      mode: TabMode.Data,
-      editedRows: [],
-      removedRow: []
+      mode: mode ? mode : TabMode.Data
     };
 
     if (tabs.length < maxTabs) {

@@ -14,19 +14,19 @@
     "**/*": "prettier --write --ignore-unknown"
   },
   "dependencies": {
-    "@codemirror/lang-sql": "^6.5.5",
+    "@codemirror/lang-sql": "^6.6.1",
     "@emotion/cache": "^11.11.0",
-    "@emotion/react": "^11.11.3",
+    "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.0",
-    "@fontsource/roboto": "^5.0.8",
+    "@fontsource/roboto": "^5.0.12",
     "@hookform/resolvers": "^3.3.4",
-    "@mui/icons-material": "^5.15.10",
+    "@mui/icons-material": "^5.15.12",
     "@mui/lab": "5.0.0-alpha.166",
-    "@mui/material": "^5.15.10",
+    "@mui/material": "^5.15.12",
     "@mui/material-nextjs": "^5.15.11",
     "@mui/x-tree-view": "6.17.0",
-    "@uiw/codemirror-theme-github": "^4.21.23",
-    "@uiw/react-codemirror": "^4.21.23",
+    "@uiw/codemirror-theme-github": "^4.21.24",
+    "@uiw/react-codemirror": "^4.21.24",
     "axios": "^1.6.7",
     "dayjs": "^1.11.10",
     "deep-object-diff": "^1.1.9",
@@ -37,20 +37,20 @@
     "react": "^18.2.0",
     "react-data-grid": "7.0.0-beta.40",
     "react-dom": "^18.2.0",
-    "react-hook-form": "^7.50.1",
-    "sonner": "^1.4.1",
+    "react-hook-form": "^7.51.0",
+    "sonner": "^1.4.3",
     "swr": "^2.2.5",
     "uuid": "^9.0.1",
     "zod": "^3.22.4",
-    "zustand": "^4.5.1"
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
-    "@playwright/test": "^1.41.2",
+    "@playwright/test": "^1.42.1",
     "@types/jest": "^29.5.12",
-    "@types/node": "^20.11.20",
-    "@types/react": "^18.2.58",
-    "@types/react-dom": "^18.2.19",
+    "@types/node": "^20.11.25",
+    "@types/react": "^18.2.64",
+    "@types/react-dom": "^18.2.21",
     "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
@@ -63,6 +63,6 @@
     "lint-staged": "^15.2.2",
     "prettier": "3.0.3",
     "prettier-plugin-organize-imports": "^3.2.4",
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.2"
   }
 }

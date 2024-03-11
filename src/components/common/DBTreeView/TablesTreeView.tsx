@@ -26,15 +26,6 @@ export default function TablesTreeView({ tables }: { tables: string[] }) {
             <TreeItem onClick={() => handleTableClick(table)} key={uuid()} nodeId={index + '100'} label={table} />
           ))}
         </TreeItem>
-        {/* <TreeItem nodeId='3' label='Functions'>
-          <TreeItem nodeId='4' label='OSS' />
-        </TreeItem>
-        <TreeItem nodeId='5' label='Views'>
-          <TreeItem nodeId='6' label='OSS' />
-        </TreeItem>
-        <TreeItem nodeId='7' label='MaterializeView'>
-          <TreeItem nodeId='8' label='OSS' />
-        </TreeItem> */}
       </TreeView>
     </Box>
   );

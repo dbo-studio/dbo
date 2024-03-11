@@ -1,4 +1,7 @@
-type CodeEditorProps = {
+import { ViewUpdate } from '@uiw/react-codemirror';
+
+export type CodeEditorProps = {
   value: string;
-  editable: boolean;
+  editable?: boolean;
+  onChange: (value: string, viewUpdate: ViewUpdate) => void;
 };
