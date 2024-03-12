@@ -1,9 +1,10 @@
 import { isNumber, isObject } from '.';
 
 export const tools = {
-  screenMaxHeight: (): string => {
+  screenMaxHeight: (asNumber?: boolean): string | number => {
     // if (!isServerSide) {
-    return window?.innerHeight - 56 + 'px';
+    const height = window?.innerHeight - 56;
+    return asNumber ? height : height + 'px';
     // }
     // return '100%';
   },

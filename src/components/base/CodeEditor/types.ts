@@ -1,7 +1,3 @@
-import { ViewUpdate } from '@uiw/react-codemirror';
+import { ReactCodeMirrorProps } from '@uiw/react-codemirror';
 
-export type CodeEditorProps = {
-  value: string;
-  editable?: boolean;
-  onChange: (value: string, viewUpdate: ViewUpdate) => void;
-};
+export interface CodeEditorProps extends ReactCodeMirrorProps {}
