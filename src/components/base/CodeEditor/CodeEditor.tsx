@@ -18,6 +18,17 @@ export default function CodeEditor(props: CodeEditorProps) {
       role='textbox'
       style={styles}
       theme={githubLight}
+      basicSetup={{
+        foldGutter: true,
+        highlightActiveLine: true,
+        syntaxHighlighting: true,
+        autocompletion: true,
+        highlightSelectionMatches: true,
+        searchKeymap: true,
+        completionKeymap: true,
+        lintKeymap: true,
+        historyKeymap: true
+      }}
       extensions={[sql({ dialect: PostgreSQL, upperCaseKeywords: true })]}
       {...props}
     />

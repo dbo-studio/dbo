@@ -1,6 +1,7 @@
 import { handelRowChangeLog } from '@/src/core/utils';
 import { useDataStore } from '@/src/store/dataStore/data.store';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
+import { TabMode } from '@/src/types';
 import { Box, Checkbox, CircularProgress } from '@mui/material';
 import { useEffect, useState } from 'react';
 import DataGrid, { RenderCheckboxProps, RowsChangeData } from 'react-data-grid';
@@ -30,7 +31,7 @@ export default function DBDataGrid() {
   };
 
   useEffect(() => {
-    if (getRows().length == 0 || getColumns().length == 0) {
+    if (selectedTab?.mode == TabMode.Data && (getRows().length == 0 || getColumns().length == 0)) {
       getData();
     }
   }, [selectedTab]);
