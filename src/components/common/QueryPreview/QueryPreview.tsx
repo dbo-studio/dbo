@@ -1,6 +1,6 @@
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { Box, Theme, useTheme } from '@mui/material';
-import CodeEditor from '../../base/CodeEditor/CodeEditor';
+import BaseEditor from '../../base/CodeEditor/BaseEditor';
 
 export default function QueryPreview() {
   const { selectedTab } = useTabStore();
@@ -8,7 +8,7 @@ export default function QueryPreview() {
 
   return (
     <Box className='query-preview' borderBottom={`1px solid ${theme.palette.divider}`}>
-      {selectedTab && <CodeEditor value={selectedTab?.query} editable={false} />}
+      {selectedTab && <BaseEditor value={selectedTab?.query} editable={false} />}
     </Box>
   );
 }

@@ -1,38 +1,42 @@
 import { PostgreSQL, sql } from '@codemirror/lang-sql';
-import { Theme, useTheme } from '@mui/material';
-import { githubLight } from '@uiw/codemirror-theme-github';
-import CodeMirror from '@uiw/react-codemirror';
-import { CSSProperties } from 'react';
+import { EditorView } from '@uiw/react-codemirror';
+import BaseEditor from './BaseEditor';
 import { CodeEditorProps } from './types';
 
 export default function CodeEditor(props: CodeEditorProps) {
-  const theme: Theme = useTheme();
-
-  const styles: CSSProperties = {
-    fontSize: theme.typography.body2.fontSize,
-    fontWeight: theme.typography.fontWeightBold,
-    height: '100%'
-  };
+  const styleTheme = EditorView.baseTheme({
+    '&.cm-editor.cm-focused': {
+      outline: 'unset'
+    }
+  });
 
   return (
-    <CodeMirror
-      role='textbox'
-      style={styles}
-      theme={githubLight}
-      basicSetup={{
-        foldGutter: true,
-        highlightActiveLine: true,
-        syntaxHighlighting: true,
-        autocompletion: true,
-        highlightSelectionMatches: true,
-        searchKeymap: true,
-        completionKeymap: true,
-        lintKeymap: true,
-        historyKeymap: true,
-        tabSize: 4
-      }}
-      extensions={[sql({ dialect: PostgreSQL, upperCaseKeywords: true })]}
-      {...props}
+    <BaseEditor
+      height='100%'
+      extensions={[
+        sql({
+          dialect: PostgreSQL,
+          upperCaseKeywords: true,
+          schema: {
+            addons: ['id', 'user_id']
+          }
+        }),
+        styleTheme
+        // Prec.highest(
+        //   keymap.of([
+        //     {
+        //       key: 'Tab',
+        //       run: () => {
+        //         return true;
+        //       }
+        //     }
+        //   ])
+        // )
+      ]}
+      autoFocus={true}
+      value={props.value}
+      onChange={props.onChange}
+      editable={true}
     />
   );
 }
