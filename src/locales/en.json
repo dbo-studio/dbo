@@ -46,5 +46,6 @@
     "length": "Length",
     "decimal": "Decimal",
     "not_null": "Not Null",
-    "comment": "Comment"
+    "comment": "Comment",
+    "run": "Run"
 }

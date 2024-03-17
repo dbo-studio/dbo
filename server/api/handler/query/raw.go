@@ -22,7 +22,7 @@ func (QueryHandler) Raw(c *fiber.Ctx) error {
 
 	rawQueryResult, err := app.Drivers().Pgsql.RawQuery(req)
 	if err != nil {
-		return c.JSON(response.Error(err.Error()))
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(response.Error(err.Error()))
 	}
 
 	return c.JSON(response.Success(response.RawQuery(rawQueryResult)))

@@ -10,7 +10,8 @@ export default function CodeEditor(props: CodeEditorProps) {
 
   const styles: CSSProperties = {
     fontSize: theme.typography.body2.fontSize,
-    fontWeight: theme.typography.fontWeightBold
+    fontWeight: theme.typography.fontWeightBold,
+    height: '100%'
   };
 
   return (
@@ -27,7 +28,8 @@ export default function CodeEditor(props: CodeEditorProps) {
         searchKeymap: true,
         completionKeymap: true,
         lintKeymap: true,
-        historyKeymap: true
+        historyKeymap: true,
+        tabSize: 4
       }}
       extensions={[sql({ dialect: PostgreSQL, upperCaseKeywords: true })]}
       {...props}

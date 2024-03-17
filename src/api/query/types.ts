@@ -11,6 +11,11 @@ export type RunQueryType = {
   sorts: SortType[];
 };
 
+export type RunRawQueryType = {
+  connection_id: number;
+  query: string;
+};
+
 export type RunQueryResponseType = {
   query: string;
   data: any[];

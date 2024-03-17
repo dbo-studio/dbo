@@ -1,4 +1,4 @@
-import { runQuery } from '@/src/api/query';
+import { runQuery, runRawQuery } from '@/src/api/query';
 import { StateCreator } from 'zustand';
 import { useConnectionStore } from '../../connectionStore/connection.store';
 import { useTabStore } from '../../tabStore/tab.store';
@@ -37,6 +37,25 @@ export const createDataQuerySlice: StateCreator<
             f.isActive
         ),
         sorts: sorts.filter((f) => f.column.length > 0 && f.operator.length > 0 && f.isActive)
+      });
+
+      useTabStore.getState().updateQuery(res.query);
+      Promise.all([get().updateRows(res.data), get().updateColumns(res.structures)]);
+    } catch (error) {
+      console.log('🚀 ~ runQuery: ~ error:', error);
+    }
+  },
+  runRawQuery: async () => {
+    const currentConnection = useConnectionStore.getState().currentConnection;
+    const selectedTab = useTabStore.getState().selectedTab;
+    if (!selectedTab || !currentConnection) {
+      return;
+    }
+
+    try {
+      const res = await runRawQuery({
+        connection_id: currentConnection.id,
+        query: selectedTab.query
       });
 
       useTabStore.getState().updateQuery(res.query);

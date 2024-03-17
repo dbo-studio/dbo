@@ -49,6 +49,7 @@ export type DataUnsavedRowsSlice = {
 
 export type DataQuerySlice = {
   runQuery: () => Promise<void>;
+  runRawQuery: () => Promise<void>;
 };
 
 export type DataRowsType = {

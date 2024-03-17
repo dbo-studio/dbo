@@ -6,7 +6,7 @@ import { TabSettingSlice, TabStore } from '../types';
 const maxTabs = 15;
 
 export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [], [], TabSettingSlice> = (set, get) => ({
-  addTab: (table: string,mode? :TabMode) => {
+  addTab: (table: string, mode?: TabMode) => {
     const tabs = get().tabs;
 
     const findTab = tabs.filter((t: TabType) => t.table == table);
@@ -18,7 +18,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
     const newTab: TabType = {
       id: uuidv4(),
       table: table,
-      query: `SELECT * FROM ${table}`,
+      query: mode == TabMode.Query ? '' : `SELECT * FROM ${table}`,
       filters: [],
       sorts: [],
       showColumns: false,

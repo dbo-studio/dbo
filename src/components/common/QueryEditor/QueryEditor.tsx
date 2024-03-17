@@ -1,42 +1,62 @@
 import { tools } from '@/src/core/utils';
 import { useDataStore } from '@/src/store/dataStore/data.store';
-import { StandardSQL, sql } from '@codemirror/lang-sql';
-import { Box } from '@mui/material';
-import { useState } from 'react';
+import { useTabStore } from '@/src/store/tabStore/tab.store';
+import { PostgreSQL, sql } from '@codemirror/lang-sql';
+import { Box, useTheme } from '@mui/material';
+import { EditorView } from '@uiw/react-codemirror';
 import CodeEditor from '../../base/CodeEditor/CodeEditor';
 import DBDataGrid from '../DBDataGrid/DBDataGrid';
 
 export default function QueryEditor() {
-  const [query, setQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { getRows, runQuery } = useDataStore();
+  const theme = useTheme();
+  const { getRows } = useDataStore();
+  const { updateSelectedTab, selectedTab } = useTabStore();
 
-  const getData = async () => {
-    setIsLoading(true);
-    await runQuery();
-    setIsLoading(false);
+  const handleChangeValue = (value: string) => {
+    updateSelectedTab({
+      ...selectedTab!,
+      query: value
+    });
   };
 
+  const styleTheme = EditorView.baseTheme({
+    '&.cm-editor.cm-focused': {
+      outline: 'unset'
+    }
+  });
+
   return (
-    <Box height={tools.screenMaxHeight()}>
-      <Box flex={1}>
+    <Box display={'flex'} flexDirection={'column'} height={tools.screenMaxHeight()}>
+      <Box flex={1} borderBottom={`1px solid ${theme.palette.divider}`}>
         <CodeEditor
+          height='100%'
           extensions={[
             sql({
-              dialect: StandardSQL,
+              dialect: PostgreSQL,
               upperCaseKeywords: true,
               schema: {
                 addons: ['id', 'user_id']
               }
-            })
+            }),
+            styleTheme
+            // Prec.highest(
+            //   keymap.of([
+            //     {
+            //       key: 'Tab',
+            //       run: () => {
+            //         return true;
+            //       }
+            //     }
+            //   ])
+            // )
           ]}
           autoFocus={true}
-          value={query}
-          onChange={setQuery}
+          value={selectedTab?.query}
+          onChange={handleChangeValue}
           editable={true}
         />
       </Box>
-      {getRows().length > 0 && <DBDataGrid />}
+      {getRows() && getRows().length > 0 && <DBDataGrid />}
     </Box>
   );
 }

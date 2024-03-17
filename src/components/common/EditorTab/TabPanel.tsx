@@ -7,6 +7,7 @@ import DBDataGrid from '../DBDataGrid/DBDataGrid';
 import DBStructure from '../DBStructure/DBStructure';
 import Filters from '../Filters/Filters';
 import QueryEditor from '../QueryEditor/QueryEditor';
+import QueryEditorActionBar from '../QueryEditorActionBar/QueryEditorActionBar';
 import QueryPreview from '../QueryPreview/QueryPreview';
 import Sorts from '../Sorts/Sorts';
 import StatusBar from '../StatusBar/StatusBar';
@@ -52,5 +53,10 @@ function StructureMode() {
 }
 
 function QueryMode() {
-  return <QueryEditor />;
+  return (
+    <>
+      <QueryEditorActionBar />
+      <QueryEditor />
+    </>
+  );
 }
