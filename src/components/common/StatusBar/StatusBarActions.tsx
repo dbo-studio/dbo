@@ -9,8 +9,15 @@ import LoadingIconButton from '../../base/LoadingIconButton/LoadingIconButton';
 
 export default function StatusBarActions() {
   const { selectedTab } = useTabStore();
-  const { addEmptyRow, getEditedRows, getSelectedRows, updateRemovedRows, updateEditedRows, discardUnsavedRows } =
-    useDataStore();
+  const {
+    addEmptyRow,
+    getEditedRows,
+    getSelectedRows,
+    updateRemovedRows,
+    updateEditedRows,
+    discardUnsavedRows,
+    updateSelectedRows
+  } = useDataStore();
 
   const { request: updateQuery, pending: updateQueryPending } = useAPI({
     apiMethod: api.query.updateQuery
@@ -40,6 +47,7 @@ export default function StatusBarActions() {
       updateRemovedRows([]);
       updateEditedRows([]);
       discardUnsavedRows();
+      updateSelectedRows([]);
     }
   };
 

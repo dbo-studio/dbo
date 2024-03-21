@@ -27,10 +27,7 @@ type RunQueryResult struct {
 }
 
 func (p *PostgresQueryEngine) RunQuery(dto *dto.RunQueryDto) (*RunQueryResult, error) {
-	query, err := p.queryGenerator(dto)
-	if err != nil {
-		return nil, errors.New("Generate query error: " + err.Error())
-	}
+	query := p.queryGenerator(dto)
 
 	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {
@@ -104,6 +101,27 @@ func (p *PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) (*RawQueryResult, e
 		Query:   dto.Query,
 		Data:    queryResults,
 		Columns: structures,
+	}, nil
+}
+
+type UpdateQueryResult struct {
+	Query        []string
+	RowsAffected int64
+}
+
+func (p *PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryDto) (*UpdateQueryResult, error) {
+	// db, err := p.Connect(dto.ConnectionId)
+	// if err != nil {
+	// 	return nil, errors.New("Connection error: " + err.Error())
+	// }
+
+	queries := p.updateQueryGenerator(dto)
+
+	// result := db.Exec(query[0])
+
+	return &UpdateQueryResult{
+		Query:        queries,
+		RowsAffected: 1,
 	}, nil
 }
 

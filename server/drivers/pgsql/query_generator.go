@@ -7,7 +7,7 @@ import (
 	"github.com/khodemobin/dbo/api/dto"
 )
 
-func (p *PostgresQueryEngine) queryGenerator(dto *dto.RunQueryDto) (string, error) {
+func (p *PostgresQueryEngine) queryGenerator(dto *dto.RunQueryDto) string {
 	query := ""
 
 	if len(dto.Columns) == 0 {
@@ -47,7 +47,7 @@ func (p *PostgresQueryEngine) queryGenerator(dto *dto.RunQueryDto) (string, erro
 
 	query += fmt.Sprintf("OFFSET %d;", dto.Offset)
 
-	return query, nil
+	return query
 }
 
 func (p *PostgresQueryEngine) createDBQuery(dto *dto.DatabaseDto) string {
@@ -66,3 +66,42 @@ func (p *PostgresQueryEngine) createDBQuery(dto *dto.DatabaseDto) string {
 
 	return query
 }
+
+func (p *PostgresQueryEngine) updateQueryGenerator(dto *dto.UpdateQueryDto) []string {
+	queries := []string{}
+
+	for _, editedItem := range dto.EditedItems {
+		query := fmt.Sprintf("ALTER %s.%s.%s ", dto.Database, dto.Schema, dto.Table)
+		if len(dto.EditedItems) > 0 {
+			query += "SET "
+		}
+
+		if len(editedItem.Values) == 0 || len(editedItem.Conditions) == 0 {
+			continue
+		}
+
+		for key, value := range editedItem.Values {
+			query += fmt.Sprintf("%s = %v, ", key, value)
+		}
+
+		query = query[:len(query)-2]
+
+		query += " WHERE "
+		for key, value := range editedItem.Conditions {
+			query += fmt.Sprintf("%s = %v AND ", key, value)
+		}
+
+		query = query[:len(query)-5]
+
+		queries = append(queries, query)
+	}
+
+	return queries
+}
+
+//"UPDATE public.orders SET user_id = 1 where id = 1"
+// UPDATE cars
+// SET color = 'red'
+// WHERE brand = 'Volvo';
+
+// UPDATE default.public.orders  SET order_id = 1 where id = 1;UPDATE default.public.orders  SET order_id = 2 where id = 2;

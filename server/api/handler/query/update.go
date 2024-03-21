@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/khodemobin/dbo/api/dto"
 	"github.com/khodemobin/dbo/api/response"
+	"github.com/khodemobin/dbo/app"
 	"github.com/khodemobin/dbo/helper"
 )
 
@@ -18,5 +19,11 @@ func (QueryHandler) Update(c *fiber.Ctx) error {
 	if errors != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
 	}
-	return c.JSON(response.Success(req))
+
+	updateQueryResult, err := app.Drivers().Pgsql.UpdateQuery(req)
+	if err != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(response.Error(err.Error()))
+	}
+
+	return c.JSON(response.Success(updateQueryResult))
 }
