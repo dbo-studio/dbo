@@ -21,4 +21,10 @@ func (r *Server) routing() {
 	database.Get("/metadata", r.databaseHandler.DatabaseMetaData)
 	database.Post("/", r.databaseHandler.AddDatabase)
 	database.Delete("/", r.databaseHandler.DeleteDatabase)
+
+	history := api.Group("histories")
+	history.Get("/", r.historyHandler.Histories)
+	history.Post("/", r.historyHandler.AddHistory)
+	history.Patch("/:id", r.historyHandler.UpdateHistory)
+	history.Delete("/:id", r.historyHandler.DeleteHistory)
 }

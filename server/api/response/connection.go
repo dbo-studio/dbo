@@ -35,7 +35,7 @@ type authDetails struct {
 }
 
 func Connections(connections []model.Connection) any {
-	var data []connectionsInfo
+	data := []connectionsInfo{}
 	for _, c := range connections {
 		data = append(data, connectionsInfo{
 			ID:       int64(c.ID),

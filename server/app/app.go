@@ -47,7 +47,7 @@ func New() {
 	}
 
 	db := db.New(config, logger).DB
-	err := db.AutoMigrate(&model.Connection{})
+	err := db.AutoMigrate(&model.Connection{}, &model.History{})
 	if err != nil {
 		logger.Fatal(err)
 	}
