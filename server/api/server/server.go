@@ -9,8 +9,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	connection_handler "github.com/khodemobin/dbo/api/handler/connection"
 	database_handler "github.com/khodemobin/dbo/api/handler/database"
-	history_handler "github.com/khodemobin/dbo/api/handler/history"
 	query_handler "github.com/khodemobin/dbo/api/handler/query"
+	saved_handler "github.com/khodemobin/dbo/api/handler/saved_query"
 	"github.com/khodemobin/dbo/app"
 )
 
@@ -19,7 +19,7 @@ type Server struct {
 	queryHandler      query_handler.QueryHandler
 	connectionHandler connection_handler.ConnectionHandler
 	databaseHandler   database_handler.DatabaseHandler
-	historyHandler    history_handler.HistoryHandler
+	savedQueryHandler saved_handler.SavedQueryHandler
 }
 
 func New(isLocal bool) *Server {
@@ -37,7 +37,7 @@ func New(isLocal bool) *Server {
 		queryHandler:      query_handler.QueryHandler{},
 		connectionHandler: connection_handler.ConnectionHandler{},
 		databaseHandler:   database_handler.DatabaseHandler{},
-		historyHandler:    history_handler.HistoryHandler{},
+		savedQueryHandler: saved_handler.SavedQueryHandler{},
 	}
 }
 

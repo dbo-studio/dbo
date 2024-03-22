@@ -1,4 +1,4 @@
-package history_handler
+package saved_handler
 
 import (
 	"github.com/gofiber/fiber/v2"
@@ -6,13 +6,13 @@ import (
 	"github.com/khodemobin/dbo/app"
 )
 
-func (h *HistoryHandler) DeleteHistory(c *fiber.Ctx) error {
-	history, err := h.FindHistory(c.Params("id"))
+func (h *SavedQueryHandler) DeleteSavedQuery(c *fiber.Ctx) error {
+	query, err := h.FindSavedQuery(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(err.Error())
 	}
 
-	app.DB().Delete(history)
+	app.DB().Delete(query)
 
 	return c.JSON(response.Success(""))
 }

@@ -21,9 +21,9 @@ func (r *Server) routing() {
 	database.Post("/", r.databaseHandler.AddDatabase)
 	database.Delete("/", r.databaseHandler.DeleteDatabase)
 
-	history := api.Group("histories")
-	history.Get("/", r.historyHandler.Histories)
-	history.Post("/", r.historyHandler.AddHistory)
-	history.Patch("/:id", r.historyHandler.UpdateHistory)
-	history.Delete("/:id", r.historyHandler.DeleteHistory)
+	history := api.Group("saved")
+	history.Get("/", r.savedQueryHandler.SavedQueries)
+	history.Post("/", r.savedQueryHandler.AddSavedQuery)
+	history.Patch("/:id", r.savedQueryHandler.UpdateSavedQuery)
+	history.Delete("/:id", r.savedQueryHandler.DeleteSavedQuery)
 }

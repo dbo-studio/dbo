@@ -1,4 +1,4 @@
-package history_handler
+package saved_handler
 
 import (
 	"github.com/gofiber/fiber/v2"
@@ -7,14 +7,14 @@ import (
 	"github.com/khodemobin/dbo/model"
 )
 
-func (h *HistoryHandler) Histories(c *fiber.Ctx) error {
-	var histories []model.History
+func (h *SavedQueryHandler) SavedQueries(c *fiber.Ctx) error {
+	var queries []model.SavedQuery
 
-	result := app.DB().Find(&histories)
+	result := app.DB().Find(&queries)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(result.Error.Error()))
 	}
 
-	return c.JSON(response.Success(response.Histories(histories)))
+	return c.JSON(response.Success(response.SavedQueries(queries)))
 }

@@ -1,6 +1,6 @@
 package dto
 
-type CreateHistoryDto struct {
+type CreateSavedQueryDto struct {
 	Name  *string `json:"name"`
 	Query string  `json:"query" validate:"required"`
 }

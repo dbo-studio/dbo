@@ -1,4 +1,4 @@
-package history_handler
+package saved_handler
 
 import (
 	"github.com/gofiber/fiber/v2"
@@ -9,8 +9,8 @@ import (
 	"github.com/khodemobin/dbo/model"
 )
 
-func (h *HistoryHandler) UpdateHistory(c *fiber.Ctx) error {
-	req := new(dto.CreateHistoryDto)
+func (h *SavedQueryHandler) UpdateSavedQuery(c *fiber.Ctx) error {
+	req := new(dto.CreateSavedQueryDto)
 
 	if err := c.BodyParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
@@ -21,27 +21,27 @@ func (h *HistoryHandler) UpdateHistory(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
 	}
 
-	history, err := h.FindHistory(c.Params("id"))
+	query, err := h.FindSavedQuery(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(err.Error())
 	}
 
-	updatedHistory, err := h.updateHistory(history, req)
+	updatedQuery, err := h.updateSavedQuery(query, req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
 	}
 
-	return c.JSON(response.Success(response.History(updatedHistory)))
+	return c.JSON(response.Success(response.SaveQuery(updatedQuery)))
 }
 
-func (h *HistoryHandler) updateHistory(history *model.History, req *dto.CreateHistoryDto) (*model.History, error) {
+func (h *SavedQueryHandler) updateSavedQuery(query *model.SavedQuery, req *dto.CreateSavedQueryDto) (*model.SavedQuery, error) {
 	if req.Name != nil && len(*req.Name) == 0 {
-		history.Name = req.Query[0:10]
+		query.Name = req.Query[0:10]
 	} else {
-		history.Name = helper.OptionalString(req.Name, history.Name)
+		query.Name = helper.OptionalString(req.Name, query.Name)
 	}
 
-	history.Query = req.Query
-	result := app.DB().Save(&history)
-	return history, result.Error
+	query.Query = req.Query
+	result := app.DB().Save(&query)
+	return query, result.Error
 }

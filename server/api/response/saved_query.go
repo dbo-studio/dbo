@@ -4,23 +4,23 @@ import (
 	"github.com/khodemobin/dbo/model"
 )
 
-type historyInfo struct {
+type savedQueryInfo struct {
 	ID    int64  `json:"id"`
 	Name  string `json:"name"`
 	Query string `json:"type"`
 }
 
-func Histories(histories []model.History) []historyInfo {
-	data := []historyInfo{}
+func SavedQueries(histories []model.SavedQuery) []savedQueryInfo {
+	data := []savedQueryInfo{}
 	for _, h := range histories {
-		data = append(data, History(&h))
+		data = append(data, SaveQuery(&h))
 	}
 
 	return data
 }
 
-func History(history *model.History) historyInfo {
-	return historyInfo{
+func SaveQuery(history *model.SavedQuery) savedQueryInfo {
+	return savedQueryInfo{
 		ID:    int64(history.ID),
 		Name:  history.Name,
 		Query: history.Query,

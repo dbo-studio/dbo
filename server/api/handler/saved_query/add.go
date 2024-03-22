@@ -1,4 +1,4 @@
-package history_handler
+package saved_handler
 
 import (
 	"github.com/gofiber/fiber/v2"
@@ -9,8 +9,8 @@ import (
 	"github.com/khodemobin/dbo/model"
 )
 
-func (h *HistoryHandler) AddHistory(c *fiber.Ctx) error {
-	req := new(dto.CreateHistoryDto)
+func (h *SavedQueryHandler) AddSavedQuery(c *fiber.Ctx) error {
+	req := new(dto.CreateSavedQueryDto)
 	if err := c.BodyParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
@@ -20,22 +20,22 @@ func (h *HistoryHandler) AddHistory(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
 	}
 
-	history, err := createHistory(req)
+	history, err := createSavedQuery(req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
 	}
 
-	return c.JSON(response.Success(response.History(history)))
+	return c.JSON(response.Success(response.SaveQuery(history)))
 }
 
-func createHistory(req *dto.CreateHistoryDto) (*model.History, error) {
-	var history model.History
+func createSavedQuery(req *dto.CreateSavedQueryDto) (*model.SavedQuery, error) {
+	var query model.SavedQuery
 	if req.Name == nil {
-		history.Name = req.Query[0:10]
+		query.Name = req.Query[0:10]
 	} else {
-		history.Name = *req.Name
+		query.Name = *req.Name
 	}
-	history.Query = req.Query
-	result := app.DB().Save(&history)
-	return &history, result.Error
+	query.Query = req.Query
+	result := app.DB().Save(&query)
+	return &query, result.Error
 }
