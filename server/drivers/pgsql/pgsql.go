@@ -110,14 +110,24 @@ type UpdateQueryResult struct {
 }
 
 func (p *PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryDto) (*UpdateQueryResult, error) {
-	// db, err := p.Connect(dto.ConnectionId)
-	// if err != nil {
-	// 	return nil, errors.New("Connection error: " + err.Error())
-	// }
+	db, err := p.Connect(dto.ConnectionId)
+	if err != nil {
+		return nil, errors.New("Connection error: " + err.Error())
+	}
 
 	queries := p.updateQueryGenerator(dto)
-
-	// result := db.Exec(query[0])
+	err = db.Transaction(func(tx *gorm.DB) error {
+		for _, query := range queries {
+			result := tx.Exec(query)
+			if result.Error != nil {
+				return result.Error
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
 
 	return &UpdateQueryResult{
 		Query:        queries,

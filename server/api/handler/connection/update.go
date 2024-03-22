@@ -28,12 +28,12 @@ func (h *ConnectionHandler) UpdateConnection(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(err.Error())
 	}
 
-	updatedConnection, err := updateConnection(connection, req)
+	updatedConnection, err := h.updateConnection(connection, req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
 	}
 
-	err = makeAllConnectionsNotDefault(connection, req)
+	err = h.makeAllConnectionsNotDefault(connection, req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
 	}
@@ -41,7 +41,7 @@ func (h *ConnectionHandler) UpdateConnection(c *fiber.Ctx) error {
 	return connectionDetail(c, updatedConnection)
 }
 
-func updateConnection(connection *model.Connection, req *dto.UpdateConnectionDto) (*model.Connection, error) {
+func (h *ConnectionHandler) updateConnection(connection *model.Connection, req *dto.UpdateConnectionDto) (*model.Connection, error) {
 	connection.Name = helper.OptionalString(req.Name, connection.Name)
 	connection.Host = helper.OptionalString(req.Host, connection.Host)
 	connection.Username = helper.OptionalString(req.Username, connection.Username)
@@ -66,7 +66,7 @@ func updateConnection(connection *model.Connection, req *dto.UpdateConnectionDto
 	return connection, result.Error
 }
 
-func makeAllConnectionsNotDefault(connection *model.Connection, req *dto.UpdateConnectionDto) error {
+func (h *ConnectionHandler) makeAllConnectionsNotDefault(connection *model.Connection, req *dto.UpdateConnectionDto) error {
 	if req.IsActive != nil && *req.IsActive == true {
 		result := app.DB().Model(&model.Connection{}).Not("id", connection.ID).Update("is_active", false)
 		return result.Error

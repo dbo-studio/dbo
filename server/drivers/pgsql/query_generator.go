@@ -71,15 +71,11 @@ func (p *PostgresQueryEngine) updateQueryGenerator(dto *dto.UpdateQueryDto) []st
 	queries := []string{}
 
 	for _, editedItem := range dto.EditedItems {
-		query := fmt.Sprintf("ALTER %s.%s.%s ", dto.Database, dto.Schema, dto.Table)
-		if len(dto.EditedItems) > 0 {
-			query += "SET "
-		}
-
 		if len(editedItem.Values) == 0 || len(editedItem.Conditions) == 0 {
 			continue
 		}
 
+		query := fmt.Sprintf("UPDATE %s.%s SET ", dto.Schema, dto.Table)
 		for key, value := range editedItem.Values {
 			query += fmt.Sprintf("%s = %v, ", key, value)
 		}
@@ -96,12 +92,16 @@ func (p *PostgresQueryEngine) updateQueryGenerator(dto *dto.UpdateQueryDto) []st
 		queries = append(queries, query)
 	}
 
+	for _, deletedItem := range dto.DeletedItems {
+		query := fmt.Sprintf("DELETE FROM %s.%s WHERE ", dto.Schema, dto.Table)
+		for key, value := range deletedItem {
+			query += fmt.Sprintf("%s = %v AND ", key, value)
+		}
+
+		query = query[:len(query)-5]
+
+		queries = append(queries, query)
+	}
+
 	return queries
 }
-
-//"UPDATE public.orders SET user_id = 1 where id = 1"
-// UPDATE cars
-// SET color = 'red'
-// WHERE brand = 'Volvo';
-
-// UPDATE default.public.orders  SET order_id = 1 where id = 1;UPDATE default.public.orders  SET order_id = 2 where id = 2;

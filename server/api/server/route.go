@@ -7,7 +7,6 @@ func (r *Server) routing() {
 	query.Post("/run", r.queryHandler.Run)
 	query.Post("/raw", r.queryHandler.Raw)
 	query.Post("/update", r.queryHandler.Update)
-	query.Post("/delete", r.queryHandler.Delete)
 
 	connection := api.Group("connections")
 	connection.Get("/:id", r.connectionHandler.Connection)

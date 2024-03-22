@@ -22,7 +22,7 @@ type UpdateQueryDto struct {
 	Schema       string           `json:"schema" validate:"required"`
 	Database     string           `json:"database" validate:"required"`
 	EditedItems  []EditedItem     `json:"edited" validate:"dive"`
-	DeletedItems []map[string]any `json:"deleted" validate:"required"`
+	DeletedItems []map[string]any `json:"deleted"`
 }
 
 type EditedItem struct {
