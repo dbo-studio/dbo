@@ -75,9 +75,12 @@ func (p *PostgresQueryEngine) updateQueryGenerator(dto *dto.UpdateQueryDto) []st
 			continue
 		}
 
-		query := fmt.Sprintf("UPDATE %s.%s SET ", dto.Schema, dto.Table)
+		query := fmt.Sprintf(`UPDATE "%s"."%s" SET `, dto.Schema, dto.Table)
 		for key, value := range editedItem.Values {
-			query += fmt.Sprintf("%s = %v, ", key, value)
+			if key == "dbo_index" {
+				continue
+			}
+			query += fmt.Sprintf(`"%s" = '%v', `, key, value)
 		}
 
 		query = query[:len(query)-2]
@@ -95,6 +98,9 @@ func (p *PostgresQueryEngine) updateQueryGenerator(dto *dto.UpdateQueryDto) []st
 	for _, deletedItem := range dto.DeletedItems {
 		query := fmt.Sprintf("DELETE FROM %s.%s WHERE ", dto.Schema, dto.Table)
 		for key, value := range deletedItem {
+			if key == "dbo_index" {
+				continue
+			}
 			query += fmt.Sprintf("%s = %v AND ", key, value)
 		}
 

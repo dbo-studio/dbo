@@ -37,7 +37,7 @@ export enum TabMode {
 
 export type EditedRow = {
   dboIndex: number;
-  id: number | undefined;
+  conditions: object;
   old: RowType;
   new: RowType;
 };

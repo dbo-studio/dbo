@@ -1,5 +1,6 @@
 import api from '@/src/api';
 import useAPI from '@/src/hooks/useApi.hook';
+import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
 import { useDataStore } from '@/src/store/dataStore/data.store';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { TabMode } from '@/src/types';
@@ -12,22 +13,40 @@ export default function StatusBarActions() {
   const {
     addEmptyRow,
     getEditedRows,
+    getRemovedRows,
     getSelectedRows,
-    updateRemovedRows,
+    applyRemovedRows,
     updateEditedRows,
+    updateRemovedRows,
+    restoreEditedRows,
     discardUnsavedRows,
     updateSelectedRows
   } = useDataStore();
+
+  const { currentConnection } = useConnectionStore();
 
   const { request: updateQuery, pending: updateQueryPending } = useAPI({
     apiMethod: api.query.updateQuery
   });
 
   const handleSave = async () => {
-    if (getEditedRows().length == 0) {
+    if (!selectedTab || !currentConnection || (getEditedRows().length == 0 && getRemovedRows().length == 0)) {
       return;
     }
-    await updateQuery(getEditedRows());
+    try {
+      await updateQuery({
+        connection_id: currentConnection.id,
+        schema: currentConnection.currentSchema,
+        database: currentConnection.currentDatabase,
+        table: selectedTab?.table,
+        edited: getEditedRows(),
+        removed: getRemovedRows()
+      });
+      updateEditedRows([]);
+      applyRemovedRows();
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const handleAddAction = () => {
@@ -45,7 +64,7 @@ export default function StatusBarActions() {
   const handleDiscardChanges = () => {
     if (selectedTab?.mode == TabMode.Data) {
       updateRemovedRows([]);
-      updateEditedRows([]);
+      restoreEditedRows();
       discardUnsavedRows();
       updateSelectedRows([]);
     }

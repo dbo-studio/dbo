@@ -120,13 +120,13 @@ func (p *PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryDto) (*UpdateQuery
 		for _, query := range queries {
 			result := tx.Exec(query)
 			if result.Error != nil {
-				return result.Error
+				return errors.New("Error on " + query + " " + result.Error.Error())
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return nil, err
 	}
 
 	return &UpdateQueryResult{

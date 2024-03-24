@@ -1,12 +1,14 @@
 import { EditedRow } from '@/src/types';
 import { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
-import { DataEditedRowsSlice, DataStore } from '../types';
+import { DataEditedRowsSlice, DataRowSlice, DataStore } from '../types';
 
-export const createDataEditedRowsSlice: StateCreator<DataStore & DataEditedRowsSlice, [], [], DataEditedRowsSlice> = (
-  set,
-  get
-) => ({
+export const createDataEditedRowsSlice: StateCreator<
+  DataStore & DataEditedRowsSlice & DataRowSlice,
+  [],
+  [],
+  DataEditedRowsSlice
+> = (set, get) => ({
   editedRows: {},
   getEditedRows: (): EditedRow[] => {
     const selectedTab = useTabStore.getState().selectedTab;
@@ -24,5 +26,25 @@ export const createDataEditedRowsSlice: StateCreator<DataStore & DataEditedRowsS
     const rows = get().editedRows;
     rows[selectedTab.id] = editedRows;
     set({ editedRows: rows });
+  },
+  restoreEditedRows: async (): Promise<void> => {
+    const selectedTab = useTabStore.getState().selectedTab;
+    if (!selectedTab) {
+      return;
+    }
+
+    const newRows = get().getEditedRows();
+    const oldRows = get().getRows();
+
+    newRows.forEach((newRow: EditedRow) => {
+      const findValueIndex = oldRows.findIndex((x) => x.dbo_index == newRow.dboIndex);
+      oldRows[findValueIndex] = {
+        ...oldRows[newRow.dboIndex],
+        ...newRow.old
+      };
+    });
+
+    get().updateRows(oldRows);
+    get().updateEditedRows([]);
   }
 });

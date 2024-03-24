@@ -1,4 +1,4 @@
-import { ColumnType, FilterType, SortType } from '@/src/types';
+import { ColumnType, EditedRow, FilterType, RowType, SortType } from '@/src/types';
 
 export type RunQueryType = {
   connection_id: number;
@@ -20,4 +20,13 @@ export type RunQueryResponseType = {
   query: string;
   data: any[];
   structures: ColumnType[];
+};
+
+export type UpdateQueryType = {
+  connection_id: number;
+  schema: string;
+  database: string;
+  table: string;
+  edited: EditedRow[];
+  removed: RowType[];
 };

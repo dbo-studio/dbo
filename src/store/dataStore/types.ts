@@ -32,12 +32,14 @@ export type DataEditedRowsSlice = {
   editedRows: DataEditedRowsType;
   getEditedRows(): EditedRow[];
   updateEditedRows: (rows: EditedRow[]) => void;
+  restoreEditedRows: () => Promise<void>;
 };
 
 export type DataRemovedRowsSlice = {
   removedRows: DataRemovedRowsType;
   getRemovedRows(): RowType[];
   updateRemovedRows(rowsIndex: number[]): void;
+  applyRemovedRows(): void; // this function will remove RemovedRows from table rows
 };
 
 export type DataUnsavedRowsSlice = {

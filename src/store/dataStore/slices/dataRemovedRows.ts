@@ -28,8 +28,28 @@ export const createDataRemovedRowsSlice: StateCreator<
       .filter((r: RowType) => rows.includes(r.dbo_index));
 
     const removedRows = get().removedRows;
-    removedRows[selectedTab.id] = selectedRows;
+
+    removedRows[selectedTab.id] = selectedRows.map(function (row) {
+      if (Object.prototype.hasOwnProperty.call(row, 'id')) {
+        return {
+          id: row.id,
+          dbo_index: row.dbo_index
+        };
+      }
+
+      return row;
+    });
 
     set({ removedRows });
+  },
+  applyRemovedRows: (): void => {
+    const removedRows = get().getRemovedRows();
+    const rows = get()
+      .getRows()
+      .filter((row) => {
+        return !removedRows.some((v) => v.dbo_index == row.dbo_index);
+      });
+
+    get().updateRows(rows);
   }
 });

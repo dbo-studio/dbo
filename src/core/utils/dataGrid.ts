@@ -39,32 +39,43 @@ export const formatServerColumns = (serverColumns: ColumnType[]): any => {
 };
 
 export const handelRowChangeLog = (editedRows: EditedRow[], oldValue: RowType, newValue: RowType): EditedRow[] => {
-  const findValueIndex = editedRows.findIndex((x) => x.dboIndex == newValue.dbo_index);
+  const dboIndex = oldValue.dbo_index;
+
+  //check if edited value exists in editedRows just update this values
+  const findValueIndex = editedRows.findIndex((x) => x.dboIndex == dboIndex);
   const findValue = editedRows[findValueIndex];
+
+  //the old value and new value always contain one diff key so we pick first item
   const diff = updatedDiff(oldValue, newValue);
   const diffKey = Object.keys(diff)[0];
-  let o: RowType = {};
-  let n: RowType = {};
+
+  const oldObject: RowType = findValue ? findValue.old : {};
+  const newObject: RowType = findValue ? findValue.new : {};
+  oldObject[diffKey] = oldValue[diffKey];
+  newObject[diffKey] = newValue[diffKey];
+
+  let conditions: object = {};
+  if (Object.prototype.hasOwnProperty.call(oldValue, 'id')) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
+    conditions['id'] = oldValue.id;
+  } else {
+    conditions = oldValue;
+  }
 
   if (!findValue) {
-    o[diffKey] = oldValue[diffKey];
-    n[diffKey] = newValue[diffKey];
     editedRows.push({
-      dboIndex: newValue.dbo_index,
-      id: n.id,
-      old: o,
-      new: n
+      dboIndex: dboIndex,
+      conditions: conditions,
+      old: oldObject,
+      new: newObject
     });
   } else {
-    o = findValue.old;
-    n = findValue.new;
-    o[diffKey] = oldValue[diffKey];
-    n[diffKey] = newValue[diffKey];
     editedRows[findValueIndex] = {
-      dboIndex: newValue.dbo_index,
-      id: n.id,
-      old: o,
-      new: n
+      dboIndex: dboIndex,
+      conditions: conditions,
+      old: oldObject,
+      new: newObject
     };
   }
 
