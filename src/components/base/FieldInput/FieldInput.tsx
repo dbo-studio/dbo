@@ -39,6 +39,8 @@ export default forwardRef(function FieldInput(props: FieldInputProps, ref) {
         fullWidth={props.fullWidth}
         type={props.type}
         value={value}
+        name={props.name}
+        autoComplete='off'
         onChange={handleOnChange}
         sx={{
           borderColor: props.error ? theme.palette.error.light : theme.palette.divider,

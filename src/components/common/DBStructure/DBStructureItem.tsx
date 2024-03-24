@@ -12,10 +12,10 @@ export default function DBStructureItem({ item }: { item: ColumnType }) {
   return (
     <TableRow sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
       <TableCell component='th' scope='row'>
-        <FieldInput size='small' value={item.name} type='string' />
+        <FieldInput name='name' size='small' value={item.name} type='string' />
       </TableCell>
       <TableCell align='left'>
-        <SelectInput size='small'>
+        <SelectInput name='type' size='small'>
           {types.map((t: string) => (
             <SelectOption value={t} key={uuidv4()}>
               {t}
@@ -24,16 +24,16 @@ export default function DBStructureItem({ item }: { item: ColumnType }) {
         </SelectInput>
       </TableCell>
       <TableCell align='left'>
-        <FieldInput value={item.default} size='small' type='string' />
+        <FieldInput name='default' value={item.default} size='small' type='string' />
       </TableCell>
       <TableCell align='left'>
-        <FieldInput value={item.length} size='small' type='string' />
+        <FieldInput name='length' value={item.length} size='small' type='string' />
       </TableCell>
       <TableCell align='left'>
-        <Checkbox checked={item.notNull} size='small' />
+        <Checkbox name='not_null' checked={item.notNull} size='small' />
       </TableCell>
       <TableCell align='left'>
-        <FieldInput value={item.comment} size='small' type='string' />
+        <FieldInput name='comment' value={item.comment} size='small' type='string' />
       </TableCell>
     </TableRow>
   );

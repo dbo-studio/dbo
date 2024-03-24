@@ -1,16 +1,22 @@
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { TabMode, TabType } from '@/src/types';
 import { Box } from '@mui/material';
+import dynamic from 'next/dynamic';
 import ActionBar from '../ActionBar/ActionBar';
 import Columns from '../Columns/Columns';
 import DBDataGrid from '../DBDataGrid/DBDataGrid';
-import DBStructure from '../DBStructure/DBStructure';
+import { DBStructureStyled } from '../DBStructure/DBStructure.styled';
 import Filters from '../Filters/Filters';
 import QueryEditor from '../QueryEditor/QueryEditor';
 import QueryEditorActionBar from '../QueryEditorActionBar/QueryEditorActionBar';
 import QueryPreview from '../QueryPreview/QueryPreview';
 import Sorts from '../Sorts/Sorts';
 import StatusBar from '../StatusBar/StatusBar';
+
+const DBStructure = dynamic(() => import('../DBStructure/DBStructure'), {
+  ssr: false,
+  loading: () => <DBStructureStyled />
+});
 
 export default function TabPanel() {
   const { selectedTab } = useTabStore();
