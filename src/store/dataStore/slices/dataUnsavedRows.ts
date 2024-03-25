@@ -1,10 +1,11 @@
+import { createEmptyRow } from '@/src/core/utils';
 import { RowType } from '@/src/types';
+import { pullAt } from 'lodash';
 import { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
-import { DataStore, DataUnsavedRowsSlice } from '../types';
-
+import { DataColumnSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
 export const createDataUnsavedRowsSlice: StateCreator<
-  DataStore & DataUnsavedRowsSlice,
+  DataStore & DataUnsavedRowsSlice & DataRowSlice & DataColumnSlice,
   [],
   [],
   DataUnsavedRowsSlice
@@ -18,27 +19,39 @@ export const createDataUnsavedRowsSlice: StateCreator<
     }
     return rows[selectedTab.id];
   },
-  updateUnsavedRows: (row: RowType): void => {
+  addUnsavedRows: (): void => {
+    // create an empty row
+    const rows = get().getRows();
+    const columns = get().getColumns();
+    const newRow: RowType = createEmptyRow(columns);
+    newRow.dbo_index = rows.length == 0 ? 0 : rows[rows.length - 1].dbo_index + 1;
+    rows.push(newRow);
+    get().updateRows(rows);
+
+    //save empty row to unSavedRows
+    const unSavedRows = get().getUnsavedRows();
+    unSavedRows.push(newRow);
+    get().updateUnsavedRows(unSavedRows);
+  },
+  updateUnsavedRows: (unSavedRows: RowType[]): void => {
     const selectedTab = useTabStore.getState().selectedTab;
-    const unSavedRows = get().unSavedRows;
     if (!selectedTab) {
       return;
     }
-    if (!Object.prototype.hasOwnProperty.call(unSavedRows, selectedTab.id)) {
-      unSavedRows[selectedTab.id] = [row];
-    } else {
-      unSavedRows[selectedTab.id].push(row);
-    }
-
-    set({ unSavedRows });
+    const rows = get().unSavedRows;
+    rows[selectedTab.id] = unSavedRows;
+    set({ unSavedRows: rows });
   },
   discardUnsavedRows: (): void => {
-    const selectedTab = useTabStore.getState().selectedTab;
-    const unSavedRows = get().unSavedRows;
-    if (!selectedTab) {
-      return;
-    }
-    unSavedRows[selectedTab.id] = [];
-    set({ unSavedRows });
+    const unSavedRows = get().getUnsavedRows();
+    const oldRows = get().getRows();
+
+    unSavedRows.forEach((unSavedRow: RowType) => {
+      const findValueIndex = oldRows.findIndex((x) => x.dbo_index == unSavedRow.dbo_index);
+      pullAt(oldRows, [findValueIndex]);
+    });
+
+    get().updateRows(oldRows);
+    get().updateUnsavedRows([]);
   }
 });

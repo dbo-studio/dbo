@@ -1,4 +1,3 @@
-import { createEmptyRow } from '@/src/core/utils';
 import { RowType } from '@/src/types';
 import { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
@@ -28,20 +27,6 @@ export const createDataRowSlice: StateCreator<
     const rows = get().rows;
     rows[selectedTab.id] = items;
 
-    set({ rows });
-  },
-  addEmptyRow: (): void => {
-    const rows = get().rows;
-    const columns = get().getColumns();
-    const selectedTab = useTabStore.getState().selectedTab;
-    if (!selectedTab) {
-      return;
-    }
-    const newRow: RowType = createEmptyRow(columns);
-    newRow.dbo_index = rows[selectedTab.id][rows[selectedTab.id].length - 1]!.dbo_index + 1;
-    rows[selectedTab.id].push(newRow);
-
-    get().updateUnsavedRows(newRow);
     set({ rows });
   }
 });
