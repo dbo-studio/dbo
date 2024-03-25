@@ -95,16 +95,60 @@ func (p *PostgresQueryEngine) updateQueryGenerator(dto *dto.UpdateQueryDto) []st
 		queries = append(queries, query)
 	}
 
+	return queries
+}
+
+func (p *PostgresQueryEngine) deleteQueryGenerator(dto *dto.UpdateQueryDto) []string {
+	queries := []string{}
+
 	for _, deletedItem := range dto.DeletedItems {
-		query := fmt.Sprintf("DELETE FROM %s.%s WHERE ", dto.Schema, dto.Table)
+		if len(deletedItem) == 0 {
+			continue
+		}
+		query := fmt.Sprintf(`DELETE FROM "%s"."%s" WHERE `, dto.Schema, dto.Table)
 		for key, value := range deletedItem {
 			if key == "dbo_index" {
 				continue
 			}
-			query += fmt.Sprintf("%s = %v AND ", key, value)
+			query += fmt.Sprintf(`"%s" = '%v' AND `, key, value)
 		}
 
 		query = query[:len(query)-5]
+
+		queries = append(queries, query)
+	}
+
+	return queries
+}
+
+func (p *PostgresQueryEngine) insertQueryGenerator(dto *dto.UpdateQueryDto) []string {
+	queries := []string{}
+
+	for _, addedItem := range dto.AddedItems {
+		if len(addedItem) == 0 {
+			continue
+		}
+
+		query := fmt.Sprintf(`INSERT INTO "%s"."%s" (`, dto.Schema, dto.Table)
+		for key := range addedItem {
+			if key == "dbo_index" {
+				continue
+			}
+
+			query += fmt.Sprintf(`'%s', `, key)
+		}
+
+		query = query[:len(query)-2] + ") VALUES"
+
+		for key, value := range addedItem {
+			if key == "dbo_index" {
+				continue
+			}
+
+			query += fmt.Sprintf(`'%s', `, key)
+		}
+
+		query = query[:len(query)-2] + ")"
 
 		queries = append(queries, query)
 	}

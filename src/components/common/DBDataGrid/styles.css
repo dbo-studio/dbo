@@ -167,6 +167,7 @@
     grid-row-start: var(--rdg-grid-row-start);
     background-color: inherit;
     min-height: 30px;
+    max-height: 30px;
 
     white-space: nowrap;
     overflow: clip;

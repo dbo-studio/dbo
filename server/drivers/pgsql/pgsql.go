@@ -116,6 +116,9 @@ func (p *PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryDto) (*UpdateQuery
 	}
 
 	queries := p.updateQueryGenerator(dto)
+	queries = append(queries, p.insertQueryGenerator(dto)...)
+	queries = append(queries, p.deleteQueryGenerator(dto)...)
+
 	err = db.Transaction(func(tx *gorm.DB) error {
 		for _, query := range queries {
 			result := tx.Exec(query)

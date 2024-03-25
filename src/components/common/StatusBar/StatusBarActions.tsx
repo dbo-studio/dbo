@@ -11,7 +11,7 @@ import LoadingIconButton from '../../base/LoadingIconButton/LoadingIconButton';
 export default function StatusBarActions() {
   const { selectedTab } = useTabStore();
   const {
-    addEmptyRow,
+    addUnsavedRows,
     getEditedRows,
     getRemovedRows,
     getSelectedRows,
@@ -20,7 +20,8 @@ export default function StatusBarActions() {
     updateRemovedRows,
     restoreEditedRows,
     discardUnsavedRows,
-    updateSelectedRows
+    updateSelectedRows,
+    runQuery
   } = useDataStore();
 
   const { currentConnection } = useConnectionStore();
@@ -51,7 +52,7 @@ export default function StatusBarActions() {
 
   const handleAddAction = () => {
     if (selectedTab?.mode == TabMode.Data) {
-      addEmptyRow();
+      addUnsavedRows();
     }
   };
 
@@ -67,6 +68,12 @@ export default function StatusBarActions() {
       restoreEditedRows();
       discardUnsavedRows();
       updateSelectedRows([]);
+    }
+  };
+
+  const handleRefresh = () => {
+    if (selectedTab?.mode == TabMode.Data) {
+      runQuery();
     }
   };
 
@@ -94,13 +101,13 @@ export default function StatusBarActions() {
         </IconButton>
       </Box>
       <Box>
-        <IconButton>
+        <IconButton onClick={handleRefresh}>
           <CustomIcon type='refresh' size='s' />
         </IconButton>
 
-        <IconButton>
+        {/* <IconButton>
           <CustomIcon type='stop' size='s' />
-        </IconButton>
+        </IconButton> */}
       </Box>
     </Stack>
   );
