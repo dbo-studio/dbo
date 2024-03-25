@@ -7,7 +7,6 @@ export type DataRowSlice = {
   rows: DataRowsType;
   getRows(): RowType[];
   updateRows: (items: RowType[]) => Promise<void>;
-  addEmptyRow: () => void;
 };
 
 export type DataHightedRowSlice = {
@@ -45,11 +44,13 @@ export type DataRemovedRowsSlice = {
 export type DataUnsavedRowsSlice = {
   unSavedRows: DataRowsType;
   getUnsavedRows(): RowType[];
-  updateUnsavedRows(row: RowType): void;
+  addUnsavedRows(): void;
+  updateUnsavedRows(unSavedRows: RowType[]): void;
   discardUnsavedRows(): void;
 };
 
 export type DataQuerySlice = {
+  loading: boolean;
   runQuery: () => Promise<void>;
   runRawQuery: () => Promise<void>;
 };

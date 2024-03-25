@@ -3,14 +3,14 @@ import { useDataStore } from '@/src/store/dataStore/data.store';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { TabMode } from '@/src/types';
 import { Box, Checkbox, CircularProgress } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import DataGrid, { RenderCheckboxProps, RowsChangeData } from 'react-data-grid';
 import './styles.css';
 
 export default function DBDataGrid() {
-  const [isLoading, setIsLoading] = useState(false);
   const { selectedTab } = useTabStore();
   const {
+    loading,
     updateRows,
     updateHightedRow,
     getRows,
@@ -25,9 +25,7 @@ export default function DBDataGrid() {
   } = useDataStore();
 
   const getData = async () => {
-    setIsLoading(true);
     await runQuery();
-    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -44,14 +42,14 @@ export default function DBDataGrid() {
   };
 
   const handleRowsChange = (rows: any[], data: RowsChangeData<any, unknown>) => {
-    const oldRow = getRows()[data.indexes[0]];
+    const oldRow: any = getRows()[data.indexes[0]];
     const newRow = rows[data.indexes[0]];
     const editedRows = handelRowChangeLog(getEditedRows(), oldRow, newRow);
     updateEditedRows(editedRows);
     updateRows(rows);
   };
 
-  return isLoading ? (
+  return loading ? (
     <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
       <CircularProgress size={30} />
     </Box>

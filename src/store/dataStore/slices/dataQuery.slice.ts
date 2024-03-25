@@ -10,7 +10,9 @@ export const createDataQuerySlice: StateCreator<
   [],
   DataQuerySlice
 > = (set, get) => ({
+  loading: false,
   runQuery: async () => {
+    set({ loading: true });
     const currentConnection = useConnectionStore.getState().currentConnection;
     const selectedTab = useTabStore.getState().selectedTab;
     if (!selectedTab || !currentConnection) {
@@ -43,9 +45,12 @@ export const createDataQuerySlice: StateCreator<
       Promise.all([get().updateRows(res.data), get().updateColumns(res.structures)]);
     } catch (error) {
       console.log('🚀 ~ runQuery: ~ error:', error);
+    } finally {
+      set({ loading: false });
     }
   },
   runRawQuery: async () => {
+    set({ loading: true });
     const currentConnection = useConnectionStore.getState().currentConnection;
     const selectedTab = useTabStore.getState().selectedTab;
     if (!selectedTab || !currentConnection) {
@@ -62,6 +67,8 @@ export const createDataQuerySlice: StateCreator<
       Promise.all([get().updateRows(res.data), get().updateColumns(res.structures)]);
     } catch (error) {
       console.log('🚀 ~ runQuery: ~ error:', error);
+    } finally {
+      set({ loading: false });
     }
   }
 });
