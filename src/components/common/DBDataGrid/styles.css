@@ -134,17 +134,17 @@
 
     .edit-highlight{
       .rdg-cell {
-          background-color: #FFE16A; 
+          background-color: #fff8da; 
         }
     }
     .unsaved-highlight{
       .rdg-cell {
-          background-color: gray; 
+          background-color: #DFE3E8; 
         }
     }
     .removed-highlight{
       .rdg-cell {
-          background-color: red; 
+          background-color: #ffebeb; 
         }
     }
   }

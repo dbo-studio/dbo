@@ -1,6 +1,6 @@
 import { createEmptyRow } from '@/src/core/utils';
 import { RowType } from '@/src/types';
-import { concat, pullAt } from 'lodash';
+import { pullAt } from 'lodash';
 import { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
 import { DataColumnSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
@@ -51,9 +51,12 @@ export const createDataUnsavedRowsSlice: StateCreator<
     set({ unSavedRows: rows });
   },
   discardUnsavedRows: (rows?: RowType[]): void => {
-    const unSavedRows = concat(rows ?? [], get().getUnsavedRows());
-    const oldRows = get().getRows();
+    const unSavedRows = rows ? rows : get().getUnsavedRows();
+    if (unSavedRows.length == 0) {
+      return;
+    }
 
+    const oldRows = get().getRows();
     unSavedRows.forEach((unSavedRow: RowType) => {
       const findValueIndex = oldRows.findIndex((x) => x.dbo_index == unSavedRow.dbo_index);
       pullAt(oldRows, [findValueIndex]);
