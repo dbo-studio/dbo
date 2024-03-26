@@ -87,7 +87,7 @@ func (p *PostgresQueryEngine) updateQueryGenerator(dto *dto.UpdateQueryDto) []st
 
 		query += " WHERE "
 		for key, value := range editedItem.Conditions {
-			query += fmt.Sprintf("%s = %v AND ", key, value)
+			query += fmt.Sprintf("%s = '%v' AND ", key, value)
 		}
 
 		query = query[:len(query)-5]
@@ -135,17 +135,16 @@ func (p *PostgresQueryEngine) insertQueryGenerator(dto *dto.UpdateQueryDto) []st
 				continue
 			}
 
-			query += fmt.Sprintf(`'%s', `, key)
+			query += fmt.Sprintf(`%s, `, key)
 		}
 
-		query = query[:len(query)-2] + ") VALUES"
+		query = query[:len(query)-2] + ") VALUES ("
 
 		for key, value := range addedItem {
 			if key == "dbo_index" {
 				continue
 			}
-
-			query += fmt.Sprintf(`'%s', `, key)
+			query += fmt.Sprintf(`'%v', `, value)
 		}
 
 		query = query[:len(query)-2] + ")"

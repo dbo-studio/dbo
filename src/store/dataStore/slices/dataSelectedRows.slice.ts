@@ -1,3 +1,4 @@
+import { pullAllBy } from 'lodash';
 import { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
 import { DataSelectedRowsSlice, DataStore } from '../types';
@@ -26,6 +27,17 @@ export const createDataSelectedRowsSlice: StateCreator<
 
     const rows = get().selectedRows;
     rows[selectedTab.id] = Array.from(selectedRows);
+
+    set({ selectedRows: rows });
+  },
+  removeSelectedRows: (selectedRowsIndex: number[]): void => {
+    const selectedTab = useTabStore.getState().selectedTab;
+    if (!selectedTab) {
+      return;
+    }
+
+    const rows = get().selectedRows;
+    rows[selectedTab.id] = pullAllBy(rows[selectedTab.id], selectedRowsIndex);
 
     set({ selectedRows: rows });
   }

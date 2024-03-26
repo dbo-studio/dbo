@@ -1,10 +1,10 @@
 import { RowType } from '@/src/types';
 import { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
-import { DataRemovedRowsSlice, DataRowSlice, DataStore } from '../types';
+import { DataRemovedRowsSlice, DataRowSlice, DataSelectedRowsSlice, DataStore, DataUnsavedRowsSlice } from '../types';
 
 export const createDataRemovedRowsSlice: StateCreator<
-  DataStore & DataRemovedRowsSlice & DataRowSlice,
+  DataStore & DataRemovedRowsSlice & DataRowSlice & DataUnsavedRowsSlice & DataSelectedRowsSlice,
   [],
   [],
   DataRemovedRowsSlice
@@ -18,38 +18,39 @@ export const createDataRemovedRowsSlice: StateCreator<
     }
     return rows[selectedTab.id];
   },
-  updateRemovedRows: (rows: RowType[]) => {
+  updateRemovedRows: (rowsIndex: number[]) => {
     const selectedTab = useTabStore.getState().selectedTab;
     if (!selectedTab) {
       return;
     }
-    const selectedRows = get()
-      .getRows()
-      .filter((r: RowType) => rows.includes(r.dbo_index));
 
-    const removedRows = get().removedRows;
-
-    removedRows[selectedTab.id] = selectedRows.map(function (row) {
-      if (Object.prototype.hasOwnProperty.call(row, 'id')) {
-        return {
-          id: row.id,
-          dbo_index: row.dbo_index
-        };
-      }
-
-      return row;
-    });
-
-    set({ removedRows });
-  },
-  applyRemovedRows: (): void => {
-    const removedRows = get().getRemovedRows();
     const rows = get()
       .getRows()
-      .filter((row) => {
-        return !removedRows.some((v) => v.dbo_index == row.dbo_index);
-      });
+      .filter((r: RowType) => rowsIndex.includes(r.dbo_index));
 
-    get().updateRows(rows);
+    //unsaved items will remove immediately if selected and should not store in removed rows list
+    const unsavedRows = get()
+      .getUnsavedRows()
+      .filter((r) => rowsIndex.includes(r.dbo_index));
+    const unsavedRowsId = unsavedRows.map((r) => r.dbo_index);
+
+    const removedRows = get().removedRows;
+    removedRows[selectedTab.id] = rows
+      .map(function (row) {
+        // for deleting a row from db we referenced to row's id and if it doesn't exists to all fields
+        if (Object.prototype.hasOwnProperty.call(row, 'id')) {
+          return {
+            id: row.id,
+            dbo_index: row.dbo_index
+          };
+        }
+
+        return row;
+      })
+      .filter((r) => !unsavedRowsId.includes(r.dbo_index));
+
+    set({ removedRows });
+    get().discardUnsavedRows(unsavedRows);
+    get().removeSelectedRows(unsavedRowsId);
   }
 });

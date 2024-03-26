@@ -29,4 +29,5 @@ export type UpdateQueryType = {
   table: string;
   edited: EditedRow[];
   removed: RowType[];
+  added: RowType[];
 };

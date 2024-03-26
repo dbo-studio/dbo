@@ -19,6 +19,7 @@ export type DataSelectedRowsSlice = {
   selectedRows: DataSelectedRowType; // when check a row in data grid
   getSelectedRows: any;
   updateSelectedRows(selectedRows: any): void;
+  removeSelectedRows(selectedRowIndex: number[]): void;
 };
 
 export type DataColumnSlice = {
@@ -38,15 +39,14 @@ export type DataRemovedRowsSlice = {
   removedRows: DataRemovedRowsType;
   getRemovedRows(): RowType[];
   updateRemovedRows(rowsIndex: number[]): void;
-  applyRemovedRows(): void; // this function will remove RemovedRows from table rows
 };
 
 export type DataUnsavedRowsSlice = {
   unSavedRows: DataRowsType;
   getUnsavedRows(): RowType[];
-  addUnsavedRows(): void;
+  addUnsavedRows(newRow?: RowType): void;
   updateUnsavedRows(unSavedRows: RowType[]): void;
-  discardUnsavedRows(): void;
+  discardUnsavedRows(rows?: RowType[]): void;
 };
 
 export type DataQuerySlice = {

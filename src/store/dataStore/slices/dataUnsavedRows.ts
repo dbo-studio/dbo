@@ -1,6 +1,6 @@
 import { createEmptyRow } from '@/src/core/utils';
 import { RowType } from '@/src/types';
-import { pullAt } from 'lodash';
+import { concat, pullAt } from 'lodash';
 import { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
 import { DataColumnSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
@@ -19,18 +19,26 @@ export const createDataUnsavedRowsSlice: StateCreator<
     }
     return rows[selectedTab.id];
   },
-  addUnsavedRows: (): void => {
-    // create an empty row
-    const rows = get().getRows();
-    const columns = get().getColumns();
-    const newRow: RowType = createEmptyRow(columns);
-    newRow.dbo_index = rows.length == 0 ? 0 : rows[rows.length - 1].dbo_index + 1;
-    rows.push(newRow);
-    get().updateRows(rows);
-
-    //save empty row to unSavedRows
+  addUnsavedRows: (newRow?: RowType): void => {
     const unSavedRows = get().getUnsavedRows();
-    unSavedRows.push(newRow);
+    if (!newRow) {
+      // create an empty row
+      const rows = get().getRows();
+      const columns = get().getColumns();
+      newRow = createEmptyRow(columns);
+      newRow.dbo_index = rows.length == 0 ? 0 : rows[rows.length - 1].dbo_index + 1;
+      rows.push(newRow);
+      get().updateRows(rows);
+      //save empty row to unSavedRows
+      unSavedRows.push(newRow);
+    } else {
+      const findValueIndex = unSavedRows.findIndex((x) => x.dbo_index == newRow.dbo_index);
+      if (findValueIndex == -1) {
+        unSavedRows.push(newRow);
+      } else {
+        unSavedRows[findValueIndex] = newRow;
+      }
+    }
     get().updateUnsavedRows(unSavedRows);
   },
   updateUnsavedRows: (unSavedRows: RowType[]): void => {
@@ -42,8 +50,8 @@ export const createDataUnsavedRowsSlice: StateCreator<
     rows[selectedTab.id] = unSavedRows;
     set({ unSavedRows: rows });
   },
-  discardUnsavedRows: (): void => {
-    const unSavedRows = get().getUnsavedRows();
+  discardUnsavedRows: (rows?: RowType[]): void => {
+    const unSavedRows = concat(rows ?? [], get().getUnsavedRows());
     const oldRows = get().getRows();
 
     unSavedRows.forEach((unSavedRow: RowType) => {

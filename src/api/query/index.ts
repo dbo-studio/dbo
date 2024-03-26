@@ -20,13 +20,15 @@ export const updateQuery = (data: UpdateQueryType) => {
     database: string;
     edited: object[];
     deleted: object[];
+    added: object[];
   } = {
     connection_id: data.connection_id,
     table: data.table,
     schema: data.schema,
     database: data.database,
     edited: [],
-    deleted: data.removed
+    deleted: data.removed,
+    added: data.added
   };
 
   data.edited.forEach((edited: EditedRow) => {

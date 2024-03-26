@@ -106,7 +106,7 @@ func (p *PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) (*RawQueryResult, e
 
 type UpdateQueryResult struct {
 	Query        []string
-	RowsAffected int64
+	RowsAffected int
 }
 
 func (p *PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryDto) (*UpdateQueryResult, error) {
@@ -118,13 +118,15 @@ func (p *PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryDto) (*UpdateQuery
 	queries := p.updateQueryGenerator(dto)
 	queries = append(queries, p.insertQueryGenerator(dto)...)
 	queries = append(queries, p.deleteQueryGenerator(dto)...)
-
+	rowsAffected := 0
 	err = db.Transaction(func(tx *gorm.DB) error {
 		for _, query := range queries {
 			result := tx.Exec(query)
 			if result.Error != nil {
 				return errors.New("Error on " + query + " " + result.Error.Error())
 			}
+
+			rowsAffected += int(result.RowsAffected)
 		}
 		return nil
 	})
@@ -134,7 +136,7 @@ func (p *PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryDto) (*UpdateQuery
 
 	return &UpdateQueryResult{
 		Query:        queries,
-		RowsAffected: 1,
+		RowsAffected: rowsAffected,
 	}, nil
 }
 

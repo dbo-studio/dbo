@@ -1,10 +1,11 @@
-import { EditedRow } from '@/src/types';
+import { EditedRow, RowType } from '@/src/types';
+import { pullAt } from 'lodash';
 import { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
-import { DataEditedRowsSlice, DataRowSlice, DataStore } from '../types';
+import { DataEditedRowsSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
 
 export const createDataEditedRowsSlice: StateCreator<
-  DataStore & DataEditedRowsSlice & DataRowSlice,
+  DataStore & DataEditedRowsSlice & DataRowSlice & DataUnsavedRowsSlice,
   [],
   [],
   DataEditedRowsSlice
@@ -23,6 +24,25 @@ export const createDataEditedRowsSlice: StateCreator<
     if (!selectedTab) {
       return;
     }
+
+    const unSavedRows = get().getUnsavedRows();
+    const shouldBeUnsaved: RowType[] = [];
+
+    editedRows.forEach((editedRow: EditedRow) => {
+      const findValueIndex = unSavedRows.findIndex((x) => x.dbo_index == editedRow.dboIndex);
+      shouldBeUnsaved.push(...pullAt(editedRows, [findValueIndex]));
+    });
+
+    //if row exists in unsaved'rows, it should not push into edited'rows list
+    shouldBeUnsaved.forEach((unSavedRow) => {
+      const { dboIndex, ...data } = unSavedRow;
+      const newUnsavedRow = {
+        ...data.new,
+        dbo_index: dboIndex
+      };
+      get().addUnsavedRows(newUnsavedRow);
+    });
+
     const rows = get().editedRows;
     rows[selectedTab.id] = editedRows;
     set({ editedRows: rows });

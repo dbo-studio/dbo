@@ -53,8 +53,9 @@
       color: var(--rdg-color);
       font-size: var(--rdg-font-size);
       cursor: pointer;
-      max-height: calc(100vh - 64px - 30px - 40px);
+      /* max-height: calc(100vh - 64px - 30px - 40px); */
       flex: 1;
+      align-content: flex-start;
     }
 
     .rnvodz57-0-0-beta-40::-webkit-scrollbar {

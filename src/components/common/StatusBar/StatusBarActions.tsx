@@ -11,16 +11,18 @@ import LoadingIconButton from '../../base/LoadingIconButton/LoadingIconButton';
 export default function StatusBarActions() {
   const { selectedTab } = useTabStore();
   const {
+    loading,
     addUnsavedRows,
+    getUnsavedRows,
     getEditedRows,
     getRemovedRows,
     getSelectedRows,
-    applyRemovedRows,
     updateEditedRows,
     updateRemovedRows,
     restoreEditedRows,
     discardUnsavedRows,
     updateSelectedRows,
+    updateUnsavedRows,
     runQuery
   } = useDataStore();
 
@@ -31,7 +33,11 @@ export default function StatusBarActions() {
   });
 
   const handleSave = async () => {
-    if (!selectedTab || !currentConnection || (getEditedRows().length == 0 && getRemovedRows().length == 0)) {
+    const edited = getEditedRows();
+    const removed = getRemovedRows();
+    const unsaved = getUnsavedRows();
+
+    if (!selectedTab || !currentConnection || (edited.length == 0 && removed.length == 0 && unsaved.length == 0)) {
       return;
     }
     try {
@@ -40,13 +46,17 @@ export default function StatusBarActions() {
         schema: currentConnection.currentSchema,
         database: currentConnection.currentDatabase,
         table: selectedTab?.table,
-        edited: getEditedRows(),
-        removed: getRemovedRows()
+        edited: edited,
+        removed: removed,
+        added: unsaved
       });
       updateEditedRows([]);
-      applyRemovedRows();
+      updateRemovedRows([]);
+      updateUnsavedRows([]);
+      updateSelectedRows([]);
+      await runQuery();
     } catch (error) {
-      console.log(error);
+      console.log('🚀 ~ handleSave ~ error:', error);
     }
   };
 
@@ -80,30 +90,34 @@ export default function StatusBarActions() {
   return (
     <Stack direction={'row'} mb={'5px'} justifyContent={'space-between'} width={208}>
       <Box>
-        <IconButton onClick={handleAddAction}>
+        <IconButton disabled={updateQueryPending || loading} onClick={handleAddAction}>
           <CustomIcon type='plus' size='s' />
         </IconButton>
 
-        <IconButton onClick={handleRemoveAction}>
+        <IconButton disabled={updateQueryPending || loading} onClick={handleRemoveAction}>
           <CustomIcon type='mines' size='s' />
         </IconButton>
       </Box>
       <Box ml={1} mr={1}>
         <LoadingIconButton
           loading={updateQueryPending ? true : undefined}
-          disabled={updateQueryPending}
+          disabled={updateQueryPending || loading}
           onClick={handleSave}
         >
           <CustomIcon type='check' size='s' />
         </LoadingIconButton>
-        <IconButton onClick={handleDiscardChanges}>
+        <IconButton onClick={handleDiscardChanges} disabled={updateQueryPending || loading}>
           <CustomIcon type='close' size='s' />
         </IconButton>
       </Box>
       <Box>
-        <IconButton onClick={handleRefresh}>
+        <LoadingIconButton
+          loading={loading ? true : undefined}
+          disabled={updateQueryPending || loading}
+          onClick={handleRefresh}
+        >
           <CustomIcon type='refresh' size='s' />
-        </IconButton>
+        </LoadingIconButton>
 
         {/* <IconButton>
           <CustomIcon type='stop' size='s' />
