@@ -28,24 +28,22 @@ export const createDataEditedRowsSlice: StateCreator<
     const unSavedRows = get().getUnsavedRows();
     const shouldBeUnsaved: RowType[] = [];
 
-    editedRows.forEach((editedRow: EditedRow) => {
+    editedRows.forEach((editedRow: EditedRow, index: number) => {
       const findValueIndex = unSavedRows.findIndex((x) => x.dbo_index == editedRow.dboIndex);
-      console.log(findValueIndex);
-
-      // if (findValueIndex > -1) {
-      shouldBeUnsaved.push(...pullAt(editedRows, [findValueIndex]));
-      // }
+      if (findValueIndex > -1) {
+        shouldBeUnsaved.push(...pullAt(editedRows, [index]));
+      }
     });
 
-    //if row exists in unsaved'rows, it should not push into edited'rows list
-    // shouldBeUnsaved.forEach((unSavedRow) => {
-    //   const { dboIndex, ...data } = unSavedRow;
-    //   const newUnsavedRow = {
-    //     ...data.new,
-    //     dbo_index: dboIndex
-    //   };
-    //   get().addUnsavedRows(newUnsavedRow);
-    // });
+    //  if row exists in unsaved'rows, it should not push into edited'rows list
+    shouldBeUnsaved.forEach((unSavedRow) => {
+      const { dboIndex, ...data } = unSavedRow;
+      const newUnsavedRow = {
+        ...data.new,
+        dbo_index: dboIndex
+      };
+      get().addUnsavedRows(newUnsavedRow);
+    });
 
     const rows = get().editedRows;
     rows[selectedTab.id] = editedRows;
