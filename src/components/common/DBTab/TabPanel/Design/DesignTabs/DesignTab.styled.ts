@@ -1,0 +1,24 @@
+import { Box, styled } from '@mui/material';
+import { DesignTabItemStyledProps } from './types';
+
+export const DesignTabWrapperStyled = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flex: 1,
+  overflow: 'auto',
+  borderTop: `1px solid ${theme.palette.divider}`,
+  borderBottom: `1px solid ${theme.palette.divider}`
+}));
+
+export const DesignTabItemStyled = styled(Box)<DesignTabItemStyledProps>(({ theme, selected }) => ({
+  cursor: 'pointer',
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  padding: theme.spacing(1),
+  p: {
+    fontWeight: selected ? 'bold' : 'inherit'
+  },
+  ':hover': {
+    p: {
+      fontWeight: 'bold'
+    }
+  }
+}));

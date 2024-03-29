@@ -15,7 +15,8 @@ export default function Table(): Components {
       styleOverrides: {
         root: {
           '& .MuiTableCell-root': {
-            padding: '6px 8px 0px'
+            padding: '6px 8px 0px',
+            minWidth: '100px'
           }
         }
       }

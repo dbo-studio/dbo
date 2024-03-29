@@ -1,5 +1,4 @@
 import { IconTypes } from '@/src/components/base/CustomIcon/types';
-import { TabMode } from '@/src/types';
 
 export type DesignTabTypes = {
   id: number;
@@ -9,6 +8,12 @@ export type DesignTabTypes = {
   component: JSX.Element;
 };
 
-export type DesignStylesProps = {
-  mode?: TabMode;
+export type DesignTabItemProps = {
+  tab: DesignTabTypes;
+  onClick: (tab: DesignTabTypes) => void;
+  selected: boolean;
+};
+
+export type DesignTabItemStyledProps = {
+  selected: boolean;
 };
