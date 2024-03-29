@@ -26,13 +26,13 @@ export const useTabStore = create<TabState>()(
           return;
         }
 
-        const tabs = get().tabs;
-        tabs.map((t: TabType) => {
+        const tabs = get().tabs.map((t: TabType) => {
           if (t.id == selectedTab.id) {
             return selectedTab;
           }
           return t;
         });
+
         set({ tabs, selectedTab });
       },
       ...createTabSettingSlice(set, get, ...state),

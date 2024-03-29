@@ -4,7 +4,7 @@ import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { SortType } from '@/src/types';
 import { Box, Button, Theme, useTheme } from '@mui/material';
 import { v4 as uuid } from 'uuid';
-import CustomIcon from '../../base/CustomIcon/CustomIcon';
+import CustomIcon from '../../../../../base/CustomIcon/CustomIcon';
 import AddSortButton from './AddSortButton';
 import SortItem from './SortItem';
 

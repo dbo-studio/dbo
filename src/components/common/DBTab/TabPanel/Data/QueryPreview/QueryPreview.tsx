@@ -1,6 +1,6 @@
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { Box, Theme, useTheme } from '@mui/material';
-import BaseEditor from '../../base/CodeEditor/BaseEditor';
+import BaseEditor from '../../../../../base/CodeEditor/BaseEditor';
 
 export default function QueryPreview() {
   const { selectedTab } = useTabStore();

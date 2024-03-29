@@ -1,20 +1,24 @@
 import ConnectionBox from '@/src/components/common/ConnectionInfo/ConnectionBox';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
-import { IconButton, Stack, Tab } from '@mui/material';
-import Grid from '@mui/material/Unstable_Grid2';
-import CustomIcon from '../../base/CustomIcon/CustomIcon';
-import Databases from '../Databases/Databases';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { TabMode } from '@/src/types';
+import { IconButton, Stack } from '@mui/material';
+import Grid from '@mui/material/Unstable_Grid2';
+import dynamic from 'next/dynamic';
+import CustomIcon from '../../base/CustomIcon/CustomIcon';
+
+const Databases = dynamic(() => import('../Databases/Databases'), {
+  ssr: false
+});
 
 export default function ConnectionInfo() {
   const { updateShowAddConnection, showSelectDatabase, updateShowSelectDatabase, currentConnection } =
     useConnectionStore();
 
-  const {addTab} = useTabStore()
+  const { addTab } = useTabStore();
 
   const handleAddEditorTab = () => {
-    addTab("Editor",TabMode.Query)
+    addTab('Editor', TabMode.Query);
   };
 
   return (
@@ -43,12 +47,9 @@ export default function ConnectionInfo() {
 
       <Grid md={4}>
         <Stack direction={'row'} spacing={2} justifyContent='flex-start'>
-          <IconButton aria-label='refresh'>
-            <CustomIcon type={'refresh'} size={'m'} />
-          </IconButton>
-          <IconButton aria-label='search'>
+          {/* <IconButton aria-label='search'>
             <CustomIcon type={'search'} size={'m'} />
-          </IconButton>
+          </IconButton> */}
           <IconButton aria-label='sql' onClick={handleAddEditorTab}>
             <CustomIcon type={'sql'} size={'m'} />
           </IconButton>

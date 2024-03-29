@@ -2,8 +2,8 @@ import { tools } from '@/src/core/utils';
 import { useDataStore } from '@/src/store/dataStore/data.store';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { Box, useTheme } from '@mui/material';
-import CodeEditor from '../../base/CodeEditor/CodeEditor';
-import DBDataGrid from '../DBDataGrid/DBDataGrid';
+import CodeEditor from '../../../../../base/CodeEditor/CodeEditor';
+import DBDataGrid from '../../../../../shared/DBDataGrid/DBDataGrid';
 
 export default function QueryEditor() {
   const theme = useTheme();

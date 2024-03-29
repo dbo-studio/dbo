@@ -4,7 +4,7 @@ import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { FilterType } from '@/src/types/Tab';
 import { Box, Button, Theme, useTheme } from '@mui/material';
 import { v4 as uuid } from 'uuid';
-import CustomIcon from '../../base/CustomIcon/CustomIcon';
+import CustomIcon from '../../../../../base/CustomIcon/CustomIcon';
 import AddFilterButton from './AddFilterButton';
 import FilterItem from './FilterItem';
 

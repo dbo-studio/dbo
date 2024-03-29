@@ -1,6 +1,6 @@
-import DBFelids from '@/src/components/common/DBFelids/DBFelids';
 import { useSettingStore } from '@/src/store/settingStore/setting.store';
 import { Box } from '@mui/material';
+import dynamic from 'next/dynamic';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
 import { EndContainerStyled } from './Container.styled';
 
@@ -34,6 +34,10 @@ import { EndContainerStyled } from './Container.styled';
 //   }
 // ];
 
+const DBFields = dynamic(() => import('../../common/DBFields/DBFields'), {
+  ssr: false
+});
+
 export default function EndContainer() {
   // const [selectedTabId, setSelectedTabId] = useState(tabs[0].id);
   const { sidebar, updateSidebar } = useSettingStore();
@@ -59,10 +63,9 @@ export default function EndContainer() {
           <Tab label='DDL' />
           <Tab label='Info' />
         </Tabs> */}
-
         {/* <Box role='tabpanel'>{selectedTabContent}</Box> */}
         <Box role='tabpanel'>
-          <DBFelids />
+          <DBFields />
         </Box>
       </EndContainerStyled>
     </ResizableXBox>

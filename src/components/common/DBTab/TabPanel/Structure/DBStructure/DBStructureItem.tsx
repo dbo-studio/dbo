@@ -1,9 +1,10 @@
 import { ColumnType } from '@/src/types/Data';
 import { Checkbox, TableCell, TableRow } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
-import FieldInput from '../../base/FieldInput/FieldInput';
-import SelectInput from '../../base/SelectInput/SelectInput';
-import SelectOption from '../../base/SelectInput/SelectOption';
+
+import FieldInput from '@/src/components/base/FieldInput/FieldInput';
+import SelectInput from '@/src/components/base/SelectInput/SelectInput';
+import SelectOption from '@/src/components/base/SelectInput/SelectOption';
 import { fakeStructureTypes } from './makeData';
 
 export default function DBStructureItem({ item }: { item: ColumnType }) {

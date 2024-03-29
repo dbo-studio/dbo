@@ -6,7 +6,7 @@ export default function ColumnItem({ column, onClick }: ColumnItemProps) {
   const theme = useTheme();
 
   return (
-    <ColumnItemStyled onClick={onClick}>
+    <ColumnItemStyled onClick={() => onClick(column)}>
       <Checkbox checked={column.isActive} style={{ padding: 0, marginRight: theme.spacing(1) }} size='small' />
       <Typography variant='body2'>{column.key}</Typography>
     </ColumnItemStyled>

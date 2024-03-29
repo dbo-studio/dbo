@@ -23,12 +23,12 @@ export const useConnectionStore = create<ConnectionState>()(
         set({ showEditConnection: connection });
       },
       updateCurrentConnection: (currentConnection: ConnectionType) => {
-        const connections = get().connections;
+        let connections = get().connections;
         if (!connections) {
           return;
         }
 
-        connections.map((c: ConnectionType) => {
+        connections = connections.map((c: ConnectionType) => {
           if (c.id == currentConnection.id) {
             return currentConnection;
           }

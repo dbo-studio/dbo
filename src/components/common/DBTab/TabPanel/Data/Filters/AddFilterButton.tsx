@@ -2,7 +2,7 @@ import { PgsqlFilterConditions, PgsqlFilterNext } from '@/src/core/constants';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { IconButton } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
-import CustomIcon from '../../base/CustomIcon/CustomIcon';
+import CustomIcon from '../../../../../base/CustomIcon/CustomIcon';
 import { AddFilterButtonProps } from './types';
 
 export default function AddFilterButton({ columns }: AddFilterButtonProps) {

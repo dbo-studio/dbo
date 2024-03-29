@@ -5,10 +5,18 @@ import { ConnectionType } from '@/src/types';
 import { Box } from '@mui/material';
 import { useEffect } from 'react';
 import { v4 as uuid } from 'uuid';
-import AddConnection from '../AddConnection/AddConnection/AddConnection';
-import EditConnection from '../EditConnection/EditConnection/EditConnection';
+
+import dynamic from 'next/dynamic';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { EmptySpaceStyle } from './EmptySpace.styled';
+
+const AddConnection = dynamic(() => import('../AddConnection/AddConnection/AddConnection'), {
+  ssr: false
+});
+
+const EditConnection = dynamic(() => import('../EditConnection/EditConnection/EditConnection'), {
+  ssr: false
+});
 
 export default function Connections() {
   const { connections, currentConnection, updateCurrentConnection, updateConnections, updateShowAddConnection } =

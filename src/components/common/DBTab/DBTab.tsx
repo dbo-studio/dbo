@@ -3,10 +3,10 @@ import { TabType as TabData } from '@/src/types';
 import { Box, Tab, Tabs, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
-import TabPanel from './TabPanel';
+import TabPanel from './TabPanel/TabPanel';
 
-export default function EditorTab() {
-  const { removeTab, switchTab, tabs, selectedTab } = useTabStore();
+export default function DBTab() {
+  const { switchTab, removeTab, tabs, selectedTab } = useTabStore();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -23,8 +23,9 @@ export default function EditorTab() {
             variant='scrollable'
             allowScrollButtonsMobile
           >
-            {tabs.map((tab: TabData, index: number) => (
+            {tabs.map((tab: TabData) => (
               <Tab
+                key={tab.id}
                 value={tab.id}
                 className='Mui-flat grid-tab'
                 label={
@@ -42,7 +43,6 @@ export default function EditorTab() {
                     </Typography>
                   </Box>
                 }
-                key={index}
               />
             ))}
           </Tabs>
