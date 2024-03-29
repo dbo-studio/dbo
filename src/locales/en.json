@@ -2,6 +2,7 @@
     "no_active_connection": "No active connection",
     "data": "Data",
     "structure": "Structure",
+    "design": "Design",
     "fields": "Fields",
     "ddl": "DDL",
     "info": "Info",
@@ -47,5 +48,6 @@
     "decimal": "Decimal",
     "not_null": "Not Null",
     "comment": "Comment",
-    "run": "Run"
+    "run": "Run",
+    "columns": "Columns"
 }

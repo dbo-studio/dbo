@@ -16,7 +16,7 @@ const tabs: StatusBarTabTypes[] = [
   },
   {
     id: 1,
-    name: locales.structure,
+    name: locales.design,
     icon: 'structure',
     iconActive: 'structureBlue'
   }
@@ -35,7 +35,7 @@ export default function StatusBarTabs() {
     setSelectedTabId(id);
     updateSelectedTab({
       ...selectedTab,
-      mode: id == TabMode.Data ? TabMode.Data : TabMode.Structure
+      mode: id == TabMode.Data ? TabMode.Data : TabMode.Design
     });
   };
 

@@ -10,7 +10,7 @@ const Query = dynamic(() => import('./Query/Query'), {
   ssr: false
 });
 
-const Structure = dynamic(() => import('./Structure/Structure'), {
+const Design = dynamic(() => import('./Design/Design'), {
   ssr: false
 });
 
@@ -21,7 +21,7 @@ export default function TabPanel() {
       {selectedTab ? (
         <>
           {selectedTab.mode == TabMode.Data && <Data />}
-          {selectedTab.mode == TabMode.Structure && <Structure />}
+          {selectedTab.mode == TabMode.Design && <Design />}
           {selectedTab.mode == TabMode.Query && <Query />}
         </>
       ) : null}

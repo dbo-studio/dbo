@@ -7,7 +7,7 @@ import SelectInput from '@/src/components/base/SelectInput/SelectInput';
 import SelectOption from '@/src/components/base/SelectInput/SelectOption';
 import { fakeStructureTypes } from './makeData';
 
-export default function DBStructureItem({ item }: { item: ColumnType }) {
+export default function ColumnItem({ item }: { item: ColumnType }) {
   const types = fakeStructureTypes();
 
   return (

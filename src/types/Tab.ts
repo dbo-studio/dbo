@@ -31,7 +31,7 @@ export type TabType = {
 
 export enum TabMode {
   Data = 0,
-  Structure = 1,
+  Design = 1,
   Query = 2
 }
 

@@ -1,10 +1,10 @@
 import StatusBar from '@/src/components/shared/StatusBar/StatusBar';
-import DBStructure from './DBStructure/DBStructure';
+import DesignTabs from './DesignTabs';
 
-export default function Structure() {
+export default function Design() {
   return (
     <>
-      <DBStructure />
+      <DesignTabs />
       <StatusBar />
     </>
   );

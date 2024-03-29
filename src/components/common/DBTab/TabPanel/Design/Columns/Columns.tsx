@@ -3,14 +3,14 @@ import { useDataStore } from '@/src/store/dataStore/data.store';
 import { ColumnType } from '@/src/types/Data';
 import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { v4 as uuid } from 'uuid';
-import { DBStructureStyled } from './DBStructure.styled';
-import DBStructureItem from './DBStructureItem';
+import ColumnItem from './ColumnItem';
+import { ColumnsStyled } from './Columns.styled';
 
-export default function DBStructure() {
+export default function Columns() {
   const { getColumns } = useDataStore();
 
   return (
-    <DBStructureStyled>
+    <ColumnsStyled>
       <TableContainer component={Box}>
         <Table size='small'>
           <TableHead>
@@ -25,11 +25,11 @@ export default function DBStructure() {
           </TableHead>
           <TableBody>
             {getColumns().map((item: ColumnType) => (
-              <DBStructureItem key={uuid()} item={item} />
+              <ColumnItem key={uuid()} item={item} />
             ))}
           </TableBody>
         </Table>
       </TableContainer>
-    </DBStructureStyled>
+    </ColumnsStyled>
   );
 }

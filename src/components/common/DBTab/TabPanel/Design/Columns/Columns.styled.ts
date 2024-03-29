@@ -1,6 +1,6 @@
 import { Box, styled } from '@mui/material';
 
-export const DBStructureStyled = styled(Box)(({ theme }) => ({
+export const ColumnsStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
   flex: 1,
   overflow: 'auto',
