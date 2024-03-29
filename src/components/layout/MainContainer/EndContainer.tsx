@@ -1,3 +1,4 @@
+import { useWindowSize } from '@/src/hooks/useWindowSize.hook';
 import { useSettingStore } from '@/src/store/settingStore/setting.store';
 import { Box } from '@mui/material';
 import dynamic from 'next/dynamic';
@@ -39,6 +40,7 @@ const DBFields = dynamic(() => import('../../common/DBFields/DBFields'), {
 });
 
 export default function EndContainer() {
+  const windowSize = useWindowSize();
   // const [selectedTabId, setSelectedTabId] = useState(tabs[0].id);
   const { sidebar, updateSidebar } = useSettingStore();
 
@@ -57,7 +59,7 @@ export default function EndContainer() {
       direction='ltr'
       maxWidth={500}
     >
-      <EndContainerStyled>
+      <EndContainerStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
         {/* <Tabs value={selectedTabId} onChange={onSelectedTabChanged}>
           <Tab label='Fields' />
           <Tab label='DDL' />

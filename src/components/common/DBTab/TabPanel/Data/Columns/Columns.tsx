@@ -1,4 +1,4 @@
-import { tools } from '@/src/core/utils';
+import { useWindowSize } from '@/src/hooks/useWindowSize.hook';
 import { useDataStore } from '@/src/store/dataStore/data.store';
 import { ColumnType } from '@/src/types/Data';
 import { Box, Theme, useTheme } from '@mui/material';
@@ -6,6 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 import ColumnItem from './ColumnItem';
 
 export default function Columns() {
+  const windowSize = useWindowSize();
+
   const theme: Theme = useTheme();
   const { getColumns, updateColumns } = useDataStore();
 
@@ -24,9 +26,9 @@ export default function Columns() {
     <Box
       padding={theme.spacing(1)}
       borderRight={`1px solid ${theme.palette.divider}`}
-      height={tools.screenMaxHeight()}
-      maxHeight={tools.screenMaxHeight()}
-      minHeight={tools.screenMaxHeight()}
+      height={windowSize.height}
+      maxHeight={windowSize.height}
+      minHeight={windowSize.height}
       overflow={'auto'}
       display={'flex'}
       flexDirection={'column'}

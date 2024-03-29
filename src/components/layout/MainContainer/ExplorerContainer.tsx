@@ -1,4 +1,5 @@
 import DBTreeView from '@/src/components/common/DBTreeView/DBTreeView';
+import { useWindowSize } from '@/src/hooks/useWindowSize.hook';
 import locales from '@/src/locales';
 import { useSettingStore } from '@/src/store/settingStore/setting.store';
 import { Box, Tab, Tabs } from '@mui/material';
@@ -34,6 +35,7 @@ const tabs = [
 ];
 
 export default function ExplorerContainer() {
+  const windowSize = useWindowSize();
   const [selectedTabId, setSelectedTabId] = useState(0);
   const { sidebar, updateSidebar } = useSettingStore();
 
@@ -52,7 +54,7 @@ export default function ExplorerContainer() {
       direction='rtl'
       maxWidth={500}
     >
-      <ExplorerContainerStyled>
+      <ExplorerContainerStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
         <Tabs value={selectedTabId} onChange={onSelectedTabChanged}>
           <Tab label={locales.fields} />
           <Tab label={locales.queries} />

@@ -1,21 +1,17 @@
+import { useMount } from '@/src/hooks';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { TabType as TabData } from '@/src/types';
 import { Box, Tab, Tabs, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import TabPanel from './TabPanel/TabPanel';
 
 export default function DBTab() {
   const { switchTab, removeTab, tabs, selectedTab } = useTabStore();
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const mounted = useMount();
 
   return (
     <>
-      {selectedTab && isMounted ? (
+      {selectedTab && mounted ? (
         <>
           <Tabs
             value={selectedTab.id}
