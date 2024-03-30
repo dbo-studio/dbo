@@ -5,11 +5,9 @@ import { v4 as uuidv4 } from 'uuid';
 import FieldInput from '@/src/components/base/FieldInput/FieldInput';
 import SelectInput from '@/src/components/base/SelectInput/SelectInput';
 import SelectOption from '@/src/components/base/SelectInput/SelectOption';
-import { fakeStructureTypes } from './makeData';
+import { PgsqlTypes } from '@/src/core/constants';
 
 export default function ColumnItem({ item }: { item: ColumnType }) {
-  const types = fakeStructureTypes();
-
   return (
     <TableRow sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
       <TableCell component='th' scope='row'>
@@ -17,7 +15,7 @@ export default function ColumnItem({ item }: { item: ColumnType }) {
       </TableCell>
       <TableCell align='left'>
         <SelectInput name='type' size='small'>
-          {types.map((t: string) => (
+          {PgsqlTypes.map((t: string) => (
             <SelectOption value={t} key={uuidv4()}>
               {t}
             </SelectOption>
