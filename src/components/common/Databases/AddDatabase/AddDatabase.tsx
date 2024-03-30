@@ -7,6 +7,7 @@ import useAPI from '@/src/hooks/useApi.hook';
 import locales from '@/src/locales';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { LoadingButton } from '@mui/lab';
 import { Box, Button } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
@@ -33,7 +34,7 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
   const { currentConnection } = useConnectionStore();
   const [metadata, setMetadata] = useState<undefined | DatabaseMetaDataType>(undefined);
 
-  const { request: createDatabase } = useAPI({
+  const { request: createDatabase, pending: pending } = useAPI({
     apiMethod: api.database.createDatabase
   });
 
@@ -59,7 +60,7 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
   const onSubmit: SubmitHandler<IFormInput> = async (data, e) => {
     e?.preventDefault();
     try {
-      //todo: add loading
+      //todo: add db to list after success create
       await createDatabase({
         connection_id: currentConnection?.id,
         name: data.name,
@@ -145,9 +146,15 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
             {locales.cancel}
           </Button>
 
-          <Button onClick={handleSubmit(onSubmit)} size='small' variant='contained'>
-            {locales.create}
-          </Button>
+          <LoadingButton
+            disabled={pending}
+            loading={pending}
+            onClick={handleSubmit(onSubmit)}
+            size='small'
+            variant='contained'
+          >
+            <span>{locales.create}</span>
+          </LoadingButton>
         </Box>
       </Box>
     )
