@@ -1,9 +1,9 @@
+import CodeEditor from '@/src/components/base/CodeEditor/CodeEditor';
+import DBDataGrid from '@/src/components/shared/DBDataGrid/DBDataGrid';
 import { useWindowSize } from '@/src/hooks/useWindowSize.hook';
 import { useDataStore } from '@/src/store/dataStore/data.store';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { Box, useTheme } from '@mui/material';
-import CodeEditor from '../../../../../base/CodeEditor/CodeEditor';
-import DBDataGrid from '../../../../../shared/DBDataGrid/DBDataGrid';
 
 export default function QueryEditor() {
   const theme = useTheme();
