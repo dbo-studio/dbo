@@ -14,4 +14,19 @@ export interface ColumnType extends Column<RowType> {
   comment: string;
   default: string;
   mappedType: string;
+  selected?: boolean;
+  editMode: {
+    name: boolean;
+    default: boolean;
+    length: boolean;
+    comment: boolean;
+  };
+}
+
+export interface EditedColumnType extends ColumnType {
+  old?: object;
+  new?: object;
+  edited?: boolean;
+  deleted?: boolean;
+  unsaved?: boolean;
 }

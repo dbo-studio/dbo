@@ -1,5 +1,5 @@
 import { EditedRow } from '@/src/types';
-import { ColumnType, RowType } from '@/src/types/Data';
+import { ColumnType, EditedColumnType, RowType } from '@/src/types/Data';
 
 export type DataStore = object;
 
@@ -25,7 +25,12 @@ export type DataSelectedRowsSlice = {
 export type DataColumnSlice = {
   columns: DataColumnsType;
   getColumns(withSelect?: boolean): ColumnType[];
-  updateColumns: (items: ColumnType[]) => Promise<void>;
+  updateColumns: (columns: ColumnType[]) => Promise<void>;
+  updateColumn: (columns: ColumnType) => Promise<void>;
+  editedColumns: DataEditedColumnsType;
+  getEditedColumns(): EditedColumnType[];
+  updateEditedColumns: (oldValue: ColumnType, newValue: ColumnType | EditedColumnType) => Promise<void>;
+  restoreEditedRows: () => Promise<void>;
 };
 
 export type DataEditedRowsSlice = {
@@ -61,6 +66,10 @@ export type DataRowsType = {
 
 export type DataColumnsType = {
   [key: string]: ColumnType[];
+};
+
+export type DataEditedColumnsType = {
+  [key: string]: EditedColumnType[];
 };
 
 export type DataEditedRowsType = {

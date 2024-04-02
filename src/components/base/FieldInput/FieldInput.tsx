@@ -46,6 +46,7 @@ export default forwardRef(function FieldInput(props: FieldInputProps, ref) {
           borderColor: props.error ? theme.palette.error.light : theme.palette.divider,
           marginBottom: props.error ? '0px' : theme.spacing(1)
         }}
+        {...props}
       />
       <Typography mb={theme.spacing(1)} color={theme.palette.error.light} variant='caption'>
         {props.helperText}

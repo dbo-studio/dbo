@@ -82,7 +82,7 @@ const colorPalette = {
   action: {
     active: GREY[600],
     hover: alpha(GREY[500], 0.08),
-    selected: alpha(GREY[500], 0.16),
+    selected: '#dbedfa',
     disabled: alpha(GREY[500], 0.8),
     disabledBackground: alpha(GREY[500], 0.24),
     focus: alpha(GREY[500], 0.24),
@@ -112,6 +112,9 @@ export default function palette(themeMode: ThemeModeEnum) {
         primary: colorPalette.dark[0],
         secondary: colorPalette.dark[2],
         disabled: colorPalette.disabled.light
+      },
+      action: {
+        selected: '#dbedfa'
       }
     },
     dark: {

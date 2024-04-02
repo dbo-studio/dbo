@@ -99,11 +99,7 @@ export default function StatusBarActions() {
         </IconButton>
       </Box>
       <Box ml={1} mr={1}>
-        <LoadingIconButton
-          loading={updateQueryPending ? true : undefined}
-          disabled={updateQueryPending || loading}
-          onClick={handleSave}
-        >
+        <LoadingIconButton loading={+updateQueryPending} disabled={updateQueryPending || loading} onClick={handleSave}>
           <CustomIcon type='check' size='s' />
         </LoadingIconButton>
         <IconButton onClick={handleDiscardChanges} disabled={updateQueryPending || loading}>
@@ -111,11 +107,7 @@ export default function StatusBarActions() {
         </IconButton>
       </Box>
       <Box>
-        <LoadingIconButton
-          loading={loading ? true : undefined}
-          disabled={updateQueryPending || loading}
-          onClick={handleRefresh}
-        >
+        <LoadingIconButton loading={+loading} disabled={updateQueryPending || loading} onClick={handleRefresh}>
           <CustomIcon type='refresh' size='s' />
         </LoadingIconButton>
 
