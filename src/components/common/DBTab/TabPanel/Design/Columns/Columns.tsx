@@ -12,13 +12,16 @@ export default function Columns() {
   const { selectedTab } = useTabStore();
 
   const handleColumnChange = (oldValue: ColumnType, newValue: EditedColumnType) => {
-    newValue.edited = true;
     updateEditedColumns(oldValue, newValue);
     updateColumn(newValue);
   };
 
   const handleColumnSelect = (column: ColumnType) => {
     column.selected = !column.selected;
+    updateColumn(column);
+  };
+
+  const handleToggleEditColumn = (column: ColumnType) => {
     updateColumn(column);
   };
 
@@ -48,6 +51,7 @@ export default function Columns() {
                   column={item}
                   onChange={handleColumnChange}
                   onSelect={() => handleColumnSelect(item)}
+                  onEditToggle={handleToggleEditColumn}
                 />
               ))}
             </TableBody>

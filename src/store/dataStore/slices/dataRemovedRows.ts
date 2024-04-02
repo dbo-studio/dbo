@@ -18,12 +18,13 @@ export const createDataRemovedRowsSlice: StateCreator<
     }
     return rows[selectedTab.id];
   },
-  updateRemovedRows: (rowsIndex: number[]) => {
+  updateRemovedRows: () => {
     const selectedTab = useTabStore.getState().selectedTab;
     if (!selectedTab) {
       return;
     }
 
+    const rowsIndex = Array.from(get().getSelectedRows());
     const rows = get()
       .getRows()
       .filter((r: RowType) => rowsIndex.includes(r.dbo_index));
@@ -51,6 +52,5 @@ export const createDataRemovedRowsSlice: StateCreator<
 
     set({ removedRows });
     get().discardUnsavedRows(unsavedRows);
-    // get().removeSelectedRows(unsavedRowsId);
   }
 });

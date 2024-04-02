@@ -11,6 +11,7 @@ export type ColumnItemProps = {
   unsaved: boolean;
   onChange: (oldValue: ColumnType, newValue: ColumnType) => void;
   onSelect: () => void;
+  onEditToggle: (column: ColumnType) => void;
 };
 
 export type Editable = {

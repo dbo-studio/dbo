@@ -10,13 +10,24 @@ import { useState } from 'react';
 import { ColumnItemStyled } from './Columns.styled';
 import { ColumnItemProps } from './types';
 
-export default function ColumnItem({ column, onChange, onSelect, edited, deleted, unsaved }: ColumnItemProps) {
+export default function ColumnItem({
+  column,
+  onChange,
+  onSelect,
+  onEditToggle,
+  edited,
+  deleted,
+  unsaved
+}: ColumnItemProps) {
   const [value, setValue] = useState(column);
 
-  const toggleEdit = (name: 'name' | 'default' | 'length' | 'comment') => {
-    const newColumn = clone(column);
-    newColumn.editMode[name] = !column.editMode[name];
-    onChange(column, newColumn);
+  const handleToggleEdit = (name: 'name' | 'default' | 'length' | 'comment') => {
+    if (column['editMode']) {
+      column.editMode[name] = !column.editMode[name];
+    } else {
+      column['editMode']![name] = true;
+    }
+    onEditToggle(column);
   };
 
   const handleOnColumnChange = (value: any, name: 'name' | 'default' | 'length' | 'comment' | 'type') => {
@@ -25,9 +36,15 @@ export default function ColumnItem({ column, onChange, onSelect, edited, deleted
     setValue(newColumn);
   };
 
+  const handleOnBlur = () => {
+    value.editMode = undefined;
+    column.editMode = undefined;
+    onChange(column, value);
+  };
+
   return (
     <ColumnItemStyled
-      onBlur={() => onChange(column, value)}
+      onBlur={handleOnBlur}
       edited={+edited}
       deleted={+deleted}
       unsaved={+unsaved}
@@ -37,7 +54,7 @@ export default function ColumnItem({ column, onChange, onSelect, edited, deleted
         <Checkbox onChange={() => onSelect()} name='selected' checked={column.selected} size='small' />
       </TableCell>
       <TableCell component='th' scope='row'>
-        {column.editMode.name ? (
+        {column?.editMode?.name ? (
           <FieldInput
             onChange={(e) => handleOnColumnChange(e.target.value, 'name')}
             sx={{ marginBottom: '0' }}
@@ -47,7 +64,7 @@ export default function ColumnItem({ column, onChange, onSelect, edited, deleted
             type='string'
           />
         ) : (
-          <Typography onDoubleClick={() => toggleEdit('name')} variant='body2'>
+          <Typography onDoubleClick={() => handleToggleEdit('name')} variant='body2'>
             {value.name}
           </Typography>
         )}
@@ -68,7 +85,7 @@ export default function ColumnItem({ column, onChange, onSelect, edited, deleted
         </SelectInput>
       </TableCell>
       <TableCell align='left'>
-        {column.editMode.length ? (
+        {column?.editMode?.length ? (
           <FieldInput
             onChange={(e) => handleOnColumnChange(e.target.value, 'length')}
             name='length'
@@ -77,16 +94,16 @@ export default function ColumnItem({ column, onChange, onSelect, edited, deleted
             type='string'
           />
         ) : (
-          <Typography onClick={() => toggleEdit('length')} variant='body2'>
+          <Typography onClick={() => handleToggleEdit('length')} variant='body2'>
             {value.length}
           </Typography>
         )}
       </TableCell>
       <TableCell align='left'>
-        {column.editMode.default ? (
+        {column?.editMode?.default ? (
           <FieldInput name='default' value={value.default} size='small' type='string' />
         ) : (
-          <Typography onClick={() => toggleEdit('default')} variant='body2'>
+          <Typography onClick={() => handleToggleEdit('default')} variant='body2'>
             {value.default}
           </Typography>
         )}
@@ -95,10 +112,10 @@ export default function ColumnItem({ column, onChange, onSelect, edited, deleted
         <Checkbox name='not_null' checked={value.notNull} size='small' />
       </TableCell>
       <TableCell align='left'>
-        {column.editMode.comment ? (
+        {column?.editMode?.comment ? (
           <FieldInput name='comment' value={value.comment} size='small' type='string' />
         ) : (
-          <Typography onClick={() => toggleEdit('comment')} variant='body2'>
+          <Typography onClick={() => handleToggleEdit('comment')} variant='body2'>
             {value.comment}
           </Typography>
         )}

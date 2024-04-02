@@ -15,11 +15,11 @@ export interface ColumnType extends Column<RowType> {
   default: string;
   mappedType: string;
   selected?: boolean;
-  editMode: {
-    name: boolean;
-    default: boolean;
-    length: boolean;
-    comment: boolean;
+  editMode?: {
+    name?: boolean;
+    default?: boolean;
+    length?: boolean;
+    comment?: boolean;
   };
 }
 

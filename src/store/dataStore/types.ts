@@ -30,7 +30,8 @@ export type DataColumnSlice = {
   editedColumns: DataEditedColumnsType;
   getEditedColumns(): EditedColumnType[];
   updateEditedColumns: (oldValue: ColumnType, newValue: ColumnType | EditedColumnType) => Promise<void>;
-  restoreEditedRows: () => Promise<void>;
+  updateRemovedColumns: () => Promise<void>;
+  restoreEditedColumns: () => Promise<void>;
 };
 
 export type DataEditedRowsSlice = {
@@ -43,7 +44,7 @@ export type DataEditedRowsSlice = {
 export type DataRemovedRowsSlice = {
   removedRows: DataRemovedRowsType;
   getRemovedRows(): RowType[];
-  updateRemovedRows(rowsIndex: number[]): void;
+  updateRemovedRows(): void;
 };
 
 export type DataUnsavedRowsSlice = {

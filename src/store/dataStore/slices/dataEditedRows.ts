@@ -50,18 +50,13 @@ export const createDataEditedRowsSlice: StateCreator<
     set({ editedRows: rows });
   },
   restoreEditedRows: async (): Promise<void> => {
-    const selectedTab = useTabStore.getState().selectedTab;
-    if (!selectedTab) {
-      return;
-    }
-
     const newRows = get().getEditedRows();
     const oldRows = get().getRows();
 
     newRows.forEach((newRow: EditedRow) => {
       const findValueIndex = oldRows.findIndex((x) => x.dbo_index == newRow.dboIndex);
       oldRows[findValueIndex] = {
-        ...oldRows[newRow.dboIndex],
+        ...oldRows[findValueIndex],
         ...newRow.old
       };
     });

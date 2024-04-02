@@ -16,14 +16,15 @@ export default function StatusBarActions() {
     getUnsavedRows,
     getEditedRows,
     getRemovedRows,
-    getSelectedRows,
     updateEditedRows,
     updateRemovedRows,
     restoreEditedRows,
     discardUnsavedRows,
     updateSelectedRows,
     updateUnsavedRows,
-    runQuery
+    runQuery,
+    restoreEditedColumns,
+    updateRemovedColumns
   } = useDataStore();
 
   const { currentConnection } = useConnectionStore();
@@ -51,7 +52,7 @@ export default function StatusBarActions() {
         added: unsaved
       });
       updateEditedRows([]);
-      updateRemovedRows([]);
+      updateRemovedRows();
       updateUnsavedRows([]);
       updateSelectedRows([]);
       await runQuery();
@@ -68,23 +69,31 @@ export default function StatusBarActions() {
 
   const handleRemoveAction = () => {
     if (selectedTab?.mode == TabMode.Data) {
-      updateRemovedRows(Array.from(getSelectedRows()));
+      updateRemovedRows();
+    }
+
+    if (selectedTab?.mode == TabMode.Design) {
+      updateRemovedColumns();
     }
   };
 
   const handleDiscardChanges = () => {
     if (selectedTab?.mode == TabMode.Data) {
-      updateRemovedRows([]);
+      updateRemovedRows();
       restoreEditedRows();
       discardUnsavedRows();
       updateSelectedRows([]);
     }
+
+    if (selectedTab?.mode == TabMode.Design) {
+      restoreEditedColumns();
+    }
   };
 
   const handleRefresh = () => {
-    if (selectedTab?.mode == TabMode.Data) {
-      runQuery();
-    }
+    // if (selectedTab?.mode == TabMode.Data) {
+    runQuery();
+    // }
   };
 
   return (

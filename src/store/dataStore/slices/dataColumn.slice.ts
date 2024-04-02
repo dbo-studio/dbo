@@ -58,5 +58,82 @@ export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, []
     columns[selectedTab.id] = handelColumnChangeLog(get().getEditedColumns(), oldValue, newValue);
 
     set({ editedColumns: columns });
+  },
+  updateRemovedColumns: async () => {
+    const selectedTab = useTabStore.getState().selectedTab;
+    if (!selectedTab) {
+      return;
+    }
+
+    //if selected column edited before, we discard changes and add to removed list
+    const editedColumns = get().getEditedColumns();
+    const columns = get()
+      .getColumns()
+      .map((c: ColumnType) => {
+        if (!c.selected) {
+          return c;
+        }
+
+        const findValueIndex = editedColumns.findIndex((x) => x.key == c.key);
+        if (findValueIndex === -1) {
+          editedColumns.push({
+            ...c,
+            deleted: true
+          });
+        } else {
+          c = {
+            ...c,
+            ...editedColumns[findValueIndex].old
+          };
+          editedColumns[findValueIndex] = {
+            ...editedColumns[findValueIndex],
+            ...editedColumns[findValueIndex].old,
+            edited: false,
+            old: undefined,
+            new: undefined,
+            deleted: true,
+            editMode: undefined
+          };
+        }
+        c.selected = false;
+        c.editMode = undefined;
+        return c;
+      });
+
+    const newEditedColumns = get().editedColumns;
+    newEditedColumns[selectedTab.id] = editedColumns;
+    set({ editedColumns: newEditedColumns });
+    get().updateColumns(columns);
+  },
+  restoreEditedColumns: async () => {
+    const selectedTab = useTabStore.getState().selectedTab;
+    if (!selectedTab) {
+      return;
+    }
+
+    const editedColumns = get().getEditedColumns();
+    const columns = get()
+      .getColumns()
+      .map((c) => {
+        return {
+          ...c,
+          selected: false,
+          editMode: undefined
+        };
+      });
+
+    editedColumns.forEach((c: EditedColumnType) => {
+      const findValueIndex = columns.findIndex((x) => x.key == c.key);
+      columns[findValueIndex] = {
+        ...columns[findValueIndex],
+        ...c.old
+      };
+    });
+
+    get().updateColumns(columns);
+
+    const newEditedColumns = get().editedColumns;
+    newEditedColumns[selectedTab.id] = [];
+    set({ editedColumns: newEditedColumns });
   }
 });

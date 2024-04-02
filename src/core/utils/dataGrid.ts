@@ -64,7 +64,8 @@ export const handelRowChangeLog = (editedRows: EditedRow[], oldValue: RowType, n
 
   const oldObject: RowType = findValue ? findValue.old : {};
   const newObject: RowType = findValue ? findValue.new : {};
-  oldObject[diffKey] = oldValue[diffKey];
+
+  if (!oldObject[diffKey]) oldObject[diffKey] = oldValue[diffKey];
   newObject[diffKey] = newValue[diffKey];
 
   let conditions: object = {};
@@ -134,13 +135,15 @@ export const handelColumnChangeLog = (
 
   const oldObject: EditedColumnType = findValue ? findValue.old : {};
   const newObject: EditedColumnType = findValue ? findValue.new : {};
-  oldObject[diffKey] = oldValue[diffKey];
+
+  if (!oldObject[diffKey]) oldObject[diffKey] = oldValue[diffKey];
   newObject[diffKey] = newValue[diffKey];
 
-  if (Object.keys(diff).length > 0) {
-    newValue.edited = true;
+  if (Object.keys(diff).length == 0) {
+    return editedColumns;
   }
 
+  newValue.edited = true;
   if (!findValue) {
     editedColumns.push({
       ...newValue,
