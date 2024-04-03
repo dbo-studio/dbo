@@ -37,8 +37,11 @@ export default function ColumnItem({
   };
 
   const handleOnBlur = () => {
-    value.editMode = undefined;
-    column.editMode = undefined;
+    if (!unsaved) {
+      value.editMode = undefined;
+      column.editMode = undefined;
+    }
+
     onChange(column, value);
   };
 
@@ -51,7 +54,13 @@ export default function ColumnItem({
       selected={column.selected ?? false}
     >
       <TableCell style={{ minWidth: 'unset' }} component='th' scope='row'>
-        <Checkbox onChange={() => onSelect()} name='selected' checked={column.selected} size='small' />
+        <Checkbox
+          sx={{ marginBottom: '0' }}
+          onChange={() => onSelect()}
+          name='selected'
+          checked={column.selected}
+          size='small'
+        />
       </TableCell>
       <TableCell component='th' scope='row'>
         {column?.editMode?.name ? (
@@ -72,6 +81,7 @@ export default function ColumnItem({
       <TableCell align='left'>
         {/* todo we have some problem here, the types doest match */}
         <SelectInput
+          sx={{ marginBottom: '0' }}
           value={value.type}
           defaultValue={value.type}
           onChange={(e) => handleOnColumnChange(e.target.value, 'type')}
@@ -88,6 +98,7 @@ export default function ColumnItem({
       <TableCell align='left'>
         {column?.editMode?.length ? (
           <FieldInput
+            sx={{ marginBottom: '0' }}
             onChange={(e) => handleOnColumnChange(e.target.value, 'length')}
             name='length'
             value={value.length}
@@ -102,7 +113,7 @@ export default function ColumnItem({
       </TableCell>
       <TableCell align='left'>
         {column?.editMode?.default ? (
-          <FieldInput name='default' value={value.default} size='small' type='string' />
+          <FieldInput sx={{ marginBottom: '0' }} name='default' value={value.default} size='small' type='string' />
         ) : (
           <Typography onClick={() => handleToggleEdit('default')} variant='body2'>
             {value.default}
@@ -110,11 +121,11 @@ export default function ColumnItem({
         )}
       </TableCell>
       <TableCell align='left'>
-        <Checkbox name='not_null' checked={value.notNull} size='small' />
+        <Checkbox sx={{ marginBottom: '0' }} name='not_null' checked={value.notNull} size='small' />
       </TableCell>
       <TableCell align='left'>
         {column?.editMode?.comment ? (
-          <FieldInput name='comment' value={value.comment} size='small' type='string' />
+          <FieldInput sx={{ marginBottom: '0' }} name='comment' value={value.comment} size='small' type='string' />
         ) : (
           <Typography onClick={() => handleToggleEdit('comment')} variant='body2'>
             {value.comment}

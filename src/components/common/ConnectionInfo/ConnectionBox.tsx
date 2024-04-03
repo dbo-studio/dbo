@@ -8,7 +8,6 @@ export default function ConnectionBox() {
   const { currentConnection } = useConnectionStore();
   const [info, setInfo] = useState('');
   const [active, setActive] = useState('false');
-  //todo add db version
   useEffect(() => {
     if (!currentConnection || !currentConnection.currentSchema) {
       setInfo(locales.no_active_connection);

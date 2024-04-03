@@ -29,9 +29,11 @@ export type DataColumnSlice = {
   updateColumn: (columns: ColumnType) => Promise<void>;
   editedColumns: DataEditedColumnsType;
   getEditedColumns(): EditedColumnType[];
-  updateEditedColumns: (oldValue: ColumnType, newValue: ColumnType | EditedColumnType) => Promise<void>;
+  updateEditedColumns: (columns: EditedColumnType[]) => Promise<void>;
+  addEditedColumns: (oldValue: ColumnType, newValue: ColumnType | EditedColumnType) => Promise<void>;
   updateRemovedColumns: () => Promise<void>;
   restoreEditedColumns: () => Promise<void>;
+  addEmptyEditedColumns: () => Promise<void>;
 };
 
 export type DataEditedRowsSlice = {

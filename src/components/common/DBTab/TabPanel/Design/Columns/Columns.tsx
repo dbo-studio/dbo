@@ -8,11 +8,11 @@ import ColumnItem from './ColumnItem';
 import { ColumnsStyled } from './Columns.styled';
 
 export default function Columns() {
-  const { getColumns, getEditedColumns, updateColumn, updateEditedColumns } = useDataStore();
+  const { getColumns, getEditedColumns, updateColumn, addEditedColumns } = useDataStore();
   const { selectedTab } = useTabStore();
 
   const handleColumnChange = (oldValue: ColumnType, newValue: EditedColumnType) => {
-    updateEditedColumns(oldValue, newValue);
+    addEditedColumns(oldValue, newValue);
     updateColumn(newValue);
   };
 

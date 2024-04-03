@@ -24,7 +24,8 @@ export default function StatusBarActions() {
     updateUnsavedRows,
     runQuery,
     restoreEditedColumns,
-    updateRemovedColumns
+    updateRemovedColumns,
+    addEmptyEditedColumns
   } = useDataStore();
 
   const { currentConnection } = useConnectionStore();
@@ -65,6 +66,10 @@ export default function StatusBarActions() {
     if (selectedTab?.mode == TabMode.Data) {
       addUnsavedRows();
     }
+
+    if (selectedTab?.mode == TabMode.Design) {
+      addEmptyEditedColumns();
+    }
   };
 
   const handleRemoveAction = () => {
@@ -91,9 +96,7 @@ export default function StatusBarActions() {
   };
 
   const handleRefresh = () => {
-    // if (selectedTab?.mode == TabMode.Data) {
     runQuery();
-    // }
   };
 
   return (
