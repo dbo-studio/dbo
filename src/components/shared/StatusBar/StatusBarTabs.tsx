@@ -1,7 +1,7 @@
+import { TabMode } from '@/src/core/enums';
 import { useUUID } from '@/src/hooks';
 import locales from '@/src/locales';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
-import { TabMode } from '@/src/types';
 import { Box, Tab, Tabs } from '@mui/material';
 import { useEffect, useState } from 'react';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';

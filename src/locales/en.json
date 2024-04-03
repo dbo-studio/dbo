@@ -51,5 +51,6 @@
     "run": "Run",
     "columns": "Columns",
     "no_active_schema_find": "No Active Schema Find",
-    "beatify": "Beatify"
+    "beatify": "Beatify",
+    "minify": "Minify"
 }

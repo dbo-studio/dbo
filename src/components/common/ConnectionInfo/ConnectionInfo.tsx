@@ -1,7 +1,7 @@
 import ConnectionBox from '@/src/components/common/ConnectionInfo/ConnectionBox';
+import { TabMode } from '@/src/core/enums';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
-import { TabMode } from '@/src/types';
 import { IconButton, Stack } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import dynamic from 'next/dynamic';

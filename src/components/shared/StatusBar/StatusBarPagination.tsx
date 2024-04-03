@@ -1,4 +1,4 @@
-import { TabMode } from '@/src/types';
+import { TabMode } from '@/src/core/enums';
 import { Box, IconButton, Typography } from '@mui/material';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 

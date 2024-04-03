@@ -1,9 +1,9 @@
 import api from '@/src/api';
+import { TabMode } from '@/src/core/enums';
 import useAPI from '@/src/hooks/useApi.hook';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
 import { useDataStore } from '@/src/store/dataStore/data.store';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
-import { TabMode } from '@/src/types';
 import { Box, IconButton, Stack } from '@mui/material';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import LoadingIconButton from '../../base/LoadingIconButton/LoadingIconButton';

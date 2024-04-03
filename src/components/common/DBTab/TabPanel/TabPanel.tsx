@@ -1,5 +1,5 @@
+import { TabMode } from '@/src/core/enums';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
-import { TabMode } from '@/src/types';
 import { Box } from '@mui/material';
 import dynamic from 'next/dynamic';
 

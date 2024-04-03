@@ -1,3 +1,4 @@
+import { TabMode } from '../core/enums';
 import { RowType } from './Data';
 
 export type SortType = {
@@ -28,12 +29,6 @@ export type TabType = {
   filters: FilterType[];
   mode: TabMode;
 };
-
-export enum TabMode {
-  Data = 0,
-  Design = 1,
-  Query = 2
-}
 
 export type EditedRow = {
   dboIndex: number;

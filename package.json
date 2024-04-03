@@ -34,6 +34,7 @@
     "lucide-react": "^0.309.0",
     "next": "14.0.4",
     "next-pwa": "^5.6.0",
+    "pgsql-minify": "^1.0.7",
     "react": "^18.2.0",
     "react-data-grid": "7.0.0-beta.40",
     "react-dom": "^18.2.0",

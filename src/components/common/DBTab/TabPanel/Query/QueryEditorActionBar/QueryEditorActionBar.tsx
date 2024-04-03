@@ -3,6 +3,7 @@ import { useDataStore } from '@/src/store/dataStore/data.store';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { Button, Stack, useTheme } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
+import { minify } from 'pgsql-minify';
 import { format } from 'sql-formatter';
 
 export default function QueryEditorActionBar() {
@@ -13,6 +14,13 @@ export default function QueryEditorActionBar() {
   const handleFormatSql = () => {
     if (selectedTab && selectedTab.query.length > 0) {
       selectedTab.query = format(selectedTab.query, { language: 'postgresql' });
+      updateSelectedTab(selectedTab);
+    }
+  };
+
+  const handleMinifySql = () => {
+    if (selectedTab && selectedTab.query.length > 0) {
+      selectedTab.query = minify(selectedTab.query);
       updateSelectedTab(selectedTab);
     }
   };
@@ -30,6 +38,9 @@ export default function QueryEditorActionBar() {
       <Grid md={8} display='flex' justifyContent='flex-start'></Grid>
       <Grid md={8} mx={2} display='flex' justifyContent='flex-end'>
         <Stack spacing={2} direction={'row'}>
+          <Button variant='outlined' size='small' aria-label='grid' onClick={handleMinifySql}>
+            {locales.minify}
+          </Button>
           <Button variant='outlined' size='small' aria-label='grid' onClick={handleFormatSql}>
             {locales.beatify}
           </Button>

@@ -65,6 +65,9 @@ dependencies:
   next-pwa:
     specifier: ^5.6.0
     version: 5.6.0(@babel/core@7.24.3)(next@14.0.4)(webpack@5.91.0)
+  pgsql-minify:
+    specifier: ^1.0.7
+    version: 1.0.7
   react:
     specifier: ^18.2.0
     version: 18.2.0
@@ -5169,6 +5172,10 @@ packages:
   /path-type@4.0.0:
     resolution: {integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==}
     engines: {node: '>=8'}
+
+  /pgsql-minify@1.0.7:
+    resolution: {integrity: sha512-uOVLTXgEAY3sLoDjhaYHJWOwdpcxTwRjsNQXYh8WJk/weJhufgsSWdM/rBjLZhnynPZwu6QaXJn6k8xQntODfA==}
+    dev: false
 
   /picocolors@1.0.0:
     resolution: {integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==}
