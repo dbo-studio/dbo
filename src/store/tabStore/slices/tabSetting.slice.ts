@@ -1,4 +1,5 @@
-import { TabMode, TabType } from '@/src/types/Tab';
+import { TabMode } from '@/src/core/enums';
+import { TabType } from '@/src/types/Tab';
 import { v4 as uuidv4 } from 'uuid';
 import { StateCreator } from 'zustand';
 import { TabSettingSlice, TabStore } from '../types';

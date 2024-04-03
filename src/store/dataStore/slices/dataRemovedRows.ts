@@ -52,5 +52,6 @@ export const createDataRemovedRowsSlice: StateCreator<
 
     set({ removedRows });
     get().discardUnsavedRows(unsavedRows);
+    get().updateSelectedRows([]);
   }
 });

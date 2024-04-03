@@ -84,10 +84,10 @@ export default function StatusBarActions() {
 
   const handleDiscardChanges = () => {
     if (selectedTab?.mode == TabMode.Data) {
-      updateRemovedRows();
+      updateSelectedRows([]);
       restoreEditedRows();
       discardUnsavedRows();
-      updateSelectedRows([]);
+      updateRemovedRows();
     }
 
     if (selectedTab?.mode == TabMode.Design) {
