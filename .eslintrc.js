@@ -34,7 +34,13 @@ module.exports = {
     'prettier/prettier': 'error',
     'arrow-body-style': 'off',
     'prefer-arrow-callback': 'off',
-    '@typescript-eslint/no-explicit-any': 0
+    '@typescript-eslint/no-explicit-any': 0,
+    'no-restricted-imports': [
+      'error',
+      {
+        patterns: ['@mui/*/*/*']
+      }
+    ]
   },
   plugins: ['react', 'prettier', '@typescript-eslint', 'unused-imports'],
 

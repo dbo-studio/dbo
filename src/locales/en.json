@@ -50,5 +50,6 @@
     "comment": "Comment",
     "run": "Run",
     "columns": "Columns",
-    "no_active_schema_find": "No Active Schema Find"
+    "no_active_schema_find": "No Active Schema Find",
+    "beatify": "Beatify"
 }
