@@ -22,6 +22,11 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       query: mode == TabMode.Query ? '' : `SELECT * FROM ${table}`,
       filters: [],
       sorts: [],
+      pagination: {
+        page: 1,
+        limit: 100,
+        offset: 0
+      },
       showColumns: false,
       showFilters: false,
       showQuery: false,

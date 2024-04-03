@@ -27,8 +27,8 @@ export const createDataQuerySlice: StateCreator<
         connection_id: currentConnection.id,
         table: selectedTab.table,
         schema: currentConnection.currentSchema!,
-        limit: 100,
-        offset: 0,
+        limit: selectedTab.pagination.limit,
+        offset: (selectedTab.pagination.page - 1) * selectedTab.pagination.limit,
         columns: [],
         filters: filters.filter(
           (f) =>

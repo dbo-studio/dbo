@@ -1,4 +1,5 @@
-import { Stack, styled } from '@mui/material';
+import { variables } from '@/src/core/theme/variables';
+import { Box, Stack, styled } from '@mui/material';
 import { StatusBarStylesProps } from './types';
 
 export const StatusBarStyled = styled(Stack)<StatusBarStylesProps>(({ theme }) => ({
@@ -6,4 +7,11 @@ export const StatusBarStyled = styled(Stack)<StatusBarStylesProps>(({ theme }) =
   width: '100%',
   borderTop: `1px solid ${theme.palette.divider}`,
   padding: '4px 8px 0 8px'
+}));
+
+export const PaginationSettingStyled = styled(Box)(({ theme }) => ({
+  background: theme.palette.background.default,
+  borderRadius: variables.radius.medium,
+  border: `1px solid ${theme.palette.divider}`,
+  padding: theme.spacing(1)
 }));

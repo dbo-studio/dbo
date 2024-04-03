@@ -25,7 +25,7 @@ export default forwardRef(function FieldInput(props: FieldInputProps, ref) {
   };
 
   return (
-    <Box>
+    <Box display={'flex'} flexDirection={'column'}>
       <Box display={'flex'} flexDirection={'row'} justifyContent={'space-between'}>
         <Typography color={theme.palette.text.secondary} variant='caption'>
           {props.label}

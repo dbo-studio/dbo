@@ -21,6 +21,7 @@ export type TabType = {
   id: string;
   table: string;
   query: string;
+  pagination: TabDataPagination;
   showQuery: boolean;
   showColumns: boolean;
   showFilters: boolean;
@@ -35,4 +36,10 @@ export type EditedRow = {
   conditions: object;
   old: RowType;
   new: RowType;
+};
+
+export type TabDataPagination = {
+  page: number;
+  limit: number;
+  offset: number;
 };

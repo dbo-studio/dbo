@@ -1,8 +1,10 @@
 import { useTabStore } from '@/src/store/tabStore/tab.store';
+import dynamic from 'next/dynamic';
 import { StatusBarStyled } from './StatusBar.styled';
-import StatusBarActions from './StatusBarActions';
-import StatusBarPagination from './StatusBarPagination';
-import StatusBarTabs from './StatusBarTabs';
+
+const StatusBarActions = dynamic(() => import('./StatusBarActions'));
+const StatusBarTabs = dynamic(() => import('./StatusBarTabs'));
+const StatusBarPagination = dynamic(() => import('./StatusBarPagination'));
 
 export default function StatusBar() {
   const { selectedTab } = useTabStore();

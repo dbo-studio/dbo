@@ -177,6 +177,7 @@
     display: flex;
     justify-content: flex-start;
     align-items: center;
+    max-width: 400px;
   }
 
   .cj343x07-0-0-beta-40[aria-selected="true"] {
