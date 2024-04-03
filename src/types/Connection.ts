@@ -3,6 +3,7 @@ export interface ConnectionType {
   name: string;
   type: string;
   driver: string;
+  version: string;
   currentDatabase?: string;
   currentSchema?: string;
   isActive: boolean;

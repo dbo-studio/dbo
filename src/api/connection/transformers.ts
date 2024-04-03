@@ -22,6 +22,7 @@ export const transformConnectionDetail = (data: any): ConnectionType => {
     name: data?.name,
     type: data?.type,
     driver: data?.driver,
+    version: data?.version,
     currentDatabase: data?.current_database,
     currentSchema: data?.current_schema,
     isActive: data?.isActive,

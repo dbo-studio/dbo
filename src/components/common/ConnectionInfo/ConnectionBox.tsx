@@ -16,7 +16,9 @@ export default function ConnectionBox() {
     } else {
       setInfo(
         currentConnection?.driver +
-          ' 15.1: ' +
+          ' ' +
+          currentConnection?.version +
+          ' ' +
           currentConnection.currentSchema +
           ': ' +
           currentConnection?.name +

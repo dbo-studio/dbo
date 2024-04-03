@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/khodemobin/dbo/api/dto"
 	"gorm.io/gorm"
@@ -138,6 +139,19 @@ func (p *PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryDto) (*UpdateQuery
 		Query:        queries,
 		RowsAffected: rowsAffected,
 	}, nil
+}
+
+func (p *PostgresQueryEngine) Version(connectionId int32) (string, error) {
+	db, err := p.Connect(connectionId)
+	if err != nil {
+		return "", errors.New("Connection error: " + err.Error())
+	}
+
+	var version string
+	result := db.Raw("SELECT version()").Scan(&version)
+	version = strings.Split(version, " ")[1]
+
+	return version, result.Error
 }
 
 func (p *PostgresQueryEngine) Databases(connectionId int32, withTemplates bool) ([]string, error) {

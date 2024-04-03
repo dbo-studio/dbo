@@ -18,6 +18,7 @@ type connectionInfo struct {
 	Name            string      `json:"name"`
 	Type            string      `json:"type"`
 	Driver          string      `json:"driver"`
+	Version         string      `json:"version"`
 	IsActive        bool        `json:"is_active"`
 	CurrentDatabase string      `json:"current_database"`
 	CurrentSchema   string      `json:"current_schema"`
@@ -55,12 +56,13 @@ func Connections(connections []model.Connection) any {
 	return data
 }
 
-func Connection(connection *model.Connection, databases []string, schemas []string, tables []string) any {
+func Connection(connection *model.Connection, version string, databases []string, schemas []string, tables []string) any {
 	return connectionInfo{
 		ID:              int64(connection.ID),
 		Name:            connection.Name,
 		Type:            "SQL",
 		Driver:          "PostgreSQL",
+		Version:         version,
 		IsActive:        connection.IsActive,
 		CurrentDatabase: connection.CurrentDatabase.String,
 		CurrentSchema:   connection.CurrentSchema.String,

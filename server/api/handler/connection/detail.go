@@ -24,8 +24,13 @@ func connectionDetail(c *fiber.Ctx, connection *model.Connection) error {
 	var err error
 
 	databases, _ := app.Drivers().Pgsql.Databases(int32(connection.ID), false)
+	version, err := app.Drivers().Pgsql.Version(int32(connection.ID))
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(err.Error())
+	}
+
 	if connection.CurrentDatabase.String == "" {
-		return c.JSON(response.Success(response.Connection(connection, databases, schemas, tables)))
+		return c.JSON(response.Success(response.Connection(connection, version, databases, schemas, tables)))
 	}
 
 	schemas, _ = app.Drivers().Pgsql.Schemas(int32(connection.ID), connection.CurrentDatabase.String)
@@ -50,5 +55,5 @@ func connectionDetail(c *fiber.Ctx, connection *model.Connection) error {
 		IsActive: true,
 	})
 
-	return c.JSON(response.Success(response.Connection(connection, databases, schemas, tables)))
+	return c.JSON(response.Success(response.Connection(connection, version, databases, schemas, tables)))
 }
