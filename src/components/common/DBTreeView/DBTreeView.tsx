@@ -9,9 +9,6 @@ export default function DBTreeView() {
   const [tables, setTables] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!currentConnection?.currentSchema) {
-      return;
-    }
     setTables(currentConnection?.tables ?? []);
   }, [currentConnection]);
 
@@ -29,13 +26,9 @@ export default function DBTreeView() {
 
   return (
     <>
-      {currentConnection?.currentSchema && (
-        <>
-          <Search onChange={handleSearch} />
-          <TablesTreeView tables={tables} />
-          <Schemes />
-        </>
-      )}
+      <Search onChange={handleSearch} />
+      <TablesTreeView tables={tables} />
+      <Schemes />
     </>
   );
 }

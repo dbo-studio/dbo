@@ -56,9 +56,22 @@ func (h *ConnectionHandler) updateConnection(connection *model.Connection, req *
 		Valid:  true,
 		String: helper.OptionalString(req.CurrentDatabase, connection.CurrentDatabase.String),
 	}
-	connection.CurrentSchema = sql.NullString{
-		Valid:  true,
-		String: helper.OptionalString(req.CurrentSchema, connection.CurrentSchema.String),
+
+	if req.CurrentDatabase != nil && req.CurrentSchema == nil {
+		schemas, _ := app.Drivers().Pgsql.Schemas(int32(connection.ID), *req.CurrentDatabase)
+		var currentSchema string
+		if len(schemas) > 0 {
+			currentSchema = schemas[0]
+		}
+		connection.CurrentSchema = sql.NullString{
+			Valid:  true,
+			String: currentSchema,
+		}
+	} else {
+		connection.CurrentSchema = sql.NullString{
+			Valid:  true,
+			String: helper.OptionalString(req.CurrentSchema, connection.CurrentSchema.String),
+		}
 	}
 
 	result := app.DB().Save(&connection)

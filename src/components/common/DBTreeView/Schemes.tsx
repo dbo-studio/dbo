@@ -1,5 +1,6 @@
 import api from '@/src/api';
 import useAPI from '@/src/hooks/useApi.hook';
+import locales from '@/src/locales';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
 import { EventFor } from '@/src/types';
 import { Box } from '@mui/material';
@@ -35,16 +36,20 @@ export default function Schemes() {
       <Box>
         {currentConnection && currentConnection.schemas && (
           <SelectInput
+            disabled={currentConnection.schemas.length == 0}
             size='medium'
             fullWidth={true}
             onChange={handleChangeSchema}
-            defaultValue={currentConnection.schemas[0]}
+            defaultValue={currentConnection.currentSchema}
           >
             {currentConnection.schemas.map((s: string) => (
               <SelectOption key={uuid()} value={s}>
                 {s}
               </SelectOption>
             ))}
+            {currentConnection.schemas.length == 0 && (
+              <SelectOption value={'null'}>{locales.no_active_schema_find}</SelectOption>
+            )}
           </SelectInput>
         )}
       </Box>

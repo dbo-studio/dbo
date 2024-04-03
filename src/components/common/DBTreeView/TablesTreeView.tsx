@@ -25,6 +25,7 @@ export default function TablesTreeView({ tables }: { tables: string[] }) {
           {tables.map((table: string, index: number) => (
             <TreeItem onClick={() => handleTableClick(table)} key={uuid()} nodeId={index + '100'} label={table} />
           ))}
+          <TreeItem style={{ display: 'none' }} nodeId={'100'} />
         </TreeItem>
       </TreeView>
     </Box>

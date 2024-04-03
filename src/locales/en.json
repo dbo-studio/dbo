@@ -49,5 +49,6 @@
     "not_null": "Not Null",
     "comment": "Comment",
     "run": "Run",
-    "columns": "Columns"
+    "columns": "Columns",
+    "no_active_schema_find": "No Active Schema Find"
 }

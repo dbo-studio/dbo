@@ -70,6 +70,7 @@ export default function ColumnItem({
         )}
       </TableCell>
       <TableCell align='left'>
+        {/* todo we have some problem here, the types doest match */}
         <SelectInput
           value={value.type}
           defaultValue={value.type}
