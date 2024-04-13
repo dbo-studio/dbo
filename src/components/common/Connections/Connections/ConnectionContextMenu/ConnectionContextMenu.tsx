@@ -2,7 +2,7 @@ import api from '@/src/api';
 import CustomIcon from '@/src/components/base/CustomIcon/CustomIcon';
 import useAPI from '@/src/hooks/useApi.hook';
 import locales from '@/src/locales';
-import { useConfirmModalStore } from '@/src/store/confirmModal/confirm_modal.store';
+import { useConfirmModalStore } from '@/src/store/confirmModal/confirmModal.store';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
 import { Box, Menu, MenuItem, Stack } from '@mui/material';
 import { toast } from 'sonner';

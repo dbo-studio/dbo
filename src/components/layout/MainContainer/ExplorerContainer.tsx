@@ -5,6 +5,7 @@ import { useSettingStore } from '@/src/store/settingStore/setting.store';
 import { Box, Tab, Tabs } from '@mui/material';
 import { useMemo, useState } from 'react';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
+import SavedQueries from '../../common/SavedQueries/SavedQueries';
 import { ExplorerContainerStyled } from './Container.styled';
 
 const tabs = [
@@ -20,7 +21,7 @@ const tabs = [
     id: 1,
     content: (
       <>
-        <p>Queries</p>
+        <SavedQueries />
       </>
     )
   },

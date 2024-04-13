@@ -7,7 +7,7 @@ import (
 type savedQueryInfo struct {
 	ID    int64  `json:"id"`
 	Name  string `json:"name"`
-	Query string `json:"type"`
+	Query string `json:"query"`
 }
 
 func SavedQueries(histories []model.SavedQuery) []savedQueryInfo {

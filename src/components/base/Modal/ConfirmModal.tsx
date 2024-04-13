@@ -1,5 +1,5 @@
 import locales from '@/src/locales';
-import { useConfirmModalStore } from '@/src/store/confirmModal/confirm_modal.store';
+import { useConfirmModalStore } from '@/src/store/confirmModal/confirmModal.store';
 import { Box, Button, Divider, Typography, useTheme } from '@mui/material';
 import { ConfirmModalWrapperStyled, ModalStyled } from './Modal.styled';
 
