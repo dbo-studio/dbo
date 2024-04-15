@@ -154,3 +154,34 @@ func (p *PostgresQueryEngine) insertQueryGenerator(dto *dto.UpdateQueryDto) []st
 
 	return queries
 }
+
+func (p *PostgresQueryEngine) updateDesignGenerator(dto *dto.DesignDto) []string {
+	queries := []string{}
+
+	for _, editedItem := range dto.EditedItems {
+		if len(editedItem.Values) == 0 || len(editedItem.Conditions) == 0 {
+			continue
+		}
+
+		query := fmt.Sprintf(`UPDATE "%s"."%s" SET `, dto.Schema, dto.Table)
+		for key, value := range editedItem.Values {
+			if key == "dbo_index" {
+				continue
+			}
+			query += fmt.Sprintf(`"%s" = '%v', `, key, value)
+		}
+
+		query = query[:len(query)-2]
+
+		query += " WHERE "
+		for key, value := range editedItem.Conditions {
+			query += fmt.Sprintf("%s = '%v' AND ", key, value)
+		}
+
+		query = query[:len(query)-5]
+
+		queries = append(queries, query)
+	}
+
+	return queries
+}
