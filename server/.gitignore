@@ -1,6 +1,0 @@
-tmp
-logs
-bin
-*.db
-dbo
-/docker/data

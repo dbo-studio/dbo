@@ -1,0 +1,23 @@
+services:
+  backend:
+    container_name: dbo-studio-api
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/back/
+    env_file:
+      - .env
+    ports:
+      - ${APP_PORT}
+  frontend:
+    container_name: dbo-studio-frontend
+    restart: unless-stopped
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend:/app
+    env_file: .env
+    ports:
+      - ${FRONT_PORT}:${FRONT_PORT}

@@ -1,0 +1,16 @@
+# Base layer
+FROM node:20-alpine
+
+# Set the working directory 
+WORKDIR /app
+
+# Copy all files 
+COPY . .
+
+# Install pnpm
+RUN npm i -g pnpm
+
+# Install 
+RUN pnpm install --ignore-scripts
+
+CMD ["pnpm", "next", "dev"]
