@@ -1,16 +1,16 @@
 package drivers
 
 import (
-	"github.com/khodemobin/dbo/drivers/pgsql"
+	pgsql_driver "github.com/khodemobin/dbo/drivers/pgsql"
 	"gorm.io/gorm"
 )
 
 type DriverEngine struct {
-	Pgsql *pgsql.PostgresQueryEngine
+	Pgsql *pgsql_driver.PostgresQueryEngine
 }
 
 func InitDrivers(db *gorm.DB) *DriverEngine {
 	return &DriverEngine{
-		Pgsql: pgsql.InitPostgresEngine(db),
+		Pgsql: pgsql_driver.InitPostgresEngine(db),
 	}
 }

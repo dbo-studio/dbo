@@ -1,4 +1,4 @@
-package pgsql
+package pgsql_driver
 
 import (
 	"errors"
