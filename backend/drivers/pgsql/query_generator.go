@@ -158,30 +158,48 @@ func (p *PostgresQueryEngine) insertQueryGenerator(dto *dto.UpdateQueryDto) []st
 func (p *PostgresQueryEngine) updateDesignGenerator(dto *dto.DesignDto) []string {
 	queries := []string{}
 
-	// for _, editedItem := range dto.EditedItems {
-	// 	if len(editedItem.Values) == 0 || len(editedItem.Conditions) == 0 {
-	// 		continue
-	// 	}
+	for _, editedItem := range dto.EditedItems {
+		query := fmt.Sprintf(`ALTER TABLE "%s"."%s" `, dto.Schema, dto.Table)
+		query += fmt.Sprintf(`ALTER COLUMN "%s"."%s" TYPE %s(%s) COLLATE "pg_catalog"."%s" USING "%s"::%s(%s) `, dto.Schema, dto.Table,editedItem.Type,editedItem.Length,dto.Database,dto.Table,editedItem.Type,editedItem.Length)
+		
+		if(editedItem.IsNull){
+			query += fmt.Sprintf(`ALTER COLUMN "%s"."%s" SET NULL`, dto.Schema, dto.Table,editedItem.Type,editedItem.Length,dto.Database,dto.Table,editedItem.Type,editedItem.Length)
+		}else{
 
-	// 	query := fmt.Sprintf(`UPDATE "%s"."%s" SET `, dto.Schema, dto.Table)
-	// 	for key, value := range editedItem.Values {
-	// 		if key == "dbo_index" {
-	// 			continue
-	// 		}
-	// 		query += fmt.Sprintf(`"%s" = '%v', `, key, value)
-	// 	}
+		}
 
-	// 	query = query[:len(query)-2]
+		// ALTER TABLE "public"."data_src" 
+		// ALTER COLUMN "authors" TYPE varchar(255) COLLATE "pg_catalog"."default" USING "authors"::varchar(255),
+		// ALTER COLUMN "authors" SET NOT NULL
+		// ALTER TABLE "public"."data_src" RENAME COLUMN "authors" TO "authors_renamed"
 
-	// 	query += " WHERE "
-	// 	for key, value := range editedItem.Conditions {
-	// 		query += fmt.Sprintf("%s = '%v' AND ", key, value)
-	// 	}
+		for key, value := range editedItem.Values {
+			if key == "dbo_index" {
+				continue
+			}
+			query += fmt.Sprintf(`"%s" = '%v', `, key, value)
+		}
 
-	// 	query = query[:len(query)-5]
+		query = query[:len(query)-2]
 
-	// 	queries = append(queries, query)
-	// }
+		query += " WHERE "
+		for key, value := range editedItem.Conditions {
+			query += fmt.Sprintf("%s = '%v' AND ", key, value)
+		}
+
+		query = query[:len(query)-5]
+
+		queries = append(queries, query)
+	}
 
 	return queries
 }
+create table "users" (
+	"id" serial primary key,
+	"first_name" VARYING CHARACTER not null default fghfgh,
+	"last_name" varchar(255) null,
+	"email" varchar(255) not null,
+	"created_at" timestamp not null default NOW(),
+	"updated_at" timestamp not null default NOW()
+  );
+  comment on column "users"."first_name" is 'vbnvbn'

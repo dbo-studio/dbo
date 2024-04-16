@@ -21,6 +21,9 @@ func (r *Server) routing() {
 	database.Post("/", r.databaseHandler.AddDatabase)
 	database.Delete("/", r.databaseHandler.DeleteDatabase)
 
+	design := api.Group("design")
+	design.Patch("/design", r.designHandler.UpdateDesign)
+
 	history := api.Group("saved")
 	history.Get("/", r.savedQueryHandler.SavedQueries)
 	history.Post("/", r.savedQueryHandler.AddSavedQuery)
