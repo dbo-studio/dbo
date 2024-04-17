@@ -22,7 +22,7 @@ func (r *Server) routing() {
 	database.Delete("/", r.databaseHandler.DeleteDatabase)
 
 	design := api.Group("design")
-	design.Patch("/design", r.designHandler.UpdateDesign)
+	design.Patch("/", r.designHandler.UpdateDesign)
 
 	history := api.Group("saved")
 	history.Get("/", r.savedQueryHandler.SavedQueries)

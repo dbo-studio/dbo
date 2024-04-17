@@ -11,10 +11,11 @@ type DesignDto struct {
 }
 
 type DesignItem struct {
-	Name    string `json:"name" validate:"required"`
-	Type    string `json:"type" validate:"required"`
-	Length  string `json:"length" validate:"required"`
-	IsNull  bool   `json:"is_null" validate:"required"`
-	Default string `json:"default" validate:"required"`
-	Comment string `json:"comment" validate:"required"`
+	Name    string  `json:"name" validate:"required,min=1"`
+	Length  *string `json:"length"`
+	Type    *string `json:"type" validate:"required_with=length,min=1"`
+	IsNull  *bool   `json:"is_null" validate:"boolean"`
+	Default *string `json:"default" validate:"min=1"`
+	Comment *string `json:"comment" validate:"min=1"`
+	Rename  *string `json:"rename" validate:"min=1"`
 }

@@ -160,46 +160,42 @@ func (p *PostgresQueryEngine) updateDesignGenerator(dto *dto.DesignDto) []string
 
 	for _, editedItem := range dto.EditedItems {
 		query := fmt.Sprintf(`ALTER TABLE "%s"."%s" `, dto.Schema, dto.Table)
-		query += fmt.Sprintf(`ALTER COLUMN "%s"."%s" TYPE %s(%s) COLLATE "pg_catalog"."%s" USING "%s"::%s(%s) `, dto.Schema, dto.Table,editedItem.Type,editedItem.Length,dto.Database,dto.Table,editedItem.Type,editedItem.Length)
-		
-		if(editedItem.IsNull){
-			query += fmt.Sprintf(`ALTER COLUMN "%s"."%s" SET NULL`, dto.Schema, dto.Table,editedItem.Type,editedItem.Length,dto.Database,dto.Table,editedItem.Type,editedItem.Length)
-		}else{
 
+		if editedItem.Type != nil {
+			if editedItem.Length != nil {
+				query += fmt.Sprintf(`ALTER COLUMN "%s" TYPE %s(%s) COLLATE "pg_catalog"."%s" USING "%s"::%s(%s) `, editedItem.Name, *editedItem.Type, *editedItem.Length, dto.Database, editedItem.Name, *editedItem.Type, *editedItem.Length)
+			} else {
+				query += fmt.Sprintf(`ALTER COLUMN "%s" TYPE %s COLLATE "pg_catalog"."%s" USING "%s"::%s `, editedItem.Name, *editedItem.Type, dto.Database, editedItem.Name, *editedItem.Type)
+			}
 		}
 
-		// ALTER TABLE "public"."data_src" 
+		if editedItem.IsNull != nil {
+			if *editedItem.IsNull {
+				query += fmt.Sprintf(`ALTER COLUMN "%s" SET NULL`, editedItem.Name)
+			} else {
+				query += fmt.Sprintf(`ALTER COLUMN "%s" SET NOT NULL `, editedItem.Name)
+			}
+		}
+
+		query += fmt.Sprintf(`ALTER TABLE "%s"."%s" RENAME COLUMN "%s" TO "%s"`, dto.Schema, dto.Table, editedItem.Name, *editedItem.Rename)
+
+		// ALTER TABLE "public"."data_src"
 		// ALTER COLUMN "authors" TYPE varchar(255) COLLATE "pg_catalog"."default" USING "authors"::varchar(255),
 		// ALTER COLUMN "authors" SET NOT NULL
 		// ALTER TABLE "public"."data_src" RENAME COLUMN "authors" TO "authors_renamed"
-
-		for key, value := range editedItem.Values {
-			if key == "dbo_index" {
-				continue
-			}
-			query += fmt.Sprintf(`"%s" = '%v', `, key, value)
-		}
-
-		query = query[:len(query)-2]
-
-		query += " WHERE "
-		for key, value := range editedItem.Conditions {
-			query += fmt.Sprintf("%s = '%v' AND ", key, value)
-		}
-
-		query = query[:len(query)-5]
 
 		queries = append(queries, query)
 	}
 
 	return queries
 }
-create table "users" (
-	"id" serial primary key,
-	"first_name" VARYING CHARACTER not null default fghfgh,
-	"last_name" varchar(255) null,
-	"email" varchar(255) not null,
-	"created_at" timestamp not null default NOW(),
-	"updated_at" timestamp not null default NOW()
-  );
-  comment on column "users"."first_name" is 'vbnvbn'
+
+// create table "users" (
+// 	"id" serial primary key,
+// 	"first_name" VARYING CHARACTER not null default fghfgh,
+// 	"last_name" varchar(255) null,
+// 	"email" varchar(255) not null,
+// 	"created_at" timestamp not null default NOW(),
+// 	"updated_at" timestamp not null default NOW()
+//   );
+//   comment on column "users"."first_name" is 'vbnvbn'
