@@ -11,6 +11,6 @@ COPY . .
 RUN npm i -g pnpm
 
 # Install 
-RUN pnpm install --ignore-scripts
+RUN pnpm install
 
 CMD ["pnpm", "next", "dev"]
