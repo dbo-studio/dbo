@@ -156,46 +156,55 @@ func (p *PostgresQueryEngine) insertQueryGenerator(dto *dto.UpdateQueryDto) []st
 }
 
 func (p *PostgresQueryEngine) updateDesignGenerator(dto *dto.DesignDto) []string {
-	queries := []string{}
+	alter := fmt.Sprintf(`ALTER TABLE "%s"."%s" `, dto.Schema, dto.Table)
 
+	queries := []string{}
 	for _, editedItem := range dto.EditedItems {
-		query := fmt.Sprintf(`ALTER TABLE "%s"."%s" `, dto.Schema, dto.Table)
 
 		if editedItem.Type != nil {
+			query := alter
 			if editedItem.Length != nil {
-				query += fmt.Sprintf(`ALTER COLUMN "%s" TYPE %s(%s) COLLATE "pg_catalog"."%s" USING "%s"::%s(%s) `, editedItem.Name, *editedItem.Type, *editedItem.Length, dto.Database, editedItem.Name, *editedItem.Type, *editedItem.Length)
+				query += fmt.Sprintf(`ALTER COLUMN "%s" SET DATA TYPE %s(%s)`, editedItem.Name, *editedItem.Type, *editedItem.Length)
 			} else {
-				query += fmt.Sprintf(`ALTER COLUMN "%s" TYPE %s COLLATE "pg_catalog"."%s" USING "%s"::%s `, editedItem.Name, *editedItem.Type, dto.Database, editedItem.Name, *editedItem.Type)
+				query += fmt.Sprintf(`ALTER COLUMN "%s" SET DATA TYPE %s`, editedItem.Name, *editedItem.Type)
 			}
+
+			queries = append(queries, query)
 		}
 
 		if editedItem.IsNull != nil {
+			query := alter
 			if *editedItem.IsNull {
-				query += fmt.Sprintf(`ALTER COLUMN "%s" SET NULL`, editedItem.Name)
+				query += fmt.Sprintf(`ALTER COLUMN "%s" DROP NOT NULL`, editedItem.Name)
 			} else {
-				query += fmt.Sprintf(`ALTER COLUMN "%s" SET NOT NULL `, editedItem.Name)
+				query += fmt.Sprintf(`ALTER COLUMN "%s" SET NOT NULL`, editedItem.Name)
 			}
+			queries = append(queries, query)
 		}
 
-		query += fmt.Sprintf(`ALTER TABLE "%s"."%s" RENAME COLUMN "%s" TO "%s"`, dto.Schema, dto.Table, editedItem.Name, *editedItem.Rename)
+		if editedItem.Rename != nil {
+			query := alter + fmt.Sprintf(`RENAME COLUMN "%s" TO "%s"`, editedItem.Name, *editedItem.Rename)
+			queries = append(queries, query)
+		}
 
-		// ALTER TABLE "public"."data_src"
-		// ALTER COLUMN "authors" TYPE varchar(255) COLLATE "pg_catalog"."default" USING "authors"::varchar(255),
-		// ALTER COLUMN "authors" SET NOT NULL
-		// ALTER TABLE "public"."data_src" RENAME COLUMN "authors" TO "authors_renamed"
+		if editedItem.Default != nil {
+			query := alter
 
-		queries = append(queries, query)
+			if editedItem.Default.MakeNull != nil && *editedItem.Default.MakeNull {
+				query += fmt.Sprintf(`ALTER COLUMN "%s" SET DEFAULT NULL`, editedItem.Name)
+			} else if editedItem.Default.MakeEmpty != nil && *editedItem.Default.MakeEmpty {
+				query += fmt.Sprintf(`ALTER COLUMN "%s" SET DEFAULT ''`, editedItem.Name)
+			} else {
+				query += fmt.Sprintf(`ALTER COLUMN "%s" SET DEFAULT '%s'`, editedItem.Name, *editedItem.Default.Value)
+			}
+			queries = append(queries, query)
+		}
+
+		if editedItem.Comment != nil {
+			query := fmt.Sprintf(`COMMENT ON COLUMN "%s"."%s"."%s" IS '%s'`, dto.Schema, dto.Table, editedItem.Name, *editedItem.Comment)
+			queries = append(queries, query)
+		}
 	}
 
 	return queries
 }
-
-// create table "users" (
-// 	"id" serial primary key,
-// 	"first_name" VARYING CHARACTER not null default fghfgh,
-// 	"last_name" varchar(255) null,
-// 	"email" varchar(255) not null,
-// 	"created_at" timestamp not null default NOW(),
-// 	"updated_at" timestamp not null default NOW()
-//   );
-//   comment on column "users"."first_name" is 'vbnvbn'
