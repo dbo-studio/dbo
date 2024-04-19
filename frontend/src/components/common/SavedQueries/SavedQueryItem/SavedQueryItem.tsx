@@ -1,6 +1,8 @@
 import api from '@/src/api';
+import { TabMode } from '@/src/core/enums';
 import useAPI from '@/src/hooks/useApi.hook';
 import useContextMenu from '@/src/hooks/useContextMenu';
+import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { Box, ClickAwayListener, Typography, useTheme } from '@mui/material';
 import { useState } from 'react';
 import CustomIcon from '../../../base/CustomIcon/CustomIcon';
@@ -10,10 +12,12 @@ import { SavedQueryItemProps } from '../types';
 import SavedQueryContextMenu from './SavedQueryContextMenu/SavedQueryContextMenu';
 import { SavedQueryItemStyled } from './SavedQueryItem.styled';
 
-export default function SavedQueryItem({ query, onChange, onDelete }: SavedQueryItemProps) {
+export default function SavedQueryItem({ query, selected, onChange, onDelete, onClick }: SavedQueryItemProps) {
   const [editMode, setEditMode] = useState(false);
   const [name, setName] = useState(query.name);
   const theme = useTheme();
+
+  const { addTab } = useTabStore();
 
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
@@ -46,10 +50,15 @@ export default function SavedQueryItem({ query, onChange, onDelete }: SavedQuery
     setEditMode(false);
   };
 
+  const handleRun = () => {
+    const name = query.name.slice(0, 10);
+    addTab(name, TabMode.Query, query.query);
+  };
+
   return (
     <ClickAwayListener onClickAway={handleDiscardChanges}>
-      <SavedQueryItemStyled onContextMenu={handleContextMenu}>
-        <Box flex={1} mr={theme.spacing(1)} onDoubleClick={() => handleEditMode(true)}>
+      <SavedQueryItemStyled selected={selected} onContextMenu={handleContextMenu}>
+        <Box flex={1} mr={theme.spacing(1)} onDoubleClick={handleRun} onClick={() => onClick()}>
           {editMode ? (
             <FieldInput
               size='small'

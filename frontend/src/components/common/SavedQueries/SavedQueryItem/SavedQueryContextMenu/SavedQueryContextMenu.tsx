@@ -51,7 +51,8 @@ export default function SavedQueryContextMenu({
   };
 
   const handleRun = () => {
-    addTab(query.name, TabMode.Query, query.query);
+    const name = query.name.slice(0, 10);
+    addTab(name, TabMode.Query, query.query);
     onClose();
   };
 
