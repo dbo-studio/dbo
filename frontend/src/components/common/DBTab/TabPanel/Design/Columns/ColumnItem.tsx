@@ -66,7 +66,7 @@ export default function ColumnItem({
         {column?.editMode?.name ? (
           <FieldInput
             onChange={(e) => handleOnColumnChange(e.target.value, 'name')}
-            sx={{ marginBottom: '0' }}
+            margin='none'
             name='name'
             size='small'
             value={value.name}
@@ -98,7 +98,7 @@ export default function ColumnItem({
       <TableCell align='left'>
         {column?.editMode?.length ? (
           <FieldInput
-            sx={{ marginBottom: '0' }}
+            margin='none'
             onChange={(e) => handleOnColumnChange(e.target.value, 'length')}
             name='length'
             value={value.length}
@@ -113,7 +113,7 @@ export default function ColumnItem({
       </TableCell>
       <TableCell align='left'>
         {column?.editMode?.default ? (
-          <FieldInput sx={{ marginBottom: '0' }} name='default' value={value.default} size='small' type='string' />
+          <FieldInput margin='none' name='default' value={value.default} size='small' type='string' />
         ) : (
           <Typography onClick={() => handleToggleEdit('default')} variant='body2'>
             {value.default}
@@ -125,7 +125,7 @@ export default function ColumnItem({
       </TableCell>
       <TableCell align='left'>
         {column?.editMode?.comment ? (
-          <FieldInput sx={{ marginBottom: '0' }} name='comment' value={value.comment} size='small' type='string' />
+          <FieldInput margin='none' name='comment' value={value.comment} size='small' type='string' />
         ) : (
           <Typography onClick={() => handleToggleEdit('comment')} variant='body2'>
             {value.comment}

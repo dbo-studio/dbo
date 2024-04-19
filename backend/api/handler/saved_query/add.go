@@ -31,7 +31,7 @@ func (h *SavedQueryHandler) AddSavedQuery(c *fiber.Ctx) error {
 func createSavedQuery(req *dto.CreateSavedQueryDto) (*model.SavedQuery, error) {
 	var query model.SavedQuery
 	if req.Name == nil {
-		query.Name = req.Query[0:10]
+		query.Name = req.Query[0:20]
 	} else {
 		query.Name = *req.Name
 	}

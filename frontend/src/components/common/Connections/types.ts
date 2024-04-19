@@ -1,4 +1,4 @@
-import { ConnectionType } from '@/src/types';
+import { ConnectionType, ContextMenuType } from '@/src/types';
 import { Theme } from '@mui/material';
 
 export type ConnectionItemStyledProps = {
@@ -14,9 +14,6 @@ export type ConnectionItemProps = {
 
 export type ConnectionContextMenuProps = {
   connection: ConnectionType;
-  contextMenu: {
-    mouseX: number;
-    mouseY: number;
-  } | null;
+  contextMenu: ContextMenuType;
   onClose: () => void;
 };

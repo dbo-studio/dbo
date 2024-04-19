@@ -14,7 +14,7 @@ export default function QueryEditorActionBar() {
   const theme = useTheme();
   const { runRawQuery } = useDataStore();
   const { selectedTab, updateSelectedTab } = useTabStore();
-  const { upsert } = useSavedQueryStore();
+  const { upsertQuery } = useSavedQueryStore();
 
   const { request: createSavedQuery } = useAPI({
     apiMethod: api.savedQueries.createSavedQuery
@@ -44,7 +44,7 @@ export default function QueryEditorActionBar() {
       const res = await createSavedQuery({
         query: selectedTab!.query
       });
-      upsert(res);
+      upsertQuery(res);
       toast.success(locales.query_saved_successfully);
     } catch (error) {
       console.log('🚀 ~ saveQuery ~ error:', error);

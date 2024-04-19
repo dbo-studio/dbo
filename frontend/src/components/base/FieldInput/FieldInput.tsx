@@ -44,11 +44,15 @@ export default forwardRef(function FieldInput(props: FieldInputProps, ref) {
         onChange={handleOnChange}
         sx={{
           borderColor: props.error ? theme.palette.error.light : theme.palette.divider,
-          marginBottom: props.error ? '0px' : theme.spacing(1)
+          marginBottom: props.error || props.margin == 'none' ? '0px' : theme.spacing(1)
         }}
         {...props}
       />
-      <Typography mb={theme.spacing(1)} color={theme.palette.error.light} variant='caption'>
+      <Typography
+        mb={props.margin == 'none' ? 0 : theme.spacing(1)}
+        color={theme.palette.error.light}
+        variant='caption'
+      >
         {props.helperText}
       </Typography>
     </Box>

@@ -45,5 +45,8 @@ export const IconTypes = {
   plus: 'Plus',
   structure: 'Grid3x3',
   structureBlue: 'Grid3x3',
-  delete: 'Trash2'
+  delete: 'Trash2',
+  pen: 'PenLine',
+  play: 'Play',
+  copy: 'Copy'
 };

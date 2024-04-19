@@ -1,0 +1,93 @@
+import api from '@/src/api';
+import CustomIcon from '@/src/components/base/CustomIcon/CustomIcon';
+import { TabMode } from '@/src/core/enums';
+import useAPI from '@/src/hooks/useApi.hook';
+import { useCopyToClipboard } from '@/src/hooks/useCopyToClipboard';
+import locales from '@/src/locales';
+import { useConfirmModalStore } from '@/src/store/confirmModal/confirmModal.store';
+import { useTabStore } from '@/src/store/tabStore/tab.store';
+import { Box, Menu, MenuItem, Stack } from '@mui/material';
+import { toast } from 'sonner';
+import { SavedQueryContextMenuProps } from '../../types';
+
+export default function SavedQueryContextMenu({
+  query,
+  contextMenu,
+  onClose,
+  onDelete,
+  onChange
+}: SavedQueryContextMenuProps) {
+  const [_, copy] = useCopyToClipboard();
+  const { addTab } = useTabStore();
+
+  const showModal = useConfirmModalStore((state) => state.show);
+
+  const { request: deleteSavedQuery, pending: pendingDelete } = useAPI({
+    apiMethod: api.savedQueries.deleteSavedQuery
+  });
+
+  const handleDelete = async () => {
+    onClose();
+    showModal(locales.delete_action, locales.query_saved_delete_confirm, async () => {
+      try {
+        await deleteSavedQuery(query.id);
+        toast.success(locales.database_delete_success);
+        onDelete();
+      } catch (err) {
+        console.log('🚀 ~ handleSaveChange ~ err:', err);
+      }
+    });
+  };
+
+  const handleCopy = async () => {
+    try {
+      await copy(query.query);
+      toast.success(locales.database_delete_success);
+    } catch (error) {
+      console.log('🚀 ~ handleCopy ~ error:', error);
+    } finally {
+      onClose();
+    }
+  };
+
+  const handleRun = () => {
+    addTab(query.name, TabMode.Query, query.query);
+    onClose();
+  };
+
+  return (
+    <Box>
+      <Menu
+        open={contextMenu !== null}
+        onClose={onClose}
+        anchorReference='anchorPosition'
+        anchorPosition={contextMenu !== null ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
+      >
+        <MenuItem onClick={handleRun}>
+          <Stack width={'100%'} alignItems={'center'} justifyContent={'space-between'} direction={'row'}>
+            {locales.run}
+            <CustomIcon type='play' />
+          </Stack>
+        </MenuItem>
+        <MenuItem onClick={handleCopy}>
+          <Stack width={'100%'} alignItems={'center'} justifyContent={'space-between'} direction={'row'}>
+            {locales.copy}
+            <CustomIcon type='copy' />
+          </Stack>
+        </MenuItem>
+        <MenuItem onClick={onChange}>
+          <Stack width={'100%'} alignItems={'center'} justifyContent={'space-between'} direction={'row'}>
+            {locales.rename}
+            <CustomIcon type='pen' />
+          </Stack>
+        </MenuItem>
+        <MenuItem onClick={handleDelete}>
+          <Stack width={'100%'} alignItems={'center'} justifyContent={'space-between'} direction={'row'}>
+            {locales.delete}
+            <CustomIcon type='delete' />
+          </Stack>
+        </MenuItem>
+      </Menu>
+    </Box>
+  );
+}

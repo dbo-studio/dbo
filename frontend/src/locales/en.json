@@ -32,6 +32,7 @@
     "connection_delete_confirm": "Are your sure delete connection?",
     "database_delete_confirm": "Are your sure delete database?",
     "edit": "Edit",
+    "rename": "Rename",
     "delete": "Delete",
     "select_database": "Select database",
     "create_database": "Create database",
@@ -49,8 +50,9 @@
     "not_null": "Not Null",
     "comment": "Comment",
     "run": "Run",
+    "copy": "Copy",
     "columns": "Columns",
-    "no_active_schema_find": "No Active Schema Find",
+    "no_active_schema_find": "No active schema find",
     "beatify": "Beatify",
     "minify": "Minify",
     "limit": "Limit",
@@ -58,6 +60,7 @@
     "offset": "Offset",
     "offset_should_greater_than_zero": "offset should be greater than 0",
     "save": "Save",
-    "empty_query":"Empty query",
-    "query_saved_successfully":"Query saved successfully"
+    "empty_query": "Empty query",
+    "query_saved_successfully": "Query saved successfully",
+    "query_saved_delete_confirm": "Are your sure delete query?"
 }

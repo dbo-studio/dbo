@@ -1,7 +1,7 @@
 import { SavedQueryType } from '@/src/types';
 
 export type SavedQueryStore = {
-  savedQueries: SavedQueryType[];
-  upsert: (savedQuery: SavedQueryType) => void;
-  delete: (id: number) => void;
+  savedQueries: SavedQueryType[] | undefined;
+  upsertQuery: (savedQuery: SavedQueryType) => void;
+  deleteQuery: (id: number) => void;
 };
