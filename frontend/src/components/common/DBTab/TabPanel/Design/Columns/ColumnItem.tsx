@@ -30,9 +30,15 @@ export default function ColumnItem({
     onEditToggle(column);
   };
 
-  const handleOnColumnChange = (value: any, name: 'name' | 'default' | 'length' | 'comment' | 'type') => {
+  const handleOnColumnChange = (value: any, name: 'name' | 'default' | 'length' | 'comment' | 'type' | 'notNull') => {
     const newColumn = clone(column);
-    newColumn[name] = value;
+
+    if (name == 'notNull') {
+      newColumn[name] = value == 'true' ? false : true;
+    } else {
+      newColumn[name] = value;
+    }
+
     setValue(newColumn);
   };
 
@@ -113,7 +119,14 @@ export default function ColumnItem({
       </TableCell>
       <TableCell align='left'>
         {column?.editMode?.default ? (
-          <FieldInput margin='none' name='default' value={value.default} size='small' type='string' />
+          <FieldInput
+            onChange={(e) => handleOnColumnChange(e.target.value, 'default')}
+            margin='none'
+            name='default'
+            value={value.default}
+            size='small'
+            type='string'
+          />
         ) : (
           <Typography onClick={() => handleToggleEdit('default')} variant='body2'>
             {value.default}
@@ -121,11 +134,25 @@ export default function ColumnItem({
         )}
       </TableCell>
       <TableCell align='left'>
-        <Checkbox sx={{ marginBottom: '0' }} name='not_null' checked={value.notNull} size='small' />
+        <Checkbox
+          onChange={(e) => handleOnColumnChange(e.target.value, 'notNull')}
+          sx={{ marginBottom: '0' }}
+          name='notNull'
+          checked={value.notNull}
+          value={value.notNull}
+          size='small'
+        />
       </TableCell>
       <TableCell align='left'>
         {column?.editMode?.comment ? (
-          <FieldInput margin='none' name='comment' value={value.comment} size='small' type='string' />
+          <FieldInput
+            onChange={(e) => handleOnColumnChange(e.target.value, 'comment')}
+            margin='none'
+            name='comment'
+            value={value.comment}
+            size='small'
+            type='string'
+          />
         ) : (
           <Typography onClick={() => handleToggleEdit('comment')} variant='body2'>
             {value.comment}
