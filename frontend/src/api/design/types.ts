@@ -19,5 +19,5 @@ export type UpdateDesignItemType = {
   };
   is_null: true;
   comment: string;
-  rename: string;
+  rename?: string;
 };

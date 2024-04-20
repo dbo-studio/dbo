@@ -1,3 +1,5 @@
+import { updateDesign } from '@/src/api/design';
+import { UpdateDesignItemType } from '@/src/api/design/types';
 import { runQuery, runRawQuery } from '@/src/api/query';
 import { StateCreator } from 'zustand';
 import { useConnectionStore } from '../../connectionStore/connection.store';
@@ -61,6 +63,65 @@ export const createDataQuerySlice: StateCreator<
       const res = await runRawQuery({
         connection_id: currentConnection.id,
         query: selectedTab.query
+      });
+
+      useTabStore.getState().updateQuery(res.query);
+      Promise.all([get().updateRows(res.data), get().updateColumns(res.structures)]);
+    } catch (error) {
+      console.log('🚀 ~ runQuery: ~ error:', error);
+    } finally {
+      set({ loading: false });
+    }
+  },
+  updateDesignsQuery: async () => {
+    set({ loading: true });
+    const currentConnection = useConnectionStore.getState().currentConnection;
+    const selectedTab = useTabStore.getState().selectedTab;
+    if (!selectedTab || !currentConnection) {
+      return;
+    }
+
+    const columns = get().getEditedColumns();
+
+    const added = columns
+      .filter((c) => c.unsaved)
+      .map((c) => {
+        return {
+          name: c.name,
+          type: c.type,
+          length: Number(c.length),
+          default: {
+            value: c.default
+          },
+          is_null: !c.notNull,
+          comment: c.comment
+        };
+      });
+
+    const edited = columns
+      .filter((c) => !c.unsaved && c.edited)
+      .map((c) => {
+        return {
+          name: c.name,
+          type: c.type,
+          length: Number(c.length),
+          default: {
+            value: c.default
+          },
+          is_null: !c.notNull,
+          comment: c.comment
+        };
+      });
+
+    try {
+      const res = await updateDesign({
+        connection_id: currentConnection.id,
+        table: selectedTab.table,
+        schema: currentConnection.currentSchema!,
+        database: currentConnection.currentDatabase!,
+        edited: [],
+        removed: [],
+        added: added as UpdateDesignItemType[]
       });
 
       useTabStore.getState().updateQuery(res.query);

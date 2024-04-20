@@ -160,7 +160,7 @@ export const handelColumnChangeLog = (
   }
 
   (newValue as EditedColumnType).edited = true;
-  (newValue as EditedColumnType).unsaved = findValue.unsaved;
+  (newValue as EditedColumnType).unsaved = findValue?.unsaved ?? false;
   if (!findValue) {
     editedColumns.push({
       ...newValue,
