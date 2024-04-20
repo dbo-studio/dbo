@@ -206,5 +206,41 @@ func (p *PostgresQueryEngine) updateDesignGenerator(dto *dto.DesignDto) []string
 		}
 	}
 
+	for _, addedItem := range dto.AddedItems {
+		query := alter + fmt.Sprintf(`ADD COLUMN "%s" %s`, addedItem.Name, addedItem.Type)
+		if addedItem.Length != nil {
+			query += fmt.Sprintf(`(%s)`, *addedItem.Length)
+		}
+
+		if addedItem.IsNull != nil && !*addedItem.IsNull {
+			query += " NOT NULL"
+		}
+
+		if addedItem.Default != nil {
+			if addedItem.Default.MakeNull != nil && *addedItem.Default.MakeNull {
+				query += " DEFAULT NULL"
+
+			} else if addedItem.Default.MakeEmpty != nil && *addedItem.Default.MakeEmpty {
+				query += "DEFAULT ''"
+			} else {
+				query += fmt.Sprintf(` DEFAULT '%s'`, *addedItem.Default.Value)
+			}
+		}
+
+		queries = append(queries, query)
+		if addedItem.Comment != nil {
+			query := fmt.Sprintf(`COMMENT ON COLUMN "%s"."%s"."%s" IS '%s'`, dto.Schema, dto.Table, addedItem.Name, *addedItem.Comment)
+			queries = append(queries, query)
+		}
+	}
+
+	for _, deletedItem := range dto.DeletedItems {
+		if deletedItem == "" {
+			continue
+		}
+		query := alter + fmt.Sprintf(`DROP COLUMN "%s"`, deletedItem)
+		queries = append(queries, query)
+	}
+
 	return queries
 }
