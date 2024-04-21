@@ -3,7 +3,7 @@ import { TabMode } from '@/src/core/enums';
 import useAPI from '@/src/hooks/useApi.hook';
 import useContextMenu from '@/src/hooks/useContextMenu';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
-import { Box, ClickAwayListener, Typography, useTheme } from '@mui/material';
+import { Box, ClickAwayListener, IconButton, Typography, useTheme } from '@mui/material';
 import { useState } from 'react';
 import CustomIcon from '../../../base/CustomIcon/CustomIcon';
 import FieldInput from '../../../base/FieldInput/FieldInput';
@@ -73,7 +73,7 @@ export default function SavedQueryItem({ query, selected, onChange, onDelete, on
           )}
         </Box>
 
-        {editMode && (
+        {editMode ? (
           <LoadingIconButton
             loading={pendingUpdate}
             disabled={query.name === name || pendingUpdate}
@@ -81,6 +81,10 @@ export default function SavedQueryItem({ query, selected, onChange, onDelete, on
           >
             <CustomIcon type='check' size='s' />
           </LoadingIconButton>
+        ) : (
+          <IconButton onClick={handleContextMenu}>
+            <CustomIcon type='ellipsisVertical' size='s' />
+          </IconButton>
         )}
 
         <SavedQueryContextMenu

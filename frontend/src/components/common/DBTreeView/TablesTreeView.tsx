@@ -1,6 +1,6 @@
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { Box, useTheme } from '@mui/material';
-import { TreeItem, TreeView } from '@mui/x-tree-view';
+import { SimpleTreeView, TreeItem } from '@mui/x-tree-view';
 import { v4 as uuid } from 'uuid';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 
@@ -14,20 +14,22 @@ export default function TablesTreeView({ tables }: { tables: string[] }) {
 
   return (
     <Box mt={1} pb={theme.spacing(7)}>
-      <TreeView
-        defaultExpanded={['1']}
+      <SimpleTreeView
+        slots={{
+          expandIcon: () => <CustomIcon size='s' type={'arrowRight'} />,
+          collapseIcon: () => <CustomIcon size='s' type={'arrowDown'} />,
+          endIcon: () => <CustomIcon type={'columnToken'} />
+        }}
+        defaultExpandedItems={['1']}
         aria-label='file system navigator'
-        defaultCollapseIcon={<CustomIcon size='s' type={'arrowDown'} />}
-        defaultExpandIcon={<CustomIcon size='s' type={'arrowRight'} />}
-        defaultEndIcon={<CustomIcon type={'columnToken'} />}
       >
-        <TreeItem nodeId='1' label='Tables'>
+        <TreeItem label='Tables' itemId={'1'}>
           {tables.map((table: string, index: number) => (
-            <TreeItem onClick={() => handleTableClick(table)} key={uuid()} nodeId={index + '100'} label={table} />
+            <TreeItem onClick={() => handleTableClick(table)} key={uuid()} itemId={index + '100'} label={table} />
           ))}
-          <TreeItem style={{ display: 'none' }} nodeId={'100'} />
+          <TreeItem style={{ display: 'none' }} itemId={'100'} />
         </TreeItem>
-      </TreeView>
+      </SimpleTreeView>
     </Box>
   );
 }

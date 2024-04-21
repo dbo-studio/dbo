@@ -48,5 +48,6 @@ export const IconTypes = {
   delete: 'Trash2',
   pen: 'PenLine',
   play: 'Play',
-  copy: 'Copy'
+  copy: 'Copy',
+  ellipsisVertical: 'EllipsisVertical'
 };

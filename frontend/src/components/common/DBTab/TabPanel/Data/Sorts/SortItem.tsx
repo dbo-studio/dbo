@@ -45,7 +45,7 @@ export default function SortItem({ sort, columns }: SortItemProps) {
         <Checkbox size='small' checked={currentSort.isActive} onChange={(e) => handleChange('isActive', e)} />
       </Box>
       <Box>
-        <SelectInput size='small' value={currentSort.column} onChange={(e) => handleChange('column', e)}>
+        <SelectInput margin='none' size='small' value={currentSort.column} onChange={(e) => handleChange('column', e)}>
           {columns.map((c: ColumnType) => (
             <SelectOption key={uuidv4()} value={c.key as string}>
               {c.name}
@@ -54,7 +54,12 @@ export default function SortItem({ sort, columns }: SortItemProps) {
         </SelectInput>
       </Box>
       <Box mr={1} ml={1}>
-        <SelectInput size='small' value={currentSort.operator} onChange={(e) => handleChange('operator', e)}>
+        <SelectInput
+          margin='none'
+          size='small'
+          value={currentSort.operator}
+          onChange={(e) => handleChange('operator', e)}
+        >
           {PgsqlSorts.map((c: string, index) => (
             <SelectOption key={uuidOperators[index]} value={c}>
               {c}

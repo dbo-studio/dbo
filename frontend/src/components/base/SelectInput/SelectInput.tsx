@@ -6,7 +6,7 @@ import { SelectInputProps } from './types';
 export default forwardRef(function SelectInput(props: SelectInputProps, ref) {
   const theme = useTheme();
   return (
-    <Box>
+    <Box display={'flex'} flexDirection={'column'}>
       {props.label && (
         <Typography color={theme.palette.text.secondary} variant='caption'>
           {props.label}
@@ -15,14 +15,18 @@ export default forwardRef(function SelectInput(props: SelectInputProps, ref) {
       <NativeSelect
         sx={{
           borderColor: props.error ? theme.palette.error.light : theme.palette.divider,
-          marginBottom: props.error ? '0px' : theme.spacing(1)
+          marginBottom: props.error || props.margin == 'none' ? '0px' : theme.spacing(1)
         }}
         {...props}
       >
         {props.children}
       </NativeSelect>
 
-      <Typography mb={theme.spacing(1)} color={theme.palette.error.light} variant='caption'>
+      <Typography
+        mb={props.margin == 'none' ? 0 : theme.spacing(1)}
+        color={theme.palette.error.light}
+        variant='caption'
+      >
         {props.helperText}
       </Typography>
     </Box>
