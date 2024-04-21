@@ -25,7 +25,8 @@ export default function StatusBarActions() {
     runQuery,
     restoreEditedColumns,
     updateRemovedColumns,
-    addEmptyEditedColumns
+    addEmptyEditedColumns,
+    updateDesignsQuery
   } = useDataStore();
 
   const { currentConnection } = useConnectionStore();
@@ -35,30 +36,44 @@ export default function StatusBarActions() {
   });
 
   const handleSave = async () => {
-    const edited = getEditedRows();
-    const removed = getRemovedRows();
-    const unsaved = getUnsavedRows();
+    if (selectedTab?.mode == TabMode.Data) {
+      const edited = getEditedRows();
+      const removed = getRemovedRows();
+      const unsaved = getUnsavedRows();
 
-    if (!selectedTab || !currentConnection || (edited.length == 0 && removed.length == 0 && unsaved.length == 0)) {
-      return;
+      if (!selectedTab || !currentConnection || (edited.length == 0 && removed.length == 0 && unsaved.length == 0)) {
+        return;
+      }
+      try {
+        await updateQuery({
+          connection_id: currentConnection.id,
+          schema: currentConnection.currentSchema,
+          database: currentConnection.currentDatabase,
+          table: selectedTab?.table,
+          edited: edited,
+          removed: removed,
+          added: unsaved
+        });
+        updateEditedRows([]);
+        updateRemovedRows();
+        updateUnsavedRows([]);
+        updateSelectedRows([]);
+        await runQuery();
+      } catch (error) {
+        console.log('🚀 ~ handleSave ~ error:', error);
+      }
     }
-    try {
-      await updateQuery({
-        connection_id: currentConnection.id,
-        schema: currentConnection.currentSchema,
-        database: currentConnection.currentDatabase,
-        table: selectedTab?.table,
-        edited: edited,
-        removed: removed,
-        added: unsaved
-      });
-      updateEditedRows([]);
-      updateRemovedRows();
-      updateUnsavedRows([]);
-      updateSelectedRows([]);
-      await runQuery();
-    } catch (error) {
-      console.log('🚀 ~ handleSave ~ error:', error);
+
+    if (selectedTab?.mode == TabMode.Design) {
+      if (!selectedTab || !currentConnection) {
+        return;
+      }
+
+      try {
+        await updateDesignsQuery();
+      } catch (error) {
+        console.log('🚀 ~ handleSave ~ error:', error);
+      }
     }
   };
 
@@ -111,7 +126,11 @@ export default function StatusBarActions() {
         </IconButton>
       </Box>
       <Box ml={1} mr={1}>
-        <LoadingIconButton loading={+updateQueryPending} disabled={updateQueryPending || loading} onClick={handleSave}>
+        <LoadingIconButton
+          loading={+updateQueryPending || loading}
+          disabled={updateQueryPending || loading}
+          onClick={handleSave}
+        >
           <CustomIcon type='check' size='s' />
         </LoadingIconButton>
         <IconButton onClick={handleDiscardChanges} disabled={updateQueryPending || loading}>

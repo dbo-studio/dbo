@@ -1,5 +1,7 @@
-import { ColumnType, EditedColumnType, EditedRow, RowType } from '@/src/types';
+import { UpdateDesignItemType } from '@/src/api/design/types';
+import { ColumnType, EditedColumnType, EditedColumnValue, EditedRow, RowType } from '@/src/types';
 import { updatedDiff } from 'deep-object-diff';
+import { has } from 'lodash';
 import { SelectColumn, textEditor } from 'react-data-grid';
 
 export const formatServerColumns = (serverColumns: ColumnType[]): any => {
@@ -136,8 +138,8 @@ export const handelColumnChangeLog = (
   const diffKey = Object.keys(diff)[0];
 
   if (findValue && findValue.unsaved) {
-    findValue.old = diff;
-    findValue.new = diff;
+    findValue.old = findValue?.old ?? diff;
+    findValue.new = findValue?.new ?? diff;
   }
 
   const oldObject: Partial<EditedColumnType | undefined> = findValue ? findValue.old : {};
@@ -160,7 +162,7 @@ export const handelColumnChangeLog = (
   }
 
   (newValue as EditedColumnType).edited = true;
-  (newValue as EditedColumnType).unsaved = findValue.unsaved;
+  (newValue as EditedColumnType).unsaved = findValue?.unsaved ?? false;
   if (!findValue) {
     editedColumns.push({
       ...newValue,
@@ -194,4 +196,46 @@ export const createEmptyColumn = (): EditedColumnType => {
     selected: false,
     unsaved: true
   };
+};
+
+//this function remove null values from object and make it clean to sent to server
+export const cleanupUpdateDesignObject = (data: EditedColumnValue | null): UpdateDesignItemType => {
+  const newObject: UpdateDesignItemType = {};
+  if (!data) {
+    return newObject;
+  }
+
+  if (has(data, 'name')) {
+    newObject['name'] = data.name;
+  }
+
+  if (has(data, 'type')) {
+    newObject['type'] = data.type;
+  }
+
+  if (has(data, 'length')) {
+    newObject['length'] = Number(data.length);
+  }
+
+  if (has(data, 'default')) {
+    newObject['default'] = {
+      make_null: false,
+      make_empty: false,
+      value: data.default ?? ''
+    };
+  }
+
+  if (has(data, 'notNull')) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
+    newObject['is_null'] = !data.notNull;
+  }
+
+  if (has(data, 'comment')) {
+    newObject['comment'] = data.comment;
+  }
+
+  console.log(newObject);
+
+  return newObject;
 };

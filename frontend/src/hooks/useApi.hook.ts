@@ -1,6 +1,6 @@
 import { DependencyList, useEffect, useMemo, useState } from 'react';
 import { apiHandler } from '../core/services';
-import { isEmpty, isServerSide } from '../core/utils';
+import { isServerSide, tools } from '../core/utils';
 import { ArgumentType, MethodType } from '../types';
 
 interface UseAPI<T, M extends MethodType> {
@@ -54,7 +54,7 @@ export default function useAPI<T, M extends MethodType>({
   }
 
   const memoizedDependenciesOnLoad = useMemo(
-    () => (isEmpty(dependenciesOnLoad) ? [isReady] : [isReady, ...(dependenciesOnLoad || [])]),
+    () => (tools.isEmpty(dependenciesOnLoad) ? [isReady] : [isReady, ...(dependenciesOnLoad || [])]),
     [isReady, dependenciesOnLoad]
   );
 
