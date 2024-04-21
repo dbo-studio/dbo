@@ -7,7 +7,7 @@ import (
 	"github.com/khodemobin/dbo/api/dto"
 )
 
-func (p *PostgresQueryEngine) queryGenerator(dto *dto.RunQueryDto) string {
+func queryGenerator(dto *dto.RunQueryDto) string {
 	query := ""
 
 	if len(dto.Columns) == 0 {
@@ -50,7 +50,7 @@ func (p *PostgresQueryEngine) queryGenerator(dto *dto.RunQueryDto) string {
 	return query
 }
 
-func (p *PostgresQueryEngine) createDBQuery(dto *dto.DatabaseDto) string {
+func createDBQuery(dto *dto.DatabaseDto) string {
 	query := fmt.Sprintf("CREATE DATABASE %s ", dto.Name)
 	if dto.Template != nil && len(*dto.Template) > 0 {
 		query += fmt.Sprintf("WITH TEMPLATE = %s ", *dto.Template)
@@ -67,7 +67,7 @@ func (p *PostgresQueryEngine) createDBQuery(dto *dto.DatabaseDto) string {
 	return query
 }
 
-func (p *PostgresQueryEngine) updateQueryGenerator(dto *dto.UpdateQueryDto) []string {
+func updateQueryGenerator(dto *dto.UpdateQueryDto) []string {
 	queries := []string{}
 
 	for _, editedItem := range dto.EditedItems {
@@ -98,7 +98,7 @@ func (p *PostgresQueryEngine) updateQueryGenerator(dto *dto.UpdateQueryDto) []st
 	return queries
 }
 
-func (p *PostgresQueryEngine) deleteQueryGenerator(dto *dto.UpdateQueryDto) []string {
+func deleteQueryGenerator(dto *dto.UpdateQueryDto) []string {
 	queries := []string{}
 
 	for _, deletedItem := range dto.DeletedItems {
@@ -121,7 +121,7 @@ func (p *PostgresQueryEngine) deleteQueryGenerator(dto *dto.UpdateQueryDto) []st
 	return queries
 }
 
-func (p *PostgresQueryEngine) insertQueryGenerator(dto *dto.UpdateQueryDto) []string {
+func insertQueryGenerator(dto *dto.UpdateQueryDto) []string {
 	queries := []string{}
 
 	for _, addedItem := range dto.AddedItems {
@@ -155,7 +155,7 @@ func (p *PostgresQueryEngine) insertQueryGenerator(dto *dto.UpdateQueryDto) []st
 	return queries
 }
 
-func (p *PostgresQueryEngine) updateDesignGenerator(dto *dto.DesignDto) []string {
+func updateDesignGenerator(dto *dto.DesignDto) []string {
 	alter := fmt.Sprintf(`ALTER TABLE "%s"."%s" `, dto.Schema, dto.Table)
 
 	queries := []string{}
@@ -164,7 +164,7 @@ func (p *PostgresQueryEngine) updateDesignGenerator(dto *dto.DesignDto) []string
 		if editedItem.Type != nil {
 			query := alter
 			if editedItem.Length != nil {
-				query += fmt.Sprintf(`ALTER COLUMN "%s" SET DATA TYPE %s(%s)`, editedItem.Name, *editedItem.Type, *editedItem.Length)
+				query += fmt.Sprintf(`ALTER COLUMN "%s" SET DATA TYPE %s(%d)`, editedItem.Name, *editedItem.Type, *editedItem.Length)
 			} else {
 				query += fmt.Sprintf(`ALTER COLUMN "%s" SET DATA TYPE %s`, editedItem.Name, *editedItem.Type)
 			}
@@ -206,10 +206,16 @@ func (p *PostgresQueryEngine) updateDesignGenerator(dto *dto.DesignDto) []string
 		}
 	}
 
+	return queries
+}
+
+func insertToDesignGenerator(dto *dto.DesignDto) []string {
+	alter := fmt.Sprintf(`ALTER TABLE "%s"."%s" `, dto.Schema, dto.Table)
+	queries := []string{}
 	for _, addedItem := range dto.AddedItems {
 		query := alter + fmt.Sprintf(`ADD COLUMN "%s" %s`, addedItem.Name, addedItem.Type)
 		if addedItem.Length != nil {
-			query += fmt.Sprintf(`(%s)`, *addedItem.Length)
+			query += fmt.Sprintf(`(%d)`, *addedItem.Length)
 		}
 
 		if addedItem.IsNull != nil && !*addedItem.IsNull {
@@ -234,6 +240,12 @@ func (p *PostgresQueryEngine) updateDesignGenerator(dto *dto.DesignDto) []string
 		}
 	}
 
+	return queries
+}
+
+func deleteFromDesignGenerator(dto *dto.DesignDto) []string {
+	alter := fmt.Sprintf(`ALTER TABLE "%s"."%s" `, dto.Schema, dto.Table)
+	queries := []string{}
 	for _, deletedItem := range dto.DeletedItems {
 		if deletedItem == "" {
 			continue

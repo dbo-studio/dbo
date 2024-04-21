@@ -1,6 +1,7 @@
 import { updateDesign } from '@/src/api/design';
 import { UpdateDesignItemType } from '@/src/api/design/types';
 import { runQuery, runRawQuery } from '@/src/api/query';
+import { cleanupUpdateDesignObject } from '@/src/core/utils';
 import { StateCreator } from 'zustand';
 import { useConnectionStore } from '../../connectionStore/connection.store';
 import { useTabStore } from '../../tabStore/tab.store';
@@ -83,34 +84,35 @@ export const createDataQuerySlice: StateCreator<
 
     const columns = get().getEditedColumns();
 
+    if (columns.length == 0) {
+      set({ loading: false });
+      return;
+    }
+
     const added = columns
       .filter((c) => c.unsaved)
       .map((c) => {
-        return {
-          name: c.name,
-          type: c.type,
-          length: Number(c.length),
-          default: {
-            value: c.default
-          },
-          is_null: !c.notNull,
-          comment: c.comment
-        };
+        return cleanupUpdateDesignObject(c?.new ?? null);
       });
 
     const edited = columns
       .filter((c) => !c.unsaved && c.edited)
       .map((c) => {
-        return {
-          name: c.name,
-          type: c.type,
-          length: Number(c.length),
-          default: {
-            value: c.default
-          },
-          is_null: !c.notNull,
-          comment: c.comment
-        };
+        const data = cleanupUpdateDesignObject(c?.new ?? null);
+        if (c?.old?.name !== c?.new?.name) {
+          data.rename = c?.new?.name;
+          data.name = c?.old?.name;
+        } else {
+          data.name = c.name;
+        }
+
+        return data;
+      });
+
+    const removed = columns
+      .filter((c) => c.deleted)
+      .map((c) => {
+        return c.name;
       });
 
     try {
@@ -119,13 +121,13 @@ export const createDataQuerySlice: StateCreator<
         table: selectedTab.table,
         schema: currentConnection.currentSchema!,
         database: currentConnection.currentDatabase!,
-        edited: [],
-        removed: [],
+        edited: edited as UpdateDesignItemType[],
+        removed: Array.from(removed),
         added: added as UpdateDesignItemType[]
       });
 
       useTabStore.getState().updateQuery(res.query);
-      Promise.all([get().updateRows(res.data), get().updateColumns(res.structures)]);
+      Promise.all([get().updateEditedColumns([])]);
     } catch (error) {
       console.log('🚀 ~ runQuery: ~ error:', error);
     } finally {

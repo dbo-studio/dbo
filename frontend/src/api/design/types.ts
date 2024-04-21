@@ -9,15 +9,15 @@ export type UpdateDesignType = {
 };
 
 export type UpdateDesignItemType = {
-  name: string;
-  type: string;
-  length: number;
-  default: {
+  name?: string;
+  type?: string;
+  length?: number;
+  default?: {
     make_null: boolean;
     make_empty: boolean;
     value: string;
   };
-  is_null: true;
-  comment: string;
+  is_null?: true;
+  comment?: string;
   rename?: string;
 };

@@ -15,7 +15,7 @@ type RunQueryResult struct {
 }
 
 func (p *PostgresQueryEngine) RunQuery(dto *dto.RunQueryDto) (*RunQueryResult, error) {
-	query := p.queryGenerator(dto)
+	query := queryGenerator(dto)
 
 	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {
@@ -207,6 +207,7 @@ func (p *PostgresQueryEngine) TableStructure(connectionId int32, table string, s
 
 	for i, structure := range structures {
 		structures[i].MappedType = columnMappedFormat(structure.DataType)
+		structures[i].DataType = columnAliases(structure.DataType)
 	}
 
 	if result.Error != nil {
@@ -311,5 +312,34 @@ func columnMappedFormat(dataType string) string {
 		return "number"
 	default:
 		return "string"
+	}
+}
+
+func columnAliases(dataType string) string {
+	switch dataType {
+	case "character varying":
+		return "varchar"
+	case "varchar":
+		return "character varying"
+	case "timestamp":
+		return "timestamp without time zone"
+	case "timestamptz":
+		return "timestamp with time zone"
+	case "int2":
+		return "smallint"
+	case "int4":
+		return "integer"
+	case "int8":
+		return "bigint"
+	case "float4":
+		return "real"
+	case "float8":
+		return "double precision"
+	case "time":
+		return "time without time zone"
+	case "timetz":
+		return "time with time zone"
+	default:
+		return dataType
 	}
 }

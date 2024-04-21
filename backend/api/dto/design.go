@@ -12,7 +12,7 @@ type DesignDto struct {
 
 type EditDesignItem struct {
 	Name    string             `json:"name" validate:"required"`
-	Length  *string            `json:"length"`
+	Length  *int               `json:"length"`
 	Type    *string            `json:"type"`
 	IsNull  *bool              `json:"is_null"`
 	Default *DesignItemDefault `json:"default"`
@@ -21,7 +21,7 @@ type EditDesignItem struct {
 }
 type AddDesignItem struct {
 	Name    string             `json:"name" validate:"required"`
-	Length  *string            `json:"length"`
+	Length  *int               `json:"length"`
 	Type    string             `json:"type" validate:"required"`
 	IsNull  *bool              `json:"is_null"`
 	Default *DesignItemDefault `json:"default"`

@@ -24,9 +24,18 @@ export interface ColumnType extends Column<RowType> {
 }
 
 export interface EditedColumnType extends ColumnType {
-  old?: object;
-  new?: object;
+  old?: EditedColumnValue;
+  new?: EditedColumnValue;
   edited?: boolean;
   deleted?: boolean;
   unsaved?: boolean;
 }
+
+export type EditedColumnValue = {
+  type?: string;
+  name?: string;
+  notNull?: boolean;
+  length?: string;
+  default?: string;
+  comment?: string;
+};

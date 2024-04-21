@@ -19,9 +19,9 @@ func (p *PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryDto) (*UpdateQuery
 		return nil, errors.New("Connection error: " + err.Error())
 	}
 
-	queries := p.updateQueryGenerator(dto)
-	queries = append(queries, p.insertQueryGenerator(dto)...)
-	queries = append(queries, p.deleteQueryGenerator(dto)...)
+	queries := updateQueryGenerator(dto)
+	queries = append(queries, insertQueryGenerator(dto)...)
+	queries = append(queries, deleteQueryGenerator(dto)...)
 	rowsAffected := 0
 	err = db.Transaction(func(tx *gorm.DB) error {
 		for _, query := range queries {
@@ -50,7 +50,10 @@ func (p *PostgresQueryEngine) UpdateDesign(dto *dto.DesignDto) (*UpdateQueryResu
 		return nil, errors.New("Connection error: " + err.Error())
 	}
 
-	queries := p.updateDesignGenerator(dto)
+	queries := updateDesignGenerator(dto)
+	queries = append(queries, insertToDesignGenerator(dto)...)
+	queries = append(queries, deleteFromDesignGenerator(dto)...)
+
 	err = db.Transaction(func(tx *gorm.DB) error {
 		for _, query := range queries {
 			result := tx.Exec(query)
@@ -72,7 +75,7 @@ func (p *PostgresQueryEngine) UpdateDesign(dto *dto.DesignDto) (*UpdateQueryResu
 }
 
 func (p *PostgresQueryEngine) CreateDatabase(dto *dto.DatabaseDto) error {
-	query := p.createDBQuery(dto)
+	query := createDBQuery(dto)
 
 	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {

@@ -38,7 +38,6 @@ export default function ColumnItem({
     } else {
       newColumn[name] = value;
     }
-
     setValue(newColumn);
   };
 
@@ -48,7 +47,16 @@ export default function ColumnItem({
       column.editMode = undefined;
     }
 
-    onChange(column, value);
+    onChange(
+      {
+        ...column,
+        editable: undefined
+      },
+      {
+        ...value,
+        editable: undefined
+      }
+    );
   };
 
   return (
@@ -85,7 +93,6 @@ export default function ColumnItem({
         )}
       </TableCell>
       <TableCell align='left'>
-        {/* todo we have some problem here, the types doest match */}
         <SelectInput
           sx={{ marginBottom: '0' }}
           value={value.type}
@@ -109,7 +116,7 @@ export default function ColumnItem({
             name='length'
             value={value.length}
             size='small'
-            type='string'
+            type='number'
           />
         ) : (
           <Typography onClick={() => handleToggleEdit('length')} variant='body2'>

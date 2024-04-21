@@ -22,11 +22,3 @@ export const tools = {
     return newObj;
   }
 };
-export const isEmpty = (data: unknown): data is never | undefined | null => {
-  return (
-    (!data && !isNumber(data)) ||
-    (Array.isArray(data) && data.length === 0) ||
-    (isObject(data) && Object.keys(data).length === 0)
-  );
-};
-//please don't add itt to toooolssss , auto import does not work with this
