@@ -2,11 +2,11 @@ package server
 
 import (
 	"github.com/goccy/go-json"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/compress"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/compress"
+	"github.com/gofiber/fiber/v3/middleware/cors"
+	fiberLogger "github.com/gofiber/fiber/v3/middleware/logger"
+	"github.com/gofiber/fiber/v3/middleware/recover"
 	connection_handler "github.com/khodemobin/dbo/api/handler/connection"
 	database_handler "github.com/khodemobin/dbo/api/handler/database"
 	design_handler "github.com/khodemobin/dbo/api/handler/design"
@@ -29,7 +29,7 @@ func New(isLocal bool) *Server {
 		app: fiber.New(fiber.Config{
 			JSONEncoder: json.Marshal,
 			JSONDecoder: json.Unmarshal,
-			ErrorHandler: func(ctx *fiber.Ctx, err error) error {
+			ErrorHandler: func(ctx fiber.Ctx, err error) error {
 				app.Log().Error(err)
 				return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 					"message": "Internal Server Error",

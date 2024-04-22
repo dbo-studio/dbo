@@ -1,12 +1,12 @@
 package database_handler
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/khodemobin/dbo/api/response"
 	"github.com/khodemobin/dbo/app"
 )
 
-func (h *DatabaseHandler) DatabaseMetaData(c *fiber.Ctx) error {
+func (h *DatabaseHandler) DatabaseMetaData(c fiber.Ctx) error {
 	connection, err := h.FindConnection(c.Query("connection_id"))
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(err.Error())

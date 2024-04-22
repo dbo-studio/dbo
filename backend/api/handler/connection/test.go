@@ -1,7 +1,7 @@
 package connection_handler
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/khodemobin/dbo/api/dto"
 	"github.com/khodemobin/dbo/api/response"
 	"github.com/khodemobin/dbo/app"
@@ -9,10 +9,10 @@ import (
 	"github.com/khodemobin/dbo/helper"
 )
 
-func (h *ConnectionHandler) TestConnection(c *fiber.Ctx) error {
+func (h *ConnectionHandler) TestConnection(c fiber.Ctx) error {
 	req := new(dto.CreateConnectionDto)
 
-	if err := c.BodyParser(req); err != nil {
+	if err := c.Bind().Body(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
 

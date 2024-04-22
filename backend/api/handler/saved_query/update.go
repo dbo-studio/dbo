@@ -1,7 +1,7 @@
 package saved_handler
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/khodemobin/dbo/api/dto"
 	"github.com/khodemobin/dbo/api/response"
 	"github.com/khodemobin/dbo/app"
@@ -9,10 +9,10 @@ import (
 	"github.com/khodemobin/dbo/model"
 )
 
-func (h *SavedQueryHandler) UpdateSavedQuery(c *fiber.Ctx) error {
+func (h *SavedQueryHandler) UpdateSavedQuery(c fiber.Ctx) error {
 	req := new(dto.CreateSavedQueryDto)
 
-	if err := c.BodyParser(req); err != nil {
+	if err := c.Bind().Body(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
 

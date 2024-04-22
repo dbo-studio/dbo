@@ -1,5 +1,11 @@
 package dto
 
+type DesignGetColumnListDto struct {
+	ConnectionId int32  `json:"connection_id" validate:"required,gte=0"`
+	Table        string `json:"table" validate:"required"`
+	Schema       string `json:"schema" validate:"required"`
+}
+
 type DesignDto struct {
 	ConnectionId int32            `json:"connection_id" validate:"required,gte=0"`
 	Table        string           `json:"table" validate:"required"`

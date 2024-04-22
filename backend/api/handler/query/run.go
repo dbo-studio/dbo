@@ -1,17 +1,17 @@
 package query_handler
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/khodemobin/dbo/api/dto"
 	"github.com/khodemobin/dbo/api/response"
 	"github.com/khodemobin/dbo/app"
 	"github.com/khodemobin/dbo/helper"
 )
 
-func (QueryHandler) Run(c *fiber.Ctx) error {
+func (QueryHandler) Run(c fiber.Ctx) error {
 	req := new(dto.RunQueryDto)
 
-	if err := c.BodyParser(req); err != nil {
+	if err := c.Bind().Body(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
 

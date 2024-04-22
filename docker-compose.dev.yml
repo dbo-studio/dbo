@@ -12,7 +12,6 @@ services:
       - ${APP_PORT}:${APP_PORT}
   frontend:
     container_name: dbo-studio-dev-frontend
-    restart: unless-stopped
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev

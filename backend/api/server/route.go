@@ -23,6 +23,7 @@ func (r *Server) routing() {
 
 	design := api.Group("design")
 	design.Patch("/", r.designHandler.UpdateDesign)
+	design.Get("/columns", r.designHandler.ColumnList)
 
 	history := api.Group("saved")
 	history.Get("/", r.savedQueryHandler.SavedQueries)

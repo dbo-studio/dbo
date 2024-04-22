@@ -3,13 +3,13 @@ package connection_handler
 import (
 	"database/sql"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/khodemobin/dbo/api/response"
 	"github.com/khodemobin/dbo/app"
 	"github.com/khodemobin/dbo/model"
 )
 
-func (h *ConnectionHandler) Connection(c *fiber.Ctx) error {
+func (h *ConnectionHandler) Connection(c fiber.Ctx) error {
 	connection, err := h.FindConnection(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(err.Error())
@@ -18,7 +18,7 @@ func (h *ConnectionHandler) Connection(c *fiber.Ctx) error {
 	return connectionDetail(c, connection)
 }
 
-func connectionDetail(c *fiber.Ctx, connection *model.Connection) error {
+func connectionDetail(c fiber.Ctx, connection *model.Connection) error {
 	var schemas []string = []string{}
 	var tables []string = []string{}
 	var err error

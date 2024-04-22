@@ -3,7 +3,7 @@ package connection_handler
 import (
 	"database/sql"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/khodemobin/dbo/api/dto"
 	"github.com/khodemobin/dbo/api/response"
 	"github.com/khodemobin/dbo/app"
@@ -11,10 +11,10 @@ import (
 	"github.com/khodemobin/dbo/model"
 )
 
-func (h *ConnectionHandler) UpdateConnection(c *fiber.Ctx) error {
+func (h *ConnectionHandler) UpdateConnection(c fiber.Ctx) error {
 	req := new(dto.UpdateConnectionDto)
 
-	if err := c.BodyParser(req); err != nil {
+	if err := c.Bind().Body(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
 
