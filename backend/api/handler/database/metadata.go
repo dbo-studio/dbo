@@ -21,7 +21,9 @@ func (h *DatabaseHandler) DatabaseMetaData(c fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(err.Error())
 	}
-	encodings := app.Drivers().Pgsql.Encodes()
 
-	return c.JSON(response.Success(response.DatabaseMetaData(databases, tableSpaces, encodings)))
+	encodings := app.Drivers().Pgsql.Encodes()
+	datatypes := app.Drivers().Pgsql.DataTypes()
+
+	return c.JSON(response.Success(response.DatabaseMetaData(databases, tableSpaces, encodings, datatypes)))
 }

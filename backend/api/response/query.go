@@ -1,6 +1,6 @@
 package response
 
-import pgsql "github.com/khodemobin/dbo/drivers/pgsql"
+import pgsql "github.com/khodemobin/dbo/driver/pgsql"
 
 type runQuery struct {
 	Query      string              `json:"query"`
