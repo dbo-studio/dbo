@@ -24,6 +24,7 @@ func (h *ConnectionHandler) AddConnection(c fiber.Ctx) error {
 
 	connection, err := createConnection(req)
 	if err != nil {
+		app.Log().Error(err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
 	}
 

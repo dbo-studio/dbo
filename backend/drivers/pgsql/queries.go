@@ -32,6 +32,7 @@ func (p *PostgresQueryEngine) RunQuery(dto *dto.RunQueryDto) (*RunQueryResult, e
 		queryResults[i]["dbo_index"] = i
 	}
 
+	p.DBLogger(query)
 	return &RunQueryResult{
 		Query: query,
 		Data:  queryResults,
@@ -84,6 +85,8 @@ func (p *PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) (*RawQueryResult, e
 			MappedType: columnMappedFormat(columnTypes[i].Name()),
 		})
 	}
+
+	p.DBLogger(dto.Query)
 
 	return &RawQueryResult{
 		Query:   dto.Query,

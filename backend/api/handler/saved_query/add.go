@@ -22,6 +22,7 @@ func (h *SavedQueryHandler) AddSavedQuery(c fiber.Ctx) error {
 
 	history, err := createSavedQuery(req)
 	if err != nil {
+		app.Log().Error(err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
 	}
 

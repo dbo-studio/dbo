@@ -10,6 +10,7 @@ import (
 	connection_handler "github.com/khodemobin/dbo/api/handler/connection"
 	database_handler "github.com/khodemobin/dbo/api/handler/database"
 	design_handler "github.com/khodemobin/dbo/api/handler/design"
+	history_handler "github.com/khodemobin/dbo/api/handler/history"
 	query_handler "github.com/khodemobin/dbo/api/handler/query"
 	saved_handler "github.com/khodemobin/dbo/api/handler/saved_query"
 	"github.com/khodemobin/dbo/app"
@@ -22,6 +23,7 @@ type Server struct {
 	databaseHandler   database_handler.DatabaseHandler
 	savedQueryHandler saved_handler.SavedQueryHandler
 	designHandler     design_handler.DesignHandler
+	historyHandler    history_handler.HistoryHandler
 }
 
 func New(isLocal bool) *Server {
@@ -41,6 +43,7 @@ func New(isLocal bool) *Server {
 		databaseHandler:   database_handler.DatabaseHandler{},
 		savedQueryHandler: saved_handler.SavedQueryHandler{},
 		designHandler:     design_handler.DesignHandler{},
+		historyHandler:    history_handler.HistoryHandler{},
 	}
 }
 

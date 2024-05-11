@@ -25,16 +25,19 @@ func (h *ConnectionHandler) UpdateConnection(c fiber.Ctx) error {
 
 	connection, err := h.FindConnection(c.Params("id"))
 	if err != nil {
+		app.Log().Error(err.Error())
 		return c.Status(fiber.StatusNotFound).JSON(err.Error())
 	}
 
 	updatedConnection, err := h.updateConnection(connection, req)
 	if err != nil {
+		app.Log().Error(err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
 	}
 
 	err = h.makeAllConnectionsNotDefault(connection, req)
 	if err != nil {
+		app.Log().Error(err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
 	}
 

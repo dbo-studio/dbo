@@ -38,7 +38,7 @@ func New() {
 	logger = zap.New()
 
 	db := db.New(config, logger).DB
-	err := db.AutoMigrate(&model.Connection{}, &model.SavedQuery{})
+	err := db.AutoMigrate(&model.Connection{}, &model.SavedQuery{}, &model.History{})
 	if err != nil {
 		logger.Fatal(err)
 	}

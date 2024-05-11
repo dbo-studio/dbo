@@ -29,7 +29,6 @@ func (p *PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryDto) (*UpdateQuery
 			if result.Error != nil {
 				return errors.New("Error on " + query + " " + result.Error.Error())
 			}
-
 			rowsAffected += int(result.RowsAffected)
 		}
 		return nil

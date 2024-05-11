@@ -21,6 +21,7 @@ func (h *DatabaseHandler) DeleteDatabase(c fiber.Ctx) error {
 
 	err := app.Drivers().Pgsql.DropDatabase(dto)
 	if err != nil {
+		app.Log().Error(err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
 	}
 

@@ -1,4 +1,4 @@
-package connection_handler
+package history_handler
 
 import (
 	"github.com/gofiber/fiber/v3"
@@ -7,15 +7,17 @@ import (
 	"github.com/khodemobin/dbo/model"
 )
 
-func (h *ConnectionHandler) Connections(c fiber.Ctx) error {
-	var connections []model.Connection
+type HistoryHandler struct{}
 
-	result := app.DB().Find(&connections)
+func (h *HistoryHandler) Histories(c fiber.Ctx) error {
+	var histories []model.History
+
+	result := app.DB().Find(&histories)
 
 	if result.Error != nil {
 		app.Log().Error(result.Error.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(result.Error.Error()))
 	}
 
-	return c.JSON(response.Success(response.Connections(connections)))
+	return c.JSON(response.Success(histories))
 }

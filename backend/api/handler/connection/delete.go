@@ -13,7 +13,10 @@ func (h *ConnectionHandler) DeleteConnection(c fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(err.Error())
 	}
 
-	app.DB().Delete(connection)
+	result := app.DB().Delete(connection)
+	if result.Error != nil {
+		app.Log().Error(result.Error.Error())
+	}
 
 	return c.JSON(response.Success(""))
 }

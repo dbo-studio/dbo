@@ -22,11 +22,13 @@ func (QueryHandler) Run(c fiber.Ctx) error {
 
 	runQueryResult, err := app.Drivers().Pgsql.RunQuery(req)
 	if err != nil {
+		app.Log().Error(err.Error())
 		return c.JSON(response.Error(err.Error()))
 	}
 
 	structures, err := app.Drivers().Pgsql.TableStructure(req.ConnectionId, req.Table, req.Schema)
 	if err != nil {
+		app.Log().Error(err.Error())
 		return c.JSON(response.Error(err.Error()))
 	}
 

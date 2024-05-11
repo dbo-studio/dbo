@@ -28,7 +28,9 @@ func (h *ConnectionHandler) TestConnection(c fiber.Ctx) error {
 		Password: req.Password,
 		Database: req.Database,
 	})
+
 	if err != nil {
+		app.Log().Error(err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
 

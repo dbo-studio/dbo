@@ -21,6 +21,7 @@ func (h *DatabaseHandler) AddDatabase(c fiber.Ctx) error {
 
 	err := app.Drivers().Pgsql.CreateDatabase(dto)
 	if err != nil {
+		app.Log().Error(err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
 	}
 

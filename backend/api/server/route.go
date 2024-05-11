@@ -25,9 +25,12 @@ func (r *Server) routing() {
 	design.Patch("/", r.designHandler.UpdateDesign)
 	design.Get("/columns", r.designHandler.ColumnList)
 
-	history := api.Group("saved")
-	history.Get("/", r.savedQueryHandler.SavedQueries)
-	history.Post("/", r.savedQueryHandler.AddSavedQuery)
-	history.Patch("/:id", r.savedQueryHandler.UpdateSavedQuery)
-	history.Delete("/:id", r.savedQueryHandler.DeleteSavedQuery)
+	saved := api.Group("saved")
+	saved.Get("/", r.savedQueryHandler.SavedQueries)
+	saved.Post("/", r.savedQueryHandler.AddSavedQuery)
+	saved.Patch("/:id", r.savedQueryHandler.UpdateSavedQuery)
+	saved.Delete("/:id", r.savedQueryHandler.DeleteSavedQuery)
+
+	history := api.Group("histories")
+	history.Get("/", r.historyHandler.Histories)
 }
