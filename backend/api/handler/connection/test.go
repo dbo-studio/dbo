@@ -5,7 +5,7 @@ import (
 	"github.com/khodemobin/dbo/api/dto"
 	"github.com/khodemobin/dbo/api/response"
 	"github.com/khodemobin/dbo/app"
-	pgsql "github.com/khodemobin/dbo/drivers/pgsql"
+	pgsql "github.com/khodemobin/dbo/driver/pgsql"
 	"github.com/khodemobin/dbo/helper"
 )
 

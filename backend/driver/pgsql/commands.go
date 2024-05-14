@@ -1,10 +1,10 @@
 package pgsql_driver
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/khodemobin/dbo/api/dto"
+	error_c "github.com/khodemobin/dbo/error"
 	"gorm.io/gorm"
 )
 
@@ -16,7 +16,7 @@ type UpdateQueryResult struct {
 func (p *PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryDto) (*UpdateQueryResult, error) {
 	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {
-		return nil, errors.New("Connection error: " + err.Error())
+		return nil, error_c.Global(err, "Connection")
 	}
 
 	queries := updateQueryGenerator(dto)
@@ -27,7 +27,7 @@ func (p *PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryDto) (*UpdateQuery
 		for _, query := range queries {
 			result := tx.Exec(query)
 			if result.Error != nil {
-				return errors.New("Error on " + query + " " + result.Error.Error())
+				return error_c.Driver(result.Error, query)
 			}
 			rowsAffected += int(result.RowsAffected)
 		}
@@ -46,7 +46,7 @@ func (p *PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryDto) (*UpdateQuery
 func (p *PostgresQueryEngine) UpdateDesign(dto *dto.DesignDto) (*UpdateQueryResult, error) {
 	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {
-		return nil, errors.New("Connection error: " + err.Error())
+		return nil, error_c.Global(err, "Connection")
 	}
 
 	queries := updateDesignGenerator(dto)
@@ -57,7 +57,7 @@ func (p *PostgresQueryEngine) UpdateDesign(dto *dto.DesignDto) (*UpdateQueryResu
 		for _, query := range queries {
 			result := tx.Exec(query)
 			if result.Error != nil {
-				return errors.New("Error on " + query + " " + result.Error.Error())
+				return error_c.Driver(result.Error, query)
 			}
 
 		}
@@ -78,7 +78,7 @@ func (p *PostgresQueryEngine) CreateDatabase(dto *dto.DatabaseDto) error {
 
 	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {
-		return errors.New("Connection error: " + err.Error())
+		return error_c.Global(err, "Connection")
 	}
 
 	result := db.Exec(query)
@@ -91,7 +91,7 @@ func (p *PostgresQueryEngine) DropDatabase(dto *dto.DeleteDatabaseDto) error {
 
 	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {
-		return errors.New("Connection error: " + err.Error())
+		return error_c.Global(err, "Connection")
 	}
 
 	result := db.Exec(query)

@@ -24,6 +24,7 @@ func (r *Server) routing() {
 	design := api.Group("design")
 	design.Patch("/", r.designHandler.UpdateDesign)
 	design.Get("/columns", r.designHandler.ColumnList)
+	design.Get("/indexes", r.designHandler.IndexList)
 
 	saved := api.Group("saved")
 	saved.Get("/", r.savedQueryHandler.SavedQueries)
