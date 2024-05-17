@@ -17,7 +17,7 @@ export default function SavedQueries() {
     apiMethod: api.savedQueries.getSavedQueries
   });
 
-  const handleGetSavedQueriesFrom = async () => {
+  const handleGetSavedQueries = async () => {
     try {
       const res = await getSavedQueries();
       res.forEach((item) => upsertQuery(item));
@@ -26,13 +26,7 @@ export default function SavedQueries() {
 
   useEffect(() => {
     if (savedQueries == undefined) {
-      handleGetSavedQueriesFrom();
-    }
-  }, []);
-
-  useEffect(() => {
-    if (savedQueries == undefined) {
-      handleGetSavedQueriesFrom();
+      handleGetSavedQueries();
     }
   }, []);
 

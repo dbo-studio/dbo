@@ -19,5 +19,5 @@ func (h *HistoryHandler) Histories(c fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(result.Error.Error()))
 	}
 
-	return c.JSON(response.Success(histories))
+	return c.JSON(response.Success(response.Histories(histories)))
 }

@@ -5,33 +5,22 @@ import { useSettingStore } from '@/src/store/settingStore/setting.store';
 import { Box, Tab, Tabs } from '@mui/material';
 import { useMemo, useState } from 'react';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
+import Histories from '../../common/Histories/Histories';
 import SavedQueries from '../../common/SavedQueries/SavedQueries';
 import { ExplorerContainerStyled } from './Container.styled';
 
 const tabs = [
   {
     id: 0,
-    content: (
-      <>
-        <DBTreeView />
-      </>
-    )
+    content: <DBTreeView />
   },
   {
     id: 1,
-    content: (
-      <>
-        <SavedQueries />
-      </>
-    )
+    content: <SavedQueries />
   },
   {
     id: 2,
-    content: (
-      <>
-        <p>History</p>
-      </>
-    )
+    content: <Histories />
   }
 ];
 

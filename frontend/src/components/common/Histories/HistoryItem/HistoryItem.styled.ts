@@ -1,8 +1,8 @@
 import { variables } from '@/src/core/theme/variables';
 import { Box, styled } from '@mui/material';
-import { SavedQueryItemStyledProps } from '../types';
+import { HistoryItemStyledProps } from '../types';
 
-export const SavedQueryItemStyled = styled(Box)<SavedQueryItemStyledProps>(({ theme, selected }) => ({
+export const HistoryItemStyled = styled(Box)<HistoryItemStyledProps>(({ theme, selected }) => ({
   padding: `0 ${theme.spacing(1)}`,
   cursor: 'pointer',
   borderBottom: `1px solid ${theme.palette.divider}`,
@@ -11,5 +11,6 @@ export const SavedQueryItemStyled = styled(Box)<SavedQueryItemStyledProps>(({ th
   justifyContent: 'space-between',
   alignItems: 'center',
   borderRadius: variables.radius.medium,
-  background: selected ? theme.palette.background.paper : theme.palette.background.default
+  background: selected ? theme.palette.background.paper : theme.palette.background.default,
+  marginBottom: theme.spacing(1)
 }));
