@@ -46,14 +46,12 @@
       display: grid;
       contain: content;
       content-visibility: auto;
-      border-bottom: 1px solid var(--rdg-border-color);
       box-sizing: border-box;
       overflow: auto;
       background-color: var(--rdg-background-color);
       color: var(--rdg-color);
       font-size: var(--rdg-font-size);
       cursor: pointer;
-      /* max-height: calc(100vh - 64px - 30px - 40px); */
       flex: 1;
       align-content: flex-start;
     }

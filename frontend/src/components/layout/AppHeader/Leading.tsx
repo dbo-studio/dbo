@@ -1,5 +1,4 @@
-import { IconButton, Stack } from '@mui/material';
-import CustomIcon from '../../base/CustomIcon/CustomIcon';
+import { Stack } from '@mui/material';
 
 export default function Leading() {
   return (
@@ -7,9 +6,9 @@ export default function Leading() {
       {/* <IconButton aria-label='user'>
         <CustomIcon type={'user'} size={'m'} />
       </IconButton> */}
-      <IconButton aria-label='settings'>
+      {/* <IconButton aria-label='settings'>
         <CustomIcon type={'settings'} size={'m'} />
-      </IconButton>
+      </IconButton> */}
     </Stack>
   );
 }

@@ -29,9 +29,9 @@ export default function ConnectionInfo() {
           <IconButton aria-label='connection' onClick={() => updateShowAddConnection(true)}>
             <CustomIcon type={'connection'} size={'m'} />
           </IconButton>
-          <IconButton aria-label='lock'>
+          {/* <IconButton aria-label='lock'>
             <CustomIcon type={'lock'} size={'m'} />
-          </IconButton>
+          </IconButton> */}
           <IconButton
             disabled={!currentConnection}
             aria-label='database'
