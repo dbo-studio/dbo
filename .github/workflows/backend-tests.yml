@@ -23,6 +23,7 @@ jobs:
           check-latest: true
           cache: true
       - name: Verify go.mod is tidy
+        working-directory: ./backend
         run: |
           go mod tidy -go=1.22
           git diff --exit-code
