@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	fiberLogger "github.com/gofiber/fiber/v3/middleware/logger"
 	"github.com/gofiber/fiber/v3/middleware/recover"
+	//"github.com/gofiber/template/html"
 	connection_handler "github.com/khodemobin/dbo/api/handler/connection"
 	database_handler "github.com/khodemobin/dbo/api/handler/database"
 	design_handler "github.com/khodemobin/dbo/api/handler/design"

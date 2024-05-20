@@ -1,6 +1,6 @@
 import { Box, NativeSelect, Typography, useTheme } from '@mui/material';
 import { forwardRef } from 'react';
-import { SelectInputProps } from './types';
+import { SelectInputProps } from './types'; // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default forwardRef(function SelectInput(props: SelectInputProps, ref) {

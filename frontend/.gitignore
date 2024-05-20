@@ -39,3 +39,5 @@ next-env.d.ts
 /playwright-report
 
 .pnpm-store/
+
+public/workbox-*

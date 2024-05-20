@@ -1,6 +1,14 @@
 package server
 
+import (
+	"embed"
+)
+
+var FS embed.FS
+
 func (r *Server) routing() {
+	r.app.Static("/", "/dist/out")
+
 	api := r.app.Group("/api")
 
 	query := api.Group("query")
