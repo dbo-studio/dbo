@@ -1,23 +1,12 @@
 services:
-  backend:
-    container_name: dbo-studio-api
+  dbo:
+    container_name: dbo-studio
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
-    volumes:
-      - ./backend:/back/
-    env_file:
-      - .env
+    environment:
+      APP_PORT: "9000"
+#      APP_ENV: "production"
+#      DB_NAME: "dbo.db"
     ports:
-      - ${APP_PORT}
-  frontend:
-    container_name: dbo-studio-frontend
-    restart: unless-stopped
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    volumes:
-      - ./frontend:/app
-    env_file: .env
-    ports:
-      - ${FRONT_PORT}:${FRONT_PORT}
+      - "9000:9000"

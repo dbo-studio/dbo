@@ -1,4 +1,4 @@
 /docker
-.env
 .idea
 logs/*
+build

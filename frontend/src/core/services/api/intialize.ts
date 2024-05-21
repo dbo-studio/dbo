@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const $axios = axios.create({
   //   baseURL: isProduction ? process.env.NEXT_PUBLIC_BACKEND_URL : process.env.NEXT_PUBLIC_BACKEND_URL_DEMO,
-  baseURL: process.env.NEXT_PUBLIC_SERVER_URL,
+  baseURL: process.env.NEXT_PUBLIC_SERVER_URL ?? "/api",
   headers: {
     'Content-Type': 'application/json'
   },

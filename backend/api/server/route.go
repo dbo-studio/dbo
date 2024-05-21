@@ -1,13 +1,7 @@
 package server
 
-import (
-	"embed"
-)
-
-var FS embed.FS
-
 func (r *Server) routing() {
-	r.app.Static("/", "/dist/out")
+	r.app.Static("/", "out")
 
 	api := r.app.Group("/api")
 
