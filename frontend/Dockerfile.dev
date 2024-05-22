@@ -1,6 +1,8 @@
 # Base layer
 FROM node:20-alpine
 
+ENV NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL}
+
 # Set the working directory 
 WORKDIR /app
 

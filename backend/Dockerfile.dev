@@ -1,5 +1,8 @@
 FROM golang:1.22-alpine
 
+ENV APP_PORT=${APP_PORT}
+ENV APP_ENV=${APP_ENV}
+
 WORKDIR /back
 
 COPY . .
