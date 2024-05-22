@@ -83,7 +83,7 @@ func (h *ConnectionHandler) updateConnection(connection *model.Connection, req *
 }
 
 func (h *ConnectionHandler) makeAllConnectionsNotDefault(connection *model.Connection, req *dto.UpdateConnectionDto) error {
-	if req.IsActive != nil && *req.IsActive == true {
+	if req.IsActive != nil && *req.IsActive {
 		result := app.DB().Model(&model.Connection{}).Not("id", connection.ID).Update("is_active", false)
 		return result.Error
 	}
