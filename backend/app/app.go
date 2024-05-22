@@ -1,10 +1,6 @@
 package app
 
 import (
-	"errors"
-	"log"
-	"os"
-
 	"github.com/khodemobin/dbo/config"
 	"github.com/khodemobin/dbo/db"
 	"github.com/khodemobin/dbo/driver"
@@ -24,30 +20,19 @@ type AppContainer struct {
 var Container *AppContainer = nil
 
 func New() {
-	config := config.New()
-	var logger logger.Logger
-
-	path := "logs"
-	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
-		err := os.Mkdir(path, os.ModePerm)
-		if err != nil {
-			log.Println(err)
-		}
-	}
-
-	logger = zap.New()
-
-	db := db.New(config, logger).DB
-	err := db.AutoMigrate(&model.Connection{}, &model.SavedQuery{}, &model.History{})
+	cfg := config.New()
+	appLogger := zap.New(cfg)
+	appDB := db.New(cfg, appLogger).DB
+	err := appDB.AutoMigrate(&model.Connection{}, &model.SavedQuery{}, &model.History{})
 	if err != nil {
-		logger.Fatal(err)
+		appLogger.Fatal(err)
 	}
 
 	Container = &AppContainer{
-		DB:      db,
-		Config:  config,
-		Log:     logger,
-		Drivers: driver.InitDrivers(db),
+		DB:      appDB,
+		Config:  cfg,
+		Log:     appLogger,
+		Drivers: driver.InitDrivers(appDB),
 	}
 }
 
