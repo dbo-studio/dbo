@@ -8,14 +8,13 @@ WORKDIR /frontend
 
 COPY ./frontend .
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 RUN pnpm build
 
 FROM golang:1.22-alpine as backend
 
 ENV APP_PORT=${APP_PORT}
-ENV APP_ENV=production
-ENV DB_NAME=dbo.db
+ENV APP_ENV=docker
 
 WORKDIR /backend
 COPY ./backend .
@@ -25,7 +24,7 @@ RUN apk add --no-cache gcc musl-dev
 RUN go mod download
 
 RUN go build -p=8 --tags "release" -ldflags "-w" -o "build/dbo" *.go
-COPY --from=frontend /frontend/out ./backend/build
+COPY --from=frontend /frontend/out ./out
 
 EXPOSE $APP_PORT
 
