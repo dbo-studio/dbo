@@ -10,15 +10,15 @@ import {
 import { transformConnectionDetail, transformConnections } from './transformers';
 import { createConnectionType, updateConnectionType } from './types';
 
-export const getConnectionList = () => {
+export const getConnectionList = async () => {
   return api.get(GET_CONNECTION_LIST()).then(transformConnections);
 };
 
-export const getConnectionDetail = (connectionID: string | number) => {
+export const getConnectionDetail = async (connectionID: string | number) => {
   return api.get(GET_CONNECTION_DETAIL(connectionID)).then(transformConnectionDetail);
 };
 
-export const createConnection = (data: createConnectionType) => {
+export const createConnection = async (data: createConnectionType) => {
   return api
     .post(CREATE_CONNECTION(), {
       ...data,
@@ -27,7 +27,7 @@ export const createConnection = (data: createConnectionType) => {
     .then(transformConnectionDetail);
 };
 
-export const updateConnection = (data: updateConnectionType) => {
+export const updateConnection = async (data: updateConnectionType) => {
   return api
     .patch(UPDATE_CONNECTION(data.id), {
       ...data,
@@ -36,11 +36,11 @@ export const updateConnection = (data: updateConnectionType) => {
     .then(transformConnectionDetail);
 };
 
-export const deleteConnection = (connectionId: string | number) => {
-  return api.del(DELETE_CONNECTION(connectionId));
+export const deleteConnection = async (connectionId: string | number) => {
+  return api.del(DELETE_CONNECTION(connectionId)).then(transformConnections);
 };
 
-export const testConnection = (data: createConnectionType) => {
+export const testConnection = async (data: createConnectionType) => {
   return api.post(TEST_CONNECTION(), {
     ...data,
     port: Number(data.port)

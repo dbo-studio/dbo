@@ -9,7 +9,9 @@ import { ConnectionType } from '../types';
 const connectionTypes: ConnectionType[] = [
   {
     name: 'PostgreSQL',
-    logo: '/images/connections/postgresql_logo.svg'
+    logo: '/images/connections/postgresql_logo.svg',
+    port: 5432,
+    host: 'localhost'
   }
 ];
 

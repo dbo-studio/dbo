@@ -22,9 +22,14 @@ export const useConnectionStore = create<ConnectionState>()(
       updateShowEditConnection: (connection: ConnectionType | undefined) => {
         set({ showEditConnection: connection });
       },
-      updateCurrentConnection: (currentConnection: ConnectionType) => {
+      updateCurrentConnection: (currentConnection: ConnectionType | undefined) => {
         let connections = get().connections;
         if (!connections) {
+          return;
+        }
+
+        if (!currentConnection) {
+          set({ currentConnection: undefined });
           return;
         }
 

@@ -14,11 +14,11 @@ export const ColumnItemStyled = styled(TableRow)<ColumnItemStyledProps>(
     background: selected
       ? theme.palette.action.selected + ' !important'
       : edited
-      ? '#fff8da' + ' !important'
-      : deleted
-      ? '#ffebeb' + ' !important'
-      : unsaved
-      ? '#DFE3E8' + ' !important'
-      : 'unset'
+        ? '#fff8da' + ' !important'
+        : deleted
+          ? '#ffebeb' + ' !important'
+          : unsaved
+            ? '#DFE3E8' + ' !important'
+            : 'unset'
   })
 );

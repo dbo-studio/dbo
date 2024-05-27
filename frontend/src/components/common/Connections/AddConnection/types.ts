@@ -1,6 +1,8 @@
 export type ConnectionType = {
   name: string;
   logo: string;
+  host: string;
+  port: number;
 };
 
 export type ConnectionItemProps = {

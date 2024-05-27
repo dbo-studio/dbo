@@ -6,7 +6,7 @@ export type ConnectionStore = {
   connections: ConnectionType[] | undefined;
   currentConnection: ConnectionType | undefined;
   updateConnections: (connections: ConnectionType[]) => void;
-  updateCurrentConnection: (connections: ConnectionType) => void;
+  updateCurrentConnection: (connection: ConnectionType | undefined) => void;
   updateShowAddConnection: (show: boolean) => void;
   updateShowEditConnection: (connections: ConnectionType | undefined) => void;
 };

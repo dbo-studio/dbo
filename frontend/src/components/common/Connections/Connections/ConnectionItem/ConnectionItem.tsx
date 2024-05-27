@@ -17,7 +17,7 @@ export default function ConnectionItem({ connection, selected = false, onClick }
 
   return (
     <ConnectionItemStyled onContextMenu={handleContextMenu} theme={theme} selected={selected} onClick={handleClick}>
-      <Box maxHeight={50} maxWidth={50} textAlign={'center'}>
+      <Box maxHeight={50} maxWidth={50} display={'flex'} flexDirection={'column'} alignItems={'center'}>
         <CustomIcon type='databaseOutline' size='l' />
         <Typography component={'p'} mt={1} variant='caption' noWrap>
           {connection.name}

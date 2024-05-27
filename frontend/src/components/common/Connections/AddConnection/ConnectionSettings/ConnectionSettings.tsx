@@ -1,6 +1,7 @@
 import api from '@/src/api';
 import useAPI from '@/src/hooks/useApi.hook';
 import locales from '@/src/locales';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LoadingButton } from '@mui/lab';
 import { Box, Button, Stack } from '@mui/material';
@@ -33,6 +34,8 @@ const formSchema = z.object({
 type ValidationSchema = z.infer<typeof formSchema>;
 
 export default function ConnectionSetting({ connection, onClose }: ConnectionSettingsProps) {
+  const { updateConnections, updateCurrentConnection, connections } = useConnectionStore();
+
   const {
     control,
     handleSubmit,
@@ -56,7 +59,11 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
       return;
     }
     try {
-      await createConnection(data);
+      const res = await createConnection(data);
+      const c = connections ?? [];
+      c?.push(res);
+      updateConnections(c);
+      updateCurrentConnection(res);
       toast.success(locales.connection_create_success);
       reset({ ...data });
       onClose();
@@ -101,7 +108,13 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
                 name='host'
                 control={control}
                 render={({ field }) => (
-                  <FieldInput helperText={errors.host?.message} error={!!errors.host} label={locales.host} {...field} />
+                  <FieldInput
+                    placeholder={connection?.host}
+                    helperText={errors.host?.message}
+                    error={!!errors.host}
+                    label={locales.host}
+                    {...field}
+                  />
                 )}
               />
               <Controller
@@ -109,6 +122,7 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
                 control={control}
                 render={({ field }) => (
                   <FieldInput
+                    placeholder={connection?.port.toString()}
                     helperText={errors.port?.message}
                     error={!!errors.port}
                     label={locales.port}

@@ -41,3 +41,5 @@ next-env.d.ts
 .pnpm-store/
 
 public/workbox-*
+
+.env

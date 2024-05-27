@@ -13,7 +13,7 @@ export const createSavedQuery = (data: CreateSavedQueryType) => {
 
 export const updateSavedQuery = (data: UpdateSavedQueryType) => {
   console.log(data);
-  
+
   return api.patch(UPDATE_SAVED_QUERY(data.id), data).then(transformSavedQuery);
 };
 

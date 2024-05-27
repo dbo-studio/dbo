@@ -1,7 +1,7 @@
 import { SavedQueryType } from '@/src/types';
 import { create } from 'zustand';
-import { SavedQueryStore } from './types';
 import { devtools } from 'zustand/middleware';
+import { SavedQueryStore } from './types';
 
 type SavedQueryState = SavedQueryStore;
 
@@ -14,14 +14,14 @@ export const useSavedQueryStore = create<SavedQueryState>()(
         if (queries == undefined) {
           queries = [];
         }
-    
+
         const findQuery = queries.findIndex((s) => s.id == savedQuery.id);
         if (findQuery == -1) {
           queries.push(savedQuery);
         } else {
           queries[findQuery] = savedQuery;
         }
-    
+
         set({ savedQueries: queries });
       },
       deleteQuery: (id: number) => {
@@ -29,7 +29,7 @@ export const useSavedQueryStore = create<SavedQueryState>()(
         if (queries == undefined) {
           return;
         }
-    
+
         queries = queries.filter((s) => s.id !== id);
         set({ savedQueries: queries });
       }
@@ -37,4 +37,3 @@ export const useSavedQueryStore = create<SavedQueryState>()(
     { name: 'saved_query' }
   )
 );
-
