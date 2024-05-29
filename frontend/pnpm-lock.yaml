@@ -72,8 +72,8 @@ importers:
         specifier: ^18.3.1
         version: 18.3.1
       react-data-grid:
-        specifier: 7.0.0-beta.44
-        version: 7.0.0-beta.44(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 7.0.0-beta.40
+        version: 7.0.0-beta.40(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
@@ -2965,8 +2965,8 @@ packages:
   randombytes@2.1.0:
     resolution: {integrity: sha512-vYl3iOX+4CKUWuxGi9Ukhie6fsqXqS9FE2Zaic4tNFD2N2QQaXOMFbuKK4QmDHC0JO6B1Zp41J0LpT0oR68amQ==}
 
-  react-data-grid@7.0.0-beta.44:
-    resolution: {integrity: sha512-VTql8VPBJEf7E+zkrqYW+jaQT1/m47dxigWzPq59QESJ8LhU59kHyzIx06BUpjdZKdK/tzbWaw2yyJpKoNnt5g==}
+  react-data-grid@7.0.0-beta.40:
+    resolution: {integrity: sha512-2jgF56UfmHL9LhZ4teB+qR1WzAGGq3SL1ux8heiTYR8k8gQM1NFww6+EgKRlSU9fVR9yx+k/w3b6Y9aa+NpW0g==}
     peerDependencies:
       react: ^18.0
       react-dom: ^18.0
@@ -6828,7 +6828,7 @@ snapshots:
     dependencies:
       safe-buffer: 5.2.1
 
-  react-data-grid@7.0.0-beta.44(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  react-data-grid@7.0.0-beta.40(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       clsx: 2.1.1
       react: 18.3.1
