@@ -17,11 +17,11 @@ func InitPostgresEngine(db *gorm.DB) *PostgresQueryEngine {
 	}
 }
 
-func (e PostgresQueryEngine) DBLogger(query string) {
+func (p PostgresQueryEngine) DBLogger(query string) {
 	go func(query string) {
 		model := model.History{
 			Query: query,
 		}
-		e.DB.Save(&model)
+		p.DB.Save(&model)
 	}(query)
 }

@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (p *PostgresQueryEngine) Connect(connectionId int32) (*gorm.DB, error) {
+func (p PostgresQueryEngine) Connect(connectionId int32) (*gorm.DB, error) {
 	if conn, exists := p.OpenConnections[connectionId]; exists {
 		return conn, nil
 	}
@@ -24,7 +24,7 @@ func (p *PostgresQueryEngine) Connect(connectionId int32) (*gorm.DB, error) {
 	return conn, nil
 }
 
-func (p *PostgresQueryEngine) Open(connectionId int32) (*gorm.DB, error) {
+func (p PostgresQueryEngine) Open(connectionId int32) (*gorm.DB, error) {
 	var connection model.Connection
 	result := p.DB.Where("id", "=", connectionId).First(&connection)
 	if result.Error != nil {
@@ -52,7 +52,7 @@ type ConnectionOption struct {
 	Database string
 }
 
-func (p *PostgresQueryEngine) ConnectWithOptions(options ConnectionOption) (*gorm.DB, error) {
+func (p PostgresQueryEngine) ConnectWithOptions(options ConnectionOption) (*gorm.DB, error) {
 	dsn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s",
 		options.Host,
 		strconv.Itoa(int(options.Port)),

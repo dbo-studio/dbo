@@ -16,8 +16,12 @@ func RunQuery(queryResult *pgsql.RunQueryResult, structures []pgsql.Structure) a
 	}
 }
 
-func RawQuery(queryResult *pgsql.RawQueryResult) any {
+func RawQuery(queryResult *pgsql.RawQueryResult, err error) any {
 	var newStructures []structureResponse
+	if err != nil || !queryResult.IsQuery {
+		return commandResponseBuilder(queryResult, err)
+	}
+
 	for _, structure := range queryResult.Columns {
 		var s structureResponse
 		s.Name = structure.ColumnName
@@ -33,6 +37,52 @@ func RawQuery(queryResult *pgsql.RawQueryResult) any {
 	return runQuery{
 		Query:      queryResult.Query,
 		Data:       queryResult.Data,
+		Structures: newStructures,
+	}
+}
+
+func commandResponseBuilder(queryResult *pgsql.RawQueryResult, err error) runQuery {
+	message := "OK"
+	if err != nil {
+		message = err.Error()
+	}
+
+	newStructures := []structureResponse{
+		{
+			Name:       "Query",
+			Type:       "Varchar",
+			MappedType: "string",
+			NotNull:    false,
+			Length:     nil,
+			Default:    nil,
+		},
+		{
+			Name:       "Message",
+			Type:       "Varchar",
+			MappedType: "string",
+			NotNull:    false,
+			Length:     nil,
+			Default:    nil,
+		},
+		{
+			Name:       "Time",
+			Type:       "Varchar",
+			MappedType: "string",
+			NotNull:    false,
+			Length:     nil,
+			Default:    nil,
+		},
+	}
+
+	return runQuery{
+		Query: queryResult.Query,
+		Data: []map[string]interface{}{
+			{
+				"Query":    queryResult.Query,
+				"Message":  message,
+				"Duration": queryResult.Duration,
+			},
+		},
 		Structures: newStructures,
 	}
 }

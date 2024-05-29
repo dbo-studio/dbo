@@ -3,10 +3,13 @@ package pgsql_driver
 import (
 	"database/sql"
 	"fmt"
-	"strings"
-
 	"github.com/khodemobin/dbo/api/dto"
 	error_c "github.com/khodemobin/dbo/error"
+	"github.com/khodemobin/dbo/helper"
+	"github.com/xwb1989/sqlparser"
+	"log"
+	"strings"
+	"time"
 )
 
 type RunQueryResult struct {
@@ -14,15 +17,15 @@ type RunQueryResult struct {
 	Data  []map[string]interface{}
 }
 
-func (p *PostgresQueryEngine) RunQuery(dto *dto.RunQueryDto) (*RunQueryResult, error) {
+func (p PostgresQueryEngine) RunQuery(dto *dto.RunQueryDto) (*RunQueryResult, error) {
 	query := queryGenerator(dto)
 
 	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {
-		return nil, error_c.Global(err, "Connection")
+		return nil, error_c.ErrConnection
 	}
 
-	queryResults := []map[string]interface{}{}
+	queryResults := make([]map[string]interface{}, 0)
 	result := db.Raw(query).Find(&queryResults)
 	if result.Error != nil {
 		return nil, result.Error
@@ -40,24 +43,29 @@ func (p *PostgresQueryEngine) RunQuery(dto *dto.RunQueryDto) (*RunQueryResult, e
 }
 
 type RawQueryResult struct {
-	Query   string
-	Data    []map[string]interface{}
-	Columns []Structure
+	Query    string
+	Data     []map[string]interface{}
+	Columns  []Structure
+	IsQuery  bool
+	Duration string
 }
 
-func (p *PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) (*RawQueryResult, error) {
+func (p PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) (*RawQueryResult, error) {
 	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {
-		return nil, error_c.Global(err, "Connection")
+		return nil, error_c.ErrConnection
 	}
 
-	queryResults := []map[string]interface{}{}
-	result := db.Raw(dto.Query).Find(&queryResults)
-	if result.Error != nil {
-		return nil, result.Error
+	stmt, err := sqlparser.Parse(dto.Query)
+	if err != nil {
+		return nil, err
 	}
+
+	startTime := time.Now()
+	queryResults := make([]map[string]interface{}, 0)
 
 	rows, err := db.Raw(dto.Query).Rows()
+	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -72,11 +80,22 @@ func (p *PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) (*RawQueryResult, e
 		return nil, err
 	}
 
+	for rows.Next() {
+		var data map[string]interface{}
+		err := db.ScanRows(rows, &data)
+		if err != nil {
+			return nil, err
+		}
+		queryResults = append(queryResults, data)
+	}
+
+	endTime := time.Since(startTime)
+
 	for i := range queryResults {
 		queryResults[i]["dbo_index"] = i
 	}
 
-	structures := []Structure{}
+	structures := make([]Structure, 0)
 
 	for i, column := range columns {
 		structures = append(structures, Structure{
@@ -88,17 +107,26 @@ func (p *PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) (*RawQueryResult, e
 
 	p.DBLogger(dto.Query)
 
+	isQuery := false
+	switch smtType := stmt.(type) {
+	case *sqlparser.Select:
+		isQuery = true
+		log.Println(smtType)
+	}
+
 	return &RawQueryResult{
-		Query:   dto.Query,
-		Data:    queryResults,
-		Columns: structures,
+		Query:    dto.Query,
+		Data:     queryResults,
+		Columns:  structures,
+		IsQuery:  isQuery,
+		Duration: helper.FloatToString(endTime.Seconds()),
 	}, nil
 }
 
-func (p *PostgresQueryEngine) Version(connectionId int32) (string, error) {
+func (p PostgresQueryEngine) Version(connectionId int32) (string, error) {
 	db, err := p.Connect(connectionId)
 	if err != nil {
-		return "", error_c.Global(err, "Connection")
+		return "", error_c.ErrConnection
 	}
 
 	var version string
@@ -108,10 +136,10 @@ func (p *PostgresQueryEngine) Version(connectionId int32) (string, error) {
 	return version, result.Error
 }
 
-func (p *PostgresQueryEngine) Databases(connectionId int32, withTemplates bool) ([]string, error) {
+func (p PostgresQueryEngine) Databases(connectionId int32, withTemplates bool) ([]string, error) {
 	db, err := p.Connect(connectionId)
 	if err != nil {
-		return nil, error_c.Global(err, "Connection")
+		return nil, error_c.ErrConnection
 	}
 
 	query := "SELECT datname FROM pg_database"
@@ -123,7 +151,7 @@ func (p *PostgresQueryEngine) Databases(connectionId int32, withTemplates bool) 
 		Name string `gorm:"column:datname"`
 	}
 
-	databases := []Database{}
+	databases := make([]Database, 0)
 	result := db.Raw(query).Find(&databases)
 
 	var names []string
@@ -134,20 +162,20 @@ func (p *PostgresQueryEngine) Databases(connectionId int32, withTemplates bool) 
 	return names, result.Error
 }
 
-func (p *PostgresQueryEngine) Schemas(connectionId int32, database string) ([]string, error) {
+func (p PostgresQueryEngine) Schemas(connectionId int32, database string) ([]string, error) {
 	db, err := p.Connect(connectionId)
 	if err != nil {
-		return nil, error_c.Global(err, "Connection")
+		return nil, error_c.ErrConnection
 	}
 	query := "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema') " + fmt.Sprintf("AND catalog_name = '%s'", database) + " AND schema_name NOT LIKE 'pg_%';"
 	type Schema struct {
 		Name string `gorm:"column:schema_name"`
 	}
 
-	schemas := []Schema{}
+	schemas := make([]Schema, 0)
 	result := db.Raw(query).Find(&schemas)
 
-	names := []string{}
+	names := make([]string, 0)
 	for _, v := range schemas {
 		names = append(names, v.Name)
 	}
@@ -155,10 +183,10 @@ func (p *PostgresQueryEngine) Schemas(connectionId int32, database string) ([]st
 	return names, result.Error
 }
 
-func (p *PostgresQueryEngine) Tables(connectionId int32, schema string) ([]string, error) {
+func (p PostgresQueryEngine) Tables(connectionId int32, schema string) ([]string, error) {
 	db, err := p.Connect(connectionId)
 	if err != nil {
-		return nil, error_c.Global(err, "Connection")
+		return nil, error_c.ErrConnection
 	}
 
 	query := fmt.Sprintf("SELECT n.nspname AS schema_name,t.tablename AS table_name FROM pg_namespace n LEFT JOIN pg_tables t ON n.nspname=t.schemaname::name WHERE n.nspname = '%s' ORDER BY schema_name,table_name;", schema)
@@ -197,10 +225,10 @@ type Structure struct {
 	MappedType             string         `gorm:"_:"`
 }
 
-func (p *PostgresQueryEngine) TableStructure(connectionId int32, table string, schema string) ([]Structure, error) {
+func (p PostgresQueryEngine) TableStructure(connectionId int32, table string, schema string) ([]Structure, error) {
 	db, err := p.Connect(connectionId)
 	if err != nil {
-		return nil, error_c.Global(err, "Connection")
+		return nil, error_c.ErrConnection
 	}
 
 	query := fmt.Sprintf("SELECT cols.ordinal_position,cols.column_name,cols.data_type,cols.is_nullable,cols.column_default,cols.character_maximum_length,des.description AS column_comment FROM information_schema.columns AS cols LEFT JOIN pg_catalog.pg_description AS des ON(des.objoid=(SELECT c.oid FROM pg_catalog.pg_class AS c WHERE c.relname=cols.table_name)AND des.objsubid=cols.ordinal_position)WHERE cols.table_schema='%s' AND cols.table_name='%s' ORDER BY cols.ordinal_position;", schema, table)
@@ -220,10 +248,10 @@ func (p *PostgresQueryEngine) TableStructure(connectionId int32, table string, s
 	return structures, err
 }
 
-func (p *PostgresQueryEngine) TableSpaces(connectionId int32) ([]string, error) {
+func (p PostgresQueryEngine) TableSpaces(connectionId int32) ([]string, error) {
 	db, err := p.Connect(connectionId)
 	if err != nil {
-		return nil, error_c.Global(err, "Connection")
+		return nil, error_c.ErrConnection
 	}
 
 	query := "SELECT spcname FROM pg_tablespace;"
@@ -257,10 +285,10 @@ type IndexInfo struct {
 	Comment         *string `db:"comment"`
 }
 
-func (p *PostgresQueryEngine) Indexes(connectionId int32, table string, schema string) ([]IndexInfo, error) {
+func (p PostgresQueryEngine) Indexes(connectionId int32, table string, schema string) ([]IndexInfo, error) {
 	db, err := p.Connect(connectionId)
 	if err != nil {
-		return nil, error_c.Global(err, "Connection")
+		return nil, error_c.ErrConnection
 	}
 
 	query := fmt.Sprintf(`SELECT ix.relname AS index_name,upper(am.amname)AS index_algorithm,indisunique AS is_unique,pg_get_indexdef(indexrelid)AS index_definition,REPLACE(regexp_replace(regexp_replace(pg_get_indexdef(indexrelid),' WHERE .+',''),'.*\((.*)\)','\1'),' ','')AS column_name,CASE WHEN position(' WHERE ' IN pg_get_indexdef(indexrelid))>0 THEN regexp_replace(pg_get_indexdef(indexrelid),'.+WHERE ','')ELSE'' END AS condition,pg_catalog.obj_description(i.indexrelid,'pg_class')AS COMMENT FROM pg_index i JOIN pg_class t ON t.oid=i.indrelid JOIN pg_class ix ON ix.oid=i.indexrelid JOIN pg_namespace n ON t.relnamespace=n.oid JOIN pg_am AS am ON ix.relam=am.oid WHERE t.relname='%s' AND n.nspname='%s';`, table, schema)
@@ -275,7 +303,7 @@ func (p *PostgresQueryEngine) Indexes(connectionId int32, table string, schema s
 	return indexes, nil
 }
 
-func (p *PostgresQueryEngine) Encodes() []string {
+func (p PostgresQueryEngine) Encodes() []string {
 	return []string{
 		"BIG5",
 		"EUC_CN",
@@ -332,7 +360,7 @@ func (p *PostgresQueryEngine) Encodes() []string {
 	}
 }
 
-func (p *PostgresQueryEngine) DataTypes() []string {
+func (p PostgresQueryEngine) DataTypes() []string {
 	return []string{
 		"bigserial",
 		"bit",

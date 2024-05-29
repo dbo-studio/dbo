@@ -13,10 +13,10 @@ type UpdateQueryResult struct {
 	RowsAffected int
 }
 
-func (p *PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryDto) (*UpdateQueryResult, error) {
+func (p PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryDto) (*UpdateQueryResult, error) {
 	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {
-		return nil, error_c.Global(err, "Connection")
+		return nil, error_c.ErrConnection
 	}
 
 	queries := updateQueryGenerator(dto)
@@ -27,7 +27,7 @@ func (p *PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryDto) (*UpdateQuery
 		for _, query := range queries {
 			result := tx.Exec(query)
 			if result.Error != nil {
-				return error_c.Driver(result.Error, query)
+				return error_c.ErrorQuery(result.Error, query)
 			}
 			rowsAffected += int(result.RowsAffected)
 		}
@@ -43,10 +43,10 @@ func (p *PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryDto) (*UpdateQuery
 	}, nil
 }
 
-func (p *PostgresQueryEngine) UpdateDesign(dto *dto.DesignDto) (*UpdateQueryResult, error) {
+func (p PostgresQueryEngine) UpdateDesign(dto *dto.DesignDto) (*UpdateQueryResult, error) {
 	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {
-		return nil, error_c.Global(err, "Connection")
+		return nil, error_c.ErrConnection
 	}
 
 	queries := updateDesignGenerator(dto)
@@ -57,7 +57,7 @@ func (p *PostgresQueryEngine) UpdateDesign(dto *dto.DesignDto) (*UpdateQueryResu
 		for _, query := range queries {
 			result := tx.Exec(query)
 			if result.Error != nil {
-				return error_c.Driver(result.Error, query)
+				return error_c.ErrorQuery(result.Error, query)
 			}
 
 		}
@@ -73,12 +73,12 @@ func (p *PostgresQueryEngine) UpdateDesign(dto *dto.DesignDto) (*UpdateQueryResu
 	}, nil
 }
 
-func (p *PostgresQueryEngine) CreateDatabase(dto *dto.DatabaseDto) error {
+func (p PostgresQueryEngine) CreateDatabase(dto *dto.DatabaseDto) error {
 	query := createDBQuery(dto)
 
 	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {
-		return error_c.Global(err, "Connection")
+		return error_c.ErrConnection
 	}
 
 	result := db.Exec(query)
@@ -86,12 +86,12 @@ func (p *PostgresQueryEngine) CreateDatabase(dto *dto.DatabaseDto) error {
 	return result.Error
 }
 
-func (p *PostgresQueryEngine) DropDatabase(dto *dto.DeleteDatabaseDto) error {
+func (p PostgresQueryEngine) DropDatabase(dto *dto.DeleteDatabaseDto) error {
 	query := fmt.Sprintf("DROP DATABASE %s", dto.Name)
 
 	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {
-		return error_c.Global(err, "Connection")
+		return error_c.ErrConnection
 	}
 
 	result := db.Exec(query)

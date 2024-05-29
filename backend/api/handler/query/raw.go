@@ -15,16 +15,15 @@ func (QueryHandler) Raw(c fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
 
-	errors := helper.Validate(req)
-	if errors != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
+	validate := helper.Validate(req)
+	if validate != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(validate)
 	}
 
 	rawQueryResult, err := app.Drivers().Pgsql.RawQuery(req)
 	if err != nil {
-		app.Log().Error(err.Error())
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(response.Error(err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
 
-	return c.JSON(response.Success(response.RawQuery(rawQueryResult)))
+	return c.JSON(response.Success(response.RawQuery(rawQueryResult, err)))
 }
