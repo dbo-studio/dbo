@@ -56,11 +56,6 @@ func (p PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) (*RawQueryResult, er
 		return nil, error_c.ErrConnection
 	}
 
-	stmt, err := sqlparser.Parse(dto.Query)
-	if err != nil {
-		return nil, err
-	}
-
 	startTime := time.Now()
 	queryResults := make([]map[string]interface{}, 0)
 
@@ -107,18 +102,11 @@ func (p PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) (*RawQueryResult, er
 
 	p.DBLogger(dto.Query)
 
-	isQuery := false
-	switch smtType := stmt.(type) {
-	case *sqlparser.Select:
-		isQuery = true
-		log.Println(smtType)
-	}
-
 	return &RawQueryResult{
 		Query:    dto.Query,
 		Data:     queryResults,
 		Columns:  structures,
-		IsQuery:  isQuery,
+		IsQuery:  isQuery(dto.Query, queryResults),
 		Duration: helper.FloatToString(endTime.Seconds()),
 	}, nil
 }
@@ -450,4 +438,19 @@ func columnAliases(dataType string) string {
 	default:
 		return dataType
 	}
+}
+
+func isQuery(query string, queryResult []map[string]interface{}) bool {
+	stmt, err := sqlparser.Parse(query)
+	if err != nil {
+		return len(queryResult) > 0
+	}
+
+	switch smtType := stmt.(type) {
+	case *sqlparser.Select:
+		log.Println(smtType)
+		return true
+	}
+
+	return false
 }
