@@ -46,13 +46,13 @@ export default function StatusBarPagination({ mode }: { mode: TabMode | undefine
           <PaginationSetting />
           <IconButton
             style={{ marginLeft: theme.spacing(1) }}
-            disabled={selectedTab?.pagination.page == 1}
+            disabled={selectedTab?.pagination?.page == 1}
             onClick={() => handlePagination('prev')}
           >
             <CustomIcon type='arrowLeft' size='s' />
           </IconButton>
           <Typography fontWeight={'bold'} textAlign={'center'} minWidth={54}>
-            {selectedTab?.pagination.page}
+            {selectedTab?.pagination?.page ?? 1}
           </Typography>
           <IconButton onClick={() => handlePagination('next')}>
             <CustomIcon type='arrowRight' size='s' />

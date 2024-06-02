@@ -1,7 +1,7 @@
-import Modal from '@/src/components/base/Modal/Modal';
+import Modal from '@/components/base/Modal/Modal';
 import locales from '@/src/locales';
-import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
-import ConnectionSetting from '../ConnectionSettings/ConnectionSettings';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import ConnectionSetting from './ConnectionSettings/ConnectionSettings';
 
 export default function EditConnection() {
   const { updateShowEditConnection, showEditConnection } = useConnectionStore();

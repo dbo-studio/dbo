@@ -1,8 +1,6 @@
-// import { isProduction } from '@/utils';
 import axios from 'axios';
 
 const $axios = axios.create({
-  //   baseURL: isProduction ? process.env.NEXT_PUBLIC_BACKEND_URL : process.env.NEXT_PUBLIC_BACKEND_URL_DEMO,
   baseURL: process.env.NEXT_PUBLIC_SERVER_URL ?? '/api',
   headers: {
     'Content-Type': 'application/json'
@@ -11,13 +9,13 @@ const $axios = axios.create({
 });
 
 $axios.interceptors.request.use((config) => {
-  config.headers.Authorization = localStorage.getItem('accessToken');
+  // config.headers.Authorization = localStorage.getItem('accessToken');
   return config;
 });
-// TODO: promise chaining is not handled
-$axios.interceptors.response.use((response) => {
-  return response;
-});
+
+// $axios.interceptors.response.use((response) => {
+//   return response;
+// });
 const servicePost = $axios.post;
 const serviceGet = $axios.get;
 const serviceDelete = $axios.delete;

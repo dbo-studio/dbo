@@ -77,7 +77,7 @@ export default function StatusBarActions() {
     }
   };
 
-  const handleAddAction = () => {
+  const handleAddAction = async () => {
     if (selectedTab?.mode == TabMode.Data) {
       addUnsavedRows();
     }
@@ -87,7 +87,7 @@ export default function StatusBarActions() {
     }
   };
 
-  const handleRemoveAction = () => {
+  const handleRemoveAction = async () => {
     if (selectedTab?.mode == TabMode.Data) {
       updateRemovedRows();
     }
@@ -97,7 +97,7 @@ export default function StatusBarActions() {
     }
   };
 
-  const handleDiscardChanges = () => {
+  const handleDiscardChanges =async () => {
     if (selectedTab?.mode == TabMode.Data) {
       updateSelectedRows([]);
       restoreEditedRows();

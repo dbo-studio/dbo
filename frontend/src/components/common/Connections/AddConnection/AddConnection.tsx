@@ -1,10 +1,10 @@
-import Modal from '@/src/components/base/Modal/Modal';
+import Modal from '@/components/base/Modal/Modal';
 import locales from '@/src/locales';
-import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useState } from 'react';
-import ConnectionSelection from '../ConnectionSelection/ConnectionSelection';
-import ConnectionSetting from '../ConnectionSettings/ConnectionSettings';
-import { ConnectionType } from '../types';
+import ConnectionSelection from './ConnectionSelection/ConnectionSelection';
+import ConnectionSetting from './ConnectionSettings/ConnectionSettings';
+import { ConnectionType } from './types';
 
 const connectionTypes: ConnectionType[] = [
   {

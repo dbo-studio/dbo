@@ -10,11 +10,11 @@ import dynamic from 'next/dynamic';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { EmptySpaceStyle } from './EmptySpace.styled';
 
-const AddConnection = dynamic(() => import('../AddConnection/AddConnection/AddConnection'), {
+const AddConnection = dynamic(() => import('../AddConnection/AddConnection'), {
   ssr: false
 });
 
-const EditConnection = dynamic(() => import('../EditConnection/EditConnection/EditConnection'), {
+const EditConnection = dynamic(() => import('../EditConnection/EditConnection'), {
   ssr: false
 });
 

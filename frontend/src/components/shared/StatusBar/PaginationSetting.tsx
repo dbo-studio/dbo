@@ -11,8 +11,8 @@ export default function PaginationSetting() {
   const { selectedTab, updateSelectedTab } = useTabStore();
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [limit, setLimit] = useState<number>(selectedTab?.pagination.limit ?? 0);
-  const [offset, setOffset] = useState<number>(selectedTab?.pagination.offset ?? 0);
+  const [limit, setLimit] = useState<number>(selectedTab?.pagination?.limit ?? 0);
+  const [offset, setOffset] = useState<number>(selectedTab?.pagination?.offset ?? 0);
   const [errors, setErrors] = useState<{
     limit: string | undefined;
     offset: string | undefined;
