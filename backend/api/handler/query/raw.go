@@ -23,6 +23,7 @@ func (QueryHandler) Raw(c fiber.Ctx) error {
 
 	rawQueryResult, err := app.Drivers().Pgsql.RawQuery(req)
 	if err != nil && rawQueryResult == nil {
+		app.Log().Error(err.Error())
 		return c.JSON(response.Success(response.RawQuery(&pgsql.RawQueryResult{
 			Query:    req.Query,
 			Columns:  nil,

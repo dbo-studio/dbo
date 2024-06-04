@@ -5,7 +5,7 @@ export type RowType = any;
 export interface ColumnType extends Column<RowType> {
   key: string;
   name: string;
-  renderEditCell: any;
+  renderEditCell?: any;
   resizable: boolean;
   type: string;
   isActive: boolean;
@@ -15,6 +15,7 @@ export interface ColumnType extends Column<RowType> {
   default: string;
   mappedType: string;
   selected?: boolean;
+  editable?: boolean;
   editMode?: {
     name?: boolean;
     default?: boolean;

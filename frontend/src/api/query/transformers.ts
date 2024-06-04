@@ -23,7 +23,8 @@ export const transformStructures = (data: any): ColumnType[] => {
       renderEditCell: undefined,
       resizable: false,
       isActive: false,
-      comment: item?.comment
+      comment: item?.comment,
+      editable: item?.editable ?? false
     });
   });
 

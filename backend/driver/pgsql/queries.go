@@ -93,6 +93,7 @@ func (p PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) (*RawQueryResult, er
 
 	for i := range queryResults {
 		queryResults[i]["dbo_index"] = i
+		queryResults[i]["editable"] = false
 	}
 
 	structures := make([]Structure, 0)
@@ -216,9 +217,10 @@ type Structure struct {
 	CharacterMaximumLength sql.NullInt32  `gorm:"column:character_maximum_length"`
 	Comment                sql.NullString `gorm:"column:column_comment"`
 	MappedType             string         `gorm:"_:"`
+	Editable               bool           `gorm:"_:"`
 }
 
-func (p PostgresQueryEngine) TableStructure(connectionId int32, table string, schema string) ([]Structure, error) {
+func (p PostgresQueryEngine) TableStructure(connectionId int32, table string, schema string, editable bool) ([]Structure, error) {
 	db, err := p.Connect(connectionId)
 	if err != nil {
 		return nil, error_c.ErrConnection
@@ -226,12 +228,13 @@ func (p PostgresQueryEngine) TableStructure(connectionId int32, table string, sc
 
 	query := fmt.Sprintf("SELECT cols.ordinal_position,cols.column_name,cols.data_type,cols.is_nullable,cols.column_default,cols.character_maximum_length,des.description AS column_comment FROM information_schema.columns AS cols LEFT JOIN pg_catalog.pg_description AS des ON(des.objoid=(SELECT c.oid FROM pg_catalog.pg_class AS c WHERE c.relname=cols.table_name)AND des.objsubid=cols.ordinal_position)WHERE cols.table_schema='%s' AND cols.table_name='%s' ORDER BY cols.ordinal_position;", schema, table)
 
-	structures := []Structure{}
+	structures := make([]Structure, 0)
 	result := db.Raw(query).Find(&structures)
 
 	for i, structure := range structures {
 		structures[i].MappedType = columnMappedFormat(structure.DataType)
 		structures[i].DataType = columnAliases(structure.DataType)
+		structures[i].Editable = editable
 	}
 
 	if result.Error != nil {

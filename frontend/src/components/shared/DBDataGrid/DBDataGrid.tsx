@@ -3,7 +3,7 @@ import { handelRowChangeLog } from '@/src/core/utils';
 import { useDataStore } from '@/src/store/dataStore/data.store';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { Box, Checkbox, CircularProgress } from '@mui/material';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import DataGrid, { RenderCheckboxProps, RowsChangeData } from 'react-data-grid';
 import './styles.css';
 
@@ -68,13 +68,13 @@ export default function DBDataGrid() {
           headerRowHeight={30}
           renderers={{ renderCheckbox }}
           rowClass={(_, index) => {
-            if (getRemovedRows().some((v) => v.dbo_index == index) == true) {
+            if (getRemovedRows().some((v) => v.dbo_index == index)) {
               return 'removed-highlight';
             }
-            if (getUnsavedRows().some((v) => v.dbo_index == index) == true) {
+            if (getUnsavedRows().some((v) => v.dbo_index == index)) {
               return 'unsaved-highlight';
             }
-            if (getEditedRows().some((v) => v.dboIndex == index) == true) {
+            if (getEditedRows().some((v) => v.dboIndex == index)) {
               return 'edit-highlight';
             }
             return undefined;

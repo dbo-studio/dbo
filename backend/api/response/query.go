@@ -30,6 +30,7 @@ func RawQuery(queryResult *pgsql.RawQueryResult, err error) any {
 		s.NotNull = false
 		s.Length = nil
 		s.Default = nil
+		s.Editable = structure.Editable
 
 		newStructures = append(newStructures, s)
 	}

@@ -45,7 +45,7 @@ export const createDataQuerySlice: StateCreator<
       });
 
       useTabStore.getState().updateQuery(res.query);
-      Promise.all([get().updateRows(res.data), get().updateColumns(res.structures)]);
+      await Promise.all([get().updateRows(res.data), get().updateColumns(res.structures)]);
     } catch (error) {
       console.log('🚀 ~ runQuery: ~ error:', error);
     } finally {

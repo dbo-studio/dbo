@@ -20,7 +20,7 @@ func (h DesignHandler) ColumnList(c fiber.Ctx) error {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
 	}
 
-	structures, err := app.Drivers().Pgsql.TableStructure(req.ConnectionId, req.Table, req.Schema)
+	structures, err := app.Drivers().Pgsql.TableStructure(req.ConnectionId, req.Table, req.Schema, false)
 	if err != nil {
 		app.Log().Error(err.Error())
 		return c.JSON(response.Error(err.Error()))

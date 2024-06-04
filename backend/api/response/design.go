@@ -10,6 +10,7 @@ type structureResponse struct {
 	Default    *string `json:"default"`
 	Comment    *string `json:"comment"`
 	MappedType string  `json:"mapped_type"`
+	Editable   bool    `json:"editable"`
 }
 
 func StructureList(structures []pgsql.Structure) []structureResponse {
@@ -20,6 +21,7 @@ func StructureList(structures []pgsql.Structure) []structureResponse {
 		s.Name = structure.ColumnName
 		s.Type = structure.DataType
 		s.MappedType = structure.MappedType
+		s.Editable = structure.Editable
 
 		if structure.IsNullable == "NO" {
 			s.NotNull = false

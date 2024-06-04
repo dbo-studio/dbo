@@ -26,7 +26,7 @@ func (QueryHandler) Run(c fiber.Ctx) error {
 		return c.JSON(response.Error(err.Error()))
 	}
 
-	structures, err := app.Drivers().Pgsql.TableStructure(req.ConnectionId, req.Table, req.Schema)
+	structures, err := app.Drivers().Pgsql.TableStructure(req.ConnectionId, req.Table, req.Schema, true)
 	if err != nil {
 		app.Log().Error(err.Error())
 		return c.JSON(response.Error(err.Error()))
