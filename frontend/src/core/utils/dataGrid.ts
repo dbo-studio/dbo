@@ -20,6 +20,7 @@ export const formatServerColumns = (serverColumns: ColumnType[]): any => {
       default: 'null',
       mappedType: 'string',
       editable: false,
+      maxWidth: 400,
       editMode: {
         name: false,
         default: false,
@@ -31,6 +32,7 @@ export const formatServerColumns = (serverColumns: ColumnType[]): any => {
   serverColumns!.forEach((column: ColumnType) => {
     arr.push({
       key: column.key,
+      maxWidth: 400,
       name: column.name,
       type: column.type,
       resizable: true,
