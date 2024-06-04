@@ -5,6 +5,7 @@ import (
 	"github.com/khodemobin/dbo/api/dto"
 	"github.com/khodemobin/dbo/api/response"
 	"github.com/khodemobin/dbo/app"
+	pgsql "github.com/khodemobin/dbo/driver/pgsql"
 	"github.com/khodemobin/dbo/helper"
 )
 
@@ -21,8 +22,13 @@ func (QueryHandler) Raw(c fiber.Ctx) error {
 	}
 
 	rawQueryResult, err := app.Drivers().Pgsql.RawQuery(req)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
+	if err != nil && rawQueryResult == nil {
+		return c.JSON(response.Success(response.RawQuery(&pgsql.RawQueryResult{
+			Query:    req.Query,
+			Columns:  nil,
+			IsQuery:  false,
+			Duration: "0",
+		}, err)))
 	}
 
 	return c.JSON(response.Success(response.RawQuery(rawQueryResult, err)))

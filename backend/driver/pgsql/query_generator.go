@@ -77,9 +77,6 @@ func updateQueryGenerator(dto *dto.UpdateQueryDto) []string {
 
 		query := fmt.Sprintf(`UPDATE "%s"."%s" SET `, dto.Schema, dto.Table)
 		for key, value := range editedItem.Values {
-			if key == "dbo_index" {
-				continue
-			}
 			query += fmt.Sprintf(`"%s" = '%v', `, key, value)
 		}
 
@@ -107,9 +104,6 @@ func deleteQueryGenerator(dto *dto.UpdateQueryDto) []string {
 		}
 		query := fmt.Sprintf(`DELETE FROM "%s"."%s" WHERE `, dto.Schema, dto.Table)
 		for key, value := range deletedItem {
-			if key == "dbo_index" {
-				continue
-			}
 			query += fmt.Sprintf(`"%s" = '%v' AND `, key, value)
 		}
 
@@ -131,19 +125,12 @@ func insertQueryGenerator(dto *dto.UpdateQueryDto) []string {
 
 		query := fmt.Sprintf(`INSERT INTO "%s"."%s" (`, dto.Schema, dto.Table)
 		for key := range addedItem {
-			if key == "dbo_index" {
-				continue
-			}
-
 			query += fmt.Sprintf(`%s, `, key)
 		}
 
 		query = query[:len(query)-2] + ") VALUES ("
 
-		for key, value := range addedItem {
-			if key == "dbo_index" {
-				continue
-			}
+		for _, value := range addedItem {
 			query += fmt.Sprintf(`'%v', `, value)
 		}
 

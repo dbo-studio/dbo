@@ -60,10 +60,15 @@ func (p PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) (*RawQueryResult, er
 	queryResults := make([]map[string]interface{}, 0)
 
 	rows, err := db.Raw(dto.Query).Rows()
-	defer rows.Close()
 	if err != nil {
-		return nil, err
+		return &RawQueryResult{
+			Query:    dto.Query,
+			Data:     queryResults,
+			IsQuery:  isQuery(dto.Query, queryResults),
+			Duration: "0",
+		}, err
 	}
+	defer rows.Close()
 
 	columns, err := rows.Columns()
 	if err != nil {

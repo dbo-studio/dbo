@@ -56,6 +56,7 @@ func (r *Server) Start(isLocal bool, port string) error {
 	}
 
 	r.app.Use(cors.New())
+	r.app.Use(skipClearRequestMiddleware)
 
 	r.routing()
 	return r.app.Listen(":" + port)
