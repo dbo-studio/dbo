@@ -16,6 +16,11 @@ export type RunRawQueryType = {
   query: string;
 };
 
+export type AutoCompleteType = {
+  connection_id: number;
+  database: string;
+};
+
 export type RunQueryResponseType = {
   query: string;
   data: any[];

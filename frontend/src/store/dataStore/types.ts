@@ -10,7 +10,7 @@ export type DataRowSlice = {
 };
 
 export type DataHighlightedRowSlice = {
-  highlightedRow: DataHightedRowType; // when click on a row
+  highlightedRow: DataHighlightedRowType; // when click on a row
   getHighlightedRow(): RowType | undefined;
   updateHighlightedRow(selectedRow: RowType | undefined): RowType | undefined;
 };
@@ -64,6 +64,11 @@ export type DataQuerySlice = {
   updateDesignsQuery: () => Promise<void>;
 };
 
+export type AutocompleteSlice = {
+  autoComplete: any;
+  updateAutocomplete: (data: any) => void;
+};
+
 export type DataRowsType = {
   [key: string]: RowType[];
 };
@@ -84,7 +89,7 @@ export type DataRemovedRowsType = {
   [key: string]: RowType[];
 };
 
-export type DataHightedRowType = {
+export type DataHighlightedRowType = {
   [key: string]: RowType | undefined;
 };
 

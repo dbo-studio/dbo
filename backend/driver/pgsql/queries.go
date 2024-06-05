@@ -256,7 +256,7 @@ func (p PostgresQueryEngine) TableSpaces(connectionId int32) ([]string, error) {
 		Name string `gorm:"column:spcname"`
 	}
 
-	tablespacesResult := []tableSpace{}
+	tablespacesResult := make([]tableSpace, 0)
 	result := db.Raw(query).Find(&tablespacesResult)
 
 	if result.Error != nil {
@@ -269,6 +269,41 @@ func (p PostgresQueryEngine) TableSpaces(connectionId int32) ([]string, error) {
 	}
 
 	return tablespaces, err
+}
+
+func (p PostgresQueryEngine) AutoComplete(connectionId int32, database string) (any, error) {
+	db, err := p.Connect(connectionId)
+	if err != nil {
+		return nil, error_c.ErrConnection
+	}
+
+	schemas, err := p.Schemas(connectionId, database)
+	if err != nil {
+		return nil, err
+	}
+
+	queryResult := make(map[string]map[string][]string)
+
+	type columnInfo struct {
+		TableName  string `gorm:"column:table_name"`
+		ColumnName string `gorm:"column:column_name"`
+	}
+
+	for _, schema := range schemas {
+		tablesQuery := fmt.Sprintf(`select table_name, column_name from information_schema.columns where table_schema = '%s' order by table_name, ordinal_position;`, schema)
+		columnInfoResult := make([]columnInfo, 0)
+		result := db.Raw(tablesQuery).Find(&columnInfoResult)
+		if result.Error != nil {
+			return nil, err
+		}
+
+		queryResult[schema] = make(map[string][]string)
+		for _, c := range columnInfoResult {
+			queryResult[schema][c.TableName] = append(queryResult[schema][c.TableName], c.ColumnName)
+		}
+	}
+
+	return queryResult, nil
 }
 
 type IndexInfo struct {

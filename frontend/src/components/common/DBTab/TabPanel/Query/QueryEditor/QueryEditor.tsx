@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react';
 export default function QueryEditor() {
   const theme = useTheme();
   const windowSize = useWindowSize();
-  const { getRows } = useDataStore();
+  const { getRows, autoComplete } = useDataStore();
   const { updateSelectedTab, selectedTab } = useTabStore();
   const [query, setQuery] = useState(selectedTab?.query);
   const debouncedQuery = useDebounce(query, 300);
@@ -40,7 +40,7 @@ export default function QueryEditor() {
   return (
     <Box ref={ref} display={'flex'} flexDirection={'column'} height={windowSize.height}>
       <Box flex={1} borderBottom={`1px solid ${theme.palette.divider}`}>
-        <CodeEditor value={selectedTab?.query} onChange={handleChangeValue} />
+        <CodeEditor autocomplete={autoComplete} value={selectedTab?.query} onChange={handleChangeValue} />
       </Box>
       {getRows() && getRows().length > 0 && <DBDataGrid />}
     </Box>

@@ -47,3 +47,8 @@ type SortDto struct {
 	Column   string `json:"column" validate:"required"`
 	Operator string `json:"operator" validate:"required"`
 }
+
+type AutoCompleteDto struct {
+	ConnectionId int32  `query:"connection_id" validate:"required,gte=0"`
+	Database     string `query:"database" validate:"required"`
+}

@@ -3,9 +3,9 @@ import { Theme, useTheme } from '@mui/material';
 import { githubLight } from '@uiw/codemirror-theme-github';
 import CodeMirror from '@uiw/react-codemirror';
 import { CSSProperties } from 'react';
-import { CodeEditorProps } from './types';
+import { BaseEditorProps } from './types';
 
-export default function BaseEditor(props: CodeEditorProps) {
+export default function BaseEditor(props: BaseEditorProps) {
   const theme: Theme = useTheme();
 
   const styles: CSSProperties = {
