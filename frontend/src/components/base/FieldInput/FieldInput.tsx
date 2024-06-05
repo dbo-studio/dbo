@@ -31,7 +31,7 @@ export default forwardRef(function FieldInput(props: FieldInputProps, ref) {
           {props.label}
         </Typography>
         <Typography color={theme.palette.text.secondary} variant='caption'>
-          {props.typeLabel}
+          {props.typelabel}
         </Typography>
       </Box>
       <InputBase
