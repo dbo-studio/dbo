@@ -5,13 +5,13 @@ import { useEffect, useState } from 'react';
 import FieldInput from '../../base/FieldInput/FieldInput';
 
 export default function DBFields() {
-  const { getColumns, getHightedRow } = useDataStore();
+  const { getColumns, getHighlightedRow } = useDataStore();
   const [fields, setFields] = useState<any[]>([]);
   const [search, setSearch] = useState<string>('');
 
   useEffect(() => {
     generateFields();
-  }, [getHightedRow()]);
+  }, [getHighlightedRow()]);
 
   const handleSearch = (name: string) => {
     setSearch(name);
@@ -19,7 +19,7 @@ export default function DBFields() {
   };
 
   function generateFields() {
-    const row = getHightedRow();
+    const row = getHighlightedRow();
     if (!row) {
       return;
     }
@@ -44,7 +44,7 @@ export default function DBFields() {
     <>
       <Search onChange={handleSearch} />
       <Box mt={1}>
-        {getHightedRow() &&
+        {getHighlightedRow() &&
           fields.map(
             (item, index) =>
               item.name && (
@@ -54,7 +54,7 @@ export default function DBFields() {
                   fullWidth={true}
                   key={index}
                   label={item.name}
-                  typeLabel={item.type}
+                  typelabel={item.type}
                   type={item.type}
                 />
               )

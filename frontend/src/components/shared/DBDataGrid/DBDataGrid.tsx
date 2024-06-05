@@ -12,7 +12,7 @@ export default function DBDataGrid() {
   const {
     loading,
     updateRows,
-    updateHightedRow,
+    updateHighlightedRow,
     getRows,
     getColumns,
     runQuery,
@@ -38,7 +38,7 @@ export default function DBDataGrid() {
     if (e.rowIdx == -1) {
       return;
     }
-    updateHightedRow(e.row);
+    updateHighlightedRow(e.row);
   };
 
   const handleRowsChange = (rows: any[], data: RowsChangeData<any, unknown>) => {
@@ -86,7 +86,7 @@ export default function DBDataGrid() {
 }
 
 function rowKeyGetter(row: any) {
-  return row.dbo_index;
+  return row?.dbo_index ?? Math.random();
 }
 
 function renderCheckbox({ onChange, ...props }: RenderCheckboxProps) {

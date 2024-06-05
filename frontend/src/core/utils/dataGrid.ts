@@ -1,3 +1,4 @@
+import TextRenderCell from '@/components/shared/DBDataGrid/TextRenderCell';
 import { UpdateDesignItemType } from '@/src/api/design/types';
 import { ColumnType, EditedColumnType, EditedColumnValue, EditedRow, RowType } from '@/src/types';
 import { updatedDiff } from 'deep-object-diff';
@@ -13,7 +14,8 @@ export const formatServerColumns = (serverColumns: ColumnType[]): any => {
       type: 'type',
       resizable: true,
       isActive: true,
-      // renderEditCell: textEditor,
+      renderCell: TextRenderCell,
+      renderEditCell: null,
       notNull: false,
       length: 'null',
       comment: 'null',
@@ -38,6 +40,7 @@ export const formatServerColumns = (serverColumns: ColumnType[]): any => {
       resizable: true,
       isActive: true,
       renderEditCell: column.editable ? textEditor : null,
+      renderCell: TextRenderCell,
       notNull: column.notNull,
       length: column.length ?? 'null',
       comment: column.comment ?? 'null',

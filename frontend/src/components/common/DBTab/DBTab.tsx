@@ -1,7 +1,7 @@
 import { useMount } from '@/src/hooks';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
 import { TabType as TabData } from '@/src/types';
-import { Box, Tab, Tabs, Typography } from '@mui/material';
+import { Box, Tab, Tabs, Tooltip, Typography } from '@mui/material';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import TabPanel from './TabPanel/TabPanel';
 
@@ -25,19 +25,21 @@ export default function DBTab() {
                 value={tab.id}
                 className='Mui-flat grid-tab'
                 label={
-                  <Box display={'flex'} alignItems={'center'}>
-                    <CustomIcon type='close' size='s' onClick={() => removeTab(tab.id)} />
-                    <Typography
-                      display={'inline-block'}
-                      component={'span'}
-                      overflow={'hidden'}
-                      textOverflow={'ellipsis'}
-                      maxWidth={'100px'}
-                      variant='subtitle2'
-                    >
-                      {tab.table}
-                    </Typography>
-                  </Box>
+                  <Tooltip title={tab.table}>
+                    <Box display={'flex'} alignItems={'center'}>
+                      <CustomIcon type='close' size='s' onClick={() => removeTab(tab.id)} />
+                      <Typography
+                        display={'inline-block'}
+                        component={'span'}
+                        overflow={'hidden'}
+                        textOverflow={'ellipsis'}
+                        maxWidth={'100px'}
+                        variant='subtitle2'
+                      >
+                        {tab.table}
+                      </Typography>
+                    </Box>
+                  </Tooltip>
                 }
               />
             ))}
