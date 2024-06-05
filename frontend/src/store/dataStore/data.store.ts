@@ -13,7 +13,7 @@ import { createDataUnsavedRowsSlice } from './slices/dataUnsavedRows';
 import {
   DataColumnSlice,
   DataEditedRowsSlice,
-  DataHightedRowSlice,
+  DataHighlightedRowSlice,
   DataQuerySlice,
   DataRemovedRowsSlice,
   DataRowSlice,
@@ -25,7 +25,7 @@ import {
 type DataState = DataStore &
   DataRowSlice &
   DataSelectedRowsSlice &
-  DataHightedRowSlice &
+  DataHighlightedRowSlice &
   DataEditedRowsSlice &
   DataRemovedRowsSlice &
   DataUnsavedRowsSlice &

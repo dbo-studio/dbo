@@ -9,10 +9,10 @@ export type DataRowSlice = {
   updateRows: (items: RowType[]) => Promise<void>;
 };
 
-export type DataHightedRowSlice = {
-  hightedRow: DataHightedRowType; // when click on a row
-  getHightedRow(): RowType | undefined;
-  updateHightedRow(selectedRow: RowType | undefined): RowType | undefined;
+export type DataHighlightedRowSlice = {
+  highlightedRow: DataHightedRowType; // when click on a row
+  getHighlightedRow(): RowType | undefined;
+  updateHighlightedRow(selectedRow: RowType | undefined): RowType | undefined;
 };
 
 export type DataSelectedRowsSlice = {

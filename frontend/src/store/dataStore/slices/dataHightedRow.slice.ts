@@ -1,30 +1,32 @@
 import { RowType } from '@/src/types';
 import { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
-import { DataHightedRowSlice, DataStore } from '../types';
+import { DataHighlightedRowSlice, DataStore } from '../types';
 
-export const createDataHightedRowSlice: StateCreator<DataStore & DataHightedRowSlice, [], [], DataHightedRowSlice> = (
-  set,
-  get
-) => ({
-  hightedRow: {},
-  getHightedRow: (): RowType | undefined => {
+export const createDataHightedRowSlice: StateCreator<
+  DataStore & DataHighlightedRowSlice,
+  [],
+  [],
+  DataHighlightedRowSlice
+> = (set, get) => ({
+  highlightedRow: {},
+  getHighlightedRow: (): RowType | undefined => {
     const selectedTab = useTabStore.getState().selectedTab;
-    const rows = get().hightedRow;
+    const rows = get().highlightedRow;
     if (!selectedTab || !Object.prototype.hasOwnProperty.call(rows, selectedTab.id)) {
       return undefined;
     }
     return rows[selectedTab.id];
   },
-  updateHightedRow: (selectedRow: RowType | undefined) => {
+  updateHighlightedRow: (selectedRow: RowType | undefined) => {
     const selectedTab = useTabStore.getState().selectedTab;
     if (!selectedTab) {
       return;
     }
 
-    const rows = get().hightedRow;
+    const rows = get().highlightedRow;
     rows[selectedTab.id] = selectedRow;
 
-    set({ hightedRow: rows });
+    set({ highlightedRow: rows });
   }
 });
