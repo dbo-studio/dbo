@@ -4,7 +4,7 @@ const withPWA = require('next-pwa')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  output: process.env.NODE_ENV === 'development' ? 'standalone' : 'export',
   images: {
     unoptimized: true,
     remotePatterns: [

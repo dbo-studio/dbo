@@ -26,6 +26,7 @@ services:
       - ./frontend:/app
     environment:
       NEXT_PUBLIC_SERVER_URL: "http://localhost:8080/api"
+      NODE_ENV: "development"
     ports:
       - "3000:3000"
   sample-pgsql:
