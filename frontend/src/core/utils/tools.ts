@@ -20,5 +20,16 @@ export const tools = {
     const newObj = { ...obj };
     Object.keys(newObj).forEach((key) => (newObj[key] === undefined ? delete newObj[key] : {}));
     return newObj;
+  },
+
+  isMac: () => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    const { userAgent } = navigator;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
+    return /Mac/i.test(userAgent) || (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream);
   }
 };

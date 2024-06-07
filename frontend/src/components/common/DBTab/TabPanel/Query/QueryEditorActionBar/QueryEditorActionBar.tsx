@@ -1,10 +1,12 @@
+import { shortcuts } from '@/core/utils';
+import { useShortcut } from '@/hooks/useShortcut';
 import api from '@/src/api';
 import useAPI from '@/src/hooks/useApi.hook';
 import locales from '@/src/locales';
 import { useDataStore } from '@/src/store/dataStore/data.store';
 import { useSavedQueryStore } from '@/src/store/savedQueryStore/savedQuery.store';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
-import { Button, Stack, useTheme } from '@mui/material';
+import { Button, Stack, Tooltip, useTheme } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { minify } from 'pgsql-minify';
 import { toast } from 'sonner';
@@ -19,6 +21,8 @@ export default function QueryEditorActionBar() {
   const { request: createSavedQuery } = useAPI({
     apiMethod: api.savedQueries.createSavedQuery
   });
+
+  useShortcut(shortcuts.runQuery, () => runRawQuery());
 
   const handleFormatSql = () => {
     if (selectedTab && selectedTab.query.length > 0) {
@@ -78,9 +82,11 @@ export default function QueryEditorActionBar() {
           <Button variant='outlined' size='small' aria-label='grid' onClick={handleFormatSql}>
             {locales.beatify}
           </Button>
-          <Button variant='contained' size='small' aria-label='grid' onClick={() => runRawQuery()}>
-            {locales.run}
-          </Button>
+          <Tooltip title={shortcuts.runQuery.command}>
+            <Button variant='contained' size='small' aria-label='grid' onClick={() => runRawQuery()}>
+              {locales.run}
+            </Button>
+          </Tooltip>
         </Stack>
       </Grid>
     </Stack>

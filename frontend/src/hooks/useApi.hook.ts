@@ -1,6 +1,6 @@
+import { apiHandler } from '@/core/services';
+import { isServerSide, tools } from '@/core/utils';
 import { DependencyList, useEffect, useMemo, useState } from 'react';
-import { apiHandler } from '../core/services';
-import { isServerSide, tools } from '../core/utils';
 import { ArgumentType, MethodType } from '../types';
 
 interface UseAPI<T, M extends MethodType> {

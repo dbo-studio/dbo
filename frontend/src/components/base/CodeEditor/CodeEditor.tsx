@@ -1,5 +1,7 @@
+import { shortcuts } from '@/core/utils';
 import { PostgreSQL, sql } from '@codemirror/lang-sql';
-import { EditorView } from '@uiw/react-codemirror';
+import { EditorView, Prec, keymap } from '@uiw/react-codemirror';
+import { useMemo } from 'react';
 import BaseEditor from './BaseEditor';
 import { CodeEditorProps } from './types';
 
@@ -9,6 +11,17 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
       outline: 'unset'
     }
   });
+
+  const k = useMemo(() => {
+    return Object.keys(shortcuts).map((key) => ({
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      key: shortcuts[key].codemirror,
+      run: () => {
+        return true;
+      }
+    }));
+  }, [shortcuts]);
 
   return (
     <BaseEditor
@@ -23,17 +36,8 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
           upperCaseKeywords: true,
           schema: autocomplete
         }),
-        styleTheme
-        // Prec.highest(
-        //   keymap.of([
-        //     {
-        //       key: 'Tab',
-        //       run: () => {
-        //         return true;
-        //       }
-        //     }
-        //   ])
-        // )
+        styleTheme,
+        Prec.highest(keymap.of(k))
       ]}
     />
   );

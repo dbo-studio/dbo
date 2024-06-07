@@ -8,3 +8,9 @@ export type ContextMenuType = {
   mouseX: number;
   mouseY: number;
 } | null;
+
+export type ShortcutType = {
+  codemirror: string;
+  command: string;
+  shortcut: (event: KeyboardEvent) => boolean;
+};
