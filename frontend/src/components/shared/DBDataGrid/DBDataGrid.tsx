@@ -61,7 +61,7 @@ export default function DBDataGrid() {
           rowKeyGetter={rowKeyGetter}
           selectedRows={getSelectedRows()}
           onSelectedRowsChange={updateSelectedRows}
-          columns={getColumns(true)}
+          columns={getColumns(true, true)}
           rows={getRows()}
           rowHeight={30}
           onRowsChange={handleRowsChange}

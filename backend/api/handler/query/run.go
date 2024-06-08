@@ -32,5 +32,5 @@ func (QueryHandler) Run(c fiber.Ctx) error {
 		return c.JSON(response.Error(err.Error()))
 	}
 
-	return c.JSON(response.Success(response.RunQuery(runQueryResult, structures)))
+	return c.JSON(response.Success(response.RunQuery(runQueryResult, structures, req.Columns)))
 }

@@ -218,6 +218,7 @@ type Structure struct {
 	Comment                sql.NullString `gorm:"column:column_comment"`
 	MappedType             string         `gorm:"_:"`
 	Editable               bool           `gorm:"_:"`
+	IsActive               bool           `gorm:"_:"`
 }
 
 func (p PostgresQueryEngine) TableStructure(connectionId int32, table string, schema string, editable bool) ([]Structure, error) {
@@ -235,6 +236,7 @@ func (p PostgresQueryEngine) TableStructure(connectionId int32, table string, sc
 		structures[i].MappedType = columnMappedFormat(structure.DataType)
 		structures[i].DataType = columnAliases(structure.DataType)
 		structures[i].Editable = editable
+		structures[i].IsActive = true
 	}
 
 	if result.Error != nil {

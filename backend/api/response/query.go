@@ -1,6 +1,9 @@
 package response
 
-import pgsql "github.com/khodemobin/dbo/driver/pgsql"
+import (
+	pgsql "github.com/khodemobin/dbo/driver/pgsql"
+	"slices"
+)
 
 type runQuery struct {
 	Query      string              `json:"query"`
@@ -8,7 +11,13 @@ type runQuery struct {
 	Structures []structureResponse `json:"structures"`
 }
 
-func RunQuery(queryResult *pgsql.RunQueryResult, structures []pgsql.Structure) any {
+func RunQuery(queryResult *pgsql.RunQueryResult, structures []pgsql.Structure, activeColumns []string) any {
+	if len(activeColumns) > 0 {
+		for i, s := range structures {
+			structures[i].IsActive = slices.Contains(activeColumns, s.ColumnName)
+		}
+	}
+
 	return runQuery{
 		Query:      queryResult.Query,
 		Data:       queryResult.Data,

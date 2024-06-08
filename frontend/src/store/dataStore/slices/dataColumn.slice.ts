@@ -11,14 +11,21 @@ export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, []
 ) => ({
   columns: {},
   editedColumns: {},
-  getColumns: (withSelect: boolean) => {
+  getColumns: (withSelect: boolean, isActive?: boolean) => {
     const selectedTab = useTabStore.getState().selectedTab;
     const columns = get().columns;
     if (!selectedTab || !Object.prototype.hasOwnProperty.call(columns, selectedTab.id)) {
       return [];
     }
-    if (withSelect) return columns[selectedTab.id];
-    return columns[selectedTab.id].filter((c: ColumnType) => c.key != 'select-row');
+
+    let newColumns = columns[selectedTab.id];
+
+    if (isActive) {
+      newColumns = newColumns.filter((c) => c.isActive);
+    }
+
+    if (withSelect) return newColumns;
+    return newColumns.filter((c: ColumnType) => c.key != 'select-row');
   },
   updateColumns: async (items: ColumnType[]) => {
     const selectedTab = useTabStore.getState().selectedTab;

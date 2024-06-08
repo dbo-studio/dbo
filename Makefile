@@ -6,6 +6,3 @@ down-dev:
 	docker compose -f docker-compose.dev.yml down
 build:
 	sh ./docs/scripts/build_all_in_one.sh
-
-update-changelog:
-	git cliff --output CHANGELOG.md

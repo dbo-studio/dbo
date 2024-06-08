@@ -24,7 +24,7 @@ export type DataSelectedRowsSlice = {
 
 export type DataColumnSlice = {
   columns: DataColumnsType;
-  getColumns(withSelect?: boolean): ColumnType[];
+  getColumns(withSelect?: boolean, isActive?: boolean): ColumnType[];
   updateColumns: (columns: ColumnType[]) => Promise<void>;
   updateColumn: (columns: ColumnType) => Promise<void>;
   editedColumns: DataEditedColumnsType;

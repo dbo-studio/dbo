@@ -1,10 +1,10 @@
 import { useWindowSize } from '@/src/hooks/useWindowSize.hook';
 import { useDataStore } from '@/src/store/dataStore/data.store';
 import { ColumnType } from '@/src/types/Data';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, Theme, useTheme } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
 import ColumnItem from './ColumnItem';
-import { useTabStore } from '@/store/tabStore/tab.store';
 
 export default function Columns() {
   const windowSize = useWindowSize();
@@ -40,7 +40,7 @@ export default function Columns() {
       display={'flex'}
       flexDirection={'column'}
     >
-      {getColumns().map((c: ColumnType) => (
+      {getColumns(false, false).map((c: ColumnType) => (
         <ColumnItem onClick={() => handleCheckToggle(c)} key={uuidv4()} column={c} />
       ))}
     </Box>

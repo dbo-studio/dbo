@@ -11,6 +11,7 @@ type structureResponse struct {
 	Comment    *string `json:"comment"`
 	MappedType string  `json:"mapped_type"`
 	Editable   bool    `json:"editable"`
+	IsActive   bool    `json:"is_active"`
 }
 
 func StructureList(structures []pgsql.Structure) []structureResponse {
@@ -22,6 +23,7 @@ func StructureList(structures []pgsql.Structure) []structureResponse {
 		s.Type = structure.DataType
 		s.MappedType = structure.MappedType
 		s.Editable = structure.Editable
+		s.IsActive = structure.IsActive
 
 		if structure.IsNullable == "NO" {
 			s.NotNull = false
