@@ -28,6 +28,7 @@ export type TabType = {
   showSorts: boolean;
   sorts: SortType[];
   filters: FilterType[];
+  columns: string[];
   mode: TabMode;
 };
 

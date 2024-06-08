@@ -26,6 +26,7 @@ export type TabQuerySlice = {
 
 export type TabDataSlice = {
   setShowColumns: (show: boolean) => void;
+  updateColumns: (columns:string[]) => void;
 };
 
 export type TabStore = {

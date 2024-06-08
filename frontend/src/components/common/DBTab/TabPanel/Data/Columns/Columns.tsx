@@ -4,14 +4,16 @@ import { ColumnType } from '@/src/types/Data';
 import { Box, Theme, useTheme } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
 import ColumnItem from './ColumnItem';
+import { useTabStore } from '@/store/tabStore/tab.store';
 
 export default function Columns() {
   const windowSize = useWindowSize();
 
   const theme: Theme = useTheme();
   const { getColumns, updateColumns } = useDataStore();
+  const { updateColumns: updateTabColumns } = useTabStore();
 
-  const handleCheckToggle = (column: ColumnType) => {
+  const handleCheckToggle = async (column: ColumnType) => {
     column.isActive = !column.isActive;
     const newColumns = getColumns().map((c: ColumnType) => {
       if (c.key == column.key) {
@@ -19,7 +21,12 @@ export default function Columns() {
       }
       return c;
     });
-    updateColumns(newColumns);
+
+    await updateColumns(newColumns);
+
+    const c = newColumns.filter((c) => c.isActive).map((c) => c.name);
+
+    updateTabColumns([...c]);
   };
 
   return (

@@ -17,28 +17,14 @@ func RunQuery(queryResult *pgsql.RunQueryResult, structures []pgsql.Structure) a
 }
 
 func RawQuery(queryResult *pgsql.RawQueryResult, err error) any {
-	var newStructures []structureResponse
 	if err != nil || !queryResult.IsQuery {
 		return commandResponseBuilder(queryResult, err)
-	}
-
-	for _, structure := range queryResult.Columns {
-		var s structureResponse
-		s.Name = structure.ColumnName
-		s.Type = structure.DataType
-		s.MappedType = structure.MappedType
-		s.NotNull = false
-		s.Length = nil
-		s.Default = nil
-		s.Editable = structure.Editable
-
-		newStructures = append(newStructures, s)
 	}
 
 	return runQuery{
 		Query:      queryResult.Query,
 		Data:       queryResult.Data,
-		Structures: newStructures,
+		Structures: StructureList(queryResult.Columns),
 	}
 }
 

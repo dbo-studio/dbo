@@ -38,7 +38,7 @@ export const formatServerColumns = (serverColumns: ColumnType[]): any => {
       name: column.name,
       type: column.type,
       resizable: true,
-      isActive: true,
+      isActive: column.isActive,
       renderEditCell: column.editable ? textEditor : null,
       renderCell: TextRenderCell,
       notNull: column.notNull,

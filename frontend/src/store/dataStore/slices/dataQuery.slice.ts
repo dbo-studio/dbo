@@ -32,7 +32,7 @@ export const createDataQuerySlice: StateCreator<
         schema: currentConnection.currentSchema!,
         limit: selectedTab.pagination.limit,
         offset: (selectedTab.pagination.page - 1) * selectedTab.pagination.limit,
-        columns: [],
+        columns: selectedTab.columns ?? [],
         filters: filters.filter(
           (f) =>
             f.column.length > 0 &&

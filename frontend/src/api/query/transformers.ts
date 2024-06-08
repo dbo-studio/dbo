@@ -22,7 +22,7 @@ export const transformStructures = (data: any): ColumnType[] => {
       mappedType: item?.mapped_type,
       renderEditCell: undefined,
       resizable: false,
-      isActive: false,
+      isActive: true,
       comment: item?.comment,
       editable: item?.editable ?? false
     });

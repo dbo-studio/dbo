@@ -63,7 +63,7 @@ export default function SelectDatabase({ onClose, onChangeStep }: SelectDatabase
 
   return (
     <>
-      <Box flex={1} maxHeight={300} overflow={'scroll'}>
+      <Box flex={1} maxHeight={300} overflow={'auto'}>
         {currentConnection?.databases?.map((db: string) => (
           <DatabaseItem
             onDelete={() => handleConfirmDelete(db)}

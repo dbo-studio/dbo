@@ -6,7 +6,7 @@ export type RunQueryType = {
   schema: string;
   limit: number;
   offset: number;
-  columns: ColumnType[];
+  columns: string[];
   filters: FilterType[];
   sorts: SortType[];
 };
