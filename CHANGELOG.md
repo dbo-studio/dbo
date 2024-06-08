@@ -8,10 +8,14 @@ All notable changes to this project will be documented in this file.
 
 - Add new hook for component on mount getting data
 - Add new tranformer for the connections
+- Add changelog generator
+- Add new icons for app
+- Add new icons for app
 
 ### 🐛 Bug Fixes
 
 - *(build)* Disable eslint rule on build time
+- Column filtering
 
 ### ⚙️ Miscellaneous Tasks
 
