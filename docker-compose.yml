@@ -6,6 +6,7 @@ services:
       dockerfile: Dockerfile
     environment:
       APP_PORT: "9000"
+      APP_ENV: "docker"
     volumes:
       - ./docker/dbo:/backend/data
     ports:
