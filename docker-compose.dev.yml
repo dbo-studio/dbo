@@ -1,22 +1,22 @@
 services:
-#  backend:
-#    container_name: dbo-studio-dev-api
-#    build:
-#      context: ./backend
-#      dockerfile: Dockerfile.dev
-#    volumes:
-#      - ./backend:/back/
-#    environment:
-#      APP_PORT: "8080"
-#      APP_ENV: "docker"
-#      DB_TEST_CONNECTION: "pgsql"
-#      DB_TEST_HOST: "localhost"
-#      DB_TEST_PORT: "5432"
-#      DB_TEST_DATABASE: "default"
-#      DB_TEST_USERNAME: "default"
-#      DB_TEST_PASSWORD: "secret"
-#    ports:
-#      - "8080:8080"
+  backend:
+    container_name: dbo-studio-dev-api
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./backend:/back/
+    environment:
+      APP_PORT: "8080"
+      APP_ENV: "local"
+      DB_TEST_CONNECTION: "pgsql"
+      DB_TEST_HOST: "localhost"
+      DB_TEST_PORT: "5432"
+      DB_TEST_DATABASE: "default"
+      DB_TEST_USERNAME: "default"
+      DB_TEST_PASSWORD: "secret"
+    ports:
+      - "8080:8080"
   frontend:
     container_name: dbo-studio-dev-frontend
     build:

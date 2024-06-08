@@ -22,9 +22,9 @@ func New(cfg *config.Config) logger.Logger {
 
 	//create dir if not exists
 	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
-		err := os.Mkdir(path, os.ModePerm)
+		err := os.MkdirAll(path, os.ModePerm)
 		if err != nil {
-			l.Println(err)
+			l.Fatalln(err)
 		}
 	}
 
