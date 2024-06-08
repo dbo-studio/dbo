@@ -8,7 +8,14 @@ import { appConfig } from '../appConfig';
 
 export const metadata: Metadata = {
   title: appConfig.title,
-  description: appConfig.description
+  description: appConfig.description,
+  manifest: '/manifest.json',
+  icons:[
+    {
+      url:"/favicon.ico",
+      rel:"shortcut icon"
+    }
+  ]
 };
 
 export const viewport: Viewport = {
