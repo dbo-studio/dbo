@@ -10,7 +10,7 @@ interface IAppConfig {
 export const appConfig: IAppConfig = {
   siteName: 'DBO Studio',
   title: 'DBO Studio',
-  description: 'Minimal SQL Client',
+  description: 'Modern and easy to use SQL client',
   locale: 'en',
   direction: 'ltr',
   version: '0'
