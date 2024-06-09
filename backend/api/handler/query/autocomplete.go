@@ -17,7 +17,7 @@ func (QueryHandler) Autocomplete(c fiber.Ctx) error {
 	r, err := app.Drivers().Pgsql.AutoComplete(req.ConnectionId, req.Database)
 	if err != nil {
 		app.Log().Error(err.Error())
-		return c.JSON(response.Error(err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
 
 	return c.JSON(response.Success(r))

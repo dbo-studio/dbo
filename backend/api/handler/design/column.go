@@ -23,7 +23,7 @@ func (h DesignHandler) ColumnList(c fiber.Ctx) error {
 	structures, err := app.Drivers().Pgsql.TableStructure(req.ConnectionId, req.Table, req.Schema, false)
 	if err != nil {
 		app.Log().Error(err.Error())
-		return c.JSON(response.Error(err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
 
 	return c.JSON(response.Success(structures))
@@ -44,7 +44,7 @@ func (h DesignHandler) UpdateDesign(c fiber.Ctx) error {
 	updateDesignResult, err := app.Drivers().Pgsql.UpdateDesign(req)
 	if err != nil {
 		app.Log().Error(err.Error())
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(response.Error(err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
 
 	return c.JSON(response.Success(updateDesignResult))

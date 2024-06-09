@@ -16,7 +16,7 @@ func (h *HistoryHandler) Histories(c fiber.Ctx) error {
 
 	if result.Error != nil {
 		app.Log().Error(result.Error.Error())
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(result.Error.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(result.Error.Error()))
 	}
 
 	return c.JSON(response.Success(response.Histories(histories)))

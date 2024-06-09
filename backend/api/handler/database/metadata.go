@@ -16,13 +16,13 @@ func (h *DatabaseHandler) DatabaseMetaData(c fiber.Ctx) error {
 	databases, err := app.Drivers().Pgsql.Databases(int32(connection.ID), true)
 	if err != nil {
 		app.Log().Error(err.Error())
-		return c.Status(fiber.StatusInternalServerError).JSON(err.Error())
+		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
 	}
 
 	tableSpaces, err := app.Drivers().Pgsql.TableSpaces(int32(connection.ID))
 	if err != nil {
 		app.Log().Error(err.Error())
-		return c.Status(fiber.StatusInternalServerError).JSON(err.Error())
+		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
 	}
 
 	encodings := app.Drivers().Pgsql.Encodes()
