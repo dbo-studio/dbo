@@ -14,8 +14,6 @@ export const formatServerColumns = (serverColumns: ColumnType[]): any => {
       type: 'type',
       resizable: true,
       isActive: true,
-      renderCell: TextRenderCell,
-      renderEditCell: null,
       notNull: false,
       length: 'null',
       comment: 'null',
