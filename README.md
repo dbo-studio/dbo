@@ -1,5 +1,5 @@
 <p align="center">
-    <a href="https://github.com/dbo-studio/dbo" target="_blank" rel="noopener">
+    <a href="https://github.com/dbo-studio/dbo">
         <img src="https://github.com/dbo-studio/dbo/blob/master/docs/img/dbo_studio.jpg" alt="DBO Studio" />
     </a>
 </p>
