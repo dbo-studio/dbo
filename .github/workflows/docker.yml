@@ -13,9 +13,6 @@ on:
 jobs:
   push-dbo-image:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: "./DBO"
     steps:
       - name: "Checkout GitHub Action"
         uses: actions/checkout@main
