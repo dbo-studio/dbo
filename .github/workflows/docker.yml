@@ -1,0 +1,33 @@
+name: Deploy Images to GHCR
+
+env:
+  APP_PORT: "9000"
+  APP_ENV: "docker"
+
+on:
+  push:
+    branches:
+      - "release/*.*.*"
+  workflow_dispatch:
+
+jobs:
+  push-dbo-image:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: "./DBO"
+    steps:
+      - name: "Checkout GitHub Action"
+        uses: actions/checkout@main
+
+      - name: "Login to GitHub Container Registry"
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: "Build Inventory Image"
+        run: |
+          docker build . --tag ghcr.io/dbo-studio/dbo:${{ github.event.release.tag_name }}
+          docker push ghcr.io/dbo-studio/dbo:${{ github.event.release.tag_name }}
