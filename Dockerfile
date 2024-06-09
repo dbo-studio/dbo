@@ -9,6 +9,7 @@ WORKDIR /frontend
 COPY ./frontend .
 
 RUN pnpm install
+RUN pnpm exec next telemetry disable
 RUN pnpm build
 
 FROM golang:1.22-alpine as backend
