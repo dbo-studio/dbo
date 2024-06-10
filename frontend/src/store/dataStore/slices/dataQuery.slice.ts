@@ -16,16 +16,16 @@ export const createDataQuerySlice: StateCreator<
   loading: false,
   runQuery: async () => {
     set({ loading: true });
-    const currentConnection = useConnectionStore.getState().currentConnection;
-    const selectedTab = useTabStore.getState().selectedTab;
-    if (!selectedTab || !currentConnection) {
-      return;
-    }
-
-    const filters = selectedTab.filters ?? [];
-    const sorts = selectedTab.sorts ?? [];
-
     try {
+      const currentConnection = useConnectionStore.getState().currentConnection;
+      const selectedTab = useTabStore.getState().selectedTab;
+      if (!selectedTab || !currentConnection) {
+        return;
+      }
+
+      const filters = selectedTab.filters ?? [];
+      const sorts = selectedTab.sorts ?? [];
+
       const res = await runQuery({
         connection_id: currentConnection.id,
         table: selectedTab.table,
