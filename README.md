@@ -24,6 +24,15 @@ DBO Studio is a minimal and open source database manager
     <img alt="table view" src="https://raw.githubusercontent.com/dbo-studio/dbo/dev/docs/img/query_tab.png" width="400"/>
 </a>
 
+## Supported Databases
+- [x] Postgresql
+- [ ] Mysql
+- [ ] MariaDB
+- [ ] SQLServer
+- [ ] Sqlite
+
+We plan to add more databases as soon as possible.
+
 ## Contributing
 
 DBO Studio is free and open source project licensed under the [MIT License](LICENSE.md).
