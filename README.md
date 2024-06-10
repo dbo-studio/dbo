@@ -11,17 +11,17 @@ DBO Studio is a minimal and open source database manager
 > [!WARNING]
 > Please keep in mind that DBO is not stable and it is still under active development.
 
-<a href="https://raw.githubusercontent.com/dbo-studio/dbo/dev/docs/img/table_view.png">
-    <img alt="table view" src="https://raw.githubusercontent.com/dbo-studio/dbo/dev/docs/img/table_view.png" width="400"/>
+<a href="https://raw.githubusercontent.com/dbo-studio/dbo/master/docs/img/table_view.png">
+    <img alt="table view" src="https://raw.githubusercontent.com/dbo-studio/dbo/master/docs/img/table_view.png" width="400"/>
 </a>
-<a href="https://raw.githubusercontent.com/dbo-studio/dbo/dev/docs/img/db_design.png">
-    <img alt="table view" src="https://raw.githubusercontent.com/dbo-studio/dbo/dev/docs/img/db_design.png" width="400"/>
+<a href="https://raw.githubusercontent.com/dbo-studio/dbo/master/docs/img/db_design.png">
+    <img alt="table view" src="https://raw.githubusercontent.com/dbo-studio/dbo/master/docs/img/db_design.png" width="400"/>
 </a>
-<a href="https://raw.githubusercontent.com/dbo-studio/dbo/dev/docs/img/query_builder.png">
-    <img alt="table view" src="https://raw.githubusercontent.com/dbo-studio/dbo/dev/docs/img/query_builder.png" width="400"/>
+<a href="https://raw.githubusercontent.com/dbo-studio/dbo/master/docs/img/query_builder.png">
+    <img alt="table view" src="https://raw.githubusercontent.com/dbo-studio/dbo/master/docs/img/query_builder.png" width="400"/>
 </a>
-<a href="https://raw.githubusercontent.com/dbo-studio/dbo/dev/docs/img/query_tab.png">
-    <img alt="table view" src="https://raw.githubusercontent.com/dbo-studio/dbo/dev/docs/img/query_tab.png" width="400"/>
+<a href="https://raw.githubusercontent.com/dbo-studio/dbo/master/docs/img/query_tab.png">
+    <img alt="table view" src="https://raw.githubusercontent.com/dbo-studio/dbo/master/docs/img/query_tab.png" width="400"/>
 </a>
 
 ## Supported Databases
