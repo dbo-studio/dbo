@@ -1,9 +1,7 @@
 services:
   dbo:
     container_name: dbo-studio
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/dbo-studio/dbo/dbo:latest
     environment:
       APP_PORT: "9000"
       APP_ENV: "docker"

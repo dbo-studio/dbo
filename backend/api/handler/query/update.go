@@ -23,7 +23,7 @@ func (QueryHandler) Update(c fiber.Ctx) error {
 	updateQueryResult, err := app.Drivers().Pgsql.UpdateQuery(req)
 	if err != nil {
 		app.Log().Error(err.Error())
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(response.Error(err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
 
 	return c.JSON(response.Success(updateQueryResult))

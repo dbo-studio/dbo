@@ -24,7 +24,7 @@ func (h *SavedQueryHandler) UpdateSavedQuery(c fiber.Ctx) error {
 	query, err := h.FindSavedQuery(c.Params("id"))
 	if err != nil {
 		app.Log().Error(err.Error())
-		return c.Status(fiber.StatusNotFound).JSON(err.Error())
+		return c.Status(fiber.StatusNotFound).JSON(response.Error(err.Error()))
 	}
 
 	updatedQuery, err := h.updateSavedQuery(query, req)

@@ -19,14 +19,19 @@ func (h *ConnectionHandler) Connection(c fiber.Ctx) error {
 }
 
 func connectionDetail(c fiber.Ctx, connection *model.Connection) error {
-	var schemas []string = []string{}
-	var tables []string = []string{}
+	var schemas []string = make([]string, 0)
+	var tables []string = make([]string, 0)
 	var err error
 
-	databases, _ := app.Drivers().Pgsql.Databases(int32(connection.ID), false)
+	databases, err := app.Drivers().Pgsql.Databases(int32(connection.ID), false)
+	if err != nil {
+		app.Log().Error(err.Error())
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
+	}
+
 	version, err := app.Drivers().Pgsql.Version(int32(connection.ID))
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(err.Error())
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
 
 	if connection.CurrentDatabase.String == "" {
@@ -43,7 +48,7 @@ func connectionDetail(c fiber.Ctx, connection *model.Connection) error {
 	if currentSchema != "" {
 		tables, err = app.Drivers().Pgsql.Tables(int32(connection.ID), currentSchema)
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(err.Error())
+			return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 		}
 	}
 

@@ -22,7 +22,7 @@ func (h DesignHandler) IndexList(c fiber.Ctx) error {
 
 	indexes, err := app.Drivers().Pgsql.Indexes(req.ConnectionId, req.Table, req.Schema)
 	if err != nil {
-		return c.JSON(response.Error(err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
 
 	return c.JSON(response.Success(indexes))

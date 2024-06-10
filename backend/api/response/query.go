@@ -29,6 +29,9 @@ func RawQuery(queryResult *pgsql.RawQueryResult, err error) any {
 	if err != nil || !queryResult.IsQuery {
 		return commandResponseBuilder(queryResult, err)
 	}
+	for i := 0; i < len(queryResult.Columns); i++ {
+		queryResult.Columns[i].IsActive = true
+	}
 
 	return runQuery{
 		Query:      queryResult.Query,
