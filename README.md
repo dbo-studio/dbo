@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/dbo-studio/dbo" target="_blank">
-    <img src="https://raw.githubusercontent.com/dbo-studio/dbo/dev/docs/img/logo.png" width="400" alt="DBO Logo">
+    <img src="https://raw.githubusercontent.com/dbo-studio/dbo/dev/docs/img/logo.svg" width="100" alt="DBO Logo">
   </a>
 </p>
 
