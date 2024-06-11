@@ -6,3 +6,5 @@ down-dev:
 	docker compose -f docker-compose.dev.yml down
 build:
 	sh ./docs/scripts/build_all_in_one.sh
+electron-dev:
+	sh ./docs/scripts/electron_dev.sh

@@ -6,7 +6,7 @@ import portfinder from 'portfinder';
 
 const appServe = app.isPackaged
   ? serve({
-      directory: path.join(__dirname, '../out')
+      directory: path.join(__dirname, '.../../dbo')
     })
   : null;
 
