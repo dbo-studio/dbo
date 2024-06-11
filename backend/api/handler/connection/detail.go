@@ -19,8 +19,8 @@ func (h *ConnectionHandler) Connection(c fiber.Ctx) error {
 }
 
 func connectionDetail(c fiber.Ctx, connection *model.Connection) error {
-	var schemas []string = make([]string, 0)
-	var tables []string = make([]string, 0)
+	var schemas = make([]string, 0)
+	var tables = make([]string, 0)
 	var err error
 
 	databases, err := app.Drivers().Pgsql.Databases(int32(connection.ID), false)
@@ -38,7 +38,12 @@ func connectionDetail(c fiber.Ctx, connection *model.Connection) error {
 		return c.JSON(response.Success(response.Connection(connection, version, databases, schemas, tables)))
 	}
 
-	schemas, _ = app.Drivers().Pgsql.Schemas(int32(connection.ID), connection.CurrentDatabase.String)
+	schemas, err = app.Drivers().Pgsql.Schemas(int32(connection.ID), connection.CurrentDatabase.String)
+	if err != nil {
+		app.Log().Error(err.Error())
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
+	}
+
 	currentSchema := connection.CurrentSchema.String
 
 	if connection.CurrentSchema.String == "" && len(schemas) > 0 {
