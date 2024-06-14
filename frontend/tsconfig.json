@@ -33,9 +33,10 @@
       "@/services/*": ["src/core/services/*"],
       "@/utils/*": ["src/core/utils/*"],
       "@/api/*": ["src/api/*"]
-    }
+    },
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
 
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/types/Data.ts", "src/types/Data"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/types/*.ts","../desktop/**/*.ts"],
   "exclude": ["node_modules"]
 }

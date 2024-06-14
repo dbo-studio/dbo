@@ -5,11 +5,9 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
-import { Box, styled } from '@mui/material';
-import ConfirmModal from '../components/base/Modal/ConfirmModal';
-import AppHeader from '../components/layout/AppHeader/AppHeader';
-import MainContainer from '../components/layout/MainContainer/MainContainer';
 import { useWindowSize } from '@/hooks/useWindowSize.hook';
+import { Box, styled } from '@mui/material';
+import { useEffect } from 'react';
 
 const Wrapper = styled(Box)(({ theme }) => ({
   backgroundColor: theme.palette.background.default,
@@ -19,11 +17,22 @@ const Wrapper = styled(Box)(({ theme }) => ({
 const Page = () => {
   const windowSize = useWindowSize(true);
 
+  useEffect(() => {
+    window.electronAPI.receive('message', (data: any) => {
+      console.log(`Received from main: ${data}`);
+    });
+  }, []);
+
+  // const onSayHiClick = () => {
+  //   window.electronAPI.send('hello from new nextjs');
+  // };
+
   return (
     <Wrapper maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
-      <ConfirmModal />
-      <AppHeader />
-      <MainContainer />
+      {/*<ConfirmModal />*/}
+      {/*<AppHeader />*/}
+      {/*<MainContainer />*/}
+      <p>sdas</p>
     </Wrapper>
   );
 };

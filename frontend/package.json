@@ -2,14 +2,11 @@
   "name": "dbo",
   "version": "0.0.1",
   "private": false,
-  "main": "electron/build/index.js",
   "scripts": {
     "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "electron-dev": "concurrently -n \"NEXT,ELECTRON\" -c \"yellow,blue\" --kill-others \"next dev\" \"tsc -p electron && electron .\"",
-    "electron-build": "next build && electron-builder"
+    "lint": "next lint"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
@@ -30,8 +27,7 @@
     "axios": "^1.7.2",
     "dayjs": "^1.11.11",
     "deep-object-diff": "^1.1.9",
-    "electron-serve": "^2.0.0",
-    "electron-squirrel-startup": "^1.0.1",
+    "electron": "^31.0.1",
     "lodash": "^4.17.21",
     "lucide-react": "^0.379.0",
     "next": "14.2.3",
@@ -60,8 +56,6 @@
     "@typescript-eslint/eslint-plugin": "^7.10.0",
     "@typescript-eslint/parser": "^7.10.0",
     "concurrently": "^8.2.2",
-    "electron": "^30.1.0",
-    "electron-builder": "^24.13.3",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.3",
     "eslint-config-prettier": "^9.1.0",
