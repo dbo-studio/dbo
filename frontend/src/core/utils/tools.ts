@@ -31,5 +31,8 @@ export const tools = {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     return /Mac/i.test(userAgent) || (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream);
+  },
+  isElectron: () => {
+    return window.electron;
   }
 };

@@ -8,6 +8,8 @@ import '@fontsource/roboto/700.css';
 import { useWindowSize } from '@/hooks/useWindowSize.hook';
 import { Box, styled } from '@mui/material';
 import { useEffect } from 'react';
+import api from '../api';
+import { tools } from '../core/utils';
 
 const Wrapper = styled(Box)(({ theme }) => ({
   backgroundColor: theme.palette.background.default,
@@ -18,13 +20,20 @@ const Page = () => {
   const windowSize = useWindowSize(true);
 
   useEffect(() => {
-    window.electronAPI.receive('message', (data: any) => {
+    if (tools.isElectron()) {
+      api.electron.getPort();
+    }
+    // ;
+
+    window.electron.receive(ChannelName, (data: any) => {
+      console.log(data);
+
       console.log(`Received from main: ${data}`);
     });
   }, []);
 
   // const onSayHiClick = () => {
-  //   window.electronAPI.send('hello from new nextjs');
+  //   window.electronAPI.send('message', 'hello from new nextjs');
   // };
 
   return (

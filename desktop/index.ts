@@ -3,7 +3,7 @@ import serve from "electron-serve";
 import path from "path";
 import portfinder from "portfinder";
 import { spawn } from "node:child_process";
-import { CHANNEL_NAME } from "./constants";
+import { CHANNEL_NAME, MessageType } from "./constants";
 
 const appServe = app.isPackaged
   ? serve({
@@ -33,7 +33,7 @@ const createWindow = () => {
     width: 800,
     height: 600,
     webPreferences: {
-      // nodeIntegration: true,
+      nodeIntegration: true,
       preload: path.join(__dirname, "preload.js"),
     },
   });
@@ -55,13 +55,6 @@ const createWindow = () => {
     });
   }
 
-  const apiUrl = "http://localhost:" + process.env.APP_PORT;
-  win.webContents.send(CHANNEL_NAME, {
-    name: "get_port",
-    value: apiUrl,
-  });
-  console.log("sent: " + apiUrl);
-
   win.on("closed", () => {
     backendProcess.kill();
     win = null;
@@ -80,7 +73,22 @@ app.on("activate", () => {
   }
 });
 
-ipcMain.on("message", (event: IpcMainEvent, message: any) => {
-  console.log(message);
-  setTimeout(() => event.sender.send("message", "hi from electron"), 500);
+ipcMain.on(CHANNEL_NAME, (event: IpcMainEvent, message: any) => {
+  message = JSON.parse(message);
+  console.log("🚀 ~ ipcMain.on ~ message:", message);
+
+  switch (message.name) {
+    case MessageType.GET_PORT:
+      event.sender.send(
+        CHANNEL_NAME,
+        JSON.stringify({
+          name: MessageType.GET_PORT,
+          data: "http://localhost:" + process.env.APP_PORT,
+        })
+      );
+      break;
+
+    default:
+      break;
+  }
 });

@@ -4,7 +4,7 @@ interface IAppConfig {
   description: string;
   locale: string;
   direction: 'ltr' | 'rtl';
-  version: string;
+  apiUrl: string;
 }
 
 export const appConfig: IAppConfig = {
@@ -13,5 +13,5 @@ export const appConfig: IAppConfig = {
   description: 'Modern and easy to use SQL client',
   locale: 'en',
   direction: 'ltr',
-  version: '0'
+  apiUrl: process.env.NEXT_PUBLIC_SERVER_URL ?? '/api'
 };
