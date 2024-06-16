@@ -24,8 +24,8 @@ echo "${GREEN}Completed building DBO backend."
 echo ""
 echo "Step 2 - start DBO electron..."
 if command -v pnpm >/dev/null; then
-    # pnpm --dir "${FRONTEND_DIR}" i && 
-    # pnpm --dir "${FRONTEND_DIR}" run dev &
+    pnpm --dir "${FRONTEND_DIR}" i && 
+    pnpm --dir "${FRONTEND_DIR}" run dev &
 
     pnpm --dir "${DESKTOP_DIR}" i &&
     pnpm --dir "${DESKTOP_DIR}" run dev &
