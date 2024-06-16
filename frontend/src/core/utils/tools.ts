@@ -1,4 +1,4 @@
-import { isNumber, isObject } from '.';
+import { isNumber, isObject, isServerSide } from '.';
 
 export const tools = {
   screenMaxHeight: (asNumber?: boolean): string | number => {
@@ -23,7 +23,7 @@ export const tools = {
   },
 
   isMac: () => {
-    if (typeof window === 'undefined') {
+    if (isServerSide) {
       return false;
     }
 

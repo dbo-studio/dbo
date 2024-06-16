@@ -21,4 +21,9 @@ const servicePost = $axios.post;
 const serviceGet = $axios.get;
 const serviceDelete = $axios.delete;
 const servicePatch = $axios.patch;
-export { serviceDelete, serviceGet, servicePatch, servicePost };
+
+const changeUrl = (url: string) => {
+  $axios.defaults.baseURL = url;
+};
+
+export { changeUrl, serviceDelete, serviceGet, servicePatch, servicePost };

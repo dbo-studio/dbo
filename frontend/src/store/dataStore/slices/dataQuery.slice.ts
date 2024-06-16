@@ -15,7 +15,6 @@ export const createDataQuerySlice: StateCreator<
 > = (set, get) => ({
   loading: false,
   runQuery: async () => {
-    set({ loading: true });
     const currentConnection = useConnectionStore.getState().currentConnection;
     const selectedTab = useTabStore.getState().selectedTab;
     if (!selectedTab || !currentConnection) {
@@ -26,6 +25,7 @@ export const createDataQuerySlice: StateCreator<
     const sorts = selectedTab.sorts ?? [];
 
     try {
+      set({ loading: true });
       const res = await runQuery({
         connection_id: currentConnection.id,
         table: selectedTab.table,
@@ -53,7 +53,6 @@ export const createDataQuerySlice: StateCreator<
     }
   },
   runRawQuery: async () => {
-    set({ loading: true });
     const currentConnection = useConnectionStore.getState().currentConnection;
     const selectedTab = useTabStore.getState().selectedTab;
     if (!selectedTab || !currentConnection) {
@@ -61,6 +60,7 @@ export const createDataQuerySlice: StateCreator<
     }
 
     try {
+      set({ loading: true });
       const res = await runRawQuery({
         connection_id: currentConnection.id,
         query: selectedTab.query
@@ -75,7 +75,6 @@ export const createDataQuerySlice: StateCreator<
     }
   },
   updateDesignsQuery: async () => {
-    set({ loading: true });
     const currentConnection = useConnectionStore.getState().currentConnection;
     const selectedTab = useTabStore.getState().selectedTab;
     if (!selectedTab || !currentConnection) {
@@ -83,9 +82,7 @@ export const createDataQuerySlice: StateCreator<
     }
 
     const columns = get().getEditedColumns();
-
     if (columns.length == 0) {
-      set({ loading: false });
       return;
     }
 
@@ -116,6 +113,7 @@ export const createDataQuerySlice: StateCreator<
       });
 
     try {
+      set({ loading: true });
       const res = await updateDesign({
         connection_id: currentConnection.id,
         table: selectedTab.table,

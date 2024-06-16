@@ -7,8 +7,13 @@ import '@fontsource/roboto/700.css';
 
 import { useWindowSize } from '@/hooks/useWindowSize.hook';
 import { Box, styled } from '@mui/material';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import api from '../api';
+import ConfirmModal from '../components/base/Modal/ConfirmModal';
+import AppHeader from '../components/layout/AppHeader/AppHeader';
+import MainContainer from '../components/layout/MainContainer/MainContainer';
+import { ChannelName } from '../core/constants';
+import { changeUrl } from '../core/services/api/intialize';
 import { tools } from '../core/utils';
 
 const Wrapper = styled(Box)(({ theme }) => ({
@@ -18,32 +23,25 @@ const Wrapper = styled(Box)(({ theme }) => ({
 
 const Page = () => {
   const windowSize = useWindowSize(true);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     if (tools.isElectron()) {
       api.electron.getPort();
+      window.electron.receive(ChannelName, (data: any) => {
+        changeUrl(data.data);
+        setLoaded(true);
+      });
     }
-    // ;
-
-    window.electron.receive(ChannelName, (data: any) => {
-      console.log(data);
-
-      console.log(`Received from main: ${data}`);
-    });
   }, []);
 
-  // const onSayHiClick = () => {
-  //   window.electronAPI.send('message', 'hello from new nextjs');
-  // };
-
-  return (
+  return loaded ? (
     <Wrapper maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
-      {/*<ConfirmModal />*/}
-      {/*<AppHeader />*/}
-      {/*<MainContainer />*/}
-      <p>sdas</p>
+      <ConfirmModal />
+      <AppHeader />
+      <MainContainer />
     </Wrapper>
-  );
+  ) : null;
 };
 
 export default Page;
