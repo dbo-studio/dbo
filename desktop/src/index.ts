@@ -6,14 +6,17 @@ import path from 'path';
 import portfinder from 'portfinder';
 import { CHANNEL_NAME, MessageType } from './constants';
 
-if (require('electron-squirrel-startup')) app.quit();
+// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+if (require('electron-squirrel-startup')) {
+  app.quit();
+}
 
 app.on('ready', () => {
   createWindow();
 });
 
 const createWindow = async () => {
-  let mainWindowState = windowStateKeeper({
+  const mainWindowState = windowStateKeeper({
     defaultWidth: 1230
   });
 
@@ -52,6 +55,7 @@ app.on('activate', () => {
   }
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 ipcMain.on(CHANNEL_NAME, (event: IpcMainEvent, message: any) => {
   message = JSON.parse(message);
   console.log('🚀 ~ ipcMain.on ~ message:', message);
