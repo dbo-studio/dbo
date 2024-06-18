@@ -7,8 +7,6 @@ import portfinder from 'portfinder';
 import { CHANNEL_NAME, MessageType } from './constants';
 
 if (require('electron-squirrel-startup')) app.quit();
-const { updateElectronApp } = require('update-electron-app');
-updateElectronApp();
 
 app.on('ready', () => {
   createWindow();
