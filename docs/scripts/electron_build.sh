@@ -22,12 +22,20 @@ CGO_ENABLED=1 go build -p=8 --tags "release" -ldflags "-w" -o "${DESKTOP_DIR}/db
 echo "${GREEN}Completed building DBO backend."
 
 echo ""
-echo "Step 2 - start DBO electron..."
+echo "Step 2 - building DBO frontend..."
+if command -v pnpm >/dev/null; then
+   pnpm --dir ${FRONTEND_DIR} i && pnpm --dir ${FRONTEND_DIR} build
+else
+   npm --prefix ${FRONTEND_DIR} i && npm --prefix ${FRONTEND_DIR} run build
+fi
 
-npm --prefix "${FRONTEND_DIR}" i && 
-npm --prefix "${FRONTEND_DIR}" run dev &&
+# echo ""
+# echo "Step 2 - start DBO electron..."
 
-npm --prefix "${DESKTOP_DIR}" i &&
-npm --prefix "${DESKTOP_DIR}" run dev &&
+# npm --prefix "${FRONTEND_DIR}" i && 
+# npm --prefix "${FRONTEND_DIR}" run dev &&
 
-wait
+# npm --prefix "${DESKTOP_DIR}" i &&
+# npm --prefix "${DESKTOP_DIR}" run dev &&
+
+# wait

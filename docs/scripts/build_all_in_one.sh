@@ -38,11 +38,11 @@ fi
 echo "${GREEN}Completed building DBO frontend."
 
 echo ""
-echo "Step 3 - Copy fronted to  backend/..."
+echo "Step 2 - Copy fronted to  backend/..."
 mv ${FRONTEND_DIR}/out "${OUTPUT_DIR}/out"
 
 echo ""
-echo "Step 2 - building DBO backend..."
+echo "Step 3 - building DBO backend..."
 
 cd ${BACKEND_DIR} && go mod download
 CGO_ENABLED=1 go build -p=8 --tags "release" -ldflags "-w" -o "${OUTPUT_BINARY}" ${BACKEND_DIR}/*.go

@@ -8,3 +8,5 @@ build:
 	sh ./docs/scripts/build_all_in_one.sh
 electron-dev:
 	sh ./docs/scripts/electron_dev.sh
+electron-build:
+	sh ./docs/scripts/electron_build.sh
