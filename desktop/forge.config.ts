@@ -6,7 +6,8 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 
 const config: ForgeConfig = {
   packagerConfig: {
-    asar: true
+    asar: true,
+    icon: 'app-icon/icon'
   },
   rebuildConfig: {},
   makers: [
@@ -14,13 +15,37 @@ const config: ForgeConfig = {
     // new MakerZIP({}, ['darwin']),
     // new MakerRpm({}),
     new MakerDMG({
-      icon: '/app-icon/mac-icon.icns',
-      format: 'ULFO'
+      icon: 'app-icon/icon.icns',
+      background: 'app-icon/background.tiff',
+      format: 'ULFO',
+      contents: [
+        {
+          x: 410,
+          y: 230,
+          type: 'link',
+          path: '/Applications'
+        },
+        {
+          x: 130,
+          y: 230,
+          type: 'file',
+          path: '${process.cwd()}/out/dbo-darwin-arm64/dbo.app'
+        }
+      ],
+      additionalDMGOptions: {
+        window: {
+          size: {
+            width: 540,
+            height: 380
+          }
+        }
+      }
     }),
     new MakerDeb({
       options: {
         maintainer: 'DBO Studio',
-        homepage: 'https://github.com/dbo-studio/dbo'
+        homepage: 'https://github.com/dbo-studio/dbo',
+        icon: 'app-icon/icon.png'
       }
     })
   ],
