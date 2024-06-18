@@ -27,8 +27,7 @@
         "build"
     ],
     "include": [
-        "**/*.ts",
-        "**/*.tsx",
-        "**/*.js"
+        "src/*.ts",
+        "src/*.js"
     ]
 }
