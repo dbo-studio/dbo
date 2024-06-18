@@ -1,3 +1,4 @@
+import { PHASE_PRODUCTION_BUILD } from 'next/constants';
 import { isNumber, isObject, isServerSide } from '.';
 
 export const tools = {
@@ -23,7 +24,7 @@ export const tools = {
   },
 
   isMac: () => {
-    if (isServerSide) {
+    if (PHASE_PRODUCTION_BUILD || isServerSide) {
       return false;
     }
 

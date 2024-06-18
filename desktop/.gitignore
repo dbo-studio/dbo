@@ -93,3 +93,5 @@ typings/
 
 # Electron-Forge
 out/
+
+front_build

@@ -28,14 +28,10 @@ if command -v pnpm >/dev/null; then
 else
    npm --prefix ${FRONTEND_DIR} i && npm --prefix ${FRONTEND_DIR} run build
 fi
+echo "${GREEN}Completed building DBO frontend."
 
-# echo ""
-# echo "Step 2 - start DBO electron..."
 
-# npm --prefix "${FRONTEND_DIR}" i && 
-# npm --prefix "${FRONTEND_DIR}" run dev &&
-
-# npm --prefix "${DESKTOP_DIR}" i &&
-# npm --prefix "${DESKTOP_DIR}" run dev &&
-
-# wait
+echo ""
+echo "Step 3 - move front build to electron dir."
+mv ${FRONTEND_DIR}/out ${DESKTOP_DIR}/front_build
+echo "${GREEN}Completed move front build to electron dir."
