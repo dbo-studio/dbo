@@ -11,6 +11,12 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+const appServe = app.isPackaged
+  ? serve({
+      directory: path.join(__dirname, '../front_build')
+    })
+  : null;
+
 app.on('ready', () => {
   createWindow();
 });
@@ -106,15 +112,9 @@ const serveBackend = (port: number): ChildProcessWithoutNullStreams => {
 };
 
 const serveFront = async (win: BrowserWindow) => {
-  const appServe = app.isPackaged
-    ? serve({
-        directory: path.join(__dirname, '../out')
-      })
-    : null;
-
   if (appServe) {
     await appServe(win);
-    win?.loadURL('app://-');
+    await win?.loadURL('app://-');
   } else {
     win.loadURL(`http://localhost:3000`);
     win.webContents.openDevTools();
