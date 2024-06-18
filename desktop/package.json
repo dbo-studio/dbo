@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": false,
   "main": "./build/index.js",
+  "description": "Modern and easy to use SQL client",
   "scripts": {
     "dev": "tsc -p . && electron-forge start",
     "package": "electron-forge package",
