@@ -1,6 +1,8 @@
 import api from '@/src/api';
 import useAPI from '@/src/hooks/useApi.hook';
 import locales from '@/src/locales';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LoadingButton } from '@mui/lab';
 import { Box, Button, Stack } from '@mui/material';
@@ -52,6 +54,9 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
     }
   });
 
+  const { updateSelectedTab, updateTabs } = useTabStore();
+  const { updateCurrentConnection } = useConnectionStore();
+
   const { request: updateConnection, pending: updateConnectionPending } = useAPI({
     apiMethod: api.connection.updateConnection
   });
@@ -66,11 +71,14 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
       return;
     }
     try {
-      await updateConnection({
+      const res = await updateConnection({
         ...data,
         id: connection?.id
       });
       toast.success(locales.connection_update_success);
+      updateSelectedTab(undefined);
+      updateTabs([]);
+      updateCurrentConnection(res);
       onClose();
     } catch (err) {
       console.log(err);

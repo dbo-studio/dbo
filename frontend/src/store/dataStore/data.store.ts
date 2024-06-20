@@ -2,6 +2,7 @@ import { TabType } from '@/src/types';
 import { createAutocompleteSlice } from '@/store/dataStore/slices/dataAutocomplete.slice';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
 import { useTabStore } from '../tabStore/tab.store';
 import { createDataColumnSlice } from './slices/dataColumn.slice';
 import { createDataEditedRowsSlice } from './slices/dataEditedRows';
@@ -23,7 +24,6 @@ import {
   DataStore,
   DataUnsavedRowsSlice
 } from './types';
-import { immer } from 'zustand/middleware/immer';
 
 type DataState = DataStore &
   DataRowSlice &

@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { ConnectionContextMenuProps } from '../../types';
 
 export default function ConnectionContextMenu({ connection, contextMenu, onClose }: ConnectionContextMenuProps) {
-  const { updateShowEditConnection, updateConnections, updateCurrentConnection, currentConnection, connections } =
+  const { updateShowEditConnection, updateConnections, updateCurrentConnection, currentConnection } =
     useConnectionStore();
   const { updateSelectedTab, updateTabs } = useTabStore();
   const showModal = useConfirmModalStore((state) => state.show);
