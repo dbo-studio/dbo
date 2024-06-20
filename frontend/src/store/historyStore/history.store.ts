@@ -2,12 +2,13 @@ import { HistoryType } from '@/src/types/History';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { HistoryStore } from './types';
+import { immer } from 'zustand/middleware/immer';
 
 type HistoryState = HistoryStore;
 
 export const useHistoryStore = create<HistoryState>()(
   devtools(
-    (set, get) => ({
+    immer((set, get) => ({
       histories: undefined,
       upsertHistory: (history: HistoryType) => {
         let queries = get().histories;
@@ -27,7 +28,7 @@ export const useHistoryStore = create<HistoryState>()(
       updateHistories: (histories: HistoryType[]) => {
         set({ histories: histories });
       }
-    }),
+    })),
     { name: 'history' }
   )
 );

@@ -3,6 +3,7 @@ import { devtools, persist } from 'zustand/middleware';
 
 import { TabType } from '@/src/types';
 
+import { immer } from 'zustand/middleware/immer';
 import { createTabColumnSlice } from './slices/tabColumn.slice';
 import { createTabFilterSlice } from './slices/tabFilter.slice';
 import { createTabQuerySlice } from './slices/tabQuery.slice';
@@ -15,7 +16,7 @@ type TabState = TabStore & TabSettingSlice & TabQuerySlice & TabFilterSlice & Ta
 export const useTabStore = create<TabState>()(
   devtools(
     persist(
-      (set, get, ...state) => ({
+      immer((set, get, ...state) => ({
         tabs: [],
         selectedTab: undefined,
         updateTabs: (tabs: TabType[]) => {
@@ -41,7 +42,7 @@ export const useTabStore = create<TabState>()(
         ...createTabFilterSlice(set, get, ...state),
         ...createTabSortSlice(set, get, ...state),
         ...createTabColumnSlice(set, get, ...state)
-      }),
+      })),
       { name: 'tabs' }
     ),
     {

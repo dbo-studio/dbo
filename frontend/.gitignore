@@ -41,6 +41,7 @@ next-env.d.ts
 .pnpm-store/
 
 public/workbox-*
+public/sw.js
 
 .env
 dbo

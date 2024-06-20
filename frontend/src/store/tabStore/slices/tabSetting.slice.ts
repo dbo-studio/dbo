@@ -29,6 +29,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       query: tabQuery,
       filters: [],
       sorts: [],
+      columns:[],
       pagination: {
         page: 1,
         limit: 100,

@@ -23,6 +23,7 @@ import {
   DataStore,
   DataUnsavedRowsSlice
 } from './types';
+import { immer } from 'zustand/middleware/immer';
 
 type DataState = DataStore &
   DataRowSlice &
@@ -37,7 +38,7 @@ type DataState = DataStore &
 
 export const useDataStore = create<DataState>()(
   devtools(
-    (set, get, ...state) => ({
+    immer((set, get, ...state) => ({
       selectedTab: (): TabType | undefined => {
         return useTabStore.getState().selectedTab;
       },
@@ -50,7 +51,7 @@ export const useDataStore = create<DataState>()(
       ...createDataColumnSlice(set, get, ...state),
       ...createDataQuerySlice(set, get, ...state),
       ...createAutocompleteSlice(set, get, ...state)
-    }),
+    })),
     { name: 'data' }
   )
 );

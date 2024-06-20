@@ -14,7 +14,7 @@ func (h *SavedQueryHandler) DeleteSavedQuery(c fiber.Ctx) error {
 
 	result := app.DB().Delete(query)
 	if result.Error != nil {
-		app.Log().Error(result.Error.Error())
+		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(result.Error.Error()))
 	}
 
 	return c.JSON(response.Success(""))
