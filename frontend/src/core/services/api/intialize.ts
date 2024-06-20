@@ -1,8 +1,7 @@
-import { appConfig } from '@/src/appConfig';
 import axios from 'axios';
 
 const $axios = axios.create({
-  baseURL: appConfig.apiUrl,
+  baseURL: process.env.NEXT_PUBLIC_SERVER_URL ?? '/api',
   headers: {
     'Content-Type': 'application/json'
   },
