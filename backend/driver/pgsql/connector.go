@@ -44,6 +44,10 @@ func (p PostgresQueryEngine) Open(connectionId int32) (*gorm.DB, error) {
 	}), &gorm.Config{})
 }
 
+func (p PostgresQueryEngine) Close(connectionId int32) {
+	delete(p.OpenConnections, connectionId)
+}
+
 type ConnectionOption struct {
 	Host     string
 	Port     int32
