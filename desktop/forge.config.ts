@@ -1,5 +1,6 @@
 import { MakerDeb } from '@electron-forge/maker-deb';
 import MakerDMG from '@electron-forge/maker-dmg';
+import AutoUnpackNativesPlugin from '@electron-forge/plugin-auto-unpack-natives';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import type { ForgeConfig } from '@electron-forge/shared-types';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
@@ -7,7 +8,9 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    icon: 'app-icon/icon'
+    icon: 'app-icon/icon',
+    extraResource: ['dbo', 'front_build'],
+    appVersion: process.env.APP_VERSION
   },
   rebuildConfig: {},
   makers: [
@@ -60,7 +63,8 @@ const config: ForgeConfig = {
       [FuseV1Options.EnableNodeCliInspectArguments]: false,
       [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
       [FuseV1Options.OnlyLoadAppFromAsar]: true
-    })
+    }),
+    new AutoUnpackNativesPlugin({})
   ]
 };
 

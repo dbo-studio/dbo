@@ -49,6 +49,15 @@ check_npm() {
     fi
 }
 
+## check typescript installed
+check_typescript() {
+    if ! command -v tsc >/dev/null; then
+        echo "${RED}Recheck failed.${NC} typescript is not installed."
+        exit 1
+    fi
+}
+
+
 # Version function used for version string comparison
 version() { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
 

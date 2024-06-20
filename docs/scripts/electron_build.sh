@@ -13,6 +13,7 @@ set -e
 check_go
 check_node
 check_npm
+check_typescript
 
 echo ""
 echo "Step 1 - building DBO Backend..."
@@ -33,5 +34,15 @@ echo "${GREEN}Completed building DBO frontend."
 
 echo ""
 echo "Step 3 - move front build to electron dir."
+rm -rf ${DESKTOP_DIR}/front_build
 mv ${FRONTEND_DIR}/out ${DESKTOP_DIR}/front_build
 echo "${GREEN}Completed move front build to electron dir."
+
+
+echo ""
+echo "Step 4 - build the app"
+npm --prefix ${DESKTOP_DIR} i
+tsc -p ${DESKTOP_DIR}
+APP_VERSION=${VERSION} npm --prefix ${DESKTOP_DIR} run make
+
+echo "${GREEN}Completed build the app"

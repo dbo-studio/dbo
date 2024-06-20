@@ -13,7 +13,7 @@ if (require('electron-squirrel-startup')) {
 
 const appServe = app.isPackaged
   ? serve({
-      directory: path.join(__dirname, '../front_build')
+      directory: path.join(process.resourcesPath, 'front_build')
     })
   : null;
 
@@ -80,18 +80,16 @@ ipcMain.on(CHANNEL_NAME, (event: IpcMainEvent, message: any) => {
 });
 
 const findServerPort = async () => {
-  const port = await portfinder.getPortPromise({
+  return await portfinder.getPortPromise({
     port: 5000
   });
-
-  return port;
 };
 
 const serveBackend = (port: number): ChildProcessWithoutNullStreams => {
   process.env.APP_PORT = port.toString();
   process.env.APP_ENV = 'production';
 
-  const binaryPath = path.join(__dirname, '../', `dbo`);
+  const binaryPath = app.isPackaged ? path.join(process.resourcesPath, 'dbo') : path.join(__dirname, '../', `dbo`);
   const backendProcess = spawn(`${binaryPath}`, {
     env: process.env
   });
@@ -116,7 +114,7 @@ const serveFront = async (win: BrowserWindow) => {
     await appServe(win);
     await win?.loadURL('app://-');
   } else {
-    win.loadURL(`http://localhost:3000`);
+    await win.loadURL(`http://localhost:3000`);
     win.webContents.openDevTools();
     win.webContents.on('did-fail-load', () => {
       win?.webContents.reloadIgnoringCache();
