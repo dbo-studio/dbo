@@ -97,7 +97,7 @@ export default function StatusBarActions() {
     }
   };
 
-  const handleDiscardChanges =async () => {
+  const handleDiscardChanges = async () => {
     if (selectedTab?.mode == TabMode.Data) {
       updateSelectedRows([]);
       restoreEditedRows();
