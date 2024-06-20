@@ -5,16 +5,16 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
+import { ChannelName } from '@/core/constants';
+import { tools } from '@/core/utils';
 import { useWindowSize } from '@/hooks/useWindowSize.hook';
+import { changeUrl } from '@/services/api/intialize';
 import { Box, styled } from '@mui/material';
 import { useEffect, useState } from 'react';
 import api from '../api';
 import ConfirmModal from '../components/base/Modal/ConfirmModal';
 import AppHeader from '../components/layout/AppHeader/AppHeader';
 import MainContainer from '../components/layout/MainContainer/MainContainer';
-import { ChannelName } from '../core/constants';
-import { changeUrl } from '../core/services/api/intialize';
-import { tools } from '../core/utils';
 
 const Wrapper = styled(Box)(({ theme }) => ({
   backgroundColor: theme.palette.background.default,
@@ -32,6 +32,8 @@ const Page = () => {
         changeUrl(data.data);
         setLoaded(true);
       });
+    } else {
+      setLoaded(true);
     }
   }, []);
 
