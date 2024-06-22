@@ -43,7 +43,7 @@ func (h *ConnectionHandler) UpdateConnection(c fiber.Ctx) error {
 
 	app.Drivers().Pgsql.Close(int32(connection.ID))
 
-	return connectionDetail(c, updatedConnection)
+	return connectionDetail(c, updatedConnection, false)
 }
 
 func (h *ConnectionHandler) updateConnection(connection *model.Connection, req *dto.UpdateConnectionDto) (*model.Connection, error) {

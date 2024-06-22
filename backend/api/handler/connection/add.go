@@ -28,7 +28,7 @@ func (h *ConnectionHandler) AddConnection(c fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
 	}
 
-	return connectionDetail(c, connection)
+	return connectionDetail(c, connection, false)
 }
 
 func createConnection(req *dto.CreateConnectionDto) (*model.Connection, error) {
