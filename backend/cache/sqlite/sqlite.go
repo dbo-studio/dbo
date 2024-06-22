@@ -2,7 +2,6 @@ package sqlite
 
 import (
 	"errors"
-	"fmt"
 	"github.com/goccy/go-json"
 	"github.com/khodemobin/dbo/model"
 	"gorm.io/gorm"
@@ -20,24 +19,34 @@ func NewSQLiteCache(db *gorm.DB) *SQLiteCache {
 	}
 }
 
-func (c *SQLiteCache) Get(key string, result *any) error {
-	var item model.CacheItem
-	err := c.db.First(&item, "key = ?", key).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("key not found")
-		}
-		return err
-	}
-	if item.Expiration > 0 && time.Now().Unix() > item.Expiration {
-		return c.Delete(key)
-	}
-
-	if err := json.Unmarshal([]byte(item.Value), result); err != nil {
-		return err
+func (c *SQLiteCache) ConditionalGet(key string, result any, condition bool) error {
+	if condition {
+		return c.Get(key, result)
 	}
 
 	return nil
+}
+
+func (c *SQLiteCache) Get(key string, result any) error {
+	var item model.CacheItem
+	err := c.db.First(&item, "key = ?", key).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		return err
+	}
+
+	if item.Expiration > 0 && time.Now().Unix() > item.Expiration {
+		err = c.Delete(key)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	return json.Unmarshal([]byte(item.Value), &result)
 }
 
 func (c *SQLiteCache) Set(key string, value any, ttl *time.Duration) error {
