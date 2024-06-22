@@ -8,14 +8,18 @@ import {
   UPDATE_CONNECTION
 } from './endpoints';
 import { transformConnectionDetail, transformConnections } from './transformers';
-import { createConnectionType, updateConnectionType } from './types';
+import { connectionDetailType, createConnectionType, updateConnectionType } from './types';
 
 export const getConnectionList = async () => {
   return api.get(GET_CONNECTION_LIST()).then(transformConnections);
 };
 
-export const getConnectionDetail = async (connectionID: string | number) => {
-  return api.get(GET_CONNECTION_DETAIL(connectionID)).then(transformConnectionDetail);
+export const getConnectionDetail = async (data: connectionDetailType) => {
+  return api
+    .get(GET_CONNECTION_DETAIL(data.connectionID), {
+      from_cache: data.fromCache
+    })
+    .then(transformConnectionDetail);
 };
 
 export const createConnection = async (data: createConnectionType) => {
