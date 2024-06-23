@@ -1,7 +1,7 @@
 import { TabMode } from '@/src/core/enums';
 import useContextMenu from '@/src/hooks/useContextMenu';
 import { useTabStore } from '@/src/store/tabStore/tab.store';
-import { Box, ClickAwayListener, IconButton, Typography, useTheme } from '@mui/material';
+import { Box, IconButton, Typography, useTheme } from '@mui/material';
 import CustomIcon from '../../../base/CustomIcon/CustomIcon';
 import { HistoryItemProps } from '../types';
 import HistoryContextMenu from './HistoryContextMenu/HistoryContextMenu';
@@ -20,18 +20,16 @@ export default function HistoryItem({ history, selected, onClick }: HistoryItemP
   };
 
   return (
-    <ClickAwayListener onClickAway={() => handleCloseContextMenu()}>
-      <HistoryItemStyled selected={selected} onContextMenu={handleContextMenu}>
-        <Box flex={1} mr={theme.spacing(1)} onDoubleClick={handleRun} onClick={() => onClick()}>
-          <Typography variant='body2'>{history.query.slice(0, 50)}</Typography>
-        </Box>
+    <HistoryItemStyled selected={selected} onContextMenu={handleContextMenu}>
+      <Box flex={1} mr={theme.spacing(1)} onDoubleClick={handleRun} onClick={() => onClick()}>
+        <Typography variant='body2'>{history.query.slice(0, 50)}</Typography>
+      </Box>
 
-        <IconButton onClick={handleContextMenu}>
-          <CustomIcon type='ellipsisVertical' size='s' />
-        </IconButton>
+      <IconButton onClick={handleContextMenu}>
+        <CustomIcon type='ellipsisVertical' size='s' />
+      </IconButton>
 
-        <HistoryContextMenu history={history} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
-      </HistoryItemStyled>
-    </ClickAwayListener>
+      <HistoryContextMenu history={history} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
+    </HistoryItemStyled>
   );
 }

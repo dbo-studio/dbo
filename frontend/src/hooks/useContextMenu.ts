@@ -5,6 +5,10 @@ function useContextMenu() {
 
   const handleContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
+    if (contextMenuPosition != null) {
+      return;
+    }
+
     setContextMenuPosition({
       mouseX: event.clientX + 2,
       mouseY: event.clientY - 6
