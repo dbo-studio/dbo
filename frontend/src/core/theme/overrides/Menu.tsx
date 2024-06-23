@@ -13,11 +13,12 @@ export default function Menu(theme: Theme): Components {
           boxShadow: '0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1)',
           border: `1px solid ${theme.palette.divider}`,
           minWidth: 180,
+          padding: '0 2px',
           borderRadius: variables.radius.medium
         },
         list: {
-          paddingTop: theme.spacing(1),
-          paddingBottom: theme.spacing(1),
+          paddingTop: 2,
+          paddingBottom: 2,
           background: theme.palette.background.default
         }
       }
@@ -25,9 +26,13 @@ export default function Menu(theme: Theme): Components {
     MuiMenuItem: {
       styleOverrides: {
         root: {
+          borderRadius: variables.radius.small,
           fontSize: theme.typography.body2.fontSize,
           '&:hover': {
             backgroundColor: theme.palette.background.paper
+          },
+          '&:focus-visible': {
+            backgroundColor: 'transparent'
           }
         }
       }
