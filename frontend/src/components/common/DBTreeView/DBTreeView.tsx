@@ -1,8 +1,8 @@
+import Schemas from '@/components/common/DBTreeView/Schemas/Schemas';
 import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
 import { useEffect, useState } from 'react';
 import Search from '../../base/Search/Search';
-import Schemes from './Schemes';
-import TablesTreeView from './TablesTreeView';
+import TablesTreeView from './TableTreeView/TablesTreeView';
 
 export default function DBTreeView() {
   const { currentConnection } = useConnectionStore();
@@ -28,7 +28,7 @@ export default function DBTreeView() {
     <>
       <Search onChange={handleSearch} />
       <TablesTreeView tables={tables} />
-      <Schemes />
+      <Schemas />
     </>
   );
 }
