@@ -1,5 +1,5 @@
-import { FilterType } from '@/src/types';
-import { ColumnType } from '@/src/types/Data';
+import { FilterType } from '@/types';
+import { ColumnType } from '@/types/Data';
 
 export type FilterItemProps = {
   filter: FilterType;

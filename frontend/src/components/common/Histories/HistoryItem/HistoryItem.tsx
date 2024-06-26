@@ -1,6 +1,6 @@
-import { TabMode } from '@/src/core/enums';
-import useContextMenu from '@/src/hooks/useContextMenu';
-import { useTabStore } from '@/src/store/tabStore/tab.store';
+import { TabMode } from '@/core/enums';
+import { useContextMenu } from '@/hooks';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, IconButton, Typography, useTheme } from '@mui/material';
 import CustomIcon from '../../../base/CustomIcon/CustomIcon';
 import { HistoryItemProps } from '../types';

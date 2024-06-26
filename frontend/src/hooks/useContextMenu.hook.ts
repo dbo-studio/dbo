@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-function useContextMenu() {
+export const useContextMenu = () => {
   const [contextMenuPosition, setContextMenuPosition] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
   const handleContextMenu = (event: React.MouseEvent) => {
@@ -20,6 +20,4 @@ function useContextMenu() {
   };
 
   return { contextMenuPosition, handleContextMenu, handleCloseContextMenu };
-}
-
-export default useContextMenu;
+};

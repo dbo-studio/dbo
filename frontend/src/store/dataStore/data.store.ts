@@ -1,5 +1,5 @@
-import { TabType } from '@/src/types';
 import { createAutocompleteSlice } from '@/store/dataStore/slices/dataAutocomplete.slice';
+import { TabType } from '@/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';

@@ -1,8 +1,8 @@
-import { TabMode } from '@/src/core/enums';
-import locales from '@/src/locales';
-import { useDataStore } from '@/src/store/dataStore/data.store';
-import { useTabStore } from '@/src/store/tabStore/tab.store';
-import { ColumnType, EditedColumnType } from '@/src/types/Data';
+import { TabMode } from '@/core/enums';
+import locales from '@/locales';
+import { useDataStore } from '@/store/dataStore/data.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
+import { ColumnType, EditedColumnType } from '@/types/Data';
 import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { useEffect } from 'react';
 import { v4 as uuid } from 'uuid';

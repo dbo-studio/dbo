@@ -1,5 +1,5 @@
-import { TabMode } from '@/src/core/enums';
-import { TabType } from '@/src/types/Tab';
+import { TabMode } from '@/core/enums';
+import { TabType } from '@/types/Tab';
 import { v4 as uuidv4 } from 'uuid';
 import { StateCreator } from 'zustand';
 import { TabSettingSlice, TabStore } from '../types';
@@ -29,7 +29,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       query: tabQuery,
       filters: [],
       sorts: [],
-      columns:[],
+      columns: [],
       pagination: {
         page: 1,
         limit: 100,

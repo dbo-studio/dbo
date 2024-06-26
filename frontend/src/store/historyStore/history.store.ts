@@ -1,8 +1,8 @@
-import { HistoryType } from '@/src/types/History';
+import { HistoryType } from '@/types/History';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { HistoryStore } from './types';
 import { immer } from 'zustand/middleware/immer';
+import { HistoryStore } from './types';
 
 type HistoryState = HistoryStore;
 

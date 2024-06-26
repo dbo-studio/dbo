@@ -1,6 +1,6 @@
-import DBDataGrid from '@/src/components/shared/DBDataGrid/DBDataGrid';
-import StatusBar from '@/src/components/shared/StatusBar/StatusBar';
-import { useTabStore } from '@/src/store/tabStore/tab.store';
+import DBDataGrid from '@/components/shared/DBDataGrid/DBDataGrid';
+import StatusBar from '@/components/shared/StatusBar/StatusBar';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box } from '@mui/material';
 import ActionBar from './ActionBar/ActionBar';
 import Columns from './Columns/Columns';

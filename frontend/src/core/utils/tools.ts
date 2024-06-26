@@ -1,5 +1,4 @@
-import { PHASE_PRODUCTION_BUILD } from 'next/constants';
-import { isNumber, isObject, isServerSide } from '.';
+import { isNumber, isObject } from '.';
 
 export const tools = {
   screenMaxHeight: (asNumber?: boolean): string | number => {
@@ -24,10 +23,6 @@ export const tools = {
   },
 
   isMac: () => {
-    if (PHASE_PRODUCTION_BUILD || isServerSide) {
-      return false;
-    }
-
     const { userAgent } = navigator;
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error

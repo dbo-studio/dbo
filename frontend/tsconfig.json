@@ -1,42 +1,11 @@
 {
-  "compilerOptions": {
-    "target": "ES2016",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "baseUrl": "./",
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": ["./*"],
-      "@/components/*": ["src/components/*"],
-      "@/pages/*": ["pages/*"],
-      "@/theme/*": ["src/theme/*"],
-      "@/core/*": ["src/core/*"],
-      "@/store/*": ["src/store/*"],
-      "@/sections/*": ["src/sections/*"],
-      "@/hooks/*": ["src/hooks/*"],
-      "@/types/*": ["src/types/*"],
-      "@/services/*": ["src/core/services/*"],
-      "@/utils/*": ["src/core/utils/*"],
-      "@/api/*": ["src/api/*"]
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
     },
-    "typeRoots": ["./node_modules/@types", "./src/types"]
-  },
-
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/types/*.ts","../desktop/**/*.ts"],
-  "exclude": ["node_modules"]
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
 }

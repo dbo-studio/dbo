@@ -1,4 +1,4 @@
-import { variables } from '@/src/core/theme/variables';
+import { variables } from '@/core/theme/variables';
 import { Box, Stack, styled } from '@mui/material';
 import { StatusBarStylesProps } from './types';
 

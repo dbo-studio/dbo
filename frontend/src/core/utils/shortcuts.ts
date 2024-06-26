@@ -1,5 +1,5 @@
-import { ShortcutType } from '@/src/types';
-import { tools } from '@/utils/tools';
+import { tools } from '@/core/utils/tools';
+import { ShortcutType } from '@/types';
 
 export const shortcuts = {
   runQuery: {

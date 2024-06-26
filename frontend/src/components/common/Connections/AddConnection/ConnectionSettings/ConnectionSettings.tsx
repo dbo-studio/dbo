@@ -1,6 +1,6 @@
-import api from '@/src/api';
-import useAPI from '@/src/hooks/useApi.hook';
-import locales from '@/src/locales';
+import api from '@/api';
+import useAPI from '@/hooks/useApi.hook';
+import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LoadingButton } from '@mui/lab';

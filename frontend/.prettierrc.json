@@ -1,5 +1,7 @@
 {
-  "plugins": ["prettier-plugin-organize-imports"],
+  "plugins": [
+    "prettier-plugin-organize-imports"
+  ],
   "printWidth": 120,
   "tabWidth": 2,
   "useTabs": false,
@@ -9,11 +11,14 @@
   "singleQuote": true,
   "jsxSingleQuote": true,
   "overrides": [
-  {
-    "files": ["*.ts", "*.tsx"],
-    "options": {
-      "parser": "typescript"
+    {
+      "files": [
+        "*.ts",
+        "*.tsx"
+      ],
+      "options": {
+        "parser": "typescript"
+      }
     }
-  }
   ]
 }

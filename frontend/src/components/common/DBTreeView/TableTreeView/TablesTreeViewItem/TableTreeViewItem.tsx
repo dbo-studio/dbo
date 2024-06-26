@@ -1,7 +1,7 @@
 import TableTreeViewItemContextMenu from '@/components/common/DBTreeView/TableTreeView/TablesTreeViewItem/TableTreeViewItemContextMenu/TableTreeViewItemContextMenu';
 import { TablesTreeViewItemProps } from '@/components/common/DBTreeView/types';
-import useContextMenu from '@/hooks/useContextMenu';
-import { Box, Tooltip } from "@mui/material";
+import { useContextMenu } from '@/hooks';
+import { Box, Tooltip } from '@mui/material';
 import { TreeItem } from '@mui/x-tree-view';
 
 export default function TableTreeViewItem({ table, onClick }: TablesTreeViewItemProps) {

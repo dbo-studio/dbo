@@ -1,4 +1,4 @@
-import { useSettingStore } from '@/src/store/settingStore/setting.store';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import Grid from '@mui/material/Unstable_Grid2';
 import CenterContainer from './CenterContainer';
 import EndContainer from './EndContainer';

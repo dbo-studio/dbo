@@ -1,6 +1,6 @@
+import { UpdateDesignItemType } from '@/api/design/types';
 import TextRenderCell from '@/components/shared/DBDataGrid/TextRenderCell';
-import { UpdateDesignItemType } from '@/src/api/design/types';
-import { ColumnType, EditedColumnType, EditedColumnValue, EditedRow, RowType } from '@/src/types';
+import { ColumnType, EditedColumnType, EditedColumnValue, EditedRow, RowType } from '@/types';
 import { updatedDiff } from 'deep-object-diff';
 import { has } from 'lodash';
 import { SelectColumn, textEditor } from 'react-data-grid';

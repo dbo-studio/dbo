@@ -1,5 +1,5 @@
 import Schemas from '@/components/common/DBTreeView/Schemas/Schemas';
-import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useEffect, useState } from 'react';
 import Search from '../../base/Search/Search';
 import TablesTreeView from './TableTreeView/TablesTreeView';

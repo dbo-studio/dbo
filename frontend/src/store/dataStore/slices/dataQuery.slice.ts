@@ -1,7 +1,7 @@
-import { updateDesign } from '@/src/api/design';
-import { UpdateDesignItemType } from '@/src/api/design/types';
-import { runQuery, runRawQuery } from '@/src/api/query';
-import { cleanupUpdateDesignObject } from '@/src/core/utils';
+import { updateDesign } from '@/api/design';
+import { UpdateDesignItemType } from '@/api/design/types';
+import { runQuery, runRawQuery } from '@/api/query';
+import { cleanupUpdateDesignObject } from '@/core/utils';
 import { StateCreator } from 'zustand';
 import { useConnectionStore } from '../../connectionStore/connection.store';
 import { useTabStore } from '../../tabStore/tab.store';

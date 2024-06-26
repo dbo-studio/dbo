@@ -1,4 +1,4 @@
-import { RowType } from '@/src/types';
+import { RowType } from '@/types';
 import { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
 import { DataHighlightedRowSlice, DataStore } from '../types';

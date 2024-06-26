@@ -1,7 +1,7 @@
-import { PgsqlFilterConditions, PgsqlFilterNext } from '@/src/core/constants';
-import { useUUID } from '@/src/hooks';
-import { useTabStore } from '@/src/store/tabStore/tab.store';
-import { ColumnType, EventFor, FilterType } from '@/src/types';
+import { PgsqlFilterConditions, PgsqlFilterNext } from '@/core/constants';
+import { useUUID } from '@/hooks';
+import { useTabStore } from '@/store/tabStore/tab.store';
+import { ColumnType, EventFor, FilterType } from '@/types';
 import { Box, Checkbox } from '@mui/material';
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';

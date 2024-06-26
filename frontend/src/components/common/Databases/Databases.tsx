@@ -1,5 +1,5 @@
-import locales from '@/src/locales';
-import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
+import locales from '@/locales';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useState } from 'react';
 import Modal from '../../base/Modal/Modal';
 import AddDatabase from './AddDatabase/AddDatabase';

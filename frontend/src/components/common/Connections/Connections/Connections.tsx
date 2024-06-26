@@ -1,22 +1,16 @@
-import api from '@/src/api';
-import useAPI from '@/src/hooks/useApi.hook';
-import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
-import { ConnectionType } from '@/src/types';
+import api from '@/api';
+import useAPI from '@/hooks/useApi.hook';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { ConnectionType } from '@/types';
 import { Box } from '@mui/material';
-import { useEffect } from 'react';
+import { lazy, useEffect } from 'react';
 import { v4 as uuid } from 'uuid';
 
-import dynamic from 'next/dynamic';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { EmptySpaceStyle } from './EmptySpace.styled';
 
-const AddConnection = dynamic(() => import('../AddConnection/AddConnection'), {
-  ssr: false
-});
-
-const EditConnection = dynamic(() => import('../EditConnection/EditConnection'), {
-  ssr: false
-});
+const AddConnection = lazy(() => import('../AddConnection/AddConnection'));
+const EditConnection = lazy(() => import('../EditConnection/EditConnection'));
 
 export default function Connections() {
   const { connections, currentConnection, updateCurrentConnection, updateConnections, updateShowAddConnection } =

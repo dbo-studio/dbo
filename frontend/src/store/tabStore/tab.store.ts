@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
-import { TabType } from '@/src/types';
+import { TabType } from '@/types';
 
 import { immer } from 'zustand/middleware/immer';
 import { createTabColumnSlice } from './slices/tabColumn.slice';

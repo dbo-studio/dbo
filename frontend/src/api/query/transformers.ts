@@ -1,4 +1,4 @@
-import { ColumnType } from '@/src/types';
+import { ColumnType } from '@/types';
 import { RunQueryResponseType } from './types';
 
 export const transformRunQuery = (data: any): RunQueryResponseType => {

@@ -1,6 +1,6 @@
-import { useMount } from '@/src/hooks';
-import { useTabStore } from '@/src/store/tabStore/tab.store';
-import { TabType as TabData } from '@/src/types';
+import { useMount } from '@/hooks';
+import { useTabStore } from '@/store/tabStore/tab.store';
+import { TabType as TabData } from '@/types';
 import { Box, Tab, Tabs, Tooltip, Typography } from '@mui/material';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import TabPanel from './TabPanel/TabPanel';

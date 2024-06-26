@@ -1,7 +1,7 @@
-import { useWindowSize } from '@/src/hooks/useWindowSize.hook';
-import { useSettingStore } from '@/src/store/settingStore/setting.store';
+import { useWindowSize } from '@/hooks/useWindowSize.hook';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box } from '@mui/material';
-import dynamic from 'next/dynamic';
+import { lazy } from 'react';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
 import { EndContainerStyled } from './Container.styled';
 
@@ -35,9 +35,7 @@ import { EndContainerStyled } from './Container.styled';
 //   }
 // ];
 
-const DBFields = dynamic(() => import('../../common/DBFields/DBFields'), {
-  ssr: false
-});
+const DBFields = lazy(() => import('../../common/DBFields/DBFields'));
 
 export default function EndContainer() {
   const windowSize = useWindowSize();

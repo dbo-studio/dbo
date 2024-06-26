@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const $axios = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_SERVER_URL ?? '/api',
+  baseURL: import.meta.env.VITE_PUBLIC_SERVER_URL ?? '/api',
   headers: {
     'Content-Type': 'application/json'
   },

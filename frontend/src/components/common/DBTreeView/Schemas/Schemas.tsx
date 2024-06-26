@@ -1,12 +1,12 @@
-import api from '@/src/api';
-import useAPI from '@/src/hooks/useApi.hook';
-import locales from '@/src/locales';
-import {useConnectionStore} from '@/src/store/connectionStore/connection.store';
-import {EventFor} from '@/src/types';
-import {v4 as uuid} from 'uuid';
+import api from '@/api';
+import { SchemasStyled } from '@/components/common/DBTreeView/Schemas/Schemas.styled';
+import useAPI from '@/hooks/useApi.hook';
+import locales from '@/locales';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { EventFor } from '@/types';
+import { v4 as uuid } from 'uuid';
 import SelectInput from '../../../base/SelectInput/SelectInput';
 import SelectOption from '../../../base/SelectInput/SelectOption';
-import {SchemasStyled} from "@/components/common/DBTreeView/Schemas/Schemas.styled";
 
 export default function Schemas() {
   const { currentConnection, updateCurrentConnection } = useConnectionStore();

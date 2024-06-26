@@ -1,5 +1,5 @@
 import TableTreeViewItem from '@/components/common/DBTreeView/TableTreeView/TablesTreeViewItem/TableTreeViewItem';
-import locales from '@/src/locales';
+import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, useTheme } from '@mui/material';
 import { SimpleTreeView, TreeItem, useTreeViewApiRef } from '@mui/x-tree-view';

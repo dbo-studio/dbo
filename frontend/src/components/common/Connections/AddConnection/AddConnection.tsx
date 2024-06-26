@@ -1,5 +1,5 @@
 import Modal from '@/components/base/Modal/Modal';
-import locales from '@/src/locales';
+import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useState } from 'react';
 import ConnectionSelection from './ConnectionSelection/ConnectionSelection';

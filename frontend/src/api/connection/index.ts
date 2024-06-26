@@ -1,4 +1,4 @@
-import api from '@/src/core/services/api';
+import api from '@/core/services/api';
 import {
   CREATE_CONNECTION,
   DELETE_CONNECTION,

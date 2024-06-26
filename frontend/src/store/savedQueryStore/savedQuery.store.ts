@@ -1,4 +1,4 @@
-import { SavedQueryType } from '@/src/types';
+import { SavedQueryType } from '@/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';

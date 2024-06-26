@@ -1,8 +1,8 @@
-import api from '@/src/api';
-import { TabMode } from '@/src/core/enums';
-import useAPI from '@/src/hooks/useApi.hook';
-import useContextMenu from '@/src/hooks/useContextMenu';
-import { useTabStore } from '@/src/store/tabStore/tab.store';
+import api from '@/api';
+import { TabMode } from '@/core/enums';
+import { useContextMenu } from '@/hooks';
+import useAPI from '@/hooks/useApi.hook';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, ClickAwayListener, IconButton, Typography, useTheme } from '@mui/material';
 import { useState } from 'react';
 import CustomIcon from '../../../base/CustomIcon/CustomIcon';

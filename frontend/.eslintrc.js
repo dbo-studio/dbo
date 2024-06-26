@@ -18,7 +18,6 @@ module.exports = {
     'plugin:react-hooks/recommended',
     'prettier',
     'plugin:react/jsx-runtime',
-    'next/core-web-vitals',
     'plugin:prettier/recommended'
   ],
   root: true,

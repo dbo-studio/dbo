@@ -1,4 +1,4 @@
-import { ChannelName, MessageType } from '@/src/core/constants';
+import { ChannelName, MessageType } from '@/core/constants';
 
 export const getPort = () => {
   window.electron.send(

@@ -1,4 +1,4 @@
-import { ConnectionAuthType, ConnectionType } from '@/src/types';
+import { ConnectionAuthType, ConnectionType } from '@/types';
 
 export const transformConnections = (data: any): ConnectionType[] => {
   const connections: ConnectionType[] = [];

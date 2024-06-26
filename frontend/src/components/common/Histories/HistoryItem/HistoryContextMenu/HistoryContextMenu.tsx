@@ -1,8 +1,8 @@
-import CustomIcon from '@/src/components/base/CustomIcon/CustomIcon';
-import { TabMode } from '@/src/core/enums';
-import { useCopyToClipboard } from '@/src/hooks/useCopyToClipboard';
-import locales from '@/src/locales';
-import { useTabStore } from '@/src/store/tabStore/tab.store';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { TabMode } from '@/core/enums';
+import { useCopyToClipboard } from '@/hooks';
+import locales from '@/locales';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, Menu, MenuItem, Stack } from '@mui/material';
 import { toast } from 'sonner';
 import { HistoryContextMenuProps } from '../../types';

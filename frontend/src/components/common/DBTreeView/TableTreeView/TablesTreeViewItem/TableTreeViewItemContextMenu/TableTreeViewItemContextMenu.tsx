@@ -1,7 +1,7 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { TabMode } from '@/core/enums';
-import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
-import locales from '@/src/locales';
+import { useCopyToClipboard } from '@/hooks';
+import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, Menu, MenuItem, Stack } from '@mui/material';
 import { toast } from 'sonner';
@@ -15,18 +15,13 @@ export default function TableTreeViewItemContextMenu({
   const [_, copy] = useCopyToClipboard();
   const { addTab } = useTabStore();
 
-
   const menus = [
     {
-      name:"",
-      icon:"",
-      action:""
+      name: '',
+      icon: '',
+      action: ''
     }
-  ]
-
-
-
-
+  ];
 
   const handleCopy = async () => {
     try {

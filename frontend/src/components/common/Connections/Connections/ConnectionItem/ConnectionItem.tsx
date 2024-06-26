@@ -1,4 +1,4 @@
-import useContextMenu from '@/src/hooks/useContextMenu';
+import { useContextMenu } from '@/hooks';
 import { Box, Theme, Tooltip, Typography, useTheme } from '@mui/material';
 import CustomIcon from '../../../../base/CustomIcon/CustomIcon';
 import { ConnectionItemProps } from '../../types';

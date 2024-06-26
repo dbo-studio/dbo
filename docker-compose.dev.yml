@@ -1,31 +1,34 @@
 services:
-  backend:
-    container_name: dbo-studio-dev-api
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
-    volumes:
-      - ./backend:/back/
-    environment:
-      APP_PORT: "8080"
-      APP_ENV: "local"
-      DB_TEST_CONNECTION: "pgsql"
-      DB_TEST_HOST: "localhost"
-      DB_TEST_PORT: "5432"
-      DB_TEST_DATABASE: "default"
-      DB_TEST_USERNAME: "default"
-      DB_TEST_PASSWORD: "secret"
-    ports:
-      - "8080:8080"
+  # backend:
+  #   container_name: dbo-studio-dev-api
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile.dev
+  #   volumes:
+  #     - ./backend:/back/
+  #   environment:
+  #     APP_PORT: "8080"
+  #     APP_ENV: "local"
+  #     DB_TEST_CONNECTION: "pgsql"
+  #     DB_TEST_HOST: "localhost"
+  #     DB_TEST_PORT: "5432"
+  #     DB_TEST_DATABASE: "default"
+  #     DB_TEST_USERNAME: "default"
+  #     DB_TEST_PASSWORD: "secret"
+  #   ports:
+  #     - "8080:8080"
   frontend:
     container_name: dbo-studio-dev-frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
     volumes:
-      - ./frontend:/app
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/index.html
+      - ./frontend/package.json:/package.json
     environment:
-      NEXT_PUBLIC_SERVER_URL: "http://localhost:8080/api"
+      VITE_PUBLIC_SERVER_URL: "http://localhost:8080/api"
       NODE_ENV: "development"
     ports:
       - "3000:3000"

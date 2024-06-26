@@ -1,5 +1,5 @@
+import api from '@/api';
 import useAPI from '@/hooks/useApi.hook';
-import api from '@/src/api';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useEffect } from 'react';
