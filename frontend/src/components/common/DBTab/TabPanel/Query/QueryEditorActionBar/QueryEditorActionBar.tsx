@@ -1,7 +1,7 @@
 import api from '@/api';
 import { shortcuts } from '@/core/utils';
+import { useShortcut } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
-import { useShortcut } from '@/hooks/useShortcut';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useSavedQueryStore } from '@/store/savedQueryStore/savedQuery.store';

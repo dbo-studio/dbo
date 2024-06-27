@@ -47,7 +47,7 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
     defaultValues: {
       database: connection?.auth.database,
       host: connection?.auth.host ?? '',
-      port: connection?.auth.port + '' ?? '',
+      port: connection?.auth.port.toString() ?? '',
       name: connection?.name ?? '',
       username: connection?.auth.username ?? '',
       password: ''

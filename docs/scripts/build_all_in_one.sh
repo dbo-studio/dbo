@@ -39,7 +39,7 @@ echo "${GREEN}Completed building DBO frontend."
 
 echo ""
 echo "Step 2 - Copy fronted to  backend/..."
-mv ${FRONTEND_DIR}/out "${OUTPUT_DIR}/out"
+mv ${FRONTEND_DIR}/dist "${OUTPUT_DIR}/out"
 
 echo ""
 echo "Step 3 - building DBO backend..."
