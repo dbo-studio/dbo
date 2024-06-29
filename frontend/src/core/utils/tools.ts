@@ -28,7 +28,8 @@ export const tools = {
     // @ts-expect-error
     return /Mac/i.test(userAgent) || (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream);
   },
-  isElectron: () => {
-    return window.electron;
+  isTauri: () => {
+    const env = import.meta.env.VITE_ENV;
+    return env && env == 'tauri';
   }
 };
