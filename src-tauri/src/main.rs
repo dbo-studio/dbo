@@ -1,31 +1,40 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use rust_embed::RustEmbed;
+use rust_embed::Embed;
 use std::env;
-use std::fs::File;
-use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::io::Write;
+use std::os::unix::fs::PermissionsExt;
+use std::path::Path;
+use tempfile::NamedTempFile;
+use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::process::Command;
+use tokio::runtime::Runtime;
+use tokio::task;
 
-#[derive(RustEmbed)]
+#[derive(Embed)]
 #[folder = "assets/"]
-struct Asset;
+pub struct Asset;
 
 fn main() {
-    match write_embedded_binary() {
-        Ok(binary_path) => {
-            // Run the binary and print its outputs
-            if let Err(e) = run_binary(&binary_path) {
-                println!("Failed to execute command: {}", e);
-            } else {
-                println!("run success")
-            }
+    let binary_path = extract_binary();
+
+    let rt = Runtime::new().unwrap();
+    rt.block_on(async {
+        // Spawn a task to run the command in the background
+        let handle = task::spawn(async move {
+            run_command(binary_path.as_path()).await;
+        });
+
+        // Simulate doing other work in the main thread
+        for i in 0..5 {
+            println!("Main thread working: iteration {}", i);
+            tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
         }
-        Err(e) => {
-            println!("Failed to write embedded binary: {}", e);
-        }
-    }
+
+        // Await the background task to ensure it completes
+        handle.await.expect("Background task failed");
+    });
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![get_backend_host])
@@ -54,57 +63,45 @@ fn get_backend_host() -> String {
 //     None
 // }
 
-fn write_embedded_binary() -> Result<PathBuf, std::io::Error> {
-    // Load the binary data from embedded assets
-    let embedded_file = Asset::get("dbo").expect("Binary not found in assets");
-    let binary_data = embedded_file.data;
+fn extract_binary() -> std::path::PathBuf {
+    // Extract the embedded binary to a temporary file
+    let binary = Asset::get("/dbo").expect("Failed to get embedded binary");
 
-    // Create a temporary directory
-    let temp_dir = env::temp_dir();
-    let binary_path = temp_dir.join("dbo");
+    let mut file = NamedTempFile::new().expect("Failed to create temporary file");
+    file.write_all(&binary.data)
+        .expect("Failed to write binary to temporary file");
 
-    // Write the embedded binary to the temporary file
-    let mut file = File::create(&binary_path)?;
-    file.write_all(&binary_data)?;
+    // Make the file executable
+    let mut perms = file
+        .as_file()
+        .metadata()
+        .expect("Failed to get file metadata")
+        .permissions();
 
-    // Make the file executable (needed for Unix-based systems)
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let mut perms = file.metadata()?.permissions();
-        perms.set_mode(0o755);
-        std::fs::set_permissions(&binary_path, perms)?;
-    }
+    perms.set_mode(0o755);
+    file.as_file()
+        .set_permissions(perms)
+        .expect("Failed to set file permissions");
 
-    Ok(binary_path)
+    file.into_temp_path().to_path_buf()
 }
 
-fn run_binary(binary_path: &Path) -> Result<(), std::io::Error> {
-    // Execute the command and capture its output
-    let mut proc_handle = Command::new(binary_path)
+async fn run_command(binary_path: &Path) {
+    let mut child = Command::new(binary_path)
         .stdout(std::process::Stdio::piped())
         .spawn()
-        .unwrap();
+        .expect("Failed to start command");
 
-    // let x = proc_handle.wait();
+    if let Some(stdout) = child.stdout.take() {
+        let mut reader = BufReader::new(stdout).lines();
+        while let Some(line) = reader.next_line().await.expect("Failed to read line") {
+            println!("Command output: {}", line);
+        }
+    }
 
-    let mut output_buffer = String::new();
-    let mut stdout_handle = proc_handle
-        .stdout
-        .unwrap()
-        .read_to_string(&mut output_buffer);
-
-    println!("output result {}", output_buffer);
-
-    // Print stdout and stderr
-    // let stdout = String::from_utf8_lossy(&output.stdout);
-    // let stderr = String::from_utf8_lossy(&output.stderr);
-
-    // if output.status.success() {
-    //     println!("Command executed successfully:\n{}", stdout);
-    // } else {
-    //     println!("Command failed with status {}:\n{}", output.status, stderr);
-    // }
-
-    Ok(())
+    let output = child
+        .wait_with_output()
+        .await
+        .expect("Failed to run command");
+    println!("Command finished with status: {}", output.status);
 }
