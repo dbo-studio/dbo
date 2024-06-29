@@ -82,3 +82,36 @@ mkdir_output() {
 #    echo "export $key=\"$value\""
 #  done
 #)"
+
+
+get_platform_name() {
+   # Get the architecture
+    ARCH=$(uname -m)
+
+    # Map the architecture to desired format
+    case "$ARCH" in
+        x86_64) ARCH="x86_64" ;;
+        i386) ARCH="i386" ;;
+        armv7l) ARCH="arm" ;;
+        aarch64) ARCH="aarch64" ;;
+        arm64) ARCH="aarch64" ;; # Add support for arm64 architecture
+        *) echo "Unsupported architecture: $ARCH"; return 1 ;;
+    esac
+
+    # Get the operating system
+    OS=$(uname -s)
+
+    # Map the OS to desired format
+    case "$OS" in
+        Darwin) OS="apple-darwin" ;;
+        Linux) OS="linux-gnu" ;;
+        CYGWIN*|MINGW32*|MSYS*|MINGW*) OS="windows" ;;
+        *) echo "Unsupported OS: $OS"; return 1 ;;
+    esac
+
+    # Construct the platform-specific name
+    PLATFORM_NAME="${ARCH}-${OS}"
+
+    # Return the platform-specific name
+    echo "$PLATFORM_NAME"
+}

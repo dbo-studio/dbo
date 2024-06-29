@@ -18,7 +18,7 @@ echo ""
 echo "Step 1 - building DBO Backend..."
 
 cd "${BACKEND_DIR}" && go mod download
-CGO_ENABLED=1 go build -p=8 --tags "release" -ldflags "-w" -o "${DESKTOP_DIR}/dbo" "${BACKEND_DIR}"/*.go
+CGO_ENABLED=1 go build -p=8 --tags "release" -ldflags "-w" -o "${DESKTOP_DIR}/assets/dbo-$(get_platform_name)" "${BACKEND_DIR}"/*.go
 echo "${GREEN}Completed building DBO backend."
 
 echo ""

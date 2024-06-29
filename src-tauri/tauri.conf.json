@@ -18,6 +18,15 @@
         "message": true,
         "open": true, 
         "save": true 
+      },
+      "shell": {
+        "sidecar": true,
+        "scope": [
+          {
+            "name": "assets/dbo",
+            "sidecar": true
+          }
+        ]
       }
     },
     "bundle": {
@@ -27,7 +36,7 @@
       "deb": {
         "depends": []
       },
-      "externalBin": [],
+      "externalBin": ["assets/dbo"],
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",

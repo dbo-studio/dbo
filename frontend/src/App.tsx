@@ -29,6 +29,7 @@ const App = () => {
           alert('cant found empty port!');
           return;
         }
+        alert(response);
         changeUrl(response as string);
         setLoaded(true);
       });
