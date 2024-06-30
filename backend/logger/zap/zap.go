@@ -2,11 +2,13 @@ package zap
 
 import (
 	"errors"
-	"github.com/khodemobin/dbo/config"
+	"fmt"
 	l "log"
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/khodemobin/dbo/config"
 
 	"github.com/khodemobin/dbo/logger"
 	"go.uber.org/zap"
@@ -29,6 +31,7 @@ func New(cfg *config.Config) logger.Logger {
 	}
 
 	f, err := os.OpenFile(path+"/app.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o666)
+	fmt.Println("log path: " + path + "/app.log")
 	if err != nil {
 		l.Fatalln(err)
 	}

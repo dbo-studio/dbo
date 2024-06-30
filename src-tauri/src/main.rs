@@ -6,37 +6,40 @@ use std::{env, net::TcpListener};
 use tauri::api::process::{Command, CommandEvent};
 
 fn main() {
-    match find_free_port() {
-        Some(p) => {
-            env::set_var("APP_ENV", "production");
-            env::set_var("APP_PORT", p.to_string());
-            run_server();
-            tauri::Builder::default()
-                .invoke_handler(tauri::generate_handler![get_backend_host])
-                .run(tauri::generate_context!())
-                .expect("error while running tauri application");
-        }
-        None => {}
-    };
+    env::set_var("APP_ENV", "production");
+    let port = find_free_port();
+    env::set_var("APP_PORT", port.to_string());
+    run_server();
+    tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![get_backend_host])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }
 
 #[tauri::command]
 fn get_backend_host() -> String {
     return String::from(
-        "http://localhost:".to_string() + &env::var("APP_PORT").unwrap().to_string(),
+        "http://127.0.0.1:".to_string()
+            + &env::var("APP_PORT").unwrap().to_string()
+            + "/api".into(),
     )
     .to_string();
 }
 
-fn find_free_port() -> Option<u16> {
-    for port in 5000..=9000 {
-        if let Ok(listener) = TcpListener::bind(("127.0.0.1", port)) {
-            // Immediately drop the listener to free the port
-            drop(listener);
-            return Some(port);
+fn find_free_port() -> u16 {
+    let default = 5124;
+    match TcpListener::bind("127.0.0.1:0") {
+        Ok(listener) => {
+            if let Ok(addr) = listener.local_addr() {
+                return addr.port();
+            } else {
+                return default;
+            }
         }
+        Err(_) => {}
     }
-    None
+
+    return default;
 }
 
 fn run_server() {

@@ -11,23 +11,7 @@
   },
   "tauri": {
     "allowlist": {
-      "dialog": {
-        "all": true,
-        "ask": true,
-        "confirm": true,
-        "message": true,
-        "open": true, 
-        "save": true 
-      },
-      "shell": {
-        "sidecar": true,
-        "scope": [
-          {
-            "name": "assets/dbo",
-            "sidecar": true
-          }
-        ]
-      }
+      "all": true
     },
     "bundle": {
       "active": true,
@@ -70,10 +54,10 @@
     },
     "windows": [
       {
-        "fullscreen": false,
+        "fullscreen": true,
         "height": 600,
         "resizable": true,
-        "title": "DBO",
+        "title": "DBO Studio",
         "width": 800
       }
     ]
