@@ -6,8 +6,8 @@
     "distDir": "../frontend/dist"
   },
   "package": {
-    "productName": "tauri",
-    "version": "0.1.0"
+    "productName": "DBO Studio",
+    "version": "0.0.1"
   },
   "tauri": {
     "allowlist": {
@@ -15,7 +15,7 @@
     },
     "bundle": {
       "active": true,
-      "category": "DeveloperTool",
+      "category": "public.app-category.developer-tools",
       "copyright": "",
       "deb": {
         "depends": []
@@ -54,11 +54,11 @@
     },
     "windows": [
       {
-        "fullscreen": true,
         "height": 600,
         "resizable": true,
         "title": "DBO Studio",
-        "width": 800
+        "width": 1200,
+        "center": true
       }
     ]
   }
