@@ -1,0 +1,35 @@
+import { Box, Menu, MenuItem, Stack } from '@mui/material';
+import CustomIcon from '../CustomIcon/CustomIcon';
+import { ContextMenuProps, MenuType } from './types';
+
+export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuProps) {
+  const handleClick = (m: MenuType) => {
+    if (m.closeBeforeAction) {
+      onClose();
+    }
+    m.action;
+    if (m.closeAfterAction) {
+      onClose();
+    }
+  };
+
+  return (
+    <Box>
+      <Menu
+        open={contextMenu !== null}
+        onClose={onClose}
+        anchorReference='anchorPosition'
+        anchorPosition={contextMenu !== null ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
+      >
+        {menu.map((m) => (
+          <MenuItem onClick={() => handleClick(m)}>
+            <Stack width={'100%'} alignItems={'center'} justifyContent={'space-between'} direction={'row'}>
+              {m.name}
+              {m.icon && <CustomIcon type={m.icon} />}
+            </Stack>
+          </MenuItem>
+        ))}
+      </Menu>
+    </Box>
+  );
+}
