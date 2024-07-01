@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 VERSION=$(cat ./scripts/VERSION)
 BACKEND_DIR=./../backend
 FRONTEND_DIR=./../frontend
-DESKTOP_DIR=./../src-tauri
+DESKTOP_DIR=./../desktop
 
 ## check go version
 check_go() {

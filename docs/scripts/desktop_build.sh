@@ -1,7 +1,7 @@
 #!/bin/sh
 # ===========================================================================
-# File: electron_dev
-# Description: usage: ./electron_dev
+# File: desktop_build
+# Description: usage: ./desktop_dev
 # ===========================================================================
 
 cd "$(dirname "$0")/../"

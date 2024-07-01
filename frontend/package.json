@@ -27,7 +27,6 @@
     "axios": "^1.7.2",
     "dayjs": "^1.11.11",
     "deep-object-diff": "^1.1.9",
-    "electron": "^31.0.1",
     "immer": "^10.1.1",
     "lodash": "^4.17.21",
     "lucide-react": "^0.390.0",

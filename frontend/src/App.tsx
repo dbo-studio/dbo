@@ -32,12 +32,6 @@ const App = () => {
         changeUrl(response as string);
         setLoaded(true);
       });
-
-      // api.electron.getPort();
-      // window.electron.receive(ChannelName, (data: any) => {
-      //   changeUrl(data.data);
-      //   setLoaded(true);
-      // });
     } else {
       setLoaded(true);
     }
