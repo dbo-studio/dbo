@@ -1,12 +1,9 @@
-import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
-import { MenuType } from '@/components/base/ContextMenu/types';
 import { useContextMenu } from '@/hooks';
-import locales from '@/locales';
 import { Box, Theme, Tooltip, Typography, useTheme } from '@mui/material';
 import CustomIcon from '../../../../base/CustomIcon/CustomIcon';
 import { ConnectionItemProps } from '../../types';
 import { ConnectionItemStyled } from './ConnectionItem.styled';
-import { handleEditConnection, handleOpenConfirm } from './contextMenuActions';
+import ConnectionItemContextMenu from './ConnectionItemContextMenu/ConnectionItemContextMenu';
 
 export default function ConnectionItem({ connection, selected = false, onClick }: ConnectionItemProps) {
   const theme: Theme = useTheme();
@@ -18,20 +15,6 @@ export default function ConnectionItem({ connection, selected = false, onClick }
     }
   };
 
-  const menu: MenuType[] = [
-    {
-      name: locales.edit,
-      icon: 'settings',
-      action: () => handleEditConnection(connection)
-    },
-    {
-      name: locales.delete,
-      icon: 'delete',
-      action: () => handleOpenConfirm(connection),
-      closeBeforeAction: true
-    }
-  ];
-
   return (
     <ConnectionItemStyled onContextMenu={handleContextMenu} theme={theme} selected={selected} onClick={handleClick}>
       <Tooltip title={connection.name}>
@@ -42,7 +25,11 @@ export default function ConnectionItem({ connection, selected = false, onClick }
           </Typography>
         </Box>
       </Tooltip>
-      <ContextMenu menu={menu} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
+      <ConnectionItemContextMenu
+        connection={connection}
+        contextMenu={contextMenuPosition}
+        onClose={handleCloseContextMenu}
+      />
     </ConnectionItemStyled>
   );
 }

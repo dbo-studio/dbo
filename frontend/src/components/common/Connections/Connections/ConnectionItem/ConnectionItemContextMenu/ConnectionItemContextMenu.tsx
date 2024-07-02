@@ -1,15 +1,16 @@
 import api from '@/api';
-import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
+import { MenuType } from '@/components/base/ContextMenu/types';
 import useAPI from '@/hooks/useApi.hook';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { Box, Menu, MenuItem, Stack } from '@mui/material';
+import { ConnectionType } from '@/types';
 import { toast } from 'sonner';
-import { ConnectionContextMenuProps } from '../../types';
+import { ConnectionContextMenuProps } from '../../../types';
 
-export default function ConnectionContextMenu({ connection, contextMenu, onClose }: ConnectionContextMenuProps) {
+export default function ConnectionItemContextMenu({ connection, contextMenu, onClose }: ConnectionContextMenuProps) {
   const { updateShowEditConnection, updateConnections, updateCurrentConnection, currentConnection } =
     useConnectionStore();
   const { updateSelectedTab, updateTabs } = useTabStore();
@@ -19,14 +20,13 @@ export default function ConnectionContextMenu({ connection, contextMenu, onClose
     apiMethod: api.connection.deleteConnection
   });
 
-  const handleOpenConfirm = async () => {
-    onClose();
+  const handleOpenConfirm = async (connection: ConnectionType) => {
     showModal(locales.delete_action, locales.connection_delete_confirm, () => {
-      handleDeleteConnection();
+      handleDeleteConnection(connection);
     });
   };
 
-  const handleDeleteConnection = async () => {
+  const handleDeleteConnection = async (connection: ConnectionType) => {
     try {
       const res = await deleteConnection(connection.id);
       if (res.length == 0) {
@@ -46,37 +46,28 @@ export default function ConnectionContextMenu({ connection, contextMenu, onClose
         }
       }
       toast.success(locales.connection_delete_success);
-      onClose();
     } catch (err) {
-      console.log(err);
+      console.log('🚀 ~ handleDeleteConnection ~ err:', err);
     }
   };
 
-  const handleEditConnection = () => {
-    updateShowEditConnection(connection);
+  const handleEditConnection = (connections: ConnectionType | undefined) => {
+    updateShowEditConnection(connections);
   };
 
-  return (
-    <Box>
-      <Menu
-        open={contextMenu !== null}
-        onClose={onClose}
-        anchorReference='anchorPosition'
-        anchorPosition={contextMenu !== null ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
-      >
-        <MenuItem onClick={handleEditConnection}>
-          <Stack width={'100%'} alignItems={'center'} justifyContent={'space-between'} direction={'row'}>
-            {locales.edit}
-            <CustomIcon type='settings' />
-          </Stack>
-        </MenuItem>
-        <MenuItem onClick={handleOpenConfirm}>
-          <Stack width={'100%'} alignItems={'center'} justifyContent={'space-between'} direction={'row'}>
-            {locales.delete}
-            <CustomIcon type='delete' />
-          </Stack>
-        </MenuItem>
-      </Menu>
-    </Box>
-  );
+  const menu: MenuType[] = [
+    {
+      name: locales.edit,
+      icon: 'settings',
+      action: () => handleEditConnection(connection)
+    },
+    {
+      name: locales.delete,
+      icon: 'delete',
+      action: () => handleOpenConfirm(connection),
+      closeBeforeAction: true
+    }
+  ];
+
+  return <ContextMenu menu={menu} contextMenu={contextMenu} onClose={onClose} />;
 }
