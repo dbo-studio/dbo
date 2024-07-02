@@ -11,7 +11,11 @@ export default function TableTreeViewItem({ table, onClick }: TablesTreeViewItem
 
   const menu: MenuType[] = [
     {
-      name: locales.open,
+      name: locales.open_data,
+      action: () => {}
+    },
+    {
+      name: locales.open_design,
       action: () => {}
     }
   ];

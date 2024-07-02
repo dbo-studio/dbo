@@ -62,5 +62,7 @@
     "save": "Save",
     "empty_query": "Empty query",
     "query_saved_successfully": "Query saved successfully",
-    "query_saved_delete_confirm": "Are your sure delete query?"
+    "query_saved_delete_confirm": "Are your sure delete query?",
+    "open_data":"Open data",
+    "open_design":"Open design"
 }
