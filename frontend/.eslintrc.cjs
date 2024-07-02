@@ -28,7 +28,6 @@ module.exports = {
     semi: [1, 'always'],
     'space-unary-ops': 2,
     'react/prop-types': 0,
-    'unused-imports/no-unused-imports': 'error',
     'react/display-name': 'off',
     'prettier/prettier': 'error',
     'arrow-body-style': 'off',
@@ -41,7 +40,7 @@ module.exports = {
       }
     ]
   },
-  plugins: ['react', 'prettier', '@typescript-eslint', 'unused-imports'],
+  plugins: ['react', 'prettier', '@typescript-eslint'],
 
   parserOptions: {
     ecmaFeatures: {
