@@ -14,7 +14,7 @@ export default function HistoryContextMenu({ history, contextMenu, onClose }: Hi
   const handleCopy = async () => {
     try {
       await copy(history.query);
-      toast.success(locales.database_delete_success);
+      toast.success(locales.copied);
     } catch (error) {
       console.log('🚀 ~ handleCopy ~ error:', error);
     }

@@ -33,7 +33,7 @@ export default function SavedQueryContextMenu({
     showModal(locales.delete_action, locales.query_saved_delete_confirm, async () => {
       try {
         await deleteSavedQuery(query.id);
-        toast.success(locales.database_delete_success);
+        toast.success(locales.copied);
         onDelete();
       } catch (err) {
         console.log('🚀 ~ handleSaveChange ~ err:', err);
