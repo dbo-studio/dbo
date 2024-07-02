@@ -4,7 +4,7 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton, Stack } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
-import { lazy } from 'react';
+import { Suspense, lazy } from 'react';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 
 const Databases = lazy(() => import('../Databases/Databases'));
@@ -21,7 +21,9 @@ export default function ConnectionInfo() {
 
   return (
     <Stack direction={'row'} justifyContent={'center'} alignItems={'center'}>
-      <Databases open={showSelectDatabase} />
+      <Suspense>
+        <Databases open={showSelectDatabase} />
+      </Suspense>
       <Grid md={4}>
         <Stack direction={'row'} spacing={2} justifyContent='flex-end'>
           <IconButton aria-label='connection' onClick={() => updateShowAddConnection(true)}>

@@ -3,7 +3,7 @@ import useAPI from '@/hooks/useApi.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { ConnectionType } from '@/types';
 import { Box } from '@mui/material';
-import { lazy, useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { v4 as uuid } from 'uuid';
 
 import ConnectionItem from './ConnectionItem/ConnectionItem';
@@ -47,9 +47,12 @@ export default function Connections() {
 
   return (
     <Box height={'100%'} display={'flex'} flexDirection={'column'}>
-      <AddConnection />
-      <EditConnection />
-
+      <Suspense>
+        <AddConnection />
+      </Suspense>
+      <Suspense>
+        <EditConnection />
+      </Suspense>
       {connections?.map((c: ConnectionType) => (
         <ConnectionItem
           onClick={() => handleChangeCurrentConnection(c)}

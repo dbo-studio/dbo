@@ -1,7 +1,7 @@
 import { TabMode } from '@/core/enums';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box } from '@mui/material';
-import { lazy } from 'react';
+import { Suspense, lazy } from 'react';
 
 const Data = lazy(() => import('./Data/Data'));
 const Query = lazy(() => import('./Query/Query'));
@@ -13,11 +13,11 @@ export default function TabPanel() {
   return (
     <Box overflow='hidden' height={'100%'} display='flex' flexDirection='column'>
       {selectedTab ? (
-        <>
+        <Suspense>
           {selectedTab.mode == TabMode.Data && <Data />}
           {selectedTab.mode == TabMode.Design && <Design />}
           {selectedTab.mode == TabMode.Query && <Query />}
-        </>
+        </Suspense>
       ) : null}
     </Box>
   );

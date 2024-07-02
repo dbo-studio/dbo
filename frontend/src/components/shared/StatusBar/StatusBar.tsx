@@ -1,5 +1,5 @@
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { lazy } from 'react';
+import { Suspense, lazy } from 'react';
 import { StatusBarStyled } from './StatusBar.styled';
 
 const StatusBarActions = lazy(() => import('./StatusBarActions'));
@@ -11,9 +11,15 @@ export default function StatusBar() {
 
   return (
     <StatusBarStyled mode={selectedTab?.mode} direction={'row'} justifyContent={'space-between'}>
-      <StatusBarActions />
-      <StatusBarTabs />
-      <StatusBarPagination mode={selectedTab?.mode} />
+      <Suspense>
+        <StatusBarActions />
+      </Suspense>
+      <Suspense>
+        <StatusBarTabs />
+      </Suspense>
+      <Suspense>
+        <StatusBarPagination mode={selectedTab?.mode} />
+      </Suspense>
     </StatusBarStyled>
   );
 }
