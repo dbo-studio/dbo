@@ -86,7 +86,8 @@ export default function TableTreeViewItem({ table, onClick }: TablesTreeViewItem
     // },
     {
       name: locales.copy,
-      action: handleCopy
+      action: handleCopy,
+      closeAfterAction: true
     },
     // {
     //   name: locales.rename,
