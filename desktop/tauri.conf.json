@@ -16,7 +16,7 @@
     "bundle": {
       "active": true,
       "category": "public.app-category.developer-tools",
-      "copyright": "",
+      "copyright": "The MIT License (MIT) Copyright (c) 2022 - present, DBO Studio",
       "deb": {
         "depends": []
       },
@@ -38,8 +38,8 @@
         "signingIdentity": null
       },
       "resources": [],
-      "shortDescription": "",
-      "targets": "all",
+      "shortDescription": "Modern and easy to use SQL client",
+      "targets": ["deb","nsis","dmg","updater","appimage"],
       "windows": {
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",

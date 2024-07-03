@@ -104,7 +104,7 @@ get_platform_name() {
     # Map the OS to desired format
     case "$OS" in
         Darwin) OS="apple-darwin" ;;
-        Linux) OS="linux-gnu" ;;
+        Linux) OS="unknown-linux-gnu" ;;
         CYGWIN*|MINGW32*|MSYS*|MINGW*) OS="windows" ;;
         *) echo "Unsupported OS: $OS"; return 1 ;;
     esac
