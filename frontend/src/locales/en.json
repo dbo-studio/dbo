@@ -71,5 +71,8 @@
   "refresh": "Refresh",
   "import": "Import",
   "export": "Export",
-  "copied": "Copied successfully!"
+  "copied": "Copied successfully!",
+  "close": "Close",
+  "close_other_tabs": "Close other tabs",
+  "close_all": "Close all"
 }
