@@ -50,12 +50,12 @@ export default function ActionBar() {
         <IconButton className='toggle-code-preview' onClick={() => handleToggle('query')}>
           <CustomIcon type='code' size='s' />
         </IconButton>
-        <IconButton aria-label='export'>
+        {/* <IconButton aria-label='export'>
           <CustomIcon type='export' size='s' />
         </IconButton>
         <IconButton aria-label='import'>
           <CustomIcon type='import' size='s' />
-        </IconButton>
+        </IconButton> */}
       </Grid>
     </Stack>
   );
