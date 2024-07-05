@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "DBO Studio",
-    "version": "0.0.1"
+    "version": "0.0.3"
   },
   "tauri": {
     "allowlist": {
@@ -35,7 +35,8 @@
         "exceptionDomain": "",
         "frameworks": [],
         "providerShortName": null,
-        "signingIdentity": null
+        "signingIdentity": null,
+        "license": "../LICENSE"
       },
       "resources": [],
       "shortDescription": "Modern and easy to use SQL client",
