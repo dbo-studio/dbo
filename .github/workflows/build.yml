@@ -56,7 +56,7 @@ jobs:
           cache: true
       - name: build go
         run: |
-          ./docs/scripts/build_backend.sh
+          chmod -x ./docs/scripts/build_backend.sh && ./docs/scripts/build_backend.sh
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
