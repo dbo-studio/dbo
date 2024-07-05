@@ -18,7 +18,6 @@ check_typescript
 echo ""
 echo "Step 1 - building DBO Backend..."
 
-cd "${BACKEND_DIR}" && go mod download
 build_backend
 echo "${GREEN}Completed building DBO backend."
 

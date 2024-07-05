@@ -106,5 +106,6 @@ get_platform_name() {
 }
 
 build_backend(){
+    cd "${BACKEND_DIR}" && go mod download
     CGO_ENABLED=1 go build -p=8 --tags "release" -ldflags "-w" -o "${DESKTOP_DIR}/assets/dbo-$(get_platform_name)" "${BACKEND_DIR}"/*.go
 }
