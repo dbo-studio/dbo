@@ -101,7 +101,7 @@ func (p PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) (*RawQueryResult, er
 	for i, column := range columns {
 		structures = append(structures, Structure{
 			ColumnName: column,
-			DataType:   columnTypes[i].Name(),
+			DataType:   strings.ToLower(columnTypes[i].DatabaseTypeName()),
 			MappedType: columnMappedFormat(columnTypes[i].Name()),
 		})
 	}

@@ -2,15 +2,13 @@ FROM node:20.12.2 as frontend
 
 ARG RELEASE="release"
 
-RUN npm i -g pnpm
-
 WORKDIR /frontend
 
 COPY ./frontend .
 
-RUN pnpm install
-RUN pnpm exec next telemetry disable
-RUN pnpm build
+RUN npm i -g typescript
+RUN npm i
+RUN npm run build
 
 FROM golang:1.22-alpine as backend
 
@@ -25,7 +23,7 @@ RUN apk add --no-cache gcc musl-dev
 RUN go mod download
 
 RUN go build -p=8 --tags "release" -ldflags "-w" -o "build/dbo" *.go
-COPY --from=frontend /frontend/out ./out
+COPY --from=frontend /frontend/dist ./out
 
 EXPOSE $APP_PORT
 

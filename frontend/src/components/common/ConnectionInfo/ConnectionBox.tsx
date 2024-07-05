@@ -1,5 +1,5 @@
-import locales from '@/src/locales';
-import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
+import locales from '@/locales';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { ConnectionBoxStyled } from './ConnectionBox.styled';

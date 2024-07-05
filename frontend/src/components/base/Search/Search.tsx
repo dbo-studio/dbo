@@ -1,5 +1,5 @@
-import locales from '@/src/locales';
-import { EventFor } from '@/src/types';
+import locales from '@/locales';
+import { EventFor } from '@/types';
 import { Box, InputAdornment, InputBase } from '@mui/material';
 import { useState } from 'react';
 import CustomIcon from '../CustomIcon/CustomIcon';

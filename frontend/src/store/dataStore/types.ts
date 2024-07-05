@@ -1,5 +1,5 @@
-import { EditedRow } from '@/src/types';
-import { ColumnType, EditedColumnType, RowType } from '@/src/types/Data';
+import { EditedRow } from '@/types';
+import { ColumnType, EditedColumnType, RowType } from '@/types/Data';
 
 export type DataStore = object;
 

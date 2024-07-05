@@ -1,4 +1,4 @@
-import { TabMode } from '@/src/core/enums';
+import { TabMode } from '@/core/enums';
 import { IconTypes } from '../../base/CustomIcon/types';
 
 export type StatusBarTabTypes = {

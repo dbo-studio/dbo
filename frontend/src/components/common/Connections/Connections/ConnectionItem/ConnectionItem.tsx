@@ -1,9 +1,9 @@
-import useContextMenu from '@/src/hooks/useContextMenu';
+import { useContextMenu } from '@/hooks';
 import { Box, Theme, Tooltip, Typography, useTheme } from '@mui/material';
 import CustomIcon from '../../../../base/CustomIcon/CustomIcon';
 import { ConnectionItemProps } from '../../types';
-import ConnectionContextMenu from '../ConnectionContextMenu/ConnectionContextMenu';
 import { ConnectionItemStyled } from './ConnectionItem.styled';
+import ConnectionItemContextMenu from './ConnectionItemContextMenu/ConnectionItemContextMenu';
 
 export default function ConnectionItem({ connection, selected = false, onClick }: ConnectionItemProps) {
   const theme: Theme = useTheme();
@@ -25,7 +25,7 @@ export default function ConnectionItem({ connection, selected = false, onClick }
           </Typography>
         </Box>
       </Tooltip>
-      <ConnectionContextMenu
+      <ConnectionItemContextMenu
         connection={connection}
         contextMenu={contextMenuPosition}
         onClose={handleCloseContextMenu}

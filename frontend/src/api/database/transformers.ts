@@ -1,4 +1,4 @@
-import { ConnectionAuthType, ConnectionType } from '@/src/types';
+import { ConnectionAuthType, ConnectionType } from '@/types';
 import { DatabaseMetaDataType } from './types';
 
 export const transformDatabaseMetaData = (data: any): DatabaseMetaDataType => {

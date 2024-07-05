@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const $axios = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_SERVER_URL ?? '/api',
+  baseURL: import.meta.env.VITE_PUBLIC_SERVER_URL ?? '/api',
   headers: {
     'Content-Type': 'application/json'
   },
@@ -20,4 +20,9 @@ const servicePost = $axios.post;
 const serviceGet = $axios.get;
 const serviceDelete = $axios.delete;
 const servicePatch = $axios.patch;
-export { serviceDelete, serviceGet, servicePatch, servicePost };
+
+const changeUrl = (url: string) => {
+  $axios.defaults.baseURL = url;
+};
+
+export { changeUrl, serviceDelete, serviceGet, servicePatch, servicePost };

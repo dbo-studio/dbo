@@ -1,5 +1,5 @@
-import { useUUID } from '@/src/hooks';
-import locales from '@/src/locales';
+import { useUUID } from '@/hooks';
+import locales from '@/locales';
 import { Box, useTheme } from '@mui/material';
 import { useState } from 'react';
 import Columns from '../Columns/Columns';

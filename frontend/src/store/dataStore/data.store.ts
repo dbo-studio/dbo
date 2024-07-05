@@ -1,7 +1,8 @@
-import { TabType } from '@/src/types';
 import { createAutocompleteSlice } from '@/store/dataStore/slices/dataAutocomplete.slice';
+import { TabType } from '@/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
 import { useTabStore } from '../tabStore/tab.store';
 import { createDataColumnSlice } from './slices/dataColumn.slice';
 import { createDataEditedRowsSlice } from './slices/dataEditedRows';
@@ -37,7 +38,7 @@ type DataState = DataStore &
 
 export const useDataStore = create<DataState>()(
   devtools(
-    (set, get, ...state) => ({
+    immer((set, get, ...state) => ({
       selectedTab: (): TabType | undefined => {
         return useTabStore.getState().selectedTab;
       },
@@ -50,7 +51,7 @@ export const useDataStore = create<DataState>()(
       ...createDataColumnSlice(set, get, ...state),
       ...createDataQuerySlice(set, get, ...state),
       ...createAutocompleteSlice(set, get, ...state)
-    }),
+    })),
     { name: 'data' }
   )
 );

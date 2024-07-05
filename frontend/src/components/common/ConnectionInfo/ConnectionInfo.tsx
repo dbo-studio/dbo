@@ -1,15 +1,13 @@
-import ConnectionBox from '@/src/components/common/ConnectionInfo/ConnectionBox';
-import { TabMode } from '@/src/core/enums';
-import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
-import { useTabStore } from '@/src/store/tabStore/tab.store';
+import ConnectionBox from '@/components/common/ConnectionInfo/ConnectionBox';
+import { TabMode } from '@/core/enums';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton, Stack } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
-import dynamic from 'next/dynamic';
+import { Suspense, lazy } from 'react';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 
-const Databases = dynamic(() => import('../Databases/Databases'), {
-  ssr: false
-});
+const Databases = lazy(() => import('../Databases/Databases'));
 
 export default function ConnectionInfo() {
   const { updateShowAddConnection, showSelectDatabase, updateShowSelectDatabase, currentConnection } =
@@ -23,7 +21,9 @@ export default function ConnectionInfo() {
 
   return (
     <Stack direction={'row'} justifyContent={'center'} alignItems={'center'}>
-      <Databases open={showSelectDatabase} />
+      <Suspense>
+        <Databases open={showSelectDatabase} />
+      </Suspense>
       <Grid md={4}>
         <Stack direction={'row'} spacing={2} justifyContent='flex-end'>
           <IconButton aria-label='connection' onClick={() => updateShowAddConnection(true)}>

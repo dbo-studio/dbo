@@ -1,5 +1,5 @@
-import api from '@/src/core/services/api';
-import { EditedRow } from '@/src/types';
+import api from '@/core/services/api';
+import { EditedRow } from '@/types';
 import { AUTOCOMPLETE_QUERY, RUN_QUERY, RUN_RAW_QUERY, UPDATE_QUERY } from './endpoints';
 import { transformRunQuery } from './transformers';
 import { AutoCompleteType, RunQueryType, RunRawQueryType, UpdateQueryType } from './types';

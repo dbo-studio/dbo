@@ -1,7 +1,7 @@
-import { useWindowSize } from '@/src/hooks/useWindowSize.hook';
-import { useDataStore } from '@/src/store/dataStore/data.store';
-import { ColumnType } from '@/src/types/Data';
+import { useWindowSize } from '@/hooks/useWindowSize.hook';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import { ColumnType } from '@/types/Data';
 import { Box, Theme, useTheme } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
 import ColumnItem from './ColumnItem';

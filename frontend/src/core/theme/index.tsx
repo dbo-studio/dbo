@@ -1,6 +1,6 @@
 'use client';
 
-import { appConfig } from '@/src/appConfig';
+import { appConfig } from '@/appConfig';
 import { ThemeProvider as MUIThemeProvider, ThemeOptions, createTheme } from '@mui/material/styles';
 import { ThemeModeEnum } from '../enums';
 import componentsOverride from './overrides';

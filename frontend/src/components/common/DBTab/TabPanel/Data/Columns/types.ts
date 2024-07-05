@@ -1,4 +1,4 @@
-import { ColumnType } from '@/src/types/Data';
+import { ColumnType } from '@/types/Data';
 
 export type ColumnItemProps = {
   column: ColumnType;

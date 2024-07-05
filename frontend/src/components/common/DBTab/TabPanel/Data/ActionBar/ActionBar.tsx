@@ -1,4 +1,4 @@
-import { useTabStore } from '@/src/store/tabStore/tab.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton, Stack, useTheme } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import CustomIcon from '../../../../../base/CustomIcon/CustomIcon';
@@ -50,12 +50,12 @@ export default function ActionBar() {
         <IconButton className='toggle-code-preview' onClick={() => handleToggle('query')}>
           <CustomIcon type='code' size='s' />
         </IconButton>
-        <IconButton aria-label='export'>
+        {/* <IconButton aria-label='export'>
           <CustomIcon type='export' size='s' />
         </IconButton>
         <IconButton aria-label='import'>
           <CustomIcon type='import' size='s' />
-        </IconButton>
+        </IconButton> */}
       </Grid>
     </Stack>
   );

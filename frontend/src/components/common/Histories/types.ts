@@ -1,5 +1,5 @@
-import { ContextMenuType } from '@/src/types';
-import { HistoryType } from '@/src/types/History';
+import { ContextMenuType } from '@/types';
+import { HistoryType } from '@/types/History';
 
 export type HistoryItemProps = {
   history: HistoryType;

@@ -4,7 +4,6 @@ interface IAppConfig {
   description: string;
   locale: string;
   direction: 'ltr' | 'rtl';
-  version: string;
 }
 
 export const appConfig: IAppConfig = {
@@ -12,6 +11,5 @@ export const appConfig: IAppConfig = {
   title: 'DBO Studio',
   description: 'Modern and easy to use SQL client',
   locale: 'en',
-  direction: 'ltr',
-  version: '0'
+  direction: 'ltr'
 };

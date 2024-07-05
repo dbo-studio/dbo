@@ -1,8 +1,8 @@
-import api from '@/src/api';
-import useAPI from '@/src/hooks/useApi.hook';
-import locales from '@/src/locales';
-import { useConfirmModalStore } from '@/src/store/confirmModal/confirmModal.store';
-import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
+import api from '@/api';
+import useAPI from '@/hooks/useApi.hook';
+import locales from '@/locales';
+import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { Box, Button, Stack } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';

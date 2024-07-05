@@ -1,4 +1,4 @@
-import { ColumnType } from '@/src/types';
+import { ColumnType } from '@/types';
 
 export type EditableType = {
   [key: string]: Editable;

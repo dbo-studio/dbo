@@ -1,4 +1,4 @@
-import CustomIcon from '@/src/components/base/CustomIcon/CustomIcon';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { IconButton, Typography } from '@mui/material';
 import { DatabaseItemProps } from '../types';
 import { DatabaseItemStyled } from './SelectedDatabase.styled';

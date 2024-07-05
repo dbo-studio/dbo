@@ -1,16 +1,17 @@
-import { TabMode } from '@/src/core/enums';
-import { TabType } from '@/src/types/Tab';
+import { TabMode } from '@/core/enums';
+import { TabType } from '@/types/Tab';
 import { v4 as uuidv4 } from 'uuid';
 import { StateCreator } from 'zustand';
 import { TabSettingSlice, TabStore } from '../types';
 
 const maxTabs = 15;
 
-export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [], [], TabSettingSlice> = (set, get) => ({
+export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [], [], TabSettingSlice> = (_, get) => ({
   addTab: (table: string, mode?: TabMode, query?: string) => {
+    mode = mode ? mode : TabMode.Data;
     const tabs = get().tabs;
 
-    const findTab = tabs.filter((t: TabType) => t.table == table);
+    const findTab = tabs.filter((t: TabType) => t.table == table && t.mode == mode);
     if (findTab.length > 0) {
       get().switchTab(findTab[0].id);
       return;
@@ -29,7 +30,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       query: tabQuery,
       filters: [],
       sorts: [],
-      columns:[],
+      columns: [],
       pagination: {
         page: 1,
         limit: 100,

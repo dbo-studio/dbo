@@ -1,4 +1,4 @@
-import api from '@/src/core/services/api';
+import api from '@/core/services/api';
 import { CREATE_SAVED_QUERY, GET_SAVED_QUERIES, UPDATE_SAVED_QUERY } from './endpoints';
 import { transformSavedQueries, transformSavedQuery } from './transformers';
 import { CreateSavedQueryType, UpdateSavedQueryType } from './types';

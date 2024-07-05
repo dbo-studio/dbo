@@ -1,9 +1,9 @@
-import api from '@/src/api';
-import { TabMode } from '@/src/core/enums';
-import useAPI from '@/src/hooks/useApi.hook';
-import { useConnectionStore } from '@/src/store/connectionStore/connection.store';
-import { useDataStore } from '@/src/store/dataStore/data.store';
-import { useTabStore } from '@/src/store/tabStore/tab.store';
+import api from '@/api';
+import { TabMode } from '@/core/enums';
+import useAPI from '@/hooks/useApi.hook';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useDataStore } from '@/store/dataStore/data.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, IconButton, Stack } from '@mui/material';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import LoadingIconButton from '../../base/LoadingIconButton/LoadingIconButton';
@@ -97,7 +97,7 @@ export default function StatusBarActions() {
     }
   };
 
-  const handleDiscardChanges =async () => {
+  const handleDiscardChanges = async () => {
     if (selectedTab?.mode == TabMode.Data) {
       updateSelectedRows([]);
       restoreEditedRows();

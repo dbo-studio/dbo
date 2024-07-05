@@ -54,6 +54,7 @@ func commandResponseBuilder(queryResult *pgsql.RawQueryResult, err error) runQue
 			NotNull:    false,
 			Length:     nil,
 			Default:    nil,
+			IsActive:   true,
 		},
 		{
 			Name:       "Message",
@@ -62,6 +63,7 @@ func commandResponseBuilder(queryResult *pgsql.RawQueryResult, err error) runQue
 			NotNull:    false,
 			Length:     nil,
 			Default:    nil,
+			IsActive:   true,
 		},
 		{
 			Name:       "Time",
@@ -70,6 +72,7 @@ func commandResponseBuilder(queryResult *pgsql.RawQueryResult, err error) runQue
 			NotNull:    false,
 			Length:     nil,
 			Default:    nil,
+			IsActive:   true,
 		},
 	}
 

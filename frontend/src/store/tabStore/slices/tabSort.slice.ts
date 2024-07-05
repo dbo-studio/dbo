@@ -1,4 +1,4 @@
-import { SortType } from '@/src/types';
+import { SortType } from '@/types';
 import { StateCreator } from 'zustand';
 import { TabSortSlice, TabStore } from '../types';
 

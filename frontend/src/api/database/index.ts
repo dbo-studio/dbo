@@ -1,4 +1,4 @@
-import api from '@/src/core/services/api';
+import api from '@/core/services/api';
 import { CREATE_DATABASE, DATABASE_META_DATA, DELETE_DATABASE } from './endpoints';
 import { transformDatabaseMetaData } from './transformers';
 import { createDatabaseType, deleteConnectionType } from './types';

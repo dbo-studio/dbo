@@ -1,4 +1,4 @@
-import { EventFor } from '@/src/types';
+import { EventFor } from '@/types';
 import { Box, InputBase, Typography, useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import { forwardRef, useEffect, useState } from 'react';

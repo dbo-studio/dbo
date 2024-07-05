@@ -1,5 +1,5 @@
-import { TabMode } from '@/src/core/enums';
-import { FilterType, SortType, TabType } from '@/src/types/Tab';
+import { TabMode } from '@/core/enums';
+import { FilterType, SortType, TabType } from '@/types/Tab';
 
 export type TabFilterSlice = {
   upsertFilters: (filter: FilterType) => Promise<void>;
@@ -26,7 +26,7 @@ export type TabQuerySlice = {
 
 export type TabDataSlice = {
   setShowColumns: (show: boolean) => void;
-  updateColumns: (columns:string[]) => void;
+  updateColumns: (columns: string[]) => void;
 };
 
 export type TabStore = {

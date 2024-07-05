@@ -1,6 +1,6 @@
-import api from '@/src/api';
-import useAPI from '@/src/hooks/useApi.hook';
-import { useSavedQueryStore } from '@/src/store/savedQueryStore/savedQuery.store';
+import api from '@/api';
+import useAPI from '@/hooks/useApi.hook';
+import { useSavedQueryStore } from '@/store/savedQueryStore/savedQuery.store';
 import { Box, ClickAwayListener, LinearProgress, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { v4 as uuid } from 'uuid';

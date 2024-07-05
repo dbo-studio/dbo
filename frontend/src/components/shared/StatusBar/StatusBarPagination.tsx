@@ -1,6 +1,6 @@
-import { TabMode } from '@/src/core/enums';
-import { useDataStore } from '@/src/store/dataStore/data.store';
-import { useTabStore } from '@/src/store/tabStore/tab.store';
+import { TabMode } from '@/core/enums';
+import { useDataStore } from '@/store/dataStore/data.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, IconButton, Typography, useTheme } from '@mui/material';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import PaginationSetting from './PaginationSetting';

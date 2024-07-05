@@ -1,10 +1,10 @@
 import { Checkbox, TableCell, Typography } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
 
-import FieldInput from '@/src/components/base/FieldInput/FieldInput';
-import SelectInput from '@/src/components/base/SelectInput/SelectInput';
-import SelectOption from '@/src/components/base/SelectInput/SelectOption';
-import { PgsqlTypes } from '@/src/core/constants';
+import FieldInput from '@/components/base/FieldInput/FieldInput';
+import SelectInput from '@/components/base/SelectInput/SelectInput';
+import SelectOption from '@/components/base/SelectInput/SelectOption';
+import { PgsqlTypes } from '@/core/constants';
 import { clone } from 'lodash';
 import { useState } from 'react';
 import { ColumnItemStyled } from './Columns.styled';

@@ -1,4 +1,4 @@
-import { useTabStore } from '@/src/store/tabStore/tab.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, Theme, useTheme } from '@mui/material';
 import BaseEditor from '../../../../../base/CodeEditor/BaseEditor';
 
