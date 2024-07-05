@@ -56,6 +56,7 @@ jobs:
           cache: true
       - name: build go
         run: |
+          cd ./backend && go mod download
           bash ./docs/scripts/build_backend.sh
 
       - name: install Rust stable
