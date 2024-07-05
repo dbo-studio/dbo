@@ -49,13 +49,15 @@ jobs:
           cache: "npm" # Set this to npm, yarn or pnpm.
           cache-dependency-path: ./frontend/package-lock.json
 
-      - name: build go
-        uses: actions/setup-go@v5
+      - uses: actions/setup-go@v5
         with:
           go-version: 1.22
           check-latest: true
           cache: true
-        run: ./docs/scripts/build_backend.sh
+      - name: build go
+        working-directory: ./backend
+        run: |
+          ./docs/scripts/build_backend.sh
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
