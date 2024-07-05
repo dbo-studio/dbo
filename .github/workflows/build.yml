@@ -55,7 +55,6 @@ jobs:
           check-latest: true
           cache: true
       - name: build go
-        working-directory: ./backend
         run: |
           ./docs/scripts/build_backend.sh
 
