@@ -28,7 +28,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.dbo.dev",
+      "identifier": "com.dbostudio.dev",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
@@ -51,7 +51,10 @@
       "csp": null
     },
     "updater": {
-      "active": false
+      "active": true,
+			"endpoints": ["https://github.com/dbo-studio/dbo/blob/release/docs/scripts/releases.json"],
+			"dialog": true,
+			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEU2NzZEOTdDMkU4RTVFOTIKUldTU1hvNHVmTmwyNW9mbE9CK0liUlNKZmIxbnhhRlVIYm81QlZwUG9xUXA0MEZ0VW4vdjZiWW0K"
     },
     "windows": [
       {
