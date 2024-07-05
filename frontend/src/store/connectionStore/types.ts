@@ -1,4 +1,4 @@
-import { ConnectionType } from '@/src/types';
+import { ConnectionType } from '@/types';
 
 export type ConnectionStore = {
   showAddConnection: boolean;

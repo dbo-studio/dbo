@@ -1,4 +1,4 @@
-import { useWindowSize } from '@/src/hooks/useWindowSize.hook';
+import { useWindowSize } from '@/hooks/useWindowSize.hook';
 import DBTab from '../../common/DBTab/DBTab';
 import { CenterContainerStyled } from './Container.styled';
 

@@ -1,4 +1,4 @@
-import { HistoryType } from '@/src/types/History';
+import { HistoryType } from '@/types/History';
 
 export const transformHistory = (data: any): HistoryType => {
   return {

@@ -1,7 +1,7 @@
 # Base layer
 FROM node:20-alpine
 
-ENV NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL}
+ENV VITE_PUBLIC_SERVER_URL=${VITE_PUBLIC_SERVER_URL}
 
 # Set the working directory 
 WORKDIR /app
@@ -9,10 +9,7 @@ WORKDIR /app
 # Copy all files 
 COPY . .
 
-# Install pnpm
-RUN npm i -g pnpm
-
 # Install 
-RUN pnpm install
+RUN npm install
 
-CMD ["pnpm", "next", "dev"]
+CMD ["npm", "run", "dev"]

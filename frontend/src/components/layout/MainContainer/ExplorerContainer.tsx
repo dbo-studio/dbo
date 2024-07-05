@@ -1,7 +1,7 @@
-import DBTreeView from '@/src/components/common/DBTreeView/DBTreeView';
-import { useWindowSize } from '@/src/hooks/useWindowSize.hook';
-import locales from '@/src/locales';
-import { useSettingStore } from '@/src/store/settingStore/setting.store';
+import DBTreeView from '@/components/common/DBTreeView/DBTreeView';
+import { useWindowSize } from '@/hooks/useWindowSize.hook';
+import locales from '@/locales';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Tab, Tabs } from '@mui/material';
 import { useMemo, useState } from 'react';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';

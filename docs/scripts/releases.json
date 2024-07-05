@@ -1,0 +1,23 @@
+{
+    "version": "0.0.3",
+    "notes": "See the assets to download this version and install.",
+    "pub_date": "2024-07-05T15:00:00",
+    "platforms": {
+      "darwin-x86_64": {
+        "signature": "",
+        "url": "https://github.com/dbo-studio/dbo/releases/download/v0.0.3/DBO_x64.app.tar.gz"
+      },
+      "darwin-aarch64": {
+        "signature": "",
+        "url": "https://github.com/dbo-studio/dbo/releases/download/v0.0.3/DBO_aarch64.app.tar.gz"
+      },
+      "linux-x86_64": {
+        "signature": "",
+        "url": "https://github.com/dbo-studio/dbo/releases/download/v0.0.3/dbo_0.0.3_amd64.AppImage.tar.gz"
+      },
+      "windows-x86_64": {
+        "signature": "",
+        "url": "https://github.com/dbo-studio/dbo/releases/download/v0.0.3/DBO_0.0.3_x64_en-US.msi.zip"
+      }
+    }
+  }

@@ -1,7 +1,7 @@
-import locales from '@/src/locales';
-import { useDataStore } from '@/src/store/dataStore/data.store';
-import { useTabStore } from '@/src/store/tabStore/tab.store';
-import { SortType } from '@/src/types';
+import locales from '@/locales';
+import { useDataStore } from '@/store/dataStore/data.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
+import { SortType } from '@/types';
 import { Box, Button, Theme, useTheme } from '@mui/material';
 import { v4 as uuid } from 'uuid';
 import CustomIcon from '../../../../../base/CustomIcon/CustomIcon';

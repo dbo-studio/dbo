@@ -1,5 +1,5 @@
-import Search from '@/src/components/base/Search/Search';
-import { useDataStore } from '@/src/store/dataStore/data.store';
+import Search from '@/components/base/Search/Search';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { Box } from '@mui/material';
 import { useEffect, useState } from 'react';
 import FieldInput from '../../base/FieldInput/FieldInput';

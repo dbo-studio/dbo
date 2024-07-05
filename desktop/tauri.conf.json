@@ -1,0 +1,69 @@
+{
+  "build": {
+    "beforeBuildCommand": "VITE_ENV=tauri npm --prefix frontend run build",
+    "beforeDevCommand": "VITE_ENV=tauri npm --prefix frontend run dev",
+    "devPath": "http://localhost:3000",
+    "distDir": "../frontend/dist"
+  },
+  "package": {
+    "productName": "DBO Studio",
+    "version": "0.0.3"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": true
+    },
+    "bundle": {
+      "active": true,
+      "category": "public.app-category.developer-tools",
+      "copyright": "The MIT License (MIT) Copyright (c) 2022 - present, DBO Studio",
+      "deb": {
+        "depends": []
+      },
+      "externalBin": ["assets/dbo"],
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ],
+      "identifier": "com.dbostudio.dev",
+      "longDescription": "",
+      "macOS": {
+        "entitlements": null,
+        "exceptionDomain": "",
+        "frameworks": [],
+        "providerShortName": null,
+        "signingIdentity": null,
+        "license": "../LICENSE"
+      },
+      "resources": [],
+      "shortDescription": "Modern and easy to use SQL client",
+      "targets": ["deb","nsis","dmg","updater","appimage"],
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
+    },
+    "security": {
+      "csp": null
+    },
+    "updater": {
+      "active": true,
+			"endpoints": ["https://github.com/dbo-studio/dbo/blob/release/docs/scripts/releases.json"],
+			"dialog": true,
+			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEU2NzZEOTdDMkU4RTVFOTIKUldTU1hvNHVmTmwyNW9mbE9CK0liUlNKZmIxbnhhRlVIYm81QlZwUG9xUXA0MEZ0VW4vdjZiWW0K"
+    },
+    "windows": [
+      {
+        "height": 600,
+        "resizable": true,
+        "title": "DBO Studio",
+        "width": 1200,
+        "center": true
+      }
+    ]
+  }
+}

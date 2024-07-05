@@ -1,4 +1,4 @@
-import { EditedRow, RowType } from '@/src/types';
+import { EditedRow, RowType } from '@/types';
 import { pullAt } from 'lodash';
 import { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';

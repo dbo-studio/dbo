@@ -1,4 +1,4 @@
-import { useTabStore } from '@/src/store/tabStore/tab.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton } from '@mui/material';
 import CustomIcon from '../../../../../base/CustomIcon/CustomIcon';
 import { RemoveFilterButtonProps } from './types';

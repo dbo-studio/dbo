@@ -10,7 +10,7 @@ services:
       APP_PORT: "8080"
       APP_ENV: "local"
       DB_TEST_CONNECTION: "pgsql"
-      DB_TEST_HOST: "localhost"
+      DB_TEST_HOST: "sample-pgsql"
       DB_TEST_PORT: "5432"
       DB_TEST_DATABASE: "default"
       DB_TEST_USERNAME: "default"
@@ -23,9 +23,12 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.dev
     volumes:
-      - ./frontend:/app
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/index.html
+      - ./frontend/package.json:/package.json
     environment:
-      NEXT_PUBLIC_SERVER_URL: "http://localhost:8080/api"
+      VITE_PUBLIC_SERVER_URL: "http://localhost:8080/api"
       NODE_ENV: "development"
     ports:
       - "3000:3000"

@@ -1,4 +1,4 @@
-import { variables } from '@/src/core/theme/variables';
+import { variables } from '@/core/theme/variables';
 import { Box, Modal, styled } from '@mui/material';
 
 export const ModalStyled = styled(Modal)(() => ({

@@ -1,3 +1,8 @@
+export type connectionDetailType = {
+  connectionID: string | number;
+  fromCache: boolean;
+};
+
 export type createConnectionType = {
   name: string;
   host: string;

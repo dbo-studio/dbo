@@ -1,6 +1,8 @@
 package app
 
 import (
+	"github.com/khodemobin/dbo/cache"
+	"github.com/khodemobin/dbo/cache/sqlite"
 	"github.com/khodemobin/dbo/config"
 	"github.com/khodemobin/dbo/db"
 	"github.com/khodemobin/dbo/driver"
@@ -15,6 +17,7 @@ type AppContainer struct {
 	Log     logger.Logger
 	Config  *config.Config
 	Drivers *driver.DriverEngine
+	Cache   cache.Cache
 }
 
 var Container *AppContainer = nil
@@ -23,7 +26,7 @@ func New() {
 	cfg := config.New()
 	appLogger := zap.New(cfg)
 	appDB := db.New(cfg, appLogger).DB
-	err := appDB.AutoMigrate(&model.Connection{}, &model.SavedQuery{}, &model.History{})
+	err := appDB.AutoMigrate(&model.CacheItem{}, &model.Connection{}, &model.SavedQuery{}, &model.History{})
 	if err != nil {
 		appLogger.Fatal(err)
 	}
@@ -33,6 +36,7 @@ func New() {
 		Config:  cfg,
 		Log:     appLogger,
 		Drivers: driver.InitDrivers(appDB),
+		Cache:   sqlite.NewSQLiteCache(appDB),
 	}
 }
 
@@ -50,4 +54,8 @@ func Config() *config.Config {
 
 func Drivers() *driver.DriverEngine {
 	return Container.Drivers
+}
+
+func Cache() cache.Cache {
+	return Container.Cache
 }

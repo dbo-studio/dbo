@@ -1,7 +1,7 @@
-import { TabMode } from '@/src/core/enums';
-import { handelRowChangeLog } from '@/src/core/utils';
-import { useDataStore } from '@/src/store/dataStore/data.store';
-import { useTabStore } from '@/src/store/tabStore/tab.store';
+import { TabMode } from '@/core/enums';
+import { handelRowChangeLog } from '@/core/utils';
+import { useDataStore } from '@/store/dataStore/data.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, Checkbox, CircularProgress } from '@mui/material';
 import React, { useEffect } from 'react';
 import DataGrid, { RenderCheckboxProps, RowsChangeData } from 'react-data-grid';

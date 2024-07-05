@@ -1,4 +1,4 @@
-import { ContextMenuType, SavedQueryType } from '@/src/types';
+import { ContextMenuType, SavedQueryType } from '@/types';
 
 export type SavedQueryItemProps = {
   query: SavedQueryType;

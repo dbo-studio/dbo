@@ -1,4 +1,4 @@
-import { variables } from '@/src/core/theme/variables';
+import { variables } from '@/core/theme/variables';
 import { Box, styled } from '@mui/material';
 
 export const ColumnItemStyled = styled(Box)(({ theme }) => ({

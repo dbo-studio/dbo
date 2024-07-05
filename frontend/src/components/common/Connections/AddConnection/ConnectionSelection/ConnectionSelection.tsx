@@ -1,5 +1,5 @@
-import { useUUID } from '@/src/hooks';
-import locales from '@/src/locales';
+import { useUUID } from '@/hooks';
+import locales from '@/locales';
 import { Box, Button } from '@mui/material';
 import { useState } from 'react';
 import Search from '../../../../base/Search/Search';

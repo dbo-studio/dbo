@@ -1,4 +1,4 @@
-import { EventFor } from '@/src/types';
+import { EventFor } from '@/types';
 import { Box } from '@mui/material';
 import { useEffect, useState } from 'react';
 import ResizableToggle from './ResizableToggle';

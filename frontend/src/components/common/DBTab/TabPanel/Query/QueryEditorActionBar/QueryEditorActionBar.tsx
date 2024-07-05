@@ -1,11 +1,11 @@
+import api from '@/api';
 import { shortcuts } from '@/core/utils';
-import { useShortcut } from '@/hooks/useShortcut';
-import api from '@/src/api';
-import useAPI from '@/src/hooks/useApi.hook';
-import locales from '@/src/locales';
-import { useDataStore } from '@/src/store/dataStore/data.store';
-import { useSavedQueryStore } from '@/src/store/savedQueryStore/savedQuery.store';
-import { useTabStore } from '@/src/store/tabStore/tab.store';
+import { useShortcut } from '@/hooks';
+import useAPI from '@/hooks/useApi.hook';
+import locales from '@/locales';
+import { useDataStore } from '@/store/dataStore/data.store';
+import { useSavedQueryStore } from '@/store/savedQueryStore/savedQuery.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { Button, Stack, Tooltip, useTheme } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { minify } from 'pgsql-minify';

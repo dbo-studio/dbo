@@ -1,4 +1,4 @@
-import { SavedQueryType } from '@/src/types';
+import { SavedQueryType } from '@/types';
 
 export interface SavedQueryResponseType extends SavedQueryType {}
 

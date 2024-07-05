@@ -8,7 +8,9 @@ export default function TextRenderCell<TRow, TSummaryRow>({ row, column }: Custo
 
   return (
     <Tooltip title={value} placement={'bottom'}>
-      <Typography maxWidth={400}>{value}</Typography>
+      <Typography variant={'body2'} maxWidth={400}>
+        {value}
+      </Typography>
     </Tooltip>
   );
 }

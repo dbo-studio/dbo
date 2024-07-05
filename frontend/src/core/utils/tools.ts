@@ -23,13 +23,13 @@ export const tools = {
   },
 
   isMac: () => {
-    if (typeof window === 'undefined') {
-      return false;
-    }
-
     const { userAgent } = navigator;
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     return /Mac/i.test(userAgent) || (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream);
+  },
+  isTauri: () => {
+    const env = import.meta.env.VITE_ENV;
+    return env && env == 'tauri';
   }
 };

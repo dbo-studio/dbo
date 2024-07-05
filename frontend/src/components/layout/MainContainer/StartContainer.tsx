@@ -1,5 +1,5 @@
-import Connections from '@/src/components/common/Connections/Connections/Connections';
-import { useWindowSize } from '@/src/hooks/useWindowSize.hook';
+import Connections from '@/components/common/Connections/Connections/Connections';
+import { useWindowSize } from '@/hooks/useWindowSize.hook';
 import { StartContainerStyled } from './Container.styled';
 
 export default function StartContainer() {

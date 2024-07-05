@@ -1,4 +1,4 @@
-import api from '@/src/core/services/api';
+import api from '@/core/services/api';
 import { GET_HISTORIES } from './endpoints';
 import { transformHistories } from './transformers';
 

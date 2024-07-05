@@ -1,5 +1,5 @@
-import { constants } from '@/src/core/constants';
-import { useSettingStore } from '@/src/store/settingStore/setting.store';
+import { constants } from '@/core/constants';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import { IconButton, Stack } from '@mui/material';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 

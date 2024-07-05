@@ -1,10 +1,10 @@
-import CodeEditor from '@/src/components/base/CodeEditor/CodeEditor';
-import DBDataGrid from '@/src/components/shared/DBDataGrid/DBDataGrid';
-import { useClickAway } from '@/src/hooks/useClickAway.hook';
-import { useDebounce } from '@/src/hooks/useDebounce.hook';
-import { useWindowSize } from '@/src/hooks/useWindowSize.hook';
-import { useDataStore } from '@/src/store/dataStore/data.store';
-import { useTabStore } from '@/src/store/tabStore/tab.store';
+import CodeEditor from '@/components/base/CodeEditor/CodeEditor';
+import DBDataGrid from '@/components/shared/DBDataGrid/DBDataGrid';
+import { useClickAway } from '@/hooks/useClickAway.hook';
+import { useDebounce } from '@/hooks/useDebounce.hook';
+import { useWindowSize } from '@/hooks/useWindowSize.hook';
+import { useDataStore } from '@/store/dataStore/data.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 

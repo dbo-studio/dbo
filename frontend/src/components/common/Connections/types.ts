@@ -1,4 +1,4 @@
-import { ConnectionType, ContextMenuType } from '@/src/types';
+import { ConnectionType, ContextMenuType } from '@/types';
 import { Theme } from '@mui/material';
 
 export type ConnectionItemStyledProps = {
