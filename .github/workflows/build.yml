@@ -55,8 +55,7 @@ jobs:
           go-version: 1.22
           check-latest: true
           cache: true
-        run: |
-          ./docs/scripts/build_backend.sh
+        run: ./docs/scripts/build_backend.sh
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
