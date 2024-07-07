@@ -74,14 +74,16 @@ jobs:
         run: npm install # change this to npm or pnpm depending on which one you use.
         working-directory: ./frontend
 
-      - uses: tauri-apps/tauri-action@v0.4.0
+      - uses: tauri-apps/tauri-action@v0.5.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: __VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: "__VERSION__"
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+          tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+          releaseName: "v__VERSION__"
           releaseBody: "See the assets to download this version and install."
           releaseDraft: true
           args: ${{ matrix.settings.args }}
           projectPath: "./desktop"
           includeUpdaterJson: true
+          appVersion: $(cat docs/scripts/VERSION)
