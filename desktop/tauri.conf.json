@@ -22,11 +22,11 @@
         "sidecar": true,
         "scope": [
           {
-            "name": "bin/dbo",
+            "name": "bin/dbo-bin",
             "sidecar": true
           },
           {
-            "name": "dbo",
+            "name": "dbo-bin",
             "sidecar": true
           }
         ]
@@ -68,7 +68,7 @@
       "deb": {
         "depends": []
       },
-      "externalBin": ["bin/dbo"],
+      "externalBin": ["bin/dbo-bin"],
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",

@@ -21,6 +21,5 @@ echo "${GREEN}Completed building DBO backend."
 
 echo ""
 echo "Step 2 - start DBO desktop..."
-
 cd "${DESKTOP_DIR}"
 tauri dev

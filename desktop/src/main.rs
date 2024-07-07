@@ -1,6 +1,5 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-// mod window;
 use std::{env, net::TcpListener};
 
 use tauri::api::process::{Command, CommandEvent};
@@ -8,7 +7,7 @@ use tauri::api::process::{Command, CommandEvent};
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![get_backend_host])
-        .setup(|app| {
+        .setup(|_app| {
             env::set_var("APP_ENV", "production");
             let port = find_free_port();
             env::set_var("APP_PORT", port.to_string());
@@ -47,20 +46,20 @@ fn find_free_port() -> u16 {
 }
 
 fn run_server() {
-    let (mut rx, mut child) = Command::new_sidecar("dbo")
-        .expect("failed to create `dbo` binary command")
+    let (mut rx, mut child) = Command::new_sidecar("dbo-bin")
+        .expect("failed to create `dbo-bin` binary command")
         .spawn()
         .expect("Failed to spawn sidecar");
 
     tauri::async_runtime::spawn(async move {
         while let Some(event) = rx.recv().await {
             if let CommandEvent::Stdout(line) = event {
-                println!("Received message: {}", line);
+                println!("Received message: {} ", line);
                 if let Err(e) = child.write("message from Rust\n".as_bytes()) {
-                    eprintln!("Failed to write to child stdin: {}", e);
+                    println!("Failed to write to child stdin: {}", e);
                 }
             } else {
-                println!("Received non-stdout event: {:?}", event);
+                println!("Received non-stdout event: {:?} ", event);
             }
         }
     });
