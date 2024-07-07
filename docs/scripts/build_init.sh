@@ -94,7 +94,7 @@ get_platform_name() {
     case "$OS" in
         Darwin) OS="apple-darwin" ;;
         Linux) OS="unknown-linux-gnu" ;;
-        CYGWIN*|MINGW32*|MSYS*|MINGW*) OS="windows" ;;
+        CYGWIN*|MINGW32*|MSYS*|MINGW*) OS="pc-windows-msvc.exe" ;;
         *) echo "Unsupported OS: $OS"; return 1 ;;
     esac
 
@@ -103,4 +103,10 @@ get_platform_name() {
 
     # Return the platform-specific name
     echo "$PLATFORM_NAME"
+}
+
+build_backend(){
+    cd "${BACKEND_DIR}" && go mod download
+    CGO_ENABLED=1 go build -p=8 --tags "release" -ldflags "-w" -o "${DESKTOP_DIR}/bin/dbo-bin-$(get_platform_name)" "${BACKEND_DIR}"/*.go
+    echo build dbo-bin-$(get_platform_name)
 }

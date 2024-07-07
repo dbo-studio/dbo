@@ -21,10 +21,8 @@ jobs:
         settings:
           - platform: "macos-14" # for Arm based macs (M1 and above).
             args: "--target aarch64-apple-darwin"
-          - platform: "macos-14" # for Intel based macs.
+          - platform: "macos-13" # for Intel based macs.
             args: "--target x86_64-apple-darwin"
-          - platform: "macos-14" # for Intel based macs.
-            args: "--target universal-apple-darwin"
           - platform: "ubuntu-22.04" # for Tauri v1 you could replace this with ubuntu-20.04.
             args: ""
           - platform: "windows-latest"
@@ -48,6 +46,15 @@ jobs:
           node-version: lts/*
           cache: "npm" # Set this to npm, yarn or pnpm.
           cache-dependency-path: ./frontend/package-lock.json
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.22
+          check-latest: true
+          cache: true
+      - name: build go
+        run: |
+          bash ./docs/scripts/build_backend.sh
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
