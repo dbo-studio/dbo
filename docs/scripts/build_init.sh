@@ -76,8 +76,7 @@ mkdir_output() {
 get_platform_name() {
    # Get the architecture
     ARCH=$(uname -m)
-    echo "arch is $ARCH"
-
+    
     # Map the architecture to desired format
     case "$ARCH" in
         x86_64) ARCH="x86_64" ;;
