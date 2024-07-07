@@ -17,7 +17,6 @@ check_typescript
 
 echo ""
 echo "Step 1 - building DBO Backend..."
-
 build_backend
 echo "${GREEN}Completed building DBO backend."
 
