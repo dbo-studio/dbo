@@ -2,7 +2,6 @@ name: "DBO App Publish"
 
 on:
   push:
-    branches: [release]
     tags:
       - "*"
   workflow_dispatch:
@@ -51,7 +50,6 @@ jobs:
         with:
           go-version: 1.22
           check-latest: true
-          cache: true
       - name: build go
         run: |
           bash ./docs/scripts/build_backend.sh
@@ -76,13 +74,14 @@ jobs:
         run: npm install # change this to npm or pnpm depending on which one you use.
         working-directory: ./frontend
 
-      - uses: tauri-apps/tauri-action@v0
+      - uses: tauri-apps/tauri-action@v0.4.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: dbo-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: "App v__VERSION__"
+          tagName: __VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+          releaseName: "__VERSION__"
           releaseBody: "See the assets to download this version and install."
           releaseDraft: true
-          prerelease: false
           args: ${{ matrix.settings.args }}
+          projectPath: "./desktop"
+          includeUpdaterJson: true
