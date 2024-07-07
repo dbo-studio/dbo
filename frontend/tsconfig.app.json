@@ -39,7 +39,7 @@
       }
   },
   // "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/types/*.ts","../desktop/**/*.ts"],
-  "include": ["src","**/*.ts", "**/*.tsx", "src/types/*.ts","../desktop/**/*.ts"],
+  "include": ["src"],
   "exclude": [
     "node_modules"
   ]
