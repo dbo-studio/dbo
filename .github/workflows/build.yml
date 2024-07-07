@@ -2,7 +2,7 @@ name: "DBO App Publish"
 
 on:
   push:
-    branches: [release, dev]
+    branches: [release]
     tags:
       - "*"
   workflow_dispatch:
