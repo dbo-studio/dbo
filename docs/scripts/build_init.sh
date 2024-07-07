@@ -76,7 +76,7 @@ mkdir_output() {
 get_platform_name() {
    # Get the architecture
     ARCH=$(uname -m)
-    
+
     # Map the architecture to desired format
     case "$ARCH" in
         x86_64) ARCH="x86_64" ;;
@@ -94,7 +94,7 @@ get_platform_name() {
     case "$OS" in
         Darwin) OS="apple-darwin" ;;
         Linux) OS="unknown-linux-gnu" ;;
-        CYGWIN*|MINGW32*|MSYS*|MINGW*) OS="windows" ;;
+        CYGWIN*|MINGW32*|MSYS*|MINGW*) OS="windows-msvc.exe" ;;
         *) echo "Unsupported OS: $OS"; return 1 ;;
     esac
 
