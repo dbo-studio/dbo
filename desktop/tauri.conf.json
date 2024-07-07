@@ -24,6 +24,10 @@
           {
             "name": "bin/dbo",
             "sidecar": true
+          },
+          {
+            "name": "dbo",
+            "sidecar": true
           }
         ]
       },

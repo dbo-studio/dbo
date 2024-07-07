@@ -29,7 +29,7 @@ export const tools = {
     return /Mac/i.test(userAgent) || (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream);
   },
   isTauri: () => {
-    const env = import.meta.env.VITE_ENV;
-    return env && env == 'tauri';
+    const env = import.meta.env.TAURI_PLATFORM;
+    return env !== undefined;
   }
 };
