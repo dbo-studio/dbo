@@ -79,7 +79,7 @@ jobs:
           releaseId: ${{ needs.create-release.outputs.release_id }}
           tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: "v__VERSION__"
-          releaseBody: "See the assets to download this version and install."
+          releaseBody: "See full change log plaese see https://github.com/dbo-studio/dbo/releases"
           releaseDraft: true
           args: ${{ matrix.settings.args }}
           projectPath: "./desktop"
