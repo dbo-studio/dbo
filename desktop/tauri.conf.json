@@ -84,7 +84,7 @@
         "frameworks": [],
         "providerShortName": null,
         "signingIdentity": null,
-        "license": "../LICENSE"
+        "license": ""
       },
       "resources": [],
       "shortDescription": "Modern and easy to use SQL client",
