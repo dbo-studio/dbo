@@ -1,4 +1,4 @@
-import CodeEditor from '@/components/base/CodeEditor/CodeEditor';
+import CodeEditorV2 from '@/components/base/CodeEditorV2/CodeEditorV2';
 import DBDataGrid from '@/components/shared/DBDataGrid/DBDataGrid';
 import { useClickAway } from '@/hooks/useClickAway.hook';
 import { useDebounce } from '@/hooks/useDebounce.hook';
@@ -40,7 +40,8 @@ export default function QueryEditor() {
   return (
     <Box ref={ref} display={'flex'} flexDirection={'column'} height={windowSize.height}>
       <Box flex={1} borderBottom={`1px solid ${theme.palette.divider}`}>
-        <CodeEditor autocomplete={autoComplete} value={selectedTab?.query} onChange={handleChangeValue} />
+        <CodeEditorV2 value={selectedTab?.query} onChange={handleChangeValue} />
+        {/* <CodeEditor autocomplete={autoComplete} value={selectedTab?.query} onChange={handleChangeValue} /> */}
       </Box>
       {getRows() && getRows().length > 0 && <DBDataGrid />}
     </Box>
