@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "DBO",
-    "version": "0.0.3"
+    "version": "0.0.4"
   },
   "tauri": {
     "allowlist": {
@@ -83,8 +83,7 @@
         "exceptionDomain": "",
         "frameworks": [],
         "providerShortName": null,
-        "signingIdentity": null,
-        "license": ""
+        "signingIdentity": null
       },
       "resources": [],
       "shortDescription": "Modern and easy to use SQL client",
