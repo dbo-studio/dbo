@@ -17,7 +17,8 @@ tauri-build = { version = "1.5.2", features = [] }
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.6.5", features = [ "updater", "process-relaunch", "clipboard-write-text", "path-all", "notification-all", "fs-all", "window-set-focus", "window-close", "shell-all", "os-all", "dialog-open", "dialog-save", "window-start-dragging", "process-exit", "process-command-api"] }
+tauri = { version = "1.7.1", features = [ "updater", "process-relaunch", "clipboard-write-text", "path-all", "notification-all", "fs-all", "window-set-focus", "window-close", "shell-all", "os-all", "dialog-open", "dialog-save", "window-start-dragging", "process-exit", "process-command-api"] }
+fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.
