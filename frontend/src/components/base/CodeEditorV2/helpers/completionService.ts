@@ -1,32 +1,44 @@
-import { languages } from 'monaco-editor/esm/vs/editor/editor.api';
-import { CompletionService, ICompletionItem } from 'monaco-sql-languages/esm/languageService';
-import { EntityContextType } from 'monaco-sql-languages/esm/main';
+import { languages, Position } from 'monaco-editor/esm/vs/editor/editor.api';
+import { CompletionService, EntityContextType, ICompletionItem } from 'monaco-sql-languages/esm/main';
 
-import { getCatalogs, getDataBases, getSchemas, getTables, getViews } from './dbMetaProvider';
+import { editor } from 'monaco-editor';
+import {
+  getCatalogs,
+  getColumns,
+  getDataBasesAndSchemas,
+  getTables,
+  getViews
+} from './dbMetaProvider';
 
 const haveCatalogSQLType = (languageId: string) => {
   return ['flinksql', 'trinosql'].includes(languageId.toLowerCase());
 };
 
-const namedSchemaSQLType = (languageId: string) => {
-  return ['trinosql', 'hivesql', 'sparksql'].includes(languageId);
-};
+// const namedSchemaSQLType = (languageId: string) => {
+//   return ['trinosql', 'hivesql', 'sparksql', 'pgsql'].includes(languageId);
+// };
 
-export const completionService: CompletionService = async function (model, _position, _completionContext, suggestions) {
+export const completionService: CompletionService = async function (
+  model: editor.ITextModel,
+  position: Position,
+  _completionContext,
+  suggestions
+) {
   if (!suggestions) {
     return Promise.resolve([]);
   }
   const languageId = model.getLanguageId();
 
   const haveCatalog = haveCatalogSQLType(languageId);
-  const getDBOrSchema = namedSchemaSQLType(languageId) ? getSchemas : getDataBases;
+  // const getDBOrSchema = namedSchemaSQLType(languageId) ? getSchemas : getDataBases;
+  const getDBOrSchema = getDataBasesAndSchemas;
 
   const { keywords, syntax } = suggestions;
 
   const keywordsCompletionItems: ICompletionItem[] = keywords.map((kw) => ({
     label: kw,
     kind: languages.CompletionItemKind.Keyword,
-    detail: '关键字',
+    detail: 'Keywords',
     sortText: '2' + kw
   }));
 
@@ -39,10 +51,11 @@ export const completionService: CompletionService = async function (model, _posi
   let existTableInDbCompletions = false;
   let existViewCompletions = false;
   let existViewInDbCompletions = false;
+  let existColumnCompletions = false;
+  let existColumnInTableCompletions = false;
 
   for (let i = 0; i < syntax.length; i++) {
     const { syntaxContextType, wordRanges } = syntax[i];
-
     // e.g. words -> ['cat', '.', 'database', '.', 'table']
     const words = wordRanges.map((wr) => wr.text);
     const wordCount = words.length;
@@ -68,6 +81,7 @@ export const completionService: CompletionService = async function (model, _posi
         syntaxCompletionItems = syntaxCompletionItems.concat(await getDBOrSchema(languageId));
         existDatabaseCompletions = true;
       }
+
       if (!existDatabaseInCatCompletions && haveCatalog && wordCount >= 2 && wordCount <= 3) {
         syntaxCompletionItems = syntaxCompletionItems.concat(await getDBOrSchema(languageId, words[0]));
         existDatabaseInCatCompletions = true;
@@ -142,6 +156,35 @@ export const completionService: CompletionService = async function (model, _posi
         }
       }
     }
+
+    if (syntaxContextType == EntityContextType.COLUMN || syntaxContextType == EntityContextType.FUNCTION) {
+      const tableName = getCurrentTableName(model, position);
+
+      if (!existColumnCompletions && !tableName) {
+        syntaxCompletionItems = syntaxCompletionItems.concat(await getColumns(languageId, undefined));
+        existColumnCompletions = true;
+      }
+
+      if (!existColumnInTableCompletions && tableName) {
+        syntaxCompletionItems = syntaxCompletionItems.concat(await getColumns(languageId, tableName));
+        existColumnInTableCompletions = true;
+      }
+    }
   }
   return [...syntaxCompletionItems, ...keywordsCompletionItems];
 };
+
+function getCurrentTableName(model: editor.ITextModel, position: Position): string | null {
+  const currentLineContent = model.getLineContent(position.lineNumber);
+  const previousLineContent = position.lineNumber > 1 ? model.getLineContent(position.lineNumber - 1) : '';
+  const sqlText = previousLineContent + ' ' + currentLineContent;
+
+  const tableNameRegex = /from\s+([a-zA-Z_][\w]*)/i;
+  const match = tableNameRegex.exec(sqlText);
+
+  if (match && match[1]) {
+    return match[1];
+  }
+
+  return null;
+}

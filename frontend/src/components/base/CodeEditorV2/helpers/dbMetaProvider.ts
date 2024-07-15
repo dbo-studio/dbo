@@ -1,45 +1,46 @@
+import api from '@/api';
+import { AutoCompleteType } from '@/api/query/types.ts';
 import { languages } from 'monaco-editor/esm/vs/editor/editor.api';
-
-const catalogList = ['mock_catalog_1', 'mock_catalog_2', 'mock_catalog_3'];
-const schemaList = ['mock_schema_1', 'mock_schema_2', 'mock_schema_3'];
-const databaseList = ['mock_database_1', 'mock_database_2', 'mock_database_3'];
-const tableList = ['mock_table1', 'mock_table2', 'mock_table3'];
-const viewList = ['mock_view1', 'mock_view2', 'mock_view3'];
-
-const tmpDatabaseList = ['current_catalog_db1', 'current_catalog_db2', 'current_catalog_db3'];
-const tmpSchemaList = ['current_catalog_schema1', 'current_catalog_schema2', 'current_catalog_schema3'];
-const tmpTableList = ['current_db_table1', 'current_db_table2', 'current_db_table3'];
-const tmpViewList = ['current_db_view1', 'current_db_view2', 'current_db_view3'];
+import { ICompletionItem } from 'monaco-sql-languages';
 
 const prefixLabel = (languageId: string, text: string) => {
   const prefix = languageId ? languageId.replace(/sql/gi, '').toLocaleLowerCase() : '';
   return prefix ? `${prefix}_${text}` : text;
 };
 
-/**
- * 获取所有的 catalog
- */
+let databaseCompletions: ICompletionItem[] | undefined = undefined;
+let schemaCompletions: ICompletionItem[] | undefined = undefined;
+let viewCompletions: ICompletionItem[] | undefined = undefined;
+const tableCompletions: {
+  [key: string]: ICompletionItem[];
+}[] = [];
+
 export function getCatalogs(languageId: string) {
-  const catCompletions = catalogList.map((cat) => ({
-    // label: prefixLabel(languageId, cat),
-    label: cat,
-    kind: languages.CompletionItemKind.Field,
-    detail: 'catalog',
-    sortText: '1' + prefixLabel(languageId, cat)
-  }));
-  return Promise.resolve(catCompletions);
+  console.log('🚀 ~ getCatalogs ~ _languageId:', languageId);
+  return Promise.resolve([]);
 }
 
-/**
- * 根据catalog 获取 database
- */
-export function getDataBases(languageId: string, catalog?: string) {
-  const databases = catalog ? databaseList : tmpDatabaseList;
-  console.log('🚀 ~ getDataBases ~ catalog:', catalog);
-  console.log('🚀 ~ getDataBases ~ databases:', databases);
+export async function getDataBasesAndSchemas(languageId: string, catalog?: string) {
+  const databaseAndSchemas = await getDataBases(languageId, catalog);
 
-  const databaseCompletions = databases.map((db) => ({
-    // label: prefixLabel(languageId, db),
+  databaseAndSchemas.concat(await getSchemas(languageId, catalog));
+  console.log('🚀 ~ getDataBasesAndSchemas ~ databaseAndSchemas:', databaseAndSchemas);
+
+  return Promise.resolve(databaseAndSchemas);
+}
+
+export async function getDataBases(languageId: string, catalog?: string): Promise<ICompletionItem[]> {
+  if (databaseCompletions) {
+    return Promise.resolve(databaseCompletions);
+  }
+  const databases = await requestAutoComplete({
+    connection_id: 1,
+    type: 'databases'
+  });
+  console.log('🚀 ~ getDataBases ~ databases:', databases);
+  console.log('🚀 ~ getDataBases ~ catalog:', catalog);
+
+  databaseCompletions = databases.map((db) => ({
     label: db,
     kind: languages.CompletionItemKind.Field,
     detail: 'database',
@@ -49,16 +50,19 @@ export function getDataBases(languageId: string, catalog?: string) {
   return Promise.resolve(databaseCompletions);
 }
 
-/**
- * 根据catalog 获取 schema
- */
-export function getSchemas(languageId: string, catalog?: string) {
-  const schemas = catalog ? schemaList : tmpSchemaList;
+export async function getSchemas(languageId: string, catalog?: string): Promise<ICompletionItem[]> {
+  if (schemaCompletions) {
+    return Promise.resolve(schemaCompletions);
+  }
+
+  const schemas = await requestAutoComplete({
+    connection_id: 1,
+    type: 'schemas'
+  });
   console.log('🚀 ~ getSchemas ~ schemas:', schemas);
   console.log('🚀 ~ getSchemas ~ catalog:', catalog);
 
-  const schemaCompletions = schemas.map((sc) => ({
-    // label: prefixLabel(languageId, sc),
+  schemaCompletions = schemas.map((sc) => ({
     label: sc,
     kind: languages.CompletionItemKind.Field,
     detail: 'schema',
@@ -68,34 +72,52 @@ export function getSchemas(languageId: string, catalog?: string) {
   return Promise.resolve(schemaCompletions);
 }
 
-/**
- * 根据 catalog 和 database 获取 table
- */
-export function getTables(languageId: string, catalog?: string, database?: string) {
-  const tables = catalog && database ? tableList : tmpTableList;
-  console.log('🚀 ~ getTables ~ catalog:', catalog);
+export async function getTables(languageId: string, catalog?: string, database?: string): Promise<ICompletionItem[]> {
+  const dbName: string = database ?? 'empty';
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
+  if (tableCompletions[dbName]) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
+    return tableCompletions[dbName];
+  }
+
+  const tables = await requestAutoComplete({
+    connection_id: 1,
+    type: 'tables',
+    schema: database ?? ''
+  });
   console.log('🚀 ~ getTables ~ tables:', tables);
+  console.log('🚀 ~ getTables ~ catalog:', catalog);
   console.log('🚀 ~ getTables ~ database:', database);
 
-  const tableCompletions = tables.map((tb) => ({
-    // label: prefixLabel(languageId, tb),
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
+  tableCompletions[dbName] = tables.map((tb) => ({
     label: tb,
     kind: languages.CompletionItemKind.Field,
     detail: 'table',
     sortText: '1' + prefixLabel(languageId, tb)
   }));
 
-  return Promise.resolve(tableCompletions);
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
+  return Promise.resolve(tableCompletions[dbName]);
 }
 
-/**
- * 根据 catalog 和 database 获取 view
- */
-export function getViews(languageId: string, catalog?: string, database?: string) {
-  const views = catalog && database ? viewList : tmpViewList;
+export async function getViews(languageId: string, catalog?: string, database?: string): Promise<ICompletionItem[]> {
+  if (viewCompletions) {
+    return Promise.resolve(viewCompletions);
+  }
+  const views = await requestAutoComplete({
+    connection_id: 1,
+    type: 'views',
+    database: database
+  });
+  console.log('🚀 ~ getViews ~ views:', views);
+  console.log('🚀 ~ getViews ~ catalog:', catalog);
 
-  const viewCompletions = views.map((v) => ({
-    // label: prefixLabel(languageId, v),
+  viewCompletions = views.map((v) => ({
     label: v,
     kind: languages.CompletionItemKind.Field,
     detail: 'view',
@@ -103,4 +125,30 @@ export function getViews(languageId: string, catalog?: string, database?: string
   }));
 
   return Promise.resolve(viewCompletions);
+}
+
+export async function getColumns(languageId: string, tableName?: string): Promise<ICompletionItem[]> {
+  const columns: string[] = await requestAutoComplete({
+    connection_id: 1,
+    type: 'columns',
+    table: tableName,
+    schema: ''
+  });
+  console.log('🚀 ~ getColumns ~ columns:', columns);
+
+  const columnCompletions = columns.map((c) => ({
+    label: c,
+    kind: languages.CompletionItemKind.Field,
+    detail: 'column',
+    sortText: '1' + prefixLabel(languageId, c)
+  }));
+
+  return Promise.resolve(columnCompletions);
+}
+
+async function requestAutoComplete(data: AutoCompleteType): Promise<string[]> {
+  return api.query.autoComplete({
+    ...data,
+    from_cache: true
+  });
 }
