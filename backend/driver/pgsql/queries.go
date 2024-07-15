@@ -189,7 +189,7 @@ func (p PostgresQueryEngine) Tables(connectionId int32, schema string) ([]string
 		TableName sql.NullString `gorm:"column:table_name"`
 	}
 
-	info := []Info{}
+	info := make([]Info, 0)
 	result := db.Raw(query).Find(&info)
 
 	if result.Error != nil {
@@ -206,6 +206,51 @@ func (p PostgresQueryEngine) Tables(connectionId int32, schema string) ([]string
 	}
 
 	return tables, err
+}
+
+func (p PostgresQueryEngine) Columns(connectionId int32, table string, schema string) ([]string, error) {
+	columns := make([]string, 0)
+	structures, err := p.TableStructure(connectionId, table, schema, false)
+	if err != nil {
+		return columns, err
+	}
+
+	for _, structure := range structures {
+		columns = append(columns, structure.ColumnName)
+	}
+
+	return columns, nil
+}
+
+func (p PostgresQueryEngine) Views(connectionId int32) ([]string, error) {
+	db, err := p.Connect(connectionId)
+	if err != nil {
+		return nil, error_c.ErrConnection
+	}
+
+	query := "SELECT schemaname,viewname FROM pg_catalog.pg_views WHERE schemaname NOT IN ('pg_catalog','information_schema') ORDER BY schemaname,viewname;"
+
+	type Info struct {
+		ViewName sql.NullString `gorm:"column:viewname"`
+	}
+
+	info := make([]Info, 0)
+	result := db.Raw(query).Find(&info)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	var views []string
+	for _, view := range info {
+		if !view.ViewName.Valid {
+			continue
+		}
+
+		views = append(views, view.ViewName.String)
+	}
+
+	return views, err
 }
 
 type Structure struct {

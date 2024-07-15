@@ -18,7 +18,11 @@ export type RunRawQueryType = {
 
 export type AutoCompleteType = {
   connection_id: number;
-  database: string;
+  database?: string;
+  from_cache?: boolean;
+  schema?: string;
+  table?: string;
+  type: 'databases' | 'views' | 'schemas' | 'tables' | 'columns';
 };
 
 export type RunQueryResponseType = {
