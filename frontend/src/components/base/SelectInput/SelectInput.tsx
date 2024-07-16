@@ -15,7 +15,8 @@ export default forwardRef(function SelectInput(props: SelectInputProps, ref) {
       <NativeSelect
         sx={{
           borderColor: props.error ? theme.palette.error.light : theme.palette.divider,
-          marginBottom: props.error || props.margin == 'none' ? '0px' : theme.spacing(1)
+          marginBottom: props.error || props.margin == 'none' ? '0px' : theme.spacing(1),
+          minWidth: 90
         }}
         {...props}
       >

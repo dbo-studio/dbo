@@ -49,5 +49,8 @@ export const IconTypes = {
   pen: 'PenLine',
   play: 'Play',
   copy: 'Copy',
-  ellipsisVertical: 'EllipsisVertical'
+  ellipsisVertical: 'EllipsisVertical',
+  save: 'Save',
+  wand_sparkles: 'WandSparkles',
+  pickaxe: 'Pickaxe'
 };

@@ -2,6 +2,7 @@ import api from '@/api';
 import { AutoCompleteType } from '@/api/query/types.ts';
 import { languages } from 'monaco-editor/esm/vs/editor/editor.api';
 import { ICompletionItem } from 'monaco-sql-languages';
+import { CodeEditorSettingType } from '../types';
 
 const prefixLabel = (languageId: string, text: string) => {
   const prefix = languageId ? languageId.replace(/sql/gi, '').toLocaleLowerCase() : '';
@@ -14,6 +15,13 @@ let viewCompletions: ICompletionItem[] | undefined = undefined;
 const tableCompletions: {
   [key: string]: ICompletionItem[];
 }[] = [];
+let currentDatabase = '';
+let currentSchema = '';
+
+export function changeMetaProviderSetting(setting: CodeEditorSettingType) {
+  currentDatabase = setting.database;
+  currentSchema = setting.schema;
+}
 
 export function getCatalogs(languageId: string) {
   console.log('🚀 ~ getCatalogs ~ _languageId:', languageId);
@@ -24,7 +32,6 @@ export async function getDataBasesAndSchemas(languageId: string, catalog?: strin
   const databaseAndSchemas = await getDataBases(languageId, catalog);
 
   databaseAndSchemas.concat(await getSchemas(languageId, catalog));
-  console.log('🚀 ~ getDataBasesAndSchemas ~ databaseAndSchemas:', databaseAndSchemas);
 
   return Promise.resolve(databaseAndSchemas);
 }
@@ -37,8 +44,6 @@ export async function getDataBases(languageId: string, catalog?: string): Promis
     connection_id: 1,
     type: 'databases'
   });
-  console.log('🚀 ~ getDataBases ~ databases:', databases);
-  console.log('🚀 ~ getDataBases ~ catalog:', catalog);
 
   databaseCompletions = databases.map((db) => ({
     label: db,
@@ -59,8 +64,6 @@ export async function getSchemas(languageId: string, catalog?: string): Promise<
     connection_id: 1,
     type: 'schemas'
   });
-  console.log('🚀 ~ getSchemas ~ schemas:', schemas);
-  console.log('🚀 ~ getSchemas ~ catalog:', catalog);
 
   schemaCompletions = schemas.map((sc) => ({
     label: sc,
@@ -85,11 +88,8 @@ export async function getTables(languageId: string, catalog?: string, database?:
   const tables = await requestAutoComplete({
     connection_id: 1,
     type: 'tables',
-    schema: database ?? ''
+    schema: currentDatabase
   });
-  console.log('🚀 ~ getTables ~ tables:', tables);
-  console.log('🚀 ~ getTables ~ catalog:', catalog);
-  console.log('🚀 ~ getTables ~ database:', database);
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
@@ -114,8 +114,6 @@ export async function getViews(languageId: string, catalog?: string, database?: 
     type: 'views',
     database: database
   });
-  console.log('🚀 ~ getViews ~ views:', views);
-  console.log('🚀 ~ getViews ~ catalog:', catalog);
 
   viewCompletions = views.map((v) => ({
     label: v,
@@ -132,9 +130,9 @@ export async function getColumns(languageId: string, tableName?: string): Promis
     connection_id: 1,
     type: 'columns',
     table: tableName,
-    schema: ''
+    schema: currentSchema,
+    database: currentDatabase
   });
-  console.log('🚀 ~ getColumns ~ columns:', columns);
 
   const columnCompletions = columns.map((c) => ({
     label: c,

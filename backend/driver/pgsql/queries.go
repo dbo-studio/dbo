@@ -3,13 +3,14 @@ package pgsql_driver
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"strings"
+	"time"
+
 	"github.com/khodemobin/dbo/api/dto"
 	error_c "github.com/khodemobin/dbo/error"
 	"github.com/khodemobin/dbo/helper"
 	"github.com/xwb1989/sqlparser"
-	"log"
-	"strings"
-	"time"
 )
 
 type RunQueryResult struct {
@@ -156,12 +157,16 @@ func (p PostgresQueryEngine) Databases(connectionId int32, withTemplates bool) (
 	return names, result.Error
 }
 
-func (p PostgresQueryEngine) Schemas(connectionId int32, database string) ([]string, error) {
+func (p PostgresQueryEngine) Schemas(connectionId int32, database string, all bool) ([]string, error) {
 	db, err := p.Connect(connectionId)
 	if err != nil {
 		return nil, error_c.ErrConnection
 	}
-	query := "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema') " + fmt.Sprintf("AND catalog_name = '%s'", database) + " AND schema_name NOT LIKE 'pg_%';"
+	query := "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema') " + fmt.Sprintf("AND catalog_name = '%s'", database)
+	if !all {
+		query += " AND schema_name NOT LIKE 'pg_%';"
+	}
+
 	type Schema struct {
 		Name string `gorm:"column:schema_name"`
 	}
@@ -316,41 +321,6 @@ func (p PostgresQueryEngine) TableSpaces(connectionId int32) ([]string, error) {
 	}
 
 	return tablespaces, err
-}
-
-func (p PostgresQueryEngine) AutoComplete(connectionId int32, database string) (any, error) {
-	db, err := p.Connect(connectionId)
-	if err != nil {
-		return nil, error_c.ErrConnection
-	}
-
-	schemas, err := p.Schemas(connectionId, database)
-	if err != nil {
-		return nil, err
-	}
-
-	queryResult := make(map[string]map[string][]string)
-
-	type columnInfo struct {
-		TableName  string `gorm:"column:table_name"`
-		ColumnName string `gorm:"column:column_name"`
-	}
-
-	for _, schema := range schemas {
-		tablesQuery := fmt.Sprintf(`select table_name, column_name from information_schema.columns where table_schema = '%s' order by table_name, ordinal_position;`, schema)
-		columnInfoResult := make([]columnInfo, 0)
-		result := db.Raw(tablesQuery).Find(&columnInfoResult)
-		if result.Error != nil {
-			return nil, err
-		}
-
-		queryResult[schema] = make(map[string][]string)
-		for _, c := range columnInfoResult {
-			queryResult[schema][c.TableName] = append(queryResult[schema][c.TableName], c.ColumnName)
-		}
-	}
-
-	return queryResult, nil
 }
 
 type IndexInfo struct {

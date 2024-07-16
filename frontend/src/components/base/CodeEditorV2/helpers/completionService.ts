@@ -2,13 +2,7 @@ import { languages, Position } from 'monaco-editor/esm/vs/editor/editor.api';
 import { CompletionService, EntityContextType, ICompletionItem } from 'monaco-sql-languages/esm/main';
 
 import { editor } from 'monaco-editor';
-import {
-  getCatalogs,
-  getColumns,
-  getDataBasesAndSchemas,
-  getTables,
-  getViews
-} from './dbMetaProvider';
+import { getCatalogs, getColumns, getDataBasesAndSchemas, getTables, getViews } from './dbMetaProvider';
 
 const haveCatalogSQLType = (languageId: string) => {
   return ['flinksql', 'trinosql'].includes(languageId.toLowerCase());
@@ -55,6 +49,7 @@ export const completionService: CompletionService = async function (
   let existColumnInTableCompletions = false;
 
   for (let i = 0; i < syntax.length; i++) {
+    syntaxCompletionItems = [];
     const { syntaxContextType, wordRanges } = syntax[i];
     // e.g. words -> ['cat', '.', 'database', '.', 'table']
     const words = wordRanges.map((wr) => wr.text);

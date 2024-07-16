@@ -17,6 +17,7 @@ export default function SavedQueryContextMenu({
   onDelete,
   onChange
 }: SavedQueryContextMenuProps) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, copy] = useCopyToClipboard();
   const { addTab } = useTabStore();
 

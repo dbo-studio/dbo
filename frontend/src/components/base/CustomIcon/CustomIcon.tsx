@@ -31,7 +31,8 @@ export default function CustomIcon({ type, size = 's', width, height, onClick }:
     h = height;
   }
 
-  // @ts-ignore
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
   const LucideIcon = icons[IconTypes[type]];
   if (!LucideIcon) {
     return <img onClick={onClick} src={`/icons/${type}.svg`} alt={type} width={w} height={h} />;

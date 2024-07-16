@@ -2,6 +2,7 @@ package query_handler
 
 import (
 	"fmt"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/khodemobin/dbo/api/dto"
 	"github.com/khodemobin/dbo/api/response"
@@ -39,7 +40,7 @@ func (QueryHandler) Autocomplete(c fiber.Ctx) error {
 		return c.JSON(response.Success(views))
 	}
 
-	schemas, err := getSchemas(req.ConnectionId, databases, req.FromCache)
+	schemas, err := getSchemas(req.ConnectionId, databases, req.Database, req.FromCache)
 	if err != nil {
 		app.Log().Error(err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
@@ -123,7 +124,7 @@ func getViews(connectionID int32, fromCache bool) ([]string, error) {
 	return views, err
 }
 
-func getSchemas(connectionID int32, databases []string, fromCache bool) ([]string, error) {
+func getSchemas(connectionID int32, databases []string, database string, fromCache bool) ([]string, error) {
 	var schemas []string
 	err := app.Cache().ConditionalGet(
 		fmt.Sprintf("auto_complete_schemas_%d", connectionID),
@@ -132,16 +133,20 @@ func getSchemas(connectionID int32, databases []string, fromCache bool) ([]strin
 	)
 
 	if err != nil || schemas == nil {
-		for _, database := range databases {
-			schemaResult, err := app.Drivers().Pgsql.Schemas(connectionID, database)
+		if database != "" {
+			schemaResult, err := app.Drivers().Pgsql.Schemas(connectionID, database, true)
 			if err != nil {
 				return []string{}, nil
 			}
 			schemas = append(schemas, schemaResult...)
-		}
-
-		if err != nil {
-			return schemas, err
+		} else {
+			for _, db := range databases {
+				schemaResult, err := app.Drivers().Pgsql.Schemas(connectionID, db, true)
+				if err != nil {
+					return []string{}, nil
+				}
+				schemas = append(schemas, schemaResult...)
+			}
 		}
 
 		err = app.Cache().Set(fmt.Sprintf("auto_complete_schemas_%d", connectionID), databases, nil)
@@ -203,14 +208,14 @@ func getColumns(connectionID int32, tables []string, schema string, table string
 	)
 	if err != nil || columns == nil {
 		if table != "" && schema != "" {
-			columnResult, err := app.Drivers().Pgsql.Columns(connectionID, schema, table)
+			columnResult, err := app.Drivers().Pgsql.Columns(connectionID, table, schema)
 			if err != nil {
 				return []string{}, err
 			}
 			columns = append(columns, columnResult...)
 		} else {
 			for _, ta := range tables {
-				columnResult, err := app.Drivers().Pgsql.Columns(connectionID, schema, ta)
+				columnResult, err := app.Drivers().Pgsql.Columns(connectionID, ta, schema)
 				if err != nil {
 					return []string{}, err
 				}

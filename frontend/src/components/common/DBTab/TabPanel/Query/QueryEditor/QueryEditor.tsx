@@ -7,8 +7,9 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
+import { QueryEditorProps } from '../types';
 
-export default function QueryEditor() {
+export default function QueryEditor({ setting }: QueryEditorProps) {
   const theme = useTheme();
   const windowSize = useWindowSize();
   const { getRows } = useDataStore();
@@ -21,13 +22,11 @@ export default function QueryEditor() {
   });
 
   const handleChangeValue = (value: string) => {
-    console.log('🚀 ~ handleChangeValue ~ value:', value);
     setQuery(value);
   };
 
   const handleUpdateState = () => {
     if (debouncedQuery) {
-      console.log('🚀 ~ handleUpdateState ~ query:', query);
       updateSelectedTab({
         ...selectedTab!,
         query: query ?? ''
@@ -42,7 +41,12 @@ export default function QueryEditor() {
   return (
     <Box ref={ref} display={'flex'} flexDirection={'column'} height={windowSize.height}>
       <Box flex={1} borderBottom={`1px solid ${theme.palette.divider}`}>
-        <CodeEditorV2 value={selectedTab?.query ?? ''} onChange={handleChangeValue} />
+        <CodeEditorV2
+          database={setting.database}
+          schema={setting.schema}
+          value={selectedTab?.query ?? ''}
+          onChange={handleChangeValue}
+        />
         {/* <CodeEditor autocomplete={autoComplete} value={selectedTab?.query} onChange={handleChangeValue} /> */}
       </Box>
       {getRows() && getRows().length > 0 && <DBDataGrid />}
