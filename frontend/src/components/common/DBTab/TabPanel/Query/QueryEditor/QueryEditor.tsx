@@ -14,18 +14,20 @@ export default function QueryEditor() {
   const { getRows } = useDataStore();
   const { updateSelectedTab, selectedTab } = useTabStore();
   const [query, setQuery] = useState(selectedTab?.query);
-  const debouncedQuery = useDebounce(query, 300);
+  const debouncedQuery = useDebounce(query, 200);
 
   const ref = useClickAway(() => {
     if (selectedTab?.query !== query) handleUpdateState();
   });
 
   const handleChangeValue = (value: string) => {
+    console.log('🚀 ~ handleChangeValue ~ value:', value);
     setQuery(value);
   };
 
   const handleUpdateState = () => {
     if (debouncedQuery) {
+      console.log('🚀 ~ handleUpdateState ~ query:', query);
       updateSelectedTab({
         ...selectedTab!,
         query: query ?? ''
