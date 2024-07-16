@@ -2,11 +2,11 @@ package sqlite
 
 import (
 	"errors"
+	"time"
+
 	"github.com/goccy/go-json"
 	"github.com/khodemobin/dbo/model"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
-	"time"
 )
 
 type SQLiteCache struct {
@@ -62,18 +62,11 @@ func (c *SQLiteCache) Set(key string, value any, ttl *time.Duration) error {
 		return err
 	}
 
-	item := model.CacheItem{
+	return c.db.Save(&model.CacheItem{
 		Key:        key,
 		Value:      string(jsonValue),
 		Expiration: expiration,
-	}
-
-	return c.db.Clauses(
-		clause.OnConflict{
-			Columns:   []clause.Column{{Name: "key"}},
-			DoUpdates: clause.AssignmentColumns([]string{"value", "expiration"}),
-		},
-	).Create(&item).Error
+	}).Error
 }
 
 func (c *SQLiteCache) Delete(key string) error {

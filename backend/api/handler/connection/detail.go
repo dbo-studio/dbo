@@ -156,7 +156,7 @@ func getTables(connectionID uint, schemaName string, fromCache bool) ([]string, 
 			return tables, err
 		}
 
-		err = app.Cache().Set(fmt.Sprintf("schemas_%d", connectionID), tables, nil)
+		err = app.Cache().Set(fmt.Sprintf("tables_%d", connectionID), tables, nil)
 		if err != nil {
 			return tables, err
 		}
