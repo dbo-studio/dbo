@@ -1,9 +1,6 @@
-import api from '@/api';
-import { AutoCompleteType } from '@/api/query/types';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import SelectOption from '@/components/base/SelectInput/SelectOption';
 import { useUUID } from '@/hooks';
-import useAPI from '@/hooks/useApi.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { Stack } from '@mui/material';
 import { useEffect, useState } from 'react';
@@ -17,24 +14,8 @@ export default function QueryEditorLeading({ onChange }: QueryEditorLeadingProps
   const [schema, setSchema] = useState<string>(currentConnection?.currentSchema ?? '');
   const [database, setDatabase] = useState<string>(currentConnection?.currentDatabase ?? '');
 
-  const [schemas, setSchemas] = useState<string[]>(currentConnection?.schemas ?? []);
-
-  const { request: autocomplete, pending: pending } = useAPI({
-    apiMethod: api.query.autoComplete
-  });
-
   const handleDatabaseChange = async (name: string) => {
-    if (pending) {
-      return;
-    }
-    const res = await autocomplete({
-      connection_id: currentConnection?.id,
-      type: 'schemas',
-      database: name
-    } as AutoCompleteType);
-
     setDatabase(name);
-    setSchemas(res);
   };
 
   const handleSchemaChange = (name: string) => {
@@ -75,7 +56,7 @@ export default function QueryEditorLeading({ onChange }: QueryEditorLeadingProps
         size='small'
       >
         <SelectOption value={''}></SelectOption>
-        {schemas.map((t: string, i: number) => (
+        {currentConnection?.schemas?.map((t: string, i: number) => (
           <SelectOption value={t} key={uuidSchemas[i]}>
             {t}
           </SelectOption>

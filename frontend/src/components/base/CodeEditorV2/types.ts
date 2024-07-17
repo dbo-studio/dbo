@@ -1,6 +1,7 @@
+import { AutoCompleteType } from '@/types';
+
 export type CodeEditorProps = {
-  database: string;
-  schema: string;
+  autocomplete: AutoCompleteType;
   value: string;
   onChange: (value: string) => void;
 };

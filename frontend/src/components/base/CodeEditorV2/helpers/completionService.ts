@@ -49,7 +49,6 @@ export const completionService: CompletionService = async function (
   let existColumnInTableCompletions = false;
 
   for (let i = 0; i < syntax.length; i++) {
-    syntaxCompletionItems = [];
     const { syntaxContextType, wordRanges } = syntax[i];
     // e.g. words -> ['cat', '.', 'database', '.', 'table']
     const words = wordRanges.map((wr) => wr.text);
@@ -57,7 +56,7 @@ export const completionService: CompletionService = async function (
 
     if (syntaxContextType === EntityContextType.CATALOG || syntaxContextType === EntityContextType.DATABASE_CREATE) {
       if (!existCatalogCompletions && wordCount <= 1) {
-        syntaxCompletionItems = syntaxCompletionItems.concat(await getCatalogs(languageId));
+        syntaxCompletionItems = syntaxCompletionItems.concat(getCatalogs(languageId));
         existCatalogCompletions = true;
       }
     }
@@ -68,17 +67,17 @@ export const completionService: CompletionService = async function (
       syntaxContextType === EntityContextType.VIEW_CREATE
     ) {
       if (!existCatalogCompletions && haveCatalog && wordCount <= 1) {
-        syntaxCompletionItems = syntaxCompletionItems.concat(await getCatalogs(languageId));
+        syntaxCompletionItems = syntaxCompletionItems.concat(getCatalogs(languageId));
         existCatalogCompletions = true;
       }
 
       if (!existDatabaseCompletions && wordCount <= 1) {
-        syntaxCompletionItems = syntaxCompletionItems.concat(await getDBOrSchema(languageId));
+        syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId));
         existDatabaseCompletions = true;
       }
 
       if (!existDatabaseInCatCompletions && haveCatalog && wordCount >= 2 && wordCount <= 3) {
-        syntaxCompletionItems = syntaxCompletionItems.concat(await getDBOrSchema(languageId, words[0]));
+        syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId, words[0]));
         existDatabaseInCatCompletions = true;
       }
     }
@@ -92,27 +91,27 @@ export const completionService: CompletionService = async function (
         }
 
         if (!existDatabaseCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(await getDBOrSchema(languageId));
+          syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId));
           existDatabaseCompletions = true;
         }
 
         if (!existTableCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(await getTables(languageId));
+          syntaxCompletionItems = syntaxCompletionItems.concat(getTables(languageId));
           existTableCompletions = true;
         }
       } else if (wordCount >= 2 && wordCount <= 3) {
         if (!existDatabaseInCatCompletions && haveCatalog) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(await getDBOrSchema(languageId, words[0]));
+          syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId, words[0]));
           existDatabaseInCatCompletions = true;
         }
 
         if (!existTableInDbCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(await getTables(languageId, undefined, words[0]));
+          syntaxCompletionItems = syntaxCompletionItems.concat(getTables(languageId, undefined, words[0]));
           existTableInDbCompletions = true;
         }
       } else if (wordCount >= 4 && wordCount <= 5) {
         if (!existTableInDbCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(await getTables(languageId, words[0], words[2]));
+          syntaxCompletionItems = syntaxCompletionItems.concat(getTables(languageId, words[0], words[2]));
           existTableInDbCompletions = true;
         }
       }
@@ -121,32 +120,32 @@ export const completionService: CompletionService = async function (
     if (syntaxContextType === EntityContextType.VIEW) {
       if (wordCount <= 1) {
         if (!existCatalogCompletions && haveCatalog) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(await getCatalogs(languageId));
+          syntaxCompletionItems = syntaxCompletionItems.concat(getCatalogs(languageId));
           existCatalogCompletions = true;
         }
 
         if (!existDatabaseCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(await getDBOrSchema(languageId));
+          syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId));
           existDatabaseCompletions = true;
         }
 
         if (!existViewCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(await getViews(languageId));
+          syntaxCompletionItems = syntaxCompletionItems.concat(getViews(languageId));
           existViewCompletions = true;
         }
       } else if (wordCount >= 2 && wordCount <= 3) {
         if (!existDatabaseInCatCompletions && haveCatalog) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(await getDBOrSchema(languageId, words[0]));
+          syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId, words[0]));
           existDatabaseInCatCompletions = true;
         }
 
         if (!existViewInDbCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(await getViews(languageId, undefined, words[0]));
+          syntaxCompletionItems = syntaxCompletionItems.concat(getViews(languageId, undefined, words[0]));
           existViewInDbCompletions = true;
         }
       } else if (wordCount >= 4 && wordCount <= 5) {
         if (!existViewInDbCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(await getViews(languageId, words[0], words[2]));
+          syntaxCompletionItems = syntaxCompletionItems.concat(getViews(languageId, words[0], words[2]));
           existViewInDbCompletions = true;
         }
       }
@@ -156,12 +155,12 @@ export const completionService: CompletionService = async function (
       const tableName = getCurrentTableName(model, position);
 
       if (!existColumnCompletions && !tableName) {
-        syntaxCompletionItems = syntaxCompletionItems.concat(await getColumns(languageId, undefined));
+        syntaxCompletionItems = syntaxCompletionItems.concat(getColumns(languageId, undefined));
         existColumnCompletions = true;
       }
 
       if (!existColumnInTableCompletions && tableName) {
-        syntaxCompletionItems = syntaxCompletionItems.concat(await getColumns(languageId, tableName));
+        syntaxCompletionItems = syntaxCompletionItems.concat(getColumns(languageId, tableName));
         existColumnInTableCompletions = true;
       }
     }

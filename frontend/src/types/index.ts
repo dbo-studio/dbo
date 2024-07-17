@@ -1,4 +1,5 @@
 export * from './Api';
+export * from './Autocomplete';
 export * from './Connection';
 export * from './Data';
 export * from './Events';

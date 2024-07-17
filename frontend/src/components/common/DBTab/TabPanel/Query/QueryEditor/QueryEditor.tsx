@@ -9,7 +9,7 @@ import { Box, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { QueryEditorProps } from '../types';
 
-export default function QueryEditor({ setting }: QueryEditorProps) {
+export default function QueryEditor({ autocomplete }: QueryEditorProps) {
   const theme = useTheme();
   const windowSize = useWindowSize();
   const { getRows } = useDataStore();
@@ -41,12 +41,7 @@ export default function QueryEditor({ setting }: QueryEditorProps) {
   return (
     <Box ref={ref} display={'flex'} flexDirection={'column'} height={windowSize.height}>
       <Box flex={1} borderBottom={`1px solid ${theme.palette.divider}`}>
-        <CodeEditorV2
-          database={setting.database}
-          schema={setting.schema}
-          value={selectedTab?.query ?? ''}
-          onChange={handleChangeValue}
-        />
+        <CodeEditorV2 autocomplete={autocomplete} value={selectedTab?.query ?? ''} onChange={handleChangeValue} />
         {/* <CodeEditor autocomplete={autoComplete} value={selectedTab?.query} onChange={handleChangeValue} /> */}
       </Box>
       {getRows() && getRows().length > 0 && <DBDataGrid />}

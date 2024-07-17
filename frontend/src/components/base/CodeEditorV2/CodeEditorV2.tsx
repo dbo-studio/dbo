@@ -8,7 +8,7 @@ import { changeMetaProviderSetting } from './helpers/dbMetaProvider.ts';
 import { editorConfig } from './helpers/editorConfig.ts';
 import './helpers/languageSetup.ts';
 
-export default function CodeEditorV2({ database, schema, value, onChange }: CodeEditorProps) {
+export default function CodeEditorV2({ autocomplete, value, onChange }: CodeEditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
 
@@ -30,11 +30,8 @@ export default function CodeEditorV2({ database, schema, value, onChange }: Code
   }, []);
 
   useEffect(() => {
-    changeMetaProviderSetting({
-      database,
-      schema
-    });
-  }, [database, schema]);
+    changeMetaProviderSetting(autocomplete);
+  }, [autocomplete]);
 
   setupLanguageFeatures(LanguageIdEnum.PG, {
     completionItems: {

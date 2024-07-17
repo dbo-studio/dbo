@@ -2,6 +2,7 @@ package query_handler
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/khodemobin/dbo/api/dto"
@@ -9,6 +10,14 @@ import (
 	"github.com/khodemobin/dbo/app"
 	"github.com/khodemobin/dbo/helper"
 )
+
+type AutoCompleteResult struct {
+	Databases []string            `json:"databases"`
+	Views     []string            `json:"views"`
+	Schemas   []string            `json:"schemas"`
+	Tables    []string            `json:"tables"`
+	Columns   map[string][]string `json:"columns"`
+}
 
 func (QueryHandler) Autocomplete(c fiber.Ctx) error {
 	req := new(dto.AutoCompleteDto)
@@ -22,216 +31,93 @@ func (QueryHandler) Autocomplete(c fiber.Ctx) error {
 	}
 
 	fromCache := req.FromCache
-	databases, err := getDatabases(req.ConnectionId, fromCache)
+
+	resultFromCache, err := findResultFromCache(req.ConnectionId, req.Database, req.Schema, fromCache)
 	if err != nil {
 		app.Log().Error(err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
-	if req.Type == "databases" {
-		return c.JSON(response.Success(databases))
+
+	if resultFromCache != nil {
+		return c.JSON(response.Success(resultFromCache))
 	}
 
-	views, err := getViews(req.ConnectionId, fromCache)
+	databases, err := app.Drivers().Pgsql.Databases(req.ConnectionId, true)
 	if err != nil {
 		app.Log().Error(err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
-	if req.Type == "views" {
-		return c.JSON(response.Success(views))
-	}
 
-	schemas, err := getSchemas(req.ConnectionId, databases, req.Database, req.FromCache)
+	views, err := app.Drivers().Pgsql.Views(req.ConnectionId)
 	if err != nil {
 		app.Log().Error(err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
-	if req.Type == "schemas" {
-		return c.JSON(response.Success(schemas))
-	}
 
-	tables, err := getTables(req.ConnectionId, schemas, req.Schema, fromCache)
+	schemas, err := app.Drivers().Pgsql.Schemas(req.ConnectionId, req.Database, true)
 	if err != nil {
 		app.Log().Error(err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
-	if req.Type == "tables" {
-		return c.JSON(response.Success(tables))
-	}
 
-	columns, err := getColumns(req.ConnectionId, tables, req.Schema, req.Table, fromCache)
+	tables, err := app.Drivers().Pgsql.Tables(req.ConnectionId, req.Schema)
 	if err != nil {
 		app.Log().Error(err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
-	if req.Type == "columns" {
-		return c.JSON(response.Success(columns))
+
+	columns, err := getColumns(req.ConnectionId, tables, req.Schema)
+	if err != nil {
+		app.Log().Error(err.Error())
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}
 
-	return nil
+	autocomplete := AutoCompleteResult{
+		Databases: databases,
+		Views:     views,
+		Schemas:   schemas,
+		Tables:    tables,
+		Columns:   columns,
+	}
+
+	ttl := 60 * time.Minute
+	err = app.Cache().Set(cacheName(req.ConnectionId, req.Database, req.Schema), autocomplete, &ttl)
+	if err != nil {
+		app.Log().Error(err.Error())
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
+	}
+
+	return c.JSON(response.Success(autocomplete))
 }
 
-func getDatabases(connectionID int32, fromCache bool) ([]string, error) {
-	var databases []string
+func findResultFromCache(connectionID int32, database string, schema string, fromCache bool) (*AutoCompleteResult, error) {
+	var result *AutoCompleteResult
 	err := app.Cache().ConditionalGet(
-		fmt.Sprintf("auto_complete_databases_%d", connectionID),
-		&databases,
+		cacheName(connectionID, database, schema),
+		&result,
 		fromCache,
 	)
 
-	if err != nil || databases == nil {
-		databases, err = app.Drivers().Pgsql.Databases(connectionID, true)
-
-		if err != nil {
-			return databases, err
-		}
-
-		err = app.Cache().Set(fmt.Sprintf("auto_complete_databases_%d", connectionID), databases, nil)
-		if err != nil {
-			return databases, err
-		}
-	}
-	if databases == nil {
-		return []string{}, nil
+	if err != nil {
+		return nil, err
 	}
 
-	return databases, err
+	return result, nil
 }
 
-func getViews(connectionID int32, fromCache bool) ([]string, error) {
-	var views []string
-	err := app.Cache().ConditionalGet(
-		fmt.Sprintf("auto_complete_views_%d", connectionID),
-		&views,
-		fromCache,
-	)
-
-	if err != nil || views == nil {
-		views, err = app.Drivers().Pgsql.Views(connectionID)
-
+func getColumns(connectionID int32, tables []string, schema string) (map[string][]string, error) {
+	columns := make(map[string][]string)
+	for _, ta := range tables {
+		columnResult, err := app.Drivers().Pgsql.Columns(connectionID, ta, schema)
 		if err != nil {
-			return views, err
+			return map[string][]string{}, err
 		}
-
-		err = app.Cache().Set(fmt.Sprintf("auto_complete_views_%d", connectionID), views, nil)
-		if err != nil {
-			return views, err
-		}
-	}
-	if views == nil {
-		return []string{}, nil
-	}
-
-	return views, err
-}
-
-func getSchemas(connectionID int32, databases []string, database string, fromCache bool) ([]string, error) {
-	var schemas []string
-	err := app.Cache().ConditionalGet(
-		fmt.Sprintf("auto_complete_schemas_%d", connectionID),
-		&schemas,
-		fromCache,
-	)
-
-	if err != nil || schemas == nil {
-		if database != "" {
-			schemaResult, err := app.Drivers().Pgsql.Schemas(connectionID, database, true)
-			if err != nil {
-				return []string{}, nil
-			}
-			schemas = append(schemas, schemaResult...)
-		} else {
-			for _, db := range databases {
-				schemaResult, err := app.Drivers().Pgsql.Schemas(connectionID, db, true)
-				if err != nil {
-					return []string{}, nil
-				}
-				schemas = append(schemas, schemaResult...)
-			}
-		}
-
-		err = app.Cache().Set(fmt.Sprintf("auto_complete_schemas_%d", connectionID), databases, nil)
-		if err != nil {
-			return schemas, err
-		}
-	}
-
-	if schemas == nil {
-		return []string{}, nil
-	}
-
-	return schemas, nil
-}
-
-func getTables(connectionID int32, schemas []string, schema string, fromCache bool) ([]string, error) {
-	var tables []string
-	err := app.Cache().ConditionalGet(
-		fmt.Sprintf("auto_complete_tables_%d_%s", connectionID, schema),
-		&tables,
-		fromCache,
-	)
-
-	if err != nil || tables == nil {
-		if schema != "" {
-			tableResult, err := app.Drivers().Pgsql.Tables(connectionID, schema)
-			if err != nil {
-				return []string{}, nil
-			}
-			tables = append(tables, tableResult...)
-		} else {
-			for _, sc := range schemas {
-				tableResult, err := app.Drivers().Pgsql.Tables(connectionID, sc)
-				if err != nil {
-					return []string{}, nil
-				}
-				tables = append(tables, tableResult...)
-			}
-		}
-
-		err = app.Cache().Set(fmt.Sprintf("auto_complete_tables_%d_%s", connectionID, schema), tables, nil)
-		if err != nil {
-			return schemas, err
-		}
-	}
-	if tables == nil {
-		return []string{}, nil
-	}
-
-	return tables, nil
-}
-
-func getColumns(connectionID int32, tables []string, schema string, table string, fromCache bool) ([]string, error) {
-	var columns []string
-	err := app.Cache().ConditionalGet(
-		fmt.Sprintf("auto_complete_columns_%d_%s_%s", connectionID, schema, table),
-		&columns,
-		fromCache,
-	)
-	if err != nil || columns == nil {
-		if table != "" && schema != "" {
-			columnResult, err := app.Drivers().Pgsql.Columns(connectionID, table, schema)
-			if err != nil {
-				return []string{}, err
-			}
-			columns = append(columns, columnResult...)
-		} else {
-			for _, ta := range tables {
-				columnResult, err := app.Drivers().Pgsql.Columns(connectionID, ta, schema)
-				if err != nil {
-					return []string{}, err
-				}
-				columns = append(columns, columnResult...)
-			}
-		}
-
-		err = app.Cache().Set(fmt.Sprintf("auto_complete_columns_%d_%s_%s", connectionID, schema, table), columns, nil)
-		if err != nil {
-			return columns, err
-		}
-	}
-
-	if columns == nil {
-		return []string{}, nil
+		columns[ta] = columnResult
 	}
 
 	return columns, nil
+}
+
+func cacheName(connectionID int32, database string, schema string) string {
+	return fmt.Sprintf("auto_complete_connection_%d_database_%s_schema_%s", connectionID, database, schema)
 }
