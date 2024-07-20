@@ -19,6 +19,12 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src')
     }
   },
+  optimizeDeps: {
+    include: [
+      `monaco-editor/esm/vs/editor/editor.worker?worker`,
+      `monaco-sql-languages/esm/languages/pgsql/pgsql.worker?worker`
+    ]
+  },
   server: {
     host: true,
     port: 3000
@@ -28,6 +34,14 @@ export default defineConfig({
     // don't minify for debug builds
     minify: !process.env.TAURI_DEBUG ? 'esbuild' : false,
     // produce sourcemaps for debug builds
-    sourcemap: !!process.env.TAURI_DEBUG
+    sourcemap: !!process.env.TAURI_DEBUG,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          editorWorker: [`monaco-editor/esm/vs/editor/editor.worker?worker`],
+          pgsqlWorker: [`monaco-sql-languages/esm/languages/pgsql/pgsql.worker?worker`]
+        }
+      }
+    }
   }
 });
