@@ -2,7 +2,7 @@ import { languages, Position } from 'monaco-editor/esm/vs/editor/editor.api';
 import { CompletionService, EntityContextType, ICompletionItem } from 'monaco-sql-languages/esm/main';
 
 import { editor } from 'monaco-editor';
-import { getCatalogs, getColumns, getDataBasesAndSchemas, getTables, getViews } from './dbMetaProvider';
+import { getColumns, getDataBasesAndSchemas, getTables, getViews } from './dbMetaProvider';
 
 const haveCatalogSQLType = (languageId: string) => {
   return ['flinksql', 'trinosql'].includes(languageId.toLowerCase());
@@ -38,7 +38,6 @@ export const completionService: CompletionService = async function (
 
   let syntaxCompletionItems: ICompletionItem[] = [];
 
-  let existCatalogCompletions = false;
   let existDatabaseCompletions = false;
   let existDatabaseInCatCompletions = false;
   let existTableCompletions = false;
@@ -50,46 +49,27 @@ export const completionService: CompletionService = async function (
 
   for (let i = 0; i < syntax.length; i++) {
     const { syntaxContextType, wordRanges } = syntax[i];
-    // e.g. words -> ['cat', '.', 'database', '.', 'table']
     const words = wordRanges.map((wr) => wr.text);
     const wordCount = words.length;
-
-    if (syntaxContextType === EntityContextType.CATALOG || syntaxContextType === EntityContextType.DATABASE_CREATE) {
-      if (!existCatalogCompletions && wordCount <= 1) {
-        syntaxCompletionItems = syntaxCompletionItems.concat(getCatalogs(languageId));
-        existCatalogCompletions = true;
-      }
-    }
 
     if (
       syntaxContextType === EntityContextType.DATABASE ||
       syntaxContextType === EntityContextType.TABLE_CREATE ||
       syntaxContextType === EntityContextType.VIEW_CREATE
     ) {
-      if (!existCatalogCompletions && haveCatalog && wordCount <= 1) {
-        syntaxCompletionItems = syntaxCompletionItems.concat(getCatalogs(languageId));
-        existCatalogCompletions = true;
-      }
-
       if (!existDatabaseCompletions && wordCount <= 1) {
         syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId));
         existDatabaseCompletions = true;
       }
 
       if (!existDatabaseInCatCompletions && haveCatalog && wordCount >= 2 && wordCount <= 3) {
-        syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId, words[0]));
+        syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId));
         existDatabaseInCatCompletions = true;
       }
     }
 
     if (syntaxContextType === EntityContextType.TABLE) {
       if (wordCount <= 1) {
-        if (!existCatalogCompletions && haveCatalog) {
-          const ctas = await getCatalogs(languageId);
-          syntaxCompletionItems = syntaxCompletionItems.concat(ctas);
-          existCatalogCompletions = true;
-        }
-
         if (!existDatabaseCompletions) {
           syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId));
           existDatabaseCompletions = true;
@@ -101,17 +81,17 @@ export const completionService: CompletionService = async function (
         }
       } else if (wordCount >= 2 && wordCount <= 3) {
         if (!existDatabaseInCatCompletions && haveCatalog) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId, words[0]));
+          syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId));
           existDatabaseInCatCompletions = true;
         }
 
         if (!existTableInDbCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(getTables(languageId, undefined, words[0]));
+          syntaxCompletionItems = syntaxCompletionItems.concat(getTables(languageId));
           existTableInDbCompletions = true;
         }
       } else if (wordCount >= 4 && wordCount <= 5) {
         if (!existTableInDbCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(getTables(languageId, words[0], words[2]));
+          syntaxCompletionItems = syntaxCompletionItems.concat(getTables(languageId));
           existTableInDbCompletions = true;
         }
       }
@@ -119,11 +99,6 @@ export const completionService: CompletionService = async function (
 
     if (syntaxContextType === EntityContextType.VIEW) {
       if (wordCount <= 1) {
-        if (!existCatalogCompletions && haveCatalog) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(getCatalogs(languageId));
-          existCatalogCompletions = true;
-        }
-
         if (!existDatabaseCompletions) {
           syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId));
           existDatabaseCompletions = true;
@@ -135,17 +110,17 @@ export const completionService: CompletionService = async function (
         }
       } else if (wordCount >= 2 && wordCount <= 3) {
         if (!existDatabaseInCatCompletions && haveCatalog) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId, words[0]));
+          syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId));
           existDatabaseInCatCompletions = true;
         }
 
         if (!existViewInDbCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(getViews(languageId, undefined, words[0]));
+          syntaxCompletionItems = syntaxCompletionItems.concat(getViews(languageId));
           existViewInDbCompletions = true;
         }
       } else if (wordCount >= 4 && wordCount <= 5) {
         if (!existViewInDbCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(getViews(languageId, words[0], words[2]));
+          syntaxCompletionItems = syntaxCompletionItems.concat(getViews(languageId));
           existViewInDbCompletions = true;
         }
       }

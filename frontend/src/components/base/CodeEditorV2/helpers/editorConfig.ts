@@ -27,5 +27,7 @@ export const editorConfig: editor.IStandaloneEditorConstructionOptions = {
     alwaysConsumeMouseWheel: false
   },
   fontSize: 14,
-  fontWeight: 'medium'
+  fontWeight: 'medium',
+  wordBasedSuggestions: 'off',
+  quickSuggestions: false
 };

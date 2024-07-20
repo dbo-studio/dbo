@@ -19,20 +19,15 @@ export function changeMetaProviderSetting(at: AutoCompleteType) {
   autocomplete = at;
 }
 
-export function getCatalogs(languageId: string) {
-  console.log('🚀 ~ getCatalogs ~ _languageId:', languageId);
-  return [];
-}
+export function getDataBasesAndSchemas(languageId: string) {
+  const databaseAndSchemas = getDataBases(languageId);
 
-export function getDataBasesAndSchemas(languageId: string, catalog?: string) {
-  const databaseAndSchemas = getDataBases(languageId, catalog);
-
-  databaseAndSchemas.concat(getSchemas(languageId, catalog));
+  databaseAndSchemas.concat(getSchemas(languageId));
 
   return databaseAndSchemas;
 }
 
-export function getDataBases(languageId: string, catalog?: string): ICompletionItem[] {
+export function getDataBases(languageId: string): ICompletionItem[] {
   const databaseCompletions = autocomplete.databases.map((db) => ({
     label: db,
     kind: languages.CompletionItemKind.Field,
@@ -43,7 +38,7 @@ export function getDataBases(languageId: string, catalog?: string): ICompletionI
   return databaseCompletions;
 }
 
-export function getSchemas(languageId: string, catalog?: string): ICompletionItem[] {
+export function getSchemas(languageId: string): ICompletionItem[] {
   const schemaCompletions = autocomplete.schemas.map((sc) => ({
     label: sc,
     kind: languages.CompletionItemKind.Field,
@@ -54,7 +49,7 @@ export function getSchemas(languageId: string, catalog?: string): ICompletionIte
   return schemaCompletions;
 }
 
-export function getTables(languageId: string, catalog?: string, database?: string): ICompletionItem[] {
+export function getTables(languageId: string): ICompletionItem[] {
   const tableCompletions = autocomplete.tables.map((tb) => ({
     label: tb,
     kind: languages.CompletionItemKind.Field,
@@ -65,7 +60,7 @@ export function getTables(languageId: string, catalog?: string, database?: strin
   return tableCompletions;
 }
 
-export function getViews(languageId: string, catalog?: string, database?: string): ICompletionItem[] {
+export function getViews(languageId: string): ICompletionItem[] {
   const viewCompletions = autocomplete.views.map((v) => ({
     label: v,
     kind: languages.CompletionItemKind.Field,

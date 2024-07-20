@@ -1,4 +1,5 @@
 import { CodeEditorProps } from '@/components/base/CodeEditorV2/types.ts';
+import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import * as monaco from 'monaco-editor';
 import { editor } from 'monaco-editor';
 import { LanguageIdEnum, setupLanguageFeatures, vsPlusTheme } from 'monaco-sql-languages';
@@ -8,9 +9,10 @@ import { changeMetaProviderSetting } from './helpers/dbMetaProvider.ts';
 import { editorConfig } from './helpers/editorConfig.ts';
 import './helpers/languageSetup.ts';
 
-export default function CodeEditorV2({ autocomplete, value, onChange }: CodeEditorProps) {
+export default function CodeEditorV2({ autocomplete }: CodeEditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
+  const { selectedTab, updateSelectedTab } = useTabStore();
 
   useEffect(() => {
     if (hostRef.current && !editorRef.current) {
@@ -19,15 +21,25 @@ export default function CodeEditorV2({ autocomplete, value, onChange }: CodeEdit
       editorRef.current = monaco.editor.create(hostRef.current, {
         ...editorConfig,
         language: LanguageIdEnum.PG,
-        value: value
+        value: 'SELECT *'
       });
     }
 
     const model = editorRef.current?.getModel();
     model?.onDidChangeContent(() => {
-      onChange(model.getValue());
+      // onChange(model.getValue());
+      handleChange(model.getValue());
     });
   }, []);
+
+  const handleChange = async (value: string) => {
+    if (selectedTab) {
+      updateSelectedTab({
+        ...selectedTab,
+        query: value
+      });
+    }
+  };
 
   useEffect(() => {
     changeMetaProviderSetting(autocomplete);
