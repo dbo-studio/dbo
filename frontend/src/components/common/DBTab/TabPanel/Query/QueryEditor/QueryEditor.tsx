@@ -9,6 +9,14 @@ export default function QueryEditor({ autocomplete }: QueryEditorProps) {
   const theme = useTheme();
   const windowSize = useWindowSize();
   const { getRows } = useDataStore();
+  // const { updateSelectedTab, selectedTab } = useTabStore();
+
+  // const handleUpdateState = (value: string) => {
+  //   updateSelectedTab({
+  //     ...selectedTab!,
+  //     query: value ?? ''
+  //   });
+  // };
 
   return (
     <Box display={'flex'} flexDirection={'column'} height={windowSize.height}>

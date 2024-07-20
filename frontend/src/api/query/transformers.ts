@@ -33,10 +33,10 @@ export const transformStructures = (data: any): ColumnType[] => {
 
 export const transformAutoComplete = (data: any): AutoCompleteType => {
   return {
-    databases: data?.databases,
-    views: data?.views,
-    schemas: data?.schemas,
-    tables: data?.tables,
-    columns: data?.columns
+    databases: data?.databases ?? [],
+    views: data?.views ?? [],
+    schemas: data?.schemas ?? [],
+    tables: data?.tables ?? [],
+    columns: data?.columns ?? []
   };
 };

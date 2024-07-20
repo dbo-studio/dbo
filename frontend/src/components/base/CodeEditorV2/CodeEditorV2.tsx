@@ -3,6 +3,7 @@ import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import * as monaco from 'monaco-editor';
 import { editor } from 'monaco-editor';
 import { LanguageIdEnum, setupLanguageFeatures, vsPlusTheme } from 'monaco-sql-languages';
+
 import { useEffect, useRef } from 'react';
 import { completionService } from './helpers/completionService.ts';
 import { changeMetaProviderSetting } from './helpers/dbMetaProvider.ts';
@@ -21,7 +22,7 @@ export default function CodeEditorV2({ autocomplete }: CodeEditorProps) {
       editorRef.current = monaco.editor.create(hostRef.current, {
         ...editorConfig,
         language: LanguageIdEnum.PG,
-        value: 'SELECT *'
+        value: selectedTab?.query ?? ''
       });
     }
 
