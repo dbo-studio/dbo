@@ -4,7 +4,7 @@ import { QueryEditorActionBarProps } from '../types';
 import QueryEditorActions from './QueryEditorActions/QueryEditorActions';
 import QueryEditorLeading from './QueryEditorLeading/QueryEditorLeading';
 
-export default function QueryEditorActionBar({ onChange }: QueryEditorActionBarProps) {
+export default function QueryEditorActionBar({ onChange, onFormat }: QueryEditorActionBarProps) {
   const theme = useTheme();
 
   return (
@@ -21,7 +21,7 @@ export default function QueryEditorActionBar({ onChange }: QueryEditorActionBarP
         <QueryEditorLeading onChange={onChange} />
       </Grid>
       <Grid md={8} mx={2} display='flex' justifyContent='flex-end'>
-        <QueryEditorActions />
+        <QueryEditorActions onFormat={onFormat} />
       </Grid>
     </Stack>
   );

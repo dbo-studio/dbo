@@ -38,6 +38,7 @@ export default function QueryEditorLeading({ onChange }: QueryEditorLeadingProps
         onChange={(e) => handleDatabaseChange(e.target.value)}
         name='type'
         size='small'
+        margin='none'
       >
         <SelectOption value={''}></SelectOption>
         {currentConnection?.databases?.map((t: string, i: number) => (
@@ -54,6 +55,7 @@ export default function QueryEditorLeading({ onChange }: QueryEditorLeadingProps
         onChange={(e) => handleSchemaChange(e.target.value)}
         name='type'
         size='small'
+        margin='none'
       >
         <SelectOption value={''}></SelectOption>
         {currentConnection?.schemas?.map((t: string, i: number) => (

@@ -1,11 +1,15 @@
-import { CodeEditorSettingType } from '@/components/base/CodeEditorV2/types';
+import { CodeEditorSettingType } from '@/components/base/CodeEditor/types';
 import { AutoCompleteType } from '@/types';
 
 export type QueryEditorLeadingProps = {
   onChange: (data: CodeEditorSettingType) => void;
 };
 
-export interface QueryEditorActionBarProps extends QueryEditorLeadingProps {}
+export type QueryEditorActionsProps = {
+  onFormat: () => void;
+};
+
+export type QueryEditorActionBarProps = QueryEditorLeadingProps & QueryEditorActionsProps;
 
 export type QueryEditorProps = {
   autocomplete: AutoCompleteType;

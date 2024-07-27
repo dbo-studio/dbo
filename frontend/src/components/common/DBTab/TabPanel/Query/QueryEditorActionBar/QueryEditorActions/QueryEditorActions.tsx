@@ -11,8 +11,9 @@ import { IconButton, Stack, Tooltip } from '@mui/material';
 import { minify } from 'pgsql-minify';
 import { toast } from 'sonner';
 import { format } from 'sql-formatter';
+import { QueryEditorActionsProps } from '../../types';
 
-export default function QueryEditorActions() {
+export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps) {
   const { runRawQuery } = useDataStore();
   const { selectedTab, updateSelectedTab } = useTabStore();
   const { upsertQuery } = useSavedQueryStore();
@@ -24,16 +25,23 @@ export default function QueryEditorActions() {
   useShortcut(shortcuts.runQuery, () => runRawQuery());
 
   const handleFormatSql = () => {
-    if (selectedTab && selectedTab.query.length > 0) {
-      selectedTab.query = format(selectedTab.query, { language: 'postgresql' });
+    if (checkQueryLength()) {
+      const sql = JSON.parse(selectedTab!.query);
+      const formatted = format(sql, { language: 'postgresql' });
+      selectedTab!.query = JSON.stringify(formatted);
+
       updateSelectedTab(selectedTab);
+      onFormat();
     }
   };
 
   const handleMinifySql = () => {
     if (checkQueryLength()) {
-      selectedTab!.query = minify(selectedTab!.query);
+      const sql = JSON.parse(selectedTab!.query);
+      const minified = minify(sql);
+      selectedTab!.query = JSON.stringify(minified);
       updateSelectedTab(selectedTab);
+      onFormat();
     }
   };
 

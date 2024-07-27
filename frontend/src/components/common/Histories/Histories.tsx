@@ -19,7 +19,9 @@ export default function Histories() {
     try {
       const res = await getHistories();
       updateHistories(res);
-    } catch (error) {}
+    } catch (error) {
+      console.log('🚀 ~ handleGetHistories ~ error:', error);
+    }
   };
 
   useEffect(() => {

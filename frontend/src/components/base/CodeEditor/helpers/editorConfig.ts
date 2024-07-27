@@ -1,7 +1,7 @@
 import { editor } from 'monaco-editor';
 
 export const editorConfig: editor.IStandaloneEditorConstructionOptions = {
-  theme: 'sql-light',
+  theme: 'github-light',
   tabSize: 4,
   renderValidationDecorations: 'on',
   accessibilitySupport: 'off',

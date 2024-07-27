@@ -1,44 +1,46 @@
-import { shortcuts } from '@/core/utils';
-import { PostgreSQL, sql } from '@codemirror/lang-sql';
-import { EditorView, Prec, keymap } from '@uiw/react-codemirror';
-import { useMemo } from 'react';
-import BaseEditor from './BaseEditor';
-import { CodeEditorProps } from './types';
+import { CodeEditorProps } from '@/components/base/CodeEditor/types.ts';
+import * as monaco from 'monaco-editor';
+import { LanguageIdEnum } from 'monaco-sql-languages';
+
+import { useEffect, useRef } from 'react';
+import { changeMetaProviderSetting } from './helpers/dbMetaProvider.ts';
+import { editorConfig } from './helpers/editorConfig.ts';
+import './helpers/languageSetup.ts';
 
 export default function CodeEditor({ autocomplete, value, onChange }: CodeEditorProps) {
-  const styleTheme = EditorView.baseTheme({
-    '&.cm-editor.cm-focused': {
-      outline: 'unset'
+  const hostRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
+
+  useEffect(() => {
+    if (hostRef.current && !editorRef.current) {
+      editorRef.current = monaco.editor.create(hostRef.current, {
+        ...editorConfig,
+        language: LanguageIdEnum.PG
+      });
     }
-  });
 
-  const k = useMemo(() => {
-    return Object.keys(shortcuts).map((key) => ({
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      key: shortcuts[key].codemirror,
-      run: () => {
-        return true;
+    const model = editorRef.current?.getModel();
+    model?.onDidChangeContent(() => {
+      onChange(JSON.stringify(model.getValue()));
+    });
+  }, []);
+
+  useEffect(() => {
+    if (editorRef.current) {
+      let v = value ?? '';
+      try {
+        v = JSON.parse(v);
+      } catch (error) {
+        console.log('🚀 ~ useEffect ~ error:', error);
       }
-    }));
-  }, [shortcuts]);
 
-  return (
-    <BaseEditor
-      height='100%'
-      autoFocus={true}
-      value={value}
-      onChange={onChange}
-      editable={true}
-      extensions={[
-        sql({
-          dialect: PostgreSQL,
-          upperCaseKeywords: true,
-          schema: autocomplete
-        }),
-        styleTheme,
-        Prec.highest(keymap.of(k))
-      ]}
-    />
-  );
+      editorRef.current.setValue(v);
+    }
+  }, [value]);
+
+  useEffect(() => {
+    changeMetaProviderSetting(autocomplete);
+  }, [autocomplete]);
+
+  return <div style={{ height: '100%', width: '100%' }} ref={hostRef}></div>;
 }
