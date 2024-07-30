@@ -1,11 +1,12 @@
 import { useUUID } from '@/hooks';
 import locales from '@/locales';
 import { Box, useTheme } from '@mui/material';
-import { useState } from 'react';
-import Columns from '../Columns/Columns';
+import { lazy, Suspense, useState } from 'react';
 import { DesignTabWrapperStyled } from './DesignTab.styled';
 import DesignTabItem from './DesignTabItem';
 import { DesignTabTypes } from './types';
+
+const Columns = lazy(() => import('../Columns/Columns'));
 
 const tabs: DesignTabTypes[] = [
   {
@@ -35,7 +36,7 @@ export default function DesignTabs() {
         ))}
       </Box>
 
-      {tabs[mode].component}
+      <Suspense>{tabs[mode].component}</Suspense>
     </DesignTabWrapperStyled>
   );
 }
