@@ -10,6 +10,7 @@ export const editorConfig: editor.IStandaloneEditorConstructionOptions = {
   detectIndentation: false,
   folding: false,
   automaticLayout: true,
+  contextmenu: false,
   minimap: {
     enabled: false
   },
