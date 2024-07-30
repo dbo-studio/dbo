@@ -29,7 +29,6 @@
     "lucide-react": "^0.416.0",
     "monaco-editor": "^0.50.0",
     "monaco-sql-languages": "^0.12.2",
-    "pgsql-minify": "^1.0.7",
     "react": "^18.3.1",
     "react-data-grid": "7.0.0-beta.40",
     "react-dom": "^18.3.1",

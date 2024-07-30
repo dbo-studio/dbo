@@ -20,7 +20,7 @@ export default function Query() {
   const { currentConnection } = useConnectionStore();
   const windowSize = useWindowSize();
   const { getRows } = useDataStore();
-  const { updateSelectedTab, selectedTab } = useTabStore();
+  const { getQuery, updateQuery } = useTabStore();
   const [autocomplete, setAutocomplete] = useState<AutoCompleteType | null>(null);
   const [value, setValue] = useState('');
   const [setting, setSetting] = useState<CodeEditorSettingType>({
@@ -52,14 +52,11 @@ export default function Query() {
   }, []);
 
   const handleChangeValue = () => {
-    setValue(selectedTab?.query ?? '');
+    setValue(getQuery());
   };
 
   const handleUpdateState = (value: string) => {
-    updateSelectedTab({
-      ...selectedTab!,
-      query: value ?? ''
-    });
+    updateQuery(value);
   };
 
   return (

@@ -30,14 +30,7 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
 
   useEffect(() => {
     if (editorRef.current) {
-      let v = value ?? '';
-      try {
-        v = JSON.parse(v);
-      } catch (error) {
-        console.log('🚀 ~ useEffect ~ error:', error);
-      }
-
-      editorRef.current.setValue(v);
+      editorRef.current.setValue(value);
     }
   }, [value]);
 

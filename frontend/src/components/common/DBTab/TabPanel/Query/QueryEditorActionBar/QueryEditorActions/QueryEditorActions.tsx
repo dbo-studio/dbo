@@ -1,6 +1,6 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { shortcuts } from '@/core/utils';
+import { shortcuts, tools } from '@/core/utils';
 import { useShortcut } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
 import locales from '@/locales';
@@ -8,14 +8,13 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useSavedQueryStore } from '@/store/savedQueryStore/savedQuery.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton, Stack, Tooltip } from '@mui/material';
-import { minify } from 'pgsql-minify';
 import { toast } from 'sonner';
 import { format } from 'sql-formatter';
 import { QueryEditorActionsProps } from '../../types';
 
 export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps) {
   const { runRawQuery } = useDataStore();
-  const { selectedTab, updateSelectedTab } = useTabStore();
+  const { selectedTab, updateQuery, getQuery } = useTabStore();
   const { upsertQuery } = useSavedQueryStore();
 
   const { request: createSavedQuery } = useAPI({
@@ -26,21 +25,16 @@ export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps
 
   const handleFormatSql = () => {
     if (checkQueryLength()) {
-      const sql = JSON.parse(selectedTab!.query);
-      const formatted = format(sql, { language: 'postgresql' });
-      selectedTab!.query = JSON.stringify(formatted);
-
-      updateSelectedTab(selectedTab);
+      const formatted = format(getQuery(), { language: 'postgresql', keywordCase: 'preserve' });
+      updateQuery(formatted);
       onFormat();
     }
   };
 
   const handleMinifySql = () => {
     if (checkQueryLength()) {
-      const sql = JSON.parse(selectedTab!.query);
-      const minified = minify(sql);
-      selectedTab!.query = JSON.stringify(minified);
-      updateSelectedTab(selectedTab);
+      const minified = tools.minifySql(getQuery());
+      updateQuery(minified);
       onFormat();
     }
   };
@@ -53,7 +47,7 @@ export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps
 
     try {
       const res = await createSavedQuery({
-        query: selectedTab!.query
+        query: getQuery()
       });
       upsertQuery(res);
       toast.success(locales.query_saved_successfully);
@@ -63,7 +57,7 @@ export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps
   };
 
   const checkQueryLength = () => {
-    return selectedTab && selectedTab.query.length > 0;
+    return selectedTab && getQuery().length > 0;
   };
 
   return (

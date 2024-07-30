@@ -2,7 +2,7 @@ import { AutoCompleteType } from '@/types';
 
 export type CodeEditorProps = {
   autocomplete: AutoCompleteType;
-  value?: string;
+  value: string;
   onChange: (value: string) => void;
 };
 
