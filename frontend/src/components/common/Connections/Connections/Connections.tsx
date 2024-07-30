@@ -6,6 +6,7 @@ import { Box } from '@mui/material';
 import { Suspense, lazy, useEffect } from 'react';
 import { v4 as uuid } from 'uuid';
 
+import { updateConnectionType } from '@/api/connection/types';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { EmptySpaceStyle } from './EmptySpace.styled';
 
@@ -22,6 +23,10 @@ export default function Connections() {
 
   const { request: getConnectionDetail } = useAPI({
     apiMethod: api.connection.getConnectionDetail
+  });
+
+  const { request: updateConnection } = useAPI({
+    apiMethod: api.connection.updateConnection
   });
 
   useEffect(() => {
@@ -42,6 +47,10 @@ export default function Connections() {
       fromCache: true
     }).then((res) => {
       updateCurrentConnection(res);
+      updateConnection({
+        id: c.id,
+        is_active: true
+      } as updateConnectionType);
     });
   };
 

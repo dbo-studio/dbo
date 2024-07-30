@@ -80,6 +80,7 @@ func (h *ConnectionHandler) updateConnection(connection *model.Connection, req *
 	}
 
 	result := app.DB().Save(&connection)
+	app.DB().Delete(&model.CacheItem{})
 
 	return connection, result.Error
 }
