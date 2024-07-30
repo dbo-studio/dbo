@@ -1,7 +1,7 @@
 import api from '@/api';
 import { AutoCompleteRequestType } from '@/api/query/types';
 import { CodeEditorSettingType } from '@/components/base/CodeEditor/types';
-import { useWindowSize } from '@/hooks';
+import { useMount, useWindowSize } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
@@ -16,6 +16,7 @@ const DBDataGrid = lazy(() => import('@/components/shared/DBDataGrid/DBDataGrid'
 
 export default function Query() {
   const theme = useTheme();
+  const mounted = useMount();
   const { currentConnection } = useConnectionStore();
   const windowSize = useWindowSize();
   const { getRows } = useDataStore();
@@ -65,14 +66,14 @@ export default function Query() {
     <>
       <QueryEditorActionBar onFormat={() => handleChangeValue()} onChange={setSetting} />
       <Box display={'flex'} flexDirection={'column'} height={windowSize.height}>
-        <Suspense fallback={<div>loading editor</div>}>
+        <Suspense>
           {autocomplete && (
             <Box display={'flex'} minHeight={'0'} flex={1} borderBottom={`1px solid ${theme.palette.divider}`}>
               <CodeEditor onChange={handleUpdateState} autocomplete={autocomplete} value={value} />
             </Box>
           )}
         </Suspense>
-        <Suspense fallback={<div>loading rows</div>}>{getRows() && getRows().length > 0 && <DBDataGrid />}</Suspense>
+        {mounted && <Suspense>{getRows() && getRows().length > 0 && <DBDataGrid />}</Suspense>}
       </Box>
     </>
   );
