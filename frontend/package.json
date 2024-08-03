@@ -33,8 +33,10 @@
     "react-data-grid": "7.0.0-beta.40",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.51.5",
+    "react-tabulator": "^0.20.3",
     "sonner": "^1.5.0",
     "sql-formatter": "^15.3.1",
+    "tabulator-tables": "^6.2.5",
     "uuid": "^10.0.0",
     "zod": "^3.23.8",
     "zustand": "^4.5.2"

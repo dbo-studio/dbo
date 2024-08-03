@@ -9,6 +9,7 @@ import QueryPreview from './QueryPreview/QueryPreview';
 import Sorts from './Sorts/Sorts';
 
 const DBDataGrid = lazy(() => import('@/components/shared/DBDataGrid/DBDataGrid'));
+const DataGrid = lazy(() => import('@/components/shared/DataGrid/DataGrid'));
 
 export default function Data() {
   const { selectedTab } = useTabStore();
@@ -23,7 +24,8 @@ export default function Data() {
         <Box overflow='hidden' flex={1} display='flex' flexDirection='row'>
           {selectedTab.showColumns && <Columns />}
           <Suspense>
-            <DBDataGrid />
+            {/* <DBDataGrid /> */}
+            <DataGrid />
           </Suspense>
         </Box>
         <StatusBar />

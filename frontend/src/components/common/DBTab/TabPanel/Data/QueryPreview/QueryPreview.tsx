@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react';
 import { QueryPreviewStyled } from './QueryPreview.styled';
 
 export default function QueryPreview() {
-  const { selectedTab } = useTabStore();
+  const { selectedTab, getQuery } = useTabStore();
   const [html, setHtml] = useState('');
 
   useEffect(() => {
-    SyntaxHighlighter(selectedTab?.query ?? '').then((_html) => setHtml(_html));
+    SyntaxHighlighter(getQuery()).then((_html) => setHtml(_html));
   }, [selectedTab?.query]);
 
   return (
