@@ -6,12 +6,12 @@ export const ConnectionItemStyled = styled(Box)<ConnectionItemStyledProps>(({ th
   position: 'relative',
   borderBottom: `1px solid ${theme.palette.divider}`,
   borderRight: selected ? 'unset' : `1px solid ${theme.palette.divider}`,
-  // background: selected ? theme.palette.background.paper : 'unset',
   justifyContent: 'center',
   display: 'flex',
   alignItems: 'center',
   flexDirection: 'column',
   padding: theme.spacing(2),
+  color: theme.palette.text.text,
   maxHeight: '82px',
   ':hover': {
     background: theme.palette.background.paper

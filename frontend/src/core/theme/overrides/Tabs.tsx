@@ -23,6 +23,7 @@ export default function Tabs(theme: Theme): Components {
           minHeight: 30,
           height: 30,
           borderRadius: variables.radius.small,
+          color: theme.palette.text.subdued,
           border: `1px solid transparent`,
           '& .MuiTabs-indicator': {
             display: 'none',
@@ -35,7 +36,7 @@ export default function Tabs(theme: Theme): Components {
           },
           '&.Mui-selected': {
             border: `1px solid ${theme.palette.divider}`,
-            color: theme.palette.text.primary,
+            color: theme.palette.text.text,
             fontWeight: theme.typography.fontWeightMedium,
             backgroundColor: theme.palette.background.paper
           },
@@ -49,7 +50,7 @@ export default function Tabs(theme: Theme): Components {
             borderTop: 'unset',
             svg: {
               position: 'relative',
-              right: '16px',
+              left: '16px',
               opacity: 0,
               transition: 'opacity 0.1s'
             },

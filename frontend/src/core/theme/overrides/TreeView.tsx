@@ -10,7 +10,7 @@ export default function TreeView(theme: Theme): Components | MuiTree {
         root: {
           borderRadius: variables.radius.medium,
           backgroundColor: theme.palette.background,
-          color: theme.palette.text.primary,
+          color: theme.palette.text.text,
           '& .MuiTreeItem-content': {
             borderRadius: variables.radius.small,
             height: 32

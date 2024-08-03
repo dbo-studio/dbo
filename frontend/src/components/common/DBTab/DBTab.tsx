@@ -58,7 +58,6 @@ export default function DBTab() {
                 label={
                   <Tooltip title={tab.table}>
                     <Box display={'flex'} alignItems={'center'}>
-                      <CustomIcon type='close' size='s' onClick={() => removeTab(tab.id)} />
                       <Typography
                         display={'inline-block'}
                         component={'span'}
@@ -69,6 +68,7 @@ export default function DBTab() {
                       >
                         {tab.table}
                       </Typography>
+                      <CustomIcon type='close' size='s' onClick={() => removeTab(tab.id)} />
                     </Box>
                   </Tooltip>
                 }
