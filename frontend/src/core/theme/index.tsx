@@ -16,7 +16,7 @@ export default function ThemeProvider({ children }: Props) {
 
   const themeOptions: ThemeOptions = {
     typography,
-    palette: palette(ThemeModeEnum.Light),
+    palette: palette(ThemeModeEnum.Dark),
     // palette: {
     //   mode: 'dark'
     // },

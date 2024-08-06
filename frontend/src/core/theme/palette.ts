@@ -140,6 +140,14 @@ const colorPalette = {
       success: '#E6F9F7',
       warning: '#FFF9E8',
       danger: '#F8E9E9'
+    },
+    dark: {
+      primary: '#1A1C1E',
+      subdued: '#25282A',
+      secondary: '#343A40',
+      success: '#14282D',
+      warning: '#2F2A1D',
+      danger: '#3C1C1E'
     }
   }
 };
@@ -174,7 +182,13 @@ export default function palette(themeMode: ThemeModeEnum) {
       background: {
         default: colorPalette.light[0],
         paper: colorPalette.light[1],
-        neutral: colorPalette.light[2]
+        neutral: colorPalette.light[2],
+        primary: colorPalette.background.light.primary,
+        subdued: colorPalette.background.light.subdued,
+        secondary: colorPalette.background.light.secondary,
+        success: colorPalette.background.light.success,
+        warning: colorPalette.background.light.warning,
+        danger: colorPalette.background.light.danger
       },
       text: colorPalette.text.light,
       action: {
@@ -210,7 +224,13 @@ export default function palette(themeMode: ThemeModeEnum) {
       background: {
         default: colorPalette.dark[0],
         paper: colorPalette.dark[1],
-        neutral: colorPalette.dark[2]
+        neutral: colorPalette.dark[2],
+        primary: colorPalette.background.dark.primary,
+        subdued: colorPalette.background.dark.subdued,
+        secondary: colorPalette.background.dark.secondary,
+        success: colorPalette.background.dark.success,
+        warning: colorPalette.background.dark.warning,
+        danger: colorPalette.background.dark.danger
       },
       text: colorPalette.text.dark,
       divider: colorPalette.divider.dark
