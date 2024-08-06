@@ -95,14 +95,26 @@ const colorPalette = {
   constant: { white: '#FFFFFF', black: '#222222' },
   divider: { light: '#d3dae6', dark: '#343741' },
   action: {
-    active: GREY[600],
-    hover: alpha(GREY[500], 0.08),
-    selected: '#dbedfa',
-    disabled: alpha(GREY[500], 0.8),
-    disabledBackground: alpha(GREY[500], 0.24),
-    focus: alpha(GREY[500], 0.24),
-    hoverOpacity: 0.08,
-    disabledOpacity: 0.48
+    light: {
+      active: GREY[600],
+      hover: alpha(GREY[500], 0.08),
+      selected: '#dbedfa',
+      disabled: alpha(GREY[500], 0.8),
+      disabledBackground: alpha(GREY[500], 0.24),
+      focus: alpha(GREY[500], 0.24),
+      hoverOpacity: 0.08,
+      disabledOpacity: 0.48
+    },
+    dark: {
+      active: GREY[600],
+      hover: alpha(GREY[500], 0.08),
+      selected: '#dbedfa',
+      disabled: '#515761',
+      disabledBackground: '#212229',
+      focus: alpha(GREY[500], 0.24),
+      hoverOpacity: 0.08,
+      disabledOpacity: 0.48
+    }
   },
   text: {
     light: {
@@ -192,7 +204,14 @@ export default function palette(themeMode: ThemeModeEnum) {
       },
       text: colorPalette.text.light,
       action: {
-        selected: '#dbedfa'
+        selected: colorPalette.action.light.selected,
+        active: colorPalette.action.light.active,
+        hover: colorPalette.action.light.hover,
+        disabled: colorPalette.action.light.disabled,
+        disabledBackground: colorPalette.action.light.disabledBackground,
+        focus: colorPalette.action.light.focus,
+        hoverOpacity: colorPalette.action.light.hoverOpacity,
+        disabledOpacity: colorPalette.action.light.disabledOpacity
       },
       divider: colorPalette.divider.light
     },
@@ -232,17 +251,20 @@ export default function palette(themeMode: ThemeModeEnum) {
         warning: colorPalette.background.dark.warning,
         danger: colorPalette.background.dark.danger
       },
+      action: {
+        selected: colorPalette.action.dark.selected,
+        active: colorPalette.action.dark.active,
+        hover: colorPalette.action.dark.hover,
+        disabled: colorPalette.action.dark.disabled,
+        disabledBackground: colorPalette.action.dark.disabledBackground,
+        focus: colorPalette.action.dark.focus,
+        hoverOpacity: colorPalette.action.dark.hoverOpacity,
+        disabledOpacity: colorPalette.action.dark.disabledOpacity
+      },
       text: colorPalette.text.dark,
       divider: colorPalette.divider.dark
     }
   } as const;
 
-  const constant = {
-    gradient: {
-      main: `linear-gradient(45deg, ${colorPalette.primary}, ${colorPalette.secondary})`,
-      mainChannel: '0 0 0'
-    }
-  };
-
-  return { ...theme[themeMode], ...constant };
+  return { ...theme[themeMode] };
 }

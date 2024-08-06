@@ -24,5 +24,5 @@ export const ModalWrapperStyled = styled(Box)(({ theme }) => ({
 
 export const ConfirmModalWrapperStyled = styled(ModalWrapperStyled)(() => ({
   minHeight: '120px',
-  minWidth: '150px'
+  minWidth: '400px'
 }));
