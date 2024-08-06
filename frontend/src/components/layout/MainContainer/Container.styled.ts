@@ -11,7 +11,8 @@ export const CenterContainerStyled = styled(Box)(({ theme }) => ({
 export const EndContainerStyled = styled(Box)(({ theme }) => ({
   padding: theme.spacing(1),
   border: `1px solid ${theme.palette.divider}`,
-  overflow: 'auto'
+  overflow: 'auto',
+  background: theme.palette.background.neutral
 }));
 
 export const StartContainerStyled = styled(Box)(({ theme }) => ({
@@ -25,5 +26,6 @@ export const ExplorerContainerStyled = styled(Box)(({ theme }) => ({
   borderTop: `1px solid ${theme.palette.divider}`,
   borderBottom: `1px solid ${theme.palette.divider}`,
   borderRight: `1px solid ${theme.palette.divider}`,
-  overflow: 'auto'
+  overflow: 'auto',
+  background: theme.palette.background.neutral
 }));

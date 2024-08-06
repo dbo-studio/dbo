@@ -13,7 +13,16 @@ export default function TreeView(theme: Theme): Components | MuiTree {
           color: theme.palette.text.text,
           '& .MuiTreeItem-content': {
             borderRadius: variables.radius.small,
-            height: 32
+            height: 32,
+            '&:hover': {
+              background: `${theme.palette.background.default} !important`,
+              color: theme.palette.text.primary
+            }
+          },
+          '& .Mui-selected': {
+            background: `${theme.palette.background.default} !important`,
+            color: theme.palette.text.primary,
+            border: `1px solid ${theme.palette.divider}`
           }
         }
       }
