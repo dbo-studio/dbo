@@ -8,7 +8,7 @@ export default forwardRef(function SelectInput(props: SelectInputProps, ref) {
   return (
     <Box display={'flex'} flexDirection={'column'}>
       {props.label && (
-        <Typography color={theme.palette.text.secondary} variant='caption'>
+        <Typography color={theme.palette.text.text} variant='caption'>
           {props.label}
         </Typography>
       )}

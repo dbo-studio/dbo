@@ -95,17 +95,17 @@
 
     .edit-highlight{
       .rdg-cell {
-          background-color: #fff8da; 
+          background-color: #2F2A1D; 
         }
     }
     .unsaved-highlight{
       .rdg-cell {
-          background-color: #DFE3E8; 
+          background-color: #14282D; 
         }
     }
     .removed-highlight{
       .rdg-cell {
-          background-color: #ffebeb; 
+          background-color: #3C1C1E; 
         }
     }
   }
