@@ -15,10 +15,18 @@ export const useSettingStore = create<SettingState>()(
         showLeft: true,
         showRight: true
       },
+      isDark: false,
       updateSidebar: (sidebar: Partial<SidebarType>) => {
         const oldSidebar = get().sidebar;
         const newSidebar = { ...oldSidebar, ...sidebar };
         set({ sidebar: newSidebar });
+      },
+      updateIsDark: (isDark: undefined | boolean) => {
+        if (isDark !== undefined) {
+          set({ isDark });
+        } else {
+          set({ isDark: !get().isDark });
+        }
       }
     })),
     { name: 'settings' }

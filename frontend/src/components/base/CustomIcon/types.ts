@@ -52,5 +52,7 @@ export const IconTypes = {
   ellipsisVertical: 'EllipsisVertical',
   save: 'Save',
   wand_sparkles: 'WandSparkles',
-  pickaxe: 'Pickaxe'
+  pickaxe: 'Pickaxe',
+  light: 'SunMoon',
+  dark: 'Moon'
 };
