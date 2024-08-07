@@ -1,15 +1,17 @@
 import { SyntaxHighlighter } from '@/components/base/SyntaxHighlighter/SyntaxHighlighter';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useEffect, useState } from 'react';
 import { QueryPreviewStyled } from './QueryPreview.styled';
 
 export default function QueryPreview() {
-  const { selectedTab } = useTabStore();
+  const { getQuery } = useTabStore();
+  const { isDark } = useSettingStore();
   const [html, setHtml] = useState('');
 
   useEffect(() => {
-    SyntaxHighlighter(selectedTab?.query ?? '').then((_html) => setHtml(_html));
-  }, [selectedTab?.query]);
+    SyntaxHighlighter(getQuery() ?? '', isDark ?? false).then((_html) => setHtml(_html));
+  }, [getQuery(), isDark]);
 
   return (
     <QueryPreviewStyled>

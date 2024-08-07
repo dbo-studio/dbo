@@ -7,12 +7,11 @@ export default function Leading() {
   const { isDark, updateIsDark } = useSettingStore();
 
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    if (mq.matches) {
-      updateIsDark(true);
-    }
-
     if (isDark === undefined) {
+      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      if (mq.matches) {
+        updateIsDark(true);
+      }
       mq.addEventListener('change', (evt) => updateIsDark(evt.matches));
     }
   }, []);

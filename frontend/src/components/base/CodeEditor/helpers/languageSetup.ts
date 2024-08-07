@@ -18,12 +18,11 @@ import { completionService } from './completionService';
 };
 
 const highlighter = await createHighlighter({
-  themes: ['github-light'],
+  themes: ['github-light', 'github-dark'],
   langs: ['sql']
 });
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
 shikiToMonaco(highlighter, monaco);
 
 const preprocessCode = (code: string): string => {
