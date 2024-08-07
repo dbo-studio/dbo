@@ -28,7 +28,7 @@ export default function TablesTreeView({ tables }: { tables: string[] }) {
         slots={{
           expandIcon: () => <CustomIcon size='s' type={'arrowRight'} />,
           collapseIcon: () => <CustomIcon size='s' type={'arrowDown'} />,
-          endIcon: () => <CustomIcon type={'columnToken'} />
+          endIcon: () => <CustomIcon type={'sheet'} />
         }}
         defaultExpandedItems={['1']}
         aria-label='file system navigator'

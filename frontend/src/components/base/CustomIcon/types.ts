@@ -53,6 +53,7 @@ export const IconTypes = {
   save: 'Save',
   wand_sparkles: 'WandSparkles',
   pickaxe: 'Pickaxe',
-  light: 'SunMoon',
-  dark: 'Moon'
+  light: 'Sun',
+  dark: 'Moon',
+  sheet: 'Sheet'
 };
