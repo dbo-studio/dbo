@@ -1,11 +1,11 @@
 import { TabMode } from '@/core/enums';
 import { handelRowChangeLog } from '@/core/utils';
 import { useDataStore } from '@/store/dataStore/data.store';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, Checkbox, CircularProgress } from '@mui/material';
 import React, { useEffect } from 'react';
 import DataGrid, { RenderCheckboxProps, RowsChangeData } from 'react-data-grid';
-import './styles.css';
 
 export default function DBDataGrid() {
   const { selectedTab } = useTabStore();
@@ -24,6 +24,8 @@ export default function DBDataGrid() {
     getRemovedRows
   } = useDataStore();
 
+  const { isDark } = useSettingStore();
+
   const getData = async () => {
     await runQuery();
   };
@@ -32,7 +34,11 @@ export default function DBDataGrid() {
     if (selectedTab?.mode == TabMode.Data && (getRows().length == 0 || getColumns().length == 0)) {
       getData();
     }
-  }, [selectedTab]);
+  }, [selectedTab?.id]);
+
+  useEffect(() => {
+    isDark ? import('./styles.dark.css') : import('./styles.css');
+  }, []);
 
   const handleOnCellClick = (e: any) => {
     if (e.rowIdx == -1) {

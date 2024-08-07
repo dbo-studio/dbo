@@ -1,6 +1,7 @@
 import { Components, Theme } from '@mui/material';
 import Baseline from './Baseline';
 import Button from './Button';
+import Checkbox from './Checkbox';
 import Input from './Input';
 import Menu from './Menu';
 import Select from './Select';
@@ -19,6 +20,7 @@ export default function ComponentsOverrides(theme: Theme): Components {
     Select(theme),
     Button(theme),
     Menu(theme),
-    Table()
+    Table(),
+    Checkbox(theme)
   );
 }

@@ -1,11 +1,36 @@
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { Box, Button, Typography, useTheme } from '@mui/material';
+import { useEffect, useState } from 'react';
 import { ConfirmModalWrapperStyled, ModalStyled } from './Modal.styled';
 
 export default function ConfirmModal() {
-  const { isOpen, title, description, onCancel, onSuccess, close } = useConfirmModalStore();
+  const { isOpen, mode, title, description, onCancel, onSuccess, close } = useConfirmModalStore();
+  const [style, setStyle] = useState({});
   const theme = useTheme();
+
+  useEffect(() => {
+    if (mode == 'danger') {
+      setStyle({
+        background: theme.palette.background.danger,
+        color: theme.palette.text.danger
+      });
+    }
+
+    if (mode == 'success') {
+      setStyle({
+        background: theme.palette.background.success,
+        color: theme.palette.text.success
+      });
+    }
+
+    if (mode == 'warning') {
+      setStyle({
+        background: theme.palette.background.warning,
+        color: theme.palette.text.warning
+      });
+    }
+  }, [mode]);
 
   const handleCancel = () => {
     onCancel && onCancel();
@@ -41,15 +66,7 @@ export default function ConfirmModal() {
           >
             {locales.cancel}
           </Button>
-          <Button
-            style={{
-              background: theme.palette.background.danger,
-              color: theme.palette.text.danger
-            }}
-            onClick={handleConfirm}
-            size='small'
-            variant='contained'
-          >
+          <Button style={style} onClick={handleConfirm} size='small' variant='contained'>
             {locales.yes}
           </Button>
         </Box>

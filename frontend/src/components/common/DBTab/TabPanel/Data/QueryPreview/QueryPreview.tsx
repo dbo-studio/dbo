@@ -11,7 +11,7 @@ export default function QueryPreview() {
 
   useEffect(() => {
     SyntaxHighlighter(getQuery() ?? '', isDark ?? false).then((_html) => setHtml(_html));
-  }, [getQuery(), isDark]);
+  }, [getQuery()]);
 
   return (
     <QueryPreviewStyled>

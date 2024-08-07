@@ -21,7 +21,7 @@ export default function SavedQueryContextMenu({
   const [_, copy] = useCopyToClipboard();
   const { addTab } = useTabStore();
 
-  const showModal = useConfirmModalStore((state) => state.show);
+  const showModal = useConfirmModalStore((state) => state.danger);
 
   const { request: deleteSavedQuery, pending: pendingDelete } = useAPI({
     apiMethod: api.savedQueries.deleteSavedQuery
