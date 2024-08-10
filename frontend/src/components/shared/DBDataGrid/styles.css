@@ -86,7 +86,7 @@
       --rdg-header-background-color: #fff;
       --rdg-header-draggable-background-color: hsl(0deg 0% 90.5%);
       --rdg-row-hover-background-color: #e5f1fa;
-      --rdg-row-selected-background-color: hsl(207deg 76% 92%);
+      --rdg-row-selected-background-color: #dbecfa;
       --rdg-row-selected-hover-background-color: #e5f1fa;
       --rdg-checkbox-color: hsl(207deg 100% 29%);
       --rdg-checkbox-border-color: #c9cbcd;
@@ -98,17 +98,17 @@
 
     .edit-highlight{
       .rdg-cell {
-          background-color: #fff8da; 
+          background-color: #FFF9E8; 
         }
     }
     .unsaved-highlight{
       .rdg-cell {
-          background-color: #DFE3E8; 
+          background-color: #E6F9F7; 
         }
     }
     .removed-highlight{
       .rdg-cell {
-          background-color: #ffebeb; 
+          background-color: #F8E9E9; 
         }
     }
   }

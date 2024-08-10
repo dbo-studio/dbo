@@ -98,7 +98,7 @@ const colorPalette = {
     light: {
       active: GREY[600],
       hover: alpha(GREY[500], 0.08),
-      selected: '#dbedfa',
+      selected: '#dbecfa',
       disabled: alpha(GREY[500], 0.8),
       disabledBackground: alpha(GREY[500], 0.24),
       focus: alpha(GREY[500], 0.24),
@@ -108,7 +108,7 @@ const colorPalette = {
     dark: {
       active: GREY[600],
       hover: alpha(GREY[500], 0.08),
-      selected: '#dbedfa',
+      selected: '#103148',
       disabled: '#515761',
       disabledBackground: '#212229',
       focus: alpha(GREY[500], 0.24),

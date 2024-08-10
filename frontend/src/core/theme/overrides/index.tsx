@@ -20,7 +20,7 @@ export default function ComponentsOverrides(theme: Theme): Components {
     Select(theme),
     Button(theme),
     Menu(theme),
-    Table(),
+    Table(theme),
     Checkbox(theme)
   );
 }
