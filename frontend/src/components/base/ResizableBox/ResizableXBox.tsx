@@ -1,6 +1,6 @@
 import { EventFor } from '@/types';
 import { Box } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ResizableToggle from './ResizableToggle';
 import { ResizableBoxXProps } from './types';
 
@@ -9,6 +9,12 @@ export default function ResizableXBox({ direction, width, maxWidth, children, on
   const [isResizing, setIsResizing] = useState(false);
   const [initialX, setInitialX] = useState(0);
 
+  const currentWidthRef = useRef(boxWidth);
+
+  useEffect(() => {
+    setBoxWidth(width);
+  }, [width]);
+
   const handleMouseDown = (event: EventFor<'div', 'onMouseDown'>) => {
     event.preventDefault();
     setIsResizing(true);
@@ -16,25 +22,43 @@ export default function ResizableXBox({ direction, width, maxWidth, children, on
   };
 
   const handleMouseUp = () => {
+    if (!isResizing) return;
+
+    if (onChange) {
+      const finalWidth = currentWidthRef.current;
+      if (maxWidth && finalWidth > maxWidth) {
+        onChange(maxWidth);
+      } else {
+        onChange(finalWidth);
+      }
+    }
     setIsResizing(false);
   };
 
   const handleMouseMove = (event: any) => {
     if (!isResizing) return;
 
-    const newWidth = direction == 'ltr' ? boxWidth - (event.clientX - initialX) : boxWidth + (event.clientX - initialX);
+    const newWidth =
+      direction === 'ltr'
+        ? Math.max(boxWidth - (event.clientX - initialX), 50)
+        : Math.max(boxWidth + (event.clientX - initialX), 50);
 
-    setBoxWidth(Math.min(Math.max(newWidth, width ?? 50), maxWidth ?? width * 2));
+    if (maxWidth && newWidth > maxWidth) return;
+
+    setBoxWidth(newWidth);
+    currentWidthRef.current = newWidth;
+
     setInitialX(event.clientX);
-
-    if (onChange) {
-      onChange(newWidth);
-    }
   };
 
   useEffect(() => {
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    }
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
