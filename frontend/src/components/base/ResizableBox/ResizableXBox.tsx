@@ -8,12 +8,7 @@ export default function ResizableXBox({ direction, width, maxWidth, children, on
   const [boxWidth, setBoxWidth] = useState(width);
   const [isResizing, setIsResizing] = useState(false);
   const [initialX, setInitialX] = useState(0);
-
   const currentWidthRef = useRef(boxWidth);
-
-  useEffect(() => {
-    setBoxWidth(width);
-  }, [width]);
 
   const handleMouseDown = (event: EventFor<'div', 'onMouseDown'>) => {
     event.preventDefault();
