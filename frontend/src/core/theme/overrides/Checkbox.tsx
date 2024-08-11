@@ -6,7 +6,7 @@ export default function Checkbox(theme: Theme): Components {
       styleOverrides: {
         root: {
           '& .MuiSvgIcon-root': {
-            fill: theme.palette.text.secondary
+            fill: theme.palette.primary.main
           }
         }
       }
