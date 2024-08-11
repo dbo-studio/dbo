@@ -1,11 +1,12 @@
 import { TabMode } from '@/core/enums';
 import { handelRowChangeLog } from '@/core/utils';
 import { useDataStore } from '@/store/dataStore/data.store';
-import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, Checkbox, CircularProgress } from '@mui/material';
 import React, { useEffect } from 'react';
-import DataGrid, { RenderCheckboxProps, RowsChangeData } from 'react-data-grid';
+import { RenderCheckboxProps, RowsChangeData } from 'react-data-grid';
+import 'react-data-grid/lib/styles.css';
+import { DataGridStyled } from './DataGrid.styled';
 
 export default function DBDataGrid() {
   const { selectedTab } = useTabStore();
@@ -24,8 +25,6 @@ export default function DBDataGrid() {
     getRemovedRows
   } = useDataStore();
 
-  const { isDark } = useSettingStore();
-
   const getData = async () => {
     await runQuery();
   };
@@ -35,10 +34,6 @@ export default function DBDataGrid() {
       getData();
     }
   }, [selectedTab?.id]);
-
-  useEffect(() => {
-    isDark ? import('./styles.dark.css') : import('./styles.css');
-  }, []);
 
   const handleOnCellClick = (e: any) => {
     if (e.rowIdx == -1) {
@@ -62,7 +57,7 @@ export default function DBDataGrid() {
   ) : (
     <Box overflow='hidden' display={'flex'} flexDirection={'column'} flex={1}>
       {selectedTab && (
-        <DataGrid
+        <DataGridStyled
           onSelectedCellChange={handleOnCellClick}
           rowKeyGetter={rowKeyGetter}
           selectedRows={getSelectedRows()}

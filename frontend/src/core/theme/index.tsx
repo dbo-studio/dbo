@@ -18,7 +18,6 @@ export default function ThemeProvider({ children }: Props) {
   const themeOptions: ThemeOptions = {
     typography,
     palette: palette(isDark ? ThemeModeEnum.Dark : ThemeModeEnum.Light),
-    // palette: palette(ThemeModeEnum.Dark),
     direction: appConfig.direction
   };
 
