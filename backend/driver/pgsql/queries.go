@@ -3,13 +3,14 @@ package pgsql_driver
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"strings"
+	"time"
+
 	"github.com/khodemobin/dbo/api/dto"
 	error_c "github.com/khodemobin/dbo/error"
 	"github.com/khodemobin/dbo/helper"
 	"github.com/xwb1989/sqlparser"
-	"log"
-	"strings"
-	"time"
 )
 
 type RunQueryResult struct {
@@ -156,12 +157,16 @@ func (p PostgresQueryEngine) Databases(connectionId int32, withTemplates bool) (
 	return names, result.Error
 }
 
-func (p PostgresQueryEngine) Schemas(connectionId int32, database string) ([]string, error) {
+func (p PostgresQueryEngine) Schemas(connectionId int32, database string, all bool) ([]string, error) {
 	db, err := p.Connect(connectionId)
 	if err != nil {
 		return nil, error_c.ErrConnection
 	}
-	query := "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema') " + fmt.Sprintf("AND catalog_name = '%s'", database) + " AND schema_name NOT LIKE 'pg_%';"
+	query := "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema') " + fmt.Sprintf("AND catalog_name = '%s'", database)
+	if !all {
+		query += " AND schema_name NOT LIKE 'pg_%';"
+	}
+
 	type Schema struct {
 		Name string `gorm:"column:schema_name"`
 	}
@@ -189,7 +194,7 @@ func (p PostgresQueryEngine) Tables(connectionId int32, schema string) ([]string
 		TableName sql.NullString `gorm:"column:table_name"`
 	}
 
-	info := []Info{}
+	info := make([]Info, 0)
 	result := db.Raw(query).Find(&info)
 
 	if result.Error != nil {
@@ -206,6 +211,51 @@ func (p PostgresQueryEngine) Tables(connectionId int32, schema string) ([]string
 	}
 
 	return tables, err
+}
+
+func (p PostgresQueryEngine) Columns(connectionId int32, table string, schema string) ([]string, error) {
+	columns := make([]string, 0)
+	structures, err := p.TableStructure(connectionId, table, schema, false)
+	if err != nil {
+		return columns, err
+	}
+
+	for _, structure := range structures {
+		columns = append(columns, structure.ColumnName)
+	}
+
+	return columns, nil
+}
+
+func (p PostgresQueryEngine) Views(connectionId int32) ([]string, error) {
+	db, err := p.Connect(connectionId)
+	if err != nil {
+		return nil, error_c.ErrConnection
+	}
+
+	query := "SELECT schemaname,viewname FROM pg_catalog.pg_views WHERE schemaname NOT IN ('pg_catalog','information_schema') ORDER BY schemaname,viewname;"
+
+	type Info struct {
+		ViewName sql.NullString `gorm:"column:viewname"`
+	}
+
+	info := make([]Info, 0)
+	result := db.Raw(query).Find(&info)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	var views []string
+	for _, view := range info {
+		if !view.ViewName.Valid {
+			continue
+		}
+
+		views = append(views, view.ViewName.String)
+	}
+
+	return views, err
 }
 
 type Structure struct {
@@ -271,41 +321,6 @@ func (p PostgresQueryEngine) TableSpaces(connectionId int32) ([]string, error) {
 	}
 
 	return tablespaces, err
-}
-
-func (p PostgresQueryEngine) AutoComplete(connectionId int32, database string) (any, error) {
-	db, err := p.Connect(connectionId)
-	if err != nil {
-		return nil, error_c.ErrConnection
-	}
-
-	schemas, err := p.Schemas(connectionId, database)
-	if err != nil {
-		return nil, err
-	}
-
-	queryResult := make(map[string]map[string][]string)
-
-	type columnInfo struct {
-		TableName  string `gorm:"column:table_name"`
-		ColumnName string `gorm:"column:column_name"`
-	}
-
-	for _, schema := range schemas {
-		tablesQuery := fmt.Sprintf(`select table_name, column_name from information_schema.columns where table_schema = '%s' order by table_name, ordinal_position;`, schema)
-		columnInfoResult := make([]columnInfo, 0)
-		result := db.Raw(tablesQuery).Find(&columnInfoResult)
-		if result.Error != nil {
-			return nil, err
-		}
-
-		queryResult[schema] = make(map[string][]string)
-		for _, c := range columnInfoResult {
-			queryResult[schema][c.TableName] = append(queryResult[schema][c.TableName], c.ColumnName)
-		}
-	}
-
-	return queryResult, nil
 }
 
 type IndexInfo struct {

@@ -1,6 +1,7 @@
 'use client';
 
 import { appConfig } from '@/appConfig';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import { ThemeProvider as MUIThemeProvider, ThemeOptions, createTheme } from '@mui/material/styles';
 import { ThemeModeEnum } from '../enums';
 import componentsOverride from './overrides';
@@ -12,11 +13,11 @@ type Props = {
 };
 
 export default function ThemeProvider({ children }: Props) {
-  // const status = useAppSelector((state: any) => state.themeReducer.value);
+  const { isDark } = useSettingStore();
 
   const themeOptions: ThemeOptions = {
     typography,
-    palette: palette(ThemeModeEnum.Light),
+    palette: palette(isDark ? ThemeModeEnum.Dark : ThemeModeEnum.Light),
     direction: appConfig.direction
   };
 

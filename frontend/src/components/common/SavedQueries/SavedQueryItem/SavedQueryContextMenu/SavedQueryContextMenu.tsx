@@ -17,10 +17,11 @@ export default function SavedQueryContextMenu({
   onDelete,
   onChange
 }: SavedQueryContextMenuProps) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, copy] = useCopyToClipboard();
   const { addTab } = useTabStore();
 
-  const showModal = useConfirmModalStore((state) => state.show);
+  const showModal = useConfirmModalStore((state) => state.danger);
 
   const { request: deleteSavedQuery, pending: pendingDelete } = useAPI({
     apiMethod: api.savedQueries.deleteSavedQuery

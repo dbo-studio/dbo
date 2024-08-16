@@ -63,7 +63,7 @@ export const createDataQuerySlice: StateCreator<
       set({ loading: true });
       const res = await runRawQuery({
         connection_id: currentConnection.id,
-        query: selectedTab.query
+        query: JSON.parse(useTabStore.getState().getQuery())
       });
 
       useTabStore.getState().updateQuery(res.query);

@@ -2,11 +2,12 @@ import api from '@/api';
 import useAPI from '@/hooks/useApi.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { ConnectionType } from '@/types';
-import { Box } from '@mui/material';
 import { Suspense, lazy, useEffect } from 'react';
 import { v4 as uuid } from 'uuid';
 
+import { updateConnectionType } from '@/api/connection/types';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
+import { ConnectionsStyled } from './Connections.styled';
 import { EmptySpaceStyle } from './EmptySpace.styled';
 
 const AddConnection = lazy(() => import('../AddConnection/AddConnection'));
@@ -24,6 +25,10 @@ export default function Connections() {
     apiMethod: api.connection.getConnectionDetail
   });
 
+  const { request: updateConnection } = useAPI({
+    apiMethod: api.connection.updateConnection
+  });
+
   useEffect(() => {
     getConnectionList().then((res) => {
       if (res.length > 0) {
@@ -37,16 +42,23 @@ export default function Connections() {
   }, []);
 
   const handleChangeCurrentConnection = (c: ConnectionType) => {
+    if (c.id === currentConnection?.id) {
+      return;
+    }
     getConnectionDetail({
       connectionID: c?.id,
       fromCache: true
     }).then((res) => {
       updateCurrentConnection(res);
+      updateConnection({
+        id: c.id,
+        is_active: true
+      } as updateConnectionType);
     });
   };
 
   return (
-    <Box height={'100%'} display={'flex'} flexDirection={'column'}>
+    <ConnectionsStyled>
       <Suspense>
         <AddConnection />
       </Suspense>
@@ -62,6 +74,6 @@ export default function Connections() {
         />
       ))}
       <EmptySpaceStyle />
-    </Box>
+    </ConnectionsStyled>
   );
 }

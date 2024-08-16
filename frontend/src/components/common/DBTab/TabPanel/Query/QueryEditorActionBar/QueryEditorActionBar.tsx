@@ -1,63 +1,11 @@
-import api from '@/api';
-import { shortcuts } from '@/core/utils';
-import { useShortcut } from '@/hooks';
-import useAPI from '@/hooks/useApi.hook';
-import locales from '@/locales';
-import { useDataStore } from '@/store/dataStore/data.store';
-import { useSavedQueryStore } from '@/store/savedQueryStore/savedQuery.store';
-import { useTabStore } from '@/store/tabStore/tab.store';
-import { Button, Stack, Tooltip, useTheme } from '@mui/material';
+import { Stack, useTheme } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
-import { minify } from 'pgsql-minify';
-import { toast } from 'sonner';
-import { format } from 'sql-formatter';
+import { QueryEditorActionBarProps } from '../types';
+import QueryEditorActions from './QueryEditorActions/QueryEditorActions';
+import QueryEditorLeading from './QueryEditorLeading/QueryEditorLeading';
 
-export default function QueryEditorActionBar() {
+export default function QueryEditorActionBar({ onChange, onFormat }: QueryEditorActionBarProps) {
   const theme = useTheme();
-  const { runRawQuery } = useDataStore();
-  const { selectedTab, updateSelectedTab } = useTabStore();
-  const { upsertQuery } = useSavedQueryStore();
-
-  const { request: createSavedQuery } = useAPI({
-    apiMethod: api.savedQueries.createSavedQuery
-  });
-
-  useShortcut(shortcuts.runQuery, () => runRawQuery());
-
-  const handleFormatSql = () => {
-    if (selectedTab && selectedTab.query.length > 0) {
-      selectedTab.query = format(selectedTab.query, { language: 'postgresql' });
-      updateSelectedTab(selectedTab);
-    }
-  };
-
-  const handleMinifySql = () => {
-    if (checkQueryLength()) {
-      selectedTab!.query = minify(selectedTab!.query);
-      updateSelectedTab(selectedTab);
-    }
-  };
-
-  const saveQuery = async () => {
-    if (!checkQueryLength()) {
-      toast.error(locales.empty_query);
-      return;
-    }
-
-    try {
-      const res = await createSavedQuery({
-        query: selectedTab!.query
-      });
-      upsertQuery(res);
-      toast.success(locales.query_saved_successfully);
-    } catch (error) {
-      console.log('🚀 ~ saveQuery ~ error:', error);
-    }
-  };
-
-  const checkQueryLength = () => {
-    return selectedTab && selectedTab.query.length > 0;
-  };
 
   return (
     <Stack
@@ -70,24 +18,10 @@ export default function QueryEditorActionBar() {
       alignItems='center'
     >
       <Grid md={8} display='flex' justifyContent='flex-start'>
-        <Button color='secondary' variant='contained' size='small' aria-label='grid' onClick={saveQuery}>
-          {locales.save}
-        </Button>
+        <QueryEditorLeading onChange={onChange} />
       </Grid>
       <Grid md={8} mx={2} display='flex' justifyContent='flex-end'>
-        <Stack spacing={2} direction={'row'}>
-          <Button variant='outlined' size='small' aria-label='grid' onClick={handleMinifySql}>
-            {locales.minify}
-          </Button>
-          <Button variant='outlined' size='small' aria-label='grid' onClick={handleFormatSql}>
-            {locales.beatify}
-          </Button>
-          <Tooltip title={shortcuts.runQuery.command}>
-            <Button variant='contained' size='small' aria-label='grid' onClick={() => runRawQuery()}>
-              {locales.run}
-            </Button>
-          </Tooltip>
-        </Stack>
+        <QueryEditorActions onFormat={onFormat} />
       </Grid>
     </Stack>
   );

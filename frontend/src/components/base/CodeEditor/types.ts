@@ -1,6 +1,12 @@
-import { ReactCodeMirrorProps } from '@uiw/react-codemirror';
+import { AutoCompleteType } from '@/types';
 
-export interface BaseEditorProps extends ReactCodeMirrorProps {}
-export interface CodeEditorProps extends ReactCodeMirrorProps {
-  autocomplete: any;
-}
+export type CodeEditorProps = {
+  autocomplete: AutoCompleteType;
+  value: string;
+  onChange: (value: string) => void;
+};
+
+export type CodeEditorSettingType = {
+  database: string;
+  schema: string;
+};

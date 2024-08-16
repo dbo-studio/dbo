@@ -1,3 +1,4 @@
+import { useTheme } from '@mui/material';
 import { icons } from 'lucide-react';
 import { IconProps, IconTypes } from './types';
 
@@ -21,6 +22,8 @@ const sizes = {
 };
 
 export default function CustomIcon({ type, size = 's', width, height, onClick }: IconProps) {
+  const theme = useTheme();
+
   let w = sizes[size].width;
   let h = sizes[size].height;
 
@@ -31,11 +34,12 @@ export default function CustomIcon({ type, size = 's', width, height, onClick }:
     h = height;
   }
 
-  // @ts-ignore
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
   const LucideIcon = icons[IconTypes[type]];
   if (!LucideIcon) {
     return <img onClick={onClick} src={`/icons/${type}.svg`} alt={type} width={w} height={h} />;
   }
 
-  return <LucideIcon onClick={onClick} strokeWidth={2} size={w} />;
+  return <LucideIcon style={{ color: theme.palette.text.text }} onClick={onClick} strokeWidth={1.5} size={w} />;
 }

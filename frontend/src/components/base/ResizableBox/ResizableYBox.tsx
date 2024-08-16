@@ -1,6 +1,6 @@
 import { EventFor } from '@/types';
 import { Box } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ResizableToggle from './ResizableToggle';
 import { ResizableBoxYProps } from './types';
 
@@ -8,6 +8,11 @@ export default function ResizableYBox(props: ResizableBoxYProps) {
   const [boxHeight, setBoxHeight] = useState(props.height);
   const [isResizing, setIsResizing] = useState(false);
   const [initialY, setInitialY] = useState(0);
+  const currentHeightRef = useRef(boxHeight);
+
+  useEffect(() => {
+    currentHeightRef.current = boxHeight;
+  }, [boxHeight]);
 
   const handleMouseDown = (event: EventFor<'div', 'onMouseDown'>) => {
     event.preventDefault();
@@ -16,22 +21,33 @@ export default function ResizableYBox(props: ResizableBoxYProps) {
   };
 
   const handleMouseUp = () => {
-    setIsResizing(false);
+    if (isResizing) {
+      setIsResizing(false);
+    }
   };
 
   const handleMouseMove = (event: any) => {
     if (!isResizing) return;
 
     const newHeight =
-      props.direction == 'ttb' ? boxHeight + (event.clientY - initialY) : boxHeight - (event.clientY - initialY);
+      props.direction === 'ttb'
+        ? currentHeightRef.current + (event.clientY - initialY)
+        : currentHeightRef.current - (event.clientY - initialY);
 
-    setBoxHeight(Math.min(Math.max(newHeight, props.height ?? 50), props.maxHeight ?? props.height * 2));
+    const constrainedHeight = Math.min(
+      Math.max(newHeight, props.height ?? 50),
+      props.maxHeight ?? currentHeightRef.current * 2
+    );
+
+    setBoxHeight(constrainedHeight);
     setInitialY(event.clientY);
   };
 
   useEffect(() => {
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
@@ -40,7 +56,7 @@ export default function ResizableYBox(props: ResizableBoxYProps) {
   }, [isResizing]);
 
   return (
-    <Box position={'relative'} overflow={'hidden'} {...props} height={boxHeight}>
+    <Box position={'relative'} overflow={'hidden'} height={boxHeight}>
       <ResizableToggle onMouseDown={handleMouseDown} direction={props.direction} />
       {props.children}
     </Box>

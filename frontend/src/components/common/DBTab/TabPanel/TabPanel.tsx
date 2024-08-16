@@ -5,7 +5,6 @@ import { Suspense, lazy } from 'react';
 
 const Data = lazy(() => import('./Data/Data'));
 const Query = lazy(() => import('./Query/Query'));
-
 const Design = lazy(() => import('./Design/Design'));
 
 export default function TabPanel() {

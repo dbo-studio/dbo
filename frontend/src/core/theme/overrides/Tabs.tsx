@@ -23,6 +23,7 @@ export default function Tabs(theme: Theme): Components {
           minHeight: 30,
           height: 30,
           borderRadius: variables.radius.small,
+          color: theme.palette.text.subdued,
           border: `1px solid transparent`,
           '& .MuiTabs-indicator': {
             display: 'none',
@@ -37,7 +38,7 @@ export default function Tabs(theme: Theme): Components {
             border: `1px solid ${theme.palette.divider}`,
             color: theme.palette.text.primary,
             fontWeight: theme.typography.fontWeightMedium,
-            backgroundColor: theme.palette.background.paper
+            backgroundColor: theme.palette.background.primary
           },
 
           svg: {
@@ -48,15 +49,18 @@ export default function Tabs(theme: Theme): Components {
             borderRadius: 0,
             borderTop: 'unset',
             svg: {
-              position: 'relative',
-              right: '16px',
+              position: 'absolute',
+              right: 0,
               opacity: 0,
               transition: 'opacity 0.1s'
             },
 
             '&:hover': {
               svg: {
-                opacity: 1
+                opacity: 1,
+                border: `1px solid ${theme.palette.divider}`,
+                borderRadius: variables.radius.small,
+                background: theme.palette.background.default
               }
             }
           },
@@ -67,7 +71,10 @@ export default function Tabs(theme: Theme): Components {
             minWidth: '250px',
             '&.Mui-selected': {
               borderRight: `1px solid ${theme.palette.divider}`,
-              borderLeft: 'unset'
+              borderLeft: 'unset',
+              span: {
+                color: theme.palette.text.primary
+              }
             }
           }
         }

@@ -50,5 +50,7 @@ type SortDto struct {
 
 type AutoCompleteDto struct {
 	ConnectionId int32  `query:"connection_id" validate:"required,gte=0"`
+	FromCache    bool   `query:"from_cache"`
 	Database     string `query:"database" validate:"required"`
+	Schema       string `query:"schema" validate:"required"`
 }

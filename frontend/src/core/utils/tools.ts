@@ -31,5 +31,31 @@ export const tools = {
   isTauri: () => {
     const env = import.meta.env.TAURI_PLATFORM;
     return env !== undefined;
+  },
+  minifySql(value: string): string {
+    if (!value.length) {
+      return '';
+    }
+    return (
+      value
+        // Remove multiline comments
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        // Remove single-line comments
+        .replace(/--.*$/gm, '')
+        // Remove leading and trailing whitespace from each line
+        .replace(/^\s+|\s+$/gm, '')
+        // Remove extra spaces between keywords and values
+        .replace(/\s+/g, ' ')
+        // Trim any remaining whitespace at the start and end of the string
+        .trim()
+    );
+  },
+  isValidJSON: (value: string) => {
+    try {
+      JSON.parse(value);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 };

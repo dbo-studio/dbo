@@ -13,7 +13,7 @@ import DatabaseItem from './DatabaseItem';
 export default function SelectDatabase({ onClose, onChangeStep }: SelectDatabaseProps) {
   const { currentConnection, updateCurrentConnection } = useConnectionStore();
   const [selectedDB, setSelectedDB] = useState<string | undefined>(undefined);
-  const showModal = useConfirmModalStore((state) => state.show);
+  const showModal = useConfirmModalStore((state) => state.danger);
 
   useEffect(() => {
     setSelectedDB(currentConnection?.currentDatabase);

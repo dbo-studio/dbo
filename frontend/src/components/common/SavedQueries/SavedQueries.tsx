@@ -21,7 +21,9 @@ export default function SavedQueries() {
     try {
       const res = await getSavedQueries();
       res.forEach((item) => upsertQuery(item));
-    } catch (error) {}
+    } catch (error) {
+      console.log('🚀 ~ handleGetSavedQueries ~ error:', error);
+    }
   };
 
   useEffect(() => {

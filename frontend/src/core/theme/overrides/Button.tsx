@@ -7,10 +7,11 @@ export default function Button(theme: Theme): Components {
       styleOverrides: {
         root: {
           height: 32,
-          border: `1px solid ${theme.palette.divider}`,
           borderRadius: variables.radius.medium,
           padding: '0 8px',
           '&.Mui-disabled': {
+            background: theme.palette.action.disabledBackground,
+            color: theme.palette.action.disabled,
             '& svg': { color: theme.palette.text.disabled }
           },
           '&.Mui-focused': {
@@ -22,7 +23,6 @@ export default function Button(theme: Theme): Components {
           ':after': {
             borderBottom: 'none !important'
           },
-
           '&.MuiButton-sizeSmall': {
             height: 24,
             padding: '5px 16px',

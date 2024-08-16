@@ -1,4 +1,4 @@
-import { ColumnType } from '@/types';
+import { AutoCompleteType, ColumnType } from '@/types';
 import { RunQueryResponseType } from './types';
 
 export const transformRunQuery = (data: any): RunQueryResponseType => {
@@ -29,4 +29,14 @@ export const transformStructures = (data: any): ColumnType[] => {
   });
 
   return structures;
+};
+
+export const transformAutoComplete = (data: any): AutoCompleteType => {
+  return {
+    databases: data?.databases ?? [],
+    views: data?.views ?? [],
+    schemas: data?.schemas ?? [],
+    tables: data?.tables ?? [],
+    columns: data?.columns ?? []
+  };
 };

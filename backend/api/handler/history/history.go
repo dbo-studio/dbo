@@ -12,7 +12,7 @@ type HistoryHandler struct{}
 func (h *HistoryHandler) Histories(c fiber.Ctx) error {
 	var histories []model.History
 
-	result := app.DB().Find(&histories)
+	result := app.DB().Limit(50).Find(&histories)
 
 	if result.Error != nil {
 		app.Log().Error(result.Error.Error())

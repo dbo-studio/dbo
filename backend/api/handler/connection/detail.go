@@ -3,6 +3,7 @@ package connection_handler
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/khodemobin/dbo/api/response"
 	"github.com/khodemobin/dbo/app"
@@ -126,7 +127,7 @@ func getSchemas(connectionID uint, databaseName string, fromCache bool) ([]strin
 	)
 
 	if err != nil || schemas == nil {
-		schemas, err = app.Drivers().Pgsql.Schemas(int32(connectionID), databaseName)
+		schemas, err = app.Drivers().Pgsql.Schemas(int32(connectionID), databaseName, false)
 
 		if err != nil {
 			return schemas, err
@@ -156,7 +157,7 @@ func getTables(connectionID uint, schemaName string, fromCache bool) ([]string, 
 			return tables, err
 		}
 
-		err = app.Cache().Set(fmt.Sprintf("schemas_%d", connectionID), tables, nil)
+		err = app.Cache().Set(fmt.Sprintf("tables_%d", connectionID), tables, nil)
 		if err != nil {
 			return tables, err
 		}
