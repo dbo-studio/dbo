@@ -7,7 +7,7 @@ export default function Input(theme: Theme): Components {
     MuiInputBase: {
       styleOverrides: {
         root: {
-          background: theme.palette.background.neutral,
+          background: theme.palette.background.default,
           height: 32,
           border: `1px solid ${theme.palette.divider}`,
           color: theme.palette.text.text,

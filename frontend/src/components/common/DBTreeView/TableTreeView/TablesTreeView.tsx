@@ -2,14 +2,12 @@ import TableTreeViewItem from '@/components/common/DBTreeView/TableTreeView/Tabl
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, useTheme } from '@mui/material';
-import { SimpleTreeView, TreeItem, useTreeViewApiRef } from '@mui/x-tree-view';
+import { SimpleTreeView, TreeItem } from '@mui/x-tree-view';
 import { v4 as uuid } from 'uuid';
 import CustomIcon from '../../../base/CustomIcon/CustomIcon';
 
 export default function TablesTreeView({ tables }: { tables: string[] }) {
   const theme = useTheme();
-  const apiRef = useTreeViewApiRef();
-
   const { addTab, selectedTab } = useTabStore();
 
   const handleTableClick = (tableName: string) => {
@@ -19,7 +17,6 @@ export default function TablesTreeView({ tables }: { tables: string[] }) {
   return (
     <Box mt={1} pb={theme.spacing(7)}>
       <SimpleTreeView
-        apiRef={apiRef}
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         selectedItems={[selectedTab?.table + '100']}

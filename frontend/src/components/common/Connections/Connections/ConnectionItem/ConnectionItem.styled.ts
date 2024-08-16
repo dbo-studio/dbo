@@ -5,16 +5,17 @@ export const ConnectionItemStyled = styled(Box)<ConnectionItemStyledProps>(({ th
   cursor: 'pointer',
   position: 'relative',
   borderBottom: `1px solid ${theme.palette.divider}`,
-  borderRight: selected ? 'unset' : `1px solid ${theme.palette.divider}`,
+  borderRight: `1px solid ${theme.palette.divider}`,
   justifyContent: 'center',
   display: 'flex',
   alignItems: 'center',
   flexDirection: 'column',
   padding: theme.spacing(2),
-  color: theme.palette.text.text,
-  background: selected ? theme.palette.background.neutral : theme.palette.background.default,
   maxHeight: '82px',
   ':hover': {
     background: theme.palette.background.paper
+  },
+  p: {
+    color: selected ? theme.palette.text.primary : theme.palette.text.text
   }
 }));

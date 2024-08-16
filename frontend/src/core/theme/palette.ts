@@ -89,8 +89,6 @@ const colorPalette = {
   warning: WARNING,
   error: ERROR,
   grey: GREY,
-  light: ['#ffffff', '#f7f8fc', '#f9fbfd'],
-  dark: ['#1d1e24', '#141519', '#16171c'],
   disabled: { light: '#CCCCCC', dark: '#AAAAAA' },
   constant: { white: '#FFFFFF', black: '#222222' },
   divider: { light: '#d3dae6', dark: '#343741' },
@@ -146,8 +144,8 @@ const colorPalette = {
   },
   background: {
     light: {
-      primary: '#E6F1FA',
-      subdued: '#F7F8FC',
+      primary: '#fff',
+      subdued: '#f7f8fc',
       secondary: '#FEEDF5',
       success: '#E6F9F7',
       warning: '#FFF9E8',
@@ -192,9 +190,9 @@ export default function palette(themeMode: ThemeModeEnum) {
         main: colorPalette.success.light
       },
       background: {
-        default: colorPalette.light[0],
-        paper: colorPalette.light[1],
-        neutral: colorPalette.light[2],
+        default: colorPalette.background.light.primary,
+        paper: colorPalette.background.light.subdued,
+        neutral: colorPalette.background.light.secondary,
         primary: colorPalette.background.light.primary,
         subdued: colorPalette.background.light.subdued,
         secondary: colorPalette.background.light.secondary,
@@ -241,9 +239,9 @@ export default function palette(themeMode: ThemeModeEnum) {
         main: colorPalette.success.dark
       },
       background: {
-        default: colorPalette.dark[0],
-        paper: colorPalette.dark[1],
-        neutral: colorPalette.dark[2],
+        default: colorPalette.background.dark.primary,
+        paper: colorPalette.background.dark.subdued,
+        neutral: colorPalette.background.dark.secondary,
         primary: colorPalette.background.dark.primary,
         subdued: colorPalette.background.dark.subdued,
         secondary: colorPalette.background.dark.secondary,

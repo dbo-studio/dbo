@@ -38,7 +38,7 @@ export default function Tabs(theme: Theme): Components {
             border: `1px solid ${theme.palette.divider}`,
             color: theme.palette.text.primary,
             fontWeight: theme.typography.fontWeightMedium,
-            backgroundColor: theme.palette.background.paper
+            backgroundColor: theme.palette.background.primary
           },
 
           svg: {
