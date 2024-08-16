@@ -14,7 +14,7 @@ export default function ConnectionItemContextMenu({ connection, contextMenu, onC
   const { updateShowEditConnection, updateConnections, updateCurrentConnection, currentConnection } =
     useConnectionStore();
   const { updateSelectedTab, updateTabs } = useTabStore();
-  const showModal = useConfirmModalStore((state) => state.show);
+  const showModal = useConfirmModalStore((state) => state.danger);
 
   const { request: deleteConnection } = useAPI({
     apiMethod: api.connection.deleteConnection

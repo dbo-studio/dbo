@@ -100,7 +100,7 @@ export default function PaginationSetting() {
               type='number'
               label={locales.offset}
             />
-            <Button onClick={handleUpdateState} size='small' fullWidth>
+            <Button variant='contained' onClick={handleUpdateState} size='small' fullWidth>
               {locales.save}
             </Button>
           </PaginationSettingStyled>

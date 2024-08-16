@@ -27,10 +27,10 @@ export default forwardRef(function FieldInput(props: FieldInputProps, ref) {
   return (
     <Box display={'flex'} flexDirection={'column'}>
       <Box display={'flex'} flexDirection={'row'} justifyContent={'space-between'}>
-        <Typography color={theme.palette.text.secondary} variant='caption'>
+        <Typography color={theme.palette.text.text} variant='caption'>
           {props.label}
         </Typography>
-        <Typography color={theme.palette.text.secondary} variant='caption'>
+        <Typography color={theme.palette.text.subdued} variant='caption'>
           {props.typelabel}
         </Typography>
       </Box>
@@ -43,14 +43,14 @@ export default forwardRef(function FieldInput(props: FieldInputProps, ref) {
         autoComplete='off'
         onChange={handleOnChange}
         sx={{
-          borderColor: props.error ? theme.palette.error.light : theme.palette.divider,
+          borderColor: props.error ? theme.palette.error.main : theme.palette.divider,
           marginBottom: props.error || props.margin == 'none' ? '0px' : theme.spacing(1)
         }}
         {...props}
       />
       <Typography
         mb={props.margin == 'none' ? 0 : theme.spacing(1)}
-        color={theme.palette.error.light}
+        color={theme.palette.text.danger}
         variant='caption'
       >
         {props.helperText}

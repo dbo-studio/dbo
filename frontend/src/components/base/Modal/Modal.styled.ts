@@ -1,9 +1,7 @@
 import { variables } from '@/core/theme/variables';
 import { Box, Modal, styled } from '@mui/material';
 
-export const ModalStyled = styled(Modal)(() => ({
-  background: 'rgba(228, 228, 228, 0.50)'
-}));
+export const ModalStyled = styled(Modal)(() => ({}));
 
 export const ModalWrapperStyled = styled(Box)(({ theme }) => ({
   minHeight: '400px',
@@ -24,5 +22,5 @@ export const ModalWrapperStyled = styled(Box)(({ theme }) => ({
 
 export const ConfirmModalWrapperStyled = styled(ModalWrapperStyled)(() => ({
   minHeight: '120px',
-  minWidth: '150px'
+  minWidth: '400px'
 }));

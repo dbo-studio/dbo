@@ -29,15 +29,13 @@ export const IconTypes = {
   columnToken: 'columnToken',
   grid: 'Grid3x3',
   gridBlue: 'Grid3x3',
-  filter: 'filter',
+  filter: 'Filter',
   sort: 'ArrowDownWideNarrow',
   code: 'Code',
   export: 'FileUp',
   import: 'FileDown',
   close: 'X',
   databaseOutline: 'Database',
-  columnFillGreen: 'columnFillGreen',
-  filterBrown: 'filterBrown',
   sortBlue: 'sortBlue',
   check: 'Check',
   stop: 'Ban',
@@ -52,5 +50,8 @@ export const IconTypes = {
   ellipsisVertical: 'EllipsisVertical',
   save: 'Save',
   wand_sparkles: 'WandSparkles',
-  pickaxe: 'Pickaxe'
+  pickaxe: 'Pickaxe',
+  light: 'Sun',
+  dark: 'Moon',
+  sheet: 'Sheet'
 };

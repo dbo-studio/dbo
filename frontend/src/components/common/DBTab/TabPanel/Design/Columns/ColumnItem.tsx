@@ -100,6 +100,7 @@ export default function ColumnItem({
           onChange={(e) => handleOnColumnChange(e.target.value, 'type')}
           name='type'
           size='small'
+          margin='none'
         >
           {PgsqlTypes.map((t: string) => (
             <SelectOption value={t} key={uuidv4()}>
