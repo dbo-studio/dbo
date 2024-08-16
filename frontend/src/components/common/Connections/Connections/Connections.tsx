@@ -42,6 +42,9 @@ export default function Connections() {
   }, []);
 
   const handleChangeCurrentConnection = (c: ConnectionType) => {
+    if (c.id === currentConnection?.id) {
+      return;
+    }
     getConnectionDetail({
       connectionID: c?.id,
       fromCache: true
