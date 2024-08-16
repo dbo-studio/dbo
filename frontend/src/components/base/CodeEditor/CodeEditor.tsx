@@ -38,6 +38,14 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
   }, [value]);
 
   useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.updateOptions({
+        theme: isDark ? 'github-dark' : 'github-light'
+      });
+    }
+  }, [isDark]);
+
+  useEffect(() => {
     changeMetaProviderSetting(autocomplete);
   }, [autocomplete]);
 
