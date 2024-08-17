@@ -7,7 +7,7 @@ WORKDIR /frontend
 COPY ./frontend .
 
 RUN npm i -g typescript
-RUN npm i
+RUN npm i --force
 RUN npm run build
 
 FROM golang:1.22-alpine as backend
