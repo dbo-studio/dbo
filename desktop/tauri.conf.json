@@ -79,7 +79,6 @@
       "identifier": "com.dbostudio.dev",
       "longDescription": "",
       "macOS": {
-        "minimumSystemVersion": "11",
         "entitlements": null,
         "exceptionDomain": "",
         "frameworks": [],
