@@ -24,10 +24,15 @@ export default defineConfig({
     port: 3000
   },
   build: {
-    target: process.env.TAURI_PLATFORM == 'windows' || process.env.TAURI_PLATFORM == 'linux' ? 'chrome105' : 'safari15',
+    target: process.env.TAURI_PLATFORM == 'windows' || process.env.TAURI_PLATFORM == 'linux' ? 'chrome105' : 'safari13',
     // don't minify for debug builds
     minify: !process.env.TAURI_DEBUG ? 'esbuild' : false,
     // produce sourcemaps for debug builds
     sourcemap: !!process.env.TAURI_DEBUG
+  },
+  esbuild: {
+    supported: {
+      'top-level-await': true
+    }
   }
 });
