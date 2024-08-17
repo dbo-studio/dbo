@@ -16,7 +16,7 @@ type TabState = TabStore & TabSettingSlice & TabQuerySlice & TabFilterSlice & Ta
 export const useTabStore = create<TabState>()(
   devtools(
     persist(
-      immer((set, get, ...state) => ({
+      immer((set, get, state) => ({
         tabs: [],
         selectedTab: undefined,
         updateTabs: (tabs: TabType[]) => {
@@ -37,11 +37,11 @@ export const useTabStore = create<TabState>()(
 
           set({ tabs, selectedTab });
         },
-        ...createTabSettingSlice(set, get, ...state),
-        ...createTabQuerySlice(set, get, ...state),
-        ...createTabFilterSlice(set, get, ...state),
-        ...createTabSortSlice(set, get, ...state),
-        ...createTabColumnSlice(set, get, ...state)
+        ...createTabSettingSlice(set, get, state),
+        ...createTabQuerySlice(set, get, state),
+        ...createTabFilterSlice(set, get, state),
+        ...createTabSortSlice(set, get, state),
+        ...createTabColumnSlice(set, get, state)
       })),
       { name: 'tabs' }
     ),

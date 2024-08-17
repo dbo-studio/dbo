@@ -11,7 +11,7 @@ func queryGenerator(dto *dto.RunQueryDto) string {
 	query := ""
 
 	if len(dto.Columns) == 0 {
-		query = "Select * "
+		query = "SELECT * "
 	} else {
 		query = fmt.Sprintf("SELECT %s ", strings.Join(dto.Columns, ","))
 	}

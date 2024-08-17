@@ -1,13 +1,14 @@
-import { Components } from '@mui/material';
+import { Components, Theme } from '@mui/material';
 
-export default function Table(): Components {
+export default function Table(theme: Theme): Components {
   return {
     MuiTableHead: {
       styleOverrides: {
         root: {
           '& .MuiTableCell-root': {
             padding: '4px 8px'
-          }
+          },
+          tr: { borderBottom: `1.5px solid ${theme.palette.divider}` }
         }
       }
     },
@@ -15,9 +16,10 @@ export default function Table(): Components {
       styleOverrides: {
         root: {
           '& .MuiTableCell-root': {
-            padding: '4px 8px 0px',
+            padding: '4px 8px',
             minWidth: '100px'
-          }
+          },
+          'td,th': { borderBottom: `1px solid ${theme.palette.divider}` }
         }
       }
     }

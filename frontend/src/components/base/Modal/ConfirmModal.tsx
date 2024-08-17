@@ -1,11 +1,36 @@
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
-import { Box, Button, Divider, Typography, useTheme } from '@mui/material';
+import { Box, Button, Typography, useTheme } from '@mui/material';
+import { useEffect, useState } from 'react';
 import { ConfirmModalWrapperStyled, ModalStyled } from './Modal.styled';
 
 export default function ConfirmModal() {
-  const { isOpen, title, description, onCancel, onSuccess, close } = useConfirmModalStore();
+  const { isOpen, mode, title, description, onCancel, onSuccess, close } = useConfirmModalStore();
+  const [style, setStyle] = useState({});
   const theme = useTheme();
+
+  useEffect(() => {
+    if (mode == 'danger') {
+      setStyle({
+        background: theme.palette.background.danger,
+        color: theme.palette.text.danger
+      });
+    }
+
+    if (mode == 'success') {
+      setStyle({
+        background: theme.palette.background.success,
+        color: theme.palette.text.success
+      });
+    }
+
+    if (mode == 'warning') {
+      setStyle({
+        background: theme.palette.background.warning,
+        color: theme.palette.text.warning
+      });
+    }
+  }, [mode]);
 
   const handleCancel = () => {
     onCancel && onCancel();
@@ -20,22 +45,28 @@ export default function ConfirmModal() {
   return (
     <ModalStyled open={isOpen}>
       <ConfirmModalWrapperStyled>
-        <Box flex={1} mt={theme.spacing(1)} mb={theme.spacing(1)}>
+        <Box flex={1} mb={theme.spacing(1)}>
           <Box mb={theme.spacing(2)}>
-            <Typography color={theme.palette.error.main} variant='h6'>
+            <Typography fontSize={'1.9286rem'} fontWeight={'bold'} color={theme.palette.text.text} variant='h1'>
               {title}
             </Typography>
-            <Divider sx={{ marginBottom: theme.spacing(1) }} />
-            <Typography color={theme.palette.text.default} variant='body1'>
+            <Typography mt={theme.spacing(2)} color={theme.palette.text.text}>
               {description}
             </Typography>
           </Box>
         </Box>
-        <Box display={'flex'} justifyContent={'space-between'}>
-          <Button size='small' onClick={handleCancel}>
+        <Box display={'flex'} justifyContent={'end'}>
+          <Button
+            variant='text'
+            style={{
+              marginRight: theme.spacing(2)
+            }}
+            size='small'
+            onClick={handleCancel}
+          >
             {locales.cancel}
           </Button>
-          <Button onClick={handleConfirm} size='small' variant='contained'>
+          <Button style={style} onClick={handleConfirm} size='small' variant='contained'>
             {locales.yes}
           </Button>
         </Box>

@@ -37,13 +37,13 @@ export default function ActionBar() {
     >
       <Grid md={8} display='flex' justifyContent='flex-start'>
         <IconButton color='secondary' aria-label='grid' onClick={() => handleToggle('column')}>
-          <CustomIcon type='columnFillGreen' size='m' />
+          <CustomIcon type='grid' size='s' />
         </IconButton>
         <IconButton className='toggle-filters' onClick={() => handleToggle('filter')}>
-          <CustomIcon type='filterBrown' size='m' />
+          <CustomIcon type='filter' size='s' />
         </IconButton>
         <IconButton aria-label='sort' onClick={() => handleToggle('sort')}>
-          <CustomIcon type='sortBlue' size='m' />
+          <CustomIcon type='sort' size='s' />
         </IconButton>
       </Grid>
       <Grid md={8} mx={2} display='flex' justifyContent='flex-end'>

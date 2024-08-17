@@ -64,11 +64,6 @@ export type DataQuerySlice = {
   updateDesignsQuery: () => Promise<void>;
 };
 
-export type AutocompleteSlice = {
-  autoComplete: any;
-  updateAutocomplete: (data: any) => void;
-};
-
 export type DataRowsType = {
   [key: string]: RowType[];
 };

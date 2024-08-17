@@ -20,6 +20,7 @@ export type TabSettingSlice = {
 };
 
 export type TabQuerySlice = {
+  getQuery: () => string;
   updateQuery: (query: string) => void;
   setShowQueryPreview: (show: boolean) => void;
 };

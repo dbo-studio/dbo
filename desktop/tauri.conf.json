@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "DBO",
-    "version": "0.0.4"
+    "version": "0.1.0"
   },
   "tauri": {
     "allowlist": {
@@ -79,6 +79,7 @@
       "identifier": "com.dbostudio.dev",
       "longDescription": "",
       "macOS": {
+        "minimumSystemVersion": "11",
         "entitlements": null,
         "exceptionDomain": "",
         "frameworks": [],
@@ -108,9 +109,9 @@
         "height": 800,
         "resizable": true,
         "title": "DBO",
-        "width": 1200,
+        "width": 1280,
         "center": true,
-        "minWidth": 1000,
+        "minWidth": 1280,
         "minHeight": 700,
         "x": 0,
         "y": 0

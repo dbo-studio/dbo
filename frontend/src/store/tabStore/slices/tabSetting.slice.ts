@@ -51,12 +51,17 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
     get().switchTab(newTab.id);
   },
   removeTab: (tabId: string) => {
+    const tabIndex = get().tabs.findIndex((t: TabType) => t.id == tabId);
     const newTabs = get().tabs.filter((t: TabType) => t.id !== tabId);
-    if (newTabs.length > 0) {
+
+    if (newTabs.length > tabIndex && get().selectedTab?.id === tabId) {
+      get().switchTab(newTabs[tabIndex].id);
+    } else if (newTabs.length > 0 && get().selectedTab?.id === tabId) {
       get().switchTab(newTabs[newTabs.length - 1].id);
-    } else {
+    } else if (newTabs.length == 0) {
       get().switchTab(null);
     }
+
     get().updateTabs(newTabs);
   },
   switchTab: (tabId: string | null) => {

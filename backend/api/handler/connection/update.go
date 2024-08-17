@@ -63,7 +63,7 @@ func (h *ConnectionHandler) updateConnection(connection *model.Connection, req *
 	}
 
 	if req.CurrentDatabase != nil && req.CurrentSchema == nil {
-		schemas, _ := app.Drivers().Pgsql.Schemas(int32(connection.ID), *req.CurrentDatabase)
+		schemas, _ := app.Drivers().Pgsql.Schemas(int32(connection.ID), *req.CurrentDatabase, false)
 		var currentSchema string
 		if len(schemas) > 0 {
 			currentSchema = schemas[0]
@@ -80,6 +80,7 @@ func (h *ConnectionHandler) updateConnection(connection *model.Connection, req *
 	}
 
 	result := app.DB().Save(&connection)
+	app.DB().Delete(&model.CacheItem{})
 
 	return connection, result.Error
 }

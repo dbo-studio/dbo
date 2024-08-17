@@ -4,8 +4,9 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, Checkbox, CircularProgress } from '@mui/material';
 import React, { useEffect } from 'react';
-import DataGrid, { RenderCheckboxProps, RowsChangeData } from 'react-data-grid';
-import './styles.css';
+import { RenderCheckboxProps, RowsChangeData } from 'react-data-grid';
+import 'react-data-grid/lib/styles.css';
+import { DataGridStyled } from './DataGrid.styled';
 
 export default function DBDataGrid() {
   const { selectedTab } = useTabStore();
@@ -32,7 +33,7 @@ export default function DBDataGrid() {
     if (selectedTab?.mode == TabMode.Data && (getRows().length == 0 || getColumns().length == 0)) {
       getData();
     }
-  }, [selectedTab]);
+  }, [selectedTab?.id]);
 
   const handleOnCellClick = (e: any) => {
     if (e.rowIdx == -1) {
@@ -56,7 +57,7 @@ export default function DBDataGrid() {
   ) : (
     <Box overflow='hidden' display={'flex'} flexDirection={'column'} flex={1}>
       {selectedTab && (
-        <DataGrid
+        <DataGridStyled
           onSelectedCellChange={handleOnCellClick}
           rowKeyGetter={rowKeyGetter}
           selectedRows={getSelectedRows()}

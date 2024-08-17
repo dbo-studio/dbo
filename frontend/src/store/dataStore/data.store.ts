@@ -1,4 +1,3 @@
-import { createAutocompleteSlice } from '@/store/dataStore/slices/dataAutocomplete.slice';
 import { TabType } from '@/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
@@ -13,7 +12,6 @@ import { createDataRowSlice } from './slices/dataRow.slice';
 import { createDataSelectedRowsSlice } from './slices/dataSelectedRows.slice';
 import { createDataUnsavedRowsSlice } from './slices/dataUnsavedRows';
 import {
-  AutocompleteSlice,
   DataColumnSlice,
   DataEditedRowsSlice,
   DataHighlightedRowSlice,
@@ -33,8 +31,7 @@ type DataState = DataStore &
   DataRemovedRowsSlice &
   DataUnsavedRowsSlice &
   DataColumnSlice &
-  DataQuerySlice &
-  AutocompleteSlice;
+  DataQuerySlice;
 
 export const useDataStore = create<DataState>()(
   devtools(
@@ -49,8 +46,7 @@ export const useDataStore = create<DataState>()(
       ...createDataUnsavedRowsSlice(set, get, ...state),
       ...createDataSelectedRowsSlice(set, get, ...state),
       ...createDataColumnSlice(set, get, ...state),
-      ...createDataQuerySlice(set, get, ...state),
-      ...createAutocompleteSlice(set, get, ...state)
+      ...createDataQuerySlice(set, get, ...state)
     })),
     { name: 'data' }
   )

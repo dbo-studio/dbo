@@ -8,25 +8,22 @@ export default forwardRef(function SelectInput(props: SelectInputProps, ref) {
   return (
     <Box display={'flex'} flexDirection={'column'}>
       {props.label && (
-        <Typography color={theme.palette.text.secondary} variant='caption'>
+        <Typography color={theme.palette.text.text} variant='caption'>
           {props.label}
         </Typography>
       )}
       <NativeSelect
         sx={{
-          borderColor: props.error ? theme.palette.error.light : theme.palette.divider,
-          marginBottom: props.error || props.margin == 'none' ? '0px' : theme.spacing(1)
+          borderColor: props.error ? theme.palette.error.main : theme.palette.divider,
+          marginBottom: props.error || props.margin == 'none' ? '0px' : theme.spacing(1),
+          minWidth: 90
         }}
         {...props}
       >
         {props.children}
       </NativeSelect>
 
-      <Typography
-        mb={props.margin == 'none' ? 0 : theme.spacing(1)}
-        color={theme.palette.error.light}
-        variant='caption'
-      >
+      <Typography mb={props.margin == 'none' ? 0 : theme.spacing(1)} color={theme.palette.error.main} variant='caption'>
         {props.helperText}
       </Typography>
     </Box>

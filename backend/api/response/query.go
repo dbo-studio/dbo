@@ -1,8 +1,9 @@
 package response
 
 import (
-	pgsql "github.com/khodemobin/dbo/driver/pgsql"
 	"slices"
+
+	pgsql "github.com/khodemobin/dbo/driver/pgsql"
 )
 
 type runQuery struct {

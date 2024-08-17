@@ -1,44 +1,53 @@
-import { shortcuts } from '@/core/utils';
-import { PostgreSQL, sql } from '@codemirror/lang-sql';
-import { EditorView, Prec, keymap } from '@uiw/react-codemirror';
-import { useMemo } from 'react';
-import BaseEditor from './BaseEditor';
-import { CodeEditorProps } from './types';
+import { CodeEditorProps } from '@/components/base/CodeEditor/types.ts';
+import * as monaco from 'monaco-editor';
+import { LanguageIdEnum } from 'monaco-sql-languages';
+
+import { useSettingStore } from '@/store/settingStore/setting.store.ts';
+import { useEffect, useRef, useState } from 'react';
+import { changeMetaProviderSetting } from './helpers/dbMetaProvider.ts';
+import { editorConfig } from './helpers/editorConfig.ts';
+import './helpers/languageSetup.ts';
 
 export default function CodeEditor({ autocomplete, value, onChange }: CodeEditorProps) {
-  const styleTheme = EditorView.baseTheme({
-    '&.cm-editor.cm-focused': {
-      outline: 'unset'
+  const hostRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
+  const [mount, setMount] = useState(false);
+  const { isDark } = useSettingStore();
+
+  useEffect(() => {
+    if (hostRef.current && !editorRef.current) {
+      editorRef.current = monaco.editor.create(hostRef.current, {
+        ...editorConfig,
+        theme: isDark ? 'github-dark' : 'github-light',
+        language: LanguageIdEnum.PG
+      });
     }
-  });
 
-  const k = useMemo(() => {
-    return Object.keys(shortcuts).map((key) => ({
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      key: shortcuts[key].codemirror,
-      run: () => {
-        return true;
-      }
-    }));
-  }, [shortcuts]);
+    const model = editorRef.current?.getModel();
+    model?.onDidChangeContent(() => {
+      onChange(JSON.stringify(model.getValue()));
+    });
 
-  return (
-    <BaseEditor
-      height='100%'
-      autoFocus={true}
-      value={value}
-      onChange={onChange}
-      editable={true}
-      extensions={[
-        sql({
-          dialect: PostgreSQL,
-          upperCaseKeywords: true,
-          schema: autocomplete
-        }),
-        styleTheme,
-        Prec.highest(keymap.of(k))
-      ]}
-    />
-  );
+    setMount(true);
+  }, []);
+
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.setValue(value);
+    }
+  }, [value]);
+
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.updateOptions({
+        theme: isDark ? 'github-dark' : 'github-light'
+      });
+    }
+  }, [isDark]);
+
+  useEffect(() => {
+    changeMetaProviderSetting(autocomplete);
+  }, [autocomplete]);
+
+  return <div style={{ height: '100%', width: '100%', visibility: mount ? 'visible' : 'hidden' }} ref={hostRef}></div>;
 }
