@@ -9,10 +9,6 @@ on:
 
 env:
   CI: false
-  MAC_M1_IMAGE: "macos-latest"
-  MAC_INTEL_IMAGE: "macos-13"
-  UBUNTU_IMAGE: "ubuntu-22.04"
-  WINDOWS_IMAGE: "windows-latest"
 
 jobs:
   create-release:
@@ -57,13 +53,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: ${{ env.MAC_M1_IMAGE }} # for Arm based macs (M1 and above).
+          - platform: "macos-latest" # for Arm based macs (M1 and above).
             args: "--target aarch64-apple-darwin"
-          - platform: ${{ env.MAC_INTEL_IMAGE }} # for Intel based macs.
+          - platform: "macos-13" # for Intel based macs.
             args: "--target x86_64-apple-darwin"
-          - platform: ${{ env.UBUNTU_IMAGE }}
+          - platform: "ubuntu-22.04"
             args: ""
-          - platform: ${{ env.WINDOWS_IMAGE }}
+          - platform: "windows-latest"
             args: ""
 
     runs-on: ${{ matrix.platform }}
@@ -71,7 +67,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: install dependencies (ubuntu only)
-        if: matrix.platform == env.UBUNTU_IMAGE
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
@@ -95,7 +91,7 @@ jobs:
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ (matrix.platform == env.MAC_M1_IMAGE || matrix.platform == env.MAC_INTEL_IMAGE) && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          targets: ${{ (matrix.platform == 'macos-latest' || matrix.platform == 'macos-13') && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
