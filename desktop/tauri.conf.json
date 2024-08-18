@@ -83,7 +83,7 @@
         "exceptionDomain": "",
         "frameworks": [],
         "providerShortName": null,
-        "signingIdentity": null
+        "signingIdentity": "-"
       },
       "resources": [],
       "shortDescription": "Modern and easy to use SQL client",
