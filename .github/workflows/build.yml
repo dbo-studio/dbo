@@ -90,12 +90,6 @@ jobs:
         with:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      # - name: Add rust target (macos only)
-      #   if: matrix.platform == 'macos-14'
-      #   run: |
-      #     rustup target add aarch64-apple-darwin
-      #     rustup target add x86_64-apple-darwin
-
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
