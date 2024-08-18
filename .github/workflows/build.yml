@@ -54,7 +54,7 @@ jobs:
             args: "--target aarch64-apple-darwin"
           - platform: "macos-latest" # for Intel based macs.
             args: "--target x86_64-apple-darwin"
-          - platform: "ubuntu-22.04" # for Tauri v1 you could replace this with ubuntu-20.04.
+          - platform: "ubuntu-22.04"
             args: ""
           - platform: "windows-latest"
             args: ""
@@ -64,18 +64,16 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-        # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
-        # You can remove the one that doesn't apply to your app to speed up the workflow a bit.
 
       - name: setup node
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
-          cache: "npm" # Set this to npm, yarn or pnpm.
+          cache: "npm"
           cache-dependency-path: ./frontend/package-lock.json
 
       - uses: actions/setup-go@v5
@@ -90,7 +88,6 @@ jobs:
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       # - name: Add rust target (macos only)
@@ -105,8 +102,7 @@ jobs:
           workspaces: "./desktop -> target"
 
       - name: install frontend dependencies
-        # If you don't have `beforeBuildCommand` configured you may want to build your frontend here too.
-        run: npm install --force # change this to npm or pnpm depending on which one you use.
+        run: npm install --force
         working-directory: ./frontend
 
       - uses: tauri-apps/tauri-action@v0
@@ -120,7 +116,7 @@ jobs:
           releaseName: "v__VERSION__"
           releaseBody: "See full change log please see https://github.com/dbo-studio/dbo/releases"
           releaseDraft: true
-          args: ${{ matrix.settings.args }}
+          args: ${{ matrix.args }}
           projectPath: "./desktop"
           includeUpdaterJson: true
           appVersion: $(cat docs/scripts/VERSION)
