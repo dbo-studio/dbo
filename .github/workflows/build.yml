@@ -1,10 +1,10 @@
 name: "DBO App Publish"
 
 on:
-  push:
-    tags:
-      - "*"
-    branches: [dev]
+  # push:
+  #   tags:
+  #     - "*"
+  #   branches: [dev]
   workflow_dispatch:
 
 jobs:
