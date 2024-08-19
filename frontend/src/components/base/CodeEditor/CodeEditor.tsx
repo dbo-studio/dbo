@@ -25,7 +25,7 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
 
     const model = editorRef.current?.getModel();
     model?.onDidChangeContent(() => {
-      onChange(JSON.stringify(model.getValue()));
+      onChange(model.getValue());
     });
 
     setMount(true);
