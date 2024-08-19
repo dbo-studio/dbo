@@ -22,7 +22,7 @@ export default function DarkModeToggle() {
 
   return (
     <IconButton onClick={handleToggle} aria-label='user'>
-      <CustomIcon type={isDark ? 'dark' : 'light'} size={'m'} />
+      <CustomIcon type={isDark ? 'light' : 'dark'} size={'m'} />
     </IconButton>
   );
 }
