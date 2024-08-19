@@ -11,7 +11,7 @@ import Typography from './Typography';
 
 export default function ComponentsOverrides(theme: Theme): Components {
   return Object.assign(
-    Baseline(),
+    Baseline(theme),
     Typography(theme),
     TreeView(theme),
     Input(theme),
