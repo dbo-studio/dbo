@@ -1,6 +1,6 @@
 {
   "name": "dbo",
-  "version": "0.0.4",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
