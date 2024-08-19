@@ -7,6 +7,7 @@ import React, { useEffect } from 'react';
 import { RenderCheckboxProps, RowsChangeData } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
 import { DataGridStyled } from './DataGrid.styled';
+import { DataGridWrapperStyled } from './DataGridWrapper.styled';
 
 export default function DBDataGrid() {
   const { selectedTab } = useTabStore();
@@ -55,7 +56,7 @@ export default function DBDataGrid() {
       <CircularProgress size={30} />
     </Box>
   ) : (
-    <Box overflow='hidden' display={'flex'} flexDirection={'column'} flex={1}>
+    <DataGridWrapperStyled>
       {selectedTab && (
         <DataGridStyled
           onSelectedCellChange={handleOnCellClick}
@@ -82,7 +83,7 @@ export default function DBDataGrid() {
           }}
         />
       )}
-    </Box>
+    </DataGridWrapperStyled>
   );
 }
 

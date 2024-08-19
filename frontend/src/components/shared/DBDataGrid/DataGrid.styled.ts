@@ -16,6 +16,8 @@ export const DataGridStyled = styled(DataGrid)(({ theme }) => ({
   '--rdg-checkbox-focus-color': 'hsl(207deg 100% 89%)',
   '--rdg-checkbox-disabled-border-color': '#000',
   '--rdg-checkbox-disabled-background-color': '#333',
+
+  flex: 1,
   '.cj343x07-0-0-beta-46': {
     minHeight: '30px',
     maxHeight: '30px',
@@ -40,19 +42,6 @@ export const DataGridStyled = styled(DataGrid)(({ theme }) => ({
   '.removed-highlight': {
     '.rdg-cell': {
       backgroundColor: theme.palette.background.danger
-    }
-  },
-  '.rnvodz57-0-0-beta-46': {
-    '::-webkit-scrollbar-track': {
-      background: '#f1f1f1'
-    },
-
-    '::-webkit-scrollbar-thumb': {
-      background: '#888',
-      borderRadius: '4px'
-    },
-    '::-webkit-scrollbar-thumb:hover': {
-      background: '#555'
     }
   }
 }));
