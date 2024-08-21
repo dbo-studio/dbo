@@ -53,12 +53,21 @@ export default function DBDataGrid() {
   };
 
   const scrollToBottom = () => {
-    if (!dataGridRef.current) {
-      return;
+    let lastLength = 0;
+
+    if (lastLength == 0) {
+      lastLength = getUnsavedRows().length;
     }
-    dataGridRef.current!.scrollToCell({
-      rowIdx: getRows().length - 1
-    });
+
+    console.log('🚀 ~ scrollToBottom ~ lastLength:', lastLength);
+    console.log('🚀 ~ scrollToBottom ~ getUnsavedRows().length:', getUnsavedRows().length);
+    if (dataGridRef.current && lastLength > getUnsavedRows().length) {
+      dataGridRef.current!.scrollToCell({
+        rowIdx: getRows().length - 1
+      });
+    }
+
+    lastLength = getUnsavedRows().length;
   };
 
   useEffect(() => {
