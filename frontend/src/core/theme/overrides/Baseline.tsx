@@ -12,7 +12,7 @@ export default function Baseline(theme: Theme): Components {
           bottom: 0
         },
         '::-webkit-scrollbar': {
-          '-webkit-appearance': 'none',
+          webkitAppearance: 'none',
           width: '7px',
           height: '7px'
         },
@@ -23,7 +23,7 @@ export default function Baseline(theme: Theme): Components {
         },
 
         '::-webkit-scrollbar-thumb': {
-          '-webkit-box-shadow': '0 0 1px rgba(255,255,255,.5)',
+          webkitBoxShadow: '0 0 1px rgba(255,255,255,.5)',
           backgroundColor: '#6b6b6b',
           borderRadius: '6px'
         },

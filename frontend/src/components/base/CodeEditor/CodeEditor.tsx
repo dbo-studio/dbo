@@ -3,6 +3,7 @@ import * as monaco from 'monaco-editor';
 import { LanguageIdEnum } from 'monaco-sql-languages';
 
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
+import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { useEffect, useRef, useState } from 'react';
 import { changeMetaProviderSetting } from './helpers/dbMetaProvider.ts';
 import { editorConfig } from './helpers/editorConfig.ts';
@@ -13,6 +14,7 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
   const [mount, setMount] = useState(false);
   const { isDark } = useSettingStore();
+  const { selectedTab, getQuery } = useTabStore();
 
   useEffect(() => {
     if (hostRef.current && !editorRef.current) {
@@ -36,6 +38,12 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
       editorRef.current.setValue(value);
     }
   }, [value]);
+
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.setValue(getQuery());
+    }
+  }, [selectedTab?.id]);
 
   useEffect(() => {
     if (editorRef.current) {
