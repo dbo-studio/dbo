@@ -3,14 +3,17 @@ import { handelRowChangeLog } from '@/core/utils';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, Checkbox, CircularProgress } from '@mui/material';
-import React, { useEffect } from 'react';
-import { RenderCheckboxProps, RowsChangeData } from 'react-data-grid';
+import React, { useEffect, useRef } from 'react';
+import { DataGridHandle, RenderCheckboxProps, RowsChangeData } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
 import { DataGridStyled } from './DataGrid.styled';
 import { DataGridWrapperStyled } from './DataGridWrapper.styled';
 
+let lastUnsavedRowsLength = 0;
 export default function DBDataGrid() {
   const { selectedTab } = useTabStore();
+
+  const dataGridRef = useRef<DataGridHandle>(null);
   const {
     loading,
     updateRows,
@@ -51,6 +54,24 @@ export default function DBDataGrid() {
     updateRows(rows);
   };
 
+  const scrollToBottom = () => {
+    if (lastUnsavedRowsLength == 0) {
+      lastUnsavedRowsLength = getUnsavedRows().length;
+    }
+
+    if (dataGridRef.current && lastUnsavedRowsLength <= getUnsavedRows().length) {
+      dataGridRef.current!.scrollToCell({
+        rowIdx: getRows().length - 1
+      });
+    }
+
+    lastUnsavedRowsLength = getUnsavedRows().length;
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [getUnsavedRows().length]);
+
   return loading ? (
     <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
       <CircularProgress size={30} />
@@ -59,6 +80,7 @@ export default function DBDataGrid() {
     <DataGridWrapperStyled>
       {selectedTab && (
         <DataGridStyled
+          ref={dataGridRef}
           onSelectedCellChange={handleOnCellClick}
           rowKeyGetter={rowKeyGetter}
           selectedRows={getSelectedRows()}
