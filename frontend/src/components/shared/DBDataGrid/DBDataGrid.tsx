@@ -9,8 +9,10 @@ import 'react-data-grid/lib/styles.css';
 import { DataGridStyled } from './DataGrid.styled';
 import { DataGridWrapperStyled } from './DataGridWrapper.styled';
 
+let lastUnsavedRowsLength = 0;
 export default function DBDataGrid() {
   const { selectedTab } = useTabStore();
+
   const dataGridRef = useRef<DataGridHandle>(null);
   const {
     loading,
@@ -53,21 +55,17 @@ export default function DBDataGrid() {
   };
 
   const scrollToBottom = () => {
-    let lastLength = 0;
-
-    if (lastLength == 0) {
-      lastLength = getUnsavedRows().length;
+    if (lastUnsavedRowsLength == 0) {
+      lastUnsavedRowsLength = getUnsavedRows().length;
     }
 
-    console.log('🚀 ~ scrollToBottom ~ lastLength:', lastLength);
-    console.log('🚀 ~ scrollToBottom ~ getUnsavedRows().length:', getUnsavedRows().length);
-    if (dataGridRef.current && lastLength > getUnsavedRows().length) {
+    if (dataGridRef.current && lastUnsavedRowsLength <= getUnsavedRows().length) {
       dataGridRef.current!.scrollToCell({
         rowIdx: getRows().length - 1
       });
     }
 
-    lastLength = getUnsavedRows().length;
+    lastUnsavedRowsLength = getUnsavedRows().length;
   };
 
   useEffect(() => {
