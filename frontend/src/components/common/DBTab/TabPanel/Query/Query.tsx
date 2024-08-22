@@ -1,10 +1,9 @@
 import api from '@/api';
 import { AutoCompleteRequestType } from '@/api/query/types';
 import { CodeEditorSettingType } from '@/components/base/CodeEditor/types';
-import { useMount, useWindowSize } from '@/hooks';
+import { useWindowSize } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { AutoCompleteType } from '@/types';
 import { Box, useTheme } from '@mui/material';
@@ -16,10 +15,8 @@ const DBDataGrid = lazy(() => import('@/components/shared/DBDataGrid/DBDataGrid'
 
 export default function Query() {
   const theme = useTheme();
-  const mounted = useMount();
   const { currentConnection } = useConnectionStore();
   const windowSize = useWindowSize();
-  const { getRows } = useDataStore();
   const { getQuery, updateQuery } = useTabStore();
   const [autocomplete, setAutocomplete] = useState<AutoCompleteType | null>(null);
   const [value, setValue] = useState('');
@@ -69,8 +66,8 @@ export default function Query() {
               <CodeEditor onChange={handleUpdateState} autocomplete={autocomplete} value={value} />
             </Box>
           )}
+          <DBDataGrid />
         </Suspense>
-        {mounted && <Suspense>{getRows() && getRows().length > 0 && <DBDataGrid />}</Suspense>}
       </Box>
     </>
   );
