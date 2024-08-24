@@ -14,6 +14,7 @@ export interface ResizableBoxYProps extends BoxProps {
   height: number;
   maxHeight?: number;
   children: React.ReactNode;
+  onChange?: any;
 }
 
 export type ResizableToggleStyledProps = {
