@@ -5,10 +5,10 @@ import { cleanupUpdateDesignObject } from '@/core/utils';
 import { StateCreator } from 'zustand';
 import { useConnectionStore } from '../../connectionStore/connection.store';
 import { useTabStore } from '../../tabStore/tab.store';
-import { DataColumnSlice, DataQuerySlice, DataRowSlice, DataStore } from '../types';
+import { DataColumnSlice, DataEditedColumnSlice, DataQuerySlice, DataRowSlice, DataStore } from '../types';
 
 export const createDataQuerySlice: StateCreator<
-  DataStore & DataQuerySlice & DataColumnSlice & DataRowSlice,
+  DataStore & DataQuerySlice & DataColumnSlice & DataEditedColumnSlice & DataRowSlice,
   [],
   [],
   DataQuerySlice

@@ -1,6 +1,7 @@
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu.tsx';
 import { MenuType } from '@/components/base/ContextMenu/types.ts';
 import { useContextMenu, useMount } from '@/hooks';
+import { useRemoveTab } from '@/hooks/useRemoveTab.hook';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { TabType as TabData } from '@/types';
@@ -9,7 +10,8 @@ import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import TabPanel from './TabPanel/TabPanel';
 
 export default function DBTab() {
-  const { switchTab, removeTab, tabs, selectedTab } = useTabStore();
+  const { switchTab, tabs, selectedTab } = useTabStore();
+  const [removeTab] = useRemoveTab();
   const mounted = useMount();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
@@ -17,7 +19,9 @@ export default function DBTab() {
     {
       name: locales.close,
       action: () => {
-        if (selectedTab) removeTab(selectedTab.id);
+        if (selectedTab) {
+          removeTab(selectedTab.id);
+        }
       },
       closeAfterAction: true
     },
