@@ -47,7 +47,7 @@ export default function DBTab() {
             value={selectedTab.id}
             onChange={(_: React.SyntheticEvent, tabId: string) => switchTab(tabId)}
             variant='scrollable'
-            allowScrollButtonsMobile
+            scrollButtons={false}
           >
             {tabs.map((tab: TabData) => (
               <Tab
