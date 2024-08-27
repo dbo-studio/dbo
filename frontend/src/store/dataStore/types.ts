@@ -7,12 +7,14 @@ export type DataRowSlice = {
   rows: DataRowsType;
   getRows(): RowType[];
   updateRows: (items: RowType[]) => Promise<void>;
+  removeRowsByTabId: (tabId: string) => void;
 };
 
 export type DataHighlightedRowSlice = {
   highlightedRow: DataHighlightedRowType; // when click on a row
   getHighlightedRow(): RowType | undefined;
   updateHighlightedRow(selectedRow: RowType | undefined): RowType | undefined;
+  removeHighlightedRowsByTabId: (tabId: string) => void;
 };
 
 export type DataSelectedRowsSlice = {
@@ -26,7 +28,11 @@ export type DataColumnSlice = {
   columns: DataColumnsType;
   getColumns(withSelect?: boolean, isActive?: boolean): ColumnType[];
   updateColumns: (columns: ColumnType[]) => Promise<void>;
-  updateColumn: (columns: ColumnType) => Promise<void>;
+  updateColumn: (column: ColumnType) => Promise<void>;
+  removeColumnsByTabId: (tabId: string) => void;
+};
+
+export type DataEditedColumnSlice = {
   editedColumns: DataEditedColumnsType;
   getEditedColumns(): EditedColumnType[];
   updateEditedColumns: (columns: EditedColumnType[]) => Promise<void>;
@@ -34,6 +40,7 @@ export type DataColumnSlice = {
   updateRemovedColumns: () => Promise<void>;
   restoreEditedColumns: () => Promise<void>;
   addEmptyEditedColumns: () => Promise<void>;
+  removeEditedColumnsByTabId: (tabId: string) => void;
 };
 
 export type DataEditedRowsSlice = {
@@ -41,12 +48,14 @@ export type DataEditedRowsSlice = {
   getEditedRows(): EditedRow[];
   updateEditedRows: (rows: EditedRow[]) => void;
   restoreEditedRows: () => Promise<void>;
+  removeEditedRowsByTabId: (tabId: string) => void;
 };
 
 export type DataRemovedRowsSlice = {
   removedRows: DataRemovedRowsType;
   getRemovedRows(): RowType[];
   updateRemovedRows(): void;
+  deleteRemovedRowsByTabId: (tabId: string) => void;
 };
 
 export type DataUnsavedRowsSlice = {
@@ -55,6 +64,7 @@ export type DataUnsavedRowsSlice = {
   addUnsavedRows(newRow?: RowType): void;
   updateUnsavedRows(unSavedRows: RowType[]): void;
   discardUnsavedRows(rows?: RowType[]): void;
+  removeUnsavedRowsByTabId: (tabId: string) => void;
 };
 
 export type DataQuerySlice = {
