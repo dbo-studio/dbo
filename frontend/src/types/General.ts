@@ -10,7 +10,8 @@ export type ContextMenuType = {
 } | null;
 
 export type ShortcutType = {
-  codemirror: string;
+  label: string;
+  monaco: number[];
   command: string;
   shortcut: (event: KeyboardEvent) => boolean;
 };

@@ -11,7 +11,13 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
     mode = mode ? mode : TabMode.Data;
     const tabs = get().tabs;
 
-    const findTab = tabs.filter((t: TabType) => t.table == table && t.mode == mode);
+    let findTab;
+    if (mode == TabMode.Query) {
+      findTab = tabs.filter((t: TabType) => t.mode == TabMode.Query && (t.query == '' || t.query == '""'));
+    } else {
+      findTab = tabs.filter((t: TabType) => t.table == table && t.mode == mode);
+    }
+
     if (findTab.length > 0) {
       get().switchTab(findTab[0].id);
       return;

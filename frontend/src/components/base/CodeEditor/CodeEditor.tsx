@@ -2,7 +2,11 @@ import { CodeEditorProps } from '@/components/base/CodeEditor/types.ts';
 import * as monaco from 'monaco-editor';
 import { LanguageIdEnum } from 'monaco-sql-languages';
 
+import { shortcuts } from '@/core/utils/shortcuts.ts';
+import { useShortcut } from '@/hooks/useShortcut.hook.ts';
+import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
+import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { useEffect, useRef, useState } from 'react';
 import { changeMetaProviderSetting } from './helpers/dbMetaProvider.ts';
 import { editorConfig } from './helpers/editorConfig.ts';
@@ -13,6 +17,9 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
   const [mount, setMount] = useState(false);
   const { isDark } = useSettingStore();
+  const { runRawQuery } = useDataStore();
+  const { selectedTab, getQuery } = useTabStore();
+  useShortcut(shortcuts.runQuery, () => runRawQuery());
 
   useEffect(() => {
     if (hostRef.current && !editorRef.current) {
@@ -24,6 +31,14 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
     }
 
     const model = editorRef.current?.getModel();
+
+    editorRef.current?.addAction({
+      id: shortcuts.runQuery.command,
+      keybindings: shortcuts.runQuery.monaco,
+      run: () => runRawQuery(),
+      label: shortcuts.runQuery.label
+    });
+
     model?.onDidChangeContent(() => {
       onChange(model.getValue());
     });
@@ -36,6 +51,12 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
       editorRef.current.setValue(value);
     }
   }, [value]);
+
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.setValue(getQuery());
+    }
+  }, [selectedTab?.id]);
 
   useEffect(() => {
     if (editorRef.current) {

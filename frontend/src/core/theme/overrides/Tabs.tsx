@@ -60,7 +60,10 @@ export default function Tabs(theme: Theme): Components {
                 opacity: 1,
                 border: `1px solid ${theme.palette.divider}`,
                 borderRadius: variables.radius.small,
-                background: theme.palette.background.default
+                background: theme.palette.background.default,
+                '&:hover': {
+                  background: theme.palette.background.subdued
+                }
               }
             }
           },

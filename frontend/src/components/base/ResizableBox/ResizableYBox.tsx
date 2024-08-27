@@ -10,10 +10,6 @@ export default function ResizableYBox(props: ResizableBoxYProps) {
   const [initialY, setInitialY] = useState(0);
   const currentHeightRef = useRef(boxHeight);
 
-  useEffect(() => {
-    currentHeightRef.current = boxHeight;
-  }, [boxHeight]);
-
   const handleMouseDown = (event: EventFor<'div', 'onMouseDown'>) => {
     event.preventDefault();
     setIsResizing(true);
@@ -21,9 +17,16 @@ export default function ResizableYBox(props: ResizableBoxYProps) {
   };
 
   const handleMouseUp = () => {
-    if (isResizing) {
-      setIsResizing(false);
+    if (!isResizing) return;
+    if (props.onChange) {
+      const finalHeight = currentHeightRef.current;
+      if (props.maxHeight && finalHeight > props.maxHeight) {
+        props.onChange(props.maxHeight);
+      } else {
+        props.onChange(finalHeight);
+      }
     }
+    setIsResizing(false);
   };
 
   const handleMouseMove = (event: any) => {
@@ -31,15 +34,13 @@ export default function ResizableYBox(props: ResizableBoxYProps) {
 
     const newHeight =
       props.direction === 'ttb'
-        ? currentHeightRef.current + (event.clientY - initialY)
-        : currentHeightRef.current - (event.clientY - initialY);
+        ? Math.max(boxHeight + (event.clientY - initialY), 50)
+        : Math.max(boxHeight - (event.clientY - initialY), 50);
 
-    const constrainedHeight = Math.min(
-      Math.max(newHeight, props.height ?? 50),
-      props.maxHeight ?? currentHeightRef.current * 2
-    );
+    if (props.maxHeight && newHeight > props.maxHeight) return;
 
-    setBoxHeight(constrainedHeight);
+    setBoxHeight(newHeight);
+    currentHeightRef.current = newHeight;
     setInitialY(event.clientY);
   };
 
@@ -47,6 +48,9 @@ export default function ResizableYBox(props: ResizableBoxYProps) {
     if (isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
     }
 
     return () => {

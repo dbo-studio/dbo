@@ -147,17 +147,17 @@ const colorPalette = {
       primary: '#fff',
       subdued: '#f7f8fc',
       secondary: '#FEEDF5',
-      success: '#E6F9F7',
-      warning: '#FFF9E8',
-      danger: '#F8E9E9'
+      success: '#daebc2',
+      warning: '#ffe18e',
+      danger: '#f5a6b0'
     },
     dark: {
       primary: '#1A1C1E',
       subdued: '#25282A',
       secondary: '#343A40',
-      success: '#14282D',
-      warning: '#2F2A1D',
-      danger: '#3C1C1E'
+      success: '#558c3c',
+      warning: '#8b6926',
+      danger: '#8e2f31'
     }
   }
 };

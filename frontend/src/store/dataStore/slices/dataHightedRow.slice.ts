@@ -28,5 +28,13 @@ export const createDataHightedRowSlice: StateCreator<
     rows[selectedTab.id] = selectedRow;
 
     set({ highlightedRow: rows });
+  },
+  removeHighlightedRowsByTabId: (tabId: string) => {
+    const rows = get().highlightedRow;
+    if (Object.prototype.hasOwnProperty.call(rows, tabId)) {
+      delete rows[tabId];
+    }
+
+    set({ highlightedRow: rows });
   }
 });
