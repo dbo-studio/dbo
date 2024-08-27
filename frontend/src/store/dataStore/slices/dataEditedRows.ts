@@ -63,5 +63,13 @@ export const createDataEditedRowsSlice: StateCreator<
 
     get().updateRows(oldRows);
     get().updateEditedRows([]);
+  },
+  removeEditedRowsByTabId: (tabId: string) => {
+    const rows = get().editedRows;
+    if (Object.prototype.hasOwnProperty.call(rows, tabId)) {
+      delete rows[tabId];
+    }
+
+    set({ editedRows: rows });
   }
 });

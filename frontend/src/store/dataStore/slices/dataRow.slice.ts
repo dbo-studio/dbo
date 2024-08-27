@@ -28,5 +28,13 @@ export const createDataRowSlice: StateCreator<
     rows[selectedTab.id] = items;
 
     set({ rows });
+  },
+  removeRowsByTabId: (tabId: string) => {
+    const rows = get().rows;
+    if (Object.prototype.hasOwnProperty.call(rows, tabId)) {
+      delete rows[tabId];
+    }
+
+    set({ rows: rows });
   }
 });

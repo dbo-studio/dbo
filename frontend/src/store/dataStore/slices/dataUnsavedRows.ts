@@ -64,5 +64,13 @@ export const createDataUnsavedRowsSlice: StateCreator<
 
     get().updateRows(oldRows);
     get().updateUnsavedRows([]);
+  },
+  removeUnsavedRowsByTabId: (tabId: string) => {
+    const rows = get().unSavedRows;
+    if (Object.prototype.hasOwnProperty.call(rows, tabId)) {
+      delete rows[tabId];
+    }
+
+    set({ unSavedRows: rows });
   }
 });

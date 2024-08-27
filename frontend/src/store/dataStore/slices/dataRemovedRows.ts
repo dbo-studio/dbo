@@ -53,5 +53,13 @@ export const createDataRemovedRowsSlice: StateCreator<
     set({ removedRows });
     get().discardUnsavedRows(unsavedRows);
     get().updateSelectedRows([]);
+  },
+  deleteRemovedRowsByTabId: (tabId: string) => {
+    const rows = get().removedRows;
+    if (Object.prototype.hasOwnProperty.call(rows, tabId)) {
+      delete rows[tabId];
+    }
+
+    set({ removedRows: rows });
   }
 });
