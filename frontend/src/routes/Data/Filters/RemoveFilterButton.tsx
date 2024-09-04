@@ -1,7 +1,7 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton } from '@mui/material';
-import { RemoveFilterButtonProps } from './types';
+import type { RemoveFilterButtonProps } from './types';
 
 export default function RemoveFilterButton({ filter }: RemoveFilterButtonProps) {
   const { removeFilter } = useTabStore();

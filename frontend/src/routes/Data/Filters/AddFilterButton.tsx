@@ -3,7 +3,7 @@ import { PgsqlFilterConditions, PgsqlFilterNext } from '@/core/constants';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
-import { AddFilterButtonProps } from './types';
+import type { AddFilterButtonProps } from './types';
 
 export default function AddFilterButton({ columns }: AddFilterButtonProps) {
   const { upsertFilters } = useTabStore();

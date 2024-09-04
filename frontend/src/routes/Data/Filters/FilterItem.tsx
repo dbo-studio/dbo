@@ -1,7 +1,7 @@
 import { PgsqlFilterConditions, PgsqlFilterNext } from '@/core/constants';
 import { useUUID } from '@/hooks';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { ColumnType, EventFor, FilterType } from '@/types';
+import type { ColumnType, EventFor, FilterType } from '@/types';
 import { Box, Checkbox } from '@mui/material';
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,7 +11,7 @@ import SelectInput from '@/components/base/SelectInput/SelectInput';
 import SelectOption from '@/components/base/SelectInput/SelectOption';
 import AddFilterButton from './AddFilterButton';
 import RemoveFilterButton from './RemoveFilterButton';
-import { FilterItemProps } from './types';
+import type { FilterItemProps } from './types';
 
 export default function FilterItem({ filter, columns }: FilterItemProps) {
   const { upsertFilters } = useTabStore();
@@ -33,11 +33,11 @@ export default function FilterItem({ filter, columns }: FilterItemProps) {
     const value = e.target.value as string;
     const newFilter = {
       index: currentFilter.index,
-      column: type == 'column' ? value : currentFilter.column,
-      operator: type == 'operator' ? value : currentFilter.operator,
-      value: type == 'value' ? value : currentFilter.value,
-      next: type == 'next' ? value : currentFilter.next,
-      isActive: type == 'isActive' ? e.target.checked : currentFilter.isActive
+      column: type === 'column' ? value : currentFilter.column,
+      operator: type === 'operator' ? value : currentFilter.operator,
+      value: type === 'value' ? value : currentFilter.value,
+      next: type === 'next' ? value : currentFilter.next,
+      isActive: type === 'isActive' ? e.target.checked : currentFilter.isActive
     };
     setCurrentFilter(newFilter);
     if (timeoutId !== null) {

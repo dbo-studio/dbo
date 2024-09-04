@@ -1,9 +1,9 @@
 import { PgsqlSorts } from '@/core/constants';
 import { useUUID } from '@/hooks';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { EventFor } from '@/types';
-import { ColumnType } from '@/types/Data';
-import { SortType } from '@/types/Tab';
+import type { EventFor } from '@/types';
+import type { ColumnType } from '@/types/Data';
+import type { SortType } from '@/types/Tab';
 import { Box, Checkbox } from '@mui/material';
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
@@ -12,7 +12,7 @@ import SelectInput from '@/components/base/SelectInput/SelectInput';
 import SelectOption from '@/components/base/SelectInput/SelectOption';
 import AddSortButton from './AddSortButton';
 import RemoveSortButton from './RemoveSortButton';
-import { SortItemProps } from './types';
+import type { SortItemProps } from './types';
 
 export default function SortItem({ sort, columns }: SortItemProps) {
   const { upsertSorts } = useTabStore();
@@ -31,9 +31,9 @@ export default function SortItem({ sort, columns }: SortItemProps) {
     const value = e.target.value as string;
     const newSort = {
       index: currentSort.index,
-      column: type == 'column' ? value : currentSort.column,
-      operator: type == 'operator' ? value : currentSort.operator,
-      isActive: type == 'isActive' ? e.target.checked : currentSort.isActive
+      column: type === 'column' ? value : currentSort.column,
+      operator: type === 'operator' ? value : currentSort.operator,
+      isActive: type === 'isActive' ? e.target.checked : currentSort.isActive
     };
 
     setCurrentSort(newSort);

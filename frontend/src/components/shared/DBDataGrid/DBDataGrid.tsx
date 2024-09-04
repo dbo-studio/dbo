@@ -57,7 +57,7 @@ export default function DBDataGrid() {
   };
 
   const scrollToBottom = () => {
-    dataGridRef.current!.scrollToCell({
+    dataGridRef.current?.scrollToCell({
       rowIdx: getRows().length - 1
     });
 
@@ -91,13 +91,13 @@ export default function DBDataGrid() {
           headerRowHeight={30}
           renderers={{ renderCheckbox }}
           rowClass={(_, index) => {
-            if (getRemovedRows().some((v) => v.dbo_index == index)) {
+            if (getRemovedRows().some((v) => v.dbo_index === index)) {
               return 'removed-highlight';
             }
-            if (getUnsavedRows().some((v) => v.dbo_index == index)) {
+            if (getUnsavedRows().some((v) => v.dbo_index === index)) {
               return 'unsaved-highlight';
             }
-            if (getEditedRows().some((v) => v.dboIndex == index)) {
+            if (getEditedRows().some((v) => v.dboIndex === index)) {
               return 'edit-highlight';
             }
             return undefined;

@@ -3,7 +3,7 @@ import { PgsqlSorts } from '@/core/constants';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
-import { AddSortButtonProps } from './types';
+import type { AddSortButtonProps } from './types';
 
 export default function AddSortButton({ columns }: AddSortButtonProps) {
   const { upsertSorts } = useTabStore();

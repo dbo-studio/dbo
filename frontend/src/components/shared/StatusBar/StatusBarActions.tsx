@@ -4,15 +4,14 @@ import { useCurrentConnection, useCurrentTab } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { Box, IconButton, Stack } from '@mui/material';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import LoadingIconButton from '../../base/LoadingIconButton/LoadingIconButton';
 
 export default function StatusBarActions() {
   const currentTab = useCurrentTab();
   const currentConnection = useCurrentConnection();
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [_, setSearchParams] = useSearchParams();
 
   const {
     loading,
@@ -38,12 +37,12 @@ export default function StatusBarActions() {
   });
 
   const handleSave = async () => {
-    if (currentTab?.mode == TabMode.Data) {
+    if (currentTab?.mode === TabMode.Data) {
       const edited = getEditedRows();
       const removed = getRemovedRows();
       const unsaved = getUnsavedRows();
 
-      if (!currentTab || !currentConnection || (edited.length == 0 && removed.length == 0 && unsaved.length == 0)) {
+      if (!currentTab || !currentConnection || (edited.length === 0 && removed.length === 0 && unsaved.length === 0)) {
         return;
       }
       try {
@@ -66,7 +65,7 @@ export default function StatusBarActions() {
       }
     }
 
-    if (currentTab?.mode == TabMode.Design) {
+    if (currentTab?.mode === TabMode.Design) {
       if (!currentTab || !currentConnection) {
         return;
       }
@@ -80,35 +79,35 @@ export default function StatusBarActions() {
   };
 
   const handleAddAction = async () => {
-    if (currentTab?.mode == TabMode.Data) {
+    if (currentTab?.mode === TabMode.Data) {
       addUnsavedRows();
       setSearchParams({ scrollToBottom: 'true' });
     }
 
-    if (currentTab?.mode == TabMode.Design) {
+    if (currentTab?.mode === TabMode.Design) {
       addEmptyEditedColumns();
     }
   };
 
   const handleRemoveAction = async () => {
-    if (currentTab?.mode == TabMode.Data) {
+    if (currentTab?.mode === TabMode.Data) {
       updateRemovedRows();
     }
 
-    if (currentTab?.mode == TabMode.Design) {
+    if (currentTab?.mode === TabMode.Design) {
       updateRemovedColumns();
     }
   };
 
   const handleDiscardChanges = async () => {
-    if (currentTab?.mode == TabMode.Data) {
+    if (currentTab?.mode === TabMode.Data) {
       updateSelectedRows([]);
       restoreEditedRows();
       discardUnsavedRows();
       updateRemovedRows();
     }
 
-    if (currentTab?.mode == TabMode.Design) {
+    if (currentTab?.mode === TabMode.Design) {
       restoreEditedColumns();
     }
   };

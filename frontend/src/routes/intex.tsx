@@ -9,7 +9,6 @@ export const router = createBrowserRouter([
   {
     path: '',
     element: <Layout />,
-    // errorElement: <RootError />,
     children: [
       { path: 'data/:tabId/:connectionId', element: <Data /> },
       { path: 'query/:tabId/:connectionId', element: <Query /> },
@@ -22,14 +21,6 @@ export function Router(): JSX.Element {
   return createElement(RouterProvider, { router });
 }
 
-// Clean up on module reload (HMR)
-// https://vitejs.dev/guide/api-hmr
 if (import.meta.hot) {
   import.meta.hot.dispose(() => router.dispose());
 }
-
-// ('query/{tabId}/{connectionid}');
-// ('design/{tabId}/{connectionid}');
-// ('design/{tabId}/{connectionid}/tables/create');
-// ('data/{tabId}/{connectionid}');
-// ('setting/{tabId}/');
