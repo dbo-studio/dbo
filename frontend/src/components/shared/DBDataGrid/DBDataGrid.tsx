@@ -3,17 +3,17 @@ import { handelRowChangeLog } from '@/core/utils';
 import { useCurrentTab } from '@/hooks';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { Box, Checkbox, CircularProgress } from '@mui/material';
-import React, { useEffect, useRef } from 'react';
-import { DataGridHandle, RenderCheckboxProps, RowsChangeData } from 'react-data-grid';
+import type React from 'react';
+import { useEffect, useRef } from 'react';
+import type { DataGridHandle, RenderCheckboxProps, RowsChangeData } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
 import { useSearchParams } from 'react-router-dom';
 import { DataGridStyled } from './DataGrid.styled';
 import { DataGridWrapperStyled } from './DataGridWrapper.styled';
 
-let lastUnsavedRowsLength = 0;
 export default function DBDataGrid() {
   const currentTab = useCurrentTab();
-  let [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const dataGridRef = useRef<DataGridHandle>(null);
   const {
@@ -36,13 +36,13 @@ export default function DBDataGrid() {
   };
 
   useEffect(() => {
-    if (currentTab?.mode == TabMode.Data && (getRows().length == 0 || getColumns().length == 0)) {
+    if (currentTab?.mode === TabMode.Data && (getRows().length === 0 || getColumns().length === 0)) {
       getData();
     }
   }, [currentTab?.id]);
 
   const handleOnCellClick = (e: any) => {
-    if (e.rowIdx == -1) {
+    if (e.rowIdx === -1) {
       return;
     }
     updateHighlightedRow(e.row);
