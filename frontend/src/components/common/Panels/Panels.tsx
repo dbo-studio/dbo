@@ -1,26 +1,31 @@
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu.tsx';
 import { MenuType } from '@/components/base/ContextMenu/types.ts';
-import { useContextMenu, useMount } from '@/hooks';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { useContextMenu, useCurrentConnection, useCurrentTab, useMount } from '@/hooks';
 import { useRemoveTab } from '@/hooks/useRemoveTab.hook';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { TabType as TabData } from '@/types';
 import { Box, Tab, Tabs, Tooltip, Typography } from '@mui/material';
-import CustomIcon from '../../base/CustomIcon/CustomIcon';
-import TabPanel from './TabPanel/TabPanel';
+import { useNavigate } from 'react-router-dom';
+import PanelItem from './PanelItem/PanelItem';
 
-export default function DBTab() {
-  const { switchTab, tabs, selectedTab } = useTabStore();
-  const [removeTab] = useRemoveTab();
+export default function Panels() {
+  const navigate = useNavigate();
   const mounted = useMount();
+  const currentTab = useCurrentTab();
+  const currentConnection = useCurrentConnection();
+
+  const { tabs } = useTabStore();
+  const [removeTab] = useRemoveTab();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
   const menu: MenuType[] = [
     {
       name: locales.close,
       action: () => {
-        if (selectedTab) {
-          removeTab(selectedTab.id);
+        if (currentTab) {
+          removeTab(currentTab.id);
         }
       },
       closeAfterAction: true
@@ -29,7 +34,7 @@ export default function DBTab() {
       name: locales.close_other_tabs,
       action: () => {
         tabs.forEach((tab) => {
-          if (tab.id != selectedTab?.id) removeTab(tab.id);
+          if (tab.id != currentTab?.id) removeTab(tab.id);
         });
       },
       closeAfterAction: true
@@ -43,13 +48,17 @@ export default function DBTab() {
     }
   ];
 
+  const handleSwitchTab = (tabId: string) => {
+    navigate(`/data/${tabId}/${currentConnection?.id}`);
+  };
+
   return (
     <>
-      {selectedTab && mounted ? (
+      {currentTab && mounted ? (
         <>
           <Tabs
-            value={selectedTab.id}
-            onChange={(_: React.SyntheticEvent, tabId: string) => switchTab(tabId)}
+            value={currentTab.id}
+            onChange={(_: React.SyntheticEvent, tabId: string) => handleSwitchTab(tabId)}
             variant='scrollable'
             scrollButtons={false}
           >
@@ -80,7 +89,7 @@ export default function DBTab() {
             ))}
             <ContextMenu menu={menu} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
           </Tabs>
-          <TabPanel />
+          <PanelItem />
         </>
       ) : null}
     </>

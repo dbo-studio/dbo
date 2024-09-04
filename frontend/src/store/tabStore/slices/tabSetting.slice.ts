@@ -7,7 +7,7 @@ import { TabSettingSlice, TabStore } from '../types';
 const maxTabs = 15;
 
 export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [], [], TabSettingSlice> = (_, get) => ({
-  addTab: (table: string, mode?: TabMode, query?: string) => {
+  addTab: (table: string, mode?: TabMode, query?: string): string => {
     mode = mode ? mode : TabMode.Data;
     const tabs = get().tabs;
 
@@ -20,7 +20,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
 
     if (findTab.length > 0) {
       get().switchTab(findTab[0].id);
-      return;
+      return findTab[0].id;
     }
 
     let tabQuery = '';
@@ -55,6 +55,8 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       get().updateTabs([...tabs.slice(1), newTab]);
     }
     get().switchTab(newTab.id);
+
+    return newTab.id;
   },
   removeTab: (tabId: string) => {
     const tabIndex = get().tabs.findIndex((t: TabType) => t.id == tabId);

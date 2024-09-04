@@ -1,5 +1,6 @@
 import api from '@/api';
 import { SchemasStyled } from '@/components/common/DBTreeView/Schemas/Schemas.styled';
+import { useCurrentConnection } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
@@ -9,7 +10,8 @@ import SelectInput from '../../../base/SelectInput/SelectInput';
 import SelectOption from '../../../base/SelectInput/SelectOption';
 
 export default function Schemas() {
-  const { currentConnection, updateCurrentConnection } = useConnectionStore();
+  const currentConnection = useCurrentConnection();
+  const { updateCurrentConnection } = useConnectionStore();
 
   const { request: updateConnection } = useAPI({
     apiMethod: api.connection.updateConnection

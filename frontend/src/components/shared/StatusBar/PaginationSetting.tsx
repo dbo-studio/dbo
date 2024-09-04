@@ -1,3 +1,4 @@
+import { useCurrentTab } from '@/hooks';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { TabDataPagination } from '@/types';
@@ -8,11 +9,11 @@ import FieldInput from '../../base/FieldInput/FieldInput';
 import { PaginationSettingStyled } from './StatusBar.styled';
 
 export default function PaginationSetting() {
-  const { selectedTab, updateSelectedTab } = useTabStore();
-
+  const { updateSelectedTab } = useTabStore();
+  const currentTab = useCurrentTab();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [limit, setLimit] = useState<number>(selectedTab?.pagination?.limit ?? 0);
-  const [offset, setOffset] = useState<number>(selectedTab?.pagination?.offset ?? 0);
+  const [limit, setLimit] = useState<number>(currentTab?.pagination?.limit ?? 0);
+  const [offset, setOffset] = useState<number>(currentTab?.pagination?.offset ?? 0);
   const [errors, setErrors] = useState<{
     limit: string | undefined;
     offset: string | undefined;
@@ -29,8 +30,8 @@ export default function PaginationSetting() {
   };
 
   const handleCloseClick = () => {
-    setLimit(selectedTab?.pagination.limit ?? 0);
-    setOffset(selectedTab?.pagination.offset ?? 0);
+    setLimit(currentTab?.pagination.limit ?? 0);
+    setOffset(currentTab?.pagination.offset ?? 0);
     setErrors({
       limit: undefined,
       offset: undefined
@@ -39,7 +40,7 @@ export default function PaginationSetting() {
   };
 
   const handleUpdateState = () => {
-    if (!selectedTab) {
+    if (!currentTab) {
       return;
     }
 
@@ -58,13 +59,13 @@ export default function PaginationSetting() {
     }
 
     const pagination: TabDataPagination = {
-      page: selectedTab.pagination.page,
+      page: currentTab.pagination.page,
       limit,
       offset
     };
 
     updateSelectedTab({
-      ...selectedTab,
+      ...currentTab,
       pagination
     });
 

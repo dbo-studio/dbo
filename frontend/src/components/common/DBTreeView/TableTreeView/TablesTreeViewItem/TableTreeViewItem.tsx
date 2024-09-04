@@ -3,32 +3,38 @@ import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import { MenuType } from '@/components/base/ContextMenu/types';
 import { TablesTreeViewItemProps } from '@/components/common/DBTreeView/types';
 import { TabMode } from '@/core/enums';
-import { useContextMenu, useCopyToClipboard } from '@/hooks';
+import { useContextMenu, useCopyToClipboard, useCurrentConnection } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook.ts';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { Box, Tooltip } from '@mui/material';
 import { TreeItem } from '@mui/x-tree-view';
-import { toast } from 'sonner';
 
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 export default function TableTreeViewItem({ table, onClick }: TablesTreeViewItemProps) {
+  const navigate = useNavigate();
+  const currentConnection = useCurrentConnection();
+
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, copy] = useCopyToClipboard();
   const { addTab } = useTabStore();
-  const { currentConnection, updateCurrentConnection } = useConnectionStore();
+  const { updateCurrentConnection } = useConnectionStore();
 
   const { request: getConnectionDetail } = useAPI({
     apiMethod: api.connection.getConnectionDetail
   });
 
   const handleAddTabData = () => {
-    addTab(table);
+    const tabId = addTab(table);
+    navigate(`/data/${tabId}/${currentConnection?.id}`);
   };
 
   const handleAddTabDesign = () => {
-    addTab(table, TabMode.Design);
+    const tabId = addTab(table, TabMode.Design);
+    navigate(`/design/${tabId}/${currentConnection?.id}`);
   };
 
   const handleRefresh = () => {

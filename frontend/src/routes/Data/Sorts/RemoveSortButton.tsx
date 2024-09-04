@@ -1,6 +1,6 @@
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton } from '@mui/material';
-import CustomIcon from '../../../../../base/CustomIcon/CustomIcon';
 import { RemoveSortButtonProps } from './types';
 
 export default function RemoveSortButton({ sort }: RemoveSortButtonProps) {

@@ -1,17 +1,19 @@
 import { TabMode } from '@/core/enums';
 import { handelRowChangeLog } from '@/core/utils';
+import { useCurrentTab } from '@/hooks';
 import { useDataStore } from '@/store/dataStore/data.store';
-import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, Checkbox, CircularProgress } from '@mui/material';
 import React, { useEffect, useRef } from 'react';
 import { DataGridHandle, RenderCheckboxProps, RowsChangeData } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
+import { useSearchParams } from 'react-router-dom';
 import { DataGridStyled } from './DataGrid.styled';
 import { DataGridWrapperStyled } from './DataGridWrapper.styled';
 
 let lastUnsavedRowsLength = 0;
 export default function DBDataGrid() {
-  const { selectedTab } = useTabStore();
+  const currentTab = useCurrentTab();
+  let [searchParams, setSearchParams] = useSearchParams();
 
   const dataGridRef = useRef<DataGridHandle>(null);
   const {
@@ -34,10 +36,10 @@ export default function DBDataGrid() {
   };
 
   useEffect(() => {
-    if (selectedTab?.mode == TabMode.Data && (getRows().length == 0 || getColumns().length == 0)) {
+    if (currentTab?.mode == TabMode.Data && (getRows().length == 0 || getColumns().length == 0)) {
       getData();
     }
-  }, [selectedTab?.id]);
+  }, [currentTab?.id]);
 
   const handleOnCellClick = (e: any) => {
     if (e.rowIdx == -1) {
@@ -55,22 +57,19 @@ export default function DBDataGrid() {
   };
 
   const scrollToBottom = () => {
-    if (lastUnsavedRowsLength == 0) {
-      lastUnsavedRowsLength = getUnsavedRows().length;
-    }
+    dataGridRef.current!.scrollToCell({
+      rowIdx: getRows().length - 1
+    });
 
-    if (dataGridRef.current && lastUnsavedRowsLength <= getUnsavedRows().length) {
-      dataGridRef.current!.scrollToCell({
-        rowIdx: getRows().length - 1
-      });
-    }
-
-    lastUnsavedRowsLength = getUnsavedRows().length;
+    setSearchParams({ scrollToBottom: 'false' });
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [getUnsavedRows().length]);
+    const params = Object.fromEntries([...searchParams]);
+    if (params?.scrollToBottom) {
+      scrollToBottom();
+    }
+  }, [searchParams]);
 
   return loading ? (
     <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
@@ -78,7 +77,7 @@ export default function DBDataGrid() {
     </Box>
   ) : (
     <DataGridWrapperStyled>
-      {selectedTab && (
+      {currentTab && (
         <DataGridStyled
           ref={dataGridRef}
           onSelectedCellChange={handleOnCellClick}

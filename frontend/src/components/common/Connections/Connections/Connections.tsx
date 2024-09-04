@@ -6,6 +6,7 @@ import { Suspense, lazy, useEffect } from 'react';
 import { v4 as uuid } from 'uuid';
 
 import { updateConnectionType } from '@/api/connection/types';
+import { useCurrentConnection } from '@/hooks';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { ConnectionsStyled } from './Connections.styled';
 import { EmptySpaceStyle } from './EmptySpace.styled';
@@ -14,8 +15,8 @@ const AddConnection = lazy(() => import('../AddConnection/AddConnection'));
 const EditConnection = lazy(() => import('../EditConnection/EditConnection'));
 
 export default function Connections() {
-  const { connections, currentConnection, updateCurrentConnection, updateConnections, updateShowAddConnection } =
-    useConnectionStore();
+  const { connections, updateCurrentConnection, updateConnections, updateShowAddConnection } = useConnectionStore();
+  const currentConnection = useCurrentConnection();
 
   const { request: getConnectionList } = useAPI({
     apiMethod: api.connection.getConnectionList

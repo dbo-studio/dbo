@@ -1,25 +1,27 @@
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { useCurrentTab } from '@/hooks';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton, Stack, useTheme } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
-import CustomIcon from '../../../../../base/CustomIcon/CustomIcon';
 
 export default function ActionBar() {
   const theme = useTheme();
-  const { selectedTab, setShowQueryPreview, setShowFilters, setShowSorts, setShowColumns } = useTabStore();
+  const { setShowQueryPreview, setShowFilters, setShowSorts, setShowColumns } = useTabStore();
+  const currentTab = useCurrentTab();
 
   const handleToggle = (type: 'filter' | 'query' | 'sort' | 'column') => {
     switch (type) {
       case 'filter':
-        setShowFilters(!selectedTab!.showFilters);
+        setShowFilters(!currentTab!.showFilters);
         break;
       case 'query':
-        setShowQueryPreview(!selectedTab!.showQuery);
+        setShowQueryPreview(!currentTab!.showQuery);
         break;
       case 'sort':
-        setShowSorts(!selectedTab!.showSorts);
+        setShowSorts(!currentTab!.showSorts);
         break;
       case 'column':
-        setShowColumns(!selectedTab!.showColumns);
+        setShowColumns(!currentTab!.showColumns);
         break;
     }
   };

@@ -5,9 +5,10 @@ import { ColumnType, EventFor, FilterType } from '@/types';
 import { Box, Checkbox } from '@mui/material';
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import FieldInput from '../../../../../base/FieldInput/FieldInput';
-import SelectInput from '../../../../../base/SelectInput/SelectInput';
-import SelectOption from '../../../../../base/SelectInput/SelectOption';
+
+import FieldInput from '@/components/base/FieldInput/FieldInput';
+import SelectInput from '@/components/base/SelectInput/SelectInput';
+import SelectOption from '@/components/base/SelectInput/SelectOption';
 import AddFilterButton from './AddFilterButton';
 import RemoveFilterButton from './RemoveFilterButton';
 import { FilterItemProps } from './types';

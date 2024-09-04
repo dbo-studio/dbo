@@ -1,6 +1,7 @@
 import api from '@/api';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import { MenuType } from '@/components/base/ContextMenu/types';
+import { useCurrentConnection } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
@@ -11,8 +12,8 @@ import { toast } from 'sonner';
 import { ConnectionContextMenuProps } from '../../../types';
 
 export default function ConnectionItemContextMenu({ connection, contextMenu, onClose }: ConnectionContextMenuProps) {
-  const { updateShowEditConnection, updateConnections, updateCurrentConnection, currentConnection } =
-    useConnectionStore();
+  const currentConnection = useCurrentConnection();
+  const { updateShowEditConnection, updateConnections, updateCurrentConnection } = useConnectionStore();
   const { updateSelectedTab, updateTabs } = useTabStore();
   const showModal = useConfirmModalStore((state) => state.danger);
 

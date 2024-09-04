@@ -1,4 +1,4 @@
-import { useTabStore } from '@/store/tabStore/tab.store';
+import { useCurrentTab } from '@/hooks';
 import { Suspense, lazy } from 'react';
 import { StatusBarStyled } from './StatusBar.styled';
 
@@ -7,10 +7,9 @@ const StatusBarTabs = lazy(() => import('./StatusBarTabs'));
 const StatusBarPagination = lazy(() => import('./StatusBarPagination'));
 
 export default function StatusBar() {
-  const { selectedTab } = useTabStore();
-
+  const currentTab = useCurrentTab();
   return (
-    <StatusBarStyled mode={selectedTab?.mode} direction={'row'} justifyContent={'space-between'}>
+    <StatusBarStyled mode={currentTab?.mode} direction={'row'} justifyContent={'space-between'}>
       <Suspense>
         <StatusBarActions />
       </Suspense>
@@ -18,7 +17,7 @@ export default function StatusBar() {
         <StatusBarTabs />
       </Suspense>
       <Suspense>
-        <StatusBarPagination mode={selectedTab?.mode} />
+        <StatusBarPagination mode={currentTab?.mode} />
       </Suspense>
     </StatusBarStyled>
   );

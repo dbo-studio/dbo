@@ -1,5 +1,6 @@
 import { useWindowSize } from '@/hooks/useWindowSize.hook';
-import DBTab from '../../common/DBTab/DBTab';
+
+import Panels from '@/components/common/Panels/Panels';
 import { CenterContainerStyled } from './Container.styled';
 
 export default function CenterContainer() {
@@ -7,7 +8,7 @@ export default function CenterContainer() {
 
   return (
     <CenterContainerStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
-      <DBTab />
+      <Panels />
     </CenterContainerStyled>
   );
 }

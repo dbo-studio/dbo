@@ -1,8 +1,8 @@
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { PgsqlSorts } from '@/core/constants';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
-import CustomIcon from '../../../../../base/CustomIcon/CustomIcon';
 import { AddSortButtonProps } from './types';
 
 export default function AddSortButton({ columns }: AddSortButtonProps) {

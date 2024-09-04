@@ -7,8 +7,9 @@ import { SortType } from '@/types/Tab';
 import { Box, Checkbox } from '@mui/material';
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import SelectInput from '../../../../../base/SelectInput/SelectInput';
-import SelectOption from '../../../../../base/SelectInput/SelectOption';
+
+import SelectInput from '@/components/base/SelectInput/SelectInput';
+import SelectOption from '@/components/base/SelectInput/SelectOption';
 import AddSortButton from './AddSortButton';
 import RemoveSortButton from './RemoveSortButton';
 import { SortItemProps } from './types';

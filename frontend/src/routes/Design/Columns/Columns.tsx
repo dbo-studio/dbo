@@ -1,7 +1,7 @@
 import { TabMode } from '@/core/enums';
+import { useCurrentTab } from '@/hooks';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
-import { useTabStore } from '@/store/tabStore/tab.store';
 import { ColumnType, EditedColumnType } from '@/types/Data';
 import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { useEffect } from 'react';
@@ -11,17 +11,17 @@ import { ColumnsStyled } from './Columns.styled';
 
 export default function Columns() {
   const { getColumns, getEditedColumns, updateColumn, addEditedColumns, runQuery } = useDataStore();
-  const { selectedTab } = useTabStore();
+  const currentTab = useCurrentTab();
 
   const getData = async () => {
     await runQuery();
   };
 
   useEffect(() => {
-    if (selectedTab?.mode == TabMode.Design && getColumns().length == 0) {
+    if (currentTab?.mode == TabMode.Design && getColumns().length == 0) {
       getData();
     }
-  }, [selectedTab]);
+  }, [currentTab]);
 
   const handleColumnChange = (oldValue: ColumnType, newValue: EditedColumnType) => {
     addEditedColumns(oldValue, newValue);

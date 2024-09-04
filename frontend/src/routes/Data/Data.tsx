@@ -1,5 +1,5 @@
 import StatusBar from '@/components/shared/StatusBar/StatusBar';
-import { useTabStore } from '@/store/tabStore/tab.store';
+import { useCurrentTab } from '@/hooks';
 import { Box } from '@mui/material';
 import { lazy, Suspense } from 'react';
 import ActionBar from './ActionBar/ActionBar';
@@ -11,17 +11,17 @@ import Sorts from './Sorts/Sorts';
 const DBDataGrid = lazy(() => import('@/components/shared/DBDataGrid/DBDataGrid'));
 
 export default function Data() {
-  const { selectedTab } = useTabStore();
+  const currentTab = useCurrentTab();
 
   return (
-    selectedTab && (
+    currentTab && (
       <>
         <ActionBar />
-        {selectedTab.showFilters && <Filters />}
-        {selectedTab.showSorts && <Sorts />}
-        {selectedTab.showQuery && <QueryPreview />}
+        {currentTab.showFilters && <Filters />}
+        {currentTab.showSorts && <Sorts />}
+        {currentTab.showQuery && <QueryPreview />}
         <Box overflow='hidden' flex={1} display='flex' flexDirection='row'>
-          {selectedTab.showColumns && <Columns />}
+          {currentTab.showColumns && <Columns />}
           <Suspense>
             <DBDataGrid />
           </Suspense>
