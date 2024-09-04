@@ -8,7 +8,7 @@ import { Box, Button, Stack } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { v4 as uuid } from 'uuid';
-import { SelectDatabaseProps } from '../types';
+import type { SelectDatabaseProps } from '../types';
 import DatabaseItem from './DatabaseItem';
 
 export default function SelectDatabase({ onClose, onChangeStep }: SelectDatabaseProps) {
@@ -52,10 +52,14 @@ export default function SelectDatabase({ onClose, onChangeStep }: SelectDatabase
   };
 
   const handleDeleteDatabase = async (db: string) => {
+    if (!currentConnection) {
+      return;
+    }
+
     try {
-      const c = currentConnection!;
-      c.databases = c?.databases?.filter((v) => v !== db);
-      await deleteDatabase({ connection_id: currentConnection!.id, name: db });
+      const c = currentConnection;
+      c.databases = c.databases?.filter((v) => v !== db);
+      await deleteDatabase({ connection_id: currentConnection.id, name: db });
       updateCurrentConnection(c);
       toast.success(locales.database_delete_success);
     } catch (err) {
@@ -72,7 +76,7 @@ export default function SelectDatabase({ onClose, onChangeStep }: SelectDatabase
             onClick={() => setSelectedDB(db)}
             name={db}
             key={uuid()}
-            selected={db == selectedDB}
+            selected={db === selectedDB}
           />
         ))}
       </Box>

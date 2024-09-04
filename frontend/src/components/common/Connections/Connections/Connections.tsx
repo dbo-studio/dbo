@@ -1,11 +1,11 @@
 import api from '@/api';
 import useAPI from '@/hooks/useApi.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { ConnectionType } from '@/types';
+import type { ConnectionType } from '@/types';
 import { Suspense, lazy, useEffect } from 'react';
 import { v4 as uuid } from 'uuid';
 
-import { updateConnectionType } from '@/api/connection/types';
+import type { updateConnectionType } from '@/api/connection/types';
 import { useCurrentConnection } from '@/hooks';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { ConnectionsStyled } from './Connections.styled';
@@ -70,7 +70,7 @@ export default function Connections() {
         <ConnectionItem
           onClick={() => handleChangeCurrentConnection(c)}
           key={uuid()}
-          selected={c.id == currentConnection?.id}
+          selected={c.id === currentConnection?.id}
           connection={c}
         />
       ))}

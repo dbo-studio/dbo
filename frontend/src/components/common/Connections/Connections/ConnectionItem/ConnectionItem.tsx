@@ -1,7 +1,7 @@
 import { useContextMenu } from '@/hooks';
-import { Box, Theme, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, type Theme, Tooltip, Typography, useTheme } from '@mui/material';
 import CustomIcon from '../../../../base/CustomIcon/CustomIcon';
-import { ConnectionItemProps } from '../../types';
+import type { ConnectionItemProps } from '../../types';
 import { ConnectionItemStyled } from './ConnectionItem.styled';
 import ConnectionItemContextMenu from './ConnectionItemContextMenu/ConnectionItemContextMenu';
 

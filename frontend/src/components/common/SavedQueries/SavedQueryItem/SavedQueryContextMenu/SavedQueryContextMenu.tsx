@@ -1,6 +1,6 @@
 import api from '@/api';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
-import { MenuType } from '@/components/base/ContextMenu/types';
+import type { MenuType } from '@/components/base/ContextMenu/types';
 import { TabMode } from '@/core/enums';
 import { useCopyToClipboard } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
@@ -8,7 +8,7 @@ import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { toast } from 'sonner';
-import { SavedQueryContextMenuProps } from '../../types';
+import type { SavedQueryContextMenuProps } from '../../types';
 
 export default function SavedQueryContextMenu({
   query,

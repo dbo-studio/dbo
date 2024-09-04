@@ -25,7 +25,7 @@ export default function TablesTreeView({ tables }: { tables: string[] }) {
       <SimpleTreeView
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        selectedItems={[currentTab?.table + '100']}
+        selectedItems={[`${currentTab?.table}100`]}
         autoFocus={false}
         disabledItemsFocusable={true}
         slots={{

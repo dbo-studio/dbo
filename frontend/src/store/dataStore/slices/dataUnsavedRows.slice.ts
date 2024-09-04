@@ -1,9 +1,9 @@
 import { createEmptyRow } from '@/core/utils';
-import { RowType } from '@/types';
+import type { RowType } from '@/types';
 import { pullAt } from 'lodash';
-import { StateCreator } from 'zustand';
+import type { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
-import { DataColumnSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
+import type { DataColumnSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
 export const createDataUnsavedRowsSlice: StateCreator<
   DataStore & DataUnsavedRowsSlice & DataRowSlice & DataColumnSlice,
   [],
@@ -25,15 +25,16 @@ export const createDataUnsavedRowsSlice: StateCreator<
       // create an empty row
       const rows = get().getRows();
       const columns = get().getColumns();
+      // biome-ignore lint: reason
       newRow = createEmptyRow(columns);
-      newRow.dbo_index = rows.length == 0 ? 0 : rows[rows.length - 1].dbo_index + 1;
+      newRow.dbo_index = rows.length === 0 ? 0 : rows[rows.length - 1].dbo_index + 1;
       rows.push(newRow);
       get().updateRows(rows);
       //save empty row to unSavedRows
       unSavedRows.push(newRow);
     } else {
-      const findValueIndex = unSavedRows.findIndex((x) => x.dbo_index == newRow.dbo_index);
-      if (findValueIndex == -1) {
+      const findValueIndex = unSavedRows.findIndex((x) => x.dbo_index === newRow.dbo_index);
+      if (findValueIndex === -1) {
         unSavedRows.push(newRow);
       } else {
         unSavedRows[findValueIndex] = newRow;
@@ -52,15 +53,15 @@ export const createDataUnsavedRowsSlice: StateCreator<
   },
   discardUnsavedRows: (rows?: RowType[]): void => {
     const unSavedRows = rows ? rows : get().getUnsavedRows();
-    if (unSavedRows.length == 0) {
+    if (unSavedRows.length === 0) {
       return;
     }
 
     const oldRows = get().getRows();
-    unSavedRows.forEach((unSavedRow: RowType) => {
-      const findValueIndex = oldRows.findIndex((x) => x.dbo_index == unSavedRow.dbo_index);
+    for (const unSavedRow of unSavedRows) {
+      const findValueIndex = oldRows.findIndex((x) => x.dbo_index === unSavedRow.dbo_index);
       pullAt(oldRows, [findValueIndex]);
-    });
+    }
 
     get().updateRows(oldRows);
     get().updateUnsavedRows([]);

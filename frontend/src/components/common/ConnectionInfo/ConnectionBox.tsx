@@ -14,14 +14,7 @@ export default function ConnectionBox() {
       setActive('false');
     } else {
       setInfo(
-        currentConnection?.driver +
-          ' ' +
-          currentConnection?.version +
-          ' ' +
-          currentConnection.currentSchema +
-          ': ' +
-          currentConnection?.name +
-          ' SQL Query'
+        `${currentConnection?.driver} ${currentConnection?.version} ${currentConnection.currentSchema}: ${currentConnection?.name} SQL Query`
       );
       setActive('true');
     }

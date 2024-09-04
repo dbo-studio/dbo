@@ -9,7 +9,7 @@ export const useSetupDesktop = () => {
   useEffect(() => {
     if (tools.isTauri()) {
       invoke('get_backend_host').then((response) => {
-        if (response == '') {
+        if (response === '') {
           alert('cant found empty port!');
           return;
         }

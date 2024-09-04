@@ -1,7 +1,7 @@
 import { apiHandler } from '@/core/services';
 import { isServerSide, tools } from '@/core/utils';
-import { DependencyList, useEffect, useMemo, useState } from 'react';
-import { ArgumentType, MethodType } from '../types';
+import { type DependencyList, useEffect, useMemo, useState } from 'react';
+import type { ArgumentType, MethodType } from '../types';
 
 interface UseAPI<T, M extends MethodType> {
   apiMethod: (data?: ArgumentType<M>) => Promise<T & { message?: string }>;
@@ -35,7 +35,7 @@ export default function useAPI<T, M extends MethodType>({
   const endCallback = () => setLoading(false);
 
   function request(apiData?: ArgumentType<M>): Promise<T> {
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
       apiHandler<T, M>({
         apiData,
         apiMethod,

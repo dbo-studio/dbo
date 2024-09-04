@@ -3,7 +3,7 @@ import { useContextMenu } from '@/hooks';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, IconButton, Typography, useTheme } from '@mui/material';
 import CustomIcon from '../../../base/CustomIcon/CustomIcon';
-import { HistoryItemProps } from '../types';
+import type { HistoryItemProps } from '../types';
 import HistoryContextMenu from './HistoryContextMenu/HistoryContextMenu';
 import { HistoryItemStyled } from './HistoryItem.styled';
 

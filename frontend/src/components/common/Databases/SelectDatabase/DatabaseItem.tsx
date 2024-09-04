@@ -1,6 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { IconButton, Typography } from '@mui/material';
-import { DatabaseItemProps } from '../types';
+import type { DatabaseItemProps } from '../types';
 import { DatabaseItemStyled } from './SelectedDatabase.styled';
 
 export default function DatabaseItem({ name, selected, onClick, onDelete }: DatabaseItemProps) {

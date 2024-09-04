@@ -1,4 +1,4 @@
-import { CodeEditorProps } from '@/components/base/CodeEditor/types.ts';
+import type { CodeEditorProps } from '@/components/base/CodeEditor/types.ts';
 import * as monaco from 'monaco-editor';
 import { LanguageIdEnum } from 'monaco-sql-languages';
 
@@ -74,5 +74,5 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
     changeMetaProviderSetting(autocomplete);
   }, [autocomplete]);
 
-  return <div style={{ height: '100%', width: '100%', visibility: mount ? 'visible' : 'hidden' }} ref={hostRef}></div>;
+  return <div style={{ height: '100%', width: '100%', visibility: mount ? 'visible' : 'hidden' }} ref={hostRef} />;
 }

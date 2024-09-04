@@ -1,5 +1,5 @@
-import { TabMode } from '@/core/enums';
-import { FilterType, SortType, TabType } from '@/types/Tab';
+import type { TabMode } from '@/core/enums';
+import type { FilterType, SortType, TabType } from '@/types/Tab';
 
 export type TabFilterSlice = {
   upsertFilters: (filter: FilterType) => Promise<void>;

@@ -1,7 +1,7 @@
 import { pullAllBy } from 'lodash';
-import { StateCreator } from 'zustand';
+import type { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
-import { DataSelectedRowsSlice, DataStore } from '../types';
+import type { DataSelectedRowsSlice, DataStore } from '../types';
 
 export const createDataSelectedRowsSlice: StateCreator<
   DataStore & DataSelectedRowsSlice,

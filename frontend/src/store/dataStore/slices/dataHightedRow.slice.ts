@@ -1,7 +1,7 @@
-import { RowType } from '@/types';
-import { StateCreator } from 'zustand';
+import type { RowType } from '@/types';
+import type { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
-import { DataHighlightedRowSlice, DataStore } from '../types';
+import type { DataHighlightedRowSlice, DataStore } from '../types';
 
 export const createDataHightedRowSlice: StateCreator<
   DataStore & DataHighlightedRowSlice,

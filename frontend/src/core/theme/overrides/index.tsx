@@ -1,4 +1,4 @@
-import { Components, Theme } from '@mui/material';
+import type { Components, Theme } from '@mui/material';
 import Baseline from './Baseline';
 import Button from './Button';
 import Input from './Input';

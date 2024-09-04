@@ -6,7 +6,7 @@ import { Box, Tab, Tabs } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
-import { StatusBarTabTypes } from './types';
+import type { StatusBarTabTypes } from './types';
 
 const tabs: StatusBarTabTypes[] = [
   {
@@ -59,7 +59,7 @@ export default function StatusBarTabs() {
         {tabs.map((tabItem, index) => (
           <Tab
             iconPosition='start'
-            icon={<CustomIcon type={selectedTabId == tabItem.id ? tabItem.iconActive : tabItem.icon} />}
+            icon={<CustomIcon type={selectedTabId === tabItem.id ? tabItem.iconActive : tabItem.icon} />}
             label={tabItem.name}
             key={uuids[index]}
           />

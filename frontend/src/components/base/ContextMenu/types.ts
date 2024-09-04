@@ -1,5 +1,5 @@
-import { ContextMenuType } from '@/types';
-import { IconTypes } from '../CustomIcon/types';
+import type { ContextMenuType } from '@/types';
+import type { IconTypes } from '../CustomIcon/types';
 
 export type ContextMenuProps = {
   contextMenu: ContextMenuType;

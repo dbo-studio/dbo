@@ -1,4 +1,4 @@
-import { CustomCellRendererProps } from '@/components/shared/DBDataGrid/types';
+import type { CustomCellRendererProps } from '@/components/shared/DBDataGrid/types';
 import { Tooltip, Typography } from '@mui/material';
 
 export default function TextRenderCell<TRow, TSummaryRow>({ row, column }: CustomCellRendererProps<TRow, TSummaryRow>) {

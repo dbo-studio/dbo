@@ -1,6 +1,6 @@
 import { tools } from '@/core/utils';
-import { StateCreator } from 'zustand';
-import { TabQuerySlice, TabStore } from '../types';
+import type { StateCreator } from 'zustand';
+import type { TabQuerySlice, TabStore } from '../types';
 
 export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [], TabQuerySlice> = (_, get) => ({
   getQuery: (): string => {
@@ -22,6 +22,7 @@ export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [],
     }
 
     if (!tools.isValidJSON(query)) {
+      // biome-ignore lint: reason
       query = JSON.stringify(query);
     }
 

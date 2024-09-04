@@ -1,11 +1,11 @@
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu.tsx';
-import { MenuType } from '@/components/base/ContextMenu/types.ts';
+import type { MenuType } from '@/components/base/ContextMenu/types.ts';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useContextMenu, useCurrentConnection, useCurrentTab, useMount } from '@/hooks';
 import { useRemoveTab } from '@/hooks/useRemoveTab.hook';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { TabType as TabData } from '@/types';
+import type { TabType as TabData } from '@/types';
 import { Box, Tab, Tabs, Tooltip, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import PanelItem from './PanelItem/PanelItem';
@@ -33,16 +33,18 @@ export default function Panels() {
     {
       name: locales.close_other_tabs,
       action: () => {
-        tabs.forEach((tab) => {
-          if (tab.id != currentTab?.id) removeTab(tab.id);
-        });
+        for (const tab of tabs) {
+          if (tab.id !== currentTab?.id) removeTab(tab.id);
+        }
       },
       closeAfterAction: true
     },
     {
       name: locales.close_all,
       action: () => {
-        tabs.forEach((tab) => removeTab(tab.id));
+        for (const tab of tabs) {
+          removeTab(tab.id);
+        }
       },
       closeAfterAction: true
     }

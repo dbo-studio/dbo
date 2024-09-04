@@ -1,8 +1,8 @@
-import { EditedRow, RowType } from '@/types';
+import type { EditedRow, RowType } from '@/types';
 import { pullAt } from 'lodash';
-import { StateCreator } from 'zustand';
+import type { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
-import { DataEditedRowsSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
+import type { DataEditedRowsSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
 
 export const createDataEditedRowsSlice: StateCreator<
   DataStore & DataEditedRowsSlice & DataRowSlice & DataUnsavedRowsSlice,
@@ -29,21 +29,21 @@ export const createDataEditedRowsSlice: StateCreator<
     const shouldBeUnsaved: RowType[] = [];
 
     editedRows.forEach((editedRow: EditedRow, index: number) => {
-      const findValueIndex = unSavedRows.findIndex((x) => x.dbo_index == editedRow.dboIndex);
+      const findValueIndex = unSavedRows.findIndex((x) => x.dbo_index === editedRow.dboIndex);
       if (findValueIndex > -1) {
         shouldBeUnsaved.push(...pullAt(editedRows, [index]));
       }
     });
 
     //  if row exists in unsaved'rows, it should not push into edited'rows list
-    shouldBeUnsaved.forEach((unSavedRow) => {
+    for (const unSavedRow of shouldBeUnsaved) {
       const { dboIndex, ...data } = unSavedRow;
       const newUnsavedRow = {
         ...data.new,
         dbo_index: dboIndex
       };
       get().addUnsavedRows(newUnsavedRow);
-    });
+    }
 
     const rows = get().editedRows;
     rows[selectedTab.id] = editedRows;
@@ -53,13 +53,13 @@ export const createDataEditedRowsSlice: StateCreator<
     const newRows = get().getEditedRows();
     const oldRows = get().getRows();
 
-    newRows.forEach((newRow: EditedRow) => {
-      const findValueIndex = oldRows.findIndex((x) => x.dbo_index == newRow.dboIndex);
+    for (const newRow of newRows) {
+      const findValueIndex = oldRows.findIndex((x) => x.dbo_index === newRow.dboIndex);
       oldRows[findValueIndex] = {
         ...oldRows[findValueIndex],
         ...newRow.old
       };
-    });
+    }
 
     get().updateRows(oldRows);
     get().updateEditedRows([]);

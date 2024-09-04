@@ -1,8 +1,7 @@
 import api from '@/core/services/api';
-import { EditedRow } from '@/types';
 import { AUTOCOMPLETE_QUERY, RUN_QUERY, RUN_RAW_QUERY, UPDATE_QUERY } from './endpoints';
 import { transformAutoComplete, transformRunQuery } from './transformers';
-import { AutoCompleteRequestType, RunQueryType, RunRawQueryType, UpdateQueryType } from './types';
+import type { AutoCompleteRequestType, RunQueryType, RunRawQueryType, UpdateQueryType } from './types';
 
 export const runQuery = async (data: RunQueryType) => {
   return api.post(RUN_QUERY(), data).then(transformRunQuery);
@@ -35,12 +34,12 @@ export const updateQuery = async (data: UpdateQueryType) => {
     added: data.added
   };
 
-  data.edited.forEach((edited: EditedRow) => {
+  for (const edited of data.edited) {
     formattedData.edited.push({
-      conditions: edited.conditions,
+      conditions: edited?.conditions,
       values: edited.new
     });
-  });
+  }
 
   return api.post(UPDATE_QUERY(), formattedData).then(transformRunQuery);
 };

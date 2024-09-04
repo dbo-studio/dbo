@@ -1,5 +1,5 @@
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { TabType } from '@/types';
+import type { TabType } from '@/types';
 import { useParams } from 'react-router-dom';
 
 export const useCurrentTab = (): TabType | undefined => {

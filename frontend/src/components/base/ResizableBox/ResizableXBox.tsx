@@ -1,8 +1,8 @@
-import { EventFor } from '@/types';
+import type { EventFor } from '@/types';
 import { Box } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import ResizableToggle from './ResizableToggle';
-import { ResizableBoxXProps } from './types';
+import type { ResizableBoxXProps } from './types';
 
 export default function ResizableXBox({ direction, width, maxWidth, children, onChange }: ResizableBoxXProps) {
   const [boxWidth, setBoxWidth] = useState(width);

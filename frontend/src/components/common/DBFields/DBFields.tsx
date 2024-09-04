@@ -52,7 +52,7 @@ export default function DBFields() {
                   size='small'
                   value={item.value}
                   fullWidth={true}
-                  key={index}
+                  key={`${item.key}_${index}`}
                   label={item.name}
                   typelabel={item.type}
                   type={item.type}

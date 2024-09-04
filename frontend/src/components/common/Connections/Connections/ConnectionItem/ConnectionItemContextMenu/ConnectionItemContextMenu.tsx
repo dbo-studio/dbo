@@ -1,15 +1,15 @@
 import api from '@/api';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
-import { MenuType } from '@/components/base/ContextMenu/types';
+import type { MenuType } from '@/components/base/ContextMenu/types';
 import { useCurrentConnection } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { ConnectionType } from '@/types';
+import type { ConnectionType } from '@/types';
 import { toast } from 'sonner';
-import { ConnectionContextMenuProps } from '../../../types';
+import type { ConnectionContextMenuProps } from '../../../types';
 
 export default function ConnectionItemContextMenu({ connection, contextMenu, onClose }: ConnectionContextMenuProps) {
   const currentConnection = useCurrentConnection();
@@ -30,15 +30,15 @@ export default function ConnectionItemContextMenu({ connection, contextMenu, onC
   const handleDeleteConnection = async (connection: ConnectionType) => {
     try {
       const res = await deleteConnection(connection.id);
-      if (res.length == 0) {
+      if (res.length === 0) {
         updateConnections([]);
         updateCurrentConnection(undefined);
         updateSelectedTab(undefined);
         updateTabs([]);
       } else {
         if (currentConnection) {
-          const found = res?.findIndex((connection) => currentConnection.id == connection.id);
-          if (found == -1) {
+          const found = res?.findIndex((connection) => currentConnection.id === connection.id);
+          if (found === -1) {
             updateSelectedTab(undefined);
             updateTabs([]);
             updateCurrentConnection(res[0]);

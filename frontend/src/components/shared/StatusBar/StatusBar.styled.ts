@@ -1,6 +1,6 @@
 import { variables } from '@/core/theme/variables';
 import { Box, Stack, styled } from '@mui/material';
-import { StatusBarStylesProps } from './types';
+import type { StatusBarStylesProps } from './types';
 
 export const StatusBarStyled = styled(Stack)<StatusBarStylesProps>(({ theme }) => ({
   background: theme.palette.background.default,

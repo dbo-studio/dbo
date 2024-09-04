@@ -1,5 +1,5 @@
 import { Typography } from '@mui/material';
-import { ConnectionItemProps } from '../../types';
+import type { ConnectionItemProps } from '../../types';
 import { ConnectionItemLogoStyled, ConnectionItemStyled } from './ConnectionItem.styled';
 
 export default function ConnectionItem({ connection, selected, onClick }: ConnectionItemProps) {

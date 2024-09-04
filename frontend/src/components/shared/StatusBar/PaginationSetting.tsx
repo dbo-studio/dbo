@@ -1,7 +1,7 @@
 import { useCurrentTab } from '@/hooks';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { TabDataPagination } from '@/types';
+import type { TabDataPagination } from '@/types';
 import { Button, ClickAwayListener, IconButton, Popper } from '@mui/material';
 import { useState } from 'react';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';

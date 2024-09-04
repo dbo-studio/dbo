@@ -15,9 +15,9 @@ export default function Databases({ open }: { open: boolean }) {
   };
 
   return (
-    <Modal open={open} title={step == 0 ? locales.select_database : locales.create_database}>
-      {step == 0 && <SelectDatabase onChangeStep={() => setStep(1)} onClose={handleClose} />}
-      {step == 1 && <AddDatabase onClose={handleClose} />}
+    <Modal open={open} title={step === 0 ? locales.select_database : locales.create_database}>
+      {step === 0 && <SelectDatabase onChangeStep={() => setStep(1)} onClose={handleClose} />}
+      {step === 1 && <AddDatabase onClose={handleClose} />}
     </Modal>
   );
 }

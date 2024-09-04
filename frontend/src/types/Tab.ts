@@ -1,5 +1,5 @@
-import { TabMode } from '../core/enums';
-import { RowType } from './Data';
+import type { TabMode } from '../core/enums';
+import type { RowType } from './Data';
 
 export type SortType = {
   index: string;

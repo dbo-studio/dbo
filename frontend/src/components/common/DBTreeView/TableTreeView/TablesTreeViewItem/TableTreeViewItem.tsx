@@ -1,7 +1,7 @@
 import api from '@/api';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
-import { MenuType } from '@/components/base/ContextMenu/types';
-import { TablesTreeViewItemProps } from '@/components/common/DBTreeView/types';
+import type { MenuType } from '@/components/base/ContextMenu/types';
+import type { TablesTreeViewItemProps } from '@/components/common/DBTreeView/types';
 import { TabMode } from '@/core/enums';
 import { useContextMenu, useCopyToClipboard, useCurrentConnection } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook.ts';
@@ -109,7 +109,7 @@ export default function TableTreeViewItem({ table, onClick }: TablesTreeViewItem
   return (
     <Box onContextMenu={handleContextMenu}>
       <Tooltip title={table}>
-        <TreeItem onClick={() => onClick()} itemId={table + '100'} label={table} />
+        <TreeItem onClick={() => onClick()} itemId={`${table}100`} label={table} />
       </Tooltip>
       <ContextMenu menu={menu} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
     </Box>

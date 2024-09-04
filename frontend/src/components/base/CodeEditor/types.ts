@@ -1,4 +1,4 @@
-import { AutoCompleteType } from '@/types';
+import type { AutoCompleteType } from '@/types';
 
 export type CodeEditorProps = {
   autocomplete: AutoCompleteType;

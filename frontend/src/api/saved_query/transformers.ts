@@ -1,4 +1,4 @@
-import { SavedQueryResponseType } from './types';
+import type { SavedQueryResponseType } from './types';
 
 export const transformSavedQuery = (data: any): SavedQueryResponseType => {
   return {
@@ -10,9 +10,9 @@ export const transformSavedQuery = (data: any): SavedQueryResponseType => {
 
 export const transformSavedQueries = (data: any): SavedQueryResponseType[] => {
   const queries: SavedQueryResponseType[] = [];
-  data?.forEach((item: any) => {
+  for (const item of data) {
     queries.push(transformSavedQuery(item));
-  });
+  }
 
   return queries;
 };

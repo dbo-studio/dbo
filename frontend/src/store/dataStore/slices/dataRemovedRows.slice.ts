@@ -1,7 +1,13 @@
-import { RowType } from '@/types';
-import { StateCreator } from 'zustand';
+import type { RowType } from '@/types';
+import type { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
-import { DataRemovedRowsSlice, DataRowSlice, DataSelectedRowsSlice, DataStore, DataUnsavedRowsSlice } from '../types';
+import type {
+  DataRemovedRowsSlice,
+  DataRowSlice,
+  DataSelectedRowsSlice,
+  DataStore,
+  DataUnsavedRowsSlice
+} from '../types';
 
 export const createDataRemovedRowsSlice: StateCreator<
   DataStore & DataRemovedRowsSlice & DataRowSlice & DataUnsavedRowsSlice & DataSelectedRowsSlice,
@@ -37,7 +43,7 @@ export const createDataRemovedRowsSlice: StateCreator<
 
     const removedRows = get().removedRows;
     removedRows[selectedTab.id] = rows
-      .map(function (row) {
+      .map((row) => {
         // for deleting a row from db we referenced to row's id and if it doesn't exists to all fields
         if (Object.prototype.hasOwnProperty.call(row, 'id')) {
           return {

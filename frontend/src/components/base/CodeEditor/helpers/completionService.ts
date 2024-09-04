@@ -1,7 +1,7 @@
-import { languages, Position } from 'monaco-editor/esm/vs/editor/editor.api';
-import { CompletionService, EntityContextType, ICompletionItem } from 'monaco-sql-languages/esm/main';
+import { languages, type Position } from 'monaco-editor/esm/vs/editor/editor.api';
+import { type CompletionService, EntityContextType, type ICompletionItem } from 'monaco-sql-languages/esm/main';
 
-import { editor } from 'monaco-editor';
+import type { editor } from 'monaco-editor';
 import { getColumns, getDataBasesAndSchemas, getTables, getViews } from './dbMetaProvider';
 
 const haveCatalogSQLType = (languageId: string) => {
@@ -12,12 +12,12 @@ const haveCatalogSQLType = (languageId: string) => {
 //   return ['trinosql', 'hivesql', 'sparksql', 'pgsql'].includes(languageId);
 // };
 
-export const completionService: CompletionService = async function (
+export const completionService: CompletionService = async (
   model: editor.ITextModel,
   position: Position,
   _completionContext,
   suggestions
-) {
+) => {
   if (!suggestions) {
     return Promise.resolve([]);
   }
@@ -33,7 +33,7 @@ export const completionService: CompletionService = async function (
     label: kw,
     kind: languages.CompletionItemKind.Keyword,
     detail: 'Keywords',
-    sortText: '2' + kw
+    sortText: `2${kw}`
   }));
 
   let syntaxCompletionItems: ICompletionItem[] = [];
@@ -126,7 +126,7 @@ export const completionService: CompletionService = async function (
       }
     }
 
-    if (syntaxContextType == EntityContextType.COLUMN || syntaxContextType == EntityContextType.FUNCTION) {
+    if (syntaxContextType == EntityContextType.COLUMN || syntaxContextType === EntityContextType.FUNCTION) {
       const tableName = getCurrentTableName(model, position);
 
       if (!existColumnCompletions && !tableName) {
@@ -146,12 +146,12 @@ export const completionService: CompletionService = async function (
 function getCurrentTableName(model: editor.ITextModel, position: Position): string | null {
   const currentLineContent = model.getLineContent(position.lineNumber);
   const previousLineContent = position.lineNumber > 1 ? model.getLineContent(position.lineNumber - 1) : '';
-  const sqlText = previousLineContent + ' ' + currentLineContent;
+  const sqlText = `${previousLineContent} ${currentLineContent}`;
 
   const tableNameRegex = /from\s+([a-zA-Z_][\w]*)/i;
   const match = tableNameRegex.exec(sqlText);
 
-  if (match && match[1]) {
+  if (match?.[1]) {
     return match[1];
   }
 

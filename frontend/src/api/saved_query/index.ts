@@ -1,7 +1,7 @@
 import api from '@/core/services/api';
 import { CREATE_SAVED_QUERY, GET_SAVED_QUERIES, UPDATE_SAVED_QUERY } from './endpoints';
 import { transformSavedQueries, transformSavedQuery } from './transformers';
-import { CreateSavedQueryType, UpdateSavedQueryType } from './types';
+import type { CreateSavedQueryType, UpdateSavedQueryType } from './types';
 
 export const getSavedQueries = () => {
   return api.get(GET_SAVED_QUERIES()).then(transformSavedQueries);

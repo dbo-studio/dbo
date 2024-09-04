@@ -13,21 +13,23 @@ export default function SavedQueries() {
   const theme = useTheme();
   const { savedQueries, upsertQuery, deleteQuery } = useSavedQueryStore();
 
-  const { request: getSavedQueries, pending: pending } = useAPI({
+  const { request: getSavedQueries, pending } = useAPI({
     apiMethod: api.savedQueries.getSavedQueries
   });
 
   const handleGetSavedQueries = async () => {
     try {
       const res = await getSavedQueries();
-      res.forEach((item) => upsertQuery(item));
+      for (const item of res) {
+        upsertQuery(item);
+      }
     } catch (error) {
       console.log('🚀 ~ handleGetSavedQueries ~ error:', error);
     }
   };
 
   useEffect(() => {
-    if (savedQueries == undefined) {
+    if (savedQueries === undefined) {
       handleGetSavedQueries();
     }
   }, []);
@@ -51,7 +53,7 @@ export default function SavedQueries() {
                   }}
                   key={uuid()}
                   query={query}
-                  selected={selected == query.id}
+                  selected={selected === query.id}
                 />
               ))
           )}

@@ -1,4 +1,4 @@
-import { TabType } from '@/types';
+import type { TabType } from '@/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -12,7 +12,7 @@ import { createDataRemovedRowsSlice } from './slices/dataRemovedRows.slice';
 import { createDataRowSlice } from './slices/dataRow.slice';
 import { createDataSelectedRowsSlice } from './slices/dataSelectedRows.slice';
 import { createDataUnsavedRowsSlice } from './slices/dataUnsavedRows.slice';
-import {
+import type {
   DataColumnSlice,
   DataEditedColumnSlice,
   DataEditedRowsSlice,

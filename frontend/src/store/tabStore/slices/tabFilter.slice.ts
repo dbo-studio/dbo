@@ -1,6 +1,6 @@
-import { FilterType } from '@/types';
-import { StateCreator } from 'zustand';
-import { TabFilterSlice, TabStore } from '../types';
+import type { FilterType } from '@/types';
+import type { StateCreator } from 'zustand';
+import type { TabFilterSlice, TabStore } from '../types';
 
 export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [], TabFilterSlice> = (set, get) => ({
   upsertFilters: async (filter: FilterType) => {
@@ -27,8 +27,8 @@ export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [
       return;
     }
 
-    (selectedTab.filters = selectedTab.filters.filter((f: FilterType) => f.index !== filter.index)),
-      get().updateSelectedTab(selectedTab);
+    selectedTab.filters = selectedTab.filters.filter((f: FilterType) => f.index !== filter.index);
+    get().updateSelectedTab(selectedTab);
   },
   setShowFilters: (show: boolean) => {
     const selectedTab = get().selectedTab;

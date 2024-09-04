@@ -1,21 +1,22 @@
 import { TabMode } from '@/core/enums';
-import { TabType } from '@/types/Tab';
+import type { TabType } from '@/types/Tab';
 import { v4 as uuidv4 } from 'uuid';
-import { StateCreator } from 'zustand';
-import { TabSettingSlice, TabStore } from '../types';
+import type { StateCreator } from 'zustand';
+import type { TabSettingSlice, TabStore } from '../types';
 
 const maxTabs = 15;
 
 export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [], [], TabSettingSlice> = (_, get) => ({
   addTab: (table: string, mode?: TabMode, query?: string): string => {
+    // biome-ignore lint: reason
     mode = mode ? mode : TabMode.Data;
     const tabs = get().tabs;
 
-    let findTab;
-    if (mode == TabMode.Query) {
-      findTab = tabs.filter((t: TabType) => t.mode == TabMode.Query && (t.query == '' || t.query == '""'));
+    let findTab: TabType[];
+    if (mode === TabMode.Query) {
+      findTab = tabs.filter((t: TabType) => t.mode === TabMode.Query && (t.query === '' || t.query === '""'));
     } else {
-      findTab = tabs.filter((t: TabType) => t.table == table && t.mode == mode);
+      findTab = tabs.filter((t: TabType) => t.table === table && t.mode === mode);
     }
 
     if (findTab.length > 0) {
@@ -24,7 +25,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
     }
 
     let tabQuery = '';
-    if (mode == TabMode.Data) {
+    if (mode === TabMode.Data) {
       tabQuery = `SELECT * FROM ${table}`;
     } else {
       tabQuery = query ? query : '';
@@ -59,14 +60,14 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
     return newTab.id;
   },
   removeTab: (tabId: string) => {
-    const tabIndex = get().tabs.findIndex((t: TabType) => t.id == tabId);
+    const tabIndex = get().tabs.findIndex((t: TabType) => t.id === tabId);
     const newTabs = get().tabs.filter((t: TabType) => t.id !== tabId);
 
     if (newTabs.length > tabIndex && get().selectedTab?.id === tabId) {
       get().switchTab(newTabs[tabIndex].id);
     } else if (newTabs.length > 0 && get().selectedTab?.id === tabId) {
       get().switchTab(newTabs[newTabs.length - 1].id);
-    } else if (newTabs.length == 0) {
+    } else if (newTabs.length === 0) {
       get().switchTab(null);
     }
 

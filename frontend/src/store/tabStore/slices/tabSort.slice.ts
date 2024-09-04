@@ -1,6 +1,6 @@
-import { SortType } from '@/types';
-import { StateCreator } from 'zustand';
-import { TabSortSlice, TabStore } from '../types';
+import type { SortType } from '@/types';
+import type { StateCreator } from 'zustand';
+import type { TabSortSlice, TabStore } from '../types';
 
 export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], TabSortSlice> = (set, get) => ({
   upsertSorts: async (sort: SortType) => {
@@ -26,8 +26,8 @@ export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], T
       return;
     }
 
-    (selectedTab.sorts = selectedTab.sorts.filter((s: SortType) => s.index !== sort.index)),
-      get().updateSelectedTab(selectedTab);
+    selectedTab.sorts = selectedTab.sorts.filter((s: SortType) => s.index !== sort.index);
+    get().updateSelectedTab(selectedTab);
   },
   setShowSorts: (show: boolean) => {
     const selectedTab = get().selectedTab;

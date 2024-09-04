@@ -2,11 +2,10 @@
 
 import { appConfig } from '@/appConfig';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { ThemeProvider as MUIThemeProvider, ThemeOptions, createTheme } from '@mui/material/styles';
+import { ThemeProvider as MUIThemeProvider, type ThemeOptions, createTheme } from '@mui/material/styles';
 import { ThemeModeEnum } from '../enums';
 import componentsOverride from './overrides';
 import palette from './palette';
-import typography from './typography';
 
 type Props = {
   children: React.ReactNode;
@@ -16,7 +15,6 @@ export default function ThemeProvider({ children }: Props) {
   const { isDark } = useSettingStore();
 
   const themeOptions: ThemeOptions = {
-    typography,
     palette: palette(isDark ? ThemeModeEnum.Dark : ThemeModeEnum.Light),
     direction: appConfig.direction
   };

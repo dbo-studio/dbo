@@ -1,11 +1,11 @@
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
-import { MenuType } from '@/components/base/ContextMenu/types';
+import type { MenuType } from '@/components/base/ContextMenu/types';
 import { TabMode } from '@/core/enums';
 import { useCopyToClipboard } from '@/hooks';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { toast } from 'sonner';
-import { HistoryContextMenuProps } from '../../types';
+import type { HistoryContextMenuProps } from '../../types';
 
 export default function HistoryContextMenu({ history, contextMenu, onClose }: HistoryContextMenuProps) {
   const [_, copy] = useCopyToClipboard();
