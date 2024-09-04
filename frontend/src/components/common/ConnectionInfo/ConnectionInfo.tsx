@@ -54,7 +54,7 @@ export default function ConnectionInfo() {
           {/* <IconButton aria-label='search'>
             <CustomIcon type={'search'} size={'m'} />
           </IconButton> */}
-          <IconButton aria-label='sql' onClick={handleAddEditorTab}>
+          <IconButton disabled={!currentConnection} aria-label='sql' onClick={handleAddEditorTab}>
             <CustomIcon type={'sql'} size={'m'} />
           </IconButton>
         </Stack>

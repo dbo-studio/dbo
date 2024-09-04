@@ -53,5 +53,6 @@ export const IconTypes = {
   pickaxe: 'Pickaxe',
   light: 'Sun',
   dark: 'Moon',
-  sheet: 'Sheet'
+  sheet: 'Sheet',
+  databaseZap: 'DatabaseZap'
 };
