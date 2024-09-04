@@ -1,12 +1,12 @@
 import api from '@/api';
-import { AutoCompleteRequestType } from '@/api/query/types';
-import { CodeEditorSettingType } from '@/components/base/CodeEditor/types';
+import type { AutoCompleteRequestType } from '@/api/query/types';
+import type { CodeEditorSettingType } from '@/components/base/CodeEditor/types';
 import { useCurrentConnection, useWindowSize } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { AutoCompleteType } from '@/types';
+import type { AutoCompleteType } from '@/types';
 import { Box, useTheme } from '@mui/material';
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
 
 const CodeEditor = lazy(() => import('@/components/base/CodeEditor/CodeEditor'));
@@ -24,12 +24,12 @@ export default function Query() {
     schema: ''
   });
 
-  const { request: getAutoComplete, pending: pending } = useAPI({
+  const { request: getAutoComplete, pending } = useAPI({
     apiMethod: api.query.autoComplete
   });
 
   useEffect(() => {
-    if (!currentConnection || pending || setting.schema == '' || setting.database == '') {
+    if (!currentConnection || pending || setting.schema === '' || setting.database === '') {
       return;
     }
 

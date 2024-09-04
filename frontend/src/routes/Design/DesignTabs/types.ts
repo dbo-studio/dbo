@@ -1,4 +1,4 @@
-import { IconTypes } from '@/components/base/CustomIcon/types';
+import type { IconTypes } from '@/components/base/CustomIcon/types';
 
 export type DesignTabTypes = {
   id: number;

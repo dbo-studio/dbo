@@ -12,16 +12,16 @@ export default function ActionBar() {
   const handleToggle = (type: 'filter' | 'query' | 'sort' | 'column') => {
     switch (type) {
       case 'filter':
-        setShowFilters(!currentTab!.showFilters);
+        setShowFilters(!currentTab?.showFilters);
         break;
       case 'query':
-        setShowQueryPreview(!currentTab!.showQuery);
+        setShowQueryPreview(!currentTab?.showQuery);
         break;
       case 'sort':
-        setShowSorts(!currentTab!.showSorts);
+        setShowSorts(!currentTab?.showSorts);
         break;
       case 'column':
-        setShowColumns(!currentTab!.showColumns);
+        setShowColumns(!currentTab?.showColumns);
         break;
     }
   };

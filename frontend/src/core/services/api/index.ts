@@ -1,4 +1,4 @@
-import { AxiosError, AxiosRequestHeaders } from 'axios';
+import type { AxiosError, AxiosRequestHeaders } from 'axios';
 import { toast } from 'sonner';
 import { serviceDelete, serviceGet, servicePatch, servicePost } from './intialize';
 
@@ -12,7 +12,7 @@ const messageHandler = (response: any) => {
 };
 
 interface ApiOptions {
-  headers?: (AxiosRequestHeaders & { Authorization?: string }) | {};
+  headers?: (AxiosRequestHeaders & { Authorization?: string }) | object;
   isPublic?: boolean;
   [key: string]: any;
 }
@@ -22,14 +22,14 @@ function get<T = any>(url: string, params = {}, { headers = {}, isPublic, ...opt
   };
   // TODO: set csrf token
   // if (!isPublic) completeHeaders.Authorization = getToken();
-  return new Promise(function (resolve, reject) {
+  return new Promise((resolve, reject) => {
     serviceGet(url, { ...options, params: { ...params }, headers: completeHeaders })
-      .then(function (response) {
+      .then((response) => {
         const responseData = response?.data?.data;
         messageHandler(response);
         resolve(responseData);
       })
-      .catch(function (error: AxiosError) {
+      .catch((error: AxiosError) => {
         console.log('🚀 ~ error:', error);
         reject(error);
       });
@@ -50,14 +50,14 @@ function post<T = any>(
 
   // TODO: set csrf token
   // if (!isPublic) completeHeaders.Authorization = getToken();
-  return new Promise(function (resolve, reject) {
+  return new Promise((resolve, reject) => {
     servicePost(url, completeData, { ...options, headers: completeHeaders })
-      .then(function (response) {
+      .then((response) => {
         const responseData = response?.data?.data;
         messageHandler(response);
         resolve(responseData);
       })
-      .catch(function (error) {
+      .catch((error) => {
         console.log('🚀 ~ error:', error);
         reject(error);
       });
@@ -78,14 +78,14 @@ function patch<T = any>(
 
   // TODO: set csrf token
   // if (!isPublic) completeHeaders.Authorization = getToken();
-  return new Promise(function (resolve, reject) {
+  return new Promise((resolve, reject) => {
     servicePatch(url, completeData, { ...options, headers: completeHeaders })
-      .then(function (response) {
+      .then((response) => {
         const responseData = response?.data?.data;
         messageHandler(response);
         resolve(responseData);
       })
-      .catch(function (error) {
+      .catch((error) => {
         console.log('🚀 ~ error:', error);
         reject(error);
       });
@@ -98,14 +98,14 @@ function del<T = any>(url: string, data = {}, { headers = {}, isPublic, ...optio
   };
   // TODO: set csrf token
   // if (!isPublic) completeHeaders.Authorization = getToken();
-  return new Promise(function (resolve, reject) {
+  return new Promise((resolve, reject) => {
     serviceDelete(url, { ...options, data: { ...data }, headers: completeHeaders })
-      .then(function (response) {
+      .then((response) => {
         const responseData = response?.data?.data;
         messageHandler(response);
         resolve(responseData);
       })
-      .catch(function (error) {
+      .catch((error) => {
         console.log('🚀 ~ error:', error);
         reject(error);
       });

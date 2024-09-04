@@ -1,4 +1,4 @@
-import { languages, type Position } from 'monaco-editor/esm/vs/editor/editor.api';
+import { type Position, languages } from 'monaco-editor/esm/vs/editor/editor.api';
 import { type CompletionService, EntityContextType, type ICompletionItem } from 'monaco-sql-languages/esm/main';
 
 import type { editor } from 'monaco-editor';
@@ -126,7 +126,7 @@ export const completionService: CompletionService = async (
       }
     }
 
-    if (syntaxContextType == EntityContextType.COLUMN || syntaxContextType === EntityContextType.FUNCTION) {
+    if (syntaxContextType === EntityContextType.COLUMN || syntaxContextType === EntityContextType.FUNCTION) {
       const tableName = getCurrentTableName(model, position);
 
       if (!existColumnCompletions && !tableName) {

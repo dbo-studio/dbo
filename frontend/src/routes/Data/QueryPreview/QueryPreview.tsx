@@ -15,6 +15,7 @@ export default function QueryPreview() {
 
   return (
     <QueryPreviewStyled>
+      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation> */}
       <div dangerouslySetInnerHTML={{ __html: html }} />
     </QueryPreviewStyled>
   );

@@ -1,5 +1,5 @@
 import { Box, styled } from '@mui/material';
-import { DesignTabItemStyledProps } from './types';
+import type { DesignTabItemStyledProps } from './types';
 
 export const DesignTabWrapperStyled = styled(Box)(({ theme }) => ({
   display: 'flex',

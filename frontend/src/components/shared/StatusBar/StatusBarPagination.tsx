@@ -18,11 +18,11 @@ export default function StatusBarPagination({ mode }: { mode: TabMode | undefine
     }
     const pagination = currentTab.pagination;
 
-    if (mode == 'prev') {
+    if (mode === 'prev') {
       pagination.page = pagination.page - 1;
     }
 
-    if (mode == 'next') {
+    if (mode === 'next') {
       pagination.page = pagination.page + 1;
     }
 
@@ -43,12 +43,12 @@ export default function StatusBarPagination({ mode }: { mode: TabMode | undefine
       flexDirection={'row'}
       width={208}
     >
-      {!mode && mode == TabMode.Data && (
+      {!mode && mode === TabMode.Data && (
         <>
           <PaginationSetting />
           <IconButton
             style={{ marginLeft: theme.spacing(1) }}
-            disabled={currentTab?.pagination?.page == 1}
+            disabled={currentTab?.pagination?.page === 1}
             onClick={() => handlePagination('prev')}
           >
             <CustomIcon type='arrowLeft' size='s' />

@@ -1,5 +1,5 @@
-import { CodeEditorSettingType } from '@/components/base/CodeEditor/types';
-import { AutoCompleteType } from '@/types';
+import type { CodeEditorSettingType } from '@/components/base/CodeEditor/types';
+import type { AutoCompleteType } from '@/types';
 
 export type QueryEditorLeadingProps = {
   onChange: (data: CodeEditorSettingType) => void;

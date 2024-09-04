@@ -1,6 +1,6 @@
 import { Checkbox, Typography, useTheme } from '@mui/material';
 import { ColumnItemStyled } from './ColumnItem.styled';
-import { ColumnItemProps } from './types';
+import type { ColumnItemProps } from './types';
 
 export default function ColumnItem({ column, onClick }: ColumnItemProps) {
   const theme = useTheme();

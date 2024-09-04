@@ -2,8 +2,8 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useCurrentTab } from '@/hooks';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
-import { SortType } from '@/types';
-import { Box, Button, Theme, useTheme } from '@mui/material';
+import type { SortType } from '@/types';
+import { Box, Button, type Theme, useTheme } from '@mui/material';
 import { v4 as uuid } from 'uuid';
 import AddSortButton from './AddSortButton';
 import SortItem from './SortItem';
@@ -15,7 +15,7 @@ export default function Sorts() {
 
   return (
     <Box id='#sorts' p={1} borderBottom={`1px solid ${theme.palette.divider}`}>
-      {currentTab?.sorts.length == 0 ? (
+      {currentTab?.sorts.length === 0 ? (
         <AddSortButton columns={getColumns()} />
       ) : (
         currentTab?.sorts.map((sort: SortType) => {

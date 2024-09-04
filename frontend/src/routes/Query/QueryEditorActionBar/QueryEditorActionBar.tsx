@@ -1,6 +1,6 @@
 import { Stack, useTheme } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
-import { QueryEditorActionBarProps } from '../types';
+import type { QueryEditorActionBarProps } from '../types';
 import QueryEditorActions from './QueryEditorActions/QueryEditorActions';
 import QueryEditorLeading from './QueryEditorLeading/QueryEditorLeading';
 

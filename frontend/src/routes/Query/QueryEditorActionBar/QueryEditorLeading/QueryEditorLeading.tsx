@@ -4,7 +4,7 @@ import { useUUID } from '@/hooks';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { Stack } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { QueryEditorLeadingProps } from '../../types';
+import type { QueryEditorLeadingProps } from '../../types';
 
 export default function QueryEditorLeading({ onChange }: QueryEditorLeadingProps) {
   const { currentConnection } = useConnectionStore();
@@ -40,7 +40,7 @@ export default function QueryEditorLeading({ onChange }: QueryEditorLeadingProps
         size='small'
         margin='none'
       >
-        <SelectOption value={''}></SelectOption>
+        <SelectOption value={''} />
         {currentConnection?.databases?.map((t: string, i: number) => (
           <SelectOption value={t} key={uuidDatabases[i]}>
             {t}
@@ -57,7 +57,7 @@ export default function QueryEditorLeading({ onChange }: QueryEditorLeadingProps
         size='small'
         margin='none'
       >
-        <SelectOption value={''}></SelectOption>
+        <SelectOption value={''} />
         {currentConnection?.schemas?.map((t: string, i: number) => (
           <SelectOption value={t} key={uuidSchemas[i]}>
             {t}

@@ -1,6 +1,6 @@
 import Layout from '@/components/layout/Layout';
 import { createElement } from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import Data from './Data/Data';
 import Design from './Design/Design';
 import Query from './Query/Query';

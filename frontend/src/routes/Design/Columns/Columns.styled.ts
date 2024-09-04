@@ -1,5 +1,5 @@
 import { Box, TableRow, styled } from '@mui/material';
-import { ColumnItemStyledProps } from './types';
+import type { ColumnItemStyledProps } from './types';
 
 export const ColumnsStyled = styled(Box)(() => ({
   display: 'flex',
@@ -11,13 +11,13 @@ export const ColumnItemStyled = styled(TableRow)<ColumnItemStyledProps>(
   ({ theme, selected, edited, deleted, unsaved }) => ({
     cursor: 'pointer',
     background: selected
-      ? theme.palette.action.selected + ' !important'
+      ? `${theme.palette.action.selected} !important`
       : edited
-        ? theme.palette.background.warning + ' !important'
+        ? `${theme.palette.background.warning} !important`
         : deleted
-          ? theme.palette.background.danger + ' !important'
+          ? `${theme.palette.background.danger} !important`
           : unsaved
-            ? theme.palette.background.success + ' !important'
+            ? `${theme.palette.background.success} !important`
             : 'unset'
   })
 );

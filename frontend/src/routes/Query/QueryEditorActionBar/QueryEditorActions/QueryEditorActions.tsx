@@ -10,7 +10,7 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton, Stack, Tooltip } from '@mui/material';
 import { toast } from 'sonner';
 import { format } from 'sql-formatter';
-import { QueryEditorActionsProps } from '../../types';
+import type { QueryEditorActionsProps } from '../../types';
 
 export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps) {
   const { runRawQuery } = useDataStore();

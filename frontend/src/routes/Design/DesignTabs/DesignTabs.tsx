@@ -1,10 +1,10 @@
 import { useUUID } from '@/hooks';
 import locales from '@/locales';
 import { Box, useTheme } from '@mui/material';
-import { lazy, Suspense, useState } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { DesignTabWrapperStyled } from './DesignTab.styled';
 import DesignTabItem from './DesignTabItem';
-import { DesignTabTypes } from './types';
+import type { DesignTabTypes } from './types';
 
 const Columns = lazy(() => import('../Columns/Columns'));
 

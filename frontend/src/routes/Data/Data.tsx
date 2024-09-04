@@ -1,7 +1,7 @@
 import StatusBar from '@/components/shared/StatusBar/StatusBar';
 import { useCurrentTab } from '@/hooks';
 import { Box } from '@mui/material';
-import { lazy, Suspense } from 'react';
+import { Suspense, lazy } from 'react';
 import ActionBar from './ActionBar/ActionBar';
 import Columns from './Columns/Columns';
 import Filters from './Filters/Filters';

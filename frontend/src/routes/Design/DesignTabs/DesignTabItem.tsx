@@ -1,6 +1,6 @@
 import { Typography } from '@mui/material';
 import { DesignTabItemStyled } from './DesignTab.styled';
-import { DesignTabItemProps } from './types';
+import type { DesignTabItemProps } from './types';
 
 export default function DesignTabItem({ tab, selected, onClick }: DesignTabItemProps) {
   return (

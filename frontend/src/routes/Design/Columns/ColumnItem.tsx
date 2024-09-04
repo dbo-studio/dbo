@@ -8,7 +8,7 @@ import { PgsqlTypes } from '@/core/constants';
 import { clone } from 'lodash';
 import { useState } from 'react';
 import { ColumnItemStyled } from './Columns.styled';
-import { ColumnItemProps } from './types';
+import type { ColumnItemProps } from './types';
 
 export default function ColumnItem({
   column,
@@ -22,10 +22,11 @@ export default function ColumnItem({
   const [value, setValue] = useState(column);
 
   const handleToggleEdit = (name: 'name' | 'default' | 'length' | 'comment') => {
-    if (column['editMode']) {
+    if (column.editMode) {
       column.editMode[name] = !column.editMode[name];
     } else {
-      column['editMode']![name] = true;
+      // biome-ignore lint: reason
+      column.editMode![name] = true;
     }
     onEditToggle(column);
   };
@@ -33,8 +34,8 @@ export default function ColumnItem({
   const handleOnColumnChange = (value: any, name: 'name' | 'default' | 'length' | 'comment' | 'type' | 'notNull') => {
     const newColumn = clone(column);
 
-    if (name == 'notNull') {
-      newColumn[name] = value == 'true' ? false : true;
+    if (name === 'notNull') {
+      newColumn[name] = value !== 'true';
     } else {
       newColumn[name] = value;
     }

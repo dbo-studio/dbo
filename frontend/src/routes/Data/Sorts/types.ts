@@ -1,5 +1,5 @@
-import { SortType } from '@/types';
-import { ColumnType } from '@/types/Data';
+import type { SortType } from '@/types';
+import type { ColumnType } from '@/types/Data';
 
 export type SortItemProps = {
   sort: SortType;

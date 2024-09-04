@@ -19,7 +19,7 @@ export const tools = {
     if (!isObject(obj)) return {};
     const newObj = { ...obj };
     for (const key of Object.keys(newObj)) {
-      newObj[key] === undefined ? delete newObj[key] : {}
+      newObj[key] === undefined ? delete newObj[key] : {};
     }
     return newObj;
   },

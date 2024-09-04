@@ -1,8 +1,8 @@
 import { useWindowSize } from '@/hooks/useWindowSize.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { ColumnType } from '@/types/Data';
-import { Box, Theme, useTheme } from '@mui/material';
+import type { ColumnType } from '@/types/Data';
+import { Box, type Theme, useTheme } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
 import ColumnItem from './ColumnItem';
 
@@ -16,7 +16,7 @@ export default function Columns() {
   const handleCheckToggle = async (column: ColumnType) => {
     column.isActive = !column.isActive;
     const newColumns = getColumns().map((c: ColumnType) => {
-      if (c.key == column.key) {
+      if (c.key === column.key) {
         return column;
       }
       return c;
