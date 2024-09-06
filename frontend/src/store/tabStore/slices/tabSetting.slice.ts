@@ -59,19 +59,21 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
 
     return newTab.id;
   },
-  removeTab: (tabId: string) => {
+  removeTab: (tabId: string): string | null | undefined => {
     const tabIndex = get().tabs.findIndex((t: TabType) => t.id === tabId);
     const newTabs = get().tabs.filter((t: TabType) => t.id !== tabId);
 
+    let newTabId: string | null | undefined = null;
+
     if (newTabs.length > tabIndex && get().selectedTab?.id === tabId) {
-      get().switchTab(newTabs[tabIndex].id);
+      newTabId = newTabs[tabIndex].id;
     } else if (newTabs.length > 0 && get().selectedTab?.id === tabId) {
-      get().switchTab(newTabs[newTabs.length - 1].id);
-    } else if (newTabs.length === 0) {
-      get().switchTab(null);
+      newTabId = newTabs[newTabs.length - 1].id;
     }
 
+    get().switchTab(newTabId);
     get().updateTabs(newTabs);
+    return newTabs.length === 0 ? undefined : newTabId;
   },
   switchTab: (tabId: string | null) => {
     if (!tabId) {

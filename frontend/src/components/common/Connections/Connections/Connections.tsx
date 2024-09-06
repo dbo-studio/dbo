@@ -10,6 +10,7 @@ import { useCurrentConnection } from '@/hooks';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { ConnectionsStyled } from './Connections.styled';
 import { EmptySpaceStyle } from './EmptySpace.styled';
+import useNavigate from '@/hooks/useNavigate.hook';
 
 const AddConnection = lazy(() => import('../AddConnection/AddConnection'));
 const EditConnection = lazy(() => import('../EditConnection/EditConnection'));
@@ -17,6 +18,7 @@ const EditConnection = lazy(() => import('../EditConnection/EditConnection'));
 export default function Connections() {
   const { connections, updateCurrentConnection, updateConnections, updateShowAddConnection } = useConnectionStore();
   const currentConnection = useCurrentConnection();
+  const navigate = useNavigate();
 
   const { request: getConnectionList } = useAPI({
     apiMethod: api.connection.getConnectionList
@@ -42,20 +44,28 @@ export default function Connections() {
     });
   }, []);
 
-  const handleChangeCurrentConnection = (c: ConnectionType) => {
+  const handleChangeCurrentConnection = async (c: ConnectionType) => {
     if (c.id === currentConnection?.id) {
       return;
     }
-    getConnectionDetail({
-      connectionID: c?.id,
-      fromCache: true
-    }).then((res) => {
-      updateCurrentConnection(res);
-      updateConnection({
+
+    try {
+      const connectionDetail = await getConnectionDetail({
+        connectionID: c?.id,
+        fromCache: true
+      });
+
+      updateCurrentConnection(connectionDetail);
+      await updateConnection({
         id: c.id,
         is_active: true
       } as updateConnectionType);
-    });
+
+      navigate({
+        route: '/',
+        connectionId: c.id
+      });
+    } catch (error) {}
   };
 
   return (

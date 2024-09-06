@@ -10,9 +10,9 @@ export const router = createBrowserRouter([
     path: '',
     element: <Layout />,
     children: [
-      { path: 'data/:tabId/:connectionId', element: <Data /> },
-      { path: 'query/:tabId/:connectionId', element: <Query /> },
-      { path: 'design/:tabId/:connectionId', element: <Design /> }
+      { path: 'data', element: <Data /> },
+      { path: 'query', element: <Query /> },
+      { path: 'design', element: <Design /> }
     ]
   }
 ]);

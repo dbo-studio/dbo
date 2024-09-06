@@ -1,12 +1,12 @@
 import { TabMode } from '@/core/enums';
-import { useCurrentConnection, useCurrentTab, useUUID } from '@/hooks';
+import { useCurrentTab, useUUID } from '@/hooks';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, Tab, Tabs } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import type { StatusBarTabTypes } from './types';
+import useNavigate from '@/hooks/useNavigate.hook';
 
 const tabs: StatusBarTabTypes[] = [
   {
@@ -28,7 +28,6 @@ const tabs: StatusBarTabTypes[] = [
 export default function StatusBarTabs() {
   const navigate = useNavigate();
   const currentTab = useCurrentTab();
-  const currentConnection = useCurrentConnection();
   const [selectedTabId, setSelectedTabId] = useState(TabMode.Data);
   const uuids = useUUID(2);
   const { updateSelectedTab } = useTabStore();
@@ -36,8 +35,10 @@ export default function StatusBarTabs() {
   const onSelectedTabChanged = (event: React.SyntheticEvent, id: number) => {
     const tab = tabs.find((tab) => tab.id === id);
     if (!tab || !currentTab) return;
-
-    navigate(`/${tab.link}/${currentTab?.id}/${currentConnection?.id}`);
+    navigate({
+      route: tab.link as 'design' | 'data',
+      tabId: currentTab?.id
+    });
     setSelectedTabId(id);
     updateSelectedTab({
       ...currentTab,

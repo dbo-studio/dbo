@@ -1,23 +1,25 @@
 import TableTreeViewItem from '@/components/common/DBTreeView/TableTreeView/TablesTreeViewItem/TableTreeViewItem';
-import { useCurrentConnection, useCurrentTab } from '@/hooks';
+import { useCurrentTab } from '@/hooks';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, useTheme } from '@mui/material';
 import { SimpleTreeView, TreeItem } from '@mui/x-tree-view';
-import { useNavigate } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
 import CustomIcon from '../../../base/CustomIcon/CustomIcon';
+import useNavigate from '@/hooks/useNavigate.hook';
 
 export default function TablesTreeView({ tables }: { tables: string[] }) {
   const theme = useTheme();
   const navigate = useNavigate();
   const { addTab } = useTabStore();
   const currentTab = useCurrentTab();
-  const currentConnection = useCurrentConnection();
 
   const handleTableClick = (tableName: string) => {
     const tabId = addTab(tableName);
-    navigate(`/data/${tabId}/${currentConnection?.id}`);
+    navigate({
+      route: 'data',
+      tabId: tabId
+    });
   };
 
   return (

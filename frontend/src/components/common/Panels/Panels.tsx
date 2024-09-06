@@ -1,40 +1,30 @@
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu.tsx';
 import type { MenuType } from '@/components/base/ContextMenu/types.ts';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { useContextMenu, useCurrentConnection, useCurrentTab, useMount } from '@/hooks';
+import { useContextMenu, useCurrentTab, useMount } from '@/hooks';
 import { useRemoveTab } from '@/hooks/useRemoveTab.hook';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { TabType as TabData } from '@/types';
 import { Box, Tab, Tabs, Tooltip, Typography } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import PanelItem from './PanelItem/PanelItem';
+import useNavigate, { type NavigationParamsType } from '@/hooks/useNavigate.hook';
 
 export default function Panels() {
   const navigate = useNavigate();
   const mounted = useMount();
   const currentTab = useCurrentTab();
-  const currentConnection = useCurrentConnection();
-
   const { tabs } = useTabStore();
   const [removeTab] = useRemoveTab();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
   const menu: MenuType[] = [
     {
-      name: locales.close,
-      action: () => {
-        if (currentTab) {
-          removeTab(currentTab.id);
-        }
-      },
-      closeAfterAction: true
-    },
-    {
       name: locales.close_other_tabs,
       action: () => {
         for (const tab of tabs) {
           if (tab.id !== currentTab?.id) removeTab(tab.id);
+          else navigate({ route: 'data', tabId: tab.id });
         }
       },
       closeAfterAction: true
@@ -45,21 +35,43 @@ export default function Panels() {
         for (const tab of tabs) {
           removeTab(tab.id);
         }
+        navigate({ route: '/' });
       },
       closeAfterAction: true
     }
   ];
 
   const handleSwitchTab = (tabId: string) => {
-    navigate(`/data/${tabId}/${currentConnection?.id}`);
+    const tab = tabs.find((tab) => tab.id === tabId);
+    if (!tab) return;
+
+    navigate({
+      route: 'data',
+      tabId: tabId
+    });
+  };
+
+  const handleRemoveTab = (tabId: string) => {
+    const newTabId = removeTab(tabId);
+    if (newTabId === undefined) {
+      navigate({ route: '/' });
+      return;
+    }
+
+    const newRoute: NavigationParamsType = { route: '/' };
+    if (newTabId) {
+      newRoute.route = 'data';
+      newRoute.tabId = newTabId;
+      navigate(newRoute);
+    }
   };
 
   return (
     <>
-      {currentTab && mounted ? (
+      {(currentTab || tabs.length > 0) && mounted ? (
         <>
           <Tabs
-            value={currentTab.id}
+            value={currentTab?.id ?? tabs[0]}
             onChange={(_: React.SyntheticEvent, tabId: string) => handleSwitchTab(tabId)}
             variant='scrollable'
             scrollButtons={false}
@@ -83,7 +95,7 @@ export default function Panels() {
                       >
                         {tab.table}
                       </Typography>
-                      <CustomIcon type='close' size='s' onClick={() => removeTab(tab.id)} />
+                      <CustomIcon type='close' size='s' onClick={() => handleRemoveTab(tab.id)} />
                     </Box>
                   </Tooltip>
                 }

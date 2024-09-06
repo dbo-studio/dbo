@@ -14,8 +14,7 @@ export function useRemoveTab() {
     removeUnsavedRowsByTabId
   } = useDataStore();
 
-  const remove = useCallback(async (tabId: string) => {
-    removeTab(tabId);
+  const remove = useCallback((tabId: string): string | null | undefined => {
     removeColumnsByTabId(tabId);
     removeEditedColumnsByTabId(tabId);
     removeEditedRowsByTabId(tabId);
@@ -23,6 +22,7 @@ export function useRemoveTab() {
     deleteRemovedRowsByTabId(tabId);
     removeRowsByTabId(tabId);
     removeUnsavedRowsByTabId(tabId);
+    return removeTab(tabId);
   }, []);
 
   return [remove];

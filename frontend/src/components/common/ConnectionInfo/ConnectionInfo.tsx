@@ -6,21 +6,23 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton, Stack } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { Suspense, lazy } from 'react';
-import { useNavigate } from 'react-router-dom';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
+import useNavigate from '@/hooks/useNavigate.hook';
 
 const Databases = lazy(() => import('../Databases/Databases'));
 
 export default function ConnectionInfo() {
   const navigate = useNavigate();
-  const { updateShowAddConnection, showSelectDatabase, updateShowSelectDatabase } = useConnectionStore();
   const currentConnection = useCurrentConnection();
-
+  const { updateShowAddConnection, showSelectDatabase, updateShowSelectDatabase } = useConnectionStore();
   const { addTab } = useTabStore();
 
   const handleAddEditorTab = () => {
     const tabId = addTab('Editor', TabMode.Query);
-    navigate(`/query/${tabId}/${currentConnection?.id}`);
+    navigate({
+      route: 'query',
+      tabId: tabId
+    });
   };
 
   return (

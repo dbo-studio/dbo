@@ -1,17 +1,28 @@
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { ConnectionType } from '@/types';
 import { useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
+import useNavigate from './useNavigate.hook';
 
 export const useCurrentConnection = (): ConnectionType | undefined => {
-  const { connectionId } = useParams();
-  const { connections, currentConnection } = useConnectionStore();
+  const [searchParams] = useSearchParams();
+  const { connections } = useConnectionStore();
+  const navigate = useNavigate();
 
-  return useMemo(() => {
-    if (!connectionId) {
-      return currentConnection;
-    }
+  // return useMemo(() => {
+  const params = Object.fromEntries([...searchParams]);
 
-    return connections?.find((connection) => connection.id === Number(connectionId));
-  }, [connectionId, connections, currentConnection]);
+  if (!params.connectionId || params.connectionId === '') {
+    return undefined;
+  }
+
+  const connection = connections?.find((connection) => connection.id === Number(params.connectionId));
+
+  if (!connection) {
+    // navigate({ route: '/' });
+    return undefined;
+  }
+
+  return connection;
+  // }, [searchParams, connections]);
 };

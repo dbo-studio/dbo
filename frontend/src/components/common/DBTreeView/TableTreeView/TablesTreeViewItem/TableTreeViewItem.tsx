@@ -5,14 +5,14 @@ import type { TablesTreeViewItemProps } from '@/components/common/DBTreeView/typ
 import { TabMode } from '@/core/enums';
 import { useContextMenu, useCopyToClipboard, useCurrentConnection } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook.ts';
+import useNavigate from '@/hooks/useNavigate.hook';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { Box, Tooltip } from '@mui/material';
 import { TreeItem } from '@mui/x-tree-view';
-
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+
 export default function TableTreeViewItem({ table, onClick }: TablesTreeViewItemProps) {
   const navigate = useNavigate();
   const currentConnection = useCurrentConnection();
@@ -29,12 +29,18 @@ export default function TableTreeViewItem({ table, onClick }: TablesTreeViewItem
 
   const handleAddTabData = () => {
     const tabId = addTab(table);
-    navigate(`/data/${tabId}/${currentConnection?.id}`);
+    navigate({
+      route: 'data',
+      tabId: tabId
+    });
   };
 
   const handleAddTabDesign = () => {
     const tabId = addTab(table, TabMode.Design);
-    navigate(`/design/${tabId}/${currentConnection?.id}`);
+    navigate({
+      route: 'design',
+      tabId: tabId
+    });
   };
 
   const handleRefresh = () => {
