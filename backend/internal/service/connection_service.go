@@ -1,26 +1,53 @@
-package connection_handler
+package service
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
-	"github.com/dbo-studio/dbo/api/response"
+	"github.com/dbo-studio/dbo/api/dto"
 	"github.com/dbo-studio/dbo/app"
+	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/model"
-	"github.com/gofiber/fiber/v3"
+	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
-// func (h *ConnectionHandler) Connection(c fiber.Ctx) error {
-// 	connection, err := h.FindConnection(c.Params("id"))
-// 	fromCache := fiber.Query[bool](c, "from_cache", false)
-// 	if err != nil {
-// 		return c.Status(fiber.StatusNotFound).JSON(err.Error())
-// 	}
+var _ IConnectionService = (*IConnectionServiceImpl)(nil)
 
-// 	return connectionDetail(c, connection, fromCache)
-// }
+type IConnectionServiceImpl struct {
+	connectionRepo repository.IConnectionRepo
+}
 
-func connectionDetail(c fiber.Ctx, connection *model.Connection, fromCache bool) error {
+func NewConnectionService(
+	connectionRepo repository.IConnectionRepo,
+) *IConnectionServiceImpl {
+	return &IConnectionServiceImpl{
+		connectionRepo: connectionRepo,
+	}
+}
+
+func (s *IConnectionServiceImpl) CreateConnection(ctx context.Context, req *dto.CreateConnectionRequest) (*dto.CreateConnectionResponse, error) {
+	connection, err := s.connectionRepo.CreateConnection(ctx, req)
+	if err != nil {
+		app.Log().Error(err.Error())
+		return nil, apperror.InternalServerError(err)
+	}
+
+	println(connection)
+	return nil, nil
+}
+
+func (s *IConnectionServiceImpl) ConnectionDetail(ctx context.Context, req *dto.ConnectionDetailRequest) (*dto.ConnectionDetailResponse, error) {
+	connection, err := s.connectionRepo.FindConnection(ctx, req.ConnectionId)
+	if err != nil {
+		app.Log().Error(err.Error())
+		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	return connectionDetail(connection, req.FromCache)
+}
+
+func connectionDetail(connection *model.Connection, fromCache bool) (*dto.ConnectionDetailResponse, error) {
 	var schemas = make([]string, 0)
 	var tables = make([]string, 0)
 	var err error
@@ -28,22 +55,22 @@ func connectionDetail(c fiber.Ctx, connection *model.Connection, fromCache bool)
 	databases, err := getDatabases(connection.ID, fromCache)
 	if err != nil {
 		app.Log().Error(err.Error())
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
+		return nil, err
 	}
 
 	version, err := getVersion(connection.ID, fromCache)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
+		return nil, err
 	}
 
 	if connection.CurrentDatabase.String == "" {
-		return c.JSON(response.Success(response.Connection(connection, version, databases, schemas, tables)))
+		return nil, err
 	}
 
 	schemas, err = getSchemas(connection.ID, connection.CurrentDatabase.String, fromCache)
 	if err != nil {
 		app.Log().Error(err.Error())
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
+		return nil, err
 	}
 
 	currentSchema := connection.CurrentSchema.String
@@ -55,7 +82,7 @@ func connectionDetail(c fiber.Ctx, connection *model.Connection, fromCache bool)
 	if currentSchema != "" {
 		tables, err = getTables(connection.ID, currentSchema, fromCache)
 		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
+			return nil, err
 		}
 	}
 
@@ -67,7 +94,7 @@ func connectionDetail(c fiber.Ctx, connection *model.Connection, fromCache bool)
 		IsActive: true,
 	})
 
-	return c.JSON(response.Success(response.Connection(connection, version, databases, schemas, tables)))
+	return connectionModelToConnectionDetailResponse(connection, version, databases, schemas, tables), nil
 }
 
 func getDatabases(connectionID uint, fromCache bool) ([]string, error) {

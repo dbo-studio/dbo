@@ -1,10 +1,10 @@
 package history_handler
 
 import (
+	"github.com/dbo-studio/dbo/api/response"
+	"github.com/dbo-studio/dbo/app"
+	"github.com/dbo-studio/dbo/model"
 	"github.com/gofiber/fiber/v3"
-	"github.com/khodemobin/dbo/api/response"
-	"github.com/khodemobin/dbo/app"
-	"github.com/khodemobin/dbo/model"
 )
 
 type HistoryHandler struct{}

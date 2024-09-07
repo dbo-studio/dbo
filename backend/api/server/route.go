@@ -1,7 +1,9 @@
 package server
 
+import "github.com/gofiber/fiber/v3/middleware/static"
+
 func (r *Server) routing() {
-	r.app.Static("/", "out")
+	r.app.Get("/*", static.New("out"))
 
 	api := r.app.Group("/api")
 
@@ -12,9 +14,9 @@ func (r *Server) routing() {
 	query.Get("/autocomplete", r.queryHandler.Autocomplete)
 
 	connection := api.Group("connections")
-	connection.Get("/:id", r.connectionHandler.Connection)
+	connection.Get("/:id", r.connectionHandler.ConnectionDetail)
 	connection.Get("/", r.connectionHandler.Connections)
-	connection.Post("/", r.connectionHandler.AddConnection)
+	connection.Post("/", r.connectionHandler.CreateConnection)
 	connection.Post("/test", r.connectionHandler.TestConnection)
 	connection.Patch("/:id", r.connectionHandler.UpdateConnection)
 	connection.Delete("/:id", r.connectionHandler.DeleteConnection)

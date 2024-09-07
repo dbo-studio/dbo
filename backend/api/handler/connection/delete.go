@@ -1,8 +1,8 @@
 package connection_handler
 
 import (
+	"github.com/dbo-studio/dbo/app"
 	"github.com/gofiber/fiber/v3"
-	"github.com/khodemobin/dbo/app"
 )
 
 func (h *ConnectionHandler) DeleteConnection(c fiber.Ctx) error {

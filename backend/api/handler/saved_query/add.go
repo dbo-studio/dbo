@@ -1,12 +1,12 @@
 package saved_handler
 
 import (
+	"github.com/dbo-studio/dbo/api/dto"
+	"github.com/dbo-studio/dbo/api/response"
+	"github.com/dbo-studio/dbo/app"
+	"github.com/dbo-studio/dbo/helper"
+	"github.com/dbo-studio/dbo/model"
 	"github.com/gofiber/fiber/v3"
-	"github.com/khodemobin/dbo/api/dto"
-	"github.com/khodemobin/dbo/api/response"
-	"github.com/khodemobin/dbo/app"
-	"github.com/khodemobin/dbo/helper"
-	"github.com/khodemobin/dbo/model"
 )
 
 func (h *SavedQueryHandler) AddSavedQuery(c fiber.Ctx) error {

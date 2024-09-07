@@ -3,8 +3,8 @@ package pgsql_driver
 import (
 	"fmt"
 
-	"github.com/khodemobin/dbo/api/dto"
-	error_c "github.com/khodemobin/dbo/error"
+	"github.com/dbo-studio/dbo/api/dto"
+	error_c "github.com/dbo-studio/dbo/error"
 	"gorm.io/gorm"
 )
 

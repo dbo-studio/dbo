@@ -1,12 +1,12 @@
 package connection_handler
 
 import (
+	"github.com/dbo-studio/dbo/api/dto"
+	"github.com/dbo-studio/dbo/api/response"
+	"github.com/dbo-studio/dbo/app"
+	pgsql "github.com/dbo-studio/dbo/driver/pgsql"
+	"github.com/dbo-studio/dbo/helper"
 	"github.com/gofiber/fiber/v3"
-	"github.com/khodemobin/dbo/api/dto"
-	"github.com/khodemobin/dbo/api/response"
-	"github.com/khodemobin/dbo/app"
-	pgsql "github.com/khodemobin/dbo/driver/pgsql"
-	"github.com/khodemobin/dbo/helper"
 )
 
 func (h *ConnectionHandler) TestConnection(c fiber.Ctx) error {

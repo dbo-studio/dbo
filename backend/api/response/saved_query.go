@@ -1,7 +1,7 @@
 package response
 
 import (
-	"github.com/khodemobin/dbo/model"
+	"github.com/dbo-studio/dbo/model"
 )
 
 type savedQueryInfo struct {

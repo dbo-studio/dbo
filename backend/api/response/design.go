@@ -1,6 +1,6 @@
 package response
 
-import pgsql "github.com/khodemobin/dbo/driver/pgsql"
+import pgsql "github.com/dbo-studio/dbo/driver/pgsql"
 
 type structureResponse struct {
 	Name       string  `json:"name"`
