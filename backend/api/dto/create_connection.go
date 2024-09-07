@@ -2,7 +2,6 @@ package dto
 
 import (
 	"github.com/invopop/validation"
-	"github.com/invopop/validation/is"
 )
 
 type (
@@ -33,6 +32,6 @@ func (ccr CreateConnectionRequest) Validate() error {
 		validation.Field(&ccr.Host, validation.Required, validation.Length(0, 120)),
 		validation.Field(&ccr.Username, validation.Required, validation.Length(0, 120)),
 		validation.Field(&ccr.Password, validation.Required, validation.Length(0, 120)),
-		validation.Field(&ccr.Port, validation.Required, validation.Min(0), is.Digit),
+		validation.Field(&ccr.Port, validation.Required, validation.Min(0)),
 	)
 }

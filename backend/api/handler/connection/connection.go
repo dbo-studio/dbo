@@ -37,9 +37,7 @@ func (h *ConnectionHandler) CreateConnection(c fiber.Ctx) error {
 		return response.ErrorBuilder(err).Send(c)
 	}
 
-	println(connection)
-
-	return nil
+	return response.SuccessBuilder(connection).Send(c)
 }
 
 func (h *ConnectionHandler) ConnectionDetail(c fiber.Ctx) error {

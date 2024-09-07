@@ -9,7 +9,7 @@ import (
 )
 
 type FailedResponse struct {
-	Code    int    `json:"_"`
+	Code    int    `json:"-"`
 	Message string `json:"message"`
 }
 

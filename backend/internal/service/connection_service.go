@@ -33,8 +33,10 @@ func (s *IConnectionServiceImpl) CreateConnection(ctx context.Context, req *dto.
 		return nil, apperror.InternalServerError(err)
 	}
 
-	println(connection)
-	return nil, nil
+	res, err := connectionDetail(connection, false)
+	return &dto.CreateConnectionResponse{
+		ConnectionDetailResponse: *res,
+	}, err
 }
 
 func (s *IConnectionServiceImpl) ConnectionDetail(ctx context.Context, req *dto.ConnectionDetailRequest) (*dto.ConnectionDetailResponse, error) {
