@@ -2,8 +2,8 @@ package dto
 
 type (
 	ConnectionDetailRequest struct {
-		ConnectionId int32 `url:"id"`
-		FromCache    bool  `query:"from_cache"`
+		ConnectionId int32
+		FromCache    bool
 	}
 	ConnectionDetailResponse struct {
 		ID              int64       `json:"id"`

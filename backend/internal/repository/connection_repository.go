@@ -18,6 +18,13 @@ func NewConnectionRepo() *IConnectionRepoImpl {
 	return &IConnectionRepoImpl{}
 }
 
+func (c *IConnectionRepoImpl) ConnectionList(ctx context.Context) (*[]model.Connection, error) {
+	var connections []model.Connection
+	result := app.DB().Find(&connections)
+
+	return &connections, result.Error
+}
+
 func (c *IConnectionRepoImpl) FindConnection(ctx context.Context, id int32) (*model.Connection, error) {
 	var connection model.Connection
 	result := app.DB().Where("id", "=", id).First(&connection)
@@ -49,4 +56,9 @@ func (c *IConnectionRepoImpl) CreateConnection(ctx context.Context, dto *dto.Cre
 	result := app.DB().Save(connection)
 
 	return connection, result.Error
+}
+
+func (c *IConnectionRepoImpl) DeleteConnection(ctx context.Context, connection *model.Connection) error {
+	result := app.DB().Delete(connection)
+	return result.Error
 }

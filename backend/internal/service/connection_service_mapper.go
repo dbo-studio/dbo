@@ -5,7 +5,28 @@ import (
 	"github.com/dbo-studio/dbo/model"
 )
 
-func connectionModelToConnectionDetailResponse(connection *model.Connection, version string, databases []string, schemas []string, tables []string) *dto.ConnectionDetailResponse {
+func connectionsToResponse(connections *[]model.Connection) *[]dto.ConnectionsResponse {
+	data := make([]dto.ConnectionsResponse, len(*connections))
+	for _, c := range *connections {
+		data = append(data, dto.ConnectionsResponse{
+			ID:       int64(c.ID),
+			Name:     c.Name,
+			Type:     "SQL",
+			Driver:   "PostgreSQL",
+			IsActive: c.IsActive,
+			Auth: dto.AuthDetails{
+				Database: c.Database,
+				Host:     c.Host,
+				Port:     int(c.Port),
+				Username: c.Username,
+			},
+		})
+	}
+
+	return &data
+}
+
+func connectionDetailModelToResponse(connection *model.Connection, version string, databases []string, schemas []string, tables []string) *dto.ConnectionDetailResponse {
 	return &dto.ConnectionDetailResponse{
 		ID:              int64(connection.ID),
 		Name:            connection.Name,

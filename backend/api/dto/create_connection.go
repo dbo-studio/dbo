@@ -14,10 +14,6 @@ type (
 		Database string `json:"database"`
 	}
 
-	CreateConnectionResponse struct {
-		ConnectionDetailResponse
-	}
-
 	AuthDetails struct {
 		Database string `json:"database"`
 		Host     string `json:"host"`

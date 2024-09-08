@@ -21,6 +21,16 @@ func (h *ConnectionHandler) FindConnection(connectionId string) (*model.Connecti
 	return &connection, result.Error
 }
 
+func (h *ConnectionHandler) Connections(c fiber.Ctx) error {
+	connections, err := h.ConnectionService.Connections(c.Context())
+	if err != nil {
+		app.Log().Error(err.Error())
+		return response.ErrorBuilder(err).Send(c)
+	}
+
+	return response.SuccessBuilder(connections).Send(c)
+}
+
 func (h *ConnectionHandler) CreateConnection(c fiber.Ctx) error {
 	req := new(dto.CreateConnectionRequest)
 	if err := c.Bind().Body(req); err != nil {
@@ -53,4 +63,15 @@ func (h *ConnectionHandler) ConnectionDetail(c fiber.Ctx) error {
 	}
 
 	return response.SuccessBuilder(connection).Send(c)
+}
+
+func (h *ConnectionHandler) DeleteConnection(c fiber.Ctx) error {
+	connectionId := fiber.Params[int32](c, "id")
+	connections, err := h.ConnectionService.DeleteConnection(c.Context(), connectionId)
+	if err != nil {
+		app.Log().Error(err.Error())
+		return response.ErrorBuilder(err).Send(c)
+	}
+
+	return response.SuccessBuilder(connections).Send(c)
 }

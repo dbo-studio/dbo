@@ -8,8 +8,10 @@ import (
 )
 
 type IConnectionService interface {
-	CreateConnection(ctx context.Context, req *dto.CreateConnectionRequest) (*dto.CreateConnectionResponse, error)
+	Connections(ctx context.Context) (*[]dto.ConnectionsResponse, error)
+	CreateConnection(ctx context.Context, req *dto.CreateConnectionRequest) (*dto.ConnectionDetailResponse, error)
 	ConnectionDetail(ctx context.Context, req *dto.ConnectionDetailRequest) (*dto.ConnectionDetailResponse, error)
+	DeleteConnection(ctx context.Context, connectionId int32) (*[]dto.ConnectionsResponse, error)
 }
 
 type Service struct {

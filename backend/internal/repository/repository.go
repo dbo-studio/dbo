@@ -8,8 +8,10 @@ import (
 )
 
 type IConnectionRepo interface {
-	CreateConnection(ctx context.Context, dto *dto.CreateConnectionRequest) (*model.Connection, error)
+	ConnectionList(ctx context.Context) (*[]model.Connection, error)
 	FindConnection(ctx context.Context, id int32) (*model.Connection, error)
+	CreateConnection(ctx context.Context, dto *dto.CreateConnectionRequest) (*model.Connection, error)
+	DeleteConnection(ctx context.Context, connection *model.Connection) error
 }
 
 type Repository struct {

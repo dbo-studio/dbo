@@ -26,27 +26,45 @@ func NewConnectionService(
 	}
 }
 
-func (s *IConnectionServiceImpl) CreateConnection(ctx context.Context, req *dto.CreateConnectionRequest) (*dto.CreateConnectionResponse, error) {
+func (s *IConnectionServiceImpl) Connections(ctx context.Context) (*[]dto.ConnectionsResponse, error) {
+	connections, err := s.connectionRepo.ConnectionList(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return connectionsToResponse(connections), nil
+}
+
+func (s *IConnectionServiceImpl) CreateConnection(ctx context.Context, req *dto.CreateConnectionRequest) (*dto.ConnectionDetailResponse, error) {
 	connection, err := s.connectionRepo.CreateConnection(ctx, req)
 	if err != nil {
-		app.Log().Error(err.Error())
 		return nil, apperror.InternalServerError(err)
 	}
 
-	res, err := connectionDetail(connection, false)
-	return &dto.CreateConnectionResponse{
-		ConnectionDetailResponse: *res,
-	}, err
+	return connectionDetail(connection, false)
 }
 
 func (s *IConnectionServiceImpl) ConnectionDetail(ctx context.Context, req *dto.ConnectionDetailRequest) (*dto.ConnectionDetailResponse, error) {
 	connection, err := s.connectionRepo.FindConnection(ctx, req.ConnectionId)
 	if err != nil {
-		app.Log().Error(err.Error())
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
 	return connectionDetail(connection, req.FromCache)
+}
+
+func (s *IConnectionServiceImpl) DeleteConnection(ctx context.Context, connectionId int32) (*[]dto.ConnectionsResponse, error) {
+	connection, err := s.connectionRepo.FindConnection(ctx, connectionId)
+	if err != nil {
+		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	err = s.connectionRepo.DeleteConnection(ctx, connection)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.Connections(ctx)
 }
 
 func connectionDetail(connection *model.Connection, fromCache bool) (*dto.ConnectionDetailResponse, error) {
@@ -96,7 +114,7 @@ func connectionDetail(connection *model.Connection, fromCache bool) (*dto.Connec
 		IsActive: true,
 	})
 
-	return connectionModelToConnectionDetailResponse(connection, version, databases, schemas, tables), nil
+	return connectionDetailModelToResponse(connection, version, databases, schemas, tables), nil
 }
 
 func getDatabases(connectionID uint, fromCache bool) ([]string, error) {
