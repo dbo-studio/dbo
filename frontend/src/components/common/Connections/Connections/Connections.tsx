@@ -37,7 +37,6 @@ export default function Connections() {
     }
 
     if (connections.length > 0) {
-      updateConnections(connections);
       const activeConnection = connections.filter((c: ConnectionType) => c.isActive);
       if (activeConnection.length > 0) handleChangeCurrentConnection(activeConnection[0]);
     } else {
