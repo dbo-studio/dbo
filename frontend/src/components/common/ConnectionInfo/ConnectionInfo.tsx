@@ -1,20 +1,19 @@
 import ConnectionBox from '@/components/common/ConnectionInfo/ConnectionBox';
 import { TabMode } from '@/core/enums';
-import { useCurrentConnection } from '@/hooks';
+import useNavigate from '@/hooks/useNavigate.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton, Stack } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { Suspense, lazy } from 'react';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
-import useNavigate from '@/hooks/useNavigate.hook';
 
 const Databases = lazy(() => import('../Databases/Databases'));
 
 export default function ConnectionInfo() {
   const navigate = useNavigate();
-  const currentConnection = useCurrentConnection();
-  const { updateShowAddConnection, showSelectDatabase, updateShowSelectDatabase } = useConnectionStore();
+  const { currentConnection, updateShowAddConnection, showSelectDatabase, updateShowSelectDatabase } =
+    useConnectionStore();
   const { addTab } = useTabStore();
 
   const handleAddEditorTab = () => {

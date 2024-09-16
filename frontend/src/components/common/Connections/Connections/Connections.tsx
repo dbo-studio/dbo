@@ -6,23 +6,18 @@ import { Suspense, lazy, useEffect } from 'react';
 import { v4 as uuid } from 'uuid';
 
 import type { updateConnectionType } from '@/api/connection/types';
-import { useCurrentConnection } from '@/hooks';
+import useNavigate from '@/hooks/useNavigate.hook';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { ConnectionsStyled } from './Connections.styled';
 import { EmptySpaceStyle } from './EmptySpace.styled';
-import useNavigate from '@/hooks/useNavigate.hook';
 
 const AddConnection = lazy(() => import('../AddConnection/AddConnection'));
 const EditConnection = lazy(() => import('../EditConnection/EditConnection'));
 
 export default function Connections() {
-  const { connections, updateCurrentConnection, updateConnections, updateShowAddConnection } = useConnectionStore();
-  const currentConnection = useCurrentConnection();
+  const { currentConnection, connections, updateCurrentConnection, updateConnections, updateShowAddConnection } =
+    useConnectionStore();
   const navigate = useNavigate();
-
-  const { request: getConnectionList } = useAPI({
-    apiMethod: api.connection.getConnectionList
-  });
 
   const { request: getConnectionDetail } = useAPI({
     apiMethod: api.connection.getConnectionDetail
@@ -33,16 +28,22 @@ export default function Connections() {
   });
 
   useEffect(() => {
-    getConnectionList().then((res) => {
-      if (res.length > 0) {
-        updateConnections(res);
-        const activeConnection = res.filter((c: ConnectionType) => c.isActive);
-        if (activeConnection.length > 0) handleChangeCurrentConnection(activeConnection[0]);
-      } else {
-        updateShowAddConnection(true);
-      }
-    });
-  }, []);
+    if (!connections) {
+      return;
+    }
+
+    if (connections.length === 0) {
+      updateShowAddConnection(true);
+    }
+
+    if (connections.length > 0) {
+      updateConnections(connections);
+      const activeConnection = connections.filter((c: ConnectionType) => c.isActive);
+      if (activeConnection.length > 0) handleChangeCurrentConnection(activeConnection[0]);
+    } else {
+      updateShowAddConnection(true);
+    }
+  }, [connections]);
 
   const handleChangeCurrentConnection = async (c: ConnectionType) => {
     if (c.id === currentConnection?.id) {
@@ -62,7 +63,6 @@ export default function Connections() {
       } as updateConnectionType);
 
       navigate({
-        route: '/',
         connectionId: c.id
       });
     } catch (error) {}

@@ -12,7 +12,7 @@ export const createDataEditedRowsSlice: StateCreator<
 > = (set, get) => ({
   editedRows: {},
   getEditedRows: (): EditedRow[] => {
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     const rows = get().editedRows;
     if (!selectedTab || !Object.prototype.hasOwnProperty.call(rows, selectedTab.id)) {
       return [];
@@ -20,7 +20,7 @@ export const createDataEditedRowsSlice: StateCreator<
     return rows[selectedTab.id];
   },
   updateEditedRows: (editedRows: EditedRow[]): void => {
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab) {
       return;
     }

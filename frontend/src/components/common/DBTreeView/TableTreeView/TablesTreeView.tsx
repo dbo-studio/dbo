@@ -1,5 +1,4 @@
 import TableTreeViewItem from '@/components/common/DBTreeView/TableTreeView/TablesTreeViewItem/TableTreeViewItem';
-import { useCurrentTab } from '@/hooks';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, useTheme } from '@mui/material';
@@ -12,7 +11,7 @@ export default function TablesTreeView({ tables }: { tables: string[] }) {
   const theme = useTheme();
   const navigate = useNavigate();
   const { addTab } = useTabStore();
-  const currentTab = useCurrentTab();
+  const { getSelectedTab } = useTabStore();
 
   const handleTableClick = (tableName: string) => {
     const tabId = addTab(tableName);
@@ -27,7 +26,7 @@ export default function TablesTreeView({ tables }: { tables: string[] }) {
       <SimpleTreeView
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        selectedItems={[`${currentTab?.table}100`]}
+        selectedItems={[`${getSelectedTab()?.table}100`]}
         autoFocus={false}
         disabledItemsFocusable={true}
         slots={{

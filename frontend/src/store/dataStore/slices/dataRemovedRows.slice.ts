@@ -17,7 +17,7 @@ export const createDataRemovedRowsSlice: StateCreator<
 > = (set, get) => ({
   removedRows: {},
   getRemovedRows: (): RowType[] => {
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     const rows = get().removedRows;
     if (!selectedTab || !Object.prototype.hasOwnProperty.call(rows, selectedTab.id)) {
       return [];
@@ -25,7 +25,7 @@ export const createDataRemovedRowsSlice: StateCreator<
     return rows[selectedTab.id];
   },
   updateRemovedRows: () => {
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab) {
       return;
     }

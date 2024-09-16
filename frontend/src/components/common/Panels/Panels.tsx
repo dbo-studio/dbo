@@ -1,20 +1,17 @@
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu.tsx';
 import type { MenuType } from '@/components/base/ContextMenu/types.ts';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { useContextMenu, useCurrentTab, useMount } from '@/hooks';
+import { useContextMenu } from '@/hooks';
+import useNavigate, { type NavigationParamsType } from '@/hooks/useNavigate.hook';
 import { useRemoveTab } from '@/hooks/useRemoveTab.hook';
 import locales from '@/locales';
-import { useTabStore } from '@/store/tabStore/tab.store';
-import type { TabType as TabData } from '@/types';
+import type { TabType as TabData, TabType } from '@/types';
 import { Box, Tab, Tabs, Tooltip, Typography } from '@mui/material';
 import PanelItem from './PanelItem/PanelItem';
-import useNavigate, { type NavigationParamsType } from '@/hooks/useNavigate.hook';
+import type { PanelsProps } from './types';
 
-export default function Panels() {
+export default function Panels({ tab, tabs }: PanelsProps) {
   const navigate = useNavigate();
-  const mounted = useMount();
-  const currentTab = useCurrentTab();
-  const { tabs } = useTabStore();
   const [removeTab] = useRemoveTab();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
@@ -22,9 +19,9 @@ export default function Panels() {
     {
       name: locales.close_other_tabs,
       action: () => {
-        for (const tab of tabs) {
-          if (tab.id !== currentTab?.id) removeTab(tab.id);
-          else navigate({ route: 'data', tabId: tab.id });
+        for (const t of tabs) {
+          if (t.id !== tab?.id) removeTab(t.id);
+          else navigate({ route: 'data', tabId: t.id });
         }
       },
       closeAfterAction: true
@@ -32,8 +29,8 @@ export default function Panels() {
     {
       name: locales.close_all,
       action: () => {
-        for (const tab of tabs) {
-          removeTab(tab.id);
+        for (const t of tabs) {
+          removeTab(t.id);
         }
         navigate({ route: '/' });
       },
@@ -42,8 +39,8 @@ export default function Panels() {
   ];
 
   const handleSwitchTab = (tabId: string) => {
-    const tab = tabs.find((tab) => tab.id === tabId);
-    if (!tab) return;
+    const findTab = tabs.find((t: TabType) => t.id === tabId);
+    if (!findTab) return;
 
     navigate({
       route: 'data',
@@ -68,10 +65,10 @@ export default function Panels() {
 
   return (
     <>
-      {(currentTab || tabs.length > 0) && mounted ? (
+      {tab && (
         <>
           <Tabs
-            value={currentTab?.id ?? tabs[0]}
+            value={tab.id}
             onChange={(_: React.SyntheticEvent, tabId: string) => handleSwitchTab(tabId)}
             variant='scrollable'
             scrollButtons={false}
@@ -105,7 +102,7 @@ export default function Panels() {
           </Tabs>
           <PanelItem />
         </>
-      ) : null}
+      )}
     </>
   );
 }

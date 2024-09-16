@@ -3,7 +3,7 @@ import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
 import type { TablesTreeViewItemProps } from '@/components/common/DBTreeView/types';
 import { TabMode } from '@/core/enums';
-import { useContextMenu, useCopyToClipboard, useCurrentConnection } from '@/hooks';
+import { useContextMenu, useCopyToClipboard } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook.ts';
 import useNavigate from '@/hooks/useNavigate.hook';
 import locales from '@/locales';
@@ -15,13 +15,11 @@ import { toast } from 'sonner';
 
 export default function TableTreeViewItem({ table, onClick }: TablesTreeViewItemProps) {
   const navigate = useNavigate();
-  const currentConnection = useCurrentConnection();
-
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, copy] = useCopyToClipboard();
   const { addTab } = useTabStore();
-  const { updateCurrentConnection } = useConnectionStore();
+  const { updateCurrentConnection, currentConnection } = useConnectionStore();
 
   const { request: getConnectionDetail } = useAPI({
     apiMethod: api.connection.getConnectionDetail

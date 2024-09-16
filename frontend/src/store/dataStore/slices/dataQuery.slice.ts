@@ -16,7 +16,7 @@ export const createDataQuerySlice: StateCreator<
   loading: false,
   runQuery: async () => {
     const currentConnection = useConnectionStore.getState().currentConnection;
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab || !currentConnection) {
       return;
     }
@@ -54,7 +54,7 @@ export const createDataQuerySlice: StateCreator<
   },
   runRawQuery: async () => {
     const currentConnection = useConnectionStore.getState().currentConnection;
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab || !currentConnection) {
       return;
     }
@@ -76,7 +76,7 @@ export const createDataQuerySlice: StateCreator<
   },
   updateDesignsQuery: async () => {
     const currentConnection = useConnectionStore.getState().currentConnection;
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab || !currentConnection) {
       return;
     }

@@ -10,7 +10,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
   addTab: (table: string, mode?: TabMode, query?: string): string => {
     // biome-ignore lint: reason
     mode = mode ? mode : TabMode.Data;
-    const tabs = get().tabs;
+    const tabs = get().getTabs();
 
     let findTab: TabType[];
     if (mode === TabMode.Query) {
@@ -60,14 +60,18 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
     return newTab.id;
   },
   removeTab: (tabId: string): string | null | undefined => {
-    const tabIndex = get().tabs.findIndex((t: TabType) => t.id === tabId);
-    const newTabs = get().tabs.filter((t: TabType) => t.id !== tabId);
+    const tabIndex = get()
+      .getTabs()
+      .findIndex((t: TabType) => t.id === tabId);
+    const newTabs = get()
+      .getTabs()
+      .filter((t: TabType) => t.id !== tabId);
 
     let newTabId: string | null | undefined = null;
 
-    if (newTabs.length > tabIndex && get().selectedTab?.id === tabId) {
+    if (newTabs.length > tabIndex && get().getSelectedTab()?.id === tabId) {
       newTabId = newTabs[tabIndex].id;
-    } else if (newTabs.length > 0 && get().selectedTab?.id === tabId) {
+    } else if (newTabs.length > 0 && get().getSelectedTab()?.id === tabId) {
       newTabId = newTabs[newTabs.length - 1].id;
     }
 
@@ -80,7 +84,9 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       get().updateSelectedTab(undefined);
     }
 
-    const findTab = get().tabs.find((t) => t.id === tabId);
+    const findTab = get()
+      .getTabs()
+      .find((t) => t.id === tabId);
     if (findTab) {
       get().updateSelectedTab(findTab);
     }

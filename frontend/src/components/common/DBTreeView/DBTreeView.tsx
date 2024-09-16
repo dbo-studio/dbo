@@ -1,11 +1,11 @@
 import Schemas from '@/components/common/DBTreeView/Schemas/Schemas';
-import { useCurrentConnection } from '@/hooks';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useEffect, useState } from 'react';
 import Search from '../../base/Search/Search';
 import TablesTreeView from './TableTreeView/TablesTreeView';
 
 export default function DBTreeView() {
-  const currentConnection = useCurrentConnection();
+  const { currentConnection } = useConnectionStore();
   const [tables, setTables] = useState<string[]>([]);
 
   useEffect(() => {

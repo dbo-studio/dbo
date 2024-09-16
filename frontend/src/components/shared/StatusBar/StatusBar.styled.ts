@@ -8,10 +8,3 @@ export const StatusBarStyled = styled(Stack)<StatusBarStylesProps>(({ theme }) =
   borderTop: `1px solid ${theme.palette.divider}`,
   padding: '4px 8px 0 8px'
 }));
-
-export const PaginationSettingStyled = styled(Box)(({ theme }) => ({
-  background: theme.palette.background.subdued,
-  borderRadius: variables.radius.medium,
-  border: `1px solid ${theme.palette.divider}`,
-  padding: theme.spacing(1)
-}));

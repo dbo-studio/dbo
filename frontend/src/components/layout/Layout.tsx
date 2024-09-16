@@ -5,6 +5,7 @@ import '@fontsource/roboto/700.css';
 
 import { useSetupDesktop, useWindowSize } from '@/hooks';
 import { useSettingStore } from '@/store/settingStore/setting.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { Grid } from '@mui/material';
 import { Fragment } from 'react/jsx-runtime';
 import ConfirmModal from '../base/Modal/ConfirmModal';
@@ -19,6 +20,7 @@ export default function Layout() {
   const windowSize = useWindowSize(true);
   const done = useSetupDesktop();
   const { sidebar } = useSettingStore();
+  const { getTabs, getSelectedTab } = useTabStore();
 
   return done ? (
     <Fragment>
@@ -35,7 +37,7 @@ export default function Layout() {
             </Grid>
           )}
           <Grid flex={1} minWidth={0}>
-            <CenterContainer />
+            <CenterContainer selectedTab={getSelectedTab()} tabs={getTabs()} />
           </Grid>
           {sidebar.showRight && (
             <Grid>

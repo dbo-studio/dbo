@@ -4,7 +4,7 @@ import type { TabSortSlice, TabStore } from '../types';
 
 export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], TabSortSlice> = (set, get) => ({
   upsertSorts: async (sort: SortType) => {
-    const selectedTab = get().selectedTab;
+    const selectedTab = get().getSelectedTab();
     if (!selectedTab) {
       return;
     }
@@ -21,7 +21,7 @@ export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], T
     get().updateSelectedTab(selectedTab);
   },
   removeSort: (sort: SortType) => {
-    const selectedTab = get().selectedTab;
+    const selectedTab = get().getSelectedTab();
     if (!selectedTab) {
       return;
     }
@@ -30,7 +30,7 @@ export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], T
     get().updateSelectedTab(selectedTab);
   },
   setShowSorts: (show: boolean) => {
-    const selectedTab = get().selectedTab;
+    const selectedTab = get().getSelectedTab();
     if (!selectedTab) {
       return;
     }

@@ -4,7 +4,7 @@ import type { TabFilterSlice, TabStore } from '../types';
 
 export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [], TabFilterSlice> = (set, get) => ({
   upsertFilters: async (filter: FilterType) => {
-    const selectedTab = get().selectedTab;
+    const selectedTab = get().getSelectedTab();
     if (!selectedTab) {
       return;
     }
@@ -22,7 +22,7 @@ export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [
     get().updateSelectedTab(selectedTab);
   },
   removeFilter: (filter: FilterType) => {
-    const selectedTab = get().selectedTab;
+    const selectedTab = get().getSelectedTab();
     if (!selectedTab) {
       return;
     }
@@ -31,7 +31,7 @@ export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [
     get().updateSelectedTab(selectedTab);
   },
   setShowFilters: (show: boolean) => {
-    const selectedTab = get().selectedTab;
+    const selectedTab = get().getSelectedTab();
     if (!selectedTab) {
       return;
     }

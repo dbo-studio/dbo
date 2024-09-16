@@ -1,5 +1,4 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { useCurrentTab } from '@/hooks';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton, Stack, useTheme } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
@@ -7,21 +6,21 @@ import Grid from '@mui/material/Unstable_Grid2';
 export default function ActionBar() {
   const theme = useTheme();
   const { setShowQueryPreview, setShowFilters, setShowSorts, setShowColumns } = useTabStore();
-  const currentTab = useCurrentTab();
+  const { getSelectedTab } = useTabStore();
 
   const handleToggle = (type: 'filter' | 'query' | 'sort' | 'column') => {
     switch (type) {
       case 'filter':
-        setShowFilters(!currentTab?.showFilters);
+        setShowFilters(!getSelectedTab()?.showFilters);
         break;
       case 'query':
-        setShowQueryPreview(!currentTab?.showQuery);
+        setShowQueryPreview(!getSelectedTab()?.showQuery);
         break;
       case 'sort':
-        setShowSorts(!currentTab?.showSorts);
+        setShowSorts(!getSelectedTab()?.showSorts);
         break;
       case 'column':
-        setShowColumns(!currentTab?.showColumns);
+        setShowColumns(!getSelectedTab()?.showColumns);
         break;
     }
   };

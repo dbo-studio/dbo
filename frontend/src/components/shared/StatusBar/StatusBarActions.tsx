@@ -1,16 +1,14 @@
 import api from '@/api';
 import { TabMode } from '@/core/enums';
-import { useCurrentConnection, useCurrentTab } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { Box, IconButton, Stack } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import LoadingIconButton from '../../base/LoadingIconButton/LoadingIconButton';
+import type { BaseProp } from '@/types';
 
-export default function StatusBarActions() {
-  const currentTab = useCurrentTab();
-  const currentConnection = useCurrentConnection();
+export default function StatusBarActions({ tab, connection }: BaseProp) {
   const [_, setSearchParams] = useSearchParams();
 
   const {
@@ -37,20 +35,20 @@ export default function StatusBarActions() {
   });
 
   const handleSave = async () => {
-    if (currentTab?.mode === TabMode.Data) {
+    if (tab?.mode === TabMode.Data) {
       const edited = getEditedRows();
       const removed = getRemovedRows();
       const unsaved = getUnsavedRows();
 
-      if (!currentTab || !currentConnection || (edited.length === 0 && removed.length === 0 && unsaved.length === 0)) {
+      if (!tab || !connection || (edited.length === 0 && removed.length === 0 && unsaved.length === 0)) {
         return;
       }
       try {
         await updateQuery({
-          connection_id: currentConnection.id,
-          schema: currentConnection.currentSchema,
-          database: currentConnection.currentDatabase,
-          table: currentTab?.table,
+          connection_id: connection.id,
+          schema: connection.currentSchema,
+          database: connection.currentDatabase,
+          table: tab?.table,
           edited: edited,
           removed: removed,
           added: unsaved
@@ -65,8 +63,8 @@ export default function StatusBarActions() {
       }
     }
 
-    if (currentTab?.mode === TabMode.Design) {
-      if (!currentTab || !currentConnection) {
+    if (tab?.mode === TabMode.Design) {
+      if (!tab || !connection) {
         return;
       }
 
@@ -79,35 +77,35 @@ export default function StatusBarActions() {
   };
 
   const handleAddAction = async () => {
-    if (currentTab?.mode === TabMode.Data) {
+    if (tab?.mode === TabMode.Data) {
       addUnsavedRows();
       setSearchParams({ scrollToBottom: 'true' });
     }
 
-    if (currentTab?.mode === TabMode.Design) {
+    if (tab?.mode === TabMode.Design) {
       addEmptyEditedColumns();
     }
   };
 
   const handleRemoveAction = async () => {
-    if (currentTab?.mode === TabMode.Data) {
+    if (tab?.mode === TabMode.Data) {
       updateRemovedRows();
     }
 
-    if (currentTab?.mode === TabMode.Design) {
+    if (tab?.mode === TabMode.Design) {
       updateRemovedColumns();
     }
   };
 
   const handleDiscardChanges = async () => {
-    if (currentTab?.mode === TabMode.Data) {
+    if (tab?.mode === TabMode.Data) {
       updateSelectedRows([]);
       restoreEditedRows();
       discardUnsavedRows();
       updateRemovedRows();
     }
 
-    if (currentTab?.mode === TabMode.Design) {
+    if (tab?.mode === TabMode.Design) {
       restoreEditedColumns();
     }
   };

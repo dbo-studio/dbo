@@ -3,9 +3,9 @@ import type { DatabaseMetaDataType } from '@/api/database/types';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import SelectOption from '@/components/base/SelectInput/SelectOption';
-import { useCurrentConnection } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
 import locales from '@/locales';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LoadingButton } from '@mui/lab';
 import { Box, Button } from '@mui/material';
@@ -31,7 +31,7 @@ const formSchema = z.object({
 type ValidationSchema = z.infer<typeof formSchema>;
 
 export default function AddDatabase({ onClose }: { onClose: () => void }) {
-  const currentConnection = useCurrentConnection();
+  const { currentConnection } = useConnectionStore();
   const [metadata, setMetadata] = useState<undefined | DatabaseMetaDataType>(undefined);
 
   const { request: createDatabase, pending } = useAPI({

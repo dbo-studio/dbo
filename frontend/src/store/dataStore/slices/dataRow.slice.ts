@@ -11,7 +11,7 @@ export const createDataRowSlice: StateCreator<
 > = (set, get) => ({
   rows: {},
   getRows: (): RowType[] => {
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     const rows = get().rows;
     if (!selectedTab || !Object.prototype.hasOwnProperty.call(rows, selectedTab.id)) {
       return [];
@@ -19,7 +19,7 @@ export const createDataRowSlice: StateCreator<
     return rows[selectedTab.id];
   },
   updateRows: async (items: RowType[]) => {
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab) {
       return;
     }

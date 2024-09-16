@@ -1,11 +1,11 @@
-import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { ConnectionBoxStyled } from './ConnectionBox.styled';
 
 export default function ConnectionBox() {
-  const currentConnection = useCurrentConnection();
+  const { currentConnection } = useConnectionStore();
   const [info, setInfo] = useState('');
   const [active, setActive] = useState('false');
   useEffect(() => {

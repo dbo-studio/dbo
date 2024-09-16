@@ -13,7 +13,7 @@ export const createDataEditedColumnSlice: StateCreator<
 > = (set, get) => ({
   editedColumns: {},
   getEditedColumns: () => {
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     const columns = get().editedColumns;
     if (!selectedTab || !Object.prototype.hasOwnProperty.call(columns, selectedTab.id)) {
       return [];
@@ -21,7 +21,7 @@ export const createDataEditedColumnSlice: StateCreator<
     return columns[selectedTab.id];
   },
   updateEditedColumns: async (columns: EditedColumnType[]) => {
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab) {
       return;
     }
@@ -31,7 +31,7 @@ export const createDataEditedColumnSlice: StateCreator<
     set({ editedColumns });
   },
   addEditedColumns: async (oldValue: ColumnType, newValue: ColumnType | EditedColumnType) => {
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab) {
       return;
     }

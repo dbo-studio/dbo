@@ -3,7 +3,6 @@ import * as monaco from 'monaco-editor';
 import { LanguageIdEnum } from 'monaco-sql-languages';
 
 import { shortcuts } from '@/core/utils/shortcuts.ts';
-import { useCurrentTab } from '@/hooks/useCurrentTab.hook.ts';
 import { useShortcut } from '@/hooks/useShortcut.hook.ts';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
@@ -20,7 +19,7 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
   const { isDark } = useSettingStore();
   const { runRawQuery } = useDataStore();
   const { getQuery } = useTabStore();
-  const currentTab = useCurrentTab();
+  const { getSelectedTab } = useTabStore();
 
   useShortcut(shortcuts.runQuery, () => runRawQuery());
 
@@ -60,7 +59,7 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
       editorRef.current.setValue(getQuery());
     }
     //todo: check if works
-  }, [currentTab?.id]);
+  }, [getSelectedTab()?.id]);
 
   useEffect(() => {
     if (editorRef.current) {

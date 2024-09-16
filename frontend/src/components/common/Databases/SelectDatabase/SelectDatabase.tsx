@@ -1,5 +1,4 @@
 import api from '@/api';
-import { useCurrentConnection } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
@@ -12,8 +11,7 @@ import type { SelectDatabaseProps } from '../types';
 import DatabaseItem from './DatabaseItem';
 
 export default function SelectDatabase({ onClose, onChangeStep }: SelectDatabaseProps) {
-  const currentConnection = useCurrentConnection();
-  const { updateCurrentConnection } = useConnectionStore();
+  const { updateCurrentConnection, currentConnection } = useConnectionStore();
   const [selectedDB, setSelectedDB] = useState<string | undefined>(undefined);
   const showModal = useConfirmModalStore((state) => state.danger);
 

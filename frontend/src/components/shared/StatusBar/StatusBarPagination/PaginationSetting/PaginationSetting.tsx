@@ -1,19 +1,17 @@
-import { useCurrentTab } from '@/hooks';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { TabDataPagination } from '@/types';
+import type { BaseProp, TabDataPagination } from '@/types';
 import { Button, ClickAwayListener, IconButton, Popper } from '@mui/material';
 import { useState } from 'react';
-import CustomIcon from '../../base/CustomIcon/CustomIcon';
-import FieldInput from '../../base/FieldInput/FieldInput';
-import { PaginationSettingStyled } from './StatusBar.styled';
+import CustomIcon from '../../../../base/CustomIcon/CustomIcon';
+import FieldInput from '../../../../base/FieldInput/FieldInput';
+import { PaginationSettingStyled } from './PaginationSetting.styled';
 
-export default function PaginationSetting() {
+export default function PaginationSetting({ tab }: BaseProp) {
   const { updateSelectedTab } = useTabStore();
-  const currentTab = useCurrentTab();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [limit, setLimit] = useState<number>(currentTab?.pagination?.limit ?? 0);
-  const [offset, setOffset] = useState<number>(currentTab?.pagination?.offset ?? 0);
+  const [limit, setLimit] = useState<number>(tab?.pagination?.limit ?? 0);
+  const [offset, setOffset] = useState<number>(tab?.pagination?.offset ?? 0);
   const [errors, setErrors] = useState<{
     limit: string | undefined;
     offset: string | undefined;
@@ -30,8 +28,8 @@ export default function PaginationSetting() {
   };
 
   const handleCloseClick = () => {
-    setLimit(currentTab?.pagination.limit ?? 0);
-    setOffset(currentTab?.pagination.offset ?? 0);
+    setLimit(tab?.pagination.limit ?? 0);
+    setOffset(tab?.pagination.offset ?? 0);
     setErrors({
       limit: undefined,
       offset: undefined
@@ -40,7 +38,7 @@ export default function PaginationSetting() {
   };
 
   const handleUpdateState = () => {
-    if (!currentTab) {
+    if (!tab) {
       return;
     }
 
@@ -59,13 +57,13 @@ export default function PaginationSetting() {
     }
 
     const pagination: TabDataPagination = {
-      page: currentTab.pagination.page,
+      page: tab.pagination.page,
       limit,
       offset
     };
 
     updateSelectedTab({
-      ...currentTab,
+      ...tab,
       pagination
     });
 

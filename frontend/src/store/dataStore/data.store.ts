@@ -40,7 +40,7 @@ export const useDataStore = create<DataState>()(
   devtools(
     immer((set, get, ...state) => ({
       selectedTab: (): TabType | undefined => {
-        return useTabStore.getState().selectedTab;
+        return useTabStore.getState().getSelectedTab();
       },
       ...createDataRowSlice(set, get, ...state),
       ...createDataHightedRowSlice(set, get, ...state),
