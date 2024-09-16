@@ -19,13 +19,15 @@ export default function Data() {
 
   useEffect(() => {
     if (getRows().length === 0 || getColumns().length === 0) {
+      console.log('🚀 ~ useEffect ~ empty getRows:', getRows());
+      console.log('🚀 ~ useEffect ~ getColumns:', getColumns());
+
       runQuery();
+    } else {
+      console.log('🚀 ~ useEffect ~ getRows:', getRows());
+      console.log('🚀 ~ useEffect ~ getColumns:', getColumns());
     }
   }, [location]);
-
-  useEffect(() => {
-    console.log(getSelectedTab());
-  }, []);
 
   return (
     getSelectedTab() && (
@@ -40,7 +42,7 @@ export default function Data() {
             <DBDataGrid rows={getRows()} columns={getColumns(true, true)} loading={loading} />
           </Suspense>
         </Box>
-        <StatusBar tab={getSelectedTab()} />
+        <StatusBar />
       </>
     )
   );

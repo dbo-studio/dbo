@@ -1,22 +1,24 @@
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { Suspense, lazy } from 'react';
 import { StatusBarStyled } from './StatusBar.styled';
-import type { BaseProp } from '@/types';
 
 const StatusBarActions = lazy(() => import('./StatusBarActions'));
 const StatusBarTabs = lazy(() => import('./StatusBarTabs'));
 const StatusBarPagination = lazy(() => import('./StatusBarPagination/StatusBarPagination'));
 
-export default function StatusBar({ tab, connection }: BaseProp) {
+export default function StatusBar() {
+  const { getSelectedTab } = useTabStore();
+
   return (
-    <StatusBarStyled mode={tab?.mode} direction={'row'} justifyContent={'space-between'}>
+    <StatusBarStyled mode={getSelectedTab()?.mode} direction={'row'} justifyContent={'space-between'}>
       <Suspense>
-        <StatusBarActions tab={tab} connection={connection} />
+        <StatusBarActions />
       </Suspense>
       <Suspense>
-        <StatusBarTabs tab={tab} connection={connection} />
+        <StatusBarTabs />
       </Suspense>
       <Suspense>
-        <StatusBarPagination tab={tab} connection={connection} />
+        <StatusBarPagination />
       </Suspense>
     </StatusBarStyled>
   );

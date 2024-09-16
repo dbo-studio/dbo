@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { useNavigate as use_navigate } from 'react-router-dom';
+import { useSearchParams, useNavigate as use_navigate } from 'react-router-dom';
 
 export type NavigationParamsType = {
   tabId?: string;
@@ -16,7 +15,7 @@ export default function useNavigate() {
     () => (route: NavigationParamsType) => {
       const params = { ...Object.fromEntries([...searchParams]) };
 
-      if (route.tabId) {
+      if (route.tabId && route.tabId.length > 0) {
         params.tabId = route.tabId;
       }
 

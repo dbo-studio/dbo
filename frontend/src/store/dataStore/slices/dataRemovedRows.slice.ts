@@ -19,10 +19,7 @@ export const createDataRemovedRowsSlice: StateCreator<
   getRemovedRows: (): RowType[] => {
     const selectedTab = useTabStore.getState().getSelectedTab();
     const rows = get().removedRows;
-    if (!selectedTab || !Object.prototype.hasOwnProperty.call(rows, selectedTab.id)) {
-      return [];
-    }
-    return rows[selectedTab.id];
+    return rows[selectedTab?.id as string] ?? [];
   },
   updateRemovedRows: () => {
     const selectedTab = useTabStore.getState().getSelectedTab();
@@ -45,7 +42,7 @@ export const createDataRemovedRowsSlice: StateCreator<
     removedRows[selectedTab.id] = rows
       .map((row) => {
         // for deleting a row from db we referenced to row's id and if it doesn't exists to all fields
-        if (Object.prototype.hasOwnProperty.call(row, 'id')) {
+        if (row.id) {
           return {
             id: row.id,
             dbo_index: row.dbo_index
@@ -62,7 +59,7 @@ export const createDataRemovedRowsSlice: StateCreator<
   },
   deleteRemovedRowsByTabId: (tabId: string) => {
     const rows = get().removedRows;
-    if (Object.prototype.hasOwnProperty.call(rows, tabId)) {
+    if (!rows[tabId]) {
       delete rows[tabId];
     }
 

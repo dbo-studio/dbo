@@ -13,10 +13,7 @@ export const createDataHightedRowSlice: StateCreator<
   getHighlightedRow: (): RowType | undefined => {
     const selectedTab = useTabStore.getState().getSelectedTab();
     const rows = get().highlightedRow;
-    if (!selectedTab || !Object.prototype.hasOwnProperty.call(rows, selectedTab.id)) {
-      return undefined;
-    }
-    return rows[selectedTab.id];
+    return rows[selectedTab?.id as string] ?? undefined;
   },
   updateHighlightedRow: (selectedRow: RowType | undefined) => {
     const selectedTab = useTabStore.getState().getSelectedTab();
@@ -31,7 +28,7 @@ export const createDataHightedRowSlice: StateCreator<
   },
   removeHighlightedRowsByTabId: (tabId: string) => {
     const rows = get().highlightedRow;
-    if (Object.prototype.hasOwnProperty.call(rows, tabId)) {
+    if (!rows[tabId]) {
       delete rows[tabId];
     }
 

@@ -2,13 +2,13 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
 import type { TabType } from '@/types';
+import { useConnectionStore } from '../connectionStore/connection.store';
 import { createTabColumnSlice } from './slices/tabColumn.slice';
 import { createTabFilterSlice } from './slices/tabFilter.slice';
 import { createTabQuerySlice } from './slices/tabQuery.slice';
 import { createTabSettingSlice } from './slices/tabSetting.slice';
 import { createTabSortSlice } from './slices/tabSort.slice';
 import type { TabDataSlice, TabFilterSlice, TabQuerySlice, TabSettingSlice, TabSortSlice, TabStore } from './types';
-import { useConnectionStore } from '../connectionStore/connection.store';
 
 type TabState = TabStore & TabSettingSlice & TabQuerySlice & TabFilterSlice & TabSortSlice & TabDataSlice;
 
@@ -21,7 +21,7 @@ export const useTabStore = create<TabState>()(
         getTabs: (): TabType[] => {
           const currentConnection = useConnectionStore.getState().currentConnection;
           const tabs = get().tabs;
-          if (!currentConnection || !Object.prototype.hasOwnProperty.call(tabs, currentConnection.id)) {
+          if (!currentConnection || !tabs[currentConnection.id]) {
             return [];
           }
 
@@ -29,12 +29,21 @@ export const useTabStore = create<TabState>()(
         },
         getSelectedTab: (): TabType | undefined => {
           const currentConnection = useConnectionStore.getState().currentConnection;
-          const tabs = get().selectedTab;
-          if (!currentConnection || !Object.prototype.hasOwnProperty.call(tabs, currentConnection.id)) {
+          const selectedTab = get().selectedTab;
+          if (!currentConnection) {
             return undefined;
           }
 
-          return tabs[currentConnection.id];
+          if (selectedTab[currentConnection.id]) {
+            return selectedTab[currentConnection.id];
+          }
+
+          const tabs = get().tabs;
+          if (!tabs[currentConnection.id] || tabs[currentConnection.id].length === 0) {
+            return undefined;
+          }
+
+          return tabs[currentConnection.id][0];
         },
         updateTabs: (newTabs: TabType[]) => {
           const currentConnection = useConnectionStore.getState().currentConnection;

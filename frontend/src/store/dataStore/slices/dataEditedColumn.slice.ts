@@ -15,10 +15,10 @@ export const createDataEditedColumnSlice: StateCreator<
   getEditedColumns: () => {
     const selectedTab = useTabStore.getState().getSelectedTab();
     const columns = get().editedColumns;
-    if (!selectedTab || !Object.prototype.hasOwnProperty.call(columns, selectedTab.id)) {
+    if (!columns[selectedTab?.id as string]) {
       return [];
     }
-    return columns[selectedTab.id];
+    return columns[selectedTab?.id as string];
   },
   updateEditedColumns: async (columns: EditedColumnType[]) => {
     const selectedTab = useTabStore.getState().getSelectedTab();

@@ -14,10 +14,7 @@ export const createDataUnsavedRowsSlice: StateCreator<
   getUnsavedRows: (): RowType[] => {
     const selectedTab = useTabStore.getState().getSelectedTab();
     const rows = get().unSavedRows;
-    if (!selectedTab || !Object.prototype.hasOwnProperty.call(rows, selectedTab.id)) {
-      return [];
-    }
-    return rows[selectedTab.id];
+    return rows[selectedTab?.id as string] ?? [];
   },
   addUnsavedRows: (newRow?: RowType): void => {
     const unSavedRows = get().getUnsavedRows();
@@ -68,7 +65,7 @@ export const createDataUnsavedRowsSlice: StateCreator<
   },
   removeUnsavedRowsByTabId: (tabId: string) => {
     const rows = get().unSavedRows;
-    if (Object.prototype.hasOwnProperty.call(rows, tabId)) {
+    if (!rows[tabId]) {
       delete rows[tabId];
     }
 

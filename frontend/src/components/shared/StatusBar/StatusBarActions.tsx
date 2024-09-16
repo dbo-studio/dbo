@@ -1,15 +1,18 @@
 import api from '@/api';
 import { TabMode } from '@/core/enums';
 import useAPI from '@/hooks/useApi.hook';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, IconButton, Stack } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import LoadingIconButton from '../../base/LoadingIconButton/LoadingIconButton';
-import type { BaseProp } from '@/types';
 
-export default function StatusBarActions({ tab, connection }: BaseProp) {
+export default function StatusBarActions() {
   const [_, setSearchParams] = useSearchParams();
+  const { getSelectedTab } = useTabStore();
+  const { currentConnection } = useConnectionStore();
 
   const {
     loading,
@@ -35,20 +38,24 @@ export default function StatusBarActions({ tab, connection }: BaseProp) {
   });
 
   const handleSave = async () => {
-    if (tab?.mode === TabMode.Data) {
+    if (getSelectedTab()?.mode === TabMode.Data) {
       const edited = getEditedRows();
       const removed = getRemovedRows();
       const unsaved = getUnsavedRows();
 
-      if (!tab || !connection || (edited.length === 0 && removed.length === 0 && unsaved.length === 0)) {
+      if (
+        !getSelectedTab() ||
+        !currentConnection ||
+        (edited.length === 0 && removed.length === 0 && unsaved.length === 0)
+      ) {
         return;
       }
       try {
         await updateQuery({
-          connection_id: connection.id,
-          schema: connection.currentSchema,
-          database: connection.currentDatabase,
-          table: tab?.table,
+          connection_id: currentConnection.id,
+          schema: currentConnection.currentSchema,
+          database: currentConnection.currentDatabase,
+          table: getSelectedTab()?.table,
           edited: edited,
           removed: removed,
           added: unsaved
@@ -63,8 +70,8 @@ export default function StatusBarActions({ tab, connection }: BaseProp) {
       }
     }
 
-    if (tab?.mode === TabMode.Design) {
-      if (!tab || !connection) {
+    if (getSelectedTab()?.mode === TabMode.Design) {
+      if (!getSelectedTab() || !currentConnection) {
         return;
       }
 
@@ -77,35 +84,35 @@ export default function StatusBarActions({ tab, connection }: BaseProp) {
   };
 
   const handleAddAction = async () => {
-    if (tab?.mode === TabMode.Data) {
+    if (getSelectedTab()?.mode === TabMode.Data) {
       addUnsavedRows();
       setSearchParams({ scrollToBottom: 'true' });
     }
 
-    if (tab?.mode === TabMode.Design) {
+    if (getSelectedTab()?.mode === TabMode.Design) {
       addEmptyEditedColumns();
     }
   };
 
   const handleRemoveAction = async () => {
-    if (tab?.mode === TabMode.Data) {
+    if (getSelectedTab()?.mode === TabMode.Data) {
       updateRemovedRows();
     }
 
-    if (tab?.mode === TabMode.Design) {
+    if (getSelectedTab()?.mode === TabMode.Design) {
       updateRemovedColumns();
     }
   };
 
   const handleDiscardChanges = async () => {
-    if (tab?.mode === TabMode.Data) {
+    if (getSelectedTab()?.mode === TabMode.Data) {
       updateSelectedRows([]);
       restoreEditedRows();
       discardUnsavedRows();
       updateRemovedRows();
     }
 
-    if (tab?.mode === TabMode.Design) {
+    if (getSelectedTab()?.mode === TabMode.Design) {
       restoreEditedColumns();
     }
   };

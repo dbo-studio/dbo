@@ -13,7 +13,7 @@ export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, []
   getColumns: (withSelect: boolean, isActive?: boolean) => {
     const selectedTab = useTabStore.getState().getSelectedTab();
     const columns = get().columns;
-    if (!selectedTab || !Object.prototype.hasOwnProperty.call(columns, selectedTab.id)) {
+    if (!selectedTab || !columns[selectedTab.id]) {
       return [];
     }
 
@@ -50,7 +50,7 @@ export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, []
   },
   removeColumnsByTabId: (tabId: string) => {
     const columns = get().columns;
-    if (Object.prototype.hasOwnProperty.call(columns, tabId)) {
+    if (!columns[tabId]) {
       delete columns[tabId];
     }
 

@@ -13,7 +13,7 @@ export const createDataRowSlice: StateCreator<
   getRows: (): RowType[] => {
     const selectedTab = useTabStore.getState().getSelectedTab();
     const rows = get().rows;
-    if (!selectedTab || !Object.prototype.hasOwnProperty.call(rows, selectedTab.id)) {
+    if (!selectedTab || !rows[selectedTab.id]) {
       return [];
     }
     return rows[selectedTab.id];
@@ -31,7 +31,7 @@ export const createDataRowSlice: StateCreator<
   },
   removeRowsByTabId: (tabId: string) => {
     const rows = get().rows;
-    if (Object.prototype.hasOwnProperty.call(rows, tabId)) {
+    if (!rows[tabId]) {
       delete rows[tabId];
     }
 

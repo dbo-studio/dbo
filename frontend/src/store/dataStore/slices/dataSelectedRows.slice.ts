@@ -13,7 +13,7 @@ export const createDataSelectedRowsSlice: StateCreator<
   getSelectedRows: () => {
     const selectedTab = useTabStore.getState().getSelectedTab();
     const rows = get().selectedRows;
-    if (!selectedTab || !Object.prototype.hasOwnProperty.call(rows, selectedTab.id)) {
+    if (!selectedTab || !rows[selectedTab.id]) {
       return new Set([]);
     }
 
