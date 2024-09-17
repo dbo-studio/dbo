@@ -11,7 +11,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ThemeProvider>
       <CssBaseline />
       <Router />
-      <Toaster position='bottom-center' duration={5000} richColors />
+      <Toaster position='bottom-center' duration={5000} richColors closeButton={true} />
     </ThemeProvider>
   </React.StrictMode>
 );
