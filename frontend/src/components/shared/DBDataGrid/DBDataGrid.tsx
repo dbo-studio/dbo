@@ -77,33 +77,31 @@ export default function DBDataGrid() {
     </Box>
   ) : (
     <DataGridWrapperStyled>
-      {getSelectedTab() && (
-        <DataGridStyled
-          ref={dataGridRef}
-          onSelectedCellChange={handleOnCellClick}
-          rowKeyGetter={rowKeyGetter}
-          selectedRows={getSelectedRows()}
-          onSelectedRowsChange={updateSelectedRows}
-          columns={getColumns(true, true)}
-          rows={getRows()}
-          rowHeight={30}
-          onRowsChange={handleRowsChange}
-          headerRowHeight={30}
-          renderers={{ renderCheckbox }}
-          rowClass={(_, index) => {
-            if (getRemovedRows().some((v) => v.dbo_index === index)) {
-              return 'removed-highlight';
-            }
-            if (getUnsavedRows().some((v) => v.dbo_index === index)) {
-              return 'unsaved-highlight';
-            }
-            if (getEditedRows().some((v) => v.dboIndex === index)) {
-              return 'edit-highlight';
-            }
-            return undefined;
-          }}
-        />
-      )}
+      <DataGridStyled
+        ref={dataGridRef}
+        onSelectedCellChange={handleOnCellClick}
+        rowKeyGetter={rowKeyGetter}
+        selectedRows={getSelectedRows()}
+        onSelectedRowsChange={updateSelectedRows}
+        columns={getColumns(true, true)}
+        rows={getRows()}
+        rowHeight={30}
+        onRowsChange={handleRowsChange}
+        headerRowHeight={30}
+        renderers={{ renderCheckbox }}
+        rowClass={(_, index) => {
+          if (getRemovedRows().some((v) => v.dbo_index === index)) {
+            return 'removed-highlight';
+          }
+          if (getUnsavedRows().some((v) => v.dbo_index === index)) {
+            return 'unsaved-highlight';
+          }
+          if (getEditedRows().some((v) => v.dboIndex === index)) {
+            return 'edit-highlight';
+          }
+          return undefined;
+        }}
+      />
     </DataGridWrapperStyled>
   );
 }

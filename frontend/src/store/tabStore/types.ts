@@ -14,7 +14,7 @@ export type TabSortSlice = {
 };
 
 export type TabSettingSlice = {
-  addTab: (table: string, mode?: TabMode, query?: string) => string;
+  addTab: (table: string, mode?: TabMode, query?: string) => TabType;
   removeTab: (tabId: string) => string | null | undefined;
   switchTab: (tabId: string | null) => void;
 };

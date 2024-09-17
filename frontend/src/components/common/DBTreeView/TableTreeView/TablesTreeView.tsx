@@ -1,11 +1,12 @@
 import TableTreeViewItem from '@/components/common/DBTreeView/TableTreeView/TablesTreeViewItem/TableTreeViewItem';
+import { TabMode } from '@/core/enums';
+import useNavigate from '@/hooks/useNavigate.hook';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, useTheme } from '@mui/material';
 import { SimpleTreeView, TreeItem } from '@mui/x-tree-view';
 import { v4 as uuid } from 'uuid';
 import CustomIcon from '../../../base/CustomIcon/CustomIcon';
-import useNavigate from '@/hooks/useNavigate.hook';
 
 export default function TablesTreeView({ tables }: { tables: string[] }) {
   const theme = useTheme();
@@ -14,10 +15,10 @@ export default function TablesTreeView({ tables }: { tables: string[] }) {
   const { getSelectedTab } = useTabStore();
 
   const handleTableClick = (tableName: string) => {
-    const tabId = addTab(tableName);
+    const tab = addTab(tableName);
     navigate({
-      route: 'data',
-      tabId: tabId
+      route: tab.mode === TabMode.Data ? 'data' : 'design',
+      tabId: tab.id
     });
   };
 

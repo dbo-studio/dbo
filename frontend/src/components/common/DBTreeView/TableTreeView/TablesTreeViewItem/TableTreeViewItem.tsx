@@ -26,18 +26,18 @@ export default function TableTreeViewItem({ table, onClick }: TablesTreeViewItem
   });
 
   const handleAddTabData = () => {
-    const tabId = addTab(table);
+    const tab = addTab(table);
     navigate({
       route: 'data',
-      tabId: tabId
+      tabId: tab.id
     });
   };
 
   const handleAddTabDesign = () => {
-    const tabId = addTab(table, TabMode.Design);
+    const tab = addTab(table, TabMode.Design);
     navigate({
       route: 'design',
-      tabId: tabId
+      tabId: tab.id
     });
   };
 

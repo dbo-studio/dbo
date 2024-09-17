@@ -35,14 +35,14 @@ export default function StatusBarTabs() {
   const onSelectedTabChanged = (event: React.SyntheticEvent, id: number) => {
     const findTab = tabs.find((tab) => tab.id === id);
     if (!findTab || !getSelectedTab()) return;
-    navigate({
-      route: findTab.link as 'design' | 'data',
-      tabId: getSelectedTab()?.id
-    });
     setSelectedTabId(id);
     updateSelectedTab({
       ...(getSelectedTab() ?? ({} as TabType)),
       mode: findTab.id
+    });
+    navigate({
+      route: findTab.link as 'design' | 'data',
+      tabId: getSelectedTab()?.id
     });
   };
 

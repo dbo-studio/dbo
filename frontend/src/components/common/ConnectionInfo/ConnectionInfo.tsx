@@ -17,10 +17,10 @@ export default function ConnectionInfo() {
   const { addTab } = useTabStore();
 
   const handleAddEditorTab = () => {
-    const tabId = addTab('Editor', TabMode.Query);
+    const tab = addTab('Editor', TabMode.Query);
     navigate({
       route: 'query',
-      tabId: tabId
+      tabId: tab.id
     });
   };
 
