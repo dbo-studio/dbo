@@ -1,9 +1,7 @@
 import StatusBar from '@/components/shared/StatusBar/StatusBar';
-import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box } from '@mui/material';
-import { Suspense, lazy, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
 import ActionBar from './ActionBar/ActionBar';
 import Columns from './Columns/Columns';
 import Filters from './Filters/Filters';
@@ -13,22 +11,7 @@ import Sorts from './Sorts/Sorts';
 const DBDataGrid = lazy(() => import('@/components/shared/DBDataGrid/DBDataGrid'));
 
 export default function Data() {
-  const location = useLocation();
-  const { loading, getRows, getColumns, runQuery } = useDataStore();
   const { getSelectedTab } = useTabStore();
-
-  useEffect(() => {
-    if (getRows().length === 0 || getColumns().length === 0) {
-      console.log('🚀 ~ useEffect ~ empty getRows:', getRows());
-      console.log('🚀 ~ useEffect ~ getColumns:', getColumns());
-
-      runQuery();
-    } else {
-      console.log('🚀 ~ useEffect ~ getRows:', getRows());
-      console.log('🚀 ~ useEffect ~ getColumns:', getColumns());
-    }
-  }, [location]);
-
   return (
     getSelectedTab() && (
       <>
@@ -38,9 +21,7 @@ export default function Data() {
         {getSelectedTab()?.showQuery && <QueryPreview />}
         <Box overflow='hidden' flex={1} display='flex' flexDirection='row'>
           {getSelectedTab()?.showColumns && <Columns />}
-          <Suspense>
-            <DBDataGrid rows={getRows()} columns={getColumns(true, true)} loading={loading} />
-          </Suspense>
+          <Suspense>{/* <DBDataGrid /> */}</Suspense>
         </Box>
         <StatusBar />
       </>

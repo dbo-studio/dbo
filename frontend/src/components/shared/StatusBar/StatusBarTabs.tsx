@@ -15,14 +15,14 @@ const tabs: StatusBarTabTypes[] = [
     name: locales.data,
     icon: 'grid',
     iconActive: 'gridBlue',
-    link: 'data'
+    link: '/data'
   },
   {
     id: TabMode.Design,
     name: locales.design,
     icon: 'structure',
     iconActive: 'structureBlue',
-    link: 'design'
+    link: '/design'
   }
 ];
 

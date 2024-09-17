@@ -4,7 +4,6 @@ import type { CodeEditorSettingType } from '@/components/base/CodeEditor/types';
 import { useWindowSize } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AutoCompleteType } from '@/types';
 import { Box, useTheme } from '@mui/material';
@@ -17,7 +16,6 @@ const DBDataGrid = lazy(() => import('@/components/shared/DBDataGrid/DBDataGrid'
 export default function Query() {
   const theme = useTheme();
   const { currentConnection } = useConnectionStore();
-  const { loading, getRows, getColumns } = useDataStore();
   const windowSize = useWindowSize();
   const { getQuery, updateQuery } = useTabStore();
   const [autocomplete, setAutocomplete] = useState<AutoCompleteType | null>(null);
@@ -68,7 +66,7 @@ export default function Query() {
               <CodeEditor onChange={handleUpdateState} autocomplete={autocomplete} value={value} />
             </Box>
           )}
-          <DBDataGrid rows={getRows()} columns={getColumns(true, true)} loading={loading} />
+          <DBDataGrid />
         </Suspense>
       </Box>
     </>
