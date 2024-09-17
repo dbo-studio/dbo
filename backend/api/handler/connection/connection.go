@@ -3,22 +3,14 @@ package connection_handler
 import (
 	"github.com/dbo-studio/dbo/api/dto"
 	"github.com/dbo-studio/dbo/app"
-	"github.com/dbo-studio/dbo/internal/service"
-	"github.com/dbo-studio/dbo/model"
+	serviceConnection "github.com/dbo-studio/dbo/internal/service/connection"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/response"
 	"github.com/gofiber/fiber/v3"
 )
 
 type ConnectionHandler struct {
-	ConnectionService service.IConnectionService
-}
-
-func (h *ConnectionHandler) FindConnection(connectionId string) (*model.Connection, error) {
-	var connection model.Connection
-	result := app.DB().Where("id", "=", connectionId).First(&connection)
-
-	return &connection, result.Error
+	ConnectionService serviceConnection.IConnectionService
 }
 
 func (h *ConnectionHandler) Connections(c fiber.Ctx) error {
@@ -74,4 +66,44 @@ func (h *ConnectionHandler) DeleteConnection(c fiber.Ctx) error {
 	}
 
 	return response.SuccessBuilder(connections).Send(c)
+}
+
+func (h *ConnectionHandler) TestConnection(c fiber.Ctx) error {
+	req := new(dto.CreateConnectionRequest)
+	if err := c.Bind().Body(req); err != nil {
+		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
+	}
+
+	err := h.ConnectionService.TestConnection(c.Context(), req)
+	if err != nil {
+		app.Log().Error(err.Error())
+		return response.ErrorBuilder(err).Send(c)
+	}
+
+	return response.SuccessBuilder("").Send(c)
+}
+
+func (h *ConnectionHandler) UpdateConnection(c fiber.Ctx) error {
+	connectionId := fiber.Params[int32](c, "id")
+	req := new(dto.UpdateConnectionRequest)
+
+	if err := c.Bind().Body(req); err != nil {
+		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
+	}
+
+	connection, err := h.ConnectionService.UpdateConnection(c.Context(), connectionId, req)
+	if err != nil {
+		app.Log().Error(err.Error())
+		return response.ErrorBuilder(err).Send(c)
+	}
+
+	return response.SuccessBuilder(connection).Send(c)
 }

@@ -1,52 +1,39 @@
-package connection_handler
+package serviceConnection
 
 import (
+	"context"
 	"database/sql"
 
 	"github.com/dbo-studio/dbo/api/dto"
-	"github.com/dbo-studio/dbo/api/response"
 	"github.com/dbo-studio/dbo/app"
 	"github.com/dbo-studio/dbo/helper"
 	"github.com/dbo-studio/dbo/model"
-	"github.com/gofiber/fiber/v3"
+	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
-func (h *ConnectionHandler) UpdateConnection(c fiber.Ctx) error {
-	req := new(dto.UpdateConnectionDto)
-
-	if err := c.Bind().Body(req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
-	}
-
-	errors := helper.Validate(req)
-	if errors != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
-	}
-
-	connection, err := h.FindConnection(c.Params("id"))
+func (s *IConnectionServiceImpl) UpdateConnection(ctx context.Context, connectionId int32, req *dto.UpdateConnectionRequest) (*dto.ConnectionDetailResponse, error) {
+	connection, err := s.connectionRepo.FindConnection(ctx, connectionId)
 	if err != nil {
-		app.Log().Error(err.Error())
-		return c.Status(fiber.StatusNotFound).JSON(err.Error())
+		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	updatedConnection, err := h.updateConnection(connection, req)
+	updatedConnection, err := updateConnection(connection, req)
+	s.cacheRepo.FlushCache(ctx)
 	if err != nil {
-		app.Log().Error(err.Error())
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
+		return nil, apperror.InternalServerError(err)
 	}
 
-	err = h.makeAllConnectionsNotDefault(connection, req)
+	err = makeAllConnectionsNotDefault(connection, req)
 	if err != nil {
-		app.Log().Error(err.Error())
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error(err.Error()))
+		return nil, apperror.InternalServerError(err)
 	}
 
 	app.Drivers().Pgsql.Close(int32(connection.ID))
 
-	return connectionDetail(c, updatedConnection, false)
+	return s.connectionDetail(ctx, updatedConnection, false)
 }
 
-func (h *ConnectionHandler) updateConnection(connection *model.Connection, req *dto.UpdateConnectionDto) (*model.Connection, error) {
+func updateConnection(connection *model.Connection, req *dto.UpdateConnectionRequest) (*model.Connection, error) {
 	connection.Name = helper.OptionalString(req.Name, connection.Name)
 	connection.Host = helper.OptionalString(req.Host, connection.Host)
 	connection.Username = helper.OptionalString(req.Username, connection.Username)
@@ -80,12 +67,11 @@ func (h *ConnectionHandler) updateConnection(connection *model.Connection, req *
 	}
 
 	result := app.DB().Save(&connection)
-	app.DB().Delete(&model.CacheItem{})
 
 	return connection, result.Error
 }
 
-func (h *ConnectionHandler) makeAllConnectionsNotDefault(connection *model.Connection, req *dto.UpdateConnectionDto) error {
+func makeAllConnectionsNotDefault(connection *model.Connection, req *dto.UpdateConnectionRequest) error {
 	if req.IsActive != nil && *req.IsActive {
 		result := app.DB().Model(&model.Connection{}).Not("id", connection.ID).Update("is_active", false)
 		return result.Error

@@ -1,4 +1,4 @@
-package pgsql_driver
+package pgsqlDriver
 
 import (
 	"github.com/dbo-studio/dbo/model"

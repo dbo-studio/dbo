@@ -1,4 +1,4 @@
-package service
+package serviceConnection
 
 import (
 	"github.com/dbo-studio/dbo/api/dto"
