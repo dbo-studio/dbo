@@ -19,7 +19,6 @@ type ICacheRepo interface {
 	GetConnectionDatabases(ctx context.Context, connectionID uint, fromCache bool) ([]string, error)
 	GetConnectionSchemas(ctx context.Context, connectionID uint, databaseName string, fromCache bool) ([]string, error)
 	GeDatabaseTables(ctx context.Context, connectionID uint, schemaName string, fromCache bool) ([]string, error)
-
 	FlushCache(ctx context.Context) error
 }
 
