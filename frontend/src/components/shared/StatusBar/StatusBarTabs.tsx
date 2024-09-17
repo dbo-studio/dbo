@@ -11,24 +11,24 @@ import type { StatusBarTabTypes } from './types';
 
 const tabs: StatusBarTabTypes[] = [
   {
-    id: TabMode.Data,
+    id: 0,
     name: locales.data,
     icon: 'grid',
     iconActive: 'gridBlue',
-    link: '/data'
+    link: TabMode.Data
   },
   {
-    id: TabMode.Design,
+    id: 1,
     name: locales.design,
     icon: 'structure',
     iconActive: 'structureBlue',
-    link: '/design'
+    link: TabMode.Design
   }
 ];
 
 export default function StatusBarTabs() {
   const navigate = useNavigate();
-  const [selectedTabId, setSelectedTabId] = useState(TabMode.Data);
+  const [selectedTabId, setSelectedTabId] = useState(0);
   const uuids = useUUID(2);
   const { updateSelectedTab, getSelectedTab } = useTabStore();
 
@@ -38,10 +38,10 @@ export default function StatusBarTabs() {
     setSelectedTabId(id);
     updateSelectedTab({
       ...(getSelectedTab() ?? ({} as TabType)),
-      mode: findTab.id
+      mode: findTab.link
     });
     navigate({
-      route: findTab.link as 'design' | 'data',
+      route: findTab.link,
       tabId: getSelectedTab()?.id
     });
   };
@@ -51,7 +51,7 @@ export default function StatusBarTabs() {
       return;
     }
 
-    setSelectedTabId(getSelectedTab()?.mode ?? TabMode.Data);
+    setSelectedTabId(getSelectedTab()?.mode === TabMode.Data ? 0 : 1);
   }, [getSelectedTab()]);
 
   return (

@@ -1,7 +1,6 @@
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu.tsx';
 import type { MenuType } from '@/components/base/ContextMenu/types.ts';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { TabMode } from '@/core/enums';
 import { useContextMenu } from '@/hooks';
 import useNavigate, { type NavigationParamsType } from '@/hooks/useNavigate.hook';
 import { useRemoveTab } from '@/hooks/useRemoveTab.hook';
@@ -44,7 +43,7 @@ export default function Panels({ tab, tabs }: PanelsProps) {
     if (!findTab) return;
 
     navigate({
-      route: findTab.mode === TabMode.Data ? 'data' : 'design',
+      route: findTab.mode,
       tabId: tabId
     });
   };

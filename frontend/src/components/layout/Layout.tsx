@@ -43,6 +43,10 @@ export default function Layout() {
     updateConnections(connectionList);
 
     if (!tabId || tabId === '') {
+      if (getTabs().length > 0) {
+        const tab = getTabs()[0];
+        navigate({ route: tab.mode, tabId: tab.id });
+      }
       return;
     }
 

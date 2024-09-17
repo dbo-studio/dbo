@@ -28,7 +28,7 @@ export default function useNavigate() {
       }
 
       if (route.route) {
-        routeNavigate(route.route);
+        routeNavigate(`/${route.route}`);
       }
 
       setSearchParams(params);

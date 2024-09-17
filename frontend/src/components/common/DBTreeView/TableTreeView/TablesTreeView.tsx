@@ -1,5 +1,4 @@
 import TableTreeViewItem from '@/components/common/DBTreeView/TableTreeView/TablesTreeViewItem/TableTreeViewItem';
-import { TabMode } from '@/core/enums';
 import useNavigate from '@/hooks/useNavigate.hook';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -17,7 +16,7 @@ export default function TablesTreeView({ tables }: { tables: string[] }) {
   const handleTableClick = (tableName: string) => {
     const tab = addTab(tableName);
     navigate({
-      route: tab.mode === TabMode.Data ? 'data' : 'design',
+      route: tab.mode,
       tabId: tab.id
     });
   };
