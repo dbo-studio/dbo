@@ -15,8 +15,7 @@ const AddConnection = lazy(() => import('../AddConnection/AddConnection'));
 const EditConnection = lazy(() => import('../EditConnection/EditConnection'));
 
 export default function Connections() {
-  const { currentConnection, connections, updateCurrentConnection, updateConnections, updateShowAddConnection } =
-    useConnectionStore();
+  const { currentConnection, connections, updateCurrentConnection, updateShowAddConnection } = useConnectionStore();
   const navigate = useNavigate();
 
   const { request: getConnectionDetail } = useAPI({
@@ -45,7 +44,7 @@ export default function Connections() {
   }, [connections]);
 
   const handleChangeCurrentConnection = async (c: ConnectionType) => {
-    if (c.id === currentConnection?.id) {
+    if (c.id === Number(currentConnection?.id)) {
       return;
     }
 
