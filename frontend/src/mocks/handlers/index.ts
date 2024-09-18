@@ -1,8 +1,5 @@
-import { http, HttpResponse } from 'msw';
+import { connectionHandler } from './connections';
+import { historiesHandler } from './histories';
+import { savedQueriesHandler } from './savedQueries';
 
-export const handlers = [
-  // An example handler
-  http.get('/user', () => {
-    return HttpResponse.json({ name: 'John Maverick' });
-  })
-];
+export const handlers = [...connectionHandler, ...historiesHandler, ...savedQueriesHandler];
