@@ -42,7 +42,7 @@ export default function StatusBarPagination() {
       flexDirection={'row'}
       width={208}
     >
-      {!getSelectedTab()?.mode && getSelectedTab()?.mode === TabMode.Data && (
+      {getSelectedTab()?.mode && getSelectedTab()?.mode === TabMode.Data && (
         <>
           <PaginationSetting />
           <IconButton
