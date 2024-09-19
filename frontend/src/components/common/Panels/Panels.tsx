@@ -1,10 +1,13 @@
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu.tsx';
 import type { MenuType } from '@/components/base/ContextMenu/types.ts';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { useContextMenu } from '@/hooks';
+import { TabMode } from '@/core/enums';
+import { shortcuts } from '@/core/utils';
+import { useContextMenu, useShortcut } from '@/hooks';
 import useNavigate from '@/hooks/useNavigate.hook';
 import { useRemoveTab } from '@/hooks/useRemoveTab.hook';
 import locales from '@/locales';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import type { TabType as TabData, TabType } from '@/types';
 import { Box, Tab, Tabs, Tooltip, Typography } from '@mui/material';
 import PanelItem from './PanelItem/PanelItem';
@@ -13,7 +16,10 @@ import type { PanelsProps } from './types';
 export default function Panels({ tab, tabs }: PanelsProps) {
   const navigate = useNavigate();
   const [removeTab] = useRemoveTab();
+  const { addTab, getSelectedTab } = useTabStore();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
+  useShortcut(shortcuts.newTab, () => addNewEmptyTab());
+  useShortcut(shortcuts.closeTab, () => getSelectedTab() && handleRemoveTab(getSelectedTab().id));
 
   const menu: MenuType[] = [
     {
@@ -61,6 +67,14 @@ export default function Panels({ tab, tabs }: PanelsProps) {
         tabId: newTab.id
       });
     }
+  };
+
+  const addNewEmptyTab = () => {
+    const tab = addTab('Editor', TabMode.Query);
+    navigate({
+      route: 'query',
+      tabId: tab.id
+    });
   };
 
   return (
