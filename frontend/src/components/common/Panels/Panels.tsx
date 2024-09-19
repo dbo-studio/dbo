@@ -2,7 +2,7 @@ import ContextMenu from '@/components/base/ContextMenu/ContextMenu.tsx';
 import type { MenuType } from '@/components/base/ContextMenu/types.ts';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useContextMenu } from '@/hooks';
-import useNavigate, { type NavigationParamsType } from '@/hooks/useNavigate.hook';
+import useNavigate from '@/hooks/useNavigate.hook';
 import { useRemoveTab } from '@/hooks/useRemoveTab.hook';
 import locales from '@/locales';
 import type { TabType as TabData, TabType } from '@/types';
@@ -49,17 +49,17 @@ export default function Panels({ tab, tabs }: PanelsProps) {
   };
 
   const handleRemoveTab = (tabId: string) => {
-    const newTabId = removeTab(tabId);
-    if (newTabId === undefined) {
+    const newTab = removeTab(tabId);
+    if (newTab === undefined) {
       navigate({ route: '/' });
       return;
     }
 
-    const newRoute: NavigationParamsType = { route: '/' };
-    if (newTabId) {
-      newRoute.route = 'data';
-      newRoute.tabId = newTabId;
-      navigate(newRoute);
+    if (newTab) {
+      navigate({
+        route: newTab.mode,
+        tabId: newTab.id
+      });
     }
   };
 

@@ -1,5 +1,6 @@
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import type { TabType } from '@/types';
 import { useCallback } from 'react';
 
 export function useRemoveTab() {
@@ -14,7 +15,7 @@ export function useRemoveTab() {
     removeUnsavedRowsByTabId
   } = useDataStore();
 
-  const remove = useCallback((tabId: string): string | null | undefined => {
+  const remove = useCallback((tabId: string): TabType | null | undefined => {
     removeColumnsByTabId(tabId);
     removeEditedColumnsByTabId(tabId);
     removeEditedRowsByTabId(tabId);
