@@ -29,7 +29,7 @@ const savedQueriesHandler = [
     const { id } = params;
     return HttpResponse.json({
       data: {
-        id: id,
+        id: Number(id),
         name: 'data_src',
         query: "SELECT * FROM 'data_src';"
       },

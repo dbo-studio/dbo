@@ -44,7 +44,7 @@ export default function Connections() {
   }, [connections]);
 
   const handleChangeCurrentConnection = async (c: ConnectionType) => {
-    if (c.id === Number(currentConnection?.id)) {
+    if (c.id === currentConnection?.id) {
       return;
     }
 

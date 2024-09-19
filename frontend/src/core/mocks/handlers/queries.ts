@@ -163,43 +163,140 @@ const queriesHandler = [
         query: 'select * from data_src limit 1',
         data: [
           {
-            Duration: '0',
-            Message: 'connection error',
-            Query: 'select * from data_src limit 1'
+            authors: 'G.V. Mann',
+            datasrc_id: 'D1066 ',
+            dbo_index: 0,
+            end_page: '76',
+            issue_state: '',
+            journal: 'American Journal of Clinical Nutrition',
+            start_page: '31',
+            title: 'The Health and Nutritional status of Alaskan Eskimos.',
+            vol_city: '11',
+            year: 1962
+          },
+          {
+            authors: 'J.P. McBride, R.A. Maclead',
+            datasrc_id: 'D1073 ',
+            dbo_index: 1,
+            end_page: '638',
+            issue_state: '',
+            journal: 'Journal of the American Dietetic Association',
+            start_page: '636',
+            title: 'Sodium and potassium in fish from the Canadian Pacific coast.',
+            vol_city: '32',
+            year: 1956
+          },
+          {
+            authors: 'M.E. Stansby',
+            datasrc_id: 'D1107 ',
+            dbo_index: 2,
+            end_page: '11',
+            issue_state: '9',
+            journal: 'Marine Fish Rev.',
+            start_page: '1',
+            title: 'Chemical Characteristics of fish caught in the northwest Pacific Oceans.',
+            vol_city: '38',
+            year: 1976
           }
         ],
         structures: [
           {
-            name: 'Query',
-            type: 'Varchar',
+            name: 'datasrc_id',
+            type: 'character',
             not_null: false,
-            length: null,
+            length: 6,
             default: null,
             comment: null,
             mapped_type: 'string',
-            editable: false,
+            editable: true,
             is_active: true
           },
           {
-            name: 'Message',
-            type: 'Varchar',
-            not_null: false,
+            name: 'authors',
+            type: 'text',
+            not_null: true,
             length: null,
             default: null,
             comment: null,
             mapped_type: 'string',
-            editable: false,
+            editable: true,
             is_active: true
           },
           {
-            name: 'Time',
-            type: 'Varchar',
+            name: 'title',
+            type: 'text',
             not_null: false,
             length: null,
             default: null,
             comment: null,
             mapped_type: 'string',
-            editable: false,
+            editable: true,
+            is_active: true
+          },
+          {
+            name: 'year',
+            type: 'integer',
+            not_null: true,
+            length: null,
+            default: null,
+            comment: null,
+            mapped_type: 'string',
+            editable: true,
+            is_active: true
+          },
+          {
+            name: 'journal',
+            type: 'text',
+            not_null: true,
+            length: null,
+            default: null,
+            comment: null,
+            mapped_type: 'string',
+            editable: true,
+            is_active: true
+          },
+          {
+            name: 'vol_city',
+            type: 'text',
+            not_null: true,
+            length: null,
+            default: null,
+            comment: null,
+            mapped_type: 'string',
+            editable: true,
+            is_active: true
+          },
+          {
+            name: 'issue_state',
+            type: 'text',
+            not_null: true,
+            length: null,
+            default: null,
+            comment: null,
+            mapped_type: 'string',
+            editable: true,
+            is_active: true
+          },
+          {
+            name: 'start_page',
+            type: 'text',
+            not_null: true,
+            length: null,
+            default: null,
+            comment: null,
+            mapped_type: 'string',
+            editable: true,
+            is_active: true
+          },
+          {
+            name: 'end_page',
+            type: 'text',
+            not_null: true,
+            length: null,
+            default: null,
+            comment: null,
+            mapped_type: 'string',
+            editable: true,
             is_active: true
           }
         ]

@@ -39,7 +39,7 @@ const connectionHandler = [
     const { id } = params;
     return HttpResponse.json({
       data: {
-        id: id,
+        id: Number(id),
         name: 'sample_db',
         type: 'SQL',
         driver: 'PostgreSQL',
@@ -112,7 +112,7 @@ const connectionHandler = [
     const { id } = params;
     return HttpResponse.json({
       data: {
-        id: id,
+        id: Number(id),
         name: 'sample_db',
         type: 'SQL',
         driver: 'PostgreSQL',
