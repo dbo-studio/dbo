@@ -23,7 +23,7 @@ export default function Filters() {
         })
       )}
 
-      {getSelectedTab() && getSelectedTab().filters?.length > 0 ? (
+      {(getSelectedTab()?.filters?.length ?? 0) > 0 ? (
         <Box display='flex' justifyContent='flex-start' mx={1} mt={1}>
           <Button onClick={runQuery} size='small' variant='outlined' endIcon={<CustomIcon type='check' size='xs' />}>
             {locales.apply}

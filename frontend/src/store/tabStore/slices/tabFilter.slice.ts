@@ -13,6 +13,7 @@ export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [
     if (!findFilter) {
       selectedTab.filters.push(filter);
     } else {
+      findFilter.column = filter.column;
       findFilter.value = filter.value;
       findFilter.operator = filter.operator;
       findFilter.next = filter.next;

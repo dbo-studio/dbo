@@ -16,7 +16,6 @@ import type { FilterItemProps } from './types';
 export default function FilterItem({ filter, columns }: FilterItemProps) {
   const { upsertFilters } = useTabStore();
   const uuidOperators = useUUID(PgsqlFilterConditions.length);
-  let timeoutId: NodeJS.Timeout | null = null;
   const [currentFilter, setCurrentFilter] = useState<FilterType>({
     index: filter.index,
     column: filter.column,
@@ -40,12 +39,6 @@ export default function FilterItem({ filter, columns }: FilterItemProps) {
       isActive: type === 'isActive' ? e.target.checked : currentFilter.isActive
     };
     setCurrentFilter(newFilter);
-    if (timeoutId !== null) {
-      clearTimeout(timeoutId);
-    }
-    timeoutId = setTimeout(() => {
-      upsertFilters(newFilter);
-    }, 500);
   };
 
   return (
@@ -87,6 +80,7 @@ export default function FilterItem({ filter, columns }: FilterItemProps) {
           fullWidth
           size='small'
           value={currentFilter.value}
+          onBlur={(e: EventFor<'input', 'onBlur'>) => upsertFilters(currentFilter)}
           onChange={(e: EventFor<'input', 'onChange'>) => handleChange('value', e)}
         />
       </Box>

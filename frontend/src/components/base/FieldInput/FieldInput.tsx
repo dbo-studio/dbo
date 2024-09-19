@@ -24,6 +24,13 @@ export default forwardRef(function FieldInput(props: FieldInputProps, ref) {
     }
   };
 
+  const handleOnBlue = (e: EventFor<'input', 'onBlur'>) => {
+    setValue(e.target.value);
+    if (props.onBlur) {
+      props.onBlur(e);
+    }
+  };
+
   return (
     <Box display={'flex'} flexDirection={'column'}>
       <Box display={'flex'} flexDirection={'row'} justifyContent={'space-between'}>
@@ -41,6 +48,7 @@ export default forwardRef(function FieldInput(props: FieldInputProps, ref) {
         value={value}
         name={props.name}
         autoComplete='off'
+        onBlur={handleOnBlue}
         onChange={handleOnChange}
         sx={{
           borderColor: props.error ? theme.palette.error.main : theme.palette.divider,
