@@ -31,7 +31,7 @@ export default function ConnectionInfo() {
       </Suspense>
       <Grid md={4}>
         <Stack direction={'row'} spacing={2} justifyContent='flex-end'>
-          <IconButton aria-label='connection' onClick={() => updateShowAddConnection(true)}>
+          <IconButton aria-label='connections' onClick={() => updateShowAddConnection(true)}>
             <CustomIcon type={'connection'} size={'m'} />
           </IconButton>
           {/* <IconButton aria-label='lock'>
@@ -39,7 +39,7 @@ export default function ConnectionInfo() {
           </IconButton> */}
           <IconButton
             disabled={!currentConnection}
-            aria-label='database'
+            aria-label='databases'
             onClick={() => updateShowSelectDatabase(!showSelectDatabase)}
           >
             <CustomIcon type={'databaseOutline'} size={'m'} />

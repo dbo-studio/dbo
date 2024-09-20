@@ -1,10 +1,10 @@
-import path from 'node:path';
 import react from '@vitejs/plugin-react-swc';
-import { defineConfig } from 'vite';
+import path from 'node:path';
+import tsconfigPaths from 'vite-tsconfig-paths';
+import { defineConfig } from 'vitest/config';
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tsconfigPaths()],
   envPrefix: [
     'VITE_',
     'TAURI_PLATFORM',
@@ -35,5 +35,21 @@ export default defineConfig({
     supported: {
       'top-level-await': true
     }
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: 'vitest.setup.js',
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html']
+    },
+    exclude: ['node_modules'],
+    alias: [
+      {
+        find: /^monaco-editor$/,
+        replacement: `${__dirname}/node_modules/monaco-editor/esm/vs/editor/editor.api`
+      }
+    ]
   }
 });
