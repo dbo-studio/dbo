@@ -1,5 +1,5 @@
 import locales from '@/locales';
-import * as nav from '@/store/connectionStore/connection.store.ts';
+import * as conn from '@/store/connectionStore/connection.store.ts';
 import { screen } from '@testing-library/dom';
 import { render } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
@@ -9,7 +9,7 @@ import { connectionDetailModel } from '@/core/mocks/handlers/connections.ts';
 import { transformConnectionDetail } from '@/api/connection/transformers.ts';
 
 describe('ConnectionBox.tsx', () => {
-  const spy = vi.spyOn(nav, 'useConnectionStore');
+  const spy = vi.spyOn(conn, 'useConnectionStore');
 
   beforeEach(() => {
     spy.mockReturnValue({
@@ -28,7 +28,7 @@ describe('ConnectionBox.tsx', () => {
   });
 
   test('should with connection', () => {
-    const connection = transformConnectionDetail(connectionDetailModel)
+    const connection = transformConnectionDetail(connectionDetailModel);
     spy.mockReturnValue({
       currentConnection: connection
     });
@@ -38,7 +38,7 @@ describe('ConnectionBox.tsx', () => {
         <ConnectionBox />
       </BrowserRouter>
     );
-    const txt = `${connection?.driver} ${connection?.version} ${connection.currentSchema}: ${connection?.name} SQL Query`
+    const txt = `${connection?.driver} ${connection?.version} ${connection.currentSchema}: ${connection?.name} SQL Query`;
     expect(screen.getByText(txt)).not.toBeNull();
   });
 });
