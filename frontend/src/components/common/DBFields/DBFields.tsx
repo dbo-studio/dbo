@@ -1,8 +1,9 @@
 import Search from '@/components/base/Search/Search';
-import { useDataStore } from '@/store/dataStore/data.store';
-import { Box } from '@mui/material';
-import { useEffect, useState } from 'react';
+import {useDataStore} from '@/store/dataStore/data.store';
+import {Box} from '@mui/material';
+import {useEffect, useState} from 'react';
 import FieldInput from '../../base/FieldInput/FieldInput';
+
 
 export default function DBFields() {
   const { getColumns, getHighlightedRow } = useDataStore();

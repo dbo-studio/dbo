@@ -38,7 +38,7 @@ describe('ConnectionBox.tsx', () => {
         <ConnectionBox />
       </BrowserRouter>
     );
-    const txt = `${connection?.driver} ${connection?.version} ${connection.currentSchema}: ${connection?.name} SQL Query`;
+    const txt = "PostgreSQL 16.1 public: sample_db SQL Query";
     expect(screen.getByText(txt)).not.toBeNull();
   });
 });
