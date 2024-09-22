@@ -43,9 +43,9 @@ export default function DBFields() {
   return (
     <>
       <Search onChange={handleSearch} />
-      <Box mt={1}>
-        {getHighlightedRow() &&
-          fields.map(
+      {getHighlightedRow() && (
+        <Box mt={1} id='db-field'>
+          {fields.map(
             (item, index) =>
               item.name && (
                 <FieldInput
@@ -59,7 +59,8 @@ export default function DBFields() {
                 />
               )
           )}
-      </Box>
+        </Box>
+      )}
     </>
   );
 }

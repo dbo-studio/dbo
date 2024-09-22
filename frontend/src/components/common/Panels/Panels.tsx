@@ -19,7 +19,7 @@ export default function Panels({ tab, tabs }: PanelsProps) {
   const { addTab, getSelectedTab } = useTabStore();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
   useShortcut(shortcuts.newTab, () => addNewEmptyTab());
-  useShortcut(shortcuts.closeTab, () => getSelectedTab() && handleRemoveTab(getSelectedTab().id));
+  useShortcut(shortcuts.closeTab, () => getSelectedTab() && handleRemoveTab(getSelectedTab()?.id ?? ""));
 
   const menu: MenuType[] = [
     {
