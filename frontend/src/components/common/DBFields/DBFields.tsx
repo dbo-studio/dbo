@@ -30,9 +30,9 @@ export default function DBFields() {
         return c.name.includes(search);
       })
       .map((c: any) => {
-        if (!Object.prototype.hasOwnProperty.call(row, c.key)) return;
+        if (!row[c.key]) return;
         data.push({
-          value: row[c.key] ?? null,
+          value: row[c.key],
           ...c
         });
       });

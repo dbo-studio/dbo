@@ -19,12 +19,6 @@ describe('DBField.tsx', () => {
       getHighlightedRow: mockGetHighlightedRow,
       getColumns: mockGetColumns
     });
-
-    // render(
-    //   <BrowserRouter>
-    //     <DBFields />
-    //   </BrowserRouter>
-    // );
   });
 
   test('should render the the db fields', () => {
@@ -65,8 +59,37 @@ describe('DBField.tsx', () => {
     await userEvent.type(inputElement[0], 'auth');
     expect(inputElement[0]).toHaveValue('auth');
 
-    screen.debug();
     expect(screen.queryByText('datasrc_id')).toBeNull();
     expect(screen.getByText('authors')).toBeVisible();
+  });
+
+  test('should show noting without highlightedRow', async () => {
+    const data = transformRunQuery(queryModel);
+    mockGetHighlightedRow.mockReturnValue(null);
+    mockGetColumns.mockReturnValue(data.structures);
+    render(
+      <BrowserRouter>
+        <DBFields />
+      </BrowserRouter>
+    );
+
+    expect(screen.queryByTestId('db-field')).toBeNull();
+  });
+
+  test('should skip wrong property of row', async () => {
+    const data = transformRunQuery(queryModel);
+    const columns = data.structures;
+    columns[0].test_fake_row = 'test';
+
+    mockGetHighlightedRow.mockReturnValue(data.data[0]);
+    mockGetColumns.mockReturnValue(columns);
+    render(
+      <BrowserRouter>
+        <DBFields />
+      </BrowserRouter>
+    );
+
+    expect(screen.queryByText('test_fake_row')).toBeNull();
+    expect(screen.queryByTestId('db-field')).not.toBeNull();
   });
 });
