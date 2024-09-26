@@ -18,7 +18,11 @@ func (s *IConnectionServiceImpl) UpdateConnection(ctx context.Context, connectio
 	}
 
 	updatedConnection, err := updateConnection(connection, req)
-	s.cacheRepo.FlushCache(ctx)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	err = s.cacheRepo.FlushCache(ctx)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
