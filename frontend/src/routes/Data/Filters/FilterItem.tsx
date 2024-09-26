@@ -25,10 +25,10 @@ export default function FilterItem({ filter, columns }: FilterItemProps) {
     isActive: filter.isActive
   });
 
-  const handleChange = async (
+  const handleChange = (
     type: 'column' | 'operator' | 'value' | 'next' | 'isActive',
     e: EventFor<'select', 'onChange'> | EventFor<'input', 'onChange'> | any
-  ) => {
+  ): FilterType => {
     const value = e.target.value as string;
     const newFilter = {
       index: currentFilter.index,
@@ -38,13 +38,21 @@ export default function FilterItem({ filter, columns }: FilterItemProps) {
       next: type === 'next' ? value : currentFilter.next,
       isActive: type === 'isActive' ? e.target.checked : currentFilter.isActive
     };
+
     setCurrentFilter(newFilter);
+    return newFilter;
   };
 
   return (
     <Box className='filter-item' display='flex' flexDirection='row' alignItems='center'>
       <Box>
-        <Checkbox size='small' checked={currentFilter.isActive} onChange={(e) => handleChange('isActive', e)} />
+        <Checkbox
+          size='small'
+          checked={currentFilter.isActive}
+          onChange={(e) => {
+            upsertFilters(handleChange('isActive', e));
+          }}
+        />
       </Box>
       <Box>
         <SelectInput
