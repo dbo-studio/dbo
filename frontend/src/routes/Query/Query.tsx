@@ -30,7 +30,7 @@ export default function Query() {
   });
 
   useEffect(() => {
-    if (!currentConnection || pending || setting.schema === '' || setting.database === '') {
+    if (autocomplete || !currentConnection || pending || setting.schema === '' || setting.database === '') {
       return;
     }
 
@@ -60,14 +60,18 @@ export default function Query() {
     <>
       <QueryEditorActionBar onFormat={() => handleChangeValue()} onChange={setSetting} />
       <Box display={'flex'} flexDirection={'column'} height={windowSize.height}>
-        <Suspense>
+        <Box display={'flex'} minHeight={'0'} flex={1} borderBottom={`1px solid ${theme.palette.divider}`}>
           {autocomplete && (
-            <Box display={'flex'} minHeight={'0'} flex={1} borderBottom={`1px solid ${theme.palette.divider}`}>
+            <Suspense>
               <CodeEditor onChange={handleUpdateState} autocomplete={autocomplete} value={value} />
-            </Box>
+            </Suspense>
           )}
-          <DBDataGrid />
-        </Suspense>
+        </Box>
+        {autocomplete && (
+          <Suspense fallback={<Box display={'flex'} flex={1} />}>
+            <DBDataGrid />
+          </Suspense>
+        )}
       </Box>
     </>
   );
