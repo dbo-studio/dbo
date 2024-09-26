@@ -1,12 +1,13 @@
+import { transformRunQuery } from '@/api/query/transformers.ts';
+import { queryModel } from '@/core/mocks/handlers/queries.ts';
 import * as data from '@/store/dataStore/data.store.ts';
+import { screen } from '@testing-library/dom';
+import '@testing-library/jest-dom';
 import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { describe, expect, test, vi } from 'vitest';
 import DBFields from './DBFields';
-import { transformRunQuery } from '@/api/query/transformers.ts';
-import { queryModel } from '@/core/mocks/handlers/queries.ts';
-import { screen } from '@testing-library/dom';
-import userEvent from '@testing-library/user-event';
 
 describe('DBField.tsx', () => {
   const spy = vi.spyOn(data, 'useDataStore');
@@ -19,18 +20,22 @@ describe('DBField.tsx', () => {
       getColumns: mockGetColumns
     });
 
-    render(
-      <BrowserRouter>
-        <DBFields />
-      </BrowserRouter>
-    );
+    // render(
+    //   <BrowserRouter>
+    //     <DBFields />
+    //   </BrowserRouter>
+    // );
   });
 
   test('should render the the db fields', () => {
     mockGetHighlightedRow.mockReturnValue([]);
     mockGetColumns.mockReturnValue([]);
-    const element = document.getElementById('db-field');
-    expect(element).toBeNull();
+    render(
+      <BrowserRouter>
+        <DBFields />
+      </BrowserRouter>
+    );
+    expect(screen.getByTestId('db-field')).not.toBeNull();
   });
 
   test('should render fields', () => {
@@ -56,18 +61,12 @@ describe('DBField.tsx', () => {
       </BrowserRouter>
     );
 
-    expect(screen.getByText('datasrc_id')).not.toBeNull();
     const inputElement = await screen.findAllByPlaceholderText('Search');
     await userEvent.type(inputElement[0], 'auth');
     expect(inputElement[0]).toHaveValue('auth');
 
-    render(
-        <BrowserRouter>
-          <DBFields />
-        </BrowserRouter>
-    );
-
-    // expect(screen.getByText('datasrc_id')).toBeNull();
-    expect(screen.getByText('authors')).not.toBeNull();
+    screen.debug();
+    expect(screen.queryByText('datasrc_id')).toBeNull();
+    expect(screen.getByText('authors')).toBeVisible();
   });
 });

@@ -1,9 +1,8 @@
 import Search from '@/components/base/Search/Search';
-import {useDataStore} from '@/store/dataStore/data.store';
-import {Box} from '@mui/material';
-import {useEffect, useState} from 'react';
+import { useDataStore } from '@/store/dataStore/data.store';
+import { Box } from '@mui/material';
+import { useEffect, useState } from 'react';
 import FieldInput from '../../base/FieldInput/FieldInput';
-
 
 export default function DBFields() {
   const { getColumns, getHighlightedRow } = useDataStore();
@@ -45,7 +44,7 @@ export default function DBFields() {
     <>
       <Search onChange={handleSearch} />
       {getHighlightedRow() && (
-        <Box mt={1} id='db-field'>
+        <Box mt={1} data-testid='db-field'>
           {fields.map(
             (item, index) =>
               item.name && (

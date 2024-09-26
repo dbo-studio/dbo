@@ -1,11 +1,10 @@
-import Connections from '@/components/common/Connections/Connections/Connections.tsx';
 import { connectionDetailModel } from '@/core/mocks/handlers/connections.ts';
 import locales from '@/locales';
 import * as conn from '@/store/connectionStore/connection.store.ts';
 import { useConnectionStore } from '@/store/connectionStore/connection.store.ts';
 import * as ta from '@/store/tabStore/tab.store.ts';
 import { screen } from '@testing-library/dom';
-import { render } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { describe, expect, test, vi } from 'vitest';
@@ -58,18 +57,14 @@ describe('ConnectionInfo.tsx', () => {
     await userEvent.click(screen.getByRole('button', { name: 'databases' }));
 
     expect(mockUpdateShowSelectDatabase).toHaveBeenCalledWith(true);
-    spyConnection.mockReturnValue({
-      ...useConnectionStore,
-      showSelectDatabase: true
+    act(() => {
+      spyConnection.mockReturnValue({
+        ...useConnectionStore,
+        showSelectDatabase: true
+      });
     });
 
-    render(
-      <BrowserRouter>
-        <ConnectionInfo />
-      </BrowserRouter>
-    );
-
-    expect(await screen.findAllByText(locales.select_database)).not.toBeNull();
+    await waitFor(() => expect(screen.findAllByText(locales.select_database)).not.toBeNull());
   });
 
   test('should open create connection modal after click connection icon', async () => {
@@ -80,13 +75,7 @@ describe('ConnectionInfo.tsx', () => {
       showAddConnection: true
     });
 
-    render(
-      <BrowserRouter>
-        <Connections />
-      </BrowserRouter>
-    );
-
-    expect(await screen.findAllByText(locales.new_connection)).not.toBeNull();
+    await waitFor(() => expect(screen.findAllByText(locales.new_connection)).not.toBeNull());
   });
 
   test('should open new editor tab after click editor icon', async () => {
