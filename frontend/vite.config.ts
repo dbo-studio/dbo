@@ -1,10 +1,10 @@
 import react from '@vitejs/plugin-react-swc';
-import path from 'path';
-import { defineConfig } from 'vite';
+import path from 'node:path';
+import tsconfigPaths from 'vite-tsconfig-paths';
+import { defineConfig } from 'vitest/config';
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tsconfigPaths()],
   envPrefix: [
     'VITE_',
     'TAURI_PLATFORM',
@@ -24,7 +24,8 @@ export default defineConfig({
     port: 3000
   },
   build: {
-    target: process.env.TAURI_PLATFORM == 'windows' || process.env.TAURI_PLATFORM == 'linux' ? 'chrome105' : 'safari13',
+    target:
+      process.env.TAURI_PLATFORM === 'windows' || process.env.TAURI_PLATFORM === 'linux' ? 'chrome105' : 'safari13',
     // don't minify for debug builds
     minify: !process.env.TAURI_DEBUG ? 'esbuild' : false,
     // produce sourcemaps for debug builds
@@ -34,5 +35,21 @@ export default defineConfig({
     supported: {
       'top-level-await': true
     }
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: 'vitest.setup.js',
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html']
+    },
+    exclude: ['node_modules'],
+    alias: [
+      {
+        find: /^monaco-editor$/,
+        replacement: `${__dirname}/node_modules/monaco-editor/esm/vs/editor/editor.api`
+      }
+    ]
   }
 });

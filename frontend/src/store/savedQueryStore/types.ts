@@ -1,4 +1,4 @@
-import { SavedQueryType } from '@/types';
+import type { SavedQueryType } from '@/types';
 
 export type SavedQueryStore = {
   savedQueries: SavedQueryType[] | undefined;

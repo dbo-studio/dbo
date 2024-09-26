@@ -1,8 +1,8 @@
 import { formatServerColumns } from '@/core/utils';
-import { ColumnType } from '@/types';
-import { StateCreator } from 'zustand';
+import type { ColumnType } from '@/types';
+import type { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
-import { DataColumnSlice, DataStore } from '../types';
+import type { DataColumnSlice, DataStore } from '../types';
 
 export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, [], [], DataColumnSlice> = (
   set,
@@ -11,9 +11,9 @@ export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, []
   columns: {},
   editedColumns: {},
   getColumns: (withSelect: boolean, isActive?: boolean) => {
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     const columns = get().columns;
-    if (!selectedTab || !Object.prototype.hasOwnProperty.call(columns, selectedTab.id)) {
+    if (!selectedTab || !columns[selectedTab.id]) {
       return [];
     }
 
@@ -24,10 +24,10 @@ export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, []
     }
 
     if (withSelect) return newColumns;
-    return newColumns.filter((c: ColumnType) => c.key != 'select-row');
+    return newColumns.filter((c: ColumnType) => c.key !== 'select-row');
   },
   updateColumns: async (items: ColumnType[]) => {
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab) {
       return;
     }
@@ -40,7 +40,7 @@ export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, []
     const columns = get()
       .getColumns()
       .map((c) => {
-        if (c.key == column.key) {
+        if (c.key === column.key) {
           return column;
         }
         return c;
@@ -50,7 +50,7 @@ export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, []
   },
   removeColumnsByTabId: (tabId: string) => {
     const columns = get().columns;
-    if (Object.prototype.hasOwnProperty.call(columns, tabId)) {
+    if (!columns[tabId]) {
       delete columns[tabId];
     }
 

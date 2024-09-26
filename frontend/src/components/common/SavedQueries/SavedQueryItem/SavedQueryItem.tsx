@@ -8,7 +8,7 @@ import { useState } from 'react';
 import CustomIcon from '../../../base/CustomIcon/CustomIcon';
 import FieldInput from '../../../base/FieldInput/FieldInput';
 import LoadingIconButton from '../../../base/LoadingIconButton/LoadingIconButton';
-import { SavedQueryItemProps } from '../types';
+import type { SavedQueryItemProps } from '../types';
 import SavedQueryContextMenu from './SavedQueryContextMenu/SavedQueryContextMenu';
 import { SavedQueryItemStyled } from './SavedQueryItem.styled';
 

@@ -1,6 +1,6 @@
 // import { toast } from 'react-toastify';
 import { toast } from 'sonner';
-import { ArgumentType, MethodType, SimpleFunction } from '../../types';
+import type { ArgumentType, MethodType, SimpleFunction } from '../../types';
 
 interface ApiHandlerProps<T, M extends MethodType> {
   apiMethod: (data?: ArgumentType<M>) => Promise<T & { message?: string }>;
@@ -15,7 +15,7 @@ function apiHandler<T, M extends MethodType>({
   endCallback,
   apiData
 }: ApiHandlerProps<T, M>): Promise<T> {
-  return new Promise(function (resolve, reject) {
+  return new Promise((resolve, reject) => {
     startCallback?.();
     apiMethod(apiData)
       .then((data) => {
@@ -29,7 +29,7 @@ function apiHandler<T, M extends MethodType>({
           //   toast('مشکلی پیش آمده است.', {
           //     type: 'error'
           //   });
-        } else if (status === 500 || status == 400 || status == 422) {
+        } else if (status === 500 || status === 400 || status === 422) {
           toast.error(message, {
             closeButton: true,
             duration: undefined

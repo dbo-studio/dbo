@@ -1,10 +1,11 @@
 import api from '@/api';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
-import { MenuType } from '@/components/base/ContextMenu/types';
-import { TablesTreeViewItemProps } from '@/components/common/DBTreeView/types';
+import type { MenuType } from '@/components/base/ContextMenu/types';
+import type { TablesTreeViewItemProps } from '@/components/common/DBTreeView/types';
 import { TabMode } from '@/core/enums';
 import { useContextMenu, useCopyToClipboard } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook.ts';
+import useNavigate from '@/hooks/useNavigate.hook';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
@@ -13,22 +14,31 @@ import { TreeItem } from '@mui/x-tree-view';
 import { toast } from 'sonner';
 
 export default function TableTreeViewItem({ table, onClick }: TablesTreeViewItemProps) {
+  const navigate = useNavigate();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, copy] = useCopyToClipboard();
   const { addTab } = useTabStore();
-  const { currentConnection, updateCurrentConnection } = useConnectionStore();
+  const { updateCurrentConnection, currentConnection } = useConnectionStore();
 
   const { request: getConnectionDetail } = useAPI({
     apiMethod: api.connection.getConnectionDetail
   });
 
   const handleAddTabData = () => {
-    addTab(table);
+    const tab = addTab(table);
+    navigate({
+      route: 'data',
+      tabId: tab.id
+    });
   };
 
   const handleAddTabDesign = () => {
-    addTab(table, TabMode.Design);
+    const tab = addTab(table, TabMode.Design);
+    navigate({
+      route: 'design',
+      tabId: tab.id
+    });
   };
 
   const handleRefresh = () => {
@@ -103,7 +113,7 @@ export default function TableTreeViewItem({ table, onClick }: TablesTreeViewItem
   return (
     <Box onContextMenu={handleContextMenu}>
       <Tooltip title={table}>
-        <TreeItem onClick={() => onClick()} itemId={table + '100'} label={table} />
+        <TreeItem onClick={() => onClick()} itemId={`${table}100`} label={table} />
       </Tooltip>
       <ContextMenu menu={menu} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
     </Box>

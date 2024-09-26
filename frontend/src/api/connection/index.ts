@@ -8,7 +8,7 @@ import {
   UPDATE_CONNECTION
 } from './endpoints';
 import { transformConnectionDetail, transformConnections } from './transformers';
-import { connectionDetailType, createConnectionType, updateConnectionType } from './types';
+import type { connectionDetailType, createConnectionType, updateConnectionType } from './types';
 
 export const getConnectionList = async () => {
   return api.get(GET_CONNECTION_LIST()).then(transformConnections);

@@ -4,13 +4,13 @@ import { StatusBarStyled } from './StatusBar.styled';
 
 const StatusBarActions = lazy(() => import('./StatusBarActions'));
 const StatusBarTabs = lazy(() => import('./StatusBarTabs'));
-const StatusBarPagination = lazy(() => import('./StatusBarPagination'));
+const StatusBarPagination = lazy(() => import('./StatusBarPagination/StatusBarPagination'));
 
 export default function StatusBar() {
-  const { selectedTab } = useTabStore();
+  const { getSelectedTab } = useTabStore();
 
   return (
-    <StatusBarStyled mode={selectedTab?.mode} direction={'row'} justifyContent={'space-between'}>
+    <StatusBarStyled mode={getSelectedTab()?.mode} direction={'row'} justifyContent={'space-between'}>
       <Suspense>
         <StatusBarActions />
       </Suspense>
@@ -18,7 +18,7 @@ export default function StatusBar() {
         <StatusBarTabs />
       </Suspense>
       <Suspense>
-        <StatusBarPagination mode={selectedTab?.mode} />
+        <StatusBarPagination />
       </Suspense>
     </StatusBarStyled>
   );

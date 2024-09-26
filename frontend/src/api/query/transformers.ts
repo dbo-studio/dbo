@@ -1,5 +1,5 @@
-import { AutoCompleteType, ColumnType } from '@/types';
-import { RunQueryResponseType } from './types';
+import type { AutoCompleteType, ColumnType } from '@/types';
+import type { RunQueryResponseType } from './types';
 
 export const transformRunQuery = (data: any): RunQueryResponseType => {
   return {
@@ -11,7 +11,7 @@ export const transformRunQuery = (data: any): RunQueryResponseType => {
 
 export const transformStructures = (data: any): ColumnType[] => {
   const structures: ColumnType[] = [];
-  data?.forEach((item: any) => {
+  for (const item of data) {
     structures.push({
       key: item?.name,
       name: item?.name,
@@ -26,7 +26,7 @@ export const transformStructures = (data: any): ColumnType[] => {
       editable: item?.editable ?? false,
       isActive: item?.is_active ?? true
     });
-  });
+  }
 
   return structures;
 };

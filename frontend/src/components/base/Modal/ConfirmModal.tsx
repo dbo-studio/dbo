@@ -10,21 +10,21 @@ export default function ConfirmModal() {
   const theme = useTheme();
 
   useEffect(() => {
-    if (mode == 'danger') {
+    if (mode === 'danger') {
       setStyle({
         background: theme.palette.background.danger,
         color: theme.palette.text.danger
       });
     }
 
-    if (mode == 'success') {
+    if (mode === 'success') {
       setStyle({
         background: theme.palette.background.success,
         color: theme.palette.text.success
       });
     }
 
-    if (mode == 'warning') {
+    if (mode === 'warning') {
       setStyle({
         background: theme.palette.background.warning,
         color: theme.palette.text.warning
@@ -33,12 +33,12 @@ export default function ConfirmModal() {
   }, [mode]);
 
   const handleCancel = () => {
-    onCancel && onCancel();
+    onCancel?.();
     close();
   };
 
   const handleConfirm = () => {
-    onSuccess && onSuccess();
+    onSuccess?.();
     close();
   };
 

@@ -1,8 +1,8 @@
-import { ConnectionAuthType, ConnectionType } from '@/types';
+import type { ConnectionAuthType, ConnectionType } from '@/types';
 
 export const transformConnections = (data: any): ConnectionType[] => {
   const connections: ConnectionType[] = [];
-  data?.forEach((item: any) => {
+  for (const item of data) {
     connections.push({
       id: item?.id,
       name: item?.name,
@@ -11,7 +11,7 @@ export const transformConnections = (data: any): ConnectionType[] => {
       isActive: item?.is_active,
       auth: transformAuthData(item?.auth)
     });
-  });
+  }
 
   return connections;
 };

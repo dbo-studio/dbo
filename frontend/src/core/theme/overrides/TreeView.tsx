@@ -1,4 +1,4 @@
-import { Components, Theme } from '@mui/material';
+import type { Components, Theme } from '@mui/material';
 import type {} from '@mui/x-tree-view/themeAugmentation';
 import { variables } from '../variables';
 

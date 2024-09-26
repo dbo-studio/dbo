@@ -1,4 +1,4 @@
-import { ColumnType, EditedRow, FilterType, RowType, SortType } from '@/types';
+import type { ColumnType, EditedRow, FilterType, RowType, SortType } from '@/types';
 
 export type RunQueryType = {
   connection_id: number;

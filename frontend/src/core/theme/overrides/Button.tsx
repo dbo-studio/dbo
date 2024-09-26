@@ -1,4 +1,4 @@
-import { Components, Theme } from '@mui/material/styles';
+import type { Components, Theme } from '@mui/material/styles';
 import { variables } from '../variables';
 
 export default function Button(theme: Theme): Components {

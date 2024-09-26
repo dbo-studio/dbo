@@ -1,7 +1,7 @@
 import { useUUID } from '@/hooks';
 import { Box, Menu, MenuItem, Stack } from '@mui/material';
 import CustomIcon from '../CustomIcon/CustomIcon';
-import { ContextMenuProps, MenuType } from './types';
+import type { ContextMenuProps, MenuType } from './types';
 
 export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuProps) {
   const uuids = useUUID(menu.length);

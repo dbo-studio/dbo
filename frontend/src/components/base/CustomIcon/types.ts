@@ -1,4 +1,4 @@
-import { MouseEventHandler } from 'react';
+import type { MouseEventHandler } from 'react';
 
 export type sizeTypes = 'l' | 'm' | 's' | 'xs';
 
@@ -53,5 +53,6 @@ export const IconTypes = {
   pickaxe: 'Pickaxe',
   light: 'Sun',
   dark: 'Moon',
-  sheet: 'Sheet'
+  sheet: 'Sheet',
+  databaseZap: 'DatabaseZap'
 };

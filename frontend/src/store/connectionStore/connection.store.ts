@@ -1,9 +1,9 @@
-import { ConnectionType } from '@/types';
+import type { ConnectionType } from '@/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { createDatabaseSlice } from './slices/database.slices';
-import { ConnectionStore, DatabaseSlice } from './types';
+import type { ConnectionStore, DatabaseSlice } from './types';
 
 type ConnectionState = ConnectionStore & DatabaseSlice;
 
@@ -35,7 +35,7 @@ export const useConnectionStore = create<ConnectionState>()(
         }
 
         connections = connections.map((c: ConnectionType) => {
-          if (c.id == currentConnection.id) {
+          if (c.id === currentConnection.id) {
             return currentConnection;
           }
           return c;

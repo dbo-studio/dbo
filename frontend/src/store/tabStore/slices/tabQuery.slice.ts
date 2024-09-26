@@ -1,10 +1,10 @@
 import { tools } from '@/core/utils';
-import { StateCreator } from 'zustand';
-import { TabQuerySlice, TabStore } from '../types';
+import type { StateCreator } from 'zustand';
+import type { TabQuerySlice, TabStore } from '../types';
 
 export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [], TabQuerySlice> = (_, get) => ({
   getQuery: (): string => {
-    const selectedTab = get().selectedTab;
+    const selectedTab = get().getSelectedTab();
     if (!selectedTab) {
       return '';
     }
@@ -16,12 +16,13 @@ export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [],
     return selectedTab.query;
   },
   updateQuery: (query: string) => {
-    const selectedTab = get().selectedTab;
+    const selectedTab = get().getSelectedTab();
     if (!selectedTab) {
       return;
     }
 
     if (!tools.isValidJSON(query)) {
+      // biome-ignore lint: reason
       query = JSON.stringify(query);
     }
 
@@ -29,7 +30,7 @@ export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [],
     get().updateSelectedTab(selectedTab);
   },
   setShowQueryPreview: (show: boolean) => {
-    const selectedTab = get().selectedTab;
+    const selectedTab = get().getSelectedTab();
     if (!selectedTab) {
       return;
     }

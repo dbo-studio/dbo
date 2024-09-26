@@ -1,30 +1,32 @@
 import { TabMode } from '@/core/enums';
-import { TabType } from '@/types/Tab';
+import type { TabType } from '@/types/Tab';
 import { v4 as uuidv4 } from 'uuid';
-import { StateCreator } from 'zustand';
-import { TabSettingSlice, TabStore } from '../types';
+import type { StateCreator } from 'zustand';
+import type { TabSettingSlice, TabStore } from '../types';
 
 const maxTabs = 15;
 
 export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [], [], TabSettingSlice> = (_, get) => ({
-  addTab: (table: string, mode?: TabMode, query?: string) => {
+  addTab: (table: string, mode?: TabMode, query?: string): TabType => {
+    // biome-ignore lint: reason
     mode = mode ? mode : TabMode.Data;
-    const tabs = get().tabs;
+    const tabs = get().getTabs();
 
-    let findTab;
-    if (mode == TabMode.Query) {
-      findTab = tabs.filter((t: TabType) => t.mode == TabMode.Query && (t.query == '' || t.query == '""'));
+    let findTab: TabType[];
+    if (mode === TabMode.Query) {
+      findTab = tabs.filter((t: TabType) => t.mode === TabMode.Query && (t.query === '' || t.query === '""'));
     } else {
-      findTab = tabs.filter((t: TabType) => t.table == table && t.mode == mode);
+      findTab = tabs.filter((t: TabType) => t.table === table);
     }
 
     if (findTab.length > 0) {
+      findTab[0].mode = mode;
       get().switchTab(findTab[0].id);
-      return;
+      return findTab[0];
     }
 
     let tabQuery = '';
-    if (mode == TabMode.Data) {
+    if (mode === TabMode.Data) {
       tabQuery = `SELECT * FROM ${table}`;
     } else {
       tabQuery = query ? query : '';
@@ -55,27 +57,37 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       get().updateTabs([...tabs.slice(1), newTab]);
     }
     get().switchTab(newTab.id);
-  },
-  removeTab: (tabId: string) => {
-    const tabIndex = get().tabs.findIndex((t: TabType) => t.id == tabId);
-    const newTabs = get().tabs.filter((t: TabType) => t.id !== tabId);
 
-    if (newTabs.length > tabIndex && get().selectedTab?.id === tabId) {
-      get().switchTab(newTabs[tabIndex].id);
-    } else if (newTabs.length > 0 && get().selectedTab?.id === tabId) {
-      get().switchTab(newTabs[newTabs.length - 1].id);
-    } else if (newTabs.length == 0) {
-      get().switchTab(null);
+    return newTab;
+  },
+  removeTab: (tabId: string): TabType | null | undefined => {
+    const tabIndex = get()
+      .getTabs()
+      .findIndex((t: TabType) => t.id === tabId);
+    const newTabs = get()
+      .getTabs()
+      .filter((t: TabType) => t.id !== tabId);
+
+    let newTab: TabType | null | undefined = null;
+
+    if (newTabs.length > tabIndex && get().getSelectedTab()?.id === tabId) {
+      newTab = newTabs[tabIndex];
+    } else if (newTabs.length > 0 && get().getSelectedTab()?.id === tabId) {
+      newTab = newTabs[newTabs.length - 1];
     }
 
+    get().switchTab(newTab?.id ?? null);
     get().updateTabs(newTabs);
+    return newTabs.length === 0 ? undefined : newTab;
   },
   switchTab: (tabId: string | null) => {
     if (!tabId) {
       get().updateSelectedTab(undefined);
     }
 
-    const findTab = get().tabs.find((t) => t.id === tabId);
+    const findTab = get()
+      .getTabs()
+      .find((t) => t.id === tabId);
     if (findTab) {
       get().updateSelectedTab(findTab);
     }
