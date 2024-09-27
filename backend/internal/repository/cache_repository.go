@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/dbo-studio/dbo/app"
-	"github.com/dbo-studio/dbo/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
@@ -120,5 +119,5 @@ func (i *ICacheRepoImpl) GetDatabaseVersion(ctx context.Context, connectionID ui
 
 // FlushCache implements ICacheRepo.
 func (i *ICacheRepoImpl) FlushCache(ctx context.Context) error {
-	return app.DB().Delete(&model.CacheItem{}).Error
+	return app.DB().Exec("DELETE FROM cache_items").Error
 }

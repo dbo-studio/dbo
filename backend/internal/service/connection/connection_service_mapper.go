@@ -6,7 +6,7 @@ import (
 )
 
 func connectionsToResponse(connections *[]model.Connection) *[]dto.ConnectionsResponse {
-	data := make([]dto.ConnectionsResponse, len(*connections))
+	data := make([]dto.ConnectionsResponse, 0)
 	for _, c := range *connections {
 		data = append(data, dto.ConnectionsResponse{
 			ID:       int64(c.ID),
