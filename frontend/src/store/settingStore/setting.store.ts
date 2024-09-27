@@ -2,7 +2,7 @@ import { constants } from '@/core/constants';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { SettingStore, SidebarType } from './types';
+import type { SettingStore, SidebarType } from './types';
 
 type SettingState = SettingStore;
 

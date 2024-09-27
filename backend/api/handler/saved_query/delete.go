@@ -1,9 +1,9 @@
 package saved_handler
 
 import (
+	"github.com/dbo-studio/dbo/api/response"
+	"github.com/dbo-studio/dbo/app"
 	"github.com/gofiber/fiber/v3"
-	"github.com/khodemobin/dbo/api/response"
-	"github.com/khodemobin/dbo/app"
 )
 
 func (h *SavedQueryHandler) DeleteSavedQuery(c fiber.Ctx) error {

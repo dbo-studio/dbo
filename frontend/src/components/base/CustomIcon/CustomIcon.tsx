@@ -1,6 +1,6 @@
 import { useTheme } from '@mui/material';
 import { icons } from 'lucide-react';
-import { IconProps, IconTypes } from './types';
+import { type IconProps, IconTypes } from './types';
 
 const sizes = {
   l: {

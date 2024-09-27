@@ -1,7 +1,7 @@
 import { pullAllBy } from 'lodash';
-import { StateCreator } from 'zustand';
+import type { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
-import { DataSelectedRowsSlice, DataStore } from '../types';
+import type { DataSelectedRowsSlice, DataStore } from '../types';
 
 export const createDataSelectedRowsSlice: StateCreator<
   DataStore & DataSelectedRowsSlice,
@@ -11,16 +11,16 @@ export const createDataSelectedRowsSlice: StateCreator<
 > = (set, get) => ({
   selectedRows: {},
   getSelectedRows: () => {
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     const rows = get().selectedRows;
-    if (!selectedTab || !Object.prototype.hasOwnProperty.call(rows, selectedTab.id)) {
+    if (!selectedTab || !rows[selectedTab.id]) {
       return new Set([]);
     }
 
     return new Set(rows[selectedTab.id]);
   },
   updateSelectedRows: (selectedRows): void => {
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab) {
       return;
     }
@@ -31,7 +31,7 @@ export const createDataSelectedRowsSlice: StateCreator<
     set({ selectedRows: rows });
   },
   removeSelectedRows: (selectedRowsIndex: number[]): void => {
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab) {
       return;
     }

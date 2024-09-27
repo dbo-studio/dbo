@@ -4,14 +4,9 @@
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": [
-      "ES2020",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
-    /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
@@ -19,28 +14,24 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-    /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "baseUrl": "./src",
     "paths": {
-        "@/*": ["./*"],
-        "@/components/*": ["components/*"],
-        "@/theme/*": ["theme/*"],
-        "@/core/*": ["core/*"],
-        "@/store/*": ["store/*"],
-        "@/hooks/*": ["hooks/*"],
-        "@/types/*": ["types/*"],
-        "@/services/*": ["core/services/*"],
-        "@/utils/*": ["core/utils/*"],
-        "@/api/*": ["api/*"]
-      }
+      "@/*": ["./*"],
+      "@/components/*": ["components/*"],
+      "@/theme/*": ["theme/*"],
+      "@/core/*": ["core/*"],
+      "@/store/*": ["store/*"],
+      "@/hooks/*": ["hooks/*"],
+      "@/types/*": ["types/*"],
+      "@/services/*": ["core/services/*"],
+      "@/utils/*": ["core/utils/*"],
+      "@/api/*": ["api/*"]
+    }
   },
-  // "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/types/*.ts","../desktop/**/*.ts"],
   "include": ["src"],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

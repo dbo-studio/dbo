@@ -1,14 +1,14 @@
 package app
 
 import (
-	"github.com/khodemobin/dbo/cache"
-	"github.com/khodemobin/dbo/cache/sqlite"
-	"github.com/khodemobin/dbo/config"
-	"github.com/khodemobin/dbo/db"
-	"github.com/khodemobin/dbo/driver"
-	"github.com/khodemobin/dbo/logger"
-	"github.com/khodemobin/dbo/logger/zap"
-	"github.com/khodemobin/dbo/model"
+	"github.com/dbo-studio/dbo/cache"
+	"github.com/dbo-studio/dbo/cache/sqlite"
+	"github.com/dbo-studio/dbo/config"
+	"github.com/dbo-studio/dbo/db"
+	"github.com/dbo-studio/dbo/driver"
+	"github.com/dbo-studio/dbo/logger"
+	"github.com/dbo-studio/dbo/logger/zap"
+	"github.com/dbo-studio/dbo/model"
 	"gorm.io/gorm"
 )
 

@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/khodemobin/dbo/app"
-	"github.com/khodemobin/dbo/model"
+	"github.com/dbo-studio/dbo/app"
+	"github.com/dbo-studio/dbo/model"
 	"github.com/spf13/cobra"
 )
 

@@ -1,4 +1,4 @@
-import { Components, Theme } from '@mui/material/styles';
+import type { Components, Theme } from '@mui/material/styles';
 import { variables } from '../variables';
 
 export default function Tabs(theme: Theme): Components {
@@ -24,7 +24,7 @@ export default function Tabs(theme: Theme): Components {
           height: 30,
           borderRadius: variables.radius.small,
           color: theme.palette.text.subdued,
-          border: `1px solid transparent`,
+          border: '1px solid transparent',
           '& .MuiTabs-indicator': {
             display: 'none',
             background: '#fff'

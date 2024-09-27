@@ -1,6 +1,6 @@
 import { variables } from '@/core/theme/variables';
 import { Box, styled } from '@mui/material';
-import { DatabaseItemStyledProps } from '../types';
+import type { DatabaseItemStyledProps } from '../types';
 
 export const DatabaseItemStyled = styled(Box)<DatabaseItemStyledProps>(({ theme, selected }) => ({
   display: 'flex',

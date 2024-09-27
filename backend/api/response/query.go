@@ -3,7 +3,7 @@ package response
 import (
 	"slices"
 
-	pgsql "github.com/khodemobin/dbo/driver/pgsql"
+	pgsql "github.com/dbo-studio/dbo/driver/pgsql"
 )
 
 type runQuery struct {

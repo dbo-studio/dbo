@@ -1,6 +1,6 @@
-import { AutoCompleteType } from '@/types';
+import type { AutoCompleteType } from '@/types';
 import { languages } from 'monaco-editor/esm/vs/editor/editor.api';
-import { ICompletionItem } from 'monaco-sql-languages';
+import type { ICompletionItem } from 'monaco-sql-languages';
 
 const prefixLabel = (languageId: string, text: string) => {
   const prefix = languageId ? languageId.replace(/sql/gi, '').toLocaleLowerCase() : '';
@@ -32,7 +32,7 @@ export function getDataBases(languageId: string): ICompletionItem[] {
     label: db,
     kind: languages.CompletionItemKind.Field,
     detail: 'database',
-    sortText: '1' + prefixLabel(languageId, db)
+    sortText: `1${prefixLabel(languageId, db)}`
   }));
 
   return databaseCompletions;
@@ -43,7 +43,7 @@ export function getSchemas(languageId: string): ICompletionItem[] {
     label: sc,
     kind: languages.CompletionItemKind.Field,
     detail: 'schema',
-    sortText: '1' + prefixLabel(languageId, sc)
+    sortText: `1${prefixLabel(languageId, sc)}`
   }));
 
   return schemaCompletions;
@@ -54,7 +54,7 @@ export function getTables(languageId: string): ICompletionItem[] {
     label: tb,
     kind: languages.CompletionItemKind.Field,
     detail: 'table',
-    sortText: '1' + prefixLabel(languageId, tb)
+    sortText: `1${prefixLabel(languageId, tb)}`
   }));
 
   return tableCompletions;
@@ -65,21 +65,21 @@ export function getViews(languageId: string): ICompletionItem[] {
     label: v,
     kind: languages.CompletionItemKind.Field,
     detail: 'view',
-    sortText: '1' + prefixLabel(languageId, v)
+    sortText: `1${prefixLabel(languageId, v)}`
   }));
 
   return viewCompletions;
 }
 
 export function getColumns(languageId: string, tableName?: string): ICompletionItem[] {
-  if (!tableName || !Object.prototype.hasOwnProperty.call(autocomplete.columns, tableName!)) {
+  if (!tableName || !Object.prototype.hasOwnProperty.call(autocomplete.columns, tableName)) {
     return [];
   }
   const columnCompletions = autocomplete.columns[tableName].map((c) => ({
     label: c,
     kind: languages.CompletionItemKind.Field,
     detail: 'column',
-    sortText: '1' + prefixLabel(languageId, c)
+    sortText: `1${prefixLabel(languageId, c)}`
   }));
 
   return columnCompletions;

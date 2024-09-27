@@ -1,4 +1,4 @@
-import { Components, Theme } from '@mui/material';
+import type { Components, Theme } from '@mui/material';
 import Baseline from './Baseline';
 import Button from './Button';
 import Input from './Input';
@@ -8,6 +8,7 @@ import Table from './Table';
 import Tabs from './Tabs';
 import TreeView from './TreeView';
 import Typography from './Typography';
+import IconButton from './IconButton';
 
 export default function ComponentsOverrides(theme: Theme): Components {
   return Object.assign(
@@ -18,6 +19,7 @@ export default function ComponentsOverrides(theme: Theme): Components {
     Tabs(theme),
     Select(theme),
     Button(theme),
+    IconButton(theme),
     Menu(theme),
     Table(theme)
   );

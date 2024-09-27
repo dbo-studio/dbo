@@ -1,4 +1,4 @@
-package pgsql_driver
+package pgsqlDriver
 
 import (
 	"database/sql"
@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/khodemobin/dbo/api/dto"
-	error_c "github.com/khodemobin/dbo/error"
-	"github.com/khodemobin/dbo/helper"
+	"github.com/dbo-studio/dbo/api/dto"
+	error_c "github.com/dbo-studio/dbo/error"
+	"github.com/dbo-studio/dbo/helper"
 	"github.com/xwb1989/sqlparser"
 )
 

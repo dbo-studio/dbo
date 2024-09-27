@@ -1,4 +1,4 @@
-import { ConnectionType } from '@/types';
+import type { ConnectionType } from '@/types';
 
 export type ConnectionSettingsProps = {
   connection: ConnectionType | undefined;

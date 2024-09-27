@@ -1,1 +1,1 @@
-export const GET_HISTORIES = () => `/histories`;
+export const GET_HISTORIES = () => '/histories';

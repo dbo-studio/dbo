@@ -1,5 +1,5 @@
 import { ThemeModeEnum } from '@/core/enums';
-import { Components, Theme } from '@mui/material/styles';
+import type { Components, Theme } from '@mui/material/styles';
 import { variables } from '../variables';
 
 export default function Input(theme: Theme): Components {
@@ -17,7 +17,7 @@ export default function Input(theme: Theme): Components {
             '& svg': { color: theme.palette.text.disabled }
           },
           '&.Mui-focused': {
-            borderBottom: `1px solid ${theme.palette.mode == ThemeModeEnum.Dark ? theme.palette.primary.dark : theme.palette.primary.light}`
+            borderBottom: `1px solid ${theme.palette.mode === ThemeModeEnum.Dark ? theme.palette.primary.dark : theme.palette.primary.light}`
           },
           ':before': {
             borderBottom: 'none !important'

@@ -3,10 +3,10 @@ import { isNumber, isObject } from '.';
 export const tools = {
   screenMaxHeight: (asNumber?: boolean): string | number => {
     const height = window?.innerHeight - 56;
-    return asNumber ? height : height + 'px';
+    return asNumber ? height : `${height}px`;
   },
   screenFullHeight: (): string => {
-    return window?.innerHeight + 'px';
+    return `${window?.innerHeight}px`;
   },
   isEmpty: (data: unknown): data is never | undefined | null => {
     return (
@@ -18,7 +18,9 @@ export const tools = {
   cleanObject: (obj: any) => {
     if (!isObject(obj)) return {};
     const newObj = { ...obj };
-    Object.keys(newObj).forEach((key) => (newObj[key] === undefined ? delete newObj[key] : {}));
+    for (const key of Object.keys(newObj)) {
+      newObj[key] === undefined ? delete newObj[key] : {};
+    }
     return newObj;
   },
 

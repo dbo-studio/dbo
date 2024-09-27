@@ -1,4 +1,4 @@
-import { ShortcutType } from '@/types';
+import type { ShortcutType } from '@/types';
 import { useEffect } from 'react';
 
 export const useShortcut = (shortcut: ShortcutType, callback: () => void) => {

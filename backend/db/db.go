@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/khodemobin/dbo/config"
-	"github.com/khodemobin/dbo/logger"
+	"github.com/dbo-studio/dbo/config"
+	"github.com/dbo-studio/dbo/logger"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

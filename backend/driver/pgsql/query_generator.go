@@ -1,10 +1,10 @@
-package pgsql_driver
+package pgsqlDriver
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/khodemobin/dbo/api/dto"
+	"github.com/dbo-studio/dbo/api/dto"
 )
 
 func queryGenerator(dto *dto.RunQueryDto) string {

@@ -30,9 +30,9 @@ export default function DBFields() {
         return c.name.includes(search);
       })
       .map((c: any) => {
-        if (!Object.prototype.hasOwnProperty.call(row, c.key)) return;
+        if (!row[c.key]) return;
         data.push({
-          value: row[c.key] ?? null,
+          value: row[c.key],
           ...c
         });
       });
@@ -43,23 +43,24 @@ export default function DBFields() {
   return (
     <>
       <Search onChange={handleSearch} />
-      <Box mt={1}>
-        {getHighlightedRow() &&
-          fields.map(
+      {getHighlightedRow() && (
+        <Box mt={1} data-testid='db-field'>
+          {fields.map(
             (item, index) =>
               item.name && (
                 <FieldInput
                   size='small'
                   value={item.value}
                   fullWidth={true}
-                  key={index}
+                  key={`${item.key}_${index}`}
                   label={item.name}
                   typelabel={item.type}
                   type={item.type}
                 />
               )
           )}
-      </Box>
+        </Box>
+      )}
     </>
   );
 }

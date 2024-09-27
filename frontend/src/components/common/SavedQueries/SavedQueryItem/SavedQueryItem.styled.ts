@@ -1,6 +1,6 @@
 import { variables } from '@/core/theme/variables';
 import { Box, styled } from '@mui/material';
-import { SavedQueryItemStyledProps } from '../types';
+import type { SavedQueryItemStyledProps } from '../types';
 
 export const SavedQueryItemStyled = styled(Box)<SavedQueryItemStyledProps>(({ theme, selected }) => ({
   padding: `0 ${theme.spacing(1)}`,

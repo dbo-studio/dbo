@@ -1,11 +1,11 @@
-package pgsql_driver
+package pgsqlDriver
 
 import (
 	"errors"
 	"fmt"
 	"strconv"
 
-	"github.com/khodemobin/dbo/model"
+	"github.com/dbo-studio/dbo/model"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
