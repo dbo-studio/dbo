@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/khodemobin/dbo/app"
-	"github.com/khodemobin/dbo/cmd"
+	"github.com/dbo-studio/dbo/app"
+	"github.com/dbo-studio/dbo/cmd"
 	"github.com/spf13/cobra"
 )
 

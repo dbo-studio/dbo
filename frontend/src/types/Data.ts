@@ -1,4 +1,4 @@
-import { Column } from 'react-data-grid';
+import type { Column } from 'react-data-grid';
 
 export type RowType = any;
 

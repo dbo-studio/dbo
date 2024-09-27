@@ -1,4 +1,4 @@
-import { CodeEditorProps } from '@/components/base/CodeEditor/types.ts';
+import type { CodeEditorProps } from '@/components/base/CodeEditor/types.ts';
 import * as monaco from 'monaco-editor';
 import { LanguageIdEnum } from 'monaco-sql-languages';
 
@@ -18,7 +18,9 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
   const [mount, setMount] = useState(false);
   const { isDark } = useSettingStore();
   const { runRawQuery } = useDataStore();
-  const { selectedTab, getQuery } = useTabStore();
+  const { getQuery } = useTabStore();
+  const { getSelectedTab } = useTabStore();
+
   useShortcut(shortcuts.runQuery, () => runRawQuery());
 
   useEffect(() => {
@@ -56,7 +58,8 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
     if (editorRef.current) {
       editorRef.current.setValue(getQuery());
     }
-  }, [selectedTab?.id]);
+    //todo: check if works
+  }, [getSelectedTab()?.id]);
 
   useEffect(() => {
     if (editorRef.current) {
@@ -70,5 +73,5 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
     changeMetaProviderSetting(autocomplete);
   }, [autocomplete]);
 
-  return <div style={{ height: '100%', width: '100%', visibility: mount ? 'visible' : 'hidden' }} ref={hostRef}></div>;
+  return <div style={{ height: '100%', width: '100%', visibility: mount ? 'visible' : 'hidden' }} ref={hostRef} />;
 }

@@ -1,11 +1,12 @@
 import api from '@/api';
 import useAPI from '@/hooks/useApi.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { ConnectionType } from '@/types';
+import type { ConnectionType } from '@/types';
 import { Suspense, lazy, useEffect } from 'react';
 import { v4 as uuid } from 'uuid';
 
-import { updateConnectionType } from '@/api/connection/types';
+import type { updateConnectionType } from '@/api/connection/types';
+import useNavigate from '@/hooks/useNavigate.hook';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { ConnectionsStyled } from './Connections.styled';
 import { EmptySpaceStyle } from './EmptySpace.styled';
@@ -14,12 +15,8 @@ const AddConnection = lazy(() => import('../AddConnection/AddConnection'));
 const EditConnection = lazy(() => import('../EditConnection/EditConnection'));
 
 export default function Connections() {
-  const { connections, currentConnection, updateCurrentConnection, updateConnections, updateShowAddConnection } =
-    useConnectionStore();
-
-  const { request: getConnectionList } = useAPI({
-    apiMethod: api.connection.getConnectionList
-  });
+  const { currentConnection, connections, updateCurrentConnection, updateShowAddConnection } = useConnectionStore();
+  const navigate = useNavigate();
 
   const { request: getConnectionDetail } = useAPI({
     apiMethod: api.connection.getConnectionDetail
@@ -30,31 +27,43 @@ export default function Connections() {
   });
 
   useEffect(() => {
-    getConnectionList().then((res) => {
-      if (res.length > 0) {
-        updateConnections(res);
-        const activeConnection = res.filter((c: ConnectionType) => c.isActive);
-        if (activeConnection.length > 0) handleChangeCurrentConnection(activeConnection[0]);
-      } else {
-        updateShowAddConnection(true);
-      }
-    });
-  }, []);
+    if (!connections) {
+      return;
+    }
 
-  const handleChangeCurrentConnection = (c: ConnectionType) => {
+    if (connections.length === 0) {
+      updateShowAddConnection(true);
+    }
+
+    if (connections.length > 0) {
+      const activeConnection = connections.filter((c: ConnectionType) => c.isActive);
+      if (activeConnection.length > 0) handleChangeCurrentConnection(activeConnection[0]);
+    } else {
+      updateShowAddConnection(true);
+    }
+  }, [connections]);
+
+  const handleChangeCurrentConnection = async (c: ConnectionType) => {
     if (c.id === currentConnection?.id) {
       return;
     }
-    getConnectionDetail({
-      connectionID: c?.id,
-      fromCache: true
-    }).then((res) => {
-      updateCurrentConnection(res);
-      updateConnection({
+
+    try {
+      const connectionDetail = await getConnectionDetail({
+        connectionID: c?.id,
+        fromCache: true
+      });
+
+      updateCurrentConnection(connectionDetail);
+      await updateConnection({
         id: c.id,
         is_active: true
       } as updateConnectionType);
-    });
+
+      navigate({
+        connectionId: c.id
+      });
+    } catch (error) {}
   };
 
   return (
@@ -69,7 +78,7 @@ export default function Connections() {
         <ConnectionItem
           onClick={() => handleChangeCurrentConnection(c)}
           key={uuid()}
-          selected={c.id == currentConnection?.id}
+          selected={c.id === currentConnection?.id}
           connection={c}
         />
       ))}

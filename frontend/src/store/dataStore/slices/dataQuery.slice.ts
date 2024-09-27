@@ -1,11 +1,11 @@
 import { updateDesign } from '@/api/design';
-import { UpdateDesignItemType } from '@/api/design/types';
+import type { UpdateDesignItemType } from '@/api/design/types';
 import { runQuery, runRawQuery } from '@/api/query';
 import { cleanupUpdateDesignObject } from '@/core/utils';
-import { StateCreator } from 'zustand';
+import type { StateCreator } from 'zustand';
 import { useConnectionStore } from '../../connectionStore/connection.store';
 import { useTabStore } from '../../tabStore/tab.store';
-import { DataColumnSlice, DataEditedColumnSlice, DataQuerySlice, DataRowSlice, DataStore } from '../types';
+import type { DataColumnSlice, DataEditedColumnSlice, DataQuerySlice, DataRowSlice, DataStore } from '../types';
 
 export const createDataQuerySlice: StateCreator<
   DataStore & DataQuerySlice & DataColumnSlice & DataEditedColumnSlice & DataRowSlice,
@@ -16,7 +16,7 @@ export const createDataQuerySlice: StateCreator<
   loading: false,
   runQuery: async () => {
     const currentConnection = useConnectionStore.getState().currentConnection;
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab || !currentConnection) {
       return;
     }
@@ -29,7 +29,7 @@ export const createDataQuerySlice: StateCreator<
       const res = await runQuery({
         connection_id: currentConnection.id,
         table: selectedTab.table,
-        schema: currentConnection.currentSchema!,
+        schema: currentConnection.currentSchema ?? '',
         limit: selectedTab.pagination.limit,
         offset: (selectedTab.pagination.page - 1) * selectedTab.pagination.limit,
         columns: selectedTab.columns ?? [],
@@ -54,7 +54,7 @@ export const createDataQuerySlice: StateCreator<
   },
   runRawQuery: async () => {
     const currentConnection = useConnectionStore.getState().currentConnection;
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab || !currentConnection) {
       return;
     }
@@ -76,13 +76,13 @@ export const createDataQuerySlice: StateCreator<
   },
   updateDesignsQuery: async () => {
     const currentConnection = useConnectionStore.getState().currentConnection;
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab || !currentConnection) {
       return;
     }
 
     const columns = get().getEditedColumns();
-    if (columns.length == 0) {
+    if (columns.length === 0) {
       return;
     }
 
@@ -117,8 +117,8 @@ export const createDataQuerySlice: StateCreator<
       const res = await updateDesign({
         connection_id: currentConnection.id,
         table: selectedTab.table,
-        schema: currentConnection.currentSchema!,
-        database: currentConnection.currentDatabase!,
+        schema: currentConnection.currentSchema ?? '',
+        database: currentConnection.currentDatabase ?? '',
         edited: edited as UpdateDesignItemType[],
         removed: Array.from(removed),
         added: added as UpdateDesignItemType[]

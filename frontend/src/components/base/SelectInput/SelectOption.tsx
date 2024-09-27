@@ -1,4 +1,4 @@
-import { SelectOptionProps } from './types';
+import type { SelectOptionProps } from './types';
 
 export default function SelectOption({ value, selected, children }: SelectOptionProps) {
   return (

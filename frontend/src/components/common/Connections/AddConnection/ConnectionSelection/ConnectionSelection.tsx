@@ -3,7 +3,7 @@ import locales from '@/locales';
 import { Box, Button } from '@mui/material';
 import { useState } from 'react';
 import Search from '../../../../base/Search/Search';
-import { ConnectionSelectionProps, ConnectionType } from '../types';
+import type { ConnectionSelectionProps, ConnectionType } from '../types';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { ConnectionWrapperStyled } from './ConnectionSelection.styled';
 
@@ -16,7 +16,7 @@ export default function ConnectionSelection({ connections, onSubmit, onClose }: 
   };
 
   const handleConnectionType = (c: ConnectionType) => {
-    const newConnection = connectionType?.name == c.name ? undefined : c;
+    const newConnection = connectionType?.name === c.name ? undefined : c;
     setConnectionType(newConnection);
   };
 

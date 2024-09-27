@@ -1,6 +1,6 @@
-import { UpdateDesignItemType } from '@/api/design/types';
+import type { UpdateDesignItemType } from '@/api/design/types';
 import TextRenderCell from '@/components/shared/DBDataGrid/TextRenderCell';
-import { ColumnType, EditedColumnType, EditedColumnValue, EditedRow, RowType } from '@/types';
+import type { ColumnType, EditedColumnType, EditedColumnValue, EditedRow, RowType } from '@/types';
 import { updatedDiff } from 'deep-object-diff';
 import { has } from 'lodash';
 import { SelectColumn, textEditor } from 'react-data-grid';
@@ -29,7 +29,8 @@ export const formatServerColumns = (serverColumns: ColumnType[]): any => {
       }
     }
   ];
-  serverColumns!.forEach((column: ColumnType) => {
+
+  for (const column of serverColumns) {
     arr.push({
       key: column.key,
       maxWidth: 400,
@@ -52,7 +53,7 @@ export const formatServerColumns = (serverColumns: ColumnType[]): any => {
         comment: false
       }
     });
-  });
+  }
 
   return arr;
 };
@@ -61,7 +62,7 @@ export const handelRowChangeLog = (editedRows: EditedRow[], oldValue: RowType, n
   const dboIndex = oldValue.dbo_index;
 
   //check if edited value exists in editedRows just update this values
-  const findValueIndex = editedRows.findIndex((x) => x.dboIndex == dboIndex);
+  const findValueIndex = editedRows.findIndex((x) => x.dboIndex === dboIndex);
   const findValue = editedRows[findValueIndex];
 
   //the old value and new value always contain one diff key so we pick first item
@@ -81,7 +82,7 @@ export const handelRowChangeLog = (editedRows: EditedRow[], oldValue: RowType, n
   if (Object.prototype.hasOwnProperty.call(oldValue, 'id')) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
-    conditions['id'] = oldValue.id;
+    conditions.id = oldValue.id;
   } else {
     conditions = oldValue;
   }
@@ -107,7 +108,7 @@ export const handelRowChangeLog = (editedRows: EditedRow[], oldValue: RowType, n
 
 export const createEmptyRow = (columns: ColumnType[]): RowType => {
   const newRow: RowType = {};
-  columns.forEach((column) => {
+  for (const column of columns) {
     if (!column.notNull) {
       newRow[column.name] = null;
     } else {
@@ -123,7 +124,7 @@ export const createEmptyRow = (columns: ColumnType[]): RowType => {
           break;
       }
     }
-  });
+  }
 
   return newRow;
 };
@@ -134,14 +135,14 @@ export const handelColumnChangeLog = (
   newValue: EditedColumnType
 ) => {
   //check if edited value exists in editedColumns just update this values
-  const findValueIndex = editedColumns.findIndex((x) => x.key == oldValue.key);
+  const findValueIndex = editedColumns.findIndex((x) => x.key === oldValue.key);
   const findValue = editedColumns[findValueIndex];
 
   //the old value and new value always contain one diff key so we pick first item
   const diff = updatedDiff(oldValue, newValue);
   const diffKey = Object.keys(diff)[0];
 
-  if (findValue && findValue.unsaved) {
+  if (findValue?.unsaved) {
     findValue.old = findValue?.old ?? diff;
     findValue.new = findValue?.new ?? diff;
   }
@@ -161,7 +162,7 @@ export const handelColumnChangeLog = (
   // @ts-expect-error
   newObject[diffKey] = newValue[diffKey];
 
-  if (Object.keys(diff).length == 0) {
+  if (Object.keys(diff).length === 0) {
     return editedColumns;
   }
 
@@ -210,19 +211,19 @@ export const cleanupUpdateDesignObject = (data: EditedColumnValue | null): Updat
   }
 
   if (has(data, 'name')) {
-    newObject['name'] = data.name;
+    newObject.name = data.name;
   }
 
   if (has(data, 'type')) {
-    newObject['type'] = data.type;
+    newObject.type = data.type;
   }
 
   if (has(data, 'length')) {
-    newObject['length'] = Number(data.length);
+    newObject.length = Number(data.length);
   }
 
   if (has(data, 'default')) {
-    newObject['default'] = {
+    newObject.default = {
       make_null: false,
       make_empty: false,
       value: data.default ?? ''
@@ -232,11 +233,11 @@ export const cleanupUpdateDesignObject = (data: EditedColumnValue | null): Updat
   if (has(data, 'notNull')) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
-    newObject['is_null'] = !data.notNull;
+    newObject.is_null = !data.notNull;
   }
 
   if (has(data, 'comment')) {
-    newObject['comment'] = data.comment;
+    newObject.comment = data.comment;
   }
 
   console.log(newObject);

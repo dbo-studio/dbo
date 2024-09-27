@@ -7,7 +7,7 @@ export default function Actions() {
   const { updateSidebar, sidebar } = useSettingStore();
 
   const handelUpdateSidebar = (direction: 'right' | 'left') => {
-    if (direction == 'right') {
+    if (direction === 'right') {
       if (!sidebar.showRight) {
         updateSidebar({ showRight: !sidebar.showRight, rightWidth: constants.defaultSidebarWidth });
       } else {
@@ -15,7 +15,7 @@ export default function Actions() {
       }
     }
 
-    if (direction == 'left') {
+    if (direction === 'left') {
       if (!sidebar.showLeft) {
         updateSidebar({ showLeft: !sidebar.showLeft, leftWidth: constants.defaultSidebarWidth });
       } else {

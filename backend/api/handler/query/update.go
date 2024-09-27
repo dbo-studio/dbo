@@ -1,11 +1,11 @@
 package query_handler
 
 import (
+	"github.com/dbo-studio/dbo/api/dto"
+	"github.com/dbo-studio/dbo/api/response"
+	"github.com/dbo-studio/dbo/app"
+	"github.com/dbo-studio/dbo/helper"
 	"github.com/gofiber/fiber/v3"
-	"github.com/khodemobin/dbo/api/dto"
-	"github.com/khodemobin/dbo/api/response"
-	"github.com/khodemobin/dbo/app"
-	"github.com/khodemobin/dbo/helper"
 )
 
 func (QueryHandler) Update(c fiber.Ctx) error {

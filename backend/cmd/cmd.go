@@ -1,13 +1,16 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
 
-	"github.com/khodemobin/dbo/api/server"
-	"github.com/khodemobin/dbo/app"
-	"github.com/khodemobin/dbo/helper"
+	"github.com/dbo-studio/dbo/api/server"
+	"github.com/dbo-studio/dbo/app"
+	"github.com/dbo-studio/dbo/helper"
+	"github.com/dbo-studio/dbo/internal/repository"
+	"github.com/dbo-studio/dbo/internal/service"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +26,11 @@ func ServeCommand() *cobra.Command {
 }
 
 func Execute() {
-	restServer := server.New(helper.IsLocal())
+	ctx := context.Background()
+	repository := repository.NewRepository(ctx)
+	service := service.NewService(repository)
+
+	restServer := server.New(service, helper.IsLocal())
 
 	if err := restServer.Start(helper.IsLocal(), app.Config().App.Port); err != nil {
 		msg := fmt.Sprintf("error happen while serving: %v", err)

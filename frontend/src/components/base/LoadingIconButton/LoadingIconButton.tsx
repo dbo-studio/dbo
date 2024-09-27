@@ -1,5 +1,5 @@
 import { CircularProgress, IconButton } from '@mui/material';
-import { LoadingIconButtonProps } from './types';
+import type { LoadingIconButtonProps } from './types';
 
 export default function LoadingIconButton(props: LoadingIconButtonProps) {
   return (

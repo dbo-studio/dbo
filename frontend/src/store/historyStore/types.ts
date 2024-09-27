@@ -1,4 +1,4 @@
-import { HistoryType } from '@/types/History';
+import type { HistoryType } from '@/types/History';
 
 export type HistoryStore = {
   histories: HistoryType[] | undefined;

@@ -5,11 +5,11 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LoadingButton } from '@mui/lab';
 import { Box, Button, Stack } from '@mui/material';
-import { Controller, SubmitHandler, useForm } from 'react-hook-form';
+import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import FieldInput from '../../../../base/FieldInput/FieldInput';
-import { ConnectionSettingsProps } from '../types';
+import type { ConnectionSettingsProps } from '../types';
 
 interface IFormInput {
   name: string;
@@ -23,7 +23,7 @@ interface IFormInput {
 const formSchema = z.object({
   name: z.string(),
   host: z.string(),
-  port: z.string().refine((val) => !Number.isNaN(parseInt(val, 10)), {
+  port: z.string().refine((val) => !Number.isNaN(Number.parseInt(val, 10)), {
     message: 'Expected number, received a string'
   }),
   username: z.string(),

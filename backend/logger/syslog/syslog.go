@@ -3,7 +3,7 @@ package syslog
 import (
 	"log"
 
-	"github.com/khodemobin/dbo/logger"
+	"github.com/dbo-studio/dbo/logger"
 )
 
 type syslog struct{}

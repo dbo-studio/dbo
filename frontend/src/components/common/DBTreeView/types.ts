@@ -1,4 +1,4 @@
-import { ContextMenuType } from '@/types';
+import type { ContextMenuType } from '@/types';
 
 export type TablesTreeViewItemProps = {
   table: string;

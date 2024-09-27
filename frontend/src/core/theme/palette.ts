@@ -1,4 +1,4 @@
-import { ThemeModeEnum } from '@/core/enums';
+import type { ThemeModeEnum } from '@/core/enums';
 import { alpha } from '@mui/material';
 
 declare module '@mui/material/styles/createPalette' {

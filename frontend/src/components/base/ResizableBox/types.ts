@@ -1,5 +1,6 @@
-import { BoxProps } from '@mui/material';
-import React, { MouseEventHandler } from 'react';
+import type { BoxProps } from '@mui/material';
+import type React from 'react';
+import type { MouseEventHandler } from 'react';
 
 export interface ResizableBoxXProps {
   direction: 'rtl' | 'ltr';

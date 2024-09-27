@@ -11,7 +11,7 @@ export default function Histories() {
   const theme = useTheme();
   const { histories, updateHistories } = useHistoryStore();
 
-  const { request: getHistories, pending: pending } = useAPI({
+  const { request: getHistories, pending } = useAPI({
     apiMethod: api.histories.getHistories
   });
 
@@ -25,7 +25,7 @@ export default function Histories() {
   };
 
   useEffect(() => {
-    if (histories == undefined) {
+    if (histories === undefined) {
       handleGetHistories();
     }
   }, []);
@@ -44,7 +44,7 @@ export default function Histories() {
                 }}
                 key={uuid()}
                 history={query}
-                selected={selected == query.id}
+                selected={selected === query.id}
               />
             ))
           )}

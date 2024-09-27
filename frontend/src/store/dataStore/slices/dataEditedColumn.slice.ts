@@ -1,9 +1,9 @@
 import { createEmptyColumn, handelColumnChangeLog } from '@/core/utils';
-import { ColumnType, EditedColumnType } from '@/types';
+import type { ColumnType, EditedColumnType } from '@/types';
 import { pullAt } from 'lodash';
-import { StateCreator } from 'zustand';
+import type { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
-import { DataColumnSlice, DataEditedColumnSlice, DataStore } from '../types';
+import type { DataColumnSlice, DataEditedColumnSlice, DataStore } from '../types';
 
 export const createDataEditedColumnSlice: StateCreator<
   DataStore & DataEditedColumnSlice & DataColumnSlice,
@@ -13,15 +13,15 @@ export const createDataEditedColumnSlice: StateCreator<
 > = (set, get) => ({
   editedColumns: {},
   getEditedColumns: () => {
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     const columns = get().editedColumns;
-    if (!selectedTab || !Object.prototype.hasOwnProperty.call(columns, selectedTab.id)) {
+    if (!columns[selectedTab?.id as string]) {
       return [];
     }
-    return columns[selectedTab.id];
+    return columns[selectedTab?.id as string];
   },
   updateEditedColumns: async (columns: EditedColumnType[]) => {
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab) {
       return;
     }
@@ -31,7 +31,7 @@ export const createDataEditedColumnSlice: StateCreator<
     set({ editedColumns });
   },
   addEditedColumns: async (oldValue: ColumnType, newValue: ColumnType | EditedColumnType) => {
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab) {
       return;
     }
@@ -50,7 +50,7 @@ export const createDataEditedColumnSlice: StateCreator<
           return c;
         }
 
-        const findValueIndex = editedColumns.findIndex((x) => x.key == c.key);
+        const findValueIndex = editedColumns.findIndex((x) => x.key === c.key);
         if (findValueIndex === -1) {
           editedColumns.push({
             ...c,
@@ -61,6 +61,7 @@ export const createDataEditedColumnSlice: StateCreator<
             pullAt(editedColumns, [findValueIndex]);
             shouldRemoveUnsaved.push(index);
           } else {
+            // biome-ignore lint: reason
             c = {
               ...c,
               ...editedColumns[findValueIndex].old
@@ -82,7 +83,7 @@ export const createDataEditedColumnSlice: StateCreator<
       });
 
     get().updateEditedColumns(editedColumns);
-    get().updateColumns(columns.filter((c, index) => !shouldRemoveUnsaved.includes(index)));
+    get().updateColumns(columns.filter((_, index) => !shouldRemoveUnsaved.includes(index)));
   },
   restoreEditedColumns: async () => {
     const editedColumns = get().getEditedColumns();
@@ -96,8 +97,8 @@ export const createDataEditedColumnSlice: StateCreator<
         };
       });
 
-    editedColumns.forEach((c: EditedColumnType) => {
-      const findValueIndex = columns.findIndex((x) => x.key == c.key);
+    for (const c of editedColumns) {
+      const findValueIndex = columns.findIndex((x) => x.key === c.key);
       if (c.unsaved) {
         pullAt(columns, [findValueIndex]);
       } else {
@@ -106,7 +107,7 @@ export const createDataEditedColumnSlice: StateCreator<
           ...c.old
         };
       }
-    });
+    }
 
     get().updateColumns(columns);
     get().updateEditedColumns([]);

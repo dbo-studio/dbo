@@ -1,8 +1,8 @@
-import { EventFor } from '@/types';
+import type { EventFor } from '@/types';
 import { Box } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import ResizableToggle from './ResizableToggle';
-import { ResizableBoxYProps } from './types';
+import type { ResizableBoxYProps } from './types';
 
 export default function ResizableYBox(props: ResizableBoxYProps) {
   const [boxHeight, setBoxHeight] = useState(props.height);

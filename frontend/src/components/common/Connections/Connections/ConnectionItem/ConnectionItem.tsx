@@ -1,7 +1,7 @@
 import { useContextMenu } from '@/hooks';
-import { Box, Theme, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, type Theme, Tooltip, Typography, useTheme } from '@mui/material';
 import CustomIcon from '../../../../base/CustomIcon/CustomIcon';
-import { ConnectionItemProps } from '../../types';
+import type { ConnectionItemProps } from '../../types';
 import { ConnectionItemStyled } from './ConnectionItem.styled';
 import ConnectionItemContextMenu from './ConnectionItemContextMenu/ConnectionItemContextMenu';
 
@@ -19,7 +19,7 @@ export default function ConnectionItem({ connection, selected = false, onClick }
     <ConnectionItemStyled onContextMenu={handleContextMenu} theme={theme} selected={selected} onClick={handleClick}>
       <Tooltip title={connection.name}>
         <Box maxHeight={50} maxWidth={50} display={'flex'} flexDirection={'column'} alignItems={'center'}>
-          <CustomIcon type='databaseOutline' size='l' />
+          <CustomIcon type='databaseZap' size='l' />
           <Typography component={'p'} mt={1} variant='caption' noWrap>
             {connection.name}
           </Typography>

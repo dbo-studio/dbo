@@ -1,5 +1,6 @@
 import ConnectionBox from '@/components/common/ConnectionInfo/ConnectionBox';
 import { TabMode } from '@/core/enums';
+import useNavigate from '@/hooks/useNavigate.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton, Stack } from '@mui/material';
@@ -10,13 +11,17 @@ import CustomIcon from '../../base/CustomIcon/CustomIcon';
 const Databases = lazy(() => import('../Databases/Databases'));
 
 export default function ConnectionInfo() {
-  const { updateShowAddConnection, showSelectDatabase, updateShowSelectDatabase, currentConnection } =
+  const navigate = useNavigate();
+  const { currentConnection, updateShowAddConnection, showSelectDatabase, updateShowSelectDatabase } =
     useConnectionStore();
-
   const { addTab } = useTabStore();
 
   const handleAddEditorTab = () => {
-    addTab('Editor', TabMode.Query);
+    const tab = addTab('Editor', TabMode.Query);
+    navigate({
+      route: 'query',
+      tabId: tab.id
+    });
   };
 
   return (
@@ -26,7 +31,7 @@ export default function ConnectionInfo() {
       </Suspense>
       <Grid md={4}>
         <Stack direction={'row'} spacing={2} justifyContent='flex-end'>
-          <IconButton aria-label='connection' onClick={() => updateShowAddConnection(true)}>
+          <IconButton aria-label='connections' onClick={() => updateShowAddConnection(true)}>
             <CustomIcon type={'connection'} size={'m'} />
           </IconButton>
           {/* <IconButton aria-label='lock'>
@@ -34,7 +39,7 @@ export default function ConnectionInfo() {
           </IconButton> */}
           <IconButton
             disabled={!currentConnection}
-            aria-label='database'
+            aria-label='databases'
             onClick={() => updateShowSelectDatabase(!showSelectDatabase)}
           >
             <CustomIcon type={'databaseOutline'} size={'m'} />
@@ -50,7 +55,7 @@ export default function ConnectionInfo() {
           {/* <IconButton aria-label='search'>
             <CustomIcon type={'search'} size={'m'} />
           </IconButton> */}
-          <IconButton aria-label='sql' onClick={handleAddEditorTab}>
+          <IconButton disabled={!currentConnection} aria-label='sql' onClick={handleAddEditorTab}>
             <CustomIcon type={'sql'} size={'m'} />
           </IconButton>
         </Stack>

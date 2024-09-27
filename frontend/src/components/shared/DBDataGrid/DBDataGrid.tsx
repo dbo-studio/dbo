@@ -3,15 +3,17 @@ import { handelRowChangeLog } from '@/core/utils';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, Checkbox, CircularProgress } from '@mui/material';
-import React, { useEffect, useRef } from 'react';
-import { DataGridHandle, RenderCheckboxProps, RowsChangeData } from 'react-data-grid';
+import type React from 'react';
+import { useEffect, useRef } from 'react';
+import type { DataGridHandle, RenderCheckboxProps, RowsChangeData } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
+import { useSearchParams } from 'react-router-dom';
 import { DataGridStyled } from './DataGrid.styled';
 import { DataGridWrapperStyled } from './DataGridWrapper.styled';
 
-let lastUnsavedRowsLength = 0;
 export default function DBDataGrid() {
-  const { selectedTab } = useTabStore();
+  const { getSelectedTab } = useTabStore();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const dataGridRef = useRef<DataGridHandle>(null);
   const {
@@ -34,13 +36,13 @@ export default function DBDataGrid() {
   };
 
   useEffect(() => {
-    if (selectedTab?.mode == TabMode.Data && (getRows().length == 0 || getColumns().length == 0)) {
+    if (getSelectedTab()?.mode === TabMode.Data && (getRows().length === 0 || getColumns().length === 0)) {
       getData();
     }
-  }, [selectedTab?.id]);
+  }, [getSelectedTab()?.id]);
 
   const handleOnCellClick = (e: any) => {
-    if (e.rowIdx == -1) {
+    if (e.rowIdx === -1) {
       return;
     }
     updateHighlightedRow(e.row);
@@ -55,22 +57,19 @@ export default function DBDataGrid() {
   };
 
   const scrollToBottom = () => {
-    if (lastUnsavedRowsLength == 0) {
-      lastUnsavedRowsLength = getUnsavedRows().length;
-    }
+    dataGridRef.current?.scrollToCell({
+      rowIdx: getRows().length - 1
+    });
 
-    if (dataGridRef.current && lastUnsavedRowsLength <= getUnsavedRows().length) {
-      dataGridRef.current!.scrollToCell({
-        rowIdx: getRows().length - 1
-      });
-    }
-
-    lastUnsavedRowsLength = getUnsavedRows().length;
+    setSearchParams({ scrollToBottom: 'false' });
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [getUnsavedRows().length]);
+    const params = Object.fromEntries([...searchParams]);
+    if (params?.scrollToBottom) {
+      scrollToBottom();
+    }
+  }, [searchParams]);
 
   return loading ? (
     <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
@@ -78,33 +77,31 @@ export default function DBDataGrid() {
     </Box>
   ) : (
     <DataGridWrapperStyled>
-      {selectedTab && (
-        <DataGridStyled
-          ref={dataGridRef}
-          onSelectedCellChange={handleOnCellClick}
-          rowKeyGetter={rowKeyGetter}
-          selectedRows={getSelectedRows()}
-          onSelectedRowsChange={updateSelectedRows}
-          columns={getColumns(true, true)}
-          rows={getRows()}
-          rowHeight={30}
-          onRowsChange={handleRowsChange}
-          headerRowHeight={30}
-          renderers={{ renderCheckbox }}
-          rowClass={(_, index) => {
-            if (getRemovedRows().some((v) => v.dbo_index == index)) {
-              return 'removed-highlight';
-            }
-            if (getUnsavedRows().some((v) => v.dbo_index == index)) {
-              return 'unsaved-highlight';
-            }
-            if (getEditedRows().some((v) => v.dboIndex == index)) {
-              return 'edit-highlight';
-            }
-            return undefined;
-          }}
-        />
-      )}
+      <DataGridStyled
+        ref={dataGridRef}
+        onSelectedCellChange={handleOnCellClick}
+        rowKeyGetter={rowKeyGetter}
+        selectedRows={getSelectedRows()}
+        onSelectedRowsChange={updateSelectedRows}
+        columns={getColumns(true, true)}
+        rows={getRows()}
+        rowHeight={30}
+        onRowsChange={handleRowsChange}
+        headerRowHeight={30}
+        renderers={{ renderCheckbox }}
+        rowClass={(_, index) => {
+          if (getRemovedRows().some((v) => v.dbo_index === index)) {
+            return 'removed-highlight';
+          }
+          if (getUnsavedRows().some((v) => v.dbo_index === index)) {
+            return 'unsaved-highlight';
+          }
+          if (getEditedRows().some((v) => v.dboIndex === index)) {
+            return 'edit-highlight';
+          }
+          return undefined;
+        }}
+      />
     </DataGridWrapperStyled>
   );
 }

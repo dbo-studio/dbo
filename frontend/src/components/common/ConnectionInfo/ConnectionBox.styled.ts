@@ -1,6 +1,6 @@
 import { variables } from '@/core/theme/variables';
 import { Box, styled } from '@mui/material';
-import { ConnectionBoxStyledProps } from './types';
+import type { ConnectionBoxStyledProps } from './types';
 
 export const ConnectionBoxStyled = styled(Box)<ConnectionBoxStyledProps>(({ theme, active }) => ({
   height: '32px',
@@ -11,6 +11,6 @@ export const ConnectionBoxStyled = styled(Box)<ConnectionBoxStyledProps>(({ them
   padding: `0 ${theme.spacing(2)}`,
   border: `1px solid ${theme.palette.divider}`,
   h6: {
-    color: active == 'true' ? theme.palette.text.success : theme.palette.text.subdued
+    color: active === 'true' ? theme.palette.text.success : theme.palette.text.subdued
   }
 }));

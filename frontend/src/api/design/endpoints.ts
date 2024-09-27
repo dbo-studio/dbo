@@ -1,1 +1,1 @@
-export const UPDATE_DESIGN = () => `/design`;
+export const UPDATE_DESIGN = () => '/design';

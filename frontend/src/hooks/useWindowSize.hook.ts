@@ -13,7 +13,7 @@ export const useWindowSize = (fullSize?: boolean) => {
   useEffect(() => {
     function handleResize() {
       setWindowSize({
-        width: window.innerWidth + 'px',
+        width: `${window.innerWidth}px`,
         height: fullSize ? tools.screenFullHeight().toString() : tools.screenMaxHeight().toString()
       });
     }

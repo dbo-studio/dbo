@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/dbo-studio/dbo/model"
 	"github.com/goccy/go-json"
-	"github.com/khodemobin/dbo/model"
 	"gorm.io/gorm"
 )
 

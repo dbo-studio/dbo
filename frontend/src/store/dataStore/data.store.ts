@@ -1,18 +1,18 @@
-import { TabType } from '@/types';
+import type { TabType } from '@/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { useTabStore } from '../tabStore/tab.store';
 import { createDataColumnSlice } from './slices/dataColumn.slice';
 import { createDataEditedColumnSlice } from './slices/dataEditedColumn.slice';
-import { createDataEditedRowsSlice } from './slices/dataEditedRows';
+import { createDataEditedRowsSlice } from './slices/dataEditedRows.slice';
 import { createDataHightedRowSlice } from './slices/dataHightedRow.slice';
 import { createDataQuerySlice } from './slices/dataQuery.slice';
-import { createDataRemovedRowsSlice } from './slices/dataRemovedRows';
+import { createDataRemovedRowsSlice } from './slices/dataRemovedRows.slice';
 import { createDataRowSlice } from './slices/dataRow.slice';
 import { createDataSelectedRowsSlice } from './slices/dataSelectedRows.slice';
-import { createDataUnsavedRowsSlice } from './slices/dataUnsavedRows';
-import {
+import { createDataUnsavedRowsSlice } from './slices/dataUnsavedRows.slice';
+import type {
   DataColumnSlice,
   DataEditedColumnSlice,
   DataEditedRowsSlice,
@@ -40,7 +40,7 @@ export const useDataStore = create<DataState>()(
   devtools(
     immer((set, get, ...state) => ({
       selectedTab: (): TabType | undefined => {
-        return useTabStore.getState().selectedTab;
+        return useTabStore.getState().getSelectedTab();
       },
       ...createDataRowSlice(set, get, ...state),
       ...createDataHightedRowSlice(set, get, ...state),

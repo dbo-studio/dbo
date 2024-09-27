@@ -1,5 +1,5 @@
-import { TabMode } from '@/core/enums';
-import { FilterType, SortType, TabType } from '@/types/Tab';
+import type { TabMode } from '@/core/enums';
+import type { FilterType, SortType, TabType } from '@/types/Tab';
 
 export type TabFilterSlice = {
   upsertFilters: (filter: FilterType) => Promise<void>;
@@ -14,8 +14,8 @@ export type TabSortSlice = {
 };
 
 export type TabSettingSlice = {
-  addTab: (table: string, mode?: TabMode, query?: string) => void;
-  removeTab: (tabId: string) => void;
+  addTab: (table: string, mode?: TabMode, query?: string) => TabType;
+  removeTab: (tabId: string) => TabType | null | undefined;
   switchTab: (tabId: string | null) => void;
 };
 
@@ -31,8 +31,18 @@ export type TabDataSlice = {
 };
 
 export type TabStore = {
-  tabs: TabType[];
-  selectedTab: TabType | undefined;
+  tabs: TabStoreTabsType;
+  selectedTab: TabStoreSelectedTabType;
+  getTabs(): TabType[];
+  getSelectedTab(): TabType | undefined;
   updateTabs: (tabs: TabType[]) => void;
   updateSelectedTab: (selectedTab: TabType | undefined) => void;
+};
+
+export type TabStoreTabsType = {
+  [key: string]: TabType[];
+};
+
+export type TabStoreSelectedTabType = {
+  [key: string]: TabType | undefined;
 };

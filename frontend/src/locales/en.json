@@ -75,6 +75,8 @@
   "close": "Close",
   "close_other_tabs": "Close other tabs",
   "close_all": "Close all",
-  "restart_required":"Restart require!",
-  "dark_mode_restart":"To apply a changing theme you need to restart the app!"
+  "restart_required": "Restart require!",
+  "dark_mode_restart": "To apply a changing theme you need to restart the app!",
+  "new_tab": "New tab",
+  "close_tab": "Close tab"
 }

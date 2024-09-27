@@ -1,6 +1,6 @@
 import { variables } from '@/core/theme/variables';
 import { Box, styled } from '@mui/material';
-import { HistoryItemStyledProps } from '../types';
+import type { HistoryItemStyledProps } from '../types';
 
 export const HistoryItemStyled = styled(Box)<HistoryItemStyledProps>(({ theme, selected }) => ({
   padding: `0 ${theme.spacing(1)}`,

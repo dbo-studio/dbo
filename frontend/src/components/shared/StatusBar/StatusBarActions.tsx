@@ -5,11 +5,15 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, IconButton, Stack } from '@mui/material';
+import { useSearchParams } from 'react-router-dom';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import LoadingIconButton from '../../base/LoadingIconButton/LoadingIconButton';
 
 export default function StatusBarActions() {
-  const { selectedTab } = useTabStore();
+  const [_, setSearchParams] = useSearchParams();
+  const { getSelectedTab } = useTabStore();
+  const { currentConnection } = useConnectionStore();
+
   const {
     loading,
     addUnsavedRows,
@@ -29,19 +33,21 @@ export default function StatusBarActions() {
     updateDesignsQuery
   } = useDataStore();
 
-  const { currentConnection } = useConnectionStore();
-
   const { request: updateQuery, pending: updateQueryPending } = useAPI({
     apiMethod: api.query.updateQuery
   });
 
   const handleSave = async () => {
-    if (selectedTab?.mode == TabMode.Data) {
+    if (getSelectedTab()?.mode === TabMode.Data) {
       const edited = getEditedRows();
       const removed = getRemovedRows();
       const unsaved = getUnsavedRows();
 
-      if (!selectedTab || !currentConnection || (edited.length == 0 && removed.length == 0 && unsaved.length == 0)) {
+      if (
+        !getSelectedTab() ||
+        !currentConnection ||
+        (edited.length === 0 && removed.length === 0 && unsaved.length === 0)
+      ) {
         return;
       }
       try {
@@ -49,7 +55,7 @@ export default function StatusBarActions() {
           connection_id: currentConnection.id,
           schema: currentConnection.currentSchema,
           database: currentConnection.currentDatabase,
-          table: selectedTab?.table,
+          table: getSelectedTab()?.table,
           edited: edited,
           removed: removed,
           added: unsaved
@@ -64,8 +70,8 @@ export default function StatusBarActions() {
       }
     }
 
-    if (selectedTab?.mode == TabMode.Design) {
-      if (!selectedTab || !currentConnection) {
+    if (getSelectedTab()?.mode === TabMode.Design) {
+      if (!getSelectedTab() || !currentConnection) {
         return;
       }
 
@@ -78,34 +84,35 @@ export default function StatusBarActions() {
   };
 
   const handleAddAction = async () => {
-    if (selectedTab?.mode == TabMode.Data) {
+    if (getSelectedTab()?.mode === TabMode.Data) {
       addUnsavedRows();
+      setSearchParams({ scrollToBottom: 'true' });
     }
 
-    if (selectedTab?.mode == TabMode.Design) {
+    if (getSelectedTab()?.mode === TabMode.Design) {
       addEmptyEditedColumns();
     }
   };
 
   const handleRemoveAction = async () => {
-    if (selectedTab?.mode == TabMode.Data) {
+    if (getSelectedTab()?.mode === TabMode.Data) {
       updateRemovedRows();
     }
 
-    if (selectedTab?.mode == TabMode.Design) {
+    if (getSelectedTab()?.mode === TabMode.Design) {
       updateRemovedColumns();
     }
   };
 
   const handleDiscardChanges = async () => {
-    if (selectedTab?.mode == TabMode.Data) {
+    if (getSelectedTab()?.mode === TabMode.Data) {
       updateSelectedRows([]);
       restoreEditedRows();
       discardUnsavedRows();
       updateRemovedRows();
     }
 
-    if (selectedTab?.mode == TabMode.Design) {
+    if (getSelectedTab()?.mode === TabMode.Design) {
       restoreEditedColumns();
     }
   };

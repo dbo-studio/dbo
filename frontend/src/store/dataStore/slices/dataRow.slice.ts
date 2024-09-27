@@ -1,7 +1,7 @@
-import { RowType } from '@/types';
-import { StateCreator } from 'zustand';
+import type { RowType } from '@/types';
+import type { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
-import { DataColumnSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
+import type { DataColumnSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
 
 export const createDataRowSlice: StateCreator<
   DataStore & DataRowSlice & DataColumnSlice & DataUnsavedRowsSlice,
@@ -11,15 +11,15 @@ export const createDataRowSlice: StateCreator<
 > = (set, get) => ({
   rows: {},
   getRows: (): RowType[] => {
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     const rows = get().rows;
-    if (!selectedTab || !Object.prototype.hasOwnProperty.call(rows, selectedTab.id)) {
+    if (!selectedTab || !rows[selectedTab.id]) {
       return [];
     }
     return rows[selectedTab.id];
   },
   updateRows: async (items: RowType[]) => {
-    const selectedTab = useTabStore.getState().selectedTab;
+    const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab) {
       return;
     }
@@ -31,7 +31,7 @@ export const createDataRowSlice: StateCreator<
   },
   removeRowsByTabId: (tabId: string) => {
     const rows = get().rows;
-    if (Object.prototype.hasOwnProperty.call(rows, tabId)) {
+    if (!rows[tabId]) {
       delete rows[tabId];
     }
 

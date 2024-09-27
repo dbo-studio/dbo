@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { ConfirmModalModel, ConfirmModalStore } from './types';
+import type { ConfirmModalModel, ConfirmModalStore } from './types';
 
 type ConfirmModalState = ConfirmModalStore;
 

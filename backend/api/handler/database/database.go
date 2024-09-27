@@ -1,8 +1,8 @@
 package database_handler
 
 import (
-	"github.com/khodemobin/dbo/app"
-	"github.com/khodemobin/dbo/model"
+	"github.com/dbo-studio/dbo/app"
+	"github.com/dbo-studio/dbo/model"
 )
 
 type DatabaseHandler struct{}

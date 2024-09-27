@@ -7,14 +7,15 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	fiberLogger "github.com/gofiber/fiber/v3/middleware/logger"
 	"github.com/gofiber/fiber/v3/middleware/recover"
-	//"github.com/gofiber/template/html"
-	connection_handler "github.com/khodemobin/dbo/api/handler/connection"
-	database_handler "github.com/khodemobin/dbo/api/handler/database"
-	design_handler "github.com/khodemobin/dbo/api/handler/design"
-	history_handler "github.com/khodemobin/dbo/api/handler/history"
-	query_handler "github.com/khodemobin/dbo/api/handler/query"
-	saved_handler "github.com/khodemobin/dbo/api/handler/saved_query"
-	"github.com/khodemobin/dbo/app"
+
+	connection_handler "github.com/dbo-studio/dbo/api/handler/connection"
+	database_handler "github.com/dbo-studio/dbo/api/handler/database"
+	design_handler "github.com/dbo-studio/dbo/api/handler/design"
+	history_handler "github.com/dbo-studio/dbo/api/handler/history"
+	query_handler "github.com/dbo-studio/dbo/api/handler/query"
+	saved_handler "github.com/dbo-studio/dbo/api/handler/saved_query"
+	"github.com/dbo-studio/dbo/app"
+	"github.com/dbo-studio/dbo/internal/service"
 )
 
 type Server struct {
@@ -27,7 +28,7 @@ type Server struct {
 	historyHandler    history_handler.HistoryHandler
 }
 
-func New(isLocal bool) *Server {
+func New(service *service.Service, isLocal bool) *Server {
 	return &Server{
 		app: fiber.New(fiber.Config{
 			JSONEncoder: json.Marshal,
@@ -39,8 +40,10 @@ func New(isLocal bool) *Server {
 				})
 			},
 		}),
-		queryHandler:      query_handler.QueryHandler{},
-		connectionHandler: connection_handler.ConnectionHandler{},
+		queryHandler: query_handler.QueryHandler{},
+		connectionHandler: connection_handler.ConnectionHandler{
+			ConnectionService: service.ConnectionService,
+		},
 		databaseHandler:   database_handler.DatabaseHandler{},
 		savedQueryHandler: saved_handler.SavedQueryHandler{},
 		designHandler:     design_handler.DesignHandler{},

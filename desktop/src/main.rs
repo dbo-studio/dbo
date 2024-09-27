@@ -6,7 +6,7 @@ use tauri::api::process::{Command, CommandEvent};
 
 fn main() {
     let _ = fix_path_env::fix();
-    
+
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![get_backend_host])
         .setup(|_app| {

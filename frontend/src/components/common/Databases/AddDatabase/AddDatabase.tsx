@@ -1,5 +1,5 @@
 import api from '@/api';
-import { DatabaseMetaDataType } from '@/api/database/types';
+import type { DatabaseMetaDataType } from '@/api/database/types';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import SelectOption from '@/components/base/SelectInput/SelectOption';
@@ -10,7 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { LoadingButton } from '@mui/lab';
 import { Box, Button } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { Controller, SubmitHandler, useForm } from 'react-hook-form';
+import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -34,7 +34,7 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
   const { currentConnection } = useConnectionStore();
   const [metadata, setMetadata] = useState<undefined | DatabaseMetaDataType>(undefined);
 
-  const { request: createDatabase, pending: pending } = useAPI({
+  const { request: createDatabase, pending } = useAPI({
     apiMethod: api.database.createDatabase
   });
 
@@ -100,9 +100,9 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
               control={control}
               render={({ field }) => (
                 <SelectInput {...field} label={locales.template} fullWidth error={!!errors.template}>
-                  <SelectOption value={undefined}></SelectOption>
-                  {metadata.templates.map((option, index) => (
-                    <SelectOption key={index} value={option}>
+                  <SelectOption value={undefined} />
+                  {metadata.templates.map((option) => (
+                    <SelectOption key={option} value={option}>
                       {option}
                     </SelectOption>
                   ))}
@@ -115,9 +115,9 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
               control={control}
               render={({ field }) => (
                 <SelectInput {...field} label={locales.encoding} fullWidth error={!!errors.encoding}>
-                  <SelectOption value={undefined}></SelectOption>
-                  {metadata.encodings.map((option, index) => (
-                    <SelectOption key={index} value={option}>
+                  <SelectOption value={undefined} />
+                  {metadata.encodings.map((option) => (
+                    <SelectOption key={option} value={option}>
                       {option}
                     </SelectOption>
                   ))}
@@ -130,9 +130,9 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
               control={control}
               render={({ field }) => (
                 <SelectInput {...field} label={locales.table_space} fullWidth error={!!errors.table_space}>
-                  <SelectOption value={undefined}></SelectOption>
-                  {metadata.tableSpaces.map((option, index) => (
-                    <SelectOption key={index} value={option}>
+                  <SelectOption value={undefined} />
+                  {metadata.tableSpaces.map((option) => (
+                    <SelectOption key={option} value={option}>
                       {option}
                     </SelectOption>
                   ))}

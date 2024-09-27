@@ -1,7 +1,7 @@
-package pgsql_driver
+package pgsqlDriver
 
 import (
-	"github.com/khodemobin/dbo/model"
+	"github.com/dbo-studio/dbo/model"
 	"gorm.io/gorm"
 )
 
