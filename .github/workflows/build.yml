@@ -109,14 +109,10 @@ jobs:
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
-          tagName: "v$(cat docs/scripts/VERSION)" # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: "v$(cat docs/scripts/VERSION)"
           releaseBody: "See full change log please see https://github.com/dbo-studio/dbo/releases"
-          releaseDraft: true
           args: ${{ matrix.args }}
           projectPath: "./desktop"
           includeUpdaterJson: true
-          appVersion: "$(cat docs/scripts/VERSION)"
 
   publish-release:
     permissions:
@@ -136,6 +132,6 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: process.env.release_id,
-              draft: false,
+              draft: true,
               prerelease: false
             })
