@@ -116,7 +116,7 @@ jobs:
           args: ${{ matrix.args }}
           projectPath: "./desktop"
           includeUpdaterJson: true
-          appVersion: $(cat docs/scripts/VERSION)
+          appVersion: "$(cat docs/scripts/VERSION)"
 
   publish-release:
     permissions:
