@@ -1,4 +1,6 @@
+import type {} from '@emotion/styled';
 import { styled } from '@mui/material';
+import type {} from '@mui/system';
 import DataGrid from 'react-data-grid';
 
 export const DataGridStyled = styled(DataGrid)(({ theme }) => ({
@@ -18,7 +20,7 @@ export const DataGridStyled = styled(DataGrid)(({ theme }) => ({
   '--rdg-checkbox-disabled-background-color': '#333',
 
   flex: 1,
-  '.cj343x07-0-0-beta-46': {
+  '.cj343x07-0-0-beta-47': {
     minHeight: '30px',
     maxHeight: '30px',
     whiteSpace: 'nowrap',
