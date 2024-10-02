@@ -39,14 +39,14 @@ export const useParamParser = () => {
     const currentConnection = connectionList?.find((c) => c.id === Number(connectionId));
     if (!currentConnection || !tabs[connectionId]) {
       updateCurrentConnection(undefined);
-      navigate({ route: '/', connectionId: undefined, tabId: undefined });
+      navigate({ route: '404' });
       return;
     }
 
     //find selected tab
     const selectedTab = tabs[connectionId]?.find((t) => t.id === tabId);
     if (!selectedTab) {
-      navigate({ route: '/', connectionId: undefined, tabId: undefined });
+      navigate({ route: '404' });
       return;
     }
 
