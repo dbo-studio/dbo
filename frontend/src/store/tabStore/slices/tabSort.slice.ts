@@ -38,5 +38,14 @@ export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], T
     selectedTab.showSorts = show;
     selectedTab.showFilters = false;
     get().updateSelectedTab(selectedTab);
+  },
+  updateSorts: async (sorts: SortType[]) => {
+    const selectedTab = get().getSelectedTab();
+    if (!selectedTab) {
+      return;
+    }
+
+    selectedTab.sorts = sorts;
+    get().updateSelectedTab(selectedTab);
   }
 });

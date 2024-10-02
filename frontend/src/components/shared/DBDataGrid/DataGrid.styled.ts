@@ -20,6 +20,9 @@ export const DataGridStyled = styled(DataGrid)(({ theme }) => ({
   '--rdg-checkbox-disabled-background-color': '#333',
 
   flex: 1,
+  '.h44jtk67-0-0-beta-47': {
+    flex: 1
+  },
   '.cj343x07-0-0-beta-47': {
     minHeight: '30px',
     maxHeight: '30px',
@@ -29,7 +32,11 @@ export const DataGridStyled = styled(DataGrid)(({ theme }) => ({
     outline: 'none',
     display: 'flex',
     justifyContent: 'flex-start',
-    alignItems: 'center'
+    alignItems: 'center',
+    paddingRight: theme.spacing(1)
+  },
+  '.rdg-header-sort-name': {
+    paddingRight: theme.spacing(1 / 2)
   },
   '.edit-highlight': {
     '.rdg-cell': {
