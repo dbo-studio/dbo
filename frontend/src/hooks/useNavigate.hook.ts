@@ -27,7 +27,7 @@ export default function useNavigate() {
         params.tabId = '';
       }
 
-      if (route.route) {
+      if (route.route && route.route.length > 0 && isUrlValid(`/${route.route}`)) {
         routeNavigate(`/${route.route}`);
       }
 
@@ -38,3 +38,12 @@ export default function useNavigate() {
 
   return navigate;
 }
+
+const isUrlValid = (url: string): boolean => {
+  try {
+    new URL(url);
+    return true;
+  } catch (err) {
+    return false;
+  }
+};
