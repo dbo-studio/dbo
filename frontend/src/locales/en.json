@@ -80,5 +80,6 @@
   "new_tab": "New tab",
   "close_tab": "Close tab",
   "404_description": " Oops! The page you're looking for doesn't exist.",
-  "back_to_home": "Back to Home"
+  "back_to_home": "Back to Home",
+  "reload": "Reload"
 }
