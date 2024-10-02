@@ -39,6 +39,7 @@ export default function Schemas() {
           size='medium'
           fullWidth={true}
           onChange={handleChangeSchema}
+          value={currentConnection.currentSchema}
           defaultValue={currentConnection.currentSchema}
         >
           {currentConnection.schemas.map((s: string) => (
