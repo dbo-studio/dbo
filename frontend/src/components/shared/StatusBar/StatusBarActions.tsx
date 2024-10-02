@@ -6,6 +6,7 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, IconButton, Stack } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import LoadingIconButton from '../../base/LoadingIconButton/LoadingIconButton';
 
@@ -78,7 +79,7 @@ export default function StatusBarActions() {
       try {
         await updateDesignsQuery();
       } catch (error) {
-        console.log('🚀 ~ handleSave ~ error:', error);
+        toast.error(error.message);
       }
     }
   };

@@ -240,7 +240,5 @@ export const cleanupUpdateDesignObject = (data: EditedColumnValue | null): Updat
     newObject.comment = data.comment;
   }
 
-  console.log(newObject);
-
   return newObject;
 };
