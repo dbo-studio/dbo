@@ -11,6 +11,7 @@ export type TabSortSlice = {
   upsertSorts: (sort: SortType) => Promise<void>;
   removeSort: (sort: SortType) => void;
   setShowSorts: (show: boolean) => void;
+  updateSorts: (sorts: SortType[]) => void;
 };
 
 export type TabSettingSlice = {
