@@ -7,7 +7,8 @@ const connectionHandler = [
         connectionListItemModel,
         {
           ...connectionListItemModel,
-          id:2
+          id: 2,
+          is_active: false
         }
       ],
       message: ''
@@ -19,7 +20,7 @@ const connectionHandler = [
     return HttpResponse.json({
       data: {
         ...connectionDetailModel,
-        id: Number(id),
+        id: Number(id)
       },
       message: ''
     });
@@ -45,9 +46,7 @@ const connectionHandler = [
 
   http.delete('/api/connections/:id', () => {
     return HttpResponse.json({
-      data: [
-       connectionListItemModel
-      ],
+      data: [connectionListItemModel],
       message: ''
     });
   }),
@@ -60,8 +59,7 @@ const connectionHandler = [
   })
 ];
 
-
-const connectionListItemModel =   {
+const connectionListItemModel = {
   id: 1,
   name: 'localhost',
   type: 'SQL',
@@ -73,7 +71,7 @@ const connectionListItemModel =   {
     username: 'default'
   },
   is_active: true
-}
+};
 
 const connectionDetailModel = {
   id: 1,
@@ -104,8 +102,6 @@ const connectionDetailModel = {
     'src_cd',
     'weight'
   ]
-}
+};
 
-
-
-export { connectionHandler,connectionListItemModel,connectionDetailModel };
+export { connectionDetailModel, connectionHandler, connectionListItemModel };
