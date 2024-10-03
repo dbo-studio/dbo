@@ -63,7 +63,7 @@ export default function DBDataGrid() {
       rowIdx: getRows().length - 1
     });
 
-    setSearchParams({ scrollToBottom: 'false' });
+    setSearchParams({ ...searchParams, scrollToBottom: 'false' });
   };
 
   useEffect(() => {

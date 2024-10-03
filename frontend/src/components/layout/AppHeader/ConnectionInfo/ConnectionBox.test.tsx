@@ -4,7 +4,7 @@ import locales from '@/locales';
 import * as conn from '@/store/connectionStore/connection.store.ts';
 import { screen } from '@testing-library/dom';
 import { render } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, test, vi } from 'vitest';
 import ConnectionBox from './ConnectionBox';
 
@@ -19,9 +19,9 @@ describe('ConnectionBox.tsx', () => {
 
   test('should render the the connection box', () => {
     render(
-      <BrowserRouter>
+      <MemoryRouter>
         <ConnectionBox />
-      </BrowserRouter>
+      </MemoryRouter>
     );
     expect(screen.getByText(locales.no_active_connection)).not.toBeNull();
   });
@@ -33,9 +33,9 @@ describe('ConnectionBox.tsx', () => {
     });
 
     render(
-      <BrowserRouter>
+      <MemoryRouter>
         <ConnectionBox />
-      </BrowserRouter>
+      </MemoryRouter>
     );
 
     const txt = 'PostgreSQL 16.1 public: sample_db SQL Query';

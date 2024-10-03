@@ -2,23 +2,18 @@ import type { ConnectionType } from '@/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { createDatabaseSlice } from './slices/database.slices';
-import type { ConnectionStore, DatabaseSlice } from './types';
+import type { ConnectionStore } from './types';
 
-type ConnectionState = ConnectionStore & DatabaseSlice;
+type ConnectionState = ConnectionStore;
 
 export const useConnectionStore = create<ConnectionState>()(
   devtools(
     immer((set, get, ...state) => ({
-      showAddConnection: false,
       showEditConnection: undefined,
       connections: undefined,
       currentConnection: undefined,
       updateConnections: (connections: ConnectionType[]) => {
         set({ connections });
-      },
-      updateShowAddConnection: (show: boolean) => {
-        set({ showAddConnection: show });
       },
       updateShowEditConnection: (connection: ConnectionType | undefined) => {
         set({ showEditConnection: connection });
@@ -42,8 +37,7 @@ export const useConnectionStore = create<ConnectionState>()(
         });
 
         set({ currentConnection, connections });
-      },
-      ...createDatabaseSlice(set, get, ...state)
+      }
     })),
     { name: 'connections' }
   )
