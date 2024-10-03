@@ -23,8 +23,8 @@ check_go() {
         read _ _ v _
         echo ${v#go}
     })
-    if [ "$(version "${GO_VERSION}")" -lt "$(version 1.22.0)" ]; then
-        echo "${RED}Recheck failed.${NC} Require go version >= 1.22. Current version ${GO_VERSION}."
+    if [ "$(version "${GO_VERSION}")" -lt "$(version 1.23.0)" ]; then
+        echo "${RED}Recheck failed.${NC} Require go version >= 1.23. Current version ${GO_VERSION}."
         exit 1
     fi
 }
