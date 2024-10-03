@@ -5,6 +5,7 @@ import NotFound from './404/404';
 import Data from './Data/Data';
 import Design from './Design/Design';
 import Query from './Query/Query';
+import Settings from './Settings/Settings';
 
 export const router = createBrowserRouter([
   {
@@ -26,6 +27,10 @@ export const router = createBrowserRouter([
       {
         path: 'design',
         element: <Design />
+      },
+      {
+        path: 'settings',
+        element: <Settings />
       }
     ]
   }

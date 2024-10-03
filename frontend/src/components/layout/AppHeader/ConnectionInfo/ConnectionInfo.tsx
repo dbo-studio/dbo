@@ -1,4 +1,4 @@
-import ConnectionBox from '@/components/common/ConnectionInfo/ConnectionBox';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { TabMode } from '@/core/enums';
 import useNavigate from '@/hooks/useNavigate.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
@@ -6,9 +6,9 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton, Stack } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { Suspense, lazy } from 'react';
-import CustomIcon from '../../base/CustomIcon/CustomIcon';
+import ConnectionBox from './ConnectionBox';
 
-const Databases = lazy(() => import('../Databases/Databases'));
+const Databases = lazy(() => import('./../../../common/Databases/Databases'));
 
 export default function ConnectionInfo() {
   const navigate = useNavigate();
