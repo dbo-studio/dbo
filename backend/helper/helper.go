@@ -2,9 +2,10 @@ package helper
 
 import (
 	"encoding/json"
-	"go.uber.org/zap"
 	"os"
 	"strconv"
+
+	"go.uber.org/zap"
 )
 
 func IsLocal() bool {
