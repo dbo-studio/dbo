@@ -1,6 +1,7 @@
 package server
 
 import (
+	connection_handler "github.com/dbo-studio/dbo/api/handler"
 	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/compress"
@@ -8,8 +9,6 @@ import (
 	fiberLogger "github.com/gofiber/fiber/v3/middleware/logger"
 	"github.com/gofiber/fiber/v3/middleware/recover"
 
-	connection_handler "github.com/dbo-studio/dbo/api/handler/connection"
-	database_handler "github.com/dbo-studio/dbo/api/handler/database"
 	design_handler "github.com/dbo-studio/dbo/api/handler/design"
 	history_handler "github.com/dbo-studio/dbo/api/handler/history"
 	query_handler "github.com/dbo-studio/dbo/api/handler/query"
@@ -22,13 +21,13 @@ type Server struct {
 	app               *fiber.App
 	queryHandler      query_handler.QueryHandler
 	connectionHandler connection_handler.ConnectionHandler
-	databaseHandler   database_handler.DatabaseHandler
+	databaseHandler   connection_handler.DatabaseHandler
 	savedQueryHandler saved_handler.SavedQueryHandler
 	designHandler     design_handler.DesignHandler
 	historyHandler    history_handler.HistoryHandler
 }
 
-func New(service *service.Service, isLocal bool) *Server {
+func New(service *service.Service) *Server {
 	return &Server{
 		app: fiber.New(fiber.Config{
 			JSONEncoder: json.Marshal,
@@ -44,7 +43,10 @@ func New(service *service.Service, isLocal bool) *Server {
 		connectionHandler: connection_handler.ConnectionHandler{
 			ConnectionService: service.ConnectionService,
 		},
-		databaseHandler:   database_handler.DatabaseHandler{},
+		databaseHandler: connection_handler.DatabaseHandler{
+			ConnectionService: service.ConnectionService,
+			DatabaseService:   service.DatabaseService,
+		},
 		savedQueryHandler: saved_handler.SavedQueryHandler{},
 		designHandler:     design_handler.DesignHandler{},
 		historyHandler:    history_handler.HistoryHandler{},

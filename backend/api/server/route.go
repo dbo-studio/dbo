@@ -22,8 +22,8 @@ func (r *Server) routing() {
 	connection.Delete("/:id", r.connectionHandler.DeleteConnection)
 
 	database := api.Group("databases")
-	database.Get("/metadata", r.databaseHandler.DatabaseMetaData)
-	database.Post("/", r.databaseHandler.AddDatabase)
+	database.Get("/metadata", r.databaseHandler.MetaData)
+	database.Post("/", r.databaseHandler.CreateDatabase)
 	database.Delete("/", r.databaseHandler.DeleteDatabase)
 
 	design := api.Group("design")

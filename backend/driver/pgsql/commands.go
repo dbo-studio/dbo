@@ -73,7 +73,7 @@ func (p PostgresQueryEngine) UpdateDesign(dto *dto.DesignDto) (*UpdateQueryResul
 	}, nil
 }
 
-func (p PostgresQueryEngine) CreateDatabase(dto *dto.DatabaseDto) error {
+func (p PostgresQueryEngine) CreateDatabase(dto *dto.CreateDatabaseRequest) error {
 	query := createDBQuery(dto)
 
 	db, err := p.Connect(dto.ConnectionId)
@@ -86,7 +86,7 @@ func (p PostgresQueryEngine) CreateDatabase(dto *dto.DatabaseDto) error {
 	return result.Error
 }
 
-func (p PostgresQueryEngine) DropDatabase(dto *dto.DeleteDatabaseDto) error {
+func (p PostgresQueryEngine) DropDatabase(dto *dto.DeleteDatabaseRequest) error {
 	query := fmt.Sprintf("DROP DATABASE %s", dto.Name)
 
 	db, err := p.Connect(dto.ConnectionId)

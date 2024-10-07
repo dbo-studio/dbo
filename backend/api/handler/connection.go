@@ -1,4 +1,4 @@
-package connection_handler
+package handler
 
 import (
 	"github.com/dbo-studio/dbo/api/dto"

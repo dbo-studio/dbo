@@ -50,7 +50,7 @@ func queryGenerator(dto *dto.RunQueryDto) string {
 	return query
 }
 
-func createDBQuery(dto *dto.DatabaseDto) string {
+func createDBQuery(dto *dto.CreateDatabaseRequest) string {
 	query := fmt.Sprintf("CREATE DATABASE %s ", dto.Name)
 	if dto.Template != nil && len(*dto.Template) > 0 {
 		query += fmt.Sprintf("WITH TEMPLATE = %s ", *dto.Template)
