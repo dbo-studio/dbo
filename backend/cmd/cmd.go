@@ -27,10 +27,10 @@ func ServeCommand() *cobra.Command {
 
 func Execute() {
 	ctx := context.Background()
-	repository := repository.NewRepository(ctx)
-	service := service.NewService(repository)
+	rr := repository.NewRepository(ctx)
+	ss := service.NewService(rr)
 
-	restServer := server.New(service, helper.IsLocal())
+	restServer := server.New(ss)
 
 	if err := restServer.Start(helper.IsLocal(), app.Config().App.Port); err != nil {
 		msg := fmt.Sprintf("error happen while serving: %v", err)

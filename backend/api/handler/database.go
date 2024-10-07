@@ -54,7 +54,7 @@ func (h DatabaseHandler) DeleteDatabase(c fiber.Ctx) error {
 }
 
 func (h DatabaseHandler) MetaData(c fiber.Ctx) error {
-	metadata, err := h.DatabaseService.MetaData(c.Context(), fiber.Params[int32](c, "connection_id"))
+	metadata, err := h.DatabaseService.MetaData(c.Context(), fiber.Query[int32](c, "connection_id"))
 	if err != nil {
 		app.Log().Error(err.Error())
 		return response.ErrorBuilder(err).Send(c)
