@@ -83,7 +83,7 @@ func (s IConnectionServiceImpl) DeleteConnection(ctx context.Context, connection
 	return s.Connections(ctx)
 }
 
-func (s IConnectionServiceImpl) TestConnection(ctx context.Context, req *dto.CreateConnectionRequest) error {
+func (s IConnectionServiceImpl) TestConnection(_ context.Context, req *dto.CreateConnectionRequest) error {
 	_, err := app.Drivers().Pgsql.ConnectWithOptions(pgsqlDriver.ConnectionOption{
 		Host:     req.Host,
 		Port:     int32(req.Port),
