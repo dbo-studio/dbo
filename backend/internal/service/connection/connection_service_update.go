@@ -11,7 +11,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
-func (s *IConnectionServiceImpl) UpdateConnection(ctx context.Context, connectionId int32, req *dto.UpdateConnectionRequest) (*dto.ConnectionDetailResponse, error) {
+func (s IConnectionServiceImpl) UpdateConnection(ctx context.Context, connectionId int32, req *dto.UpdateConnectionRequest) (*dto.ConnectionDetailResponse, error) {
 	connection, err := s.connectionRepo.FindConnection(ctx, connectionId)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)

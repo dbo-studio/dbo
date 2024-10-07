@@ -36,7 +36,7 @@ func NewConnectionService(
 	}
 }
 
-func (s *IConnectionServiceImpl) Connections(ctx context.Context) (*[]dto.ConnectionsResponse, error) {
+func (s IConnectionServiceImpl) Connections(ctx context.Context) (*[]dto.ConnectionsResponse, error) {
 	connections, err := s.connectionRepo.ConnectionList(ctx)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,12 @@ func (s *IConnectionServiceImpl) Connections(ctx context.Context) (*[]dto.Connec
 	return connectionsToResponse(connections), nil
 }
 
-func (s *IConnectionServiceImpl) CreateConnection(ctx context.Context, req *dto.CreateConnectionRequest) (*dto.ConnectionDetailResponse, error) {
+func (s IConnectionServiceImpl) CreateConnection(ctx context.Context, req *dto.CreateConnectionRequest) (*dto.ConnectionDetailResponse, error) {
+	err := s.TestConnection(ctx, req)
+	if err != nil {
+		return nil, apperror.DriverError(err)
+	}
+
 	connection, err := s.connectionRepo.CreateConnection(ctx, req)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
@@ -59,7 +64,7 @@ func (s *IConnectionServiceImpl) CreateConnection(ctx context.Context, req *dto.
 	return s.connectionDetail(ctx, connection, false)
 }
 
-func (s *IConnectionServiceImpl) DeleteConnection(ctx context.Context, connectionId int32) (*[]dto.ConnectionsResponse, error) {
+func (s IConnectionServiceImpl) DeleteConnection(ctx context.Context, connectionId int32) (*[]dto.ConnectionsResponse, error) {
 	connection, err := s.connectionRepo.FindConnection(ctx, connectionId)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
@@ -78,7 +83,7 @@ func (s *IConnectionServiceImpl) DeleteConnection(ctx context.Context, connectio
 	return s.Connections(ctx)
 }
 
-func (s *IConnectionServiceImpl) TestConnection(ctx context.Context, req *dto.CreateConnectionRequest) error {
+func (s IConnectionServiceImpl) TestConnection(ctx context.Context, req *dto.CreateConnectionRequest) error {
 	_, err := app.Drivers().Pgsql.ConnectWithOptions(pgsqlDriver.ConnectionOption{
 		Host:     req.Host,
 		Port:     int32(req.Port),

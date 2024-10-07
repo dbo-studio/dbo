@@ -10,7 +10,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
-func (s *IConnectionServiceImpl) ConnectionDetail(ctx context.Context, req *dto.ConnectionDetailRequest) (*dto.ConnectionDetailResponse, error) {
+func (s IConnectionServiceImpl) ConnectionDetail(ctx context.Context, req *dto.ConnectionDetailRequest) (*dto.ConnectionDetailResponse, error) {
 	connection, err := s.connectionRepo.FindConnection(ctx, req.ConnectionId)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
@@ -19,7 +19,7 @@ func (s *IConnectionServiceImpl) ConnectionDetail(ctx context.Context, req *dto.
 	return s.connectionDetail(ctx, connection, req.FromCache)
 }
 
-func (s *IConnectionServiceImpl) connectionDetail(ctx context.Context, connection *model.Connection, fromCache bool) (*dto.ConnectionDetailResponse, error) {
+func (s IConnectionServiceImpl) connectionDetail(ctx context.Context, connection *model.Connection, fromCache bool) (*dto.ConnectionDetailResponse, error) {
 	var schemas = make([]string, 0)
 	var tables = make([]string, 0)
 	var err error
