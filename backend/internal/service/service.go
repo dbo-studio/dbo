@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/dbo-studio/dbo/internal/driver"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceConnection "github.com/dbo-studio/dbo/internal/service/connection"
 	serviceDatabase "github.com/dbo-studio/dbo/internal/service/database"
@@ -13,10 +14,10 @@ type Service struct {
 	DesignService     serviceDesign.IDesignService
 }
 
-func NewService(repo *repository.Repository) *Service {
+func NewService(repo *repository.Repository, drivers *driver.DriverEngine) *Service {
 	return &Service{
-		ConnectionService: serviceConnection.NewConnectionService(repo.ConnectionRepo, repo.CacheRepo),
-		DatabaseService:   serviceDatabase.NewDatabaseService(repo.ConnectionRepo),
-		DesignService:     serviceDesign.NewDesignService(repo.ConnectionRepo),
+		ConnectionService: serviceConnection.NewConnectionService(drivers, repo.ConnectionRepo, repo.CacheRepo),
+		DatabaseService:   serviceDatabase.NewDatabaseService(repo.ConnectionRepo, drivers),
+		DesignService:     serviceDesign.NewDesignService(repo.ConnectionRepo, drivers),
 	}
 }

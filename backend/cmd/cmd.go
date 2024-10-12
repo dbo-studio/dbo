@@ -4,11 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/dbo-studio/dbo/config"
+	"github.com/dbo-studio/dbo/internal/app/handler"
+	historyHandler "github.com/dbo-studio/dbo/internal/app/handler/history"
+	queryHandler "github.com/dbo-studio/dbo/internal/app/handler/query"
+	savedHandler "github.com/dbo-studio/dbo/internal/app/handler/saved_query"
+	"github.com/dbo-studio/dbo/internal/app/server"
+	"github.com/dbo-studio/dbo/internal/driver"
+	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/dbo-studio/dbo/pkg/cache/sqlite"
+	"github.com/dbo-studio/dbo/pkg/db"
+	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/dbo-studio/dbo/pkg/logger/zap"
 	"log"
 
-	"github.com/dbo-studio/dbo/api/server"
-	"github.com/dbo-studio/dbo/app"
-	"github.com/dbo-studio/dbo/helper"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/internal/service"
 	"github.com/spf13/cobra"
@@ -27,14 +36,32 @@ func ServeCommand() *cobra.Command {
 
 func Execute() {
 	ctx := context.Background()
-	rr := repository.NewRepository(ctx)
-	ss := service.NewService(rr)
 
-	restServer := server.New(ss)
+	cfg := config.New()
+	appLogger := zap.New(cfg)
+	appDB := db.New(cfg, appLogger).DB
+	err := appDB.AutoMigrate(&model.CacheItem{}, &model.Connection{}, &model.SavedQuery{}, &model.History{})
+	if err != nil {
+		appLogger.Fatal(err)
+	}
+	drivers := driver.InitDrivers(appDB)
+	cache := sqlite.NewSQLiteCache(appDB)
 
-	if err := restServer.Start(helper.IsLocal(), app.Config().App.Port); err != nil {
+	rr := repository.NewRepository(ctx, appDB, cache, drivers)
+	ss := service.NewService(rr, drivers)
+
+	restServer := server.New(appLogger, server.Handlers{
+		Query:      queryHandler.NewQueryHandler(appLogger, appDB, drivers, cache, ss.DesignService),
+		Connection: handler.NewConnectionHandler(appLogger, ss.ConnectionService),
+		Database:   handler.NewDatabaseHandler(appLogger, ss.ConnectionService, ss.DatabaseService),
+		SavedQuery: savedHandler.NewSavedQueryHandler(appLogger, appDB),
+		Design:     handler.NewDesignHandler(appLogger, ss.ConnectionService, ss.DesignService),
+		History:    historyHandler.NewHistoryHandler(appLogger, appDB),
+	})
+
+	if err := restServer.Start(helper.IsLocal(), cfg.App.Port); err != nil {
 		msg := fmt.Sprintf("error happen while serving: %v", err)
-		app.Log().Error(errors.New(msg))
+		appLogger.Error(errors.New(msg))
 		log.Println(msg)
 	}
 }

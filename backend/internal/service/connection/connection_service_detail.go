@@ -2,11 +2,10 @@ package serviceConnection
 
 import (
 	"context"
-	"database/sql"
+	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/samber/lo"
 
-	"github.com/dbo-studio/dbo/api/dto"
-	"github.com/dbo-studio/dbo/app"
-	"github.com/dbo-studio/dbo/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
@@ -56,14 +55,15 @@ func (s IConnectionServiceImpl) connectionDetail(ctx context.Context, connection
 		}
 	}
 
-	app.DB().Model(&connection).Updates(&model.Connection{
-		CurrentSchema: sql.NullString{
-			String: currentSchema,
-			Valid:  true,
-		},
-		IsActive: true,
+	c, err := s.connectionRepo.UpdateConnection(ctx, connection, &dto.UpdateConnectionRequest{
+		CurrentSchema: lo.ToPtr[string](currentSchema),
+		IsActive:      lo.ToPtr[bool](true),
 	})
 
-	return connectionDetailModelToResponse(connection, version, databases, schemas, tables), nil
+	if err != nil {
+		return nil, err
+	}
+
+	return connectionDetailModelToResponse(c, version, databases, schemas, tables), nil
 
 }

@@ -3,36 +3,42 @@ package repository
 import (
 	"context"
 	"database/sql"
-
-	"github.com/dbo-studio/dbo/api/dto"
-	"github.com/dbo-studio/dbo/app"
-	"github.com/dbo-studio/dbo/model"
+	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/driver"
+	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/dbo-studio/dbo/pkg/helper"
+	"gorm.io/gorm"
 )
 
 var _ IConnectionRepo = (*IConnectionRepoImpl)(nil)
 
 type IConnectionRepoImpl struct {
+	db      *gorm.DB
+	drivers *driver.DriverEngine
 }
 
-func NewConnectionRepo() *IConnectionRepoImpl {
-	return &IConnectionRepoImpl{}
+func NewConnectionRepo(db *gorm.DB, drivers *driver.DriverEngine) *IConnectionRepoImpl {
+	return &IConnectionRepoImpl{
+		db:      db,
+		drivers: drivers,
+	}
 }
 
-func (c *IConnectionRepoImpl) ConnectionList(ctx context.Context) (*[]model.Connection, error) {
+func (c IConnectionRepoImpl) ConnectionList(_ context.Context) (*[]model.Connection, error) {
 	var connections []model.Connection
-	result := app.DB().Find(&connections)
+	result := c.db.Find(&connections)
 
 	return &connections, result.Error
 }
 
-func (c *IConnectionRepoImpl) FindConnection(ctx context.Context, id int32) (*model.Connection, error) {
+func (c IConnectionRepoImpl) FindConnection(_ context.Context, id int32) (*model.Connection, error) {
 	var connection model.Connection
-	result := app.DB().Where("id", "=", id).First(&connection)
+	result := c.db.Where("id", "=", id).First(&connection)
 
 	return &connection, result.Error
 }
 
-func (c *IConnectionRepoImpl) CreateConnection(ctx context.Context, dto *dto.CreateConnectionRequest) (*model.Connection, error) {
+func (c IConnectionRepoImpl) CreateConnection(_ context.Context, dto *dto.CreateConnectionRequest) (*model.Connection, error) {
 	connection := &model.Connection{
 		Name:     dto.Name,
 		Host:     dto.Host,
@@ -53,12 +59,58 @@ func (c *IConnectionRepoImpl) CreateConnection(ctx context.Context, dto *dto.Cre
 		UpdatedAt:       sql.NullTime{},
 	}
 
-	result := app.DB().Save(connection)
+	result := c.db.Save(connection)
 
 	return connection, result.Error
 }
 
-func (c *IConnectionRepoImpl) DeleteConnection(ctx context.Context, connection *model.Connection) error {
-	result := app.DB().Delete(connection)
+func (c IConnectionRepoImpl) DeleteConnection(_ context.Context, connection *model.Connection) error {
+	result := c.db.Delete(connection)
 	return result.Error
+}
+
+func (c IConnectionRepoImpl) UpdateConnection(_ context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) (*model.Connection, error) {
+	connection.Name = helper.OptionalString(req.Name, connection.Name)
+	connection.Host = helper.OptionalString(req.Host, connection.Host)
+	connection.Username = helper.OptionalString(req.Username, connection.Username)
+	connection.Password = sql.NullString{
+		Valid:  true,
+		String: helper.OptionalString(req.Password, connection.Password.String),
+	}
+	connection.Port = helper.OptionalUint(req.Port, connection.Port)
+	connection.Database = helper.OptionalString(req.Database, connection.Database)
+	connection.IsActive = helper.OptionalBool(req.IsActive, connection.IsActive)
+	connection.CurrentDatabase = sql.NullString{
+		Valid:  true,
+		String: helper.OptionalString(req.CurrentDatabase, connection.CurrentDatabase.String),
+	}
+
+	if req.CurrentDatabase != nil && req.CurrentSchema == nil {
+		schemas, _ := c.drivers.Pgsql.Schemas(int32(connection.ID), *req.CurrentDatabase, false)
+		var currentSchema string
+		if len(schemas) > 0 {
+			currentSchema = schemas[0]
+		}
+		connection.CurrentSchema = sql.NullString{
+			Valid:  true,
+			String: currentSchema,
+		}
+	} else {
+		connection.CurrentSchema = sql.NullString{
+			Valid:  true,
+			String: helper.OptionalString(req.CurrentSchema, connection.CurrentSchema.String),
+		}
+	}
+
+	result := c.db.Save(&connection)
+
+	return connection, result.Error
+}
+
+func (c IConnectionRepoImpl) MakeAllConnectionsNotDefault(_ context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) error {
+	if req.IsActive != nil && *req.IsActive {
+		result := c.db.Model(&model.Connection{}).Not("id", connection.ID).Update("is_active", false)
+		return result.Error
+	}
+	return nil
 }

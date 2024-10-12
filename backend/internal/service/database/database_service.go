@@ -2,9 +2,9 @@ package serviceDatabase
 
 import (
 	"context"
+	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/driver"
 
-	"github.com/dbo-studio/dbo/api/dto"
-	"github.com/dbo-studio/dbo/app"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
@@ -18,12 +18,14 @@ type IDatabaseService interface {
 var _ IDatabaseService = (*IDatabaseServiceImpl)(nil)
 
 type IDatabaseServiceImpl struct {
+	drivers        *driver.DriverEngine
 	connectionRepo repository.IConnectionRepo
 }
 
-func NewDatabaseService(cr repository.IConnectionRepo) *IDatabaseServiceImpl {
+func NewDatabaseService(cr repository.IConnectionRepo, drivers *driver.DriverEngine) *IDatabaseServiceImpl {
 	return &IDatabaseServiceImpl{
 		connectionRepo: cr,
+		drivers:        drivers,
 	}
 }
 
@@ -33,7 +35,7 @@ func (i IDatabaseServiceImpl) CreateDatabase(ctx context.Context, dto *dto.Creat
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	err = app.Drivers().Pgsql.CreateDatabase(dto)
+	err = i.drivers.Pgsql.CreateDatabase(dto)
 	if err != nil {
 		return apperror.DriverError(apperror.ErrConnectionNotFound)
 	}
@@ -47,7 +49,7 @@ func (i IDatabaseServiceImpl) DeleteDatabase(ctx context.Context, dto *dto.Delet
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	err = app.Drivers().Pgsql.DropDatabase(dto)
+	err = i.drivers.Pgsql.DropDatabase(dto)
 	if err != nil {
 		return apperror.DriverError(err)
 	}
@@ -61,18 +63,18 @@ func (i IDatabaseServiceImpl) MetaData(ctx context.Context, connId int32) (*dto.
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	databases, err := app.Drivers().Pgsql.Databases(int32(connection.ID), true)
+	databases, err := i.drivers.Pgsql.Databases(int32(connection.ID), true)
 	if err != nil {
 		return nil, apperror.DriverError(err)
 	}
 
-	tableSpaces, err := app.Drivers().Pgsql.TableSpaces(int32(connection.ID))
+	tableSpaces, err := i.drivers.Pgsql.TableSpaces(int32(connection.ID))
 	if err != nil {
 		return nil, apperror.DriverError(err)
 	}
 
-	encodings := app.Drivers().Pgsql.Encodes()
-	datatypes := app.Drivers().Pgsql.DataTypes()
+	encodings := i.drivers.Pgsql.Encodes()
+	datatypes := i.drivers.Pgsql.DataTypes()
 
 	return &dto.DatabaseMetaDataResponse{
 		Templates:   databases,

@@ -11,8 +11,6 @@ issues:
 
 linters:
   enable:
-#    - cyclop
-    - goimports
     - testifylint
     - unconvert
     - govet

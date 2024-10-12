@@ -3,37 +3,45 @@ package repository
 import (
 	"context"
 	"fmt"
+	"github.com/dbo-studio/dbo/internal/driver"
+	"github.com/dbo-studio/dbo/pkg/cache"
+	"gorm.io/gorm"
 
-	"github.com/dbo-studio/dbo/app"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
 var _ ICacheRepo = (*ICacheRepoImpl)(nil)
 
 type ICacheRepoImpl struct {
+	cache   cache.Cache
+	drivers *driver.DriverEngine
+	db      *gorm.DB
 }
 
-func NewCacheRepo() *ICacheRepoImpl {
-	return &ICacheRepoImpl{}
+func NewCacheRepo(cache cache.Cache, drivers *driver.DriverEngine) *ICacheRepoImpl {
+	return &ICacheRepoImpl{
+		cache:   cache,
+		drivers: drivers,
+	}
 }
 
 // GeDatabaseTables implements ICacheRepo.
-func (i *ICacheRepoImpl) GeDatabaseTables(ctx context.Context, connectionID uint, schemaName string, fromCache bool) ([]string, error) {
+func (i ICacheRepoImpl) GeDatabaseTables(_ context.Context, connectionID uint, schemaName string, fromCache bool) ([]string, error) {
 	var tables []string
-	err := app.Cache().ConditionalGet(
+	err := i.cache.ConditionalGet(
 		fmt.Sprintf("connections:%d:tables", connectionID),
 		&tables,
 		fromCache,
 	)
 
 	if err != nil || tables == nil {
-		tables, err = app.Drivers().Pgsql.Tables(int32(connectionID), schemaName)
+		tables, err = i.drivers.Pgsql.Tables(int32(connectionID), schemaName)
 
 		if err != nil {
 			return tables, apperror.DriverError(err)
 		}
 
-		err = app.Cache().Set(fmt.Sprintf("connections:%d:tables", connectionID), tables, nil)
+		err = i.cache.Set(fmt.Sprintf("connections:%d:tables", connectionID), tables, nil)
 		if err != nil {
 			return tables, apperror.InternalServerError(err)
 		}
@@ -43,22 +51,22 @@ func (i *ICacheRepoImpl) GeDatabaseTables(ctx context.Context, connectionID uint
 }
 
 // GetConnectionDatabases implements ICacheRepo.
-func (i *ICacheRepoImpl) GetConnectionDatabases(ctx context.Context, connectionID uint, fromCache bool) ([]string, error) {
+func (i ICacheRepoImpl) GetConnectionDatabases(_ context.Context, connectionID uint, fromCache bool) ([]string, error) {
 	var databases []string
-	err := app.Cache().ConditionalGet(
+	err := i.cache.ConditionalGet(
 		fmt.Sprintf("connections:%d:databases", connectionID),
 		&databases,
 		fromCache,
 	)
 
 	if err != nil || databases == nil {
-		databases, err = app.Drivers().Pgsql.Databases(int32(connectionID), false)
+		databases, err = i.drivers.Pgsql.Databases(int32(connectionID), false)
 
 		if err != nil {
 			return databases, apperror.DriverError(err)
 		}
 
-		err = app.Cache().Set(fmt.Sprintf("connections:%d:databases", connectionID), databases, nil)
+		err = i.cache.Set(fmt.Sprintf("connections:%d:databases", connectionID), databases, nil)
 		if err != nil {
 			return databases, apperror.InternalServerError(err)
 		}
@@ -68,22 +76,22 @@ func (i *ICacheRepoImpl) GetConnectionDatabases(ctx context.Context, connectionI
 }
 
 // GetConnectionSchemas implements ICacheRepo.
-func (i *ICacheRepoImpl) GetConnectionSchemas(ctx context.Context, connectionID uint, databaseName string, fromCache bool) ([]string, error) {
+func (i ICacheRepoImpl) GetConnectionSchemas(_ context.Context, connectionID uint, databaseName string, fromCache bool) ([]string, error) {
 	var schemas []string
-	err := app.Cache().ConditionalGet(
+	err := i.cache.ConditionalGet(
 		fmt.Sprintf("connections:%d:schemas", connectionID),
 		&schemas,
 		fromCache,
 	)
 
 	if err != nil || schemas == nil {
-		schemas, err = app.Drivers().Pgsql.Schemas(int32(connectionID), databaseName, false)
+		schemas, err = i.drivers.Pgsql.Schemas(int32(connectionID), databaseName, false)
 
 		if err != nil {
 			return schemas, apperror.DriverError(err)
 		}
 
-		err = app.Cache().Set(fmt.Sprintf("connections:%d:schemas", connectionID), schemas, nil)
+		err = i.cache.Set(fmt.Sprintf("connections:%d:schemas", connectionID), schemas, nil)
 		if err != nil {
 			return schemas, apperror.InternalServerError(err)
 		}
@@ -93,22 +101,22 @@ func (i *ICacheRepoImpl) GetConnectionSchemas(ctx context.Context, connectionID 
 }
 
 // GetDatabaseVersion implements ICacheRepo.
-func (i *ICacheRepoImpl) GetDatabaseVersion(ctx context.Context, connectionID uint, fromCache bool) (string, error) {
+func (i ICacheRepoImpl) GetDatabaseVersion(_ context.Context, connectionID uint, fromCache bool) (string, error) {
 	var version string
-	err := app.Cache().ConditionalGet(
+	err := i.cache.ConditionalGet(
 		fmt.Sprintf("connections:%d:version", connectionID),
 		&version,
 		fromCache,
 	)
 
 	if err != nil || version == "" {
-		version, err = app.Drivers().Pgsql.Version(int32(connectionID))
+		version, err = i.drivers.Pgsql.Version(int32(connectionID))
 
 		if err != nil {
 			return version, apperror.DriverError(err)
 		}
 
-		err = app.Cache().Set(fmt.Sprintf("connections:%d:version", connectionID), version, nil)
+		err = i.cache.Set(fmt.Sprintf("connections:%d:version", connectionID), version, nil)
 		if err != nil {
 			return version, apperror.InternalServerError(err)
 		}
@@ -118,6 +126,6 @@ func (i *ICacheRepoImpl) GetDatabaseVersion(ctx context.Context, connectionID ui
 }
 
 // FlushCache implements ICacheRepo.
-func (i *ICacheRepoImpl) FlushCache(ctx context.Context) error {
-	return app.DB().Exec("DELETE FROM cache_items").Error
+func (i ICacheRepoImpl) FlushCache(_ context.Context) error {
+	return i.db.Exec("DELETE FROM cache_items").Error
 }

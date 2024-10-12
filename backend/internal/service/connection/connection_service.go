@@ -2,10 +2,10 @@ package serviceConnection
 
 import (
 	"context"
+	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/driver"
+	"github.com/dbo-studio/dbo/internal/driver/pgsql"
 
-	"github.com/dbo-studio/dbo/api/dto"
-	"github.com/dbo-studio/dbo/app"
-	pgsqlDriver "github.com/dbo-studio/dbo/driver/pgsql"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
@@ -22,15 +22,18 @@ type IConnectionService interface {
 var _ IConnectionService = (*IConnectionServiceImpl)(nil)
 
 type IConnectionServiceImpl struct {
+	drivers        *driver.DriverEngine
 	connectionRepo repository.IConnectionRepo
 	cacheRepo      repository.ICacheRepo
 }
 
 func NewConnectionService(
+	drivers *driver.DriverEngine,
 	connectionRepo repository.IConnectionRepo,
 	cacheRepo repository.ICacheRepo,
 ) *IConnectionServiceImpl {
 	return &IConnectionServiceImpl{
+		drivers:        drivers,
 		connectionRepo: connectionRepo,
 		cacheRepo:      cacheRepo,
 	}
@@ -84,7 +87,7 @@ func (s IConnectionServiceImpl) DeleteConnection(ctx context.Context, connection
 }
 
 func (s IConnectionServiceImpl) TestConnection(_ context.Context, req *dto.CreateConnectionRequest) error {
-	_, err := app.Drivers().Pgsql.ConnectWithOptions(pgsqlDriver.ConnectionOption{
+	_, err := s.drivers.Pgsql.ConnectWithOptions(pgsqlDriver.ConnectionOption{
 		Host:     req.Host,
 		Port:     int32(req.Port),
 		User:     req.Username,

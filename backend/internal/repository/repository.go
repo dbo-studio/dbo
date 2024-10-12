@@ -2,9 +2,11 @@ package repository
 
 import (
 	"context"
-
-	"github.com/dbo-studio/dbo/api/dto"
-	"github.com/dbo-studio/dbo/model"
+	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/driver"
+	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/dbo-studio/dbo/pkg/cache"
+	"gorm.io/gorm"
 )
 
 type IConnectionRepo interface {
@@ -12,6 +14,8 @@ type IConnectionRepo interface {
 	FindConnection(ctx context.Context, id int32) (*model.Connection, error)
 	CreateConnection(ctx context.Context, dto *dto.CreateConnectionRequest) (*model.Connection, error)
 	DeleteConnection(ctx context.Context, connection *model.Connection) error
+	UpdateConnection(ctx context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) (*model.Connection, error)
+	MakeAllConnectionsNotDefault(ctx context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) error
 }
 
 type ICacheRepo interface {
@@ -27,9 +31,9 @@ type Repository struct {
 	CacheRepo      ICacheRepo
 }
 
-func NewRepository(ctx context.Context) *Repository {
+func NewRepository(_ context.Context, db *gorm.DB, cache cache.Cache, drivers *driver.DriverEngine) *Repository {
 	return &Repository{
-		ConnectionRepo: NewConnectionRepo(),
-		CacheRepo:      NewCacheRepo(),
+		ConnectionRepo: NewConnectionRepo(db, drivers),
+		CacheRepo:      NewCacheRepo(cache, drivers),
 	}
 }

@@ -1,13 +1,13 @@
 package serviceDesign
 
 import (
-	"github.com/dbo-studio/dbo/api/dto"
-	pgsql "github.com/dbo-studio/dbo/driver/pgsql"
+	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/driver/pgsql"
 	"github.com/samber/lo"
 )
 
-func indexListToResponse(indexes []pgsql.IndexInfo) *dto.GetDesignIndexResponse {
-	data := make([]dto.GetDesignIndex, len(indexes))
+func indexListToResponse(indexes []pgsqlDriver.IndexInfo) *dto.GetDesignIndexResponse {
+	data := make([]dto.GetDesignIndex, 0)
 	for _, i := range indexes {
 		index := dto.GetDesignIndex{
 			IndexName:       i.IndexName,
@@ -30,40 +30,40 @@ func indexListToResponse(indexes []pgsql.IndexInfo) *dto.GetDesignIndexResponse 
 	}
 }
 
-func columnListToResponse(columns []pgsql.Structure) *dto.GetDesignColumnResponse {
-	data := make([]dto.GetDesignColumn, len(columns))
-	for _, col := range columns {
-		column := dto.GetDesignColumn{
-			OrdinalPosition: col.OrdinalPosition,
-			ColumnName:      col.ColumnName,
-			DataType:        col.DataType,
-			IsNullable:      col.IsNullable,
-			MappedType:      col.MappedType,
-			Editable:        col.Editable,
-			IsActive:        col.IsActive,
+func columnListToResponse(columns []pgsqlDriver.Structure) []dto.GetDesignColumn {
+	data := make([]dto.GetDesignColumn, 0)
+	for _, column := range columns {
+		var col dto.GetDesignColumn
+
+		col.Name = column.ColumnName
+		col.Type = column.DataType
+		col.MappedType = column.MappedType
+		col.Editable = column.Editable
+		col.IsActive = column.IsActive
+
+		if column.IsNullable == "NO" {
+			col.NotNull = false
 		}
 
-		if col.ColumnDefault.Valid {
-			column.ColumnDefault = lo.ToPtr[string](col.ColumnDefault.String)
+		if column.CharacterMaximumLength.Valid {
+			col.Length = lo.ToPtr[int32](column.CharacterMaximumLength.Int32)
 		}
 
-		if col.CharacterMaximumLength.Valid {
-			column.CharacterMaximumLength = lo.ToPtr[int32](col.CharacterMaximumLength.Int32)
+		if column.ColumnDefault.Valid {
+			col.Default = lo.ToPtr[string](column.ColumnDefault.String)
 		}
 
-		if col.Comment.Valid {
-			column.Comment = lo.ToPtr[string](col.Comment.String)
+		if column.Comment.Valid {
+			col.Comment = lo.ToPtr[string](column.Comment.String)
 		}
 
-		data = append(data, column)
+		data = append(data, col)
 	}
 
-	return &dto.GetDesignColumnResponse{
-		Columns: data,
-	}
+	return data
 }
 
-func updateDesignToResponse(result *pgsql.UpdateQueryResult) *dto.UpdateDesignResponse {
+func updateDesignToResponse(result *pgsqlDriver.UpdateQueryResult) *dto.UpdateDesignResponse {
 	return &dto.UpdateDesignResponse{
 		Query:        result.Query,
 		RowsAffected: result.RowsAffected,

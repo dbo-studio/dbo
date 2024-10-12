@@ -1,8 +1,8 @@
 package serviceConnection
 
 import (
-	"github.com/dbo-studio/dbo/api/dto"
-	"github.com/dbo-studio/dbo/model"
+	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/model"
 )
 
 func connectionsToResponse(connections *[]model.Connection) *dto.ConnectionsResponse {
