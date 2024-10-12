@@ -5,10 +5,10 @@ import (
 	"github.com/dbo-studio/dbo/model"
 )
 
-func connectionsToResponse(connections *[]model.Connection) *[]dto.ConnectionsResponse {
-	data := make([]dto.ConnectionsResponse, 0)
+func connectionsToResponse(connections *[]model.Connection) *dto.ConnectionsResponse {
+	data := make([]dto.Connections, 0)
 	for _, c := range *connections {
-		data = append(data, dto.ConnectionsResponse{
+		data = append(data, dto.Connections{
 			ID:       int64(c.ID),
 			Name:     c.Name,
 			Type:     "SQL",
@@ -23,7 +23,9 @@ func connectionsToResponse(connections *[]model.Connection) *[]dto.ConnectionsRe
 		})
 	}
 
-	return &data
+	return &dto.ConnectionsResponse{
+		Connections: data,
+	}
 }
 
 func connectionDetailModelToResponse(connection *model.Connection, version string, databases []string, schemas []string, tables []string) *dto.ConnectionDetailResponse {

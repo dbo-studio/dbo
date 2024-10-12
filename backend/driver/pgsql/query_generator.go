@@ -142,7 +142,7 @@ func insertQueryGenerator(dto *dto.UpdateQueryDto) []string {
 	return queries
 }
 
-func updateDesignGenerator(dto *dto.DesignDto) []string {
+func updateDesignGenerator(dto *dto.UpdateDesignRequest) []string {
 	alter := fmt.Sprintf(`ALTER TABLE "%s"."%s" `, dto.Schema, dto.Table)
 
 	queries := []string{}
@@ -196,7 +196,7 @@ func updateDesignGenerator(dto *dto.DesignDto) []string {
 	return queries
 }
 
-func insertToDesignGenerator(dto *dto.DesignDto) []string {
+func insertToDesignGenerator(dto *dto.UpdateDesignRequest) []string {
 	alter := fmt.Sprintf(`ALTER TABLE "%s"."%s" `, dto.Schema, dto.Table)
 	queries := []string{}
 	for _, addedItem := range dto.AddedItems {
@@ -230,7 +230,7 @@ func insertToDesignGenerator(dto *dto.DesignDto) []string {
 	return queries
 }
 
-func deleteFromDesignGenerator(dto *dto.DesignDto) []string {
+func deleteFromDesignGenerator(dto *dto.UpdateDesignRequest) []string {
 	alter := fmt.Sprintf(`ALTER TABLE "%s"."%s" `, dto.Schema, dto.Table)
 	queries := []string{}
 	for _, deletedItem := range dto.DeletedItems {

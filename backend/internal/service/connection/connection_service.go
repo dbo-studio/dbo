@@ -11,11 +11,11 @@ import (
 )
 
 type IConnectionService interface {
-	Connections(ctx context.Context) (*[]dto.ConnectionsResponse, error)
+	Connections(ctx context.Context) (*dto.ConnectionsResponse, error)
 	CreateConnection(ctx context.Context, req *dto.CreateConnectionRequest) (*dto.ConnectionDetailResponse, error)
 	ConnectionDetail(ctx context.Context, req *dto.ConnectionDetailRequest) (*dto.ConnectionDetailResponse, error)
 	UpdateConnection(ctx context.Context, connectionId int32, req *dto.UpdateConnectionRequest) (*dto.ConnectionDetailResponse, error)
-	DeleteConnection(ctx context.Context, connectionId int32) (*[]dto.ConnectionsResponse, error)
+	DeleteConnection(ctx context.Context, connectionId int32) (*dto.ConnectionsResponse, error)
 	TestConnection(ctx context.Context, req *dto.CreateConnectionRequest) error
 }
 
@@ -36,7 +36,7 @@ func NewConnectionService(
 	}
 }
 
-func (s IConnectionServiceImpl) Connections(ctx context.Context) (*[]dto.ConnectionsResponse, error) {
+func (s IConnectionServiceImpl) Connections(ctx context.Context) (*dto.ConnectionsResponse, error) {
 	connections, err := s.connectionRepo.ConnectionList(ctx)
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func (s IConnectionServiceImpl) CreateConnection(ctx context.Context, req *dto.C
 	return s.connectionDetail(ctx, connection, false)
 }
 
-func (s IConnectionServiceImpl) DeleteConnection(ctx context.Context, connectionId int32) (*[]dto.ConnectionsResponse, error) {
+func (s IConnectionServiceImpl) DeleteConnection(ctx context.Context, connectionId int32) (*dto.ConnectionsResponse, error) {
 	connection, err := s.connectionRepo.FindConnection(ctx, connectionId)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)

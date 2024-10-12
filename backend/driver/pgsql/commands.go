@@ -43,7 +43,7 @@ func (p PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryDto) (*UpdateQueryR
 	}, nil
 }
 
-func (p PostgresQueryEngine) UpdateDesign(dto *dto.DesignDto) (*UpdateQueryResult, error) {
+func (p PostgresQueryEngine) UpdateDesign(dto *dto.UpdateDesignRequest) (*UpdateQueryResult, error) {
 	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {
 		return nil, error_c.ErrConnection

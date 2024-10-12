@@ -9,22 +9,22 @@ import (
 	fiberLogger "github.com/gofiber/fiber/v3/middleware/logger"
 	"github.com/gofiber/fiber/v3/middleware/recover"
 
-	design_handler "github.com/dbo-studio/dbo/api/handler/design"
-	history_handler "github.com/dbo-studio/dbo/api/handler/history"
-	query_handler "github.com/dbo-studio/dbo/api/handler/query"
-	saved_handler "github.com/dbo-studio/dbo/api/handler/saved_query"
+	designHandler "github.com/dbo-studio/dbo/api/handler"
+	historyHandler "github.com/dbo-studio/dbo/api/handler/history"
+	queryHandler "github.com/dbo-studio/dbo/api/handler/query"
+	savedHandler "github.com/dbo-studio/dbo/api/handler/saved_query"
 	"github.com/dbo-studio/dbo/app"
 	"github.com/dbo-studio/dbo/internal/service"
 )
 
 type Server struct {
 	app               *fiber.App
-	queryHandler      query_handler.QueryHandler
+	queryHandler      queryHandler.QueryHandler
 	connectionHandler connection_handler.ConnectionHandler
 	databaseHandler   connection_handler.DatabaseHandler
-	savedQueryHandler saved_handler.SavedQueryHandler
-	designHandler     design_handler.DesignHandler
-	historyHandler    history_handler.HistoryHandler
+	savedQueryHandler savedHandler.SavedQueryHandler
+	designHandler     designHandler.DesignHandler
+	historyHandler    historyHandler.HistoryHandler
 }
 
 func New(service *service.Service) *Server {
@@ -39,7 +39,7 @@ func New(service *service.Service) *Server {
 				})
 			},
 		}),
-		queryHandler: query_handler.QueryHandler{},
+		queryHandler: queryHandler.QueryHandler{},
 		connectionHandler: connection_handler.ConnectionHandler{
 			ConnectionService: service.ConnectionService,
 		},
@@ -47,9 +47,12 @@ func New(service *service.Service) *Server {
 			ConnectionService: service.ConnectionService,
 			DatabaseService:   service.DatabaseService,
 		},
-		savedQueryHandler: saved_handler.SavedQueryHandler{},
-		designHandler:     design_handler.DesignHandler{},
-		historyHandler:    history_handler.HistoryHandler{},
+		savedQueryHandler: savedHandler.SavedQueryHandler{},
+		designHandler: designHandler.DesignHandler{
+			ConnectionService: service.ConnectionService,
+			DesignService:     service.DesignService,
+		},
+		historyHandler: historyHandler.HistoryHandler{},
 	}
 }
 

@@ -10,8 +10,8 @@ import (
 )
 
 type IDatabaseService interface {
-	CreateDatabase(context.Context, dto.CreateDatabaseRequest) error
-	DeleteDatabase(context.Context, dto.DeleteDatabaseRequest) error
+	CreateDatabase(context.Context, *dto.CreateDatabaseRequest) error
+	DeleteDatabase(context.Context, *dto.DeleteDatabaseRequest) error
 	MetaData(ctx context.Context, connId int32) (*dto.DatabaseMetaDataResponse, error)
 }
 
@@ -27,13 +27,13 @@ func NewDatabaseService(cr repository.IConnectionRepo) *IDatabaseServiceImpl {
 	}
 }
 
-func (i IDatabaseServiceImpl) CreateDatabase(ctx context.Context, dto dto.CreateDatabaseRequest) error {
+func (i IDatabaseServiceImpl) CreateDatabase(ctx context.Context, dto *dto.CreateDatabaseRequest) error {
 	_, err := i.connectionRepo.FindConnection(ctx, dto.ConnectionId)
 	if err != nil {
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	err = app.Drivers().Pgsql.CreateDatabase(&dto)
+	err = app.Drivers().Pgsql.CreateDatabase(dto)
 	if err != nil {
 		return apperror.DriverError(apperror.ErrConnectionNotFound)
 	}
@@ -41,13 +41,13 @@ func (i IDatabaseServiceImpl) CreateDatabase(ctx context.Context, dto dto.Create
 	return err
 }
 
-func (i IDatabaseServiceImpl) DeleteDatabase(ctx context.Context, dto dto.DeleteDatabaseRequest) error {
+func (i IDatabaseServiceImpl) DeleteDatabase(ctx context.Context, dto *dto.DeleteDatabaseRequest) error {
 	_, err := i.connectionRepo.FindConnection(ctx, dto.ConnectionId)
 	if err != nil {
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	err = app.Drivers().Pgsql.DropDatabase(&dto)
+	err = app.Drivers().Pgsql.DropDatabase(dto)
 	if err != nil {
 		return apperror.DriverError(err)
 	}

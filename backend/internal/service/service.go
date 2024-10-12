@@ -4,16 +4,19 @@ import (
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceConnection "github.com/dbo-studio/dbo/internal/service/connection"
 	serviceDatabase "github.com/dbo-studio/dbo/internal/service/database"
+	serviceDesign "github.com/dbo-studio/dbo/internal/service/design"
 )
 
 type Service struct {
 	ConnectionService serviceConnection.IConnectionService
 	DatabaseService   serviceDatabase.IDatabaseService
+	DesignService     serviceDesign.IDesignService
 }
 
 func NewService(repo *repository.Repository) *Service {
 	return &Service{
 		ConnectionService: serviceConnection.NewConnectionService(repo.ConnectionRepo, repo.CacheRepo),
 		DatabaseService:   serviceDatabase.NewDatabaseService(repo.ConnectionRepo),
+		DesignService:     serviceDesign.NewDesignService(repo.ConnectionRepo),
 	}
 }

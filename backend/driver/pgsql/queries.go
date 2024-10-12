@@ -324,13 +324,13 @@ func (p PostgresQueryEngine) TableSpaces(connectionId int32) ([]string, error) {
 }
 
 type IndexInfo struct {
-	IndexName       string  `db:"index_name"`
-	IndexAlgorithm  string  `db:"index_algorithm"`
-	IsUnique        bool    `db:"is_unique"`
-	IndexDefinition string  `db:"index_definition"`
-	ColumnName      string  `db:"column_name"`
-	Condition       string  `db:"condition"`
-	Comment         *string `db:"comment"`
+	IndexName       string         `db:"index_name"`
+	IndexAlgorithm  string         `db:"index_algorithm"`
+	IsUnique        bool           `db:"is_unique"`
+	IndexDefinition string         `db:"index_definition"`
+	ColumnName      string         `db:"column_name"`
+	Condition       string         `db:"condition"`
+	Comment         sql.NullString `db:"comment"`
 }
 
 func (p PostgresQueryEngine) Indexes(connectionId int32, table string, schema string) ([]IndexInfo, error) {

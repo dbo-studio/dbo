@@ -25,7 +25,7 @@ func (h DatabaseHandler) CreateDatabase(c fiber.Ctx) error {
 		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
 	}
 
-	err := h.DatabaseService.CreateDatabase(c.Context(), *req)
+	err := h.DatabaseService.CreateDatabase(c.Context(), req)
 	if err != nil {
 		app.Log().Error(err.Error())
 		return response.ErrorBuilder(err).Send(c)
@@ -44,7 +44,7 @@ func (h DatabaseHandler) DeleteDatabase(c fiber.Ctx) error {
 		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
 	}
 
-	err := h.DatabaseService.DeleteDatabase(c.Context(), *req)
+	err := h.DatabaseService.DeleteDatabase(c.Context(), req)
 	if err != nil {
 		app.Log().Error(err.Error())
 		return response.ErrorBuilder(err).Send(c)

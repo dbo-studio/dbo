@@ -13,17 +13,17 @@ type ConnectionHandler struct {
 	ConnectionService serviceConnection.IConnectionService
 }
 
-func (h *ConnectionHandler) Connections(c fiber.Ctx) error {
-	connections, err := h.ConnectionService.Connections(c.Context())
+func (h ConnectionHandler) Connections(c fiber.Ctx) error {
+	data, err := h.ConnectionService.Connections(c.Context())
 	if err != nil {
 		app.Log().Error(err.Error())
 		return response.ErrorBuilder(err).Send(c)
 	}
 
-	return response.SuccessBuilder(connections).Send(c)
+	return response.SuccessBuilder(data.Connections).Send(c)
 }
 
-func (h *ConnectionHandler) CreateConnection(c fiber.Ctx) error {
+func (h ConnectionHandler) CreateConnection(c fiber.Ctx) error {
 	req := new(dto.CreateConnectionRequest)
 	if err := c.Bind().Body(req); err != nil {
 		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
@@ -42,7 +42,7 @@ func (h *ConnectionHandler) CreateConnection(c fiber.Ctx) error {
 	return response.SuccessBuilder(connection).Send(c)
 }
 
-func (h *ConnectionHandler) ConnectionDetail(c fiber.Ctx) error {
+func (h ConnectionHandler) ConnectionDetail(c fiber.Ctx) error {
 	req := &dto.ConnectionDetailRequest{
 		ConnectionId: fiber.Params[int32](c, "id"),
 		FromCache:    fiber.Query[bool](c, "from_cache"),
@@ -57,18 +57,18 @@ func (h *ConnectionHandler) ConnectionDetail(c fiber.Ctx) error {
 	return response.SuccessBuilder(connection).Send(c)
 }
 
-func (h *ConnectionHandler) DeleteConnection(c fiber.Ctx) error {
+func (h ConnectionHandler) DeleteConnection(c fiber.Ctx) error {
 	connectionId := fiber.Params[int32](c, "id")
-	connections, err := h.ConnectionService.DeleteConnection(c.Context(), connectionId)
+	data, err := h.ConnectionService.DeleteConnection(c.Context(), connectionId)
 	if err != nil {
 		app.Log().Error(err.Error())
 		return response.ErrorBuilder(err).Send(c)
 	}
 
-	return response.SuccessBuilder(connections).Send(c)
+	return response.SuccessBuilder(data.Connections).Send(c)
 }
 
-func (h *ConnectionHandler) TestConnection(c fiber.Ctx) error {
+func (h ConnectionHandler) TestConnection(c fiber.Ctx) error {
 	req := new(dto.CreateConnectionRequest)
 	if err := c.Bind().Body(req); err != nil {
 		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
@@ -87,7 +87,7 @@ func (h *ConnectionHandler) TestConnection(c fiber.Ctx) error {
 	return response.SuccessBuilder("").Send(c)
 }
 
-func (h *ConnectionHandler) UpdateConnection(c fiber.Ctx) error {
+func (h ConnectionHandler) UpdateConnection(c fiber.Ctx) error {
 	connectionId := fiber.Params[int32](c, "id")
 	req := new(dto.UpdateConnectionRequest)
 
