@@ -27,6 +27,6 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           working-directory: ./backend
-          version: v1.58.1
+          version: v1.61.0
           args: --verbose --timeout=3m
           skip-cache: true
