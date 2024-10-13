@@ -2,7 +2,6 @@ package server
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/handler"
-	historyHandler "github.com/dbo-studio/dbo/internal/app/handler/history"
 	queryHandler "github.com/dbo-studio/dbo/internal/app/handler/query"
 	savedHandler "github.com/dbo-studio/dbo/internal/app/handler/saved_query"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -20,7 +19,7 @@ type Handlers struct {
 	Database   *handler.DatabaseHandler
 	SavedQuery *savedHandler.SavedQueryHandler
 	Design     *handler.DesignHandler
-	History    *historyHandler.HistoryHandler
+	History    *handler.HistoryHandler
 }
 
 type Server struct {

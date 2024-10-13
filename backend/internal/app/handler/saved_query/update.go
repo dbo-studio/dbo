@@ -9,7 +9,7 @@ import (
 )
 
 func (h *SavedQueryHandler) UpdateSavedQuery(c fiber.Ctx) error {
-	req := new(dto.CreateSavedQueryDto)
+	req := new(dto.CreateSavedQueryRequest)
 
 	if err := c.Bind().Body(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
@@ -35,7 +35,7 @@ func (h *SavedQueryHandler) UpdateSavedQuery(c fiber.Ctx) error {
 	return c.JSON(response.Success(response.SaveQuery(updatedQuery)))
 }
 
-func (h *SavedQueryHandler) updateSavedQuery(query *model.SavedQuery, req *dto.CreateSavedQueryDto) (*model.SavedQuery, error) {
+func (h *SavedQueryHandler) updateSavedQuery(query *model.SavedQuery, req *dto.CreateSavedQueryRequest) (*model.SavedQuery, error) {
 	if req.Name != nil && len(*req.Name) == 0 {
 		query.Name = req.Query[0:10]
 	} else {

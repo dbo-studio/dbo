@@ -26,14 +26,20 @@ type ICacheRepo interface {
 	FlushCache(ctx context.Context) error
 }
 
+type IHistoryRepo interface {
+	List(ctx context.Context, pagination dto.PaginationRequest) (*[]model.History, error)
+}
+
 type Repository struct {
 	ConnectionRepo IConnectionRepo
 	CacheRepo      ICacheRepo
+	HistoryRepo    IHistoryRepo
 }
 
 func NewRepository(_ context.Context, db *gorm.DB, cache cache.Cache, drivers *driver.DriverEngine) *Repository {
 	return &Repository{
 		ConnectionRepo: NewConnectionRepo(db, drivers),
 		CacheRepo:      NewCacheRepo(cache, drivers),
+		HistoryRepo:    NewHistoryRepo(db),
 	}
 }

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/handler"
-	historyHandler "github.com/dbo-studio/dbo/internal/app/handler/history"
 	queryHandler "github.com/dbo-studio/dbo/internal/app/handler/query"
 	savedHandler "github.com/dbo-studio/dbo/internal/app/handler/saved_query"
 	"github.com/dbo-studio/dbo/internal/app/server"
@@ -56,7 +55,7 @@ func Execute() {
 		Database:   handler.NewDatabaseHandler(appLogger, ss.ConnectionService, ss.DatabaseService),
 		SavedQuery: savedHandler.NewSavedQueryHandler(appLogger, appDB),
 		Design:     handler.NewDesignHandler(appLogger, ss.ConnectionService, ss.DesignService),
-		History:    historyHandler.NewHistoryHandler(appLogger, appDB),
+		History:    handler.NewHistoryHandler(appLogger, ss.HistoryService),
 	})
 
 	if err := restServer.Start(helper.IsLocal(), cfg.App.Port); err != nil {
