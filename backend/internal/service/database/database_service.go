@@ -30,7 +30,7 @@ func NewDatabaseService(cr repository.IConnectionRepo, drivers *driver.DriverEng
 }
 
 func (i IDatabaseServiceImpl) CreateDatabase(ctx context.Context, dto *dto.CreateDatabaseRequest) error {
-	_, err := i.connectionRepo.FindConnection(ctx, dto.ConnectionId)
+	_, err := i.connectionRepo.Find(ctx, dto.ConnectionId)
 	if err != nil {
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
@@ -44,7 +44,7 @@ func (i IDatabaseServiceImpl) CreateDatabase(ctx context.Context, dto *dto.Creat
 }
 
 func (i IDatabaseServiceImpl) DeleteDatabase(ctx context.Context, dto *dto.DeleteDatabaseRequest) error {
-	_, err := i.connectionRepo.FindConnection(ctx, dto.ConnectionId)
+	_, err := i.connectionRepo.Find(ctx, dto.ConnectionId)
 	if err != nil {
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
@@ -58,7 +58,7 @@ func (i IDatabaseServiceImpl) DeleteDatabase(ctx context.Context, dto *dto.Delet
 }
 
 func (i IDatabaseServiceImpl) MetaData(ctx context.Context, connId int32) (*dto.DatabaseMetaDataResponse, error) {
-	connection, err := i.connectionRepo.FindConnection(ctx, connId)
+	connection, err := i.connectionRepo.Find(ctx, connId)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}

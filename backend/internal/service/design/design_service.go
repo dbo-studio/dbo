@@ -31,7 +31,7 @@ func NewDesignService(cr repository.IConnectionRepo, drivers *driver.DriverEngin
 }
 
 func (i IDesignServiceImpl) IndexList(ctx context.Context, dto *dto.GetDesignIndexRequest) (*dto.GetDesignIndexResponse, error) {
-	_, err := i.connectionRepo.FindConnection(ctx, dto.ConnectionId)
+	_, err := i.connectionRepo.Find(ctx, dto.ConnectionId)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
@@ -45,7 +45,7 @@ func (i IDesignServiceImpl) IndexList(ctx context.Context, dto *dto.GetDesignInd
 }
 
 func (i IDesignServiceImpl) ColumnList(ctx context.Context, req *dto.GetDesignColumnRequest, editable bool) (*dto.GetDesignColumnResponse, error) {
-	_, err := i.connectionRepo.FindConnection(ctx, req.ConnectionId)
+	_, err := i.connectionRepo.Find(ctx, req.ConnectionId)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
@@ -66,7 +66,7 @@ func (i IDesignServiceImpl) ColumnsFormater(_ context.Context, structures []pgsq
 }
 
 func (i IDesignServiceImpl) UpdateDesign(ctx context.Context, dto *dto.UpdateDesignRequest) (*dto.UpdateDesignResponse, error) {
-	_, err := i.connectionRepo.FindConnection(ctx, dto.ConnectionId)
+	_, err := i.connectionRepo.Find(ctx, dto.ConnectionId)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}

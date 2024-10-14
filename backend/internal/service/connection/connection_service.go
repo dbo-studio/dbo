@@ -11,12 +11,12 @@ import (
 )
 
 type IConnectionService interface {
-	Connections(ctx context.Context) (*dto.ConnectionsResponse, error)
-	CreateConnection(ctx context.Context, req *dto.CreateConnectionRequest) (*dto.ConnectionDetailResponse, error)
-	ConnectionDetail(ctx context.Context, req *dto.ConnectionDetailRequest) (*dto.ConnectionDetailResponse, error)
-	UpdateConnection(ctx context.Context, connectionId int32, req *dto.UpdateConnectionRequest) (*dto.ConnectionDetailResponse, error)
-	DeleteConnection(ctx context.Context, connectionId int32) (*dto.ConnectionsResponse, error)
-	TestConnection(ctx context.Context, req *dto.CreateConnectionRequest) error
+	Index(ctx context.Context) (*dto.ConnectionsResponse, error)
+	Create(ctx context.Context, req *dto.CreateConnectionRequest) (*dto.ConnectionDetailResponse, error)
+	Detail(ctx context.Context, req *dto.ConnectionDetailRequest) (*dto.ConnectionDetailResponse, error)
+	Update(ctx context.Context, connectionId int32, req *dto.UpdateConnectionRequest) (*dto.ConnectionDetailResponse, error)
+	Delete(ctx context.Context, connectionId int32) (*dto.ConnectionsResponse, error)
+	Test(ctx context.Context, req *dto.CreateConnectionRequest) error
 }
 
 var _ IConnectionService = (*IConnectionServiceImpl)(nil)
@@ -39,8 +39,8 @@ func NewConnectionService(
 	}
 }
 
-func (s IConnectionServiceImpl) Connections(ctx context.Context) (*dto.ConnectionsResponse, error) {
-	connections, err := s.connectionRepo.ConnectionList(ctx)
+func (s IConnectionServiceImpl) Index(ctx context.Context) (*dto.ConnectionsResponse, error) {
+	connections, err := s.connectionRepo.Index(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -48,13 +48,13 @@ func (s IConnectionServiceImpl) Connections(ctx context.Context) (*dto.Connectio
 	return connectionsToResponse(connections), nil
 }
 
-func (s IConnectionServiceImpl) CreateConnection(ctx context.Context, req *dto.CreateConnectionRequest) (*dto.ConnectionDetailResponse, error) {
-	err := s.TestConnection(ctx, req)
+func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConnectionRequest) (*dto.ConnectionDetailResponse, error) {
+	err := s.Test(ctx, req)
 	if err != nil {
 		return nil, apperror.DriverError(err)
 	}
 
-	connection, err := s.connectionRepo.CreateConnection(ctx, req)
+	connection, err := s.connectionRepo.Create(ctx, req)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -67,13 +67,13 @@ func (s IConnectionServiceImpl) CreateConnection(ctx context.Context, req *dto.C
 	return s.connectionDetail(ctx, connection, false)
 }
 
-func (s IConnectionServiceImpl) DeleteConnection(ctx context.Context, connectionId int32) (*dto.ConnectionsResponse, error) {
-	connection, err := s.connectionRepo.FindConnection(ctx, connectionId)
+func (s IConnectionServiceImpl) Delete(ctx context.Context, connectionId int32) (*dto.ConnectionsResponse, error) {
+	connection, err := s.connectionRepo.Find(ctx, connectionId)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	err = s.connectionRepo.DeleteConnection(ctx, connection)
+	err = s.connectionRepo.Delete(ctx, connection)
 	if err != nil {
 		return nil, err
 	}
@@ -83,10 +83,10 @@ func (s IConnectionServiceImpl) DeleteConnection(ctx context.Context, connection
 		return nil, apperror.InternalServerError(err)
 	}
 
-	return s.Connections(ctx)
+	return s.Index(ctx)
 }
 
-func (s IConnectionServiceImpl) TestConnection(_ context.Context, req *dto.CreateConnectionRequest) error {
+func (s IConnectionServiceImpl) Test(_ context.Context, req *dto.CreateConnectionRequest) error {
 	_, err := s.drivers.Pgsql.ConnectWithOptions(pgsqlDriver.ConnectionOption{
 		Host:     req.Host,
 		Port:     int32(req.Port),

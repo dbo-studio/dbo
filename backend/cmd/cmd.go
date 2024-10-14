@@ -7,7 +7,6 @@ import (
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/handler"
 	queryHandler "github.com/dbo-studio/dbo/internal/app/handler/query"
-	savedHandler "github.com/dbo-studio/dbo/internal/app/handler/saved_query"
 	"github.com/dbo-studio/dbo/internal/app/server"
 	"github.com/dbo-studio/dbo/internal/driver"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -53,7 +52,7 @@ func Execute() {
 		Query:      queryHandler.NewQueryHandler(appLogger, appDB, drivers, cache, ss.DesignService),
 		Connection: handler.NewConnectionHandler(appLogger, ss.ConnectionService),
 		Database:   handler.NewDatabaseHandler(appLogger, ss.ConnectionService, ss.DatabaseService),
-		SavedQuery: savedHandler.NewSavedQueryHandler(appLogger, appDB),
+		SavedQuery: handler.NewSavedQueryHandler(appLogger, ss.SavedQueryService),
 		Design:     handler.NewDesignHandler(appLogger, ss.ConnectionService, ss.DesignService),
 		History:    handler.NewHistoryHandler(appLogger, ss.HistoryService),
 	})

@@ -11,18 +11,18 @@ import (
 
 type ConnectionHandler struct {
 	logger            logger.Logger
-	ConnectionService serviceConnection.IConnectionService
+	connectionService serviceConnection.IConnectionService
 }
 
 func NewConnectionHandler(logger logger.Logger, connectionService serviceConnection.IConnectionService) *ConnectionHandler {
 	return &ConnectionHandler{
 		logger:            logger,
-		ConnectionService: connectionService,
+		connectionService: connectionService,
 	}
 }
 
 func (h ConnectionHandler) Connections(c fiber.Ctx) error {
-	data, err := h.ConnectionService.Connections(c.Context())
+	data, err := h.connectionService.Index(c.Context())
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder(err).Send(c)
@@ -41,7 +41,7 @@ func (h ConnectionHandler) CreateConnection(c fiber.Ctx) error {
 		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
 	}
 
-	connection, err := h.ConnectionService.CreateConnection(c.Context(), req)
+	connection, err := h.connectionService.Create(c.Context(), req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder(err).Send(c)
@@ -56,7 +56,7 @@ func (h ConnectionHandler) ConnectionDetail(c fiber.Ctx) error {
 		FromCache:    fiber.Query[bool](c, "from_cache"),
 	}
 
-	connection, err := h.ConnectionService.ConnectionDetail(c.Context(), req)
+	connection, err := h.connectionService.Detail(c.Context(), req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder(err).Send(c)
@@ -67,7 +67,7 @@ func (h ConnectionHandler) ConnectionDetail(c fiber.Ctx) error {
 
 func (h ConnectionHandler) DeleteConnection(c fiber.Ctx) error {
 	connectionId := fiber.Params[int32](c, "id")
-	data, err := h.ConnectionService.DeleteConnection(c.Context(), connectionId)
+	data, err := h.connectionService.Delete(c.Context(), connectionId)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder(err).Send(c)
@@ -86,7 +86,7 @@ func (h ConnectionHandler) TestConnection(c fiber.Ctx) error {
 		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
 	}
 
-	err := h.ConnectionService.TestConnection(c.Context(), req)
+	err := h.connectionService.Test(c.Context(), req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder(err).Send(c)
@@ -107,7 +107,7 @@ func (h ConnectionHandler) UpdateConnection(c fiber.Ctx) error {
 		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
 	}
 
-	connection, err := h.ConnectionService.UpdateConnection(c.Context(), connectionId, req)
+	connection, err := h.connectionService.Update(c.Context(), connectionId, req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder(err).Send(c)

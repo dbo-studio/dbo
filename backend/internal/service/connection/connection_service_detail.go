@@ -9,8 +9,8 @@ import (
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
-func (s IConnectionServiceImpl) ConnectionDetail(ctx context.Context, req *dto.ConnectionDetailRequest) (*dto.ConnectionDetailResponse, error) {
-	connection, err := s.connectionRepo.FindConnection(ctx, req.ConnectionId)
+func (s IConnectionServiceImpl) Detail(ctx context.Context, req *dto.ConnectionDetailRequest) (*dto.ConnectionDetailResponse, error) {
+	connection, err := s.connectionRepo.Find(ctx, req.ConnectionId)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
@@ -55,7 +55,7 @@ func (s IConnectionServiceImpl) connectionDetail(ctx context.Context, connection
 		}
 	}
 
-	c, err := s.connectionRepo.UpdateConnection(ctx, connection, &dto.UpdateConnectionRequest{
+	c, err := s.connectionRepo.Update(ctx, connection, &dto.UpdateConnectionRequest{
 		CurrentSchema: lo.ToPtr[string](currentSchema),
 		IsActive:      lo.ToPtr[bool](true),
 	})

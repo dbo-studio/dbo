@@ -3,7 +3,6 @@ package server
 import (
 	"github.com/dbo-studio/dbo/internal/app/handler"
 	queryHandler "github.com/dbo-studio/dbo/internal/app/handler/query"
-	savedHandler "github.com/dbo-studio/dbo/internal/app/handler/saved_query"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v3"
@@ -17,7 +16,7 @@ type Handlers struct {
 	Query      *queryHandler.QueryHandler
 	Connection *handler.ConnectionHandler
 	Database   *handler.DatabaseHandler
-	SavedQuery *savedHandler.SavedQueryHandler
+	SavedQuery *handler.SavedQueryHandler
 	Design     *handler.DesignHandler
 	History    *handler.HistoryHandler
 }

@@ -25,7 +25,7 @@ func (h *HistoryHandler) Histories(c fiber.Ctx) error {
 		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
 	}
 
-	items, err := h.historyService.HistoryList(c.Context(), req)
+	items, err := h.historyService.Index(c.Context(), req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder(err).Send(c)

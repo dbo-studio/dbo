@@ -5,17 +5,19 @@ import (
 	"gorm.io/gorm"
 )
 
-func Paginate(dto dto.PaginationRequest) func(db *gorm.DB) *gorm.DB {
+func Paginate(dto *dto.PaginationRequest) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		page := 0
 		count := 0
 
-		if dto.Page != nil {
-			page = *dto.Page
-		}
+		if dto != nil {
+			if dto.Page != nil {
+				page = *dto.Page
+			}
 
-		if dto.Count != nil {
-			count = *dto.Count
+			if dto.Count != nil {
+				count = *dto.Count
+			}
 		}
 
 		if page <= 0 {

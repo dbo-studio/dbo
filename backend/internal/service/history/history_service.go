@@ -9,7 +9,7 @@ import (
 )
 
 type IHistoryService interface {
-	HistoryList(ctx context.Context, dto *dto.HistoryListRequest) (*dto.HistoryListResponse, error)
+	Index(ctx context.Context, dto *dto.HistoryListRequest) (*dto.HistoryListResponse, error)
 }
 
 var _ IHistoryService = (*IHistoryServiceImpl)(nil)
@@ -24,8 +24,8 @@ func NewHistoryService(hr repository.IHistoryRepo) *IHistoryServiceImpl {
 	}
 }
 
-func (i IHistoryServiceImpl) HistoryList(ctx context.Context, req *dto.HistoryListRequest) (*dto.HistoryListResponse, error) {
-	histories, err := i.historyRepo.List(ctx, req.PaginationRequest)
+func (i IHistoryServiceImpl) Index(ctx context.Context, req *dto.HistoryListRequest) (*dto.HistoryListResponse, error) {
+	histories, err := i.historyRepo.Index(ctx, &req.PaginationRequest)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}

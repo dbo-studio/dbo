@@ -8,6 +8,7 @@ import (
 
 var (
 	ErrConnectionNotFound = errors.New("connection not found")
+	ErrSavedQueryNotFound = errors.New("query not found")
 )
 
 type AppError struct {

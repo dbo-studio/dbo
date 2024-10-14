@@ -20,7 +20,7 @@ func NewHistoryRepo(db *gorm.DB) *IHistoryRepoImpl {
 	}
 }
 
-func (h IHistoryRepoImpl) List(_ context.Context, pagination dto.PaginationRequest) (*[]model.History, error) {
+func (h IHistoryRepoImpl) Index(_ context.Context, pagination *dto.PaginationRequest) (*[]model.History, error) {
 	var histories []model.History
 
 	result := h.db.Scopes(scope.Paginate(pagination)).Find(&histories)

@@ -18,10 +18,11 @@ type ICacheRepoImpl struct {
 	db      *gorm.DB
 }
 
-func NewCacheRepo(cache cache.Cache, drivers *driver.DriverEngine) *ICacheRepoImpl {
+func NewCacheRepo(cache cache.Cache, drivers *driver.DriverEngine, db *gorm.DB) *ICacheRepoImpl {
 	return &ICacheRepoImpl{
 		cache:   cache,
 		drivers: drivers,
+		db:      db,
 	}
 }
 

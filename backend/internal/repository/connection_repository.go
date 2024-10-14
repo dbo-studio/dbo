@@ -24,21 +24,21 @@ func NewConnectionRepo(db *gorm.DB, drivers *driver.DriverEngine) *IConnectionRe
 	}
 }
 
-func (c IConnectionRepoImpl) ConnectionList(_ context.Context) (*[]model.Connection, error) {
+func (c IConnectionRepoImpl) Index(_ context.Context) (*[]model.Connection, error) {
 	var connections []model.Connection
 	result := c.db.Find(&connections)
 
 	return &connections, result.Error
 }
 
-func (c IConnectionRepoImpl) FindConnection(_ context.Context, id int32) (*model.Connection, error) {
+func (c IConnectionRepoImpl) Find(_ context.Context, id int32) (*model.Connection, error) {
 	var connection model.Connection
 	result := c.db.Where("id", "=", id).First(&connection)
 
 	return &connection, result.Error
 }
 
-func (c IConnectionRepoImpl) CreateConnection(_ context.Context, dto *dto.CreateConnectionRequest) (*model.Connection, error) {
+func (c IConnectionRepoImpl) Create(_ context.Context, dto *dto.CreateConnectionRequest) (*model.Connection, error) {
 	connection := &model.Connection{
 		Name:     dto.Name,
 		Host:     dto.Host,
@@ -64,12 +64,12 @@ func (c IConnectionRepoImpl) CreateConnection(_ context.Context, dto *dto.Create
 	return connection, result.Error
 }
 
-func (c IConnectionRepoImpl) DeleteConnection(_ context.Context, connection *model.Connection) error {
+func (c IConnectionRepoImpl) Delete(_ context.Context, connection *model.Connection) error {
 	result := c.db.Delete(connection)
 	return result.Error
 }
 
-func (c IConnectionRepoImpl) UpdateConnection(_ context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) (*model.Connection, error) {
+func (c IConnectionRepoImpl) Update(_ context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) (*model.Connection, error) {
 	connection.Name = helper.OptionalString(req.Name, connection.Name)
 	connection.Host = helper.OptionalString(req.Host, connection.Host)
 	connection.Username = helper.OptionalString(req.Username, connection.Username)

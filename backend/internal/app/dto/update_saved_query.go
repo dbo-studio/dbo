@@ -3,17 +3,17 @@ package dto
 import "github.com/invopop/validation"
 
 type (
-	CreateSavedQueryRequest struct {
+	UpdateSavedQueryRequest struct {
 		Name  *string `json:"name"`
 		Query string  `json:"query"`
 	}
 
-	CreateSavedQueryResponse struct {
+	UpdateSavedQueryResponse struct {
 		SavedQuery
 	}
 )
 
-func (c CreateSavedQueryRequest) Validate() error {
+func (c UpdateSavedQueryRequest) Validate() error {
 	return validation.ValidateStruct(&c,
 		validation.Field(&c.Query, validation.Required),
 	)

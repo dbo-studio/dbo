@@ -12,15 +12,15 @@ import (
 
 type DatabaseHandler struct {
 	logger            logger.Logger
-	ConnectionService serviceConnection.IConnectionService
-	DatabaseService   serviceDatabase.IDatabaseService
+	connectionService serviceConnection.IConnectionService
+	databaseService   serviceDatabase.IDatabaseService
 }
 
 func NewDatabaseHandler(logger logger.Logger, connectionService serviceConnection.IConnectionService, databaseService serviceDatabase.IDatabaseService) *DatabaseHandler {
 	return &DatabaseHandler{
 		logger:            logger,
-		ConnectionService: connectionService,
-		DatabaseService:   databaseService,
+		connectionService: connectionService,
+		databaseService:   databaseService,
 	}
 }
 
@@ -34,7 +34,7 @@ func (h DatabaseHandler) CreateDatabase(c fiber.Ctx) error {
 		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
 	}
 
-	err := h.DatabaseService.CreateDatabase(c.Context(), req)
+	err := h.databaseService.CreateDatabase(c.Context(), req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder(err).Send(c)
@@ -53,7 +53,7 @@ func (h DatabaseHandler) DeleteDatabase(c fiber.Ctx) error {
 		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
 	}
 
-	err := h.DatabaseService.DeleteDatabase(c.Context(), req)
+	err := h.databaseService.DeleteDatabase(c.Context(), req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder(err).Send(c)
@@ -63,7 +63,7 @@ func (h DatabaseHandler) DeleteDatabase(c fiber.Ctx) error {
 }
 
 func (h DatabaseHandler) MetaData(c fiber.Ctx) error {
-	metadata, err := h.DatabaseService.MetaData(c.Context(), fiber.Query[int32](c, "connection_id"))
+	metadata, err := h.databaseService.MetaData(c.Context(), fiber.Query[int32](c, "connection_id"))
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder(err).Send(c)

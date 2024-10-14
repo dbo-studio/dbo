@@ -32,10 +32,10 @@ func (r *Server) routing() {
 	design.Get("/indexes", r.handlers.Design.IndexList)
 
 	saved := api.Group("saved")
-	saved.Get("/", r.handlers.SavedQuery.SavedQueries)
-	saved.Post("/", r.handlers.SavedQuery.AddSavedQuery)
-	saved.Patch("/:id", r.handlers.SavedQuery.UpdateSavedQuery)
-	saved.Delete("/:id", r.handlers.SavedQuery.DeleteSavedQuery)
+	saved.Get("/", r.handlers.SavedQuery.Index)
+	saved.Post("/", r.handlers.SavedQuery.Create)
+	saved.Patch("/:id", r.handlers.SavedQuery.Update)
+	saved.Delete("/:id", r.handlers.SavedQuery.Delete)
 
 	history := api.Group("histories")
 	history.Get("/", r.handlers.History.Histories)

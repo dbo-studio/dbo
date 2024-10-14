@@ -6,9 +6,9 @@ import (
 )
 
 func connectionsToResponse(connections *[]model.Connection) *dto.ConnectionsResponse {
-	data := make([]dto.Connections, 0)
+	data := make([]dto.Connection, 0)
 	for _, c := range *connections {
-		data = append(data, dto.Connections{
+		data = append(data, dto.Connection{
 			ID:       int64(c.ID),
 			Name:     c.Name,
 			Type:     "SQL",
