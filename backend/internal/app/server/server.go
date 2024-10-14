@@ -59,3 +59,7 @@ func (r *Server) Start(isLocal bool, port string) error {
 func (r *Server) Shutdown() error {
 	return r.app.Shutdown()
 }
+
+func (r *Server) App() *fiber.App {
+	return r.app
+}

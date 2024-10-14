@@ -3,9 +3,9 @@ package server
 import "github.com/gofiber/fiber/v3/middleware/static"
 
 func (r *Server) routing() {
-	r.app.Get("/*", static.New("out"))
+	r.App().Get("/*", static.New("out"))
 
-	api := r.app.Group("/api")
+	api := r.App().Group("/api")
 
 	query := api.Group("query")
 	query.Post("/run", r.handlers.Query.Run)

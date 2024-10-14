@@ -14,6 +14,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/db"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger/zap"
+	"github.com/dbo-studio/modules/pgsql"
 	"log"
 
 	"github.com/dbo-studio/dbo/internal/repository"
@@ -56,6 +57,8 @@ func Execute() {
 		Design:     handler.NewDesignHandler(appLogger, ss.ConnectionService, ss.DesignService),
 		History:    handler.NewHistoryHandler(appLogger, ss.HistoryService),
 	})
+
+	pgsql.NewPgsqlDriver(restServer.App(), cfg, appLogger, appDB, cache)
 
 	if err := restServer.Start(helper.IsLocal(), cfg.App.Port); err != nil {
 		msg := fmt.Sprintf("error happen while serving: %v", err)
