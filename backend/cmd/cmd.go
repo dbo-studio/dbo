@@ -9,12 +9,12 @@ import (
 	queryHandler "github.com/dbo-studio/dbo/internal/app/handler/query"
 	"github.com/dbo-studio/dbo/internal/app/server"
 	"github.com/dbo-studio/dbo/internal/driver"
+	"github.com/dbo-studio/dbo/internal/driver/pgsql"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/cache/sqlite"
 	"github.com/dbo-studio/dbo/pkg/db"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger/zap"
-	"github.com/dbo-studio/modules/pgsql"
 	"log"
 
 	"github.com/dbo-studio/dbo/internal/repository"
@@ -58,7 +58,7 @@ func Execute() {
 		History:    handler.NewHistoryHandler(appLogger, ss.HistoryService),
 	})
 
-	pgsql.NewPgsqlDriver(restServer.App(), cfg, appLogger, appDB, cache)
+	pgsql.NewPgsqlDriver(restServer.App(), appDB)
 
 	if err := restServer.Start(helper.IsLocal(), cfg.App.Port); err != nil {
 		msg := fmt.Sprintf("error happen while serving: %v", err)

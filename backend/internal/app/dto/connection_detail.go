@@ -1,5 +1,7 @@
 package dto
 
+import "github.com/invopop/validation"
+
 type (
 	ConnectionDetailRequest struct {
 		ConnectionId int32
@@ -20,3 +22,9 @@ type (
 		Tables          []string    `json:"tables"`
 	}
 )
+
+func (r ConnectionDetailRequest) Validate() error {
+	return validation.ValidateStruct(&r,
+		validation.Field(&r.ConnectionId, validation.Required, validation.Min(0)),
+	)
+}

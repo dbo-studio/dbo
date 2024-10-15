@@ -2,7 +2,7 @@ package handler
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	serviceHistory "github.com/dbo-studio/dbo/internal/service/history"
+	"github.com/dbo-studio/dbo/internal/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/dbo-studio/dbo/pkg/response"
@@ -11,10 +11,10 @@ import (
 
 type HistoryHandler struct {
 	logger         logger.Logger
-	historyService serviceHistory.IHistoryService
+	historyService contract.IHistoryService
 }
 
-func NewHistoryHandler(logger logger.Logger, historyService serviceHistory.IHistoryService) *HistoryHandler {
+func NewHistoryHandler(logger logger.Logger, historyService contract.IHistoryService) *HistoryHandler {
 	return &HistoryHandler{logger, historyService}
 }
 

@@ -3,27 +3,20 @@ package serviceDesign
 import (
 	"context"
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/contract"
 	"github.com/dbo-studio/dbo/internal/driver"
-	pgsql "github.com/dbo-studio/dbo/internal/driver/pgsql"
-	"github.com/dbo-studio/dbo/internal/repository"
+	pgsql "github.com/dbo-studio/dbo/internal/driver/pgsql/engine"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
-type IDesignService interface {
-	IndexList(ctx context.Context, dto *dto.GetDesignIndexRequest) (*dto.GetDesignIndexResponse, error)
-	ColumnList(ctx context.Context, dto *dto.GetDesignColumnRequest, editable bool) (*dto.GetDesignColumnResponse, error)
-	ColumnsFormater(ctx context.Context, dto []pgsql.Structure) []dto.GetDesignColumn
-	UpdateDesign(ctx context.Context, dto *dto.UpdateDesignRequest) (*dto.UpdateDesignResponse, error)
-}
-
-var _ IDesignService = (*IDesignServiceImpl)(nil)
+var _ contract.IDesignService = (*IDesignServiceImpl)(nil)
 
 type IDesignServiceImpl struct {
-	connectionRepo repository.IConnectionRepo
+	connectionRepo contract.IConnectionRepo
 	drivers        *driver.DriverEngine
 }
 
-func NewDesignService(cr repository.IConnectionRepo, drivers *driver.DriverEngine) *IDesignServiceImpl {
+func NewDesignService(cr contract.IConnectionRepo, drivers *driver.DriverEngine) *IDesignServiceImpl {
 	return &IDesignServiceImpl{
 		connectionRepo: cr,
 		drivers:        drivers,

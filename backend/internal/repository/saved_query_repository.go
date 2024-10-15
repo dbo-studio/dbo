@@ -3,13 +3,14 @@ package repository
 import (
 	"context"
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/db/scope"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"gorm.io/gorm"
 )
 
-var _ ISavedQueryRepo = (*ISavedQueryRepoImpl)(nil)
+var _ contract.ISavedQueryRepo = (*ISavedQueryRepoImpl)(nil)
 
 type ISavedQueryRepoImpl struct {
 	db *gorm.DB

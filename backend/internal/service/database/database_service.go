@@ -3,26 +3,20 @@ package serviceDatabase
 import (
 	"context"
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/contract"
 	"github.com/dbo-studio/dbo/internal/driver"
 
-	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
-type IDatabaseService interface {
-	CreateDatabase(context.Context, *dto.CreateDatabaseRequest) error
-	DeleteDatabase(context.Context, *dto.DeleteDatabaseRequest) error
-	MetaData(ctx context.Context, connId int32) (*dto.DatabaseMetaDataResponse, error)
-}
-
-var _ IDatabaseService = (*IDatabaseServiceImpl)(nil)
+var _ contract.IDatabaseService = (*IDatabaseServiceImpl)(nil)
 
 type IDatabaseServiceImpl struct {
 	drivers        *driver.DriverEngine
-	connectionRepo repository.IConnectionRepo
+	connectionRepo contract.IConnectionRepo
 }
 
-func NewDatabaseService(cr repository.IConnectionRepo, drivers *driver.DriverEngine) *IDatabaseServiceImpl {
+func NewDatabaseService(cr contract.IConnectionRepo, drivers *driver.DriverEngine) *IDatabaseServiceImpl {
 	return &IDatabaseServiceImpl{
 		connectionRepo: cr,
 		drivers:        drivers,

@@ -1,5 +1,5 @@
 package contract
 
-type IModule interface {
+type IDriver interface {
 	Register()
 }

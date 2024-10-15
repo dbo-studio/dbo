@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/dbo-studio/dbo/internal/contract"
 	"github.com/dbo-studio/dbo/internal/driver"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceConnection "github.com/dbo-studio/dbo/internal/service/connection"
@@ -11,11 +12,11 @@ import (
 )
 
 type Service struct {
-	ConnectionService serviceConnection.IConnectionService
-	DatabaseService   serviceDatabase.IDatabaseService
-	DesignService     serviceDesign.IDesignService
-	HistoryService    serviceHistory.IHistoryService
-	SavedQueryService serviceSavedQuery.ISavedQueryService
+	ConnectionService contract.IConnectionService
+	DatabaseService   contract.IDatabaseService
+	DesignService     contract.IDesignService
+	HistoryService    contract.IHistoryService
+	SavedQueryService contract.ISavedQueryService
 }
 
 func NewService(repo *repository.Repository, drivers *driver.DriverEngine) *Service {

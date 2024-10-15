@@ -2,8 +2,7 @@ package handler
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	serviceConnection "github.com/dbo-studio/dbo/internal/service/connection"
-	serviceDesign "github.com/dbo-studio/dbo/internal/service/design"
+	"github.com/dbo-studio/dbo/internal/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/dbo-studio/dbo/pkg/response"
@@ -12,11 +11,11 @@ import (
 
 type DesignHandler struct {
 	logger            logger.Logger
-	ConnectionService serviceConnection.IConnectionService
-	DesignService     serviceDesign.IDesignService
+	ConnectionService contract.IConnectionService
+	DesignService     contract.IDesignService
 }
 
-func NewDesignHandler(logger logger.Logger, connectionService serviceConnection.IConnectionService, designService serviceDesign.IDesignService) *DesignHandler {
+func NewDesignHandler(logger logger.Logger, connectionService contract.IConnectionService, designService contract.IDesignService) *DesignHandler {
 	return &DesignHandler{logger, connectionService, designService}
 }
 

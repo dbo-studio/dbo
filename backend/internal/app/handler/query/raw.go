@@ -3,7 +3,7 @@ package query_handler
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/app/response"
-	pgsql "github.com/dbo-studio/dbo/internal/driver/pgsql"
+	pgsql "github.com/dbo-studio/dbo/internal/driver/pgsql/engine"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/gofiber/fiber/v3"
 )

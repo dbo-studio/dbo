@@ -2,8 +2,7 @@ package handler
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	serviceConnection "github.com/dbo-studio/dbo/internal/service/connection"
-	serviceDatabase "github.com/dbo-studio/dbo/internal/service/database"
+	"github.com/dbo-studio/dbo/internal/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/dbo-studio/dbo/pkg/response"
@@ -12,11 +11,11 @@ import (
 
 type DatabaseHandler struct {
 	logger            logger.Logger
-	connectionService serviceConnection.IConnectionService
-	databaseService   serviceDatabase.IDatabaseService
+	connectionService contract.IConnectionService
+	databaseService   contract.IDatabaseService
 }
 
-func NewDatabaseHandler(logger logger.Logger, connectionService serviceConnection.IConnectionService, databaseService serviceDatabase.IDatabaseService) *DatabaseHandler {
+func NewDatabaseHandler(logger logger.Logger, connectionService contract.IConnectionService, databaseService contract.IDatabaseService) *DatabaseHandler {
 	return &DatabaseHandler{
 		logger:            logger,
 		connectionService: connectionService,

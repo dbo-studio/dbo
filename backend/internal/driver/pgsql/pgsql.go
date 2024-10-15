@@ -1,25 +1,33 @@
-package pgsqlDriver
+package pgsql
 
 import (
+	"github.com/dbo-studio/dbo/internal/contract"
 	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/gofiber/fiber/v3"
 	"gorm.io/gorm"
 )
 
-type PostgresQueryEngine struct {
-	OpenConnections map[int32]*gorm.DB
-	DB              *gorm.DB
+type pgsql struct {
+	app         *fiber.App
+	connections map[int32]*gorm.DB
+	db          *gorm.DB
 }
 
-func InitPostgresEngine(db *gorm.DB) *PostgresQueryEngine {
-	return &PostgresQueryEngine{
-		OpenConnections: map[int32]*gorm.DB{},
-		DB:              db,
+func NewPgsqlDriver(app *fiber.App, db *gorm.DB) contract.IDriver {
+	return pgsql{
+		app:         app,
+		connections: map[int32]*gorm.DB{},
+		db:          db,
 	}
 }
 
-func (p PostgresQueryEngine) DBLogger(query string) {
+func (p pgsql) Register() {
+	p.registerRoutes()
+}
+
+func (p pgsql) DBLogger(query string) {
 	go func(query string) {
-		p.DB.Save(&model.History{
+		p.db.Save(&model.History{
 			Query: query,
 		})
 	}(query)

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"github.com/dbo-studio/dbo/internal/contract"
 	"github.com/dbo-studio/dbo/internal/driver"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"gorm.io/gorm"
@@ -10,7 +11,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
-var _ ICacheRepo = (*ICacheRepoImpl)(nil)
+var _ contract.ICacheRepo = (*ICacheRepoImpl)(nil)
 
 type ICacheRepoImpl struct {
 	cache   cache.Cache

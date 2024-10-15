@@ -1,8 +1,8 @@
 package query_handler
 
 import (
+	"github.com/dbo-studio/dbo/internal/contract"
 	"github.com/dbo-studio/dbo/internal/driver"
-	serviceDesign "github.com/dbo-studio/dbo/internal/service/design"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"gorm.io/gorm"
@@ -13,10 +13,10 @@ type QueryHandler struct {
 	db            *gorm.DB
 	drivers       *driver.DriverEngine
 	cache         cache.Cache
-	designService serviceDesign.IDesignService
+	designService contract.IDesignService
 }
 
-func NewQueryHandler(logger logger.Logger, db *gorm.DB, drivers *driver.DriverEngine, cache cache.Cache, designService serviceDesign.IDesignService) *QueryHandler {
+func NewQueryHandler(logger logger.Logger, db *gorm.DB, drivers *driver.DriverEngine, cache cache.Cache, designService contract.IDesignService) *QueryHandler {
 	return &QueryHandler{
 		logger:        logger,
 		db:            db,

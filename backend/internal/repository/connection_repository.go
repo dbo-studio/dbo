@@ -4,13 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/contract"
 	"github.com/dbo-studio/dbo/internal/driver"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"gorm.io/gorm"
 )
 
-var _ IConnectionRepo = (*IConnectionRepoImpl)(nil)
+var _ contract.IConnectionRepo = (*IConnectionRepoImpl)(nil)
 
 type IConnectionRepoImpl struct {
 	db      *gorm.DB

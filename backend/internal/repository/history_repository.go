@@ -3,12 +3,13 @@ package repository
 import (
 	"context"
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/db/scope"
 	"gorm.io/gorm"
 )
 
-var _ IHistoryRepo = (*IHistoryRepoImpl)(nil)
+var _ contract.IHistoryRepo = (*IHistoryRepoImpl)(nil)
 
 type IHistoryRepoImpl struct {
 	db *gorm.DB

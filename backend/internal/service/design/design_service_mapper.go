@@ -2,11 +2,11 @@ package serviceDesign
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/driver/pgsql"
+	"github.com/dbo-studio/dbo/internal/driver/pgsql/engine"
 	"github.com/samber/lo"
 )
 
-func indexListToResponse(indexes []pgsqlDriver.IndexInfo) *dto.GetDesignIndexResponse {
+func indexListToResponse(indexes []engine.IndexInfo) *dto.GetDesignIndexResponse {
 	data := make([]dto.GetDesignIndex, 0)
 	for _, i := range indexes {
 		index := dto.GetDesignIndex{
@@ -30,7 +30,7 @@ func indexListToResponse(indexes []pgsqlDriver.IndexInfo) *dto.GetDesignIndexRes
 	}
 }
 
-func columnListToResponse(columns []pgsqlDriver.Structure) []dto.GetDesignColumn {
+func columnListToResponse(columns []engine.Structure) []dto.GetDesignColumn {
 	data := make([]dto.GetDesignColumn, 0)
 	for _, column := range columns {
 		var col dto.GetDesignColumn
@@ -63,7 +63,7 @@ func columnListToResponse(columns []pgsqlDriver.Structure) []dto.GetDesignColumn
 	return data
 }
 
-func updateDesignToResponse(result *pgsqlDriver.UpdateQueryResult) *dto.UpdateDesignResponse {
+func updateDesignToResponse(result *engine.UpdateQueryResult) *dto.UpdateDesignResponse {
 	return &dto.UpdateDesignResponse{
 		Query:        result.Query,
 		RowsAffected: result.RowsAffected,

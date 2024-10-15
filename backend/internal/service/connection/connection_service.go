@@ -3,34 +3,25 @@ package serviceConnection
 import (
 	"context"
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/contract"
 	"github.com/dbo-studio/dbo/internal/driver"
-	"github.com/dbo-studio/dbo/internal/driver/pgsql"
+	"github.com/dbo-studio/dbo/internal/driver/pgsql/engine"
 
-	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
-type IConnectionService interface {
-	Index(ctx context.Context) (*dto.ConnectionsResponse, error)
-	Create(ctx context.Context, req *dto.CreateConnectionRequest) (*dto.ConnectionDetailResponse, error)
-	Detail(ctx context.Context, req *dto.ConnectionDetailRequest) (*dto.ConnectionDetailResponse, error)
-	Update(ctx context.Context, connectionId int32, req *dto.UpdateConnectionRequest) (*dto.ConnectionDetailResponse, error)
-	Delete(ctx context.Context, connectionId int32) (*dto.ConnectionsResponse, error)
-	Test(ctx context.Context, req *dto.CreateConnectionRequest) error
-}
-
-var _ IConnectionService = (*IConnectionServiceImpl)(nil)
+var _ contract.IConnectionService = (*IConnectionServiceImpl)(nil)
 
 type IConnectionServiceImpl struct {
 	drivers        *driver.DriverEngine
-	connectionRepo repository.IConnectionRepo
-	cacheRepo      repository.ICacheRepo
+	connectionRepo contract.IConnectionRepo
+	cacheRepo      contract.ICacheRepo
 }
 
 func NewConnectionService(
 	drivers *driver.DriverEngine,
-	connectionRepo repository.IConnectionRepo,
-	cacheRepo repository.ICacheRepo,
+	connectionRepo contract.IConnectionRepo,
+	cacheRepo contract.ICacheRepo,
 ) *IConnectionServiceImpl {
 	return &IConnectionServiceImpl{
 		drivers:        drivers,
@@ -87,7 +78,7 @@ func (s IConnectionServiceImpl) Delete(ctx context.Context, connectionId int32) 
 }
 
 func (s IConnectionServiceImpl) Test(_ context.Context, req *dto.CreateConnectionRequest) error {
-	_, err := s.drivers.Pgsql.ConnectWithOptions(pgsqlDriver.ConnectionOption{
+	_, err := s.drivers.Pgsql.ConnectWithOptions(engine.ConnectionOption{
 		Host:     req.Host,
 		Port:     int32(req.Port),
 		User:     req.Username,

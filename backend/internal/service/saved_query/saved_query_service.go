@@ -3,24 +3,17 @@ package serviceSavedQuery
 import (
 	"context"
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/repository"
+	"github.com/dbo-studio/dbo/internal/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
-type ISavedQueryService interface {
-	Index(ctx context.Context, dto *dto.SavedQueryListRequest) (*dto.SavedQueryListResponse, error)
-	Create(ctx context.Context, dto *dto.CreateSavedQueryRequest) (*dto.CreateSavedQueryResponse, error)
-	Update(ctx context.Context, queryId int32, req *dto.UpdateSavedQueryRequest) (*dto.UpdateSavedQueryResponse, error)
-	Delete(ctx context.Context, queryId int32) (*dto.SavedQueryListResponse, error)
-}
-
-var _ ISavedQueryService = (*ISavedQueryServiceImpl)(nil)
+var _ contract.ISavedQueryService = (*ISavedQueryServiceImpl)(nil)
 
 type ISavedQueryServiceImpl struct {
-	savedQueryRepo repository.ISavedQueryRepo
+	savedQueryRepo contract.ISavedQueryRepo
 }
 
-func NewSavedQueryService(savedQueryRepo repository.ISavedQueryRepo) *ISavedQueryServiceImpl {
+func NewSavedQueryService(savedQueryRepo contract.ISavedQueryRepo) *ISavedQueryServiceImpl {
 	return &ISavedQueryServiceImpl{
 		savedQueryRepo: savedQueryRepo,
 	}

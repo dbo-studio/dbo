@@ -3,22 +3,18 @@ package serviceHistory
 import (
 	"context"
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/repository"
+	"github.com/dbo-studio/dbo/internal/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/samber/lo"
 )
 
-type IHistoryService interface {
-	Index(ctx context.Context, dto *dto.HistoryListRequest) (*dto.HistoryListResponse, error)
-}
-
-var _ IHistoryService = (*IHistoryServiceImpl)(nil)
+var _ contract.IHistoryService = (*IHistoryServiceImpl)(nil)
 
 type IHistoryServiceImpl struct {
-	historyRepo repository.IHistoryRepo
+	historyRepo contract.IHistoryRepo
 }
 
-func NewHistoryService(hr repository.IHistoryRepo) *IHistoryServiceImpl {
+func NewHistoryService(hr contract.IHistoryRepo) *IHistoryServiceImpl {
 	return &IHistoryServiceImpl{
 		historyRepo: hr,
 	}

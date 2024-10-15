@@ -2,7 +2,7 @@ package handler
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	serviceSavedQuery "github.com/dbo-studio/dbo/internal/service/saved_query"
+	"github.com/dbo-studio/dbo/internal/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/dbo-studio/dbo/pkg/response"
@@ -11,10 +11,10 @@ import (
 
 type SavedQueryHandler struct {
 	logger            logger.Logger
-	savedQueryService serviceSavedQuery.ISavedQueryService
+	savedQueryService contract.ISavedQueryService
 }
 
-func NewSavedQueryHandler(logger logger.Logger, savedQueryService serviceSavedQuery.ISavedQueryService) *SavedQueryHandler {
+func NewSavedQueryHandler(logger logger.Logger, savedQueryService contract.ISavedQueryService) *SavedQueryHandler {
 	return &SavedQueryHandler{
 		logger:            logger,
 		savedQueryService: savedQueryService,

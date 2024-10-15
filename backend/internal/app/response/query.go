@@ -2,7 +2,7 @@ package response
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	pgsql "github.com/dbo-studio/dbo/internal/driver/pgsql"
+	pgsql "github.com/dbo-studio/dbo/internal/driver/pgsql/engine"
 	"slices"
 )
 
