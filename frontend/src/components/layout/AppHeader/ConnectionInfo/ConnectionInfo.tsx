@@ -1,4 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import Settings from '@/components/common/Settings/Settings.tsx';
 import { TabMode } from '@/core/enums';
 import useNavigate from '@/hooks/useNavigate.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
@@ -30,6 +31,9 @@ export default function ConnectionInfo() {
     <Stack direction={'row'} justifyContent={'center'} alignItems={'center'}>
       <Suspense>
         <Databases open={searchParams.get('showSelectDatabase') === 'true'} />
+      </Suspense>
+      <Suspense>
+        <Settings open={searchParams.get('showSettings') === 'true'} />
       </Suspense>
       <Grid md={4}>
         <Stack direction={'row'} spacing={2} justifyContent='flex-end'>
