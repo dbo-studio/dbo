@@ -34,18 +34,7 @@ func (I IDatabaseServiceImpl) Index(ctx context.Context, request *dto.GetDatabas
 		return nil, apperror.DriverError(err)
 	}
 
-	tableSpaces, err := i.drivers.Pgsql.TableSpaces(int32(connection.ID))
-	if err != nil {
-		return nil, apperror.DriverError(err)
-	}
-
-	encodings := i.drivers.Pgsql.Encodes()
-	datatypes := i.drivers.Pgsql.DataTypes()
-
-	return &dto.DatabaseMetaDataResponse{
-		Templates:   databases,
-		Tablespaces: tableSpaces,
-		Encodings:   encodings,
-		DataTypes:   datatypes,
+	return &dto.GetDatabaseListResponse{
+		Name: databases,
 	}, nil
 }
