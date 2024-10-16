@@ -4,6 +4,7 @@ import type { MenuType } from '@/components/base/ContextMenu/types';
 import { TabMode } from '@/core/enums';
 import { useCopyToClipboard } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
+import useNavigate from '@/hooks/useNavigate.hook';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -17,9 +18,9 @@ export default function SavedQueryContextMenu({
   onDelete,
   onChange
 }: SavedQueryContextMenuProps) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_, copy] = useCopyToClipboard();
+  const [copy] = useCopyToClipboard();
   const { addTab } = useTabStore();
+  const navigate = useNavigate();
 
   const showModal = useConfirmModalStore((state) => state.danger);
 
@@ -53,7 +54,11 @@ export default function SavedQueryContextMenu({
 
   const handleRun = () => {
     const name = query.name.slice(0, 10);
-    addTab(name, TabMode.Query, query.query);
+    const tab = addTab(name, TabMode.Query, query.query);
+    navigate({
+      route: tab.mode,
+      tabId: tab.id
+    });
   };
 
   const menu: MenuType[] = [

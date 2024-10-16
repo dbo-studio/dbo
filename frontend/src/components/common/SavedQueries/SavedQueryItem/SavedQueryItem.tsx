@@ -2,6 +2,7 @@ import api from '@/api';
 import { TabMode } from '@/core/enums';
 import { useContextMenu } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
+import useNavigate from '@/hooks/useNavigate.hook';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, ClickAwayListener, IconButton, Typography, useTheme } from '@mui/material';
 import { useState } from 'react';
@@ -16,6 +17,7 @@ export default function SavedQueryItem({ query, selected, onChange, onDelete, on
   const [editMode, setEditMode] = useState(false);
   const [name, setName] = useState(query.name);
   const theme = useTheme();
+  const navigate = useNavigate();
 
   const { addTab } = useTabStore();
 
@@ -52,7 +54,11 @@ export default function SavedQueryItem({ query, selected, onChange, onDelete, on
 
   const handleRun = () => {
     const name = query.name.slice(0, 10);
-    addTab(name, TabMode.Query, query.query);
+    const tab = addTab(name, TabMode.Query, query.query);
+    navigate({
+      route: tab.mode,
+      tabId: tab.id
+    });
   };
 
   return (
