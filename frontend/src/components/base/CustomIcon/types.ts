@@ -54,5 +54,9 @@ export const IconTypes = {
   light: 'Sun',
   dark: 'Moon',
   sheet: 'Sheet',
-  databaseZap: 'DatabaseZap'
+  databaseZap: 'DatabaseZap',
+  theme: 'Palette',
+  shortcuts: 'SquareSlash',
+  update: 'Download',
+  about: 'Info'
 };

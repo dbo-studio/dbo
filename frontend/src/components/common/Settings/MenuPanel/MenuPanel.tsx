@@ -12,8 +12,26 @@ const tabs: {
 }[] = [
   {
     id: 0,
-    name: 'Tab 1',
-    icon: 'settings',
+    name: 'Theme',
+    icon: 'theme',
+    content: <div>Tab 1 content</div>
+  },
+  {
+    id: 0,
+    name: 'Shortcuts',
+    icon: 'shortcuts',
+    content: <div>Tab 1 content</div>
+  },
+  {
+    id: 0,
+    name: 'Update',
+    icon: 'update',
+    content: <div>Tab 1 content</div>
+  },
+  {
+    id: 0,
+    name: 'About',
+    icon: 'about',
     content: <div>Tab 1 content</div>
   }
 ];
