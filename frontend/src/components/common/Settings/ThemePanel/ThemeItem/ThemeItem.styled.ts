@@ -8,6 +8,8 @@ export const ThemeItemStyled = styled(Box)<ThemeItemStyledProps>(({ theme, selec
   marginRight: '16px',
   border: selected ? `1px solid ${theme.palette.divider}` : 'none',
   img: {
-    borderRadius: variables.radius.medium
+    borderRadius: variables.radius.medium,
+    width: 150,
+    height: 93
   }
 }));
