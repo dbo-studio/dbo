@@ -1,5 +1,5 @@
 import { variables } from '@/core/theme/variables';
-import { Box, colors, styled } from '@mui/material';
+import { Box, styled } from '@mui/material';
 import type { SavedQueryItemStyledProps } from '../types';
 
 export const SavedQueryItemStyled = styled(Box)<SavedQueryItemStyledProps>(({ theme, selected }) => ({
@@ -13,4 +13,4 @@ export const SavedQueryItemStyled = styled(Box)<SavedQueryItemStyledProps>(({ th
   borderRadius: variables.radius.medium,
   background: theme.palette.background.default,
   color: selected ? theme.palette.text.primary : theme.palette.text.text
-}));
+})) as typeof Box;

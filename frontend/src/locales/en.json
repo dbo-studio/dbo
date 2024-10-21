@@ -81,5 +81,13 @@
   "close_tab": "Close tab",
   "404_description": " Oops! The page you're looking for doesn't exist.",
   "back_to_home": "Back to Home",
-  "reload": "Reload"
+  "reload": "Reload",
+  "theme": "Theme",
+  "shortcuts": "Shortcuts",
+  "about": "About",
+  "select_theme_description": "Personalize your experience with themes that match your style. Manually select a theme or sync with system settings and let the machine set your day and night themes.",
+  "sync_with_os": "Sync with OS",
+  "sync_with_os_description": "Automatically switch between light and dark themes based on your OS settings",
+  "light": "Light",
+  "dark": "Dark"
 }

@@ -1,12 +1,46 @@
 import Modal from '@/components/base/Modal/Modal';
-import { Grid } from '@mui/material';
+import locales from '@/locales';
+import { Grid, useTheme } from '@mui/material';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import AboutPanel from './AboutPanel/AboutPanel';
 import MenuPanel from './MenuPanel/MenuPanel';
+import ShortcutPanel from './ShortcutPanel/ShortcutPanel';
+import ThemePanel from './ThemePanel/ThemePanel';
+import UpdatePanel from './UpdatePanel/UpdatePanel';
+import type { MenuPanelTabType } from './types';
+
+const tabs: MenuPanelTabType[] = [
+  {
+    id: 0,
+    name: locales.theme,
+    icon: 'theme',
+    content: <ThemePanel />
+  },
+  {
+    id: 1,
+    name: locales.shortcuts,
+    icon: 'shortcuts',
+    content: <ShortcutPanel />
+  },
+  {
+    id: 2,
+    name: locales.update,
+    icon: 'update',
+    content: <UpdatePanel />
+  },
+  {
+    id: 3,
+    name: locales.about,
+    icon: 'about',
+    content: <AboutPanel />
+  }
+];
 
 export default function Settings({ open }: { open: boolean }) {
   const [content, setContent] = useState<JSX.Element>();
   const [searchParams, setSearchParams] = useSearchParams();
+  const theme = useTheme();
 
   function handleOnClose(): void {
     setSearchParams({
@@ -17,11 +51,13 @@ export default function Settings({ open }: { open: boolean }) {
 
   return (
     <Modal open={open} padding='0px' onClose={handleOnClose}>
-      <Grid container spacing={0} flex={1}>
+      <Grid width='850px' container spacing={0} flex={1}>
         <Grid display={'flex'} flexDirection={'column'}>
-          <MenuPanel onChange={(c) => setContent(c)} />
+          <MenuPanel tabs={tabs} onChange={(c) => setContent(c)} />
         </Grid>
-        <Grid flex={1}>{content}</Grid>
+        <Grid flex={1} p={theme.spacing(2)}>
+          {content}
+        </Grid>
       </Grid>
     </Modal>
   );

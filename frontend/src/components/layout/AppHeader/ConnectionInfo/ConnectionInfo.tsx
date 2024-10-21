@@ -1,5 +1,4 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import Settings from '@/components/common/Settings/Settings.tsx';
 import { TabMode } from '@/core/enums';
 import useNavigate from '@/hooks/useNavigate.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
@@ -10,7 +9,8 @@ import { Suspense, lazy } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ConnectionBox from './ConnectionBox';
 
-const Databases = lazy(() => import('./../../../common/Databases/Databases'));
+const Databases = lazy(() => import('@/components/common/Databases/Databases'));
+const Settings = lazy(() => import('@/components/common/Settings/Settings.tsx'));
 
 export default function ConnectionInfo() {
   const navigate = useNavigate();

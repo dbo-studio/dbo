@@ -8,8 +8,9 @@ export const MenuPanelItemStyled = styled(Box)<MenuPanelItemStyledProps>(({ them
   alignItems: 'center',
   padding: `${theme.spacing(1 / 2)} ${theme.spacing(1)}`,
   cursor: 'pointer',
+  marginBottom: `${theme.spacing(1 / 2)}`,
   borderBottom: `1px solid ${theme.palette.divider}`,
   border: `1px solid ${selected ? theme.palette.divider : 'transparent'}`,
   borderRadius: variables.radius.medium,
-  background: theme.palette.background.default
+  background: selected ? theme.palette.background.default : theme.palette.background.paper
 }));
