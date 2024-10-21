@@ -6,7 +6,7 @@ export const ThemeItemStyled = styled(Box)<ThemeItemStyledProps>(({ theme, selec
   borderRadius: variables.radius.medium,
   padding: '8px 16px',
   marginRight: '16px',
-  border: selected ? `1px solid ${theme.palette.divider}` : 'none',
+  border: selected ? `1px solid ${theme.palette.text.primary}` : 'none',
   img: {
     borderRadius: variables.radius.medium,
     width: 150,
