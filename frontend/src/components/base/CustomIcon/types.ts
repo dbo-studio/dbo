@@ -58,5 +58,6 @@ export const IconTypes = {
   theme: 'Palette',
   shortcuts: 'SquareSlash',
   update: 'Download',
-  about: 'Info'
+  about: 'Info',
+  externalLink: 'ExternalLink'
 };

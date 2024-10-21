@@ -89,5 +89,11 @@
   "sync_with_os": "Sync with OS",
   "sync_with_os_description": "Automatically switch between light and dark themes based on your OS settings",
   "light": "Light",
-  "dark": "Dark"
+  "dark": "Dark",
+  "version": "Version",
+  "architecture": "Architecture",
+  "platform": "Platform",
+  "platform_version": "Platform Version",
+  "releases_url": "Releases url",
+  "report_an_issue": "Report an issue"
 }
