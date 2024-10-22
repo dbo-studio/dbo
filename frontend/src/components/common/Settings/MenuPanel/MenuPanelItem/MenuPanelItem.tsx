@@ -7,7 +7,7 @@ export default function MenuPanelItem({ name, icon, selected, onClick }: MenuPan
   return (
     <MenuPanelItemStyled selected={selected} onClick={() => onClick()}>
       <CustomIcon type={icon} />
-      <Typography margin={'0 0 0 16px'} variant='body2'>
+      <Typography margin={'0 0 0 16px'} variant='subtitle2'>
         {name}
       </Typography>
     </MenuPanelItemStyled>

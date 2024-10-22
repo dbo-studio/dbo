@@ -5,6 +5,6 @@ export const MenuPanelStyled = styled(Box)(({ theme }) => ({
   border: `1px solid ${theme.palette.divider}`,
   overflow: 'auto',
   background: theme.palette.background.subdued,
-  flex: 1,
-  width: 180
+  flex: 1
+  // width: 180
 }));

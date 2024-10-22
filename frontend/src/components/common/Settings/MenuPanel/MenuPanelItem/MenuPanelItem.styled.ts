@@ -13,7 +13,7 @@ export const MenuPanelItemStyled = styled(Box)<MenuPanelItemStyledProps>(({ them
   border: `1px solid ${selected ? theme.palette.divider : 'transparent'}`,
   borderRadius: variables.radius.medium,
   background: selected ? theme.palette.background.default : theme.palette.background.paper,
-  p: {
+  h6: {
     color: selected ? theme.palette.text.primary : theme.palette.text.text
   },
   svg: {
