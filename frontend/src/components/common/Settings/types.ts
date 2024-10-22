@@ -19,6 +19,7 @@ export type MenuPanelProps = {
 export type MenuPanelTabType = {
   id: number;
   name: string;
+  onlyDesktop: boolean;
   icon: keyof typeof IconTypes;
   content: JSX.Element;
 };

@@ -14,24 +14,28 @@ const tabs: MenuPanelTabType[] = [
   {
     id: 0,
     name: locales.theme,
+    onlyDesktop: false,
     icon: 'theme',
     content: <ThemePanel />
   },
   {
     id: 1,
     name: locales.shortcuts,
+    onlyDesktop: false,
     icon: 'shortcuts',
     content: <ShortcutPanel />
   },
   {
     id: 2,
     name: locales.update,
+    onlyDesktop: true,
     icon: 'update',
     content: <UpdatePanel />
   },
   {
     id: 3,
     name: locales.about,
+    onlyDesktop: false,
     icon: 'about',
     content: <AboutPanel />
   }

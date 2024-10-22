@@ -95,5 +95,7 @@
   "platform": "Platform",
   "platform_version": "Platform Version",
   "releases_url": "Releases url",
-  "report_an_issue": "Report an issue"
+  "report_an_issue": "Report an issue",
+  "app_update": "App update",
+  "check_for_updates": "Check for updates"
 }

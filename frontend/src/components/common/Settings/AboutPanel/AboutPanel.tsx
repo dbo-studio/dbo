@@ -26,8 +26,6 @@ export default function AboutPanel() {
     }
   }, []);
 
-  console.log('🚀 ~ AboutPanel ~ env:', about);
-
   return (
     <Box>
       <Box mt={theme.spacing(2)} textAlign={'center'}>
