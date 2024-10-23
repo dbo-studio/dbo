@@ -55,10 +55,10 @@ export default function Settings({ open }: { open: boolean }) {
   return (
     <Modal open={open} padding='0px' onClose={handleOnClose}>
       <Grid width='850px' container spacing={0} flex={1}>
-        <Grid md={3} display={'flex'} flexDirection={'column'}>
+        <Grid item md={3} display={'flex'} flexDirection={'column'}>
           <MenuPanel tabs={tabs} onChange={(c) => setContent(c)} />
         </Grid>
-        <Grid md={9} flex={1} p={theme.spacing(2)}>
+        <Grid item md={9} flex={1} p={theme.spacing(2)}>
           {content}
         </Grid>
       </Grid>
