@@ -7,7 +7,6 @@ import AboutPanel from './AboutPanel/AboutPanel';
 import MenuPanel from './MenuPanel/MenuPanel';
 import ShortcutPanel from './ShortcutPanel/ShortcutPanel';
 import ThemePanel from './ThemePanel/ThemePanel';
-import UpdatePanel from './UpdatePanel/UpdatePanel';
 import type { MenuPanelTabType } from './types';
 
 const tabs: MenuPanelTabType[] = [
@@ -25,13 +24,13 @@ const tabs: MenuPanelTabType[] = [
     icon: 'shortcuts',
     content: <ShortcutPanel />
   },
-  {
-    id: 2,
-    name: locales.update,
-    onlyDesktop: true,
-    icon: 'update',
-    content: <UpdatePanel />
-  },
+  // {
+  //   id: 2,
+  //   name: locales.update,
+  //   onlyDesktop: true,
+  //   icon: 'update',
+  //   content: <UpdatePanel />
+  // },
   {
     id: 3,
     name: locales.about,

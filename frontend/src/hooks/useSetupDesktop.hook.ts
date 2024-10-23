@@ -1,4 +1,3 @@
-import { changeUrl } from '@/core/services/api/intialize';
 import { tools } from '@/core/utils';
 import { invoke } from '@tauri-apps/api';
 import { useEffect, useState } from 'react';
@@ -13,7 +12,7 @@ export const useSetupDesktop = () => {
           alert('cant found empty port!');
           return;
         }
-        changeUrl(response as string);
+        // changeUrl(response as string);
         setLoaded(true);
       });
     } else {
