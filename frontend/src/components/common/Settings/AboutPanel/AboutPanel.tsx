@@ -6,11 +6,9 @@ import { Box, Typography, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 export default function AboutPanel() {
-  const version = import.meta.env.VITE_VERSION;
-
   const theme = useTheme();
   const [about, setAbout] = useState({
-    version: version,
+    version: null,
     arch: null,
     platform: null,
     platformVersion: null
@@ -19,7 +17,14 @@ export default function AboutPanel() {
   useEffect(() => {
     if (tools.isTauri()) {
       setAbout({
-        version: version,
+        version: import.meta.env.VITE_VERSION,
+        arch: import.meta.env.TAURI_ARCH,
+        platform: import.meta.env.TAURI_PLATFORM,
+        platformVersion: import.meta.env.TAURI_PLATFORM_VERSION
+      });
+
+      console.log({
+        version: import.meta.env.VITE_VERSION,
         arch: import.meta.env.TAURI_ARCH,
         platform: import.meta.env.TAURI_PLATFORM,
         platformVersion: import.meta.env.TAURI_PLATFORM_VERSION
