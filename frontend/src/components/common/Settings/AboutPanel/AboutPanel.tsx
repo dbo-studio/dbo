@@ -4,9 +4,10 @@ import { tools } from '@/core/utils';
 import locales from '@/locales';
 import { Box, Typography, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { version } from './../../../../../package.json';
 
 export default function AboutPanel() {
+  const version = import.meta.env.VITE_VERSION;
+
   const theme = useTheme();
   const [about, setAbout] = useState({
     version: version,
