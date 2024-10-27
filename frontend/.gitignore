@@ -28,3 +28,4 @@ dist-ssr
 .env
 dbo
 /coverage
+.celp-ai

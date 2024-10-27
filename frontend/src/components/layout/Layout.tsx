@@ -2,7 +2,6 @@ import { useParamParser, useSetupDesktop, useWindowSize } from '@/hooks';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Grid } from '@mui/material';
-import { Fragment } from 'react/jsx-runtime';
 import ConfirmModal from '../base/Modal/ConfirmModal';
 import AppHeader from './AppHeader/AppHeader';
 import { LayoutStyled } from './Layout.styled';
@@ -19,7 +18,7 @@ export default function Layout() {
   useParamParser();
 
   return done ? (
-    <Fragment>
+    <>
       <LayoutStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
         <ConfirmModal />
         <AppHeader />
@@ -42,6 +41,6 @@ export default function Layout() {
           )}
         </Grid>
       </LayoutStyled>
-    </Fragment>
+    </>
   ) : null;
 }

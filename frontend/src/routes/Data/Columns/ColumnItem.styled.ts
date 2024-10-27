@@ -13,4 +13,4 @@ export const ColumnItemStyled = styled(Box)(({ theme }) => ({
   ':hover': {
     border: `1px solid ${theme.palette.divider}`
   }
-}));
+})) as typeof Box;

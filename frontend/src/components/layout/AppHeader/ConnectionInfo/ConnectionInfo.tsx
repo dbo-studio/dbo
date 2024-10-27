@@ -1,4 +1,4 @@
-import ConnectionBox from '@/components/common/ConnectionInfo/ConnectionBox';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { TabMode } from '@/core/enums';
 import useNavigate from '@/hooks/useNavigate.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
@@ -6,14 +6,17 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton, Stack } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { Suspense, lazy } from 'react';
-import CustomIcon from '../../base/CustomIcon/CustomIcon';
+import { useSearchParams } from 'react-router-dom';
+import ConnectionBox from './ConnectionBox';
 
-const Databases = lazy(() => import('../Databases/Databases'));
+const Databases = lazy(() => import('@/components/common/Databases/Databases'));
+const Settings = lazy(() => import('@/components/common/Settings/Settings.tsx'));
 
 export default function ConnectionInfo() {
   const navigate = useNavigate();
-  const { currentConnection, updateShowAddConnection, showSelectDatabase, updateShowSelectDatabase } =
-    useConnectionStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const { currentConnection } = useConnectionStore();
   const { addTab } = useTabStore();
 
   const handleAddEditorTab = () => {
@@ -27,11 +30,17 @@ export default function ConnectionInfo() {
   return (
     <Stack direction={'row'} justifyContent={'center'} alignItems={'center'}>
       <Suspense>
-        <Databases open={showSelectDatabase} />
+        <Databases open={searchParams.get('showSelectDatabase') === 'true'} />
+      </Suspense>
+      <Suspense>
+        <Settings open={searchParams.get('showSettings') === 'true'} />
       </Suspense>
       <Grid md={4}>
         <Stack direction={'row'} spacing={2} justifyContent='flex-end'>
-          <IconButton aria-label='connections' onClick={() => updateShowAddConnection(true)}>
+          <IconButton
+            aria-label='connections'
+            onClick={() => setSearchParams({ ...searchParams, showAddConnection: 'true' })}
+          >
             <CustomIcon type={'connection'} size={'m'} />
           </IconButton>
           {/* <IconButton aria-label='lock'>
@@ -40,7 +49,7 @@ export default function ConnectionInfo() {
           <IconButton
             disabled={!currentConnection}
             aria-label='databases'
-            onClick={() => updateShowSelectDatabase(!showSelectDatabase)}
+            onClick={() => setSearchParams({ ...searchParams, showSelectDatabase: 'true' })}
           >
             <CustomIcon type={'databaseOutline'} size={'m'} />
           </IconButton>

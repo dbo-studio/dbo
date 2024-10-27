@@ -19,7 +19,7 @@ export default function DBTreeView() {
 
     setTables(
       currentConnection.tables.filter((c: string) => {
-        return c.includes(name);
+        return c.toLocaleLowerCase().includes(name.toLocaleLowerCase());
       })
     );
   };
