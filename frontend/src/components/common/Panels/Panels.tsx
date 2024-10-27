@@ -7,6 +7,7 @@ import { useContextMenu, useShortcut } from '@/hooks';
 import useNavigate from '@/hooks/useNavigate.hook';
 import { useRemoveTab } from '@/hooks/useRemoveTab.hook';
 import locales from '@/locales';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { TabType as TabData, TabType } from '@/types';
 import { Box, Tab, Tabs, Tooltip, Typography } from '@mui/material';
@@ -17,9 +18,11 @@ export default function Panels({ tab, tabs }: PanelsProps) {
   const navigate = useNavigate();
   const [removeTab] = useRemoveTab();
   const { addTab, getSelectedTab } = useTabStore();
+  const { runQuery, runRawQuery } = useDataStore();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
   useShortcut(shortcuts.newTab, () => addNewEmptyTab());
-  useShortcut(shortcuts.closeTab, () => getSelectedTab() && handleRemoveTab(getSelectedTab()?.id ?? ""));
+  useShortcut(shortcuts.closeTab, () => getSelectedTab() && handleRemoveTab(getSelectedTab()?.id ?? ''));
+  useShortcut(shortcuts.reloadTab, () => getSelectedTab() && handleReload());
 
   const menu: MenuType[] = [
     {
@@ -75,6 +78,18 @@ export default function Panels({ tab, tabs }: PanelsProps) {
       route: 'query',
       tabId: tab.id
     });
+  };
+
+  const handleReload = () => {
+    if (getSelectedTab()?.mode === TabMode.Query) {
+      runRawQuery();
+      return;
+    }
+
+    if (getSelectedTab()?.mode === TabMode.Data || getSelectedTab()?.mode === TabMode.Design) {
+      runQuery();
+      return;
+    }
   };
 
   return (

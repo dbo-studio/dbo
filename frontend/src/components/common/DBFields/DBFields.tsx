@@ -27,7 +27,7 @@ export default function DBFields() {
     const data: any[] = [];
     getColumns()
       .filter((c: any) => {
-        return c.name.includes(search);
+        return c.name.toLocaleLowerCase().includes(search.toLocaleLowerCase());
       })
       .map((c: any) => {
         if (!row[c.key]) return;

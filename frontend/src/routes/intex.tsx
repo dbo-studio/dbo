@@ -1,13 +1,18 @@
 import Layout from '@/components/layout/Layout';
 import { createElement } from 'react';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import NotFound from './404/404';
 import Data from './Data/Data';
 import Design from './Design/Design';
 import Query from './Query/Query';
 
 export const router = createBrowserRouter([
   {
-    path: '',
+    path: '*',
+    element: <NotFound />
+  },
+  {
+    path: '/',
     element: <Layout />,
     children: [
       {

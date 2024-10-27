@@ -29,9 +29,6 @@ export default function Actions() {
       <IconButton aria-label='sideLeft' onClick={() => handelUpdateSidebar('left')}>
         <CustomIcon type={'sideLeft'} size={'m'} />
       </IconButton>
-      {/* <IconButton aria-label='sideBottom'>
-        <CustomIcon type={'sideBottom'} size={'m'} />
-      </IconButton> */}
       <IconButton aria-label='sideRight' onClick={() => handelUpdateSidebar('right')}>
         <CustomIcon type={'sideRight'} size={'m'} />
       </IconButton>

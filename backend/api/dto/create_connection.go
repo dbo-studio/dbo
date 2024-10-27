@@ -9,9 +9,9 @@ type (
 		Name     string `json:"name"`
 		Host     string `json:"host"`
 		Username string `json:"username"`
-		Password string `json:"password"`
+		Password string `json:"password,omitempty"`
 		Port     int    `json:"port"`
-		Database string `json:"database"`
+		Database string `json:"database,omitempty"`
 	}
 
 	AuthDetails struct {

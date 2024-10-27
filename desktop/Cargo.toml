@@ -17,23 +17,7 @@ tauri-build = { version = "1.5.2", features = [] }
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.7.1", features = [
-    "updater",
-    "process-relaunch",
-    "clipboard-write-text",
-    "path-all",
-    "notification-all",
-    "fs-all",
-    "window-set-focus",
-    "window-close",
-    "shell-all",
-    "os-all",
-    "dialog-open",
-    "dialog-save",
-    "window-start-dragging",
-    "process-exit",
-    "process-command-api",
-] }
+tauri = { version = "1.7.1", features = ["clipboard-write-text", "dialog-open", "dialog-save", "fs-all", "notification-all", "os-all", "path-all", "process-command-api", "process-exit", "process-relaunch", "shell-all", "updater", "window-close", "window-set-focus", "window-start-dragging"] }
 fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 
 [features]

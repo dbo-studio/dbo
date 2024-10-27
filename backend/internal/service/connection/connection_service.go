@@ -51,6 +51,11 @@ func (s *IConnectionServiceImpl) CreateConnection(ctx context.Context, req *dto.
 		return nil, apperror.InternalServerError(err)
 	}
 
+	err = s.cacheRepo.FlushCache(ctx)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
 	return s.connectionDetail(ctx, connection, false)
 }
 
@@ -63,6 +68,11 @@ func (s *IConnectionServiceImpl) DeleteConnection(ctx context.Context, connectio
 	err = s.connectionRepo.DeleteConnection(ctx, connection)
 	if err != nil {
 		return nil, err
+	}
+
+	err = s.cacheRepo.FlushCache(ctx)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
 	}
 
 	return s.Connections(ctx)

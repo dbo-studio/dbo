@@ -5,6 +5,7 @@ services:
     environment:
       APP_PORT: "9000"
       APP_ENV: "docker"
+      VITE_VERSION: $(cat ./docs/VERSION)
     volumes:
       - ./docker/dbo:/backend/data
     ports:
