@@ -4,7 +4,7 @@ import { useSearchParams, useNavigate as use_navigate } from 'react-router-dom';
 export type NavigationParamsType = {
   tabId?: string;
   connectionId?: number;
-  route?: 'data' | 'query' | 'design' | '/';
+  route?: 'data' | 'query' | 'design' | '/' | '404';
 };
 
 export default function useNavigate() {
@@ -13,21 +13,30 @@ export default function useNavigate() {
 
   const navigate = useMemo(
     () => (route: NavigationParamsType) => {
-      const params = { ...Object.fromEntries([...searchParams]) };
-
-      if (route.tabId && route.tabId.length > 0) {
-        params.tabId = route.tabId;
+      if (route.route === '404') {
+        routeNavigate('/404');
+        return;
       }
+
+      const params = { ...Object.fromEntries([...searchParams]) };
 
       if (route.connectionId) {
         params.connectionId = String(route.connectionId);
       }
 
       if (route.route === '/') {
-        params.tabId = '';
+        routeNavigate('/');
+        setSearchParams({
+          connectionId: params.connectionId
+        });
+        return;
       }
 
-      if (route.route) {
+      if (route.tabId && route.tabId.length > 0) {
+        params.tabId = route.tabId;
+      }
+
+      if (route.route && route.route.length > 0) {
         routeNavigate(`/${route.route}`);
       }
 

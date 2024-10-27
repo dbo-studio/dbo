@@ -6,5 +6,6 @@ export const ConnectionWrapperStyled = styled(Box)(({ theme }) => ({
   padding: theme.spacing(1),
   marginTop: theme.spacing(2),
   border: `1px solid ${theme.palette.divider}`,
-  borderRadius: variables.radius.medium
-}));
+  borderRadius: variables.radius.medium,
+  minHeight: 97
+})) as typeof Box;

@@ -1,6 +1,6 @@
 module github.com/dbo-studio/dbo
 
-go 1.22
+go 1.23
 
 require (
 	github.com/go-faker/faker/v4 v4.5.0

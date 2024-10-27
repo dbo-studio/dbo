@@ -7,6 +7,7 @@ import { v4 as uuid } from 'uuid';
 
 import type { updateConnectionType } from '@/api/connection/types';
 import useNavigate from '@/hooks/useNavigate.hook';
+import { useSearchParams } from 'react-router-dom';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { ConnectionsStyled } from './Connections.styled';
 import { EmptySpaceStyle } from './EmptySpace.styled';
@@ -15,7 +16,8 @@ const AddConnection = lazy(() => import('../AddConnection/AddConnection'));
 const EditConnection = lazy(() => import('../EditConnection/EditConnection'));
 
 export default function Connections() {
-  const { currentConnection, connections, updateCurrentConnection, updateShowAddConnection } = useConnectionStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { currentConnection, connections, updateCurrentConnection } = useConnectionStore();
   const navigate = useNavigate();
 
   const { request: getConnectionDetail } = useAPI({
@@ -32,14 +34,14 @@ export default function Connections() {
     }
 
     if (connections.length === 0) {
-      updateShowAddConnection(true);
+      setSearchParams({ ...searchParams, showAddConnection: 'true' });
     }
 
     if (connections.length > 0) {
       const activeConnection = connections.filter((c: ConnectionType) => c.isActive);
       if (activeConnection.length > 0) handleChangeCurrentConnection(activeConnection[0]);
     } else {
-      updateShowAddConnection(true);
+      setSearchParams({ ...searchParams, showAddConnection: 'true' });
     }
   }, [connections]);
 

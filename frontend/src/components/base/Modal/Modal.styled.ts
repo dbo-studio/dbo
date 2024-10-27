@@ -1,7 +1,7 @@
 import { variables } from '@/core/theme/variables';
 import { Box, Modal, styled } from '@mui/material';
 
-export const ModalStyled = styled(Modal)(() => ({}));
+export const ModalStyled = styled(Modal)(() => ({})) as typeof Modal;
 
 export const ModalWrapperStyled = styled(Box)(({ theme }) => ({
   minHeight: '400px',
@@ -18,9 +18,9 @@ export const ModalWrapperStyled = styled(Box)(({ theme }) => ({
   ':focus-visible': {
     outline: 'unset'
   }
-}));
+})) as typeof Box;
 
 export const ConfirmModalWrapperStyled = styled(ModalWrapperStyled)(() => ({
   minHeight: '120px',
   minWidth: '400px'
-}));
+})) as typeof ModalWrapperStyled;

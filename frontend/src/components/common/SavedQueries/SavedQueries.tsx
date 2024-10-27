@@ -43,7 +43,7 @@ export default function SavedQueries() {
             <LinearProgress style={{ marginTop: '8px' }} />
           ) : (
             savedQueries
-              ?.filter((f) => f.name.includes(search))
+              ?.filter((f) => f.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()))
               .map((query) => (
                 <SavedQueryItem
                   onChange={(q) => upsertQuery(q)}

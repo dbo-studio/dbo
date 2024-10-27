@@ -16,8 +16,7 @@ import { toast } from 'sonner';
 export default function TableTreeViewItem({ table, onClick }: TablesTreeViewItemProps) {
   const navigate = useNavigate();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_, copy] = useCopyToClipboard();
+  const [copy] = useCopyToClipboard();
   const { addTab } = useTabStore();
   const { updateCurrentConnection, currentConnection } = useConnectionStore();
 

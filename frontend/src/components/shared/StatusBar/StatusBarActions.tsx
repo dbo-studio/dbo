@@ -6,11 +6,12 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, IconButton, Stack } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import CustomIcon from '../../base/CustomIcon/CustomIcon';
 import LoadingIconButton from '../../base/LoadingIconButton/LoadingIconButton';
 
 export default function StatusBarActions() {
-  const [_, setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { getSelectedTab } = useTabStore();
   const { currentConnection } = useConnectionStore();
 
@@ -78,7 +79,7 @@ export default function StatusBarActions() {
       try {
         await updateDesignsQuery();
       } catch (error) {
-        console.log('🚀 ~ handleSave ~ error:', error);
+        toast.error(error.message);
       }
     }
   };
@@ -86,7 +87,7 @@ export default function StatusBarActions() {
   const handleAddAction = async () => {
     if (getSelectedTab()?.mode === TabMode.Data) {
       addUnsavedRows();
-      setSearchParams({ scrollToBottom: 'true' });
+      setSearchParams({ ...searchParams, scrollToBottom: 'true' });
     }
 
     if (getSelectedTab()?.mode === TabMode.Design) {

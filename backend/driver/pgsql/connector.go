@@ -31,17 +31,13 @@ func (p PostgresQueryEngine) Open(connectionId int32) (*gorm.DB, error) {
 		return nil, errors.New("connection not found")
 	}
 
-	dsn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s",
-		connection.Host,
-		strconv.Itoa(int(connection.Port)),
-		connection.Database,
-		connection.Username,
-		connection.Password.String,
-	)
-
-	return gorm.Open(postgres.New(postgres.Config{
-		DSN: dsn,
-	}), &gorm.Config{})
+	return p.ConnectWithOptions(ConnectionOption{
+		Host:     connection.Host,
+		Port:     int32(connection.Port),
+		User:     connection.Username,
+		Password: connection.Password.String,
+		Database: connection.Database,
+	})
 }
 
 func (p PostgresQueryEngine) Close(connectionId int32) {
@@ -57,13 +53,19 @@ type ConnectionOption struct {
 }
 
 func (p PostgresQueryEngine) ConnectWithOptions(options ConnectionOption) (*gorm.DB, error) {
-	dsn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s",
+	dsn := fmt.Sprintf("host=%s port=%s user=%s ",
 		options.Host,
 		strconv.Itoa(int(options.Port)),
-		options.Database,
 		options.User,
-		options.Password,
 	)
+
+	if len(options.Database) > 0 {
+		dsn += fmt.Sprintf("dbname=%s ", options.Database)
+	}
+
+	if len(options.Password) > 0 {
+		dsn += fmt.Sprintf("password=%s", options.Password)
+	}
 
 	return gorm.Open(postgres.New(postgres.Config{
 		DSN: dsn,

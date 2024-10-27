@@ -4,16 +4,18 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, Checkbox, CircularProgress } from '@mui/material';
 import type React from 'react';
-import { useEffect, useRef } from 'react';
-import type { DataGridHandle, RenderCheckboxProps, RowsChangeData } from 'react-data-grid';
+import { useEffect, useRef, useState } from 'react';
+import type { DataGridHandle, RenderCheckboxProps, RowsChangeData, SortColumn, SortDirection } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
 import { useSearchParams } from 'react-router-dom';
+import { v4 as uuidv4 } from 'uuid';
 import { DataGridStyled } from './DataGrid.styled';
 import { DataGridWrapperStyled } from './DataGridWrapper.styled';
 
 export default function DBDataGrid() {
-  const { getSelectedTab } = useTabStore();
+  const { getSelectedTab, updateSorts } = useTabStore();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([]);
 
   const dataGridRef = useRef<DataGridHandle>(null);
   const {
@@ -61,7 +63,7 @@ export default function DBDataGrid() {
       rowIdx: getRows().length - 1
     });
 
-    setSearchParams({ scrollToBottom: 'false' });
+    setSearchParams({ ...searchParams, scrollToBottom: 'false' });
   };
 
   useEffect(() => {
@@ -71,6 +73,39 @@ export default function DBDataGrid() {
     }
   }, [searchParams]);
 
+  const handleChangeSorts = (sortColumns: SortColumn[]) => {
+    if (sortColumns.length === 0) {
+      updateSorts([]);
+    } else {
+      updateSorts([
+        {
+          index: uuidv4(),
+          column: sortColumns[0].columnKey,
+          operator: sortColumns[0].direction,
+          isActive: true
+        }
+      ]);
+    }
+
+    runQuery();
+  };
+
+  useEffect(() => {
+    if ((getSelectedTab()?.sorts ?? 0) === 0) {
+      setSortColumns([]);
+      return;
+    }
+
+    const sortItems: SortColumn[] = [];
+    for (const sort of getSelectedTab()?.sorts) {
+      sortItems.push({
+        columnKey: sort.column,
+        direction: sort.operator as SortDirection
+      });
+    }
+    setSortColumns(sortItems);
+  }, [getSelectedTab()?.sorts]);
+
   return loading ? (
     <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
       <CircularProgress size={30} />
@@ -78,6 +113,14 @@ export default function DBDataGrid() {
   ) : (
     <DataGridWrapperStyled>
       <DataGridStyled
+        defaultColumnOptions={{
+          sortable: getSelectedTab()?.mode === TabMode.Data
+        }}
+        sortColumns={sortColumns}
+        onSortColumnsChange={(sortColumns: SortColumn[]) => {
+          setSortColumns(sortColumns);
+          handleChangeSorts(sortColumns);
+        }}
         ref={dataGridRef}
         onSelectedCellChange={handleOnCellClick}
         rowKeyGetter={rowKeyGetter}

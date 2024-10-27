@@ -9,10 +9,16 @@ import { ConnectionWrapperStyled } from './ConnectionSelection.styled';
 
 export default function ConnectionSelection({ connections, onSubmit, onClose }: ConnectionSelectionProps) {
   const uuids = useUUID(connections.length);
+  const [visibleConnections, setVisibleConnections] = useState(connections);
+
   const [connectionType, setConnectionType] = useState<ConnectionType | undefined>(undefined);
 
   const handleSearch = (value: string) => {
-    console.log(value);
+    setVisibleConnections(
+      connections.filter((c: ConnectionType) => {
+        return c.name.toLocaleLowerCase().includes(value.toLocaleLowerCase());
+      })
+    );
   };
 
   const handleConnectionType = (c: ConnectionType) => {
@@ -29,7 +35,7 @@ export default function ConnectionSelection({ connections, onSubmit, onClose }: 
       <Box flex={1}>
         <Search onChange={handleSearch} />
         <ConnectionWrapperStyled>
-          {connections.map((c, index: number) => (
+          {visibleConnections.map((c, index: number) => (
             <ConnectionItem
               selected={connectionType?.name === c.name}
               onClick={handleConnectionType}

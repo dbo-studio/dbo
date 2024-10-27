@@ -1,6 +1,6 @@
-import ConnectionInfo from '@/components/common/ConnectionInfo/ConnectionInfo';
 import Grid from '@mui/material/Unstable_Grid2';
 import Actions from './Actions';
+import ConnectionInfo from './ConnectionInfo/ConnectionInfo';
 import Leading from './Leading';
 
 export default function AppHeader() {

@@ -39,7 +39,7 @@ export default function Schemas() {
           size='medium'
           fullWidth={true}
           onChange={handleChangeSchema}
-          defaultValue={currentConnection.currentSchema}
+          value={currentConnection.currentSchema}
         >
           {currentConnection.schemas.map((s: string) => (
             <SelectOption key={uuid()} value={s}>

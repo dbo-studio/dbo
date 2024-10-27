@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine
+FROM golang:1.23-alpine
 
 ENV APP_PORT=${APP_PORT}
 ENV APP_ENV=${APP_ENV}
