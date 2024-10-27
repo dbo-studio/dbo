@@ -12,10 +12,11 @@ describe('AboutPanel.tsx', () => {
         <AboutPanel />
       </MemoryRouter>
     );
-    expect(screen.getAllByText(locales.theme)).not.toBeNull();
+    expect(screen.getAllByText(locales.releases_url)).not.toBeNull();
+    expect(screen.getAllByText(locales.report_an_issue)).not.toBeNull();
   });
 
-  test('should close setting after click ', () => {
+  test('should show app version when platform is desktop', () => {
     process.env.TAURI_ARCH = 'TAURI_ARCH';
     process.env.TAURI_PLATFORM = 'TAURI_PLATFORM';
     process.env.TAURI_PLATFORM_VERSION = 'TAURI_PLATFORM_VERSION';
@@ -26,6 +27,9 @@ describe('AboutPanel.tsx', () => {
         <AboutPanel />
       </MemoryRouter>
     );
-    expect(screen.getAllByText(locales.theme)).not.toBeNull();
+    expect(screen.getAllByText('TAURI_ARCH')).not.toBeNull();
+    expect(screen.getAllByText('TAURI_PLATFORM')).not.toBeNull();
+    expect(screen.getAllByText('TAURI_PLATFORM_VERSION')).not.toBeNull();
+    expect(screen.getAllByText('VITE_VERSION')).not.toBeNull();
   });
 });

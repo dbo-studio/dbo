@@ -6,4 +6,4 @@ export const MenuPanelStyled = styled(Box)(({ theme }) => ({
   overflow: 'auto',
   background: theme.palette.background.subdued,
   flex: 1
-}));
+})) as typeof Box;

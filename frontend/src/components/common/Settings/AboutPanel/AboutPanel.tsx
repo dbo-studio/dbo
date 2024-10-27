@@ -22,13 +22,6 @@ export default function AboutPanel() {
         platform: import.meta.env.TAURI_PLATFORM,
         platformVersion: import.meta.env.TAURI_PLATFORM_VERSION
       });
-
-      console.log({
-        version: import.meta.env.VITE_VERSION,
-        arch: import.meta.env.TAURI_ARCH,
-        platform: import.meta.env.TAURI_PLATFORM,
-        platformVersion: import.meta.env.TAURI_PLATFORM_VERSION
-      });
     }
   }, []);
 
