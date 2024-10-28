@@ -1,7 +1,6 @@
 import { constants } from '@/core/constants';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
 import type { SettingStore, SidebarType } from './types';
 
 type SettingState = SettingStore;
@@ -9,7 +8,7 @@ type SettingState = SettingStore;
 export const useSettingStore = create<SettingState>()(
   devtools(
     persist(
-      immer((set, get) => ({
+      (set, get) => ({
         sidebar: {
           leftWidth: constants.defaultSidebarWidth,
           rightWidth: constants.defaultSidebarWidth,
@@ -29,7 +28,7 @@ export const useSettingStore = create<SettingState>()(
             set({ isDark: !get().isDark });
           }
         }
-      })),
+      }),
       { name: 'settings' }
     ),
     { name: 'settings' }

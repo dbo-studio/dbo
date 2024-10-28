@@ -1,7 +1,6 @@
 import type { TabType } from '@/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
 import { useTabStore } from '../tabStore/tab.store';
 import { createDataColumnSlice } from './slices/dataColumn.slice';
 import { createDataEditedColumnSlice } from './slices/dataEditedColumn.slice';
@@ -38,7 +37,7 @@ type DataState = DataStore &
 
 export const useDataStore = create<DataState>()(
   devtools(
-    immer((set, get, ...state) => ({
+    (set, get, ...state) => ({
       selectedTab: (): TabType | undefined => {
         return useTabStore.getState().getSelectedTab();
       },
@@ -51,7 +50,7 @@ export const useDataStore = create<DataState>()(
       ...createDataColumnSlice(set, get, ...state),
       ...createDataEditedColumnSlice(set, get, ...state),
       ...createDataQuerySlice(set, get, ...state)
-    })),
+    }),
     { name: 'data' }
   )
 );

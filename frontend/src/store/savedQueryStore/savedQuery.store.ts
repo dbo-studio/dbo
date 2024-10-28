@@ -1,14 +1,13 @@
 import type { SavedQueryType } from '@/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
 import type { SavedQueryStore } from './types';
 
 type SavedQueryState = SavedQueryStore;
 
 export const useSavedQueryStore = create<SavedQueryState>()(
   devtools(
-    immer((set, get) => ({
+    (set, get) => ({
       savedQueries: undefined,
       upsertQuery: (savedQuery: SavedQueryType) => {
         let queries = get().savedQueries;
@@ -34,7 +33,7 @@ export const useSavedQueryStore = create<SavedQueryState>()(
         queries = queries.filter((s) => s.id !== id);
         set({ savedQueries: queries });
       }
-    })),
+    }),
     { name: 'saved_query' }
   )
 );

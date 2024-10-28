@@ -1,14 +1,13 @@
 import type { ConnectionType } from '@/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
 import type { ConnectionStore } from './types';
 
 type ConnectionState = ConnectionStore;
 
 export const useConnectionStore = create<ConnectionState>()(
   devtools(
-    immer((set, get, ...state) => ({
+    (set, get) => ({
       showEditConnection: undefined,
       connections: undefined,
       currentConnection: undefined,
@@ -38,7 +37,7 @@ export const useConnectionStore = create<ConnectionState>()(
 
         set({ currentConnection, connections });
       }
-    })),
+    }),
     { name: 'connections' }
   )
 );
