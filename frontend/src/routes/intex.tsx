@@ -1,4 +1,4 @@
-import Layout from '@/components/layout/Layout';
+import BaseLayout from '@/components/layout/BaseLayout.tsx';
 import { createElement } from 'react';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import NotFound from './404/404';
@@ -13,7 +13,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/',
-    element: <Layout />,
+    element: <BaseLayout />,
     children: [
       {
         path: 'data',

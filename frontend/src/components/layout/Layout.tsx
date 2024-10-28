@@ -1,4 +1,4 @@
-import { useParamParser, useSetupDesktop, useWindowSize } from '@/hooks';
+import { useParamParser, useWindowSize } from '@/hooks';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Grid } from '@mui/material';
@@ -12,35 +12,32 @@ import StartContainer from './MainContainer/StartContainer';
 
 export default function Layout() {
   const windowSize = useWindowSize(true);
-  const done = useSetupDesktop();
   const { sidebar } = useSettingStore();
   const { getTabs, getSelectedTab } = useTabStore();
   useParamParser();
 
-  return done ? (
-    <>
-      <LayoutStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
-        <ConfirmModal />
-        <AppHeader />
-        <Grid container spacing={0}>
-          <Grid>
-            <StartContainer />
-          </Grid>
-          {sidebar.showLeft && (
-            <Grid>
-              <ExplorerContainer />
-            </Grid>
-          )}
-          <Grid flex={1} minWidth={0}>
-            <CenterContainer selectedTab={getSelectedTab()} tabs={getTabs()} />
-          </Grid>
-          {sidebar.showRight && (
-            <Grid>
-              <EndContainer />
-            </Grid>
-          )}
+  return (
+    <LayoutStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
+      <ConfirmModal />
+      <AppHeader />
+      <Grid container spacing={0}>
+        <Grid>
+          <StartContainer />
         </Grid>
-      </LayoutStyled>
-    </>
-  ) : null;
+        {sidebar.showLeft && (
+          <Grid>
+            <ExplorerContainer />
+          </Grid>
+        )}
+        <Grid flex={1} minWidth={0}>
+          <CenterContainer selectedTab={getSelectedTab()} tabs={getTabs()} />
+        </Grid>
+        {sidebar.showRight && (
+          <Grid>
+            <EndContainer />
+          </Grid>
+        )}
+      </Grid>
+    </LayoutStyled>
+  );
 }
