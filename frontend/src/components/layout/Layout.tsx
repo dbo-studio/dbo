@@ -1,6 +1,5 @@
 import { useParamParser, useWindowSize } from '@/hooks';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { useTabStore } from '@/store/tabStore/tab.store';
 import { Grid } from '@mui/material';
 import ConfirmModal from '../base/Modal/ConfirmModal';
 import AppHeader from './AppHeader/AppHeader';
@@ -13,7 +12,6 @@ import StartContainer from './MainContainer/StartContainer';
 export default function Layout() {
   const windowSize = useWindowSize(true);
   const { sidebar } = useSettingStore();
-  const { getTabs, getSelectedTab } = useTabStore();
   useParamParser();
 
   return (
@@ -30,7 +28,7 @@ export default function Layout() {
           </Grid>
         )}
         <Grid flex={1} minWidth={0}>
-          <CenterContainer selectedTab={getSelectedTab()} tabs={getTabs()} />
+          <CenterContainer />
         </Grid>
         {sidebar.showRight && (
           <Grid>
