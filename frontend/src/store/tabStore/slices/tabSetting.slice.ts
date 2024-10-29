@@ -76,7 +76,10 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       newTab = newTabs[newTabs.length - 1];
     }
 
-    get().switchTab(newTab?.id ?? null);
+    if (newTab?.id === tabId) {
+      get().switchTab(newTab?.id ?? null);
+    }
+
     get().updateTabs(newTabs);
     return newTabs.length === 0 ? undefined : newTab;
   },

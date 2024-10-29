@@ -15,16 +15,28 @@ export function useRemoveTab() {
     removeUnsavedRowsByTabId
   } = useDataStore();
 
-  const remove = useCallback((tabId: string): TabType | null | undefined => {
-    removeColumnsByTabId(tabId);
-    removeEditedColumnsByTabId(tabId);
-    removeEditedRowsByTabId(tabId);
-    removeHighlightedRowsByTabId(tabId);
-    deleteRemovedRowsByTabId(tabId);
-    removeRowsByTabId(tabId);
-    removeUnsavedRowsByTabId(tabId);
-    return removeTab(tabId);
-  }, []);
+  const remove = useCallback(
+    (tabId: string): TabType | null | undefined => {
+      removeColumnsByTabId(tabId);
+      removeEditedColumnsByTabId(tabId);
+      removeEditedRowsByTabId(tabId);
+      removeHighlightedRowsByTabId(tabId);
+      deleteRemovedRowsByTabId(tabId);
+      removeRowsByTabId(tabId);
+      removeUnsavedRowsByTabId(tabId);
+      return removeTab(tabId);
+    },
+    [
+      deleteRemovedRowsByTabId,
+      removeColumnsByTabId,
+      removeEditedColumnsByTabId,
+      removeEditedRowsByTabId,
+      removeHighlightedRowsByTabId,
+      removeRowsByTabId,
+      removeTab,
+      removeUnsavedRowsByTabId
+    ]
+  );
 
   return [remove];
 }
