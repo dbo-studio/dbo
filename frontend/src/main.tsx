@@ -2,8 +2,9 @@ import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
+import { globalStyles } from '@/core/theme/global.ts';
 import { tools } from '@/core/utils';
-import { CssBaseline } from '@mui/material';
+import { CssBaseline, GlobalStyles } from '@mui/material';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { Toaster } from 'sonner';
@@ -15,6 +16,7 @@ enableMocking().then(() => {
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
       <ThemeProvider>
+        <GlobalStyles styles={globalStyles} />
         <CssBaseline />
         <Router />
         <Toaster position='bottom-center' duration={5000} richColors closeButton={true} />
@@ -24,7 +26,7 @@ enableMocking().then(() => {
 });
 
 async function enableMocking() {
-  if (process.env.NODE_ENV !== 'development' || tools.isTauri()) {
+  if (process.env.NODE_ENV !== 'development' || !tools.isTauri()) {
     return;
   }
 
