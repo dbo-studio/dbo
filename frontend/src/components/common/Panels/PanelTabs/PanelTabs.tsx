@@ -4,7 +4,7 @@ import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { TabType } from '@/types';
 
 export default function PanelTabs() {
-  const { getTabs } = useTabStore();
+  const getTabs = useTabStore((state) => state.getTabs);
 
   return (
     <PanelTabsStyled>

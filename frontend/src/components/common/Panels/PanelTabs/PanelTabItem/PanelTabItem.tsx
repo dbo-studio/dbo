@@ -18,9 +18,12 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
   const tabRefs = useRef<Record<string, HTMLElement>>({});
   const navigate = useNavigate();
   const [removeTab] = useRemoveTab();
-  const { addTab, getSelectedTab, getTabs } = useTabStore();
-  const { runQuery, runRawQuery } = useDataStore();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
+  const addTab = useTabStore((state) => state.addTab);
+  const getSelectedTab = useTabStore((state) => state.getSelectedTab);
+  const getTabs = useTabStore((state) => state.getTabs);
+  const runQuery = useDataStore((state) => state.runQuery);
+  const runRawQuery = useDataStore((state) => state.runRawQuery);
 
   useShortcut(shortcuts.newTab, () => addNewEmptyTab());
   useShortcut(shortcuts.closeTab, () => getSelectedTab() && handleRemoveTab(getSelectedTab()?.id ?? ''));
