@@ -7,7 +7,7 @@ export const useSetupDesktop = () => {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    if (tools.isTauri()) {
+    if (process.env.NODE_ENV !== 'development' && tools.isTauri()) {
       invoke('get_backend_host').then((response) => {
         if (response === '') {
           alert('cant found empty port!');

@@ -73,5 +73,16 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
     changeMetaProviderSetting(autocomplete);
   }, [autocomplete]);
 
-  return <div style={{ height: '100%', width: '100%', visibility: mount ? 'visible' : 'hidden' }} ref={hostRef} />;
+  return (
+    <div
+      style={{
+        height: '100%',
+        width: '100%',
+        visibility: mount ? 'visible' : 'hidden',
+        userSelect: 'all',
+        WebkitUserSelect: 'all'
+      }}
+      ref={hostRef}
+    />
+  );
 }

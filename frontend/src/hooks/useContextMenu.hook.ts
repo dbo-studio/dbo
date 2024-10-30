@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useState } from 'react';
 
 export const useContextMenu = () => {
