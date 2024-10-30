@@ -143,8 +143,6 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
             handleRemoveTab(tab.id);
           }}
         />
-
-        <div className={'indicator'} />
       </PanelTabItemStyled>
       <ContextMenu menu={menu} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
     </Box>

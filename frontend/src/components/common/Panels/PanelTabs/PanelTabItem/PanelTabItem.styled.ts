@@ -11,6 +11,7 @@ export const PanelTabItemStyled = styled(Box)<PanelTabItemStyledProps>(({ theme,
   flex: 1,
   width: '250px',
   flexDirection: 'row',
+  background: theme.palette.background.default,
   display: 'flex',
   span: {
     color: selected ? theme.palette.text.primary : theme.palette.text.subdued
@@ -35,12 +36,5 @@ export const PanelTabItemStyled = styled(Box)<PanelTabItemStyledProps>(({ theme,
       }
     }
   },
-  '.indicator': {
-    height: '1px',
-    position: 'absolute',
-    bottom: 2,
-    right: 0,
-    left: 0,
-    backgroundColor: selected ? theme.palette.text.primary : 'transparent'
-  }
+  borderBottom: selected ? `3px solid ${theme.palette.text.primary}` : `3px solid ${theme.palette.background.default}`
 }));
