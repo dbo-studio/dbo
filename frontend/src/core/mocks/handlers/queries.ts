@@ -1,7 +1,9 @@
-import {http, HttpResponse} from 'msw';
+import { faker } from '@faker-js/faker';
+import { http, HttpResponse, delay } from 'msw';
 
 const queriesHandler = [
-  http.post('/api/query/run', () => {
+  http.post('/api/query/run', async () => {
+    await delay(5000);
     return HttpResponse.json({
       data: queryModel,
       message: ''
@@ -101,46 +103,25 @@ const queriesHandler = [
   })
 ];
 
+const data = [];
+for (let i = 0; i < 100; i++) {
+  data.push({
+    authors: faker.person.fullName(),
+    datasrc_id: faker.number.int(),
+    dbo_index: i,
+    end_page: faker.number.int({ min: 0, max: 100 }),
+    issue_state: '',
+    journal: faker.lorem.text(),
+    start_page: '31',
+    title: faker.word.words({ count: 20 }),
+    vol_city: faker.number.int({ min: 0, max: 100 }),
+    year: faker.date.birthdate().getFullYear()
+  });
+}
+
 const queryModel = {
   query: 'SELECT * FROM "data_src" LIMIT 100 OFFSET 0;',
-  data: [
-    {
-      authors: 'G.V. Mann',
-      datasrc_id: 'D1066 ',
-      dbo_index: 0,
-      end_page: '76',
-      issue_state: '',
-      journal: 'American Journal of Clinical Nutrition',
-      start_page: '31',
-      title: 'The Health and Nutritional status of Alaskan Eskimos.',
-      vol_city: '11',
-      year: 1962
-    },
-    {
-      authors: 'J.P. McBride, R.A. Maclead',
-      datasrc_id: 'D1073 ',
-      dbo_index: 1,
-      end_page: '638',
-      issue_state: '',
-      journal: 'Journal of the American Dietetic Association',
-      start_page: '636',
-      title: 'Sodium and potassium in fish from the Canadian Pacific coast.',
-      vol_city: '32',
-      year: 1956
-    },
-    {
-      authors: 'M.E. Stansby',
-      datasrc_id: 'D1107 ',
-      dbo_index: 2,
-      end_page: '11',
-      issue_state: '9',
-      journal: 'Marine Fish Rev.',
-      start_page: '1',
-      title: 'Chemical Characteristics of fish caught in the northwest Pacific Oceans.',
-      vol_city: '38',
-      year: 1976
-    }
-  ],
+  data: data,
   structures: [
     {
       name: 'datasrc_id',

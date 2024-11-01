@@ -4,7 +4,7 @@ import { Box, styled } from '@mui/material';
 
 export const PanelTabItemStyled = styled(Box)<PanelTabItemStyledProps>(({ theme, selected }) => ({
   position: 'relative',
-  height: 33,
+  height: 35,
   cursor: 'pointer',
   borderRight: `1px solid ${theme.palette.divider}`,
   padding: `${theme.spacing(1)} ${theme.spacing(2)}`,
@@ -24,7 +24,7 @@ export const PanelTabItemStyled = styled(Box)<PanelTabItemStyledProps>(({ theme,
 
   '&:hover': {
     span: {
-      color: theme.palette.text.text
+      color: selected ? theme.palette.text.primary :  theme.palette.text.text
     },
 
     svg: {
@@ -36,5 +36,5 @@ export const PanelTabItemStyled = styled(Box)<PanelTabItemStyledProps>(({ theme,
       }
     }
   },
-  borderBottom: selected ? `3px solid ${theme.palette.text.primary}` : `3px solid ${theme.palette.background.default}`
+  borderBottom: selected ? `4px solid ${theme.palette.text.primary}` : `4px solid ${theme.palette.background.default}`
 }));

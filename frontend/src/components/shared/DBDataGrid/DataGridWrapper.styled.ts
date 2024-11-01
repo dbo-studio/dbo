@@ -5,4 +5,4 @@ export const DataGridWrapperStyled = styled(Box)(() => ({
   display: 'flex',
   flexDirection: 'column',
   flex: 1
-}));
+})) as typeof Box;

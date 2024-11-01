@@ -3,7 +3,6 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import { globalStyles } from '@/core/theme/global.ts';
-import { tools } from '@/core/utils';
 import { CssBaseline, GlobalStyles } from '@mui/material';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -26,7 +25,7 @@ enableMocking().then(() => {
 });
 
 async function enableMocking() {
-  if (process.env.NODE_ENV !== 'development' || !tools.isTauri()) {
+  if (process.env.NODE_ENV !== 'development') {
     return;
   }
 

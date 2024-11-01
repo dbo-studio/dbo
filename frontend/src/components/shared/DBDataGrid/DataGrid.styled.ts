@@ -1,6 +1,4 @@
-import type {} from '@emotion/styled';
 import { styled } from '@mui/material';
-import type {} from '@mui/system';
 import DataGrid from 'react-data-grid';
 
 export const DataGridStyled = styled(DataGrid)(({ theme }) => ({
@@ -53,4 +51,4 @@ export const DataGridStyled = styled(DataGrid)(({ theme }) => ({
       backgroundColor: theme.palette.background.danger
     }
   }
-}));
+})) as typeof DataGrid;

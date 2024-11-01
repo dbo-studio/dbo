@@ -16,30 +16,24 @@ export default function DBDataGrid() {
   const { getSelectedTab, updateSorts } = useTabStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([]);
-
   const dataGridRef = useRef<DataGridHandle>(null);
-  const {
-    loading,
-    updateRows,
-    updateHighlightedRow,
-    getRows,
-    getColumns,
-    runQuery,
-    getSelectedRows,
-    updateSelectedRows,
-    getEditedRows,
-    updateEditedRows,
-    getUnsavedRows,
-    getRemovedRows
-  } = useDataStore();
 
-  const getData = async () => {
-    await runQuery();
-  };
+  const loading = useDataStore((state) => state.loading);
+  const updateRows = useDataStore((state) => state.updateRows);
+  const updateHighlightedRow = useDataStore((state) => state.updateHighlightedRow);
+  const getRows = useDataStore((state) => state.getRows);
+  const getColumns = useDataStore((state) => state.getColumns);
+  const runQuery = useDataStore((state) => state.runQuery);
+  const getSelectedRows = useDataStore((state) => state.getSelectedRows);
+  const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
+  const getEditedRows = useDataStore((state) => state.getEditedRows);
+  const updateEditedRows = useDataStore((state) => state.updateEditedRows);
+  const getUnsavedRows = useDataStore((state) => state.getUnsavedRows);
+  const getRemovedRows = useDataStore((state) => state.getRemovedRows);
 
   useEffect(() => {
     if (getSelectedTab()?.mode === TabMode.Data && (getRows().length === 0 || getColumns().length === 0)) {
-      getData();
+      runQuery().then();
     }
   }, [getSelectedTab()?.id]);
 
@@ -50,12 +44,12 @@ export default function DBDataGrid() {
     updateHighlightedRow(e.row);
   };
 
-  const handleRowsChange = (rows: any[], data: RowsChangeData<any, unknown>) => {
+  const handleRowsChange = (rows: any[], data: RowsChangeData<any>) => {
     const oldRow: any = getRows()[data.indexes[0]];
     const newRow = rows[data.indexes[0]];
     const editedRows = handelRowChangeLog(getEditedRows(), oldRow, newRow);
     updateEditedRows(editedRows);
-    updateRows(rows);
+    updateRows(rows).then();
   };
 
   const scrollToBottom = () => {
@@ -87,17 +81,19 @@ export default function DBDataGrid() {
       ]);
     }
 
-    runQuery();
+    runQuery().then();
   };
 
   useEffect(() => {
-    if ((getSelectedTab()?.sorts ?? 0) === 0) {
+    const sorts = getSelectedTab()?.sorts ?? [];
+
+    if (sorts.length === 0) {
       setSortColumns([]);
       return;
     }
 
     const sortItems: SortColumn[] = [];
-    for (const sort of getSelectedTab()?.sorts) {
+    for (const sort of sorts) {
       sortItems.push({
         columnKey: sort.column,
         direction: sort.operator as SortDirection

@@ -125,7 +125,7 @@ export const createDataQuerySlice: StateCreator<
       });
 
       useTabStore.getState().updateQuery(res.query);
-      Promise.all([get().updateEditedColumns([])]);
+      await Promise.all([get().updateEditedColumns([])]);
     } catch (error) {
       throw new Error(error?.response?.data?.message);
     } finally {
