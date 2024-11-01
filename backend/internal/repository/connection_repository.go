@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/driver"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -47,7 +48,7 @@ func (c IConnectionRepoImpl) Create(_ context.Context, dto *dto.CreateConnection
 			Valid:  true,
 			String: dto.Password,
 		},
-		Port:     uint(dto.Port),
+		Port:     dto.Port,
 		Database: dto.Database,
 		IsActive: false,
 		CurrentSchema: sql.NullString{
@@ -77,7 +78,7 @@ func (c IConnectionRepoImpl) Update(_ context.Context, connection *model.Connect
 		Valid:  true,
 		String: helper.OptionalString(req.Password, connection.Password.String),
 	}
-	connection.Port = helper.OptionalUint(req.Port, connection.Port)
+	connection.Port = helper.OptionalInt32(req.Port, connection.Port)
 	connection.Database = helper.OptionalString(req.Database, connection.Database)
 	connection.IsActive = helper.OptionalBool(req.IsActive, connection.IsActive)
 	connection.CurrentDatabase = sql.NullString{
