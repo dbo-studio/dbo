@@ -5,7 +5,11 @@ export default function Select(theme: Theme): Components {
     MuiSelect: {
       styleOverrides: {
         root: {
-          background: theme.palette.background.default
+          background: theme.palette.background.default,
+          height: 32
+        },
+        select: {
+          padding: 0
         }
       }
     }

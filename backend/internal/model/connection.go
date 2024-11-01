@@ -13,7 +13,7 @@ type Connection struct {
 	Host            string
 	Username        string
 	Password        sql.NullString
-	Port            uint
+	Port            int32
 	Database        string
 	IsActive        bool
 	CurrentSchema   sql.NullString
@@ -27,7 +27,7 @@ type ConnectionResource struct {
 	Name     string `json:"name"`
 	Host     string `json:"host"`
 	Username string `json:"username"`
-	Port     uint   `json:"port"`
+	Port     int32  `json:"port"`
 	Database string `json:"database"`
 }
 
@@ -42,7 +42,7 @@ func (c Connection) FakeConnection() *Connection {
 			Valid:  true,
 			String: faker.Password(),
 		},
-		Port:      uint(port),
+		Port:      int32(port),
 		Database:  faker.Name(),
 		CreatedAt: sql.NullTime{},
 		UpdatedAt: sql.NullTime{},

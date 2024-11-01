@@ -2,9 +2,10 @@ package serviceConnection
 
 import (
 	"context"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/driver"
-	"github.com/dbo-studio/dbo/internal/driver/pgsql"
+	pgsqlDriver "github.com/dbo-studio/dbo/internal/driver/pgsql"
 
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/apperror"

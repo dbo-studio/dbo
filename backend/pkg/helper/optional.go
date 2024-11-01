@@ -16,7 +16,7 @@ func OptionalBool(value *bool, defaultValue bool) bool {
 	}
 }
 
-func OptionalUint(value *uint, defaultValue uint) uint {
+func OptionalInt32(value *int32, defaultValue int32) int32 {
 	if value != nil {
 		return *value
 	} else {

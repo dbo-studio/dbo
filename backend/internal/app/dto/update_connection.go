@@ -8,7 +8,7 @@ type (
 		Host            *string `json:"host"`
 		Username        *string `json:"username"`
 		Password        *string `json:"password"`
-		Port            *uint   `json:"port"`
+		Port            *int32  `json:"port"`
 		Database        *string `json:"database"`
 		IsActive        *bool   `json:"is_active"`
 		CurrentDatabase *string `json:"current_database"`

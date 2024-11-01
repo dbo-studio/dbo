@@ -10,14 +10,14 @@ type (
 		Host     string `json:"host"`
 		Username string `json:"username"`
 		Password string `json:"password,omitempty"`
-		Port     int    `json:"port"`
+		Port     int32  `json:"port"`
 		Database string `json:"database,omitempty"`
 	}
 
 	AuthDetails struct {
 		Database string `json:"database"`
 		Host     string `json:"host"`
-		Port     int    `json:"port"`
+		Port     int32  `json:"port"`
 		Username string `json:"username"`
 	}
 )

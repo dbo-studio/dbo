@@ -17,7 +17,7 @@ func connectionsToResponse(connections *[]model.Connection) *dto.ConnectionsResp
 			Auth: dto.AuthDetails{
 				Database: c.Database,
 				Host:     c.Host,
-				Port:     int(c.Port),
+				Port:     c.Port,
 				Username: c.Username,
 			},
 		})
@@ -42,7 +42,7 @@ func connectionDetailModelToResponse(connection *model.Connection, version strin
 			Database: connection.Database,
 			Host:     connection.Host,
 			Username: connection.Username,
-			Port:     int(connection.Port),
+			Port:     connection.Port,
 		},
 		Databases: databases,
 		Schemas:   schemas,

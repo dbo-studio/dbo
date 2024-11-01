@@ -1,9 +1,7 @@
-import { Box, NativeSelect, Typography, useTheme } from '@mui/material';
-import { forwardRef } from 'react';
-import type { SelectInputProps } from './types'; // eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { Box, Select, Typography, useTheme } from '@mui/material';
+import type { SelectInputProps } from './types';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export default forwardRef(function SelectInput(props: SelectInputProps, ref) {
+export default function SelectInput(props: SelectInputProps) {
   const theme = useTheme();
   return (
     <Box display={'flex'} flexDirection={'column'}>
@@ -12,7 +10,8 @@ export default forwardRef(function SelectInput(props: SelectInputProps, ref) {
           {props.label}
         </Typography>
       )}
-      <NativeSelect
+      <Select
+        variant='standard'
         sx={{
           borderColor: props.error ? theme.palette.error.main : theme.palette.divider,
           marginBottom: props.error || props.margin === 'none' ? '0px' : theme.spacing(1),
@@ -21,7 +20,7 @@ export default forwardRef(function SelectInput(props: SelectInputProps, ref) {
         {...props}
       >
         {props.children}
-      </NativeSelect>
+      </Select>
 
       <Typography
         mb={props.margin === 'none' ? 0 : theme.spacing(1)}
@@ -32,4 +31,4 @@ export default forwardRef(function SelectInput(props: SelectInputProps, ref) {
       </Typography>
     </Box>
   );
-});
+}
