@@ -89,7 +89,7 @@ const connectionDetailModel = {
     username: 'default'
   },
   databases: ['postgres', 'default'],
-  schemas: ['public'],
+  schemas: ['public', 'test1', 'test2'],
   tables: [
     'data_src',
     'datsrcln',

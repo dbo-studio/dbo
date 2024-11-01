@@ -1,7 +1,7 @@
-import type { NativeSelectProps } from '@mui/material';
+import type { StandardSelectProps } from '@mui/material';
 import type React from 'react';
 
-export interface SelectInputProps extends NativeSelectProps {
+export interface SelectInputProps extends StandardSelectProps {
   label?: string;
   helperText?: string | undefined;
   children?: React.ReactNode;
