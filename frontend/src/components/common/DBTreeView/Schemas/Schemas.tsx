@@ -1,11 +1,12 @@
 import api from '@/api';
+import SelectInput from '@/components/base/SelectInput/SelectInput.tsx';
 import { SchemasStyled } from '@/components/common/DBTreeView/Schemas/Schemas.styled';
 import useAPI from '@/hooks/useApi.hook';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import type { EventFor } from '@/types';
+import { MenuItem } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material/Select/SelectInput';
 import { v4 as uuid } from 'uuid';
-import SelectInput from '../../../base/SelectInput/SelectInput';
 import SelectOption from '../../../base/SelectInput/SelectOption';
 
 export default function Schemas() {
@@ -16,7 +17,8 @@ export default function Schemas() {
     apiMethod: api.connection.updateConnection
   });
 
-  const handleChangeSchema = (e: EventFor<'select', 'onChange'>) => {
+  const handleChangeSchema = (e: SelectChangeEvent<unknown>) => {
+    console.log(e.target.value);
     const schema = currentConnection?.schemas?.filter((s: string) => s === e.target.value);
     if (!currentConnection || !schema || schema?.length === 0) {
       return;
@@ -42,9 +44,9 @@ export default function Schemas() {
           value={currentConnection.currentSchema}
         >
           {currentConnection.schemas.map((s: string) => (
-            <SelectOption key={uuid()} value={s}>
+            <MenuItem key={uuid()} selected={s === currentConnection.currentSchema} value={s}>
               {s}
-            </SelectOption>
+            </MenuItem>
           ))}
           {currentConnection.schemas.length === 0 && (
             <SelectOption value={'null'}>{locales.no_active_schema_find}</SelectOption>

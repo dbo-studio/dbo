@@ -1,9 +1,8 @@
-import { Checkbox, TableCell, Typography } from '@mui/material';
-import { v4 as uuidv4 } from 'uuid';
+import { Checkbox, MenuItem, TableCell, Typography } from '@mui/material';
+import { v4 as uuid } from 'uuid';
 
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
-import SelectOption from '@/components/base/SelectInput/SelectOption';
 import { PgsqlTypes } from '@/core/constants';
 import { clone } from 'lodash';
 import { useState } from 'react';
@@ -97,16 +96,15 @@ export default function ColumnItem({
         <SelectInput
           sx={{ marginBottom: '0' }}
           value={value.type}
-          defaultValue={value.type}
           onChange={(e) => handleOnColumnChange(e.target.value, 'type')}
           name='type'
           size='small'
           margin='none'
         >
           {PgsqlTypes.map((t: string) => (
-            <SelectOption value={t} key={uuidv4()}>
+            <MenuItem key={uuid()} selected={value.type === t} value={value.type}>
               {t}
-            </SelectOption>
+            </MenuItem>
           ))}
         </SelectInput>
       </TableCell>

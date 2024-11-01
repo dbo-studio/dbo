@@ -13,30 +13,26 @@ export default function Columns() {
   const { getColumns, getEditedColumns, updateColumn, addEditedColumns, runQuery } = useDataStore();
   const { getSelectedTab } = useTabStore();
 
-  const getData = async () => {
-    await runQuery();
-  };
-
   useEffect(() => {
     if (getSelectedTab()?.mode === TabMode.Design && getColumns().length === 0) {
-      getData();
+      runQuery().then();
     }
   }, [getSelectedTab()]);
 
   const handleColumnChange = (oldValue: ColumnType, newValue: EditedColumnType) => {
-    addEditedColumns(oldValue, newValue);
-    updateColumn(newValue);
+    addEditedColumns(oldValue, newValue).then();
+    updateColumn(newValue).then();
   };
 
   const handleColumnSelect = (column: ColumnType) => {
     updateColumn({
       ...column,
       selected: !column.selected
-    });
+    }).then();
   };
 
   const handleToggleEditColumn = (column: ColumnType) => {
-    updateColumn(column);
+    updateColumn(column).then();
   };
 
   return (
@@ -58,9 +54,9 @@ export default function Columns() {
             {getColumns().map((item: ColumnType) => (
               <ColumnItem
                 key={uuid()}
-                edited={getEditedColumns().some((c) => c.key === item.key && c.edited) === true}
-                deleted={getEditedColumns().some((c) => c.key === item.key && c.deleted) === true}
-                unsaved={getEditedColumns().some((c) => c.key === item.key && c.unsaved) === true}
+                edited={getEditedColumns().some((c) => c.key === item.key && c.edited)}
+                deleted={getEditedColumns().some((c) => c.key === item.key && c.deleted)}
+                unsaved={getEditedColumns().some((c) => c.key === item.key && c.unsaved)}
                 column={item}
                 onChange={handleColumnChange}
                 onSelect={() => handleColumnSelect(item)}

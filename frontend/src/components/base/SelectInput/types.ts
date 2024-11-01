@@ -1,7 +1,8 @@
-import type { StandardSelectProps } from '@mui/material';
+import type { BaseSelectProps, SelectVariants } from '@mui/material/Select/Select';
 import type React from 'react';
 
-export interface SelectInputProps extends StandardSelectProps {
+export interface SelectInputProps extends BaseSelectProps {
+  variant?: SelectVariants;
   label?: string;
   helperText?: string | undefined;
   children?: React.ReactNode;

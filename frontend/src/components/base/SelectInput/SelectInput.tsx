@@ -1,8 +1,9 @@
+import type { SelectInputProps } from '@/components/base/SelectInput/types.ts';
 import { Box, Select, Typography, useTheme } from '@mui/material';
-import type { SelectInputProps } from './types';
 
 export default function SelectInput(props: SelectInputProps) {
   const theme = useTheme();
+
   return (
     <Box display={'flex'} flexDirection={'column'}>
       {props.label && (
