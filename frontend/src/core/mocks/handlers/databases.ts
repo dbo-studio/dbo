@@ -1,7 +1,8 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse, delay } from 'msw';
 
 const databasesHandler = [
-  http.get('/api/databases/metadata', () => {
+  http.get('/api/databases/metadata', async () => {
+    await delay(5000);
     return HttpResponse.json({
       data: {
         templates: ['postgres', 'default', 'template1', 'template0'],
@@ -103,8 +104,8 @@ const databasesHandler = [
           'txid_snapshot',
           'uuid',
           'varbit',
-          'varchar',
-          'xml'
+          'xml',
+          'character varying'
         ]
       },
       message: ''

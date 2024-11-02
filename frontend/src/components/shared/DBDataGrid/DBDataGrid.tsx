@@ -18,18 +18,20 @@ export default function DBDataGrid() {
   const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([]);
   const dataGridRef = useRef<DataGridHandle>(null);
 
-  const loading = useDataStore((state) => state.loading);
-  const updateRows = useDataStore((state) => state.updateRows);
-  const updateHighlightedRow = useDataStore((state) => state.updateHighlightedRow);
-  const getRows = useDataStore((state) => state.getRows);
-  const getColumns = useDataStore((state) => state.getColumns);
-  const runQuery = useDataStore((state) => state.runQuery);
-  const getSelectedRows = useDataStore((state) => state.getSelectedRows);
-  const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
-  const getEditedRows = useDataStore((state) => state.getEditedRows);
-  const updateEditedRows = useDataStore((state) => state.updateEditedRows);
-  const getUnsavedRows = useDataStore((state) => state.getUnsavedRows);
-  const getRemovedRows = useDataStore((state) => state.getRemovedRows);
+  const {
+    loading,
+    updateRows,
+    updateHighlightedRow,
+    getRows,
+    getColumns,
+    runQuery,
+    getSelectedRows,
+    updateSelectedRows,
+    getEditedRows,
+    updateEditedRows,
+    getUnsavedRows,
+    getRemovedRows
+  } = useDataStore();
 
   useEffect(() => {
     if (getSelectedTab()?.mode === TabMode.Data && (getRows().length === 0 || getColumns().length === 0)) {
