@@ -1,7 +1,6 @@
 import { shortcuts } from '@/core/utils';
 import locales from '@/locales';
-import { Box, Typography, useTheme } from '@mui/material';
-import Grid from '@mui/material/Unstable_Grid2';
+import { Box, Grid2, Typography, useTheme } from '@mui/material';
 
 export default function ShortcutPanel() {
   const theme = useTheme();
@@ -12,14 +11,14 @@ export default function ShortcutPanel() {
 
       <Box mt={theme.spacing(2)}>
         {Object.entries(shortcuts).map(([key, value]) => (
-          <Grid key={key} container spacing={2}>
-            <Grid md={8}>
+          <Grid2 key={key} container spacing={2}>
+            <Grid2 size={{ md: 8 }}>
               <Typography variant='body2'>{value.label}</Typography>
-            </Grid>
-            <Grid md={4}>
+            </Grid2>
+            <Grid2 size={{ md: 4 }}>
               <Typography variant='body2'>{value.command}</Typography>
-            </Grid>
-          </Grid>
+            </Grid2>
+          </Grid2>
         ))}
       </Box>
     </Box>

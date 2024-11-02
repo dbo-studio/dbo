@@ -3,8 +3,7 @@ import { TabMode } from '@/core/enums';
 import useNavigate from '@/hooks/useNavigate.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { IconButton, Stack } from '@mui/material';
-import Grid from '@mui/material/Unstable_Grid2';
+import { Grid2, IconButton, Stack } from '@mui/material';
 import { Suspense, lazy } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ConnectionBox from './ConnectionBox';
@@ -35,7 +34,7 @@ export default function ConnectionInfo() {
       <Suspense>
         <Settings open={searchParams.get('showSettings') === 'true'} />
       </Suspense>
-      <Grid md={4}>
+      <Grid2 size={{ md: 4 }}>
         <Stack direction={'row'} spacing={2} justifyContent='flex-end'>
           <IconButton
             aria-label='connections'
@@ -54,12 +53,12 @@ export default function ConnectionInfo() {
             <CustomIcon type={'databaseOutline'} size={'m'} />
           </IconButton>
         </Stack>
-      </Grid>
-      <Grid md={8} mx={2}>
+      </Grid2>
+      <Grid2 size={{ md: 8 }}>
         <ConnectionBox />
-      </Grid>
+      </Grid2>
 
-      <Grid md={4}>
+      <Grid2 size={{ md: 4 }}>
         <Stack direction={'row'} spacing={2} justifyContent='flex-start'>
           {/* <IconButton aria-label='search'>
             <CustomIcon type={'search'} size={'m'} />
@@ -68,7 +67,7 @@ export default function ConnectionInfo() {
             <CustomIcon type={'sql'} size={'m'} />
           </IconButton>
         </Stack>
-      </Grid>
+      </Grid2>
     </Stack>
   );
 }
