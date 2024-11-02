@@ -18,7 +18,6 @@ export default function Schemas() {
   });
 
   const handleChangeSchema = (e: SelectChangeEvent<unknown>) => {
-    console.log(e.target.value);
     const schema = currentConnection?.schemas?.filter((s: string) => s === e.target.value);
     if (!currentConnection || !schema || schema?.length === 0) {
       return;

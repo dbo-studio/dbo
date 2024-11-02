@@ -124,7 +124,7 @@ const queryModel = {
   structures: [
     {
       name: 'datasrc_id',
-      type: 'character',
+      type: 'character varying',
       not_null: false,
       length: 6,
       default: null,
@@ -157,7 +157,7 @@ const queryModel = {
     },
     {
       name: 'year',
-      type: 'integer',
+      type: 'int2',
       not_null: true,
       length: null,
       default: null,

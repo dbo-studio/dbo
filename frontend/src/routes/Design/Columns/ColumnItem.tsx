@@ -3,7 +3,6 @@ import { v4 as uuid } from 'uuid';
 
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
-import { PgsqlTypes } from '@/core/constants';
 import { clone } from 'lodash';
 import { useState } from 'react';
 import { ColumnItemStyled } from './Columns.styled';
@@ -16,7 +15,8 @@ export default function ColumnItem({
   onEditToggle,
   edited,
   deleted,
-  unsaved
+  unsaved,
+  dataTypes
 }: ColumnItemProps) {
   const [value, setValue] = useState(column);
 
@@ -101,8 +101,8 @@ export default function ColumnItem({
           size='small'
           margin='none'
         >
-          {PgsqlTypes.map((t: string) => (
-            <MenuItem key={uuid()} selected={value.type === t} value={value.type}>
+          {dataTypes.map((t: string) => (
+            <MenuItem key={uuid()} value={t} selected={value.type === t}>
               {t}
             </MenuItem>
           ))}
