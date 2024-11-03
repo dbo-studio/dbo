@@ -1,15 +1,15 @@
-import type { BaseSelectProps, SelectVariants } from '@mui/material/Select/Select';
-import type React from 'react';
-
-export interface SelectInputProps extends BaseSelectProps {
-  variant?: SelectVariants;
+export type SelectInputProps = {
+  disabled?: boolean;
   label?: string;
   helperText?: string | undefined;
-  children?: React.ReactNode;
-}
+  value?: string;
+  emptyLabel?: string;
+  size?: 'medium' | 'small';
+  options: SelectInputOption[];
+  onChange: (value: SelectInputOption) => void;
+};
 
-export type SelectOptionProps = {
-  value: string | readonly string[] | number | undefined;
-  children?: React.ReactNode;
-  selected?: boolean;
+export type SelectInputOption = {
+  value: any;
+  label: string;
 };

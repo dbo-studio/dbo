@@ -24,7 +24,7 @@ export const PanelTabItemStyled = styled(Box)<PanelTabItemStyledProps>(({ theme,
 
   '&:hover': {
     span: {
-      color: selected ? theme.palette.text.primary :  theme.palette.text.text
+      color: selected ? theme.palette.text.primary : theme.palette.text.text
     },
 
     svg: {
@@ -36,5 +36,5 @@ export const PanelTabItemStyled = styled(Box)<PanelTabItemStyledProps>(({ theme,
       }
     }
   },
-  borderBottom: selected ? `4px solid ${theme.palette.text.primary}` : `4px solid ${theme.palette.background.default}`
+  borderBottom: selected ? `4px solid ${theme.palette.primary.main}` : `4px solid ${theme.palette.background.default}`
 }));

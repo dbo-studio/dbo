@@ -1,5 +1,4 @@
-import { Checkbox, MenuItem, TableCell, Typography } from '@mui/material';
-import { v4 as uuid } from 'uuid';
+import { Checkbox, TableCell, Typography } from '@mui/material';
 
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
@@ -94,19 +93,11 @@ export default function ColumnItem({
       </TableCell>
       <TableCell align='left'>
         <SelectInput
-          sx={{ marginBottom: '0' }}
           value={value.type}
-          onChange={(e) => handleOnColumnChange(e.target.value, 'type')}
-          name='type'
           size='small'
-          margin='none'
-        >
-          {dataTypes.map((t: string) => (
-            <MenuItem key={uuid()} value={t} selected={value.type === t}>
-              {t}
-            </MenuItem>
-          ))}
-        </SelectInput>
+          options={dataTypes.map((t) => ({ value: t, label: t }))}
+          onChange={(e) => handleOnColumnChange(e.value, 'type')}
+        />
       </TableCell>
       <TableCell align='left'>
         {column?.editMode?.length ? (

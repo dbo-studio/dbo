@@ -1,24 +1,21 @@
 import api from '@/api';
 import SelectInput from '@/components/base/SelectInput/SelectInput.tsx';
+import type { SelectInputOption } from '@/components/base/SelectInput/types.ts';
 import { SchemasStyled } from '@/components/common/DBTreeView/Schemas/Schemas.styled';
 import useAPI from '@/hooks/useApi.hook';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { MenuItem } from '@mui/material';
-import type { SelectChangeEvent } from '@mui/material/Select/SelectInput';
-import { v4 as uuid } from 'uuid';
-import SelectOption from '../../../base/SelectInput/SelectOption';
 
 export default function Schemas() {
-  const { currentConnection } = useConnectionStore();
+  const currentConnection = useConnectionStore((state) => state.currentConnection);
   const { updateCurrentConnection } = useConnectionStore();
 
   const { request: updateConnection } = useAPI({
     apiMethod: api.connection.updateConnection
   });
 
-  const handleChangeSchema = (e: SelectChangeEvent<unknown>) => {
-    const schema = currentConnection?.schemas?.filter((s: string) => s === e.target.value);
+  const handleChangeSchema = (value: SelectInputOption) => {
+    const schema = currentConnection?.schemas?.filter((s: string) => s === value.value);
     if (!currentConnection || !schema || schema?.length === 0) {
       return;
     }
@@ -36,21 +33,13 @@ export default function Schemas() {
     <SchemasStyled>
       {currentConnection?.schemas && (
         <SelectInput
+          emptyLabel={locales.no_active_schema_find}
+          value={currentConnection.currentSchema}
           disabled={currentConnection.schemas.length === 0}
           size='medium'
-          fullWidth={true}
+          options={currentConnection.schemas.map((s) => ({ value: s, label: s }))}
           onChange={handleChangeSchema}
-          value={currentConnection.currentSchema}
-        >
-          {currentConnection.schemas.map((s: string) => (
-            <MenuItem key={uuid()} selected={s === currentConnection.currentSchema} value={s}>
-              {s}
-            </MenuItem>
-          ))}
-          {currentConnection.schemas.length === 0 && (
-            <SelectOption value={'null'}>{locales.no_active_schema_find}</SelectOption>
-          )}
-        </SelectInput>
+        />
       )}
     </SchemasStyled>
   );
