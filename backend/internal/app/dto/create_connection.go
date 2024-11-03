@@ -27,7 +27,7 @@ func (ccr CreateConnectionRequest) Validate() error {
 		validation.Field(&ccr.Name, validation.Required, validation.Length(0, 50)),
 		validation.Field(&ccr.Host, validation.Required, validation.Length(0, 120)),
 		validation.Field(&ccr.Username, validation.Required, validation.Length(0, 120)),
-		validation.Field(&ccr.Password, validation.Required, validation.Length(0, 120)),
+		validation.Field(&ccr.Password, validation.Length(0, 120)),
 		validation.Field(&ccr.Port, validation.Required, validation.Min(0)),
 	)
 }
