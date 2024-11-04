@@ -7,5 +7,5 @@ export const SchemasStyled = styled(Box)(({ theme }) => ({
   bottom: 0,
   padding: `0 ${theme.spacing(2)}`,
   background: theme.palette.background.paper,
-  margin: '1px'
+  margin: '1px 1px 8px 1px'
 }));

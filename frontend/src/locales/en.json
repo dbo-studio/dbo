@@ -53,6 +53,7 @@
   "copy": "Copy",
   "columns": "Columns",
   "no_active_schema_find": "No active schema find",
+  "no_active_database_find": "No active database find",
   "beatify": "Beatify",
   "minify": "Minify",
   "limit": "Limit",

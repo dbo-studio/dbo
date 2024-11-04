@@ -11,7 +11,8 @@ export const SelectInputStyles = (theme: Theme, size?: 'small' | 'medium'): Styl
     height: size === 'small' ? '24px' : '32px',
     minWidth: '90px',
     backgroundColor: theme.palette.background.default,
-    borderBottom: `1px solid ${isFocused ? theme.palette.primary.main : theme.palette.divider}`
+    borderBottom: `1px solid ${isFocused ? theme.palette.primary.main : theme.palette.divider}`,
+    alignItems: 'center'
   }),
   menu: (styles) => ({
     ...styles,

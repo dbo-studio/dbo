@@ -16,7 +16,7 @@ export default function SelectInput({
   const theme = useTheme();
 
   return (
-    <Box display={'flex'} flexDirection={'column'} mb={1}>
+    <Box display={'flex'} flexDirection={'column'}>
       {label && (
         <Typography color={theme.palette.text.text} variant='caption'>
           {label}
