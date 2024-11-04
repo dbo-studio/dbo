@@ -4,6 +4,7 @@ export type SelectInputProps = {
   helperText?: string | undefined;
   value?: string;
   emptyLabel?: string;
+  error?: boolean;
   size?: 'medium' | 'small';
   options: SelectInputOption[];
   onChange: (value: SelectInputOption) => void;

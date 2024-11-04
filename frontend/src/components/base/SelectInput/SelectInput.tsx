@@ -11,7 +11,8 @@ export default function SelectInput({
   options,
   onChange,
   emptyLabel,
-  disabled
+  disabled,
+  error
 }: SelectInputProps) {
   const theme = useTheme();
 
@@ -30,7 +31,7 @@ export default function SelectInput({
         options={options as any}
         menuPlacement={'auto'}
         onChange={(e) => onChange(e as any)}
-        styles={SelectInputStyles(theme, size)}
+        styles={SelectInputStyles(theme, error, size)}
       />
 
       <Typography color={theme.palette.error.main} variant='caption'>
