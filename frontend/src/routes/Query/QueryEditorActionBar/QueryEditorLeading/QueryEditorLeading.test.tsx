@@ -9,76 +9,55 @@ import { describe, expect, vi } from 'vitest';
 describe('QueryEditorLeading.tsx', () => {
   const spy = vi.spyOn(conn, 'useConnectionStore');
 
-  beforeEach(() => {
-    spy.mockReturnValue({
-      currentConnection: {
-        schemas: [],
-        databases: []
-      }
-    });
-  });
-
   test('should render the the QueryEditorLeading', () => {
+    spy.mockReturnValue({
+      schemas: [],
+      databases: []
+    });
+
     render(<QueryEditorLeading onChange={() => {}} />);
     expect(screen.queryByText(locales.no_active_database_find)).not.toBeNull();
     expect(screen.queryByText(locales.no_active_schema_find)).not.toBeNull();
   });
 
-  test('should call onChange event when change select', async () => {
-    render(<QueryEditorLeading onChange={() => {}} />);
-    await userEvent.click(screen.getByLabelText('sideRight'));
-
-    expect(spy).toHaveBeenCalledWith({
-      showRight: false
+  test('should call should see options after click on select', async () => {
+    spy.mockReturnValue({
+      currentSchema: 'selected_schema',
+      currentDatabase: 'selected_db',
+      schemas: ['selected_schema', 'public_schema'],
+      databases: ['selected_db', 'public_db']
     });
-  });
-  //
-  // test('should update open right sidebar', async () => {
-  //     spy.mockReturnValue({
-  //         sidebar: {
-  //             leftWidth: 285,
-  //             rightWidth: 285,
-  //             showLeft: true,
-  //             showRight: false
-  //         },
-  //         updateSidebar: mockUpdateSidebar
-  //     });
-  //
-  //     render(<Actions />);
-  //
-  //     await userEvent.click(screen.getByLabelText('sideRight'));
-  //
-  //     expect(mockUpdateSidebar).toHaveBeenCalledWith({
-  //         showRight: true,
-  //         rightWidth: 285
-  //     });
-  // });
 
-  // test('should update close left sidebar', async () => {
-  //     render(<Actions />);
-  //     await userEvent.click(screen.getByLabelText('sideLeft'));
-  //
-  //     expect(mockUpdateSidebar).toHaveBeenCalledWith({
-  //         showLeft: false
-  //     });
-  // });
-  //
-  // test('should update open left sidebar', async () => {
-  //     spy.mockReturnValue({
-  //         sidebar: {
-  //             leftWidth: 285,
-  //             rightWidth: 285,
-  //             showLeft: false,
-  //             showRight: false
-  //         },
-  //         updateSidebar: mockUpdateSidebar
-  //     });
-  //     render(<Actions />);
-  //     await userEvent.click(screen.getByLabelText('sideLeft'));
-  //
-  //     expect(mockUpdateSidebar).toHaveBeenCalledWith({
-  //         showLeft: true,
-  //         leftWidth: 285
-  //     });
-  // });
+    render(<QueryEditorLeading onChange={() => {}} />);
+
+    expect(screen.getByText('selected_schema')).not.toBeNull();
+    expect(screen.getByText('selected_db')).not.toBeNull();
+    expect(screen.queryByText('public_schema')).toBeNull();
+    expect(screen.queryByText('public_db')).toBeNull();
+
+    await userEvent.click(screen.getByText('selected_schema'));
+    expect(screen.getByText('public_schema')).not.toBeNull();
+
+    await userEvent.click(screen.getByText('selected_db'));
+    expect(screen.getByText('public_db')).not.toBeNull();
+  });
+
+  test('should onChange called after select change', async () => {
+    const onChangeMock = vi.fn();
+
+    spy.mockReturnValue({
+      currentSchema: 'selected_schema',
+      currentDatabase: 'selected_db',
+      schemas: ['selected_schema', 'public_schema'],
+      databases: ['selected_db', 'public_db']
+    });
+
+    render(<QueryEditorLeading onChange={onChangeMock} />);
+
+    expect(screen.getByText('selected_schema')).not.toBeNull();
+    await userEvent.click(screen.getByText('selected_schema'));
+    await userEvent.click(screen.getByText('public_schema'));
+
+    expect(onChangeMock).toHaveBeenCalled();
+  });
 });
