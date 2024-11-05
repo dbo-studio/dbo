@@ -4,6 +4,7 @@ import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { Box, Button, Stack } from '@mui/material';
+import { isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { v4 as uuid } from 'uuid';
@@ -45,7 +46,7 @@ export default function SelectDatabase({ onClose, onChangeStep }: SelectDatabase
 
   const handleConfirmDelete = (db: string) => {
     showModal(locales.delete_action, locales.database_delete_confirm, () => {
-      handleDeleteDatabase(db);
+      handleDeleteDatabase(db).then();
     });
   };
 
@@ -56,12 +57,15 @@ export default function SelectDatabase({ onClose, onChangeStep }: SelectDatabase
 
     try {
       const c = currentConnection;
+      await deleteDatabase({ connection_id: c.id, name: db });
       c.databases = c.databases?.filter((v) => v !== db);
-      await deleteDatabase({ connection_id: currentConnection.id, name: db });
       updateCurrentConnection(c);
       toast.success(locales.database_delete_success);
     } catch (err) {
-      console.log(err);
+      if (isAxiosError(err)) {
+        toast.error(err.message);
+      }
+      console.log('🚀 ~ SelectDatabase.tsx: ~ err:', err);
     }
   };
 

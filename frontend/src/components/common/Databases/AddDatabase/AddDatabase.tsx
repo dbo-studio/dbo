@@ -9,6 +9,7 @@ import { LoadingButton } from '@mui/lab';
 import { Box, Button } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import { zodValidator } from '@tanstack/zod-form-adapter';
+import { isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -64,10 +65,12 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
             databases: databases
           });
         }
-
         onClose();
       } catch (err) {
-        console.log(err);
+        if (isAxiosError(err)) {
+          toast.error(err.message);
+        }
+        console.log('🚀 ~ AddDatabase.tsx: ~ err:', err);
       }
     },
     defaultValues: {

@@ -9,6 +9,13 @@ const databasesHandler = [
     });
   }),
 
+  http.delete('/api/databases', () => {
+    return HttpResponse.json({
+      data: '',
+      message: ''
+    });
+  }),
+
   http.get('/api/databases/metadata', async () => {
     return HttpResponse.json({
       data: {
