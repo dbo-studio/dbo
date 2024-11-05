@@ -7,7 +7,7 @@ export default function TextRenderCell<TRow, TSummaryRow>({ row, column }: Custo
   const value = row[column.key] as string;
 
   return (
-    <Tooltip title={value} placement={'bottom'}>
+    <Tooltip enterDelay={1000} title={value} placement={'bottom'}>
       <Typography variant={'body2'} maxWidth={400}>
         {value}
       </Typography>
