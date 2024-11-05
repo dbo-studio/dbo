@@ -1,9 +1,9 @@
 export type SelectInputProps = {
   disabled?: boolean;
   label?: string;
-  helperText?: string | undefined;
+  helpertext?: string | undefined;
   value?: string;
-  emptyLabel?: string;
+  emptylabel?: string;
   error?: boolean;
   size?: 'medium' | 'small';
   options: SelectInputOption[];

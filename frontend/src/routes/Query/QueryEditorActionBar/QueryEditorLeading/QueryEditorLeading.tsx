@@ -21,7 +21,7 @@ export default function QueryEditorLeading({ onChange }: QueryEditorLeadingProps
   return (
     <Stack spacing={2} direction={'row'}>
       <SelectInput
-        emptyLabel={locales.no_active_database_find}
+        emptylabel={locales.no_active_database_find}
         value={database}
         disabled={currentConnection?.databases?.length === 0}
         size='small'
@@ -30,7 +30,7 @@ export default function QueryEditorLeading({ onChange }: QueryEditorLeadingProps
       />
 
       <SelectInput
-        emptyLabel={locales.no_active_schema_find}
+        emptylabel={locales.no_active_schema_find}
         value={schema}
         disabled={currentConnection?.schemas?.length === 0}
         size='small'

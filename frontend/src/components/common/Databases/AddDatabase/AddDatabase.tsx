@@ -15,14 +15,15 @@ import { z } from 'zod';
 
 const formSchema = z.object({
   name: z.string(),
-  template: z.string(),
+  template: z.string().optional(),
   encoding: z.string().optional(),
   table_space: z.string().optional()
 });
 
 export default function AddDatabase({ onClose }: { onClose: () => void }) {
-  const { currentConnection } = useConnectionStore();
   const [metadata, setMetadata] = useState<undefined | DatabaseMetaDataType>(undefined);
+  const currentConnection = useConnectionStore((state) => state.currentConnection);
+  const updateCurrentConnection = useConnectionStore((state) => state.updateCurrentConnection);
 
   const { request: createDatabase, pending } = useAPI({
     apiMethod: api.database.createDatabase
@@ -45,7 +46,6 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
     },
     onSubmit: async ({ value }) => {
       try {
-        //todo: add db to list after success create
         await createDatabase({
           connection_id: currentConnection?.id,
           name: value.name,
@@ -55,17 +55,27 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
         });
         toast.success(locales.database_create_success);
         form.reset();
+
+        if (currentConnection && value.name) {
+          const databases = currentConnection.databases ?? [];
+          databases.push(value.name);
+          updateCurrentConnection({
+            ...currentConnection,
+            databases: databases
+          });
+        }
+
         onClose();
       } catch (err) {
         console.log(err);
       }
     },
     defaultValues: {
-      connection_id: undefined,
-      name: undefined,
-      template: undefined,
-      encoding: undefined,
-      tableSpace: undefined
+      connection_id: '',
+      name: '',
+      template: '',
+      encoding: '',
+      tableSpace: ''
     }
   });
 
@@ -85,7 +95,7 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
               {(field) => (
                 <FieldInput
                   value={field.state.value}
-                  helperText={field.state.meta.errors.join(', ')}
+                  helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
                   error={field.state.meta.errors.length > 0}
                   fullWidth={true}
                   label={locales.name}
@@ -97,9 +107,9 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
             <form.Field name='encoding'>
               {(field) => (
                 <SelectInput
-                  helperText={field.state.meta.errors.join(', ')}
+                  helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
                   label={locales.encoding}
-                  emptyLabel={locales.empty_encoding}
+                  emptylabel={locales.empty_encoding}
                   value={undefined}
                   error={field.state.meta.errors.length > 0}
                   disabled={metadata?.encodings?.length === 0}
@@ -114,9 +124,9 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
             <form.Field name='template'>
               {(field) => (
                 <SelectInput
-                  helperText={field.state.meta.errors.join(', ')}
+                  helpertext={field.state.meta.errors.join(', ')}
                   label={locales.template}
-                  emptyLabel={locales.empty_template}
+                  emptylabel={locales.empty_template}
                   value={undefined}
                   error={field.state.meta.errors.length > 0}
                   disabled={metadata?.templates?.length === 0}
@@ -130,9 +140,9 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
             <form.Field name='tableSpace'>
               {(field) => (
                 <SelectInput
-                  helperText={field.state.meta.errors.join(', ')}
+                  helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
                   label={locales.table_space}
-                  emptyLabel={locales.empty_table_space}
+                  emptylabel={locales.empty_table_space}
                   value={undefined}
                   error={field.state.meta.errors.length > 0}
                   disabled={metadata?.tableSpaces?.length === 0}

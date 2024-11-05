@@ -39,7 +39,7 @@ export default function SelectDatabase({ onClose, onChangeStep }: SelectDatabase
     });
   };
 
-  const { request: deleteDatabase } = useAPI({
+  const { request: deleteDatabase, pending } = useAPI({
     apiMethod: api.database.deleteDatabase
   });
 
@@ -50,7 +50,7 @@ export default function SelectDatabase({ onClose, onChangeStep }: SelectDatabase
   };
 
   const handleDeleteDatabase = async (db: string) => {
-    if (!currentConnection) {
+    if (!currentConnection || pending) {
       return;
     }
 

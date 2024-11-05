@@ -62,7 +62,7 @@ export default forwardRef(function FieldInput(props: FieldInputProps, _) {
         color={theme.palette.text.danger}
         variant='caption'
       >
-        {props.helperText}
+        {props.helpertext}
       </Typography>
     </Box>
   );

@@ -108,7 +108,7 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
               control={control}
               render={({ field }) => (
                 <FieldInput
-                  helperText={errors.name?.message}
+                  helpertext={errors.name?.message}
                   error={!!errors.name}
                   fullWidth={true}
                   label={locales.name}
@@ -121,7 +121,7 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
                 name='host'
                 control={control}
                 render={({ field }) => (
-                  <FieldInput helperText={errors.host?.message} error={!!errors.host} label={locales.host} {...field} />
+                  <FieldInput helpertext={errors.host?.message} error={!!errors.host} label={locales.host} {...field} />
                 )}
               />
               <Controller
@@ -129,7 +129,7 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
                 control={control}
                 render={({ field }) => (
                   <FieldInput
-                    helperText={errors.port?.message}
+                    helpertext={errors.port?.message}
                     error={!!errors.port}
                     label={locales.port}
                     type='number'
@@ -144,7 +144,7 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
                 control={control}
                 render={({ field }) => (
                   <FieldInput
-                    helperText={errors.username?.message}
+                    helpertext={errors.username?.message}
                     error={!!errors.username}
                     label={locales.username}
                     {...field}
@@ -156,7 +156,7 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
                 control={control}
                 render={({ field }) => (
                   <FieldInput
-                    helperText={errors.password?.message}
+                    helpertext={errors.password?.message}
                     error={!!errors.password}
                     label={locales.password}
                     {...field}
@@ -169,7 +169,7 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
               control={control}
               render={({ field }) => (
                 <FieldInput
-                  helperText={errors.database?.message}
+                  helpertext={errors.database?.message}
                   error={!!errors.database}
                   fullWidth={true}
                   label={locales.database}

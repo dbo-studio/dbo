@@ -1,6 +1,14 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse, delay } from 'msw';
 
 const databasesHandler = [
+  http.post('/api/databases', async () => {
+    await delay(2000);
+    return HttpResponse.json({
+      data: {},
+      message: ''
+    });
+  }),
+
   http.get('/api/databases/metadata', async () => {
     return HttpResponse.json({
       data: {

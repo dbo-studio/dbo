@@ -33,7 +33,7 @@ export default function Schemas() {
     <SchemasStyled>
       {currentConnection?.schemas && (
         <SelectInput
-          emptyLabel={locales.no_active_schema_find}
+          emptylabel={locales.no_active_schema_find}
           value={currentConnection.currentSchema}
           disabled={currentConnection.schemas.length === 0}
           size='medium'

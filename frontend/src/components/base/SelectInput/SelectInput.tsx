@@ -5,12 +5,12 @@ import Select from 'react-select';
 
 export default function SelectInput({
   label,
-  helperText,
+  helpertext,
   value,
   size,
   options,
   onChange,
-  emptyLabel,
+  emptylabel,
   disabled,
   error
 }: SelectInputProps) {
@@ -25,7 +25,7 @@ export default function SelectInput({
       )}
       <Select
         components={{ IndicatorSeparator: null }}
-        placeholder={options.length === 0 && emptyLabel}
+        placeholder={options.length === 0 && emptylabel}
         isDisabled={disabled || options.length === 0}
         defaultValue={options.find((option) => option.value === value) ?? ''}
         options={options as any}
@@ -34,9 +34,11 @@ export default function SelectInput({
         styles={SelectInputStyles(theme, error, size)}
       />
 
-      <Typography color={theme.palette.error.main} variant='caption'>
-        {helperText}
-      </Typography>
+      {helpertext && (
+        <Typography color={theme.palette.error.main} variant='caption'>
+          {helpertext}
+        </Typography>
+      )}
     </Box>
   );
 }
