@@ -1,9 +1,9 @@
-import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
 import { PgsqlSorts } from '@/core/constants';
-import { useTabStore } from '@/store/tabStore/tab.store';
+import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { IconButton } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
-import type { AddSortButtonProps } from './types';
+import type { AddSortButtonProps } from '../../types.ts';
 
 export default function AddSortButton({ columns }: AddSortButtonProps) {
   const { upsertSorts } = useTabStore();
