@@ -82,7 +82,7 @@ export default function PaginationSetting() {
           <PaginationSettingStyled>
             <FieldInput
               error={!!errors.limit}
-              helperText={errors.limit}
+              helpertext={errors.limit}
               value={limit}
               onChange={(e) => setLimit(Number(e.target.value))}
               size='small'
@@ -92,7 +92,7 @@ export default function PaginationSetting() {
             />
             <FieldInput
               error={!!errors.offset}
-              helperText={errors.offset}
+              helpertext={errors.offset}
               value={offset}
               onChange={(e) => setOffset(Number(e.target.value))}
               size='small'

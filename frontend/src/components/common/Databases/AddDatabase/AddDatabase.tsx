@@ -2,24 +2,17 @@ import api from '@/api';
 import type { DatabaseMetaDataType } from '@/api/database/types';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
-import SelectOption from '@/components/base/SelectInput/SelectOption';
 import useAPI from '@/hooks/useApi.hook';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { LoadingButton } from '@mui/lab';
 import { Box, Button } from '@mui/material';
+import { useForm } from '@tanstack/react-form';
+import { zodValidator } from '@tanstack/zod-form-adapter';
+import { isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
-import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
-
-interface IFormInput {
-  name: string;
-  template?: string;
-  encoding?: string;
-  table_space?: string;
-}
 
 const formSchema = z.object({
   name: z.string(),
@@ -28,11 +21,10 @@ const formSchema = z.object({
   table_space: z.string().optional()
 });
 
-type ValidationSchema = z.infer<typeof formSchema>;
-
 export default function AddDatabase({ onClose }: { onClose: () => void }) {
-  const { currentConnection } = useConnectionStore();
   const [metadata, setMetadata] = useState<undefined | DatabaseMetaDataType>(undefined);
+  const currentConnection = useConnectionStore((state) => state.currentConnection);
+  const updateCurrentConnection = useConnectionStore((state) => state.updateCurrentConnection);
 
   const { request: createDatabase, pending } = useAPI({
     apiMethod: api.database.createDatabase
@@ -48,97 +40,121 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
     });
   }, []);
 
-  const {
-    control,
-    handleSubmit,
-    reset,
-    formState: { errors }
-  } = useForm<ValidationSchema>({
-    resolver: zodResolver(formSchema)
-  });
+  const form = useForm({
+    validatorAdapter: zodValidator(),
+    validators: {
+      onChange: formSchema
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        await createDatabase({
+          connection_id: currentConnection?.id,
+          name: value.name,
+          template: value.template,
+          encoding: value.encoding,
+          tableSpace: value.tableSpace
+        });
+        toast.success(locales.database_create_success);
+        form.reset();
 
-  const onSubmit: SubmitHandler<IFormInput> = async (data, e) => {
-    e?.preventDefault();
-    try {
-      //todo: add db to list after success create
-      await createDatabase({
-        connection_id: currentConnection?.id,
-        name: data.name,
-        template: data.template,
-        encoding: data.encoding,
-        tableSpace: data.table_space
-      });
-      toast.success(locales.database_create_success);
-      reset({ ...data });
-      onClose();
-    } catch (err) {
-      console.log(err);
+        if (currentConnection && value.name) {
+          const databases = currentConnection.databases ?? [];
+          databases.push(value.name);
+          updateCurrentConnection({
+            ...currentConnection,
+            databases: databases
+          });
+        }
+        onClose();
+      } catch (err) {
+        if (isAxiosError(err)) {
+          toast.error(err.message);
+        }
+        console.log('🚀 ~ AddDatabase.tsx: ~ err:', err);
+      }
+    },
+    defaultValues: {
+      connection_id: '',
+      name: '',
+      template: '',
+      encoding: '',
+      tableSpace: ''
     }
-  };
+  });
 
   return (
     currentConnection &&
     metadata && (
       <Box flex={1} display={'flex'} flexDirection={'column'}>
         <Box flex={1}>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <Controller
-              name='name'
-              control={control}
-              render={({ field }) => (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              form.handleSubmit().then();
+            }}
+          >
+            <form.Field name='name'>
+              {(field) => (
                 <FieldInput
-                  helperText={errors.name?.message}
-                  error={!!errors.name}
+                  value={field.state.value}
+                  helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
+                  error={field.state.meta.errors.length > 0}
                   fullWidth={true}
                   label={locales.name}
-                  {...field}
+                  onChange={(e) => field.handleChange(e.target.value)}
                 />
               )}
-            />
-            <Controller
-              name='template'
-              control={control}
-              render={({ field }) => (
-                <SelectInput {...field} label={locales.template} fullWidth error={!!errors.template}>
-                  <SelectOption value={undefined} />
-                  {metadata.templates.map((option) => (
-                    <SelectOption key={option} value={option}>
-                      {option}
-                    </SelectOption>
-                  ))}
-                </SelectInput>
-              )}
-            />
+            </form.Field>
 
-            <Controller
-              name='encoding'
-              control={control}
-              render={({ field }) => (
-                <SelectInput {...field} label={locales.encoding} fullWidth error={!!errors.encoding}>
-                  <SelectOption value={undefined} />
-                  {metadata.encodings.map((option) => (
-                    <SelectOption key={option} value={option}>
-                      {option}
-                    </SelectOption>
-                  ))}
-                </SelectInput>
+            <form.Field name='encoding'>
+              {(field) => (
+                <SelectInput
+                  helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
+                  label={locales.encoding}
+                  emptylabel={locales.empty_encoding}
+                  value={undefined}
+                  error={field.state.meta.errors.length > 0}
+                  disabled={metadata?.encodings?.length === 0}
+                  size='medium'
+                  options={metadata?.encodings?.map((s) => ({ value: s, label: s }))}
+                  onChange={(e) => field.handleChange(e.value)}
+                />
               )}
-            />
+            </form.Field>
 
-            <Controller
-              name='table_space'
-              control={control}
-              render={({ field }) => (
-                <SelectInput {...field} label={locales.table_space} fullWidth error={!!errors.table_space}>
-                  <SelectOption value={undefined} />
-                  {metadata.tableSpaces.map((option) => (
-                    <SelectOption key={option} value={option}>
-                      {option}
-                    </SelectOption>
-                  ))}
-                </SelectInput>
+            <Box mb={2} />
+            <form.Field name='template'>
+              {(field) => (
+                <SelectInput
+                  helpertext={field.state.meta.errors.join(', ')}
+                  label={locales.template}
+                  emptylabel={locales.empty_template}
+                  value={undefined}
+                  error={field.state.meta.errors.length > 0}
+                  disabled={metadata?.templates?.length === 0}
+                  size='medium'
+                  options={metadata?.templates?.map((s) => ({ value: s, label: s }))}
+                  onChange={(e) => field.handleChange(e.value)}
+                />
               )}
-            />
+            </form.Field>
+            <Box mb={2} />
+            <form.Field name='tableSpace'>
+              {(field) => (
+                <SelectInput
+                  helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
+                  label={locales.table_space}
+                  emptylabel={locales.empty_table_space}
+                  value={undefined}
+                  error={field.state.meta.errors.length > 0}
+                  disabled={metadata?.tableSpaces?.length === 0}
+                  size='medium'
+                  options={metadata?.tableSpaces?.map((s) => ({ value: s, label: s }))}
+                  onChange={(e) => field.handleChange(e.value)}
+                />
+              )}
+            </form.Field>
           </form>
         </Box>
         <Box display={'flex'} justifyContent={'space-between'}>
@@ -149,7 +165,9 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
           <LoadingButton
             disabled={pending}
             loading={pending}
-            onClick={handleSubmit(onSubmit)}
+            onClick={() => {
+              form.handleSubmit().then();
+            }}
             size='small'
             variant='contained'
           >

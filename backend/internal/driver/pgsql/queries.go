@@ -3,11 +3,12 @@ package pgsqlDriver
 import (
 	"database/sql"
 	"fmt"
-	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/pkg/helper"
 	"log"
 	"strings"
 	"time"
+
+	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/pkg/helper"
 
 	"github.com/xwb1989/sqlparser"
 )
@@ -283,7 +284,7 @@ func (p PostgresQueryEngine) TableStructure(connectionId int32, table string, sc
 
 	for i, structure := range structures {
 		structures[i].MappedType = columnMappedFormat(structure.DataType)
-		structures[i].DataType = columnAliases(structure.DataType)
+		structures[i].DataType = structure.DataType
 		structures[i].Editable = editable
 		structures[i].IsActive = true
 	}
@@ -451,8 +452,8 @@ func (p PostgresQueryEngine) DataTypes() []string {
 		"txid_snapshot",
 		"uuid",
 		"varbit",
-		"varchar",
 		"xml",
+		"character varying",
 	}
 }
 
@@ -467,35 +468,6 @@ func columnMappedFormat(dataType string) string {
 		return "number"
 	default:
 		return "string"
-	}
-}
-
-func columnAliases(dataType string) string {
-	switch dataType {
-	case "character varying":
-		return "varchar"
-	case "varchar":
-		return "character varying"
-	case "timestamp":
-		return "timestamp without time zone"
-	case "timestamptz":
-		return "timestamp with time zone"
-	case "int2":
-		return "smallint"
-	case "int4":
-		return "integer"
-	case "int8":
-		return "bigint"
-	case "float4":
-		return "real"
-	case "float8":
-		return "double precision"
-	case "time":
-		return "time without time zone"
-	case "timetz":
-		return "time with time zone"
-	default:
-		return dataType
 	}
 }
 

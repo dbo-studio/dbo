@@ -79,6 +79,7 @@ export default function StatusBarActions() {
       try {
         await updateDesignsQuery();
       } catch (error) {
+        // @ts-ignore
         toast.error(error.message);
       }
     }
@@ -91,7 +92,7 @@ export default function StatusBarActions() {
     }
 
     if (getSelectedTab()?.mode === TabMode.Design) {
-      addEmptyEditedColumns();
+      addEmptyEditedColumns().then();
     }
   };
 
@@ -101,25 +102,25 @@ export default function StatusBarActions() {
     }
 
     if (getSelectedTab()?.mode === TabMode.Design) {
-      updateRemovedColumns();
+      updateRemovedColumns().then();
     }
   };
 
   const handleDiscardChanges = async () => {
     if (getSelectedTab()?.mode === TabMode.Data) {
       updateSelectedRows([]);
-      restoreEditedRows();
+      restoreEditedRows().then();
       discardUnsavedRows();
       updateRemovedRows();
     }
 
     if (getSelectedTab()?.mode === TabMode.Design) {
-      restoreEditedColumns();
+      restoreEditedColumns().then();
     }
   };
 
   const handleRefresh = () => {
-    runQuery();
+    runQuery().then();
   };
 
   return (

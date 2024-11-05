@@ -5,7 +5,7 @@ import { forwardRef, useEffect, useState } from 'react';
 import type { FieldInputProps } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export default forwardRef(function FieldInput(props: FieldInputProps, ref) {
+export default forwardRef(function FieldInput(props: FieldInputProps, _) {
   const theme = useTheme();
   const [value, setValue] = useState('');
 
@@ -42,6 +42,7 @@ export default forwardRef(function FieldInput(props: FieldInputProps, ref) {
         </Typography>
       </Box>
       <InputBase
+        spellCheck={'false'}
         size={props.size}
         fullWidth={props.fullWidth}
         type={props.type}
@@ -61,7 +62,7 @@ export default forwardRef(function FieldInput(props: FieldInputProps, ref) {
         color={theme.palette.text.danger}
         variant='caption'
       >
-        {props.helperText}
+        {props.helpertext}
       </Typography>
     </Box>
   );

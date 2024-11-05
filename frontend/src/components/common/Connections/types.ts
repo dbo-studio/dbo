@@ -1,8 +1,6 @@
 import type { ConnectionType, ContextMenuType } from '@/types';
-import type { Theme } from '@mui/material';
 
 export type ConnectionItemStyledProps = {
-  theme: Theme;
   selected?: boolean;
 };
 

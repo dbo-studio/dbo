@@ -5,7 +5,7 @@ export const ColumnsStyled = styled(Box)(() => ({
   display: 'flex',
   flex: 1,
   overflow: 'auto'
-}));
+})) as typeof Box;
 
 export const ColumnItemStyled = styled(TableRow)<ColumnItemStyledProps>(
   ({ theme, selected, edited, deleted, unsaved }) => ({

@@ -45,8 +45,9 @@ export const createDataQuerySlice: StateCreator<
       });
 
       useTabStore.getState().updateQuery(res.query);
-      await Promise.all([get().updateRows(res.data), get().updateColumns(res.structures)]);
+      Promise.all([get().updateRows(res.data), get().updateColumns(res.structures)]);
     } catch (error) {
+      // @ts-ignore
       throw new Error(error?.response?.data?.message);
     } finally {
       set({ loading: false });
@@ -127,6 +128,7 @@ export const createDataQuerySlice: StateCreator<
       useTabStore.getState().updateQuery(res.query);
       await Promise.all([get().updateEditedColumns([])]);
     } catch (error) {
+      // @ts-ignore
       throw new Error(error?.response?.data?.message);
     } finally {
       set({ loading: false });
