@@ -1,9 +1,9 @@
-import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
 import { PgsqlFilterConditions, PgsqlFilterNext } from '@/core/constants';
-import { useTabStore } from '@/store/tabStore/tab.store';
+import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { IconButton } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
-import type { AddFilterButtonProps } from './types';
+import type { AddFilterButtonProps } from '../../types.ts';
 
 export default function AddFilterButton({ columns }: AddFilterButtonProps) {
   const { upsertFilters } = useTabStore();

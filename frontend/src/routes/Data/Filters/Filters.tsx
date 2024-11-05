@@ -5,12 +5,12 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import type { FilterType } from '@/types/Tab';
 import { Box, Button, type Theme, useTheme } from '@mui/material';
 import { v4 as uuid } from 'uuid';
-import AddFilterButton from './AddFilterButton';
-import FilterItem from './FilterItem';
+import AddFilterButton from './FilterItem/AddFilterButton/AddFilterButton.tsx';
+import FilterItem from './FilterItem/FilterItem.tsx';
 
 export default function Filters() {
-  const { getColumns, runQuery } = useDataStore();
   const theme: Theme = useTheme();
+  const { getColumns, runQuery } = useDataStore();
   const { getSelectedTab } = useTabStore();
 
   return (
