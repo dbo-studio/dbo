@@ -32,7 +32,7 @@ export default function SortItem({ sort, columns }: SortItemProps) {
   };
 
   return (
-    <Box className='sort-item' display='flex' flexDirection='row' alignItems='center'>
+    <Box aria-label={'sort-item'} className='sort-item' display='flex' flexDirection='row' alignItems='center'>
       <Box>
         <Checkbox
           size='small'

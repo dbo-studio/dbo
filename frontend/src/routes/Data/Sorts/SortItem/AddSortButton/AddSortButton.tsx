@@ -8,8 +8,8 @@ import type { AddSortButtonProps } from '../../types.ts';
 export default function AddSortButton({ columns }: AddSortButtonProps) {
   const { upsertSorts } = useTabStore();
 
-  const handleAddNewSort = () => {
-    upsertSorts({
+  const handleAddNewSort = async () => {
+    await upsertSorts({
       index: uuidv4(),
       column: columns[0].name,
       operator: PgsqlSorts[0],
@@ -17,7 +17,7 @@ export default function AddSortButton({ columns }: AddSortButtonProps) {
     });
   };
   return (
-    <IconButton className='add-sort-btn' onClick={handleAddNewSort}>
+    <IconButton aria-label={'add-sort-btn'} className='add-sort-btn' onClick={handleAddNewSort}>
       <CustomIcon type='plus' size='s' />
     </IconButton>
   );
