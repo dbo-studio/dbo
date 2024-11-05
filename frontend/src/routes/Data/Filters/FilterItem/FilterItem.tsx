@@ -37,7 +37,7 @@ export default function FilterItem({ filter, columns }: FilterItemProps) {
   };
 
   return (
-    <Box className='filter-item' display='flex' flexDirection='row' alignItems='center'>
+    <Box aria-label={'filter-item'} className='filter-item' display='flex' flexDirection='row' alignItems='center'>
       <Box>
         <Checkbox
           size='small'

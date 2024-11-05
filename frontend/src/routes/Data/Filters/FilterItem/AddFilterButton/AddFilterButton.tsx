@@ -19,7 +19,7 @@ export default function AddFilterButton({ columns }: AddFilterButtonProps) {
     });
   };
   return (
-    <IconButton className='add-filter-btn' onClick={handleAddNewFilter}>
+    <IconButton aria-label='add-filter-btn' className='add-filter-btn' onClick={handleAddNewFilter}>
       <CustomIcon type='plus' size='s' />
     </IconButton>
   );
