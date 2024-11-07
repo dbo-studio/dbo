@@ -64,7 +64,7 @@ export default function DBDataGrid() {
 
   useEffect(() => {
     const params = Object.fromEntries([...searchParams]);
-    if (params?.scrollToBottom) {
+    if (params?.scrollToBottom === 'true') {
       scrollToBottom();
     }
   }, [searchParams]);
