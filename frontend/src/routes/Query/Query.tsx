@@ -30,7 +30,10 @@ export default function Query() {
   });
 
   useEffect(() => {
-    if (autocomplete || !currentConnection || pending || setting.schema === '' || setting.database === '') {
+    // if (autocomplete || !currentConnection || pending || setting.schema === '' || setting.database === '') {
+    //   return;
+    // }
+    if (autocomplete || !currentConnection || pending) {
       return;
     }
 
