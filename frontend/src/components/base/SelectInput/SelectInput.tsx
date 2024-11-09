@@ -28,6 +28,7 @@ export default function SelectInput({
         placeholder={options.length === 0 && emptylabel}
         isDisabled={disabled || options.length === 0}
         defaultValue={options.find((option) => option.value === value) ?? ''}
+        value={options.find((option) => option.value === value) ?? ''}
         options={options as any}
         menuPlacement={'auto'}
         onChange={(e) => onChange(e as any)}

@@ -18,6 +18,16 @@ export default function QueryEditorLeading({ onChange }: QueryEditorLeadingProps
     });
   }, [schema, database]);
 
+  useEffect(() => {
+    if (schema === '' && currentConnection?.currentSchema !== '') {
+      setSchema(currentConnection?.currentSchema ?? '');
+    }
+
+    if (database === '' && currentConnection?.currentDatabase !== '') {
+      setDatabase(currentConnection?.currentDatabase ?? '');
+    }
+  }, [currentConnection]);
+
   return (
     <Stack spacing={2} direction={'row'}>
       <SelectInput
