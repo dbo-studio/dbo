@@ -2,11 +2,13 @@ import api from '@/api';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
 import useAPI from '@/hooks/useApi.hook';
+import useNavigate from '@/hooks/useNavigate.hook.ts';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ConnectionType } from '@/types';
+import axios from 'axios';
 import { toast } from 'sonner';
 import type { ConnectionContextMenuProps } from '../../../types';
 
@@ -15,9 +17,14 @@ export default function ConnectionItemContextMenu({ connection, contextMenu, onC
     useConnectionStore();
   const { updateSelectedTab, updateTabs } = useTabStore();
   const showModal = useConfirmModalStore((state) => state.danger);
+  const navigate = useNavigate();
 
   const { request: deleteConnection } = useAPI({
     apiMethod: api.connection.deleteConnection
+  });
+
+  const { request: getConnectionDetail } = useAPI({
+    apiMethod: api.connection.getConnectionDetail
   });
 
   const handleOpenConfirm = async (connection: ConnectionType) => {
@@ -34,19 +41,31 @@ export default function ConnectionItemContextMenu({ connection, contextMenu, onC
         updateCurrentConnection(undefined);
         updateSelectedTab(undefined);
         updateTabs([]);
-      } else {
-        if (currentConnection) {
-          const found = res?.findIndex((connection) => currentConnection.id === connection.id);
-          if (found === -1) {
-            updateSelectedTab(undefined);
-            updateTabs([]);
-            updateCurrentConnection(res[0]);
-          }
-          updateConnections(res);
-        }
+        toast.success(locales.connection_delete_success);
+        navigate({ route: '/' });
+        return;
       }
+
+      if (currentConnection) {
+        const found = res?.findIndex((connection) => currentConnection.id === connection.id);
+        if (found === -1) {
+          const connectionDetail = await getConnectionDetail({
+            connectionID: res[res.length - 1].id,
+            fromCache: true
+          });
+          updateSelectedTab(undefined);
+          updateTabs([]);
+          updateCurrentConnection(connectionDetail);
+          navigate({ route: '/', tabId: undefined, connectionId: connectionDetail.id });
+        }
+        updateConnections(res);
+      }
+
       toast.success(locales.connection_delete_success);
     } catch (err) {
+      if (axios.isAxiosError(err)) {
+        toast.error(err.message);
+      }
       console.log('🚀 ~ handleDeleteConnection ~ err:', err);
     }
   };
