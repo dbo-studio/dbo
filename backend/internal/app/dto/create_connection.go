@@ -6,19 +6,19 @@ import (
 
 type (
 	CreateConnectionRequest struct {
-		Name     string `json:"name"`
-		Host     string `json:"host"`
-		Username string `json:"username"`
-		Password string `json:"password,omitempty"`
-		Port     int32  `json:"port"`
-		Database string `json:"database,omitempty"`
+		Name     string  `json:"name"`
+		Host     string  `json:"host"`
+		Username string  `json:"username"`
+		Password *string `json:"password"`
+		Port     int32   `json:"port"`
+		Database *string `json:"database"`
 	}
 
 	AuthDetails struct {
-		Database string `json:"database"`
-		Host     string `json:"host"`
-		Port     int32  `json:"port"`
-		Username string `json:"username"`
+		Database *string `json:"database"`
+		Host     string  `json:"host"`
+		Port     int32   `json:"port"`
+		Username string  `json:"username"`
 	}
 )
 

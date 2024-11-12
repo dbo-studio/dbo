@@ -6,7 +6,6 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/driver"
 	pgsqlDriver "github.com/dbo-studio/dbo/internal/driver/pgsql"
-
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
@@ -90,7 +89,7 @@ func (s IConnectionServiceImpl) Delete(ctx context.Context, connectionId int32) 
 func (s IConnectionServiceImpl) Test(_ context.Context, req *dto.CreateConnectionRequest) error {
 	_, err := s.drivers.Pgsql.ConnectWithOptions(pgsqlDriver.ConnectionOption{
 		Host:     req.Host,
-		Port:     int32(req.Port),
+		Port:     req.Port,
 		User:     req.Username,
 		Password: req.Password,
 		Database: req.Database,
