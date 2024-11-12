@@ -15,7 +15,6 @@ export const useParamParser = () => {
   const { updateCurrentConnection, updateConnections, connections } = useConnectionStore();
 
   async function parseParams() {
-    console.log(location);
     const tabId = searchParams.get('tabId');
     const connectionId = searchParams.get('connectionId');
     let connectionList = connections;
