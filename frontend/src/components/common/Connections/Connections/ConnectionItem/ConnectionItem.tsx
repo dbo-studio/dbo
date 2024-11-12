@@ -17,9 +17,9 @@ export default function ConnectionItem({ connection, selected = false, onClick }
   return (
     <ConnectionItemStyled onContextMenu={handleContextMenu} selected={selected} onClick={handleClick}>
       <Tooltip title={connection.name}>
-        <Box maxHeight={50} maxWidth={50} display={'flex'} flexDirection={'column'} alignItems={'center'}>
-          <CustomIcon type='databaseZap' size='l' />
-          <Typography component={'p'} mt={1} variant='caption' noWrap>
+        <Box maxWidth={50}>
+          <CustomIcon type='databaseZap' size='m' />
+          <Typography component={'p'} variant='caption' noWrap>
             {connection.name}
           </Typography>
         </Box>
