@@ -34,14 +34,16 @@ export default function Connections() {
     }
 
     if (connections.length === 0) {
-      setSearchParams({ ...searchParams, showAddConnection: 'true' });
+      searchParams.set('showAddConnection', 'true');
+      setSearchParams(searchParams);
     }
 
     if (connections.length > 0) {
       const activeConnection = connections.filter((c: ConnectionType) => c.isActive);
-      if (activeConnection.length > 0) handleChangeCurrentConnection(activeConnection[0]);
+      if (activeConnection.length > 0) handleChangeCurrentConnection(activeConnection[0]).then();
     } else {
-      setSearchParams({ ...searchParams, showAddConnection: 'true' });
+      searchParams.set('showAddConnection', 'true');
+      setSearchParams(searchParams);
     }
   }, [connections]);
 

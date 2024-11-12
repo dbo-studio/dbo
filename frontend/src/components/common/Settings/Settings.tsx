@@ -46,10 +46,8 @@ export default function Settings({ open }: { open: boolean }) {
   const theme = useTheme();
 
   function handleOnClose(): void {
-    setSearchParams({
-      ...searchParams,
-      showSettings: 'false'
-    });
+    searchParams.delete('showSettings');
+    setSearchParams(searchParams);
   }
 
   return (
