@@ -3,8 +3,10 @@ package pgsqlDriver
 import (
 	"errors"
 	"fmt"
-	"github.com/dbo-studio/dbo/internal/model"
 	"strconv"
+
+	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/samber/lo"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -31,13 +33,21 @@ func (p PostgresQueryEngine) Open(connectionId int32) (*gorm.DB, error) {
 		return nil, errors.New("connection not found")
 	}
 
-	return p.ConnectWithOptions(ConnectionOption{
-		Host:     connection.Host,
-		Port:     int32(connection.Port),
-		User:     connection.Username,
-		Password: connection.Password.String,
-		Database: connection.Database,
-	})
+	options := ConnectionOption{
+		Host: connection.Host,
+		Port: connection.Port,
+		User: connection.Username,
+	}
+
+	if connection.Password.Valid {
+		options.Password = lo.ToPtr(connection.Password.String)
+	}
+
+	if connection.Database.Valid {
+		options.Database = lo.ToPtr(connection.Database.String)
+	}
+
+	return p.ConnectWithOptions(options)
 }
 
 func (p PostgresQueryEngine) Close(connectionId int32) {
@@ -48,8 +58,8 @@ type ConnectionOption struct {
 	Host     string
 	Port     int32
 	User     string
-	Password string
-	Database string
+	Password *string
+	Database *string
 }
 
 func (p PostgresQueryEngine) ConnectWithOptions(options ConnectionOption) (*gorm.DB, error) {
@@ -59,12 +69,12 @@ func (p PostgresQueryEngine) ConnectWithOptions(options ConnectionOption) (*gorm
 		options.User,
 	)
 
-	if len(options.Database) > 0 {
-		dsn += fmt.Sprintf("dbname=%s ", options.Database)
+	if options.Database != nil && len(lo.FromPtr(options.Database)) > 0 {
+		dsn += fmt.Sprintf("dbname=%s ", lo.FromPtr(options.Database))
 	}
 
-	if len(options.Password) > 0 {
-		dsn += fmt.Sprintf("password=%s", options.Password)
+	if options.Password != nil && len(lo.FromPtr(options.Password)) > 0 {
+		dsn += fmt.Sprintf("password=%s", lo.FromPtr(options.Password))
 	}
 
 	return gorm.Open(postgres.New(postgres.Config{

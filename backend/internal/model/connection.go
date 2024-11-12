@@ -14,7 +14,7 @@ type Connection struct {
 	Username        string
 	Password        sql.NullString
 	Port            int32
-	Database        string
+	Database        sql.NullString
 	IsActive        bool
 	CurrentSchema   sql.NullString
 	CurrentDatabase sql.NullString
@@ -42,8 +42,11 @@ func (c Connection) FakeConnection() *Connection {
 			Valid:  true,
 			String: faker.Password(),
 		},
-		Port:      int32(port),
-		Database:  faker.Name(),
+		Port: int32(port),
+		Database: sql.NullString{
+			Valid:  true,
+			String: faker.Name(),
+		},
 		CreatedAt: sql.NullTime{},
 		UpdatedAt: sql.NullTime{},
 		CurrentSchema: sql.NullString{

@@ -8,6 +8,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/driver"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
 
@@ -41,23 +42,32 @@ func (c IConnectionRepoImpl) Find(_ context.Context, id int32) (*model.Connectio
 
 func (c IConnectionRepoImpl) Create(_ context.Context, dto *dto.CreateConnectionRequest) (*model.Connection, error) {
 	connection := &model.Connection{
-		Name:     dto.Name,
-		Host:     dto.Host,
-		Username: dto.Username,
-		Password: sql.NullString{
+		Name:      dto.Name,
+		Host:      dto.Host,
+		Username:  dto.Username,
+		Port:      dto.Port,
+		IsActive:  false,
+		CreatedAt: sql.NullTime{},
+		UpdatedAt: sql.NullTime{},
+	}
+
+	if dto.Password != nil {
+		connection.Password = sql.NullString{
 			Valid:  true,
-			String: dto.Password,
-		},
-		Port:     dto.Port,
-		Database: dto.Database,
-		IsActive: false,
-		CurrentSchema: sql.NullString{
-			String: dto.Database,
+			String: lo.FromPtr[string](dto.Password),
+		}
+	}
+
+	if dto.Database != nil {
+		connection.Database = sql.NullString{
 			Valid:  true,
-		},
-		CurrentDatabase: sql.NullString{},
-		CreatedAt:       sql.NullTime{},
-		UpdatedAt:       sql.NullTime{},
+			String: lo.FromPtr[string](dto.Database),
+		}
+
+		connection.CurrentDatabase = sql.NullString{
+			Valid:  true,
+			String: lo.FromPtr[string](dto.Database),
+		}
 	}
 
 	result := c.db.Save(connection)
@@ -79,7 +89,10 @@ func (c IConnectionRepoImpl) Update(_ context.Context, connection *model.Connect
 		String: helper.OptionalString(req.Password, connection.Password.String),
 	}
 	connection.Port = helper.OptionalInt32(req.Port, connection.Port)
-	connection.Database = helper.OptionalString(req.Database, connection.Database)
+	connection.Database = sql.NullString{
+		Valid:  true,
+		String: helper.OptionalString(req.Database, connection.Database.String),
+	}
 	connection.IsActive = helper.OptionalBool(req.IsActive, connection.IsActive)
 	connection.CurrentDatabase = sql.NullString{
 		Valid:  true,

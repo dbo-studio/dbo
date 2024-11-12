@@ -59,12 +59,12 @@ export default function DBDataGrid() {
       rowIdx: getRows().length - 1
     });
 
-    setSearchParams({ ...searchParams, scrollToBottom: 'false' });
+    searchParams.delete('scrollToBottom');
+    setSearchParams(searchParams);
   };
 
   useEffect(() => {
-    const params = Object.fromEntries([...searchParams]);
-    if (params?.scrollToBottom === 'true') {
+    if (searchParams.get('scrollToBottom') === 'true') {
       scrollToBottom();
     }
   }, [searchParams]);

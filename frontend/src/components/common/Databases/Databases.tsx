@@ -10,7 +10,8 @@ export default function Databases({ open }: { open: boolean }) {
   const [step, setStep] = useState(0);
 
   const handleClose = () => {
-    setSearchParams({ ...searchParams, showSelectDatabase: 'false' });
+    searchParams.delete('showSelectDatabase');
+    setSearchParams(searchParams);
     setStep(0);
   };
 

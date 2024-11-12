@@ -2,7 +2,7 @@ import type { FilterType } from '@/types';
 import type { StateCreator } from 'zustand';
 import type { TabFilterSlice, TabStore } from '../types';
 
-export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [], TabFilterSlice> = (set, get) => ({
+export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [], TabFilterSlice> = (_, get) => ({
   upsertFilters: async (filter: FilterType) => {
     const selectedTab = get().getSelectedTab();
     if (!selectedTab) {

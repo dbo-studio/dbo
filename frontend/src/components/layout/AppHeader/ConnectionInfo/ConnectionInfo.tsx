@@ -26,6 +26,11 @@ export default function ConnectionInfo() {
     });
   };
 
+  const changeSearchParams = (key: string) => {
+    searchParams.set(key, 'true');
+    setSearchParams(searchParams);
+  };
+
   return (
     <Stack direction={'row'} justifyContent={'center'} alignItems={'center'}>
       <Suspense>
@@ -36,10 +41,7 @@ export default function ConnectionInfo() {
       </Suspense>
       <Grid2 size={{ md: 4 }}>
         <Stack direction={'row'} spacing={2} justifyContent='flex-end'>
-          <IconButton
-            aria-label='connections'
-            onClick={() => setSearchParams({ ...searchParams, showAddConnection: 'true' })}
-          >
+          <IconButton aria-label='connections' onClick={() => changeSearchParams('showAddConnection')}>
             <CustomIcon type={'connection'} size={'m'} />
           </IconButton>
           {/* <IconButton aria-label='lock'>
@@ -48,7 +50,7 @@ export default function ConnectionInfo() {
           <IconButton
             disabled={!currentConnection}
             aria-label='databases'
-            onClick={() => setSearchParams({ ...searchParams, showSelectDatabase: 'true' })}
+            onClick={() => changeSearchParams('showSelectDatabase')}
           >
             <CustomIcon type={'databaseOutline'} size={'m'} />
           </IconButton>

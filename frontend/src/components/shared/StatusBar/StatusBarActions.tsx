@@ -88,7 +88,8 @@ export default function StatusBarActions() {
   const handleAddAction = async () => {
     if (getSelectedTab()?.mode === TabMode.Data) {
       addUnsavedRows();
-      setSearchParams({ ...searchParams, scrollToBottom: 'true' });
+      searchParams.set('scrollToBottom', 'true');
+      setSearchParams(searchParams);
     }
 
     if (getSelectedTab()?.mode === TabMode.Design) {

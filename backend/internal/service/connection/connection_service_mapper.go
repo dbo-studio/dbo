@@ -3,6 +3,7 @@ package serviceConnection
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/samber/lo"
 )
 
 func connectionsToResponse(connections *[]model.Connection) *dto.ConnectionsResponse {
@@ -15,7 +16,7 @@ func connectionsToResponse(connections *[]model.Connection) *dto.ConnectionsResp
 			Driver:   "PostgreSQL",
 			IsActive: c.IsActive,
 			Auth: dto.AuthDetails{
-				Database: c.Database,
+				Database: lo.ToPtr(c.Database.String),
 				Host:     c.Host,
 				Port:     c.Port,
 				Username: c.Username,
@@ -39,7 +40,7 @@ func connectionDetailModelToResponse(connection *model.Connection, version strin
 		CurrentDatabase: connection.CurrentDatabase.String,
 		CurrentSchema:   connection.CurrentSchema.String,
 		Auth: dto.AuthDetails{
-			Database: connection.Database,
+			Database: lo.ToPtr(connection.Database.String),
 			Host:     connection.Host,
 			Username: connection.Username,
 			Port:     connection.Port,

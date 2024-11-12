@@ -6,7 +6,7 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 import useNavigate from './useNavigate.hook';
 
 export const useParamParser = () => {
-  const { getTabs } = useTabStore();
+  const { getTabs, getSelectedTab } = useTabStore();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -20,18 +20,24 @@ export const useParamParser = () => {
     let connectionList = connections;
     if (!connectionList) {
       connectionList = await getConnectionList();
-    }
-    updateConnections(connectionList);
-
-    if (!tabId || tabId === '') {
-      if (getTabs().length > 0) {
-        const tab = getTabs()[0];
-        navigate({ route: tab.mode, tabId: tab.id });
-      }
-      return;
+      updateConnections(connectionList);
     }
 
     if (!connectionId || connectionId === '') {
+      return;
+    }
+
+    if (!tabId || tabId === '') {
+      if (getSelectedTab()) {
+        navigate({ route: getSelectedTab()?.mode, tabId: getSelectedTab()?.id });
+        return;
+      }
+
+      if (getTabs().length > 0) {
+        const tab = getTabs()[0];
+        navigate({ route: tab.mode, tabId: tab.id });
+        return;
+      }
       return;
     }
 
@@ -50,10 +56,12 @@ export const useParamParser = () => {
       return;
     }
 
-    updateSelectedTab(selectedTab);
+    if (!getSelectedTab() || getSelectedTab()?.id !== tabId) {
+      updateSelectedTab(selectedTab);
+    }
   }
 
   useEffect(() => {
-    parseParams();
+    parseParams().then();
   }, [location]);
 };
