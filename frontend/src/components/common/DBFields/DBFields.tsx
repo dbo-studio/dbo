@@ -10,15 +10,15 @@ export default function DBFields() {
   const [search, setSearch] = useState<string>('');
 
   useEffect(() => {
-    generateFields();
+    generateFields(search);
   }, [getHighlightedRow()]);
 
-  const handleSearch = (name: string) => {
-    setSearch(name);
-    generateFields();
+  const handleSearch = (value: string) => {
+    setSearch(value);
+    generateFields(value);
   };
 
-  function generateFields() {
+  function generateFields(value: string) {
     const row = getHighlightedRow();
     if (!row) {
       return;
@@ -27,7 +27,7 @@ export default function DBFields() {
     const data: any[] = [];
     getColumns()
       .filter((c: any) => {
-        return c.name.toLocaleLowerCase().includes(search.toLocaleLowerCase());
+        return c.name.toLocaleLowerCase().includes(value.toLocaleLowerCase());
       })
       .map((c: any) => {
         if (!row[c.key]) return;
