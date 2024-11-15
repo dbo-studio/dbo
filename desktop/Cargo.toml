@@ -12,16 +12,26 @@ rust-version = "1.60"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "1.5.2", features = [] }
+tauri-build = { version = "2", features = [] }
 
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.7.1", features = ["clipboard-write-text", "dialog-open", "dialog-save", "fs-all", "notification-all", "os-all", "path-all", "process-command-api", "process-exit", "process-relaunch", "shell-all", "updater", "window-close", "window-set-focus", "window-start-dragging"] }
+tauri = { version = "2", features = [] }
 fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
+tauri-plugin-os = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-process = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-notification = "2"
+tauri-plugin-clipboard-manager = "2.0.0-alpha.2"
+tauri-plugin-shell = "2"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.
 # If you use cargo directly instead of tauri's cli you can use this feature flag to switch between tauri's `dev` and `build` modes.
 # DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2"
