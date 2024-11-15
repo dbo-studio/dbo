@@ -1,6 +1,6 @@
 import { changeUrl } from '@/core/services/api/intialize';
 import { tools } from '@/core/utils';
-import { invoke } from '@tauri-apps/api';
+import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from 'react';
 
 export const useSetupDesktop = () => {

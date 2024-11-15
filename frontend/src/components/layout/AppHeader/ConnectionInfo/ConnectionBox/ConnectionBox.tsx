@@ -32,7 +32,7 @@ export default function ConnectionBox() {
     }
 
     setInfo(
-      `${currentConnection?.name} | ${currentConnection?.driver}${currentConnection?.version} : ${currentConnection.currentSchema} :  SQL Query`
+      `${currentConnection?.name} | ${currentConnection?.driver} ${currentConnection?.version} : ${currentConnection.currentSchema} :  SQL Query`
     );
     setStatus('active');
   }, [currentConnection, loading]);
