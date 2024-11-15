@@ -57,23 +57,6 @@ fn find_free_port() -> u16 {
 }
 
 fn run_server(app: &mut App) {
-    // let sidecar_command = app.shell().sidecar("dbo-bin").unwrap();
-    // let (mut rx, mut child) = sidecar_command.spawn().expect("Failed to spawn sidecar");
-
-    // tauri::async_runtime::spawn(async move {
-    //     while let Some(event) = rx.recv().await {
-    //         if let CommandEvent::Stdout(line_bytes) = event {
-    //             let line = String::from_utf8_lossy(&line_bytes);
-    //             println!("Received message: {} ", line);
-    //             if let Err(e) = child.write("message from Rust\n".as_bytes()) {
-    //                 println!("Failed to write to child stdin: {}", e);
-    //             }
-    //         } else {
-    //             println!("Received non-stdout event: {:?} ", event);
-    //         }
-    //     }
-    // });
-
     // Try to create the sidecar command
     let sidecar_command = match app.shell().sidecar("dbo-bin") {
         Ok(command) => command,
