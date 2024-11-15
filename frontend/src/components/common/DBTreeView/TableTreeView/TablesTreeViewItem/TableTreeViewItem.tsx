@@ -18,7 +18,7 @@ export default function TableTreeViewItem({ table, onClick }: TablesTreeViewItem
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
   const [copy] = useCopyToClipboard();
   const { addTab } = useTabStore();
-  const { updateCurrentConnection, currentConnection } = useConnectionStore();
+  const { updateCurrentConnection, currentConnection, updateLoading } = useConnectionStore();
 
   const { request: getConnectionDetail } = useAPI({
     apiMethod: api.connection.getConnectionDetail
@@ -44,11 +44,13 @@ export default function TableTreeViewItem({ table, onClick }: TablesTreeViewItem
     if (!currentConnection) {
       return;
     }
+    updateLoading(true);
     getConnectionDetail({
       connectionID: currentConnection?.id,
       fromCache: false
     }).then((res) => {
       updateCurrentConnection(res);
+      updateLoading(false);
     });
   };
 

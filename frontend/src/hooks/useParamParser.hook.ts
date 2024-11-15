@@ -12,15 +12,17 @@ export const useParamParser = () => {
 
   const [searchParams, _] = useSearchParams();
   const { updateSelectedTab, tabs } = useTabStore();
-  const { updateCurrentConnection, updateConnections, connections } = useConnectionStore();
+  const { updateCurrentConnection, updateConnections, connections, updateLoading } = useConnectionStore();
 
   async function parseParams() {
     const tabId = searchParams.get('tabId');
     const connectionId = searchParams.get('connectionId');
     let connectionList = connections;
     if (!connectionList) {
+      updateLoading(true);
       connectionList = await getConnectionList();
       updateConnections(connectionList);
+      updateLoading(false);
     }
 
     if (!connectionId || connectionId === '') {

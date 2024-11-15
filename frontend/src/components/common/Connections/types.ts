@@ -7,6 +7,7 @@ export type ConnectionItemStyledProps = {
 export type ConnectionItemProps = {
   connection: ConnectionType;
   selected?: boolean;
+  loading: boolean;
   onClick: () => void;
 };
 

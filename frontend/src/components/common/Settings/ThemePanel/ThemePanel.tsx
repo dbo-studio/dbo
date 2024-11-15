@@ -21,8 +21,12 @@ export default function ThemePanel() {
 
   return (
     <Box>
-      <Typography variant='h6'>{locales.theme}</Typography>
-      <Typography variant='body2'>{locales.select_theme_description}</Typography>
+      <Typography color={'textTitle'} variant='h6'>
+        {locales.theme}
+      </Typography>
+      <Typography color={'textText'} variant='body2'>
+        {locales.select_theme_description}
+      </Typography>
 
       <Box display={'flex'} mt={theme.spacing(2)}>
         <ThemeItem selected={isDark !== false} onClick={() => handleToggle(true)} isDark={true} />

@@ -1,7 +1,8 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse, delay } from 'msw';
 
 const connectionHandler = [
-  http.get('/api/connections', () => {
+  http.get('/api/connections', async () => {
+    await delay(5000);
     return HttpResponse.json({
       data: [
         connectionListItemModel,
@@ -15,7 +16,7 @@ const connectionHandler = [
     });
   }),
 
-  http.get('/api/connections/:id', ({ params }) => {
+  http.get('/api/connections/:id', async ({ params }) => {
     const { id } = params;
     return HttpResponse.json({
       data: {

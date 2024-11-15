@@ -5,7 +5,7 @@ import type { DesignTabItemProps } from './types';
 export default function DesignTabItem({ tab, selected, onClick }: DesignTabItemProps) {
   return (
     <DesignTabItemStyled selected={selected}>
-      <Typography variant='body2' onClick={() => onClick(tab)}>
+      <Typography color={'textTitle'} variant='body2' onClick={() => onClick(tab)}>
         {tab.name}
       </Typography>
     </DesignTabItemStyled>
