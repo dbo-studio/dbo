@@ -12,7 +12,9 @@ export default function ThemeItem({ isDark, selected, onClick }: ThemeItemProps)
         alt={isDark ? 'dark' : 'light'}
         src={`/images/theme_${isDark ? 'dark' : 'light'}.svg`}
       />
-      <Typography variant='body2'>{isDark ? locales.dark : locales.light}</Typography>
+      <Typography color={'textText'} variant='body2'>
+        {isDark ? locales.dark : locales.light}
+      </Typography>
     </ThemeItemStyled>
   );
 }

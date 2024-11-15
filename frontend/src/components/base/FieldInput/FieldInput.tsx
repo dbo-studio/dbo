@@ -34,10 +34,10 @@ export default forwardRef(function FieldInput(props: FieldInputProps, _) {
   return (
     <Box display={'flex'} flexDirection={'column'}>
       <Box display={'flex'} flexDirection={'row'} justifyContent={'space-between'}>
-        <Typography color={theme.palette.text.text} variant='caption'>
+        <Typography color={'textText'} variant='caption'>
           {props.label}
         </Typography>
-        <Typography color={theme.palette.text.subdued} variant='caption'>
+        <Typography color={'textText'} variant='caption'>
           {props.typelabel}
         </Typography>
       </Box>

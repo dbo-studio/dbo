@@ -47,5 +47,9 @@ export const SelectInputStyles = (
     ...styles,
     color: theme.palette.text.text,
     fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize
+  }),
+  placeholder: (styles) => ({
+    ...styles,
+    fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize
   })
 });

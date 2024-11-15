@@ -6,7 +6,7 @@ import { screen } from '@testing-library/dom';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, test, vi } from 'vitest';
-import ConnectionBox from './ConnectionBox';
+import ConnectionBox from './ConnectionBox.tsx';
 
 describe('ConnectionBox.tsx', () => {
   const spy = vi.spyOn(conn, 'useConnectionStore');

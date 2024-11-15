@@ -86,7 +86,7 @@ export default function ColumnItem({
             type='string'
           />
         ) : (
-          <Typography onDoubleClick={() => handleToggleEdit('name')} variant='body2'>
+          <Typography color={'textText'} onDoubleClick={() => handleToggleEdit('name')} variant='body2'>
             {value.name}
           </Typography>
         )}
@@ -110,7 +110,7 @@ export default function ColumnItem({
             type='number'
           />
         ) : (
-          <Typography onClick={() => handleToggleEdit('length')} variant='body2'>
+          <Typography color={'textText'} onClick={() => handleToggleEdit('length')} variant='body2'>
             {value.length}
           </Typography>
         )}
@@ -126,7 +126,7 @@ export default function ColumnItem({
             type='string'
           />
         ) : (
-          <Typography onClick={() => handleToggleEdit('default')} variant='body2'>
+          <Typography color={'textText'} onClick={() => handleToggleEdit('default')} variant='body2'>
             {value.default}
           </Typography>
         )}
@@ -152,7 +152,7 @@ export default function ColumnItem({
             type='string'
           />
         ) : (
-          <Typography onClick={() => handleToggleEdit('comment')} variant='body2'>
+          <Typography color={'textText'} onClick={() => handleToggleEdit('comment')} variant='body2'>
             {value.comment}
           </Typography>
         )}

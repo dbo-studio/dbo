@@ -13,4 +13,4 @@ export const SavedQueryItemStyled = styled(Box)<SavedQueryItemStyledProps>(({ th
   borderRadius: variables.radius.medium,
   background: theme.palette.background.default,
   color: selected ? theme.palette.text.primary : theme.palette.text.text
-})) as typeof Box;
+}));

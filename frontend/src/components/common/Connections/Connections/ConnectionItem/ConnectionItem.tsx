@@ -1,11 +1,11 @@
 import { useContextMenu } from '@/hooks';
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, CircularProgress, Tooltip, Typography } from '@mui/material';
 import CustomIcon from '../../../../base/CustomIcon/CustomIcon';
 import type { ConnectionItemProps } from '../../types';
 import { ConnectionItemStyled } from './ConnectionItem.styled';
 import ConnectionItemContextMenu from './ConnectionItemContextMenu/ConnectionItemContextMenu';
 
-export default function ConnectionItem({ connection, selected = false, onClick }: ConnectionItemProps) {
+export default function ConnectionItem({ connection, selected = false, onClick, loading }: ConnectionItemProps) {
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
   const handleClick = () => {
@@ -19,9 +19,15 @@ export default function ConnectionItem({ connection, selected = false, onClick }
       <Tooltip title={connection.name}>
         <Box maxWidth={50}>
           <CustomIcon type='databaseZap' size='m' />
-          <Typography component={'p'} variant='caption' noWrap>
-            {connection.name}
-          </Typography>
+          {loading ? (
+            <Box>
+              <CircularProgress size={15} color='primary' />
+            </Box>
+          ) : (
+            <Typography component={'p'} variant='caption' noWrap>
+              {connection.name}
+            </Typography>
+          )}
         </Box>
       </Tooltip>
       <ConnectionItemContextMenu

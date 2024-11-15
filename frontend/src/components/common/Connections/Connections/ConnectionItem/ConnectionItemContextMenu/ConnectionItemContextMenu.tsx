@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import type { ConnectionContextMenuProps } from '../../../types';
 
 export default function ConnectionItemContextMenu({ connection, contextMenu, onClose }: ConnectionContextMenuProps) {
-  const { updateShowEditConnection, updateConnections, updateCurrentConnection, currentConnection } =
+  const { updateShowEditConnection, updateConnections, updateCurrentConnection, currentConnection, updateLoading } =
     useConnectionStore();
   const { updateSelectedTab, updateTabs } = useTabStore();
   const showModal = useConfirmModalStore((state) => state.danger);
@@ -30,6 +30,20 @@ export default function ConnectionItemContextMenu({ connection, contextMenu, onC
   const handleOpenConfirm = async (connection: ConnectionType) => {
     showModal(locales.delete_action, locales.connection_delete_confirm, () => {
       handleDeleteConnection(connection);
+    });
+  };
+
+  const handleRefresh = () => {
+    if (!currentConnection) {
+      return;
+    }
+    updateLoading(true);
+    getConnectionDetail({
+      connectionID: currentConnection?.id,
+      fromCache: false
+    }).then((res) => {
+      updateCurrentConnection(res);
+      updateLoading(false);
     });
   };
 
@@ -84,6 +98,12 @@ export default function ConnectionItemContextMenu({ connection, contextMenu, onC
       name: locales.delete,
       icon: 'delete',
       action: () => handleOpenConfirm(connection),
+      closeBeforeAction: true
+    },
+    {
+      name: locales.refresh,
+      icon: 'refresh',
+      action: () => handleRefresh(),
       closeBeforeAction: true
     }
   ];

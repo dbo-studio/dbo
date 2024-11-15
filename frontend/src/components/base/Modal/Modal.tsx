@@ -15,7 +15,9 @@ export default function Modal({ open, title, children, padding, onClose }: Modal
       <ModalWrapperStyled padding={`${padding} !important`}>
         {title && (
           <Box mb={theme.spacing(1)}>
-            <Typography variant='h6'>{title}</Typography>
+            <Typography color={'textTitle'} variant='h6'>
+              {title}
+            </Typography>
             <Divider />
           </Box>
         )}

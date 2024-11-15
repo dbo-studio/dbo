@@ -8,9 +8,13 @@ type ConnectionState = ConnectionStore;
 export const useConnectionStore = create<ConnectionState>()(
   devtools(
     (set, get) => ({
+      loading: false,
       showEditConnection: undefined,
       connections: undefined,
       currentConnection: undefined,
+      updateLoading: (loading: boolean) => {
+        set({ loading });
+      },
       updateConnections: (connections: ConnectionType[]) => {
         set({ connections });
       },

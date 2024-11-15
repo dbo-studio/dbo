@@ -38,8 +38,8 @@ export default function SavedQueryItem({ query, selected, onChange, onDelete, on
         ...query,
         name
       };
-      setEditMode(false);
       await updateSavedQuery(newQuery);
+      setEditMode(false);
       onChange(newQuery);
     } catch (err) {
       console.log('🚀 ~ handleSaveChange ~ err:', err);
@@ -81,7 +81,7 @@ export default function SavedQueryItem({ query, selected, onChange, onDelete, on
 
         {editMode ? (
           <LoadingIconButton
-            loading={pendingUpdate}
+            loading={+pendingUpdate}
             disabled={query.name === name || pendingUpdate}
             onClick={handleSaveChange}
           >

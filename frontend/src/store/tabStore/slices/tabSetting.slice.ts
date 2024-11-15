@@ -25,7 +25,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       return findTab[0];
     }
 
-    let tabQuery = '';
+    let tabQuery: string;
     if (mode === TabMode.Data) {
       tabQuery = `SELECT * FROM ${table}`;
     } else {

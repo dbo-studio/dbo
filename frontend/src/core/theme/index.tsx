@@ -5,7 +5,7 @@ import { ThemeProvider as MUIThemeProvider, type ThemeOptions, createTheme } fro
 import type React from 'react';
 import { ThemeModeEnum } from '../enums';
 import componentsOverride from './overrides';
-import palette from './palette';
+import palette from './palette_improved';
 
 type Props = {
   children: React.ReactNode;

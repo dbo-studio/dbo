@@ -38,17 +38,26 @@ export const DataGridStyled = styled(DataGrid)(({ theme }) => ({
   },
   '.edit-highlight': {
     '.rdg-cell': {
-      backgroundColor: theme.palette.background.warning
+      backgroundColor: theme.palette.background.warning,
+      p: {
+        color: theme.palette.text.warning
+      }
     }
   },
   '.unsaved-highlight': {
     '.rdg-cell': {
-      backgroundColor: theme.palette.background.success
+      backgroundColor: theme.palette.background.success,
+      p: {
+        color: theme.palette.text.success
+      }
     }
   },
   '.removed-highlight': {
     '.rdg-cell': {
-      backgroundColor: theme.palette.background.danger
+      backgroundColor: theme.palette.background.danger,
+      p: {
+        color: theme.palette.text.danger
+      }
     }
   }
 })) as typeof DataGrid;

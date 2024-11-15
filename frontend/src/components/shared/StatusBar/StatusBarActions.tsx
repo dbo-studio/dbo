@@ -137,7 +137,7 @@ export default function StatusBarActions() {
       </Box>
       <Box ml={1} mr={1}>
         <LoadingIconButton
-          loading={+updateQueryPending || loading}
+          loading={+updateQueryPending || +loading}
           disabled={updateQueryPending || loading}
           onClick={handleSave}
         >

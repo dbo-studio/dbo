@@ -6,7 +6,7 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import { Grid2, IconButton, Stack } from '@mui/material';
 import { Suspense, lazy } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import ConnectionBox from './ConnectionBox';
+import ConnectionBox from './ConnectionBox/ConnectionBox.tsx';
 
 const Databases = lazy(() => import('@/components/common/Databases/Databases'));
 const Settings = lazy(() => import('@/components/common/Settings/Settings.tsx'));

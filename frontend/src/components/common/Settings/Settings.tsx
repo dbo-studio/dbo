@@ -1,6 +1,6 @@
 import Modal from '@/components/base/Modal/Modal';
 import locales from '@/locales';
-import { Grid, useTheme } from '@mui/material';
+import { Grid2, useTheme } from '@mui/material';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import AboutPanel from './AboutPanel/AboutPanel';
@@ -52,14 +52,14 @@ export default function Settings({ open }: { open: boolean }) {
 
   return (
     <Modal open={open} padding='0px' onClose={handleOnClose}>
-      <Grid width='850px' container spacing={0} flex={1}>
-        <Grid item md={3} display={'flex'} flexDirection={'column'}>
+      <Grid2 width='850px' container spacing={0} flex={1}>
+        <Grid2 size={{ md: 3 }} display={'flex'} flexDirection={'column'}>
           <MenuPanel tabs={tabs} onChange={(c) => setContent(c)} />
-        </Grid>
-        <Grid item md={9} flex={1} p={theme.spacing(2)}>
+        </Grid2>
+        <Grid2 size={{ md: 9 }} flex={1} p={theme.spacing(2)}>
           {content}
-        </Grid>
-      </Grid>
+        </Grid2>
+      </Grid2>
     </Modal>
   );
 }

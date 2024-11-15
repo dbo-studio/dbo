@@ -2,12 +2,14 @@ import api from '@/api';
 import useAPI from '@/hooks/useApi.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { ConnectionType } from '@/types';
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 
 import type { updateConnectionType } from '@/api/connection/types';
 import useNavigate from '@/hooks/useNavigate.hook';
+import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { ConnectionsStyled } from './Connections.styled';
 import { EmptySpaceStyle } from './EmptySpace.styled';
@@ -17,10 +19,11 @@ const EditConnection = lazy(() => import('../EditConnection/EditConnection'));
 
 export default function Connections() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { currentConnection, connections, updateCurrentConnection } = useConnectionStore();
+  const { currentConnection, connections, updateCurrentConnection, updateLoading, loading } = useConnectionStore();
+  const [loadingConnectionId, setLoadingConnectionId] = useState<number | undefined>(undefined);
   const navigate = useNavigate();
 
-  const { request: getConnectionDetail } = useAPI({
+  const { request: getConnectionDetail, pending: pendingGetDetail } = useAPI({
     apiMethod: api.connection.getConnectionDetail
   });
 
@@ -48,11 +51,13 @@ export default function Connections() {
   }, [connections]);
 
   const handleChangeCurrentConnection = async (c: ConnectionType) => {
-    if (c.id === currentConnection?.id) {
+    if (c.id === currentConnection?.id || loading) {
       return;
     }
 
     try {
+      setLoadingConnectionId(c.id);
+      updateLoading(true);
       const connectionDetail = await getConnectionDetail({
         connectionID: c?.id,
         fromCache: true
@@ -64,10 +69,18 @@ export default function Connections() {
         is_active: true
       } as updateConnectionType);
 
+      updateLoading(false);
+
       navigate({
         connectionId: c.id
       });
-    } catch (error) {}
+    } catch (error) {
+      updateLoading(false);
+      if (axios.isAxiosError(error)) {
+        toast.error(error.message);
+      }
+      console.log('🚀 ~ handleChangeCurrentConnection ~ err:', error);
+    }
   };
 
   return (
@@ -80,6 +93,7 @@ export default function Connections() {
       </Suspense>
       {connections?.map((c: ConnectionType) => (
         <ConnectionItem
+          loading={pendingGetDetail && loadingConnectionId === c.id}
           onClick={() => handleChangeCurrentConnection(c)}
           key={uuid()}
           selected={c.id === currentConnection?.id}
