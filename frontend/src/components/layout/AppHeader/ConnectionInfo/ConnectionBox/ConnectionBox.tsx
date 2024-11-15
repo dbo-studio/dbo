@@ -32,7 +32,7 @@ export default function ConnectionBox() {
     }
 
     setInfo(
-      `${currentConnection?.driver} ${currentConnection?.version} ${currentConnection.currentSchema}: ${currentConnection?.name} SQL Query`
+      `${currentConnection?.name} | ${currentConnection?.driver}${currentConnection?.version} : ${currentConnection.currentSchema} :  SQL Query`
     );
     setStatus('active');
   }, [currentConnection, loading]);
@@ -54,8 +54,8 @@ export default function ConnectionBox() {
   return (
     <ConnectionBoxStyled status={status}>
       <Box display={'flex'} alignItems={'center'} flexDirection={'row'}>
-        <Typography variant='body1' component='h6'>
-          {loading ? locales.loading : info}
+        <Typography variant='body2' component='h6'>
+          {loading ? locales.connecting : info}
         </Typography>
         {loading && <Loading />}
       </Box>

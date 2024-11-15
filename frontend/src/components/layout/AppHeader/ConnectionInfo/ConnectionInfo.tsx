@@ -40,7 +40,7 @@ export default function ConnectionInfo() {
         <Settings open={searchParams.get('showSettings') === 'true'} />
       </Suspense>
       <Grid2 size={{ md: 4 }}>
-        <Stack direction={'row'} spacing={2} justifyContent='flex-end'>
+        <Stack direction={'row'} justifyContent='flex-end'>
           <IconButton aria-label='connections' onClick={() => changeSearchParams('showAddConnection')}>
             <CustomIcon type={'connection'} size={'m'} />
           </IconButton>
@@ -56,12 +56,12 @@ export default function ConnectionInfo() {
           </IconButton>
         </Stack>
       </Grid2>
-      <Grid2 size={{ md: 8 }}>
+      <Grid2 mr={1} ml={1} size={{ md: 8 }}>
         <ConnectionBox />
       </Grid2>
 
       <Grid2 size={{ md: 4 }}>
-        <Stack direction={'row'} spacing={2} justifyContent='flex-start'>
+        <Stack direction={'row'}  justifyContent='flex-start'>
           {/* <IconButton aria-label='search'>
             <CustomIcon type={'search'} size={'m'} />
           </IconButton> */}

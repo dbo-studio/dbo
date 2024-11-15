@@ -57,14 +57,13 @@ fn find_free_port() -> u16 {
 }
 
 fn run_server(app: &mut App) {
-    // let (mut rx, mut child) = Command::new_sidecar("dbo-bin")
-    //     .expect("failed to create `dbo-bin` binary command")
-    //     .spawn()
-    //     .expect("Failed to spawn sidecar");
+    // let sidecar_command = app.shell().sidecar("dbo-bin").unwrap();
+    // let (mut rx, mut child) = sidecar_command.spawn().expect("Failed to spawn sidecar");
 
     // tauri::async_runtime::spawn(async move {
     //     while let Some(event) = rx.recv().await {
-    //         if let CommandEvent::Stdout(line) = event {
+    //         if let CommandEvent::Stdout(line_bytes) = event {
+    //             let line = String::from_utf8_lossy(&line_bytes);
     //             println!("Received message: {} ", line);
     //             if let Err(e) = child.write("message from Rust\n".as_bytes()) {
     //                 println!("Failed to write to child stdin: {}", e);
@@ -75,20 +74,50 @@ fn run_server(app: &mut App) {
     //     }
     // });
 
-    let sidecar_command = app.shell().sidecar("dbo-bin").unwrap();
-    let (mut rx, mut child) = sidecar_command.spawn().expect("Failed to spawn sidecar");
+    // Try to create the sidecar command
+    let sidecar_command = match app.shell().sidecar("dbo-bin") {
+        Ok(command) => command,
+        Err(e) => {
+            eprintln!("Failed to create sidecar command: {}", e);
+            return;
+        }
+    };
 
+    // Spawn the sidecar process
+    let (mut rx, mut child) = match sidecar_command.spawn() {
+        Ok((rx, child)) => (rx, child),
+        Err(e) => {
+            eprintln!("Failed to spawn sidecar process: {}", e);
+            return;
+        }
+    };
+
+    // Handle the sidecar process asynchronously
     tauri::async_runtime::spawn(async move {
         while let Some(event) = rx.recv().await {
-            if let CommandEvent::Stdout(line_bytes) = event {
-                let line = String::from_utf8_lossy(&line_bytes);
-                println!("Received message: {} ", line);
-                if let Err(e) = child.write("message from Rust\n".as_bytes()) {
-                    println!("Failed to write to child stdin: {}", e);
+            match event {
+                CommandEvent::Stdout(line_bytes) => {
+                    let line = String::from_utf8_lossy(&line_bytes);
+                    println!("Received message: {}", line);
+
+                    // Try writing to the child's stdin
+                    if let Err(e) = child.write(b"message from Rust\n") {
+                        eprintln!("Failed to write to child stdin: {}", e);
+                    }
                 }
-            } else {
-                println!("Received non-stdout event: {:?} ", event);
+                CommandEvent::Stderr(err_bytes) => {
+                    let error_line = String::from_utf8_lossy(&err_bytes);
+                    eprintln!("Error from sidecar: {}", error_line);
+                }
+                other_event => {
+                    println!("Received other event: {:?}", other_event);
+                }
             }
+        }
+
+        // Ensure the child process is terminated properly
+        if let Err(e) = child.kill() {
+            eprintln!("Failed to terminate sidecar process: {}", e);
         }
     });
 }

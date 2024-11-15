@@ -2,7 +2,7 @@ import { isNumber, isObject } from '.';
 
 export const tools = {
   screenMaxHeight: (asNumber?: boolean): string | number => {
-    const height = window?.innerHeight - 56;
+    const height = window?.innerHeight - 40;
     return asNumber ? height : `${height}px`;
   },
   screenFullHeight: (): string => {

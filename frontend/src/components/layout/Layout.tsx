@@ -1,6 +1,6 @@
 import { useParamParser, useWindowSize } from '@/hooks';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Grid } from '@mui/material';
+import { Grid2 } from '@mui/material';
 import ConfirmModal from '../base/Modal/ConfirmModal';
 import AppHeader from './AppHeader/AppHeader';
 import { LayoutStyled } from './Layout.styled';
@@ -18,24 +18,24 @@ export default function Layout() {
     <LayoutStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
       <ConfirmModal />
       <AppHeader />
-      <Grid container spacing={0}>
-        <Grid>
+      <Grid2 container spacing={0}>
+        <Grid2>
           <StartContainer />
-        </Grid>
+        </Grid2>
         {sidebar.showLeft && (
-          <Grid>
+          <Grid2>
             <ExplorerContainer />
-          </Grid>
+          </Grid2>
         )}
-        <Grid flex={1} minWidth={0}>
+        <Grid2 flex={1} minWidth={0}>
           <CenterContainer />
-        </Grid>
+        </Grid2>
         {sidebar.showRight && (
-          <Grid>
+          <Grid2>
             <EndContainer />
-          </Grid>
+          </Grid2>
         )}
-      </Grid>
+      </Grid2>
     </LayoutStyled>
   );
 }

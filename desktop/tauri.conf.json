@@ -36,7 +36,7 @@
       "exceptionDomain": "",
       "frameworks": [],
       "providerShortName": null,
-      "signingIdentity": "-"
+      "signingIdentity": null
     },
     "resources": [],
     "shortDescription": "Modern and easy to use SQL client",
@@ -45,7 +45,7 @@
         "depends": []
       }
     },
-    "createUpdaterArtifacts": "v1Compatible"
+    "createUpdaterArtifacts": true
   },
   "productName": "DBO",
   "mainBinaryName": "DBO",
@@ -70,8 +70,7 @@
         "minWidth": 1280,
         "minHeight": 700,
         "x": 0,
-        "y": 0,
-        " ": true
+        "y": 0
       }
     ],
     "security": {

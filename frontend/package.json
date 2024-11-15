@@ -26,10 +26,11 @@
     "@mui/x-tree-view": "7.22.1",
     "@tanstack/react-form": "^0.34.4",
     "@tanstack/zod-form-adapter": "^0.34.4",
-    "@tauri-apps/api": "^1.6.0",
+    "@tauri-apps/api": "^2.1.1",
     "axios": "^1.7.7",
     "dayjs": "^1.11.13",
     "deep-object-diff": "^1.1.9",
+    "eruda": "^3.4.1",
     "immer": "^10.1.1",
     "lodash": "^4.17.21",
     "lucide-react": "^0.453.0",
@@ -75,8 +76,6 @@
     "vitest": "^2.1.4"
   },
   "msw": {
-    "workerDirectory": [
-      "public"
-    ]
+    "workerDirectory": ["public"]
   }
 }

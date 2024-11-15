@@ -30,18 +30,11 @@ export default function StatusBarPagination() {
       pagination
     });
 
-    runQuery();
+    runQuery().then();
   };
 
   return (
-    <Box
-      alignItems={'center'}
-      mb={'5px'}
-      justifyContent={'flex-end'}
-      display={'flex'}
-      flexDirection={'row'}
-      width={208}
-    >
+    <Box alignItems={'center'} justifyContent={'flex-end'} display={'flex'} flexDirection={'row'} width={208}>
       {getSelectedTab()?.mode && getSelectedTab()?.mode === TabMode.Data && (
         <>
           <PaginationSetting />
@@ -52,7 +45,7 @@ export default function StatusBarPagination() {
           >
             <CustomIcon type='arrowLeft' size='s' />
           </IconButton>
-          <Typography fontWeight={'bold'} textAlign={'center'} minWidth={54}>
+          <Typography color={'textText'} fontWeight={'bold'} textAlign={'center'} minWidth={54}>
             {getSelectedTab()?.pagination?.page ?? 1}
           </Typography>
           <IconButton onClick={() => handlePagination('next')}>
