@@ -29,5 +29,5 @@ echo "${GREEN}Completed install npm dependencies."
 echo ""
 echo "Step 3 - building DBO desktop..."
 cd "${DESKTOP_DIR}"
-tauri build
+tauri build --debug
 echo "${GREEN}Completed building DBO desktop."

@@ -1,5 +1,4 @@
 import { changeUrl } from '@/core/services/api/intialize';
-import { tools } from '@/core/utils';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from 'react';
 
@@ -7,7 +6,8 @@ export const useSetupDesktop = () => {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'development' && tools.isTauri()) {
+      localStorage.clear();
+      
       invoke('get_backend_host').then((response) => {
         if (response === '') {
           alert('cant found empty port!');
@@ -17,9 +17,6 @@ export const useSetupDesktop = () => {
         changeUrl(response as string);
         setLoaded(true);
       });
-    } else {
-      setLoaded(true);
-    }
   }, []);
 
   return loaded;
