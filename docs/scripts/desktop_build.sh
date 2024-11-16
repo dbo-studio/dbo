@@ -21,7 +21,13 @@ build_backend
 echo "${GREEN}Completed building DBO backend."
 
 echo ""
-echo "Step 2 - building DBO desktop..."
+echo "Step 2 - install npm dependencies"
+cd "${FRONTEND_DIR}"
+npm i
+echo "${GREEN}Completed install npm dependencies."
+
+echo ""
+echo "Step 3 - building DBO desktop..."
 cd "${DESKTOP_DIR}"
 tauri build
 echo "${GREEN}Completed building DBO desktop."
