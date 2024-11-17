@@ -1,8 +1,7 @@
 pre-push:
   commands:
     front-check:
-      root: "frontend"
-      run: npm @biomejs/biome check src --no-errors-on-unmatched --files-ignore-unknown=true --colors=off
+      run: npm run biome check frontend/src --no-errors-on-unmatched --files-ignore-unknown=true --colors=off
     front-test:
       root: "frontend"
       run: npm run test
