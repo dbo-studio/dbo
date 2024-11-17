@@ -46,6 +46,7 @@ export default defineConfig({
       reporter: ['text', 'json', 'html']
     },
     exclude: ['node_modules'],
+    reporters: process.env.GITHUB_ACTIONS ? ['dot', 'github-actions'] : ['dot'],
     alias: [
       {
         find: /^monaco-editor$/,
