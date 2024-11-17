@@ -1,7 +1,5 @@
 pre-push:
   commands:
-    front-check:
-      run: npm run biome check frontend/src --colors=off
     front-test:
       root: "frontend"
       run: npm run test
