@@ -6,11 +6,9 @@
 pre-push:
   commands:
     front-check:
-      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
       root: "frontend"
       run: npm @biomejs/biome check src --no-errors-on-unmatched --files-ignore-unknown=true --colors=off
     backend-check:
-      glob: "*.{go}"
       root: "frontend"
       run: golangci-lint run ./...
 
