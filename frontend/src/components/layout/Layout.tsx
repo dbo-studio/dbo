@@ -13,33 +13,34 @@ import StartContainer from './MainContainer/StartContainer';
 export default function Layout() {
   const windowSize = useWindowSize(true);
   const { sidebar } = useSettingStore();
-  const connections = useConnectionStore((state) => state.connections);
+  const currentConnection = useConnectionStore((state) => state.currentConnection);
   useParamParser();
 
   return (
     <LayoutStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
       <ConfirmModal />
       <AppHeader />
-      {connections && connections.length > 0 && (
-        <Grid2 container spacing={0}>
+      <Grid2 container spacing={0}>
+        <Grid2>
+          <StartContainer />
+        </Grid2>
+        {sidebar.showLeft && currentConnection && (
           <Grid2>
-            <StartContainer />
+            <ExplorerContainer />
           </Grid2>
-          {sidebar.showLeft && (
-            <Grid2>
-              <ExplorerContainer />
-            </Grid2>
-          )}
+        )}
+        {currentConnection && (
           <Grid2 flex={1} minWidth={0}>
             <CenterContainer />
           </Grid2>
-          {sidebar.showRight && (
-            <Grid2>
-              <EndContainer />
-            </Grid2>
-          )}
-        </Grid2>
-      )}
+        )}
+
+        {sidebar.showRight && currentConnection && (
+          <Grid2>
+            <EndContainer />
+          </Grid2>
+        )}
+      </Grid2>
     </LayoutStyled>
   );
 }

@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, test } from 'vitest';
-import Leading from './Leading';
+import Leading from './Leading.tsx';
 
 describe('Leading.tsx', () => {
   test('should render the the Leading', () => {

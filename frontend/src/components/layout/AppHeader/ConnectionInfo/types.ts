@@ -2,4 +2,4 @@ export type ConnectionBoxStyledProps = {
   status: ConnectionBoxStatus;
 };
 
-export type ConnectionBoxStatus = 'active' | 'loading' | 'disable';
+export type ConnectionBoxStatus = 'error' | 'finished' | 'loading' | 'disable';

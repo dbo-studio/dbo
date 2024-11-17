@@ -1,7 +1,7 @@
 import { constants } from '@/core/constants';
-import { useSettingStore } from '@/store/settingStore/setting.store';
+import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { IconButton, Stack } from '@mui/material';
-import CustomIcon from '../../base/CustomIcon/CustomIcon';
+import CustomIcon from '../../../base/CustomIcon/CustomIcon.tsx';
 
 export default function Actions() {
   const { updateSidebar, sidebar } = useSettingStore();

@@ -12,12 +12,19 @@ import type { TabDataSlice, TabFilterSlice, TabQuerySlice, TabSettingSlice, TabS
 
 type TabState = TabStore & TabSettingSlice & TabQuerySlice & TabFilterSlice & TabSortSlice & TabDataSlice;
 
+const initialize = {
+  tabs: {},
+  selectedTab: {}
+};
+
 export const useTabStore = create<TabState>()(
   devtools(
     persist(
       (set, get, ...state) => ({
-        tabs: {},
-        selectedTab: {},
+        ...initialize,
+        reset: () => {
+          set({ ...initialize });
+        },
         getTabs: (): TabType[] => {
           const currentConnection = useConnectionStore.getState().currentConnection;
           const tabs = get().tabs;
