@@ -1,8 +1,10 @@
 import { getConnectionList } from '@/api/connection';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import axios from 'axios';
 import { useEffect } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import useNavigate from './useNavigate.hook';
 
 export const useParamParser = () => {
@@ -11,7 +13,7 @@ export const useParamParser = () => {
   const location = useLocation();
 
   const [searchParams, _] = useSearchParams();
-  const { updateSelectedTab, tabs } = useTabStore();
+  const { updateSelectedTab, tabs, reset } = useTabStore();
   const { updateCurrentConnection, updateConnections, connections, updateLoading } = useConnectionStore();
 
   async function parseParams() {
@@ -19,13 +21,27 @@ export const useParamParser = () => {
     const connectionId = searchParams.get('connectionId');
     let connectionList = connections;
     if (!connectionList) {
-      updateLoading(true);
-      connectionList = await getConnectionList();
-      updateConnections(connectionList);
-      updateLoading(false);
+      updateLoading('loading');
+      try {
+        connectionList = await getConnectionList();
+        updateConnections(connectionList);
+        updateLoading('finished');
+      } catch (e) {
+        updateLoading('error');
+        if (axios.isAxiosError(e)) {
+          toast.error(e.message);
+        }
+        console.log('🚀 ~ parseParams ~ err:', e);
+      }
     }
 
     if (!connectionId || connectionId === '') {
+      return;
+    }
+
+    if (!connectionList || connectionList.length === 0) {
+      console.log('adasd');
+      reset();
       return;
     }
 

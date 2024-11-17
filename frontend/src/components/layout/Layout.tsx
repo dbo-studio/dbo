@@ -20,26 +20,27 @@ export default function Layout() {
     <LayoutStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
       <ConfirmModal />
       <AppHeader />
-      {connections && connections.length > 0 && (
-        <Grid2 container spacing={0}>
+      <Grid2 container spacing={0}>
+        <Grid2>
+          <StartContainer />
+        </Grid2>
+        {sidebar.showLeft && connections && connections.length > 0 && (
           <Grid2>
-            <StartContainer />
+            <ExplorerContainer />
           </Grid2>
-          {sidebar.showLeft && (
-            <Grid2>
-              <ExplorerContainer />
-            </Grid2>
-          )}
+        )}
+        {connections && connections.length > 0 && (
           <Grid2 flex={1} minWidth={0}>
             <CenterContainer />
           </Grid2>
-          {sidebar.showRight && (
-            <Grid2>
-              <EndContainer />
-            </Grid2>
-          )}
-        </Grid2>
-      )}
+        )}
+
+        {sidebar.showRight && connections && connections.length > 0 && (
+          <Grid2>
+            <EndContainer />
+          </Grid2>
+        )}
+      </Grid2>
     </LayoutStyled>
   );
 }

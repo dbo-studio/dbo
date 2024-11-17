@@ -11,6 +11,7 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store.ts'
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { Box, Tooltip } from '@mui/material';
 import { TreeItem } from '@mui/x-tree-view';
+import axios from 'axios';
 import { toast } from 'sonner';
 
 export default function TableTreeViewItem({ table, onClick }: TablesTreeViewItemProps) {
@@ -44,14 +45,22 @@ export default function TableTreeViewItem({ table, onClick }: TablesTreeViewItem
     if (!currentConnection) {
       return;
     }
-    updateLoading(true);
+    updateLoading('loading');
     getConnectionDetail({
       connectionID: currentConnection?.id,
       fromCache: false
-    }).then((res) => {
-      updateCurrentConnection(res);
-      updateLoading(false);
-    });
+    })
+      .then((res) => {
+        updateCurrentConnection(res);
+        updateLoading('finished');
+      })
+      .catch((e) => {
+        updateLoading('error');
+        if (axios.isAxiosError(e)) {
+          toast.error(e.message);
+        }
+        console.log('🚀 ~ handleRefresh ~ err:', e);
+      });
   };
 
   const handleCopy = async () => {

@@ -13,12 +13,12 @@ export const ConnectionBoxStyled = styled(Box)<ConnectionBoxStyledProps>(({ them
   justifyContent: 'space-between',
   background:
     (status === 'loading' && theme.palette.background.warning) ||
-    (status === 'disable' && theme.palette.background.default) ||
+    (status === 'error' && theme.palette.background.danger) ||
     theme.palette.background.default,
   h6: {
     color:
       (status === 'loading' && theme.palette.text.warning) ||
-      (status === 'disable' && theme.palette.text.subdued) ||
+      (status === 'error' && theme.palette.text.danger) ||
       theme.palette.text.text
   }
 }));

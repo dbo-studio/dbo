@@ -36,6 +36,7 @@ export type TabDataSlice = {
 export type TabStore = {
   tabs: TabStoreTabsType;
   selectedTab: TabStoreSelectedTabType;
+  reset: () => void;
   getTabs(): TabType[];
   getSelectedTab(): TabType | undefined;
   updateTabs: (tabs: TabType[]) => void;
