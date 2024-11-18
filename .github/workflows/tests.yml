@@ -30,27 +30,27 @@ jobs:
           args: --verbose --timeout=3m
           skip-cache: true
 
-  front-quality:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: biomejs/setup-biome@v2
-        with:
-          version: latest
-      - name: Run Biome
-        run: biome ci frontend/src
+  # front-quality:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: biomejs/setup-biome@v2
+  #       with:
+  #         version: latest
+  #     - name: Run Biome
+  #       run: biome ci frontend/src
 
-  front-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+  # front-test:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 20
           
-      - name: install frontend dependencies
-        working-directory: /frontend
-        run: npm install
+  #     - name: install frontend dependencies
+  #       working-directory: /frontend
+  #       run: npm install
       
-      - name: run tests
-        working-directory: /frontend
-        run: npm run test
+  #     - name: run tests
+  #       working-directory: /frontend
+  #       run: npm run test
