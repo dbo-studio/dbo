@@ -1,3 +1,4 @@
+import { getTauriVersion } from '@tauri-apps/api/app';
 import { isNumber, isObject } from '.';
 
 export const tools = {
@@ -30,9 +31,8 @@ export const tools = {
     // @ts-expect-error
     return /Mac/i.test(userAgent) || (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream);
   },
-  isTauri: () => {
-    const env = import.meta.env.TAURI_PLATFORM;
-    return env !== undefined;
+  isTauri: async () => {
+    return (await getTauriVersion()) !== null;
   },
   minifySql(value: string): string {
     if (!value.length) {
