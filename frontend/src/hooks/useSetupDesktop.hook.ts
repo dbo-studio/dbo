@@ -33,6 +33,9 @@ export const useSetupDesktop = () => {
 };
 
 function disableMenu() {
+  if (process.env.NODE_ENV === 'development') {
+    return;
+  }
   document.addEventListener(
     'contextmenu',
     (e) => {
