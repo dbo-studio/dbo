@@ -44,12 +44,12 @@ jobs:
   front-test:
     runs-on: ubuntu-latest
     steps:
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "npm"
-          cache-dependency-path: ./frontend/package-lock.json
-     
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: "npm"
+        cache-dependency-path: ./frontend/package-lock.json
+    
       - name: install frontend dependencies
         run: npm install --force
         working-directory: ./frontend
