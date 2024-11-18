@@ -12,6 +12,7 @@ export const useSetupDesktop = () => {
     tools
       .isTauri()
       .then(() => {
+        disableMenu();
         reset();
         invoke('get_backend_host').then((response) => {
           if (response === '') {
@@ -30,3 +31,23 @@ export const useSetupDesktop = () => {
 
   return loaded;
 };
+
+function disableMenu() {
+  document.addEventListener(
+    'contextmenu',
+    (e) => {
+      e.preventDefault();
+      return false;
+    },
+    { capture: true }
+  );
+
+  document.addEventListener(
+    'selectstart',
+    (e) => {
+      e.preventDefault();
+      return false;
+    },
+    { capture: true }
+  );
+}
