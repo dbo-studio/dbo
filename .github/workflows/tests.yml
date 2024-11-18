@@ -6,7 +6,6 @@ on:
 
   pull_request:
     branches: [master, release, dev]
-    paths: ["go.mod", "go.sum", "**.go"]
 
 jobs:
   go-static-checks:
