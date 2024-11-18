@@ -48,7 +48,9 @@ jobs:
           node-version: 20
           
       - name: install frontend dependencies
-        run: npm --prefix frontend install
+        working-directory: ./frontend
+        run: npm install
       
       - name: run tests
-        run: npm --prefix frontend run test
+        working-directory: ./frontend
+        run: npm run test
