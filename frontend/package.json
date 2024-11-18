@@ -8,8 +8,7 @@
     "lint": "biome check src",
     "preview": "vite preview",
     "test": "vitest",
-    "coverage": "vitest run --coverage",
-    "prepare": "husky"
+    "coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@emotion/cache": "^11.13.1",

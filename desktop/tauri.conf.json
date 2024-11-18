@@ -1,6 +1,6 @@
 {
   "build": {
-    "beforeBuildCommand": "NODE_ENV=production npm --prefix frontend run build",
+    "beforeBuildCommand": "npm --prefix frontend run build",
     "beforeDevCommand": "npm --prefix frontend run dev",
     "frontendDist": "../frontend/dist",
     "devUrl": "http://localhost:3000"
