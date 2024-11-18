@@ -20,6 +20,7 @@
     "@mui/material": "^6.1.6",
     "@mui/x-tree-view": "7.22.1",
     "@tanstack/react-form": "^0.34.4",
+    "@tanstack/react-table": "^8.20.5",
     "@tanstack/zod-form-adapter": "^0.34.4",
     "@tauri-apps/api": "^2.1.1",
     "axios": "^1.7.7",

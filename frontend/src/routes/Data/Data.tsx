@@ -7,6 +7,7 @@ import Columns from './Columns/Columns';
 import Filters from './Filters/Filters';
 import QueryPreview from './QueryPreview/QueryPreview';
 import Sorts from './Sorts/Sorts';
+import NewDataGrid from '@/components/shared/DBDataGrid/NewDataGrid';
 
 export default function Data(): JSX.Element {
   const { getSelectedTab } = useTabStore();
@@ -18,7 +19,8 @@ export default function Data(): JSX.Element {
       {getSelectedTab()?.showQuery && <QueryPreview />}
       <Box overflow='hidden' flex={1} display='flex' flexDirection='row'>
         {getSelectedTab()?.showColumns && <Columns />}
-        <DBDataGrid />
+        {/* <DBDataGrid /> */}
+        <NewDataGrid />
       </Box>
       <StatusBar />
     </>

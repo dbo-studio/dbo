@@ -17,7 +17,7 @@ const connectionHandler = [
 
   http.get('/api/connections/:id', async ({ params }) => {
     const { id } = params;
-    await delay(5000);
+    await delay(1);
     return HttpResponse.json({
       data: {
         ...connectionDetailModel,
