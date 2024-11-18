@@ -103,5 +103,7 @@
   "report_an_issue": "Report an issue",
   "app_update": "App update",
   "check_for_updates": "Check for updates",
-  "loading": "Loading"
+  "connecting": "Connecting",
+  "general": "General",
+  "connection_error": "Error fetching Connection"
 }

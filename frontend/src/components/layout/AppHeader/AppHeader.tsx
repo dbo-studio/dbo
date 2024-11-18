@@ -1,11 +1,12 @@
+import { AppHeaderStyled } from '@/components/layout/AppHeader/AppHeader.styled.ts';
 import { Grid2 } from '@mui/material';
-import Actions from './Actions';
+import Actions from './Actions/Actions.tsx';
 import ConnectionInfo from './ConnectionInfo/ConnectionInfo';
-import Leading from './Leading';
+import Leading from './Leading/Leading.tsx';
 
 export default function AppHeader() {
   return (
-    <Grid2 className={'app-header'} pt={1} pb={1} pr={2} pl={2} container spacing={0} justifyContent={'space-between'}>
+    <AppHeaderStyled className={'app-header'} container spacing={0} justifyContent={'space-between'}>
       <Grid2 size={{ md: 2 }}>
         <Leading />
       </Grid2>
@@ -15,6 +16,6 @@ export default function AppHeader() {
       <Grid2 size={{ md: 2 }}>
         <Actions />
       </Grid2>
-    </Grid2>
+    </AppHeaderStyled>
   );
 }

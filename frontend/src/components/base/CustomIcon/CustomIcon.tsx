@@ -8,8 +8,8 @@ const sizes = {
     height: 30
   },
   m: {
-    width: 24,
-    height: 24
+    width: 20,
+    height: 20
   },
   s: {
     width: 16,

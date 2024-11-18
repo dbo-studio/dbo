@@ -125,7 +125,7 @@ export default function StatusBarActions() {
   };
 
   return (
-    <Stack direction={'row'} mb={'5px'} justifyContent={'space-between'} width={208}>
+    <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'} width={208}>
       <Box>
         <IconButton disabled={updateQueryPending || loading} onClick={handleAddAction}>
           <CustomIcon type='plus' size='s' />

@@ -1,10 +1,10 @@
-import * as sa from '@/store/settingStore/setting.store';
+import * as sa from '@/store/settingStore/setting.store.ts';
 import { screen } from '@testing-library/dom';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
-import Actions from './Actions';
+import Actions from './Actions.tsx';
 
 describe('Actions.tsx', () => {
   const spy = vi.spyOn(sa, 'useSettingStore');

@@ -32,6 +32,8 @@ export default function TablesTreeView({ tables }: { tables: string[] }) {
           collapseIcon: () => <CustomIcon size='s' type={'arrowDown'} />,
           endIcon: () => <CustomIcon type={'sheet'} />
         }}
+        autoFocus={false}
+        disabledItemsFocusable={true}
         defaultExpandedItems={['1']}
         aria-label='file system navigator'
       >

@@ -15,6 +15,9 @@ export const handlers = [
   http.get('/vite*', () => {
     return passthrough();
   }),
+  http.get('/images/*', () => {
+    return passthrough();
+  }),
   ...connectionHandler,
   ...historiesHandler,
   ...savedQueriesHandler,

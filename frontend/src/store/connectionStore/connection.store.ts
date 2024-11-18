@@ -1,18 +1,18 @@
 import type { ConnectionType } from '@/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import type { ConnectionStore } from './types';
+import type { ConnectionStore, LoadingType } from './types';
 
 type ConnectionState = ConnectionStore;
 
 export const useConnectionStore = create<ConnectionState>()(
   devtools(
     (set, get) => ({
-      loading: false,
+      loading: 'finished',
       showEditConnection: undefined,
       connections: undefined,
       currentConnection: undefined,
-      updateLoading: (loading: boolean) => {
+      updateLoading: (loading: LoadingType) => {
         set({ loading });
       },
       updateConnections: (connections: ConnectionType[]) => {

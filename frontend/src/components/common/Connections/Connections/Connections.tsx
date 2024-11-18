@@ -51,13 +51,13 @@ export default function Connections() {
   }, [connections]);
 
   const handleChangeCurrentConnection = async (c: ConnectionType) => {
-    if (c.id === currentConnection?.id || loading) {
+    if (c.id === currentConnection?.id || loading === 'loading') {
       return;
     }
 
     try {
       setLoadingConnectionId(c.id);
-      updateLoading(true);
+      updateLoading('loading');
       const connectionDetail = await getConnectionDetail({
         connectionID: c?.id,
         fromCache: true
@@ -69,13 +69,13 @@ export default function Connections() {
         is_active: true
       } as updateConnectionType);
 
-      updateLoading(false);
+      updateLoading('finished');
 
       navigate({
         connectionId: c.id
       });
     } catch (error) {
-      updateLoading(false);
+      updateLoading('error');
       if (axios.isAxiosError(error)) {
         toast.error(error.message);
       }

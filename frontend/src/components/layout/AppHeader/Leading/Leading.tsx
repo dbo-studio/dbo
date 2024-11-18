@@ -1,4 +1,4 @@
-import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
 import { IconButton, Stack } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 

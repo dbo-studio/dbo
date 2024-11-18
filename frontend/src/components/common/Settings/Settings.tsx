@@ -10,15 +10,22 @@ import ThemePanel from './ThemePanel/ThemePanel';
 import type { MenuPanelTabType } from './types';
 
 const tabs: MenuPanelTabType[] = [
+  // {
+  //   id: 0,
+  //   name: locales.general,
+  //   onlyDesktop: true,
+  //   icon: 'settings',
+  //   content: <General />
+  // },
   {
-    id: 0,
+    id: 1,
     name: locales.theme,
     onlyDesktop: false,
     icon: 'theme',
     content: <ThemePanel />
   },
   {
-    id: 1,
+    id: 2,
     name: locales.shortcuts,
     onlyDesktop: false,
     icon: 'shortcuts',

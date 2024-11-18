@@ -3,7 +3,7 @@ import { Box, styled } from '@mui/material';
 import type { ConnectionBoxStyledProps } from '../types.ts';
 
 export const ConnectionBoxStyled = styled(Box)<ConnectionBoxStyledProps>(({ theme, status }) => ({
-  height: '32px',
+  height: '24px',
   textAlign: 'center',
   borderRadius: variables.radius.medium,
   display: 'flex',
@@ -12,13 +12,13 @@ export const ConnectionBoxStyled = styled(Box)<ConnectionBoxStyledProps>(({ them
   border: `1px solid ${theme.palette.divider}`,
   justifyContent: 'space-between',
   background:
-    (status === 'active' && theme.palette.background.success) ||
-    (status === 'disable' && theme.palette.background.default) ||
-    theme.palette.background.warning,
+    (status === 'loading' && theme.palette.background.warning) ||
+    (status === 'error' && theme.palette.background.danger) ||
+    theme.palette.background.default,
   h6: {
     color:
-      (status === 'active' && theme.palette.text.success) ||
-      (status === 'disable' && theme.palette.text.subdued) ||
-      theme.palette.text.warning
+      (status === 'loading' && theme.palette.text.warning) ||
+      (status === 'error' && theme.palette.text.danger) ||
+      theme.palette.text.text
   }
 }));

@@ -37,14 +37,22 @@ export default function ConnectionItemContextMenu({ connection, contextMenu, onC
     if (!currentConnection) {
       return;
     }
-    updateLoading(true);
+    updateLoading('loading');
     getConnectionDetail({
       connectionID: currentConnection?.id,
       fromCache: false
-    }).then((res) => {
-      updateCurrentConnection(res);
-      updateLoading(false);
-    });
+    })
+      .then((res) => {
+        updateCurrentConnection(res);
+        updateLoading('finished');
+      })
+      .catch((e) => {
+        updateLoading('error');
+        if (axios.isAxiosError(e)) {
+          toast.error(e.message);
+        }
+        console.log('🚀 ~ handleRefresh ~ err:', e);
+      });
   };
 
   const handleDeleteConnection = async (connection: ConnectionType) => {
