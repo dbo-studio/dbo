@@ -49,8 +49,8 @@ jobs:
           
       - name: install frontend dependencies
         run: npm install --force
-        working-directory: ./frontend
+        working-directory: frontend
       
       - name: run tests
         run: npm run test
-        working-directory: ./frontend
+        working-directory: frontend
