@@ -103,7 +103,7 @@ const queriesHandler = [
 ];
 
 const data = [];
-for (let i = 0; i < 100; i++) {
+for (let i = 0; i < 2; i++) {
   data.push({
     authors: faker.person.fullName(),
     datasrc_id: faker.number.int(),
