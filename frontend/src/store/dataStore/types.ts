@@ -18,10 +18,9 @@ export type DataHighlightedRowSlice = {
 };
 
 export type DataSelectedRowsSlice = {
-  selectedRows: DataSelectedRowType; // when check a row in data grid
-  getSelectedRows: any;
-  updateSelectedRows(selectedRows: any): void;
-  removeSelectedRows(selectedRowIndex: number[]): void;
+  selectedRows: Set<number>;
+  getSelectedRows: () => number[];
+  setSelectedRows: (rows: number[]) => void;
 };
 
 export type DataColumnSlice = {
