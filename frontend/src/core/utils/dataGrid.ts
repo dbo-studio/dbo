@@ -58,36 +58,35 @@ export const formatServerColumns = (serverColumns: ColumnType[]): any => {
   return arr;
 };
 
-export const handelRowChangeLog = (editedRows: EditedRow[], oldValue: RowType, newValue: RowType): EditedRow[] => {
-  const dboIndex = oldValue.dbo_index;
+export const handelRowChangeLog = (
+  editedRows: EditedRow[],
+  rows: RowType[],
+  rowIndex: number,
+  rowKey: string,
+  oldValue: any,
+  newValue: any
+): EditedRow[] => {
+  const oldRow = rows[rowIndex];
+  const dboIndex = oldRow.dbo_index;
 
   //check if edited value exists in editedRows just update this values
   const findValueIndex = editedRows.findIndex((x) => x.dboIndex === dboIndex);
   const findValue = editedRows[findValueIndex];
 
-  //the old value and new value always contain one diff key so we pick first item
-  const diff = updatedDiff(oldValue, newValue);
-  const diffKey = Object.keys(diff)[0];
-
   const oldObject: RowType = findValue ? findValue.old : {};
   const newObject: RowType = findValue ? findValue.new : {};
 
-  //for keeping original value we update oldObject once
-  if (!oldObject[diffKey]) {
-    oldObject[diffKey] = oldValue[diffKey];
-  }
-  newObject[diffKey] = newValue[diffKey];
+  oldObject[rowKey] = oldValue;
+  newObject[rowKey] = newValue;
 
-  let conditions: object = {};
-  if (Object.prototype.hasOwnProperty.call(oldValue, 'id')) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    conditions.id = oldValue.id;
+  let conditions: any = {};
+  if (oldRow?.id) {
+    conditions.id = oldRow?.id;
   } else {
-    conditions = oldValue;
+    conditions = oldRow;
   }
 
-  if (!findValue) {
+  if (findValueIndex === -1) {
     editedRows.push({
       dboIndex: dboIndex,
       conditions: conditions,

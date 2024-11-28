@@ -1,17 +1,19 @@
-import { HotColumn, HotTable } from '@handsontable/react';
-import 'handsontable/dist/handsontable.full.min.css';
 import { TabMode } from '@/core/enums';
+import { handelRowChangeLog } from '@/core/utils';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
+import { HotColumn, HotTable, type HotTableClass } from '@handsontable/react';
+import 'handsontable/dist/handsontable.full.min.css';
+import { registerAllModules } from 'handsontable/registry';
 import { useEffect, useRef } from 'react';
 import './index.css';
-import { registerAllModules } from 'handsontable/registry';
 
 registerAllModules();
 
 export default function NewDataGrid() {
-  const hotTableRef = useRef(null);
-  const { getColumns, getRows, runQuery, getSelectedRows, setSelectedRows } = useDataStore();
+  const hotTableRef = useRef<HotTableClass>(null);
+  const { getColumns, getRows, runQuery, setSelectedRows, getEditedRows, updateEditedRows, updateRows } =
+    useDataStore();
   const { getSelectedTab } = useTabStore();
 
   useEffect(() => {
@@ -21,17 +23,29 @@ export default function NewDataGrid() {
   }, [getSelectedTab()?.id]);
 
   const handleSelectionEnd = (rowStart: number, _colStart: number, rowEnd: number, _colEnd: number) => {
+    const hot = hotTableRef?.current?.hotInstance;
+    if (!hot) {
+      return;
+    }
     const selectedRows = [];
     for (let i = Math.min(rowStart, rowEnd); i <= Math.max(rowStart, rowEnd); i++) {
-      selectedRows.push(i);
+      const rowData = hot.getSourceDataAtRow(i); // Fetch row data
+      selectedRows.push({ index: i, data: rowData });
     }
+
     setSelectedRows(selectedRows);
   };
 
-  useEffect(() => {
-    const selectedRows = getSelectedRows();
-    console.log('Selected Rows:', selectedRows);
-  }, [getSelectedRows()]);
+  const handleChange = (changes: any[] | null, _: any) => {
+    if (!changes || changes.length === 0) return;
+    for (const [row, prop, oldValue, newValue] of changes) {
+      if (oldValue === newValue) continue;
+      const rows = getRows();
+      const editedRows = handelRowChangeLog(getEditedRows(), rows, row, prop, oldValue, newValue);
+      updateEditedRows(editedRows);
+      updateRows(rows);
+    }
+  };
 
   return (
     <HotTable
@@ -58,6 +72,7 @@ export default function NewDataGrid() {
       }}
       className={'handsontable'}
       afterSelectionEnd={handleSelectionEnd}
+      afterChange={handleChange}
     >
       {getColumns().map((column) => (
         <HotColumn data={column.key} title={column.name} key={column.key} />

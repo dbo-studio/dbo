@@ -7,13 +7,12 @@ export const createDataSelectedRowsSlice: StateCreator<
   [],
   DataSelectedRowsSlice
 > = (set, get) => ({
-  selectedRows: new Set<number>(),
-
+  selectedRows: new Map(),
   getSelectedRows: () => {
-    return Array.from(get().selectedRows);
+    return Array.from(get().selectedRows.values());
   },
-
   setSelectedRows: (rows) => {
-    set({ selectedRows: new Set(rows) });
+    const mappedRows = new Map(rows.map((row) => [row.index, row]));
+    set({ selectedRows: mappedRows });
   }
 });

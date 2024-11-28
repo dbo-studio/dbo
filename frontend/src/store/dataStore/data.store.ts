@@ -5,7 +5,6 @@ import { useTabStore } from '../tabStore/tab.store';
 import { createDataColumnSlice } from './slices/dataColumn.slice';
 import { createDataEditedColumnSlice } from './slices/dataEditedColumn.slice';
 import { createDataEditedRowsSlice } from './slices/dataEditedRows.slice';
-import { createDataHightedRowSlice } from './slices/dataHightedRow.slice';
 import { createDataQuerySlice } from './slices/dataQuery.slice';
 import { createDataRemovedRowsSlice } from './slices/dataRemovedRows.slice';
 import { createDataRowSlice } from './slices/dataRow.slice';
@@ -15,7 +14,6 @@ import type {
   DataColumnSlice,
   DataEditedColumnSlice,
   DataEditedRowsSlice,
-  DataHighlightedRowSlice,
   DataQuerySlice,
   DataRemovedRowsSlice,
   DataRowSlice,
@@ -27,7 +25,6 @@ import type {
 type DataState = DataStore &
   DataRowSlice &
   DataSelectedRowsSlice &
-  DataHighlightedRowSlice &
   DataEditedRowsSlice &
   DataRemovedRowsSlice &
   DataUnsavedRowsSlice &
@@ -42,7 +39,6 @@ export const useDataStore = create<DataState>()(
         return useTabStore.getState().getSelectedTab();
       },
       ...createDataRowSlice(set, get, ...state),
-      ...createDataHightedRowSlice(set, get, ...state),
       ...createDataEditedRowsSlice(set, get, ...state),
       ...createDataRemovedRowsSlice(set, get, ...state),
       ...createDataUnsavedRowsSlice(set, get, ...state),
