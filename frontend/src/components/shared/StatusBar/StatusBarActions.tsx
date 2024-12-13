@@ -25,13 +25,13 @@ export default function StatusBarActions() {
     updateRemovedRows,
     restoreEditedRows,
     discardUnsavedRows,
-    updateSelectedRows,
     updateUnsavedRows,
     runQuery,
     restoreEditedColumns,
     updateRemovedColumns,
     addEmptyEditedColumns,
-    updateDesignsQuery
+    updateDesignsQuery,
+    deleteRemovedRowsByTabId
   } = useDataStore();
 
   const { request: updateQuery, pending: updateQueryPending } = useAPI({
@@ -64,7 +64,6 @@ export default function StatusBarActions() {
         updateEditedRows([]);
         updateRemovedRows();
         updateUnsavedRows([]);
-        updateSelectedRows([]);
         await runQuery();
       } catch (error) {
         console.log('🚀 ~ handleSave ~ error:', error);
@@ -109,10 +108,9 @@ export default function StatusBarActions() {
 
   const handleDiscardChanges = async () => {
     if (getSelectedTab()?.mode === TabMode.Data) {
-      updateSelectedRows([]);
       restoreEditedRows().then();
       discardUnsavedRows();
-      updateRemovedRows();
+      deleteRemovedRowsByTabId(getSelectedTab()?.id ?? '');
     }
 
     if (getSelectedTab()?.mode === TabMode.Design) {

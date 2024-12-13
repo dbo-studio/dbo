@@ -27,7 +27,7 @@ export const createDataRemovedRowsSlice: StateCreator<
       return;
     }
 
-    const rowsIndex = Array.from(get().getSelectedRows());
+    const rowsIndex = Array.from(get().getSelectedRows().values()).map((row) => row.index);
     const rows = get()
       .getRows()
       .filter((r: RowType) => rowsIndex.includes(r.dbo_index));
@@ -55,12 +55,12 @@ export const createDataRemovedRowsSlice: StateCreator<
 
     set({ removedRows });
     get().discardUnsavedRows(unsavedRows);
-    get().updateSelectedRows([]);
+    get().setSelectedRows([]);
   },
   deleteRemovedRowsByTabId: (tabId: string) => {
     const rows = get().removedRows;
-    if (!rows[tabId]) {
-      delete rows[tabId];
+    if (rows[tabId]) {
+      rows[tabId] = [];
     }
 
     set({ removedRows: rows });

@@ -11,7 +11,7 @@ import { Suspense, lazy, useEffect, useState } from 'react';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
 
 const CodeEditor = lazy(() => import('@/components/base/CodeEditor/CodeEditor'));
-const DBDataGrid = lazy(() => import('@/components/shared/DBDataGrid/DBDataGrid'));
+const DBDataGrid = lazy(() => import('@/components/shared/DBDataGrid/DataGrid.tsx'));
 
 export default function Query() {
   const theme = useTheme();
