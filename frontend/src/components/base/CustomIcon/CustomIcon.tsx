@@ -41,5 +41,12 @@ export default function CustomIcon({ type, size = 's', width, height, onClick }:
     return <img onClick={onClick} src={`/icons/${type}.svg`} alt={type} width={w} height={h} />;
   }
 
-  return <LucideIcon style={{ color: theme.palette.text.text }} onClick={onClick} strokeWidth={1.5} size={w} />;
+  return (
+    <LucideIcon
+      onClick={onClick}
+      style={{ color: theme.palette.text.text, display: 'block' }}
+      strokeWidth={1.5}
+      size={w}
+    />
+  );
 }
