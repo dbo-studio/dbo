@@ -8,7 +8,6 @@ export function useRemoveTab() {
     removeColumnsByTabId,
     removeEditedColumnsByTabId,
     removeEditedRowsByTabId,
-    removeHighlightedRowsByTabId,
     deleteRemovedRowsByTabId,
     removeRowsByTabId,
     removeUnsavedRowsByTabId
@@ -22,7 +21,6 @@ export function useRemoveTab() {
     removeColumnsByTabId(tabId);
     removeEditedColumnsByTabId(tabId);
     removeEditedRowsByTabId(tabId);
-    removeHighlightedRowsByTabId(tabId);
     deleteRemovedRowsByTabId(tabId);
     removeRowsByTabId(tabId);
     removeUnsavedRowsByTabId(tabId);

@@ -31,6 +31,7 @@ export default function StatusBarActions() {
     updateRemovedColumns,
     addEmptyEditedColumns,
     updateDesignsQuery,
+    clearSelectedRows,
     deleteRemovedRowsByTabId
   } = useDataStore();
 
@@ -111,6 +112,7 @@ export default function StatusBarActions() {
       restoreEditedRows().then();
       discardUnsavedRows();
       deleteRemovedRowsByTabId(getSelectedTab()?.id ?? '');
+      clearSelectedRows();
     }
 
     if (getSelectedTab()?.mode === TabMode.Design) {

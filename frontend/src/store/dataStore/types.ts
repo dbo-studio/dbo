@@ -12,7 +12,9 @@ export type DataRowSlice = {
 
 export type DataSelectedRowsSlice = {
   selectedRows: Map<number, SelectedRow>;
+  toggleClear: boolean;
   getSelectedRows: () => SelectedRow[];
+  clearSelectedRows: () => void;
   setSelectedRows: (rows: SelectedRow[]) => void;
 };
 
