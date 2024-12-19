@@ -15,7 +15,7 @@ export const useHandleRowSelect = (hotTableRef: RefObject<HotTableClass>) => {
         }
         const selectedRows = [];
         for (let i = Math.min(rowStart, rowEnd); i <= Math.max(rowStart, rowEnd); i++) {
-          const rowData = hot.getSourceDataAtRow(i); // Fetch row data
+          const rowData = hot.getSourceDataAtRow(i);
           selectedRows.push({ index: i, data: rowData });
         }
 

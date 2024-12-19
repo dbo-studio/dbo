@@ -5,7 +5,13 @@ export const DataGridStyled = styled(HotTable)(({ theme }) => ({
   '& .handsontable td': {
     whiteSpace: 'nowrap',
     overflow: 'hidden',
-    textOverflow: 'ellipsis'
+    textOverflow: 'ellipsis',
+    borderColor: theme.palette.divider,
+    color: theme.palette.text.text,
+    backgroundColor: theme.palette.background.default
+  },
+  '& .handsontable .ht__row_odd td': {
+    backgroundColor: `${theme.palette.background.subdued}`
   },
   '& .removed-highlight': {
     backgroundColor: `${theme.palette.background.danger} !important`,
@@ -37,5 +43,28 @@ export const DataGridStyled = styled(HotTable)(({ theme }) => ({
   },
   '& span.colHeader.columnSorting.descending:before': {
     transform: 'scaleY(-1)'
+  },
+  '& .handsontable thead tr th': {
+    border: 'none',
+    borderColor: `${theme.palette.divider} !important`,
+    color: theme.palette.text.text,
+    backgroundColor: theme.palette.background.default
+  },
+  '& .handsontable tbody tr th': {
+    borderLeft: 'none !important',
+    borderColor: theme.palette.divider,
+    color: theme.palette.text.text,
+    backgroundColor: theme.palette.background.default
+  },
+  '& .handsontable tbody .ht__highlight, .handsontable tbody td.highlight': {
+    backgroundColor: `${theme.palette.action.selected}`,
+    opacity: '1',
+    color: theme.palette.text.text
+  },
+  '& .handsontable tbody td.highlight:before': {
+    opacity: '0'
+  },
+  '& .handsontable tbody tr td': {
+    borderColor: theme.palette.divider
   }
 }));

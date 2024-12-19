@@ -2,7 +2,8 @@ import { TabMode } from '@/core/enums';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { HotColumn, type HotTableClass } from '@handsontable/react';
-import 'handsontable/dist/handsontable.full.min.css';
+import 'handsontable/dist/handsontable.min.css';
+
 import { DataGridStyled } from '@/components/shared/DBDataGrid/DataGrid.styled.ts';
 import { useHandleDeselect } from '@/components/shared/DBDataGrid/hooks/useHandleDeselect.ts';
 import { useHandleRowChange } from '@/components/shared/DBDataGrid/hooks/useHandleRowChange.ts';
