@@ -1,7 +1,7 @@
 import Modal from '@/components/base/Modal/Modal';
 import locales from '@/locales';
 import { Grid2, useTheme } from '@mui/material';
-import { useState } from 'react';
+import { type JSX, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import AboutPanel from './AboutPanel/AboutPanel';
 import MenuPanel from './MenuPanel/MenuPanel';

@@ -45,7 +45,8 @@ export const DataGridStyled = styled(HotTable)(({ theme }) => ({
     transform: 'scaleY(-1)'
   },
   '& .handsontable thead tr th': {
-    border: 'none',
+    borderTop: 'none',
+    borderLeft: 'none',
     borderColor: `${theme.palette.divider} !important`,
     color: theme.palette.text.text,
     backgroundColor: theme.palette.background.default
