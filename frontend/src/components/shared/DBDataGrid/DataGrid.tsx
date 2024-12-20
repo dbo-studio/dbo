@@ -5,6 +5,7 @@ import { HotColumn, type HotTableRef } from '@handsontable/react-wrapper';
 import 'handsontable/dist/handsontable.min.css';
 
 import { DataGridStyled } from '@/components/shared/DBDataGrid/DataGrid.styled.ts';
+import { useHandleContextMenu } from '@/components/shared/DBDataGrid/hooks/useHandleContextMenu.ts';
 import { useHandleDeselect } from '@/components/shared/DBDataGrid/hooks/useHandleDeselect.ts';
 import { useHandleRowChange } from '@/components/shared/DBDataGrid/hooks/useHandleRowChange.ts';
 import { useHandleRowSelect } from '@/components/shared/DBDataGrid/hooks/useHandleRowSelect.ts';
@@ -21,8 +22,10 @@ export default function DataGrid() {
   useHandleScroll(hotTableRef);
   useHandleDeselect(hotTableRef);
   useHandleRowStyle();
+
   const handleSelection = useHandleRowSelect(hotTableRef);
   const handleRowChange = useHandleRowChange();
+  const handleContextMenu = useHandleContextMenu(hotTableRef);
 
   const { loading, getColumns, getRows, runQuery, getEditedRows, getRemovedRows, getUnsavedRows, toggleDataFetching } =
     useDataStore();
@@ -68,6 +71,7 @@ export default function DataGrid() {
       manualColumnResize={true}
       outsideClickDeselects={false}
       minSpareRows={0}
+      contextMenu={handleContextMenu}
       afterSelectionEnd={handleSelection}
       afterChange={handleRowChange}
       licenseKey='non-commercial-and-evaluation'

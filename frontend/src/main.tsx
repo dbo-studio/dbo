@@ -15,7 +15,7 @@ enableMocking().then(() => {
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
       <ThemeProvider>
-        <GlobalStyles styles={globalStyles} />
+        <GlobalStyles styles={(theme) => globalStyles(theme)} />
         <CssBaseline />
         <Router />
         <Toaster position='bottom-center' duration={5000} richColors closeButton={true} />
