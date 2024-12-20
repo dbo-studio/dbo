@@ -1,7 +1,7 @@
 import { TabMode } from '@/core/enums';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
-import { HotColumn, type HotTableClass } from '@handsontable/react';
+import { HotColumn, type HotTableRef } from '@handsontable/react-wrapper';
 import 'handsontable/dist/handsontable.min.css';
 
 import { DataGridStyled } from '@/components/shared/DBDataGrid/DataGrid.styled.ts';
@@ -17,14 +17,15 @@ import { useEffect, useRef } from 'react';
 registerAllModules();
 
 export default function DataGrid() {
-  const hotTableRef = useRef<HotTableClass>(null);
+  const hotTableRef = useRef<HotTableRef | null>(null);
   useHandleScroll(hotTableRef);
-  useHandleRowChange(hotTableRef);
-  useHandleRowSelect(hotTableRef);
   useHandleDeselect(hotTableRef);
   useHandleRowStyle();
+  const handleSelection = useHandleRowSelect(hotTableRef);
+  const handleRowChange = useHandleRowChange();
 
-  const { loading, getColumns, getRows, runQuery, getEditedRows, getRemovedRows, getUnsavedRows } = useDataStore();
+  const { loading, getColumns, getRows, runQuery, getEditedRows, getRemovedRows, getUnsavedRows, toggleDataFetching } =
+    useDataStore();
   const { getSelectedTab } = useTabStore();
 
   useEffect(() => {
@@ -36,6 +37,10 @@ export default function DataGrid() {
   useEffect(() => {
     hotTableRef?.current?.hotInstance?.render();
   }, [getRemovedRows(), getUnsavedRows(), getEditedRows()]);
+
+  useEffect(() => {
+    hotTableRef?.current?.hotInstance?.updateData(getRows());
+  }, [toggleDataFetching]);
 
   if (loading) {
     return (
@@ -63,6 +68,8 @@ export default function DataGrid() {
       manualColumnResize={true}
       outsideClickDeselects={false}
       minSpareRows={0}
+      afterSelectionEnd={handleSelection}
+      afterChange={handleRowChange}
       licenseKey='non-commercial-and-evaluation'
       modifyColWidth={(width) => {
         if (width > 400) return 400;

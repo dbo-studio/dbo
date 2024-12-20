@@ -1,8 +1,8 @@
 import { useDataStore } from '@/store/dataStore/data.store.ts';
-import type { HotTableClass } from '@handsontable/react';
+import type { HotTableRef } from '@handsontable/react-wrapper';
 import { type RefObject, useEffect } from 'react';
 
-export const useHandleDeselect = (hotTableRef: RefObject<HotTableClass>) => {
+export const useHandleDeselect = (hotTableRef: RefObject<HotTableRef | null>) => {
   const { toggleClear } = useDataStore();
 
   useEffect(() => {

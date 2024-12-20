@@ -120,7 +120,8 @@ export default function StatusBarActions() {
     }
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
+    await handleDiscardChanges();
     runQuery().then();
   };
 

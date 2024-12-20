@@ -1,26 +1,23 @@
 import { useDataStore } from '@/store/dataStore/data.store.ts';
-import type { HotTableClass } from '@handsontable/react';
-import { type RefObject, useEffect } from 'react';
+import type { HotTableRef } from '@handsontable/react-wrapper';
+import { type RefObject, useCallback } from 'react';
 
-export const useHandleRowSelect = (hotTableRef: RefObject<HotTableClass>) => {
+export const useHandleRowSelect = (hotTableRef: RefObject<HotTableRef | null>) => {
   const { setSelectedRows } = useDataStore();
 
-  useEffect(() => {
-    hotTableRef?.current?.hotInstance?.addHook(
-      'afterSelectionEnd',
-      (rowStart: number, _colStart: number, rowEnd: number, _colEnd: number) => {
-        const hot = hotTableRef?.current?.hotInstance;
-        if (!hot) {
-          return;
-        }
-        const selectedRows = [];
-        for (let i = Math.min(rowStart, rowEnd); i <= Math.max(rowStart, rowEnd); i++) {
-          const rowData = hot.getSourceDataAtRow(i);
-          selectedRows.push({ index: i, data: rowData });
-        }
+  return useCallback(
+    (rowStart: number, _colStart: number, rowEnd: number, _colEnd: number) => {
+      const hotInstance = hotTableRef?.current?.hotInstance;
+      if (!hotInstance) return;
 
-        setSelectedRows(selectedRows);
+      const selectedRows = [];
+      for (let i = Math.min(rowStart, rowEnd); i <= Math.max(rowStart, rowEnd); i++) {
+        const rowData = hotInstance.getSourceDataAtRow(i);
+        selectedRows.push({ index: i, data: rowData });
       }
-    );
-  }, [hotTableRef.current]);
+
+      setSelectedRows(selectedRows);
+    },
+    [hotTableRef.current]
+  );
 };
