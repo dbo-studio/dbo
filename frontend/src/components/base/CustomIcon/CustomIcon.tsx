@@ -44,7 +44,7 @@ export default function CustomIcon({ type, size = 's', width, height, onClick }:
   return (
     <LucideIcon
       onClick={onClick}
-      style={{ color: theme.palette.text.text, display: 'block' }}
+      style={{ color: theme.palette.text.text, display: 'inline-block' }}
       strokeWidth={1.5}
       size={w}
     />
