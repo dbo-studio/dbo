@@ -21,11 +21,11 @@ export default function StatusBarActions() {
     getUnsavedRows,
     getEditedRows,
     getRemovedRows,
-    updateEditedRows,
+    removeEditedRowsByTabId,
     updateRemovedRows,
     restoreEditedRows,
     discardUnsavedRows,
-    updateUnsavedRows,
+    removeUnsavedRowsByTabId,
     runQuery,
     restoreEditedColumns,
     updateRemovedColumns,
@@ -62,9 +62,9 @@ export default function StatusBarActions() {
           removed: removed,
           added: unsaved
         });
-        updateEditedRows([]);
-        updateRemovedRows();
-        updateUnsavedRows([]);
+        removeEditedRowsByTabId(getSelectedTab()?.id ?? '');
+        deleteRemovedRowsByTabId(getSelectedTab()?.id ?? '');
+        removeUnsavedRowsByTabId(getSelectedTab()?.id ?? '');
         await runQuery();
       } catch (error) {
         console.log('🚀 ~ handleSave ~ error:', error);
