@@ -2,8 +2,9 @@ package pgsqlDriver
 
 import (
 	"fmt"
-	"github.com/dbo-studio/dbo/internal/app/dto"
 	"strings"
+
+	"github.com/dbo-studio/dbo/internal/app/dto"
 )
 
 func queryGenerator(dto *dto.RunQueryDto) string {
@@ -67,26 +68,34 @@ func createDBQuery(dto *dto.CreateDatabaseRequest) string {
 }
 
 func updateQueryGenerator(dto *dto.UpdateQueryDto) []string {
-	queries := []string{}
+	if dto == nil || dto.EditedItems == nil {
+		return nil // Handle nil DTO or EditedItems gracefully
+	}
+
+	var queries []string
 
 	for _, editedItem := range dto.EditedItems {
 		if len(editedItem.Values) == 0 || len(editedItem.Conditions) == 0 {
 			continue
 		}
 
-		query := fmt.Sprintf(`UPDATE "%s"."%s" SET `, dto.Schema, dto.Table)
+		var setClauses []string
 		for key, value := range editedItem.Values {
-			query += fmt.Sprintf(`"%s" = '%v', `, key, value)
+			setClauses = append(setClauses, fmt.Sprintf(`"%s" = '%v'`, key, value))
 		}
 
-		query = query[:len(query)-2]
-
-		query += " WHERE "
+		var whereClauses []string
 		for key, value := range editedItem.Conditions {
-			query += fmt.Sprintf("%s = '%v' AND ", key, value)
+			whereClauses = append(whereClauses, fmt.Sprintf(`"%s" = '%v'`, key, value))
 		}
 
-		query = query[:len(query)-5]
+		query := fmt.Sprintf(
+			`UPDATE "%s"."%s" SET %s WHERE %s`,
+			dto.Schema,
+			dto.Table,
+			strings.Join(setClauses, ", "),
+			strings.Join(whereClauses, " AND "),
+		)
 
 		queries = append(queries, query)
 	}
@@ -95,18 +104,28 @@ func updateQueryGenerator(dto *dto.UpdateQueryDto) []string {
 }
 
 func deleteQueryGenerator(dto *dto.UpdateQueryDto) []string {
-	queries := []string{}
+	if dto == nil || dto.DeletedItems == nil {
+		return nil
+	}
+
+	var queries []string
 
 	for _, deletedItem := range dto.DeletedItems {
 		if len(deletedItem) == 0 {
 			continue
 		}
-		query := fmt.Sprintf(`DELETE FROM "%s"."%s" WHERE `, dto.Schema, dto.Table)
+
+		var conditions []string
 		for key, value := range deletedItem {
-			query += fmt.Sprintf(`"%s" = '%v' AND `, key, value)
+			conditions = append(conditions, fmt.Sprintf(`"%s" = '%v'`, key, value))
 		}
 
-		query = query[:len(query)-5]
+		query := fmt.Sprintf(
+			`DELETE FROM "%s"."%s" WHERE %s`,
+			dto.Schema,
+			dto.Table,
+			strings.Join(conditions, " AND "),
+		)
 
 		queries = append(queries, query)
 	}
@@ -115,25 +134,30 @@ func deleteQueryGenerator(dto *dto.UpdateQueryDto) []string {
 }
 
 func insertQueryGenerator(dto *dto.UpdateQueryDto) []string {
-	queries := []string{}
+	if dto == nil || dto.AddedItems == nil {
+		return nil
+	}
+	var queries []string
 
 	for _, addedItem := range dto.AddedItems {
 		if len(addedItem) == 0 {
 			continue
 		}
 
-		query := fmt.Sprintf(`INSERT INTO "%s"."%s" (`, dto.Schema, dto.Table)
-		for key := range addedItem {
-			query += fmt.Sprintf(`%s, `, key)
+		var columns, values []string
+
+		for key, value := range addedItem {
+			columns = append(columns, fmt.Sprintf(`"%s"`, key))
+			values = append(values, fmt.Sprintf(`'%v'`, value))
 		}
 
-		query = query[:len(query)-2] + ") VALUES ("
-
-		for _, value := range addedItem {
-			query += fmt.Sprintf(`'%v', `, value)
-		}
-
-		query = query[:len(query)-2] + ")"
+		query := fmt.Sprintf(
+			`INSERT INTO "%s"."%s" (%s) VALUES (%s)`,
+			dto.Schema,
+			dto.Table,
+			strings.Join(columns, ", "),
+			strings.Join(values, ", "),
+		)
 
 		queries = append(queries, query)
 	}
