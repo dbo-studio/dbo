@@ -6,7 +6,13 @@ export const ThemeItemStyled = styled(Box)<ThemeItemStyledProps>(({ theme, selec
   borderRadius: variables.radius.medium,
   padding: '8px 16px',
   marginRight: '16px',
-  border: selected ? `1px solid ${theme.palette.text.primary}` : 'none',
+  border: '1px solid transparent',
+  borderColor: selected ? theme.palette.text.primary : 'transparent',
+  cursor: 'pointer',
+  ':hover': {
+    borderColor: selected ? theme.palette.text.primary : theme.palette.divider,
+    transition: 'border-color 0.2s ease-in-out'
+  },
   img: {
     borderRadius: variables.radius.medium,
     width: 150,
