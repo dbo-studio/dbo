@@ -60,7 +60,7 @@ export const createDataRemovedRowsSlice: StateCreator<
   deleteRemovedRowsByTabId: (tabId: string) => {
     const rows = get().removedRows;
     if (rows[tabId]) {
-      rows[tabId] = [];
+      delete rows[tabId];
     }
 
     set({ removedRows: rows });

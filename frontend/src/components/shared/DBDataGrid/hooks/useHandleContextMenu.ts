@@ -1,12 +1,9 @@
-import { useDataStore } from '@/store/dataStore/data.store.ts';
-import type { HotTableRef } from '@handsontable/react-wrapper';
 import Handsontable from 'handsontable';
 import type { Settings } from 'handsontable/plugins/contextMenu';
-import type { RefObject } from 'react';
 import ContextMenu = Handsontable.plugins.ContextMenu;
 
-export const useHandleContextMenu = (hotTableRef: RefObject<HotTableRef | null>): Settings => {
-  const { setSelectedRows } = useDataStore();
+export const useHandleContextMenu = (): Settings => {
+  // const { setSelectedRows } = useDataStore();
 
   return {
     items: {

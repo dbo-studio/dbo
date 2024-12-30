@@ -4,6 +4,7 @@ import { pullAt } from 'lodash';
 import type { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
 import type { DataColumnSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
+
 export const createDataUnsavedRowsSlice: StateCreator<
   DataStore & DataUnsavedRowsSlice & DataRowSlice & DataColumnSlice,
   [],
@@ -26,7 +27,7 @@ export const createDataUnsavedRowsSlice: StateCreator<
       newRow = createEmptyRow(columns);
       newRow.dbo_index = rows.length === 0 ? 0 : rows[rows.length - 1].dbo_index + 1;
       rows.push(newRow);
-      get().updateRows(rows);
+      get().updateRows(rows).then();
       //save empty row to unSavedRows
       unSavedRows.push(newRow);
     } else {
@@ -34,7 +35,7 @@ export const createDataUnsavedRowsSlice: StateCreator<
       if (findValueIndex === -1) {
         unSavedRows.push(newRow);
       } else {
-        unSavedRows[findValueIndex] = newRow;
+        unSavedRows[findValueIndex] = { ...unSavedRows[findValueIndex], ...newRow };
       }
     }
     get().updateUnsavedRows(unSavedRows);
@@ -60,12 +61,12 @@ export const createDataUnsavedRowsSlice: StateCreator<
       pullAt(oldRows, [findValueIndex]);
     }
 
-    get().updateRows(oldRows);
+    get().updateRows(oldRows).then();
     get().updateUnsavedRows([]);
   },
   removeUnsavedRowsByTabId: (tabId: string) => {
     const rows = get().unSavedRows;
-    if (!rows[tabId]) {
+    if (rows[tabId]) {
       delete rows[tabId];
     }
 

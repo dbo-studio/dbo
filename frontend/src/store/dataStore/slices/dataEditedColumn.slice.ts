@@ -132,12 +132,12 @@ export const createDataEditedColumnSlice: StateCreator<
     };
     editedColumns.push(newColumn);
 
-    get().updateColumns(columns);
-    get().updateEditedColumns(editedColumns);
+    await get().updateColumns(columns);
+    await get().updateEditedColumns(editedColumns);
   },
   removeEditedColumnsByTabId: (tabId: string) => {
     const columns = get().editedColumns;
-    if (Object.prototype.hasOwnProperty.call(columns, tabId)) {
+    if (columns[tabId]) {
       delete columns[tabId];
     }
 

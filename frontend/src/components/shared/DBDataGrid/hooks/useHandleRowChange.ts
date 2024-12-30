@@ -10,7 +10,8 @@ export const useHandleRowChange = () => {
     if (!changes || changes.length === 0 || source !== 'edit') return;
 
     for (const [row, prop, oldValue, newValue] of changes) {
-      if (oldValue.toString() === newValue.toString()) continue;
+      if (oldValue === null && newValue === null) continue;
+      if (oldValue !== null && oldValue.toString() === newValue.toString()) continue;
       const rows = getRows();
       const editedRows = handelRowChangeLog(getEditedRows(), rows, row, prop, oldValue, newValue);
       updateEditedRows(editedRows);

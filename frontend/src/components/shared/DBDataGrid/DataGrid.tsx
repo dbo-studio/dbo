@@ -25,7 +25,7 @@ export default function DataGrid() {
 
   const handleSelection = useHandleRowSelect(hotTableRef);
   const handleRowChange = useHandleRowChange();
-  const handleContextMenu = useHandleContextMenu(hotTableRef);
+  const handleContextMenu = useHandleContextMenu();
 
   const { loading, getColumns, getRows, runQuery, getEditedRows, getRemovedRows, getUnsavedRows, toggleDataFetching } =
     useDataStore();
