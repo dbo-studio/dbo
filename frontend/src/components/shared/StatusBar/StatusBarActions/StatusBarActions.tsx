@@ -1,14 +1,14 @@
 import api from '@/api';
 import { TabMode } from '@/core/enums';
-import useAPI from '@/hooks/useApi.hook';
-import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { useDataStore } from '@/store/dataStore/data.store';
-import { useTabStore } from '@/store/tabStore/tab.store';
+import useAPI from '@/hooks/useApi.hook.ts';
+import { useConnectionStore } from '@/store/connectionStore/connection.store.ts';
+import { useDataStore } from '@/store/dataStore/data.store.ts';
+import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { Box, IconButton, Stack } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import CustomIcon from '../../base/CustomIcon/CustomIcon';
-import LoadingIconButton from '../../base/LoadingIconButton/LoadingIconButton';
+import CustomIcon from '../../../base/CustomIcon/CustomIcon.tsx';
+import LoadingIconButton from '../../../base/LoadingIconButton/LoadingIconButton.tsx';
 
 export default function StatusBarActions() {
   const [searchParams, setSearchParams] = useSearchParams();

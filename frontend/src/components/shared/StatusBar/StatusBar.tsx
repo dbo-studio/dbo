@@ -1,8 +1,8 @@
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { StatusBarStyled } from './StatusBar.styled';
-import StatusBarActions from './StatusBarActions';
+import StatusBarActions from './StatusBarActions/StatusBarActions.tsx';
 import StatusBarPagination from './StatusBarPagination/StatusBarPagination';
-import StatusBarTabs from './StatusBarTabs';
+import StatusBarTabs from './StatusBarTabs/StatusBarTabs.tsx';
 
 export default function StatusBar() {
   const { getSelectedTab } = useTabStore();
