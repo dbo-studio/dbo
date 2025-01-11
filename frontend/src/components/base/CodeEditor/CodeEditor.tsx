@@ -14,7 +14,7 @@ import './helpers/languageSetup.ts';
 
 export default function CodeEditor({ autocomplete, value, onChange }: CodeEditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
-  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
   const [mount, setMount] = useState(false);
   const { isDark } = useSettingStore();
   const { runRawQuery } = useDataStore();

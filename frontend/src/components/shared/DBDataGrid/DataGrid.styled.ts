@@ -2,6 +2,9 @@ import { HotTable } from '@handsontable/react-wrapper';
 import { styled } from '@mui/material';
 
 export const DataGridStyled = styled(HotTable)(({ theme }) => ({
+  '& .handsontable': {
+    zIndex: 0
+  },
   '& .handsontable td': {
     whiteSpace: 'nowrap',
     overflow: 'hidden',

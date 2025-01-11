@@ -1,5 +1,6 @@
 import api from '@/api';
 import type { AutoCompleteRequestType } from '@/api/query/types';
+import CodeEditor from '@/components/base/CodeEditor/CodeEditor.tsx';
 import type { CodeEditorSettingType } from '@/components/base/CodeEditor/types';
 import { useWindowSize } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
@@ -7,11 +8,10 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AutoCompleteType } from '@/types';
 import { Box, useTheme } from '@mui/material';
-import { Suspense, lazy, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
+import DataGrid from '@/components/shared/DBDataGrid/DataGrid.tsx';
 
-const CodeEditor = lazy(() => import('@/components/base/CodeEditor/CodeEditor'));
-const DBDataGrid = lazy(() => import('@/components/shared/DBDataGrid/DataGrid.tsx'));
 
 export default function Query() {
   const theme = useTheme();
@@ -62,15 +62,13 @@ export default function Query() {
       <Box display={'flex'} flexDirection={'column'} height={windowSize.height}>
         <Box display={'flex'} minHeight={'0'} flex={1} borderBottom={`1px solid ${theme.palette.divider}`}>
           {autocomplete && (
-            <Suspense>
               <CodeEditor onChange={handleUpdateState} autocomplete={autocomplete} value={value} />
-            </Suspense>
           )}
         </Box>
         {autocomplete && (
-          <Suspense fallback={<Box display={'flex'} flex={1} />}>
-            <DBDataGrid />
-          </Suspense>
+          <Box display={'flex'} flex={1}>
+            <DataGrid />
+          </Box>
         )}
       </Box>
     </>
