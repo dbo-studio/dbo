@@ -2,6 +2,7 @@ import api from '@/api';
 import type { AutoCompleteRequestType } from '@/api/query/types';
 import CodeEditor from '@/components/base/CodeEditor/CodeEditor.tsx';
 import type { CodeEditorSettingType } from '@/components/base/CodeEditor/types';
+import DataGrid from '@/components/shared/DBDataGrid/DataGrid.tsx';
 import { useWindowSize } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
@@ -10,7 +11,6 @@ import type { AutoCompleteType } from '@/types';
 import { Box, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
-import DataGrid from '@/components/shared/DBDataGrid/DataGrid.tsx';
 
 
 export default function Query() {
@@ -30,10 +30,14 @@ export default function Query() {
   });
 
   useEffect(() => {
-    if (autocomplete || !currentConnection || pending) {
-      return;
-    }
-
+    if (
+      setting.schema === '' ||
+      setting.database === '' ||
+      autocomplete ||
+      !currentConnection
+      || pending
+    ) return;
+    
     getAutoComplete({
       connection_id: currentConnection.id,
       schema: setting.schema,
@@ -62,7 +66,7 @@ export default function Query() {
       <Box display={'flex'} flexDirection={'column'} height={windowSize.height}>
         <Box display={'flex'} minHeight={'0'} flex={1} borderBottom={`1px solid ${theme.palette.divider}`}>
           {autocomplete && (
-              <CodeEditor onChange={handleUpdateState} autocomplete={autocomplete} value={value} />
+            <CodeEditor onChange={handleUpdateState} autocomplete={autocomplete} value={value} />
           )}
         </Box>
         {autocomplete && (
