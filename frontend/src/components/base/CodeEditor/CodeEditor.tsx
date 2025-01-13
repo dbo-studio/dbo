@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from 'react';
 import { changeMetaProviderSetting } from './helpers/dbMetaProvider.ts';
 import { editorConfig } from './helpers/editorConfig.ts';
 import './helpers/languageSetup.ts';
+import { Box } from '@mui/material';
 
 export default function CodeEditor({ autocomplete, value, onChange }: CodeEditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -58,7 +59,6 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
     if (editorRef.current) {
       editorRef.current.setValue(getQuery());
     }
-    //todo: check if works
   }, [getSelectedTab()?.id]);
 
   useEffect(() => {
@@ -74,13 +74,19 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
   }, [autocomplete]);
 
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         height: '100%',
         width: '100%',
         visibility: mount ? 'visible' : 'hidden',
-        userSelect: 'all',
-        WebkitUserSelect: 'all'
+        userSelect: 'text',
+        WebkitUserSelect: 'text',
+        msUserSelect: 'text',
+        '& *': {
+          userSelect: 'text',
+          WebkitUserSelect: 'text',
+          msUserSelect: 'text'
+        }
       }}
       ref={hostRef}
     />

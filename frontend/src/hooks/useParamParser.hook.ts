@@ -40,7 +40,6 @@ export const useParamParser = () => {
     }
 
     if (!connectionList || connectionList.length === 0) {
-      console.log('adasd');
       reset();
       return;
     }
