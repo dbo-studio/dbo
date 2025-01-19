@@ -1,9 +1,9 @@
 import FieldInput from '@/components/base/FieldInput/FieldInput.tsx';
 import Search from '@/components/base/Search/Search';
-import { useDataStore } from '@/store/dataStore/data.store';
-import type { RowType } from '@/types';
-import { Box } from '@mui/material';
-import { useEffect, useState } from 'react';
+import {useDataStore} from '@/store/dataStore/data.store';
+import type {RowType} from '@/types';
+import {Box} from '@mui/material';
+import {useEffect, useState} from 'react';
 
 export default function DBFields() {
   const { getColumns, getSelectedRows } = useDataStore();
