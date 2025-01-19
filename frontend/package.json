@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "test": "vitest",
     "coverage": "vitest run --coverage",
-    "format": "biome format src --write"
+    "format": "biome format --write --config-path=./biome.json src"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",

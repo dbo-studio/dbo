@@ -46,7 +46,10 @@ export const useParamParser = () => {
 
     if (!tabId || tabId === '') {
       if (getSelectedTab()) {
-        navigate({ route: getSelectedTab()?.mode, tabId: getSelectedTab()?.id });
+        navigate({
+          route: getSelectedTab()?.mode,
+          tabId: getSelectedTab()?.id
+        });
         return;
       }
 

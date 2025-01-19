@@ -2,7 +2,7 @@ import api from '@/api';
 import useAPI from '@/hooks/useApi.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { ConnectionType } from '@/types';
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 
 import type { updateConnectionType } from '@/api/connection/types';
@@ -72,7 +72,8 @@ export default function Connections() {
       updateLoading('finished');
 
       navigate({
-        connectionId: c.id
+        connectionId: c.id,
+        tabId: ''
       });
     } catch (error) {
       updateLoading('error');
