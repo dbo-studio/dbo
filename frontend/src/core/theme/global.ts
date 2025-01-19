@@ -8,6 +8,9 @@ export const globalStyles = (theme: Theme) => {
       WebkitUserSelect: 'none', // For Safari
       msUserSelect: 'none' // For IE/Edge
     },
+    html: {
+      overscrollBehavior: 'none'
+    },
     '& .htContextMenu td': {
       background: theme.palette.background.default
     },
