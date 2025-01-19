@@ -13,21 +13,17 @@ export default function DBFields() {
 
   useEffect(() => {
     const rows = getSelectedRows();
-    if (rows.length === 0) {
-      return;
-    }
+    if (rows.length === 0) return;
 
     const row = rows[rows.length - 1].data;
     if (row !== selectedRow) {
       setSelectedRow(row);
-      generateFields(search);
     }
   }, [getSelectedRows()]);
 
-  const handleSearch = (value: string) => {
-    setSearch(value);
-    generateFields(value);
-  };
+  useEffect(() => {
+    generateFields(search);
+  }, [search, selectedRow]);
 
   function generateFields(value: string) {
     if (!selectedRow) return;
@@ -50,7 +46,7 @@ export default function DBFields() {
 
   return (
     <>
-      <Search onChange={handleSearch} />
+      <Search onChange={(value: string) => setSearch(value)} />
       {fields.length > 0 && (
         <Box mt={1} data-testid='db-field'>
           {fields.map(

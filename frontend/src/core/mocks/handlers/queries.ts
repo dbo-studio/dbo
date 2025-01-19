@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw';
 const queriesHandler = [
   http.post('/api/query/run', async () => {
     return HttpResponse.json({
-      data: queryModel,
+      data: structureModel,
       message: ''
     });
   }),
@@ -19,7 +19,7 @@ const queriesHandler = [
   }),
   http.post('/api/query/raw', () => {
     return HttpResponse.json({
-      data: queryModel,
+      data: structureModel,
       message: ''
     });
   }),
@@ -102,9 +102,9 @@ const queriesHandler = [
   })
 ];
 
-const data = [];
+const queryModel = [];
 for (let i = 0; i < 3; i++) {
-  data.push({
+  queryModel.push({
     authors: faker.person.fullName(),
     datasrc_id: faker.number.int(),
     dbo_index: i,
@@ -118,9 +118,9 @@ for (let i = 0; i < 3; i++) {
   });
 }
 
-const queryModel = {
+const structureModel = {
   query: 'SELECT * FROM "data_src" LIMIT 100 OFFSET 0;',
-  data: data,
+  data: queryModel,
   structures: [
     {
       name: 'datasrc_id',
@@ -224,4 +224,4 @@ const queryModel = {
   ]
 };
 
-export { queriesHandler, queryModel };
+export { queriesHandler, structureModel, queryModel };
