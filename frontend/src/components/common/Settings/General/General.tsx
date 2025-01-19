@@ -1,10 +1,13 @@
 import locales from '@/locales';
-import type { EventFor } from '@/types';
-import { Box, Button, Divider, Switch, Typography } from '@mui/material';
+import {useSettingStore} from '@/store/settingStore/setting.store.ts';
+import {Box, Divider, Switch, Typography} from '@mui/material';
+import type * as React from 'react';
 
 export default function General() {
-  const handleChangeDebugMode = (event: EventFor<'input', 'onChange'>) => {
-    console.log(event.target.checked);
+  const { updateDebug, debug } = useSettingStore();
+
+  const handleChangeDebugMode = (event: React.ChangeEvent<HTMLInputElement>) => {
+    updateDebug(event?.target?.checked);
   };
 
   return (
@@ -25,43 +28,43 @@ export default function General() {
             </Typography>
           </Box>
 
-          <Switch onChange={handleChangeDebugMode} />
+          <Switch checked={debug} onChange={handleChangeDebugMode} />
         </Box>
-        <Divider />
+        {/*<Divider />*/}
       </Box>
 
-      <Box mt={1}>
-        <Box display={'flex'} mb={1} flexDirection={'row'} alignItems={'center'} justifyContent={'space-between'}>
-          <Box>
-            <Typography color={'textText'} variant={'subtitle2'}>
-              Show logs
-            </Typography>
-          </Box>
+      {/*<Box mt={1}>*/}
+      {/*  <Box display={'flex'} mb={1} flexDirection={'row'} alignItems={'center'} justifyContent={'space-between'}>*/}
+      {/*    <Box>*/}
+      {/*      <Typography color={'textText'} variant={'subtitle2'}>*/}
+      {/*        Show logs*/}
+      {/*      </Typography>*/}
+      {/*    </Box>*/}
 
-          <Button variant={'outlined'} size={'small'}>
-            Open
-          </Button>
-        </Box>
-        <Divider />
-      </Box>
+      {/*    <Button variant={'outlined'} size={'small'}>*/}
+      {/*      Open*/}
+      {/*    </Button>*/}
+      {/*  </Box>*/}
+      {/*  <Divider />*/}
+      {/*</Box>*/}
 
-      <Box mt={1}>
-        <Box display={'flex'} mb={1} flexDirection={'row'} alignItems={'center'} justifyContent={'space-between'}>
-          <Box>
-            <Typography color={'textTitle'} variant={'subtitle2'}>
-              Reload
-            </Typography>
-            <Typography color={'textText'} variant={'caption'}>
-              Reload DBO core
-            </Typography>
-          </Box>
+      {/*<Box mt={1}>*/}
+      {/*  <Box display={'flex'} mb={1} flexDirection={'row'} alignItems={'center'} justifyContent={'space-between'}>*/}
+      {/*    <Box>*/}
+      {/*      <Typography color={'textTitle'} variant={'subtitle2'}>*/}
+      {/*        Reload*/}
+      {/*      </Typography>*/}
+      {/*      <Typography color={'textText'} variant={'caption'}>*/}
+      {/*        Reload DBO core*/}
+      {/*      </Typography>*/}
+      {/*    </Box>*/}
 
-          <Button variant={'outlined'} color={'error'} size={'small'}>
-            Reload
-          </Button>
-        </Box>
-        <Divider />
-      </Box>
+      {/*    <Button variant={'outlined'} color={'error'} size={'small'}>*/}
+      {/*      Reload*/}
+      {/*    </Button>*/}
+      {/*  </Box>*/}
+      {/*  <Divider />*/}
+      {/*</Box>*/}
     </Box>
   );
 }

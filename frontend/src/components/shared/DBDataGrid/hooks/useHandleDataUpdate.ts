@@ -5,15 +5,8 @@ import type { HotTableRef } from '@handsontable/react-wrapper';
 import { type RefObject, useEffect } from 'react';
 
 export const useHandleDataUpdate = (hotTableRef: RefObject<HotTableRef | null>) => {
-  const {
-    getColumns,
-    getRows,
-    runQuery,
-    getEditedRows,
-    getRemovedRows,
-    getUnsavedRows,
-    toggleDataFetching
-  } = useDataStore();
+  const { getColumns, getRows, runQuery, getEditedRows, getRemovedRows, getUnsavedRows, toggleDataFetching } =
+    useDataStore();
   const { getSelectedTab } = useTabStore();
 
   useEffect(() => {

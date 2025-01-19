@@ -1,7 +1,7 @@
-import { constants } from '@/core/constants';
-import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
-import type { SettingStore, SidebarType } from './types';
+import {constants} from '@/core/constants';
+import {create} from 'zustand';
+import {devtools, persist} from 'zustand/middleware';
+import type {SettingStore, SidebarType} from './types';
 
 type SettingState = SettingStore;
 
@@ -16,6 +16,10 @@ export const useSettingStore = create<SettingState>()(
           showRight: true
         },
         isDark: false,
+        debug: false,
+        updateDebug: (debug: boolean) => {
+          set({ debug });
+        },
         updateSidebar: (sidebar: Partial<SidebarType>) => {
           const oldSidebar = get().sidebar;
           const newSidebar = { ...oldSidebar, ...sidebar };

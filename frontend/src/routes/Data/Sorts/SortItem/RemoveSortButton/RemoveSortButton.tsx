@@ -6,15 +6,15 @@ import type { RemoveSortButtonProps } from '../../types.ts';
 
 export default function RemoveSortButton({ sort }: RemoveSortButtonProps) {
   const { removeSort } = useTabStore();
-  const {runQuery} = useDataStore()
+  const { runQuery } = useDataStore();
 
   const handleRemoveSort = () => {
     removeSort(sort);
-    if (sort.isActive){
-      runQuery().then()
+    if (sort.isActive) {
+      runQuery().then();
     }
   };
-  
+
   return (
     <IconButton className='remove-sort-btn' onClick={handleRemoveSort}>
       <CustomIcon type='mines' size='xs' />

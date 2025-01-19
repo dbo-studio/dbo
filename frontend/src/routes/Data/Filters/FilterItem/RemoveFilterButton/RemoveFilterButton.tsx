@@ -10,14 +10,14 @@ export default function RemoveFilterButton({ filter }: RemoveFilterButtonProps) 
 
   const handleRemoveFilter = () => {
     removeFilter(filter);
-    if (filter.isActive){
-      runQuery().then()
+    if (filter.isActive) {
+      runQuery().then();
     }
   };
 
   return (
-    <IconButton className="remove-filter-btn" onClick={handleRemoveFilter}>
-      <CustomIcon type="mines" size="xs" />
+    <IconButton className='remove-filter-btn' onClick={handleRemoveFilter}>
+      <CustomIcon type='mines' size='xs' />
     </IconButton>
   );
 }

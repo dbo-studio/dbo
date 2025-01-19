@@ -1,23 +1,22 @@
 import api from '@/api';
-import type { AutoCompleteRequestType } from '@/api/query/types';
+import type {AutoCompleteRequestType} from '@/api/query/types';
 import CodeEditor from '@/components/base/CodeEditor/CodeEditor.tsx';
-import type { CodeEditorSettingType } from '@/components/base/CodeEditor/types';
+import type {CodeEditorSettingType} from '@/components/base/CodeEditor/types';
 import DataGrid from '@/components/shared/DBDataGrid/DataGrid.tsx';
-import { useWindowSize } from '@/hooks';
+import {useWindowSize} from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
-import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { useTabStore } from '@/store/tabStore/tab.store';
-import type { AutoCompleteType } from '@/types';
-import { Box, useTheme } from '@mui/material';
-import { useEffect, useState } from 'react';
+import {useConnectionStore} from '@/store/connectionStore/connection.store';
+import {useTabStore} from '@/store/tabStore/tab.store';
+import type {AutoCompleteType} from '@/types';
+import {Box, useTheme} from '@mui/material';
+import {useEffect, useState} from 'react';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
-
 
 export default function Query() {
   const theme = useTheme();
   const { currentConnection } = useConnectionStore();
   const windowSize = useWindowSize();
-  const { getQuery, updateQuery } = useTabStore();
+  const { getQuery, updateQuery, getSelectedTab } = useTabStore();
   const [autocomplete, setAutocomplete] = useState<AutoCompleteType | null>(null);
   const [value, setValue] = useState('');
   const [setting, setSetting] = useState<CodeEditorSettingType>({
@@ -30,14 +29,8 @@ export default function Query() {
   });
 
   useEffect(() => {
-    if (
-      setting.schema === '' ||
-      setting.database === '' ||
-      autocomplete ||
-      !currentConnection
-      || pending
-    ) return;
-    
+    if (setting.schema === '' || setting.database === '' || autocomplete || !currentConnection || pending) return;
+
     getAutoComplete({
       connection_id: currentConnection.id,
       schema: setting.schema,
@@ -50,14 +43,14 @@ export default function Query() {
 
   useEffect(() => {
     handleChangeValue();
-  }, []);
+  }, [getSelectedTab()?.id]);
 
   const handleChangeValue = () => {
     setValue(getQuery());
   };
 
-  const handleUpdateState = (value: string) => {
-    updateQuery(value);
+  const handleUpdateState = (query: string) => {
+    updateQuery(query);
   };
 
   return (
@@ -65,9 +58,7 @@ export default function Query() {
       <QueryEditorActionBar onFormat={() => handleChangeValue()} onChange={setSetting} />
       <Box display={'flex'} flexDirection={'column'} height={windowSize.height}>
         <Box display={'flex'} minHeight={'0'} flex={1} borderBottom={`1px solid ${theme.palette.divider}`}>
-          {autocomplete && (
-            <CodeEditor onChange={handleUpdateState} autocomplete={autocomplete} value={value} />
-          )}
+          {autocomplete && <CodeEditor onChange={handleUpdateState} autocomplete={autocomplete} value={value} />}
         </Box>
         {autocomplete && (
           <Box display={'flex'} flex={1}>

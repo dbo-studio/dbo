@@ -1,8 +1,8 @@
-import { tools } from '@/core/utils';
-import { useUUID } from '@/hooks';
-import { useEffect, useMemo, useState } from 'react';
-import type { MenuPanelProps } from '../types';
-import { MenuPanelStyled } from './MenuPanel.styled';
+import {tools} from '@/core/utils';
+import {useUUID} from '@/hooks';
+import {useEffect, useMemo, useState} from 'react';
+import type {MenuPanelProps} from '../types';
+import {MenuPanelStyled} from './MenuPanel.styled';
 import MenuPanelItem from './MenuPanelItem/MenuPanelItem';
 
 export default function MenuPanel({ tabs, onChange }: MenuPanelProps) {
@@ -17,7 +17,7 @@ export default function MenuPanel({ tabs, onChange }: MenuPanelProps) {
   useEffect(() => {
     tools
       .isTauri()
-      .then((e) => setIsDesktop(e))
+      .then((e) => e ?? setIsDesktop(e))
       .catch();
     onChange(selectedTabContent);
   }, [selectedTabId]);

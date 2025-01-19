@@ -56,7 +56,7 @@ export default function StatusBarTabs() {
   }, [getSelectedTab()]);
 
   return (
-    <Box className={"tabs"}>
+    <Box className={'tabs'}>
       <Tabs value={selectedTabId} onChange={onSelectedTabChanged}>
         {tabs.map((tabItem, index) => (
           <Tab

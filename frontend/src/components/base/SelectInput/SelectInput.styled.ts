@@ -25,7 +25,7 @@ export const SelectInputStyles = (
     ...styles,
     padding: '0px 2px',
     backgroundColor: theme.palette.background.default,
-    cursor: 'pointer',
+    cursor: 'pointer'
   }),
   option: (_, { isFocused }) => ({
     padding: '4px 8px',
