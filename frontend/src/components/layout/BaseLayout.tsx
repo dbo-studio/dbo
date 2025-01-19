@@ -8,6 +8,7 @@ export default function BaseLayout() {
   const { debug } = useSettingStore();
 
   useEffect(() => {
+    console.log('asdqs');
     import('eruda').then((eruda) => {
       if (debug) {
         eruda.default.init();

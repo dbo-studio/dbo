@@ -49,7 +49,6 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
   }, [getSelectedTab()?.id]);
 
   useEffect(() => {
-    console.log(' ~ CodeEditor.tsx: ~ value:', value);
     if (editorRef.current) {
       editorRef.current.setValue(value);
     }

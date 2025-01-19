@@ -1,33 +1,44 @@
-import { transformRunQuery } from '@/api/query/transformers.ts';
-import { queryModel } from '@/core/mocks/handlers/queries.ts';
+import {transformRunQuery} from '@/api/query/transformers.ts';
+import {queryModel} from '@/core/mocks/handlers/queries.ts';
 import * as data from '@/store/dataStore/data.store.ts';
-import { screen } from '@testing-library/dom';
+import {screen} from '@testing-library/dom';
 import '@testing-library/jest-dom';
-import { render } from '@testing-library/react';
+import {render} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { BrowserRouter } from 'react-router-dom';
-import { describe, expect, test, vi } from 'vitest';
+import {MemoryRouter} from 'react-router-dom';
+import {describe, expect, test, vi} from 'vitest';
 import DBFields from './DBFields';
 
 describe('DBField.tsx', () => {
   const spy = vi.spyOn(data, 'useDataStore');
   const mockGetHighlightedRow = vi.fn();
   const mockGetColumns = vi.fn();
+  const mockSelectedRows = vi.fn();
 
   beforeEach(() => {
     spy.mockReturnValue({
       getHighlightedRow: mockGetHighlightedRow,
-      getColumns: mockGetColumns
+      getColumns: mockGetColumns,
+      getSelectedRows: mockSelectedRows
     });
   });
 
   test('should render the the db fields', () => {
     mockGetHighlightedRow.mockReturnValue([]);
     mockGetColumns.mockReturnValue([]);
+    mockSelectedRows.mockReturnValue([
+      {
+        index: 1,
+        data: {
+          authors: 'Linda Wolff'
+        }
+      }
+    ]);
+
     render(
-      <BrowserRouter>
+      <MemoryRouter>
         <DBFields />
-      </BrowserRouter>
+      </MemoryRouter>
     );
     expect(screen.getByTestId('db-field')).not.toBeNull();
   });
@@ -37,9 +48,9 @@ describe('DBField.tsx', () => {
     mockGetHighlightedRow.mockReturnValue(data.data[0]);
     mockGetColumns.mockReturnValue(data.structures);
     render(
-      <BrowserRouter>
+      <MemoryRouter>
         <DBFields />
-      </BrowserRouter>
+      </MemoryRouter>
     );
 
     expect(screen.getByText('datasrc_id')).not.toBeNull();
@@ -50,9 +61,9 @@ describe('DBField.tsx', () => {
     mockGetHighlightedRow.mockReturnValue(data.data[0]);
     mockGetColumns.mockReturnValue(data.structures);
     render(
-      <BrowserRouter>
+      <MemoryRouter>
         <DBFields />
-      </BrowserRouter>
+      </MemoryRouter>
     );
 
     const inputElement = await screen.findAllByPlaceholderText('Search');
@@ -68,9 +79,9 @@ describe('DBField.tsx', () => {
     mockGetHighlightedRow.mockReturnValue(null);
     mockGetColumns.mockReturnValue(data.structures);
     render(
-      <BrowserRouter>
+      <MemoryRouter>
         <DBFields />
-      </BrowserRouter>
+      </MemoryRouter>
     );
 
     expect(screen.queryByTestId('db-field')).toBeNull();
@@ -79,14 +90,15 @@ describe('DBField.tsx', () => {
   test('should skip wrong property of row', async () => {
     const data = transformRunQuery(queryModel);
     const columns = data.structures;
+    // @ts-ignore
     columns[0].test_fake_row = 'test';
 
     mockGetHighlightedRow.mockReturnValue(data.data[0]);
     mockGetColumns.mockReturnValue(columns);
     render(
-      <BrowserRouter>
+      <MemoryRouter>
         <DBFields />
-      </BrowserRouter>
+      </MemoryRouter>
     );
 
     expect(screen.queryByText('test_fake_row')).toBeNull();

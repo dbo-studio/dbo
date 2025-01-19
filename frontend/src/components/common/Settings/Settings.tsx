@@ -14,7 +14,7 @@ const tabs: MenuPanelTabType[] = [
   {
     id: 0,
     name: locales.general,
-    onlyDesktop: true,
+    onlyDesktop: false,
     icon: 'settings',
     content: <General />
   },
