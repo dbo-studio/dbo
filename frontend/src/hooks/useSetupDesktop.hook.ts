@@ -1,8 +1,8 @@
-import {changeUrl} from '@/core/services/api/intialize';
-import {tools} from '@/core/utils';
-import {useTabStore} from '@/store/tabStore/tab.store.ts';
-import {invoke} from '@tauri-apps/api/core';
-import {useEffect, useState} from 'react';
+import { changeUrl } from '@/core/services/api/intialize';
+import { tools } from '@/core/utils';
+import { useTabStore } from '@/store/tabStore/tab.store.ts';
+import { invoke } from '@tauri-apps/api/core';
+import { useEffect, useState } from 'react';
 
 export const useSetupDesktop = () => {
   const [loaded, setLoaded] = useState(false);

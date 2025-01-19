@@ -1,6 +1,6 @@
-import {tools} from '@/core/utils';
-import type {StateCreator} from 'zustand';
-import type {TabQuerySlice, TabStore} from '../types';
+import { tools } from '@/core/utils';
+import type { StateCreator } from 'zustand';
+import type { TabQuerySlice, TabStore } from '../types';
 
 export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [], TabQuerySlice> = (_, get) => ({
   getQuery: (): string => {

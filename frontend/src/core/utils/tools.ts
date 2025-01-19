@@ -1,5 +1,5 @@
-import {getTauriVersion} from '@tauri-apps/api/app';
-import {isNumber, isObject} from '.';
+import { getTauriVersion } from '@tauri-apps/api/app';
+import { isNumber, isObject } from '.';
 
 export const tools = {
   screenMaxHeight: (asNumber?: boolean): string | number => {

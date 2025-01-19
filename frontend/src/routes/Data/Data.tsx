@@ -1,9 +1,9 @@
 import DataGrid from '@/components/shared/DBDataGrid/DataGrid.tsx';
 import StatusBar from '@/components/shared/StatusBar/StatusBar';
 import Sorts from '@/routes/Data/Sorts/Sorts.tsx';
-import {useTabStore} from '@/store/tabStore/tab.store';
-import {Box} from '@mui/material';
-import type {JSX} from 'react';
+import { useTabStore } from '@/store/tabStore/tab.store';
+import { Box } from '@mui/material';
+import type { JSX } from 'react';
 import ActionBar from './ActionBar/ActionBar';
 import Columns from './Columns/Columns';
 import Filters from './Filters/Filters';

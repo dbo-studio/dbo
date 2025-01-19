@@ -1,18 +1,18 @@
 import api from '@/api';
 import useAPI from '@/hooks/useApi.hook';
-import {useConnectionStore} from '@/store/connectionStore/connection.store';
-import type {ConnectionType} from '@/types';
-import {lazy, Suspense, useEffect, useState} from 'react';
-import {v4 as uuid} from 'uuid';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import type { ConnectionType } from '@/types';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { v4 as uuid } from 'uuid';
 
-import type {updateConnectionType} from '@/api/connection/types';
+import type { updateConnectionType } from '@/api/connection/types';
 import useNavigate from '@/hooks/useNavigate.hook';
 import axios from 'axios';
-import {useSearchParams} from 'react-router-dom';
-import {toast} from 'sonner';
+import { useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
-import {ConnectionsStyled} from './Connections.styled';
-import {EmptySpaceStyle} from './EmptySpace.styled';
+import { ConnectionsStyled } from './Connections.styled';
+import { EmptySpaceStyle } from './EmptySpace.styled';
 
 const AddConnection = lazy(() => import('../AddConnection/AddConnection'));
 const EditConnection = lazy(() => import('../EditConnection/EditConnection'));

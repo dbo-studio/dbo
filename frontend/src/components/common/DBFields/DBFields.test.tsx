@@ -1,12 +1,12 @@
-import {transformRunQuery} from '@/api/query/transformers.ts';
-import {queryModel} from '@/core/mocks/handlers/queries.ts';
+import { transformRunQuery } from '@/api/query/transformers.ts';
+import { queryModel } from '@/core/mocks/handlers/queries.ts';
 import * as data from '@/store/dataStore/data.store.ts';
-import {screen} from '@testing-library/dom';
+import { screen } from '@testing-library/dom';
 import '@testing-library/jest-dom';
-import {render} from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {MemoryRouter} from 'react-router-dom';
-import {describe, expect, test, vi} from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
+import { describe, expect, test, vi } from 'vitest';
 import DBFields from './DBFields';
 
 describe('DBField.tsx', () => {

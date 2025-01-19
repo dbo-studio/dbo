@@ -1,14 +1,14 @@
 import Modal from '@/components/base/Modal/Modal';
 import General from '@/components/common/Settings/General/General.tsx';
 import locales from '@/locales';
-import {Grid2, useTheme} from '@mui/material';
-import {type JSX, useState} from 'react';
-import {useSearchParams} from 'react-router-dom';
+import { Grid2, useTheme } from '@mui/material';
+import { type JSX, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AboutPanel from './AboutPanel/AboutPanel';
 import MenuPanel from './MenuPanel/MenuPanel';
 import ShortcutPanel from './ShortcutPanel/ShortcutPanel';
 import ThemePanel from './ThemePanel/ThemePanel';
-import type {MenuPanelTabType} from './types';
+import type { MenuPanelTabType } from './types';
 
 const tabs: MenuPanelTabType[] = [
   {

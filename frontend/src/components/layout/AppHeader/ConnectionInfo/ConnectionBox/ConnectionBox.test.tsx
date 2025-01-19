@@ -1,12 +1,12 @@
-import {transformConnectionDetail} from '@/api/connection/transformers.ts';
-import {connectionDetailModel} from '@/core/mocks/handlers/connections.ts';
+import { transformConnectionDetail } from '@/api/connection/transformers.ts';
+import { connectionDetailModel } from '@/core/mocks/handlers/connections.ts';
 import locales from '@/locales';
 import * as conn from '@/store/connectionStore/connection.store.ts';
-import {screen} from '@testing-library/dom';
-import {render} from '@testing-library/react';
+import { screen } from '@testing-library/dom';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {MemoryRouter} from 'react-router-dom';
-import {describe, expect, test, vi} from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
+import { describe, expect, test, vi } from 'vitest';
 import ConnectionBox from './ConnectionBox.tsx';
 
 describe('ConnectionBox.tsx', () => {

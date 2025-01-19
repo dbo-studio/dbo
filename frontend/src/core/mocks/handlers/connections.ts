@@ -1,4 +1,4 @@
-import {http, HttpResponse} from 'msw';
+import { http, HttpResponse } from 'msw';
 
 const connectionHandler = [
   http.get('/api/connections', async () => {

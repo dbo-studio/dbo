@@ -1,6 +1,6 @@
 import locales from '@/locales';
-import {useSettingStore} from '@/store/settingStore/setting.store.ts';
-import {Box, Divider, Switch, Typography} from '@mui/material';
+import { useSettingStore } from '@/store/settingStore/setting.store.ts';
+import { Box, Divider, Switch, Typography } from '@mui/material';
 import type * as React from 'react';
 
 export default function General() {
