@@ -32,7 +32,11 @@ export const tools = {
     return /Mac/i.test(userAgent) || (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream);
   },
   isTauri: async () => {
-    return (await getTauriVersion()) !== null;
+    try {
+      return (await getTauriVersion()) !== null;
+    } catch (e) {
+      return false;
+    }
   },
   minifySql(value: string): string {
     if (!value.length) {

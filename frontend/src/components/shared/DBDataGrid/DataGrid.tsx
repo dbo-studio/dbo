@@ -3,7 +3,6 @@ import { HotColumn, type HotTableRef } from '@handsontable/react-wrapper';
 import 'handsontable/dist/handsontable.min.css';
 
 import { DataGridStyled } from '@/components/shared/DBDataGrid/DataGrid.styled.ts';
-import { useHandleContextMenu } from '@/components/shared/DBDataGrid/hooks/useHandleContextMenu.ts';
 import { useHandleDataUpdate } from '@/components/shared/DBDataGrid/hooks/useHandleDataUpdate.ts';
 import { useHandleDeselect } from '@/components/shared/DBDataGrid/hooks/useHandleDeselect.ts';
 import { useHandleRowChange } from '@/components/shared/DBDataGrid/hooks/useHandleRowChange.ts';
@@ -27,8 +26,7 @@ export default function DataGrid() {
 
   const handleSelection = useHandleRowSelect(hotTableRef);
   const handleRowChange = useHandleRowChange();
-  const handleContextMenu = useHandleContextMenu();
-
+  // const handleContextMenu = useHandleContextMenu();
 
   if (loading) {
     return (
@@ -37,7 +35,6 @@ export default function DataGrid() {
       </Box>
     );
   }
-
 
   return (
     <DataGridStyled
@@ -52,16 +49,16 @@ export default function DataGrid() {
       selectionMode={'multiple'}
       startRows={0}
       startCols={0}
-      height="100%"
-      width="100%"
+      height='100%'
+      width='100%'
       manualColumnResize={true}
       outsideClickDeselects={false}
       minSpareRows={0}
-      contextMenu={handleContextMenu}
+      // contextMenu={handleContextMenu}
       afterSelectionEnd={handleSelection}
       afterChange={handleRowChange}
-      licenseKey="non-commercial-and-evaluation"
-      modifyColWidth={(width) => width > 400 ?  400 : width}
+      licenseKey='non-commercial-and-evaluation'
+      modifyColWidth={(width) => (width > 400 ? 400 : width)}
       className={'handsontable'}
       cells={() => {
         return { renderer: 'handleRowStyle' };

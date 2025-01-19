@@ -11,11 +11,11 @@ export const useHandleContextMenu = (): Settings => {
     items: {
       quick_look: {
         name: 'Quick look editor',
-        callback: (core: Core, key: string, selection: Selection[], clickEvent: MouseEvent):void => {
-          console.log("=>(useHandleContextMenu.ts:15) clickEvent", clickEvent);
-          console.log("=>(useHandleContextMenu.ts:15) selection", selection);
-          console.log("=>(useHandleContextMenu.ts:15) key", key);
-          console.log("=>(useHandleContextMenu.ts:15) core", core);
+        callback: (core: Core, key: string, selection: Selection[], clickEvent: MouseEvent): void => {
+          console.log('=>(useHandleContextMenu.ts:15) clickEvent', clickEvent);
+          console.log('=>(useHandleContextMenu.ts:15) selection', selection);
+          console.log('=>(useHandleContextMenu.ts:15) key', key);
+          console.log('=>(useHandleContextMenu.ts:15) core', core);
         }
       },
       // sp1: ContextMenu.SEPARATOR,
@@ -35,59 +35,59 @@ export const useHandleContextMenu = (): Settings => {
             {
               key: 'set_value:empty',
               name: 'Empty',
-              callback: (core: Core, key: string, selection: Selection[], clickEvent: MouseEvent):void => {
-                console.log("=>(useHandleContextMenu.ts:15) clickEvent", clickEvent);
-                console.log("=>(useHandleContextMenu.ts:15) selection", selection);
-                console.log("=>(useHandleContextMenu.ts:15) key", key);
-                console.log("=>(useHandleContextMenu.ts:15) core", core);
+              callback: (core: Core, key: string, selection: Selection[], clickEvent: MouseEvent): void => {
+                console.log('=>(useHandleContextMenu.ts:15) clickEvent', clickEvent);
+                console.log('=>(useHandleContextMenu.ts:15) selection', selection);
+                console.log('=>(useHandleContextMenu.ts:15) key', key);
+                console.log('=>(useHandleContextMenu.ts:15) core', core);
               }
             },
             {
               key: 'set_value:null',
               name: 'Null',
-              callback: (core: Core, key: string, selection: Selection[], clickEvent: MouseEvent):void => {
-                console.log("=>(useHandleContextMenu.ts:15) clickEvent", clickEvent);
-                console.log("=>(useHandleContextMenu.ts:15) selection", selection);
-                console.log("=>(useHandleContextMenu.ts:15) key", key);
-                console.log("=>(useHandleContextMenu.ts:15) core", core);
+              callback: (core: Core, key: string, selection: Selection[], clickEvent: MouseEvent): void => {
+                console.log('=>(useHandleContextMenu.ts:15) clickEvent', clickEvent);
+                console.log('=>(useHandleContextMenu.ts:15) selection', selection);
+                console.log('=>(useHandleContextMenu.ts:15) key', key);
+                console.log('=>(useHandleContextMenu.ts:15) core', core);
               }
             },
             {
               key: 'set_value:default',
               name: 'Default',
-              callback: (core: Core, key: string, selection: Selection[], clickEvent: MouseEvent):void => {
-                console.log("=>(useHandleContextMenu.ts:15) clickEvent", clickEvent);
-                console.log("=>(useHandleContextMenu.ts:15) selection", selection);
-                console.log("=>(useHandleContextMenu.ts:15) key", key);
-                console.log("=>(useHandleContextMenu.ts:15) core", core);
+              callback: (core: Core, key: string, selection: Selection[], clickEvent: MouseEvent): void => {
+                console.log('=>(useHandleContextMenu.ts:15) clickEvent', clickEvent);
+                console.log('=>(useHandleContextMenu.ts:15) selection', selection);
+                console.log('=>(useHandleContextMenu.ts:15) key', key);
+                console.log('=>(useHandleContextMenu.ts:15) core', core);
               }
             }
           ]
         }
-      },
-    //   sp3: ContextMenu.SEPARATOR,
-    //   copy: {
-    //     name: 'Copy',
-    //     callback: () => {}
-    //   },
-    //   copy_sell_value: {
-    //     name: 'Copy sell value',
-    //     callback: () => {}
-    //   },
-    //   copy_row_as: {
-    //     name: 'Copy row as',
-    //     callback: () => {}
-    //   },
-    //   sp4: ContextMenu.SEPARATOR,
-    //   quick_filter: {
-    //     name: 'Quick filter',
-    //     callback: () => {}
-    //   },
-    //   sp5: ContextMenu.SEPARATOR,
-    //   delete: {
-    //     name: 'Delete',
-    //     callback: () => {}
-    //   }
+      }
+      //   sp3: ContextMenu.SEPARATOR,
+      //   copy: {
+      //     name: 'Copy',
+      //     callback: () => {}
+      //   },
+      //   copy_sell_value: {
+      //     name: 'Copy sell value',
+      //     callback: () => {}
+      //   },
+      //   copy_row_as: {
+      //     name: 'Copy row as',
+      //     callback: () => {}
+      //   },
+      //   sp4: ContextMenu.SEPARATOR,
+      //   quick_filter: {
+      //     name: 'Quick filter',
+      //     callback: () => {}
+      //   },
+      //   sp5: ContextMenu.SEPARATOR,
+      //   delete: {
+      //     name: 'Delete',
+      //     callback: () => {}
+      //   }
     }
   };
 };

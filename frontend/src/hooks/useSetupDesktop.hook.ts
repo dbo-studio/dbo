@@ -11,7 +11,11 @@ export const useSetupDesktop = () => {
   useEffect(() => {
     tools
       .isTauri()
-      .then(() => {
+      .then((e) => {
+        if (!e) {
+          setLoaded(true);
+          return;
+        }
         disableMenu();
         reset();
         invoke('get_backend_host').then((response) => {

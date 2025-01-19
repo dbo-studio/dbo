@@ -1,3 +1,1 @@
-export default function QuickViewDialog(){
-
-}
+export default function QuickViewDialog() {}

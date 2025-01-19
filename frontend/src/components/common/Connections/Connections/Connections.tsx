@@ -2,7 +2,7 @@ import api from '@/api';
 import useAPI from '@/hooks/useApi.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { ConnectionType } from '@/types';
-import { Suspense, lazy, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 
 import type { updateConnectionType } from '@/api/connection/types';
@@ -23,11 +23,11 @@ export default function Connections() {
   const [loadingConnectionId, setLoadingConnectionId] = useState<number | undefined>(undefined);
   const navigate = useNavigate();
 
-  const { request: getConnectionDetail, pending: pendingGetDetail } = useAPI({
+  const { request: getConnectionDetail } = useAPI({
     apiMethod: api.connection.getConnectionDetail
   });
 
-  const { request: updateConnection } = useAPI({
+  const { request: updateConnection, pending: pendingUpdateConnection } = useAPI({
     apiMethod: api.connection.updateConnection
   });
 
@@ -63,12 +63,12 @@ export default function Connections() {
         fromCache: true
       });
 
-      updateCurrentConnection(connectionDetail);
       await updateConnection({
         id: c.id,
         is_active: true
       } as updateConnectionType);
 
+      updateCurrentConnection(connectionDetail);
       updateLoading('finished');
 
       navigate({
@@ -93,7 +93,7 @@ export default function Connections() {
       </Suspense>
       {connections?.map((c: ConnectionType) => (
         <ConnectionItem
-          loading={pendingGetDetail && loadingConnectionId === c.id}
+          loading={pendingUpdateConnection && loadingConnectionId === c.id}
           onClick={() => handleChangeCurrentConnection(c)}
           key={uuid()}
           selected={c.id === currentConnection?.id}

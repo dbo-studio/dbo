@@ -6,11 +6,11 @@ import { shortcuts } from '@/core/utils/shortcuts.ts';
 import { useShortcut } from '@/hooks/useShortcut.hook.ts';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
-import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { useEffect, useRef, useState } from 'react';
 import { changeMetaProviderSetting } from './helpers/dbMetaProvider.ts';
 import { editorConfig } from './helpers/editorConfig.ts';
 import './helpers/languageSetup.ts';
+import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { Box } from '@mui/material';
 
 export default function CodeEditor({ autocomplete, value, onChange }: CodeEditorProps) {
@@ -18,9 +18,8 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
   const [mount, setMount] = useState(false);
   const { isDark } = useSettingStore();
-  const { runRawQuery } = useDataStore();
-  const { getQuery } = useTabStore();
   const { getSelectedTab } = useTabStore();
+  const { runRawQuery } = useDataStore();
 
   useShortcut(shortcuts.runQuery, () => runRawQuery());
 
@@ -47,19 +46,13 @@ export default function CodeEditor({ autocomplete, value, onChange }: CodeEditor
     });
 
     setMount(true);
-  }, []);
+  }, [getSelectedTab()?.id]);
 
   useEffect(() => {
     if (editorRef.current) {
       editorRef.current.setValue(value);
     }
   }, [value]);
-
-  useEffect(() => {
-    if (editorRef.current) {
-      editorRef.current.setValue(getQuery());
-    }
-  }, [getSelectedTab()?.id]);
 
   useEffect(() => {
     if (editorRef.current) {

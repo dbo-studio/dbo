@@ -17,7 +17,7 @@ export default function MenuPanel({ tabs, onChange }: MenuPanelProps) {
   useEffect(() => {
     tools
       .isTauri()
-      .then((e) => setIsDesktop(e))
+      .then((e) => e ?? setIsDesktop(e))
       .catch();
     onChange(selectedTabContent);
   }, [selectedTabId]);
