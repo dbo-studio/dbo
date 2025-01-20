@@ -46,11 +46,11 @@ export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, []
         return c;
       });
 
-    get().updateColumns(columns);
+    await get().updateColumns(columns);
   },
   removeColumnsByTabId: (tabId: string) => {
     const columns = get().columns;
-    if (!columns[tabId]) {
+    if (columns[tabId]) {
       delete columns[tabId];
     }
 

@@ -25,7 +25,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       return findTab[0];
     }
 
-    let tabQuery = '';
+    let tabQuery: string;
     if (mode === TabMode.Data) {
       tabQuery = `SELECT * FROM ${table}`;
     } else {
@@ -76,7 +76,10 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       newTab = newTabs[newTabs.length - 1];
     }
 
-    get().switchTab(newTab?.id ?? null);
+    if (newTab?.id === tabId) {
+      get().switchTab(newTab?.id ?? null);
+    }
+
     get().updateTabs(newTabs);
     return newTabs.length === 0 ? undefined : newTab;
   },

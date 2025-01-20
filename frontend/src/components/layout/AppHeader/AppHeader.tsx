@@ -1,20 +1,21 @@
-import Grid from '@mui/material/Unstable_Grid2';
-import Actions from './Actions';
+import { AppHeaderStyled } from '@/components/layout/AppHeader/AppHeader.styled.ts';
+import { Grid2 } from '@mui/material';
+import Actions from './Actions/Actions.tsx';
 import ConnectionInfo from './ConnectionInfo/ConnectionInfo';
-import Leading from './Leading';
+import Leading from './Leading/Leading.tsx';
 
 export default function AppHeader() {
   return (
-    <Grid className={'app-header'} pt={1} pb={1} pr={2} pl={2} container spacing={0} justifyContent={'space-between'}>
-      <Grid md={2}>
+    <AppHeaderStyled className={'app-header'} container spacing={0} justifyContent={'space-between'}>
+      <Grid2 size={{ md: 2 }}>
         <Leading />
-      </Grid>
-      <Grid md={8}>
+      </Grid2>
+      <Grid2 size={{ md: 8 }}>
         <ConnectionInfo />
-      </Grid>
-      <Grid md={2}>
+      </Grid2>
+      <Grid2 size={{ md: 2 }}>
         <Actions />
-      </Grid>
-    </Grid>
+      </Grid2>
+    </AppHeaderStyled>
   );
 }

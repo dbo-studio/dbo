@@ -11,7 +11,7 @@ export default function useNavigate() {
   const [searchParams, setSearchParams] = useSearchParams();
   const routeNavigate = use_navigate();
 
-  const navigate = useMemo(
+  return useMemo(
     () => (route: NavigationParamsType) => {
       if (route.route === '404') {
         routeNavigate('/404');
@@ -32,7 +32,7 @@ export default function useNavigate() {
         return;
       }
 
-      if (route.tabId && route.tabId.length > 0) {
+      if (route.tabId || route.tabId === '') {
         params.tabId = route.tabId;
       }
 
@@ -44,6 +44,4 @@ export default function useNavigate() {
     },
     [searchParams, routeNavigate]
   );
-
-  return navigate;
 }

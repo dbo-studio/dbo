@@ -1,37 +1,63 @@
 import { getConnectionList } from '@/api/connection';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import axios from 'axios';
 import { useEffect } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import useNavigate from './useNavigate.hook';
 
 export const useParamParser = () => {
-  const { getTabs } = useTabStore();
+  const { getTabs, getSelectedTab } = useTabStore();
   const navigate = useNavigate();
   const location = useLocation();
 
   const [searchParams, _] = useSearchParams();
-  const { updateSelectedTab, tabs } = useTabStore();
-  const { updateCurrentConnection, updateConnections, connections } = useConnectionStore();
+  const { updateSelectedTab, tabs, reset } = useTabStore();
+  const { updateCurrentConnection, updateConnections, connections, updateLoading } = useConnectionStore();
 
   async function parseParams() {
     const tabId = searchParams.get('tabId');
     const connectionId = searchParams.get('connectionId');
     let connectionList = connections;
     if (!connectionList) {
-      connectionList = await getConnectionList();
-    }
-    updateConnections(connectionList);
-
-    if (!tabId || tabId === '') {
-      if (getTabs().length > 0) {
-        const tab = getTabs()[0];
-        navigate({ route: tab.mode, tabId: tab.id });
+      updateLoading('loading');
+      try {
+        connectionList = await getConnectionList();
+        updateConnections(connectionList);
+        updateLoading('finished');
+      } catch (e) {
+        updateLoading('error');
+        if (axios.isAxiosError(e)) {
+          toast.error(e.message);
+        }
+        console.log('🚀 ~ parseParams ~ err:', e);
       }
-      return;
     }
 
     if (!connectionId || connectionId === '') {
+      return;
+    }
+
+    if (!connectionList || connectionList.length === 0) {
+      reset();
+      return;
+    }
+
+    if (!tabId || tabId === '') {
+      if (getSelectedTab()) {
+        navigate({
+          route: getSelectedTab()?.mode,
+          tabId: getSelectedTab()?.id
+        });
+        return;
+      }
+
+      if (getTabs().length > 0) {
+        const tab = getTabs()[0];
+        navigate({ route: tab.mode, tabId: tab.id });
+        return;
+      }
       return;
     }
 
@@ -50,10 +76,12 @@ export const useParamParser = () => {
       return;
     }
 
-    updateSelectedTab(selectedTab);
+    if (!getSelectedTab() || getSelectedTab()?.id !== tabId) {
+      updateSelectedTab(selectedTab);
+    }
   }
 
   useEffect(() => {
-    parseParams();
+    parseParams().then();
   }, [location]);
 };

@@ -1,7 +1,7 @@
 import { apiHandler } from '@/core/services';
 import { isServerSide, tools } from '@/core/utils';
+import type { ArgumentType, MethodType } from '@/types';
 import { type DependencyList, useEffect, useMemo, useState } from 'react';
-import type { ArgumentType, MethodType } from '../types';
 
 interface UseAPI<T, M extends MethodType> {
   apiMethod: (data?: ArgumentType<M>) => Promise<T & { message?: string }>;

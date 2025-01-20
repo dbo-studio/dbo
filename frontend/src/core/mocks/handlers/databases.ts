@@ -1,7 +1,21 @@
 import { http, HttpResponse } from 'msw';
 
 const databasesHandler = [
-  http.get('/api/databases/metadata', () => {
+  http.post('/api/databases', async () => {
+    return HttpResponse.json({
+      data: {},
+      message: ''
+    });
+  }),
+
+  http.delete('/api/databases', () => {
+    return HttpResponse.json({
+      data: '',
+      message: ''
+    });
+  }),
+
+  http.get('/api/databases/metadata', async () => {
     return HttpResponse.json({
       data: {
         templates: ['postgres', 'default', 'template1', 'template0'],
@@ -103,8 +117,8 @@ const databasesHandler = [
           'txid_snapshot',
           'uuid',
           'varbit',
-          'varchar',
-          'xml'
+          'xml',
+          'character varying'
         ]
       },
       message: ''

@@ -1,6 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { constants } from '@/core/constants';
-import { tools } from '@/core/utils';
 import locales from '@/locales';
 import { Box, Typography, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
@@ -8,21 +7,13 @@ import { useEffect, useState } from 'react';
 export default function AboutPanel() {
   const theme = useTheme();
   const [about, setAbout] = useState({
-    version: null,
-    arch: null,
-    platform: null,
-    platformVersion: null
+    version: null
   });
 
   useEffect(() => {
-    if (tools.isTauri()) {
-      setAbout({
-        version: import.meta.env.VITE_VERSION,
-        arch: import.meta.env.TAURI_ARCH,
-        platform: import.meta.env.TAURI_PLATFORM,
-        platformVersion: import.meta.env.TAURI_PLATFORM_VERSION
-      });
-    }
+    setAbout({
+      version: import.meta.env.VITE_VERSION
+    });
   }, []);
 
   return (
@@ -35,24 +26,6 @@ export default function AboutPanel() {
         <Box mt={theme.spacing(2)} textAlign={'center'}>
           <Typography variant='caption'>{locales.version}</Typography>
           <Typography variant='subtitle2'>{about.version}</Typography>
-        </Box>
-      )}
-      {about.platformVersion && (
-        <Box mt={theme.spacing(2)} textAlign={'center'}>
-          <Typography variant='caption'>{locales.platform_version}</Typography>
-          <Typography variant='subtitle2'>{about.platformVersion}</Typography>
-        </Box>
-      )}
-      {about.arch && (
-        <Box mt={theme.spacing(2)} textAlign={'center'}>
-          <Typography variant='caption'>{locales.architecture}</Typography>
-          <Typography variant='subtitle2'>{about.arch}</Typography>
-        </Box>
-      )}
-      {about.platform && (
-        <Box mt={theme.spacing(2)} textAlign={'center'}>
-          <Typography variant='caption'>{locales.platform}</Typography>
-          <Typography variant='subtitle2'>{about.platform}</Typography>
         </Box>
       )}
 

@@ -1,7 +1,7 @@
 import type { StateCreator } from 'zustand';
 import type { TabDataSlice, TabStore } from '../types';
 
-export const createTabColumnSlice: StateCreator<TabStore & TabDataSlice, [], [], TabDataSlice> = (set, get) => ({
+export const createTabColumnSlice: StateCreator<TabStore & TabDataSlice, [], [], TabDataSlice> = (_, get) => ({
   setShowColumns: (show: boolean) => {
     const selectedTab = get().getSelectedTab();
     if (!selectedTab) {

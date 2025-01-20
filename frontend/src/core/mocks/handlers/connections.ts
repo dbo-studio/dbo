@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 const connectionHandler = [
-  http.get('/api/connections', () => {
+  http.get('/api/connections', async () => {
     return HttpResponse.json({
       data: [
         connectionListItemModel,
@@ -15,7 +15,7 @@ const connectionHandler = [
     });
   }),
 
-  http.get('/api/connections/:id', ({ params }) => {
+  http.get('/api/connections/:id', async ({ params }) => {
     const { id } = params;
     return HttpResponse.json({
       data: {
@@ -89,7 +89,7 @@ const connectionDetailModel = {
     username: 'default'
   },
   databases: ['postgres', 'default'],
-  schemas: ['public'],
+  schemas: ['public', 'test1', 'test2'],
   tables: [
     'data_src',
     'datsrcln',

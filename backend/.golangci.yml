@@ -4,3 +4,13 @@ run:
   issues-exit-code: 2
   allow-parallel-runners: true
   allow-serial-runners: true
+
+issues:
+  exclude-dirs:
+    - test
+
+linters:
+  enable:
+    - testifylint
+    - unconvert
+    - govet

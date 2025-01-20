@@ -1,26 +1,15 @@
 import SelectInput from '@/components/base/SelectInput/SelectInput';
-import SelectOption from '@/components/base/SelectInput/SelectOption';
-import { useUUID } from '@/hooks';
+import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { Stack } from '@mui/material';
 import { useEffect, useState } from 'react';
 import type { QueryEditorLeadingProps } from '../../types';
 
 export default function QueryEditorLeading({ onChange }: QueryEditorLeadingProps) {
-  const { currentConnection } = useConnectionStore();
-  const uuidDatabases = useUUID(currentConnection?.databases?.length);
-  const uuidSchemas = useUUID(currentConnection?.schemas?.length);
+  const currentConnection = useConnectionStore((state) => state.currentConnection);
 
   const [schema, setSchema] = useState<string>(currentConnection?.currentSchema ?? '');
   const [database, setDatabase] = useState<string>(currentConnection?.currentDatabase ?? '');
-
-  const handleDatabaseChange = async (name: string) => {
-    setDatabase(name);
-  };
-
-  const handleSchemaChange = (name: string) => {
-    setSchema(name);
-  };
 
   useEffect(() => {
     onChange({
@@ -29,41 +18,35 @@ export default function QueryEditorLeading({ onChange }: QueryEditorLeadingProps
     });
   }, [schema, database]);
 
+  useEffect(() => {
+    if (schema === '' && currentConnection?.currentSchema !== '') {
+      setSchema(currentConnection?.currentSchema ?? '');
+    }
+
+    if (database === '' && currentConnection?.currentDatabase !== '') {
+      setDatabase(currentConnection?.currentDatabase ?? '');
+    }
+  }, [currentConnection]);
+
   return (
     <Stack spacing={2} direction={'row'}>
       <SelectInput
-        sx={{ marginBottom: '0' }}
+        emptylabel={locales.no_active_database_find}
         value={database}
-        defaultValue={database}
-        onChange={(e) => handleDatabaseChange(e.target.value)}
-        name='type'
+        disabled={currentConnection?.databases?.length === 0}
         size='small'
-        margin='none'
-      >
-        <SelectOption value={''} />
-        {currentConnection?.databases?.map((t: string, i: number) => (
-          <SelectOption value={t} key={uuidDatabases[i]}>
-            {t}
-          </SelectOption>
-        ))}
-      </SelectInput>
+        options={currentConnection?.databases?.map((s) => ({ value: s, label: s })) ?? []}
+        onChange={(e) => setDatabase(e.value)}
+      />
 
       <SelectInput
-        sx={{ marginBottom: '0' }}
+        emptylabel={locales.no_active_schema_find}
         value={schema}
-        defaultValue={schema}
-        onChange={(e) => handleSchemaChange(e.target.value)}
-        name='type'
+        disabled={currentConnection?.schemas?.length === 0}
         size='small'
-        margin='none'
-      >
-        <SelectOption value={''} />
-        {currentConnection?.schemas?.map((t: string, i: number) => (
-          <SelectOption value={t} key={uuidSchemas[i]}>
-            {t}
-          </SelectOption>
-        ))}
-      </SelectInput>
+        options={currentConnection?.schemas?.map((s) => ({ value: s, label: s })) ?? []}
+        onChange={(e) => setSchema(e.value)}
+      />
     </Stack>
   );
 }

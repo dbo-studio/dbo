@@ -5,7 +5,7 @@ import { forwardRef, useEffect, useState } from 'react';
 import type { FieldInputProps } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export default forwardRef(function FieldInput(props: FieldInputProps, ref) {
+export default forwardRef(function FieldInput(props: FieldInputProps, _) {
   const theme = useTheme();
   const [value, setValue] = useState('');
 
@@ -34,14 +34,15 @@ export default forwardRef(function FieldInput(props: FieldInputProps, ref) {
   return (
     <Box display={'flex'} flexDirection={'column'}>
       <Box display={'flex'} flexDirection={'row'} justifyContent={'space-between'}>
-        <Typography color={theme.palette.text.text} variant='caption'>
+        <Typography color={'textText'} variant='caption'>
           {props.label}
         </Typography>
-        <Typography color={theme.palette.text.subdued} variant='caption'>
+        <Typography color={'textText'} variant='caption'>
           {props.typelabel}
         </Typography>
       </Box>
       <InputBase
+        spellCheck={'false'}
         size={props.size}
         fullWidth={props.fullWidth}
         type={props.type}
@@ -61,7 +62,7 @@ export default forwardRef(function FieldInput(props: FieldInputProps, ref) {
         color={theme.palette.text.danger}
         variant='caption'
       >
-        {props.helperText}
+        {props.helpertext}
       </Typography>
     </Box>
   );

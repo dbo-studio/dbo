@@ -9,6 +9,7 @@ export type ColumnItemProps = {
   edited: boolean;
   deleted: boolean;
   unsaved: boolean;
+  dataTypes: string[];
   onChange: (oldValue: ColumnType, newValue: ColumnType) => void;
   onSelect: () => void;
   onEditToggle: (column: ColumnType) => void;

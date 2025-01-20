@@ -5,7 +5,8 @@ export const transformDatabaseMetaData = (data: any): DatabaseMetaDataType => {
   return {
     templates: data?.templates,
     tableSpaces: data?.table_spaces,
-    encodings: data?.encodings
+    encodings: data?.encodings,
+    dataTypes: data?.data_types
   };
 };
 

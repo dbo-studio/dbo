@@ -17,9 +17,6 @@ describe('AboutPanel.tsx', () => {
   });
 
   test('should show app version when platform is desktop', () => {
-    process.env.TAURI_ARCH = 'TAURI_ARCH';
-    process.env.TAURI_PLATFORM = 'TAURI_PLATFORM';
-    process.env.TAURI_PLATFORM_VERSION = 'TAURI_PLATFORM_VERSION';
     process.env.VITE_VERSION = 'VITE_VERSION';
 
     render(
@@ -27,9 +24,6 @@ describe('AboutPanel.tsx', () => {
         <AboutPanel />
       </MemoryRouter>
     );
-    expect(screen.getAllByText('TAURI_ARCH')).not.toBeNull();
-    expect(screen.getAllByText('TAURI_PLATFORM')).not.toBeNull();
-    expect(screen.getAllByText('TAURI_PLATFORM_VERSION')).not.toBeNull();
     expect(screen.getAllByText('VITE_VERSION')).not.toBeNull();
   });
 });

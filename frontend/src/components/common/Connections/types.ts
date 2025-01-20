@@ -1,14 +1,13 @@
 import type { ConnectionType, ContextMenuType } from '@/types';
-import type { Theme } from '@mui/material';
 
 export type ConnectionItemStyledProps = {
-  theme: Theme;
   selected?: boolean;
 };
 
 export type ConnectionItemProps = {
   connection: ConnectionType;
   selected?: boolean;
+  loading: boolean;
   onClick: () => void;
 };
 
