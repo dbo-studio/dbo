@@ -1,28 +1,32 @@
+import FieldInput from '@/components/base/FieldInput/FieldInput.tsx';
 import Search from '@/components/base/Search/Search';
 import { useDataStore } from '@/store/dataStore/data.store';
+import type { RowType } from '@/types';
 import { Box } from '@mui/material';
 import { useEffect, useState } from 'react';
-import FieldInput from '../../base/FieldInput/FieldInput';
 
 export default function DBFields() {
-  const { getColumns, getHighlightedRow } = useDataStore();
+  const { getColumns, getSelectedRows } = useDataStore();
   const [fields, setFields] = useState<any[]>([]);
   const [search, setSearch] = useState<string>('');
+  const [selectedRow, setSelectedRow] = useState<RowType | undefined>(undefined);
+
+  useEffect(() => {
+    const rows = getSelectedRows();
+    if (rows.length === 0) return;
+
+    const row = rows[rows.length - 1].data;
+    if (row !== selectedRow) {
+      setSelectedRow(row);
+    }
+  }, [getSelectedRows()]);
 
   useEffect(() => {
     generateFields(search);
-  }, [getHighlightedRow()]);
-
-  const handleSearch = (value: string) => {
-    setSearch(value);
-    generateFields(value);
-  };
+  }, [search, selectedRow]);
 
   function generateFields(value: string) {
-    const row = getHighlightedRow();
-    if (!row) {
-      return;
-    }
+    if (!selectedRow) return;
 
     const data: any[] = [];
     getColumns()
@@ -30,9 +34,9 @@ export default function DBFields() {
         return c.name.toLocaleLowerCase().includes(value.toLocaleLowerCase());
       })
       .map((c: any) => {
-        if (!row[c.key]) return;
+        if (!selectedRow[c.key]) return;
         data.push({
-          value: row[c.key],
+          value: selectedRow[c.key],
           ...c
         });
       });
@@ -42,8 +46,8 @@ export default function DBFields() {
 
   return (
     <>
-      <Search onChange={handleSearch} />
-      {getHighlightedRow() && (
+      <Search onChange={(value: string) => setSearch(value)} />
+      {fields.length > 0 && (
         <Box mt={1} data-testid='db-field'>
           {fields.map(
             (item, index) =>

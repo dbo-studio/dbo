@@ -3,6 +3,7 @@ import useAPI from '@/hooks/useApi.hook';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { LoadingButton } from '@mui/lab';
 import { Box, Button, Stack } from '@mui/material';
 import { isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
@@ -20,7 +21,7 @@ export default function SelectDatabase({ onClose, onChangeStep }: SelectDatabase
     setSelectedDB(currentConnection?.currentDatabase);
   }, [currentConnection]);
 
-  const { request: updateConnection } = useAPI({
+  const { request: updateConnection, pending: pendingUpdate } = useAPI({
     apiMethod: api.connection.updateConnection
   });
 
@@ -40,7 +41,7 @@ export default function SelectDatabase({ onClose, onChangeStep }: SelectDatabase
     });
   };
 
-  const { request: deleteDatabase, pending } = useAPI({
+  const { request: deleteDatabase, pending: pendingDelete } = useAPI({
     apiMethod: api.database.deleteDatabase
   });
 
@@ -51,7 +52,7 @@ export default function SelectDatabase({ onClose, onChangeStep }: SelectDatabase
   };
 
   const handleDeleteDatabase = async (db: string) => {
-    if (!currentConnection || pending) {
+    if (!currentConnection || pendingDelete) {
       return;
     }
 
@@ -90,9 +91,15 @@ export default function SelectDatabase({ onClose, onChangeStep }: SelectDatabase
           <Button onClick={() => onChangeStep()} size='small' variant='contained' color='secondary'>
             {locales.new}
           </Button>
-          <Button disabled={!selectedDB} onClick={handelChangeDatabase} size='small' variant='contained'>
+          <LoadingButton
+            loading={pendingUpdate}
+            disabled={!selectedDB}
+            onClick={handelChangeDatabase}
+            size='small'
+            variant='contained'
+          >
             {locales.open}
-          </Button>
+          </LoadingButton>
         </Stack>
       </Box>
     </>

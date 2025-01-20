@@ -16,6 +16,10 @@ export const useSettingStore = create<SettingState>()(
           showRight: true
         },
         isDark: false,
+        debug: false,
+        updateDebug: (debug: boolean) => {
+          set({ debug });
+        },
         updateSidebar: (sidebar: Partial<SidebarType>) => {
           const oldSidebar = get().sidebar;
           const newSidebar = { ...oldSidebar, ...sidebar };

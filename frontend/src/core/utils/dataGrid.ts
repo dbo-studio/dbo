@@ -1,45 +1,17 @@
 import type { UpdateDesignItemType } from '@/api/design/types';
-import TextRenderCell from '@/components/shared/DBDataGrid/TextRenderCell';
 import type { ColumnType, EditedColumnType, EditedColumnValue, EditedRow, RowType } from '@/types';
 import { updatedDiff } from 'deep-object-diff';
 import { has } from 'lodash';
-import { SelectColumn, textEditor } from 'react-data-grid';
 
 export const formatServerColumns = (serverColumns: ColumnType[]): any => {
-  const arr: ColumnType[] = [
-    {
-      ...SelectColumn,
-      key: 'select-row',
-      name: 'name',
-      type: 'type',
-      resizable: true,
-      isActive: true,
-      notNull: false,
-      length: 'null',
-      comment: 'null',
-      default: 'null',
-      mappedType: 'string',
-      editable: false,
-      maxWidth: 400,
-      editMode: {
-        name: false,
-        default: false,
-        length: false,
-        comment: false
-      }
-    }
-  ];
-
+  const arr: ColumnType[] = [];
   for (const column of serverColumns) {
     arr.push({
       key: column.key,
-      maxWidth: 400,
       name: column.name,
       type: column.type,
-      resizable: true,
+      editable: column.editable,
       isActive: column.isActive,
-      renderEditCell: column.editable ? textEditor : null,
-      renderCell: TextRenderCell,
       notNull: column.notNull,
       length: column.length ?? 'null',
       comment: column.comment ?? 'null',
@@ -58,36 +30,35 @@ export const formatServerColumns = (serverColumns: ColumnType[]): any => {
   return arr;
 };
 
-export const handelRowChangeLog = (editedRows: EditedRow[], oldValue: RowType, newValue: RowType): EditedRow[] => {
-  const dboIndex = oldValue.dbo_index;
+export const handelRowChangeLog = (
+  editedRows: EditedRow[],
+  rows: RowType[],
+  rowIndex: number,
+  rowKey: string,
+  oldValue: any,
+  newValue: any
+): EditedRow[] => {
+  const oldRow = rows[rowIndex];
+  const dboIndex = oldRow.dbo_index;
 
   //check if edited value exists in editedRows just update this values
   const findValueIndex = editedRows.findIndex((x) => x.dboIndex === dboIndex);
   const findValue = editedRows[findValueIndex];
 
-  //the old value and new value always contain one diff key so we pick first item
-  const diff = updatedDiff(oldValue, newValue);
-  const diffKey = Object.keys(diff)[0];
-
   const oldObject: RowType = findValue ? findValue.old : {};
   const newObject: RowType = findValue ? findValue.new : {};
 
-  //for keeping original value we update oldObject once
-  if (!oldObject[diffKey]) {
-    oldObject[diffKey] = oldValue[diffKey];
-  }
-  newObject[diffKey] = newValue[diffKey];
+  oldObject[rowKey] = oldValue;
+  newObject[rowKey] = newValue;
 
-  let conditions: object = {};
-  if (Object.prototype.hasOwnProperty.call(oldValue, 'id')) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    conditions.id = oldValue.id;
+  let conditions: any = {};
+  if (oldRow?.id) {
+    conditions.id = oldRow?.id;
   } else {
-    conditions = oldValue;
+    conditions = oldRow;
   }
 
-  if (!findValue) {
+  if (findValueIndex === -1) {
     editedRows.push({
       dboIndex: dboIndex,
       conditions: conditions,
@@ -189,8 +160,6 @@ export const createEmptyColumn = (): EditedColumnType => {
   return {
     key: 'new_column',
     name: '',
-    renderEditCell: textEditor,
-    resizable: true,
     type: 'varchar',
     isActive: false,
     notNull: true,

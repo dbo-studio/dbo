@@ -29,14 +29,14 @@ export default function ActionBar() {
       id='action-bar'
       borderBottom={`1px solid ${theme.palette.divider}`}
       borderTop={`1px solid ${theme.palette.divider}`}
-      padding='0 8px'
+      padding=' 8px'
       maxHeight={40}
       direction='row'
       justifyContent='space-between'
       alignItems='center'
     >
-      <Grid2 size={{ md: 8 }} display='flex' justifyContent='flex-start'>
-        <IconButton color='secondary' aria-label='grid' onClick={() => handleToggle('column')}>
+      <Stack direction={'row'} spacing={1} display='flex' justifyContent='flex-start'>
+        <IconButton aria-label='grid' onClick={() => handleToggle('column')}>
           <CustomIcon type='grid' size='s' />
         </IconButton>
         <IconButton className='toggle-filters' onClick={() => handleToggle('filter')}>
@@ -45,7 +45,7 @@ export default function ActionBar() {
         <IconButton aria-label='sort' onClick={() => handleToggle('sort')}>
           <CustomIcon type='sort' size='s' />
         </IconButton>
-      </Grid2>
+      </Stack>
       <Grid2 size={{ md: 8 }} display='flex' justifyContent='flex-end'>
         <IconButton className='toggle-code-preview' onClick={() => handleToggle('query')}>
           <CustomIcon type='code' size='s' />

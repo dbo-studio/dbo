@@ -1,26 +1,60 @@
 import { changeUrl } from '@/core/services/api/intialize';
 import { tools } from '@/core/utils';
-import { invoke } from '@tauri-apps/api';
+import { useTabStore } from '@/store/tabStore/tab.store.ts';
+import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from 'react';
 
 export const useSetupDesktop = () => {
   const [loaded, setLoaded] = useState(false);
+  const reset = useTabStore((state) => state.reset);
 
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'development' && tools.isTauri()) {
-      invoke('get_backend_host').then((response) => {
-        if (response === '') {
-          alert('cant found empty port!');
+    tools
+      .isTauri()
+      .then((e) => {
+        if (!e) {
+          setLoaded(true);
           return;
         }
+        disableMenu();
+        reset();
+        invoke('get_backend_host').then((response) => {
+          if (response === '') {
+            alert('cant found empty port!');
+            return;
+          }
 
-        changeUrl(response as string);
+          changeUrl(response as string);
+          setLoaded(true);
+        });
+      })
+      .catch(() => {
         setLoaded(true);
       });
-    } else {
-      setLoaded(true);
-    }
   }, []);
 
   return loaded;
 };
+
+function disableMenu() {
+  if (process.env.NODE_ENV === 'development') {
+    return;
+  }
+  document.addEventListener(
+    'contextmenu',
+    (e) => {
+      e.preventDefault();
+      return false;
+    },
+    { capture: true }
+  );
+
+  document.addEventListener(
+    'selectstart',
+    (e) => {
+      e.preventDefault();
+      return false;
+    },
+    { capture: true }
+  );
+}

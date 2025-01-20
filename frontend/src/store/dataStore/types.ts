@@ -10,18 +10,12 @@ export type DataRowSlice = {
   removeRowsByTabId: (tabId: string) => void;
 };
 
-export type DataHighlightedRowSlice = {
-  highlightedRow: DataHighlightedRowType; // when click on a row
-  getHighlightedRow(): RowType | undefined;
-  updateHighlightedRow(selectedRow: RowType | undefined): RowType | undefined;
-  removeHighlightedRowsByTabId: (tabId: string) => void;
-};
-
 export type DataSelectedRowsSlice = {
-  selectedRows: DataSelectedRowType; // when check a row in data grid
-  getSelectedRows: any;
-  updateSelectedRows(selectedRows: any): void;
-  removeSelectedRows(selectedRowIndex: number[]): void;
+  selectedRows: Map<number, SelectedRow>;
+  toggleClear: boolean;
+  getSelectedRows: () => SelectedRow[];
+  clearSelectedRows: () => void;
+  setSelectedRows: (rows: SelectedRow[]) => void;
 };
 
 export type DataColumnSlice = {
@@ -69,6 +63,7 @@ export type DataUnsavedRowsSlice = {
 
 export type DataQuerySlice = {
   loading: boolean;
+  toggleDataFetching: boolean;
   runQuery: () => Promise<void>;
   runRawQuery: () => Promise<void>;
   updateDesignsQuery: () => Promise<void>;
@@ -100,4 +95,9 @@ export type DataHighlightedRowType = {
 
 export type DataSelectedRowType = {
   [key: string]: any;
+};
+
+type SelectedRow = {
+  index: number; // The row index
+  data: Record<string, any>; // The row's data object
 };

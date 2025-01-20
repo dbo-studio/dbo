@@ -1,14 +1,14 @@
 import api from '@/api';
 import { TabMode } from '@/core/enums';
-import useAPI from '@/hooks/useApi.hook';
-import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { useDataStore } from '@/store/dataStore/data.store';
-import { useTabStore } from '@/store/tabStore/tab.store';
+import useAPI from '@/hooks/useApi.hook.ts';
+import { useConnectionStore } from '@/store/connectionStore/connection.store.ts';
+import { useDataStore } from '@/store/dataStore/data.store.ts';
+import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { Box, IconButton, Stack } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import CustomIcon from '../../base/CustomIcon/CustomIcon';
-import LoadingIconButton from '../../base/LoadingIconButton/LoadingIconButton';
+import CustomIcon from '../../../base/CustomIcon/CustomIcon.tsx';
+import LoadingIconButton from '../../../base/LoadingIconButton/LoadingIconButton.tsx';
 
 export default function StatusBarActions() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -21,17 +21,18 @@ export default function StatusBarActions() {
     getUnsavedRows,
     getEditedRows,
     getRemovedRows,
-    updateEditedRows,
+    removeEditedRowsByTabId,
     updateRemovedRows,
     restoreEditedRows,
     discardUnsavedRows,
-    updateSelectedRows,
-    updateUnsavedRows,
+    removeUnsavedRowsByTabId,
     runQuery,
     restoreEditedColumns,
     updateRemovedColumns,
     addEmptyEditedColumns,
-    updateDesignsQuery
+    updateDesignsQuery,
+    clearSelectedRows,
+    deleteRemovedRowsByTabId
   } = useDataStore();
 
   const { request: updateQuery, pending: updateQueryPending } = useAPI({
@@ -61,11 +62,10 @@ export default function StatusBarActions() {
           removed: removed,
           added: unsaved
         });
-        updateEditedRows([]);
-        updateRemovedRows();
-        updateUnsavedRows([]);
-        updateSelectedRows([]);
         await runQuery();
+        removeEditedRowsByTabId(getSelectedTab()?.id ?? '');
+        deleteRemovedRowsByTabId(getSelectedTab()?.id ?? '');
+        removeUnsavedRowsByTabId(getSelectedTab()?.id ?? '');
       } catch (error) {
         console.log('🚀 ~ handleSave ~ error:', error);
       }
@@ -109,10 +109,10 @@ export default function StatusBarActions() {
 
   const handleDiscardChanges = async () => {
     if (getSelectedTab()?.mode === TabMode.Data) {
-      updateSelectedRows([]);
       restoreEditedRows().then();
       discardUnsavedRows();
-      updateRemovedRows();
+      deleteRemovedRowsByTabId(getSelectedTab()?.id ?? '');
+      clearSelectedRows();
     }
 
     if (getSelectedTab()?.mode === TabMode.Design) {
@@ -120,12 +120,13 @@ export default function StatusBarActions() {
     }
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
+    await handleDiscardChanges();
     runQuery().then();
   };
 
   return (
-    <Stack direction={'row'} mb={'5px'} justifyContent={'space-between'} width={208}>
+    <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'} width={208}>
       <Box>
         <IconButton disabled={updateQueryPending || loading} onClick={handleAddAction}>
           <CustomIcon type='plus' size='s' />

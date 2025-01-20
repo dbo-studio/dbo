@@ -1,6 +1,7 @@
 import { useParamParser, useWindowSize } from '@/hooks';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Grid } from '@mui/material';
+import { Grid2 } from '@mui/material';
 import ConfirmModal from '../base/Modal/ConfirmModal';
 import AppHeader from './AppHeader/AppHeader';
 import { LayoutStyled } from './Layout.styled';
@@ -12,30 +13,34 @@ import StartContainer from './MainContainer/StartContainer';
 export default function Layout() {
   const windowSize = useWindowSize(true);
   const { sidebar } = useSettingStore();
+  const currentConnection = useConnectionStore((state) => state.currentConnection);
   useParamParser();
 
   return (
     <LayoutStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
       <ConfirmModal />
       <AppHeader />
-      <Grid container spacing={0}>
-        <Grid>
+      <Grid2 container spacing={0}>
+        <Grid2>
           <StartContainer />
-        </Grid>
-        {sidebar.showLeft && (
-          <Grid>
+        </Grid2>
+        {sidebar.showLeft && currentConnection && (
+          <Grid2>
             <ExplorerContainer />
-          </Grid>
+          </Grid2>
         )}
-        <Grid flex={1} minWidth={0}>
-          <CenterContainer />
-        </Grid>
-        {sidebar.showRight && (
-          <Grid>
+        {currentConnection && (
+          <Grid2 flex={1} minWidth={0}>
+            <CenterContainer />
+          </Grid2>
+        )}
+
+        {sidebar.showRight && currentConnection && (
+          <Grid2>
             <EndContainer />
-          </Grid>
+          </Grid2>
         )}
-      </Grid>
+      </Grid2>
     </LayoutStyled>
   );
 }

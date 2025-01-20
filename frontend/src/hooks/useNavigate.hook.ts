@@ -32,7 +32,7 @@ export default function useNavigate() {
         return;
       }
 
-      if (route.tabId && route.tabId.length > 0) {
+      if (route.tabId || route.tabId === '') {
         params.tabId = route.tabId;
       }
 

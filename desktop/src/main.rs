@@ -1,19 +1,28 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use std::{env, net::TcpListener};
-
-use tauri::api::process::{Command, CommandEvent};
+use tauri::App;
+use tauri_plugin_shell::process::CommandEvent;
+use tauri_plugin_shell::ShellExt;
 
 fn main() {
     let _ = fix_path_env::fix();
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_os::init())
         .invoke_handler(tauri::generate_handler![get_backend_host])
         .setup(|_app| {
             env::set_var("APP_ENV", "production");
             let port = find_free_port();
             env::set_var("APP_PORT", port.to_string());
-            run_server();
+            run_server(_app);
 
             Ok(())
         })
@@ -47,22 +56,51 @@ fn find_free_port() -> u16 {
     return default;
 }
 
-fn run_server() {
-    let (mut rx, mut child) = Command::new_sidecar("dbo-bin")
-        .expect("failed to create `dbo-bin` binary command")
-        .spawn()
-        .expect("Failed to spawn sidecar");
+fn run_server(app: &mut App) {
+    // Try to create the sidecar command
+    let sidecar_command = match app.shell().sidecar("dbo-bin") {
+        Ok(command) => command,
+        Err(e) => {
+            eprintln!("Failed to create sidecar command: {}", e);
+            return;
+        }
+    };
 
+    // Spawn the sidecar process
+    let (mut rx, mut child) = match sidecar_command.spawn() {
+        Ok((rx, child)) => (rx, child),
+        Err(e) => {
+            eprintln!("Failed to spawn sidecar process: {}", e);
+            return;
+        }
+    };
+
+    // Handle the sidecar process asynchronously
     tauri::async_runtime::spawn(async move {
         while let Some(event) = rx.recv().await {
-            if let CommandEvent::Stdout(line) = event {
-                println!("Received message: {} ", line);
-                if let Err(e) = child.write("message from Rust\n".as_bytes()) {
-                    println!("Failed to write to child stdin: {}", e);
+            match event {
+                CommandEvent::Stdout(line_bytes) => {
+                    let line = String::from_utf8_lossy(&line_bytes);
+                    println!("Received message: {}", line);
+
+                    // Try writing to the child's stdin
+                    if let Err(e) = child.write(b"message from Rust\n") {
+                        eprintln!("Failed to write to child stdin: {}", e);
+                    }
                 }
-            } else {
-                println!("Received non-stdout event: {:?} ", event);
+                CommandEvent::Stderr(err_bytes) => {
+                    let error_line = String::from_utf8_lossy(&err_bytes);
+                    eprintln!("Error from sidecar: {}", error_line);
+                }
+                other_event => {
+                    println!("Received other event: {:?}", other_event);
+                }
             }
+        }
+
+        // Ensure the child process is terminated properly
+        if let Err(e) = child.kill() {
+            eprintln!("Failed to terminate sidecar process: {}", e);
         }
     });
 }

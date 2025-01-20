@@ -14,6 +14,7 @@ export const createDataQuerySlice: StateCreator<
   DataQuerySlice
 > = (set, get) => ({
   loading: false,
+  toggleDataFetching: true,
   runQuery: async () => {
     const currentConnection = useConnectionStore.getState().currentConnection;
     const selectedTab = useTabStore.getState().getSelectedTab();
@@ -45,7 +46,8 @@ export const createDataQuerySlice: StateCreator<
       });
 
       useTabStore.getState().updateQuery(res.query);
-      Promise.all([get().updateRows(res.data), get().updateColumns(res.structures)]);
+      await Promise.all([get().updateRows(res.data), get().updateColumns(res.structures)]);
+      set({ toggleDataFetching: !get().toggleDataFetching });
     } catch (error) {
       // @ts-ignore
       throw new Error(error?.response?.data?.message);
@@ -68,7 +70,8 @@ export const createDataQuerySlice: StateCreator<
       });
 
       useTabStore.getState().updateQuery(res.query);
-      Promise.all([get().updateRows(res.data), get().updateColumns(res.structures)]);
+      await Promise.all([get().updateRows(res.data), get().updateColumns(res.structures)]);
+      set({ toggleDataFetching: !get().toggleDataFetching });
     } catch (error) {
       console.log('🚀 ~ runQuery: ~ error:', error);
     } finally {

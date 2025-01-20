@@ -1,8 +1,7 @@
-import { http, HttpResponse, delay } from 'msw';
+import { http, HttpResponse } from 'msw';
 
 const databasesHandler = [
   http.post('/api/databases', async () => {
-    await delay(2000);
     return HttpResponse.json({
       data: {},
       message: ''

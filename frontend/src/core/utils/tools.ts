@@ -1,8 +1,9 @@
+import { getTauriVersion } from '@tauri-apps/api/app';
 import { isNumber, isObject } from '.';
 
 export const tools = {
   screenMaxHeight: (asNumber?: boolean): string | number => {
-    const height = window?.innerHeight - 56;
+    const height = window?.innerHeight - 40;
     return asNumber ? height : `${height}px`;
   },
   screenFullHeight: (): string => {
@@ -30,9 +31,12 @@ export const tools = {
     // @ts-expect-error
     return /Mac/i.test(userAgent) || (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream);
   },
-  isTauri: () => {
-    const env = import.meta.env.TAURI_PLATFORM;
-    return env !== undefined;
+  isTauri: async () => {
+    try {
+      return (await getTauriVersion()) !== null;
+    } catch (e) {
+      return false;
+    }
   },
   minifySql(value: string): string {
     if (!value.length) {

@@ -20,7 +20,8 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
   const [removeTab] = useRemoveTab();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
   const { addTab, getSelectedTab, getTabs } = useTabStore();
-  const { runQuery, runRawQuery } = useDataStore();
+  const { runQuery, runRawQuery, removeEditedRowsByTabId, deleteRemovedRowsByTabId, removeUnsavedRowsByTabId } =
+    useDataStore();
 
   useShortcut(shortcuts.newTab, () => addNewEmptyTab());
   useShortcut(shortcuts.closeTab, () => getSelectedTab() && handleRemoveTab(getSelectedTab()?.id ?? ''));
@@ -87,14 +88,17 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
     });
   };
 
-  const handleReload = () => {
+  const handleReload = async () => {
     if (getSelectedTab()?.mode === TabMode.Query) {
-      runRawQuery().then();
+      await runRawQuery();
       return;
     }
 
     if (getSelectedTab()?.mode === TabMode.Data || getSelectedTab()?.mode === TabMode.Design) {
-      runQuery().then();
+      await runQuery();
+      removeEditedRowsByTabId(getSelectedTab()?.id ?? '');
+      deleteRemovedRowsByTabId(getSelectedTab()?.id ?? '');
+      removeUnsavedRowsByTabId(getSelectedTab()?.id ?? '');
       return;
     }
   };

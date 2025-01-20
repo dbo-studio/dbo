@@ -1,7 +1,8 @@
 import Modal from '@/components/base/Modal/Modal';
+import General from '@/components/common/Settings/General/General.tsx';
 import locales from '@/locales';
 import { Grid2, useTheme } from '@mui/material';
-import { useState } from 'react';
+import { type JSX, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import AboutPanel from './AboutPanel/AboutPanel';
 import MenuPanel from './MenuPanel/MenuPanel';
@@ -12,13 +13,20 @@ import type { MenuPanelTabType } from './types';
 const tabs: MenuPanelTabType[] = [
   {
     id: 0,
+    name: locales.general,
+    onlyDesktop: false,
+    icon: 'settings',
+    content: <General />
+  },
+  {
+    id: 1,
     name: locales.theme,
     onlyDesktop: false,
     icon: 'theme',
     content: <ThemePanel />
   },
   {
-    id: 1,
+    id: 2,
     name: locales.shortcuts,
     onlyDesktop: false,
     icon: 'shortcuts',

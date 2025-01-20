@@ -20,16 +20,4 @@ describe('MenuPanel.tsx', () => {
     expect(screen.getAllByText('Tab1')).not.toBeNull();
     expect(screen.queryByText('Tab2')).toBeNull();
   });
-
-  test('should render the the about panel with correct tabs in desktop', () => {
-    process.env.TAURI_PLATFORM = 'TAURI_PLATFORM';
-
-    render(
-      <MemoryRouter>
-        <MenuPanel tabs={tabs} onChange={() => {}} />
-      </MemoryRouter>
-    );
-    expect(screen.getAllByText('Tab1')).not.toBeNull();
-    expect(screen.getAllByText('Tab2')).not.toBeNull();
-  });
 });

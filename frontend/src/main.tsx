@@ -1,8 +1,8 @@
+import { globalStyles } from '@/core/theme/global.ts';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
-import { globalStyles } from '@/core/theme/global.ts';
 import { CssBaseline, GlobalStyles } from '@mui/material';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -15,7 +15,7 @@ enableMocking().then(() => {
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
       <ThemeProvider>
-        <GlobalStyles styles={globalStyles} />
+        <GlobalStyles styles={(theme) => globalStyles(theme)} />
         <CssBaseline />
         <Router />
         <Toaster position='bottom-center' duration={5000} richColors closeButton={true} />

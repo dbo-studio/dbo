@@ -1,8 +1,7 @@
-import { http, HttpResponse, delay } from 'msw';
+import { http, HttpResponse } from 'msw';
 
 const connectionHandler = [
   http.get('/api/connections', async () => {
-    await delay(5000);
     return HttpResponse.json({
       data: [
         connectionListItemModel,
