@@ -27,7 +27,9 @@ export default function HistoryItem({ history, selected, onClick }: HistoryItemP
   return (
     <HistoryItemStyled selected={selected} onContextMenu={handleContextMenu}>
       <Box flex={1} mr={theme.spacing(1)} onDoubleClick={handleRun} onClick={() => onClick()}>
-        <Typography variant='body2'>{history.query.slice(0, 50)}</Typography>
+        <Typography color={'textText'} variant='body2'>
+          {history.query.slice(0, 50)}
+        </Typography>
       </Box>
 
       <IconButton onClick={handleContextMenu}>

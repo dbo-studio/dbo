@@ -8,6 +8,7 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useSavedQueryStore } from '@/store/savedQueryStore/savedQuery.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton, Stack, Tooltip } from '@mui/material';
+import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
 import { format } from 'sql-formatter';
 import type { QueryEditorActionsProps } from '../../types';
@@ -53,6 +54,9 @@ export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps
       upsertQuery(res);
       toast.success(locales.query_saved_successfully);
     } catch (error) {
+      if (isAxiosError(error)) {
+        toast.error(error.message);
+      }
       console.log('🚀 ~ saveQuery ~ error:', error);
     }
   };

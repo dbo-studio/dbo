@@ -27,13 +27,13 @@ export default function TablesTreeView({ tables }: { tables: string[] }) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         selectedItems={[`${getSelectedTab()?.table}100`]}
-        autoFocus={false}
-        disabledItemsFocusable={true}
         slots={{
           expandIcon: () => <CustomIcon size='s' type={'arrowRight'} />,
           collapseIcon: () => <CustomIcon size='s' type={'arrowDown'} />,
           endIcon: () => <CustomIcon type={'sheet'} />
         }}
+        autoFocus={false}
+        disabledItemsFocusable={true}
         defaultExpandedItems={['1']}
         aria-label='file system navigator'
       >

@@ -2,10 +2,6 @@ import type { AxiosError, AxiosRequestHeaders } from 'axios';
 import { toast } from 'sonner';
 import { serviceDelete, serviceGet, servicePatch, servicePost } from './intialize';
 
-// const getToken = () => {
-//   return store?.getState()?.user?.token;
-// };
-
 const messageHandler = (response: any) => {
   const message = response?.data?.data?.message;
   message && toast.error(message);
@@ -20,8 +16,7 @@ function get<T = any>(url: string, params = {}, { headers = {}, isPublic, ...opt
   const completeHeaders = {
     ...headers
   };
-  // TODO: set csrf token
-  // if (!isPublic) completeHeaders.Authorization = getToken();
+
   return new Promise((resolve, reject) => {
     serviceGet(url, { ...options, params: { ...params }, headers: completeHeaders })
       .then((response) => {
@@ -44,12 +39,8 @@ function post<T = any>(
   const completeHeaders = {
     ...headers
   };
-  // Note: This because of handling FormData objects
-  // TODO: Find a better way so we can have formData and location data together if it is needed
   const completeData = isLocationBased ? { ...data, ...location } : data;
 
-  // TODO: set csrf token
-  // if (!isPublic) completeHeaders.Authorization = getToken();
   return new Promise((resolve, reject) => {
     servicePost(url, completeData, { ...options, headers: completeHeaders })
       .then((response) => {
@@ -72,12 +63,9 @@ function patch<T = any>(
   const completeHeaders = {
     ...headers
   };
-  // Note: This because of handling FormData objects
-  // TODO: Find a better way so we can have formData and location data together if it is needed
+
   const completeData = isLocationBased ? { ...data, ...location } : data;
 
-  // TODO: set csrf token
-  // if (!isPublic) completeHeaders.Authorization = getToken();
   return new Promise((resolve, reject) => {
     servicePatch(url, completeData, { ...options, headers: completeHeaders })
       .then((response) => {
@@ -96,8 +84,7 @@ function del<T = any>(url: string, data = {}, { headers = {}, isPublic, ...optio
   const completeHeaders = {
     ...headers
   };
-  // TODO: set csrf token
-  // if (!isPublic) completeHeaders.Authorization = getToken();
+
   return new Promise((resolve, reject) => {
     serviceDelete(url, { ...options, data: { ...data }, headers: completeHeaders })
       .then((response) => {

@@ -2,16 +2,15 @@ package serviceConnection
 
 import (
 	"context"
-	"database/sql"
+	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/samber/lo"
 
-	"github.com/dbo-studio/dbo/api/dto"
-	"github.com/dbo-studio/dbo/app"
-	"github.com/dbo-studio/dbo/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
-func (s *IConnectionServiceImpl) ConnectionDetail(ctx context.Context, req *dto.ConnectionDetailRequest) (*dto.ConnectionDetailResponse, error) {
-	connection, err := s.connectionRepo.FindConnection(ctx, req.ConnectionId)
+func (s IConnectionServiceImpl) Detail(ctx context.Context, req *dto.ConnectionDetailRequest) (*dto.ConnectionDetailResponse, error) {
+	connection, err := s.connectionRepo.Find(ctx, req.ConnectionId)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
@@ -19,7 +18,7 @@ func (s *IConnectionServiceImpl) ConnectionDetail(ctx context.Context, req *dto.
 	return s.connectionDetail(ctx, connection, req.FromCache)
 }
 
-func (s *IConnectionServiceImpl) connectionDetail(ctx context.Context, connection *model.Connection, fromCache bool) (*dto.ConnectionDetailResponse, error) {
+func (s IConnectionServiceImpl) connectionDetail(ctx context.Context, connection *model.Connection, fromCache bool) (*dto.ConnectionDetailResponse, error) {
 	var schemas = make([]string, 0)
 	var tables = make([]string, 0)
 	var err error
@@ -56,14 +55,15 @@ func (s *IConnectionServiceImpl) connectionDetail(ctx context.Context, connectio
 		}
 	}
 
-	app.DB().Model(&connection).Updates(&model.Connection{
-		CurrentSchema: sql.NullString{
-			String: currentSchema,
-			Valid:  true,
-		},
-		IsActive: true,
+	c, err := s.connectionRepo.Update(ctx, connection, &dto.UpdateConnectionRequest{
+		CurrentSchema: lo.ToPtr[string](currentSchema),
+		IsActive:      lo.ToPtr[bool](true),
 	})
 
-	return connectionDetailModelToResponse(connection, version, databases, schemas, tables), nil
+	if err != nil {
+		return nil, err
+	}
+
+	return connectionDetailModelToResponse(c, version, databases, schemas, tables), nil
 
 }

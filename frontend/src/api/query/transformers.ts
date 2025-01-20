@@ -5,7 +5,7 @@ export const transformRunQuery = (data: any): RunQueryResponseType => {
   return {
     query: data?.query,
     data: data?.data,
-    structures: transformStructures(data?.structures)
+    structures: transformStructures(data?.structures ?? [])
   };
 };
 
@@ -20,8 +20,6 @@ export const transformStructures = (data: any): ColumnType[] => {
       length: item?.length,
       default: item?.default,
       mappedType: item?.mapped_type,
-      renderEditCell: undefined,
-      resizable: false,
       comment: item?.comment,
       editable: item?.editable ?? false,
       isActive: item?.is_active ?? true

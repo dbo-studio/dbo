@@ -1,14 +1,16 @@
-import type { NativeSelectProps } from '@mui/material';
-import type React from 'react';
-
-export interface SelectInputProps extends NativeSelectProps {
+export type SelectInputProps = {
+  disabled?: boolean;
   label?: string;
-  helperText?: string | undefined;
-  children?: React.ReactNode;
-}
+  helpertext?: string | undefined;
+  value?: string;
+  emptylabel?: string;
+  error?: boolean;
+  size?: 'medium' | 'small';
+  options: SelectInputOption[];
+  onChange: (value: SelectInputOption) => void;
+};
 
-export type SelectOptionProps = {
-  value: string | readonly string[] | number | undefined;
-  children?: React.ReactNode;
-  selected?: boolean;
+export type SelectInputOption = {
+  value: any;
+  label: string;
 };

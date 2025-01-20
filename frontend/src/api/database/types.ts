@@ -15,4 +15,5 @@ export type DatabaseMetaDataType = {
   templates: string[];
   tableSpaces: string[];
   encodings: string[];
+  dataTypes: string[];
 };

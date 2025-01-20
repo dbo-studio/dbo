@@ -31,7 +31,7 @@ export const createDataRowSlice: StateCreator<
   },
   removeRowsByTabId: (tabId: string) => {
     const rows = get().rows;
-    if (!rows[tabId]) {
+    if (rows[tabId]) {
       delete rows[tabId];
     }
 

@@ -22,7 +22,8 @@ export default function AddConnection() {
 
   const handleClose = () => {
     setConnectionType(undefined);
-    setSearchParams({ ...searchParams, showAddConnection: 'false' });
+    searchParams.delete('showAddConnection');
+    setSearchParams(searchParams);
     setStep(0);
   };
 

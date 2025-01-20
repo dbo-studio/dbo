@@ -2,12 +2,14 @@ import api from '@/api';
 import useAPI from '@/hooks/useApi.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { ConnectionType } from '@/types';
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 
 import type { updateConnectionType } from '@/api/connection/types';
 import useNavigate from '@/hooks/useNavigate.hook';
+import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { ConnectionsStyled } from './Connections.styled';
 import { EmptySpaceStyle } from './EmptySpace.styled';
@@ -17,14 +19,15 @@ const EditConnection = lazy(() => import('../EditConnection/EditConnection'));
 
 export default function Connections() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { currentConnection, connections, updateCurrentConnection } = useConnectionStore();
+  const { currentConnection, connections, updateCurrentConnection, updateLoading, loading } = useConnectionStore();
+  const [loadingConnectionId, setLoadingConnectionId] = useState<number | undefined>(undefined);
   const navigate = useNavigate();
 
   const { request: getConnectionDetail } = useAPI({
     apiMethod: api.connection.getConnectionDetail
   });
 
-  const { request: updateConnection } = useAPI({
+  const { request: updateConnection, pending: pendingUpdateConnection } = useAPI({
     apiMethod: api.connection.updateConnection
   });
 
@@ -34,38 +37,51 @@ export default function Connections() {
     }
 
     if (connections.length === 0) {
-      setSearchParams({ ...searchParams, showAddConnection: 'true' });
+      searchParams.set('showAddConnection', 'true');
+      setSearchParams(searchParams);
     }
 
     if (connections.length > 0) {
       const activeConnection = connections.filter((c: ConnectionType) => c.isActive);
-      if (activeConnection.length > 0) handleChangeCurrentConnection(activeConnection[0]);
+      if (activeConnection.length > 0) handleChangeCurrentConnection(activeConnection[0]).then();
     } else {
-      setSearchParams({ ...searchParams, showAddConnection: 'true' });
+      searchParams.set('showAddConnection', 'true');
+      setSearchParams(searchParams);
     }
   }, [connections]);
 
   const handleChangeCurrentConnection = async (c: ConnectionType) => {
-    if (c.id === currentConnection?.id) {
+    if (c.id === currentConnection?.id || loading === 'loading') {
       return;
     }
 
     try {
+      setLoadingConnectionId(c.id);
+      updateLoading('loading');
       const connectionDetail = await getConnectionDetail({
         connectionID: c?.id,
         fromCache: true
       });
 
-      updateCurrentConnection(connectionDetail);
       await updateConnection({
         id: c.id,
         is_active: true
       } as updateConnectionType);
 
+      updateCurrentConnection(connectionDetail);
+      updateLoading('finished');
+
       navigate({
-        connectionId: c.id
+        connectionId: c.id,
+        tabId: ''
       });
-    } catch (error) {}
+    } catch (error) {
+      updateLoading('error');
+      if (axios.isAxiosError(error)) {
+        toast.error(error.message);
+      }
+      console.log('🚀 ~ handleChangeCurrentConnection ~ err:', error);
+    }
   };
 
   return (
@@ -78,6 +94,7 @@ export default function Connections() {
       </Suspense>
       {connections?.map((c: ConnectionType) => (
         <ConnectionItem
+          loading={pendingUpdateConnection && loadingConnectionId === c.id}
           onClick={() => handleChangeCurrentConnection(c)}
           key={uuid()}
           selected={c.id === currentConnection?.id}

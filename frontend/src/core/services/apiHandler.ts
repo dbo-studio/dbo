@@ -1,6 +1,5 @@
-// import { toast } from 'react-toastify';
+import type { ArgumentType, MethodType, SimpleFunction } from '@/types';
 import { toast } from 'sonner';
-import type { ArgumentType, MethodType, SimpleFunction } from '../../types';
 
 interface ApiHandlerProps<T, M extends MethodType> {
   apiMethod: (data?: ArgumentType<M>) => Promise<T & { message?: string }>;

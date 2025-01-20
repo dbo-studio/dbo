@@ -1,7 +1,7 @@
-import { useParamParser, useSetupDesktop, useWindowSize } from '@/hooks';
+import { useParamParser, useWindowSize } from '@/hooks';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { useTabStore } from '@/store/tabStore/tab.store';
-import { Grid } from '@mui/material';
+import { Grid2 } from '@mui/material';
 import ConfirmModal from '../base/Modal/ConfirmModal';
 import AppHeader from './AppHeader/AppHeader';
 import { LayoutStyled } from './Layout.styled';
@@ -12,35 +12,35 @@ import StartContainer from './MainContainer/StartContainer';
 
 export default function Layout() {
   const windowSize = useWindowSize(true);
-  const done = useSetupDesktop();
   const { sidebar } = useSettingStore();
-  const { getTabs, getSelectedTab } = useTabStore();
+  const currentConnection = useConnectionStore((state) => state.currentConnection);
   useParamParser();
 
-  return done ? (
-    <>
-      <LayoutStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
-        <ConfirmModal />
-        <AppHeader />
-        <Grid container spacing={0}>
-          <Grid>
-            <StartContainer />
-          </Grid>
-          {sidebar.showLeft && (
-            <Grid>
-              <ExplorerContainer />
-            </Grid>
-          )}
-          <Grid flex={1} minWidth={0}>
-            <CenterContainer selectedTab={getSelectedTab()} tabs={getTabs()} />
-          </Grid>
-          {sidebar.showRight && (
-            <Grid>
-              <EndContainer />
-            </Grid>
-          )}
-        </Grid>
-      </LayoutStyled>
-    </>
-  ) : null;
+  return (
+    <LayoutStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
+      <ConfirmModal />
+      <AppHeader />
+      <Grid2 container spacing={0}>
+        <Grid2>
+          <StartContainer />
+        </Grid2>
+        {sidebar.showLeft && currentConnection && (
+          <Grid2>
+            <ExplorerContainer />
+          </Grid2>
+        )}
+        {currentConnection && (
+          <Grid2 flex={1} minWidth={0}>
+            <CenterContainer />
+          </Grid2>
+        )}
+
+        {sidebar.showRight && currentConnection && (
+          <Grid2>
+            <EndContainer />
+          </Grid2>
+        )}
+      </Grid2>
+    </LayoutStyled>
+  );
 }

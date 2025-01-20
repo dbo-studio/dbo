@@ -6,7 +6,9 @@ import { DatabaseItemStyled } from './SelectedDatabase.styled';
 export default function DatabaseItem({ name, selected, onClick, onDelete }: DatabaseItemProps) {
   return (
     <DatabaseItemStyled selected={selected} onClick={() => onClick()}>
-      <Typography variant='subtitle2'>{name}</Typography>
+      <Typography color={'textText'} variant='subtitle2'>
+        {name}
+      </Typography>
       <IconButton onClick={() => onDelete()}>
         <CustomIcon type='delete' />
       </IconButton>

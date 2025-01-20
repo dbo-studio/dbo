@@ -1,6 +1,6 @@
-import Layout from '@/components/layout/Layout';
-import { createElement } from 'react';
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import BaseLayout from '@/components/layout/BaseLayout.tsx';
+import { createElement, type JSX } from 'react';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import NotFound from './404/404';
 import Data from './Data/Data';
 import Design from './Design/Design';
@@ -13,7 +13,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/',
-    element: <Layout />,
+    element: <BaseLayout />,
     children: [
       {
         path: 'data',

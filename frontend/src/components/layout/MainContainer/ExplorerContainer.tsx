@@ -3,7 +3,7 @@ import { useWindowSize } from '@/hooks/useWindowSize.hook';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Tab, Tabs } from '@mui/material';
-import { useMemo, useState } from 'react';
+import { type SyntheticEvent, useMemo, useState } from 'react';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
 import Histories from '../../common/Histories/Histories';
 import SavedQueries from '../../common/SavedQueries/SavedQueries';
@@ -33,7 +33,7 @@ export default function ExplorerContainer() {
     return tabs.find((obj) => obj.id === Number(selectedTabId))?.content;
   }, [selectedTabId]);
 
-  const onSelectedTabChanged = (event: React.SyntheticEvent, id: number) => {
+  const onSelectedTabChanged = (_: SyntheticEvent, id: number) => {
     setSelectedTabId(id);
   };
 

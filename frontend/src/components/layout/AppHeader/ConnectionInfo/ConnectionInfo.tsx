@@ -3,11 +3,10 @@ import { TabMode } from '@/core/enums';
 import useNavigate from '@/hooks/useNavigate.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { IconButton, Stack } from '@mui/material';
-import Grid from '@mui/material/Unstable_Grid2';
+import { Grid2, IconButton, Stack } from '@mui/material';
 import { Suspense, lazy } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import ConnectionBox from './ConnectionBox';
+import ConnectionBox from './ConnectionBox/ConnectionBox.tsx';
 
 const Databases = lazy(() => import('@/components/common/Databases/Databases'));
 const Settings = lazy(() => import('@/components/common/Settings/Settings.tsx'));
@@ -27,6 +26,11 @@ export default function ConnectionInfo() {
     });
   };
 
+  const changeSearchParams = (key: string) => {
+    searchParams.set(key, 'true');
+    setSearchParams(searchParams);
+  };
+
   return (
     <Stack direction={'row'} justifyContent={'center'} alignItems={'center'}>
       <Suspense>
@@ -35,12 +39,9 @@ export default function ConnectionInfo() {
       <Suspense>
         <Settings open={searchParams.get('showSettings') === 'true'} />
       </Suspense>
-      <Grid md={4}>
-        <Stack direction={'row'} spacing={2} justifyContent='flex-end'>
-          <IconButton
-            aria-label='connections'
-            onClick={() => setSearchParams({ ...searchParams, showAddConnection: 'true' })}
-          >
+      <Grid2 size={{ md: 3 }}>
+        <Stack direction={'row'} justifyContent='flex-end'>
+          <IconButton aria-label='connections' onClick={() => changeSearchParams('showAddConnection')}>
             <CustomIcon type={'connection'} size={'m'} />
           </IconButton>
           {/* <IconButton aria-label='lock'>
@@ -49,18 +50,18 @@ export default function ConnectionInfo() {
           <IconButton
             disabled={!currentConnection}
             aria-label='databases'
-            onClick={() => setSearchParams({ ...searchParams, showSelectDatabase: 'true' })}
+            onClick={() => changeSearchParams('showSelectDatabase')}
           >
             <CustomIcon type={'databaseOutline'} size={'m'} />
           </IconButton>
         </Stack>
-      </Grid>
-      <Grid md={8} mx={2}>
+      </Grid2>
+      <Grid2 mr={1} ml={1} size={{ md: 8 }}>
         <ConnectionBox />
-      </Grid>
+      </Grid2>
 
-      <Grid md={4}>
-        <Stack direction={'row'} spacing={2} justifyContent='flex-start'>
+      <Grid2 size={{ md: 3 }}>
+        <Stack direction={'row'} justifyContent='flex-start'>
           {/* <IconButton aria-label='search'>
             <CustomIcon type={'search'} size={'m'} />
           </IconButton> */}
@@ -68,7 +69,7 @@ export default function ConnectionInfo() {
             <CustomIcon type={'sql'} size={'m'} />
           </IconButton>
         </Stack>
-      </Grid>
+      </Grid2>
     </Stack>
   );
 }

@@ -1,7 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { IconButton, Stack, useTheme } from '@mui/material';
-import Grid from '@mui/material/Unstable_Grid2';
+import { Grid2, IconButton, Stack, useTheme } from '@mui/material';
 
 export default function ActionBar() {
   const theme = useTheme();
@@ -30,14 +29,14 @@ export default function ActionBar() {
       id='action-bar'
       borderBottom={`1px solid ${theme.palette.divider}`}
       borderTop={`1px solid ${theme.palette.divider}`}
-      padding='0 8px'
+      padding=' 8px'
       maxHeight={40}
       direction='row'
       justifyContent='space-between'
       alignItems='center'
     >
-      <Grid md={8} display='flex' justifyContent='flex-start'>
-        <IconButton color='secondary' aria-label='grid' onClick={() => handleToggle('column')}>
+      <Stack direction={'row'} spacing={1} display='flex' justifyContent='flex-start'>
+        <IconButton aria-label='grid' onClick={() => handleToggle('column')}>
           <CustomIcon type='grid' size='s' />
         </IconButton>
         <IconButton className='toggle-filters' onClick={() => handleToggle('filter')}>
@@ -46,8 +45,8 @@ export default function ActionBar() {
         <IconButton aria-label='sort' onClick={() => handleToggle('sort')}>
           <CustomIcon type='sort' size='s' />
         </IconButton>
-      </Grid>
-      <Grid md={8} mx={2} display='flex' justifyContent='flex-end'>
+      </Stack>
+      <Grid2 size={{ md: 8 }} display='flex' justifyContent='flex-end'>
         <IconButton className='toggle-code-preview' onClick={() => handleToggle('query')}>
           <CustomIcon type='code' size='s' />
         </IconButton>
@@ -57,7 +56,7 @@ export default function ActionBar() {
         <IconButton aria-label='import'>
           <CustomIcon type='import' size='s' />
         </IconButton> */}
-      </Grid>
+      </Grid2>
     </Stack>
   );
 }

@@ -1,17 +1,20 @@
 import type { ConnectionType } from '@/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
-import type { ConnectionStore } from './types';
+import type { ConnectionStore, LoadingType } from './types';
 
 type ConnectionState = ConnectionStore;
 
 export const useConnectionStore = create<ConnectionState>()(
   devtools(
-    immer((set, get, ...state) => ({
+    (set, get) => ({
+      loading: 'finished',
       showEditConnection: undefined,
       connections: undefined,
       currentConnection: undefined,
+      updateLoading: (loading: LoadingType) => {
+        set({ loading });
+      },
       updateConnections: (connections: ConnectionType[]) => {
         set({ connections });
       },
@@ -38,7 +41,7 @@ export const useConnectionStore = create<ConnectionState>()(
 
         set({ currentConnection, connections });
       }
-    })),
+    }),
     { name: 'connections' }
   )
 );

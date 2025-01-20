@@ -1,3 +1,5 @@
 export type ConnectionBoxStyledProps = {
-  active?: boolean | string;
+  status: ConnectionBoxStatus;
 };
+
+export type ConnectionBoxStatus = 'error' | 'finished' | 'loading' | 'disable';

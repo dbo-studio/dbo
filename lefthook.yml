@@ -1,0 +1,9 @@
+pre-push:
+  commands:
+    # front-test:
+    #   run: npm --prefix frontend run test
+    front-format:
+      run: npm --prefix frontend run format
+    # backend-check:
+    #   root: "backend"
+    #   run: golangci-lint run

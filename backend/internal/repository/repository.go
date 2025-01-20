@@ -2,16 +2,20 @@ package repository
 
 import (
 	"context"
-
-	"github.com/dbo-studio/dbo/api/dto"
-	"github.com/dbo-studio/dbo/model"
+	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/driver"
+	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/dbo-studio/dbo/pkg/cache"
+	"gorm.io/gorm"
 )
 
 type IConnectionRepo interface {
-	ConnectionList(ctx context.Context) (*[]model.Connection, error)
-	FindConnection(ctx context.Context, id int32) (*model.Connection, error)
-	CreateConnection(ctx context.Context, dto *dto.CreateConnectionRequest) (*model.Connection, error)
-	DeleteConnection(ctx context.Context, connection *model.Connection) error
+	Index(ctx context.Context) (*[]model.Connection, error)
+	Find(ctx context.Context, id int32) (*model.Connection, error)
+	Create(ctx context.Context, dto *dto.CreateConnectionRequest) (*model.Connection, error)
+	Delete(ctx context.Context, connection *model.Connection) error
+	Update(ctx context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) (*model.Connection, error)
+	MakeAllConnectionsNotDefault(ctx context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) error
 }
 
 type ICacheRepo interface {
@@ -22,14 +26,30 @@ type ICacheRepo interface {
 	FlushCache(ctx context.Context) error
 }
 
+type IHistoryRepo interface {
+	Index(ctx context.Context, pagination *dto.PaginationRequest) (*[]model.History, error)
+}
+
+type ISavedQueryRepo interface {
+	Index(ctx context.Context, pagination *dto.PaginationRequest) (*[]model.SavedQuery, error)
+	Find(ctx context.Context, id int32) (*model.SavedQuery, error)
+	Create(ctx context.Context, dto *dto.CreateSavedQueryRequest) (*model.SavedQuery, error)
+	Delete(ctx context.Context, query *model.SavedQuery) error
+	Update(ctx context.Context, query *model.SavedQuery, req *dto.UpdateSavedQueryRequest) (*model.SavedQuery, error)
+}
+
 type Repository struct {
 	ConnectionRepo IConnectionRepo
 	CacheRepo      ICacheRepo
+	HistoryRepo    IHistoryRepo
+	SavedQueryRepo ISavedQueryRepo
 }
 
-func NewRepository(ctx context.Context) *Repository {
+func NewRepository(_ context.Context, db *gorm.DB, cache cache.Cache, drivers *driver.DriverEngine) *Repository {
 	return &Repository{
-		ConnectionRepo: NewConnectionRepo(),
-		CacheRepo:      NewCacheRepo(),
+		ConnectionRepo: NewConnectionRepo(db, drivers),
+		CacheRepo:      NewCacheRepo(cache, drivers, db),
+		HistoryRepo:    NewHistoryRepo(db),
+		SavedQueryRepo: NewSavedQueryRepo(db),
 	}
 }

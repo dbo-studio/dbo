@@ -1,6 +1,4 @@
-import { pullAllBy } from 'lodash';
 import type { StateCreator } from 'zustand';
-import { useTabStore } from '../../tabStore/tab.store';
 import type { DataSelectedRowsSlice, DataStore } from '../types';
 
 export const createDataSelectedRowsSlice: StateCreator<
@@ -9,36 +7,16 @@ export const createDataSelectedRowsSlice: StateCreator<
   [],
   DataSelectedRowsSlice
 > = (set, get) => ({
-  selectedRows: {},
+  selectedRows: new Map(),
+  toggleClear: true,
   getSelectedRows: () => {
-    const selectedTab = useTabStore.getState().getSelectedTab();
-    const rows = get().selectedRows;
-    if (!selectedTab || !rows[selectedTab.id]) {
-      return new Set([]);
-    }
-
-    return new Set(rows[selectedTab.id]);
+    return Array.from(get().selectedRows.values());
   },
-  updateSelectedRows: (selectedRows): void => {
-    const selectedTab = useTabStore.getState().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
-
-    const rows = get().selectedRows;
-    rows[selectedTab.id] = Array.from(selectedRows);
-
-    set({ selectedRows: rows });
+  setSelectedRows: (rows) => {
+    const mappedRows = new Map(rows.map((row) => [row.index, row]));
+    set({ selectedRows: mappedRows });
   },
-  removeSelectedRows: (selectedRowsIndex: number[]): void => {
-    const selectedTab = useTabStore.getState().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
-
-    const rows = get().selectedRows;
-    rows[selectedTab.id] = pullAllBy(rows[selectedTab.id], selectedRowsIndex);
-
-    set({ selectedRows: rows });
+  clearSelectedRows: () => {
+    set({ selectedRows: new Map(), toggleClear: !get().toggleClear });
   }
 });

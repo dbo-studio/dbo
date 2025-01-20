@@ -3,18 +3,17 @@ import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { SortType } from '@/types';
-import { Box, Button, type Theme, useTheme } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { v4 as uuid } from 'uuid';
-import AddSortButton from './AddSortButton';
-import SortItem from './SortItem';
+import AddSortButton from './SortItem/AddSortButton/AddSortButton.tsx';
+import SortItem from './SortItem/SortItem.tsx';
 
 export default function Sorts() {
   const { getSelectedTab } = useTabStore();
   const { getColumns, runQuery } = useDataStore();
-  const theme: Theme = useTheme();
 
   return (
-    <Box id='#sorts' p={1} borderBottom={`1px solid ${theme.palette.divider}`}>
+    <Box id='#sorts' p={1} borderBottom={(theme) => `1px solid ${theme.palette.divider}`}>
       {getSelectedTab()?.sorts.length === 0 ? (
         <AddSortButton columns={getColumns()} />
       ) : (
@@ -23,13 +22,13 @@ export default function Sorts() {
         })
       )}
 
-      {getSelectedTab() && getSelectedTab().sorts.length > 0 ? (
+      {(getSelectedTab()?.sorts?.length ?? 0) > 0 && (
         <Box display='flex' justifyContent='flex-start' mx={1} mt={1}>
           <Button onClick={runQuery} size='small' variant='outlined' endIcon={<CustomIcon type='check' size='xs' />}>
             {locales.apply}
           </Button>
         </Box>
-      ) : null}
+      )}
     </Box>
   );
 }

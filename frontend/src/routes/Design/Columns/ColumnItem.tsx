@@ -1,10 +1,7 @@
 import { Checkbox, TableCell, Typography } from '@mui/material';
-import { v4 as uuidv4 } from 'uuid';
 
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
-import SelectOption from '@/components/base/SelectInput/SelectOption';
-import { PgsqlTypes } from '@/core/constants';
 import { clone } from 'lodash';
 import { useState } from 'react';
 import { ColumnItemStyled } from './Columns.styled';
@@ -17,7 +14,8 @@ export default function ColumnItem({
   onEditToggle,
   edited,
   deleted,
-  unsaved
+  unsaved,
+  dataTypes
 }: ColumnItemProps) {
   const [value, setValue] = useState(column);
 
@@ -88,27 +86,18 @@ export default function ColumnItem({
             type='string'
           />
         ) : (
-          <Typography onDoubleClick={() => handleToggleEdit('name')} variant='body2'>
+          <Typography color={'textText'} onDoubleClick={() => handleToggleEdit('name')} variant='body2'>
             {value.name}
           </Typography>
         )}
       </TableCell>
       <TableCell align='left'>
         <SelectInput
-          sx={{ marginBottom: '0' }}
           value={value.type}
-          defaultValue={value.type}
-          onChange={(e) => handleOnColumnChange(e.target.value, 'type')}
-          name='type'
           size='small'
-          margin='none'
-        >
-          {PgsqlTypes.map((t: string) => (
-            <SelectOption value={t} key={uuidv4()}>
-              {t}
-            </SelectOption>
-          ))}
-        </SelectInput>
+          options={dataTypes.map((t) => ({ value: t, label: t }))}
+          onChange={(e) => handleOnColumnChange(e.value, 'type')}
+        />
       </TableCell>
       <TableCell align='left'>
         {column?.editMode?.length ? (
@@ -121,7 +110,7 @@ export default function ColumnItem({
             type='number'
           />
         ) : (
-          <Typography onClick={() => handleToggleEdit('length')} variant='body2'>
+          <Typography color={'textText'} onClick={() => handleToggleEdit('length')} variant='body2'>
             {value.length}
           </Typography>
         )}
@@ -137,7 +126,7 @@ export default function ColumnItem({
             type='string'
           />
         ) : (
-          <Typography onClick={() => handleToggleEdit('default')} variant='body2'>
+          <Typography color={'textText'} onClick={() => handleToggleEdit('default')} variant='body2'>
             {value.default}
           </Typography>
         )}
@@ -163,7 +152,7 @@ export default function ColumnItem({
             type='string'
           />
         ) : (
-          <Typography onClick={() => handleToggleEdit('comment')} variant='body2'>
+          <Typography color={'textText'} onClick={() => handleToggleEdit('comment')} variant='body2'>
             {value.comment}
           </Typography>
         )}

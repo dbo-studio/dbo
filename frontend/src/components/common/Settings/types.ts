@@ -1,4 +1,5 @@
 import type { IconTypes } from '@/components/base/CustomIcon/types';
+import type { JSX } from 'react';
 
 export type MenuPanelItemProps = {
   name: string;
