@@ -1,11 +1,16 @@
+import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton.tsx';
 import { TabMode } from '@/core/enums';
+import useAPI from '@/hooks/useApi.hook.ts';
 import useNavigate from '@/hooks/useNavigate.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Grid2, IconButton, Stack } from '@mui/material';
-import { Suspense, lazy } from 'react';
+import axios from 'axios';
+import { lazy, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import ConnectionBox from './ConnectionBox/ConnectionBox.tsx';
 
 const Databases = lazy(() => import('@/components/common/Databases/Databases'));
@@ -14,9 +19,12 @@ const Settings = lazy(() => import('@/components/common/Settings/Settings.tsx'))
 export default function ConnectionInfo() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const { currentConnection } = useConnectionStore();
+  const { currentConnection, loading, updateLoading, updateCurrentConnection } = useConnectionStore();
   const { addTab } = useTabStore();
+
+  const { request: getConnectionDetail, pending } = useAPI({
+    apiMethod: api.connection.getConnectionDetail
+  });
 
   const handleAddEditorTab = () => {
     const tab = addTab('Editor', TabMode.Query);
@@ -29,6 +37,28 @@ export default function ConnectionInfo() {
   const changeSearchParams = (key: string) => {
     searchParams.set(key, 'true');
     setSearchParams(searchParams);
+  };
+
+  const handleRefresh = () => {
+    if (!currentConnection) {
+      return;
+    }
+    updateLoading('loading');
+    getConnectionDetail({
+      connectionID: currentConnection?.id,
+      fromCache: false
+    })
+      .then((res) => {
+        updateCurrentConnection(res);
+        updateLoading('finished');
+      })
+      .catch((e) => {
+        updateLoading('error');
+        if (axios.isAxiosError(e)) {
+          toast.error(e.message);
+        }
+        console.log('🚀 ~ handleRefresh ~ err:', e);
+      });
   };
 
   return (
@@ -62,10 +92,15 @@ export default function ConnectionInfo() {
 
       <Grid2 size={{ md: 3 }}>
         <Stack direction={'row'} justifyContent='flex-start'>
-          {/* <IconButton aria-label='search'>
-            <CustomIcon type={'search'} size={'m'} />
-          </IconButton> */}
-          <IconButton disabled={!currentConnection} aria-label='sql' onClick={handleAddEditorTab}>
+          <LoadingIconButton
+            aria-label={'refresh'}
+            onClick={handleRefresh}
+            loading={pending}
+            disabled={loading === 'loading'}
+          >
+            <CustomIcon type={'refresh'} />
+          </LoadingIconButton>
+          <IconButton aria-lable={'sql'} disabled={!currentConnection} aria-label='sql' onClick={handleAddEditorTab}>
             <CustomIcon type={'sql'} size={'m'} />
           </IconButton>
         </Stack>
