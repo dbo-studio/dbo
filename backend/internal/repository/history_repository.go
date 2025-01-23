@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/db/scope"
@@ -23,7 +24,7 @@ func NewHistoryRepo(db *gorm.DB) *IHistoryRepoImpl {
 func (h IHistoryRepoImpl) Index(_ context.Context, pagination *dto.PaginationRequest) (*[]model.History, error) {
 	var histories []model.History
 
-	result := h.db.Scopes(scope.Paginate(pagination)).Find(&histories)
+	result := h.db.Scopes(scope.Paginate(pagination)).Order("created_at desc").Find(&histories)
 
 	if result.Error != nil {
 		return nil, result.Error
