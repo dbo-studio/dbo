@@ -105,5 +105,7 @@
   "check_for_updates": "Check for updates",
   "connecting": "Connecting",
   "general": "General",
-  "connection_error": "Error fetching Connection"
+  "connection_error": "Error fetching Connection",
+  "debug_mode": "Debug mode",
+  "enable_debug_console": "Enable Debug console"
 }
