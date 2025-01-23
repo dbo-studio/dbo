@@ -3,25 +3,17 @@ import useAPI from '@/hooks/useApi.hook';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { LoadingButton } from '@mui/lab';
 import { Box, Button, Stack } from '@mui/material';
-import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import FieldInput from '../../../../base/FieldInput/FieldInput';
 import type { ConnectionSettingsProps } from '../types';
-
-interface IFormInput {
-  name: string;
-  host: string;
-  port: string;
-  username: string;
-  password?: string;
-  database?: string;
-}
+import { isAxiosError } from 'axios';
+import { useForm } from '@tanstack/react-form';
 
 const formSchema = z.object({
+  isTest: z.boolean().optional(),
   name: z.string().min(1),
   host: z.string().min(1),
   port: z
@@ -35,25 +27,7 @@ const formSchema = z.object({
   database: z.string().optional()
 });
 
-type ValidationSchema = z.infer<typeof formSchema>;
-
 export default function ConnectionSetting({ connection, onClose }: ConnectionSettingsProps) {
-  const {
-    control,
-    handleSubmit,
-    formState: { errors }
-  } = useForm<ValidationSchema>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      database: connection?.auth.database,
-      host: connection?.auth.host ?? '',
-      port: connection?.auth.port.toString() ?? '',
-      name: connection?.name ?? '',
-      username: connection?.auth.username ?? '',
-      password: ''
-    }
-  });
-
   const { updateSelectedTab, updateTabs } = useTabStore();
   const { updateCurrentConnection } = useConnectionStore();
 
@@ -65,118 +39,147 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
     apiMethod: api.connection.testConnection
   });
 
-  const onSubmit: SubmitHandler<IFormInput> = async (data, e) => {
-    e?.preventDefault();
-    if (updateConnectionPending) {
-      return;
-    }
-    try {
-      const res = await updateConnection({
-        ...data,
-        id: connection?.id
-      });
-      toast.success(locales.connection_update_success);
-      updateSelectedTab(undefined);
-      updateTabs([]);
-      updateCurrentConnection(res);
-      onClose();
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  const form = useForm({
+    validators: {
+      onChange: formSchema
+    },
+    onSubmit: async ({ value }) => {
+      //test connection ping
+      if (value.isTest) {
+        if (testConnectionPending) {
+          return;
+        }
+        try {
+          await testConnection(value);
+          toast.success(locales.connection_test_success);
+        } catch (err) {
+          if (isAxiosError(err)) {
+            toast.error(err.message);
+          }
+          console.log('🚀 ~ ConnectionSettings.tsx: ~ err:', err);
+        }
+        return;
+      }
 
-  const handleTestConnection: SubmitHandler<IFormInput> = async (data, e) => {
-    e?.preventDefault();
-    if (testConnectionPending) {
-      return;
+      //update connection
+      if (updateConnectionPending) {
+        return;
+      }
+      try {
+        const res = await updateConnection({
+          ...value,
+          id: connection?.id
+        });
+        toast.success(locales.connection_update_success);
+        updateSelectedTab(undefined);
+        updateTabs([]);
+        updateCurrentConnection(res);
+        onClose();
+      } catch (err) {
+        if (isAxiosError(err)) {
+          toast.error(err.message);
+        }
+        console.log('🚀 ~ ConnectionSettings.tsx: ~ err:', err);
+      }
+    },
+    defaultValues: {
+      isTest: false,
+      database: connection?.auth.database,
+      host: connection?.auth.host ?? '',
+      port: connection?.auth.port.toString() ?? '',
+      name: connection?.name ?? '',
+      username: connection?.auth.username ?? '',
+      password: ''
     }
-    try {
-      await testConnection(data);
-      toast.success(locales.connection_test_success);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  });
 
   return (
     connection && (
       <Box flex={1} display={'flex'} flexDirection={'column'}>
         <Box flex={1}>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <Controller
-              name='name'
-              control={control}
-              render={({ field }) => (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              form.handleSubmit().then();
+            }}
+          >
+            <form.Field name='name'>
+              {(field) => (
                 <FieldInput
-                  helpertext={errors.name?.message}
-                  error={!!errors.name}
+                  value={field.state.value}
+                  helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
+                  error={field.state.meta.errors.length > 0}
                   fullWidth={true}
                   label={locales.name}
-                  {...field}
+                  onChange={(e) => field.handleChange(e.target.value)}
                 />
               )}
-            />
+            </form.Field>
+
             <Stack direction='row' spacing={2}>
-              <Controller
-                name='host'
-                control={control}
-                render={({ field }) => (
-                  <FieldInput helpertext={errors.host?.message} error={!!errors.host} label={locales.host} {...field} />
-                )}
-              />
-              <Controller
-                name='port'
-                control={control}
-                render={({ field }) => (
+              <form.Field name='host'>
+                {(field) => (
                   <FieldInput
-                    helpertext={errors.port?.message}
-                    error={!!errors.port}
+                    value={field.state.value}
+                    helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
+                    error={field.state.meta.errors.length > 0}
+                    label={locales.host}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                  />
+                )}
+              </form.Field>
+
+              <form.Field name='port'>
+                {(field) => (
+                  <FieldInput
+                    value={field.state.value}
+                    helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
+                    error={field.state.meta.errors.length > 0}
                     label={locales.port}
                     type='number'
-                    {...field}
+                    onChange={(e) => field.handleChange(e.target.value)}
                   />
                 )}
-              />
+              </form.Field>
             </Stack>
             <Stack direction='row' spacing={2}>
-              <Controller
-                name='username'
-                control={control}
-                render={({ field }) => (
+              <form.Field name='username'>
+                {(field) => (
                   <FieldInput
-                    helpertext={errors.username?.message}
-                    error={!!errors.username}
+                    value={field.state.value}
+                    helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
+                    error={field.state.meta.errors.length > 0}
                     label={locales.username}
-                    {...field}
+                    onChange={(e) => field.handleChange(e.target.value)}
                   />
                 )}
-              />
-              <Controller
-                name='password'
-                control={control}
-                render={({ field }) => (
+              </form.Field>
+
+              <form.Field name='password'>
+                {(field) => (
                   <FieldInput
-                    helpertext={errors.password?.message}
-                    error={!!errors.password}
+                    value={field.state.value}
+                    helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
+                    error={field.state.meta.errors.length > 0}
                     label={locales.password}
-                    {...field}
+                    onChange={(e) => field.handleChange(e.target.value)}
                   />
                 )}
-              />
+              </form.Field>
             </Stack>
-            <Controller
-              name='database'
-              control={control}
-              render={({ field }) => (
+            <form.Field name='database'>
+              {(field) => (
                 <FieldInput
-                  helpertext={errors.database?.message}
-                  error={!!errors.database}
-                  fullWidth={true}
+                  value={field.state.value}
+                  helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
+                  error={field.state.meta.errors.length > 0}
                   label={locales.database}
-                  {...field}
+                  fullWidth={true}
+                  onChange={(e) => field.handleChange(e.target.value)}
                 />
               )}
-            />
+            </form.Field>
           </form>
         </Box>
         <Box display={'flex'} justifyContent={'space-between'}>
@@ -186,7 +189,10 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
           <Stack spacing={1} direction={'row'}>
             <LoadingButton
               loading={testConnectionPending}
-              onClick={handleSubmit(handleTestConnection)}
+              onClick={() => {
+                form.state.values.isTest = true;
+                form.handleSubmit().then();
+              }}
               size='small'
               variant='contained'
               color='secondary'
@@ -195,7 +201,10 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
             </LoadingButton>
             <LoadingButton
               loading={updateConnectionPending}
-              onClick={handleSubmit(onSubmit)}
+              onClick={() => {
+                form.state.values.isTest = false;
+                form.handleSubmit().then();
+              }}
               size='small'
               variant='contained'
             >
