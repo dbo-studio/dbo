@@ -25,9 +25,7 @@ export default function Histories() {
   };
 
   useEffect(() => {
-    if (histories === undefined) {
-      handleGetHistories();
-    }
+    handleGetHistories().then();
   }, []);
 
   return (
