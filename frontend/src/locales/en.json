@@ -107,5 +107,6 @@
   "general": "General",
   "connection_error": "Error fetching Connection",
   "debug_mode": "Debug mode",
-  "enable_debug_console": "Enable Debug console"
+  "enable_debug_console": "Enable Debug console",
+  "record": "Record"
 }

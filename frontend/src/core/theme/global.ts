@@ -1,5 +1,5 @@
-import {variables} from '@/core/theme/variables.ts';
-import type {Theme} from '@mui/material';
+import { variables } from '@/core/theme/variables.ts';
+import type { Theme } from '@mui/material';
 
 export const globalStyles = (theme: Theme) => {
   return {
