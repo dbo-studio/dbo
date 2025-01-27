@@ -108,5 +108,6 @@
   "connection_error": "Error fetching Connection",
   "debug_mode": "Debug mode",
   "enable_debug_console": "Enable Debug console",
-  "record": "Record"
+  "record": "Record",
+  "quick_look_editor": "Quick look editor"
 }

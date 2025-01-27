@@ -100,7 +100,7 @@ export default function ConnectionInfo() {
           >
             <CustomIcon type={'refresh'} />
           </LoadingIconButton>
-          <IconButton aria-lable={'sql'} disabled={!currentConnection} aria-label='sql' onClick={handleAddEditorTab}>
+          <IconButton aria-label={'sql'} disabled={!currentConnection} onClick={handleAddEditorTab}>
             <CustomIcon type={'sql'} size={'m'} />
           </IconButton>
         </Stack>

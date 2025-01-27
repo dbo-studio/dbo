@@ -13,10 +13,12 @@ import { useHandleScroll } from '@/components/shared/DBDataGrid/hooks/useHandleS
 import { Box, CircularProgress } from '@mui/material';
 import { registerAllModules } from 'handsontable/registry';
 import { useRef } from 'react';
+import type { DataGridProps } from '@/components/shared/DBDataGrid/types.ts';
+import QuickViewDialog from '@/components/shared/DBDataGrid/QuickViewDialog/QuickViewDialog.tsx';
 
 registerAllModules();
 
-export default function DataGrid() {
+export default function DataGrid({ editable }: DataGridProps) {
   const hotTableRef = useRef<HotTableRef | null>(null);
   const { loading, getRows, getColumns } = useDataStore();
 
@@ -38,37 +40,41 @@ export default function DataGrid() {
   }
 
   return (
-    <DataGridStyled
-      ref={hotTableRef}
-      data={getRows()}
-      rowHeaders={true}
-      fillHandle={false}
-      mergeCells={false}
-      manualColumnFreeze={false}
-      manualColumnMove={false}
-      manualRowMove={false}
-      selectionMode={'multiple'}
-      startRows={0}
-      startCols={0}
-      height='100%'
-      width='100%'
-      manualColumnResize={true}
-      outsideClickDeselects={false}
-      minSpareRows={0}
-      contextMenu={handleContextMenu}
-      afterSelectionEnd={handleSelection}
-      afterChange={handleRowChange}
-      licenseKey='non-commercial-and-evaluation'
-      modifyColWidth={(width) => (width > 400 ? 400 : width)}
-      className={'handsontable'}
-      cells={() => {
-        return { renderer: 'handleRowStyle' };
-      }}
-      columnSorting={true}
-    >
-      {getColumns().map((column) => (
-        <HotColumn data={column.key} title={column.name} key={column.key} />
-      ))}
-    </DataGridStyled>
+    <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
+      <QuickViewDialog />
+      <DataGridStyled
+        ref={hotTableRef}
+        data={getRows()}
+        rowHeaders={true}
+        fillHandle={false}
+        mergeCells={false}
+        manualColumnFreeze={false}
+        manualColumnMove={false}
+        manualRowMove={false}
+        selectionMode={'multiple'}
+        startRows={0}
+        startCols={0}
+        height='100%'
+        width='100%'
+        manualColumnResize={true}
+        outsideClickDeselects={false}
+        minSpareRows={0}
+        contextMenu={handleContextMenu}
+        afterSelectionEnd={handleSelection}
+        readOnly={!editable}
+        afterChange={editable ? handleRowChange : undefined}
+        licenseKey='non-commercial-and-evaluation'
+        modifyColWidth={(width) => (width > 400 ? 400 : width)}
+        className={'handsontable'}
+        cells={() => {
+          return { renderer: 'handleRowStyle' };
+        }}
+        columnSorting={true}
+      >
+        {getColumns().map((column) => (
+          <HotColumn data={column.key} title={column.name} key={column.key} />
+        ))}
+      </DataGridStyled>
+    </Box>
   );
 }

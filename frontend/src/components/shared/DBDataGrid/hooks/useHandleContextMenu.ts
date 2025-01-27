@@ -2,20 +2,20 @@ import Handsontable from 'handsontable';
 // @ts-ignore
 import type Core from 'handsontable/core';
 import type { Selection, Settings } from 'handsontable/plugins/contextMenu';
+import { useSearchParams } from 'react-router-dom';
 import ContextMenu = Handsontable.plugins.ContextMenu;
 
 export const useHandleContextMenu = (): Settings => {
-  // const { setSelectedRows } = useDataStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+
   // @ts-ignore
   return {
     items: {
       quick_look: {
         name: 'Quick look editor',
-        callback: (core: Core, key: string, selection: Selection[], clickEvent: MouseEvent): void => {
-          console.log('=>(useHandleContextMenu.ts:15) clickEvent', clickEvent);
-          console.log('=>(useHandleContextMenu.ts:15) selection', selection);
-          console.log('=>(useHandleContextMenu.ts:15) key', key);
-          console.log('=>(useHandleContextMenu.ts:15) core', core);
+        callback: (): void => {
+          searchParams.set('quick-look-editor', 'true');
+          setSearchParams(searchParams);
         }
       },
       // sp1: ContextMenu.SEPARATOR,

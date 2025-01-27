@@ -1,28 +1,45 @@
+import type { SqlEditorProps } from '@/components/base/SqlEditor/types.ts';
 import * as monaco from 'monaco-editor';
+import { LanguageIdEnum } from 'monaco-sql-languages';
+
+import { shortcuts } from '@/core/utils/shortcuts.ts';
+import { useShortcut } from '@/hooks/useShortcut.hook.ts';
+import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { useEffect, useRef, useState } from 'react';
+import { changeMetaProviderSetting } from './helpers/dbMetaProvider.ts';
 import { editorConfig } from './helpers/editorConfig.ts';
 import './helpers/languageSetup.ts';
-import type { CodeEditorProps } from '@/components/base/CodeEditor/types.ts';
+import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { Box } from '@mui/material';
 
-export default function CodeEditor({ value, onChange }: CodeEditorProps) {
+export default function SqlEditor({ autocomplete, value, onChange }: SqlEditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
   const [mount, setMount] = useState(false);
   const { isDark } = useSettingStore();
+  const { getSelectedTab } = useTabStore();
+  const { runRawQuery } = useDataStore();
+
+  useShortcut(shortcuts.runQuery, () => runRawQuery());
 
   useEffect(() => {
     if (hostRef.current && !editorRef.current) {
       editorRef.current = monaco.editor.create(hostRef.current, {
         ...editorConfig,
         theme: isDark ? 'github-dark' : 'github-light',
-        language: 'json'
-        // language: LanguageIdEnum.PG
+        language: LanguageIdEnum.PG
       });
     }
 
     const model = editorRef.current?.getModel();
+
+    editorRef.current?.addAction({
+      id: shortcuts.runQuery.command,
+      keybindings: shortcuts.runQuery.monaco,
+      run: () => runRawQuery(),
+      label: shortcuts.runQuery.label
+    });
 
     model?.onDidChangeContent(() => {
       if (value.toString() !== model.getValue()) {
@@ -31,7 +48,7 @@ export default function CodeEditor({ value, onChange }: CodeEditorProps) {
     });
 
     setMount(true);
-  }, []);
+  }, [getSelectedTab()?.id]);
 
   useEffect(() => {
     if (editorRef.current && value.toString() !== editorRef.current.getValue()) {
@@ -47,9 +64,14 @@ export default function CodeEditor({ value, onChange }: CodeEditorProps) {
     }
   }, [isDark]);
 
+  useEffect(() => {
+    changeMetaProviderSetting(autocomplete);
+  }, [autocomplete]);
+
   return (
     <Box
       sx={{
+        height: '100%',
         width: '100%',
         visibility: mount ? 'visible' : 'hidden',
         userSelect: 'text',
