@@ -13,7 +13,7 @@ export default function AppHeader() {
       <Grid2 size={{ md: 8 }}>
         <ConnectionInfo />
       </Grid2>
-      <Grid2 size={{ md: 2 }} display={'flex'} justifyContent={'flex-start'}>
+      <Grid2 size={{ md: 2 }} display={'flex'} justifyContent={'flex-end'}>
         <Actions />
       </Grid2>
     </AppHeaderStyled>
