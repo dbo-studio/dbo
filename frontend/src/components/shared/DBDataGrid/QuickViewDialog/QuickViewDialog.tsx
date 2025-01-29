@@ -1,8 +1,8 @@
 import CodeEditor from '@/components/base/CodeEditor/CodeEditor.tsx';
-import Modal from '@/components/base/Modal/Modal';
+import ResizableModal from '@/components/base/Modal/ResizableModal/ResizableModal.tsx';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
-import { Box, Button } from '@mui/material';
+import { Box } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
@@ -10,6 +10,7 @@ export default function QuickViewDialog() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { getSelectedRows } = useDataStore();
   const [value, setValue] = useState<string | undefined>(undefined);
+  const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
 
   const handleClose = () => {
     searchParams.delete('quick-look-editor');
@@ -29,11 +30,17 @@ export default function QuickViewDialog() {
   }, [searchParams.get('quick-look-editor')]);
 
   return (
-    <Modal open={searchParams.get('quick-look-editor') === 'true'} title={locales.new_connection}>
+    <ResizableModal
+      onClose={handleClose}
+      open={searchParams.get('quick-look-editor') === 'true'}
+      title={locales.quick_look_editor}
+      onResize={(width: number, height: number): void => setDimensions({ width, height })}
+    >
       <Box display={'flex'} flex={1} flexDirection={'column'}>
-        <Box display={'flex'} flex={1}>
+        <Box overflow={'auto'} display={'flex'} flex={1}>
           {value && (
             <CodeEditor
+              width={dimensions.width}
               value={value}
               onChange={(value: string): void => {
                 console.log(value);
@@ -41,9 +48,7 @@ export default function QuickViewDialog() {
             />
           )}
         </Box>
-
-        <Button onClick={handleClose}>Close</Button>
       </Box>
-    </Modal>
+    </ResizableModal>
   );
 }

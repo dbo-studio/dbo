@@ -2,7 +2,7 @@ import { useParamParser, useWindowSize } from '@/hooks';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Grid2 } from '@mui/material';
-import ConfirmModal from '../base/Modal/ConfirmModal';
+import ConfirmModal from '../base/Modal/ConfirmModal/ConfirmModal.tsx';
 import AppHeader from './AppHeader/AppHeader';
 import { LayoutStyled } from './Layout.styled';
 import CenterContainer from './MainContainer/CenterContainer';

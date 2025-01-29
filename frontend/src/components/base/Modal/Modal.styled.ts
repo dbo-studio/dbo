@@ -19,8 +19,3 @@ export const ModalWrapperStyled = styled(Box)(({ theme }) => ({
     outline: 'unset'
   }
 })) as typeof Box;
-
-export const ConfirmModalWrapperStyled = styled(ModalWrapperStyled)(() => ({
-  minHeight: '120px',
-  minWidth: '400px'
-})) as typeof ModalWrapperStyled;

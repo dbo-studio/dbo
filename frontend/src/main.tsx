@@ -9,6 +9,7 @@ import ReactDOM from 'react-dom/client';
 import { Toaster } from 'sonner';
 import ThemeProvider from './core/theme/index.tsx';
 import { Router } from './routes/intex.tsx';
+import './components/base/SqlEditor/helpers/languageSetup.ts';
 
 enableMocking().then(() => {
   // biome-ignore lint: reason

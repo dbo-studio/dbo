@@ -8,8 +8,7 @@ import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { useEffect, useRef, useState } from 'react';
 import { changeMetaProviderSetting } from './helpers/dbMetaProvider.ts';
-import { editorConfig } from './helpers/editorConfig.ts';
-import './helpers/languageSetup.ts';
+import { editorConfig } from './helpers/editorConfig.ts'; // import './helpers/languageSetup.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { Box } from '@mui/material';
 
