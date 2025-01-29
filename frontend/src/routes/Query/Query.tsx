@@ -1,7 +1,7 @@
 import api from '@/api';
 import type { AutoCompleteRequestType } from '@/api/query/types';
-import CodeEditor from '@/components/base/CodeEditor/CodeEditor.tsx';
-import type { CodeEditorSettingType } from '@/components/base/CodeEditor/types';
+import SqlEditor from '@/components/base/SqlEditor/SqlEditor.tsx';
+import type { SqlEditorSettingType } from '@/components/base/SqlEditor/types';
 import DataGrid from '@/components/shared/DBDataGrid/DataGrid.tsx';
 import { useWindowSize } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
@@ -19,7 +19,7 @@ export default function Query() {
   const { getQuery, updateQuery, getSelectedTab } = useTabStore();
   const [autocomplete, setAutocomplete] = useState<AutoCompleteType | null>(null);
   const [value, setValue] = useState('');
-  const [setting, setSetting] = useState<CodeEditorSettingType>({
+  const [setting, setSetting] = useState<SqlEditorSettingType>({
     database: '',
     schema: ''
   });
@@ -58,7 +58,7 @@ export default function Query() {
       <QueryEditorActionBar onFormat={() => handleChangeValue()} onChange={setSetting} />
       <Box display={'flex'} flexDirection={'column'} height={windowSize.height}>
         <Box display={'flex'} minHeight={'0'} flex={1} borderBottom={`1px solid ${theme.palette.divider}`}>
-          {autocomplete && <CodeEditor onChange={handleUpdateState} autocomplete={autocomplete} value={value} />}
+          {autocomplete && <SqlEditor onChange={handleUpdateState} autocomplete={autocomplete} value={value} />}
         </Box>
         {autocomplete && (
           <Box display={'flex'} flex={1}>

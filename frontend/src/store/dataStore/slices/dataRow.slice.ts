@@ -18,6 +18,11 @@ export const createDataRowSlice: StateCreator<
     }
     return rows[selectedTab.id];
   },
+  getRow: (dboIndex: number): RowType => {
+    return get()
+      .getRows()
+      .find((r) => r.dbo_index === dboIndex);
+  },
   updateRows: async (items: RowType[]) => {
     const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab) {
@@ -26,6 +31,22 @@ export const createDataRowSlice: StateCreator<
 
     const rows = get().rows;
     rows[selectedTab.id] = items;
+
+    set({ rows });
+  },
+  updateRow: (item: RowType) => {
+    const selectedTab = useTabStore.getState().getSelectedTab();
+    if (!selectedTab) {
+      return;
+    }
+
+    const rows = get().rows;
+    rows[selectedTab.id] = get()
+      .getRows()
+      .map((r) => {
+        if (r.dbo_index === item.dbo_index) return item;
+        return r;
+      });
 
     set({ rows });
   },

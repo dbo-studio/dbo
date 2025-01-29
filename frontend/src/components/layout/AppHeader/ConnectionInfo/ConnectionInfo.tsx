@@ -8,13 +8,11 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Grid2, IconButton, Stack } from '@mui/material';
 import axios from 'axios';
-import { lazy, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import ConnectionBox from './ConnectionBox/ConnectionBox.tsx';
-
-const Databases = lazy(() => import('@/components/common/Databases/Databases'));
-const Settings = lazy(() => import('@/components/common/Settings/Settings.tsx'));
+import Databases from '@/components/common/Databases/Databases.tsx';
+import Settings from '@/components/common/Settings/Settings.tsx';
 
 export default function ConnectionInfo() {
   const navigate = useNavigate();
@@ -63,12 +61,8 @@ export default function ConnectionInfo() {
 
   return (
     <Stack direction={'row'} justifyContent={'center'} alignItems={'center'}>
-      <Suspense>
-        <Databases open={searchParams.get('showSelectDatabase') === 'true'} />
-      </Suspense>
-      <Suspense>
-        <Settings open={searchParams.get('showSettings') === 'true'} />
-      </Suspense>
+      <Databases open={searchParams.get('showSelectDatabase') === 'true'} />
+      <Settings open={searchParams.get('showSettings') === 'true'} />
       <Grid2 size={{ md: 3 }}>
         <Stack direction={'row'} justifyContent='flex-end'>
           <IconButton aria-label='connections' onClick={() => changeSearchParams('showAddConnection')}>
@@ -100,7 +94,7 @@ export default function ConnectionInfo() {
           >
             <CustomIcon type={'refresh'} />
           </LoadingIconButton>
-          <IconButton aria-lable={'sql'} disabled={!currentConnection} aria-label='sql' onClick={handleAddEditorTab}>
+          <IconButton aria-label={'sql'} disabled={!currentConnection} onClick={handleAddEditorTab}>
             <CustomIcon type={'sql'} size={'m'} />
           </IconButton>
         </Stack>

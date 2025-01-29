@@ -1,32 +1,53 @@
-import type { CodeEditorProps } from '@/components/base/CodeEditor/types.ts';
-import { useSettingStore } from '@/store/settingStore/setting.store.ts';
-import { Box } from '@mui/material';
+import type { SqlEditorProps } from '@/components/base/SqlEditor/types.ts';
 import * as monaco from 'monaco-editor';
-import { useEffect, useRef } from 'react';
-import { editorConfig } from './helpers/editorConfig.ts';
+import { LanguageIdEnum } from 'monaco-sql-languages';
 
-export default function CodeEditor({ value, onChange, width, height }: CodeEditorProps) {
+import { shortcuts } from '@/core/utils/shortcuts.ts';
+import { useShortcut } from '@/hooks/useShortcut.hook.ts';
+import { useDataStore } from '@/store/dataStore/data.store.ts';
+import { useSettingStore } from '@/store/settingStore/setting.store.ts';
+import { useEffect, useRef, useState } from 'react';
+import { changeMetaProviderSetting } from './helpers/dbMetaProvider.ts';
+import { editorConfig } from './helpers/editorConfig.ts'; // import './helpers/languageSetup.ts';
+import { useTabStore } from '@/store/tabStore/tab.store.ts';
+import { Box } from '@mui/material';
+
+export default function SqlEditor({ autocomplete, value, onChange }: SqlEditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
+  const [mount, setMount] = useState(false);
   const { isDark } = useSettingStore();
+  const { getSelectedTab } = useTabStore();
+  const { runRawQuery } = useDataStore();
+
+  useShortcut(shortcuts.runQuery, () => runRawQuery());
 
   useEffect(() => {
     if (hostRef.current && !editorRef.current) {
       editorRef.current = monaco.editor.create(hostRef.current, {
         ...editorConfig,
         theme: isDark ? 'github-dark' : 'github-light',
-        language: 'json'
+        language: LanguageIdEnum.PG
       });
     }
 
     const model = editorRef.current?.getModel();
+
+    editorRef.current?.addAction({
+      id: shortcuts.runQuery.command,
+      keybindings: shortcuts.runQuery.monaco,
+      run: () => runRawQuery(),
+      label: shortcuts.runQuery.label
+    });
 
     model?.onDidChangeContent(() => {
       if (value.toString() !== model.getValue()) {
         onChange(model.getValue());
       }
     });
-  }, []);
+
+    setMount(true);
+  }, [getSelectedTab()?.id]);
 
   useEffect(() => {
     if (editorRef.current && value.toString() !== editorRef.current.getValue()) {
@@ -43,15 +64,15 @@ export default function CodeEditor({ value, onChange, width, height }: CodeEdito
   }, [isDark]);
 
   useEffect(() => {
-    if (editorRef.current) {
-      editorRef.current.layout();
-    }
-  }, [width, height]);
+    changeMetaProviderSetting(autocomplete);
+  }, [autocomplete]);
 
   return (
     <Box
       sx={{
+        height: '100%',
         width: '100%',
+        visibility: mount ? 'visible' : 'hidden',
         userSelect: 'text',
         WebkitUserSelect: 'text',
         msUserSelect: 'text',

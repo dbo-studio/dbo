@@ -1,8 +1,13 @@
 import { LanguageIdEnum, setupLanguageFeatures } from 'monaco-sql-languages';
 
+
 import { shikiToMonaco } from '@shikijs/monaco';
 import * as monaco from 'monaco-editor';
-import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
+import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
+import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
+import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import PGSQLWorker from 'monaco-sql-languages/esm/languages/pgsql/pgsql.worker?worker';
 import { createHighlighter } from 'shiki';
 import { completionService } from './completionService';
@@ -13,13 +18,35 @@ import { completionService } from './completionService';
     if (label === LanguageIdEnum.PG) {
       return new PGSQLWorker();
     }
-    return new EditorWorker();
+
+    if (label === 'json') {
+      return new jsonWorker();
+    }
+    if (label === 'css' || label === 'scss' || label === 'less') {
+      return new cssWorker();
+    }
+    if (label === 'html' || label === 'handlebars' || label === 'razor') {
+      return new htmlWorker();
+    }
+    if (label === 'typescript' || label === 'javascript') {
+      return new tsWorker();
+    }
+    return new editorWorker();
   }
 };
 
+monaco.languages.json.jsonDefaults.setModeConfiguration({
+  ...monaco.languages.json.jsonDefaults.modeConfiguration,
+  completionItems: false
+});
+
+monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+  validate: false
+});
+
 const highlighter = await createHighlighter({
   themes: ['github-light', 'github-dark'],
-  langs: ['sql']
+  langs: ['sql', 'json', 'html', 'css', 'typescript', 'javascript']
 });
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
