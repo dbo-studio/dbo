@@ -3,7 +3,7 @@ import { Box, styled } from '@mui/material';
 import type { ConnectionBoxStyledProps } from '../types.ts';
 
 export const ConnectionBoxStyled = styled(Box)<ConnectionBoxStyledProps>(({ theme, status }) => ({
-  height: '24px',
+  minHeight: '24px',
   textAlign: 'center',
   borderRadius: variables.radius.medium,
   display: 'flex',

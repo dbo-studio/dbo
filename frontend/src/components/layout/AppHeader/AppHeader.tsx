@@ -7,13 +7,13 @@ import Leading from './Leading/Leading.tsx';
 export default function AppHeader() {
   return (
     <AppHeaderStyled className={'app-header'} container spacing={0} justifyContent={'space-between'}>
-      <Grid2 size={{ md: 2 }}>
+      <Grid2 size={{ md: 2 }} display={'flex'} justifyContent={'flex-start'}>
         <Leading />
       </Grid2>
       <Grid2 size={{ md: 8 }}>
         <ConnectionInfo />
       </Grid2>
-      <Grid2 size={{ md: 2 }}>
+      <Grid2 size={{ md: 2 }} display={'flex'} justifyContent={'flex-start'}>
         <Actions />
       </Grid2>
     </AppHeaderStyled>
