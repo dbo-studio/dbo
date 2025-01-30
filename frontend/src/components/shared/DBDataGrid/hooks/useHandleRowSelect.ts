@@ -16,7 +16,7 @@ export const useHandleRowSelect = (hotTableRef: RefObject<HotTableRef | null>) =
         const rowData = hotInstance.getSourceDataAtRow(i);
         const cellData = hotInstance.getDataAtCell(i, _colStart);
         const columnName = hotInstance.getColHeader(_colStart);
-        selectedRows.push({ index: i, data: rowData, selectedCell: cellData, selectedColumn: columnName.toString() });
+        selectedRows.push({ index: i, data: rowData, selectedCell: cellData, selectedColumn: columnName?.toString() });
       }
 
       setSelectedRows(selectedRows);

@@ -36,9 +36,7 @@ export const createDataRowSlice: StateCreator<
   },
   updateRow: (item: RowType) => {
     const selectedTab = useTabStore.getState().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
+    if (!selectedTab) return;
 
     const rows = get().rows;
     rows[selectedTab.id] = get()

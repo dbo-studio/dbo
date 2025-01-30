@@ -22,7 +22,7 @@ export type DataSelectedRowsSlice = {
 
 export type DataColumnSlice = {
   columns: DataColumnsType;
-  getColumns: (withSelect?: boolean, isActive?: boolean) => ColumnType[];
+  getColumns: (isActive?: boolean) => ColumnType[];
   updateColumns: (columns: ColumnType[]) => Promise<void>;
   updateColumn: (column: ColumnType) => Promise<void>;
   removeColumnsByTabId: (tabId: string) => void;

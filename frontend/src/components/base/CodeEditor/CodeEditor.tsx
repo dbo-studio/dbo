@@ -22,8 +22,8 @@ export default function CodeEditor({ value, onChange, width, height }: CodeEdito
     const model = editorRef.current?.getModel();
 
     model?.onDidChangeContent(() => {
-      if (value.toString() !== model.getValue()) {
-        onChange(model.getValue());
+      if (value.toString() !== model.getValue().trimStart()) {
+        onChange(model.getValue().trimStart());
       }
     });
   }, []);

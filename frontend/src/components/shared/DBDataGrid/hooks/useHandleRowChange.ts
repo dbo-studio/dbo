@@ -13,7 +13,9 @@ export const useHandleRowChange = () => {
       if (oldValue === null && newValue === null) continue;
       if (oldValue !== null && oldValue.toString() === newValue.toString()) continue;
       const row = getRow(index);
-      const editedRows = handelRowChangeLog(getEditedRows(), row, prop, oldValue, newValue);
+      const newRow = { ...row };
+      newRow[prop] = oldValue;
+      const editedRows = handelRowChangeLog(getEditedRows(), newRow, prop, oldValue, newValue);
       updateEditedRows(editedRows);
       updateRow(row);
     }
