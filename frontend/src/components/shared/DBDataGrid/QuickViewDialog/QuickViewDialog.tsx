@@ -24,8 +24,9 @@ export default function QuickViewDialog() {
 
     const editedRows = handelRowChangeLog(getEditedRows(), row.data, row.selectedColumn, row.selectedCell, value);
     updateEditedRows(editedRows);
-    row.data[row.selectedColumn] = value;
-    updateRow(row.data);
+    const newRow = { ...row.data };
+    newRow[row.selectedColumn] = value;
+    updateRow(newRow);
 
     searchParams.delete('quick-look-editor');
     setSearchParams(searchParams);
@@ -38,22 +39,22 @@ export default function QuickViewDialog() {
     }
 
     const row = rows[rows.length - 1];
-    if (!row.selectedCell || !row.selectedColumn) return;
+    if (row.selectedCell === undefined || !row.selectedColumn === undefined) return;
 
     setRow(row);
-    setValue(row.selectedCell.toString());
+    setValue(row.selectedCell?.toString() ?? ' ');
   }, [searchParams.get('quick-look-editor')]);
 
   return (
     <ResizableModal
       onClose={handleClose}
       open={searchParams.get('quick-look-editor') === 'true'}
-      title={locales.quick_look_editor}
+      title={`${locales.quick_look_editor} : ${row?.selectedColumn ?? ''}`}
       onResize={(width: number, height: number): void => setDimensions({ width, height })}
     >
       <Box display={'flex'} flex={1} flexDirection={'column'}>
         <Box overflow={'auto'} display={'flex'} flex={1}>
-          {value && <CodeEditor width={dimensions.width} value={value} onChange={(v: string): void => setValue(v)} />}
+          <CodeEditor width={dimensions.width} value={value ?? ''} onChange={(v: string): void => setValue(v)} />
         </Box>
       </Box>
     </ResizableModal>

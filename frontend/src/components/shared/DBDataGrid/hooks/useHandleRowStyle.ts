@@ -26,6 +26,10 @@ export const useHandleRowStyle = () => {
       td.innerHTML = `<span style='color: ${theme.palette.text.disabled}'>NULL</span>`; // Replace 'Custom Value' with the desired value
     }
 
+    if (value === '@DEFAULT') {
+      td.innerHTML = `<span style='color: ${theme.palette.text.disabled}'>DEFAULT</span>`; // Replace 'Custom Value' with the desired value
+    }
+
     td.classList.remove('removed-highlight', 'unsaved-highlight', 'edit-highlight');
 
     if (getRemovedRows().some((v) => v.dbo_index === row)) {
