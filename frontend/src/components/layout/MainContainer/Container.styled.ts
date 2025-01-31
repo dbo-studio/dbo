@@ -1,4 +1,4 @@
-import { Box, styled } from '@mui/material';
+import {Box, styled} from '@mui/material';
 
 export const CenterContainerStyled = styled(Box)(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,

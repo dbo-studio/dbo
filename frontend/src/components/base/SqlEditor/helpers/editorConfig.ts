@@ -9,7 +9,7 @@ export const editorConfig: editor.IStandaloneEditorConstructionOptions = {
   detectIndentation: false,
   folding: false,
   automaticLayout: true,
-  contextmenu: true,
+  contextmenu: false,
   minimap: {
     enabled: false
   },

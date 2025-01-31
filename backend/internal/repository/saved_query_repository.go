@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/db/scope"
@@ -24,7 +25,7 @@ func NewSavedQueryRepo(db *gorm.DB) *ISavedQueryRepoImpl {
 func (I ISavedQueryRepoImpl) Index(_ context.Context, pagination *dto.PaginationRequest) (*[]model.SavedQuery, error) {
 	var items []model.SavedQuery
 
-	result := I.db.Scopes(scope.Paginate(pagination)).Find(&items)
+	result := I.db.Scopes(scope.Paginate(pagination)).Order("created_at desc").Find(&items)
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -43,7 +44,11 @@ func (I ISavedQueryRepoImpl) Find(_ context.Context, id int32) (*model.SavedQuer
 func (I ISavedQueryRepoImpl) Create(_ context.Context, dto *dto.CreateSavedQueryRequest) (*model.SavedQuery, error) {
 	var query model.SavedQuery
 	if dto.Name == nil {
-		query.Name = dto.Query[0:20]
+		if len(dto.Query) > 20 {
+			query.Name = dto.Query[0:20]
+		} else {
+			query.Name = dto.Query
+		}
 	} else {
 		query.Name = *dto.Name
 	}

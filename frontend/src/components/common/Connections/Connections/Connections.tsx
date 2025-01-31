@@ -2,7 +2,7 @@ import api from '@/api';
 import useAPI from '@/hooks/useApi.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { ConnectionType } from '@/types';
-import { Suspense, lazy, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 
 import type { updateConnectionType } from '@/api/connection/types';
@@ -13,9 +13,8 @@ import { toast } from 'sonner';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { ConnectionsStyled } from './Connections.styled';
 import { EmptySpaceStyle } from './EmptySpace.styled';
-
-const AddConnection = lazy(() => import('../AddConnection/AddConnection'));
-const EditConnection = lazy(() => import('../EditConnection/EditConnection'));
+import AddConnection from '@/components/common/Connections/AddConnection/AddConnection.tsx';
+import EditConnection from '@/components/common/Connections/EditConnection/EditConnection.tsx';
 
 export default function Connections() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -86,12 +85,8 @@ export default function Connections() {
 
   return (
     <ConnectionsStyled>
-      <Suspense>
-        <AddConnection />
-      </Suspense>
-      <Suspense>
-        <EditConnection />
-      </Suspense>
+      <AddConnection />
+      <EditConnection />
       {connections?.map((c: ConnectionType) => (
         <ConnectionItem
           loading={pendingUpdateConnection && loadingConnectionId === c.id}

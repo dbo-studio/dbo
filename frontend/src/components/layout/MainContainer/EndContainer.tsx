@@ -1,9 +1,9 @@
 import { useWindowSize } from '@/hooks/useWindowSize.hook';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box } from '@mui/material';
-import { Suspense, lazy } from 'react';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
 import { EndContainerStyled } from './Container.styled';
+import DBFields from '@/components/common/DBFields/DBFields';
 
 // const tabs = [
 //   {
@@ -35,8 +35,6 @@ import { EndContainerStyled } from './Container.styled';
 //   }
 // ];
 
-const DBFields = lazy(() => import('../../common/DBFields/DBFields'));
-
 export default function EndContainer() {
   const windowSize = useWindowSize();
   // const [selectedTabId, setSelectedTabId] = useState(tabs[0].id);
@@ -65,9 +63,7 @@ export default function EndContainer() {
         </Tabs> */}
         {/* <Box role='tabpanel'>{selectedTabContent}</Box> */}
         <Box role='tabpanel'>
-          <Suspense>
-            <DBFields />
-          </Suspense>
+          <DBFields />
         </Box>
       </EndContainerStyled>
     </ResizableXBox>

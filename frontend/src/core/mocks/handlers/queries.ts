@@ -102,6 +102,15 @@ const queriesHandler = [
   })
 ];
 
+const generateFakeJson = () => {
+  return JSON.stringify({
+    id: faker.number.int(),
+    first_name: faker.person.firstName(),
+    last_name: faker.person.lastName(),
+    email: faker.internet.email()
+  });
+};
+
 const queryModel = [];
 for (let i = 0; i < 3; i++) {
   queryModel.push({
@@ -112,7 +121,7 @@ for (let i = 0; i < 3; i++) {
     issue_state: '',
     journal: faker.lorem.text(),
     start_page: '31',
-    title: faker.word.words({ count: 20 }),
+    title: generateFakeJson(),
     vol_city: faker.number.int({ min: 0, max: 100 }),
     year: faker.date.birthdate().getFullYear()
   });

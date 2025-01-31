@@ -1,8 +1,8 @@
-import type { CodeEditorSettingType } from '@/components/base/CodeEditor/types';
+import type { SqlEditorSettingType } from '@/components/base/SqlEditor/types';
 import type { AutoCompleteType } from '@/types';
 
 export type QueryEditorLeadingProps = {
-  onChange: (data: CodeEditorSettingType) => void;
+  onChange: (data: SqlEditorSettingType) => void;
 };
 
 export type QueryEditorActionsProps = {

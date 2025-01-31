@@ -21,10 +21,10 @@ export default function General() {
         <Box display={'flex'} mb={1} flexDirection={'row'} alignItems={'center'} justifyContent={'space-between'}>
           <Box>
             <Typography color={'textTitle'} variant={'subtitle2'}>
-              Debug mode
+              {locales.debug_mode}
             </Typography>
             <Typography color={'textText'} variant={'caption'}>
-              Enable Debug console
+              {locales.enable_debug_console}
             </Typography>
           </Box>
 

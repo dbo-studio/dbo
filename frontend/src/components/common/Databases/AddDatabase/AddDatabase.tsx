@@ -8,14 +8,13 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { LoadingButton } from '@mui/lab';
 import { Box, Button } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
-import { zodValidator } from '@tanstack/zod-form-adapter';
 import { isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
 const formSchema = z.object({
-  name: z.string(),
+  name: z.string().min(1),
   template: z.string().optional(),
   encoding: z.string().optional(),
   table_space: z.string().optional()
@@ -41,7 +40,6 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
   }, []);
 
   const form = useForm({
-    validatorAdapter: zodValidator(),
     validators: {
       onChange: formSchema
     },
@@ -52,7 +50,7 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
           name: value.name,
           template: value.template,
           encoding: value.encoding,
-          tableSpace: value.tableSpace
+          tableSpace: value.table_space
         });
         toast.success(locales.database_create_success);
         form.reset();
@@ -74,11 +72,10 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
       }
     },
     defaultValues: {
-      connection_id: '',
       name: '',
       template: '',
       encoding: '',
-      tableSpace: ''
+      table_space: ''
     }
   });
 
@@ -113,7 +110,7 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
                   helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
                   label={locales.encoding}
                   emptylabel={locales.empty_encoding}
-                  value={undefined}
+                  value={field.state.value}
                   error={field.state.meta.errors.length > 0}
                   disabled={metadata?.encodings?.length === 0}
                   size='medium'
@@ -130,7 +127,7 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
                   helpertext={field.state.meta.errors.join(', ')}
                   label={locales.template}
                   emptylabel={locales.empty_template}
-                  value={undefined}
+                  value={field.state.value}
                   error={field.state.meta.errors.length > 0}
                   disabled={metadata?.templates?.length === 0}
                   size='medium'
@@ -140,13 +137,13 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
               )}
             </form.Field>
             <Box mb={2} />
-            <form.Field name='tableSpace'>
+            <form.Field name='table_space'>
               {(field) => (
                 <SelectInput
                   helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
                   label={locales.table_space}
                   emptylabel={locales.empty_table_space}
-                  value={undefined}
+                  value={field.state.value}
                   error={field.state.meta.errors.length > 0}
                   disabled={metadata?.tableSpaces?.length === 0}
                   size='medium'

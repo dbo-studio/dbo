@@ -1,21 +1,52 @@
-import Handsontable from 'handsontable';
+import { handelRowChangeLog } from '@/core/utils';
+import { useDataStore } from '@/store/dataStore/data.store.ts';
 // @ts-ignore
 import type Core from 'handsontable/core';
-import type { Selection, Settings } from 'handsontable/plugins/contextMenu';
-import ContextMenu = Handsontable.plugins.ContextMenu;
+import { ContextMenu, type Settings } from 'handsontable/plugins/contextMenu';
+import { useSearchParams } from 'react-router-dom';
 
 export const useHandleContextMenu = (): Settings => {
-  // const { setSelectedRows } = useDataStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { getSelectedRows, updateEditedRows, getEditedRows, updateRow } = useDataStore();
+
+  const valueReplacer = (newValue: any) => {
+    const rows = getSelectedRows();
+    if (rows.length === 1 && rows[0].selectedCell !== undefined && rows[0].selectedColumn !== undefined) {
+      const editedRows = handelRowChangeLog(
+        getEditedRows(),
+        rows[0].data,
+        rows[0].selectedColumn,
+        rows[0].selectedCell,
+        newValue
+      );
+      updateEditedRows(editedRows);
+      const newRow = { ...rows[0].data };
+      newRow[rows[0].selectedColumn] = newValue;
+      updateRow(newRow);
+      return;
+    }
+
+    for (const row of rows) {
+      if (!row.data) continue;
+      const newRow = { ...row.data };
+      for (const key of Object.keys(row.data)) {
+        if (key === 'dbo_index') continue;
+        const editedRows = handelRowChangeLog(getEditedRows(), row.data, key, row.data[key], newValue);
+        updateEditedRows(editedRows);
+        newRow[key] = newValue;
+        updateRow(newRow);
+      }
+    }
+  };
+
   // @ts-ignore
   return {
     items: {
       quick_look: {
         name: 'Quick look editor',
-        callback: (core: Core, key: string, selection: Selection[], clickEvent: MouseEvent): void => {
-          console.log('=>(useHandleContextMenu.ts:15) clickEvent', clickEvent);
-          console.log('=>(useHandleContextMenu.ts:15) selection', selection);
-          console.log('=>(useHandleContextMenu.ts:15) key', key);
-          console.log('=>(useHandleContextMenu.ts:15) core', core);
+        callback: (): void => {
+          searchParams.set('quick-look-editor', 'true');
+          setSearchParams(searchParams);
         }
       },
       // sp1: ContextMenu.SEPARATOR,
@@ -35,32 +66,17 @@ export const useHandleContextMenu = (): Settings => {
             {
               key: 'set_value:empty',
               name: 'Empty',
-              callback: (core: Core, key: string, selection: Selection[], clickEvent: MouseEvent): void => {
-                console.log('=>(useHandleContextMenu.ts:15) clickEvent', clickEvent);
-                console.log('=>(useHandleContextMenu.ts:15) selection', selection);
-                console.log('=>(useHandleContextMenu.ts:15) key', key);
-                console.log('=>(useHandleContextMenu.ts:15) core', core);
-              }
+              callback: (): void => valueReplacer('')
             },
             {
               key: 'set_value:null',
               name: 'Null',
-              callback: (core: Core, key: string, selection: Selection[], clickEvent: MouseEvent): void => {
-                console.log('=>(useHandleContextMenu.ts:15) clickEvent', clickEvent);
-                console.log('=>(useHandleContextMenu.ts:15) selection', selection);
-                console.log('=>(useHandleContextMenu.ts:15) key', key);
-                console.log('=>(useHandleContextMenu.ts:15) core', core);
-              }
+              callback: (): void => valueReplacer(null)
             },
             {
               key: 'set_value:default',
               name: 'Default',
-              callback: (core: Core, key: string, selection: Selection[], clickEvent: MouseEvent): void => {
-                console.log('=>(useHandleContextMenu.ts:15) clickEvent', clickEvent);
-                console.log('=>(useHandleContextMenu.ts:15) selection', selection);
-                console.log('=>(useHandleContextMenu.ts:15) key', key);
-                console.log('=>(useHandleContextMenu.ts:15) core', core);
-              }
+              callback: (): void => valueReplacer('@DEFAULT')
             }
           ]
         }

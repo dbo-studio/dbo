@@ -8,46 +8,44 @@ import (
 )
 
 func queryGenerator(dto *dto.RunQueryDto) string {
-	query := ""
+	var sb strings.Builder
 
-	if len(dto.Columns) == 0 {
-		query = "SELECT * "
-	} else {
-		query = fmt.Sprintf("SELECT %s ", strings.Join(dto.Columns, ","))
+	// SELECT clause
+	selectColumns := "*"
+	if len(dto.Columns) > 0 {
+		selectColumns = strings.Join(dto.Columns, ", ")
 	}
+	_, _ = fmt.Fprintf(&sb, "SELECT %s FROM %q", selectColumns, dto.Table)
 
-	query += fmt.Sprintf("FROM %q ", dto.Table)
-
+	// WHERE clause
 	if len(dto.Filters) > 0 {
-		query += "WHERE "
-		for index, filter := range dto.Filters {
-			query += fmt.Sprintf("%q %s '%s' ", filter.Column, filter.Operator, filter.Value)
-			if index != len(dto.Filters)-1 {
-				query += fmt.Sprintf("%s ", filter.Next)
+		sb.WriteString(" WHERE ")
+		for i, filter := range dto.Filters {
+			_, _ = fmt.Fprintf(&sb, "%s %s '%s'", filter.Column, filter.Operator, filter.Value)
+			if i < len(dto.Filters)-1 {
+				_, _ = fmt.Fprintf(&sb, " %s ", filter.Next)
 			}
 		}
 	}
 
+	// ORDER BY clause
 	if len(dto.Sorts) > 0 {
-		query += "ORDER BY "
-		for index, sort := range dto.Sorts {
-			query += fmt.Sprintf("%q %s ", sort.Column, sort.Operator)
-			if index != len(dto.Sorts)-1 {
-				query += ", "
-			}
+		sb.WriteString(" ORDER BY ")
+		sortClauses := make([]string, len(dto.Sorts))
+		for i, sort := range dto.Sorts {
+			sortClauses[i] = fmt.Sprintf("%s %s", sort.Column, sort.Operator)
 		}
+		sb.WriteString(strings.Join(sortClauses, ", "))
 	}
 
+	// LIMIT and OFFSET
 	limit := 100
 	if dto.Limit > 0 {
 		limit = int(dto.Limit)
 	}
+	_, _ = fmt.Fprintf(&sb, " LIMIT %d OFFSET %d;", limit, dto.Offset)
 
-	query += fmt.Sprintf("LIMIT %d ", limit)
-
-	query += fmt.Sprintf("OFFSET %d;", dto.Offset)
-
-	return query
+	return sb.String()
 }
 
 func createDBQuery(dto *dto.CreateDatabaseRequest) string {
@@ -81,12 +79,22 @@ func updateQueryGenerator(dto *dto.UpdateQueryDto) []string {
 
 		var setClauses []string
 		for key, value := range editedItem.Values {
-			setClauses = append(setClauses, fmt.Sprintf(`"%s" = '%v'`, key, value))
+			if value == nil {
+				setClauses = append(setClauses, fmt.Sprintf(`"%s" = NULL`, key))
+			} else if value == "@DEFAULT" {
+				setClauses = append(setClauses, fmt.Sprintf(`"%s" = DEFAULT`, key))
+			} else {
+				setClauses = append(setClauses, fmt.Sprintf(`"%s" = '%v'`, key, value))
+			}
 		}
 
 		var whereClauses []string
 		for key, value := range editedItem.Conditions {
-			whereClauses = append(whereClauses, fmt.Sprintf(`"%s" = '%v'`, key, value))
+			if value == nil {
+				whereClauses = append(whereClauses, fmt.Sprintf(`"%s" IS NULL`, key))
+			} else {
+				whereClauses = append(whereClauses, fmt.Sprintf(`"%s" = '%v'`, key, value))
+			}
 		}
 
 		query := fmt.Sprintf(
@@ -147,8 +155,16 @@ func insertQueryGenerator(dto *dto.UpdateQueryDto) []string {
 		var columns, values []string
 
 		for key, value := range addedItem {
+			if value == "@DEFAULT" {
+				continue
+			}
+
 			columns = append(columns, fmt.Sprintf(`"%s"`, key))
-			values = append(values, fmt.Sprintf(`'%v'`, value))
+			if value == nil {
+				values = append(values, "NULL")
+			} else {
+				values = append(values, fmt.Sprintf(`'%v'`, value))
+			}
 		}
 
 		query := fmt.Sprintf(
@@ -168,7 +184,7 @@ func insertQueryGenerator(dto *dto.UpdateQueryDto) []string {
 func updateDesignGenerator(dto *dto.UpdateDesignRequest) []string {
 	alter := fmt.Sprintf(`ALTER TABLE "%s"."%s" `, dto.Schema, dto.Table)
 
-	queries := []string{}
+	queries := make([]string, 0)
 	for _, editedItem := range dto.EditedItems {
 
 		if editedItem.Type != nil {
@@ -221,7 +237,7 @@ func updateDesignGenerator(dto *dto.UpdateDesignRequest) []string {
 
 func insertToDesignGenerator(dto *dto.UpdateDesignRequest) []string {
 	alter := fmt.Sprintf(`ALTER TABLE "%s"."%s" `, dto.Schema, dto.Table)
-	queries := []string{}
+	queries := make([]string, 0)
 	for _, addedItem := range dto.AddedItems {
 		query := alter + fmt.Sprintf(`ADD COLUMN "%s" %s`, addedItem.Name, addedItem.Type)
 		if addedItem.Length != nil {
@@ -255,7 +271,7 @@ func insertToDesignGenerator(dto *dto.UpdateDesignRequest) []string {
 
 func deleteFromDesignGenerator(dto *dto.UpdateDesignRequest) []string {
 	alter := fmt.Sprintf(`ALTER TABLE "%s"."%s" `, dto.Schema, dto.Table)
-	queries := []string{}
+	queries := make([]string, 0)
 	for _, deletedItem := range dto.DeletedItems {
 		if deletedItem == "" {
 			continue
