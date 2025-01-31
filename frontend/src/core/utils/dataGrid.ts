@@ -32,13 +32,11 @@ export const formatServerColumns = (serverColumns: ColumnType[]): any => {
 
 export const handelRowChangeLog = (
   editedRows: EditedRow[],
-  rows: RowType[],
-  rowIndex: number,
+  oldRow: RowType,
   rowKey: string,
   oldValue: any,
   newValue: any
 ): EditedRow[] => {
-  const oldRow = rows[rowIndex];
   const dboIndex = oldRow.dbo_index;
 
   //check if edited value exists in editedRows just update this values

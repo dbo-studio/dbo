@@ -10,10 +10,12 @@ export default function Columns() {
   const windowSize = useWindowSize();
 
   const theme: Theme = useTheme();
-  const { getColumns, updateColumns } = useDataStore();
+  const { getColumns, updateColumns, runQuery, loading } = useDataStore();
   const { updateColumns: updateTabColumns } = useTabStore();
 
   const handleCheckToggle = async (column: ColumnType) => {
+    if (loading) return;
+
     column.isActive = !column.isActive;
     const newColumns = getColumns().map((c: ColumnType) => {
       if (c.key === column.key) {
@@ -23,10 +25,9 @@ export default function Columns() {
     });
 
     await updateColumns(newColumns);
-
     const c = newColumns.filter((c) => c.isActive).map((c) => c.name);
-
     updateTabColumns([...c]);
+    runQuery().then();
   };
 
   return (
@@ -39,8 +40,9 @@ export default function Columns() {
       overflow={'auto'}
       display={'flex'}
       flexDirection={'column'}
+      minWidth={'130px'}
     >
-      {getColumns(false, false).map((c: ColumnType) => (
+      {getColumns().map((c: ColumnType) => (
         <ColumnItem onClick={() => handleCheckToggle(c)} key={uuidv4()} column={c} />
       ))}
     </Box>

@@ -5,8 +5,10 @@ export type DataStore = object;
 
 export type DataRowSlice = {
   rows: DataRowsType;
-  getRows(): RowType[];
+  getRows: () => RowType[];
+  getRow: (dboIndex: number) => RowType | null | undefined;
   updateRows: (items: RowType[]) => Promise<void>;
+  updateRow: (item: RowType) => void;
   removeRowsByTabId: (tabId: string) => void;
 };
 
@@ -20,7 +22,7 @@ export type DataSelectedRowsSlice = {
 
 export type DataColumnSlice = {
   columns: DataColumnsType;
-  getColumns(withSelect?: boolean, isActive?: boolean): ColumnType[];
+  getColumns: (isActive?: boolean) => ColumnType[];
   updateColumns: (columns: ColumnType[]) => Promise<void>;
   updateColumn: (column: ColumnType) => Promise<void>;
   removeColumnsByTabId: (tabId: string) => void;
@@ -28,7 +30,7 @@ export type DataColumnSlice = {
 
 export type DataEditedColumnSlice = {
   editedColumns: DataEditedColumnsType;
-  getEditedColumns(): EditedColumnType[];
+  getEditedColumns: () => EditedColumnType[];
   updateEditedColumns: (columns: EditedColumnType[]) => Promise<void>;
   addEditedColumns: (oldValue: ColumnType, newValue: ColumnType | EditedColumnType) => Promise<void>;
   updateRemovedColumns: () => Promise<void>;
@@ -39,7 +41,7 @@ export type DataEditedColumnSlice = {
 
 export type DataEditedRowsSlice = {
   editedRows: DataEditedRowsType;
-  getEditedRows(): EditedRow[];
+  getEditedRows: () => EditedRow[];
   updateEditedRows: (rows: EditedRow[]) => void;
   restoreEditedRows: () => Promise<void>;
   removeEditedRowsByTabId: (tabId: string) => void;
@@ -47,17 +49,17 @@ export type DataEditedRowsSlice = {
 
 export type DataRemovedRowsSlice = {
   removedRows: DataRemovedRowsType;
-  getRemovedRows(): RowType[];
-  updateRemovedRows(): void;
+  getRemovedRows: () => RowType[];
+  updateRemovedRows: () => void;
   deleteRemovedRowsByTabId: (tabId: string) => void;
 };
 
 export type DataUnsavedRowsSlice = {
   unSavedRows: DataRowsType;
-  getUnsavedRows(): RowType[];
-  addUnsavedRows(newRow?: RowType): void;
-  updateUnsavedRows(unSavedRows: RowType[]): void;
-  discardUnsavedRows(rows?: RowType[]): void;
+  getUnsavedRows: () => RowType[];
+  addUnsavedRows: (newRow?: RowType) => void;
+  updateUnsavedRows: (unSavedRows: RowType[]) => void;
+  discardUnsavedRows: (rows?: RowType[]) => void;
   removeUnsavedRowsByTabId: (tabId: string) => void;
 };
 
@@ -89,15 +91,9 @@ export type DataRemovedRowsType = {
   [key: string]: RowType[];
 };
 
-export type DataHighlightedRowType = {
-  [key: string]: RowType | undefined;
-};
-
-export type DataSelectedRowType = {
-  [key: string]: any;
-};
-
-type SelectedRow = {
-  index: number; // The row index
+export type SelectedRow = {
+  index: number; // The row index,
+  selectedCell: string | undefined;
+  selectedColumn: string | undefined;
   data: Record<string, any>; // The row's data object
 };

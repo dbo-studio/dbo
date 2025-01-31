@@ -1,8 +1,9 @@
+import { ConfirmModalStyled } from '@/components/base/Modal/ConfirmModal/ConfirmModal.styled.ts';
 import locales from '@/locales';
-import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
+import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store.ts';
 import { Box, Button, Typography, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { ConfirmModalWrapperStyled, ModalStyled } from './Modal.styled';
+import { ModalStyled } from '../Modal.styled.ts';
 
 export default function ConfirmModal() {
   const { isOpen, mode, title, description, onCancel, onSuccess, close } = useConfirmModalStore();
@@ -44,7 +45,7 @@ export default function ConfirmModal() {
 
   return (
     <ModalStyled open={isOpen}>
-      <ConfirmModalWrapperStyled>
+      <ConfirmModalStyled>
         <Box flex={1} mb={theme.spacing(1)}>
           <Box mb={theme.spacing(2)}>
             <Typography fontSize={'1.9286rem'} fontWeight={'bold'} color={theme.palette.text.text} variant='h1'>
@@ -70,7 +71,7 @@ export default function ConfirmModal() {
             {locales.yes}
           </Button>
         </Box>
-      </ConfirmModalWrapperStyled>
+      </ConfirmModalStyled>
     </ModalStyled>
   );
 }

@@ -25,7 +25,7 @@ export default function Data() {
       {getSelectedTab()?.showQuery && <QueryPreview />}
       <Box overflow='hidden' flex={1} display='flex' flexDirection='row'>
         {getSelectedTab()?.showColumns && <Columns />}
-        <DataGrid />
+        <DataGrid editable={true} />
       </Box>
       <StatusBar />
     </>

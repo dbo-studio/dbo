@@ -1,3 +1,5 @@
+import type { JSX } from 'react';
+
 type GetEventHandlers<T extends keyof JSX.IntrinsicElements> = Extract<keyof JSX.IntrinsicElements[T], `on${string}`>;
 
 /**

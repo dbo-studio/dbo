@@ -7,3 +7,7 @@ export type ModalProps = {
   padding?: string;
   onClose?: () => void;
 };
+
+export type ResizableModalProps = ModalProps & {
+  onResize: (width: number, height: number) => void;
+};
