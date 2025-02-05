@@ -3,14 +3,11 @@ package pgsqlDriver
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/pkg/helper"
-
-	"github.com/xwb1989/sqlparser"
 )
 
 type RunQueryResult struct {
@@ -65,7 +62,7 @@ func (p PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) (*RawQueryResult, er
 		return &RawQueryResult{
 			Query:    dto.Query,
 			Data:     queryResults,
-			IsQuery:  isQuery(dto.Query, queryResults),
+			IsQuery:  isQuery(dto.Query),
 			Duration: "0",
 		}, err
 	}
@@ -104,6 +101,7 @@ func (p PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) (*RawQueryResult, er
 			ColumnName: column,
 			DataType:   strings.ToLower(columnTypes[i].DatabaseTypeName()),
 			MappedType: columnMappedFormat(columnTypes[i].Name()),
+			IsActive:   true,
 		})
 	}
 
@@ -113,7 +111,7 @@ func (p PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) (*RawQueryResult, er
 		Query:    dto.Query,
 		Data:     queryResults,
 		Columns:  structures,
-		IsQuery:  isQuery(dto.Query, queryResults),
+		IsQuery:  isQuery(dto.Query),
 		Duration: helper.FloatToString(endTime.Seconds()),
 	}, nil
 }
@@ -471,17 +469,6 @@ func columnMappedFormat(dataType string) string {
 	}
 }
 
-func isQuery(query string, queryResult []map[string]interface{}) bool {
-	stmt, err := sqlparser.Parse(query)
-	if err != nil {
-		return len(queryResult) > 0
-	}
-
-	switch smtType := stmt.(type) {
-	case *sqlparser.Select:
-		log.Println(smtType)
-		return true
-	}
-
-	return false
+func isQuery(query string) bool {
+	return strings.Contains(strings.ToLower(query), "select")
 }

@@ -1,6 +1,5 @@
 import { LanguageIdEnum, setupLanguageFeatures } from 'monaco-sql-languages';
 
-
 import { shikiToMonaco } from '@shikijs/monaco';
 import * as monaco from 'monaco-editor';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
