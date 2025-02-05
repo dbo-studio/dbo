@@ -1,15 +1,15 @@
 import api from '@/api';
-import type {AutoCompleteRequestType} from '@/api/query/types';
+import type { AutoCompleteRequestType } from '@/api/query/types';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor.tsx';
-import type {SqlEditorSettingType} from '@/components/base/SqlEditor/types';
+import type { SqlEditorSettingType } from '@/components/base/SqlEditor/types';
 import DataGrid from '@/components/shared/DBDataGrid/DataGrid.tsx';
-import {useWindowSize} from '@/hooks';
+import { useWindowSize } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
-import {useConnectionStore} from '@/store/connectionStore/connection.store';
-import {useTabStore} from '@/store/tabStore/tab.store';
-import type {AutoCompleteType} from '@/types';
-import {Box, useTheme} from '@mui/material';
-import {useEffect, useState} from 'react';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
+import type { AutoCompleteType } from '@/types';
+import { Box, useTheme } from '@mui/material';
+import { useEffect, useState } from 'react';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
 
 export default function Query() {
