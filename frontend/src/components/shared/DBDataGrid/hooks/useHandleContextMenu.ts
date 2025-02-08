@@ -5,7 +5,7 @@ import type Core from 'handsontable/core';
 import { ContextMenu, type Settings } from 'handsontable/plugins/contextMenu';
 import { useSearchParams } from 'react-router-dom';
 
-export const useHandleContextMenu = (): Settings => {
+export const useHandleContextMenu = (editable?: boolean): Settings => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { getSelectedRows, updateEditedRows, getEditedRows, updateRow } = useDataStore();
 
@@ -79,7 +79,8 @@ export const useHandleContextMenu = (): Settings => {
               callback: (): void => valueReplacer('@DEFAULT')
             }
           ]
-        }
+        },
+        disabled: !editable
       }
       //   sp3: ContextMenu.SEPARATOR,
       //   copy: {

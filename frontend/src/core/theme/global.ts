@@ -11,6 +11,7 @@ export const globalStyles = (theme: Theme) => {
     html: {
       overscrollBehavior: 'none'
     },
+    /* ------DataGrid context menu---------------- */
     '& .htContextMenu td': {
       background: theme.palette.background.default
     },
@@ -41,7 +42,14 @@ export const globalStyles = (theme: Theme) => {
         '&:hover': {
           backgroundColor: theme.palette.background.paper
         }
+      },
+      '& td.htDisabled': {
+        color: theme.palette.text.subdued,
+        '&:hover': {
+          backgroundColor: 'unset'
+        }
       }
     }
+    /* ---------------------- */
   };
 };
