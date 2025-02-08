@@ -30,7 +30,7 @@ export default function SavedQueries() {
 
   useEffect(() => {
     if (savedQueries === undefined) {
-      handleGetSavedQueries();
+      handleGetSavedQueries().then();
     }
   }, []);
 
