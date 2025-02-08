@@ -8,6 +8,7 @@ import type { RowType } from '@/types';
 import { Box } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import type { QuickViewDialogProps } from '@/components/shared/DBDataGrid/QuickViewDialog/types.ts';
 
 const getRowValue = (row: SelectedRow): string => {
   const columns = row.selectedColumns;
@@ -20,7 +21,7 @@ const getSelectedColumn = (columns: string[]) => {
   return columns[columns.length - 1];
 };
 
-export default function QuickViewDialog() {
+export default function QuickViewDialog({ editable }: QuickViewDialogProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { getSelectedRows, updateRow, getEditedRows, updateEditedRows } = useDataStore();
   const [value, setValue] = useState<string | undefined>(undefined);
@@ -28,7 +29,7 @@ export default function QuickViewDialog() {
   const [row, setRow] = useState<RowType>();
 
   const handleClose = () => {
-    if (!row || value === getRowValue(row)) {
+    if (!row || value === getRowValue(row) || !editable) {
       searchParams.delete('quick-look-editor');
       setSearchParams(searchParams);
       return;

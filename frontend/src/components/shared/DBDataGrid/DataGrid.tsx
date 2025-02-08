@@ -41,7 +41,7 @@ export default function DataGrid({ editable }: DataGridProps) {
 
   return (
     <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
-      <QuickViewDialog />
+      <QuickViewDialog editable={editable} />
       <DataGridStyled
         ref={hotTableRef}
         data={getRows()}
