@@ -3,6 +3,7 @@ import { HotColumn, type HotTableRef } from '@handsontable/react-wrapper';
 import 'handsontable/dist/handsontable.min.css';
 
 import { DataGridStyled } from '@/components/shared/DBDataGrid/DataGrid.styled.ts';
+import QuickViewDialog from '@/components/shared/DBDataGrid/QuickViewDialog/QuickViewDialog.tsx';
 import { useHandleContextMenu } from '@/components/shared/DBDataGrid/hooks/useHandleContextMenu.ts';
 import { useHandleDataUpdate } from '@/components/shared/DBDataGrid/hooks/useHandleDataUpdate.ts';
 import { useHandleDeselect } from '@/components/shared/DBDataGrid/hooks/useHandleDeselect.ts';
@@ -10,11 +11,10 @@ import { useHandleRowChange } from '@/components/shared/DBDataGrid/hooks/useHand
 import { useHandleRowSelect } from '@/components/shared/DBDataGrid/hooks/useHandleRowSelect.ts';
 import { useHandleRowStyle } from '@/components/shared/DBDataGrid/hooks/useHandleRowStyle.ts';
 import { useHandleScroll } from '@/components/shared/DBDataGrid/hooks/useHandleScroll.ts';
+import type { DataGridProps } from '@/components/shared/DBDataGrid/types.ts';
 import { Box, CircularProgress } from '@mui/material';
 import { registerAllModules } from 'handsontable/registry';
 import { useRef } from 'react';
-import type { DataGridProps } from '@/components/shared/DBDataGrid/types.ts';
-import QuickViewDialog from '@/components/shared/DBDataGrid/QuickViewDialog/QuickViewDialog.tsx';
 
 registerAllModules();
 
@@ -29,7 +29,7 @@ export default function DataGrid({ editable }: DataGridProps) {
 
   const handleSelection = useHandleRowSelect(hotTableRef);
   const handleRowChange = useHandleRowChange();
-  const handleContextMenu = useHandleContextMenu();
+  const handleContextMenu = useHandleContextMenu(editable);
 
   if (loading) {
     return (
@@ -41,7 +41,7 @@ export default function DataGrid({ editable }: DataGridProps) {
 
   return (
     <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
-      <QuickViewDialog />
+      <QuickViewDialog editable={editable} />
       <DataGridStyled
         ref={hotTableRef}
         data={getRows()}

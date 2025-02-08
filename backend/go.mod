@@ -10,7 +10,6 @@ require (
 	github.com/invopop/validation v0.8.0
 	github.com/samber/lo v1.49.1
 	github.com/spf13/cobra v1.8.1
-	github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2
 	go.uber.org/zap v1.27.0
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/driver/sqlite v1.5.7

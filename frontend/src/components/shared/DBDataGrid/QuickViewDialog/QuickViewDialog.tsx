@@ -3,12 +3,25 @@ import ResizableModal from '@/components/base/Modal/ResizableModal/ResizableModa
 import { handelRowChangeLog } from '@/core/utils';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
+import type { SelectedRow } from '@/store/dataStore/types.ts';
 import type { RowType } from '@/types';
 import { Box } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import type { QuickViewDialogProps } from '@/components/shared/DBDataGrid/QuickViewDialog/types.ts';
 
-export default function QuickViewDialog() {
+const getRowValue = (row: SelectedRow): string => {
+  const columns = row.selectedColumns;
+  if (columns === undefined || columns.length === 0) return '';
+
+  return row.data[columns[columns.length - 1].toString()];
+};
+
+const getSelectedColumn = (columns: string[]) => {
+  return columns[columns.length - 1];
+};
+
+export default function QuickViewDialog({ editable }: QuickViewDialogProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { getSelectedRows, updateRow, getEditedRows, updateEditedRows } = useDataStore();
   const [value, setValue] = useState<string | undefined>(undefined);
@@ -16,16 +29,23 @@ export default function QuickViewDialog() {
   const [row, setRow] = useState<RowType>();
 
   const handleClose = () => {
-    if (!row || value === row.selectedCell) {
+    if (!row || value === getRowValue(row) || !editable) {
       searchParams.delete('quick-look-editor');
       setSearchParams(searchParams);
       return;
     }
 
-    const editedRows = handelRowChangeLog(getEditedRows(), row.data, row.selectedColumn, row.selectedCell, value);
+    const editedRows = handelRowChangeLog(
+      getEditedRows(),
+      row.data,
+      getSelectedColumn(row.selectedColumns),
+      getRowValue(row),
+      value
+    );
+
     updateEditedRows(editedRows);
     const newRow = { ...row.data };
-    newRow[row.selectedColumn] = value;
+    newRow[getSelectedColumn(row.selectedColumns)] = value;
     updateRow(newRow);
 
     searchParams.delete('quick-look-editor');
@@ -39,10 +59,11 @@ export default function QuickViewDialog() {
     }
 
     const row = rows[rows.length - 1];
-    if (row.selectedCell === undefined || !row.selectedColumn === undefined) return;
+    const columns = row.selectedColumns;
+    if (columns === undefined || columns.length === 0) return;
 
     setRow(row);
-    setValue(row.selectedCell?.toString() ?? ' ');
+    setValue(getRowValue(row));
   }, [searchParams.get('quick-look-editor')]);
 
   return (

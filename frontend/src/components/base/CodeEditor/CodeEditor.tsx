@@ -26,6 +26,8 @@ export default function CodeEditor({ value, onChange, width, height }: CodeEdito
         onChange(model.getValue().trimStart());
       }
     });
+
+    editorRef.current?.focus();
   }, []);
 
   useEffect(() => {

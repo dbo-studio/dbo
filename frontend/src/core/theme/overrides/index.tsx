@@ -8,9 +8,11 @@ import Select from './Select';
 import Table from './Table';
 import Tabs from './Tabs';
 import TreeView from './TreeView';
+import Fonts from './Fonts.tsx';
 
 export default function ComponentsOverrides(theme: Theme): Components {
   return Object.assign(
+    Fonts(theme),
     Baseline(theme),
     TreeView(theme),
     Input(theme),
