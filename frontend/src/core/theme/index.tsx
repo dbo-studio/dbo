@@ -1,7 +1,7 @@
 import { constants } from '@/core/constants';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { Direction } from '@mui/material';
-import { ThemeProvider as MUIThemeProvider, type ThemeOptions, createTheme } from '@mui/material/styles';
+import { createTheme, type ThemeOptions, ThemeProvider as MUIThemeProvider } from '@mui/material/styles';
 import type React from 'react';
 import { ThemeModeEnum } from '../enums';
 import componentsOverride from './overrides';

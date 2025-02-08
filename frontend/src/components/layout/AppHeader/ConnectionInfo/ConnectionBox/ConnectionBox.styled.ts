@@ -19,6 +19,9 @@ export const ConnectionBoxStyled = styled(Box)<ConnectionBoxStyledProps>(({ them
     color:
       (status === 'loading' && theme.palette.text.warning) ||
       (status === 'error' && theme.palette.text.danger) ||
-      theme.palette.text.text
+      theme.palette.text.text,
+    fontFamily: 'JetBrainsMono-Bold',
+    fontWeight: 'bold',
+    fontSize: 12
   }
 }));

@@ -27,5 +27,6 @@ export const editorConfig: editor.IStandaloneEditorConstructionOptions = {
     alwaysConsumeMouseWheel: false
   },
   fontSize: 14,
-  fontWeight: 'medium'
+  fontWeight: 'bold',
+  fontFamily: 'JetBrainsMono-Bold'
 };
