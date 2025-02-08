@@ -1,6 +1,6 @@
 {
   "name": "dbo",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -69,6 +69,8 @@
     "vitest": "^3.0.5"
   },
   "msw": {
-    "workerDirectory": ["public"]
+    "workerDirectory": [
+      "public"
+    ]
   }
 }
