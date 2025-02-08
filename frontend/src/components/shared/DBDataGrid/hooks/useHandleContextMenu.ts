@@ -5,35 +5,20 @@ import type Core from 'handsontable/core';
 import { ContextMenu, type Settings } from 'handsontable/plugins/contextMenu';
 import { useSearchParams } from 'react-router-dom';
 
-export const useHandleContextMenu = (): Settings => {
+export const useHandleContextMenu = (editable?: boolean): Settings => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { getSelectedRows, updateEditedRows, getEditedRows, updateRow } = useDataStore();
 
   const valueReplacer = (newValue: any) => {
     const rows = getSelectedRows();
-    if (rows.length === 1 && rows[0].selectedCell !== undefined && rows[0].selectedColumn !== undefined) {
-      const editedRows = handelRowChangeLog(
-        getEditedRows(),
-        rows[0].data,
-        rows[0].selectedColumn,
-        rows[0].selectedCell,
-        newValue
-      );
-      updateEditedRows(editedRows);
-      const newRow = { ...rows[0].data };
-      newRow[rows[0].selectedColumn] = newValue;
-      updateRow(newRow);
-      return;
-    }
-
     for (const row of rows) {
       if (!row.data) continue;
       const newRow = { ...row.data };
-      for (const key of Object.keys(row.data)) {
-        if (key === 'dbo_index') continue;
-        const editedRows = handelRowChangeLog(getEditedRows(), row.data, key, row.data[key], newValue);
+
+      for (const column of row.selectedColumns) {
+        const editedRows = handelRowChangeLog(getEditedRows(), row.data, column, row.data[column], newValue);
         updateEditedRows(editedRows);
-        newRow[key] = newValue;
+        newRow[column] = newValue;
         updateRow(newRow);
       }
     }
@@ -79,7 +64,8 @@ export const useHandleContextMenu = (): Settings => {
               callback: (): void => valueReplacer('@DEFAULT')
             }
           ]
-        }
+        },
+        disabled: !editable
       }
       //   sp3: ContextMenu.SEPARATOR,
       //   copy: {

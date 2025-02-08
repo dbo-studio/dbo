@@ -93,7 +93,6 @@ export type DataRemovedRowsType = {
 
 export type SelectedRow = {
   index: number; // The row index,
-  selectedCell: string | undefined;
-  selectedColumn: string | undefined;
+  selectedColumns: string[];
   data: Record<string, any>; // The row's data object
 };

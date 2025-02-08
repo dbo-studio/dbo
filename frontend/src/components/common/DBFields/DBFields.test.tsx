@@ -1,6 +1,6 @@
 import { transformRunQuery } from '@/api/query/transformers.ts';
 import { structureModel } from '@/core/mocks/handlers/queries.ts';
-import * as data from '@/store/dataStore/data.store.ts';
+import * as useDataStore from '@/store/dataStore/data.store.ts';
 import { screen } from '@testing-library/dom';
 import '@testing-library/jest-dom';
 import { render } from '@testing-library/react';
@@ -10,7 +10,7 @@ import { describe, expect, test, vi } from 'vitest';
 import DBFields from './DBFields';
 
 describe('DBField.tsx', () => {
-  const spy = vi.spyOn(data, 'useDataStore');
+  const spy = vi.spyOn(useDataStore, 'useDataStore');
   const mockGetColumns = vi.fn();
   const mockSelectedRows = vi.fn();
 

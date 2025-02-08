@@ -62,7 +62,7 @@ export default function Query() {
         </Box>
         {autocomplete && (
           <Box display={'flex'} flex={1}>
-            <DataGrid />
+            <DataGrid editable={false} />
           </Box>
         )}
       </Box>
