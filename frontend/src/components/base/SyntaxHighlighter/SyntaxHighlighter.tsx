@@ -1,6 +1,24 @@
+import { useEffect, useState } from 'react';
 import { codeToHtml } from 'shiki';
+import { SyntaxHighlighterStyled } from './SyntaxHighlighter.styled';
+import type { SyntaxHighlighterProps } from './types';
 
-export const SyntaxHighlighter = async (value: string, isDark: boolean) => {
+export default function SyntaxHighlighter({ value, isDark }: SyntaxHighlighterProps) {
+  const [html, setHtml] = useState('');
+
+  useEffect(() => {
+    shikiWrapper(value ?? '', isDark ?? false).then((_html) => setHtml(_html));
+  }, [value]);
+
+  return (
+    <SyntaxHighlighterStyled>
+      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation> */}
+      <div dangerouslySetInnerHTML={{ __html: html }} />
+    </SyntaxHighlighterStyled>
+  );
+}
+
+const shikiWrapper = async (value: string, isDark: boolean) => {
   return await codeToHtml(value, {
     lang: 'sql',
     theme: isDark ? 'github-dark' : 'github-light'
