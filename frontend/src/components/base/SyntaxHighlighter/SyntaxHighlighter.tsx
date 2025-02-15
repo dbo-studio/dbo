@@ -7,7 +7,7 @@ export default function SyntaxHighlighter({ value, isDark }: SyntaxHighlighterPr
   const [html, setHtml] = useState('');
 
   useEffect(() => {
-    shikiWrapper(value ?? '', isDark ?? false).then((_html) => setHtml(_html));
+    shikiWrapper(value, isDark ?? false).then((_html) => setHtml(_html));
   }, [value]);
 
   return (
