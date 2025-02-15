@@ -6,6 +6,12 @@ export const SyntaxHighlighterStyled = styled('div')(({ theme }) => ({
     padding: theme.spacing(1),
     fontSize: 13,
     fontWeight: 'bold',
-    fontFamily: 'JetBrainsMono-Bold'
+    fontFamily: 'JetBrainsMono-Bold',
+
+    '& *': {
+      userSelect: 'text',
+      WebkitUserSelect: 'text',
+      msUserSelect: 'text'
+    }
   }
 }));
