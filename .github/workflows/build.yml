@@ -1,10 +1,6 @@
 name: "DBO App Publish"
 
 on:
-  # push:
-  #   tags:
-  #     - "*"
-  #   branches: [dev]
   workflow_dispatch:
 
 env:
@@ -18,33 +14,33 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       release_id: ${{ steps.create-release.outputs.result }}
+      package_version: ${{ steps.get-version.outputs.version }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      - name: Get Version from File
+        id: get-version
+        run: |
+          VERSION=$(cat docs/scripts/VERSION || echo "0.0.0")
+          echo "PACKAGE_VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: get version
-        run: echo "PACKAGE_VERSION=$(cat docs/scripts/VERSION)" >> $GITHUB_ENV
-
-      - name: create release
+      - name: Create GitHub Release
         id: create-release
         uses: actions/github-script@v6
         with:
           script: |
+            const version = process.env.PACKAGE_VERSION;
             const { data } = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag_name: `v${process.env.PACKAGE_VERSION}`,
-              name: `v${process.env.PACKAGE_VERSION}`,
-              body: 'Take a look at the assets to download and install this app.',
+              tag_name: `v${version}`,
+              name: `v${version}`,
+              body: 'Check the assets to download and install the app.',
               draft: true,
               prerelease: false
-            })
-            return data.id
+            });
+            return data.id;
 
   build-tauri:
     needs: create-release
@@ -54,9 +50,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: "macos-latest" # for Arm based macs (M1 and above).
+          - platform: "macos-latest"
             args: "--target aarch64-apple-darwin"
-          - platform: "macos-13" # for Intel based macs.
+          - platform: "macos-13"
             args: "--target x86_64-apple-darwin"
           - platform: "ubuntu-22.04"
             args: ""
@@ -67,38 +63,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: install dependencies (ubuntu only)
+      - name: Install Dependencies (Ubuntu Only)
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
-      - name: setup node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "npm"
           cache-dependency-path: ./frontend/package-lock.json
      
-      - name: install frontend dependencies
+      - name: Install Frontend Dependencies
         run: npm install --force
         working-directory: ./frontend
+
+      - name: Build Frontend with Version
+        run: npm run build
+        working-directory: ./frontend
+        env:
+          VITE_VERSION: ${{ env.PACKAGE_VERSION }}
 
       - uses: actions/setup-go@v5
         with:
           go-version: 1.23
           check-latest: true
 
-      - name: build go
-        run: |
-          bash ./docs/scripts/build_backend.sh
+      - name: Build Go Backend
+        run: bash ./docs/scripts/build_backend.sh
 
-      - name: install Rust stable
+      - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ (matrix.platform == 'macos-latest' || matrix.platform == 'macos-13') && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      - name: Rust cache
+      - name: Rust Cache
         uses: swatinem/rust-cache@v2
         with:
           workspaces: "./desktop -> target"
@@ -110,14 +111,14 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
-          tagName: "v$(cat docs/scripts/VERSION)" # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: "v$(cat docs/scripts/VERSION)"
-          releaseBody: "See full change log please see https://github.com/dbo-studio/dbo/releases"
+          tagName: "v${{ env.PACKAGE_VERSION }}"
+          releaseName: "v${{ env.PACKAGE_VERSION }}"
+          releaseBody: "See full changelog at https://github.com/dbo-studio/dbo/releases"
           releaseDraft: true
           args: ${{ matrix.args }}
           projectPath: "./desktop"
           includeUpdaterJson: true
-          appVersion: $(cat docs/scripts/VERSION)
+          appVersion: ${{ env.PACKAGE_VERSION }}
 
   publish-release:
     permissions:
@@ -126,7 +127,7 @@ jobs:
     needs: [create-release, build-tauri]
 
     steps:
-      - name: publish release
+      - name: Publish Release
         id: publish-release
         uses: actions/github-script@v6
         env:
@@ -139,4 +140,4 @@ jobs:
               release_id: process.env.release_id,
               draft: false,
               prerelease: false
-            })
+            });
