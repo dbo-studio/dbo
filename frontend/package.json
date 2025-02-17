@@ -29,7 +29,7 @@
     "lodash": "^4.17.21",
     "lucide-react": "^0.475.0",
     "monaco-editor": "^0.52.2",
-    "monaco-sql-languages": "^0.13.1",
+    "monaco-sql-languages": "^0.12.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.5",
