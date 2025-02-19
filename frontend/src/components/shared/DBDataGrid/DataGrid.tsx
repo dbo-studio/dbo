@@ -1,34 +1,34 @@
-import {useDataStore} from '@/store/dataStore/data.store.ts';
-import {HotColumn, type HotTableRef} from '@handsontable/react-wrapper';
+import { useDataStore } from '@/store/dataStore/data.store.ts';
+import { HotColumn, type HotTableRef } from '@handsontable/react-wrapper';
 import 'handsontable/dist/handsontable.min.css';
 
-import {DataGridStyled} from '@/components/shared/DBDataGrid/DataGrid.styled.ts';
+import { DataGridStyled } from '@/components/shared/DBDataGrid/DataGrid.styled.ts';
 import QuickViewDialog from '@/components/shared/DBDataGrid/QuickViewDialog/QuickViewDialog.tsx';
-import {useHandleContextMenu} from '@/components/shared/DBDataGrid/hooks/useHandleContextMenu.ts';
-import {useHandleDataUpdate} from '@/components/shared/DBDataGrid/hooks/useHandleDataUpdate.ts';
-import {useHandleDeselect} from '@/components/shared/DBDataGrid/hooks/useHandleDeselect.ts';
-import {useHandleRowChange} from '@/components/shared/DBDataGrid/hooks/useHandleRowChange.ts';
-import {useHandleRowSelect} from '@/components/shared/DBDataGrid/hooks/useHandleRowSelect.ts';
-import {useHandleRowStyle} from '@/components/shared/DBDataGrid/hooks/useHandleRowStyle.ts';
-import {useHandleScroll} from '@/components/shared/DBDataGrid/hooks/useHandleScroll.ts';
-import type {DataGridProps} from '@/components/shared/DBDataGrid/types.ts';
-import {Box, CircularProgress} from '@mui/material';
-import {useMemo, useRef} from 'react';
+import { useHandleContextMenu } from '@/components/shared/DBDataGrid/hooks/useHandleContextMenu.ts';
+import { useHandleDataUpdate } from '@/components/shared/DBDataGrid/hooks/useHandleDataUpdate.ts';
+import { useHandleDeselect } from '@/components/shared/DBDataGrid/hooks/useHandleDeselect.ts';
+import { useHandleRowChange } from '@/components/shared/DBDataGrid/hooks/useHandleRowChange.ts';
+import { useHandleRowSelect } from '@/components/shared/DBDataGrid/hooks/useHandleRowSelect.ts';
+import { useHandleRowStyle } from '@/components/shared/DBDataGrid/hooks/useHandleRowStyle.ts';
+import { useHandleScroll } from '@/components/shared/DBDataGrid/hooks/useHandleScroll.ts';
+import type { DataGridProps } from '@/components/shared/DBDataGrid/types.ts';
+import { Box, CircularProgress } from '@mui/material';
+import { useMemo, useRef } from 'react';
 
-import {registerCellType, TextCellType} from 'handsontable/cellTypes';
+import { registerCellType, TextCellType } from 'handsontable/cellTypes';
 
-import type {ColumnType} from '@/types';
-import {registerEditor, TextEditor} from 'handsontable/editors';
+import type { ColumnType } from '@/types';
+import { registerEditor, TextEditor } from 'handsontable/editors';
 import {
-    AutoColumnSize,
-    AutoRowSize,
-    ContextMenu,
-    ManualColumnResize,
-    registerPlugin,
-    TouchScroll,
-    TrimRows
+  AutoColumnSize,
+  AutoRowSize,
+  ContextMenu,
+  ManualColumnResize,
+  registerPlugin,
+  TouchScroll,
+  TrimRows
 } from 'handsontable/plugins';
-import {baseRenderer, htmlRenderer, registerRenderer, textRenderer} from 'handsontable/renderers';
+import { baseRenderer, htmlRenderer, registerRenderer, textRenderer } from 'handsontable/renderers';
 
 registerRenderer(baseRenderer);
 registerRenderer(textRenderer);
