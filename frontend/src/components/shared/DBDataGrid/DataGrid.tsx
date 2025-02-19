@@ -13,14 +13,42 @@ import { useHandleRowStyle } from '@/components/shared/DBDataGrid/hooks/useHandl
 import { useHandleScroll } from '@/components/shared/DBDataGrid/hooks/useHandleScroll.ts';
 import type { DataGridProps } from '@/components/shared/DBDataGrid/types.ts';
 import { Box, CircularProgress } from '@mui/material';
-import { registerAllModules } from 'handsontable/registry';
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 
-registerAllModules();
+import { registerCellType, TextCellType } from 'handsontable/cellTypes';
+
+import type { ColumnType } from '@/types';
+import { registerEditor, TextEditor } from 'handsontable/editors';
+import {
+  AutoColumnSize,
+  AutoRowSize,
+  ContextMenu,
+  ManualColumnResize,
+  registerPlugin,
+  TouchScroll,
+  TrimRows
+} from 'handsontable/plugins';
+import { baseRenderer, htmlRenderer, registerRenderer, textRenderer } from 'handsontable/renderers';
+
+registerRenderer(baseRenderer);
+registerRenderer(textRenderer);
+registerRenderer(htmlRenderer);
+registerEditor(TextEditor);
+registerCellType(TextCellType);
+
+registerPlugin(ManualColumnResize);
+registerPlugin(TrimRows);
+registerPlugin(TouchScroll);
+registerPlugin(AutoRowSize);
+registerPlugin(AutoColumnSize);
+registerPlugin(ContextMenu);
 
 export default function DataGrid({ editable }: DataGridProps) {
   const hotTableRef = useRef<HotTableRef | null>(null);
   const { loading, getRows, getColumns } = useDataStore();
+
+  const rows = useMemo(() => getRows(), [getRows()]);
+  const headers = useMemo(() => getColumns(true), [getColumns()]);
 
   useHandleScroll(hotTableRef);
   useHandleDeselect(hotTableRef);
@@ -44,7 +72,7 @@ export default function DataGrid({ editable }: DataGridProps) {
       <QuickViewDialog editable={editable} />
       <DataGridStyled
         ref={hotTableRef}
-        data={getRows()}
+        data={rows}
         rowHeaders={true}
         fillHandle={false}
         mergeCells={false}
@@ -71,7 +99,7 @@ export default function DataGrid({ editable }: DataGridProps) {
         }}
         columnSorting={true}
       >
-        {getColumns(true).map((column) => (
+        {headers.map((column: ColumnType) => (
           <HotColumn data={column.key} title={column.name} key={column.key} />
         ))}
       </DataGridStyled>

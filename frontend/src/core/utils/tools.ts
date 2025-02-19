@@ -1,4 +1,5 @@
 import { getTauriVersion } from '@tauri-apps/api/app';
+import { type SqlLanguage, format } from 'sql-formatter';
 import { isNumber, isObject } from '.';
 
 export const tools = {
@@ -55,6 +56,9 @@ export const tools = {
         // Trim any remaining whitespace at the start and end of the string
         .trim()
     );
+  },
+  formatSql: (query: string, lang: SqlLanguage): string => {
+    return format(query, { language: lang, keywordCase: 'preserve' });
   },
   isValidJSON: (value: string) => {
     try {

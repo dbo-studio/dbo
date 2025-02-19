@@ -10,7 +10,6 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton, Stack, Tooltip } from '@mui/material';
 import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
-import { format } from 'sql-formatter';
 import type { QueryEditorActionsProps } from '../../types';
 
 export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps) {
@@ -27,8 +26,7 @@ export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps
 
   const handleFormatSql = () => {
     if (checkQueryLength()) {
-      const formatted = format(getQuery(), { language: 'postgresql', keywordCase: 'preserve' });
-      updateQuery(formatted);
+      updateQuery(tools.formatSql(getQuery(), 'postgresql'));
       onFormat();
     }
   };

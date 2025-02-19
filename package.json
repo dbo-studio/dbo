@@ -1,0 +1,15 @@
+{
+  "name": "dbo",
+  "scripts": {
+    "lefthook": "lefthook",
+    "tauri": "tauri",
+    "biome": "biome"
+  },
+  "author": "DBO Studio",
+  "license": "MIT",
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@tauri-apps/cli": "^2.2.5",
+    "lefthook": "^1.10.8"
+  }
+}
