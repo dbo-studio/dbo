@@ -42,7 +42,8 @@ export const SelectInputStyles = (
     ...styles,
     margin: 0,
     padding: 0,
-    color: theme.palette.text.text
+    color: theme.palette.text.text,
+    fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize
   }),
   singleValue: (styles) => ({
     ...styles,

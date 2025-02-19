@@ -12,34 +12,40 @@ export const useSetupDesktop = () => {
     tools
       .isTauri()
       .then((e) => {
-        if (!e) {
-          setLoaded(true);
-          return;
-        }
-        disableMenu();
+        if (!e) return;
         reset();
-        invoke('get_backend_host').then((response) => {
-          if (response === '') {
-            alert('cant found empty port!');
-            return;
-          }
-
-          changeUrl(response as string);
-          setLoaded(true);
-        });
+        setup().then();
       })
-      .catch(() => {
-        setLoaded(true);
-      });
+      .catch((e) => {
+        console.log('=>(useSetupDesktop.hook.ts:28) e', e);
+      })
+      .finally(() => setLoaded(true));
   }, []);
 
   return loaded;
 };
 
-function disableMenu() {
+const setup = async () => {
+  disableDefaultContextMenu();
+  await setupMenu();
+  await setupBackend();
+};
+
+const setupBackend = async () => {
+  const response = await invoke('get_backend_host');
+  if (response === '') {
+    alert('cant found empty port!');
+    return;
+  }
+
+  changeUrl(response as string);
+};
+
+const disableDefaultContextMenu = () => {
   if (process.env.NODE_ENV === 'development') {
     return;
   }
+
   document.addEventListener(
     'contextmenu',
     (e) => {
@@ -57,4 +63,6 @@ function disableMenu() {
     },
     { capture: true }
   );
-}
+};
+
+const setupMenu = async () => {};
