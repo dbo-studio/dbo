@@ -6,7 +6,9 @@ import { useEffect, useState } from 'react';
 
 export default function AboutPanel() {
   const theme = useTheme();
-  const [about, setAbout] = useState({
+  const [about, setAbout] = useState<{
+    version: string | null;
+  }>({
     version: null
   });
 
@@ -31,7 +33,15 @@ export default function AboutPanel() {
 
       <Box mt={theme.spacing(2)} display={'flex'} alignItems={'center'} flexDirection={'column'}>
         <Box display={'flex'} flexDirection={'row'} alignItems={'center'}>
-          <a href={constants.releasesUrl} target='_blank' rel='noreferrer' style={{ textDecoration: 'none' }}>
+          <a
+            href={constants.releasesUrl}
+            target='_blank'
+            rel='noreferrer'
+            style={{
+              textDecoration: 'none',
+              color: theme.palette.text.primary
+            }}
+          >
             <Typography style={{ marginRight: theme.spacing(1) }} variant='caption'>
               {locales.releases_url}
             </Typography>
@@ -43,7 +53,11 @@ export default function AboutPanel() {
             href={constants.reportIssueUrl}
             target='_blank'
             rel='noreferrer'
-            style={{ textDecoration: 'none', marginRight: theme.spacing(1) }}
+            style={{
+              textDecoration: 'none',
+              marginRight: theme.spacing(1),
+              color: theme.palette.text.primary
+            }}
           >
             <Typography style={{ marginRight: theme.spacing(1) }} variant='caption'>
               {locales.report_an_issue}
