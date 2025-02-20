@@ -60,7 +60,7 @@ export default function ResizableYBox(props: ResizableBoxYProps) {
   }, [isResizing]);
 
   return (
-    <Box position={'relative'} overflow={'hidden'} height={boxHeight}>
+    <Box display={'flex'} position={'relative'} overflow={'hidden'} height={boxHeight}>
       <ResizableToggle onMouseDown={handleMouseDown} direction={props.direction} />
       {props.children}
     </Box>

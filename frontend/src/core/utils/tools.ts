@@ -1,5 +1,5 @@
 import { getTauriVersion } from '@tauri-apps/api/app';
-import { type SqlLanguage, format } from 'sql-formatter';
+import { format, type SqlLanguage } from 'sql-formatter';
 import { isNumber, isObject } from '.';
 
 export const tools = {
@@ -7,8 +7,8 @@ export const tools = {
     const height = window?.innerHeight - 40;
     return asNumber ? height : `${height}px`;
   },
-  screenFullHeight: (): string => {
-    return `${window?.innerHeight}px`;
+  screenFullHeight: (asNumber?: boolean): string | number => {
+    return asNumber ? window?.innerHeight : `${window?.innerHeight}px`;
   },
   isEmpty: (data: unknown): data is never | undefined | null => {
     return (

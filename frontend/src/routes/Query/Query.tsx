@@ -1,5 +1,6 @@
 import api from '@/api';
 import type { AutoCompleteRequestType } from '@/api/query/types';
+import ResizableYBox from '@/components/base/ResizableBox/ResizableYBox.tsx';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor.tsx';
 import type { SqlEditorSettingType } from '@/components/base/SqlEditor/types';
 import DataGrid from '@/components/shared/DBDataGrid/DataGrid.tsx';
@@ -61,9 +62,9 @@ export default function Query() {
           {autocomplete && <SqlEditor onChange={handleUpdateState} autocomplete={autocomplete} value={value} />}
         </Box>
         {autocomplete && (
-          <Box display={'flex'} flex={1}>
+          <ResizableYBox height={windowSize.heightNumber ? windowSize.heightNumber / 2 : 0} direction={'btt'}>
             <DataGrid editable={false} />
-          </Box>
+          </ResizableYBox>
         )}
       </Box>
     </>
