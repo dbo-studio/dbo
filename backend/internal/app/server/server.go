@@ -19,6 +19,7 @@ type Handlers struct {
 	SavedQuery *handler.SavedQueryHandler
 	Design     *handler.DesignHandler
 	History    *handler.HistoryHandler
+	V2Handler  *handler.V2Handler
 }
 
 type Server struct {
