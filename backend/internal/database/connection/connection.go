@@ -1,14 +1,18 @@
 package databaseConnection
 
 import (
-	"database/sql"
+	"fmt"
 	"sync"
 	"time"
 
-	_ "github.com/denisenkom/go-mssqldb" // درایور SQL Server
-	_ "github.com/go-sql-driver/mysql"   // درایور MySQL
-	_ "github.com/lib/pq"                // درایور PostgreSQL
-	_ "github.com/mattn/go-sqlite3"      // درایور SQLite
+	"github.com/dbo-studio/dbo/pkg/logger"
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/sqlserver"
+
+	// درایور SQLite
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 type ConnectionInfo struct {
@@ -18,88 +22,72 @@ type ConnectionInfo struct {
 }
 
 type Connection struct {
-	DB       *sql.DB
+	DB       *gorm.DB
 	LastUsed time.Time
 }
 
 type ConnectionManager struct {
-	Connections map[string]*Connection
-	Mutex       sync.Mutex
+	connections map[string]*Connection
+	mu          sync.Mutex
+	logger      logger.Logger
 }
 
-func NewConnectionManager() *ConnectionManager {
+func NewConnectionManager(logger logger.Logger) *ConnectionManager {
 	cm := &ConnectionManager{
-		Connections: make(map[string]*Connection),
-		Mutex:       sync.Mutex{},
+		connections: make(map[string]*Connection),
+		mu:          sync.Mutex{},
+		logger:      logger,
 	}
 	go cm.cleanupInactiveConnections()
 	return cm
 }
 
-func (cm *ConnectionManager) GetConnection(connInfo ConnectionInfo) (*sql.DB, error) {
-	cm.Mutex.Lock()
-	defer cm.Mutex.Unlock()
+func (cm *ConnectionManager) GetConnection(connInfo ConnectionInfo) (*gorm.DB, error) {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
 
-	if conn, exists := cm.Connections[connInfo.ID]; exists {
-		if err := conn.DB.Ping(); err == nil {
-			conn.LastUsed = time.Now()
-			return conn.DB, nil
+	if conn, exists := cm.connections[connInfo.ID]; exists {
+		db, err := conn.DB.DB()
+		if err == nil {
+			if err := db.Ping(); err == nil { // تست اتصال با GORM
+				conn.LastUsed = time.Now()
+				return conn.DB, nil
+			}
 		}
-		delete(cm.Connections, connInfo.ID)
+		cm.logger.Error(err)
+		delete(cm.connections, connInfo.ID)
 	}
 
-	db, err := sql.Open(connInfo.DBType, connInfo.ConnectionString)
+	var dialect gorm.Dialector
+	switch connInfo.DBType {
+	case "mysql":
+		dialect = mysql.Open(connInfo.ConnectionString)
+	case "postgresql":
+		dialect = postgres.Open(connInfo.ConnectionString)
+	case "sqlite":
+		dialect = sqlite.Open(connInfo.ConnectionString)
+	case "sqlserver":
+		dialect = sqlserver.Open(connInfo.ConnectionString)
+	default:
+		cm.logger.Error(fmt.Errorf("unsupported database type: %s", connInfo.DBType))
+		return nil, fmt.Errorf("unsupported database type: %s", connInfo.DBType)
+	}
+
+	db, err := gorm.Open(dialect, &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
 
-	db.SetMaxOpenConns(10)
-	db.SetMaxIdleConns(5)
-	db.SetConnMaxLifetime(5 * time.Minute)
+	sqlDB, _ := db.DB()
+	sqlDB.SetMaxOpenConns(10)
+	sqlDB.SetMaxIdleConns(5)
+	sqlDB.SetConnMaxLifetime(5 * time.Minute)
 
-	cm.Connections[connInfo.ID] = &Connection{
+	cm.connections[connInfo.ID] = &Connection{
 		DB:       db,
 		LastUsed: time.Now(),
 	}
 	return db, nil
-}
-
-func (cm *ConnectionManager) CloseConnection(connID string) error {
-	cm.Mutex.Lock()
-	defer cm.Mutex.Unlock()
-
-	if conn, exists := cm.Connections[connID]; exists {
-		err := conn.DB.Close()
-		delete(cm.Connections, connID)
-		return err
-	}
-	return nil
-}
-
-func (cm *ConnectionManager) CloseAll() {
-	cm.Mutex.Lock()
-	defer cm.Mutex.Unlock()
-
-	for id, conn := range cm.Connections {
-		conn.DB.Close()
-		delete(cm.Connections, id)
-	}
-}
-
-func (cm *ConnectionManager) cleanupInactiveConnections() {
-	ticker := time.NewTicker(10 * time.Second)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		cm.Mutex.Lock()
-		for id, conn := range cm.Connections {
-			if time.Since(conn.LastUsed) > 30*time.Second {
-				conn.DB.Close()
-				delete(cm.Connections, id)
-			}
-		}
-		cm.Mutex.Unlock()
-	}
 }
 
 func GetConnectionInfoFromDB(connID string) ConnectionInfo {
@@ -107,6 +95,31 @@ func GetConnectionInfoFromDB(connID string) ConnectionInfo {
 	return ConnectionInfo{
 		ID:               connID,
 		DBType:           "postgres",
-		ConnectionString: "user=default password=secret dbname=default port=5432 sslmode=disable",
+		ConnectionString: "host=localhost user=default password=secret dbname=default port=5432 sslmode=disable",
+	}
+}
+
+func (cm *ConnectionManager) cleanupInactiveConnections() {
+	ticker := time.NewTicker(10 * time.Second) // هر ۱۰ ثانیه چک می‌کنه
+	defer ticker.Stop()
+
+	for range ticker.C {
+		cm.mu.Lock()
+		for id, conn := range cm.connections {
+			if time.Since(conn.LastUsed) > 30*time.Second { // بیشتر از ۳۰ ثانیه غیرفعال
+				delete(cm.connections, id)
+				db, err := conn.DB.DB()
+				if err == nil {
+					err = db.Close()
+					if err != nil {
+						cm.logger.Error(err)
+						return
+					}
+				}
+
+				cm.logger.Error(err)
+			}
+		}
+		cm.mu.Unlock()
 	}
 }

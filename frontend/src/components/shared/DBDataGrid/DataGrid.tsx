@@ -5,7 +5,6 @@ import 'handsontable/dist/handsontable.min.css';
 import { DataGridStyled } from '@/components/shared/DBDataGrid/DataGrid.styled.ts';
 import QuickViewDialog from '@/components/shared/DBDataGrid/QuickViewDialog/QuickViewDialog.tsx';
 import { useHandleContextMenu } from '@/components/shared/DBDataGrid/hooks/useHandleContextMenu.ts';
-import { useHandleDataUpdate } from '@/components/shared/DBDataGrid/hooks/useHandleDataUpdate.ts';
 import { useHandleDeselect } from '@/components/shared/DBDataGrid/hooks/useHandleDeselect.ts';
 import { useHandleRowChange } from '@/components/shared/DBDataGrid/hooks/useHandleRowChange.ts';
 import { useHandleRowSelect } from '@/components/shared/DBDataGrid/hooks/useHandleRowSelect.ts';
@@ -52,7 +51,7 @@ export default function DataGrid({ editable }: DataGridProps) {
 
   useHandleScroll(hotTableRef);
   useHandleDeselect(hotTableRef);
-  useHandleDataUpdate(hotTableRef);
+  // useHandleDataUpdate(hotTableRef);
   useHandleRowStyle();
 
   const handleSelection = useHandleRowSelect(hotTableRef);

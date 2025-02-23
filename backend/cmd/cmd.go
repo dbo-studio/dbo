@@ -45,7 +45,7 @@ func Execute() {
 		appLogger.Fatal(err)
 	}
 	drivers := driver.InitDrivers(appDB)
-	cm := databaseConnection.NewConnectionManager()
+	cm := databaseConnection.NewConnectionManager(appLogger)
 	cache := sqlite.NewSQLiteCache(appDB)
 
 	rr := repository.NewRepository(ctx, appDB, cache, drivers)

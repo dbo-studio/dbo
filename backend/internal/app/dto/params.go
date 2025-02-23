@@ -29,19 +29,23 @@ type MySQLUpdateTableParams struct {
 }
 
 type MySQLCreateObjectParams struct {
-	Name      string `json:"name"`
-	Type      string `json:"type"`
-	Query     string `json:"query,omitempty"`
-	OrReplace bool   `json:"orReplace,omitempty"`
-	Charset   string `json:"charset,omitempty"`
-	Collation string `json:"collation,omitempty"`
+	Name      string   `json:"name"`
+	Type      string   `json:"type"` // "schema", "view", "index"
+	Query     string   `json:"query,omitempty"`
+	OrReplace bool     `json:"orReplace,omitempty"`
+	Charset   string   `json:"charset,omitempty"`
+	Collation string   `json:"collation,omitempty"`
+	TableName string   `json:"tableName,omitempty"` // برای Index
+	Columns   []string `json:"columns,omitempty"`   // برای Index
 }
 
 type MySQLUpdateObjectParams struct {
-	Name      string `json:"name"`
-	Type      string `json:"type"`
-	Query     string `json:"query"`
-	OrReplace bool   `json:"orReplace"`
+	Name      string   `json:"name"`
+	Type      string   `json:"type"` // "view", "index"
+	Query     string   `json:"query,omitempty"`
+	OrReplace bool     `json:"orReplace,omitempty"`
+	TableName string   `json:"tableName,omitempty"`
+	Columns   []string `json:"columns,omitempty"`
 }
 
 type PostgresCreateDatabaseParams struct {
@@ -71,20 +75,24 @@ type PostgresUpdateTableParams struct {
 }
 
 type PostgresCreateObjectParams struct {
-	Name      string `json:"name"`
-	Type      string `json:"type"`
-	Query     string `json:"query,omitempty"`
-	OrReplace bool   `json:"orReplace,omitempty"`
-	WithData  bool   `json:"withData,omitempty"`
-	Owner     string `json:"owner,omitempty"`
+	Name      string   `json:"name"`
+	Type      string   `json:"type"` // "schema", "view", "materialized_view", "index", "sequence"
+	Query     string   `json:"query,omitempty"`
+	OrReplace bool     `json:"orReplace,omitempty"`
+	WithData  bool     `json:"withData,omitempty"`
+	Owner     string   `json:"owner,omitempty"`
+	TableName string   `json:"tableName,omitempty"` // برای Index
+	Columns   []string `json:"columns,omitempty"`   // برای Index
 }
 
 type PostgresUpdateObjectParams struct {
-	Name      string `json:"name"`
-	Type      string `json:"type"`
-	Query     string `json:"query,omitempty"`
-	OrReplace bool   `json:"orReplace,omitempty"`
-	WithData  bool   `json:"withData,omitempty"`
+	Name      string   `json:"name"`
+	Type      string   `json:"type"`
+	Query     string   `json:"query,omitempty"`
+	OrReplace bool     `json:"orReplace,omitempty"`
+	WithData  bool     `json:"withData,omitempty"`
+	TableName string   `json:"tableName,omitempty"`
+	Columns   []string `json:"columns,omitempty"`
 }
 
 type DropTableParams struct {
@@ -114,18 +122,21 @@ type SQLiteUpdateTableParams struct {
 
 // SQLiteCreateObjectParams برای ساخت اشیا در SQLite (فقط View)
 type SQLiteCreateObjectParams struct {
-	Name      string `json:"name"`
-	Type      string `json:"type"` // فقط "view"
-	Query     string `json:"query"`
-	OrReplace bool   `json:"orReplace,omitempty"`
+	Name      string   `json:"name"`
+	Type      string   `json:"type"` // "view", "index"
+	Query     string   `json:"query,omitempty"`
+	OrReplace bool     `json:"orReplace,omitempty"`
+	TableName string   `json:"tableName,omitempty"` // برای Index
+	Columns   []string `json:"columns,omitempty"`   // برای Index
 }
 
-// SQLiteUpdateObjectParams برای ویرایش View در SQLite
 type SQLiteUpdateObjectParams struct {
-	Name      string `json:"name"`
-	Type      string `json:"type"` // فقط "view"
-	Query     string `json:"query"`
-	OrReplace bool   `json:"orReplace"`
+	Name      string   `json:"name"`
+	Type      string   `json:"type"` // "view", "index"
+	Query     string   `json:"query,omitempty"`
+	OrReplace bool     `json:"orReplace,omitempty"`
+	TableName string   `json:"tableName,omitempty"`
+	Columns   []string `json:"columns,omitempty"`
 }
 
 // SQLServerCreateDatabaseParams برای ساخت دیتابیس در SQL Server
@@ -153,16 +164,19 @@ type SQLServerUpdateTableParams struct {
 
 // SQLServerCreateObjectParams برای ساخت اشیا در SQL Server
 type SQLServerCreateObjectParams struct {
-	Name      string `json:"name"`
-	Type      string `json:"type"` // "view"
-	Query     string `json:"query"`
-	OrReplace bool   `json:"orReplace,omitempty"`
+	Name      string   `json:"name"`
+	Type      string   `json:"type"` // "view", "index"
+	Query     string   `json:"query,omitempty"`
+	OrReplace bool     `json:"orReplace,omitempty"`
+	TableName string   `json:"tableName,omitempty"` // برای Index
+	Columns   []string `json:"columns,omitempty"`   // برای Index
 }
 
-// SQLServerUpdateObjectParams برای ویرایش اشیا در SQL Server
 type SQLServerUpdateObjectParams struct {
-	Name      string `json:"name"`
-	Type      string `json:"type"` // "view"
-	Query     string `json:"query"`
-	OrReplace bool   `json:"orReplace"`
+	Name      string   `json:"name"`
+	Type      string   `json:"type"` // "view", "index"
+	Query     string   `json:"query,omitempty"`
+	OrReplace bool     `json:"orReplace,omitempty"`
+	TableName string   `json:"tableName,omitempty"`
+	Columns   []string `json:"columns,omitempty"`
 }

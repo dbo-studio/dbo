@@ -1,6 +1,10 @@
 package databaseContract
 
-import "database/sql"
+import (
+	"database/sql"
+
+	"gorm.io/gorm"
+)
 
 type DatabaseRepository interface {
 	BuildTree() (*TreeNode, error)
@@ -9,7 +13,7 @@ type DatabaseRepository interface {
 	Drop(params interface{}) error
 	Update(params interface{}) error
 	ExecuteQuery(query string, args ...interface{}) (*sql.Rows, error)
-	Execute(query string, args ...interface{}) (sql.Result, error)
+	Execute(query string, args ...interface{}) (*gorm.Statement, error)
 	GetAvailableActions(nodeType string) []string
 	GetFormFields(action string) []FormField
 }

@@ -112,7 +112,7 @@ const generateFakeJson = () => {
 };
 
 const queryModel = [];
-for (let i = 0; i < 3; i++) {
+for (let i = 0; i < 100; i++) {
   queryModel.push({
     authors: faker.person.fullName(),
     datasrc_id: faker.number.int(),
