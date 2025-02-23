@@ -29,30 +29,30 @@ func getFormFields(action string) []databaseContract.FormField {
 	switch action {
 	case "create_database":
 		return []databaseContract.FormField{
-			{ID: "name", Label: "Database Name", Type: "text", Required: true},
+			{ID: "name", Name: "Database Name", Type: "text", Required: true},
 		}
 	case "create_table", "edit_table":
 		return []databaseContract.FormField{
-			{ID: "name", Label: "Table Name", Type: "text", Required: true},
-			{ID: "columns", Label: "Columns", Type: "array", Required: true, Options: []databaseContract.FormFieldOption{
-				{Value: "name", Label: "Column Name"},
-				{Value: "dataType", Label: "Data Type"},
-				{Value: "notNull", Label: "Not Null"},
-				{Value: "primary", Label: "Primary Key"},
+			{ID: "name", Name: "Table Name", Type: "text", Required: true},
+			{ID: "columns", Name: "Columns", Type: "array", Required: true, Options: []databaseContract.FormFieldOption{
+				{Value: "name", Name: "Column Name"},
+				{Value: "dataType", Name: "Data Type"},
+				{Value: "notNull", Name: "Not Null"},
+				{Value: "primary", Name: "Primary Key"},
 			}},
 		}
 	case "create_view", "edit_view":
 		return []databaseContract.FormField{
-			{ID: "name", Label: "View Name", Type: "text", Required: true},
-			{ID: "query", Label: "Query", Type: "textarea", Required: true},
-			{ID: "orReplace", Label: "Or Replace", Type: "checkbox"},
+			{ID: "name", Name: "View Name", Type: "text", Required: true},
+			{ID: "query", Name: "Query", Type: "textarea", Required: true},
+			{ID: "orReplace", Name: "Or Replace", Type: "checkbox"},
 		}
 	case "create_index", "edit_index":
 		return []databaseContract.FormField{
-			{ID: "name", Label: "Index Name", Type: "text", Required: true},
-			{ID: "tableName", Label: "Table Name", Type: "text", Required: true},
-			{ID: "columns", Label: "Columns", Type: "array", Required: true, Options: []databaseContract.FormFieldOption{
-				{Value: "name", Label: "Column Name"},
+			{ID: "name", Name: "Index Name", Type: "text", Required: true},
+			{ID: "tableName", Name: "Table Name", Type: "text", Required: true},
+			{ID: "columns", Name: "Columns", Type: "array", Required: true, Options: []databaseContract.FormFieldOption{
+				{Value: "name", Name: "Column Name"},
 			}},
 		}
 	case "drop_database", "drop_table", "drop_view", "drop_index":

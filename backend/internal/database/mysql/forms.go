@@ -35,41 +35,41 @@ func getFormFields(r *MySQLRepository, action string) []databaseContract.FormFie
 		charsetOptions := r.getCharsetOptions()
 		collationOptions := r.getCollationOptions()
 		return []databaseContract.FormField{
-			{ID: "name", Label: "Database Name", Type: "text", Required: true},
-			{ID: "charset", Label: "Character Set", Type: "select", Options: charsetOptions},
-			{ID: "collation", Label: "Collation", Type: "select", Options: collationOptions},
+			{ID: "name", Name: "Database Name", Type: "text", Required: true},
+			{ID: "charset", Name: "Character Set", Type: "select", Options: charsetOptions},
+			{ID: "collation", Name: "Collation", Type: "select", Options: collationOptions},
 		}
 	case "create_table", "edit_table":
 		return []databaseContract.FormField{
-			{ID: "name", Label: "Table Name", Type: "text", Required: true},
-			{ID: "columns", Label: "Columns", Type: "array", Required: true, Options: []databaseContract.FormFieldOption{
-				{Value: "name", Label: "Column Name"},
-				{Value: "dataType", Label: "Data Type"},
-				{Value: "notNull", Label: "Not Null"},
-				{Value: "primary", Label: "Primary Key"},
+			{ID: "name", Name: "Table Name", Type: "text", Required: true},
+			{ID: "columns", Name: "Columns", Type: "array", Required: true, Options: []databaseContract.FormFieldOption{
+				{Value: "name", Name: "Column Name"},
+				{Value: "dataType", Name: "Data Type"},
+				{Value: "notNull", Name: "Not Null"},
+				{Value: "primary", Name: "Primary Key"},
 			}},
-			{ID: "engine", Label: "Engine", Type: "select", Options: []databaseContract.FormFieldOption{
-				{Value: "InnoDB", Label: "InnoDB"},
-				{Value: "MyISAM", Label: "MyISAM"},
+			{ID: "engine", Name: "Engine", Type: "select", Options: []databaseContract.FormFieldOption{
+				{Value: "InnoDB", Name: "InnoDB"},
+				{Value: "MyISAM", Name: "MyISAM"},
 			}},
 		}
 	case "create_view", "edit_view":
 		return []databaseContract.FormField{
-			{ID: "name", Label: "View Name", Type: "text", Required: true},
-			{ID: "query", Label: "Query", Type: "textarea", Required: true},
-			{ID: "orReplace", Label: "Or Replace", Type: "checkbox"},
+			{ID: "name", Name: "View Name", Type: "text", Required: true},
+			{ID: "query", Name: "Query", Type: "textarea", Required: true},
+			{ID: "orReplace", Name: "Or Replace", Type: "checkbox"},
 		}
 	case "create_index", "edit_index":
 		return []databaseContract.FormField{
-			{ID: "name", Label: "Index Name", Type: "text", Required: true},
-			{ID: "tableName", Label: "Table Name", Type: "text", Required: true},
-			{ID: "columns", Label: "Columns", Type: "array", Required: true, Options: []databaseContract.FormFieldOption{
-				{Value: "name", Label: "Column Name"},
+			{ID: "name", Name: "Index Name", Type: "text", Required: true},
+			{ID: "tableName", Name: "Table Name", Type: "text", Required: true},
+			{ID: "columns", Name: "Columns", Type: "array", Required: true, Options: []databaseContract.FormFieldOption{
+				{Value: "name", Name: "Column Name"},
 			}},
 		}
 	case "drop_database", "drop_table", "drop_view", "drop_index":
 		return []databaseContract.FormField{
-			{ID: "ifExists", Label: "If Exists", Type: "checkbox"},
+			{ID: "ifExists", Name: "If Exists", Type: "checkbox"},
 		}
 	default:
 		return []databaseContract.FormField{}
@@ -90,7 +90,7 @@ func (r *MySQLRepository) getCharsetOptions() []databaseContract.FormFieldOption
 	for i, charset := range charsets {
 		options[i] = databaseContract.FormFieldOption{
 			Value: charset.Charset,
-			Label: fmt.Sprintf("%s (%s)", charset.Charset, charset.Description),
+			Name:  fmt.Sprintf("%s (%s)", charset.Charset, charset.Description),
 		}
 	}
 	return options
@@ -110,7 +110,7 @@ func (r *MySQLRepository) getCollationOptions() []databaseContract.FormFieldOpti
 	for i, collation := range collations {
 		options[i] = databaseContract.FormFieldOption{
 			Value: collation.Collation,
-			Label: fmt.Sprintf("%s (%s)", collation.Collation, collation.Charset),
+			Name:  fmt.Sprintf("%s (%s)", collation.Collation, collation.Charset),
 		}
 	}
 	return options

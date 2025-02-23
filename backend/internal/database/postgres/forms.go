@@ -42,56 +42,56 @@ func getFormFields(r *PostgresRepository, action string) []databaseContract.Form
 	case "create_database":
 		templateOptions := r.getTemplateOptions()
 		encodingOptions := []databaseContract.FormFieldOption{
-			{Value: "UTF8", Label: "UTF-8"},
-			{Value: "SQL_ASCII", Label: "SQL ASCII"},
-			{Value: "LATIN1", Label: "Latin-1"},
+			{Value: "UTF8", Name: "UTF-8"},
+			{Value: "SQL_ASCII", Name: "SQL ASCII"},
+			{Value: "LATIN1", Name: "Latin-1"},
 		}
 		return []databaseContract.FormField{
-			{ID: "name", Label: "Database Name", Type: "text", Required: true},
-			{ID: "owner", Label: "Owner", Type: "text"},
-			{ID: "encoding", Label: "Encoding", Type: "select", Options: encodingOptions},
-			{ID: "template", Label: "Template", Type: "select", Options: templateOptions},
+			{ID: "name", Name: "Database Name", Type: "text", Required: true},
+			{ID: "owner", Name: "Owner", Type: "text"},
+			{ID: "encoding", Name: "Encoding", Type: "select", Options: encodingOptions},
+			{ID: "template", Name: "Template", Type: "select", Options: templateOptions},
 		}
 	case "create_table", "edit_table":
 		return []databaseContract.FormField{
-			{ID: "name", Label: "Table Name", Type: "text", Required: true},
-			{ID: "columns", Label: "Columns", Type: "array", Required: true, Options: []databaseContract.FormFieldOption{
-				{Value: "name", Label: "Column Name"},
-				{Value: "dataType", Label: "Data Type"},
-				{Value: "notNull", Label: "Not Null"},
-				{Value: "primary", Label: "Primary Key"},
+			{ID: "name", Name: "Table Name", Type: "text", Required: true},
+			{ID: "columns", Name: "Columns", Type: "array", Required: true, Options: []databaseContract.FormFieldOption{
+				{Value: "name", Name: "Column Name"},
+				{Value: "dataType", Name: "Data Type"},
+				{Value: "notNull", Name: "Not Null"},
+				{Value: "primary", Name: "Primary Key"},
 			}},
-			{ID: "temp", Label: "Temporary", Type: "checkbox"},
+			{ID: "temp", Name: "Temporary", Type: "checkbox"},
 		}
 	case "create_view", "edit_view":
 		return []databaseContract.FormField{
-			{ID: "name", Label: "View Name", Type: "text", Required: true},
-			{ID: "query", Label: "Query", Type: "textarea", Required: true},
-			{ID: "orReplace", Label: "Or Replace", Type: "checkbox"},
+			{ID: "name", Name: "View Name", Type: "text", Required: true},
+			{ID: "query", Name: "Query", Type: "textarea", Required: true},
+			{ID: "orReplace", Name: "Or Replace", Type: "checkbox"},
 		}
 	case "create_materialized_view", "edit_materialized_view":
 		return []databaseContract.FormField{
-			{ID: "name", Label: "Materialized View Name", Type: "text", Required: true},
-			{ID: "query", Label: "Query", Type: "textarea", Required: true},
-			{ID: "orReplace", Label: "Or Replace", Type: "checkbox"},
-			{ID: "withData", Label: "With Data", Type: "checkbox"},
+			{ID: "name", Name: "Materialized View Name", Type: "text", Required: true},
+			{ID: "query", Name: "Query", Type: "textarea", Required: true},
+			{ID: "orReplace", Name: "Or Replace", Type: "checkbox"},
+			{ID: "withData", Name: "With Data", Type: "checkbox"},
 		}
 	case "create_index", "edit_index":
 		return []databaseContract.FormField{
-			{ID: "name", Label: "Index Name", Type: "text", Required: true},
-			{ID: "tableName", Label: "Table Name", Type: "text", Required: true},
-			{ID: "columns", Label: "Columns", Type: "array", Required: true, Options: []databaseContract.FormFieldOption{
-				{Value: "name", Label: "Column Name"},
+			{ID: "name", Name: "Index Name", Type: "text", Required: true},
+			{ID: "tableName", Name: "Table Name", Type: "text", Required: true},
+			{ID: "columns", Name: "Columns", Type: "array", Required: true, Options: []databaseContract.FormFieldOption{
+				{Value: "name", Name: "Column Name"},
 			}},
 		}
 	case "create_sequence", "edit_sequence":
 		return []databaseContract.FormField{
-			{ID: "name", Label: "Sequence Name", Type: "text", Required: true},
+			{ID: "name", Name: "Sequence Name", Type: "text", Required: true},
 		}
 	case "drop_database", "drop_schema", "drop_table", "drop_view", "drop_materialized_view", "drop_index", "drop_sequence":
 		return []databaseContract.FormField{
-			{ID: "ifExists", Label: "If Exists", Type: "checkbox"},
-			{ID: "cascade", Label: "Cascade", Type: "checkbox"},
+			{ID: "ifExists", Name: "If Exists", Type: "checkbox"},
+			{ID: "cascade", Name: "Cascade", Type: "checkbox"},
 		}
 	default:
 		return []databaseContract.FormField{}
@@ -102,12 +102,12 @@ func (r *PostgresRepository) getTemplateOptions() []databaseContract.FormFieldOp
 	var templates []string
 	err := r.db.Raw("SELECT datname FROM pg_database WHERE datistemplate").Scan(&templates).Error
 	if err != nil {
-		return []databaseContract.FormFieldOption{{Value: "template0", Label: "template0"}, {Value: "template1", Label: "template1"}}
+		return []databaseContract.FormFieldOption{{Value: "template0", Name: "template0"}, {Value: "template1", Name: "template1"}}
 	}
 
 	var options []databaseContract.FormFieldOption
 	for _, template := range templates {
-		options = append(options, databaseContract.FormFieldOption{Value: template, Label: template})
+		options = append(options, databaseContract.FormFieldOption{Value: template, Name: template})
 	}
 	return options
 }

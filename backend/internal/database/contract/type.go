@@ -10,7 +10,7 @@ type ColumnDefinition struct {
 
 type TreeNode struct {
 	ID       string                 `json:"id"`
-	Label    string                 `json:"label"`
+	Name     string                 `json:"name"`
 	Type     string                 `json:"type"`
 	Children []TreeNode             `json:"children"`
 	Actions  []string               `json:"actions"`
@@ -19,7 +19,7 @@ type TreeNode struct {
 
 type FormField struct {
 	ID       string            `json:"id"`
-	Label    string            `json:"label"`
+	Name     string            `json:"name"`
 	Type     string            `json:"type"`
 	Required bool              `json:"required"`
 	Default  string            `json:"default,omitempty"`
@@ -28,5 +28,5 @@ type FormField struct {
 
 type FormFieldOption struct {
 	Value string `json:"value"`
-	Label string `json:"label"`
+	Name  string `json:"name"`
 }

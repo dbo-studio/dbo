@@ -9,7 +9,7 @@ import (
 func buildTree(r *PostgresRepository) (*databaseContract.TreeNode, error) {
 	root := &databaseContract.TreeNode{
 		ID:      "root",
-		Label:   "PostgreSQL Server",
+		Name:    "PostgreSQL Server",
 		Type:    "server",
 		Actions: r.GetAvailableActions("root"),
 	}
@@ -25,10 +25,11 @@ func buildTree(r *PostgresRepository) (*databaseContract.TreeNode, error) {
 
 	for _, db := range databases {
 		dbNode := databaseContract.TreeNode{
-			ID:      db.Name,
-			Label:   db.Name,
-			Type:    "database",
-			Actions: r.GetAvailableActions("database"),
+			ID:       db.Name,
+			Name:     db.Name,
+			Type:     "database",
+			Actions:  r.GetAvailableActions("database"),
+			Children: make([]databaseContract.TreeNode, 0),
 		}
 
 		// گرفتن لیست اسکیماها
@@ -48,7 +49,7 @@ func buildTree(r *PostgresRepository) (*databaseContract.TreeNode, error) {
 		for _, schema := range schemas {
 			schemaNode := databaseContract.TreeNode{
 				ID:       fmt.Sprintf("%s.%s", db.Name, schema.Name),
-				Label:    schema.Name,
+				Name:     schema.Name,
 				Type:     "schema",
 				Actions:  r.GetAvailableActions("schema"),
 				Children: make([]databaseContract.TreeNode, 0),
@@ -57,35 +58,35 @@ func buildTree(r *PostgresRepository) (*databaseContract.TreeNode, error) {
 			// گره‌های ثابت برای همه نوع اشیا
 			tablesNode := databaseContract.TreeNode{
 				ID:       fmt.Sprintf("%s.%s.tables", db.Name, schema.Name),
-				Label:    "Tables",
+				Name:     "Tables",
 				Type:     "table_container",
 				Actions:  []string{"create_table"},
 				Children: make([]databaseContract.TreeNode, 0),
 			}
 			viewsNode := databaseContract.TreeNode{
 				ID:       fmt.Sprintf("%s.%s.views", db.Name, schema.Name),
-				Label:    "Views",
+				Name:     "Views",
 				Type:     "view_container",
 				Actions:  []string{"create_view"},
 				Children: make([]databaseContract.TreeNode, 0),
 			}
 			matViewsNode := databaseContract.TreeNode{
 				ID:       fmt.Sprintf("%s.%s.materialized_views", db.Name, schema.Name),
-				Label:    "Materialized Views",
+				Name:     "Materialized Views",
 				Type:     "materialized_view_container",
 				Actions:  []string{"create_materialized_view"},
 				Children: make([]databaseContract.TreeNode, 0),
 			}
 			indexesNode := databaseContract.TreeNode{
 				ID:       fmt.Sprintf("%s.%s.indexes", db.Name, schema.Name),
-				Label:    "Indexes",
+				Name:     "Indexes",
 				Type:     "index_container",
 				Actions:  []string{"create_index"},
 				Children: make([]databaseContract.TreeNode, 0),
 			}
 			sequencesNode := databaseContract.TreeNode{
 				ID:       fmt.Sprintf("%s.%s.sequences", db.Name, schema.Name),
-				Label:    "Sequences",
+				Name:     "Sequences",
 				Type:     "sequence_container",
 				Actions:  []string{"create_sequence"},
 				Children: make([]databaseContract.TreeNode, 0),
@@ -96,20 +97,28 @@ func buildTree(r *PostgresRepository) (*databaseContract.TreeNode, error) {
 				Name string `gorm:"column:table_name"`
 			}
 			err = r.db.Raw(`
-                SELECT table_name 
-                FROM information_schema.tables 
-                WHERE table_catalog = ? 
-                AND table_schema = ?
-            `, db.Name, schema.Name).Scan(&tables).Error
+             SELECT
+			  n.nspname AS schema_name,
+			  t.tablename AS table_name
+				FROM
+				  pg_namespace n
+				  LEFT JOIN pg_tables t ON n.nspname = t.schemaname::name
+				WHERE
+				  n.nspname = ?
+				ORDER BY
+				  schema_name,
+				  table_name;
+            `, schema.Name).Scan(&tables).Error
 			if err != nil {
 				return nil, fmt.Errorf("failed to fetch tables for %s.%s: %v", db.Name, schema.Name, err)
 			}
 			for _, table := range tables {
 				tableNode := databaseContract.TreeNode{
-					ID:      fmt.Sprintf("%s.%s.%s", db.Name, schema.Name, table.Name),
-					Label:   table.Name,
-					Type:    "table",
-					Actions: r.GetAvailableActions("table"),
+					ID:       fmt.Sprintf("%s.%s.%s", db.Name, schema.Name, table.Name),
+					Name:     table.Name,
+					Type:     "table",
+					Actions:  r.GetAvailableActions("table"),
+					Children: make([]databaseContract.TreeNode, 0),
 				}
 				tablesNode.Children = append(tablesNode.Children, tableNode)
 			}
@@ -129,10 +138,11 @@ func buildTree(r *PostgresRepository) (*databaseContract.TreeNode, error) {
 			}
 			for _, view := range views {
 				viewNode := databaseContract.TreeNode{
-					ID:      fmt.Sprintf("%s.%s.%s", db.Name, schema.Name, view.Name),
-					Label:   view.Name,
-					Type:    "view",
-					Actions: r.GetAvailableActions("view"),
+					ID:       fmt.Sprintf("%s.%s.%s", db.Name, schema.Name, view.Name),
+					Name:     view.Name,
+					Type:     "view",
+					Actions:  r.GetAvailableActions("view"),
+					Children: make([]databaseContract.TreeNode, 0),
 				}
 				viewsNode.Children = append(viewsNode.Children, viewNode)
 			}
@@ -151,10 +161,11 @@ func buildTree(r *PostgresRepository) (*databaseContract.TreeNode, error) {
 			}
 			for _, matView := range matViews {
 				matViewChild := databaseContract.TreeNode{
-					ID:      fmt.Sprintf("%s.%s.%s", db.Name, schema.Name, matView.Name),
-					Label:   matView.Name,
-					Type:    "materialized_view",
-					Actions: r.GetAvailableActions("materialized_view"),
+					ID:       fmt.Sprintf("%s.%s.%s", db.Name, schema.Name, matView.Name),
+					Name:     matView.Name,
+					Type:     "materialized_view",
+					Actions:  r.GetAvailableActions("materialized_view"),
+					Children: make([]databaseContract.TreeNode, 0),
 				}
 				matViewsNode.Children = append(matViewsNode.Children, matViewChild)
 			}
@@ -173,10 +184,11 @@ func buildTree(r *PostgresRepository) (*databaseContract.TreeNode, error) {
 			}
 			for _, index := range indexes {
 				indexNode := databaseContract.TreeNode{
-					ID:      fmt.Sprintf("%s.%s.%s", db.Name, schema.Name, index.Name),
-					Label:   index.Name,
-					Type:    "index",
-					Actions: r.GetAvailableActions("index"),
+					ID:       fmt.Sprintf("%s.%s.%s", db.Name, schema.Name, index.Name),
+					Name:     index.Name,
+					Type:     "index",
+					Actions:  r.GetAvailableActions("index"),
+					Children: make([]databaseContract.TreeNode, 0),
 				}
 				indexesNode.Children = append(indexesNode.Children, indexNode)
 			}
@@ -195,10 +207,11 @@ func buildTree(r *PostgresRepository) (*databaseContract.TreeNode, error) {
 			}
 			for _, sequence := range sequences {
 				sequenceNode := databaseContract.TreeNode{
-					ID:      fmt.Sprintf("%s.%s.%s", db.Name, schema.Name, sequence.Name),
-					Label:   sequence.Name,
-					Type:    "sequence",
-					Actions: r.GetAvailableActions("sequence"),
+					ID:       fmt.Sprintf("%s.%s.%s", db.Name, schema.Name, sequence.Name),
+					Name:     sequence.Name,
+					Type:     "sequence",
+					Actions:  r.GetAvailableActions("sequence"),
+					Children: make([]databaseContract.TreeNode, 0),
 				}
 				sequencesNode.Children = append(sequencesNode.Children, sequenceNode)
 			}

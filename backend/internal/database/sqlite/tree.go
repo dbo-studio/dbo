@@ -9,7 +9,7 @@ import (
 func buildTree(r *SQLiteRepository) (*databaseContract.TreeNode, error) {
 	root := &databaseContract.TreeNode{
 		ID:       r.connID,
-		Label:    "SQLite DB",
+		Name:     "SQLite DB",
 		Type:     "database",
 		Actions:  r.GetAvailableActions("database"),
 		Children: make([]databaseContract.TreeNode, 0),
@@ -18,21 +18,21 @@ func buildTree(r *SQLiteRepository) (*databaseContract.TreeNode, error) {
 	// گره‌های ثابت برای همه نوع اشیا
 	tablesNode := databaseContract.TreeNode{
 		ID:       fmt.Sprintf("%s.tables", r.connID),
-		Label:    "Tables",
+		Name:     "Tables",
 		Type:     "table_container",
 		Actions:  []string{"create_table"},
 		Children: make([]databaseContract.TreeNode, 0),
 	}
 	viewsNode := databaseContract.TreeNode{
 		ID:       fmt.Sprintf("%s.views", r.connID),
-		Label:    "Views",
+		Name:     "Views",
 		Type:     "view_container",
 		Actions:  []string{"create_view"},
 		Children: make([]databaseContract.TreeNode, 0),
 	}
 	indexesNode := databaseContract.TreeNode{
 		ID:       fmt.Sprintf("%s.indexes", r.connID),
-		Label:    "Indexes",
+		Name:     "Indexes",
 		Type:     "index_container",
 		Actions:  []string{"create_index"},
 		Children: make([]databaseContract.TreeNode, 0),
@@ -51,7 +51,7 @@ func buildTree(r *SQLiteRepository) (*databaseContract.TreeNode, error) {
 	for _, obj := range objects {
 		node := databaseContract.TreeNode{
 			ID:      obj.Name,
-			Label:   obj.Name,
+			Name:    obj.Name,
 			Type:    obj.Type,
 			Actions: r.GetAvailableActions(obj.Type),
 		}
