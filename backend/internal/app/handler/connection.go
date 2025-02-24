@@ -53,7 +53,6 @@ func (h ConnectionHandler) CreateConnection(c fiber.Ctx) error {
 func (h ConnectionHandler) ConnectionDetail(c fiber.Ctx) error {
 	req := &dto.ConnectionDetailRequest{
 		ConnectionId: fiber.Params[int32](c, "id"),
-		FromCache:    fiber.Query[bool](c, "from_cache"),
 	}
 
 	connection, err := h.connectionService.Detail(c.Context(), req)

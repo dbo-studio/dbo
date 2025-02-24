@@ -16,9 +16,10 @@ func OptionalBool(value *bool, defaultValue bool) bool {
 	}
 }
 
-func OptionalInt32(value *int32, defaultValue int32) int32 {
+// Optional  don't judge me for this function name :))))
+func Optional[T any](value *T, defaultValue *T) *T {
 	if value != nil {
-		return *value
+		return value
 	} else {
 		return defaultValue
 	}

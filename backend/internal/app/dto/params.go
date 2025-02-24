@@ -48,53 +48,6 @@ type MySQLUpdateObjectParams struct {
 	Columns   []string `json:"columns,omitempty"`
 }
 
-type PostgresCreateDatabaseParams struct {
-	Name     string `json:"name"`
-	Owner    string `json:"owner,omitempty"`
-	Encoding string `json:"encoding,omitempty"`
-	Template string `json:"template,omitempty"`
-}
-
-type PostgresDropDatabaseParams struct {
-	Name     string `json:"name"`
-	IfExists bool   `json:"ifExists,omitempty"`
-	Cascade  bool   `json:"cascade,omitempty"`
-}
-
-type PostgresCreateTableParams struct {
-	Name    string                              `json:"name"`
-	Columns []databaseContract.ColumnDefinition `json:"columns"`
-	Temp    bool                                `json:"temp,omitempty"`
-}
-
-type PostgresUpdateTableParams struct {
-	OldName    string                              `json:"oldName"`
-	NewName    string                              `json:"newName"`
-	AddColumns []databaseContract.ColumnDefinition `json:"addColumns"`
-	Temp       bool                                `json:"temp,omitempty"`
-}
-
-type PostgresCreateObjectParams struct {
-	Name      string   `json:"name"`
-	Type      string   `json:"type"` // "schema", "view", "materialized_view", "index", "sequence"
-	Query     string   `json:"query,omitempty"`
-	OrReplace bool     `json:"orReplace,omitempty"`
-	WithData  bool     `json:"withData,omitempty"`
-	Owner     string   `json:"owner,omitempty"`
-	TableName string   `json:"tableName,omitempty"` // برای Index
-	Columns   []string `json:"columns,omitempty"`   // برای Index
-}
-
-type PostgresUpdateObjectParams struct {
-	Name      string   `json:"name"`
-	Type      string   `json:"type"`
-	Query     string   `json:"query,omitempty"`
-	OrReplace bool     `json:"orReplace,omitempty"`
-	WithData  bool     `json:"withData,omitempty"`
-	TableName string   `json:"tableName,omitempty"`
-	Columns   []string `json:"columns,omitempty"`
-}
-
 type DropTableParams struct {
 	Name     string `json:"name"`
 	IfExists bool   `json:"ifExists,omitempty"`

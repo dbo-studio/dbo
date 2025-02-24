@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:live": "VITE_PUBLIC_SERVER_URL=http://localhost:8080/api vite",
     "build": "tsc --noEmit && vite build",
     "lint": "biome check src",
     "preview": "vite preview",

@@ -46,7 +46,7 @@ func createObject(r *SQLiteRepository, params interface{}) error {
 			return fmt.Errorf("SQLite: unsupported object type: %s", p.Type)
 		}
 	default:
-		return fmt.Errorf("SQLite: invalid params for Create")
+		return fmt.Errorf("SQLite: invalid params for CreateObject")
 	}
 }
 
@@ -72,7 +72,7 @@ func dropObject(r *SQLiteRepository, params interface{}) error {
 			return fmt.Errorf("SQLite: unsupported object type for drop: %s", p.Type)
 		}
 	default:
-		return fmt.Errorf("SQLite: invalid params for Drop")
+		return fmt.Errorf("SQLite: invalid params for DropObject")
 	}
 }
 
@@ -116,7 +116,7 @@ func updateObject(r *SQLiteRepository, params interface{}) error {
 			return fmt.Errorf("SQLite: unsupported object type for update: %s", p.Type)
 		}
 	default:
-		return fmt.Errorf("SQLite: invalid params for Update")
+		return fmt.Errorf("SQLite: invalid params for UpdateObject")
 	}
 }
 

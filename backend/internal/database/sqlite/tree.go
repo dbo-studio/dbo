@@ -2,13 +2,14 @@ package databaseSqlite
 
 import (
 	"fmt"
+	"strconv"
 
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
 func buildTree(r *SQLiteRepository) (*databaseContract.TreeNode, error) {
 	root := &databaseContract.TreeNode{
-		ID:       r.connID,
+		ID:       strconv.Itoa(int(r.connection.ID)),
 		Name:     "SQLite DB",
 		Type:     "database",
 		Actions:  r.GetAvailableActions("database"),
@@ -17,21 +18,21 @@ func buildTree(r *SQLiteRepository) (*databaseContract.TreeNode, error) {
 
 	// گره‌های ثابت برای همه نوع اشیا
 	tablesNode := databaseContract.TreeNode{
-		ID:       fmt.Sprintf("%s.tables", r.connID),
+		ID:       fmt.Sprintf("%d.tables", r.connection.ID),
 		Name:     "Tables",
 		Type:     "table_container",
 		Actions:  []string{"create_table"},
 		Children: make([]databaseContract.TreeNode, 0),
 	}
 	viewsNode := databaseContract.TreeNode{
-		ID:       fmt.Sprintf("%s.views", r.connID),
+		ID:       fmt.Sprintf("%d.views", r.connection.ID),
 		Name:     "Views",
 		Type:     "view_container",
 		Actions:  []string{"create_view"},
 		Children: make([]databaseContract.TreeNode, 0),
 	}
 	indexesNode := databaseContract.TreeNode{
-		ID:       fmt.Sprintf("%s.indexes", r.connID),
+		ID:       fmt.Sprintf("%d.indexes", r.connection.ID),
 		Name:     "Indexes",
 		Type:     "index_container",
 		Actions:  []string{"create_index"},

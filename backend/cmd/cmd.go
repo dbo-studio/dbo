@@ -49,16 +49,16 @@ func Execute() {
 	cache := sqlite.NewSQLiteCache(appDB)
 
 	rr := repository.NewRepository(ctx, appDB, cache, drivers)
-	ss := service.NewService(rr, drivers)
+	ss := service.NewService(rr, drivers, cm)
 
 	restServer := server.New(appLogger, server.Handlers{
-		Query:      queryHandler.NewQueryHandler(appLogger, appDB, drivers, cache, ss.DesignService),
-		Connection: handler.NewConnectionHandler(appLogger, ss.ConnectionService),
-		Database:   handler.NewDatabaseHandler(appLogger, ss.ConnectionService, ss.DatabaseService),
-		SavedQuery: handler.NewSavedQueryHandler(appLogger, ss.SavedQueryService),
-		Design:     handler.NewDesignHandler(appLogger, ss.ConnectionService, ss.DesignService),
-		History:    handler.NewHistoryHandler(appLogger, ss.HistoryService),
-		V2Handler:  handler.NewV2Handler(appLogger, cm),
+		Query:       queryHandler.NewQueryHandler(appLogger, appDB, drivers, cache, ss.DesignService),
+		Connection:  handler.NewConnectionHandler(appLogger, ss.ConnectionService),
+		Database:    handler.NewDatabaseHandler(appLogger, ss.ConnectionService, ss.DatabaseService),
+		SavedQuery:  handler.NewSavedQueryHandler(appLogger, ss.SavedQueryService),
+		Design:      handler.NewDesignHandler(appLogger, ss.ConnectionService, ss.DesignService),
+		History:     handler.NewHistoryHandler(appLogger, ss.HistoryService),
+		TreeHandler: handler.NewTreeHandler(appLogger, ss.TreeService),
 	})
 
 	if err := restServer.Start(helper.IsLocal(), cfg.App.Port); err != nil {

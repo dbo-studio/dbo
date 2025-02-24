@@ -45,7 +45,7 @@ func createObject(r *MySQLRepository, params interface{}) error {
 	case dto.MySQLCreateObjectParams:
 		switch p.Type {
 		case "schema":
-			return r.Create(dto.MySQLCreateDatabaseParams{
+			return r.CreateObject(dto.MySQLCreateDatabaseParams{
 				Name:      p.Name,
 				Charset:   p.Charset,
 				Collation: p.Collation,
@@ -64,7 +64,7 @@ func createObject(r *MySQLRepository, params interface{}) error {
 			return fmt.Errorf("MySQL: unsupported object type: %s", p.Type)
 		}
 	default:
-		return fmt.Errorf("MySQL: invalid params for Create")
+		return fmt.Errorf("MySQL: invalid params for CreateObject")
 	}
 }
 
@@ -92,7 +92,7 @@ func dropObject(r *MySQLRepository, params interface{}) error {
 		query += p.Name
 		return r.db.Exec(query).Error
 	default:
-		return fmt.Errorf("MySQL: invalid params for Drop")
+		return fmt.Errorf("MySQL: invalid params for DropObject")
 	}
 }
 
@@ -143,7 +143,7 @@ func updateObject(r *MySQLRepository, params interface{}) error {
 			return fmt.Errorf("MySQL: unsupported object type for update: %s", p.Type)
 		}
 	default:
-		return fmt.Errorf("MySQL: invalid params for Update")
+		return fmt.Errorf("MySQL: invalid params for UpdateObject")
 	}
 }
 

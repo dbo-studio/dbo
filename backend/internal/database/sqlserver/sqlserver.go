@@ -5,25 +5,24 @@ import (
 
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/dbo-studio/dbo/internal/model"
 	"gorm.io/gorm"
 )
 
 type SQLServerRepository struct {
-	db     *gorm.DB
-	connID string
-	cm     *databaseConnection.ConnectionManager
+	db         *gorm.DB
+	connection *model.Connection
 }
 
-func NewSQLServerRepository(connID string, cm *databaseConnection.ConnectionManager) (*SQLServerRepository, error) {
-	db, err := cm.GetConnection(databaseConnection.ConnectionInfo{
-		ID:               connID,
-		DBType:           "sqlserver",
-		ConnectionString: getConnectionString(connID), // فرضاً از یه تابع
-	})
+func NewSQLServerRepository(connection *model.Connection, cm *databaseConnection.ConnectionManager) (databaseContract.DatabaseRepository, error) {
+	db, err := cm.GetConnection(connection)
 	if err != nil {
 		return nil, err
 	}
-	return &SQLServerRepository{db: db, connID: connID, cm: cm}, nil
+	return &SQLServerRepository{
+		db:         db,
+		connection: connection,
+	}, nil
 }
 
 func (r *SQLServerRepository) BuildTree() (*databaseContract.TreeNode, error) {
@@ -34,15 +33,15 @@ func (r *SQLServerRepository) GetObjectData(nodeID, objType string) (interface{}
 	return getObjectData(r, nodeID, objType)
 }
 
-func (r *SQLServerRepository) Create(params interface{}) error {
+func (r *SQLServerRepository) CreateObject(params interface{}) error {
 	return createObject(r, params)
 }
 
-func (r *SQLServerRepository) Drop(params interface{}) error {
+func (r *SQLServerRepository) DropObject(params interface{}) error {
 	return dropObject(r, params)
 }
 
-func (r *SQLServerRepository) Update(params interface{}) error {
+func (r *SQLServerRepository) UpdateObject(params interface{}) error {
 	return updateObject(r, params)
 }
 
@@ -60,9 +59,4 @@ func (r *SQLServerRepository) GetAvailableActions(nodeType string) []string {
 
 func (r *SQLServerRepository) GetFormFields(action string) []databaseContract.FormField {
 	return getFormFields(action)
-}
-
-func getConnectionString(connID string) string {
-	info := databaseConnection.GetConnectionInfoFromDB(connID)
-	return info.ConnectionString // مثلاً "sqlserver://user:password@localhost:1433?database=master"
 }

@@ -13,7 +13,7 @@ func connectionsToResponse(connections *[]model.Connection) *dto.ConnectionsResp
 			ID:       int64(c.ID),
 			Name:     c.Name,
 			Type:     "SQL",
-			Driver:   "PostgreSQL",
+			Driver:   c.ConnectionType,
 			IsActive: c.IsActive,
 			Auth: dto.AuthDetails{
 				Database: lo.ToPtr(c.Database.String),
@@ -29,24 +29,18 @@ func connectionsToResponse(connections *[]model.Connection) *dto.ConnectionsResp
 	}
 }
 
-func connectionDetailModelToResponse(connection *model.Connection, version string, databases []string, schemas []string, tables []string) *dto.ConnectionDetailResponse {
+func connectionDetailModelToResponse(connection *model.Connection) *dto.ConnectionDetailResponse {
 	return &dto.ConnectionDetailResponse{
-		ID:              int64(connection.ID),
-		Name:            connection.Name,
-		Type:            "SQL",
-		Driver:          "PostgreSQL",
-		Version:         version,
-		IsActive:        connection.IsActive,
-		CurrentDatabase: connection.CurrentDatabase.String,
-		CurrentSchema:   connection.CurrentSchema.String,
+		ID:       int64(connection.ID),
+		Name:     connection.Name,
+		Type:     "SQL",
+		Driver:   connection.ConnectionType,
+		IsActive: connection.IsActive,
 		Auth: dto.AuthDetails{
 			Database: lo.ToPtr(connection.Database.String),
 			Host:     connection.Host,
-			Username: connection.Username,
 			Port:     connection.Port,
+			Username: connection.Username,
 		},
-		Databases: databases,
-		Schemas:   schemas,
-		Tables:    tables,
 	}
 }

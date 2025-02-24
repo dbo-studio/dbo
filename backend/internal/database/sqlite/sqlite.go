@@ -5,25 +5,24 @@ import (
 
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/dbo-studio/dbo/internal/model"
 	"gorm.io/gorm"
 )
 
 type SQLiteRepository struct {
-	db     *gorm.DB
-	connID string
-	cm     *databaseConnection.ConnectionManager
+	db         *gorm.DB
+	connection *model.Connection
 }
 
-func NewSQLiteRepository(connID string, cm *databaseConnection.ConnectionManager) (*SQLiteRepository, error) {
-	db, err := cm.GetConnection(databaseConnection.ConnectionInfo{
-		ID:               connID,
-		DBType:           "sqlite",
-		ConnectionString: getConnectionString(connID), // فرضاً از یه تابع
-	})
+func NewSQLiteRepository(connection *model.Connection, cm *databaseConnection.ConnectionManager) (databaseContract.DatabaseRepository, error) {
+	db, err := cm.GetConnection(connection)
 	if err != nil {
 		return nil, err
 	}
-	return &SQLiteRepository{db: db, connID: connID, cm: cm}, nil
+	return &SQLiteRepository{
+		db:         db,
+		connection: connection,
+	}, nil
 }
 
 func (r *SQLiteRepository) BuildTree() (*databaseContract.TreeNode, error) {
@@ -34,15 +33,15 @@ func (r *SQLiteRepository) GetObjectData(nodeID, objType string) (interface{}, e
 	return getObjectData(r, nodeID, objType)
 }
 
-func (r *SQLiteRepository) Create(params interface{}) error {
+func (r *SQLiteRepository) CreateObject(params interface{}) error {
 	return createObject(r, params)
 }
 
-func (r *SQLiteRepository) Drop(params interface{}) error {
+func (r *SQLiteRepository) DropObject(params interface{}) error {
 	return dropObject(r, params)
 }
 
-func (r *SQLiteRepository) Update(params interface{}) error {
+func (r *SQLiteRepository) UpdateObject(params interface{}) error {
 	return updateObject(r, params)
 }
 
@@ -60,9 +59,4 @@ func (r *SQLiteRepository) GetAvailableActions(nodeType string) []string {
 
 func (r *SQLiteRepository) GetFormFields(action string) []databaseContract.FormField {
 	return getFormFields(action)
-}
-
-func getConnectionString(connID string) string {
-	info := databaseConnection.GetConnectionInfoFromDB(connID)
-	return info.ConnectionString // مثلاً "file:test.db"
 }

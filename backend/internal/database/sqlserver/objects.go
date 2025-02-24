@@ -49,7 +49,7 @@ func createObject(r *SQLServerRepository, params interface{}) error {
 			return fmt.Errorf("SQLServer: unsupported object type: %s", p.Type)
 		}
 	default:
-		return fmt.Errorf("SQLServer: invalid params for Create")
+		return fmt.Errorf("SQLServer: invalid params for CreateObject")
 	}
 }
 
@@ -65,7 +65,7 @@ func dropObject(r *SQLServerRepository, params interface{}) error {
 		query := fmt.Sprintf("DROP %s %s", strings.ToUpper(p.Type), p.Name)
 		return r.db.Exec(query).Error
 	default:
-		return fmt.Errorf("SQLServer: invalid params for Drop")
+		return fmt.Errorf("SQLServer: invalid params for DropObject")
 	}
 }
 
@@ -109,7 +109,7 @@ func updateObject(r *SQLServerRepository, params interface{}) error {
 			return fmt.Errorf("SQLServer: unsupported object type for update: %s", p.Type)
 		}
 	default:
-		return fmt.Errorf("SQLServer: invalid params for Update")
+		return fmt.Errorf("SQLServer: invalid params for UpdateObject")
 	}
 }
 

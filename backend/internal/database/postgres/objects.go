@@ -159,7 +159,7 @@ func createObject(r *PostgresRepository, params interface{}) error {
 			return fmt.Errorf("PostgreSQL: unsupported object type: %s", p.Type)
 		}
 	default:
-		return fmt.Errorf("PostgreSQL: invalid params for Create")
+		return fmt.Errorf("PostgreSQL: invalid params for CreateObject")
 	}
 }
 
@@ -196,7 +196,7 @@ func dropObject(r *PostgresRepository, params interface{}) error {
 		}
 		return r.db.Exec(query).Error
 	default:
-		return fmt.Errorf("PostgreSQL: invalid params for Drop")
+		return fmt.Errorf("PostgreSQL: invalid params for DropObject")
 	}
 }
 
@@ -255,6 +255,6 @@ func updateObject(r *PostgresRepository, params interface{}) error {
 			return fmt.Errorf("PostgreSQL: unsupported object type for update: %s", p.Type)
 		}
 	default:
-		return fmt.Errorf("PostgreSQL: invalid params for Update")
+		return fmt.Errorf("PostgreSQL: invalid params for UpdateObject")
 	}
 }

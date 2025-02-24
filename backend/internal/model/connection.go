@@ -10,6 +10,8 @@ import (
 type Connection struct {
 	ID              uint `gorm:"primaryKey,autoIncrement"`
 	Name            string
+	ConnectionType  string
+	Options         string
 	Host            string
 	Username        string
 	Password        sql.NullString
@@ -20,15 +22,6 @@ type Connection struct {
 	CurrentDatabase sql.NullString
 	CreatedAt       sql.NullTime `gorm:"autoCreateTime"`
 	UpdatedAt       sql.NullTime `gorm:"autoUpdateTime"`
-}
-
-type ConnectionResource struct {
-	ID       uint   `json:"id"`
-	Name     string `json:"name"`
-	Host     string `json:"host"`
-	Username string `json:"username"`
-	Port     int32  `json:"port"`
-	Database string `json:"database"`
 }
 
 func (c Connection) FakeConnection() *Connection {

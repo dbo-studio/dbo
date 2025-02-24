@@ -5,25 +5,24 @@ import (
 
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/dbo-studio/dbo/internal/model"
 	"gorm.io/gorm"
 )
 
 type MySQLRepository struct {
-	db     *gorm.DB
-	connID string
-	cm     *databaseConnection.ConnectionManager
+	db         *gorm.DB
+	connection *model.Connection
 }
 
-func NewMySQLRepository(connID string, cm *databaseConnection.ConnectionManager) (*MySQLRepository, error) {
-	db, err := cm.GetConnection(databaseConnection.ConnectionInfo{
-		ID:               connID,
-		DBType:           "mysql",
-		ConnectionString: getConnectionString(connID), // فرضاً از یه تابع
-	})
+func NewMySQLRepository(connection *model.Connection, cm *databaseConnection.ConnectionManager) (databaseContract.DatabaseRepository, error) {
+	db, err := cm.GetConnection(connection)
 	if err != nil {
 		return nil, err
 	}
-	return &MySQLRepository{db: db, connID: connID, cm: cm}, nil
+	return &MySQLRepository{
+		db:         db,
+		connection: connection,
+	}, nil
 }
 
 func (r *MySQLRepository) BuildTree() (*databaseContract.TreeNode, error) {
@@ -34,15 +33,15 @@ func (r *MySQLRepository) GetObjectData(nodeID, objType string) (interface{}, er
 	return getObjectData(r, nodeID, objType)
 }
 
-func (r *MySQLRepository) Create(params interface{}) error {
+func (r *MySQLRepository) CreateObject(params interface{}) error {
 	return createObject(r, params)
 }
 
-func (r *MySQLRepository) Drop(params interface{}) error {
+func (r *MySQLRepository) DropObject(params interface{}) error {
 	return dropObject(r, params)
 }
 
-func (r *MySQLRepository) Update(params interface{}) error {
+func (r *MySQLRepository) UpdateObject(params interface{}) error {
 	return updateObject(r, params)
 }
 
@@ -60,9 +59,4 @@ func (r *MySQLRepository) GetAvailableActions(nodeType string) []string {
 
 func (r *MySQLRepository) GetFormFields(action string) []databaseContract.FormField {
 	return getFormFields(r, action)
-}
-
-func getConnectionString(connID string) string {
-	info := databaseConnection.GetConnectionInfoFromDB(connID)
-	return info.ConnectionString // مثلاً "user:password@tcp(127.0.0.1:3306)/dbname"
 }

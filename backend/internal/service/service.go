@@ -1,6 +1,7 @@
 package service
 
 import (
+	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/driver"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceConnection "github.com/dbo-studio/dbo/internal/service/connection"
@@ -8,6 +9,7 @@ import (
 	serviceDesign "github.com/dbo-studio/dbo/internal/service/design"
 	serviceHistory "github.com/dbo-studio/dbo/internal/service/history"
 	serviceSavedQuery "github.com/dbo-studio/dbo/internal/service/saved_query"
+	serviceTree "github.com/dbo-studio/dbo/internal/service/tree"
 )
 
 type Service struct {
@@ -16,14 +18,16 @@ type Service struct {
 	DesignService     serviceDesign.IDesignService
 	HistoryService    serviceHistory.IHistoryService
 	SavedQueryService serviceSavedQuery.ISavedQueryService
+	TreeService       serviceTree.ITreeService
 }
 
-func NewService(repo *repository.Repository, drivers *driver.DriverEngine) *Service {
+func NewService(repo *repository.Repository, drivers *driver.DriverEngine, cm *databaseConnection.ConnectionManager) *Service {
 	return &Service{
 		ConnectionService: serviceConnection.NewConnectionService(drivers, repo.ConnectionRepo, repo.CacheRepo),
 		DatabaseService:   serviceDatabase.NewDatabaseService(repo.ConnectionRepo, drivers),
 		DesignService:     serviceDesign.NewDesignService(repo.ConnectionRepo, drivers),
 		HistoryService:    serviceHistory.NewHistoryService(repo.HistoryRepo),
 		SavedQueryService: serviceSavedQuery.NewSavedQueryService(repo.SavedQueryRepo),
+		TreeService:       serviceTree.NewTreeService(repo.ConnectionRepo, cm),
 	}
 }

@@ -9,8 +9,8 @@ import (
 
 func buildTree(r *PostgresRepository) (*databaseContract.TreeNode, error) {
 	root := &databaseContract.TreeNode{
-		ID:       fmt.Sprintf("%s@database", r.connectionInfo.ID),
-		Name:     fmt.Sprintf("%s@databases", r.connectionInfo.ID),
+		ID:       fmt.Sprintf("%d@database", r.connection.ID),
+		Name:     fmt.Sprintf("%d@databases", r.connection.ID),
 		Type:     "database_container",
 		Actions:  r.GetAvailableActions("database"),
 		Children: make([]databaseContract.TreeNode, 0),

@@ -9,19 +9,20 @@ import (
 	databasePostgres "github.com/dbo-studio/dbo/internal/database/postgres"
 	databaseSqlite "github.com/dbo-studio/dbo/internal/database/sqlite"
 	databaseSqlserver "github.com/dbo-studio/dbo/internal/database/sqlserver"
+	"github.com/dbo-studio/dbo/internal/model"
 )
 
-func NewDatabaseRepository(dbType, connID string, cm *databaseConnection.ConnectionManager) (databaseContract.DatabaseRepository, error) {
-	switch dbType {
+func NewDatabaseRepository(connection *model.Connection, cm *databaseConnection.ConnectionManager) (databaseContract.DatabaseRepository, error) {
+	switch connection.ConnectionType {
 	case "mysql":
-		return databaseMysql.NewMySQLRepository(connID, cm)
-	case "postgres":
-		return databasePostgres.NewPostgresRepository(connID, cm)
+		return databaseMysql.NewMySQLRepository(connection, cm)
+	case string(databaseContract.Postgresql):
+		return databasePostgres.NewPostgresRepository(connection, cm)
 	case "sqlite":
-		return databaseSqlite.NewSQLiteRepository(connID, cm)
+		return databaseSqlite.NewSQLiteRepository(connection, cm)
 	case "sqlserver":
-		return databaseSqlserver.NewSQLServerRepository(connID, cm)
+		return databaseSqlserver.NewSQLServerRepository(connection, cm)
 	default:
-		return nil, fmt.Errorf("unsupported database type: %s", dbType)
+		return nil, fmt.Errorf("unsupported database type: %s", connection.ConnectionType)
 	}
 }
