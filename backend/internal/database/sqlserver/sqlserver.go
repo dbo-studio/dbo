@@ -25,7 +25,7 @@ func NewSQLServerRepository(connection *model.Connection, cm *databaseConnection
 	}, nil
 }
 
-func (r *SQLServerRepository) BuildTree() (*databaseContract.TreeNode, error) {
+func (r *SQLServerRepository) BuildTree(parentID string) (*databaseContract.TreeNode, error) {
 	return buildTree(r)
 }
 

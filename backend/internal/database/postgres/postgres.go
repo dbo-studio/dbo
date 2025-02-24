@@ -25,8 +25,8 @@ func NewPostgresRepository(connection *model.Connection, cm *databaseConnection.
 	}, nil
 }
 
-func (r *PostgresRepository) BuildTree() (*databaseContract.TreeNode, error) {
-	return buildTree(r)
+func (r *PostgresRepository) BuildTree(parentID string) (*databaseContract.TreeNode, error) {
+	return buildTree(r, parentID)
 }
 
 func (r *PostgresRepository) GetObjectData(nodeID, objType string) (any, error) {

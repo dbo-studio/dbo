@@ -25,7 +25,7 @@ func NewMySQLRepository(connection *model.Connection, cm *databaseConnection.Con
 	}, nil
 }
 
-func (r *MySQLRepository) BuildTree() (*databaseContract.TreeNode, error) {
+func (r *MySQLRepository) BuildTree(parentID string) (*databaseContract.TreeNode, error) {
 	return buildTree(r)
 }
 

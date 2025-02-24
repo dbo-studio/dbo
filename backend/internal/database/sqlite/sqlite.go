@@ -25,7 +25,7 @@ func NewSQLiteRepository(connection *model.Connection, cm *databaseConnection.Co
 	}, nil
 }
 
-func (r *SQLiteRepository) BuildTree() (*databaseContract.TreeNode, error) {
+func (r *SQLiteRepository) BuildTree(parentID string) (*databaseContract.TreeNode, error) {
 	return buildTree(r)
 }
 

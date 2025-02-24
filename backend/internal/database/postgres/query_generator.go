@@ -50,11 +50,11 @@ type View struct {
 	Name string `gorm:"column:table_name"`
 }
 
-func (r *PostgresRepository) getViewList(db Database) ([]View, error) {
+func (r *PostgresRepository) getViewList(db Database, schema Schema) ([]View, error) {
 	views := make([]View, 0)
 	err := r.db.Select("table_name").
 		Table("information_schema.views").
-		Where("table_catalog = ?", db.Name).
+		Where("table_catalog = ? AND table_schema = ?", db.Name, schema.Name).
 		Find(&views).Error
 
 	return views, err

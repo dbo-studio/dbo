@@ -7,7 +7,7 @@ import (
 )
 
 type DatabaseRepository interface {
-	BuildTree() (*TreeNode, error)
+	BuildTree(parentID string) (*TreeNode, error)
 	GetObjectData(nodeID, objType string) (any, error)
 	CreateObject(params any) error
 	DropObject(params any) error

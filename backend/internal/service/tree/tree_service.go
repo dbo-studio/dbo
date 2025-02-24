@@ -3,6 +3,7 @@ package serviceTree
 import (
 	"context"
 
+	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/repository"
@@ -10,7 +11,7 @@ import (
 )
 
 type ITreeService interface {
-	Tree(ctx context.Context, connectionId int32) (any, error)
+	Tree(ctx context.Context, req *dto.TreeListRequest) (any, error)
 }
 
 var _ ITreeService = (*ITreeServiceImpl)(nil)
@@ -27,8 +28,8 @@ func NewTreeService(cr repository.IConnectionRepo, cm *databaseConnection.Connec
 	}
 }
 
-func (i ITreeServiceImpl) Tree(ctx context.Context, connectionId int32) (any, error) {
-	connection, err := i.connectionRepo.Find(ctx, connectionId)
+func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (any, error) {
+	connection, err := i.connectionRepo.Find(ctx, req.ConnectionId)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
@@ -38,7 +39,7 @@ func (i ITreeServiceImpl) Tree(ctx context.Context, connectionId int32) (any, er
 		return nil, apperror.InternalServerError(err)
 	}
 
-	tree, err := repo.BuildTree()
+	tree, err := repo.BuildTree(req.ParentId)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}

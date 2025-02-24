@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"github.com/dbo-studio/dbo/internal/app/dto"
 	serviceTree "github.com/dbo-studio/dbo/internal/service/tree"
+	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/dbo-studio/dbo/pkg/response"
 	"github.com/gofiber/fiber/v3"
@@ -17,9 +19,12 @@ func NewTreeHandler(logger logger.Logger, treeService serviceTree.ITreeService) 
 }
 
 func (h *TreeHandler) TreeHandler(c fiber.Ctx) error {
-	connectionId := fiber.Query[int32](c, "connection_id")
+	req := new(dto.TreeListRequest)
+	if err := c.Bind().Query(req); err != nil {
+		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
+	}
 
-	result, err := h.treeService.Tree(c.Context(), connectionId)
+	result, err := h.treeService.Tree(c.Context(), req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder(err).Send(c)
