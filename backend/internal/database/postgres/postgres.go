@@ -9,24 +9,31 @@ import (
 )
 
 type PostgresRepository struct {
-	db     *gorm.DB
-	connID string
-	cm     *databaseConnection.ConnectionManager
+	db             *gorm.DB
+	connectionId   string
+	connectionInfo databaseConnection.ConnectionInfo
 }
 
-func NewPostgresRepository(connID string, cm *databaseConnection.ConnectionManager) (*PostgresRepository, error) {
+func NewPostgresRepository(connectionId string, cm *databaseConnection.ConnectionManager) (*PostgresRepository, error) {
+	cmInfo := getConnectionString(connectionId)
+
 	db, err := cm.GetConnection(databaseConnection.ConnectionInfo{
-		ID:               connID,
-		DBType:           "postgresql",
-		ConnectionString: getConnectionString(connID), // فرضاً از یه تابع
+		ID:               connectionId,
+		DBType:           string(databaseContract.Postgresql),
+		ConnectionString: cmInfo.ConnectionString,
 	})
+
 	if err != nil {
 		return nil, err
 	}
-	return &PostgresRepository{db: db, connID: connID, cm: cm}, nil
+
+	return &PostgresRepository{
+		db:             db,
+		connectionId:   connectionId,
+		connectionInfo: cmInfo,
+	}, nil
 }
 
-// متدهای رابط به فایل‌های جداگانه ارجاع داده می‌شن
 func (r *PostgresRepository) BuildTree() (*databaseContract.TreeNode, error) {
 	return buildTree(r)
 }
@@ -63,7 +70,7 @@ func (r *PostgresRepository) GetFormFields(action string) []databaseContract.For
 	return getFormFields(r, action)
 }
 
-func getConnectionString(connID string) string {
+func getConnectionString(connID string) databaseConnection.ConnectionInfo {
 	info := databaseConnection.GetConnectionInfoFromDB(connID)
-	return info.ConnectionString
+	return info
 }

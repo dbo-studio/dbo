@@ -4,23 +4,21 @@ import (
 	"fmt"
 
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
 func buildTree(r *PostgresRepository) (*databaseContract.TreeNode, error) {
 	root := &databaseContract.TreeNode{
-		ID:      "root",
-		Name:    "PostgreSQL Server",
-		Type:    "server",
-		Actions: r.GetAvailableActions("root"),
+		ID:       fmt.Sprintf("%s@database", r.connectionInfo.ID),
+		Name:     fmt.Sprintf("%s@databases", r.connectionInfo.ID),
+		Type:     "database_container",
+		Actions:  r.GetAvailableActions("database"),
+		Children: make([]databaseContract.TreeNode, 0),
 	}
 
-	// گرفتن لیست دیتابیس‌ها
-	var databases []struct {
-		Name string `gorm:"column:datname"`
-	}
-	err := r.db.Raw("SELECT datname FROM pg_database WHERE datistemplate = false").Scan(&databases).Error
+	databases, err := r.getDatabaseList()
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch databases: %v", err)
+		return nil, apperror.DriverError(err)
 	}
 
 	for _, db := range databases {
@@ -32,18 +30,9 @@ func buildTree(r *PostgresRepository) (*databaseContract.TreeNode, error) {
 			Children: make([]databaseContract.TreeNode, 0),
 		}
 
-		// گرفتن لیست اسکیماها
-		var schemas []struct {
-			Name string `gorm:"column:schema_name"`
-		}
-		err = r.db.Raw(`
-            SELECT schema_name 
-            FROM information_schema.schemata 
-            WHERE catalog_name = ? 
-            AND schema_name NOT IN ('pg_catalog', 'information_schema')
-        `, db.Name).Scan(&schemas).Error
+		schemas, err := r.getSchemaList(db)
 		if err != nil {
-			return nil, fmt.Errorf("failed to fetch schemas for %s: %v", db.Name, err)
+			return nil, apperror.DriverError(err)
 		}
 
 		for _, schema := range schemas {
@@ -54,8 +43,6 @@ func buildTree(r *PostgresRepository) (*databaseContract.TreeNode, error) {
 				Actions:  r.GetAvailableActions("schema"),
 				Children: make([]databaseContract.TreeNode, 0),
 			}
-
-			// گره‌های ثابت برای همه نوع اشیا
 			tablesNode := databaseContract.TreeNode{
 				ID:       fmt.Sprintf("%s.%s.tables", db.Name, schema.Name),
 				Name:     "Tables",
@@ -92,25 +79,9 @@ func buildTree(r *PostgresRepository) (*databaseContract.TreeNode, error) {
 				Children: make([]databaseContract.TreeNode, 0),
 			}
 
-			// گرفتن جداول
-			var tables []struct {
-				Name string `gorm:"column:table_name"`
-			}
-			err = r.db.Raw(`
-             SELECT
-			  n.nspname AS schema_name,
-			  t.tablename AS table_name
-				FROM
-				  pg_namespace n
-				  LEFT JOIN pg_tables t ON n.nspname = t.schemaname::name
-				WHERE
-				  n.nspname = ?
-				ORDER BY
-				  schema_name,
-				  table_name;
-            `, schema.Name).Scan(&tables).Error
+			tables, err := r.getTableList(schema)
 			if err != nil {
-				return nil, fmt.Errorf("failed to fetch tables for %s.%s: %v", db.Name, schema.Name, err)
+				return nil, apperror.DriverError(err)
 			}
 			for _, table := range tables {
 				tableNode := databaseContract.TreeNode{
@@ -123,18 +94,9 @@ func buildTree(r *PostgresRepository) (*databaseContract.TreeNode, error) {
 				tablesNode.Children = append(tablesNode.Children, tableNode)
 			}
 
-			// گرفتن Viewها
-			var views []struct {
-				Name string `gorm:"column:table_name"`
-			}
-			err = r.db.Raw(`
-                SELECT table_name 
-                FROM information_schema.views 
-                WHERE table_catalog = ? 
-                AND table_schema = ?
-            `, db.Name, schema.Name).Scan(&views).Error
+			views, err := r.getViewList(db)
 			if err != nil {
-				return nil, fmt.Errorf("failed to fetch views for %s.%s: %v", db.Name, schema.Name, err)
+				return nil, apperror.DriverError(err)
 			}
 			for _, view := range views {
 				viewNode := databaseContract.TreeNode{
@@ -147,17 +109,9 @@ func buildTree(r *PostgresRepository) (*databaseContract.TreeNode, error) {
 				viewsNode.Children = append(viewsNode.Children, viewNode)
 			}
 
-			// گرفتن Materialized Viewها
-			var matViews []struct {
-				Name string `gorm:"column:matviewname"`
-			}
-			err = r.db.Raw(`
-                SELECT matviewname 
-                FROM pg_matviews 
-                WHERE schemaname = ?
-            `, schema.Name).Scan(&matViews).Error
+			matViews, err := r.getMaterializedViewList(schema)
 			if err != nil {
-				return nil, fmt.Errorf("failed to fetch materialized views for %s.%s: %v", db.Name, schema.Name, err)
+				return nil, apperror.DriverError(err)
 			}
 			for _, matView := range matViews {
 				matViewChild := databaseContract.TreeNode{
@@ -170,17 +124,9 @@ func buildTree(r *PostgresRepository) (*databaseContract.TreeNode, error) {
 				matViewsNode.Children = append(matViewsNode.Children, matViewChild)
 			}
 
-			// گرفتن Indexها
-			var indexes []struct {
-				Name string `gorm:"column:indexname"`
-			}
-			err = r.db.Raw(`
-                SELECT indexname 
-                FROM pg_indexes 
-                WHERE schemaname = ?
-            `, schema.Name).Scan(&indexes).Error
+			indexes, err := r.getIndexList(schema)
 			if err != nil {
-				return nil, fmt.Errorf("failed to fetch indexes for %s.%s: %v", db.Name, schema.Name, err)
+				return nil, apperror.DriverError(err)
 			}
 			for _, index := range indexes {
 				indexNode := databaseContract.TreeNode{
@@ -193,17 +139,9 @@ func buildTree(r *PostgresRepository) (*databaseContract.TreeNode, error) {
 				indexesNode.Children = append(indexesNode.Children, indexNode)
 			}
 
-			// گرفتن Sequenceها
-			var sequences []struct {
-				Name string `gorm:"column:sequencename"`
-			}
-			err = r.db.Raw(`
-                SELECT sequencename 
-                FROM pg_sequences 
-                WHERE schemaname = ?
-            `, schema.Name).Scan(&sequences).Error
+			sequences, err := r.getSequenceList(schema)
 			if err != nil {
-				return nil, fmt.Errorf("failed to fetch sequences for %s.%s: %v", db.Name, schema.Name, err)
+				return nil, apperror.DriverError(err)
 			}
 			for _, sequence := range sequences {
 				sequenceNode := databaseContract.TreeNode{
@@ -216,7 +154,6 @@ func buildTree(r *PostgresRepository) (*databaseContract.TreeNode, error) {
 				sequencesNode.Children = append(sequencesNode.Children, sequenceNode)
 			}
 
-			// اضافه کردن همه گره‌های ثابت به اسکیما
 			schemaNode.Children = append(schemaNode.Children, tablesNode, viewsNode, matViewsNode, indexesNode, sequencesNode)
 			dbNode.Children = append(dbNode.Children, schemaNode)
 		}
