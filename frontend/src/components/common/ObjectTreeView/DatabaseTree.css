@@ -1,0 +1,70 @@
+.database-tree {
+  background-color: #ffffff;
+  color: #1e1e1e;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif; /* فونت VS Code */
+  height: 100vh;
+  width: 300px;
+  padding: 8px 0;
+  overflow-y: auto;
+  box-sizing: border-box;
+  border-right: 1px solid #e7e7e7;
+}
+
+.tree-node {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.1s ease;
+}
+
+.expand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  color: #858585;
+  font-size: 10px;
+}
+
+.node-label {
+  flex-grow: 1;
+}
+
+.leaf {
+  visibility: hidden;
+}
+
+.tree-node:hover {
+  background-color: #f2f2f2;
+}
+
+.tree-node.selected {
+  background-color: #e5f3ff;
+  color: #1e1e1e;
+}
+
+.treeview .tree-node {
+  margin-left: 20px;
+}
+
+.database-tree::-webkit-scrollbar {
+  width: 8px;
+}
+
+.database-tree::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.database-tree::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.database-tree::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

@@ -4,6 +4,7 @@ import { databasesHandler } from './databases';
 import { historiesHandler } from './histories';
 import { queriesHandler } from './queries';
 import { savedQueriesHandler } from './savedQueries';
+import { objectsHandler } from '@/core/mocks/handlers/objects.ts';
 
 export const handlers = [
   http.get('/node_modules/*', () => {
@@ -22,5 +23,6 @@ export const handlers = [
   ...historiesHandler,
   ...savedQueriesHandler,
   ...queriesHandler,
-  ...databasesHandler
+  ...databasesHandler,
+  ...objectsHandler
 ];

@@ -28,6 +28,7 @@ import {
   TrimRows
 } from 'handsontable/plugins';
 import { baseRenderer, htmlRenderer, registerRenderer, textRenderer } from 'handsontable/renderers';
+import { useHandleDataUpdate } from './hooks/useHandleDataUpdate';
 
 registerRenderer(baseRenderer);
 registerRenderer(textRenderer);
@@ -51,7 +52,7 @@ export default function DataGrid({ editable }: DataGridProps) {
 
   useHandleScroll(hotTableRef);
   useHandleDeselect(hotTableRef);
-  // useHandleDataUpdate(hotTableRef);
+  useHandleDataUpdate(hotTableRef);
   useHandleRowStyle();
 
   const handleSelection = useHandleRowSelect(hotTableRef);

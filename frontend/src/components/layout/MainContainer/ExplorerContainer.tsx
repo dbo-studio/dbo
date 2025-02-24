@@ -1,4 +1,3 @@
-import DBTreeView from '@/components/common/DBTreeView/DBTreeView';
 import { useWindowSize } from '@/hooks/useWindowSize.hook';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -8,11 +7,12 @@ import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
 import Histories from '../../common/Histories/Histories';
 import SavedQueries from '../../common/SavedQueries/SavedQueries';
 import { ExplorerContainerStyled } from './Container.styled';
+import ObjectTreeView from '@/components/common/ObjectTreeView/ObjectTreeView.tsx';
 
 const tabs = [
   {
     id: 0,
-    content: <DBTreeView />
+    content: <ObjectTreeView connId={'1'} />
   },
   {
     id: 1,
