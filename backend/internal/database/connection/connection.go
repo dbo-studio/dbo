@@ -11,7 +11,6 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlserver"
 
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -58,8 +57,8 @@ func (cm *ConnectionManager) GetConnection(connection *model.Connection) (*gorm.
 		dialect = mysql.Open(connection.Name)
 	case string(databaseContract.Postgresql):
 		dialect = OpenPostgresqlConnection(connection)
-	case "sqlite":
-		dialect = sqlite.Open(connection.Name)
+	case string(databaseContract.Sqlite):
+		dialect = OpenSQLiteConnection(connection)
 	case "sqlserver":
 		dialect = sqlserver.Open(connection.Name)
 	default:

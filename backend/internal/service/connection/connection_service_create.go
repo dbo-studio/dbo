@@ -20,6 +20,8 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 	switch req.Type {
 	case string(databaseContract.Postgresql):
 		options, err = databaseConnection.CreatePostgresqlConnection(req.Options)
+	case string(databaseContract.Sqlite):
+		options, err = databaseConnection.CreateSQLiteConnection(req.Options)
 	}
 
 	if err != nil {

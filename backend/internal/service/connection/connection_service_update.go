@@ -20,6 +20,8 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionId int32, 
 	switch connection.ConnectionType {
 	case string(databaseContract.Postgresql):
 		options, err = databaseConnection.UpdatePostgresqlConnection(json.RawMessage(connection.Options), req.Options)
+	case string(databaseContract.Sqlite):
+		options, err = databaseConnection.UpdateSQLiteConnection(json.RawMessage(connection.Options), req.Options)
 	}
 
 	if err != nil {
