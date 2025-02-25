@@ -43,7 +43,7 @@ func UpdatePostgresqlConnection(oldParams json.RawMessage, newParams json.RawMes
 		return "", apperror.Validation(errors.New("invalid params"))
 	}
 
-§§	if err := newOptions.Validate(); err != nil {
+	if err := newOptions.Validate(); err != nil {
 		return "", apperror.Validation(err)
 	}
 
