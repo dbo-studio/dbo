@@ -43,6 +43,10 @@ func UpdatePostgresqlConnection(oldParams json.RawMessage, newParams json.RawMes
 		return "", apperror.Validation(errors.New("invalid params"))
 	}
 
+§§	if err := newOptions.Validate(); err != nil {
+		return "", apperror.Validation(err)
+	}
+
 	newOptions.Host = helper.Optional[string](newOptions.Host, oldOptions.Host)
 	newOptions.Username = helper.Optional[string](newOptions.Username, oldOptions.Username)
 	newOptions.Password = helper.Optional[string](newOptions.Password, oldOptions.Password)
@@ -83,5 +87,14 @@ func (req PgsqlCreateParams) Validate() error {
 		validation.Field(&req.Username, validation.Required, validation.Length(0, 120)),
 		validation.Field(&req.Password, validation.Length(0, 120)),
 		validation.Field(&req.Port, validation.Required, validation.Min(0)),
+	)
+}
+
+func (ccr PgsqlUpdateParams) Validate() error {
+	return validation.ValidateStruct(&ccr,
+		validation.Field(&ccr.Host, validation.Length(0, 120)),
+		validation.Field(&ccr.Username, validation.Length(0, 120)),
+		validation.Field(&ccr.Password, validation.Length(0, 120)),
+		validation.Field(&ccr.Port, validation.Min(0)),
 	)
 }

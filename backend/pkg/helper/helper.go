@@ -53,6 +53,10 @@ func StructToJson(value interface{}) string {
 
 func RawJsonToStruct[T any](value json.RawMessage) (T, error) {
 	var v T
+	if value == nil {
+		return v, nil
+	}
+
 	err := json.Unmarshal(value, &v)
 	return v, err
 }
