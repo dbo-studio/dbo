@@ -3,7 +3,24 @@ import Box from '@mui/material/Box';
 import { variables } from '@/core/theme/variables.ts';
 import Typography from '@mui/material/Typography';
 
-export const TreeNodeContainer = styled(Box)({});
+export const TreeNodeContainer = styled(Box)({
+  flexDirection: 'column',
+  display: 'flex',
+  flexWrap: 'nowrap',
+  overflowX: 'auto',
+  alignItems: 'flex-start',
+  whiteSpace: 'nowrap',
+  flexShrink: 0,
+  minWidth: 0,
+  maxWidth: '100%',
+  '&::-webkit-scrollbar': {
+    height: '8px'
+  },
+  '&::-webkit-scrollbar-thumb': {
+    backgroundColor: '#888',
+    borderRadius: '4px'
+  }
+});
 
 export const NodeLabel = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'isFocused'
@@ -14,15 +31,18 @@ export const NodeLabel = styled(Box, {
   cursor: 'pointer',
   borderRadius: variables.radius.medium,
   color: theme.palette.text.text,
+  width: '100%',
+  overflow: 'hidden',
+  border: '1px solid transparent',
   // '&:hover': {
   //   backgroundColor: theme.palette.background.primary
   // },
   ...(isFocused && {
     backgroundColor: theme.palette.background.primary,
-    outline: `1px solid ${theme.palette.divider}`
+    border: `1px solid ${theme.palette.divider}`
   }),
   '&:focus-visible': {
-    outline: `1px solid ${theme.palette.divider}`,
+    border: `1px solid ${theme.palette.divider}`,
     backgroundColor: theme.palette.background.primary
   }
 }));
@@ -40,7 +60,8 @@ export const NodeType = styled(Typography)(({ theme }) => ({
 }));
 
 export const ChildrenContainer = styled(Box)({
-  paddingLeft: '20px'
+  paddingLeft: '20px',
+  width: '100%'
 });
 
 export const LoadingIndicator = styled(Box)(({ theme }) => ({
