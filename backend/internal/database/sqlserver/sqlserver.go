@@ -53,7 +53,7 @@ func (r *SQLServerRepository) Execute(query string, args ...interface{}) (*gorm.
 	return execute(r, query, args...)
 }
 
-func (r *SQLServerRepository) GetAvailableActions(nodeType string) []string {
+func (r *SQLServerRepository) GetAvailableActions(nodeType string) []databaseContract.TreeNodeAction {
 	return getAvailableActions(nodeType)
 }
 

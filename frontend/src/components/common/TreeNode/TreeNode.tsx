@@ -36,7 +36,7 @@ export default function TreeNode({
     };
   }, [node.id, parentRefs]);
 
-  const { hasChildren, expandNode, focusNode, handleBlur, handleKeyDown } = useTreeNodeHandlers({
+  const { hasChildren, expandNode, focusNode, handleBlur, handleKeyDown, actionDetection } = useTreeNodeHandlers({
     node,
     children,
     isExpanded,
@@ -58,7 +58,7 @@ export default function TreeNode({
       <NodeLabel
         ref={nodeRef}
         onClick={focusNode}
-        onDoubleClick={(e) => expandNode(e, false)}
+        onDoubleClick={(e) => actionDetection(e, node)}
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         isFocused={isFocused}
@@ -69,7 +69,9 @@ export default function TreeNode({
         data-level={level}
         data-index={nodeIndex}
       >
-        {hasChildren && <CustomIcon type={isExpanded ? 'arrowDown' : 'arrowRight'} />}
+        {hasChildren && (
+          <CustomIcon onClick={(e) => expandNode(e, false)} type={isExpanded ? 'arrowDown' : 'arrowRight'} />
+        )}
         <NodeName isLeaf={!hasChildren} variant='body2' fontWeight={'medium'}>
           {node.name}
           {/*<NodeType variant='caption'>({node.type})</NodeType>*/}

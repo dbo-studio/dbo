@@ -9,9 +9,18 @@ export type TreeNodeType = {
   id: string;
   name: string;
   type: string;
-  actions: string[];
+  action: TreeNodeActionType;
+  contextMenu: TreeNodeActionType[];
   children?: TreeNodeType[];
 };
+
+export type TreeNodeActionType = {
+  name: string;
+  type: TreeNodeActionTypesType;
+  params: Record<string, any>;
+};
+
+export type TreeNodeActionTypesType = 'form' | 'command' | 'action' | 'route';
 
 export type FormFieldType = {
   id: string;

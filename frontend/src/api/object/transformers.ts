@@ -1,11 +1,12 @@
 import type { TreeResponseType } from './types';
 
 export const transformTree = (data: any): TreeResponseType => {
-  const objects: TreeResponseType = data;
-
-  if (!objects.children) {
-    objects.children = [];
-  }
-
-  return objects;
+  return {
+    id: data?.id,
+    name: data?.name,
+    type: data?.type,
+    action: data?.action,
+    contextMenu: data?.context_menu ?? [],
+    children: data?.children ?? []
+  };
 };

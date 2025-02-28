@@ -8,10 +8,10 @@ import (
 
 func buildTree(r *MySQLRepository) (*databaseContract.TreeNode, error) {
 	root := &databaseContract.TreeNode{
-		ID:      "root",
-		Name:    "MySQL Server",
-		Type:    "server",
-		Actions: r.GetAvailableActions("root"),
+		ID:          "root",
+		Name:        "MySQL Server",
+		Type:        "server",
+		ContextMenu: r.GetAvailableActions("root"),
 	}
 
 	// گرفتن لیست دیتابیس‌ها
@@ -25,33 +25,33 @@ func buildTree(r *MySQLRepository) (*databaseContract.TreeNode, error) {
 
 	for _, db := range databases {
 		dbNode := databaseContract.TreeNode{
-			ID:       db.Name,
-			Name:     db.Name,
-			Type:     "database",
-			Actions:  r.GetAvailableActions("database"),
-			Children: make([]databaseContract.TreeNode, 0),
+			ID:          db.Name,
+			Name:        db.Name,
+			Type:        "database",
+			ContextMenu: r.GetAvailableActions("database"),
+			Children:    make([]databaseContract.TreeNode, 0),
 		}
 
 		// گره‌های ثابت برای همه نوع اشیا
 		tablesNode := databaseContract.TreeNode{
-			ID:       fmt.Sprintf("%s.tables", db.Name),
-			Name:     "Tables",
-			Type:     "table_container",
-			Actions:  []string{"create_table"},
+			ID:   fmt.Sprintf("%s.tables", db.Name),
+			Name: "Tables",
+			Type: "table_container",
+			//ContextMenu:  []string{"create_table"},
 			Children: make([]databaseContract.TreeNode, 0),
 		}
 		viewsNode := databaseContract.TreeNode{
-			ID:       fmt.Sprintf("%s.views", db.Name),
-			Name:     "Views",
-			Type:     "view_container",
-			Actions:  []string{"create_view"},
+			ID:   fmt.Sprintf("%s.views", db.Name),
+			Name: "Views",
+			Type: "view_container",
+			//ContextMenu:  []string{"create_view"},
 			Children: make([]databaseContract.TreeNode, 0),
 		}
 		indexesNode := databaseContract.TreeNode{
-			ID:       fmt.Sprintf("%s.indexes", db.Name),
-			Name:     "Indexes",
-			Type:     "index_container",
-			Actions:  []string{"create_index"},
+			ID:   fmt.Sprintf("%s.indexes", db.Name),
+			Name: "Indexes",
+			Type: "index_container",
+			//ContextMenu:  []string{"create_index"},
 			Children: make([]databaseContract.TreeNode, 0),
 		}
 
@@ -70,11 +70,11 @@ func buildTree(r *MySQLRepository) (*databaseContract.TreeNode, error) {
 		}
 		for _, table := range tables {
 			tableNode := databaseContract.TreeNode{
-				ID:       fmt.Sprintf("%s.%s", db.Name, table.Name),
-				Name:     table.Name,
-				Type:     "table",
-				Actions:  r.GetAvailableActions("table"),
-				Children: make([]databaseContract.TreeNode, 0),
+				ID:          fmt.Sprintf("%s.%s", db.Name, table.Name),
+				Name:        table.Name,
+				Type:        "table",
+				ContextMenu: r.GetAvailableActions("table"),
+				Children:    make([]databaseContract.TreeNode, 0),
 			}
 			tablesNode.Children = append(tablesNode.Children, tableNode)
 		}
@@ -93,11 +93,11 @@ func buildTree(r *MySQLRepository) (*databaseContract.TreeNode, error) {
 		}
 		for _, view := range views {
 			viewNode := databaseContract.TreeNode{
-				ID:       fmt.Sprintf("%s.%s", db.Name, view.Name),
-				Name:     view.Name,
-				Type:     "view",
-				Actions:  r.GetAvailableActions("view"),
-				Children: make([]databaseContract.TreeNode, 0),
+				ID:          fmt.Sprintf("%s.%s", db.Name, view.Name),
+				Name:        view.Name,
+				Type:        "view",
+				ContextMenu: r.GetAvailableActions("view"),
+				Children:    make([]databaseContract.TreeNode, 0),
 			}
 			viewsNode.Children = append(viewsNode.Children, viewNode)
 		}
@@ -116,11 +116,11 @@ func buildTree(r *MySQLRepository) (*databaseContract.TreeNode, error) {
 		}
 		for _, index := range indexes {
 			indexNode := databaseContract.TreeNode{
-				ID:       fmt.Sprintf("%s.%s", db.Name, index.Name),
-				Name:     index.Name,
-				Type:     "index",
-				Actions:  r.GetAvailableActions("index"),
-				Children: make([]databaseContract.TreeNode, 0),
+				ID:          fmt.Sprintf("%s.%s", db.Name, index.Name),
+				Name:        index.Name,
+				Type:        "index",
+				ContextMenu: r.GetAvailableActions("index"),
+				Children:    make([]databaseContract.TreeNode, 0),
 			}
 			indexesNode.Children = append(indexesNode.Children, indexNode)
 		}

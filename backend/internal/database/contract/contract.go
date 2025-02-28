@@ -14,6 +14,6 @@ type DatabaseRepository interface {
 	UpdateObject(params any) error
 	ExecuteQuery(query string, args ...any) (*sql.Rows, error)
 	Execute(query string, args ...any) (*gorm.Statement, error)
-	GetAvailableActions(nodeType string) []string
+	GetAvailableActions(nodeType string) []TreeNodeAction
 	GetFormFields(action string) []FormField
 }

@@ -53,7 +53,7 @@ func (r *SQLiteRepository) Execute(query string, args ...interface{}) (*gorm.Sta
 	return execute(r, query, args...)
 }
 
-func (r *SQLiteRepository) GetAvailableActions(nodeType string) []string {
+func (r *SQLiteRepository) GetAvailableActions(nodeType string) []databaseContract.TreeNodeAction {
 	return getAvailableActions(nodeType)
 }
 

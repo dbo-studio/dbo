@@ -53,7 +53,7 @@ func (r *MySQLRepository) Execute(query string, args ...interface{}) (*gorm.Stat
 	return execute(r, query, args...)
 }
 
-func (r *MySQLRepository) GetAvailableActions(nodeType string) []string {
+func (r *MySQLRepository) GetAvailableActions(nodeType string) []databaseContract.TreeNodeAction {
 	return getAvailableActions(nodeType)
 }
 

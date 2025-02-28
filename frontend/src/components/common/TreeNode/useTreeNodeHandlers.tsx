@@ -1,6 +1,8 @@
 import type React from 'react';
 import { useCallback } from 'react';
 import type { TreeNodeType } from '@/api/object/types.ts';
+import useNavigate from '@/hooks/useNavigate.hook.ts';
+import { useTabStore } from '@/store/tabStore/tab.store.ts';
 
 interface UseTreeNodeHandlersProps {
   node: TreeNodeType;
@@ -34,6 +36,25 @@ export function useTreeNodeHandlers({
   onFocusChange
 }: UseTreeNodeHandlersProps) {
   const hasChildren = children?.length > 0 || node.type !== 'table';
+  const navigate = useNavigate();
+  const { addTab } = useTabStore();
+
+  const actionDetection = useCallback(async (event: React.MouseEvent, node: TreeNodeType) => {
+    if (!node.action) {
+      await expandNode(event, false);
+      return;
+    }
+
+    switch (node.action.type) {
+      case 'route': {
+        const tab = addTab(node.action.params.id, node.action.params.path);
+        navigate({
+          route: node.action.params.path,
+          tabId: tab.id
+        });
+      }
+    }
+  }, []);
 
   const expandNode = useCallback(
     async (event: React.MouseEvent | React.KeyboardEvent, moveFocusToChild = false) => {
@@ -167,6 +188,7 @@ export function useTreeNodeHandlers({
   );
 
   return {
+    actionDetection,
     expandNode,
     focusNode,
     handleBlur,

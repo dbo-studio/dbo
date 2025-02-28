@@ -53,7 +53,7 @@ func (r *PostgresRepository) Execute(query string, args ...any) (*gorm.Statement
 	return execute(r, query, args...)
 }
 
-func (r *PostgresRepository) GetAvailableActions(nodeType string) []string {
+func (r *PostgresRepository) GetAvailableActions(nodeType string) []databaseContract.TreeNodeAction {
 	return getAvailableActions(nodeType)
 }
 

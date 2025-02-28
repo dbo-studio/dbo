@@ -2,25 +2,26 @@ package databaseSqlite
 
 import databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 
-func getAvailableActions(nodeType string) []string {
-	switch nodeType {
-	case "database":
-		return []string{"create_table", "create_view", "create_index"}
-	case "table_container":
-		return []string{"create_table"}
-	case "view_container":
-		return []string{"create_view"}
-	case "index_container":
-		return []string{"create_index"}
-	case "table":
-		return []string{"edit_table", "drop_table", "copy_name"}
-	case "view":
-		return []string{"edit_view", "drop_view"}
-	case "index":
-		return []string{"edit_index", "drop_index"}
-	default:
-		return []string{}
-	}
+func getAvailableActions(nodeType string) []databaseContract.TreeNodeAction {
+	return []databaseContract.TreeNodeAction{}
+	//switch nodeType {
+	//case "database":
+	//	return []string{"create_table", "create_view", "create_index"}
+	//case "table_container":
+	//	return []string{"create_table"}
+	//case "view_container":
+	//	return []string{"create_view"}
+	//case "index_container":
+	//	return []string{"create_index"}
+	//case "table":
+	//	return []string{"edit_table", "drop_table", "copy_name"}
+	//case "view":
+	//	return []string{"edit_view", "drop_view"}
+	//case "index":
+	//	return []string{"edit_index", "drop_index"}
+	//default:
+	//	return []string{}
+	//}
 }
 
 func getFormFields(action string) []databaseContract.FormField {
