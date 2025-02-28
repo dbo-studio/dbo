@@ -13,13 +13,18 @@ export const NodeLabel = styled(Box, {
   padding: theme.spacing(0.4),
   cursor: 'pointer',
   borderRadius: variables.radius.medium,
-  '&:hover': {
-    backgroundColor: theme.palette.background.primary
-  },
+  color: theme.palette.text.text,
+  // '&:hover': {
+  //   backgroundColor: theme.palette.background.primary
+  // },
   ...(isFocused && {
     backgroundColor: theme.palette.background.primary,
     outline: `1px solid ${theme.palette.divider}`
-  })
+  }),
+  '&:focus-visible': {
+    outline: `1px solid ${theme.palette.divider}`,
+    backgroundColor: theme.palette.background.primary
+  }
 }));
 
 export const NodeName = styled(Typography, {
@@ -29,9 +34,9 @@ export const NodeName = styled(Typography, {
 }));
 
 export const NodeType = styled(Typography)(({ theme }) => ({
-  color: theme.palette.text.text,
   fontSize: '0.9em',
-  marginLeft: theme.spacing(0.5)
+  marginLeft: theme.spacing(0.5),
+  color: theme.palette.text.secondary
 }));
 
 export const ChildrenContainer = styled(Box)({

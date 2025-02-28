@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import CircularProgress from '@mui/material/CircularProgress';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
-import type { TreeNodeData, TreeNodeProps } from '@/components/common/TreeView/types.ts';
+import type { TreeNodeProps } from '@/components/common/TreeNode/types.ts';
 import {
   ChildrenContainer,
   LoadingIndicator,
@@ -9,8 +9,9 @@ import {
   NodeName,
   NodeType,
   TreeNodeContainer
-} from '@/components/common/TreeView/TreeNode.styled.ts';
-import { useTreeNodeHandlers } from '@/components/common/TreeView/useTreeNodeHandlers.tsx';
+} from '@/components/common/TreeNode/TreeNode.styled.ts';
+import { useTreeNodeHandlers } from '@/components/common/TreeNode/useTreeNodeHandlers.tsx';
+import type { TreeNodeType } from '@/api/object/types.ts';
 
 export default function TreeNode({
   node,
@@ -21,14 +22,11 @@ export default function TreeNode({
   onFocusChange
 }: TreeNodeProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [children, setChildren] = useState<TreeNodeData[]>(node.children || []);
+  const [children, setChildren] = useState<TreeNodeType[]>(node.children || []);
   const [isLoading, setIsLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const nodeRef = useRef<HTMLDivElement | null>(null);
 
-  const hasChildren = children.length > 0 || node.type !== 'table';
-
-  // Register this node's ref with parentRefs
   useEffect(() => {
     if (nodeRef.current) {
       parentRefs.current.set(node.id, nodeRef.current);
@@ -38,7 +36,7 @@ export default function TreeNode({
     };
   }, [node.id, parentRefs]);
 
-  const { expandNode, focusNode, handleBlur, handleKeyDown } = useTreeNodeHandlers({
+  const { hasChildren, expandNode, focusNode, handleBlur, handleKeyDown } = useTreeNodeHandlers({
     node,
     children,
     isExpanded,
@@ -72,9 +70,10 @@ export default function TreeNode({
         data-index={nodeIndex}
       >
         {hasChildren && <CustomIcon type={isExpanded ? 'arrowDown' : 'arrowRight'} />}
-        <NodeName isLeaf={!hasChildren} variant='body2'>
+        <NodeName isLeaf={!hasChildren} variant='body2' fontWeight={'medium'}>
           {node.name}
-          <NodeType variant='caption'>({node.type})</NodeType>
+          {/*<NodeType variant='caption'>({node.type})</NodeType>*/}
+          <NodeType variant='caption'>({node.children?.length})</NodeType>
         </NodeName>
         {isLoading && (
           <LoadingIndicator>
@@ -83,7 +82,7 @@ export default function TreeNode({
         )}
       </NodeLabel>
 
-      {isExpanded && children.length > 0 && (
+      {isExpanded && children?.length > 0 && (
         <ChildrenContainer>
           {children.map((child, index) => (
             <TreeNode

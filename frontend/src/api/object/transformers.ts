@@ -1,9 +1,10 @@
-import type { ObjectResponseType } from './types';
+import type { TreeResponseType } from './types';
 
-export const transformObject = (data: any): ObjectResponseType[] => {
-  const objects: ObjectResponseType[] = [];
-  for (const item of data) {
-    objects.push(item);
+export const transformTree = (data: any): TreeResponseType => {
+  const objects: TreeResponseType = data;
+
+  if (!objects.children) {
+    objects.children = [];
   }
 
   return objects;

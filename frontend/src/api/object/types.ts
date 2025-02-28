@@ -1,32 +1,37 @@
-export type ObjectResponseType = TreeNode[];
+export type TreeRequestType = {
+  connection_id: number | string;
+  parent_id: string;
+};
 
-export interface TreeNode {
+export type TreeResponseType = TreeNodeType;
+
+export type TreeNodeType = {
   id: string;
   name: string;
   type: string;
   actions: string[];
-  children?: TreeNode[];
-}
+  children?: TreeNodeType[];
+};
 
-export interface FormField {
+export type FormFieldType = {
   id: string;
   name: string;
   type: 'text' | 'textarea' | 'checkbox' | 'select' | 'array';
   required?: boolean;
   default?: string;
-  options?: FormFieldOption[];
-}
+  options?: FormFieldOptionType[];
+};
 
-export interface FormFieldOption {
+export type FormFieldOptionType = {
   value: string;
   name: string;
-}
+};
 
-export interface FormData {
+export type FormDataType = {
   [key: string]: any;
-}
+};
 
-export interface ModalAction {
+export type ModalActionType = {
   id: string;
   nodeId: string;
-}
+};
