@@ -1,8 +1,8 @@
 import type React from 'react';
-import {useCallback} from 'react';
-import type {TreeNodeType} from '@/api/object/types.ts';
+import { useCallback } from 'react';
+import type { TreeNodeType } from '@/api/object/types.ts';
 import useNavigate from '@/hooks/useNavigate.hook.ts';
-import {useTabStore} from '@/store/tabStore/tab.store.ts';
+import { useTabStore } from '@/store/tabStore/tab.store.ts';
 
 interface UseTreeNodeHandlersProps {
   node: TreeNodeType;

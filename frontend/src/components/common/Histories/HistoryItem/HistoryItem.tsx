@@ -1,12 +1,12 @@
-import {TabMode} from '@/core/enums';
-import {useContextMenu} from '@/hooks';
+import { TabMode } from '@/core/enums';
+import { useContextMenu } from '@/hooks';
 import useNavigate from '@/hooks/useNavigate.hook';
-import {useTabStore} from '@/store/tabStore/tab.store';
-import {Box, IconButton, Typography, useTheme} from '@mui/material';
+import { useTabStore } from '@/store/tabStore/tab.store';
+import { Box, IconButton, Typography, useTheme } from '@mui/material';
 import CustomIcon from '../../../base/CustomIcon/CustomIcon';
-import type {HistoryItemProps} from '../types';
+import type { HistoryItemProps } from '../types';
 import HistoryContextMenu from './HistoryContextMenu/HistoryContextMenu';
-import {HistoryItemStyled} from './HistoryItem.styled';
+import { HistoryItemStyled } from './HistoryItem.styled';
 
 export default function HistoryItem({ history, selected, onClick }: HistoryItemProps) {
   const theme = useTheme();

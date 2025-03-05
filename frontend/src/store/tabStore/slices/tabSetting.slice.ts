@@ -1,8 +1,8 @@
-import {TabMode} from '@/core/enums';
-import type {TabType} from '@/types/Tab';
-import {v4 as uuidv4} from 'uuid';
-import type {StateCreator} from 'zustand';
-import type {TabSettingSlice, TabStore} from '../types';
+import { TabMode } from '@/core/enums';
+import type { TabType } from '@/types/Tab';
+import { v4 as uuidv4 } from 'uuid';
+import type { StateCreator } from 'zustand';
+import type { TabSettingSlice, TabStore } from '../types';
 
 const maxTabs = 15;
 
