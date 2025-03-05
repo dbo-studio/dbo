@@ -2,6 +2,7 @@ package dto
 
 import (
 	"fmt"
+
 	"github.com/invopop/validation"
 )
 

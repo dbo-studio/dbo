@@ -14,7 +14,7 @@ type SQLiteRepository struct {
 	connection *model.Connection
 }
 
-func NewSQLiteRepository(connection *model.Connection, cm *databaseConnection.ConnectionManager) (databaseContract.DatabaseRepository, error) {
+func NewSQLiteRepository(connection *model.Connection, cm *databaseConnection.ConnectionManager) (*SQLiteRepository, error) {
 	db, err := cm.GetConnection(connection)
 	if err != nil {
 		return nil, err

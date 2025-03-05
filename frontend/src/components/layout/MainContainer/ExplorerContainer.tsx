@@ -1,18 +1,18 @@
-import { useWindowSize } from '@/hooks/useWindowSize.hook';
+import {useWindowSize} from '@/hooks/useWindowSize.hook';
 import locales from '@/locales';
-import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Box, Tab, Tabs } from '@mui/material';
-import { type SyntheticEvent, useMemo, useState } from 'react';
+import {useSettingStore} from '@/store/settingStore/setting.store';
+import {Box, Tab, Tabs} from '@mui/material';
+import {type SyntheticEvent, useMemo, useState} from 'react';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
 import Histories from '../../common/Histories/Histories';
 import SavedQueries from '../../common/SavedQueries/SavedQueries';
-import { ExplorerContainerStyled } from './Container.styled';
+import {ExplorerContainerStyled} from './Container.styled';
 import ObjectTreeView from '@/components/common/ObjectTreeView/ObjectTreeView.tsx';
 
 const tabs = [
   {
     id: 0,
-    content: <ObjectTreeView connId={'1'} />
+    content: <ObjectTreeView />
   },
   {
     id: 1,

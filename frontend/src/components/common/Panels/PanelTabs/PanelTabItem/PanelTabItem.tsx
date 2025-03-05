@@ -1,18 +1,18 @@
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu.tsx';
-import type { MenuType } from '@/components/base/ContextMenu/types.ts';
+import type {MenuType} from '@/components/base/ContextMenu/types.ts';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
-import { PanelTabItemStyled } from '@/components/common/Panels/PanelTabs/PanelTabItem/PanelTabItem.styled.ts';
-import { TabMode } from '@/core/enums';
-import { shortcuts } from '@/core/utils';
-import { useContextMenu, useShortcut } from '@/hooks';
+import {PanelTabItemStyled} from '@/components/common/Panels/PanelTabs/PanelTabItem/PanelTabItem.styled.ts';
+import {TabMode} from '@/core/enums';
+import {shortcuts} from '@/core/utils';
+import {useContextMenu, useShortcut} from '@/hooks';
 import useNavigate from '@/hooks/useNavigate.hook.ts';
-import { useRemoveTab } from '@/hooks/useRemoveTab.hook.ts';
+import {useRemoveTab} from '@/hooks/useRemoveTab.hook.ts';
 import locales from '@/locales';
-import { useDataStore } from '@/store/dataStore/data.store.ts';
-import { useTabStore } from '@/store/tabStore/tab.store.ts';
-import type { TabType } from '@/types';
-import { Box, Tooltip, Typography } from '@mui/material';
-import { useEffect, useRef } from 'react';
+import {useDataStore} from '@/store/dataStore/data.store.ts';
+import {useTabStore} from '@/store/tabStore/tab.store.ts';
+import type {TabType} from '@/types';
+import {Box, Tooltip, Typography} from '@mui/material';
+import {useEffect, useRef} from 'react';
 
 export default function PanelTabItem({ tab }: { tab: TabType }) {
   const tabRefs = useRef<Record<string, HTMLElement>>({});
@@ -81,7 +81,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
   };
 
   const addNewEmptyTab = () => {
-    const tab = addTab('Editor', TabMode.Query);
+    const tab = addTab('Editor', undefined, TabMode.Query);
     navigate({
       route: 'query',
       tabId: tab.id

@@ -13,13 +13,14 @@ import (
 )
 
 type Handlers struct {
-	Query       *queryHandler.QueryHandler
-	Connection  *handler.ConnectionHandler
-	Database    *handler.DatabaseHandler
-	SavedQuery  *handler.SavedQueryHandler
-	Design      *handler.DesignHandler
-	History     *handler.HistoryHandler
-	TreeHandler *handler.TreeHandler
+	Query        *queryHandler.QueryHandler
+	Connection   *handler.ConnectionHandler
+	Database     *handler.DatabaseHandler
+	SavedQuery   *handler.SavedQueryHandler
+	Design       *handler.DesignHandler
+	History      *handler.HistoryHandler
+	TreeHandler  *handler.TreeHandler
+	QueryHandler *handler.QueryHandler
 }
 
 type Server struct {

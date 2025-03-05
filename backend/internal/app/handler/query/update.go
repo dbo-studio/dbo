@@ -8,7 +8,7 @@ import (
 )
 
 func (h QueryHandler) Update(c fiber.Ctx) error {
-	req := new(dto.UpdateQueryDto)
+	req := new(dto.UpdateQueryRequest)
 
 	if err := c.Bind().Body(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))

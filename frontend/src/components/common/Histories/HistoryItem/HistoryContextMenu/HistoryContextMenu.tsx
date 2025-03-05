@@ -1,12 +1,12 @@
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
-import type { MenuType } from '@/components/base/ContextMenu/types';
-import { TabMode } from '@/core/enums';
-import { useCopyToClipboard } from '@/hooks';
+import type {MenuType} from '@/components/base/ContextMenu/types';
+import {TabMode} from '@/core/enums';
+import {useCopyToClipboard} from '@/hooks';
 import useNavigate from '@/hooks/useNavigate.hook';
 import locales from '@/locales';
-import { useTabStore } from '@/store/tabStore/tab.store';
-import { toast } from 'sonner';
-import type { HistoryContextMenuProps } from '../../types';
+import {useTabStore} from '@/store/tabStore/tab.store';
+import {toast} from 'sonner';
+import type {HistoryContextMenuProps} from '../../types';
 
 export default function HistoryContextMenu({ history, contextMenu, onClose }: HistoryContextMenuProps) {
   const [copy] = useCopyToClipboard();
@@ -24,7 +24,7 @@ export default function HistoryContextMenu({ history, contextMenu, onClose }: Hi
 
   const handleRun = () => {
     const name = history.query.slice(0, 10);
-    const tab = addTab(name, TabMode.Query, history.query);
+    const tab = addTab(name, undefined, TabMode.Query, history.query);
     navigate({
       route: tab.mode,
       tabId: tab.id

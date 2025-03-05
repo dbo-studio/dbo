@@ -9,7 +9,7 @@ import (
 )
 
 func (h QueryHandler) Raw(c fiber.Ctx) error {
-	req := new(dto.RawQueryDto)
+	req := new(dto.RawQueryRequest)
 
 	if err := c.Bind().Body(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))

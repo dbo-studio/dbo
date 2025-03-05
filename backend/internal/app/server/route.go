@@ -14,7 +14,7 @@ func (r *Server) routing() {
 	api.Post("/query", r.handlers.TreeHandler.QueryHandler) // برای اجرای کوئری‌ها
 
 	query := api.Group("query")
-	query.Post("/run", r.handlers.Query.Run)
+	query.Post("/run", r.handlers.QueryHandler.Run)
 	query.Post("/raw", r.handlers.Query.Raw)
 	query.Post("/update", r.handlers.Query.Update)
 	query.Get("/autocomplete", r.handlers.Query.Autocomplete)

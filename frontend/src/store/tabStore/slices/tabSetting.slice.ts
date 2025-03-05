@@ -1,13 +1,13 @@
-import { TabMode } from '@/core/enums';
-import type { TabType } from '@/types/Tab';
-import { v4 as uuidv4 } from 'uuid';
-import type { StateCreator } from 'zustand';
-import type { TabSettingSlice, TabStore } from '../types';
+import {TabMode} from '@/core/enums';
+import type {TabType} from '@/types/Tab';
+import {v4 as uuidv4} from 'uuid';
+import type {StateCreator} from 'zustand';
+import type {TabSettingSlice, TabStore} from '../types';
 
 const maxTabs = 15;
 
 export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [], [], TabSettingSlice> = (_, get) => ({
-  addTab: (table: string, mode?: TabMode, query?: string): TabType => {
+  addTab: (table: string, id?: string, mode?: TabMode, query?: string): TabType => {
     // biome-ignore lint: reason
     mode = mode ? mode : TabMode.Data;
     const tabs = get().getTabs();
@@ -33,7 +33,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
     }
 
     const newTab: TabType = {
-      id: uuidv4(),
+      id: id ?? uuidv4(),
       table: table,
       query: tabQuery,
       filters: [],

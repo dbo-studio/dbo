@@ -1,9 +1,5 @@
 package dto
 
-import (
-	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
-)
-
 type MySQLCreateDatabaseParams struct {
 	Name      string `json:"name"`
 	Charset   string `json:"charset,omitempty"`
@@ -16,16 +12,16 @@ type MySQLDropDatabaseParams struct {
 }
 
 type MySQLCreateTableParams struct {
-	Name    string                              `json:"name"`
-	Columns []databaseContract.ColumnDefinition `json:"columns"`
-	Engine  string                              `json:"engine,omitempty"`
+	Name    string             `json:"name"`
+	Columns []ColumnDefinition `json:"columns"`
+	Engine  string             `json:"engine,omitempty"`
 }
 
 type MySQLUpdateTableParams struct {
-	OldName    string                              `json:"oldName"`
-	NewName    string                              `json:"newName"`
-	AddColumns []databaseContract.ColumnDefinition `json:"addColumns"`
-	Engine     string                              `json:"engine,omitempty"`
+	OldName    string             `json:"oldName"`
+	NewName    string             `json:"newName"`
+	AddColumns []ColumnDefinition `json:"addColumns"`
+	Engine     string             `json:"engine,omitempty"`
 }
 
 type MySQLCreateObjectParams struct {
@@ -73,15 +69,15 @@ type SQLServerDropDatabaseParams struct {
 
 // SQLServerCreateTableParams برای ساخت جدول در SQL Server
 type SQLServerCreateTableParams struct {
-	Name    string                              `json:"name"`
-	Columns []databaseContract.ColumnDefinition `json:"columns"`
+	Name    string             `json:"name"`
+	Columns []ColumnDefinition `json:"columns"`
 }
 
 // SQLServerUpdateTableParams برای ویرایش جدول در SQL Server
 type SQLServerUpdateTableParams struct {
-	OldName    string                              `json:"oldName"`
-	NewName    string                              `json:"newName"`
-	AddColumns []databaseContract.ColumnDefinition `json:"addColumns"`
+	OldName    string             `json:"oldName"`
+	NewName    string             `json:"newName"`
+	AddColumns []ColumnDefinition `json:"addColumns"`
 }
 
 // SQLServerCreateObjectParams برای ساخت اشیا در SQL Server

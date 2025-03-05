@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
 func getObjectData(r *PostgresRepository, nodeID, objType string) (interface{}, error) {
@@ -21,9 +20,9 @@ func getObjectData(r *PostgresRepository, nodeID, objType string) (interface{}, 
 		if err != nil {
 			return nil, err
 		}
-		tableColumns := make([]databaseContract.ColumnDefinition, len(columns))
+		tableColumns := make([]dto.ColumnDefinition, len(columns))
 		for i, col := range columns {
-			tableColumns[i] = databaseContract.ColumnDefinition{
+			tableColumns[i] = dto.ColumnDefinition{
 				Name:     col.Name,
 				DataType: col.DataType,
 				NotNull:  col.IsNullable == "NO",

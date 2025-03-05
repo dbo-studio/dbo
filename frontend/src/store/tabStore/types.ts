@@ -1,5 +1,5 @@
-import type { TabMode } from '@/core/enums';
-import type { FilterType, SortType, TabType } from '@/types/Tab';
+import type {TabMode} from '@/core/enums';
+import type {FilterType, SortType, TabType} from '@/types/Tab';
 
 export type TabFilterSlice = {
   upsertFilters: (filter: FilterType) => Promise<void>;
@@ -15,7 +15,7 @@ export type TabSortSlice = {
 };
 
 export type TabSettingSlice = {
-  addTab: (table: string, mode?: TabMode, query?: string) => TabType;
+  addTab: (table: string, id?: string, mode?: TabMode, query?: string) => TabType;
 
   //return undefined will redirect to route /
   removeTab: (tabId: string) => TabType | null | undefined;

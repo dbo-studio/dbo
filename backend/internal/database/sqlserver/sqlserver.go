@@ -14,7 +14,7 @@ type SQLServerRepository struct {
 	connection *model.Connection
 }
 
-func NewSQLServerRepository(connection *model.Connection, cm *databaseConnection.ConnectionManager) (databaseContract.DatabaseRepository, error) {
+func NewSQLServerRepository(connection *model.Connection, cm *databaseConnection.ConnectionManager) (*SQLServerRepository, error) {
 	db, err := cm.GetConnection(connection)
 	if err != nil {
 		return nil, err

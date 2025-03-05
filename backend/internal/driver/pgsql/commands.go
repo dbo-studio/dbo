@@ -2,6 +2,7 @@ package pgsqlDriver
 
 import (
 	"fmt"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 
 	"gorm.io/gorm"
@@ -12,7 +13,7 @@ type UpdateQueryResult struct {
 	RowsAffected int
 }
 
-func (p PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryDto) (*UpdateQueryResult, error) {
+func (p PostgresQueryEngine) UpdateQuery(dto *dto.UpdateQueryRequest) (*UpdateQueryResult, error) {
 	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {
 		return nil, ErrConnection

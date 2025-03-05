@@ -14,7 +14,7 @@ type MySQLRepository struct {
 	connection *model.Connection
 }
 
-func NewMySQLRepository(connection *model.Connection, cm *databaseConnection.ConnectionManager) (databaseContract.DatabaseRepository, error) {
+func NewMySQLRepository(connection *model.Connection, cm *databaseConnection.ConnectionManager) (*MySQLRepository, error) {
 	db, err := cm.GetConnection(connection)
 	if err != nil {
 		return nil, err

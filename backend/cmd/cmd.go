@@ -52,13 +52,14 @@ func Execute() {
 	ss := service.NewService(rr, drivers, cm)
 
 	restServer := server.New(appLogger, server.Handlers{
-		Query:       queryHandler.NewQueryHandler(appLogger, appDB, drivers, cache, ss.DesignService),
-		Connection:  handler.NewConnectionHandler(appLogger, ss.ConnectionService),
-		Database:    handler.NewDatabaseHandler(appLogger, ss.ConnectionService, ss.DatabaseService),
-		SavedQuery:  handler.NewSavedQueryHandler(appLogger, ss.SavedQueryService),
-		Design:      handler.NewDesignHandler(appLogger, ss.ConnectionService, ss.DesignService),
-		History:     handler.NewHistoryHandler(appLogger, ss.HistoryService),
-		TreeHandler: handler.NewTreeHandler(appLogger, ss.TreeService),
+		Query:        queryHandler.NewQueryHandler(appLogger, appDB, drivers, cache, ss.DesignService),
+		Connection:   handler.NewConnectionHandler(appLogger, ss.ConnectionService),
+		Database:     handler.NewDatabaseHandler(appLogger, ss.ConnectionService, ss.DatabaseService),
+		SavedQuery:   handler.NewSavedQueryHandler(appLogger, ss.SavedQueryService),
+		Design:       handler.NewDesignHandler(appLogger, ss.ConnectionService, ss.DesignService),
+		History:      handler.NewHistoryHandler(appLogger, ss.HistoryService),
+		TreeHandler:  handler.NewTreeHandler(appLogger, ss.TreeService),
+		QueryHandler: handler.NewQueryHandler(appLogger, ss.QueryService),
 	})
 
 	if err := restServer.Start(helper.IsLocal(), cfg.App.Port); err != nil {

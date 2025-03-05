@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
 func createObject(r *MySQLRepository, params interface{}) error {
@@ -161,9 +160,9 @@ func getObjectData(r *MySQLRepository, nodeID, objType string) (interface{}, err
 		if err != nil {
 			return nil, err
 		}
-		tableColumns := make([]databaseContract.ColumnDefinition, len(columns))
+		tableColumns := make([]dto.ColumnDefinition, len(columns))
 		for i, col := range columns {
-			tableColumns[i] = databaseContract.ColumnDefinition{
+			tableColumns[i] = dto.ColumnDefinition{
 				Name:     col.Field,
 				DataType: col.Type,
 				NotNull:  col.Null == "NO",

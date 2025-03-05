@@ -1,13 +1,5 @@
 package databaseContract
 
-type ColumnDefinition struct {
-	Name     string `json:"name"`
-	DataType string `json:"dataType"`
-	NotNull  bool   `json:"notNull,omitempty"`
-	Primary  bool   `json:"primary,omitempty"`
-	Default  string `json:"default,omitempty"`
-}
-
 type TreeNode struct {
 	ID          string                 `json:"id"`
 	Name        string                 `json:"name"`

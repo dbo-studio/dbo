@@ -1,18 +1,18 @@
 import api from '@/api';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
-import type { MenuType } from '@/components/base/ContextMenu/types';
-import type { TablesTreeViewItemProps } from '@/components/common/DBTreeView/types';
-import { TabMode } from '@/core/enums';
-import { useContextMenu, useCopyToClipboard } from '@/hooks';
+import type {MenuType} from '@/components/base/ContextMenu/types';
+import type {TablesTreeViewItemProps} from '@/components/common/DBTreeView/types';
+import {TabMode} from '@/core/enums';
+import {useContextMenu, useCopyToClipboard} from '@/hooks';
 import useAPI from '@/hooks/useApi.hook.ts';
 import useNavigate from '@/hooks/useNavigate.hook';
 import locales from '@/locales';
-import { useConnectionStore } from '@/store/connectionStore/connection.store.ts';
-import { useTabStore } from '@/store/tabStore/tab.store.ts';
-import { Box, Tooltip } from '@mui/material';
-import { TreeItem } from '@mui/x-tree-view';
+import {useConnectionStore} from '@/store/connectionStore/connection.store.ts';
+import {useTabStore} from '@/store/tabStore/tab.store.ts';
+import {Box, Tooltip} from '@mui/material';
+import {TreeItem} from '@mui/x-tree-view';
 import axios from 'axios';
-import { toast } from 'sonner';
+import {toast} from 'sonner';
 
 export default function TableTreeViewItem({ table, onClick }: TablesTreeViewItemProps) {
   const navigate = useNavigate();
@@ -34,7 +34,7 @@ export default function TableTreeViewItem({ table, onClick }: TablesTreeViewItem
   };
 
   const handleAddTabDesign = () => {
-    const tab = addTab(table, TabMode.Design);
+    const tab = addTab(table, undefined, TabMode.Design);
     navigate({
       route: 'design',
       tabId: tab.id

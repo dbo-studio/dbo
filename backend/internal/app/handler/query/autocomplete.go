@@ -20,7 +20,7 @@ type AutoCompleteResult struct {
 }
 
 func (h QueryHandler) Autocomplete(c fiber.Ctx) error {
-	req := new(dto.AutoCompleteDto)
+	req := new(dto.AutoCompleteRequest)
 	if err := c.Bind().Query(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
 	}

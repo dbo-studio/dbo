@@ -1,8 +1,7 @@
 package databasePostgres
 
 import (
-	"database/sql"
-
+	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -45,12 +44,12 @@ func (r *PostgresRepository) UpdateObject(params any) error {
 	return updateObject(r, params)
 }
 
-func (r *PostgresRepository) ExecuteQuery(query string, args ...any) (*sql.Rows, error) {
-	return executeQuery(r, query, args...)
+func (r *PostgresRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
+	return runQuery(r, req)
 }
 
-func (r *PostgresRepository) Execute(query string, args ...any) (*gorm.Statement, error) {
-	return execute(r, query, args...)
+func (r *PostgresRepository) RunRawQuery(req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
+	return runRawQuery(r, req)
 }
 
 func (r *PostgresRepository) GetAvailableActions(nodeType string) []databaseContract.TreeNodeAction {

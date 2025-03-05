@@ -1,17 +1,17 @@
 import api from '@/api';
-import { TabMode } from '@/core/enums';
-import { useContextMenu } from '@/hooks';
+import {TabMode} from '@/core/enums';
+import {useContextMenu} from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
 import useNavigate from '@/hooks/useNavigate.hook';
-import { useTabStore } from '@/store/tabStore/tab.store';
-import { Box, ClickAwayListener, IconButton, Typography, useTheme } from '@mui/material';
-import { useState } from 'react';
+import {useTabStore} from '@/store/tabStore/tab.store';
+import {Box, ClickAwayListener, IconButton, Typography, useTheme} from '@mui/material';
+import {useState} from 'react';
 import CustomIcon from '../../../base/CustomIcon/CustomIcon';
 import FieldInput from '../../../base/FieldInput/FieldInput';
 import LoadingIconButton from '../../../base/LoadingIconButton/LoadingIconButton';
-import type { SavedQueryItemProps } from '../types';
+import type {SavedQueryItemProps} from '../types';
 import SavedQueryContextMenu from './SavedQueryContextMenu/SavedQueryContextMenu';
-import { SavedQueryItemStyled } from './SavedQueryItem.styled';
+import {SavedQueryItemStyled} from './SavedQueryItem.styled';
 
 export default function SavedQueryItem({ query, selected, onChange, onDelete, onClick }: SavedQueryItemProps) {
   const [editMode, setEditMode] = useState(false);
@@ -54,7 +54,7 @@ export default function SavedQueryItem({ query, selected, onChange, onDelete, on
 
   const handleRun = () => {
     const name = query.name.slice(0, 10);
-    const tab = addTab(name, TabMode.Query, query.query);
+    const tab = addTab(name, undefined, TabMode.Query, query.query);
     navigate({
       route: tab.mode,
       tabId: tab.id

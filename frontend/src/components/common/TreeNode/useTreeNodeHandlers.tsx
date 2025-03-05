@@ -1,8 +1,8 @@
 import type React from 'react';
-import { useCallback } from 'react';
-import type { TreeNodeType } from '@/api/object/types.ts';
+import {useCallback} from 'react';
+import type {TreeNodeType} from '@/api/object/types.ts';
 import useNavigate from '@/hooks/useNavigate.hook.ts';
-import { useTabStore } from '@/store/tabStore/tab.store.ts';
+import {useTabStore} from '@/store/tabStore/tab.store.ts';
 
 interface UseTreeNodeHandlersProps {
   node: TreeNodeType;
@@ -47,7 +47,7 @@ export function useTreeNodeHandlers({
 
     switch (node.action.type) {
       case 'route': {
-        const tab = addTab(node.action.params.id, node.action.params.path);
+        const tab = addTab(node.action.params.id, node.id, node.action.params.path);
         navigate({
           route: node.action.params.path,
           tabId: tab.id

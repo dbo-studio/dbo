@@ -1,7 +1,5 @@
 package dto
 
-import databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
-
 type SQLiteCreateConnectionParams struct {
 	Path string `json:"path"`
 }
@@ -11,15 +9,15 @@ type SQLiteUpdateConnectionParams struct {
 }
 
 type SQLiteCreateTableParams struct {
-	Name    string                              `json:"name"`
-	Columns []databaseContract.ColumnDefinition `json:"columns"`
+	Name    string             `json:"name"`
+	Columns []ColumnDefinition `json:"columns"`
 }
 
 // SQLiteUpdateTableParams برای ویرایش جدول در SQLite
 type SQLiteUpdateTableParams struct {
-	OldName    string                              `json:"oldName"`
-	NewName    string                              `json:"newName"`
-	AddColumns []databaseContract.ColumnDefinition `json:"addColumns"`
+	OldName    string             `json:"oldName"`
+	NewName    string             `json:"newName"`
+	AddColumns []ColumnDefinition `json:"addColumns"`
 }
 
 // SQLiteCreateObjectParams برای ساخت اشیا در SQLite (فقط View)

@@ -1,5 +1,13 @@
 package databasePostgres
 
+import (
+	"fmt"
+	"strings"
+
+	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/samber/lo"
+)
+
 type Database struct {
 	Name string `gorm:"column:datname"`
 }
@@ -100,4 +108,45 @@ func (r *PostgresRepository) getSequenceList(schema Schema) ([]Sequence, error) 
 		Find(&sequences).Error
 
 	return sequences, err
+}
+
+func queryGenerator(dto *dto.RunQueryRequest, node PGNode) string {
+	var sb strings.Builder
+
+	// SELECT clause
+	selectColumns := "*"
+	if len(dto.Columns) > 0 {
+		selectColumns = strings.Join(dto.Columns, ", ")
+	}
+	_, _ = fmt.Fprintf(&sb, "SELECT %s FROM %q", selectColumns, node.Table)
+
+	// WHERE clause
+	if len(dto.Filters) > 0 {
+		sb.WriteString(" WHERE ")
+		for i, filter := range dto.Filters {
+			_, _ = fmt.Fprintf(&sb, "%s %s '%s'", filter.Column, filter.Operator, filter.Value)
+			if i < len(dto.Filters)-1 {
+				_, _ = fmt.Fprintf(&sb, " %s ", filter.Next)
+			}
+		}
+	}
+
+	// ORDER BY clause
+	if len(dto.Sorts) > 0 {
+		sb.WriteString(" ORDER BY ")
+		sortClauses := make([]string, len(dto.Sorts))
+		for i, sort := range dto.Sorts {
+			sortClauses[i] = fmt.Sprintf("%s %s", sort.Column, sort.Operator)
+		}
+		sb.WriteString(strings.Join(sortClauses, ", "))
+	}
+
+	// LIMIT and OFFSET
+	limit := 100
+	if dto.Limit != nil && lo.FromPtr(dto.Limit) > 0 {
+		limit = lo.FromPtr(dto.Limit)
+	}
+	_, _ = fmt.Fprintf(&sb, " LIMIT %d OFFSET %d;", limit, dto.Offset)
+
+	return sb.String()
 }

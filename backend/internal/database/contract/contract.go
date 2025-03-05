@@ -1,9 +1,7 @@
 package databaseContract
 
 import (
-	"database/sql"
-
-	"gorm.io/gorm"
+	"github.com/dbo-studio/dbo/internal/app/dto"
 )
 
 type DatabaseRepository interface {
@@ -12,8 +10,8 @@ type DatabaseRepository interface {
 	CreateObject(params any) error
 	DropObject(params any) error
 	UpdateObject(params any) error
-	ExecuteQuery(query string, args ...any) (*sql.Rows, error)
-	Execute(query string, args ...any) (*gorm.Statement, error)
+	RunQuery(dto *dto.RunQueryRequest) (*dto.RunQueryResponse, error)
+	RunRawQuery(dto *dto.RawQueryRequest) (*dto.RawQueryResponse, error)
 	GetAvailableActions(nodeType string) []TreeNodeAction
 	GetFormFields(action string) []FormField
 }

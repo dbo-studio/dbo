@@ -8,6 +8,7 @@ import (
 	serviceDatabase "github.com/dbo-studio/dbo/internal/service/database"
 	serviceDesign "github.com/dbo-studio/dbo/internal/service/design"
 	serviceHistory "github.com/dbo-studio/dbo/internal/service/history"
+	serviceQuery "github.com/dbo-studio/dbo/internal/service/query"
 	serviceSavedQuery "github.com/dbo-studio/dbo/internal/service/saved_query"
 	serviceTree "github.com/dbo-studio/dbo/internal/service/tree"
 )
@@ -19,6 +20,7 @@ type Service struct {
 	HistoryService    serviceHistory.IHistoryService
 	SavedQueryService serviceSavedQuery.ISavedQueryService
 	TreeService       serviceTree.ITreeService
+	QueryService      serviceQuery.IQueryService
 }
 
 func NewService(repo *repository.Repository, drivers *driver.DriverEngine, cm *databaseConnection.ConnectionManager) *Service {
@@ -29,5 +31,6 @@ func NewService(repo *repository.Repository, drivers *driver.DriverEngine, cm *d
 		HistoryService:    serviceHistory.NewHistoryService(repo.HistoryRepo),
 		SavedQueryService: serviceSavedQuery.NewSavedQueryService(repo.SavedQueryRepo),
 		TreeService:       serviceTree.NewTreeService(repo.ConnectionRepo, cm),
+		QueryService:      serviceQuery.NewQueryService(repo.ConnectionRepo, cm),
 	}
 }

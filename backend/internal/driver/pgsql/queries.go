@@ -15,7 +15,7 @@ type RunQueryResult struct {
 	Data  []map[string]interface{}
 }
 
-func (p PostgresQueryEngine) RunQuery(dto *dto.RunQueryDto) (*RunQueryResult, error) {
+func (p PostgresQueryEngine) RunQuery(dto *dto.RunQueryRequest) (*RunQueryResult, error) {
 	query := queryGenerator(dto)
 
 	db, err := p.Connect(dto.ConnectionId)
@@ -48,7 +48,7 @@ type RawQueryResult struct {
 	Duration string
 }
 
-func (p PostgresQueryEngine) RawQuery(dto *dto.RawQueryDto) (*RawQueryResult, error) {
+func (p PostgresQueryEngine) RawQuery(dto *dto.RawQueryRequest) (*RawQueryResult, error) {
 	db, err := p.Connect(dto.ConnectionId)
 	if err != nil {
 		return nil, ErrConnection

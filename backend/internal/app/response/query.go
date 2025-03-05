@@ -1,9 +1,10 @@
 package response
 
 import (
+	"slices"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	pgsql "github.com/dbo-studio/dbo/internal/driver/pgsql"
-	"slices"
 )
 
 type runQuery struct {

@@ -253,7 +253,7 @@ func (h *TreeHandler) QueryHandler(c fiber.Ctx) error {
 	//	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	//}
 	//
-	//rows, err := repo.ExecuteQuery(req.Query)
+	//rows, err := repo.RunQuery(req.Query)
 	//if err != nil {
 	//	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	//}

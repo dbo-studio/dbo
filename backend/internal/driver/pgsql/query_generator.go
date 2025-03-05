@@ -7,45 +7,45 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 )
 
-func queryGenerator(dto *dto.RunQueryDto) string {
-	var sb strings.Builder
+func queryGenerator(dto *dto.RunQueryRequest) string {
+	//var sb strings.Builder
+	//
+	//// SELECT clause
+	//selectColumns := "*"
+	//if len(dto.Columns) > 0 {
+	//	selectColumns = strings.Join(dto.Columns, ", ")
+	//}
+	//_, _ = fmt.Fprintf(&sb, "SELECT %s FROM %q", selectColumns, dto.Table)
+	//
+	//// WHERE clause
+	//if len(dto.Filters) > 0 {
+	//	sb.WriteString(" WHERE ")
+	//	for i, filter := range dto.Filters {
+	//		_, _ = fmt.Fprintf(&sb, "%s %s '%s'", filter.Column, filter.Operator, filter.Value)
+	//		if i < len(dto.Filters)-1 {
+	//			_, _ = fmt.Fprintf(&sb, " %s ", filter.Next)
+	//		}
+	//	}
+	//}
+	//
+	//// ORDER BY clause
+	//if len(dto.Sorts) > 0 {
+	//	sb.WriteString(" ORDER BY ")
+	//	sortClauses := make([]string, len(dto.Sorts))
+	//	for i, sort := range dto.Sorts {
+	//		sortClauses[i] = fmt.Sprintf("%s %s", sort.Column, sort.Operator)
+	//	}
+	//	sb.WriteString(strings.Join(sortClauses, ", "))
+	//}
+	//
+	//// LIMIT and OFFSET
+	//limit := 100
+	//if dto.Limit != nil && lo.FromPtr[int](dto.Limit) > 0 {
+	//	limit = lo.FromPtr(dto.Limit)
+	//}
+	//_, _ = fmt.Fprintf(&sb, " LIMIT %d OFFSET %d;", limit, dto.Offset)
 
-	// SELECT clause
-	selectColumns := "*"
-	if len(dto.Columns) > 0 {
-		selectColumns = strings.Join(dto.Columns, ", ")
-	}
-	_, _ = fmt.Fprintf(&sb, "SELECT %s FROM %q", selectColumns, dto.Table)
-
-	// WHERE clause
-	if len(dto.Filters) > 0 {
-		sb.WriteString(" WHERE ")
-		for i, filter := range dto.Filters {
-			_, _ = fmt.Fprintf(&sb, "%s %s '%s'", filter.Column, filter.Operator, filter.Value)
-			if i < len(dto.Filters)-1 {
-				_, _ = fmt.Fprintf(&sb, " %s ", filter.Next)
-			}
-		}
-	}
-
-	// ORDER BY clause
-	if len(dto.Sorts) > 0 {
-		sb.WriteString(" ORDER BY ")
-		sortClauses := make([]string, len(dto.Sorts))
-		for i, sort := range dto.Sorts {
-			sortClauses[i] = fmt.Sprintf("%s %s", sort.Column, sort.Operator)
-		}
-		sb.WriteString(strings.Join(sortClauses, ", "))
-	}
-
-	// LIMIT and OFFSET
-	limit := 100
-	if dto.Limit > 0 {
-		limit = int(dto.Limit)
-	}
-	_, _ = fmt.Fprintf(&sb, " LIMIT %d OFFSET %d;", limit, dto.Offset)
-
-	return sb.String()
+	return ""
 }
 
 func createDBQuery(dto *dto.CreateDatabaseRequest) string {
@@ -65,7 +65,7 @@ func createDBQuery(dto *dto.CreateDatabaseRequest) string {
 	return query
 }
 
-func updateQueryGenerator(dto *dto.UpdateQueryDto) []string {
+func updateQueryGenerator(dto *dto.UpdateQueryRequest) []string {
 	if dto == nil || dto.EditedItems == nil {
 		return nil // Handle nil DTO or EditedItems gracefully
 	}
@@ -111,7 +111,7 @@ func updateQueryGenerator(dto *dto.UpdateQueryDto) []string {
 	return queries
 }
 
-func deleteQueryGenerator(dto *dto.UpdateQueryDto) []string {
+func deleteQueryGenerator(dto *dto.UpdateQueryRequest) []string {
 	if dto == nil || dto.DeletedItems == nil {
 		return nil
 	}
@@ -141,7 +141,7 @@ func deleteQueryGenerator(dto *dto.UpdateQueryDto) []string {
 	return queries
 }
 
-func insertQueryGenerator(dto *dto.UpdateQueryDto) []string {
+func insertQueryGenerator(dto *dto.UpdateQueryRequest) []string {
 	if dto == nil || dto.AddedItems == nil {
 		return nil
 	}

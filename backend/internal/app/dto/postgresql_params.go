@@ -1,7 +1,5 @@
 package dto
 
-import databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
-
 type PostgresqlCreateConnectionParams struct {
 	Database *string `json:"database"`
 	Host     string  `json:"host"`
@@ -32,16 +30,16 @@ type PostgresDropDatabaseParams struct {
 }
 
 type PostgresCreateTableParams struct {
-	Name    string                              `json:"name"`
-	Columns []databaseContract.ColumnDefinition `json:"columns"`
-	Temp    bool                                `json:"temp,omitempty"`
+	Name    string             `json:"name"`
+	Columns []ColumnDefinition `json:"columns"`
+	Temp    bool               `json:"temp,omitempty"`
 }
 
 type PostgresUpdateTableParams struct {
-	OldName    string                              `json:"oldName"`
-	NewName    string                              `json:"newName"`
-	AddColumns []databaseContract.ColumnDefinition `json:"addColumns"`
-	Temp       bool                                `json:"temp,omitempty"`
+	OldName    string             `json:"oldName"`
+	NewName    string             `json:"newName"`
+	AddColumns []ColumnDefinition `json:"addColumns"`
+	Temp       bool               `json:"temp,omitempty"`
 }
 
 type PostgresCreateObjectParams struct {
@@ -63,4 +61,12 @@ type PostgresUpdateObjectParams struct {
 	WithData  bool     `json:"withData,omitempty"`
 	TableName string   `json:"tableName,omitempty"`
 	Columns   []string `json:"columns,omitempty"`
+}
+
+type ColumnDefinition struct {
+	Name     string `json:"name"`
+	DataType string `json:"dataType"`
+	NotNull  bool   `json:"notNull,omitempty"`
+	Primary  bool   `json:"primary,omitempty"`
+	Default  string `json:"default,omitempty"`
 }
