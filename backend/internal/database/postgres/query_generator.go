@@ -1,7 +1,9 @@
 package databasePostgres
 
 import (
+	"database/sql"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -110,6 +112,45 @@ func (r *PostgresRepository) getSequenceList(schema Schema) ([]Sequence, error) 
 	return sequences, err
 }
 
+type Column struct {
+	OrdinalPosition        int32          `gorm:"column:ordinal_position"`
+	ColumnName             string         `gorm:"column:column_name"`
+	DataType               string         `gorm:"column:data_type"`
+	IsNullable             string         `gorm:"column:is_nullable"`
+	ColumnDefault          sql.NullString `gorm:"column:column_default"`
+	CharacterMaximumLength sql.NullInt32  `gorm:"column:character_maximum_length"`
+	Comment                sql.NullString `gorm:"column:column_comment"`
+	MappedType             string         `gorm:"_:"`
+	Editable               bool           `gorm:"_:"`
+	IsActive               bool           `gorm:"_:"`
+}
+
+func (r *PostgresRepository) getColumns(table string, schema string, columnNames []string, editable bool) ([]Column, error) {
+	columns := make([]Column, 0)
+
+	err := r.db.Table("information_schema.columns AS cols").
+		Select("cols.ordinal_position, cols.column_name, cols.data_type, cols.is_nullable, cols.column_default, cols.character_maximum_length, des.description AS column_comment").
+		Joins("LEFT JOIN pg_catalog.pg_description AS des ON (des.objoid = (SELECT c.oid FROM pg_catalog.pg_class AS c WHERE c.relname = cols.table_name) AND des.objsubid = cols.ordinal_position)").
+		Where("cols.table_schema = ? AND cols.table_name = ?", schema, table).
+		Order("cols.ordinal_position").
+		Scan(&columns).Error
+
+	for i, column := range columns {
+		columns[i].MappedType = columnMappedFormat(column.DataType)
+		columns[i].Editable = editable
+		columns[i].IsActive = true
+		if len(columnNames) > 0 {
+			columns[i].IsActive = slices.Contains(columnNames, column.ColumnName)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return columns, err
+}
+
 func queryGenerator(dto *dto.RunQueryRequest, node PGNode) string {
 	var sb strings.Builder
 
@@ -146,7 +187,13 @@ func queryGenerator(dto *dto.RunQueryRequest, node PGNode) string {
 	if dto.Limit != nil && lo.FromPtr(dto.Limit) > 0 {
 		limit = lo.FromPtr(dto.Limit)
 	}
-	_, _ = fmt.Fprintf(&sb, " LIMIT %d OFFSET %d;", limit, dto.Offset)
+
+	offset := 0
+	if dto.Offset != nil && lo.FromPtr(dto.Offset) > 0 {
+		offset = lo.FromPtr(dto.Offset)
+	}
+
+	_, _ = fmt.Fprintf(&sb, " LIMIT %d OFFSET %d;", limit, offset)
 
 	return sb.String()
 }

@@ -1,6 +1,11 @@
 package databasePostgres
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/samber/lo"
+)
 
 type PGNode struct {
 	Database string
@@ -8,27 +13,18 @@ type PGNode struct {
 	Table    string
 }
 
-func ExtractNode(node string) PGNode {
-	//"shopping_order.public.business_notifications"
-	extracted := strings.Split(node, ".")
-	database := ""
-	schema := ""
-	table := ""
+func extractNode(node string) PGNode {
+	parts := strings.Split(node, ".")
 
-	if len(extracted) == 0 {
-		return PGNode{}
-	}
+	var database, schema, table string
 
-	if len(extracted) == 1 {
-		database = extracted[0]
-	}
-
-	if len(extracted) == 2 {
-		schema = extracted[1]
-	}
-
-	if len(extracted) == 3 {
-		table = extracted[2]
+	switch len(parts) {
+	case 1:
+		database = parts[0]
+	case 2:
+		database, schema = parts[0], parts[1]
+	case 3:
+		database, schema, table = parts[0], parts[1], parts[2]
 	}
 
 	return PGNode{
@@ -53,4 +49,37 @@ func columnMappedFormat(dataType string) string {
 	default:
 		return "string"
 	}
+}
+
+func columnListToResponse(columns []Column) []dto.GetDesignColumn {
+	data := make([]dto.GetDesignColumn, 0)
+	for _, column := range columns {
+		var col dto.GetDesignColumn
+
+		col.Name = column.ColumnName
+		col.Type = column.DataType
+		col.MappedType = column.MappedType
+		col.Editable = column.Editable
+		col.IsActive = column.IsActive
+
+		if column.IsNullable == "NO" {
+			col.NotNull = false
+		}
+
+		if column.CharacterMaximumLength.Valid {
+			col.Length = lo.ToPtr[int32](column.CharacterMaximumLength.Int32)
+		}
+
+		if column.ColumnDefault.Valid {
+			col.Default = lo.ToPtr[string](column.ColumnDefault.String)
+		}
+
+		if column.Comment.Valid {
+			col.Comment = lo.ToPtr[string](column.Comment.String)
+		}
+
+		data = append(data, col)
+	}
+
+	return data
 }

@@ -59,7 +59,6 @@ func (i IDesignServiceImpl) ColumnList(ctx context.Context, req *dto.GetDesignCo
 	return &dto.GetDesignColumnResponse{
 		Columns: i.ColumnsFormater(ctx, structures),
 	}, nil
-
 }
 
 func (i IDesignServiceImpl) ColumnsFormater(_ context.Context, structures []pgsql.Structure) []dto.GetDesignColumn {

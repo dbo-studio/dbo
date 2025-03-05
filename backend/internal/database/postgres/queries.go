@@ -9,7 +9,7 @@ import (
 )
 
 func runQuery(r *PostgresRepository, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
-	node := ExtractNode(req.NodeId)
+	node := extractNode(req.NodeId)
 	query := queryGenerator(req, node)
 	queryResults := make([]map[string]interface{}, 0)
 
@@ -22,11 +22,17 @@ func runQuery(r *PostgresRepository, req *dto.RunQueryRequest) (*dto.RunQueryRes
 		queryResults[i]["dbo_index"] = i
 	}
 
+	columns, err := r.getColumns(node.Table, node.Schema, req.Columns, true)
+	if err != nil {
+		return nil, result.Error
+	}
+
 	//p.DBLogger(query)
 
 	return &dto.RunQueryResponse{
-		Query: query,
-		Data:  queryResults,
+		Query:      query,
+		Structures: columnListToResponse(columns),
+		Data:       queryResults,
 	}, nil
 }
 

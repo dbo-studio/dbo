@@ -21,7 +21,7 @@ func NewQueryHandler(logger logger.Logger, queryService serviceQuery.IQueryServi
 func (h QueryHandler) Run(c fiber.Ctx) error {
 	req := new(dto.RunQueryRequest)
 
-	if err := c.Bind().Query(req); err != nil {
+	if err := c.Bind().Body(req); err != nil {
 		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
 	}
 
