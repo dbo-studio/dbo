@@ -1,6 +1,6 @@
 package dto
 
-import "database/sql"
+import "github.com/invopop/validation"
 
 type (
 	RawQueryRequest struct {
@@ -11,21 +11,27 @@ type (
 	RawQueryResponse struct {
 		Query    string
 		Data     []map[string]interface{}
-		Columns  []Structure
+		Columns  []Column
 		IsQuery  bool
 		Duration string
 	}
 )
 
-type Structure struct {
-	OrdinalPosition        int32          `gorm:"column:ordinal_position"`
-	ColumnName             string         `gorm:"column:column_name"`
-	DataType               string         `gorm:"column:data_type"`
-	IsNullable             string         `gorm:"column:is_nullable"`
-	ColumnDefault          sql.NullString `gorm:"column:column_default"`
-	CharacterMaximumLength sql.NullInt32  `gorm:"column:character_maximum_length"`
-	Comment                sql.NullString `gorm:"column:column_comment"`
-	MappedType             string         `gorm:"_:"`
-	Editable               bool           `gorm:"_:"`
-	IsActive               bool           `gorm:"_:"`
+type Column struct {
+	Name       string  `json:"name"`
+	Type       string  `json:"type"`
+	NotNull    bool    `json:"not_null"`
+	Length     *int32  `json:"length"`
+	Default    *string `json:"default"`
+	Comment    *string `json:"comment"`
+	MappedType string  `json:"mapped_type"`
+	Editable   bool    `json:"editable"`
+	IsActive   bool    `json:"is_active"`
+}
+
+func (req RawQueryRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
+		validation.Field(&req.Query, validation.Required),
+	)
 }

@@ -38,21 +38,18 @@ func (i IQueryServiceImpl) Run(ctx context.Context, req *dto.RunQueryRequest) (*
 	}
 
 	return repo.RunQuery(req)
-
-	//runQueryResult, err := h.drivers.Pgsql.RunQuery(req)
-	//if err != nil {
-	//	h.logger.Error(err.Error())
-	//	return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
-	//}
-	//
-	//columns, err := h.designService.ColumnList(c.Context(), &dto.GetDesignColumnRequest{
-	//	ConnectionId: req.ConnectionId,
-	//	Table:        req.Table,
-	//	Schema:       req.Schema,
-	//}, true)
 }
 
 func (i IQueryServiceImpl) Raw(ctx context.Context, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	connection, err := i.connectionRepo.Find(ctx, req.ConnectionId)
+	if err != nil {
+		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	repo, err := database.NewDatabaseRepository(connection, i.cm)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	return repo.RunRawQuery(req)
 }

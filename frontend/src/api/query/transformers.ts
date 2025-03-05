@@ -5,7 +5,7 @@ export const transformRunQuery = (data: any): RunQueryResponseType => {
   return {
     query: data?.query,
     data: data?.data,
-    structures: transformStructures(data?.structures ?? [])
+    structures: transformStructures(data?.columns ?? [])
   };
 };
 

@@ -1,6 +1,8 @@
 package dto
 
-import "github.com/invopop/validation"
+import (
+	"github.com/invopop/validation"
+)
 
 type (
 	RunQueryRequest struct {
@@ -14,21 +16,11 @@ type (
 	}
 
 	RunQueryResponse struct {
-		Query      string            `json:"query"`
-		Data       any               `json:"data"`
-		Structures []GetDesignColumn `json:"structures"`
+		Query   string   `json:"query"`
+		Data    any      `json:"data"`
+		Columns []Column `json:"columns"`
 	}
 )
-
-type EditedItem struct {
-	Conditions map[string]any `json:"conditions"`
-	Values     map[string]any `json:"values"`
-}
-
-type DeleteQueryDto struct {
-	ConnectionId int32  `json:"connection_id" validate:"required,gte=0"`
-	Query        string `json:"query" validate:"required,gte=0"`
-}
 
 type FilterDto struct {
 	Column   string `json:"column"`
@@ -48,19 +40,14 @@ func (req RunQueryRequest) Validate() error {
 		validation.Field(&req.NodeId, validation.Required, validation.Length(0, 120)),
 		validation.Field(&req.Limit, validation.Min(1)),
 		validation.Field(&req.Offset, validation.Min(1)),
-	)
-}
-
-func (req EditedItem) Validate() error {
-	return validation.ValidateStruct(&req,
-		validation.Field(&req.Conditions, validation.Required),
-		validation.Field(&req.Values, validation.Required),
+		validation.Field(&req.Filters),
+		validation.Field(&req.Sorts),
 	)
 }
 
 func (req FilterDto) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.Column, validation.Required),
+		validation.Field(&req.Column, validation.Required, validation.Length(12, 120)),
 		validation.Field(&req.Operator, validation.Required),
 		validation.Field(&req.Value, validation.Required),
 		validation.Field(&req.Next, validation.Required),

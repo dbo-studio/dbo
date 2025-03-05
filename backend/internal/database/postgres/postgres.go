@@ -49,7 +49,12 @@ func (r *PostgresRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryRe
 }
 
 func (r *PostgresRepository) RunRawQuery(req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
-	return runRawQuery(r, req)
+	result, err := runRawQuery(r, req)
+	if err != nil || !result.IsQuery {
+		return commandResponseBuilder(result, err), nil
+	}
+
+	return result, nil
 }
 
 func (r *PostgresRepository) GetAvailableActions(nodeType string) []databaseContract.TreeNodeAction {

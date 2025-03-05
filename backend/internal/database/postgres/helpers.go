@@ -51,10 +51,10 @@ func columnMappedFormat(dataType string) string {
 	}
 }
 
-func columnListToResponse(columns []Column) []dto.GetDesignColumn {
-	data := make([]dto.GetDesignColumn, 0)
+func columnListToResponse(columns []Column) []dto.Column {
+	data := make([]dto.Column, 0)
 	for _, column := range columns {
-		var col dto.GetDesignColumn
+		var col dto.Column
 
 		col.Name = column.ColumnName
 		col.Type = column.DataType

@@ -30,9 +30,9 @@ func runQuery(r *PostgresRepository, req *dto.RunQueryRequest) (*dto.RunQueryRes
 	//p.DBLogger(query)
 
 	return &dto.RunQueryResponse{
-		Query:      query,
-		Structures: columnListToResponse(columns),
-		Data:       queryResults,
+		Query:   query,
+		Columns: columnListToResponse(columns),
+		Data:    queryResults,
 	}, nil
 }
 
@@ -78,12 +78,12 @@ func runRawQuery(r *PostgresRepository, req *dto.RawQueryRequest) (*dto.RawQuery
 		queryResults[i]["editable"] = false
 	}
 
-	structures := make([]dto.Structure, 0)
+	structures := make([]dto.Column, 0)
 
 	for i, column := range columns {
-		structures = append(structures, dto.Structure{
-			ColumnName: column,
-			DataType:   strings.ToLower(columnTypes[i].DatabaseTypeName()),
+		structures = append(structures, dto.Column{
+			Name:       column,
+			Type:       strings.ToLower(columnTypes[i].DatabaseTypeName()),
 			MappedType: columnMappedFormat(columnTypes[i].Name()),
 			IsActive:   true,
 		})
@@ -98,4 +98,53 @@ func runRawQuery(r *PostgresRepository, req *dto.RawQueryRequest) (*dto.RawQuery
 		IsQuery:  isQuery(req.Query),
 		Duration: helper.FloatToString(endTime.Seconds()),
 	}, nil
+}
+
+func commandResponseBuilder(queryResult *dto.RawQueryResponse, err error) *dto.RawQueryResponse {
+	message := "OK"
+	if err != nil {
+		message = err.Error()
+	}
+
+	newStructures := []dto.Column{
+		{
+			Name:       "Query",
+			Type:       "Varchar",
+			MappedType: "string",
+			NotNull:    false,
+			Length:     nil,
+			Default:    nil,
+			IsActive:   true,
+		},
+		{
+			Name:       "Message",
+			Type:       "Varchar",
+			MappedType: "string",
+			NotNull:    false,
+			Length:     nil,
+			Default:    nil,
+			IsActive:   true,
+		},
+		{
+			Name:       "Time",
+			Type:       "Varchar",
+			MappedType: "string",
+			NotNull:    false,
+			Length:     nil,
+			Default:    nil,
+			IsActive:   true,
+		},
+	}
+
+	return &dto.RawQueryResponse{
+		Query: queryResult.Query,
+		Data: []map[string]interface{}{
+			{
+				"Query":    queryResult.Query,
+				"Message":  message,
+				"Duration": queryResult.Duration,
+			},
+		},
+		Columns: newStructures,
+	}
 }
