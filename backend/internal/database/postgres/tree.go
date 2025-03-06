@@ -8,12 +8,30 @@ import (
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
+func (r *PostgresRepository) Tree(parentID string) (*contract.TreeNode, error) {
+	if parentID == "" {
+		return buildRoot(r)
+	}
+
+	parts := strings.Split(parentID, ".")
+	switch len(parts) {
+	case 1:
+		return buildDatabase(r, parts[0])
+	case 2:
+		return buildSchema(r, parts[0], parts[1])
+	case 3:
+		return buildContainer(r, parts[0], parts[1], parts[2])
+	default:
+		return nil, fmt.Errorf("unsupported parent_id: %s", parentID)
+	}
+}
+
 func buildRoot(r *PostgresRepository) (*contract.TreeNode, error) {
 	root := &contract.TreeNode{
 		ID:          fmt.Sprintf("%d@database", r.connection.ID),
 		Name:        fmt.Sprintf("%d@databases", r.connection.ID),
 		Type:        "database_container",
-		ContextMenu: r.GetAvailableActions("database_container"),
+		ContextMenu: r.Actions("database_container"),
 		Children:    make([]contract.TreeNode, 0),
 	}
 	databases, err := r.getDatabaseList()
@@ -25,7 +43,7 @@ func buildRoot(r *PostgresRepository) (*contract.TreeNode, error) {
 			ID:          db.Name,
 			Name:        db.Name,
 			Type:        "database",
-			ContextMenu: r.GetAvailableActions("database"),
+			ContextMenu: r.Actions("database"),
 			Children:    make([]contract.TreeNode, 0),
 		})
 	}
@@ -37,7 +55,7 @@ func buildDatabase(r *PostgresRepository, dbName string) (*contract.TreeNode, er
 		ID:          dbName,
 		Name:        dbName,
 		Type:        "database",
-		ContextMenu: r.GetAvailableActions("database"),
+		ContextMenu: r.Actions("database"),
 		Children:    make([]contract.TreeNode, 0),
 	}
 	schemas, err := r.getSchemaList(Database{Name: dbName})
@@ -49,7 +67,7 @@ func buildDatabase(r *PostgresRepository, dbName string) (*contract.TreeNode, er
 			ID:          fmt.Sprintf("%s.%s", dbName, schema.Name),
 			Name:        schema.Name,
 			Type:        "schema",
-			ContextMenu: r.GetAvailableActions("schema"),
+			ContextMenu: r.Actions("schema"),
 			Children:    make([]contract.TreeNode, 0),
 		})
 	}
@@ -61,7 +79,7 @@ func buildSchema(r *PostgresRepository, dbName, schemaName string) (*contract.Tr
 		ID:          fmt.Sprintf("%s.%s", dbName, schemaName),
 		Name:        schemaName,
 		Type:        "schema",
-		ContextMenu: r.GetAvailableActions("schema"),
+		ContextMenu: r.Actions("schema"),
 		Children:    make([]contract.TreeNode, 0),
 	}
 	containers := []struct {
@@ -69,11 +87,11 @@ func buildSchema(r *PostgresRepository, dbName, schemaName string) (*contract.Tr
 		name        string
 		contextMenu []contract.TreeNodeAction
 	}{
-		{"tables", "Tables", r.GetAvailableActions("table")},
-		{"views", "Views", r.GetAvailableActions("view")},
-		{"materialized_views", "Materialized Views", r.GetAvailableActions("materialized_view")},
-		{"indexes", "Indexes", r.GetAvailableActions("index")},
-		{"sequences", "Sequences", r.GetAvailableActions("sequence")},
+		{"tables", "Tables", r.Actions("table")},
+		{"views", "Views", r.Actions("view")},
+		{"materialized_views", "Materialized Views", r.Actions("materialized_view")},
+		{"indexes", "Indexes", r.Actions("index")},
+		{"sequences", "Sequences", r.Actions("sequence")},
 	}
 	for _, c := range containers {
 		schemaNode.Children = append(schemaNode.Children, contract.TreeNode{
@@ -92,7 +110,7 @@ func buildContainer(r *PostgresRepository, dbName, schemaName, container string)
 		ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, container),
 		Name:        strings.TrimSuffix(container, "s"),
 		Type:        container,
-		ContextMenu: r.GetAvailableActions(container),
+		ContextMenu: r.Actions(container),
 		Children:    make([]contract.TreeNode, 0),
 	}
 	switch container {
@@ -117,7 +135,7 @@ func buildContainer(r *PostgresRepository, dbName, schemaName, container string)
 						"id":   fmt.Sprintf("%s.%s.%s", dbName, schemaName, table.Name),
 					},
 				},
-				ContextMenu: r.GetAvailableActions("table"),
+				ContextMenu: r.Actions("table"),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}
@@ -131,7 +149,7 @@ func buildContainer(r *PostgresRepository, dbName, schemaName, container string)
 				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, view.Name),
 				Name:        view.Name,
 				Type:        "view",
-				ContextMenu: r.GetAvailableActions("view"),
+				ContextMenu: r.Actions("view"),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}
@@ -145,7 +163,7 @@ func buildContainer(r *PostgresRepository, dbName, schemaName, container string)
 				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, mv.Name),
 				Name:        mv.Name,
 				Type:        "materialized_view",
-				ContextMenu: r.GetAvailableActions("materialized_view"),
+				ContextMenu: r.Actions("materialized_view"),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}
@@ -159,7 +177,7 @@ func buildContainer(r *PostgresRepository, dbName, schemaName, container string)
 				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, index.Name),
 				Name:        index.Name,
 				Type:        "index",
-				ContextMenu: r.GetAvailableActions("index"),
+				ContextMenu: r.Actions("index"),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}
@@ -173,7 +191,7 @@ func buildContainer(r *PostgresRepository, dbName, schemaName, container string)
 				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, sequence.Name),
 				Name:        sequence.Name,
 				Type:        "sequence",
-				ContextMenu: r.GetAvailableActions("sequence"),
+				ContextMenu: r.Actions("sequence"),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}
@@ -181,22 +199,4 @@ func buildContainer(r *PostgresRepository, dbName, schemaName, container string)
 		return nil, fmt.Errorf("unsupported container type: %s", container)
 	}
 	return containerNode, nil
-}
-
-func buildTree(r *PostgresRepository, parentID string) (*contract.TreeNode, error) {
-	if parentID == "" {
-		return buildRoot(r)
-	}
-
-	parts := strings.Split(parentID, ".")
-	switch len(parts) {
-	case 1:
-		return buildDatabase(r, parts[0])
-	case 2:
-		return buildSchema(r, parts[0], parts[1])
-	case 3:
-		return buildContainer(r, parts[0], parts[1], parts[2])
-	default:
-		return nil, fmt.Errorf("unsupported parent_id: %s", parentID)
-	}
 }

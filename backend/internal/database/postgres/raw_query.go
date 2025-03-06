@@ -8,32 +8,13 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func runQuery(r *PostgresRepository, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
-	node := extractNode(req.NodeId)
-	query := queryGenerator(req, node)
-	queryResults := make([]map[string]interface{}, 0)
-
-	result := r.db.Raw(query).Find(&queryResults)
-	if result.Error != nil {
-		return nil, result.Error
+func (r *PostgresRepository) RunRawQuery(req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
+	result, err := runRawQuery(r, req)
+	if err != nil || !result.IsQuery {
+		return commandResponseBuilder(result, err), nil
 	}
 
-	for i := range queryResults {
-		queryResults[i]["dbo_index"] = i
-	}
-
-	columns, err := r.getColumns(node.Table, node.Schema, req.Columns, true)
-	if err != nil {
-		return nil, result.Error
-	}
-
-	//p.DBLogger(query)
-
-	return &dto.RunQueryResponse{
-		Query:   query,
-		Columns: columnListToResponse(columns),
-		Data:    queryResults,
-	}, nil
+	return result, nil
 }
 
 func runRawQuery(r *PostgresRepository, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {

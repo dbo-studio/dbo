@@ -39,7 +39,7 @@ func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (a
 		return nil, apperror.InternalServerError(err)
 	}
 
-	tree, err := repo.BuildTree(req.ParentId)
+	tree, err := repo.Tree(req.ParentId)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}

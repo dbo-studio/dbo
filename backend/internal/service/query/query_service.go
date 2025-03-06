@@ -13,6 +13,8 @@ import (
 type IQueryService interface {
 	Run(ctx context.Context, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error)
 	Raw(ctx context.Context, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error)
+	Update(ctx context.Context, req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error)
+	//AutoComplete(ctx context.Context, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error)
 }
 
 var _ IQueryService = (*IQueryServiceImpl)(nil)
@@ -52,4 +54,18 @@ func (i IQueryServiceImpl) Raw(ctx context.Context, req *dto.RawQueryRequest) (*
 	}
 
 	return repo.RunRawQuery(req)
+}
+
+func (i IQueryServiceImpl) Update(ctx context.Context, req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error) {
+	connection, err := i.connectionRepo.Find(ctx, req.ConnectionId)
+	if err != nil {
+		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	repo, err := database.NewDatabaseRepository(connection, i.cm)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	return repo.UpdateQuery(req)
 }

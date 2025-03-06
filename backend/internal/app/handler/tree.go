@@ -47,7 +47,7 @@ func (h *TreeHandler) FormFieldsHandler(c fiber.Ctx) error {
 	//	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	//}
 	//
-	//fields := repo.GetFormFields(action)
+	//fields := repo.FormFields(action)
 	//return c.JSON(fields)
 }
 
@@ -66,7 +66,7 @@ func (h *TreeHandler) GetObjectHandler(c fiber.Ctx) error {
 	//	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	//}
 	//
-	//data, err := repo.GetObjectData(nodeID, objType)
+	//data, err := repo.objects(nodeID, objType)
 	//if err != nil {
 	//	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	//}

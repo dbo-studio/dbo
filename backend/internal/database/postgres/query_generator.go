@@ -2,12 +2,7 @@ package databasePostgres
 
 import (
 	"database/sql"
-	"fmt"
 	"slices"
-	"strings"
-
-	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/samber/lo"
 )
 
 type Database struct {
@@ -151,49 +146,16 @@ func (r *PostgresRepository) getColumns(table string, schema string, columnNames
 	return columns, err
 }
 
-func queryGenerator(dto *dto.RunQueryRequest, node PGNode) string {
-	var sb strings.Builder
+type Template struct {
+	Name string `gorm:"column:datname"`
+}
 
-	// SELECT clause
-	selectColumns := "*"
-	if len(dto.Columns) > 0 {
-		selectColumns = strings.Join(dto.Columns, ", ")
-	}
-	_, _ = fmt.Fprintf(&sb, "SELECT %s FROM %q", selectColumns, node.Table)
+func (r *PostgresRepository) getTemplates() ([]Template, error) {
+	var templates []Template
+	err := r.db.Table("pg_database").
+		Select("datname").
+		Where("datistemplate = true").
+		Scan(&templates).Error
 
-	// WHERE clause
-	if len(dto.Filters) > 0 {
-		sb.WriteString(" WHERE ")
-		for i, filter := range dto.Filters {
-			_, _ = fmt.Fprintf(&sb, "%s %s '%s'", filter.Column, filter.Operator, filter.Value)
-			if i < len(dto.Filters)-1 {
-				_, _ = fmt.Fprintf(&sb, " %s ", filter.Next)
-			}
-		}
-	}
-
-	// ORDER BY clause
-	if len(dto.Sorts) > 0 {
-		sb.WriteString(" ORDER BY ")
-		sortClauses := make([]string, len(dto.Sorts))
-		for i, sort := range dto.Sorts {
-			sortClauses[i] = fmt.Sprintf("%s %s", sort.Column, sort.Operator)
-		}
-		sb.WriteString(strings.Join(sortClauses, ", "))
-	}
-
-	// LIMIT and OFFSET
-	limit := 100
-	if dto.Limit != nil && lo.FromPtr(dto.Limit) > 0 {
-		limit = lo.FromPtr(dto.Limit)
-	}
-
-	offset := 0
-	if dto.Offset != nil && lo.FromPtr(dto.Offset) > 0 {
-		offset = lo.FromPtr(dto.Offset)
-	}
-
-	_, _ = fmt.Fprintf(&sb, " LIMIT %d OFFSET %d;", limit, offset)
-
-	return sb.String()
+	return templates, err
 }

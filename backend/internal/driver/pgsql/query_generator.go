@@ -99,8 +99,8 @@ func updateQueryGenerator(dto *dto.UpdateQueryRequest) []string {
 
 		query := fmt.Sprintf(
 			`UPDATE "%s"."%s" SET %s WHERE %s`,
-			dto.Schema,
-			dto.Table,
+			"dto.Schema",
+			"dto.Table",
 			strings.Join(setClauses, ", "),
 			strings.Join(whereClauses, " AND "),
 		)
@@ -130,8 +130,8 @@ func deleteQueryGenerator(dto *dto.UpdateQueryRequest) []string {
 
 		query := fmt.Sprintf(
 			`DELETE FROM "%s"."%s" WHERE %s`,
-			dto.Schema,
-			dto.Table,
+			"dto.Schema",
+			"dto.Table",
 			strings.Join(conditions, " AND "),
 		)
 
@@ -169,8 +169,8 @@ func insertQueryGenerator(dto *dto.UpdateQueryRequest) []string {
 
 		query := fmt.Sprintf(
 			`INSERT INTO "%s"."%s" (%s) VALUES (%s)`,
-			dto.Schema,
-			dto.Table,
+			"dto.Schema",
+			"dto.Table",
 			strings.Join(columns, ", "),
 			strings.Join(values, ", "),
 		)
