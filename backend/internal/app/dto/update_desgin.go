@@ -8,7 +8,7 @@ import (
 
 type (
 	UpdateDesignRequest struct {
-		ConnectionId int32            `json:"connection_id"`
+		ConnectionId int32            `json:"connectionId"`
 		Table        string           `json:"table"`
 		Schema       string           `json:"schema"`
 		Database     string           `json:"database"`
@@ -18,7 +18,7 @@ type (
 	}
 	UpdateDesignResponse struct {
 		Query        []string `json:"query"`
-		RowsAffected int      `json:"rows_affected"`
+		RowsAffected int      `json:"rowsAffected"`
 	}
 )
 
@@ -27,7 +27,7 @@ type (
 		Name    string             `json:"name"`
 		Length  *int               `json:"length"`
 		Type    *string            `json:"type"`
-		IsNull  *bool              `json:"is_null"`
+		IsNull  *bool              `json:"isNull"`
 		Default *DesignItemDefault `json:"default"`
 		Comment *string            `json:"comment"`
 		Rename  *string            `json:"rename"`
@@ -36,14 +36,14 @@ type (
 		Name    string             `json:"name"`
 		Length  *int               `json:"length"`
 		Type    string             `json:"type"`
-		IsNull  *bool              `json:"is_null"`
+		IsNull  *bool              `json:"isNull"`
 		Default *DesignItemDefault `json:"default"`
 		Comment *string            `json:"comment"`
 	}
 
 	DesignItemDefault struct {
-		MakeNull  *bool   `json:"make_null"`
-		MakeEmpty *bool   `json:"make_empty"`
+		MakeNull  *bool   `json:"makeNull"`
+		MakeEmpty *bool   `json:"makeEmpty"`
 		Value     *string `json:"value"`
 	}
 )

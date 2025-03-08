@@ -1,7 +1,6 @@
 export type RowType = any;
 
 export interface ColumnType {
-  key: string;
   name: string;
   type: string;
   isActive: boolean;

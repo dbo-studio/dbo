@@ -4,11 +4,11 @@ import "github.com/invopop/validation"
 
 type (
 	CreateDatabaseRequest struct {
-		ConnectionId int32   `json:"connection_id"`
+		ConnectionId int32   `json:"connectionId"`
 		Name         string  `json:"name"`
 		Template     *string `json:"template"`
 		Encoding     *string `json:"encoding"`
-		TableSpace   *string `json:"table_space"`
+		TableSpace   *string `json:"tableSpace"`
 	}
 )
 

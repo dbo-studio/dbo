@@ -3,11 +3,11 @@ import api from '@/core/services/api';
 import { transformTree } from './transformers';
 import type { TreeRequestType, TreeResponseType } from '@/api/object/types.ts';
 
-export const getTree = async ({ connection_id, parent_id }: TreeRequestType): Promise<TreeResponseType> => {
+export const getTree = async ({ connectionId, parentId }: TreeRequestType): Promise<TreeResponseType> => {
   return api
     .get(GET_TREE(), {
-      connection_id,
-      parent_id
+      connectionId,
+      parentId
     })
     .then(transformTree);
 };

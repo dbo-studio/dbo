@@ -4,9 +4,9 @@ import type { DatabaseMetaDataType } from './types';
 export const transformDatabaseMetaData = (data: any): DatabaseMetaDataType => {
   return {
     templates: data?.templates,
-    tableSpaces: data?.table_spaces,
+    tableSpaces: data?.tableSpaces,
     encodings: data?.encodings,
-    dataTypes: data?.data_types
+    dataTypes: data?.dataTypes
   };
 };
 
@@ -16,9 +16,9 @@ export const transformConnectionDetail = (data: any): ConnectionType => {
     name: data?.name,
     type: data?.type,
     driver: data?.driver,
-    currentDatabase: data?.current_database,
-    currentSchema: data?.current_schema,
-    isActive: data?.is_active,
+    currentDatabase: data?.currentDatabase,
+    currentSchema: data?.currentSchema,
+    isActive: data?.isActive,
     auth: transformAuthData(data?.auth),
     databases: data?.databases,
     schemas: data?.schemas,

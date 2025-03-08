@@ -9,7 +9,7 @@ type (
 		Name     string      `json:"name"`
 		Type     string      `json:"type"`
 		Driver   string      `json:"driver"`
-		IsActive bool        `json:"is_active"`
+		IsActive bool        `json:"isActive"`
 		Auth     AuthDetails `json:"auth"`
 	}
 

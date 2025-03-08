@@ -4,16 +4,16 @@ import "github.com/invopop/validation"
 
 type (
 	UpdateQueryRequest struct {
-		ConnectionId int32            `json:"connection_id" validate:"required,gte=0"`
-		NodeId       string           `json:"table" validate:"required"`
-		EditedItems  []EditedItem     `json:"edited" validate:"dive"`
+		ConnectionId int32            `json:"connectionId"`
+		NodeId       string           `json:"nodeId"`
+		EditedItems  []EditedItem     `json:"edited"`
 		DeletedItems []map[string]any `json:"deleted"`
 		AddedItems   []map[string]any `json:"added"`
 	}
 
 	UpdateQueryResponse struct {
-		Query        []string
-		RowsAffected int
+		Query        []string `json:"query"`
+		RowsAffected int      `json:"rowAffected"`
 	}
 )
 

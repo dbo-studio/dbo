@@ -1,34 +1,43 @@
-import api from '@/core/services/api';
-import { AUTOCOMPLETE_QUERY, RUN_QUERY, RUN_RAW_QUERY, UPDATE_QUERY } from './endpoints';
-import { transformAutoComplete, transformRunQuery } from './transformers';
-import type { AutoCompleteRequestType, RunQueryType, RunRawQueryType, UpdateQueryType } from './types';
+import { api } from '@/core/api';
+import type {
+  AutoCompleteRequestType,
+  RunQueryRequestType,
+  RunQueryResponseType,
+  RunRawQueryRequestType,
+  UpdateQueryRequestType,
+  UpdateQueryResponseType
+} from './types';
+import type { AutoCompleteType } from '@/types';
 
-export const runQuery = async (data: RunQueryType) => {
-  return api.post(RUN_QUERY(), data).then(transformRunQuery);
+const endpoint = {
+  runQuery: () => '/query/run',
+  runRawQuery: () => '/query/raw',
+  updateQuery: () => '/query/update',
+  autoComplete: () => '/query/autocomplete'
 };
 
-export const runRawQuery = async (data: RunRawQueryType) => {
-  return api.post(RUN_RAW_QUERY(), data).then(transformRunQuery);
+export const runQuery = async (data: RunQueryRequestType): Promise<RunQueryResponseType> => {
+  return (await api.post(endpoint.runQuery(), data)).data.data as RunQueryResponseType;
 };
 
-export const autoComplete = async (data: AutoCompleteRequestType) => {
-  return api.get(AUTOCOMPLETE_QUERY(), data).then(transformAutoComplete);
+export const runRawQuery = async (data: RunRawQueryRequestType): Promise<RunQueryResponseType> => {
+  return (await api.post(endpoint.runRawQuery(), data)).data.data as RunQueryResponseType;
 };
 
-export const updateQuery = async (data: UpdateQueryType) => {
+export const autoComplete = async (data: AutoCompleteRequestType): Promise<AutoCompleteType> => {
+  return (await api.get(endpoint.autoComplete(), { params: data })).data.data as AutoCompleteType;
+};
+
+export const updateQuery = async (data: UpdateQueryRequestType): Promise<UpdateQueryResponseType> => {
   const formattedData: {
-    connection_id: number;
-    table: string;
-    schema: string;
-    database: string;
+    connectionId: number;
+    nodeId: string;
     edited: object[];
     deleted: object[];
     added: object[];
   } = {
-    connection_id: data.connection_id,
-    table: data.table,
-    schema: data.schema,
-    database: data.database,
+    connectionId: data.connectionId,
+    nodeId: data.nodeId,
     edited: [],
     deleted: data.removed,
     added: data.added
@@ -41,5 +50,5 @@ export const updateQuery = async (data: UpdateQueryType) => {
     });
   }
 
-  return api.post(UPDATE_QUERY(), formattedData).then(transformRunQuery);
+  return (await api.post(endpoint.updateQuery(), formattedData)).data.data as UpdateQueryResponseType;
 };

@@ -6,8 +6,8 @@ import (
 
 type (
 	RunQueryRequest struct {
-		ConnectionId int32       `json:"connection_id"`
-		NodeId       string      `json:"node_id"`
+		ConnectionId int32       `json:"connectionId"`
+		NodeId       string      `json:"nodeId"`
 		Limit        *int        `json:"limit"`
 		Offset       *int        `json:"offset"`
 		Filters      []FilterDto `json:"filters"`
@@ -47,7 +47,7 @@ func (req RunQueryRequest) Validate() error {
 
 func (req FilterDto) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.Column, validation.Required, validation.Length(12, 120)),
+		validation.Field(&req.Column, validation.Required, validation.Length(0, 120)),
 		validation.Field(&req.Operator, validation.Required),
 		validation.Field(&req.Value, validation.Required),
 		validation.Field(&req.Next, validation.Required),

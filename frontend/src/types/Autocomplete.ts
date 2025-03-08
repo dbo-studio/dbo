@@ -3,7 +3,5 @@ export type AutoCompleteType = {
   views: string[];
   schemas: string[];
   tables: string[];
-  columns: {
-    [key: string]: string[];
-  };
+  columns: Record<string, string[]>;
 };

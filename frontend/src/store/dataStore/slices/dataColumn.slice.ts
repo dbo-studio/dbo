@@ -39,7 +39,7 @@ export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, []
     const columns = get()
       .getColumns()
       .map((c) => {
-        if (c.key === column.key) {
+        if (c.name === column.name) {
           return column;
         }
         return c;

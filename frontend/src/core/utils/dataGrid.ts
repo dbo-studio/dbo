@@ -7,16 +7,7 @@ export const formatServerColumns = (serverColumns: ColumnType[]): any => {
   const arr: ColumnType[] = [];
   for (const column of serverColumns) {
     arr.push({
-      key: column.key,
-      name: column.name,
-      type: column.type,
-      editable: column.editable,
-      isActive: column.isActive,
-      notNull: column.notNull,
-      length: column.length ?? 'null',
-      comment: column.comment ?? 'null',
-      default: column.default ?? 'null',
-      mappedType: column.mappedType,
+      ...column,
       selected: column.selected ?? false,
       editMode: column.editMode ?? {
         name: false,
@@ -104,7 +95,7 @@ export const handelColumnChangeLog = (
   newValue: EditedColumnType
 ) => {
   //check if edited value exists in editedColumns just update this values
-  const findValueIndex = editedColumns.findIndex((x) => x.key === oldValue.key);
+  const findValueIndex = editedColumns.findIndex((x) => x.name === oldValue.name);
   const findValue = editedColumns[findValueIndex];
 
   //the old value and new value always contain one diff key so we pick first item
@@ -156,7 +147,6 @@ export const handelColumnChangeLog = (
 
 export const createEmptyColumn = (): EditedColumnType => {
   return {
-    key: 'new_column',
     name: '',
     type: 'varchar',
     isActive: false,

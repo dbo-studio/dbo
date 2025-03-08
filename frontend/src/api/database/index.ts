@@ -3,8 +3,8 @@ import { CREATE_DATABASE, DATABASE_META_DATA, DELETE_DATABASE } from './endpoint
 import { transformDatabaseMetaData } from './transformers';
 import type { createDatabaseType, deleteConnectionType } from './types';
 
-export const getDatabaseMetadata = (connectionID: string | number) => {
-  return api.get(DATABASE_META_DATA(connectionID)).then(transformDatabaseMetaData);
+export const getDatabaseMetadata = (connectionId: string | number) => {
+  return api.get(DATABASE_META_DATA(connectionId)).then(transformDatabaseMetaData);
 };
 
 export const createDatabase = (data: createDatabaseType) => {

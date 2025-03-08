@@ -4,7 +4,7 @@ export const transformHistory = (data: any): HistoryType => {
   return {
     id: data?.id,
     query: data?.query,
-    createdAt: data?.created_at
+    createdAt: data?.createdAt
   };
 };
 

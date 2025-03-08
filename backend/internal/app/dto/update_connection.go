@@ -8,7 +8,7 @@ import (
 type (
 	UpdateConnectionRequest struct {
 		Name     *string         `json:"name"`
-		IsActive *bool           `json:"is_active"`
+		IsActive *bool           `json:"isActive"`
 		Options  json.RawMessage `json:"options"`
 	}
 )

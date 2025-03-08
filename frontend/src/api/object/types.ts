@@ -1,6 +1,6 @@
 export type TreeRequestType = {
-  connection_id: number | string;
-  parent_id: string;
+  connectionId: number | string;
+  parentId: string;
 };
 
 export type TreeResponseType = TreeNodeType;

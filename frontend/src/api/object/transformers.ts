@@ -6,7 +6,7 @@ export const transformTree = (data: any): TreeResponseType => {
     name: data?.name,
     type: data?.type,
     action: data?.action,
-    contextMenu: data?.context_menu ?? [],
+    contextMenu: data?.contextMenu ?? [],
     children: data?.children ?? []
   };
 };

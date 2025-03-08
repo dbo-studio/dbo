@@ -16,7 +16,7 @@ func (r *Server) routing() {
 	query := api.Group("query")
 	query.Post("/run", r.handlers.QueryHandler.Run)
 	query.Post("/raw", r.handlers.QueryHandler.Raw)
-	query.Post("/update", r.handlers.Query.Update)
+	query.Post("/update", r.handlers.QueryHandler.Update)
 	query.Get("/autocomplete", r.handlers.Query.Autocomplete)
 
 	connection := api.Group("connections")

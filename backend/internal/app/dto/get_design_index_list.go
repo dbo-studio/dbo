@@ -6,7 +6,7 @@ import (
 
 type (
 	GetDesignIndexRequest struct {
-		ConnectionId int32  `query:"connection_id"`
+		ConnectionId int32  `query:"connectionId"`
 		Table        string `query:"table"`
 		Schema       string `query:"schema"`
 	}
@@ -18,11 +18,11 @@ type (
 
 type (
 	GetDesignIndex struct {
-		IndexName       string  `json:"index_name"`
-		IndexAlgorithm  string  `json:"index_algorithm"`
-		IsUnique        bool    `json:"is_unique"`
-		IndexDefinition string  `json:"index_definition"`
-		ColumnName      string  `json:"column_name"`
+		IndexName       string  `json:"indexName"`
+		IndexAlgorithm  string  `json:"indexAlgorithm"`
+		IsUnique        bool    `json:"isUnique"`
+		IndexDefinition string  `json:"indexDefinition"`
+		ColumnName      string  `json:"columnName"`
 		Condition       string  `json:"condition"`
 		Comment         *string `json:"comment"`
 	}

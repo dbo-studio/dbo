@@ -9,25 +9,24 @@ import (
 )
 
 func (r *PostgresRepository) RunRawQuery(req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
+	startTime := time.Now()
 	result, err := runRawQuery(r, req)
-	if err != nil || !result.IsQuery {
-		return commandResponseBuilder(result, err), nil
+	endTime := time.Since(startTime)
+	if err != nil || !isQuery(req.Query) {
+		return commandResponseBuilder(result, endTime, err), nil
 	}
 
 	return result, nil
 }
 
 func runRawQuery(r *PostgresRepository, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
-	startTime := time.Now()
-	queryResults := make([]map[string]interface{}, 0)
+	queryResults := make([]map[string]any, 0)
 
 	rows, err := r.db.Raw(req.Query).Rows()
 	if err != nil {
 		return &dto.RawQueryResponse{
-			Query:    req.Query,
-			Data:     queryResults,
-			IsQuery:  isQuery(req.Query),
-			Duration: "0",
+			Query: req.Query,
+			Data:  queryResults,
 		}, err
 	}
 
@@ -44,15 +43,13 @@ func runRawQuery(r *PostgresRepository, req *dto.RawQueryRequest) (*dto.RawQuery
 	}
 
 	for rows.Next() {
-		var data map[string]interface{}
+		var data map[string]any
 		err := r.db.ScanRows(rows, &data)
 		if err != nil {
 			return nil, err
 		}
 		queryResults = append(queryResults, data)
 	}
-
-	endTime := time.Since(startTime)
 
 	for i := range queryResults {
 		queryResults[i]["dbo_index"] = i
@@ -73,15 +70,13 @@ func runRawQuery(r *PostgresRepository, req *dto.RawQueryRequest) (*dto.RawQuery
 	//p.DBLogger(req.Query)
 
 	return &dto.RawQueryResponse{
-		Query:    req.Query,
-		Data:     queryResults,
-		Columns:  structures,
-		IsQuery:  isQuery(req.Query),
-		Duration: helper.FloatToString(endTime.Seconds()),
+		Query:   req.Query,
+		Data:    queryResults,
+		Columns: structures,
 	}, nil
 }
 
-func commandResponseBuilder(queryResult *dto.RawQueryResponse, err error) *dto.RawQueryResponse {
+func commandResponseBuilder(queryResult *dto.RawQueryResponse, endTime time.Duration, err error) *dto.RawQueryResponse {
 	message := "OK"
 	if err != nil {
 		message = err.Error()
@@ -119,11 +114,11 @@ func commandResponseBuilder(queryResult *dto.RawQueryResponse, err error) *dto.R
 
 	return &dto.RawQueryResponse{
 		Query: queryResult.Query,
-		Data: []map[string]interface{}{
+		Data: []map[string]any{
 			{
 				"Query":    queryResult.Query,
 				"Message":  message,
-				"Duration": queryResult.Duration,
+				"Duration": helper.FloatToString(endTime.Seconds()),
 			},
 		},
 		Columns: newStructures,

@@ -14,6 +14,6 @@ type (
 	HistoryListItem struct {
 		ID        int64  `json:"id"`
 		Query     string `json:"query"`
-		CreatedAt string `json:"created_at"`
+		CreatedAt string `json:"createdAt"`
 	}
 )

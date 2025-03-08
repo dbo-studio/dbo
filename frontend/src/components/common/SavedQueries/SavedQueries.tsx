@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import Search from '../../base/Search/Search';
 import SavedQueryItem from './SavedQueryItem/SavedQueryItem';
+import { isAxiosError } from 'axios';
+import { toast } from 'sonner';
 
 export default function SavedQueries() {
   const [search, setSearch] = useState('');
@@ -24,6 +26,9 @@ export default function SavedQueries() {
         upsertQuery(item);
       }
     } catch (error) {
+      if (isAxiosError(error)) {
+        toast.error(error.message);
+      }
       console.log('🚀 ~ handleGetSavedQueries ~ error:', error);
     }
   };

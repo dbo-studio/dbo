@@ -18,7 +18,7 @@ export default function Columns() {
 
     column.isActive = !column.isActive;
     const newColumns = getColumns().map((c: ColumnType) => {
-      if (c.key === column.key) {
+      if (c.name === column.name) {
         return column;
       }
       return c;

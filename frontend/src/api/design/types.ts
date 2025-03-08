@@ -1,8 +1,6 @@
 export type UpdateDesignType = {
-  connection_id: number;
-  schema: string;
-  database: string;
-  table: string;
+  connectionId: number;
+  nodeId: string;
   edited: UpdateDesignItemType[];
   removed: string[];
   added: UpdateDesignItemType[];
@@ -13,11 +11,11 @@ export type UpdateDesignItemType = {
   type?: string;
   length?: number;
   default?: {
-    make_null: boolean;
-    make_empty: boolean;
+    makeNull: boolean;
+    makeEmpty: boolean;
     value: string;
   };
-  is_null?: true;
+  isNull?: true;
   comment?: string;
   rename?: string;
 };

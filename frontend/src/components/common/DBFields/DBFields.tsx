@@ -34,9 +34,9 @@ export default function DBFields() {
         return c.name.toLocaleLowerCase().includes(value.toLocaleLowerCase());
       })
       .map((c: any) => {
-        if (!selectedRow[c.key]) return;
+        if (!selectedRow[c.name]) return;
         data.push({
-          value: selectedRow[c.key],
+          value: selectedRow[c.name],
           ...c
         });
       });
@@ -56,7 +56,7 @@ export default function DBFields() {
                   size='small'
                   value={item.value}
                   fullWidth={true}
-                  key={`${item.key}_${index}`}
+                  key={`${item.name}_${index}`}
                   label={item.name}
                   typelabel={item.type}
                   type={item.type}

@@ -1,5 +1,3 @@
-import api from '@/api';
-import useAPI from '@/hooks/useApi.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { ConnectionType } from '@/types';
 import { useEffect, useState } from 'react';
@@ -15,6 +13,8 @@ import { ConnectionsStyled } from './Connections.styled';
 import { EmptySpaceStyle } from './EmptySpace.styled';
 import AddConnection from '@/components/common/Connections/AddConnection/AddConnection.tsx';
 import EditConnection from '@/components/common/Connections/EditConnection/EditConnection.tsx';
+import { useMutation } from '@tanstack/react-query';
+import api from '@/api';
 
 export default function Connections() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -22,12 +22,9 @@ export default function Connections() {
   const [loadingConnectionId, setLoadingConnectionId] = useState<number | undefined>(undefined);
   const navigate = useNavigate();
 
-  const { request: getConnectionDetail } = useAPI({
-    apiMethod: api.connection.getConnectionDetail
-  });
-
-  const { request: updateConnection, pending: pendingUpdateConnection } = useAPI({
-    apiMethod: api.connection.updateConnection
+  const { mutateAsync: connectionDetailMutation } = useMutation({ mutationFn: api.connection.getConnectionDetail });
+  const { mutateAsync: updateConnectionMutation, isPending: pendingUpdateConnection } = useMutation({
+    mutationFn: api.connection.updateConnection
   });
 
   useEffect(() => {
@@ -57,12 +54,12 @@ export default function Connections() {
     try {
       setLoadingConnectionId(c.id);
       updateLoading('loading');
-      const connectionDetail = await getConnectionDetail({
-        connectionID: c?.id,
+      const connectionDetail = await connectionDetailMutation({
+        connectionId: c?.id,
         fromCache: true
       });
 
-      await updateConnection({
+      await updateConnectionMutation({
         id: c.id,
         is_active: true
       } as updateConnectionType);

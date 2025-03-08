@@ -5,12 +5,12 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { LoadingButton } from '@mui/lab';
 import { Box, Button, Stack } from '@mui/material';
+import { useForm } from '@tanstack/react-form';
+import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import FieldInput from '../../../../base/FieldInput/FieldInput';
 import type { ConnectionSettingsProps } from '../types';
-import { isAxiosError } from 'axios';
-import { useForm } from '@tanstack/react-form';
 
 const formSchema = z.object({
   isTest: z.boolean().optional(),

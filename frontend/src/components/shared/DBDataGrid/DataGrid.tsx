@@ -100,7 +100,7 @@ export default function DataGrid({ editable }: DataGridProps) {
         columnSorting={true}
       >
         {headers.map((column: ColumnType) => (
-          <HotColumn data={column.key} title={column.name} key={column.key} />
+          <HotColumn data={column.name} title={column.name} key={column.name} />
         ))}
       </DataGridStyled>
     </Box>

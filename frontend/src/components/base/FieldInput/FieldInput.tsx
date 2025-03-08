@@ -10,7 +10,7 @@ export default forwardRef(function FieldInput(props: FieldInputProps, _) {
   const [value, setValue] = useState('');
 
   useEffect(() => {
-    if (props.type === 'date' || props.type === 'date_time') {
+    if (props.type === 'date' || props.type === 'date_time' || props.type === 'dateTime') {
       setValue(dayjs('2022-04-17T15:30').format('YYYY-MM-DD'));
     } else {
       setValue(props.value as '');

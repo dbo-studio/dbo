@@ -9,7 +9,7 @@ export default function ColumnItem({ column, onClick }: ColumnItemProps) {
     <ColumnItemStyled onClick={() => onClick(column)}>
       <Checkbox checked={column.isActive} style={{ padding: 0, marginRight: theme.spacing(1) }} size='small' />
       <Typography color={'textText'} variant='body2'>
-        {column.key}
+        {column.name}
       </Typography>
     </ColumnItemStyled>
   );

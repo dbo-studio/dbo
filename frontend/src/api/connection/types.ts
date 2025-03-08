@@ -1,5 +1,5 @@
 export type connectionDetailType = {
-  connectionID: string | number;
+  connectionId: string | number;
   fromCache: boolean;
 };
 
@@ -21,6 +21,6 @@ export type updateConnectionType = {
   password?: string;
   database?: string;
   is_active?: boolean;
-  current_database?: string;
-  current_schema?: string;
+  currentDatabase?: string;
+  currentSchema?: string;
 };

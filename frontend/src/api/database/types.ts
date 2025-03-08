@@ -1,5 +1,5 @@
 export type createDatabaseType = {
-  connection_id: number | string;
+  connectionId: number | string;
   name: string;
   template: string | undefined;
   encoding: string | undefined;
@@ -7,7 +7,7 @@ export type createDatabaseType = {
 };
 
 export type deleteConnectionType = {
-  connection_id: number | string;
+  connectionId: number | string;
   name: string;
 };
 

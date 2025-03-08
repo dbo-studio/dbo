@@ -2,8 +2,8 @@ package dto
 
 type (
 	AutoCompleteRequest struct {
-		ConnectionId int32  `query:"connection_id" validate:"required,gte=0"`
-		FromCache    bool   `query:"from_cache"`
+		ConnectionId int32  `query:"connectionId" validate:"required,gte=0"`
+		FromCache    bool   `query:"fromCache"`
 		Database     string `query:"database" validate:"required"`
 		Schema       string `query:"schema" validate:"required"`
 	}

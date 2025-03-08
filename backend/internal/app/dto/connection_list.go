@@ -13,6 +13,6 @@ type (
 		Type     string      `json:"type"`
 		Driver   string      `json:"driver"`
 		Auth     AuthDetails `json:"auth"`
-		IsActive bool        `json:"is_active"`
+		IsActive bool        `json:"isActive"`
 	}
 )

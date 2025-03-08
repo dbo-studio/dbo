@@ -54,10 +54,8 @@ export default function StatusBarActions() {
       }
       try {
         await updateQuery({
-          connection_id: currentConnection.id,
-          schema: currentConnection.currentSchema,
-          database: currentConnection.currentDatabase,
-          table: getSelectedTab()?.table,
+          connectionId: currentConnection.id,
+          nodeId: getSelectedTab()?.id,
           edited: edited,
           removed: removed,
           added: unsaved

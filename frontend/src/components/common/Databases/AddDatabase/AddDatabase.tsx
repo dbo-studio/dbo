@@ -17,7 +17,7 @@ const formSchema = z.object({
   name: z.string().min(1),
   template: z.string().optional(),
   encoding: z.string().optional(),
-  table_space: z.string().optional()
+  tableSpace: z.string().optional()
 });
 
 export default function AddDatabase({ onClose }: { onClose: () => void }) {
@@ -46,11 +46,11 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
     onSubmit: async ({ value }) => {
       try {
         await createDatabase({
-          connection_id: currentConnection?.id,
+          connectionId: currentConnection?.id,
           name: value.name,
           template: value.template,
           encoding: value.encoding,
-          tableSpace: value.table_space
+          tableSpace: value.tableSpace
         });
         toast.success(locales.database_create_success);
         form.reset();
@@ -75,7 +75,7 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
       name: '',
       template: '',
       encoding: '',
-      table_space: ''
+      tableSpace: ''
     }
   });
 
@@ -137,7 +137,7 @@ export default function AddDatabase({ onClose }: { onClose: () => void }) {
               )}
             </form.Field>
             <Box mb={2} />
-            <form.Field name='table_space'>
+            <form.Field name='tableSpace'>
               {(field) => (
                 <SelectInput
                   helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}

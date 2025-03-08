@@ -2,6 +2,8 @@ import { updateDesign } from '@/api/design';
 import type { UpdateDesignItemType } from '@/api/design/types';
 import { runQuery, runRawQuery } from '@/api/query';
 import { cleanupUpdateDesignObject } from '@/core/utils';
+import { isAxiosError } from 'axios';
+import { toast } from 'sonner';
 import type { StateCreator } from 'zustand';
 import { useConnectionStore } from '../../connectionStore/connection.store';
 import { useTabStore } from '../../tabStore/tab.store';
@@ -28,9 +30,8 @@ export const createDataQuerySlice: StateCreator<
     try {
       set({ loading: true });
       const res = await runQuery({
-        connection_id: currentConnection.id,
-        table: selectedTab.table,
-        schema: currentConnection.currentSchema ?? '',
+        connectionId: currentConnection.id,
+        nodeId: selectedTab.id,
         limit: selectedTab.pagination.limit,
         offset: (selectedTab.pagination.page - 1) * selectedTab.pagination.limit,
         columns: selectedTab.columns ?? [],
@@ -46,11 +47,13 @@ export const createDataQuerySlice: StateCreator<
       });
 
       useTabStore.getState().updateQuery(res.query);
-      await Promise.all([get().updateRows(res.data), get().updateColumns(res.structures)]);
+      await Promise.all([get().updateRows(res.data), get().updateColumns(res.columns)]);
       set({ toggleDataFetching: !get().toggleDataFetching });
     } catch (error) {
-      // @ts-ignore
-      throw new Error(error?.response?.data?.message);
+      if (isAxiosError(error)) {
+        toast.error(error.message);
+      }
+      console.log('🚀 ~ runQuery: ~ error:', error);
     } finally {
       set({ loading: false });
     }
@@ -65,15 +68,18 @@ export const createDataQuerySlice: StateCreator<
     try {
       set({ loading: true });
       const res = await runRawQuery({
-        connection_id: currentConnection.id,
+        connectionId: currentConnection.id,
         query: useTabStore.getState().getQuery()
       });
 
       useTabStore.getState().updateQuery(res.query);
-      await Promise.all([get().updateRows(res.data), get().updateColumns(res.structures)]);
+      await Promise.all([get().updateRows(res.data), get().updateColumns(res.columns)]);
       set({ toggleDataFetching: !get().toggleDataFetching });
     } catch (error) {
-      console.log('🚀 ~ runQuery: ~ error:', error);
+      if (isAxiosError(error)) {
+        toast.error(error.message);
+      }
+      console.log('🚀 ~ runRawQuery: ~ error:', error);
     } finally {
       set({ loading: false });
     }
@@ -119,10 +125,8 @@ export const createDataQuerySlice: StateCreator<
     try {
       set({ loading: true });
       const res = await updateDesign({
-        connection_id: currentConnection.id,
-        table: selectedTab.table,
-        schema: currentConnection.currentSchema ?? '',
-        database: currentConnection.currentDatabase ?? '',
+        connectionId: currentConnection.id,
+        nodeId: selectedTab.id,
         edited: edited as UpdateDesignItemType[],
         removed: Array.from(removed),
         added: added as UpdateDesignItemType[]
@@ -131,8 +135,10 @@ export const createDataQuerySlice: StateCreator<
       useTabStore.getState().updateQuery(res.query);
       await Promise.all([get().updateEditedColumns([])]);
     } catch (error) {
-      // @ts-ignore
-      throw new Error(error?.response?.data?.message);
+      if (isAxiosError(error)) {
+        toast.error(error.message);
+      }
+      console.log('🚀 ~ updateDesignsQuery: ~ error:', error);
     } finally {
       set({ loading: false });
     }

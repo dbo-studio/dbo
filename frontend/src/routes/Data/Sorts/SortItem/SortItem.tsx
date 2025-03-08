@@ -46,7 +46,7 @@ export default function SortItem({ sort, columns }: SortItemProps) {
           value={currentSort.column}
           disabled={columns.length === 0}
           size='small'
-          options={columns.map((c) => ({ value: c.key as string, label: c.name }))}
+          options={columns.map((c) => ({ value: c.name as string, label: c.name }))}
           onChange={(e) => handleChange('column', e.value)}
         />
       </Box>

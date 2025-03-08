@@ -50,7 +50,7 @@ export const createDataEditedColumnSlice: StateCreator<
           return c;
         }
 
-        const findValueIndex = editedColumns.findIndex((x) => x.key === c.key);
+        const findValueIndex = editedColumns.findIndex((x) => x.name === c.name);
         if (findValueIndex === -1) {
           editedColumns.push({
             ...c,
@@ -98,7 +98,7 @@ export const createDataEditedColumnSlice: StateCreator<
       });
 
     for (const c of editedColumns) {
-      const findValueIndex = columns.findIndex((x) => x.key === c.key);
+      const findValueIndex = columns.findIndex((x) => x.name === c.name);
       if (c.unsaved) {
         pullAt(columns, [findValueIndex]);
       } else {

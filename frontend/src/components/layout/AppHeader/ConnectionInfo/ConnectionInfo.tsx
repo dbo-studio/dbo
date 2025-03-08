@@ -43,7 +43,7 @@ export default function ConnectionInfo() {
     }
     updateLoading('loading');
     getConnectionDetail({
-      connectionID: currentConnection?.id,
+      connectionId: currentConnection?.id,
       fromCache: false
     })
       .then((res) => {

@@ -9,13 +9,9 @@ const $axios = axios.create({
 });
 
 $axios.interceptors.request.use((config) => {
-  // config.headers.Authorization = localStorage.getItem('accessToken');
   return config;
 });
 
-// $axios.interceptors.response.use((response) => {
-//   return response;
-// });
 const servicePost = $axios.post;
 const serviceGet = $axios.get;
 const serviceDelete = $axios.delete;

@@ -19,8 +19,8 @@ export default function ObjectTreeView() {
   const handleGetTree = async (parentId: string | null): Promise<TreeNodeType | undefined> => {
     try {
       return await getTree({
-        parent_id: parentId,
-        connection_id: currentConnection?.id
+        parentId: parentId,
+        connectionId: currentConnection?.id
       });
     } catch (error) {
       console.log('🚀 ~ handleGetTree ~ error:', error);

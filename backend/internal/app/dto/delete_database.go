@@ -3,7 +3,7 @@ package dto
 import "github.com/invopop/validation"
 
 type DeleteDatabaseRequest struct {
-	ConnectionId int32  `json:"connection_id"`
+	ConnectionId int32  `json:"connectionId"`
 	Name         string `json:"name"`
 }
 

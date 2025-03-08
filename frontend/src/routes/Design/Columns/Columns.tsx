@@ -77,9 +77,9 @@ export default function Columns() {
               {getColumns().map((item: ColumnType) => (
                 <ColumnItem
                   key={uuid()}
-                  edited={getEditedColumns().some((c) => c.key === item.key && c.edited) === true}
-                  deleted={getEditedColumns().some((c) => c.key === item.key && c.deleted) === true}
-                  unsaved={getEditedColumns().some((c) => c.key === item.key && c.unsaved) === true}
+                  edited={getEditedColumns().some((c) => c.name === item.name && c.edited) === true}
+                  deleted={getEditedColumns().some((c) => c.name === item.name && c.deleted) === true}
+                  unsaved={getEditedColumns().some((c) => c.name === item.name && c.unsaved) === true}
                   column={item}
                   onChange={handleColumnChange}
                   onSelect={() => handleColumnSelect(item)}

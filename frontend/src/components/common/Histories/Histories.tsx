@@ -5,6 +5,8 @@ import { Box, ClickAwayListener, LinearProgress, useTheme } from '@mui/material'
 import { useEffect, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import HistoryItem from './HistoryItem/HistoryItem';
+import { isAxiosError } from 'axios';
+import { toast } from 'sonner';
 
 export default function Histories() {
   const [selected, setSelected] = useState<number | null>(null);
@@ -20,6 +22,9 @@ export default function Histories() {
       const res = await getHistories();
       updateHistories(res);
     } catch (error) {
+      if (isAxiosError(error)) {
+        toast.error(error.message);
+      }
       console.log('🚀 ~ handleGetHistories ~ error:', error);
     }
   };

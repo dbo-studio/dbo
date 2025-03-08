@@ -6,7 +6,7 @@ import (
 
 type (
 	GetDesignColumnRequest struct {
-		ConnectionId int32  `query:"connection_id"`
+		ConnectionId int32  `query:"connectionId"`
 		Table        string `query:"table"`
 		Schema       string `query:"schema"`
 	}
@@ -20,13 +20,13 @@ type (
 	GetDesignColumn struct {
 		Name       string  `json:"name"`
 		Type       string  `json:"type"`
-		NotNull    bool    `json:"not_null"`
+		NotNull    bool    `json:"notNull"`
 		Length     *int32  `json:"length"`
 		Default    *string `json:"default"`
 		Comment    *string `json:"comment"`
-		MappedType string  `json:"mapped_type"`
+		MappedType string  `json:"mappedType"`
 		Editable   bool    `json:"editable"`
-		IsActive   bool    `json:"is_active"`
+		IsActive   bool    `json:"isActive"`
 	}
 )
 

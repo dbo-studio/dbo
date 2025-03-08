@@ -39,7 +39,7 @@ export default function ConnectionItemContextMenu({ connection, contextMenu, onC
     }
     updateLoading('loading');
     getConnectionDetail({
-      connectionID: currentConnection?.id,
+      connectionId: currentConnection?.id,
       fromCache: false
     })
       .then((res) => {

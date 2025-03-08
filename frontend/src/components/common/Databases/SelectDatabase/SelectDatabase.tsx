@@ -58,7 +58,7 @@ export default function SelectDatabase({ onClose, onChangeStep }: SelectDatabase
 
     try {
       const c = currentConnection;
-      await deleteDatabase({ connection_id: c.id, name: db });
+      await deleteDatabase({ connectionId: c.id, name: db });
       c.databases = c.databases?.filter((v) => v !== db);
       updateCurrentConnection(c);
       toast.success(locales.database_delete_success);
