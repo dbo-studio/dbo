@@ -16,7 +16,7 @@ func buildTree(r *MySQLRepository) (*databaseContract.TreeNode, error) {
 
 	// گرفتن لیست دیتابیس‌ها
 	var databases []struct {
-		Name string `gorm:"column:Database"`
+		Name string `gorm:"column:DatabaseNodeType"`
 	}
 	err := r.db.Raw("SHOW DATABASES").Scan(&databases).Error
 	if err != nil {
@@ -36,22 +36,22 @@ func buildTree(r *MySQLRepository) (*databaseContract.TreeNode, error) {
 		tablesNode := databaseContract.TreeNode{
 			ID:   fmt.Sprintf("%s.tables", db.Name),
 			Name: "Tables",
-			Type: "table_container",
-			//ContextMenu:  []string{"create_table"},
+			Type: "tableContainer",
+			//ContextMenu:  []string{"createTable"},
 			Children: make([]databaseContract.TreeNode, 0),
 		}
 		viewsNode := databaseContract.TreeNode{
 			ID:   fmt.Sprintf("%s.views", db.Name),
 			Name: "Views",
-			Type: "view_container",
-			//ContextMenu:  []string{"create_view"},
+			Type: "viewContainer",
+			//ContextMenu:  []string{"createView"},
 			Children: make([]databaseContract.TreeNode, 0),
 		}
 		indexesNode := databaseContract.TreeNode{
 			ID:   fmt.Sprintf("%s.indexes", db.Name),
 			Name: "Indexes",
-			Type: "index_container",
-			//ContextMenu:  []string{"create_index"},
+			Type: "indexContainer",
+			//ContextMenu:  []string{"createIndex"},
 			Children: make([]databaseContract.TreeNode, 0),
 		}
 

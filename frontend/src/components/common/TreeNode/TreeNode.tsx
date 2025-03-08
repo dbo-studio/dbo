@@ -1,17 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
-import CircularProgress from '@mui/material/CircularProgress';
-import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
-import type { TreeNodeProps } from '@/components/common/TreeNode/types.ts';
-import {
-  ChildrenContainer,
-  LoadingIndicator,
-  NodeLabel,
-  NodeName,
-  NodeType,
-  TreeNodeContainer
-} from '@/components/common/TreeNode/TreeNode.styled.ts';
-import { useTreeNodeHandlers } from '@/components/common/TreeNode/useTreeNodeHandlers.tsx';
 import type { TreeNodeType } from '@/api/object/types.ts';
+import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
+import { NodeContent } from '@/components/common/TreeNode/NodeContent/NodeContent';
+import { ChildrenContainer, TreeNodeContainer } from '@/components/common/TreeNode/TreeNode.styled.ts';
+import { useTreeNodeHandlers } from '@/components/common/TreeNode/hooks/useTreeNodeHandlers';
+import { useTreeNodeMenu } from '@/components/common/TreeNode/hooks/useTreeNodeMenu';
+import type { TreeNodeProps } from '@/components/common/TreeNode/types.ts';
+import { useContextMenu } from '@/hooks';
+import { useEffect, useRef, useState } from 'react';
 
 export default function TreeNode({
   node,
@@ -26,6 +21,7 @@ export default function TreeNode({
   const [isLoading, setIsLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const nodeRef = useRef<HTMLDivElement | null>(null);
+  const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
   useEffect(() => {
     if (nodeRef.current) {
@@ -53,36 +49,29 @@ export default function TreeNode({
     onFocusChange
   });
 
+  const { menu } = useTreeNodeMenu(node, actionDetection);
+
   return (
     <TreeNodeContainer>
-      <NodeLabel
-        ref={nodeRef}
-        onClick={focusNode}
-        onDoubleClick={(e) => actionDetection(e, node)}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
+      <NodeContent
+        node={node}
+        nodeRef={nodeRef}
         isFocused={isFocused}
-        role='treeitem'
-        aria-expanded={hasChildren ? isExpanded : undefined}
-        aria-label={`${node.name} (${node.type})`}
-        tabIndex={0}
-        data-level={level}
-        data-index={nodeIndex}
-      >
-        {hasChildren && (
-          <CustomIcon onClick={(e) => expandNode(e, false)} type={isExpanded ? 'arrowDown' : 'arrowRight'} />
-        )}
-        <NodeName isLeaf={!hasChildren} variant='body2' fontWeight={'medium'}>
-          {node.name}
-          {/*<NodeType variant='caption'>({node.type})</NodeType>*/}
-          <NodeType variant='caption'>({node.children?.length})</NodeType>
-        </NodeName>
-        {isLoading && (
-          <LoadingIndicator>
-            <CircularProgress size={16} />
-          </LoadingIndicator>
-        )}
-      </NodeLabel>
+        isExpanded={isExpanded}
+        isLoading={isLoading}
+        hasChildren={hasChildren}
+        level={level}
+        nodeIndex={nodeIndex}
+        focusNode={focusNode}
+        actionDetection={actionDetection}
+        expandNode={expandNode}
+        handleContextMenu={handleContextMenu}
+        handleBlur={handleBlur}
+        handleKeyDown={handleKeyDown}
+      />
+      {menu.length > 0 && (
+        <ContextMenu menu={menu} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
+      )}
 
       {isExpanded && children?.length > 0 && (
         <ChildrenContainer>

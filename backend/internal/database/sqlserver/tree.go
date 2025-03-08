@@ -41,29 +41,29 @@ func buildTree(r *SQLServerRepository) (*databaseContract.TreeNode, error) {
 		tablesNode := databaseContract.TreeNode{
 			ID:   fmt.Sprintf("%s.tables", db.Name),
 			Name: "Tables",
-			Type: "table_container",
-			//ContextMenu:  []string{"create_table"},
+			Type: "tableContainer",
+			//ContextMenu:  []string{"createTable"},
 			Children: make([]databaseContract.TreeNode, 0),
 		}
 		viewsNode := databaseContract.TreeNode{
 			ID:   fmt.Sprintf("%s.views", db.Name),
 			Name: "Views",
-			Type: "view_container",
-			//ContextMenu:  []string{"create_view"},
+			Type: "viewContainer",
+			//ContextMenu:  []string{"createView"},
 			Children: make([]databaseContract.TreeNode, 0),
 		}
 		indexesNode := databaseContract.TreeNode{
 			ID:   fmt.Sprintf("%s.indexes", db.Name),
 			Name: "Indexes",
-			Type: "index_container",
-			//ContextMenu:  []string{"create_index"},
+			Type: "indexContainer",
+			//ContextMenu:  []string{"createIndex"},
 			Children: make([]databaseContract.TreeNode, 0),
 		}
 		sequencesNode := databaseContract.TreeNode{
 			ID:   fmt.Sprintf("%s.sequences", db.Name),
 			Name: "Sequences",
-			Type: "sequence_container",
-			//ContextMenu:  []string{"create_sequence"},
+			Type: "sequenceContainer",
+			//ContextMenu:  []string{"createSequence"},
 			Children: make([]databaseContract.TreeNode, 0),
 		}
 

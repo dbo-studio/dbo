@@ -15,6 +15,7 @@ export type TreeNodeType = {
 };
 
 export type TreeNodeActionType = {
+  title: string;
   name: string;
   type: TreeNodeActionTypesType;
   params: Record<string, any>;

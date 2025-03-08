@@ -44,7 +44,7 @@ type PostgresUpdateTableParams struct {
 
 type PostgresCreateObjectParams struct {
 	Name      string   `json:"name"`
-	Type      string   `json:"type"` // "schema", "view", "materialized_view", "index", "sequence"
+	Type      string   `json:"type"` // "schema", "view", "materializedView", "index", "sequence"
 	Query     string   `json:"query,omitempty"`
 	OrReplace bool     `json:"orReplace,omitempty"`
 	WithData  bool     `json:"withData,omitempty"`

@@ -11,21 +11,21 @@ func getAvailableActions(nodeType string) []databaseContract.TreeNodeAction {
 
 	//switch nodeType {
 	//case "root":
-	//	return []string{"create_database"}
+	//	return []string{"createDatabase"}
 	//case "database":
-	//	return []string{"create_table", "create_view", "create_index", "drop_database"}
-	//case "table_container":
-	//	return []string{"create_table"}
-	//case "view_container":
-	//	return []string{"create_view"}
-	//case "index_container":
-	//	return []string{"create_index"}
+	//	return []string{"createTable", "createView", "createIndex", "dropDatabase"}
+	//case "tableContainer":
+	//	return []string{"createTable"}
+	//case "viewContainer":
+	//	return []string{"createView"}
+	//case "indexContainer":
+	//	return []string{"createIndex"}
 	//case "table":
-	//	return []string{"edit_table", "drop_table", "copy_name"}
+	//	return []string{"editTable", "dropTable", "copy_name"}
 	//case "view":
-	//	return []string{"edit_view", "drop_view"}
+	//	return []string{"editView", "dropView"}
 	//case "index":
-	//	return []string{"edit_index", "drop_index"}
+	//	return []string{"editIndex", "dropIndex"}
 	//default:
 	//	return []string{}
 	//}
@@ -33,17 +33,17 @@ func getAvailableActions(nodeType string) []databaseContract.TreeNodeAction {
 
 func getFormFields(r *MySQLRepository, action string) []databaseContract.FormField {
 	switch action {
-	case "create_database":
+	case "createDatabase":
 		charsetOptions := r.getCharsetOptions()
 		collationOptions := r.getCollationOptions()
 		return []databaseContract.FormField{
-			{ID: "name", Name: "Database Name", Type: "text", Required: true},
+			{ID: "name", Name: "DatabaseNodeType Name", Type: "text", Required: true},
 			{ID: "charset", Name: "Character Set", Type: "select", Options: charsetOptions},
 			{ID: "collation", Name: "Collation", Type: "select", Options: collationOptions},
 		}
-	case "create_table", "edit_table":
+	case "createTable", "editTable":
 		return []databaseContract.FormField{
-			{ID: "name", Name: "Table Name", Type: "text", Required: true},
+			{ID: "name", Name: "TableNodeType Name", Type: "text", Required: true},
 			{ID: "columns", Name: "Columns", Type: "array", Required: true, Options: []databaseContract.FormFieldOption{
 				{Value: "name", Name: "Column Name"},
 				{Value: "dataType", Name: "Data Type"},
@@ -55,21 +55,21 @@ func getFormFields(r *MySQLRepository, action string) []databaseContract.FormFie
 				{Value: "MyISAM", Name: "MyISAM"},
 			}},
 		}
-	case "create_view", "edit_view":
+	case "createView", "editView":
 		return []databaseContract.FormField{
-			{ID: "name", Name: "View Name", Type: "text", Required: true},
+			{ID: "name", Name: "ViewNodeType Name", Type: "text", Required: true},
 			{ID: "query", Name: "Query", Type: "textarea", Required: true},
 			{ID: "orReplace", Name: "Or Replace", Type: "checkbox"},
 		}
-	case "create_index", "edit_index":
+	case "createIndex", "editIndex":
 		return []databaseContract.FormField{
-			{ID: "name", Name: "Index Name", Type: "text", Required: true},
-			{ID: "tableName", Name: "Table Name", Type: "text", Required: true},
+			{ID: "name", Name: "IndexNodeType Name", Type: "text", Required: true},
+			{ID: "tableName", Name: "TableNodeType Name", Type: "text", Required: true},
 			{ID: "columns", Name: "Columns", Type: "array", Required: true, Options: []databaseContract.FormFieldOption{
 				{Value: "name", Name: "Column Name"},
 			}},
 		}
-	case "drop_database", "drop_table", "drop_view", "drop_index":
+	case "dropDatabase", "dropTable", "dropView", "dropIndex":
 		return []databaseContract.FormField{
 			{ID: "ifExists", Name: "If Exists", Type: "checkbox"},
 		}

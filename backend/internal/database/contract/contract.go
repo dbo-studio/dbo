@@ -13,6 +13,6 @@ type DatabaseRepository interface {
 	RunQuery(dto *dto.RunQueryRequest) (*dto.RunQueryResponse, error)
 	UpdateQuery(dto *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error)
 	RunRawQuery(dto *dto.RawQueryRequest) (*dto.RawQueryResponse, error)
-	Actions(nodeType string) []TreeNodeAction
-	FormFields(action string) []FormField
+	Actions(nodeType TreeNodeType) []TreeNodeAction
+	FormFields(action TreeNodeActionName) []FormField
 }

@@ -60,7 +60,7 @@ func (r *PostgresRepository) CreateObject(params any) error {
 			}
 			query += fmt.Sprintf("VIEW %s AS %s", p.Name, p.Query)
 			return r.db.Exec(query).Error
-		case "materialized_view":
+		case "materializedView":
 			query := fmt.Sprintf("CREATE MATERIALIZED VIEW %s AS %s", p.Name, p.Query)
 			if !p.WithData {
 				query += " WITH NO DATA"

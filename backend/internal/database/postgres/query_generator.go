@@ -46,6 +46,7 @@ func (r *PostgresRepository) getTableList(schema Schema) ([]Table, error) {
 		Select("n.nspname AS schema_name, t.tablename AS table_name").
 		Joins("LEFT JOIN pg_tables t ON n.nspname = t.schemaname::name").
 		Where("n.nspname = ?", schema.Name).
+		Where("t.tablename != ''").
 		Order("schema_name, table_name").
 		Scan(&tables).Error
 	return tables, err

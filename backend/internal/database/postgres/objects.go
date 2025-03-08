@@ -39,7 +39,7 @@ func (r *PostgresRepository) Objects(nodeID, objType string) (any, error) {
 		}
 		return dto.PostgresCreateObjectParams{Name: nodeID, Type: "view", Query: query, OrReplace: false}, nil
 
-	case "materialized_view":
+	case "materializedView":
 		var query string
 		err := r.db.Raw("SELECT definition FROM pg_matviews WHERE matviewname = ?", nodeID).Scan(&query).Error
 		if err != nil {
@@ -50,7 +50,7 @@ func (r *PostgresRepository) Objects(nodeID, objType string) (any, error) {
 		if err != nil {
 			return nil, err
 		}
-		return dto.PostgresCreateObjectParams{Name: nodeID, Type: "materialized_view", Query: query, OrReplace: false, WithData: withData}, nil
+		return dto.PostgresCreateObjectParams{Name: nodeID, Type: "materializedView", Query: query, OrReplace: false, WithData: withData}, nil
 
 	case "index":
 		var tableName string

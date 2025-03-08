@@ -20,7 +20,7 @@ func (r *PostgresRepository) Tree(parentID string) (*contract.TreeNode, error) {
 	case 2:
 		return buildSchema(r, parts[0], parts[1])
 	case 3:
-		return buildContainer(r, parts[0], parts[1], parts[2])
+		return buildContainer(r, parts[0], parts[1], contract.TreeNodeType(parts[2]))
 	default:
 		return nil, fmt.Errorf("unsupported parent_id: %s", parentID)
 	}
@@ -30,8 +30,8 @@ func buildRoot(r *PostgresRepository) (*contract.TreeNode, error) {
 	root := &contract.TreeNode{
 		ID:          fmt.Sprintf("%d@database", r.connection.ID),
 		Name:        fmt.Sprintf("%d@databases", r.connection.ID),
-		Type:        "database_container",
-		ContextMenu: r.Actions("database_container"),
+		Type:        contract.DatabaseContainerNodeType,
+		ContextMenu: r.Actions(contract.DatabaseContainerNodeType),
 		Children:    make([]contract.TreeNode, 0),
 	}
 	databases, err := r.getDatabaseList()
@@ -42,8 +42,8 @@ func buildRoot(r *PostgresRepository) (*contract.TreeNode, error) {
 		root.Children = append(root.Children, contract.TreeNode{
 			ID:          db.Name,
 			Name:        db.Name,
-			Type:        "database",
-			ContextMenu: r.Actions("database"),
+			Type:        contract.DatabaseNodeType,
+			ContextMenu: r.Actions(contract.DatabaseNodeType),
 			Children:    make([]contract.TreeNode, 0),
 		})
 	}
@@ -54,8 +54,8 @@ func buildDatabase(r *PostgresRepository, dbName string) (*contract.TreeNode, er
 	dbNode := &contract.TreeNode{
 		ID:          dbName,
 		Name:        dbName,
-		Type:        "database",
-		ContextMenu: r.Actions("database"),
+		Type:        contract.DatabaseNodeType,
+		ContextMenu: r.Actions(contract.DatabaseNodeType),
 		Children:    make([]contract.TreeNode, 0),
 	}
 	schemas, err := r.getSchemaList(Database{Name: dbName})
@@ -66,8 +66,8 @@ func buildDatabase(r *PostgresRepository, dbName string) (*contract.TreeNode, er
 		dbNode.Children = append(dbNode.Children, contract.TreeNode{
 			ID:          fmt.Sprintf("%s.%s", dbName, schema.Name),
 			Name:        schema.Name,
-			Type:        "schema",
-			ContextMenu: r.Actions("schema"),
+			Type:        contract.SchemaNodeType,
+			ContextMenu: r.Actions(contract.SchemaNodeType),
 			Children:    make([]contract.TreeNode, 0),
 		})
 	}
@@ -78,20 +78,40 @@ func buildSchema(r *PostgresRepository, dbName, schemaName string) (*contract.Tr
 	schemaNode := &contract.TreeNode{
 		ID:          fmt.Sprintf("%s.%s", dbName, schemaName),
 		Name:        schemaName,
-		Type:        "schema",
-		ContextMenu: r.Actions("schema"),
+		Type:        contract.SchemaNodeType,
+		ContextMenu: r.Actions(contract.SchemaNodeType),
 		Children:    make([]contract.TreeNode, 0),
 	}
 	containers := []struct {
-		id          string
 		name        string
+		id          contract.TreeNodeType
 		contextMenu []contract.TreeNodeAction
 	}{
-		{"tables", "Tables", r.Actions("table")},
-		{"views", "Views", r.Actions("view")},
-		{"materialized_views", "Materialized Views", r.Actions("materialized_view")},
-		{"indexes", "Indexes", r.Actions("index")},
-		{"sequences", "Sequences", r.Actions("sequence")},
+		{
+			"Tables",
+			contract.TableContainerNodeType,
+			r.Actions(contract.TableContainerNodeType),
+		},
+		{
+			"Views",
+			contract.ViewContainerNodeType,
+			r.Actions(contract.ViewContainerNodeType),
+		},
+		{
+			"Materialized Views",
+			contract.MaterializedViewContainerNodeType,
+			r.Actions(contract.MaterializedViewContainerNodeType),
+		},
+		{
+			"Indexes",
+			contract.IndexContainerNodeType,
+			r.Actions(contract.IndexContainerNodeType),
+		},
+		{
+			"Sequences",
+			contract.SequenceContainerNodeType,
+			r.Actions(contract.SequenceContainerNodeType),
+		},
 	}
 	for _, c := range containers {
 		schemaNode.Children = append(schemaNode.Children, contract.TreeNode{
@@ -105,28 +125,25 @@ func buildSchema(r *PostgresRepository, dbName, schemaName string) (*contract.Tr
 	return schemaNode, nil
 }
 
-func buildContainer(r *PostgresRepository, dbName, schemaName, container string) (*contract.TreeNode, error) {
+func buildContainer(r *PostgresRepository, dbName, schemaName string, container contract.TreeNodeType) (*contract.TreeNode, error) {
 	containerNode := &contract.TreeNode{
 		ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, container),
-		Name:        strings.TrimSuffix(container, "s"),
+		Name:        string(container),
 		Type:        container,
 		ContextMenu: r.Actions(container),
 		Children:    make([]contract.TreeNode, 0),
 	}
 	switch container {
-	case "tables":
+	case contract.TableContainerNodeType:
 		tables, err := r.getTableList(Schema{Name: schemaName})
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}
 		for _, table := range tables {
-			if table.Name == "" {
-				continue
-			}
 			containerNode.Children = append(containerNode.Children, contract.TreeNode{
 				ID:   fmt.Sprintf("%s.%s.%s", dbName, schemaName, table.Name),
 				Name: table.Name,
-				Type: "table",
+				Type: contract.TableNodeType,
 				Action: &contract.TreeNodeAction{
 					Name: "",
 					Type: contract.TreeNodeActionTypeRoute,
@@ -135,11 +152,11 @@ func buildContainer(r *PostgresRepository, dbName, schemaName, container string)
 						"id":   fmt.Sprintf("%s.%s.%s", dbName, schemaName, table.Name),
 					},
 				},
-				ContextMenu: r.Actions("table"),
+				ContextMenu: r.Actions(contract.TableNodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}
-	case "views":
+	case contract.ViewContainerNodeType:
 		views, err := r.getViewList(Database{Name: dbName}, Schema{Name: schemaName})
 		if err != nil {
 			return nil, apperror.DriverError(err)
@@ -148,12 +165,12 @@ func buildContainer(r *PostgresRepository, dbName, schemaName, container string)
 			containerNode.Children = append(containerNode.Children, contract.TreeNode{
 				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, view.Name),
 				Name:        view.Name,
-				Type:        "view",
-				ContextMenu: r.Actions("view"),
+				Type:        contract.ViewNodeType,
+				ContextMenu: r.Actions(contract.ViewNodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}
-	case "materialized_views":
+	case contract.MaterializedViewContainerNodeType:
 		mvs, err := r.getMaterializedViewList(Schema{Name: schemaName})
 		if err != nil {
 			return nil, apperror.DriverError(err)
@@ -162,12 +179,12 @@ func buildContainer(r *PostgresRepository, dbName, schemaName, container string)
 			containerNode.Children = append(containerNode.Children, contract.TreeNode{
 				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, mv.Name),
 				Name:        mv.Name,
-				Type:        "materialized_view",
-				ContextMenu: r.Actions("materialized_view"),
+				Type:        contract.MaterializedViewNodeType,
+				ContextMenu: r.Actions(contract.MaterializedViewNodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}
-	case "indexes":
+	case contract.IndexContainerNodeType:
 		indexes, err := r.getIndexList(Schema{Name: schemaName})
 		if err != nil {
 			return nil, apperror.DriverError(err)
@@ -176,12 +193,12 @@ func buildContainer(r *PostgresRepository, dbName, schemaName, container string)
 			containerNode.Children = append(containerNode.Children, contract.TreeNode{
 				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, index.Name),
 				Name:        index.Name,
-				Type:        "index",
-				ContextMenu: r.Actions("index"),
+				Type:        contract.TableNodeType,
+				ContextMenu: r.Actions(contract.TableNodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}
-	case "sequences":
+	case contract.SequenceContainerNodeType:
 		sequences, err := r.getSequenceList(Schema{Name: schemaName})
 		if err != nil {
 			return nil, apperror.DriverError(err)
@@ -190,8 +207,8 @@ func buildContainer(r *PostgresRepository, dbName, schemaName, container string)
 			containerNode.Children = append(containerNode.Children, contract.TreeNode{
 				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, sequence.Name),
 				Name:        sequence.Name,
-				Type:        "sequence",
-				ContextMenu: r.Actions("sequence"),
+				Type:        contract.SequenceNodeType,
+				ContextMenu: r.Actions(contract.SequenceNodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}

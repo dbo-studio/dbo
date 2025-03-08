@@ -3,27 +3,19 @@ package databaseContract
 type TreeNode struct {
 	ID          string                 `json:"id"`
 	Name        string                 `json:"name"`
-	Type        string                 `json:"type"`
+	Type        TreeNodeType           `json:"type"`
 	Children    []TreeNode             `json:"children"`
 	Action      *TreeNodeAction        `json:"action"`
-	ContextMenu []TreeNodeAction       `json:"context_menu"`
+	ContextMenu []TreeNodeAction       `json:"contextMenu"`
 	Metadata    map[string]interface{} `json:"metadata"`
 }
 
 type TreeNodeAction struct {
-	Name   string                 `json:"name"`
+	Title  string                 `json:"title"`
+	Name   TreeNodeActionName     `json:"name"`
 	Type   TreeNodeActionType     `json:"type"`
 	Params map[string]interface{} `json:"params"`
 }
-
-type TreeNodeActionType string
-
-const (
-	TreeNodeActionTypeForm    TreeNodeActionType = "form"
-	TreeNodeActionTypeAction  TreeNodeActionType = "action"
-	TreeNodeActionTypeCommand TreeNodeActionType = "command"
-	TreeNodeActionTypeRoute   TreeNodeActionType = "route"
-)
 
 type FormField struct {
 	ID       string            `json:"id"`

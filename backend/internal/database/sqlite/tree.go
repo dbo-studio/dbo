@@ -20,22 +20,22 @@ func buildTree(r *SQLiteRepository) (*databaseContract.TreeNode, error) {
 	tablesNode := databaseContract.TreeNode{
 		ID:   fmt.Sprintf("%d.tables", r.connection.ID),
 		Name: "Tables",
-		Type: "table_container",
-		//ContextMenu:  []string{"create_table"},
+		Type: "tableContainer",
+		//ContextMenu:  []string{"createTable"},
 		Children: make([]databaseContract.TreeNode, 0),
 	}
 	viewsNode := databaseContract.TreeNode{
 		ID:   fmt.Sprintf("%d.views", r.connection.ID),
 		Name: "Views",
-		Type: "view_container",
-		//ContextMenu:  []string{"create_view"},
+		Type: "viewContainer",
+		//ContextMenu:  []string{"createView"},
 		Children: make([]databaseContract.TreeNode, 0),
 	}
 	indexesNode := databaseContract.TreeNode{
 		ID:   fmt.Sprintf("%d.indexes", r.connection.ID),
 		Name: "Indexes",
-		Type: "index_container",
-		//ContextMenu:  []string{"create_index"},
+		Type: "indexContainer",
+		//ContextMenu:  []string{"createIndex"},
 		Children: make([]databaseContract.TreeNode, 0),
 	}
 

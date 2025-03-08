@@ -2,9 +2,9 @@ package databasePostgres
 
 import contract "github.com/dbo-studio/dbo/internal/database/contract"
 
-func (r *PostgresRepository) FormFields(action string) []contract.FormField {
+func (r *PostgresRepository) FormFields(action contract.TreeNodeActionName) []contract.FormField {
 	switch action {
-	case "create_database":
+	case contract.CreateDatabaseAction:
 		templateOptions := r.getTemplateOptions()
 		encodingOptions := []contract.FormFieldOption{
 			{Value: "UTF8", Name: "UTF-8"},
@@ -12,14 +12,14 @@ func (r *PostgresRepository) FormFields(action string) []contract.FormField {
 			{Value: "LATIN1", Name: "Latin-1"},
 		}
 		return []contract.FormField{
-			{ID: "name", Name: "Database Name", Type: "text", Required: true},
+			{ID: "name", Name: "DatabaseNodeType Name", Type: "text", Required: true},
 			{ID: "owner", Name: "Owner", Type: "text"},
 			{ID: "encoding", Name: "Encoding", Type: "select", Options: encodingOptions},
 			{ID: "template", Name: "Template", Type: "select", Options: templateOptions},
 		}
-	case "create_table", "edit_table":
+	case contract.CreateTableAction, contract.EditTableAction:
 		return []contract.FormField{
-			{ID: "name", Name: "Table Name", Type: "text", Required: true},
+			{ID: "name", Name: "TableNodeType Name", Type: "text", Required: true},
 			{ID: "columns", Name: "Columns", Type: "array", Required: true, Options: []contract.FormFieldOption{
 				{Value: "name", Name: "Column Name"},
 				{Value: "dataType", Name: "Data Type"},
@@ -28,32 +28,33 @@ func (r *PostgresRepository) FormFields(action string) []contract.FormField {
 			}},
 			{ID: "temp", Name: "Temporary", Type: "checkbox"},
 		}
-	case "create_view", "edit_view":
+	case contract.CreateViewAction, contract.EditViewAction:
 		return []contract.FormField{
-			{ID: "name", Name: "View Name", Type: "text", Required: true},
+			{ID: "name", Name: "ViewNodeType Name", Type: "text", Required: true},
 			{ID: "query", Name: "Query", Type: "textarea", Required: true},
 			{ID: "orReplace", Name: "Or Replace", Type: "checkbox"},
 		}
-	case "create_materialized_view", "edit_materialized_view":
+	case contract.CreateMaterializedViewAction, contract.EditMaterializedViewAction:
 		return []contract.FormField{
-			{ID: "name", Name: "Materialized View Name", Type: "text", Required: true},
+			{ID: "name", Name: "Materialized ViewNodeType Name", Type: "text", Required: true},
 			{ID: "query", Name: "Query", Type: "textarea", Required: true},
 			{ID: "orReplace", Name: "Or Replace", Type: "checkbox"},
 			{ID: "withData", Name: "With Data", Type: "checkbox"},
 		}
-	case "create_index", "edit_index":
+	case contract.CreateIndexAction, contract.EditIndexAction:
 		return []contract.FormField{
-			{ID: "name", Name: "Index Name", Type: "text", Required: true},
-			{ID: "tableName", Name: "Table Name", Type: "text", Required: true},
+			{ID: "name", Name: "IndexNodeType Name", Type: "text", Required: true},
+			{ID: "tableName", Name: "TableNodeType Name", Type: "text", Required: true},
 			{ID: "columns", Name: "Columns", Type: "array", Required: true, Options: []contract.FormFieldOption{
 				{Value: "name", Name: "Column Name"},
 			}},
 		}
-	case "create_sequence", "edit_sequence":
+	case contract.CreateSequenceAction, contract.EditSequenceAction:
 		return []contract.FormField{
-			{ID: "name", Name: "Sequence Name", Type: "text", Required: true},
+			{ID: "name", Name: "SequenceNodeType Name", Type: "text", Required: true},
 		}
-	case "drop_database", "drop_schema", "drop_table", "drop_view", "drop_materialized_view", "drop_index", "drop_sequence":
+	case contract.DropDatabaseAction, contract.DropSchemaAction, contract.DropTableAction, contract.DropViewAction,
+		contract.DropMaterializedViewAction, contract.DropIndexAction, contract.DropSequenceAction:
 		return []contract.FormField{
 			{ID: "ifExists", Name: "If Exists", Type: "checkbox"},
 			{ID: "cascade", Name: "Cascade", Type: "checkbox"},

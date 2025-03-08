@@ -4,141 +4,175 @@ import (
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
-func (r *PostgresRepository) Actions(nodeType string) []contract.TreeNodeAction {
+func (r *PostgresRepository) Actions(nodeType contract.TreeNodeType) []contract.TreeNodeAction {
 	actions := make([]contract.TreeNodeAction, 0)
 
 	switch nodeType {
-	case "root":
+	case contract.RootNodeType:
 		actions = append(actions, contract.TreeNodeAction{
-			Name: "create_database",
-			Type: contract.TreeNodeActionTypeForm,
+			Title: "Create database",
+			Name:  contract.CreateDatabaseAction,
+			Type:  contract.TreeNodeActionTypeForm,
 		})
-	case "database":
+	case contract.DatabaseNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
-				Name: "create_schema",
-				Type: contract.TreeNodeActionTypeForm,
-			}, contract.TreeNodeAction{
-				Name: "create_table",
-				Type: contract.TreeNodeActionTypeForm,
+				Title: "Edit database",
+				Name:  contract.EditDatabaseAction,
+				Type:  contract.TreeNodeActionTypeForm,
 			},
 			contract.TreeNodeAction{
-				Name: "create_view",
-				Type: contract.TreeNodeActionTypeForm,
+				Title: "Drop database",
+				Name:  contract.DropDatabaseAction,
+				Type:  contract.TreeNodeActionTypeAction,
 			},
 			contract.TreeNodeAction{
-				Name: "drop_database",
-				Type: contract.TreeNodeActionTypeAction,
+				Title: "Create schema",
+				Name:  contract.CreateSchemaAction,
+				Type:  contract.TreeNodeActionTypeForm,
 			},
 		)
-	case "schema":
+	case contract.SchemaNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
-				Name: "create_table",
-				Type: contract.TreeNodeActionTypeForm,
-			}, contract.TreeNodeAction{
-				Name: "create_view",
-				Type: contract.TreeNodeActionTypeForm,
+				Title: "Edit schema",
+				Name:  contract.EditSchemaAction,
+				Type:  contract.TreeNodeActionTypeForm,
 			},
 			contract.TreeNodeAction{
-				Name: "create_materialized_view",
-				Type: contract.TreeNodeActionTypeForm,
+				Title: "Drop schema",
+				Name:  contract.DropSchemaAction,
+				Type:  contract.TreeNodeActionTypeAction,
 			},
 			contract.TreeNodeAction{
-				Name: "create_index",
-				Type: contract.TreeNodeActionTypeForm,
+				Title: "Create table",
+				Name:  contract.CreateTableAction,
+				Type:  contract.TreeNodeActionTypeForm,
 			},
 			contract.TreeNodeAction{
-				Name: "create_sequence",
-				Type: contract.TreeNodeActionTypeForm,
+				Title: "Create view",
+				Name:  contract.CreateViewAction,
+				Type:  contract.TreeNodeActionTypeForm,
 			},
 			contract.TreeNodeAction{
-				Name: "drop_database",
-				Type: contract.TreeNodeActionTypeAction,
+				Title: "Create materialized view",
+				Name:  contract.CreateMaterializedViewAction,
+				Type:  contract.TreeNodeActionTypeForm,
+			},
+			contract.TreeNodeAction{
+				Title: "Create index",
+				Name:  contract.CreateIndexAction,
+				Type:  contract.TreeNodeActionTypeForm,
+			},
+			contract.TreeNodeAction{
+				Title: "Create sequence",
+				Name:  contract.CreateSequenceAction,
+				Type:  contract.TreeNodeActionTypeForm,
 			},
 		)
-	case "table_container":
+	case contract.TableContainerNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
-				Name: "create_table",
-				Type: contract.TreeNodeActionTypeForm,
+				Title: "Create table",
+				Name:  contract.CreateTableAction,
+				Type:  contract.TreeNodeActionTypeForm,
 			})
-	case "view_container":
+	case contract.ViewContainerNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
-				Name: "create_view",
-				Type: contract.TreeNodeActionTypeForm,
+				Title: "Create view",
+				Name:  contract.CreateViewAction,
+				Type:  contract.TreeNodeActionTypeForm,
 			})
-	case "materialized_view_container":
+	case contract.MaterializedViewContainerNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
-				Name: "create_materialized_view",
-				Type: contract.TreeNodeActionTypeForm,
+				Title: "Create materialized view",
+				Name:  contract.CreateMaterializedViewAction,
+				Type:  contract.TreeNodeActionTypeForm,
 			})
-	case "index_container":
+	case contract.IndexContainerNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
-				Name: "create_index",
-				Type: contract.TreeNodeActionTypeForm,
+				Title: "Create index",
+				Name:  contract.CreateIndexAction,
+				Type:  contract.TreeNodeActionTypeForm,
 			})
-	case "sequence_container":
+	case contract.SequenceContainerNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
-				Name: "create_sequence",
-				Type: contract.TreeNodeActionTypeForm,
+				Title: "Create sequence",
+				Name:  contract.CreateSequenceAction,
+				Type:  contract.TreeNodeActionTypeForm,
 			})
-	case "table":
+	case contract.TableNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
-				Name: "edit_table",
-				Type: contract.TreeNodeActionTypeForm,
-			}, contract.TreeNodeAction{
-				Name: "drop_table",
-				Type: contract.TreeNodeActionTypeAction,
+				Title: "Edit table",
+				Name:  contract.EditTableAction,
+				Type:  contract.TreeNodeActionTypeForm,
 			},
 			contract.TreeNodeAction{
-				Name: "copy_name",
-				Type: contract.TreeNodeActionTypeCommand,
+				Title: "Drop table",
+				Name:  contract.DropTableAction,
+				Type:  contract.TreeNodeActionTypeAction,
+			},
+			contract.TreeNodeAction{
+				Title: "Copy name",
+				Name:  contract.CopyNameAction,
+				Type:  contract.TreeNodeActionTypeCommand,
 			},
 		)
-	case "view":
+	case contract.ViewNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
-				Name: "edit_view",
-				Type: contract.TreeNodeActionTypeForm,
-			}, contract.TreeNodeAction{
-				Name: "drop_view",
-				Type: contract.TreeNodeActionTypeAction,
+				Title: "Edit view",
+				Name:  contract.EditViewAction,
+				Type:  contract.TreeNodeActionTypeForm,
+			},
+			contract.TreeNodeAction{
+				Title: "Drop view",
+				Name:  contract.DropViewAction,
+				Type:  contract.TreeNodeActionTypeAction,
 			},
 		)
-	case "materialized_view":
+	case contract.MaterializedViewNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
-				Name: "edit_materialized_view",
-				Type: contract.TreeNodeActionTypeForm,
-			}, contract.TreeNodeAction{
-				Name: "drop_materialized_view",
-				Type: contract.TreeNodeActionTypeAction,
+				Title: "Edit materialized view",
+				Name:  contract.EditMaterializedViewAction,
+				Type:  contract.TreeNodeActionTypeForm,
+			},
+			contract.TreeNodeAction{
+				Title: "Drop materialized view",
+				Name:  contract.DropMaterializedViewAction,
+				Type:  contract.TreeNodeActionTypeAction,
 			},
 		)
-	case "index":
+	case contract.IndexNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
-				Name: "edit_index",
-				Type: contract.TreeNodeActionTypeForm,
-			}, contract.TreeNodeAction{
-				Name: "drop_index",
-				Type: contract.TreeNodeActionTypeAction,
+				Title: "Edit index",
+				Name:  contract.EditIndexAction,
+				Type:  contract.TreeNodeActionTypeForm,
+			},
+			contract.TreeNodeAction{
+				Title: "Drop index",
+				Name:  contract.DropIndexAction,
+				Type:  contract.TreeNodeActionTypeAction,
 			},
 		)
-	case "sequence":
+	case contract.SequenceNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
-				Name: "edit_sequence",
-				Type: contract.TreeNodeActionTypeForm,
-			}, contract.TreeNodeAction{
-				Name: "drop_sequence",
-				Type: contract.TreeNodeActionTypeAction,
+				Title: "Edit sequence",
+				Name:  contract.EditSequenceAction,
+				Type:  contract.TreeNodeActionTypeForm,
+			},
+			contract.TreeNodeAction{
+				Title: "Drop sequence",
+				Name:  contract.DropSequenceAction,
+				Type:  contract.TreeNodeActionTypeAction,
 			},
 		)
 	}

@@ -96,17 +96,17 @@ func (h *TreeHandler) ExecuteHandler(c fiber.Ctx) error {
 	//
 	//dbType := databaseConnection.GetConnectionInfoFromDB(req.ConnID).DBType
 	//switch {
-	//case req.Action == "create_database" || req.Action == "create_table" || req.Action == "create_object":
+	//case req.Action == "createDatabase" || req.Action == "createTable" || req.Action == "create_object":
 	//	if dbType == "mysql" {
 	//		var params interface{}
 	//		switch req.Action {
-	//		case "create_database":
+	//		case "createDatabase":
 	//			var p dto.MySQLCreateDatabaseParams
 	//			if err := c.Bind().Body(p); err != nil {
 	//				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	//			}
 	//			params = p
-	//		case "create_table":
+	//		case "createTable":
 	//			var p dto.MySQLCreateTableParams
 	//			if err := c.Bind().Body(p); err != nil {
 	//				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
@@ -125,13 +125,13 @@ func (h *TreeHandler) ExecuteHandler(c fiber.Ctx) error {
 	//	} else if dbType == "postgresql" {
 	//		var params interface{}
 	//		switch req.Action {
-	//		case "create_database":
+	//		case "createDatabase":
 	//			var p dto.PostgresCreateDatabaseParams
 	//			if err := c.Bind().Body(p); err != nil {
 	//				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	//			}
 	//			params = p
-	//		case "create_table":
+	//		case "createTable":
 	//			var p dto.PostgresCreateTableParams
 	//			if err := c.Bind().Body(p); err != nil {
 	//				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
@@ -148,17 +148,17 @@ func (h *TreeHandler) ExecuteHandler(c fiber.Ctx) error {
 	//		}
 	//		err = repo.CreateObject(params)
 	//	}
-	//case req.Action == "drop_database" || req.Action == "drop_table" || req.Action == "drop_object":
+	//case req.Action == "dropDatabase" || req.Action == "dropTable" || req.Action == "drop_object":
 	//	if dbType == "mysql" {
 	//		var params interface{}
 	//		switch req.Action {
-	//		case "drop_database":
+	//		case "dropDatabase":
 	//			var p dto.MySQLDropDatabaseParams
 	//			if err := c.Bind().Body(p); err != nil {
 	//				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	//			}
 	//			params = p
-	//		case "drop_table", "drop_object":
+	//		case "dropTable", "drop_object":
 	//			var p dto.DropTableParams
 	//			if err := c.Bind().Body(p); err != nil {
 	//				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
@@ -170,13 +170,13 @@ func (h *TreeHandler) ExecuteHandler(c fiber.Ctx) error {
 	//	} else if dbType == "postgresql" {
 	//		var params interface{}
 	//		switch req.Action {
-	//		case "drop_database":
+	//		case "dropDatabase":
 	//			var p dto.PostgresDropDatabaseParams
 	//			if err := c.Bind().Body(p); err != nil {
 	//				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	//			}
 	//			params = p
-	//		case "drop_table", "drop_object":
+	//		case "dropTable", "drop_object":
 	//			var p dto.DropTableParams
 	//			if err := c.Bind().Body(p); err != nil {
 	//				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
@@ -186,18 +186,18 @@ func (h *TreeHandler) ExecuteHandler(c fiber.Ctx) error {
 	//		}
 	//		err = repo.DropObject(params)
 	//	}
-	//case req.Action == "edit_table" || req.Action == "edit_view" || req.Action == "edit_materialized_view":
+	//case req.Action == "editTable" || req.Action == "editView" || req.Action == "editMaterializedView":
 	//	if dbType == "mysql" {
 	//		var params interface{}
 	//		switch req.Action {
-	//		case "edit_table":
+	//		case "editTable":
 	//			var p dto.MySQLUpdateTableParams
 	//			if err := c.Bind().Body(p); err != nil {
 	//				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	//			}
 	//			p.OldName = req.NodeID
 	//			params = p
-	//		case "edit_view":
+	//		case "editView":
 	//			var p dto.MySQLUpdateObjectParams
 	//			if err := c.Bind().Body(p); err != nil {
 	//				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
@@ -209,14 +209,14 @@ func (h *TreeHandler) ExecuteHandler(c fiber.Ctx) error {
 	//	} else if dbType == "postgresql" {
 	//		var params interface{}
 	//		switch req.Action {
-	//		case "edit_table":
+	//		case "editTable":
 	//			var p dto.PostgresUpdateTableParams
 	//			if err := c.Bind().Body(p); err != nil {
 	//				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	//			}
 	//			p.OldName = req.NodeID
 	//			params = p
-	//		case "edit_view", "edit_materialized_view":
+	//		case "editView", "editMaterializedView":
 	//			var p dto.PostgresUpdateObjectParams
 	//			if err := c.Bind().Body(p); err != nil {
 	//				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
