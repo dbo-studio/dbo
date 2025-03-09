@@ -4,7 +4,7 @@ import { useSearchParams, useNavigate as use_navigate } from 'react-router-dom';
 export type NavigationParamsType = {
   tabId?: string;
   connectionId?: number;
-  route?: 'data' | 'query' | 'design' | '/' | '404';
+  route?: 'data' | 'query' | 'design' | 'object' | '/' | '404';
 };
 
 export default function useNavigate() {

@@ -33,10 +33,9 @@ export default function Query() {
     if (setting.schema === '' || setting.database === '' || autocomplete || !currentConnection || pending) return;
 
     getAutoComplete({
-      connection_id: currentConnection.id,
-      schema: setting.schema,
-      database: setting.database,
-      from_cache: true
+      connectionId: currentConnection.id,
+      nodeId: getSelectedTab()?.id,
+      fromCache: true
     } as AutoCompleteRequestType).then((res) => {
       setAutocomplete(res);
     });

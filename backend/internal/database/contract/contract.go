@@ -5,14 +5,15 @@ import (
 )
 
 type DatabaseRepository interface {
-	Tree(parentID string) (*TreeNode, error)
-	Objects(nodeID, objType string) (any, error)
 	CreateObject(params any) error
 	DropObject(params any) error
 	UpdateObject(params any) error
 	RunQuery(dto *dto.RunQueryRequest) (*dto.RunQueryResponse, error)
 	UpdateQuery(dto *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error)
 	RunRawQuery(dto *dto.RawQueryRequest) (*dto.RawQueryResponse, error)
+	Tree(parentID string) (*TreeNode, error)
 	Actions(nodeType TreeNodeType) []TreeNodeAction
-	FormFields(action TreeNodeActionName) []FormField
+	GetFormTabs(action TreeNodeActionName) []FormTab
+	GetFormFields(action TreeNodeActionName, tabID TreeTab) []FormField
+	Objects(nodeID string, objType TreeNodeType, tabID TreeTab) (any, error)
 }

@@ -5,6 +5,17 @@ export type TreeRequestType = {
 
 export type TreeResponseType = TreeNodeType;
 
+export type GetObjectRequestType = {
+  connectionId: string;
+  action: string;
+};
+
+export type GetObjectDetailRequestType = {
+  connectionId: string;
+  nodeId: string;
+  type: string;
+};
+
 export type TreeNodeType = {
   id: string;
   name: string;

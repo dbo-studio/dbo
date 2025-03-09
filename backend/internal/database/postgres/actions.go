@@ -9,6 +9,7 @@ func (r *PostgresRepository) Actions(nodeType contract.TreeNodeType) []contract.
 
 	switch nodeType {
 	case contract.RootNodeType:
+	case contract.DatabaseContainerNodeType:
 		actions = append(actions, contract.TreeNodeAction{
 			Title: "Create database",
 			Name:  contract.CreateDatabaseAction,

@@ -1,9 +1,10 @@
 import BaseLayout from '@/components/layout/BaseLayout.tsx';
-import { createElement, type JSX } from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { type JSX, createElement } from 'react';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import NotFound from './404/404';
 import Data from './Data/Data';
 import Design from './Design/Design';
+import ObjectForm from './ObjectForm/Object';
 import Query from './Query/Query';
 
 export const router = createBrowserRouter([
@@ -26,6 +27,14 @@ export const router = createBrowserRouter([
       {
         path: 'design',
         element: <Design />
+      },
+      {
+        path: 'object',
+        element: <ObjectForm />
+      },
+      {
+        path: 'object/:id',
+        element: <ObjectForm />
       }
     ]
   }

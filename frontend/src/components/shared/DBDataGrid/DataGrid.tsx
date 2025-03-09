@@ -14,18 +14,21 @@ import type { DataGridProps } from '@/components/shared/DBDataGrid/types.ts';
 import { Box, CircularProgress } from '@mui/material';
 import { useMemo, useRef } from 'react';
 
-import { registerCellType, TextCellType } from 'handsontable/cellTypes';
+import { TextCellType, registerCellType } from 'handsontable/cellTypes';
 
+import { TabMode } from '@/core/enums';
+import useNavigate from '@/hooks/useNavigate.hook';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ColumnType } from '@/types';
-import { registerEditor, TextEditor } from 'handsontable/editors';
+import { TextEditor, registerEditor } from 'handsontable/editors';
 import {
   AutoColumnSize,
   AutoRowSize,
   ContextMenu,
   ManualColumnResize,
-  registerPlugin,
   TouchScroll,
-  TrimRows
+  TrimRows,
+  registerPlugin
 } from 'handsontable/plugins';
 import { baseRenderer, htmlRenderer, registerRenderer, textRenderer } from 'handsontable/renderers';
 import { useHandleDataUpdate } from './hooks/useHandleDataUpdate';
@@ -46,6 +49,9 @@ registerPlugin(ContextMenu);
 export default function DataGrid({ editable }: DataGridProps) {
   const hotTableRef = useRef<HotTableRef | null>(null);
   const { loading, getRows, getColumns } = useDataStore();
+
+  const { addTab } = useTabStore();
+  const navigate = useNavigate();
 
   const rows = useMemo(() => getRows(), [getRows()]);
   const headers = useMemo(() => getColumns(true), [getColumns()]);
@@ -69,6 +75,18 @@ export default function DataGrid({ editable }: DataGridProps) {
 
   return (
     <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
+      {/* biome-ignore lint/a11y/useButtonType: <explanation> */}
+      <button
+        onClick={() => {
+          const tab = addTab('your-object=tab-name', undefined, TabMode.Object);
+          navigate({
+            route: 'object',
+            tabId: tab.id
+          });
+        }}
+      >
+        go to object
+      </button>
       <QuickViewDialog editable={editable} />
       <DataGridStyled
         ref={hotTableRef}

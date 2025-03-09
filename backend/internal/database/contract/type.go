@@ -27,6 +27,14 @@ type FormField struct {
 }
 
 type FormFieldOption struct {
-	Value string `json:"value"`
-	Name  string `json:"name"`
+	ID      string            `json:"id"`
+	Name    string            `json:"name"`
+	Type    string            `json:"type,omitempty"`
+	Value   string            `json:"value,omitempty"`
+	Options []FormFieldOption `json:"options,omitempty"`
+}
+
+type FormTab struct {
+	ID   TreeTab `json:"id"`
+	Name string  `json:"name"`
 }

@@ -7,11 +7,12 @@ func (r *Server) routing() {
 
 	api := r.app.Group("/api")
 
-	api.Get("/tree", r.handlers.TreeHandler.TreeHandler)
-	api.Get("/form-fields", r.handlers.TreeHandler.FormFieldsHandler)
-	api.Get("/get-object", r.handlers.TreeHandler.GetObjectHandler)
-	api.Post("/execute", r.handlers.TreeHandler.ExecuteHandler)
-	api.Post("/query", r.handlers.TreeHandler.QueryHandler) // برای اجرای کوئری‌ها
+	tree := api.Group("tree")
+	tree.Get("/", r.handlers.TreeHandler.TreeHandler)
+	tree.Get("/tabs", r.handlers.TreeHandler.Tabs)
+	tree.Get("/fields", r.handlers.TreeHandler.ObjectFields)
+	tree.Get("/object", r.handlers.TreeHandler.ObjectDetail)
+	tree.Post("/execute", r.handlers.TreeHandler.ExecuteHandler)
 
 	query := api.Group("query")
 	query.Post("/run", r.handlers.QueryHandler.Run)

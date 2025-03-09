@@ -1,13 +1,37 @@
-import { GET_TREE } from '@/api/object/endpoints.ts';
-import api from '@/core/services/api';
-import { transformTree } from './transformers';
-import type { TreeRequestType, TreeResponseType } from '@/api/object/types.ts';
+import type {
+  GetObjectDetailRequestType,
+  GetObjectRequestType,
+  TreeRequestType,
+  TreeResponseType
+} from '@/api/object/types.ts';
+import { api } from '@/core/api';
 
-export const getTree = async ({ connectionId, parentId }: TreeRequestType): Promise<TreeResponseType> => {
-  return api
-    .get(GET_TREE(), {
-      connectionId,
-      parentId
+const endpoints = {
+  getTree: () => '/tree',
+  getObject: () => '/tree/object',
+  getObjectDetail: () => '/tree/object-detail'
+};
+
+export const getTree = async (params: TreeRequestType): Promise<TreeResponseType> => {
+  return (
+    await api.get(endpoints.getTree(), {
+      params
     })
-    .then(transformTree);
+  ).data.data as TreeResponseType;
+};
+
+export const getObject = async (params: GetObjectRequestType) => {
+  return (
+    await api.get(endpoints.getObject(), {
+      params
+    })
+  ).data.data;
+};
+
+export const getObjectDetail = async (params: GetObjectDetailRequestType) => {
+  return (
+    await api.get(endpoints.getObjectDetail(), {
+      params
+    })
+  ).data.data;
 };

@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:live": "NODE_ENV=local VITE_PUBLIC_SERVER_URL=http://localhost:8080/api vite",
+    "dev:live": "NODE_ENV=development VITE_PUBLIC_SERVER_URL=http://localhost:8080/api vite",
     "build": "tsc --noEmit && vite build",
     "lint": "biome check src",
     "preview": "vite preview",
@@ -73,6 +73,8 @@
     "vitest": "^3.0.8"
   },
   "msw": {
-    "workerDirectory": ["public"]
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

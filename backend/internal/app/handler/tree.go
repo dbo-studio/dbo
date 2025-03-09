@@ -33,45 +33,49 @@ func (h *TreeHandler) TreeHandler(c fiber.Ctx) error {
 	return response.SuccessBuilder(result).Send(c)
 }
 
-func (h *TreeHandler) FormFieldsHandler(c fiber.Ctx) error {
-	return nil
+func (h *TreeHandler) Tabs(c fiber.Ctx) error {
+	req := new(dto.ObjectTabsRequest)
+	if err := c.Bind().Query(req); err != nil {
+		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
+	}
 
-	//connID := c.Query("conn_id")
-	//action := c.Query("action")
-	//if connID == "" || action == "" {
-	//	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "conn_id and action are required"})
-	//}
-	//
-	//repo, err := database.NewDatabaseRepository(databaseConnection.GetConnectionInfoFromDB(connID).DBType, connID, h.cm)
-	//if err != nil {
-	//	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
-	//}
-	//
-	//fields := repo.FormFields(action)
-	//return c.JSON(fields)
+	result, err := h.treeService.Tabs(c.Context(), req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder(err).Send(c)
+	}
+
+	return response.SuccessBuilder(result).Send(c)
 }
 
-func (h *TreeHandler) GetObjectHandler(c fiber.Ctx) error {
-	return nil
+func (h *TreeHandler) ObjectFields(c fiber.Ctx) error {
+	req := new(dto.ObjectFieldsRequest)
+	if err := c.Bind().Query(req); err != nil {
+		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
+	}
 
-	//connID := c.Query("conn_id")
-	//nodeID := c.Query("node_id")
-	//objType := c.Query("type")
-	//if connID == "" || nodeID == "" || objType == "" {
-	//	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "conn_id, node_id, and type are required"})
-	//}
-	//
-	//repo, err := database.NewDatabaseRepository(databaseConnection.GetConnectionInfoFromDB(connID).DBType, connID, h.cm)
-	//if err != nil {
-	//	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
-	//}
-	//
-	//data, err := repo.objects(nodeID, objType)
-	//if err != nil {
-	//	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
-	//}
-	//
-	//return c.JSON(data)
+	result, err := h.treeService.TabObject(c.Context(), req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder(err).Send(c)
+	}
+
+	return response.SuccessBuilder(result).Send(c)
+}
+
+func (h *TreeHandler) ObjectDetail(c fiber.Ctx) error {
+	req := new(dto.ObjectDetailRequest)
+	if err := c.Bind().Query(req); err != nil {
+		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
+	}
+
+	result, err := h.treeService.ObjectDetail(c.Context(), req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder(err).Send(c)
+	}
+
+	return response.SuccessBuilder(result).Send(c)
 }
 
 func (h *TreeHandler) ExecuteHandler(c fiber.Ctx) error {
