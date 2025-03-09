@@ -204,26 +204,45 @@ func (r *PostgresRepository) getIndexColumns(node PGNode) (any, error) {
 	}, nil
 }
 
-func (r *PostgresRepository) getIndexInfo(node PGNode) (any, error) {
-	type IndexInfo struct {
-		IndexName   string         `gorm:"column:index_name"`
-		SchemaName  string         `gorm:"column:schema_name"`
-		TableSize   sql.NullString `gorm:"column:table_size"`
-		IndexesSize sql.NullString `gorm:"column:indexes_size"`
-		TotalSize   sql.NullString `gorm:"column:total_size"`
-	}
+type IndexInfo struct {
+	Name         string         `gorm:"column:index_name"`
+	Columns      string         `gorm:"column:columns"`
+	IsUnique     bool           `gorm:"column:is_unique"`
+	IsPrimary    bool           `gorm:"column:is_primary"`
+	AccessMethod string         `gorm:"column:access_method"`
+	Tablespace   sql.NullString `gorm:"column:tablespace"`
+	Definition   string         `gorm:"column:definition"`
+	Size         sql.NullString `gorm:"column:size"`
+}
 
-	info := IndexInfo{}
-	err := r.db.Table("pg_index AS i").
-		Select("i.indname, n.nspname, pg_size_pretty(c.reltuples * coalesce(c.relpages, 0) * 8) as table_size, pg_size_pretty(c.relpages * 8) as indexes_size, pg_size_pretty(c.reltuples * coalesce(c.relpages, 0) * 8 + c.relpages * 8) as total_size").
-		Joins("JOIN pg_class AS c ON c.relname = ? AND c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)", node.Table, node.Schema).
-		Scan(&info).Error
+func (r *PostgresRepository) getIndexInfo(node PGNode) (any, error) {
+	indexes := make([]IndexInfo, 0)
+	err := r.db.Table("pg_index ix").
+		Select(`
+			i.relname as index_name,
+			array_to_string(array_agg(a.attname), ', ') as columns,
+			ix.indisunique as is_unique,
+			ix.indisprimary as is_primary,
+			am.amname as access_method,
+			t.spcname as tablespace,
+			pg_get_indexdef(i.oid) as definition,
+			pg_size_pretty(pg_relation_size(i.oid)) as size
+		`).
+		Joins("JOIN pg_class i ON i.oid = ix.indexrelid").
+		Joins("JOIN pg_class c ON c.oid = ix.indrelid").
+		Joins("JOIN pg_namespace n ON n.oid = c.relnamespace").
+		Joins("JOIN pg_am am ON am.oid = i.relam").
+		Joins("LEFT JOIN pg_tablespace t ON t.oid = i.reltablespace").
+		Joins("JOIN pg_attribute a ON a.attrelid = ix.indrelid AND a.attnum = ANY(ix.indkey)").
+		Where("n.nspname = ? AND c.relname = ?", node.Schema, node.Table).
+		Group("i.relname, ix.indisunique, ix.indisprimary, am.amname, t.spcname, i.oid").
+		Scan(&indexes).Error
 	if err != nil {
 		return nil, err
 	}
 
 	return map[string]interface{}{
-		"info": info,
+		"indexes": indexes,
 	}, nil
 }
 
@@ -427,76 +446,116 @@ func (r *PostgresRepository) getTableTriggers(node PGNode) (any, error) {
 	}, nil
 }
 
-func (r *PostgresRepository) getTableIndexes(node PGNode) (any, error) {
-	type TableIndex struct {
-		IndexName   string         `gorm:"column:index_name"`
-		SchemaName  string         `gorm:"column:schema_name"`
-		TableSize   sql.NullString `gorm:"column:table_size"`
-		IndexesSize sql.NullString `gorm:"column:indexes_size"`
-		TotalSize   sql.NullString `gorm:"column:total_size"`
-	}
-
-	indexes := make([]TableIndex, 0)
-	err := r.db.Table("pg_index AS i").
-		Select("i.indname as index_name, n.nspname as schema_name, pg_size_pretty(c.reltuples * coalesce(c.relpages, 0) * 8) as table_size, pg_size_pretty(c.relpages * 8) as indexes_size, pg_size_pretty(c.reltuples * coalesce(c.relpages, 0) * 8 + c.relpages * 8) as total_size").
-		Joins("JOIN pg_class AS c ON c.relname = ? AND c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)", node.Table, node.Schema).
+func (r *PostgresRepository) getTableIndexes(node PGNode) ([]IndexInfo, error) {
+	indexes := make([]IndexInfo, 0)
+	err := r.db.Table("pg_index ix").
+		Select(`
+			i.relname as index_name,
+			array_to_string(array_agg(a.attname), ', ') as columns,
+			ix.indisunique as is_unique,
+			ix.indisprimary as is_primary,
+			am.amname as access_method,
+			t.spcname as tablespace,
+			pg_get_indexdef(i.oid) as definition,
+			pg_size_pretty(pg_relation_size(i.oid)) as size
+		`).
+		Joins("JOIN pg_class i ON i.oid = ix.indexrelid").
+		Joins("JOIN pg_class c ON c.oid = ix.indrelid").
+		Joins("JOIN pg_namespace n ON n.oid = c.relnamespace").
+		Joins("JOIN pg_am am ON am.oid = i.relam").
+		Joins("LEFT JOIN pg_tablespace t ON t.oid = i.reltablespace").
+		Joins("JOIN pg_attribute a ON a.attrelid = ix.indrelid AND a.attnum = ANY(ix.indkey)").
+		Where("n.nspname = ? AND c.relname = ?", node.Schema, node.Table).
+		Group("i.relname, ix.indisunique, ix.indisprimary, am.amname, t.spcname, i.oid").
 		Scan(&indexes).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]interface{}{
-		"indexes": indexes,
-	}, nil
+	return indexes, err
 }
 
-func (r *PostgresRepository) getTableForeignKeys(node PGNode) (any, error) {
-	type TableForeignKey struct {
-		ConstraintName string         `gorm:"column:constraint_name"`
-		SchemaName     string         `gorm:"column:schema_name"`
-		Definition     sql.NullString `gorm:"column:definition"`
-	}
-
-	foreignKeys := make([]TableForeignKey, 0)
-	err := r.db.Table("pg_constraint AS c").
-		Select("c.conname as constraint_name, n.nspname as schema_name, c.consrc as definition").
-		Joins("JOIN pg_namespace AS n ON n.oid = c.connamespace").
-		Where("c.conname = ? AND c.connamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)", node.Table, node.Schema).
-		Scan(&foreignKeys).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]interface{}{
-		"foreignKeys": foreignKeys,
-	}, nil
+type ForeignKeyInfo struct {
+	Name           string `gorm:"column:constraint_name"`
+	Columns        string `gorm:"column:columns"`
+	RefTable       string `gorm:"column:ref_table"`
+	RefColumns     string `gorm:"column:ref_columns"`
+	UpdateAction   string `gorm:"column:update_action"`
+	DeleteAction   string `gorm:"column:delete_action"`
+	Deferrable     bool   `gorm:"column:is_deferrable"`
+	InitiallyDefer bool   `gorm:"column:initially_deferred"`
 }
 
-func (r *PostgresRepository) getTableColumns(node PGNode) (any, error) {
-	type TableColumn struct {
-		ColumnName    string         `gorm:"column:column_name"`
-		DataType      string         `gorm:"column:data_type"`
-		IsNullable    string         `gorm:"column:is_nullable"`
-		ColumnDefault sql.NullString `gorm:"column:column_default"`
-		Comment       sql.NullString `gorm:"column:comment"`
-	}
+func (r *PostgresRepository) getTableForeignKeys(node PGNode) ([]ForeignKeyInfo, error) {
+	fks := make([]ForeignKeyInfo, 0)
+	err := r.db.Table("pg_constraint c").
+		Select(`
+			c.conname as constraint_name,
+			array_to_string(array_agg(a.attname), ', ') as columns,
+			ct.relname as ref_table,
+			array_to_string(array_agg(af.attname), ', ') as ref_columns,
+			CASE c.confupdtype
+				WHEN 'a' THEN 'NO ACTION'
+				WHEN 'r' THEN 'RESTRICT'
+				WHEN 'c' THEN 'CASCADE'
+				WHEN 'n' THEN 'SET NULL'
+				WHEN 'd' THEN 'SET DEFAULT'
+			END as update_action,
+			CASE c.confdeltype
+				WHEN 'a' THEN 'NO ACTION'
+				WHEN 'r' THEN 'RESTRICT'
+				WHEN 'c' THEN 'CASCADE'
+				WHEN 'n' THEN 'SET NULL'
+				WHEN 'd' THEN 'SET DEFAULT'
+			END as delete_action,
+			c.condeferrable as is_deferrable,
+			c.condeferred as initially_deferred
+		`).
+		Joins("JOIN pg_class t ON t.oid = c.conrelid").
+		Joins("JOIN pg_class ct ON ct.oid = c.confrelid").
+		Joins("JOIN pg_namespace n ON n.oid = t.relnamespace").
+		Joins("JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)").
+		Joins("JOIN pg_attribute af ON af.attrelid = c.confrelid AND af.attnum = ANY(c.confkey)").
+		Where("n.nspname = ? AND t.relname = ? AND c.contype = 'f'", node.Schema, node.Table).
+		Group("c.conname, ct.relname, c.confupdtype, c.confdeltype, c.condeferrable, c.condeferred").
+		Scan(&fks).Error
+	return fks, err
+}
 
-	columns := make([]TableColumn, 0)
-	err := r.db.Table("pg_attribute AS a").
-		Select("a.attname as column_name, t.typname as data_type, a.attnotnull as is_nullable, pg_get_expr(ad.adbin, ad.adrelid) as column_default, d.description as comment").
-		Joins("JOIN pg_type AS t ON t.oid = a.atttypid").
-		Joins("JOIN pg_class AS c ON c.relname = ? AND c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)", node.Table, node.Schema).
-		Joins("LEFT JOIN pg_attrdef AS ad ON ad.adrelid = a.attrelid AND ad.adnum = a.attnum").
-		Joins("LEFT JOIN pg_description AS d ON d.objoid = a.attrelid AND d.objsubid = a.attnum").
-		Where("a.attrelid = c.oid AND a.attnum > 0").
+type ColumnInfo struct {
+	Name         string         `gorm:"column:column_name"`
+	DataType     string         `gorm:"column:data_type"`
+	NotNull      bool           `gorm:"column:not_null"`
+	Default      sql.NullString `gorm:"column:column_default"`
+	Comment      sql.NullString `gorm:"column:comment"`
+	MaxLength    sql.NullInt64  `gorm:"column:character_maximum_length"`
+	NumericScale sql.NullInt64  `gorm:"column:numeric_scale"`
+	IsIdentity   bool           `gorm:"column:is_identity"`
+	IsGenerated  bool           `gorm:"column:is_generated"`
+}
+
+func (r *PostgresRepository) getTableColumns(node PGNode) ([]ColumnInfo, error) {
+	columns := make([]ColumnInfo, 0)
+	err := r.db.Table("pg_attribute a").
+		Select(`
+			a.attname as column_name,
+			format_type(a.atttypid, a.atttypmod) as data_type,
+			a.attnotnull as not_null,
+			pg_get_expr(ad.adbin, ad.adrelid) as column_default,
+			col.character_maximum_length,
+			col.numeric_scale,
+			CASE WHEN a.attidentity != '' THEN true ELSE false END as is_identity,
+			CASE WHEN a.attgenerated != '' THEN true ELSE false END as is_generated,
+			d.description as comment
+		`).
+		Joins("JOIN pg_class c ON c.oid = a.attrelid").
+		Joins("JOIN pg_namespace n ON n.oid = c.relnamespace").
+		Joins("LEFT JOIN pg_attrdef ad ON ad.adrelid = a.attrelid AND ad.adnum = a.attnum").
+		Joins("LEFT JOIN pg_description d ON d.objoid = a.attrelid AND d.objsubid = a.attnum").
+		Joins(`LEFT JOIN information_schema.columns col ON 
+			col.table_schema = n.nspname AND 
+			col.table_name = c.relname AND 
+			col.column_name = a.attname`).
+		Where("n.nspname = ? AND c.relname = ? AND a.attnum > 0 AND NOT a.attisdropped", node.Schema, node.Table).
+		Order("a.attnum").
 		Scan(&columns).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]interface{}{
-		"columns": columns,
-	}, nil
+	return columns, err
 }
 
 func (r *PostgresRepository) getSchemaPrivileges(node PGNode) (any, error) {
@@ -571,11 +630,13 @@ func (r *PostgresRepository) getDatabaseInfo(node PGNode) (any, error) {
 		Name     string         `gorm:"column:datname"`
 		Owner    string         `gorm:"column:rolname"`
 		Encoding sql.NullString `gorm:"column:encoding"`
+		Comment  sql.NullString `gorm:"column:description"`
 	}
 	err := r.db.Raw(`
-		SELECT d.datname, r.rolname, pg_encoding_to_char(encoding) as encoding
+		SELECT d.datname, r.rolname, pg_encoding_to_char(d.encoding) as encoding, des.description
 		FROM pg_database d
 		JOIN pg_roles r ON r.oid = d.datdba
+		LEFT JOIN pg_description des ON des.objoid = d.oid AND des.objsubid = 0
 		WHERE d.datname = ?`, node.Database).Scan(&info).Error
 	if err != nil {
 		return nil, err
@@ -584,12 +645,13 @@ func (r *PostgresRepository) getDatabaseInfo(node PGNode) (any, error) {
 		"name":     info.Name,
 		"owner":    info.Owner,
 		"encoding": info.Encoding.String,
+		"comment":  info.Comment.String,
 	}, nil
 }
 
 // Helper methods for Table
 func (r *PostgresRepository) getTableInfo(node PGNode) (any, error) {
-	var info struct {
+	type TableInfo struct {
 		Name                string         `gorm:"column:name"`
 		Comment             sql.NullString `gorm:"column:description"`
 		Persistence         string         `gorm:"column:persistence"`
@@ -601,20 +663,37 @@ func (r *PostgresRepository) getTableInfo(node PGNode) (any, error) {
 		Tablespace          sql.NullString `gorm:"column:tablespace"`
 		Owner               string         `gorm:"column:owner"`
 	}
-	err := r.db.Raw(`
-		SELECT 
-			CASE WHEN c.relpersistence = 't' THEN true ELSE false END AS istemporary,
-			d.description
-		FROM pg_class c
-		JOIN pg_namespace n ON n.oid = c.relnamespace
-		LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0
-		WHERE c.relname = ? AND n.nspname = ?`,
-		node.Table, node.Schema).Scan(&info).Error
+
+	var info TableInfo
+	err := r.db.Table("pg_class c").
+		Select(`
+			c.relname as name,
+			d.description,
+			CASE 
+				WHEN c.relpersistence = 'p' THEN 'permanent'
+				WHEN c.relpersistence = 'u' THEN 'unlogged'
+				WHEN c.relpersistence = 't' THEN 'temporary'
+			END as persistence,
+			false as with_oids,
+			pg_get_partkeydef(c.oid) as partition_key,
+			pg_get_expr(c.relpartbound, c.oid) as partition_expression,
+			array_to_string(c.reloptions, ', ') as options,
+			am.amname as access_method,
+			t.spcname as tablespace,
+			r.rolname as owner
+		`).
+		Joins("JOIN pg_namespace n ON n.oid = c.relnamespace").
+		Joins("JOIN pg_roles r ON r.oid = c.relowner").
+		Joins("LEFT JOIN pg_tablespace t ON t.oid = c.reltablespace").
+		Joins("LEFT JOIN pg_am am ON am.oid = c.relam").
+		Joins("LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0").
+		Where("c.relname = ? AND n.nspname = ?", node.Table, node.Schema).
+		Scan(&info).Error
 	if err != nil {
 		return nil, err
 	}
 	return map[string]interface{}{
-		"name":                 node.Table,
+		"name":                 info.Name,
 		"persistence":          info.Persistence,
 		"with_oids":            info.WithOids,
 		"partition_expression": info.PartitionExpression.String,
