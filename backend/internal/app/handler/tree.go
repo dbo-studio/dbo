@@ -34,9 +34,10 @@ func (h *TreeHandler) TreeHandler(c fiber.Ctx) error {
 }
 
 func (h *TreeHandler) Tabs(c fiber.Ctx) error {
-	req := new(dto.ObjectTabsRequest)
-	if err := c.Bind().Query(req); err != nil {
-		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
+	req := &dto.ObjectTabsRequest{
+		ConnectionId: fiber.Query[int32](c, "connectionId"),
+		Action:       fiber.Query[string](c, "action"),
+		NodeId:       fiber.Params[string](c, "nodeId"),
 	}
 
 	result, err := h.treeService.Tabs(c.Context(), req)
@@ -49,9 +50,11 @@ func (h *TreeHandler) Tabs(c fiber.Ctx) error {
 }
 
 func (h *TreeHandler) ObjectFields(c fiber.Ctx) error {
-	req := new(dto.ObjectFieldsRequest)
-	if err := c.Bind().Query(req); err != nil {
-		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
+	req := &dto.ObjectFieldsRequest{
+		ConnectionId: fiber.Query[int32](c, "connectionId"),
+		Action:       fiber.Query[string](c, "action"),
+		NodeId:       fiber.Params[string](c, "nodeId"),
+		TabId:        fiber.Params[string](c, "tabId"),
 	}
 
 	result, err := h.treeService.TabObject(c.Context(), req)
@@ -64,9 +67,11 @@ func (h *TreeHandler) ObjectFields(c fiber.Ctx) error {
 }
 
 func (h *TreeHandler) ObjectDetail(c fiber.Ctx) error {
-	req := new(dto.ObjectDetailRequest)
-	if err := c.Bind().Query(req); err != nil {
-		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
+	req := &dto.ObjectDetailRequest{
+		ConnectionId: fiber.Query[int32](c, "connectionId"),
+		NodeId:       fiber.Params[string](c, "nodeId"),
+		TabId:        fiber.Params[string](c, "tabId"),
+		Type:         fiber.Params[string](c, "type"),
 	}
 
 	result, err := h.treeService.ObjectDetail(c.Context(), req)

@@ -9,9 +9,9 @@ func (r *Server) routing() {
 
 	tree := api.Group("tree")
 	tree.Get("/", r.handlers.TreeHandler.TreeHandler)
-	tree.Get("/tabs", r.handlers.TreeHandler.Tabs)
-	tree.Get("/fields", r.handlers.TreeHandler.ObjectFields)
-	tree.Get("/object", r.handlers.TreeHandler.ObjectDetail)
+	tree.Get("/:nodeId/tabs", r.handlers.TreeHandler.Tabs)
+	tree.Get("/:nodeId/tabs/:tabId/fields", r.handlers.TreeHandler.ObjectFields)
+	tree.Get("/:nodeId/tabs/:tabId/fields/:type", r.handlers.TreeHandler.ObjectDetail)
 	tree.Post("/execute", r.handlers.TreeHandler.ExecuteHandler)
 
 	query := api.Group("query")
