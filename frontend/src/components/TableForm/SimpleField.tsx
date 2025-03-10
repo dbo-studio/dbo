@@ -31,12 +31,14 @@ export default function SimpleField({ field, value, onChange, size = 'medium' }:
         </Box>
       );
     case 'select':
+    case 'multi-select':
       return (
         <SelectInput
+          isMulti={field.type === 'multi-select'}
           label={size === 'medium' ? field.name : undefined}
-          value={value || ''}
+          value={value || (field.type === 'multi-select' ? [] : '')}
           options={field.options?.map((opt) => ({ value: opt.value, label: opt.name })) || []}
-          onChange={(e) => onChange(e.value)}
+          onChange={(e) => onChange(e)}
           size={size}
         />
       );

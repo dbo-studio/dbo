@@ -21,6 +21,7 @@ export default function TableForm({ formSchema, formData, onChange }: TableFormP
 
   const handleFormChange = (field: string, value: any) => {
     const newState = { ...formState, [field]: value };
+    console.log('🚀 ~ handleFormChange ~ newState:', newState);
     setFormState(newState);
     onChange(newState);
   };

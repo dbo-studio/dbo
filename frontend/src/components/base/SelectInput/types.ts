@@ -8,6 +8,7 @@ export type SelectInputProps = {
   size?: 'medium' | 'small';
   options: SelectInputOption[];
   onChange: (value: SelectInputOption) => void;
+  isMulti?: boolean;
 };
 
 export type SelectInputOption = {

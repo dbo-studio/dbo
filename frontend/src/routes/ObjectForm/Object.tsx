@@ -15,7 +15,7 @@ export default function ObjectForm() {
     queryKey: ['objectTabs', currentConnection?.id],
     queryFn: () =>
       api.tree.getTabs({
-        nodeId: 'default.public.tableContainer',
+        nodeId: 'default.public.data_src',
         action: 'createTable',
         connectionId: String(currentConnection?.id || '')
       }),
@@ -27,7 +27,7 @@ export default function ObjectForm() {
     queryKey: ['tabFields', currentConnection?.id, tabs?.[selectedTabIndex]?.id],
     queryFn: () =>
       api.tree.getFields({
-        nodeId: 'default.public.tableContainer',
+        nodeId: 'default.public.data_src',
         action: 'createTable',
         tabId: tabs?.[selectedTabIndex].id || '',
         connectionId: String(currentConnection?.id || ''),

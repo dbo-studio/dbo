@@ -12,9 +12,27 @@ export default function SelectInput({
   onChange,
   emptylabel,
   disabled,
-  error
+  error,
+  isMulti
 }: SelectInputProps) {
   const theme = useTheme();
+
+  const handleChange = (selected: any) => {
+    if (isMulti) {
+      onChange(selected ? selected.map((item: any) => item.value) : []);
+    } else {
+      onChange(selected ? selected.value : '');
+    }
+  };
+
+  const getValue = () => {
+    if (!value) return null;
+
+    if (isMulti) {
+      return options.filter((option) => value.includes(option.value));
+    }
+    return options.find((option) => option.value === value) || null;
+  };
 
   return (
     <Box display={'flex'} flexDirection={'column'}>
@@ -24,14 +42,14 @@ export default function SelectInput({
         </Typography>
       )}
       <Select
+        isMulti={isMulti}
         components={{ IndicatorSeparator: null }}
         placeholder={options.length === 0 && emptylabel}
         isDisabled={disabled || options.length === 0}
-        defaultValue={options.find((option) => option.value === value) ?? ''}
-        value={options.find((option) => option.value === value) ?? ''}
-        options={options as any}
+        value={getValue()}
+        options={options}
         menuPlacement={'auto'}
-        onChange={(e) => onChange(e as any)}
+        onChange={handleChange}
         styles={SelectInputStyles(theme, error, size)}
         menuPortalTarget={document.body}
       />

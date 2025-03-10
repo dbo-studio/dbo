@@ -1,14 +1,16 @@
 import type { FormFieldType } from '@/api/tree/types';
 import {
   Box,
-  Button,
   IconButton,
+  Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
+  Typography
 } from '@mui/material';
 import CustomIcon from '../base/CustomIcon/CustomIcon';
 import SimpleField from './SimpleField';
@@ -22,7 +24,14 @@ interface ArrayFieldProps {
 export default function ArrayField({ field, value = [], onChange }: ArrayFieldProps) {
   const handleItemChange = (index: number, fieldId: string, fieldValue: any) => {
     const newData = [...value];
-    newData[index] = { ...newData[index], [fieldId]: fieldValue };
+    const foundField = field.options?.find((opt) => opt.id === fieldId);
+
+    if (foundField?.type === 'multi-select') {
+      newData[index] = { ...newData[index], [fieldId]: fieldValue || [] };
+    } else {
+      newData[index] = { ...newData[index], [fieldId]: fieldValue };
+    }
+
     onChange(newData);
   };
 
@@ -34,7 +43,7 @@ export default function ArrayField({ field, value = [], onChange }: ArrayFieldPr
   const handleAdd = () => {
     const newItem = field?.options?.reduce(
       (acc, option) => {
-        acc[option.id] = '';
+        acc[option.id] = option.type === 'multi-select' ? [] : '';
         return acc;
       },
       {} as Record<string, any>
@@ -43,22 +52,25 @@ export default function ArrayField({ field, value = [], onChange }: ArrayFieldPr
   };
 
   return (
-    <Box>
-      <TableContainer>
-        <Table size='small'>
+    <Box height='100%' display='flex' flexDirection='column'>
+      <TableContainer component={Paper}>
+        <Table sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow>
               {field?.options?.map((option) => (
-                <TableCell key={option.id}>{option.name}</TableCell>
+                <TableCell sx={{ minWidth: 150 }} key={option.id}>
+                  {option.name}
+                </TableCell>
               ))}
-              <TableCell width={50} />
+              <TableCell sx={{ minWidth: 50 }}>Add</TableCell>
+              <TableCell sx={{ minWidth: 50 }}>Remove</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {value.map((item, index) => (
               <TableRow key={`${field.id}-${index}-${item.name || ''}`}>
                 {field?.options?.map((option) => (
-                  <TableCell key={option.id}>
+                  <TableCell key={option.id} sx={{ minWidth: 150 }}>
                     <SimpleField
                       size='small'
                       field={option as unknown as FormFieldType}
@@ -67,21 +79,45 @@ export default function ArrayField({ field, value = [], onChange }: ArrayFieldPr
                     />
                   </TableCell>
                 ))}
-                <TableCell>
+
+                <TableCell sx={{ minWidth: 50 }}>
+                  <IconButton size='small' onClick={handleAdd}>
+                    <CustomIcon type='plus' />
+                  </IconButton>
+                </TableCell>
+
+                <TableCell sx={{ minWidth: 50 }}>
                   <IconButton size='small' onClick={() => handleDelete(index)}>
                     <CustomIcon type='delete' />
                   </IconButton>
                 </TableCell>
+
+                <TableCell />
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
-      <Box mt={2}>
-        <Button variant='contained' onClick={handleAdd}>
-          Add {field.name}
-        </Button>
-      </Box>
+      {value.length === 0 && (
+        <Box>
+          <IconButton color='primary' size='small' onClick={handleAdd}>
+            <Stack direction={'row'} spacing={1} alignItems={'center'}>
+              <Typography variant='body2'>Add {field.name}</Typography>
+              <CustomIcon type='plus' />
+            </Stack>
+          </IconButton>
+        </Box>
+      )}
+      {value.length > 0 && (
+        <Box>
+          <IconButton color='primary' size='small' onClick={handleAdd}>
+            <Stack direction={'row'} spacing={1} alignItems={'center'}>
+              <Typography variant='body2'>Add {field.name}</Typography>
+              <CustomIcon type='plus' />
+            </Stack>
+          </IconButton>
+        </Box>
+      )}
     </Box>
   );
 }

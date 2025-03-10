@@ -54,7 +54,9 @@ func (r *PostgresRepository) GetFormTabs(action contract.TreeNodeActionName) []c
 	}
 }
 
-func (r *PostgresRepository) GetFormFields(action contract.TreeNodeActionName, tabID contract.TreeTab) []contract.FormField {
+func (r *PostgresRepository) GetFormFields(nodeID string, action contract.TreeNodeActionName, tabID contract.TreeTab) []contract.FormField {
+	node := extractNode(nodeID)
+
 	switch action {
 	case contract.CreateDatabaseAction, contract.EditDatabaseAction:
 		switch tabID {
@@ -101,7 +103,7 @@ func (r *PostgresRepository) GetFormFields(action contract.TreeNodeActionName, t
 			}
 		case contract.ForeignKeysTab:
 			return []contract.FormField{
-				{ID: "foreign_keys", Name: "Foreign Keys", Type: "array", Options: getForeignKeyOptions()},
+				{ID: "foreign_keys", Name: "Foreign Keys", Type: "array", Options: r.getForeignKeyOptions(node)},
 			}
 		case contract.IndexesTab:
 			return []contract.FormField{
@@ -231,13 +233,89 @@ func getDataTypeOptions() []contract.FormFieldOption {
 	}
 }
 
-func getForeignKeyOptions() []contract.FormFieldOption {
+func (r *PostgresRepository) getForeignKeyOptions(node PGNode) []contract.FormFieldOption {
 	return []contract.FormFieldOption{
-		{ID: "name", Name: "Foreign Key Name", Type: "text"},
-		{ID: "columns", Name: "Source Columns", Type: "array"},
-		{ID: "ref_table", Name: "Referenced Table", Type: "text"},
-		{ID: "ref_columns", Name: "Referenced Columns", Type: "array"},
+		{ID: "name", Name: "Constraint Name", Type: "text", Required: true},
+		{ID: "columns", Name: "Source Columns", Type: "multi-select", Required: true, Options: r.getTableColumnsList(node)},
+		{ID: "ref_table", Name: "Referenced Table", Type: "select", Required: true, Options: r.getTablesList(node)},
+		{ID: "ref_columns", Name: "Referenced Columns", Type: "multi-select", Required: true, Options: r.getTableColumnsList(node)},
+		{ID: "on_update", Name: "On Update", Type: "select", Required: true, Options: []contract.FormFieldOption{
+			{Value: "NO ACTION", Name: "NO ACTION"},
+			{Value: "RESTRICT", Name: "RESTRICT"},
+			{Value: "CASCADE", Name: "CASCADE"},
+			{Value: "SET NULL", Name: "SET NULL"},
+			{Value: "SET DEFAULT", Name: "SET DEFAULT"},
+		}},
+		{ID: "on_delete", Name: "On Delete", Type: "select", Required: true, Options: []contract.FormFieldOption{
+			{Value: "NO ACTION", Name: "NO ACTION"},
+			{Value: "RESTRICT", Name: "RESTRICT"},
+			{Value: "CASCADE", Name: "CASCADE"},
+			{Value: "SET NULL", Name: "SET NULL"},
+			{Value: "SET DEFAULT", Name: "SET DEFAULT"},
+		}},
+		{ID: "deferrable", Name: "Deferrable", Type: "checkbox"},
+		{ID: "initially_deferred", Name: "Initially Deferred", Type: "checkbox"},
 	}
+}
+
+func (r *PostgresRepository) getTableColumnsList(node PGNode) []contract.FormFieldOption {
+	type columnResult struct {
+		Value string `gorm:"column:value"`
+		Name  string `gorm:"column:name"`
+	}
+
+	var results []columnResult
+	err := r.db.Table("pg_attribute a").
+		Select("a.attname as value, a.attname as name").
+		Joins("JOIN pg_class c ON c.oid = a.attrelid").
+		Joins("JOIN pg_namespace n ON n.oid = c.relnamespace").
+		Where("n.nspname = ? AND c.relname = ? AND a.attnum > 0 AND NOT a.attisdropped",
+			node.Schema, node.Table).
+		Order("a.attnum").
+		Scan(&results).Error
+
+	if err != nil {
+		return []contract.FormFieldOption{}
+	}
+
+	columns := make([]contract.FormFieldOption, len(results))
+	for i, result := range results {
+		columns[i] = contract.FormFieldOption{
+			ID:    result.Value,
+			Value: result.Value,
+			Name:  result.Name,
+		}
+	}
+	return columns
+}
+
+func (r *PostgresRepository) getTablesList(node PGNode) []contract.FormFieldOption {
+	type tableResult struct {
+		Value string `gorm:"column:value"`
+		Name  string `gorm:"column:name"`
+	}
+
+	var results []tableResult
+	err := r.db.Table("pg_class c").
+		Select("c.relname as value, c.relname as name").
+		Joins("JOIN pg_namespace n ON n.oid = c.relnamespace").
+		Where("n.nspname = ? AND c.relkind = 'r'", node.Schema).
+		Order("c.relname").
+		Scan(&results).Error
+	if err != nil {
+		return []contract.FormFieldOption{}
+	}
+
+	tables := make([]contract.FormFieldOption, len(results))
+	for i, result := range results {
+		tables[i] = contract.FormFieldOption{
+			ID:    result.Value,
+			Value: result.Value,
+			Name:  result.Name,
+		}
+	}
+
+	return tables
 }
 
 func getEncodingOptions() []contract.FormFieldOption {
