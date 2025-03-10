@@ -33,6 +33,7 @@ export default function SelectInput({
         menuPlacement={'auto'}
         onChange={(e) => onChange(e as any)}
         styles={SelectInputStyles(theme, error, size)}
+        menuPortalTarget={document.body}
       />
 
       {helpertext && (

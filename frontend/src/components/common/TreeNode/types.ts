@@ -1,4 +1,4 @@
-import type { TreeNodeType } from '@/api/object/types.ts';
+import type { TreeNodeType } from '@/api/tree/types';
 import type React from 'react';
 import type { RefObject } from 'react';
 

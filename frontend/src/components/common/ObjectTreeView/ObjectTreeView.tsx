@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { Box } from '@mui/material';
+import api from '@/api';
+import type { TreeNodeType } from '@/api/tree/types';
 import TreeNode from '@/components/common/TreeNode/TreeNode.tsx';
 import useAPI from '@/hooks/useApi.hook.ts';
-import api from '@/api';
 import { useConnectionStore } from '@/store/connectionStore/connection.store.ts';
-import type { TreeNodeType } from '@/api/object/types';
+import { Box } from '@mui/material';
+import { useEffect, useRef, useState } from 'react';
 
 export default function ObjectTreeView() {
   const [tree, setTree] = useState<TreeNodeType | undefined>(undefined);
@@ -13,7 +13,7 @@ export default function ObjectTreeView() {
   const parentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const { request: getTree } = useAPI({
-    apiMethod: api.object.getTree
+    apiMethod: api.tree.getTree
   });
 
   const handleGetTree = async (parentId: string | null): Promise<TreeNodeType | undefined> => {

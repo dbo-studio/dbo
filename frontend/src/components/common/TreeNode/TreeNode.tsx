@@ -1,4 +1,4 @@
-import type { TreeNodeType } from '@/api/object/types.ts';
+import type { TreeNodeType } from '@/api/tree/types';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import { NodeContent } from '@/components/common/TreeNode/NodeContent/NodeContent';
 import { ChildrenContainer, TreeNodeContainer } from '@/components/common/TreeNode/TreeNode.styled.ts';

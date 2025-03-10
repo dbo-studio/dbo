@@ -1,64 +1,57 @@
 import api from '@/api';
 import TableForm from '@/components/TableForm/TableForm';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { Box, Tab, Tabs } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-
-interface FormField {
-  id: string;
-  name: string;
-  type: string;
-  options?: any;
-  required?: boolean;
-}
+import { ObjectStyled } from './Object.styled';
+import ObjectTabs from './ObjectTabs';
 
 export default function ObjectForm() {
   const { currentConnection } = useConnectionStore();
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
 
-  const { data: formSchema } = useQuery({
-    queryKey: ['objectForm', currentConnection?.id],
+  // Get tabs list
+  const { data: tabs } = useQuery({
+    queryKey: ['objectTabs', currentConnection?.id],
     queryFn: () =>
-      api.object.getObject({
+      api.tree.getTabs({
+        nodeId: 'default.public.tableContainer',
         action: 'createTable',
         connectionId: String(currentConnection?.id || '')
       }),
     enabled: !!currentConnection
   });
 
+  // Get fields for selected tab
+  const { data: fields } = useQuery({
+    queryKey: ['tabFields', currentConnection?.id, tabs?.[selectedTabIndex]?.id],
+    queryFn: () =>
+      api.tree.getFields({
+        nodeId: 'default.public.tableContainer',
+        action: 'createTable',
+        tabId: tabs?.[selectedTabIndex].id || '',
+        connectionId: String(currentConnection?.id || ''),
+        type: 'table'
+      }),
+    enabled: !!currentConnection && !!tabs?.[selectedTabIndex]
+  });
+
   const handleFormChange = (data: any) => {
     console.log('Form data changed:', data);
-    // Handle form data changes here
   };
 
-  const tabs = useMemo(() => {
-    if (!formSchema) return [];
-    return formSchema;
-  }, [formSchema]);
-
   const selectedContent = useMemo(() => {
-    if (!tabs.length) return null;
-    const currentTab = tabs[selectedTabIndex];
+    if (!fields) return null;
 
-    if (currentTab.type === 'array') {
-      return <TableForm formSchema={currentTab.options} onChange={handleFormChange} />;
-    }
-    return <TableForm formSchema={[currentTab]} onChange={handleFormChange} />;
-  }, [selectedTabIndex, tabs]);
+    return <TableForm formSchema={fields} onChange={handleFormChange} />;
+  }, [fields]);
 
-  if (!formSchema || !tabs.length) return null;
+  if (!tabs) return null;
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={selectedTabIndex} onChange={(_, newValue) => setSelectedTabIndex(newValue)}>
-          {tabs.map((tab: FormField) => (
-            <Tab key={tab.id} label={tab.name} />
-          ))}
-        </Tabs>
-      </Box>
-      <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>{selectedContent}</Box>
-    </Box>
+    <ObjectStyled>
+      <ObjectTabs tabs={tabs} selectedTabIndex={selectedTabIndex} setSelectedTabIndex={setSelectedTabIndex} />
+      {selectedContent}
+    </ObjectStyled>
   );
 }

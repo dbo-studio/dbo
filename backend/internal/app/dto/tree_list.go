@@ -7,22 +7,23 @@ type (
 	}
 
 	ObjectTabsRequest struct {
-		ConnectionId int32  `query:"connectionId"`
-		NodeId       string `query:"nodeId"`
-		Action       string `query:"action"`
+		ConnectionId int32 `query:"connectionId"`
+		NodeId       string
+		Action       string
 	}
 
 	ObjectFieldsRequest struct {
-		ConnectionId int32  `query:"connectionId"`
-		NodeId       string `query:"nodeId"`
-		TabId        string `query:"tabId"`
-		Action       string `query:"action"`
+		ConnectionId int32 `query:"connectionId"`
+		NodeId       string
+		TabId        string
+		Action       string
 	}
 
 	ObjectDetailRequest struct {
-		ConnectionId int32  `query:"connectionId"`
-		NodeId       string `query:"nodeId"`
-		Type         string `query:"type"`
-		TabId        string `query:"tabId"`
+		ConnectionId int32 `query:"connectionId"`
+		NodeId       string
+		Action       string
+		TabId        string
+		Type         string
 	}
 )

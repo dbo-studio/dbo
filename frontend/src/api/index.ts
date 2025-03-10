@@ -3,7 +3,7 @@ import * as database from './database';
 import * as histories from './history';
 import * as query from './query';
 import * as savedQueries from './savedQuery';
-import * as object from './object';
+import * as tree from './tree';
 
 const api = {
   connection,
@@ -11,7 +11,7 @@ const api = {
   query,
   savedQueries,
   histories,
-  object
+  tree
 };
 
 export default api;
