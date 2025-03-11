@@ -94,7 +94,7 @@ func (r *PostgresRepository) GetFormFields(nodeID string, action contract.TreeNo
 				{ID: "partition_key", Name: "Partition Key", Type: "text"},
 				{ID: "options", Name: "Options", Type: "text"},
 				{ID: "access_method", Name: "Access Method", Type: "text"},
-				{ID: "tablespace", Name: "Tablespace", Type: "text"},
+				{ID: "tablespace", Name: "Tablespace", Type: "select", Options: r.getTablespaceOptions()},
 				{ID: "owner", Name: "Owner", Type: "text"},
 			}
 		case contract.ColumnsTab:
@@ -107,7 +107,7 @@ func (r *PostgresRepository) GetFormFields(nodeID string, action contract.TreeNo
 			}
 		case contract.IndexesTab:
 			return []contract.FormField{
-				{ID: "indexes", Name: "Indexes", Type: "array", Options: getIndexOptions()},
+				{ID: "indexes", Name: "Indexes", Type: "array", Options: r.getIndexOptions(node)},
 			}
 		case contract.TriggersTab:
 			return []contract.FormField{
@@ -135,20 +135,42 @@ func (r *PostgresRepository) getTemplateOptions() []contract.FormFieldOption {
 	return options
 }
 
-func getIndexOptions() []contract.FormFieldOption {
+func (r *PostgresRepository) getIndexOptions(node PGNode) []contract.FormFieldOption {
 	return []contract.FormFieldOption{
-		{Value: "btree", Name: "btree"},
-		{Value: "hash", Name: "hash"},
-		{Value: "gin", Name: "gin"},
-		{Value: "gist", Name: "gist"},
-		{Value: "spgist", Name: "spgist"},
+		{ID: "name", Name: "Index Name", Type: "text", Required: true},
+		{ID: "columns", Name: "Columns", Type: "multi-select", Required: true, Options: r.getTableColumnsList(node)},
+		{ID: "method", Name: "Method", Type: "select", Required: true, Options: []contract.FormFieldOption{
+			{Value: "btree", Name: "btree"},
+			{Value: "hash", Name: "hash"},
+			{Value: "gin", Name: "gin"},
+			{Value: "gist", Name: "gist"},
+			{Value: "spgist", Name: "spgist"},
+			{Value: "brin", Name: "brin"},
+		}},
+		{ID: "unique", Name: "Unique", Type: "checkbox"},
+		{ID: "concurrent", Name: "Concurrent", Type: "checkbox"},
 	}
 }
 
 func getTriggerOptions() []contract.FormFieldOption {
 	return []contract.FormFieldOption{
-		{Value: "before", Name: "before"},
-		{Value: "after", Name: "after"},
+		{ID: "name", Name: "Name", Type: "text", Required: true},
+		{ID: "for_each", Name: "For Each", Type: "select", Required: true, Options: []contract.FormFieldOption{
+			{Value: "ROW", Name: "ROW"},
+			{Value: "STATEMENT", Name: "STATEMENT"},
+		}},
+		{ID: "fires", Name: "Fires", Type: "select", Required: true, Options: []contract.FormFieldOption{
+			{Value: "BEFORE", Name: "BEFORE"},
+			{Value: "AFTER", Name: "AFTER"},
+			{Value: "INSTEAD OF", Name: "INSTEAD OF"},
+		}},
+		{ID: "INSERT", Name: "INSERT", Type: "checkbox"},
+		{ID: "UPDATE", Name: "UPDATE", Type: "checkbox"},
+		{ID: "DELETE", Name: "DELETE", Type: "checkbox"},
+		{ID: "TRUNCATE", Name: "TRUNCATE", Type: "checkbox"},
+		{ID: "function", Name: "Function", Type: "text", Required: true},
+		{ID: "when", Name: "When Condition", Type: "text"},
+		{ID: "enable", Name: "Enable", Type: "checkbox"},
 	}
 }
 
@@ -385,4 +407,30 @@ func getPrivilegeOptions() []contract.FormFieldOption {
 			{Value: "DELETE", Name: "DELETE"},
 		}},
 	}
+}
+
+func (r *PostgresRepository) getTablespaceOptions() []contract.FormFieldOption {
+	type tablespaceResult struct {
+		Value string `gorm:"column:value"`
+		Name  string `gorm:"column:name"`
+	}
+
+	var results []tablespaceResult
+	err := r.db.Table("pg_tablespace").
+		Select("spcname as value, spcname as name").
+		Order("spcname").
+		Scan(&results).Error
+	if err != nil {
+		return []contract.FormFieldOption{}
+	}
+
+	tablespaces := make([]contract.FormFieldOption, len(results))
+	for i, result := range results {
+		tablespaces[i] = contract.FormFieldOption{
+			Value: result.Value,
+			Name:  result.Name,
+		}
+	}
+
+	return tablespaces
 }
