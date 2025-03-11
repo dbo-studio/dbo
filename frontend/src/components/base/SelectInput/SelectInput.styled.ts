@@ -5,8 +5,7 @@ import type { StylesConfig } from 'react-select';
 export const SelectInputStyles = (
   theme: Theme,
   error: undefined | boolean,
-  size?: 'small' | 'medium',
-  isMulti?: boolean
+  size?: 'small' | 'medium'
 ): StylesConfig => ({
   control: (_, { isFocused }) => ({
     color: theme.palette.text.text,

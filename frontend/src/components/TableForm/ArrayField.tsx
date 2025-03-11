@@ -8,8 +8,7 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow,
-  Typography
+  TableRow
 } from '@mui/material';
 import CustomIcon from '../base/CustomIcon/CustomIcon';
 import SimpleField from './SimpleField';
@@ -52,6 +51,18 @@ export default function ArrayField({ field, value = [], onChange }: ArrayFieldPr
 
   return (
     <Box height='100%' display='flex' flexDirection='column'>
+      <Stack direction={'row'} spacing={1} mt={1} mb={1}>
+        <IconButton size='small' onClick={handleAdd}>
+          <Stack direction={'row'} spacing={1} alignItems={'center'}>
+            <CustomIcon type='plus' />
+          </Stack>
+        </IconButton>
+        <IconButton size='small' onClick={handleAdd}>
+          <Stack direction={'row'} spacing={1} alignItems={'center'}>
+            <CustomIcon type='code' />
+          </Stack>
+        </IconButton>
+      </Stack>
       <TableContainer>
         <Table sx={{ minWidth: 650 }}>
           <TableHead>
@@ -95,26 +106,6 @@ export default function ArrayField({ field, value = [], onChange }: ArrayFieldPr
           </TableBody>
         </Table>
       </TableContainer>
-      {value.length === 0 && (
-        <Box>
-          <IconButton color='primary' size='small' onClick={handleAdd}>
-            <Stack direction={'row'} spacing={1} alignItems={'center'}>
-              <Typography variant='body2'>Add {field.name}</Typography>
-              <CustomIcon type='plus' />
-            </Stack>
-          </IconButton>
-        </Box>
-      )}
-      {value.length > 0 && (
-        <Box mt={1}>
-          <IconButton color='primary' size='small' onClick={handleAdd}>
-            <Stack direction={'row'} spacing={1} alignItems={'center'}>
-              <Typography variant='body2'>Add {field.name}</Typography>
-              <CustomIcon type='plus' />
-            </Stack>
-          </IconButton>
-        </Box>
-      )}
     </Box>
   );
 }

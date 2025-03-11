@@ -19,6 +19,7 @@ func (r *PostgresRepository) GetFormTabs(action contract.TreeNodeActionName) []c
 		return []contract.FormTab{
 			{ID: contract.TableTab, Name: "Table"},
 			{ID: contract.ColumnsTab, Name: "Columns"},
+			{ID: contract.KeysTab, Name: "Keys"},
 			{ID: contract.ForeignKeysTab, Name: "Foreign Keys"},
 			{ID: contract.IndexesTab, Name: "Indexes"},
 			{ID: contract.TriggersTab, Name: "Triggers"},
@@ -64,7 +65,7 @@ func (r *PostgresRepository) GetFormFields(nodeID string, action contract.TreeNo
 			return []contract.FormField{
 				{ID: "name", Name: "Name", Type: "text", Required: true},
 				{ID: "owner", Name: "Owner", Type: "text"},
-				{ID: "encoding", Name: "Encoding", Type: "select", Options: getEncodingOptions()},
+				{ID: "encoding", Name: "Encoding", Type: "select", Options: r.getEncodingOptions()},
 				{ID: "template", Name: "Template", Type: "select", Options: r.getTemplateOptions()},
 			}
 		}
@@ -78,7 +79,7 @@ func (r *PostgresRepository) GetFormFields(nodeID string, action contract.TreeNo
 			}
 		case contract.PrivilegesTab:
 			return []contract.FormField{
-				{ID: "privileges", Name: "Privileges", Type: "array", Options: getPrivilegeOptions()},
+				{ID: "privileges", Name: "Privileges", Type: "array", Options: r.getPrivilegeOptions()},
 			}
 		}
 
@@ -88,7 +89,7 @@ func (r *PostgresRepository) GetFormFields(nodeID string, action contract.TreeNo
 			return []contract.FormField{
 				{ID: "name", Name: "Name", Type: "text", Required: true},
 				{ID: "comment", Name: "Comment", Type: "text"},
-				{ID: "persistence", Name: "Persistence", Type: "select", Options: getPersistenceOptions()},
+				{ID: "persistence", Name: "Persistence", Type: "select", Options: r.getPersistenceOptions()},
 				{ID: "with_oids", Name: "With OIDs", Type: "checkbox"},
 				{ID: "partition_expression", Name: "Partition Expression", Type: "text"},
 				{ID: "partition_key", Name: "Partition Key", Type: "text"},
@@ -111,15 +112,31 @@ func (r *PostgresRepository) GetFormFields(nodeID string, action contract.TreeNo
 			}
 		case contract.TriggersTab:
 			return []contract.FormField{
-				{ID: "triggers", Name: "Triggers", Type: "array", Options: getTriggerOptions()},
+				{ID: "triggers", Name: "Triggers", Type: "array", Options: r.getTriggerOptions(node)},
 			}
 		case contract.ChecksTab:
 			return []contract.FormField{
-				{ID: "checks", Name: "Checks", Type: "array", Options: getCheckOptions()},
+				{ID: "checks", Name: "Checks", Type: "array", Options: r.getCheckOptions()},
+			}
+		case contract.KeysTab:
+			return []contract.FormField{
+				{ID: "keys", Name: "Keys", Type: "array", Options: r.getKeyOptions(node)},
 			}
 		}
 	}
 	return []contract.FormField{}
+}
+
+func (r *PostgresRepository) getKeyOptions(node PGNode) []contract.FormFieldOption {
+	return []contract.FormFieldOption{
+		{ID: "name", Name: "Name", Type: "text", Required: true},
+		{ID: "comment", Name: "Comment", Type: "text"},
+		{ID: "primary", Name: "Primary", Type: "checkbox"},
+		{ID: "deferrable", Name: "Deferrable", Type: "checkbox"},
+		{ID: "initially_deferred", Name: "Initially Deferred", Type: "checkbox"},
+		{ID: "columns", Name: "Columns", Type: "multi-select", Options: r.getTableColumnsList(node)},
+		{ID: "exclude_operator", Name: "Exclude operator", Type: "text"},
+	}
 }
 
 func (r *PostgresRepository) getTemplateOptions() []contract.FormFieldOption {
@@ -137,9 +154,13 @@ func (r *PostgresRepository) getTemplateOptions() []contract.FormFieldOption {
 
 func (r *PostgresRepository) getIndexOptions(node PGNode) []contract.FormFieldOption {
 	return []contract.FormFieldOption{
-		{ID: "name", Name: "Index Name", Type: "text", Required: true},
-		{ID: "columns", Name: "Columns", Type: "multi-select", Required: true, Options: r.getTableColumnsList(node)},
-		{ID: "method", Name: "Method", Type: "select", Required: true, Options: []contract.FormFieldOption{
+		{ID: "name", Name: "Name", Type: "text"},
+		{ID: "comment", Name: "Comment", Type: "text"},
+		{ID: "unique", Name: "Unique", Type: "checkbox"},
+		{ID: "columns", Name: "Columns", Type: "multi-select", Options: r.getTableColumnsList(node)},
+		{ID: "condition", Name: "Condition", Type: "text"},
+		{ID: "include_columns", Name: "Include Columns", Type: "text"},
+		{ID: "access_method", Name: "Access Method", Type: "select", Options: []contract.FormFieldOption{
 			{Value: "btree", Name: "btree"},
 			{Value: "hash", Name: "hash"},
 			{Value: "gin", Name: "gin"},
@@ -147,41 +168,72 @@ func (r *PostgresRepository) getIndexOptions(node PGNode) []contract.FormFieldOp
 			{Value: "spgist", Name: "spgist"},
 			{Value: "brin", Name: "brin"},
 		}},
-		{ID: "unique", Name: "Unique", Type: "checkbox"},
-		{ID: "concurrent", Name: "Concurrent", Type: "checkbox"},
+		{ID: "tablespace", Name: "Tablespace", Type: "select", Options: r.getTablespaceOptions()},
 	}
 }
 
-func getTriggerOptions() []contract.FormFieldOption {
+func (r *PostgresRepository) getTriggerOptions(node PGNode) []contract.FormFieldOption {
 	return []contract.FormFieldOption{
 		{ID: "name", Name: "Name", Type: "text", Required: true},
-		{ID: "for_each", Name: "For Each", Type: "select", Required: true, Options: []contract.FormFieldOption{
-			{Value: "ROW", Name: "ROW"},
-			{Value: "STATEMENT", Name: "STATEMENT"},
-		}},
-		{ID: "fires", Name: "Fires", Type: "select", Required: true, Options: []contract.FormFieldOption{
+		{ID: "comment", Name: "Comment", Type: "text"},
+		{ID: "timing", Name: "Timing", Type: "select", Required: true, Options: []contract.FormFieldOption{
 			{Value: "BEFORE", Name: "BEFORE"},
 			{Value: "AFTER", Name: "AFTER"},
 			{Value: "INSTEAD OF", Name: "INSTEAD OF"},
 		}},
-		{ID: "INSERT", Name: "INSERT", Type: "checkbox"},
-		{ID: "UPDATE", Name: "UPDATE", Type: "checkbox"},
-		{ID: "DELETE", Name: "DELETE", Type: "checkbox"},
-		{ID: "TRUNCATE", Name: "TRUNCATE", Type: "checkbox"},
-		{ID: "function", Name: "Function", Type: "text", Required: true},
+		{ID: "level", Name: "Level", Type: "select", Required: true, Options: []contract.FormFieldOption{
+			{Value: "FOR EACH ROW", Name: "FOR EACH ROW"},
+			{Value: "FOR EACH STATEMENT", Name: "FOR EACH STATEMENT"},
+		}},
+		{ID: "events", Name: "Events", Type: "multi-select", Required: true, Options: []contract.FormFieldOption{
+			{Value: "INSERT", Name: "INSERT"},
+			{Value: "UPDATE", Name: "UPDATE"},
+			{Value: "DELETE", Name: "DELETE"},
+			{Value: "TRUNCATE", Name: "TRUNCATE"},
+		}},
+		{ID: "update_columns", Name: "Update Columns", Type: "multi-select", Options: r.getTableColumnsList(node)},
+		{ID: "function", Name: "Function", Type: "select", Required: true, Options: r.getTriggerFunctionOptions(node)},
 		{ID: "when", Name: "When Condition", Type: "text"},
+		{ID: "no_inherit", Name: "No Inherit", Type: "checkbox"},
 		{ID: "enable", Name: "Enable", Type: "checkbox"},
+		{ID: "truncate_cascade", Name: "Truncate Cascade", Type: "checkbox"},
 	}
 }
 
-func getCheckOptions() []contract.FormFieldOption {
+func (r *PostgresRepository) getTriggerFunctionOptions(node PGNode) []contract.FormFieldOption {
+	type functionResult struct {
+		Value string `gorm:"column:value"`
+		Name  string `gorm:"column:name"`
+	}
+
+	var results []functionResult
+	err := r.db.Table("pg_proc").
+		Select("oid as value, proname as name").
+		Where("proname LIKE 'trigger_%'").
+		Scan(&results).Error
+	if err != nil {
+		return []contract.FormFieldOption{}
+	}
+
+	options := make([]contract.FormFieldOption, len(results))
+	for i, result := range results {
+		options[i] = contract.FormFieldOption{Value: result.Value, Name: result.Name}
+	}
+	return options
+}
+
+func (r *PostgresRepository) getCheckOptions() []contract.FormFieldOption {
 	return []contract.FormFieldOption{
-		{Value: "check", Name: "check"},
+		{ID: "name", Name: "Name", Type: "text"},
+		{ID: "comment", Name: "Comment", Type: "text"},
+		{ID: "deferrable", Name: "Deferrable", Type: "checkbox"},
+		{ID: "initially_deferred", Name: "Initially Deferred", Type: "checkbox"},
+		{ID: "no_inherit", Name: "No Inherit", Type: "checkbox"},
+		{ID: "predicate", Name: "Predicate", Type: "text"},
 	}
 }
 
-// Helper functions to keep the code organized
-func getPersistenceOptions() []contract.FormFieldOption {
+func (r *PostgresRepository) getPersistenceOptions() []contract.FormFieldOption {
 	return []contract.FormFieldOption{
 		{Value: "PERSISTENT", Name: "PERSISTENT"},
 		{Value: "UNLOGGED", Name: "UNLOGGED"},
@@ -257,18 +309,19 @@ func getDataTypeOptions() []contract.FormFieldOption {
 
 func (r *PostgresRepository) getForeignKeyOptions(node PGNode) []contract.FormFieldOption {
 	return []contract.FormFieldOption{
-		{ID: "name", Name: "Constraint Name", Type: "text", Required: true},
-		{ID: "columns", Name: "Source Columns", Type: "multi-select", Required: true, Options: r.getTableColumnsList(node)},
-		{ID: "ref_table", Name: "Referenced Table", Type: "select", Required: true, Options: r.getTablesList(node)},
-		{ID: "ref_columns", Name: "Referenced Columns", Type: "multi-select", Required: true, Options: r.getTableColumnsList(node)},
-		{ID: "on_update", Name: "On Update", Type: "select", Required: true, Options: []contract.FormFieldOption{
+		{ID: "name", Name: "Constraint Name", Type: "text"},
+		{ID: "comment", Name: "Comment", Type: "text"},
+		{ID: "columns", Name: "Source Columns", Type: "multi-select", Options: r.getTableColumnsList(node)},
+		{ID: "target_table", Name: "Target Table", Type: "select", Options: r.getTablesList(node)},
+		{ID: "target_columns", Name: "Target Columns", Type: "multi-select", Options: r.getTableColumnsList(node)},
+		{ID: "on_update", Name: "On Update", Type: "select", Options: []contract.FormFieldOption{
 			{Value: "NO ACTION", Name: "NO ACTION"},
 			{Value: "RESTRICT", Name: "RESTRICT"},
 			{Value: "CASCADE", Name: "CASCADE"},
 			{Value: "SET NULL", Name: "SET NULL"},
 			{Value: "SET DEFAULT", Name: "SET DEFAULT"},
 		}},
-		{ID: "on_delete", Name: "On Delete", Type: "select", Required: true, Options: []contract.FormFieldOption{
+		{ID: "on_delete", Name: "On Delete", Type: "select", Options: []contract.FormFieldOption{
 			{Value: "NO ACTION", Name: "NO ACTION"},
 			{Value: "RESTRICT", Name: "RESTRICT"},
 			{Value: "CASCADE", Name: "CASCADE"},
@@ -340,7 +393,7 @@ func (r *PostgresRepository) getTablesList(node PGNode) []contract.FormFieldOpti
 	return tables
 }
 
-func getEncodingOptions() []contract.FormFieldOption {
+func (r *PostgresRepository) getEncodingOptions() []contract.FormFieldOption {
 	return []contract.FormFieldOption{
 		{Value: "BIG5", Name: "BIG5"},
 		{Value: "EUC_CN", Name: "EUC_CN"},
@@ -397,7 +450,7 @@ func getEncodingOptions() []contract.FormFieldOption {
 	}
 }
 
-func getPrivilegeOptions() []contract.FormFieldOption {
+func (r *PostgresRepository) getPrivilegeOptions() []contract.FormFieldOption {
 	return []contract.FormFieldOption{
 		{ID: "grantee", Name: "Grantee", Type: "text"},
 		{ID: "privileges", Name: "Privileges", Type: "array", Options: []contract.FormFieldOption{

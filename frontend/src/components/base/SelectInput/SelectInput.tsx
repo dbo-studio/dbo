@@ -50,7 +50,7 @@ export default function SelectInput({
         options={options}
         menuPlacement={'auto'}
         onChange={handleChange}
-        styles={SelectInputStyles(theme, error, size, isMulti)}
+        styles={SelectInputStyles(theme, error, size)}
         menuPortalTarget={document.body}
       />
 
