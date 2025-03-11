@@ -2,7 +2,6 @@ import type { FormFieldType } from '@/api/tree/types';
 import {
   Box,
   IconButton,
-  Paper,
   Stack,
   Table,
   TableBody,
@@ -53,7 +52,7 @@ export default function ArrayField({ field, value = [], onChange }: ArrayFieldPr
 
   return (
     <Box height='100%' display='flex' flexDirection='column'>
-      <TableContainer component={Paper}>
+      <TableContainer>
         <Table sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow>
@@ -91,8 +90,6 @@ export default function ArrayField({ field, value = [], onChange }: ArrayFieldPr
                     <CustomIcon type='delete' />
                   </IconButton>
                 </TableCell>
-
-                <TableCell />
               </TableRow>
             ))}
           </TableBody>
@@ -109,7 +106,7 @@ export default function ArrayField({ field, value = [], onChange }: ArrayFieldPr
         </Box>
       )}
       {value.length > 0 && (
-        <Box>
+        <Box mt={1}>
           <IconButton color='primary' size='small' onClick={handleAdd}>
             <Stack direction={'row'} spacing={1} alignItems={'center'}>
               <Typography variant='body2'>Add {field.name}</Typography>

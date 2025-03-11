@@ -5,7 +5,8 @@ import type { StylesConfig } from 'react-select';
 export const SelectInputStyles = (
   theme: Theme,
   error: undefined | boolean,
-  size?: 'small' | 'medium'
+  size?: 'small' | 'medium',
+  isMulti?: boolean
 ): StylesConfig => ({
   control: (_, { isFocused }) => ({
     color: theme.palette.text.text,
@@ -19,7 +20,11 @@ export const SelectInputStyles = (
     borderBottom: error
       ? `1px solid ${theme.palette.error.main}`
       : `1px solid ${isFocused ? theme.palette.primary.main : theme.palette.divider}`,
-    alignItems: 'center'
+    alignItems: 'center',
+    boxShadow: isFocused ? `0 0 0 1px ${theme.palette.primary.main}` : 'none',
+    '&:hover': {
+      borderColor: isFocused ? theme.palette.primary.main : theme.palette.action.hover
+    }
   }),
   menu: (styles) => ({
     ...styles,
@@ -50,6 +55,54 @@ export const SelectInputStyles = (
     color: theme.palette.text.text,
     fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize
   }),
+  // Updated multi-value components
+  multiValue: (base: any) => ({
+    ...base,
+    flexShrink: 0,
+    margin: '2px 4px 2px 0',
+    backgroundColor: theme.palette.primary.light,
+    borderRadius: variables.radius.small
+  }),
+
+  multiValueLabel: (styles) => ({
+    ...styles,
+    color: theme.palette.primary.contrastText,
+    fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize,
+    padding: '2px 4px',
+    fontWeight: 500
+  }),
+
+  multiValueRemove: (styles) => ({
+    ...styles,
+    color: theme.palette.primary.contrastText,
+    opacity: 0.7,
+    ':hover': {
+      backgroundColor: theme.palette.primary.dark,
+      color: theme.palette.common.white,
+      opacity: 1
+    }
+  }),
+
+  valueContainer: (base: any) => ({
+    ...base,
+    display: 'flex',
+    flexDirection: 'row',
+    flexWrap: 'nowrap',
+    overflow: 'auto',
+    padding: '2px 8px',
+    maxWidth: '100%',
+    '&::-webkit-scrollbar': {
+      height: '4px'
+    },
+    '&::-webkit-scrollbar-thumb': {
+      backgroundColor: theme.palette.divider,
+      borderRadius: '2px'
+    },
+    '&::-webkit-scrollbar-track': {
+      backgroundColor: 'transparent'
+    }
+  }),
+
   placeholder: (styles) => ({
     ...styles,
     fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize

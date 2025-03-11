@@ -87,12 +87,12 @@ func (r *PostgresRepository) GetFormFields(nodeID string, action contract.TreeNo
 		case contract.TableTab:
 			return []contract.FormField{
 				{ID: "name", Name: "Name", Type: "text", Required: true},
-				{ID: "comment", Name: "Comment", Type: "textarea"},
+				{ID: "comment", Name: "Comment", Type: "text"},
 				{ID: "persistence", Name: "Persistence", Type: "select", Options: getPersistenceOptions()},
 				{ID: "with_oids", Name: "With OIDs", Type: "checkbox"},
-				{ID: "partition_expression", Name: "Partition Expression", Type: "textarea"},
+				{ID: "partition_expression", Name: "Partition Expression", Type: "text"},
 				{ID: "partition_key", Name: "Partition Key", Type: "text"},
-				{ID: "options", Name: "Options", Type: "textarea"},
+				{ID: "options", Name: "Options", Type: "text"},
 				{ID: "access_method", Name: "Access Method", Type: "text"},
 				{ID: "tablespace", Name: "Tablespace", Type: "text"},
 				{ID: "owner", Name: "Owner", Type: "text"},
@@ -179,8 +179,8 @@ func getColumnOptions() []contract.FormFieldOption {
 		{ID: "notNull", Name: "Not Null", Type: "checkbox"},
 		{ID: "primary", Name: "Primary", Type: "checkbox"},
 		{ID: "default", Name: "Default", Type: "text"},
-		{ID: "comment", Name: "Comment", Type: "textarea"},
-		{ID: "options", Name: "Options", Type: "textarea"},
+		{ID: "comment", Name: "Comment", Type: "text"},
+		{ID: "options", Name: "Options", Type: "text"},
 	}
 }
 
