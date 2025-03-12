@@ -1,3 +1,4 @@
+import type { TabMode } from '@/core/enums';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { TabType } from '@/types';
@@ -13,7 +14,7 @@ export function useRemoveTab() {
     removeUnsavedRowsByTabId
   } = useDataStore();
 
-  const remove = (tabId: string): TabType | null | undefined => {
+  const remove = (tabId: string, mode: TabMode): TabType | null | undefined => {
     if (getTabs().length === 1) {
       updateSelectedTab(undefined);
     }
@@ -24,7 +25,7 @@ export function useRemoveTab() {
     deleteRemovedRowsByTabId(tabId);
     removeRowsByTabId(tabId);
     removeUnsavedRowsByTabId(tabId);
-    return removeTab(tabId);
+    return removeTab(tabId, mode);
   };
 
   return [remove];

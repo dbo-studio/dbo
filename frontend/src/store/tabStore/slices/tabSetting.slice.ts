@@ -21,7 +21,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
 
     if (findTab.length > 0) {
       findTab[0].mode = mode;
-      get().switchTab(findTab[0].id);
+      get().switchTab(findTab[0].id, mode);
       return findTab[0];
     }
 
@@ -56,11 +56,38 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
     } else {
       get().updateTabs([...tabs.slice(1), newTab]);
     }
-    get().switchTab(newTab.id);
+    get().switchTab(newTab.id, mode);
 
     return newTab;
   },
-  removeTab: (tabId: string): TabType | null | undefined => {
+  addObjectTab: (id: string, action: string, mode: TabMode): TabType => {
+    const tabs = get().getTabs();
+    const findTab = tabs.find((t: TabType) => t.mode === mode && t.id === id);
+
+    if (findTab) {
+      get().switchTab(findTab.id, mode);
+      return findTab;
+    }
+
+    //@ts-ignore
+    const newTab: TabType = {
+      id: id,
+      mode: mode,
+      options: {
+        action: action
+      }
+    };
+
+    if (tabs.length < maxTabs) {
+      get().updateTabs([...tabs, newTab]);
+    } else {
+      get().updateTabs([...tabs.slice(1), newTab]);
+    }
+    get().switchTab(newTab.id, mode);
+
+    return newTab;
+  },
+  removeTab: (tabId: string, mode: TabMode): TabType | null | undefined => {
     const tabIndex = get()
       .getTabs()
       .findIndex((t: TabType) => t.id === tabId);
@@ -77,20 +104,20 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
     }
 
     if (newTab?.id === tabId) {
-      get().switchTab(newTab?.id ?? null);
+      get().switchTab(newTab?.id ?? null, mode);
     }
 
     get().updateTabs(newTabs);
     return newTabs.length === 0 ? undefined : newTab;
   },
-  switchTab: (tabId: string | null) => {
+  switchTab: (tabId: string | null, mode: TabMode) => {
     if (!tabId) {
       get().updateSelectedTab(undefined);
     }
 
     const findTab = get()
       .getTabs()
-      .find((t) => t.id === tabId);
+      .find((t) => t.id === tabId && t.mode === mode);
     if (findTab) {
       get().updateSelectedTab(findTab);
     }

@@ -79,7 +79,7 @@ export const useTabStore = create<TabState>()(
           const tabs = get()
             .getTabs()
             .map((t: TabType) => {
-              if (t.id === newSelectedTab.id) {
+              if (t.id === newSelectedTab.id && t.mode === newSelectedTab.mode) {
                 return newSelectedTab;
               }
               return t;

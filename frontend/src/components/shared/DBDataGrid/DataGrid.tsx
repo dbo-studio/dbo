@@ -16,9 +16,6 @@ import { useMemo, useRef } from 'react';
 
 import { TextCellType, registerCellType } from 'handsontable/cellTypes';
 
-import { TabMode } from '@/core/enums';
-import useNavigate from '@/hooks/useNavigate.hook';
-import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ColumnType } from '@/types';
 import { TextEditor, registerEditor } from 'handsontable/editors';
 import {
@@ -50,9 +47,6 @@ export default function DataGrid({ editable }: DataGridProps) {
   const hotTableRef = useRef<HotTableRef | null>(null);
   const { loading, getRows, getColumns } = useDataStore();
 
-  const { addTab } = useTabStore();
-  const navigate = useNavigate();
-
   const rows = useMemo(() => getRows(), [getRows()]);
   const headers = useMemo(() => getColumns(true), [getColumns()]);
 
@@ -75,18 +69,6 @@ export default function DataGrid({ editable }: DataGridProps) {
 
   return (
     <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
-      {/* biome-ignore lint/a11y/useButtonType: <explanation> */}
-      <button
-        onClick={() => {
-          const tab = addTab('your-object=tab-name', undefined, TabMode.Object);
-          navigate({
-            route: 'object',
-            tabId: tab.id
-          });
-        }}
-      >
-        go to object
-      </button>
       <QuickViewDialog editable={editable} />
       <DataGridStyled
         ref={hotTableRef}

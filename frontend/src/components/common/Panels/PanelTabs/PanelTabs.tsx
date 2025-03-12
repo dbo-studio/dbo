@@ -9,7 +9,7 @@ export default function PanelTabs() {
   return (
     <PanelTabsStyled>
       {getTabs().map((tab: TabType) => (
-        <PanelTabItem tab={tab} key={tab.id} />
+        <PanelTabItem tab={tab} key={`${tab.id}-${tab.mode}`} />
       ))}
     </PanelTabsStyled>
   );

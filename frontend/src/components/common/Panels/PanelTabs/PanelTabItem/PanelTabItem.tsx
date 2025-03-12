@@ -12,7 +12,7 @@ import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { TabType } from '@/types';
 import { Box, Tooltip, Typography } from '@mui/material';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 export default function PanelTabItem({ tab }: { tab: TabType }) {
   const tabRefs = useRef<Record<string, HTMLElement>>({});
@@ -23,21 +23,23 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
   const { runQuery, runRawQuery, removeEditedRowsByTabId, deleteRemovedRowsByTabId, removeUnsavedRowsByTabId } =
     useDataStore();
 
+  const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
+
   useShortcut(shortcuts.newTab, () => addNewEmptyTab());
-  useShortcut(shortcuts.closeTab, () => getSelectedTab() && handleRemoveTab(getSelectedTab()?.id ?? ''));
-  useShortcut(shortcuts.reloadTab, () => getSelectedTab() && handleReload());
+  useShortcut(shortcuts.closeTab, () => selectedTab && handleRemoveTab(selectedTab?.id ?? '', selectedTab.mode));
+  useShortcut(shortcuts.reloadTab, () => selectedTab && handleReload());
 
   const menu: MenuType[] = [
     {
       name: locales.close,
-      action: () => removeTab(tab.id),
+      action: () => removeTab(tab.id, tab.mode),
       closeAfterAction: true
     },
     {
       name: locales.close_other_tabs,
       action: () => {
         for (const t of getTabs()) {
-          if (t.id !== getSelectedTab()?.id) removeTab(t.id);
+          if (t.id !== selectedTab?.id) removeTab(t.id, t.mode);
           else navigate({ route: 'data', tabId: t.id });
         }
       },
@@ -47,7 +49,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
       name: locales.close_all,
       action: () => {
         for (const t of getTabs()) {
-          removeTab(t.id);
+          removeTab(t.id, t.mode);
         }
         navigate({ route: '/' });
       },
@@ -55,8 +57,8 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
     }
   ];
 
-  const handleSwitchTab = (tabId: string) => {
-    const findTab = getTabs().find((t: TabType) => t.id === tabId);
+  const handleSwitchTab = (tabId: string, mode: TabMode) => {
+    const findTab = getTabs().find((t: TabType) => t.id === tabId && t.mode === mode);
     if (!findTab) return;
 
     navigate({
@@ -65,8 +67,8 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
     });
   };
 
-  const handleRemoveTab = (tabId: string) => {
-    const newTab = removeTab(tabId);
+  const handleRemoveTab = (tabId: string, mode: TabMode) => {
+    const newTab = removeTab(tabId, mode);
     if (newTab === undefined) {
       navigate({ route: '/' });
       return;
@@ -89,22 +91,22 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
   };
 
   const handleReload = async () => {
-    if (getSelectedTab()?.mode === TabMode.Query) {
+    if (selectedTab?.mode === TabMode.Query) {
       await runRawQuery();
       return;
     }
 
-    if (getSelectedTab()?.mode === TabMode.Data || getSelectedTab()?.mode === TabMode.Design) {
+    if (selectedTab?.mode === TabMode.Data || selectedTab?.mode === TabMode.Design) {
       await runQuery();
-      removeEditedRowsByTabId(getSelectedTab()?.id ?? '');
-      deleteRemovedRowsByTabId(getSelectedTab()?.id ?? '');
-      removeUnsavedRowsByTabId(getSelectedTab()?.id ?? '');
+      removeEditedRowsByTabId(selectedTab?.id ?? '');
+      deleteRemovedRowsByTabId(selectedTab?.id ?? '');
+      removeUnsavedRowsByTabId(selectedTab?.id ?? '');
       return;
     }
   };
 
   useEffect(() => {
-    const tabId = getSelectedTab()?.id;
+    const tabId = selectedTab?.id;
     if (tabId && tabRefs.current?.[tabId]) {
       tabRefs.current[tabId].scrollIntoView({
         behavior: 'smooth',
@@ -112,7 +114,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
         inline: 'center'
       });
     }
-  }, [getSelectedTab()]);
+  }, [selectedTab]);
 
   return (
     <Box
@@ -121,9 +123,12 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
         tabRefs.current[tab.id] = el;
       }}
     >
-      <PanelTabItemStyled selected={getSelectedTab()?.id === tab.id} onClick={() => handleSwitchTab(tab.id)}>
+      <PanelTabItemStyled
+        selected={selectedTab?.id === tab.id && selectedTab.mode === tab.mode}
+        onClick={() => handleSwitchTab(tab.id, tab.mode)}
+      >
         <Box display={'flex'} overflow={'hidden'} flexGrow={1} justifyContent={'center'} alignItems={'center'}>
-          <Tooltip title={tab.table} placement={'bottom'} key={tab.id}>
+          <Tooltip title={tab.id} placement={'bottom'} key={tab.id}>
             <Typography
               display={'inline-block'}
               component={'span'}
@@ -132,7 +137,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
               maxWidth={'100px'}
               variant='subtitle2'
             >
-              {tab.table}
+              {tab.id}
             </Typography>
           </Tooltip>
         </Box>
@@ -141,7 +146,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
           size='s'
           onClick={(e) => {
             e.stopPropagation();
-            handleRemoveTab(tab.id);
+            handleRemoveTab(tab.id, tab.mode);
           }}
         />
       </PanelTabItemStyled>

@@ -2,7 +2,7 @@ import { getConnectionList } from '@/api/connection';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import axios from 'axios';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import useNavigate from './useNavigate.hook';
@@ -11,15 +11,18 @@ export const useParamParser = () => {
   const { getTabs, getSelectedTab } = useTabStore();
   const navigate = useNavigate();
   const location = useLocation();
-
   const [searchParams, _] = useSearchParams();
   const { updateSelectedTab, tabs, reset } = useTabStore();
   const { updateCurrentConnection, updateConnections, connections, updateLoading } = useConnectionStore();
 
+  const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
+
   async function parseParams() {
     const tabId = searchParams.get('tabId');
     const connectionId = searchParams.get('connectionId');
+    const tabMode = location.pathname.substring(1);
     let connectionList = connections;
+
     if (!connectionList) {
       updateLoading('loading');
       try {
@@ -45,10 +48,10 @@ export const useParamParser = () => {
     }
 
     if (!tabId || tabId === '') {
-      if (getSelectedTab()) {
+      if (selectedTab) {
         navigate({
-          route: getSelectedTab()?.mode,
-          tabId: getSelectedTab()?.id
+          route: selectedTab?.mode,
+          tabId: selectedTab?.id
         });
         return;
       }
@@ -70,14 +73,16 @@ export const useParamParser = () => {
     }
 
     //find selected tab
-    const selectedTab = tabs[connectionId]?.find((t) => t.id === tabId);
-    if (!selectedTab) {
+    const findedSelectedTab = tabs[connectionId]?.find((t) => t.id === tabId && t.mode === tabMode);
+    if (!findedSelectedTab) {
       navigate({ route: '/' });
       return;
     }
 
-    if (!getSelectedTab() || getSelectedTab()?.id !== tabId) {
-      updateSelectedTab(selectedTab);
+    if (!selectedTab || selectedTab?.id !== tabId || selectedTab.mode !== tabMode) {
+      console.log('asdasd');
+
+      updateSelectedTab(findedSelectedTab);
     }
   }
 

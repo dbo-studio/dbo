@@ -4,7 +4,8 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import NotFound from './404/404';
 import Data from './Data/Data';
 import Design from './Design/Design';
-import ObjectForm from './ObjectForm/Object';
+import ObjectFormDetail from './ObjectDetail/ObjectDetail';
+import ObjectForm from './ObjectForm/ObjectForm';
 import Query from './Query/Query';
 
 export const router = createBrowserRouter([
@@ -33,8 +34,8 @@ export const router = createBrowserRouter([
         element: <ObjectForm />
       },
       {
-        path: 'object/:id',
-        element: <ObjectForm />
+        path: 'object-detail',
+        element: <ObjectFormDetail />
       }
     ]
   }
