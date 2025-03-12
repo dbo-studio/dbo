@@ -15,5 +15,5 @@ type DatabaseRepository interface {
 	Actions(nodeType TreeNodeType) []TreeNodeAction
 	GetFormTabs(action TreeNodeActionName) []FormTab
 	GetFormFields(nodeID string, action TreeNodeActionName, tabID TreeTab) []FormField
-	Objects(nodeID string, objType TreeNodeType, tabID TreeTab) (any, error)
+	Objects(nodeID string, tabID TreeTab) (any, error)
 }

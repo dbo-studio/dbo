@@ -92,7 +92,7 @@ func (i ITreeServiceImpl) ObjectDetail(ctx context.Context, req *dto.ObjectDetai
 		return nil, apperror.InternalServerError(err)
 	}
 
-	data, err := repo.Objects(req.NodeId, contract.TreeNodeType(req.Type), contract.TreeTab(req.TabId))
+	data, err := repo.Objects(req.NodeId, contract.TreeTab(req.TabId))
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}

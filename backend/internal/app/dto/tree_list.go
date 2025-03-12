@@ -24,6 +24,5 @@ type (
 		NodeId       string
 		Action       string
 		TabId        string
-		Type         string
 	}
 )

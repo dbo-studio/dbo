@@ -146,10 +146,10 @@ func buildContainer(r *PostgresRepository, dbName, schemaName string, container 
 				Type: contract.TableNodeType,
 				Action: &contract.TreeNodeAction{
 					Name: "",
-					Type: contract.TreeNodeActionTypeRoute,
+					Type: contract.TreeNodeActionTypeTab,
 					Params: map[string]interface{}{
-						"path": "data",
-						"id":   fmt.Sprintf("%s.%s.%s", dbName, schemaName, table.Name),
+						"path":  "data",
+						"table": table.Name,
 					},
 				},
 				ContextMenu: r.Actions(contract.TableNodeType),

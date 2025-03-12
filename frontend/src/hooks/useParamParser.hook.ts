@@ -80,8 +80,6 @@ export const useParamParser = () => {
     }
 
     if (!selectedTab || selectedTab?.id !== tabId || selectedTab.mode !== tabMode) {
-      console.log('asdasd');
-
       updateSelectedTab(findedSelectedTab);
     }
   }

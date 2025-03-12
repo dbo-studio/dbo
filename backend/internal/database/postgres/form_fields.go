@@ -8,46 +8,47 @@ func (r *PostgresRepository) GetFormTabs(action contract.TreeNodeActionName) []c
 	switch action {
 	case contract.CreateDatabaseAction, contract.EditDatabaseAction:
 		return []contract.FormTab{
-			{ID: contract.GeneralTab, Name: "General"},
+			{ID: contract.DatabaseTab, Name: "Database"},
+			{ID: contract.DatabasePrivilegesTab, Name: "Database Privileges"},
 		}
 	case contract.CreateSchemaAction, contract.EditSchemaAction:
 		return []contract.FormTab{
-			{ID: contract.GeneralTab, Name: "General"},
-			{ID: contract.PrivilegesTab, Name: "Privileges"},
+			{ID: contract.SchemaTab, Name: "Schema"},
+			{ID: contract.SchemaPrivilegesTab, Name: "Schema Privileges"},
 		}
 	case contract.CreateTableAction, contract.EditTableAction:
 		return []contract.FormTab{
 			{ID: contract.TableTab, Name: "Table"},
-			{ID: contract.ColumnsTab, Name: "Columns"},
-			{ID: contract.ForeignKeysTab, Name: "Foreign Keys"},
-			{ID: contract.IndexesTab, Name: "Indexes"},
-			{ID: contract.TriggersTab, Name: "Triggers"},
-			{ID: contract.ChecksTab, Name: "Checks"},
+			{ID: contract.TableColumnsTab, Name: "Columns"},
+			{ID: contract.TableForeignKeysTab, Name: "Foreign Keys"},
+			{ID: contract.TableIndexesTab, Name: "Indexes"},
+			{ID: contract.TableTriggersTab, Name: "Triggers"},
+			{ID: contract.TableChecksTab, Name: "Checks"},
 		}
 	case contract.CreateViewAction, contract.EditViewAction:
 		return []contract.FormTab{
-			{ID: contract.GeneralTab, Name: "General"},
-			{ID: contract.DefinitionTab, Name: "Definition"},
-			{ID: contract.PrivilegesTab, Name: "Privileges"},
+			{ID: contract.ViewTab, Name: "View"},
+			{ID: contract.ViewDefinitionTab, Name: "View Definition"},
+			{ID: contract.ViewPrivilegesTab, Name: "View Privileges"},
 		}
 	case contract.CreateMaterializedViewAction, contract.EditMaterializedViewAction:
 		return []contract.FormTab{
-			{ID: contract.GeneralTab, Name: "General"},
-			{ID: contract.DefinitionTab, Name: "Definition"},
-			{ID: contract.StorageTab, Name: "Storage"},
-			{ID: contract.PrivilegesTab, Name: "Privileges"},
+			{ID: contract.MaterializedViewTab, Name: "Materialized View"},
+			{ID: contract.MaterializedViewDefinitionTab, Name: "Materialized Definition"},
+			{ID: contract.MaterializedViewStorageTab, Name: "Storage"},
+			{ID: contract.MaterializedViewPrivilegesTab, Name: "Materialized Privileges"},
 		}
 	case contract.CreateIndexAction, contract.EditIndexAction:
 		return []contract.FormTab{
-			{ID: contract.GeneralTab, Name: "General"},
-			{ID: contract.ColumnsTab, Name: "Columns"},
-			{ID: contract.StorageTab, Name: "Storage"},
+			{ID: contract.IndexTab, Name: "Index"},
+			{ID: contract.IndexColumnsTab, Name: "Columns"},
+			{ID: contract.IndexStorageTab, Name: "Storage"},
 		}
 	case contract.CreateSequenceAction, contract.EditSequenceAction:
 		return []contract.FormTab{
-			{ID: contract.GeneralTab, Name: "General"},
-			{ID: contract.DefinitionTab, Name: "Definition"},
-			{ID: contract.PrivilegesTab, Name: "Privileges"},
+			{ID: contract.SequenceTab, Name: "Sequence"},
+			{ID: contract.SequenceDefinitionTab, Name: "SequenceDefinition"},
+			{ID: contract.SequencePrivilegesTab, Name: "Sequence Privileges"},
 		}
 	default:
 		return []contract.FormTab{}
@@ -60,7 +61,7 @@ func (r *PostgresRepository) GetFormFields(nodeID string, action contract.TreeNo
 	switch action {
 	case contract.CreateDatabaseAction, contract.EditDatabaseAction:
 		switch tabID {
-		case contract.GeneralTab:
+		case contract.DatabaseTab:
 			return []contract.FormField{
 				{ID: "name", Name: "Name", Type: "text", Required: true},
 				{ID: "owner", Name: "Owner", Type: "text"},
@@ -71,12 +72,12 @@ func (r *PostgresRepository) GetFormFields(nodeID string, action contract.TreeNo
 
 	case contract.CreateSchemaAction, contract.EditSchemaAction:
 		switch tabID {
-		case contract.GeneralTab:
+		case contract.SchemaTab:
 			return []contract.FormField{
 				{ID: "name", Name: "Name", Type: "text", Required: true},
 				{ID: "owner", Name: "Owner", Type: "text"},
 			}
-		case contract.PrivilegesTab:
+		case contract.SchemaPrivilegesTab:
 			return []contract.FormField{
 				{ID: "privileges", Name: "Privileges", Type: "array", Options: getPrivilegeOptions()},
 			}
@@ -97,23 +98,23 @@ func (r *PostgresRepository) GetFormFields(nodeID string, action contract.TreeNo
 				{ID: "tablespace", Name: "Tablespace", Type: "select", Options: r.getTablespaceOptions()},
 				{ID: "owner", Name: "Owner", Type: "text"},
 			}
-		case contract.ColumnsTab:
+		case contract.TableColumnsTab:
 			return []contract.FormField{
 				{ID: "columns", Name: "Columns", Type: "array", Required: true, Options: getColumnOptions()},
 			}
-		case contract.ForeignKeysTab:
+		case contract.TableForeignKeysTab:
 			return []contract.FormField{
 				{ID: "foreign_keys", Name: "Foreign Keys", Type: "array", Options: r.getForeignKeyOptions(node)},
 			}
-		case contract.IndexesTab:
+		case contract.TableIndexesTab:
 			return []contract.FormField{
 				{ID: "indexes", Name: "Indexes", Type: "array", Options: r.getIndexOptions(node)},
 			}
-		case contract.TriggersTab:
+		case contract.TableTriggersTab:
 			return []contract.FormField{
 				{ID: "triggers", Name: "Triggers", Type: "array", Options: getTriggerOptions()},
 			}
-		case contract.ChecksTab:
+		case contract.TableChecksTab:
 			return []contract.FormField{
 				{ID: "checks", Name: "Checks", Type: "array", Options: getCheckOptions()},
 			}

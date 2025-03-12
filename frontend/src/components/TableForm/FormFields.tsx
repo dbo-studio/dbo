@@ -10,7 +10,7 @@ interface FormFieldsProps {
 
 export default function FormFields({ fields, values, onChange }: FormFieldsProps) {
   return (
-    <Grid2 direction={'row'}>
+    <Grid2 direction={'row'} mt={1}>
       {fields.map((field) => (
         <Grid2
           size={{
