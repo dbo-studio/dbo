@@ -1,25 +1,27 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Grid2, IconButton, Stack, useTheme } from '@mui/material';
+import { useMemo } from 'react';
 
 export default function ActionBar() {
   const theme = useTheme();
   const { setShowQueryPreview, setShowFilters, setShowSorts, setShowColumns } = useTabStore();
   const { getSelectedTab } = useTabStore();
+  const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
 
   const handleToggle = (type: 'filter' | 'query' | 'sort' | 'column') => {
     switch (type) {
       case 'filter':
-        setShowFilters(!getSelectedTab()?.showFilters);
+        setShowFilters(!selectedTab?.showFilters);
         break;
       case 'query':
-        setShowQueryPreview(!getSelectedTab()?.showQuery);
+        setShowQueryPreview(!selectedTab?.showQuery);
         break;
       case 'sort':
-        setShowSorts(!getSelectedTab()?.showSorts);
+        setShowSorts(!selectedTab?.showSorts);
         break;
       case 'column':
-        setShowColumns(!getSelectedTab()?.showColumns);
+        setShowColumns(!selectedTab?.showColumns);
         break;
     }
   };

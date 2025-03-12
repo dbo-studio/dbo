@@ -24,6 +24,7 @@ func (r *PostgresRepository) GetFormTabs(action contract.TreeNodeActionName) []c
 			{ID: contract.TableIndexesTab, Name: "Indexes"},
 			{ID: contract.TableTriggersTab, Name: "Triggers"},
 			{ID: contract.TableChecksTab, Name: "Checks"},
+			{ID: contract.TableKeysTab, Name: "Keys"},
 		}
 	case contract.CreateViewAction, contract.EditViewAction:
 		return []contract.FormTab{
@@ -118,7 +119,7 @@ func (r *PostgresRepository) GetFormFields(nodeID string, action contract.TreeNo
 			return []contract.FormField{
 				{ID: "checks", Name: "Checks", Type: "array", Options: r.getCheckOptions()},
 			}
-		case contract.KeysTab:
+		case contract.TableKeysTab:
 			return []contract.FormField{
 				{ID: "keys", Name: "Keys", Type: "array", Options: r.getKeyOptions(node)},
 			}

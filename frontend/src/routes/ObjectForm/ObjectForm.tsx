@@ -12,8 +12,7 @@ export default function ObjectForm() {
   const [formDataByTab, setFormDataByTab] = useState<Record<string, any>>({});
   const { currentConnection } = useConnectionStore();
   const { getSelectedTab } = useTabStore();
-
-  const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab]);
+  const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
 
   const { data: tabs } = useQuery({
     queryKey: ['objectTabs', currentConnection?.id],

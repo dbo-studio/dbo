@@ -1,6 +1,7 @@
 import type { FormFieldType } from '@/api/tree/types';
 import {
   Box,
+  Divider,
   IconButton,
   Stack,
   Table,
@@ -63,6 +64,7 @@ export default function ArrayField({ field, value = [], onChange }: ArrayFieldPr
           </Stack>
         </IconButton>
       </Stack>
+      <Divider />
       <TableContainer>
         <Table sx={{ minWidth: 650 }}>
           <TableHead>

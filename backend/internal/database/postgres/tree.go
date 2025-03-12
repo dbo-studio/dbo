@@ -145,7 +145,6 @@ func buildContainer(r *PostgresRepository, dbName, schemaName string, container 
 				Name: table.Name,
 				Type: contract.TableNodeType,
 				Action: &contract.TreeNodeAction{
-					Name: "",
 					Type: contract.TreeNodeActionTypeTab,
 					Params: map[string]interface{}{
 						"path":  "data",

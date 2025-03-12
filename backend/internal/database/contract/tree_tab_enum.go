@@ -34,4 +34,5 @@ const (
 	TableTriggersTab    TreeTab = "table_triggers"
 	TableChecksTab      TreeTab = "table_checks"
 	TableStorageTab     TreeTab = "table_storage"
+	TableKeysTab        TreeTab = "table_keys"
 )

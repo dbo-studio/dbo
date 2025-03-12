@@ -15,7 +15,8 @@ export default function FormFields({ fields, values, onChange }: FormFieldsProps
         <Grid2
           size={{
             xs: 12,
-            md: 6
+            md: 12,
+            lg: 6
           }}
           key={field.id}
         >
