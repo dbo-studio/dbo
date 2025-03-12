@@ -14,8 +14,7 @@ const endpoints = {
   getTree: () => '/tree',
   getTabs: (nodeId: string, action: string) => `/tree/${nodeId}/tabs/${action}`,
   getFields: (nodeId: string, action: string, tabId: string) => `/tree/${nodeId}/tabs/${action}/fields/${tabId}`,
-  getObject: (nodeId: string, action: string, tabId: string, type: string) =>
-    `/tree/${nodeId}/tabs/${action}/fields/${tabId}/${type}`
+  getObject: (nodeId: string, action: string, tabId: string) => `/tree/${nodeId}/tabs/${action}/fields/${tabId}/object`
 };
 
 export const getTree = async (params: TreeRequestType): Promise<TreeResponseType> => {
@@ -48,7 +47,7 @@ export const getFields = async (params: FieldRequestType): Promise<FieldResponse
 
 export const getObject = async (params: ObjectRequestType) => {
   return (
-    await api.get(endpoints.getObject(params.nodeId, params.action, params.tabId, params.type), {
+    await api.get(endpoints.getObject(params.nodeId, params.action, params.tabId), {
       params: {
         connectionId: params.connectionId
       }

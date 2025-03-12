@@ -31,7 +31,7 @@ export default function TableForm({ formSchema, formData, onChange }: TableFormP
 
   return (
     <Box overflow={'auto'} padding={1} width={'100%'}>
-      <FormFields fields={simpleFields} values={formState} onChange={handleFormChange} />
+      <FormFields values={formState} fields={simpleFields} onChange={handleFormChange} />
       {arrayFields.map((field) => (
         <Box key={field.id}>
           <ArrayField

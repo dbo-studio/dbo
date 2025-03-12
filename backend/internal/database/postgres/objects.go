@@ -8,86 +8,66 @@ import (
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
-func (r *PostgresRepository) Objects(nodeID string, objType contract.TreeNodeType, tabID contract.TreeTab) (any, error) {
+func (r *PostgresRepository) Objects(nodeID string, tabID contract.TreeTab) (any, error) {
 	node := extractNode(nodeID)
 
-	switch objType {
-	case contract.DatabaseNodeType:
-		switch tabID {
-		case contract.GeneralTab:
-			return r.getDatabaseInfo(node)
-		case contract.PrivilegesTab:
-			return r.getDatabasePrivileges(node)
-		}
+	switch tabID {
 
-	case contract.SchemaNodeType:
-		switch tabID {
-		case contract.GeneralTab:
-			return r.getSchemaInfo(node)
-		case contract.PrivilegesTab:
-			return r.getSchemaPrivileges(node)
-		}
+	case contract.DatabaseTab:
+		return r.getDatabaseInfo(node)
+	case contract.DatabasePrivilegesTab:
+		return r.getDatabasePrivileges(node)
 
-	case contract.TableNodeType:
-		switch tabID {
-		case contract.TableTab:
-			return r.getTableInfo(node)
-		case contract.ColumnsTab:
-			return r.getTableColumns(node)
-		case contract.ForeignKeysTab:
-			return r.getTableForeignKeys(node)
-		case contract.IndexesTab:
-			return r.getTableIndexes(node)
-		case contract.TriggersTab:
-			return r.getTableTriggers(node)
-		case contract.ChecksTab:
-			return r.getTableChecks(node)
-		}
+	case contract.SchemaTab:
+		return r.getSchemaInfo(node)
+	case contract.SchemaPrivilegesTab:
+		return r.getSchemaPrivileges(node)
 
-	case contract.ViewNodeType:
-		switch tabID {
-		case contract.GeneralTab:
-			return r.getViewInfo(node)
-		case contract.DefinitionTab:
-			return r.getViewDefinition(node)
-		case contract.PrivilegesTab:
-			return r.getViewPrivileges(node)
-		}
+	case contract.TableTab:
+		return r.getTableInfo(node)
+	case contract.TableColumnsTab:
+		return r.getTableColumns(node)
+	case contract.TableForeignKeysTab:
+		return r.getTableForeignKeys(node)
+	case contract.TableIndexesTab:
+		return r.getTableIndexes(node)
+	case contract.TableTriggersTab:
+		return r.getTableTriggers(node)
+	case contract.TableChecksTab:
+		return r.getTableChecks(node)
 
-	case contract.MaterializedViewNodeType:
-		switch tabID {
-		case contract.GeneralTab:
-			return r.getMaterializedViewInfo(node)
-		case contract.DefinitionTab:
-			return r.getMaterializedViewDefinition(node)
-		case contract.StorageTab:
-			return r.getMaterializedViewStorage(node)
-		case contract.PrivilegesTab:
-			return r.getMaterializedViewPrivileges(node)
-		}
+	case contract.ViewTab:
+		return r.getViewInfo(node)
+	case contract.ViewDefinitionTab:
+		return r.getViewDefinition(node)
+	case contract.ViewPrivilegesTab:
+		return r.getViewPrivileges(node)
 
-	case contract.IndexNodeType:
-		switch tabID {
-		case contract.GeneralTab:
-			return r.getIndexInfo(node)
-		case contract.ColumnsTab:
-			return r.getIndexColumns(node)
-		case contract.StorageTab:
-			return r.getIndexStorage(node)
-		}
+	case contract.MaterializedViewTab:
+		return r.getMaterializedViewInfo(node)
+	case contract.MaterializedViewDefinitionTab:
+		return r.getMaterializedViewDefinition(node)
+	case contract.MaterializedViewStorageTab:
+		return r.getMaterializedViewStorage(node)
+	case contract.MaterializedViewPrivilegesTab:
+		return r.getMaterializedViewPrivileges(node)
 
-	case contract.SequenceNodeType:
-		switch tabID {
-		case contract.GeneralTab:
-			return r.getSequenceInfo(node)
-		case contract.DefinitionTab:
-			return r.getSequenceDefinition(node)
-		case contract.PrivilegesTab:
-			return r.getSequencePrivileges(node)
-		}
+	case contract.IndexTab:
+		return r.getIndexInfo(node)
+	case contract.IndexColumnsTab:
+		return r.getIndexColumns(node)
+	case contract.IndexStorageTab:
+		return r.getIndexStorage(node)
+
+	case contract.SequenceTab:
+		return r.getSequenceInfo(node)
+	case contract.SequenceDefinitionTab:
+		return r.getSequenceDefinition(node)
+	case contract.SequencePrivilegesTab:
+		return r.getSequencePrivileges(node)
 	}
 
-	return nil, fmt.Errorf("PostgreSQL: unsupported object type: %s or tab: %s", objType, tabID)
+	return nil, fmt.Errorf("PostgreSQL: unsupported object or tab: %s", tabID)
 }
 
 func (r *PostgresRepository) getSequencePrivileges(node PGNode) (any, error) {

@@ -30,6 +30,7 @@ export type TabType = {
   filters: FilterType[];
   columns: string[];
   mode: TabMode;
+  options?: Record<string, any>;
 };
 
 export type EditedRow = {

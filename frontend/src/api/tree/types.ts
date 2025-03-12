@@ -46,7 +46,6 @@ export type FieldOptionType = {
 export type ObjectRequestType = {
   connectionId: string;
   nodeId: string;
-  type: string;
   action: string;
   tabId: string;
 };
@@ -69,4 +68,4 @@ export type TreeNodeActionType = {
   params: Record<string, any>;
 };
 
-export type TreeNodeActionTypesType = 'form' | 'command' | 'action' | 'route';
+export type TreeNodeActionTypesType = 'form' | 'command' | 'action' | 'route' | 'tab';

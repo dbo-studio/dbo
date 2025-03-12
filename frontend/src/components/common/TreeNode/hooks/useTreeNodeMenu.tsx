@@ -5,19 +5,11 @@ export function useTreeNodeMenu(node: TreeNodeType, actionDetection: (event: any
   const menu: MenuType[] =
     node?.contextMenu?.map((action) => ({
       name: action.title,
-      action: () => {
-        switch (action.type) {
-          case 'route': {
-            actionDetection({ stopPropagation: () => {} } as any, {
-              ...node,
-              action
-            });
-            break;
-          }
-          default:
-            break;
-        }
-      },
+      action: () =>
+        actionDetection({ stopPropagation: () => {} } as any, {
+          ...node,
+          action
+        }),
       closeAfterAction: true
     })) || [];
 

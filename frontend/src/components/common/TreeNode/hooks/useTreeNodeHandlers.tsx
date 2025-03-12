@@ -1,4 +1,5 @@
 import type { TreeNodeType } from '@/api/tree/types';
+import { TabMode } from '@/core/enums';
 import useNavigate from '@/hooks/useNavigate.hook.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type React from 'react';
@@ -37,7 +38,7 @@ export function useTreeNodeHandlers({
 }: UseTreeNodeHandlersProps) {
   const hasChildren = children?.length > 0 || node.type !== 'table';
   const navigate = useNavigate();
-  const { addTab } = useTabStore();
+  const { addTab, addObjectTab } = useTabStore();
 
   const actionDetection = useCallback(async (event: React.MouseEvent, node: TreeNodeType) => {
     if (!node.action) {
@@ -46,12 +47,33 @@ export function useTreeNodeHandlers({
     }
 
     switch (node.action.type) {
-      case 'route': {
-        const tab = addTab(node.action.params.id, node.id, node.action.params.path);
-        navigate({
-          route: node.action.params.path,
-          tabId: tab.id
-        });
+      case 'tab': {
+        switch (node.action.params.path) {
+          case 'object': {
+            const tab = addObjectTab(node.id, node.action.name, TabMode.Object);
+            navigate({
+              route: node.action.params.path,
+              tabId: tab.id
+            });
+            break;
+          }
+          case 'object-detail': {
+            const tab = addObjectTab(node.id, node.action.name, TabMode.ObjectDetail);
+            navigate({
+              route: node.action.params.path,
+              tabId: tab.id
+            });
+            break;
+          }
+          case 'data': {
+            const tab = addTab(node.action.params.table, node.id, node.action.params.path);
+            navigate({
+              route: node.action.params.path,
+              tabId: tab.id
+            });
+            break;
+          }
+        }
       }
     }
   }, []);

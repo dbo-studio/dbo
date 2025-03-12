@@ -15,7 +15,7 @@ export default function SimpleField({ field, value, onChange, size = 'medium' }:
     case 'text':
       return (
         <FieldInput
-          margin='none'
+          margin={size === 'small' ? 'none' : undefined}
           label={size === 'medium' ? field.name : undefined}
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
@@ -33,14 +33,16 @@ export default function SimpleField({ field, value, onChange, size = 'medium' }:
     case 'select':
     case 'multi-select':
       return (
-        <SelectInput
-          isMulti={field.type === 'multi-select'}
-          label={size === 'medium' ? field.name : undefined}
-          value={value || (field.type === 'multi-select' ? [] : '')}
-          options={field.options?.map((opt) => ({ value: opt.value, label: opt.name })) || []}
-          onChange={(e) => onChange(e)}
-          size={size}
-        />
+        <Box mb={1}>
+          <SelectInput
+            isMulti={field.type === 'multi-select'}
+            label={size === 'medium' ? field.name : undefined}
+            value={value || (field.type === 'multi-select' ? [] : '')}
+            options={field.options?.map((opt) => ({ value: opt.value, label: opt.name })) || []}
+            onChange={(e) => onChange(e)}
+            size={size}
+          />
+        </Box>
       );
     default:
       return null;

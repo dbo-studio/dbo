@@ -181,8 +181,8 @@ export const cleanupUpdateDesignObject = (data: EditedColumnValue | null): Updat
 
   if (has(data, 'default')) {
     newObject.default = {
-      make_null: false,
-      make_empty: false,
+      makeNull: false,
+      makeEmpty: false,
       value: data.default ?? ''
     };
   }

@@ -71,7 +71,6 @@ func (h *TreeHandler) ObjectDetail(c fiber.Ctx) error {
 		ConnectionId: fiber.Query[int32](c, "connectionId"),
 		NodeId:       fiber.Params[string](c, "nodeId"),
 		TabId:        fiber.Params[string](c, "tabId"),
-		Type:         fiber.Params[string](c, "type"),
 		Action:       fiber.Params[string](c, "action"),
 	}
 

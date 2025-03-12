@@ -45,38 +45,16 @@ func (r *PostgresRepository) Actions(nodeType contract.TreeNodeType) []contract.
 				Name:  contract.DropSchemaAction,
 				Type:  contract.TreeNodeActionTypeAction,
 			},
-			contract.TreeNodeAction{
-				Title: "Create table",
-				Name:  contract.CreateTableAction,
-				Type:  contract.TreeNodeActionTypeForm,
-			},
-			contract.TreeNodeAction{
-				Title: "Create view",
-				Name:  contract.CreateViewAction,
-				Type:  contract.TreeNodeActionTypeForm,
-			},
-			contract.TreeNodeAction{
-				Title: "Create materialized view",
-				Name:  contract.CreateMaterializedViewAction,
-				Type:  contract.TreeNodeActionTypeForm,
-			},
-			contract.TreeNodeAction{
-				Title: "Create index",
-				Name:  contract.CreateIndexAction,
-				Type:  contract.TreeNodeActionTypeForm,
-			},
-			contract.TreeNodeAction{
-				Title: "Create sequence",
-				Name:  contract.CreateSequenceAction,
-				Type:  contract.TreeNodeActionTypeForm,
-			},
 		)
 	case contract.TableContainerNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
 				Title: "Create table",
 				Name:  contract.CreateTableAction,
-				Type:  contract.TreeNodeActionTypeForm,
+				Type:  contract.TreeNodeActionTypeTab,
+				Params: map[string]any{
+					"path": "object",
+				},
 			})
 	case contract.ViewContainerNodeType:
 		actions = append(actions,
@@ -111,7 +89,10 @@ func (r *PostgresRepository) Actions(nodeType contract.TreeNodeType) []contract.
 			contract.TreeNodeAction{
 				Title: "Edit table",
 				Name:  contract.EditTableAction,
-				Type:  contract.TreeNodeActionTypeForm,
+				Type:  contract.TreeNodeActionTypeTab,
+				Params: map[string]any{
+					"path": "object-detail",
+				},
 			},
 			contract.TreeNodeAction{
 				Title: "Drop table",
