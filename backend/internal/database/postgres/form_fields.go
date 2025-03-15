@@ -63,21 +63,13 @@ func (r *PostgresRepository) GetFormFields(nodeID string, action contract.TreeNo
 	case contract.CreateDatabaseAction, contract.EditDatabaseAction:
 		switch tabID {
 		case contract.DatabaseTab:
-			return []contract.FormField{
-				{ID: "name", Name: "Name", Type: "text", Required: true},
-				{ID: "owner", Name: "Owner", Type: "text"},
-				{ID: "encoding", Name: "Encoding", Type: "select", Options: r.getEncodingOptions()},
-				{ID: "template", Name: "Template", Type: "select", Options: r.getTemplateOptions()},
-			}
+			return convertFieldDefinitionToFormField(r.GetDatabaseFields())
 		}
 
 	case contract.CreateSchemaAction, contract.EditSchemaAction:
 		switch tabID {
 		case contract.SchemaTab:
-			return []contract.FormField{
-				{ID: "name", Name: "Name", Type: "text", Required: true},
-				{ID: "owner", Name: "Owner", Type: "text"},
-			}
+			return convertFieldDefinitionToFormField(r.GetSchemaFields())
 		case contract.SchemaPrivilegesTab:
 			return []contract.FormField{
 				{ID: "privileges", Name: "Privileges", Type: "array", Options: r.getPrivilegeOptions()},
@@ -87,18 +79,7 @@ func (r *PostgresRepository) GetFormFields(nodeID string, action contract.TreeNo
 	case contract.CreateTableAction, contract.EditTableAction:
 		switch tabID {
 		case contract.TableTab:
-			return []contract.FormField{
-				{ID: "name", Name: "Name", Type: "text", Required: true},
-				{ID: "comment", Name: "Comment", Type: "text"},
-				{ID: "persistence", Name: "Persistence", Type: "select", Options: r.getPersistenceOptions()},
-				{ID: "with_oids", Name: "With OIDs", Type: "checkbox"},
-				{ID: "partition_expression", Name: "Partition Expression", Type: "text"},
-				{ID: "partition_key", Name: "Partition Key", Type: "text"},
-				{ID: "options", Name: "Options", Type: "text"},
-				{ID: "access_method", Name: "Access Method", Type: "text"},
-				{ID: "tablespace", Name: "Tablespace", Type: "select", Options: r.getTablespaceOptions()},
-				{ID: "owner", Name: "Owner", Type: "text"},
-			}
+			return convertFieldDefinitionToFormField(r.GetTableFields())
 		case contract.TableColumnsTab:
 			return []contract.FormField{
 				{ID: "columns", Name: "Columns", Type: "array", Required: true, Options: getColumnOptions()},

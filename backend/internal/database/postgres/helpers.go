@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/samber/lo"
 )
 
@@ -82,4 +83,12 @@ func columnListToResponse(columns []Column) []dto.Column {
 	}
 
 	return data
+}
+
+func convertFieldDefinitionToFormField(fieldDefinition map[string]contract.FormField) []contract.FormField {
+	formFields := make([]contract.FormField, 0)
+	for _, field := range fieldDefinition {
+		formFields = append(formFields, field)
+	}
+	return formFields
 }

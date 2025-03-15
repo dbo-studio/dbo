@@ -6,6 +6,7 @@ import (
 	"database/sql"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	"gorm.io/gorm"
 )
 
 func (r *PostgresRepository) Objects(nodeID string, tabID contract.TreeTab) (any, error) {
@@ -561,26 +562,19 @@ func (r *PostgresRepository) getSchemaPrivileges(node PGNode) (any, error) {
 }
 
 func (r *PostgresRepository) getSchemaInfo(node PGNode) (any, error) {
-	type SchemaInfo struct {
-		SchemaName string         `gorm:"column:schema_name"`
-		Owner      string         `gorm:"column:owner"`
-		Comment    sql.NullString `gorm:"column:comment"`
-	}
+	fields := r.GetSchemaFields()
 
-	info := SchemaInfo{}
-	err := r.db.Table("pg_namespace AS n").
-		Select("n.nspname as schema_name, r.rolname as owner, d.description as comment").
-		Joins("JOIN pg_roles AS r ON r.oid = n.nspowner").
-		Joins("LEFT JOIN pg_description AS d ON d.objoid = n.oid AND d.objsubid = 0").
-		Where("n.nspname = ?", node.Schema).
-		Scan(&info).Error
-	if err != nil {
-		return nil, err
-	}
+	query := r.db.Table("pg_namespace n").
+		Select(`
+			n.nspname,
+			r.rolname,
+			d.description
+		`).
+		Joins("JOIN pg_roles r ON r.oid = n.nspowner").
+		Joins("LEFT JOIN pg_description d ON d.objoid = n.oid AND d.objsubid = 0").
+		Where("n.nspname = ?", node.Schema)
 
-	return map[string]interface{}{
-		"info": info,
-	}, nil
+	return buildObjectResponse(query, fields)
 }
 
 func (r *PostgresRepository) getDatabasePrivileges(node PGNode) (any, error) {
@@ -606,81 +600,66 @@ func (r *PostgresRepository) getDatabasePrivileges(node PGNode) (any, error) {
 }
 
 func (r *PostgresRepository) getDatabaseInfo(node PGNode) (any, error) {
-	var info struct {
-		Name     string         `gorm:"column:datname"`
-		Owner    string         `gorm:"column:rolname"`
-		Encoding sql.NullString `gorm:"column:encoding"`
-		Comment  sql.NullString `gorm:"column:description"`
-	}
-	err := r.db.Raw(`
-		SELECT d.datname, r.rolname, pg_encoding_to_char(d.encoding) as encoding, des.description
-		FROM pg_database d
-		JOIN pg_roles r ON r.oid = d.datdba
-		LEFT JOIN pg_description des ON des.objoid = d.oid AND des.objsubid = 0
-		WHERE d.datname = ?`, node.Database).Scan(&info).Error
-	if err != nil {
-		return nil, err
-	}
-	return map[string]interface{}{
-		"name":     info.Name,
-		"owner":    info.Owner,
-		"encoding": info.Encoding.String,
-		"comment":  info.Comment.String,
-	}, nil
+	fields := r.GetDatabaseFields()
+
+	query := r.db.Table("pg_database d").
+		Select(`
+			d.datname,
+			r.rolname,
+			pg_encoding_to_char(d.encoding) as encoding,
+			des.description
+		`).
+		Joins("JOIN pg_roles r ON r.oid = d.datdba").
+		Joins("LEFT JOIN pg_description des ON des.objoid = d.oid AND des.objsubid = 0").
+		Where("d.datname = ?", node.Database)
+
+	return buildObjectResponse(query, fields)
 }
 
 // Helper methods for Table
 func (r *PostgresRepository) getTableInfo(node PGNode) (any, error) {
-	type TableInfo struct {
-		Name                string         `gorm:"column:name"`
-		Comment             sql.NullString `gorm:"column:description"`
-		Persistence         string         `gorm:"column:persistence"`
-		WithOids            bool           `gorm:"column:with_oids"`
-		PartitionExpression sql.NullString `gorm:"column:partition_expression"`
-		PartitionKey        sql.NullString `gorm:"column:partition_key"`
-		Options             sql.NullString `gorm:"column:options"`
-		AccessMethod        sql.NullString `gorm:"column:access_method"`
-		Tablespace          sql.NullString `gorm:"column:tablespace"`
-		Owner               string         `gorm:"column:owner"`
-	}
+	fields := r.GetTableFields()
 
-	var info TableInfo
-	err := r.db.Table("pg_class c").
+	query := r.db.Table("pg_class c").
 		Select(`
-			c.relname as name,
+			c.relname,
 			d.description,
-			CASE 
-				WHEN c.relpersistence = 'p' THEN 'permanent'
-				WHEN c.relpersistence = 'u' THEN 'unlogged'
-				WHEN c.relpersistence = 't' THEN 'temporary'
-			END as persistence,
-			false as with_oids,
-			pg_get_partkeydef(c.oid) as partition_key,
-			pg_get_expr(c.relpartbound, c.oid) as partition_expression,
-			array_to_string(c.reloptions, ', ') as options,
-			am.amname as access_method,
-			t.spcname as tablespace,
-			r.rolname as owner
+			c.relpersistence,
+			pg_get_expr(c.relpartbound, c.oid) as relpartbound,
+			pg_get_partkeydef(c.oid) as partkeydef,
+			array_to_string(c.reloptions, ', ') as reloptions,
+			am.amname,
+			t.spcname,
+			r.rolname
 		`).
 		Joins("JOIN pg_namespace n ON n.oid = c.relnamespace").
 		Joins("JOIN pg_roles r ON r.oid = c.relowner").
 		Joins("LEFT JOIN pg_tablespace t ON t.oid = c.reltablespace").
 		Joins("LEFT JOIN pg_am am ON am.oid = c.relam").
 		Joins("LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0").
-		Where("c.relname = ? AND n.nspname = ?", node.Table, node.Schema).
-		Scan(&info).Error
+		Where("c.relname = ? AND n.nspname = ?", node.Table, node.Schema)
+
+	return buildObjectResponse(query, fields)
+}
+
+// buildObjectResponse یک تابع کمکی برای ساخت پاسخ بر اساس فیلدهای تعریف شده
+func buildObjectResponse(query *gorm.DB, fields map[string]contract.FormField) (map[string]any, error) {
+	var results []map[string]any
+	err := query.Scan(&results).Error
 	if err != nil {
 		return nil, err
 	}
-	return map[string]interface{}{
-		"name":                 info.Name,
-		"persistence":          info.Persistence,
-		"with_oids":            info.WithOids,
-		"partition_expression": info.PartitionExpression.String,
-		"partition_key":        info.PartitionKey.String,
-		"options":              info.Options.String,
-		"access_method":        info.AccessMethod.String,
-		"tablespace":           info.Tablespace.String,
-		"owner":                info.Owner,
-	}, nil
+
+	if len(results) == 0 {
+		return nil, fmt.Errorf("no results found")
+	}
+
+	// ساخت response با استفاده از field definitions
+	response := make(map[string]any)
+	for id := range fields {
+		if val, exists := results[0][id]; exists {
+			response[id] = val
+		}
+	}
+	return response, nil
 }
