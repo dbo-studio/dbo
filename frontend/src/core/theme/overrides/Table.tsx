@@ -6,7 +6,7 @@ export default function Table(theme: Theme): Components {
       styleOverrides: {
         root: {
           '& .MuiTableCell-root': {
-            padding: '4px 8px',
+            // padding: '4px 8px',
             color: theme.palette.text.title,
             borderBottom: `1px solid ${theme.palette.divider}`
           },
@@ -18,7 +18,7 @@ export default function Table(theme: Theme): Components {
       styleOverrides: {
         root: {
           '& .MuiTableCell-root': {
-            padding: '4px 8px',
+            // padding: '4px 8px',
             minWidth: '100px'
           },
           'td,th': { borderBottom: `1px solid ${theme.palette.divider}` }

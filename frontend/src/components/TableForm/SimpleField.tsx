@@ -33,7 +33,7 @@ export default function SimpleField({ field, value, onChange, size = 'medium' }:
     case 'select':
     case 'multi-select':
       return (
-        <Box mb={1}>
+        <Box mb={size === 'small' ? 0 : 1}>
           <SelectInput
             isMulti={field.type === 'multi-select'}
             label={size === 'medium' ? field.name : undefined}

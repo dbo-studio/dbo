@@ -15,7 +15,7 @@ export default function ObjectFormDetail() {
   const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
 
   const { data: tabs } = useQuery({
-    queryKey: ['objectTabs', currentConnection?.id],
+    queryKey: ['objectTabs', selectedTab?.id, currentConnection?.id, selectedTab?.options?.action],
     queryFn: () =>
       api.tree.getTabs({
         nodeId: selectedTab?.id ?? '',
@@ -28,20 +28,19 @@ export default function ObjectFormDetail() {
   const currentTabId = tabs?.[selectedTabIndex]?.id;
 
   const { data: fields } = useQuery({
-    queryKey: ['tabFields', currentConnection?.id, currentTabId],
+    queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, currentTabId],
     queryFn: () =>
       api.tree.getFields({
         nodeId: selectedTab?.id ?? '',
         action: selectedTab?.options?.action,
         tabId: currentTabId || '',
-        connectionId: String(currentConnection?.id || ''),
-        type: currentTabId ?? ''
+        connectionId: String(currentConnection?.id || '')
       }),
     enabled: !!currentConnection && !!currentTabId
   });
 
   const { data: object } = useQuery({
-    queryKey: ['tabObject', currentConnection?.id, currentTabId],
+    queryKey: ['tabObject', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, currentTabId],
     queryFn: () =>
       api.tree.getObject({
         nodeId: selectedTab?.id ?? '',
@@ -52,7 +51,6 @@ export default function ObjectFormDetail() {
     enabled: !!currentConnection && !!currentTabId
   });
 
-  // وقتی object از API می‌آید، آن را در state ذخیره می‌کنیم
   useEffect(() => {
     if (currentTabId && object && !formDataByTab[currentTabId]) {
       setFormDataByTab((prev) => ({

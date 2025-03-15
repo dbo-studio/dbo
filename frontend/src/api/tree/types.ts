@@ -23,7 +23,6 @@ export type FieldRequestType = {
   action: string;
   nodeId: string;
   tabId: string;
-  type: string;
 };
 
 export type FieldResponseType = FormFieldType[];

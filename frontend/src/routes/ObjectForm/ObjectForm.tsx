@@ -15,7 +15,7 @@ export default function ObjectForm() {
   const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
 
   const { data: tabs } = useQuery({
-    queryKey: ['objectTabs', currentConnection?.id],
+    queryKey: ['objectTabs', selectedTab?.id, currentConnection?.id, selectedTab?.options?.action],
     queryFn: () =>
       api.tree.getTabs({
         nodeId: selectedTab?.id ?? '',
@@ -28,14 +28,13 @@ export default function ObjectForm() {
   const currentTabId = tabs?.[selectedTabIndex]?.id;
 
   const { data: fields } = useQuery({
-    queryKey: ['tabFields', currentConnection?.id, currentTabId],
+    queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, currentTabId],
     queryFn: () =>
       api.tree.getFields({
         nodeId: selectedTab?.id ?? '',
         action: selectedTab?.options?.action,
         tabId: currentTabId || '',
-        connectionId: String(currentConnection?.id || ''),
-        type: currentTabId ?? ''
+        connectionId: String(currentConnection?.id || '')
       }),
     enabled: !!currentConnection && !!currentTabId
   });

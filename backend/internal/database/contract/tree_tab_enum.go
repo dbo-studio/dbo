@@ -4,7 +4,7 @@ type TreeTab string
 
 const (
 	DatabaseTab           TreeTab = "database"
-	DatabasePrivilegesTab TreeTab = "databaseـprivileges"
+	DatabasePrivilegesTab TreeTab = "database_privileges"
 
 	SchemaTab           TreeTab = "schema"
 	SchemaPrivilegesTab TreeTab = "schema_privileges"

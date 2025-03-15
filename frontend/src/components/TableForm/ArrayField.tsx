@@ -74,8 +74,7 @@ export default function ArrayField({ field, value = [], onChange }: ArrayFieldPr
                   {option.name}
                 </TableCell>
               ))}
-              <TableCell sx={{ minWidth: 50 }}>Add</TableCell>
-              <TableCell sx={{ minWidth: 50 }}>Remove</TableCell>
+              <TableCell />
             </TableRow>
           </TableHead>
           <TableBody>
@@ -92,16 +91,16 @@ export default function ArrayField({ field, value = [], onChange }: ArrayFieldPr
                   </TableCell>
                 ))}
 
-                <TableCell sx={{ minWidth: 50 }}>
-                  <IconButton size='small' onClick={handleAdd}>
-                    <CustomIcon type='plus' />
-                  </IconButton>
-                </TableCell>
+                <TableCell>
+                  <Stack direction={'row'} spacing={1}>
+                    <IconButton size='small' onClick={handleAdd}>
+                      <CustomIcon type='plus' />
+                    </IconButton>
 
-                <TableCell sx={{ minWidth: 50 }}>
-                  <IconButton size='small' onClick={() => handleDelete(index)}>
-                    <CustomIcon type='delete' />
-                  </IconButton>
+                    <IconButton size='small' onClick={() => handleDelete(index)}>
+                      <CustomIcon type='delete' />
+                    </IconButton>
+                  </Stack>
                 </TableCell>
               </TableRow>
             ))}
