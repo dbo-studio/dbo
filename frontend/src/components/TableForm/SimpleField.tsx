@@ -1,7 +1,9 @@
 import type { FormFieldType } from '@/api/tree/types';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
+import { variables } from '@/core/theme/variables';
 import { Box, Checkbox, Typography } from '@mui/material';
+import SqlEditor from '../base/SqlEditor/SqlEditor';
 
 interface SimpleFieldProps {
   field: FormFieldType;
@@ -41,6 +43,26 @@ export default function SimpleField({ field, onChange, size = 'medium' }: Simple
             onChange={(e) => onChange(e)}
             size={size}
           />
+        </Box>
+      );
+    case 'query':
+      return (
+        <Box display={'flex'} width={'100%'} minHeight={250} flex={1}>
+          <Box p={0.1} flex={1} border={1} borderColor={'divider'} borderRadius={variables.radius.medium}>
+            <SqlEditor
+              value={field.value ?? ''}
+              onChange={(value: string) => {
+                console.log(value);
+              }}
+              autocomplete={{
+                databases: [],
+                views: [],
+                schemas: [],
+                tables: [],
+                columns: {}
+              }}
+            />
+          </Box>
         </Box>
       );
     default:

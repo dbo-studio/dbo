@@ -3,10 +3,7 @@ package databasePostgres
 import (
 	"fmt"
 
-	"database/sql"
-
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
-	"gorm.io/gorm"
 )
 
 func (r *PostgresRepository) Objects(nodeID string, tabID contract.TreeTab) ([]contract.FormField, error) {
@@ -38,374 +35,106 @@ func (r *PostgresRepository) Objects(nodeID string, tabID contract.TreeTab) ([]c
 		return r.getTableChecks(node)
 	case contract.TableKeysTab:
 		return r.getTableKeys(node)
+	case contract.TableSequenceTab:
+		return r.getTableSequence(node)
 
 	case contract.ViewTab:
 		return r.getViewInfo(node)
-	case contract.ViewDefinitionTab:
-		return r.getViewDefinition(node)
 	case contract.ViewPrivilegesTab:
 		return r.getViewPrivileges(node)
 
 	case contract.MaterializedViewTab:
 		return r.getMaterializedViewInfo(node)
-	case contract.MaterializedViewDefinitionTab:
-		return r.getMaterializedViewDefinition(node)
-	case contract.MaterializedViewStorageTab:
-		return r.getMaterializedViewStorage(node)
 	case contract.MaterializedViewPrivilegesTab:
 		return r.getMaterializedViewPrivileges(node)
 
-	case contract.IndexTab:
-		return r.getIndexInfo(node)
-	case contract.IndexColumnsTab:
-		return r.getIndexColumns(node)
-	case contract.IndexStorageTab:
-		return r.getIndexStorage(node)
-
-	case contract.SequenceTab:
-		return r.getSequenceInfo(node)
-	case contract.SequenceDefinitionTab:
-		return r.getSequenceDefinition(node)
-	case contract.SequencePrivilegesTab:
-		return r.getSequencePrivileges(node)
 	}
 
 	return nil, fmt.Errorf("PostgreSQL: unsupported object or tab: %s", tabID)
 }
 
-func (r *PostgresRepository) getSequencePrivileges(node PGNode) ([]contract.FormField, error) {
-	type SequencePrivilege struct {
-		Grantor    string         `gorm:"column:grantor"`
-		Grantee    string         `gorm:"column:grantee"`
-		Privileges sql.NullString `gorm:"column:privileges"`
-	}
-
-	privileges := make([]SequencePrivilege, 0)
-	err := r.db.Table("information_schema.sequences AS s").
-		Select("grantor, grantee, string_agg(privilege_type, ', ') as privileges").
-		Joins("JOIN information_schema.usage_privileges AS p ON s.sequence_name = p.object_name").
-		Where("s.sequence_schema = ? AND s.sequence_name = ?", node.Schema, node.Table).
-		Group("grantor, grantee").
-		Scan(&privileges).Error
-	if err != nil {
-		return nil, err
-	}
-
-	// return map[string]interface{}{
-	// 	"privileges": privileges,
-	// }, nil
-
-	return nil, nil
-}
-
-func (r *PostgresRepository) getSequenceDefinition(node PGNode) ([]contract.FormField, error) {
-	type SequenceDefinition struct {
-		StartValue sql.NullInt64  `gorm:"column:start_value"`
-		MinValue   sql.NullInt64  `gorm:"column:min_value"`
-		MaxValue   sql.NullInt64  `gorm:"column:max_value"`
-		Increment  sql.NullInt64  `gorm:"column:increment"`
-		Cache      sql.NullInt64  `gorm:"column:cache"`
-		Comment    sql.NullString `gorm:"column:comment"`
-	}
-
-	definition := SequenceDefinition{}
-	err := r.db.Table("information_schema.sequences AS s").
-		Select("start_value, min_value, max_value, increment, cache, comment").
-		Where("s.sequence_schema = ? AND s.sequence_name = ?", node.Schema, node.Table).
-		Scan(&definition).Error
-	if err != nil {
-		return nil, err
-	}
-
-	// return map[string]interface{}{
-	// 	"definition": definition,
-	// }, nil
-
-	return nil, nil
-}
-
-func (r *PostgresRepository) getSequenceInfo(node PGNode) ([]contract.FormField, error) {
-	type SequenceInfo struct {
-		SequenceName  string         `gorm:"column:sequence_name"`
-		SchemaName    string         `gorm:"column:schema_name"`
-		DataType      string         `gorm:"column:data_type"`
-		IsNullable    string         `gorm:"column:is_nullable"`
-		ColumnDefault sql.NullString `gorm:"column:column_default"`
-		Comment       sql.NullString `gorm:"column:comment"`
-	}
-
-	info := SequenceInfo{}
-	err := r.db.Table("information_schema.sequences AS s").
-		Select("sequence_name, schema_name, data_type, is_nullable, column_default, comment").
-		Where("s.sequence_schema = ? AND s.sequence_name = ?", node.Schema, node.Table).
-		Scan(&info).Error
-	if err != nil {
-		return nil, err
-	}
-
-	// return map[string]interface{}{
-	// 	"info": info,
-	// }, nil
-
-	return nil, nil
-}
-
-func (r *PostgresRepository) getIndexStorage(node PGNode) ([]contract.FormField, error) {
-	type IndexStorage struct {
-		TableSize   sql.NullString `gorm:"column:table_size"`
-		IndexesSize sql.NullString `gorm:"column:indexes_size"`
-		TotalSize   sql.NullString `gorm:"column:total_size"`
-	}
-
-	storage := IndexStorage{}
-	err := r.db.Table("pg_class AS c").
-		Select("pg_size_pretty(c.reltuples * coalesce(c.relpages, 0) * 8) as table_size, pg_size_pretty(c.relpages * 8) as indexes_size, pg_size_pretty(c.reltuples * coalesce(c.relpages, 0) * 8 + c.relpages * 8) as total_size").
-		Where("c.relname = ? AND c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)", node.Table, node.Schema).
-		Scan(&storage).Error
-	if err != nil {
-		return nil, err
-	}
-
-	// return map[string]interface{}{
-	// 	"storage": storage,
-	// }, nil
-
-	return nil, nil
-}
-
-func (r *PostgresRepository) getIndexColumns(node PGNode) ([]contract.FormField, error) {
-	type IndexColumn struct {
-		ColumnName   string       `gorm:"column:column_name"`
-		IsAscending  sql.NullBool `gorm:"column:is_ascending"`
-		IsDescending sql.NullBool `gorm:"column:is_descending"`
-	}
-
-	columns := make([]IndexColumn, 0)
-	err := r.db.Table("pg_index AS i").
-		Select("i.indkey, c.column_name, i.is_ascending, i.is_descending").
-		Joins("JOIN pg_attribute AS c ON c.attnum = ANY(i.indkey) AND c.attrelid = i.indrelid").
-		Where("i.indname = ? AND i.indnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)", node.Table, node.Schema).
-		Scan(&columns).Error
-	if err != nil {
-		return nil, err
-	}
-
-	// return map[string]interface{}{
-	// 	"columns": columns,
-	// }, nil
-
-	return nil, nil
-}
-
-type IndexInfo struct {
-	Name         string         `gorm:"column:index_name"`
-	Columns      string         `gorm:"column:columns"`
-	IsUnique     bool           `gorm:"column:is_unique"`
-	IsPrimary    bool           `gorm:"column:is_primary"`
-	AccessMethod string         `gorm:"column:access_method"`
-	Tablespace   sql.NullString `gorm:"column:tablespace"`
-	Definition   string         `gorm:"column:definition"`
-	Size         sql.NullString `gorm:"column:size"`
-}
-
-func (r *PostgresRepository) getIndexInfo(node PGNode) ([]contract.FormField, error) {
-	indexes := make([]IndexInfo, 0)
-	err := r.db.Table("pg_index ix").
+func (r *PostgresRepository) getTableSequence(node PGNode) ([]contract.FormField, error) {
+	fields := r.sequenceFields()
+	query := r.db.Table("information_schema.sequences AS s").
 		Select(`
-			i.relname as index_name,
-			array_to_string(array_agg(a.attname), ', ') as columns,
-			ix.indisunique as is_unique,
-			ix.indisprimary as is_primary,
-			am.amname as access_method,
-			t.spcname as tablespace,
-			pg_get_indexdef(i.oid) as definition,
-			pg_size_pretty(pg_relation_size(i.oid)) as size
+			s.sequence_name AS name,
+			obj_description(c.oid, 'pg_class') AS comment,
+			s.increment AS increment,
+			s.minimum_value AS min_value,
+			s.maximum_value AS max_value,
+			s.start_value AS start_value,
+			s.cache_value AS cache,
+			s.cycle_option AS cycle,
+			CONCAT(s.sequence_schema, '.', s.sequence_name) AS owned_by
 		`).
-		Joins("JOIN pg_class i ON i.oid = ix.indexrelid").
-		Joins("JOIN pg_class c ON c.oid = ix.indrelid").
-		Joins("JOIN pg_namespace n ON n.oid = c.relnamespace").
-		Joins("JOIN pg_am am ON am.oid = i.relam").
-		Joins("LEFT JOIN pg_tablespace t ON t.oid = i.reltablespace").
-		Joins("JOIN pg_attribute a ON a.attrelid = ix.indrelid AND a.attnum = ANY(ix.indkey)").
-		Where("n.nspname = ? AND c.relname = ?", node.Schema, node.Table).
-		Group("i.relname, ix.indisunique, ix.indisprimary, am.amname, t.spcname, i.oid").
-		Scan(&indexes).Error
-	if err != nil {
-		return nil, err
-	}
+		Joins("JOIN pg_class c ON c.relname = s.sequence_name").
+		Joins("JOIN pg_namespace n ON n.oid = c.relnamespace AND n.nspname = s.sequence_schema").
+		Where("s.sequence_schema = ? AND s.sequence_name = ?", node.Schema, node.Table)
 
-	// return map[string]interface{}{
-	// 	"indexes": indexes,
-	// }, nil
-
-	return nil, nil
+	return buildObjectResponse(query, fields)
 }
 
 func (r *PostgresRepository) getMaterializedViewPrivileges(node PGNode) ([]contract.FormField, error) {
-	type MaterializedViewPrivilege struct {
-		Grantor    string         `gorm:"column:grantor"`
-		Grantee    string         `gorm:"column:grantee"`
-		Privileges sql.NullString `gorm:"column:privileges"`
-	}
+	fields := r.materializedViewPrivilegeOptions()
 
-	privileges := make([]MaterializedViewPrivilege, 0)
-	err := r.db.Table("information_schema.sequences AS s").
+	query := r.db.Table("information_schema.views AS v").
 		Select("grantor, grantee, string_agg(privilege_type, ', ') as privileges").
-		Joins("JOIN information_schema.usage_privileges AS p ON s.sequence_name = p.object_name").
-		Where("s.sequence_schema = ? AND s.sequence_name = ?", node.Schema, node.Table).
-		Group("grantor, grantee").
-		Scan(&privileges).Error
-	if err != nil {
-		return nil, err
-	}
+		Joins("JOIN information_schema.table_privileges AS p ON v.table_name = p.table_name AND v.table_schema = p.table_schema").
+		Where("v.table_schema = ? AND v.table_name = ?", node.Schema, node.Table).
+		Group("grantor, grantee")
 
-	// return map[string]interface{}{
-	// 	"privileges": privileges,
-	// }, nil
-
-	return nil, nil
-}
-
-func (r *PostgresRepository) getMaterializedViewStorage(node PGNode) ([]contract.FormField, error) {
-	type MaterializedViewStorage struct {
-		TableSize   sql.NullString `gorm:"column:table_size"`
-		IndexesSize sql.NullString `gorm:"column:indexes_size"`
-		TotalSize   sql.NullString `gorm:"column:total_size"`
-	}
-
-	storage := MaterializedViewStorage{}
-	err := r.db.Table("pg_class AS c").
-		Select("pg_size_pretty(c.reltuples * coalesce(c.relpages, 0) * 8) as table_size, pg_size_pretty(c.relpages * 8) as indexes_size, pg_size_pretty(c.reltuples * coalesce(c.relpages, 0) * 8 + c.relpages * 8) as total_size").
-		Where("c.relname = ? AND c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)", node.Table, node.Schema).
-		Scan(&storage).Error
-	if err != nil {
-		return nil, err
-	}
-
-	// return map[string]interface{}{
-	// 	"storage": storage,
-	// }, nil
-
-	return nil, nil
-}
-
-func (r *PostgresRepository) getMaterializedViewDefinition(node PGNode) ([]contract.FormField, error) {
-	type MaterializedViewDefinition struct {
-		Definition sql.NullString `gorm:"column:definition"`
-	}
-
-	definition := MaterializedViewDefinition{}
-	err := r.db.Table("pg_matviews AS m").
-		Select("m.definition").
-		Where("m.matviewname = ? AND m.schemaname = ?", node.Table, node.Schema).
-		Scan(&definition).Error
-	if err != nil {
-		return nil, err
-	}
-
-	// return map[string]interface{}{
-	// 	"definition": definition,
-	// }, nil
-
-	return nil, nil
+	return buildArrayResponse(query, fields)
 }
 
 func (r *PostgresRepository) getMaterializedViewInfo(node PGNode) ([]contract.FormField, error) {
-	type MaterializedViewInfo struct {
-		ViewName    string         `gorm:"column:view_name"`
-		SchemaName  string         `gorm:"column:schema_name"`
-		TableSize   sql.NullString `gorm:"column:table_size"`
-		IndexesSize sql.NullString `gorm:"column:indexes_size"`
-		TotalSize   sql.NullString `gorm:"column:total_size"`
-	}
+	fields := r.materializedViewFields()
 
-	info := MaterializedViewInfo{}
-	err := r.db.Table("pg_class AS c").
-		Select("c.relname as view_name, n.nspname as schema_name, pg_size_pretty(c.reltuples * coalesce(c.relpages, 0) * 8) as table_size, pg_size_pretty(c.relpages * 8) as indexes_size, pg_size_pretty(c.reltuples * coalesce(c.relpages, 0) * 8 + c.relpages * 8) as total_size").
+	query := r.db.Table("pg_class AS c").
+		Select(`
+			c.relname as name,
+			d.description as comment,
+			NULL as withs,
+			t.spcname as tablespace,
+			m.definition as query
+		`).
 		Joins("JOIN pg_namespace AS n ON n.oid = c.relnamespace").
-		Where("c.relname = ? AND c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)", node.Table, node.Schema).
-		Scan(&info).Error
-	if err != nil {
-		return nil, err
-	}
+		Joins("LEFT JOIN pg_description AS d ON d.objoid = c.oid AND d.objsubid = 0").
+		Joins("LEFT JOIN pg_tablespace AS t ON t.oid = c.reltablespace").
+		Joins("LEFT JOIN pg_matviews AS m ON m.matviewname = c.relname AND m.schemaname = n.nspname").
+		Where("c.relname = ? AND c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)", node.Table, node.Schema)
 
-	// return map[string]interface{}{
-	// 	"info": info,
-	// }, nil
-
-	return nil, nil
+	return buildObjectResponse(query, fields)
 }
 
 func (r *PostgresRepository) getViewPrivileges(node PGNode) ([]contract.FormField, error) {
-	type ViewPrivilege struct {
-		Grantor    string         `gorm:"column:grantor"`
-		Grantee    string         `gorm:"column:grantee"`
-		Privileges sql.NullString `gorm:"column:privileges"`
-	}
+	fields := r.viewPrivilegeOptions()
 
-	privileges := make([]ViewPrivilege, 0)
-	err := r.db.Table("information_schema.sequences AS s").
+	query := r.db.Table("information_schema.views AS v").
 		Select("grantor, grantee, string_agg(privilege_type, ', ') as privileges").
-		Joins("JOIN information_schema.usage_privileges AS p ON s.sequence_name = p.object_name").
-		Where("s.sequence_schema = ? AND s.sequence_name = ?", node.Schema, node.Table).
-		Group("grantor, grantee").
-		Scan(&privileges).Error
-	if err != nil {
-		return nil, err
-	}
+		Joins("JOIN information_schema.view_column_usage AS vc ON v.table_name = vc.view_name AND v.table_schema = vc.view_schema").
+		Joins("JOIN information_schema.column_privileges AS cp ON vc.table_name = cp.table_name AND vc.column_name = cp.column_name").
+		Where("v.table_schema = ? AND v.table_name = ?", node.Schema, node.Table).
+		Group("grantor, grantee")
 
-	// return map[string]interface{}{
-	// 	"privileges": privileges,
-	// }, nil
-
-	return nil, nil
-}
-
-func (r *PostgresRepository) getViewDefinition(node PGNode) ([]contract.FormField, error) {
-	type ViewDefinition struct {
-		Definition sql.NullString `gorm:"column:definition"`
-	}
-
-	definition := ViewDefinition{}
-	err := r.db.Table("pg_views AS v").
-		Select("v.definition").
-		Where("v.viewname = ? AND v.schemaname = ?", node.Table, node.Schema).
-		Scan(&definition).Error
-	if err != nil {
-		return nil, err
-	}
-
-	// return map[string]interface{}{
-	// 	"definition": definition,
-	// }, nil
-
-	return nil, nil
+	return buildArrayResponse(query, fields)
 }
 
 func (r *PostgresRepository) getViewInfo(node PGNode) ([]contract.FormField, error) {
-	type ViewInfo struct {
-		ViewName    string         `gorm:"column:view_name"`
-		SchemaName  string         `gorm:"column:schema_name"`
-		TableSize   sql.NullString `gorm:"column:table_size"`
-		IndexesSize sql.NullString `gorm:"column:indexes_size"`
-		TotalSize   sql.NullString `gorm:"column:total_size"`
-	}
+	fields := r.viewFields()
 
-	info := ViewInfo{}
-	err := r.db.Table("pg_class AS c").
-		Select("c.relname as view_name, n.nspname as schema_name, pg_size_pretty(c.reltuples * coalesce(c.relpages, 0) * 8) as table_size, pg_size_pretty(c.relpages * 8) as indexes_size, pg_size_pretty(c.reltuples * coalesce(c.relpages, 0) * 8 + c.relpages * 8) as total_size").
-		Joins("JOIN pg_namespace AS n ON n.oid = c.relnamespace").
-		Where("c.relname = ? AND c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)", node.Table, node.Schema).
-		Scan(&info).Error
-	if err != nil {
-		return nil, err
-	}
+	query := r.db.Table("pg_class AS c").
+		Select(`
+			c.relname as name,
+			d.description as comment,
+			v.definition as query,
+			NULL as check_option
+		`).
+		Joins("JOIN pg_namespace AQAqqawWS3``11		q	`e4	`sw3	wasS n ON n.oid = c.relnamespace").
+		Joins("LEFT JOIN pg_views v ON v.viewname = c.relname AND v.schemaname = n.nspname").
+		Joins("LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0").
+		Where("c.relname = ? AND n.nspname = ? AND c.relkind = 'v'", node.Table, node.Schema)
 
-	// return map[string]interface{}{
-	// 	"info": info,
-	// }, nil
-
-	return nil, nil
+	return buildObjectResponse(query, fields)
 }
 
 func (r *PostgresRepository) getTableChecks(node PGNode) ([]contract.FormField, error) {
@@ -490,17 +219,6 @@ func (r *PostgresRepository) getTableIndexes(node PGNode) ([]contract.FormField,
 		Group("i.relname, ix.indisunique, ix.indisprimary, am.amname, t.spcname, i.oid")
 
 	return buildArrayResponse(query, fields)
-}
-
-type ForeignKeyInfo struct {
-	Name           string `gorm:"column:constraint_name"`
-	Columns        string `gorm:"column:columns"`
-	RefTable       string `gorm:"column:ref_table"`
-	RefColumns     string `gorm:"column:ref_columns"`
-	UpdateAction   string `gorm:"column:update_action"`
-	DeleteAction   string `gorm:"column:delete_action"`
-	Deferrable     bool   `gorm:"column:is_deferrable"`
-	InitiallyDefer bool   `gorm:"column:initially_deferred"`
 }
 
 func (r *PostgresRepository) getTableForeignKeys(node PGNode) ([]contract.FormField, error) {
@@ -674,79 +392,4 @@ func (r *PostgresRepository) getTableKeys(node PGNode) ([]contract.FormField, er
 		Group("c.conname, d.description, c.contype, c.condeferrable, c.condeferred, c.oid")
 
 	return buildArrayResponse(query, fields)
-}
-
-func buildObjectResponse(query *gorm.DB, fields []contract.FormField) ([]contract.FormField, error) {
-	var results []map[string]any
-	err := query.Scan(&results).Error
-	if err != nil {
-		return nil, err
-	}
-
-	if len(results) == 0 {
-		return fields, nil
-	}
-
-	for i, field := range fields {
-		if val, exists := results[0][field.ID]; exists && val != nil {
-			fields[i].Value = val
-		}
-	}
-
-	return fields, nil
-}
-
-func buildArrayResponse(query *gorm.DB, fields []contract.FormField) ([]contract.FormField, error) {
-	var results []map[string]any
-	err := query.Scan(&results).Error
-	if err != nil {
-		return nil, err
-	}
-
-	if len(results) == 0 {
-		return []contract.FormField{
-			{
-				ID:   "columns",
-				Type: "array",
-				Fields: []contract.FormField{
-					{
-						ID:     "empty",
-						Type:   "object",
-						Fields: fields,
-					},
-				},
-			},
-		}, nil
-	}
-
-	responseFields := make([]contract.FormField, len(results))
-	responseFields = append(responseFields, contract.FormField{
-		ID:     "empty",
-		Type:   "object",
-		Fields: fields,
-	})
-
-	for i, result := range results {
-		responseFields[i] = contract.FormField{
-			ID:     "",
-			Type:   "object",
-			Fields: make([]contract.FormField, len(fields)),
-		}
-
-		for j, field := range fields {
-			newField := field
-			if val, exists := result[field.ID]; exists && val != nil {
-				newField.Value = val
-			}
-			responseFields[i].Fields[j] = newField
-		}
-	}
-
-	return []contract.FormField{
-		{
-			ID:     "columns",
-			Type:   "array",
-			Fields: responseFields,
-		},
-	}, nil
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/samber/lo"
+	"gorm.io/gorm"
 )
 
 type PGNode struct {
@@ -91,4 +92,95 @@ func convertFieldDefinitionToFormField(fieldDefinition []contract.FormField) []c
 		formFields = append(formFields, field)
 	}
 	return formFields
+}
+
+func buildFieldArray(fields []contract.FormField) []contract.FormField {
+	return []contract.FormField{
+		{
+			ID:   "columns",
+			Type: "array",
+			Fields: []contract.FormField{
+				{
+					ID:     "empty",
+					Type:   "object",
+					Fields: fields,
+				},
+			},
+		},
+	}
+}
+
+func buildObjectResponse(query *gorm.DB, fields []contract.FormField) ([]contract.FormField, error) {
+	var results []map[string]any
+	err := query.Scan(&results).Error
+	if err != nil {
+		return nil, err
+	}
+
+	if len(results) == 0 {
+		return fields, nil
+	}
+
+	for i, field := range fields {
+		if val, exists := results[0][field.ID]; exists && val != nil {
+			fields[i].Value = val
+		}
+	}
+
+	return fields, nil
+}
+
+func buildArrayResponse(query *gorm.DB, fields []contract.FormField) ([]contract.FormField, error) {
+	var results []map[string]any
+	err := query.Scan(&results).Error
+	if err != nil {
+		return nil, err
+	}
+
+	if len(results) == 0 {
+		return []contract.FormField{
+			{
+				ID:   "columns",
+				Type: "array",
+				Fields: []contract.FormField{
+					{
+						ID:     "empty",
+						Type:   "object",
+						Fields: fields,
+					},
+				},
+			},
+		}, nil
+	}
+
+	responseFields := make([]contract.FormField, len(results))
+	responseFields = append(responseFields, contract.FormField{
+		ID:     "empty",
+		Type:   "object",
+		Fields: fields,
+	})
+
+	for i, result := range results {
+		responseFields[i] = contract.FormField{
+			ID:     "",
+			Type:   "object",
+			Fields: make([]contract.FormField, len(fields)),
+		}
+
+		for j, field := range fields {
+			newField := field
+			if val, exists := result[field.ID]; exists && val != nil {
+				newField.Value = val
+			}
+			responseFields[i].Fields[j] = newField
+		}
+	}
+
+	return []contract.FormField{
+		{
+			ID:     "columns",
+			Type:   "array",
+			Fields: responseFields,
+		},
+	}, nil
 }

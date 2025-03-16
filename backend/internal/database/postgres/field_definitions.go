@@ -336,7 +336,7 @@ func (r *PostgresRepository) databasePrivilegeOptions() []contract.FormField {
 	return []contract.FormField{
 		{ID: "grantee", Name: "Grantee", Type: "text"},
 		{ID: "grantor", Name: "Grantor", Type: "text"},
-		{ID: "privileges", Name: "Privileges", Type: "array", Fields: []contract.FormField{
+		{ID: "privileges", Name: "Privileges", Type: "multi-select", Fields: []contract.FormField{
 			{Value: "SELECT", Name: "SELECT"},
 			{Value: "INSERT", Name: "INSERT"},
 			{Value: "UPDATE", Name: "UPDATE"},
@@ -465,7 +465,8 @@ func (r *PostgresRepository) encodingOptions() []contract.FormField {
 func (r *PostgresRepository) schemaPrivilegeOptions() []contract.FormField {
 	return []contract.FormField{
 		{ID: "grantee", Name: "Grantee", Type: "text"},
-		{ID: "privileges", Name: "Privileges", Type: "array", Fields: []contract.FormField{
+		{ID: "grantor", Name: "Grantor", Type: "text"},
+		{ID: "privileges", Name: "Privileges", Type: "multi-select", Fields: []contract.FormField{
 			{Value: "SELECT", Name: "SELECT"},
 			{Value: "INSERT", Name: "INSERT"},
 			{Value: "UPDATE", Name: "UPDATE"},
@@ -498,4 +499,65 @@ func (r *PostgresRepository) tablespaceOptions() []contract.FormField {
 	}
 
 	return tablespaces
+}
+
+func (r *PostgresRepository) viewFields() []contract.FormField {
+	return []contract.FormField{
+		{ID: "name", Name: "Name", Type: "text"},
+		{ID: "comment", Name: "Comment", Type: "text"},
+		{ID: "check_option", Name: "Check Option", Type: "select", Fields: []contract.FormField{
+			{Value: "LOCAL", Name: "LOCAL"},
+			{Value: "CASCADE", Name: "CASCADE"},
+		}},
+		{ID: "query", Name: "Query", Type: "query"},
+	}
+}
+
+func (r *PostgresRepository) viewPrivilegeOptions() []contract.FormField {
+	return []contract.FormField{
+		{ID: "grantee", Name: "Grantee", Type: "text"},
+		{ID: "privileges", Name: "Privileges", Type: "multi-select", Fields: []contract.FormField{
+			{Value: "SELECT", Name: "SELECT"},
+			{Value: "INSERT", Name: "INSERT"},
+			{Value: "UPDATE", Name: "UPDATE"},
+			{Value: "DELETE", Name: "DELETE"},
+		}},
+	}
+}
+
+func (r *PostgresRepository) materializedViewFields() []contract.FormField {
+	return []contract.FormField{
+		{ID: "name", Name: "Name", Type: "text"},
+		{ID: "comment", Name: "Comment", Type: "text"},
+		{ID: "withs", Name: "Withs", Type: "text"},
+		{ID: "tablespace", Name: "Tablespace", Type: "select", Fields: r.tablespaceOptions()},
+		{ID: "query", Name: "Query", Type: "query"},
+	}
+}
+
+func (r *PostgresRepository) materializedViewPrivilegeOptions() []contract.FormField {
+	return []contract.FormField{
+		{ID: "grantee", Name: "Grantee", Type: "text"},
+		{ID: "grantor", Name: "Grantor", Type: "text"},
+		{ID: "privileges", Name: "Privileges", Type: "multi-select", Fields: []contract.FormField{
+			{Value: "SELECT", Name: "SELECT"},
+			{Value: "INSERT", Name: "INSERT"},
+			{Value: "UPDATE", Name: "UPDATE"},
+			{Value: "DELETE", Name: "DELETE"},
+		}},
+	}
+}
+
+func (r *PostgresRepository) sequenceFields() []contract.FormField {
+	return []contract.FormField{
+		{ID: "name", Name: "Name", Type: "text"},
+		{ID: "comment", Name: "Comment", Type: "text"},
+		{ID: "increment", Name: "Increment", Type: "text"},
+		{ID: "min_value", Name: "Min Value", Type: "text"},
+		{ID: "max_value", Name: "Max Value", Type: "text"},
+		{ID: "start_value", Name: "Start Value", Type: "text"},
+		{ID: "cache", Name: "Cache", Type: "text"},
+		{ID: "cycle", Name: "Cycle", Type: "checkbox"},
+		{ID: "owned_by", Name: "Owned By", Type: "text"},
+	}
 }

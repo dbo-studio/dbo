@@ -102,16 +102,6 @@ func buildSchema(r *PostgresRepository, dbName, schemaName string) (*contract.Tr
 			contract.MaterializedViewContainerNodeType,
 			r.Actions(contract.MaterializedViewContainerNodeType),
 		},
-		{
-			"Indexes",
-			contract.IndexContainerNodeType,
-			r.Actions(contract.IndexContainerNodeType),
-		},
-		{
-			"Sequences",
-			contract.SequenceContainerNodeType,
-			r.Actions(contract.SequenceContainerNodeType),
-		},
 	}
 	for _, c := range containers {
 		schemaNode.Children = append(schemaNode.Children, contract.TreeNode{
@@ -180,34 +170,6 @@ func buildContainer(r *PostgresRepository, dbName, schemaName string, container 
 				Name:        mv.Name,
 				Type:        contract.MaterializedViewNodeType,
 				ContextMenu: r.Actions(contract.MaterializedViewNodeType),
-				Children:    make([]contract.TreeNode, 0),
-			})
-		}
-	case contract.IndexContainerNodeType:
-		indexes, err := r.getIndexList(Schema{Name: schemaName})
-		if err != nil {
-			return nil, apperror.DriverError(err)
-		}
-		for _, index := range indexes {
-			containerNode.Children = append(containerNode.Children, contract.TreeNode{
-				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, index.Name),
-				Name:        index.Name,
-				Type:        contract.TableNodeType,
-				ContextMenu: r.Actions(contract.TableNodeType),
-				Children:    make([]contract.TreeNode, 0),
-			})
-		}
-	case contract.SequenceContainerNodeType:
-		sequences, err := r.getSequenceList(Schema{Name: schemaName})
-		if err != nil {
-			return nil, apperror.DriverError(err)
-		}
-		for _, sequence := range sequences {
-			containerNode.Children = append(containerNode.Children, contract.TreeNode{
-				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, sequence.Name),
-				Name:        sequence.Name,
-				Type:        contract.SequenceNodeType,
-				ContextMenu: r.Actions(contract.SequenceNodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}

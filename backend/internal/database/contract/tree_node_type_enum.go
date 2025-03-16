@@ -10,11 +10,7 @@ const (
 	TableContainerNodeType            TreeNodeType = "tableContainer"
 	ViewContainerNodeType             TreeNodeType = "viewContainer"
 	MaterializedViewContainerNodeType TreeNodeType = "materializedViewContainer"
-	IndexContainerNodeType            TreeNodeType = "indexContainer"
-	SequenceContainerNodeType         TreeNodeType = "sequenceContainer"
 	TableNodeType                     TreeNodeType = "table"
 	ViewNodeType                      TreeNodeType = "view"
 	MaterializedViewNodeType          TreeNodeType = "materializedView"
-	IndexNodeType                     TreeNodeType = "index"
-	SequenceNodeType                  TreeNodeType = "sequence"
 )
