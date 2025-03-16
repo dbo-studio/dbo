@@ -1,5 +1,6 @@
 import type { FormFieldType } from '@/api/tree/types';
 import { Box } from '@mui/material';
+import { useMemo } from 'react';
 import ArrayField from './ArrayField';
 import FormFields from './FormFields';
 
@@ -9,6 +10,14 @@ interface TableFormProps {
 }
 
 export default function TableForm({ formSchema, onChange }: TableFormProps) {
+  const { simpleFields, arrayFields } = useMemo(
+    () => ({
+      simpleFields: formSchema.filter((field) => field.type !== 'array'),
+      arrayFields: formSchema.filter((field) => field.type === 'array')
+    }),
+    [formSchema]
+  );
+
   const handleFormChange = (field: string, value: any) => {
     const formData = formSchema.reduce(
       (acc, field) => {
@@ -21,9 +30,6 @@ export default function TableForm({ formSchema, onChange }: TableFormProps) {
     const newState = { ...formData, [field]: value };
     onChange(newState);
   };
-
-  const simpleFields = formSchema.filter((field) => field.type !== 'array');
-  const arrayFields = formSchema.filter((field) => field.type === 'array');
 
   return (
     <Box overflow={'auto'} padding={1} width={'100%'}>

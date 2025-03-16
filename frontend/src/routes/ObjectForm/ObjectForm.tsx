@@ -74,14 +74,15 @@ export default function ObjectForm({ isDetail = false }: { isDetail?: boolean })
     }));
   };
 
-  const selectedContent = useMemo(() => {
+  const currentFields = useMemo(() => {
     if (!fields || !currentTabId) return null;
-
-    const currentFields = isDetail ? formDataByTab[currentTabId] || fields : fields;
-    console.log('🚀 ~ selectedContent ~ currentFields:', currentFields);
-
-    return <TableForm formSchema={currentFields} onChange={handleFormChange} />;
+    return isDetail ? formDataByTab[currentTabId] || fields : fields;
   }, [fields, currentTabId, formDataByTab, isDetail]);
+
+  const selectedContent = useMemo(() => {
+    if (!currentFields) return null;
+    return <TableForm formSchema={currentFields} onChange={handleFormChange} />;
+  }, [currentFields]);
 
   const handleTabChange = (index: number) => {
     setSelectedTabIndex(index);

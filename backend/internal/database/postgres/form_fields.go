@@ -83,21 +83,13 @@ func (r *PostgresRepository) GetFormFields(nodeID string, action contract.TreeNo
 		case contract.TableForeignKeysTab:
 			return r.foreignKeyOptions(node)
 		case contract.TableIndexesTab:
-			return []contract.FormField{
-				{ID: "indexes", Name: "Indexes", Type: "array", Fields: r.indexOptions(node)},
-			}
+			return r.indexOptions(node)
 		case contract.TableTriggersTab:
-			return []contract.FormField{
-				{ID: "triggers", Name: "Triggers", Type: "array", Fields: r.triggerOptions(node)},
-			}
+			return r.triggerOptions(node)
 		case contract.TableChecksTab:
-			return []contract.FormField{
-				{ID: "checks", Name: "Checks", Type: "array", Fields: r.checkOptions()},
-			}
+			return r.checkOptions()
 		case contract.TableKeysTab:
-			return []contract.FormField{
-				{ID: "keys", Name: "Keys", Type: "array", Fields: r.getKeyOptions(node)},
-			}
+			return r.getKeyOptions(node)
 		}
 	}
 	return []contract.FormField{}

@@ -11,6 +11,7 @@ import {
   TableHead,
   TableRow
 } from '@mui/material';
+import { useMemo } from 'react';
 import CustomIcon from '../base/CustomIcon/CustomIcon';
 import SimpleField from './SimpleField';
 
@@ -20,6 +21,8 @@ interface ArrayFieldProps {
 }
 
 export default function ArrayField({ field, onChange }: ArrayFieldProps) {
+  const template = useMemo(() => field.fields?.[0], [field.fields]);
+
   const handleItemChange = (index: number, fieldId: string, fieldValue: any) => {
     const newFields = [...(field.fields || [])];
 
@@ -39,13 +42,10 @@ export default function ArrayField({ field, onChange }: ArrayFieldProps) {
   };
 
   const handleAdd = () => {
-    const template = field.fields?.[0];
-    if (!template) return;
-
     const newField = {
       ...template,
       id: 'object',
-      fields: template.fields?.map((f) => ({
+      fields: template?.fields?.map((f) => ({
         ...f,
         value: f.type === 'multi-select' ? [] : null
       }))

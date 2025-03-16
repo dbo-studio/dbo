@@ -36,6 +36,8 @@ func (r *PostgresRepository) Objects(nodeID string, tabID contract.TreeTab) ([]c
 		return r.getTableTriggers(node)
 	case contract.TableChecksTab:
 		return r.getTableChecks(node)
+	case contract.TableKeysTab:
+		return r.getTableKeys(node)
 
 	case contract.ViewTab:
 		return r.getViewInfo(node)
@@ -407,59 +409,67 @@ func (r *PostgresRepository) getViewInfo(node PGNode) ([]contract.FormField, err
 }
 
 func (r *PostgresRepository) getTableChecks(node PGNode) ([]contract.FormField, error) {
-	type TableCheck struct {
-		CheckName  string         `gorm:"column:check_name"`
-		SchemaName string         `gorm:"column:schema_name"`
-		Definition sql.NullString `gorm:"column:definition"`
-	}
+	fields := r.checkOptions()
 
-	checks := make([]TableCheck, 0)
-	err := r.db.Table("pg_constraint AS c").
-		Select("c.conname as check_name, n.nspname as schema_name, c.consrc as definition").
+	query := r.db.Table("pg_constraint AS c").
+		Select(`
+			c.conname as name,
+			d.description as comment,
+			c.condeferrable as deferrable,
+			c.condeferred as initially_deferred,
+			c.connoinherit as no_inherit,
+			pg_get_constraintdef(c.oid) as predicate
+		`).
 		Joins("JOIN pg_namespace AS n ON n.oid = c.connamespace").
-		Where("c.conname = ? AND c.connamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)", node.Table, node.Schema).
-		Scan(&checks).Error
-	if err != nil {
-		return nil, err
-	}
+		Joins("LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0").
+		Where("c.conrelid = (SELECT oid FROM pg_class WHERE relname = ? AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)) AND c.contype = 'c'", node.Table, node.Schema)
 
-	// return map[string]interface{}{
-	// 	"checks": checks,
-	// }, nil
-
-	return nil, nil
+	return buildArrayResponse(query, fields[0].Fields)
 }
 
 func (r *PostgresRepository) getTableTriggers(node PGNode) ([]contract.FormField, error) {
-	type TableTrigger struct {
-		TriggerName string `gorm:"column:trigger_name"`
-		SchemaName  string `gorm:"column:schema_name"`
-		TriggerType string `gorm:"column:trigger_type"`
-		Event       string `gorm:"column:event"`
-		Table       string `gorm:"column:table"`
-		Function    string `gorm:"column:function"`
-	}
+	fields := r.triggerOptions(node)
 
-	triggers := make([]TableTrigger, 0)
-	err := r.db.Table("pg_trigger AS t").
-		Select("t.tgname as trigger_name, n.nspname as schema_name, t.tgtype as trigger_type, t.tgevent as event, c.relname as table, f.proname as function").
-		Joins("JOIN pg_class AS c ON c.relname = ? AND c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)", node.Table, node.Schema).
-		Joins("JOIN pg_proc AS f ON f.oid = t.tgfoid").
-		Scan(&triggers).Error
-	if err != nil {
-		return nil, err
-	}
+	query := r.db.Table("pg_trigger AS t").
+		Select(`
+			t.tgname as name,
+			d.description as comment,
+			CASE 
+				WHEN (t.tgtype & 2) = 2 THEN 'BEFORE'
+				WHEN (t.tgtype & 16) = 16 THEN 'INSTEAD OF'
+				ELSE 'AFTER'
+			END as timing,
+			CASE 
+				WHEN (t.tgtype & 1) = 1 THEN 'FOR EACH ROW'
+				ELSE 'FOR EACH STATEMENT'
+			END as level,
+			array_to_string(ARRAY[
+				CASE WHEN (t.tgtype & 4) = 4 THEN 'INSERT' ELSE NULL END,
+				CASE WHEN (t.tgtype & 8) = 8 THEN 'DELETE' ELSE NULL END,
+				CASE WHEN (t.tgtype & 32) = 32 THEN 'UPDATE' ELSE NULL END,
+				CASE WHEN (t.tgtype & 64) = 64 THEN 'TRUNCATE' ELSE NULL END
+			], ', ') as events,
+			array_to_string(array_agg(a.attname), ', ') as update_columns,
+			p.proname as function,
+			pg_get_triggerdef(t.oid) as when,
+			(t.tgtype & 128) = 128 as no_inherit,
+			NOT t.tgisinternal as enable,
+			(t.tgtype & 256) = 256 as truncate_cascade
+		`).
+		Joins("JOIN pg_class AS c ON c.oid = t.tgrelid").
+		Joins("JOIN pg_namespace AS n ON n.oid = c.relnamespace").
+		Joins("JOIN pg_proc AS p ON p.oid = t.tgfoid").
+		Joins("LEFT JOIN pg_description AS d ON d.objoid = t.oid AND d.objsubid = 0").
+		Joins("LEFT JOIN pg_attribute AS a ON a.attrelid = t.tgrelid AND a.attnum = ANY(t.tgattr)").
+		Where("c.relname = ? AND n.nspname = ?", node.Table, node.Schema).
+		Group("t.tgname, d.description, t.tgtype, p.proname, t.oid")
 
-	// return map[string]interface{}{
-	// 	"triggers": triggers,
-	// }, nil
-
-	return nil, nil
+	return buildArrayResponse(query, fields[0].Fields)
 }
 
 func (r *PostgresRepository) getTableIndexes(node PGNode) ([]contract.FormField, error) {
-	indexes := make([]IndexInfo, 0)
-	err := r.db.Table("pg_index ix").
+	indexes := r.indexOptions(node)
+	query := r.db.Table("pg_index ix").
 		Select(`
 			i.relname as index_name,
 			array_to_string(array_agg(a.attname), ', ') as columns,
@@ -477,15 +487,9 @@ func (r *PostgresRepository) getTableIndexes(node PGNode) ([]contract.FormField,
 		Joins("LEFT JOIN pg_tablespace t ON t.oid = i.reltablespace").
 		Joins("JOIN pg_attribute a ON a.attrelid = ix.indrelid AND a.attnum = ANY(ix.indkey)").
 		Where("n.nspname = ? AND c.relname = ?", node.Schema, node.Table).
-		Group("i.relname, ix.indisunique, ix.indisprimary, am.amname, t.spcname, i.oid").
-		Scan(&indexes).Error
-	if err != nil {
-		return nil, err
-	}
+		Group("i.relname, ix.indisunique, ix.indisprimary, am.amname, t.spcname, i.oid")
 
-	// return indexes, err
-
-	return nil, nil
+	return buildArrayResponse(query, indexes[0].Fields)
 }
 
 type ForeignKeyInfo struct {
@@ -671,6 +675,28 @@ func (r *PostgresRepository) getTableInfo(node PGNode) ([]contract.FormField, er
 		Where("c.relname = ? AND n.nspname = ?", node.Table, node.Schema)
 
 	return buildObjectResponse(query, fields)
+}
+
+func (r *PostgresRepository) getTableKeys(node PGNode) ([]contract.FormField, error) {
+	fields := r.getKeyOptions(node)
+
+	query := r.db.Table("pg_constraint c").
+		Select(`
+			c.conname as name,
+			d.description as comment,
+			(c.contype = 'p') as primary,
+			c.condeferrable as deferrable,
+			c.condeferred as initially_deferred,
+			array_to_string(array_agg(a.attname), ', ') as columns,
+			pg_get_constraintdef(c.oid) as exclude_operator
+		`).
+		Joins("JOIN pg_namespace n ON n.oid = c.connamespace").
+		Joins("LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0").
+		Joins("LEFT JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)").
+		Where("c.conrelid = (SELECT oid FROM pg_class WHERE relname = ? AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)) AND c.contype = 'p'", node.Table, node.Schema).
+		Group("c.conname, d.description, c.contype, c.condeferrable, c.condeferred, c.oid")
+
+	return buildArrayResponse(query, fields[0].Fields)
 }
 
 func buildObjectResponse(query *gorm.DB, fields []contract.FormField) ([]contract.FormField, error) {
