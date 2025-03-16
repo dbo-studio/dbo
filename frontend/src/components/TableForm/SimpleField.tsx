@@ -5,19 +5,18 @@ import { Box, Checkbox, Typography } from '@mui/material';
 
 interface SimpleFieldProps {
   field: FormFieldType;
-  value: any;
   onChange: (value: any) => void;
   size?: 'small' | 'medium';
 }
 
-export default function SimpleField({ field, value, onChange, size = 'medium' }: SimpleFieldProps) {
+export default function SimpleField({ field, onChange, size = 'medium' }: SimpleFieldProps) {
   switch (field.type) {
     case 'text':
       return (
         <FieldInput
           margin={size === 'small' ? 'none' : undefined}
           label={size === 'medium' ? field.name : undefined}
-          value={value || ''}
+          value={field.value || ''}
           onChange={(e) => onChange(e.target.value)}
           size={size}
           fullWidth
@@ -26,7 +25,7 @@ export default function SimpleField({ field, value, onChange, size = 'medium' }:
     case 'checkbox':
       return (
         <Box display='flex' alignItems='center'>
-          <Checkbox checked={value || false} onChange={(e) => onChange(e.target.checked)} size={size} />
+          <Checkbox checked={field.value || false} onChange={(e) => onChange(e.target.checked)} size={size} />
           {size === 'medium' && <Typography>{field.name}</Typography>}
         </Box>
       );
@@ -37,7 +36,7 @@ export default function SimpleField({ field, value, onChange, size = 'medium' }:
           <SelectInput
             isMulti={field.type === 'multi-select'}
             label={size === 'medium' ? field.name : undefined}
-            value={value || (field.type === 'multi-select' ? [] : '')}
+            value={field.value || (field.type === 'multi-select' ? [] : '')}
             options={field.fields?.map((opt) => ({ value: opt.value, label: opt.name })) || []}
             onChange={(e) => onChange(e)}
             size={size}

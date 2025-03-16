@@ -4,11 +4,10 @@ import SimpleField from './SimpleField';
 
 interface FormFieldsProps {
   fields: FormFieldType[];
-  values: Record<string, any>;
   onChange: (fieldId: string, value: any) => void;
 }
 
-export default function FormFields({ fields, values, onChange }: FormFieldsProps) {
+export default function FormFields({ fields, onChange }: FormFieldsProps) {
   return (
     <Grid2 direction={'row'} mt={1}>
       {fields.map((field) => (
@@ -20,7 +19,7 @@ export default function FormFields({ fields, values, onChange }: FormFieldsProps
           }}
           key={field.id}
         >
-          <SimpleField field={field} value={values[field.id]} onChange={(value) => onChange(field.id, value)} />
+          <SimpleField field={field} onChange={(value) => onChange(field.id, value)} />
         </Grid2>
       ))}
     </Grid2>

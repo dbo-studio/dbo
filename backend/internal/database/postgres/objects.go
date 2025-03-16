@@ -535,7 +535,7 @@ func (r *PostgresRepository) getTableForeignKeys(node PGNode) ([]contract.FormFi
 		Where("n.nspname = ? AND t.relname = ? AND c.contype = 'f'", node.Schema, node.Table).
 		Group("c.conname, ct.relname, c.confupdtype, c.confdeltype, c.condeferrable, c.condeferred, d.description, c.conkey, c.confkey")
 
-	return buildObjectResponse(query, fields[0].Fields)
+	return buildArrayResponse(query, fields[0].Fields)
 }
 
 func (r *PostgresRepository) getTableColumns(node PGNode) ([]contract.FormField, error) {
@@ -564,13 +564,7 @@ func (r *PostgresRepository) getTableColumns(node PGNode) ([]contract.FormField,
 		Where("n.nspname = ? AND c.relname = ? AND a.attnum > 0 AND NOT a.attisdropped", node.Schema, node.Table).
 		Order("a.attnum")
 
-	result, err := buildObjectResponse(query, fields[0].Fields)
-	if err != nil {
-		return nil, err
-	}
-
-	fields[0].Fields = result
-	return fields, nil
+	return buildArrayResponse(query, fields[0].Fields)
 }
 
 func (r *PostgresRepository) getSchemaPrivileges(node PGNode) ([]contract.FormField, error) {
@@ -697,4 +691,53 @@ func buildObjectResponse(query *gorm.DB, fields []contract.FormField) ([]contrac
 	}
 
 	return fields, nil
+}
+
+func buildArrayResponse(query *gorm.DB, fields []contract.FormField) ([]contract.FormField, error) {
+	var results []map[string]any
+	err := query.Scan(&results).Error
+	if err != nil {
+		return nil, err
+	}
+
+	if len(results) == 0 {
+		return []contract.FormField{
+			{
+				ID:   "columns",
+				Type: "array",
+				Fields: []contract.FormField{
+					{
+						ID:     "empty",
+						Type:   "object",
+						Fields: fields,
+					},
+				},
+			},
+		}, nil
+	}
+
+	responseFields := make([]contract.FormField, len(results))
+	for i, result := range results {
+		responseFields[i] = contract.FormField{
+			ID:     "",
+			Type:   "object",
+			Fields: make([]contract.FormField, len(fields)),
+		}
+
+		for j, field := range fields {
+			newField := field
+			if val, exists := result[field.ID]; exists && val != nil {
+				newField.Value = val
+			}
+			responseFields[i].Fields[j] = newField
+		}
+	}
+
+	return []contract.FormField{
+		{
+			ID:     "columns",
+			Type:   "array",
+			Fields: responseFields,
+		},
+	}, nil
 }

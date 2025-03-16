@@ -16,13 +16,12 @@ import SimpleField from './SimpleField';
 
 interface ArrayFieldProps {
   field: FormFieldType;
-  value: any[];
   onChange: (value: any[]) => void;
 }
 
-export default function ArrayField({ field, value = [], onChange }: ArrayFieldProps) {
+export default function ArrayField({ field, onChange }: ArrayFieldProps) {
   const handleItemChange = (index: number, fieldId: string, fieldValue: any) => {
-    const newData = [...value];
+    const newData = [...(field.value || [])];
     const foundField = field.fields?.find((opt) => opt.id === fieldId);
 
     if (foundField?.type === 'multi-select') {
@@ -35,7 +34,7 @@ export default function ArrayField({ field, value = [], onChange }: ArrayFieldPr
   };
 
   const handleDelete = (index: number) => {
-    const newData = value.filter((_, i) => i !== index);
+    const newData = (field.value || []).filter((_, i) => i !== index);
     onChange(newData);
   };
 
@@ -47,7 +46,7 @@ export default function ArrayField({ field, value = [], onChange }: ArrayFieldPr
       },
       {} as Record<string, any>
     );
-    onChange([...value, newItem]);
+    onChange([...(field.value || []), newItem]);
   };
 
   return (
@@ -69,41 +68,44 @@ export default function ArrayField({ field, value = [], onChange }: ArrayFieldPr
         <Table sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow>
-              {field?.fields?.map((option) => (
-                <TableCell sx={{ minWidth: 150 }} key={option.id}>
-                  {option.name}
-                </TableCell>
-              ))}
+              {field?.fields?.[0]?.fields?.map((option) => {
+                return (
+                  <TableCell sx={{ minWidth: 150 }} key={option.id}>
+                    {option.name}
+                  </TableCell>
+                );
+              })}
               <TableCell />
             </TableRow>
           </TableHead>
           <TableBody>
-            {value.map((item, index) => (
-              <TableRow key={`${field.id}-${index}-${item.name || ''}`}>
-                {field?.fields?.map((option) => (
-                  <TableCell key={option.id} sx={{ minWidth: 150 }}>
-                    <SimpleField
-                      size='small'
-                      field={option as unknown as FormFieldType}
-                      value={item[option.id]}
-                      onChange={(newValue) => handleItemChange(index, option.id, newValue)}
-                    />
+            {field?.fields
+              ?.filter((f) => f.id !== 'empty')
+              .map((item, index) => (
+                <TableRow key={`${field.id}-${index}-${item.name || ''}`}>
+                  {item?.fields?.map((option) => {
+                    return (
+                      <TableCell key={option.id} sx={{ minWidth: 150 }}>
+                        <SimpleField
+                          size='small'
+                          field={option}
+                          onChange={(newValue) => handleItemChange(index, option.id, newValue)}
+                        />
+                      </TableCell>
+                    );
+                  })}
+                  <TableCell>
+                    <Stack direction={'row'} spacing={1}>
+                      <IconButton size='small' onClick={handleAdd}>
+                        <CustomIcon type='plus' />
+                      </IconButton>
+                      <IconButton size='small' onClick={() => handleDelete(index)}>
+                        <CustomIcon type='delete' />
+                      </IconButton>
+                    </Stack>
                   </TableCell>
-                ))}
-
-                <TableCell>
-                  <Stack direction={'row'} spacing={1}>
-                    <IconButton size='small' onClick={handleAdd}>
-                      <CustomIcon type='plus' />
-                    </IconButton>
-
-                    <IconButton size='small' onClick={() => handleDelete(index)}>
-                      <CustomIcon type='delete' />
-                    </IconButton>
-                  </Stack>
-                </TableCell>
-              </TableRow>
-            ))}
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       </TableContainer>

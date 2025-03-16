@@ -11,11 +11,11 @@ interface TableFormProps {
 }
 
 export default function TableForm({ formSchema, formData, onChange }: TableFormProps) {
-  const [formState, setFormState] = useState<Record<string, any>>(formData || {});
+  const [formState, setFormState] = useState<Record<string, any>>();
 
   useEffect(() => {
     if (formData) {
-      setFormState(formData);
+      setFormState((prevState) => ({ ...prevState, ...formData }));
     }
   }, [formData]);
 
@@ -31,14 +31,10 @@ export default function TableForm({ formSchema, formData, onChange }: TableFormP
 
   return (
     <Box overflow={'auto'} padding={1} width={'100%'}>
-      <FormFields values={formState} fields={simpleFields} onChange={handleFormChange} />
+      <FormFields fields={simpleFields} onChange={handleFormChange} />
       {arrayFields.map((field) => (
         <Box key={field.id}>
-          <ArrayField
-            field={field}
-            value={formState[field.id] || []}
-            onChange={(value) => handleFormChange(field.id, value)}
-          />
+          <ArrayField field={field} onChange={(value) => handleFormChange(field.id, value)} />
         </Box>
       ))}
     </Box>
