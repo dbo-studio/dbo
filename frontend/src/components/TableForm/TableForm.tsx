@@ -1,28 +1,24 @@
 import type { FormFieldType } from '@/api/tree/types';
 import { Box } from '@mui/material';
-import { useEffect, useState } from 'react';
 import ArrayField from './ArrayField';
 import FormFields from './FormFields';
 
 interface TableFormProps {
   formSchema: FormFieldType[];
-  formData?: Record<string, any>;
   onChange: (data: Record<string, any>) => void;
 }
 
-export default function TableForm({ formSchema, formData, onChange }: TableFormProps) {
-  const [formState, setFormState] = useState<Record<string, any>>();
-
-  useEffect(() => {
-    if (formData) {
-      setFormState((prevState) => ({ ...prevState, ...formData }));
-    }
-  }, [formData]);
-
+export default function TableForm({ formSchema, onChange }: TableFormProps) {
   const handleFormChange = (field: string, value: any) => {
-    const newState = { ...formState, [field]: value };
-    console.log('🚀 ~ handleFormChange ~ newState:', newState);
-    setFormState(newState);
+    const formData = formSchema.reduce(
+      (acc, field) => {
+        acc[field.id] = field.value;
+        return acc;
+      },
+      {} as Record<string, any>
+    );
+
+    const newState = { ...formData, [field]: value };
     onChange(newState);
   };
 

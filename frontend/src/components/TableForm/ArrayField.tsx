@@ -21,32 +21,37 @@ interface ArrayFieldProps {
 
 export default function ArrayField({ field, onChange }: ArrayFieldProps) {
   const handleItemChange = (index: number, fieldId: string, fieldValue: any) => {
-    const newData = [...(field.value || [])];
-    const foundField = field.fields?.find((opt) => opt.id === fieldId);
+    const newFields = [...(field.fields || [])];
 
-    if (foundField?.type === 'multi-select') {
-      newData[index] = { ...newData[index], [fieldId]: fieldValue || [] };
-    } else {
-      newData[index] = { ...newData[index], [fieldId]: fieldValue };
+    if (newFields[index]?.fields) {
+      const targetField = newFields[index].fields?.find((f: FormFieldType) => f.id === fieldId);
+      if (targetField) {
+        targetField.value = fieldValue;
+      }
     }
 
-    onChange(newData);
+    onChange(newFields.filter((f) => f.id !== 'empty'));
   };
 
   const handleDelete = (index: number) => {
-    const newData = (field.value || []).filter((_, i) => i !== index);
-    onChange(newData);
+    const newFields = field.fields?.filter((_, i) => i !== index);
+    onChange(newFields?.filter((f) => f.id !== 'empty') || []);
   };
 
   const handleAdd = () => {
-    const newItem = field?.fields?.reduce(
-      (acc, option) => {
-        acc[option.id] = option.type === 'multi-select' ? [] : '';
-        return acc;
-      },
-      {} as Record<string, any>
-    );
-    onChange([...(field.value || []), newItem]);
+    const template = field.fields?.[0];
+    if (!template) return;
+
+    const newField = {
+      ...template,
+      fields: template.fields?.map((f) => ({
+        ...f,
+        value: f.type === 'multi-select' ? [] : null
+      }))
+    };
+
+    const newFields = [...(field.fields || []), newField];
+    onChange(newFields.filter((f) => f.id !== 'empty'));
   };
 
   return (
@@ -79,33 +84,31 @@ export default function ArrayField({ field, onChange }: ArrayFieldProps) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {field?.fields
-              ?.filter((f) => f.id !== 'empty')
-              .map((item, index) => (
-                <TableRow key={`${field.id}-${index}-${item.name || ''}`}>
-                  {item?.fields?.map((option) => {
-                    return (
-                      <TableCell key={option.id} sx={{ minWidth: 150 }}>
-                        <SimpleField
-                          size='small'
-                          field={option}
-                          onChange={(newValue) => handleItemChange(index, option.id, newValue)}
-                        />
-                      </TableCell>
-                    );
-                  })}
-                  <TableCell>
-                    <Stack direction={'row'} spacing={1}>
-                      <IconButton size='small' onClick={handleAdd}>
-                        <CustomIcon type='plus' />
-                      </IconButton>
-                      <IconButton size='small' onClick={() => handleDelete(index)}>
-                        <CustomIcon type='delete' />
-                      </IconButton>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              ))}
+            {field?.fields.map((item, index) => (
+              <TableRow key={`${field.id}-${index}-${item.name || ''}`}>
+                {item?.fields?.map((option) => {
+                  return (
+                    <TableCell key={option.id} sx={{ minWidth: 150 }}>
+                      <SimpleField
+                        size='small'
+                        field={option}
+                        onChange={(newValue) => handleItemChange(index, option.id, newValue)}
+                      />
+                    </TableCell>
+                  );
+                })}
+                <TableCell>
+                  <Stack direction={'row'} spacing={1}>
+                    <IconButton size='small' onClick={handleAdd}>
+                      <CustomIcon type='plus' />
+                    </IconButton>
+                    <IconButton size='small' onClick={() => handleDelete(index)}>
+                      <CustomIcon type='delete' />
+                    </IconButton>
+                  </Stack>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </TableContainer>

@@ -12,7 +12,7 @@ export default function ObjectForm({ isDetail = false }: { isDetail?: boolean })
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedTabIndex, setSelectedTabIndex] = useState(() => {
     const tabIndex = searchParams.get('tab');
-    return tabIndex ? parseInt(tabIndex) : 0;
+    return tabIndex ? Number.parseInt(tabIndex) : 0;
   });
   const [formDataByTab, setFormDataByTab] = useState<Record<string, any>>({});
   const { currentConnection } = useConnectionStore();
@@ -52,20 +52,35 @@ export default function ObjectForm({ isDetail = false }: { isDetail?: boolean })
   });
 
   const handleFormChange = (data: any) => {
-    if (!currentTabId) return;
+    console.log('🚀 ~ handleFormChange ~ data:', data);
+    if (!currentTabId || !fields) return;
+
+    const updatedFields = fields.map((field) => {
+      if (field.type === 'array') {
+        return {
+          ...field,
+          fields: data[field.id]
+        };
+      }
+      return {
+        ...field,
+        value: data[field.id]
+      };
+    });
 
     setFormDataByTab((prev) => ({
       ...prev,
-      [currentTabId]: data
+      [currentTabId]: updatedFields
     }));
   };
 
   const selectedContent = useMemo(() => {
     if (!fields || !currentTabId) return null;
 
-    const formData = isDetail ? fields : formDataByTab[currentTabId];
+    const currentFields = isDetail ? formDataByTab[currentTabId] || fields : fields;
+    console.log('🚀 ~ selectedContent ~ currentFields:', currentFields);
 
-    return <TableForm formSchema={fields} onChange={handleFormChange} formData={formData} />;
+    return <TableForm formSchema={currentFields} onChange={handleFormChange} />;
   }, [fields, currentTabId, formDataByTab, isDetail]);
 
   const handleTabChange = (index: number) => {
