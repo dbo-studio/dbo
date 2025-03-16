@@ -1,7 +1,7 @@
 import type { ObjectTabType } from '@/api/tree/types';
 import { Tab, Tabs } from '@mui/material';
+import type { ObjectTabProps } from '../types';
 import { ObjectTabsStyled } from './ObjectTabs.styles';
-import type { ObjectTabProps } from './types';
 
 export default function ObjectTabs({ tabs, selectedTabIndex, setSelectedTabIndex }: ObjectTabProps) {
   return (

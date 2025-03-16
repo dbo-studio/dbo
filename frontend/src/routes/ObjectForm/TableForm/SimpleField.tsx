@@ -1,15 +1,9 @@
-import type { FormFieldType } from '@/api/tree/types';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
+import SqlEditor from '@/components/base/SqlEditor/SqlEditor';
 import { variables } from '@/core/theme/variables';
 import { Box, Checkbox, Typography } from '@mui/material';
-import SqlEditor from '../base/SqlEditor/SqlEditor';
-
-interface SimpleFieldProps {
-  field: FormFieldType;
-  onChange: (value: any) => void;
-  size?: 'small' | 'medium';
-}
+import type { SimpleFieldProps } from '../types';
 
 export default function SimpleField({ field, onChange, size = 'medium' }: SimpleFieldProps) {
   switch (field.type) {

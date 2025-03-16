@@ -1,12 +1,12 @@
 import api from '@/api';
-import TableForm from '@/components/TableForm/TableForm';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { TabType } from '@/types';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { ObjectFormStyled } from './ObjectForm.styled';
-import ObjectTabs from './ObjectTabs';
+import TableForm from './TableForm/TableForm';
+import ObjectTabs from './ObjectTabs/ObjectTabs';
 
 export default function ObjectForm({ isDetail = false }: { isDetail?: boolean }) {
   const { getSelectedTab, updateSelectedTab } = useTabStore();

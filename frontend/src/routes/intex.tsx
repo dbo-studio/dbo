@@ -3,7 +3,6 @@ import { type JSX, createElement } from 'react';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import NotFound from './404/404';
 import Data from './Data/Data';
-import Design from './Design/Design';
 import ObjectForm from './ObjectForm/ObjectForm';
 import Query from './Query/Query';
 
@@ -23,10 +22,6 @@ export const router = createBrowserRouter([
       {
         path: 'query',
         element: <Query />
-      },
-      {
-        path: 'design',
-        element: <Design />
       },
       {
         path: 'object',

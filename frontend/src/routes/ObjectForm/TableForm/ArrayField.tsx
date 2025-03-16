@@ -1,4 +1,5 @@
 import type { FormFieldType } from '@/api/tree/types';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import {
   Box,
   Divider,
@@ -11,13 +12,8 @@ import {
   TableHead,
   TableRow
 } from '@mui/material';
-import CustomIcon from '../base/CustomIcon/CustomIcon';
+import type { ArrayFieldProps } from '../types';
 import SimpleField from './SimpleField';
-
-interface ArrayFieldProps {
-  field: FormFieldType;
-  onChange: (value: any[]) => void;
-}
 
 export default function ArrayField({ field, onChange }: ArrayFieldProps) {
   const handleItemChange = (index: number, fieldId: string, fieldValue: any) => {

@@ -1,12 +1,7 @@
-import type { FormFieldType } from '@/api/tree/types';
 import { Box } from '@mui/material';
+import type { TableFormProps } from '../types';
 import ArrayField from './ArrayField';
 import FormFields from './FormFields';
-
-interface TableFormProps {
-  formSchema: FormFieldType[];
-  onChange: (data: Record<string, any>) => void;
-}
 
 export default function TableForm({ formSchema, onChange }: TableFormProps) {
   const handleFormChange = (field: string, value: any) => {

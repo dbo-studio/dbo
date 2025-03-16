@@ -1,11 +1,6 @@
-import type { FormFieldType } from '@/api/tree/types';
 import { Grid2 } from '@mui/material';
+import type { FormFieldsProps } from '../types';
 import SimpleField from './SimpleField';
-
-interface FormFieldsProps {
-  fields: FormFieldType[];
-  onChange: (fieldId: string, value: any) => void;
-}
 
 export default function FormFields({ fields, onChange }: FormFieldsProps) {
   return (

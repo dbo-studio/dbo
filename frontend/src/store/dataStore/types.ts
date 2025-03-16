@@ -4,7 +4,7 @@ import type { ColumnType, EditedColumnType, RowType } from '@/types/Data';
 export type DataStore = object;
 
 export type DataRowSlice = {
-  rows: DataRowsType;
+  rows: Record<string, RowType[]>;
   getRows: () => RowType[];
   getRow: (dboIndex: number) => RowType | null | undefined;
   updateRows: (items: RowType[]) => Promise<void>;
@@ -21,7 +21,7 @@ export type DataSelectedRowsSlice = {
 };
 
 export type DataColumnSlice = {
-  columns: DataColumnsType;
+  columns: Record<string, ColumnType[]>;
   getColumns: (isActive?: boolean) => ColumnType[];
   updateColumns: (columns: ColumnType[]) => Promise<void>;
   updateColumn: (column: ColumnType) => Promise<void>;
@@ -29,7 +29,7 @@ export type DataColumnSlice = {
 };
 
 export type DataEditedColumnSlice = {
-  editedColumns: DataEditedColumnsType;
+  editedColumns: Record<string, EditedColumnType[]>;
   getEditedColumns: () => EditedColumnType[];
   updateEditedColumns: (columns: EditedColumnType[]) => Promise<void>;
   addEditedColumns: (oldValue: ColumnType, newValue: ColumnType | EditedColumnType) => Promise<void>;
@@ -40,7 +40,7 @@ export type DataEditedColumnSlice = {
 };
 
 export type DataEditedRowsSlice = {
-  editedRows: DataEditedRowsType;
+  editedRows: Record<string, EditedRow[]>;
   getEditedRows: () => EditedRow[];
   updateEditedRows: (rows: EditedRow[]) => void;
   restoreEditedRows: () => Promise<void>;
@@ -48,14 +48,14 @@ export type DataEditedRowsSlice = {
 };
 
 export type DataRemovedRowsSlice = {
-  removedRows: DataRemovedRowsType;
+  removedRows: Record<string, RowType[]>;
   getRemovedRows: () => RowType[];
   updateRemovedRows: () => void;
   deleteRemovedRowsByTabId: (tabId: string) => void;
 };
 
 export type DataUnsavedRowsSlice = {
-  unSavedRows: DataRowsType;
+  unSavedRows: Record<string, RowType[]>;
   getUnsavedRows: () => RowType[];
   addUnsavedRows: (newRow?: RowType) => void;
   updateUnsavedRows: (unSavedRows: RowType[]) => void;
@@ -69,26 +69,6 @@ export type DataQuerySlice = {
   runQuery: () => Promise<void>;
   runRawQuery: () => Promise<void>;
   updateDesignsQuery: () => Promise<void>;
-};
-
-export type DataRowsType = {
-  [key: string]: RowType[];
-};
-
-export type DataColumnsType = {
-  [key: string]: ColumnType[];
-};
-
-export type DataEditedColumnsType = {
-  [key: string]: EditedColumnType[];
-};
-
-export type DataEditedRowsType = {
-  [key: string]: EditedRow[];
-};
-
-export type DataRemovedRowsType = {
-  [key: string]: RowType[];
 };
 
 export type SelectedRow = {
