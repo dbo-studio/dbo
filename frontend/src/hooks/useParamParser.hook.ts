@@ -20,9 +20,7 @@ export const useParamParser = () => {
   async function parseParams() {
     const tabId = searchParams.get('tabId');
     const connectionId = searchParams.get('connectionId');
-    const tabMode = location.pathname.substring(1);
     let connectionList = connections;
-
     if (!connectionList) {
       updateLoading('loading');
       try {
@@ -49,10 +47,7 @@ export const useParamParser = () => {
 
     if (!tabId || tabId === '') {
       if (selectedTab) {
-        navigate({
-          route: selectedTab?.mode,
-          tabId: selectedTab?.id
-        });
+        navigate({ route: selectedTab?.mode, tabId: selectedTab?.id });
         return;
       }
 
@@ -73,14 +68,14 @@ export const useParamParser = () => {
     }
 
     //find selected tab
-    const findedSelectedTab = tabs[connectionId]?.find((t) => t.id === tabId && t.mode === tabMode);
-    if (!findedSelectedTab) {
+    const findSelectedTab = tabs[connectionId]?.find((t) => t.id === tabId);
+    if (!findSelectedTab) {
       navigate({ route: '/' });
       return;
     }
 
-    if (!selectedTab || selectedTab?.id !== tabId || selectedTab.mode !== tabMode) {
-      updateSelectedTab(findedSelectedTab);
+    if (!selectedTab || selectedTab?.id !== tabId) {
+      updateSelectedTab(findSelectedTab);
     }
   }
 

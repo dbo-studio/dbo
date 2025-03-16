@@ -26,20 +26,20 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
   const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
 
   useShortcut(shortcuts.newTab, () => addNewEmptyTab());
-  useShortcut(shortcuts.closeTab, () => selectedTab && handleRemoveTab(selectedTab?.id ?? '', selectedTab.mode));
+  useShortcut(shortcuts.closeTab, () => selectedTab && handleRemoveTab(selectedTab?.id ?? ''));
   useShortcut(shortcuts.reloadTab, () => selectedTab && handleReload());
 
   const menu: MenuType[] = [
     {
       name: locales.close,
-      action: () => removeTab(tab.id, tab.mode),
+      action: () => removeTab(tab.id),
       closeAfterAction: true
     },
     {
       name: locales.close_other_tabs,
       action: () => {
         for (const t of getTabs()) {
-          if (t.id !== selectedTab?.id) removeTab(t.id, t.mode);
+          if (t.id !== selectedTab?.id) removeTab(t.id);
           else navigate({ route: 'data', tabId: t.id });
         }
       },
@@ -49,7 +49,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
       name: locales.close_all,
       action: () => {
         for (const t of getTabs()) {
-          removeTab(t.id, t.mode);
+          removeTab(t.id);
         }
         navigate({ route: '/' });
       },
@@ -57,8 +57,8 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
     }
   ];
 
-  const handleSwitchTab = (tabId: string, mode: TabMode) => {
-    const findTab = getTabs().find((t: TabType) => t.id === tabId && t.mode === mode);
+  const handleSwitchTab = (tabId: string) => {
+    const findTab = getTabs().find((t: TabType) => t.id === tabId);
     if (!findTab) return;
 
     navigate({
@@ -67,8 +67,8 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
     });
   };
 
-  const handleRemoveTab = (tabId: string, mode: TabMode) => {
-    const newTab = removeTab(tabId, mode);
+  const handleRemoveTab = (tabId: string) => {
+    const newTab = removeTab(tabId);
     if (newTab === undefined) {
       navigate({ route: '/' });
       return;
@@ -123,12 +123,9 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
         tabRefs.current[tab.id] = el;
       }}
     >
-      <PanelTabItemStyled
-        selected={selectedTab?.id === tab.id && selectedTab.mode === tab.mode}
-        onClick={() => handleSwitchTab(tab.id, tab.mode)}
-      >
+      <PanelTabItemStyled selected={selectedTab?.id === tab.id} onClick={() => handleSwitchTab(tab.id)}>
         <Box display={'flex'} overflow={'hidden'} flexGrow={1} justifyContent={'center'} alignItems={'center'}>
-          <Tooltip title={tab.id} placement={'bottom'} key={tab.id}>
+          <Tooltip title={tab.nodeId} placement={'bottom'} key={tab.id}>
             <Typography
               display={'inline-block'}
               component={'span'}
@@ -137,7 +134,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
               maxWidth={'100px'}
               variant='subtitle2'
             >
-              {tab.id}
+              {tab.nodeId}
             </Typography>
           </Tooltip>
         </Box>
@@ -146,7 +143,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
           size='s'
           onClick={(e) => {
             e.stopPropagation();
-            handleRemoveTab(tab.id, tab.mode);
+            handleRemoveTab(tab.id);
           }}
         />
       </PanelTabItemStyled>

@@ -14,7 +14,7 @@ export function useRemoveTab() {
     removeUnsavedRowsByTabId
   } = useDataStore();
 
-  const remove = (tabId: string, mode: TabMode): TabType | null | undefined => {
+  const remove = (tabId: string): TabType | null | undefined => {
     if (getTabs().length === 1) {
       updateSelectedTab(undefined);
     }
@@ -25,7 +25,7 @@ export function useRemoveTab() {
     deleteRemovedRowsByTabId(tabId);
     removeRowsByTabId(tabId);
     removeUnsavedRowsByTabId(tabId);
-    return removeTab(tabId, mode);
+    return removeTab(tabId);
   };
 
   return [remove];

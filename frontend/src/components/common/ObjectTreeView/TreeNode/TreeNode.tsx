@@ -1,10 +1,10 @@
 import type { TreeNodeType } from '@/api/tree/types';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
-import { NodeContent } from '@/components/common/TreeNode/NodeContent/NodeContent';
-import { ChildrenContainer, TreeNodeContainer } from '@/components/common/TreeNode/TreeNode.styled.ts';
-import { useTreeNodeHandlers } from '@/components/common/TreeNode/hooks/useTreeNodeHandlers';
-import { useTreeNodeMenu } from '@/components/common/TreeNode/hooks/useTreeNodeMenu';
-import type { TreeNodeProps } from '@/components/common/TreeNode/types.ts';
+import { NodeContent } from '@/components/common/ObjectTreeView/TreeNode/NodeContent/NodeContent';
+import { ChildrenContainer, TreeNodeContainer } from '@/components/common/ObjectTreeView/TreeNode/TreeNode.styled';
+import { useTreeNodeHandlers } from '@/components/common/ObjectTreeView/TreeNode/hooks/useTreeNodeHandlers';
+import { useTreeNodeMenu } from '@/components/common/ObjectTreeView/TreeNode/hooks/useTreeNodeMenu';
+import type { TreeNodeProps } from '@/components/common/ObjectTreeView/TreeNode/types';
 import { useContextMenu } from '@/hooks';
 import { useEffect, useRef, useState } from 'react';
 

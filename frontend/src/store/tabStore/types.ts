@@ -18,8 +18,8 @@ export type TabSettingSlice = {
   addTab: (table: string, id?: string, mode?: TabMode, query?: string) => TabType;
   addObjectTab: (id: string, action: string, mode: TabMode) => TabType;
   //return undefined will redirect to route /
-  removeTab: (tabId: string, mode: TabMode) => TabType | null | undefined;
-  switchTab: (tabId: string | null, mode: TabMode) => void;
+  removeTab: (tabId: string) => TabType | null | undefined;
+  switchTab: (tabId: string | null) => void;
 };
 
 export type TabQuerySlice = {

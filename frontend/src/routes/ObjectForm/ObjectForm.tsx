@@ -2,28 +2,25 @@ import api from '@/api';
 import TableForm from '@/components/TableForm/TableForm';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import type { TabType } from '@/types';
 import { useQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
 import { ObjectFormStyled } from './ObjectForm.styled';
 import ObjectTabs from './ObjectTabs';
 
 export default function ObjectForm({ isDetail = false }: { isDetail?: boolean }) {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [selectedTabIndex, setSelectedTabIndex] = useState(() => {
-    const tabIndex = searchParams.get('tab');
-    return tabIndex ? Number.parseInt(tabIndex) : 0;
-  });
+  const { getSelectedTab, updateSelectedTab } = useTabStore();
+  const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
+
+  const [selectedTabIndex, setSelectedTabIndex] = useState(Number.parseInt(selectedTab?.options?.tabId));
   const [formDataByTab, setFormDataByTab] = useState<Record<string, any>>({});
   const { currentConnection } = useConnectionStore();
-  const { getSelectedTab } = useTabStore();
-  const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
 
   const { data: tabs } = useQuery({
     queryKey: ['objectTabs', selectedTab?.id, currentConnection?.id, selectedTab?.options?.action],
     queryFn: () =>
       api.tree.getTabs({
-        nodeId: selectedTab?.id ?? '',
+        nodeId: selectedTab?.nodeId ?? '',
         action: selectedTab?.options?.action,
         connectionId: String(currentConnection?.id || '')
       }),
@@ -37,13 +34,13 @@ export default function ObjectForm({ isDetail = false }: { isDetail?: boolean })
     queryFn: () =>
       isDetail
         ? api.tree.getObject({
-            nodeId: selectedTab?.id ?? '',
+            nodeId: selectedTab?.nodeId ?? '',
             action: selectedTab?.options?.action,
             tabId: currentTabId || '',
             connectionId: String(currentConnection?.id || '')
           })
         : api.tree.getFields({
-            nodeId: selectedTab?.id ?? '',
+            nodeId: selectedTab?.nodeId ?? '',
             action: selectedTab?.options?.action,
             tabId: currentTabId || '',
             connectionId: String(currentConnection?.id || '')
@@ -74,20 +71,30 @@ export default function ObjectForm({ isDetail = false }: { isDetail?: boolean })
     }));
   };
 
-  const currentFields = useMemo(() => {
-    if (!fields || !currentTabId) return null;
-    return isDetail ? formDataByTab[currentTabId] || fields : fields;
-  }, [fields, currentTabId, formDataByTab, isDetail]);
-
   const selectedContent = useMemo(() => {
-    if (!currentFields) return null;
+    if (!fields || !currentTabId) return null;
+
+    const currentFields = isDetail ? formDataByTab[currentTabId] || fields : fields;
+
     return <TableForm formSchema={currentFields} onChange={handleFormChange} />;
-  }, [currentFields]);
+  }, [fields, currentTabId, formDataByTab, isDetail]);
 
   const handleTabChange = (index: number) => {
     setSelectedTabIndex(index);
-    setSearchParams({ tab: index.toString() });
+    updateSelectedTab({
+      ...selectedTab,
+      options: {
+        ...selectedTab?.options,
+        tabId: index
+      }
+    } as TabType);
   };
+
+  useEffect(() => {
+    if (selectedTab) {
+      setSelectedTabIndex(Number.parseInt(selectedTab?.options?.tabId));
+    }
+  }, [selectedTab]);
 
   if (!tabs) return null;
 

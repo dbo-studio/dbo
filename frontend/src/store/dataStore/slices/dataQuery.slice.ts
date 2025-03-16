@@ -31,7 +31,7 @@ export const createDataQuerySlice: StateCreator<
       set({ loading: true });
       const res = await runQuery({
         connectionId: currentConnection.id,
-        nodeId: selectedTab.id,
+        nodeId: selectedTab.nodeId,
         limit: selectedTab.pagination.limit,
         offset: (selectedTab.pagination.page - 1) * selectedTab.pagination.limit,
         columns: selectedTab.columns ?? [],
@@ -126,7 +126,7 @@ export const createDataQuerySlice: StateCreator<
       set({ loading: true });
       const res = await updateDesign({
         connectionId: currentConnection.id,
-        nodeId: selectedTab.id,
+        nodeId: selectedTab.nodeId,
         edited: edited as UpdateDesignItemType[],
         removed: Array.from(removed),
         added: added as UpdateDesignItemType[]

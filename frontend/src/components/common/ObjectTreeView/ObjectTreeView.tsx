@@ -1,6 +1,6 @@
 import api from '@/api';
 import type { TreeNodeType } from '@/api/tree/types';
-import TreeNode from '@/components/common/TreeNode/TreeNode.tsx';
+import TreeNode from '@/components/common/ObjectTreeView/TreeNode/TreeNode';
 import useAPI from '@/hooks/useApi.hook.ts';
 import { useConnectionStore } from '@/store/connectionStore/connection.store.ts';
 import { Box } from '@mui/material';
