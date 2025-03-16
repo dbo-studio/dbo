@@ -56,42 +56,36 @@ func (r *PostgresRepository) GetFormTabs(action contract.TreeNodeActionName) []c
 	}
 }
 
-func (r *PostgresRepository) GetFormFields(nodeID string, action contract.TreeNodeActionName, tabID contract.TreeTab) []contract.FormField {
+func (r *PostgresRepository) GetFormFields(nodeID string, tabID contract.TreeTab) []contract.FormField {
 	node := extractNode(nodeID)
 
-	switch action {
-	case contract.CreateDatabaseAction, contract.EditDatabaseAction:
-		switch tabID {
-		case contract.DatabaseTab:
-			return r.databaseFields()
-		}
+	switch tabID {
+	case contract.DatabaseTab:
+		return r.databaseFields()
+	case contract.DatabasePrivilegesTab:
+		return buildFieldArray(r.databasePrivilegeOptions())
 
-	case contract.CreateSchemaAction, contract.EditSchemaAction:
-		switch tabID {
-		case contract.SchemaTab:
-			return r.schemaFields()
-		case contract.SchemaPrivilegesTab:
-			return buildFieldArray(r.schemaPrivilegeOptions())
-		}
+	case contract.SchemaTab:
+		return r.schemaFields()
+	case contract.SchemaPrivilegesTab:
+		return buildFieldArray(r.schemaPrivilegeOptions())
 
-	case contract.CreateTableAction, contract.EditTableAction:
-		switch tabID {
-		case contract.TableTab:
-			return r.tableFields()
-		case contract.TableColumnsTab:
-			return buildFieldArray(r.tableColumnFields())
-		case contract.TableForeignKeysTab:
-			return buildFieldArray(r.foreignKeyOptions(node))
-		case contract.TableIndexesTab:
-			return buildFieldArray(r.indexOptions(node))
-		case contract.TableTriggersTab:
-			return buildFieldArray(r.triggerOptions(node))
-		case contract.TableChecksTab:
-			return buildFieldArray(r.checkOptions())
-		case contract.TableKeysTab:
-			return buildFieldArray(r.getKeyOptions(node))
-		}
+	case contract.TableTab:
+		return r.tableFields()
+	case contract.TableColumnsTab:
+		return buildFieldArray(r.tableColumnFields())
+	case contract.TableForeignKeysTab:
+		return buildFieldArray(r.foreignKeyOptions(node))
+	case contract.TableIndexesTab:
+		return buildFieldArray(r.indexOptions(node))
+	case contract.TableTriggersTab:
+		return buildFieldArray(r.triggerOptions(node))
+	case contract.TableChecksTab:
+		return buildFieldArray(r.checkOptions())
+	case contract.TableKeysTab:
+		return buildFieldArray(r.getKeyOptions(node))
 	}
+
 	return []contract.FormField{}
 }
 

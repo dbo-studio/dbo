@@ -76,7 +76,7 @@ func (i ITreeServiceImpl) TabObject(ctx context.Context, req *dto.ObjectFieldsRe
 		return nil, apperror.InternalServerError(err)
 	}
 
-	fields := repo.GetFormFields(req.NodeId, contract.TreeNodeActionName(req.Action), contract.TreeTab(req.TabId))
+	fields := repo.GetFormFields(req.NodeId, contract.TreeTab(req.TabId))
 
 	return fields, nil
 }

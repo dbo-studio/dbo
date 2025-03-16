@@ -332,6 +332,19 @@ func (r *PostgresRepository) dataTypeOptions() []contract.FormField {
 	}
 }
 
+func (r *PostgresRepository) databasePrivilegeOptions() []contract.FormField {
+	return []contract.FormField{
+		{ID: "grantee", Name: "Grantee", Type: "text"},
+		{ID: "grantor", Name: "Grantor", Type: "text"},
+		{ID: "privileges", Name: "Privileges", Type: "array", Fields: []contract.FormField{
+			{Value: "SELECT", Name: "SELECT"},
+			{Value: "INSERT", Name: "INSERT"},
+			{Value: "UPDATE", Name: "UPDATE"},
+			{Value: "DELETE", Name: "DELETE"},
+		}},
+	}
+}
+
 func (r *PostgresRepository) tableColumnsList(node PGNode) []contract.FormField {
 	type columnResult struct {
 		Value string `gorm:"column:value"`

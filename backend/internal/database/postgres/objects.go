@@ -600,27 +600,15 @@ func (r *PostgresRepository) getSchemaInfo(node PGNode) ([]contract.FormField, e
 }
 
 func (r *PostgresRepository) getDatabasePrivileges(node PGNode) ([]contract.FormField, error) {
-	type DatabasePrivilege struct {
-		Grantor    string         `gorm:"column:grantor"`
-		Grantee    string         `gorm:"column:grantee"`
-		Privileges sql.NullString `gorm:"column:privileges"`
-	}
+	fields := r.databasePrivilegeOptions()
 
-	privileges := make([]DatabasePrivilege, 0)
-	err := r.db.Table("pg_database AS d").
+	query := r.db.Table("pg_database AS d").
 		Select("grantor, grantee, string_agg(privilege_type, ', ') as privileges").
 		Joins("JOIN information_schema.usage_privileges AS p ON d.datname = p.object_name").
 		Where("d.datname = ?", node.Database).
-		Scan(&privileges).Error
-	if err != nil {
-		return nil, err
-	}
+		Group("grantor, grantee")
 
-	// return map[string]interface{}{
-	// 	"privileges": privileges,
-	// }, nil
-
-	return nil, nil
+	return buildArrayResponse(query, fields)
 }
 
 func (r *PostgresRepository) getDatabaseInfo(node PGNode) ([]contract.FormField, error) {
