@@ -23,7 +23,7 @@ interface ArrayFieldProps {
 export default function ArrayField({ field, value = [], onChange }: ArrayFieldProps) {
   const handleItemChange = (index: number, fieldId: string, fieldValue: any) => {
     const newData = [...value];
-    const foundField = field.options?.find((opt) => opt.id === fieldId);
+    const foundField = field.fields?.find((opt) => opt.id === fieldId);
 
     if (foundField?.type === 'multi-select') {
       newData[index] = { ...newData[index], [fieldId]: fieldValue || [] };
@@ -40,7 +40,7 @@ export default function ArrayField({ field, value = [], onChange }: ArrayFieldPr
   };
 
   const handleAdd = () => {
-    const newItem = field?.options?.reduce(
+    const newItem = field?.fields?.reduce(
       (acc, option) => {
         acc[option.id] = option.type === 'multi-select' ? [] : '';
         return acc;
@@ -69,7 +69,7 @@ export default function ArrayField({ field, value = [], onChange }: ArrayFieldPr
         <Table sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow>
-              {field?.options?.map((option) => (
+              {field?.fields?.map((option) => (
                 <TableCell sx={{ minWidth: 150 }} key={option.id}>
                   {option.name}
                 </TableCell>
@@ -80,7 +80,7 @@ export default function ArrayField({ field, value = [], onChange }: ArrayFieldPr
           <TableBody>
             {value.map((item, index) => (
               <TableRow key={`${field.id}-${index}-${item.name || ''}`}>
-                {field?.options?.map((option) => (
+                {field?.fields?.map((option) => (
                   <TableCell key={option.id} sx={{ minWidth: 150 }}>
                     <SimpleField
                       size='small'

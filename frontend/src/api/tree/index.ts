@@ -2,7 +2,6 @@ import type {
   FieldRequestType,
   FieldResponseType,
   ObjectRequestType,
-  ObjectResponseType,
   TabRequestType,
   TabResponseType,
   TreeRequestType,
@@ -45,12 +44,12 @@ export const getFields = async (params: FieldRequestType): Promise<FieldResponse
   ).data.data as FieldResponseType;
 };
 
-export const getObject = async (params: ObjectRequestType) => {
+export const getObject = async (params: ObjectRequestType): Promise<FieldResponseType> => {
   return (
     await api.get(endpoints.getObject(params.nodeId, params.action, params.tabId), {
       params: {
         connectionId: params.connectionId
       }
     })
-  ).data.data as ObjectResponseType;
+  ).data.data as FieldResponseType;
 };

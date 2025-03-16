@@ -15,7 +15,7 @@ type ITreeService interface {
 	Tree(ctx context.Context, req *dto.TreeListRequest) (*contract.TreeNode, error)
 	Tabs(ctx context.Context, req *dto.ObjectTabsRequest) ([]contract.FormTab, error)
 	TabObject(ctx context.Context, req *dto.ObjectFieldsRequest) ([]contract.FormField, error)
-	ObjectDetail(ctx context.Context, req *dto.ObjectDetailRequest) (any, error)
+	ObjectDetail(ctx context.Context, req *dto.ObjectDetailRequest) ([]contract.FormField, error)
 }
 
 var _ ITreeService = (*ITreeServiceImpl)(nil)
@@ -81,7 +81,7 @@ func (i ITreeServiceImpl) TabObject(ctx context.Context, req *dto.ObjectFieldsRe
 	return fields, nil
 }
 
-func (i ITreeServiceImpl) ObjectDetail(ctx context.Context, req *dto.ObjectDetailRequest) (any, error) {
+func (i ITreeServiceImpl) ObjectDetail(ctx context.Context, req *dto.ObjectDetailRequest) ([]contract.FormField, error) {
 	connection, err := i.connectionRepo.Find(ctx, req.ConnectionId)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)

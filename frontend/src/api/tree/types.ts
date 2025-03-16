@@ -32,14 +32,8 @@ export type FormFieldType = {
   name: string;
   type: string;
   required: boolean;
-  options?: FieldOptionType[];
-};
-
-export type FieldOptionType = {
-  id: string;
-  name: string;
-  value: string;
-  type?: string;
+  value?: any;
+  fields?: FormFieldType[];
 };
 
 export type ObjectRequestType = {
@@ -48,8 +42,6 @@ export type ObjectRequestType = {
   action: string;
   tabId: string;
 };
-
-export type ObjectResponseType = Record<string, any>;
 
 export type TreeNodeType = {
   id: string;

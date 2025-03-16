@@ -7,7 +7,7 @@ import { useMemo, useState } from 'react';
 import { ObjectFormStyled } from './ObjectForm.styled';
 import ObjectTabs from './ObjectTabs';
 
-export default function ObjectForm() {
+export default function ObjectForm({ isDetail = false }: { isDetail?: boolean }) {
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
   const [formDataByTab, setFormDataByTab] = useState<Record<string, any>>({});
   const { currentConnection } = useConnectionStore();
@@ -30,12 +30,19 @@ export default function ObjectForm() {
   const { data: fields } = useQuery({
     queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, currentTabId],
     queryFn: () =>
-      api.tree.getFields({
-        nodeId: selectedTab?.id ?? '',
-        action: selectedTab?.options?.action,
-        tabId: currentTabId || '',
-        connectionId: String(currentConnection?.id || '')
-      }),
+      isDetail
+        ? api.tree.getObject({
+            nodeId: selectedTab?.id ?? '',
+            action: selectedTab?.options?.action,
+            tabId: currentTabId || '',
+            connectionId: String(currentConnection?.id || '')
+          })
+        : api.tree.getFields({
+            nodeId: selectedTab?.id ?? '',
+            action: selectedTab?.options?.action,
+            tabId: currentTabId || '',
+            connectionId: String(currentConnection?.id || '')
+          }),
     enabled: !!currentConnection && !!currentTabId
   });
 
@@ -51,7 +58,7 @@ export default function ObjectForm() {
   const selectedContent = useMemo(() => {
     if (!fields || !currentTabId) return null;
 
-    return <TableForm formSchema={fields} onChange={handleFormChange} formData={formDataByTab[currentTabId]} />;
+    return <TableForm formSchema={fields} onChange={handleFormChange} formData={fields[0].fields} />;
   }, [fields, currentTabId, formDataByTab]);
 
   if (!tabs) return null;

@@ -4,7 +4,6 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/handler"
 	queryHandler "github.com/dbo-studio/dbo/internal/app/handler/query"
 	"github.com/dbo-studio/dbo/pkg/logger"
-	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/compress"
 	"github.com/gofiber/fiber/v3/middleware/cors"
@@ -31,8 +30,6 @@ type Server struct {
 func New(logger logger.Logger, handlers Handlers) *Server {
 	return &Server{
 		app: fiber.New(fiber.Config{
-			JSONEncoder: json.Marshal,
-			JSONDecoder: json.Unmarshal,
 			ErrorHandler: func(ctx fiber.Ctx, err error) error {
 				logger.Error(err)
 				return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
