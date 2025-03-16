@@ -1,6 +1,7 @@
 package databasePostgres
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -11,7 +12,11 @@ import (
 func (r *PostgresRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
 	node := extractNode(req.NodeId)
 	query := runQueryGenerator(req, node)
-	queryResults := make([]map[string]interface{}, 0)
+	queryResults := make([]map[string]any, 0)
+
+	if node.Table == "" {
+		return nil, errors.New("table not found")
+	}
 
 	result := r.db.Raw(query).Find(&queryResults)
 	if result.Error != nil {

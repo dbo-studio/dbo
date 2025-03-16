@@ -30,12 +30,12 @@ export default function ArrayField({ field, onChange }: ArrayFieldProps) {
       }
     }
 
-    onChange(newFields.filter((f) => f.id !== 'empty'));
+    onChange(newFields);
   };
 
   const handleDelete = (index: number) => {
     const newFields = field.fields?.filter((_, i) => i !== index);
-    onChange(newFields?.filter((f) => f.id !== 'empty') || []);
+    onChange(newFields || []);
   };
 
   const handleAdd = () => {
@@ -52,7 +52,7 @@ export default function ArrayField({ field, onChange }: ArrayFieldProps) {
     };
 
     const newFields = [...(field.fields || []), newField];
-    onChange(newFields.filter((f) => f.id !== 'empty'));
+    onChange(newFields);
   };
 
   return (
@@ -85,33 +85,34 @@ export default function ArrayField({ field, onChange }: ArrayFieldProps) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {field?.fields
-              ?.filter((f) => f.id !== 'empty')
-              .map((item, index) => (
-                <TableRow key={`${field.id}-${index}-${item.name || ''}`}>
-                  {item?.fields?.map((option) => {
-                    return (
-                      <TableCell key={option.id} sx={{ minWidth: 150 }}>
-                        <SimpleField
-                          size='small'
-                          field={option}
-                          onChange={(newValue) => handleItemChange(index, option.id, newValue)}
-                        />
-                      </TableCell>
-                    );
-                  })}
-                  <TableCell>
-                    <Stack direction={'row'} spacing={1}>
-                      <IconButton size='small' onClick={handleAdd}>
-                        <CustomIcon type='plus' />
-                      </IconButton>
-                      <IconButton size='small' onClick={() => handleDelete(index)}>
-                        <CustomIcon type='delete' />
-                      </IconButton>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              ))}
+            {field?.fields?.map((item, index) => (
+              <TableRow
+                sx={{ display: item.id === 'empty' ? 'none' : 'table-row' }}
+                key={`${field.id}-${index}-${item.name || ''}`}
+              >
+                {item?.fields?.map((option) => {
+                  return (
+                    <TableCell key={option.id} sx={{ minWidth: 150 }}>
+                      <SimpleField
+                        size='small'
+                        field={option}
+                        onChange={(newValue) => handleItemChange(index, option.id, newValue)}
+                      />
+                    </TableCell>
+                  );
+                })}
+                <TableCell>
+                  <Stack direction={'row'} spacing={1}>
+                    <IconButton size='small' onClick={handleAdd}>
+                      <CustomIcon type='plus' />
+                    </IconButton>
+                    <IconButton size='small' onClick={() => handleDelete(index)}>
+                      <CustomIcon type='delete' />
+                    </IconButton>
+                  </Stack>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </TableContainer>

@@ -125,65 +125,54 @@ func (r *PostgresRepository) indexFields(node PGNode) []contract.FormField {
 
 func (r *PostgresRepository) tableColumnFields() []contract.FormField {
 	return []contract.FormField{
-		{ID: "columns",
-			Name:     "Columns",
-			Type:     "array",
-			Required: true,
-			Fields: []contract.FormField{
-				{ID: "column_name", Name: "Name", Type: "text"},
-				{ID: "data_type", Name: "Data Type", Type: "select", Fields: r.dataTypeOptions()},
-				{ID: "not_null", Name: "Not Null", Type: "checkbox"},
-				{ID: "primary", Name: "Primary", Type: "checkbox"},
-				{ID: "column_default", Name: "Default", Type: "text"},
-				{ID: "comment", Name: "Comment", Type: "text"},
-				{ID: "character_maximum_length", Name: "Max length", Type: "text"},
-				{ID: "numeric_scale", Name: "Numeric scale", Type: "text"},
-				{ID: "is_identity", Name: "Is identity", Type: "checkbox"},
-				{ID: "is_generated", Name: "Is generated", Type: "checkbox"},
-			},
-		},
+		{ID: "column_name", Name: "Name", Type: "text"},
+		{ID: "data_type", Name: "Data Type", Type: "select", Fields: r.dataTypeOptions()},
+		{ID: "not_null", Name: "Not Null", Type: "checkbox"},
+		{ID: "primary", Name: "Primary", Type: "checkbox"},
+		{ID: "column_default", Name: "Default", Type: "text"},
+		{ID: "comment", Name: "Comment", Type: "text"},
+		{ID: "character_maximum_length", Name: "Max length", Type: "text"},
+		{ID: "numeric_scale", Name: "Numeric scale", Type: "text"},
+		{ID: "is_identity", Name: "Is identity", Type: "checkbox"},
+		{ID: "is_generated", Name: "Is generated", Type: "checkbox"},
 	}
 }
 
 func (r *PostgresRepository) foreignKeyOptions(node PGNode) []contract.FormField {
 	return []contract.FormField{
-		{ID: "foreign_keys", Name: "Foreign Keys", Type: "array", Fields: []contract.FormField{
-			{ID: "constraint_name", Name: "Constraint Name", Type: "text"},
-			{ID: "comment", Name: "Comment", Type: "text"},
-			{ID: "ref_columns", Name: "Source Columns", Type: "multi-select", Fields: r.tableColumnsList(node)},
-			{ID: "ref_table", Name: "Target Table", Type: "select", Fields: r.tablesList(node)},
-			{ID: "target_columns", Name: "Target Columns", Type: "multi-select", Fields: r.tableColumnsList(node)},
-			{ID: "update_action", Name: "On Update", Type: "select", Fields: []contract.FormField{
-				{Value: "NO ACTION", Name: "NO ACTION"},
-				{Value: "RESTRICT", Name: "RESTRICT"},
-				{Value: "CASCADE", Name: "CASCADE"},
-				{Value: "SET NULL", Name: "SET NULL"},
-				{Value: "SET DEFAULT", Name: "SET DEFAULT"},
-			}},
-			{ID: "delete_action", Name: "On Delete", Type: "select", Fields: []contract.FormField{
-				{Value: "NO ACTION", Name: "NO ACTION"},
-				{Value: "RESTRICT", Name: "RESTRICT"},
-				{Value: "CASCADE", Name: "CASCADE"},
-				{Value: "SET NULL", Name: "SET NULL"},
-				{Value: "SET DEFAULT", Name: "SET DEFAULT"},
-			}},
-			{ID: "is_deferrable", Name: "Deferrable", Type: "checkbox"},
-			{ID: "initially_deferred", Name: "Initially Deferred", Type: "checkbox"},
+		{ID: "constraint_name", Name: "Constraint Name", Type: "text"},
+		{ID: "comment", Name: "Comment", Type: "text"},
+		{ID: "ref_columns", Name: "Source Columns", Type: "multi-select", Fields: r.tableColumnsList(node)},
+		{ID: "ref_table", Name: "Target Table", Type: "select", Fields: r.tablesList(node)},
+		{ID: "target_columns", Name: "Target Columns", Type: "multi-select", Fields: r.tableColumnsList(node)},
+		{ID: "update_action", Name: "On Update", Type: "select", Fields: []contract.FormField{
+			{Value: "NO ACTION", Name: "NO ACTION"},
+			{Value: "RESTRICT", Name: "RESTRICT"},
+			{Value: "CASCADE", Name: "CASCADE"},
+			{Value: "SET NULL", Name: "SET NULL"},
+			{Value: "SET DEFAULT", Name: "SET DEFAULT"},
 		}},
+		{ID: "delete_action", Name: "On Delete", Type: "select", Fields: []contract.FormField{
+			{Value: "NO ACTION", Name: "NO ACTION"},
+			{Value: "RESTRICT", Name: "RESTRICT"},
+			{Value: "CASCADE", Name: "CASCADE"},
+			{Value: "SET NULL", Name: "SET NULL"},
+			{Value: "SET DEFAULT", Name: "SET DEFAULT"},
+		}},
+		{ID: "is_deferrable", Name: "Deferrable", Type: "checkbox"},
+		{ID: "initially_deferred", Name: "Initially Deferred", Type: "checkbox"},
 	}
 }
 
 func (r *PostgresRepository) getKeyOptions(node PGNode) []contract.FormField {
 	return []contract.FormField{
-		{ID: "keys", Name: "Keys", Type: "array", Fields: []contract.FormField{
-			{ID: "name", Name: "Name", Type: "text", Required: true},
-			{ID: "comment", Name: "Comment", Type: "text"},
-			{ID: "primary", Name: "Primary", Type: "checkbox"},
-			{ID: "deferrable", Name: "Deferrable", Type: "checkbox"},
-			{ID: "initially_deferred", Name: "Initially Deferred", Type: "checkbox"},
-			{ID: "columns", Name: "Columns", Type: "multi-select", Fields: r.tableColumnsList(node)},
-			{ID: "exclude_operator", Name: "Exclude operator", Type: "text"},
-		}},
+		{ID: "name", Name: "Name", Type: "text", Required: true},
+		{ID: "comment", Name: "Comment", Type: "text"},
+		{ID: "primary", Name: "Primary", Type: "checkbox"},
+		{ID: "deferrable", Name: "Deferrable", Type: "checkbox"},
+		{ID: "initially_deferred", Name: "Initially Deferred", Type: "checkbox"},
+		{ID: "columns", Name: "Columns", Type: "multi-select", Fields: r.tableColumnsList(node)},
+		{ID: "exclude_operator", Name: "Exclude operator", Type: "text"},
 	}
 }
 
@@ -202,53 +191,49 @@ func (r *PostgresRepository) templateOptions() []contract.FormField {
 
 func (r *PostgresRepository) indexOptions(node PGNode) []contract.FormField {
 	return []contract.FormField{
-		{ID: "indexes", Name: "Indexes", Type: "array", Fields: []contract.FormField{
-			{ID: "name", Name: "Name", Type: "text"},
-			{ID: "comment", Name: "Comment", Type: "text"},
-			{ID: "unique", Name: "Unique", Type: "checkbox"},
-			{ID: "columns", Name: "Columns", Type: "multi-select", Fields: r.tableColumnsList(node)},
-			{ID: "condition", Name: "Condition", Type: "text"},
-			{ID: "include_columns", Name: "Include Columns", Type: "text"},
-			{ID: "access_method", Name: "Access Method", Type: "select", Fields: []contract.FormField{
-				{Value: "btree", Name: "btree"},
-				{Value: "hash", Name: "hash"},
-				{Value: "gin", Name: "gin"},
-				{Value: "gist", Name: "gist"},
-				{Value: "spgist", Name: "spgist"},
-				{Value: "brin", Name: "brin"},
-			}},
-			{ID: "tablespace", Name: "Tablespace", Type: "select", Fields: r.tablespaceOptions()},
+		{ID: "name", Name: "Name", Type: "text"},
+		{ID: "comment", Name: "Comment", Type: "text"},
+		{ID: "unique", Name: "Unique", Type: "checkbox"},
+		{ID: "columns", Name: "Columns", Type: "multi-select", Fields: r.tableColumnsList(node)},
+		{ID: "condition", Name: "Condition", Type: "text"},
+		{ID: "include_columns", Name: "Include Columns", Type: "text"},
+		{ID: "access_method", Name: "Access Method", Type: "select", Fields: []contract.FormField{
+			{Value: "btree", Name: "btree"},
+			{Value: "hash", Name: "hash"},
+			{Value: "gin", Name: "gin"},
+			{Value: "gist", Name: "gist"},
+			{Value: "spgist", Name: "spgist"},
+			{Value: "brin", Name: "brin"},
 		}},
+		{ID: "tablespace", Name: "Tablespace", Type: "select", Fields: r.tablespaceOptions()},
 	}
 }
 
 func (r *PostgresRepository) triggerOptions(node PGNode) []contract.FormField {
 	return []contract.FormField{
-		{ID: "triggers", Name: "Triggers", Type: "array", Fields: []contract.FormField{
-			{ID: "name", Name: "Name", Type: "text", Required: true},
-			{ID: "comment", Name: "Comment", Type: "text"},
-			{ID: "timing", Name: "Timing", Type: "select", Required: true, Fields: []contract.FormField{
-				{Value: "BEFORE", Name: "BEFORE"},
-				{Value: "AFTER", Name: "AFTER"},
-				{Value: "INSTEAD OF", Name: "INSTEAD OF"},
-			}},
-			{ID: "level", Name: "Level", Type: "select", Required: true, Fields: []contract.FormField{
-				{Value: "FOR EACH ROW", Name: "FOR EACH ROW"},
-				{Value: "FOR EACH STATEMENT", Name: "FOR EACH STATEMENT"},
-			}},
-			{ID: "events", Name: "Events", Type: "multi-select", Required: true, Fields: []contract.FormField{
-				{Value: "INSERT", Name: "INSERT"},
-				{Value: "UPDATE", Name: "UPDATE"},
-				{Value: "DELETE", Name: "DELETE"},
-				{Value: "TRUNCATE", Name: "TRUNCATE"},
-			}},
-			{ID: "update_columns", Name: "Update Columns", Type: "multi-select", Fields: r.tableColumnsList(node)},
-			{ID: "function", Name: "Function", Type: "select", Required: true, Fields: r.triggerFunctionOptions(node)},
-			{ID: "when", Name: "When Condition", Type: "text"},
-			{ID: "no_inherit", Name: "No Inherit", Type: "checkbox"},
-			{ID: "enable", Name: "Enable", Type: "checkbox"},
-			{ID: "truncate_cascade", Name: "Truncate Cascade", Type: "checkbox"},
+		{ID: "name", Name: "Name", Type: "text", Required: true},
+		{ID: "comment", Name: "Comment", Type: "text"},
+		{ID: "timing", Name: "Timing", Type: "select", Required: true, Fields: []contract.FormField{
+			{Value: "BEFORE", Name: "BEFORE"},
+			{Value: "AFTER", Name: "AFTER"},
+			{Value: "INSTEAD OF", Name: "INSTEAD OF"},
 		}},
+		{ID: "level", Name: "Level", Type: "select", Required: true, Fields: []contract.FormField{
+			{Value: "FOR EACH ROW", Name: "FOR EACH ROW"},
+			{Value: "FOR EACH STATEMENT", Name: "FOR EACH STATEMENT"},
+		}},
+		{ID: "events", Name: "Events", Type: "multi-select", Required: true, Fields: []contract.FormField{
+			{Value: "INSERT", Name: "INSERT"},
+			{Value: "UPDATE", Name: "UPDATE"},
+			{Value: "DELETE", Name: "DELETE"},
+			{Value: "TRUNCATE", Name: "TRUNCATE"},
+		}},
+		{ID: "update_columns", Name: "Update Columns", Type: "multi-select", Fields: r.tableColumnsList(node)},
+		{ID: "function", Name: "Function", Type: "select", Required: true, Fields: r.triggerFunctionOptions(node)},
+		{ID: "when", Name: "When Condition", Type: "text"},
+		{ID: "no_inherit", Name: "No Inherit", Type: "checkbox"},
+		{ID: "enable", Name: "Enable", Type: "checkbox"},
+		{ID: "truncate_cascade", Name: "Truncate Cascade", Type: "checkbox"},
 	}
 }
 
@@ -276,14 +261,12 @@ func (r *PostgresRepository) triggerFunctionOptions(node PGNode) []contract.Form
 
 func (r *PostgresRepository) checkOptions() []contract.FormField {
 	return []contract.FormField{
-		{ID: "checks", Name: "Checks", Type: "array", Fields: []contract.FormField{
-			{ID: "name", Name: "Name", Type: "text"},
-			{ID: "comment", Name: "Comment", Type: "text"},
-			{ID: "deferrable", Name: "Deferrable", Type: "checkbox"},
-			{ID: "initially_deferred", Name: "Initially Deferred", Type: "checkbox"},
-			{ID: "no_inherit", Name: "No Inherit", Type: "checkbox"},
-			{ID: "predicate", Name: "Predicate", Type: "text"},
-		}},
+		{ID: "name", Name: "Name", Type: "text"},
+		{ID: "comment", Name: "Comment", Type: "text"},
+		{ID: "deferrable", Name: "Deferrable", Type: "checkbox"},
+		{ID: "initially_deferred", Name: "Initially Deferred", Type: "checkbox"},
+		{ID: "no_inherit", Name: "No Inherit", Type: "checkbox"},
+		{ID: "predicate", Name: "Predicate", Type: "text"},
 	}
 }
 
@@ -468,14 +451,12 @@ func (r *PostgresRepository) encodingOptions() []contract.FormField {
 
 func (r *PostgresRepository) schemaPrivilegeOptions() []contract.FormField {
 	return []contract.FormField{
+		{ID: "grantee", Name: "Grantee", Type: "text"},
 		{ID: "privileges", Name: "Privileges", Type: "array", Fields: []contract.FormField{
-			{ID: "grantee", Name: "Grantee", Type: "text"},
-			{ID: "privileges", Name: "Privileges", Type: "array", Fields: []contract.FormField{
-				{Value: "SELECT", Name: "SELECT"},
-				{Value: "INSERT", Name: "INSERT"},
-				{Value: "UPDATE", Name: "UPDATE"},
-				{Value: "DELETE", Name: "DELETE"},
-			}},
+			{Value: "SELECT", Name: "SELECT"},
+			{Value: "INSERT", Name: "INSERT"},
+			{Value: "UPDATE", Name: "UPDATE"},
+			{Value: "DELETE", Name: "DELETE"},
 		}},
 	}
 }

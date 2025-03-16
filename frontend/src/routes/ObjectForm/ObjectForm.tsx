@@ -74,7 +74,7 @@ export default function ObjectForm({ isDetail = false }: { isDetail?: boolean })
   const selectedContent = useMemo(() => {
     if (!fields || !currentTabId) return null;
 
-    const currentFields = isDetail ? formDataByTab[currentTabId] || fields : fields;
+    const currentFields = formDataByTab[currentTabId] || fields;
 
     return <TableForm formSchema={currentFields} onChange={handleFormChange} />;
   }, [fields, currentTabId, formDataByTab, isDetail]);

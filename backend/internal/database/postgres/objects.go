@@ -424,7 +424,7 @@ func (r *PostgresRepository) getTableChecks(node PGNode) ([]contract.FormField, 
 		Joins("LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0").
 		Where("c.conrelid = (SELECT oid FROM pg_class WHERE relname = ? AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)) AND c.contype = 'c'", node.Table, node.Schema)
 
-	return buildArrayResponse(query, fields[0].Fields)
+	return buildArrayResponse(query, fields)
 }
 
 func (r *PostgresRepository) getTableTriggers(node PGNode) ([]contract.FormField, error) {
@@ -464,11 +464,11 @@ func (r *PostgresRepository) getTableTriggers(node PGNode) ([]contract.FormField
 		Where("c.relname = ? AND n.nspname = ?", node.Table, node.Schema).
 		Group("t.tgname, d.description, t.tgtype, p.proname, t.oid")
 
-	return buildArrayResponse(query, fields[0].Fields)
+	return buildArrayResponse(query, fields)
 }
 
 func (r *PostgresRepository) getTableIndexes(node PGNode) ([]contract.FormField, error) {
-	indexes := r.indexOptions(node)
+	fields := r.indexOptions(node)
 	query := r.db.Table("pg_index ix").
 		Select(`
 			i.relname as index_name,
@@ -489,7 +489,7 @@ func (r *PostgresRepository) getTableIndexes(node PGNode) ([]contract.FormField,
 		Where("n.nspname = ? AND c.relname = ?", node.Schema, node.Table).
 		Group("i.relname, ix.indisunique, ix.indisprimary, am.amname, t.spcname, i.oid")
 
-	return buildArrayResponse(query, indexes[0].Fields)
+	return buildArrayResponse(query, fields)
 }
 
 type ForeignKeyInfo struct {
@@ -539,7 +539,7 @@ func (r *PostgresRepository) getTableForeignKeys(node PGNode) ([]contract.FormFi
 		Where("n.nspname = ? AND t.relname = ? AND c.contype = 'f'", node.Schema, node.Table).
 		Group("c.conname, ct.relname, c.confupdtype, c.confdeltype, c.condeferrable, c.condeferred, d.description, c.conkey, c.confkey")
 
-	return buildArrayResponse(query, fields[0].Fields)
+	return buildArrayResponse(query, fields)
 }
 
 func (r *PostgresRepository) getTableColumns(node PGNode) ([]contract.FormField, error) {
@@ -568,30 +568,19 @@ func (r *PostgresRepository) getTableColumns(node PGNode) ([]contract.FormField,
 		Where("n.nspname = ? AND c.relname = ? AND a.attnum > 0 AND NOT a.attisdropped", node.Schema, node.Table).
 		Order("a.attnum")
 
-	return buildArrayResponse(query, fields[0].Fields)
+	return buildArrayResponse(query, fields)
 }
 
 func (r *PostgresRepository) getSchemaPrivileges(node PGNode) ([]contract.FormField, error) {
-	type SchemaPrivilege struct {
-		Grantor    string         `gorm:"column:grantor"`
-		Grantee    string         `gorm:"column:grantee"`
-		Privileges sql.NullString `gorm:"column:privileges"`
-	}
+	fields := r.schemaPrivilegeOptions()
 
-	privileges := make([]SchemaPrivilege, 0)
-	err := r.db.Table("pg_namespace AS n").
+	query := r.db.Table("pg_namespace AS n").
 		Select("grantor, grantee, string_agg(privilege_type, ', ') as privileges").
 		Joins("JOIN information_schema.usage_privileges AS p ON n.nspname = p.object_name").
 		Where("n.nspname = ?", node.Schema).
-		Scan(&privileges).Error
-	if err != nil {
-		return nil, err
-	}
+		Group("grantor, grantee")
 
-	return nil, nil
-	// return map[string]interface{}{
-	// 	"privileges": privileges,
-	// }, nil
+	return buildObjectResponse(query, fields)
 }
 
 func (r *PostgresRepository) getSchemaInfo(node PGNode) ([]contract.FormField, error) {
@@ -696,7 +685,7 @@ func (r *PostgresRepository) getTableKeys(node PGNode) ([]contract.FormField, er
 		Where("c.conrelid = (SELECT oid FROM pg_class WHERE relname = ? AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)) AND c.contype = 'p'", node.Table, node.Schema).
 		Group("c.conname, d.description, c.contype, c.condeferrable, c.condeferred, c.oid")
 
-	return buildArrayResponse(query, fields[0].Fields)
+	return buildArrayResponse(query, fields)
 }
 
 func buildObjectResponse(query *gorm.DB, fields []contract.FormField) ([]contract.FormField, error) {
@@ -743,6 +732,12 @@ func buildArrayResponse(query *gorm.DB, fields []contract.FormField) ([]contract
 	}
 
 	responseFields := make([]contract.FormField, len(results))
+	responseFields = append(responseFields, contract.FormField{
+		ID:     "empty",
+		Type:   "object",
+		Fields: fields,
+	})
+
 	for i, result := range results {
 		responseFields[i] = contract.FormField{
 			ID:     "",

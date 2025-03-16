@@ -71,7 +71,7 @@ func (r *PostgresRepository) GetFormFields(nodeID string, action contract.TreeNo
 		case contract.SchemaTab:
 			return r.schemaFields()
 		case contract.SchemaPrivilegesTab:
-			return r.schemaPrivilegeOptions()
+			return buildFieldArray(r.schemaPrivilegeOptions())
 		}
 
 	case contract.CreateTableAction, contract.EditTableAction:
@@ -79,18 +79,34 @@ func (r *PostgresRepository) GetFormFields(nodeID string, action contract.TreeNo
 		case contract.TableTab:
 			return r.tableFields()
 		case contract.TableColumnsTab:
-			return r.tableColumnFields()
+			return buildFieldArray(r.tableColumnFields())
 		case contract.TableForeignKeysTab:
-			return r.foreignKeyOptions(node)
+			return buildFieldArray(r.foreignKeyOptions(node))
 		case contract.TableIndexesTab:
-			return r.indexOptions(node)
+			return buildFieldArray(r.indexOptions(node))
 		case contract.TableTriggersTab:
-			return r.triggerOptions(node)
+			return buildFieldArray(r.triggerOptions(node))
 		case contract.TableChecksTab:
-			return r.checkOptions()
+			return buildFieldArray(r.checkOptions())
 		case contract.TableKeysTab:
-			return r.getKeyOptions(node)
+			return buildFieldArray(r.getKeyOptions(node))
 		}
 	}
 	return []contract.FormField{}
+}
+
+func buildFieldArray(fields []contract.FormField) []contract.FormField {
+	return []contract.FormField{
+		{
+			ID:   "columns",
+			Type: "array",
+			Fields: []contract.FormField{
+				{
+					ID:     "empty",
+					Type:   "object",
+					Fields: fields,
+				},
+			},
+		},
+	}
 }
