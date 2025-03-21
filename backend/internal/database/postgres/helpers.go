@@ -1,6 +1,8 @@
 package databasePostgres
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -183,4 +185,14 @@ func buildArrayResponse(query *gorm.DB, fields []contract.FormField) ([]contract
 			Fields: responseFields,
 		},
 	}, nil
+}
+
+func convertToDTO[T any](params []byte) (*T, error) {
+	var dtoParams T
+	err := json.Unmarshal(params, &dtoParams)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal params: %v", err)
+	}
+
+	return &dtoParams, nil
 }

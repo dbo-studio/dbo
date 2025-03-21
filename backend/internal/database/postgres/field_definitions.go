@@ -14,11 +14,37 @@ func (r *PostgresRepository) databaseFields() []contract.FormField {
 	}
 }
 
+func (r *PostgresRepository) databasePrivilegeOptions() []contract.FormField {
+	return []contract.FormField{
+		{ID: "grantee", Name: "Grantee", Type: "text"},
+		{ID: "grantor", Name: "Grantor", Type: "text"},
+		{ID: "privileges", Name: "Privileges", Type: "multi-select", Fields: []contract.FormField{
+			{Value: "SELECT", Name: "SELECT"},
+			{Value: "INSERT", Name: "INSERT"},
+			{Value: "UPDATE", Name: "UPDATE"},
+			{Value: "DELETE", Name: "DELETE"},
+		}},
+	}
+}
+
 func (r *PostgresRepository) schemaFields() []contract.FormField {
 	return []contract.FormField{
 		{ID: "nspname", Name: "Name", Type: "text", Required: true},
 		{ID: "rolname", Name: "Owner", Type: "text"},
 		{ID: "description", Name: "Comment", Type: "text"},
+	}
+}
+
+func (r *PostgresRepository) schemaPrivilegeOptions() []contract.FormField {
+	return []contract.FormField{
+		{ID: "grantee", Name: "Grantee", Type: "text"},
+		{ID: "grantor", Name: "Grantor", Type: "text"},
+		{ID: "privileges", Name: "Privileges", Type: "multi-select", Fields: []contract.FormField{
+			{Value: "SELECT", Name: "SELECT"},
+			{Value: "INSERT", Name: "INSERT"},
+			{Value: "UPDATE", Name: "UPDATE"},
+			{Value: "DELETE", Name: "DELETE"},
+		}},
 	}
 }
 
@@ -33,93 +59,6 @@ func (r *PostgresRepository) tableFields() []contract.FormField {
 		{ID: "amname", Name: "Access Method", Type: "text"},
 		{ID: "spcname", Name: "Tablespace", Type: "select", Fields: r.tablespaceOptions()},
 		{ID: "rolname", Name: "Owner", Type: "text"},
-	}
-}
-
-func (r *PostgresRepository) columnFields() []contract.FormField {
-	return []contract.FormField{
-		{ID: "attname", Name: "Name", Type: "text"},
-		{
-			ID:   "format_type",
-			Name: "Data Type",
-			Type: "select",
-			Fields: []contract.FormField{
-				{Value: "bigserial", Name: "bigserial"},
-				{Value: "bit", Name: "bit"},
-				{Value: "bool", Name: "bool"},
-				{Value: "box", Name: "box"},
-				{Value: "bytea", Name: "bytea"},
-				{Value: "char", Name: "char"},
-				{Value: "cidr", Name: "cidr"},
-				{Value: "circle", Name: "circle"},
-				{Value: "date", Name: "date"},
-				{Value: "decimal", Name: "decimal"},
-				{Value: "float4", Name: "float4"},
-				{Value: "float8", Name: "float8"},
-				{Value: "inet", Name: "inet"},
-				{Value: "int2", Name: "int2"},
-				{Value: "int4", Name: "int4"},
-				{Value: "int8", Name: "int8"},
-				{Value: "interval", Name: "interval"},
-				{Value: "json", Name: "json"},
-				{Value: "jsonb", Name: "jsonb"},
-				{Value: "line", Name: "line"},
-				{Value: "lseg", Name: "lseg"},
-				{Value: "macaddr", Name: "macaddr"},
-				{Value: "money", Name: "money"},
-				{Value: "numeric", Name: "numeric"},
-				{Value: "path", Name: "path"},
-				{Value: "point", Name: "point"},
-				{Value: "polygon", Name: "polygon"},
-				{Value: "serial", Name: "serial"},
-				{Value: "serial2", Name: "serial2"},
-				{Value: "serial4", Name: "serial4"},
-				{Value: "serial8", Name: "serial8"},
-				{Value: "smallserial", Name: "smallserial"},
-				{Value: "text", Name: "text"},
-				{Value: "time", Name: "time"},
-				{Value: "timestamp", Name: "timestamp"},
-				{Value: "timestamptz", Name: "timestamptz"},
-				{Value: "timetz", Name: "timetz"},
-				{Value: "tsquery", Name: "tsquery"},
-				{Value: "tsvector", Name: "tsvector"},
-				{Value: "txid_snapshot", Name: "txid_snapshot"},
-				{Value: "uuid", Name: "uuid"},
-				{Value: "varbit", Name: "varbit"},
-				{Value: "xml", Name: "xml"},
-				{Value: "character varying", Name: "character varying"},
-			},
-		},
-		{ID: "attnotnull", Name: "Not Null", Type: "checkbox"},
-		{ID: "attisprimary", Name: "Primary", Type: "checkbox"},
-		{ID: "column_default", Name: "Default", Type: "text"},
-		{ID: "description", Name: "Comment", Type: "text"},
-		{ID: "attoptions", Name: "Options", Type: "text"},
-	}
-}
-
-func (r *PostgresRepository) indexFields(node PGNode) []contract.FormField {
-	return []contract.FormField{
-		{ID: "indexname", Name: "Name", Type: "text"},
-		{ID: "description", Name: "Comment", Type: "text"},
-		{ID: "indisunique", Name: "Unique", Type: "checkbox"},
-		{ID: "indkey", Name: "Columns", Type: "multi-select", Fields: r.tableColumnsList(node)},
-		{ID: "indpred", Name: "Condition", Type: "text"},
-		{ID: "indinclude", Name: "Include Columns", Type: "text"},
-		{
-			ID:   "amname",
-			Name: "Access Method",
-			Type: "select",
-			Fields: []contract.FormField{
-				{Value: "btree", Name: "btree"},
-				{Value: "hash", Name: "hash"},
-				{Value: "gin", Name: "gin"},
-				{Value: "gist", Name: "gist"},
-				{Value: "spgist", Name: "spgist"},
-				{Value: "brin", Name: "brin"},
-			},
-		},
-		{ID: "spcname", Name: "Tablespace", Type: "select", Fields: r.tablespaceOptions()},
 	}
 }
 
@@ -332,19 +271,6 @@ func (r *PostgresRepository) dataTypeOptions() []contract.FormField {
 	}
 }
 
-func (r *PostgresRepository) databasePrivilegeOptions() []contract.FormField {
-	return []contract.FormField{
-		{ID: "grantee", Name: "Grantee", Type: "text"},
-		{ID: "grantor", Name: "Grantor", Type: "text"},
-		{ID: "privileges", Name: "Privileges", Type: "multi-select", Fields: []contract.FormField{
-			{Value: "SELECT", Name: "SELECT"},
-			{Value: "INSERT", Name: "INSERT"},
-			{Value: "UPDATE", Name: "UPDATE"},
-			{Value: "DELETE", Name: "DELETE"},
-		}},
-	}
-}
-
 func (r *PostgresRepository) tableColumnsList(node PGNode) []contract.FormField {
 	type columnResult struct {
 		Value string `gorm:"column:value"`
@@ -459,19 +385,6 @@ func (r *PostgresRepository) encodingOptions() []contract.FormField {
 		{Value: "WIN1256", Name: "WIN1256"},
 		{Value: "WIN1257", Name: "WIN1257"},
 		{Value: "WIN1258", Name: "WIN1258"},
-	}
-}
-
-func (r *PostgresRepository) schemaPrivilegeOptions() []contract.FormField {
-	return []contract.FormField{
-		{ID: "grantee", Name: "Grantee", Type: "text"},
-		{ID: "grantor", Name: "Grantor", Type: "text"},
-		{ID: "privileges", Name: "Privileges", Type: "multi-select", Fields: []contract.FormField{
-			{Value: "SELECT", Name: "SELECT"},
-			{Value: "INSERT", Name: "INSERT"},
-			{Value: "UPDATE", Name: "UPDATE"},
-			{Value: "DELETE", Name: "DELETE"},
-		}},
 	}
 }
 

@@ -9,6 +9,7 @@ export type ObjectTabProps = {
 export type ArrayFieldProps = {
   field: FormFieldType;
   onChange: (value: any[]) => void;
+  onAdd?: () => void;
 };
 
 export type FormFieldsProps = {
@@ -23,6 +24,14 @@ export type SimpleFieldProps = {
 };
 
 export type TableFormProps = {
+  tabId: string | undefined;
   formSchema: FormFieldType[];
   onChange: (data: Record<string, any>) => void;
+};
+
+export type StatusBarProps = {
+  onSave: () => void;
+  onCancel: () => void;
+  onAdd?: () => void;
+  disabled?: boolean;
 };

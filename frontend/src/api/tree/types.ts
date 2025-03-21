@@ -43,6 +43,10 @@ export type ObjectRequestType = {
   tabId: string;
 };
 
+export type SaveObjectRequestType = ObjectRequestType & {
+  data: any;
+};
+
 export type TreeNodeType = {
   id: string;
   name: string;

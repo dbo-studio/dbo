@@ -1,5 +1,5 @@
 import type { EditedRow } from '@/types';
-import type { ColumnType, EditedColumnType, RowType } from '@/types/Data';
+import type { ColumnType, RowType } from '@/types/Data';
 
 export type DataStore = object;
 
@@ -26,17 +26,6 @@ export type DataColumnSlice = {
   updateColumns: (columns: ColumnType[]) => Promise<void>;
   updateColumn: (column: ColumnType) => Promise<void>;
   removeColumnsByTabId: (tabId: string) => void;
-};
-
-export type DataEditedColumnSlice = {
-  editedColumns: Record<string, EditedColumnType[]>;
-  getEditedColumns: () => EditedColumnType[];
-  updateEditedColumns: (columns: EditedColumnType[]) => Promise<void>;
-  addEditedColumns: (oldValue: ColumnType, newValue: ColumnType | EditedColumnType) => Promise<void>;
-  updateRemovedColumns: () => Promise<void>;
-  restoreEditedColumns: () => Promise<void>;
-  addEmptyEditedColumns: () => Promise<void>;
-  removeEditedColumnsByTabId: (tabId: string) => void;
 };
 
 export type DataEditedRowsSlice = {
@@ -68,7 +57,6 @@ export type DataQuerySlice = {
   toggleDataFetching: boolean;
   runQuery: () => Promise<void>;
   runRawQuery: () => Promise<void>;
-  updateDesignsQuery: () => Promise<void>;
 };
 
 export type SelectedRow = {

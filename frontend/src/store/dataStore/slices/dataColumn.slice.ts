@@ -9,7 +9,6 @@ export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, []
   get
 ) => ({
   columns: {},
-  editedColumns: {},
   getColumns: (isActive?: boolean) => {
     const selectedTab = useTabStore.getState().getSelectedTab();
     const columns = get().columns;

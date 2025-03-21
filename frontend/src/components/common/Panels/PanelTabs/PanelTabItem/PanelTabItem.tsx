@@ -40,7 +40,6 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
       action: () => {
         for (const t of getTabs()) {
           if (t.id !== selectedTab?.id) removeTab(t.id);
-          else navigate({ route: 'data', tabId: t.id });
         }
       },
       closeAfterAction: true
@@ -96,7 +95,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
       return;
     }
 
-    if (selectedTab?.mode === TabMode.Data || selectedTab?.mode === TabMode.Design) {
+    if (selectedTab?.mode === TabMode.Data) {
       await runQuery();
       removeEditedRowsByTabId(selectedTab?.id ?? '');
       deleteRemovedRowsByTabId(selectedTab?.id ?? '');

@@ -4,7 +4,7 @@ export const ObjectTabsStyled = styled(Box)(({ theme }) => ({
   marginTop: theme.spacing(1),
   borderRight: `1px solid ${theme.palette.divider}`,
   padding: theme.spacing(1),
-  minWidth: '200px',
+  minWidth: '220px',
   '& .MuiTabs-list': {
     flexDirection: 'column',
     alignItems: 'flex-start',

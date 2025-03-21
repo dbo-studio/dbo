@@ -8,7 +8,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// UpdateQuery processes a query update request and executes the generated queries within a transaction
 func (r *PostgresRepository) UpdateQuery(req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error) {
 	if req == nil {
 		return nil, fmt.Errorf("nil request")
@@ -49,7 +48,6 @@ func (r *PostgresRepository) UpdateQuery(req *dto.UpdateQueryRequest) (*dto.Upda
 	}, nil
 }
 
-// generateQueries combines all query types (update, insert, delete) into a single slice
 func generateQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
 	var queries []string
 
@@ -60,7 +58,6 @@ func generateQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
 	return queries
 }
 
-// generateUpdateQueries creates SQL update statements from the request
 func generateUpdateQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
 	if req == nil || req.EditedItems == nil {
 		return nil
@@ -94,7 +91,6 @@ func generateUpdateQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
 	return queries
 }
 
-// generateDeleteQueries creates SQL delete statements from the request
 func generateDeleteQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
 	if req == nil || req.DeletedItems == nil {
 		return nil
@@ -125,7 +121,6 @@ func generateDeleteQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
 	return queries
 }
 
-// generateInsertQueries creates SQL insert statements from the request
 func generateInsertQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
 	if req == nil || req.AddedItems == nil {
 		return nil
@@ -149,7 +144,6 @@ func generateInsertQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
 			if value == nil {
 				values = append(values, "NULL")
 			} else {
-				// Use proper parameter formatting to avoid SQL injection
 				values = append(values, fmt.Sprintf(`'%v'`, value))
 			}
 		}
@@ -172,7 +166,6 @@ func generateInsertQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
 	return queries
 }
 
-// buildSetClauses creates SET clauses for UPDATE statements
 func buildSetClauses(values map[string]interface{}) []string {
 	var setClauses []string
 
@@ -182,7 +175,6 @@ func buildSetClauses(values map[string]interface{}) []string {
 		} else if value == "@DEFAULT" {
 			setClauses = append(setClauses, fmt.Sprintf(`"%s" = DEFAULT`, key))
 		} else {
-			// Note: In production code, this should use proper parameter binding
 			setClauses = append(setClauses, fmt.Sprintf(`"%s" = '%v'`, key, value))
 		}
 	}
@@ -190,7 +182,6 @@ func buildSetClauses(values map[string]interface{}) []string {
 	return setClauses
 }
 
-// buildWhereClauses creates WHERE clauses for statements
 func buildWhereClauses(conditions map[string]interface{}) []string {
 	var whereClauses []string
 
@@ -198,7 +189,6 @@ func buildWhereClauses(conditions map[string]interface{}) []string {
 		if value == nil {
 			whereClauses = append(whereClauses, fmt.Sprintf(`"%s" IS NULL`, key))
 		} else {
-			// Note: In production code, this should use proper parameter binding
 			whereClauses = append(whereClauses, fmt.Sprintf(`"%s" = '%v'`, key, value))
 		}
 	}

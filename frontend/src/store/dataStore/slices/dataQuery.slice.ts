@@ -1,16 +1,13 @@
-import { updateDesign } from '@/api/design';
-import type { UpdateDesignItemType } from '@/api/design/types';
 import { runQuery, runRawQuery } from '@/api/query';
-import { cleanupUpdateDesignObject } from '@/core/utils';
 import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
 import type { StateCreator } from 'zustand';
 import { useConnectionStore } from '../../connectionStore/connection.store';
 import { useTabStore } from '../../tabStore/tab.store';
-import type { DataColumnSlice, DataEditedColumnSlice, DataQuerySlice, DataRowSlice, DataStore } from '../types';
+import type { DataColumnSlice, DataQuerySlice, DataRowSlice, DataStore } from '../types';
 
 export const createDataQuerySlice: StateCreator<
-  DataStore & DataQuerySlice & DataColumnSlice & DataEditedColumnSlice & DataRowSlice,
+  DataStore & DataQuerySlice & DataColumnSlice & DataRowSlice,
   [],
   [],
   DataQuerySlice
@@ -80,65 +77,6 @@ export const createDataQuerySlice: StateCreator<
         toast.error(error.message);
       }
       console.log('🚀 ~ runRawQuery: ~ error:', error);
-    } finally {
-      set({ loading: false });
-    }
-  },
-  updateDesignsQuery: async () => {
-    const currentConnection = useConnectionStore.getState().currentConnection;
-    const selectedTab = useTabStore.getState().getSelectedTab();
-    if (!selectedTab || !currentConnection) {
-      return;
-    }
-
-    const columns = get().getEditedColumns();
-    if (columns.length === 0) {
-      return;
-    }
-
-    const added = columns
-      .filter((c) => c.unsaved)
-      .map((c) => {
-        return cleanupUpdateDesignObject(c?.new ?? null);
-      });
-
-    const edited = columns
-      .filter((c) => !c.unsaved && c.edited)
-      .map((c) => {
-        const data = cleanupUpdateDesignObject(c?.new ?? null);
-        if (c?.old?.name !== c?.new?.name) {
-          data.rename = c?.new?.name;
-          data.name = c?.old?.name;
-        } else {
-          data.name = c.name;
-        }
-
-        return data;
-      });
-
-    const removed = columns
-      .filter((c) => c.deleted)
-      .map((c) => {
-        return c.name;
-      });
-
-    try {
-      set({ loading: true });
-      const res = await updateDesign({
-        connectionId: currentConnection.id,
-        nodeId: selectedTab.nodeId,
-        edited: edited as UpdateDesignItemType[],
-        removed: Array.from(removed),
-        added: added as UpdateDesignItemType[]
-      });
-
-      useTabStore.getState().updateQuery(res.query);
-      await Promise.all([get().updateEditedColumns([])]);
-    } catch (error) {
-      if (isAxiosError(error)) {
-        toast.error(error.message);
-      }
-      console.log('🚀 ~ updateDesignsQuery: ~ error:', error);
     } finally {
       set({ loading: false });
     }

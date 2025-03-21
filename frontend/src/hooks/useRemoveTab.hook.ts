@@ -7,7 +7,6 @@ export function useRemoveTab() {
   const { removeTab, getTabs, updateSelectedTab } = useTabStore();
   const {
     removeColumnsByTabId,
-    removeEditedColumnsByTabId,
     removeEditedRowsByTabId,
     deleteRemovedRowsByTabId,
     removeRowsByTabId,
@@ -20,7 +19,6 @@ export function useRemoveTab() {
     }
 
     removeColumnsByTabId(tabId);
-    removeEditedColumnsByTabId(tabId);
     removeEditedRowsByTabId(tabId);
     deleteRemovedRowsByTabId(tabId);
     removeRowsByTabId(tabId);

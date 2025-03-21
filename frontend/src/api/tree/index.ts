@@ -2,6 +2,7 @@ import type {
   FieldRequestType,
   FieldResponseType,
   ObjectRequestType,
+  SaveObjectRequestType,
   TabRequestType,
   TabResponseType,
   TreeRequestType,
@@ -13,7 +14,9 @@ const endpoints = {
   getTree: () => '/tree',
   getTabs: (nodeId: string, action: string) => `/tree/${nodeId}/tabs/${action}`,
   getFields: (nodeId: string, action: string, tabId: string) => `/tree/${nodeId}/tabs/${action}/fields/${tabId}`,
-  getObject: (nodeId: string, action: string, tabId: string) => `/tree/${nodeId}/tabs/${action}/fields/${tabId}/object`
+  getObject: (nodeId: string, action: string, tabId: string) => `/tree/${nodeId}/tabs/${action}/fields/${tabId}/object`,
+  executeAction: (nodeId: string, action: string, tabId: string) =>
+    `/tree/${nodeId}/tabs/${action}/fields/${tabId}/object`
 };
 
 export const getTree = async (params: TreeRequestType): Promise<TreeResponseType> => {
@@ -52,4 +55,15 @@ export const getObject = async (params: ObjectRequestType): Promise<FieldRespons
       }
     })
   ).data.data as FieldResponseType;
+};
+
+export const executeAction = async (params: SaveObjectRequestType): Promise<void> => {
+  await api.post(endpoints.executeAction(params.nodeId, params.action, params.tabId), params.data, {
+    params: {
+      connectionId: params.connectionId
+    },
+    data: {
+      ...params.data
+    }
+  });
 };

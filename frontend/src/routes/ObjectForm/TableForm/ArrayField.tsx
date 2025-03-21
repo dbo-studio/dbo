@@ -15,7 +15,7 @@ import {
 import type { ArrayFieldProps } from '../types';
 import SimpleField from './SimpleField';
 
-export default function ArrayField({ field, onChange }: ArrayFieldProps) {
+export default function ArrayField({ field, onChange, onAdd }: ArrayFieldProps) {
   const handleItemChange = (index: number, fieldId: string, fieldValue: any) => {
     const newFields = [...(field.fields || [])];
 
@@ -34,34 +34,12 @@ export default function ArrayField({ field, onChange }: ArrayFieldProps) {
     onChange(newFields || []);
   };
 
-  const handleAdd = () => {
-    const template = field.fields?.[0];
-    if (!template) return;
-
-    const newField = {
-      ...template,
-      id: 'object',
-      fields: template.fields?.map((f) => ({
-        ...f,
-        value: f.type === 'multi-select' ? [] : null
-      }))
-    };
-
-    const newFields = [...(field.fields || []), newField];
-    onChange(newFields);
-  };
-
   return (
     <Box height='100%' display='flex' flexDirection='column'>
       <Stack direction={'row'} spacing={1} mt={1} mb={1}>
-        <IconButton size='small' onClick={handleAdd}>
+        <IconButton size='small' onClick={onAdd}>
           <Stack direction={'row'} spacing={1} alignItems={'center'}>
             <CustomIcon type='plus' />
-          </Stack>
-        </IconButton>
-        <IconButton size='small' onClick={handleAdd}>
-          <Stack direction={'row'} spacing={1} alignItems={'center'}>
-            <CustomIcon type='code' />
           </Stack>
         </IconButton>
       </Stack>
@@ -99,9 +77,6 @@ export default function ArrayField({ field, onChange }: ArrayFieldProps) {
                 })}
                 <TableCell>
                   <Stack direction={'row'} spacing={1}>
-                    <IconButton size='small' onClick={handleAdd}>
-                      <CustomIcon type='plus' />
-                    </IconButton>
                     <IconButton size='small' onClick={() => handleDelete(index)}>
                       <CustomIcon type='delete' />
                     </IconButton>

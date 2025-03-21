@@ -5,9 +5,6 @@ import (
 )
 
 type DatabaseRepository interface {
-	CreateObject(params any) error
-	DropObject(params any) error
-	UpdateObject(params any) error
 	RunQuery(dto *dto.RunQueryRequest) (*dto.RunQueryResponse, error)
 	UpdateQuery(dto *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error)
 	RunRawQuery(dto *dto.RawQueryRequest) (*dto.RawQueryResponse, error)
@@ -16,4 +13,5 @@ type DatabaseRepository interface {
 	GetFormTabs(action TreeNodeActionName) []FormTab
 	GetFormFields(nodeID string, tabID TreeTab) []FormField
 	Objects(nodeID string, tabID TreeTab) ([]FormField, error)
+	Execute(nodeID string, tabId TreeTab, action TreeNodeActionName, params []byte) error
 }

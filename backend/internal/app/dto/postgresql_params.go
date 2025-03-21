@@ -16,51 +16,73 @@ type PostgresqlUpdateConnectionParams struct {
 	Database *string `json:"database"`
 }
 
-type PostgresCreateDatabaseParams struct {
-	Name     string `json:"name"`
-	Owner    string `json:"owner,omitempty"`
-	Encoding string `json:"encoding,omitempty"`
-	Template string `json:"template,omitempty"`
+type PostgresDatabaseParams struct {
+	Name     *string `json:"datname,omitempty"`
+	Owner    *string `json:"rolname,omitempty"`
+	Encoding *string `json:"encoding,omitempty"`
+	Template *string `json:"template,omitempty"`
+	Comment  *string `json:"description,omitempty"`
 }
 
-type PostgresDropDatabaseParams struct {
-	Name     string `json:"name"`
-	IfExists bool   `json:"ifExists,omitempty"`
-	Cascade  bool   `json:"cascade,omitempty"`
+type PostgresDatabasePrivilegeParams struct {
+	Grantee    string   `json:"grantee,omitempty"`
+	Grantor    string   `json:"grantor,omitempty"`
+	Privileges []string `json:"privileges,omitempty"`
 }
 
-type PostgresCreateTableParams struct {
-	Name    string             `json:"name"`
-	Columns []ColumnDefinition `json:"columns"`
-	Temp    bool               `json:"temp,omitempty"`
+type PostgresSchemaParams struct {
+	Name    string `json:"nspname,omitempty"`
+	Owner   string `json:"rolname,omitempty"`
+	Comment string `json:"description,omitempty"`
 }
 
-type PostgresUpdateTableParams struct {
-	OldName    string             `json:"oldName"`
-	NewName    string             `json:"newName"`
-	AddColumns []ColumnDefinition `json:"addColumns"`
-	Temp       bool               `json:"temp,omitempty"`
+type PostgresTableParams struct {
+	Name                string `json:"name"`
+	Comment             string `json:"description,omitempty"`
+	Persistence         string `json:"relpersistence,omitempty"`
+	PartitionExpression string `json:"relpartbound,omitempty"`
+	PartitionKey        string `json:"partkeydef,omitempty"`
+	Options             string `json:"reloptions,omitempty"`
+	AccessMethod        string `json:"amname,omitempty"`
+	Tablespace          string `json:"spcname,omitempty"`
+	Owner               string `json:"rolname,omitempty"`
 }
 
-type PostgresCreateObjectParams struct {
-	Name      string   `json:"name"`
-	Type      string   `json:"type"` // "schema", "view", "materializedView", "index", "sequence"
-	Query     string   `json:"query,omitempty"`
-	OrReplace bool     `json:"orReplace,omitempty"`
-	WithData  bool     `json:"withData,omitempty"`
-	Owner     string   `json:"owner,omitempty"`
-	TableName string   `json:"tableName,omitempty"` // برای Index
-	Columns   []string `json:"columns,omitempty"`   // برای Index
+type PostgresViewParams struct {
+	Name        string `json:"name,omitempty"`
+	Query       string `json:"query,omitempty"`
+	Comment     string `json:"description,omitempty"`
+	CheckOption string `json:"check_option,omitempty"`
 }
 
-type PostgresUpdateObjectParams struct {
-	Name      string   `json:"name"`
-	Type      string   `json:"type"`
-	Query     string   `json:"query,omitempty"`
-	OrReplace bool     `json:"orReplace,omitempty"`
-	WithData  bool     `json:"withData,omitempty"`
-	TableName string   `json:"tableName,omitempty"`
-	Columns   []string `json:"columns,omitempty"`
+type PostgresMaterializedViewParams struct {
+	Name        string `json:"name,omitempty"`
+	Query       string `json:"query,omitempty"`
+	Comment     string `json:"description,omitempty"`
+	CheckOption string `json:"check_option,omitempty"`
+}
+
+type PostgresIndexParams struct {
+	Name           string `json:"name,omitempty"`
+	Comment        string `json:"comment,omitempty"`
+	Unique         bool   `json:"unique,omitempty"`
+	Columns        string `json:"columns,omitempty"`
+	Condition      string `json:"condition,omitempty"`
+	IncludeColumns string `json:"include_columns,omitempty"`
+	AccessMethod   string `json:"access_method,omitempty"`
+	Tablespace     string `json:"tablespace,omitempty"`
+}
+
+type PostgresSequenceParams struct {
+	Name       string `json:"name"`
+	Comment    string `json:"comment"`
+	Increment  int64  `json:"increment"`
+	MinValue   int64  `json:"min_value"`
+	MaxValue   int64  `json:"max_value"`
+	StartValue int64  `json:"start_value"`
+	Cache      int64  `json:"cache"`
+	Cycle      bool   `json:"cycle"`
+	OwnedBy    string `json:"owned_by"`
 }
 
 type ColumnDefinition struct {

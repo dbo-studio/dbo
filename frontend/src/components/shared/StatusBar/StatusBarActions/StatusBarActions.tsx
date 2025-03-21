@@ -6,7 +6,6 @@ import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { Box, IconButton, Stack } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
-import { toast } from 'sonner';
 import CustomIcon from '../../../base/CustomIcon/CustomIcon.tsx';
 import LoadingIconButton from '../../../base/LoadingIconButton/LoadingIconButton.tsx';
 
@@ -27,10 +26,6 @@ export default function StatusBarActions() {
     discardUnsavedRows,
     removeUnsavedRowsByTabId,
     runQuery,
-    restoreEditedColumns,
-    updateRemovedColumns,
-    addEmptyEditedColumns,
-    updateDesignsQuery,
     clearSelectedRows,
     deleteRemovedRowsByTabId
   } = useDataStore();
@@ -68,19 +63,6 @@ export default function StatusBarActions() {
         console.log('🚀 ~ handleSave ~ error:', error);
       }
     }
-
-    if (getSelectedTab()?.mode === TabMode.Design) {
-      if (!getSelectedTab() || !currentConnection) {
-        return;
-      }
-
-      try {
-        await updateDesignsQuery();
-      } catch (error) {
-        // @ts-ignore
-        toast.error(error.message);
-      }
-    }
   };
 
   const handleAddAction = async () => {
@@ -89,19 +71,11 @@ export default function StatusBarActions() {
       searchParams.set('scrollToBottom', 'true');
       setSearchParams(searchParams);
     }
-
-    if (getSelectedTab()?.mode === TabMode.Design) {
-      addEmptyEditedColumns().then();
-    }
   };
 
   const handleRemoveAction = async () => {
     if (getSelectedTab()?.mode === TabMode.Data) {
       updateRemovedRows();
-    }
-
-    if (getSelectedTab()?.mode === TabMode.Design) {
-      updateRemovedColumns().then();
     }
   };
 
@@ -111,10 +85,6 @@ export default function StatusBarActions() {
       discardUnsavedRows();
       deleteRemovedRowsByTabId(getSelectedTab()?.id ?? '');
       clearSelectedRows();
-    }
-
-    if (getSelectedTab()?.mode === TabMode.Design) {
-      restoreEditedColumns().then();
     }
   };
 
@@ -135,11 +105,7 @@ export default function StatusBarActions() {
         </IconButton>
       </Box>
       <Box ml={1} mr={1}>
-        <LoadingIconButton
-          loading={+updateQueryPending || +loading}
-          disabled={updateQueryPending || loading}
-          onClick={handleSave}
-        >
+        <LoadingIconButton onClick={handleSave}>
           <CustomIcon type='check' size='s' />
         </LoadingIconButton>
         <IconButton onClick={handleDiscardChanges} disabled={updateQueryPending || loading}>
@@ -147,7 +113,7 @@ export default function StatusBarActions() {
         </IconButton>
       </Box>
       <Box>
-        <LoadingIconButton loading={+loading} disabled={updateQueryPending || loading} onClick={handleRefresh}>
+        <LoadingIconButton loading={loading} disabled={updateQueryPending || loading} onClick={handleRefresh}>
           <CustomIcon type='refresh' size='s' />
         </LoadingIconButton>
 
