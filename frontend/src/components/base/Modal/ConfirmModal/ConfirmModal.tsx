@@ -48,10 +48,10 @@ export default function ConfirmModal() {
       <ConfirmModalStyled>
         <Box flex={1} mb={theme.spacing(1)}>
           <Box mb={theme.spacing(2)}>
-            <Typography fontSize={'1.9286rem'} fontWeight={'bold'} color={theme.palette.text.text} variant='h1'>
+            <Typography variant='h6' component='h2'>
               {title}
             </Typography>
-            <Typography mt={theme.spacing(2)} color={theme.palette.text.text}>
+            <Typography sx={{ mt: 2 }} color={theme.palette.text.text}>
               {description}
             </Typography>
           </Box>

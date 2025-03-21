@@ -1,45 +1,62 @@
-import api from '@/api';
+import { getTree } from '@/api/tree';
 import type { TreeNodeType } from '@/api/tree/types';
-import TreeNode from '@/components/common/ObjectTreeView/TreeNode/TreeNode';
-import useAPI from '@/hooks/useApi.hook.ts';
-import { useConnectionStore } from '@/store/connectionStore/connection.store.ts';
-import { Box } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { Box, LinearProgress } from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
+import TreeNode from './TreeNode/TreeNode';
 
 export default function ObjectTreeView() {
-  const [tree, setTree] = useState<TreeNodeType | undefined>(undefined);
   const { currentConnection } = useConnectionStore();
-
   const parentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
-  const { request: getTree } = useAPI({
-    apiMethod: api.tree.getTree
+  const { data: tree, isLoading } = useQuery({
+    queryKey: ['tree', currentConnection?.id],
+    queryFn: async () => {
+      try {
+        const data = await getTree({
+          parentId: null,
+          connectionId: currentConnection?.id || ''
+        });
+        // Ensure children exists
+        return {
+          ...data,
+          children: data?.children || []
+        };
+      } catch (error) {
+        console.log('🚀 ~ handleGetTree ~ error:', error);
+        return undefined;
+      }
+    }
   });
 
-  const handleGetTree = async (parentId: string | null): Promise<TreeNodeType | undefined> => {
+  const fetchChildren = async (parentId: string): Promise<TreeNodeType[]> => {
     try {
-      return await getTree({
-        parentId: parentId,
-        connectionId: currentConnection?.id
+      const nodes = await getTree({
+        parentId,
+        connectionId: currentConnection?.id || ''
       });
+      return nodes?.children || [];
     } catch (error) {
-      console.log('🚀 ~ handleGetTree ~ error:', error);
+      console.log('🚀 ~ fetchChildren ~ error:', error);
+      return [];
     }
   };
 
   useEffect(() => {
-    handleGetTree(null).then((res) => {
-      setTree(res);
-    });
-  }, []);
+    console.log('🚀 ~ useEffect ~ tree:', tree);
+  }, [tree]);
 
-  const fetchChildren = async (parentId: string): Promise<TreeNodeType[]> => {
-    const nodes = await handleGetTree(parentId);
-    return nodes?.children ?? [];
-  };
+  if (isLoading) {
+    return (
+      <Box p={2}>
+        <LinearProgress style={{ marginTop: '8px' }} />
+      </Box>
+    );
+  }
 
   return (
-    <Box sx={{ padding: 2 }} role='tree'>
+    <Box p={2} overflow={'auto'} height={'100%'}>
       {tree && <TreeNode node={tree} fetchChildren={fetchChildren} parentRefs={parentRefs} nodeIndex={0} level={0} />}
     </Box>
   );

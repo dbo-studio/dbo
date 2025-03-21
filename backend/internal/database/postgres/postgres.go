@@ -27,10 +27,18 @@ func NewPostgresRepository(connection *model.Connection, cm *databaseConnection.
 }
 
 func (r *PostgresRepository) Execute(nodeID string, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) error {
-	err := r.handleDatabaseCommands(tabId, action, params)
+	queries, err := r.handleDatabaseCommands(tabId, action, params)
 	if err != nil {
 		return err
 	}
+
+	for _, query := range queries {
+		if err := r.db.Exec(query).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
 
 	switch action {
 	case contract.CreateSchemaAction:
@@ -135,7 +143,7 @@ func (r *PostgresRepository) Execute(nodeID string, tabId contract.TreeTab, acti
 			query += fmt.Sprintf(" WITH %s CHECK OPTION", params.CheckOption)
 		}
 		if params.Comment != "" {
-			query += fmt.Sprintf(" COMMENT '%s'", params.Comment)
+			query += fmt.Sprintf(" WITH COMMENT = '%s'", params.Comment)
 		}
 		return r.db.Exec(query).Error
 
@@ -149,7 +157,7 @@ func (r *PostgresRepository) Execute(nodeID string, tabId contract.TreeTab, acti
 			query += fmt.Sprintf(" WITH %s CHECK OPTION", params.CheckOption)
 		}
 		if params.Comment != "" {
-			query += fmt.Sprintf(" COMMENT '%s'", params.Comment)
+			query += fmt.Sprintf(" WITH COMMENT = '%s'", params.Comment)
 		}
 		return r.db.Exec(query).Error
 
@@ -163,7 +171,7 @@ func (r *PostgresRepository) Execute(nodeID string, tabId contract.TreeTab, acti
 			query += fmt.Sprintf(" WITH %s CHECK OPTION", params.CheckOption)
 		}
 		if params.Comment != "" {
-			query += fmt.Sprintf(" COMMENT '%s'", params.Comment)
+			query += fmt.Sprintf(" WITH COMMENT = '%s'", params.Comment)
 		}
 		return r.db.Exec(query).Error
 
@@ -177,7 +185,7 @@ func (r *PostgresRepository) Execute(nodeID string, tabId contract.TreeTab, acti
 			query += fmt.Sprintf(" WITH %s CHECK OPTION", params.CheckOption)
 		}
 		if params.Comment != "" {
-			query += fmt.Sprintf(" COMMENT '%s'", params.Comment)
+			query += fmt.Sprintf(" WITH COMMENT = '%s'", params.Comment)
 		}
 		return r.db.Exec(query).Error
 
@@ -205,7 +213,7 @@ func (r *PostgresRepository) Execute(nodeID string, tabId contract.TreeTab, acti
 			query += fmt.Sprintf(" TABLESPACE %s", params.Tablespace)
 		}
 		if params.Comment != "" {
-			query += fmt.Sprintf(" COMMENT '%s'", params.Comment)
+			query += fmt.Sprintf(" WITH COMMENT = '%s'", params.Comment)
 		}
 		return r.db.Exec(query).Error
 
@@ -266,7 +274,7 @@ func (r *PostgresRepository) Execute(nodeID string, tabId contract.TreeTab, acti
 			query += fmt.Sprintf(" OWNED BY %s", params.OwnedBy)
 		}
 		if params.Comment != "" {
-			query += fmt.Sprintf(" COMMENT '%s'", params.Comment)
+			query += fmt.Sprintf(" WITH COMMENT = '%s'", params.Comment)
 		}
 		return r.db.Exec(query).Error
 
@@ -297,7 +305,7 @@ func (r *PostgresRepository) Execute(nodeID string, tabId contract.TreeTab, acti
 			query += " NO CYCLE"
 		}
 		if params.Comment != "" {
-			query += fmt.Sprintf(" COMMENT '%s'", params.Comment)
+			query += fmt.Sprintf(" WITH COMMENT = '%s'", params.Comment)
 		}
 		return r.db.Exec(query).Error
 
@@ -306,76 +314,71 @@ func (r *PostgresRepository) Execute(nodeID string, tabId contract.TreeTab, acti
 	}
 }
 
-func (r *PostgresRepository) handleDatabaseCommands(tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) error {
+func (r *PostgresRepository) handleDatabaseCommands(tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, error) {
+	queries := []string{}
+	if action == contract.DropDatabaseAction {
+		query := fmt.Sprintf("DROP DATABASE %s", tabId)
+		queries = append(queries, query)
+	}
+
 	switch tabId {
 	case contract.DatabaseTab:
 		switch action {
 		case contract.CreateDatabaseAction:
 			params, err := convertToDTO[dto.PostgresDatabaseParams](params)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			query := fmt.Sprintf("CREATE DATABASE %s", *params.Name)
 			if params.Owner != nil {
 				query += fmt.Sprintf(" OWNER %s", *params.Owner)
 			}
-			if params.Encoding != nil {
-				query += fmt.Sprintf(" ENCODING '%s'", *params.Encoding)
-			}
 			if params.Template != nil {
 				query += fmt.Sprintf(" TEMPLATE %s", *params.Template)
 			}
+
+			queries = append(queries, query)
+
 			if params.Comment != nil {
-				query += fmt.Sprintf(" COMMENT '%s'", *params.Comment)
+				queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS '%s'", *params.Name, *params.Comment))
 			}
-			return r.db.Exec(query).Error
 
 		case contract.EditDatabaseAction:
 			params, err := convertToDTO[dto.PostgresDatabaseParams](params)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			query := fmt.Sprintf("ALTER DATABASE %s", *params.Name)
 			if params.Owner != nil {
 				query += fmt.Sprintf(" OWNER TO %s", *params.Owner)
 			}
-			if params.Comment != nil {
-				query += fmt.Sprintf(" SET COMMENT = '%s'", *params.Comment)
-			}
-			if params.Encoding != nil {
-				query += fmt.Sprintf(" SET ENCODING = '%s'", *params.Encoding)
-			}
 			if params.Template != nil {
 				query += fmt.Sprintf(" SET TEMPLATE = '%s'", *params.Template)
 			}
-			return r.db.Exec(query).Error
+			queries = append(queries, query)
 
-		case contract.DropDatabaseAction:
-			params, err := convertToDTO[dto.PostgresDatabaseParams](params)
-			if err != nil {
-				return err
+			if params.Comment != nil {
+				queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS '%s'", *params.Name, *params.Comment))
 			}
-			query := fmt.Sprintf("DROP DATABASE %s", *params.Name)
-			return r.db.Exec(query).Error
 		}
 	case contract.DatabasePrivilegesTab:
 		switch action {
 		case contract.CreateDatabaseAction:
 			params, err := convertToDTO[dto.PostgresDatabasePrivilegeParams](params)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			query := fmt.Sprintf("GRANT %s ON DATABASE %s TO %s", params.Privileges, params.Grantor, params.Grantee)
-			return r.db.Exec(query).Error
+			queries = append(queries, query)
 
 		case contract.EditDatabaseAction:
 			params, err := convertToDTO[dto.PostgresDatabasePrivilegeParams](params)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			query := fmt.Sprintf("REVOKE %s ON DATABASE %s FROM %s", params.Privileges, params.Grantor, params.Grantee)
-			return r.db.Exec(query).Error
+			queries = append(queries, query)
 		}
 	}
-	return nil
+	return queries, nil
 }

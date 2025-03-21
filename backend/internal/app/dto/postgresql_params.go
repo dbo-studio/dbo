@@ -19,7 +19,6 @@ type PostgresqlUpdateConnectionParams struct {
 type PostgresDatabaseParams struct {
 	Name     *string `json:"datname,omitempty"`
 	Owner    *string `json:"rolname,omitempty"`
-	Encoding *string `json:"encoding,omitempty"`
 	Template *string `json:"template,omitempty"`
 	Comment  *string `json:"description,omitempty"`
 }

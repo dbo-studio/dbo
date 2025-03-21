@@ -7,21 +7,27 @@ import { useTreeNodeMenu } from '@/components/common/ObjectTreeView/TreeNode/hoo
 import type { TreeNodeProps } from '@/components/common/ObjectTreeView/TreeNode/types';
 import { useContextMenu } from '@/hooks';
 import { useEffect, useRef, useState } from 'react';
+import { useActionDetection } from './hooks/useActionDetection';
 
 export default function TreeNode({
-  node,
+  node: initialNode,
   fetchChildren,
   parentRefs = { current: new Map() },
   nodeIndex = 0,
   level = 0,
   onFocusChange
 }: TreeNodeProps) {
+  const [node, setNode] = useState<TreeNodeType>(initialNode);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [children, setChildren] = useState<TreeNodeType[]>(node.children || []);
   const [isLoading, setIsLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
+
+  // Update local node when initialNode changes
+  useEffect(() => {
+    setNode(initialNode);
+  }, [initialNode]);
 
   useEffect(() => {
     if (nodeRef.current) {
@@ -32,12 +38,17 @@ export default function TreeNode({
     };
   }, [node.id, parentRefs]);
 
-  const { hasChildren, expandNode, focusNode, handleBlur, handleKeyDown, actionDetection } = useTreeNodeHandlers({
+  const { hasChildren, expandNode, focusNode, handleBlur, handleKeyDown } = useTreeNodeHandlers({
     node,
-    children,
+    children: node.children,
     isExpanded,
     setIsExpanded,
-    setChildren,
+    setChildren: (newChildren) => {
+      setNode((prev) => ({
+        ...prev,
+        children: Array.isArray(newChildren) ? newChildren : newChildren(prev.children)
+      }));
+    },
     setIsLoading,
     setIsFocused,
     fetchChildren,
@@ -49,6 +60,7 @@ export default function TreeNode({
     onFocusChange
   });
 
+  const { actionDetection } = useActionDetection(expandNode);
   const { menu } = useTreeNodeMenu(node, actionDetection);
 
   return (
@@ -73,9 +85,9 @@ export default function TreeNode({
         <ContextMenu menu={menu} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
       )}
 
-      {isExpanded && children?.length > 0 && (
+      {isExpanded && node.children.length > 0 && (
         <ChildrenContainer>
-          {children.map((child, index) => (
+          {node.children.map((child, index) => (
             <TreeNode
               key={child.id}
               node={child}

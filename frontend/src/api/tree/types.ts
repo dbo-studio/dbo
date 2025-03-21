@@ -1,6 +1,6 @@
 export type TreeRequestType = {
   connectionId: number | string;
-  parentId: string;
+  parentId: string | null;
 };
 
 export type TreeResponseType = TreeNodeType;
@@ -53,7 +53,7 @@ export type TreeNodeType = {
   type: string;
   action: TreeNodeActionType;
   contextMenu: TreeNodeActionType[];
-  children?: TreeNodeType[];
+  children: TreeNodeType[];
 };
 
 export type TreeNodeActionType = {

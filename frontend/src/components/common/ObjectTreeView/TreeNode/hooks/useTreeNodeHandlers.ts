@@ -1,7 +1,4 @@
 import type { TreeNodeType } from '@/api/tree/types';
-import { TabMode } from '@/core/enums';
-import useNavigate from '@/hooks/useNavigate.hook.ts';
-import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type React from 'react';
 import { useCallback } from 'react';
 
@@ -37,46 +34,6 @@ export function useTreeNodeHandlers({
   onFocusChange
 }: UseTreeNodeHandlersProps) {
   const hasChildren = children?.length > 0 || node.type !== 'table';
-  const navigate = useNavigate();
-  const { addTab, addObjectTab } = useTabStore();
-
-  const actionDetection = useCallback(async (event: React.MouseEvent, node: TreeNodeType) => {
-    if (!node.action) {
-      await expandNode(event, false);
-      return;
-    }
-
-    switch (node.action.type) {
-      case 'tab': {
-        switch (node.action.params.path) {
-          case 'object': {
-            const tab = addObjectTab(node.id, node.action.name, TabMode.Object);
-            navigate({
-              route: node.action.params.path,
-              tabId: tab.id
-            });
-            break;
-          }
-          case 'object-detail': {
-            const tab = addObjectTab(node.id, node.action.name, TabMode.ObjectDetail);
-            navigate({
-              route: node.action.params.path,
-              tabId: tab.id
-            });
-            break;
-          }
-          case 'data': {
-            const tab = addTab(node.action.params.table, node.id, node.action.params.path);
-            navigate({
-              route: node.action.params.path,
-              tabId: tab.id
-            });
-            break;
-          }
-        }
-      }
-    }
-  }, []);
 
   const expandNode = useCallback(
     async (event: React.MouseEvent | React.KeyboardEvent, moveFocusToChild = false) => {
@@ -210,7 +167,6 @@ export function useTreeNodeHandlers({
   );
 
   return {
-    actionDetection,
     expandNode,
     focusNode,
     handleBlur,

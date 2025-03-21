@@ -34,9 +34,12 @@ export const useObjectActions = (tabId: string | undefined) => {
 
       toast.success('Changes saved successfully');
 
-      // Invalidate queries to refresh data
       await queryClient.invalidateQueries({
         queryKey: ['tabFields', currentConnection.id, selectedTab.id, selectedTab.options?.action, tabId]
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: ['tree', currentConnection.id]
       });
     } catch (error) {
       console.error('Save error:', error);
