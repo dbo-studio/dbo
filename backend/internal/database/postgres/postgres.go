@@ -27,7 +27,8 @@ func NewPostgresRepository(connection *model.Connection, cm *databaseConnection.
 }
 
 func (r *PostgresRepository) Execute(nodeID string, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) error {
-	queries, err := r.handleDatabaseCommands(tabId, action, params)
+	node := extractNode(nodeID)
+	queries, err := r.handleDatabaseCommands(node, tabId, action, params)
 	if err != nil {
 		return err
 	}
@@ -314,8 +315,13 @@ func (r *PostgresRepository) Execute(nodeID string, tabId contract.TreeTab, acti
 	}
 }
 
-func (r *PostgresRepository) handleDatabaseCommands(tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, error) {
+func (r *PostgresRepository) handleDatabaseCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, error) {
 	queries := []string{}
+	oldFields, err := r.getDatabaseInfo(node)
+	if err != nil {
+		return nil, err
+	}
+
 	if action == contract.DropDatabaseAction {
 		query := fmt.Sprintf("DROP DATABASE %s", tabId)
 		queries = append(queries, query)
@@ -336,6 +342,9 @@ func (r *PostgresRepository) handleDatabaseCommands(tabId contract.TreeTab, acti
 			if params.Template != nil {
 				query += fmt.Sprintf(" TEMPLATE %s", *params.Template)
 			}
+			if params.Tablespace != nil {
+				query += fmt.Sprintf(" TABLESPACE %s", *params.Tablespace)
+			}
 
 			queries = append(queries, query)
 
@@ -348,17 +357,24 @@ func (r *PostgresRepository) handleDatabaseCommands(tabId contract.TreeTab, acti
 			if err != nil {
 				return nil, err
 			}
-			query := fmt.Sprintf("ALTER DATABASE %s", *params.Name)
+
+			if params.Name != nil {
+				query := fmt.Sprintf("ALTER DATABASE %s RENAME TO %s", findField(oldFields, "Name"), *params.Name)
+				queries = append(queries, query)
+			}
+
 			if params.Owner != nil {
-				query += fmt.Sprintf(" OWNER TO %s", *params.Owner)
+				query := fmt.Sprintf("ALTER DATABASE %s OWNER TO %s", *params.Name, *params.Owner)
+				queries = append(queries, query)
 			}
-			if params.Template != nil {
-				query += fmt.Sprintf(" SET TEMPLATE = '%s'", *params.Template)
+
+			if params.Tablespace != nil {
+				query := fmt.Sprintf("ALTER DATABASE %s SET tablespace = %s", *params.Name, *params.Tablespace)
+				queries = append(queries, query)
 			}
-			queries = append(queries, query)
 
 			if params.Comment != nil {
-				queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS '%s'", *params.Name, *params.Comment))
+				queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS %s", *params.Name, *params.Comment))
 			}
 		}
 	case contract.DatabasePrivilegesTab:
@@ -381,4 +397,13 @@ func (r *PostgresRepository) handleDatabaseCommands(tabId contract.TreeTab, acti
 		}
 	}
 	return queries, nil
+}
+
+func findField(fields []contract.FormField, field string) string {
+	for _, f := range fields {
+		if f.Name == field {
+			return f.Value.(string)
+		}
+	}
+	return ""
 }

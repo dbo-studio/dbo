@@ -337,10 +337,12 @@ func (r *PostgresRepository) getDatabaseInfo(node PGNode) ([]contract.FormField,
 			d.datname,
 			r.rolname,
 			pg_encoding_to_char(d.encoding) as encoding,
-			des.description
+			des.description,
+			t.spcname as tablespace
 		`).
 		Joins("JOIN pg_roles r ON r.oid = d.datdba").
-		Joins("LEFT JOIN pg_description des ON des.objoid = d.oid AND des.objsubid = 0").
+		Joins("LEFT JOIN pg_shdescription des ON des.objoid = d.oid").
+		Joins("LEFT JOIN pg_tablespace t ON t.oid = d.dattablespace").
 		Where("d.datname = ?", node.Database)
 
 	return buildObjectResponse(query, fields)

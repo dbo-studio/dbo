@@ -9,6 +9,7 @@ func (r *PostgresRepository) databaseFields() []contract.FormField {
 		{ID: "datname", Name: "Name", Type: "text", Required: true},
 		{ID: "rolname", Name: "Owner", Type: "text"},
 		{ID: "template", Name: "Template", Type: "select", Fields: r.templateOptions()},
+		{ID: "tablespace", Name: "Tablespace", Type: "select", Fields: r.tablespaceOptions()},
 		{ID: "description", Name: "Comment", Type: "text"},
 	}
 }

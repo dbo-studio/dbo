@@ -17,10 +17,11 @@ type PostgresqlUpdateConnectionParams struct {
 }
 
 type PostgresDatabaseParams struct {
-	Name     *string `json:"datname,omitempty"`
-	Owner    *string `json:"rolname,omitempty"`
-	Template *string `json:"template,omitempty"`
-	Comment  *string `json:"description,omitempty"`
+	Name       *string `json:"datname,omitempty"`
+	Owner      *string `json:"rolname,omitempty"`
+	Template   *string `json:"template,omitempty"`
+	Tablespace *string `json:"tablespace,omitempty"`
+	Comment    *string `json:"description,omitempty"`
 }
 
 type PostgresDatabasePrivilegeParams struct {

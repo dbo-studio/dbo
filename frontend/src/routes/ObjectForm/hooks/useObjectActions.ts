@@ -18,11 +18,18 @@ export const useObjectActions = (tabId: string | undefined) => {
     try {
       const formData = formSchema.reduce(
         (acc, field) => {
-          acc[field.id] = field.value;
+          if (field.value !== field.originalValue) {
+            acc[field.id] = field.value;
+          }
           return acc;
         },
         {} as Record<string, any>
       );
+
+      if (Object.keys(formData).length === 0) {
+        toast.info('No changes detected');
+        return;
+      }
 
       await api.tree.executeAction({
         nodeId: selectedTab.nodeId,
@@ -51,9 +58,8 @@ export const useObjectActions = (tabId: string | undefined) => {
     if (!currentConnection || !tabId || !selectedTab) return;
 
     try {
-      // Invalidate and refetch queries to reset data
       await queryClient.invalidateQueries({
-        queryKey: ['tabFields', currentConnection.id, selectedTab.id, selectedTab.options?.action, tabId]
+        queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, tabId]
       });
 
       toast.info('Changes discarded');

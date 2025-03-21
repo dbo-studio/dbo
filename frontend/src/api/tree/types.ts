@@ -33,6 +33,7 @@ export type FormFieldType = {
   type: string;
   required: boolean;
   value?: any;
+  originalValue?: any;
   fields?: FormFieldType[];
 };
 
