@@ -61,9 +61,9 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
 
     return newTab;
   },
-  addObjectTab: (id: string, action: string, mode: TabMode): TabType => {
+  addObjectTab: (nodeId: string, action: string, mode: TabMode): TabType => {
     const tabs = get().getTabs();
-    const findTab = tabs.find((t: TabType) => t.mode === mode && t.id === id);
+    const findTab = tabs.find((t: TabType) => t.mode === mode && t.nodeId === nodeId);
 
     if (findTab) {
       get().switchTab(findTab.id);
@@ -73,7 +73,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
     //@ts-ignore
     const newTab: TabType = {
       id: uuidv4(),
-      nodeId: id,
+      nodeId: nodeId,
       mode: mode,
       options: {
         action: action,
