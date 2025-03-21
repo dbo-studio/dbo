@@ -28,10 +28,20 @@ func NewPostgresRepository(connection *model.Connection, cm *databaseConnection.
 
 func (r *PostgresRepository) Execute(nodeID string, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) error {
 	node := extractNode(nodeID)
-	queries, err := r.handleDatabaseCommands(node, tabId, action, params)
+	dbQueries, err := r.handleDatabaseCommands(node, tabId, action, params)
 	if err != nil {
 		return err
 	}
+
+	schemaQueries, err := r.handleSchemaCommands(node, tabId, action, params)
+	if err != nil {
+		return err
+	}
+
+	queries := append(
+		dbQueries,
+		schemaQueries...,
+	)
 
 	for _, query := range queries {
 		if err := r.db.Exec(query).Error; err != nil {
@@ -42,34 +52,6 @@ func (r *PostgresRepository) Execute(nodeID string, tabId contract.TreeTab, acti
 	return nil
 
 	switch action {
-	case contract.CreateSchemaAction:
-		params, err := convertToDTO[dto.PostgresSchemaParams](params)
-		if err != nil {
-			return err
-		}
-		query := fmt.Sprintf("CREATE SCHEMA %s", params.Name)
-		if params.Owner != "" {
-			query += fmt.Sprintf(" AUTHORIZATION %s", params.Owner)
-		}
-		if params.Comment != "" {
-			query += fmt.Sprintf(" COMMENT '%s'", params.Comment)
-		}
-		return r.db.Exec(query).Error
-
-	case contract.EditSchemaAction:
-		params, err := convertToDTO[dto.PostgresSchemaParams](params)
-		if err != nil {
-			return err
-		}
-		query := fmt.Sprintf("ALTER SCHEMA %s", params.Name)
-		if params.Owner != "" {
-			query += fmt.Sprintf(" OWNER TO %s", params.Owner)
-		}
-		if params.Comment != "" {
-			query += fmt.Sprintf(" SET COMMENT = '%s'", params.Comment)
-		}
-		return r.db.Exec(query).Error
-
 	case contract.CreateTableAction:
 		params, err := convertToDTO[dto.PostgresTableParams](params)
 		if err != nil {
@@ -323,7 +305,7 @@ func (r *PostgresRepository) handleDatabaseCommands(node PGNode, tabId contract.
 	}
 
 	if action == contract.DropDatabaseAction {
-		query := fmt.Sprintf("DROP DATABASE %s", tabId)
+		query := fmt.Sprintf("DROP DATABASE %s", node.Database)
 		queries = append(queries, query)
 	}
 
@@ -377,25 +359,57 @@ func (r *PostgresRepository) handleDatabaseCommands(node PGNode, tabId contract.
 				queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS %s", findField(oldFields, "Name"), *params.Comment))
 			}
 		}
-	case contract.DatabasePrivilegesTab:
-		switch action {
-		case contract.CreateDatabaseAction:
-			params, err := convertToDTO[dto.PostgresDatabasePrivilegeParams](params)
-			if err != nil {
-				return nil, err
-			}
-			query := fmt.Sprintf("GRANT %s ON DATABASE %s TO %s", params.Privileges, params.Grantor, params.Grantee)
-			queries = append(queries, query)
+	}
+	return queries, nil
+}
 
-		case contract.EditDatabaseAction:
-			params, err := convertToDTO[dto.PostgresDatabasePrivilegeParams](params)
-			if err != nil {
-				return nil, err
-			}
-			query := fmt.Sprintf("REVOKE %s ON DATABASE %s FROM %s", params.Privileges, params.Grantor, params.Grantee)
-			queries = append(queries, query)
+func (r *PostgresRepository) handleSchemaCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, error) {
+	queries := []string{}
+	oldFields, err := r.getSchemaInfo(node)
+	if err != nil {
+		return nil, err
+	}
+
+	if action == contract.DropSchemaAction {
+		query := fmt.Sprintf("DROP SCHEMA %s", node.Schema)
+		queries = append(queries, query)
+	}
+
+	switch action {
+	case contract.CreateSchemaAction:
+		params, err := convertToDTO[dto.PostgresSchemaParams](params)
+		if err != nil {
+			return nil, err
+		}
+		query := fmt.Sprintf("CREATE SCHEMA %s", *params.Name)
+
+		if params.Owner != nil {
+			query += fmt.Sprintf(" AUTHORIZATION %s", *params.Owner)
+		}
+
+		queries = append(queries, query)
+
+		if params.Comment != nil {
+			queries = append(queries, fmt.Sprintf("COMMENT ON SCHEMA %s IS '%s'", *params.Name, *params.Comment))
+		}
+
+	case contract.EditSchemaAction:
+		params, err := convertToDTO[dto.PostgresSchemaParams](params)
+		if err != nil {
+			return nil, err
+		}
+		query := fmt.Sprintf("ALTER SCHEMA %s", *params.Name)
+		if params.Owner != nil {
+			query += fmt.Sprintf(" OWNER TO %s", *params.Owner)
+		}
+
+		queries = append(queries, query)
+
+		if params.Comment != nil {
+			queries = append(queries, fmt.Sprintf("COMMENT ON SCHEMA %s IS %s", findField(oldFields, "Name"), *params.Comment))
 		}
 	}
+
 	return queries, nil
 }
 

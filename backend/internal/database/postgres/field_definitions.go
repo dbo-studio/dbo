@@ -14,37 +14,11 @@ func (r *PostgresRepository) databaseFields() []contract.FormField {
 	}
 }
 
-func (r *PostgresRepository) databasePrivilegeOptions() []contract.FormField {
-	return []contract.FormField{
-		{ID: "grantee", Name: "Grantee", Type: "text"},
-		{ID: "grantor", Name: "Grantor", Type: "text"},
-		{ID: "privileges", Name: "Privileges", Type: "multi-select", Fields: []contract.FormField{
-			{Value: "SELECT", Name: "SELECT"},
-			{Value: "INSERT", Name: "INSERT"},
-			{Value: "UPDATE", Name: "UPDATE"},
-			{Value: "DELETE", Name: "DELETE"},
-		}},
-	}
-}
-
 func (r *PostgresRepository) schemaFields() []contract.FormField {
 	return []contract.FormField{
 		{ID: "nspname", Name: "Name", Type: "text", Required: true},
 		{ID: "rolname", Name: "Owner", Type: "text"},
 		{ID: "description", Name: "Comment", Type: "text"},
-	}
-}
-
-func (r *PostgresRepository) schemaPrivilegeOptions() []contract.FormField {
-	return []contract.FormField{
-		{ID: "grantee", Name: "Grantee", Type: "text"},
-		{ID: "grantor", Name: "Grantor", Type: "text"},
-		{ID: "privileges", Name: "Privileges", Type: "multi-select", Fields: []contract.FormField{
-			{Value: "SELECT", Name: "SELECT"},
-			{Value: "INSERT", Name: "INSERT"},
-			{Value: "UPDATE", Name: "UPDATE"},
-			{Value: "DELETE", Name: "DELETE"},
-		}},
 	}
 }
 
@@ -426,18 +400,6 @@ func (r *PostgresRepository) viewFields() []contract.FormField {
 	}
 }
 
-func (r *PostgresRepository) viewPrivilegeOptions() []contract.FormField {
-	return []contract.FormField{
-		{ID: "grantee", Name: "Grantee", Type: "text"},
-		{ID: "privileges", Name: "Privileges", Type: "multi-select", Fields: []contract.FormField{
-			{Value: "SELECT", Name: "SELECT"},
-			{Value: "INSERT", Name: "INSERT"},
-			{Value: "UPDATE", Name: "UPDATE"},
-			{Value: "DELETE", Name: "DELETE"},
-		}},
-	}
-}
-
 func (r *PostgresRepository) materializedViewFields() []contract.FormField {
 	return []contract.FormField{
 		{ID: "name", Name: "Name", Type: "text"},
@@ -445,19 +407,6 @@ func (r *PostgresRepository) materializedViewFields() []contract.FormField {
 		{ID: "withs", Name: "Withs", Type: "text"},
 		{ID: "tablespace", Name: "Tablespace", Type: "select", Fields: r.tablespaceOptions()},
 		{ID: "query", Name: "Query", Type: "query"},
-	}
-}
-
-func (r *PostgresRepository) materializedViewPrivilegeOptions() []contract.FormField {
-	return []contract.FormField{
-		{ID: "grantee", Name: "Grantee", Type: "text"},
-		{ID: "grantor", Name: "Grantor", Type: "text"},
-		{ID: "privileges", Name: "Privileges", Type: "multi-select", Fields: []contract.FormField{
-			{Value: "SELECT", Name: "SELECT"},
-			{Value: "INSERT", Name: "INSERT"},
-			{Value: "UPDATE", Name: "UPDATE"},
-			{Value: "DELETE", Name: "DELETE"},
-		}},
 	}
 }
 

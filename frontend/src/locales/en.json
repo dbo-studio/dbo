@@ -109,5 +109,8 @@
   "debug_mode": "Debug mode",
   "enable_debug_console": "Enable Debug console",
   "record": "Record",
-  "quick_look_editor": "Quick look editor"
+  "quick_look_editor": "Quick look editor",
+  "action_executed_successfully": "Action executed successfully",
+  "no_changes_detected": "No changes detected",
+  "changes_saved_successfully": "Changes saved successfully"
 }

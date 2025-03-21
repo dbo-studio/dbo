@@ -13,13 +13,9 @@ func (r *PostgresRepository) Objects(nodeID string, tabID contract.TreeTab) ([]c
 
 	case contract.DatabaseTab:
 		return r.getDatabaseInfo(node)
-	case contract.DatabasePrivilegesTab:
-		return r.getDatabasePrivileges(node)
 
 	case contract.SchemaTab:
 		return r.getSchemaInfo(node)
-	case contract.SchemaPrivilegesTab:
-		return r.getSchemaPrivileges(node)
 
 	case contract.TableTab:
 		return r.getTableInfo(node)
@@ -40,14 +36,9 @@ func (r *PostgresRepository) Objects(nodeID string, tabID contract.TreeTab) ([]c
 
 	case contract.ViewTab:
 		return r.getViewInfo(node)
-	case contract.ViewPrivilegesTab:
-		return r.getViewPrivileges(node)
 
 	case contract.MaterializedViewTab:
 		return r.getMaterializedViewInfo(node)
-	case contract.MaterializedViewPrivilegesTab:
-		return r.getMaterializedViewPrivileges(node)
-
 	}
 
 	return nil, fmt.Errorf("PostgreSQL: unsupported object or tab: %s", tabID)
@@ -74,18 +65,6 @@ func (r *PostgresRepository) getTableSequence(node PGNode) ([]contract.FormField
 	return buildObjectResponse(query, fields)
 }
 
-func (r *PostgresRepository) getMaterializedViewPrivileges(node PGNode) ([]contract.FormField, error) {
-	fields := r.materializedViewPrivilegeOptions()
-
-	query := r.db.Table("information_schema.views AS v").
-		Select("grantor, grantee, string_agg(privilege_type, ', ') as privileges").
-		Joins("JOIN information_schema.table_privileges AS p ON v.table_name = p.table_name AND v.table_schema = p.table_schema").
-		Where("v.table_schema = ? AND v.table_name = ?", node.Schema, node.Table).
-		Group("grantor, grantee")
-
-	return buildArrayResponse(query, fields)
-}
-
 func (r *PostgresRepository) getMaterializedViewInfo(node PGNode) ([]contract.FormField, error) {
 	fields := r.materializedViewFields()
 
@@ -104,19 +83,6 @@ func (r *PostgresRepository) getMaterializedViewInfo(node PGNode) ([]contract.Fo
 		Where("c.relname = ? AND c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)", node.Table, node.Schema)
 
 	return buildObjectResponse(query, fields)
-}
-
-func (r *PostgresRepository) getViewPrivileges(node PGNode) ([]contract.FormField, error) {
-	fields := r.viewPrivilegeOptions()
-
-	query := r.db.Table("information_schema.views AS v").
-		Select("grantor, grantee, string_agg(privilege_type, ', ') as privileges").
-		Joins("JOIN information_schema.view_column_usage AS vc ON v.table_name = vc.view_name AND v.table_schema = vc.view_schema").
-		Joins("JOIN information_schema.column_privileges AS cp ON vc.table_name = cp.table_name AND vc.column_name = cp.column_name").
-		Where("v.table_schema = ? AND v.table_name = ?", node.Schema, node.Table).
-		Group("grantor, grantee")
-
-	return buildArrayResponse(query, fields)
 }
 
 func (r *PostgresRepository) getViewInfo(node PGNode) ([]contract.FormField, error) {
@@ -289,18 +255,6 @@ func (r *PostgresRepository) getTableColumns(node PGNode) ([]contract.FormField,
 	return buildArrayResponse(query, fields)
 }
 
-func (r *PostgresRepository) getSchemaPrivileges(node PGNode) ([]contract.FormField, error) {
-	fields := r.schemaPrivilegeOptions()
-
-	query := r.db.Table("pg_namespace AS n").
-		Select("grantor, grantee, string_agg(privilege_type, ', ') as privileges").
-		Joins("JOIN information_schema.usage_privileges AS p ON n.nspname = p.object_name").
-		Where("n.nspname = ?", node.Schema).
-		Group("grantor, grantee")
-
-	return buildObjectResponse(query, fields)
-}
-
 func (r *PostgresRepository) getSchemaInfo(node PGNode) ([]contract.FormField, error) {
 	fields := r.schemaFields()
 
@@ -315,18 +269,6 @@ func (r *PostgresRepository) getSchemaInfo(node PGNode) ([]contract.FormField, e
 		Where("n.nspname = ?", node.Schema)
 
 	return buildObjectResponse(query, fields)
-}
-
-func (r *PostgresRepository) getDatabasePrivileges(node PGNode) ([]contract.FormField, error) {
-	fields := r.databasePrivilegeOptions()
-
-	query := r.db.Table("pg_database AS d").
-		Select("grantor, grantee, string_agg(privilege_type, ', ') as privileges").
-		Joins("JOIN information_schema.usage_privileges AS p ON d.datname = p.object_name").
-		Where("d.datname = ?", node.Database).
-		Group("grantor, grantee")
-
-	return buildArrayResponse(query, fields)
 }
 
 func (r *PostgresRepository) getDatabaseInfo(node PGNode) ([]contract.FormField, error) {
@@ -348,7 +290,6 @@ func (r *PostgresRepository) getDatabaseInfo(node PGNode) ([]contract.FormField,
 	return buildObjectResponse(query, fields)
 }
 
-// Helper methods for Table
 func (r *PostgresRepository) getTableInfo(node PGNode) ([]contract.FormField, error) {
 	fields := r.tableFields()
 

@@ -31,9 +31,9 @@ type PostgresDatabasePrivilegeParams struct {
 }
 
 type PostgresSchemaParams struct {
-	Name    string `json:"nspname,omitempty"`
-	Owner   string `json:"rolname,omitempty"`
-	Comment string `json:"description,omitempty"`
+	Name    *string `json:"nspname,omitempty"`
+	Owner   *string `json:"rolname,omitempty"`
+	Comment *string `json:"description,omitempty"`
 }
 
 type PostgresTableParams struct {

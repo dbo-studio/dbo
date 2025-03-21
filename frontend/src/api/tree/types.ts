@@ -1,12 +1,12 @@
 export type TreeRequestType = {
-  connectionId: number | string;
+  connectionId: number;
   parentId: string | null;
 };
 
 export type TreeResponseType = TreeNodeType;
 
 export type TabRequestType = {
-  connectionId: number | string;
+  connectionId: number;
   action: string;
   nodeId: string;
 };
@@ -19,7 +19,7 @@ export type ObjectTabType = {
 };
 
 export type FieldRequestType = {
-  connectionId: string;
+  connectionId: number;
   action: string;
   nodeId: string;
   tabId: string;
@@ -38,7 +38,7 @@ export type FormFieldType = {
 };
 
 export type ObjectRequestType = {
-  connectionId: string;
+  connectionId: number;
   nodeId: string;
   action: string;
   tabId: string;

@@ -3,17 +3,13 @@ package databaseContract
 type TreeTab string
 
 const (
-	DatabaseTab           TreeTab = "database"
-	DatabasePrivilegesTab TreeTab = "database_privileges"
+	DatabaseTab TreeTab = "database"
 
-	SchemaTab           TreeTab = "schema"
-	SchemaPrivilegesTab TreeTab = "schema_privileges"
+	SchemaTab TreeTab = "schema"
 
-	ViewTab           TreeTab = "view"
-	ViewPrivilegesTab TreeTab = "view_privileges"
+	ViewTab TreeTab = "view"
 
-	MaterializedViewTab           TreeTab = "materialized_view"
-	MaterializedViewPrivilegesTab TreeTab = "materialized_view_privileges"
+	MaterializedViewTab TreeTab = "materialized_view"
 
 	TableTab            TreeTab = "table"
 	TableColumnsTab     TreeTab = "table_columns"

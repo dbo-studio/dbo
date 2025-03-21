@@ -1,8 +1,9 @@
 import api from '@/api';
 import type { FormFieldType } from '@/api/tree/types';
+import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
 
@@ -12,8 +13,24 @@ export const useObjectActions = (tabId: string | undefined) => {
   const { getSelectedTab } = useTabStore();
   const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
 
+  const { mutateAsync: executeAction, isPending: pendingExecuteAction } = useMutation({
+    mutationFn: api.tree.executeAction,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, tabId]
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ['tree', currentConnection?.id]
+      });
+    },
+    onError: (error) => {
+      console.error('🚀 ~ handleSave ~ error:', error);
+    }
+  });
+
   const handleSave = async (formSchema: FormFieldType[]) => {
-    if (!currentConnection || !tabId || !selectedTab) return;
+    if (!currentConnection || !tabId || !selectedTab || pendingExecuteAction) return;
 
     try {
       const formData = formSchema.reduce(
@@ -27,31 +44,20 @@ export const useObjectActions = (tabId: string | undefined) => {
       );
 
       if (Object.keys(formData).length === 0) {
-        toast.info('No changes detected');
+        toast.info(locales.no_changes_detected);
         return;
       }
 
-      await api.tree.executeAction({
+      await executeAction({
         nodeId: selectedTab.nodeId,
         action: selectedTab.options?.action || '',
         tabId: tabId,
-        connectionId: String(currentConnection.id),
+        connectionId: currentConnection.id,
         data: formData
       });
 
-      toast.success('Changes saved successfully');
-
-      await queryClient.invalidateQueries({
-        queryKey: ['tabFields', currentConnection.id, selectedTab.id, selectedTab.options?.action, tabId]
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ['tree', currentConnection.id]
-      });
-    } catch (error) {
-      console.error('Save error:', error);
-      toast.error('Failed to save changes');
-    }
+      toast.success(locales.changes_saved_successfully);
+    } catch (error) {}
   };
 
   const handleCancel = async () => {

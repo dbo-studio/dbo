@@ -18,14 +18,21 @@ export const useObjectFields = (currentTabId: string | undefined, isDetail = fal
             nodeId: selectedTab?.nodeId ?? '',
             action: selectedTab?.options?.action,
             tabId: currentTabId || '',
-            connectionId: String(currentConnection?.id || '')
+            connectionId: currentConnection?.id || 0
           })
         : api.tree.getFields({
             nodeId: selectedTab?.nodeId ?? '',
             action: selectedTab?.options?.action,
             tabId: currentTabId || '',
-            connectionId: String(currentConnection?.id || '')
+            connectionId: currentConnection?.id || 0
           }),
+    enabled: !!(
+      currentConnection?.id &&
+      selectedTab?.id &&
+      selectedTab?.options?.action &&
+      currentTabId &&
+      selectedTab?.nodeId
+    ),
     select: (data) => {
       return data.map((field) => ({
         ...field,

@@ -1,51 +1,42 @@
+import api from '@/api';
 import { getTree } from '@/api/tree';
 import type { TreeNodeType } from '@/api/tree/types';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { Box, LinearProgress } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
-import { useEffect, useRef } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useRef } from 'react';
 import TreeNode from './TreeNode/TreeNode';
 
 export default function ObjectTreeView() {
   const { currentConnection } = useConnectionStore();
   const parentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const { mutateAsync: getChildrenMutation } = useMutation({
+    mutationFn: api.tree.getTree,
+    onError: (error) => {
+      console.error('🚀 ~ getChildrenMutation ~ error:', error);
+    }
+  });
 
   const { data: tree, isLoading } = useQuery({
     queryKey: ['tree', currentConnection?.id],
-    queryFn: async () => {
-      try {
-        const data = await getTree({
-          parentId: null,
-          connectionId: currentConnection?.id || ''
-        });
-        // Ensure children exists
-        return {
-          ...data,
-          children: data?.children || []
-        };
-      } catch (error) {
-        console.log('🚀 ~ handleGetTree ~ error:', error);
-        return undefined;
-      }
-    }
+    queryFn: () =>
+      getTree({
+        parentId: null,
+        connectionId: currentConnection?.id || 0
+      })
   });
 
   const fetchChildren = async (parentId: string): Promise<TreeNodeType[]> => {
     try {
-      const nodes = await getTree({
+      const nodes = await getChildrenMutation({
         parentId,
-        connectionId: currentConnection?.id || ''
+        connectionId: currentConnection?.id || 0
       });
       return nodes?.children || [];
     } catch (error) {
-      console.log('🚀 ~ fetchChildren ~ error:', error);
       return [];
     }
   };
-
-  useEffect(() => {
-    console.log('🚀 ~ useEffect ~ tree:', tree);
-  }, [tree]);
 
   if (isLoading) {
     return (

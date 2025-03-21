@@ -9,12 +9,10 @@ func (r *PostgresRepository) GetFormTabs(action contract.TreeNodeActionName) []c
 	case contract.CreateDatabaseAction, contract.EditDatabaseAction:
 		return []contract.FormTab{
 			{ID: contract.DatabaseTab, Name: "Database"},
-			{ID: contract.DatabasePrivilegesTab, Name: "Database Privileges"},
 		}
 	case contract.CreateSchemaAction, contract.EditSchemaAction:
 		return []contract.FormTab{
 			{ID: contract.SchemaTab, Name: "Schema"},
-			{ID: contract.SchemaPrivilegesTab, Name: "Schema Privileges"},
 		}
 	case contract.CreateTableAction, contract.EditTableAction:
 		return []contract.FormTab{
@@ -30,12 +28,10 @@ func (r *PostgresRepository) GetFormTabs(action contract.TreeNodeActionName) []c
 	case contract.CreateViewAction, contract.EditViewAction:
 		return []contract.FormTab{
 			{ID: contract.ViewTab, Name: "View"},
-			{ID: contract.ViewPrivilegesTab, Name: "View Privileges"},
 		}
 	case contract.CreateMaterializedViewAction, contract.EditMaterializedViewAction:
 		return []contract.FormTab{
 			{ID: contract.MaterializedViewTab, Name: "Materialized View"},
-			{ID: contract.MaterializedViewPrivilegesTab, Name: "Materialized Privileges"},
 		}
 	default:
 		return []contract.FormTab{}
@@ -48,13 +44,9 @@ func (r *PostgresRepository) GetFormFields(nodeID string, tabID contract.TreeTab
 	switch tabID {
 	case contract.DatabaseTab:
 		return r.databaseFields()
-	case contract.DatabasePrivilegesTab:
-		return buildFieldArray(r.databasePrivilegeOptions())
 
 	case contract.SchemaTab:
 		return r.schemaFields()
-	case contract.SchemaPrivilegesTab:
-		return buildFieldArray(r.schemaPrivilegeOptions())
 
 	case contract.TableTab:
 		return r.tableFields()
@@ -75,14 +67,9 @@ func (r *PostgresRepository) GetFormFields(nodeID string, tabID contract.TreeTab
 
 	case contract.ViewTab:
 		return r.viewFields()
-	case contract.ViewPrivilegesTab:
-		return buildFieldArray(r.viewPrivilegeOptions())
 
 	case contract.MaterializedViewTab:
 		return r.materializedViewFields()
-	case contract.MaterializedViewPrivilegesTab:
-		return buildFieldArray(r.materializedViewPrivilegeOptions())
-
 	}
 
 	return []contract.FormField{}

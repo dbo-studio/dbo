@@ -2,10 +2,11 @@ import api from '@/api';
 import type { TreeNodeType } from '@/api/tree/types';
 import { TabMode } from '@/core/enums';
 import useNavigate from '@/hooks/useNavigate.hook';
+import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 
@@ -15,7 +16,24 @@ export const useActionDetection = (expandNode: (event: React.MouseEvent, focus?:
   const { addTab, addObjectTab, getSelectedTab } = useTabStore();
   const confirmModal = useConfirmModalStore();
   const { currentConnection } = useConnectionStore();
+
   const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
+
+  const { mutateAsync: executeActionMutation, isPending: pendingExecuteAction } = useMutation({
+    mutationFn: api.tree.executeAction,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, variables.nodeId]
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ['tree', currentConnection?.id]
+      });
+    },
+    onError: (error) => {
+      console.error('🚀 ~ actionDetection:', error);
+    }
+  });
 
   const actionDetection = useCallback(
     async (event: React.MouseEvent, node: TreeNodeType) => {
@@ -55,37 +73,27 @@ export const useActionDetection = (expandNode: (event: React.MouseEvent, focus?:
           break;
         }
         case 'action': {
-          if (!currentConnection) {
-            toast.error('No connection selected');
-            return;
-          }
+          if (!currentConnection) return;
 
           confirmModal.danger(
             `Confirm ${node.action.title}`,
             `Are you sure you want to ${node.action.title} ${node.name}?`,
             async () => {
+              if (pendingExecuteAction) {
+                return;
+              }
+
               try {
-                await api.tree.executeAction({
+                await executeActionMutation({
                   nodeId: node.id,
                   action: node.action.name,
-                  connectionId: String(currentConnection.id),
-                  tabId: node.id,
+                  connectionId: currentConnection.id,
+                  tabId: selectedTab?.id ?? '',
                   data: {}
                 });
 
-                await queryClient.invalidateQueries({
-                  queryKey: ['tabFields', currentConnection.id, selectedTab?.id, selectedTab?.options?.action, node.id]
-                });
-
-                await queryClient.invalidateQueries({
-                  queryKey: ['tree', currentConnection.id]
-                });
-
-                toast.success('Action executed successfully');
-              } catch (error) {
-                console.error('🚀 ~ error:', error);
-                toast.error('Failed to execute action');
-              }
+                toast.success(locales.action_executed_successfully);
+              } catch (error) {}
             }
           );
           break;

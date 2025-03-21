@@ -17,9 +17,9 @@ export const useObjectTabs = () => {
       api.tree.getTabs({
         nodeId: selectedTab?.nodeId ?? '',
         action: selectedTab?.options?.action,
-        connectionId: String(currentConnection?.id || '')
+        connectionId: currentConnection?.id || 0
       }),
-    enabled: !!currentConnection
+    enabled: !!(selectedTab?.id && currentConnection?.id && selectedTab?.options?.action)
   });
 
   const currentTabId = tabs?.[selectedTabIndex]?.id;
