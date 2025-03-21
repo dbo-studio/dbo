@@ -364,17 +364,17 @@ func (r *PostgresRepository) handleDatabaseCommands(node PGNode, tabId contract.
 			}
 
 			if params.Owner != nil {
-				query := fmt.Sprintf("ALTER DATABASE %s OWNER TO %s", *params.Name, *params.Owner)
+				query := fmt.Sprintf("ALTER DATABASE %s OWNER TO %s", findField(oldFields, "Name"), *params.Owner)
 				queries = append(queries, query)
 			}
 
 			if params.Tablespace != nil {
-				query := fmt.Sprintf("ALTER DATABASE %s SET tablespace = %s", *params.Name, *params.Tablespace)
+				query := fmt.Sprintf("ALTER DATABASE %s SET tablespace = %s", findField(oldFields, "Name"), *params.Tablespace)
 				queries = append(queries, query)
 			}
 
 			if params.Comment != nil {
-				queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS %s", *params.Name, *params.Comment))
+				queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS %s", findField(oldFields, "Name"), *params.Comment))
 			}
 		}
 	case contract.DatabasePrivilegesTab:

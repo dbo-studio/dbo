@@ -88,14 +88,6 @@ func columnListToResponse(columns []Column) []dto.Column {
 	return data
 }
 
-func convertFieldDefinitionToFormField(fieldDefinition []contract.FormField) []contract.FormField {
-	formFields := make([]contract.FormField, 0)
-	for _, field := range fieldDefinition {
-		formFields = append(formFields, field)
-	}
-	return formFields
-}
-
 func buildFieldArray(fields []contract.FormField) []contract.FormField {
 	return []contract.FormField{
 		{

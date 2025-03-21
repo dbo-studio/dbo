@@ -26,7 +26,6 @@ export const useObjectFields = (currentTabId: string | undefined, isDetail = fal
             tabId: currentTabId || '',
             connectionId: String(currentConnection?.id || '')
           }),
-    enabled: !!currentConnection && !!currentTabId,
     select: (data) => {
       return data.map((field) => ({
         ...field,
@@ -34,6 +33,10 @@ export const useObjectFields = (currentTabId: string | undefined, isDetail = fal
       }));
     }
   });
+
+  const getTabId = () => {
+    return currentTabId + selectedTab?.options?.action;
+  };
 
   const handleFormChange = (data: any) => {
     if (!currentTabId || !fields) return;
@@ -53,7 +56,7 @@ export const useObjectFields = (currentTabId: string | undefined, isDetail = fal
 
     setFormDataByTab((prev) => ({
       ...prev,
-      [currentTabId]: updatedFields
+      [getTabId()]: updatedFields
     }));
   };
 
@@ -61,14 +64,22 @@ export const useObjectFields = (currentTabId: string | undefined, isDetail = fal
     if (!currentTabId) return;
     setFormDataByTab((prev) => {
       const newState = { ...prev };
-      delete newState[currentTabId];
+      delete newState[getTabId()];
       return newState;
     });
   };
 
   const currentFields = useMemo(() => {
     if (!fields || !currentTabId) return null;
-    return formDataByTab[currentTabId] || fields;
+
+    if (formDataByTab[getTabId()]) {
+      return formDataByTab[getTabId()];
+    }
+
+    return fields.map((field) => ({
+      ...field,
+      value: field.originalValue
+    }));
   }, [fields, currentTabId, formDataByTab]);
 
   return {
