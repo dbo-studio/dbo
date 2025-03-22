@@ -12,7 +12,7 @@ export const useObjectActions = (tabId: string | undefined) => {
   const queryClient = useQueryClient();
   const { currentConnection } = useConnectionStore();
   const { getSelectedTab } = useTabStore();
-  const { updateFormData, getFormData } = useDataStore();
+  const { updateFormData, getFormData, resetFormData } = useDataStore();
   const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
   const action = selectedTab?.options?.action || '';
 
@@ -67,9 +67,7 @@ export const useObjectActions = (tabId: string | undefined) => {
     if (!currentConnection || !tabId || !selectedTab) return;
 
     try {
-      await queryClient.invalidateQueries({
-        queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, tabId]
-      });
+      resetFormData(tabId, action);
 
       toast.info('Changes discarded');
     } catch (error) {

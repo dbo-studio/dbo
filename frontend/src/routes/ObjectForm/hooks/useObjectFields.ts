@@ -3,13 +3,13 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 export const useObjectFields = (currentTabId: string | undefined, isDetail = false) => {
   const { getSelectedTab } = useTabStore();
   const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
   const { currentConnection } = useConnectionStore();
-  const { getFormData, resetFormData } = useDataStore();
+  const { getFormData, resetFormData, updateFormData } = useDataStore();
 
   const { data: fields } = useQuery({
     queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, currentTabId],
@@ -54,6 +54,21 @@ export const useObjectFields = (currentTabId: string | undefined, isDetail = fal
     if (!currentTabId) return;
     resetFormData(getTabId(), getAction());
   };
+
+  // Initialize or update form data when fields change from the server
+  useEffect(() => {
+    if (fields && currentTabId) {
+      const formData = getFormData(getTabId(), getAction());
+      // Only initialize if no form data exists for this tab
+      if (!formData) {
+        const initialFields = fields.map((field) => ({
+          ...field,
+          value: field.originalValue
+        }));
+        updateFormData(getTabId(), getAction(), initialFields);
+      }
+    }
+  }, [fields, currentTabId, getAction, getTabId, getFormData, updateFormData]);
 
   const currentFields = useMemo(() => {
     if (!fields || !currentTabId) return null;
