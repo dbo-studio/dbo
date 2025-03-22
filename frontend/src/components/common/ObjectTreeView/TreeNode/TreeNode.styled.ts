@@ -35,7 +35,7 @@ export const NodeLabel = styled(Box, {
   border: '1px solid transparent',
   height: '22px',
   '&:hover': {
-    backgroundColor: theme.palette.action.hover
+    backgroundColor: theme.palette.action.selected
   },
   ...(isFocused && {
     backgroundColor: theme.palette.action.selected,

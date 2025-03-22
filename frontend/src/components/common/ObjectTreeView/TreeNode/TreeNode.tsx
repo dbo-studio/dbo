@@ -93,7 +93,7 @@ export default function TreeNode({
           <IndentGuideStyled
             key={`indent-${node.id}-${idx}`}
             className='indent-guide'
-            sx={{ left: `${12 + idx * 16}px` }} // Increased spacing from icons
+            sx={{ right: `calc(100% - ${12 + idx * 16}px)` }}
           />
         ))}
       </IndentGuidesContainerStyled>
@@ -106,6 +106,7 @@ export default function TreeNode({
         sx={{
           display: 'flex',
           alignItems: 'center',
+          width: '100%',
           pl: level * 2
         }}
       >
