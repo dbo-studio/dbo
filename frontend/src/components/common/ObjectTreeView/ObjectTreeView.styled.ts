@@ -11,10 +11,11 @@ export const TreeViewContainerStyled = styled(Box)({
   userSelect: 'none'
 });
 
-export const TreeViewContentStyled = styled(Box)({
+export const TreeViewContentStyled = styled(Box)(({ theme }) => ({
   overflow: 'auto',
   flex: 1,
   padding: '4px 0',
+  marginTop: theme.spacing(1),
   '&::-webkit-scrollbar': {
     width: '10px'
   },
@@ -28,4 +29,4 @@ export const TreeViewContentStyled = styled(Box)({
   '&::-webkit-scrollbar-track': {
     backgroundColor: 'transparent'
   }
-});
+}));

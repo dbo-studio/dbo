@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
@@ -9,7 +10,7 @@ export const NodeLabel = styled(Box, {
   alignItems: 'center',
   padding: theme.spacing(0.2, 0.4),
   cursor: 'pointer',
-  borderRadius: 0,
+  borderRadius: variables.radius.small,
   color: theme.palette.text.text,
   width: '100%',
   overflow: 'hidden',
