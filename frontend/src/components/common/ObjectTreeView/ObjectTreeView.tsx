@@ -5,6 +5,7 @@ import { useTreeStore } from '@/store/treeStore/tree.store';
 import { Box, LinearProgress } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
+import { TreeViewContainerStyled, TreeViewContentStyled } from './ObjectTreeView.styled';
 import TreeNode from './TreeNode/TreeNode';
 
 export default function ObjectTreeView() {
@@ -20,17 +21,20 @@ export default function ObjectTreeView() {
   });
 
   useEffect(() => {
+    // Initial load of the tree when component mounts
     if (!tree && !isLoading && currentConnection?.id) {
       reloadTree();
     }
   }, [currentConnection?.id, reloadTree, tree, isLoading]);
 
+  // Reset tree when connection changes
   useEffect(() => {
     setTree(null);
   }, [currentConnection?.id, setTree]);
 
   const fetchChildren = async (parentId: string): Promise<TreeNodeType[]> => {
     try {
+      // اضافه کردن parentId به لیست
       addLoadedParentId(parentId);
 
       const nodes = await getChildrenMutation({
@@ -44,16 +48,16 @@ export default function ObjectTreeView() {
   };
 
   return (
-    <Box display='flex' flexDirection='column' height='100%'>
+    <TreeViewContainerStyled>
       {isLoading && (
-        <Box p={2}>
-          <LinearProgress style={{ marginTop: '8px' }} />
+        <Box px={1} py={0.5}>
+          <LinearProgress sx={{ height: 2 }} /> {/* Thinner progress bar */}
         </Box>
       )}
 
-      <Box p={2} overflow={'auto'} flex={1}>
+      <TreeViewContentStyled>
         {tree && <TreeNode node={tree} fetchChildren={fetchChildren} parentRefs={parentRefs} nodeIndex={0} level={0} />}
-      </Box>
-    </Box>
+      </TreeViewContentStyled>
+    </TreeViewContainerStyled>
   );
 }

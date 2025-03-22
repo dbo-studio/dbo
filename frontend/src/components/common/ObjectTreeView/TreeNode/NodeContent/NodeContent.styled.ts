@@ -1,4 +1,3 @@
-import { variables } from '@/core/theme/variables.ts';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
@@ -8,36 +7,47 @@ export const NodeLabel = styled(Box, {
 })<{ isFocused?: boolean }>(({ theme, isFocused }) => ({
   display: 'flex',
   alignItems: 'center',
-  padding: theme.spacing(0.4),
+  padding: theme.spacing(0.2, 0.4),
   cursor: 'pointer',
-  borderRadius: variables.radius.medium,
+  borderRadius: 0,
   color: theme.palette.text.text,
   width: '100%',
   overflow: 'hidden',
   border: '1px solid transparent',
-  // '&:hover': {
-  //   backgroundColor: theme.palette.background.primary
-  // },
+  height: '22px',
+  transition: 'background-color 0.1s ease',
+  position: 'relative',
+  zIndex: 1,
+  '&:hover': {
+    backgroundColor: theme.palette.action.selected
+  },
   ...(isFocused && {
-    backgroundColor: theme.palette.background.primary,
-    border: `1px solid ${theme.palette.divider}`
+    backgroundColor: theme.palette.action.selected,
+    border: '1px solid transparent'
   }),
   '&:focus-visible': {
-    border: `1px solid ${theme.palette.divider}`,
-    backgroundColor: theme.palette.background.primary
+    outline: 'none',
+    border: '1px solid transparent',
+    backgroundColor: theme.palette.action.selected
   }
 }));
 
 export const NodeName = styled(Typography, {
   shouldForwardProp: (prop) => prop !== 'isLeaf'
 })<{ isLeaf: boolean }>(({ theme, isLeaf }) => ({
-  paddingLeft: isLeaf ? theme.spacing(2) : 0
+  paddingLeft: isLeaf ? theme.spacing(1.5) : theme.spacing(0.5),
+  fontSize: '13px',
+  lineHeight: '20px',
+  fontWeight: 400,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis'
 }));
 
 export const NodeType = styled(Typography)(({ theme }) => ({
-  fontSize: '0.9em',
+  fontSize: '0.85em',
   marginLeft: theme.spacing(0.5),
-  color: theme.palette.text.secondary
+  color: theme.palette.text.secondary,
+  opacity: 0.7
 }));
 
 export const LoadingIndicator = styled(Box)(({ theme }) => ({

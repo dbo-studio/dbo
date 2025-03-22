@@ -1,7 +1,12 @@
 import type { TreeNodeType } from '@/api/tree/types';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import { NodeContent } from '@/components/common/ObjectTreeView/TreeNode/NodeContent/NodeContent';
-import { ChildrenContainer, TreeNodeContainer } from '@/components/common/ObjectTreeView/TreeNode/TreeNode.styled';
+import {
+  ChildrenContainer,
+  HoverableTreeNodeContainerStyled,
+  IndentGuideStyled,
+  IndentGuidesContainerStyled
+} from '@/components/common/ObjectTreeView/TreeNode/TreeNode.styled';
 import { useTreeNodeHandlers } from '@/components/common/ObjectTreeView/TreeNode/hooks/useTreeNodeHandlers';
 import { useTreeNodeMenu } from '@/components/common/ObjectTreeView/TreeNode/hooks/useTreeNodeMenu';
 import type { TreeNodeProps } from '@/components/common/ObjectTreeView/TreeNode/types';
@@ -81,24 +86,46 @@ export default function TreeNode({
   const { actionDetection } = useActionDetection(handleExpandNode);
   const { menu } = useTreeNodeMenu(node, actionDetection);
 
+  const indentGuides =
+    level > 0 ? (
+      <IndentGuidesContainerStyled className='indent-guides'>
+        {Array.from({ length: level }).map((_, idx) => (
+          <IndentGuideStyled
+            key={`indent-${node.id}-${idx}`}
+            className='indent-guide'
+            sx={{ left: `${12 + idx * 16}px` }} // Increased spacing from icons
+          />
+        ))}
+      </IndentGuidesContainerStyled>
+    ) : null;
+
   return (
-    <TreeNodeContainer>
-      <NodeContent
-        node={node}
-        nodeRef={nodeRef}
-        isFocused={isFocused}
-        isExpanded={isExpanded}
-        isLoading={isLoading}
-        hasChildren={hasChildren}
-        level={level}
-        nodeIndex={nodeIndex}
-        focusNode={focusNode}
-        actionDetection={actionDetection}
-        expandNode={handleExpandNode}
-        handleContextMenu={handleContextMenu}
-        handleBlur={handleBlur}
-        handleKeyDown={handleKeyDown}
-      />
+    <HoverableTreeNodeContainerStyled>
+      {indentGuides}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          pl: level * 2
+        }}
+      >
+        <NodeContent
+          node={node}
+          nodeRef={nodeRef}
+          isFocused={isFocused}
+          isExpanded={isExpanded}
+          isLoading={isLoading}
+          hasChildren={hasChildren}
+          level={level}
+          nodeIndex={nodeIndex}
+          focusNode={focusNode}
+          actionDetection={actionDetection}
+          expandNode={handleExpandNode}
+          handleContextMenu={handleContextMenu}
+          handleBlur={handleBlur}
+          handleKeyDown={handleKeyDown}
+        />
+      </Box>
       {menu.length > 0 && (
         <ContextMenu menu={menu} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
       )}
@@ -123,6 +150,6 @@ export default function TreeNode({
           ))}
         </ChildrenContainer>
       )}
-    </TreeNodeContainer>
+    </HoverableTreeNodeContainerStyled>
   );
 }
