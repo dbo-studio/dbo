@@ -77,7 +77,7 @@ func (i ITreeServiceImpl) TabObject(ctx context.Context, req *dto.ObjectFieldsRe
 		return nil, apperror.InternalServerError(err)
 	}
 
-	fields := repo.GetFormFields(req.NodeId, contract.TreeTab(req.TabId))
+	fields := repo.GetFormFields(req.NodeId, contract.TreeTab(req.TabId), contract.TreeNodeActionName(req.Action))
 
 	return fields, nil
 }
@@ -93,7 +93,7 @@ func (i ITreeServiceImpl) ObjectDetail(ctx context.Context, req *dto.ObjectDetai
 		return nil, apperror.InternalServerError(err)
 	}
 
-	data, err := repo.Objects(req.NodeId, contract.TreeTab(req.TabId))
+	data, err := repo.Objects(req.NodeId, contract.TreeTab(req.TabId), contract.TreeNodeActionName(req.Action))
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}

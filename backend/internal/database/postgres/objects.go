@@ -6,7 +6,7 @@ import (
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
-func (r *PostgresRepository) Objects(nodeID string, tabID contract.TreeTab) ([]contract.FormField, error) {
+func (r *PostgresRepository) Objects(nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) ([]contract.FormField, error) {
 	node := extractNode(nodeID)
 
 	switch tabID {
@@ -18,7 +18,7 @@ func (r *PostgresRepository) Objects(nodeID string, tabID contract.TreeTab) ([]c
 		return r.getSchemaInfo(node)
 
 	case contract.TableTab:
-		return r.getTableInfo(node)
+		return r.getTableInfo(node, action)
 	case contract.TableColumnsTab:
 		return r.getTableColumns(node)
 	case contract.TableForeignKeysTab:
@@ -290,26 +290,25 @@ func (r *PostgresRepository) getDatabaseInfo(node PGNode) ([]contract.FormField,
 	return buildObjectResponse(query, fields)
 }
 
-func (r *PostgresRepository) getTableInfo(node PGNode) ([]contract.FormField, error) {
-	fields := r.tableFields()
+func (r *PostgresRepository) getTableInfo(node PGNode, action contract.TreeNodeActionName) ([]contract.FormField, error) {
+	fields := r.tableFields(action)
 
 	query := r.db.Table("pg_class c").
 		Select(`
 			c.relname,
-			d.description,
-			c.relpersistence,
-			pg_get_expr(c.relpartbound, c.oid) as relpartbound,
-			pg_get_partkeydef(c.oid) as partkeydef,
-			array_to_string(c.reloptions, ', ') as reloptions,
-			am.amname,
-			t.spcname,
+			pd.description,
+			CASE c.relpersistence
+				WHEN 'p' THEN 'LOGGED'
+				WHEN 'u' THEN 'UNLOGGED'
+				WHEN 't' THEN 'TEMPORARY'
+			END as persistence,
+			t.spcname as tablespace,
 			r.rolname
 		`).
 		Joins("JOIN pg_namespace n ON n.oid = c.relnamespace").
-		Joins("JOIN pg_roles r ON r.oid = c.relowner").
+		Joins("LEFT JOIN pg_roles r ON r.oid = c.relowner").
 		Joins("LEFT JOIN pg_tablespace t ON t.oid = c.reltablespace").
-		Joins("LEFT JOIN pg_am am ON am.oid = c.relam").
-		Joins("LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0").
+		Joins("LEFT JOIN pg_description pd ON pd.objoid = c.oid AND pd.objsubid = 0").
 		Where("c.relname = ? AND n.nspname = ?", node.Table, node.Schema)
 
 	return buildObjectResponse(query, fields)

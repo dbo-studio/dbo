@@ -4,6 +4,7 @@ import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import { useTreeStore } from '@/store/treeStore/tree.store';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
@@ -15,6 +16,7 @@ export const useObjectActions = (tabId: string | undefined) => {
   const { updateFormData, getFormData, resetFormData } = useDataStore();
   const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
   const action = selectedTab?.options?.action || '';
+  const { reloadTree } = useTreeStore();
 
   const { mutateAsync: executeAction, isPending: pendingExecuteAction } = useMutation({
     mutationFn: api.tree.executeAction,
@@ -22,10 +24,7 @@ export const useObjectActions = (tabId: string | undefined) => {
       queryClient.invalidateQueries({
         queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, tabId]
       });
-
-      queryClient.invalidateQueries({
-        queryKey: ['tree', currentConnection?.id]
-      });
+      reloadTree();
     },
     onError: (error) => {
       console.error('🚀 ~ handleSave ~ error:', error);

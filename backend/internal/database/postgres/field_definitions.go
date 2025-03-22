@@ -22,16 +22,12 @@ func (r *PostgresRepository) schemaFields() []contract.FormField {
 	}
 }
 
-func (r *PostgresRepository) tableFields() []contract.FormField {
+func (r *PostgresRepository) tableFields(action contract.TreeNodeActionName) []contract.FormField {
 	return []contract.FormField{
 		{ID: "relname", Name: "Name", Type: "text", Required: true},
 		{ID: "description", Name: "Comment", Type: "text"},
-		{ID: "relpersistence", Name: "Persistence", Type: "select", Fields: r.persistenceOptions()},
-		{ID: "relpartbound", Name: "Partition Expression", Type: "text"},
-		{ID: "partkeydef", Name: "Partition Key", Type: "text"},
-		{ID: "reloptions", Name: "Options", Type: "text"},
-		{ID: "amname", Name: "Access Method", Type: "text"},
-		{ID: "spcname", Name: "Tablespace", Type: "select", Fields: r.tablespaceOptions()},
+		{ID: "persistence", Name: "Persistence", Type: "select", Fields: r.persistenceOptions(action)},
+		{ID: "tablespace", Name: "Tablespace", Type: "select", Fields: r.tablespaceOptions()},
 		{ID: "rolname", Name: "Owner", Type: "text"},
 	}
 }
@@ -183,16 +179,18 @@ func (r *PostgresRepository) checkOptions() []contract.FormField {
 	}
 }
 
-func (r *PostgresRepository) persistenceOptions() []contract.FormField {
+func (r *PostgresRepository) persistenceOptions(action contract.TreeNodeActionName) []contract.FormField {
+	if action == contract.EditTableAction {
+		return []contract.FormField{
+			{Value: "LOGGED", Name: "LOGGED"},
+			{Value: "UNLOGGED", Name: "UNLOGGED"},
+		}
+	}
+
 	return []contract.FormField{
-		{Value: "PERSISTENT", Name: "PERSISTENT"},
+		{Value: "LOGGED", Name: "LOGGED"},
 		{Value: "UNLOGGED", Name: "UNLOGGED"},
 		{Value: "TEMPORARY", Name: "TEMPORARY"},
-		{Value: "GLOBAL TEMPORARY", Name: "GLOBAL TEMPORARY"},
-		{Value: "LOCAL TEMPORARY", Name: "LOCAL TEMPORARY"},
-		{Value: "UNLOGGED TEMPORARY", Name: "UNLOGGED TEMPORARY"},
-		{Value: "UNLOGGED GLOBAL TEMPORARY", Name: "UNLOGGED GLOBAL TEMPORARY"},
-		{Value: "UNLOGGED LOCAL TEMPORARY", Name: "UNLOGGED LOCAL TEMPORARY"},
 	}
 }
 

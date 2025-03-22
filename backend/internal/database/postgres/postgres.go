@@ -238,80 +238,74 @@ func (r *PostgresRepository) Execute(nodeID string, tabId contract.TreeTab, acti
 
 func (r *PostgresRepository) handleDatabaseCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, error) {
 	queries := []string{}
+
 	oldFields, err := r.getDatabaseInfo(node)
 	if err != nil {
 		return nil, err
 	}
 
-	if action == contract.DropDatabaseAction {
+	switch action {
+	case contract.CreateDatabaseAction:
+		params, err := convertToDTO[dto.PostgresDatabaseParams](params)
+		if err != nil {
+			return nil, err
+		}
+		query := fmt.Sprintf("CREATE DATABASE %s", *params.Name)
+		if params.Owner != nil {
+			query += fmt.Sprintf(" OWNER %s", *params.Owner)
+		}
+		if params.Template != nil {
+			query += fmt.Sprintf(" TEMPLATE %s", *params.Template)
+		}
+		if params.Tablespace != nil {
+			query += fmt.Sprintf(" TABLESPACE %s", *params.Tablespace)
+		}
+
+		queries = append(queries, query)
+
+		if params.Comment != nil {
+			queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS '%s'", *params.Name, *params.Comment))
+		}
+
+	case contract.EditDatabaseAction:
+		params, err := convertToDTO[dto.PostgresDatabaseParams](params)
+		if err != nil {
+			return nil, err
+		}
+
+		if params.Name != nil {
+			query := fmt.Sprintf("ALTER DATABASE %s RENAME TO %s", findField(oldFields, "Name"), *params.Name)
+			queries = append(queries, query)
+		}
+
+		if params.Owner != nil {
+			query := fmt.Sprintf("ALTER DATABASE %s OWNER TO %s", findField(oldFields, "Name"), *params.Owner)
+			queries = append(queries, query)
+		}
+
+		if params.Tablespace != nil {
+			query := fmt.Sprintf("ALTER DATABASE %s SET tablespace = %s", findField(oldFields, "Name"), *params.Tablespace)
+			queries = append(queries, query)
+		}
+
+		if params.Comment != nil {
+			queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS %s", findField(oldFields, "Name"), *params.Comment))
+		}
+
+	case contract.DropDatabaseAction:
 		query := fmt.Sprintf("DROP DATABASE %s", node.Database)
 		queries = append(queries, query)
 	}
 
-	switch tabId {
-	case contract.DatabaseTab:
-		switch action {
-		case contract.CreateDatabaseAction:
-			params, err := convertToDTO[dto.PostgresDatabaseParams](params)
-			if err != nil {
-				return nil, err
-			}
-			query := fmt.Sprintf("CREATE DATABASE %s", *params.Name)
-			if params.Owner != nil {
-				query += fmt.Sprintf(" OWNER %s", *params.Owner)
-			}
-			if params.Template != nil {
-				query += fmt.Sprintf(" TEMPLATE %s", *params.Template)
-			}
-			if params.Tablespace != nil {
-				query += fmt.Sprintf(" TABLESPACE %s", *params.Tablespace)
-			}
-
-			queries = append(queries, query)
-
-			if params.Comment != nil {
-				queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS '%s'", *params.Name, *params.Comment))
-			}
-
-		case contract.EditDatabaseAction:
-			params, err := convertToDTO[dto.PostgresDatabaseParams](params)
-			if err != nil {
-				return nil, err
-			}
-
-			if params.Name != nil {
-				query := fmt.Sprintf("ALTER DATABASE %s RENAME TO %s", findField(oldFields, "Name"), *params.Name)
-				queries = append(queries, query)
-			}
-
-			if params.Owner != nil {
-				query := fmt.Sprintf("ALTER DATABASE %s OWNER TO %s", findField(oldFields, "Name"), *params.Owner)
-				queries = append(queries, query)
-			}
-
-			if params.Tablespace != nil {
-				query := fmt.Sprintf("ALTER DATABASE %s SET tablespace = %s", findField(oldFields, "Name"), *params.Tablespace)
-				queries = append(queries, query)
-			}
-
-			if params.Comment != nil {
-				queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS %s", findField(oldFields, "Name"), *params.Comment))
-			}
-		}
-	}
 	return queries, nil
 }
 
 func (r *PostgresRepository) handleSchemaCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, error) {
 	queries := []string{}
+
 	oldFields, err := r.getSchemaInfo(node)
 	if err != nil {
 		return nil, err
-	}
-
-	if action == contract.DropSchemaAction {
-		query := fmt.Sprintf("DROP SCHEMA %s", node.Schema)
-		queries = append(queries, query)
 	}
 
 	switch action {
@@ -337,21 +331,22 @@ func (r *PostgresRepository) handleSchemaCommands(node PGNode, tabId contract.Tr
 		if err != nil {
 			return nil, err
 		}
-		query := fmt.Sprintf("ALTER SCHEMA %s", findField(oldFields, "Name"))
 
 		if params.Name != nil {
-			query += fmt.Sprintf(" RENAME TO %s", *params.Name)
+			queries = append(queries, fmt.Sprintf("ALTER SCHEMA %s RENAME TO %s", findField(oldFields, "Name"), *params.Name))
 		}
 
 		if params.Owner != nil {
-			query += fmt.Sprintf(" OWNER TO %s", *params.Owner)
+			queries = append(queries, fmt.Sprintf("ALTER SCHEMA %s OWNER TO %s", findField(oldFields, "Name"), *params.Owner))
 		}
-
-		queries = append(queries, query)
 
 		if params.Comment != nil {
 			queries = append(queries, fmt.Sprintf("COMMENT ON SCHEMA %s IS %s", findField(oldFields, "Name"), *params.Comment))
 		}
+
+	case contract.DropSchemaAction:
+		query := fmt.Sprintf("DROP SCHEMA %s", node.Schema)
+		queries = append(queries, query)
 	}
 
 	return queries, nil
@@ -359,7 +354,8 @@ func (r *PostgresRepository) handleSchemaCommands(node PGNode, tabId contract.Tr
 
 func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, error) {
 	queries := []string{}
-	oldFields, err := r.getTableInfo(node)
+
+	oldFields, err := r.getTableInfo(node, action)
 	if err != nil {
 		return nil, err
 	}
@@ -371,64 +367,53 @@ func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.Tre
 			return nil, err
 		}
 
-		query := fmt.Sprintf("CREATE TABLE %s", params.Name)
-		if params.Owner != "" {
-			query += fmt.Sprintf(" OWNER %s", params.Owner)
-		}
-		if params.Tablespace != "" {
-			query += fmt.Sprintf(" TABLESPACE %s", params.Tablespace)
-		}
-		if params.AccessMethod != "" {
-			query += fmt.Sprintf(" USING %s", params.AccessMethod)
-		}
-		if params.Comment != "" {
-			query += fmt.Sprintf(" COMMENT '%s'", params.Comment)
-		}
-		if params.Persistence != "" {
-			query += fmt.Sprintf(" WITH %s", params.Persistence)
-		}
-		if params.PartitionExpression != "" {
-			query += fmt.Sprintf(" PARTITION BY %s", params.PartitionExpression)
-		}
-		if params.PartitionKey != "" {
-			query += fmt.Sprintf(" PARTITION BY %s", params.PartitionKey)
-		}
-		if params.Options != "" {
-			query += fmt.Sprintf(" WITH %s", params.Options)
+		query := fmt.Sprintf("CREATE TABLE %s (", *params.Name)
+		if params.Tablespace != nil {
+			query += fmt.Sprintf(") TABLESPACE %s", *params.Tablespace)
+		} else {
+			query += ")"
 		}
 
 		queries = append(queries, query)
+
+		if params.Persistence != nil {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET %s", *params.Name, *params.Persistence))
+		}
+
+		if params.Owner != nil {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s OWNER TO \"%s\"", *params.Name, *params.Owner))
+		}
+
+		if params.Comment != nil {
+			queries = append(queries, fmt.Sprintf("COMMENT ON TABLE %s IS '%s'", *params.Name, *params.Comment))
+		}
 
 	case contract.EditTableAction:
 		params, err := convertToDTO[dto.PostgresTableParams](params)
 		if err != nil {
 			return nil, err
 		}
-		query := fmt.Sprintf("ALTER TABLE %s", findField(oldFields, "Name"))
-		if params.Owner != "" {
-			query += fmt.Sprintf(" OWNER TO %s", params.Owner)
+		if params.Name != nil {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s RENAME TO %s", findField(oldFields, "Name"), *params.Name))
 		}
-		if params.Comment != "" {
-			query += fmt.Sprintf(" SET COMMENT '%s'", params.Comment)
+		if params.Tablespace != nil {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET TABLESPACE %s", findField(oldFields, "Name"), *params.Tablespace))
 		}
-		if params.Tablespace != "" {
-			query += fmt.Sprintf(" SET TABLESPACE %s", params.Tablespace)
+
+		if params.Persistence != nil {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET %s", findField(oldFields, "Name"), *params.Persistence))
 		}
-		if params.AccessMethod != "" {
-			query += fmt.Sprintf(" SET ACCESS METHOD %s", params.AccessMethod)
+
+		if params.Owner != nil {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s OWNER TO \"%s\"", findField(oldFields, "Name"), *params.Owner))
 		}
-		if params.Options != "" {
-			query += fmt.Sprintf(" SET %s", params.Options)
+
+		if params.Comment != nil {
+			queries = append(queries, fmt.Sprintf("COMMENT ON TABLE %s IS '%s'", findField(oldFields, "Name"), *params.Comment))
 		}
-		if params.PartitionExpression != "" {
-			query += fmt.Sprintf(" SET PARTITION BY %s", params.PartitionExpression)
-		}
-		if params.PartitionKey != "" {
-			query += fmt.Sprintf(" SET PARTITION BY %s", params.PartitionKey)
-		}
-		if params.Persistence != "" {
-			query += fmt.Sprintf(" SET PERSISTENCE %s", params.Persistence)
-		}
+
+	case contract.DropTableAction:
+		query := fmt.Sprintf("DROP TABLE %s", node.Table)
 		queries = append(queries, query)
 	}
 

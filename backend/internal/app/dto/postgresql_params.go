@@ -37,15 +37,11 @@ type PostgresSchemaParams struct {
 }
 
 type PostgresTableParams struct {
-	Name                string `json:"name"`
-	Comment             string `json:"description,omitempty"`
-	Persistence         string `json:"relpersistence,omitempty"`
-	PartitionExpression string `json:"relpartbound,omitempty"`
-	PartitionKey        string `json:"partkeydef,omitempty"`
-	Options             string `json:"reloptions,omitempty"`
-	AccessMethod        string `json:"amname,omitempty"`
-	Tablespace          string `json:"spcname,omitempty"`
-	Owner               string `json:"rolname,omitempty"`
+	Name        *string `json:"relname"`
+	Comment     *string `json:"description,omitempty"`
+	Persistence *string `json:"persistence,omitempty"`
+	Tablespace  *string `json:"tablespace,omitempty"`
+	Owner       *string `json:"rolname,omitempty"`
 }
 
 type PostgresViewParams struct {

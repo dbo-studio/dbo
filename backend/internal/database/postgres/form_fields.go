@@ -38,7 +38,7 @@ func (r *PostgresRepository) GetFormTabs(action contract.TreeNodeActionName) []c
 	}
 }
 
-func (r *PostgresRepository) GetFormFields(nodeID string, tabID contract.TreeTab) []contract.FormField {
+func (r *PostgresRepository) GetFormFields(nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) []contract.FormField {
 	node := extractNode(nodeID)
 
 	switch tabID {
@@ -49,7 +49,7 @@ func (r *PostgresRepository) GetFormFields(nodeID string, tabID contract.TreeTab
 		return r.schemaFields()
 
 	case contract.TableTab:
-		return r.tableFields()
+		return r.tableFields(action)
 	case contract.TableColumnsTab:
 		return buildFieldArray(r.tableColumnFields())
 	case contract.TableForeignKeysTab:
