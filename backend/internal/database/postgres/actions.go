@@ -6,18 +6,32 @@ import (
 
 func (r *PostgresRepository) Actions(nodeType contract.TreeNodeType) []contract.TreeNodeAction {
 	actions := make([]contract.TreeNodeAction, 0)
+	defaultActions := []contract.TreeNodeAction{
+		{
+			Title: "Copy name",
+			Name:  contract.CopyNameAction,
+			Type:  contract.TreeNodeActionTypeCommand,
+		},
+		{
+			Title: "Refresh",
+			Name:  contract.RefreshAction,
+			Type:  contract.TreeNodeActionTypeCommand,
+		},
+	}
 
 	switch nodeType {
 	case contract.RootNodeType:
 	case contract.DatabaseContainerNodeType:
-		actions = append(actions, contract.TreeNodeAction{
-			Title: "Create database",
-			Name:  contract.CreateDatabaseAction,
-			Type:  contract.TreeNodeActionTypeTab,
-			Params: map[string]any{
-				"path": "object",
+		actions = append(actions,
+			contract.TreeNodeAction{
+				Title: "Create database",
+				Name:  contract.CreateDatabaseAction,
+				Type:  contract.TreeNodeActionTypeTab,
+				Params: map[string]any{
+					"path": "object",
+				},
 			},
-		})
+		)
 	case contract.DatabaseNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
@@ -67,7 +81,8 @@ func (r *PostgresRepository) Actions(nodeType contract.TreeNodeType) []contract.
 				Params: map[string]any{
 					"path": "object",
 				},
-			})
+			},
+		)
 	case contract.ViewContainerNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
@@ -77,7 +92,8 @@ func (r *PostgresRepository) Actions(nodeType contract.TreeNodeType) []contract.
 				Params: map[string]any{
 					"path": "object",
 				},
-			})
+			},
+		)
 	case contract.MaterializedViewContainerNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
@@ -87,7 +103,8 @@ func (r *PostgresRepository) Actions(nodeType contract.TreeNodeType) []contract.
 				Params: map[string]any{
 					"path": "object",
 				},
-			})
+			},
+		)
 	case contract.TableNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
@@ -103,11 +120,6 @@ func (r *PostgresRepository) Actions(nodeType contract.TreeNodeType) []contract.
 				Name:  contract.DropTableAction,
 				Type:  contract.TreeNodeActionTypeAction,
 			},
-			contract.TreeNodeAction{
-				Title: "Copy name",
-				Name:  contract.CopyNameAction,
-				Type:  contract.TreeNodeActionTypeCommand,
-			},
 		)
 	case contract.ViewNodeType:
 		actions = append(actions,
@@ -118,11 +130,6 @@ func (r *PostgresRepository) Actions(nodeType contract.TreeNodeType) []contract.
 				Params: map[string]any{
 					"path": "object-detail",
 				},
-			},
-			contract.TreeNodeAction{
-				Title: "Drop view",
-				Name:  contract.DropViewAction,
-				Type:  contract.TreeNodeActionTypeAction,
 			},
 		)
 	case contract.MaterializedViewNodeType:
@@ -143,5 +150,6 @@ func (r *PostgresRepository) Actions(nodeType contract.TreeNodeType) []contract.
 		)
 	}
 
+	actions = append(actions, defaultActions...)
 	return actions
 }

@@ -1,11 +1,13 @@
 import api from '@/api';
 import type { TreeNodeType } from '@/api/tree/types';
 import { TabMode } from '@/core/enums';
+import { useCopyToClipboard } from '@/hooks';
 import useNavigate from '@/hooks/useNavigate.hook';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import { useTreeStore } from '@/store/treeStore/tree.store';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
@@ -16,19 +18,19 @@ export const useActionDetection = (expandNode: (event: React.MouseEvent, focus?:
   const { addTab, addObjectTab, getSelectedTab } = useTabStore();
   const confirmModal = useConfirmModalStore();
   const { currentConnection } = useConnectionStore();
+  const { reloadTree } = useTreeStore();
+  const [copy] = useCopyToClipboard();
 
   const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
 
   const { mutateAsync: executeActionMutation, isPending: pendingExecuteAction } = useMutation({
     mutationFn: api.tree.executeAction,
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, variables.nodeId]
       });
 
-      queryClient.invalidateQueries({
-        queryKey: ['tree', currentConnection?.id]
-      });
+      await reloadTree();
     },
     onError: (error) => {
       console.error('🚀 ~ actionDetection:', error);
@@ -98,9 +100,36 @@ export const useActionDetection = (expandNode: (event: React.MouseEvent, focus?:
           );
           break;
         }
+        case 'command': {
+          if (node.action.name === 'copyName') {
+            try {
+              await copy(node.name);
+              toast.success(locales.copied);
+            } catch (error) {
+              console.log('🚀 ~ handleCopy ~ error:', error);
+            }
+          }
+
+          if (node.action.name === 'refresh') {
+            await reloadTree();
+          }
+
+          break;
+        }
       }
     },
-    [addObjectTab, addTab, confirmModal, currentConnection?.id, expandNode, navigate]
+    [
+      addObjectTab,
+      addTab,
+      confirmModal,
+      currentConnection?.id,
+      expandNode,
+      navigate,
+      executeActionMutation,
+      pendingExecuteAction,
+      selectedTab?.id,
+      reloadTree
+    ]
   );
 
   return { actionDetection };

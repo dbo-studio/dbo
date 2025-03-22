@@ -6,6 +6,8 @@ import { useTreeNodeHandlers } from '@/components/common/ObjectTreeView/TreeNode
 import { useTreeNodeMenu } from '@/components/common/ObjectTreeView/TreeNode/hooks/useTreeNodeMenu';
 import type { TreeNodeProps } from '@/components/common/ObjectTreeView/TreeNode/types';
 import { useContextMenu } from '@/hooks';
+import { useTreeStore } from '@/store/treeStore/tree.store';
+import { Box, LinearProgress } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import { useActionDetection } from './hooks/useActionDetection';
 
@@ -18,13 +20,14 @@ export default function TreeNode({
   onFocusChange
 }: TreeNodeProps) {
   const [node, setNode] = useState<TreeNodeType>(initialNode);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
+  const { isNodeExpanded, expandNode, collapseNode, setNodeChildren } = useTreeStore();
 
-  // Update local node when initialNode changes
+  const isExpanded = isNodeExpanded(node.id);
+
   useEffect(() => {
     setNode(initialNode);
   }, [initialNode]);
@@ -38,16 +41,31 @@ export default function TreeNode({
     };
   }, [node.id, parentRefs]);
 
-  const { hasChildren, expandNode, focusNode, handleBlur, handleKeyDown } = useTreeNodeHandlers({
+  const {
+    hasChildren,
+    expandNode: handleExpandNode,
+    focusNode,
+    handleBlur,
+    handleKeyDown
+  } = useTreeNodeHandlers({
     node,
     children: node.children,
     isExpanded,
-    setIsExpanded,
+    setIsExpanded: (expanded) => {
+      if (expanded) {
+        expandNode(node.id);
+      } else {
+        collapseNode(node.id);
+      }
+    },
     setChildren: (newChildren) => {
+      const children = typeof newChildren === 'function' ? newChildren(node.children) : newChildren;
       setNode((prev) => ({
         ...prev,
-        children: Array.isArray(newChildren) ? newChildren : newChildren(prev.children)
+        children: Array.isArray(children) ? children : []
       }));
+
+      setNodeChildren(node.id, Array.isArray(children) ? children : []);
     },
     setIsLoading,
     setIsFocused,
@@ -60,7 +78,7 @@ export default function TreeNode({
     onFocusChange
   });
 
-  const { actionDetection } = useActionDetection(expandNode);
+  const { actionDetection } = useActionDetection(handleExpandNode);
   const { menu } = useTreeNodeMenu(node, actionDetection);
 
   return (
@@ -76,7 +94,7 @@ export default function TreeNode({
         nodeIndex={nodeIndex}
         focusNode={focusNode}
         actionDetection={actionDetection}
-        expandNode={expandNode}
+        expandNode={handleExpandNode}
         handleContextMenu={handleContextMenu}
         handleBlur={handleBlur}
         handleKeyDown={handleKeyDown}
@@ -87,6 +105,11 @@ export default function TreeNode({
 
       {isExpanded && node.children.length > 0 && (
         <ChildrenContainer>
+          {isLoading && (
+            <Box p={1}>
+              <LinearProgress />
+            </Box>
+          )}
           {node.children.map((child, index) => (
             <TreeNode
               key={child.id}

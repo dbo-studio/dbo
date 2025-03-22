@@ -24,5 +24,6 @@ const (
 	DropIndexAction              TreeNodeActionName = "dropIndex"
 	EditSequenceAction           TreeNodeActionName = "editSequence"
 	DropSequenceAction           TreeNodeActionName = "dropSequence"
-	CopyNameAction               TreeNodeActionName = "copy_name"
+	CopyNameAction               TreeNodeActionName = "copyName"
+	RefreshAction                TreeNodeActionName = "refresh"
 )
