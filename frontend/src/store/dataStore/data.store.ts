@@ -4,6 +4,7 @@ import { devtools } from 'zustand/middleware';
 import { useTabStore } from '../tabStore/tab.store';
 import { createDataColumnSlice } from './slices/dataColumn.slice';
 import { createDataEditedRowsSlice } from './slices/dataEditedRows.slice';
+import { createDataFormDataSlice } from './slices/dataFormData.slice';
 import { createDataQuerySlice } from './slices/dataQuery.slice';
 import { createDataRemovedRowsSlice } from './slices/dataRemovedRows.slice';
 import { createDataRowSlice } from './slices/dataRow.slice';
@@ -12,6 +13,7 @@ import { createDataUnsavedRowsSlice } from './slices/dataUnsavedRows.slice';
 import type {
   DataColumnSlice,
   DataEditedRowsSlice,
+  DataFormDataSlice,
   DataQuerySlice,
   DataRemovedRowsSlice,
   DataRowSlice,
@@ -27,7 +29,8 @@ type DataState = DataStore &
   DataRemovedRowsSlice &
   DataUnsavedRowsSlice &
   DataColumnSlice &
-  DataQuerySlice;
+  DataQuerySlice &
+  DataFormDataSlice;
 
 export const useDataStore = create<DataState>()(
   devtools(
@@ -41,7 +44,8 @@ export const useDataStore = create<DataState>()(
       ...createDataUnsavedRowsSlice(set, get, ...state),
       ...createDataSelectedRowsSlice(set, get, ...state),
       ...createDataColumnSlice(set, get, ...state),
-      ...createDataQuerySlice(set, get, ...state)
+      ...createDataQuerySlice(set, get, ...state),
+      ...createDataFormDataSlice(set, get, ...state)
     }),
     { name: 'data' }
   )

@@ -2,6 +2,7 @@ import api from '@/api';
 import type { FormFieldType } from '@/api/tree/types';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
@@ -11,7 +12,9 @@ export const useObjectActions = (tabId: string | undefined) => {
   const queryClient = useQueryClient();
   const { currentConnection } = useConnectionStore();
   const { getSelectedTab } = useTabStore();
+  const { updateFormData, getFormData } = useDataStore();
   const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
+  const action = selectedTab?.options?.action || '';
 
   const { mutateAsync: executeAction, isPending: pendingExecuteAction } = useMutation({
     mutationFn: api.tree.executeAction,
@@ -75,20 +78,9 @@ export const useObjectActions = (tabId: string | undefined) => {
     }
   };
 
-  const handleFormChange = (formSchema: FormFieldType[], field: string, value: any, onChange: (value: any) => void) => {
-    const formData = formSchema.reduce(
-      (acc, field) => {
-        acc[field.id] = field.value;
-        return acc;
-      },
-      {} as Record<string, any>
-    );
+  const handleAddArrayItem = (field: FormFieldType) => {
+    if (!tabId) return;
 
-    const newState = { ...formData, [field]: value };
-    onChange(newState);
-  };
-
-  const handleAddArrayItem = (field: FormFieldType, onChange: (value: any) => void) => {
     const template = field.fields?.[0];
     if (!template) return;
 
@@ -101,14 +93,61 @@ export const useObjectActions = (tabId: string | undefined) => {
       }))
     };
 
-    const newFields = [...(field.fields || []), newField];
-    onChange(newFields);
+    // Get current form data and update it
+    const formData = getFormData(tabId, action);
+    if (!formData) return;
+
+    // Find the field to update
+    const updatedFields = formData.map((f) => {
+      if (f.id === field.id) {
+        return {
+          ...f,
+          fields: [...(f.fields || []), newField]
+        };
+      }
+      return f;
+    });
+
+    // Update the store
+    updateFormData(tabId, action, updatedFields);
+  };
+
+  const handleFieldChange = (formSchema: any, field: string, value: any) => {
+    // Create a new state object with all form values
+    const formData = formSchema.reduce(
+      (acc: Record<string, any>, field: any) => {
+        acc[field.id] = field.value;
+        return acc;
+      },
+      {} as Record<string, any>
+    );
+
+    // Update the field that changed
+    const newState = { ...formData, [field]: value };
+
+    // Update the form data in the store
+    if (tabId) {
+      const updatedFields = formSchema.map((field: any) => {
+        if (field.type === 'array') {
+          return {
+            ...field,
+            fields: newState[field.id]
+          };
+        }
+        return {
+          ...field,
+          value: newState[field.id]
+        };
+      });
+
+      updateFormData(tabId, action, updatedFields);
+    }
   };
 
   return {
     handleSave,
     handleCancel,
-    handleFormChange,
-    handleAddArrayItem
+    handleAddArrayItem,
+    handleFieldChange
   };
 };

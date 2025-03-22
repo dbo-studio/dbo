@@ -38,10 +38,13 @@ func (r *PostgresRepository) Execute(nodeID string, tabId contract.TreeTab, acti
 		return err
 	}
 
-	queries := append(
-		dbQueries,
-		schemaQueries...,
-	)
+	tableQueries, err := r.handleTableCommands(node, tabId, action, params)
+	if err != nil {
+		return err
+	}
+
+	queries := append(dbQueries, schemaQueries...)
+	queries = append(queries, tableQueries...)
 
 	for _, query := range queries {
 		if err := r.db.Exec(query).Error; err != nil {
@@ -52,70 +55,6 @@ func (r *PostgresRepository) Execute(nodeID string, tabId contract.TreeTab, acti
 	return nil
 
 	switch action {
-	case contract.CreateTableAction:
-		params, err := convertToDTO[dto.PostgresTableParams](params)
-		if err != nil {
-			return err
-		}
-		query := fmt.Sprintf("CREATE TABLE %s", params.Name)
-		if params.Owner != "" {
-			query += fmt.Sprintf(" OWNER %s", params.Owner)
-		}
-		if params.Tablespace != "" {
-			query += fmt.Sprintf(" TABLESPACE %s", params.Tablespace)
-		}
-		if params.AccessMethod != "" {
-			query += fmt.Sprintf(" USING %s", params.AccessMethod)
-		}
-		if params.Comment != "" {
-			query += fmt.Sprintf(" COMMENT '%s'", params.Comment)
-		}
-		if params.Persistence != "" {
-			query += fmt.Sprintf(" WITH %s", params.Persistence)
-		}
-		if params.PartitionExpression != "" {
-			query += fmt.Sprintf(" PARTITION BY %s", params.PartitionExpression)
-		}
-		if params.PartitionKey != "" {
-			query += fmt.Sprintf(" PARTITION BY %s", params.PartitionKey)
-		}
-		if params.Options != "" {
-			query += fmt.Sprintf(" WITH %s", params.Options)
-		}
-		return r.db.Exec(query).Error
-
-	case contract.EditTableAction:
-		params, err := convertToDTO[dto.PostgresTableParams](params)
-		if err != nil {
-			return err
-		}
-		query := fmt.Sprintf("ALTER TABLE %s", params.Name)
-		if params.Owner != "" {
-			query += fmt.Sprintf(" OWNER TO %s", params.Owner)
-		}
-		if params.Comment != "" {
-			query += fmt.Sprintf(" SET COMMENT '%s'", params.Comment)
-		}
-		if params.Tablespace != "" {
-			query += fmt.Sprintf(" SET TABLESPACE %s", params.Tablespace)
-		}
-		if params.AccessMethod != "" {
-			query += fmt.Sprintf(" SET ACCESS METHOD %s", params.AccessMethod)
-		}
-		if params.Options != "" {
-			query += fmt.Sprintf(" SET %s", params.Options)
-		}
-		if params.PartitionExpression != "" {
-			query += fmt.Sprintf(" SET PARTITION BY %s", params.PartitionExpression)
-		}
-		if params.PartitionKey != "" {
-			query += fmt.Sprintf(" SET PARTITION BY %s", params.PartitionKey)
-		}
-		if params.Persistence != "" {
-			query += fmt.Sprintf(" SET PERSISTENCE %s", params.Persistence)
-		}
-		return r.db.Exec(query).Error
-
 	case contract.CreateViewAction:
 		params, err := convertToDTO[dto.PostgresViewParams](params)
 		if err != nil {
@@ -398,7 +337,12 @@ func (r *PostgresRepository) handleSchemaCommands(node PGNode, tabId contract.Tr
 		if err != nil {
 			return nil, err
 		}
-		query := fmt.Sprintf("ALTER SCHEMA %s", *params.Name)
+		query := fmt.Sprintf("ALTER SCHEMA %s", findField(oldFields, "Name"))
+
+		if params.Name != nil {
+			query += fmt.Sprintf(" RENAME TO %s", *params.Name)
+		}
+
 		if params.Owner != nil {
 			query += fmt.Sprintf(" OWNER TO %s", *params.Owner)
 		}
@@ -408,6 +352,84 @@ func (r *PostgresRepository) handleSchemaCommands(node PGNode, tabId contract.Tr
 		if params.Comment != nil {
 			queries = append(queries, fmt.Sprintf("COMMENT ON SCHEMA %s IS %s", findField(oldFields, "Name"), *params.Comment))
 		}
+	}
+
+	return queries, nil
+}
+
+func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, error) {
+	queries := []string{}
+	oldFields, err := r.getTableInfo(node)
+	if err != nil {
+		return nil, err
+	}
+
+	switch action {
+	case contract.CreateTableAction:
+		params, err := convertToDTO[dto.PostgresTableParams](params)
+		if err != nil {
+			return nil, err
+		}
+
+		query := fmt.Sprintf("CREATE TABLE %s", params.Name)
+		if params.Owner != "" {
+			query += fmt.Sprintf(" OWNER %s", params.Owner)
+		}
+		if params.Tablespace != "" {
+			query += fmt.Sprintf(" TABLESPACE %s", params.Tablespace)
+		}
+		if params.AccessMethod != "" {
+			query += fmt.Sprintf(" USING %s", params.AccessMethod)
+		}
+		if params.Comment != "" {
+			query += fmt.Sprintf(" COMMENT '%s'", params.Comment)
+		}
+		if params.Persistence != "" {
+			query += fmt.Sprintf(" WITH %s", params.Persistence)
+		}
+		if params.PartitionExpression != "" {
+			query += fmt.Sprintf(" PARTITION BY %s", params.PartitionExpression)
+		}
+		if params.PartitionKey != "" {
+			query += fmt.Sprintf(" PARTITION BY %s", params.PartitionKey)
+		}
+		if params.Options != "" {
+			query += fmt.Sprintf(" WITH %s", params.Options)
+		}
+
+		queries = append(queries, query)
+
+	case contract.EditTableAction:
+		params, err := convertToDTO[dto.PostgresTableParams](params)
+		if err != nil {
+			return nil, err
+		}
+		query := fmt.Sprintf("ALTER TABLE %s", findField(oldFields, "Name"))
+		if params.Owner != "" {
+			query += fmt.Sprintf(" OWNER TO %s", params.Owner)
+		}
+		if params.Comment != "" {
+			query += fmt.Sprintf(" SET COMMENT '%s'", params.Comment)
+		}
+		if params.Tablespace != "" {
+			query += fmt.Sprintf(" SET TABLESPACE %s", params.Tablespace)
+		}
+		if params.AccessMethod != "" {
+			query += fmt.Sprintf(" SET ACCESS METHOD %s", params.AccessMethod)
+		}
+		if params.Options != "" {
+			query += fmt.Sprintf(" SET %s", params.Options)
+		}
+		if params.PartitionExpression != "" {
+			query += fmt.Sprintf(" SET PARTITION BY %s", params.PartitionExpression)
+		}
+		if params.PartitionKey != "" {
+			query += fmt.Sprintf(" SET PARTITION BY %s", params.PartitionKey)
+		}
+		if params.Persistence != "" {
+			query += fmt.Sprintf(" SET PERSISTENCE %s", params.Persistence)
+		}
+		queries = append(queries, query)
 	}
 
 	return queries, nil

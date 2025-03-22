@@ -26,7 +26,6 @@ export type SimpleFieldProps = {
 export type TableFormProps = {
   tabId: string | undefined;
   formSchema: FormFieldType[];
-  onChange: (data: Record<string, any>) => void;
 };
 
 export type StatusBarProps = {

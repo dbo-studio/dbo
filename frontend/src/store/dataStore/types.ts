@@ -64,3 +64,10 @@ export type SelectedRow = {
   selectedColumns: string[];
   data: Record<string, any>; // The row's data object
 };
+
+export type DataFormDataSlice = {
+  formDataByTab: Record<string, any[]>;
+  getFormData: (tabId: string, action: string) => any[] | undefined;
+  updateFormData: (tabId: string, action: string, data: any[]) => void;
+  resetFormData: (tabId: string, action: string) => void;
+};
