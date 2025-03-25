@@ -133,11 +133,6 @@ export default function TreeNode({
 
       {isExpanded && node.children.length > 0 && (
         <ChildrenContainer>
-          {isLoading && (
-            <Box p={1}>
-              <LinearProgress />
-            </Box>
-          )}
           {node.children.map((child, index) => (
             <TreeNode
               key={child.id}

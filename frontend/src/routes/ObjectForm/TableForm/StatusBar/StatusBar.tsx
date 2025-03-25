@@ -7,11 +7,11 @@ export default function StatusBar({ onSave, onCancel, onAdd, disabled }: StatusB
   return (
     <StatusBarStyled>
       {onAdd && (
-        <IconButton disabled={disabled} onClick={onAdd}>
+        <IconButton sx={{ marginRight: 2 }} disabled={disabled} onClick={onAdd}>
           <CustomIcon type='plus' size='s' />
         </IconButton>
       )}
-      <Box ml={2}>
+      <Box>
         <IconButton disabled={disabled} onClick={onSave}>
           <CustomIcon type='check' size='s' />
         </IconButton>

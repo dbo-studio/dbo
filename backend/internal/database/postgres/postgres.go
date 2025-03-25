@@ -2,11 +2,13 @@ package databasePostgres
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
 
@@ -43,8 +45,14 @@ func (r *PostgresRepository) Execute(nodeID string, tabId contract.TreeTab, acti
 		return err
 	}
 
+	tableColumnQueries, err := r.handleTableColumnCommands(node, tabId, action, params)
+	if err != nil {
+		return err
+	}
+
 	queries := append(dbQueries, schemaQueries...)
 	queries = append(queries, tableQueries...)
+	queries = append(queries, tableColumnQueries...)
 
 	for _, query := range queries {
 		if err := r.db.Exec(query).Error; err != nil {
@@ -360,6 +368,10 @@ func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.Tre
 		return nil, err
 	}
 
+	if tabId != contract.TableTab {
+		return queries, nil
+	}
+
 	switch action {
 	case contract.CreateTableAction:
 		params, err := convertToDTO[dto.PostgresTableParams](params)
@@ -420,6 +432,149 @@ func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.Tre
 	return queries, nil
 }
 
+func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, error) {
+	queries := []string{}
+
+	if tabId != contract.TableColumnsTab {
+		return queries, nil
+	}
+
+	switch action {
+	case contract.CreateTableAction:
+		params, err := convertToDTO[dto.PostgresTableColumnParams](params)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, column := range params.Columns {
+			columnDef := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s", node.Table, *column.Name, *column.DataType)
+
+			if column.MaxLength != nil {
+				columnDef = fmt.Sprintf("%s(%d)", columnDef, *column.MaxLength)
+			}
+
+			if column.NumericScale != nil {
+				columnDef = fmt.Sprintf("%s(%d,%d)", columnDef, *column.MaxLength, *column.NumericScale)
+			}
+
+			if lo.FromPtr(column.NotNull) {
+				columnDef += " NOT NULL"
+			}
+
+			if lo.FromPtr(column.Primary) {
+				columnDef += " PRIMARY KEY"
+			}
+
+			if column.Default != nil {
+				columnDef += fmt.Sprintf(" DEFAULT %s", *column.Default)
+			}
+
+			if lo.FromPtr(column.IsIdentity) {
+				columnDef += " GENERATED ALWAYS AS IDENTITY"
+			}
+
+			if lo.FromPtr(column.IsGenerated) {
+				if column.Default != nil {
+					columnDef += fmt.Sprintf(" GENERATED ALWAYS AS (%s) STORED", *column.Default)
+				}
+			}
+
+			alterQuery := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s", node.Table, columnDef)
+
+			queries = append(queries, alterQuery)
+
+			if column.Comment != nil {
+				queries = append(queries, fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'",
+					node.Table, *column.Name, *column.Comment))
+			}
+		}
+
+	case contract.EditTableAction:
+		params, err := convertToDTO[dto.PostgresTableColumnParams](params)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, column := range params.Columns {
+			// Handle column rename if needed
+			// We'd need additional info to know the old name
+
+			// Handle data type change
+			if column.DataType != nil && *column.DataType != "" {
+				dataTypeQuery := fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s TYPE %s",
+					node.Table, *column.Name, *column.DataType)
+
+				// Handle length/precision for the type
+				if column.MaxLength != nil && *column.MaxLength > 0 {
+					if isCharacterType(*column.DataType) {
+						dataTypeQuery = fmt.Sprintf("%s(%d)", dataTypeQuery, *column.MaxLength)
+					} else if isNumericType(*column.DataType) && column.NumericScale != nil {
+						dataTypeQuery = fmt.Sprintf("%s(%d,%d)", dataTypeQuery, *column.MaxLength, *column.NumericScale)
+					}
+				}
+
+				queries = append(queries, dataTypeQuery)
+			}
+
+			// Handle NOT NULL constraint
+			if column.NotNull != nil {
+				if *column.NotNull {
+					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s SET NOT NULL",
+						node.Table, *column.Name))
+				} else {
+					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s DROP NOT NULL",
+						node.Table, *column.Name))
+				}
+			}
+
+			// Handle DEFAULT value
+			if column.Default != nil {
+				if *column.Default != "" {
+					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s SET DEFAULT %s",
+						node.Table, *column.Name, *column.Default))
+				} else {
+					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s DROP DEFAULT",
+						node.Table, *column.Name))
+				}
+			}
+
+			// Handle comment
+			if column.Comment != nil && *column.Comment != "" {
+				commentQuery := fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'",
+					node.Table, *column.Name, *column.Comment)
+				queries = append(queries, commentQuery)
+			}
+		}
+
+	case contract.DropTableAction:
+		// No additional column-specific actions needed for dropping the entire table
+	}
+
+	return queries, nil
+}
+
+// Helper function to check if a data type is a character type
+func isCharacterType(dataType string) bool {
+	characterTypes := []string{"char", "character", "varchar", "character varying", "text"}
+	for _, t := range characterTypes {
+		if dataType == t {
+			return true
+		}
+	}
+	return false
+}
+
+// Helper function to check if a data type is a numeric type that needs precision/scale
+func isNumericType(dataType string) bool {
+	numericTypes := []string{"numeric", "decimal"}
+	for _, t := range numericTypes {
+		if dataType == t {
+			return true
+		}
+	}
+	return false
+}
+
 func findField(fields []contract.FormField, field string) string {
 	for _, f := range fields {
 		if f.Name == field {
@@ -427,4 +582,80 @@ func findField(fields []contract.FormField, field string) string {
 		}
 	}
 	return ""
+}
+
+// Helper function to build a CREATE TABLE query with columns
+func buildCreateTableQuery(tableName string, columns []struct {
+	Name         *string `json:"column_name"`
+	DataType     *string `json:"data_type,omitempty"`
+	NotNull      *bool   `json:"not_null,omitempty"`
+	Primary      *bool   `json:"primary,omitempty"`
+	Default      *string `json:"column_default,omitempty"`
+	Comment      *string `json:"comment,omitempty"`
+	MaxLength    *int64  `json:"character_maximum_length,omitempty"`
+	NumericScale *int64  `json:"numeric_scale,omitempty"`
+	IsIdentity   *bool   `json:"is_identity,omitempty"`
+	IsGenerated  *bool   `json:"is_generated,omitempty"`
+}) string {
+	// Start with the basic CREATE TABLE statement
+	query := fmt.Sprintf("CREATE TABLE %s (", tableName)
+
+	// If there are no columns provided, add a default ID column
+	if len(columns) == 0 {
+		query += "id SERIAL PRIMARY KEY"
+	} else {
+		columnDefs := make([]string, 0, len(columns))
+
+		for _, col := range columns {
+			// Start with column name and data type
+			colDef := fmt.Sprintf("%s %s", *col.Name, *col.DataType)
+
+			// Handle character/numeric type length specifications
+			if col.MaxLength != nil && *col.MaxLength > 0 {
+				// For character types
+				if isCharacterType(*col.DataType) {
+					colDef = fmt.Sprintf("%s(%d)", colDef, *col.MaxLength)
+				} else if isNumericType(*col.DataType) && col.NumericScale != nil {
+					colDef = fmt.Sprintf("%s(%d,%d)", colDef, *col.MaxLength, *col.NumericScale)
+				}
+			}
+
+			// Add NOT NULL constraint if specified
+			if col.NotNull != nil && *col.NotNull {
+				colDef += " NOT NULL"
+			}
+
+			// Add PRIMARY KEY constraint if specified
+			if col.Primary != nil && *col.Primary {
+				colDef += " PRIMARY KEY"
+			}
+
+			// Add DEFAULT value if specified
+			if col.Default != nil && *col.Default != "" {
+				colDef += fmt.Sprintf(" DEFAULT %s", *col.Default)
+			}
+
+			// Handle identity column if specified
+			if col.IsIdentity != nil && *col.IsIdentity {
+				colDef += " GENERATED ALWAYS AS IDENTITY"
+			}
+
+			// Handle generated column if specified
+			if col.IsGenerated != nil && *col.IsGenerated {
+				// For generated columns, the default value should be an expression
+				if col.Default != nil && *col.Default != "" {
+					colDef += fmt.Sprintf(" GENERATED ALWAYS AS (%s) STORED", *col.Default)
+				}
+			}
+
+			columnDefs = append(columnDefs, colDef)
+		}
+
+		query += strings.Join(columnDefs, ", ")
+	}
+
+	// Close the parenthesis
+	query += ")"
+
+	return query
 }

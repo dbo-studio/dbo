@@ -37,9 +37,31 @@ export const useObjectActions = (tabId: string | undefined) => {
     try {
       const formData = formSchema.reduce(
         (acc, field) => {
-          if (field.value !== field.originalValue) {
+          // Handle array type fields
+          if (field.type === 'array' && field.fields) {
+            // If there's any content in the array, consider it changed from null
+            if (field.fields.length > 0 && field.originalValue === null) {
+              acc[field.id] = field.fields
+                .filter((item) => item.id !== 'empty')
+                .map((item: FormFieldType) => {
+                  // Extract values from nested fields
+                  if (item.fields) {
+                    return item.fields.reduce((itemAcc: Record<string, any>, nestedField: FormFieldType) => {
+                      if (nestedField.value !== null) {
+                        itemAcc[nestedField.id] = nestedField.value;
+                      }
+                      return itemAcc;
+                    }, {});
+                  }
+                  return item.value;
+                });
+            }
+          }
+          // Handle regular fields
+          else if (field.value !== field.originalValue) {
             acc[field.id] = field.value;
           }
+
           return acc;
         },
         {} as Record<string, any>

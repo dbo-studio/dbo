@@ -88,3 +88,18 @@ type ColumnDefinition struct {
 	Primary  bool   `json:"primary,omitempty"`
 	Default  string `json:"default,omitempty"`
 }
+
+type PostgresTableColumnParams struct {
+	Columns []struct {
+		Name         *string `json:"column_name"`
+		DataType     *string `json:"data_type,omitempty"`
+		NotNull      *bool   `json:"not_null,omitempty"`
+		Primary      *bool   `json:"primary,omitempty"`
+		Default      *string `json:"column_default,omitempty"`
+		Comment      *string `json:"comment,omitempty"`
+		MaxLength    *int64  `json:"character_maximum_length,omitempty"`
+		NumericScale *int64  `json:"numeric_scale,omitempty"`
+		IsIdentity   *bool   `json:"is_identity,omitempty"`
+		IsGenerated  *bool   `json:"is_generated,omitempty"`
+	} `json:"columns"`
+}
