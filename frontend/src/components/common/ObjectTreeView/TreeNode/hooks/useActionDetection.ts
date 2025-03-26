@@ -90,8 +90,11 @@ export const useActionDetection = (expandNode: (event: React.MouseEvent, focus?:
                   nodeId: node.id,
                   action: node.action.name,
                   connectionId: currentConnection.id,
-                  tabId: selectedTab?.id ?? '',
-                  data: {}
+                  data: {
+                    [selectedTab?.id ?? '']: {
+                      [node.id]: {}
+                    }
+                  }
                 });
 
                 toast.success(locales.action_executed_successfully);

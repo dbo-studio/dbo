@@ -232,7 +232,7 @@ func (r *PostgresRepository) getTableColumns(node PGNode) ([]contract.FormField,
 	query := r.db.Table("pg_attribute a").
 		Select(`
 			a.attname as column_name,
-			format_type(a.atttypid, a.atttypmod) as data_type,
+			format_type(a.atttypid, NULL) as data_type,
 			a.attnotnull as not_null,
 			pg_get_expr(ad.adbin, ad.adrelid) as column_default,
 			col.character_maximum_length,

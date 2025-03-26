@@ -4,29 +4,27 @@ import type { DataFormDataSlice } from '../types';
 export const createDataFormDataSlice: StateCreator<DataFormDataSlice, [], [], DataFormDataSlice> = (set, get) => ({
   formDataByTab: {},
 
-  getFormData: (tabId: string, action: string) => {
-    const key = `${tabId}${action}`;
-    const formData = get().formDataByTab[key];
+  getFormData: (tabId: string, objectTabId: string) => {
+    const formData = get().formDataByTab?.[tabId]?.[objectTabId];
     return formData;
   },
 
-  updateFormData: (tabId: string, action: string, data: any[]) => {
-    const key = `${tabId}${action}`;
-
+  updateFormData: (tabId: string, objectTabId: string, data: any[]) => {
     set((state: DataFormDataSlice) => ({
       formDataByTab: {
         ...state.formDataByTab,
-        [key]: data
+        [tabId]: {
+          ...state.formDataByTab[tabId],
+          [objectTabId]: data
+        }
       }
     }));
   },
 
-  resetFormData: (tabId: string, action: string) => {
-    const key = `${tabId}${action}`;
-
+  resetFormData: (tabId: string, objectTabId: string) => {
     set((state: DataFormDataSlice) => {
       const newState = { ...state.formDataByTab };
-      delete newState[key];
+      delete newState[tabId][objectTabId];
 
       return {
         formDataByTab: newState

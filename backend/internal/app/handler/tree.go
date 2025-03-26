@@ -87,7 +87,6 @@ func (h *TreeHandler) ExecuteHandler(c fiber.Ctx) error {
 	req := &dto.ObjectExecuteRequest{
 		ConnectionId: fiber.Query[int32](c, "connectionId"),
 		NodeId:       fiber.Params[string](c, "nodeId"),
-		TabId:        fiber.Params[string](c, "tabId"),
 		Action:       fiber.Params[string](c, "action"),
 		Params:       c.Body(),
 	}

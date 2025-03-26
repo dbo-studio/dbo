@@ -13,7 +13,7 @@ export const useObjectActions = (tabId: string | undefined) => {
   const queryClient = useQueryClient();
   const { currentConnection } = useConnectionStore();
   const { getSelectedTab } = useTabStore();
-  const { updateFormData, getFormData, resetFormData } = useDataStore();
+  const { updateFormData, getFormData, resetFormData, formDataByTab } = useDataStore();
   const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
   const action = selectedTab?.options?.action || '';
   const { reloadTree } = useTreeStore();
@@ -31,43 +31,55 @@ export const useObjectActions = (tabId: string | undefined) => {
     }
   });
 
-  const handleSave = async (formSchema: FormFieldType[]) => {
-    if (!currentConnection || !tabId || !selectedTab || pendingExecuteAction) return;
+  const handleSave = async () => {
+    if (!currentConnection || !selectedTab || pendingExecuteAction) return;
 
     try {
-      const formData = formSchema.reduce(
-        (acc, field) => {
-          // Handle array type fields
-          if (field.type === 'array' && field.fields) {
-            // If there's any content in the array, consider it changed from null
-            if (field.fields.length > 0 && field.originalValue === null) {
-              acc[field.id] = field.fields
-                .filter((item) => item.id !== 'empty')
-                .map((item: FormFieldType) => {
-                  // Extract values from nested fields
-                  if (item.fields) {
-                    return item.fields.reduce((itemAcc: Record<string, any>, nestedField: FormFieldType) => {
-                      if (nestedField.value !== null) {
-                        itemAcc[nestedField.id] = nestedField.value;
+      // Get all form data from all tabs
+      const allFormData = Object.entries(formDataByTab[selectedTab.id] || {}).reduce(
+        (acc, [tabId, fields]) => {
+          const tabData = fields.reduce(
+            (fieldAcc: Record<string, any>, field: FormFieldType) => {
+              // Handle array type fields
+              if (field.type === 'array' && field.fields) {
+                // If there's any content in the array, consider it changed from null
+                if (field.fields.length > 0 && field.originalValue === null) {
+                  fieldAcc[field.id] = field.fields
+                    .filter((item) => item.id !== 'empty')
+                    .map((item: FormFieldType) => {
+                      // Extract values from nested fields
+                      if (item.fields) {
+                        return item.fields.reduce((itemAcc: Record<string, any>, nestedField: FormFieldType) => {
+                          if (nestedField.value !== null) {
+                            itemAcc[nestedField.id] = nestedField.value;
+                          }
+                          return itemAcc;
+                        }, {});
                       }
-                      return itemAcc;
-                    }, {});
-                  }
-                  return item.value;
-                });
-            }
-          }
-          // Handle regular fields
-          else if (field.value !== field.originalValue) {
-            acc[field.id] = field.value;
+                      return item.value;
+                    });
+                }
+              }
+              // Handle regular fields
+              else if (field.value !== field.originalValue) {
+                fieldAcc[field.id] = field.value;
+              }
+
+              return fieldAcc;
+            },
+            {} as Record<string, any>
+          );
+
+          if (Object.keys(tabData).length > 0) {
+            acc[tabId] = tabData;
           }
 
           return acc;
         },
-        {} as Record<string, any>
+        {} as Record<string, Record<string, any>>
       );
 
-      if (Object.keys(formData).length === 0) {
+      if (Object.keys(allFormData).length === 0) {
         toast.info(locales.no_changes_detected);
         return;
       }
@@ -75,9 +87,8 @@ export const useObjectActions = (tabId: string | undefined) => {
       await executeAction({
         nodeId: selectedTab.nodeId,
         action: selectedTab.options?.action || '',
-        tabId: tabId,
         connectionId: currentConnection.id,
-        data: formData
+        data: allFormData
       });
 
       toast.success(locales.changes_saved_successfully);
@@ -113,7 +124,7 @@ export const useObjectActions = (tabId: string | undefined) => {
     };
 
     // Get current form data and update it
-    const formData = getFormData(tabId, action);
+    const formData = getFormData(selectedTab?.id ?? '', tabId);
     if (!formData) return;
 
     // Find the field to update
@@ -128,7 +139,7 @@ export const useObjectActions = (tabId: string | undefined) => {
     });
 
     // Update the store
-    updateFormData(tabId, action, updatedFields);
+    updateFormData(selectedTab?.id ?? '', tabId, updatedFields);
   };
 
   const handleFieldChange = (formSchema: any, field: string, value: any) => {
@@ -159,7 +170,7 @@ export const useObjectActions = (tabId: string | undefined) => {
         };
       });
 
-      updateFormData(tabId, action, updatedFields);
+      updateFormData(selectedTab?.id ?? '', tabId, updatedFields);
     }
   };
 

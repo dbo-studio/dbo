@@ -66,8 +66,8 @@ export type SelectedRow = {
 };
 
 export type DataFormDataSlice = {
-  formDataByTab: Record<string, any[]>;
-  getFormData: (tabId: string, action: string) => any[] | undefined;
-  updateFormData: (tabId: string, action: string, data: any[]) => void;
-  resetFormData: (tabId: string, action: string) => void;
+  formDataByTab: Record<string, Record<string, any>>;
+  getFormData: (tabId: string, objectTabId: string) => any[] | undefined;
+  updateFormData: (tabId: string, objectTabId: string, data: any[]) => void;
+  resetFormData: (tabId: string, objectTabId: string) => void;
 };

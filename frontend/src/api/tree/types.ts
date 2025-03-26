@@ -44,8 +44,11 @@ export type ObjectRequestType = {
   tabId: string;
 };
 
-export type SaveObjectRequestType = ObjectRequestType & {
-  data: any;
+export type SaveObjectRequestType = {
+  connectionId: number;
+  nodeId: string;
+  action: string;
+  data: Record<string, any>;
 };
 
 export type TreeNodeType = {

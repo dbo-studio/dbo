@@ -26,7 +26,7 @@ export default function TableForm({ tabId, formSchema }: TableFormProps) {
         ))}
       </Box>
       <StatusBar
-        onSave={() => handleSave(formSchema)}
+        onSave={handleSave}
         onCancel={handleCancel}
         onAdd={arrayFields.length > 0 ? () => handleAddArrayItem(arrayFields[0]) : undefined}
         disabled={!formSchema}

@@ -97,8 +97,8 @@ type PostgresTableColumnParams struct {
 		Primary      *bool   `json:"primary,omitempty"`
 		Default      *string `json:"column_default,omitempty"`
 		Comment      *string `json:"comment,omitempty"`
-		MaxLength    *int64  `json:"character_maximum_length,omitempty"`
-		NumericScale *int64  `json:"numeric_scale,omitempty"`
+		MaxLength    *string `json:"character_maximum_length,omitempty"`
+		NumericScale *string `json:"numeric_scale,omitempty"`
 		IsIdentity   *bool   `json:"is_identity,omitempty"`
 		IsGenerated  *bool   `json:"is_generated,omitempty"`
 	} `json:"columns"`

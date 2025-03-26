@@ -126,7 +126,7 @@ func (r *PostgresRepository) getColumns(table string, schema string, columnNames
 
 	err := r.db.Table("information_schema.columns AS cols").
 		Select("cols.ordinal_position, cols.column_name, cols.data_type, cols.is_nullable, cols.column_default, cols.character_maximum_length, des.description AS column_comment").
-		Joins("LEFT JOIN pg_catalog.pg_description AS des ON (des.objoid = (SELECT c.oid FROM pg_catalog.pg_class AS c WHERE c.relname = cols.table_name) AND des.objsubid = cols.ordinal_position)").
+		Joins("LEFT JOIN pg_catalog.pg_description AS des ON (des.objoid = (SELECT c.oid FROM pg_catalog.pg_class AS c WHERE c.relname = cols.table_name LIMIT 1) AND des.objsubid = cols.ordinal_position)").
 		Where("cols.table_schema = ? AND cols.table_name = ?", schema, table).
 		Order("cols.ordinal_position").
 		Scan(&columns).Error

@@ -2,7 +2,7 @@ package databasePostgres
 
 import (
 	"fmt"
-	"strings"
+	"net/url"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
@@ -28,33 +28,58 @@ func NewPostgresRepository(connection *model.Connection, cm *databaseConnection.
 	}, nil
 }
 
-func (r *PostgresRepository) Execute(nodeID string, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) error {
+func (r *PostgresRepository) Execute(nodeID string, action contract.TreeNodeActionName, params []byte) error {
 	node := extractNode(nodeID)
-	dbQueries, err := r.handleDatabaseCommands(node, tabId, action, params)
+	type ExecuteParams map[contract.TreeTab]any
+	executeParams, err := convertToDTO[ExecuteParams](params)
 	if err != nil {
 		return err
 	}
 
-	schemaQueries, err := r.handleSchemaCommands(node, tabId, action, params)
-	if err != nil {
-		return err
-	}
+	queries := []string{}
 
-	tableQueries, err := r.handleTableCommands(node, tabId, action, params)
-	if err != nil {
-		return err
-	}
+	tableName := ""
+	for tabId := range executeParams {
+		dbQueries, err := r.handleDatabaseCommands(node, tabId, action, params)
+		if err != nil {
+			return err
+		}
 
-	tableColumnQueries, err := r.handleTableColumnCommands(node, tabId, action, params)
-	if err != nil {
-		return err
-	}
+		schemaQueries, err := r.handleSchemaCommands(node, tabId, action, params)
+		if err != nil {
+			return err
+		}
 
-	queries := append(dbQueries, schemaQueries...)
-	queries = append(queries, tableQueries...)
-	queries = append(queries, tableColumnQueries...)
+		tableQueries, t, err := r.handleTableCommands(node, tabId, action, params)
+		if err != nil {
+			return err
+		}
+
+		if tableName == "" {
+			tableName = t
+		}
+
+		tableColumnQueries, err := r.handleTableColumnCommands(node, tableName, tabId, action, params)
+		if err != nil {
+			return err
+		}
+
+		queries = append(queries, dbQueries...)
+		queries = append(queries, schemaQueries...)
+		queries = append(queries, tableQueries...)
+		queries = append(queries, tableColumnQueries...)
+	}
 
 	for _, query := range queries {
+		if query == "" {
+			continue
+		}
+
+		query, err = url.PathUnescape(query)
+		if err != nil {
+			return err
+		}
+
 		if err := r.db.Exec(query).Error; err != nil {
 			return err
 		}
@@ -254,10 +279,13 @@ func (r *PostgresRepository) handleDatabaseCommands(node PGNode, tabId contract.
 
 	switch action {
 	case contract.CreateDatabaseAction:
-		params, err := convertToDTO[dto.PostgresDatabaseParams](params)
+		dto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresDatabaseParams](params)
 		if err != nil {
 			return nil, err
 		}
+
+		params := dto[tabId]
+
 		query := fmt.Sprintf("CREATE DATABASE %s", *params.Name)
 		if params.Owner != nil {
 			query += fmt.Sprintf(" OWNER %s", *params.Owner)
@@ -318,12 +346,13 @@ func (r *PostgresRepository) handleSchemaCommands(node PGNode, tabId contract.Tr
 
 	switch action {
 	case contract.CreateSchemaAction:
-		params, err := convertToDTO[dto.PostgresSchemaParams](params)
+		dto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresSchemaParams](params)
 		if err != nil {
 			return nil, err
 		}
-		query := fmt.Sprintf("CREATE SCHEMA %s", *params.Name)
+		params := dto[tabId]
 
+		query := fmt.Sprintf("CREATE SCHEMA %s", *params.Name)
 		if params.Owner != nil {
 			query += fmt.Sprintf(" AUTHORIZATION %s", *params.Owner)
 		}
@@ -360,25 +389,29 @@ func (r *PostgresRepository) handleSchemaCommands(node PGNode, tabId contract.Tr
 	return queries, nil
 }
 
-func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, error) {
+func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
 	queries := []string{}
+	var tableName string
 
 	oldFields, err := r.getTableInfo(node, action)
 	if err != nil {
-		return nil, err
+		return nil, tableName, err
 	}
 
-	if tabId != contract.TableTab {
-		return queries, nil
+	if tabId != contract.TableTab && action != contract.DropTableAction {
+		return queries, tableName, nil
 	}
 
 	switch action {
 	case contract.CreateTableAction:
-		params, err := convertToDTO[dto.PostgresTableParams](params)
+		dto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableParams](params)
 		if err != nil {
-			return nil, err
+			return nil, tableName, err
 		}
 
+		params := dto[tabId]
+
+		tableName = *params.Name
 		query := fmt.Sprintf("CREATE TABLE %s (", *params.Name)
 		if params.Tablespace != nil {
 			query += fmt.Sprintf(") TABLESPACE %s", *params.Tablespace)
@@ -401,10 +434,14 @@ func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.Tre
 		}
 
 	case contract.EditTableAction:
-		params, err := convertToDTO[dto.PostgresTableParams](params)
+		dto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableParams](params)
 		if err != nil {
-			return nil, err
+			return nil, tableName, err
 		}
+
+		params := dto[tabId]
+		tableName = *params.Name
+
 		if params.Name != nil {
 			queries = append(queries, fmt.Sprintf("ALTER TABLE %s RENAME TO %s", findField(oldFields, "Name"), *params.Name))
 		}
@@ -429,32 +466,33 @@ func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.Tre
 		queries = append(queries, query)
 	}
 
-	return queries, nil
+	return queries, tableName, nil
 }
 
-func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, error) {
+func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tableName string, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, error) {
 	queries := []string{}
 
-	if tabId != contract.TableColumnsTab {
+	if tabId != contract.TableColumnsTab || node.Table == "" {
 		return queries, nil
 	}
 
 	switch action {
 	case contract.CreateTableAction:
-		params, err := convertToDTO[dto.PostgresTableColumnParams](params)
+		dto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableColumnParams](params)
 		if err != nil {
 			return nil, err
 		}
 
+		params := dto[tabId]
 		for _, column := range params.Columns {
-			columnDef := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s", node.Table, *column.Name, *column.DataType)
+			columnDef := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s", tableName, *column.Name, *column.DataType)
 
 			if column.MaxLength != nil {
-				columnDef = fmt.Sprintf("%s(%d)", columnDef, *column.MaxLength)
+				columnDef = fmt.Sprintf("%s(%s)", columnDef, *column.MaxLength)
 			}
 
 			if column.NumericScale != nil {
-				columnDef = fmt.Sprintf("%s(%d,%d)", columnDef, *column.MaxLength, *column.NumericScale)
+				columnDef = fmt.Sprintf("%s(%s,%s)", columnDef, *column.MaxLength, *column.NumericScale)
 			}
 
 			if lo.FromPtr(column.NotNull) {
@@ -479,13 +517,11 @@ func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tabId contra
 				}
 			}
 
-			alterQuery := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s", node.Table, columnDef)
-
-			queries = append(queries, alterQuery)
+			queries = append(queries, columnDef)
 
 			if column.Comment != nil {
 				queries = append(queries, fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'",
-					node.Table, *column.Name, *column.Comment))
+					tableName, *column.Name, *column.Comment))
 			}
 		}
 
@@ -496,64 +532,55 @@ func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tabId contra
 		}
 
 		for _, column := range params.Columns {
-			// Handle column rename if needed
-			// We'd need additional info to know the old name
-
-			// Handle data type change
 			if column.DataType != nil && *column.DataType != "" {
 				dataTypeQuery := fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s TYPE %s",
-					node.Table, *column.Name, *column.DataType)
+					tableName, *column.Name, *column.DataType)
 
-				// Handle length/precision for the type
-				if column.MaxLength != nil && *column.MaxLength > 0 {
+				if column.MaxLength != nil && *column.MaxLength != "" {
 					if isCharacterType(*column.DataType) {
-						dataTypeQuery = fmt.Sprintf("%s(%d)", dataTypeQuery, *column.MaxLength)
+						dataTypeQuery = fmt.Sprintf("%s(%s)", dataTypeQuery, *column.MaxLength)
 					} else if isNumericType(*column.DataType) && column.NumericScale != nil {
-						dataTypeQuery = fmt.Sprintf("%s(%d,%d)", dataTypeQuery, *column.MaxLength, *column.NumericScale)
+						dataTypeQuery = fmt.Sprintf("%s(%s,%s)", dataTypeQuery, *column.MaxLength, *column.NumericScale)
 					}
 				}
 
 				queries = append(queries, dataTypeQuery)
 			}
 
-			// Handle NOT NULL constraint
 			if column.NotNull != nil {
 				if *column.NotNull {
 					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s SET NOT NULL",
-						node.Table, *column.Name))
+						tableName, *column.Name))
 				} else {
 					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s DROP NOT NULL",
-						node.Table, *column.Name))
+						tableName, *column.Name))
 				}
 			}
 
-			// Handle DEFAULT value
 			if column.Default != nil {
 				if *column.Default != "" {
 					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s SET DEFAULT %s",
-						node.Table, *column.Name, *column.Default))
+						tableName, *column.Name, *column.Default))
 				} else {
 					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s DROP DEFAULT",
-						node.Table, *column.Name))
+						tableName, *column.Name))
 				}
 			}
 
-			// Handle comment
 			if column.Comment != nil && *column.Comment != "" {
 				commentQuery := fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'",
-					node.Table, *column.Name, *column.Comment)
+					tableName, *column.Name, *column.Comment)
 				queries = append(queries, commentQuery)
 			}
 		}
 
 	case contract.DropTableAction:
-		// No additional column-specific actions needed for dropping the entire table
+		queries = append(queries, fmt.Sprintf("ALTER TABLE %s DROP COLUMN %s", tableName, node.Table))
 	}
 
 	return queries, nil
 }
 
-// Helper function to check if a data type is a character type
 func isCharacterType(dataType string) bool {
 	characterTypes := []string{"char", "character", "varchar", "character varying", "text"}
 	for _, t := range characterTypes {
@@ -564,7 +591,6 @@ func isCharacterType(dataType string) bool {
 	return false
 }
 
-// Helper function to check if a data type is a numeric type that needs precision/scale
 func isNumericType(dataType string) bool {
 	numericTypes := []string{"numeric", "decimal"}
 	for _, t := range numericTypes {
@@ -582,80 +608,4 @@ func findField(fields []contract.FormField, field string) string {
 		}
 	}
 	return ""
-}
-
-// Helper function to build a CREATE TABLE query with columns
-func buildCreateTableQuery(tableName string, columns []struct {
-	Name         *string `json:"column_name"`
-	DataType     *string `json:"data_type,omitempty"`
-	NotNull      *bool   `json:"not_null,omitempty"`
-	Primary      *bool   `json:"primary,omitempty"`
-	Default      *string `json:"column_default,omitempty"`
-	Comment      *string `json:"comment,omitempty"`
-	MaxLength    *int64  `json:"character_maximum_length,omitempty"`
-	NumericScale *int64  `json:"numeric_scale,omitempty"`
-	IsIdentity   *bool   `json:"is_identity,omitempty"`
-	IsGenerated  *bool   `json:"is_generated,omitempty"`
-}) string {
-	// Start with the basic CREATE TABLE statement
-	query := fmt.Sprintf("CREATE TABLE %s (", tableName)
-
-	// If there are no columns provided, add a default ID column
-	if len(columns) == 0 {
-		query += "id SERIAL PRIMARY KEY"
-	} else {
-		columnDefs := make([]string, 0, len(columns))
-
-		for _, col := range columns {
-			// Start with column name and data type
-			colDef := fmt.Sprintf("%s %s", *col.Name, *col.DataType)
-
-			// Handle character/numeric type length specifications
-			if col.MaxLength != nil && *col.MaxLength > 0 {
-				// For character types
-				if isCharacterType(*col.DataType) {
-					colDef = fmt.Sprintf("%s(%d)", colDef, *col.MaxLength)
-				} else if isNumericType(*col.DataType) && col.NumericScale != nil {
-					colDef = fmt.Sprintf("%s(%d,%d)", colDef, *col.MaxLength, *col.NumericScale)
-				}
-			}
-
-			// Add NOT NULL constraint if specified
-			if col.NotNull != nil && *col.NotNull {
-				colDef += " NOT NULL"
-			}
-
-			// Add PRIMARY KEY constraint if specified
-			if col.Primary != nil && *col.Primary {
-				colDef += " PRIMARY KEY"
-			}
-
-			// Add DEFAULT value if specified
-			if col.Default != nil && *col.Default != "" {
-				colDef += fmt.Sprintf(" DEFAULT %s", *col.Default)
-			}
-
-			// Handle identity column if specified
-			if col.IsIdentity != nil && *col.IsIdentity {
-				colDef += " GENERATED ALWAYS AS IDENTITY"
-			}
-
-			// Handle generated column if specified
-			if col.IsGenerated != nil && *col.IsGenerated {
-				// For generated columns, the default value should be an expression
-				if col.Default != nil && *col.Default != "" {
-					colDef += fmt.Sprintf(" GENERATED ALWAYS AS (%s) STORED", *col.Default)
-				}
-			}
-
-			columnDefs = append(columnDefs, colDef)
-		}
-
-		query += strings.Join(columnDefs, ", ")
-	}
-
-	// Close the parenthesis
-	query += ")"
-
-	return query
 }

@@ -46,34 +46,30 @@ export const useObjectFields = (currentTabId: string | undefined, isDetail = fal
     return currentTabId || '';
   };
 
-  const getAction = () => {
-    return selectedTab?.options?.action || '';
-  };
-
   const resetForm = () => {
     if (!currentTabId) return;
-    resetFormData(getTabId(), getAction());
+    resetFormData(selectedTab?.id ?? '', getTabId());
   };
 
   // Initialize or update form data when fields change from the server
   useEffect(() => {
     if (fields && currentTabId) {
-      const formData = getFormData(getTabId(), getAction());
+      const formData = getFormData(selectedTab?.id ?? '', getTabId());
       // Only initialize if no form data exists for this tab
       if (!formData) {
         const initialFields = fields.map((field) => ({
           ...field,
           value: field.originalValue
         }));
-        updateFormData(getTabId(), getAction(), initialFields);
+        updateFormData(selectedTab?.id ?? '', getTabId(), initialFields);
       }
     }
-  }, [fields, currentTabId, getAction, getTabId, getFormData, updateFormData]);
+  }, [fields, currentTabId, getFormData, getTabId, updateFormData]);
 
   const currentFields = useMemo(() => {
     if (!fields || !currentTabId) return null;
 
-    const formData = getFormData(getTabId(), getAction());
+    const formData = getFormData(selectedTab?.id ?? '', getTabId());
     if (formData) {
       return formData;
     }
@@ -82,7 +78,7 @@ export const useObjectFields = (currentTabId: string | undefined, isDetail = fal
       ...field,
       value: field.originalValue
     }));
-  }, [fields, currentTabId, getFormData, getTabId, getAction]);
+  }, [fields, currentTabId, getFormData, getTabId]);
 
   return {
     fields: currentFields,

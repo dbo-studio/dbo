@@ -111,7 +111,7 @@ func (i *ITreeServiceImpl) ObjectExecute(ctx context.Context, req *dto.ObjectExe
 		return apperror.InternalServerError(err)
 	}
 
-	err = repo.Execute(req.NodeId, contract.TreeTab(req.TabId), contract.TreeNodeActionName(req.Action), req.Params)
+	err = repo.Execute(req.NodeId, contract.TreeNodeActionName(req.Action), req.Params)
 	if err != nil {
 		return apperror.InternalServerError(err)
 	}

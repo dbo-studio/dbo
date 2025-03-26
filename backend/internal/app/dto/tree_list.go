@@ -30,7 +30,6 @@ type (
 		ConnectionId int32
 		NodeId       string
 		Action       string
-		TabId        string
 		Params       []byte
 	}
 )

@@ -179,12 +179,12 @@ func buildArrayResponse(query *gorm.DB, fields []contract.FormField) ([]contract
 	}, nil
 }
 
-func convertToDTO[T any](params []byte) (*T, error) {
+func convertToDTO[T any](params []byte) (T, error) {
 	var dtoParams T
 	err := json.Unmarshal(params, &dtoParams)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal params: %v", err)
+		return dtoParams, fmt.Errorf("failed to unmarshal params: %v", err)
 	}
 
-	return &dtoParams, nil
+	return dtoParams, nil
 }
