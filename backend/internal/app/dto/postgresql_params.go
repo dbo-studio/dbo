@@ -101,5 +101,6 @@ type PostgresTableColumnParams struct {
 		NumericScale *string `json:"numeric_scale,omitempty"`
 		IsIdentity   *bool   `json:"is_identity,omitempty"`
 		IsGenerated  *bool   `json:"is_generated,omitempty"`
+		Deleted      *bool   `json:"deleted,omitempty"`
 	} `json:"columns"`
 }

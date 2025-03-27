@@ -30,7 +30,12 @@ export default function ArrayField({ field, onChange, onAdd }: ArrayFieldProps) 
   };
 
   const handleDelete = (index: number) => {
-    const newFields = field.fields?.filter((_, i) => i !== index);
+    const newFields = field.fields?.map((item, i) => {
+      if (i === index) {
+        return { ...item, deleted: true };
+      }
+      return item;
+    });
     onChange(newFields || []);
   };
 
@@ -61,7 +66,7 @@ export default function ArrayField({ field, onChange, onAdd }: ArrayFieldProps) 
           <TableBody>
             {field?.fields?.map((item, index) => (
               <TableRow
-                sx={{ display: item.id === 'empty' ? 'none' : 'table-row' }}
+                sx={{ display: item.id === 'empty' || item.deleted ? 'none' : 'table-row' }}
                 key={`${field.id}-${index}-${item.name || ''}`}
               >
                 {item?.fields?.map((option) => {

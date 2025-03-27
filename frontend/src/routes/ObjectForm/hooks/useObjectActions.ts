@@ -35,33 +35,39 @@ export const useObjectActions = (tabId: string | undefined) => {
     if (!currentConnection || !selectedTab || pendingExecuteAction) return;
 
     try {
-      // Get all form data from all tabs
       const allFormData = Object.entries(formDataByTab[selectedTab.id] || {}).reduce(
         (acc, [tabId, fields]) => {
           const tabData = fields.reduce(
             (fieldAcc: Record<string, any>, field: FormFieldType) => {
-              // Handle array type fields
               if (field.type === 'array' && field.fields) {
-                // If there's any content in the array, consider it changed from null
-                if (field.fields.length > 0 && field.originalValue === null) {
-                  fieldAcc[field.id] = field.fields
-                    .filter((item) => item.id !== 'empty')
-                    .map((item: FormFieldType) => {
-                      // Extract values from nested fields
-                      if (item.fields) {
-                        return item.fields.reduce((itemAcc: Record<string, any>, nestedField: FormFieldType) => {
-                          if (nestedField.value !== null) {
-                            itemAcc[nestedField.id] = nestedField.value;
-                          }
-                          return itemAcc;
-                        }, {});
-                      }
-                      return item.value;
-                    });
+                const currentItems = field.fields
+                  .filter((item) => item.id !== 'empty')
+                  .map((item: FormFieldType) => {
+                    if (item.fields) {
+                      return item.fields.reduce((itemAcc: Record<string, any>, nestedField: FormFieldType) => {
+                        if (item.deleted) {
+                          itemAcc.deleted = item.deleted;
+                        }
+
+                        if (nestedField.value !== null) {
+                          itemAcc[nestedField.id] = Number.parseInt(nestedField.value)
+                            ? String(nestedField.value)
+                            : nestedField.value;
+                        }
+                        return itemAcc;
+                      }, {});
+                    }
+                    return item.value;
+                  });
+
+                // Get original array items
+                const originalItems = field.originalValue || [];
+
+                // Compare current and original arrays
+                if (JSON.stringify(currentItems) !== JSON.stringify(originalItems)) {
+                  fieldAcc[field.id] = currentItems;
                 }
-              }
-              // Handle regular fields
-              else if (field.value !== field.originalValue) {
+              } else if (field.value !== field.originalValue) {
                 fieldAcc[field.id] = field.value;
               }
 
