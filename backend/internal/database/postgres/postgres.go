@@ -526,15 +526,22 @@ func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tableName st
 		}
 
 	case contract.EditTableAction:
-		params, err := convertToDTO[dto.PostgresTableColumnParams](params)
+		dto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableColumnParams](params)
 		if err != nil {
 			return nil, err
 		}
 
+		params := dto[tabId]
+
 		for _, column := range params.Columns {
+			if lo.FromPtr(column.Deleted) {
+				queries = append(queries, fmt.Sprintf("ALTER TABLE %s DROP COLUMN %s", node.Table, *column.Name))
+				continue
+			}
+
 			if column.DataType != nil && *column.DataType != "" {
-				dataTypeQuery := fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s TYPE %s",
-					tableName, *column.Name, *column.DataType)
+				dataTypeQuery := fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s TYPE %s USING %s::%s",
+					node.Table, *column.Name, *column.DataType, *column.Name, *column.DataType)
 
 				if column.MaxLength != nil && *column.MaxLength != "" {
 					if isCharacterType(*column.DataType) {
@@ -550,34 +557,30 @@ func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tableName st
 			if column.NotNull != nil {
 				if *column.NotNull {
 					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s SET NOT NULL",
-						tableName, *column.Name))
+						node.Table, *column.Name))
 				} else {
 					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s DROP NOT NULL",
-						tableName, *column.Name))
+						node.Table, *column.Name))
 				}
 			}
 
 			if column.Default != nil {
 				if *column.Default != "" {
 					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s SET DEFAULT %s",
-						tableName, *column.Name, *column.Default))
+						node.Table, *column.Name, *column.Default))
 				} else {
 					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s DROP DEFAULT",
-						tableName, *column.Name))
+						node.Table, *column.Name))
 				}
 			}
 
 			if column.Comment != nil && *column.Comment != "" {
 				commentQuery := fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'",
-					tableName, *column.Name, *column.Comment)
+					node.Table, *column.Name, *column.Comment)
 				queries = append(queries, commentQuery)
 			}
 		}
-
-	case contract.DropTableAction:
-		queries = append(queries, fmt.Sprintf("ALTER TABLE %s DROP COLUMN %s", tableName, node.Table))
 	}
-
 	return queries, nil
 }
 
