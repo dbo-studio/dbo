@@ -92,15 +92,30 @@ type ColumnDefinition struct {
 type PostgresTableColumnParams struct {
 	Columns []struct {
 		Name         *string `json:"column_name"`
-		DataType     *string `json:"data_type,omitempty"`
-		NotNull      *bool   `json:"not_null,omitempty"`
-		Primary      *bool   `json:"primary,omitempty"`
-		Default      *string `json:"column_default,omitempty"`
-		Comment      *string `json:"comment,omitempty"`
-		MaxLength    *string `json:"character_maximum_length,omitempty"`
-		NumericScale *string `json:"numeric_scale,omitempty"`
-		IsIdentity   *bool   `json:"is_identity,omitempty"`
-		IsGenerated  *bool   `json:"is_generated,omitempty"`
-		Deleted      *bool   `json:"deleted,omitempty"`
+		DataType     *string `json:"data_type"`
+		NotNull      *bool   `json:"not_null"`
+		Primary      *bool   `json:"primary"`
+		Default      *string `json:"column_default"`
+		Comment      *string `json:"comment"`
+		MaxLength    *string `json:"character_maximum_length"`
+		NumericScale *string `json:"numeric_scale"`
+		IsIdentity   *bool   `json:"is_identity"`
+		IsGenerated  *bool   `json:"is_generated"`
+		Deleted      *bool   `json:"deleted"`
+	} `json:"columns"`
+}
+
+type PostgresTableForeignKeyParams struct {
+	Columns []struct {
+		ConstraintName    *string  `json:"constraint_name"`
+		Comment           *string  `json:"comment"`
+		SourceColumns     []string `json:"ref_columns"`
+		TargetTable       *string  `json:"ref_table"`
+		TargetColumns     []string `json:"target_columns"`
+		OnUpdate          *string  `json:"update_action"`
+		OnDelete          *string  `json:"delete_action"`
+		IsDeferrable      *bool    `json:"is_deferrable"`
+		InitiallyDeferred *bool    `json:"initially_deferred"`
+		Deleted           *bool    `json:"deleted"`
 	} `json:"columns"`
 }

@@ -53,7 +53,7 @@ func (r *PostgresRepository) foreignKeyOptions(node PGNode) []contract.FormField
 		{ID: "comment", Name: "Comment", Type: "text"},
 		{ID: "ref_columns", Name: "Source Columns", Type: "multi-select", Fields: r.tableColumnsList(node)},
 		{ID: "ref_table", Name: "Target Table", Type: "select", Fields: r.tablesList(node)},
-		{ID: "target_columns", Name: "Target Columns", Type: "multi-select", Fields: r.tableColumnsList(node)},
+		{ID: "target_columns", Name: "Target Columns", Type: "chip"},
 		{ID: "update_action", Name: "On Update", Type: "select", Fields: []contract.FormField{
 			{Value: "NO ACTION", Name: "NO ACTION"},
 			{Value: "RESTRICT", Name: "RESTRICT"},

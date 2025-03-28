@@ -3,6 +3,7 @@ package databasePostgres
 import (
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
@@ -64,10 +65,16 @@ func (r *PostgresRepository) Execute(nodeID string, action contract.TreeNodeActi
 			return err
 		}
 
+		tableForeignKeyQueries, err := r.handleForeignKeyCommands(node, tableName, tabId, action, params)
+		if err != nil {
+			return err
+		}
+
 		queries = append(queries, dbQueries...)
 		queries = append(queries, schemaQueries...)
 		queries = append(queries, tableQueries...)
 		queries = append(queries, tableColumnQueries...)
+		queries = append(queries, tableForeignKeyQueries...)
 	}
 
 	for _, query := range queries {
@@ -393,13 +400,13 @@ func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.Tre
 	queries := []string{}
 	var tableName string
 
-	oldFields, err := r.getTableInfo(node, action)
-	if err != nil {
-		return nil, tableName, err
-	}
-
 	if tabId != contract.TableTab && action != contract.DropTableAction {
 		return queries, tableName, nil
+	}
+
+	oldFields, err := r.getTableInfo(node, action)
+	if err != nil {
+		return queries, tableName, err
 	}
 
 	switch action {
@@ -476,6 +483,11 @@ func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tableName st
 		return queries, nil
 	}
 
+	oldFields, err := r.getTableColumns(node)
+	if err != nil {
+		return queries, err
+	}
+
 	switch action {
 	case contract.CreateTableAction:
 		dto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableColumnParams](params)
@@ -534,14 +546,20 @@ func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tableName st
 		params := dto[tabId]
 
 		for _, column := range params.Columns {
+			alter := fmt.Sprintf(`ALTER TABLE "%s"."%s" `, node.Schema, node.Table)
+
 			if lo.FromPtr(column.Deleted) {
-				queries = append(queries, fmt.Sprintf("ALTER TABLE %s DROP COLUMN %s", node.Table, *column.Name))
+				queries = append(queries, fmt.Sprintf("%s DROP COLUMN %s", alter, *column.Name))
 				continue
 			}
 
-			if column.DataType != nil && *column.DataType != "" {
-				dataTypeQuery := fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s TYPE %s USING %s::%s",
-					node.Table, *column.Name, *column.DataType, *column.Name, *column.DataType)
+			if column.Name != nil {
+				queries = append(queries, fmt.Sprintf(`%s RENAME COLUMN "%s" TO "%s"`, alter, findField(oldFields, "Name"), *column.Name))
+			}
+
+			if column.DataType != nil {
+				dataTypeQuery := fmt.Sprintf(`%s ALTER COLUMN "%s" TYPE %s USING "%s"::%s`,
+					alter, *column.Name, *column.DataType, *column.Name, *column.DataType)
 
 				if column.MaxLength != nil && *column.MaxLength != "" {
 					if isCharacterType(*column.DataType) {
@@ -556,27 +574,142 @@ func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tableName st
 
 			if column.NotNull != nil {
 				if *column.NotNull {
-					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s SET NOT NULL",
-						node.Table, *column.Name))
+					queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" SET NOT NULL`,
+						alter, *column.Name))
 				} else {
-					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s DROP NOT NULL",
-						node.Table, *column.Name))
+					queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" DROP NOT NULL`,
+						alter, *column.Name))
 				}
 			}
 
 			if column.Default != nil {
 				if *column.Default != "" {
-					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s SET DEFAULT %s",
-						node.Table, *column.Name, *column.Default))
+					queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" SET DEFAULT %s`,
+						alter, *column.Name, *column.Default))
 				} else {
-					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s DROP DEFAULT",
-						node.Table, *column.Name))
+					queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" DROP DEFAULT`,
+						alter, *column.Name))
 				}
 			}
 
-			if column.Comment != nil && *column.Comment != "" {
+			if column.Comment != nil {
 				commentQuery := fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'",
 					node.Table, *column.Name, *column.Comment)
+				queries = append(queries, commentQuery)
+			}
+		}
+	}
+	return queries, nil
+}
+
+func (r *PostgresRepository) handleForeignKeyCommands(node PGNode, tableName string, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, error) {
+	queries := []string{}
+
+	if tabId != contract.TableForeignKeysTab || node.Table == "" {
+		return queries, nil
+	}
+
+	oldFields, err := r.getTableForeignKeys(node)
+	if err != nil {
+		return nil, err
+	}
+
+	switch action {
+	case contract.CreateTableAction:
+		dto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableForeignKeyParams](params)
+		if err != nil {
+			return nil, err
+		}
+
+		params := dto[tabId]
+		for _, column := range params.Columns {
+			columnDef := fmt.Sprintf("ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s)",
+				tableName,
+				*column.ConstraintName,
+				strings.Join(column.SourceColumns, ","),
+				*column.TargetTable,
+				strings.Join(column.TargetColumns, ","),
+			)
+
+			if column.OnUpdate != nil {
+				columnDef += fmt.Sprintf(" ON UPDATE %s", *column.OnUpdate)
+			}
+
+			if column.OnDelete != nil {
+				columnDef += fmt.Sprintf(" ON DELETE %s", *column.OnDelete)
+			}
+
+			if lo.FromPtr(column.IsDeferrable) {
+				columnDef += " DEFERRABLE"
+			}
+
+			if lo.FromPtr(column.InitiallyDeferred) {
+				columnDef += " INITIALLY DEFERRED"
+			}
+
+			queries = append(queries, columnDef)
+
+			if column.Comment != nil {
+				queries = append(queries, fmt.Sprintf("COMMENT ON CONSTRAINT %s ON %s IS '%s'",
+					*column.ConstraintName, tableName, *column.Comment))
+			}
+		}
+
+	case contract.EditTableAction:
+		dto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableForeignKeyParams](params)
+		if err != nil {
+			return nil, err
+		}
+
+		params := dto[tabId]
+
+		for _, column := range params.Columns {
+			if lo.FromPtr(column.Deleted) {
+				queries = append(queries, fmt.Sprintf("ALTER TABLE %s DROP CONSTRAINT %s", node.Table, *column.ConstraintName))
+				continue
+			}
+
+			if column.ConstraintName != nil {
+				queries = append(queries, fmt.Sprintf("ALTER TABLE %s RENAME CONSTRAINT %s TO %s", node.Table, findField(oldFields, "Constraint Name"), *column.ConstraintName))
+			}
+
+			if column.SourceColumns != nil || column.TargetTable != nil || column.TargetColumns != nil {
+				queries = append(queries, fmt.Sprintf("ALTER TABLE %s DROP CONSTRAINT %s, ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s)",
+					node.Table,
+					*column.ConstraintName,
+					*column.ConstraintName,
+					strings.Join(column.SourceColumns, ","),
+					*column.TargetTable,
+					strings.Join(column.TargetColumns, ",")))
+			}
+
+			if column.IsDeferrable != nil {
+				if *column.IsDeferrable {
+					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s DEFERRABLE", node.Table, *column.ConstraintName))
+				} else {
+					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s NOT DEFERRABLE", node.Table, *column.ConstraintName))
+				}
+			}
+
+			if column.InitiallyDeferred != nil {
+				if *column.InitiallyDeferred {
+					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s INITIALLY DEFERRED", node.Table, *column.ConstraintName))
+				} else {
+					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s INITIALLY IMMEDIATE", node.Table, *column.ConstraintName))
+				}
+			}
+
+			if column.OnUpdate != nil {
+				queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s ON UPDATE %s", node.Table, *column.ConstraintName, *column.OnUpdate))
+			}
+
+			if column.OnDelete != nil {
+				queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s ON DELETE %s", node.Table, *column.ConstraintName, *column.OnDelete))
+			}
+
+			if column.Comment != nil && *column.Comment != "" {
+				commentQuery := fmt.Sprintf("COMMENT ON CONSTRAINT %s ON %s IS '%s'",
+					*column.ConstraintName, node.Table, *column.Comment)
 				queries = append(queries, commentQuery)
 			}
 		}
@@ -606,6 +739,16 @@ func isNumericType(dataType string) bool {
 
 func findField(fields []contract.FormField, field string) string {
 	for _, f := range fields {
+		if f.Type == "array" {
+			for _, object := range f.Fields {
+				for _, item := range object.Fields {
+					if item.Name == field {
+						return item.Value.(string)
+					}
+				}
+			}
+		}
+
 		if f.Name == field {
 			return f.Value.(string)
 		}

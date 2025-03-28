@@ -1,3 +1,4 @@
+import ChipInput from '@/components/base/ChipInput/ChipInput';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor';
@@ -34,6 +35,17 @@ export default function SimpleField({ field, onChange, size = 'medium' }: Simple
             label={size === 'medium' ? field.name : undefined}
             value={field.value || (field.type === 'multi-select' ? [] : '')}
             options={field.fields?.map((opt) => ({ value: opt.value, label: opt.name })) || []}
+            onChange={(e) => onChange(e)}
+            size={size}
+          />
+        </Box>
+      );
+    case 'chip':
+      return (
+        <Box mb={size === 'small' ? 0 : 1}>
+          <ChipInput
+            label={size === 'medium' ? field.name : undefined}
+            value={field.value || []}
             onChange={(e) => onChange(e)}
             size={size}
           />

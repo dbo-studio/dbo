@@ -1,5 +1,5 @@
 import { getTauriVersion } from '@tauri-apps/api/app';
-import { format, type SqlLanguage } from 'sql-formatter';
+import { type SqlLanguage, format } from 'sql-formatter';
 import { isNumber, isObject } from '.';
 
 export const tools = {
@@ -67,5 +67,8 @@ export const tools = {
     } catch (e) {
       return false;
     }
+  },
+  isNumber: (value: string) => {
+    return /^-?\d*\.?\d+(e[+-]?\d+)?$/i.test(value);
   }
 };

@@ -1,5 +1,6 @@
 import api from '@/api';
 import type { FormFieldType } from '@/api/tree/types';
+import { tools } from '@/core/utils';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
@@ -50,9 +51,10 @@ export const useObjectActions = (tabId: string | undefined) => {
                         }
 
                         if (nestedField.value !== null) {
-                          itemAcc[nestedField.id] = Number.parseInt(nestedField.value)
-                            ? String(nestedField.value)
+                          const processedValue = tools.isNumber(nestedField.value)
+                            ? String(Number(nestedField.value))
                             : nestedField.value;
+                          itemAcc[nestedField.id] = processedValue;
                         }
                         return itemAcc;
                       }, {});

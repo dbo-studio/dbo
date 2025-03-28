@@ -3,3 +3,4 @@
 logs/*
 build
 node_modules
+frontend/.cursor

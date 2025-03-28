@@ -1,14 +1,15 @@
 import api from '@/api';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { TabType } from '@/types';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 export const useObjectTabs = () => {
-  const { getSelectedTab, updateSelectedTab } = useTabStore();
+  const { getSelectedTab } = useTabStore();
   const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
-  const [selectedTabIndex, setSelectedTabIndex] = useState(Number.parseInt(selectedTab?.options?.tabId));
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedTabIndex, setSelectedTabIndex] = useState(Number.parseInt(searchParams.get('objectTabId') ?? '0'));
   const { currentConnection } = useConnectionStore();
 
   const { data: tabs } = useQuery({
@@ -26,18 +27,13 @@ export const useObjectTabs = () => {
 
   const handleTabChange = (index: number) => {
     setSelectedTabIndex(index);
-    updateSelectedTab({
-      ...selectedTab,
-      options: {
-        ...selectedTab?.options,
-        tabId: index
-      }
-    } as TabType);
+    searchParams.set('objectTabId', index.toString());
+    setSearchParams(searchParams);
   };
 
   useEffect(() => {
     if (selectedTab) {
-      setSelectedTabIndex(Number.parseInt(selectedTab?.options?.tabId));
+      setSelectedTabIndex(Number.parseInt(searchParams.get('objectTabId') ?? '0'));
     }
   }, [selectedTab]);
 
