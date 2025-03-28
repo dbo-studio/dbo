@@ -62,14 +62,8 @@ export const useObjectActions = (tabId: string | undefined) => {
                     return item.value;
                   });
 
-                // Get original array items
-                const originalItems = field.originalValue || [];
-
-                // Compare current and original arrays
-                if (JSON.stringify(currentItems) !== JSON.stringify(originalItems)) {
-                  fieldAcc[field.id] = currentItems;
-                }
-              } else if (field.value !== field.originalValue) {
+                fieldAcc[field.id] = currentItems;
+              } else {
                 fieldAcc[field.id] = field.value;
               }
 
