@@ -36,6 +36,7 @@ export type FormFieldType = {
   originalValue?: any;
   fields?: FormFieldType[];
   deleted?: boolean;
+  added?: boolean;
 };
 
 export type ObjectRequestType = {

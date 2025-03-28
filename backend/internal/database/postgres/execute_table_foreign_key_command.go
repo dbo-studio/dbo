@@ -9,28 +9,24 @@ import (
 	"github.com/samber/lo"
 )
 
-func (r *PostgresRepository) handleForeignKeyCommands(node PGNode, tableName string, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, error) {
+func (r *PostgresRepository) handleForeignKeyCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
-	if tabId != contract.TableForeignKeysTab || node.Table == "" {
+	if tabId != contract.TableForeignKeysTab || node.Table == "" || (action != contract.CreateTableAction && action != contract.EditTableAction) {
 		return queries, nil
 	}
 
-	oldFields, err := r.getTableForeignKeys(node)
+	paramsDto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableForeignKeyParams](data)
 	if err != nil {
 		return nil, err
 	}
 
-	if action == contract.CreateTableAction {
-		dto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableForeignKeyParams](params)
-		if err != nil {
-			return nil, err
-		}
+	params := paramsDto[tabId]
 
-		params := dto[tabId]
+	if action == contract.CreateTableAction {
 		for _, column := range params.Columns {
 			columnDef := fmt.Sprintf("ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s)",
-				tableName,
+				node.Table,
 				*column.ConstraintName,
 				strings.Join(column.SourceColumns, ","),
 				*column.TargetTable,
@@ -57,32 +53,42 @@ func (r *PostgresRepository) handleForeignKeyCommands(node PGNode, tableName str
 
 			if column.Comment != nil {
 				queries = append(queries, fmt.Sprintf("COMMENT ON CONSTRAINT %s ON %s IS '%s'",
-					*column.ConstraintName, tableName, *column.Comment))
+					*column.ConstraintName, node.Table, *column.Comment))
 			}
 		}
 	}
 
 	if action == contract.EditTableAction {
-		dto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableForeignKeyParams](params)
+		oldFields, err := r.getTableForeignKeys(node)
 		if err != nil {
 			return nil, err
 		}
 
-		params := dto[tabId]
-
 		for _, column := range params.Columns {
+			column = compareAndSetNil(column, oldFields)
+			alter := fmt.Sprintf("ALTER TABLE %s", node.Table)
+
 			if lo.FromPtr(column.Deleted) {
-				queries = append(queries, fmt.Sprintf("ALTER TABLE %s DROP CONSTRAINT %s", node.Table, *column.ConstraintName))
+				queries = append(queries, fmt.Sprintf("%s DROP CONSTRAINT %s", alter, *column.ConstraintName))
 				continue
 			}
 
 			if column.ConstraintName != nil {
-				queries = append(queries, fmt.Sprintf("ALTER TABLE %s RENAME CONSTRAINT %s TO %s", node.Table, findField(oldFields, "Constraint Name"), *column.ConstraintName))
+				if lo.FromPtr(column.Added) {
+					queries = append(queries, fmt.Sprintf("%s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s)",
+						alter,
+						*column.ConstraintName,
+						strings.Join(column.SourceColumns, ","),
+						*column.TargetTable,
+						strings.Join(column.TargetColumns, ",")))
+				} else {
+					queries = append(queries, fmt.Sprintf("%s RENAME CONSTRAINT %s TO %s", alter, findField(oldFields, "constraint_name"), *column.ConstraintName))
+				}
 			}
 
 			if column.SourceColumns != nil || column.TargetTable != nil || column.TargetColumns != nil {
-				queries = append(queries, fmt.Sprintf("ALTER TABLE %s DROP CONSTRAINT %s, ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s)",
-					node.Table,
+				queries = append(queries, fmt.Sprintf("%s DROP CONSTRAINT %s, ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s)",
+					alter,
 					*column.ConstraintName,
 					*column.ConstraintName,
 					strings.Join(column.SourceColumns, ","),
@@ -92,26 +98,26 @@ func (r *PostgresRepository) handleForeignKeyCommands(node PGNode, tableName str
 
 			if column.IsDeferrable != nil {
 				if *column.IsDeferrable {
-					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s DEFERRABLE", node.Table, *column.ConstraintName))
+					queries = append(queries, fmt.Sprintf("%s ALTER CONSTRAINT %s DEFERRABLE", alter, *column.ConstraintName))
 				} else {
-					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s NOT DEFERRABLE", node.Table, *column.ConstraintName))
+					queries = append(queries, fmt.Sprintf("%s ALTER CONSTRAINT %s NOT DEFERRABLE", alter, *column.ConstraintName))
 				}
 			}
 
 			if column.InitiallyDeferred != nil {
 				if *column.InitiallyDeferred {
-					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s INITIALLY DEFERRED", node.Table, *column.ConstraintName))
+					queries = append(queries, fmt.Sprintf("%s ALTER CONSTRAINT %s INITIALLY DEFERRED", alter, *column.ConstraintName))
 				} else {
-					queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s INITIALLY IMMEDIATE", node.Table, *column.ConstraintName))
+					queries = append(queries, fmt.Sprintf("%s ALTER CONSTRAINT %s INITIALLY IMMEDIATE", alter, *column.ConstraintName))
 				}
 			}
 
 			if column.OnUpdate != nil {
-				queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s ON UPDATE %s", node.Table, *column.ConstraintName, *column.OnUpdate))
+				queries = append(queries, fmt.Sprintf("%s ALTER CONSTRAINT %s ON UPDATE %s", alter, *column.ConstraintName, *column.OnUpdate))
 			}
 
 			if column.OnDelete != nil {
-				queries = append(queries, fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s ON DELETE %s", node.Table, *column.ConstraintName, *column.OnDelete))
+				queries = append(queries, fmt.Sprintf("%s ALTER CONSTRAINT %s ON DELETE %s", alter, *column.ConstraintName, *column.OnDelete))
 			}
 
 			if column.Comment != nil && *column.Comment != "" {

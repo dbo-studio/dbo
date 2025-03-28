@@ -43,27 +43,29 @@ func (r *PostgresRepository) handleDatabaseCommands(node PGNode, tabId contract.
 
 	if action == contract.EditDatabaseAction {
 		params, err := convertToDTO[dto.PostgresDatabaseParams](params)
+		params = compareAndSetNil(params, oldFields)
+
 		if err != nil {
 			return nil, err
 		}
 
 		if params.Name != nil {
-			query := fmt.Sprintf("ALTER DATABASE %s RENAME TO %s", findField(oldFields, "Name"), *params.Name)
+			query := fmt.Sprintf("ALTER DATABASE %s RENAME TO %s", findField(oldFields, "datname"), *params.Name)
 			queries = append(queries, query)
 		}
 
 		if params.Owner != nil {
-			query := fmt.Sprintf("ALTER DATABASE %s OWNER TO %s", findField(oldFields, "Name"), *params.Owner)
+			query := fmt.Sprintf("ALTER DATABASE %s OWNER TO %s", findField(oldFields, "datname"), *params.Owner)
 			queries = append(queries, query)
 		}
 
 		if params.Tablespace != nil {
-			query := fmt.Sprintf("ALTER DATABASE %s SET tablespace = %s", findField(oldFields, "Name"), *params.Tablespace)
+			query := fmt.Sprintf("ALTER DATABASE %s SET tablespace = %s", findField(oldFields, "datname"), *params.Tablespace)
 			queries = append(queries, query)
 		}
 
 		if params.Comment != nil {
-			queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS %s", findField(oldFields, "Name"), *params.Comment))
+			queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS %s", findField(oldFields, "datname"), *params.Comment))
 		}
 	}
 

@@ -36,20 +36,22 @@ func (r *PostgresRepository) handleSchemaCommands(node PGNode, tabId contract.Tr
 
 	if action == contract.EditSchemaAction {
 		params, err := convertToDTO[dto.PostgresSchemaParams](params)
+		params = compareAndSetNil(params, oldFields)
+
 		if err != nil {
 			return nil, err
 		}
 
 		if params.Name != nil {
-			queries = append(queries, fmt.Sprintf("ALTER SCHEMA %s RENAME TO %s", findField(oldFields, "Name"), *params.Name))
+			queries = append(queries, fmt.Sprintf("ALTER SCHEMA %s RENAME TO %s", findField(oldFields, "nspname"), *params.Name))
 		}
 
 		if params.Owner != nil {
-			queries = append(queries, fmt.Sprintf("ALTER SCHEMA %s OWNER TO %s", findField(oldFields, "Name"), *params.Owner))
+			queries = append(queries, fmt.Sprintf("ALTER SCHEMA %s OWNER TO %s", findField(oldFields, "nspname"), *params.Owner))
 		}
 
 		if params.Comment != nil {
-			queries = append(queries, fmt.Sprintf("COMMENT ON SCHEMA %s IS %s", findField(oldFields, "Name"), *params.Comment))
+			queries = append(queries, fmt.Sprintf("COMMENT ON SCHEMA %s IS %s", findField(oldFields, "nspname"), *params.Comment))
 		}
 	}
 

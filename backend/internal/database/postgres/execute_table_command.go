@@ -52,31 +52,32 @@ func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.Tre
 	}
 
 	if action == contract.EditTableAction {
-		dto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableParams](params)
+		dtoParams, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableParams](params)
 		if err != nil {
 			return nil, tableName, err
 		}
 
-		params := dto[tabId]
+		params := dtoParams[tabId]
 		tableName = *params.Name
+		params = compareAndSetNil(params, oldFields)
 
 		if params.Name != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE %s RENAME TO %s", findField(oldFields, "Name"), *params.Name))
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s RENAME TO %s", findField(oldFields, "relname"), *params.Name))
 		}
 		if params.Tablespace != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET TABLESPACE %s", findField(oldFields, "Name"), *params.Tablespace))
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET TABLESPACE %s", findField(oldFields, "relname"), *params.Tablespace))
 		}
 
 		if params.Persistence != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET %s", findField(oldFields, "Name"), *params.Persistence))
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET %s", findField(oldFields, "relname"), *params.Persistence))
 		}
 
 		if params.Owner != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE %s OWNER TO \"%s\"", findField(oldFields, "Name"), *params.Owner))
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s OWNER TO \"%s\"", findField(oldFields, "relname"), *params.Owner))
 		}
 
 		if params.Comment != nil {
-			queries = append(queries, fmt.Sprintf("COMMENT ON TABLE %s IS '%s'", findField(oldFields, "Name"), *params.Comment))
+			queries = append(queries, fmt.Sprintf("COMMENT ON TABLE %s IS '%s'", findField(oldFields, "relname"), *params.Comment))
 		}
 	}
 

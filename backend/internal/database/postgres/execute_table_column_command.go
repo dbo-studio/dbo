@@ -8,27 +8,23 @@ import (
 	"github.com/samber/lo"
 )
 
-func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tableName string, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, error) {
+func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
-	if tabId != contract.TableColumnsTab || node.Table == "" {
+	if tabId != contract.TableColumnsTab || node.Table == "" || (action != contract.CreateTableAction && action != contract.EditTableAction) {
 		return queries, nil
 	}
 
-	oldFields, err := r.getTableColumns(node)
+	paramsDto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableColumnParams](data)
 	if err != nil {
-		return queries, err
+		return nil, err
 	}
 
-	if action == contract.CreateTableAction {
-		dto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableColumnParams](params)
-		if err != nil {
-			return nil, err
-		}
+	params := paramsDto[tabId]
 
-		params := dto[tabId]
+	if action == contract.CreateTableAction {
 		for _, column := range params.Columns {
-			columnDef := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s", tableName, *column.Name, *column.DataType)
+			columnDef := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s", node.Table, *column.Name, *column.DataType)
 
 			if column.MaxLength != nil {
 				columnDef = fmt.Sprintf("%s(%s)", columnDef, *column.MaxLength)
@@ -64,20 +60,20 @@ func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tableName st
 
 			if column.Comment != nil {
 				queries = append(queries, fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'",
-					tableName, *column.Name, *column.Comment))
+					node.Table, *column.Name, *column.Comment))
 			}
 		}
 	}
 
 	if action == contract.EditTableAction {
-		dto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableColumnParams](params)
+		oldFields, err := r.getTableColumns(node)
 		if err != nil {
-			return nil, err
+			return queries, err
 		}
 
-		params := dto[tabId]
-
 		for _, column := range params.Columns {
+			column := compareAndSetNil(column, oldFields)
+
 			alter := fmt.Sprintf(`ALTER TABLE "%s"."%s" `, node.Schema, node.Table)
 
 			if lo.FromPtr(column.Deleted) {
@@ -86,7 +82,11 @@ func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tableName st
 			}
 
 			if column.Name != nil {
-				queries = append(queries, fmt.Sprintf(`%s RENAME COLUMN "%s" TO "%s"`, alter, findField(oldFields, "Name"), *column.Name))
+				if lo.FromPtr(column.Added) {
+					queries = append(queries, fmt.Sprintf(`%s ADD COLUMN %s`, alter, *column.Name))
+				} else {
+					queries = append(queries, fmt.Sprintf(`%s RENAME COLUMN "%s" TO "%s"`, alter, findField(oldFields, "column_name"), *column.Name))
+				}
 			}
 
 			if column.DataType != nil {

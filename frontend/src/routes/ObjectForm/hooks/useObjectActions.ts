@@ -50,6 +50,10 @@ export const useObjectActions = (tabId: string | undefined) => {
                           itemAcc.deleted = item.deleted;
                         }
 
+                        if (item.added) {
+                          itemAcc.added = item.added;
+                        }
+
                         if (nestedField.value !== null) {
                           const processedValue = tools.isNumber(nestedField.value)
                             ? String(Number(nestedField.value))
@@ -122,7 +126,8 @@ export const useObjectActions = (tabId: string | undefined) => {
       fields: template.fields?.map((f: FormFieldType) => ({
         ...f,
         value: f.type === 'multi-select' ? [] : null
-      }))
+      })),
+      added: true
     };
 
     // Get current form data and update it

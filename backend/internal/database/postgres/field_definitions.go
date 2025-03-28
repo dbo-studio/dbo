@@ -34,8 +34,8 @@ func (r *PostgresRepository) tableFields(action contract.TreeNodeActionName) []c
 
 func (r *PostgresRepository) tableColumnFields() []contract.FormField {
 	return []contract.FormField{
-		{ID: "column_name", Name: "Name", Type: "text"},
-		{ID: "data_type", Name: "Data Type", Type: "select", Fields: r.dataTypeOptions()},
+		{ID: "column_name", Name: "Name", Type: "text", Required: true},
+		{ID: "data_type", Name: "Data Type", Type: "select", Fields: r.dataTypeOptions(), Required: true},
 		{ID: "not_null", Name: "Not Null", Type: "checkbox"},
 		{ID: "primary", Name: "Primary", Type: "checkbox"},
 		{ID: "column_default", Name: "Default", Type: "text"},
