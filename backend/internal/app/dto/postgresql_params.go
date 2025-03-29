@@ -17,6 +17,11 @@ type PostgresqlUpdateConnectionParams struct {
 }
 
 type PostgresDatabaseParams struct {
+	New *PostgresDatabaseParamsData `json:"new"`
+	Old *PostgresDatabaseParamsData `json:"old"`
+}
+
+type PostgresDatabaseParamsData struct {
 	Name       *string `json:"datname"`
 	Owner      *string `json:"rolname"`
 	Template   *string `json:"template"`
@@ -25,12 +30,22 @@ type PostgresDatabaseParams struct {
 }
 
 type PostgresSchemaParams struct {
+	New *PostgresSchemaParamsData `json:"new"`
+	Old *PostgresSchemaParamsData `json:"old"`
+}
+
+type PostgresSchemaParamsData struct {
 	Name    *string `json:"nspname"`
 	Owner   *string `json:"rolname"`
 	Comment *string `json:"description"`
 }
 
 type PostgresTableParams struct {
+	New *PostgresTableParamsData `json:"new"`
+	Old *PostgresTableParamsData `json:"old"`
+}
+
+type PostgresTableParamsData struct {
 	Name        *string `json:"relname"`
 	Comment     *string `json:"description"`
 	Persistence *string `json:"persistence"`
@@ -88,6 +103,13 @@ type PostgresTableColumnParams struct {
 }
 
 type PostgresTableColumn struct {
+	New     *PostgresTableColumnData `json:"new"`
+	Old     *PostgresTableColumnData `json:"old"`
+	Added   *bool                    `json:"added"`
+	Deleted *bool                    `json:"deleted"`
+}
+
+type PostgresTableColumnData struct {
 	Name         *string `json:"column_name"`
 	DataType     *string `json:"data_type"`
 	NotNull      *bool   `json:"not_null"`
@@ -98,8 +120,6 @@ type PostgresTableColumn struct {
 	NumericScale *string `json:"numeric_scale"`
 	IsIdentity   *bool   `json:"is_identity"`
 	IsGenerated  *bool   `json:"is_generated"`
-	Deleted      *bool   `json:"deleted"`
-	Added        *bool   `json:"added"`
 }
 
 type PostgresTableForeignKeyParams struct {
@@ -107,15 +127,20 @@ type PostgresTableForeignKeyParams struct {
 }
 
 type PostgresTableForeignKey struct {
+	New     *PostgresTableForeignKeyData `json:"new"`
+	Old     *PostgresTableForeignKeyData `json:"old"`
+	Added   *bool                        `json:"added"`
+	Deleted *bool                        `json:"deleted"`
+}
+
+type PostgresTableForeignKeyData struct {
 	ConstraintName    *string  `json:"constraint_name"`
 	Comment           *string  `json:"comment"`
 	SourceColumns     []string `json:"ref_columns"`
-	TargetTable       *string  `json:"ref_table"`
+	TargetTable       *string  `json:"target_table"`
 	TargetColumns     []string `json:"target_columns"`
 	OnUpdate          *string  `json:"update_action"`
 	OnDelete          *string  `json:"delete_action"`
 	IsDeferrable      *bool    `json:"is_deferrable"`
 	InitiallyDeferred *bool    `json:"initially_deferred"`
-	Deleted           *bool    `json:"deleted"`
-	Added             *bool    `json:"added"`
 }

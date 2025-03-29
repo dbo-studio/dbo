@@ -24,113 +24,126 @@ func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tabId contra
 
 	if action == contract.CreateTableAction {
 		for _, column := range params.Columns {
-			columnDef := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s", node.Table, *column.Name, *column.DataType)
-
-			if column.MaxLength != nil {
-				columnDef = fmt.Sprintf("%s(%s)", columnDef, *column.MaxLength)
-			}
-
-			if column.NumericScale != nil {
-				columnDef = fmt.Sprintf("%s(%s,%s)", columnDef, *column.MaxLength, *column.NumericScale)
-			}
-
-			if lo.FromPtr(column.NotNull) {
-				columnDef += " NOT NULL"
-			}
-
-			if lo.FromPtr(column.Primary) {
-				columnDef += " PRIMARY KEY"
-			}
-
-			if column.Default != nil {
-				columnDef += fmt.Sprintf(" DEFAULT %s", *column.Default)
-			}
-
-			if lo.FromPtr(column.IsIdentity) {
-				columnDef += " GENERATED ALWAYS AS IDENTITY"
-			}
-
-			if lo.FromPtr(column.IsGenerated) {
-				if column.Default != nil {
-					columnDef += fmt.Sprintf(" GENERATED ALWAYS AS (%s) STORED", *column.Default)
-				}
-			}
-
-			queries = append(queries, columnDef)
-
-			if column.Comment != nil {
-				queries = append(queries, fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'",
-					node.Table, *column.Name, *column.Comment))
-			}
+			queries = append(queries, handleCreateColumn(node, column)...)
 		}
 	}
 
 	if action == contract.EditTableAction {
-		oldFields, err := r.getTableColumns(node)
-		if err != nil {
-			return queries, err
-		}
-
 		for _, column := range params.Columns {
-			column := compareAndSetNil(column, oldFields)
-
-			alter := fmt.Sprintf(`ALTER TABLE "%s"."%s" `, node.Schema, node.Table)
-
-			if lo.FromPtr(column.Deleted) {
-				queries = append(queries, fmt.Sprintf("%s DROP COLUMN %s", alter, *column.Name))
+			if column.New == nil {
 				continue
 			}
 
-			if column.Name != nil {
-				if lo.FromPtr(column.Added) {
-					queries = append(queries, fmt.Sprintf(`%s ADD COLUMN %s`, alter, *column.Name))
-				} else {
-					queries = append(queries, fmt.Sprintf(`%s RENAME COLUMN "%s" TO "%s"`, alter, findField(oldFields, "column_name"), *column.Name))
-				}
-			}
-
-			if column.DataType != nil {
-				dataTypeQuery := fmt.Sprintf(`%s ALTER COLUMN "%s" TYPE %s USING "%s"::%s`,
-					alter, *column.Name, *column.DataType, *column.Name, *column.DataType)
-
-				if column.MaxLength != nil && *column.MaxLength != "" {
-					if isCharacterType(*column.DataType) {
-						dataTypeQuery = fmt.Sprintf("%s(%s)", dataTypeQuery, *column.MaxLength)
-					} else if isNumericType(*column.DataType) && column.NumericScale != nil {
-						dataTypeQuery = fmt.Sprintf("%s(%s,%s)", dataTypeQuery, *column.MaxLength, *column.NumericScale)
-					}
-				}
-
-				queries = append(queries, dataTypeQuery)
-			}
-
-			if column.NotNull != nil {
-				if *column.NotNull {
-					queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" SET NOT NULL`,
-						alter, *column.Name))
-				} else {
-					queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" DROP NOT NULL`,
-						alter, *column.Name))
-				}
-			}
-
-			if column.Default != nil {
-				if *column.Default != "" {
-					queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" SET DEFAULT %s`,
-						alter, *column.Name, *column.Default))
-				} else {
-					queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" DROP DEFAULT`,
-						alter, *column.Name))
-				}
-			}
-
-			if column.Comment != nil {
-				commentQuery := fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'",
-					node.Table, *column.Name, *column.Comment)
-				queries = append(queries, commentQuery)
+			if lo.FromPtr(column.Added) {
+				queries = append(queries, handleCreateColumn(node, column)...)
+			} else {
+				queries = append(queries, handleEditColumn(node, column)...)
 			}
 		}
 	}
 
 	return queries, nil
+}
+
+func handleCreateColumn(node PGNode, column dto.PostgresTableColumn) []string {
+	queries := []string{}
+
+	columnDef := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s", node.Table, *column.New.Name, *column.New.DataType)
+
+	if column.New.MaxLength != nil {
+		columnDef = fmt.Sprintf("%s(%s)", columnDef, *column.New.MaxLength)
+	}
+
+	if column.New.NumericScale != nil {
+		columnDef = fmt.Sprintf("%s(%s,%s)", columnDef, *column.New.MaxLength, *column.New.NumericScale)
+	}
+
+	if lo.FromPtr(column.New.NotNull) {
+		columnDef += " NOT NULL"
+	}
+
+	if lo.FromPtr(column.New.Primary) {
+		columnDef += " PRIMARY KEY"
+	}
+
+	if column.New.Default != nil {
+		columnDef += fmt.Sprintf(" DEFAULT %s", *column.New.Default)
+	}
+
+	if lo.FromPtr(column.New.IsIdentity) {
+		columnDef += " GENERATED ALWAYS AS IDENTITY"
+	}
+
+	if lo.FromPtr(column.New.IsGenerated) {
+		if column.New.Default != nil {
+			columnDef += fmt.Sprintf(" GENERATED ALWAYS AS (%s) STORED", *column.New.Default)
+		}
+	}
+
+	queries = append(queries, columnDef)
+
+	if column.New.Comment != nil {
+		queries = append(queries, fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'",
+			node.Table, *column.New.Name, *column.New.Comment))
+	}
+
+	return queries
+}
+
+func handleEditColumn(node PGNode, column dto.PostgresTableColumn) []string {
+	queries := []string{}
+
+	alter := fmt.Sprintf(`ALTER TABLE "%s"."%s" `, node.Schema, node.Table)
+
+	if lo.FromPtr(column.Deleted) {
+		queries = append(queries, fmt.Sprintf("%s DROP COLUMN %s", alter, *column.New.Name))
+		return queries
+	}
+
+	if column.New.Name != nil {
+		queries = append(queries, fmt.Sprintf(`%s RENAME COLUMN "%s" TO "%s"`, alter, *column.Old.Name, *column.New.Name))
+	}
+
+	if column.New.DataType != nil {
+		dataTypeQuery := fmt.Sprintf(`%s ALTER COLUMN "%s" TYPE %s USING "%s"::%s`,
+			alter, *column.New.Name, *column.New.DataType, *column.New.Name, *column.New.DataType)
+
+		if column.New.MaxLength != nil && *column.New.MaxLength != "" {
+			if isCharacterType(*column.New.DataType) {
+				dataTypeQuery = fmt.Sprintf("%s(%s)", dataTypeQuery, *column.New.MaxLength)
+			} else if isNumericType(*column.New.DataType) && column.New.NumericScale != nil {
+				dataTypeQuery = fmt.Sprintf("%s(%s,%s)", dataTypeQuery, *column.New.MaxLength, *column.New.NumericScale)
+			}
+		}
+
+		queries = append(queries, dataTypeQuery)
+	}
+
+	if column.New.NotNull != nil {
+		if *column.New.NotNull {
+			queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" SET NOT NULL`,
+				alter, *column.New.Name))
+		} else {
+			queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" DROP NOT NULL`,
+				alter, *column.New.Name))
+		}
+	}
+
+	if column.New.Default != nil {
+		if *column.New.Default != "" {
+			queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" SET DEFAULT %s`,
+				alter, *column.New.Name, *column.New.Default))
+		} else {
+			queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" DROP DEFAULT`,
+				alter, *column.New.Name))
+		}
+	}
+
+	if column.New.Comment != nil {
+		commentQuery := fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'",
+			node.Table, *column.New.Name, *column.New.Comment)
+		queries = append(queries, commentQuery)
+	}
+
+	return queries
 }

@@ -15,11 +15,6 @@ func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.Tre
 		return queries, tableName, nil
 	}
 
-	oldFields, err := r.getTableInfo(node, action)
-	if err != nil {
-		return queries, tableName, err
-	}
-
 	if action == contract.CreateTableAction {
 		dto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableParams](params)
 		if err != nil {
@@ -28,26 +23,26 @@ func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.Tre
 
 		params := dto[tabId]
 
-		tableName = *params.Name
-		query := fmt.Sprintf("CREATE TABLE %s (", *params.Name)
-		if params.Tablespace != nil {
-			query += fmt.Sprintf(") TABLESPACE %s", *params.Tablespace)
+		tableName = *params.New.Name
+		query := fmt.Sprintf("CREATE TABLE %s (", *params.New.Name)
+		if params.New.Tablespace != nil {
+			query += fmt.Sprintf(") TABLESPACE %s", *params.New.Tablespace)
 		} else {
 			query += ")"
 		}
 
 		queries = append(queries, query)
 
-		if params.Persistence != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET %s", *params.Name, *params.Persistence))
+		if params.New.Persistence != nil {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET %s", *params.New.Name, *params.New.Persistence))
 		}
 
-		if params.Owner != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE %s OWNER TO \"%s\"", *params.Name, *params.Owner))
+		if params.New.Owner != nil {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s OWNER TO \"%s\"", *params.New.Name, *params.New.Owner))
 		}
 
-		if params.Comment != nil {
-			queries = append(queries, fmt.Sprintf("COMMENT ON TABLE %s IS '%s'", *params.Name, *params.Comment))
+		if params.New.Comment != nil {
+			queries = append(queries, fmt.Sprintf("COMMENT ON TABLE %s IS '%s'", *params.New.Name, *params.New.Comment))
 		}
 	}
 
@@ -58,26 +53,25 @@ func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.Tre
 		}
 
 		params := dtoParams[tabId]
-		tableName = *params.Name
-		params = compareAndSetNil(params, oldFields)
+		tableName = *params.New.Name
 
-		if params.Name != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE %s RENAME TO %s", findField(oldFields, "relname"), *params.Name))
+		if params.New.Name != nil {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s RENAME TO %s", *params.Old.Name, *params.New.Name))
 		}
-		if params.Tablespace != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET TABLESPACE %s", findField(oldFields, "relname"), *params.Tablespace))
-		}
-
-		if params.Persistence != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET %s", findField(oldFields, "relname"), *params.Persistence))
+		if params.New.Tablespace != nil {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET TABLESPACE %s", *params.Old.Tablespace, *params.New.Tablespace))
 		}
 
-		if params.Owner != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE %s OWNER TO \"%s\"", findField(oldFields, "relname"), *params.Owner))
+		if params.New.Persistence != nil {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET %s", *params.Old.Persistence, *params.New.Persistence))
 		}
 
-		if params.Comment != nil {
-			queries = append(queries, fmt.Sprintf("COMMENT ON TABLE %s IS '%s'", findField(oldFields, "relname"), *params.Comment))
+		if params.New.Owner != nil {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s OWNER TO \"%s\"", *params.Old.Owner, *params.New.Owner))
+		}
+
+		if params.New.Comment != nil {
+			queries = append(queries, fmt.Sprintf("COMMENT ON TABLE %s IS '%s'", *params.Old.Comment, *params.New.Comment))
 		}
 	}
 

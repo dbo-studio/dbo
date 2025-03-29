@@ -35,70 +35,82 @@ export const useObjectActions = (tabId: string | undefined) => {
   const handleSave = async () => {
     if (!currentConnection || !selectedTab || pendingExecuteAction) return;
 
-    try {
-      const allFormData = Object.entries(formDataByTab[selectedTab.id] || {}).reduce(
-        (acc, [tabId, fields]) => {
-          const tabData = fields.reduce(
-            (fieldAcc: Record<string, any>, field: FormFieldType) => {
-              if (field.type === 'array' && field.fields) {
-                const currentItems = field.fields
-                  .filter((item) => item.id !== 'empty')
-                  .map((item: FormFieldType) => {
-                    if (item.fields) {
-                      return item.fields.reduce((itemAcc: Record<string, any>, nestedField: FormFieldType) => {
-                        if (item.deleted) {
-                          itemAcc.deleted = item.deleted;
-                        }
+    // try {
+    const allFormData = Object.entries(formDataByTab[selectedTab.id] || {}).reduce(
+      (acc, [tabId, fields]) => {
+        const tabData = fields.reduce(
+          (fieldAcc: Record<string, any>, field: FormFieldType) => {
+            if (field.type === 'array' && field.fields) {
+              const currentItems = field.fields
+                .filter((item) => item.id !== 'empty')
+                .map((item: FormFieldType) => {
+                  if (item.fields) {
+                    return item.fields
+                      .filter(
+                        (nestedField) =>
+                          nestedField.value !== null ||
+                          (nestedField.originalValue && nestedField.originalValue !== nestedField.value)
+                      )
+                      .reduce(
+                        (itemAcc: Record<string, any>, nestedField: FormFieldType) => {
+                          if (item.deleted) {
+                            itemAcc.deleted = item.deleted;
+                          }
 
-                        if (item.added) {
-                          itemAcc.added = item.added;
-                        }
+                          if (item.added) {
+                            itemAcc.added = item.added;
+                          }
 
-                        if (nestedField.value !== null) {
                           const processedValue = tools.isNumber(nestedField.value)
                             ? String(Number(nestedField.value))
                             : nestedField.value;
-                          itemAcc[nestedField.id] = processedValue;
-                        }
-                        return itemAcc;
-                      }, {});
-                    }
-                    return item.value;
-                  });
+                          itemAcc.new[nestedField.id] = processedValue;
+                          itemAcc.old[nestedField.id] = nestedField.originalValue;
 
-                fieldAcc[field.id] = currentItems;
-              } else {
-                fieldAcc[field.id] = field.value;
-              }
+                          return itemAcc;
+                        },
+                        { new: {}, old: {} }
+                      );
+                  }
+                  return item.value;
+                });
 
-              return fieldAcc;
-            },
-            {} as Record<string, any>
-          );
+              fieldAcc[field.id] = currentItems.filter((item) => !tools.isEmpty(item.new));
+            } else if (field.value !== field.originalValue) {
+              if (!fieldAcc.new) fieldAcc.new = {};
+              if (!fieldAcc.old) fieldAcc.old = {};
+              fieldAcc.new[field.id] = field.value;
+              fieldAcc.old[field.id] = field.originalValue;
+            }
 
-          if (Object.keys(tabData).length > 0) {
-            acc[tabId] = tabData;
-          }
+            return fieldAcc;
+          },
+          {} as Record<string, any>
+        );
 
-          return acc;
-        },
-        {} as Record<string, Record<string, any>>
-      );
+        if (Object.keys(tabData).length > 0) {
+          acc[tabId] = tabData;
+        }
 
-      if (Object.keys(allFormData).length === 0) {
-        toast.info(locales.no_changes_detected);
-        return;
-      }
+        return acc;
+      },
+      {} as Record<string, Record<string, any>>
+    );
 
-      await executeAction({
-        nodeId: selectedTab.nodeId,
-        action: selectedTab.options?.action || '',
-        connectionId: currentConnection.id,
-        data: allFormData
-      });
+    if (Object.keys(allFormData).length === 0) {
+      toast.info(locales.no_changes_detected);
+      return;
+    }
 
-      toast.success(locales.changes_saved_successfully);
-    } catch (error) {}
+    await executeAction({
+      nodeId: selectedTab.nodeId,
+      action: selectedTab.options?.action || '',
+      connectionId: currentConnection.id,
+      data: allFormData
+    });
+
+    toast.success(locales.changes_saved_successfully);
+    // } catch (error) {}
   };
 
   const handleCancel = async () => {
@@ -150,35 +162,25 @@ export const useObjectActions = (tabId: string | undefined) => {
   };
 
   const handleFieldChange = (formSchema: any, field: string, value: any) => {
-    // Create a new state object with all form values
-    const formData = formSchema.reduce(
-      (acc: Record<string, any>, field: any) => {
-        acc[field.id] = field.value;
-        return acc;
-      },
-      {} as Record<string, any>
-    );
+    if (!tabId) {
+      return;
+    }
 
-    // Update the field that changed
-    const newState = { ...formData, [field]: value };
-
-    // Update the form data in the store
-    if (tabId) {
-      const updatedFields = formSchema.map((field: any) => {
-        if (field.type === 'array') {
-          return {
-            ...field,
-            fields: newState[field.id]
-          };
-        }
+    const newState = { [field]: value };
+    const updatedFields = formSchema.map((field: any) => {
+      if (field.type === 'array') {
         return {
           ...field,
-          value: newState[field.id]
+          fields: newState[field.id]
         };
-      });
+      }
+      return {
+        ...field,
+        value: newState[field.id]
+      };
+    });
 
-      updateFormData(selectedTab?.id ?? '', tabId, updatedFields);
-    }
+    updateFormData(selectedTab?.id ?? '', tabId, updatedFields);
   };
 
   return {

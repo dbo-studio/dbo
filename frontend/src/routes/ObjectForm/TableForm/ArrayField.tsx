@@ -22,6 +22,7 @@ export default function ArrayField({ field, onChange, onAdd }: ArrayFieldProps) 
     if (newFields[index]?.fields) {
       const targetField = newFields[index].fields?.find((f: FormFieldType) => f.id === fieldId);
       if (targetField) {
+        targetField.originalValue = targetField.value;
         targetField.value = fieldValue;
       }
     }

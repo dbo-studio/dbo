@@ -3,7 +3,6 @@ package databasePostgres
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -208,77 +207,4 @@ func isNumericType(dataType string) bool {
 		}
 	}
 	return false
-}
-
-func findField(fields []contract.FormField, field string) any {
-	for _, f := range fields {
-		if f.Type == "array" {
-			for _, object := range f.Fields {
-				for _, item := range object.Fields {
-					if item.ID == field && item.Value != nil {
-						return item.Value
-					}
-				}
-			}
-		}
-
-		if f.ID == field && f.Value != nil {
-			return f.Value
-		}
-	}
-
-	return nil
-}
-
-func compareAndSetNil[T any](oldFields T, originalFields []contract.FormField) T {
-	val := reflect.ValueOf(oldFields)
-	isPtr := val.Kind() == reflect.Ptr
-
-	if isPtr {
-		val = val.Elem()
-	}
-
-	typ := val.Type()
-	result := reflect.New(typ).Elem()
-
-	for i := range val.NumField() {
-		field := val.Field(i)
-		fieldType := typ.Field(i)
-
-		jsonTag := fieldType.Tag.Get("json")
-		if jsonTag == "" {
-			continue
-		}
-
-		originalValue := findField(originalFields, jsonTag)
-		if originalValue == nil {
-			result.Field(i).Set(field)
-			continue
-		}
-
-		var fieldValue interface{}
-		if field.Kind() == reflect.Ptr {
-			if !field.IsNil() {
-				fieldValue = field.Elem().Interface()
-			}
-		} else {
-			fieldValue = field.Interface()
-		}
-
-		// fmt.Printf("Field: %s, Value: %v, Original: %s\n", fieldType.Name, fieldValue, originalValue)
-
-		if reflect.DeepEqual(fieldValue, originalValue) {
-			result.Field(i).Set(reflect.Zero(field.Type()))
-		} else {
-			result.Field(i).Set(field)
-		}
-	}
-
-	if isPtr {
-		ptr := reflect.New(result.Type())
-		ptr.Elem().Set(result)
-		return ptr.Interface().(T)
-	}
-
-	return result.Interface().(T)
 }

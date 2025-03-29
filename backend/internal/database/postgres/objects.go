@@ -194,7 +194,7 @@ func (r *PostgresRepository) getTableForeignKeys(node PGNode) ([]contract.FormFi
 		Select(`
 			c.conname as constraint_name,
 			array_to_string(array_agg(a.attname ORDER BY array_position(c.conkey, a.attnum)), ', ') as columns,
-			ct.relname as ref_table,
+			ct.relname as target_table,
 			array_to_string(array_agg(af.attname ORDER BY array_position(c.confkey, af.attnum)), ', ') as ref_columns,
 			CASE c.confupdtype
 				WHEN 'a' THEN 'NO ACTION'
