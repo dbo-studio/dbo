@@ -2,11 +2,8 @@ package service
 
 import (
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
-	"github.com/dbo-studio/dbo/internal/driver"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceConnection "github.com/dbo-studio/dbo/internal/service/connection"
-	serviceDatabase "github.com/dbo-studio/dbo/internal/service/database"
-	serviceDesign "github.com/dbo-studio/dbo/internal/service/design"
 	serviceHistory "github.com/dbo-studio/dbo/internal/service/history"
 	serviceQuery "github.com/dbo-studio/dbo/internal/service/query"
 	serviceSavedQuery "github.com/dbo-studio/dbo/internal/service/saved_query"
@@ -15,19 +12,15 @@ import (
 
 type Service struct {
 	ConnectionService serviceConnection.IConnectionService
-	DatabaseService   serviceDatabase.IDatabaseService
-	DesignService     serviceDesign.IDesignService
 	HistoryService    serviceHistory.IHistoryService
 	SavedQueryService serviceSavedQuery.ISavedQueryService
 	TreeService       serviceTree.ITreeService
 	QueryService      serviceQuery.IQueryService
 }
 
-func NewService(repo *repository.Repository, drivers *driver.DriverEngine, cm *databaseConnection.ConnectionManager) *Service {
+func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionManager) *Service {
 	return &Service{
-		ConnectionService: serviceConnection.NewConnectionService(drivers, repo.ConnectionRepo, repo.CacheRepo),
-		DatabaseService:   serviceDatabase.NewDatabaseService(repo.ConnectionRepo, drivers),
-		DesignService:     serviceDesign.NewDesignService(repo.ConnectionRepo, drivers),
+		ConnectionService: serviceConnection.NewConnectionService(repo.ConnectionRepo),
 		HistoryService:    serviceHistory.NewHistoryService(repo.HistoryRepo),
 		SavedQueryService: serviceSavedQuery.NewSavedQueryService(repo.SavedQueryRepo),
 		TreeService:       serviceTree.NewTreeService(repo.ConnectionRepo, cm),

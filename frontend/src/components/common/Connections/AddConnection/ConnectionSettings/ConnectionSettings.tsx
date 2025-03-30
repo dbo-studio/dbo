@@ -1,14 +1,15 @@
 import api from '@/api';
+import FieldInput from '@/components/base/FieldInput/FieldInput';
 import useAPI from '@/hooks/useApi.hook';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { LoadingButton } from '@mui/lab';
-import { Box, Button, Stack } from '@mui/material';
+import { Box, Button, Checkbox, Stack, Typography } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import { isAxiosError } from 'axios';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import FieldInput from '../../../../base/FieldInput/FieldInput';
 import type { ConnectionSettingsProps } from '../types';
 
 const formSchema = z.object({
@@ -20,11 +21,13 @@ const formSchema = z.object({
   }),
   username: z.string().min(1),
   password: z.string().optional(),
-  database: z.string().optional()
+  database: z.string().optional(),
+  uri: z.string().optional()
 });
 
 export default function ConnectionSetting({ connection, onClose }: ConnectionSettingsProps) {
   const { updateConnections, updateCurrentConnection, connections } = useConnectionStore();
+  const [useUri, setUseUri] = useState(false);
 
   const { request: createConnection, pending: createConnectionPending } = useAPI({
     apiMethod: api.connection.createConnection
@@ -83,7 +86,8 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
       port: '',
       username: '',
       password: '',
-      database: ''
+      database: '',
+      uri: ''
     }
   });
 
@@ -114,6 +118,7 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
               <form.Field name='host'>
                 {(field) => (
                   <FieldInput
+                    disabled={useUri}
                     value={field.state.value}
                     helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
                     error={field.state.meta.errors.length > 0}
@@ -126,6 +131,7 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
               <form.Field name='port'>
                 {(field) => (
                   <FieldInput
+                    disabled={useUri}
                     placeholder={connection?.port.toString()}
                     value={field.state.value}
                     helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
@@ -141,6 +147,7 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
               <form.Field name='username'>
                 {(field) => (
                   <FieldInput
+                    disabled={useUri}
                     value={field.state.value}
                     helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
                     error={field.state.meta.errors.length > 0}
@@ -153,6 +160,7 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
               <form.Field name='password'>
                 {(field) => (
                   <FieldInput
+                    disabled={useUri}
                     value={field.state.value}
                     helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
                     error={field.state.meta.errors.length > 0}
@@ -166,6 +174,7 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
             <form.Field name='database'>
               {(field) => (
                 <FieldInput
+                  disabled={useUri}
                   value={field.state.value}
                   helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
                   error={field.state.meta.errors.length > 0}
@@ -175,9 +184,29 @@ export default function ConnectionSetting({ connection, onClose }: ConnectionSet
                 />
               )}
             </form.Field>
+
+            <Box display={'flex'} flexDirection={'column'}>
+              <Box display={'flex'} alignItems={'center'}>
+                <Checkbox checked={useUri} size={'small'} onChange={(e) => setUseUri(e.target.checked)} />
+                <Typography>{locales.use_uri}</Typography>
+              </Box>
+
+              <form.Field name='uri'>
+                {(field) => (
+                  <FieldInput
+                    value={field.state.value}
+                    helpertext={field.state.meta.errors.length > 0 ? field.state.meta.errors.join(', ') : undefined}
+                    error={field.state.meta.errors.length > 0}
+                    label={locales.uri}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    disabled={!useUri}
+                  />
+                )}
+              </form.Field>
+            </Box>
           </form>
         </Box>
-        '
+
         <Box display={'flex'} justifyContent={'space-between'}>
           <Button size='small' onClick={onClose}>
             {locales.cancel}

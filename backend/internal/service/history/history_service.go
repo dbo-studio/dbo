@@ -2,6 +2,7 @@ package serviceHistory
 
 import (
 	"context"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/apperror"
@@ -35,7 +36,7 @@ func (i IHistoryServiceImpl) Index(ctx context.Context, req *dto.HistoryListRequ
 		data = append(data, dto.HistoryListItem{
 			ID:        int64(h.ID),
 			Query:     h.Query,
-			CreatedAt: h.CreatedAt.Time.Format("2006-01-02 15:04:05"),
+			CreatedAt: h.CreatedAt.Format("2006-01-02 15:04:05"),
 		})
 	}
 

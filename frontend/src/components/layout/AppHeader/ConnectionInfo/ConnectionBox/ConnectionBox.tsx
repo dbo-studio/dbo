@@ -23,15 +23,13 @@ export default function ConnectionBox() {
       return;
     }
 
-    if (!currentConnection || !currentConnection.currentSchema) {
+    if (!currentConnection) {
       setInfo(locales.no_active_connection);
       setStatus('disable');
       return;
     }
 
-    setInfo(
-      `${currentConnection?.name} | ${currentConnection?.driver} ${currentConnection?.version} : ${currentConnection.currentSchema} :  SQL Query`
-    );
+    setInfo(`${currentConnection?.name} | ${currentConnection?.driver} ${currentConnection?.version} :  SQL Query`);
     setStatus('finished');
   }, [currentConnection, loading]);
 

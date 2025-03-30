@@ -7,9 +7,9 @@ type (
 	ConnectionDetailResponse struct {
 		ID       int64       `json:"id"`
 		Name     string      `json:"name"`
-		Type     string      `json:"type"`
-		Driver   string      `json:"driver"`
 		IsActive bool        `json:"isActive"`
+		Info     string      `json:"info"`
+		Icon     string      `json:"icon"`
 		Auth     AuthDetails `json:"auth"`
 	}
 

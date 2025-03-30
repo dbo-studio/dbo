@@ -2,10 +2,8 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/driver"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"gorm.io/gorm"
@@ -14,14 +12,12 @@ import (
 var _ IConnectionRepo = (*IConnectionRepoImpl)(nil)
 
 type IConnectionRepoImpl struct {
-	db      *gorm.DB
-	drivers *driver.DriverEngine
+	db *gorm.DB
 }
 
-func NewConnectionRepo(db *gorm.DB, drivers *driver.DriverEngine) *IConnectionRepoImpl {
+func NewConnectionRepo(db *gorm.DB) *IConnectionRepoImpl {
 	return &IConnectionRepoImpl{
-		db:      db,
-		drivers: drivers,
+		db: db,
 	}
 }
 
@@ -45,8 +41,8 @@ func (c IConnectionRepoImpl) Create(ctx context.Context, dto *dto.CreateConnecti
 		ConnectionType: dto.Type,
 		Options:        string(dto.Options),
 		IsActive:       false,
-		CreatedAt:      sql.NullTime{},
-		UpdatedAt:      sql.NullTime{},
+		CreatedAt:      nil,
+		UpdatedAt:      nil,
 	}
 
 	result := c.db.WithContext(ctx).Save(connection)

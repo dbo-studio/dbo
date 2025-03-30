@@ -112,5 +112,7 @@
   "quick_look_editor": "Quick look editor",
   "action_executed_successfully": "Action executed successfully",
   "no_changes_detected": "No changes detected",
-  "changes_saved_successfully": "Changes saved successfully"
+  "changes_saved_successfully": "Changes saved successfully",
+  "use_uri": "Use URI",
+  "uri": "URI"
 }

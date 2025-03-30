@@ -10,8 +10,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/handler"
 	queryHandler "github.com/dbo-studio/dbo/internal/app/handler/query"
 	"github.com/dbo-studio/dbo/internal/app/server"
-	"github.com/dbo-studio/dbo/internal/database/connection"
-	"github.com/dbo-studio/dbo/internal/driver"
+	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/cache/sqlite"
 	"github.com/dbo-studio/dbo/pkg/db"
@@ -44,19 +43,17 @@ func Execute() {
 	if err != nil {
 		appLogger.Fatal(err)
 	}
-	drivers := driver.InitDrivers(appDB)
+
 	cm := databaseConnection.NewConnectionManager(appLogger)
 	cache := sqlite.NewSQLiteCache(appDB)
 
-	rr := repository.NewRepository(ctx, appDB, cache, drivers)
-	ss := service.NewService(rr, drivers, cm)
+	rr := repository.NewRepository(ctx, appDB, cache)
+	ss := service.NewService(rr, cm)
 
 	restServer := server.New(appLogger, server.Handlers{
-		Query:        queryHandler.NewQueryHandler(appLogger, appDB, drivers, cache, ss.DesignService),
+		Query:        queryHandler.NewQueryHandler(appLogger, appDB, cache),
 		Connection:   handler.NewConnectionHandler(appLogger, ss.ConnectionService),
-		Database:     handler.NewDatabaseHandler(appLogger, ss.ConnectionService, ss.DatabaseService),
 		SavedQuery:   handler.NewSavedQueryHandler(appLogger, ss.SavedQueryService),
-		Design:       handler.NewDesignHandler(appLogger, ss.ConnectionService, ss.DesignService),
 		History:      handler.NewHistoryHandler(appLogger, ss.HistoryService),
 		TreeHandler:  handler.NewTreeHandler(appLogger, ss.TreeService),
 		QueryHandler: handler.NewQueryHandler(appLogger, ss.QueryService),

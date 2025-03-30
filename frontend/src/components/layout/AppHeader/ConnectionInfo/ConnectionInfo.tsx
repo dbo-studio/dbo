@@ -1,6 +1,7 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton.tsx';
+import Settings from '@/components/common/Settings/Settings.tsx';
 import { TabMode } from '@/core/enums';
 import useAPI from '@/hooks/useApi.hook.ts';
 import useNavigate from '@/hooks/useNavigate.hook';
@@ -11,8 +12,6 @@ import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import ConnectionBox from './ConnectionBox/ConnectionBox.tsx';
-import Databases from '@/components/common/Databases/Databases.tsx';
-import Settings from '@/components/common/Settings/Settings.tsx';
 
 export default function ConnectionInfo() {
   const navigate = useNavigate();
@@ -61,7 +60,6 @@ export default function ConnectionInfo() {
 
   return (
     <Stack direction={'row'} justifyContent={'center'} alignItems={'center'}>
-      <Databases open={searchParams.get('showSelectDatabase') === 'true'} />
       <Settings open={searchParams.get('showSettings') === 'true'} />
       <Grid2 size={{ md: 3 }}>
         <Stack direction={'row'} justifyContent='flex-end'>
@@ -71,13 +69,6 @@ export default function ConnectionInfo() {
           {/* <IconButton aria-label='lock'>
             <CustomIcon type={'lock'} size={'m'} />
           </IconButton> */}
-          <IconButton
-            disabled={!currentConnection}
-            aria-label='databases'
-            onClick={() => changeSearchParams('showSelectDatabase')}
-          >
-            <CustomIcon type={'databaseOutline'} size={'m'} />
-          </IconButton>
         </Stack>
       </Grid2>
       <Grid2 mr={1} ml={1} size={{ md: 8 }}>

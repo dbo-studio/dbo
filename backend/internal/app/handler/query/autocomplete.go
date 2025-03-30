@@ -2,11 +2,6 @@ package query_handler
 
 import (
 	"fmt"
-	"time"
-
-	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/app/response"
-	"github.com/dbo-studio/dbo/pkg/helper"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -20,74 +15,75 @@ type AutoCompleteResult struct {
 }
 
 func (h QueryHandler) Autocomplete(c fiber.Ctx) error {
-	req := new(dto.AutoCompleteRequest)
-	if err := c.Bind().Query(req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
-	}
+	// req := new(dto.AutoCompleteRequest)
+	// if err := c.Bind().Query(req); err != nil {
+	// 	return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
+	// }
 
-	errors := helper.Validate(req)
-	if errors != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
-	}
+	// errors := helper.Validate(req)
+	// if errors != nil {
+	// 	return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
+	// }
 
-	fromCache := req.FromCache
+	// fromCache := req.FromCache
 
-	resultFromCache, err := h.findResultFromCache(req.ConnectionId, req.Database, req.Schema, fromCache)
-	if err != nil {
-		h.logger.Error(err.Error())
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
-	}
+	// resultFromCache, err := h.findResultFromCache(req.ConnectionId, req.Database, req.Schema, fromCache)
+	// if err != nil {
+	// 	h.logger.Error(err.Error())
+	// 	return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
+	// }
 
-	if resultFromCache != nil {
-		return c.JSON(response.Success(resultFromCache))
-	}
+	// if resultFromCache != nil {
+	// 	return c.JSON(response.Success(resultFromCache))
+	// }
 
-	databases, err := h.drivers.Pgsql.Databases(req.ConnectionId, true)
-	if err != nil {
-		h.logger.Error(err.Error())
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
-	}
+	// databases, err := h.drivers.Pgsql.Databases(req.ConnectionId, true)
+	// if err != nil {
+	// 	h.logger.Error(err.Error())
+	// 	return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
+	// }
 
-	views, err := h.drivers.Pgsql.Views(req.ConnectionId)
-	if err != nil {
-		h.logger.Error(err.Error())
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
-	}
+	// views, err := h.drivers.Pgsql.Views(req.ConnectionId)
+	// if err != nil {
+	// 	h.logger.Error(err.Error())
+	// 	return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
+	// }
 
-	schemas, err := h.drivers.Pgsql.Schemas(req.ConnectionId, req.Database, true)
-	if err != nil {
-		h.logger.Error(err.Error())
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
-	}
+	// schemas, err := h.drivers.Pgsql.Schemas(req.ConnectionId, req.Database, true)
+	// if err != nil {
+	// 	h.logger.Error(err.Error())
+	// 	return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
+	// }
 
-	tables, err := h.drivers.Pgsql.Tables(req.ConnectionId, req.Schema)
-	if err != nil {
-		h.logger.Error(err.Error())
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
-	}
+	// tables, err := h.drivers.Pgsql.Tables(req.ConnectionId, req.Schema)
+	// if err != nil {
+	// 	h.logger.Error(err.Error())
+	// 	return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
+	// }
 
-	columns, err := h.getColumns(req.ConnectionId, tables, req.Schema)
-	if err != nil {
-		h.logger.Error(err.Error())
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
-	}
+	// columns, err := h.getColumns(req.ConnectionId, tables, req.Schema)
+	// if err != nil {
+	// 	h.logger.Error(err.Error())
+	// 	return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
+	// }
 
-	autocomplete := AutoCompleteResult{
-		Databases: databases,
-		Views:     views,
-		Schemas:   schemas,
-		Tables:    tables,
-		Columns:   columns,
-	}
+	// autocomplete := AutoCompleteResult{
+	// 	Databases: databases,
+	// 	Views:     views,
+	// 	Schemas:   schemas,
+	// 	Tables:    tables,
+	// 	Columns:   columns,
+	// }
 
-	ttl := 60 * time.Minute
-	err = h.cache.Set(cacheName(req.ConnectionId, req.Database, req.Schema), autocomplete, &ttl)
-	if err != nil {
-		h.logger.Error(err.Error())
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
-	}
+	// ttl := 60 * time.Minute
+	// err = h.cache.Set(cacheName(req.ConnectionId, req.Database, req.Schema), autocomplete, &ttl)
+	// if err != nil {
+	// 	h.logger.Error(err.Error())
+	// 	return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
+	// }
 
-	return c.JSON(response.Success(autocomplete))
+	// return c.JSON(response.Success(autocomplete))
+	return nil
 }
 
 func (h QueryHandler) findResultFromCache(connectionID int32, database string, schema string, fromCache bool) (*AutoCompleteResult, error) {
@@ -106,16 +102,16 @@ func (h QueryHandler) findResultFromCache(connectionID int32, database string, s
 }
 
 func (h QueryHandler) getColumns(connectionID int32, tables []string, schema string) (map[string][]string, error) {
-	columns := make(map[string][]string)
-	for _, ta := range tables {
-		columnResult, err := h.drivers.Pgsql.Columns(connectionID, ta, schema)
-		if err != nil {
-			return map[string][]string{}, err
-		}
-		columns[ta] = columnResult
-	}
+	// columns := make(map[string][]string)
+	// for _, ta := range tables {
+	// 	columnResult, err := h.drivers.Pgsql.Columns(connectionID, ta, schema)
+	// 	if err != nil {
+	// 		return map[string][]string{}, err
+	// 	}
+	// 	columns[ta] = columnResult
+	// }
 
-	return columns, nil
+	return nil, nil
 }
 
 func cacheName(connectionID int32, database string, schema string) string {

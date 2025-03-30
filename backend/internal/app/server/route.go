@@ -27,17 +27,7 @@ func (r *Server) routing() {
 	connection.Post("/test", r.handlers.Connection.TestConnection)
 	connection.Patch("/:id", r.handlers.Connection.UpdateConnection)
 	connection.Delete("/:id", r.handlers.Connection.DeleteConnection)
-
-	database := api.Group("databases")
-	database.Get("/metadata", r.handlers.Database.MetaData)
-	database.Post("/", r.handlers.Database.CreateDatabase)
-	database.Delete("/", r.handlers.Database.DeleteDatabase)
-
-	design := api.Group("design")
-	design.Patch("/", r.handlers.Design.UpdateDesign)
-	design.Get("/columns", r.handlers.Design.ColumnList)
-	design.Get("/indexes", r.handlers.Design.IndexList)
-
+	
 	saved := api.Group("saved")
 	saved.Get("/", r.handlers.SavedQuery.Index)
 	saved.Post("/", r.handlers.SavedQuery.Create)

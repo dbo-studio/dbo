@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/driver"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"gorm.io/gorm"
@@ -46,10 +45,9 @@ type Repository struct {
 	SavedQueryRepo ISavedQueryRepo
 }
 
-func NewRepository(_ context.Context, db *gorm.DB, cache cache.Cache, drivers *driver.DriverEngine) *Repository {
+func NewRepository(_ context.Context, db *gorm.DB, cache cache.Cache) *Repository {
 	return &Repository{
-		ConnectionRepo: NewConnectionRepo(db, drivers),
-		CacheRepo:      NewCacheRepo(cache, drivers, db),
+		ConnectionRepo: NewConnectionRepo(db),
 		HistoryRepo:    NewHistoryRepo(db),
 		SavedQueryRepo: NewSavedQueryRepo(db),
 	}

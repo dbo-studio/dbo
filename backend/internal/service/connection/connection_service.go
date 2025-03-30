@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/driver"
 	"github.com/dbo-studio/dbo/internal/repository"
 )
 
@@ -20,20 +19,14 @@ type IConnectionService interface {
 var _ IConnectionService = (*IConnectionServiceImpl)(nil)
 
 type IConnectionServiceImpl struct {
-	drivers        *driver.DriverEngine
 	connectionRepo repository.IConnectionRepo
-	cacheRepo      repository.ICacheRepo
 }
 
 func NewConnectionService(
-	drivers *driver.DriverEngine,
 	connectionRepo repository.IConnectionRepo,
-	cacheRepo repository.ICacheRepo,
 ) *IConnectionServiceImpl {
 	return &IConnectionServiceImpl{
-		drivers:        drivers,
 		connectionRepo: connectionRepo,
-		cacheRepo:      cacheRepo,
 	}
 }
 

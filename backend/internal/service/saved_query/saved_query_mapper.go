@@ -12,7 +12,7 @@ func createRes(sq *model.SavedQuery) *dto.CreateSavedQueryResponse {
 			ID:        int64(sq.ID),
 			Name:      sq.Name,
 			Query:     sq.Query,
-			CreatedAt: sq.CreatedAt.Time.Format("2006-01-02 15:04:05"),
+			CreatedAt: sq.CreatedAt.Format("2006-01-02 15:04:05"),
 		},
 	}
 }
@@ -23,7 +23,7 @@ func updateRes(sq *model.SavedQuery) *dto.UpdateSavedQueryResponse {
 			ID:        int64(sq.ID),
 			Name:      sq.Name,
 			Query:     sq.Query,
-			CreatedAt: sq.CreatedAt.Time.Format("2006-01-02 15:04:05"),
+			CreatedAt: sq.CreatedAt.Format("2006-01-02 15:04:05"),
 		},
 	}
 }
@@ -35,7 +35,7 @@ func indexRes(queries *[]model.SavedQuery) *dto.SavedQueryListResponse {
 			ID:        int64(query.ID),
 			Name:      query.Name,
 			Query:     query.Query,
-			CreatedAt: query.CreatedAt.Time.Format("2006-01-02 15:04:05"),
+			CreatedAt: query.CreatedAt.Format("2006-01-02 15:04:05"),
 		})
 	}
 
