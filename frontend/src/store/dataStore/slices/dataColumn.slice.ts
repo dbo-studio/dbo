@@ -1,4 +1,3 @@
-import { formatServerColumns } from '@/core/utils';
 import type { ColumnType } from '@/types';
 import type { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
@@ -30,7 +29,7 @@ export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, []
       return;
     }
     const columns = get().columns;
-    columns[selectedTab.id] = formatServerColumns(items);
+    columns[selectedTab.id] = items;
 
     set({ columns });
   },

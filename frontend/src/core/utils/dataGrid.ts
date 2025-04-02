@@ -1,23 +1,5 @@
 import type { ColumnType, EditedRow, RowType } from '@/types';
 
-export const formatServerColumns = (serverColumns: ColumnType[]): any => {
-  const arr: ColumnType[] = [];
-  for (const column of serverColumns) {
-    arr.push({
-      ...column,
-      selected: column.selected ?? false,
-      editMode: column.editMode ?? {
-        name: false,
-        default: false,
-        length: false,
-        comment: false
-      }
-    });
-  }
-
-  return arr;
-};
-
 export const handelRowChangeLog = (
   editedRows: EditedRow[],
   oldRow: RowType,

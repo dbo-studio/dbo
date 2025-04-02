@@ -20,16 +20,16 @@ export type FilterType = {
 export type TabType = {
   id: string;
   nodeId: string;
-  table: string;
-  query: string;
-  pagination: TabDataPagination;
-  showQuery: boolean;
-  showColumns: boolean;
-  showFilters: boolean;
-  showSorts: boolean;
-  sorts: SortType[];
-  filters: FilterType[];
-  columns: string[];
+  table?: string;
+  query?: string;
+  pagination?: TabDataPagination;
+  showQuery?: boolean;
+  showColumns?: boolean;
+  showFilters?: boolean;
+  showSorts?: boolean;
+  sorts?: SortType[];
+  filters?: FilterType[];
+  columns?: string[];
   mode: TabMode;
   options?: Record<string, any>;
 };

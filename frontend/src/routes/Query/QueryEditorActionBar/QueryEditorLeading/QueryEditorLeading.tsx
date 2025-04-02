@@ -1,19 +1,23 @@
 import SelectInput from '@/components/base/SelectInput/SelectInput';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import locales from '@/locales';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { Stack, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import type { QueryEditorLeadingProps } from '../../types';
 
-export default function QueryEditorLeading({ databases, schemas, onChange }: QueryEditorLeadingProps) {
-  const [localSchema, setLocalSchema] = useState<string>('');
-  const [localDatabase, setLocalDatabase] = useState<string>('');
+export default function QueryEditorLeading({ databases, schemas }: QueryEditorLeadingProps) {
+  const selectedTab = useSelectedTab();
+  const { updateSelectedTab } = useTabStore();
+
+  const [localSchema, setLocalSchema] = useState<string>(selectedTab?.options?.schema ?? '');
+  const [localDatabase, setLocalDatabase] = useState<string>(selectedTab?.options?.database ?? '');
 
   useEffect(() => {
-    onChange({
-      database: localDatabase,
-      schema: localSchema
-    });
-  }, [localSchema, localDatabase, onChange]);
+    if (!selectedTab) return;
+
+    updateSelectedTab({ ...selectedTab, options: { database: localDatabase, schema: localSchema } });
+  }, [localSchema, localDatabase]);
 
   return (
     <Stack spacing={2} direction={'row'}>

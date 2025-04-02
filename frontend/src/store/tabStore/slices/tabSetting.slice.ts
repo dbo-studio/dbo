@@ -12,17 +12,12 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
     mode = mode ? mode : TabMode.Data;
     const tabs = get().getTabs();
 
-    let findTab: TabType[];
-    if (mode === TabMode.Query) {
-      findTab = tabs.filter((t: TabType) => t.mode === TabMode.Query && (t.query === '' || t.query === '""'));
-    } else {
-      findTab = tabs.filter((t: TabType) => t.table === table);
-    }
+    const findTab = tabs.find((t: TabType) => t.mode === mode && t.table === table);
 
-    if (findTab.length > 0) {
-      findTab[0].mode = mode;
-      get().switchTab(findTab[0].id);
-      return findTab[0];
+    if (findTab) {
+      findTab.mode = mode;
+      get().switchTab(findTab.id);
+      return findTab;
     }
 
     let tabQuery: string;
@@ -61,6 +56,30 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
 
     return newTab;
   },
+
+  addEditorTab: (): TabType => {
+    const tabs = get().getTabs();
+    const findTab = tabs.find((t: TabType) => t.mode === TabMode.Query && (t.query === '' || t.query === '""'));
+
+    if (findTab) {
+      findTab.mode = TabMode.Query;
+      get().switchTab(findTab.id);
+      return findTab;
+    }
+
+    const newTab: TabType = {
+      id: uuidv4(),
+      nodeId: 'Editor',
+      mode: TabMode.Query,
+      query: '',
+      options: {
+        database: '',
+        schema: ''
+      }
+    };
+
+    return get().handleAddNewTab(tabs, newTab);
+  },
   addObjectTab: (nodeId: string, action: string, mode: TabMode): TabType => {
     const tabs = get().getTabs();
     const findTab = tabs.find((t: TabType) => t.mode === mode && t.nodeId === nodeId);
@@ -70,7 +89,6 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       return findTab;
     }
 
-    //@ts-ignore
     const newTab: TabType = {
       id: uuidv4(),
       nodeId: nodeId,
@@ -81,14 +99,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       }
     };
 
-    if (tabs.length < maxTabs) {
-      get().updateTabs([...tabs, newTab]);
-    } else {
-      get().updateTabs([...tabs.slice(1), newTab]);
-    }
-    get().switchTab(newTab.id);
-
-    return newTab;
+    return get().handleAddNewTab(tabs, newTab);
   },
   removeTab: (tabId: string): TabType | null | undefined => {
     const tabIndex = get()
@@ -124,5 +135,16 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
     if (findTab) {
       get().updateSelectedTab(findTab);
     }
+  },
+
+  handleAddNewTab: (tabs: TabType[], newTab: TabType) => {
+    if (tabs.length < maxTabs) {
+      get().updateTabs([...tabs, newTab]);
+    } else {
+      get().updateTabs([...tabs.slice(1), newTab]);
+    }
+    get().switchTab(newTab.id);
+
+    return newTab;
   }
 });

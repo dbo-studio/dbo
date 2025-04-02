@@ -9,9 +9,9 @@ type (
 	}
 
 	RawQueryResponse struct {
-		Query   string
-		Data    []map[string]interface{}
-		Columns []Column
+		Query   string   `json:"query"`
+		Data    any      `json:"data"`
+		Columns []Column `json:"columns"`
 	}
 )
 

@@ -1,15 +1,13 @@
 import api from '@/api';
 import ResizableYBox from '@/components/base/ResizableBox/ResizableYBox.tsx';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor.tsx';
-import type { SqlEditorSettingType } from '@/components/base/SqlEditor/types';
 import DataGrid from '@/components/shared/DBDataGrid/DataGrid.tsx';
 import { useWindowSize } from '@/hooks';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { AutoCompleteType } from '@/types';
 import { Box } from '@mui/material';
-import { useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
 
@@ -18,32 +16,19 @@ export default function Query() {
   const currentConnection = useCurrentConnection();
   const windowSize = useWindowSize();
   const { getQuery, updateQuery } = useTabStore();
-  const [autocomplete, setAutocomplete] = useState<AutoCompleteType | null>(null);
   const [value, setValue] = useState('');
-  const [setting, setSetting] = useState<SqlEditorSettingType>({
-    database: '',
-    schema: ''
+
+  const { data: autocomplete } = useQuery({
+    queryKey: ['autocomplete', currentConnection?.id, selectedTab?.options?.database, selectedTab?.options?.schema],
+    queryFn: () =>
+      api.query.autoComplete({
+        connectionId: currentConnection?.id ?? 0,
+        fromCache: false,
+        database: selectedTab?.options?.database === '' ? undefined : selectedTab?.options?.database,
+        schema: selectedTab?.options?.schema === '' ? undefined : selectedTab?.options?.schema
+      }),
+    enabled: !!currentConnection
   });
-
-  const { mutateAsync: autocompleteMutate, isPending: pendingAutocomplete } = useMutation({
-    mutationFn: api.query.autoComplete,
-    onError: (error) => {
-      console.error('🚀 ~ handleSave ~ error:', error);
-    }
-  });
-
-  useEffect(() => {
-    if (!currentConnection || pendingAutocomplete) return;
-
-    autocompleteMutate({
-      connectionId: currentConnection.id,
-      fromCache: false,
-      database: setting.database === '' ? undefined : setting.database,
-      schema: setting.schema === '' ? undefined : setting.schema
-    }).then((res) => {
-      setAutocomplete(res);
-    });
-  }, [setting, currentConnection]);
 
   useEffect(() => {
     handleChangeValue();
@@ -57,13 +42,16 @@ export default function Query() {
     updateQuery(query);
   };
 
+  if (!selectedTab) {
+    return <></>;
+  }
+
   return (
     <>
       <QueryEditorActionBar
         databases={autocomplete?.databases ?? []}
         schemas={autocomplete?.schemas ?? []}
         onFormat={() => handleChangeValue()}
-        onChange={setSetting}
       />
       <Box display={'flex'} flexDirection={'column'} height={windowSize.height}>
         <Box display={'flex'} minHeight={'0'} flex={1} borderBottom={(theme) => `1px solid ${theme.palette.divider}`}>

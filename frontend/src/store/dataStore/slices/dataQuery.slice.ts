@@ -70,6 +70,7 @@ export const createDataQuerySlice: StateCreator<
       });
 
       useTabStore.getState().updateQuery(res.query);
+
       await Promise.all([get().updateRows(res.data), get().updateColumns(res.columns)]);
       set({ toggleDataFetching: !get().toggleDataFetching });
     } catch (error) {

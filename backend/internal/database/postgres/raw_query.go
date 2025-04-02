@@ -102,7 +102,7 @@ func commandResponseBuilder(queryResult *dto.RawQueryResponse, endTime time.Dura
 			IsActive:   true,
 		},
 		{
-			Name:       "Time",
+			Name:       "Duration",
 			Type:       "Varchar",
 			MappedType: "string",
 			NotNull:    false,

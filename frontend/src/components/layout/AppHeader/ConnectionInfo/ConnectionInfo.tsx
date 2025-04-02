@@ -1,7 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton.tsx';
 import Settings from '@/components/common/Settings/Settings.tsx';
-import { TabMode } from '@/core/enums';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection.tsx';
 import useNavigate from '@/hooks/useNavigate.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
@@ -18,11 +17,11 @@ export default function ConnectionInfo() {
   const currentConnection = useCurrentConnection();
   const [searchParams, setSearchParams] = useSearchParams();
   const { loading } = useConnectionStore();
-  const { addTab } = useTabStore();
+  const { addEditorTab } = useTabStore();
   const { reloadTree } = useTreeStore();
 
   const handleAddEditorTab = () => {
-    const tab = addTab('Editor', undefined, TabMode.Query);
+    const tab = addEditorTab();
     navigate({
       route: 'query',
       tabId: tab.id
