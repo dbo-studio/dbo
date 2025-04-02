@@ -6,12 +6,13 @@ import { useWindowSize } from '@/hooks';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import type { AutoCompleteType } from '@/types';
 import { Box } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
 
-export default function Query() {
+export default function Query(): JSX.Element {
   const selectedTab = useSelectedTab();
   const currentConnection = useCurrentConnection();
   const windowSize = useWindowSize();
@@ -20,7 +21,7 @@ export default function Query() {
 
   const { data: autocomplete } = useQuery({
     queryKey: ['autocomplete', currentConnection?.id, selectedTab?.options?.database, selectedTab?.options?.schema],
-    queryFn: () =>
+    queryFn: async (): Promise<AutoCompleteType> =>
       api.query.autoComplete({
         connectionId: currentConnection?.id ?? 0,
         fromCache: false,
@@ -34,11 +35,11 @@ export default function Query() {
     handleChangeValue();
   }, [selectedTab?.id]);
 
-  const handleChangeValue = () => {
+  const handleChangeValue = (): void => {
     setValue(getQuery() ?? '');
   };
 
-  const handleUpdateState = (query: string) => {
+  const handleUpdateState = (query: string): void => {
     updateQuery(query);
   };
 
@@ -51,10 +52,15 @@ export default function Query() {
       <QueryEditorActionBar
         databases={autocomplete?.databases ?? []}
         schemas={autocomplete?.schemas ?? []}
-        onFormat={() => handleChangeValue()}
+        onFormat={(): void => handleChangeValue()}
       />
       <Box display={'flex'} flexDirection={'column'} height={windowSize.height}>
-        <Box display={'flex'} minHeight={'0'} flex={1} borderBottom={(theme) => `1px solid ${theme.palette.divider}`}>
+        <Box
+          display={'flex'}
+          minHeight={'0'}
+          flex={1}
+          borderBottom={(theme): string => `1px solid ${theme.palette.divider}`}
+        >
           {autocomplete && <SqlEditor onChange={handleUpdateState} autocomplete={autocomplete} value={value} />}
         </Box>
         {autocomplete && (

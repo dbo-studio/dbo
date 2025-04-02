@@ -10,10 +10,10 @@ import type {
 } from './types';
 
 const endpoint = {
-  runQuery: () => '/query/run',
-  runRawQuery: () => '/query/raw',
-  updateQuery: () => '/query/update',
-  autoComplete: () => '/query/autocomplete'
+  runQuery: (): string => '/query/run',
+  runRawQuery: (): string => '/query/raw',
+  updateQuery: (): string => '/query/update',
+  autoComplete: (): string => '/query/autocomplete'
 };
 
 export const runQuery = async (data: RunQueryRequestType): Promise<RunQueryResponseType> => {

@@ -2,37 +2,45 @@ import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { shortcuts, tools } from '@/core/utils';
 import { useShortcut } from '@/hooks';
-import useAPI from '@/hooks/useApi.hook';
 import { useSelectedTab } from '@/hooks/useSelectedTab';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useSavedQueryStore } from '@/store/savedQueryStore/savedQuery.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import type { SavedQueryType } from '@/types';
 import { IconButton, Stack, Tooltip } from '@mui/material';
-import { isAxiosError } from 'axios';
+import { useMutation } from '@tanstack/react-query';
+import type { JSX } from 'react';
 import { toast } from 'sonner';
 import type { QueryEditorActionsProps } from '../../types';
 
-export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps) {
+export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps): JSX.Element {
   const { runRawQuery } = useDataStore();
   const { updateQuery, getQuery } = useTabStore();
   const { upsertQuery } = useSavedQueryStore();
   const selectedTab = useSelectedTab();
 
-  const { request: createSavedQuery } = useAPI({
-    apiMethod: api.savedQueries.createSavedQuery
+  const { mutateAsync: createSavedQueryMutation } = useMutation({
+    mutationFn: api.savedQueries.createSavedQuery,
+    onSuccess: (data: SavedQueryType): void => {
+      upsertQuery(data);
+      toast.success(locales.query_saved_successfully);
+    },
+    onError: (error: Error): void => {
+      console.error('🚀 ~ createSavedQueryMutation ~ error:', error);
+    }
   });
 
   useShortcut(shortcuts.runQuery, () => runRawQuery());
 
-  const handleFormatSql = () => {
+  const handleFormatSql = (): void => {
     if (checkQueryLength()) {
       updateQuery(tools.formatSql(getQuery(), 'postgresql'));
       onFormat();
     }
   };
 
-  const handleMinifySql = () => {
+  const handleMinifySql = (): void => {
     if (checkQueryLength()) {
       const minified = tools.minifySql(getQuery());
       updateQuery(minified);
@@ -40,28 +48,21 @@ export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps
     }
   };
 
-  const saveQuery = async () => {
+  const saveQuery = async (): Promise<void> => {
     if (!checkQueryLength()) {
       toast.error(locales.empty_query);
       return;
     }
 
     try {
-      const res = await createSavedQuery({
+      await createSavedQueryMutation({
         query: getQuery()
       });
-      upsertQuery(res);
-      toast.success(locales.query_saved_successfully);
-    } catch (error) {
-      if (isAxiosError(error)) {
-        toast.error(error.message);
-      }
-      console.log('🚀 ~ saveQuery ~ error:', error);
-    }
+    } catch (error) {}
   };
 
-  const checkQueryLength = () => {
-    return selectedTab && getQuery().length > 0;
+  const checkQueryLength = (): boolean => {
+    return selectedTab !== undefined && getQuery().length > 0;
   };
 
   return (
@@ -82,7 +83,7 @@ export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps
         </IconButton>
       </Tooltip>
       <Tooltip title={shortcuts.runQuery.command}>
-        <IconButton color='primary' onClick={() => runRawQuery()}>
+        <IconButton color='primary' onClick={(): Promise<void> => runRawQuery()}>
           <CustomIcon type='play' />
         </IconButton>
       </Tooltip>

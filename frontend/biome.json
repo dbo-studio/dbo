@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
   "formatter": {
     "enabled": true,
     "formatWithErrors": false,
@@ -21,6 +21,9 @@
       },
       "a11y": {
         "useKeyWithClickEvents": "off"
+      },
+      "nursery": {
+        "useExplicitType": "error"
       }
     }
   },
@@ -37,9 +40,10 @@
       "attributePosition": "auto"
     }
   },
-  "overrides": [
-    {
-      "include": ["src/*.ts", "src/*.tsx"]
-    }
-  ]
+  "files": {
+    "include": ["src/**/*.ts", "src/**/*.tsx"]
+  },
+  "organizeImports": {
+    "enabled": true
+  }
 }

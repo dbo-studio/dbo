@@ -3,7 +3,7 @@ import type { CreateConnectionRequestType } from '@/api/connection/types';
 import Modal from '@/components/base/Modal/Modal';
 import locales from '@/locales';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { type JSX, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import ConnectionSelection from './ConnectionSelection/ConnectionSelection';
@@ -18,7 +18,7 @@ const connectionTypes: SelectionConnectionType[] = [
   }
 ];
 
-export default function AddConnection() {
+export default function AddConnection(): JSX.Element {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [connectionType, setConnectionType] = useState<SelectionConnectionType | undefined>(undefined);
@@ -26,36 +26,36 @@ export default function AddConnection() {
 
   const { mutateAsync: createConnectionMutation, isPending: createConnectionPending } = useMutation({
     mutationFn: api.connection.createConnection,
-    onSuccess: () => {
+    onSuccess: (): void => {
       queryClient.invalidateQueries({
         queryKey: ['connections']
       });
     },
-    onError: (error) => {
+    onError: (error): void => {
       console.error('🚀 ~ createConnectionMutation ~ error:', error);
     }
   });
 
   const { mutateAsync: pingConnectionMutation, isPending: pingConnectionPending } = useMutation({
     mutationFn: api.connection.pingConnection,
-    onError: (error) => {
+    onError: (error): void => {
       console.error('🚀 ~ pingConnectionMutation ~ error:', error);
     }
   });
 
-  const handleClose = () => {
+  const handleClose = (): void => {
     setConnectionType(undefined);
     searchParams.delete('showAddConnection');
     setSearchParams(searchParams);
     setStep(0);
   };
 
-  const handleSetConnection = (connection: SelectionConnectionType | undefined) => {
+  const handleSetConnection = (connection: SelectionConnectionType | undefined): void => {
     setConnectionType(connection);
     setStep(1);
   };
 
-  const handlePingConnection = async (data: CreateConnectionRequestType) => {
+  const handlePingConnection = async (data: CreateConnectionRequestType): Promise<void> => {
     if (pingConnectionPending) {
       return;
     }
@@ -64,7 +64,7 @@ export default function AddConnection() {
     toast.success(locales.connection_test_success);
   };
 
-  const handleCreateConnection = async (data: CreateConnectionRequestType) => {
+  const handleCreateConnection = async (data: CreateConnectionRequestType): Promise<void> => {
     if (createConnectionPending) {
       return;
     }

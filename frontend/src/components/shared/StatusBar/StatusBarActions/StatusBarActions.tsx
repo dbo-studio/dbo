@@ -1,19 +1,19 @@
 import api from '@/api';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton';
 import { TabMode } from '@/core/enums';
-import useAPI from '@/hooks/useApi.hook.ts';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection.tsx';
 import { useSelectedTab } from '@/hooks/useSelectedTab.tsx';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { Box, IconButton, Stack } from '@mui/material';
+import { useMutation } from '@tanstack/react-query';
+import type { JSX } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import CustomIcon from '../../../base/CustomIcon/CustomIcon.tsx';
-import LoadingIconButton from '../../../base/LoadingIconButton/LoadingIconButton.tsx';
 
-export default function StatusBarActions() {
+export default function StatusBarActions(): JSX.Element {
+  const currentConnection = useCurrentConnection();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedTab = useSelectedTab();
-  const currentConnection = useCurrentConnection();
-
   const {
     loading,
     addUnsavedRows,
@@ -30,11 +30,20 @@ export default function StatusBarActions() {
     deleteRemovedRowsByTabId
   } = useDataStore();
 
-  const { request: updateQuery, pending: updateQueryPending } = useAPI({
-    apiMethod: api.query.updateQuery
+  const { mutateAsync: updateQueryMutation, isPending: updateQueryPending } = useMutation({
+    mutationFn: api.query.updateQuery,
+    onSuccess: async (): Promise<void> => {
+      await runQuery();
+      removeEditedRowsByTabId(selectedTab?.id ?? '');
+      deleteRemovedRowsByTabId(selectedTab?.id ?? '');
+      removeUnsavedRowsByTabId(selectedTab?.id ?? '');
+    },
+    onError: (error: Error): void => {
+      console.error('🚀 ~ updateQueryMutation ~ error:', error);
+    }
   });
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<void> => {
     if (selectedTab?.mode === TabMode.Data) {
       const edited = getEditedRows();
       const removed = getRemovedRows();
@@ -44,24 +53,18 @@ export default function StatusBarActions() {
         return;
       }
       try {
-        await updateQuery({
+        await updateQueryMutation({
           connectionId: currentConnection.id,
           nodeId: selectedTab.id,
           edited: edited,
           removed: removed,
           added: unsaved
         });
-        await runQuery();
-        removeEditedRowsByTabId(selectedTab.id);
-        deleteRemovedRowsByTabId(selectedTab.id);
-        removeUnsavedRowsByTabId(selectedTab.id);
-      } catch (error) {
-        console.log('🚀 ~ handleSave ~ error:', error);
-      }
+      } catch (error) {}
     }
   };
 
-  const handleAddAction = async () => {
+  const handleAddAction = async (): Promise<void> => {
     if (selectedTab?.mode === TabMode.Data) {
       addUnsavedRows();
       searchParams.set('scrollToBottom', 'true');
@@ -69,13 +72,13 @@ export default function StatusBarActions() {
     }
   };
 
-  const handleRemoveAction = async () => {
+  const handleRemoveAction = async (): Promise<void> => {
     if (selectedTab?.mode === TabMode.Data) {
       updateRemovedRows();
     }
   };
 
-  const handleDiscardChanges = async () => {
+  const handleDiscardChanges = async (): Promise<void> => {
     if (selectedTab?.mode === TabMode.Data) {
       restoreEditedRows().then();
       discardUnsavedRows();
@@ -84,7 +87,7 @@ export default function StatusBarActions() {
     }
   };
 
-  const handleRefresh = async () => {
+  const handleRefresh = async (): Promise<void> => {
     await handleDiscardChanges();
     runQuery().then();
   };

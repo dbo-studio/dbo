@@ -1,58 +1,64 @@
 import api from '@/api';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import FieldInput from '@/components/base/FieldInput/FieldInput';
+import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton';
 import { TabMode } from '@/core/enums';
 import { useContextMenu } from '@/hooks';
-import useAPI from '@/hooks/useApi.hook';
 import useNavigate from '@/hooks/useNavigate.hook';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, ClickAwayListener, IconButton, Typography, useTheme } from '@mui/material';
-import { useState } from 'react';
-import CustomIcon from '../../../base/CustomIcon/CustomIcon';
-import FieldInput from '../../../base/FieldInput/FieldInput';
-import LoadingIconButton from '../../../base/LoadingIconButton/LoadingIconButton';
+import { useMutation } from '@tanstack/react-query';
+import { type JSX, useState } from 'react';
 import type { SavedQueryItemProps } from '../types';
 import SavedQueryContextMenu from './SavedQueryContextMenu/SavedQueryContextMenu';
 import { SavedQueryItemStyled } from './SavedQueryItem.styled';
 
-export default function SavedQueryItem({ query, selected, onChange, onDelete, onClick }: SavedQueryItemProps) {
-  const [editMode, setEditMode] = useState(false);
-  const [name, setName] = useState(query.name);
+export default function SavedQueryItem({
+  query,
+  selected,
+  onChange,
+  onDelete,
+  onClick
+}: SavedQueryItemProps): JSX.Element {
   const theme = useTheme();
   const navigate = useNavigate();
-
+  const [editMode, setEditMode] = useState(false);
+  const [name, setName] = useState(query.name);
   const { addTab } = useTabStore();
-
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
-  const { request: updateSavedQuery, pending: pendingUpdate } = useAPI({
-    apiMethod: api.savedQueries.updateSavedQuery
+  const { mutateAsync: updateSavedQueryMutation, isPending } = useMutation({
+    mutationFn: api.savedQueries.updateSavedQuery,
+    onError: (error: Error): void => {
+      console.error('🚀 ~ updateSavedQueryMutation ~ error:', error);
+    }
   });
 
-  const handleEditMode = (edit: boolean) => {
+  const handleEditMode = (edit: boolean): void => {
     setEditMode(edit);
     handleCloseContextMenu();
   };
 
-  const handleSaveChange = async () => {
+  const handleSaveChange = async (): Promise<void> => {
     try {
       const newQuery = {
         ...query,
         name
       };
-      await updateSavedQuery(newQuery);
+      await updateSavedQueryMutation(newQuery);
       setEditMode(false);
       onChange(newQuery);
     } catch (err) {
-      console.log('🚀 ~ handleSaveChange ~ err:', err);
       handleDiscardChanges();
     }
   };
 
-  const handleDiscardChanges = () => {
+  const handleDiscardChanges = (): void => {
     setName(query.name);
     setEditMode(false);
   };
 
-  const handleRun = () => {
+  const handleRun = (): void => {
     const name = query.name.slice(0, 10);
     const tab = addTab(name, undefined, TabMode.Query, query.query);
     navigate({
@@ -64,14 +70,14 @@ export default function SavedQueryItem({ query, selected, onChange, onDelete, on
   return (
     <ClickAwayListener onClickAway={handleDiscardChanges}>
       <SavedQueryItemStyled selected={selected} onContextMenu={handleContextMenu}>
-        <Box flex={1} mr={theme.spacing(1)} onDoubleClick={handleRun} onClick={() => onClick()}>
+        <Box flex={1} mr={theme.spacing(1)} onDoubleClick={handleRun} onClick={(): void => onClick()}>
           {editMode ? (
             <FieldInput
               size='small'
               fullWidth={true}
               type='text'
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e): void => setName(e.target.value)}
               margin='none'
             />
           ) : (
@@ -80,11 +86,7 @@ export default function SavedQueryItem({ query, selected, onChange, onDelete, on
         </Box>
 
         {editMode ? (
-          <LoadingIconButton
-            loading={+pendingUpdate}
-            disabled={query.name === name || pendingUpdate}
-            onClick={handleSaveChange}
-          >
+          <LoadingIconButton loading={isPending} disabled={query.name === name || isPending} onClick={handleSaveChange}>
             <CustomIcon type='check' size='s' />
           </LoadingIconButton>
         ) : (
@@ -97,8 +99,8 @@ export default function SavedQueryItem({ query, selected, onChange, onDelete, on
           query={query}
           contextMenu={contextMenuPosition}
           onClose={handleCloseContextMenu}
-          onDelete={() => onDelete()}
-          onChange={() => handleEditMode(true)}
+          onDelete={(): void => onDelete()}
+          onChange={(): void => handleEditMode(true)}
         />
       </SavedQueryItemStyled>
     </ClickAwayListener>

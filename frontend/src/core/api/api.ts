@@ -33,7 +33,7 @@ api.interceptors.response.use(
   }
 );
 
-const changeUrl = (url: string) => {
+const changeUrl = (url: string): void => {
   api.defaults.baseURL = url;
 };
 

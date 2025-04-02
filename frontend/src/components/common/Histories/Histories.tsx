@@ -1,50 +1,37 @@
 import api from '@/api';
-import useAPI from '@/hooks/useApi.hook';
 import { useHistoryStore } from '@/store/historyStore/history.store';
+import type { HistoryType } from '@/types/History';
 import { Box, ClickAwayListener, LinearProgress, useTheme } from '@mui/material';
-import { isAxiosError } from 'axios';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
+import { type JSX, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import HistoryItem from './HistoryItem/HistoryItem';
 
-export default function Histories() {
+export default function Histories(): JSX.Element {
   const [selected, setSelected] = useState<number | null>(null);
   const theme = useTheme();
   const { histories, updateHistories } = useHistoryStore();
 
-  const { request: getHistories, pending } = useAPI({
-    apiMethod: api.histories.getHistories
+  const { isLoading } = useQuery({
+    queryKey: ['histories'],
+    queryFn: async (): Promise<HistoryType[]> => {
+      const res = await api.histories.getHistories();
+      updateHistories(res);
+      return res;
+    },
+    enabled: histories === undefined
   });
 
-  const handleGetHistories = async () => {
-    try {
-      const res = await getHistories();
-      updateHistories(res);
-    } catch (error) {
-      if (isAxiosError(error)) {
-        toast.error(error.message);
-      }
-      console.log('🚀 ~ handleGetHistories ~ error:', error);
-    }
-  };
-
-  useEffect(() => {
-    handleGetHistories().then();
-  }, []);
-
   return (
-    <ClickAwayListener onClickAway={() => setSelected(null)}>
+    <ClickAwayListener onClickAway={(): void => setSelected(null)}>
       <Box>
         <Box mt={theme.spacing(1)}>
-          {pending ? (
+          {isLoading ? (
             <LinearProgress style={{ marginTop: '8px' }} />
           ) : (
             histories?.map((query) => (
               <HistoryItem
-                onClick={() => {
-                  setSelected(query.id);
-                }}
+                onClick={(): void => setSelected(query.id)}
                 key={uuid()}
                 history={query}
                 selected={selected === query.id}

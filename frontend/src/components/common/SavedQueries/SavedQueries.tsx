@@ -1,59 +1,46 @@
 import api from '@/api';
-import useAPI from '@/hooks/useApi.hook';
+import type { SavedQueryResponseType } from '@/api/savedQuery/types';
 import { useSavedQueryStore } from '@/store/savedQueryStore/savedQuery.store';
 import { Box, ClickAwayListener, LinearProgress, useTheme } from '@mui/material';
-import { isAxiosError } from 'axios';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
+import { type JSX, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import Search from '../../base/Search/Search';
 import SavedQueryItem from './SavedQueryItem/SavedQueryItem';
 
-export default function SavedQueries() {
+export default function SavedQueries(): JSX.Element {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<number | null>(null);
   const theme = useTheme();
   const { savedQueries, upsertQuery, deleteQuery } = useSavedQueryStore();
 
-  const { request: getSavedQueries, pending } = useAPI({
-    apiMethod: api.savedQueries.getSavedQueries
-  });
-
-  const handleGetSavedQueries = async () => {
-    try {
-      const res = await getSavedQueries();
+  const { isLoading } = useQuery({
+    queryKey: ['savedQueries'],
+    queryFn: async (): Promise<SavedQueryResponseType[]> => {
+      const res = await api.savedQueries.getSavedQueries();
       for (const item of res) {
         upsertQuery(item);
       }
-    } catch (error) {
-      if (isAxiosError(error)) {
-        toast.error(error.message);
-      }
-      console.log('🚀 ~ handleGetSavedQueries ~ error:', error);
-    }
-  };
-
-  useEffect(() => {
-    if (savedQueries === undefined) {
-      handleGetSavedQueries().then();
-    }
-  }, []);
+      return res;
+    },
+    enabled: savedQueries === undefined
+  });
 
   return (
-    <ClickAwayListener onClickAway={() => setSelected(null)}>
+    <ClickAwayListener onClickAway={(): void => setSelected(null)}>
       <Box>
-        <Search onChange={(name) => setSearch(name)} />
+        <Search onChange={(name): void => setSearch(name)} />
         <Box mt={theme.spacing(1)}>
-          {pending ? (
+          {isLoading ? (
             <LinearProgress style={{ marginTop: '8px' }} />
           ) : (
             savedQueries
               ?.filter((f) => f.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()))
               .map((query) => (
                 <SavedQueryItem
-                  onChange={(q) => upsertQuery(q)}
-                  onDelete={() => deleteQuery(query.id)}
-                  onClick={() => {
+                  onChange={(q): void => upsertQuery(q)}
+                  onDelete={(): void => deleteQuery(query.id)}
+                  onClick={(): void => {
                     setSelected(query.id);
                   }}
                   key={uuid()}

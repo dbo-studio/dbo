@@ -1,4 +1,3 @@
-export * from './useApi.hook';
 export * from './useClickAway.hook';
 export * from './useContextMenu.hook';
 export * from './useCopyToClipboard.hook';

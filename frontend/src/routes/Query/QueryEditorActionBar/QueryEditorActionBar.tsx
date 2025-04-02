@@ -1,10 +1,10 @@
 import { Grid2, Stack } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import type { QueryEditorActionBarProps } from '../types';
 import QueryEditorActions from './QueryEditorActions/QueryEditorActions';
 import QueryEditorLeading from './QueryEditorLeading/QueryEditorLeading';
 
-export default function QueryEditorActionBar({ databases, schemas, onFormat }: QueryEditorActionBarProps) {
+export default function QueryEditorActionBar({ databases, schemas, onFormat }: QueryEditorActionBarProps): JSX.Element {
   const [localDatabases, setLocalDatabases] = useState<string[]>([]);
   const [localSchemas, setLocalSchemas] = useState<string[]>([]);
 
@@ -21,8 +21,8 @@ export default function QueryEditorActionBar({ databases, schemas, onFormat }: Q
   return (
     <Stack
       id='action-bar'
-      borderBottom={(theme) => `1px solid ${theme.palette.divider}`}
-      borderTop={(theme) => `1px solid ${theme.palette.divider}`}
+      borderBottom={(theme): string => `1px solid ${theme.palette.divider}`}
+      borderTop={(theme): string => `1px solid ${theme.palette.divider}`}
       padding='8px'
       direction='row'
       justifyContent='space-between'

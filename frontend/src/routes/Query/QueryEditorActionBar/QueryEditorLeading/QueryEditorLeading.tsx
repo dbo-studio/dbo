@@ -3,10 +3,10 @@ import { useSelectedTab } from '@/hooks/useSelectedTab';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Stack, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import type { QueryEditorLeadingProps } from '../../types';
 
-export default function QueryEditorLeading({ databases, schemas }: QueryEditorLeadingProps) {
+export default function QueryEditorLeading({ databases, schemas }: QueryEditorLeadingProps): JSX.Element {
   const selectedTab = useSelectedTab();
   const { updateSelectedTab } = useTabStore();
 
@@ -31,7 +31,7 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
           disabled={databases?.length === 0}
           size='small'
           options={databases.map((s) => ({ value: s, label: s }))}
-          onChange={(e) => setLocalDatabase(e.value)}
+          onChange={(e): void => setLocalDatabase(e.value)}
         />
       </Stack>
 
@@ -45,7 +45,7 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
           disabled={schemas?.length === 0}
           size='small'
           options={schemas.map((s) => ({ value: s, label: s }))}
-          onChange={(e) => setLocalSchema(e.value)}
+          onChange={(e): void => setLocalSchema(e.value)}
         />
       </Stack>
     </Stack>

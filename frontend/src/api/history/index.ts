@@ -1,7 +1,10 @@
-import api from '@/core/services/api';
-import { GET_HISTORIES } from './endpoints';
-import { transformHistories } from './transformers';
+import { api } from '@/core/api';
+import type { HistoryType } from '@/types/History';
 
-export const getHistories = async () => {
-  return api.get(GET_HISTORIES()).then(transformHistories);
+const endpoint = {
+  getHistories: (): string => '/histories'
+};
+
+export const getHistories = async (): Promise<HistoryType[]> => {
+  return (await api.get(endpoint.getHistories())).data.data as HistoryType[];
 };
