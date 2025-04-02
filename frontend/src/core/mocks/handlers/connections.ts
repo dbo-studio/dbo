@@ -60,48 +60,39 @@ const connectionHandler = [
 ];
 
 const connectionListItemModel = {
-  id: 1,
+  id: 16,
   name: 'localhost',
-  type: 'SQL',
-  driver: 'PostgreSQL',
-  auth: {
+  isActive: true,
+  info: 'localhost | postgresql 16.1 :  SQL Query',
+  icon: 'postgresql',
+  type: 'postgresql',
+  options: {
     database: 'default',
-    host: 'sample-pgsql',
+    host: 'localhost',
+    name: 'localhost',
+    password: '',
     port: 5432,
+    uri: '',
     username: 'default'
-  },
-  is_active: true
+  }
 };
 
 const connectionDetailModel = {
-  id: 1,
-  name: 'sample_db',
-  type: 'SQL',
-  driver: 'PostgreSQL',
-  version: '16.1',
-  is_active: true,
-  current_database: 'default',
-  current_schema: 'public',
-  auth: {
+  id: 16,
+  name: 'localhost',
+  isActive: true,
+  info: 'localhost | postgresql 16.1 :  SQL Query',
+  icon: 'postgresql',
+  type: 'postgresql',
+  options: {
     database: 'default',
-    host: 'sample-pgsql',
+    host: 'localhost',
+    name: 'localhost',
+    password: '',
     port: 5432,
+    uri: '',
     username: 'default'
-  },
-  databases: ['postgres', 'default'],
-  schemas: ['public', 'test1', 'test2'],
-  tables: [
-    'data_src',
-    'datsrcln',
-    'deriv_cd',
-    'fd_group',
-    'food_des',
-    'footnote',
-    'nut_data',
-    'nutr_def',
-    'src_cd',
-    'weight'
-  ]
+  }
 };
 
 export { connectionDetailModel, connectionHandler, connectionListItemModel };

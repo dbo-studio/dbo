@@ -1,4 +1,3 @@
-import { transformConnectionDetail } from '@/api/connection/transformers.ts';
 import { connectionDetailModel } from '@/core/mocks/handlers/connections.ts';
 import locales from '@/locales';
 import * as conn from '@/store/connectionStore/connection.store.ts';
@@ -10,7 +9,7 @@ import ConnectionBox from './ConnectionBox.tsx';
 
 describe('ConnectionBox.tsx', () => {
   const spy = vi.spyOn(conn, 'useConnectionStore');
-  const connection = transformConnectionDetail(connectionDetailModel);
+  const connection = connectionDetailModel;
 
   test('should show error when state loading ', () => {
     spy.mockReturnValue({

@@ -5,7 +5,6 @@ export * from './useCopyToClipboard.hook';
 export * from './useDebounce.hook';
 export * from './useMount.hook';
 export * from './useNavigate.hook.ts';
-export * from './useParamParser.hook.ts';
 export * from './useSetupDesktop.hook';
 export * from './useShortcut.hook';
 export * from './useUUID.hook';

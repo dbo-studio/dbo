@@ -5,6 +5,7 @@ export type TreeStore = {
   expandedNodes: Set<string>;
   loadedParentIds: Set<string>;
   isLoading: boolean;
+  treeError: Error | undefined;
 
   setTree: (tree: TreeNodeType | null) => void;
   getTree: () => TreeNodeType | null;

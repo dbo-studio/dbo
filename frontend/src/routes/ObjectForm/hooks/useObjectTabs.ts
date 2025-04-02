@@ -1,16 +1,15 @@
 import api from '@/api';
-import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { useTabStore } from '@/store/tabStore/tab.store';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 export const useObjectTabs = () => {
-  const { getSelectedTab } = useTabStore();
-  const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
+  const selectedTab = useSelectedTab();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedTabIndex, setSelectedTabIndex] = useState(Number.parseInt(searchParams.get('objectTabId') ?? '0'));
-  const { currentConnection } = useConnectionStore();
+  const currentConnection = useCurrentConnection();
 
   const { data: tabs } = useQuery({
     queryKey: ['objectTabs', selectedTab?.id, currentConnection?.id, selectedTab?.options?.action],

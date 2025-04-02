@@ -1,6 +1,6 @@
 import api from '@/api';
 import type { TreeNodeType } from '@/api/tree/types';
-import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { Box, LinearProgress } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
@@ -9,8 +9,8 @@ import { TreeViewContainerStyled, TreeViewContentStyled } from './ObjectTreeView
 import TreeNode from './TreeNode/TreeNode';
 
 export default function ObjectTreeView() {
-  const { currentConnection } = useConnectionStore();
-  const { tree, isLoading, reloadTree, setTree, addLoadedParentId } = useTreeStore();
+  const currentConnection = useCurrentConnection();
+  const { tree, isLoading, treeError, reloadTree, addLoadedParentId } = useTreeStore();
   const parentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const { mutateAsync: getChildrenMutation } = useMutation({
@@ -21,20 +21,13 @@ export default function ObjectTreeView() {
   });
 
   useEffect(() => {
-    // Initial load of the tree when component mounts
-    if (!tree && !isLoading && currentConnection?.id) {
+    if (!treeError && !tree && !isLoading && currentConnection?.id) {
       reloadTree();
     }
-  }, [currentConnection?.id, reloadTree, tree, isLoading]);
-
-  // Reset tree when connection changes
-  useEffect(() => {
-    setTree(null);
-  }, [currentConnection?.id, setTree]);
+  }, [currentConnection?.id, tree, isLoading, treeError]);
 
   const fetchChildren = async (parentId: string): Promise<TreeNodeType[]> => {
     try {
-      // اضافه کردن parentId به لیست
       addLoadedParentId(parentId);
 
       const nodes = await getChildrenMutation({

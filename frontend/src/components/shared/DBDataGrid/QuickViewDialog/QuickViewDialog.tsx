@@ -1,5 +1,6 @@
 import CodeEditor from '@/components/base/CodeEditor/CodeEditor.tsx';
 import ResizableModal from '@/components/base/Modal/ResizableModal/ResizableModal.tsx';
+import type { QuickViewDialogProps } from '@/components/shared/DBDataGrid/QuickViewDialog/types.ts';
 import { handelRowChangeLog } from '@/core/utils';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
@@ -8,7 +9,6 @@ import type { RowType } from '@/types';
 import { Box } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import type { QuickViewDialogProps } from '@/components/shared/DBDataGrid/QuickViewDialog/types.ts';
 
 const getRowValue = (row: SelectedRow): string => {
   const columns = row.selectedColumns;

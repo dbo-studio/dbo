@@ -2,7 +2,7 @@ import { useUUID } from '@/hooks';
 import locales from '@/locales';
 import { Box, Button } from '@mui/material';
 import { useState } from 'react';
-import Search from '../../../../base/Search/Search';
+import Search from '../../../base/Search/Search';
 import type { ConnectionSelectionProps, ConnectionType } from '../types';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { ConnectionWrapperStyled } from './ConnectionSelection.styled';

@@ -1,13 +1,12 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Grid2, IconButton, Stack, useTheme } from '@mui/material';
-import { useMemo } from 'react';
 
 export default function ActionBar() {
   const theme = useTheme();
   const { setShowQueryPreview, setShowFilters, setShowSorts, setShowColumns } = useTabStore();
-  const { getSelectedTab } = useTabStore();
-  const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
+  const selectedTab = useSelectedTab();
 
   const handleToggle = (type: 'filter' | 'query' | 'sort' | 'column') => {
     switch (type) {

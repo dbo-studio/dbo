@@ -1,27 +1,25 @@
-import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton.tsx';
 import Settings from '@/components/common/Settings/Settings.tsx';
 import { TabMode } from '@/core/enums';
-import useAPI from '@/hooks/useApi.hook.ts';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection.tsx';
 import useNavigate from '@/hooks/useNavigate.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import { useTreeStore } from '@/store/treeStore/tree.store.ts';
 import { Grid2, IconButton, Stack } from '@mui/material';
-import axios from 'axios';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { toast } from 'sonner';
 import ConnectionBox from './ConnectionBox/ConnectionBox.tsx';
 
 export default function ConnectionInfo() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const currentConnection = useCurrentConnection();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { currentConnection, loading, updateLoading, updateCurrentConnection } = useConnectionStore();
+  const { loading } = useConnectionStore();
   const { addTab } = useTabStore();
-
-  const { request: getConnectionDetail, pending } = useAPI({
-    apiMethod: api.connection.getConnectionDetail
-  });
+  const { reloadTree } = useTreeStore();
 
   const handleAddEditorTab = () => {
     const tab = addTab('Editor', undefined, TabMode.Query);
@@ -40,22 +38,12 @@ export default function ConnectionInfo() {
     if (!currentConnection) {
       return;
     }
-    updateLoading('loading');
-    getConnectionDetail({
-      connectionId: currentConnection?.id,
-      fromCache: false
-    })
-      .then((res) => {
-        updateCurrentConnection(res);
-        updateLoading('finished');
-      })
-      .catch((e) => {
-        updateLoading('error');
-        if (axios.isAxiosError(e)) {
-          toast.error(e.message);
-        }
-        console.log('🚀 ~ handleRefresh ~ err:', e);
-      });
+
+    queryClient.invalidateQueries({
+      queryKey: ['connections', currentConnection.id]
+    });
+
+    reloadTree();
   };
 
   return (
@@ -80,7 +68,7 @@ export default function ConnectionInfo() {
           <LoadingIconButton
             aria-label={'refresh'}
             onClick={handleRefresh}
-            loading={pending}
+            loading={loading === 'loading'}
             disabled={loading === 'loading'}
           >
             <CustomIcon type={'refresh'} />

@@ -1,5 +1,6 @@
 import Loading from '@/components/layout/AppHeader/ConnectionInfo/ConnectionBox/Loading/Loading.tsx';
 import type { ConnectionBoxStatus } from '@/components/layout/AppHeader/ConnectionInfo/types.ts';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection.tsx';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store.ts';
 import { Box, Typography } from '@mui/material';
@@ -7,9 +8,10 @@ import { useEffect, useState } from 'react';
 import { ConnectionBoxStyled } from './ConnectionBox.styled.ts';
 
 export default function ConnectionBox() {
-  const { currentConnection, loading } = useConnectionStore();
+  const { loading } = useConnectionStore();
   const [info, setInfo] = useState('');
   const [status, setStatus] = useState<ConnectionBoxStatus>('loading');
+  const currentConnection = useCurrentConnection();
 
   useEffect(() => {
     if (loading === 'loading') {
@@ -29,7 +31,7 @@ export default function ConnectionBox() {
       return;
     }
 
-    setInfo(`${currentConnection?.name} | ${currentConnection?.driver} ${currentConnection?.version} :  SQL Query`);
+    setInfo(currentConnection.info);
     setStatus('finished');
   }, [currentConnection, loading]);
 

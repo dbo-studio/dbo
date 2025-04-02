@@ -1,9 +1,9 @@
+import DBFields from '@/components/common/DBFields/DBFields';
 import { useWindowSize } from '@/hooks/useWindowSize.hook';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box } from '@mui/material';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
 import { EndContainerStyled } from './Container.styled';
-import DBFields from '@/components/common/DBFields/DBFields';
 
 // const tabs = [
 //   {

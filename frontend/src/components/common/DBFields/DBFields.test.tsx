@@ -1,4 +1,3 @@
-import { transformRunQuery } from '@/api/query/transformers.ts';
 import { structureModel } from '@/core/mocks/handlers/queries.ts';
 import * as useDataStore from '@/store/dataStore/data.store.ts';
 import { screen } from '@testing-library/dom';
@@ -22,7 +21,7 @@ describe('DBField.tsx', () => {
   });
 
   test('should render the the db fields', () => {
-    const data = transformRunQuery(structureModel);
+    const data = structureModel;
     mockGetColumns.mockReturnValue(data.structures);
     mockSelectedRows.mockReturnValue([
       {
@@ -40,7 +39,7 @@ describe('DBField.tsx', () => {
   });
 
   test('should render fields', () => {
-    const data = transformRunQuery(structureModel);
+    const data = structureModel;
     mockGetColumns.mockReturnValue(data.structures);
     mockSelectedRows.mockReturnValue([
       {
@@ -58,7 +57,7 @@ describe('DBField.tsx', () => {
   });
 
   test('should show correct fields after search', async () => {
-    const data = transformRunQuery(structureModel);
+    const data = structureModel;
     mockGetColumns.mockReturnValue(data.structures);
     mockSelectedRows.mockReturnValue([
       {
@@ -81,7 +80,7 @@ describe('DBField.tsx', () => {
   });
 
   test('should skip wrong property of row', async () => {
-    const data = transformRunQuery(structureModel);
+    const data = structureModel;
     const columns = data.structures;
     // @ts-ignore
     columns[0].test_fake_row = 'test';

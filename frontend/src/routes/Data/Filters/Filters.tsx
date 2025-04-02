@@ -1,18 +1,16 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { useSelectedTab } from '@/hooks/useSelectedTab.tsx';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
-import { useTabStore } from '@/store/tabStore/tab.store';
 import type { FilterType } from '@/types/Tab';
 import { Box, Button } from '@mui/material';
-import { useMemo } from 'react';
 import { v4 as uuid } from 'uuid';
 import AddFilterButton from './FilterItem/AddFilterButton/AddFilterButton.tsx';
 import FilterItem from './FilterItem/FilterItem.tsx';
 
 export default function Filters() {
   const { getColumns, runQuery } = useDataStore();
-  const { getSelectedTab } = useTabStore();
-  const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
+  const selectedTab = useSelectedTab();
 
   return (
     <Box id='#filters' p={1} borderBottom={(theme) => `1px solid ${theme.palette.divider}`}>

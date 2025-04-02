@@ -2,26 +2,27 @@ import api from '@/api';
 import type { TreeNodeType } from '@/api/tree/types';
 import { TabMode } from '@/core/enums';
 import { useCopyToClipboard } from '@/hooks';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import useNavigate from '@/hooks/useNavigate.hook';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
-import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { toast } from 'sonner';
 
 export const useActionDetection = (expandNode: (event: React.MouseEvent, focus?: boolean) => Promise<void>) => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { addTab, addObjectTab, getSelectedTab } = useTabStore();
+  const selectedTab = useSelectedTab();
+
+  const { addTab, addObjectTab } = useTabStore();
   const confirmModal = useConfirmModalStore();
-  const { currentConnection } = useConnectionStore();
+  const currentConnection = useCurrentConnection();
   const { reloadTree } = useTreeStore();
   const [copy] = useCopyToClipboard();
-
-  const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
 
   const { mutateAsync: executeActionMutation, isPending: pendingExecuteAction } = useMutation({
     mutationFn: api.tree.executeAction,

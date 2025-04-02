@@ -1,21 +1,19 @@
 import api from '@/api';
 import type { FormFieldType } from '@/api/tree/types';
 import { tools } from '@/core/utils';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import locales from '@/locales';
-import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
-import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useMemo } from 'react';
 import { toast } from 'sonner';
 
 export const useObjectActions = (tabId: string | undefined) => {
   const queryClient = useQueryClient();
-  const { currentConnection } = useConnectionStore();
-  const { getSelectedTab } = useTabStore();
+  const currentConnection = useCurrentConnection();
   const { updateFormData, getFormData, resetFormData, formDataByTab } = useDataStore();
-  const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
+  const selectedTab = useSelectedTab();
   const action = selectedTab?.options?.action || '';
   const { reloadTree } = useTreeStore();
 

@@ -26,7 +26,7 @@ export const useTabStore = create<TabState>()(
           set({ ...initialize });
         },
         getTabs: (): TabType[] => {
-          const currentConnection = useConnectionStore.getState().currentConnection;
+          const currentConnection = useConnectionStore.getState().connections?.find((c) => c.isActive);
           const tabs = get().tabs;
           if (!currentConnection || !tabs[currentConnection.id]) {
             return [];
@@ -35,7 +35,7 @@ export const useTabStore = create<TabState>()(
           return tabs[currentConnection.id];
         },
         getSelectedTab: (): TabType | undefined => {
-          const currentConnection = useConnectionStore.getState().currentConnection;
+          const currentConnection = useConnectionStore.getState().connections?.find((c) => c.isActive);
           const selectedTab = get().selectedTab;
           if (!currentConnection) {
             return undefined;
@@ -53,7 +53,7 @@ export const useTabStore = create<TabState>()(
           return tabs[currentConnection.id][0];
         },
         updateTabs: (newTabs: TabType[]) => {
-          const currentConnection = useConnectionStore.getState().currentConnection;
+          const currentConnection = useConnectionStore.getState().connections?.find((c) => c.isActive);
           if (!currentConnection) {
             return;
           }
@@ -64,7 +64,7 @@ export const useTabStore = create<TabState>()(
           set({ tabs });
         },
         updateSelectedTab: (newSelectedTab: TabType | undefined) => {
-          const currentConnection = useConnectionStore.getState().currentConnection;
+          const currentConnection = useConnectionStore.getState().connections?.find((c) => c.isActive);
           if (!currentConnection) {
             return;
           }

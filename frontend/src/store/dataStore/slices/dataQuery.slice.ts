@@ -1,8 +1,8 @@
 import { runQuery, runRawQuery } from '@/api/query';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
 import type { StateCreator } from 'zustand';
-import { useConnectionStore } from '../../connectionStore/connection.store';
 import { useTabStore } from '../../tabStore/tab.store';
 import type { DataColumnSlice, DataQuerySlice, DataRowSlice, DataStore } from '../types';
 
@@ -15,7 +15,7 @@ export const createDataQuerySlice: StateCreator<
   loading: false,
   toggleDataFetching: true,
   runQuery: async () => {
-    const currentConnection = useConnectionStore.getState().currentConnection;
+    const currentConnection = useConnectionStore.getState().connections?.find((c) => c.isActive);
     const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab || !currentConnection) {
       return;
@@ -56,7 +56,7 @@ export const createDataQuerySlice: StateCreator<
     }
   },
   runRawQuery: async () => {
-    const currentConnection = useConnectionStore.getState().currentConnection;
+    const currentConnection = useConnectionStore.getState().connections?.find((c) => c.isActive);
     const selectedTab = useTabStore.getState().getSelectedTab();
     if (!selectedTab || !currentConnection) {
       return;

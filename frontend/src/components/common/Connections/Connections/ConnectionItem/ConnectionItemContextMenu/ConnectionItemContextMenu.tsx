@@ -1,31 +1,35 @@
 import api from '@/api';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
-import useAPI from '@/hooks/useApi.hook';
 import useNavigate from '@/hooks/useNavigate.hook.ts';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
-import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ConnectionType } from '@/types';
-import axios from 'axios';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import type { ConnectionContextMenuProps } from '../../../types';
 
 export default function ConnectionItemContextMenu({ connection, contextMenu, onClose }: ConnectionContextMenuProps) {
-  const { updateShowEditConnection, updateConnections, updateCurrentConnection, currentConnection, updateLoading } =
-    useConnectionStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
+
+  const { mutateAsync: deleteConnectionMutation, isPending: deleteConnectionPending } = useMutation({
+    mutationFn: api.connection.deleteConnection,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['connections']
+      });
+    },
+    onError: (error) => {
+      console.error('🚀 ~ deleteConnectionMutation ~ error:', error);
+    }
+  });
+
   const { updateSelectedTab, updateTabs } = useTabStore();
   const showModal = useConfirmModalStore((state) => state.danger);
   const navigate = useNavigate();
-
-  const { request: deleteConnection } = useAPI({
-    apiMethod: api.connection.deleteConnection
-  });
-
-  const { request: getConnectionDetail } = useAPI({
-    apiMethod: api.connection.getConnectionDetail
-  });
 
   const handleOpenConfirm = async (connection: ConnectionType) => {
     showModal(locales.delete_action, locales.connection_delete_confirm, () => {
@@ -34,33 +38,15 @@ export default function ConnectionItemContextMenu({ connection, contextMenu, onC
   };
 
   const handleRefresh = () => {
-    if (!currentConnection) {
-      return;
-    }
-    updateLoading('loading');
-    getConnectionDetail({
-      connectionId: currentConnection?.id,
-      fromCache: false
-    })
-      .then((res) => {
-        updateCurrentConnection(res);
-        updateLoading('finished');
-      })
-      .catch((e) => {
-        updateLoading('error');
-        if (axios.isAxiosError(e)) {
-          toast.error(e.message);
-        }
-        console.log('🚀 ~ handleRefresh ~ err:', e);
-      });
+    queryClient.invalidateQueries({
+      queryKey: ['connections']
+    });
   };
 
   const handleDeleteConnection = async (connection: ConnectionType) => {
     try {
-      const res = await deleteConnection(connection.id);
+      const res = await deleteConnectionMutation(connection.id);
       if (res.length === 0) {
-        updateConnections([]);
-        updateCurrentConnection(undefined);
         updateSelectedTab(undefined);
         updateTabs([]);
         toast.success(locales.connection_delete_success);
@@ -68,32 +54,13 @@ export default function ConnectionItemContextMenu({ connection, contextMenu, onC
         return;
       }
 
-      if (currentConnection) {
-        const found = res?.findIndex((connection) => currentConnection.id === connection.id);
-        if (found === -1) {
-          const connectionDetail = await getConnectionDetail({
-            connectionID: res[res.length - 1].id,
-            fromCache: true
-          });
-          updateSelectedTab(undefined);
-          updateTabs([]);
-          updateCurrentConnection(connectionDetail);
-          navigate({ route: '/', tabId: undefined, connectionId: connectionDetail.id });
-        }
-        updateConnections(res);
-      }
-
       toast.success(locales.connection_delete_success);
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        toast.error(err.message);
-      }
-      console.log('🚀 ~ handleDeleteConnection ~ err:', err);
-    }
+    } catch (err) {}
   };
 
   const handleEditConnection = (connections: ConnectionType | undefined) => {
-    updateShowEditConnection(connections);
+    searchParams.set('showEditConnection', connections?.id.toString() || '');
+    setSearchParams(searchParams);
   };
 
   const menu: MenuType[] = [

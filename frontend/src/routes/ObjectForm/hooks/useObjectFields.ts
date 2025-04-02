@@ -1,16 +1,14 @@
 import api from '@/api';
-import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useDataStore } from '@/store/dataStore/data.store';
-import { useTabStore } from '@/store/tabStore/tab.store';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 
 export const useObjectFields = (currentTabId: string | undefined, isDetail = false) => {
-  const { getSelectedTab } = useTabStore();
-  const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
-  const { currentConnection } = useConnectionStore();
+  const selectedTab = useSelectedTab();
+  const currentConnection = useCurrentConnection();
   const { getFormData, resetFormData, updateFormData } = useDataStore();
-
   const { data: fields } = useQuery({
     queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, currentTabId],
     queryFn: () =>

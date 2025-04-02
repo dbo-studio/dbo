@@ -2,12 +2,12 @@ import api from '@/api';
 import useAPI from '@/hooks/useApi.hook';
 import { useSavedQueryStore } from '@/store/savedQueryStore/savedQuery.store';
 import { Box, ClickAwayListener, LinearProgress, useTheme } from '@mui/material';
+import { isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { v4 as uuid } from 'uuid';
 import Search from '../../base/Search/Search';
 import SavedQueryItem from './SavedQueryItem/SavedQueryItem';
-import { isAxiosError } from 'axios';
-import { toast } from 'sonner';
 
 export default function SavedQueries() {
   const [search, setSearch] = useState('');

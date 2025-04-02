@@ -1,6 +1,16 @@
 import type { TabMode } from '@/core/enums';
 import type { FilterType, SortType, TabType } from '@/types/Tab';
 
+export type TabStore = {
+  tabs: Record<string, TabType[]>;
+  selectedTab: Record<string, TabType | undefined>;
+  reset: () => void;
+  getTabs(): TabType[];
+  getSelectedTab(): TabType | undefined;
+  updateTabs: (tabs: TabType[]) => void;
+  updateSelectedTab: (selectedTab: TabType | undefined) => void;
+};
+
 export type TabFilterSlice = {
   upsertFilters: (filter: FilterType) => Promise<void>;
   removeFilter: (filter: FilterType) => void;
@@ -31,14 +41,4 @@ export type TabQuerySlice = {
 export type TabDataSlice = {
   setShowColumns: (show: boolean) => void;
   updateColumns: (columns: string[]) => void;
-};
-
-export type TabStore = {
-  tabs: Record<string, TabType[]>;
-  selectedTab: Record<string, TabType | undefined>;
-  reset: () => void;
-  getTabs(): TabType[];
-  getSelectedTab(): TabType | undefined;
-  updateTabs: (tabs: TabType[]) => void;
-  updateSelectedTab: (selectedTab: TabType | undefined) => void;
 };

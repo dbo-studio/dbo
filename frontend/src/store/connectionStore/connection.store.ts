@@ -9,28 +9,18 @@ export const useConnectionStore = create<ConnectionState>()(
   devtools(
     (set, get) => ({
       loading: 'finished',
-      showEditConnection: undefined,
       connections: undefined,
-      currentConnection: undefined,
       updateLoading: (loading: LoadingType) => {
         set({ loading });
       },
       updateConnections: (connections: ConnectionType[]) => {
         set({ connections });
       },
-      updateShowEditConnection: (connection: ConnectionType | undefined) => {
-        set({ showEditConnection: connection });
-      },
       updateCurrentConnection: (currentConnection: ConnectionType | undefined) => {
-        let connections = get().connections;
-        if (!connections) {
-          return;
-        }
+        if (!currentConnection) return;
 
-        if (!currentConnection) {
-          set({ currentConnection: undefined });
-          return;
-        }
+        let connections = get().connections;
+        if (!connections) return;
 
         connections = connections.map((c: ConnectionType) => {
           if (c.id === currentConnection.id) {
@@ -39,7 +29,7 @@ export const useConnectionStore = create<ConnectionState>()(
           return c;
         });
 
-        set({ currentConnection, connections });
+        set({ connections });
       }
     }),
     { name: 'connections' }

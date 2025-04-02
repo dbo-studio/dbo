@@ -1,26 +1,26 @@
-export type connectionDetailType = {
+export type ConnectionDetailRequestType = {
   connectionId: string | number;
-  fromCache: boolean;
 };
 
-export type createConnectionType = {
+export type CreateConnectionRequestType = {
   name: string;
-  host: string;
-  port: number;
-  username: string;
-  password: string;
-  database: string;
+  type: 'postgresql';
+  isActive?: boolean;
+  options: PostgresqlOptionsType;
 };
 
-export type updateConnectionType = {
-  id: number | string;
+export type UpdateConnectionRequestType = {
   name?: string;
+  type?: 'postgresql';
+  isActive?: boolean;
+  options?: PostgresqlOptionsType;
+};
+
+export type PostgresqlOptionsType = {
   host?: string;
   port?: number;
   username?: string;
   password?: string;
   database?: string;
-  is_active?: boolean;
-  currentDatabase?: string;
-  currentSchema?: string;
+  uri?: string;
 };

@@ -7,23 +7,23 @@ import { shortcuts } from '@/core/utils';
 import { useContextMenu, useShortcut } from '@/hooks';
 import useNavigate from '@/hooks/useNavigate.hook.ts';
 import { useRemoveTab } from '@/hooks/useRemoveTab.hook.ts';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { TabType } from '@/types';
 import { Box, Tooltip, Typography } from '@mui/material';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 export default function PanelTabItem({ tab }: { tab: TabType }) {
   const tabRefs = useRef<Record<string, HTMLElement>>({});
   const navigate = useNavigate();
   const [removeTab] = useRemoveTab();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
-  const { addTab, getSelectedTab, getTabs } = useTabStore();
+  const { addTab, getTabs } = useTabStore();
+  const selectedTab = useSelectedTab();
   const { runQuery, runRawQuery, removeEditedRowsByTabId, deleteRemovedRowsByTabId, removeUnsavedRowsByTabId } =
     useDataStore();
-
-  const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
 
   useShortcut(shortcuts.newTab, () => addNewEmptyTab());
   useShortcut(shortcuts.closeTab, () => selectedTab && handleRemoveTab(selectedTab?.id ?? ''));

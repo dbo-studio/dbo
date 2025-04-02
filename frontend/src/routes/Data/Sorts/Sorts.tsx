@@ -1,7 +1,7 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { useSelectedTab } from '@/hooks/useSelectedTab.tsx';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
-import { useTabStore } from '@/store/tabStore/tab.store';
 import type { SortType } from '@/types';
 import { Box, Button } from '@mui/material';
 import { useMemo } from 'react';
@@ -10,9 +10,8 @@ import AddSortButton from './SortItem/AddSortButton/AddSortButton.tsx';
 import SortItem from './SortItem/SortItem.tsx';
 
 export default function Sorts() {
-  const { getSelectedTab } = useTabStore();
   const { getColumns, runQuery } = useDataStore();
-  const selectedTab = useMemo(() => getSelectedTab(), [getSelectedTab()]);
+  const selectedTab = useSelectedTab();
   const columns = useMemo(() => getColumns(), [getColumns()]);
 
   return (

@@ -1,23 +1,23 @@
 import api from '@/api';
-import type { AutoCompleteRequestType } from '@/api/query/types';
 import ResizableYBox from '@/components/base/ResizableBox/ResizableYBox.tsx';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor.tsx';
 import type { SqlEditorSettingType } from '@/components/base/SqlEditor/types';
 import DataGrid from '@/components/shared/DBDataGrid/DataGrid.tsx';
 import { useWindowSize } from '@/hooks';
-import useAPI from '@/hooks/useApi.hook';
-import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AutoCompleteType } from '@/types';
-import { Box, useTheme } from '@mui/material';
+import { Box } from '@mui/material';
+import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
 
 export default function Query() {
-  const theme = useTheme();
-  const { currentConnection } = useConnectionStore();
+  const selectedTab = useSelectedTab();
+  const currentConnection = useCurrentConnection();
   const windowSize = useWindowSize();
-  const { getQuery, updateQuery, getSelectedTab } = useTabStore();
+  const { getQuery, updateQuery } = useTabStore();
   const [autocomplete, setAutocomplete] = useState<AutoCompleteType | null>(null);
   const [value, setValue] = useState('');
   const [setting, setSetting] = useState<SqlEditorSettingType>({
@@ -25,25 +25,29 @@ export default function Query() {
     schema: ''
   });
 
-  const { request: getAutoComplete, pending } = useAPI({
-    apiMethod: api.query.autoComplete
+  const { mutateAsync: autocompleteMutate, isPending: pendingAutocomplete } = useMutation({
+    mutationFn: api.query.autoComplete,
+    onError: (error) => {
+      console.error('🚀 ~ handleSave ~ error:', error);
+    }
   });
 
   useEffect(() => {
-    if (setting.schema === '' || setting.database === '' || autocomplete || !currentConnection || pending) return;
+    if (autocomplete || !currentConnection || pendingAutocomplete) return;
 
-    getAutoComplete({
+    autocompleteMutate({
       connectionId: currentConnection.id,
-      nodeId: getSelectedTab()?.id,
-      fromCache: true
-    } as AutoCompleteRequestType).then((res) => {
+      fromCache: false,
+      database: setting.database === '' ? undefined : setting.database,
+      schema: setting.schema === '' ? undefined : setting.schema
+    }).then((res) => {
       setAutocomplete(res);
     });
   }, [setting, currentConnection]);
 
   useEffect(() => {
     handleChangeValue();
-  }, [getSelectedTab()?.id]);
+  }, [selectedTab?.id]);
 
   const handleChangeValue = () => {
     setValue(getQuery());
@@ -55,9 +59,14 @@ export default function Query() {
 
   return (
     <>
-      <QueryEditorActionBar onFormat={() => handleChangeValue()} onChange={setSetting} />
+      <QueryEditorActionBar
+        databases={autocomplete?.databases ?? []}
+        schemas={autocomplete?.schemas ?? []}
+        onFormat={() => handleChangeValue()}
+        onChange={setSetting}
+      />
       <Box display={'flex'} flexDirection={'column'} height={windowSize.height}>
-        <Box display={'flex'} minHeight={'0'} flex={1} borderBottom={`1px solid ${theme.palette.divider}`}>
+        <Box display={'flex'} minHeight={'0'} flex={1} borderBottom={(theme) => `1px solid ${theme.palette.divider}`}>
           {autocomplete && <SqlEditor onChange={handleUpdateState} autocomplete={autocomplete} value={value} />}
         </Box>
         {autocomplete && (

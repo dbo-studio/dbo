@@ -1,4 +1,5 @@
 import { api } from '@/core/api';
+import type { AutoCompleteType } from '@/types';
 import type {
   AutoCompleteRequestType,
   RunQueryRequestType,
@@ -7,7 +8,6 @@ import type {
   UpdateQueryRequestType,
   UpdateQueryResponseType
 } from './types';
-import type { AutoCompleteType } from '@/types';
 
 const endpoint = {
   runQuery: () => '/query/run',

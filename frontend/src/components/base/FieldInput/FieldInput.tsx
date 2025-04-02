@@ -57,13 +57,11 @@ export default forwardRef(function FieldInput(props: FieldInputProps, _) {
         }}
         {...props}
       />
-      <Typography
-        mb={props.margin === 'none' ? 0 : theme.spacing(1)}
-        color={theme.palette.text.danger}
-        variant='caption'
-      >
-        {props.helpertext}
-      </Typography>
+      {props.helpertext && (
+        <Typography mb={theme.spacing(props.mb ?? 0)} color={'error'} variant='caption'>
+          {props.helpertext}
+        </Typography>
+      )}
     </Box>
   );
 });

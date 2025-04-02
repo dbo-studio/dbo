@@ -1,5 +1,5 @@
-import { styled } from '@mui/material';
 import { ModalWrapperStyled } from '@/components/base/Modal/Modal.styled.ts';
+import { styled } from '@mui/material';
 
 export const ConfirmModalStyled = styled(ModalWrapperStyled)(() => ({
   minHeight: '120px',

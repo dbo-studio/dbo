@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import type { ConfirmModalModel, ConfirmModalStore } from './types';
 import { devtools } from 'zustand/middleware';
+import type { ConfirmModalModel, ConfirmModalStore } from './types';
 
 type ConfirmModalState = ConfirmModalStore;
 

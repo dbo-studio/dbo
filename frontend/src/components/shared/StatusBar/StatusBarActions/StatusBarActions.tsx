@@ -1,9 +1,9 @@
 import api from '@/api';
 import { TabMode } from '@/core/enums';
 import useAPI from '@/hooks/useApi.hook.ts';
-import { useConnectionStore } from '@/store/connectionStore/connection.store.ts';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection.tsx';
+import { useSelectedTab } from '@/hooks/useSelectedTab.tsx';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
-import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { Box, IconButton, Stack } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 import CustomIcon from '../../../base/CustomIcon/CustomIcon.tsx';
@@ -11,8 +11,8 @@ import LoadingIconButton from '../../../base/LoadingIconButton/LoadingIconButton
 
 export default function StatusBarActions() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { getSelectedTab } = useTabStore();
-  const { currentConnection } = useConnectionStore();
+  const selectedTab = useSelectedTab();
+  const currentConnection = useCurrentConnection();
 
   const {
     loading,
@@ -35,30 +35,26 @@ export default function StatusBarActions() {
   });
 
   const handleSave = async () => {
-    if (getSelectedTab()?.mode === TabMode.Data) {
+    if (selectedTab?.mode === TabMode.Data) {
       const edited = getEditedRows();
       const removed = getRemovedRows();
       const unsaved = getUnsavedRows();
 
-      if (
-        !getSelectedTab() ||
-        !currentConnection ||
-        (edited.length === 0 && removed.length === 0 && unsaved.length === 0)
-      ) {
+      if (!selectedTab || !currentConnection || (edited.length === 0 && removed.length === 0 && unsaved.length === 0)) {
         return;
       }
       try {
         await updateQuery({
           connectionId: currentConnection.id,
-          nodeId: getSelectedTab()?.id,
+          nodeId: selectedTab.id,
           edited: edited,
           removed: removed,
           added: unsaved
         });
         await runQuery();
-        removeEditedRowsByTabId(getSelectedTab()?.id ?? '');
-        deleteRemovedRowsByTabId(getSelectedTab()?.id ?? '');
-        removeUnsavedRowsByTabId(getSelectedTab()?.id ?? '');
+        removeEditedRowsByTabId(selectedTab.id);
+        deleteRemovedRowsByTabId(selectedTab.id);
+        removeUnsavedRowsByTabId(selectedTab.id);
       } catch (error) {
         console.log('🚀 ~ handleSave ~ error:', error);
       }
@@ -66,7 +62,7 @@ export default function StatusBarActions() {
   };
 
   const handleAddAction = async () => {
-    if (getSelectedTab()?.mode === TabMode.Data) {
+    if (selectedTab?.mode === TabMode.Data) {
       addUnsavedRows();
       searchParams.set('scrollToBottom', 'true');
       setSearchParams(searchParams);
@@ -74,16 +70,16 @@ export default function StatusBarActions() {
   };
 
   const handleRemoveAction = async () => {
-    if (getSelectedTab()?.mode === TabMode.Data) {
+    if (selectedTab?.mode === TabMode.Data) {
       updateRemovedRows();
     }
   };
 
   const handleDiscardChanges = async () => {
-    if (getSelectedTab()?.mode === TabMode.Data) {
+    if (selectedTab?.mode === TabMode.Data) {
       restoreEditedRows().then();
       discardUnsavedRows();
-      deleteRemovedRowsByTabId(getSelectedTab()?.id ?? '');
+      deleteRemovedRowsByTabId(selectedTab.id);
       clearSelectedRows();
     }
   };

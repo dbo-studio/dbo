@@ -23,6 +23,7 @@
   "username": "Username",
   "password": "Password",
   "database": "Database",
+  "schema": "Schema",
   "test": "Test",
   "delete_action": "Delete action!",
   "connection_create_success": "The connection created successfully",

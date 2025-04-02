@@ -4,6 +4,7 @@ type (
 	ConnectionDetailRequest struct {
 		ConnectionId int32
 	}
+
 	ConnectionDetailResponse struct {
 		ID       int64  `json:"id"`
 		Name     string `json:"name"`

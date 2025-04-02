@@ -13,6 +13,7 @@ export const useTreeStore = create<TreeStore>()(
       expandedNodes: new Set<string>(),
       loadedParentIds: new Set<string>(),
       isLoading: false,
+      treeError: undefined,
 
       setTree: (tree) => set({ tree }),
 
@@ -69,7 +70,7 @@ export const useTreeStore = create<TreeStore>()(
 
       reloadTree: async () => {
         const connectionStore = useConnectionStore.getState();
-        const currentConnection = connectionStore.currentConnection;
+        const currentConnection = connectionStore.connections?.find((connection) => connection.isActive);
 
         if (!currentConnection) return;
 
@@ -100,10 +101,10 @@ export const useTreeStore = create<TreeStore>()(
             }
           }
 
-          set({ isLoading: false });
+          set({ isLoading: false, treeError: undefined });
         } catch (error) {
           console.error('Failed to reload tree:', error);
-          set({ isLoading: false });
+          set({ isLoading: false, treeError: error as Error });
         }
       }
     }),

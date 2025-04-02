@@ -1,11 +1,11 @@
-import { fireEvent, render } from '@testing-library/react';
 import General from '@/components/common/Settings/General/General';
+import locales from '@/locales';
 import * as setting from '@/store/settingStore/setting.store.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
-import { describe, expect, vi } from 'vitest';
 import { screen } from '@testing-library/dom';
+import { fireEvent, render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import locales from '@/locales';
+import { describe, expect, vi } from 'vitest';
 
 const spy = vi.spyOn(setting, 'useSettingStore');
 

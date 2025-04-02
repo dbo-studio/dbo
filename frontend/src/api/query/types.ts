@@ -17,7 +17,9 @@ export type RunRawQueryRequestType = {
 
 export type AutoCompleteRequestType = {
   connectionId: number;
-  nodeId: string;
+  fromCache?: boolean;
+  database?: string;
+  schema?: string;
 };
 
 export type RunQueryResponseType = {

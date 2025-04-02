@@ -3,21 +3,22 @@ import * as monaco from 'monaco-editor';
 import { LanguageIdEnum } from 'monaco-sql-languages';
 
 import { shortcuts } from '@/core/utils/shortcuts.ts';
+import { useSelectedTab } from '@/hooks/useSelectedTab.tsx';
 import { useShortcut } from '@/hooks/useShortcut.hook.ts';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
+import { Box } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import { changeMetaProviderSetting } from './helpers/dbMetaProvider.ts';
 import { editorConfig } from './helpers/editorConfig.ts'; // import './helpers/languageSetup.ts';
-import { useTabStore } from '@/store/tabStore/tab.store.ts';
-import { Box } from '@mui/material';
 
 export default function SqlEditor({ autocomplete, value, onChange }: SqlEditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
   const [mount, setMount] = useState(false);
   const { isDark } = useSettingStore();
-  const { getSelectedTab } = useTabStore();
+  const selectedTab = useSelectedTab();
+
   const { runRawQuery } = useDataStore();
 
   useShortcut(shortcuts.runQuery, () => runRawQuery());
@@ -47,7 +48,7 @@ export default function SqlEditor({ autocomplete, value, onChange }: SqlEditorPr
     });
 
     setMount(true);
-  }, [getSelectedTab()?.id]);
+  }, [selectedTab?.id]);
 
   useEffect(() => {
     if (editorRef.current && value.toString() !== editorRef.current.getValue()) {

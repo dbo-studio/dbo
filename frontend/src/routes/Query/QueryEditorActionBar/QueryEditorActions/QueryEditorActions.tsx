@@ -3,6 +3,7 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { shortcuts, tools } from '@/core/utils';
 import { useShortcut } from '@/hooks';
 import useAPI from '@/hooks/useApi.hook';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useSavedQueryStore } from '@/store/savedQueryStore/savedQuery.store';
@@ -16,7 +17,7 @@ export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps
   const { runRawQuery } = useDataStore();
   const { updateQuery, getQuery } = useTabStore();
   const { upsertQuery } = useSavedQueryStore();
-  const { getSelectedTab } = useTabStore();
+  const selectedTab = useSelectedTab();
 
   const { request: createSavedQuery } = useAPI({
     apiMethod: api.savedQueries.createSavedQuery
@@ -60,7 +61,7 @@ export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps
   };
 
   const checkQueryLength = () => {
-    return getSelectedTab() && getQuery().length > 0;
+    return selectedTab && getQuery().length > 0;
   };
 
   return (

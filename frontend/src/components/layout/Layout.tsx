@@ -1,7 +1,10 @@
-import { useParamParser, useWindowSize } from '@/hooks';
+import api from '@/api/index.ts';
+import { useWindowSize } from '@/hooks';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection.tsx';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Grid2 } from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
 import ConfirmModal from '../base/Modal/ConfirmModal/ConfirmModal.tsx';
 import AppHeader from './AppHeader/AppHeader';
 import { LayoutStyled } from './Layout.styled';
@@ -13,8 +16,20 @@ import StartContainer from './MainContainer/StartContainer';
 export default function Layout() {
   const windowSize = useWindowSize(true);
   const { sidebar } = useSettingStore();
-  const currentConnection = useConnectionStore((state) => state.currentConnection);
-  useParamParser();
+  const { updateConnections, updateLoading } = useConnectionStore();
+
+  useQuery({
+    queryKey: ['connections'],
+    queryFn: async () => {
+      updateLoading('loading');
+      const connections = await api.connection.getConnectionList();
+      updateConnections(connections);
+      updateLoading('finished');
+      return connections;
+    }
+  });
+
+  const currentConnection = useCurrentConnection();
 
   return (
     <LayoutStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
