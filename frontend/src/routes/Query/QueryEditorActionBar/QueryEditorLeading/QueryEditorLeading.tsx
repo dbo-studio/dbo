@@ -8,16 +8,12 @@ export default function QueryEditorLeading({ databases, schemas, onChange }: Que
   const [localSchema, setLocalSchema] = useState<string>('');
   const [localDatabase, setLocalDatabase] = useState<string>('');
 
-  console.log(databases);
-
   useEffect(() => {
-    console.log('🚀 ~ QueryEditorLeading ~ localDatabase:', localDatabase);
-    console.log('🚀 ~ QueryEditorLeading ~ localSchema:', localSchema);
-    // onChange({
-    //   database: localDatabase,
-    //   schema: localSchema
-    // });
-  }, [localSchema, localDatabase]);
+    onChange({
+      database: localDatabase,
+      schema: localSchema
+    });
+  }, [localSchema, localDatabase, onChange]);
 
   return (
     <Stack spacing={2} direction={'row'}>
@@ -30,7 +26,7 @@ export default function QueryEditorLeading({ databases, schemas, onChange }: Que
           value={localDatabase}
           disabled={databases?.length === 0}
           size='small'
-          options={databases?.map((s) => ({ value: s, label: s })) ?? []}
+          options={databases.map((s) => ({ value: s, label: s }))}
           onChange={(e) => setLocalDatabase(e.value)}
         />
       </Stack>
@@ -44,7 +40,7 @@ export default function QueryEditorLeading({ databases, schemas, onChange }: Que
           value={localSchema}
           disabled={schemas?.length === 0}
           size='small'
-          options={schemas?.map((s) => ({ value: s, label: s })) ?? []}
+          options={schemas.map((s) => ({ value: s, label: s }))}
           onChange={(e) => setLocalSchema(e.value)}
         />
       </Stack>

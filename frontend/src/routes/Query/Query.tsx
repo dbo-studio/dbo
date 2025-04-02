@@ -33,7 +33,7 @@ export default function Query() {
   });
 
   useEffect(() => {
-    if (autocomplete || !currentConnection || pendingAutocomplete) return;
+    if (!currentConnection || pendingAutocomplete) return;
 
     autocompleteMutate({
       connectionId: currentConnection.id,
@@ -50,7 +50,7 @@ export default function Query() {
   }, [selectedTab?.id]);
 
   const handleChangeValue = () => {
-    setValue(getQuery());
+    setValue(getQuery() ?? '');
   };
 
   const handleUpdateState = (query: string) => {

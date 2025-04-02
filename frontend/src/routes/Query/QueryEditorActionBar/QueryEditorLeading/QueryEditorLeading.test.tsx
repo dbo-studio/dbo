@@ -1,63 +1,65 @@
 import locales from '@/locales';
 import QueryEditorLeading from '@/routes/Query/QueryEditorActionBar/QueryEditorLeading/QueryEditorLeading.tsx';
 import * as conn from '@/store/connectionStore/connection.store.ts';
+import { renderWithProviders } from '@/test/test-utils';
 import { screen } from '@testing-library/dom';
-import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 describe('QueryEditorLeading.tsx', () => {
   const spy = vi.spyOn(conn, 'useConnectionStore');
 
-  test('should render the the QueryEditorLeading', () => {
+  test('should render the QueryEditorLeading with empty options', () => {
     spy.mockReturnValue({
       schemas: [],
       databases: []
     });
 
-    render(<QueryEditorLeading onChange={() => {}} />);
-    expect(screen.queryByText(locales.no_active_database_find)).not.toBeNull();
-    expect(screen.queryByText(locales.no_active_schema_find)).not.toBeNull();
+    renderWithProviders(<QueryEditorLeading onChange={() => {}} databases={[]} schemas={[]} />);
+    expect(screen.getByText(locales.no_active_database_find)).toBeInTheDocument();
+    expect(screen.getByText(locales.no_active_schema_find)).toBeInTheDocument();
   });
 
-  test('should call should see options after click on select', async () => {
-    spy.mockReturnValue({
-      currentSchema: 'selected_schema',
-      currentDatabase: 'selected_db',
-      schemas: ['selected_schema', 'public_schema'],
-      databases: ['selected_db', 'public_db']
-    });
+  test('should show options after clicking on selects', async () => {
+    const mockDatabases = ['selected_db', 'public_db'];
+    const mockSchemas = ['selected_schema', 'public_schema'];
 
-    render(<QueryEditorLeading onChange={() => {}} />);
+    renderWithProviders(<QueryEditorLeading databases={mockDatabases} schemas={mockSchemas} onChange={() => {}} />);
 
-    expect(screen.getByText('selected_schema')).not.toBeNull();
-    expect(screen.getByText('selected_db')).not.toBeNull();
-    expect(screen.queryByText('public_schema')).toBeNull();
-    expect(screen.queryByText('public_db')).toBeNull();
+    // Click database select
+    await userEvent.click(screen.getByText(locales.no_active_database_find));
+    expect(screen.getByText('selected_db')).toBeInTheDocument();
+    expect(screen.getByText('public_db')).toBeInTheDocument();
 
-    await userEvent.click(screen.getByText('selected_schema'));
-    expect(screen.getByText('public_schema')).not.toBeNull();
-
-    await userEvent.click(screen.getByText('selected_db'));
-    expect(screen.getByText('public_db')).not.toBeNull();
+    // Click schema select
+    await userEvent.click(screen.getByText(locales.no_active_schema_find));
+    expect(screen.getByText('selected_schema')).toBeInTheDocument();
+    expect(screen.getByText('public_schema')).toBeInTheDocument();
   });
 
-  test('should onChange called after select change', async () => {
+  test('should call onChange with correct values when selections change', async () => {
+    const mockDatabases = ['selected_db', 'public_db'];
+    const mockSchemas = ['selected_schema', 'public_schema'];
     const onChangeMock = vi.fn();
 
-    spy.mockReturnValue({
-      currentSchema: 'selected_schema',
-      currentDatabase: 'selected_db',
-      schemas: ['selected_schema', 'public_schema'],
-      databases: ['selected_db', 'public_db']
+    renderWithProviders(<QueryEditorLeading databases={mockDatabases} schemas={mockSchemas} onChange={onChangeMock} />);
+
+    // Select database
+    await userEvent.click(screen.getByText(locales.no_active_database_find));
+    await userEvent.click(screen.getByText('selected_db'));
+
+    expect(onChangeMock).toHaveBeenCalledWith({
+      database: 'selected_db',
+      schema: ''
     });
 
-    render(<QueryEditorLeading onChange={onChangeMock} />);
-
-    expect(screen.getByText('selected_schema')).not.toBeNull();
+    // Select schema
+    await userEvent.click(screen.getByText(locales.no_active_schema_find));
     await userEvent.click(screen.getByText('selected_schema'));
-    await userEvent.click(screen.getByText('public_schema'));
 
-    expect(onChangeMock).toHaveBeenCalled();
+    expect(onChangeMock).toHaveBeenCalledWith({
+      database: 'selected_db',
+      schema: 'selected_schema'
+    });
   });
 });

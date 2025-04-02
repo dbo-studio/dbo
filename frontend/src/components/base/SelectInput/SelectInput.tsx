@@ -18,11 +18,7 @@ export default function SelectInput({
   const theme = useTheme();
 
   const handleChange = (selected: any) => {
-    if (isMulti) {
-      onChange(selected ? selected.map((item: any) => item.value) : []);
-    } else {
-      onChange(selected ? selected.value : '');
-    }
+    onChange(selected);
   };
 
   const getValue = () => {

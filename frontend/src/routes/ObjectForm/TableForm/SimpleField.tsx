@@ -1,12 +1,21 @@
 import ChipInput from '@/components/base/ChipInput/ChipInput';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
+import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor';
 import { variables } from '@/core/theme/variables';
 import { Box, Checkbox, Typography } from '@mui/material';
 import type { SimpleFieldProps } from '../types';
 
 export default function SimpleField({ field, onChange, size = 'medium' }: SimpleFieldProps) {
+  const handleChangeSelect = (value: SelectInputOption) => {
+    if (field.type === 'multi-select') {
+      onChange(value ? value?.map((item: any) => item.value) : []);
+    } else {
+      onChange(value ? value.value : '');
+    }
+  };
+
   switch (field.type) {
     case 'text':
       return (
@@ -35,7 +44,7 @@ export default function SimpleField({ field, onChange, size = 'medium' }: Simple
             label={size === 'medium' ? field.name : undefined}
             value={field.value || (field.type === 'multi-select' ? [] : '')}
             options={field.fields?.map((opt) => ({ value: opt.value, label: opt.name })) || []}
-            onChange={(e) => onChange(e)}
+            onChange={handleChangeSelect}
             size={size}
           />
         </Box>

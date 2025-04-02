@@ -12,6 +12,7 @@ export type SelectInputProps = {
 };
 
 export type SelectInputOption = {
+  [x: string]: any;
   value: any;
   label: string;
 };
