@@ -6,6 +6,7 @@ type PostgresqlCreateConnectionParams struct {
 	Port     int32   `json:"port"`
 	Username string  `json:"username"`
 	Password *string `json:"password"`
+	URI      *string `json:"uri"`
 }
 
 type PostgresqlUpdateConnectionParams struct {
@@ -14,6 +15,7 @@ type PostgresqlUpdateConnectionParams struct {
 	Password *string `json:"password"`
 	Port     *int32  `json:"port"`
 	Database *string `json:"database"`
+	URI      *string `json:"uri"`
 }
 
 type PostgresDatabaseParams struct {

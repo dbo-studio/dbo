@@ -8,6 +8,7 @@ import (
 	serviceQuery "github.com/dbo-studio/dbo/internal/service/query"
 	serviceSavedQuery "github.com/dbo-studio/dbo/internal/service/saved_query"
 	serviceTree "github.com/dbo-studio/dbo/internal/service/tree"
+	"github.com/dbo-studio/dbo/pkg/cache"
 )
 
 type Service struct {
@@ -18,12 +19,12 @@ type Service struct {
 	QueryService      serviceQuery.IQueryService
 }
 
-func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionManager) *Service {
+func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionManager, cache cache.Cache) *Service {
 	return &Service{
-		ConnectionService: serviceConnection.NewConnectionService(repo.ConnectionRepo),
+		ConnectionService: serviceConnection.NewConnectionService(repo.ConnectionRepo, cm),
 		HistoryService:    serviceHistory.NewHistoryService(repo.HistoryRepo),
 		SavedQueryService: serviceSavedQuery.NewSavedQueryService(repo.SavedQueryRepo),
 		TreeService:       serviceTree.NewTreeService(repo.ConnectionRepo, cm),
-		QueryService:      serviceQuery.NewQueryService(repo.ConnectionRepo, cm),
+		QueryService:      serviceQuery.NewQueryService(repo.ConnectionRepo, cm, cache),
 	}
 }

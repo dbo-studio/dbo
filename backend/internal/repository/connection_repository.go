@@ -6,6 +6,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
 
@@ -40,7 +41,7 @@ func (c IConnectionRepoImpl) Create(ctx context.Context, dto *dto.CreateConnecti
 		Name:           dto.Name,
 		ConnectionType: dto.Type,
 		Options:        string(dto.Options),
-		IsActive:       false,
+		IsActive:       true,
 		CreatedAt:      nil,
 		UpdatedAt:      nil,
 	}
@@ -70,4 +71,12 @@ func (c IConnectionRepoImpl) MakeAllConnectionsNotDefault(ctx context.Context, c
 		return result.Error
 	}
 	return nil
+}
+
+func (c IConnectionRepoImpl) UpdateVersion(ctx context.Context, connection *model.Connection, version string) (*model.Connection, error) {
+	connection.Version = lo.ToPtr(version)
+
+	result := c.db.WithContext(ctx).Save(&connection)
+
+	return connection, result.Error
 }

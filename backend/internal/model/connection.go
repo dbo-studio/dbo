@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/go-faker/faker/v4"
 )
 
@@ -11,8 +13,8 @@ type Connection struct {
 	Options        string
 	IsActive       bool
 	Version        *string
-	CreatedAt      *string `gorm:"autoCreateTime"`
-	UpdatedAt      *string `gorm:"autoUpdateTime"`
+	CreatedAt      *time.Time `gorm:"autoCreateTime"`
+	UpdatedAt      *time.Time `gorm:"autoUpdateTime"`
 }
 
 func (c Connection) FakeConnection() *Connection {

@@ -52,6 +52,7 @@ func UpdatePostgresqlConnection(oldParams json.RawMessage, newParams json.RawMes
 	newOptions.Password = helper.Optional[string](newOptions.Password, oldOptions.Password)
 	newOptions.Port = helper.Optional[int32](newOptions.Port, oldOptions.Port)
 	newOptions.Database = helper.Optional[string](newOptions.Database, oldOptions.Database)
+	newOptions.URI = helper.Optional[string](newOptions.URI, oldOptions.URI)
 
 	return helper.StructToJson(newOptions), nil
 }
@@ -60,6 +61,10 @@ func OpenPostgresqlConnection(connection *model.Connection) gorm.Dialector {
 	options, err := helper.RawJsonToStruct[dto.PostgresqlCreateConnectionParams](json.RawMessage(connection.Options))
 	if err != nil {
 		return nil
+	}
+
+	if options.URI != nil && *options.URI != "" {
+		return postgres.Open(*options.URI)
 	}
 
 	dsn := fmt.Sprintf("host=%s port=%s user=%s ",
@@ -83,18 +88,20 @@ func OpenPostgresqlConnection(connection *model.Connection) gorm.Dialector {
 
 func (req PgsqlCreateParams) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.Host, validation.Required, validation.Length(0, 120)),
-		validation.Field(&req.Username, validation.Required, validation.Length(0, 120)),
+		validation.Field(&req.Host, validation.When(req.URI == nil && *req.URI == "", validation.Required), validation.Length(0, 120)),
+		validation.Field(&req.Username, validation.When(req.URI == nil && *req.URI == "", validation.Required), validation.Length(0, 120)),
 		validation.Field(&req.Password, validation.Length(0, 120)),
-		validation.Field(&req.Port, validation.Required, validation.Min(0)),
+		validation.Field(&req.Port, validation.When(req.URI == nil && *req.URI == "", validation.Required), validation.Min(0)),
+		validation.Field(&req.URI, validation.Length(0, 120)),
 	)
 }
 
-func (ccr PgsqlUpdateParams) Validate() error {
-	return validation.ValidateStruct(&ccr,
-		validation.Field(&ccr.Host, validation.Length(0, 120)),
-		validation.Field(&ccr.Username, validation.Length(0, 120)),
-		validation.Field(&ccr.Password, validation.Length(0, 120)),
-		validation.Field(&ccr.Port, validation.Min(0)),
+func (req PgsqlUpdateParams) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.Host, validation.Length(0, 120)),
+		validation.Field(&req.Username, validation.Length(0, 120)),
+		validation.Field(&req.Password, validation.Length(0, 120)),
+		validation.Field(&req.Port, validation.Min(0)),
+		validation.Field(&req.URI, validation.Length(0, 120)),
 	)
 }

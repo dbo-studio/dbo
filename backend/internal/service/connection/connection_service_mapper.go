@@ -5,17 +5,25 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/goccy/go-json"
+	"github.com/tidwall/sjson"
 )
 
 func connectionsToResponse(connections *[]model.Connection) *dto.ConnectionsResponse {
 	data := make([]dto.Connection, 0)
 	for _, c := range *connections {
+		options, _ := sjson.Set(c.Options, "password", "")
+		var j map[string]any
+		_ = json.Unmarshal([]byte(options), &j)
+
 		data = append(data, dto.Connection{
 			ID:       int64(c.ID),
 			Name:     c.Name,
 			Icon:     c.ConnectionType,
-			Info:     connectionInfo(&c),
 			IsActive: c.IsActive,
+			Type:     c.ConnectionType,
+			Info:     connectionInfo(&c),
+			Options:  j,
 		})
 	}
 
@@ -40,17 +48,17 @@ func connectionInfo(connection *model.Connection) string {
 }
 
 func connectionDetailModelToResponse(c *model.Connection) *dto.ConnectionDetailResponse {
+	options, _ := sjson.Set(c.Options, "password", "")
+	var j map[string]any
+	_ = json.Unmarshal([]byte(options), &j)
+
 	return &dto.ConnectionDetailResponse{
 		ID:       int64(c.ID),
 		Name:     c.Name,
 		Icon:     c.ConnectionType,
-		Info:     connectionInfo(c),
 		IsActive: c.IsActive,
-		// Auth: dto.AuthDetails{
-		// 	Database: lo.ToPtr(c.Database.String),
-		// 	Host:     c.Host,
-		// 	Port:     c.Port,
-		// 	Username: c.Username,
-		// },
+		Type:     c.ConnectionType,
+		Info:     connectionInfo(c),
+		Options:  j,
 	}
 }

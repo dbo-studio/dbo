@@ -18,16 +18,16 @@ func (r *Server) routing() {
 	query.Post("/run", r.handlers.QueryHandler.Run)
 	query.Post("/raw", r.handlers.QueryHandler.Raw)
 	query.Post("/update", r.handlers.QueryHandler.Update)
-	query.Get("/autocomplete", r.handlers.Query.Autocomplete)
+	query.Get("/autocomplete", r.handlers.QueryHandler.Autocomplete)
 
 	connection := api.Group("connections")
 	connection.Get("/:id", r.handlers.Connection.ConnectionDetail)
 	connection.Get("/", r.handlers.Connection.Connections)
 	connection.Post("/", r.handlers.Connection.CreateConnection)
-	connection.Post("/test", r.handlers.Connection.TestConnection)
+	connection.Post("/ping", r.handlers.Connection.PingConnection)
 	connection.Patch("/:id", r.handlers.Connection.UpdateConnection)
 	connection.Delete("/:id", r.handlers.Connection.DeleteConnection)
-	
+
 	saved := api.Group("saved")
 	saved.Get("/", r.handlers.SavedQuery.Index)
 	saved.Post("/", r.handlers.SavedQuery.Create)

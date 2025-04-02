@@ -15,6 +15,7 @@ type IConnectionRepo interface {
 	Create(ctx context.Context, dto *dto.CreateConnectionRequest) (*model.Connection, error)
 	Delete(ctx context.Context, connection *model.Connection) error
 	Update(ctx context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) (*model.Connection, error)
+	UpdateVersion(ctx context.Context, connection *model.Connection, version string) (*model.Connection, error)
 	MakeAllConnectionsNotDefault(ctx context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) error
 }
 

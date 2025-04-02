@@ -8,7 +8,6 @@ import (
 
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/handler"
-	queryHandler "github.com/dbo-studio/dbo/internal/app/handler/query"
 	"github.com/dbo-studio/dbo/internal/app/server"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -48,10 +47,9 @@ func Execute() {
 	cache := sqlite.NewSQLiteCache(appDB)
 
 	rr := repository.NewRepository(ctx, appDB, cache)
-	ss := service.NewService(rr, cm)
+	ss := service.NewService(rr, cm, cache)
 
 	restServer := server.New(appLogger, server.Handlers{
-		Query:        queryHandler.NewQueryHandler(appLogger, appDB, cache),
 		Connection:   handler.NewConnectionHandler(appLogger, ss.ConnectionService),
 		SavedQuery:   handler.NewSavedQueryHandler(appLogger, ss.SavedQueryService),
 		History:      handler.NewHistoryHandler(appLogger, ss.HistoryService),

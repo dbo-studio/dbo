@@ -75,7 +75,7 @@ func (h ConnectionHandler) DeleteConnection(c fiber.Ctx) error {
 	return response.SuccessBuilder(data.Connections).Send(c)
 }
 
-func (h ConnectionHandler) TestConnection(c fiber.Ctx) error {
+func (h ConnectionHandler) PingConnection(c fiber.Ctx) error {
 	req := new(dto.CreateConnectionRequest)
 	if err := c.Bind().Body(req); err != nil {
 		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
@@ -85,7 +85,7 @@ func (h ConnectionHandler) TestConnection(c fiber.Ctx) error {
 		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
 	}
 
-	err := h.connectionService.Test(c.Context(), req)
+	err := h.connectionService.Ping(c.Context(), req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder(err).Send(c)

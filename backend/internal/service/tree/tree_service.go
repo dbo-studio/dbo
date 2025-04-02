@@ -100,7 +100,7 @@ func (i ITreeServiceImpl) ObjectDetail(ctx context.Context, req *dto.ObjectDetai
 	return data, nil
 }
 
-func (i *ITreeServiceImpl) ObjectExecute(ctx context.Context, req *dto.ObjectExecuteRequest) error {
+func (i ITreeServiceImpl) ObjectExecute(ctx context.Context, req *dto.ObjectExecuteRequest) error {
 	connection, err := i.connectionRepo.Find(ctx, req.ConnectionId)
 	if err != nil {
 		return apperror.NotFound(apperror.ErrConnectionNotFound)

@@ -36,6 +36,15 @@ func (r *PostgresRepository) getSchemaList(db Database) ([]Schema, error) {
 	return schemas, err
 }
 
+func (r *PostgresRepository) getAllSchemaList() ([]Schema, error) {
+	schemas := make([]Schema, 0)
+	err := r.db.Select("schema_name").
+		Table("information_schema.schemata").
+		Find(&schemas).Error
+
+	return schemas, err
+}
+
 type Table struct {
 	Name string `gorm:"column:table_name"`
 }
@@ -52,6 +61,17 @@ func (r *PostgresRepository) getTableList(schema Schema) ([]Table, error) {
 	return tables, err
 }
 
+func (r *PostgresRepository) getAllTableList() ([]Table, error) {
+	tables := make([]Table, 0)
+	err := r.db.Table("pg_namespace AS n").
+		Select("n.nspname AS schema_name, t.tablename AS table_name").
+		Joins("LEFT JOIN pg_tables t ON n.nspname = t.schemaname::name").
+		Where("t.tablename != ''").
+		Order("schema_name, table_name").
+		Scan(&tables).Error
+	return tables, err
+}
+
 type View struct {
 	Name string `gorm:"column:table_name"`
 }
@@ -61,6 +81,15 @@ func (r *PostgresRepository) getViewList(db Database, schema Schema) ([]View, er
 	err := r.db.Select("table_name").
 		Table("information_schema.views").
 		Where("table_catalog = ? AND table_schema = ?", db.Name, schema.Name).
+		Find(&views).Error
+
+	return views, err
+}
+
+func (r *PostgresRepository) getAllViewList() ([]View, error) {
+	views := make([]View, 0)
+	err := r.db.Select("table_name").
+		Table("information_schema.views").
 		Find(&views).Error
 
 	return views, err
@@ -138,6 +167,51 @@ func (r *PostgresRepository) getColumns(table string, schema string, columnNames
 		if len(columnNames) > 0 {
 			columns[i].IsActive = slices.Contains(columnNames, column.ColumnName)
 		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return columns, err
+}
+
+func (r *PostgresRepository) getAllColumns(editable bool) ([]Column, error) {
+	columns := make([]Column, 0)
+
+	err := r.db.Table("information_schema.columns AS cols").
+		Select("cols.ordinal_position, cols.column_name, cols.data_type, cols.is_nullable, cols.column_default, cols.character_maximum_length, des.description AS column_comment").
+		Joins("LEFT JOIN pg_catalog.pg_description AS des ON (des.objoid = (SELECT c.oid FROM pg_catalog.pg_class AS c WHERE c.relname = cols.table_name LIMIT 1) AND des.objsubid = cols.ordinal_position)").
+		Order("cols.ordinal_position").
+		Scan(&columns).Error
+
+	for i, column := range columns {
+		columns[i].MappedType = columnMappedFormat(column.DataType)
+		columns[i].Editable = editable
+		columns[i].IsActive = true
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return columns, err
+}
+
+func (r *PostgresRepository) getColumnsBySchema(schema Schema, editable bool) ([]Column, error) {
+	columns := make([]Column, 0)
+
+	err := r.db.Table("information_schema.columns AS cols").
+		Select("cols.ordinal_position, cols.column_name, cols.data_type, cols.is_nullable, cols.column_default, cols.character_maximum_length, des.description AS column_comment").
+		Joins("LEFT JOIN pg_catalog.pg_description AS des ON (des.objoid = (SELECT c.oid FROM pg_catalog.pg_class AS c WHERE c.relname = cols.table_name LIMIT 1) AND des.objsubid = cols.ordinal_position)").
+		Where("cols.table_schema = ?", schema).
+		Order("cols.ordinal_position").
+		Scan(&columns).Error
+
+	for i, column := range columns {
+		columns[i].MappedType = columnMappedFormat(column.DataType)
+		columns[i].Editable = editable
+		columns[i].IsActive = true
 	}
 
 	if err != nil {
