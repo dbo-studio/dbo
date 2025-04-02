@@ -11,11 +11,11 @@ type (
 	}
 
 	AutoCompleteResponse struct {
-		Databases []string `json:"databases"`
-		Views     []string `json:"views"`
-		Schemas   []string `json:"schemas"`
-		Tables    []string `json:"tables"`
-		Columns   []string `json:"columns"`
+		Databases []string            `json:"databases"`
+		Views     []string            `json:"views"`
+		Schemas   []string            `json:"schemas"`
+		Tables    []string            `json:"tables"`
+		Columns   map[string][]string `json:"columns"`
 	}
 )
 

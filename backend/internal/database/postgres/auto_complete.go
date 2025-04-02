@@ -38,15 +38,15 @@ func (r *PostgresRepository) AutoComplete(data *dto.AutoCompleteRequest) (*dto.A
 		return nil, err
 	}
 
-	var columns []Column
+	columns := make(map[string][]string)
 	if data.Schema != nil {
-		columns, err = r.getColumnsBySchema(Schema{Name: lo.FromPtr(data.Schema)}, false)
-	} else {
-		columns, err = r.getAllColumns(false)
-	}
-
-	if err != nil {
-		return nil, err
+		for _, table := range tables {
+			columnResult, err := r.getColumns(table.Name, lo.FromPtr(data.Schema), nil, false)
+			if err != nil {
+				return nil, err
+			}
+			columns[table.Name] = lo.Map(columnResult, func(x Column, _ int) string { return x.ColumnName })
+		}
 	}
 
 	return &dto.AutoCompleteResponse{
@@ -54,6 +54,6 @@ func (r *PostgresRepository) AutoComplete(data *dto.AutoCompleteRequest) (*dto.A
 		Views:     lo.Map(views, func(x View, _ int) string { return x.Name }),
 		Schemas:   lo.Map(schemas, func(x Schema, _ int) string { return x.Name }),
 		Tables:    lo.Map(tables, func(x Table, _ int) string { return x.Name }),
-		Columns:   lo.Map(columns, func(x Column, _ int) string { return x.ColumnName }),
+		Columns:   columns,
 	}, nil
 }
