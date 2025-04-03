@@ -4,12 +4,12 @@ import type { DataFormDataSlice } from '../types';
 export const createDataFormDataSlice: StateCreator<DataFormDataSlice, [], [], DataFormDataSlice> = (set, get) => ({
   formDataByTab: {},
 
-  getFormData: (tabId: string, objectTabId: string) => {
+  getFormData: (tabId: string, objectTabId: string): any[] | undefined => {
     const formData = get().formDataByTab?.[tabId]?.[objectTabId];
     return formData;
   },
 
-  updateFormData: (tabId: string, objectTabId: string, data: any[]) => {
+  updateFormData: (tabId: string, objectTabId: string, data: any[]): void => {
     set((state: DataFormDataSlice) => ({
       formDataByTab: {
         ...state.formDataByTab,
@@ -21,7 +21,7 @@ export const createDataFormDataSlice: StateCreator<DataFormDataSlice, [], [], Da
     }));
   },
 
-  resetFormData: (tabId: string, objectTabId: string) => {
+  resetFormData: (tabId: string, objectTabId: string): void => {
     set((state: DataFormDataSlice) => {
       const newState = { ...state.formDataByTab };
       delete newState[tabId][objectTabId];

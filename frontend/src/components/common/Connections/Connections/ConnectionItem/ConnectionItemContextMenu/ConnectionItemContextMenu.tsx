@@ -7,23 +7,29 @@ import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ConnectionType } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { JSX } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import type { ConnectionContextMenuProps } from '../../../types';
 
-export default function ConnectionItemContextMenu({ connection, contextMenu, onClose }: ConnectionContextMenuProps) {
+export default function ConnectionItemContextMenu({
+  connection,
+  contextMenu,
+  onClose
+}: ConnectionContextMenuProps): JSX.Element {
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
 
-  const { mutateAsync: deleteConnectionMutation, isPending: deleteConnectionPending } = useMutation({
+  const { mutateAsync: deleteConnectionMutation } = useMutation({
     mutationFn: api.connection.deleteConnection,
-    onSuccess: () => {
+    onSuccess: (): void => {
       queryClient.invalidateQueries({
         queryKey: ['connections']
       });
     },
-    onError: (error) => {
+    onError: (error: Error): void => {
       console.error('🚀 ~ deleteConnectionMutation ~ error:', error);
+      toast.success(locales.connection_delete_success);
     }
   });
 
@@ -31,34 +37,29 @@ export default function ConnectionItemContextMenu({ connection, contextMenu, onC
   const showModal = useConfirmModalStore((state) => state.danger);
   const navigate = useNavigate();
 
-  const handleOpenConfirm = async (connection: ConnectionType) => {
+  const handleOpenConfirm = async (connection: ConnectionType): Promise<void> => {
     showModal(locales.delete_action, locales.connection_delete_confirm, () => {
       handleDeleteConnection(connection);
     });
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = (): void => {
     queryClient.invalidateQueries({
       queryKey: ['connections']
     });
   };
 
-  const handleDeleteConnection = async (connection: ConnectionType) => {
+  const handleDeleteConnection = async (connection: ConnectionType): Promise<void> => {
     try {
-      const res = await deleteConnectionMutation(connection.id);
-      if (res.length === 0) {
-        updateSelectedTab(undefined);
-        updateTabs([]);
-        toast.success(locales.connection_delete_success);
-        navigate({ route: '/' });
-        return;
-      }
-
+      updateSelectedTab(undefined);
+      updateTabs([]);
       toast.success(locales.connection_delete_success);
+      navigate({ route: '/' });
+      return;
     } catch (err) {}
   };
 
-  const handleEditConnection = (connections: ConnectionType | undefined) => {
+  const handleEditConnection = (connections: ConnectionType | undefined): void => {
     searchParams.set('showEditConnection', connections?.id.toString() || '');
     setSearchParams(searchParams);
   };
@@ -67,18 +68,18 @@ export default function ConnectionItemContextMenu({ connection, contextMenu, onC
     {
       name: locales.edit,
       icon: 'settings',
-      action: () => handleEditConnection(connection)
+      action: (): void => handleEditConnection(connection)
     },
     {
       name: locales.delete,
       icon: 'delete',
-      action: () => handleOpenConfirm(connection),
+      action: (): Promise<void> => handleOpenConfirm(connection),
       closeBeforeAction: true
     },
     {
       name: locales.refresh,
       icon: 'refresh',
-      action: () => handleRefresh(),
+      action: (): void => handleRefresh(),
       closeBeforeAction: true
     }
   ];

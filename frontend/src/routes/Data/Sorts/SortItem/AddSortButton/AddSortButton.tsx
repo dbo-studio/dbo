@@ -4,12 +4,17 @@ import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { IconButton } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
 import type { AddSortButtonProps } from '../../types.ts';
+import type { JSX } from 'react';
+import { useSelectedTab } from '@/hooks/useSelectedTab.tsx';
 
-export default function AddSortButton({ columns }: AddSortButtonProps) {
+export default function AddSortButton({ columns }: AddSortButtonProps): JSX.Element {
   const { upsertSorts } = useTabStore();
+  const selectedTab = useSelectedTab();
 
-  const handleAddNewSort = async () => {
-    await upsertSorts({
+  const handleAddNewSort = async (): Promise<void> => {
+    if (!selectedTab) return;
+
+    await upsertSorts(selectedTab, {
       index: uuidv4(),
       column: columns[0].name,
       operator: PgsqlSorts[0],

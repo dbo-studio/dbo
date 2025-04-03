@@ -37,8 +37,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       columns: [],
       pagination: {
         page: 1,
-        limit: 100,
-        offset: 0
+        limit: 100
       },
       showColumns: false,
       showFilters: false,
@@ -101,7 +100,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
 
     return get().handleAddNewTab(tabs, newTab);
   },
-  removeTab: (tabId: string): TabType | null | undefined => {
+  removeTab: (selectedTab: TabType, tabId: string): TabType | null | undefined => {
     const tabIndex = get()
       .getTabs()
       .findIndex((t: TabType) => t.id === tabId);
@@ -111,9 +110,9 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
 
     let newTab: TabType | null | undefined = null;
 
-    if (newTabs.length > tabIndex && get().getSelectedTab()?.id === tabId) {
+    if (newTabs.length > tabIndex && selectedTab?.id === tabId) {
       newTab = newTabs[tabIndex];
-    } else if (newTabs.length > 0 && get().getSelectedTab()?.id === tabId) {
+    } else if (newTabs.length > 0 && selectedTab?.id === tabId) {
       newTab = newTabs[newTabs.length - 1];
     }
 
@@ -124,7 +123,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
     get().updateTabs(newTabs);
     return newTabs.length === 0 ? undefined : newTab;
   },
-  switchTab: (tabId: string | null) => {
+  switchTab: (tabId: string | null): void => {
     if (!tabId) {
       get().updateSelectedTab(undefined);
     }
@@ -137,7 +136,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
     }
   },
 
-  handleAddNewTab: (tabs: TabType[], newTab: TabType) => {
+  handleAddNewTab: (tabs: TabType[], newTab: TabType): TabType => {
     if (tabs.length < maxTabs) {
       get().updateTabs([...tabs, newTab]);
     } else {

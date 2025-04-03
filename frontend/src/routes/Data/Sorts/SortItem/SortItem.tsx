@@ -2,16 +2,18 @@ import { PgsqlSorts } from '@/core/constants';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { SortType } from '@/types/Tab.ts';
 import { Box, Checkbox } from '@mui/material';
-import { useState } from 'react';
+import { type JSX, useState } from 'react';
 
 import SelectInput from '@/components/base/SelectInput/SelectInput.tsx';
+import { useSelectedTab } from '@/hooks/useSelectedTab.tsx';
 import locales from '@/locales';
 import type { SortItemProps } from '../types.ts';
 import AddSortButton from './AddSortButton/AddSortButton.tsx';
 import RemoveSortButton from './RemoveSortButton/RemoveSortButton.tsx';
 
-export default function SortItem({ sort, columns }: SortItemProps) {
+export default function SortItem({ sort, columns }: SortItemProps): JSX.Element {
   const { upsertSorts } = useTabStore();
+  const selectedTab = useSelectedTab();
   const [currentSort, setCurrentSort] = useState<SortType>({
     index: sort.index,
     column: sort.column,
@@ -19,7 +21,9 @@ export default function SortItem({ sort, columns }: SortItemProps) {
     isActive: sort.isActive
   });
 
-  const handleChange = async (type: 'column' | 'operator' | 'isActive', value: any) => {
+  const handleChange = async (type: 'column' | 'operator' | 'isActive', value: any): Promise<void> => {
+    if (!selectedTab) return;
+
     const newSort = {
       index: currentSort.index,
       column: type === 'column' ? value : currentSort.column,
@@ -28,7 +32,7 @@ export default function SortItem({ sort, columns }: SortItemProps) {
     };
 
     setCurrentSort(newSort);
-    await upsertSorts(newSort);
+    await upsertSorts(selectedTab, newSort);
   };
 
   return (
@@ -37,7 +41,7 @@ export default function SortItem({ sort, columns }: SortItemProps) {
         <Checkbox
           size='small'
           checked={currentSort.isActive}
-          onChange={(e) => handleChange('isActive', e.target.checked)}
+          onChange={(e): Promise<void> => handleChange('isActive', e.target.checked)}
         />
       </Box>
       <Box>
@@ -47,7 +51,7 @@ export default function SortItem({ sort, columns }: SortItemProps) {
           disabled={columns.length === 0}
           size='small'
           options={columns.map((c) => ({ value: c.name as string, label: c.name }))}
-          onChange={(e) => handleChange('column', e.value)}
+          onChange={(e): Promise<void> => handleChange('column', e.value)}
         />
       </Box>
       <Box mr={1} ml={1}>
@@ -55,7 +59,7 @@ export default function SortItem({ sort, columns }: SortItemProps) {
           value={currentSort.operator}
           size='small'
           options={PgsqlSorts.map((c) => ({ value: c as string, label: c }))}
-          onChange={(e) => handleChange('operator', e.value)}
+          onChange={(e): Promise<void> => handleChange('operator', e.value)}
         />
       </Box>
       <Box ml={1} mr={1}>

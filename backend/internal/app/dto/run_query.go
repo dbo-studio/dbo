@@ -9,7 +9,7 @@ type (
 		ConnectionId int32       `json:"connectionId"`
 		NodeId       string      `json:"nodeId"`
 		Limit        *int        `json:"limit"`
-		Offset       *int        `json:"offset"`
+		Page         *int        `json:"page"`
 		Filters      []FilterDto `json:"filters"`
 		Sorts        []SortDto   `json:"sorts"`
 		Columns      []string
@@ -39,7 +39,7 @@ func (req RunQueryRequest) Validate() error {
 		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
 		validation.Field(&req.NodeId, validation.Required, validation.Length(0, 120)),
 		validation.Field(&req.Limit, validation.Min(1)),
-		validation.Field(&req.Offset, validation.Min(1)),
+		validation.Field(&req.Page, validation.Min(1)),
 		validation.Field(&req.Filters),
 		validation.Field(&req.Sorts),
 	)

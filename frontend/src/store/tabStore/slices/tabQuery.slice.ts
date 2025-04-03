@@ -1,41 +1,27 @@
 import { tools } from '@/core/utils';
+import type { TabType } from '@/types';
 import type { StateCreator } from 'zustand';
 import type { TabQuerySlice, TabStore } from '../types';
 
 export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [], TabQuerySlice> = (_, get) => ({
-  getQuery: (): string => {
-    const selectedTab = get().getSelectedTab();
-    if (!selectedTab) {
-      return '';
+  getQuery: (tab: TabType): string => {
+    if (tab.query && tools.isValidJSON(tab.query)) {
+      return JSON.parse(tab.query);
     }
 
-    if (tools.isValidJSON(selectedTab.query)) {
-      return JSON.parse(selectedTab.query);
-    }
-
-    return selectedTab.query;
+    return tab?.query ?? '';
   },
-  updateQuery: (query: string) => {
-    const selectedTab = get().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
-
+  updateQuery: (tab: TabType, query: string): void => {
     if (!tools.isValidJSON(query)) {
       // biome-ignore lint: reason
       query = JSON.stringify(query);
     }
 
-    selectedTab.query = query;
-    get().updateSelectedTab(selectedTab);
+    tab.query = query;
+    get().updateSelectedTab(tab);
   },
-  setShowQueryPreview: (show: boolean) => {
-    const selectedTab = get().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
-
-    selectedTab.showQuery = show;
-    get().updateSelectedTab(selectedTab);
+  setShowQueryPreview: (tab: TabType): void => {
+    tab.showQuery = !tab.showQuery;
+    get().updateSelectedTab(tab);
   }
 });

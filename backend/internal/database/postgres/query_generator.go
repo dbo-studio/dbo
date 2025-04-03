@@ -189,3 +189,15 @@ func (r *PostgresRepository) getTemplates() ([]Template, error) {
 
 	return templates, err
 }
+
+func (r *PostgresRepository) getPrimaryKeys(table Table) ([]string, error) {
+	var primaryKeys []string
+
+	err := r.db.Table("information_schema.table_constraints AS tc").
+		Select("kcu.column_name").
+		Joins("JOIN information_schema.key_column_usage AS kcu ON kcu.constraint_name = tc.constraint_name AND kcu.table_schema = tc.table_schema").
+		Where("tc.constraint_type = 'PRIMARY KEY' AND tc.table_name = ?", table.Name).
+		Scan(&primaryKeys).Error
+
+	return primaryKeys, err
+}

@@ -12,10 +12,11 @@ import { useHandleRowStyle } from '@/components/shared/DBDataGrid/hooks/useHandl
 import { useHandleScroll } from '@/components/shared/DBDataGrid/hooks/useHandleScroll.ts';
 import type { DataGridProps } from '@/components/shared/DBDataGrid/types.ts';
 import { Box, CircularProgress } from '@mui/material';
-import { useMemo, useRef } from 'react';
+import { type JSX, useMemo, useRef } from 'react';
 
 import { TextCellType, registerCellType } from 'handsontable/cellTypes';
 
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import type { ColumnType } from '@/types';
 import { TextEditor, registerEditor } from 'handsontable/editors';
 import {
@@ -43,12 +44,13 @@ registerPlugin(AutoRowSize);
 registerPlugin(AutoColumnSize);
 registerPlugin(ContextMenu);
 
-export default function DataGrid({ editable }: DataGridProps) {
+export default function DataGrid({ editable }: DataGridProps): JSX.Element {
   const hotTableRef = useRef<HotTableRef | null>(null);
   const { loading, getRows, getColumns } = useDataStore();
+  const selectedTab = useSelectedTab();
 
-  const rows = useMemo(() => getRows(), [getRows()]);
-  const headers = useMemo(() => getColumns(true), [getColumns()]);
+  const rows = useMemo(() => getRows(selectedTab), [getRows(selectedTab), selectedTab]);
+  const headers = useMemo(() => getColumns(selectedTab, true), [getColumns(selectedTab), selectedTab]);
 
   useHandleScroll(hotTableRef);
   useHandleDeselect(hotTableRef);
@@ -92,11 +94,9 @@ export default function DataGrid({ editable }: DataGridProps) {
         readOnly={!editable}
         afterChange={editable ? handleRowChange : undefined}
         licenseKey='non-commercial-and-evaluation'
-        modifyColWidth={(width) => (width > 400 ? 400 : width)}
+        modifyColWidth={(width: number): number => (width > 400 ? 400 : width)}
         className={'handsontable'}
-        cells={() => {
-          return { renderer: 'handleRowStyle' };
-        }}
+        cells={(): { renderer: string } => ({ renderer: 'handleRowStyle' })}
         columnSorting={true}
       >
         {headers.map((column: ColumnType) => (

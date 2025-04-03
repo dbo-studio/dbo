@@ -1,6 +1,6 @@
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { ConnectionType } from '@/types';
-import { useEffect, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 
 import api from '@/api';
@@ -14,7 +14,7 @@ import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { ConnectionsStyled } from './Connections.styled';
 import { EmptySpaceStyle } from './EmptySpace.styled';
 
-export default function Connections() {
+export default function Connections(): JSX.Element {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const { connections, updateLoading, loading } = useConnectionStore();
@@ -23,12 +23,12 @@ export default function Connections() {
   const navigate = useNavigate();
 
   const { mutateAsync: updateConnectionMutation, isPending: pendingUpdateConnection } = useMutation({
-    mutationFn: (id: number) => api.connection.updateConnection(id, { isActive: true }),
-    onMutate: (id: number) => {
+    mutationFn: (id: number): Promise<ConnectionType> => api.connection.updateConnection(id, { isActive: true }),
+    onMutate: (id: number): void => {
       setLoadingConnectionId(id);
       updateLoading('loading');
     },
-    onSuccess: (c: ConnectionType) => {
+    onSuccess: (c: ConnectionType): void => {
       queryClient.invalidateQueries({
         queryKey: ['connections']
       });
@@ -39,7 +39,7 @@ export default function Connections() {
         tabId: ''
       });
     },
-    onError: (error) => {
+    onError: (error): void => {
       console.error('🚀 ~ updateConnectionMutation ~ error:', error);
       updateLoading('error');
     }
@@ -56,7 +56,7 @@ export default function Connections() {
     }
   }, [connections]);
 
-  const handleChangeCurrentConnection = async (c: ConnectionType) => {
+  const handleChangeCurrentConnection = async (c: ConnectionType): Promise<void> => {
     if (c.id === currentConnection?.id || loading === 'loading') {
       return;
     }
@@ -73,7 +73,7 @@ export default function Connections() {
       {connections?.map((c: ConnectionType) => (
         <ConnectionItem
           loading={pendingUpdateConnection && loadingConnectionId === c.id}
-          onClick={() => handleChangeCurrentConnection(c)}
+          onClick={(): Promise<void> => handleChangeCurrentConnection(c)}
           key={uuid()}
           selected={c.id === currentConnection?.id}
           connection={c}

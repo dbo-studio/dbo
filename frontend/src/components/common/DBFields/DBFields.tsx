@@ -1,11 +1,14 @@
 import FieldInput from '@/components/base/FieldInput/FieldInput.tsx';
 import Search from '@/components/base/Search/Search';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useDataStore } from '@/store/dataStore/data.store';
 import type { RowType } from '@/types';
 import { Box } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 
-export default function DBFields() {
+export default function DBFields(): JSX.Element {
+  const selectedTab = useSelectedTab();
+
   const { getColumns, getSelectedRows } = useDataStore();
   const [fields, setFields] = useState<any[]>([]);
   const [search, setSearch] = useState<string>('');
@@ -25,11 +28,11 @@ export default function DBFields() {
     generateFields(search);
   }, [search, selectedRow]);
 
-  function generateFields(value: string) {
-    if (!selectedRow) return;
+  function generateFields(value: string): void {
+    if (!selectedRow || !selectedTab) return;
 
     const data: any[] = [];
-    getColumns()
+    getColumns(selectedTab)
       .filter((c: any) => {
         return c.name.toLocaleLowerCase().includes(value.toLocaleLowerCase());
       })
@@ -46,7 +49,7 @@ export default function DBFields() {
 
   return (
     <>
-      <Search onChange={(value: string) => setSearch(value)} />
+      <Search onChange={(value: string): void => setSearch(value)} />
       {fields.length > 0 && (
         <Box mt={1} data-testid='db-field'>
           {fields.map(

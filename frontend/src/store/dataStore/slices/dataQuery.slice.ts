@@ -1,5 +1,6 @@
 import { runQuery, runRawQuery } from '@/api/query';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import type { TabType } from '@/types';
 import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
 import type { StateCreator } from 'zustand';
@@ -14,24 +15,21 @@ export const createDataQuerySlice: StateCreator<
 > = (set, get) => ({
   loading: false,
   toggleDataFetching: true,
-  runQuery: async () => {
+  runQuery: async (tab: TabType): Promise<void> => {
     const currentConnection = useConnectionStore.getState().connections?.find((c) => c.isActive);
-    const selectedTab = useTabStore.getState().getSelectedTab();
-    if (!selectedTab || !currentConnection) {
-      return;
-    }
+    if (!currentConnection) return;
 
-    const filters = selectedTab.filters ?? [];
-    const sorts = selectedTab.sorts ?? [];
+    const filters = tab.filters ?? [];
+    const sorts = tab.sorts ?? [];
 
     try {
       set({ loading: true });
       const res = await runQuery({
         connectionId: currentConnection.id,
-        nodeId: selectedTab.nodeId,
-        limit: selectedTab.pagination.limit,
-        offset: (selectedTab.pagination.page - 1) * selectedTab.pagination.limit,
-        columns: selectedTab.columns ?? [],
+        nodeId: tab.nodeId,
+        limit: tab.pagination?.limit ?? 100,
+        page: tab.pagination?.page ?? 1,
+        columns: tab.columns ?? [],
         filters: filters.filter(
           (f) =>
             f.column.length > 0 &&
@@ -43,35 +41,29 @@ export const createDataQuerySlice: StateCreator<
         sorts: sorts.filter((f) => f.column.length > 0 && f.operator.length > 0 && f.isActive)
       });
 
-      useTabStore.getState().updateQuery(res.query);
-      await Promise.all([get().updateRows(res.data), get().updateColumns(res.columns)]);
+      useTabStore.getState().updateQuery(tab, res.query);
+      await Promise.all([get().updateRows(tab, res.data), get().updateColumns(tab, res.columns)]);
       set({ toggleDataFetching: !get().toggleDataFetching });
     } catch (error) {
-      if (isAxiosError(error)) {
-        toast.error(error.message);
-      }
       console.log('🚀 ~ runQuery: ~ error:', error);
     } finally {
       set({ loading: false });
     }
   },
-  runRawQuery: async () => {
+  runRawQuery: async (tab: TabType | undefined): Promise<void> => {
     const currentConnection = useConnectionStore.getState().connections?.find((c) => c.isActive);
-    const selectedTab = useTabStore.getState().getSelectedTab();
-    if (!selectedTab || !currentConnection) {
-      return;
-    }
+    if (!currentConnection || !tab) return;
 
     try {
       set({ loading: true });
       const res = await runRawQuery({
         connectionId: currentConnection.id,
-        query: useTabStore.getState().getQuery()
+        query: useTabStore.getState().getQuery(tab)
       });
 
-      useTabStore.getState().updateQuery(res.query);
+      useTabStore.getState().updateQuery(tab, res.query);
 
-      await Promise.all([get().updateRows(res.data), get().updateColumns(res.columns)]);
+      await Promise.all([get().updateRows(tab, res.data), get().updateColumns(tab, res.columns)]);
       set({ toggleDataFetching: !get().toggleDataFetching });
     } catch (error) {
       if (isAxiosError(error)) {

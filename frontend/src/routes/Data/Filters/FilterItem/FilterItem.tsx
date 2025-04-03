@@ -2,17 +2,20 @@ import { PgsqlFilterConditions, PgsqlFilterNext } from '@/core/constants';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { EventFor, FilterType } from '@/types';
 import { Box, Checkbox } from '@mui/material';
-import { useState } from 'react';
+import { type JSX, useState } from 'react';
 
 import FieldInput from '@/components/base/FieldInput/FieldInput.tsx';
 import SelectInput from '@/components/base/SelectInput/SelectInput.tsx';
+import { useSelectedTab } from '@/hooks/useSelectedTab.tsx';
 import locales from '@/locales';
 import type { FilterItemProps } from '../types.ts';
 import AddFilterButton from './AddFilterButton/AddFilterButton.tsx';
 import RemoveFilterButton from './RemoveFilterButton/RemoveFilterButton.tsx';
 
-export default function FilterItem({ filter, columns }: FilterItemProps) {
+export default function FilterItem({ filter, columns }: FilterItemProps): JSX.Element {
+  const selectedTab = useSelectedTab();
   const { upsertFilters } = useTabStore();
+
   const [currentFilter, setCurrentFilter] = useState<FilterType>({
     index: filter.index,
     column: filter.column,
@@ -36,14 +39,18 @@ export default function FilterItem({ filter, columns }: FilterItemProps) {
     return newFilter;
   };
 
+  if (!selectedTab) {
+    return <></>;
+  }
+
   return (
     <Box aria-label={'filter-item'} className='filter-item' display='flex' flexDirection='row' alignItems='center'>
       <Box>
         <Checkbox
           size='small'
           checked={currentFilter.isActive}
-          onChange={(e) => {
-            upsertFilters(handleChange('isActive', e.target.checked)).then();
+          onChange={(e): void => {
+            upsertFilters(selectedTab, handleChange('isActive', e.target.checked)).then();
           }}
         />
       </Box>
@@ -54,7 +61,7 @@ export default function FilterItem({ filter, columns }: FilterItemProps) {
           disabled={columns.length === 0}
           size='small'
           options={columns.map((c) => ({ value: c.name as string, label: c.name }))}
-          onChange={(e) => handleChange('column', e.value)}
+          onChange={(e): FilterType => handleChange('column', e.value)}
         />
       </Box>
       <Box mr={1} ml={1}>
@@ -62,7 +69,7 @@ export default function FilterItem({ filter, columns }: FilterItemProps) {
           value={currentFilter.operator}
           size='small'
           options={PgsqlFilterConditions.map((c) => ({ value: c as string, label: c }))}
-          onChange={(e) => handleChange('operator', e.value)}
+          onChange={(e): FilterType => handleChange('operator', e.value)}
         />
       </Box>
       <Box flex={1} mr={1}>
@@ -71,8 +78,8 @@ export default function FilterItem({ filter, columns }: FilterItemProps) {
           fullWidth
           size='small'
           value={currentFilter.value}
-          onBlur={() => upsertFilters(currentFilter)}
-          onChange={(e: EventFor<'input', 'onChange'>) => handleChange('value', e.target.value)}
+          onBlur={(): Promise<void> => upsertFilters(selectedTab, currentFilter)}
+          onChange={(e: EventFor<'input', 'onChange'>): FilterType => handleChange('value', e.target.value)}
         />
       </Box>
       <Box>
@@ -80,7 +87,7 @@ export default function FilterItem({ filter, columns }: FilterItemProps) {
           value={currentFilter.next}
           size='small'
           options={PgsqlFilterNext.map((c) => ({ value: c as string, label: c }))}
-          onChange={(e) => handleChange('next', e.value)}
+          onChange={(e): FilterType => handleChange('next', e.value)}
         />
       </Box>
       <Box ml={1} mr={1}>

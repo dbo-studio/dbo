@@ -1,9 +1,8 @@
-import type { TabMode } from '@/core/enums';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { TabType } from '@/types';
 
-export function useRemoveTab() {
+export function useRemoveTab(): [(selectedTab: TabType, tabId: string) => TabType | null | undefined] {
   const { removeTab, getTabs, updateSelectedTab } = useTabStore();
   const {
     removeColumnsByTabId,
@@ -13,7 +12,7 @@ export function useRemoveTab() {
     removeUnsavedRowsByTabId
   } = useDataStore();
 
-  const remove = (tabId: string): TabType | null | undefined => {
+  const remove = (selectedTab: TabType, tabId: string): TabType | null | undefined => {
     if (getTabs().length === 1) {
       updateSelectedTab(undefined);
     }
@@ -23,7 +22,7 @@ export function useRemoveTab() {
     deleteRemovedRowsByTabId(tabId);
     removeRowsByTabId(tabId);
     removeUnsavedRowsByTabId(tabId);
-    return removeTab(tabId);
+    return removeTab(selectedTab, tabId);
   };
 
   return [remove];

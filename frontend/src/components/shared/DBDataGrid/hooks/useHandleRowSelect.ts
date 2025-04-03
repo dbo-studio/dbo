@@ -3,7 +3,9 @@ import type { SelectedRow } from '@/store/dataStore/types';
 import type { HotTableRef } from '@handsontable/react-wrapper';
 import { type RefObject, useCallback } from 'react';
 
-export const useHandleRowSelect = (hotTableRef: RefObject<HotTableRef | null>) => {
+export const useHandleRowSelect = (
+  hotTableRef: RefObject<HotTableRef | null>
+): ((rowStart: number, colStart: number, rowEnd: number, colEnd: number) => void) => {
   const { setSelectedRows } = useDataStore();
 
   return useCallback(

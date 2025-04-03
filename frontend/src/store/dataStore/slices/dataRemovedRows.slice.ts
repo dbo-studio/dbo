@@ -1,4 +1,4 @@
-import type { RowType } from '@/types';
+import type { RowType, TabType } from '@/types';
 import type { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
 import type {
@@ -16,30 +16,26 @@ export const createDataRemovedRowsSlice: StateCreator<
   DataRemovedRowsSlice
 > = (set, get) => ({
   removedRows: {},
-  getRemovedRows: (): RowType[] => {
-    const selectedTab = useTabStore.getState().getSelectedTab();
-    const rows = get().removedRows;
-    return rows[selectedTab?.id as string] ?? [];
-  },
-  updateRemovedRows: () => {
-    const selectedTab = useTabStore.getState().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
+  getRemovedRows: (tab: TabType | undefined): RowType[] => {
+    if (!tab) return [];
 
+    const rows = get().removedRows;
+    return rows[tab?.id as string] ?? [];
+  },
+  updateRemovedRows: (tab: TabType): void => {
     const rowsIndex = Array.from(get().getSelectedRows().values()).map((row) => row.index);
     const rows = get()
-      .getRows()
+      .getRows(tab)
       .filter((r: RowType) => rowsIndex.includes(r.dbo_index));
 
     //unsaved items will remove immediately if selected and should not store in removed rows list
     const unsavedRows = get()
-      .getUnsavedRows()
+      .getUnsavedRows(tab)
       .filter((r) => rowsIndex.includes(r.dbo_index));
     const unsavedRowsId = unsavedRows.map((r) => r.dbo_index);
 
     const removedRows = get().removedRows;
-    removedRows[selectedTab.id] = rows
+    removedRows[tab.id] = rows
       .map((row) => {
         // for deleting a row from db we referenced to row's id and if it doesn't exists to all fields
         if (row.id) {
@@ -54,10 +50,10 @@ export const createDataRemovedRowsSlice: StateCreator<
       .filter((r) => !unsavedRowsId.includes(r.dbo_index));
 
     set({ removedRows });
-    get().discardUnsavedRows(unsavedRows);
+    get().discardUnsavedRows(tab, unsavedRows);
     get().clearSelectedRows();
   },
-  deleteRemovedRowsByTabId: (tabId: string) => {
+  deleteRemovedRowsByTabId: (tabId: string): void => {
     const rows = get().removedRows;
     if (rows[tabId]) {
       delete rows[tabId];

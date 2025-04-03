@@ -33,10 +33,11 @@ export default function StatusBarActions(): JSX.Element {
   const { mutateAsync: updateQueryMutation, isPending: updateQueryPending } = useMutation({
     mutationFn: api.query.updateQuery,
     onSuccess: async (): Promise<void> => {
-      await runQuery();
-      removeEditedRowsByTabId(selectedTab?.id ?? '');
-      deleteRemovedRowsByTabId(selectedTab?.id ?? '');
-      removeUnsavedRowsByTabId(selectedTab?.id ?? '');
+      if (!selectedTab) return;
+      await runQuery(selectedTab);
+      removeEditedRowsByTabId(selectedTab.id);
+      deleteRemovedRowsByTabId(selectedTab.id);
+      removeUnsavedRowsByTabId(selectedTab.id);
     },
     onError: (error: Error): void => {
       console.error('🚀 ~ updateQueryMutation ~ error:', error);
@@ -45,9 +46,9 @@ export default function StatusBarActions(): JSX.Element {
 
   const handleSave = async (): Promise<void> => {
     if (selectedTab?.mode === TabMode.Data) {
-      const edited = getEditedRows();
-      const removed = getRemovedRows();
-      const unsaved = getUnsavedRows();
+      const edited = getEditedRows(selectedTab);
+      const removed = getRemovedRows(selectedTab);
+      const unsaved = getUnsavedRows(selectedTab);
 
       if (!selectedTab || !currentConnection || (edited.length === 0 && removed.length === 0 && unsaved.length === 0)) {
         return;
@@ -55,7 +56,7 @@ export default function StatusBarActions(): JSX.Element {
       try {
         await updateQueryMutation({
           connectionId: currentConnection.id,
-          nodeId: selectedTab.id,
+          nodeId: selectedTab.nodeId,
           edited: edited,
           removed: removed,
           added: unsaved
@@ -74,22 +75,24 @@ export default function StatusBarActions(): JSX.Element {
 
   const handleRemoveAction = async (): Promise<void> => {
     if (selectedTab?.mode === TabMode.Data) {
-      updateRemovedRows();
+      updateRemovedRows(selectedTab);
     }
   };
 
   const handleDiscardChanges = async (): Promise<void> => {
     if (selectedTab?.mode === TabMode.Data) {
-      restoreEditedRows().then();
-      discardUnsavedRows();
+      restoreEditedRows(selectedTab).then();
+      discardUnsavedRows(selectedTab);
       deleteRemovedRowsByTabId(selectedTab.id);
       clearSelectedRows();
     }
   };
 
   const handleRefresh = async (): Promise<void> => {
+    if (!selectedTab) return;
+
     await handleDiscardChanges();
-    runQuery().then();
+    runQuery(selectedTab).then();
   };
 
   return (

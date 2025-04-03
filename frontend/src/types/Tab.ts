@@ -44,5 +44,4 @@ export type EditedRow = {
 export type TabDataPagination = {
   page: number;
   limit: number;
-  offset: number;
 };

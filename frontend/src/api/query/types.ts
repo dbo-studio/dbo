@@ -4,7 +4,7 @@ export type RunQueryRequestType = {
   connectionId: number;
   nodeId: string;
   limit: number;
-  offset: number;
+  page: number;
   columns: string[];
   filters: FilterType[];
   sorts: SortType[];

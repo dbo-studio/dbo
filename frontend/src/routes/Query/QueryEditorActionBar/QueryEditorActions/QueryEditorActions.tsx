@@ -31,38 +31,38 @@ export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps
     }
   });
 
-  useShortcut(shortcuts.runQuery, () => runRawQuery());
+  useShortcut(shortcuts.runQuery, () => runRawQuery(selectedTab));
 
   const handleFormatSql = (): void => {
-    if (checkQueryLength()) {
-      updateQuery(tools.formatSql(getQuery(), 'postgresql'));
+    if (selectedTab && checkQueryLength()) {
+      updateQuery(selectedTab, tools.formatSql(getQuery(selectedTab), 'postgresql'));
       onFormat();
     }
   };
 
   const handleMinifySql = (): void => {
-    if (checkQueryLength()) {
-      const minified = tools.minifySql(getQuery());
-      updateQuery(minified);
+    if (selectedTab && checkQueryLength()) {
+      const minified = tools.minifySql(getQuery(selectedTab));
+      updateQuery(selectedTab, minified);
       onFormat();
     }
   };
 
   const saveQuery = async (): Promise<void> => {
-    if (!checkQueryLength()) {
+    if (!selectedTab || !checkQueryLength()) {
       toast.error(locales.empty_query);
       return;
     }
 
     try {
       await createSavedQueryMutation({
-        query: getQuery()
+        query: getQuery(selectedTab)
       });
     } catch (error) {}
   };
 
   const checkQueryLength = (): boolean => {
-    return selectedTab !== undefined && getQuery().length > 0;
+    return selectedTab !== undefined && getQuery(selectedTab).length > 0;
   };
 
   return (
@@ -83,7 +83,7 @@ export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps
         </IconButton>
       </Tooltip>
       <Tooltip title={shortcuts.runQuery.command}>
-        <IconButton color='primary' onClick={(): Promise<void> => runRawQuery()}>
+        <IconButton color='primary' onClick={(): Promise<void> => runRawQuery(selectedTab)}>
           <CustomIcon type='play' />
         </IconButton>
       </Tooltip>

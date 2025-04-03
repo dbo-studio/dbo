@@ -1,7 +1,6 @@
-import type { EditedRow, RowType } from '@/types';
+import type { EditedRow, RowType, TabType } from '@/types';
 import { pullAt } from 'lodash';
 import type { StateCreator } from 'zustand';
-import { useTabStore } from '../../tabStore/tab.store';
 import type { DataEditedRowsSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
 
 export const createDataEditedRowsSlice: StateCreator<
@@ -11,18 +10,14 @@ export const createDataEditedRowsSlice: StateCreator<
   DataEditedRowsSlice
 > = (set, get) => ({
   editedRows: {},
-  getEditedRows: (): EditedRow[] => {
-    const selectedTab = useTabStore.getState().getSelectedTab();
-    const rows = get().editedRows;
-    return rows[selectedTab?.id as string] ?? [];
-  },
-  updateEditedRows: (editedRows: EditedRow[]): void => {
-    const selectedTab = useTabStore.getState().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
+  getEditedRows: (tab: TabType | undefined): EditedRow[] => {
+    if (!tab) return [];
 
-    const unSavedRows = get().getUnsavedRows();
+    const rows = get().editedRows;
+    return rows[tab?.id as string] ?? [];
+  },
+  updateEditedRows: (tab: TabType, editedRows: EditedRow[]): void => {
+    const unSavedRows = get().getUnsavedRows(tab);
     const shouldBeUnsaved: RowType[] = [];
 
     editedRows.forEach((editedRow: EditedRow, index: number) => {
@@ -43,12 +38,12 @@ export const createDataEditedRowsSlice: StateCreator<
     }
 
     const rows = get().editedRows;
-    rows[selectedTab.id] = editedRows;
+    rows[tab.id] = editedRows;
     set({ editedRows: rows });
   },
-  restoreEditedRows: async (): Promise<void> => {
-    const newRows = get().getEditedRows();
-    const oldRows = get().getRows();
+  restoreEditedRows: async (tab: TabType): Promise<void> => {
+    const newRows = get().getEditedRows(tab);
+    const oldRows = get().getRows(tab);
 
     for (const newRow of newRows) {
       const findValueIndex = oldRows.findIndex((x) => x.dbo_index === newRow.dboIndex);
@@ -58,10 +53,10 @@ export const createDataEditedRowsSlice: StateCreator<
       };
     }
 
-    await get().updateRows(oldRows);
-    get().updateEditedRows([]);
+    await get().updateRows(tab, oldRows);
+    get().updateEditedRows(tab, []);
   },
-  removeEditedRowsByTabId: (tabId: string) => {
+  removeEditedRowsByTabId: (tabId: string): void => {
     const rows = get().editedRows;
     delete rows[tabId];
     set({ editedRows: rows });

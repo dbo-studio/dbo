@@ -1,3 +1,4 @@
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import type { RowType } from '@/types';
 import { useTheme } from '@mui/material'; // @ts-ignore
@@ -9,12 +10,13 @@ import { registerRenderer } from 'handsontable/renderers/registry'; // @ts-ignor
 import type { CellProperties } from 'handsontable/settings';
 import { useMemo } from 'react';
 
-export const useHandleRowStyle = () => {
+export const useHandleRowStyle = (): void => {
   const { getRemovedRows, getUnsavedRows, getEditedRows } = useDataStore();
+  const selectedTab = useSelectedTab();
 
-  const removed = useMemo(() => getRemovedRows(), [getRemovedRows()]);
-  const usesaved = useMemo(() => getUnsavedRows(), [getUnsavedRows()]);
-  const edited = useMemo(() => getEditedRows(), [getEditedRows()]);
+  const removed = useMemo(() => getRemovedRows(selectedTab), [getRemovedRows(selectedTab), selectedTab]);
+  const usesaved = useMemo(() => getUnsavedRows(selectedTab), [getUnsavedRows(selectedTab), selectedTab]);
+  const edited = useMemo(() => getEditedRows(selectedTab), [getEditedRows(selectedTab), selectedTab]);
 
   const theme = useTheme();
 
@@ -26,7 +28,7 @@ export const useHandleRowStyle = () => {
     prop: string | number,
     value: any,
     cellProperties: CellProperties
-  ) => {
+  ): void => {
     Handsontable.renderers.TextRenderer(instance, td, row, col, prop, value, cellProperties);
 
     if (value === null) {

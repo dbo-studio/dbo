@@ -18,7 +18,7 @@ func (r *PostgresRepository) UpdateQuery(req *dto.UpdateQueryRequest) (*dto.Upda
 		return nil, fmt.Errorf("invalid node: schema or table missing")
 	}
 
-	queries := generateQueries(req, node)
+	queries := r.generateQueries(req, node)
 	if len(queries) == 0 {
 		return &dto.UpdateQueryResponse{
 			Query:        []string{},
@@ -48,22 +48,27 @@ func (r *PostgresRepository) UpdateQuery(req *dto.UpdateQueryRequest) (*dto.Upda
 	}, nil
 }
 
-func generateQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
+func (r *PostgresRepository) generateQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
 	var queries []string
 
-	queries = append(queries, generateUpdateQueries(req, node)...)
-	queries = append(queries, generateInsertQueries(req, node)...)
-	queries = append(queries, generateDeleteQueries(req, node)...)
+	queries = append(queries, r.generateUpdateQueries(req, node)...)
+	queries = append(queries, r.generateInsertQueries(req, node)...)
+	queries = append(queries, r.generateDeleteQueries(req, node)...)
 
 	return queries
 }
 
-func generateUpdateQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
+func (r *PostgresRepository) generateUpdateQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
 	if req == nil || req.EditedItems == nil {
 		return nil
 	}
 
 	var queries []string
+
+	keys, err := r.getPrimaryKeys(Table{node.Table})
+	if err != nil {
+		return nil
+	}
 
 	for _, editedItem := range req.EditedItems {
 		if len(editedItem.Values) == 0 || len(editedItem.Conditions) == 0 {
@@ -71,7 +76,7 @@ func generateUpdateQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
 		}
 
 		setClauses := buildSetClauses(editedItem.Values)
-		whereClauses := buildWhereClauses(editedItem.Conditions)
+		whereClauses := r.buildWhereClauses(keys, editedItem.Conditions)
 
 		if len(setClauses) == 0 || len(whereClauses) == 0 {
 			continue
@@ -91,19 +96,24 @@ func generateUpdateQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
 	return queries
 }
 
-func generateDeleteQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
+func (r *PostgresRepository) generateDeleteQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
 	if req == nil || req.DeletedItems == nil {
 		return nil
 	}
 
 	var queries []string
 
+	keys, err := r.getPrimaryKeys(Table{node.Table})
+	if err != nil {
+		return nil
+	}
+
 	for _, deletedItem := range req.DeletedItems {
 		if len(deletedItem) == 0 {
 			continue
 		}
 
-		whereClauses := buildWhereClauses(deletedItem)
+		whereClauses := r.buildWhereClauses(keys, deletedItem)
 		if len(whereClauses) == 0 {
 			continue
 		}
@@ -121,7 +131,7 @@ func generateDeleteQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
 	return queries
 }
 
-func generateInsertQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
+func (r *PostgresRepository) generateInsertQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
 	if req == nil || req.AddedItems == nil {
 		return nil
 	}
@@ -182,10 +192,23 @@ func buildSetClauses(values map[string]interface{}) []string {
 	return setClauses
 }
 
-func buildWhereClauses(conditions map[string]interface{}) []string {
-	var whereClauses []string
+func (r *PostgresRepository) buildWhereClauses(primaryKeys []string, conditions map[string]interface{}) []string {
+	conditionKeys := map[string]interface{}{}
 
-	for key, value := range conditions {
+	if len(primaryKeys) > 0 {
+		for _, key := range primaryKeys {
+			if conditions[key] != nil {
+				conditionKeys[key] = conditions[key]
+			}
+		}
+	}
+
+	if len(conditionKeys) == 0 {
+		conditionKeys = conditions
+	}
+
+	var whereClauses []string
+	for key, value := range conditionKeys {
 		if value == nil {
 			whereClauses = append(whereClauses, fmt.Sprintf(`"%s" IS NULL`, key))
 		} else {

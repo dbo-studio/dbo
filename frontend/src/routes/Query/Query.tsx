@@ -36,11 +36,15 @@ export default function Query(): JSX.Element {
   }, [selectedTab?.id]);
 
   const handleChangeValue = (): void => {
-    setValue(getQuery() ?? '');
+    if (!selectedTab) return;
+
+    setValue(getQuery(selectedTab));
   };
 
   const handleUpdateState = (query: string): void => {
-    updateQuery(query);
+    if (!selectedTab) return;
+
+    updateQuery(selectedTab, query);
   };
 
   if (!selectedTab) {

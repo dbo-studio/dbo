@@ -8,11 +8,12 @@ import { useShortcut } from '@/hooks/useShortcut.hook.ts';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { Box } from '@mui/material';
+import type { JSX } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { changeMetaProviderSetting } from './helpers/dbMetaProvider.ts';
 import { editorConfig } from './helpers/editorConfig.ts'; // import './helpers/languageSetup.ts';
 
-export default function SqlEditor({ autocomplete, value, onChange }: SqlEditorProps) {
+export default function SqlEditor({ autocomplete, value, onChange }: SqlEditorProps): JSX.Element {
   const hostRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
   const [mount, setMount] = useState(false);
@@ -21,7 +22,7 @@ export default function SqlEditor({ autocomplete, value, onChange }: SqlEditorPr
 
   const { runRawQuery } = useDataStore();
 
-  useShortcut(shortcuts.runQuery, () => runRawQuery());
+  useShortcut(shortcuts.runQuery, () => runRawQuery(selectedTab));
 
   useEffect(() => {
     if (hostRef.current && !editorRef.current) {
@@ -37,7 +38,7 @@ export default function SqlEditor({ autocomplete, value, onChange }: SqlEditorPr
     editorRef.current?.addAction({
       id: shortcuts.runQuery.command,
       keybindings: shortcuts.runQuery.monaco,
-      run: () => runRawQuery(),
+      run: (): Promise<void> => runRawQuery(selectedTab),
       label: shortcuts.runQuery.label
     });
 

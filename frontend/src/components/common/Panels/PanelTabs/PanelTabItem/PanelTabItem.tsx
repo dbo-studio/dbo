@@ -13,9 +13,10 @@ import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { TabType } from '@/types';
 import { Box, Tooltip, Typography } from '@mui/material';
+import type { JSX } from 'react';
 import { useEffect, useRef } from 'react';
 
-export default function PanelTabItem({ tab }: { tab: TabType }) {
+export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
   const tabRefs = useRef<Record<string, HTMLElement>>({});
   const navigate = useNavigate();
   const [removeTab] = useRemoveTab();
@@ -32,23 +33,26 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
   const menu: MenuType[] = [
     {
       name: locales.close,
-      action: () => removeTab(tab.id),
+      action: (): void => {
+        if (!tab) return;
+        removeTab(tab, tab.id);
+      },
       closeAfterAction: true
     },
     {
       name: locales.close_other_tabs,
-      action: () => {
+      action: (): void => {
         for (const t of getTabs()) {
-          if (t.id !== selectedTab?.id) removeTab(t.id);
+          if (t.id !== selectedTab?.id) removeTab(t, t.id);
         }
       },
       closeAfterAction: true
     },
     {
       name: locales.close_all,
-      action: () => {
+      action: (): void => {
         for (const t of getTabs()) {
-          removeTab(t.id);
+          removeTab(t, t.id);
         }
         navigate({ route: '/' });
       },
@@ -56,7 +60,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
     }
   ];
 
-  const handleSwitchTab = (tabId: string) => {
+  const handleSwitchTab = (tabId: string): void => {
     const findTab = getTabs().find((t: TabType) => t.id === tabId);
     if (!findTab) return;
 
@@ -66,8 +70,10 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
     });
   };
 
-  const handleRemoveTab = (tabId: string) => {
-    const newTab = removeTab(tabId);
+  const handleRemoveTab = (tabId: string): void => {
+    if (!selectedTab) return;
+
+    const newTab = removeTab(selectedTab, tabId);
     if (newTab === undefined) {
       navigate({ route: '/' });
       return;
@@ -81,7 +87,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
     }
   };
 
-  const addNewEmptyTab = () => {
+  const addNewEmptyTab = (): void => {
     const tab = addTab('Editor', undefined, TabMode.Query);
     navigate({
       route: 'query',
@@ -89,14 +95,14 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
     });
   };
 
-  const handleReload = async () => {
+  const handleReload = async (): Promise<void> => {
     if (selectedTab?.mode === TabMode.Query) {
-      await runRawQuery();
+      await runRawQuery(selectedTab);
       return;
     }
 
     if (selectedTab?.mode === TabMode.Data) {
-      await runQuery();
+      await runQuery(selectedTab);
       removeEditedRowsByTabId(selectedTab?.id ?? '');
       deleteRemovedRowsByTabId(selectedTab?.id ?? '');
       removeUnsavedRowsByTabId(selectedTab?.id ?? '');
@@ -118,11 +124,11 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
   return (
     <Box
       onContextMenu={handleContextMenu}
-      ref={(el: HTMLElement) => {
+      ref={(el: HTMLElement): void => {
         tabRefs.current[tab.id] = el;
       }}
     >
-      <PanelTabItemStyled selected={selectedTab?.id === tab.id} onClick={() => handleSwitchTab(tab.id)}>
+      <PanelTabItemStyled selected={selectedTab?.id === tab.id} onClick={(): void => handleSwitchTab(tab.id)}>
         <Box display={'flex'} overflow={'hidden'} flexGrow={1} justifyContent={'center'} alignItems={'center'}>
           <Tooltip title={tab.nodeId} placement={'bottom'} key={tab.id}>
             <Typography
@@ -140,7 +146,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
         <CustomIcon
           type='close'
           size='s'
-          onClick={(e) => {
+          onClick={(e: React.MouseEvent<HTMLButtonElement>): void => {
             e.stopPropagation();
             handleRemoveTab(tab.id);
           }}

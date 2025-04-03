@@ -1,6 +1,5 @@
-import type { ColumnType } from '@/types';
+import type { ColumnType, TabType } from '@/types';
 import type { StateCreator } from 'zustand';
-import { useTabStore } from '../../tabStore/tab.store';
 import type { DataColumnSlice, DataStore } from '../types';
 
 export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, [], [], DataColumnSlice> = (
@@ -8,14 +7,13 @@ export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, []
   get
 ) => ({
   columns: {},
-  getColumns: (isActive?: boolean) => {
-    const selectedTab = useTabStore.getState().getSelectedTab();
+  getColumns: (tab: TabType | undefined, isActive?: boolean): ColumnType[] => {
     const columns = get().columns;
-    if (!selectedTab || !columns[selectedTab.id]) {
+    if (!tab || !columns[tab.id]) {
       return [];
     }
 
-    let newColumns = columns[selectedTab.id];
+    let newColumns = columns[tab.id];
 
     if (isActive !== undefined) {
       newColumns = newColumns.filter((c) => c.isActive);
@@ -23,29 +21,13 @@ export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, []
 
     return newColumns;
   },
-  updateColumns: async (items: ColumnType[]) => {
-    const selectedTab = useTabStore.getState().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
+  updateColumns: async (tab: TabType, items: ColumnType[]): Promise<void> => {
     const columns = get().columns;
-    columns[selectedTab.id] = items;
+    columns[tab.id] = items;
 
     set({ columns });
   },
-  updateColumn: async (column: ColumnType) => {
-    const columns = get()
-      .getColumns()
-      .map((c) => {
-        if (c.name === column.name) {
-          return column;
-        }
-        return c;
-      });
-
-    await get().updateColumns(columns);
-  },
-  removeColumnsByTabId: (tabId: string) => {
+  removeColumnsByTabId: (tabId: string): void => {
     const columns = get().columns;
     if (columns[tabId]) {
       delete columns[tabId];

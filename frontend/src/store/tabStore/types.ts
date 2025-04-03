@@ -6,22 +6,21 @@ export type TabStore = {
   selectedTab: Record<string, TabType | undefined>;
   reset: () => void;
   getTabs: () => TabType[];
-  getSelectedTab: () => TabType | undefined;
   updateTabs: (tabs: TabType[]) => void;
   updateSelectedTab: (selectedTab: TabType | undefined) => void;
 };
 
 export type TabFilterSlice = {
-  upsertFilters: (filter: FilterType) => Promise<void>;
-  removeFilter: (filter: FilterType) => void;
-  setShowFilters: (show: boolean) => void;
+  upsertFilters: (tab: TabType, filter: FilterType) => Promise<void>;
+  removeFilter: (tab: TabType, filter: FilterType) => void;
+  setShowFilters: (tab: TabType) => void;
 };
 
 export type TabSortSlice = {
-  upsertSorts: (sort: SortType) => Promise<void>;
-  removeSort: (sort: SortType) => void;
-  setShowSorts: (show: boolean) => void;
-  updateSorts: (sorts: SortType[]) => void;
+  upsertSorts: (tab: TabType, sort: SortType) => Promise<void>;
+  removeSort: (tab: TabType, sort: SortType) => void;
+  setShowSorts: (tab: TabType) => void;
+  updateSorts: (tab: TabType, sorts: SortType[]) => void;
 };
 
 export type TabSettingSlice = {
@@ -29,18 +28,18 @@ export type TabSettingSlice = {
   addObjectTab: (nodeId: string, action: string, mode: TabMode) => TabType;
   addEditorTab: () => TabType;
   //return undefined will redirect to route /
-  removeTab: (tabId: string) => TabType | null | undefined;
+  removeTab: (selectedTab: TabType, tabId: string) => TabType | null | undefined;
   switchTab: (tabId: string | null) => void;
   handleAddNewTab: (tabs: TabType[], newTab: TabType) => TabType;
 };
 
 export type TabQuerySlice = {
-  getQuery: () => string;
-  updateQuery: (query: string) => void;
-  setShowQueryPreview: (show: boolean) => void;
+  getQuery: (tab: TabType) => string;
+  updateQuery: (tab: TabType, query: string) => void;
+  setShowQueryPreview: (tab: TabType) => void;
 };
 
 export type TabDataSlice = {
-  setShowColumns: (show: boolean) => void;
-  updateColumns: (columns: string[]) => void;
+  setShowColumns: (tab: TabType) => void;
+  updateColumns: (tab: TabType, columns: string[]) => void;
 };

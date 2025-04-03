@@ -79,8 +79,8 @@ func runQueryGenerator(dto *dto.RunQueryRequest, node PGNode) string {
 	}
 
 	offset := 0
-	if dto.Offset != nil && lo.FromPtr(dto.Offset) > 0 {
-		offset = lo.FromPtr(dto.Offset)
+	if dto.Page != nil && lo.FromPtr(dto.Page) > 0 {
+		offset = (*dto.Page - 1) * limit
 	}
 
 	_, _ = fmt.Fprintf(&sb, " LIMIT %d OFFSET %d;", limit, offset)

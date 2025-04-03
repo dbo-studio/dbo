@@ -2,12 +2,13 @@ import CodeEditor from '@/components/base/CodeEditor/CodeEditor.tsx';
 import ResizableModal from '@/components/base/Modal/ResizableModal/ResizableModal.tsx';
 import type { QuickViewDialogProps } from '@/components/shared/DBDataGrid/QuickViewDialog/types.ts';
 import { handelRowChangeLog } from '@/core/utils';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import type { SelectedRow } from '@/store/dataStore/types.ts';
 import type { RowType } from '@/types';
 import { Box } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 const getRowValue = (row: SelectedRow): string => {
@@ -17,36 +18,39 @@ const getRowValue = (row: SelectedRow): string => {
   return row.data[columns[columns.length - 1].toString()];
 };
 
-const getSelectedColumn = (columns: string[]) => {
+const getSelectedColumn = (columns: string[]): string => {
   return columns[columns.length - 1];
 };
 
-export default function QuickViewDialog({ editable }: QuickViewDialogProps) {
+export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX.Element {
+  const selectedTab = useSelectedTab();
   const [searchParams, setSearchParams] = useSearchParams();
   const { getSelectedRows, updateRow, getEditedRows, updateEditedRows } = useDataStore();
   const [value, setValue] = useState<string | undefined>(undefined);
   const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
   const [row, setRow] = useState<RowType>();
 
-  const handleClose = () => {
+  const handleClose = (): void => {
     if (!row || value === getRowValue(row) || !editable) {
       searchParams.delete('quick-look-editor');
       setSearchParams(searchParams);
       return;
     }
 
+    if (!selectedTab) return;
+
     const editedRows = handelRowChangeLog(
-      getEditedRows(),
+      getEditedRows(selectedTab),
       row.data,
       getSelectedColumn(row.selectedColumns),
       getRowValue(row),
       value
     );
 
-    updateEditedRows(editedRows);
+    updateEditedRows(selectedTab, editedRows);
     const newRow = { ...row.data };
     newRow[getSelectedColumn(row.selectedColumns)] = value;
-    updateRow(newRow);
+    updateRow(selectedTab, newRow);
 
     searchParams.delete('quick-look-editor');
     setSearchParams(searchParams);

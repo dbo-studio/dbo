@@ -1,17 +1,22 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
+import { useSelectedTab } from '@/hooks/useSelectedTab.tsx';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { IconButton } from '@mui/material';
+import type { JSX } from 'react';
 import type { RemoveFilterButtonProps } from '../../types.ts';
 
-export default function RemoveFilterButton({ filter }: RemoveFilterButtonProps) {
+export default function RemoveFilterButton({ filter }: RemoveFilterButtonProps): JSX.Element {
+  const selectedTab = useSelectedTab();
   const { removeFilter } = useTabStore();
   const { runQuery } = useDataStore();
 
-  const handleRemoveFilter = () => {
-    removeFilter(filter);
+  const handleRemoveFilter = (): void => {
+    if (!selectedTab) return;
+
+    removeFilter(selectedTab, filter);
     if (filter.isActive) {
-      runQuery().then();
+      runQuery(selectedTab).then();
     }
   };
 

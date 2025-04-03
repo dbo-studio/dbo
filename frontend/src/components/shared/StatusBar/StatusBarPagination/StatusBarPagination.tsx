@@ -4,20 +4,21 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { TabType } from '@/types';
 import { Box, IconButton, Typography, useTheme } from '@mui/material';
+import type { JSX } from 'react';
 import CustomIcon from '../../../base/CustomIcon/CustomIcon';
 import PaginationSetting from './PaginationSetting/PaginationSetting';
 
-export default function StatusBarPagination() {
+export default function StatusBarPagination(): JSX.Element {
   const theme = useTheme();
   const { updateSelectedTab } = useTabStore();
   const { runQuery, loading } = useDataStore();
   const selectedTab = useSelectedTab();
 
-  const handlePagination = (mode: 'prev' | 'next') => {
+  const handlePagination = (mode: 'prev' | 'next'): void => {
     if (!selectedTab || loading) {
       return;
     }
-    const pagination = selectedTab?.pagination ?? { page: 0, limit: 100, offset: 0 };
+    const pagination = selectedTab?.pagination ?? { page: 1, limit: 100 };
 
     if (mode === 'prev') {
       pagination.page = pagination.page - 1;
@@ -32,7 +33,7 @@ export default function StatusBarPagination() {
       pagination
     });
 
-    runQuery().then();
+    runQuery(selectedTab).then();
   };
 
   return (
@@ -43,14 +44,14 @@ export default function StatusBarPagination() {
           <IconButton
             style={{ marginLeft: theme.spacing(1) }}
             disabled={selectedTab?.pagination?.page === 1}
-            onClick={() => handlePagination('prev')}
+            onClick={(): void => handlePagination('prev')}
           >
             <CustomIcon type='arrowLeft' size='s' />
           </IconButton>
           <Typography color={'textText'} fontWeight={'bold'} textAlign={'center'} minWidth={54}>
             {selectedTab?.pagination?.page ?? 1}
           </Typography>
-          <IconButton onClick={() => handlePagination('next')}>
+          <IconButton onClick={(): void => handlePagination('next')}>
             <CustomIcon type='arrowRight' size='s' />
           </IconButton>
         </>

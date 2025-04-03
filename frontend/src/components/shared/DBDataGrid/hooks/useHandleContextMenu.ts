@@ -1,25 +1,28 @@
 import { handelRowChangeLog } from '@/core/utils';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 // @ts-ignore
-import type Core from 'handsontable/core';
 import { ContextMenu, type Settings } from 'handsontable/plugins/contextMenu';
 import { useSearchParams } from 'react-router-dom';
 
 export const useHandleContextMenu = (editable?: boolean): Settings => {
+  const selectedTab = useSelectedTab();
   const [searchParams, setSearchParams] = useSearchParams();
   const { getSelectedRows, updateEditedRows, getEditedRows, updateRow } = useDataStore();
 
-  const valueReplacer = (newValue: any) => {
+  const valueReplacer = (newValue: any): void => {
+    if (!selectedTab) return;
+
     const rows = getSelectedRows();
     for (const row of rows) {
       if (!row.data) continue;
       const newRow = { ...row.data };
 
       for (const column of row.selectedColumns) {
-        const editedRows = handelRowChangeLog(getEditedRows(), row.data, column, row.data[column], newValue);
-        updateEditedRows(editedRows);
+        const editedRows = handelRowChangeLog(getEditedRows(selectedTab), row.data, column, row.data[column], newValue);
+        updateEditedRows(selectedTab, editedRows);
         newRow[column] = newValue;
-        updateRow(newRow);
+        updateRow(selectedTab, newRow);
       }
     }
   };

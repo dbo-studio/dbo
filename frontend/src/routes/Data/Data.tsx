@@ -4,12 +4,13 @@ import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import { useSelectedTab } from '@/hooks/useSelectedTab';
 import Sorts from '@/routes/Data/Sorts/Sorts.tsx';
 import { Box } from '@mui/material';
+import type { JSX } from 'react';
 import ActionBar from './ActionBar/ActionBar';
 import Columns from './Columns/Columns';
 import Filters from './Filters/Filters';
 import QueryPreview from './QueryPreview/QueryPreview';
 
-export default function Data() {
+export default function Data(): JSX.Element {
   const selectedTab = useSelectedTab();
   const currentConnection = useCurrentConnection();
 

@@ -1,17 +1,12 @@
-import type { FilterType } from '@/types';
+import type { FilterType, TabType } from '@/types';
 import type { StateCreator } from 'zustand';
 import type { TabFilterSlice, TabStore } from '../types';
 
 export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [], TabFilterSlice> = (_, get) => ({
-  upsertFilters: async (filter: FilterType) => {
-    const selectedTab = get().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
-
-    const findFilter = selectedTab.filters.find((f: FilterType) => f.index === filter.index);
+  upsertFilters: async (tab: TabType, filter: FilterType): Promise<void> => {
+    const findFilter = tab.filters?.find((f: FilterType) => f.index === filter.index);
     if (!findFilter) {
-      selectedTab.filters.push(filter);
+      tab.filters?.push(filter);
     } else {
       findFilter.column = filter.column;
       findFilter.value = filter.value;
@@ -20,25 +15,16 @@ export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [
       findFilter.isActive = filter.isActive;
     }
 
-    get().updateSelectedTab(selectedTab);
+    get().updateSelectedTab(tab);
   },
-  removeFilter: (filter: FilterType) => {
-    const selectedTab = get().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
-
-    selectedTab.filters = selectedTab.filters.filter((f: FilterType) => f.index !== filter.index);
-    get().updateSelectedTab(selectedTab);
+  removeFilter: (tab: TabType, filter: FilterType): void => {
+    tab.filters = tab?.filters?.filter((f: FilterType) => f.index !== filter.index);
+    get().updateSelectedTab(tab);
   },
-  setShowFilters: (show: boolean) => {
-    const selectedTab = get().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
+  setShowFilters: (tab: TabType): void => {
+    tab.showFilters = !tab.showFilters;
+    tab.showSorts = false;
 
-    selectedTab.showFilters = show;
-    selectedTab.showSorts = false;
-    get().updateSelectedTab(selectedTab);
+    get().updateSelectedTab(tab);
   }
 });
