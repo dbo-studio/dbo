@@ -1,7 +1,7 @@
 import api from '@/api';
 import ResizableYBox from '@/components/base/ResizableBox/ResizableYBox.tsx';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor.tsx';
-import DataGrid from '@/components/shared/DBDataGrid/DataGrid.tsx';
+import DataGrid from '@/components/common/DBDataGrid/DataGrid';
 import { useWindowSize } from '@/hooks';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import { useSelectedTab } from '@/hooks/useSelectedTab';

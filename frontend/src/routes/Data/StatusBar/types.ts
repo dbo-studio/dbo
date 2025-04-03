@@ -1,5 +1,5 @@
+import type { IconTypes } from '@/components/base/CustomIcon/types';
 import type { TabMode } from '@/core/enums';
-import type { IconTypes } from '../../base/CustomIcon/types';
 
 export type StatusBarTabTypes = {
   id: number;

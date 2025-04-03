@@ -2,15 +2,15 @@ import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { HotColumn, type HotTableRef } from '@handsontable/react-wrapper';
 import 'handsontable/dist/handsontable.min.css';
 
-import { DataGridStyled } from '@/components/shared/DBDataGrid/DataGrid.styled.ts';
-import QuickViewDialog from '@/components/shared/DBDataGrid/QuickViewDialog/QuickViewDialog.tsx';
-import { useHandleContextMenu } from '@/components/shared/DBDataGrid/hooks/useHandleContextMenu.ts';
-import { useHandleDeselect } from '@/components/shared/DBDataGrid/hooks/useHandleDeselect.ts';
-import { useHandleRowChange } from '@/components/shared/DBDataGrid/hooks/useHandleRowChange.ts';
-import { useHandleRowSelect } from '@/components/shared/DBDataGrid/hooks/useHandleRowSelect.ts';
-import { useHandleRowStyle } from '@/components/shared/DBDataGrid/hooks/useHandleRowStyle.ts';
-import { useHandleScroll } from '@/components/shared/DBDataGrid/hooks/useHandleScroll.ts';
-import type { DataGridProps } from '@/components/shared/DBDataGrid/types.ts';
+import { DataGridStyled } from '@/components/common/DBDataGrid/DataGrid.styled';
+import QuickViewDialog from '@/components/common/DBDataGrid/QuickViewDialog/QuickViewDialog';
+import { useHandleContextMenu } from '@/components/common/DBDataGrid/hooks/useHandleContextMenu';
+import { useHandleDeselect } from '@/components/common/DBDataGrid/hooks/useHandleDeselect';
+import { useHandleRowChange } from '@/components/common/DBDataGrid/hooks/useHandleRowChange';
+import { useHandleRowSelect } from '@/components/common/DBDataGrid/hooks/useHandleRowSelect';
+import { useHandleRowStyle } from '@/components/common/DBDataGrid/hooks/useHandleRowStyle';
+import { useHandleScroll } from '@/components/common/DBDataGrid/hooks/useHandleScroll';
+import type { DataGridProps } from '@/components/common/DBDataGrid/types';
 import { Box, CircularProgress } from '@mui/material';
 import { type JSX, useMemo, useRef } from 'react';
 

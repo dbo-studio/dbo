@@ -1,3 +1,4 @@
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { TabMode } from '@/core/enums';
 import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useDataStore } from '@/store/dataStore/data.store';
@@ -5,7 +6,6 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import type { TabType } from '@/types';
 import { Box, IconButton, Typography, useTheme } from '@mui/material';
 import type { JSX } from 'react';
-import CustomIcon from '../../../base/CustomIcon/CustomIcon';
 import PaginationSetting from './PaginationSetting/PaginationSetting';
 
 export default function StatusBarPagination(): JSX.Element {

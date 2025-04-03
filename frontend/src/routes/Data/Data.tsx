@@ -1,5 +1,4 @@
-import DataGrid from '@/components/shared/DBDataGrid/DataGrid.tsx';
-import StatusBar from '@/components/shared/StatusBar/StatusBar';
+import DataGrid from '@/components/common/DBDataGrid/DataGrid';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import { useSelectedTab } from '@/hooks/useSelectedTab';
 import Sorts from '@/routes/Data/Sorts/Sorts.tsx';
@@ -9,6 +8,7 @@ import ActionBar from './ActionBar/ActionBar';
 import Columns from './Columns/Columns';
 import Filters from './Filters/Filters';
 import QueryPreview from './QueryPreview/QueryPreview';
+import StatusBar from './StatusBar/StatusBar';
 
 export default function Data(): JSX.Element {
   const selectedTab = useSelectedTab();
