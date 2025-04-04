@@ -162,30 +162,39 @@ export const useObjectActions = (
       return f;
     });
 
-    // Update the store
     updateFormData(selectedTab?.id ?? '', tabId, updatedFields);
   };
 
   const handleFieldChange = (formSchema: any, field: string, value: any): void => {
-    if (!tabId) {
-      return;
-    }
+    // Create a new state object with all form values
+    const formData = formSchema.reduce(
+      (acc: Record<string, any>, field: any) => {
+        acc[field.id] = field.value;
+        return acc;
+      },
+      {} as Record<string, any>
+    );
 
-    const newState = { [field]: value };
-    const updatedFields = formSchema.map((field: any) => {
-      if (field.type === 'array') {
+    // Update the field that changed
+    const newState = { ...formData, [field]: value };
+
+    // Update the form data in the store
+    if (tabId) {
+      const updatedFields = formSchema.map((field: any) => {
+        if (field.type === 'array') {
+          return {
+            ...field,
+            fields: newState[field.id]
+          };
+        }
         return {
           ...field,
-          fields: newState[field.id]
+          value: newState[field.id]
         };
-      }
-      return {
-        ...field,
-        value: newState[field.id]
-      };
-    });
+      });
 
-    updateFormData(selectedTab?.id ?? '', tabId, updatedFields);
+      updateFormData(selectedTab?.id ?? '', tabId, updatedFields);
+    }
   };
 
   return {
