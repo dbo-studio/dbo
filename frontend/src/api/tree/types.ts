@@ -57,6 +57,7 @@ export type TreeNodeType = {
   id: string;
   name: string;
   type: string;
+  icon?: string;
   action: TreeNodeActionType;
   contextMenu: TreeNodeActionType[];
   children: TreeNodeType[];

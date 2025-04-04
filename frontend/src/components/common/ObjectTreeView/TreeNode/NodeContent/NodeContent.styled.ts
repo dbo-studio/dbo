@@ -11,7 +11,6 @@ export const NodeLabel = styled(Box, {
   padding: theme.spacing(0.2, 0.4),
   cursor: 'pointer',
   borderRadius: variables.radius.small,
-  color: theme.palette.text.text,
   width: '100%',
   overflow: 'hidden',
   border: '1px solid transparent',
@@ -19,36 +18,28 @@ export const NodeLabel = styled(Box, {
   transition: 'background-color 0.1s ease',
   position: 'relative',
   zIndex: 1,
+  gap: theme.spacing(0.5),
   '&:hover': {
-    backgroundColor: theme.palette.action.selected
+    backgroundColor: theme.palette.action.hover
   },
   ...(isFocused && {
-    backgroundColor: theme.palette.action.selected,
-    border: '1px solid transparent'
-  }),
-  '&:focus-visible': {
-    outline: 'none',
-    border: '1px solid transparent',
-    backgroundColor: theme.palette.action.selected
-  }
+    backgroundColor: theme.palette.action.hover,
+    '& p': {
+      fontWeight: 500
+    }
+  })
 }));
 
 export const NodeName = styled(Typography, {
   shouldForwardProp: (prop: string): boolean => prop !== 'isLeaf'
-})<{ isLeaf: boolean }>(({ theme, isLeaf }) => ({
-  paddingLeft: isLeaf ? theme.spacing(1.5) : theme.spacing(0.25),
+})<{ isLeaf: boolean }>(({ theme }) => ({
   fontSize: '13px',
   lineHeight: '20px',
   fontWeight: 400,
   overflow: 'hidden',
-  textOverflow: 'ellipsis'
-}));
-
-export const NodeType = styled(Typography)(({ theme }) => ({
-  fontSize: '0.85em',
-  marginLeft: theme.spacing(0.5),
-  color: theme.palette.text.secondary,
-  opacity: 0.7
+  textOverflow: 'ellipsis',
+  color: theme.palette.text.text,
+  marginLeft: theme.spacing(0.5)
 }));
 
 export const LoadingIndicator = styled(Box)(({ theme }) => ({

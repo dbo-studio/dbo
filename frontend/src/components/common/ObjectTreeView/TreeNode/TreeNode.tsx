@@ -3,9 +3,7 @@ import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import { NodeContent } from '@/components/common/ObjectTreeView/TreeNode/NodeContent/NodeContent';
 import {
   ChildrenContainer,
-  HoverableTreeNodeContainerStyled,
-  IndentGuideStyled,
-  IndentGuidesContainerStyled
+  HoverableTreeNodeContainerStyled
 } from '@/components/common/ObjectTreeView/TreeNode/TreeNode.styled';
 import { useTreeNodeHandlers } from '@/components/common/ObjectTreeView/TreeNode/hooks/useTreeNodeHandlers';
 import { useTreeNodeMenu } from '@/components/common/ObjectTreeView/TreeNode/hooks/useTreeNodeMenu';
@@ -87,22 +85,8 @@ export default function TreeNode({
   const { actionDetection } = useActionDetection(handleExpandNode);
   const { menu } = useTreeNodeMenu(node, actionDetection);
 
-  const indentGuides =
-    level > 0 ? (
-      <IndentGuidesContainerStyled className='indent-guides'>
-        {Array.from({ length: level }).map((_, idx) => (
-          <IndentGuideStyled
-            key={`indent-${node.id}-${idx}`}
-            className='indent-guide'
-            sx={{ right: `calc(100% - ${12 + idx * 8}px)` }}
-          />
-        ))}
-      </IndentGuidesContainerStyled>
-    ) : null;
-
   return (
     <HoverableTreeNodeContainerStyled>
-      {indentGuides}
       <Box
         sx={{
           display: 'flex',
@@ -131,7 +115,6 @@ export default function TreeNode({
       {menu.length > 0 && (
         <ContextMenu menu={menu} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
       )}
-
       {isExpanded && node.children.length > 0 && (
         <ChildrenContainer>
           {node.children.map((child, index) => (

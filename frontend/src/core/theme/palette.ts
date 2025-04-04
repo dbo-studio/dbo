@@ -95,7 +95,7 @@ const colorPalette = {
   action: {
     light: {
       active: GREY[600],
-      hover: '#fafbfd',
+      hover: '#eaebec',
       selected: '#dbecfa',
       disabled: alpha(GREY[500], 0.8),
       disabledBackground: alpha(GREY[500], 0.24),
@@ -105,7 +105,7 @@ const colorPalette = {
     },
     dark: {
       active: GREY[600],
-      hover: '#25282A',
+      hover: '#44464d',
       selected: '#103148',
       disabled: '#515761',
       disabledBackground: '#212229',

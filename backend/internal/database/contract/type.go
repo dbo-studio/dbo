@@ -3,6 +3,7 @@ package databaseContract
 type TreeNode struct {
 	ID          string           `json:"id"`
 	Name        string           `json:"name"`
+	Icon        *string          `json:"icon"`
 	Type        TreeNodeType     `json:"type"`
 	Children    []TreeNode       `json:"children"`
 	Action      *TreeNodeAction  `json:"action"`

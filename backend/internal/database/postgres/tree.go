@@ -6,6 +6,7 @@ import (
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/samber/lo"
 )
 
 func (r *PostgresRepository) Tree(parentID string) (*contract.TreeNode, error) {
@@ -133,6 +134,7 @@ func buildContainer(r *PostgresRepository, dbName, schemaName string, container 
 			containerNode.Children = append(containerNode.Children, contract.TreeNode{
 				ID:   fmt.Sprintf("%s.%s.%s", dbName, schemaName, table.Name),
 				Name: table.Name,
+				Icon: lo.ToPtr("sheet"),
 				Type: contract.TableNodeType,
 				Action: &contract.TreeNodeAction{
 					Type: contract.TreeNodeActionTypeTab,

@@ -11,14 +11,7 @@ export const TreeNodeContainer = styled(Box)({
   flexShrink: 0,
   minWidth: 0,
   maxWidth: '100%',
-  position: 'relative',
-  '&::-webkit-scrollbar': {
-    height: '8px'
-  },
-  '&::-webkit-scrollbar-thumb': {
-    backgroundColor: '#888',
-    borderRadius: '4px'
-  }
+  position: 'relative'
 });
 
 export const NodeLabel = styled(Box, {
@@ -29,22 +22,17 @@ export const NodeLabel = styled(Box, {
   padding: theme.spacing(0.4),
   cursor: 'pointer',
   borderRadius: 0,
-  color: theme.palette.text.text,
+  color: theme.palette.text.primary,
   width: '100%',
   overflow: 'hidden',
   border: '1px solid transparent',
   height: '22px',
   '&:hover': {
-    backgroundColor: theme.palette.action.selected
+    backgroundColor: theme.palette.action.hover
   },
   ...(isFocused && {
-    backgroundColor: theme.palette.action.selected,
-    border: '1px solid transparent'
-  }),
-  '&:focus-visible': {
-    border: `1px solid ${theme.palette.divider}`,
     backgroundColor: theme.palette.action.selected
-  }
+  })
 }));
 
 export const NodeName = styled(Typography, {
@@ -64,7 +52,7 @@ export const NodeType = styled(Typography)(({ theme }) => ({
 }));
 
 export const ChildrenContainer = styled(Box)({
-  paddingLeft: '16px',
+  paddingLeft: '20px',
   width: '100%',
   position: 'relative'
 });
@@ -87,28 +75,7 @@ export const ToggleContainerStyled = styled(Box, {
   cursor: hasChildren ? 'pointer' : 'default'
 }));
 
-export const IndentGuideStyled = styled(Box)(({ theme }) => ({
-  position: 'absolute',
-  left: 0,
-  top: 0,
-  height: '100%',
-  borderLeft: `1px solid ${theme.palette.divider}`,
-  opacity: 0,
-  transition: 'opacity 0.2s ease-in-out',
-  zIndex: 0
-}));
-
 export const HoverableTreeNodeContainerStyled = styled(TreeNodeContainer)({
   position: 'relative',
-  width: '100%',
-  '&:hover .indent-guide': {
-    opacity: 1
-  }
-});
-
-export const IndentGuidesContainerStyled = styled(Box)({
-  position: 'absolute',
-  width: '100%',
-  height: '100%',
-  pointerEvents: 'none'
+  width: '100%'
 });
