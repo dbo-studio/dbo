@@ -10,7 +10,7 @@ import { useTreeNodeMenu } from '@/components/common/ObjectTreeView/TreeNode/hoo
 import type { TreeNodeProps } from '@/components/common/ObjectTreeView/TreeNode/types';
 import { useContextMenu } from '@/hooks';
 import { useTreeStore } from '@/store/treeStore/tree.store';
-import { type JSX, useEffect, useRef, useState } from 'react';
+import { Fragment, type JSX, useEffect, useRef, useState } from 'react';
 import { useActionDetection } from './hooks/useActionDetection';
 
 export default function TreeNode({
@@ -19,7 +19,8 @@ export default function TreeNode({
   parentRefs = { current: new Map() },
   nodeIndex = 0,
   level = 0,
-  onFocusChange
+  onFocusChange,
+  searchTerm = ''
 }: TreeNodeProps): JSX.Element {
   const [node, setNode] = useState<TreeNodeType>(initialNode);
   const [isLoading, setIsLoading] = useState(false);
@@ -84,6 +85,23 @@ export default function TreeNode({
   const { actionDetection } = useActionDetection(handleExpandNode);
   const { menu } = useTreeNodeMenu(node, actionDetection);
 
+  // Check if node or any of its children match the search term
+  const matchesSearch = (node: TreeNodeType): boolean => {
+    if (!searchTerm) return true;
+
+    const searchLower = searchTerm.toLowerCase();
+    const nodeNameLower = node.name.toLowerCase();
+
+    if (nodeNameLower.includes(searchLower)) return true;
+
+    return node.children.some((child) => matchesSearch(child));
+  };
+
+  // If search term is present and node doesn't match, don't render
+  if (searchTerm && !matchesSearch(node)) {
+    return <Fragment />;
+  }
+
   return (
     <HoverableTreeNodeContainerStyled>
       <NodeContent
@@ -116,6 +134,7 @@ export default function TreeNode({
               nodeIndex={index}
               level={level + 1}
               onFocusChange={onFocusChange}
+              searchTerm={searchTerm}
             />
           ))}
         </ChildrenContainer>

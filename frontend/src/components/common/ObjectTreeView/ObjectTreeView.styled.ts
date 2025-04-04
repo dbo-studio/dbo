@@ -30,3 +30,9 @@ export const TreeViewContentStyled = styled(Box)(({ theme }) => ({
     backgroundColor: 'transparent'
   }
 }));
+
+export const SearchBoxStyled = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(1),
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  backgroundColor: theme.palette.background.paper
+}));

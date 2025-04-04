@@ -9,6 +9,7 @@ export type TreeNodeProps = {
   nodeIndex?: number;
   level?: number;
   onFocusChange?: (id: string) => void;
+  searchTerm?: string;
 };
 
 export type NodeContentProps = {
