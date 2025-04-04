@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
@@ -15,34 +16,51 @@ export const TreeNodeContainer = styled(Box)({
 });
 
 export const NodeLabel = styled(Box, {
-  shouldForwardProp: (prop): boolean => prop !== 'isFocused'
-})<{ isFocused?: boolean }>(({ theme, isFocused }) => ({
+  shouldForwardProp: (prop): boolean => prop !== 'isFocused' && prop !== 'level'
+})<{ isFocused?: boolean; level: number }>(({ theme, isFocused, level }) => ({
+  padding: theme.spacing(0.4),
+  paddingLeft: `${level * 20}px`,
   display: 'flex',
   alignItems: 'center',
-  padding: theme.spacing(0.4),
   cursor: 'pointer',
-  borderRadius: 0,
-  color: theme.palette.text.primary,
+  borderRadius: variables.radius.small,
   width: '100%',
   overflow: 'hidden',
   border: '1px solid transparent',
   height: '22px',
+  transition: 'background-color 0.1s ease',
+  position: 'relative',
+  zIndex: 1,
+  gap: theme.spacing(0.5),
   '&:hover': {
     backgroundColor: theme.palette.action.hover
   },
   ...(isFocused && {
-    backgroundColor: theme.palette.action.selected
+    backgroundColor: theme.palette.action.hover,
+    '& p': {
+      fontWeight: 500
+    }
   })
 }));
 
+export const NodeContent = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '4px',
+  height: '100%',
+  flex: 1
+});
+
 export const NodeName = styled(Typography, {
   shouldForwardProp: (prop): boolean => prop !== 'isLeaf'
-})<{ isLeaf: boolean }>(({ theme, isLeaf }) => ({
-  paddingLeft: isLeaf ? theme.spacing(2) : 0,
+})<{ isLeaf: boolean }>(({ theme }) => ({
   fontSize: '13px',
   lineHeight: '20px',
+  fontWeight: 400,
   overflow: 'hidden',
-  textOverflow: 'ellipsis'
+  textOverflow: 'ellipsis',
+  color: theme.palette.text.text,
+  marginLeft: theme.spacing(0.5)
 }));
 
 export const NodeType = styled(Typography)(({ theme }) => ({
@@ -52,7 +70,6 @@ export const NodeType = styled(Typography)(({ theme }) => ({
 }));
 
 export const ChildrenContainer = styled(Box)({
-  paddingLeft: '20px',
   width: '100%',
   position: 'relative'
 });

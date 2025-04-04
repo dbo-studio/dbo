@@ -1,6 +1,5 @@
 import { variables } from '@/core/theme/variables';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
 
 export const NodeLabel = styled(Box, {
@@ -23,27 +22,6 @@ export const NodeLabel = styled(Box, {
     backgroundColor: theme.palette.action.hover
   },
   ...(isFocused && {
-    backgroundColor: theme.palette.action.hover,
-    '& p': {
-      fontWeight: 500
-    }
+    backgroundColor: theme.palette.action.hover
   })
-}));
-
-export const NodeName = styled(Typography, {
-  shouldForwardProp: (prop: string): boolean => prop !== 'isLeaf'
-})<{ isLeaf: boolean }>(({ theme }) => ({
-  fontSize: '13px',
-  lineHeight: '20px',
-  fontWeight: 400,
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  color: theme.palette.text.text,
-  marginLeft: theme.spacing(0.5)
-}));
-
-export const LoadingIndicator = styled(Box)(({ theme }) => ({
-  marginLeft: theme.spacing(1),
-  display: 'flex',
-  alignItems: 'center'
 }));

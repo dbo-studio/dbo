@@ -10,7 +10,6 @@ import { useTreeNodeMenu } from '@/components/common/ObjectTreeView/TreeNode/hoo
 import type { TreeNodeProps } from '@/components/common/ObjectTreeView/TreeNode/types';
 import { useContextMenu } from '@/hooks';
 import { useTreeStore } from '@/store/treeStore/tree.store';
-import { Box } from '@mui/material';
 import { type JSX, useEffect, useRef, useState } from 'react';
 import { useActionDetection } from './hooks/useActionDetection';
 
@@ -87,31 +86,22 @@ export default function TreeNode({
 
   return (
     <HoverableTreeNodeContainerStyled>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          width: '100%',
-          pl: level * 2
-        }}
-      >
-        <NodeContent
-          node={node}
-          nodeRef={nodeRef}
-          isFocused={isFocused}
-          isExpanded={isExpanded}
-          isLoading={isLoading}
-          hasChildren={hasChildren}
-          level={level}
-          nodeIndex={nodeIndex}
-          focusNode={focusNode}
-          actionDetection={actionDetection}
-          expandNode={handleExpandNode}
-          handleContextMenu={handleContextMenu}
-          handleBlur={handleBlur}
-          handleKeyDown={handleKeyDown}
-        />
-      </Box>
+      <NodeContent
+        node={node}
+        nodeRef={nodeRef}
+        isFocused={isFocused}
+        isExpanded={isExpanded}
+        isLoading={isLoading}
+        hasChildren={hasChildren}
+        level={level}
+        nodeIndex={nodeIndex}
+        focusNode={focusNode}
+        actionDetection={actionDetection}
+        expandNode={handleExpandNode}
+        handleContextMenu={handleContextMenu}
+        handleBlur={handleBlur}
+        handleKeyDown={handleKeyDown}
+      />
       {menu.length > 0 && (
         <ContextMenu menu={menu} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
       )}
