@@ -2,8 +2,8 @@ import type { TreeNodeType } from '@/api/tree/types';
 
 export type TreeStore = {
   tree: TreeNodeType | null;
-  expandedNodes: Set<string>;
-  loadedParentIds: Set<string>;
+  expandedNodes: string[];
+  loadedParentIds: string[];
   isLoading: boolean;
   treeError: Error | undefined;
 
@@ -14,6 +14,6 @@ export type TreeStore = {
   isNodeExpanded: (nodeId: string) => boolean;
   setNodeChildren: (nodeId: string, children: TreeNodeType[]) => void;
   addLoadedParentId: (parentId: string) => void;
-  getLoadedParentIds: () => Set<string>;
+  getLoadedParentIds: () => string[];
   reloadTree: () => Promise<void>;
 };
