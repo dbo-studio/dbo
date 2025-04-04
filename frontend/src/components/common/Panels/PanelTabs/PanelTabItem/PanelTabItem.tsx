@@ -21,14 +21,16 @@ export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
   const navigate = useNavigate();
   const [removeTab] = useRemoveTab();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
-  const { addTab, getTabs } = useTabStore();
+  const { addEditorTab, getTabs } = useTabStore();
   const selectedTab = useSelectedTab();
   const { runQuery, runRawQuery, removeEditedRowsByTabId, deleteRemovedRowsByTabId, removeUnsavedRowsByTabId } =
     useDataStore();
 
-  useShortcut(shortcuts.newTab, () => addNewEmptyTab());
-  useShortcut(shortcuts.closeTab, () => selectedTab && handleRemoveTab(selectedTab?.id ?? ''));
-  useShortcut(shortcuts.reloadTab, () => selectedTab && handleReload());
+  if (selectedTab) {
+    useShortcut(shortcuts.newTab, () => addNewEmptyTab());
+    useShortcut(shortcuts.closeTab, () => handleRemoveTab(selectedTab?.id ?? ''));
+    useShortcut(shortcuts.reloadTab, () => handleReload());
+  }
 
   const menu: MenuType[] = [
     {
@@ -88,7 +90,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
   };
 
   const addNewEmptyTab = (): void => {
-    const tab = addTab('Editor', undefined, TabMode.Query);
+    const tab = addEditorTab();
     navigate({
       route: 'query',
       tabId: tab.id

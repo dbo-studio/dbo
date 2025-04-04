@@ -1,7 +1,6 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { shortcuts, tools } from '@/core/utils';
-import { useShortcut } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
@@ -30,8 +29,6 @@ export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps
       console.error('🚀 ~ createSavedQueryMutation ~ error:', error);
     }
   });
-
-  useShortcut(shortcuts.runQuery, () => runRawQuery(selectedTab));
 
   const handleFormatSql = (): void => {
     if (selectedTab && checkQueryLength()) {

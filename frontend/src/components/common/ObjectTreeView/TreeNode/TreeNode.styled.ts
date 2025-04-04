@@ -38,7 +38,8 @@ export const NodeLabel = styled(Box, {
   ...(isFocused && {
     backgroundColor: theme.palette.action.hover,
     '& p': {
-      fontWeight: 500
+      fontWeight: 500,
+      color: theme.palette.text.primary
     }
   })
 }));

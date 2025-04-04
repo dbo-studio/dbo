@@ -11,9 +11,9 @@ import { Box } from '@mui/material';
 import type { JSX } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { changeMetaProviderSetting } from './helpers/dbMetaProvider.ts';
-import { editorConfig } from './helpers/editorConfig.ts'; // import './helpers/languageSetup.ts';
+import { editorConfig } from './helpers/editorConfig.ts';
 
-export default function SqlEditor({ autocomplete, value, onChange }: SqlEditorProps): JSX.Element {
+export default function SqlEditor({ autocomplete, value, onChange, onMount }: SqlEditorProps): JSX.Element {
   const hostRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
   const [mount, setMount] = useState(false);
@@ -22,7 +22,9 @@ export default function SqlEditor({ autocomplete, value, onChange }: SqlEditorPr
 
   const { runRawQuery } = useDataStore();
 
-  useShortcut(shortcuts.runQuery, () => runRawQuery(selectedTab));
+  if (selectedTab) {
+    useShortcut(shortcuts.runQuery, () => runRawQuery(selectedTab));
+  }
 
   useEffect(() => {
     if (hostRef.current && !editorRef.current) {
@@ -68,6 +70,12 @@ export default function SqlEditor({ autocomplete, value, onChange }: SqlEditorPr
   useEffect(() => {
     changeMetaProviderSetting(autocomplete);
   }, [autocomplete]);
+
+  useEffect(() => {
+    if (editorRef.current && mount) {
+      onMount();
+    }
+  }, [editorRef.current, mount, onMount]);
 
   return (
     <Box

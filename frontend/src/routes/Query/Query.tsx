@@ -18,6 +18,7 @@ export default function Query(): JSX.Element {
   const windowSize = useWindowSize();
   const { getQuery, updateQuery } = useTabStore();
   const [value, setValue] = useState('');
+  const [showGrid, setShowGrid] = useState(false);
 
   const { data: autocomplete } = useQuery({
     queryKey: ['autocomplete', currentConnection?.id, selectedTab?.options?.database, selectedTab?.options?.schema],
@@ -65,9 +66,17 @@ export default function Query(): JSX.Element {
           flex={1}
           borderBottom={(theme): string => `1px solid ${theme.palette.divider}`}
         >
-          {autocomplete && <SqlEditor onChange={handleUpdateState} autocomplete={autocomplete} value={value} />}
+          {autocomplete && (
+            <SqlEditor
+              onMount={(): void => setShowGrid(true)}
+              onChange={handleUpdateState}
+              autocomplete={autocomplete}
+              value={value}
+            />
+          )}
         </Box>
-        {autocomplete && (
+
+        {showGrid && (
           <ResizableYBox height={windowSize.heightNumber ? windowSize.heightNumber / 2 : 0} direction={'btt'}>
             <DataGrid editable={false} />
           </ResizableYBox>
