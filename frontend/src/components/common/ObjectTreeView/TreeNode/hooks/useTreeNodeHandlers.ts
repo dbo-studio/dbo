@@ -6,10 +6,10 @@ interface UseTreeNodeHandlersProps {
   node: TreeNodeType;
   children: TreeNodeType[];
   isExpanded: boolean;
-  setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>;
-  setChildren: React.Dispatch<React.SetStateAction<TreeNodeType[]>>;
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  setIsFocused: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsExpanded: (expanded: boolean) => void;
+  setChildren: (newChildren: TreeNodeType[]) => void;
+  setIsLoading: (loading: boolean) => void;
+  setIsFocused: (focused: boolean) => void;
   fetchChildren: (parentId: string) => Promise<TreeNodeType[]>;
   parentRefs: React.RefObject<Map<string, HTMLDivElement>>;
   nodeRef: React.RefObject<HTMLDivElement>;
@@ -32,7 +32,13 @@ export function useTreeNodeHandlers({
   nodeIndex,
   level,
   onFocusChange
-}: UseTreeNodeHandlersProps) {
+}: UseTreeNodeHandlersProps): {
+  expandNode: (event: React.MouseEvent | React.KeyboardEvent, moveFocusToChild?: boolean) => Promise<void>;
+  focusNode: (event: React.MouseEvent) => void;
+  handleBlur: () => void;
+  handleKeyDown: (event: React.KeyboardEvent) => void;
+  hasChildren: boolean;
+} {
   const hasChildren = children?.length > 0 || node.type !== 'table';
 
   const expandNode = useCallback(
@@ -103,7 +109,7 @@ export function useTreeNodeHandlers({
       event.stopPropagation();
       const nodeRefs = parentRefs.current;
 
-      const focusNodeById = (id: string) => {
+      const focusNodeById = (id: string): void => {
         const target = nodeRefs.get(id);
         if (target) {
           target.focus();

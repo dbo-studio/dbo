@@ -13,7 +13,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 
-export const useActionDetection = (expandNode: (event: React.MouseEvent, focus?: boolean) => Promise<void>) => {
+export const useActionDetection = (
+  expandNode: (event: React.MouseEvent, focus?: boolean) => Promise<void>
+): {
+  actionDetection: (event: React.MouseEvent, node: TreeNodeType) => Promise<void>;
+} => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const selectedTab = useSelectedTab();
@@ -26,14 +30,14 @@ export const useActionDetection = (expandNode: (event: React.MouseEvent, focus?:
 
   const { mutateAsync: executeActionMutation, isPending: pendingExecuteAction } = useMutation({
     mutationFn: api.tree.executeAction,
-    onSuccess: async (_, variables) => {
+    onSuccess: async (_, variables): Promise<void> => {
       queryClient.invalidateQueries({
         queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, variables.nodeId]
       });
 
       await reloadTree();
     },
-    onError: (error) => {
+    onError: (error): void => {
       console.error('🚀 ~ actionDetection:', error);
     }
   });

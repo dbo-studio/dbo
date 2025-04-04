@@ -1,5 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
 import CircularProgress from '@mui/material/CircularProgress';
+import type { JSX } from 'react';
 import type { NodeContentProps } from '../types';
 import { LoadingIndicator, NodeLabel, NodeName, NodeType } from './NodeContent.styled';
 
@@ -18,12 +19,12 @@ export function NodeContent({
   handleContextMenu,
   handleBlur,
   handleKeyDown
-}: NodeContentProps) {
+}: NodeContentProps): JSX.Element {
   return (
     <NodeLabel
       ref={nodeRef}
       onClick={focusNode}
-      onDoubleClick={(e) => actionDetection(e, node)}
+      onDoubleClick={(e): void => actionDetection(e, node)}
       onContextMenu={handleContextMenu}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
@@ -36,7 +37,7 @@ export function NodeContent({
       data-index={nodeIndex}
     >
       {hasChildren && (
-        <CustomIcon onClick={(e) => expandNode(e, false)} type={isExpanded ? 'arrowDown' : 'arrowRight'} />
+        <CustomIcon onClick={(e): void => expandNode(e, false)} type={isExpanded ? 'arrowDown' : 'arrowRight'} />
       )}
       <NodeName isLeaf={!hasChildren} variant='body2' fontWeight={'medium'}>
         {node.name}

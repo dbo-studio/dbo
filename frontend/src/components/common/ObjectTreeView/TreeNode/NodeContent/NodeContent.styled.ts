@@ -4,7 +4,7 @@ import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
 
 export const NodeLabel = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'isFocused'
+  shouldForwardProp: (prop: string): boolean => prop !== 'isFocused'
 })<{ isFocused?: boolean }>(({ theme, isFocused }) => ({
   display: 'flex',
   alignItems: 'center',
@@ -34,9 +34,9 @@ export const NodeLabel = styled(Box, {
 }));
 
 export const NodeName = styled(Typography, {
-  shouldForwardProp: (prop) => prop !== 'isLeaf'
+  shouldForwardProp: (prop: string): boolean => prop !== 'isLeaf'
 })<{ isLeaf: boolean }>(({ theme, isLeaf }) => ({
-  paddingLeft: isLeaf ? theme.spacing(1.5) : theme.spacing(0.5),
+  paddingLeft: isLeaf ? theme.spacing(1.5) : theme.spacing(0.25),
   fontSize: '13px',
   lineHeight: '20px',
   fontWeight: 400,

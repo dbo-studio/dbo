@@ -12,8 +12,8 @@ import { useTreeNodeMenu } from '@/components/common/ObjectTreeView/TreeNode/hoo
 import type { TreeNodeProps } from '@/components/common/ObjectTreeView/TreeNode/types';
 import { useContextMenu } from '@/hooks';
 import { useTreeStore } from '@/store/treeStore/tree.store';
-import { Box, LinearProgress } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
+import { Box } from '@mui/material';
+import { type JSX, useEffect, useRef, useState } from 'react';
 import { useActionDetection } from './hooks/useActionDetection';
 
 export default function TreeNode({
@@ -23,7 +23,7 @@ export default function TreeNode({
   nodeIndex = 0,
   level = 0,
   onFocusChange
-}: TreeNodeProps) {
+}: TreeNodeProps): JSX.Element {
   const [node, setNode] = useState<TreeNodeType>(initialNode);
   const [isLoading, setIsLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -41,7 +41,7 @@ export default function TreeNode({
     if (nodeRef.current) {
       parentRefs.current.set(node.id, nodeRef.current);
     }
-    return () => {
+    return (): void => {
       parentRefs.current.delete(node.id);
     };
   }, [node.id, parentRefs]);
@@ -56,14 +56,15 @@ export default function TreeNode({
     node,
     children: node.children,
     isExpanded,
-    setIsExpanded: (expanded) => {
+    setIsExpanded: (expanded: boolean): void => {
       if (expanded) {
         expandNode(node.id);
       } else {
         collapseNode(node.id);
       }
     },
-    setChildren: (newChildren) => {
+    setChildren: (newChildren: TreeNodeType[]): void => {
+      //@ts-ignore
       const children = typeof newChildren === 'function' ? newChildren(node.children) : newChildren;
       setNode((prev) => ({
         ...prev,
@@ -93,7 +94,7 @@ export default function TreeNode({
           <IndentGuideStyled
             key={`indent-${node.id}-${idx}`}
             className='indent-guide'
-            sx={{ right: `calc(100% - ${12 + idx * 16}px)` }}
+            sx={{ right: `calc(100% - ${12 + idx * 8}px)` }}
           />
         ))}
       </IndentGuidesContainerStyled>
