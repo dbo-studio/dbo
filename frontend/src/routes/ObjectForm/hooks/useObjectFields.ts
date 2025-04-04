@@ -1,17 +1,24 @@
 import api from '@/api';
+import type { FormFieldType } from '@/api/tree/types';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 
-export const useObjectFields = (currentTabId: string | undefined, isDetail = false) => {
+export const useObjectFields = (
+  currentTabId: string | undefined,
+  isDetail = false
+): {
+  fields: FormFieldType[];
+  resetForm: () => void;
+} => {
   const selectedTab = useSelectedTab();
   const currentConnection = useCurrentConnection();
   const { getFormData, resetFormData, updateFormData } = useDataStore();
   const { data: fields } = useQuery({
     queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, currentTabId],
-    queryFn: () =>
+    queryFn: (): Promise<FormFieldType[]> =>
       isDetail
         ? api.tree.getObject({
             nodeId: selectedTab?.nodeId ?? '',
@@ -32,7 +39,7 @@ export const useObjectFields = (currentTabId: string | undefined, isDetail = fal
       currentTabId &&
       selectedTab?.nodeId
     ),
-    select: (data) => {
+    select: (data): FormFieldType[] => {
       return data.map((field) => ({
         ...field,
         originalValue: field.value
@@ -40,11 +47,11 @@ export const useObjectFields = (currentTabId: string | undefined, isDetail = fal
     }
   });
 
-  const getTabId = () => {
+  const getTabId = (): string => {
     return currentTabId || '';
   };
 
-  const resetForm = () => {
+  const resetForm = (): void => {
     if (!currentTabId) return;
     resetFormData(selectedTab?.id ?? '', getTabId());
   };
@@ -79,7 +86,7 @@ export const useObjectFields = (currentTabId: string | undefined, isDetail = fal
   }, [fields, currentTabId, getFormData, getTabId]);
 
   return {
-    fields: currentFields,
+    fields: currentFields ?? [],
     resetForm
   };
 };

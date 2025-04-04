@@ -9,7 +9,14 @@ import { useTreeStore } from '@/store/treeStore/tree.store';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-export const useObjectActions = (tabId: string | undefined) => {
+export const useObjectActions = (
+  tabId: string | undefined
+): {
+  handleSave: () => Promise<void>;
+  handleCancel: () => Promise<void>;
+  handleAddArrayItem: (field: FormFieldType) => void;
+  handleFieldChange: (formSchema: any, field: string, value: any) => void;
+} => {
   const queryClient = useQueryClient();
   const currentConnection = useCurrentConnection();
   const { updateFormData, getFormData, resetFormData, formDataByTab } = useDataStore();
@@ -19,18 +26,18 @@ export const useObjectActions = (tabId: string | undefined) => {
 
   const { mutateAsync: executeAction, isPending: pendingExecuteAction } = useMutation({
     mutationFn: api.tree.executeAction,
-    onSuccess: () => {
+    onSuccess: (): void => {
       queryClient.invalidateQueries({
         queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, tabId]
       });
       reloadTree();
     },
-    onError: (error) => {
+    onError: (error): void => {
       console.error('🚀 ~ handleSave ~ error:', error);
     }
   });
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<void> => {
     if (!currentConnection || !selectedTab || pendingExecuteAction) return;
 
     // try {
@@ -111,7 +118,7 @@ export const useObjectActions = (tabId: string | undefined) => {
     // } catch (error) {}
   };
 
-  const handleCancel = async () => {
+  const handleCancel = async (): Promise<void> => {
     if (!currentConnection || !tabId || !selectedTab) return;
 
     try {
@@ -124,7 +131,7 @@ export const useObjectActions = (tabId: string | undefined) => {
     }
   };
 
-  const handleAddArrayItem = (field: FormFieldType) => {
+  const handleAddArrayItem = (field: FormFieldType): void => {
     if (!tabId) return;
 
     const template = field.fields?.[0];
@@ -159,7 +166,7 @@ export const useObjectActions = (tabId: string | undefined) => {
     updateFormData(selectedTab?.id ?? '', tabId, updatedFields);
   };
 
-  const handleFieldChange = (formSchema: any, field: string, value: any) => {
+  const handleFieldChange = (formSchema: any, field: string, value: any): void => {
     if (!tabId) {
       return;
     }

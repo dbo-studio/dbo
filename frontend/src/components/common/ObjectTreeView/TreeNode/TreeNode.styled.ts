@@ -22,7 +22,7 @@ export const TreeNodeContainer = styled(Box)({
 });
 
 export const NodeLabel = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'isFocused'
+  shouldForwardProp: (prop): boolean => prop !== 'isFocused'
 })<{ isFocused?: boolean }>(({ theme, isFocused }) => ({
   display: 'flex',
   alignItems: 'center',
@@ -48,7 +48,7 @@ export const NodeLabel = styled(Box, {
 }));
 
 export const NodeName = styled(Typography, {
-  shouldForwardProp: (prop) => prop !== 'isLeaf'
+  shouldForwardProp: (prop): boolean => prop !== 'isLeaf'
 })<{ isLeaf: boolean }>(({ theme, isLeaf }) => ({
   paddingLeft: isLeaf ? theme.spacing(2) : 0,
   fontSize: '13px',
@@ -76,7 +76,7 @@ export const LoadingIndicator = styled(Box)(({ theme }) => ({
 }));
 
 export const ToggleContainerStyled = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'hasChildren'
+  shouldForwardProp: (prop): boolean => prop !== 'hasChildren'
 })<{ hasChildren: boolean }>(({ hasChildren }) => ({
   display: 'flex',
   justifyContent: 'center',

@@ -12,11 +12,12 @@ import {
   TableHead,
   TableRow
 } from '@mui/material';
+import type { JSX } from 'react';
 import type { ArrayFieldProps } from '../types';
 import SimpleField from './SimpleField';
 
-export default function ArrayField({ field, onChange, onAdd }: ArrayFieldProps) {
-  const handleItemChange = (index: number, fieldId: string, fieldValue: any) => {
+export default function ArrayField({ field, onChange, onAdd }: ArrayFieldProps): JSX.Element {
+  const handleItemChange = (index: number, fieldId: string, fieldValue: any): void => {
     const newFields = [...(field.fields || [])];
 
     if (newFields[index]?.fields) {
@@ -30,7 +31,7 @@ export default function ArrayField({ field, onChange, onAdd }: ArrayFieldProps) 
     onChange(newFields);
   };
 
-  const handleDelete = (index: number) => {
+  const handleDelete = (index: number): void => {
     const newFields = field.fields?.map((item, i) => {
       if (i === index) {
         return { ...item, deleted: true };
@@ -76,14 +77,14 @@ export default function ArrayField({ field, onChange, onAdd }: ArrayFieldProps) 
                       <SimpleField
                         size='small'
                         field={option}
-                        onChange={(newValue) => handleItemChange(index, option.id, newValue)}
+                        onChange={(newValue): void => handleItemChange(index, option.id, newValue)}
                       />
                     </TableCell>
                   );
                 })}
                 <TableCell>
                   <Stack direction={'row'} spacing={1}>
-                    <IconButton size='small' onClick={() => handleDelete(index)}>
+                    <IconButton size='small' onClick={(): void => handleDelete(index)}>
                       <CustomIcon type='delete' />
                     </IconButton>
                   </Stack>

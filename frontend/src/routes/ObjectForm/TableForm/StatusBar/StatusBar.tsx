@@ -1,9 +1,10 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { Box, IconButton } from '@mui/material';
+import type { JSX } from 'react';
 import type { StatusBarProps } from '../../types';
 import { StatusBarStyled } from './StatusBar.styled';
 
-export default function StatusBar({ onSave, onCancel, onAdd, disabled }: StatusBarProps) {
+export default function StatusBar({ onSave, onCancel, onAdd, disabled }: StatusBarProps): JSX.Element {
   return (
     <StatusBarStyled>
       {onAdd && (

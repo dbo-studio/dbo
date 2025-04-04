@@ -1,11 +1,17 @@
 import api from '@/api';
+import type { TabResponseType } from '@/api/tree/types';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-export const useObjectTabs = () => {
+export const useObjectTabs = (): {
+  tabs: TabResponseType;
+  selectedTabIndex: number;
+  currentTabId: string | undefined;
+  handleTabChange: (index: number) => void;
+} => {
   const selectedTab = useSelectedTab();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedTabIndex, setSelectedTabIndex] = useState(Number.parseInt(searchParams.get('objectTabId') ?? '0'));
@@ -13,7 +19,7 @@ export const useObjectTabs = () => {
 
   const { data: tabs } = useQuery({
     queryKey: ['objectTabs', selectedTab?.id, currentConnection?.id, selectedTab?.options?.action],
-    queryFn: () =>
+    queryFn: (): Promise<TabResponseType> =>
       api.tree.getTabs({
         nodeId: selectedTab?.nodeId ?? '',
         action: selectedTab?.options?.action,
@@ -24,7 +30,7 @@ export const useObjectTabs = () => {
 
   const currentTabId = tabs?.[selectedTabIndex]?.id;
 
-  const handleTabChange = (index: number) => {
+  const handleTabChange = (index: number): void => {
     setSelectedTabIndex(index);
     searchParams.set('objectTabId', index.toString());
     setSearchParams(searchParams);
@@ -37,7 +43,7 @@ export const useObjectTabs = () => {
   }, [selectedTab]);
 
   return {
-    tabs,
+    tabs: tabs ?? [],
     selectedTabIndex,
     currentTabId,
     handleTabChange

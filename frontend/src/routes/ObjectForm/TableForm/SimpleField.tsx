@@ -5,10 +5,11 @@ import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor';
 import { variables } from '@/core/theme/variables';
 import { Box, Checkbox, Typography } from '@mui/material';
+import type { JSX } from 'react';
 import type { SimpleFieldProps } from '../types';
 
-export default function SimpleField({ field, onChange, size = 'medium' }: SimpleFieldProps) {
-  const handleChangeSelect = (value: SelectInputOption) => {
+export default function SimpleField({ field, onChange, size = 'medium' }: SimpleFieldProps): JSX.Element {
+  const handleChangeSelect = (value: SelectInputOption): void => {
     if (field.type === 'multi-select') {
       onChange(value ? value?.map((item: any) => item.value) : []);
     } else {
@@ -23,7 +24,7 @@ export default function SimpleField({ field, onChange, size = 'medium' }: Simple
           margin={size === 'small' ? 'none' : undefined}
           label={size === 'medium' ? field.name : undefined}
           value={field.value || ''}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e): void => onChange(e.target.value)}
           size={size}
           fullWidth
         />
@@ -31,7 +32,7 @@ export default function SimpleField({ field, onChange, size = 'medium' }: Simple
     case 'checkbox':
       return (
         <Box display='flex' alignItems='center'>
-          <Checkbox checked={field.value || false} onChange={(e) => onChange(e.target.checked)} size={size} />
+          <Checkbox checked={field.value || false} onChange={(e): void => onChange(e.target.checked)} size={size} />
           {size === 'medium' && <Typography>{field.name}</Typography>}
         </Box>
       );
@@ -55,7 +56,7 @@ export default function SimpleField({ field, onChange, size = 'medium' }: Simple
           <ChipInput
             label={size === 'medium' ? field.name : undefined}
             value={field.value || []}
-            onChange={(e) => onChange(e)}
+            onChange={(e): void => onChange(e)}
             size={size}
           />
         </Box>
@@ -66,7 +67,7 @@ export default function SimpleField({ field, onChange, size = 'medium' }: Simple
           <Box p={0.1} flex={1} border={1} borderColor={'divider'} borderRadius={variables.radius.medium}>
             <SqlEditor
               value={field.value ?? ''}
-              onChange={(value: string) => {
+              onChange={(value: string): void => {
                 console.log(value);
               }}
               autocomplete={{
@@ -81,6 +82,6 @@ export default function SimpleField({ field, onChange, size = 'medium' }: Simple
         </Box>
       );
     default:
-      return null;
+      return <></>;
   }
 }

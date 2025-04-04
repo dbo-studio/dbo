@@ -1,8 +1,9 @@
 import { Grid2 } from '@mui/material';
+import type { JSX } from 'react';
 import type { FormFieldsProps } from '../types';
 import SimpleField from './SimpleField';
 
-export default function FormFields({ fields, onChange }: FormFieldsProps) {
+export default function FormFields({ fields, onChange }: FormFieldsProps): JSX.Element {
   return (
     <Grid2 direction={'row'} mt={1}>
       {fields.map((field) => (
@@ -14,7 +15,7 @@ export default function FormFields({ fields, onChange }: FormFieldsProps) {
           }}
           key={field.id}
         >
-          <SimpleField field={field} onChange={(value) => onChange(field.id, value)} />
+          <SimpleField field={field} onChange={(value): void => onChange(field.id, value)} />
         </Grid2>
       ))}
     </Grid2>
