@@ -7,10 +7,12 @@ import { type JSX, useState } from 'react';
 
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { PaginationSettingStyled } from './PaginationSetting.styled';
 
 export default function PaginationSetting(): JSX.Element {
   const { updateSelectedTab } = useTabStore();
+  const { runQuery, loading } = useDataStore();
   const selectedTab = useSelectedTab();
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -37,7 +39,7 @@ export default function PaginationSetting(): JSX.Element {
   };
 
   const handleUpdateState = (): void => {
-    if (!selectedTab) {
+    if (!selectedTab || loading) {
       return;
     }
 
@@ -58,6 +60,11 @@ export default function PaginationSetting(): JSX.Element {
     });
 
     setAnchorEl(null);
+
+    runQuery({
+      ...(selectedTab ?? ({} as TabType)),
+      pagination
+    });
   };
 
   return (

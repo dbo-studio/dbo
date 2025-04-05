@@ -387,13 +387,13 @@ func (r *PostgresRepository) tablespaceOptions() []contract.FormField {
 
 func (r *PostgresRepository) viewFields() []contract.FormField {
 	return []contract.FormField{
-		{ID: "name", Name: "Name", Type: "text"},
+		{ID: "name", Name: "Name", Type: "text", Required: true},
 		{ID: "comment", Name: "Comment", Type: "text"},
 		{ID: "check_option", Name: "Check Option", Type: "select", Fields: []contract.FormField{
 			{Value: "LOCAL", Name: "LOCAL"},
 			{Value: "CASCADE", Name: "CASCADE"},
 		}},
-		{ID: "query", Name: "Query", Type: "query"},
+		{ID: "query", Name: "Query", Type: "query", Required: true},
 	}
 }
 

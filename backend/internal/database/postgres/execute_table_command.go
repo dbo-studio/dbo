@@ -57,7 +57,9 @@ func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.Tre
 
 		if params.New.Name != nil {
 			queries = append(queries, fmt.Sprintf("ALTER TABLE %s RENAME TO %s", *params.Old.Name, *params.New.Name))
+			params.Old.Name = params.New.Name
 		}
+
 		if params.New.Tablespace != nil {
 			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET TABLESPACE %s", *params.Old.Tablespace, *params.New.Tablespace))
 		}

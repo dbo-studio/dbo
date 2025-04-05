@@ -56,9 +56,14 @@ type PostgresTableParamsData struct {
 }
 
 type PostgresViewParams struct {
+	New *PostgresViewParamsData `json:"new"`
+	Old *PostgresViewParamsData `json:"old"`
+}
+
+type PostgresViewParamsData struct {
 	Name        *string `json:"name"`
 	Query       *string `json:"query"`
-	Comment     *string `json:"description"`
+	Comment     *string `json:"comment"`
 	CheckOption *string `json:"check_option"`
 }
 

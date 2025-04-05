@@ -39,24 +39,19 @@ export const useObjectActions = (
 
   const handleSave = async (): Promise<void> => {
     if (!currentConnection || !selectedTab || pendingExecuteAction) return;
+    console.log(formDataByTab);
 
-    // try {
-    const allFormData = Object.entries(formDataByTab[selectedTab.id] || {}).reduce(
-      (acc, [tabId, fields]) => {
-        const tabData = fields.reduce(
-          (fieldAcc: Record<string, any>, field: FormFieldType) => {
-            if (field.type === 'array' && field.fields) {
-              const currentItems = field.fields
-                .filter((item) => item.id !== 'empty')
-                .map((item: FormFieldType) => {
-                  if (item.fields) {
-                    return item.fields
-                      .filter(
-                        (nestedField) =>
-                          nestedField.value !== null ||
-                          (nestedField.originalValue && nestedField.originalValue !== nestedField.value)
-                      )
-                      .reduce(
+    try {
+      const allFormData = Object.entries(formDataByTab[selectedTab.id] || {}).reduce(
+        (acc, [tabId, fields]) => {
+          const tabData = fields.reduce(
+            (fieldAcc: Record<string, any>, field: FormFieldType) => {
+              if (field.type === 'array' && field.fields) {
+                const currentItems = field.fields
+                  .filter((item) => item.id !== 'empty')
+                  .map((item: FormFieldType) => {
+                    if (item.fields) {
+                      return item.fields.reduce(
                         (itemAcc: Record<string, any>, nestedField: FormFieldType) => {
                           if (item.deleted) {
                             itemAcc.deleted = item.deleted;
@@ -69,53 +64,64 @@ export const useObjectActions = (
                           const processedValue = tools.isNumber(nestedField.value)
                             ? String(Number(nestedField.value))
                             : nestedField.value;
-                          itemAcc.new[nestedField.id] = processedValue;
+
+                          if (
+                            nestedField.value !== null ||
+                            (nestedField.originalValue && nestedField.originalValue !== nestedField.value)
+                          ) {
+                            itemAcc.new[nestedField.id] = processedValue;
+                          }
                           itemAcc.old[nestedField.id] = nestedField.originalValue;
 
                           return itemAcc;
                         },
                         { new: {}, old: {} }
                       );
-                  }
-                  return item.value;
-                });
+                    }
+                    return item.value;
+                  });
 
-              fieldAcc[field.id] = currentItems.filter((item) => !tools.isEmpty(item.new));
-            } else if (field.value !== field.originalValue) {
-              if (!fieldAcc.new) fieldAcc.new = {};
-              if (!fieldAcc.old) fieldAcc.old = {};
-              fieldAcc.new[field.id] = field.value;
-              fieldAcc.old[field.id] = field.originalValue;
-            }
+                fieldAcc[field.id] = currentItems.filter((item) => !tools.isEmpty(item.new));
+              } else {
+                if (!fieldAcc.new) fieldAcc.new = {};
+                if (!fieldAcc.old) fieldAcc.old = {};
 
-            return fieldAcc;
-          },
-          {} as Record<string, any>
-        );
+                if (field.value !== field.originalValue) {
+                  fieldAcc.new[field.id] = field.value;
+                }
+                fieldAcc.old[field.id] = field.originalValue;
+              }
 
-        if (Object.keys(tabData).length > 0) {
-          acc[tabId] = tabData;
-        }
+              return fieldAcc;
+            },
+            {} as Record<string, any>
+          );
 
-        return acc;
-      },
-      {} as Record<string, Record<string, any>>
-    );
+          if (Object.keys(tabData).length > 0) {
+            acc[tabId] = tabData;
+          }
 
-    if (Object.keys(allFormData).length === 0) {
-      toast.info(locales.no_changes_detected);
-      return;
+          return acc;
+        },
+        {} as Record<string, Record<string, any>>
+      );
+
+      if (Object.keys(allFormData).length === 0) {
+        toast.info(locales.no_changes_detected);
+        return;
+      }
+
+      await executeAction({
+        nodeId: selectedTab.nodeId,
+        action: selectedTab.options?.action || '',
+        connectionId: currentConnection.id,
+        data: allFormData
+      });
+
+      toast.success(locales.changes_saved_successfully);
+    } catch (error) {
+      console.error('🚀 ~ handleSave ~ error:', error);
     }
-
-    await executeAction({
-      nodeId: selectedTab.nodeId,
-      action: selectedTab.options?.action || '',
-      connectionId: currentConnection.id,
-      data: allFormData
-    });
-
-    toast.success(locales.changes_saved_successfully);
-    // } catch (error) {}
   };
 
   const handleCancel = async (): Promise<void> => {

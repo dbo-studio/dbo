@@ -11,7 +11,7 @@ export default function FormFields({ fields, onChange }: FormFieldsProps): JSX.E
           size={{
             xs: 12,
             md: 12,
-            lg: 6
+            lg: field.type === 'query' ? 12 : 6
           }}
           key={field.id}
         >

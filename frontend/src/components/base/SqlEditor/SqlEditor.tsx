@@ -72,10 +72,10 @@ export default function SqlEditor({ autocomplete, value, onChange, onMount }: Sq
   }, [autocomplete]);
 
   useEffect(() => {
-    if (editorRef.current && mount) {
+    if (editorRef.current && mount && onMount) {
       onMount();
     }
-  }, [editorRef.current, mount, onMount]);
+  }, [editorRef.current, mount]);
 
   return (
     <Box

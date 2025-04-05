@@ -38,6 +38,7 @@ func (r *PostgresRepository) handleSchemaCommands(node PGNode, tabId contract.Tr
 
 		if params.New.Name != nil {
 			queries = append(queries, fmt.Sprintf("ALTER SCHEMA %s RENAME TO %s", *params.Old.Name, *params.New.Name))
+			params.Old.Name = params.New.Name
 		}
 
 		if params.New.Owner != nil {
@@ -45,7 +46,7 @@ func (r *PostgresRepository) handleSchemaCommands(node PGNode, tabId contract.Tr
 		}
 
 		if params.New.Comment != nil {
-			queries = append(queries, fmt.Sprintf("COMMENT ON SCHEMA %s IS %s", *params.New.Name, *params.New.Comment))
+			queries = append(queries, fmt.Sprintf("COMMENT ON SCHEMA %s IS %s", *params.Old.Name, *params.New.Comment))
 		}
 	}
 

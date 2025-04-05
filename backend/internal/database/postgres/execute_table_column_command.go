@@ -102,11 +102,12 @@ func handleEditColumn(node PGNode, column dto.PostgresTableColumn) []string {
 
 	if column.New.Name != nil {
 		queries = append(queries, fmt.Sprintf(`%s RENAME COLUMN "%s" TO "%s"`, alter, *column.Old.Name, *column.New.Name))
+		column.Old.Name = column.New.Name
 	}
 
 	if column.New.DataType != nil {
 		dataTypeQuery := fmt.Sprintf(`%s ALTER COLUMN "%s" TYPE %s USING "%s"::%s`,
-			alter, *column.New.Name, *column.New.DataType, *column.New.Name, *column.New.DataType)
+			alter, *column.Old.Name, *column.New.DataType, *column.Old.Name, *column.New.DataType)
 
 		if column.New.MaxLength != nil && *column.New.MaxLength != "" {
 			if isCharacterType(*column.New.DataType) {
@@ -122,26 +123,26 @@ func handleEditColumn(node PGNode, column dto.PostgresTableColumn) []string {
 	if column.New.NotNull != nil {
 		if *column.New.NotNull {
 			queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" SET NOT NULL`,
-				alter, *column.New.Name))
+				alter, *column.Old.Name))
 		} else {
 			queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" DROP NOT NULL`,
-				alter, *column.New.Name))
+				alter, *column.Old.Name))
 		}
 	}
 
 	if column.New.Default != nil {
 		if *column.New.Default != "" {
 			queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" SET DEFAULT %s`,
-				alter, *column.New.Name, *column.New.Default))
+				alter, *column.Old.Name, *column.New.Default))
 		} else {
 			queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" DROP DEFAULT`,
-				alter, *column.New.Name))
+				alter, *column.Old.Name))
 		}
 	}
 
 	if column.New.Comment != nil {
 		commentQuery := fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'",
-			node.Table, *column.New.Name, *column.New.Comment)
+			node.Table, *column.Old.Name, *column.New.Comment)
 		queries = append(queries, commentQuery)
 	}
 

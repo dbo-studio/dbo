@@ -25,6 +25,11 @@ func (r *PostgresRepository) Execute(nodeID string, action contract.TreeNodeActi
 			return err
 		}
 
+		viewQueries, err := r.handleViewCommands(node, tabId, action, params)
+		if err != nil {
+			return err
+		}
+
 		schemaQueries, err := r.handleSchemaCommands(node, tabId, action, params)
 		if err != nil {
 			return err
@@ -50,6 +55,7 @@ func (r *PostgresRepository) Execute(nodeID string, action contract.TreeNodeActi
 		}
 
 		queries = append(queries, dbQueries...)
+		queries = append(queries, viewQueries...)
 		queries = append(queries, schemaQueries...)
 		queries = append(queries, tableQueries...)
 		queries = append(queries, tableColumnQueries...)
@@ -74,34 +80,6 @@ func (r *PostgresRepository) Execute(nodeID string, action contract.TreeNodeActi
 	return nil
 
 	switch action {
-	case contract.CreateViewAction:
-		params, err := convertToDTO[dto.PostgresViewParams](params)
-		if err != nil {
-			return err
-		}
-		query := fmt.Sprintf("CREATE VIEW %s AS %s", params.Name, params.Query)
-		if params.CheckOption != nil {
-			query += fmt.Sprintf(" WITH %s CHECK OPTION", *params.CheckOption)
-		}
-		if params.Comment != nil {
-			query += fmt.Sprintf(" WITH COMMENT = '%s'", *params.Comment)
-		}
-		return r.db.Exec(query).Error
-
-	case contract.EditViewAction:
-		params, err := convertToDTO[dto.PostgresViewParams](params)
-		if err != nil {
-			return err
-		}
-		query := fmt.Sprintf("CREATE OR REPLACE VIEW %s AS %s", params.Name, params.Query)
-		if params.CheckOption != nil {
-			query += fmt.Sprintf(" WITH %s CHECK OPTION", *params.CheckOption)
-		}
-		if params.Comment != nil {
-			query += fmt.Sprintf(" WITH COMMENT = '%s'", *params.Comment)
-		}
-		return r.db.Exec(query).Error
-
 	case contract.CreateMaterializedViewAction:
 		params, err := convertToDTO[dto.PostgresMaterializedViewParams](params)
 		if err != nil {

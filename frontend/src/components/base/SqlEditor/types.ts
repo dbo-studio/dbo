@@ -4,7 +4,7 @@ export type SqlEditorProps = {
   autocomplete: AutoCompleteType;
   value: string;
   onChange: (value: string) => void;
-  onMount: () => void;
+  onMount?: () => void;
 };
 
 export type SqlEditorSettingType = {

@@ -95,7 +95,7 @@ func (r *PostgresRepository) getViewInfo(node PGNode) ([]contract.FormField, err
 			v.definition as query,
 			NULL as check_option
 		`).
-		Joins("JOIN pg_namespace AQAqqawWS3``11		q	`e4	`sw3	wasS n ON n.oid = c.relnamespace").
+		Joins("JOIN pg_namespace n ON n.oid = c.relnamespace").
 		Joins("LEFT JOIN pg_views v ON v.viewname = c.relname AND v.schemaname = n.nspname").
 		Joins("LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0").
 		Where("c.relname = ? AND n.nspname = ? AND c.relkind = 'v'", node.Table, node.Schema)
