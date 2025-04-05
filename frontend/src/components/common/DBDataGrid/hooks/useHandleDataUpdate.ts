@@ -17,6 +17,13 @@ export const useHandleDataUpdate = (hotTableRef: RefObject<HotTableRef | null>):
     ) {
       runQuery(selectedTab).then();
     }
+
+    hotTableRef?.current?.hotInstance?.updateSettings({
+      columns: getColumns(selectedTab, true).map((column) => ({
+        data: column.name,
+        title: column.name
+      }))
+    });
   }, [selectedTab?.id]);
 
   useEffect(() => {
