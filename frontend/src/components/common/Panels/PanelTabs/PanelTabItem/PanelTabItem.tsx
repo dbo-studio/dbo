@@ -26,11 +26,9 @@ export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
   const { runQuery, runRawQuery, removeEditedRowsByTabId, deleteRemovedRowsByTabId, removeUnsavedRowsByTabId } =
     useDataStore();
 
-  if (selectedTab) {
-    useShortcut(shortcuts.newTab, () => addNewEmptyTab());
-    useShortcut(shortcuts.closeTab, () => handleRemoveTab(selectedTab?.id ?? ''));
-    useShortcut(shortcuts.reloadTab, () => handleReload());
-  }
+  useShortcut(shortcuts.newTab, () => addNewEmptyTab());
+  useShortcut(shortcuts.closeTab, () => handleRemoveTab(selectedTab?.id ?? ''));
+  useShortcut(shortcuts.reloadTab, () => handleReload());
 
   const menu: MenuType[] = [
     {

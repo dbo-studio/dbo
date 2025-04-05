@@ -29,7 +29,7 @@ export const IconTypes = {
   columnToken: 'columnToken',
   grid: 'Grid3x3',
   gridBlue: 'Grid3x3',
-  filter: 'Filter',
+  filter: 'Funnel',
   sort: 'ArrowDownWideNarrow',
   code: 'Code',
   export: 'FileUp',
