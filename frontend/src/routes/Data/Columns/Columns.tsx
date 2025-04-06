@@ -1,4 +1,4 @@
-import { useSelectedTab } from '@/hooks/useSelectedTab';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useWindowSize } from '@/hooks/useWindowSize.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';

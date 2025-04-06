@@ -32,7 +32,8 @@ func buildRoot(r *PostgresRepository) (*contract.TreeNode, error) {
 		ID:          fmt.Sprintf("%d@database", r.connection.ID),
 		Name:        fmt.Sprintf("%d@databases", r.connection.ID),
 		Type:        contract.DatabaseContainerNodeType,
-		ContextMenu: r.Actions(contract.DatabaseContainerNodeType),
+		HasChildren: true,
+		ContextMenu: r.ContextMenu(contract.DatabaseContainerNodeType),
 		Children:    make([]contract.TreeNode, 0),
 	}
 	databases, err := r.getDatabaseList()
@@ -44,7 +45,8 @@ func buildRoot(r *PostgresRepository) (*contract.TreeNode, error) {
 			ID:          db.Name,
 			Name:        db.Name,
 			Type:        contract.DatabaseNodeType,
-			ContextMenu: r.Actions(contract.DatabaseNodeType),
+			HasChildren: true,
+			ContextMenu: r.ContextMenu(contract.DatabaseNodeType),
 			Children:    make([]contract.TreeNode, 0),
 		})
 	}
@@ -56,7 +58,8 @@ func buildDatabase(r *PostgresRepository, dbName string) (*contract.TreeNode, er
 		ID:          dbName,
 		Name:        dbName,
 		Type:        contract.DatabaseNodeType,
-		ContextMenu: r.Actions(contract.DatabaseNodeType),
+		HasChildren: true,
+		ContextMenu: r.ContextMenu(contract.DatabaseNodeType),
 		Children:    make([]contract.TreeNode, 0),
 	}
 	schemas, err := r.getSchemaList(Database{Name: dbName})
@@ -68,7 +71,8 @@ func buildDatabase(r *PostgresRepository, dbName string) (*contract.TreeNode, er
 			ID:          fmt.Sprintf("%s.%s", dbName, schema.Name),
 			Name:        schema.Name,
 			Type:        contract.SchemaNodeType,
-			ContextMenu: r.Actions(contract.SchemaNodeType),
+			HasChildren: true,
+			ContextMenu: r.ContextMenu(contract.SchemaNodeType),
 			Children:    make([]contract.TreeNode, 0),
 		})
 	}
@@ -80,7 +84,8 @@ func buildSchema(r *PostgresRepository, dbName, schemaName string) (*contract.Tr
 		ID:          fmt.Sprintf("%s.%s", dbName, schemaName),
 		Name:        schemaName,
 		Type:        contract.SchemaNodeType,
-		ContextMenu: r.Actions(contract.SchemaNodeType),
+		HasChildren: true,
+		ContextMenu: r.ContextMenu(contract.SchemaNodeType),
 		Children:    make([]contract.TreeNode, 0),
 	}
 	containers := []struct {
@@ -91,17 +96,17 @@ func buildSchema(r *PostgresRepository, dbName, schemaName string) (*contract.Tr
 		{
 			"Tables",
 			contract.TableContainerNodeType,
-			r.Actions(contract.TableContainerNodeType),
+			r.ContextMenu(contract.TableContainerNodeType),
 		},
 		{
 			"Views",
 			contract.ViewContainerNodeType,
-			r.Actions(contract.ViewContainerNodeType),
+			r.ContextMenu(contract.ViewContainerNodeType),
 		},
 		{
 			"Materialized Views",
 			contract.MaterializedViewContainerNodeType,
-			r.Actions(contract.MaterializedViewContainerNodeType),
+			r.ContextMenu(contract.MaterializedViewContainerNodeType),
 		},
 	}
 	for _, c := range containers {
@@ -109,6 +114,7 @@ func buildSchema(r *PostgresRepository, dbName, schemaName string) (*contract.Tr
 			ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, c.id),
 			Name:        c.name,
 			Type:        c.id,
+			HasChildren: true,
 			ContextMenu: c.contextMenu,
 			Children:    make([]contract.TreeNode, 0),
 		})
@@ -121,7 +127,8 @@ func buildContainer(r *PostgresRepository, dbName, schemaName string, container 
 		ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, container),
 		Name:        string(container),
 		Type:        container,
-		ContextMenu: r.Actions(container),
+		HasChildren: true,
+		ContextMenu: r.ContextMenu(container),
 		Children:    make([]contract.TreeNode, 0),
 	}
 	switch container {
@@ -143,7 +150,7 @@ func buildContainer(r *PostgresRepository, dbName, schemaName string, container 
 						"table": table.Name,
 					},
 				},
-				ContextMenu: r.Actions(contract.TableNodeType),
+				ContextMenu: r.ContextMenu(contract.TableNodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}
@@ -154,10 +161,18 @@ func buildContainer(r *PostgresRepository, dbName, schemaName string, container 
 		}
 		for _, view := range views {
 			containerNode.Children = append(containerNode.Children, contract.TreeNode{
-				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, view.Name),
-				Name:        view.Name,
-				Type:        contract.ViewNodeType,
-				ContextMenu: r.Actions(contract.ViewNodeType),
+				ID:   fmt.Sprintf("%s.%s.%s", dbName, schemaName, view.Name),
+				Name: view.Name,
+				Type: contract.ViewNodeType,
+				Icon: lo.ToPtr("sheet"),
+				Action: &contract.TreeNodeAction{
+					Type: contract.TreeNodeActionTypeTab,
+					Params: map[string]interface{}{
+						"path":  "data",
+						"table": view.Name,
+					},
+				},
+				ContextMenu: r.ContextMenu(contract.ViewNodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}
@@ -171,7 +186,7 @@ func buildContainer(r *PostgresRepository, dbName, schemaName string, container 
 				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, mv.Name),
 				Name:        mv.Name,
 				Type:        contract.MaterializedViewNodeType,
-				ContextMenu: r.Actions(contract.MaterializedViewNodeType),
+				ContextMenu: r.ContextMenu(contract.MaterializedViewNodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}

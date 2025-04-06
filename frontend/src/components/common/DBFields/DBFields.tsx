@@ -1,6 +1,6 @@
 import FieldInput from '@/components/base/FieldInput/FieldInput.tsx';
 import Search from '@/components/base/Search/Search';
-import { useSelectedTab } from '@/hooks/useSelectedTab';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
 import type { RowType } from '@/types';
 import { Box } from '@mui/material';

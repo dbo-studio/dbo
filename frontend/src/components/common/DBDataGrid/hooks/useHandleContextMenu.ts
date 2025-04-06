@@ -1,5 +1,5 @@
 import { handelRowChangeLog } from '@/core/utils';
-import { useSelectedTab } from '@/hooks/useSelectedTab';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 // @ts-ignore
 import { ContextMenu, type Settings } from 'handsontable/plugins/contextMenu';

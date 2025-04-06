@@ -4,7 +4,7 @@ import (
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
-func (r *PostgresRepository) Actions(nodeType contract.TreeNodeType) []contract.TreeNodeAction {
+func (r *PostgresRepository) ContextMenu(nodeType contract.TreeNodeType) []contract.TreeNodeAction {
 	actions := make([]contract.TreeNodeAction, 0)
 	defaultActions := []contract.TreeNodeAction{
 		{

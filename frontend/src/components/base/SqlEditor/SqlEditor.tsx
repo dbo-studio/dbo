@@ -3,7 +3,7 @@ import * as monaco from 'monaco-editor';
 import { LanguageIdEnum } from 'monaco-sql-languages';
 
 import { shortcuts } from '@/core/utils/shortcuts.ts';
-import { useSelectedTab } from '@/hooks/useSelectedTab.tsx';
+import { useSelectedTab } from '@/hooks';
 import { useShortcut } from '@/hooks/useShortcut.hook.ts';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';

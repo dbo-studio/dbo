@@ -5,7 +5,7 @@ import { Box, Checkbox } from '@mui/material';
 import { type JSX, useState } from 'react';
 
 import SelectInput from '@/components/base/SelectInput/SelectInput.tsx';
-import { useSelectedTab } from '@/hooks/useSelectedTab.tsx';
+import { useSelectedTab } from '@/hooks';
 import locales from '@/locales';
 import type { SortItemProps } from '../types.ts';
 import AddSortButton from './AddSortButton/AddSortButton.tsx';

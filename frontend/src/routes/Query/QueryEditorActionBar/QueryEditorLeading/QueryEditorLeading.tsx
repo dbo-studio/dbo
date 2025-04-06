@@ -1,5 +1,5 @@
 import SelectInput from '@/components/base/SelectInput/SelectInput';
-import { useSelectedTab } from '@/hooks/useSelectedTab';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Stack, Typography } from '@mui/material';

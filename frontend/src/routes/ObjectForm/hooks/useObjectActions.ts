@@ -1,8 +1,8 @@
 import api from '@/api';
 import type { FormFieldType } from '@/api/tree/types';
 import { tools } from '@/core/utils';
-import { useCurrentConnection } from '@/hooks/useCurrentConnection';
-import { useSelectedTab } from '@/hooks/useSelectedTab';
+import { useCurrentConnection } from '@/hooks';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';

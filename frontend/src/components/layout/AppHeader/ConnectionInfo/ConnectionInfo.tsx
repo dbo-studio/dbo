@@ -1,7 +1,7 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton.tsx';
 import Settings from '@/components/common/Settings/Settings.tsx';
-import { useCurrentConnection } from '@/hooks/useCurrentConnection.tsx';
+import { useCurrentConnection } from '@/hooks';
 import useNavigate from '@/hooks/useNavigate.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';

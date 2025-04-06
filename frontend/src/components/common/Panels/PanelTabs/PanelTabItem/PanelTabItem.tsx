@@ -7,7 +7,7 @@ import { shortcuts } from '@/core/utils';
 import { useContextMenu, useShortcut } from '@/hooks';
 import useNavigate from '@/hooks/useNavigate.hook.ts';
 import { useRemoveTab } from '@/hooks/useRemoveTab.hook.ts';
-import { useSelectedTab } from '@/hooks/useSelectedTab';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';

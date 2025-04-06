@@ -1,4 +1,4 @@
-import { useSelectedTab } from '@/hooks/useSelectedTab';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import type { RowType } from '@/types';
 import { useTheme } from '@mui/material'; // @ts-ignore

@@ -1,8 +1,9 @@
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import type { ConnectionType } from '@/types';
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-export const useCurrentConnection = () => {
+export const useCurrentConnection = (): ConnectionType | undefined => {
   const [searchParams, _] = useSearchParams();
   const { connections } = useConnectionStore();
 

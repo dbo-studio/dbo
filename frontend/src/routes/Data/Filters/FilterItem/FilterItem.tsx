@@ -6,7 +6,7 @@ import { type JSX, useState } from 'react';
 
 import FieldInput from '@/components/base/FieldInput/FieldInput.tsx';
 import SelectInput from '@/components/base/SelectInput/SelectInput.tsx';
-import { useSelectedTab } from '@/hooks/useSelectedTab.tsx';
+import { useSelectedTab } from '@/hooks';
 import locales from '@/locales';
 import type { FilterItemProps } from '../types.ts';
 import AddFilterButton from './AddFilterButton/AddFilterButton.tsx';

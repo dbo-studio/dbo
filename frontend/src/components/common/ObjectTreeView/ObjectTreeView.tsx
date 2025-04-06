@@ -1,7 +1,7 @@
 import api from '@/api';
 import type { TreeNodeType } from '@/api/tree/types';
 import Search from '@/components/base/Search/Search';
-import { useCurrentConnection } from '@/hooks/useCurrentConnection';
+import { useCurrentConnection } from '@/hooks';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { Box, LinearProgress } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';

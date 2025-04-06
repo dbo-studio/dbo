@@ -2,7 +2,7 @@ import CodeEditor from '@/components/base/CodeEditor/CodeEditor.tsx';
 import ResizableModal from '@/components/base/Modal/ResizableModal/ResizableModal.tsx';
 import type { QuickViewDialogProps } from '@/components/common/DBDataGrid/QuickViewDialog/types';
 import { handelRowChangeLog } from '@/core/utils';
-import { useSelectedTab } from '@/hooks/useSelectedTab';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import type { SelectedRow } from '@/store/dataStore/types.ts';

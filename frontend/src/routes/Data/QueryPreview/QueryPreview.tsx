@@ -1,5 +1,5 @@
 import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlighter';
-import { useSelectedTab } from '@/hooks/useSelectedTab.tsx';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { JSX } from 'react';

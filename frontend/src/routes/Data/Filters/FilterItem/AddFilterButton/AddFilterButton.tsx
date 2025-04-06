@@ -1,6 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
 import { PgsqlFilterConditions, PgsqlFilterNext } from '@/core/constants';
-import { useSelectedTab } from '@/hooks/useSelectedTab.tsx';
+import { useSelectedTab } from '@/hooks';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { IconButton } from '@mui/material';
 import type { JSX } from 'react';

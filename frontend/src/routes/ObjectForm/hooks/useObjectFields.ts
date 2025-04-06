@@ -1,7 +1,7 @@
 import api from '@/api';
 import type { FormFieldType } from '@/api/tree/types';
-import { useCurrentConnection } from '@/hooks/useCurrentConnection';
-import { useSelectedTab } from '@/hooks/useSelectedTab';
+import { useCurrentConnection } from '@/hooks';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';

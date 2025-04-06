@@ -2,7 +2,7 @@ import type { TreeNodeType } from '@/api/tree/types';
 import type React from 'react';
 import { useCallback } from 'react';
 
-interface UseTreeNodeHandlersProps {
+type UseTreeNodeHandlersProps = {
   node: TreeNodeType;
   children: TreeNodeType[];
   isExpanded: boolean;
@@ -16,7 +16,14 @@ interface UseTreeNodeHandlersProps {
   nodeIndex: number;
   level: number;
   onFocusChange?: (id: string) => void;
-}
+};
+
+type TreeNodeHandlersType = {
+  expandNode: (event: React.MouseEvent | React.KeyboardEvent, moveFocusToChild?: boolean) => Promise<void>;
+  focusNode: (event: React.MouseEvent) => void;
+  handleBlur: () => void;
+  handleKeyDown: (event: React.KeyboardEvent) => void;
+};
 
 export function useTreeNodeHandlers({
   node,
@@ -32,19 +39,11 @@ export function useTreeNodeHandlers({
   nodeIndex,
   level,
   onFocusChange
-}: UseTreeNodeHandlersProps): {
-  expandNode: (event: React.MouseEvent | React.KeyboardEvent, moveFocusToChild?: boolean) => Promise<void>;
-  focusNode: (event: React.MouseEvent) => void;
-  handleBlur: () => void;
-  handleKeyDown: (event: React.KeyboardEvent) => void;
-  hasChildren: boolean;
-} {
-  const hasChildren = children?.length > 0 || node.type !== 'table';
-
+}: UseTreeNodeHandlersProps): TreeNodeHandlersType {
   const expandNode = useCallback(
     async (event: React.MouseEvent | React.KeyboardEvent, moveFocusToChild = false) => {
       event.stopPropagation();
-      if (!hasChildren) return;
+      if (!node.hasChildren) return;
 
       const newExpanded = !isExpanded;
       setIsExpanded(newExpanded);
@@ -76,18 +75,7 @@ export function useTreeNodeHandlers({
         }
       }
     },
-    [
-      hasChildren,
-      isExpanded,
-      children,
-      fetchChildren,
-      node.id,
-      parentRefs,
-      onFocusChange,
-      setIsExpanded,
-      setChildren,
-      setIsLoading
-    ]
+    [isExpanded, children, fetchChildren, node.id, parentRefs, onFocusChange, setIsExpanded, setChildren, setIsLoading]
   );
 
   const focusNode = useCallback(
@@ -126,13 +114,13 @@ export function useTreeNodeHandlers({
 
         case 'ArrowRight':
           event.preventDefault();
-          if (hasChildren && !isExpanded) expandNode(event, true).then();
+          if (node.hasChildren && !isExpanded) expandNode(event, true).then();
           else if (isExpanded && children?.length > 0) focusNodeById(children[0].id);
           break;
 
         case 'ArrowLeft':
           event.preventDefault();
-          if (hasChildren && isExpanded) setIsExpanded(false);
+          if (node.hasChildren && isExpanded) setIsExpanded(false);
           else {
             const parent = Array.from(nodeRefs.entries()).find(([, ref]) => ref.dataset.level === String(level - 1));
             if (parent) focusNodeById(parent[0]);
@@ -169,14 +157,13 @@ export function useTreeNodeHandlers({
           break;
       }
     },
-    [hasChildren, isExpanded, children, level, nodeIndex, parentRefs, expandNode, onFocusChange, setIsExpanded]
+    [node.hasChildren, isExpanded, children, level, nodeIndex, parentRefs, expandNode, onFocusChange, setIsExpanded]
   );
 
   return {
     expandNode,
     focusNode,
     handleBlur,
-    handleKeyDown,
-    hasChildren
+    handleKeyDown
   };
 }

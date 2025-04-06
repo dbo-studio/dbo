@@ -45,7 +45,6 @@ export default function TreeNode({
   }, [node.id, parentRefs]);
 
   const {
-    hasChildren,
     expandNode: handleExpandNode,
     focusNode,
     handleBlur,
@@ -110,7 +109,7 @@ export default function TreeNode({
         isFocused={isFocused}
         isExpanded={isExpanded}
         isLoading={isLoading}
-        hasChildren={hasChildren}
+        hasChildren={node.hasChildren}
         level={level}
         nodeIndex={nodeIndex}
         focusNode={focusNode}

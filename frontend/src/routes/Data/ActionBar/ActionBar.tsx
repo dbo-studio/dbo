@@ -1,5 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { useSelectedTab } from '@/hooks/useSelectedTab';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Grid2, IconButton, Stack, useTheme } from '@mui/material';
 import type { JSX } from 'react';

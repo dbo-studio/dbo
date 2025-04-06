@@ -5,7 +5,7 @@ import { v4 as uuid } from 'uuid';
 
 import api from '@/api';
 import AddConnection from '@/components/common/AddConnection/AddConnection';
-import { useCurrentConnection } from '@/hooks/useCurrentConnection';
+import { useCurrentConnection } from '@/hooks';
 import useNavigate from '@/hooks/useNavigate.hook';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';

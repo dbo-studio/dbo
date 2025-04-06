@@ -1,6 +1,6 @@
 import DataGrid from '@/components/common/DBDataGrid/DataGrid';
-import { useCurrentConnection } from '@/hooks/useCurrentConnection';
-import { useSelectedTab } from '@/hooks/useSelectedTab';
+import { useCurrentConnection } from '@/hooks';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import Sorts from '@/routes/Data/Sorts/Sorts.tsx';
 import { Box } from '@mui/material';
 import type { JSX } from 'react';

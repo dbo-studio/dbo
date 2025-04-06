@@ -1,13 +1,15 @@
 import { tools } from '@/core/utils';
 import { useEffect, useState } from 'react';
 
-export const useWindowSize = (fullSize?: boolean) => {
-  const [windowSize, setWindowSize] = useState<{
-    width: undefined | string;
-    height: undefined | string;
-    widthNumber: undefined | number;
-    heightNumber: undefined | number;
-  }>({
+type WindowSizeType = {
+  width: undefined | string;
+  height: undefined | string;
+  widthNumber: undefined | number;
+  heightNumber: undefined | number;
+};
+
+export const useWindowSize = (fullSize?: boolean): WindowSizeType => {
+  const [windowSize, setWindowSize] = useState<WindowSizeType>({
     width: undefined,
     height: undefined,
     heightNumber: undefined,
@@ -15,17 +17,17 @@ export const useWindowSize = (fullSize?: boolean) => {
   });
 
   useEffect(() => {
-    function handleResize() {
+    const handleResize = (): void => {
       setWindowSize({
         width: `${window.innerWidth}px`,
         height: fullSize ? tools.screenFullHeight().toString() : tools.screenMaxHeight().toString(),
         heightNumber: fullSize ? Number(tools.screenFullHeight(true)) : Number(tools.screenMaxHeight(true)),
         widthNumber: window.innerWidth
       });
-    }
+    };
     window.addEventListener('resize', handleResize);
     handleResize();
-    return () => window.removeEventListener('resize', handleResize);
+    return (): void => window.removeEventListener('resize', handleResize);
   }, []);
   return windowSize;
 };

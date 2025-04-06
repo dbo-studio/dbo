@@ -5,6 +5,7 @@ type TreeNode struct {
 	Name        string           `json:"name"`
 	Icon        *string          `json:"icon"`
 	Type        TreeNodeType     `json:"type"`
+	HasChildren bool             `json:"hasChildren"`
 	Children    []TreeNode       `json:"children"`
 	Action      *TreeNodeAction  `json:"action"`
 	ContextMenu []TreeNodeAction `json:"contextMenu"`

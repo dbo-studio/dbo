@@ -1,10 +1,9 @@
 import api from '@/api';
 import type { TreeNodeType } from '@/api/tree/types';
 import { TabMode } from '@/core/enums';
-import { useCopyToClipboard } from '@/hooks';
-import { useCurrentConnection } from '@/hooks/useCurrentConnection';
+import { useCopyToClipboard, useCurrentConnection } from '@/hooks';
 import useNavigate from '@/hooks/useNavigate.hook';
-import { useSelectedTab } from '@/hooks/useSelectedTab';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useTabStore } from '@/store/tabStore/tab.store';

@@ -1,5 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
-import { useSelectedTab } from '@/hooks/useSelectedTab.tsx';
+import { useSelectedTab } from '@/hooks';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { IconButton } from '@mui/material';

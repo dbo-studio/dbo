@@ -2,7 +2,7 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import type { TabType } from '@/types';
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useCurrentConnection } from './useCurrentConnection';
+import { useCurrentConnection } from './useCurrentConnection.hook';
 
 export const useSelectedTab = (): TabType | undefined => {
   const [searchParams, _] = useSearchParams();

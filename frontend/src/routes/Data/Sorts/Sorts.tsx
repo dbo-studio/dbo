@@ -1,5 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { useSelectedTab } from '@/hooks/useSelectedTab.tsx';
+import { useSelectedTab } from '@/hooks';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import type { SortType } from '@/types';

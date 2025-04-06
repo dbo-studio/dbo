@@ -16,7 +16,7 @@ import { type JSX, useMemo, useRef } from 'react';
 
 import { TextCellType, registerCellType } from 'handsontable/cellTypes';
 
-import { useSelectedTab } from '@/hooks/useSelectedTab';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import type { ColumnType } from '@/types';
 import { TextEditor, registerEditor } from 'handsontable/editors';
 import {

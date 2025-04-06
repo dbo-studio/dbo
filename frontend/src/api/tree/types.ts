@@ -58,6 +58,7 @@ export type TreeNodeType = {
   name: string;
   type: string;
   icon?: string;
+  hasChildren?: boolean;
   action: TreeNodeActionType;
   contextMenu: TreeNodeActionType[];
   children: TreeNodeType[];

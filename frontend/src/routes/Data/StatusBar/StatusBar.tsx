@@ -1,8 +1,8 @@
-import { useSelectedTab } from '@/hooks/useSelectedTab.tsx';
+import { useSelectedTab } from '@/hooks';
+import type { JSX } from 'react';
 import { StatusBarStyled } from './StatusBar.styled';
 import StatusBarActions from './StatusBarActions/StatusBarActions.tsx';
 import StatusBarPagination from './StatusBarPagination/StatusBarPagination';
-import type { JSX } from 'react';
 
 export default function StatusBar(): JSX.Element {
   const selectedTab = useSelectedTab();

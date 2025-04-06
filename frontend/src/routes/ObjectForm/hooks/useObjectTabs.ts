@@ -1,7 +1,7 @@
 import api from '@/api';
 import type { TabResponseType } from '@/api/tree/types';
-import { useCurrentConnection } from '@/hooks/useCurrentConnection';
-import { useSelectedTab } from '@/hooks/useSelectedTab';
+import { useCurrentConnection } from '@/hooks';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';

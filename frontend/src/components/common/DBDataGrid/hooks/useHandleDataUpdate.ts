@@ -1,5 +1,5 @@
 import { TabMode } from '@/core/enums';
-import { useSelectedTab } from '@/hooks/useSelectedTab';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import type { HotTableRef } from '@handsontable/react-wrapper';
 import { type RefObject, useEffect } from 'react';

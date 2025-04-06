@@ -1,13 +1,13 @@
 import Loading from '@/components/layout/AppHeader/ConnectionInfo/ConnectionBox/Loading/Loading.tsx';
 import type { ConnectionBoxStatus } from '@/components/layout/AppHeader/ConnectionInfo/types.ts';
-import { useCurrentConnection } from '@/hooks/useCurrentConnection.tsx';
+import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store.ts';
 import { Box, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import { ConnectionBoxStyled } from './ConnectionBox.styled.ts';
 
-export default function ConnectionBox() {
+export default function ConnectionBox(): JSX.Element {
   const { loading } = useConnectionStore();
   const [info, setInfo] = useState('');
   const [status, setStatus] = useState<ConnectionBoxStatus>('loading');

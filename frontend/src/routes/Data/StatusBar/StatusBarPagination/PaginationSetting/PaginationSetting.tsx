@@ -1,4 +1,4 @@
-import { useSelectedTab } from '@/hooks/useSelectedTab';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { TabDataPagination, TabType } from '@/types';

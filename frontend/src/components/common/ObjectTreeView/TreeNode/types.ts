@@ -18,7 +18,7 @@ export type NodeContentProps = {
   isFocused: boolean;
   isExpanded: boolean;
   isLoading: boolean;
-  hasChildren: boolean;
+  hasChildren?: boolean;
   level: number;
   nodeIndex: number;
   focusNode: (event: React.MouseEvent) => void;
