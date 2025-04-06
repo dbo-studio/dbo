@@ -49,11 +49,11 @@ func (r *PostgresRepository) tableColumnFields() []contract.FormField {
 
 func (r *PostgresRepository) foreignKeyOptions(node PGNode) []contract.FormField {
 	return []contract.FormField{
-		{ID: "constraint_name", Name: "Constraint Name", Type: "text"},
+		{ID: "constraint_name", Name: "Constraint Name", Type: "text", Required: true},
 		{ID: "comment", Name: "Comment", Type: "text"},
-		{ID: "ref_columns", Name: "Source Columns", Type: "multi-select", Fields: r.tableColumnsList(node)},
-		{ID: "target_table", Name: "Target Table", Type: "select", Fields: r.tablesList(node)},
-		{ID: "target_columns", Name: "Target Columns", Type: "chip"},
+		{ID: "ref_columns", Name: "Source Columns", Type: "multi-select", Fields: r.tableColumnsList(node), Required: true},
+		{ID: "target_table", Name: "Target Table", Type: "select", Fields: r.tablesList(node), Required: true},
+		{ID: "target_columns", Name: "Target Columns", Type: "chip", Required: true},
 		{ID: "update_action", Name: "On Update", Type: "select", Fields: []contract.FormField{
 			{Value: "NO ACTION", Name: "NO ACTION"},
 			{Value: "RESTRICT", Name: "RESTRICT"},
@@ -399,11 +399,11 @@ func (r *PostgresRepository) viewFields() []contract.FormField {
 
 func (r *PostgresRepository) materializedViewFields() []contract.FormField {
 	return []contract.FormField{
-		{ID: "name", Name: "Name", Type: "text"},
+		{ID: "name", Name: "Name", Type: "text", Required: true},
 		{ID: "comment", Name: "Comment", Type: "text"},
-		{ID: "withs", Name: "Withs", Type: "text"},
 		{ID: "tablespace", Name: "Tablespace", Type: "select", Fields: r.tablespaceOptions()},
-		{ID: "query", Name: "Query", Type: "query"},
+		{ID: "rolname", Name: "Owner", Type: "text"},
+		{ID: "query", Name: "Query", Type: "query", Required: true},
 	}
 }
 

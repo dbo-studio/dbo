@@ -71,14 +71,15 @@ func (r *PostgresRepository) getMaterializedViewInfo(node PGNode) ([]contract.Fo
 	query := r.db.Table("pg_class AS c").
 		Select(`
 			c.relname as name,
-			d.description as comment,
-			NULL as withs,
+			d.description as comment, 
 			t.spcname as tablespace,
+			r.rolname as rolname,
 			m.definition as query
 		`).
 		Joins("JOIN pg_namespace AS n ON n.oid = c.relnamespace").
 		Joins("LEFT JOIN pg_description AS d ON d.objoid = c.oid AND d.objsubid = 0").
 		Joins("LEFT JOIN pg_tablespace AS t ON t.oid = c.reltablespace").
+		Joins("LEFT JOIN pg_roles r ON r.oid = c.relowner").
 		Joins("LEFT JOIN pg_matviews AS m ON m.matviewname = c.relname AND m.schemaname = n.nspname").
 		Where("c.relname = ? AND c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)", node.Table, node.Schema)
 

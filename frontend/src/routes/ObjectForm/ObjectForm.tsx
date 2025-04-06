@@ -9,9 +9,9 @@ export default function ObjectForm({ isDetail = false }: { isDetail?: boolean })
   const { tabs, selectedTabIndex, currentTabId, handleTabChange } = useObjectTabs();
   const { fields } = useObjectFields(currentTabId, isDetail);
 
-  const selectedContent = fields ? <TableForm tabId={currentTabId} formSchema={fields} /> : null;
-
   if (!tabs) return <></>;
+
+  const selectedContent = fields ? <TableForm tabId={currentTabId} formSchema={fields} /> : null;
 
   return (
     <ObjectFormStyled>

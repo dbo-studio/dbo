@@ -68,10 +68,16 @@ type PostgresViewParamsData struct {
 }
 
 type PostgresMaterializedViewParams struct {
-	Name        *string `json:"name"`
-	Query       *string `json:"query"`
-	Comment     *string `json:"description"`
-	CheckOption *string `json:"check_option"`
+	New *PostgresMaterializedViewData `json:"new"`
+	Old *PostgresMaterializedViewData `json:"old"`
+}
+
+type PostgresMaterializedViewData struct {
+	Name       *string `json:"name"`
+	Comment    *string `json:"comment"`
+	Tablespace *string `json:"tablespace"`
+	Owner      *string `json:"rolname"`
+	Query      *string `json:"query"`
 }
 
 type PostgresIndexParams struct {

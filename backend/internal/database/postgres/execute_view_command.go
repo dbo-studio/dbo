@@ -48,34 +48,6 @@ func (r *PostgresRepository) handleViewCommands(node PGNode, tabId contract.Tree
 		}
 	}
 
-	// if action == contract.EditViewAction {
-	// 	if params.New.Name != nil {
-	// 		query := fmt.Sprintf(`ALTER VIEW "%s"."%s" RENAME TO %s`, node.Schema, *params.Old.Name, *params.New.Name)
-	// 		queries = append(queries, query)
-	// 		params.Old.Name = params.New.Name
-	// 	}
-
-	// 	if params.New.Query != nil && params.Old.Name != nil {
-	// 		query := fmt.Sprintf(`CREATE OR REPLACE VIEW "%s"."%s" (%s) AS %s`,
-	// 			node.Schema,
-	// 			*params.Old.Name,
-	// 			*params.Old.Query,
-	// 			*params.New.Query,
-	// 		)
-	// 		queries = append(queries, query)
-	// 	}
-
-	// 	if params.New.CheckOption != nil {
-	// 		query := fmt.Sprintf(`ALTER VIEW "%s"."%s" SET (check_option = %s)`, node.Schema, *params.New.Name, *params.New.CheckOption)
-	// 		queries = append(queries, query)
-	// 	}
-
-	// 	if params.New.Comment != nil {
-	// 		query := fmt.Sprintf(`COMMENT ON VIEW "%s"."%s" is '%s'`, node.Schema, *params.New.Name, *params.New.Comment)
-	// 		queries = append(queries, query)
-	// 	}
-	// }
-
 	if action == contract.DropViewAction {
 		query := fmt.Sprintf(`DROP VIEW "%s"."%s"`, node.Schema, node.Table)
 		queries = append(queries, query)

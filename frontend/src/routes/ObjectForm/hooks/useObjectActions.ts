@@ -172,6 +172,8 @@ export const useObjectActions = (
   };
 
   const handleFieldChange = (formSchema: any, field: string, value: any): void => {
+    if (!tabId) return;
+
     // Create a new state object with all form values
     const formData = formSchema.reduce(
       (acc: Record<string, any>, field: any) => {
@@ -185,22 +187,20 @@ export const useObjectActions = (
     const newState = { ...formData, [field]: value };
 
     // Update the form data in the store
-    if (tabId) {
-      const updatedFields = formSchema.map((field: any) => {
-        if (field.type === 'array') {
-          return {
-            ...field,
-            fields: newState[field.id]
-          };
-        }
+    const updatedFields = formSchema.map((field: any) => {
+      if (field.type === 'array') {
         return {
           ...field,
-          value: newState[field.id]
+          fields: newState[field.id]
         };
-      });
+      }
+      return {
+        ...field,
+        value: newState[field.id]
+      };
+    });
 
-      updateFormData(selectedTab?.id ?? '', tabId, updatedFields);
-    }
+    updateFormData(selectedTab?.id ?? '', tabId, updatedFields);
   };
 
   return {
