@@ -5,15 +5,17 @@ import { useCurrentConnection } from '@/hooks';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { Box, LinearProgress } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
-import { type JSX, useEffect, useRef, useState } from 'react';
+import { type JSX, useEffect, useMemo, useRef, useState } from 'react';
 import { TreeViewContainerStyled, TreeViewContentStyled } from './ObjectTreeView.styled';
 import TreeNode from './TreeNode/TreeNode';
 
 export default function ObjectTreeView(): JSX.Element {
   const currentConnection = useCurrentConnection();
-  const { tree, isLoading, treeError, reloadTree, addLoadedParentId } = useTreeStore();
+  const { getTree, isLoading, treeError, reloadTree, addLoadedParentId } = useTreeStore();
   const parentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
+
+  const tree = useMemo(() => getTree(), [getTree()]);
 
   const { mutateAsync: getChildrenMutation } = useMutation({
     mutationFn: api.tree.getTree,

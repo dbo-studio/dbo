@@ -7,7 +7,7 @@ import type { TabSettingSlice, TabStore } from '../types';
 const maxTabs = 15;
 
 export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [], [], TabSettingSlice> = (_, get) => ({
-  addTab: (table: string, id?: string, mode?: TabMode, query?: string): TabType => {
+  addTab: (table: string, id?: string, mode?: TabMode, query?: string, editable?: boolean): TabType => {
     // biome-ignore lint: reason
     mode = mode ? mode : TabMode.Data;
     const tabs = get().getTabs();
@@ -32,6 +32,9 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       nodeId: id ?? '',
       table: table,
       query: tabQuery,
+      options: {
+        editable: editable === undefined ? false : editable
+      },
       filters: [],
       sorts: [],
       columns: [],
@@ -93,8 +96,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       nodeId: nodeId,
       mode: mode,
       options: {
-        action: action,
-        tabId: 0
+        action: action
       }
     };
 

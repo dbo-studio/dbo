@@ -2,8 +2,8 @@ import type { FormFieldType, ObjectTabType } from '@/api/tree/types';
 
 export type ObjectTabProps = {
   tabs: ObjectTabType[];
-  selectedTabIndex: number;
-  setSelectedTabIndex: (index: number) => void;
+  selectedTabIndex: string;
+  setSelectedTabIndex: (index: string) => void;
 };
 
 export type ArrayFieldProps = {
@@ -24,7 +24,6 @@ export type SimpleFieldProps = {
 };
 
 export type TableFormProps = {
-  tabId: string | undefined;
   formSchema: FormFieldType[];
 };
 

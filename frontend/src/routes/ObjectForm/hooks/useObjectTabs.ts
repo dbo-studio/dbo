@@ -2,20 +2,19 @@ import api from '@/api';
 import type { TabResponseType } from '@/api/tree/types';
 import { useCurrentConnection } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 
 export const useObjectTabs = (): {
   tabs: TabResponseType;
-  selectedTabIndex: number;
-  currentTabId: string | undefined;
-  handleTabChange: (index: number) => void;
+  selectedTabIndex: string;
+  handleTabChange: (index: string) => void;
 } => {
   const selectedTab = useSelectedTab();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [selectedTabIndex, setSelectedTabIndex] = useState(Number.parseInt(searchParams.get('objectTabId') ?? '0'));
+  const [selectedTabIndex, setSelectedTabIndex] = useState(selectedTab?.options?.tabId);
   const currentConnection = useCurrentConnection();
+  const { updateSelectedTab } = useTabStore();
 
   const { data: tabs } = useQuery({
     queryKey: ['objectTabs', selectedTab?.id, currentConnection?.id, selectedTab?.options?.action],
@@ -28,24 +27,29 @@ export const useObjectTabs = (): {
     enabled: !!(selectedTab?.id && currentConnection?.id && selectedTab?.options?.action)
   });
 
-  const currentTabId = tabs?.[selectedTabIndex]?.id;
+  const handleTabChange = (index: string): void => {
+    if (!selectedTab) return;
 
-  const handleTabChange = (index: number): void => {
+    updateSelectedTab({
+      ...selectedTab,
+      options: {
+        ...selectedTab.options,
+        tabId: index
+      }
+    });
+
     setSelectedTabIndex(index);
-    searchParams.set('objectTabId', index.toString());
-    setSearchParams(searchParams);
   };
 
   useEffect(() => {
     if (selectedTab) {
-      setSelectedTabIndex(Number.parseInt(searchParams.get('objectTabId') ?? '0'));
+      setSelectedTabIndex(selectedTab?.options?.tabId);
     }
   }, [selectedTab]);
 
   return {
     tabs: tabs ?? [],
     selectedTabIndex,
-    currentTabId,
     handleTabChange
   };
 };

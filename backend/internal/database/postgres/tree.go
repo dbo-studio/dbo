@@ -146,8 +146,9 @@ func buildContainer(r *PostgresRepository, dbName, schemaName string, container 
 				Action: &contract.TreeNodeAction{
 					Type: contract.TreeNodeActionTypeTab,
 					Params: map[string]interface{}{
-						"path":  "data",
-						"table": table.Name,
+						"path":     "data",
+						"table":    table.Name,
+						"editable": true,
 					},
 				},
 				ContextMenu: r.ContextMenu(contract.TableNodeType),
@@ -168,8 +169,9 @@ func buildContainer(r *PostgresRepository, dbName, schemaName string, container 
 				Action: &contract.TreeNodeAction{
 					Type: contract.TreeNodeActionTypeTab,
 					Params: map[string]interface{}{
-						"path":  "data",
-						"table": view.Name,
+						"path":     "data",
+						"table":    view.Name,
+						"editable": false,
 					},
 				},
 				ContextMenu: r.ContextMenu(contract.ViewNodeType),
@@ -183,9 +185,17 @@ func buildContainer(r *PostgresRepository, dbName, schemaName string, container 
 		}
 		for _, mv := range mvs {
 			containerNode.Children = append(containerNode.Children, contract.TreeNode{
-				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, mv.Name),
-				Name:        mv.Name,
-				Type:        contract.MaterializedViewNodeType,
+				ID:   fmt.Sprintf("%s.%s.%s", dbName, schemaName, mv.Name),
+				Name: mv.Name,
+				Type: contract.MaterializedViewNodeType,
+				Action: &contract.TreeNodeAction{
+					Type: contract.TreeNodeActionTypeTab,
+					Params: map[string]interface{}{
+						"path":     "data",
+						"table":    mv.Name,
+						"editable": false,
+					},
+				},
 				ContextMenu: r.ContextMenu(contract.MaterializedViewNodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})

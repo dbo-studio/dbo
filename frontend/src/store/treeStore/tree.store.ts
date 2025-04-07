@@ -2,53 +2,99 @@ import api from '@/api';
 import { getTree } from '@/api/tree';
 import type { TreeNodeType } from '@/api/tree/types';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import type { ConnectionType } from '@/types';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import type { TreeStore } from './types';
+
+const getCurrentConnection = (): ConnectionType | undefined => {
+  const connectionStore = useConnectionStore.getState();
+  return connectionStore.connections?.find((connection) => connection.isActive);
+};
 
 export const useTreeStore = create<TreeStore>()(
   devtools(
     persist(
       (set, get) => ({
-        tree: null,
-        expandedNodes: [],
-        loadedParentIds: [],
+        tree: {},
+        expandedNodes: {},
+        loadedParentIds: {},
         isLoading: false,
         treeError: undefined,
 
         setTree: (tree: TreeNodeType | null): void => {
-          set({ tree });
+          const currentConnection = getCurrentConnection();
+          if (!currentConnection) return;
+
+          set((state) => ({
+            tree: { ...state.tree, [currentConnection.id]: tree }
+          }));
         },
+
         getTree: (): TreeNodeType | null => {
-          return get().tree;
+          const currentConnection = getCurrentConnection();
+          if (!currentConnection) return null;
+
+          return get().tree[currentConnection.id] || null;
         },
+
         expandNode: (nodeId: string): void => {
-          const expandedNodes = get().expandedNodes;
-          expandedNodes.push(nodeId);
+          const currentConnection = getCurrentConnection();
+          if (!currentConnection) return;
 
-          set({ expandedNodes });
+          set((state) => ({
+            expandedNodes: {
+              ...state.expandedNodes,
+              [currentConnection.id]: [...(state.expandedNodes[currentConnection.id] || []), nodeId]
+            }
+          }));
         },
+
         collapseNode: (nodeId: string): void => {
-          const expandedNodes = get().expandedNodes;
-          expandedNodes.splice(expandedNodes.indexOf(nodeId), 1);
+          const currentConnection = getCurrentConnection();
+          if (!currentConnection) return;
 
-          set({ expandedNodes });
+          set((state) => ({
+            expandedNodes: {
+              ...state.expandedNodes,
+              [currentConnection.id]: (state.expandedNodes[currentConnection.id] || []).filter((id) => id !== nodeId)
+            }
+          }));
         },
+
         isNodeExpanded: (nodeId: string): boolean => {
-          return get().expandedNodes.includes(nodeId);
-        },
-        addLoadedParentId: (parentId: string): void => {
-          const loadedParentIds = get().loadedParentIds;
-          loadedParentIds.push(parentId);
+          const currentConnection = getCurrentConnection();
+          if (!currentConnection) return false;
 
-          set({ loadedParentIds });
+          return get().expandedNodes[currentConnection.id]?.includes(nodeId) || false;
         },
+
+        addLoadedParentId: (parentId: string): void => {
+          const currentConnection = getCurrentConnection();
+          if (!currentConnection) return;
+
+          set((state) => ({
+            loadedParentIds: {
+              ...state.loadedParentIds,
+              [currentConnection.id]: [...(state.loadedParentIds[currentConnection.id] || []), parentId]
+            }
+          }));
+        },
+
         getLoadedParentIds: (): string[] => {
-          return get().loadedParentIds;
+          const currentConnection = getCurrentConnection();
+          if (!currentConnection) return [];
+
+          return get().loadedParentIds[currentConnection.id] || [];
         },
-        setNodeChildren: (nodeId: string, children: TreeNodeType[]): void =>
+
+        setNodeChildren: (nodeId: string, children: TreeNodeType[]): void => {
+          const currentConnection = getCurrentConnection();
+          if (!currentConnection) return;
+
           set((state) => {
-            if (!state.tree) return { tree: null };
+            const currentTree = state.tree[currentConnection.id];
+            if (!currentTree) return state;
 
             const updateNodeChildren = (node: TreeNodeType): TreeNodeType => {
               if (node.id === nodeId) {
@@ -66,14 +112,16 @@ export const useTreeStore = create<TreeStore>()(
             };
 
             return {
-              tree: updateNodeChildren(state.tree)
+              tree: {
+                ...state.tree,
+                [currentConnection.id]: updateNodeChildren(currentTree)
+              }
             };
-          }),
+          });
+        },
 
         reloadTree: async (): Promise<void> => {
-          const connectionStore = useConnectionStore.getState();
-          const currentConnection = connectionStore.connections?.find((connection) => connection.isActive);
-
+          const currentConnection = getCurrentConnection();
           if (!currentConnection) return;
 
           set({ isLoading: true });
@@ -84,9 +132,9 @@ export const useTreeStore = create<TreeStore>()(
               connectionId: currentConnection.id || 0
             });
 
-            set({ tree: treeData });
+            get().setTree(treeData);
 
-            const loadedParentIds = Array.from(get().loadedParentIds);
+            const loadedParentIds = get().getLoadedParentIds();
 
             for (const parentId of loadedParentIds) {
               try {
@@ -113,6 +161,9 @@ export const useTreeStore = create<TreeStore>()(
       {
         name: 'tree'
       }
-    )
+    ),
+    {
+      name: 'tree'
+    }
   )
 );

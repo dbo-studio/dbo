@@ -9,13 +9,11 @@ import { useTreeStore } from '@/store/treeStore/tree.store';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-export const useObjectActions = (
-  tabId: string | undefined
-): {
+export const useObjectActions = (): {
   handleSave: () => Promise<void>;
   handleCancel: () => Promise<void>;
   handleAddArrayItem: (field: FormFieldType) => void;
-  handleFieldChange: (formSchema: any, field: string, value: any) => void;
+  handleFieldChange: (field: string, value: any) => void;
 } => {
   const queryClient = useQueryClient();
   const currentConnection = useCurrentConnection();
@@ -28,7 +26,13 @@ export const useObjectActions = (
     mutationFn: api.tree.executeAction,
     onSuccess: (): void => {
       queryClient.invalidateQueries({
-        queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, tabId]
+        queryKey: [
+          'tabFields',
+          currentConnection?.id,
+          selectedTab?.id,
+          selectedTab?.options?.action,
+          selectedTab?.options?.tabId
+        ]
       });
       reloadTree();
     },
@@ -39,7 +43,6 @@ export const useObjectActions = (
 
   const handleSave = async (): Promise<void> => {
     if (!currentConnection || !selectedTab || pendingExecuteAction) return;
-    console.log(formDataByTab);
 
     try {
       const allFormData = Object.entries(formDataByTab[selectedTab.id] || {}).reduce(
@@ -125,10 +128,10 @@ export const useObjectActions = (
   };
 
   const handleCancel = async (): Promise<void> => {
-    if (!currentConnection || !tabId || !selectedTab) return;
+    if (!currentConnection || !selectedTab?.options?.tabId || !selectedTab) return;
 
     try {
-      resetFormData(tabId, action);
+      resetFormData(selectedTab?.options?.tabId, action);
 
       toast.info('Changes discarded');
     } catch (error) {
@@ -138,7 +141,7 @@ export const useObjectActions = (
   };
 
   const handleAddArrayItem = (field: FormFieldType): void => {
-    if (!tabId) return;
+    if (!selectedTab?.options?.tabId) return;
 
     const template = field.fields?.[0];
     if (!template) return;
@@ -154,7 +157,7 @@ export const useObjectActions = (
     };
 
     // Get current form data and update it
-    const formData = getFormData(selectedTab?.id ?? '', tabId);
+    const formData = getFormData(selectedTab?.id ?? '', selectedTab?.options?.tabId);
     if (!formData) return;
 
     // Find the field to update
@@ -168,39 +171,27 @@ export const useObjectActions = (
       return f;
     });
 
-    updateFormData(selectedTab?.id ?? '', tabId, updatedFields);
+    updateFormData(selectedTab?.id ?? '', selectedTab?.options?.tabId, updatedFields);
   };
 
-  const handleFieldChange = (formSchema: any, field: string, value: any): void => {
-    if (!tabId) return;
+  const handleFieldChange = (field: string, value: any): void => {
+    if (!selectedTab?.options?.tabId) return;
 
-    // Create a new state object with all form values
-    const formData = formSchema.reduce(
-      (acc: Record<string, any>, field: any) => {
-        acc[field.id] = field.value;
-        return acc;
-      },
-      {} as Record<string, any>
-    );
+    const currentFormData = getFormData(selectedTab?.id ?? '', selectedTab?.options?.tabId);
+    if (!currentFormData) return;
 
-    // Update the field that changed
-    const newState = { ...formData, [field]: value };
-
-    // Update the form data in the store
-    const updatedFields = formSchema.map((field: any) => {
-      if (field.type === 'array') {
+    // Update the field that changed while preserving other fields
+    const updatedFields = currentFormData.map((formField: FormFieldType) => {
+      if (formField.id === field) {
         return {
-          ...field,
-          fields: newState[field.id]
+          ...formField,
+          value: value
         };
       }
-      return {
-        ...field,
-        value: newState[field.id]
-      };
+      return formField;
     });
 
-    updateFormData(selectedTab?.id ?? '', tabId, updatedFields);
+    updateFormData(selectedTab?.id ?? '', selectedTab?.options?.tabId, updatedFields);
   };
 
   return {

@@ -6,8 +6,8 @@ import ArrayField from './ArrayField';
 import FormFields from './FormFields';
 import StatusBar from './StatusBar/StatusBar';
 
-export default function TableForm({ tabId, formSchema }: TableFormProps): JSX.Element {
-  const { handleSave, handleCancel, handleAddArrayItem, handleFieldChange } = useObjectActions(tabId);
+export default function TableForm({ formSchema }: TableFormProps): JSX.Element {
+  const { handleSave, handleCancel, handleAddArrayItem, handleFieldChange } = useObjectActions();
 
   const simpleFields = formSchema.filter((field) => field.type !== 'array');
   const arrayFields = formSchema.filter((field) => field.type === 'array');
@@ -15,15 +15,12 @@ export default function TableForm({ tabId, formSchema }: TableFormProps): JSX.El
   return (
     <Box overflow={'hidden'} flexDirection={'column'} display={'flex'} padding={1} width={'100%'}>
       <Box flex={1} overflow={'auto'}>
-        <FormFields
-          fields={simpleFields}
-          onChange={(field, value): void => handleFieldChange(formSchema, field, value)}
-        />
+        <FormFields fields={simpleFields} onChange={(field, value): void => handleFieldChange(field, value)} />
         {arrayFields.map((field) => (
           <Box key={field.id}>
             <ArrayField
               field={field}
-              onChange={(value): void => handleFieldChange(formSchema, field.id, value)}
+              onChange={(value): void => handleFieldChange(field.id, value)}
               onAdd={(): void => handleAddArrayItem(field)}
             />
           </Box>

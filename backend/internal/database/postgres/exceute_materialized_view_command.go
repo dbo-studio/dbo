@@ -43,7 +43,7 @@ func (r *PostgresRepository) handleMaterializedViewCommands(node PGNode, tabId c
 		queries = append(queries, query)
 
 		if params.New.Owner != nil {
-			queries = append(queries, fmt.Sprintf("ALTER MATERIALIZED VIEW %s OWNER TO %s", *params.New.Name, *params.New.Owner))
+			queries = append(queries, fmt.Sprintf(`ALTER MATERIALIZED VIEW %s OWNER TO %s`, *params.New.Name, *params.New.Owner))
 		}
 
 		if params.New.Comment != nil {

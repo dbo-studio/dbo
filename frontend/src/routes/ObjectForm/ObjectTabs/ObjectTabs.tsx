@@ -7,9 +7,9 @@ import { ObjectTabsStyled } from './ObjectTabs.styles';
 export default function ObjectTabs({ tabs, selectedTabIndex, setSelectedTabIndex }: ObjectTabProps): JSX.Element {
   return (
     <ObjectTabsStyled>
-      <Tabs value={selectedTabIndex} onChange={(_, newValue): void => setSelectedTabIndex(newValue)}>
+      <Tabs value={selectedTabIndex ?? tabs[0]?.id} onChange={(_, newValue): void => setSelectedTabIndex(newValue)}>
         {tabs.map((tab: ObjectTabType) => (
-          <Tab key={tab.id} label={tab.name} />
+          <Tab value={tab.id} key={tab.id} label={tab.name} />
         ))}
       </Tabs>
     </ObjectTabsStyled>

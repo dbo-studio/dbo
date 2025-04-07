@@ -1,9 +1,9 @@
 import type { TreeNodeType } from '@/api/tree/types';
 
 export type TreeStore = {
-  tree: TreeNodeType | null;
-  expandedNodes: string[];
-  loadedParentIds: string[];
+  tree: Record<string, TreeNodeType>;
+  expandedNodes: Record<string, string[]>;
+  loadedParentIds: Record<string, string[]>;
   isLoading: boolean;
   treeError: Error | undefined;
 

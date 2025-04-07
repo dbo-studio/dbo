@@ -68,7 +68,13 @@ export const useActionDetection = (
               break;
             }
             case 'data': {
-              const tab = addTab(node.action.params.table, node.id, node.action.params.path);
+              const tab = addTab(
+                node.action.params.table,
+                node.id,
+                node.action.params.path,
+                undefined,
+                node.action.params.editable
+              );
               navigate({
                 route: node.action.params.path,
                 tabId: tab.id

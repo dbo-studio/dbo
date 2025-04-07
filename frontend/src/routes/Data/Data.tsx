@@ -26,7 +26,7 @@ export default function Data(): JSX.Element {
       {selectedTab?.showQuery && <QueryPreview />}
       <Box overflow='hidden' flex={1} display='flex' flexDirection='row'>
         {selectedTab?.showColumns && <Columns />}
-        <DataGrid editable={true} />
+        <DataGrid editable={selectedTab?.options?.editable ?? false} />
       </Box>
       <StatusBar />
     </>

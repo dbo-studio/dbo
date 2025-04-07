@@ -1,21 +1,27 @@
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { TabType } from '@/types';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useCurrentConnection } from './useCurrentConnection.hook';
 
 export const useSelectedTab = (): TabType | undefined => {
-  const [searchParams, _] = useSearchParams();
-  const currentConnection = useCurrentConnection();
-  const { tabs, selectedTab } = useTabStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabs = useTabStore((state) => state.getTabs()) || [];
 
-  const tabId = searchParams.get('tabId');
+  const tabId = useMemo(() => searchParams.get('tabId'), [searchParams]);
 
-  return useMemo(() => {
-    if (!currentConnection) {
-      return undefined;
+  useEffect(() => {
+    if ((!tabId || tabId === '') && tabs[0]?.id) {
+      searchParams.set('tabId', tabs[0].id);
+      setSearchParams(searchParams);
     }
+  }, [tabs, searchParams, setSearchParams, tabId]);
 
-    return tabs?.[currentConnection.id]?.find((t) => t.id === tabId);
-  }, [tabs, tabId, currentConnection, selectedTab]);
+  const selectedTab = useMemo(() => {
+    if (!tabId || tabId === '') {
+      return tabs[0];
+    }
+    return tabs.find((t) => t.id === tabId);
+  }, [tabs, tabId]);
+
+  return selectedTab;
 };

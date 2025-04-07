@@ -2,8 +2,9 @@ import PanelTabItem from '@/components/common/Panels/PanelTabs/PanelTabItem/Pane
 import { PanelTabsStyled } from '@/components/common/Panels/PanelTabs/PanelTabs.styled.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { TabType } from '@/types';
+import type { JSX } from 'react';
 
-export default function PanelTabs() {
+export default function PanelTabs(): JSX.Element {
   const { getTabs } = useTabStore();
 
   return (
