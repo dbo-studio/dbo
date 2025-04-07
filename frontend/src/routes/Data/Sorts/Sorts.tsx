@@ -13,7 +13,7 @@ export default function Sorts(): JSX.Element {
   const { getColumns, runQuery } = useDataStore();
   const selectedTab = useSelectedTab();
 
-  const columns = useMemo(() => getColumns(selectedTab), [getColumns(selectedTab), selectedTab]);
+  const columns = useMemo(() => getColumns(), [getColumns]);
 
   if (!selectedTab) return <></>;
 
@@ -30,7 +30,7 @@ export default function Sorts(): JSX.Element {
       {(selectedTab?.sorts?.length ?? 0) > 0 && (
         <Box display='flex' justifyContent='flex-start' mx={1} mt={1}>
           <Button
-            onClick={(): Promise<void> => runQuery(selectedTab)}
+            onClick={(): Promise<void> => runQuery()}
             size='small'
             variant='outlined'
             endIcon={<CustomIcon type='check' size='xs' />}

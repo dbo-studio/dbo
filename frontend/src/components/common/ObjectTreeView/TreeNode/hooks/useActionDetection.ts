@@ -2,7 +2,6 @@ import api from '@/api';
 import type { TreeNodeType } from '@/api/tree/types';
 import { TabMode } from '@/core/enums';
 import { useCopyToClipboard, useCurrentConnection } from '@/hooks';
-import useNavigate from '@/hooks/useNavigate.hook';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
@@ -18,10 +17,9 @@ export const useActionDetection = (
   actionDetection: (event: React.MouseEvent, node: TreeNodeType) => Promise<void>;
 } => {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const selectedTab = useSelectedTab();
 
-  const { addTab, addObjectTab } = useTabStore();
+  const { addTab, addObjectTab, updateSelectedTab } = useTabStore();
   const confirmModal = useConfirmModalStore();
   const currentConnection = useCurrentConnection();
   const { reloadTree } = useTreeStore();
@@ -53,32 +51,17 @@ export const useActionDetection = (
           switch (node.action.params.path) {
             case 'object': {
               const tab = addObjectTab(node.id, node.action.name, TabMode.Object);
-              navigate({
-                route: node.action.params.path,
-                tabId: tab.id
-              });
+              updateSelectedTab(tab);
               break;
             }
             case 'object-detail': {
               const tab = addObjectTab(node.id, node.action.name, TabMode.ObjectDetail);
-              navigate({
-                route: node.action.params.path,
-                tabId: tab.id
-              });
+              updateSelectedTab(tab);
               break;
             }
             case 'data': {
-              const tab = addTab(
-                node.action.params.table,
-                node.id,
-                node.action.params.path,
-                undefined,
-                node.action.params.editable
-              );
-              navigate({
-                route: node.action.params.path,
-                tabId: tab.id
-              });
+              const tab = addTab(node.action.params.table, node.id, node.action.params.editable);
+              updateSelectedTab(tab);
               break;
             }
           }
@@ -137,7 +120,6 @@ export const useActionDetection = (
       confirmModal,
       currentConnection?.id,
       expandNode,
-      navigate,
       executeActionMutation,
       pendingExecuteAction,
       selectedTab?.id,

@@ -1,4 +1,3 @@
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useWindowSize } from '@/hooks/useWindowSize.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -9,7 +8,6 @@ import { v4 as uuidv4 } from 'uuid';
 import ColumnItem from './ColumnItem';
 
 export default function Columns(): JSX.Element {
-  const selectedTab = useSelectedTab();
   const windowSize = useWindowSize();
 
   const theme: Theme = useTheme();
@@ -17,20 +15,20 @@ export default function Columns(): JSX.Element {
   const { updateColumns: updateTabColumns } = useTabStore();
 
   const handleCheckToggle = async (column: ColumnType): Promise<void> => {
-    if (loading || !selectedTab) return;
+    if (loading) return;
 
     column.isActive = !column.isActive;
-    const newColumns = getColumns(selectedTab).map((c: ColumnType) => {
+    const newColumns = getColumns().map((c: ColumnType) => {
       if (c.name === column.name) {
         return column;
       }
       return c;
     });
 
-    await updateColumns(selectedTab, newColumns);
+    await updateColumns(newColumns);
     const c = newColumns.filter((c) => c.isActive).map((c) => c.name);
-    updateTabColumns(selectedTab, [...c]);
-    runQuery(selectedTab).then();
+    updateTabColumns([...c]);
+    runQuery().then();
   };
 
   return (
@@ -45,7 +43,7 @@ export default function Columns(): JSX.Element {
       flexDirection={'column'}
       minWidth={'130px'}
     >
-      {getColumns(selectedTab).map((c: ColumnType) => (
+      {getColumns().map((c: ColumnType) => (
         <ColumnItem onClick={(): Promise<void> => handleCheckToggle(c)} key={uuidv4()} column={c} />
       ))}
     </Box>

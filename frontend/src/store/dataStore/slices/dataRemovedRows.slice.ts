@@ -16,21 +16,25 @@ export const createDataRemovedRowsSlice: StateCreator<
   DataRemovedRowsSlice
 > = (set, get) => ({
   removedRows: {},
-  getRemovedRows: (tab: TabType | undefined): RowType[] => {
+  getRemovedRows: (): RowType[] => {
+    const tab = useTabStore.getState().selectedTab();
     if (!tab) return [];
 
     const rows = get().removedRows;
     return rows[tab?.id as string] ?? [];
   },
-  updateRemovedRows: (tab: TabType): void => {
+  updateRemovedRows: (): void => {
+    const tab = useTabStore.getState().selectedTab();
+    if (!tab) return;
+
     const rowsIndex = Array.from(get().getSelectedRows().values()).map((row) => row.index);
     const rows = get()
-      .getRows(tab)
+      .getRows()
       .filter((r: RowType) => rowsIndex.includes(r.dbo_index));
 
     //unsaved items will remove immediately if selected and should not store in removed rows list
     const unsavedRows = get()
-      .getUnsavedRows(tab)
+      .getUnsavedRows()
       .filter((r) => rowsIndex.includes(r.dbo_index));
     const unsavedRowsId = unsavedRows.map((r) => r.dbo_index);
 
@@ -50,7 +54,7 @@ export const createDataRemovedRowsSlice: StateCreator<
       .filter((r) => !unsavedRowsId.includes(r.dbo_index));
 
     set({ removedRows });
-    get().discardUnsavedRows(tab, unsavedRows);
+    get().discardUnsavedRows(unsavedRows);
     get().clearSelectedRows();
   },
   deleteRemovedRowsByTabId: (tabId: string): void => {

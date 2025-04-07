@@ -1,5 +1,4 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Grid2, IconButton, Stack, useTheme } from '@mui/material';
 import type { JSX } from 'react';
@@ -7,23 +6,20 @@ import type { JSX } from 'react';
 export default function ActionBar(): JSX.Element {
   const theme = useTheme();
   const { setShowQueryPreview, setShowFilters, setShowSorts, setShowColumns } = useTabStore();
-  const selectedTab = useSelectedTab();
 
   const handleToggle = (type: 'filter' | 'query' | 'sort' | 'column'): void => {
-    if (!selectedTab) return;
-
     switch (type) {
       case 'filter':
-        setShowFilters(selectedTab);
+        setShowFilters();
         break;
       case 'query':
-        setShowQueryPreview(selectedTab);
+        setShowQueryPreview();
         break;
       case 'sort':
-        setShowSorts(selectedTab);
+        setShowSorts();
         break;
       case 'column':
-        setShowColumns(selectedTab);
+        setShowColumns();
         break;
     }
   };

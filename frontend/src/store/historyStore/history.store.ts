@@ -9,7 +9,7 @@ export const useHistoryStore = create<HistoryState>()(
   devtools(
     (set, get) => ({
       histories: undefined,
-      upsertHistory: (history: HistoryType) => {
+      upsertHistory: (history: HistoryType): void => {
         let queries = get().histories;
         if (queries === undefined) {
           queries = [];
@@ -24,7 +24,7 @@ export const useHistoryStore = create<HistoryState>()(
 
         set({ histories: queries });
       },
-      updateHistories: (histories: HistoryType[]) => {
+      updateHistories: (histories: HistoryType[]): void => {
         set({ histories: histories });
       }
     }),

@@ -14,9 +14,9 @@ export default function RemoveFilterButton({ filter }: RemoveFilterButtonProps):
   const handleRemoveFilter = (): void => {
     if (!selectedTab) return;
 
-    removeFilter(selectedTab, filter);
+    removeFilter(filter);
     if (filter.isActive) {
-      runQuery(selectedTab).then();
+      runQuery().then();
     }
   };
 

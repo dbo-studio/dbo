@@ -10,13 +10,21 @@ export const useConnectionStore = create<ConnectionState>()(
     (set, get) => ({
       loading: 'finished',
       connections: undefined,
-      updateLoading: (loading: LoadingType) => {
+      currentConnectionId: undefined,
+      currentConnection: (): ConnectionType | undefined => {
+        const { connections, currentConnectionId } = get();
+
+        if (!connections || connections.length === 0) return undefined;
+
+        return connections.find((c) => c.id === Number(currentConnectionId));
+      },
+      updateLoading: (loading: LoadingType): void => {
         set({ loading });
       },
-      updateConnections: (connections: ConnectionType[]) => {
+      updateConnections: (connections: ConnectionType[]): void => {
         set({ connections });
       },
-      updateCurrentConnection: (currentConnection: ConnectionType | undefined) => {
+      updateCurrentConnection: (currentConnection: ConnectionType | undefined): void => {
         if (!currentConnection) return;
 
         let connections = get().connections;
@@ -24,12 +32,15 @@ export const useConnectionStore = create<ConnectionState>()(
 
         connections = connections.map((c: ConnectionType) => {
           if (c.id === currentConnection.id) {
-            return currentConnection;
+            return {
+              ...currentConnection,
+              isActive: true
+            };
           }
           return c;
         });
 
-        set({ connections });
+        set({ connections, currentConnectionId: currentConnection.id });
       }
     }),
     { name: 'connections' }

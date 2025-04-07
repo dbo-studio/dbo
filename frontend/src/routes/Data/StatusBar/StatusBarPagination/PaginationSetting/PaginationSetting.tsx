@@ -61,10 +61,7 @@ export default function PaginationSetting(): JSX.Element {
 
     setAnchorEl(null);
 
-    runQuery({
-      ...(selectedTab ?? ({} as TabType)),
-      pagination
-    });
+    runQuery();
   };
 
   return (

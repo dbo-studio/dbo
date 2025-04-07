@@ -1,15 +1,17 @@
-import useNavigate from '@/hooks/useNavigate.hook';
 import locales from '@/locales';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, Button, Typography, useTheme } from '@mui/material';
+import type { JSX } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-export default function NotFound() {
+export default function NotFound(): JSX.Element {
   const theme = useTheme();
+  const { updateSelectedTab } = useTabStore();
   const navigate = useNavigate();
 
-  const goHome = () => {
-    navigate({
-      route: '/'
-    });
+  const goHome = (): void => {
+    updateSelectedTab(undefined);
+    navigate('/');
   };
 
   return (

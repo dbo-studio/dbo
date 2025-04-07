@@ -1,19 +1,17 @@
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
-import { TabMode } from '@/core/enums';
 import { useCopyToClipboard } from '@/hooks';
-import useNavigate from '@/hooks/useNavigate.hook';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import type { JSX } from 'react';
 import { toast } from 'sonner';
 import type { HistoryContextMenuProps } from '../../types';
 
-export default function HistoryContextMenu({ history, contextMenu, onClose }: HistoryContextMenuProps) {
+export default function HistoryContextMenu({ history, contextMenu, onClose }: HistoryContextMenuProps): JSX.Element {
   const [copy] = useCopyToClipboard();
-  const { addTab } = useTabStore();
-  const navigate = useNavigate();
+  const { addEditorTab, updateSelectedTab } = useTabStore();
 
-  const handleCopy = async () => {
+  const handleCopy = async (): Promise<void> => {
     try {
       await copy(history.query);
       toast.success(locales.copied);
@@ -22,13 +20,9 @@ export default function HistoryContextMenu({ history, contextMenu, onClose }: Hi
     }
   };
 
-  const handleRun = () => {
-    const name = history.query.slice(0, 10);
-    const tab = addTab(name, undefined, TabMode.Query, history.query);
-    navigate({
-      route: tab.mode,
-      tabId: tab.id
-    });
+  const handleRun = (): void => {
+    const tab = addEditorTab(history.query);
+    updateSelectedTab(tab);
   };
 
   const menu: MenuType[] = [

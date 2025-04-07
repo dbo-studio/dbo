@@ -9,7 +9,7 @@ export const useSavedQueryStore = create<SavedQueryState>()(
   devtools(
     (set, get) => ({
       savedQueries: undefined,
-      upsertQuery: (savedQuery: SavedQueryType) => {
+      upsertQuery: (savedQuery: SavedQueryType): void => {
         let queries = get().savedQueries;
         if (queries === undefined) {
           queries = [];
@@ -24,7 +24,7 @@ export const useSavedQueryStore = create<SavedQueryState>()(
 
         set({ savedQueries: queries });
       },
-      deleteQuery: (id: number) => {
+      deleteQuery: (id: number): void => {
         let queries = get().savedQueries;
         if (queries === undefined) {
           return;

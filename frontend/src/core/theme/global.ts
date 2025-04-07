@@ -1,7 +1,7 @@
 import { variables } from '@/core/theme/variables.ts';
-import type { SxProps, Theme } from '@mui/material';
+import type { Interpolation, Theme } from '@mui/material';
 
-export const globalStyles = (theme: Theme): SxProps => {
+export const globalStyles = (theme: Theme): Interpolation<Theme> => {
   return {
     '*': {
       userSelect: 'none', // Disable text selection

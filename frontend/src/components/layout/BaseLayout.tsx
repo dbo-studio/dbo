@@ -1,9 +1,9 @@
 import Layout from '@/components/layout/Layout.tsx';
 import { useSetupDesktop } from '@/hooks';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
-import { useEffect } from 'react';
+import { type JSX, useEffect } from 'react';
 
-export default function BaseLayout() {
+export default function BaseLayout(): JSX.Element | null {
   const done = useSetupDesktop();
   const { debug } = useSettingStore();
 

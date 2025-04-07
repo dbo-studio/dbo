@@ -1,19 +1,19 @@
 import { globalStyles } from '@/core/theme/global.ts';
+import '@fontsource-variable/jetbrains-mono';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
-import '@fontsource-variable/jetbrains-mono';
 
-import { CssBaseline, GlobalStyles } from '@mui/material';
+import { CssBaseline, GlobalStyles, type Interpolation, type Theme } from '@mui/material';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { Toaster } from 'sonner';
+import './components/base/SqlEditor/helpers/languageSetup.ts';
 import ThemeProvider from './core/theme/index.tsx';
 import { Router } from './routes/intex.tsx';
-import './components/base/SqlEditor/helpers/languageSetup.ts';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 enableMocking().then(() => {
   const queryClient = new QueryClient({
@@ -30,7 +30,7 @@ enableMocking().then(() => {
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
       <ThemeProvider>
-        <GlobalStyles styles={(theme) => globalStyles(theme)} />
+        <GlobalStyles styles={(theme): Interpolation<Theme> => globalStyles(theme)} />
         <CssBaseline />
         <QueryClientProvider client={queryClient}>
           <Router />
@@ -42,6 +42,7 @@ enableMocking().then(() => {
   );
 });
 
+// biome-ignore lint/nursery/useExplicitType: <explanation>
 async function enableMocking() {
   if (process.env.NODE_ENV !== 'development') {
     return;

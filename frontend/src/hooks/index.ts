@@ -4,7 +4,6 @@ export * from './useCopyToClipboard.hook';
 export * from './useCurrentConnection.hook';
 export * from './useDebounce.hook';
 export * from './useMount.hook';
-export * from './useNavigate.hook';
 export * from './useRemoveTab.hook';
 export * from './useSelectedTab.hook';
 export * from './useSetupDesktop.hook';

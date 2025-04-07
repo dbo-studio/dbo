@@ -10,14 +10,6 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import ConnectionInfo from './ConnectionInfo';
 
-vi.mock('@/hooks/useNavigate.hook', () => ({
-  default: () => vi.fn()
-}));
-
-vi.mock('@/hooks/useCurrentConnection.tsx', () => ({
-  useCurrentConnection: () => connectionDetailModel
-}));
-
 describe('ConnectionInfo.tsx', () => {
   const spyConnection = vi.spyOn(conn, 'useConnectionStore');
   const spyTab = vi.spyOn(ta, 'useTabStore');
@@ -44,12 +36,6 @@ describe('ConnectionInfo.tsx', () => {
       updateLoading: mockUpdateLoading,
       updateCurrentConnection: vi.fn(),
       loading: 'finished'
-    });
-
-    spyTab.mockReturnValue({
-      addTab: () => {
-        return { id: 'test' };
-      }
     });
 
     spyTree.mockReturnValue({

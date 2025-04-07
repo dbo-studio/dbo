@@ -1,36 +1,34 @@
 import { TabMode } from '@/core/enums';
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
+import { useSelectedTab } from '@/hooks';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import type { HotTableRef } from '@handsontable/react-wrapper';
 import { type RefObject, useEffect } from 'react';
 
 export const useHandleDataUpdate = (hotTableRef: RefObject<HotTableRef | null>): void => {
+  const { selectedTabId } = useTabStore();
   const selectedTab = useSelectedTab();
 
   const { getColumns, getRows, runQuery, getEditedRows, getRemovedRows, getUnsavedRows, toggleDataFetching } =
     useDataStore();
 
   useEffect(() => {
-    if (
-      selectedTab?.mode === TabMode.Data &&
-      (getRows(selectedTab).length === 0 || getColumns(selectedTab).length === 0)
-    ) {
-      runQuery(selectedTab).then();
+    if (selectedTab?.mode === TabMode.Data && (getRows().length === 0 || getColumns().length === 0)) {
+      runQuery().then();
     }
-
-    hotTableRef?.current?.hotInstance?.updateSettings({
-      columns: getColumns(selectedTab, true).map((column) => ({
-        data: column.name,
-        title: column.name
-      }))
-    });
-  }, [selectedTab?.id]);
+  }, [selectedTabId]);
 
   useEffect(() => {
     hotTableRef?.current?.hotInstance?.render();
-  }, [getRemovedRows(selectedTab), getUnsavedRows(selectedTab), getEditedRows(selectedTab)]);
+  }, [getRemovedRows(), getUnsavedRows(), getEditedRows()]);
 
   useEffect(() => {
-    hotTableRef?.current?.hotInstance?.updateData(getRows(selectedTab));
-  }, [toggleDataFetching]);
+    hotTableRef?.current?.hotInstance?.updateSettings({
+      columns: getColumns(true).map((column) => ({
+        data: column.name,
+        title: column.name
+      })),
+      data: getRows()
+    });
+  }, [toggleDataFetching, selectedTabId]);
 };

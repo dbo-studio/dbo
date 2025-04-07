@@ -1,6 +1,11 @@
-import type { RowType, TabType } from '@/types';
+import { useTabStore } from '@/store/tabStore/tab.store';
+import type { RowType } from '@/types';
 import type { StateCreator } from 'zustand';
 import type { DataColumnSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
+
+const tabId = (): string | undefined => {
+  return useTabStore.getState().selectedTabId;
+};
 
 export const createDataRowSlice: StateCreator<
   DataStore & DataRowSlice & DataColumnSlice & DataUnsavedRowsSlice,
@@ -9,28 +14,36 @@ export const createDataRowSlice: StateCreator<
   DataRowSlice
 > = (set, get) => ({
   rows: {},
-  getRows: (tab: TabType | undefined): RowType[] => {
+  getRows: (): RowType[] => {
     const rows = get().rows;
-    if (!tab || !rows[tab.id]) {
+    const id = tabId();
+    if (!id || !rows[id]) {
       return [];
     }
-    return rows[tab.id];
+
+    return rows[id];
   },
-  getRow: (tab: TabType, dboIndex: number): RowType => {
+  getRow: (dboIndex: number): RowType => {
     return get()
-      .getRows(tab)
+      .getRows()
       .find((r) => r.dbo_index === dboIndex);
   },
-  updateRows: async (tab: TabType, items: RowType[]): Promise<void> => {
+  updateRows: async (items: RowType[]): Promise<void> => {
+    const id = tabId();
+    if (!id) return;
+
     const rows = get().rows;
-    rows[tab.id] = items;
+    rows[id] = items;
 
     set({ rows });
   },
-  updateRow: (tab: TabType, item: RowType): void => {
+  updateRow: (item: RowType): void => {
+    const id = tabId();
+    if (!id) return;
+
     const rows = get().rows;
-    rows[tab.id] = get()
-      .getRows(tab)
+    rows[id] = get()
+      .getRows()
       .map((r) => {
         if (r.dbo_index === item.dbo_index) return item;
         return r;

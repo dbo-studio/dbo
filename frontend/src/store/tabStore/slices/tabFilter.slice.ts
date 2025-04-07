@@ -3,7 +3,10 @@ import type { StateCreator } from 'zustand';
 import type { TabFilterSlice, TabStore } from '../types';
 
 export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [], TabFilterSlice> = (_, get) => ({
-  upsertFilters: async (tab: TabType, filter: FilterType): Promise<void> => {
+  upsertFilters: async (filter: FilterType): Promise<void> => {
+    const tab = get().selectedTab();
+    if (!tab) return;
+
     const findFilter = tab.filters?.find((f: FilterType) => f.index === filter.index);
     if (!findFilter) {
       tab.filters?.push(filter);
@@ -17,11 +20,17 @@ export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [
 
     get().updateSelectedTab(tab);
   },
-  removeFilter: (tab: TabType, filter: FilterType): void => {
+  removeFilter: (filter: FilterType): void => {
+    const tab = get().selectedTab();
+    if (!tab) return;
+
     tab.filters = tab?.filters?.filter((f: FilterType) => f.index !== filter.index);
     get().updateSelectedTab(tab);
   },
-  setShowFilters: (tab: TabType): void => {
+  setShowFilters: (): void => {
+    const tab = get().selectedTab();
+    if (!tab) return;
+
     tab.showFilters = !tab.showFilters;
     tab.showSorts = false;
 

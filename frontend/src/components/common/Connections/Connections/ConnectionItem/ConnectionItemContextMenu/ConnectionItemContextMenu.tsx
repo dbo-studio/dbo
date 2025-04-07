@@ -1,7 +1,6 @@
 import api from '@/api';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
-import useNavigate from '@/hooks/useNavigate.hook.ts';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -17,8 +16,8 @@ export default function ConnectionItemContextMenu({
   contextMenu,
   onClose
 }: ConnectionContextMenuProps): JSX.Element {
-  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const { mutateAsync: deleteConnectionMutation } = useMutation({
     mutationFn: api.connection.deleteConnection,
@@ -35,7 +34,6 @@ export default function ConnectionItemContextMenu({
 
   const { updateSelectedTab, updateTabs } = useTabStore();
   const showModal = useConfirmModalStore((state) => state.danger);
-  const navigate = useNavigate();
 
   const handleOpenConfirm = async (connection: ConnectionType): Promise<void> => {
     showModal(locales.delete_action, locales.connection_delete_confirm, () => {
@@ -51,10 +49,10 @@ export default function ConnectionItemContextMenu({
 
   const handleDeleteConnection = async (connection: ConnectionType): Promise<void> => {
     try {
+      await deleteConnectionMutation(connection.id);
       updateSelectedTab(undefined);
       updateTabs([]);
       toast.success(locales.connection_delete_success);
-      navigate({ route: '/' });
       return;
     } catch (err) {}
   };

@@ -1,7 +1,12 @@
-import type { EditedRow, RowType, TabType } from '@/types';
+import { useTabStore } from '@/store/tabStore/tab.store';
+import type { EditedRow, RowType } from '@/types';
 import { pullAt } from 'lodash';
 import type { StateCreator } from 'zustand';
 import type { DataEditedRowsSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
+
+const tabId = (): string => {
+  return useTabStore.getState().selectedTabId ?? '';
+};
 
 export const createDataEditedRowsSlice: StateCreator<
   DataStore & DataEditedRowsSlice & DataRowSlice & DataUnsavedRowsSlice,
@@ -10,14 +15,18 @@ export const createDataEditedRowsSlice: StateCreator<
   DataEditedRowsSlice
 > = (set, get) => ({
   editedRows: {},
-  getEditedRows: (tab: TabType | undefined): EditedRow[] => {
-    if (!tab) return [];
+  getEditedRows: (): EditedRow[] => {
+    const selectedTabId = tabId();
+    if (!selectedTabId) return [];
 
     const rows = get().editedRows;
-    return rows[tab?.id as string] ?? [];
+    return rows[selectedTabId] ?? [];
   },
-  updateEditedRows: (tab: TabType, editedRows: EditedRow[]): void => {
-    const unSavedRows = get().getUnsavedRows(tab);
+  updateEditedRows: (editedRows: EditedRow[]): void => {
+    const selectedTabId = tabId();
+    if (!selectedTabId) return;
+
+    const unSavedRows = get().getUnsavedRows();
     const shouldBeUnsaved: RowType[] = [];
 
     editedRows.forEach((editedRow: EditedRow, index: number) => {
@@ -38,12 +47,12 @@ export const createDataEditedRowsSlice: StateCreator<
     }
 
     const rows = get().editedRows;
-    rows[tab.id] = editedRows;
+    rows[selectedTabId] = editedRows;
     set({ editedRows: rows });
   },
-  restoreEditedRows: async (tab: TabType): Promise<void> => {
-    const newRows = get().getEditedRows(tab);
-    const oldRows = get().getRows(tab);
+  restoreEditedRows: async (): Promise<void> => {
+    const newRows = get().getEditedRows();
+    const oldRows = get().getRows();
 
     for (const newRow of newRows) {
       const findValueIndex = oldRows.findIndex((x) => x.dbo_index === newRow.dboIndex);
@@ -53,8 +62,8 @@ export const createDataEditedRowsSlice: StateCreator<
       };
     }
 
-    await get().updateRows(tab, oldRows);
-    get().updateEditedRows(tab, []);
+    await get().updateRows(oldRows);
+    get().updateEditedRows([]);
   },
   removeEditedRowsByTabId: (tabId: string): void => {
     const rows = get().editedRows;

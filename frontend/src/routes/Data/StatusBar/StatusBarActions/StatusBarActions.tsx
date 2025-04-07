@@ -34,7 +34,7 @@ export default function StatusBarActions(): JSX.Element {
     mutationFn: api.query.updateQuery,
     onSuccess: async (): Promise<void> => {
       if (!selectedTab) return;
-      await runQuery(selectedTab);
+      await runQuery();
       removeEditedRowsByTabId(selectedTab.id);
       deleteRemovedRowsByTabId(selectedTab.id);
       removeUnsavedRowsByTabId(selectedTab.id);
@@ -46,9 +46,9 @@ export default function StatusBarActions(): JSX.Element {
 
   const handleSave = async (): Promise<void> => {
     if (selectedTab?.mode === TabMode.Data) {
-      const edited = getEditedRows(selectedTab);
-      const removed = getRemovedRows(selectedTab);
-      const unsaved = getUnsavedRows(selectedTab);
+      const edited = getEditedRows();
+      const removed = getRemovedRows();
+      const unsaved = getUnsavedRows();
 
       if (!selectedTab || !currentConnection || (edited.length === 0 && removed.length === 0 && unsaved.length === 0)) {
         return;
@@ -75,14 +75,14 @@ export default function StatusBarActions(): JSX.Element {
 
   const handleRemoveAction = async (): Promise<void> => {
     if (selectedTab?.mode === TabMode.Data) {
-      updateRemovedRows(selectedTab);
+      updateRemovedRows();
     }
   };
 
   const handleDiscardChanges = async (): Promise<void> => {
     if (selectedTab?.mode === TabMode.Data) {
-      restoreEditedRows(selectedTab).then();
-      discardUnsavedRows(selectedTab);
+      restoreEditedRows().then();
+      discardUnsavedRows();
       deleteRemovedRowsByTabId(selectedTab.id);
       clearSelectedRows();
     }
@@ -92,7 +92,7 @@ export default function StatusBarActions(): JSX.Element {
     if (!selectedTab) return;
 
     await handleDiscardChanges();
-    runQuery(selectedTab).then();
+    runQuery().then();
   };
 
   return (

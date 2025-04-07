@@ -1,19 +1,26 @@
-import type { ColumnType, TabType } from '@/types';
+import { useTabStore } from '@/store/tabStore/tab.store';
+import type { ColumnType } from '@/types';
 import type { StateCreator } from 'zustand';
 import type { DataColumnSlice, DataStore } from '../types';
+
+const tabId = (): string => {
+  return useTabStore.getState().selectedTabId ?? '';
+};
 
 export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, [], [], DataColumnSlice> = (
   set,
   get
 ) => ({
   columns: {},
-  getColumns: (tab: TabType | undefined, isActive?: boolean): ColumnType[] => {
+  getColumns: (isActive?: boolean): ColumnType[] => {
+    const selectedTabId = tabId();
     const columns = get().columns;
-    if (!tab || !columns[tab.id]) {
+
+    if (!selectedTabId || !columns[selectedTabId]) {
       return [];
     }
 
-    let newColumns = columns[tab.id];
+    let newColumns = columns[selectedTabId];
 
     if (isActive !== undefined) {
       newColumns = newColumns.filter((c) => c.isActive);
@@ -21,9 +28,12 @@ export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, []
 
     return newColumns;
   },
-  updateColumns: async (tab: TabType, items: ColumnType[]): Promise<void> => {
+  updateColumns: async (items: ColumnType[]): Promise<void> => {
+    const selectedTabId = tabId();
+    if (!selectedTabId) return;
+
     const columns = get().columns;
-    columns[tab.id] = items;
+    columns[selectedTabId] = items;
 
     set({ columns });
   },

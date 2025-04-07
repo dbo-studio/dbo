@@ -32,15 +32,15 @@ export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps
 
   const handleFormatSql = (): void => {
     if (selectedTab && checkQueryLength()) {
-      updateQuery(selectedTab, tools.formatSql(getQuery(selectedTab), 'postgresql'));
+      updateQuery(tools.formatSql(getQuery(), 'postgresql'));
       onFormat();
     }
   };
 
   const handleMinifySql = (): void => {
     if (selectedTab && checkQueryLength()) {
-      const minified = tools.minifySql(getQuery(selectedTab));
-      updateQuery(selectedTab, minified);
+      const minified = tools.minifySql(getQuery());
+      updateQuery(minified);
       onFormat();
     }
   };
@@ -53,13 +53,13 @@ export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps
 
     try {
       await createSavedQueryMutation({
-        query: getQuery(selectedTab)
+        query: getQuery()
       });
     } catch (error) {}
   };
 
   const checkQueryLength = (): boolean => {
-    return selectedTab !== undefined && getQuery(selectedTab).length > 0;
+    return getQuery().length > 0;
   };
 
   return (
@@ -80,7 +80,7 @@ export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps
         </IconButton>
       </Tooltip>
       <Tooltip title={shortcuts.runQuery.command}>
-        <IconButton color='primary' onClick={(): Promise<void> => runRawQuery(selectedTab)}>
+        <IconButton color='primary' onClick={(): Promise<void> => runRawQuery()}>
           <CustomIcon type='play' />
         </IconButton>
       </Tooltip>

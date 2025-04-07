@@ -42,10 +42,22 @@ export const useObjectTabs = (): {
   };
 
   useEffect(() => {
-    if (selectedTab) {
+    if (!selectedTab) return;
+    if (!tabs || tabs.length === 0) return;
+
+    if (selectedTab?.options?.tabId) {
       setSelectedTabIndex(selectedTab?.options?.tabId);
+    } else {
+      setSelectedTabIndex(tabs[0]?.id);
+      updateSelectedTab({
+        ...selectedTab,
+        options: {
+          ...selectedTab.options,
+          tabId: tabs[0]?.id
+        }
+      });
     }
-  }, [selectedTab]);
+  }, [selectedTab, tabs]);
 
   return {
     tabs: tabs ?? [],

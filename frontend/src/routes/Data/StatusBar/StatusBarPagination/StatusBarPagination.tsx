@@ -33,7 +33,7 @@ export default function StatusBarPagination(): JSX.Element {
       pagination
     });
 
-    runQuery(selectedTab).then();
+    runQuery().then();
   };
 
   return (

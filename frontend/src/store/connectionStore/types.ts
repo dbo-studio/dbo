@@ -2,8 +2,11 @@ import type { ConnectionType } from '@/types';
 
 export type ConnectionStore = {
   loading: LoadingType;
-  updateLoading: (loading: LoadingType) => void;
   connections: ConnectionType[] | undefined;
+  currentConnectionId: string | number | undefined;
+
+  currentConnection: () => ConnectionType | undefined;
+  updateLoading: (loading: LoadingType) => void;
   updateConnections: (connections: ConnectionType[]) => void;
   updateCurrentConnection: (connection: ConnectionType | undefined) => void;
 };

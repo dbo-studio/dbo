@@ -5,7 +5,6 @@ import { PanelTabItemStyled } from '@/components/common/Panels/PanelTabs/PanelTa
 import { TabMode } from '@/core/enums';
 import { shortcuts } from '@/core/utils';
 import { useContextMenu, useShortcut } from '@/hooks';
-import useNavigate from '@/hooks/useNavigate.hook.ts';
 import { useRemoveTab } from '@/hooks/useRemoveTab.hook.ts';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
@@ -17,14 +16,15 @@ import type { JSX } from 'react';
 import { useEffect, useRef } from 'react';
 
 export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
+  const selectedTab = useSelectedTab();
+
   const tabRefs = useRef<Record<string, HTMLElement>>({});
-  const navigate = useNavigate();
   const [removeTab] = useRemoveTab();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
   const { addEditorTab, getTabs } = useTabStore();
-  const selectedTab = useSelectedTab();
   const { runQuery, runRawQuery, removeEditedRowsByTabId, deleteRemovedRowsByTabId, removeUnsavedRowsByTabId } =
     useDataStore();
+  const { updateSelectedTab } = useTabStore();
 
   useShortcut(shortcuts.newTab, () => addNewEmptyTab());
   useShortcut(shortcuts.closeTab, () => handleRemoveTab(selectedTab?.id ?? ''));
@@ -54,7 +54,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
         for (const t of getTabs()) {
           removeTab(t, t.id);
         }
-        navigate({ route: '/' });
+        updateSelectedTab(undefined);
       },
       closeAfterAction: true
     }
@@ -64,10 +64,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
     const findTab = getTabs().find((t: TabType) => t.id === tabId);
     if (!findTab) return;
 
-    navigate({
-      route: findTab.mode,
-      tabId: tabId
-    });
+    updateSelectedTab(findTab);
   };
 
   const handleRemoveTab = (tabId: string): void => {
@@ -75,34 +72,28 @@ export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
 
     const newTab = removeTab(selectedTab, tabId);
     if (newTab === undefined) {
-      navigate({ route: '/' });
+      updateSelectedTab(undefined);
       return;
     }
 
     if (newTab) {
-      navigate({
-        route: newTab.mode,
-        tabId: newTab.id
-      });
+      updateSelectedTab(newTab);
     }
   };
 
   const addNewEmptyTab = (): void => {
     const tab = addEditorTab();
-    navigate({
-      route: 'query',
-      tabId: tab.id
-    });
+    updateSelectedTab(tab);
   };
 
   const handleReload = async (): Promise<void> => {
     if (selectedTab?.mode === TabMode.Query) {
-      await runRawQuery(selectedTab);
+      await runRawQuery();
       return;
     }
 
     if (selectedTab?.mode === TabMode.Data) {
-      await runQuery(selectedTab);
+      await runQuery();
       removeEditedRowsByTabId(selectedTab?.id ?? '');
       deleteRemovedRowsByTabId(selectedTab?.id ?? '');
       removeUnsavedRowsByTabId(selectedTab?.id ?? '');

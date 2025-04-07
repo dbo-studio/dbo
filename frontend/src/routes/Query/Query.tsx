@@ -2,8 +2,7 @@ import api from '@/api';
 import ResizableYBox from '@/components/base/ResizableBox/ResizableYBox.tsx';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor.tsx';
 import DataGrid from '@/components/common/DBDataGrid/DataGrid';
-import { useWindowSize } from '@/hooks';
-import { useCurrentConnection } from '@/hooks';
+import { useCurrentConnection, useWindowSize } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AutoCompleteType } from '@/types';
@@ -37,15 +36,11 @@ export default function Query(): JSX.Element {
   }, [selectedTab?.id]);
 
   const handleChangeValue = (): void => {
-    if (!selectedTab) return;
-
-    setValue(getQuery(selectedTab));
+    setValue(getQuery());
   };
 
   const handleUpdateState = (query: string): void => {
-    if (!selectedTab) return;
-
-    updateQuery(selectedTab, query);
+    updateQuery(query);
   };
 
   if (!selectedTab) {

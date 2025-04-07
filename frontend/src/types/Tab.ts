@@ -19,6 +19,7 @@ export type FilterType = {
 
 export type TabType = {
   id: string;
+  connectionId: string | number;
   nodeId: string;
   table?: string;
   query?: string;

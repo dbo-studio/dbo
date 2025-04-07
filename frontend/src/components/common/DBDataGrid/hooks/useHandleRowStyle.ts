@@ -1,4 +1,3 @@
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import type { RowType } from '@/types';
 import { useTheme } from '@mui/material'; // @ts-ignore
@@ -12,11 +11,10 @@ import { useMemo } from 'react';
 
 export const useHandleRowStyle = (): void => {
   const { getRemovedRows, getUnsavedRows, getEditedRows } = useDataStore();
-  const selectedTab = useSelectedTab();
 
-  const removed = useMemo(() => getRemovedRows(selectedTab), [getRemovedRows(selectedTab), selectedTab]);
-  const usesaved = useMemo(() => getUnsavedRows(selectedTab), [getUnsavedRows(selectedTab), selectedTab]);
-  const edited = useMemo(() => getEditedRows(selectedTab), [getEditedRows(selectedTab), selectedTab]);
+  const removed = useMemo(() => getRemovedRows(), [getRemovedRows]);
+  const usesaved = useMemo(() => getUnsavedRows(), [getUnsavedRows]);
+  const edited = useMemo(() => getEditedRows(), [getEditedRows]);
 
   const theme = useTheme();
 

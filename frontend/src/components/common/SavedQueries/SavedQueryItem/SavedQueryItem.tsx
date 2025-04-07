@@ -2,9 +2,7 @@ import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton';
-import { TabMode } from '@/core/enums';
 import { useContextMenu } from '@/hooks';
-import useNavigate from '@/hooks/useNavigate.hook';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, ClickAwayListener, IconButton, Typography, useTheme } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
@@ -21,10 +19,9 @@ export default function SavedQueryItem({
   onClick
 }: SavedQueryItemProps): JSX.Element {
   const theme = useTheme();
-  const navigate = useNavigate();
   const [editMode, setEditMode] = useState(false);
   const [name, setName] = useState(query.name);
-  const { addTab } = useTabStore();
+  const { addEditorTab, updateSelectedTab } = useTabStore();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
   const { mutateAsync: updateSavedQueryMutation, isPending } = useMutation({
@@ -59,12 +56,8 @@ export default function SavedQueryItem({
   };
 
   const handleRun = (): void => {
-    const name = query.name.slice(0, 10);
-    const tab = addTab(name, undefined, TabMode.Query, query.query);
-    navigate({
-      route: tab.mode,
-      tabId: tab.id
-    });
+    const tab = addEditorTab(query.query);
+    updateSelectedTab(tab);
   };
 
   return (

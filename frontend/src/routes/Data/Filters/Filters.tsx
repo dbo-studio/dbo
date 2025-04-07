@@ -18,17 +18,17 @@ export default function Filters(): JSX.Element {
   return (
     <Box id='#filters' p={1} borderBottom={(theme): string => `1px solid ${theme.palette.divider}`}>
       {selectedTab?.filters?.length === 0 ? (
-        <AddFilterButton columns={getColumns(selectedTab)} />
+        <AddFilterButton columns={getColumns()} />
       ) : (
         selectedTab?.filters?.map((filter: FilterType) => {
-          return <FilterItem key={uuid()} columns={getColumns(selectedTab)} filter={filter} />;
+          return <FilterItem key={uuid()} columns={getColumns()} filter={filter} />;
         })
       )}
 
       {(selectedTab?.filters?.length ?? 0) > 0 && (
         <Box display='flex' justifyContent='flex-start' mx={1} mt={1}>
           <Button
-            onClick={(): Promise<void> => runQuery(selectedTab)}
+            onClick={(): Promise<void> => runQuery()}
             size='small'
             variant='outlined'
             endIcon={<CustomIcon type='check' size='xs' />}

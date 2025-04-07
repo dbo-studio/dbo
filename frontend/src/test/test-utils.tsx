@@ -1,7 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
-import type { ReactNode } from 'react';
-import { MemoryRouter } from 'react-router-dom';
+import type { JSX, ReactNode } from 'react';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,14 +17,10 @@ interface TestWrapperProps {
   initialEntries?: string[];
 }
 
-export function TestWrapper({ children, initialEntries = ['/'] }: TestWrapperProps) {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>
-    </QueryClientProvider>
-  );
+export function TestWrapper({ children }: TestWrapperProps): JSX.Element {
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
 
-export function renderWithProviders(ui: ReactNode, options = {}) {
+export function renderWithProviders(ui: ReactNode, options = {}): any {
   return render(ui, { wrapper: TestWrapper, ...options });
 }

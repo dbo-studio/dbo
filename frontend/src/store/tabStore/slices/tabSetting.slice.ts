@@ -1,4 +1,5 @@
 import { TabMode } from '@/core/enums';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { TabType } from '@/types/Tab';
 import { v4 as uuidv4 } from 'uuid';
 import type { StateCreator } from 'zustand';
@@ -7,31 +8,27 @@ import type { TabSettingSlice, TabStore } from '../types';
 const maxTabs = 15;
 
 export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [], [], TabSettingSlice> = (_, get) => ({
-  addTab: (table: string, id?: string, mode?: TabMode, query?: string, editable?: boolean): TabType => {
-    // biome-ignore lint: reason
-    mode = mode ? mode : TabMode.Data;
+  addTab: (table: string, id?: string, editable?: boolean): TabType => {
+    const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+    if (!currentConnectionId) {
+      throw new Error('No current connection id');
+    }
+
     const tabs = get().getTabs();
 
-    const findTab = tabs.find((t: TabType) => t.mode === mode && t.table === table);
+    const findTab = tabs.find((t: TabType) => t.mode === TabMode.Data && t.table === table);
 
     if (findTab) {
-      findTab.mode = mode;
       get().switchTab(findTab.id);
       return findTab;
     }
 
-    let tabQuery: string;
-    if (mode === TabMode.Data) {
-      tabQuery = `SELECT * FROM ${table}`;
-    } else {
-      tabQuery = query ? query : '';
-    }
-
     const newTab: TabType = {
       id: uuidv4(),
+      connectionId: currentConnectionId,
       nodeId: id ?? '',
       table: table,
-      query: tabQuery,
+      query: `SELECT * FROM ${table}`,
       options: {
         editable: editable === undefined ? false : editable
       },
@@ -46,7 +43,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       showFilters: false,
       showQuery: false,
       showSorts: false,
-      mode: mode ? mode : TabMode.Data
+      mode: TabMode.Data
     };
 
     if (tabs.length < maxTabs) {
@@ -59,7 +56,12 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
     return newTab;
   },
 
-  addEditorTab: (): TabType => {
+  addEditorTab: (query?: string): TabType => {
+    const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+    if (!currentConnectionId) {
+      throw new Error('No current connection id');
+    }
+
     const tabs = get().getTabs();
     const findTab = tabs.find((t: TabType) => t.mode === TabMode.Query && (t.query === '' || t.query === '""'));
 
@@ -71,9 +73,11 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
 
     const newTab: TabType = {
       id: uuidv4(),
+      table: query ? query.slice(0, 10) : 'Editor',
+      connectionId: currentConnectionId,
       nodeId: 'Editor',
       mode: TabMode.Query,
-      query: '',
+      query: query ? query : '',
       options: {
         database: '',
         schema: ''
@@ -83,6 +87,11 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
     return get().handleAddNewTab(tabs, newTab);
   },
   addObjectTab: (nodeId: string, action: string, mode: TabMode): TabType => {
+    const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+    if (!currentConnectionId) {
+      throw new Error('No current connection id');
+    }
+
     const tabs = get().getTabs();
     const findTab = tabs.find((t: TabType) => t.mode === mode && t.nodeId === nodeId);
 
@@ -93,6 +102,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
 
     const newTab: TabType = {
       id: uuidv4(),
+      connectionId: currentConnectionId,
       nodeId: nodeId,
       mode: mode,
       options: {

@@ -1,15 +1,18 @@
 import PanelTabItem from '@/components/common/Panels/PanelTabs/PanelTabItem/PanelTabItem.tsx';
 import { PanelTabsStyled } from '@/components/common/Panels/PanelTabs/PanelTabs.styled.ts';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { TabType } from '@/types';
-import type { JSX } from 'react';
+import { type JSX, useMemo } from 'react';
 
 export default function PanelTabs(): JSX.Element {
-  const { getTabs } = useTabStore();
+  const { currentConnectionId } = useConnectionStore();
+  const { tabs, getTabs } = useTabStore();
+  const tabList = useMemo(() => getTabs(), [currentConnectionId, tabs]);
 
   return (
     <PanelTabsStyled>
-      {getTabs().map((tab: TabType) => (
+      {tabList.map((tab: TabType) => (
         <PanelTabItem tab={tab} key={`${tab.id}-${tab.mode}`} />
       ))}
     </PanelTabsStyled>

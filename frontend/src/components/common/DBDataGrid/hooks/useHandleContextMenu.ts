@@ -19,10 +19,10 @@ export const useHandleContextMenu = (editable?: boolean): Settings => {
       const newRow = { ...row.data };
 
       for (const column of row.selectedColumns) {
-        const editedRows = handelRowChangeLog(getEditedRows(selectedTab), row.data, column, row.data[column], newValue);
-        updateEditedRows(selectedTab, editedRows);
+        const editedRows = handelRowChangeLog(getEditedRows(), row.data, column, row.data[column], newValue);
+        updateEditedRows(editedRows);
         newRow[column] = newValue;
-        updateRow(selectedTab, newRow);
+        updateRow(newRow);
       }
     }
   };

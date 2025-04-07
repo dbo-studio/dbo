@@ -4,14 +4,20 @@ import type { StateCreator } from 'zustand';
 import type { TabQuerySlice, TabStore } from '../types';
 
 export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [], TabQuerySlice> = (_, get) => ({
-  getQuery: (tab: TabType): string => {
+  getQuery: (): string => {
+    const tab = get().selectedTab();
+    if (!tab) return '';
+
     if (tab.query && tools.isValidJSON(tab.query)) {
       return JSON.parse(tab.query);
     }
 
     return tab?.query ?? '';
   },
-  updateQuery: (tab: TabType, query: string): void => {
+  updateQuery: (query: string): void => {
+    const tab = get().selectedTab();
+    if (!tab) return;
+
     if (!tools.isValidJSON(query)) {
       // biome-ignore lint: reason
       query = JSON.stringify(query);
@@ -20,7 +26,10 @@ export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [],
     tab.query = query;
     get().updateSelectedTab(tab);
   },
-  setShowQueryPreview: (tab: TabType): void => {
+  setShowQueryPreview: (): void => {
+    const tab = get().selectedTab();
+    if (!tab) return;
+
     tab.showQuery = !tab.showQuery;
     get().updateSelectedTab(tab);
   }

@@ -5,44 +5,44 @@ import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { ConnectionType } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import PostgreSQL from './Postgresql/Postgresql';
 
-export default function EditConnection() {
+export default function EditConnection(): JSX.Element {
   const queryClient = useQueryClient();
   const [activeConnection, setActiveConnection] = useState<ConnectionType | undefined>(undefined);
   const [searchParams, setSearchParams] = useSearchParams();
   const { connections } = useConnectionStore();
 
   const { mutateAsync: updateConnectionMutation, isPending: updateConnectionPending } = useMutation({
-    mutationFn: (variables: { id: number; data: CreateConnectionRequestType }) =>
+    mutationFn: (variables: { id: number; data: CreateConnectionRequestType }): Promise<ConnectionType> =>
       api.connection.updateConnection(variables.id, variables.data),
-    onSuccess: () => {
+    onSuccess: (connection: ConnectionType): void => {
       queryClient.invalidateQueries({
         queryKey: ['connections']
       });
     },
-    onError: (error) => {
+    onError: (error: Error): void => {
       console.error('🚀 ~ updateConnectionMutation ~ error:', error);
     }
   });
 
   const { mutateAsync: pingConnectionMutation, isPending: pingConnectionPending } = useMutation({
     mutationFn: api.connection.pingConnection,
-    onError: (error) => {
+    onError: (error: Error): void => {
       console.error('🚀 ~ pingConnectionMutation ~ error:', error);
     }
   });
 
-  const handleClose = () => {
+  const handleClose = (): void => {
     setActiveConnection(undefined);
     searchParams.delete('showEditConnection');
     setSearchParams(searchParams);
   };
 
-  const handlePingConnection = async (data: CreateConnectionRequestType) => {
+  const handlePingConnection = async (data: CreateConnectionRequestType): Promise<void> => {
     if (pingConnectionPending) {
       return;
     }
@@ -51,7 +51,7 @@ export default function EditConnection() {
     toast.success(locales.connection_test_success);
   };
 
-  const handleUpdateConnection = async (data: CreateConnectionRequestType) => {
+  const handleUpdateConnection = async (data: CreateConnectionRequestType): Promise<void> => {
     if (updateConnectionPending || !activeConnection) {
       return;
     }

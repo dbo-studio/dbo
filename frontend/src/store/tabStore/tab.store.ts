@@ -13,8 +13,8 @@ import type { TabDataSlice, TabFilterSlice, TabQuerySlice, TabSettingSlice, TabS
 type TabState = TabStore & TabSettingSlice & TabQuerySlice & TabFilterSlice & TabSortSlice & TabDataSlice;
 
 const initialize = {
-  tabs: {},
-  selectedTab: {}
+  tabs: [],
+  selectedTabId: undefined
 };
 
 export const useTabStore = create<TabState>()(
@@ -26,51 +26,61 @@ export const useTabStore = create<TabState>()(
           set({ ...initialize });
         },
         getTabs: (): TabType[] => {
-          const currentConnection = useConnectionStore.getState().connections?.find((c) => c.isActive);
-          const tabs = get().tabs;
-          if (!currentConnection || !tabs[currentConnection.id]) {
+          const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+          if (!currentConnectionId) {
             return [];
           }
 
-          return tabs[currentConnection.id];
+          return get().tabs.filter((t) => t.connectionId === currentConnectionId);
+        },
+        selectedTab: (): TabType | undefined => {
+          const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+          if (!currentConnectionId) {
+            return undefined;
+          }
+
+          if (!get().selectedTabId) {
+            const selectedTab = get().tabs.find((t) => t.connectionId === currentConnectionId);
+            if (selectedTab) {
+              set({ selectedTabId: selectedTab.id });
+            }
+
+            return selectedTab;
+          }
+
+          return get().tabs.find((t) => t.connectionId === currentConnectionId && t.id === get().selectedTabId);
         },
         updateTabs: (newTabs: TabType[]): void => {
-          const currentConnection = useConnectionStore.getState().connections?.find((c) => c.isActive);
-          if (!currentConnection) {
+          const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+          if (!currentConnectionId) {
             return;
           }
 
-          const tabs = get().tabs;
-          tabs[currentConnection.id] = newTabs;
+          const tabs = get().tabs.filter((t) => t.connectionId !== currentConnectionId);
+          tabs.push(...newTabs);
 
           set({ tabs });
         },
         updateSelectedTab: (newSelectedTab: TabType | undefined): void => {
-          const currentConnection = useConnectionStore.getState().connections?.find((c) => c.isActive);
-          if (!currentConnection) {
-            return;
-          }
-
-          const selectedTab = get().selectedTab;
-          selectedTab[currentConnection.id] = newSelectedTab;
           if (newSelectedTab === undefined) {
-            set({ selectedTab });
+            set({ selectedTabId: undefined });
             return;
           }
 
           const tabs = get()
             .getTabs()
             .map((t: TabType) => {
-              if (t.id === newSelectedTab.id && t.mode === newSelectedTab.mode) {
+              if (
+                t.id === newSelectedTab.id &&
+                t.mode === newSelectedTab.mode &&
+                t.connectionId === newSelectedTab.connectionId
+              ) {
                 return newSelectedTab;
               }
               return t;
             });
 
-          const newTabs = get().tabs;
-          newTabs[currentConnection.id] = tabs;
-
-          set({ tabs: newTabs, selectedTab });
+          set({ tabs, selectedTabId: newSelectedTab.id });
         },
         ...createTabSettingSlice(set, get, ...state),
         ...createTabQuerySlice(set, get, ...state),

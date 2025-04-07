@@ -40,17 +40,17 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
     if (!selectedTab) return;
 
     const editedRows = handelRowChangeLog(
-      getEditedRows(selectedTab),
+      getEditedRows(),
       row.data,
       getSelectedColumn(row.selectedColumns),
       getRowValue(row),
       value
     );
 
-    updateEditedRows(selectedTab, editedRows);
+    updateEditedRows(editedRows);
     const newRow = { ...row.data };
     newRow[getSelectedColumn(row.selectedColumns)] = value;
-    updateRow(selectedTab, newRow);
+    updateRow(newRow);
 
     searchParams.delete('quick-look-editor');
     setSearchParams(searchParams);

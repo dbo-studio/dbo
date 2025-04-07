@@ -17,15 +17,15 @@ export const useSettingStore = create<SettingState>()(
         },
         isDark: false,
         debug: false,
-        updateDebug: (debug: boolean) => {
+        updateDebug: (debug: boolean): void => {
           set({ debug });
         },
-        updateSidebar: (sidebar: Partial<SidebarType>) => {
+        updateSidebar: (sidebar: Partial<SidebarType>): void => {
           const oldSidebar = get().sidebar;
           const newSidebar = { ...oldSidebar, ...sidebar };
           set({ sidebar: newSidebar });
         },
-        updateIsDark: (isDark: undefined | boolean) => {
+        updateIsDark: (isDark: undefined | boolean): void => {
           if (isDark !== undefined) {
             set({ isDark });
           } else {
