@@ -16,6 +16,7 @@ import { type JSX, useMemo, useRef } from 'react';
 
 import { TextCellType, registerCellType } from 'handsontable/cellTypes';
 
+import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ColumnType } from '@/types';
 import { TextEditor, registerEditor } from 'handsontable/editors';
 import {
@@ -45,14 +46,15 @@ registerPlugin(ContextMenu);
 
 export default function DataGrid({ editable }: DataGridProps): JSX.Element {
   const hotTableRef = useRef<HotTableRef | null>(null);
-  const { loading, getRows, getColumns } = useDataStore();
+  const { loading, getRows, getColumns, toggleDataFetching } = useDataStore();
+  const { selectedTabId } = useTabStore();
 
-  const rows = useMemo(() => getRows(), [getRows]);
-  const headers = useMemo(() => getColumns(true), [getColumns]);
+  const rows = useMemo(() => getRows(), [toggleDataFetching, selectedTabId]);
+  const headers = useMemo(() => getColumns(true), [toggleDataFetching, selectedTabId]);
 
   useHandleScroll(hotTableRef);
   useHandleDeselect(hotTableRef);
-  useHandleDataUpdate(hotTableRef);
+  useHandleDataUpdate();
   useHandleRowStyle();
 
   const handleSelection = useHandleRowSelect(hotTableRef);

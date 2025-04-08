@@ -12,10 +12,9 @@ import { useMemo } from 'react';
 export const useHandleRowStyle = (): void => {
   const { getRemovedRows, getUnsavedRows, getEditedRows } = useDataStore();
 
-  const removed = useMemo(() => getRemovedRows(), [getRemovedRows]);
-  const usesaved = useMemo(() => getUnsavedRows(), [getUnsavedRows]);
-  const edited = useMemo(() => getEditedRows(), [getEditedRows]);
-
+  const removed = useMemo(() => getRemovedRows(), [getRemovedRows()]);
+  const usesaved = useMemo(() => getUnsavedRows(), [getUnsavedRows()]);
+  const edited = useMemo(() => getEditedRows(), [getEditedRows()]);
   const theme = useTheme();
 
   const handleRowStyle = (
