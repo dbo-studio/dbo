@@ -50,12 +50,12 @@ export const useActionDetection = (
         case 'tab': {
           switch (node.action.params.path) {
             case 'object': {
-              const tab = addObjectTab(node.id, node.action.name, TabMode.Object);
+              const tab = addObjectTab(node.action.title, node.id, node.action.name, TabMode.Object);
               updateSelectedTab(tab);
               break;
             }
             case 'object-detail': {
-              const tab = addObjectTab(node.id, node.action.name, TabMode.ObjectDetail);
+              const tab = addObjectTab(node.action.title, node.id, node.action.name, TabMode.ObjectDetail);
               updateSelectedTab(tab);
               break;
             }

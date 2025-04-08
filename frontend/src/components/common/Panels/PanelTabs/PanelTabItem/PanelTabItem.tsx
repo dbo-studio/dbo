@@ -121,7 +121,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
     >
       <PanelTabItemStyled selected={selectedTab?.id === tab.id} onClick={(): void => handleSwitchTab(tab.id)}>
         <Box display={'flex'} overflow={'hidden'} flexGrow={1} justifyContent={'center'} alignItems={'center'}>
-          <Tooltip title={tab.nodeId} placement={'bottom'} key={tab.id}>
+          <Tooltip title={tab.name} placement={'bottom'} key={tab.id}>
             <Typography
               display={'inline-block'}
               component={'span'}
@@ -130,7 +130,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
               maxWidth={'100px'}
               variant='subtitle2'
             >
-              {tab.nodeId}
+              {tab.name}
             </Typography>
           </Tooltip>
         </Box>

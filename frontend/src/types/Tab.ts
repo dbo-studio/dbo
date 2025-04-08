@@ -21,6 +21,7 @@ export type TabType = {
   id: string;
   connectionId: string | number;
   nodeId: string;
+  name: string;
   table?: string;
   query?: string;
   pagination?: TabDataPagination;

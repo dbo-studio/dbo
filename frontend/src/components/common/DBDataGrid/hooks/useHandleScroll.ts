@@ -1,4 +1,3 @@
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import type { HotTableRef } from '@handsontable/react-wrapper';
 import { type RefObject, useCallback, useEffect } from 'react';

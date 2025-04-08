@@ -1,4 +1,4 @@
-import type { RowType, TabType } from '@/types';
+import type { RowType } from '@/types';
 import type { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
 import type {

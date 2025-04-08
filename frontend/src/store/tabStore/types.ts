@@ -26,7 +26,7 @@ export type TabSortSlice = {
 
 export type TabSettingSlice = {
   addTab: (table: string, id?: string, editable?: boolean) => TabType;
-  addObjectTab: (nodeId: string, action: string, mode: TabMode) => TabType;
+  addObjectTab: (title: string, nodeId: string, action: string, mode: TabMode) => TabType;
   addEditorTab: (query?: string) => TabType;
   //return undefined will redirect to route /
   removeTab: (selectedTab: TabType, tabId: string) => TabType | null | undefined;
