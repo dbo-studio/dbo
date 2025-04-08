@@ -1,13 +1,13 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import { IconButton, Stack } from '@mui/material';
-import { useSearchParams } from 'react-router-dom';
+import type { JSX } from 'react';
 
-export default function Leading() {
-  const [searchParams, setSearchParams] = useSearchParams();
+export default function Leading(): JSX.Element {
+  const { toggleShowSettings } = useSettingStore();
 
-  const openSettings = () => {
-    searchParams.set('showSettings', 'true');
-    setSearchParams(searchParams);
+  const openSettings = (): void => {
+    toggleShowSettings(true);
   };
 
   return (

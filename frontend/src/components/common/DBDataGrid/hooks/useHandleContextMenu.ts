@@ -1,14 +1,14 @@
 import { handelRowChangeLog } from '@/core/utils';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 // @ts-ignore
 import { ContextMenu, type Settings } from 'handsontable/plugins/contextMenu';
-import { useSearchParams } from 'react-router-dom';
 
 export const useHandleContextMenu = (editable?: boolean): Settings => {
   const selectedTab = useSelectedTab();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { getSelectedRows, updateEditedRows, getEditedRows, updateRow } = useDataStore();
+  const { getSelectedRows, updateEditedRows, getEditedRows, updateRow, toggleDataFetching } = useDataStore();
+  const { toggleShowQuickLookEditor } = useSettingStore();
 
   const valueReplacer = (newValue: any): void => {
     if (!selectedTab) return;
@@ -23,6 +23,7 @@ export const useHandleContextMenu = (editable?: boolean): Settings => {
         updateEditedRows(editedRows);
         newRow[column] = newValue;
         updateRow(newRow);
+        toggleDataFetching();
       }
     }
   };
@@ -33,8 +34,7 @@ export const useHandleContextMenu = (editable?: boolean): Settings => {
       quick_look: {
         name: 'Quick look editor',
         callback: (): void => {
-          searchParams.set('quick-look-editor', 'true');
-          setSearchParams(searchParams);
+          toggleShowQuickLookEditor(true);
         }
       },
       // sp1: ContextMenu.SEPARATOR,

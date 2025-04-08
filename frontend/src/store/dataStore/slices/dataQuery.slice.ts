@@ -13,7 +13,10 @@ export const createDataQuerySlice: StateCreator<
   DataQuerySlice
 > = (set, get) => ({
   loading: false,
-  toggleDataFetching: true,
+  isDataFetching: true,
+  toggleDataFetching: (): void => {
+    set({ isDataFetching: !get().isDataFetching });
+  },
   runQuery: async (): Promise<void> => {
     const tab = useTabStore.getState().selectedTab();
     if (!tab) return;
@@ -42,7 +45,7 @@ export const createDataQuerySlice: StateCreator<
 
       useTabStore.getState().updateQuery(res.query);
       await Promise.all([get().updateRows(res.data), get().updateColumns(res.columns)]);
-      set({ toggleDataFetching: !get().toggleDataFetching });
+      set({ isDataFetching: !get().isDataFetching });
     } catch (error) {
       console.log('🚀 ~ runQuery: ~ error:', error);
     } finally {
@@ -63,7 +66,7 @@ export const createDataQuerySlice: StateCreator<
       useTabStore.getState().updateQuery(res.query);
 
       await Promise.all([get().updateRows(res.data), get().updateColumns(res.columns)]);
-      set({ toggleDataFetching: !get().toggleDataFetching });
+      set({ isDataFetching: !get().isDataFetching });
     } catch (error) {
       if (isAxiosError(error)) {
         toast.error(error.message);

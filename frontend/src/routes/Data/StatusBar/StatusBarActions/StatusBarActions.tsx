@@ -5,15 +5,15 @@ import { TabMode } from '@/core/enums';
 import { useCurrentConnection } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, IconButton, Stack } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import type { JSX } from 'react';
-import { useSearchParams } from 'react-router-dom';
 
 export default function StatusBarActions(): JSX.Element {
   const currentConnection = useCurrentConnection();
-  const [searchParams, setSearchParams] = useSearchParams();
   const selectedTab = useSelectedTab();
+  const { toggleScrollToBottom } = useSettingStore();
   const {
     loading,
     addUnsavedRows,
@@ -68,8 +68,7 @@ export default function StatusBarActions(): JSX.Element {
   const handleAddAction = async (): Promise<void> => {
     if (selectedTab?.mode === TabMode.Data) {
       addUnsavedRows();
-      searchParams.set('scrollToBottom', 'true');
-      setSearchParams(searchParams);
+      toggleScrollToBottom(true);
     }
   };
 

@@ -6,14 +6,15 @@ import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import type { SelectedRow } from '@/store/dataStore/types.ts';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { RowType } from '@/types';
 import { Box } from '@mui/material';
 import { type JSX, useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 
-const getRowValue = (row: SelectedRow): string => {
+const getRowValue = (row: SelectedRow): string | undefined => {
+  if (!row) return undefined;
   const columns = row.selectedColumns;
-  if (columns === undefined || columns.length === 0) return '';
+  if (columns === undefined || columns.length === 0) return undefined;
 
   return row.data[columns[columns.length - 1].toString()];
 };
@@ -24,26 +25,25 @@ const getSelectedColumn = (columns: string[]): string => {
 
 export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX.Element {
   const selectedTab = useSelectedTab();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { getSelectedRows, updateRow, getEditedRows, updateEditedRows } = useDataStore();
   const [value, setValue] = useState<string | undefined>(undefined);
   const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
   const [row, setRow] = useState<RowType>();
+  const { getSelectedRows, updateRow, getEditedRows, updateEditedRows, toggleDataFetching } = useDataStore();
+  const { showQuickLookEditor, toggleShowQuickLookEditor } = useSettingStore();
 
   const handleClose = (): void => {
-    if (!row || value === getRowValue(row) || !editable) {
-      searchParams.delete('quick-look-editor');
-      setSearchParams(searchParams);
+    const rowValue = getRowValue(row);
+
+    if (rowValue === undefined || !row || value === rowValue || !editable || !selectedTab) {
+      toggleShowQuickLookEditor(false);
       return;
     }
-
-    if (!selectedTab) return;
 
     const editedRows = handelRowChangeLog(
       getEditedRows(),
       row.data,
       getSelectedColumn(row.selectedColumns),
-      getRowValue(row),
+      rowValue,
       value
     );
 
@@ -51,14 +51,13 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
     const newRow = { ...row.data };
     newRow[getSelectedColumn(row.selectedColumns)] = value;
     updateRow(newRow);
-
-    searchParams.delete('quick-look-editor');
-    setSearchParams(searchParams);
+    toggleDataFetching();
+    toggleShowQuickLookEditor(false);
   };
 
   useEffect(() => {
     const rows = getSelectedRows();
-    if (rows.length === 0 || searchParams.get('quick-look-editor') !== 'true') {
+    if (rows.length === 0 || !showQuickLookEditor) {
       return;
     }
 
@@ -68,12 +67,12 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
 
     setRow(row);
     setValue(getRowValue(row));
-  }, [searchParams.get('quick-look-editor')]);
+  }, [showQuickLookEditor]);
 
   return (
     <ResizableModal
       onClose={handleClose}
-      open={searchParams.get('quick-look-editor') === 'true'}
+      open={showQuickLookEditor}
       title={`${locales.quick_look_editor} : ${row?.selectedColumn ?? ''}`}
       onResize={(width: number, height: number): void => setDimensions({ width, height })}
     >

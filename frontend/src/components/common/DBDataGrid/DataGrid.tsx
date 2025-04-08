@@ -46,11 +46,11 @@ registerPlugin(ContextMenu);
 
 export default function DataGrid({ editable }: DataGridProps): JSX.Element {
   const hotTableRef = useRef<HotTableRef | null>(null);
-  const { loading, getRows, getColumns, toggleDataFetching } = useDataStore();
+  const { loading, getRows, getColumns, isDataFetching } = useDataStore();
   const { selectedTabId } = useTabStore();
 
-  const rows = useMemo(() => getRows(), [toggleDataFetching, selectedTabId]);
-  const headers = useMemo(() => getColumns(true), [toggleDataFetching, selectedTabId]);
+  const rows = useMemo(() => getRows(), [isDataFetching, selectedTabId]);
+  const headers = useMemo(() => getColumns(true), [isDataFetching, selectedTabId]);
 
   useHandleScroll(hotTableRef);
   useHandleDeselect(hotTableRef);

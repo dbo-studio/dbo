@@ -3,7 +3,7 @@ import { useSetupDesktop } from '@/hooks';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { type JSX, useEffect } from 'react';
 
-export default function BaseLayout(): JSX.Element | null {
+export default function Home(): JSX.Element | null {
   const done = useSetupDesktop();
   const { debug } = useSettingStore();
 

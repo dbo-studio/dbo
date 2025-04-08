@@ -53,9 +53,10 @@ export type DataUnsavedRowsSlice = {
 
 export type DataQuerySlice = {
   loading: boolean;
-  toggleDataFetching: boolean;
+  isDataFetching: boolean;
   runQuery: () => Promise<void>;
   runRawQuery: () => Promise<void>;
+  toggleDataFetching: () => void;
 };
 
 export type SelectedRow = {

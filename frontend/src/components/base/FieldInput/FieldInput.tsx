@@ -1,8 +1,8 @@
-import type {EventFor} from '@/types';
-import {Box, InputBase, Typography, useTheme} from '@mui/material';
+import type { EventFor } from '@/types';
+import { Box, InputBase, Typography, useTheme } from '@mui/material';
 import dayjs from 'dayjs';
-import {forwardRef, type JSX, useEffect, useState} from 'react';
-import type {FieldInputProps} from './types';
+import { forwardRef, type JSX, useEffect, useState } from 'react';
+import type { FieldInputProps } from './types';
 
 export default forwardRef(function FieldInput(props: FieldInputProps, _): JSX.Element {
   const theme = useTheme();

@@ -3,30 +3,25 @@ import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconBu
 import Settings from '@/components/common/Settings/Settings.tsx';
 import { useCurrentConnection } from '@/hooks';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store.ts';
 import { Grid2, IconButton, Stack } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 import type { JSX } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import ConnectionBox from './ConnectionBox/ConnectionBox.tsx';
+import ConnectionBox from './ConnectionBox/ConnectionBox';
 
 export default function ConnectionInfo(): JSX.Element {
   const queryClient = useQueryClient();
   const currentConnection = useCurrentConnection();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { loading } = useConnectionStore();
   const { addEditorTab, updateSelectedTab } = useTabStore();
   const { reloadTree } = useTreeStore();
+  const { showSettings, toggleShowAddConnection } = useSettingStore();
 
   const handleAddEditorTab = (): void => {
     const tab = addEditorTab();
     updateSelectedTab(tab);
-  };
-
-  const changeSearchParams = (key: string): void => {
-    searchParams.set(key, 'true');
-    setSearchParams(searchParams);
   };
 
   const handleRefresh = (): void => {
@@ -43,10 +38,10 @@ export default function ConnectionInfo(): JSX.Element {
 
   return (
     <Stack direction={'row'} justifyContent={'center'} alignItems={'center'}>
-      <Settings open={searchParams.get('showSettings') === 'true'} />
+      <Settings open={showSettings} />
       <Grid2 size={{ md: 3 }}>
         <Stack direction={'row'} justifyContent='flex-end'>
-          <IconButton aria-label='connections' onClick={(): void => changeSearchParams('showAddConnection')}>
+          <IconButton aria-label='connections' onClick={(): void => toggleShowAddConnection(true)}>
             <CustomIcon type={'connection'} size={'m'} />
           </IconButton>
           {/* <IconButton aria-label='lock'>

@@ -2,9 +2,9 @@ import api from '@/api';
 import type { CreateConnectionRequestType } from '@/api/connection/types';
 import Modal from '@/components/base/Modal/Modal';
 import locales from '@/locales';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import ConnectionSelection from './ConnectionSelection/ConnectionSelection';
 import PostgreSQL from './Postgresql/Postgresql';
@@ -20,9 +20,9 @@ const connectionTypes: SelectionConnectionType[] = [
 
 export default function AddConnection(): JSX.Element {
   const queryClient = useQueryClient();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [connectionType, setConnectionType] = useState<SelectionConnectionType | undefined>(undefined);
   const [step, setStep] = useState(0);
+  const { toggleShowAddConnection, showAddConnection } = useSettingStore();
 
   const { mutateAsync: createConnectionMutation, isPending: createConnectionPending } = useMutation({
     mutationFn: api.connection.createConnection,
@@ -45,8 +45,7 @@ export default function AddConnection(): JSX.Element {
 
   const handleClose = (): void => {
     setConnectionType(undefined);
-    searchParams.delete('showAddConnection');
-    setSearchParams(searchParams);
+    toggleShowAddConnection(false);
     setStep(0);
   };
 
@@ -75,7 +74,7 @@ export default function AddConnection(): JSX.Element {
   };
 
   return (
-    <Modal open={searchParams.get('showAddConnection') === 'true'} title={locales.new_connection}>
+    <Modal open={showAddConnection} title={locales.new_connection}>
       {step === 0 && (
         <ConnectionSelection onClose={handleClose} onSubmit={handleSetConnection} connections={connectionTypes} />
       )}

@@ -5,20 +5,20 @@ import { v4 as uuid } from 'uuid';
 
 import api from '@/api';
 import AddConnection from '@/components/common/AddConnection/AddConnection';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
 import EditConnection from '../../AddConnection/EditConnection';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { ConnectionsStyled } from './Connections.styled';
 import { EmptySpaceStyle } from './EmptySpace.styled';
 
 export default function Connections(): JSX.Element {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [loadingConnectionId, setLoadingConnectionId] = useState<number | undefined>(undefined);
   const { loading, currentConnectionId, currentConnection, updateLoading, updateCurrentConnection, updateConnections } =
     useConnectionStore();
   const { updateSelectedTab, tabs } = useTabStore();
-  const [loadingConnectionId, setLoadingConnectionId] = useState<number | undefined>(undefined);
+  const { toggleShowAddConnection } = useSettingStore();
 
   const { data: connections } = useQuery({
     queryKey: ['connections'],
@@ -56,8 +56,7 @@ export default function Connections(): JSX.Element {
     }
 
     if (connections.length === 0) {
-      searchParams.set('showAddConnection', 'true');
-      setSearchParams(searchParams);
+      toggleShowAddConnection(true);
     }
   }, [connections]);
 

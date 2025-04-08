@@ -2,10 +2,10 @@ import type { CodeEditorProps } from '@/components/base/CodeEditor/types.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { Box } from '@mui/material';
 import * as monaco from 'monaco-editor';
-import { useEffect, useRef } from 'react';
+import { type JSX, useEffect, useRef } from 'react';
 import { editorConfig } from './helpers/editorConfig.ts';
 
-export default function CodeEditor({ value, onChange, width, height }: CodeEditorProps) {
+export default function CodeEditor({ value, onChange, width, height }: CodeEditorProps): JSX.Element {
   const hostRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
   const { isDark } = useSettingStore();
@@ -31,8 +31,8 @@ export default function CodeEditor({ value, onChange, width, height }: CodeEdito
   }, []);
 
   useEffect(() => {
-    if (editorRef.current && value.toString() !== editorRef.current.getValue()) {
-      editorRef.current.setValue(value);
+    if (value && editorRef.current && value.toString() !== editorRef.current.getValue()) {
+      editorRef.current.setValue(value.toString());
     }
   }, [value]);
 

@@ -3,23 +3,23 @@ import type { CreateConnectionRequestType } from '@/api/connection/types';
 import Modal from '@/components/base/Modal/Modal';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { ConnectionType } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import PostgreSQL from './Postgresql/Postgresql';
 
 export default function EditConnection(): JSX.Element {
   const queryClient = useQueryClient();
   const [activeConnection, setActiveConnection] = useState<ConnectionType | undefined>(undefined);
-  const [searchParams, setSearchParams] = useSearchParams();
   const { connections } = useConnectionStore();
+  const { showEditConnection, toggleShowEditConnection } = useSettingStore();
 
   const { mutateAsync: updateConnectionMutation, isPending: updateConnectionPending } = useMutation({
     mutationFn: (variables: { id: number; data: CreateConnectionRequestType }): Promise<ConnectionType> =>
       api.connection.updateConnection(variables.id, variables.data),
-    onSuccess: (connection: ConnectionType): void => {
+    onSuccess: (): void => {
       queryClient.invalidateQueries({
         queryKey: ['connections']
       });
@@ -38,8 +38,7 @@ export default function EditConnection(): JSX.Element {
 
   const handleClose = (): void => {
     setActiveConnection(undefined);
-    searchParams.delete('showEditConnection');
-    setSearchParams(searchParams);
+    toggleShowEditConnection(false);
   };
 
   const handlePingConnection = async (data: CreateConnectionRequestType): Promise<void> => {
@@ -62,21 +61,14 @@ export default function EditConnection(): JSX.Element {
   };
 
   useEffect(() => {
-    if (searchParams.has('showEditConnection')) {
-      const connection = connections?.find(
-        (connection) => connection.id === Number(searchParams.get('showEditConnection'))
-      );
-      if (connection) {
-        setActiveConnection(connection);
-      } else {
-        searchParams.delete('showEditConnection');
-        setSearchParams(searchParams);
-      }
+    if (showEditConnection) {
+      const connection = connections?.find((connection) => connection.id === Number(showEditConnection));
+      connection ? setActiveConnection(connection) : toggleShowEditConnection(false);
     }
-  }, [searchParams]);
+  }, [showEditConnection]);
 
   return (
-    <Modal open={searchParams.has('showEditConnection')} title={locales.edit_connection}>
+    <Modal open={showEditConnection !== undefined && showEditConnection !== false} title={locales.edit_connection}>
       {activeConnection?.type === 'postgresql' && (
         <PostgreSQL
           connection={activeConnection}

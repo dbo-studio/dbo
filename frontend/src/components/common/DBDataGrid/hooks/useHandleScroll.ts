@@ -1,22 +1,21 @@
 import { useDataStore } from '@/store/dataStore/data.store.ts';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { HotTableRef } from '@handsontable/react-wrapper';
 import { type RefObject, useCallback, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
 
 export const useHandleScroll = (hotTableRef: RefObject<HotTableRef | null>): void => {
-  const [searchParams, setSearchParams] = useSearchParams();
   const { getRows } = useDataStore();
+  const { scrollToBottom, toggleScrollToBottom } = useSettingStore();
 
-  const scrollToBottom = useCallback(() => {
+  const handleScrollToBottom = useCallback(() => {
     hotTableRef?.current?.hotInstance?.scrollViewportTo({ row: getRows().length - 1 });
 
-    searchParams.delete('scrollToBottom');
-    setSearchParams(searchParams);
+    toggleScrollToBottom(false);
   }, []);
 
   useEffect(() => {
-    if (searchParams.get('scrollToBottom') === 'true') {
-      scrollToBottom();
+    if (scrollToBottom) {
+      handleScrollToBottom();
     }
-  }, [searchParams]);
+  }, [scrollToBottom]);
 };

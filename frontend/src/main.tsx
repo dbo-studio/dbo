@@ -13,7 +13,7 @@ import ReactDOM from 'react-dom/client';
 import { Toaster } from 'sonner';
 import './components/base/SqlEditor/helpers/languageSetup.ts';
 import ThemeProvider from './core/theme/index.tsx';
-import { Router } from './routes/intex.tsx';
+import Home from './routes/index.tsx';
 
 enableMocking().then(() => {
   const queryClient = new QueryClient({
@@ -33,7 +33,7 @@ enableMocking().then(() => {
         <GlobalStyles styles={(theme): Interpolation<Theme> => globalStyles(theme)} />
         <CssBaseline />
         <QueryClientProvider client={queryClient}>
-          <Router />
+          <Home />
           <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
         <Toaster position='bottom-center' duration={5000} richColors closeButton={true} />

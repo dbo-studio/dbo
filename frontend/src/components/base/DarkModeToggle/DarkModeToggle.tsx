@@ -1,23 +1,23 @@
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { IconButton } from '@mui/material';
-import { useEffect } from 'react';
+import { type JSX, useEffect } from 'react';
 import CustomIcon from '../CustomIcon/CustomIcon';
 
-export default function DarkModeToggle() {
-  const { isDark, updateIsDark } = useSettingStore();
+export default function DarkModeToggle(): JSX.Element {
+  const { isDark, toggleIsDark } = useSettingStore();
 
   useEffect(() => {
     if (isDark === undefined) {
       const mq = window.matchMedia('(prefers-color-scheme: dark)');
       if (mq.matches) {
-        updateIsDark(true);
+        toggleIsDark(true);
       }
-      mq.addEventListener('change', (evt) => updateIsDark(evt.matches));
+      mq.addEventListener('change', (evt) => toggleIsDark(evt.matches));
     }
   }, []);
 
-  const handleToggle = () => {
-    updateIsDark(undefined);
+  const handleToggle = (): void => {
+    toggleIsDark(undefined);
   };
 
   return (

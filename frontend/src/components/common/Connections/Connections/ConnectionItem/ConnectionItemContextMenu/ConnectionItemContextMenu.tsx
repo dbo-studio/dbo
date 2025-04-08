@@ -3,11 +3,11 @@ import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ConnectionType } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { JSX } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import type { ConnectionContextMenuProps } from '../../../types';
 
@@ -17,7 +17,7 @@ export default function ConnectionItemContextMenu({
   onClose
 }: ConnectionContextMenuProps): JSX.Element {
   const queryClient = useQueryClient();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const { toggleShowEditConnection } = useSettingStore();
 
   const { mutateAsync: deleteConnectionMutation } = useMutation({
     mutationFn: api.connection.deleteConnection,
@@ -57,9 +57,8 @@ export default function ConnectionItemContextMenu({
     } catch (err) {}
   };
 
-  const handleEditConnection = (connections: ConnectionType | undefined): void => {
-    searchParams.set('showEditConnection', connections?.id.toString() || '');
-    setSearchParams(searchParams);
+  const handleEditConnection = (connection: ConnectionType | undefined): void => {
+    if (connection) toggleShowEditConnection(connection.id);
   };
 
   const menu: MenuType[] = [
