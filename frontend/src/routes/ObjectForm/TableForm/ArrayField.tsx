@@ -2,7 +2,6 @@ import type { FormFieldType } from '@/api/tree/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import {
   Box,
-  Divider,
   IconButton,
   Stack,
   Table,
@@ -16,7 +15,7 @@ import type { JSX } from 'react';
 import type { ArrayFieldProps } from '../types';
 import SimpleField from './SimpleField';
 
-export default function ArrayField({ field, onChange, onAdd }: ArrayFieldProps): JSX.Element {
+export default function ArrayField({ field, onChange }: ArrayFieldProps): JSX.Element {
   const handleItemChange = (index: number, fieldId: string, fieldValue: any): void => {
     const newFields = [...(field.fields || [])];
 
@@ -43,14 +42,6 @@ export default function ArrayField({ field, onChange, onAdd }: ArrayFieldProps):
 
   return (
     <Box height='100%' display='flex' flexDirection='column'>
-      <Stack direction={'row'} spacing={1} mt={1} mb={1}>
-        <IconButton size='small' onClick={onAdd}>
-          <Stack direction={'row'} spacing={1} alignItems={'center'}>
-            <CustomIcon type='plus' />
-          </Stack>
-        </IconButton>
-      </Stack>
-      <Divider />
       <TableContainer>
         <Table sx={{ minWidth: 650 }}>
           <TableHead>

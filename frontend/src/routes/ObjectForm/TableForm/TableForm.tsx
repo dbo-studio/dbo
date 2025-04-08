@@ -18,11 +18,7 @@ export default function TableForm({ formSchema }: TableFormProps): JSX.Element {
         <FormFields fields={simpleFields} onChange={(field, value): void => handleFieldChange(field, value)} />
         {arrayFields.map((field) => (
           <Box key={field.id}>
-            <ArrayField
-              field={field}
-              onChange={(value): void => handleFieldChange(field.id, value)}
-              onAdd={(): void => handleAddArrayItem(field)}
-            />
+            <ArrayField field={field} onChange={(value): void => handleFieldChange(field.id, value)} />
           </Box>
         ))}
       </Box>

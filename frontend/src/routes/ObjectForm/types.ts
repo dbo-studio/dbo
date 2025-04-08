@@ -9,7 +9,6 @@ export type ObjectTabProps = {
 export type ArrayFieldProps = {
   field: FormFieldType;
   onChange: (value: any[]) => void;
-  onAdd?: () => void;
 };
 
 export type FormFieldsProps = {

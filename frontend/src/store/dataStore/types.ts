@@ -1,4 +1,4 @@
-import type { EditedRow, TabType } from '@/types';
+import type { EditedRow } from '@/types';
 import type { ColumnType, RowType } from '@/types/Data';
 
 export type DataStore = object;

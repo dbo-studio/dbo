@@ -1,11 +1,10 @@
-import type { EventFor } from '@/types';
-import { Box, InputBase, Typography, useTheme } from '@mui/material';
+import type {EventFor} from '@/types';
+import {Box, InputBase, Typography, useTheme} from '@mui/material';
 import dayjs from 'dayjs';
-import { forwardRef, useEffect, useState } from 'react';
-import type { FieldInputProps } from './types';
+import {forwardRef, type JSX, useEffect, useState} from 'react';
+import type {FieldInputProps} from './types';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export default forwardRef(function FieldInput(props: FieldInputProps, _) {
+export default forwardRef(function FieldInput(props: FieldInputProps, _): JSX.Element {
   const theme = useTheme();
   const [value, setValue] = useState('');
 
@@ -17,14 +16,14 @@ export default forwardRef(function FieldInput(props: FieldInputProps, _) {
     }
   }, [props.type, props.value]);
 
-  const handleOnChange = (e: EventFor<'input', 'onChange'>) => {
+  const handleOnChange = (e: EventFor<'input', 'onChange'>): void => {
     setValue(e.target.value);
     if (props.onChange) {
       props.onChange(e);
     }
   };
 
-  const handleOnBlue = (e: EventFor<'input', 'onBlur'>) => {
+  const handleOnBlue = (e: EventFor<'input', 'onBlur'>): void => {
     setValue(e.target.value);
     if (props.onBlur) {
       props.onBlur(e);
