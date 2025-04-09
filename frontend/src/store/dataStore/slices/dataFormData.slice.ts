@@ -1,3 +1,4 @@
+import { useTabStore } from '@/store/tabStore/tab.store';
 import type { StateCreator } from 'zustand';
 import type { DataFormDataSlice } from '../types';
 
@@ -22,13 +23,12 @@ export const createDataFormDataSlice: StateCreator<DataFormDataSlice, [], [], Da
   },
 
   resetFormData: (tabId: string, objectTabId: string): void => {
-    set((state: DataFormDataSlice) => {
-      const newState = { ...state.formDataByTab };
-      delete newState[tabId][objectTabId];
+    const selectedTabId = useTabStore.getState().selectedTabId;
+    if (!selectedTabId) return;
 
-      return {
-        formDataByTab: newState
-      };
-    });
+    const newState = { ...get().formDataByTab[selectedTabId] };
+    delete newState[tabId][objectTabId];
+
+    set({ formDataByTab: newState });
   }
 });

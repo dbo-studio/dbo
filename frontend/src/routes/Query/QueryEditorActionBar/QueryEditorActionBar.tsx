@@ -23,7 +23,7 @@ export default function QueryEditorActionBar({ databases, schemas, onFormat }: Q
       id='action-bar'
       borderBottom={(theme): string => `1px solid ${theme.palette.divider}`}
       borderTop={(theme): string => `1px solid ${theme.palette.divider}`}
-      padding='8px'
+      padding={1}
       direction='row'
       justifyContent='space-between'
       alignItems='center'
