@@ -15,6 +15,7 @@ type Connection struct {
 	Version        *string
 	CreatedAt      *time.Time `gorm:"autoCreateTime"`
 	UpdatedAt      *time.Time `gorm:"autoUpdateTime"`
+	Histories      []History  `gorm:"foreignKey:ConnectionID;constraint:OnDelete:CASCADE"`
 }
 
 func (c Connection) FakeConnection() *Connection {

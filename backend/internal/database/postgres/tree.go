@@ -47,6 +47,7 @@ func buildRoot(r *PostgresRepository) (*contract.TreeNode, error) {
 			Name:        db.Name,
 			Type:        contract.DatabaseNodeType,
 			HasChildren: true,
+			Icon:        lo.ToPtr("database"),
 			ContextMenu: r.ContextMenu(contract.DatabaseNodeType),
 			Children:    make([]contract.TreeNode, 0),
 		})
@@ -73,6 +74,7 @@ func buildDatabase(r *PostgresRepository, dbName string) (*contract.TreeNode, er
 			Name:        schema.Name,
 			Type:        contract.SchemaNodeType,
 			HasChildren: true,
+			Icon:        lo.ToPtr("network"),
 			ContextMenu: r.ContextMenu(contract.SchemaNodeType),
 			Children:    make([]contract.TreeNode, 0),
 		})

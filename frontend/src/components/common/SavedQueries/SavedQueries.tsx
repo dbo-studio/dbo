@@ -1,7 +1,8 @@
 import api from '@/api';
 import type { SavedQueryResponseType } from '@/api/savedQuery/types';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useSavedQueryStore } from '@/store/savedQueryStore/savedQuery.store';
-import { Box, ClickAwayListener, LinearProgress, useTheme } from '@mui/material';
+import { Box, ClickAwayListener, IconButton, LinearProgress, Stack, useTheme } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import { v4 as uuid } from 'uuid';
@@ -14,7 +15,7 @@ export default function SavedQueries(): JSX.Element {
   const theme = useTheme();
   const { savedQueries, upsertQuery, deleteQuery } = useSavedQueryStore();
 
-  const { isLoading } = useQuery({
+  const { isLoading, refetch } = useQuery({
     queryKey: ['savedQueries'],
     queryFn: async (): Promise<SavedQueryResponseType[]> => {
       const res = await api.savedQueries.getSavedQueries();
@@ -26,10 +27,28 @@ export default function SavedQueries(): JSX.Element {
     enabled: savedQueries === undefined
   });
 
+  const handleRefresh = async (): Promise<void> => {
+    await refetch();
+  };
+
   return (
     <ClickAwayListener onClickAway={(): void => setSelected(null)}>
-      <Box>
-        <Search onChange={(name): void => setSearch(name)} />
+      <Box mt={1}>
+        <Stack
+          mt={1}
+          spacing={1}
+          direction={'row'}
+          alignContent={'center'}
+          justifyContent={'center'}
+          alignItems={'center'}
+        >
+          <Box flex={1}>
+            <Search onChange={(name): void => setSearch(name)} />
+          </Box>
+          <IconButton onClick={handleRefresh}>
+            <CustomIcon size='s' type={'refresh'} />
+          </IconButton>
+        </Stack>
         <Box mt={theme.spacing(1)}>
           {isLoading ? (
             <LinearProgress style={{ marginTop: '8px' }} />

@@ -23,13 +23,15 @@ type ConnectionManager struct {
 	connections map[uint]*conn
 	mu          sync.Mutex
 	logger      logger.Logger
+	appDB       *gorm.DB
 }
 
-func NewConnectionManager(logger logger.Logger) *ConnectionManager {
+func NewConnectionManager(appDB *gorm.DB, logger logger.Logger) *ConnectionManager {
 	cm := &ConnectionManager{
 		connections: make(map[uint]*conn),
 		mu:          sync.Mutex{},
 		logger:      logger,
+		appDB:       appDB,
 	}
 	go cm.cleanupInactiveConnections()
 	return cm
@@ -71,6 +73,8 @@ func (cm *ConnectionManager) GetConnection(connection *model.Connection) (*gorm.
 		return nil, err
 	}
 
+	RegisterHistoryHooks(db, cm.appDB, connection.ID)
+
 	sqlDB, _ := db.DB()
 	sqlDB.SetMaxOpenConns(10)
 	sqlDB.SetMaxIdleConns(5)
@@ -106,4 +110,35 @@ func (cm *ConnectionManager) cleanupInactiveConnections() {
 		}
 		cm.mu.Unlock()
 	}
+}
+
+func RegisterHistoryHooks(db *gorm.DB, appDB *gorm.DB, connectionID uint) {
+	cb := db.Callback()
+
+	saveHistory := func(db *gorm.DB) {
+		if db.Statement == nil || db.Statement.SQL.String() == "" {
+			return
+		}
+
+		if db.Statement.Table == "histories" {
+			return
+		}
+
+		history := model.History{
+			ConnectionID: connectionID,
+			Query:        db.Dialector.Explain(db.Statement.SQL.String(), db.Statement.Vars...),
+		}
+
+		err := appDB.Session(&gorm.Session{
+			NewDB:                  true,
+			SkipHooks:              true,
+			SkipDefaultTransaction: true,
+		}).Create(&history).Error
+
+		if err != nil {
+			db.Logger.Error(db.Statement.Context, "failed to save query history: %v", err)
+		}
+	}
+
+	cb.Query().After("gorm:after_query").Register("custom:save_history_query", saveHistory)
 }

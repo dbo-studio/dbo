@@ -60,5 +60,6 @@ export const IconTypes = {
   update: 'Download',
   about: 'Info',
   externalLink: 'ExternalLink',
-  postgresql: 'postgresql'
+  postgresql: 'postgresql',
+  network: 'Network'
 };

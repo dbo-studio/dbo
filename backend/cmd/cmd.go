@@ -43,7 +43,7 @@ func Execute() {
 		appLogger.Fatal(err)
 	}
 
-	cm := databaseConnection.NewConnectionManager(appLogger)
+	cm := databaseConnection.NewConnectionManager(appDB, appLogger)
 	cache := sqlite.NewSQLiteCache(appDB)
 
 	rr := repository.NewRepository(ctx, appDB, cache)

@@ -32,7 +32,7 @@ export default function ConnectionSelection({ connections, onSubmit, onClose }: 
 
   return (
     <Box flex={1} display={'flex'} flexDirection={'column'}>
-      <Box flex={1}>
+      <Box flex={1} mt={1}>
         <Search onChange={handleSearch} />
         <ConnectionWrapperStyled>
           {visibleConnections.map((c, index: number) => (
