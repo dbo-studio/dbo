@@ -25,15 +25,13 @@ export default function ConnectionInfo(): JSX.Element {
   };
 
   const handleRefresh = (): void => {
-    if (!currentConnection) {
-      return;
-    }
-
     queryClient.invalidateQueries({
-      queryKey: ['connections', currentConnection.id]
+      queryKey: ['connections']
     });
 
-    reloadTree();
+    if (currentConnection) {
+      reloadTree();
+    }
   };
 
   return (

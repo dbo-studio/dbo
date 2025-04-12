@@ -24,13 +24,18 @@ export default function Connections(): JSX.Element {
     queryKey: ['connections'],
     queryFn: async (): Promise<ConnectionType[]> => {
       updateLoading('loading');
-      const connections = await api.connection.getConnectionList();
-      updateConnections(connections);
-      if (!currentConnectionId) {
-        updateCurrentConnection(connections.find((c) => c.isActive));
+      try {
+        const connections = await api.connection.getConnectionList();
+        updateConnections(connections);
+        if (!currentConnectionId) {
+          updateCurrentConnection(connections.find((c) => c.isActive));
+        }
+        updateLoading('finished');
+        return connections;
+      } catch (error) {
+        updateLoading('error');
+        throw error;
       }
-      updateLoading('finished');
-      return connections;
     }
   });
 
@@ -58,7 +63,7 @@ export default function Connections(): JSX.Element {
     if (connections.length === 0) {
       toggleShowAddConnection(true);
     }
-  }, [connections]);
+  }, [connections, toggleShowAddConnection]);
 
   const handleChangeCurrentConnection = async (c: ConnectionType): Promise<void> => {
     if (c.id === currentConnection()?.id || loading === 'loading') {
