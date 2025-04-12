@@ -21,10 +21,10 @@ func NewHistoryRepo(db *gorm.DB) *IHistoryRepoImpl {
 	}
 }
 
-func (h IHistoryRepoImpl) Index(_ context.Context, pagination *dto.PaginationRequest) (*[]model.History, error) {
+func (h IHistoryRepoImpl) Index(_ context.Context, req *dto.HistoryListRequest) (*[]model.History, error) {
 	var histories []model.History
 
-	result := h.db.Scopes(scope.Paginate(pagination)).Order("created_at desc").Find(&histories)
+	result := h.db.Scopes(scope.Paginate(&req.PaginationRequest)).Where("connection_id", "=", req.ConnectionId).Order("created_at desc").Find(&histories)
 
 	if result.Error != nil {
 		return nil, result.Error

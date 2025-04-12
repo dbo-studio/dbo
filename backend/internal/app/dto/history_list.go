@@ -2,6 +2,7 @@ package dto
 
 type (
 	HistoryListRequest struct {
+		ConnectionId int32 `query:"connectionId"`
 		PaginationRequest
 	}
 
@@ -12,8 +13,9 @@ type (
 
 type (
 	HistoryListItem struct {
-		ID        int64  `json:"id"`
-		Query     string `json:"query"`
-		CreatedAt string `json:"createdAt"`
+		ID           int64  `json:"id"`
+		ConnectionId int32  `json:"connectionId"`
+		Query        string `json:"query"`
+		CreatedAt    string `json:"createdAt"`
 	}
 )

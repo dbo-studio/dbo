@@ -3,7 +3,7 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import Search from '@/components/base/Search/Search';
 import { useHistoryStore } from '@/store/historyStore/history.store';
 import type { HistoryType } from '@/types/History';
-import { Box, ClickAwayListener, IconButton, LinearProgress, Stack, useTheme } from '@mui/material';
+import { Box, Button, ClickAwayListener, IconButton, LinearProgress, Stack, useTheme } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import { v4 as uuid } from 'uuid';
@@ -14,19 +14,33 @@ export default function Histories(): JSX.Element {
   const [selected, setSelected] = useState<number | null>(null);
   const { histories, updateHistories } = useHistoryStore();
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
   const { isLoading, refetch } = useQuery({
-    queryKey: ['histories'],
+    queryKey: ['histories', page],
     queryFn: async (): Promise<HistoryType[]> => {
-      const res = await api.histories.getHistories();
-      updateHistories(res);
+      const res = await api.histories.getHistories({ page, count: 1 });
+      if (res.length === 0) setHasMore(false);
+      if (page === 1) {
+        updateHistories(res);
+      } else {
+        updateHistories([...(histories || []), ...res]);
+      }
       return res;
-    },
-    enabled: histories === undefined
+    }
   });
 
+  const handleLoadMore = async (): Promise<void> => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    await refetch({ queryKey: ['histories', nextPage] });
+  };
+
   const handleRefresh = async (): Promise<void> => {
-    await refetch();
+    await refetch({ queryKey: ['histories', 1] });
+    setPage(1);
+    setHasMore(true);
   };
 
   return (
@@ -51,19 +65,29 @@ export default function Histories(): JSX.Element {
         </Box>
 
         <Box mt={theme.spacing(1)}>
-          {isLoading ? (
+          {isLoading && page === 1 ? (
             <LinearProgress style={{ marginTop: '8px' }} />
           ) : (
-            histories
-              ?.filter((f) => f.query.toLocaleLowerCase().includes(search.toLocaleLowerCase()))
-              .map((query) => (
-                <HistoryItem
-                  onClick={(): void => setSelected(query.id)}
-                  key={uuid()}
-                  history={query}
-                  selected={selected === query.id}
-                />
-              ))
+            <>
+              {histories
+                ?.filter((f) => f.query.toLocaleLowerCase().includes(search.toLocaleLowerCase()))
+                .map((query) => (
+                  <HistoryItem
+                    onClick={(): void => setSelected(query.id)}
+                    key={uuid()}
+                    history={query}
+                    selected={selected === query.id}
+                  />
+                ))}
+
+              {hasMore && (
+                <Box display='flex' justifyContent='center' mt={2}>
+                  <Button variant='outlined' onClick={handleLoadMore} disabled={isLoading}>
+                    {isLoading ? 'Loading...' : 'Load More'}
+                  </Button>
+                </Box>
+              )}
+            </>
           )}
         </Box>
       </Box>
