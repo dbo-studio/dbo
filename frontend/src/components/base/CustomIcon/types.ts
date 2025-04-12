@@ -59,5 +59,7 @@ export const IconTypes = {
   shortcuts: 'SquareSlash',
   update: 'Download',
   about: 'Info',
-  externalLink: 'ExternalLink'
+  externalLink: 'ExternalLink',
+  postgresql: 'postgresql',
+  network: 'Network'
 };

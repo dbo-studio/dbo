@@ -26,7 +26,7 @@ func NewHistoryService(hr repository.IHistoryRepo) *IHistoryServiceImpl {
 }
 
 func (i IHistoryServiceImpl) Index(ctx context.Context, req *dto.HistoryListRequest) (*dto.HistoryListResponse, error) {
-	histories, err := i.historyRepo.Index(ctx, &req.PaginationRequest)
+	histories, err := i.historyRepo.Index(ctx, &req)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}

@@ -18,7 +18,7 @@ export default function Search({ onChange }: { onChange: (value: string) => void
   };
 
   return (
-    <Box mt={1}>
+    <Box>
       <InputBase
         size='small'
         value={value}

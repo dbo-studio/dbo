@@ -28,7 +28,7 @@ type ICacheRepo interface {
 }
 
 type IHistoryRepo interface {
-	Index(ctx context.Context, pagination *dto.PaginationRequest) (*[]model.History, error)
+	Index(ctx context.Context, pagination *dto.HistoryListRequest) (*[]model.History, error)
 }
 
 type ISavedQueryRepo interface {

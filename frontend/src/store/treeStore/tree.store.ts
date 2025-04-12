@@ -54,12 +54,54 @@ export const useTreeStore = create<TreeStore>()(
           const currentConnection = getCurrentConnection();
           if (!currentConnection) return;
 
-          set((state) => ({
-            expandedNodes: {
-              ...state.expandedNodes,
-              [currentConnection.id]: (state.expandedNodes[currentConnection.id] || []).filter((id) => id !== nodeId)
-            }
-          }));
+          set((state) => {
+            const connectionId = currentConnection.id;
+            const currentExpandedNodes = state.expandedNodes[connectionId] || [];
+            const currentLoadedParents = state.loadedParentIds[connectionId] || [];
+
+            // Function to recursively find all child node IDs
+            const getAllChildIds = (node: TreeNodeType): string[] => {
+              let childIds: string[] = [];
+              if (node.children?.length) {
+                for (const child of node.children) {
+                  childIds.push(child.id);
+                  childIds = [...childIds, ...getAllChildIds(child)];
+                }
+              }
+              return childIds;
+            };
+
+            // Get the tree to find all children of the collapsed node
+            const tree = state.tree[connectionId];
+            if (!tree) return state;
+
+            // Find the node being collapsed
+            const findNode = (node: TreeNodeType): TreeNodeType | null => {
+              if (node.id === nodeId) return node;
+              for (const child of node.children || []) {
+                const found = findNode(child);
+                if (found) return found;
+              }
+              return null;
+            };
+
+            const nodeToCollapse = findNode(tree);
+            if (!nodeToCollapse) return state;
+
+            // Get all child IDs to remove
+            const childIdsToRemove = getAllChildIds(nodeToCollapse);
+
+            return {
+              expandedNodes: {
+                ...state.expandedNodes,
+                [connectionId]: currentExpandedNodes.filter((id) => id !== nodeId && !childIdsToRemove.includes(id))
+              },
+              loadedParentIds: {
+                ...state.loadedParentIds,
+                [connectionId]: currentLoadedParents.filter((id) => id !== nodeId && !childIdsToRemove.includes(id))
+              }
+            };
+          });
         },
 
         isNodeExpanded: (nodeId: string): boolean => {

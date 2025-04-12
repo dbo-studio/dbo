@@ -11,11 +11,13 @@ import type {
 import { api } from '@/core/api';
 
 const endpoints = {
-  getTree: () => '/tree',
-  getTabs: (nodeId: string, action: string) => `/tree/${nodeId}/tabs/${action}`,
-  getFields: (nodeId: string, action: string, tabId: string) => `/tree/${nodeId}/tabs/${action}/fields/${tabId}`,
-  getObject: (nodeId: string, action: string, tabId: string) => `/tree/${nodeId}/tabs/${action}/fields/${tabId}/object`,
-  executeAction: (nodeId: string, action: string) => `/tree/${nodeId}/tabs/${action}/fields/object`
+  getTree: (): string => '/tree',
+  getTabs: (nodeId: string, action: string): string => `/tree/${nodeId}/tabs/${action}`,
+  getFields: (nodeId: string, action: string, tabId: string): string =>
+    `/tree/${nodeId}/tabs/${action}/fields/${tabId}`,
+  getObject: (nodeId: string, action: string, tabId: string): string =>
+    `/tree/${nodeId}/tabs/${action}/fields/${tabId}/object`,
+  executeAction: (nodeId: string, action: string): string => `/tree/${nodeId}/tabs/${action}/fields/object`
 };
 
 export const getTree = async (params: TreeRequestType): Promise<TreeResponseType> => {

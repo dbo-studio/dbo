@@ -1,9 +1,13 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 type History struct {
-	ID        uint       `gorm:"primaryKey,autoIncrement"`
-	Query     string     `gorm:"type:text"`
-	CreatedAt *time.Time `gorm:"autoCreateTime"`
+	ID           uint `gorm:"primaryKey,autoIncrement"`
+	ConnectionID uint
+	Query        string     `gorm:"type:text"`
+	CreatedAt    *time.Time `gorm:"autoCreateTime"`
+	Connection   Connection `gorm:"foreignKey:ConnectionID"`
 }

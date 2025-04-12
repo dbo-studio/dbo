@@ -46,7 +46,9 @@ export default function ObjectTreeView(): JSX.Element {
 
   return (
     <TreeViewContainerStyled>
-      <Search onChange={(value: string): void => setSearchTerm(value)} />
+      <Box mt={1}>
+        <Search onChange={(value: string): void => setSearchTerm(value)} />
+      </Box>
 
       {isLoading && (
         <Box px={1} py={0.5}>

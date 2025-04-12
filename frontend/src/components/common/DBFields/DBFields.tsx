@@ -46,7 +46,9 @@ export default function DBFields(): JSX.Element {
 
   return (
     <>
-      <Search onChange={(value: string): void => setSearch(value)} />
+      <Box mt={1}>
+        <Search onChange={(value: string): void => setSearch(value)} />
+      </Box>
       {fields.length > 0 && (
         <Box mt={1} data-testid='db-field'>
           {fields.map(
