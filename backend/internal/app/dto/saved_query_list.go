@@ -1,5 +1,7 @@
 package dto
 
+import "github.com/invopop/validation"
+
 type (
 	SavedQueryListRequest struct {
 		ConnectionId int32 `query:"connectionId"`
@@ -20,3 +22,9 @@ type (
 		CreatedAt    string `json:"createdAt"`
 	}
 )
+
+func (req SavedQueryListRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
+	)
+}

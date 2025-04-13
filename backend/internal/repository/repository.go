@@ -32,7 +32,7 @@ type IHistoryRepo interface {
 }
 
 type ISavedQueryRepo interface {
-	Index(ctx context.Context, pagination *dto.PaginationRequest) (*[]model.SavedQuery, error)
+	Index(ctx context.Context, pagination *dto.SavedQueryListRequest) (*[]model.SavedQuery, error)
 	Find(ctx context.Context, id int32) (*model.SavedQuery, error)
 	Create(ctx context.Context, dto *dto.CreateSavedQueryRequest) (*model.SavedQuery, error)
 	Delete(ctx context.Context, query *model.SavedQuery) error

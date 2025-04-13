@@ -25,6 +25,10 @@ func (h *HistoryHandler) Histories(c fiber.Ctx) error {
 		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
 	}
 
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
+	}
+
 	items, err := h.historyService.Index(c.Context(), req)
 	if err != nil {
 		h.logger.Error(err.Error())

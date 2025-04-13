@@ -26,7 +26,7 @@ func NewHistoryService(hr repository.IHistoryRepo) *IHistoryServiceImpl {
 }
 
 func (i IHistoryServiceImpl) Index(ctx context.Context, req *dto.HistoryListRequest) (*dto.HistoryListResponse, error) {
-	histories, err := i.historyRepo.Index(ctx, &req)
+	histories, err := i.historyRepo.Index(ctx, req)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -34,9 +34,10 @@ func (i IHistoryServiceImpl) Index(ctx context.Context, req *dto.HistoryListRequ
 	data := make([]dto.HistoryListItem, 0)
 	for _, h := range lo.FromPtr(histories) {
 		data = append(data, dto.HistoryListItem{
-			ID:        int64(h.ID),
-			Query:     h.Query,
-			CreatedAt: h.CreatedAt.Format("2006-01-02 15:04:05"),
+			ID:           int64(h.ID),
+			ConnectionId: int32(h.ConnectionID),
+			Query:        h.Query,
+			CreatedAt:    h.CreatedAt.Format("2006-01-02 15:04:05"),
 		})
 	}
 

@@ -1,5 +1,10 @@
 import { api } from '@/core/api';
-import type { CreateSavedQueryType, SavedQueryResponseType, UpdateSavedQueryType } from './types';
+import type {
+  CreateSavedQueryType,
+  SavedQueryListRequestType,
+  SavedQueryResponseType,
+  UpdateSavedQueryType
+} from './types';
 
 const endpoint = {
   getSavedQueries: (): string => '/saved',
@@ -8,8 +13,12 @@ const endpoint = {
   deleteSavedQuery: (id: number): string => `/saved/${id}`
 };
 
-export const getSavedQueries = async (): Promise<SavedQueryResponseType[]> => {
-  return (await api.get(endpoint.getSavedQueries())).data.data as SavedQueryResponseType[];
+export const getSavedQueries = async (params: SavedQueryListRequestType): Promise<SavedQueryResponseType[]> => {
+  return (
+    await api.get(endpoint.getSavedQueries(), {
+      params
+    })
+  ).data.data as SavedQueryResponseType[];
 };
 
 export const createSavedQuery = async (data: CreateSavedQueryType): Promise<SavedQueryResponseType> => {

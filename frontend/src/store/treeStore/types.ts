@@ -16,4 +16,5 @@ export type TreeStore = {
   addLoadedParentId: (parentId: string) => void;
   getLoadedParentIds: () => string[];
   reloadTree: () => Promise<void>;
+  toggleIsLoading: (isLoading: boolean) => void;
 };

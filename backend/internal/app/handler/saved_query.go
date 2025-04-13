@@ -28,6 +28,10 @@ func (h SavedQueryHandler) Index(c fiber.Ctx) error {
 		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
 	}
 
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
+	}
+
 	items, err := h.savedQueryService.Index(c.Context(), req)
 	if err != nil {
 		h.logger.Error(err.Error())
@@ -47,13 +51,13 @@ func (h SavedQueryHandler) Create(c fiber.Ctx) error {
 		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
 	}
 
-	history, err := h.savedQueryService.Create(c.Context(), req)
+	result, err := h.savedQueryService.Create(c.Context(), req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder(err).Send(c)
 	}
 
-	return response.SuccessBuilder(history).Send(c)
+	return response.SuccessBuilder(result).Send(c)
 }
 
 func (h SavedQueryHandler) Update(c fiber.Ctx) error {
@@ -68,13 +72,13 @@ func (h SavedQueryHandler) Update(c fiber.Ctx) error {
 		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
 	}
 
-	connection, err := h.savedQueryService.Update(c.Context(), queryId, req)
+	result, err := h.savedQueryService.Update(c.Context(), queryId, req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder(err).Send(c)
 	}
 
-	return response.SuccessBuilder(connection).Send(c)
+	return response.SuccessBuilder(result).Send(c)
 }
 
 func (h SavedQueryHandler) Delete(c fiber.Ctx) error {

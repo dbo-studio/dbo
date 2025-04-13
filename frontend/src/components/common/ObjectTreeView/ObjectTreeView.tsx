@@ -11,7 +11,7 @@ import TreeNode from './TreeNode/TreeNode';
 
 export default function ObjectTreeView(): JSX.Element {
   const currentConnection = useCurrentConnection();
-  const { getTree, isLoading, treeError, reloadTree, addLoadedParentId } = useTreeStore();
+  const { getTree, isLoading, treeError, reloadTree, addLoadedParentId, toggleIsLoading } = useTreeStore();
   const parentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -27,8 +27,10 @@ export default function ObjectTreeView(): JSX.Element {
   useEffect(() => {
     if (!treeError && !tree && !isLoading && currentConnection?.id) {
       reloadTree();
+    } else if (isLoading) {
+      toggleIsLoading(false);
     }
-  }, [currentConnection?.id, tree, isLoading, treeError]);
+  }, [currentConnection?.id, tree, treeError]);
 
   const fetchChildren = async (parentId: string): Promise<TreeNodeType[]> => {
     try {

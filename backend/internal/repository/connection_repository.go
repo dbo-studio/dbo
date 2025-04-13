@@ -31,7 +31,7 @@ func (c IConnectionRepoImpl) Index(_ context.Context) (*[]model.Connection, erro
 
 func (c IConnectionRepoImpl) Find(_ context.Context, id int32) (*model.Connection, error) {
 	var connection model.Connection
-	result := c.db.Where("id", "=", id).First(&connection)
+	result := c.db.Where("id = ?", id).First(&connection)
 
 	return &connection, result.Error
 }

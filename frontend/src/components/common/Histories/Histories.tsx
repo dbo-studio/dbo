@@ -1,47 +1,42 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import Search from '@/components/base/Search/Search';
-import { useHistoryStore } from '@/store/historyStore/history.store';
+import { useCurrentConnection } from '@/hooks';
 import type { HistoryType } from '@/types/History';
 import { Box, Button, ClickAwayListener, IconButton, LinearProgress, Stack, useTheme } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
-import { type JSX, useState } from 'react';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { type JSX, useEffect, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import HistoryItem from './HistoryItem/HistoryItem';
 
 export default function Histories(): JSX.Element {
   const theme = useTheme();
   const [selected, setSelected] = useState<number | null>(null);
-  const { histories, updateHistories } = useHistoryStore();
   const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
+  const currentConnection = useCurrentConnection();
 
-  const { isLoading, refetch } = useQuery({
-    queryKey: ['histories', page],
-    queryFn: async (): Promise<HistoryType[]> => {
-      const res = await api.histories.getHistories({ page, count: 1 });
-      if (res.length === 0) setHasMore(false);
-      if (page === 1) {
-        updateHistories(res);
-      } else {
-        updateHistories([...(histories || []), ...res]);
-      }
-      return res;
-    }
+  const { isPending, data, isFetching, isPlaceholderData } = useQuery({
+    queryKey: ['histories', currentConnection?.id, page],
+    queryFn: (): Promise<HistoryType[]> =>
+      api.histories.getHistories({ connectionId: currentConnection?.id, page, count: 10 }),
+    placeholderData: keepPreviousData,
+    enabled: !!currentConnection
   });
 
   const handleLoadMore = async (): Promise<void> => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    await refetch({ queryKey: ['histories', nextPage] });
+    if (!isPlaceholderData && (data?.length ?? 0) > 0) setPage((old) => old + 1);
   };
 
   const handleRefresh = async (): Promise<void> => {
-    await refetch({ queryKey: ['histories', 1] });
     setPage(1);
-    setHasMore(true);
+    // await refetch({ queryKey: ['histories', currentConnection?.id, 1] });
+    // setHasMore(true);
   };
+
+  useEffect(() => {
+    console.log(data);
+  }, [data]);
 
   return (
     <ClickAwayListener onClickAway={(): void => setSelected(null)}>
@@ -65,11 +60,11 @@ export default function Histories(): JSX.Element {
         </Box>
 
         <Box mt={theme.spacing(1)}>
-          {isLoading && page === 1 ? (
+          {isFetching && page === 1 ? (
             <LinearProgress style={{ marginTop: '8px' }} />
           ) : (
             <>
-              {histories
+              {data
                 ?.filter((f) => f.query.toLocaleLowerCase().includes(search.toLocaleLowerCase()))
                 .map((query) => (
                   <HistoryItem
@@ -80,10 +75,15 @@ export default function Histories(): JSX.Element {
                   />
                 ))}
 
-              {hasMore && (
+              {(data?.length ?? 0) > 0 && (
                 <Box display='flex' justifyContent='center' mt={2}>
-                  <Button variant='outlined' onClick={handleLoadMore} disabled={isLoading}>
-                    {isLoading ? 'Loading...' : 'Load More'}
+                  <Button
+                    fullWidth
+                    variant='contained'
+                    onClick={handleLoadMore}
+                    disabled={isPlaceholderData || isFetching}
+                  >
+                    {isPending ? 'Loading...' : 'Load More'}
                   </Button>
                 </Box>
               )}
