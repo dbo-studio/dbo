@@ -35,3 +35,7 @@ func (h IHistoryRepoImpl) Index(_ context.Context, req *dto.HistoryListRequest) 
 
 	return &histories, nil
 }
+
+func (I IHistoryRepoImpl) DeleteAll(_ context.Context, connectionID uint) error {
+	return I.db.Where("connection_id = ?", connectionID).Delete(&model.History{}).Error
+}

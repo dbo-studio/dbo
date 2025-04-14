@@ -2,11 +2,13 @@ import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useCurrentConnection } from '@/hooks';
 import type { SavedQueryType } from '@/types';
-import { Box, Button, ClickAwayListener, IconButton, LinearProgress, Stack, useTheme } from '@mui/material';
+import { Box, ClickAwayListener, IconButton, LinearProgress, Stack, useTheme } from '@mui/material';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useRef, useState } from 'react';
 import Search from '../../base/Search/Search';
 import SavedQueryItem from './SavedQueryItem/SavedQueryItem';
+import { LoadingButton } from '@mui/lab';
+import locales from '@/locales';
 
 export default function SavedQueries(): JSX.Element {
   const theme = useTheme();
@@ -30,10 +32,11 @@ export default function SavedQueries(): JSX.Element {
         page: pageParam as number,
         count: 20
       });
-      return res.reverse();
+      return res;
     },
     getNextPageParam: (lastPage, allPages): number | undefined => {
-      return lastPage.length > 0 ? allPages.length : undefined;
+      if (lastPage.length === 0) return undefined;
+      return lastPage.length > 0 ? allPages.length + 1 : undefined;
     },
     enabled: !!currentConnection,
     initialPageParam: 1
@@ -50,9 +53,9 @@ export default function SavedQueries(): JSX.Element {
 
   const handleRefresh = async (): Promise<void> => {
     await refetch();
-    queryClient.setQueryData(['savedQueries', currentConnection?.id], (data: any) => ({
+    queryClient.setQueryData(['histories', currentConnection?.id], (data: any) => ({
       pages: [data?.pages[0]],
-      pageParams: [0]
+      pageParams: [1]
     }));
   };
 
@@ -76,7 +79,7 @@ export default function SavedQueries(): JSX.Element {
         </Box>
 
         <Box mt={theme.spacing(1)} ref={listRef} flex={1}>
-          <Box>
+          <Stack spacing={1}>
             {status === 'pending' ? (
               <LinearProgress style={{ marginTop: '8px' }} />
             ) : (
@@ -94,13 +97,19 @@ export default function SavedQueries(): JSX.Element {
                 ))}
               </>
             )}
-          </Box>
+          </Stack>
         </Box>
         {hasNextPage && (
           <Box flex={1} display='flex' justifyContent='center' mt={2} mb={2}>
-            <Button fullWidth variant='contained' onClick={handleLoadMore} disabled={isFetchingNextPage}>
-              {isFetchingNextPage ? 'Loading...' : 'Load More'}
-            </Button>
+            <LoadingButton
+              disabled={isFetchingNextPage}
+              loading={isFetchingNextPage}
+              onClick={handleLoadMore}
+              fullWidth
+              variant='contained'
+            >
+              <span>{locales.load_more}</span>
+            </LoadingButton>
           </Box>
         )}
       </Box>

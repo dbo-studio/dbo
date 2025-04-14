@@ -3,7 +3,8 @@ import type { HistoryType } from '@/types/History';
 import type { HistoryRequestType } from './types';
 
 const endpoint = {
-  getHistories: (): string => '/histories'
+  getHistories: (): string => '/histories',
+  deleteHistories: (): string => '/histories'
 };
 
 export const getHistories = async (params: HistoryRequestType): Promise<HistoryType[]> => {
@@ -12,4 +13,12 @@ export const getHistories = async (params: HistoryRequestType): Promise<HistoryT
       params
     })
   ).data.data as HistoryType[];
+};
+
+export const deleteHistories = async (connectionId: number): Promise<void> => {
+  return await api.delete(endpoint.deleteHistories(), {
+    params: {
+      connectionId
+    }
+  });
 };

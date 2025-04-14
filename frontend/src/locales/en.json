@@ -113,5 +113,8 @@
   "no_changes_detected": "No changes detected",
   "changes_saved_successfully": "Changes saved successfully",
   "use_uri": "Use URI",
-  "uri": "URI"
+  "uri": "URI",
+  "load_more": "Load more",
+  "history_delete_confirm": "Are your sure delete histories?",
+  "history_delete_success": "The Histories deleted successfully"
 }

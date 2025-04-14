@@ -29,6 +29,7 @@ type ICacheRepo interface {
 
 type IHistoryRepo interface {
 	Index(ctx context.Context, pagination *dto.HistoryListRequest) (*[]model.History, error)
+	DeleteAll(_ context.Context, connectionID uint) error
 }
 
 type ISavedQueryRepo interface {

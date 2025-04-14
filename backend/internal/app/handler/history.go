@@ -37,3 +37,23 @@ func (h *HistoryHandler) Histories(c fiber.Ctx) error {
 
 	return response.SuccessBuilder(items.Items).Send(c)
 }
+
+func (h *HistoryHandler) Delete(c fiber.Ctx) error {
+	req := new(dto.DeleteHistoryRequest)
+
+	if err := c.Bind().Query(req); err != nil {
+		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
+	}
+
+	err := h.historyService.DeleteAll(c.Context(), req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder(err).Send(c)
+	}
+
+	return response.SuccessBuilder("").Send(c)
+}

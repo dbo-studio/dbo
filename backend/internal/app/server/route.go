@@ -36,4 +36,5 @@ func (r *Server) routing() {
 
 	history := api.Group("histories")
 	history.Get("/", r.handlers.History.Histories)
+	history.Delete("/", r.handlers.History.Delete)
 }

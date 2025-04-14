@@ -10,7 +10,8 @@ import (
 )
 
 type IHistoryService interface {
-	Index(ctx context.Context, dto *dto.HistoryListRequest) (*dto.HistoryListResponse, error)
+	Index(ctx context.Context, req *dto.HistoryListRequest) (*dto.HistoryListResponse, error)
+	DeleteAll(ctx context.Context, req *dto.DeleteHistoryRequest) error
 }
 
 var _ IHistoryService = (*IHistoryServiceImpl)(nil)
@@ -18,6 +19,8 @@ var _ IHistoryService = (*IHistoryServiceImpl)(nil)
 type IHistoryServiceImpl struct {
 	historyRepo repository.IHistoryRepo
 }
+
+// DeleteAll implements IHistoryService.
 
 func NewHistoryService(hr repository.IHistoryRepo) *IHistoryServiceImpl {
 	return &IHistoryServiceImpl{
@@ -44,4 +47,8 @@ func (i IHistoryServiceImpl) Index(ctx context.Context, req *dto.HistoryListRequ
 	return &dto.HistoryListResponse{
 		Items: data,
 	}, nil
+}
+
+func (i *IHistoryServiceImpl) DeleteAll(ctx context.Context, req *dto.DeleteHistoryRequest) error {
+	return i.historyRepo.DeleteAll(ctx, uint(req.ConnectionId))
 }
