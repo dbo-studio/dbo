@@ -11,13 +11,7 @@ import type { SavedQueryItemProps } from '../types';
 import SavedQueryContextMenu from './SavedQueryContextMenu/SavedQueryContextMenu';
 import { SavedQueryItemStyled } from './SavedQueryItem.styled';
 
-export default function SavedQueryItem({
-  query,
-  selected,
-  onChange,
-  onDelete,
-  onClick
-}: SavedQueryItemProps): JSX.Element {
+export default function SavedQueryItem({ query, selected, onChange, onClick }: SavedQueryItemProps): JSX.Element {
   const theme = useTheme();
   const [editMode, setEditMode] = useState(false);
   const [name, setName] = useState(query.name);
@@ -44,7 +38,7 @@ export default function SavedQueryItem({
       };
       await updateSavedQueryMutation(newQuery);
       setEditMode(false);
-      onChange(newQuery);
+      onChange();
     } catch (err) {
       handleDiscardChanges();
     }
@@ -92,7 +86,7 @@ export default function SavedQueryItem({
           query={query}
           contextMenu={contextMenuPosition}
           onClose={handleCloseContextMenu}
-          onDelete={(): void => onDelete()}
+          onDelete={(): void => onChange()}
           onChange={(): void => handleEditMode(true)}
         />
       </SavedQueryItemStyled>

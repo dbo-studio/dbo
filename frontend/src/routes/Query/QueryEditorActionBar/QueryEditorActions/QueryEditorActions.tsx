@@ -1,28 +1,30 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { shortcuts, tools } from '@/core/utils';
+import { useCurrentConnection } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
-import { useSavedQueryStore } from '@/store/savedQueryStore/savedQuery.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { SavedQueryType } from '@/types';
 import { IconButton, Stack, Tooltip } from '@mui/material';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { JSX } from 'react';
 import { toast } from 'sonner';
 import type { QueryEditorActionsProps } from '../../types';
 
 export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps): JSX.Element {
+  const selectedTab = useSelectedTab();
+  const queryClient = useQueryClient();
   const { runRawQuery } = useDataStore();
   const { updateQuery, getQuery } = useTabStore();
-  const { upsertQuery } = useSavedQueryStore();
-  const selectedTab = useSelectedTab();
+  const currentConnection = useCurrentConnection();
 
   const { mutateAsync: createSavedQueryMutation } = useMutation({
     mutationFn: api.savedQueries.createSavedQuery,
-    onSuccess: (data: SavedQueryType): void => {
-      upsertQuery(data);
+    onSuccess: (): void => {
+      queryClient.invalidateQueries({
+        queryKey: ['savedQueries', currentConnection?.id]
+      });
       toast.success(locales.query_saved_successfully);
     },
     onError: (error: Error): void => {

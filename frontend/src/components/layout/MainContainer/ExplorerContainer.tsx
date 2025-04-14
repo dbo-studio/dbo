@@ -3,7 +3,7 @@ import { useWindowSize } from '@/hooks/useWindowSize.hook';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Tab, Tabs } from '@mui/material';
-import { type SyntheticEvent, useMemo, useState } from 'react';
+import { type JSX, type SyntheticEvent, useMemo, useState } from 'react';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
 import Histories from '../../common/Histories/Histories';
 import SavedQueries from '../../common/SavedQueries/SavedQueries';
@@ -24,7 +24,7 @@ const tabs = [
   }
 ];
 
-export default function ExplorerContainer() {
+export default function ExplorerContainer(): JSX.Element {
   const windowSize = useWindowSize();
   const [selectedTabId, setSelectedTabId] = useState(0);
   const { sidebar, updateSidebar } = useSettingStore();
@@ -33,13 +33,13 @@ export default function ExplorerContainer() {
     return tabs.find((obj) => obj.id === Number(selectedTabId))?.content;
   }, [selectedTabId]);
 
-  const onSelectedTabChanged = (_: SyntheticEvent, id: number) => {
+  const onSelectedTabChanged = (_: SyntheticEvent, id: number): void => {
     setSelectedTabId(id);
   };
 
   return (
     <ResizableXBox
-      onChange={(width: number) => updateSidebar({ leftWidth: width })}
+      onChange={(width: number): void => updateSidebar({ leftWidth: width })}
       width={sidebar.leftWidth}
       direction='rtl'
       maxWidth={500}

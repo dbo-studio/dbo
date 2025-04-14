@@ -1,7 +1,3 @@
-import type { SavedQueryType } from '@/types';
-
-export interface SavedQueryResponseType extends SavedQueryType {}
-
 export type SavedQueryListRequestType = {
   connectionId: number;
   page?: number;

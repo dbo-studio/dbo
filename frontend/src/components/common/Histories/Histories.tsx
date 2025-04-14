@@ -4,52 +4,69 @@ import Search from '@/components/base/Search/Search';
 import { useCurrentConnection } from '@/hooks';
 import type { HistoryType } from '@/types/History';
 import { Box, Button, ClickAwayListener, IconButton, LinearProgress, Stack, useTheme } from '@mui/material';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { type JSX, useEffect, useState } from 'react';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { type JSX, useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import HistoryItem from './HistoryItem/HistoryItem';
 
+type HistoryResponse = HistoryType[];
+
 export default function Histories(): JSX.Element {
   const theme = useTheme();
+  const queryClient = useQueryClient();
   const [selected, setSelected] = useState<number | null>(null);
   const [search, setSearch] = useState('');
-  const [page, setPage] = useState(0);
   const currentConnection = useCurrentConnection();
+  const listRef = useRef<HTMLDivElement>(null);
 
-  const { isPending, data, isFetching, isPlaceholderData } = useQuery({
-    queryKey: ['histories', currentConnection?.id, page],
-    queryFn: (): Promise<HistoryType[]> =>
-      api.histories.getHistories({ connectionId: currentConnection?.id, page, count: 10 }),
-    placeholderData: keepPreviousData,
-    enabled: !!currentConnection
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, refetch } = useInfiniteQuery<
+    HistoryResponse,
+    Error,
+    { pages: HistoryResponse[]; pageParams: number[] }
+  >({
+    queryKey: ['histories', currentConnection?.id],
+    queryFn: async ({ pageParam = 0 }): Promise<HistoryResponse> => {
+      const res = await api.histories.getHistories({
+        connectionId: currentConnection?.id ?? 0,
+        page: pageParam as number,
+        count: 20
+      });
+      return res.reverse(); // Reverse the order of items
+    },
+    getNextPageParam: (lastPage, allPages): number | undefined => {
+      return lastPage.length > 0 ? allPages.length : undefined;
+    },
+    enabled: !!currentConnection,
+    initialPageParam: 0
   });
 
-  const handleLoadMore = async (): Promise<void> => {
-    if (!isPlaceholderData && (data?.length ?? 0) > 0) setPage((old) => old + 1);
+  const handleLoadMore = (): void => {
+    const currentScrollPos = listRef.current?.scrollTop;
+    fetchNextPage().then(() => {
+      if (listRef.current && currentScrollPos !== undefined) {
+        listRef.current.scrollTop = currentScrollPos;
+      }
+    });
   };
 
   const handleRefresh = async (): Promise<void> => {
-    setPage(1);
-    // await refetch({ queryKey: ['histories', currentConnection?.id, 1] });
-    // setHasMore(true);
+    await refetch();
+    queryClient.setQueryData(['histories', currentConnection?.id], (data: any) => ({
+      pages: [data?.pages[0]],
+      pageParams: [0]
+    }));
   };
 
-  useEffect(() => {
-    console.log(data);
-  }, [data]);
+  const allHistories = data?.pages.flat() ?? [];
+  const filteredHistories = allHistories.filter((f) =>
+    f.query.toLocaleLowerCase().includes(search.toLocaleLowerCase())
+  );
 
   return (
     <ClickAwayListener onClickAway={(): void => setSelected(null)}>
-      <Box mt={1}>
+      <Box mt={1} display={'flex'} flexDirection={'column'}>
         <Box>
-          <Stack
-            mt={1}
-            spacing={1}
-            direction={'row'}
-            alignContent={'center'}
-            justifyContent={'center'}
-            alignItems={'center'}
-          >
+          <Stack spacing={1} direction={'row'} alignContent={'center'} justifyContent={'center'} alignItems={'center'}>
             <Box flex={1}>
               <Search onChange={(name): void => setSearch(name)} />
             </Box>
@@ -59,14 +76,13 @@ export default function Histories(): JSX.Element {
           </Stack>
         </Box>
 
-        <Box mt={theme.spacing(1)}>
-          {isFetching && page === 1 ? (
-            <LinearProgress style={{ marginTop: '8px' }} />
-          ) : (
-            <>
-              {data
-                ?.filter((f) => f.query.toLocaleLowerCase().includes(search.toLocaleLowerCase()))
-                .map((query) => (
+        <Box mt={theme.spacing(1)} ref={listRef} flex={1}>
+          <Box>
+            {status === 'pending' ? (
+              <LinearProgress style={{ marginTop: '8px' }} />
+            ) : (
+              <>
+                {filteredHistories.map((query) => (
                   <HistoryItem
                     onClick={(): void => setSelected(query.id)}
                     key={uuid()}
@@ -74,22 +90,17 @@ export default function Histories(): JSX.Element {
                     selected={selected === query.id}
                   />
                 ))}
-
-              {(data?.length ?? 0) > 0 && (
-                <Box display='flex' justifyContent='center' mt={2}>
-                  <Button
-                    fullWidth
-                    variant='contained'
-                    onClick={handleLoadMore}
-                    disabled={isPlaceholderData || isFetching}
-                  >
-                    {isPending ? 'Loading...' : 'Load More'}
-                  </Button>
-                </Box>
-              )}
-            </>
-          )}
+              </>
+            )}
+          </Box>
         </Box>
+        {hasNextPage && (
+          <Box flex={1} display='flex' justifyContent='center' mt={2} mb={2}>
+            <Button fullWidth variant='contained' onClick={handleLoadMore} disabled={isFetchingNextPage}>
+              {isFetchingNextPage ? 'Loading...' : 'Load More'}
+            </Button>
+          </Box>
+        )}
       </Box>
     </ClickAwayListener>
   );
