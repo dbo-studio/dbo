@@ -81,23 +81,25 @@ export default function Histories(): JSX.Element {
           </Stack>
         </Box>
 
-        <Box mt={theme.spacing(1)} ref={listRef} flex={1}>
-          <Stack spacing={1}>
-            {status === 'pending' ? (
-              <LinearProgress style={{ marginTop: '8px' }} />
-            ) : (
-              <>
-                {filteredHistories.map((query) => (
-                  <HistoryItem
-                    onClick={(): void => setSelected(query.id)}
-                    key={uuid()}
-                    history={query}
-                    selected={selected === query.id}
-                  />
-                ))}
-              </>
-            )}
-          </Stack>
+        <Box>
+          <Box mt={theme.spacing(1)} ref={listRef} flex={1}>
+            <Stack spacing={1}>
+              {status === 'pending' ? (
+                <LinearProgress style={{ marginTop: '8px' }} />
+              ) : (
+                <>
+                  {filteredHistories.map((query) => (
+                    <HistoryItem
+                      onClick={(): void => setSelected(query.id)}
+                      key={uuid()}
+                      history={query}
+                      selected={selected === query.id}
+                    />
+                  ))}
+                </>
+              )}
+            </Stack>
+          </Box>
         </Box>
         {hasNextPage && (
           <Box flex={1} display='flex' justifyContent='center' mt={2} mb={2}>

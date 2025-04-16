@@ -1,5 +1,4 @@
-import { useDataStore } from '@/store/dataStore/data.store.ts';
-import { HotColumn, type HotTableRef } from '@handsontable/react-wrapper';
+import type { HotTableRef } from '@handsontable/react-wrapper';
 import 'handsontable/dist/handsontable.min.css';
 
 import { DataGridStyled } from '@/components/common/DBDataGrid/DataGrid.styled';
@@ -12,12 +11,10 @@ import { useHandleRowStyle } from '@/components/common/DBDataGrid/hooks/useHandl
 import { useHandleScroll } from '@/components/common/DBDataGrid/hooks/useHandleScroll';
 import type { DataGridProps } from '@/components/common/DBDataGrid/types';
 import { Box, CircularProgress } from '@mui/material';
-import { type JSX, useMemo, useRef } from 'react';
+import { type JSX, useRef } from 'react';
 
 import { TextCellType, registerCellType } from 'handsontable/cellTypes';
 
-import { useTabStore } from '@/store/tabStore/tab.store';
-import type { ColumnType } from '@/types';
 import { TextEditor, registerEditor } from 'handsontable/editors';
 import {
   AutoColumnSize,
@@ -44,17 +41,12 @@ registerPlugin(AutoRowSize);
 registerPlugin(AutoColumnSize);
 registerPlugin(ContextMenu);
 
-export default function DataGrid({ editable }: DataGridProps): JSX.Element {
+export default function DataGrid({ editable, rows, columns, loading }: DataGridProps): JSX.Element {
   const hotTableRef = useRef<HotTableRef | null>(null);
-  const { loading, getRows, getColumns, isDataFetching } = useDataStore();
-  const { selectedTabId } = useTabStore();
 
-  const rows = useMemo(() => getRows(), [isDataFetching, selectedTabId]);
-  const headers = useMemo(() => getColumns(true), [isDataFetching, selectedTabId]);
-
-  useHandleScroll(hotTableRef);
+  useHandleScroll({ hotTableRef, rows });
   useHandleDeselect(hotTableRef);
-  useHandleDataUpdate();
+  useHandleDataUpdate({ hotTableRef, rows, columns });
   useHandleRowStyle();
 
   const handleSelection = useHandleRowSelect(hotTableRef);
@@ -74,35 +66,30 @@ export default function DataGrid({ editable }: DataGridProps): JSX.Element {
       <QuickViewDialog editable={editable} />
       <DataGridStyled
         ref={hotTableRef}
-        data={rows}
-        rowHeaders={true}
+        columnSorting={true}
+        manualColumnResize={true}
+        rowHeaders={false}
         fillHandle={false}
         mergeCells={false}
         manualColumnFreeze={false}
         manualColumnMove={false}
         manualRowMove={false}
+        outsideClickDeselects={false}
+        readOnly={!editable}
         selectionMode={'multiple'}
         startRows={0}
         startCols={0}
         height='100%'
         width='100%'
-        manualColumnResize={true}
-        outsideClickDeselects={false}
         minSpareRows={0}
         contextMenu={handleContextMenu}
         afterSelectionEnd={handleSelection}
-        readOnly={!editable}
         afterChange={editable ? handleRowChange : undefined}
         licenseKey='non-commercial-and-evaluation'
         modifyColWidth={(width: number): number => (width > 400 ? 400 : width)}
         className={'handsontable'}
         cells={(): { renderer: string } => ({ renderer: 'handleRowStyle' })}
-        columnSorting={true}
-      >
-        {headers.map((column: ColumnType) => (
-          <HotColumn data={column.name} title={column.name} key={column.name} />
-        ))}
-      </DataGridStyled>
+      />
     </Box>
   );
 }

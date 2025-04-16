@@ -1,18 +1,29 @@
-import { TabMode } from '@/core/enums';
-import { useSelectedTab } from '@/hooks';
-import { useDataStore } from '@/store/dataStore/data.store.ts';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { useEffect } from 'react';
+import type { ColumnType, RowType } from '@/types';
+import type { HotTableRef } from '@handsontable/react-wrapper';
+import { type RefObject, useEffect } from 'react';
 
-export const useHandleDataUpdate = (): void => {
+type UseHandleDataUpdateProps = {
+  hotTableRef: RefObject<HotTableRef | null>;
+  rows: RowType[];
+  columns: ColumnType[];
+};
+
+export const useHandleDataUpdate = ({ hotTableRef, rows, columns }: UseHandleDataUpdateProps): void => {
+  const { isDataFetching } = useDataStore();
   const { selectedTabId } = useTabStore();
-  const selectedTab = useSelectedTab();
-
-  const { getColumns, getRows, runQuery } = useDataStore();
 
   useEffect(() => {
-    if (selectedTab?.mode === TabMode.Data && (getRows().length === 0 || getColumns().length === 0)) {
-      runQuery().then();
-    }
-  }, [selectedTabId]);
+    if (!selectedTabId || !hotTableRef.current || !hotTableRef?.current?.hotInstance) return;
+    hotTableRef.current?.hotInstance?.updateSettings({
+      data: rows,
+      columns: columns.map((c) => {
+        return {
+          data: c.name,
+          title: c.name
+        };
+      })
+    });
+  }, [isDataFetching, selectedTabId, hotTableRef.current]);
 };
