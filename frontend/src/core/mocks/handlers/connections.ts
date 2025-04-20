@@ -1,3 +1,4 @@
+import type { ConnectionType } from '@/types';
 import { http, HttpResponse } from 'msw';
 
 const connectionHandler = [
@@ -60,16 +61,15 @@ const connectionHandler = [
 ];
 
 const connectionListItemModel = {
-  id: 16,
-  name: 'localhost',
+  id: 1,
+  name: 'dmt',
   isActive: true,
-  info: 'localhost | postgresql 16.1 :  SQL Query',
+  info: 'dmt | postgresql 15.8 :  SQL Query',
   icon: 'postgresql',
   type: 'postgresql',
   options: {
-    database: 'default',
-    host: 'localhost',
-    name: 'localhost',
+    database: 'shopping_order',
+    host: 'postgres.domestic-mock-server.orb.local',
     password: '',
     port: 5432,
     uri: '',
@@ -78,21 +78,20 @@ const connectionListItemModel = {
 };
 
 const connectionDetailModel = {
-  id: 16,
-  name: 'localhost',
+  id: 1,
+  name: 'dmt',
   isActive: true,
-  info: 'localhost | postgresql 16.1 :  SQL Query',
+  info: 'dmt | postgresql 15.8 :  SQL Query',
   icon: 'postgresql',
   type: 'postgresql',
   options: {
-    database: 'default',
-    host: 'localhost',
-    name: 'localhost',
+    database: 'shopping_order',
+    host: 'postgres.domestic-mock-server.orb.local',
     password: '',
     port: 5432,
     uri: '',
     username: 'default'
   }
-};
+} as ConnectionType;
 
 export { connectionDetailModel, connectionHandler, connectionListItemModel };
