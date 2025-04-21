@@ -1,8 +1,8 @@
-import { useDataStore } from '@/store/dataStore/data.store';
-import { useTabStore } from '@/store/tabStore/tab.store';
-import type { ColumnType, RowType } from '@/types';
-import type { HotTableRef } from '@handsontable/react-wrapper';
-import { type RefObject, useEffect } from 'react';
+import {useDataStore} from '@/store/dataStore/data.store';
+import {useTabStore} from '@/store/tabStore/tab.store';
+import type {ColumnType, RowType} from '@/types';
+import type {HotTableRef} from '@handsontable/react-wrapper';
+import {type RefObject, useEffect} from 'react';
 
 type UseHandleDataUpdateProps = {
   hotTableRef: RefObject<HotTableRef | null>;
@@ -25,5 +25,5 @@ export const useHandleDataUpdate = ({ hotTableRef, rows, columns }: UseHandleDat
         };
       })
     });
-  }, [isDataFetching, selectedTabId, hotTableRef.current]);
+  }, [isDataFetching, selectedTabId, columns, rows]);
 };
