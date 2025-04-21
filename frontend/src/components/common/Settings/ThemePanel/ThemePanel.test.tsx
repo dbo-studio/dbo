@@ -1,10 +1,10 @@
 import ThemePanel from '@/components/common/Settings/ThemePanel/ThemePanel.tsx';
 import locales from '@/locales';
 import * as setting from '@/store/settingStore/setting.store.ts';
-import {renderWithProviders} from '@/test/test-utils';
-import {screen} from '@testing-library/dom';
+import { renderWithProviders } from '@/test/test-utils';
+import { screen } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
-import {describe, expect, test, vi} from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 describe('ThemePanel.tsx', () => {
   const spy = vi.spyOn(setting, 'useSettingStore');

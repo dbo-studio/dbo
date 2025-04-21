@@ -1,7 +1,7 @@
 import locales from '@/locales';
-import {useSettingStore} from '@/store/settingStore/setting.store';
-import {Box, Divider, Typography, useMediaQuery} from '@mui/material';
-import {type JSX, useEffect} from 'react';
+import { useSettingStore } from '@/store/settingStore/setting.store';
+import { Box, Divider, Typography, useMediaQuery } from '@mui/material';
+import { type JSX, useEffect } from 'react';
 import ThemeItem from './ThemeItem/ThemeItem';
 
 export default function ThemePanel(): JSX.Element {

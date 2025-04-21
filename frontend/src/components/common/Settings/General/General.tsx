@@ -1,7 +1,7 @@
 import locales from '@/locales';
-import {useSettingStore} from '@/store/settingStore/setting.store.ts';
-import {Box, Divider, Switch, Typography} from '@mui/material';
-import type {JSX} from 'react';
+import { useSettingStore } from '@/store/settingStore/setting.store.ts';
+import { Box, Divider, Switch, Typography } from '@mui/material';
+import type { JSX } from 'react';
 
 export default function General(): JSX.Element {
   const { toggleDebug, debug } = useSettingStore();

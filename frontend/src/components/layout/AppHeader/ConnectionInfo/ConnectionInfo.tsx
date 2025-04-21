@@ -1,14 +1,14 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton.tsx';
 import Settings from '@/components/common/Settings/Settings.tsx';
-import {useCurrentConnection} from '@/hooks';
-import {useConnectionStore} from '@/store/connectionStore/connection.store';
-import {useSettingStore} from '@/store/settingStore/setting.store.ts';
-import {useTabStore} from '@/store/tabStore/tab.store';
-import {useTreeStore} from '@/store/treeStore/tree.store.ts';
-import {Grid2, IconButton, Stack} from '@mui/material';
-import {useQueryClient} from '@tanstack/react-query';
-import {type JSX} from 'react';
+import { useCurrentConnection } from '@/hooks';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useSettingStore } from '@/store/settingStore/setting.store.ts';
+import { useTabStore } from '@/store/tabStore/tab.store';
+import { useTreeStore } from '@/store/treeStore/tree.store.ts';
+import { Grid2, IconButton, Stack } from '@mui/material';
+import { useQueryClient } from '@tanstack/react-query';
+import { type JSX } from 'react';
 import ConnectionBox from './ConnectionBox/ConnectionBox';
 
 export default function ConnectionInfo(): JSX.Element {

@@ -1,11 +1,11 @@
 import General from '@/components/common/Settings/General/General';
 import locales from '@/locales';
 import * as setting from '@/store/settingStore/setting.store.ts';
-import {useSettingStore} from '@/store/settingStore/setting.store.ts';
-import {renderWithProviders} from '@/test/test-utils';
-import {screen} from '@testing-library/dom';
-import {fireEvent} from '@testing-library/react';
-import {describe, expect, vi} from 'vitest';
+import { useSettingStore } from '@/store/settingStore/setting.store.ts';
+import { renderWithProviders } from '@/test/test-utils';
+import { screen } from '@testing-library/dom';
+import { fireEvent } from '@testing-library/react';
+import { describe, expect, vi } from 'vitest';
 
 const spy = vi.spyOn(setting, 'useSettingStore');
 

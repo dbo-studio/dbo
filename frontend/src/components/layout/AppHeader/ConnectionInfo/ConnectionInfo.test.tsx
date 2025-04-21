@@ -1,14 +1,14 @@
-import {connectionDetailModel} from '@/core/mocks/handlers/connections.ts';
+import { connectionDetailModel } from '@/core/mocks/handlers/connections.ts';
 import * as conn from '@/store/connectionStore/connection.store.ts';
 import * as ta from '@/store/tabStore/tab.store.ts';
 import * as tree from '@/store/treeStore/tree.store.ts';
 import * as settings from '@/store/settingStore/setting.store.ts';
-import {renderWithProviders} from '@/test/test-utils';
-import {screen} from '@testing-library/dom';
+import { renderWithProviders } from '@/test/test-utils';
+import { screen } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
-import {describe, expect, test, vi} from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import ConnectionInfo from './ConnectionInfo';
-import type {ConnectionType} from '@/types';
+import type { ConnectionType } from '@/types';
 
 const mockInvalidateQueries = vi.fn();
 
