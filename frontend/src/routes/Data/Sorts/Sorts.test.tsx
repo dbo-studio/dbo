@@ -2,9 +2,9 @@ import locales from '@/locales';
 import Sorts from '@/routes/Data/Sorts/Sorts.tsx';
 import * as data from '@/store/dataStore/data.store.ts';
 import * as tab from '@/store/tabStore/tab.store.ts';
-import { screen } from '@testing-library/dom';
-import { render } from '@testing-library/react';
-import { describe, expect, vi } from 'vitest';
+import {screen} from '@testing-library/dom';
+import {render} from '@testing-library/react';
+import {describe, expect, vi} from 'vitest';
 
 describe('Sorts.tsx', () => {
   const dataSpy = vi.spyOn(data, 'useDataStore');
@@ -24,7 +24,7 @@ describe('Sorts.tsx', () => {
     });
 
     tabSpy.mockReturnValue({
-      getSelectedTab: getSelectedTabMock
+      selectedTab: getSelectedTabMock
     });
 
     render(<Sorts />);
@@ -47,7 +47,7 @@ describe('Sorts.tsx', () => {
     });
 
     tabSpy.mockReturnValue({
-      getSelectedTab: getSelectedTabMock
+      selectedTab: getSelectedTabMock
     });
 
     render(<Sorts />);

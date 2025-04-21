@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import { afterAll, afterEach, beforeAll } from 'vitest';
-import { worker } from './src/core/mocks/browser';
+import { worker } from './src/core/mocks/node';
 
-beforeAll(() => worker.start())
+beforeAll(() => worker.listen())
 afterEach(() => worker.resetHandlers())
-// afterAll(() => worker.close())
+afterAll(() => worker.close())

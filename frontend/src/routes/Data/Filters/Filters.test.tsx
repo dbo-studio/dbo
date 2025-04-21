@@ -2,9 +2,9 @@ import locales from '@/locales';
 import Filters from '@/routes/Data/Filters/Filters.tsx';
 import * as data from '@/store/dataStore/data.store.ts';
 import * as tab from '@/store/tabStore/tab.store.ts';
-import { screen } from '@testing-library/dom';
-import { render } from '@testing-library/react';
-import { describe, expect, vi } from 'vitest';
+import {screen} from '@testing-library/dom';
+import {render} from '@testing-library/react';
+import {describe, expect, vi} from 'vitest';
 
 describe('Filters.tsx', () => {
   const dataSpy = vi.spyOn(data, 'useDataStore');
@@ -24,7 +24,7 @@ describe('Filters.tsx', () => {
     });
 
     tabSpy.mockReturnValue({
-      getSelectedTab: getSelectedTabMock
+      selectedTab: getSelectedTabMock
     });
 
     render(<Filters />);
@@ -49,7 +49,7 @@ describe('Filters.tsx', () => {
     });
 
     tabSpy.mockReturnValue({
-      getSelectedTab: getSelectedTabMock
+      selectedTab: getSelectedTabMock
     });
 
     render(<Filters />);

@@ -1,6 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
-import { render as browser } from 'vitest-browser-react';
 
 import type { JSX, ReactNode } from 'react';
 
@@ -25,8 +24,4 @@ export function TestWrapper({ children }: TestWrapperProps): JSX.Element {
 
 export function renderWithProviders(ui: ReactNode, options = {}): any {
   return render(ui, { wrapper: TestWrapper, ...options });
-}
-
-export function renderBrowser(ui: ReactNode, options = {}): any {
-  return browser(ui, { wrapper: TestWrapper, ...options });
 }
