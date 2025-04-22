@@ -1,5 +1,5 @@
-import { HotTable } from '@handsontable/react-wrapper';
-import { styled } from '@mui/material';
+import {HotTable} from '@handsontable/react-wrapper';
+import {styled} from '@mui/material';
 
 export const DataGridStyled = styled(HotTable)(({ theme }) => ({
   '& .handsontable': {
@@ -26,7 +26,7 @@ export const DataGridStyled = styled(HotTable)(({ theme }) => ({
   },
   '& .edit-highlight': {
     backgroundColor: `${theme.palette.background.warning} !important`,
-    fontWeight: `${theme.palette.text.warning} !important`
+    color: `${theme.palette.text.warning} !important`
   },
   'span.colHeader.columnSorting.ascending::before': {
     top: '12px',

@@ -1,7 +1,7 @@
-import {handelRowChangeLog} from '@/core/utils';
-import {useDataStore} from '@/store/dataStore/data.store.ts';
-import type {ChangeSource} from 'handsontable/common';
-import {useCallback} from 'react';
+import { handelRowChangeLog } from '@/core/utils';
+import { useDataStore } from '@/store/dataStore/data.store.ts';
+import type { ChangeSource } from 'handsontable/common';
+import { useCallback } from 'react';
 
 export const useHandleRowChange = (): ((changes: any[] | null, source: ChangeSource) => void) => {
   const { getRow, updateEditedRows, getEditedRows } = useDataStore();

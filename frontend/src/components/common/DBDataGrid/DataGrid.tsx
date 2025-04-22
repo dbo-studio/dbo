@@ -1,21 +1,21 @@
-import {HotColumn, type HotTableRef} from '@handsontable/react-wrapper';
+import { HotColumn, type HotTableRef } from '@handsontable/react-wrapper';
 import 'handsontable/dist/handsontable.min.css';
 
-import {DataGridStyled} from '@/components/common/DBDataGrid/DataGrid.styled';
+import { DataGridStyled } from '@/components/common/DBDataGrid/DataGrid.styled';
 import QuickViewDialog from '@/components/common/DBDataGrid/QuickViewDialog/QuickViewDialog';
-import {useHandleContextMenu} from '@/components/common/DBDataGrid/hooks/useHandleContextMenu';
-import {useHandleDeselect} from '@/components/common/DBDataGrid/hooks/useHandleDeselect';
-import {useHandleRowChange} from '@/components/common/DBDataGrid/hooks/useHandleRowChange';
-import {useHandleRowSelect} from '@/components/common/DBDataGrid/hooks/useHandleRowSelect';
-import {useHandleRowStyle} from '@/components/common/DBDataGrid/hooks/useHandleRowStyle';
-import {useHandleScroll} from '@/components/common/DBDataGrid/hooks/useHandleScroll';
-import type {DataGridProps} from '@/components/common/DBDataGrid/types';
-import {Box, CircularProgress} from '@mui/material';
-import {type JSX, useRef} from 'react';
+import { useHandleContextMenu } from '@/components/common/DBDataGrid/hooks/useHandleContextMenu';
+import { useHandleDeselect } from '@/components/common/DBDataGrid/hooks/useHandleDeselect';
+import { useHandleRowChange } from '@/components/common/DBDataGrid/hooks/useHandleRowChange';
+import { useHandleRowSelect } from '@/components/common/DBDataGrid/hooks/useHandleRowSelect';
+import { useHandleRowStyle } from '@/components/common/DBDataGrid/hooks/useHandleRowStyle';
+import { useHandleScroll } from '@/components/common/DBDataGrid/hooks/useHandleScroll';
+import type { DataGridProps } from '@/components/common/DBDataGrid/types';
+import { Box, CircularProgress } from '@mui/material';
+import { type JSX, useRef } from 'react';
 
-import {registerCellType, TextCellType} from 'handsontable/cellTypes';
+import { registerCellType, TextCellType } from 'handsontable/cellTypes';
 
-import {registerEditor, TextEditor} from 'handsontable/editors';
+import { registerEditor, TextEditor } from 'handsontable/editors';
 import {
   AutoColumnSize,
   AutoRowSize,
@@ -26,9 +26,9 @@ import {
   TouchScroll,
   TrimRows
 } from 'handsontable/plugins';
-import {baseRenderer, htmlRenderer, registerRenderer, textRenderer} from 'handsontable/renderers';
-import type {ColumnType} from '@/types';
-import {useHandleDataUpdate} from '@/components/common/DBDataGrid/hooks/useHandleDataUpdate.ts';
+import { baseRenderer, htmlRenderer, registerRenderer, textRenderer } from 'handsontable/renderers';
+import type { ColumnType } from '@/types';
+import { useHandleDataUpdate } from '@/components/common/DBDataGrid/hooks/useHandleDataUpdate.ts';
 
 registerRenderer(baseRenderer);
 registerRenderer(textRenderer);
