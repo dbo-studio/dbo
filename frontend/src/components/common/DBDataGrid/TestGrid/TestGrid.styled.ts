@@ -10,18 +10,48 @@ export const TableHeader = styled('th')(({ theme }) => ({
   userSelect: 'none',
   whiteSpace: 'nowrap',
   overflow: 'hidden',
-  maxWidth: '400px',
-  height: '22px'
+  height: '22px',
+  boxSizing: 'border-box',
+  border: `1px solid ${theme.palette.divider}`
 }));
 
 export const TableCell = styled('td')(({ theme }) => ({
   padding: theme.spacing(1),
   borderBottom: `1px solid ${theme.palette.divider}`,
+  borderRight: `1px solid ${theme.palette.divider}`,
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
-  maxWidth: '400px',
-  height: '22px'
+  height: '22px',
+  boxSizing: 'border-box',
+
+  'tr.selected &': {
+    backgroundColor: `${theme.palette.action.selected} !important`
+  },
+
+  '.removed-highlight &': {
+    backgroundColor: `${theme.palette.error.light} !important`,
+    opacity: 0.7,
+    textDecoration: 'line-through'
+  },
+
+  '.unsaved-highlight &': {
+    backgroundColor: `${theme.palette.warning.light} !important`,
+    opacity: 0.7
+  },
+
+  '.edit-highlight &': {
+    backgroundColor: `${theme.palette.info.light} !important`,
+    opacity: 0.7
+  }
+}));
+
+export const StyledTable = styled('table')(({ theme }) => ({
+  width: '100%',
+  tableLayout: 'fixed',
+  borderCollapse: 'separate',
+  borderSpacing: 0,
+  position: 'relative'
 }));
 
 export const CellContent = styled('div')(({ theme }) => ({
@@ -54,11 +84,13 @@ export const TableContainer = styled('div')(({ theme }) => ({
   borderRadius: theme.shape.borderRadius
 }));
 
-export const StyledTable = styled('table')(({ theme }) => ({
-  width: '100%',
-  tableLayout: 'fixed',
-  borderCollapse: 'collapse'
-}));
+// Remove this duplicate declaration
+// export const StyledTable = styled('table')(({ theme }) => ({
+//   width: '100%',
+//   tableLayout: 'fixed',
+//   borderCollapse: 'separate',
+//   borderSpacing: 0
+// }));
 
 export const StyledTableRow = styled('tr')(({ theme }) => ({
   '&:nth-of-type(odd)': {
@@ -68,15 +100,22 @@ export const StyledTableRow = styled('tr')(({ theme }) => ({
 
 export const Resizer = styled('div')(({ theme }) => ({
   position: 'absolute',
-  right: 0,
+  right: -2,
   top: 0,
   height: '100%',
-  width: '5px',
+  width: '4px',
+  background: 'transparent',
   cursor: 'col-resize',
   userSelect: 'none',
   touchAction: 'none',
   zIndex: 1,
+  transition: 'background-color 0.2s ease',
+  '&:hover': {
+    background: theme.palette.primary.main,
+    opacity: 0.5
+  },
   '&.isResizing': {
-    backgroundColor: theme.palette.primary.main
+    background: theme.palette.primary.main,
+    opacity: 0.7
   }
 }));

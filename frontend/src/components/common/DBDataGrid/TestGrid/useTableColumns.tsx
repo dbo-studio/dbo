@@ -1,9 +1,8 @@
 import { handelRowChangeLog } from '@/core/utils';
 import { createColumnHelper } from '@tanstack/react-table';
-import { useMemo } from 'react';
+import { type JSX, useMemo, useState } from 'react';
 import { CellContent, CellInput } from './TestGrid.styled';
 
-// biome-ignore lint/nursery/useExplicitType: <explanation>
 export default function useTableColumns({
   data,
   columns,
@@ -13,7 +12,7 @@ export default function useTableColumns({
   updateRow,
   getEditedRows,
   toggleDataFetching
-}) {
+}): JSX.Element {
   const columnHelper = createColumnHelper();
 
   return useMemo(() => {
@@ -23,19 +22,28 @@ export default function useTableColumns({
         size: 100,
         minSize: 50,
         maxSize: 400,
-        // biome-ignore lint/nursery/useExplicitType: <explanation>
-        cell: ({ row, column, getValue }) => {
+        cell: ({ row, column, getValue }): JSX.Element => {
           const isEditing = editingCell?.rowIndex === row.index && editingCell?.columnId === column.id;
+          const [tempValue, setTempValue] = useState(String(getValue()));
 
           if (isEditing) {
             return (
               <CellInput
-                value={String(getValue())}
+                value={tempValue}
                 onChange={(e): void => {
+                  if (tempValue !== e.target.value) setTempValue(e.target.value);
+                }}
+                onBlur={(): void => {
+                  // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
+                  if (tempValue == data[row.index][column.id]) {
+                    setEditingCell(null);
+                    return;
+                  }
+
                   const newData = [...data];
                   const newRow = {
                     ...newData[row.index],
-                    [column.id]: e.target.value
+                    [column.id]: tempValue
                   };
                   newData[row.index] = newRow;
 
@@ -44,14 +52,14 @@ export default function useTableColumns({
                     row.original,
                     column.id,
                     row.original[column.id],
-                    e.target.value
+                    tempValue
                   );
 
                   updateEditedRows(editedRows);
                   updateRow(newRow);
                   toggleDataFetching();
+                  setEditingCell(null);
                 }}
-                onBlur={(): void => setEditingCell(null)}
                 autoFocus
               />
             );
@@ -65,5 +73,5 @@ export default function useTableColumns({
         }
       })
     );
-  }, [data, editingCell, columns]);
+  }, [data, editingCell, columns, updateEditedRows, updateRow, getEditedRows, toggleDataFetching]);
 }
