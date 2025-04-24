@@ -45,7 +45,7 @@ export const createDataQuerySlice: StateCreator<
 
       useTabStore.getState().updateQuery(res.query);
       await Promise.all([get().updateRows(res.data), get().updateColumns(res.columns)]);
-      set({ isDataFetching: !get().isDataFetching });
+      get().toggleDataFetching();
     } catch (error) {
       console.log('🚀 ~ runQuery: ~ error:', error);
     } finally {

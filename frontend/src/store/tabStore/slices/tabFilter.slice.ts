@@ -1,4 +1,4 @@
-import type { FilterType, TabType } from '@/types';
+import type { FilterType } from '@/types';
 import type { StateCreator } from 'zustand';
 import type { TabFilterSlice, TabStore } from '../types';
 

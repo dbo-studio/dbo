@@ -13,7 +13,7 @@ export default function AddFilterButton({ columns }: AddFilterButtonProps): JSX.
   const handleAddNewFilter = async (): Promise<void> => {
     if (!selectedTab) return;
 
-    await upsertFilters(selectedTab, {
+    await upsertFilters({
       index: uuidv4(),
       column: columns[0].name,
       operator: PgsqlFilterConditions[0],

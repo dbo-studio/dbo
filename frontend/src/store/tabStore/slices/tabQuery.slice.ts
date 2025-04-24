@@ -1,5 +1,4 @@
 import { tools } from '@/core/utils';
-import type { TabType } from '@/types';
 import type { StateCreator } from 'zustand';
 import type { TabQuerySlice, TabStore } from '../types';
 

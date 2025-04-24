@@ -14,7 +14,7 @@ export default function AddSortButton({ columns }: AddSortButtonProps): JSX.Elem
   const handleAddNewSort = async (): Promise<void> => {
     if (!selectedTab) return;
 
-    await upsertSorts(selectedTab, {
+    await upsertSorts({
       index: uuidv4(),
       column: columns[0].name,
       operator: PgsqlSorts[0],

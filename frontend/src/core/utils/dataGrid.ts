@@ -1,6 +1,6 @@
 import type { ColumnType, EditedRow, RowType } from '@/types';
 
-export const handelRowChangeLog = (
+export const handleRowChangeLog = (
   editedRows: EditedRow[],
   oldRow: RowType,
   rowKey: string,
@@ -10,36 +10,28 @@ export const handelRowChangeLog = (
   const dboIndex = oldRow.dbo_index;
 
   //check if edited value exists in editedRows just update this values
-  const findValueIndex = editedRows.findIndex((x) => x.dboIndex === dboIndex);
-  const findValue = editedRows[findValueIndex];
+  const existingRowIndex = editedRows.findIndex((row) => row.dboIndex === dboIndex);
+  const existingRow = existingRowIndex !== -1 ? editedRows[existingRowIndex] : null;
 
-  const oldObject: RowType = findValue ? findValue.old : {};
-  const newObject: RowType = findValue ? findValue.new : {};
+  const oldObject: RowType = existingRow ? existingRow.old : {};
+  const newObject: RowType = existingRow ? existingRow.new : {};
 
   oldObject[rowKey] = oldValue;
   newObject[rowKey] = newValue;
 
-  let conditions: any = {};
-  if (oldRow?.id) {
-    conditions.id = oldRow?.id;
-  } else {
-    conditions = oldRow;
-  }
+  const conditions = oldRow?.id ? { id: oldRow.id } : oldRow;
 
-  if (findValueIndex === -1) {
-    editedRows.push({
-      dboIndex: dboIndex,
-      conditions: conditions,
-      old: oldObject,
-      new: newObject
-    });
+  const updatedRow: EditedRow = {
+    dboIndex,
+    conditions,
+    old: oldObject,
+    new: newObject
+  };
+
+  if (existingRowIndex === -1) {
+    editedRows.push(updatedRow);
   } else {
-    editedRows[findValueIndex] = {
-      dboIndex: dboIndex,
-      conditions: conditions,
-      old: oldObject,
-      new: newObject
-    };
+    editedRows[existingRowIndex] = updatedRow;
   }
 
   return editedRows;

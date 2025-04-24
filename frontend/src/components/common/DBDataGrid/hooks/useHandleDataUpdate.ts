@@ -16,6 +16,7 @@ export const useHandleDataUpdate = ({ hotTableRef, rows, columns }: UseHandleDat
 
   useEffect(() => {
     if (!selectedTabId || !hotTableRef.current || !hotTableRef?.current?.hotInstance) return;
+
     hotTableRef.current?.hotInstance?.updateSettings({
       data: rows,
       columns: columns.map((c) => {

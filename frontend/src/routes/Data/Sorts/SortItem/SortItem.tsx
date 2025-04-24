@@ -32,7 +32,7 @@ export default function SortItem({ sort, columns }: SortItemProps): JSX.Element 
     };
 
     setCurrentSort(newSort);
-    await upsertSorts(selectedTab, newSort);
+    await upsertSorts(newSort);
   };
 
   return (

@@ -1,4 +1,4 @@
-import { handelRowChangeLog } from '@/core/utils';
+import { handleRowChangeLog } from '@/core/utils';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import type { ChangeSource } from 'handsontable/common';
 import { useCallback } from 'react';
@@ -15,7 +15,7 @@ export const useHandleRowChange = (): ((changes: any[] | null, source: ChangeSou
       const row = getRow(index);
       const newRow = { ...row };
       newRow[prop] = oldValue;
-      const editedRows = handelRowChangeLog(getEditedRows(), newRow, prop, oldValue, newValue);
+      const editedRows = handleRowChangeLog(getEditedRows(), newRow, prop, oldValue, newValue);
       updateEditedRows(editedRows);
     }
   }, []);

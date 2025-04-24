@@ -50,7 +50,7 @@ export default function FilterItem({ filter, columns }: FilterItemProps): JSX.El
           size='small'
           checked={currentFilter.isActive}
           onChange={(e): void => {
-            upsertFilters(selectedTab, handleChange('isActive', e.target.checked)).then();
+            upsertFilters(handleChange('isActive', e.target.checked)).then();
           }}
         />
       </Box>
@@ -78,7 +78,7 @@ export default function FilterItem({ filter, columns }: FilterItemProps): JSX.El
           fullWidth
           size='small'
           value={currentFilter.value}
-          onBlur={(): Promise<void> => upsertFilters(selectedTab, currentFilter)}
+          onBlur={(): Promise<void> => upsertFilters(currentFilter)}
           onChange={(e: EventFor<'input', 'onChange'>): FilterType => handleChange('value', e.target.value)}
         />
       </Box>

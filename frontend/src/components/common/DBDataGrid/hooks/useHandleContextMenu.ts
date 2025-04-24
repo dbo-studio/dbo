@@ -1,4 +1,4 @@
-import { handelRowChangeLog } from '@/core/utils';
+import { handleRowChangeLog } from '@/core/utils';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -19,7 +19,7 @@ export const useHandleContextMenu = (editable?: boolean): Settings => {
       const newRow = { ...row.data };
 
       for (const column of row.selectedColumns) {
-        const editedRows = handelRowChangeLog(getEditedRows(), row.data, column, row.data[column], newValue);
+        const editedRows = handleRowChangeLog(getEditedRows(), row.data, column, row.data[column], newValue);
         updateEditedRows(editedRows);
         newRow[column] = newValue;
         updateRow(newRow);
