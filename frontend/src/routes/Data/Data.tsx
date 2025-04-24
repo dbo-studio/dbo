@@ -1,4 +1,4 @@
-import DataGrid from '@/components/common/DBDataGrid/DataGrid';
+import TestGrid from '@/components/common/DBDataGrid/TestGrid/TestGrid';
 import { TabMode } from '@/core/enums';
 import { useCurrentConnection } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
@@ -39,12 +39,14 @@ export default function Data(): JSX.Element {
       <Box overflow='hidden' flex={1} display='flex' flexDirection='row'>
         {selectedTab?.showColumns && <Columns />}
         {headers.length > 0 && (
-          <DataGrid
-            loading={loading}
-            rows={rows}
-            columns={headers}
-            editable={selectedTab?.options?.editable ?? false}
-          />
+          // <DataGrid
+          //   loading={loading}
+          //   rows={rows}
+          //   columns={headers}
+          //   editable={selectedTab?.options?.editable ?? false}
+          // />
+
+          <TestGrid />
         )}
       </Box>
       <StatusBar />

@@ -1,4 +1,4 @@
-import type { HotTableRef } from '@handsontable/react-wrapper';
+import { HotColumn, type HotTableRef } from '@handsontable/react-wrapper';
 import 'handsontable/dist/handsontable.min.css';
 
 import { DataGridStyled } from '@/components/common/DBDataGrid/DataGrid.styled';
@@ -13,20 +13,22 @@ import type { DataGridProps } from '@/components/common/DBDataGrid/types';
 import { Box, CircularProgress } from '@mui/material';
 import { type JSX, useRef } from 'react';
 
-import { TextCellType, registerCellType } from 'handsontable/cellTypes';
+import { registerCellType, TextCellType } from 'handsontable/cellTypes';
 
-import { TextEditor, registerEditor } from 'handsontable/editors';
+import { registerEditor, TextEditor } from 'handsontable/editors';
 import {
   AutoColumnSize,
   AutoRowSize,
   ContextMenu,
+  HiddenColumns,
   ManualColumnResize,
+  registerPlugin,
   TouchScroll,
-  TrimRows,
-  registerPlugin
+  TrimRows
 } from 'handsontable/plugins';
 import { baseRenderer, htmlRenderer, registerRenderer, textRenderer } from 'handsontable/renderers';
-import { useHandleDataUpdate } from './hooks/useHandleDataUpdate';
+import type { ColumnType } from '@/types';
+import { useHandleDataUpdate } from '@/components/common/DBDataGrid/hooks/useHandleDataUpdate.ts';
 
 registerRenderer(baseRenderer);
 registerRenderer(textRenderer);
@@ -40,6 +42,7 @@ registerPlugin(TouchScroll);
 registerPlugin(AutoRowSize);
 registerPlugin(AutoColumnSize);
 registerPlugin(ContextMenu);
+registerPlugin(HiddenColumns);
 
 export default function DataGrid({ editable, rows, columns, loading }: DataGridProps): JSX.Element {
   const hotTableRef = useRef<HotTableRef | null>(null);
@@ -66,9 +69,10 @@ export default function DataGrid({ editable, rows, columns, loading }: DataGridP
       <QuickViewDialog editable={editable} />
       <DataGridStyled
         ref={hotTableRef}
+        data={rows}
         columnSorting={true}
         manualColumnResize={true}
-        rowHeaders={false}
+        rowHeaders={true}
         fillHandle={false}
         mergeCells={false}
         manualColumnFreeze={false}
@@ -89,7 +93,11 @@ export default function DataGrid({ editable, rows, columns, loading }: DataGridP
         modifyColWidth={(width: number): number => (width > 400 ? 400 : width)}
         className={'handsontable'}
         cells={(): { renderer: string } => ({ renderer: 'handleRowStyle' })}
-      />
+      >
+        {columns.map((column: ColumnType) => (
+          <HotColumn data={column.name} title={column.name} key={column.name} />
+        ))}
+      </DataGridStyled>
     </Box>
   );
 }

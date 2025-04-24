@@ -85,7 +85,7 @@ export default function Histories(): JSX.Element {
           <Box mt={theme.spacing(1)} ref={listRef} flex={1}>
             <Stack spacing={1}>
               {status === 'pending' ? (
-                <LinearProgress style={{ marginTop: '8px' }} />
+                <LinearProgress data-testid='linear-progress' style={{ marginTop: '8px' }} />
               ) : (
                 <>
                   {filteredHistories.map((query) => (

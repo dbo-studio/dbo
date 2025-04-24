@@ -26,5 +26,5 @@ export const useHandleDataUpdate = ({ hotTableRef, rows, columns }: UseHandleDat
         };
       })
     });
-  }, [isDataFetching, selectedTabId, hotTableRef.current]);
+  }, [isDataFetching, selectedTabId, columns, rows]);
 };

@@ -24,7 +24,7 @@ describe('Filters.tsx', () => {
     });
 
     tabSpy.mockReturnValue({
-      getSelectedTab: getSelectedTabMock
+      selectedTab: getSelectedTabMock
     });
 
     render(<Filters />);
@@ -49,7 +49,7 @@ describe('Filters.tsx', () => {
     });
 
     tabSpy.mockReturnValue({
-      getSelectedTab: getSelectedTabMock
+      selectedTab: getSelectedTabMock
     });
 
     render(<Filters />);

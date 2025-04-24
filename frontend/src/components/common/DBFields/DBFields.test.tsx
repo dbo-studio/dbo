@@ -1,10 +1,9 @@
 import { structureModel } from '@/core/mocks/handlers/queries.ts';
 import * as useDataStore from '@/store/dataStore/data.store.ts';
+import { renderWithProviders } from '@/test/test-utils';
 import { screen } from '@testing-library/dom';
 import '@testing-library/jest-dom';
-import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, test, vi } from 'vitest';
 import DBFields from './DBFields';
 
@@ -30,11 +29,7 @@ describe('DBField.tsx', () => {
       }
     ]);
 
-    render(
-      <MemoryRouter>
-        <DBFields />
-      </MemoryRouter>
-    );
+    renderWithProviders(<DBFields />);
     expect(screen.getByTestId('db-field')).not.toBeNull();
   });
 
@@ -47,12 +42,8 @@ describe('DBField.tsx', () => {
         data: data.data[0]
       }
     ]);
-    render(
-      <MemoryRouter>
-        <DBFields />
-      </MemoryRouter>
-    );
 
+    renderWithProviders(<DBFields />);
     expect(screen.getByText('datasrc_id')).not.toBeNull();
   });
 
@@ -65,11 +56,8 @@ describe('DBField.tsx', () => {
         data: data.data[0]
       }
     ]);
-    render(
-      <MemoryRouter>
-        <DBFields />
-      </MemoryRouter>
-    );
+
+    renderWithProviders(<DBFields />);
 
     const inputElement = await screen.findAllByPlaceholderText('Search');
     await userEvent.type(inputElement[0], 'auth');
@@ -92,11 +80,7 @@ describe('DBField.tsx', () => {
       }
     ]);
 
-    render(
-      <MemoryRouter>
-        <DBFields />
-      </MemoryRouter>
-    );
+    renderWithProviders(<DBFields />);
 
     expect(screen.queryByText('test_fake_row')).toBeNull();
     expect(screen.queryByTestId('db-field')).not.toBeNull();

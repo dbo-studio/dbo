@@ -8,7 +8,7 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store.ts';
 import { Grid2, IconButton, Stack } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
-import type { JSX } from 'react';
+import { type JSX } from 'react';
 import ConnectionBox from './ConnectionBox/ConnectionBox';
 
 export default function ConnectionInfo(): JSX.Element {

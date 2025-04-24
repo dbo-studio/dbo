@@ -1,26 +1,17 @@
 import locales from '@/locales';
 import { screen } from '@testing-library/dom';
-import { render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, test } from 'vitest';
 import Settings from './Settings';
+import { renderWithProviders } from '@/test/test-utils';
 
 describe('Settings.tsx', () => {
   test('should render the the settings', () => {
-    render(
-      <MemoryRouter>
-        <Settings open={true} />
-      </MemoryRouter>
-    );
+    renderWithProviders(<Settings open={true} />);
     expect(screen.getAllByText(locales.theme)).not.toBeNull();
   });
 
   test('should close setting after click ', () => {
-    render(
-      <MemoryRouter>
-        <Settings open={true} />
-      </MemoryRouter>
-    );
+    renderWithProviders(<Settings open={true} />);
     expect(screen.getAllByText(locales.theme)).not.toBeNull();
   });
 });

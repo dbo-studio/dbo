@@ -26,7 +26,7 @@ export const DataGridStyled = styled(HotTable)(({ theme }) => ({
   },
   '& .edit-highlight': {
     backgroundColor: `${theme.palette.background.warning} !important`,
-    fontWeight: `${theme.palette.text.warning} !important`
+    color: `${theme.palette.text.warning} !important`
   },
   'span.colHeader.columnSorting.ascending::before': {
     top: '12px',

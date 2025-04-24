@@ -1,37 +1,24 @@
 import SavedQueries from '@/components/common/SavedQueries/SavedQueries';
-import * as useSavedQueryStore from '@/store/savedQueryStore/savedQuery.store';
+import { renderWithProviders } from '@/test/test-utils';
 import { screen } from '@testing-library/dom';
-import { render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, vi } from 'vitest';
 import '@testing-library/jest-dom';
+import { describe, expect, vi } from 'vitest';
+import { connectionDetailModel } from '@/core/mocks/handlers/connections.ts';
+import * as conn from '@/store/connectionStore/connection.store.ts';
+import { waitFor } from '@testing-library/react';
 
 describe('SavedQueries.tsx', () => {
-  const spy = vi.spyOn(useSavedQueryStore, 'useSavedQueryStore');
-  const mockUpsertQuery = vi.fn();
-  const mockDeleteQuery = vi.fn();
+  const spyConnection = vi.spyOn(conn, 'useConnectionStore');
 
-  beforeEach(() => {
-    spy.mockReturnValue({
-      savedQueries: [
-        {
-          id: 1,
-          name: 'test',
-          query: 'test query'
-        }
-      ],
-      upsertQuery: mockUpsertQuery,
-      deleteQuery: mockDeleteQuery
+  it('renders saved queries', async () => {
+    spyConnection.mockReturnValue({
+      // biome-ignore lint/nursery/useExplicitType: <explanation>
+      currentConnection: () => connectionDetailModel
     });
-  });
 
-  it('renders saved queries', () => {
-    render(
-      <MemoryRouter>
-        <SavedQueries />
-      </MemoryRouter>
-    );
-
-    expect(screen.queryByText('test')).toBeVisible();
+    renderWithProviders(<SavedQueries />);
+    await waitFor(() => {
+      expect(screen.queryByText('data_src')).toBeVisible();
+    });
   });
 });

@@ -10,7 +10,7 @@ export const useHandleRowChange = (): ((changes: any[] | null, source: ChangeSou
     if (!changes || changes.length === 0 || source !== 'edit') return;
 
     for (const [index, prop, oldValue, newValue] of changes) {
-      if (oldValue === null && newValue === null) continue;
+      if ((oldValue === null && newValue === null) || (oldValue === null && newValue === '')) continue;
       if (oldValue !== null && oldValue.toString() === newValue.toString()) continue;
       const row = getRow(index);
       const newRow = { ...row };

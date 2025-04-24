@@ -2,9 +2,9 @@ import General from '@/components/common/Settings/General/General';
 import locales from '@/locales';
 import * as setting from '@/store/settingStore/setting.store.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
+import { renderWithProviders } from '@/test/test-utils';
 import { screen } from '@testing-library/dom';
-import { fireEvent, render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { fireEvent } from '@testing-library/react';
 import { describe, expect, vi } from 'vitest';
 
 const spy = vi.spyOn(setting, 'useSettingStore');
@@ -12,17 +12,13 @@ const spy = vi.spyOn(setting, 'useSettingStore');
 describe('General.tsx', () => {
   beforeEach(() => {
     spy.mockReturnValue({
-      updateDebug: vi.fn(),
+      toggleDebug: vi.fn(),
       debug: false
     });
   });
 
   it('renders the General component', () => {
-    render(
-      <MemoryRouter>
-        <General />
-      </MemoryRouter>
-    );
+    renderWithProviders(<General />);
 
     expect(screen.queryByText(locales.general)).not.toBeNull();
     expect(screen.queryByText(locales.debug_mode)).not.toBeNull();
@@ -30,15 +26,11 @@ describe('General.tsx', () => {
   });
 
   it('toggles debug mode switch', () => {
-    const { updateDebug } = useSettingStore();
-    render(
-      <MemoryRouter>
-        <General />
-      </MemoryRouter>
-    );
+    const { toggleDebug } = useSettingStore();
+    renderWithProviders(<General />);
     const switchElement = screen.getByRole('checkbox');
     fireEvent.click(switchElement);
-    expect(updateDebug).toHaveBeenCalledWith(true);
+    expect(toggleDebug).toHaveBeenCalledWith(true);
   });
 
   it('displays the correct initial state of the switch', () => {
@@ -46,11 +38,7 @@ describe('General.tsx', () => {
       updateDebug: vi.fn(),
       debug: true
     });
-    render(
-      <MemoryRouter>
-        <General />
-      </MemoryRouter>
-    );
+    renderWithProviders(<General />);
 
     expect(screen.queryByRole('checkbox', { checked: true })).not.toBeNull();
   });

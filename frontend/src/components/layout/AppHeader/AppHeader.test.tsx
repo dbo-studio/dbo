@@ -1,15 +1,10 @@
 import { screen } from '@testing-library/dom';
-import { render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import AppHeader from './AppHeader';
+import { renderWithProviders } from '@/test/test-utils';
 
 describe('AppHeader.tsx', () => {
   test('should render the the App Header', () => {
-    render(
-      <MemoryRouter>
-        <AppHeader />
-      </MemoryRouter>
-    );
+    renderWithProviders(<AppHeader />);
     expect(screen.getByLabelText('settings')).not.toBeNull();
   });
 });
