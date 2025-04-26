@@ -7,63 +7,54 @@ import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import type { SelectedRow } from '@/store/dataStore/types.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import type { RowType } from '@/types';
 import { Box } from '@mui/material';
 import { type JSX, useEffect, useState } from 'react';
 
 const getRowValue = (row: SelectedRow): string | undefined => {
-  if (!row) return undefined;
-  const columns = row.selectedColumns;
-  if (columns === undefined || columns.length === 0) return undefined;
-
-  return row.data[columns[columns.length - 1].toString()];
-};
-
-const getSelectedColumn = (columns: string[]): string => {
-  return columns[columns.length - 1];
+  if (!row || !row.selectedColumn) return undefined;
+  return row.row[row.selectedColumn];
 };
 
 export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX.Element {
   const selectedTab = useSelectedTab();
   const [value, setValue] = useState<string | undefined>(undefined);
   const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
-  const [row, setRow] = useState<RowType>();
+  const [row, setRow] = useState<SelectedRow>();
   const { getSelectedRows, updateRow, getEditedRows, updateEditedRows, toggleDataFetching } = useDataStore();
   const { showQuickLookEditor, toggleShowQuickLookEditor } = useSettingStore();
 
   const handleClose = (): void => {
-    const rowValue = getRowValue(row);
-
-    if (rowValue === undefined || !row || value === rowValue || !editable || !selectedTab) {
+    if (!row) {
       toggleShowQuickLookEditor(false);
       return;
     }
 
-    const editedRows = handleRowChangeLog(
-      getEditedRows(),
-      row.data,
-      getSelectedColumn(row.selectedColumns),
-      rowValue,
-      value
-    );
+    const rowValue = getRowValue(row);
+    if (rowValue === undefined || value === rowValue || !editable || !selectedTab) {
+      toggleShowQuickLookEditor(false);
+      return;
+    }
+
+    const editedRows = handleRowChangeLog(getEditedRows(), row.row, row.selectedColumn, rowValue, value);
 
     updateEditedRows(editedRows);
-    const newRow = { ...row.data };
-    newRow[getSelectedColumn(row.selectedColumns)] = value;
+    const newRow = { ...row.row };
+    newRow[row.selectedColumn] = value;
     updateRow(newRow);
     toggleDataFetching();
     toggleShowQuickLookEditor(false);
   };
 
   useEffect(() => {
+    if (!showQuickLookEditor) return;
+
     const rows = getSelectedRows();
-    if (rows.length === 0 || !showQuickLookEditor) {
+    if (rows.length === 0) {
       return;
     }
 
     const row = rows[rows.length - 1];
-    const columns = row.selectedColumns;
-    if (columns === undefined || columns.length === 0) return;
+    if (!row.selectedColumn) return;
 
     setRow(row);
     setValue(getRowValue(row));

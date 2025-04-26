@@ -1,14 +1,20 @@
 import { useContextMenu } from '@/hooks';
 import { Box, CircularProgress, Tooltip, Typography } from '@mui/material';
+import type { JSX } from 'react';
 import CustomIcon from '../../../../base/CustomIcon/CustomIcon';
 import type { ConnectionItemProps } from '../../types';
 import { ConnectionItemStyled } from './ConnectionItem.styled';
 import ConnectionItemContextMenu from './ConnectionItemContextMenu/ConnectionItemContextMenu';
 
-export default function ConnectionItem({ connection, selected = false, onClick, loading }: ConnectionItemProps) {
+export default function ConnectionItem({
+  connection,
+  selected = false,
+  onClick,
+  loading
+}: ConnectionItemProps): JSX.Element {
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
-  const handleClick = () => {
+  const handleClick = (): void => {
     if (!contextMenuPosition) {
       onClick();
     }

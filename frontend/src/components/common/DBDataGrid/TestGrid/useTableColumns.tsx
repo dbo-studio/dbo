@@ -1,4 +1,4 @@
-import { handelRowChangeLog } from '@/core/utils';
+import { handleRowChangeLog } from '@/core/utils';
 import { createColumnHelper } from '@tanstack/react-table';
 import { type JSX, useMemo, useState } from 'react';
 import { CellContent, CellInput } from './TestGrid.styled';
@@ -12,7 +12,7 @@ export default function useTableColumns({
   updateRow,
   getEditedRows,
   toggleDataFetching
-}): JSX.Element {
+}) {
   const columnHelper = createColumnHelper();
 
   return useMemo(() => {
@@ -47,7 +47,7 @@ export default function useTableColumns({
                   };
                   newData[row.index] = newRow;
 
-                  const editedRows = handelRowChangeLog(
+                  const editedRows = handleRowChangeLog(
                     getEditedRows(),
                     row.original,
                     column.id,

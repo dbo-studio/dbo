@@ -1,5 +1,10 @@
+import { useTabStore } from '@/store/tabStore/tab.store';
 import type { StateCreator } from 'zustand';
 import type { DataSelectedRowsSlice, DataStore, SelectedRow } from '../types';
+
+const tabId = (): string | undefined => {
+  return useTabStore.getState().selectedTabId;
+};
 
 export const createDataSelectedRowsSlice: StateCreator<
   DataStore & DataSelectedRowsSlice,
@@ -7,16 +12,29 @@ export const createDataSelectedRowsSlice: StateCreator<
   [],
   DataSelectedRowsSlice
 > = (set, get) => ({
-  selectedRows: new Map(),
+  selectedRows: {},
   toggleClear: true,
   getSelectedRows: (): SelectedRow[] => {
-    return Array.from(get().selectedRows.values());
+    const id = tabId();
+    if (!id) return [];
+
+    return get().selectedRows[id] ?? [];
   },
   setSelectedRows: (rows: SelectedRow[]): void => {
-    const mappedRows = new Map(rows.map((row) => [row.index, row]));
-    set({ selectedRows: mappedRows });
+    const id = tabId();
+    if (!id) return;
+
+    const selectedRows = get().selectedRows;
+    selectedRows[id] = rows;
+
+    set({ selectedRows: selectedRows });
   },
   clearSelectedRows: (): void => {
-    set({ selectedRows: new Map(), toggleClear: !get().toggleClear });
+    const id = tabId();
+    if (!id) return;
+    const selectedRows = get().selectedRows;
+    selectedRows[id] = [];
+
+    set({ selectedRows: selectedRows, toggleClear: !get().toggleClear });
   }
 });

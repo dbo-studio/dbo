@@ -13,7 +13,7 @@ export type DataRowSlice = {
 };
 
 export type DataSelectedRowsSlice = {
-  selectedRows: Map<number, SelectedRow>;
+  selectedRows: Record<string, SelectedRow[]>;
   toggleClear: boolean;
   getSelectedRows: () => SelectedRow[];
   clearSelectedRows: () => void;
@@ -60,9 +60,9 @@ export type DataQuerySlice = {
 };
 
 export type SelectedRow = {
-  index: number; // The row index,
-  selectedColumns: string[];
-  data: Record<string, any>; // The row's data object
+  index: number;
+  selectedColumn: string;
+  row: RowType;
 };
 
 export type DataFormDataSlice = {
