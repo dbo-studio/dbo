@@ -61,7 +61,7 @@ export default function TableBodyRows<T>({
               ${isRemoved ? 'removed-highlight' : ''}
               ${isUnsaved ? 'unsaved-highlight' : ''}
               ${isEdited ? 'edit-highlight' : ''}
-              ${isSelected ? 'selected' : ''}
+              ${isSelected ? 'selected-highlight' : ''}
             `.trim()}
             onClick={(): void => {
               table.resetRowSelection();

@@ -2,30 +2,29 @@ import { styled } from '@mui/material';
 
 export const TableHeader = styled('th')(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
-  color: theme.palette.text.primary,
-  padding: theme.spacing(1),
+  color: theme.palette.text.text,
   position: 'relative',
   textAlign: 'left',
-  fontWeight: 600,
   userSelect: 'none',
   whiteSpace: 'nowrap',
   overflow: 'hidden',
-  height: '22px',
   boxSizing: 'border-box',
-  border: `1px solid ${theme.palette.divider}`
+  border: `1px solid ${theme.palette.divider}`,
+  padding: '2px 8px'
 }));
 
 export const TableCell = styled('td')(({ theme }) => ({
-  padding: theme.spacing(1),
   borderBottom: `1px solid ${theme.palette.divider}`,
   borderRight: `1px solid ${theme.palette.divider}`,
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
-  height: '22px',
+  height: '32px',
   boxSizing: 'border-box',
+  padding: '2px 8px',
+  color: theme.palette.text.subdued,
 
-  'tr.selected &': {
+  '.selected-highlight &': {
     backgroundColor: `${theme.palette.action.selected} !important`
   },
 
@@ -59,7 +58,6 @@ export const CellContent = styled('div')(({ theme }) => ({
   height: '22px',
   maxWidth: '400px',
   cursor: 'pointer',
-  padding: theme.spacing(0.5),
   overflow: 'hidden',
   whiteSpace: 'nowrap',
   textOverflow: 'ellipsis'
@@ -69,7 +67,6 @@ export const CellInput = styled('input')(({ theme }) => ({
   width: '100%',
   height: '22px',
   maxWidth: '400px',
-  padding: theme.spacing(0.5),
   fontSize: 'inherit',
   border: `1px solid ${theme.palette.divider}`,
   borderRadius: theme.shape.borderRadius,
@@ -83,14 +80,6 @@ export const TableContainer = styled('div')(({ theme }) => ({
   border: `1px solid ${theme.palette.divider}`,
   borderRadius: theme.shape.borderRadius
 }));
-
-// Remove this duplicate declaration
-// export const StyledTable = styled('table')(({ theme }) => ({
-//   width: '100%',
-//   tableLayout: 'fixed',
-//   borderCollapse: 'separate',
-//   borderSpacing: 0
-// }));
 
 export const StyledTableRow = styled('tr')(({ theme }) => ({
   '&:nth-of-type(odd)': {
