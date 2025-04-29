@@ -40,11 +40,11 @@ export default function TestGrid({ editable = true }: any): JSX.Element {
     getCoreRowModel: getCoreRowModel(),
     columnResizeMode: 'onChange',
     enableColumnResizing: true,
-    defaultColumn: {
-      minSize: 50,
-      maxSize: 400,
-      size: 100
-    },
+    // defaultColumn: {
+    //   minSize: 50,
+    //   maxSize: 400,
+    //   size: 100
+    // },
     enableRowSelection: false
   });
 

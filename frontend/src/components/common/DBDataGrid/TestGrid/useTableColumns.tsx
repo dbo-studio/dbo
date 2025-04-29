@@ -1,7 +1,7 @@
 import { handleRowChangeLog } from '@/core/utils';
 import { createColumnHelper } from '@tanstack/react-table';
-import { type JSX, useMemo, useState } from 'react';
-import { CellContent, CellInput } from './TestGrid.styled';
+import { type JSX, useMemo, useRef, useState } from 'react';
+import { CellContainer, CellContent, CellInput, EditButton } from './TestGrid.styled';
 
 export default function useTableColumns({
   data,
@@ -19,56 +19,79 @@ export default function useTableColumns({
     return columns.map((col) =>
       columnHelper.accessor(col.name, {
         header: col.name,
-        size: 100,
-        minSize: 50,
-        maxSize: 400,
+
         cell: ({ row, column, getValue }): JSX.Element => {
           const isEditing = editingCell?.rowIndex === row.index && editingCell?.columnId === column.id;
-          const [tempValue, setTempValue] = useState(String(getValue()));
+          const value = String(getValue());
+          const [isHovering, setIsHovering] = useState(false);
+
+          const handleEditClick = (e): void => {
+            e.stopPropagation();
+            setEditingCell({ rowIndex: row.index, columnId: column.id });
+          };
 
           if (isEditing) {
+            const inputRef = useRef(null);
+
+            // Focus the input when editing starts
+            setTimeout(() => {
+              if (inputRef.current) {
+                inputRef.current.focus();
+                inputRef.current.select();
+              }
+            }, 0);
+
             return (
               <CellInput
-                value={tempValue}
-                onChange={(e): void => {
-                  if (tempValue !== e.target.value) setTempValue(e.target.value);
-                }}
-                onBlur={(): void => {
-                  // biome-ignore lint/suspicious/noDoubleEquals: <explanation>
-                  if (tempValue == data[row.index][column.id]) {
-                    setEditingCell(null);
-                    return;
+                ref={inputRef}
+                defaultValue={value}
+                onBlur={(e): void => {
+                  const newValue = e.target.value;
+                  if (newValue !== value) {
+                    const newData = [...data];
+                    const newRow = {
+                      ...newData[row.index],
+                      [column.id]: newValue
+                    };
+                    newData[row.index] = newRow;
+
+                    const editedRows = handleRowChangeLog(
+                      getEditedRows(),
+                      row.original,
+                      column.id,
+                      row.original[column.id],
+                      newValue
+                    );
+
+                    updateEditedRows(editedRows);
+                    updateRow(newRow);
+                    toggleDataFetching();
                   }
-
-                  const newData = [...data];
-                  const newRow = {
-                    ...newData[row.index],
-                    [column.id]: tempValue
-                  };
-                  newData[row.index] = newRow;
-
-                  const editedRows = handleRowChangeLog(
-                    getEditedRows(),
-                    row.original,
-                    column.id,
-                    row.original[column.id],
-                    tempValue
-                  );
-
-                  updateEditedRows(editedRows);
-                  updateRow(newRow);
-                  toggleDataFetching();
                   setEditingCell(null);
                 }}
-                autoFocus
+                onKeyDown={(e): void => {
+                  if (e.key === 'Enter') {
+                    e.currentTarget.blur();
+                  } else if (e.key === 'Escape') {
+                    setEditingCell(null);
+                  }
+                }}
               />
             );
           }
 
           return (
-            <CellContent onDoubleClick={(): void => setEditingCell({ rowIndex: row.index, columnId: column.id })}>
-              {String(getValue())}
-            </CellContent>
+            <CellContainer
+              className={isHovering ? 'cell-hover' : ''}
+              onMouseEnter={(): void => setIsHovering(true)}
+              onMouseLeave={(): void => setIsHovering(false)}
+              onClick={(e): void => e.stopPropagation()}
+            >
+              <CellContent>{value}</CellContent>
+              <EditButton onClick={handleEditClick} title='Edit cell'>
+                ✎
+              </EditButton>
+            </CellContainer>
           );
         }
       })

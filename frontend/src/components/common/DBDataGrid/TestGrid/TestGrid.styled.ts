@@ -23,6 +23,7 @@ export const TableCell = styled('td')(({ theme }) => ({
   boxSizing: 'border-box',
   padding: '2px 8px',
   color: theme.palette.text.subdued,
+  width: '100%', // Add this to ensure cells use their full allocated width
 
   '.selected-highlight &': {
     backgroundColor: `${theme.palette.action.selected} !important`
@@ -54,19 +55,20 @@ export const StyledTable = styled('table')(({ theme }) => ({
 }));
 
 export const CellContent = styled('div')(({ theme }) => ({
-  width: '100%',
+  width: '100%', // Make sure content takes full width
   height: '22px',
-  maxWidth: '400px',
+  maxWidth: '100%', // Changed from fixed 400px to 100%
   cursor: 'pointer',
   overflow: 'hidden',
   whiteSpace: 'nowrap',
-  textOverflow: 'ellipsis'
+  textOverflow: 'ellipsis',
+  display: 'block' // Ensure it's a block-level element
 }));
 
 export const CellInput = styled('input')(({ theme }) => ({
   width: '100%',
   height: '22px',
-  maxWidth: '400px',
+  maxWidth: '100%', // Changed from fixed 400px to 100%
   fontSize: 'inherit',
   border: `1px solid ${theme.palette.divider}`,
   borderRadius: theme.shape.borderRadius,
@@ -105,6 +107,37 @@ export const Resizer = styled('div')(({ theme }) => ({
   },
   '&.isResizing': {
     background: theme.palette.primary.main,
+    opacity: 0.7
+  }
+}));
+
+export const CellContainer = styled('div')(({ theme }) => ({
+  position: 'relative',
+  width: '100%',
+  height: '100%',
+  display: 'flex',
+  alignItems: 'center'
+}));
+
+export const EditButton = styled('button')(({ theme }) => ({
+  position: 'absolute',
+  right: '2px',
+  background: theme.palette.primary.main,
+  color: theme.palette.primary.contrastText,
+  border: 'none',
+  borderRadius: '3px',
+  width: '20px',
+  height: '20px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  cursor: 'pointer',
+  opacity: 0,
+  transition: 'opacity 0.2s',
+  '&:hover': {
+    opacity: 1
+  },
+  '.cell-hover &': {
     opacity: 0.7
   }
 }));

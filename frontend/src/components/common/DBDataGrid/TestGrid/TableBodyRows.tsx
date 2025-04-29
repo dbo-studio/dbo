@@ -75,7 +75,11 @@ export default function TableBodyRows<T>({
                   context(e);
                   handleSelect(cell);
                 }}
-                onClick={(): void => handleSelect(cell)}
+                onClick={(e): void => {
+                  if (e.currentTarget === e.target) {
+                    handleSelect(cell);
+                  }
+                }}
                 style={{
                   width: cell.column.getSize(),
                   minWidth: cell.column.getSize(),
