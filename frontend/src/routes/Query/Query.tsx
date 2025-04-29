@@ -42,7 +42,7 @@ export default function Query(): JSX.Element {
   };
 
   const handleUpdateState = (query: string): void => {
-    // updateQuery(query);
+    updateQuery(query);
   };
 
   const rows = useMemo(() => getRows(), [isDataFetching, selectedTab?.id]);
@@ -69,7 +69,7 @@ export default function Query(): JSX.Element {
           {autocomplete && (
             <SqlEditor
               onMount={(): void => setShowGrid(true)}
-              onChange={handleUpdateState}
+              onBlur={handleUpdateState}
               autocomplete={autocomplete}
               value={value}
             />

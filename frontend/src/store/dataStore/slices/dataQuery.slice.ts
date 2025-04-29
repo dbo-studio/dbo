@@ -52,7 +52,7 @@ export const createDataQuerySlice: StateCreator<
       set({ loading: false });
     }
   },
-  runRawQuery: async (): Promise<void> => {
+  runRawQuery: async (query?: string): Promise<void> => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;
     if (!currentConnectionId) return;
 
@@ -60,7 +60,7 @@ export const createDataQuerySlice: StateCreator<
       set({ loading: true });
       const res = await runRawQuery({
         connectionId: Number(currentConnectionId),
-        query: useTabStore.getState().getQuery()
+        query: query ? query : useTabStore.getState().getQuery()
       });
 
       useTabStore.getState().updateQuery(res.query);

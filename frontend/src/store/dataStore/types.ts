@@ -55,7 +55,7 @@ export type DataQuerySlice = {
   loading: boolean;
   isDataFetching: boolean;
   runQuery: () => Promise<void>;
-  runRawQuery: () => Promise<void>;
+  runRawQuery: (query?: string) => Promise<void>;
   toggleDataFetching: () => void;
 };
 

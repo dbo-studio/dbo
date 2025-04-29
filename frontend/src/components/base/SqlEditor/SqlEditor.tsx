@@ -13,7 +13,7 @@ import { useEffect, useRef, useState } from 'react';
 import { changeMetaProviderSetting } from './helpers/dbMetaProvider.ts';
 import { editorConfig } from './helpers/editorConfig.ts';
 
-export default function SqlEditor({ autocomplete, value, onChange, onMount }: SqlEditorProps): JSX.Element {
+export default function SqlEditor({ autocomplete, value, onChange, onBlur, onMount }: SqlEditorProps): JSX.Element {
   const hostRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
   const [mount, setMount] = useState(false);
@@ -23,7 +23,7 @@ export default function SqlEditor({ autocomplete, value, onChange, onMount }: Sq
   const { runRawQuery } = useDataStore();
 
   if (selectedTab) {
-    useShortcut(shortcuts.runQuery, () => runRawQuery(selectedTab));
+    useShortcut(shortcuts.runQuery, () => runRawQuery());
   }
 
   useEffect(() => {
@@ -40,13 +40,21 @@ export default function SqlEditor({ autocomplete, value, onChange, onMount }: Sq
     editorRef.current?.addAction({
       id: shortcuts.runQuery.command,
       keybindings: shortcuts.runQuery.monaco,
-      run: (): Promise<void> => runRawQuery(selectedTab),
+      run: (): Promise<void> => runRawQuery(editorRef.current?.getValue()),
       label: shortcuts.runQuery.label
     });
 
     model?.onDidChangeContent(() => {
-      if (value.toString() !== model.getValue()) {
-        onChange(model.getValue());
+      const currentValue = editorRef.current?.getValue();
+      if (currentValue && currentValue !== value.toString()) {
+        onChange?.(currentValue);
+      }
+    });
+
+    editorRef.current?.onDidBlurEditorText(() => {
+      const currentValue = editorRef.current?.getValue();
+      if (currentValue && currentValue !== value.toString()) {
+        onBlur?.(currentValue);
       }
     });
 
