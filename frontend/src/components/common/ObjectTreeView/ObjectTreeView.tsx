@@ -15,7 +15,7 @@ export default function ObjectTreeView(): JSX.Element {
   const parentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
 
-  const tree = useMemo(() => getTree(), [getTree()]);
+  const tree = useMemo(() => getTree(), [getTree(), currentConnection?.id]);
 
   const { mutateAsync: getChildrenMutation } = useMutation({
     mutationFn: api.tree.getTree,
@@ -31,6 +31,10 @@ export default function ObjectTreeView(): JSX.Element {
       toggleIsLoading(false);
     }
   }, [currentConnection?.id, tree, treeError]);
+
+  useEffect(() => {
+    reloadTree();
+  }, [currentConnection?.id]);
 
   const fetchChildren = async (parentId: string): Promise<TreeNodeType[]> => {
     try {
