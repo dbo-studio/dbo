@@ -1,13 +1,25 @@
-import path from 'node:path';
 import react from '@vitejs/plugin-react-swc';
+import path from 'node:path';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
 
 const host = process.env.TAURI_DEV_HOST;
+const ReactCompilerConfig = {};
+
 
 export default defineConfig({
   clearScreen: host === undefined,
-  plugins: [react(), tsconfigPaths()],
+  plugins: [ 
+    react({
+      //@ts-ignore
+      babel: {
+        plugins: [
+          ["babel-plugin-react-compiler", ReactCompilerConfig],
+        ],
+      },
+    }),
+    tsconfigPaths()
+  ],
   envPrefix: ['VITE_', 'TAURI_ENV_*'],
   resolve: {
     alias: {
