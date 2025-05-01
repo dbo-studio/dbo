@@ -12,7 +12,7 @@ export type TabStore = {
 };
 
 export type TabFilterSlice = {
-  upsertFilters: (filter: FilterType) => Promise<void>;
+  upsertFilters: (filter: FilterType) => void;
   removeFilter: (filter: FilterType) => void;
   setShowFilters: () => void;
 };
@@ -29,7 +29,7 @@ export type TabSettingSlice = {
   addObjectTab: (title: string, nodeId: string, action: string, mode: TabMode) => TabType;
   addEditorTab: (query?: string) => TabType;
   //return undefined will redirect to route /
-  removeTab: (selectedTab: TabType, tabId: string) => TabType | null | undefined;
+  removeTab: (tabId: string) => TabType | null | undefined;
   switchTab: (tabId: string | null) => void;
   handleAddNewTab: (tabs: TabType[], newTab: TabType) => TabType;
 };

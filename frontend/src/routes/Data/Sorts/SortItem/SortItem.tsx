@@ -5,7 +5,6 @@ import { Box, Checkbox } from '@mui/material';
 import { type JSX, useState } from 'react';
 
 import SelectInput from '@/components/base/SelectInput/SelectInput.tsx';
-import { useSelectedTab } from '@/hooks';
 import locales from '@/locales';
 import type { SortItemProps } from '../types.ts';
 import AddSortButton from './AddSortButton/AddSortButton.tsx';
@@ -13,7 +12,6 @@ import RemoveSortButton from './RemoveSortButton/RemoveSortButton.tsx';
 
 export default function SortItem({ sort, columns }: SortItemProps): JSX.Element {
   const { upsertSorts } = useTabStore();
-  const selectedTab = useSelectedTab();
   const [currentSort, setCurrentSort] = useState<SortType>({
     index: sort.index,
     column: sort.column,
@@ -22,8 +20,6 @@ export default function SortItem({ sort, columns }: SortItemProps): JSX.Element 
   });
 
   const handleChange = async (type: 'column' | 'operator' | 'isActive', value: any): Promise<void> => {
-    if (!selectedTab) return;
-
     const newSort = {
       index: currentSort.index,
       column: type === 'column' ? value : currentSort.column,

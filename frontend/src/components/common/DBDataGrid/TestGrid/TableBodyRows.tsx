@@ -35,7 +35,7 @@ export default function TableBodyRows<T>({
       {table.getRowModel().rows.map((row) => {
         const rowIndex = row.index;
 
-        const isRemoved = removed.some((v: RowType) => v.dboIndex === rowIndex);
+        const isRemoved = removed.some((v: RowType) => v.dbo_index === rowIndex);
         const isUnsaved = unsaved.some((v: RowType) => v.dboIndex === rowIndex);
         const isEdited = edited.some((v: RowType) => v.dboIndex === rowIndex);
         const isSelected = selected.some((v: SelectedRow) => v.index === rowIndex);

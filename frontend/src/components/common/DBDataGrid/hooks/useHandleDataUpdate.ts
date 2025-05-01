@@ -12,7 +12,7 @@ type UseHandleDataUpdateProps = {
 
 export const useHandleDataUpdate = ({ hotTableRef, rows, columns }: UseHandleDataUpdateProps): void => {
   const { isDataFetching } = useDataStore();
-  const { selectedTabId } = useTabStore();
+  const selectedTabId = useTabStore((state) => state.selectedTabId);
 
   useEffect(() => {
     if (!selectedTabId || !hotTableRef.current || !hotTableRef?.current?.hotInstance) return;

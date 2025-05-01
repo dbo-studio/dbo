@@ -1,14 +1,17 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton.tsx';
 import Settings from '@/components/common/Settings/Settings.tsx';
-import { useCurrentConnection } from '@/hooks';
+import { TabMode } from '@/core/enums';
+import { shortcuts } from '@/core/utils';
+import { useCurrentConnection, useSelectedTab, useShortcut } from '@/hooks';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store.ts';
 import { Grid2, IconButton, Stack } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
-import { type JSX } from 'react';
+import type { JSX } from 'react';
 import ConnectionBox from './ConnectionBox/ConnectionBox';
 
 export default function ConnectionInfo(): JSX.Element {
@@ -18,19 +21,41 @@ export default function ConnectionInfo(): JSX.Element {
   const { addEditorTab, updateSelectedTab } = useTabStore();
   const { reloadTree } = useTreeStore();
   const { showSettings, toggleShowAddConnection } = useSettingStore();
+  const selectedTab = useSelectedTab();
+  const { runQuery, runRawQuery, removeEditedRowsByTabId, deleteRemovedRowsByTabId, removeUnsavedRowsByTabId } =
+    useDataStore();
+
+  useShortcut(shortcuts.reloadTab, () => handleRefresh());
 
   const handleAddEditorTab = (): void => {
     const tab = addEditorTab();
     updateSelectedTab(tab);
   };
 
-  const handleRefresh = (): void => {
+  const handleRefresh = async (): Promise<void> => {
     queryClient.invalidateQueries({
       queryKey: ['connections']
     });
 
-    if (currentConnection) {
-      reloadTree();
+    if (!currentConnection) {
+      return;
+    }
+
+    reloadTree();
+
+    if (!selectedTab) return;
+
+    if (selectedTab?.mode === TabMode.Query) {
+      await runRawQuery();
+      return;
+    }
+
+    if (selectedTab?.mode === TabMode.Data) {
+      await runQuery();
+      removeEditedRowsByTabId(selectedTab?.id ?? '');
+      deleteRemovedRowsByTabId(selectedTab?.id ?? '');
+      removeUnsavedRowsByTabId(selectedTab?.id ?? '');
+      return;
     }
   };
 

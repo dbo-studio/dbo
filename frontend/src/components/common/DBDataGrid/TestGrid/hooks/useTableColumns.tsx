@@ -3,10 +3,10 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import type { ColumnType, RowType } from '@/types';
 import { type ColumnDef, createColumnHelper } from '@tanstack/react-table';
 import { type JSX, useCallback, useMemo, useRef, useState } from 'react';
-import { CellContainer, CellContent, CellInput, EditButton } from './TestGrid.styled';
+import { CellContainer, CellContent, CellInput, EditButton } from './../TestGrid.styled';
 
 export default function useTableColumns({
-  data,
+  rows,
   columns,
   editingCell,
   setEditingCell,
@@ -15,8 +15,8 @@ export default function useTableColumns({
   getEditedRows,
   toggleDataFetching
 }: {
-  data: RowType[];
-  columns: any[];
+  rows: RowType[];
+  columns: ColumnType[];
   editingCell: { rowIndex: number; columnId: string } | null;
   setEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void;
   updateEditedRows: (rows: any) => void;
@@ -29,6 +29,7 @@ export default function useTableColumns({
 
   return useMemo((): ColumnDef<ColumnType, any>[] => {
     return columns.map((col) =>
+      //@ts-ignore
       columnHelper.accessor(col.name, {
         header: col.name,
         cell: ({ row, column, getValue }): JSX.Element => {
@@ -47,7 +48,6 @@ export default function useTableColumns({
             setTimeout(() => {
               if (inputRef.current) {
                 inputRef.current.focus();
-                inputRef.current.select();
               }
             }, 0);
 
@@ -58,12 +58,12 @@ export default function useTableColumns({
                 onBlur={(e): void => {
                   const newValue = e.target.value;
                   if (newValue !== value) {
-                    const newData = [...data];
+                    const newRows = [...rows];
                     const newRow = {
-                      ...newData[row.index],
+                      ...newRows[row.index],
                       [column.id]: newValue
                     };
-                    newData[row.index] = newRow;
+                    newRows[row.index] = newRow;
 
                     const editedRows = handleRowChangeLog(
                       getEditedRows(),
@@ -120,5 +120,5 @@ export default function useTableColumns({
         }
       })
     );
-  }, [data, editingCell, columns, updateEditedRows, updateRow, getEditedRows, toggleDataFetching]);
+  }, [rows, editingCell, columns]);
 }

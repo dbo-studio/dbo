@@ -114,7 +114,7 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
 
     return get().handleAddNewTab(tabs, newTab);
   },
-  removeTab: (selectedTab: TabType, tabId: string): TabType | null | undefined => {
+  removeTab: (tabId: string): TabType | null | undefined => {
     const tabIndex = get()
       .getTabs()
       .findIndex((t: TabType) => t.id === tabId);
@@ -124,9 +124,9 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
 
     let newTab: TabType | null | undefined = null;
 
-    if (newTabs.length > tabIndex && selectedTab?.id === tabId) {
+    if (newTabs.length > tabIndex && get().selectedTabId === tabId) {
       newTab = newTabs[tabIndex];
-    } else if (newTabs.length > 0 && selectedTab?.id === tabId) {
+    } else if (newTabs.length > 0 && get().selectedTabId === tabId) {
       newTab = newTabs[newTabs.length - 1];
     }
 

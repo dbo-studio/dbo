@@ -1,30 +1,34 @@
 import { handleRowChangeLog } from '@/core/utils';
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
 // @ts-ignore
 import { ContextMenu, type Settings } from 'handsontable/plugins/contextMenu';
 
 export const useHandleContextMenu = (editable?: boolean): Settings => {
-  const selectedTab = useSelectedTab();
+  const selectedTabId = useTabStore((state) => state.selectedTabId);
   const { getSelectedRows, updateEditedRows, getEditedRows, updateRow, toggleDataFetching } = useDataStore();
   const { toggleShowQuickLookEditor } = useSettingStore();
 
   const valueReplacer = (newValue: any): void => {
-    if (!selectedTab) return;
+    if (!selectedTabId) return;
 
     const rows = getSelectedRows();
     for (const row of rows) {
-      if (!row.data) continue;
-      const newRow = { ...row.data };
+      if (!row.row) continue;
+      const newRow = { ...row.row };
 
-      for (const column of row.selectedColumns) {
-        const editedRows = handleRowChangeLog(getEditedRows(), row.data, column, row.data[column], newValue);
-        updateEditedRows(editedRows);
-        newRow[column] = newValue;
-        updateRow(newRow);
-        toggleDataFetching();
-      }
+      const editedRows = handleRowChangeLog(
+        getEditedRows(),
+        row.row,
+        row.selectedColumn,
+        row.row[row.selectedColumn],
+        newValue
+      );
+      updateEditedRows(editedRows);
+      newRow[row.selectedColumn] = newValue;
+      updateRow(newRow);
+      toggleDataFetching();
     }
   };
 

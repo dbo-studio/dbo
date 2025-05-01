@@ -2,7 +2,6 @@ import CodeEditor from '@/components/base/CodeEditor/CodeEditor.tsx';
 import ResizableModal from '@/components/base/Modal/ResizableModal/ResizableModal.tsx';
 import type { QuickViewDialogProps } from '@/components/common/DBDataGrid/QuickViewDialog/types';
 import { handleRowChangeLog } from '@/core/utils';
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import type { SelectedRow } from '@/store/dataStore/types.ts';
@@ -16,7 +15,6 @@ const getRowValue = (row: SelectedRow): string | undefined => {
 };
 
 export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX.Element {
-  const selectedTab = useSelectedTab();
   const [value, setValue] = useState<string | undefined>(undefined);
   const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
   const [row, setRow] = useState<SelectedRow>();
@@ -30,7 +28,7 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
     }
 
     const rowValue = getRowValue(row);
-    if (rowValue === undefined || value === rowValue || !editable || !selectedTab) {
+    if (rowValue === undefined || value === rowValue || !editable) {
       toggleShowQuickLookEditor(false);
       return;
     }

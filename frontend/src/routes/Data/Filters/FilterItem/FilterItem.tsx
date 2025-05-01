@@ -2,18 +2,16 @@ import { PgsqlFilterConditions, PgsqlFilterNext } from '@/core/constants';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { EventFor, FilterType } from '@/types';
 import { Box, Checkbox } from '@mui/material';
-import { type JSX, useState } from 'react';
+import { type JSX, useCallback, useState } from 'react';
 
 import FieldInput from '@/components/base/FieldInput/FieldInput.tsx';
 import SelectInput from '@/components/base/SelectInput/SelectInput.tsx';
-import { useSelectedTab } from '@/hooks';
 import locales from '@/locales';
 import type { FilterItemProps } from '../types.ts';
 import AddFilterButton from './AddFilterButton/AddFilterButton.tsx';
 import RemoveFilterButton from './RemoveFilterButton/RemoveFilterButton.tsx';
 
 export default function FilterItem({ filter, columns }: FilterItemProps): JSX.Element {
-  const selectedTab = useSelectedTab();
   const { upsertFilters } = useTabStore();
 
   const [currentFilter, setCurrentFilter] = useState<FilterType>({
@@ -25,23 +23,22 @@ export default function FilterItem({ filter, columns }: FilterItemProps): JSX.El
     isActive: filter.isActive
   });
 
-  const handleChange = (type: 'column' | 'operator' | 'value' | 'next' | 'isActive', value: any): FilterType => {
-    const newFilter = {
-      index: currentFilter.index,
-      column: type === 'column' ? value : currentFilter.column,
-      operator: type === 'operator' ? value : currentFilter.operator,
-      value: type === 'value' ? value : currentFilter.value,
-      next: type === 'next' ? value : currentFilter.next,
-      isActive: type === 'isActive' ? value : currentFilter.isActive
-    };
+  const handleChange = useCallback(
+    (type: 'column' | 'operator' | 'value' | 'next' | 'isActive', value: any): FilterType => {
+      const newFilter = {
+        index: currentFilter.index,
+        column: type === 'column' ? value : currentFilter.column,
+        operator: type === 'operator' ? value : currentFilter.operator,
+        value: type === 'value' ? value : currentFilter.value,
+        next: type === 'next' ? value : currentFilter.next,
+        isActive: type === 'isActive' ? value : currentFilter.isActive
+      };
 
-    setCurrentFilter(newFilter);
-    return newFilter;
-  };
-
-  if (!selectedTab) {
-    return <></>;
-  }
+      setCurrentFilter(newFilter);
+      return newFilter;
+    },
+    []
+  );
 
   return (
     <Box aria-label={'filter-item'} className='filter-item' display='flex' flexDirection='row' alignItems='center'>
@@ -50,7 +47,7 @@ export default function FilterItem({ filter, columns }: FilterItemProps): JSX.El
           size='small'
           checked={currentFilter.isActive}
           onChange={(e): void => {
-            upsertFilters(handleChange('isActive', e.target.checked)).then();
+            upsertFilters(handleChange('isActive', e.target.checked));
           }}
         />
       </Box>
@@ -61,7 +58,7 @@ export default function FilterItem({ filter, columns }: FilterItemProps): JSX.El
           disabled={columns.length === 0}
           size='small'
           options={columns.map((c) => ({ value: c.name as string, label: c.name }))}
-          onChange={(e): FilterType => handleChange('column', e.value)}
+          onChange={(e): void => upsertFilters(handleChange('column', e.value))}
         />
       </Box>
       <Box mr={1} ml={1}>
@@ -69,7 +66,7 @@ export default function FilterItem({ filter, columns }: FilterItemProps): JSX.El
           value={currentFilter.operator}
           size='small'
           options={PgsqlFilterConditions.map((c) => ({ value: c as string, label: c }))}
-          onChange={(e): FilterType => handleChange('operator', e.value)}
+          onChange={(e): void => upsertFilters(handleChange('operator', e.value))}
         />
       </Box>
       <Box flex={1} mr={1}>
@@ -78,7 +75,7 @@ export default function FilterItem({ filter, columns }: FilterItemProps): JSX.El
           fullWidth
           size='small'
           value={currentFilter.value}
-          onBlur={(): Promise<void> => upsertFilters(currentFilter)}
+          onBlur={(): void => upsertFilters(currentFilter)}
           onChange={(e: EventFor<'input', 'onChange'>): FilterType => handleChange('value', e.target.value)}
         />
       </Box>
@@ -87,7 +84,7 @@ export default function FilterItem({ filter, columns }: FilterItemProps): JSX.El
           value={currentFilter.next}
           size='small'
           options={PgsqlFilterNext.map((c) => ({ value: c as string, label: c }))}
-          onChange={(e): FilterType => handleChange('next', e.value)}
+          onChange={(e): void => upsertFilters(handleChange('next', e.value))}
         />
       </Box>
       <Box ml={1} mr={1}>

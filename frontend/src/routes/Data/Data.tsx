@@ -15,13 +15,13 @@ import StatusBar from './StatusBar/StatusBar';
 export default function Data(): JSX.Element {
   const selectedTab = useSelectedTab();
   const currentConnection = useCurrentConnection();
-  const { loading, getRows, getColumns, isDataFetching, runQuery } = useDataStore();
+  const { getRows, getColumns, isDataFetching, runQuery } = useDataStore();
 
-  const rows = useMemo(() => getRows(), [isDataFetching, selectedTab?.id]);
-  const headers = useMemo(() => getColumns(true), [isDataFetching, selectedTab?.id]);
+  // const rows = useMemo(() => getRows(), [getRows(), selectedTab?.id]);
+  const columns = useMemo(() => getColumns(true), [isDataFetching, selectedTab?.id]);
 
   useEffect(() => {
-    if (selectedTab?.mode === TabMode.Data && (rows.length === 0 || headers.length === 0)) {
+    if (selectedTab?.mode === TabMode.Data && (getRows().length === 0 || columns.length === 0)) {
       runQuery().then();
     }
   }, [selectedTab?.id]);
@@ -38,16 +38,7 @@ export default function Data(): JSX.Element {
       {selectedTab?.showQuery && <QueryPreview />}
       <Box overflow='hidden' flex={1} display='flex' flexDirection='row'>
         {selectedTab?.showColumns && <Columns />}
-        {headers.length > 0 && (
-          // <DataGrid
-          //   loading={loading}
-          //   rows={rows}
-          //   columns={headers}
-          //   editable={selectedTab?.options?.editable ?? false}
-          // />
-
-          <TestGrid />
-        )}
+        <TestGrid rows={getRows()} columns={columns} />
       </Box>
       <StatusBar />
     </>

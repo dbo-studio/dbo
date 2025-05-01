@@ -1,6 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
 import { PgsqlSorts } from '@/core/constants';
-import { useSelectedTab } from '@/hooks';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { IconButton } from '@mui/material';
 import type { JSX } from 'react';
@@ -9,11 +8,8 @@ import type { AddSortButtonProps } from '../../types.ts';
 
 export default function AddSortButton({ columns }: AddSortButtonProps): JSX.Element {
   const { upsertSorts } = useTabStore();
-  const selectedTab = useSelectedTab();
 
   const handleAddNewSort = async (): Promise<void> => {
-    if (!selectedTab) return;
-
     await upsertSorts({
       index: uuidv4(),
       column: columns[0].name,

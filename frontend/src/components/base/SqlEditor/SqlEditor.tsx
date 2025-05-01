@@ -3,10 +3,10 @@ import * as monaco from 'monaco-editor';
 import { LanguageIdEnum } from 'monaco-sql-languages';
 
 import { shortcuts } from '@/core/utils/shortcuts.ts';
-import { useSelectedTab } from '@/hooks';
 import { useShortcut } from '@/hooks/useShortcut.hook.ts';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
+import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { Box } from '@mui/material';
 import type { JSX } from 'react';
 import { useEffect, useRef, useState } from 'react';
@@ -18,11 +18,11 @@ export default function SqlEditor({ autocomplete, value, onChange, onBlur, onMou
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
   const [mount, setMount] = useState(false);
   const { isDark } = useSettingStore();
-  const selectedTab = useSelectedTab();
+  const selectedTabId = useTabStore((state) => state.selectedTabId);
 
   const { runRawQuery } = useDataStore();
 
-  if (selectedTab) {
+  if (selectedTabId) {
     useShortcut(shortcuts.runQuery, () => runRawQuery());
   }
 
@@ -59,7 +59,7 @@ export default function SqlEditor({ autocomplete, value, onChange, onBlur, onMou
     });
 
     setMount(true);
-  }, [selectedTab?.id]);
+  }, [selectedTabId]);
 
   useEffect(() => {
     if (editorRef.current && value.toString() !== editorRef.current.getValue()) {
