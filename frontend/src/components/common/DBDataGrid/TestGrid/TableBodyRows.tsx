@@ -2,21 +2,17 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import type { SelectedRow } from '@/store/dataStore/types';
 import type { RowType } from '@/types';
 import { type Table, flexRender } from '@tanstack/react-table';
-import type { Virtualizer } from '@tanstack/react-virtual';
 import type { JSX } from 'react';
 import { useCallback, useMemo } from 'react';
-import { TableCell } from './TestGrid.styled';
+import { StyledTableRow, TableCell } from './TestGrid.styled';
 
 export default function TableBodyRows<T>({
   table,
-  virtualizer,
   context
 }: {
   table: Table<T>;
-  virtualizer: Virtualizer<unknown, unknown>;
   context: (event: React.MouseEvent) => void;
 }): JSX.Element {
-  const { rows } = table.getRowModel();
   const { getRemovedRows, getUnsavedRows, getEditedRows, setSelectedRows, getSelectedRows } = useDataStore();
 
   const removed = useMemo(() => getRemovedRows(), [getRemovedRows()]);
@@ -35,10 +31,9 @@ export default function TableBodyRows<T>({
   }, []);
 
   return (
-    <tbody style={{ position: 'relative' }}>
-      {virtualizer.getVirtualItems().map((virtualRow) => {
-        const row = rows[virtualRow.index];
-        const rowIndex = virtualRow.index;
+    <tbody>
+      {table.getRowModel().rows.map((row) => {
+        const rowIndex = row.index;
 
         const isRemoved = removed.some((v: RowType) => v.dboIndex === rowIndex);
         const isUnsaved = unsaved.some((v: RowType) => v.dboIndex === rowIndex);
@@ -46,17 +41,8 @@ export default function TableBodyRows<T>({
         const isSelected = selected.some((v: SelectedRow) => v.index === rowIndex);
 
         return (
-          <tr
+          <StyledTableRow
             key={row.id}
-            style={{
-              height: '22px',
-              transform: `translateY(${virtualRow.start}px)`,
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              width: '100%',
-              cursor: 'pointer'
-            }}
             className={`
               ${isRemoved ? 'removed-highlight' : ''}
               ${isUnsaved ? 'unsaved-highlight' : ''}
@@ -75,21 +61,14 @@ export default function TableBodyRows<T>({
                   context(e);
                   handleSelect(cell);
                 }}
-                onClick={(e): void => {
-                  if (e.currentTarget === e.target) {
-                    handleSelect(cell);
-                  }
-                }}
                 style={{
-                  width: cell.column.getSize(),
-                  minWidth: cell.column.getSize(),
-                  maxWidth: cell.column.getSize()
+                  width: cell.column.getSize()
                 }}
               >
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
               </TableCell>
             ))}
-          </tr>
+          </StyledTableRow>
         );
       })}
     </tbody>

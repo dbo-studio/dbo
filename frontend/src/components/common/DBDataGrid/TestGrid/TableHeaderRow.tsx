@@ -8,7 +8,14 @@ export default function TableHeaderRow<T>({
   table: Table<T>;
 }): JSX.Element {
   return (
-    <thead>
+    <thead
+      style={{
+        display: 'grid',
+        position: 'sticky',
+        top: 0,
+        zIndex: 1
+      }}
+    >
       {table.getHeaderGroups().map((headerGroup) => (
         <StyledTableRow key={headerGroup.id}>
           {headerGroup.headers.map((header) => (
@@ -17,8 +24,6 @@ export default function TableHeaderRow<T>({
               colSpan={header.colSpan}
               style={{
                 width: `${header.getSize()}px`,
-                minWidth: `${header.getSize()}px`,
-                maxWidth: `${header.getSize()}px`,
                 position: 'relative'
               }}
             >

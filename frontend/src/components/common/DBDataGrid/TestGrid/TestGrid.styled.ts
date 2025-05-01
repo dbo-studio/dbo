@@ -10,7 +10,8 @@ export const TableHeader = styled('th')(({ theme }) => ({
   overflow: 'hidden',
   boxSizing: 'border-box',
   border: `1px solid ${theme.palette.divider}`,
-  padding: '2px 8px'
+  padding: '2px 8px',
+  display: 'flex'
 }));
 
 export const TableCell = styled('td')(({ theme }) => ({
@@ -23,7 +24,7 @@ export const TableCell = styled('td')(({ theme }) => ({
   boxSizing: 'border-box',
   padding: '2px 8px',
   color: theme.palette.text.subdued,
-  width: '100%', // Add this to ensure cells use their full allocated width
+  width: '100%',
 
   '.selected-highlight &': {
     backgroundColor: `${theme.palette.action.selected} !important`
@@ -51,18 +52,18 @@ export const StyledTable = styled('table')(({ theme }) => ({
   tableLayout: 'fixed',
   borderCollapse: 'separate',
   borderSpacing: 0,
-  position: 'relative'
+  display: 'grid'
 }));
 
 export const CellContent = styled('div')(({ theme }) => ({
-  width: '100%', // Make sure content takes full width
+  width: '100%',
   height: '22px',
-  maxWidth: '100%', // Changed from fixed 400px to 100%
+  maxWidth: '100%',
   cursor: 'pointer',
   overflow: 'hidden',
   whiteSpace: 'nowrap',
   textOverflow: 'ellipsis',
-  display: 'block' // Ensure it's a block-level element
+  display: 'block'
 }));
 
 export const CellInput = styled('input')(({ theme }) => ({
@@ -84,8 +85,10 @@ export const TableContainer = styled('div')(({ theme }) => ({
 }));
 
 export const StyledTableRow = styled('tr')(({ theme }) => ({
+  display: 'flex',
+  width: '100%',
   '&:nth-of-type(odd)': {
-    backgroundColor: theme.palette.action.hover
+    // backgroundColor: theme.palette.action.hover
   }
 }));
 
