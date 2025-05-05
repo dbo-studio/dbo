@@ -47,12 +47,12 @@ func UpdatePostgresqlConnection(oldParams json.RawMessage, newParams json.RawMes
 		return "", apperror.Validation(err)
 	}
 
-	newOptions.Host = helper.Optional[string](newOptions.Host, oldOptions.Host)
-	newOptions.Username = helper.Optional[string](newOptions.Username, oldOptions.Username)
-	newOptions.Password = helper.Optional[string](newOptions.Password, oldOptions.Password)
-	newOptions.Port = helper.Optional[int32](newOptions.Port, oldOptions.Port)
-	newOptions.Database = helper.Optional[string](newOptions.Database, oldOptions.Database)
-	newOptions.URI = helper.Optional[string](newOptions.URI, oldOptions.URI)
+	newOptions.Host = helper.OptionalAndEmpty(newOptions.Host, oldOptions.Host)
+	newOptions.Username = helper.OptionalAndEmpty(newOptions.Username, oldOptions.Username)
+	newOptions.Password = helper.OptionalAndEmpty(newOptions.Password, oldOptions.Password)
+	newOptions.Port = helper.OptionalAndEmpty(newOptions.Port, oldOptions.Port)
+	newOptions.Database = helper.OptionalAndEmpty(newOptions.Database, oldOptions.Database)
+	newOptions.URI = helper.OptionalAndEmpty(newOptions.URI, oldOptions.URI)
 
 	return helper.StructToJson(newOptions), nil
 }

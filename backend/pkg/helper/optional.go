@@ -24,3 +24,16 @@ func Optional[T any](value *T, defaultValue *T) *T {
 		return defaultValue
 	}
 }
+
+func OptionalAndEmpty[T any](value *T, defaultValue *T) *T {
+	if value != nil {
+		if strVal, ok := any(*value).(string); ok {
+			if strVal != "" {
+				return value
+			}
+		} else {
+			return value
+		}
+	}
+	return defaultValue
+}
