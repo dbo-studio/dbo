@@ -24,17 +24,23 @@ export const createDataSelectedRowsSlice: StateCreator<
     const id = tabId();
     if (!id) return;
 
-    const selectedRows = get().selectedRows;
-    selectedRows[id] = rows;
-
-    set({ selectedRows: selectedRows });
+    set((state) => ({
+      selectedRows: {
+        ...state.selectedRows,
+        [id]: rows
+      }
+    }));
   },
   clearSelectedRows: (): void => {
     const id = tabId();
     if (!id) return;
-    const selectedRows = get().selectedRows;
-    selectedRows[id] = [];
 
-    set({ selectedRows: selectedRows, toggleClear: !get().toggleClear });
+    set((state) => ({
+      selectedRows: {
+        ...state.selectedRows,
+        [id]: []
+      },
+      toggleClear: !state.toggleClear
+    }));
   }
 });

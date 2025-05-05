@@ -32,17 +32,16 @@ export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, []
     const selectedTabId = tabId();
     if (!selectedTabId) return;
 
-    const columns = get().columns;
-    columns[selectedTabId] = items;
-
-    set({ columns });
+    set((state) => ({
+      columns: {
+        ...state.columns,
+        [selectedTabId]: items
+      }
+    }));
   },
   removeColumnsByTabId: (tabId: string): void => {
-    const columns = get().columns;
-    if (columns[tabId]) {
-      delete columns[tabId];
-    }
-
-    set({ columns: columns });
+    set((state) => ({
+      columns: Object.fromEntries(Object.entries(state.columns).filter(([key]) => key !== tabId))
+    }));
   }
 });

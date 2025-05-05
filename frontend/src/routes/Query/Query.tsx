@@ -1,7 +1,7 @@
 import api from '@/api';
 import ResizableYBox from '@/components/base/ResizableBox/ResizableYBox.tsx';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor.tsx';
-import DataGrid from '@/components/common/DBDataGrid/DataGrid';
+import TestGrid from '@/components/common/DBDataGrid/TestGrid/TestGrid';
 import { useCurrentConnection, useWindowSize } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
@@ -19,7 +19,7 @@ export default function Query(): JSX.Element {
   const { getQuery, updateQuery } = useTabStore();
   const [value, setValue] = useState('');
   const [showGrid, setShowGrid] = useState(false);
-  const { loading, getRows, getColumns, isDataFetching, runQuery } = useDataStore();
+  const { loading, getRows, getColumns, isDataFetching } = useDataStore();
 
   const { data: autocomplete } = useQuery({
     queryKey: ['autocomplete', currentConnection?.id, selectedTab?.options?.database, selectedTab?.options?.schema],
@@ -78,7 +78,7 @@ export default function Query(): JSX.Element {
 
         {showGrid && headers.length > 0 && (
           <ResizableYBox height={windowSize.heightNumber ? windowSize.heightNumber / 2 : 0} direction={'btt'}>
-            <DataGrid editable={false} rows={rows} columns={headers} loading={loading} />
+            <TestGrid editable={false} rows={rows} columns={headers} loading={loading} />
           </ResizableYBox>
         )}
       </Box>

@@ -15,13 +15,12 @@ export const createDataRowSlice: StateCreator<
 > = (set, get) => ({
   rows: {},
   getRows: (): RowType[] => {
-    const rows = get().rows;
     const id = tabId();
-    if (!id || !rows[id]) {
+    if (!id) {
       return [];
     }
 
-    return rows[id];
+    return get().rows[id] ?? [];
   },
   getRow: (dboIndex: number): RowType => {
     return get()
@@ -54,11 +53,8 @@ export const createDataRowSlice: StateCreator<
     set({ rows });
   },
   removeRowsByTabId: (tabId: string): void => {
-    const rows = get().rows;
-    if (rows[tabId]) {
-      delete rows[tabId];
-    }
-
-    set({ rows: rows });
+    set((state) => ({
+      rows: Object.fromEntries(Object.entries(state.rows).filter(([key]) => key !== tabId))
+    }));
   }
 });

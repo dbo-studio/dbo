@@ -1,10 +1,11 @@
 import { useContextMenu } from '@/hooks';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import { type JSX, useEffect, useRef, useState } from 'react';
+import { type JSX, useRef, useState } from 'react';
 import { StyledTable, TableContainer } from './TestGrid.styled';
 
 import type { ColumnType, RowType } from '@/types';
+import { Box, CircularProgress } from '@mui/material';
 import QuickViewDialog from '../QuickViewDialog/QuickViewDialog';
 import GridContextMenu from './GridContextMenu';
 import TableBodyRows from './TableBodyRows';
@@ -15,10 +16,12 @@ import useTableColumns from './hooks/useTableColumns';
 export default function TestGrid({
   rows,
   columns,
+  loading,
   editable = true
 }: {
-  rows: RowType[];
+  rows: RowType[] | undefined;
   columns: ColumnType[];
+  loading: boolean;
   editable?: boolean;
 }): JSX.Element {
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -30,12 +33,8 @@ export default function TestGrid({
 
   useHandleScroll(tableContainerRef);
 
-  useEffect(() => {
-    console.log(rows);
-  }, [rows]);
-
   const tableColumns = useTableColumns({
-    rows,
+    rows: rows ?? [],
     columns: columns,
     editingCell,
     setEditingCell,
@@ -46,14 +45,23 @@ export default function TestGrid({
   });
 
   const table = useReactTable({
-    data: rows,
+    data: rows ?? [],
     columns: tableColumns,
     getCoreRowModel: getCoreRowModel(),
     columnResizeMode: 'onChange',
     enableColumnResizing: true,
     enableRowSelection: false,
-    rowCount: rows.length
+    rowCount: rows?.length,
+    autoResetAll: true
   });
+
+  // if (loading) {
+  //   return (
+  //     <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
+  //       <CircularProgress size={30} />
+  //     </Box>
+  //   );
+  // }
 
   return (
     <>

@@ -11,24 +11,37 @@ export const createDataFormDataSlice: StateCreator<DataFormDataSlice, [], [], Da
   },
 
   updateFormData: (tabId: string, objectTabId: string, data: any[]): void => {
-    set((state: DataFormDataSlice) => ({
-      formDataByTab: {
-        ...state.formDataByTab,
-        [tabId]: {
-          ...state.formDataByTab[tabId],
-          [objectTabId]: data
+    if (!tabId || !objectTabId) return;
+
+    set((state: DataFormDataSlice) => {
+      const currentTabData = state.formDataByTab[tabId] || {};
+
+      return {
+        formDataByTab: {
+          ...state.formDataByTab,
+          [tabId]: {
+            ...currentTabData,
+            [objectTabId]: data
+          }
         }
-      }
-    }));
+      };
+    });
   },
 
   resetFormData: (tabId: string, objectTabId: string): void => {
     const selectedTabId = useTabStore.getState().selectedTabId;
     if (!selectedTabId) return;
 
-    const newState = { ...get().formDataByTab[selectedTabId] };
-    delete newState[tabId][objectTabId];
+    set((state) => {
+      const currentTabData = state.formDataByTab[tabId] || {};
+      const { [objectTabId]: _, ...remainingData } = currentTabData;
 
-    set({ formDataByTab: newState });
+      return {
+        formDataByTab: {
+          ...state.formDataByTab,
+          [tabId]: remainingData
+        }
+      };
+    });
   }
 });
