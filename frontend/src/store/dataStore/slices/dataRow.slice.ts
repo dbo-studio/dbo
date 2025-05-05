@@ -32,10 +32,12 @@ export const createDataRowSlice: StateCreator<
     const id = tabId();
     if (!id) return;
 
-    const rows = get().rows;
-    rows[id] = items;
-
-    set({ rows });
+    set((state) => ({
+      rows: {
+        ...state.rows,
+        [id]: items
+      }
+    }));
   },
   updateRow: (item: RowType): void => {
     const id = tabId();

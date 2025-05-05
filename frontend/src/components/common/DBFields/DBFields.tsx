@@ -15,7 +15,7 @@ export default function DBFields(): JSX.Element {
     const rows = getSelectedRows();
     if (rows.length === 0) return;
 
-    const row = rows[rows.length - 1].data;
+    const row = rows[rows.length - 1].row;
     if (row !== selectedRow) {
       setSelectedRow(row);
     }
