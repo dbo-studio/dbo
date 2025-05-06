@@ -28,7 +28,6 @@ export const useHandleContextMenu = (editable?: boolean): Settings => {
       updateEditedRows(editedRows);
       newRow[row.selectedColumn] = newValue;
       updateRow(newRow);
-      toggleDataFetching();
     }
   };
 

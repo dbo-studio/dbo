@@ -55,13 +55,13 @@ export default function TestGrid({
     autoResetAll: true
   });
 
-  // if (loading) {
-  //   return (
-  //     <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
-  //       <CircularProgress size={30} />
-  //     </Box>
-  //   );
-  // }
+  if (loading) {
+    return (
+      <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
+        <CircularProgress size={30} />
+      </Box>
+    );
+  }
 
   return (
     <>

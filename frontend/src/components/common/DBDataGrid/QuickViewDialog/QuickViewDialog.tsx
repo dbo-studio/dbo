@@ -39,7 +39,6 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
     const newRow = { ...row.row };
     newRow[row.selectedColumn] = value;
     updateRow(newRow);
-    toggleDataFetching();
     toggleShowQuickLookEditor(false);
   };
 

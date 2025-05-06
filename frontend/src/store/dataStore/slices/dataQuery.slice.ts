@@ -14,8 +14,8 @@ export const createDataQuerySlice: StateCreator<
 > = (set, get) => ({
   loading: false,
   isDataFetching: true,
-  toggleDataFetching: (): void => {
-    set({ isDataFetching: !get().isDataFetching });
+  toggleDataFetching: (loading?: boolean): void => {
+    set({ isDataFetching: loading !== undefined ? loading : !get().isDataFetching });
   },
   runQuery: async (): Promise<void> => {
     const tab = useTabStore.getState().selectedTab();
@@ -25,7 +25,7 @@ export const createDataQuerySlice: StateCreator<
     const sorts = tab.sorts ?? [];
 
     try {
-      set({ loading: true });
+      get().toggleDataFetching(true);
       const res = await runQuery({
         connectionId: Number(tab.connectionId),
         nodeId: tab.nodeId,
@@ -45,11 +45,11 @@ export const createDataQuerySlice: StateCreator<
 
       useTabStore.getState().updateQuery(res.query);
       await Promise.all([get().updateRows(res.data), get().updateColumns(res.columns)]);
-      get().toggleDataFetching();
     } catch (error) {
       console.log('🚀 ~ runQuery: ~ error:', error);
     } finally {
-      set({ loading: false });
+      console.log('asdasd');
+      get().toggleDataFetching(false);
     }
   },
   runRawQuery: async (query?: string): Promise<void> => {
@@ -57,7 +57,7 @@ export const createDataQuerySlice: StateCreator<
     if (!currentConnectionId) return;
 
     try {
-      set({ loading: true });
+      get().toggleDataFetching(true);
       const res = await runRawQuery({
         connectionId: Number(currentConnectionId),
         query: query ? query : useTabStore.getState().getQuery()
@@ -73,7 +73,7 @@ export const createDataQuerySlice: StateCreator<
       }
       console.log('🚀 ~ runRawQuery: ~ error:', error);
     } finally {
-      set({ loading: false });
+      get().toggleDataFetching(false);
     }
   }
 });

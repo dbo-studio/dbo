@@ -76,7 +76,6 @@ export default function useTableColumns({
 
                     updateEditedRows(editedRows);
                     updateRow(newRow);
-                    toggleDataFetching();
                   }
                   setEditingCell(null);
                 }}

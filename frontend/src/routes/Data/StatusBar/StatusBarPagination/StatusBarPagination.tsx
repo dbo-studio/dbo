@@ -11,11 +11,11 @@ import PaginationSetting from './PaginationSetting/PaginationSetting';
 export default function StatusBarPagination(): JSX.Element {
   const theme = useTheme();
   const { updateSelectedTab } = useTabStore();
-  const { runQuery, loading } = useDataStore();
+  const { runQuery, isDataFetching } = useDataStore();
   const selectedTab = useSelectedTab();
 
   const handlePagination = (mode: 'prev' | 'next'): void => {
-    if (!selectedTab || loading) {
+    if (!selectedTab || isDataFetching) {
       return;
     }
     const pagination = selectedTab?.pagination ?? { page: 1, limit: 100 };
