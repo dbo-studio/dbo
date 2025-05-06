@@ -19,22 +19,33 @@ export default function TestGrid({
   loading,
   editable = true
 }: {
-  rows: RowType[] | undefined;
+  rows: RowType[];
   columns: ColumnType[];
   loading: boolean;
   editable?: boolean;
 }): JSX.Element {
   const tableContainerRef = useRef<HTMLDivElement>(null);
-
   const { updateEditedRows, getEditedRows, updateRow, toggleDataFetching } = useDataStore();
-
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
+
   const [editingCell, setEditingCell] = useState<{ rowIndex: number; columnId: string } | null>(null);
+  // const [localRows, setLocalRows] = useState<RowType[]>(rows ?? []);
+  // const [localColumns, setLocalColumns] = useState<ColumnType[]>(columns);
 
   useHandleScroll(tableContainerRef);
 
+  // useEffect(() => {
+  //   if (!rows) return;
+  //   setLocalRows(rows);
+  // }, [rows]);
+
+  // useEffect(() => {
+  //   if (!columns) return;
+  //   setLocalColumns(columns);
+  // }, [columns]);
+
   const tableColumns = useTableColumns({
-    rows: rows ?? [],
+    rows: rows,
     columns: columns,
     editingCell,
     setEditingCell,
@@ -45,25 +56,21 @@ export default function TestGrid({
   });
 
   const table = useReactTable({
-    data: rows ?? [],
+    data: rows,
     columns: tableColumns,
     getCoreRowModel: getCoreRowModel(),
     columnResizeMode: 'onChange',
     enableColumnResizing: true,
     enableRowSelection: false,
-    rowCount: rows?.length,
+    rowCount: columns?.length,
     autoResetAll: true
   });
 
-  if (loading) {
-    return (
-      <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
-        <CircularProgress size={30} />
-      </Box>
-    );
-  }
-
-  return (
+  return loading ? (
+    <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
+      <CircularProgress size={30} />
+    </Box>
+  ) : (
     <>
       <QuickViewDialog editable={editable} />
       <TableContainer ref={tableContainerRef}>

@@ -1,3 +1,4 @@
+import type { RunQueryResponseType } from '@/api/query/types';
 import type { EditedRow } from '@/types';
 import type { ColumnType, RowType } from '@/types/Data';
 
@@ -53,8 +54,8 @@ export type DataUnsavedRowsSlice = {
 
 export type DataQuerySlice = {
   isDataFetching: boolean;
-  runQuery: () => Promise<void>;
-  runRawQuery: (query?: string) => Promise<void>;
+  runQuery: () => Promise<RunQueryResponseType | undefined>;
+  runRawQuery: (query?: string) => Promise<RunQueryResponseType | undefined>;
   toggleDataFetching: (loading?: boolean) => void;
 };
 

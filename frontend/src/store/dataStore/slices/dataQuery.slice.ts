@@ -1,4 +1,5 @@
 import { runQuery, runRawQuery } from '@/api/query';
+import type { RunQueryResponseType } from '@/api/query/types';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
@@ -17,7 +18,7 @@ export const createDataQuerySlice: StateCreator<
   toggleDataFetching: (loading?: boolean): void => {
     set({ isDataFetching: loading !== undefined ? loading : !get().isDataFetching });
   },
-  runQuery: async (): Promise<void> => {
+  runQuery: async (): Promise<RunQueryResponseType | undefined> => {
     const tab = useTabStore.getState().selectedTab();
     if (!tab) return;
 
@@ -44,15 +45,17 @@ export const createDataQuerySlice: StateCreator<
       });
 
       useTabStore.getState().updateQuery(res.query);
-      await Promise.all([get().updateRows(res.data), get().updateColumns(res.columns)]);
+
+      Promise.all([get().updateRows(res.data), get().updateColumns(res.columns)]);
+
+      return res;
     } catch (error) {
       console.log('🚀 ~ runQuery: ~ error:', error);
     } finally {
-      console.log('asdasd');
       get().toggleDataFetching(false);
     }
   },
-  runRawQuery: async (query?: string): Promise<void> => {
+  runRawQuery: async (query?: string): Promise<RunQueryResponseType | undefined> => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;
     if (!currentConnectionId) return;
 
@@ -65,8 +68,10 @@ export const createDataQuerySlice: StateCreator<
 
       useTabStore.getState().updateQuery(res.query);
 
-      await Promise.all([get().updateRows(res.data), get().updateColumns(res.columns)]);
+      Promise.all([get().updateRows(res.data), get().updateColumns(res.columns)]);
       set({ isDataFetching: !get().isDataFetching });
+
+      return res;
     } catch (error) {
       if (isAxiosError(error)) {
         toast.error(error.message);
