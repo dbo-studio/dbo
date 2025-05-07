@@ -9,8 +9,9 @@ export type ContextMenuProps = {
 
 export type MenuType = {
   name: string;
-  action: () => void;
+  action?: () => void;
   icon?: keyof typeof IconTypes;
   closeBeforeAction?: boolean;
   closeAfterAction?: boolean;
+  disabled?: boolean;
 };

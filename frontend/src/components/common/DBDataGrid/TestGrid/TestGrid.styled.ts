@@ -1,15 +1,18 @@
 import { styled } from '@mui/material';
 
 export const TableHeader = styled('th')(({ theme }) => ({
-  backgroundColor: theme.palette.background.paper,
+  backgroundColor: theme.palette.background.default,
   color: theme.palette.text.text,
+  fontWeight: 'normal',
+  fontSize: theme.typography.subtitle2.fontSize,
   position: 'relative',
   textAlign: 'left',
   userSelect: 'none',
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   boxSizing: 'border-box',
-  border: `1px solid ${theme.palette.divider}`,
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  borderRight: `1px solid ${theme.palette.divider}`,
   padding: '2px 8px',
   display: 'flex'
 }));
@@ -20,30 +23,31 @@ export const TableCell = styled('td')(({ theme }) => ({
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
-  height: '32px',
+  height: '22px',
   boxSizing: 'border-box',
   padding: '2px 8px',
-  color: theme.palette.text.subdued,
+  color: theme.palette.text.text,
   width: '100%',
+  fontSize: theme.typography.subtitle2.fontSize,
 
   '.selected-highlight &': {
-    backgroundColor: `${theme.palette.action.selected} !important`
+    backgroundColor: `${theme.palette.action.selected}`,
+    color: theme.palette.text.text
   },
 
   '.removed-highlight &': {
-    backgroundColor: `${theme.palette.error.light} !important`,
-    opacity: 0.7,
-    textDecoration: 'line-through'
+    backgroundColor: `${theme.palette.background.danger} !important`,
+    color: `${theme.palette.text.danger} !important`
   },
 
   '.unsaved-highlight &': {
-    backgroundColor: `${theme.palette.warning.light} !important`,
-    opacity: 0.7
+    backgroundColor: `${theme.palette.background.success} !important`,
+    color: `${theme.palette.text.success} !important`
   },
 
   '.edit-highlight &': {
-    backgroundColor: `${theme.palette.info.light} !important`,
-    opacity: 0.7
+    backgroundColor: `${theme.palette.background.warning} !important`,
+    color: `${theme.palette.text.warning} !important`
   }
 }));
 
@@ -69,8 +73,7 @@ export const CellContent = styled('div')(({ theme }) => ({
 export const CellInput = styled('input')(({ theme }) => ({
   width: '100%',
   height: '22px',
-  maxWidth: '100%', // Changed from fixed 400px to 100%
-  fontSize: 'inherit',
+  maxWidth: '100%',
   border: `1px solid ${theme.palette.divider}`,
   borderRadius: theme.shape.borderRadius,
   outline: 'none',
@@ -79,16 +82,14 @@ export const CellInput = styled('input')(({ theme }) => ({
 
 export const TableContainer = styled('div')(({ theme }) => ({
   width: '100%',
-  overflow: 'auto',
-  border: `1px solid ${theme.palette.divider}`,
-  borderRadius: theme.shape.borderRadius
+  overflow: 'auto'
 }));
 
 export const StyledTableRow = styled('tr')(({ theme }) => ({
   display: 'flex',
   width: '100%',
   '&:nth-of-type(odd)': {
-    // backgroundColor: theme.palette.action.hover
+    backgroundColor: theme.palette.background.subdued
   }
 }));
 

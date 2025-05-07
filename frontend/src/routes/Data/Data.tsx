@@ -18,6 +18,7 @@ export default function Data(): JSX.Element {
   const mounted = useMount();
 
   const { getColumns, isDataFetching, runQuery, getRows } = useDataStore();
+
   const { selectedTabId } = useTabStore();
 
   const [localRows, setLocalRows] = useState<RowType[]>([]);
@@ -42,10 +43,19 @@ export default function Data(): JSX.Element {
 
       return;
     }
-
-    setLocalColumns(columns);
-    setLocalRows(rows);
   }, [mounted, selectedTabId]);
+
+  useEffect(() => {
+    const newRows = getRows();
+    if (!mounted || newRows === localRows) return;
+    setLocalRows(newRows);
+  }, [getRows()]);
+
+  useEffect(() => {
+    const newColumns = getColumns(true);
+    if (!mounted || newColumns === localColumns) return;
+    setLocalColumns(newColumns);
+  }, [getColumns()]);
 
   if (!mounted) {
     return <></>;

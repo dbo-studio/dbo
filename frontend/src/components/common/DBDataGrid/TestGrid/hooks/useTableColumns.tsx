@@ -12,8 +12,7 @@ export default function useTableColumns({
   setEditingCell,
   updateEditedRows,
   updateRow,
-  getEditedRows,
-  toggleDataFetching
+  getEditedRows
 }: {
   rows: RowType[];
   columns: ColumnType[];
@@ -22,7 +21,6 @@ export default function useTableColumns({
   updateEditedRows: (rows: any) => void;
   updateRow: (row: any) => void;
   getEditedRows: () => any;
-  toggleDataFetching: () => void;
 }): ColumnDef<ColumnType, any>[] {
   const columnHelper = createColumnHelper<ColumnType>();
   const { setSelectedRows } = useDataStore();
@@ -42,6 +40,29 @@ export default function useTableColumns({
             setEditingCell({ rowIndex: row.index, columnId: column.id });
           }, []);
 
+          const handleRowChange = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
+            const newValue = e.target.value;
+            if (newValue !== value) {
+              const newRow = {
+                ...rows[row.index],
+                [column.id]: newValue
+              };
+
+              const editedRows = handleRowChangeLog(
+                getEditedRows(),
+                row.original,
+                column.id,
+                //@ts-ignore
+                row.original[column.id],
+                newValue
+              );
+
+              updateEditedRows(editedRows);
+              updateRow(newRow);
+            }
+            setEditingCell(null);
+          }, []);
+
           if (isEditing) {
             const inputRef = useRef<HTMLInputElement>(null);
 
@@ -55,30 +76,7 @@ export default function useTableColumns({
               <CellInput
                 ref={inputRef}
                 defaultValue={value}
-                onBlur={(e): void => {
-                  const newValue = e.target.value;
-                  if (newValue !== value) {
-                    const newRows = [...rows];
-                    const newRow = {
-                      ...newRows[row.index],
-                      [column.id]: newValue
-                    };
-                    newRows[row.index] = newRow;
-
-                    const editedRows = handleRowChangeLog(
-                      getEditedRows(),
-                      row.original,
-                      column.id,
-                      //@ts-ignore
-                      row.original[column.id],
-                      newValue
-                    );
-
-                    updateEditedRows(editedRows);
-                    updateRow(newRow);
-                  }
-                  setEditingCell(null);
-                }}
+                onBlur={handleRowChange}
                 onKeyDown={(e): void => {
                   if (e.key === 'Enter') {
                     e.currentTarget.blur();

@@ -25,24 +25,12 @@ export default function TestGrid({
   editable?: boolean;
 }): JSX.Element {
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const { updateEditedRows, getEditedRows, updateRow, toggleDataFetching } = useDataStore();
+  const { updateEditedRows, getEditedRows, updateRow } = useDataStore();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
   const [editingCell, setEditingCell] = useState<{ rowIndex: number; columnId: string } | null>(null);
-  // const [localRows, setLocalRows] = useState<RowType[]>(rows ?? []);
-  // const [localColumns, setLocalColumns] = useState<ColumnType[]>(columns);
 
   useHandleScroll(tableContainerRef);
-
-  // useEffect(() => {
-  //   if (!rows) return;
-  //   setLocalRows(rows);
-  // }, [rows]);
-
-  // useEffect(() => {
-  //   if (!columns) return;
-  //   setLocalColumns(columns);
-  // }, [columns]);
 
   const tableColumns = useTableColumns({
     rows: rows,
@@ -51,8 +39,7 @@ export default function TestGrid({
     setEditingCell,
     updateEditedRows,
     updateRow,
-    getEditedRows,
-    toggleDataFetching
+    getEditedRows
   });
 
   const table = useReactTable({

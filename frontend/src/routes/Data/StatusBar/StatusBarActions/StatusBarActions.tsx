@@ -15,7 +15,7 @@ export default function StatusBarActions(): JSX.Element {
   const selectedTab = useSelectedTab();
   const { toggleScrollToBottom } = useSettingStore();
   const {
-    loading,
+    isDataFetching,
     addUnsavedRows,
     getUnsavedRows,
     getEditedRows,
@@ -97,11 +97,11 @@ export default function StatusBarActions(): JSX.Element {
   return (
     <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'} width={208}>
       <Box>
-        <IconButton disabled={updateQueryPending || loading} onClick={handleAddAction}>
+        <IconButton disabled={updateQueryPending || isDataFetching} onClick={handleAddAction}>
           <CustomIcon type='plus' size='s' />
         </IconButton>
 
-        <IconButton disabled={updateQueryPending || loading} onClick={handleRemoveAction}>
+        <IconButton disabled={updateQueryPending || isDataFetching} onClick={handleRemoveAction}>
           <CustomIcon type='mines' size='s' />
         </IconButton>
       </Box>
@@ -109,12 +109,16 @@ export default function StatusBarActions(): JSX.Element {
         <LoadingIconButton onClick={handleSave}>
           <CustomIcon type='check' size='s' />
         </LoadingIconButton>
-        <IconButton onClick={handleDiscardChanges} disabled={updateQueryPending || loading}>
+        <IconButton onClick={handleDiscardChanges} disabled={updateQueryPending || isDataFetching}>
           <CustomIcon type='close' size='s' />
         </IconButton>
       </Box>
       <Box>
-        <LoadingIconButton loading={loading} disabled={updateQueryPending || loading} onClick={handleRefresh}>
+        <LoadingIconButton
+          loading={isDataFetching}
+          disabled={updateQueryPending || isDataFetching}
+          onClick={handleRefresh}
+        >
           <CustomIcon type='refresh' size='s' />
         </LoadingIconButton>
 

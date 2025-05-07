@@ -1,16 +1,17 @@
 import { useUUID } from '@/hooks';
 import { Box, Menu, MenuItem, Stack } from '@mui/material';
+import type { JSX } from 'react';
 import CustomIcon from '../CustomIcon/CustomIcon';
 import type { ContextMenuProps, MenuType } from './types';
 
-export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuProps) {
+export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuProps): JSX.Element {
   const uuids = useUUID(menu.length);
 
-  const handleClick = (m: MenuType) => {
+  const handleClick = (m: MenuType): void => {
     if (m.closeBeforeAction) {
       onClose();
     }
-    m.action();
+    m.action?.();
     if (m.closeAfterAction) {
       onClose();
     }
@@ -28,7 +29,7 @@ export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuP
         anchorPosition={contextMenu !== null ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
       >
         {menu.map((m, index) => (
-          <MenuItem onClick={() => handleClick(m)} key={uuids[index]}>
+          <MenuItem disabled={m.disabled} onClick={(): void => handleClick(m)} key={uuids[index]}>
             <Stack width={'100%'} alignItems={'center'} justifyContent={'space-between'} direction={'row'}>
               {m.name}
               {m.icon && <CustomIcon type={m.icon} />}
