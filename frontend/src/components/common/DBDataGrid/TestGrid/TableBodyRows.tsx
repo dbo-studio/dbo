@@ -61,9 +61,7 @@ export default function TableBodyRows<T>({
                   context(e);
                   handleSelect(cell);
                 }}
-                style={{
-                  width: cell.column.getSize()
-                }}
+                style={{ width: cell.column.getSize() }}
               >
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
               </TableCell>

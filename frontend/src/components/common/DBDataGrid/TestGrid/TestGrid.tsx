@@ -49,7 +49,6 @@ export default function TestGrid({
     columnResizeMode: 'onChange',
     enableColumnResizing: true,
     enableRowSelection: false,
-    rowCount: columns?.length,
     autoResetAll: true
   });
 

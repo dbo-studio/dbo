@@ -6,28 +6,18 @@ export const TableHeader = styled('th')(({ theme }) => ({
   fontWeight: 'normal',
   fontSize: theme.typography.subtitle2.fontSize,
   position: 'relative',
-  textAlign: 'left',
-  userSelect: 'none',
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  boxSizing: 'border-box',
   borderBottom: `1px solid ${theme.palette.divider}`,
   borderRight: `1px solid ${theme.palette.divider}`,
-  padding: '2px 8px',
-  display: 'flex'
+  padding: '2px 8px'
 }));
 
 export const TableCell = styled('td')(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
   borderRight: `1px solid ${theme.palette.divider}`,
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
   height: '22px',
   boxSizing: 'border-box',
   padding: '2px 8px',
   color: theme.palette.text.text,
-  width: '100%',
   fontSize: theme.typography.subtitle2.fontSize,
 
   '.selected-highlight &': {
@@ -53,21 +43,13 @@ export const TableCell = styled('td')(({ theme }) => ({
 
 export const StyledTable = styled('table')(({ theme }) => ({
   width: '100%',
-  tableLayout: 'fixed',
-  borderCollapse: 'separate',
-  borderSpacing: 0,
-  display: 'grid'
+  borderSpacing: 0
 }));
 
 export const CellContent = styled('div')(({ theme }) => ({
   width: '100%',
   height: '22px',
-  maxWidth: '100%',
-  cursor: 'pointer',
-  overflow: 'hidden',
-  whiteSpace: 'nowrap',
-  textOverflow: 'ellipsis',
-  display: 'block'
+  cursor: 'pointer'
 }));
 
 export const CellInput = styled('input')(({ theme }) => ({
@@ -81,13 +63,10 @@ export const CellInput = styled('input')(({ theme }) => ({
 }));
 
 export const TableContainer = styled('div')(({ theme }) => ({
-  width: '100%',
-  overflow: 'auto'
+  width: '100%'
 }));
 
 export const StyledTableRow = styled('tr')(({ theme }) => ({
-  display: 'flex',
-  width: '100%',
   '&:nth-of-type(odd)': {
     backgroundColor: theme.palette.background.subdued
   }
@@ -120,7 +99,10 @@ export const CellContainer = styled('div')(({ theme }) => ({
   width: '100%',
   height: '100%',
   display: 'flex',
-  alignItems: 'center'
+  alignItems: 'center',
+  textOverflow: 'ellipsis',
+  textWrap: 'unset',
+  overflow: 'hidden'
 }));
 
 export const EditButton = styled('button')(({ theme }) => ({

@@ -30,6 +30,7 @@ export default function useTableColumns({
       //@ts-ignore
       columnHelper.accessor(col.name, {
         header: col.name,
+        maxSize: 400,
         cell: ({ row, column, getValue }): JSX.Element => {
           const isEditing = editingCell?.rowIndex === row.index && editingCell?.columnId === column.id;
           const value = String(getValue());

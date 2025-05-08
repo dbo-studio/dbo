@@ -9,12 +9,12 @@ export default function TableHeaderRow<T>({
 }): JSX.Element {
   return (
     <thead
-      style={{
-        display: 'grid',
-        position: 'sticky',
-        top: 0,
-        zIndex: 1
-      }}
+    // style={{
+    //   display: 'grid',
+    //   position: 'sticky',
+    //   top: 0,
+    //   zIndex: 1
+    // }}
     >
       {table.getHeaderGroups().map((headerGroup) => (
         <StyledTableRow key={headerGroup.id}>
@@ -22,12 +22,9 @@ export default function TableHeaderRow<T>({
             <TableHeader
               key={header.id}
               colSpan={header.colSpan}
-              style={{
-                width: `${header.getSize()}px`,
-                position: 'relative'
-              }}
+              style={{ position: 'relative', width: header.getSize() }}
             >
-              {flexRender(header.column.columnDef.header, header.getContext())}
+              {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
               {header.column.getCanResize() && (
                 <Resizer
                   onMouseDown={header.getResizeHandler()}
