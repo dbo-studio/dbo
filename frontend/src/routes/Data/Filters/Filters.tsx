@@ -8,6 +8,7 @@ import type { JSX } from 'react';
 import { v4 as uuid } from 'uuid';
 import AddFilterButton from './FilterItem/AddFilterButton/AddFilterButton.tsx';
 import FilterItem from './FilterItem/FilterItem.tsx';
+import type { RunQueryResponseType } from '@/api/query/types.ts';
 
 export default function Filters(): JSX.Element {
   const { getColumns, runQuery } = useDataStore();
@@ -28,7 +29,7 @@ export default function Filters(): JSX.Element {
       {(selectedTab?.filters?.length ?? 0) > 0 && (
         <Box display='flex' justifyContent='flex-start' mx={1} mt={1}>
           <Button
-            onClick={(): Promise<void> => runQuery()}
+            onClick={(): Promise<RunQueryResponseType | undefined> => runQuery()}
             size='small'
             variant='outlined'
             endIcon={<CustomIcon type='check' size='xs' />}

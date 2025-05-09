@@ -11,11 +11,11 @@ export default function Columns(): JSX.Element {
   const windowSize = useWindowSize();
 
   const theme: Theme = useTheme();
-  const { getColumns, updateColumns, runQuery, loading } = useDataStore();
+  const { getColumns, updateColumns, runQuery, isDataFetching } = useDataStore();
   const { updateColumns: updateTabColumns } = useTabStore();
 
   const handleCheckToggle = async (column: ColumnType): Promise<void> => {
-    if (loading) return;
+    if (isDataFetching) return;
 
     column.isActive = !column.isActive;
     const newColumns = getColumns().map((c: ColumnType) => {

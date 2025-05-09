@@ -8,14 +8,7 @@ export default function TableHeaderRow<T>({
   table: Table<T>;
 }): JSX.Element {
   return (
-    <thead
-    // style={{
-    //   display: 'grid',
-    //   position: 'sticky',
-    //   top: 0,
-    //   zIndex: 1
-    // }}
-    >
+    <thead>
       {table.getHeaderGroups().map((headerGroup) => (
         <StyledTableRow key={headerGroup.id}>
           {headerGroup.headers.map((header) => (

@@ -22,7 +22,7 @@ export const createDataRowSlice: StateCreator<
 
     return get().rows[id] ?? [];
   },
-  getRow: (dboIndex: number): RowType => {
+  getRow: (dboIndex: number): RowType | undefined => {
     return get()
       .getRows()
       .find((r) => r.dbo_index === dboIndex);
