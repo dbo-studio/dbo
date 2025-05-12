@@ -8,7 +8,19 @@ export const TableHeader = styled('th')(({ theme }) => ({
   position: 'relative',
   borderBottom: `1px solid ${theme.palette.divider}`,
   borderRight: `1px solid ${theme.palette.divider}`,
-  padding: '2px 8px'
+  padding: '2px 8px',
+  maxWidth: '400px', // Maximum width constraint
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  willChange: 'width', // Optimize for width changes
+  transform: 'translateZ(0)', // Hardware acceleration
+  backfaceVisibility: 'hidden', // Additional performance optimization
+  transition: 'width 0.1s ease', // Add smooth transition for width changes in onChange mode
+  // Use flex-grow to fill available space when there aren't enough columns
+  '&:last-child': {
+    flexGrow: 1
+  }
 }));
 
 export const TableCell = styled('td')(({ theme }) => ({
@@ -19,6 +31,19 @@ export const TableCell = styled('td')(({ theme }) => ({
   padding: '2px 8px',
   color: theme.palette.text.text,
   fontSize: theme.typography.subtitle2.fontSize,
+  maxWidth: '400px', // Maximum width constraint
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  willChange: 'width', // Optimize for width changes
+  transform: 'translateZ(0)', // Hardware acceleration
+  backfaceVisibility: 'hidden', // Additional performance optimization
+  transition: 'width 0.1s ease', // Add smooth transition for width changes in onChange mode
+
+  // Use flex-grow to fill available space when there aren't enough columns
+  '&:last-child': {
+    flexGrow: 1
+  },
 
   '.selected-highlight &': {
     backgroundColor: `${theme.palette.action.selected}`,
@@ -43,13 +68,22 @@ export const TableCell = styled('td')(({ theme }) => ({
 
 export const StyledTable = styled('table')(({ theme }) => ({
   width: '100%',
-  borderSpacing: 0
+  borderSpacing: 0,
+  tableLayout: 'fixed', // Use fixed layout for better performance with column resizing
+  borderCollapse: 'separate' // Needed for fixed layout
 }));
 
 export const CellContent = styled('div')(({ theme }) => ({
   width: '100%',
   height: '22px',
-  cursor: 'pointer'
+  cursor: 'pointer',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+  // Optimize for animations
+  willChange: 'contents',
+  // Add a slight transition for smoother interactions
+  transition: 'background-color 0.1s ease'
 }));
 
 export const CellInput = styled('input')(({ theme }) => ({
@@ -63,7 +97,19 @@ export const CellInput = styled('input')(({ theme }) => ({
 }));
 
 export const TableContainer = styled('div')(({ theme }) => ({
-  width: '100%'
+  width: '100%',
+  height: '100%',
+  overflow: 'auto',
+  position: 'relative',
+  // Optimize scrolling performance
+  overscrollBehavior: 'contain',
+  // Prevent text selection during scrolling
+  userSelect: 'none',
+  // Hardware acceleration for smoother scrolling
+  transform: 'translateZ(0)',
+  willChange: 'scroll-position',
+  // Improve touch scrolling on mobile devices
+  WebkitOverflowScrolling: 'touch'
 }));
 
 export const StyledTableRow = styled('tr')(({ theme }) => ({
@@ -74,23 +120,29 @@ export const StyledTableRow = styled('tr')(({ theme }) => ({
 
 export const Resizer = styled('div')(({ theme }) => ({
   position: 'absolute',
-  right: -2,
+  right: -2, // Position it to be centered on the border between cells
   top: 0,
   height: '100%',
-  width: '4px',
-  background: 'transparent',
+  width: '4px', // Slightly narrower for better precision
+  background: theme.palette.divider, // Slightly visible by default
   cursor: 'col-resize',
   userSelect: 'none',
   touchAction: 'none',
-  zIndex: 1,
-  transition: 'background-color 0.2s ease',
+  zIndex: 100, // Higher z-index to ensure it's above other elements
+  willChange: 'transform, background-color, width, right', // Optimize for all animated properties
+  transform: 'translateZ(0)', // Hardware acceleration
+  backfaceVisibility: 'hidden', // Additional performance optimization
+  transition: 'background-color 0.1s ease, width 0.1s ease, right 0.1s ease', // Smooth transitions for all properties
   '&:hover': {
     background: theme.palette.primary.main,
     opacity: 0.5
   },
   '&.isResizing': {
     background: theme.palette.primary.main,
-    opacity: 0.7
+    opacity: 0.7,
+    // Wider hit area during resize for better UX
+    width: '8px',
+    right: -4
   }
 }));
 
@@ -101,8 +153,17 @@ export const CellContainer = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   textOverflow: 'ellipsis',
-  textWrap: 'unset',
-  overflow: 'hidden'
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  maxWidth: '400px', // Maximum width constraint
+  // Optimize for animations
+  willChange: 'contents',
+  // Prevent text selection for better performance during scrolling
+  userSelect: 'none',
+  // Enable text selection only when cell is being edited or hovered
+  '.cell-hover &, .editing &': {
+    userSelect: 'text'
+  }
 }));
 
 export const EditButton = styled('button')(({ theme }) => ({

@@ -1,9 +1,9 @@
-import { handleRowChangeLog } from '@/core/utils';
-import { useDataStore } from '@/store/dataStore/data.store';
-import type { ColumnType, RowType } from '@/types';
-import { type ColumnDef, createColumnHelper } from '@tanstack/react-table';
-import { type JSX, useCallback, useMemo, useRef, useState } from 'react';
-import { CellContainer, CellContent, CellInput, EditButton } from './../TestGrid.styled';
+import {handleRowChangeLog} from '@/core/utils';
+import {useDataStore} from '@/store/dataStore/data.store';
+import type {ColumnType, RowType} from '@/types';
+import {type ColumnDef, createColumnHelper} from '@tanstack/react-table';
+import {type JSX, useCallback, useMemo, useRef, useState} from 'react';
+import {CellContainer, CellContent, CellInput} from './../TestGrid.styled';
 
 export default function useTableColumns({
   rows,
@@ -108,11 +108,9 @@ export default function useTableColumns({
               onMouseEnter={(): void => setIsHovering(true)}
               onMouseLeave={(): void => setIsHovering(false)}
               onClick={handleSelect}
+              onDoubleClick={(): void => setEditingCell({ rowIndex: row.index, columnId: column.id })}
             >
               <CellContent>{value}</CellContent>
-              <EditButton onClick={handleEditClick} title='Edit cell'>
-                ✎
-              </EditButton>
             </CellContainer>
           );
         }

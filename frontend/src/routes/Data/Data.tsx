@@ -1,12 +1,12 @@
 import TestGrid from '@/components/common/DBDataGrid/TestGrid/TestGrid';
-import { useMount } from '@/hooks';
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
+import {useMount} from '@/hooks';
+import {useSelectedTab} from '@/hooks/useSelectedTab.hook';
 import Sorts from '@/routes/Data/Sorts/Sorts.tsx';
-import { useDataStore } from '@/store/dataStore/data.store';
-import { useTabStore } from '@/store/tabStore/tab.store';
-import type { ColumnType, RowType } from '@/types';
-import { Box } from '@mui/material';
-import { type JSX, useEffect, useState } from 'react';
+import {useDataStore} from '@/store/dataStore/data.store';
+import {useTabStore} from '@/store/tabStore/tab.store';
+import type {ColumnType, RowType} from '@/types';
+import {Box} from '@mui/material';
+import {type JSX, useEffect, useState} from 'react';
 import ActionBar from './ActionBar/ActionBar';
 import Columns from './Columns/Columns';
 import Filters from './Filters/Filters';
@@ -24,38 +24,47 @@ export default function Data(): JSX.Element {
   const [localRows, setLocalRows] = useState<RowType[]>([]);
   const [localColumns, setLocalColumns] = useState<ColumnType[]>([]);
 
+  // useEffect(() => {
+  //   setLocalColumns([]);
+  //   setLocalRows([]);
+  //
+  //   if (!mounted) return;
+  //
+  //   const columns = getColumns(true);
+  //   const rows = getRows();
+  //
+  //   if (!getRows() || !rows.length || !columns.length) {
+  //     runQuery().then((res) => {
+  //       if (res) {
+  //         setLocalRows(res.data);
+  //         setLocalColumns(res.columns);
+  //       }
+  //     });
+  //
+  //     return;
+  //   }
+  // }, [mounted, selectedTabId]);
+  //
+  // useEffect(() => {
+  //   const newRows = getRows();
+  //   if (!mounted || newRows === localRows) return;
+  //   setLocalRows(newRows);
+  // }, [getRows, mounted, localRows]);
+  //
+  // useEffect(() => {
+  //   const newColumns = getColumns(true);
+  //   if (!mounted || newColumns === localColumns) return;
+  //   setLocalColumns(newColumns);
+  // }, [getColumns, mounted, localColumns]);
+
   useEffect(() => {
-    setLocalColumns([]);
-    setLocalRows([]);
-
-    if (!mounted) return;
-
-    const columns = getColumns(true);
-    const rows = getRows();
-
-    if (!getRows() || !rows.length || !columns.length) {
-      runQuery().then((res) => {
-        if (res) {
-          setLocalRows(res.data);
-          setLocalColumns(res.columns);
-        }
-      });
-
-      return;
-    }
-  }, [mounted, selectedTabId]);
-
-  useEffect(() => {
-    const newRows = getRows();
-    if (!mounted || newRows === localRows) return;
-    setLocalRows(newRows);
-  }, [getRows()]);
-
-  useEffect(() => {
-    const newColumns = getColumns(true);
-    if (!mounted || newColumns === localColumns) return;
-    setLocalColumns(newColumns);
-  }, [getColumns()]);
+    runQuery().then((res) => {
+      if (res) {
+        setLocalRows(res.data);
+        setLocalColumns(res.columns);
+      }
+    });
+  }, []);
 
   if (!mounted) {
     return <></>;

@@ -1,39 +1,47 @@
-import { useDataStore } from '@/store/dataStore/data.store';
-import type { SelectedRow } from '@/store/dataStore/types';
-import type { RowType } from '@/types';
-import { type Table, flexRender } from '@tanstack/react-table';
-import type { JSX } from 'react';
-import { useCallback, useMemo } from 'react';
-import { StyledTableRow, TableCell } from './TestGrid.styled';
+import {useDataStore} from '@/store/dataStore/data.store';
+import type {SelectedRow} from '@/store/dataStore/types';
+import type {RowType} from '@/types';
+import {flexRender, type Table} from '@tanstack/react-table';
+import type {JSX} from 'react';
+import {useCallback, useMemo} from 'react';
+import {StyledTableRow, TableCell} from './TestGrid.styled';
 
 export default function TableBodyRows<T>({
   table,
-  context
+  context,
+  virtualStartIndex = 0
 }: {
   table: Table<T>;
   context: (event: React.MouseEvent) => void;
+  virtualStartIndex?: number;
 }): JSX.Element {
   const { getRemovedRows, getUnsavedRows, getEditedRows, setSelectedRows, getSelectedRows } = useDataStore();
 
-  const removed = useMemo(() => getRemovedRows(), [getRemovedRows()]);
-  const unsaved = useMemo(() => getUnsavedRows(), [getUnsavedRows()]);
-  const edited = useMemo(() => getEditedRows(), [getEditedRows()]);
-  const selected = useMemo(() => getSelectedRows(), [getSelectedRows()]);
+  const removed = useMemo(() => getRemovedRows(), [getRemovedRows]);
+  const unsaved = useMemo(() => getUnsavedRows(), [getUnsavedRows]);
+  const edited = useMemo(() => getEditedRows(), [getEditedRows]);
+  const selected = useMemo(() => getSelectedRows(), [getSelectedRows]);
 
-  const handleSelect = useCallback((cell: any): void => {
-    setSelectedRows([
-      {
-        index: cell.row.index,
-        selectedColumn: cell.column.id,
-        row: cell.row.original
-      }
-    ]);
-  }, []);
+  const handleSelect = useCallback(
+    (cell: any): void => {
+      // Use the real row index by adding virtualStartIndex to the relative index
+      const realRowIndex = virtualStartIndex + cell.row.index;
+      setSelectedRows([
+        {
+          index: realRowIndex,
+          selectedColumn: cell.column.id,
+          row: cell.row.original
+        }
+      ]);
+    },
+    [virtualStartIndex]
+  );
 
   return (
     <tbody>
       {table.getRowModel().rows.map((row) => {
-        const rowIndex = row.index;
+        // Calculate the real row index by adding virtualStartIndex to the relative index
+        const rowIndex = virtualStartIndex + row.index;
 
         const isRemoved = removed.some((v: RowType) => v.dbo_index === rowIndex);
         const isUnsaved = unsaved.some((v: RowType) => v.dbo_index === rowIndex);
