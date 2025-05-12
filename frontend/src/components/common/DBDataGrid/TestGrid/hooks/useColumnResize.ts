@@ -47,9 +47,9 @@ export function useColumnResize({
   // Initialize column sizes on mount or when columns change
   useEffect(() => {
     const initialSizes: Record<string, number> = {};
-    const columnNames = columns.map(c => c.name);
+    const columnNames = columns.map((c) => c.name);
 
-    columns.forEach(column => {
+    columns.forEach((column) => {
       // Use existing size if available, otherwise use default
       initialSizes[column.name] = columnSizesRef.current[column.name] || defaultColumnWidth;
     });
@@ -58,29 +58,35 @@ export function useColumnResize({
   }, [columns, defaultColumnWidth]);
 
   // Event handlers
-  const handleMouseMove = useCallback((event: MouseEvent) => {
-    if (!isResizingRef.current || !resizingColumnIdRef.current) return;
+  const handleMouseMove = useCallback(
+    (event: MouseEvent) => {
+      if (!isResizingRef.current || !resizingColumnIdRef.current) return;
 
-    const deltaX = event.clientX - startXRef.current;
-    const newWidth = Math.max(minColumnWidth, Math.min(maxColumnWidth, startWidthRef.current + deltaX));
+      const deltaX = event.clientX - startXRef.current;
+      const newWidth = Math.max(minColumnWidth, Math.min(maxColumnWidth, startWidthRef.current + deltaX));
 
-    setColumnSizes(prev => ({
-      ...prev,
-      [resizingColumnIdRef.current!]: newWidth
-    }));
-  }, [minColumnWidth, maxColumnWidth]);
+      setColumnSizes((prev) => ({
+        ...prev,
+        [resizingColumnIdRef.current!]: newWidth
+      }));
+    },
+    [minColumnWidth, maxColumnWidth]
+  );
 
-  const handleTouchMove = useCallback((event: TouchEvent) => {
-    if (!isResizingRef.current || !resizingColumnIdRef.current) return;
+  const handleTouchMove = useCallback(
+    (event: TouchEvent) => {
+      if (!isResizingRef.current || !resizingColumnIdRef.current) return;
 
-    const deltaX = event.touches[0].clientX - startXRef.current;
-    const newWidth = Math.max(minColumnWidth, Math.min(maxColumnWidth, startWidthRef.current + deltaX));
+      const deltaX = event.touches[0].clientX - startXRef.current;
+      const newWidth = Math.max(minColumnWidth, Math.min(maxColumnWidth, startWidthRef.current + deltaX));
 
-    setColumnSizes(prev => ({
-      ...prev,
-      [resizingColumnIdRef.current!]: newWidth
-    }));
-  }, [minColumnWidth, maxColumnWidth]);
+      setColumnSizes((prev) => ({
+        ...prev,
+        [resizingColumnIdRef.current!]: newWidth
+      }));
+    },
+    [minColumnWidth, maxColumnWidth]
+  );
 
   const handleMouseUp = useCallback(() => {
     if (isResizingRef.current && resizingColumnIdRef.current && onColumnResize) {
@@ -98,30 +104,31 @@ export function useColumnResize({
   }, [onColumnResize]);
 
   // Start resize handler
-  const startResize = useCallback((columnId: string, event: React.MouseEvent | React.TouchEvent) => {
-    // Skip resize for checkbox column
-    if (columnId === 'select') return;
+  const startResize = useCallback(
+    (columnId: string, event: React.MouseEvent | React.TouchEvent) => {
+      // Skip resize for checkbox column
+      if (columnId === 'select') return;
 
-    // Get initial position
-    const clientX = 'touches' in event 
-      ? event.touches[0].clientX 
-      : event.clientX;
+      // Get initial position
+      const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
 
-    startXRef.current = clientX;
-    startWidthRef.current = columnSizesRef.current[columnId] || defaultColumnWidth;
+      startXRef.current = clientX;
+      startWidthRef.current = columnSizesRef.current[columnId] || defaultColumnWidth;
 
-    setIsResizing(true);
-    setResizingColumnId(columnId);
+      setIsResizing(true);
+      setResizingColumnId(columnId);
 
-    // Add document-level event listeners for resize tracking
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    document.addEventListener('touchmove', handleTouchMove);
-    document.addEventListener('touchend', handleMouseUp);
+      // Add document-level event listeners for resize tracking
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('touchmove', handleTouchMove);
+      document.addEventListener('touchend', handleMouseUp);
 
-    // Prevent default to avoid text selection during resize
-    event.preventDefault();
-  }, [defaultColumnWidth, handleMouseMove, handleMouseUp, handleTouchMove]);
+      // Prevent default to avoid text selection during resize
+      event.preventDefault();
+    },
+    [defaultColumnWidth, handleMouseMove, handleMouseUp, handleTouchMove]
+  );
 
   // Clean up event listeners on unmount
   useEffect(() => {

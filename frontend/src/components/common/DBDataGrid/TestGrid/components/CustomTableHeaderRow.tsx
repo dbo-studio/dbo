@@ -1,9 +1,9 @@
-import {flexRender, type Table} from '@tanstack/react-table';
-import type {JSX} from 'react';
-import {StyledTableRow, TableHeader} from '../TestGrid.styled';
-import {CustomResizer} from './CustomResizer';
-import {useColumnResize} from '../hooks/useColumnResize';
-import type {ColumnType} from '@/types';
+import { flexRender, type Table } from '@tanstack/react-table';
+import type { JSX } from 'react';
+import { StyledTableRow, TableHeader } from '../TestGrid.styled';
+import { CustomResizer } from './CustomResizer';
+import { useColumnResize } from '../hooks/useColumnResize';
+import type { ColumnType } from '@/types';
 
 interface CustomTableHeaderRowProps<T> {
   table: Table<T>;

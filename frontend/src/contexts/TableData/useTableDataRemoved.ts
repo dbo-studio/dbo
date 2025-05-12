@@ -39,11 +39,7 @@ export const useTableDataRemoved = (state: {
   ).current;
 
   const debouncedSaveRowsAndRemovedRows = useRef(
-    debounce(async (
-      tabId: string, 
-      rowsToSave: RowType[], 
-      removedRowsToSave: RowType[]
-    ): Promise<void> => {
+    debounce(async (tabId: string, rowsToSave: RowType[], removedRowsToSave: RowType[]): Promise<void> => {
       if (!tabId) return;
       try {
         await Promise.all([
@@ -68,18 +64,21 @@ export const useTableDataRemoved = (state: {
    * Update removed rows
    * Updates the UI immediately and defers IndexedDB update
    */
-  const updateRemovedRows = useCallback(async (newRemovedRows: RowType[]): Promise<void> => {
-    if (!selectedTabId) return;
+  const updateRemovedRows = useCallback(
+    async (newRemovedRows: RowType[]): Promise<void> => {
+      if (!selectedTabId) return;
 
-    // Update UI immediately
-    setRemovedRows(newRemovedRows);
+      // Update UI immediately
+      setRemovedRows(newRemovedRows);
 
-    // Schedule IndexedDB update (debounced)
-    debouncedSaveRemovedRows(selectedTabId, newRemovedRows);
+      // Schedule IndexedDB update (debounced)
+      debouncedSaveRemovedRows(selectedTabId, newRemovedRows);
 
-    // Return immediately without waiting for IndexedDB
-    return Promise.resolve();
-  }, [selectedTabId, setRemovedRows, debouncedSaveRemovedRows]);
+      // Return immediately without waiting for IndexedDB
+      return Promise.resolve();
+    },
+    [selectedTabId, setRemovedRows, debouncedSaveRemovedRows]
+  );
 
   /**
    * Delete removed rows permanently
@@ -89,8 +88,8 @@ export const useTableDataRemoved = (state: {
     if (!selectedTabId) return;
 
     // Filter out removed rows from the current rows
-    const currentRows = rowsRef.current.filter(row => 
-      !removedRowsRef.current.some(r => r.dbo_index === row.dbo_index)
+    const currentRows = rowsRef.current.filter(
+      (row) => !removedRowsRef.current.some((r) => r.dbo_index === row.dbo_index)
     );
 
     // Update UI immediately

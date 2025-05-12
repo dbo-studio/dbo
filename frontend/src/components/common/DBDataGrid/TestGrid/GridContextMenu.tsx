@@ -33,11 +33,11 @@ export default function GridContextMenu({
         row.row[row.selectedColumn],
         newValue
       );
-      updateEditedRows(newEditedRows).catch(error => {
+      updateEditedRows(newEditedRows).catch((error) => {
         console.error('Error updating edited rows:', error);
       });
       newRow[row.selectedColumn] = newValue;
-      updateRow(newRow).catch(error => {
+      updateRow(newRow).catch((error) => {
         console.error('Error updating row:', error);
       });
     }

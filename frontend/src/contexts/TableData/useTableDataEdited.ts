@@ -32,11 +32,7 @@ export const useTableDataEdited = (state: {
 
   // Create debounced functions to save to IndexedDB
   const debouncedSaveEditedAndUnsaved = useRef(
-    debounce(async (
-      tabId: string, 
-      editedRowsToSave: EditedRow[], 
-      unsavedRowsToSave: RowType[]
-    ): Promise<void> => {
+    debounce(async (tabId: string, editedRowsToSave: EditedRow[], unsavedRowsToSave: RowType[]): Promise<void> => {
       if (!tabId) return;
       try {
         await Promise.all([
@@ -50,11 +46,7 @@ export const useTableDataEdited = (state: {
   ).current;
 
   const debouncedSaveRowsAndEditedRows = useRef(
-    debounce(async (
-      tabId: string, 
-      rowsToSave: RowType[], 
-      editedRowsToSave: EditedRow[]
-    ): Promise<void> => {
+    debounce(async (tabId: string, rowsToSave: RowType[], editedRowsToSave: EditedRow[]): Promise<void> => {
       if (!tabId) return;
       try {
         await Promise.all([
@@ -79,38 +71,41 @@ export const useTableDataEdited = (state: {
    * Update edited rows
    * Updates the UI immediately and defers IndexedDB update
    */
-  const updateEditedRows = useCallback(async (newEditedRows: EditedRow[]): Promise<void> => {
-    if (!selectedTabId) return;
+  const updateEditedRows = useCallback(
+    async (newEditedRows: EditedRow[]): Promise<void> => {
+      if (!selectedTabId) return;
 
-    // Check if any edited rows should be moved to unsaved rows
-    const currentUnsavedRows = [...unsavedRowsRef.current];
-    const rowsToKeep: EditedRow[] = [];
+      // Check if any edited rows should be moved to unsaved rows
+      const currentUnsavedRows = [...unsavedRowsRef.current];
+      const rowsToKeep: EditedRow[] = [];
 
-    for (const editedRow of newEditedRows) {
-      const isUnsaved = unsavedRowsRef.current.some(r => r.dbo_index === editedRow.dboIndex);
-      if (isUnsaved) {
-        // Move to unsaved rows
-        const { dboIndex, ...data } = editedRow;
-        const newUnsavedRow = {
-          ...data.new,
-          dbo_index: dboIndex
-        };
-        currentUnsavedRows.push(newUnsavedRow);
-      } else {
-        rowsToKeep.push(editedRow);
+      for (const editedRow of newEditedRows) {
+        const isUnsaved = unsavedRowsRef.current.some((r) => r.dbo_index === editedRow.dboIndex);
+        if (isUnsaved) {
+          // Move to unsaved rows
+          const { dboIndex, ...data } = editedRow;
+          const newUnsavedRow = {
+            ...data.new,
+            dbo_index: dboIndex
+          };
+          currentUnsavedRows.push(newUnsavedRow);
+        } else {
+          rowsToKeep.push(editedRow);
+        }
       }
-    }
 
-    // Update UI immediately
-    setEditedRows(rowsToKeep);
-    setUnsavedRows(currentUnsavedRows);
+      // Update UI immediately
+      setEditedRows(rowsToKeep);
+      setUnsavedRows(currentUnsavedRows);
 
-    // Schedule IndexedDB update (debounced)
-    debouncedSaveEditedAndUnsaved(selectedTabId, rowsToKeep, currentUnsavedRows);
+      // Schedule IndexedDB update (debounced)
+      debouncedSaveEditedAndUnsaved(selectedTabId, rowsToKeep, currentUnsavedRows);
 
-    // Return immediately without waiting for IndexedDB
-    return Promise.resolve();
-  }, [selectedTabId, setEditedRows, setUnsavedRows, debouncedSaveEditedAndUnsaved]);
+      // Return immediately without waiting for IndexedDB
+      return Promise.resolve();
+    },
+    [selectedTabId, setEditedRows, setUnsavedRows, debouncedSaveEditedAndUnsaved]
+  );
 
   /**
    * Restore edited rows to their original values
@@ -122,7 +117,7 @@ export const useTableDataEdited = (state: {
     // Restore original values for edited rows
     const currentRows = [...rowsRef.current];
     for (const editedRow of editedRowsRef.current) {
-      const rowIndex = currentRows.findIndex(r => r.dbo_index === editedRow.dboIndex);
+      const rowIndex = currentRows.findIndex((r) => r.dbo_index === editedRow.dboIndex);
       if (rowIndex !== -1) {
         currentRows[rowIndex] = {
           ...currentRows[rowIndex],

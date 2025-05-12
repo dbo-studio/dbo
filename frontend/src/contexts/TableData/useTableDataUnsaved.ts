@@ -46,36 +46,42 @@ export const useTableDataUnsaved = (state: {
    * Update unsaved rows
    * Updates the UI immediately and defers IndexedDB update
    */
-  const updateUnsavedRows = useCallback(async (newUnsavedRows: RowType[]): Promise<void> => {
-    if (!selectedTabId) return;
+  const updateUnsavedRows = useCallback(
+    async (newUnsavedRows: RowType[]): Promise<void> => {
+      if (!selectedTabId) return;
 
-    // Update UI immediately
-    setUnsavedRows(newUnsavedRows);
+      // Update UI immediately
+      setUnsavedRows(newUnsavedRows);
 
-    // Schedule IndexedDB update (debounced)
-    debouncedSaveUnsavedRows(selectedTabId, newUnsavedRows);
+      // Schedule IndexedDB update (debounced)
+      debouncedSaveUnsavedRows(selectedTabId, newUnsavedRows);
 
-    // Return immediately without waiting for IndexedDB
-    return Promise.resolve();
-  }, [selectedTabId, setUnsavedRows, debouncedSaveUnsavedRows]);
+      // Return immediately without waiting for IndexedDB
+      return Promise.resolve();
+    },
+    [selectedTabId, setUnsavedRows, debouncedSaveUnsavedRows]
+  );
 
   /**
    * Add a single unsaved row
    * Updates the UI immediately and defers IndexedDB update
    */
-  const addUnsavedRow = useCallback(async (row: RowType): Promise<void> => {
-    if (!selectedTabId) return;
+  const addUnsavedRow = useCallback(
+    async (row: RowType): Promise<void> => {
+      if (!selectedTabId) return;
 
-    setUnsavedRows(prev => {
-      const newUnsavedRows = [...prev, row];
-      // Schedule IndexedDB update (debounced)
-      debouncedSaveUnsavedRows(selectedTabId, newUnsavedRows);
-      return newUnsavedRows;
-    });
+      setUnsavedRows((prev) => {
+        const newUnsavedRows = [...prev, row];
+        // Schedule IndexedDB update (debounced)
+        debouncedSaveUnsavedRows(selectedTabId, newUnsavedRows);
+        return newUnsavedRows;
+      });
 
-    // Return immediately without waiting for IndexedDB
-    return Promise.resolve();
-  }, [selectedTabId, setUnsavedRows, debouncedSaveUnsavedRows]);
+      // Return immediately without waiting for IndexedDB
+      return Promise.resolve();
+    },
+    [selectedTabId, setUnsavedRows, debouncedSaveUnsavedRows]
+  );
 
   return {
     unsavedRows,

@@ -46,18 +46,21 @@ export const useTableDataSelected = (state: {
    * Set selected rows
    * Updates the UI immediately and defers IndexedDB update
    */
-  const setSelectedRows = useCallback(async (newSelectedRows: SelectedRow[]): Promise<void> => {
-    if (!selectedTabId) return;
+  const setSelectedRows = useCallback(
+    async (newSelectedRows: SelectedRow[]): Promise<void> => {
+      if (!selectedTabId) return;
 
-    // Update UI immediately
-    setSelectedRowsState(newSelectedRows);
+      // Update UI immediately
+      setSelectedRowsState(newSelectedRows);
 
-    // Schedule IndexedDB update (debounced)
-    debouncedSaveToIndexedDB(selectedTabId, newSelectedRows);
+      // Schedule IndexedDB update (debounced)
+      debouncedSaveToIndexedDB(selectedTabId, newSelectedRows);
 
-    // Return immediately without waiting for IndexedDB
-    return Promise.resolve();
-  }, [selectedTabId, setSelectedRowsState, debouncedSaveToIndexedDB]);
+      // Return immediately without waiting for IndexedDB
+      return Promise.resolve();
+    },
+    [selectedTabId, setSelectedRowsState, debouncedSaveToIndexedDB]
+  );
 
   return {
     selectedRows,

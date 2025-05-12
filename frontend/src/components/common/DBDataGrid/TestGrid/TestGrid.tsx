@@ -1,5 +1,5 @@
-import type {ColumnType, RowType} from '@/types';
-import {type JSX} from 'react';
+import type { ColumnType, RowType } from '@/types';
+import { type JSX } from 'react';
 import CustomTestGrid from './components/CustomTestGrid';
 
 export default function TestGrid({
@@ -14,12 +14,5 @@ export default function TestGrid({
   editable?: boolean;
 }): JSX.Element {
   // Use our custom implementation with improved column resizing
-  return (
-    <CustomTestGrid
-      rows={rows}
-      columns={columns}
-      loading={loading}
-      editable={editable}
-    />
-  );
+  return <CustomTestGrid rows={rows} columns={columns} loading={loading} editable={editable} />;
 }

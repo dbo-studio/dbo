@@ -1,10 +1,10 @@
 import TestGrid from '@/components/common/DBDataGrid/TestGrid/TestGrid';
-import {useMount} from '@/hooks';
-import {useSelectedTab} from '@/hooks/useSelectedTab.hook';
+import { useMount } from '@/hooks';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import Sorts from '@/routes/Data/Sorts/Sorts.tsx';
-import {Box} from '@mui/material';
-import type {JSX} from 'react';
-import {useTableData} from '@/contexts/TableDataContext';
+import { Box } from '@mui/material';
+import type { JSX } from 'react';
+import { useTableData } from '@/contexts/TableDataContext';
 import ActionBar from './ActionBar/ActionBar';
 import Columns from './Columns/Columns';
 import Filters from './Filters/Filters';

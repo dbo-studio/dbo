@@ -46,36 +46,42 @@ export const useTableDataRows = (state: {
    * Update a single row
    * Updates the UI immediately and defers IndexedDB update
    */
-  const updateRow = useCallback(async (row: RowType): Promise<void> => {
-    if (!selectedTabId) return;
+  const updateRow = useCallback(
+    async (row: RowType): Promise<void> => {
+      if (!selectedTabId) return;
 
-    setRows(prevRows => {
-      const newRows = prevRows.map(r => r.dbo_index === row.dbo_index ? row : r);
-      // Schedule IndexedDB update (debounced)
-      debouncedSaveRows(selectedTabId, newRows);
-      return newRows;
-    });
+      setRows((prevRows) => {
+        const newRows = prevRows.map((r) => (r.dbo_index === row.dbo_index ? row : r));
+        // Schedule IndexedDB update (debounced)
+        debouncedSaveRows(selectedTabId, newRows);
+        return newRows;
+      });
 
-    // Return immediately without waiting for IndexedDB
-    return Promise.resolve();
-  }, [selectedTabId, setRows, debouncedSaveRows]);
+      // Return immediately without waiting for IndexedDB
+      return Promise.resolve();
+    },
+    [selectedTabId, setRows, debouncedSaveRows]
+  );
 
   /**
    * Update multiple rows
    * Updates the UI immediately and defers IndexedDB update
    */
-  const updateRows = useCallback(async (newRows: RowType[]): Promise<void> => {
-    if (!selectedTabId) return;
+  const updateRows = useCallback(
+    async (newRows: RowType[]): Promise<void> => {
+      if (!selectedTabId) return;
 
-    // Update UI immediately
-    setRows(newRows);
+      // Update UI immediately
+      setRows(newRows);
 
-    // Schedule IndexedDB update (debounced)
-    debouncedSaveRows(selectedTabId, newRows);
+      // Schedule IndexedDB update (debounced)
+      debouncedSaveRows(selectedTabId, newRows);
 
-    // Return immediately without waiting for IndexedDB
-    return Promise.resolve();
-  }, [selectedTabId, setRows, debouncedSaveRows]);
+      // Return immediately without waiting for IndexedDB
+      return Promise.resolve();
+    },
+    [selectedTabId, setRows, debouncedSaveRows]
+  );
 
   return {
     rows,

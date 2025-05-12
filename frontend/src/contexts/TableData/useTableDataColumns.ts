@@ -46,24 +46,27 @@ export const useTableDataColumns = (state: {
    * Update columns
    * Updates the UI immediately and defers IndexedDB update
    */
-  const updateColumns = useCallback(async (newColumns: ColumnType[]): Promise<void> => {
-    if (!selectedTabId) return;
+  const updateColumns = useCallback(
+    async (newColumns: ColumnType[]): Promise<void> => {
+      if (!selectedTabId) return;
 
-    // Update UI immediately
-    setColumns(newColumns);
+      // Update UI immediately
+      setColumns(newColumns);
 
-    // Schedule IndexedDB update (debounced)
-    debouncedSaveColumns(selectedTabId, newColumns);
+      // Schedule IndexedDB update (debounced)
+      debouncedSaveColumns(selectedTabId, newColumns);
 
-    // Return immediately without waiting for IndexedDB
-    return Promise.resolve();
-  }, [selectedTabId, setColumns, debouncedSaveColumns]);
+      // Return immediately without waiting for IndexedDB
+      return Promise.resolve();
+    },
+    [selectedTabId, setColumns, debouncedSaveColumns]
+  );
 
   /**
    * Get active columns (columns with isActive=true)
    */
   const getActiveColumns = useCallback((): ColumnType[] => {
-    return columns.filter(c => c.isActive);
+    return columns.filter((c) => c.isActive);
   }, [columns]);
 
   return {

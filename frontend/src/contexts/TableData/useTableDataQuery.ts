@@ -22,11 +22,7 @@ export const useTableDataQuery = (state: {
   // Create a debounced function to save to IndexedDB
   // This will only execute after 300ms of inactivity
   const debouncedSaveToIndexedDB = useRef(
-    debounce(async (
-      tabId: string, 
-      rowsToSave: any[], 
-      columnsToSave: any[]
-    ): Promise<void> => {
+    debounce(async (tabId: string, rowsToSave: any[], columnsToSave: any[]): Promise<void> => {
       if (!tabId) return;
       try {
         await Promise.all([
@@ -105,39 +101,42 @@ export const useTableDataQuery = (state: {
   /**
    * Execute a raw query
    */
-  const executeRawQuery = useCallback(async (query?: string): Promise<RunQueryResponseType | undefined> => {
-    if (!selectedTabId) return undefined;
+  const executeRawQuery = useCallback(
+    async (query?: string): Promise<RunQueryResponseType | undefined> => {
+      if (!selectedTabId) return undefined;
 
-    try {
-      setIsLoading(true);
-      const currentConnectionId = useConnectionStore.getState().currentConnectionId;
-      if (!currentConnectionId) return undefined;
+      try {
+        setIsLoading(true);
+        const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+        if (!currentConnectionId) return undefined;
 
-      const result = await runRawQuery({
-        connectionId: Number(currentConnectionId),
-        query: query ? query : useTabStore.getState().getQuery()
-      });
+        const result = await runRawQuery({
+          connectionId: Number(currentConnectionId),
+          query: query ? query : useTabStore.getState().getQuery()
+        });
 
-      useTabStore.getState().updateQuery(result.query);
+        useTabStore.getState().updateQuery(result.query);
 
-      // Update state immediately
-      setRows(result.data);
-      setColumns(result.columns);
+        // Update state immediately
+        setRows(result.data);
+        setColumns(result.columns);
 
-      // Schedule IndexedDB update (debounced)
-      debouncedSaveToIndexedDB(selectedTabId, result.data, result.columns);
+        // Schedule IndexedDB update (debounced)
+        debouncedSaveToIndexedDB(selectedTabId, result.data, result.columns);
 
-      return result;
-    } catch (error) {
-      if (isAxiosError(error)) {
-        toast.error(error.message);
+        return result;
+      } catch (error) {
+        if (isAxiosError(error)) {
+          toast.error(error.message);
+        }
+        console.error('Error executing raw query:', error);
+        return undefined;
+      } finally {
+        setIsLoading(false);
       }
-      console.error('Error executing raw query:', error);
-      return undefined;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedTabId, setRows, setColumns, setIsLoading, debouncedSaveToIndexedDB]);
+    },
+    [selectedTabId, setRows, setColumns, setIsLoading, debouncedSaveToIndexedDB]
+  );
 
   /**
    * Refresh data from server

@@ -1,5 +1,5 @@
 import type React from 'react';
-import {Resizer} from '../TestGrid.styled';
+import { Resizer } from '../TestGrid.styled';
 
 interface CustomResizerProps {
   columnId: string;

@@ -50,7 +50,11 @@ export default function StatusBarActions(): JSX.Element {
 
   const handleSave = async (): Promise<void> => {
     if (selectedTab?.mode === TabMode.Data) {
-      if (!selectedTab || !currentConnection || (editedRows.length === 0 && removedRows.length === 0 && unsavedRows.length === 0)) {
+      if (
+        !selectedTab ||
+        !currentConnection ||
+        (editedRows.length === 0 && removedRows.length === 0 && unsavedRows.length === 0)
+      ) {
         return;
       }
       try {
@@ -100,7 +104,9 @@ export default function StatusBarActions(): JSX.Element {
       if (selectedUnsavedRows.length > 0) {
         const updatedRows = rows.filter((row) => !selectedUnsavedRows.some((r) => r.dbo_index === row.dbo_index));
         await updateRows(updatedRows);
-        await updateUnsavedRows(unsavedRows.filter((row) => !selectedUnsavedRows.some((r) => r.dbo_index === row.dbo_index)));
+        await updateUnsavedRows(
+          unsavedRows.filter((row) => !selectedUnsavedRows.some((r) => r.dbo_index === row.dbo_index))
+        );
       }
 
       // Clear the selected rows
@@ -152,11 +158,7 @@ export default function StatusBarActions(): JSX.Element {
         </IconButton>
       </Box>
       <Box>
-        <LoadingIconButton
-          loading={isLoading}
-          disabled={updateQueryPending || isLoading}
-          onClick={handleRefresh}
-        >
+        <LoadingIconButton loading={isLoading} disabled={updateQueryPending || isLoading} onClick={handleRefresh}>
           <CustomIcon type='refresh' size='s' />
         </LoadingIconButton>
 

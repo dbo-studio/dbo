@@ -13,7 +13,7 @@ export function useRemoveTab(): [(tabId: string) => TabType | null | undefined] 
     // No need to clear data from Zustand store anymore, as we're using IndexedDB directly
 
     // Clear data from IndexedDB
-    indexedDBService.clearTabData(tabId).catch(error => {
+    indexedDBService.clearTabData(tabId).catch((error) => {
       console.error('Error clearing IndexedDB data for tab:', tabId, error);
     });
 

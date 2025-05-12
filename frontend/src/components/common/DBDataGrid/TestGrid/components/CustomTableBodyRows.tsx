@@ -1,10 +1,10 @@
-import {useTableData} from '@/contexts/TableDataContext';
-import type {SelectedRow} from '@/store/dataStore/types';
-import type {ColumnType, RowType} from '@/types';
-import {flexRender, type Table} from '@tanstack/react-table';
-import type {JSX} from 'react';
-import {useCallback} from 'react';
-import {StyledTableRow, TableCell} from '../TestGrid.styled';
+import { useTableData } from '@/contexts/TableDataContext';
+import type { SelectedRow } from '@/store/dataStore/types';
+import type { ColumnType, RowType } from '@/types';
+import { flexRender, type Table } from '@tanstack/react-table';
+import type { JSX } from 'react';
+import { useCallback } from 'react';
+import { StyledTableRow, TableCell } from '../TestGrid.styled';
 
 interface CustomTableBodyRowsProps<T> {
   table: Table<T>;

@@ -55,63 +55,61 @@ export function TableDataProvider({ children }: TableDataProviderProps) {
     loadData();
   }, [selectedTabId]);
 
-
   // Create the context value with memoization to prevent unnecessary re-renders
-  const contextValue = useMemo<TableDataContextType>(() => ({
-    // Data access
-    rows: state.rows,
-    columns: state.columns,
-    editedRows: state.editedRows,
-    removedRows: state.removedRows,
-    unsavedRows: state.unsavedRows,
-    selectedRows: state.selectedRows,
-    isLoading: state.isLoading,
+  const contextValue = useMemo<TableDataContextType>(
+    () => ({
+      // Data access
+      rows: state.rows,
+      columns: state.columns,
+      editedRows: state.editedRows,
+      removedRows: state.removedRows,
+      unsavedRows: state.unsavedRows,
+      selectedRows: state.selectedRows,
+      isLoading: state.isLoading,
 
-    // Row operations
-    ...rowOperations,
+      // Row operations
+      ...rowOperations,
 
-    // Column operations
-    ...columnOperations,
+      // Column operations
+      ...columnOperations,
 
-    // Edited rows operations
-    ...editedOperations,
+      // Edited rows operations
+      ...editedOperations,
 
-    // Removed rows operations
-    ...removedOperations,
+      // Removed rows operations
+      ...removedOperations,
 
-    // Unsaved rows operations
-    ...unsavedOperations,
+      // Unsaved rows operations
+      ...unsavedOperations,
 
-    // Selected rows operations
-    ...selectedOperations,
+      // Selected rows operations
+      ...selectedOperations,
 
-    // Query operations
-    ...queryOperations
-  }), [
-    // State dependencies
-    state.rows,
-    state.columns,
-    state.editedRows,
-    state.removedRows,
-    state.unsavedRows,
-    state.selectedRows,
-    state.isLoading,
+      // Query operations
+      ...queryOperations
+    }),
+    [
+      // State dependencies
+      state.rows,
+      state.columns,
+      state.editedRows,
+      state.removedRows,
+      state.unsavedRows,
+      state.selectedRows,
+      state.isLoading,
 
-    // Operation dependencies
-    rowOperations,
-    columnOperations,
-    editedOperations,
-    removedOperations,
-    unsavedOperations,
-    selectedOperations,
-    queryOperations
-  ]);
-
-  return (
-    <TableDataContext.Provider value={contextValue}>
-      {children}
-    </TableDataContext.Provider>
+      // Operation dependencies
+      rowOperations,
+      columnOperations,
+      editedOperations,
+      removedOperations,
+      unsavedOperations,
+      selectedOperations,
+      queryOperations
+    ]
   );
+
+  return <TableDataContext.Provider value={contextValue}>{children}</TableDataContext.Provider>;
 }
 
 // Custom hook to use the context

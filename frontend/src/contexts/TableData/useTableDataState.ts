@@ -81,7 +81,7 @@ export const useTableDataState = () => {
     setSelectedRowsState,
     isLoading,
     setIsLoading,
-    
+
     // Methods
     loadDataFromIndexedDB,
     getState

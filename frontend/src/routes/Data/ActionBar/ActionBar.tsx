@@ -51,7 +51,7 @@ export default function ActionBar({ onRefresh }: { onRefresh?: () => void }): JS
           <CustomIcon type='code' size='s' />
         </IconButton>
         {onRefresh && (
-          <Tooltip title="Refresh data from server">
+          <Tooltip title='Refresh data from server'>
             <IconButton aria-label='refresh' onClick={onRefresh}>
               <CustomIcon type='refresh' size='s' />
             </IconButton>

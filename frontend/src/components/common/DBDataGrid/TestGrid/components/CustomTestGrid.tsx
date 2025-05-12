@@ -1,14 +1,14 @@
-import {useContextMenu} from '@/hooks';
-import {useTableData} from '@/contexts/TableDataContext';
-import {getCoreRowModel, useReactTable} from '@tanstack/react-table';
-import {type JSX, useCallback, useEffect, useRef, useState} from 'react';
-import {StyledTable, TableContainer} from '../TestGrid.styled';
+import { useContextMenu } from '@/hooks';
+import { useTableData } from '@/contexts/TableDataContext';
+import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
+import { type JSX, useCallback, useEffect, useRef, useState } from 'react';
+import { StyledTable, TableContainer } from '../TestGrid.styled';
 
-import type {ColumnType, RowType} from '@/types';
-import {Box, CircularProgress} from '@mui/material';
+import type { ColumnType, RowType } from '@/types';
+import { Box, CircularProgress } from '@mui/material';
 import QuickViewDialog from '../../QuickViewDialog/QuickViewDialog';
 import GridContextMenu from '../GridContextMenu';
-import {useHandleScroll} from '../hooks/useHandleScroll';
+import { useHandleScroll } from '../hooks/useHandleScroll';
 import useTableColumns from '../hooks/useTableColumns';
 import CustomTableHeaderRow from './CustomTableHeaderRow';
 import CustomTableBodyRows from './CustomTableBodyRows';
