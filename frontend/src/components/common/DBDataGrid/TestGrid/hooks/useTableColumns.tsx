@@ -133,7 +133,7 @@ export default function useTableColumns({
           />
         );
       },
-      size: 40,
+      size: 30,
       enableResizing: false // Make checkbox column non-resizable
     });
 

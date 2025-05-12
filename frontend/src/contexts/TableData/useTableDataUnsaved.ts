@@ -1,7 +1,8 @@
-import { useCallback } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { indexedDBService } from '@/services/indexedDB/indexedDB.service';
 import type { RowType } from '@/types';
+import { debounce } from 'lodash';
 
 /**
  * Hook for handling unsaved rows operations in the TableData context
@@ -13,30 +14,68 @@ export const useTableDataUnsaved = (state: {
   const { selectedTabId } = useTabStore();
   const { unsavedRows, setUnsavedRows } = state;
 
+  // Use a ref to keep track of the latest unsaved rows for the debounced function
+  const unsavedRowsRef = useRef<RowType[]>(unsavedRows);
+
+  // Update the ref when unsavedRows changes
+  useEffect(() => {
+    unsavedRowsRef.current = unsavedRows;
+  }, [unsavedRows]);
+
+  // Create a debounced function to save to IndexedDB
+  // This will only execute after 300ms of inactivity
+  const debouncedSaveUnsavedRows = useRef(
+    debounce(async (tabId: string, unsavedRowsToSave: RowType[]): Promise<void> => {
+      if (!tabId) return;
+      try {
+        await indexedDBService.saveUnsavedRows(tabId, unsavedRowsToSave);
+      } catch (error) {
+        console.error('Error saving unsaved rows to IndexedDB:', error);
+      }
+    }, 300)
+  ).current;
+
+  // Clean up the debounced function on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSaveUnsavedRows.cancel();
+    };
+  }, [debouncedSaveUnsavedRows]);
+
   /**
    * Update unsaved rows
+   * Updates the UI immediately and defers IndexedDB update
    */
   const updateUnsavedRows = useCallback(async (newUnsavedRows: RowType[]): Promise<void> => {
     if (!selectedTabId) return;
 
+    // Update UI immediately
     setUnsavedRows(newUnsavedRows);
-    // Save to IndexedDB
-    await indexedDBService.saveUnsavedRows(selectedTabId, newUnsavedRows);
-  }, [selectedTabId, setUnsavedRows]);
+
+    // Schedule IndexedDB update (debounced)
+    debouncedSaveUnsavedRows(selectedTabId, newUnsavedRows);
+
+    // Return immediately without waiting for IndexedDB
+    return Promise.resolve();
+  }, [selectedTabId, setUnsavedRows, debouncedSaveUnsavedRows]);
 
   /**
    * Add a single unsaved row
+   * Updates the UI immediately and defers IndexedDB update
    */
   const addUnsavedRow = useCallback(async (row: RowType): Promise<void> => {
     if (!selectedTabId) return;
 
     setUnsavedRows(prev => {
       const newUnsavedRows = [...prev, row];
-      // Save to IndexedDB in the background
-      indexedDBService.saveUnsavedRows(selectedTabId, newUnsavedRows).catch(console.error);
+      // Schedule IndexedDB update (debounced)
+      debouncedSaveUnsavedRows(selectedTabId, newUnsavedRows);
       return newUnsavedRows;
     });
-  }, [selectedTabId, setUnsavedRows]);
+
+    // Return immediately without waiting for IndexedDB
+    return Promise.resolve();
+  }, [selectedTabId, setUnsavedRows, debouncedSaveUnsavedRows]);
 
   return {
     unsavedRows,
