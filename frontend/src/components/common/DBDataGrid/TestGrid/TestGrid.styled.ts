@@ -120,29 +120,29 @@ export const StyledTableRow = styled('tr')(({ theme }) => ({
 
 export const Resizer = styled('div')(({ theme }) => ({
   position: 'absolute',
-  right: -2, // Position it to be centered on the border between cells
+  right: -3, // Position it to extend slightly outside the cell for easier grabbing
   top: 0,
   height: '100%',
-  width: '4px', // Slightly narrower for better precision
+  width: '6px', // Wider for easier grabbing
   background: theme.palette.divider, // Slightly visible by default
   cursor: 'col-resize',
   userSelect: 'none',
   touchAction: 'none',
   zIndex: 100, // Higher z-index to ensure it's above other elements
-  willChange: 'transform, background-color, width, right', // Optimize for all animated properties
+  willChange: 'transform, background-color, width', // Optimize for animated properties
   transform: 'translateZ(0)', // Hardware acceleration
   backfaceVisibility: 'hidden', // Additional performance optimization
-  transition: 'background-color 0.1s ease, width 0.1s ease, right 0.1s ease', // Smooth transitions for all properties
+  transition: 'background-color 0.1s ease, width 0.1s ease', // Smooth transitions for properties
   '&:hover': {
     background: theme.palette.primary.main,
-    opacity: 0.5
+    opacity: 0.7, // More visible on hover
+    width: '8px' // Slightly wider on hover
   },
   '&.isResizing': {
     background: theme.palette.primary.main,
-    opacity: 0.7,
+    opacity: 0.8, // More visible when resizing
     // Wider hit area during resize for better UX
-    width: '8px',
-    right: -4
+    width: '10px'
   }
 }));
 
