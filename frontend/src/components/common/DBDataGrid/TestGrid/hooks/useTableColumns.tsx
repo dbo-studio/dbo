@@ -213,13 +213,37 @@ export default function useTableColumns({
             ]);
           }, []);
 
+          // Use a ref to track click timing for distinguishing between single and double clicks
+          const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+          // Handle both single and double clicks
+          const handleClick = useCallback(
+            (e: React.MouseEvent): void => {
+              // Clear any existing timeout
+              if (clickTimeoutRef.current) {
+                clearTimeout(clickTimeoutRef.current);
+                clickTimeoutRef.current = null;
+                // If we get here, it's a double click, so edit the cell
+                setEditingCell({ rowIndex: row.index, columnId: column.id });
+                handleSelect(e);
+              } else {
+                // Set a timeout to handle as a single click
+                clickTimeoutRef.current = setTimeout(() => {
+                  // This is a single click, so select the row
+                  handleSelect(e);
+                  clickTimeoutRef.current = null;
+                }, 250); // 250ms is a common double-click threshold
+              }
+            },
+            [handleSelect, row.index, column.id]
+          );
+
           return (
             <CellContainer
               className={isHovering ? 'cell-hover' : ''}
               onMouseEnter={(): void => setIsHovering(true)}
               onMouseLeave={(): void => setIsHovering(false)}
-              onClick={handleSelect}
-              onDoubleClick={(): void => setEditingCell({ rowIndex: row.index, columnId: column.id })}
+              onClick={handleClick}
             >
               <CellContent>{value}</CellContent>
             </CellContainer>
