@@ -1,25 +1,24 @@
 import FieldInput from '@/components/base/FieldInput/FieldInput.tsx';
 import Search from '@/components/base/Search/Search';
-import { useDataStore } from '@/store/dataStore/data.store';
+import { useTableData } from '@/contexts/TableDataContext';
 import type { RowType } from '@/types';
 import { Box } from '@mui/material';
 import { type JSX, useEffect, useState } from 'react';
 
 export default function DBFields(): JSX.Element {
-  const { getColumns, getSelectedRows } = useDataStore();
+  const { columns, selectedRows } = useTableData();
   const [fields, setFields] = useState<any[]>([]);
   const [search, setSearch] = useState<string>('');
   const [selectedRow, setSelectedRow] = useState<RowType | undefined>(undefined);
 
   useEffect(() => {
-    const rows = getSelectedRows();
-    if (rows.length === 0) return;
+    if (selectedRows.length === 0) return;
 
-    const row = rows[rows.length - 1].row;
+    const row = selectedRows[selectedRows.length - 1].row;
     if (row !== selectedRow) {
       setSelectedRow(row);
     }
-  }, [getSelectedRows()]);
+  }, [selectedRows, selectedRow]);
 
   useEffect(() => {
     generateFields(search);
@@ -29,7 +28,7 @@ export default function DBFields(): JSX.Element {
     if (!selectedRow) return;
 
     const data: any[] = [];
-    getColumns()
+    columns
       .filter((c: any) => {
         return c.name.toLocaleLowerCase().includes(value.toLocaleLowerCase());
       })

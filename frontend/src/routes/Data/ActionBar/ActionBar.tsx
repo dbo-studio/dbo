@@ -1,9 +1,9 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { Grid2, IconButton, Stack, useTheme } from '@mui/material';
+import { Grid2, IconButton, Stack, useTheme, Tooltip } from '@mui/material';
 import type { JSX } from 'react';
 
-export default function ActionBar(): JSX.Element {
+export default function ActionBar({ onRefresh }: { onRefresh?: () => void }): JSX.Element {
   const theme = useTheme();
   const { setShowQueryPreview, setShowFilters, setShowSorts, setShowColumns } = useTabStore();
 
@@ -50,6 +50,13 @@ export default function ActionBar(): JSX.Element {
         <IconButton className='toggle-code-preview' onClick={(): void => handleToggle('query')}>
           <CustomIcon type='code' size='s' />
         </IconButton>
+        {onRefresh && (
+          <Tooltip title="Refresh data from server">
+            <IconButton aria-label='refresh' onClick={onRefresh}>
+              <CustomIcon type='refresh' size='s' />
+            </IconButton>
+          </Tooltip>
+        )}
         {/* <IconButton aria-label='export'>
           <CustomIcon type='export' size='s' />
         </IconButton>

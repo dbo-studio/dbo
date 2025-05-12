@@ -1,9 +1,9 @@
-import {useDataStore} from '@/store/dataStore/data.store';
+import {useTableData} from '@/contexts/TableDataContext';
 import type {SelectedRow} from '@/store/dataStore/types';
 import type {RowType} from '@/types';
 import {flexRender, type Table} from '@tanstack/react-table';
 import type {JSX} from 'react';
-import {useCallback, useMemo} from 'react';
+import {useCallback} from 'react';
 import {StyledTableRow, TableCell} from './TestGrid.styled';
 
 export default function TableBodyRows<T>({
@@ -15,12 +15,7 @@ export default function TableBodyRows<T>({
   context: (event: React.MouseEvent) => void;
   virtualStartIndex?: number;
 }): JSX.Element {
-  const { getRemovedRows, getUnsavedRows, getEditedRows, setSelectedRows, getSelectedRows } = useDataStore();
-
-  const removed = useMemo(() => getRemovedRows(), [getRemovedRows]);
-  const unsaved = useMemo(() => getUnsavedRows(), [getUnsavedRows]);
-  const edited = useMemo(() => getEditedRows(), [getEditedRows]);
-  const selected = useMemo(() => getSelectedRows(), [getSelectedRows]);
+  const { removedRows, unsavedRows, editedRows, selectedRows, setSelectedRows } = useTableData();
 
   const handleSelect = useCallback(
     (cell: any): void => {
@@ -43,10 +38,10 @@ export default function TableBodyRows<T>({
         // Calculate the real row index by adding virtualStartIndex to the relative index
         const rowIndex = virtualStartIndex + row.index;
 
-        const isRemoved = removed.some((v: RowType) => v.dbo_index === rowIndex);
-        const isUnsaved = unsaved.some((v: RowType) => v.dbo_index === rowIndex);
-        const isEdited = edited.some((v: RowType) => v.dboIndex === rowIndex);
-        const isSelected = selected.some((v: SelectedRow) => v.index === rowIndex);
+        const isRemoved = removedRows.some((v: RowType) => v.dbo_index === rowIndex);
+        const isUnsaved = unsavedRows.some((v: RowType) => v.dbo_index === rowIndex);
+        const isEdited = editedRows.some((v: RowType) => v.dboIndex === rowIndex);
+        const isSelected = selectedRows.some((v: SelectedRow) => v.index === rowIndex);
 
         return (
           <StyledTableRow
@@ -57,10 +52,6 @@ export default function TableBodyRows<T>({
               ${isEdited ? 'edit-highlight' : ''}
               ${isSelected ? 'selected-highlight' : ''}
             `.trim()}
-            onClick={(): void => {
-              table.resetRowSelection();
-              row.toggleSelected();
-            }}
           >
             {row.getVisibleCells().map((cell) => (
               <TableCell

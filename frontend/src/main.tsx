@@ -1,19 +1,20 @@
-import { globalStyles } from '@/core/theme/global.ts';
+import {globalStyles} from '@/core/theme/global.ts';
 import '@fontsource-variable/jetbrains-mono';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
-import { CssBaseline, GlobalStyles, type Interpolation, type Theme } from '@mui/material';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import {CssBaseline, GlobalStyles, type Interpolation, type Theme} from '@mui/material';
+import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
+import {ReactQueryDevtools} from '@tanstack/react-query-devtools';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { Toaster } from 'sonner';
+import {Toaster} from 'sonner';
 import './components/base/SqlEditor/helpers/languageSetup.ts';
 import ThemeProvider from './core/theme/index.tsx';
 import Home from './routes/index.tsx';
+import {TableDataProvider} from './contexts/TableDataContext.tsx';
 
 enableMocking().then(() => {
   const queryClient = new QueryClient({
@@ -33,7 +34,9 @@ enableMocking().then(() => {
         <GlobalStyles styles={(theme): Interpolation<Theme> => globalStyles(theme)} />
         <CssBaseline />
         <QueryClientProvider client={queryClient}>
-          <Home />
+          <TableDataProvider>
+            <Home />
+          </TableDataProvider>
           <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
         <Toaster position='bottom-center' duration={5000} richColors closeButton={true} />

@@ -1,7 +1,7 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useSelectedTab } from '@/hooks';
 import locales from '@/locales';
-import { useDataStore } from '@/store/dataStore/data.store';
+import { useTableData } from '@/contexts/TableDataContext';
 import type { FilterType } from '@/types/Tab';
 import { Box, Button } from '@mui/material';
 import type { JSX } from 'react';
@@ -11,7 +11,7 @@ import FilterItem from './FilterItem/FilterItem.tsx';
 import type { RunQueryResponseType } from '@/api/query/types.ts';
 
 export default function Filters(): JSX.Element {
-  const { getColumns, runQuery } = useDataStore();
+  const { columns, runQuery } = useTableData();
   const selectedTab = useSelectedTab();
 
   if (!selectedTab) return <></>;
@@ -19,10 +19,10 @@ export default function Filters(): JSX.Element {
   return (
     <Box id='#filters' p={1} borderBottom={(theme): string => `1px solid ${theme.palette.divider}`}>
       {selectedTab?.filters?.length === 0 ? (
-        <AddFilterButton columns={getColumns()} />
+        <AddFilterButton columns={columns} />
       ) : (
         selectedTab?.filters?.map((filter: FilterType) => {
-          return <FilterItem key={uuid()} columns={getColumns()} filter={filter} />;
+          return <FilterItem key={uuid()} columns={columns} filter={filter} />;
         })
       )}
 

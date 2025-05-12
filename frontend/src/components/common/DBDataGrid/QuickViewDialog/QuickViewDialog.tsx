@@ -3,7 +3,7 @@ import ResizableModal from '@/components/base/Modal/ResizableModal/ResizableModa
 import type { QuickViewDialogProps } from '@/components/common/DBDataGrid/QuickViewDialog/types';
 import { handleRowChangeLog } from '@/core/utils';
 import locales from '@/locales';
-import { useDataStore } from '@/store/dataStore/data.store.ts';
+import { useTableData } from '@/contexts/TableDataContext';
 import type { SelectedRow } from '@/store/dataStore/types.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box } from '@mui/material';
@@ -18,7 +18,7 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
   const [value, setValue] = useState<string | undefined>(undefined);
   const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
   const [row, setRow] = useState<SelectedRow>();
-  const { getSelectedRows, updateRow, getEditedRows, updateEditedRows, toggleDataFetching } = useDataStore();
+  const { selectedRows, updateRow, editedRows, updateEditedRows } = useTableData();
   const { showQuickLookEditor, toggleShowQuickLookEditor } = useSettingStore();
 
   const handleClose = (): void => {
@@ -33,9 +33,9 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
       return;
     }
 
-    const editedRows = handleRowChangeLog(getEditedRows(), row.row, row.selectedColumn, rowValue, value);
+    const newEditedRows = handleRowChangeLog(editedRows, row.row, row.selectedColumn, rowValue, value);
 
-    updateEditedRows(editedRows);
+    updateEditedRows(newEditedRows);
     const newRow = { ...row.row };
     newRow[row.selectedColumn] = value;
     updateRow(newRow);
@@ -45,17 +45,16 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
   useEffect(() => {
     if (!showQuickLookEditor) return;
 
-    const rows = getSelectedRows();
-    if (rows.length === 0) {
+    if (selectedRows.length === 0) {
       return;
     }
 
-    const row = rows[rows.length - 1];
+    const row = selectedRows[selectedRows.length - 1];
     if (!row.selectedColumn) return;
 
     setRow(row);
     setValue(getRowValue(row));
-  }, [showQuickLookEditor]);
+  }, [showQuickLookEditor, selectedRows]);
 
   return (
     <ResizableModal

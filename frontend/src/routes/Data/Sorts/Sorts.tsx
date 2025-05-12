@@ -2,7 +2,7 @@ import type { RunQueryResponseType } from '@/api/query/types.ts';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useSelectedTab } from '@/hooks';
 import locales from '@/locales';
-import { useDataStore } from '@/store/dataStore/data.store';
+import { useTableData } from '@/contexts/TableDataContext';
 import type { SortType } from '@/types';
 import { Box, Button } from '@mui/material';
 import { type JSX, useMemo } from 'react';
@@ -11,10 +11,8 @@ import AddSortButton from './SortItem/AddSortButton/AddSortButton.tsx';
 import SortItem from './SortItem/SortItem.tsx';
 
 export default function Sorts(): JSX.Element {
-  const { getColumns, runQuery } = useDataStore();
+  const { columns, runQuery } = useTableData();
   const selectedTab = useSelectedTab();
-
-  const columns = useMemo(() => getColumns(), [getColumns]);
 
   if (!selectedTab) return <></>;
 

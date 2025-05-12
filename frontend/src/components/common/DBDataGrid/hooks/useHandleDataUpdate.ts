@@ -1,4 +1,4 @@
-import { useDataStore } from '@/store/dataStore/data.store';
+import { useTableData } from '@/contexts/TableDataContext';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ColumnType, RowType } from '@/types';
 import type { HotTableRef } from '@handsontable/react-wrapper';
@@ -11,7 +11,7 @@ type UseHandleDataUpdateProps = {
 };
 
 export const useHandleDataUpdate = ({ hotTableRef, rows, columns }: UseHandleDataUpdateProps): void => {
-  const { isDataFetching } = useDataStore();
+  const { isLoading } = useTableData();
   const selectedTabId = useTabStore((state) => state.selectedTabId);
 
   useEffect(() => {
@@ -26,5 +26,5 @@ export const useHandleDataUpdate = ({ hotTableRef, rows, columns }: UseHandleDat
         };
       })
     });
-  }, [isDataFetching, selectedTabId, columns, rows]);
+  }, [isLoading, selectedTabId, columns, rows]);
 };

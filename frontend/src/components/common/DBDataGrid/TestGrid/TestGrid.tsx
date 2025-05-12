@@ -1,5 +1,5 @@
 import {useContextMenu} from '@/hooks';
-import {useDataStore} from '@/store/dataStore/data.store';
+import {useTableData} from '@/contexts/TableDataContext';
 import {getCoreRowModel, useReactTable} from '@tanstack/react-table';
 import {type JSX, useEffect, useRef, useState} from 'react';
 import {StyledTable, TableContainer} from './TestGrid.styled';
@@ -25,7 +25,7 @@ export default function TestGrid({
   editable?: boolean;
 }): JSX.Element {
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const { updateEditedRows, getEditedRows, updateRow } = useDataStore();
+  const { updateEditedRows, editedRows, updateRow } = useTableData();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
   const [editingCell, setEditingCell] = useState<{ rowIndex: number; columnId: string } | null>(null);
@@ -93,17 +93,17 @@ export default function TestGrid({
     setEditingCell,
     updateEditedRows,
     updateRow,
-    getEditedRows
+    editedRows
   });
 
   const table = useReactTable({
     data: visibleRows,
     columns: tableColumns,
     getCoreRowModel: getCoreRowModel(),
-    columnResizeMode: 'onChange', // Changed back to 'onChange' for better UX
+    columnResizeMode: 'onChange',
     enableColumnResizing: true,
     enableRowSelection: false,
-    autoResetAll: false, // Prevent resetting during virtualization
+    autoResetAll: false,
     debugTable: false
   });
 

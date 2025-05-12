@@ -5,7 +5,7 @@ import { TabMode } from '@/core/enums';
 import { shortcuts } from '@/core/utils';
 import { useCurrentConnection, useSelectedTab, useShortcut } from '@/hooks';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { useDataStore } from '@/store/dataStore/data.store';
+import { useTableData } from '@/contexts/TableDataContext';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store.ts';
@@ -22,8 +22,7 @@ export default function ConnectionInfo(): JSX.Element {
   const { reloadTree } = useTreeStore();
   const { showSettings, toggleShowAddConnection } = useSettingStore();
   const selectedTab = useSelectedTab();
-  const { runQuery, runRawQuery, removeEditedRowsByTabId, deleteRemovedRowsByTabId, removeUnsavedRowsByTabId } =
-    useDataStore();
+  const { runQuery, runRawQuery, updateEditedRows, updateRemovedRows, updateUnsavedRows } = useTableData();
 
   useShortcut(shortcuts.reloadTab, () => handleRefresh());
 
@@ -52,9 +51,9 @@ export default function ConnectionInfo(): JSX.Element {
 
     if (selectedTab?.mode === TabMode.Data) {
       await runQuery();
-      removeEditedRowsByTabId(selectedTab?.id ?? '');
-      deleteRemovedRowsByTabId(selectedTab?.id ?? '');
-      removeUnsavedRowsByTabId(selectedTab?.id ?? '');
+      await updateEditedRows([]);
+      await updateRemovedRows([]);
+      await updateUnsavedRows([]);
       return;
     }
   };

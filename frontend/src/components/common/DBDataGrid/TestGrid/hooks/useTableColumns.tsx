@@ -1,9 +1,10 @@
 import {handleRowChangeLog} from '@/core/utils';
-import {useDataStore} from '@/store/dataStore/data.store';
+import {useTableData} from '@/contexts/TableDataContext';
 import type {ColumnType, RowType} from '@/types';
 import {type ColumnDef, createColumnHelper} from '@tanstack/react-table';
 import {type JSX, useCallback, useMemo, useRef, useState} from 'react';
 import {CellContainer, CellContent, CellInput} from './../TestGrid.styled';
+import {Checkbox} from '@mui/material';
 
 export default function useTableColumns({
   rows,
@@ -12,21 +13,131 @@ export default function useTableColumns({
   setEditingCell,
   updateEditedRows,
   updateRow,
-  getEditedRows
+  editedRows
 }: {
   rows: RowType[];
   columns: ColumnType[];
   editingCell: { rowIndex: number; columnId: string } | null;
   setEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void;
-  updateEditedRows: (rows: any) => void;
-  updateRow: (row: any) => void;
-  getEditedRows: () => any;
+  updateEditedRows: (rows: any) => Promise<void>;
+  updateRow: (row: any) => Promise<void>;
+  editedRows: any;
 }): ColumnDef<ColumnType, any>[] {
   const columnHelper = createColumnHelper<ColumnType>();
-  const { setSelectedRows } = useDataStore();
+  const { selectedRows, setSelectedRows } = useTableData();
+
+  // Track the last selected row index for shift-click selection
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
+
+  // Handle row selection with shift key support
+  const handleRowSelection = useCallback(
+    (rowIndex: number, isSelected: boolean, event: React.MouseEvent): void => {
+      // If shift key is pressed and we have a last selected index, select all rows in between
+      if (event.shiftKey && lastSelectedIndex !== null) {
+        const start = Math.min(lastSelectedIndex, rowIndex);
+        const end = Math.max(lastSelectedIndex, rowIndex);
+
+        // Get current selected rows
+        const currentSelected = [...selectedRows];
+
+        // Add or remove rows in the range
+        for (let i = start; i <= end; i++) {
+          const row = rows[i];
+          if (!row) continue;
+
+          const existingIndex = currentSelected.findIndex((sr) => sr.index === i);
+
+          if (isSelected && existingIndex === -1) {
+            // Add row to selection
+            currentSelected.push({
+              index: i,
+              selectedColumn: '',
+              row: row
+            });
+          } else if (!isSelected && existingIndex !== -1) {
+            // Remove row from selection
+            currentSelected.splice(existingIndex, 1);
+          }
+        }
+
+        setSelectedRows(currentSelected);
+      } else {
+        // Normal selection (toggle)
+        const existingIndex = selectedRows.findIndex((sr) => sr.index === rowIndex);
+
+        if (isSelected && existingIndex === -1) {
+          // Add to selection
+          setSelectedRows([
+            ...selectedRows,
+            {
+              index: rowIndex,
+              selectedColumn: '',
+              row: rows[rowIndex]
+            }
+          ]);
+        } else if (!isSelected && existingIndex !== -1) {
+          // Remove from selection
+          const newSelectedRows = [...selectedRows];
+          newSelectedRows.splice(existingIndex, 1);
+          setSelectedRows(newSelectedRows);
+        }
+      }
+
+      // Update last selected index
+      setLastSelectedIndex(rowIndex);
+    },
+    [lastSelectedIndex, rows, selectedRows, setSelectedRows]
+  );
 
   return useMemo((): ColumnDef<ColumnType, any>[] => {
-    return columns.map((col) =>
+    // Create checkbox column
+    const checkboxColumn = columnHelper.display({
+      id: 'select',
+      header: ({ table }) => (
+        <Checkbox
+          sx={{ padding: 0 }}
+          size={'small'}
+          checked={selectedRows.length === rows.length && rows.length > 0}
+          indeterminate={selectedRows.length > 0 && selectedRows.length < rows.length}
+          onChange={(e) => {
+            // Select or deselect all rows
+            if (e.target.checked) {
+              const allRows = rows.map((row, index) => ({
+                index,
+                selectedColumn: '',
+                row
+              }));
+              setSelectedRows(allRows);
+            } else {
+              setSelectedRows([]);
+            }
+          }}
+        />
+      ),
+      cell: ({ row }) => {
+        const rowIndex = row.index;
+        const isSelected = selectedRows.some((sr) => sr.index === rowIndex);
+
+        return (
+          <Checkbox
+            sx={{ padding: 0 }}
+            size={'small'}
+            checked={isSelected}
+            onChange={(e, checked) => {
+              handleRowSelection(rowIndex, checked, e.nativeEvent as React.MouseEvent);
+            }}
+            onClick={(e) => {
+              // Stop propagation to prevent row selection
+              e.stopPropagation();
+            }}
+          />
+        );
+      },
+      size: 40
+    });
+
+    // Create data columns
+    const dataColumns = columns.map((col) =>
       //@ts-ignore
       columnHelper.accessor(col.name, {
         header: col.name,
@@ -49,8 +160,8 @@ export default function useTableColumns({
                 [column.id]: newValue
               };
 
-              const editedRows = handleRowChangeLog(
-                getEditedRows(),
+              const newEditedRows = handleRowChangeLog(
+                editedRows,
                 row.original,
                 column.id,
                 //@ts-ignore
@@ -58,7 +169,7 @@ export default function useTableColumns({
                 newValue
               );
 
-              updateEditedRows(editedRows);
+              updateEditedRows(newEditedRows);
               updateRow(newRow);
             }
             setEditingCell(null);
@@ -116,5 +227,8 @@ export default function useTableColumns({
         }
       })
     );
-  }, [rows, editingCell, columns]);
+
+    // Return combined columns array with checkbox first
+    return [checkboxColumn, ...dataColumns];
+  }, [rows, editingCell, columns, selectedRows, handleRowSelection]);
 }

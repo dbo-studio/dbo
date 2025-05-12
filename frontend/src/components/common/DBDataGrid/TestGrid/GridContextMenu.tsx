@@ -2,7 +2,7 @@ import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
 import { handleRowChangeLog } from '@/core/utils';
 import locales from '@/locales';
-import { useDataStore } from '@/store/dataStore/data.store';
+import { useTableData } from '@/contexts/TableDataContext';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ContextMenuType } from '@/types';
@@ -17,26 +17,29 @@ export default function GridContextMenu({
 }): JSX.Element {
   const { toggleShowQuickLookEditor } = useSettingStore();
   const selectedTabId = useTabStore((state) => state.selectedTabId);
-  const { getSelectedRows, updateEditedRows, getEditedRows, updateRow } = useDataStore();
+  const { selectedRows, updateEditedRows, editedRows, updateRow } = useTableData();
 
   const valueReplacer = (newValue: any): void => {
     if (!selectedTabId) return;
 
-    const rows = getSelectedRows();
-    for (const row of rows) {
+    for (const row of selectedRows) {
       if (!row.row) continue;
       const newRow = { ...row.row };
 
-      const editedRows = handleRowChangeLog(
-        getEditedRows(),
+      const newEditedRows = handleRowChangeLog(
+        editedRows,
         row.row,
         row.selectedColumn,
         row.row[row.selectedColumn],
         newValue
       );
-      updateEditedRows(editedRows);
+      updateEditedRows(newEditedRows).catch(error => {
+        console.error('Error updating edited rows:', error);
+      });
       newRow[row.selectedColumn] = newValue;
-      updateRow(newRow);
+      updateRow(newRow).catch(error => {
+        console.error('Error updating row:', error);
+      });
     }
   };
 
