@@ -133,7 +133,8 @@ export default function useTableColumns({
           />
         );
       },
-      size: 40
+      size: 20,
+      enableResizing: false // Make checkbox column non-resizable
     });
 
     // Create data columns
