@@ -13,7 +13,85 @@ import type {
 } from '../types';
 import { CellContainer, CellContent, CellInput } from './../TestGrid.styled';
 
-// Hook for managing cell editing state and behavior
+// Hook for managing row selection with optimized lookups
+const useRowSelection = (
+  rows: RowType[],
+  selectedRows: any[],
+  setSelectedRows: (rows: any) => Promise<void>
+): RowSelectionReturn => {
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
+
+  // Create a Map for O(1) lookups of selected rows
+  const selectedRowsMap = useMemo(() => {
+    const map = new Map<number, boolean>();
+    for (const row of selectedRows) {
+      map.set(row.index, true);
+    }
+    return map;
+  }, [selectedRows]);
+
+  const handleRowSelection = useCallback(
+    (rowIndex: number, isSelected: boolean, event: React.MouseEvent): void => {
+      if (event.shiftKey && lastSelectedIndex !== null) {
+        const start = Math.min(lastSelectedIndex, rowIndex);
+        const end = Math.max(lastSelectedIndex, rowIndex);
+        const currentSelected = new Map(selectedRowsMap);
+
+        // Batch update for shift selection
+        const updates: any[] = [];
+        for (let i = start; i <= end; i++) {
+          const row = rows[i];
+          if (!row) continue;
+
+          if (isSelected && !currentSelected.has(i)) {
+            updates.push({
+              index: i,
+              selectedColumn: '',
+              row: row
+            });
+          } else if (!isSelected && currentSelected.has(i)) {
+            currentSelected.delete(i);
+          }
+        }
+
+        if (updates.length > 0) {
+          setSelectedRows([...selectedRows, ...updates]);
+        } else if (currentSelected.size !== selectedRows.length) {
+          setSelectedRows(
+            Array.from(currentSelected.entries()).map(([index]) => ({
+              index,
+              selectedColumn: '',
+              row: rows[index]
+            }))
+          );
+        }
+      } else {
+        // Single row selection
+        if (isSelected && !selectedRowsMap.has(rowIndex)) {
+          setSelectedRows([
+            ...selectedRows,
+            {
+              index: rowIndex,
+              selectedColumn: '',
+              row: rows[rowIndex]
+            }
+          ]);
+        } else if (!isSelected && selectedRowsMap.has(rowIndex)) {
+          setSelectedRows(selectedRows.filter((sr) => sr.index !== rowIndex));
+        }
+      }
+
+      setLastSelectedIndex(rowIndex);
+    },
+    [lastSelectedIndex, rows, selectedRows, selectedRowsMap, setSelectedRows]
+  );
+
+  return {
+    handleRowSelection
+  };
+};
+
+// Optimize cell editing with immediate UI updates
 const useCellEditing = (
   row: any,
   columnId: string,
@@ -21,12 +99,14 @@ const useCellEditing = (
   editedRows: any,
   updateEditedRows: (rows: any) => Promise<void>,
   updateRow: (row: any) => Promise<void>,
-  setEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void
+  setEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void,
+  onRowUpdate: (rowIndex: number, newValue: string) => void
 ): CellEditingReturn => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const updateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const handleRowChange = useCallback(
-    (e: React.FocusEvent<HTMLInputElement>) => {
+    (e: React.FocusEvent<HTMLInputElement>): void => {
       const newValue = e.target.value;
       if (newValue !== cellValue) {
         const newRow = {
@@ -34,15 +114,33 @@ const useCellEditing = (
           [columnId]: newValue
         };
 
-        const newEditedRows = handleRowChangeLog(editedRows, row, columnId, row[columnId], newValue);
+        // Update UI immediately
+        onRowUpdate(row.dbo_index, newValue);
 
-        updateEditedRows(newEditedRows);
-        updateRow(newRow);
+        // Clear any pending updates
+        if (updateTimeoutRef.current) {
+          clearTimeout(updateTimeoutRef.current);
+        }
+
+        // Update IndexedDB in the background
+        updateTimeoutRef.current = setTimeout(() => {
+          const newEditedRows = handleRowChangeLog(editedRows, row, columnId, row[columnId], newValue);
+          Promise.all([updateEditedRows(newEditedRows), updateRow(newRow)]).catch(console.error);
+        }, 100);
       }
       setEditingCell(null);
     },
-    [row, columnId, cellValue, editedRows, updateEditedRows, updateRow, setEditingCell]
+    [row, columnId, cellValue, editedRows, updateEditedRows, updateRow, setEditingCell, onRowUpdate]
   );
+
+  // Cleanup timeout on unmount
+  useEffect((): (() => void) => {
+    return (): void => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return {
     inputRef,
@@ -98,68 +196,6 @@ const useCellSelection = (
   };
 };
 
-// Hook for managing row selection
-const useRowSelection = (
-  rows: RowType[],
-  selectedRows: any[],
-  setSelectedRows: (rows: any) => Promise<void>
-): RowSelectionReturn => {
-  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
-
-  const handleRowSelection = useCallback(
-    (rowIndex: number, isSelected: boolean, event: React.MouseEvent): void => {
-      if (event.shiftKey && lastSelectedIndex !== null) {
-        const start = Math.min(lastSelectedIndex, rowIndex);
-        const end = Math.max(lastSelectedIndex, rowIndex);
-        const currentSelected = [...selectedRows];
-
-        for (let i = start; i <= end; i++) {
-          const row = rows[i];
-          if (!row) continue;
-
-          const existingIndex = currentSelected.findIndex((sr) => sr.index === i);
-
-          if (isSelected && existingIndex === -1) {
-            currentSelected.push({
-              index: i,
-              selectedColumn: '',
-              row: row
-            });
-          } else if (!isSelected && existingIndex !== -1) {
-            currentSelected.splice(existingIndex, 1);
-          }
-        }
-
-        setSelectedRows(currentSelected);
-      } else {
-        const existingIndex = selectedRows.findIndex((sr) => sr.index === rowIndex);
-
-        if (isSelected && existingIndex === -1) {
-          setSelectedRows([
-            ...selectedRows,
-            {
-              index: rowIndex,
-              selectedColumn: '',
-              row: rows[rowIndex]
-            }
-          ]);
-        } else if (!isSelected && existingIndex !== -1) {
-          const newSelectedRows = [...selectedRows];
-          newSelectedRows.splice(existingIndex, 1);
-          setSelectedRows(newSelectedRows);
-        }
-      }
-
-      setLastSelectedIndex(rowIndex);
-    },
-    [lastSelectedIndex, rows, selectedRows, setSelectedRows]
-  );
-
-  return {
-    handleRowSelection
-  };
-};
-
 // Memoized Cell component
 const MemoizedCell = memo(
   ({
@@ -172,10 +208,12 @@ const MemoizedCell = memo(
     editedRows,
     updateEditedRows,
     updateRow,
-    setSelectedRows
+    setSelectedRows,
+    onRowUpdate
   }: MemoizedCellProps) => {
     const cellValue = String(value === null ? 'NULL' : value || '');
     const [isHovering, setIsHovering] = useState(false);
+    const cellRef = useRef<HTMLDivElement>(null);
 
     const { inputRef, handleRowChange } = useCellEditing(
       row,
@@ -184,7 +222,8 @@ const MemoizedCell = memo(
       editedRows,
       updateEditedRows,
       updateRow,
-      setEditingCell
+      setEditingCell,
+      onRowUpdate
     );
 
     const { handleClick } = useCellSelection(row, rowIndex, columnId, setSelectedRows);
@@ -193,6 +232,21 @@ const MemoizedCell = memo(
       if (isEditing && inputRef.current) {
         inputRef.current.focus();
       }
+    }, [isEditing]);
+
+    useEffect((): (() => void) => {
+      const handleClickOutside = (event: MouseEvent): void => {
+        if (isEditing && cellRef.current && !cellRef.current.contains(event.target as Node)) {
+          if (inputRef.current) {
+            inputRef.current.blur();
+          }
+        }
+      };
+
+      document.addEventListener('mousedown', handleClickOutside);
+      return (): void => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
     }, [isEditing]);
 
     if (isEditing) {
@@ -214,6 +268,7 @@ const MemoizedCell = memo(
 
     return (
       <CellContainer
+        ref={cellRef}
         className={isHovering ? 'cell-hover' : ''}
         onMouseEnter={(): void => setIsHovering(true)}
         onMouseLeave={(): void => setIsHovering(false)}
@@ -241,7 +296,8 @@ export default function useTableColumns({
   setEditingCell,
   updateEditedRows,
   updateRow,
-  editedRows
+  editedRows,
+  onRowUpdate = () => {}
 }: TableColumnsProps): CustomColumnDef[] {
   const { selectedRows, setSelectedRows } = useTableData();
   const { handleRowSelection } = useRowSelection(rows, selectedRows, setSelectedRows);
@@ -315,6 +371,7 @@ export default function useTableColumns({
                 updateEditedRows={updateEditedRows}
                 updateRow={updateRow}
                 setSelectedRows={setSelectedRows}
+                onRowUpdate={(newValue: string): void => onRowUpdate(rowIndex, newValue)}
               />
             );
           }
@@ -322,5 +379,5 @@ export default function useTableColumns({
     );
 
     return [checkboxColumn, ...dataColumns];
-  }, [rows, editingCell, columns, selectedRows, handleRowSelection]);
+  }, [rows, editingCell, columns, selectedRows, handleRowSelection, onRowUpdate]);
 }

@@ -1,6 +1,6 @@
 import type { RowType } from '@/types';
 import type { JSX } from 'react';
-import { useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { StyledTableRow, TableCell } from '../TestGrid.styled';
 import type { CustomTableBodyRowsProps } from '../types';
 
@@ -15,6 +15,42 @@ export default function CustomTableBodyRows({
   selectedRows,
   setSelectedRows
 }: CustomTableBodyRowsProps): JSX.Element {
+  // Local state for immediate UI updates
+  const [localEditedRows, setLocalEditedRows] = useState<Map<number, Map<string, string>>>(new Map());
+
+  // Create Maps for O(1) lookups
+  const removedRowsMap = useMemo(() => {
+    const map = new Map<number, boolean>();
+    for (const row of removedRows) {
+      map.set(row.dbo_index, true);
+    }
+    return map;
+  }, [removedRows]);
+
+  const unsavedRowsMap = useMemo(() => {
+    const map = new Map<number, boolean>();
+    for (const row of unsavedRows) {
+      map.set(row.dbo_index, true);
+    }
+    return map;
+  }, [unsavedRows]);
+
+  const editedRowsMap = useMemo(() => {
+    const map = new Map<number, boolean>();
+    for (const row of editedRows) {
+      map.set(row.dboIndex, true);
+    }
+    return map;
+  }, [editedRows]);
+
+  const selectedRowsMap = useMemo(() => {
+    const map = new Map<number, boolean>();
+    for (const row of selectedRows) {
+      map.set(row.index, true);
+    }
+    return map;
+  }, [selectedRows]);
+
   const handleSelect = useCallback(
     (rowIndex: number, columnId: string, row: RowType): void => {
       setSelectedRows([
@@ -28,13 +64,23 @@ export default function CustomTableBodyRows({
     [setSelectedRows]
   );
 
+  const handleRowUpdate = useCallback((rowIndex: number, columnId: string, newValue: string): void => {
+    setLocalEditedRows((prev) => {
+      const newMap = new Map(prev);
+      const rowMap = newMap.get(rowIndex) || new Map();
+      rowMap.set(columnId, newValue);
+      newMap.set(rowIndex, rowMap);
+      return newMap;
+    });
+  }, []);
+
   return (
     <tbody>
       {rows.map((row, rowIndex) => {
-        const isRemoved = removedRows.some((v: RowType) => v.dbo_index === rowIndex);
-        const isUnsaved = unsavedRows.some((v: RowType) => v.dbo_index === rowIndex);
-        const isEdited = editedRows.some((v: any) => v.dboIndex === rowIndex);
-        const isSelected = selectedRows.some((v) => v.index === rowIndex);
+        const isRemoved = removedRowsMap.has(rowIndex);
+        const isUnsaved = unsavedRowsMap.has(rowIndex);
+        const isEdited = editedRowsMap.has(rowIndex) || localEditedRows.has(rowIndex);
+        const isSelected = selectedRowsMap.has(rowIndex);
 
         return (
           <StyledTableRow
@@ -48,7 +94,8 @@ export default function CustomTableBodyRows({
           >
             {tableColumns.map((column) => {
               const columnId = column.id;
-              const value = row[column.accessor || columnId];
+              const localValue = localEditedRows.get(rowIndex)?.get(columnId);
+              const value = localValue !== undefined ? localValue : row[column.accessor || columnId];
 
               return (
                 <TableCell
@@ -59,7 +106,12 @@ export default function CustomTableBodyRows({
                   }}
                   style={{ width: columnSizes[columnId] || column.size || 200 }}
                 >
-                  {column.cell({ row, rowIndex: rowIndex, value })}
+                  {column.cell({
+                    row,
+                    rowIndex: rowIndex,
+                    value,
+                    onRowUpdate: (newValue: string): void => handleRowUpdate(rowIndex, columnId, newValue)
+                  })}
                 </TableCell>
               );
             })}

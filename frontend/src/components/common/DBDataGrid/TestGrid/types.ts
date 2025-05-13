@@ -6,7 +6,7 @@ export interface CustomColumnDef {
   id: string;
   header: JSX.Element | string;
   accessor?: string;
-  cell: (props: { row: any; rowIndex: number; value: any }) => JSX.Element;
+  cell: (props: CellProps) => JSX.Element;
   size?: number;
   minSize?: number;
   maxSize?: number;
@@ -24,6 +24,7 @@ export interface MemoizedCellProps {
   updateEditedRows: (rows: any) => Promise<void>;
   updateRow: (row: any) => Promise<void>;
   setSelectedRows: (rows: any) => Promise<void>;
+  onRowUpdate: (newValue: string) => void;
 }
 
 export interface TableColumnsProps {
@@ -34,6 +35,7 @@ export interface TableColumnsProps {
   updateEditedRows: (rows: any) => Promise<void>;
   updateRow: (row: any) => Promise<void>;
   editedRows: any;
+  onRowUpdate?: (rowIndex: number, newValue: string) => void;
 }
 
 export interface CellEditingReturn {
@@ -68,4 +70,11 @@ export interface CustomTableHeaderRowProps {
   tableColumns: CustomColumnDef[];
   columns: ColumnType[];
   onColumnResize?: (columnSizes: Record<string, number>) => void;
+}
+
+export interface CellProps {
+  row: any;
+  rowIndex: number;
+  value: any;
+  onRowUpdate: (newValue: string) => void;
 }

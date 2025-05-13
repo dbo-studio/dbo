@@ -1,11 +1,11 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton';
+import { useTableData } from '@/contexts/TableData';
 import { TabMode } from '@/core/enums';
 import { createEmptyRow } from '@/core/utils';
 import { useCurrentConnection } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
-import { useTableData } from '@/contexts/TableData';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, IconButton, Stack } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
@@ -116,7 +116,10 @@ export default function StatusBarActions(): JSX.Element {
 
   const handleDiscardChanges = async (): Promise<void> => {
     if (selectedTab?.mode === TabMode.Data) {
+      // Restore edited rows to their original state
       await restoreEditedRows();
+
+      // Clear unsaved rows
       await updateUnsavedRows([]);
 
       // Remove unsaved rows from the main rows array
@@ -126,7 +129,10 @@ export default function StatusBarActions(): JSX.Element {
         await updateRows(updatedRows);
       }
 
-      await deleteRemovedRows();
+      // Clear removed rows without affecting the main rows array
+      await updateRemovedRows([]);
+
+      // Clear selection
       await setSelectedRows([]);
     }
   };
