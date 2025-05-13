@@ -1,12 +1,13 @@
-import { useCallback, useRef, useEffect } from 'react';
-import { useTabStore } from '@/store/tabStore/tab.store';
-import { indexedDBService } from '@/services/indexedDB/indexedDB.service';
 import { runQuery, runRawQuery } from '@/api/query';
 import type { RunQueryResponseType } from '@/api/query/types';
+import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { toast } from 'sonner';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { isAxiosError } from 'axios';
 import { debounce } from 'lodash';
+import { useCallback, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
+import type { TableDataContextType } from './types';
 
 /**
  * Hook for handling query operations in the TableData context
@@ -15,7 +16,7 @@ export const useTableDataQuery = (state: {
   setRows: (rows: any[]) => void;
   setColumns: (columns: any[]) => void;
   setIsLoading: (isLoading: boolean) => void;
-}) => {
+}): TableDataContextType => {
   const { selectedTabId } = useTabStore();
   const { setRows, setColumns, setIsLoading } = state;
 
@@ -37,7 +38,7 @@ export const useTableDataQuery = (state: {
 
   // Clean up the debounced function on unmount
   useEffect(() => {
-    return () => {
+    return (): void => {
       debouncedSaveToIndexedDB.cancel();
     };
   }, [debouncedSaveToIndexedDB]);

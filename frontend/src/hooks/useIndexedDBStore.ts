@@ -1,17 +1,18 @@
-import { useEffect, useCallback } from 'react';
+import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { indexedDBService } from '@/services/indexedDB/indexedDB.service';
-import type { RowType, ColumnType } from '@/types';
-import type { EditedRow } from '@/types';
-import type { SelectedRow } from '@/store/dataStore/types';
+import { useCallback, useEffect } from 'react';
 
 /**
  * Hook to manage data persistence with IndexedDB
  * This hook syncs data between the Zustand store and IndexedDB
  * and handles loading data when switching tabs
  */
-export const useIndexedDBStore = () => {
+export const useIndexedDBStore = (): {
+  clearTabData: (tabId: string) => Promise<void>;
+  refreshDataFromServer: () => Promise<void>;
+  isLoading: boolean;
+} => {
   const {
     getRows,
     updateRows,
@@ -36,7 +37,7 @@ export const useIndexedDBStore = () => {
   useEffect(() => {
     if (!selectedTabId) return;
 
-    const loadDataFromIndexedDB = async () => {
+    const loadDataFromIndexedDB = async (): Promise<void> => {
       try {
         toggleDataFetching(true);
 
@@ -81,7 +82,7 @@ export const useIndexedDBStore = () => {
   useEffect(() => {
     if (!selectedTabId) return;
 
-    const syncRowsToIndexedDB = async () => {
+    const syncRowsToIndexedDB = async (): Promise<void> => {
       const rows = getRows();
       if (rows.length > 0) {
         await indexedDBService.saveRows(selectedTabId, rows);
@@ -95,7 +96,7 @@ export const useIndexedDBStore = () => {
   useEffect(() => {
     if (!selectedTabId) return;
 
-    const syncColumnsToIndexedDB = async () => {
+    const syncColumnsToIndexedDB = async (): Promise<void> => {
       const columns = getColumns();
       if (columns.length > 0) {
         await indexedDBService.saveColumns(selectedTabId, columns);
@@ -109,7 +110,7 @@ export const useIndexedDBStore = () => {
   useEffect(() => {
     if (!selectedTabId) return;
 
-    const syncEditedRowsToIndexedDB = async () => {
+    const syncEditedRowsToIndexedDB = async (): Promise<void> => {
       const editedRows = getEditedRows();
       await indexedDBService.saveEditedRows(selectedTabId, editedRows);
     };
@@ -121,7 +122,7 @@ export const useIndexedDBStore = () => {
   useEffect(() => {
     if (!selectedTabId) return;
 
-    const syncRemovedRowsToIndexedDB = async () => {
+    const syncRemovedRowsToIndexedDB = async (): Promise<void> => {
       const removedRows = getRemovedRows();
       await indexedDBService.saveRemovedRows(selectedTabId, removedRows);
     };
@@ -133,7 +134,7 @@ export const useIndexedDBStore = () => {
   useEffect(() => {
     if (!selectedTabId) return;
 
-    const syncUnsavedRowsToIndexedDB = async () => {
+    const syncUnsavedRowsToIndexedDB = async (): Promise<void> => {
       const unsavedRows = getUnsavedRows();
       await indexedDBService.saveUnsavedRows(selectedTabId, unsavedRows);
     };
@@ -145,7 +146,7 @@ export const useIndexedDBStore = () => {
   useEffect(() => {
     if (!selectedTabId) return;
 
-    const syncSelectedRowsToIndexedDB = async () => {
+    const syncSelectedRowsToIndexedDB = async (): Promise<void> => {
       const selectedRows = getSelectedRows();
       await indexedDBService.saveSelectedRows(selectedTabId, selectedRows);
     };

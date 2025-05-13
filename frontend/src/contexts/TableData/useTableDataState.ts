@@ -1,14 +1,14 @@
-import { useState } from 'react';
-import { useTabStore } from '@/store/tabStore/tab.store';
-import { indexedDBService } from '@/services/indexedDB/indexedDB.service';
-import type { RowType, ColumnType, EditedRow } from '@/types';
+import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import type { SelectedRow } from '@/store/dataStore/types';
+import { useTabStore } from '@/store/tabStore/tab.store';
+import type { ColumnType, EditedRow, RowType } from '@/types';
+import { useState } from 'react';
 import type { TableDataState } from './types';
 
 /**
  * Hook for managing the state of the TableData context
  */
-export const useTableDataState = () => {
+export const useTableDataState = (): TableDataState => {
   const { selectedTabId } = useTabStore();
   const [rows, setRows] = useState<RowType[]>([]);
   const [columns, setColumns] = useState<ColumnType[]>([]);
@@ -21,7 +21,7 @@ export const useTableDataState = () => {
   /**
    * Load data from IndexedDB
    */
-  const loadDataFromIndexedDB = async () => {
+  const loadDataFromIndexedDB = async (): Promise<{ rows: RowType[]; columns: ColumnType[] } | null> => {
     if (!selectedTabId) return null;
 
     setIsLoading(true);

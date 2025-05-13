@@ -1,20 +1,20 @@
-import React, { createContext, useContext, useEffect, useMemo } from 'react';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import { type JSX, createContext, useContext, useEffect, useMemo } from 'react';
 import type { TableDataContextType, TableDataProviderProps } from './TableData/types';
-import { useTableDataState } from './TableData/useTableDataState';
-import { useTableDataQuery } from './TableData/useTableDataQuery';
-import { useTableDataRows } from './TableData/useTableDataRows';
 import { useTableDataColumns } from './TableData/useTableDataColumns';
 import { useTableDataEdited } from './TableData/useTableDataEdited';
+import { useTableDataQuery } from './TableData/useTableDataQuery';
 import { useTableDataRemoved } from './TableData/useTableDataRemoved';
-import { useTableDataUnsaved } from './TableData/useTableDataUnsaved';
+import { useTableDataRows } from './TableData/useTableDataRows';
 import { useTableDataSelected } from './TableData/useTableDataSelected';
+import { useTableDataState } from './TableData/useTableDataState';
+import { useTableDataUnsaved } from './TableData/useTableDataUnsaved';
 
 // Create the context with a default value
 const TableDataContext = createContext<TableDataContextType | undefined>(undefined);
 
 // Provider component
-export function TableDataProvider({ children }: TableDataProviderProps) {
+export function TableDataProvider({ children }: TableDataProviderProps): JSX.Element {
   const { selectedTabId } = useTabStore();
 
   // Initialize state
@@ -33,7 +33,7 @@ export function TableDataProvider({ children }: TableDataProviderProps) {
   useEffect(() => {
     if (!selectedTabId) return;
 
-    const loadData = async () => {
+    const loadData = async (): Promise<void> => {
       state.setIsLoading(true);
       try {
         // Try to load data from IndexedDB
@@ -59,13 +59,7 @@ export function TableDataProvider({ children }: TableDataProviderProps) {
   const contextValue = useMemo<TableDataContextType>(
     () => ({
       // Data access
-      rows: state.rows,
-      columns: state.columns,
-      editedRows: state.editedRows,
-      removedRows: state.removedRows,
-      unsavedRows: state.unsavedRows,
-      selectedRows: state.selectedRows,
-      isLoading: state.isLoading,
+      ...state,
 
       // Row operations
       ...rowOperations,
@@ -113,7 +107,7 @@ export function TableDataProvider({ children }: TableDataProviderProps) {
 }
 
 // Custom hook to use the context
-export function useTableData() {
+export function useTableData(): TableDataContextType {
   const context = useContext(TableDataContext);
   if (context === undefined) {
     throw new Error('useTableData must be used within a TableDataProvider');

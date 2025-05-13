@@ -11,11 +11,11 @@ export const CustomResizer: React.FC<CustomResizerProps> = ({ columnId, isResizi
   // Skip rendering for checkbox column
   if (columnId === 'select') return null;
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = (e: React.MouseEvent): void => {
     onResizeStart(columnId, e);
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
+  const handleTouchStart = (e: React.TouchEvent): void => {
     onResizeStart(columnId, e);
   };
 

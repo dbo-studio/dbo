@@ -115,7 +115,7 @@ export const Resizer = styled('div')(({ theme }) => ({
   right: -3, // Position it to extend slightly outside the cell for easier grabbing
   top: 0,
   height: '100%',
-  width: '6px', // Wider for easier grabbing
+  width: '3px', // Wider for easier grabbing
   background: theme.palette.divider, // Slightly visible by default
   cursor: 'col-resize',
   userSelect: 'none',
@@ -134,7 +134,7 @@ export const Resizer = styled('div')(({ theme }) => ({
     background: theme.palette.primary.main,
     opacity: 0.8, // More visible when resizing
     // Wider hit area during resize for better UX
-    width: '10px'
+    width: '5px'
   }
 }));
 

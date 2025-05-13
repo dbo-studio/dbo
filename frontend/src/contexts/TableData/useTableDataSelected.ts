@@ -1,8 +1,9 @@
-import { useCallback, useRef, useEffect } from 'react';
-import { useTabStore } from '@/store/tabStore/tab.store';
-import { indexedDBService } from '@/services/indexedDB/indexedDB.service';
+import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import type { SelectedRow } from '@/store/dataStore/types';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { debounce } from 'lodash';
+import { useCallback, useEffect, useRef } from 'react';
+import type { TableDataContextType } from './types';
 
 /**
  * Hook for handling selected rows operations in the TableData context
@@ -10,7 +11,7 @@ import { debounce } from 'lodash';
 export const useTableDataSelected = (state: {
   selectedRows: SelectedRow[];
   setSelectedRowsState: (rows: SelectedRow[]) => void;
-}) => {
+}): TableDataContextType => {
   const { selectedTabId } = useTabStore();
   const { selectedRows, setSelectedRowsState } = state;
 
@@ -37,7 +38,7 @@ export const useTableDataSelected = (state: {
 
   // Clean up the debounced function on unmount
   useEffect(() => {
-    return () => {
+    return (): void => {
       debouncedSaveToIndexedDB.cancel();
     };
   }, [debouncedSaveToIndexedDB]);

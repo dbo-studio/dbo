@@ -1,10 +1,10 @@
 import TestGrid from '@/components/common/DBDataGrid/TestGrid/TestGrid';
+import { useTableData } from '@/contexts/TableDataContext';
 import { useMount } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import Sorts from '@/routes/Data/Sorts/Sorts.tsx';
 import { Box, CircularProgress } from '@mui/material';
 import type { JSX } from 'react';
-import { useTableData } from '@/contexts/TableDataContext';
 import { useEffect, useState } from 'react';
 import ActionBar from './ActionBar/ActionBar';
 import Columns from './Columns/Columns';
@@ -21,19 +21,17 @@ function DataContent(): JSX.Element {
   const mounted = useMount();
   const [isGridReady, setIsGridReady] = useState(false);
 
-  const { rows, columns, refreshDataFromServer, getActiveColumns } = useTableData();
+  const { rows, columns, getActiveColumns } = useTableData();
 
-  // Reset grid ready state when selected tab changes
   useEffect(() => {
     setIsGridReady(false);
 
-    // Delay rendering the TestGrid to allow the page to load first
     const timer = setTimeout(() => {
       setIsGridReady(true);
-    }, 100); // Small delay to ensure the page renders first
+    }, 100);
 
-    return () => clearTimeout(timer);
-  }, [selectedTab?.id]); // Reset when tab changes
+    return (): void => clearTimeout(timer);
+  }, [selectedTab?.id]);
 
   if (!mounted) {
     return <></>;
@@ -41,7 +39,7 @@ function DataContent(): JSX.Element {
 
   return (
     <>
-      <ActionBar onRefresh={refreshDataFromServer} />
+      <ActionBar selectedTab={selectedTab} />
       {selectedTab?.showFilters && <Filters />}
       {selectedTab?.showSorts && <Sorts />}
       {selectedTab?.showQuery && <QueryPreview />}

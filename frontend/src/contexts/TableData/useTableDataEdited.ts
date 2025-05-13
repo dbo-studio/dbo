@@ -1,8 +1,9 @@
-import { useCallback, useRef, useEffect } from 'react';
+import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { indexedDBService } from '@/services/indexedDB/indexedDB.service';
-import type { RowType, EditedRow } from '@/types';
+import type { EditedRow, RowType } from '@/types';
 import { debounce } from 'lodash';
+import { useCallback, useEffect, useRef } from 'react';
+import type { TableDataContextType } from './types';
 
 /**
  * Hook for handling edited rows operations in the TableData context
@@ -14,7 +15,7 @@ export const useTableDataEdited = (state: {
   setEditedRows: (rows: EditedRow[]) => void;
   unsavedRows: RowType[];
   setUnsavedRows: (rows: RowType[]) => void;
-}) => {
+}): TableDataContextType => {
   const { selectedTabId } = useTabStore();
   const { rows, setRows, editedRows, setEditedRows, unsavedRows, setUnsavedRows } = state;
 
@@ -61,7 +62,7 @@ export const useTableDataEdited = (state: {
 
   // Clean up debounced functions on unmount
   useEffect(() => {
-    return () => {
+    return (): void => {
       debouncedSaveEditedAndUnsaved.cancel();
       debouncedSaveRowsAndEditedRows.cancel();
     };
