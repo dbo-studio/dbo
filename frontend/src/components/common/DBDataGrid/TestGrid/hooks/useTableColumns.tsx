@@ -1,7 +1,7 @@
 import { handleRowChangeLog } from '@/core/utils';
 import { useTableData } from '@/contexts/TableDataContext';
 import type { ColumnType, RowType } from '@/types';
-import { type JSX, useCallback, useMemo, useRef, useState, memo } from 'react';
+import { type JSX, memo, useCallback, useMemo, useRef, useState } from 'react';
 import { CellContainer, CellContent, CellInput } from './../TestGrid.styled';
 import { Checkbox } from '@mui/material';
 
@@ -100,10 +100,9 @@ const MemoizedCell = memo(
       [handleSelect, rowIndex, columnId, setEditingCell]
     );
 
-    // Always define inputRef, regardless of editing state
-    const inputRef = useRef<HTMLInputElement>(null);
-
     if (isEditing) {
+      const inputRef = useRef<HTMLInputElement>(null);
+
       setTimeout(() => {
         if (inputRef.current) {
           inputRef.current.focus();

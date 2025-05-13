@@ -9,7 +9,9 @@ interface CustomTableBodyRowsProps {
   tableColumns: CustomColumnDef[];
   visibleRows: RowType[];
   context: (event: React.MouseEvent) => void;
+  virtualStartIndex?: number;
   columnSizes: Record<string, number>;
+  columns: ColumnType[];
   removedRows: RowType[];
   unsavedRows: RowType[];
   editedRows: any[];
@@ -21,37 +23,45 @@ export default function CustomTableBodyRows({
   tableColumns,
   visibleRows,
   context,
+  virtualStartIndex = 0,
   columnSizes,
+  columns,
   removedRows,
   unsavedRows,
   editedRows,
   selectedRows,
   setSelectedRows
 }: CustomTableBodyRowsProps): JSX.Element {
+
   const handleSelect = useCallback(
     (rowIndex: number, columnId: string, row: RowType): void => {
+      // Use the real row index by adding virtualStartIndex to the relative index
+      const realRowIndex = virtualStartIndex + rowIndex;
       setSelectedRows([
         {
-          index: rowIndex,
+          index: realRowIndex,
           selectedColumn: columnId,
           row: row
         }
       ]);
     },
-    [setSelectedRows]
+    [virtualStartIndex, setSelectedRows]
   );
 
   return (
     <tbody>
       {visibleRows.map((row, rowIndex) => {
-        const isRemoved = removedRows.some((v: RowType) => v.dbo_index === rowIndex);
-        const isUnsaved = unsavedRows.some((v: RowType) => v.dbo_index === rowIndex);
-        const isEdited = editedRows.some((v: any) => v.dboIndex === rowIndex);
-        const isSelected = selectedRows.some((v: SelectedRow) => v.index === rowIndex);
+        // Calculate the real row index by adding virtualStartIndex to the relative index
+        const realRowIndex = virtualStartIndex + rowIndex;
+
+        const isRemoved = removedRows.some((v: RowType) => v.dbo_index === realRowIndex);
+        const isUnsaved = unsavedRows.some((v: RowType) => v.dbo_index === realRowIndex);
+        const isEdited = editedRows.some((v: any) => v.dboIndex === realRowIndex);
+        const isSelected = selectedRows.some((v: SelectedRow) => v.index === realRowIndex);
 
         return (
           <StyledTableRow
-            key={`row-${rowIndex}`}
+            key={`row-${realRowIndex}`}
             className={`
               ${isRemoved ? 'removed-highlight' : ''}
               ${isUnsaved ? 'unsaved-highlight' : ''}
@@ -65,14 +75,14 @@ export default function CustomTableBodyRows({
 
               return (
                 <TableCell
-                  key={`cell-${rowIndex}-${columnId}`}
+                  key={`cell-${realRowIndex}-${columnId}`}
                   onContextMenu={(e): void => {
                     context(e);
                     handleSelect(rowIndex, columnId, row);
                   }}
                   style={{ width: columnSizes[columnId] || column.size || 200 }}
                 >
-                  {column.cell({ row, rowIndex, value })}
+                  {column.cell({ row, rowIndex: realRowIndex, value })}
                 </TableCell>
               );
             })}

@@ -57,7 +57,12 @@ export default function GridContextMenu({
       action: (): void => {
         valueReplacer('');
         onClose();
-      }
+      },
+      children: [
+        {
+          name: locales.set_empty
+        }
+      ]
     },
     {
       name: locales.set_null,
