@@ -2,28 +2,46 @@ import { tools } from '@/core/utils';
 import type { StateCreator } from 'zustand';
 import type { TabQuerySlice, TabStore } from '../types';
 
+const STORAGE_KEY = 'dbo_tab_queries';
+
+const getStoredQueries = (): Record<string, string> => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+};
+
+const setStoredQueries = (queries: Record<string, string>): void => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(queries));
+  } catch (error) {
+    console.error('Failed to store queries:', error);
+  }
+};
+
 export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [], TabQuerySlice> = (_, get) => ({
   getQuery: (): string => {
     const tab = get().selectedTab();
     if (!tab) return '';
 
-    if (tab.query && tools.isValidJSON(tab.query)) {
-      return JSON.parse(tab.query);
+    const storedQueries = getStoredQueries();
+    const storedQuery = storedQueries[tab.id];
+
+    if (storedQuery && tools.isValidJSON(storedQuery)) {
+      return JSON.parse(storedQuery);
     }
 
-    return tab?.query ?? '';
+    return storedQuery ?? '';
   },
   updateQuery: (query: string): void => {
     const tab = get().selectedTab();
     if (!tab) return;
 
-    if (!tools.isValidJSON(query)) {
-      // biome-ignore lint: reason
-      query = JSON.stringify(query);
-    }
-
-    tab.query = query;
-    get().updateSelectedTab(tab);
+    const storedQueries = getStoredQueries();
+    storedQueries[tab.id] = query;
+    setStoredQueries(storedQueries);
   },
   setShowQueryPreview: (): void => {
     const tab = get().selectedTab();
@@ -31,5 +49,8 @@ export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [],
 
     tab.showQuery = !tab.showQuery;
     get().updateSelectedTab(tab);
+  },
+  clearStoredQueries: (): void => {
+    localStorage.removeItem(STORAGE_KEY);
   }
 });

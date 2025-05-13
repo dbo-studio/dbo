@@ -64,7 +64,7 @@ export default function Query(): JSX.Element {
           {autocomplete && (
             <SqlEditor
               onMount={(): void => setShowGrid(true)}
-              onBlur={handleUpdateState}
+              onChange={handleUpdateState}
               autocomplete={autocomplete}
               value={value}
             />
