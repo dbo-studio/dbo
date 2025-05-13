@@ -1,8 +1,8 @@
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
+import { useTableData } from '@/contexts/TableDataContext';
 import { handleRowChangeLog } from '@/core/utils';
 import locales from '@/locales';
-import { useTableData } from '@/contexts/TableDataContext';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ContextMenuType } from '@/types';
@@ -46,37 +46,54 @@ export default function GridContextMenu({
   const menu: MenuType[] = [
     {
       name: locales.quick_look_editor,
+      closeBeforeAction: true,
       action: (): void => {
         toggleShowQuickLookEditor(true);
         onClose();
       }
     },
-
     {
-      name: locales.set_empty,
-      action: (): void => {
-        valueReplacer('');
-        onClose();
-      },
+      name: 'separator',
+      separator: true
+    },
+    {
+      name: locales.set_value,
       children: [
         {
-          name: locales.set_empty
+          name: locales.set_empty,
+          closeBeforeAction: true,
+          action: (): void => {
+            valueReplacer('');
+            onClose();
+          }
+        },
+        {
+          name: locales.set_null,
+          closeBeforeAction: true,
+          action: (): void => {
+            valueReplacer(null);
+            onClose();
+          }
+        },
+        {
+          name: locales.set_default,
+          closeBeforeAction: true,
+          action: (): void => {
+            valueReplacer('@DEFAULT');
+            onClose();
+          }
         }
       ]
     },
     {
-      name: locales.set_null,
-      action: (): void => {
-        valueReplacer(null);
-        onClose();
-      }
+      name: 'separator',
+      separator: true
     },
     {
-      name: locales.set_default,
-      action: (): void => {
-        valueReplacer('@DEFAULT');
-        onClose();
-      }
+      name: 'Copy'
+    },
+    {
+      name: 'Delete'
     }
   ];
 

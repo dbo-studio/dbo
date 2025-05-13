@@ -117,6 +117,7 @@
   "load_more": "Load more",
   "history_delete_confirm": "Are your sure delete histories?",
   "history_delete_success": "The Histories deleted successfully",
+  "set_value": "Set value",
   "set_default": "Set default",
   "set_empty": "Set empty",
   "set_null": "Set null"

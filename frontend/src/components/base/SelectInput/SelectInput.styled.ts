@@ -8,6 +8,7 @@ export const SelectInputStyles = (
   error: undefined | boolean,
   size?: 'small' | 'medium'
 ): StylesConfig => ({
+  // biome-ignore lint/nursery/useExplicitType: <explanation>
   control: (_, { isFocused }) => ({
     color: theme.palette.text.text,
     display: 'flex',
