@@ -100,9 +100,10 @@ const MemoizedCell = memo(
       [handleSelect, rowIndex, columnId, setEditingCell]
     );
 
-    if (isEditing) {
-      const inputRef = useRef<HTMLInputElement>(null);
+    // Always define inputRef, regardless of editing state
+    const inputRef = useRef<HTMLInputElement>(null);
 
+    if (isEditing) {
       setTimeout(() => {
         if (inputRef.current) {
           inputRef.current.focus();
