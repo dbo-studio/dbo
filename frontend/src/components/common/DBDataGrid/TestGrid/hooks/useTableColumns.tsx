@@ -1,46 +1,32 @@
-import { handleRowChangeLog } from '@/core/utils';
 import { useTableData } from '@/contexts/TableDataContext';
-import type { ColumnType, RowType } from '@/types';
-import { type JSX, memo, useCallback, useMemo, useRef, useState } from 'react';
-import { CellContainer, CellContent, CellInput } from './../TestGrid.styled';
+import { handleRowChangeLog } from '@/core/utils';
+import type { RowType } from '@/types';
 import { Checkbox } from '@mui/material';
+import { type JSX, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type {
+  CellEditingReturn,
+  CellSelectionReturn,
+  CustomColumnDef,
+  MemoizedCellProps,
+  RowSelectionReturn,
+  TableColumnsProps
+} from '../types';
+import { CellContainer, CellContent, CellInput } from './../TestGrid.styled';
 
-// Memoized Cell component to prevent unnecessary re-renders
-const MemoizedCell = memo(
-  ({ 
-    row, 
-    rowIndex, 
-    columnId, 
-    value, 
-    isEditing, 
-    editingCell, 
-    setEditingCell, 
-    editedRows, 
-    updateEditedRows, 
-    updateRow, 
-    setSelectedRows 
-  }: { 
-    row: any; 
-    rowIndex: number; 
-    columnId: string; 
-    value: any; 
-    isEditing: boolean; 
-    editingCell: { rowIndex: number; columnId: string } | null;
-    setEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void;
-    editedRows: any;
-    updateEditedRows: (rows: any) => Promise<void>;
-    updateRow: (row: any) => Promise<void>;
-    setSelectedRows: (rows: any) => Promise<void>;
-  }) => {
-    const cellValue = String(value || '');
-    const [isHovering, setIsHovering] = useState(false);
+// Hook for managing cell editing state and behavior
+const useCellEditing = (
+  row: any,
+  columnId: string,
+  cellValue: string,
+  editedRows: any,
+  updateEditedRows: (rows: any) => Promise<void>,
+  updateRow: (row: any) => Promise<void>,
+  setEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void
+): CellEditingReturn => {
+  const inputRef = useRef<HTMLInputElement>(null);
 
-    const handleEditClick = useCallback((e: React.MouseEvent): void => {
-      e.stopPropagation();
-      setEditingCell({ rowIndex, columnId });
-    }, [rowIndex, columnId, setEditingCell]);
-
-    const handleRowChange = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
+  const handleRowChange = useCallback(
+    (e: React.FocusEvent<HTMLInputElement>) => {
       const newValue = e.target.value;
       if (newValue !== cellValue) {
         const newRow = {
@@ -48,21 +34,33 @@ const MemoizedCell = memo(
           [columnId]: newValue
         };
 
-        const newEditedRows = handleRowChangeLog(
-          editedRows,
-          row,
-          columnId,
-          row[columnId],
-          newValue
-        );
+        const newEditedRows = handleRowChangeLog(editedRows, row, columnId, row[columnId], newValue);
 
         updateEditedRows(newEditedRows);
         updateRow(newRow);
       }
       setEditingCell(null);
-    }, [row, columnId, cellValue, editedRows, updateEditedRows, updateRow, setEditingCell]);
+    },
+    [row, columnId, cellValue, editedRows, updateEditedRows, updateRow, setEditingCell]
+  );
 
-    const handleSelect = useCallback((e: React.MouseEvent): void => {
+  return {
+    inputRef,
+    handleRowChange
+  };
+};
+
+// Hook for managing cell selection
+const useCellSelection = (
+  row: any,
+  rowIndex: number,
+  columnId: string,
+  setSelectedRows: (rows: any) => Promise<void>
+): CellSelectionReturn => {
+  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleSelect = useCallback(
+    (e: React.MouseEvent): void => {
       e.stopPropagation();
       e.preventDefault();
 
@@ -73,42 +71,131 @@ const MemoizedCell = memo(
           row
         }
       ]);
-    }, [row, rowIndex, columnId, setSelectedRows]);
+    },
+    [row, rowIndex, columnId, setSelectedRows]
+  );
 
-    // Use a ref to track click timing for distinguishing between single and double clicks
-    const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const handleClick = useCallback(
+    (e: React.MouseEvent, setEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void): void => {
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+        clickTimeoutRef.current = null;
 
-    // Handle both single and double clicks
-    const handleClick = useCallback(
-      (e: React.MouseEvent): void => {
-        // Clear any existing timeout
-        if (clickTimeoutRef.current) {
-          clearTimeout(clickTimeoutRef.current);
-          clickTimeoutRef.current = null;
-          // If we get here, it's a double click, so edit the cell
-          setEditingCell({ rowIndex, columnId });
+        setEditingCell({ rowIndex, columnId });
+        handleSelect(e);
+      } else {
+        clickTimeoutRef.current = setTimeout(() => {
           handleSelect(e);
-        } else {
-          // Set a timeout to handle as a single click
-          clickTimeoutRef.current = setTimeout(() => {
-            // This is a single click, so select the row
-            handleSelect(e);
-            clickTimeoutRef.current = null;
-          }, 250); // 250ms is a common double-click threshold
+          clickTimeoutRef.current = null;
+        }, 250);
+      }
+    },
+    [handleSelect, rowIndex, columnId]
+  );
+
+  return {
+    handleClick
+  };
+};
+
+// Hook for managing row selection
+const useRowSelection = (
+  rows: RowType[],
+  selectedRows: any[],
+  setSelectedRows: (rows: any) => Promise<void>
+): RowSelectionReturn => {
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
+
+  const handleRowSelection = useCallback(
+    (rowIndex: number, isSelected: boolean, event: React.MouseEvent): void => {
+      if (event.shiftKey && lastSelectedIndex !== null) {
+        const start = Math.min(lastSelectedIndex, rowIndex);
+        const end = Math.max(lastSelectedIndex, rowIndex);
+        const currentSelected = [...selectedRows];
+
+        for (let i = start; i <= end; i++) {
+          const row = rows[i];
+          if (!row) continue;
+
+          const existingIndex = currentSelected.findIndex((sr) => sr.index === i);
+
+          if (isSelected && existingIndex === -1) {
+            currentSelected.push({
+              index: i,
+              selectedColumn: '',
+              row: row
+            });
+          } else if (!isSelected && existingIndex !== -1) {
+            currentSelected.splice(existingIndex, 1);
+          }
         }
-      },
-      [handleSelect, rowIndex, columnId, setEditingCell]
+
+        setSelectedRows(currentSelected);
+      } else {
+        const existingIndex = selectedRows.findIndex((sr) => sr.index === rowIndex);
+
+        if (isSelected && existingIndex === -1) {
+          setSelectedRows([
+            ...selectedRows,
+            {
+              index: rowIndex,
+              selectedColumn: '',
+              row: rows[rowIndex]
+            }
+          ]);
+        } else if (!isSelected && existingIndex !== -1) {
+          const newSelectedRows = [...selectedRows];
+          newSelectedRows.splice(existingIndex, 1);
+          setSelectedRows(newSelectedRows);
+        }
+      }
+
+      setLastSelectedIndex(rowIndex);
+    },
+    [lastSelectedIndex, rows, selectedRows, setSelectedRows]
+  );
+
+  return {
+    handleRowSelection
+  };
+};
+
+// Memoized Cell component
+const MemoizedCell = memo(
+  ({
+    row,
+    rowIndex,
+    columnId,
+    value,
+    isEditing,
+    setEditingCell,
+    editedRows,
+    updateEditedRows,
+    updateRow,
+    setSelectedRows
+  }: MemoizedCellProps) => {
+    const cellValue = String(value === null ? 'NULL' : value || '');
+    const [isHovering, setIsHovering] = useState(false);
+
+    const { inputRef, handleRowChange } = useCellEditing(
+      row,
+      columnId,
+      cellValue,
+      editedRows,
+      updateEditedRows,
+      updateRow,
+      setEditingCell
     );
 
+    const { handleClick } = useCellSelection(row, rowIndex, columnId, setSelectedRows);
+
+    useEffect(() => {
+      if (isEditing && inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, [isEditing]);
+
     if (isEditing) {
-      const inputRef = useRef<HTMLInputElement>(null);
-
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus();
-        }
-      }, 0);
-
       return (
         <CellInput
           ref={inputRef}
@@ -130,13 +217,12 @@ const MemoizedCell = memo(
         className={isHovering ? 'cell-hover' : ''}
         onMouseEnter={(): void => setIsHovering(true)}
         onMouseLeave={(): void => setIsHovering(false)}
-        onClick={handleClick}
+        onClick={(e: React.MouseEvent): void => handleClick(e, setEditingCell)}
       >
         <CellContent>{cellValue}</CellContent>
       </CellContainer>
     );
   },
-  // Custom comparison function to prevent unnecessary re-renders
   (prevProps, nextProps) => {
     return (
       prevProps.value === nextProps.value &&
@@ -147,17 +233,7 @@ const MemoizedCell = memo(
   }
 );
 
-// Define our custom column definition type
-export interface CustomColumnDef {
-  id: string;
-  header: JSX.Element | string;
-  accessor?: string;
-  cell: (props: { row: any; rowIndex: number; value: any }) => JSX.Element;
-  size?: number;
-  minSize?: number;
-  maxSize?: number;
-}
-
+// Main hook for table columns
 export default function useTableColumns({
   rows,
   columns,
@@ -166,82 +242,11 @@ export default function useTableColumns({
   updateEditedRows,
   updateRow,
   editedRows
-}: {
-  rows: RowType[];
-  columns: ColumnType[];
-  editingCell: { rowIndex: number; columnId: string } | null;
-  setEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void;
-  updateEditedRows: (rows: any) => Promise<void>;
-  updateRow: (row: any) => Promise<void>;
-  editedRows: any;
-}): CustomColumnDef[] {
+}: TableColumnsProps): CustomColumnDef[] {
   const { selectedRows, setSelectedRows } = useTableData();
-
-  // Track the last selected row index for shift-click selection
-  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
-
-  // Handle row selection with shift key support
-  const handleRowSelection = useCallback(
-    (rowIndex: number, isSelected: boolean, event: React.MouseEvent): void => {
-      // If shift key is pressed and we have a last selected index, select all rows in between
-      if (event.shiftKey && lastSelectedIndex !== null) {
-        const start = Math.min(lastSelectedIndex, rowIndex);
-        const end = Math.max(lastSelectedIndex, rowIndex);
-
-        // Get current selected rows
-        const currentSelected = [...selectedRows];
-
-        // Add or remove rows in the range
-        for (let i = start; i <= end; i++) {
-          const row = rows[i];
-          if (!row) continue;
-
-          const existingIndex = currentSelected.findIndex((sr) => sr.index === i);
-
-          if (isSelected && existingIndex === -1) {
-            // Add row to selection
-            currentSelected.push({
-              index: i,
-              selectedColumn: '',
-              row: row
-            });
-          } else if (!isSelected && existingIndex !== -1) {
-            // Remove row from selection
-            currentSelected.splice(existingIndex, 1);
-          }
-        }
-
-        setSelectedRows(currentSelected);
-      } else {
-        // Normal selection (toggle)
-        const existingIndex = selectedRows.findIndex((sr) => sr.index === rowIndex);
-
-        if (isSelected && existingIndex === -1) {
-          // Add to selection
-          setSelectedRows([
-            ...selectedRows,
-            {
-              index: rowIndex,
-              selectedColumn: '',
-              row: rows[rowIndex]
-            }
-          ]);
-        } else if (!isSelected && existingIndex !== -1) {
-          // Remove from selection
-          const newSelectedRows = [...selectedRows];
-          newSelectedRows.splice(existingIndex, 1);
-          setSelectedRows(newSelectedRows);
-        }
-      }
-
-      // Update last selected index
-      setLastSelectedIndex(rowIndex);
-    },
-    [lastSelectedIndex, rows, selectedRows, setSelectedRows]
-  );
+  const { handleRowSelection } = useRowSelection(rows, selectedRows, setSelectedRows);
 
   return useMemo((): CustomColumnDef[] => {
-    // Create checkbox column
     const checkboxColumn: CustomColumnDef = {
       id: 'select',
       header: (
@@ -250,8 +255,7 @@ export default function useTableColumns({
           size={'small'}
           checked={selectedRows.length === rows.length && rows.length > 0}
           indeterminate={selectedRows.length > 0 && selectedRows.length < rows.length}
-          onChange={(e) => {
-            // Select or deselect all rows
+          onChange={(e: React.ChangeEvent<HTMLInputElement>): void => {
             if (e.target.checked) {
               const allRows = rows.map((row, index) => ({
                 index,
@@ -273,11 +277,10 @@ export default function useTableColumns({
             sx={{ padding: 0 }}
             size={'small'}
             checked={isSelected}
-            onChange={(e, checked) => {
-              handleRowSelection(rowIndex, checked, e.nativeEvent as React.MouseEvent);
+            onChange={(e: React.ChangeEvent<HTMLInputElement>, checked: boolean): void => {
+              handleRowSelection(rowIndex, checked, e.nativeEvent as unknown as React.MouseEvent);
             }}
-            onClick={(e) => {
-              // Stop propagation to prevent row selection
+            onClick={(e: React.MouseEvent): void => {
               e.stopPropagation();
             }}
           />
@@ -288,38 +291,36 @@ export default function useTableColumns({
       maxSize: 30
     };
 
-    // Create data columns
-    const dataColumns = columns.map((col) => {
-      return {
-        id: col.name,
-        accessor: col.name,
-        header: col.name,
-        minSize: 200,
-        cell: ({ row, rowIndex, value }): JSX.Element => {
-          const columnId = col.name;
-          const isEditing = editingCell?.rowIndex === rowIndex && editingCell?.columnId === columnId;
+    const dataColumns = columns.map(
+      (col) =>
+        ({
+          id: col.name,
+          accessor: col.name,
+          header: col.name,
+          minSize: 200,
+          cell: ({ row, rowIndex, value }): JSX.Element => {
+            const columnId = col.name;
+            const isEditing = editingCell?.rowIndex === rowIndex && editingCell?.columnId === columnId;
 
-          // Use the MemoizedCell component instead of directly rendering
-          return (
-            <MemoizedCell
-              row={row}
-              rowIndex={rowIndex}
-              columnId={columnId}
-              value={value}
-              isEditing={isEditing}
-              editingCell={editingCell}
-              setEditingCell={setEditingCell}
-              editedRows={editedRows}
-              updateEditedRows={updateEditedRows}
-              updateRow={updateRow}
-              setSelectedRows={setSelectedRows}
-            />
-          );
-        }
-      } as CustomColumnDef;
-    });
+            return (
+              <MemoizedCell
+                row={row}
+                rowIndex={rowIndex}
+                columnId={columnId}
+                value={value}
+                isEditing={isEditing}
+                editingCell={editingCell}
+                setEditingCell={setEditingCell}
+                editedRows={editedRows}
+                updateEditedRows={updateEditedRows}
+                updateRow={updateRow}
+                setSelectedRows={setSelectedRows}
+              />
+            );
+          }
+        }) as CustomColumnDef
+    );
 
-    // Return combined columns array with checkbox first
     return [checkboxColumn, ...dataColumns];
   }, [rows, editingCell, columns, selectedRows, handleRowSelection]);
 }

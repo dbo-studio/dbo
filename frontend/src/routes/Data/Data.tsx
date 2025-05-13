@@ -47,15 +47,14 @@ function DataContent(): JSX.Element {
       {selectedTab?.showQuery && <QueryPreview />}
       <Box overflow='hidden' flex={1} display='flex' flexDirection='row'>
         {selectedTab?.showColumns && <Columns />}
-        {columns.length > 0 && (
-          isGridReady ? (
+        {columns.length > 0 &&
+          (isGridReady ? (
             <TestGrid rows={rows} columns={getActiveColumns()} loading={false} />
           ) : (
             <Box display='flex' justifyContent='center' alignItems='center' width='100%'>
               <CircularProgress size={30} />
             </Box>
-          )
-        )}
+          ))}
       </Box>
       <StatusBar />
     </>

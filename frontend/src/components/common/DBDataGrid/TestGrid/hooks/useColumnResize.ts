@@ -1,5 +1,5 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
 import type { ColumnType } from '@/types';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface UseColumnResizeProps {
   columns: ColumnType[];
@@ -12,7 +12,6 @@ interface UseColumnResizeProps {
 interface UseColumnResizeReturn {
   columnSizes: Record<string, number>;
   startResize: (columnId: string, event: React.MouseEvent | React.TouchEvent) => void;
-  isResizing: boolean;
   resizingColumnId: string | null;
 }
 
@@ -49,21 +48,21 @@ export function useColumnResize({
     const initialSizes: Record<string, number> = {};
 
     // First, preserve any existing column sizes
-    Object.keys(columnSizesRef.current).forEach(key => {
+    for (const key in columnSizesRef.current) {
       initialSizes[key] = columnSizesRef.current[key];
-    });
+    }
 
     // Then ensure all columns have a defined width
-    columns.forEach((column) => {
+    for (const column of columns) {
       // If column doesn't have a size yet, set it to default
       if (!initialSizes[column.name]) {
         initialSizes[column.name] = defaultColumnWidth;
       }
-    });
+    }
 
     // Also add the 'select' column if it's not already there
-    if (!initialSizes['select']) {
-      initialSizes['select'] = 30; // Fixed width for checkbox column
+    if (!initialSizes.select) {
+      initialSizes.select = 40; // Fixed width for checkbox column
     }
 
     setColumnSizes(initialSizes);
@@ -80,7 +79,7 @@ export function useColumnResize({
       // Only update the width of the column being resized
       setColumnSizes((prev) => ({
         ...prev,
-        [resizingColumnIdRef.current!]: newWidth
+        [resizingColumnIdRef.current as string]: newWidth
       }));
     },
     [minColumnWidth, maxColumnWidth]
@@ -96,7 +95,7 @@ export function useColumnResize({
       // Only update the width of the column being resized
       setColumnSizes((prev) => ({
         ...prev,
-        [resizingColumnIdRef.current!]: newWidth
+        [resizingColumnIdRef.current as string]: newWidth
       }));
     },
     [minColumnWidth, maxColumnWidth]
@@ -146,7 +145,7 @@ export function useColumnResize({
 
   // Clean up event listeners on unmount
   useEffect(() => {
-    return () => {
+    return (): void => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('touchmove', handleTouchMove);
@@ -157,7 +156,6 @@ export function useColumnResize({
   return {
     columnSizes,
     startResize,
-    isResizing,
     resizingColumnId
   };
 }

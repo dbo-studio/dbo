@@ -1,22 +1,15 @@
 import type { JSX } from 'react';
 import { StyledTableRow, TableHeader } from '../TestGrid.styled';
-import { CustomResizer } from './CustomResizer';
 import { useColumnResize } from '../hooks/useColumnResize';
-import type { ColumnType } from '@/types';
-import { CustomColumnDef } from '../hooks/useTableColumns';
-
-interface CustomTableHeaderRowProps {
-  tableColumns: CustomColumnDef[];
-  columns: ColumnType[];
-  onColumnResize?: (columnSizes: Record<string, number>) => void;
-}
+import type { CustomTableHeaderRowProps } from '../types';
+import { CustomResizer } from './CustomResizer';
 
 export default function CustomTableHeaderRow({
   tableColumns,
   columns,
   onColumnResize
 }: CustomTableHeaderRowProps): JSX.Element {
-  const { columnSizes, startResize, isResizing, resizingColumnId } = useColumnResize({
+  const { columnSizes, startResize, resizingColumnId } = useColumnResize({
     columns,
     defaultColumnWidth: 200,
     minColumnWidth: 200,

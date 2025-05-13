@@ -1,28 +1,13 @@
-import type { SelectedRow } from '@/store/dataStore/types';
 import type { RowType } from '@/types';
-import type React, { JSX } from 'react';
+import type { JSX } from 'react';
 import { useCallback } from 'react';
 import { StyledTableRow, TableCell } from '../TestGrid.styled';
-import type { CustomColumnDef } from '../hooks/useTableColumns';
-
-interface CustomTableBodyRowsProps {
-  tableColumns: CustomColumnDef[];
-  visibleRows: RowType[];
-  context: (event: React.MouseEvent) => void;
-  virtualStartIndex?: number;
-  columnSizes: Record<string, number>;
-  removedRows: RowType[];
-  unsavedRows: RowType[];
-  editedRows: any[];
-  selectedRows: SelectedRow[];
-  setSelectedRows: (rows: SelectedRow[]) => void;
-}
+import type { CustomTableBodyRowsProps } from '../types';
 
 export default function CustomTableBodyRows({
   tableColumns,
-  visibleRows,
+  rows,
   context,
-  virtualStartIndex = 0,
   columnSizes,
   removedRows,
   unsavedRows,
@@ -30,36 +15,30 @@ export default function CustomTableBodyRows({
   selectedRows,
   setSelectedRows
 }: CustomTableBodyRowsProps): JSX.Element {
-
   const handleSelect = useCallback(
     (rowIndex: number, columnId: string, row: RowType): void => {
-      // Use the real row index by adding virtualStartIndex to the relative index
-      const realRowIndex = virtualStartIndex + rowIndex;
       setSelectedRows([
         {
-          index: realRowIndex,
+          index: rowIndex,
           selectedColumn: columnId,
           row: row
         }
       ]);
     },
-    [virtualStartIndex, setSelectedRows]
+    [setSelectedRows]
   );
 
   return (
     <tbody>
-      {visibleRows.map((row, rowIndex) => {
-        // Calculate the real row index by adding virtualStartIndex to the relative index
-        const realRowIndex = virtualStartIndex + rowIndex;
-
-        const isRemoved = removedRows.some((v: RowType) => v.dbo_index === realRowIndex);
-        const isUnsaved = unsavedRows.some((v: RowType) => v.dbo_index === realRowIndex);
-        const isEdited = editedRows.some((v: any) => v.dboIndex === realRowIndex);
-        const isSelected = selectedRows.some((v: SelectedRow) => v.index === realRowIndex);
+      {rows.map((row, rowIndex) => {
+        const isRemoved = removedRows.some((v: RowType) => v.dbo_index === rowIndex);
+        const isUnsaved = unsavedRows.some((v: RowType) => v.dbo_index === rowIndex);
+        const isEdited = editedRows.some((v: any) => v.dboIndex === rowIndex);
+        const isSelected = selectedRows.some((v) => v.index === rowIndex);
 
         return (
           <StyledTableRow
-            key={`row-${realRowIndex}`}
+            key={`row-${row.dbo_index}`}
             className={`
               ${isRemoved ? 'removed-highlight' : ''}
               ${isUnsaved ? 'unsaved-highlight' : ''}
@@ -73,14 +52,14 @@ export default function CustomTableBodyRows({
 
               return (
                 <TableCell
-                  key={`cell-${realRowIndex}-${columnId}`}
+                  key={`cell-${rowIndex}-${columnId}`}
                   onContextMenu={(e): void => {
                     context(e);
                     handleSelect(rowIndex, columnId, row);
                   }}
                   style={{ width: columnSizes[columnId] || column.size || 200 }}
                 >
-                  {column.cell({ row, rowIndex: realRowIndex, value })}
+                  {column.cell({ row, rowIndex: rowIndex, value })}
                 </TableCell>
               );
             })}
