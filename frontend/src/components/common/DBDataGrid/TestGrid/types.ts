@@ -35,7 +35,7 @@ export interface TableColumnsProps {
   updateEditedRows: (rows: any) => Promise<void>;
   updateRow: (row: any) => Promise<void>;
   editedRows: any;
-  onRowUpdate?: (rowIndex: number, newValue: string) => void;
+  onRowUpdate: (newValue: string) => void;
 }
 
 export interface CellEditingReturn {

@@ -100,7 +100,7 @@ const useCellEditing = (
   updateEditedRows: (rows: any) => Promise<void>,
   updateRow: (row: any) => Promise<void>,
   setEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void,
-  onRowUpdate: (rowIndex: number, newValue: string) => void
+  onRowUpdate: (newValue: string) => void
 ): CellEditingReturn => {
   const inputRef = useRef<HTMLInputElement>(null);
   const updateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -115,7 +115,7 @@ const useCellEditing = (
         };
 
         // Update UI immediately
-        onRowUpdate(row.dbo_index, newValue);
+        onRowUpdate(newValue);
 
         // Clear any pending updates
         if (updateTimeoutRef.current) {
@@ -297,7 +297,7 @@ export default function useTableColumns({
   updateEditedRows,
   updateRow,
   editedRows,
-  onRowUpdate = () => {}
+  onRowUpdate = (): void => {}
 }: TableColumnsProps): CustomColumnDef[] {
   const { selectedRows, setSelectedRows } = useTableData();
   const { handleRowSelection } = useRowSelection(rows, selectedRows, setSelectedRows);
@@ -371,7 +371,7 @@ export default function useTableColumns({
                 updateEditedRows={updateEditedRows}
                 updateRow={updateRow}
                 setSelectedRows={setSelectedRows}
-                onRowUpdate={(newValue: string): void => onRowUpdate(rowIndex, newValue)}
+                onRowUpdate={onRowUpdate}
               />
             );
           }
