@@ -1,53 +1,49 @@
-import { flexRender, type Table } from '@tanstack/react-table';
 import type { JSX } from 'react';
 import { StyledTableRow, TableHeader } from '../TestGrid.styled';
 import { CustomResizer } from './CustomResizer';
 import { useColumnResize } from '../hooks/useColumnResize';
 import type { ColumnType } from '@/types';
+import { CustomColumnDef } from '../hooks/useTableColumns';
 
-interface CustomTableHeaderRowProps<T> {
-  table: Table<T>;
+interface CustomTableHeaderRowProps {
+  tableColumns: CustomColumnDef[];
   columns: ColumnType[];
   onColumnResize?: (columnSizes: Record<string, number>) => void;
 }
 
-export default function CustomTableHeaderRow<T>({
-  table,
+export default function CustomTableHeaderRow({
+  tableColumns,
   columns,
   onColumnResize
-}: CustomTableHeaderRowProps<T>): JSX.Element {
+}: CustomTableHeaderRowProps): JSX.Element {
   const { columnSizes, startResize, isResizing, resizingColumnId } = useColumnResize({
     columns,
-    defaultColumnWidth: 150,
-    minColumnWidth: 50,
-    maxColumnWidth: 400,
+    defaultColumnWidth: 200,
+    minColumnWidth: 200,
     onColumnResize
   });
 
   return (
     <thead>
-      {table.getHeaderGroups().map((headerGroup) => (
-        <StyledTableRow key={headerGroup.id}>
-          {headerGroup.headers.map((header) => {
-            const columnId = header.id;
-            const isCurrentColumnResizing = resizingColumnId === columnId;
+      <StyledTableRow>
+        {tableColumns.map((column) => {
+          const columnId = column.id;
+          const isCurrentColumnResizing = resizingColumnId === columnId;
 
-            return (
-              <TableHeader
-                key={columnId}
-                colSpan={header.colSpan}
-                style={{
-                  position: 'relative',
-                  width: columnSizes[columnId] || header.getSize()
-                }}
-              >
-                {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                <CustomResizer columnId={columnId} isResizing={isCurrentColumnResizing} onResizeStart={startResize} />
-              </TableHeader>
-            );
-          })}
-        </StyledTableRow>
-      ))}
+          return (
+            <TableHeader
+              key={columnId}
+              style={{
+                position: 'relative',
+                width: columnSizes[columnId] || column.size || 200
+              }}
+            >
+              {typeof column.header === 'string' ? column.header : column.header}
+              <CustomResizer columnId={columnId} isResizing={isCurrentColumnResizing} onResizeStart={startResize} />
+            </TableHeader>
+          );
+        })}
+      </StyledTableRow>
     </thead>
   );
 }

@@ -9,18 +9,14 @@ export const TableHeader = styled('th')(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
   borderRight: `1px solid ${theme.palette.divider}`,
   padding: '2px 8px',
-  maxWidth: '400px', // Maximum width constraint
+  minWidth: '200px', // Minimum width constraint
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   willChange: 'width', // Optimize for width changes
   transform: 'translateZ(0)', // Hardware acceleration
   backfaceVisibility: 'hidden', // Additional performance optimization
-  transition: 'width 0.1s ease', // Add smooth transition for width changes in onChange mode
-  // Use flex-grow to fill available space when there aren't enough columns
-  '&:last-child': {
-    flexGrow: 1
-  }
+  transition: 'width 0.1s ease' // Add smooth transition for width changes in onChange mode
 }));
 
 export const TableCell = styled('td')(({ theme }) => ({
@@ -31,7 +27,7 @@ export const TableCell = styled('td')(({ theme }) => ({
   padding: '2px 8px',
   color: theme.palette.text.text,
   fontSize: theme.typography.subtitle2.fontSize,
-  maxWidth: '400px', // Maximum width constraint
+  minWidth: '200px', // Minimum width constraint
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
@@ -39,11 +35,6 @@ export const TableCell = styled('td')(({ theme }) => ({
   transform: 'translateZ(0)', // Hardware acceleration
   backfaceVisibility: 'hidden', // Additional performance optimization
   transition: 'width 0.1s ease', // Add smooth transition for width changes in onChange mode
-
-  // Use flex-grow to fill available space when there aren't enough columns
-  '&:last-child': {
-    flexGrow: 1
-  },
 
   '.selected-highlight &': {
     backgroundColor: `${theme.palette.action.selected}`,
@@ -67,7 +58,8 @@ export const TableCell = styled('td')(({ theme }) => ({
 }));
 
 export const StyledTable = styled('table')(({ theme }) => ({
-  width: '100%',
+  width: 'max-content', // Use max-content to ensure table expands to fit all columns
+  minWidth: '100%', // Ensure table is at least as wide as its container
   borderSpacing: 0,
   tableLayout: 'fixed', // Use fixed layout for better performance with column resizing
   borderCollapse: 'separate' // Needed for fixed layout
@@ -155,7 +147,6 @@ export const CellContainer = styled('div')(({ theme }) => ({
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
   overflow: 'hidden',
-  maxWidth: '400px', // Maximum width constraint
   // Optimize for animations
   willChange: 'contents',
   // Prevent text selection for better performance during scrolling

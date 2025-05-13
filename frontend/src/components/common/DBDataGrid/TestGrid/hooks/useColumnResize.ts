@@ -18,9 +18,9 @@ interface UseColumnResizeReturn {
 
 export function useColumnResize({
   columns,
-  defaultColumnWidth = 150,
-  minColumnWidth = 50,
-  maxColumnWidth = 400,
+  defaultColumnWidth = 200,
+  minColumnWidth = 200,
+  maxColumnWidth = Number.MAX_SAFE_INTEGER,
   onColumnResize
 }: UseColumnResizeProps): UseColumnResizeReturn {
   // Store column sizes in a state
@@ -47,12 +47,24 @@ export function useColumnResize({
   // Initialize column sizes on mount or when columns change
   useEffect(() => {
     const initialSizes: Record<string, number> = {};
-    const columnNames = columns.map((c) => c.name);
 
-    columns.forEach((column) => {
-      // Use existing size if available, otherwise use default
-      initialSizes[column.name] = columnSizesRef.current[column.name] || defaultColumnWidth;
+    // First, preserve any existing column sizes
+    Object.keys(columnSizesRef.current).forEach(key => {
+      initialSizes[key] = columnSizesRef.current[key];
     });
+
+    // Then ensure all columns have a defined width
+    columns.forEach((column) => {
+      // If column doesn't have a size yet, set it to default
+      if (!initialSizes[column.name]) {
+        initialSizes[column.name] = defaultColumnWidth;
+      }
+    });
+
+    // Also add the 'select' column if it's not already there
+    if (!initialSizes['select']) {
+      initialSizes['select'] = 30; // Fixed width for checkbox column
+    }
 
     setColumnSizes(initialSizes);
   }, [columns, defaultColumnWidth]);
@@ -65,6 +77,7 @@ export function useColumnResize({
       const deltaX = event.clientX - startXRef.current;
       const newWidth = Math.max(minColumnWidth, Math.min(maxColumnWidth, startWidthRef.current + deltaX));
 
+      // Only update the width of the column being resized
       setColumnSizes((prev) => ({
         ...prev,
         [resizingColumnIdRef.current!]: newWidth
@@ -80,6 +93,7 @@ export function useColumnResize({
       const deltaX = event.touches[0].clientX - startXRef.current;
       const newWidth = Math.max(minColumnWidth, Math.min(maxColumnWidth, startWidthRef.current + deltaX));
 
+      // Only update the width of the column being resized
       setColumnSizes((prev) => ({
         ...prev,
         [resizingColumnIdRef.current!]: newWidth

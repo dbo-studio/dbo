@@ -1,10 +1,162 @@
 import { handleRowChangeLog } from '@/core/utils';
 import { useTableData } from '@/contexts/TableDataContext';
 import type { ColumnType, RowType } from '@/types';
-import { type ColumnDef, createColumnHelper } from '@tanstack/react-table';
-import { type JSX, useCallback, useMemo, useRef, useState } from 'react';
+import { type JSX, useCallback, useMemo, useRef, useState, memo } from 'react';
 import { CellContainer, CellContent, CellInput } from './../TestGrid.styled';
 import { Checkbox } from '@mui/material';
+
+// Memoized Cell component to prevent unnecessary re-renders
+const MemoizedCell = memo(
+  ({ 
+    row, 
+    rowIndex, 
+    columnId, 
+    value, 
+    isEditing, 
+    editingCell, 
+    setEditingCell, 
+    editedRows, 
+    updateEditedRows, 
+    updateRow, 
+    setSelectedRows 
+  }: { 
+    row: any; 
+    rowIndex: number; 
+    columnId: string; 
+    value: any; 
+    isEditing: boolean; 
+    editingCell: { rowIndex: number; columnId: string } | null;
+    setEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void;
+    editedRows: any;
+    updateEditedRows: (rows: any) => Promise<void>;
+    updateRow: (row: any) => Promise<void>;
+    setSelectedRows: (rows: any) => Promise<void>;
+  }) => {
+    const cellValue = String(value || '');
+    const [isHovering, setIsHovering] = useState(false);
+
+    const handleEditClick = useCallback((e: React.MouseEvent): void => {
+      e.stopPropagation();
+      setEditingCell({ rowIndex, columnId });
+    }, [rowIndex, columnId, setEditingCell]);
+
+    const handleRowChange = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+      if (newValue !== cellValue) {
+        const newRow = {
+          ...row,
+          [columnId]: newValue
+        };
+
+        const newEditedRows = handleRowChangeLog(
+          editedRows,
+          row,
+          columnId,
+          row[columnId],
+          newValue
+        );
+
+        updateEditedRows(newEditedRows);
+        updateRow(newRow);
+      }
+      setEditingCell(null);
+    }, [row, columnId, cellValue, editedRows, updateEditedRows, updateRow, setEditingCell]);
+
+    const handleSelect = useCallback((e: React.MouseEvent): void => {
+      e.stopPropagation();
+      e.preventDefault();
+
+      setSelectedRows([
+        {
+          index: rowIndex,
+          selectedColumn: columnId,
+          row
+        }
+      ]);
+    }, [row, rowIndex, columnId, setSelectedRows]);
+
+    // Use a ref to track click timing for distinguishing between single and double clicks
+    const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Handle both single and double clicks
+    const handleClick = useCallback(
+      (e: React.MouseEvent): void => {
+        // Clear any existing timeout
+        if (clickTimeoutRef.current) {
+          clearTimeout(clickTimeoutRef.current);
+          clickTimeoutRef.current = null;
+          // If we get here, it's a double click, so edit the cell
+          setEditingCell({ rowIndex, columnId });
+          handleSelect(e);
+        } else {
+          // Set a timeout to handle as a single click
+          clickTimeoutRef.current = setTimeout(() => {
+            // This is a single click, so select the row
+            handleSelect(e);
+            clickTimeoutRef.current = null;
+          }, 250); // 250ms is a common double-click threshold
+        }
+      },
+      [handleSelect, rowIndex, columnId, setEditingCell]
+    );
+
+    if (isEditing) {
+      const inputRef = useRef<HTMLInputElement>(null);
+
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 0);
+
+      return (
+        <CellInput
+          ref={inputRef}
+          defaultValue={cellValue}
+          onBlur={handleRowChange}
+          onKeyDown={(e): void => {
+            if (e.key === 'Enter') {
+              e.currentTarget.blur();
+            } else if (e.key === 'Escape') {
+              setEditingCell(null);
+            }
+          }}
+        />
+      );
+    }
+
+    return (
+      <CellContainer
+        className={isHovering ? 'cell-hover' : ''}
+        onMouseEnter={(): void => setIsHovering(true)}
+        onMouseLeave={(): void => setIsHovering(false)}
+        onClick={handleClick}
+      >
+        <CellContent>{cellValue}</CellContent>
+      </CellContainer>
+    );
+  },
+  // Custom comparison function to prevent unnecessary re-renders
+  (prevProps, nextProps) => {
+    return (
+      prevProps.value === nextProps.value &&
+      prevProps.isEditing === nextProps.isEditing &&
+      prevProps.rowIndex === nextProps.rowIndex &&
+      prevProps.columnId === nextProps.columnId
+    );
+  }
+);
+
+// Define our custom column definition type
+export interface CustomColumnDef {
+  id: string;
+  header: JSX.Element | string;
+  accessor?: string;
+  cell: (props: { row: any; rowIndex: number; value: any }) => JSX.Element;
+  size?: number;
+  minSize?: number;
+  maxSize?: number;
+}
 
 export default function useTableColumns({
   rows,
@@ -22,8 +174,7 @@ export default function useTableColumns({
   updateEditedRows: (rows: any) => Promise<void>;
   updateRow: (row: any) => Promise<void>;
   editedRows: any;
-}): ColumnDef<ColumnType, any>[] {
-  const columnHelper = createColumnHelper<ColumnType>();
+}): CustomColumnDef[] {
   const { selectedRows, setSelectedRows } = useTableData();
 
   // Track the last selected row index for shift-click selection
@@ -89,11 +240,11 @@ export default function useTableColumns({
     [lastSelectedIndex, rows, selectedRows, setSelectedRows]
   );
 
-  return useMemo((): ColumnDef<ColumnType, any>[] => {
+  return useMemo((): CustomColumnDef[] => {
     // Create checkbox column
-    const checkboxColumn = columnHelper.display({
+    const checkboxColumn: CustomColumnDef = {
       id: 'select',
-      header: ({ table }) => (
+      header: (
         <Checkbox
           sx={{ padding: 0 }}
           size={'small'}
@@ -114,8 +265,7 @@ export default function useTableColumns({
           }}
         />
       ),
-      cell: ({ row }) => {
-        const rowIndex = row.index;
+      cell: ({ rowIndex }) => {
         const isSelected = selectedRows.some((sr) => sr.index === rowIndex);
 
         return (
@@ -134,124 +284,40 @@ export default function useTableColumns({
         );
       },
       size: 30,
-      enableResizing: false // Make checkbox column non-resizable
-    });
+      minSize: 30,
+      maxSize: 30
+    };
 
     // Create data columns
-    const dataColumns = columns.map((col) =>
-      //@ts-ignore
-      columnHelper.accessor(col.name, {
+    const dataColumns = columns.map((col) => {
+      return {
+        id: col.name,
+        accessor: col.name,
         header: col.name,
-        maxSize: 400,
-        cell: ({ row, column, getValue }): JSX.Element => {
-          const isEditing = editingCell?.rowIndex === row.index && editingCell?.columnId === column.id;
-          const value = String(getValue());
-          const [isHovering, setIsHovering] = useState(false);
+        minSize: 200,
+        cell: ({ row, rowIndex, value }): JSX.Element => {
+          const columnId = col.name;
+          const isEditing = editingCell?.rowIndex === rowIndex && editingCell?.columnId === columnId;
 
-          const handleEditClick = useCallback((e: React.MouseEvent): void => {
-            e.stopPropagation();
-            setEditingCell({ rowIndex: row.index, columnId: column.id });
-          }, []);
-
-          const handleRowChange = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
-            const newValue = e.target.value;
-            if (newValue !== value) {
-              const newRow = {
-                ...rows[row.index],
-                [column.id]: newValue
-              };
-
-              const newEditedRows = handleRowChangeLog(
-                editedRows,
-                row.original,
-                column.id,
-                //@ts-ignore
-                row.original[column.id],
-                newValue
-              );
-
-              updateEditedRows(newEditedRows);
-              updateRow(newRow);
-            }
-            setEditingCell(null);
-          }, []);
-
-          if (isEditing) {
-            const inputRef = useRef<HTMLInputElement>(null);
-
-            setTimeout(() => {
-              if (inputRef.current) {
-                inputRef.current.focus();
-              }
-            }, 0);
-
-            return (
-              <CellInput
-                ref={inputRef}
-                defaultValue={value}
-                onBlur={handleRowChange}
-                onKeyDown={(e): void => {
-                  if (e.key === 'Enter') {
-                    e.currentTarget.blur();
-                  } else if (e.key === 'Escape') {
-                    setEditingCell(null);
-                  }
-                }}
-              />
-            );
-          }
-
-          const handleSelect = useCallback((e: React.MouseEvent): void => {
-            e.stopPropagation();
-            e.preventDefault();
-
-            setSelectedRows([
-              {
-                index: row.index,
-                selectedColumn: column.id,
-                row: row.original
-              }
-            ]);
-          }, []);
-
-          // Use a ref to track click timing for distinguishing between single and double clicks
-          const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-          // Handle both single and double clicks
-          const handleClick = useCallback(
-            (e: React.MouseEvent): void => {
-              // Clear any existing timeout
-              if (clickTimeoutRef.current) {
-                clearTimeout(clickTimeoutRef.current);
-                clickTimeoutRef.current = null;
-                // If we get here, it's a double click, so edit the cell
-                setEditingCell({ rowIndex: row.index, columnId: column.id });
-                handleSelect(e);
-              } else {
-                // Set a timeout to handle as a single click
-                clickTimeoutRef.current = setTimeout(() => {
-                  // This is a single click, so select the row
-                  handleSelect(e);
-                  clickTimeoutRef.current = null;
-                }, 250); // 250ms is a common double-click threshold
-              }
-            },
-            [handleSelect, row.index, column.id]
-          );
-
+          // Use the MemoizedCell component instead of directly rendering
           return (
-            <CellContainer
-              className={isHovering ? 'cell-hover' : ''}
-              onMouseEnter={(): void => setIsHovering(true)}
-              onMouseLeave={(): void => setIsHovering(false)}
-              onClick={handleClick}
-            >
-              <CellContent>{value}</CellContent>
-            </CellContainer>
+            <MemoizedCell
+              row={row}
+              rowIndex={rowIndex}
+              columnId={columnId}
+              value={value}
+              isEditing={isEditing}
+              editingCell={editingCell}
+              setEditingCell={setEditingCell}
+              editedRows={editedRows}
+              updateEditedRows={updateEditedRows}
+              updateRow={updateRow}
+              setSelectedRows={setSelectedRows}
+            />
           );
         }
-      })
-    );
+      } as CustomColumnDef;
+    });
 
     // Return combined columns array with checkbox first
     return [checkboxColumn, ...dataColumns];

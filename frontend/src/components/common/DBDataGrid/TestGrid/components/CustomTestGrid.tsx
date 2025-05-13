@@ -1,6 +1,5 @@
 import { useContextMenu } from '@/hooks';
 import { useTableData } from '@/contexts/TableDataContext';
-import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { type JSX, useCallback, useEffect, useRef, useState } from 'react';
 import { StyledTable, TableContainer } from '../TestGrid.styled';
 
@@ -25,7 +24,10 @@ export default function CustomTestGrid({
   editable?: boolean;
 }): JSX.Element {
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const { updateEditedRows, editedRows, updateRow } = useTableData();
+  const { 
+    updateEditedRows, editedRows, updateRow,
+    removedRows, unsavedRows, selectedRows, setSelectedRows
+  } = useTableData();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
   const [editingCell, setEditingCell] = useState<{ rowIndex: number; columnId: string } | null>(null);
@@ -104,16 +106,7 @@ export default function CustomTestGrid({
     setColumnSizes(newColumnSizes);
   }, []);
 
-  const table = useReactTable({
-    data: visibleRows,
-    columns: tableColumns,
-    getCoreRowModel: getCoreRowModel(),
-    // Disable TanStack Table's built-in column resizing
-    enableColumnResizing: false,
-    enableRowSelection: false,
-    autoResetAll: false,
-    debugTable: false
-  });
+  // No need for useReactTable, we'll use our custom table structure directly
 
   return loading ? (
     <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
@@ -129,13 +122,19 @@ export default function CustomTestGrid({
         {/* Position the table at the correct scroll offset */}
         <div style={{ position: 'absolute', top: startIndex * rowHeight, width: '100%' }}>
           <StyledTable>
-            <CustomTableHeaderRow table={table} columns={columns} onColumnResize={handleColumnResize} />
+            <CustomTableHeaderRow tableColumns={tableColumns} columns={columns} onColumnResize={handleColumnResize} />
             <CustomTableBodyRows
-              table={table}
+              tableColumns={tableColumns}
+              visibleRows={visibleRows}
               context={handleContextMenu}
               virtualStartIndex={startIndex}
               columnSizes={columnSizes}
               columns={columns}
+              removedRows={removedRows}
+              unsavedRows={unsavedRows}
+              editedRows={editedRows}
+              selectedRows={selectedRows}
+              setSelectedRows={setSelectedRows}
             />
           </StyledTable>
         </div>
