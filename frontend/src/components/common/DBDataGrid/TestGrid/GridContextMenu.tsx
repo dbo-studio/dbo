@@ -2,11 +2,13 @@ import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
 import { useTableData } from '@/contexts/TableDataContext';
 import { handleRowChangeLog } from '@/core/utils';
+import { useCopyToClipboard } from '@/hooks';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ContextMenuType } from '@/types';
 import type { JSX } from 'react';
+import { toast } from 'sonner';
 
 export default function GridContextMenu({
   contextMenu,
@@ -18,6 +20,7 @@ export default function GridContextMenu({
   const { toggleShowQuickLookEditor } = useSettingStore();
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const { selectedRows, updateEditedRows, editedRows, updateRow } = useTableData();
+  const [copy] = useCopyToClipboard();
 
   const valueReplacer = (newValue: any): void => {
     if (!selectedTabId) return;
@@ -49,7 +52,6 @@ export default function GridContextMenu({
       closeBeforeAction: true,
       action: (): void => {
         toggleShowQuickLookEditor(true);
-        onClose();
       }
     },
     {
@@ -64,7 +66,6 @@ export default function GridContextMenu({
           closeBeforeAction: true,
           action: (): void => {
             valueReplacer('');
-            onClose();
           }
         },
         {
@@ -72,7 +73,6 @@ export default function GridContextMenu({
           closeBeforeAction: true,
           action: (): void => {
             valueReplacer(null);
-            onClose();
           }
         },
         {
@@ -80,7 +80,6 @@ export default function GridContextMenu({
           closeBeforeAction: true,
           action: (): void => {
             valueReplacer('@DEFAULT');
-            onClose();
           }
         }
       ]
@@ -90,10 +89,20 @@ export default function GridContextMenu({
       separator: true
     },
     {
-      name: 'Copy'
-    },
-    {
-      name: 'Delete'
+      name: 'Copy',
+      closeAfterAction: true,
+      action: async (): Promise<void> => {
+        if (!selectedRows.length) return;
+        const row = selectedRows[selectedRows.length - 1];
+        if (!row || !row.row || !row.selectedColumn) return;
+
+        try {
+          await copy(row.row[row.selectedColumn]);
+          toast.success(locales.copied);
+        } catch (error) {
+          console.log('🚀 ~ handleCopy ~ error:', error);
+        }
+      }
     }
   ];
 

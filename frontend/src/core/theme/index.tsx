@@ -3,6 +3,7 @@ import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { Direction } from '@mui/material';
 import { ThemeProvider as MUIThemeProvider, type ThemeOptions, createTheme } from '@mui/material/styles';
 import type React from 'react';
+import type { JSX } from 'react';
 import { ThemeModeEnum } from '../enums';
 import componentsOverride from './overrides';
 import palette from './palette';
@@ -11,7 +12,7 @@ type Props = {
   children: React.ReactNode;
 };
 
-export default function ThemeProvider({ children }: Props) {
+export default function ThemeProvider({ children }: Props): JSX.Element {
   const { isDark } = useSettingStore();
 
   const themeOptions: ThemeOptions = {

@@ -11,7 +11,6 @@ interface CustomTableBodyRowsProps {
   context: (event: React.MouseEvent) => void;
   virtualStartIndex?: number;
   columnSizes: Record<string, number>;
-  columns: ColumnType[];
   removedRows: RowType[];
   unsavedRows: RowType[];
   editedRows: any[];
@@ -25,7 +24,6 @@ export default function CustomTableBodyRows({
   context,
   virtualStartIndex = 0,
   columnSizes,
-  columns,
   removedRows,
   unsavedRows,
   editedRows,

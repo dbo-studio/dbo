@@ -115,11 +115,6 @@ export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuP
         onClose={onClose}
         anchorReference='anchorPosition'
         anchorPosition={contextMenu !== null ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
-        sx={{
-          '& .MuiPaper-root': {
-            minWidth: '200px'
-          }
-        }}
       >
         {menu.map((m, index) => renderMenuItem(m, index))}
       </Menu>
@@ -134,24 +129,7 @@ export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuP
           onClose={(): void => setNestedMenu(null)}
           anchorReference='anchorPosition'
           anchorPosition={nestedMenu !== null ? { top: nestedMenu.mouseY, left: nestedMenu.mouseX } : undefined}
-          sx={{
-            pointerEvents: 'auto',
-            '& .MuiPaper-root': {
-              minWidth: '200px',
-              position: 'fixed',
-              zIndex: 1300
-            }
-          }}
-          slotProps={{
-            paper: {
-              elevation: 3,
-              onMouseLeave: (): void => setNestedMenu(null)
-            }
-          }}
-          transformOrigin={{
-            vertical: 'top',
-            horizontal: 'left'
-          }}
+          onMouseLeave={(): void => setNestedMenu(null)}
         >
           {nestedMenu.menuItems.map((m, index) => renderMenuItem(m, index, true))}
         </Menu>
