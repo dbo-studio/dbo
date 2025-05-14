@@ -1,5 +1,5 @@
-import type { ColumnType, RowType } from '@/types';
-import type { JSX } from 'react';
+import type {ColumnType, RowType} from '@/types';
+import type {JSX} from 'react';
 import CustomTestGrid from './components/CustomTestGrid';
 
 interface TestGridProps {

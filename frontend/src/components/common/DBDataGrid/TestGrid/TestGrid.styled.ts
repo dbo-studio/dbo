@@ -1,4 +1,4 @@
-import { styled } from '@mui/material';
+import {styled} from '@mui/material';
 
 export const TableHeader = styled('th')(({ theme }) => ({
   backgroundColor: theme.palette.background.default,
@@ -13,10 +13,10 @@ export const TableHeader = styled('th')(({ theme }) => ({
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
-  willChange: 'width', // Optimize for width changes
-  transform: 'translateZ(0)', // Hardware acceleration
-  backfaceVisibility: 'hidden', // Additional performance optimization
-  transition: 'width 0.1s ease' // Add smooth transition for width changes in onChange mode
+
+  WebkitTransform: 'translateZ(0)',
+  transform: 'translateZ(0)',
+  transition: 'width 0.1s ease'
 }));
 
 export const TableCell = styled('td')(({ theme }) => ({
@@ -31,9 +31,9 @@ export const TableCell = styled('td')(({ theme }) => ({
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
-  willChange: 'width', // Optimize for width changes
-  transform: 'translateZ(0)', // Hardware acceleration
-  backfaceVisibility: 'hidden', // Additional performance optimization
+  // Safari-friendly performance optimizations
+  WebkitTransform: 'translateZ(0)', // Safari hardware acceleration
+  transform: 'translateZ(0)', // Hardware acceleration for other browsers
   transition: 'width 0.1s ease', // Add smooth transition for width changes in onChange mode
 
   '.selected-highlight &': {
@@ -115,15 +115,15 @@ export const Resizer = styled('div')(({ theme }) => ({
   right: -3, // Position it to extend slightly outside the cell for easier grabbing
   top: 0,
   height: '100%',
-  width: '3px', // Wider for easier grabbing
-  background: theme.palette.divider, // Slightly visible by default
+  width: '5px', // Wider for easier grabbing
+  // background: theme.palette.divider, // Slightly visible by default
   cursor: 'col-resize',
   userSelect: 'none',
   touchAction: 'none',
   zIndex: 100, // Higher z-index to ensure it's above other elements
-  willChange: 'transform, background-color, width', // Optimize for animated properties
-  transform: 'translateZ(0)', // Hardware acceleration
-  backfaceVisibility: 'hidden', // Additional performance optimization
+  // Safari-friendly performance optimizations
+  WebkitTransform: 'translateZ(0)', // Safari hardware acceleration
+  transform: 'translateZ(0)', // Hardware acceleration for other browsers
   transition: 'background-color 0.1s ease, width 0.1s ease', // Smooth transitions for properties
   '&:hover': {
     background: theme.palette.primary.main,

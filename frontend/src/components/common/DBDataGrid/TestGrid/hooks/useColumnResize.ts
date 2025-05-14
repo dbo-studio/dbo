@@ -62,7 +62,7 @@ export function useColumnResize({
 
     // Also add the 'select' column if it's not already there
     if (!initialSizes.select) {
-      initialSizes.select = 40; // Fixed width for checkbox column
+      initialSizes.select = 30; // Fixed width for checkbox column
     }
 
     setColumnSizes(initialSizes);

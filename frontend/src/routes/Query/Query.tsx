@@ -2,14 +2,14 @@ import api from '@/api';
 import ResizableYBox from '@/components/base/ResizableBox/ResizableYBox.tsx';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor.tsx';
 import TestGrid from '@/components/common/DBDataGrid/TestGrid/TestGrid';
-import { useCurrentConnection, useWindowSize } from '@/hooks';
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
-import { useDataStore } from '@/store/dataStore/data.store';
-import { useTabStore } from '@/store/tabStore/tab.store';
-import type { AutoCompleteType } from '@/types';
-import { Box } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
-import { type JSX, useEffect, useState } from 'react';
+import {useCurrentConnection, useWindowSize} from '@/hooks';
+import {useSelectedTab} from '@/hooks/useSelectedTab.hook';
+import {useDataStore} from '@/store/dataStore/data.store';
+import {useTabStore} from '@/store/tabStore/tab.store';
+import type {AutoCompleteType} from '@/types';
+import {Box} from '@mui/material';
+import {useQuery} from '@tanstack/react-query';
+import {type JSX, useEffect, useState} from 'react';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
 
 export default function Query(): JSX.Element {

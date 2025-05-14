@@ -104,7 +104,15 @@ export default function CustomTableBodyRows({
                     context(e);
                     handleSelect(rowIndex, columnId, row);
                   }}
-                  style={{ width: columnSizes[columnId] || column.size || 200 }}
+                  style={{ 
+                    width: columnSizes[columnId] || column.size || 200,
+                    ...(columnId === 'select' ? {
+                      minWidth: '30px',
+                      maxWidth: '30px',
+                      width: '30px',
+                      boxSizing: 'border-box'
+                    } : {})
+                  }}
                 >
                   {column.cell({
                     row,

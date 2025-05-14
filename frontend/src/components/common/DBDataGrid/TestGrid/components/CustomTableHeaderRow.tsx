@@ -28,7 +28,13 @@ export default function CustomTableHeaderRow({
               key={columnId}
               style={{
                 position: 'relative',
-                width: columnSizes[columnId] || column.size || 200
+                width: columnSizes[columnId] || column.size || 200,
+                ...(columnId === 'select' ? {
+                  minWidth: '30px',
+                  maxWidth: '30px',
+                  width: '30px',
+                  boxSizing: 'border-box'
+                } : {})
               }}
             >
               {typeof column.header === 'string' ? column.header : column.header}
