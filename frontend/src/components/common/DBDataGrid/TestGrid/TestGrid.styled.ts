@@ -59,7 +59,7 @@ export const TableCell = styled('td')(({ theme }) => ({
 
 export const StyledTable = styled('table')(({ theme }) => ({
   width: 'max-content', // Use max-content to ensure table expands to fit all columns
-  minWidth: '100%', // Ensure table is at least as wide as its container
+  // Removed minWidth: '100%' to prevent columns from expanding to fill container
   borderSpacing: 0,
   tableLayout: 'fixed', // Use fixed layout for better performance with column resizing
   borderCollapse: 'separate' // Needed for fixed layout
