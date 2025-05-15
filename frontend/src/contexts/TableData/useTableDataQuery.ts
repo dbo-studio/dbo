@@ -13,6 +13,7 @@ type QueryOperations = {
   runQuery: () => Promise<RunQueryResponseType | undefined>;
   runRawQuery: (query?: string) => Promise<RunQueryResponseType | undefined>;
   refreshDataFromServer: () => Promise<void>;
+  fetchDataFromServer: () => Promise<RunQueryResponseType | undefined>;
 };
 
 /**
@@ -158,6 +159,7 @@ export const useTableDataQuery = (state: {
 
   return {
     // Query operations
+    fetchDataFromServer,
     runQuery: executeQuery,
     runRawQuery: executeRawQuery,
     refreshDataFromServer

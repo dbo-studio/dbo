@@ -6,20 +6,22 @@ import { LoadingButton } from '@mui/lab';
 import { Box, Button, Checkbox, Stack, Typography } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import { type JSX, useState } from 'react';
-import { z } from 'zod';
+import * as v from 'valibot';
+
 import type { ConnectionSettingsProps } from '../types';
 
-const formSchema = z.object({
-  isPing: z.boolean().optional(),
-  name: z.string().min(1, 'At least 1 character'),
-  host: z.string().min(1, 'At least 1 character'),
-  port: z.string().refine((val) => !Number.isNaN(Number.parseInt(val, 10)), {
-    message: 'Expected number, received a string'
-  }),
-  username: z.string().min(1, 'At least 1 character'),
-  password: z.string().optional(),
-  database: z.string().optional(),
-  uri: z.string().optional()
+const formSchema = v.object({
+  isPing: v.boolean(),
+  name: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
+  host: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
+  port: v.pipe(
+    v.string(),
+    v.check((input) => !Number.isNaN(Number.parseInt(input, 10)), 'Expected number, received a string')
+  ),
+  username: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
+  password: v.string(),
+  database: v.string(),
+  uri: v.string()
 });
 
 export default function PostgreSQL({

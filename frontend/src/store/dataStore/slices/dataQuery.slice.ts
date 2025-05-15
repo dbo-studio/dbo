@@ -1,8 +1,6 @@
 import { runQuery, runRawQuery } from '@/api/query';
 import type { RunQueryResponseType } from '@/api/query/types';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { isAxiosError } from 'axios';
-import { toast } from 'sonner';
 import type { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
 import type { DataColumnSlice, DataQuerySlice, DataRowSlice, DataStore } from '../types';
@@ -73,9 +71,6 @@ export const createDataQuerySlice: StateCreator<
 
       return res;
     } catch (error) {
-      if (isAxiosError(error)) {
-        toast.error(error.message);
-      }
       console.log('🚀 ~ runRawQuery: ~ error:', error);
     } finally {
       get().toggleDataFetching(false);

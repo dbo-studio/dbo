@@ -29,12 +29,14 @@ export default function CustomTableHeaderRow({
               style={{
                 position: 'relative',
                 width: columnSizes[columnId] || column.size || 200,
-                ...(columnId === 'select' ? {
-                  minWidth: '30px',
-                  maxWidth: '30px',
-                  width: '30px',
-                  boxSizing: 'border-box'
-                } : {})
+                ...(columnId === 'select'
+                  ? {
+                      minWidth: '30px',
+                      maxWidth: '30px',
+                      width: '30px',
+                      boxSizing: 'border-box'
+                    }
+                  : {})
               }}
             >
               {typeof column.header === 'string' ? column.header : column.header}
