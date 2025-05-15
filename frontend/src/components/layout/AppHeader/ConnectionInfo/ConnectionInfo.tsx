@@ -3,9 +3,9 @@ import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconBu
 import Settings from '@/components/common/Settings/Settings.tsx';
 import { TabMode } from '@/core/enums';
 import { shortcuts } from '@/core/utils';
-import { useCurrentConnection, useSelectedTab, useShortcut } from '@/hooks';
+import { useCurrentConnection, useShortcut } from '@/hooks';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { useTableData } from '@/contexts/TableDataContext';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store.ts';
@@ -18,11 +18,13 @@ export default function ConnectionInfo(): JSX.Element {
   const queryClient = useQueryClient();
   const currentConnection = useCurrentConnection();
   const { loading } = useConnectionStore();
-  const { addEditorTab, updateSelectedTab } = useTabStore();
-  const { reloadTree } = useTreeStore();
+
   const { showSettings, toggleShowAddConnection } = useSettingStore();
-  const selectedTab = useSelectedTab();
-  const { runQuery, runRawQuery, updateEditedRows, updateRemovedRows, updateUnsavedRows } = useTableData();
+  const runQuery = useDataStore.getState().runQuery;
+  const runRawQuery = useDataStore.getState().runRawQuery;
+  const reloadTree = useTreeStore.getState().reloadTree;
+  const addEditorTab = useTabStore.getState().addEditorTab;
+  const updateSelectedTab = useTabStore.getState().updateSelectedTab;
 
   useShortcut(shortcuts.reloadTab, () => handleRefresh());
 
@@ -31,7 +33,9 @@ export default function ConnectionInfo(): JSX.Element {
     updateSelectedTab(tab);
   };
 
-  const handleRefresh = async (): Promise<void> => {
+  const handleRefresh = (): void => {
+    const selectedTab = useTabStore.getState().selectedTab();
+
     queryClient.invalidateQueries({
       queryKey: ['connections']
     });
@@ -45,16 +49,12 @@ export default function ConnectionInfo(): JSX.Element {
     if (!selectedTab) return;
 
     if (selectedTab?.mode === TabMode.Query) {
-      await runRawQuery();
+      runRawQuery();
       return;
     }
 
     if (selectedTab?.mode === TabMode.Data) {
-      await runQuery();
-      await updateEditedRows([]);
-      await updateRemovedRows([]);
-      await updateUnsavedRows([]);
-      return;
+      runQuery();
     }
   };
 

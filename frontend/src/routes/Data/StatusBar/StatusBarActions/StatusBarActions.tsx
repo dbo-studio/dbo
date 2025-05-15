@@ -116,23 +116,18 @@ export default function StatusBarActions(): JSX.Element {
 
   const handleDiscardChanges = async (): Promise<void> => {
     if (selectedTab?.mode === TabMode.Data) {
-      // Restore edited rows to their original state
       await restoreEditedRows();
 
-      // Clear unsaved rows
       await updateUnsavedRows([]);
 
-      // Remove unsaved rows from the main rows array
       if (unsavedRows.length > 0) {
         const unsavedIndexes = new Set(unsavedRows.map((row) => row.dbo_index));
         const updatedRows = rows.filter((row) => !unsavedIndexes.has(row.dbo_index));
         await updateRows(updatedRows);
       }
 
-      // Clear removed rows without affecting the main rows array
       await updateRemovedRows([]);
 
-      // Clear selection
       await setSelectedRows([]);
     }
   };
