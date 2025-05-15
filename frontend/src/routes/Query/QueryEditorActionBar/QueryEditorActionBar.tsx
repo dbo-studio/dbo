@@ -1,4 +1,4 @@
-import { Grid2, Stack } from '@mui/material';
+import { Grid, Stack } from '@mui/material';
 import { type JSX, useEffect, useState } from 'react';
 import type { QueryEditorActionBarProps } from '../types';
 import QueryEditorActions from './QueryEditorActions/QueryEditorActions';
@@ -28,12 +28,12 @@ export default function QueryEditorActionBar({ databases, schemas, onFormat }: Q
       justifyContent='space-between'
       alignItems='center'
     >
-      <Grid2 size={{ md: 8 }} display='flex' justifyContent='flex-start'>
+      <Grid size={{ md: 8 }} display='flex' justifyContent='flex-start'>
         <QueryEditorLeading databases={localDatabases} schemas={localSchemas} />
-      </Grid2>
-      <Grid2 size={{ md: 8 }} display='flex' justifyContent='flex-end'>
+      </Grid>
+      <Grid size={{ md: 8 }} display='flex' justifyContent='flex-end'>
         <QueryEditorActions onFormat={onFormat} />
-      </Grid2>
+      </Grid>
     </Stack>
   );
 }

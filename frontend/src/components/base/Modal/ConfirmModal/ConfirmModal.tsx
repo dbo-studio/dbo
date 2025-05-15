@@ -2,10 +2,10 @@ import { ConfirmModalStyled } from '@/components/base/Modal/ConfirmModal/Confirm
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store.ts';
 import { Box, Button, Typography, useTheme } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import { ModalStyled } from '../Modal.styled.ts';
 
-export default function ConfirmModal() {
+export default function ConfirmModal(): JSX.Element {
   const { isOpen, mode, title, description, onCancel, onSuccess, close } = useConfirmModalStore();
   const [style, setStyle] = useState({});
   const theme = useTheme();
@@ -33,12 +33,12 @@ export default function ConfirmModal() {
     }
   }, [mode]);
 
-  const handleCancel = () => {
+  const handleCancel = (): void => {
     onCancel?.();
     close();
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = (): void => {
     onSuccess?.();
     close();
   };

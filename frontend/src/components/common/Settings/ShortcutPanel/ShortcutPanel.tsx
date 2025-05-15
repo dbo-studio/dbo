@@ -1,8 +1,9 @@
 import { shortcuts } from '@/core/utils';
 import locales from '@/locales';
-import { Box, Divider, Grid2, Typography } from '@mui/material';
+import { Box, Divider, Grid, Typography } from '@mui/material';
+import type { JSX } from 'react';
 
-export default function ShortcutPanel() {
+export default function ShortcutPanel(): JSX.Element {
   return (
     <Box>
       <Typography color={'textTitle'} variant='h6'>
@@ -11,18 +12,18 @@ export default function ShortcutPanel() {
       <Divider />
       <Box mt={2}>
         {Object.entries(shortcuts).map(([key, value]) => (
-          <Grid2 mt={1} key={key} container spacing={2}>
-            <Grid2 size={{ md: 8 }}>
+          <Grid mt={1} key={key} container spacing={2}>
+            <Grid size={{ md: 8 }}>
               <Typography color={'textText'} variant='body2'>
                 {value.label}
               </Typography>
-            </Grid2>
-            <Grid2 size={{ md: 4 }}>
+            </Grid>
+            <Grid size={{ md: 4 }}>
               <Typography color={'textText'} variant='body2'>
                 {value.command}
               </Typography>
-            </Grid2>
-          </Grid2>
+            </Grid>
+          </Grid>
         ))}
       </Box>
     </Box>

@@ -1,5 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { Box, Grid2, IconButton, Stack, useTheme } from '@mui/material';
+import { Box, Grid, IconButton, Stack, useTheme } from '@mui/material';
 import { type JSX, useState } from 'react';
 import Filters from '../Filters/Filters';
 import QueryPreview from '../QueryPreview/QueryPreview';
@@ -74,7 +74,7 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
             <CustomIcon type='sort' size='s' />
           </IconButton>
         </Stack>
-        <Grid2 size={{ md: 8 }} display='flex' justifyContent='flex-end'>
+        <Grid size={{ md: 8 }} display='flex' justifyContent='flex-end'>
           <IconButton
             className={show.showQuery ? 'active' : 'toggle-code-preview'}
             onClick={(): void => handleToggle('query')}
@@ -88,7 +88,7 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
         <IconButton aria-label='import'>
           <CustomIcon type='import' size='s' />
         </IconButton> */}
-        </Grid2>
+        </Grid>
       </Stack>
 
       {show.showFilters && <Filters />}

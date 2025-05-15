@@ -1,6 +1,6 @@
 import { useCurrentConnection, useWindowSize } from '@/hooks';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Grid2 } from '@mui/material';
+import { Grid } from '@mui/material';
 import type { JSX } from 'react';
 import ConfirmModal from '../base/Modal/ConfirmModal/ConfirmModal.tsx';
 import AppHeader from './AppHeader/AppHeader';
@@ -19,27 +19,27 @@ export default function Layout(): JSX.Element {
     <LayoutStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
       <ConfirmModal />
       <AppHeader />
-      <Grid2 container spacing={0}>
-        <Grid2>
+      <Grid container spacing={0}>
+        <Grid>
           <StartContainer />
-        </Grid2>
+        </Grid>
         {sidebar.showLeft && currentConnection && (
-          <Grid2>
+          <Grid>
             <ExplorerContainer />
-          </Grid2>
+          </Grid>
         )}
         {currentConnection && (
-          <Grid2 flex={1} minWidth={0}>
+          <Grid flex={1} minWidth={0}>
             <CenterContainer />
-          </Grid2>
+          </Grid>
         )}
 
         {sidebar.showRight && currentConnection && (
-          <Grid2>
+          <Grid>
             <EndContainer />
-          </Grid2>
+          </Grid>
         )}
-      </Grid2>
+      </Grid>
     </LayoutStyled>
   );
 }

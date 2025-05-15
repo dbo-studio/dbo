@@ -9,7 +9,7 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store.ts';
-import { Grid2, IconButton, Stack } from '@mui/material';
+import { Grid, IconButton, Stack } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 import type { JSX } from 'react';
 import ConnectionBox from './ConnectionBox/ConnectionBox';
@@ -61,7 +61,7 @@ export default function ConnectionInfo(): JSX.Element {
   return (
     <Stack direction={'row'} justifyContent={'center'} alignItems={'center'}>
       <Settings open={showSettings} />
-      <Grid2 size={{ md: 3 }}>
+      <Grid size={{ md: 3 }}>
         <Stack direction={'row'} justifyContent='flex-end'>
           <IconButton aria-label='connections' onClick={(): void => toggleShowAddConnection(true)}>
             <CustomIcon type={'connection'} size={'m'} />
@@ -70,12 +70,12 @@ export default function ConnectionInfo(): JSX.Element {
             <CustomIcon type={'lock'} size={'m'} />
           </IconButton> */}
         </Stack>
-      </Grid2>
-      <Grid2 mr={1} ml={1} size={{ md: 8 }}>
+      </Grid>
+      <Grid mr={1} ml={1} size={{ md: 8 }}>
         <ConnectionBox />
-      </Grid2>
+      </Grid>
 
-      <Grid2 size={{ md: 3 }}>
+      <Grid size={{ md: 3 }}>
         <Stack direction={'row'} justifyContent='flex-start'>
           <LoadingIconButton
             aria-label={'refresh'}
@@ -89,7 +89,7 @@ export default function ConnectionInfo(): JSX.Element {
             <CustomIcon type={'sql'} size={'m'} />
           </IconButton>
         </Stack>
-      </Grid2>
+      </Grid>
     </Stack>
   );
 }

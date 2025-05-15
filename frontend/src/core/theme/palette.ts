@@ -1,13 +1,7 @@
 import type { ThemeModeEnum } from '@/core/enums';
 import { alpha } from '@mui/material';
 
-declare module '@mui/material/styles/createPalette' {
-  export interface Palette {
-    accent: PaletteColor;
-    white: PaletteColor;
-    black: PaletteColor;
-    gradient: PaletteColor;
-  }
+declare module '@mui/material/styles' {
   export interface TypeBackground {
     default: string;
     paper: string;
@@ -162,7 +156,7 @@ const colorPalette = {
   }
 };
 
-export default function palette(themeMode: ThemeModeEnum) {
+export default function palette(themeMode: ThemeModeEnum): any {
   const theme = {
     light: {
       primary: {
