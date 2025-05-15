@@ -51,6 +51,7 @@ export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps
 
     try {
       await createSavedQueryMutation({
+        connectionId: currentConnection?.id ?? 0,
         query: getQuery()
       });
     } catch (error) {}

@@ -5,6 +5,7 @@ export type SavedQueryListRequestType = {
 };
 
 export type CreateSavedQueryType = {
+  connectionId: number;
   name?: string;
   query: string;
 };

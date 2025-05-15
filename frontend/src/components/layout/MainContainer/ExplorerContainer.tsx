@@ -3,7 +3,7 @@ import { useWindowSize } from '@/hooks/useWindowSize.hook';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Tab, Tabs } from '@mui/material';
-import { type JSX, type SyntheticEvent, useMemo, useState } from 'react';
+import React, { type JSX, type SyntheticEvent, useMemo, useState } from 'react';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
 import Histories from '../../common/Histories/Histories';
 import SavedQueries from '../../common/SavedQueries/SavedQueries';
@@ -12,25 +12,26 @@ import { ExplorerContainerStyled } from './Container.styled';
 const tabs = [
   {
     id: 0,
-    content: <ObjectTreeView />
+    component: ObjectTreeView
   },
   {
     id: 1,
-    content: <SavedQueries />
+    component: SavedQueries
   },
   {
     id: 2,
-    content: <Histories />
+    component: Histories
   }
 ];
 
-export default function ExplorerContainer(): JSX.Element {
+export default React.memo(function ExplorerContainer(): JSX.Element {
   const windowSize = useWindowSize();
   const [selectedTabId, setSelectedTabId] = useState(0);
   const { sidebar, updateSidebar } = useSettingStore();
 
   const selectedTabContent = useMemo(() => {
-    return tabs.find((obj) => obj.id === Number(selectedTabId))?.content;
+    const Component = tabs.find((obj) => obj.id === Number(selectedTabId))?.component;
+    return Component ? <Component /> : null;
   }, [selectedTabId]);
 
   const onSelectedTabChanged = (_: SyntheticEvent, id: number): void => {
@@ -55,4 +56,4 @@ export default function ExplorerContainer(): JSX.Element {
       </ExplorerContainerStyled>
     </ResizableXBox>
   );
-}
+});

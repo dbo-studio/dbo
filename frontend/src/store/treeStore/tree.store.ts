@@ -6,12 +6,6 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import type { TreeStore } from './types';
 
-// const getCurrentConnection = (): ConnectionType | undefined => {
-//   const connectionStore = useConnectionStore.getState();
-//   connectionStore.currentConnectionId;
-//   return connectionStore.connections?.find((connection) => connection.id === connectionStore.currentConnectionId);
-// };
-
 const getCurrentConnectionId = (): number | undefined => {
   const connectionStore = useConnectionStore.getState();
   return connectionStore.currentConnectionId ? Number(connectionStore.currentConnectionId) : undefined;

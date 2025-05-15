@@ -9,7 +9,9 @@ import type { HistoryContextMenuProps } from '../../types';
 
 export default function HistoryContextMenu({ history, contextMenu, onClose }: HistoryContextMenuProps): JSX.Element {
   const [copy] = useCopyToClipboard();
-  const { addEditorTab, updateSelectedTab } = useTabStore();
+
+  const addEditorTab = useTabStore.getState().addEditorTab;
+  const updateSelectedTab = useTabStore.getState().updateSelectedTab;
 
   const handleCopy = async (): Promise<void> => {
     try {

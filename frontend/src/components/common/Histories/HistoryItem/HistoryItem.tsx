@@ -9,8 +9,8 @@ import { HistoryItemStyled } from './HistoryItem.styled';
 
 export default function HistoryItem({ history, selected, onClick }: HistoryItemProps): JSX.Element {
   const theme = useTheme();
-
-  const { addEditorTab, updateSelectedTab } = useTabStore();
+  const addEditorTab = useTabStore.getState().addEditorTab;
+  const updateSelectedTab = useTabStore.getState().updateSelectedTab;
 
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 

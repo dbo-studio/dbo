@@ -1,10 +1,14 @@
 import type React from 'react';
 import { useState } from 'react';
 
-export const useContextMenu = () => {
+export const useContextMenu = (): {
+  contextMenuPosition: { mouseX: number; mouseY: number } | null;
+  handleContextMenu: (event: React.MouseEvent) => void;
+  handleCloseContextMenu: () => void;
+} => {
   const [contextMenuPosition, setContextMenuPosition] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
-  const handleContextMenu = (event: React.MouseEvent) => {
+  const handleContextMenu = (event: React.MouseEvent): void => {
     event.preventDefault();
     if (contextMenuPosition != null) {
       return;
@@ -16,7 +20,7 @@ export const useContextMenu = () => {
     });
   };
 
-  const handleCloseContextMenu = () => {
+  const handleCloseContextMenu = (): void => {
     setContextMenuPosition(null);
   };
 

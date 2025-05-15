@@ -1,8 +1,7 @@
 import api from '@/api';
 import type { TreeNodeType } from '@/api/tree/types';
 import { TabMode } from '@/core/enums';
-import { useCopyToClipboard, useCurrentConnection } from '@/hooks';
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
+import { useCopyToClipboard, useCurrentConnection, useSelectedTab } from '@/hooks';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -17,9 +16,11 @@ export const useActionDetection = (
   actionDetection: (event: React.MouseEvent, node: TreeNodeType) => Promise<void>;
 } => {
   const queryClient = useQueryClient();
-  const selectedTab = useSelectedTab();
 
-  const { addTab, addObjectTab, updateSelectedTab } = useTabStore();
+  const addTab = useTabStore.getState().addTab;
+  const addObjectTab = useTabStore.getState().addObjectTab;
+  const updateSelectedTab = useTabStore.getState().updateSelectedTab;
+
   const confirmModal = useConfirmModalStore();
   const currentConnection = useCurrentConnection();
   const { reloadTree } = useTreeStore();
@@ -28,10 +29,10 @@ export const useActionDetection = (
   const { mutateAsync: executeActionMutation, isPending: pendingExecuteAction } = useMutation({
     mutationFn: api.tree.executeAction,
     onSuccess: async (_, variables): Promise<void> => {
+      const selectedTab = useSelectedTab();
       queryClient.invalidateQueries({
         queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, variables.nodeId]
       });
-
       await reloadTree();
     },
     onError: (error): void => {
@@ -79,6 +80,7 @@ export const useActionDetection = (
               }
 
               try {
+                const selectedTab = useSelectedTab();
                 await executeActionMutation({
                   nodeId: node.id,
                   action: node.action.name,
@@ -114,17 +116,7 @@ export const useActionDetection = (
         }
       }
     },
-    [
-      addObjectTab,
-      addTab,
-      confirmModal,
-      currentConnection?.id,
-      expandNode,
-      executeActionMutation,
-      pendingExecuteAction,
-      selectedTab?.id,
-      reloadTree
-    ]
+    [confirmModal, currentConnection?.id, expandNode, executeActionMutation, pendingExecuteAction, reloadTree]
   );
 
   return { actionDetection };

@@ -15,8 +15,10 @@ export default function SavedQueryItem({ query, selected, onChange, onClick }: S
   const theme = useTheme();
   const [editMode, setEditMode] = useState(false);
   const [name, setName] = useState(query.name);
-  const { addEditorTab, updateSelectedTab } = useTabStore();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
+
+  const addEditorTab = useTabStore.getState().addEditorTab;
+  const updateSelectedTab = useTabStore.getState().updateSelectedTab;
 
   const { mutateAsync: updateSavedQueryMutation, isPending } = useMutation({
     mutationFn: api.savedQueries.updateSavedQuery,
