@@ -1,15 +1,12 @@
 import TestGrid from '@/components/common/DBDataGrid/TestGrid/TestGrid';
-import {useTableData} from '@/contexts/TableDataContext';
-import {useMount} from '@/hooks';
-import {useSelectedTab} from '@/hooks/useSelectedTab.hook';
-import Sorts from '@/routes/Data/Sorts/Sorts.tsx';
-import {Box, CircularProgress} from '@mui/material';
-import type {JSX} from 'react';
-import {useEffect, useState} from 'react';
+import { useTableData } from '@/contexts/TableDataContext';
+import { useMount } from '@/hooks';
+import { useTabStore } from '@/store/tabStore/tab.store';
+import { Box, CircularProgress } from '@mui/material';
+import type { JSX } from 'react';
+import { useEffect, useState } from 'react';
 import ActionBar from './ActionBar/ActionBar';
 import Columns from './Columns/Columns';
-import Filters from './Filters/Filters';
-import QueryPreview from './QueryPreview/QueryPreview';
 import StatusBar from './StatusBar/StatusBar';
 
 export default function Data(): JSX.Element {
@@ -17,10 +14,11 @@ export default function Data(): JSX.Element {
 }
 
 function DataContent(): JSX.Element {
-  const selectedTab = useSelectedTab();
   const mounted = useMount();
   const [isGridReady, setIsGridReady] = useState(false);
+  const [showColumns, setShowColumns] = useState(false);
 
+  const { selectedTabId } = useTabStore();
   const { rows, columns, getActiveColumns } = useTableData();
 
   useEffect(() => {
@@ -31,7 +29,7 @@ function DataContent(): JSX.Element {
     }, 100);
 
     return (): void => clearTimeout(timer);
-  }, [selectedTab?.id]);
+  }, [selectedTabId]);
 
   if (!mounted) {
     return <></>;
@@ -39,12 +37,9 @@ function DataContent(): JSX.Element {
 
   return (
     <>
-      <ActionBar selectedTab={selectedTab} />
-      {selectedTab?.showFilters && <Filters />}
-      {selectedTab?.showSorts && <Sorts />}
-      {selectedTab?.showQuery && <QueryPreview />}
+      <ActionBar showColumns={showColumns} setShowColumns={setShowColumns} />
       <Box overflow='hidden' flex={1} display='flex' flexDirection='row'>
-        {selectedTab?.showColumns && <Columns />}
+        {showColumns && <Columns />}
         {columns.length > 0 &&
           (isGridReady ? (
             <TestGrid rows={rows} columns={getActiveColumns()} loading={false} />

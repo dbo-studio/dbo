@@ -14,13 +14,11 @@ export type TabStore = {
 export type TabFilterSlice = {
   upsertFilters: (filter: FilterType) => void;
   removeFilter: (filter: FilterType) => void;
-  setShowFilters: () => void;
 };
 
 export type TabSortSlice = {
   upsertSorts: (sort: SortType) => Promise<void>;
   removeSort: (sort: SortType) => void;
-  setShowSorts: () => void;
   updateSorts: (sorts: SortType[]) => void;
 };
 
@@ -28,7 +26,6 @@ export type TabSettingSlice = {
   addTab: (table: string, id?: string, editable?: boolean) => TabType;
   addObjectTab: (title: string, nodeId: string, action: string, mode: TabMode) => TabType;
   addEditorTab: (query?: string) => TabType;
-  //return undefined will redirect to route /
   removeTab: (tabId: string) => TabType | null | undefined;
   switchTab: (tabId: string | null) => void;
   handleAddNewTab: (tabs: TabType[], newTab: TabType) => TabType;
@@ -37,10 +34,8 @@ export type TabSettingSlice = {
 export type TabQuerySlice = {
   getQuery: () => string;
   updateQuery: (query: string) => void;
-  setShowQueryPreview: () => void;
 };
 
 export type TabDataSlice = {
-  setShowColumns: () => void;
   updateColumns: (columns: string[]) => void;
 };

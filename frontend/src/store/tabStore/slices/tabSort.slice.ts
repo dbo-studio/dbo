@@ -25,14 +25,6 @@ export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], T
     tab.sorts = tab.sorts?.filter((s: SortType) => s.index !== sort.index);
     get().updateSelectedTab(tab);
   },
-  setShowSorts: (): void => {
-    const tab = get().selectedTab();
-    if (!tab) return;
-
-    tab.showSorts = !tab.showSorts;
-    tab.showFilters = false;
-    get().updateSelectedTab(tab);
-  },
   updateSorts: (sorts: SortType[]): void => {
     const tab = get().selectedTab();
     if (!tab) return;

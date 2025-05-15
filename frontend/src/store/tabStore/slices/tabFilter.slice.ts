@@ -26,14 +26,5 @@ export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [
 
     tab.filters = tab?.filters?.filter((f: FilterType) => f.index !== filter.index);
     get().updateSelectedTab(tab);
-  },
-  setShowFilters: (): void => {
-    const tab = get().selectedTab();
-    if (!tab) return;
-
-    tab.showFilters = !tab.showFilters;
-    tab.showSorts = false;
-
-    get().updateSelectedTab(tab);
   }
 });

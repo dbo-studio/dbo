@@ -1,4 +1,4 @@
-import {styled} from '@mui/material';
+import { styled } from '@mui/material';
 
 export const TableHeader = styled('th')(({ theme }) => ({
   backgroundColor: theme.palette.background.default,
@@ -9,7 +9,7 @@ export const TableHeader = styled('th')(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
   borderRight: `1px solid ${theme.palette.divider}`,
   padding: '2px 8px',
-  minWidth: '200px', // Minimum width constraint
+  minWidth: '200px',
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
@@ -27,14 +27,13 @@ export const TableCell = styled('td')(({ theme }) => ({
   padding: '2px 8px',
   color: theme.palette.text.text,
   fontSize: theme.typography.subtitle2.fontSize,
-  minWidth: '200px', // Minimum width constraint
+  minWidth: '200px',
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
-  // Safari-friendly performance optimizations
-  WebkitTransform: 'translateZ(0)', // Safari hardware acceleration
-  transform: 'translateZ(0)', // Hardware acceleration for other browsers
-  transition: 'width 0.1s ease', // Add smooth transition for width changes in onChange mode
+  WebkitTransform: 'translateZ(0)',
+  transform: 'translateZ(0)',
+  transition: 'width 0.1s ease',
 
   '.selected-highlight &': {
     backgroundColor: `${theme.palette.action.selected}`,
@@ -58,11 +57,10 @@ export const TableCell = styled('td')(({ theme }) => ({
 }));
 
 export const StyledTable = styled('table')(({ theme }) => ({
-  width: 'max-content', // Use max-content to ensure table expands to fit all columns
-  // Removed minWidth: '100%' to prevent columns from expanding to fill container
+  width: 'max-content',
   borderSpacing: 0,
-  tableLayout: 'fixed', // Use fixed layout for better performance with column resizing
-  borderCollapse: 'separate' // Needed for fixed layout
+  tableLayout: 'fixed',
+  borderCollapse: 'separate'
 }));
 
 export const CellContent = styled('div')(({ theme }) => ({
@@ -72,9 +70,7 @@ export const CellContent = styled('div')(({ theme }) => ({
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
-  // Optimize for animations
   willChange: 'contents',
-  // Add a slight transition for smoother interactions
   transition: 'background-color 0.1s ease'
 }));
 
@@ -93,14 +89,10 @@ export const TableContainer = styled('div')(({ theme }) => ({
   height: '100%',
   overflow: 'auto',
   position: 'relative',
-  // Optimize scrolling performance
   overscrollBehavior: 'contain',
-  // Prevent text selection during scrolling
   userSelect: 'none',
-  // Hardware acceleration for smoother scrolling
   transform: 'translateZ(0)',
   willChange: 'scroll-position',
-  // Improve touch scrolling on mobile devices
   WebkitOverflowScrolling: 'touch'
 }));
 
@@ -112,28 +104,25 @@ export const StyledTableRow = styled('tr')(({ theme }) => ({
 
 export const Resizer = styled('div')(({ theme }) => ({
   position: 'absolute',
-  right: -3, // Position it to extend slightly outside the cell for easier grabbing
+  right: -3,
   top: 0,
   height: '100%',
-  width: '5px', // Wider for easier grabbing
-  // background: theme.palette.divider, // Slightly visible by default
+  width: '5px',
   cursor: 'col-resize',
   userSelect: 'none',
   touchAction: 'none',
-  zIndex: 100, // Higher z-index to ensure it's above other elements
-  // Safari-friendly performance optimizations
-  WebkitTransform: 'translateZ(0)', // Safari hardware acceleration
-  transform: 'translateZ(0)', // Hardware acceleration for other browsers
-  transition: 'background-color 0.1s ease, width 0.1s ease', // Smooth transitions for properties
+  zIndex: 100,
+  WebkitTransform: 'translateZ(0)',
+  transform: 'translateZ(0)',
+  transition: 'background-color 0.1s ease, width 0.1s ease',
   '&:hover': {
     background: theme.palette.primary.main,
-    opacity: 0.7, // More visible on hover
-    width: '8px' // Slightly wider on hover
+    opacity: 0.7,
+    width: '8px'
   },
   '&.isResizing': {
     background: theme.palette.primary.main,
-    opacity: 0.8, // More visible when resizing
-    // Wider hit area during resize for better UX
+    opacity: 0.8,
     width: '5px'
   }
 }));
@@ -147,11 +136,8 @@ export const CellContainer = styled('div')(({ theme }) => ({
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
   overflow: 'hidden',
-  // Optimize for animations
   willChange: 'contents',
-  // Prevent text selection for better performance during scrolling
   userSelect: 'none',
-  // Enable text selection only when cell is being edited or hovered
   '.cell-hover &, .editing &': {
     userSelect: 'text'
   }
