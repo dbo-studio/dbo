@@ -1,12 +1,13 @@
 import { constants } from '@/core/constants';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { IconButton, Stack } from '@mui/material';
+import type { JSX } from 'react';
 import CustomIcon from '../../../base/CustomIcon/CustomIcon.tsx';
 
-export default function Actions() {
+export default function Actions(): JSX.Element {
   const { updateSidebar, sidebar } = useSettingStore();
 
-  const handelUpdateSidebar = (direction: 'right' | 'left') => {
+  const handelUpdateSidebar = (direction: 'right' | 'left'): void => {
     if (direction === 'right') {
       if (!sidebar.showRight) {
         updateSidebar({ showRight: !sidebar.showRight, rightWidth: constants.defaultSidebarWidth });
@@ -26,10 +27,10 @@ export default function Actions() {
 
   return (
     <Stack direction='row' justifyContent='flex-end'>
-      <IconButton aria-label='sideLeft' onClick={() => handelUpdateSidebar('left')}>
+      <IconButton aria-label='sideLeft' onClick={(): void => handelUpdateSidebar('left')}>
         <CustomIcon type={'sideLeft'} size={'m'} />
       </IconButton>
-      <IconButton aria-label='sideRight' onClick={() => handelUpdateSidebar('right')}>
+      <IconButton aria-label='sideRight' onClick={(): void => handelUpdateSidebar('right')}>
         <CustomIcon type={'sideRight'} size={'m'} />
       </IconButton>
     </Stack>

@@ -23,11 +23,11 @@ const setStoredQueries = (queries: Record<string, string>): void => {
 
 export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [], TabQuerySlice> = (_, get) => ({
   getQuery: (): string => {
-    const tab = get().selectedTab();
-    if (!tab) return '';
+    const tabId = get().selectedTabId;
+    if (!tabId) return '';
 
     const storedQueries = getStoredQueries();
-    const storedQuery = storedQueries[tab.id];
+    const storedQuery = storedQueries[tabId];
 
     if (storedQuery && tools.isValidJSON(storedQuery)) {
       return JSON.parse(storedQuery);
@@ -36,19 +36,12 @@ export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [],
     return storedQuery ?? '';
   },
   updateQuery: (query: string): void => {
-    const tab = get().selectedTab();
-    if (!tab) return;
+    const tabId = get().selectedTabId;
+    if (!tabId) return;
 
     const storedQueries = getStoredQueries();
-    storedQueries[tab.id] = query;
+    storedQueries[tabId] = query;
     setStoredQueries(storedQueries);
-  },
-  setShowQueryPreview: (): void => {
-    const tab = get().selectedTab();
-    if (!tab) return;
-
-    tab.showQuery = !tab.showQuery;
-    get().updateSelectedTab(tab);
   },
   clearStoredQueries: (): void => {
     localStorage.removeItem(STORAGE_KEY);

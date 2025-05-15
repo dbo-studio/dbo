@@ -3,11 +3,16 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { TabType } from '@/types/Tab';
 import { v4 as uuidv4 } from 'uuid';
 import type { StateCreator } from 'zustand';
-import type { TabSettingSlice, TabStore } from '../types';
+import type { TabQuerySlice, TabSettingSlice, TabStore } from '../types';
 
 const maxTabs = 15;
 
-export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [], [], TabSettingSlice> = (_, get) => ({
+export const createTabSettingSlice: StateCreator<
+  TabStore & TabSettingSlice & TabQuerySlice,
+  [],
+  [],
+  TabSettingSlice
+> = (_, get) => ({
   addTab: (table: string, id?: string, editable?: boolean): TabType => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;
     if (!currentConnectionId) {
@@ -85,7 +90,11 @@ export const createTabSettingSlice: StateCreator<TabStore & TabSettingSlice, [],
       }
     };
 
-    return get().handleAddNewTab(tabs, newTab);
+    const addedTab = get().handleAddNewTab(tabs, newTab);
+    if (query) {
+      get().updateQuery(query);
+    }
+    return addedTab;
   },
   addObjectTab: (title: string, nodeId: string, action: string, mode: TabMode): TabType => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;

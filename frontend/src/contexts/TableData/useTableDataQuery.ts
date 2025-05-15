@@ -1,22 +1,35 @@
 import { runQuery, runRawQuery } from '@/api/query';
 import type { RunQueryResponseType } from '@/api/query/types';
+import { TabMode } from '@/core/enums';
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import type { SelectedRow } from '@/store/dataStore/types';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { isAxiosError } from 'axios';
+import type { ColumnType, EditedRow, RowType } from '@/types';
 import { debounce } from 'lodash';
 import { useCallback, useEffect, useRef } from 'react';
-import { toast } from 'sonner';
-import type { TableDataContextType } from './types';
+
+type QueryOperations = {
+  runQuery: () => Promise<RunQueryResponseType | undefined>;
+  runRawQuery: (query?: string) => Promise<RunQueryResponseType | undefined>;
+  refreshDataFromServer: () => Promise<void>;
+};
 
 /**
  * Hook for handling query operations in the TableData context
  */
 export const useTableDataQuery = (state: {
-  setRows: (rows: any[]) => void;
-  setColumns: (columns: any[]) => void;
+  rows: RowType[];
+  columns: ColumnType[];
+  editedRows: EditedRow[];
+  removedRows: RowType[];
+  unsavedRows: RowType[];
+  selectedRows: SelectedRow[];
+  isLoading: boolean;
+  setRows: (rows: RowType[]) => void;
+  setColumns: (columns: ColumnType[]) => void;
   setIsLoading: (isLoading: boolean) => void;
-}): TableDataContextType => {
+}): QueryOperations => {
   const { selectedTabId } = useTabStore();
   const { setRows, setColumns, setIsLoading } = state;
 
@@ -52,7 +65,7 @@ export const useTableDataQuery = (state: {
     try {
       setIsLoading(true);
       const tab = useTabStore.getState().selectedTab();
-      if (!tab) return undefined;
+      if (!tab || tab.mode !== TabMode.Data) return undefined;
 
       const filters = tab.filters ?? [];
       const sorts = tab.sorts ?? [];
@@ -127,10 +140,7 @@ export const useTableDataQuery = (state: {
 
         return result;
       } catch (error) {
-        if (isAxiosError(error)) {
-          toast.error(error.message);
-        }
-        console.error('Error executing raw query:', error);
+        console.log('🚀 ~ error:', error);
         return undefined;
       } finally {
         setIsLoading(false);
@@ -147,7 +157,7 @@ export const useTableDataQuery = (state: {
   }, [fetchDataFromServer]);
 
   return {
-    fetchDataFromServer,
+    // Query operations
     runQuery: executeQuery,
     runRawQuery: executeRawQuery,
     refreshDataFromServer
