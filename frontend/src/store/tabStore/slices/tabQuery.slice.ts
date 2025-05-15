@@ -43,6 +43,11 @@ export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [],
     storedQueries[tabId] = query;
     setStoredQueries(storedQueries);
   },
+  removeQuery: (tabId: string): void => {
+    const storedQueries = getStoredQueries();
+    delete storedQueries[tabId];
+    setStoredQueries(storedQueries);
+  },
   clearStoredQueries: (): void => {
     localStorage.removeItem(STORAGE_KEY);
   }

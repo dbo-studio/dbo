@@ -38,7 +38,7 @@ export default function Query(): JSX.Element {
 
   useEffect(() => {
     handleChangeValue();
-  }, [selectedTab?.id]);
+  }, [selectedTab?.id, autocomplete]);
 
   const handleChangeValue = (): void => {
     setValue(getQuery());
@@ -64,14 +64,12 @@ export default function Query(): JSX.Element {
           flex={1}
           borderBottom={(theme): string => `1px solid ${theme.palette.divider}`}
         >
-          {autocomplete && (
-            <SqlEditor
-              onMount={(): void => setShowGrid(true)}
-              onChange={handleUpdateState}
-              autocomplete={autocomplete}
-              value={value}
-            />
-          )}
+          <SqlEditor
+            onMount={(): void => setShowGrid(true)}
+            onChange={handleUpdateState}
+            autocomplete={autocomplete ?? { databases: [], schemas: [], tables: [], columns: {}, views: [] }}
+            value={value}
+          />
         </Box>
 
         {showGrid && headers.length > 0 && (

@@ -139,6 +139,8 @@ export const createTabSettingSlice: StateCreator<
       newTab = newTabs[newTabs.length - 1];
     }
 
+    get().removeQuery(tabId);
+
     if (newTab?.id === tabId) {
       get().switchTab(newTab?.id ?? null);
     }
