@@ -1,5 +1,7 @@
 import api from '@/api';
+import type { RunQueryResponseType } from '@/api/query/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton';
 import { shortcuts, tools } from '@/core/utils';
 import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
@@ -13,7 +15,7 @@ import type { QueryEditorActionsProps } from '../../types';
 
 export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps): JSX.Element {
   const queryClient = useQueryClient();
-  const { runRawQuery } = useDataStore();
+  const { runRawQuery, isDataFetching } = useDataStore();
   const { updateQuery, getQuery } = useTabStore();
   const currentConnection = useCurrentConnection();
 
@@ -76,9 +78,14 @@ export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps
         </IconButton>
       </Tooltip>
       <Tooltip title={shortcuts.runQuery.command}>
-        <IconButton color='primary' onClick={(): Promise<void> => runRawQuery()}>
+        <LoadingIconButton
+          disabled={isDataFetching}
+          loading={isDataFetching}
+          color='primary'
+          onClick={(): Promise<RunQueryResponseType | undefined> => runRawQuery()}
+        >
           <CustomIcon type='play' />
-        </IconButton>
+        </LoadingIconButton>
       </Tooltip>
     </Stack>
   );

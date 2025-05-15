@@ -17,7 +17,7 @@ export default function Connections(): JSX.Element {
   const [loadingConnectionId, setLoadingConnectionId] = useState<number | undefined>(undefined);
   const { loading, currentConnectionId, currentConnection, updateLoading, updateCurrentConnection, updateConnections } =
     useConnectionStore();
-  const { updateSelectedTab, tabs } = useTabStore();
+  const updateSelectedTab = useTabStore.getState().updateSelectedTab;
   const { toggleShowAddConnection } = useSettingStore();
 
   const { data: connections } = useQuery({
@@ -63,13 +63,13 @@ export default function Connections(): JSX.Element {
     if (connections.length === 0) {
       toggleShowAddConnection(true);
     }
-  }, [connections, toggleShowAddConnection]);
+  }, [connections]);
 
   const handleChangeCurrentConnection = async (c: ConnectionType): Promise<void> => {
+    const tabs = useTabStore.getState().tabs;
     if (c.id === currentConnection()?.id || loading === 'loading') {
       return;
     }
-
     try {
       await updateConnectionMutation(c.id);
       updateSelectedTab(tabs.find((t) => t.connectionId === c.id));

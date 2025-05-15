@@ -1,6 +1,6 @@
 import type { Interpolation, Theme } from '@mui/material';
 
-export const globalStyles = (): Interpolation<Theme> => {
+export const globalStyles = (_: Theme): Interpolation<Theme> => {
   return {
     '*': {
       userSelect: 'none', // Disable text selection

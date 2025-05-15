@@ -14,7 +14,7 @@ export const createDataQuerySlice: StateCreator<
   DataQuerySlice
 > = (set, get) => ({
   loading: false,
-  isDataFetching: true,
+  isDataFetching: false,
   toggleDataFetching: (loading?: boolean): void => {
     set({ isDataFetching: loading !== undefined ? loading : !get().isDataFetching });
   },
