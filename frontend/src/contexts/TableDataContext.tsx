@@ -17,10 +17,8 @@ const TableDataContext = createContext<TableDataContextType | undefined>(undefin
 export function TableDataProvider({ children }: TableDataProviderProps): JSX.Element {
   const { selectedTabId } = useTabStore();
 
-  // Initialize state
   const state = useTableDataState();
 
-  // Initialize hooks for different operations
   const queryOperations = useTableDataQuery(state);
   const rowOperations = useTableDataRows(state);
   const columnOperations = useTableDataColumns(state);

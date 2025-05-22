@@ -3,19 +3,12 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import type { EditedRow, RowType } from '@/types';
 import { debounce } from 'lodash';
 import { useCallback, useEffect, useRef } from 'react';
-import type { TableDataContextType } from './types';
+import type { TableDataContextType, TableDataState } from './types';
 
 /**
  * Hook for handling edited rows operations in the TableData context
  */
-export const useTableDataEdited = (state: {
-  rows: RowType[];
-  setRows: (rows: RowType[]) => void;
-  editedRows: EditedRow[];
-  setEditedRows: (rows: EditedRow[]) => void;
-  unsavedRows: RowType[];
-  setUnsavedRows: (rows: RowType[]) => void;
-}): TableDataContextType => {
+export const useTableDataEdited = (state: TableDataState): TableDataContextType => {
   const { selectedTabId } = useTabStore();
   const { rows, setRows, editedRows, setEditedRows, unsavedRows, setUnsavedRows } = state;
 

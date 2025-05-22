@@ -3,17 +3,12 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import type { RowType } from '@/types';
 import { debounce } from 'lodash';
 import { useCallback, useEffect, useRef } from 'react';
-import type { TableDataContextType } from './types';
+import type { TableDataContextType, TableDataState } from './types';
 
 /**
  * Hook for handling removed rows operations in the TableData context
  */
-export const useTableDataRemoved = (state: {
-  rows: RowType[];
-  setRows: (rows: RowType[]) => void;
-  removedRows: RowType[];
-  setRemovedRows: (rows: RowType[]) => void;
-}): TableDataContextType => {
+export const useTableDataRemoved = (state: TableDataState): TableDataContextType => {
   const { selectedTabId } = useTabStore();
   const { rows, setRows, removedRows, setRemovedRows } = state;
 

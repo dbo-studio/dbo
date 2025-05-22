@@ -3,15 +3,12 @@ import type { SelectedRow } from '@/store/dataStore/types';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { debounce } from 'lodash';
 import { useCallback, useEffect, useRef } from 'react';
-import type { TableDataContextType } from './types';
+import type { TableDataContextType, TableDataState } from './types';
 
 /**
  * Hook for handling selected rows operations in the TableData context
  */
-export const useTableDataSelected = (state: {
-  selectedRows: SelectedRow[];
-  setSelectedRowsState: (rows: SelectedRow[]) => void;
-}): TableDataContextType => {
+export const useTableDataSelected = (state: TableDataState): TableDataContextType => {
   const { selectedTabId } = useTabStore();
   const { selectedRows, setSelectedRowsState } = state;
 

@@ -3,11 +3,10 @@ import type { RunQueryResponseType } from '@/api/query/types';
 import { TabMode } from '@/core/enums';
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import type { SelectedRow } from '@/store/dataStore/types';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { ColumnType, EditedRow, RowType } from '@/types';
 import { debounce } from 'lodash';
 import { useCallback, useEffect, useRef } from 'react';
+import type { TableDataState } from './types';
 
 type QueryOperations = {
   runQuery: () => Promise<RunQueryResponseType | undefined>;
@@ -19,18 +18,7 @@ type QueryOperations = {
 /**
  * Hook for handling query operations in the TableData context
  */
-export const useTableDataQuery = (state: {
-  rows: RowType[];
-  columns: ColumnType[];
-  editedRows: EditedRow[];
-  removedRows: RowType[];
-  unsavedRows: RowType[];
-  selectedRows: SelectedRow[];
-  isLoading: boolean;
-  setRows: (rows: RowType[]) => void;
-  setColumns: (columns: ColumnType[]) => void;
-  setIsLoading: (isLoading: boolean) => void;
-}): QueryOperations => {
+export const useTableDataQuery = (state: TableDataState): QueryOperations => {
   const { selectedTabId } = useTabStore();
   const { setRows, setColumns, setIsLoading } = state;
 

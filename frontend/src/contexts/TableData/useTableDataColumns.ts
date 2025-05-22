@@ -3,15 +3,12 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ColumnType } from '@/types';
 import { debounce } from 'lodash';
 import { useCallback, useEffect, useRef } from 'react';
-import type { TableDataContextType } from './types';
+import type { TableDataContextType, TableDataState } from './types';
 
 /**
  * Hook for handling column operations in the TableData context
  */
-export const useTableDataColumns = (state: {
-  columns: ColumnType[];
-  setColumns: (columns: ColumnType[]) => void;
-}): TableDataContextType => {
+export const useTableDataColumns = (state: TableDataState): TableDataContextType => {
   const { selectedTabId } = useTabStore();
   const { columns, setColumns } = state;
 

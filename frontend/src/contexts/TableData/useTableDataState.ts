@@ -52,21 +52,7 @@ export const useTableDataState = (): TableDataState => {
     return null;
   };
 
-  /**
-   * Get the current state
-   */
-  const getState = (): TableDataState => ({
-    rows,
-    columns,
-    editedRows,
-    removedRows,
-    unsavedRows,
-    selectedRows,
-    isLoading
-  });
-
   return {
-    // State
     rows,
     setRows,
     columns,
@@ -82,8 +68,6 @@ export const useTableDataState = (): TableDataState => {
     isLoading,
     setIsLoading,
 
-    // Methods
-    loadDataFromIndexedDB,
-    getState
+    loadDataFromIndexedDB
   };
 };

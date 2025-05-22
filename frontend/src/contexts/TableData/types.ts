@@ -1,6 +1,6 @@
-import type { RowType, ColumnType, EditedRow } from '@/types';
-import type { SelectedRow } from '@/store/dataStore/types';
 import type { RunQueryResponseType } from '@/api/query/types';
+import type { SelectedRow } from '@/store/dataStore/types';
+import type { ColumnType, EditedRow, RowType } from '@/types';
 import type { ReactNode } from 'react';
 
 // Define the context interface
@@ -53,10 +53,25 @@ export interface TableDataProviderProps {
 // State interface
 export interface TableDataState {
   rows: RowType[];
+  setRows: (rows: RowType[]) => void;
+
   columns: ColumnType[];
+  setColumns: (columns: ColumnType[]) => void;
+
   editedRows: EditedRow[];
+  setEditedRows: (editedRows: EditedRow[]) => void;
+
   removedRows: RowType[];
+  setRemovedRows: (removedRows: RowType[]) => void;
+
   unsavedRows: RowType[];
+  setUnsavedRows: (unsavedRows: RowType[]) => void;
+
   selectedRows: SelectedRow[];
+  setSelectedRowsState: (selectedRows: SelectedRow[]) => void;
+
   isLoading: boolean;
+  setIsLoading: (isLoading: boolean) => void;
+
+  loadDataFromIndexedDB: () => Promise<{ rows: RowType[]; columns: ColumnType[] } | null>;
 }

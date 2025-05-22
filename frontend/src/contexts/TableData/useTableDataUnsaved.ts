@@ -3,15 +3,12 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import type { RowType } from '@/types';
 import { debounce } from 'lodash';
 import { useCallback, useEffect, useRef } from 'react';
-import type { TableDataContextType } from './types';
+import type { TableDataContextType, TableDataState } from './types';
 
 /**
  * Hook for handling unsaved rows operations in the TableData context
  */
-export const useTableDataUnsaved = (state: {
-  unsavedRows: RowType[];
-  setUnsavedRows: (rows: RowType[]) => void;
-}): TableDataContextType => {
+export const useTableDataUnsaved = (state: TableDataState): TableDataContextType => {
   const { selectedTabId } = useTabStore();
   const { unsavedRows, setUnsavedRows } = state;
 
