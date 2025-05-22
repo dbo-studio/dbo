@@ -1,7 +1,6 @@
-import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import { type ColumnType, type RowType } from '@/types';
-import { type EditedRow } from '@/types';
-import { type SelectedRow } from '@/store/dataStore/types';
+import type { SelectedRow } from '@/store/dataStore/types';
+import type { ColumnType, EditedRow, RowType } from '@/types';
+import { type DBSchema, type IDBPDatabase, openDB } from 'idb';
 
 // Define the database schema
 interface TableDataDB extends DBSchema {
@@ -71,7 +70,7 @@ class IndexedDBService {
   private initDB(): Promise<IDBPDatabase<TableDataDB>> {
     if (!this.dbPromise) {
       this.dbPromise = openDB<TableDataDB>(this.DB_NAME, this.DB_VERSION, {
-        upgrade(db) {
+        upgrade(db): void {
           // Create stores with indexes
           if (!db.objectStoreNames.contains('rows')) {
             const rowsStore = db.createObjectStore('rows', { keyPath: 'key' });
@@ -363,6 +362,20 @@ class IndexedDBService {
       cursor = await cursor.continue();
     }
     await selectedRowsTx.done;
+  }
+
+  // Clear all data from all object stores
+  async clearAllTableData(): Promise<void> {
+    const db = await this.initDB();
+    // List of all object stores to clear
+    const stores = ['rows', 'columns', 'editedRows', 'removedRows', 'unsavedRows', 'selectedRows'];
+    await Promise.all(
+      stores.map(async (store) => {
+        const tx = db.transaction(store, 'readwrite');
+        await tx.store.clear();
+        await tx.done;
+      })
+    );
   }
 }
 
