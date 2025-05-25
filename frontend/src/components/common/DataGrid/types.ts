@@ -12,7 +12,7 @@ export type CustomColumnDef = {
   maxSize?: number;
 };
 
-export type MemoizedCellProps = {
+export type DataGridTableCellProps = {
   row: any;
   rowIndex: number;
   columnId: string;
