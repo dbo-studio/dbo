@@ -1,63 +1,7 @@
-import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import { type ColumnType, type RowType } from '@/types';
-import { type EditedRow } from '@/types';
-import { type SelectedRow } from '@/store/dataStore/types';
-
-// Define the database schema
-interface TableDataDB extends DBSchema {
-  rows: {
-    key: string; // tabId + rowIndex
-    value: {
-      tabId: string;
-      rowIndex: number;
-      data: RowType;
-    };
-    indexes: { 'by-tab': string };
-  };
-  columns: {
-    key: string; // tabId
-    value: {
-      tabId: string;
-      columns: ColumnType[];
-    };
-  };
-  editedRows: {
-    key: string; // tabId + rowIndex
-    value: {
-      tabId: string;
-      rowIndex: number;
-      data: EditedRow;
-    };
-    indexes: { 'by-tab': string };
-  };
-  removedRows: {
-    key: string; // tabId + rowIndex
-    value: {
-      tabId: string;
-      rowIndex: number;
-      data: RowType;
-    };
-    indexes: { 'by-tab': string };
-  };
-  unsavedRows: {
-    key: string; // tabId + rowIndex
-    value: {
-      tabId: string;
-      rowIndex: number;
-      data: RowType;
-    };
-    indexes: { 'by-tab': string };
-  };
-  selectedRows: {
-    key: string; // tabId + rowIndex
-    value: {
-      tabId: string;
-      rowIndex: number;
-      data: SelectedRow;
-    };
-    indexes: { 'by-tab': string };
-  };
-}
+import type { SelectedRow } from '@/store/dataStore/types';
+import type { ColumnType, EditedRow, RowType } from '@/types';
+import { type IDBPDatabase, openDB } from 'idb';
+import type { TableDataDB } from './types';
 
 class IndexedDBService {
   private dbPromise: Promise<IDBPDatabase<TableDataDB>> | null = null;
@@ -71,7 +15,7 @@ class IndexedDBService {
   private initDB(): Promise<IDBPDatabase<TableDataDB>> {
     if (!this.dbPromise) {
       this.dbPromise = openDB<TableDataDB>(this.DB_NAME, this.DB_VERSION, {
-        upgrade(db) {
+        upgrade(db): void {
           // Create stores with indexes
           if (!db.objectStoreNames.contains('rows')) {
             const rowsStore = db.createObjectStore('rows', { keyPath: 'key' });
