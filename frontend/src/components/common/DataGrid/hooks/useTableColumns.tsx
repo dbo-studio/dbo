@@ -3,6 +3,7 @@ import { handleRowChangeLog } from '@/core/utils';
 import type { RowType } from '@/types';
 import { Checkbox } from '@mui/material';
 import { type JSX, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CellContainer, CellContent, CellInput } from '../DataGrid.styled';
 import type {
   CellEditingReturn,
   CellSelectionReturn,
@@ -11,7 +12,6 @@ import type {
   RowSelectionReturn,
   TableColumnsProps
 } from '../types';
-import { CellContainer, CellContent, CellInput } from './../TestGrid.styled';
 
 // Hook for managing row selection with optimized lookups
 const useRowSelection = (
@@ -99,8 +99,7 @@ const useCellEditing = (
   editedRows: any,
   updateEditedRows: (rows: any) => Promise<void>,
   updateRow: (row: any) => Promise<void>,
-  setEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void,
-  onRowUpdate: (newValue: string) => void
+  setEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void
 ): CellEditingReturn => {
   const inputRef = useRef<HTMLInputElement>(null);
   const updateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -115,7 +114,7 @@ const useCellEditing = (
         };
 
         // Update UI immediately
-        onRowUpdate(newValue);
+        updateRow(newValue);
 
         // Clear any pending updates
         if (updateTimeoutRef.current) {
@@ -130,7 +129,7 @@ const useCellEditing = (
       }
       setEditingCell(null);
     },
-    [row, columnId, cellValue, editedRows, updateEditedRows, updateRow, setEditingCell, onRowUpdate]
+    [row, columnId, cellValue, editedRows, updateEditedRows, updateRow, setEditingCell]
   );
 
   // Cleanup timeout on unmount
@@ -208,8 +207,7 @@ const MemoizedCell = memo(
     editedRows,
     updateEditedRows,
     updateRow,
-    setSelectedRows,
-    onRowUpdate
+    setSelectedRows
   }: MemoizedCellProps) => {
     const cellValue = String(value === null ? 'NULL' : value || '');
     const [isHovering, setIsHovering] = useState(false);
@@ -222,8 +220,7 @@ const MemoizedCell = memo(
       editedRows,
       updateEditedRows,
       updateRow,
-      setEditingCell,
-      onRowUpdate
+      setEditingCell
     );
 
     const { handleClick } = useCellSelection(row, rowIndex, columnId, setSelectedRows);
@@ -296,8 +293,7 @@ export default function useTableColumns({
   setEditingCell,
   updateEditedRows,
   updateRow,
-  editedRows,
-  onRowUpdate = (): void => {}
+  editedRows
 }: TableColumnsProps): CustomColumnDef[] {
   const { selectedRows, setSelectedRows } = useTableData();
   const { handleRowSelection } = useRowSelection(rows, selectedRows, setSelectedRows);
@@ -371,7 +367,6 @@ export default function useTableColumns({
                 updateEditedRows={updateEditedRows}
                 updateRow={updateRow}
                 setSelectedRows={setSelectedRows}
-                onRowUpdate={onRowUpdate}
               />
             );
           }
@@ -379,5 +374,5 @@ export default function useTableColumns({
     );
 
     return [checkboxColumn, ...dataColumns];
-  }, [rows, editingCell, columns, selectedRows, handleRowSelection, onRowUpdate]);
+  }, [rows, editingCell, columns, selectedRows, handleRowSelection]);
 }

@@ -1,4 +1,4 @@
-import TestGrid from '@/components/common/DBDataGrid/TestGrid/TestGrid';
+import DataGrid from '@/components/common/DataGrid/DataGrid';
 import { useTableData } from '@/contexts/TableDataContext';
 import { useMount } from '@/hooks';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -42,7 +42,7 @@ function DataContent(): JSX.Element {
         {showColumns && <Columns />}
         {columns.length > 0 &&
           (isGridReady ? (
-            <TestGrid rows={rows} columns={getActiveColumns()} loading={false} />
+            <DataGrid rows={rows} columns={getActiveColumns()} loading={false} />
           ) : (
             <Box display='flex' justifyContent='center' alignItems='center' width='100%'>
               <CircularProgress size={30} />

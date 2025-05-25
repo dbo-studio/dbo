@@ -1,6 +1,6 @@
 import CodeEditor from '@/components/base/CodeEditor/CodeEditor.tsx';
 import ResizableModal from '@/components/base/Modal/ResizableModal/ResizableModal.tsx';
-import type { QuickViewDialogProps } from '@/components/common/DBDataGrid/QuickViewDialog/types';
+import type { QuickViewDialogProps } from '@/components/common/DataGrid/QuickViewDialog/types';
 import { handleRowChangeLog } from '@/core/utils';
 import locales from '@/locales';
 import { useTableData } from '@/contexts/TableDataContext';
