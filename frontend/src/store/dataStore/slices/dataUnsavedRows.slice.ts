@@ -1,12 +1,7 @@
 import { createEmptyRow } from '@/core/utils';
-import { useTabStore } from '@/store/tabStore/tab.store';
 import type { RowType } from '@/types';
 import type { StateCreator } from 'zustand';
 import type { DataColumnSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
-
-const tabId = (): string | undefined => {
-  return useTabStore.getState().selectedTabId;
-};
 
 export const createDataUnsavedRowsSlice: StateCreator<
   DataStore & DataUnsavedRowsSlice & DataRowSlice & DataColumnSlice,
@@ -14,20 +9,13 @@ export const createDataUnsavedRowsSlice: StateCreator<
   [],
   DataUnsavedRowsSlice
 > = (set, get) => ({
-  unSavedRows: {},
-  getUnsavedRows: (): RowType[] => {
-    const id = tabId();
-    if (!id) return [];
-
-    const rows = get().unSavedRows;
-    return rows[id] ?? [];
-  },
+  unSavedRows: [],
   addUnsavedRows: (newRow?: RowType): void => {
-    let unSavedRows = get().getUnsavedRows();
+    let unSavedRows = get().unSavedRows;
     if (!newRow) {
       // create an empty row
-      const rows = get().getRows();
-      const columns = get().getColumns();
+      const rows = get().rows ?? [];
+      const columns = get().columns ?? [];
       const filteredRow = createEmptyRow(columns);
       filteredRow.dbo_index = rows.length === 0 ? 0 : rows[rows.length - 1].dbo_index + 1;
       const newRows = [...rows, filteredRow];
@@ -45,31 +33,17 @@ export const createDataUnsavedRowsSlice: StateCreator<
     get().updateUnsavedRows(unSavedRows);
   },
   updateUnsavedRows: (unSavedRows: RowType[]): void => {
-    const id = tabId();
-    if (!id) return;
-
-    set((state) => ({
-      unSavedRows: {
-        ...state.unSavedRows,
-        [id]: unSavedRows
-      }
-    }));
+    set({ unSavedRows });
   },
   discardUnsavedRows: async (rows?: RowType[]): Promise<void> => {
-    const unSavedRows = rows ?? get().getUnsavedRows();
+    const unSavedRows = rows ?? get().unSavedRows;
     if (unSavedRows.length === 0) return;
 
     const unsavedIndexes = new Set(unSavedRows.map((row) => row.dbo_index));
-    const updatedRows = get()
-      .getRows()
-      .filter((row) => !unsavedIndexes.has(row.dbo_index));
+    const updatedRows = get().rows?.filter((row) => !unsavedIndexes.has(row.dbo_index));
+    if (!updatedRows) return;
 
     await get().updateRows(updatedRows);
     get().updateUnsavedRows([]);
-  },
-  removeUnsavedRowsByTabId: (tabId: string): void => {
-    set((state) => ({
-      unSavedRows: Object.fromEntries(Object.entries(state.unSavedRows).filter(([key]) => key !== tabId))
-    }));
   }
 });

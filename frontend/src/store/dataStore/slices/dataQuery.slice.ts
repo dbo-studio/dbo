@@ -1,5 +1,6 @@
 import { runQuery, runRawQuery } from '@/api/query';
 import type { RunQueryResponseType } from '@/api/query/types';
+import { debouncedSaveToIndexedDB } from '@/core/utils/indexdbHelper';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
@@ -44,7 +45,11 @@ export const createDataQuerySlice: StateCreator<
 
       useTabStore.getState().updateQuery(res.query);
 
-      Promise.all([get().updateRows(res.data), get().updateColumns(res.columns)]);
+      Promise.all([
+        get().updateRows(res.data),
+        get().updateColumns(res.columns),
+        debouncedSaveToIndexedDB(tab.id, res.data, res.columns)
+      ]);
 
       return res;
     } catch (error) {
@@ -54,8 +59,9 @@ export const createDataQuerySlice: StateCreator<
     }
   },
   runRawQuery: async (query?: string): Promise<RunQueryResponseType | undefined> => {
+    const selectedTabId = useTabStore.getState().selectedTabId;
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;
-    if (!currentConnectionId) return;
+    if (!currentConnectionId || !selectedTabId) return;
 
     try {
       get().toggleDataFetching(true);
@@ -65,9 +71,11 @@ export const createDataQuerySlice: StateCreator<
       });
 
       useTabStore.getState().updateQuery(res.query);
-
-      Promise.all([get().updateRows(res.data), get().updateColumns(res.columns)]);
-      set({ isDataFetching: !get().isDataFetching });
+      Promise.all([
+        get().updateRows(res.data),
+        get().updateColumns(res.columns),
+        debouncedSaveToIndexedDB(selectedTabId, res.data, res.columns)
+      ]);
 
       return res;
     } catch (error) {

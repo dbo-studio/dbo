@@ -41,11 +41,12 @@ export default function StatusBarActions(): JSX.Element {
   });
 
   const handleSave = async (): Promise<void> => {
-    const [editedRows, removedRows, unsavedRows] = await Promise.all([
-      indexedDBService.getEditedRows(selectedTab?.nodeId ?? ''),
+    const [removedRows, unsavedRows] = await Promise.all([
       indexedDBService.getRemovedRows(selectedTab?.nodeId ?? ''),
       indexedDBService.getUnsavedRows(selectedTab?.nodeId ?? '')
     ]);
+
+    const editedRows = await indexedDBService.getEditedRows(selectedTab?.nodeId ?? '');
 
     if (selectedTab?.mode === TabMode.Data) {
       if (
@@ -64,7 +65,9 @@ export default function StatusBarActions(): JSX.Element {
           removed: removedRows,
           added: unsavedRows
         });
-      } catch (error) {}
+      } catch (error) {
+        console.log(error);
+      }
     }
   };
 

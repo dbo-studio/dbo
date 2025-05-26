@@ -1,12 +1,7 @@
-import { useTabStore } from '@/store/tabStore/tab.store';
 import type { EditedRow, RowType } from '@/types';
 import { pullAt } from 'lodash';
 import type { StateCreator } from 'zustand';
 import type { DataEditedRowsSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
-
-const tabId = (): string => {
-  return useTabStore.getState().selectedTabId ?? '';
-};
 
 export const createDataEditedRowsSlice: StateCreator<
   DataStore & DataEditedRowsSlice & DataRowSlice & DataUnsavedRowsSlice,
@@ -14,19 +9,9 @@ export const createDataEditedRowsSlice: StateCreator<
   [],
   DataEditedRowsSlice
 > = (set, get) => ({
-  editedRows: {},
-  getEditedRows: (): EditedRow[] => {
-    const selectedTabId = tabId();
-    if (!selectedTabId) return [];
-
-    const rows = get().editedRows;
-    return rows[selectedTabId] ?? [];
-  },
+  editedRows: [],
   updateEditedRows: (editedRows: EditedRow[]): void => {
-    const selectedTabId = tabId();
-    if (!selectedTabId) return;
-
-    const unSavedRows = get().getUnsavedRows();
+    const unSavedRows = get().unSavedRows;
     const shouldBeUnsaved: RowType[] = [];
 
     editedRows.forEach((editedRow: EditedRow, index: number) => {
@@ -46,13 +31,11 @@ export const createDataEditedRowsSlice: StateCreator<
       get().addUnsavedRows(newUnsavedRow);
     }
 
-    const rows = get().editedRows;
-    rows[selectedTabId] = editedRows;
-    set({ editedRows: rows });
+    set({ editedRows: editedRows });
   },
   restoreEditedRows: async (): Promise<void> => {
-    const newRows = get().getEditedRows();
-    const oldRows = get().getRows();
+    const newRows = get().editedRows;
+    const oldRows = get().rows ?? [];
 
     for (const newRow of newRows) {
       const findValueIndex = oldRows.findIndex((x) => x.dbo_index === newRow.dboIndex);
@@ -64,10 +47,5 @@ export const createDataEditedRowsSlice: StateCreator<
 
     await get().updateRows(oldRows);
     get().updateEditedRows([]);
-  },
-  removeEditedRowsByTabId: (tabId: string): void => {
-    set((state) => ({
-      editedRows: Object.fromEntries(Object.entries(state.editedRows).filter(([key]) => key !== tabId))
-    }));
   }
 });

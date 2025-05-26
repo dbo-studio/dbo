@@ -17,7 +17,7 @@ export const tools = {
       (isObject(data) && Object.keys(data).length === 0)
     );
   },
-  cleanObject: (obj: any) => {
+  cleanObject: (obj: any): any => {
     if (!isObject(obj)) return {};
     const newObj = { ...obj };
     for (const key of Object.keys(newObj)) {
@@ -26,13 +26,13 @@ export const tools = {
     return newObj;
   },
 
-  isMac: () => {
+  isMac: (): boolean => {
     const { userAgent } = navigator;
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     return /Mac/i.test(userAgent) || (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream);
   },
-  isTauri: async () => {
+  isTauri: async (): Promise<boolean> => {
     try {
       return (await getTauriVersion()) !== null;
     } catch (e) {
@@ -60,7 +60,7 @@ export const tools = {
   formatSql: (query: string, lang: SqlLanguage): string => {
     return format(query, { language: lang, keywordCase: 'preserve' });
   },
-  isValidJSON: (value: string) => {
+  isValidJSON: (value: string): boolean => {
     try {
       JSON.parse(value);
       return true;
@@ -68,7 +68,7 @@ export const tools = {
       return false;
     }
   },
-  isNumber: (value: string) => {
+  isNumber: (value: string): boolean => {
     return /^-?\d*\.?\d+(e[+-]?\d+)?$/i.test(value);
   }
 };
