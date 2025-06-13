@@ -17,7 +17,7 @@ export default function ConnectionItemContextMenu({
   onClose
 }: ConnectionContextMenuProps): JSX.Element {
   const queryClient = useQueryClient();
-  const { toggleShowEditConnection } = useSettingStore();
+  const toggleShowEditConnection = useSettingStore((state) => state.toggleShowEditConnection);
 
   const { mutateAsync: deleteConnectionMutation } = useMutation({
     mutationFn: api.connection.deleteConnection,

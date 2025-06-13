@@ -13,8 +13,10 @@ import PostgreSQL from './Postgresql/Postgresql';
 export default function EditConnection(): JSX.Element {
   const queryClient = useQueryClient();
   const [activeConnection, setActiveConnection] = useState<ConnectionType | undefined>(undefined);
-  const { connections } = useConnectionStore();
-  const { showEditConnection, toggleShowEditConnection } = useSettingStore();
+  const connections = useConnectionStore((state) => state.connections);
+
+  const showEditConnection = useSettingStore((state) => state.showEditConnection);
+  const toggleShowEditConnection = useSettingStore((state) => state.toggleShowEditConnection);
 
   const { mutateAsync: updateConnectionMutation, isPending: updateConnectionPending } = useMutation({
     mutationFn: (variables: { id: number; data: CreateConnectionRequestType }): Promise<ConnectionType> =>
