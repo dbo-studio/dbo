@@ -63,7 +63,7 @@ function DataContent(): JSX.Element {
 
   return (
     <>
-      <ActionBar showColumns={showColumns} setShowColumns={setShowColumns} />
+      {/* <ActionBar showColumns={showColumns} setShowColumns={setShowColumns} /> */}
       <Box overflow='hidden' flex={1} display='flex' flexDirection='row'>
         {showColumns && <Columns />}
         {columns &&

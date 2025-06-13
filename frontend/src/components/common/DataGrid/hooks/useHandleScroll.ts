@@ -2,7 +2,8 @@ import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useCallback, useEffect } from 'react';
 
 export const useHandleScroll = (tableRef: any): void => {
-  const { scrollToBottom, toggleScrollToBottom } = useSettingStore();
+  const scrollToBottom = useSettingStore((state) => state.scrollToBottom);
+  const toggleScrollToBottom = useSettingStore((state) => state.toggleScrollToBottom);
 
   const handleScrollToBottom = useCallback(() => {
     if (tableRef.current) {
