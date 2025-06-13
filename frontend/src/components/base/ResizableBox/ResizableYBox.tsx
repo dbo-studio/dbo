@@ -1,22 +1,22 @@
 import type { EventFor } from '@/types';
 import { Box } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
+import { type JSX, useEffect, useRef, useState } from 'react';
 import ResizableToggle from './ResizableToggle';
 import type { ResizableBoxYProps } from './types';
 
-export default function ResizableYBox(props: ResizableBoxYProps) {
+export default function ResizableYBox(props: ResizableBoxYProps): JSX.Element {
   const [boxHeight, setBoxHeight] = useState(props.height);
   const [isResizing, setIsResizing] = useState(false);
   const [initialY, setInitialY] = useState(0);
   const currentHeightRef = useRef(boxHeight);
 
-  const handleMouseDown = (event: EventFor<'div', 'onMouseDown'>) => {
+  const handleMouseDown = (event: EventFor<'div', 'onMouseDown'>): void => {
     event.preventDefault();
     setIsResizing(true);
     setInitialY(event.clientY);
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (): void => {
     if (!isResizing) return;
     if (props.onChange) {
       const finalHeight = currentHeightRef.current;
@@ -29,7 +29,7 @@ export default function ResizableYBox(props: ResizableBoxYProps) {
     setIsResizing(false);
   };
 
-  const handleMouseMove = (event: any) => {
+  const handleMouseMove = (event: any): void => {
     if (!isResizing) return;
 
     const newHeight =
@@ -53,7 +53,7 @@ export default function ResizableYBox(props: ResizableBoxYProps) {
       document.removeEventListener('mouseup', handleMouseUp);
     }
 
-    return () => {
+    return (): void => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };

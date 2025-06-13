@@ -8,8 +8,7 @@ export const SelectInputStyles = (
   error: undefined | boolean,
   size?: 'small' | 'medium'
 ): StylesConfig => ({
-  // biome-ignore lint/nursery/useExplicitType: <explanation>
-  control: (_, { isFocused }) => ({
+  control: (_, { isFocused }): any => ({
     color: theme.palette.text.text,
     display: 'flex',
     border: `1px solid ${error ? theme.palette.error.main : theme.palette.divider}`,
@@ -29,13 +28,13 @@ export const SelectInputStyles = (
         }`,
     alignItems: 'center'
   }),
-  menu: (styles) => ({
+  menu: (styles): any => ({
     ...styles,
     padding: '0px 2px',
     backgroundColor: theme.palette.background.default,
     cursor: 'pointer'
   }),
-  option: (_, { isFocused }) => ({
+  option: (_, { isFocused }): any => ({
     padding: '4px 8px',
     overflow: 'hidden',
     color: theme.palette.text.text,
@@ -46,20 +45,20 @@ export const SelectInputStyles = (
       backgroundColor: theme.palette.background.paper
     }
   }),
-  input: (styles) => ({
+  input: (styles): any => ({
     ...styles,
     margin: 0,
     padding: 0,
     color: theme.palette.text.text,
     fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize
   }),
-  singleValue: (styles) => ({
+  singleValue: (styles): any => ({
     ...styles,
     color: theme.palette.text.text,
     fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize
   }),
   // Updated multi-value components
-  multiValue: (base) => ({
+  multiValue: (base): any => ({
     ...base,
     flexShrink: 0,
     margin: '2px 4px 2px 0',
@@ -67,7 +66,7 @@ export const SelectInputStyles = (
     borderRadius: variables.radius.small
   }),
 
-  multiValueLabel: (styles) => ({
+  multiValueLabel: (styles): any => ({
     ...styles,
     color: theme.palette.primary.contrastText,
     fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize,
@@ -75,7 +74,7 @@ export const SelectInputStyles = (
     fontWeight: 500
   }),
 
-  multiValueRemove: (styles) => ({
+  multiValueRemove: (styles): any => ({
     ...styles,
     color: theme.palette.primary.contrastText,
     opacity: 0.7,
@@ -86,7 +85,7 @@ export const SelectInputStyles = (
     }
   }),
 
-  valueContainer: (base) => ({
+  valueContainer: (base): any => ({
     ...base,
     display: 'flex',
     flexDirection: 'row',
@@ -106,7 +105,7 @@ export const SelectInputStyles = (
     }
   }),
 
-  placeholder: (styles) => ({
+  placeholder: (styles): any => ({
     ...styles,
     fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize
   })

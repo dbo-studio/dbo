@@ -11,7 +11,7 @@ const tabs: MenuPanelTabType[] = [
 
 describe('MenuPanel.tsx', () => {
   test('should render the the about panel with correct tabs in web', () => {
-    renderWithProviders(<MenuPanel tabs={tabs} onChange={() => {}} />);
+    renderWithProviders(<MenuPanel tabs={tabs} onChange={(): void => {}} />);
     expect(screen.getAllByText('Tab1')).not.toBeNull();
     expect(screen.queryByText('Tab2')).toBeNull();
   });

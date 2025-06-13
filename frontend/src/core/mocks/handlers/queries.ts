@@ -102,7 +102,7 @@ const queriesHandler = [
   })
 ];
 
-const generateFakeJson = () => {
+const generateFakeJson = (): string => {
   return JSON.stringify({
     id: faker.number.int(),
     first_name: faker.person.firstName(),
@@ -233,4 +233,4 @@ const structureModel = {
   ]
 };
 
-export { queriesHandler, structureModel, queryModel };
+export { queriesHandler, queryModel, structureModel };

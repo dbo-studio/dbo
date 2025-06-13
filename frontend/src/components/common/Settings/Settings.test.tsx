@@ -1,8 +1,8 @@
 import locales from '@/locales';
+import { renderWithProviders } from '@/test/test-utils';
 import { screen } from '@testing-library/dom';
 import { describe, expect, test } from 'vitest';
 import Settings from './Settings';
-import { renderWithProviders } from '@/test/test-utils';
 
 describe('Settings.tsx', () => {
   test('should render the the settings', () => {

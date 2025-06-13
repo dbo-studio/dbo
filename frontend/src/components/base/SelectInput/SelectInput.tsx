@@ -1,6 +1,7 @@
 import { SelectInputStyles } from '@/components/base/SelectInput/SelectInput.styled.ts';
 import type { SelectInputProps } from '@/components/base/SelectInput/types.ts';
 import { Box, Typography, useTheme } from '@mui/material';
+import type { JSX } from 'react';
 import Select from 'react-select';
 
 export default function SelectInput({
@@ -14,14 +15,14 @@ export default function SelectInput({
   disabled,
   error,
   isMulti
-}: SelectInputProps) {
+}: SelectInputProps): JSX.Element {
   const theme = useTheme();
 
-  const handleChange = (selected: any) => {
+  const handleChange = (selected: any): void => {
     onChange(selected);
   };
 
-  const getValue = () => {
+  const getValue = (): any => {
     if (!value) return null;
 
     if (isMulti) {

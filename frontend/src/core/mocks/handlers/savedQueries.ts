@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
 
-export const DELETE_SAVED_QUERY = (id: number) => `/saved/${id}`;
+export const DELETE_SAVED_QUERY = (id: number): string => `/saved/${id}`;
 
 const savedQueriesHandler = [
   http.get('/api/saved', () => {

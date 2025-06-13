@@ -1,4 +1,5 @@
 import { Box, Typography, useTheme } from '@mui/material';
+import type { JSX } from 'react';
 import type { ActionMeta, MultiValue } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import { chipInputStyles } from './ChipInput.styled';
@@ -13,14 +14,14 @@ export default function ChipInput({
   error,
   helperText,
   disabled
-}: ChipInputProps) {
+}: ChipInputProps): JSX.Element {
   const theme = useTheme();
 
-  const handleChange = (newValue: MultiValue<ChipOption>, actionMeta: ActionMeta<ChipOption>) => {
+  const handleChange = (newValue: MultiValue<ChipOption>, actionMeta: ActionMeta<ChipOption>): void => {
     onChange(newValue ? newValue.map((item) => item.value) : []);
   };
 
-  const handleCreateOption = (inputValue: string) => {
+  const handleCreateOption = (inputValue: string): void => {
     // Check if input is a number using regex (including scientific notation and decimals)
     const isNumber = /^-?\d*\.?\d+(e[+-]?\d+)?$/i.test(inputValue);
     const processedValue = isNumber ? String(Number(inputValue)) : inputValue;
@@ -28,7 +29,7 @@ export default function ChipInput({
     onChange(newValue);
   };
 
-  const getValue = () => {
+  const getValue = (): ChipOption[] => {
     return value.map((item: string) => ({
       value: item,
       label: item
@@ -52,8 +53,8 @@ export default function ChipInput({
         placeholder={placeholder}
         isDisabled={disabled}
         styles={chipInputStyles(theme, error, size)}
-        formatCreateLabel={(inputValue) => `Add "${inputValue}"`}
-        noOptionsMessage={() => 'Type to add new tags'}
+        formatCreateLabel={(inputValue: string): string => `Add "${inputValue}"`}
+        noOptionsMessage={(): string => 'Type to add new tags'}
         menuPortalTarget={document.body}
       />
       {helperText && (

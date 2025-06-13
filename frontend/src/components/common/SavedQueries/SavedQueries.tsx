@@ -1,14 +1,14 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useCurrentConnection } from '@/hooks';
+import locales from '@/locales';
 import type { SavedQueryType } from '@/types';
+import { LoadingButton } from '@mui/lab';
 import { Box, ClickAwayListener, IconButton, LinearProgress, Stack, useTheme } from '@mui/material';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useRef, useState } from 'react';
 import Search from '../../base/Search/Search';
 import SavedQueryItem from './SavedQueryItem/SavedQueryItem';
-import { LoadingButton } from '@mui/lab';
-import locales from '@/locales';
 
 export default function SavedQueries(): JSX.Element {
   const theme = useTheme();

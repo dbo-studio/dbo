@@ -1,6 +1,6 @@
+import { renderWithProviders } from '@/test/test-utils';
 import { screen } from '@testing-library/dom';
 import AppHeader from './AppHeader';
-import { renderWithProviders } from '@/test/test-utils';
 
 describe('AppHeader.tsx', () => {
   test('should render the the App Header', () => {

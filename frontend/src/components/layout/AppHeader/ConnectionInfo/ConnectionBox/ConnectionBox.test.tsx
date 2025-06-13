@@ -2,10 +2,10 @@ import { connectionDetailModel } from '@/core/mocks/handlers/connections.ts';
 import locales from '@/locales';
 import * as conn from '@/store/connectionStore/connection.store.ts';
 import { renderWithProviders } from '@/test/test-utils.tsx';
+import type { ConnectionType } from '@/types';
 import { screen } from '@testing-library/dom';
 import { describe, expect, test, vi } from 'vitest';
 import ConnectionBox from './ConnectionBox.tsx';
-import type { ConnectionType } from '@/types';
 
 describe('ConnectionBox.tsx', () => {
   const spy = vi.spyOn(conn, 'useConnectionStore');
