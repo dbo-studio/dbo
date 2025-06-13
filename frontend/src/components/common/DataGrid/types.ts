@@ -1,22 +1,11 @@
 import type { SelectedRow } from '@/store/dataStore/types';
 import type { ColumnType, RowType } from '@/types';
-import type { JSX } from 'react';
 
 export type DataGridProps = {
   rows: RowType[];
   columns: ColumnType[];
   loading: boolean;
   editable?: boolean;
-};
-
-export type CustomColumnDef = {
-  id: string;
-  header: JSX.Element | string;
-  accessor?: string;
-  cell: (props: CellProps) => JSX.Element;
-  size?: number;
-  minSize?: number;
-  maxSize?: number;
 };
 
 export type DataGridTableCellProps = {
@@ -36,7 +25,7 @@ export type DataGridTableCellProps = {
 export type DataGridTableRowProps = {
   row: RowType;
   rowIndex: number;
-  tableColumns: any[];
+  columns: ColumnType[];
   columnSizes: Record<string, number>;
   context: (e: React.MouseEvent) => void;
   isEdited: boolean;
@@ -78,8 +67,8 @@ export interface RowSelectionReturn {
 }
 
 export type DataGridTableBodyRowsProps = {
-  tableColumns: CustomColumnDef[];
   rows: RowType[];
+  columns: ColumnType[];
   context: (event: React.MouseEvent) => void;
   columnSizes: Record<string, number>;
   removedRows: RowType[];
@@ -94,7 +83,6 @@ export type DataGridTableBodyRowsProps = {
 };
 
 export type DataGridTableHeaderRowProps = {
-  tableColumns: CustomColumnDef[];
   columns: ColumnType[];
   onColumnResize?: (columnSizes: Record<string, number>) => void;
 };

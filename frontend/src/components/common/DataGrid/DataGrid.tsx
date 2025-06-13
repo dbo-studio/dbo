@@ -1,14 +1,14 @@
 import { useContextMenu } from '@/hooks';
 import { useDataStore } from '@/store/dataStore/data.store';
+import type { ColumnType } from '@/types';
 import { Box, CircularProgress } from '@mui/material';
-import { type JSX, useCallback, useRef, useState } from 'react';
+import { type JSX, useCallback, useMemo, useRef, useState } from 'react';
 import { StyledTable, TableContainer } from './DataGrid.styled';
 import DataGridContextMenu from './DataGridContextMenu/DataGridContextMenu';
 import DataGridTableBodyRows from './DataGridTableBodyRows/DataGridTableBodyRows';
 import DataGridTableHeaderRow from './DataGridTableHeaderRow/DataGridTableHeaderRow';
 import QuickViewDialog from './QuickViewDialog/QuickViewDialog';
 import { useHandleScroll } from './hooks/useHandleScroll';
-import useTableColumns from './hooks/useTableColumns';
 import type { DataGridProps } from './types';
 
 export default function DataGrid({ rows, columns, loading, editable = true }: DataGridProps): JSX.Element {
@@ -30,13 +30,25 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
 
   useHandleScroll(tableContainerRef);
 
-  const tableColumns = useTableColumns({
-    columns
-  });
-
   const handleColumnResize = useCallback((newColumnSizes: Record<string, number>) => {
     setColumnSizes(newColumnSizes);
   }, []);
+
+  const tableColumns = useMemo((): ColumnType[] => {
+    return [
+      {
+        name: 'select',
+        type: 'checkbox',
+        isActive: true,
+        notNull: false,
+        length: '1',
+        comment: '',
+        default: '',
+        mappedType: ''
+      },
+      ...columns
+    ];
+  }, [columns]);
 
   return loading ? (
     <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
@@ -47,10 +59,10 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
       <QuickViewDialog editable={editable} />
       <TableContainer ref={tableContainerRef}>
         <StyledTable>
-          <DataGridTableHeaderRow tableColumns={tableColumns} columns={columns} onColumnResize={handleColumnResize} />
+          <DataGridTableHeaderRow columns={tableColumns} onColumnResize={handleColumnResize} />
           <DataGridTableBodyRows
-            tableColumns={tableColumns}
             rows={rows}
+            columns={tableColumns}
             context={handleContextMenu}
             columnSizes={columnSizes}
             removedRows={removedRows}

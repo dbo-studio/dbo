@@ -4,7 +4,7 @@ import type { DataGridTableBodyRowsProps } from '../types';
 import DataGridTableRow from './DataGridTableRow/DataGridTableRow';
 
 export default function DataGridTableBodyRows({
-  tableColumns,
+  columns,
   rows,
   context,
   columnSizes,
@@ -36,7 +36,7 @@ export default function DataGridTableBodyRows({
             key={`row-${row.dbo_index}`}
             row={row}
             rowIndex={rowIndex}
-            tableColumns={tableColumns}
+            columns={columns}
             columnSizes={columnSizes}
             context={context}
             isSelected={isSelected}

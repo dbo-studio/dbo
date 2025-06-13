@@ -1,3 +1,4 @@
+import { Checkbox } from '@mui/material';
 import { memo, useCallback } from 'react';
 import { StyledTableRow, TableCell } from '../../DataGrid.styled';
 import { DataGridTableCell } from '../../DataGridTableCell/DataGridTableCell';
@@ -7,7 +8,7 @@ const DataGridTableRow = memo(
   ({
     row,
     rowIndex,
-    tableColumns,
+    columns,
     columnSizes,
     context,
     isSelected,
@@ -43,18 +44,44 @@ const DataGridTableRow = memo(
         ${isSelected ? 'selected-highlight' : ''}
       `.trim()}
       >
-        {tableColumns.map((column) => {
-          const columnId = column.id;
-          const value = row[column.accessor];
+        {columns.map((column) => {
+          const columnId = column.name;
+          const value = row[columnId];
           const isCellEditing = editingCell?.rowIndex === rowIndex && editingCell?.columnId === columnId;
 
           if (columnId === 'select') {
             return (
               <TableCell
                 key={`cell-${rowIndex}-${columnId}`}
-                style={{ width: '30px', minWidth: '30px', maxWidth: '30px', boxSizing: 'border-box' }}
+                style={{
+                  width: '30px',
+                  minWidth: '30px',
+                  maxWidth: '30px',
+                  boxSizing: 'border-box',
+                  textAlign: 'center'
+                }}
               >
-                {/* اینجا می‌توانید چک‌باکس یا هر المان دیگری قرار دهید */}
+                <Checkbox
+                  sx={{ padding: 0 }}
+                  size={'small'}
+                  checked={isSelected}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>): void => {
+                    if (e.target.checked) {
+                      updateSelectedRows([
+                        {
+                          index: rowIndex,
+                          selectedColumn: '',
+                          row
+                        }
+                      ]);
+                    } else {
+                      updateSelectedRows([]);
+                    }
+                  }}
+                  onClick={(e: React.MouseEvent): void => {
+                    e.stopPropagation();
+                  }}
+                />
               </TableCell>
             );
           }
@@ -67,7 +94,7 @@ const DataGridTableRow = memo(
                 handleSelect(columnId);
               }}
               style={{
-                width: columnSizes[columnId] || column.size || 200
+                width: columnSizes[columnId] || 200
               }}
             >
               <DataGridTableCell
