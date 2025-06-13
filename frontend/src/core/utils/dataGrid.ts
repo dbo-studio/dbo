@@ -13,7 +13,9 @@ export const handleRowChangeLog = (
   const existingRowIndex = editedRows.findIndex((row) => row.dboIndex === dboIndex);
   const existingRow = existingRowIndex !== -1 ? editedRows[existingRowIndex] : null;
 
+  //@ts-ignore
   const oldObject: RowType = existingRow ? existingRow.old : {};
+  //@ts-ignore
   const newObject: RowType = existingRow ? existingRow.new : {};
 
   oldObject[rowKey] = oldValue;

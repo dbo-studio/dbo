@@ -2,7 +2,6 @@ import type { SelectedRow } from '@/store/dataStore/types';
 import type { ColumnType, EditedRow, RowType } from '@/types';
 import { type DBSchema, type IDBPDatabase, openDB } from 'idb';
 
-// Define the database schema
 interface TableDataDB extends DBSchema {
   rows: {
     key: string; // tabId + rowIndex
@@ -106,12 +105,10 @@ class IndexedDBService {
     return this.dbPromise;
   }
 
-  // Rows operations
   async saveRows(tabId: string, rows: RowType[]): Promise<void> {
     const db = await this.initDB();
     const tx = db.transaction('rows', 'readwrite');
 
-    // First, delete all existing rows for this tab
     const tabRowsIndex = tx.store.index('by-tab');
     let cursor = await tabRowsIndex.openCursor(IDBKeyRange.only(tabId));
 
@@ -120,10 +117,10 @@ class IndexedDBService {
       cursor = await cursor.continue();
     }
 
-    // Then add the new rows
     for (const row of rows) {
       const key = `${tabId}-${row.dbo_index}`;
       await tx.store.put({
+        //@ts-ignore
         key,
         tabId,
         rowIndex: row.dbo_index,
@@ -138,11 +135,9 @@ class IndexedDBService {
     const tabRowsIndex = db.transaction('rows').store.index('by-tab');
     const tabRows = await tabRowsIndex.getAll(IDBKeyRange.only(tabId));
 
-    // Sort by rowIndex to maintain order
     return tabRows.sort((a, b) => a.rowIndex - b.rowIndex).map((item) => item.data);
   }
 
-  // Columns operations
   async saveColumns(tabId: string, columns: ColumnType[]): Promise<void> {
     const db = await this.initDB();
     const tx = db.transaction('columns', 'readwrite');
@@ -159,12 +154,10 @@ class IndexedDBService {
     return result?.columns || [];
   }
 
-  // Edited rows operations
   async saveEditedRows(tabId: string, rows: EditedRow[]): Promise<void> {
     const db = await this.initDB();
     const tx = db.transaction('editedRows', 'readwrite');
 
-    // First, delete all existing edited rows for this tab
     const tabRowsIndex = tx.store.index('by-tab');
     let cursor = await tabRowsIndex.openCursor(IDBKeyRange.only(tabId));
 
@@ -173,10 +166,10 @@ class IndexedDBService {
       cursor = await cursor.continue();
     }
 
-    // Then add the new edited rows
     for (const row of rows) {
       const key = `${tabId}-${row.dboIndex}`;
       await tx.store.put({
+        //@ts-ignore
         key,
         tabId,
         rowIndex: row.dboIndex,
@@ -195,12 +188,10 @@ class IndexedDBService {
     return tabRows.map((item) => item.data);
   }
 
-  // Removed rows operations
   async saveRemovedRows(tabId: string, rows: RowType[]): Promise<void> {
     const db = await this.initDB();
     const tx = db.transaction('removedRows', 'readwrite');
 
-    // First, delete all existing removed rows for this tab
     const tabRowsIndex = tx.store.index('by-tab');
     let cursor = await tabRowsIndex.openCursor(IDBKeyRange.only(tabId));
 
@@ -209,10 +200,10 @@ class IndexedDBService {
       cursor = await cursor.continue();
     }
 
-    // Then add the new removed rows
     for (const row of rows) {
       const key = `${tabId}-${row.dbo_index}`;
       await tx.store.put({
+        //@ts-ignore
         key,
         tabId,
         rowIndex: row.dbo_index,
@@ -231,12 +222,10 @@ class IndexedDBService {
     return tabRows.map((item) => item.data);
   }
 
-  // Unsaved rows operations
   async saveUnsavedRows(tabId: string, rows: RowType[]): Promise<void> {
     const db = await this.initDB();
     const tx = db.transaction('unsavedRows', 'readwrite');
 
-    // First, delete all existing unsaved rows for this tab
     const tabRowsIndex = tx.store.index('by-tab');
     let cursor = await tabRowsIndex.openCursor(IDBKeyRange.only(tabId));
 
@@ -245,10 +234,10 @@ class IndexedDBService {
       cursor = await cursor.continue();
     }
 
-    // Then add the new unsaved rows
     for (const row of rows) {
       const key = `${tabId}-${row.dbo_index}`;
       await tx.store.put({
+        //@ts-ignore
         key,
         tabId,
         rowIndex: row.dbo_index,
@@ -266,12 +255,10 @@ class IndexedDBService {
     return tabRows.map((item) => item.data);
   }
 
-  // Selected rows operations
   async saveSelectedRows(tabId: string, rows: SelectedRow[]): Promise<void> {
     const db = await this.initDB();
     const tx = db.transaction('selectedRows', 'readwrite');
 
-    // First, delete all existing selected rows for this tab
     const tabRowsIndex = tx.store.index('by-tab');
     let cursor = await tabRowsIndex.openCursor(IDBKeyRange.only(tabId));
 
@@ -280,10 +267,10 @@ class IndexedDBService {
       cursor = await cursor.continue();
     }
 
-    // Then add the new selected rows
     for (const row of rows) {
       const key = `${tabId}-${row.index}`;
       await tx.store.put({
+        //@ts-ignore
         key,
         tabId,
         rowIndex: row.index,
@@ -302,11 +289,9 @@ class IndexedDBService {
     return tabRows.map((item) => item.data);
   }
 
-  // Clear data for a specific tab
   async clearTabData(tabId: string): Promise<void> {
     const db = await this.initDB();
 
-    // Clear rows
     const rowsTx = db.transaction('rows', 'readwrite');
     const rowsIndex = rowsTx.store.index('by-tab');
     let cursor = await rowsIndex.openCursor(IDBKeyRange.only(tabId));
@@ -316,12 +301,10 @@ class IndexedDBService {
     }
     await rowsTx.done;
 
-    // Clear columns
     const columnsTx = db.transaction('columns', 'readwrite');
     await columnsTx.store.delete(tabId);
     await columnsTx.done;
 
-    // Clear edited rows
     const editedRowsTx = db.transaction('editedRows', 'readwrite');
     const editedRowsIndex = editedRowsTx.store.index('by-tab');
     let editedRowsCursor = await editedRowsIndex.openCursor(IDBKeyRange.only(tabId));
@@ -331,7 +314,6 @@ class IndexedDBService {
     }
     await editedRowsTx.done;
 
-    // Clear removed rows
     const removedRowsTx = db.transaction('removedRows', 'readwrite');
     const removedRowsIndex = removedRowsTx.store.index('by-tab');
     let removedRowsCursor = await removedRowsIndex.openCursor(IDBKeyRange.only(tabId));
@@ -341,7 +323,6 @@ class IndexedDBService {
     }
     await removedRowsTx.done;
 
-    // Clear unsaved rows
     const unsavedRowsTx = db.transaction('unsavedRows', 'readwrite');
     const unsavedRowsIndex = unsavedRowsTx.store.index('by-tab');
     let unsavedRowsCursor = await unsavedRowsIndex.openCursor(IDBKeyRange.only(tabId));
@@ -351,7 +332,6 @@ class IndexedDBService {
     }
     await unsavedRowsTx.done;
 
-    // Clear selected rows
     const selectedRowsTx = db.transaction('selectedRows', 'readwrite');
     const selectedRowsIndex = selectedRowsTx.store.index('by-tab');
     let selectedRowsCursor = await selectedRowsIndex.openCursor(IDBKeyRange.only(tabId));
@@ -362,10 +342,8 @@ class IndexedDBService {
     await selectedRowsTx.done;
   }
 
-  // Clear all data from all object stores
   async clearAllTableData(): Promise<void> {
     const db = await this.initDB();
-    // List of all object stores to clear
     const stores = ['rows', 'columns', 'editedRows', 'removedRows', 'unsavedRows', 'selectedRows'] as const;
     await Promise.all(
       stores.map(async (store) => {
@@ -377,5 +355,4 @@ class IndexedDBService {
   }
 }
 
-// Export a singleton instance
 export const indexedDBService = new IndexedDBService();

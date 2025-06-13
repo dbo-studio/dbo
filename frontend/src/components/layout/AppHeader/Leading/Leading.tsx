@@ -4,10 +4,8 @@ import { IconButton, Stack } from '@mui/material';
 import type { JSX } from 'react';
 
 export default function Leading(): JSX.Element {
-  const { toggleShowSettings } = useSettingStore();
-
   const openSettings = (): void => {
-    toggleShowSettings(true);
+    useSettingStore.getState().toggleShowSettings(true);
   };
 
   return (

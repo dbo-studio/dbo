@@ -5,7 +5,7 @@ import type { JSX } from 'react';
 import { QueryPreviewStyled } from './QueryPreview.styled';
 export default function QueryPreview(): JSX.Element {
   const { getQuery } = useTabStore();
-  const { isDark } = useSettingStore();
+  const isDark = useSettingStore((state) => state.isDark);
 
   return (
     <QueryPreviewStyled>

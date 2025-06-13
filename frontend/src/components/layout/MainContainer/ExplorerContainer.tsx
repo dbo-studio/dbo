@@ -27,7 +27,8 @@ const tabs = [
 export default React.memo(function ExplorerContainer(): JSX.Element {
   const windowSize = useWindowSize();
   const [selectedTabId, setSelectedTabId] = useState(0);
-  const { sidebar, updateSidebar } = useSettingStore();
+  const sidebar = useSettingStore((state) => state.sidebar);
+  const updateSidebar = useSettingStore((state) => state.updateSidebar);
 
   const selectedTabContent = useMemo(() => {
     const Component = tabs.find((obj) => obj.id === Number(selectedTabId))?.component;

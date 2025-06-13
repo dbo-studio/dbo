@@ -5,9 +5,10 @@ import type { JSX } from 'react';
 import CustomIcon from '../../../base/CustomIcon/CustomIcon.tsx';
 
 export default function Actions(): JSX.Element {
-  const { updateSidebar, sidebar } = useSettingStore();
+  const updateSidebar = useSettingStore((state) => state.updateSidebar);
 
   const handelUpdateSidebar = (direction: 'right' | 'left'): void => {
+    const sidebar = useSettingStore.getState().sidebar;
     if (direction === 'right') {
       if (!sidebar.showRight) {
         updateSidebar({ showRight: !sidebar.showRight, rightWidth: constants.defaultSidebarWidth });

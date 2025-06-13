@@ -22,7 +22,7 @@ export default function AddConnection(): JSX.Element {
   const queryClient = useQueryClient();
   const [connectionType, setConnectionType] = useState<SelectionConnectionType | undefined>(undefined);
   const [step, setStep] = useState(0);
-  const { toggleShowAddConnection, showAddConnection } = useSettingStore();
+  const showAddConnection = useSettingStore((state) => state.showAddConnection);
 
   const { mutateAsync: createConnectionMutation, isPending: createConnectionPending } = useMutation({
     mutationFn: api.connection.createConnection,
@@ -45,7 +45,7 @@ export default function AddConnection(): JSX.Element {
 
   const handleClose = (): void => {
     setConnectionType(undefined);
-    toggleShowAddConnection(false);
+    useSettingStore.getState().toggleShowAddConnection(false);
     setStep(0);
   };
 

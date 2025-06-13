@@ -8,7 +8,7 @@ import { type JSX, useEffect, useState } from 'react';
 import { ConnectionBoxStyled } from './ConnectionBox.styled.ts';
 
 export default function ConnectionBox(): JSX.Element {
-  const { loading } = useConnectionStore();
+  const loading = useConnectionStore((state) => state.loading);
   const [info, setInfo] = useState('');
   const [status, setStatus] = useState<ConnectionBoxStatus>('loading');
   const currentConnection = useCurrentConnection();

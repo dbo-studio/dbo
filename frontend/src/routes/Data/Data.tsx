@@ -57,7 +57,7 @@ function DataContent(): JSX.Element {
     return (): void => clearTimeout(timer);
   }, [selectedTabId]);
 
-  if (!mounted) {
+  if (!mounted || !selectedTabId) {
     return <></>;
   }
 

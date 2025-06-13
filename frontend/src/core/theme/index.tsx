@@ -13,7 +13,7 @@ type Props = {
 };
 
 export default function ThemeProvider({ children }: Props): JSX.Element {
-  const { isDark } = useSettingStore();
+  const isDark = useSettingStore((state) => state.isDark);
 
   const themeOptions: ThemeOptions = {
     palette: palette(isDark ? ThemeModeEnum.Dark : ThemeModeEnum.Light),

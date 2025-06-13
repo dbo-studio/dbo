@@ -5,14 +5,14 @@ import type { JSX } from 'react';
 import ConfirmModal from '../base/Modal/ConfirmModal/ConfirmModal.tsx';
 import AppHeader from './AppHeader/AppHeader';
 import { LayoutStyled } from './Layout.styled';
-import CenterContainer from './MainContainer/CenterContainer';
-import EndContainer from './MainContainer/EndContainer';
-import ExplorerContainer from './MainContainer/ExplorerContainer';
 import StartContainer from './MainContainer/StartContainer';
+import CenterContainer from './MainContainer/CenterContainer.tsx';
+import EndContainer from './MainContainer/EndContainer.tsx';
+import ExplorerContainer from './MainContainer/ExplorerContainer.tsx';
 
 export default function Layout(): JSX.Element {
   const windowSize = useWindowSize(true);
-  const { sidebar } = useSettingStore();
+  const sidebar = useSettingStore((state) => state.sidebar);
   const currentConnection = useCurrentConnection();
 
   return (

@@ -7,7 +7,6 @@ import '@fontsource/roboto/700.css';
 
 import { CssBaseline, GlobalStyles, type Interpolation, type Theme } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { Toaster } from 'sonner';
@@ -34,7 +33,6 @@ enableMocking().then(() => {
         <CssBaseline />
         <QueryClientProvider client={queryClient}>
           <Home />
-          <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
         <Toaster position='bottom-center' duration={5000} richColors closeButton={true} />
       </ThemeProvider>

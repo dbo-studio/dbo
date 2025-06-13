@@ -15,10 +15,15 @@ import { EmptySpaceStyle } from './EmptySpace.styled';
 
 export default function Connections(): JSX.Element {
   const [loadingConnectionId, setLoadingConnectionId] = useState<number | undefined>(undefined);
-  const { loading, currentConnectionId, currentConnection, updateLoading, updateCurrentConnection, updateConnections } =
-    useConnectionStore();
+
+  const loading = useConnectionStore((state) => state.loading);
+  const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
+
+  const currentConnection = useConnectionStore((state) => state.currentConnection);
+  const updateLoading = useConnectionStore((state) => state.updateLoading);
+  const updateCurrentConnection = useConnectionStore((state) => state.updateCurrentConnection);
+  const updateConnections = useConnectionStore((state) => state.updateConnections);
   const updateSelectedTab = useTabStore.getState().updateSelectedTab;
-  const { toggleShowAddConnection } = useSettingStore();
 
   const { data: connections } = useQuery({
     queryKey: ['connections'],
@@ -61,7 +66,7 @@ export default function Connections(): JSX.Element {
     }
 
     if (connections.length === 0) {
-      toggleShowAddConnection(true);
+      useSettingStore.getState().toggleShowAddConnection(true);
     }
   }, [connections]);
 

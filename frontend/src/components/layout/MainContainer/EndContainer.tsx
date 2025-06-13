@@ -8,7 +8,8 @@ import { EndContainerStyled } from './Container.styled';
 
 export default function EndContainer(): JSX.Element {
   const windowSize = useWindowSize();
-  const { sidebar, updateSidebar } = useSettingStore();
+  const sidebar = useSettingStore((state) => state.sidebar);
+  const updateSidebar = useSettingStore((state) => state.updateSidebar);
 
   return (
     <ResizableXBox

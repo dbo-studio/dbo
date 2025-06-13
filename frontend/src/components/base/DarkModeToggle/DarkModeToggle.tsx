@@ -4,7 +4,8 @@ import { type JSX, useEffect } from 'react';
 import CustomIcon from '../CustomIcon/CustomIcon';
 
 export default function DarkModeToggle(): JSX.Element {
-  const { isDark, toggleIsDark } = useSettingStore();
+  const isDark = useSettingStore((state) => state.isDark);
+  const toggleIsDark = useSettingStore((state) => state.toggleIsDark);
 
   useEffect(() => {
     if (isDark === undefined) {

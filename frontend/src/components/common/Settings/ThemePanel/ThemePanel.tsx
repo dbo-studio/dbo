@@ -5,7 +5,8 @@ import { type JSX, useEffect } from 'react';
 import ThemeItem from './ThemeItem/ThemeItem';
 
 export default function ThemePanel(): JSX.Element {
-  const { isDark, toggleIsDark } = useSettingStore();
+  const isDark = useSettingStore((state) => state.isDark);
+  const toggleIsDark = useSettingStore((state) => state.toggleIsDark);
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
 
   useEffect(() => {
