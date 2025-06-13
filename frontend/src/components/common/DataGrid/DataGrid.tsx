@@ -3,13 +3,13 @@ import { useContextMenu } from '@/hooks';
 import type { ColumnType, RowType } from '@/types';
 import { Box, CircularProgress } from '@mui/material';
 import { type JSX, useCallback, useRef, useState } from 'react';
-import QuickViewDialog from '../../QuickViewDialog/QuickViewDialog';
-import GridContextMenu from '../GridContextMenu';
-import { StyledTable, TableContainer } from '../TestGrid.styled';
-import { useHandleScroll } from '../hooks/useHandleScroll';
-import useTableColumns from '../hooks/useTableColumns';
-import CustomTableBodyRows from './CustomTableBodyRows';
-import CustomTableHeaderRow from './CustomTableHeaderRow';
+import { StyledTable, TableContainer } from './DataGrid.styled';
+import DataGridContextMenu from './DataGridContextMenu/DataGridContextMenu';
+import DataGridTableBodyRows from './DataGridTableBodyRows/DataGridTableBodyRows';
+import DataGridTableHeaderRow from './DataGridTableHeaderRow/DataGridTableHeaderRow';
+import QuickViewDialog from './QuickViewDialog/QuickViewDialog';
+import { useHandleScroll } from './hooks/useHandleScroll';
+import useTableColumns from './hooks/useTableColumns';
 
 interface CustomTestGridProps {
   rows: RowType[];
@@ -18,7 +18,7 @@ interface CustomTestGridProps {
   editable?: boolean;
 }
 
-export default function CustomTestGrid({ rows, columns, loading, editable = true }: CustomTestGridProps): JSX.Element {
+export default function DataGrid({ rows, columns, loading, editable = true }: CustomTestGridProps): JSX.Element {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const { updateEditedRows, editedRows, updateRow, removedRows, unsavedRows, selectedRows, setSelectedRows } =
     useTableData();
@@ -52,8 +52,8 @@ export default function CustomTestGrid({ rows, columns, loading, editable = true
       <QuickViewDialog editable={editable} />
       <TableContainer ref={tableContainerRef}>
         <StyledTable>
-          <CustomTableHeaderRow tableColumns={tableColumns} columns={columns} onColumnResize={handleColumnResize} />
-          <CustomTableBodyRows
+          <DataGridTableHeaderRow tableColumns={tableColumns} columns={columns} onColumnResize={handleColumnResize} />
+          <DataGridTableBodyRows
             tableColumns={tableColumns}
             rows={rows}
             context={handleContextMenu}
@@ -66,7 +66,7 @@ export default function CustomTestGrid({ rows, columns, loading, editable = true
           />
         </StyledTable>
       </TableContainer>
-      <GridContextMenu contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
+      <DataGridContextMenu contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
     </>
   );
 }

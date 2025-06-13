@@ -15,28 +15,24 @@ export const createDataRemovedRowsSlice: StateCreator<
   [],
   DataRemovedRowsSlice
 > = (set, get) => ({
-  removedRows: {},
-  getRemovedRows: (): RowType[] => {
-    const selectedTabId = useTabStore.getState().selectedTabId;
-    if (!selectedTabId) return [];
+  removedRows: [],
+  updateRemovedRows: (removedRows: RowType[] | undefined): void => {
+    if (removedRows) {
+      set({ removedRows });
+      return;
+    }
 
-    return get().removedRows[selectedTabId] ?? [];
-  },
-  updateRemovedRows: (): void => {
     const selectedTabId = useTabStore.getState().selectedTabId;
     if (!selectedTabId) return;
 
-    const selectedRows = get().getSelectedRows();
+    const selectedRows = get().selectedRows;
     const selectedIndexes = new Set(selectedRows.map((row) => row.index));
 
-    const unsavedRows = get()
-      .getUnsavedRows()
-      .filter((r) => selectedIndexes.has(r.dbo_index));
+    const unsavedRows = get().unSavedRows.filter((r) => selectedIndexes.has(r.dbo_index));
     const unsavedIndexes = new Set(unsavedRows.map((r) => r.dbo_index));
 
     const rows = get()
-      .getRows()
-      .filter((r: RowType) => selectedIndexes.has(r.dbo_index) && !unsavedIndexes.has(r.dbo_index))
+      .rows?.filter((r: RowType) => selectedIndexes.has(r.dbo_index) && !unsavedIndexes.has(r.dbo_index))
       .map((row) => (row.id ? { id: row.id, dbo_index: row.dbo_index } : row));
 
     set((state) => ({
@@ -47,11 +43,6 @@ export const createDataRemovedRowsSlice: StateCreator<
     }));
 
     get().discardUnsavedRows(unsavedRows);
-    get().clearSelectedRows();
-  },
-  deleteRemovedRowsByTabId: (tabId: string): void => {
-    set((state) => ({
-      removedRows: Object.fromEntries(Object.entries(state.removedRows).filter(([key]) => key !== tabId))
-    }));
+    get().updateSelectedRows([]);
   }
 });

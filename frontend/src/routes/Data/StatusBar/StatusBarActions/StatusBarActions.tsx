@@ -3,6 +3,7 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton';
 import { useTableData } from '@/contexts/TableData';
 import { TabMode } from '@/core/enums';
+import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { createEmptyRow } from '@/core/utils';
 import { useCurrentConnection } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
@@ -20,28 +21,19 @@ export default function StatusBarActions(): JSX.Element {
     rows,
     columns,
     addUnsavedRow,
-    unsavedRows,
-    editedRows,
-    removedRows,
     selectedRows,
     updateRows,
-    updateEditedRows,
     updateRemovedRows,
     restoreEditedRows,
     updateUnsavedRows,
     runQuery,
-    setSelectedRows,
-    deleteRemovedRows
+    setSelectedRows
   } = useTableData();
 
   const { mutateAsync: updateQueryMutation, isPending: updateQueryPending } = useMutation({
     mutationFn: api.query.updateQuery,
     onSuccess: async (): Promise<void> => {
-      if (!selectedTab) return;
-      await runQuery();
-      await updateEditedRows([]);
-      await deleteRemovedRows();
-      await updateUnsavedRows([]);
+      handleRefresh();
     },
     onError: (error: Error): void => {
       console.error('🚀 ~ updateQueryMutation ~ error:', error);
@@ -49,6 +41,13 @@ export default function StatusBarActions(): JSX.Element {
   });
 
   const handleSave = async (): Promise<void> => {
+    const [removedRows, unsavedRows] = await Promise.all([
+      indexedDBService.getRemovedRows(selectedTab?.nodeId ?? ''),
+      indexedDBService.getUnsavedRows(selectedTab?.nodeId ?? '')
+    ]);
+
+    const editedRows = await indexedDBService.getEditedRows(selectedTab?.nodeId ?? '');
+
     if (selectedTab?.mode === TabMode.Data) {
       if (
         !selectedTab ||
@@ -57,6 +56,7 @@ export default function StatusBarActions(): JSX.Element {
       ) {
         return;
       }
+
       try {
         await updateQueryMutation({
           connectionId: currentConnection.id,
@@ -65,17 +65,17 @@ export default function StatusBarActions(): JSX.Element {
           removed: removedRows,
           added: unsavedRows
         });
-      } catch (error) {}
+      } catch (error) {
+        console.log(error);
+      }
     }
   };
 
   const handleAddAction = async (): Promise<void> => {
     if (selectedTab?.mode === TabMode.Data) {
-      // Create an empty row
       const filteredRow = createEmptyRow(columns);
       filteredRow.dbo_index = rows.length === 0 ? 0 : rows[rows.length - 1].dbo_index + 1;
 
-      // Add the row to both rows and unsavedRows
       await updateRows([...rows, filteredRow]);
       await addUnsavedRow(filteredRow);
 
@@ -84,6 +84,8 @@ export default function StatusBarActions(): JSX.Element {
   };
 
   const handleRemoveAction = async (): Promise<void> => {
+    const unsavedRows = await indexedDBService.getUnsavedRows(selectedTab?.nodeId ?? '');
+
     if (selectedTab?.mode === TabMode.Data) {
       // Get the selected rows
       const selectedIndexes = new Set(selectedRows.map((row) => row.index));
@@ -115,6 +117,8 @@ export default function StatusBarActions(): JSX.Element {
   };
 
   const handleDiscardChanges = async (): Promise<void> => {
+    const unsavedRows = await indexedDBService.getUnsavedRows(selectedTab?.nodeId ?? '');
+
     if (selectedTab?.mode === TabMode.Data) {
       await restoreEditedRows();
 

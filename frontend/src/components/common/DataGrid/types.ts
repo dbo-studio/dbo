@@ -12,7 +12,7 @@ export type CustomColumnDef = {
   maxSize?: number;
 };
 
-export type MemoizedCellProps = {
+export type DataGridTableCellProps = {
   row: any;
   rowIndex: number;
   columnId: string;
@@ -24,7 +24,6 @@ export type MemoizedCellProps = {
   updateEditedRows: (rows: any) => Promise<void>;
   updateRow: (row: any) => Promise<void>;
   setSelectedRows: (rows: any) => Promise<void>;
-  onRowUpdate: (newValue: string) => void;
 };
 
 export type TableColumnsProps = {
@@ -35,7 +34,6 @@ export type TableColumnsProps = {
   updateEditedRows: (rows: any) => Promise<void>;
   updateRow: (row: any) => Promise<void>;
   editedRows: any;
-  onRowUpdate: (newValue: string) => void;
 };
 
 export type CellEditingReturn = {
@@ -54,7 +52,7 @@ export interface RowSelectionReturn {
   handleRowSelection: (rowIndex: number, isSelected: boolean, event: React.MouseEvent) => void;
 }
 
-export type CustomTableBodyRowsProps = {
+export type DataGridTableBodyRowsProps = {
   tableColumns: CustomColumnDef[];
   rows: RowType[];
   context: (event: React.MouseEvent) => void;
@@ -66,7 +64,7 @@ export type CustomTableBodyRowsProps = {
   setSelectedRows: (rows: SelectedRow[]) => void;
 };
 
-export type CustomTableHeaderRowProps = {
+export type DataGridTableHeaderRowProps = {
   tableColumns: CustomColumnDef[];
   columns: ColumnType[];
   onColumnResize?: (columnSizes: Record<string, number>) => void;
@@ -84,4 +82,10 @@ export type TestGridProps = {
   columns: ColumnType[];
   loading: boolean;
   editable?: boolean;
+};
+
+export type DataGridResizerProps = {
+  columnId: string;
+  isResizing: boolean;
+  onResizeStart: (columnId: string, event: React.MouseEvent | React.TouchEvent) => void;
 };

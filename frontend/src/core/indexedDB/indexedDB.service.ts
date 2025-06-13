@@ -1,5 +1,5 @@
-import type { SelectedRow } from '@/store/dataStore/types';
-import type { ColumnType, EditedRow, RowType } from '@/types';
+import { type SelectedRow } from '@/store/dataStore/types';
+import { type ColumnType, type EditedRow, type RowType } from '@/types';
 import { type DBSchema, type IDBPDatabase, openDB } from 'idb';
 
 // Define the database schema

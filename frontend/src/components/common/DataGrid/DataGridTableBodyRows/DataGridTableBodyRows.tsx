@@ -1,10 +1,10 @@
 import type { RowType } from '@/types';
 import type { JSX } from 'react';
 import { useCallback, useMemo, useState } from 'react';
-import { StyledTableRow, TableCell } from '../TestGrid.styled';
-import type { CustomTableBodyRowsProps } from '../types';
+import { StyledTableRow, TableCell } from '../DataGrid.styled';
+import type { DataGridTableBodyRowsProps } from '../types';
 
-export default function CustomTableBodyRows({
+export default function DataGridTableBodyRows({
   tableColumns,
   rows,
   context,
@@ -14,11 +14,9 @@ export default function CustomTableBodyRows({
   editedRows,
   selectedRows,
   setSelectedRows
-}: CustomTableBodyRowsProps): JSX.Element {
-  // Local state for immediate UI updates
+}: DataGridTableBodyRowsProps): JSX.Element {
   const [localEditedRows, setLocalEditedRows] = useState<Map<number, Map<string, string>>>(new Map());
 
-  // Create Maps for O(1) lookups
   const removedRowsMap = useMemo(() => {
     const map = new Map<number, boolean>();
     for (const row of removedRows) {

@@ -1,104 +1,55 @@
+import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { type JSX, createContext, useContext, useEffect, useMemo } from 'react';
 import type { TableDataContextType, TableDataProviderProps } from './TableData/types';
 import { useTableDataColumns } from './TableData/useTableDataColumns';
 import { useTableDataEdited } from './TableData/useTableDataEdited';
-import { useTableDataQuery } from './TableData/useTableDataQuery';
 import { useTableDataRemoved } from './TableData/useTableDataRemoved';
-import { useTableDataRows } from './TableData/useTableDataRows';
 import { useTableDataSelected } from './TableData/useTableDataSelected';
-import { useTableDataState } from './TableData/useTableDataState';
 import { useTableDataUnsaved } from './TableData/useTableDataUnsaved';
 
-// Create the context with a default value
 const TableDataContext = createContext<TableDataContextType | undefined>(undefined);
 
-// Provider component
 export function TableDataProvider({ children }: TableDataProviderProps): JSX.Element {
-  const { selectedTabId } = useTabStore();
+  const selectedTabId = useTabStore((state) => state.selectedTabId);
 
-  const state = useTableDataState();
-
-  const queryOperations = useTableDataQuery(state);
-  const rowOperations = useTableDataRows(state);
-  const columnOperations = useTableDataColumns(state);
-  const editedOperations = useTableDataEdited(state);
-  const removedOperations = useTableDataRemoved(state);
-  const unsavedOperations = useTableDataUnsaved(state);
-  const selectedOperations = useTableDataSelected(state);
+  const columnOperations = useTableDataColumns();
+  const editedOperations = useTableDataEdited();
+  const removedOperations = useTableDataRemoved();
+  const unsavedOperations = useTableDataUnsaved();
+  const selectedOperations = useTableDataSelected();
 
   // Load data when tab changes
   useEffect(() => {
     if (!selectedTabId) return;
 
     const loadData = async (): Promise<void> => {
-      state.setIsLoading(true);
+      useDataStore.getState().toggleDataFetching(true);
       try {
-        // Try to load data from IndexedDB
-        const result = await state.loadDataFromIndexedDB();
-
-        // If no data in IndexedDB, fetch from server
+        const result = await useDataStore.getState().loadDataFromIndexedDB();
         if (!result) {
-          await queryOperations.fetchDataFromServer();
+          await useDataStore.getState().runQuery();
         }
       } catch (error) {
-        console.error('Error loading data:', error);
-        // Fallback to fetching from server
-        await queryOperations.fetchDataFromServer();
+        console.error('🚀 ~ loadData ~ error:', error);
+        await useDataStore.getState().runQuery();
       } finally {
-        state.setIsLoading(false);
+        useDataStore.getState().toggleDataFetching(false);
       }
     };
 
     loadData();
   }, [selectedTabId]);
 
-  // Create the context value with memoization to prevent unnecessary re-renders
   const contextValue = useMemo<TableDataContextType>(
     () => ({
-      // Data access
-      ...state,
-
-      // Row operations
-      ...rowOperations,
-
-      // Column operations
       ...columnOperations,
-
-      // Edited rows operations
       ...editedOperations,
-
-      // Removed rows operations
       ...removedOperations,
-
-      // Unsaved rows operations
       ...unsavedOperations,
-
-      // Selected rows operations
-      ...selectedOperations,
-
-      // Query operations
-      ...queryOperations
+      ...selectedOperations
     }),
-    [
-      // State dependencies
-      state.rows,
-      state.columns,
-      state.editedRows,
-      state.removedRows,
-      state.unsavedRows,
-      state.selectedRows,
-      state.isLoading,
-
-      // Operation dependencies
-      rowOperations,
-      columnOperations,
-      editedOperations,
-      removedOperations,
-      unsavedOperations,
-      selectedOperations,
-      queryOperations
-    ]
+    [columnOperations, editedOperations, removedOperations, unsavedOperations, selectedOperations]
   );
 
   return <TableDataContext.Provider value={contextValue}>{children}</TableDataContext.Provider>;

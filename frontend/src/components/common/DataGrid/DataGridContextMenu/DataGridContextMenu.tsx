@@ -10,7 +10,7 @@ import type { ContextMenuType } from '@/types';
 import type { JSX } from 'react';
 import { toast } from 'sonner';
 
-export default function GridContextMenu({
+export default function DataGridContextMenu({
   contextMenu,
   onClose
 }: {

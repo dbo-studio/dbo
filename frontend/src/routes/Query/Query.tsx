@@ -1,7 +1,7 @@
 import api from '@/api';
 import ResizableYBox from '@/components/base/ResizableBox/ResizableYBox.tsx';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor.tsx';
-import TestGrid from '@/components/common/DBDataGrid/TestGrid/TestGrid';
+import DataGrid from '@/components/common/DataGrid/DataGrid';
 import { useCurrentConnection, useWindowSize } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
@@ -74,7 +74,7 @@ export default function Query(): JSX.Element {
 
         {showGrid && headers.length > 0 && (
           <ResizableYBox height={windowSize.heightNumber ? windowSize.heightNumber / 2 : 0} direction={'btt'}>
-            <TestGrid editable={false} rows={getRows()} columns={getColumns(true)} loading={isDataFetching} />
+            <DataGrid editable={false} rows={getRows()} columns={getColumns(true)} loading={isDataFetching} />
           </ResizableYBox>
         )}
       </Box>

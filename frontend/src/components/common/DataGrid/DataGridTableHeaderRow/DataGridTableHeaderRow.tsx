@@ -1,14 +1,14 @@
 import type { JSX } from 'react';
-import { StyledTableRow, TableHeader } from '../TestGrid.styled';
+import { StyledTableRow, TableHeader } from '../DataGrid.styled';
+import DataGridResizer from '../DataGridResizer/DataGridResizer';
 import { useColumnResize } from '../hooks/useColumnResize';
-import type { CustomTableHeaderRowProps } from '../types';
-import { CustomResizer } from './CustomResizer';
+import type { DataGridTableHeaderRowProps } from '../types';
 
-export default function CustomTableHeaderRow({
+export default function DataGridTableHeaderRow({
   tableColumns,
   columns,
   onColumnResize
-}: CustomTableHeaderRowProps): JSX.Element {
+}: DataGridTableHeaderRowProps): JSX.Element {
   const { columnSizes, startResize, resizingColumnId } = useColumnResize({
     columns,
     defaultColumnWidth: 200,
@@ -40,7 +40,7 @@ export default function CustomTableHeaderRow({
               }}
             >
               {typeof column.header === 'string' ? column.header : column.header}
-              <CustomResizer columnId={columnId} isResizing={isCurrentColumnResizing} onResizeStart={startResize} />
+              <DataGridResizer columnId={columnId} isResizing={isCurrentColumnResizing} onResizeStart={startResize} />
             </TableHeader>
           );
         })}

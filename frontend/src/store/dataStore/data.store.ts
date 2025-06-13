@@ -1,5 +1,8 @@
+import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
+import type { ColumnType, RowType } from '@/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import { useTabStore } from '../tabStore/tab.store';
 import { createDataColumnSlice } from './slices/dataColumn.slice';
 import { createDataEditedRowsSlice } from './slices/dataEditedRows.slice';
 import { createDataFormDataSlice } from './slices/dataFormData.slice';
@@ -33,6 +36,36 @@ type DataState = DataStore &
 export const useDataStore = create<DataState>()(
   devtools(
     (set, get, ...state) => ({
+      loadDataFromIndexedDB: async (): Promise<{ rows: RowType[]; columns: ColumnType[] } | null> => {
+        const selectedTabId = useTabStore.getState().selectedTabId;
+        if (!selectedTabId) return null;
+
+        get().toggleDataFetching(true);
+
+        try {
+          const dbRows = await indexedDBService.getRows(selectedTabId);
+          const dbColumns = await indexedDBService.getColumns(selectedTabId);
+          const dbEditedRows = await indexedDBService.getEditedRows(selectedTabId);
+          const dbRemovedRows = await indexedDBService.getRemovedRows(selectedTabId);
+          const dbUnsavedRows = await indexedDBService.getUnsavedRows(selectedTabId);
+          const dbSelectedRows = await indexedDBService.getSelectedRows(selectedTabId);
+
+          if (dbRows.length > 0 && dbColumns.length > 0) {
+            get().updateRows(dbRows);
+            get().updateColumns(dbColumns);
+            get().updateEditedRows(dbEditedRows);
+            get().updateRemovedRows(dbRemovedRows);
+            get().updateUnsavedRows(dbUnsavedRows);
+            get().updateSelectedRows(dbSelectedRows);
+            return { rows: dbRows, columns: dbColumns };
+          }
+        } catch (error) {
+          console.error('Error loading data from IndexedDB:', error);
+        } finally {
+          get().toggleDataFetching(false);
+        }
+        return null;
+      },
       ...createDataRowSlice(set, get, ...state),
       ...createDataEditedRowsSlice(set, get, ...state),
       ...createDataRemovedRowsSlice(set, get, ...state),

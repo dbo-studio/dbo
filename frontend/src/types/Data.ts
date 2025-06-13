@@ -1,4 +1,5 @@
 export type RowType = {
+  dbo_index: number;
   [key: string]: any;
 };
 
