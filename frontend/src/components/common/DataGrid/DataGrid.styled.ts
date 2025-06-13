@@ -24,7 +24,6 @@ export const TableCell = styled('td')(({ theme }) => ({
   borderRight: `1px solid ${theme.palette.divider}`,
   height: '22px',
   boxSizing: 'border-box',
-  padding: '2px 8px',
   color: theme.palette.text.text,
   fontSize: theme.typography.subtitle2.fontSize,
   minWidth: '200px',
@@ -77,11 +76,14 @@ export const CellContent = styled('div')(({ theme }) => ({
 export const CellInput = styled('input')(({ theme }) => ({
   width: '100%',
   height: '22px',
+  margin: 0,
+  border: `1px solid ${theme.palette.primary.main}`,
+  padding: '2px 8px',
   maxWidth: '100%',
-  border: `1px solid ${theme.palette.divider}`,
-  borderRadius: theme.shape.borderRadius,
   outline: 'none',
-  boxSizing: 'border-box'
+  boxSizing: 'border-box',
+  background: theme.palette.background.default,
+  color: theme.palette.text.text
 }));
 
 export const TableContainer = styled('div')(({ theme }) => ({
@@ -134,6 +136,7 @@ export const CellContainer = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   textOverflow: 'ellipsis',
+  padding: '2px 8px',
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   willChange: 'contents',

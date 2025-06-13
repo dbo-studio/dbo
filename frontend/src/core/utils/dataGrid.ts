@@ -38,7 +38,9 @@ export const handleRowChangeLog = (
 };
 
 export const createEmptyRow = (columns: ColumnType[]): RowType => {
-  const newRow: RowType = {};
+  const newRow: RowType = {
+    dbo_index: 0
+  };
   for (const column of columns) {
     if (!column.notNull) {
       newRow[column.name] = null;

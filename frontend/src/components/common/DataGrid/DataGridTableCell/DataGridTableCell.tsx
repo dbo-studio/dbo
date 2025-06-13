@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import { CellContainer, CellContent, CellInput } from '../DataGrid.styled';
 import { useCellEditing } from '../hooks/useCellEditing';
 import { useCellSelection } from '../hooks/useCellSelection';
@@ -17,8 +17,8 @@ export const DataGridTableCell = memo(
     updateRow,
     setSelectedRows
   }: DataGridTableCellProps) => {
-    const cellValue = String(value === null ? 'NULL' : value || '');
-    const [isHovering, setIsHovering] = useState(false);
+    const placeholder = String(value === null ? 'NULL' : value || '');
+    const cellValue = String(value || '');
     const cellRef = useRef<HTMLDivElement>(null);
 
     const { inputRef, handleRowChange } = useCellEditing(
@@ -72,14 +72,8 @@ export const DataGridTableCell = memo(
     }
 
     return (
-      <CellContainer
-        ref={cellRef}
-        className={isHovering ? 'cell-hover' : ''}
-        onMouseEnter={(): void => setIsHovering(true)}
-        onMouseLeave={(): void => setIsHovering(false)}
-        onClick={(e: React.MouseEvent): void => handleClick(e, setEditingCell)}
-      >
-        <CellContent>{cellValue}</CellContent>
+      <CellContainer ref={cellRef} onClick={(e: React.MouseEvent): void => handleClick(e, setEditingCell)}>
+        <CellContent>{placeholder}</CellContent>
       </CellContainer>
     );
   },

@@ -13,12 +13,9 @@ import { useMutation } from '@tanstack/react-query';
 import type { JSX } from 'react';
 
 export default function StatusBarActions(): JSX.Element {
-  const currentConnection = useCurrentConnection();
-  const selectedTab = useSelectedTab();
-  const selectedRows = useDataStore((state) => state.selectedRows);
-  const rows = useDataStore((state) => state.rows);
-  const columns = useDataStore((state) => state.columns);
   const isDataFetching = useDataStore((state) => state.isDataFetching);
+  const selectedTab = useSelectedTab();
+  const currentConnection = useCurrentConnection();
 
   const toggleScrollToBottom = useSettingStore((state) => state.toggleScrollToBottom);
   const addUnsavedRows = useDataStore((state) => state.addUnsavedRows);
@@ -41,11 +38,11 @@ export default function StatusBarActions(): JSX.Element {
 
   const handleSave = async (): Promise<void> => {
     const [removedRows, unsavedRows] = await Promise.all([
-      indexedDBService.getRemovedRows(selectedTab?.nodeId ?? ''),
-      indexedDBService.getUnsavedRows(selectedTab?.nodeId ?? '')
+      indexedDBService.getRemovedRows(selectedTab?.id ?? ''),
+      indexedDBService.getUnsavedRows(selectedTab?.id ?? '')
     ]);
 
-    const editedRows = await indexedDBService.getEditedRows(selectedTab?.nodeId ?? '');
+    const editedRows = await indexedDBService.getEditedRows(selectedTab?.id ?? '');
 
     if (selectedTab?.mode === TabMode.Data) {
       if (
@@ -71,79 +68,51 @@ export default function StatusBarActions(): JSX.Element {
   };
 
   const handleAddAction = async (): Promise<void> => {
-    if (selectedTab?.mode === TabMode.Data) {
-      const emptyRow = createEmptyRow(columns ?? []);
-      emptyRow.dbo_index = 0;
-
-      await updateRows([emptyRow, ...(rows ?? [])]);
-      await addUnsavedRows(emptyRow);
-
-      toggleScrollToBottom(true);
+    if (selectedTab?.mode !== TabMode.Data) {
+      return;
     }
+
+    const columns = await indexedDBService.getColumns(selectedTab?.id ?? '');
+    const rows = await indexedDBService.getRows(selectedTab?.id ?? '');
+
+    const emptyRow = createEmptyRow(columns ?? []);
+    emptyRow.dbo_index = rows.length === 0 ? 0 : rows[rows.length - 1].dbo_index + 1;
+
+    rows.push(emptyRow);
+
+    await updateRows(rows);
+    await addUnsavedRows(emptyRow);
+
+    toggleScrollToBottom(true);
   };
 
   const handleRemoveAction = async (): Promise<void> => {
-    const unsavedRows = await indexedDBService.getUnsavedRows(selectedTab?.nodeId ?? '');
-
-    if (selectedTab?.mode === TabMode.Data) {
-      // Get the selected rows
-      const selectedIndexes = new Set(selectedRows.map((row) => row.index));
-
-      // Filter out unsaved rows
-      const selectedUnsavedRows = unsavedRows.filter((r) => selectedIndexes.has(r.dbo_index));
-      const unsavedIndexes = new Set(selectedUnsavedRows.map((r) => r.dbo_index));
-
-      // Add the remaining selected rows to the removedRows array
-      const rowsToRemove =
-        rows && rows.length > 0
-          ? rows
-              .filter((r) => selectedIndexes.has(r.dbo_index) && !unsavedIndexes.has(r.dbo_index))
-              .map((row) => (row.id ? { id: row.id, dbo_index: row.dbo_index } : row))
-          : [];
-
-      // Update removed rows
-      await updateRemovedRows(rowsToRemove);
-
-      // Discard the unsaved rows that were selected
-      if (selectedUnsavedRows.length > 0) {
-        const updatedRows =
-          rows && rows.length > 0
-            ? rows.filter((row) => !selectedUnsavedRows.some((r) => r.dbo_index === row.dbo_index))
-            : [];
-        await updateRows(updatedRows);
-        await updateUnsavedRows(
-          unsavedRows.filter((row) => !selectedUnsavedRows.some((r) => r.dbo_index === row.dbo_index))
-        );
-      }
-
-      // Clear the selected rows
-      await updateSelectedRows([]);
-    }
+    await updateRemovedRows(undefined);
   };
 
   const handleDiscardChanges = async (): Promise<void> => {
-    const unsavedRows = await indexedDBService.getUnsavedRows(selectedTab?.nodeId ?? '');
-
-    if (selectedTab?.mode === TabMode.Data) {
-      await restoreEditedRows();
-
-      await updateUnsavedRows([]);
-
-      if (unsavedRows.length > 0) {
-        const unsavedIndexes = new Set(unsavedRows.map((row) => row.dbo_index));
-        const updatedRows = rows && rows.length > 0 ? rows.filter((row) => !unsavedIndexes.has(row.dbo_index)) : [];
-        await updateRows(updatedRows);
-      }
-
-      await updateRemovedRows([]);
-
-      await updateSelectedRows([]);
+    if (selectedTab?.mode !== TabMode.Data) {
+      return;
     }
+
+    const rows = await indexedDBService.getRows(selectedTab?.id ?? '');
+    const unsavedRows = await indexedDBService.getUnsavedRows(selectedTab?.id ?? '');
+
+    await restoreEditedRows();
+    await updateUnsavedRows([]);
+
+    if (unsavedRows.length > 0) {
+      const unsavedIndexes = new Set(unsavedRows.map((row) => row.dbo_index));
+      const updatedRows = rows && rows.length > 0 ? rows.filter((row) => !unsavedIndexes.has(row.dbo_index)) : [];
+      await updateRows(updatedRows);
+    }
+
+    await updateRemovedRows([]);
+
+    await updateSelectedRows([]);
   };
 
   const handleRefresh = async (): Promise<void> => {
-    if (!selectedTab) return;
-
     await handleDiscardChanges();
     await runQuery();
   };

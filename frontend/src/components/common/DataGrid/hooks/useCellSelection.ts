@@ -9,21 +9,15 @@ export const useCellSelection = (
 ): CellSelectionReturn => {
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleSelect = useCallback(
-    (e: React.MouseEvent): void => {
-      e.stopPropagation();
-      e.preventDefault();
-
-      setSelectedRows([
-        {
-          index: rowIndex,
-          selectedColumn: columnId,
-          row
-        }
-      ]);
-    },
-    [row, rowIndex, columnId, setSelectedRows]
-  );
+  const handleSelect = useCallback((e: React.MouseEvent): void => {
+    setSelectedRows([
+      {
+        index: rowIndex,
+        selectedColumn: columnId,
+        row
+      }
+    ]);
+  }, []);
 
   const handleClick = useCallback(
     (e: React.MouseEvent, setEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void): void => {

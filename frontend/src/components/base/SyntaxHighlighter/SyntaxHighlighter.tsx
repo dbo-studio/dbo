@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import { codeToHtml } from 'shiki';
 import { SyntaxHighlighterStyled } from './SyntaxHighlighter.styled';
 import type { SyntaxHighlighterProps } from './types';
 
-export default function SyntaxHighlighter({ value, isDark }: SyntaxHighlighterProps) {
+export default function SyntaxHighlighter({ value, isDark }: SyntaxHighlighterProps): JSX.Element {
   const [html, setHtml] = useState('');
 
   useEffect(() => {
@@ -18,7 +18,7 @@ export default function SyntaxHighlighter({ value, isDark }: SyntaxHighlighterPr
   );
 }
 
-const shikiWrapper = async (value: string, isDark: boolean) => {
+const shikiWrapper = async (value: string, isDark: boolean): Promise<string> => {
   return await codeToHtml(value, {
     lang: 'sql',
     theme: isDark ? 'github-dark' : 'github-light'
