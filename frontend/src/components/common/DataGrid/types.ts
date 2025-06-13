@@ -13,9 +13,6 @@ export type DataGridTableCellProps = {
   rowIndex: number;
   columnId: string;
   value: any;
-  isEditing: boolean;
-  editingCell: { rowIndex: number; columnId: string } | null;
-  setEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void;
   editedRows: any;
   updateEditedRows: (rows: any) => Promise<void>;
   updateRow: (row: any) => Promise<void>;
@@ -32,8 +29,6 @@ export type DataGridTableRowProps = {
   isUnsaved: boolean;
   isSelected: boolean;
   isRemoved: boolean;
-  editingCell: { rowIndex: number; columnId: string } | null;
-  setEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void;
   editedRows: any;
   updateEditedRows: (rows: any) => Promise<void>;
   updateRow: (row: any) => Promise<void>;
@@ -75,13 +70,10 @@ export type DataGridTableBodyRowsProps = {
   unsavedRows: RowType[];
   selectedRows: SelectedRow[];
   editedRows: any[];
-  editingCell: { rowIndex: number; columnId: string } | null;
-  setEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void;
   updateEditedRows: (rows: any) => Promise<void>;
   updateRow: (row: any) => Promise<void>;
   updateSelectedRows: (rows: any) => void;
 };
-
 export type DataGridTableHeaderRowProps = {
   columns: ColumnType[];
   onColumnResize?: (columnSizes: Record<string, number>) => void;

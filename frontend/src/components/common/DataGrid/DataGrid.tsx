@@ -25,7 +25,6 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
 
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
-  const [editingCell, setEditingCell] = useState<{ rowIndex: number; columnId: string } | null>(null);
   const [columnSizes, setColumnSizes] = useState<Record<string, number>>({});
 
   useHandleScroll(tableContainerRef);
@@ -69,8 +68,6 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
             unsavedRows={unsavedRows}
             selectedRows={selectedRows}
             editedRows={editedRows}
-            editingCell={editingCell}
-            setEditingCell={setEditingCell}
             updateEditedRows={updateEditedRows}
             updateRow={updateRow}
             updateSelectedRows={updateSelectedRows}

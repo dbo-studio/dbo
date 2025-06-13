@@ -1,3 +1,4 @@
+import { useDataStore } from '@/store/dataStore/data.store';
 import { memo, useEffect, useRef } from 'react';
 import { CellContainer, CellContent, CellInput } from '../DataGrid.styled';
 import { useCellEditing } from '../hooks/useCellEditing';
@@ -10,8 +11,6 @@ export const DataGridTableCell = memo(
     rowIndex,
     columnId,
     value,
-    isEditing,
-    setEditingCell,
     editedRows,
     updateEditedRows,
     updateRow,
@@ -20,6 +19,9 @@ export const DataGridTableCell = memo(
     const placeholder = String(value === null ? 'NULL' : value || '');
     const cellValue = String(value || '');
     const cellRef = useRef<HTMLDivElement>(null);
+    const updateEditingCell = useDataStore((state) => state.updateEditingCell);
+    const editingCell = useDataStore((state) => state.editingCell);
+    const isEditing = editingCell?.rowIndex === rowIndex && editingCell?.columnId === columnId;
 
     const { inputRef, handleRowChange } = useCellEditing(
       row,
@@ -27,8 +29,7 @@ export const DataGridTableCell = memo(
       cellValue,
       editedRows,
       updateEditedRows,
-      updateRow,
-      setEditingCell
+      updateRow
     );
 
     const { handleClick } = useCellSelection(row, rowIndex, columnId, setSelectedRows);
@@ -64,7 +65,7 @@ export const DataGridTableCell = memo(
             if (e.key === 'Enter') {
               e.currentTarget.blur();
             } else if (e.key === 'Escape') {
-              setEditingCell(null);
+              updateEditingCell(null);
             }
           }}
         />
@@ -72,7 +73,7 @@ export const DataGridTableCell = memo(
     }
 
     return (
-      <CellContainer ref={cellRef} onClick={(e: React.MouseEvent): void => handleClick(e, setEditingCell)}>
+      <CellContainer ref={cellRef} onClick={(e: React.MouseEvent): void => handleClick(e)}>
         <CellContent>{placeholder}</CellContent>
       </CellContainer>
     );
@@ -80,7 +81,6 @@ export const DataGridTableCell = memo(
   (prevProps, nextProps) => {
     return (
       prevProps.value === nextProps.value &&
-      prevProps.isEditing === nextProps.isEditing &&
       prevProps.rowIndex === nextProps.rowIndex &&
       prevProps.columnId === nextProps.columnId
     );

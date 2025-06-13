@@ -11,6 +11,7 @@ export const createDataEditedRowsSlice: StateCreator<
   DataEditedRowsSlice
 > = (set, get) => ({
   editedRows: [],
+  editingCell: null,
   updateEditedRows: async (editedRows: EditedRow[]): Promise<void> => {
     const selectedTabId = useTabStore.getState().selectedTabId;
     if (!selectedTabId) return Promise.resolve();
@@ -59,5 +60,8 @@ export const createDataEditedRowsSlice: StateCreator<
     debouncedSaveRowsAndEditedRows(selectedTabId, currentRows, []);
 
     return Promise.resolve();
+  },
+  updateEditingCell: (cell: { rowIndex: number; columnId: string } | null): void => {
+    set({ editingCell: cell });
   }
 });

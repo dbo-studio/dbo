@@ -15,8 +15,6 @@ const DataGridTableRow = memo(
     isEdited,
     isUnsaved,
     isRemoved,
-    editingCell,
-    setEditingCell,
     editedRows,
     updateEditedRows,
     updateRow,
@@ -47,7 +45,6 @@ const DataGridTableRow = memo(
         {columns.map((column) => {
           const columnId = column.name;
           const value = row[columnId];
-          const isCellEditing = editingCell?.rowIndex === rowIndex && editingCell?.columnId === columnId;
 
           if (columnId === 'select') {
             return (
@@ -102,9 +99,6 @@ const DataGridTableRow = memo(
                 rowIndex={rowIndex}
                 columnId={columnId}
                 value={value}
-                isEditing={isCellEditing}
-                editingCell={editingCell}
-                setEditingCell={setEditingCell}
                 editedRows={editedRows}
                 updateEditedRows={updateEditedRows}
                 updateRow={updateRow}

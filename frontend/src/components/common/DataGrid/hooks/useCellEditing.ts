@@ -1,4 +1,5 @@
 import { handleRowChangeLog } from '@/core/utils';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { useCallback, useEffect, useRef } from 'react';
 import type { CellEditingReturn } from '../types';
 
@@ -8,11 +9,11 @@ export const useCellEditing = (
   cellValue: string,
   editedRows: any,
   updateEditedRows: (rows: any) => Promise<void>,
-  updateRow: (row: any) => Promise<void>,
-  setEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void
+  updateRow: (row: any) => Promise<void>
 ): CellEditingReturn => {
   const inputRef = useRef<HTMLInputElement>(null);
   const updateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const updateEditingCell = useDataStore((state) => state.updateEditingCell);
 
   const handleRowChange = useCallback(
     (e: React.FocusEvent<HTMLInputElement>): void => {
@@ -34,9 +35,9 @@ export const useCellEditing = (
           Promise.all([updateEditedRows(newEditedRows), updateRow(newRow)]).catch(console.error);
         }, 100);
       }
-      setEditingCell(null);
+      updateEditingCell(null);
     },
-    [row, columnId, cellValue, editedRows, updateEditedRows, updateRow, setEditingCell]
+    [row, columnId, cellValue, editedRows, updateEditedRows, updateRow, updateEditingCell]
   );
 
   useEffect((): (() => void) => {

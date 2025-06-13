@@ -12,8 +12,6 @@ export default function DataGridTableBodyRows({
   unsavedRows,
   selectedRows,
   editedRows,
-  editingCell,
-  setEditingCell,
   updateEditedRows,
   updateRow,
   updateSelectedRows
@@ -43,8 +41,6 @@ export default function DataGridTableBodyRows({
             isEdited={isEdited}
             isUnsaved={isUnsaved}
             isRemoved={isRemoved}
-            editingCell={editingCell}
-            setEditingCell={setEditingCell}
             editedRows={editedRows}
             updateEditedRows={updateEditedRows}
             updateRow={updateRow}
