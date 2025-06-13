@@ -1,99 +1,27 @@
-import { useDataStore } from '@/store/dataStore/data.store';
-import { Checkbox } from '@mui/material';
-import { type JSX, useMemo } from 'react';
-import { DataGridTableCell } from '../DataGridTableCell/DataGridTableCell';
-import type { CustomColumnDef, TableColumnsProps } from '../types';
-import { useRowSelection } from './useRowSelection';
+import type { ColumnType } from '@/types';
+import { useMemo } from 'react';
+import type { CustomColumnDef } from '../types';
 
-export default function useTableColumns({
-  rows,
-  columns,
-  editingCell,
-  setEditingCell,
-  updateEditedRows,
-  updateRow,
-  editedRows
-}: TableColumnsProps): CustomColumnDef[] {
-  const selectedRows = useDataStore((state) => state.selectedRows);
-  const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
-
-  const { handleRowSelection } = useRowSelection(rows, selectedRows);
-
-  return useMemo((): CustomColumnDef[] => {
-    const checkboxColumn: CustomColumnDef = {
+export default function useTableColumns({ columns }: { columns: ColumnType[] }): CustomColumnDef[] {
+  const tableColumns = useMemo(() => {
+    const selectColumn: CustomColumnDef = {
       id: 'select',
-      header: (
-        <Checkbox
-          sx={{ padding: 0 }}
-          size={'small'}
-          checked={selectedRows.length === rows.length && rows.length > 0}
-          indeterminate={selectedRows.length > 0 && selectedRows.length < rows.length}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>): void => {
-            if (e.target.checked) {
-              const allRows = rows.map((row, index) => ({
-                index,
-                selectedColumn: '',
-                row
-              }));
-              updateSelectedRows(allRows);
-            } else {
-              updateSelectedRows([]);
-            }
-          }}
-        />
-      ),
-      cell: ({ rowIndex }) => {
-        const isSelected = selectedRows.some((sr) => sr.index === rowIndex);
-
-        return (
-          <Checkbox
-            sx={{ padding: 0 }}
-            size={'small'}
-            checked={isSelected}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>, checked: boolean): void => {
-              handleRowSelection(rowIndex, checked, e.nativeEvent as unknown as React.MouseEvent);
-            }}
-            onClick={(e: React.MouseEvent): void => {
-              e.stopPropagation();
-            }}
-          />
-        );
-      },
+      accessor: 'select',
+      header: '',
       size: 30,
       minSize: 30,
-      maxSize: 30
+      maxSize: 30,
+      cell: () => <></>
     };
 
-    const dataColumns = columns.map(
-      (col) =>
-        ({
-          id: col.name,
-          accessor: col.name,
-          header: col.name,
-          minSize: 200,
-          cell: ({ row, rowIndex, value }): JSX.Element => {
-            const columnId = col.name;
-            const isEditing = editingCell?.rowIndex === rowIndex && editingCell?.columnId === columnId;
+    const processedColumns = columns.map((col) => ({
+      ...col,
+      id: col.name,
+      accessor: col.name
+    }));
 
-            return (
-              <DataGridTableCell
-                row={row}
-                rowIndex={rowIndex}
-                columnId={columnId}
-                value={value}
-                isEditing={isEditing}
-                editingCell={editingCell}
-                setEditingCell={setEditingCell}
-                editedRows={editedRows}
-                updateEditedRows={updateEditedRows}
-                updateRow={updateRow}
-                setSelectedRows={updateSelectedRows}
-              />
-            );
-          }
-        }) as CustomColumnDef
-    );
+    return [selectColumn, ...processedColumns];
+  }, [columns]);
 
-    return [checkboxColumn, ...dataColumns];
-  }, [rows, editingCell, columns, selectedRows, handleRowSelection]);
+  return tableColumns as CustomColumnDef[];
 }

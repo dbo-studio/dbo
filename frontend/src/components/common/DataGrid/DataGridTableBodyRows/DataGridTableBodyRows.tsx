@@ -1,8 +1,7 @@
-import type { RowType } from '@/types';
 import type { JSX } from 'react';
-import { useCallback, useMemo, useState } from 'react';
-import { StyledTableRow, TableCell } from '../DataGrid.styled';
+import { useMemo } from 'react';
 import type { DataGridTableBodyRowsProps } from '../types';
+import DataGridTableRow from './DataGridTableRow/DataGridTableRow';
 
 export default function DataGridTableBodyRows({
   tableColumns,
@@ -11,119 +10,46 @@ export default function DataGridTableBodyRows({
   columnSizes,
   removedRows,
   unsavedRows,
-  editedRows,
   selectedRows,
-  setSelectedRows
+  editedRows,
+  editingCell,
+  setEditingCell,
+  updateEditedRows,
+  updateRow,
+  updateSelectedRows
 }: DataGridTableBodyRowsProps): JSX.Element {
-  const [localEditedRows, setLocalEditedRows] = useState<Map<number, Map<string, string>>>(new Map());
-
-  const removedRowsMap = useMemo(() => {
-    const map = new Map<number, boolean>();
-    for (const row of removedRows) {
-      map.set(row.dbo_index, true);
-    }
-    return map;
-  }, [removedRows]);
-
-  const unsavedRowsMap = useMemo(() => {
-    const map = new Map<number, boolean>();
-    for (const row of unsavedRows) {
-      map.set(row.dbo_index, true);
-    }
-    return map;
-  }, [unsavedRows]);
-
-  const editedRowsMap = useMemo(() => {
-    const map = new Map<number, boolean>();
-    for (const row of editedRows) {
-      map.set(row.dboIndex, true);
-    }
-    return map;
-  }, [editedRows]);
-
-  const selectedRowsMap = useMemo(() => {
-    const map = new Map<number, boolean>();
-    for (const row of selectedRows) {
-      map.set(row.index, true);
-    }
-    return map;
-  }, [selectedRows]);
-
-  const handleSelect = useCallback(
-    (rowIndex: number, columnId: string, row: RowType): void => {
-      setSelectedRows([
-        {
-          index: rowIndex,
-          selectedColumn: columnId,
-          row: row
-        }
-      ]);
-    },
-    [setSelectedRows]
-  );
-
-  const handleRowUpdate = useCallback((rowIndex: number, columnId: string, newValue: string): void => {
-    setLocalEditedRows((prev) => {
-      const newMap = new Map(prev);
-      const rowMap = newMap.get(rowIndex) || new Map();
-      rowMap.set(columnId, newValue);
-      newMap.set(rowIndex, rowMap);
-      return newMap;
-    });
-  }, []);
+  const removedRowsMap = useMemo(() => new Map(removedRows.map((row) => [row.dbo_index, true])), [removedRows]);
+  const unsavedRowsMap = useMemo(() => new Map(unsavedRows.map((row) => [row.dbo_index, true])), [unsavedRows]);
+  const editedRowsMap = useMemo(() => new Map(editedRows.map((row) => [row.dboIndex, true])), [editedRows]);
+  const selectedRowsMap = useMemo(() => new Map(selectedRows.map((row) => [row.index, true])), [selectedRows]);
 
   return (
     <tbody>
       {rows.map((row, rowIndex) => {
-        const isRemoved = removedRowsMap.has(rowIndex);
-        const isUnsaved = unsavedRowsMap.has(rowIndex);
-        const isEdited = editedRowsMap.has(rowIndex) || localEditedRows.has(rowIndex);
+        const isRemoved = removedRowsMap.has(row.dbo_index);
+        const isUnsaved = unsavedRowsMap.has(row.dbo_index);
+        const isEdited = editedRowsMap.has(row.dbo_index);
         const isSelected = selectedRowsMap.has(rowIndex);
 
         return (
-          <StyledTableRow
+          <DataGridTableRow
             key={`row-${row.dbo_index}`}
-            className={`
-              ${isRemoved ? 'removed-highlight' : ''}
-              ${isUnsaved ? 'unsaved-highlight' : ''}
-              ${isEdited ? 'edit-highlight' : ''}
-              ${isSelected ? 'selected-highlight' : ''}
-            `.trim()}
-          >
-            {tableColumns.map((column) => {
-              const columnId = column.id;
-              const localValue = localEditedRows.get(rowIndex)?.get(columnId);
-              const value = localValue !== undefined ? localValue : row[column.accessor || columnId];
-
-              return (
-                <TableCell
-                  key={`cell-${rowIndex}-${columnId}`}
-                  onContextMenu={(e): void => {
-                    context(e);
-                    handleSelect(rowIndex, columnId, row);
-                  }}
-                  style={{
-                    width: columnSizes[columnId] || column.size || 200,
-                    ...(columnId === 'select'
-                      ? {
-                          minWidth: '30px',
-                          maxWidth: '30px',
-                          width: '30px',
-                          boxSizing: 'border-box'
-                        }
-                      : {})
-                  }}
-                >
-                  {column.cell({
-                    row,
-                    rowIndex: rowIndex,
-                    value,
-                    onRowUpdate: (newValue: string): void => handleRowUpdate(rowIndex, columnId, newValue)
-                  })}
-                </TableCell>
-              );
-            })}
-          </StyledTableRow>
+            row={row}
+            rowIndex={rowIndex}
+            tableColumns={tableColumns}
+            columnSizes={columnSizes}
+            context={context}
+            isSelected={isSelected}
+            isEdited={isEdited}
+            isUnsaved={isUnsaved}
+            isRemoved={isRemoved}
+            editingCell={editingCell}
+            setEditingCell={setEditingCell}
+            editedRows={editedRows}
+            updateEditedRows={updateEditedRows}
+            updateRow={updateRow}
+            updateSelectedRows={updateSelectedRows}
+          />
         );
       })}
     </tbody>

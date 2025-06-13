@@ -10,10 +10,6 @@ import Columns from './Columns/Columns';
 import StatusBar from './StatusBar/StatusBar';
 
 export default function Data(): JSX.Element {
-  return <DataContent />;
-}
-
-function DataContent(): JSX.Element {
   const mounted = useMount();
   const [isGridReady, setIsGridReady] = useState(false);
   const [showColumns, setShowColumns] = useState(false);
@@ -63,7 +59,7 @@ function DataContent(): JSX.Element {
 
   return (
     <>
-      {/* <ActionBar showColumns={showColumns} setShowColumns={setShowColumns} /> */}
+      <ActionBar showColumns={showColumns} setShowColumns={setShowColumns} />
       <Box overflow='hidden' flex={1} display='flex' flexDirection='row'>
         {showColumns && <Columns />}
         {columns &&

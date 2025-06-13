@@ -1,11 +1,13 @@
+import type { SelectedRow } from '@/store/dataStore/types';
+import type { RowType } from '@/types';
 import { useCallback, useRef } from 'react';
 import type { CellSelectionReturn } from '../types';
 
 export const useCellSelection = (
-  row: any,
+  row: RowType,
   rowIndex: number,
   columnId: string,
-  setSelectedRows: (rows: any) => Promise<void>
+  setSelectedRows: (rows: SelectedRow[]) => void
 ): CellSelectionReturn => {
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 

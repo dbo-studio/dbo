@@ -1,6 +1,5 @@
 import { useContextMenu } from '@/hooks';
 import { useDataStore } from '@/store/dataStore/data.store';
-import type { ColumnType, RowType } from '@/types';
 import { Box, CircularProgress } from '@mui/material';
 import { type JSX, useCallback, useRef, useState } from 'react';
 import { StyledTable, TableContainer } from './DataGrid.styled';
@@ -10,15 +9,9 @@ import DataGridTableHeaderRow from './DataGridTableHeaderRow/DataGridTableHeader
 import QuickViewDialog from './QuickViewDialog/QuickViewDialog';
 import { useHandleScroll } from './hooks/useHandleScroll';
 import useTableColumns from './hooks/useTableColumns';
+import type { DataGridProps } from './types';
 
-interface CustomTestGridProps {
-  rows: RowType[];
-  columns: ColumnType[];
-  loading: boolean;
-  editable?: boolean;
-}
-
-export default function DataGrid({ rows, columns, loading, editable = true }: CustomTestGridProps): JSX.Element {
+export default function DataGrid({ rows, columns, loading, editable = true }: DataGridProps): JSX.Element {
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
   const editedRows = useDataStore((state) => state.editedRows);
@@ -38,13 +31,7 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Cu
   useHandleScroll(tableContainerRef);
 
   const tableColumns = useTableColumns({
-    rows,
-    columns,
-    editingCell,
-    setEditingCell,
-    updateEditedRows,
-    updateRow,
-    editedRows
+    columns
   });
 
   const handleColumnResize = useCallback((newColumnSizes: Record<string, number>) => {
@@ -68,9 +55,13 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Cu
             columnSizes={columnSizes}
             removedRows={removedRows}
             unsavedRows={unsavedRows}
-            editedRows={editedRows}
             selectedRows={selectedRows}
-            setSelectedRows={updateSelectedRows}
+            editedRows={editedRows}
+            editingCell={editingCell}
+            setEditingCell={setEditingCell}
+            updateEditedRows={updateEditedRows}
+            updateRow={updateRow}
+            updateSelectedRows={updateSelectedRows}
           />
         </StyledTable>
       </TableContainer>
