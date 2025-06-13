@@ -1,4 +1,4 @@
-import { useTableData } from '@/contexts/TableDataContext';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { Checkbox } from '@mui/material';
 import { type JSX, useMemo } from 'react';
 import { DataGridTableCell } from '../DataGridTableCell/DataGridTableCell';
@@ -14,8 +14,10 @@ export default function useTableColumns({
   updateRow,
   editedRows
 }: TableColumnsProps): CustomColumnDef[] {
-  const { selectedRows, setSelectedRows } = useTableData();
-  const { handleRowSelection } = useRowSelection(rows, selectedRows, setSelectedRows);
+  const selectedRows = useDataStore((state) => state.selectedRows);
+  const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
+
+  const { handleRowSelection } = useRowSelection(rows, selectedRows);
 
   return useMemo((): CustomColumnDef[] => {
     const checkboxColumn: CustomColumnDef = {
@@ -33,9 +35,9 @@ export default function useTableColumns({
                 selectedColumn: '',
                 row
               }));
-              setSelectedRows(allRows);
+              updateSelectedRows(allRows);
             } else {
-              setSelectedRows([]);
+              updateSelectedRows([]);
             }
           }}
         />
@@ -85,7 +87,7 @@ export default function useTableColumns({
                 editedRows={editedRows}
                 updateEditedRows={updateEditedRows}
                 updateRow={updateRow}
-                setSelectedRows={setSelectedRows}
+                setSelectedRows={updateSelectedRows}
               />
             );
           }

@@ -1,9 +1,9 @@
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
-import { useTableData } from '@/contexts/TableDataContext';
 import { handleRowChangeLog } from '@/core/utils';
 import { useCopyToClipboard } from '@/hooks';
 import locales from '@/locales';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ContextMenuType } from '@/types';
@@ -19,7 +19,11 @@ export default function DataGridContextMenu({
 }): JSX.Element {
   const { toggleShowQuickLookEditor } = useSettingStore();
   const selectedTabId = useTabStore((state) => state.selectedTabId);
-  const { selectedRows, updateEditedRows, editedRows, updateRow } = useTableData();
+  const selectedRows = useDataStore((state) => state.selectedRows);
+  const editedRows = useDataStore((state) => state.editedRows);
+  const updateEditedRows = useDataStore((state) => state.updateEditedRows);
+  const updateRow = useDataStore((state) => state.updateRow);
+
   const [copy] = useCopyToClipboard();
 
   const valueReplacer = (newValue: any): void => {
@@ -59,30 +63,25 @@ export default function DataGridContextMenu({
       separator: true
     },
     {
-      name: locales.set_value,
-      children: [
-        {
-          name: locales.set_empty,
-          closeBeforeAction: true,
-          action: (): void => {
-            valueReplacer('');
-          }
-        },
-        {
-          name: locales.set_null,
-          closeBeforeAction: true,
-          action: (): void => {
-            valueReplacer(null);
-          }
-        },
-        {
-          name: locales.set_default,
-          closeBeforeAction: true,
-          action: (): void => {
-            valueReplacer('@DEFAULT');
-          }
-        }
-      ]
+      name: locales.set_empty,
+      closeBeforeAction: true,
+      action: (): void => {
+        valueReplacer('');
+      }
+    },
+    {
+      name: locales.set_null,
+      closeBeforeAction: true,
+      action: (): void => {
+        valueReplacer(null);
+      }
+    },
+    {
+      name: locales.set_default,
+      closeBeforeAction: true,
+      action: (): void => {
+        valueReplacer('@DEFAULT');
+      }
     },
     {
       name: 'separator',

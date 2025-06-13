@@ -15,7 +15,7 @@ export type DataRowSlice = {
 
 export type DataSelectedRowsSlice = {
   selectedRows: SelectedRow[];
-  updateSelectedRows: (rows: SelectedRow[]) => void;
+  updateSelectedRows: (rows: SelectedRow[]) => Promise<void>;
 };
 
 export type DataColumnSlice = {
@@ -26,19 +26,19 @@ export type DataColumnSlice = {
 
 export type DataEditedRowsSlice = {
   editedRows: EditedRow[];
-  updateEditedRows: (rows: EditedRow[]) => void;
+  updateEditedRows: (rows: EditedRow[]) => Promise<void>;
   restoreEditedRows: () => Promise<void>;
 };
 
 export type DataRemovedRowsSlice = {
   removedRows: RowType[];
-  updateRemovedRows: (rows: RowType[] | undefined) => void;
+  updateRemovedRows: (rows: RowType[] | undefined) => Promise<void>;
 };
 
 export type DataUnsavedRowsSlice = {
   unSavedRows: RowType[];
   addUnsavedRows: (newRow?: RowType) => void;
-  updateUnsavedRows: (unSavedRows: RowType[]) => void;
+  updateUnsavedRows: (unSavedRows: RowType[]) => Promise<void>;
   discardUnsavedRows: (rows?: RowType[]) => void;
 };
 

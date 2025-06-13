@@ -1,5 +1,5 @@
-import { type SelectedRow } from '@/store/dataStore/types';
-import { type ColumnType, type EditedRow, type RowType } from '@/types';
+import type { SelectedRow } from '@/store/dataStore/types';
+import type { ColumnType, EditedRow, RowType } from '@/types';
 import { type DBSchema, type IDBPDatabase, openDB } from 'idb';
 
 // Define the database schema
@@ -130,7 +130,6 @@ class IndexedDBService {
         data: row
       });
     }
-
     await tx.done;
   }
 
@@ -256,7 +255,6 @@ class IndexedDBService {
         data: row
       });
     }
-
     await tx.done;
   }
 
@@ -326,40 +324,40 @@ class IndexedDBService {
     // Clear edited rows
     const editedRowsTx = db.transaction('editedRows', 'readwrite');
     const editedRowsIndex = editedRowsTx.store.index('by-tab');
-    cursor = await editedRowsIndex.openCursor(IDBKeyRange.only(tabId));
-    while (cursor) {
-      await cursor.delete();
-      cursor = await cursor.continue();
+    let editedRowsCursor = await editedRowsIndex.openCursor(IDBKeyRange.only(tabId));
+    while (editedRowsCursor) {
+      await editedRowsCursor.delete();
+      editedRowsCursor = await editedRowsCursor.continue();
     }
     await editedRowsTx.done;
 
     // Clear removed rows
     const removedRowsTx = db.transaction('removedRows', 'readwrite');
     const removedRowsIndex = removedRowsTx.store.index('by-tab');
-    cursor = await removedRowsIndex.openCursor(IDBKeyRange.only(tabId));
-    while (cursor) {
-      await cursor.delete();
-      cursor = await cursor.continue();
+    let removedRowsCursor = await removedRowsIndex.openCursor(IDBKeyRange.only(tabId));
+    while (removedRowsCursor) {
+      await removedRowsCursor.delete();
+      removedRowsCursor = await removedRowsCursor.continue();
     }
     await removedRowsTx.done;
 
     // Clear unsaved rows
     const unsavedRowsTx = db.transaction('unsavedRows', 'readwrite');
     const unsavedRowsIndex = unsavedRowsTx.store.index('by-tab');
-    cursor = await unsavedRowsIndex.openCursor(IDBKeyRange.only(tabId));
-    while (cursor) {
-      await cursor.delete();
-      cursor = await cursor.continue();
+    let unsavedRowsCursor = await unsavedRowsIndex.openCursor(IDBKeyRange.only(tabId));
+    while (unsavedRowsCursor) {
+      await unsavedRowsCursor.delete();
+      unsavedRowsCursor = await unsavedRowsCursor.continue();
     }
     await unsavedRowsTx.done;
 
     // Clear selected rows
     const selectedRowsTx = db.transaction('selectedRows', 'readwrite');
     const selectedRowsIndex = selectedRowsTx.store.index('by-tab');
-    cursor = await selectedRowsIndex.openCursor(IDBKeyRange.only(tabId));
-    while (cursor) {
-      await cursor.delete();
-      cursor = await cursor.continue();
+    let selectedRowsCursor = await selectedRowsIndex.openCursor(IDBKeyRange.only(tabId));
+    while (selectedRowsCursor) {
+      await selectedRowsCursor.delete();
+      selectedRowsCursor = await selectedRowsCursor.continue();
     }
     await selectedRowsTx.done;
   }
@@ -368,7 +366,7 @@ class IndexedDBService {
   async clearAllTableData(): Promise<void> {
     const db = await this.initDB();
     // List of all object stores to clear
-    const stores = ['rows', 'columns', 'editedRows', 'removedRows', 'unsavedRows', 'selectedRows'];
+    const stores = ['rows', 'columns', 'editedRows', 'removedRows', 'unsavedRows', 'selectedRows'] as const;
     await Promise.all(
       stores.map(async (store) => {
         const tx = db.transaction(store, 'readwrite');

@@ -1,12 +1,14 @@
 import FieldInput from '@/components/base/FieldInput/FieldInput.tsx';
 import Search from '@/components/base/Search/Search';
-import { useTableData } from '@/contexts/TableDataContext';
+import { useDataStore } from '@/store/dataStore/data.store';
 import type { RowType } from '@/types';
 import { Box } from '@mui/material';
 import { type JSX, useEffect, useState } from 'react';
 
 export default function DBFields(): JSX.Element {
-  const { columns, selectedRows } = useTableData();
+  const columns = useDataStore((state) => state.columns);
+  const selectedRows = useDataStore((state) => state.selectedRows);
+
   const [fields, setFields] = useState<any[]>([]);
   const [search, setSearch] = useState<string>('');
   const [selectedRow, setSelectedRow] = useState<RowType | undefined>(undefined);
@@ -29,7 +31,7 @@ export default function DBFields(): JSX.Element {
 
     const data: any[] = [];
     columns
-      .filter((c: any) => {
+      ?.filter((c: any) => {
         return c.name.toLocaleLowerCase().includes(value.toLocaleLowerCase());
       })
       .map((c: any) => {

@@ -1,15 +1,12 @@
+import { useDataStore } from '@/store/dataStore/data.store';
 import type { RowType } from '@/types';
 import { useCallback, useMemo, useState } from 'react';
 import type { RowSelectionReturn } from '../types';
 
-export const useRowSelection = (
-  rows: RowType[],
-  selectedRows: any[],
-  setSelectedRows: (rows: any) => Promise<void>
-): RowSelectionReturn => {
+export const useRowSelection = (rows: RowType[], selectedRows: any[]): RowSelectionReturn => {
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
+  const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
 
-  // Create a Map for O(1) lookups of selected rows
   const selectedRowsMap = useMemo(() => {
     const map = new Map<number, boolean>();
     for (const row of selectedRows) {
@@ -21,7 +18,7 @@ export const useRowSelection = (
   const handleRowSelection = useCallback(
     (rowIndex: number, isSelected: boolean, _: React.MouseEvent): void => {
       if (isSelected && !selectedRowsMap.has(rowIndex)) {
-        setSelectedRows([
+        updateSelectedRows([
           ...selectedRows,
           {
             index: rowIndex,
@@ -30,12 +27,12 @@ export const useRowSelection = (
           }
         ]);
       } else if (!isSelected && selectedRowsMap.has(rowIndex)) {
-        setSelectedRows(selectedRows.filter((sr) => sr.index !== rowIndex));
+        updateSelectedRows(selectedRows.filter((sr) => sr.index !== rowIndex));
       }
 
       setLastSelectedIndex(rowIndex);
     },
-    [lastSelectedIndex, rows, selectedRows, selectedRowsMap, setSelectedRows]
+    [lastSelectedIndex, rows, selectedRows, selectedRowsMap]
   );
 
   return {

@@ -14,7 +14,6 @@ import { Toaster } from 'sonner';
 import './components/base/SqlEditor/helpers/languageSetup.ts';
 import ThemeProvider from './core/theme/index.tsx';
 import Home from './routes/index.tsx';
-import { TableDataProvider } from './contexts/TableDataContext.tsx';
 
 enableMocking().then(() => {
   const queryClient = new QueryClient({
@@ -34,9 +33,7 @@ enableMocking().then(() => {
         <GlobalStyles styles={(theme): Interpolation<Theme> => globalStyles(theme)} />
         <CssBaseline />
         <QueryClientProvider client={queryClient}>
-          <TableDataProvider>
-            <Home />
-          </TableDataProvider>
+          <Home />
           <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
         <Toaster position='bottom-center' duration={5000} richColors closeButton={true} />

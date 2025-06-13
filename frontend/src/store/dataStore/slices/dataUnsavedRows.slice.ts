@@ -1,4 +1,6 @@
 import { createEmptyRow } from '@/core/utils';
+import { debouncedSaveUnsavedRows } from '@/core/utils/indexdbHelper';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import type { RowType } from '@/types';
 import type { StateCreator } from 'zustand';
 import type { DataColumnSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
@@ -32,8 +34,14 @@ export const createDataUnsavedRowsSlice: StateCreator<
     }
     get().updateUnsavedRows(unSavedRows);
   },
-  updateUnsavedRows: (unSavedRows: RowType[]): void => {
+  updateUnsavedRows: (unSavedRows: RowType[]): Promise<void> => {
+    const selectedTabId = useTabStore.getState().selectedTabId;
+    if (!selectedTabId) return Promise.resolve();
+
     set({ unSavedRows });
+
+    debouncedSaveUnsavedRows(selectedTabId, unSavedRows);
+    return Promise.resolve();
   },
   discardUnsavedRows: async (rows?: RowType[]): Promise<void> => {
     const unSavedRows = rows ?? get().unSavedRows;

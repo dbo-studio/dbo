@@ -1,3 +1,4 @@
+import { debouncedSaveRemovedRows } from '@/core/utils/indexdbHelper';
 import type { RowType } from '@/types';
 import type { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
@@ -16,14 +17,14 @@ export const createDataRemovedRowsSlice: StateCreator<
   DataRemovedRowsSlice
 > = (set, get) => ({
   removedRows: [],
-  updateRemovedRows: (removedRows: RowType[] | undefined): void => {
+  updateRemovedRows: (removedRows: RowType[] | undefined): Promise<void> => {
     if (removedRows) {
       set({ removedRows });
-      return;
+      return Promise.resolve();
     }
 
     const selectedTabId = useTabStore.getState().selectedTabId;
-    if (!selectedTabId) return;
+    if (!selectedTabId) return Promise.resolve();
 
     const selectedRows = get().selectedRows;
     const selectedIndexes = new Set(selectedRows.map((row) => row.index));
@@ -35,14 +36,13 @@ export const createDataRemovedRowsSlice: StateCreator<
       .rows?.filter((r: RowType) => selectedIndexes.has(r.dbo_index) && !unsavedIndexes.has(r.dbo_index))
       .map((row) => (row.id ? { id: row.id, dbo_index: row.dbo_index } : row));
 
-    set((state) => ({
-      removedRows: {
-        ...state.removedRows,
-        [selectedTabId]: rows
-      }
-    }));
+    set({ removedRows: rows });
 
     get().discardUnsavedRows(unsavedRows);
     get().updateSelectedRows([]);
+
+    debouncedSaveRemovedRows(selectedTabId, rows ?? []);
+
+    return Promise.resolve();
   }
 });

@@ -1,6 +1,6 @@
 import DataGrid from '@/components/common/DataGrid/DataGrid';
-import { useTableData } from '@/contexts/TableDataContext';
 import { useMount } from '@/hooks';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, CircularProgress } from '@mui/material';
 import type { JSX } from 'react';
@@ -18,8 +18,34 @@ function DataContent(): JSX.Element {
   const [isGridReady, setIsGridReady] = useState(false);
   const [showColumns, setShowColumns] = useState(false);
 
-  const { selectedTabId } = useTabStore();
-  const { rows, columns, getActiveColumns } = useTableData();
+  const selectedTabId = useTabStore((state) => state.selectedTabId);
+  const toggleDataFetching = useDataStore((state) => state.toggleDataFetching);
+  const rows = useDataStore((state) => state.rows);
+  const columns = useDataStore((state) => state.columns);
+  const getActiveColumns = useDataStore((state) => state.getActiveColumns);
+  const loadDataFromIndexedDB = useDataStore((state) => state.loadDataFromIndexedDB);
+  const runQuery = useDataStore((state) => state.runQuery);
+
+  useEffect(() => {
+    if (!selectedTabId) return;
+
+    const loadData = async (): Promise<void> => {
+      toggleDataFetching(true);
+      try {
+        const result = await loadDataFromIndexedDB();
+        if (!result) {
+          await runQuery();
+        }
+      } catch (error) {
+        console.error('🚀 ~ loadData ~ error:', error);
+        await useDataStore.getState().runQuery();
+      } finally {
+        useDataStore.getState().toggleDataFetching(false);
+      }
+    };
+
+    loadData();
+  }, [selectedTabId]);
 
   useEffect(() => {
     setIsGridReady(false);
@@ -40,7 +66,9 @@ function DataContent(): JSX.Element {
       <ActionBar showColumns={showColumns} setShowColumns={setShowColumns} />
       <Box overflow='hidden' flex={1} display='flex' flexDirection='row'>
         {showColumns && <Columns />}
-        {columns.length > 0 &&
+        {columns &&
+          columns.length > 0 &&
+          rows &&
           (isGridReady ? (
             <DataGrid rows={rows} columns={getActiveColumns()} loading={false} />
           ) : (

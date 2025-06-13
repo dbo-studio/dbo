@@ -1,5 +1,5 @@
-import { useTableData } from '@/contexts/TableDataContext';
 import { useContextMenu } from '@/hooks';
+import { useDataStore } from '@/store/dataStore/data.store';
 import type { ColumnType, RowType } from '@/types';
 import { Box, CircularProgress } from '@mui/material';
 import { type JSX, useCallback, useRef, useState } from 'react';
@@ -20,8 +20,16 @@ interface CustomTestGridProps {
 
 export default function DataGrid({ rows, columns, loading, editable = true }: CustomTestGridProps): JSX.Element {
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const { updateEditedRows, editedRows, updateRow, removedRows, unsavedRows, selectedRows, setSelectedRows } =
-    useTableData();
+
+  const editedRows = useDataStore((state) => state.editedRows);
+  const removedRows = useDataStore((state) => state.removedRows);
+  const unsavedRows = useDataStore((state) => state.unSavedRows);
+  const selectedRows = useDataStore((state) => state.selectedRows);
+
+  const updateEditedRows = useDataStore((state) => state.updateEditedRows);
+  const updateRow = useDataStore((state) => state.updateRow);
+  const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
+
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
   const [editingCell, setEditingCell] = useState<{ rowIndex: number; columnId: string } | null>(null);
@@ -62,7 +70,7 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Cu
             unsavedRows={unsavedRows}
             editedRows={editedRows}
             selectedRows={selectedRows}
-            setSelectedRows={setSelectedRows}
+            setSelectedRows={updateSelectedRows}
           />
         </StyledTable>
       </TableContainer>

@@ -3,7 +3,7 @@ import ResizableModal from '@/components/base/Modal/ResizableModal/ResizableModa
 import type { QuickViewDialogProps } from '@/components/common/DataGrid/QuickViewDialog/types';
 import { handleRowChangeLog } from '@/core/utils';
 import locales from '@/locales';
-import { useTableData } from '@/contexts/TableDataContext';
+import { useDataStore } from '@/store/dataStore/data.store';
 import type { SelectedRow } from '@/store/dataStore/types.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box } from '@mui/material';
@@ -18,8 +18,14 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
   const [value, setValue] = useState<string | undefined>(undefined);
   const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
   const [row, setRow] = useState<SelectedRow>();
-  const { selectedRows, updateRow, editedRows, updateEditedRows } = useTableData();
-  const { showQuickLookEditor, toggleShowQuickLookEditor } = useSettingStore();
+
+  const selectedRows = useDataStore((state) => state.selectedRows);
+  const editedRows = useDataStore((state) => state.editedRows);
+  const showQuickLookEditor = useSettingStore((state) => state.showQuickLookEditor);
+
+  const toggleShowQuickLookEditor = useSettingStore((state) => state.toggleShowQuickLookEditor);
+  const updateRow = useDataStore((state) => state.updateRow);
+  const updateEditedRows = useDataStore((state) => state.updateEditedRows);
 
   const handleClose = (): void => {
     if (!row) {

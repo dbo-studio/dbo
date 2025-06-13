@@ -1,5 +1,6 @@
-import type { EditedRow, RowType } from '@/types';
-import { pullAt } from 'lodash';
+import { debouncedSaveEditedAndUnsaved, debouncedSaveRowsAndEditedRows } from '@/core/utils/indexdbHelper';
+import { useTabStore } from '@/store/tabStore/tab.store';
+import type { EditedRow } from '@/types';
 import type { StateCreator } from 'zustand';
 import type { DataEditedRowsSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
 
@@ -10,42 +11,53 @@ export const createDataEditedRowsSlice: StateCreator<
   DataEditedRowsSlice
 > = (set, get) => ({
   editedRows: [],
-  updateEditedRows: (editedRows: EditedRow[]): void => {
-    const unSavedRows = get().unSavedRows;
-    const shouldBeUnsaved: RowType[] = [];
+  updateEditedRows: async (editedRows: EditedRow[]): Promise<void> => {
+    const selectedTabId = useTabStore.getState().selectedTabId;
+    if (!selectedTabId) return Promise.resolve();
 
-    editedRows.forEach((editedRow: EditedRow, index: number) => {
-      const findValueIndex = unSavedRows.findIndex((x) => x.dbo_index === editedRow.dboIndex);
-      if (findValueIndex > -1) {
-        shouldBeUnsaved.push(...pullAt(editedRows, [index]));
+    const currentUnsavedRows = [...get().unSavedRows];
+    const rowsToKeep: EditedRow[] = [];
+
+    for (const editedRow of editedRows) {
+      const isUnsaved = currentUnsavedRows.some((r) => r.dbo_index === editedRow.dboIndex);
+      if (isUnsaved) {
+        const { dboIndex, ...data } = editedRow;
+        const newUnsavedRow = {
+          ...data.new,
+          dbo_index: dboIndex
+        };
+        currentUnsavedRows.push(newUnsavedRow);
+      } else {
+        rowsToKeep.push(editedRow);
       }
-    });
-
-    //  if row exists in unsaved'rows, it should not push into edited'rows list
-    for (const unSavedRow of shouldBeUnsaved) {
-      const { dboIndex, ...data } = unSavedRow;
-      const newUnsavedRow = {
-        ...data.new,
-        dbo_index: dboIndex
-      };
-      get().addUnsavedRows(newUnsavedRow);
     }
 
-    set({ editedRows: editedRows });
+    set({ editedRows: rowsToKeep });
+    get().updateUnsavedRows(currentUnsavedRows);
+
+    debouncedSaveEditedAndUnsaved(selectedTabId, rowsToKeep, currentUnsavedRows);
+    return Promise.resolve();
   },
   restoreEditedRows: async (): Promise<void> => {
-    const newRows = get().editedRows;
-    const oldRows = get().rows ?? [];
+    const selectedTabId = useTabStore.getState().selectedTabId;
+    if (!selectedTabId) return;
 
-    for (const newRow of newRows) {
-      const findValueIndex = oldRows.findIndex((x) => x.dbo_index === newRow.dboIndex);
-      oldRows[findValueIndex] = {
-        ...oldRows[findValueIndex],
-        ...newRow.old
-      };
+    const currentRows = [...(get().rows ?? [])];
+    for (const editedRow of get().editedRows) {
+      const rowIndex = currentRows.findIndex((r) => r.dbo_index === editedRow.dboIndex);
+      if (rowIndex !== -1) {
+        currentRows[rowIndex] = {
+          ...currentRows[rowIndex],
+          ...editedRow.old
+        };
+      }
     }
 
-    await get().updateRows(oldRows);
-    get().updateEditedRows([]);
+    get().updateRows(currentRows);
+    set({ editedRows: [] });
+
+    debouncedSaveRowsAndEditedRows(selectedTabId, currentRows, []);
+
+    return Promise.resolve();
   }
 });
