@@ -2,6 +2,7 @@ import DataGrid from '@/components/common/DataGrid/DataGrid';
 import { useMount } from '@/hooks';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import type { ColumnType, RowType } from '@/types';
 import { Box, CircularProgress } from '@mui/material';
 import type { JSX } from 'react';
 import { useEffect, useState } from 'react';
@@ -11,26 +12,36 @@ import StatusBar from './StatusBar/StatusBar';
 
 export default function Data(): JSX.Element {
   const mounted = useMount();
+  const [tableData, setTableData] = useState({
+    rows: [] as RowType[],
+    columns: [] as ColumnType[]
+  });
   const [isGridReady, setIsGridReady] = useState(false);
   const [showColumns, setShowColumns] = useState(false);
 
   const selectedTabId = useTabStore((state) => state.selectedTabId);
-  const rows = useDataStore((state) => state.rows);
-  const columns = useDataStore((state) => state.columns);
 
-  const getActiveColumns = useDataStore((state) => state.getActiveColumns);
   const toggleDataFetching = useDataStore((state) => state.toggleDataFetching);
   const loadDataFromIndexedDB = useDataStore((state) => state.loadDataFromIndexedDB);
   const runQuery = useDataStore((state) => state.runQuery);
 
   const loadData = async (): Promise<void> => {
-    if (!selectedTabId) return;
+    setTableData({
+      rows: [],
+      columns: []
+    });
 
     toggleDataFetching(true);
     try {
       const result = await loadDataFromIndexedDB();
       if (!result) {
-        await runQuery();
+        const res = await runQuery();
+        setTableData({
+          rows: res?.data ?? [],
+          columns: res?.columns.filter((column) => column.isActive) ?? []
+        });
+      } else {
+        setTableData(result);
       }
     } catch (error) {
       console.error('🚀 ~ loadData ~ error:', error);
@@ -60,11 +71,9 @@ export default function Data(): JSX.Element {
       <ActionBar showColumns={showColumns} setShowColumns={setShowColumns} />
       <Box overflow='hidden' flex={1} display='flex' flexDirection='row'>
         {showColumns && <Columns />}
-        {columns &&
-          columns.length > 0 &&
-          rows &&
+        {tableData.columns.length > 0 &&
           (isGridReady ? (
-            <DataGrid rows={rows} columns={getActiveColumns()} loading={false} />
+            <DataGrid rows={tableData.rows} columns={tableData.columns} loading={false} />
           ) : (
             <Box display='flex' justifyContent='center' alignItems='center' width='100%'>
               <CircularProgress size={30} />

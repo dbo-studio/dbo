@@ -7,12 +7,14 @@ export type QueryEditorLeadingProps = {
 
 export type QueryEditorActionsProps = {
   onFormat: () => void;
+  onRunQuery: (query?: string) => void;
 };
 
 export type QueryEditorActionBarProps = {
   databases: string[];
   schemas: string[];
   onFormat: () => void;
+  onRunQuery: (query?: string) => void;
 };
 
 export type QueryEditorProps = {

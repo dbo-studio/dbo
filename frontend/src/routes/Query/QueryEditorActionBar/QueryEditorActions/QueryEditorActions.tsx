@@ -1,5 +1,4 @@
 import api from '@/api';
-import type { RunQueryResponseType } from '@/api/query/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton';
 import { shortcuts, tools } from '@/core/utils';
@@ -13,10 +12,13 @@ import type { JSX } from 'react';
 import { toast } from 'sonner';
 import type { QueryEditorActionsProps } from '../../types';
 
-export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps): JSX.Element {
+export default function QueryEditorActions({ onFormat, onRunQuery }: QueryEditorActionsProps): JSX.Element {
   const queryClient = useQueryClient();
-  const { runRawQuery, isDataFetching } = useDataStore();
-  const { updateQuery, getQuery } = useTabStore();
+  const isDataFetching = useDataStore((state) => state.isDataFetching);
+
+  const updateQuery = useTabStore((state) => state.updateQuery);
+  const getQuery = useTabStore((state) => state.getQuery);
+
   const currentConnection = useCurrentConnection();
 
   const { mutateAsync: createSavedQueryMutation } = useMutation({
@@ -83,7 +85,7 @@ export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps
           disabled={isDataFetching}
           loading={isDataFetching}
           color='primary'
-          onClick={(): Promise<RunQueryResponseType | undefined> => runRawQuery()}
+          onClick={(): void => onRunQuery()}
         >
           <CustomIcon type='play' />
         </LoadingIconButton>

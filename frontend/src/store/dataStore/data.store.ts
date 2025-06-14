@@ -37,12 +37,6 @@ export const useDataStore = create<DataState>()(
   devtools(
     (set, get, ...state) => ({
       loadDataFromIndexedDB: async (): Promise<{ rows: RowType[]; columns: ColumnType[] } | null> => {
-        get().updateRows([]);
-        get().updateColumns([]);
-        get().updateRemovedRows(undefined);
-        get().updateUnsavedRows([]);
-        get().updateSelectedRows([]);
-
         const selectedTabId = useTabStore.getState().selectedTabId;
         if (!selectedTabId) return null;
 
@@ -63,7 +57,7 @@ export const useDataStore = create<DataState>()(
             get().updateRemovedRows(dbRemovedRows);
             get().updateUnsavedRows(dbUnsavedRows);
             get().updateSelectedRows(dbSelectedRows);
-            return { rows: dbRows, columns: dbColumns };
+            return { rows: dbRows, columns: dbColumns.filter((column) => column.isActive) };
           }
         } catch (error) {
           console.error('Error loading data from IndexedDB:', error);

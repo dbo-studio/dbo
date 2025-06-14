@@ -6,6 +6,7 @@ export type SqlEditorProps = {
   onChange?: (value: string) => void;
   onBlur?: (value: string) => void;
   onMount?: () => void;
+  onRunQuery: (query?: string) => void;
 };
 
 export type SqlEditorSettingType = {

@@ -4,7 +4,12 @@ import type { QueryEditorActionBarProps } from '../types';
 import QueryEditorActions from './QueryEditorActions/QueryEditorActions';
 import QueryEditorLeading from './QueryEditorLeading/QueryEditorLeading';
 
-export default function QueryEditorActionBar({ databases, schemas, onFormat }: QueryEditorActionBarProps): JSX.Element {
+export default function QueryEditorActionBar({
+  databases,
+  schemas,
+  onFormat,
+  onRunQuery
+}: QueryEditorActionBarProps): JSX.Element {
   const [localDatabases, setLocalDatabases] = useState<string[]>([]);
   const [localSchemas, setLocalSchemas] = useState<string[]>([]);
 
@@ -32,7 +37,7 @@ export default function QueryEditorActionBar({ databases, schemas, onFormat }: Q
         <QueryEditorLeading databases={localDatabases} schemas={localSchemas} />
       </Grid>
       <Grid size={{ md: 8 }} display='flex' justifyContent='flex-end'>
-        <QueryEditorActions onFormat={onFormat} />
+        <QueryEditorActions onFormat={onFormat} onRunQuery={onRunQuery} />
       </Grid>
     </Stack>
   );
