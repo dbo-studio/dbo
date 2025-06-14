@@ -33,7 +33,7 @@ export default function DataGridTableBodyRows({
         return (
           <DataGridTableRow
             key={`row-${row.dbo_index}`}
-            // editable={editable}
+            editable={editable}
             row={row}
             rowIndex={rowIndex}
             columns={columns}

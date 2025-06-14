@@ -3,18 +3,22 @@ import { PanelTabsStyled } from '@/components/common/Panels/PanelTabs/PanelTabs.
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { TabType } from '@/types';
-import { type JSX, useMemo } from 'react';
+import { type JSX, memo, useMemo } from 'react';
 
-export default function PanelTabs(): JSX.Element {
+const PanelTabs = memo((): JSX.Element => {
   const { currentConnectionId } = useConnectionStore();
   const { tabs, getTabs } = useTabStore();
+
   const tabList = useMemo(() => getTabs(), [currentConnectionId, tabs]);
 
-  return (
-    <PanelTabsStyled>
-      {tabList.map((tab: TabType) => (
-        <PanelTabItem tab={tab} key={`${tab.id}-${tab.mode}`} />
-      ))}
-    </PanelTabsStyled>
+  const tabItems = useMemo(
+    () => tabList.map((tab: TabType) => <PanelTabItem tab={tab} key={`${tab.id}-${tab.mode}`} />),
+    [tabList]
   );
-}
+
+  return <PanelTabsStyled>{tabItems}</PanelTabsStyled>;
+});
+
+PanelTabs.displayName = 'PanelTabs';
+
+export default PanelTabs;
