@@ -50,6 +50,10 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
     ];
   }, [columns]);
 
+  const totalTableWidth = useMemo(() => {
+    return Object.values(columnSizes).reduce((total, width) => total + width, 0);
+  }, [columnSizes]);
+
   return loading ? (
     <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
       <CircularProgress size={30} />
@@ -58,7 +62,7 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
     <>
       <QuickViewDialog editable={editable} />
       <TableContainer ref={tableContainerRef}>
-        <StyledTable>
+        <StyledTable style={{ width: totalTableWidth }}>
           <colgroup>
             {tableColumns.map((column) => (
               <col key={column.name} style={{ width: columnSizes[column.name] }} />

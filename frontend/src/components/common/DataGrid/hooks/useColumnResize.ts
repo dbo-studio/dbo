@@ -67,37 +67,31 @@ export function useColumnResize({
   }, [columns, defaultColumnWidth]);
 
   // Event handlers
-  const handleMouseMove = useCallback(
-    (event: MouseEvent) => {
-      if (!isResizingRef.current || !resizingColumnIdRef.current) return;
+  const handleMouseMove = useCallback((event: MouseEvent) => {
+    if (!isResizingRef.current || !resizingColumnIdRef.current) return;
 
-      const deltaX = event.clientX - startXRef.current;
-      const newWidth = Math.max(minColumnWidth, Math.min(maxColumnWidth, startWidthRef.current + deltaX));
+    const deltaX = event.clientX - startXRef.current;
+    const newWidth = startWidthRef.current + deltaX;
 
-      // Only update the width of the column being resized
-      setColumnSizes((prev) => ({
-        ...prev,
-        [resizingColumnIdRef.current as string]: newWidth
-      }));
-    },
-    [minColumnWidth, maxColumnWidth]
-  );
+    // Only update the width of the column being resized
+    setColumnSizes((prev) => ({
+      ...prev,
+      [resizingColumnIdRef.current as string]: newWidth
+    }));
+  }, []);
 
-  const handleTouchMove = useCallback(
-    (event: TouchEvent) => {
-      if (!isResizingRef.current || !resizingColumnIdRef.current) return;
+  const handleTouchMove = useCallback((event: TouchEvent) => {
+    if (!isResizingRef.current || !resizingColumnIdRef.current) return;
 
-      const deltaX = event.touches[0].clientX - startXRef.current;
-      const newWidth = Math.max(minColumnWidth, Math.min(maxColumnWidth, startWidthRef.current + deltaX));
+    const deltaX = event.touches[0].clientX - startXRef.current;
+    const newWidth = startWidthRef.current + deltaX;
 
-      // Only update the width of the column being resized
-      setColumnSizes((prev) => ({
-        ...prev,
-        [resizingColumnIdRef.current as string]: newWidth
-      }));
-    },
-    [minColumnWidth, maxColumnWidth]
-  );
+    // Only update the width of the column being resized
+    setColumnSizes((prev) => ({
+      ...prev,
+      [resizingColumnIdRef.current as string]: newWidth
+    }));
+  }, []);
 
   const handleMouseUp = useCallback(() => {
     if (isResizingRef.current && resizingColumnIdRef.current && onColumnResize) {

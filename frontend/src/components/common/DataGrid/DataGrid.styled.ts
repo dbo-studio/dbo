@@ -12,6 +12,7 @@ export const TableHeader = styled('th')(({ theme }) => ({
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
+  boxSizing: 'border-box',
 
   WebkitTransform: 'translateZ(0)',
   transform: 'translateZ(0)'
@@ -52,7 +53,6 @@ export const TableCell = styled('td')(({ theme }) => ({
 }));
 
 export const StyledTable = styled('table')(({ theme }) => ({
-  width: 'max-content',
   borderSpacing: 0,
   tableLayout: 'fixed',
   borderCollapse: 'separate'

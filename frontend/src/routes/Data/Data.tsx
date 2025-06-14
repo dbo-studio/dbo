@@ -15,38 +15,36 @@ export default function Data(): JSX.Element {
   const [showColumns, setShowColumns] = useState(false);
 
   const selectedTabId = useTabStore((state) => state.selectedTabId);
-  const toggleDataFetching = useDataStore((state) => state.toggleDataFetching);
   const rows = useDataStore((state) => state.rows);
   const columns = useDataStore((state) => state.columns);
+
   const getActiveColumns = useDataStore((state) => state.getActiveColumns);
+  const toggleDataFetching = useDataStore((state) => state.toggleDataFetching);
   const loadDataFromIndexedDB = useDataStore((state) => state.loadDataFromIndexedDB);
   const runQuery = useDataStore((state) => state.runQuery);
 
-  useEffect(() => {
+  const loadData = async (): Promise<void> => {
     if (!selectedTabId) return;
 
-    const loadData = async (): Promise<void> => {
-      toggleDataFetching(true);
-      try {
-        const result = await loadDataFromIndexedDB();
-        if (!result) {
-          await runQuery();
-        }
-      } catch (error) {
-        console.error('🚀 ~ loadData ~ error:', error);
-        await useDataStore.getState().runQuery();
-      } finally {
-        useDataStore.getState().toggleDataFetching(false);
+    toggleDataFetching(true);
+    try {
+      const result = await loadDataFromIndexedDB();
+      if (!result) {
+        await runQuery();
       }
-    };
-
-    loadData();
-  }, [selectedTabId]);
+    } catch (error) {
+      console.error('🚀 ~ loadData ~ error:', error);
+      await useDataStore.getState().runQuery();
+    } finally {
+      useDataStore.getState().toggleDataFetching(false);
+    }
+  };
 
   useEffect(() => {
     setIsGridReady(false);
 
     const timer = setTimeout(() => {
+      loadData();
       setIsGridReady(true);
     }, 100);
 
