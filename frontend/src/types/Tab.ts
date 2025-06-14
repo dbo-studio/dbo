@@ -19,17 +19,21 @@ export type FilterType = {
 
 export type TabType = {
   id: string;
-  table: string;
-  query: string;
-  pagination: TabDataPagination;
-  showQuery: boolean;
-  showColumns: boolean;
-  showFilters: boolean;
-  showSorts: boolean;
-  sorts: SortType[];
-  filters: FilterType[];
-  columns: string[];
+  connectionId: string | number;
+  nodeId: string;
+  name: string;
+  table?: string;
+  query?: string;
+  pagination?: TabDataPagination;
+  showQuery?: boolean;
+  showColumns?: boolean;
+  showFilters?: boolean;
+  showSorts?: boolean;
+  sorts?: SortType[];
+  filters?: FilterType[];
+  columns?: string[];
   mode: TabMode;
+  options?: Record<string, any>;
 };
 
 export type EditedRow = {
@@ -42,5 +46,4 @@ export type EditedRow = {
 export type TabDataPagination = {
   page: number;
   limit: number;
-  offset: number;
 };

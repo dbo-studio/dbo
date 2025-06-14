@@ -8,11 +8,12 @@ type (
 
 type (
 	Connection struct {
-		ID       int64       `json:"id"`
-		Name     string      `json:"name"`
-		Type     string      `json:"type"`
-		Driver   string      `json:"driver"`
-		Auth     AuthDetails `json:"auth"`
-		IsActive bool        `json:"is_active"`
+		ID       int64  `json:"id"`
+		Name     string `json:"name"`
+		IsActive bool   `json:"isActive"`
+		Icon     string `json:"icon"`
+		Type     string `json:"type"`
+		Info     string `json:"info"`
+		Options  any    `json:"options"`
 	}
 )

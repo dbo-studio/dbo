@@ -17,20 +17,36 @@ export const useSettingStore = create<SettingState>()(
         },
         isDark: false,
         debug: false,
-        updateDebug: (debug: boolean) => {
-          set({ debug });
+        showAddConnection: false,
+        showEditConnection: false,
+        showQuickLookEditor: false,
+        scrollToBottom: true,
+        showSettings: false,
+        toggleDebug: (debug?: boolean): void => {
+          set({ debug: debug !== undefined ? debug : !get().debug });
         },
-        updateSidebar: (sidebar: Partial<SidebarType>) => {
+        updateSidebar: (sidebar: Partial<SidebarType>): void => {
           const oldSidebar = get().sidebar;
           const newSidebar = { ...oldSidebar, ...sidebar };
           set({ sidebar: newSidebar });
         },
-        updateIsDark: (isDark: undefined | boolean) => {
-          if (isDark !== undefined) {
-            set({ isDark });
-          } else {
-            set({ isDark: !get().isDark });
-          }
+        toggleIsDark: (isDark?: boolean): void => {
+          set({ isDark: isDark !== undefined ? isDark : !get().isDark });
+        },
+        toggleShowAddConnection: (show?: boolean): void => {
+          set({ showAddConnection: show !== undefined ? show : !get().showAddConnection });
+        },
+        toggleShowEditConnection: (show?: boolean | number): void => {
+          set({ showEditConnection: show !== undefined ? show : !get().showEditConnection });
+        },
+        toggleShowQuickLookEditor: (show?: boolean): void => {
+          set({ showQuickLookEditor: show !== undefined ? show : !get().showQuickLookEditor });
+        },
+        toggleShowSettings: (show?: boolean): void => {
+          set({ showSettings: show !== undefined ? show : !get().showSettings });
+        },
+        toggleScrollToBottom: (scroll?: boolean): void => {
+          set({ scrollToBottom: scroll !== undefined ? scroll : !get().scrollToBottom });
         }
       }),
       { name: 'settings' }

@@ -1,30 +1,29 @@
 import type { EventFor } from '@/types';
 import { Box, InputBase, Typography, useTheme } from '@mui/material';
 import dayjs from 'dayjs';
-import { forwardRef, useEffect, useState } from 'react';
+import { type JSX, forwardRef, useEffect, useState } from 'react';
 import type { FieldInputProps } from './types';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export default forwardRef(function FieldInput(props: FieldInputProps, _) {
+export default forwardRef(function FieldInput(props: FieldInputProps, _): JSX.Element {
   const theme = useTheme();
   const [value, setValue] = useState('');
 
   useEffect(() => {
-    if (props.type === 'date' || props.type === 'date_time') {
+    if (props.type === 'date' || props.type === 'date_time' || props.type === 'dateTime') {
       setValue(dayjs('2022-04-17T15:30').format('YYYY-MM-DD'));
     } else {
       setValue(props.value as '');
     }
   }, [props.type, props.value]);
 
-  const handleOnChange = (e: EventFor<'input', 'onChange'>) => {
+  const handleOnChange = (e: EventFor<'input', 'onChange'>): void => {
     setValue(e.target.value);
     if (props.onChange) {
       props.onChange(e);
     }
   };
 
-  const handleOnBlue = (e: EventFor<'input', 'onBlur'>) => {
+  const handleOnBlue = (e: EventFor<'input', 'onBlur'>): void => {
     setValue(e.target.value);
     if (props.onBlur) {
       props.onBlur(e);
@@ -57,13 +56,11 @@ export default forwardRef(function FieldInput(props: FieldInputProps, _) {
         }}
         {...props}
       />
-      <Typography
-        mb={props.margin === 'none' ? 0 : theme.spacing(1)}
-        color={theme.palette.text.danger}
-        variant='caption'
-      >
-        {props.helpertext}
-      </Typography>
+      {props.helpertext && (
+        <Typography mb={theme.spacing(props.mb ?? 0)} color={'error'} variant='caption'>
+          {props.helpertext}
+        </Typography>
+      )}
     </Box>
   );
 });

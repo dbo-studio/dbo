@@ -1,66 +1,64 @@
 import api from '@/api';
+import type { RunQueryResponseType } from '@/api/query/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton';
 import { shortcuts, tools } from '@/core/utils';
-import { useShortcut } from '@/hooks';
-import useAPI from '@/hooks/useApi.hook';
+import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
-import { useSavedQueryStore } from '@/store/savedQueryStore/savedQuery.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton, Stack, Tooltip } from '@mui/material';
-import { isAxiosError } from 'axios';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { JSX } from 'react';
 import { toast } from 'sonner';
 import type { QueryEditorActionsProps } from '../../types';
 
-export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps) {
-  const { runRawQuery } = useDataStore();
+export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps): JSX.Element {
+  const queryClient = useQueryClient();
+  const { runRawQuery, isDataFetching } = useDataStore();
   const { updateQuery, getQuery } = useTabStore();
-  const { upsertQuery } = useSavedQueryStore();
-  const { getSelectedTab } = useTabStore();
+  const currentConnection = useCurrentConnection();
 
-  const { request: createSavedQuery } = useAPI({
-    apiMethod: api.savedQueries.createSavedQuery
+  const { mutateAsync: createSavedQueryMutation } = useMutation({
+    mutationFn: api.savedQueries.createSavedQuery,
+    onSuccess: (): void => {
+      queryClient.invalidateQueries({
+        queryKey: ['savedQueries', currentConnection?.id]
+      });
+      toast.success(locales.query_saved_successfully);
+    },
+    onError: (error: Error): void => {
+      console.error('🚀 ~ createSavedQueryMutation ~ error:', error);
+    }
   });
 
-  useShortcut(shortcuts.runQuery, () => runRawQuery());
-
-  const handleFormatSql = () => {
-    if (checkQueryLength()) {
-      updateQuery(tools.formatSql(getQuery(), 'postgresql'));
-      onFormat();
-    }
+  const handleFormatSql = (): void => {
+    updateQuery(tools.formatSql(getQuery(), 'postgresql'));
+    onFormat();
   };
 
-  const handleMinifySql = () => {
-    if (checkQueryLength()) {
-      const minified = tools.minifySql(getQuery());
-      updateQuery(minified);
-      onFormat();
-    }
+  const handleMinifySql = (): void => {
+    const minified = tools.minifySql(getQuery());
+    updateQuery(minified);
+    onFormat();
   };
 
-  const saveQuery = async () => {
+  const saveQuery = async (): Promise<void> => {
     if (!checkQueryLength()) {
       toast.error(locales.empty_query);
       return;
     }
 
     try {
-      const res = await createSavedQuery({
+      await createSavedQueryMutation({
+        connectionId: currentConnection?.id ?? 0,
         query: getQuery()
       });
-      upsertQuery(res);
-      toast.success(locales.query_saved_successfully);
-    } catch (error) {
-      if (isAxiosError(error)) {
-        toast.error(error.message);
-      }
-      console.log('🚀 ~ saveQuery ~ error:', error);
-    }
+    } catch (error) {}
   };
 
-  const checkQueryLength = () => {
-    return getSelectedTab() && getQuery().length > 0;
+  const checkQueryLength = (): boolean => {
+    return getQuery().length > 0;
   };
 
   return (
@@ -81,9 +79,14 @@ export default function QueryEditorActions({ onFormat }: QueryEditorActionsProps
         </IconButton>
       </Tooltip>
       <Tooltip title={shortcuts.runQuery.command}>
-        <IconButton color='primary' onClick={() => runRawQuery()}>
+        <LoadingIconButton
+          disabled={isDataFetching}
+          loading={isDataFetching}
+          color='primary'
+          onClick={(): Promise<RunQueryResponseType | undefined> => runRawQuery()}
+        >
           <CustomIcon type='play' />
-        </IconButton>
+        </LoadingIconButton>
       </Tooltip>
     </Stack>
   );

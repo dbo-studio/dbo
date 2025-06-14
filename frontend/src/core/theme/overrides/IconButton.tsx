@@ -11,6 +11,10 @@ export default function IconButton(theme: Theme): Components {
           '&.Mui-disabled': {
             color: `${theme.palette.text.disabled} !important`,
             '& svg': { color: `${theme.palette.text.disabled} !important` }
+          },
+          '&.active': {
+            backgroundColor: theme.palette.background.paper,
+            '& svg': { color: `${theme.palette.text.primary} !important` }
           }
         }
       }

@@ -4,8 +4,9 @@ import "github.com/invopop/validation"
 
 type (
 	CreateSavedQueryRequest struct {
-		Name  *string `json:"name"`
-		Query string  `json:"query"`
+		ConnectionId int32   `json:"connectionId"`
+		Name         *string `json:"name"`
+		Query        string  `json:"query"`
 	}
 
 	CreateSavedQueryResponse struct {
@@ -13,8 +14,9 @@ type (
 	}
 )
 
-func (c CreateSavedQueryRequest) Validate() error {
-	return validation.ValidateStruct(&c,
-		validation.Field(&c.Query, validation.Required),
+func (req CreateSavedQueryRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
+		validation.Field(&req.Query, validation.Required),
 	)
 }

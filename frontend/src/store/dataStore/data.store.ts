@@ -1,10 +1,11 @@
-import type { TabType } from '@/types';
+import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
+import type { ColumnType, RowType } from '@/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { useTabStore } from '../tabStore/tab.store';
 import { createDataColumnSlice } from './slices/dataColumn.slice';
-import { createDataEditedColumnSlice } from './slices/dataEditedColumn.slice';
 import { createDataEditedRowsSlice } from './slices/dataEditedRows.slice';
+import { createDataFormDataSlice } from './slices/dataFormData.slice';
 import { createDataQuerySlice } from './slices/dataQuery.slice';
 import { createDataRemovedRowsSlice } from './slices/dataRemovedRows.slice';
 import { createDataRowSlice } from './slices/dataRow.slice';
@@ -12,8 +13,8 @@ import { createDataSelectedRowsSlice } from './slices/dataSelectedRows.slice';
 import { createDataUnsavedRowsSlice } from './slices/dataUnsavedRows.slice';
 import type {
   DataColumnSlice,
-  DataEditedColumnSlice,
   DataEditedRowsSlice,
+  DataFormDataSlice,
   DataQuerySlice,
   DataRemovedRowsSlice,
   DataRowSlice,
@@ -29,14 +30,47 @@ type DataState = DataStore &
   DataRemovedRowsSlice &
   DataUnsavedRowsSlice &
   DataColumnSlice &
-  DataEditedColumnSlice &
-  DataQuerySlice;
+  DataQuerySlice &
+  DataFormDataSlice;
 
 export const useDataStore = create<DataState>()(
   devtools(
     (set, get, ...state) => ({
-      selectedTab: (): TabType | undefined => {
-        return useTabStore.getState().getSelectedTab();
+      loadDataFromIndexedDB: async (): Promise<{ rows: RowType[]; columns: ColumnType[] } | null> => {
+        get().updateRows([]);
+        get().updateColumns([]);
+        get().updateRemovedRows(undefined);
+        get().updateUnsavedRows([]);
+        get().updateSelectedRows([]);
+
+        const selectedTabId = useTabStore.getState().selectedTabId;
+        if (!selectedTabId) return null;
+
+        get().toggleDataFetching(true);
+
+        try {
+          const dbRows = await indexedDBService.getRows(selectedTabId);
+          const dbColumns = await indexedDBService.getColumns(selectedTabId);
+          const dbEditedRows = await indexedDBService.getEditedRows(selectedTabId);
+          const dbRemovedRows = await indexedDBService.getRemovedRows(selectedTabId);
+          const dbUnsavedRows = await indexedDBService.getUnsavedRows(selectedTabId);
+          const dbSelectedRows = await indexedDBService.getSelectedRows(selectedTabId);
+
+          if (dbRows.length > 0 && dbColumns.length > 0) {
+            get().updateRows(dbRows);
+            get().updateColumns(dbColumns);
+            get().updateEditedRows(dbEditedRows);
+            get().updateRemovedRows(dbRemovedRows);
+            get().updateUnsavedRows(dbUnsavedRows);
+            get().updateSelectedRows(dbSelectedRows);
+            return { rows: dbRows, columns: dbColumns };
+          }
+        } catch (error) {
+          console.error('Error loading data from IndexedDB:', error);
+        } finally {
+          get().toggleDataFetching(false);
+        }
+        return null;
       },
       ...createDataRowSlice(set, get, ...state),
       ...createDataEditedRowsSlice(set, get, ...state),
@@ -44,8 +78,8 @@ export const useDataStore = create<DataState>()(
       ...createDataUnsavedRowsSlice(set, get, ...state),
       ...createDataSelectedRowsSlice(set, get, ...state),
       ...createDataColumnSlice(set, get, ...state),
-      ...createDataEditedColumnSlice(set, get, ...state),
-      ...createDataQuerySlice(set, get, ...state)
+      ...createDataQuerySlice(set, get, ...state),
+      ...createDataFormDataSlice(set, get, ...state)
     }),
     { name: 'data' }
   )

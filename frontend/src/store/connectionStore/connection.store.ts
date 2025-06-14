@@ -9,37 +9,38 @@ export const useConnectionStore = create<ConnectionState>()(
   devtools(
     (set, get) => ({
       loading: 'finished',
-      showEditConnection: undefined,
       connections: undefined,
-      currentConnection: undefined,
-      updateLoading: (loading: LoadingType) => {
+      currentConnectionId: undefined,
+      currentConnection: (): ConnectionType | undefined => {
+        const { connections, currentConnectionId } = get();
+
+        if (!connections || connections.length === 0) return undefined;
+
+        return connections.find((c) => c.id === Number(currentConnectionId));
+      },
+      updateLoading: (loading: LoadingType): void => {
         set({ loading });
       },
-      updateConnections: (connections: ConnectionType[]) => {
+      updateConnections: (connections: ConnectionType[]): void => {
         set({ connections });
       },
-      updateShowEditConnection: (connection: ConnectionType | undefined) => {
-        set({ showEditConnection: connection });
-      },
-      updateCurrentConnection: (currentConnection: ConnectionType | undefined) => {
-        let connections = get().connections;
-        if (!connections) {
-          return;
-        }
+      updateCurrentConnection: (currentConnection: ConnectionType | undefined): void => {
+        if (!currentConnection) return;
 
-        if (!currentConnection) {
-          set({ currentConnection: undefined });
-          return;
-        }
+        let connections = get().connections;
+        if (!connections) return;
 
         connections = connections.map((c: ConnectionType) => {
           if (c.id === currentConnection.id) {
-            return currentConnection;
+            return {
+              ...currentConnection,
+              isActive: true
+            };
           }
           return c;
         });
 
-        set({ currentConnection, connections });
+        set({ connections, currentConnectionId: currentConnection.id });
       }
     }),
     { name: 'connections' }

@@ -36,7 +36,7 @@
       "exceptionDomain": "",
       "frameworks": [],
       "providerShortName": null,
-      "signingIdentity": "-"
+      "signingIdentity": null
     },
     "resources": [],
     "shortDescription": "Modern and easy to use SQL client",

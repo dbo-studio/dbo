@@ -1,98 +1,65 @@
+import type { RunQueryResponseType } from '@/api/query/types';
 import type { EditedRow } from '@/types';
-import type { ColumnType, EditedColumnType, RowType } from '@/types/Data';
+import type { ColumnType, RowType } from '@/types/Data';
 
-export type DataStore = object;
+export type DataStore = {
+  loadDataFromIndexedDB: () => Promise<{ rows: RowType[]; columns: ColumnType[] } | null>;
+};
 
 export type DataRowSlice = {
-  rows: DataRowsType;
-  getRows: () => RowType[];
-  getRow: (dboIndex: number) => RowType | null | undefined;
-  updateRows: (items: RowType[]) => Promise<void>;
-  updateRow: (item: RowType) => void;
-  removeRowsByTabId: (tabId: string) => void;
+  rows: RowType[] | undefined;
+  getRow: (row: RowType) => RowType | null | undefined;
+  updateRows: (rows: RowType[]) => Promise<void>;
+  updateRow: (row: RowType) => Promise<void>;
 };
 
 export type DataSelectedRowsSlice = {
-  selectedRows: Map<number, SelectedRow>;
-  toggleClear: boolean;
-  getSelectedRows: () => SelectedRow[];
-  clearSelectedRows: () => void;
-  setSelectedRows: (rows: SelectedRow[]) => void;
+  selectedRows: SelectedRow[];
+  updateSelectedRows: (rows: SelectedRow[]) => Promise<void>;
 };
 
 export type DataColumnSlice = {
-  columns: DataColumnsType;
-  getColumns: (isActive?: boolean) => ColumnType[];
+  columns: ColumnType[] | undefined;
+  getActiveColumns: () => ColumnType[];
   updateColumns: (columns: ColumnType[]) => Promise<void>;
-  updateColumn: (column: ColumnType) => Promise<void>;
-  removeColumnsByTabId: (tabId: string) => void;
-};
-
-export type DataEditedColumnSlice = {
-  editedColumns: DataEditedColumnsType;
-  getEditedColumns: () => EditedColumnType[];
-  updateEditedColumns: (columns: EditedColumnType[]) => Promise<void>;
-  addEditedColumns: (oldValue: ColumnType, newValue: ColumnType | EditedColumnType) => Promise<void>;
-  updateRemovedColumns: () => Promise<void>;
-  restoreEditedColumns: () => Promise<void>;
-  addEmptyEditedColumns: () => Promise<void>;
-  removeEditedColumnsByTabId: (tabId: string) => void;
 };
 
 export type DataEditedRowsSlice = {
-  editedRows: DataEditedRowsType;
-  getEditedRows: () => EditedRow[];
-  updateEditedRows: (rows: EditedRow[]) => void;
+  editedRows: EditedRow[];
+  editingCell: { rowIndex: number; columnId: string } | null;
+  updateEditedRows: (rows: EditedRow[]) => Promise<void>;
   restoreEditedRows: () => Promise<void>;
-  removeEditedRowsByTabId: (tabId: string) => void;
+  updateEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void;
 };
 
 export type DataRemovedRowsSlice = {
-  removedRows: DataRemovedRowsType;
-  getRemovedRows: () => RowType[];
-  updateRemovedRows: () => void;
-  deleteRemovedRowsByTabId: (tabId: string) => void;
+  removedRows: RowType[];
+  updateRemovedRows: (rows: RowType[] | undefined) => Promise<void>;
 };
 
 export type DataUnsavedRowsSlice = {
-  unSavedRows: DataRowsType;
-  getUnsavedRows: () => RowType[];
+  unSavedRows: RowType[];
   addUnsavedRows: (newRow?: RowType) => void;
-  updateUnsavedRows: (unSavedRows: RowType[]) => void;
+  updateUnsavedRows: (unSavedRows: RowType[]) => Promise<void>;
   discardUnsavedRows: (rows?: RowType[]) => void;
-  removeUnsavedRowsByTabId: (tabId: string) => void;
 };
 
 export type DataQuerySlice = {
-  loading: boolean;
-  toggleDataFetching: boolean;
-  runQuery: () => Promise<void>;
-  runRawQuery: () => Promise<void>;
-  updateDesignsQuery: () => Promise<void>;
-};
-
-export type DataRowsType = {
-  [key: string]: RowType[];
-};
-
-export type DataColumnsType = {
-  [key: string]: ColumnType[];
-};
-
-export type DataEditedColumnsType = {
-  [key: string]: EditedColumnType[];
-};
-
-export type DataEditedRowsType = {
-  [key: string]: EditedRow[];
-};
-
-export type DataRemovedRowsType = {
-  [key: string]: RowType[];
+  isDataFetching: boolean;
+  runQuery: () => Promise<RunQueryResponseType | undefined>;
+  runRawQuery: (query?: string) => Promise<RunQueryResponseType | undefined>;
+  toggleDataFetching: (loading?: boolean) => void;
 };
 
 export type SelectedRow = {
-  index: number; // The row index,
-  selectedColumns: string[];
-  data: Record<string, any>; // The row's data object
+  index: number;
+  selectedColumn: string;
+  row: RowType;
+};
+
+export type DataFormDataSlice = {
+  formDataByTab: Record<string, Record<string, any>>;
+  getFormData: (tabId: string, objectTabId: string) => any[] | undefined;
+  updateFormData: (tabId: string, objectTabId: string, data: any[]) => void;
+  resetFormData: (tabId: string, objectTabId: string) => void;
 };

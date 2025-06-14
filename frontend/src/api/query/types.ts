@@ -1,40 +1,42 @@
 import type { ColumnType, EditedRow, FilterType, RowType, SortType } from '@/types';
 
-export type RunQueryType = {
-  connection_id: number;
-  table: string;
-  schema: string;
+export type RunQueryRequestType = {
+  connectionId: number;
+  nodeId: string;
   limit: number;
-  offset: number;
+  page: number;
   columns: string[];
   filters: FilterType[];
   sorts: SortType[];
 };
 
-export type RunRawQueryType = {
-  connection_id: number;
+export type RunRawQueryRequestType = {
+  connectionId: number;
   query: string;
 };
 
 export type AutoCompleteRequestType = {
-  connection_id: number;
+  connectionId: number;
+  fromCache?: boolean;
   database?: string;
-  from_cache?: boolean;
   schema?: string;
 };
 
 export type RunQueryResponseType = {
   query: string;
   data: any[];
-  structures: ColumnType[];
+  columns: ColumnType[];
 };
 
-export type UpdateQueryType = {
-  connection_id: number;
-  schema: string;
-  database: string;
-  table: string;
+export type UpdateQueryRequestType = {
+  connectionId: number;
+  nodeId: string;
   edited: EditedRow[];
   removed: RowType[];
   added: RowType[];
+};
+
+export type UpdateQueryResponseType = {
+  query: string[];
+  rowAffected: number;
 };

@@ -1,9 +1,9 @@
-import DBTreeView from '@/components/common/DBTreeView/DBTreeView';
+import ObjectTreeView from '@/components/common/ObjectTreeView/ObjectTreeView.tsx';
 import { useWindowSize } from '@/hooks/useWindowSize.hook';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Tab, Tabs } from '@mui/material';
-import { type SyntheticEvent, useMemo, useState } from 'react';
+import React, { type JSX, type SyntheticEvent, useMemo, useState } from 'react';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
 import Histories from '../../common/Histories/Histories';
 import SavedQueries from '../../common/SavedQueries/SavedQueries';
@@ -12,34 +12,36 @@ import { ExplorerContainerStyled } from './Container.styled';
 const tabs = [
   {
     id: 0,
-    content: <DBTreeView />
+    component: ObjectTreeView
   },
   {
     id: 1,
-    content: <SavedQueries />
+    component: SavedQueries
   },
   {
     id: 2,
-    content: <Histories />
+    component: Histories
   }
 ];
 
-export default function ExplorerContainer() {
+export default React.memo(function ExplorerContainer(): JSX.Element {
   const windowSize = useWindowSize();
   const [selectedTabId, setSelectedTabId] = useState(0);
-  const { sidebar, updateSidebar } = useSettingStore();
+  const sidebar = useSettingStore((state) => state.sidebar);
+  const updateSidebar = useSettingStore((state) => state.updateSidebar);
 
   const selectedTabContent = useMemo(() => {
-    return tabs.find((obj) => obj.id === Number(selectedTabId))?.content;
+    const Component = tabs.find((obj) => obj.id === Number(selectedTabId))?.component;
+    return Component ? <Component /> : null;
   }, [selectedTabId]);
 
-  const onSelectedTabChanged = (_: SyntheticEvent, id: number) => {
+  const onSelectedTabChanged = (_: SyntheticEvent, id: number): void => {
     setSelectedTabId(id);
   };
 
   return (
     <ResizableXBox
-      onChange={(width: number) => updateSidebar({ leftWidth: width })}
+      onChange={(width: number): void => updateSidebar({ leftWidth: width })}
       width={sidebar.leftWidth}
       direction='rtl'
       maxWidth={500}
@@ -55,4 +57,4 @@ export default function ExplorerContainer() {
       </ExplorerContainerStyled>
     </ResizableXBox>
   );
-}
+});

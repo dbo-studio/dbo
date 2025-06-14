@@ -1,8 +1,8 @@
 import { createEmptyRow } from '@/core/utils';
+import { debouncedSaveUnsavedRows } from '@/core/utils/indexdbHelper';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import type { RowType } from '@/types';
-import { pullAt } from 'lodash';
 import type { StateCreator } from 'zustand';
-import { useTabStore } from '../../tabStore/tab.store';
 import type { DataColumnSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
 
 export const createDataUnsavedRowsSlice: StateCreator<
@@ -11,65 +11,47 @@ export const createDataUnsavedRowsSlice: StateCreator<
   [],
   DataUnsavedRowsSlice
 > = (set, get) => ({
-  unSavedRows: {},
-  getUnsavedRows: (): RowType[] => {
-    const selectedTab = useTabStore.getState().getSelectedTab();
-    const rows = get().unSavedRows;
-    return rows[selectedTab?.id as string] ?? [];
-  },
+  unSavedRows: [],
   addUnsavedRows: (newRow?: RowType): void => {
-    const unSavedRows = get().getUnsavedRows();
+    let unSavedRows = get().unSavedRows;
     if (!newRow) {
       // create an empty row
-      const rows = get().getRows();
-      const columns = get().getColumns();
-      // biome-ignore lint: reason
-      newRow = createEmptyRow(columns);
-      newRow.dbo_index = rows.length === 0 ? 0 : rows[rows.length - 1].dbo_index + 1;
-      rows.push(newRow);
-      get().updateRows(rows).then();
+      const rows = get().rows ?? [];
+      const columns = get().columns ?? [];
+      const filteredRow = createEmptyRow(columns);
+      filteredRow.dbo_index = rows.length === 0 ? 0 : rows[rows.length - 1].dbo_index + 1;
+      const newRows = [...rows, filteredRow];
+      get().updateRows(newRows).then();
       //save empty row to unSavedRows
-      unSavedRows.push(newRow);
+      unSavedRows = [...unSavedRows, filteredRow];
     } else {
       const findValueIndex = unSavedRows.findIndex((x) => x.dbo_index === newRow.dbo_index);
       if (findValueIndex === -1) {
-        unSavedRows.push(newRow);
+        unSavedRows = [...unSavedRows, newRow];
       } else {
-        unSavedRows[findValueIndex] = { ...unSavedRows[findValueIndex], ...newRow };
+        unSavedRows = unSavedRows.map((row, idx) => (idx === findValueIndex ? { ...row, ...newRow } : row));
       }
     }
     get().updateUnsavedRows(unSavedRows);
   },
-  updateUnsavedRows: (unSavedRows: RowType[]): void => {
-    const selectedTab = useTabStore.getState().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
-    const rows = get().unSavedRows;
-    rows[selectedTab.id] = unSavedRows;
-    set({ unSavedRows: rows });
+  updateUnsavedRows: (unSavedRows: RowType[]): Promise<void> => {
+    const selectedTabId = useTabStore.getState().selectedTabId;
+    if (!selectedTabId) return Promise.resolve();
+
+    set({ unSavedRows });
+
+    debouncedSaveUnsavedRows(selectedTabId, unSavedRows);
+    return Promise.resolve();
   },
-  discardUnsavedRows: (rows?: RowType[]): void => {
-    const unSavedRows = rows ? rows : get().getUnsavedRows();
-    if (unSavedRows.length === 0) {
-      return;
-    }
+  discardUnsavedRows: async (rows?: RowType[]): Promise<void> => {
+    const unSavedRows = rows ?? get().unSavedRows;
+    if (unSavedRows.length === 0) return;
 
-    const oldRows = get().getRows();
-    for (const unSavedRow of unSavedRows) {
-      const findValueIndex = oldRows.findIndex((x) => x.dbo_index === unSavedRow.dbo_index);
-      pullAt(oldRows, [findValueIndex]);
-    }
+    const unsavedIndexes = new Set(unSavedRows.map((row) => row.dbo_index));
+    const updatedRows = get().rows?.filter((row) => !unsavedIndexes.has(row.dbo_index));
+    if (!updatedRows) return;
 
-    get().updateRows(oldRows).then();
+    await get().updateRows(updatedRows);
     get().updateUnsavedRows([]);
-  },
-  removeUnsavedRowsByTabId: (tabId: string) => {
-    const rows = get().unSavedRows;
-    if (rows[tabId]) {
-      delete rows[tabId];
-    }
-
-    set({ unSavedRows: rows });
   }
 });

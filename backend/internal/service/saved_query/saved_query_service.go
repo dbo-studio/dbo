@@ -27,7 +27,7 @@ func NewSavedQueryService(savedQueryRepo repository.ISavedQueryRepo) *ISavedQuer
 }
 
 func (h ISavedQueryServiceImpl) Index(ctx context.Context, dto *dto.SavedQueryListRequest) (*dto.SavedQueryListResponse, error) {
-	result, err := h.savedQueryRepo.Index(ctx, &dto.PaginationRequest)
+	result, err := h.savedQueryRepo.Index(ctx, dto)
 	if err != nil {
 		return nil, err
 	}

@@ -2,22 +2,11 @@ import type { StateCreator } from 'zustand';
 import type { TabDataSlice, TabStore } from '../types';
 
 export const createTabColumnSlice: StateCreator<TabStore & TabDataSlice, [], [], TabDataSlice> = (_, get) => ({
-  setShowColumns: (show: boolean) => {
-    const selectedTab = get().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
+  updateColumns: (columns: string[]): void => {
+    const tab = get().selectedTab();
+    if (!tab) return;
 
-    selectedTab.showColumns = show;
-    get().updateSelectedTab(selectedTab);
-  },
-  updateColumns: (columns: string[]) => {
-    const selectedTab = get().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
-
-    selectedTab.columns = columns;
-    get().updateSelectedTab(selectedTab);
+    tab.columns = columns;
+    get().updateSelectedTab(tab);
   }
 });

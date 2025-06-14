@@ -2,109 +2,97 @@ import ContextMenu from '@/components/base/ContextMenu/ContextMenu.tsx';
 import type { MenuType } from '@/components/base/ContextMenu/types.ts';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
 import { PanelTabItemStyled } from '@/components/common/Panels/PanelTabs/PanelTabItem/PanelTabItem.styled.ts';
-import { TabMode } from '@/core/enums';
 import { shortcuts } from '@/core/utils';
 import { useContextMenu, useShortcut } from '@/hooks';
-import useNavigate from '@/hooks/useNavigate.hook.ts';
 import { useRemoveTab } from '@/hooks/useRemoveTab.hook.ts';
 import locales from '@/locales';
-import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { TabType } from '@/types';
 import { Box, Tooltip, Typography } from '@mui/material';
-import { useEffect, useRef } from 'react';
+import type { JSX } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
-export default function PanelTabItem({ tab }: { tab: TabType }) {
+const PanelTabItem = memo(({ tab }: { tab: TabType }): JSX.Element => {
+  const selectedTabId = useTabStore((state) => state.selectedTabId);
   const tabRefs = useRef<Record<string, HTMLElement>>({});
-  const navigate = useNavigate();
   const [removeTab] = useRemoveTab();
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
-  const { addTab, getSelectedTab, getTabs } = useTabStore();
-  const { runQuery, runRawQuery, removeEditedRowsByTabId, deleteRemovedRowsByTabId, removeUnsavedRowsByTabId } =
-    useDataStore();
+  const addEditorTab = useTabStore((state) => state.addEditorTab);
+  const getTabs = useTabStore((state) => state.getTabs);
+  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
-  useShortcut(shortcuts.newTab, () => addNewEmptyTab());
-  useShortcut(shortcuts.closeTab, () => getSelectedTab() && handleRemoveTab(getSelectedTab()?.id ?? ''));
-  useShortcut(shortcuts.reloadTab, () => getSelectedTab() && handleReload());
-
-  const menu: MenuType[] = [
-    {
-      name: locales.close,
-      action: () => removeTab(tab.id),
-      closeAfterAction: true
-    },
-    {
-      name: locales.close_other_tabs,
-      action: () => {
-        for (const t of getTabs()) {
-          if (t.id !== getSelectedTab()?.id) removeTab(t.id);
-          else navigate({ route: 'data', tabId: t.id });
-        }
+  const menu = useMemo<MenuType[]>(
+    () => [
+      {
+        name: locales.close,
+        action: (): void => {
+          if (!tab) return;
+          removeTab(tab.id);
+        },
+        closeAfterAction: true
       },
-      closeAfterAction: true
-    },
-    {
-      name: locales.close_all,
-      action: () => {
-        for (const t of getTabs()) {
-          removeTab(t.id);
-        }
-        navigate({ route: '/' });
+      {
+        name: locales.close_other_tabs,
+        action: (): void => {
+          for (const t of getTabs()) {
+            if (t.id !== selectedTabId) removeTab(t.id);
+          }
+        },
+        closeAfterAction: true
       },
-      closeAfterAction: true
-    }
-  ];
+      {
+        name: locales.close_all,
+        action: (): void => {
+          for (const t of getTabs()) {
+            removeTab(t.id);
+          }
+          updateSelectedTab(undefined);
+        },
+        closeAfterAction: true
+      }
+    ],
+    [tab, selectedTabId, getTabs, removeTab, updateSelectedTab]
+  );
 
-  const handleSwitchTab = (tabId: string) => {
-    const findTab = getTabs().find((t: TabType) => t.id === tabId);
-    if (!findTab) return;
+  const handleSwitchTab = useCallback(
+    (tabId: string): void => {
+      const findTab = getTabs().find((t: TabType) => t.id === tabId);
+      const selectedTabId = useTabStore.getState().selectedTabId;
 
-    navigate({
-      route: findTab.mode,
-      tabId: tabId
-    });
-  };
+      if (!findTab || findTab.id === selectedTabId) return;
 
-  const handleRemoveTab = (tabId: string) => {
-    const newTab = removeTab(tabId);
-    if (newTab === undefined) {
-      navigate({ route: '/' });
-      return;
-    }
+      updateSelectedTab(findTab);
+    },
+    [getTabs, updateSelectedTab]
+  );
 
-    if (newTab) {
-      navigate({
-        route: newTab.mode,
-        tabId: newTab.id
-      });
-    }
-  };
+  const handleRemoveTab = useCallback(
+    (tabId: string): void => {
+      if (!selectedTabId) return;
 
-  const addNewEmptyTab = () => {
-    const tab = addTab('Editor', TabMode.Query);
-    navigate({
-      route: 'query',
-      tabId: tab.id
-    });
-  };
+      const newTab = removeTab(tabId);
+      if (newTab === undefined) {
+        updateSelectedTab(undefined);
+        return;
+      }
 
-  const handleReload = async () => {
-    if (getSelectedTab()?.mode === TabMode.Query) {
-      await runRawQuery();
-      return;
-    }
+      if (newTab) {
+        updateSelectedTab(newTab);
+      }
+    },
+    [selectedTabId, removeTab, updateSelectedTab]
+  );
 
-    if (getSelectedTab()?.mode === TabMode.Data || getSelectedTab()?.mode === TabMode.Design) {
-      await runQuery();
-      removeEditedRowsByTabId(getSelectedTab()?.id ?? '');
-      deleteRemovedRowsByTabId(getSelectedTab()?.id ?? '');
-      removeUnsavedRowsByTabId(getSelectedTab()?.id ?? '');
-      return;
-    }
-  };
+  const addNewEmptyTab = useCallback((): void => {
+    const tab = addEditorTab();
+    updateSelectedTab(tab);
+  }, [addEditorTab, updateSelectedTab]);
+
+  useShortcut(shortcuts.newTab, addNewEmptyTab);
+  useShortcut(shortcuts.closeTab, () => handleRemoveTab(selectedTabId ?? ''));
 
   useEffect(() => {
-    const tabId = getSelectedTab()?.id;
+    const tabId = selectedTabId;
     if (tabId && tabRefs.current?.[tabId]) {
       tabRefs.current[tabId].scrollIntoView({
         behavior: 'smooth',
@@ -112,18 +100,30 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
         inline: 'center'
       });
     }
-  }, [getSelectedTab()]);
+  }, [selectedTabId]);
+
+  const handleTabClick = useCallback((): void => {
+    handleSwitchTab(tab.id);
+  }, [handleSwitchTab, tab.id]);
+
+  const handleCloseClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>): void => {
+      e.stopPropagation();
+      handleRemoveTab(tab.id);
+    },
+    [handleRemoveTab, tab.id]
+  );
 
   return (
     <Box
       onContextMenu={handleContextMenu}
-      ref={(el: HTMLElement) => {
+      ref={(el: HTMLElement): void => {
         tabRefs.current[tab.id] = el;
       }}
     >
-      <PanelTabItemStyled selected={getSelectedTab()?.id === tab.id} onClick={() => handleSwitchTab(tab.id)}>
+      <PanelTabItemStyled selected={selectedTabId === tab.id} onClick={handleTabClick}>
         <Box display={'flex'} overflow={'hidden'} flexGrow={1} justifyContent={'center'} alignItems={'center'}>
-          <Tooltip title={tab.table} placement={'bottom'} key={tab.id}>
+          <Tooltip title={tab.name} placement={'bottom'} key={tab.id}>
             <Typography
               display={'inline-block'}
               component={'span'}
@@ -132,20 +132,17 @@ export default function PanelTabItem({ tab }: { tab: TabType }) {
               maxWidth={'100px'}
               variant='subtitle2'
             >
-              {tab.table}
+              {tab.name}
             </Typography>
           </Tooltip>
         </Box>
-        <CustomIcon
-          type='close'
-          size='s'
-          onClick={(e) => {
-            e.stopPropagation();
-            handleRemoveTab(tab.id);
-          }}
-        />
+        <CustomIcon type='close' size='s' onClick={handleCloseClick} />
       </PanelTabItemStyled>
       <ContextMenu menu={menu} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
     </Box>
   );
-}
+});
+
+PanelTabItem.displayName = 'PanelTabItem';
+
+export default PanelTabItem;

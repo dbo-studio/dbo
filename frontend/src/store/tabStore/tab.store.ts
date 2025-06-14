@@ -13,8 +13,8 @@ import type { TabDataSlice, TabFilterSlice, TabQuerySlice, TabSettingSlice, TabS
 type TabState = TabStore & TabSettingSlice & TabQuerySlice & TabFilterSlice & TabSortSlice & TabDataSlice;
 
 const initialize = {
-  tabs: {},
-  selectedTab: {}
+  tabs: [],
+  selectedTabId: undefined
 };
 
 export const useTabStore = create<TabState>()(
@@ -22,73 +22,65 @@ export const useTabStore = create<TabState>()(
     persist(
       (set, get, ...state) => ({
         ...initialize,
-        reset: () => {
+        reset: (): void => {
           set({ ...initialize });
         },
         getTabs: (): TabType[] => {
-          const currentConnection = useConnectionStore.getState().currentConnection;
-          const tabs = get().tabs;
-          if (!currentConnection || !tabs[currentConnection.id]) {
+          const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+          if (!currentConnectionId) {
             return [];
           }
 
-          return tabs[currentConnection.id];
+          return get().tabs.filter((t) => t.connectionId === currentConnectionId);
         },
-        getSelectedTab: (): TabType | undefined => {
-          const currentConnection = useConnectionStore.getState().currentConnection;
-          const selectedTab = get().selectedTab;
-          if (!currentConnection) {
+        selectedTab: (): TabType | undefined => {
+          const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+          if (!currentConnectionId) {
             return undefined;
           }
 
-          if (selectedTab[currentConnection.id]) {
-            return selectedTab[currentConnection.id];
+          if (!get().selectedTabId) {
+            const selectedTab = get().tabs.find((t) => t.connectionId === currentConnectionId);
+            if (selectedTab) {
+              set({ selectedTabId: selectedTab.id });
+            }
+
+            return selectedTab;
           }
 
-          const tabs = get().tabs;
-          if (!tabs[currentConnection.id] || tabs[currentConnection.id].length === 0) {
-            return undefined;
-          }
-
-          return tabs[currentConnection.id][0];
+          return get().tabs.find((t) => t.connectionId === currentConnectionId && t.id === get().selectedTabId);
         },
-        updateTabs: (newTabs: TabType[]) => {
-          const currentConnection = useConnectionStore.getState().currentConnection;
-          if (!currentConnection) {
+        updateTabs: (newTabs: TabType[]): void => {
+          const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+          if (!currentConnectionId) {
             return;
           }
 
-          const tabs = get().tabs;
-          tabs[currentConnection.id] = newTabs;
+          const tabs = get().tabs.filter((t) => t.connectionId !== currentConnectionId);
+          tabs.push(...newTabs);
 
           set({ tabs });
         },
-        updateSelectedTab: (newSelectedTab: TabType | undefined) => {
-          const currentConnection = useConnectionStore.getState().currentConnection;
-          if (!currentConnection) {
-            return;
-          }
-
-          const selectedTab = get().selectedTab;
-          selectedTab[currentConnection.id] = newSelectedTab;
+        updateSelectedTab: (newSelectedTab: TabType | undefined): void => {
           if (newSelectedTab === undefined) {
-            set({ selectedTab });
+            set({ selectedTabId: undefined });
             return;
           }
 
           const tabs = get()
             .getTabs()
             .map((t: TabType) => {
-              if (t.id === newSelectedTab.id) {
+              if (
+                t.id === newSelectedTab.id &&
+                t.mode === newSelectedTab.mode &&
+                t.connectionId === newSelectedTab.connectionId
+              ) {
                 return newSelectedTab;
               }
               return t;
             });
 
-          const newTabs = get().tabs;
-          newTabs[currentConnection.id] = tabs;
-
-          set({ tabs: newTabs, selectedTab });
+          set({ tabs, selectedTabId: newSelectedTab.id });
         },
         ...createTabSettingSlice(set, get, ...state),
         ...createTabQuerySlice(set, get, ...state),

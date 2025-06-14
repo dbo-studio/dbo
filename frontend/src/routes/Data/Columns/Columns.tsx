@@ -3,26 +3,32 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ColumnType } from '@/types/Data';
 import { Box, type Theme, useTheme } from '@mui/material';
+import type { JSX } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import ColumnItem from './ColumnItem';
 
-export default function Columns() {
+export default function Columns(): JSX.Element {
   const windowSize = useWindowSize();
-
   const theme: Theme = useTheme();
-  const { getColumns, updateColumns, runQuery, loading } = useDataStore();
-  const { updateColumns: updateTabColumns } = useTabStore();
 
-  const handleCheckToggle = async (column: ColumnType) => {
-    if (loading) return;
+  const columns = useDataStore((state) => state.columns);
+  const isDataFetching = useDataStore((state) => state.isDataFetching);
+
+  const updateColumns = useDataStore((state) => state.updateColumns);
+  const runQuery = useDataStore((state) => state.runQuery);
+  const updateTabColumns = useTabStore((state) => state.updateColumns);
+
+  const handleCheckToggle = async (column: ColumnType): Promise<void> => {
+    if (isDataFetching) return;
 
     column.isActive = !column.isActive;
-    const newColumns = getColumns().map((c: ColumnType) => {
-      if (c.key === column.key) {
-        return column;
-      }
-      return c;
-    });
+    const newColumns =
+      columns?.map((c: ColumnType) => {
+        if (c.name === column.name) {
+          return column;
+        }
+        return c;
+      }) ?? [];
 
     await updateColumns(newColumns);
     const c = newColumns.filter((c) => c.isActive).map((c) => c.name);
@@ -42,8 +48,8 @@ export default function Columns() {
       flexDirection={'column'}
       minWidth={'130px'}
     >
-      {getColumns().map((c: ColumnType) => (
-        <ColumnItem onClick={() => handleCheckToggle(c)} key={uuidv4()} column={c} />
+      {columns?.map((c: ColumnType) => (
+        <ColumnItem onClick={(): Promise<void> => handleCheckToggle(c)} key={uuidv4()} column={c} />
       ))}
     </Box>
   );

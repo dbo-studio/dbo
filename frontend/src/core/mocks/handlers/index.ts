@@ -1,3 +1,4 @@
+import { objectsHandler } from '@/core/mocks/handlers/objects.ts';
 import { http, passthrough } from 'msw';
 import { connectionHandler } from './connections';
 import { databasesHandler } from './databases';
@@ -22,5 +23,6 @@ export const handlers = [
   ...historiesHandler,
   ...savedQueriesHandler,
   ...queriesHandler,
-  ...databasesHandler
+  ...databasesHandler,
+  ...objectsHandler
 ];

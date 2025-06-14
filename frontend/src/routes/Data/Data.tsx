@@ -1,31 +1,75 @@
-import DataGrid from '@/components/shared/DBDataGrid/DataGrid.tsx';
-import StatusBar from '@/components/shared/StatusBar/StatusBar';
-import Sorts from '@/routes/Data/Sorts/Sorts.tsx';
-import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import DataGrid from '@/components/common/DataGrid/DataGrid';
+import { useMount } from '@/hooks';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { Box } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
+import type { JSX } from 'react';
+import { useEffect, useState } from 'react';
 import ActionBar from './ActionBar/ActionBar';
 import Columns from './Columns/Columns';
-import Filters from './Filters/Filters';
-import QueryPreview from './QueryPreview/QueryPreview';
+import StatusBar from './StatusBar/StatusBar';
 
-export default function Data() {
-  const { getSelectedTab } = useTabStore();
-  const { currentConnection } = useConnectionStore();
+export default function Data(): JSX.Element {
+  const mounted = useMount();
+  const [isGridReady, setIsGridReady] = useState(false);
+  const [showColumns, setShowColumns] = useState(false);
 
-  if (!getSelectedTab() || !currentConnection) {
+  const selectedTabId = useTabStore((state) => state.selectedTabId);
+  const rows = useDataStore((state) => state.rows);
+  const columns = useDataStore((state) => state.columns);
+
+  const getActiveColumns = useDataStore((state) => state.getActiveColumns);
+  const toggleDataFetching = useDataStore((state) => state.toggleDataFetching);
+  const loadDataFromIndexedDB = useDataStore((state) => state.loadDataFromIndexedDB);
+  const runQuery = useDataStore((state) => state.runQuery);
+
+  const loadData = async (): Promise<void> => {
+    if (!selectedTabId) return;
+
+    toggleDataFetching(true);
+    try {
+      const result = await loadDataFromIndexedDB();
+      if (!result) {
+        await runQuery();
+      }
+    } catch (error) {
+      console.error('🚀 ~ loadData ~ error:', error);
+      await useDataStore.getState().runQuery();
+    } finally {
+      useDataStore.getState().toggleDataFetching(false);
+    }
+  };
+
+  useEffect(() => {
+    setIsGridReady(false);
+
+    const timer = setTimeout(() => {
+      loadData();
+      setIsGridReady(true);
+    }, 100);
+
+    return (): void => clearTimeout(timer);
+  }, [selectedTabId]);
+
+  if (!mounted || !selectedTabId) {
     return <></>;
   }
 
   return (
     <>
-      <ActionBar />
-      {getSelectedTab()?.showFilters && <Filters />}
-      {getSelectedTab()?.showSorts && <Sorts />}
-      {getSelectedTab()?.showQuery && <QueryPreview />}
+      <ActionBar showColumns={showColumns} setShowColumns={setShowColumns} />
       <Box overflow='hidden' flex={1} display='flex' flexDirection='row'>
-        {getSelectedTab()?.showColumns && <Columns />}
-        <DataGrid editable={true} />
+        {showColumns && <Columns />}
+        {columns &&
+          columns.length > 0 &&
+          rows &&
+          (isGridReady ? (
+            <DataGrid rows={rows} columns={getActiveColumns()} loading={false} />
+          ) : (
+            <Box display='flex' justifyContent='center' alignItems='center' width='100%'>
+              <CircularProgress size={30} />
+            </Box>
+          ))}
       </Box>
       <StatusBar />
     </>

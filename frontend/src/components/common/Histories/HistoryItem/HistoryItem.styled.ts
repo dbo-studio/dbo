@@ -12,5 +12,5 @@ export const HistoryItemStyled = styled(Box)<HistoryItemStyledProps>(({ theme, s
   alignItems: 'center',
   borderRadius: variables.radius.medium,
   background: theme.palette.background.default,
-  marginBottom: theme.spacing(1)
+  color: selected ? theme.palette.text.primary : theme.palette.text.text
 }));
