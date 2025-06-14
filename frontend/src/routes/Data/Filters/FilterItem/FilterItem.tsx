@@ -12,7 +12,7 @@ import AddFilterButton from './AddFilterButton/AddFilterButton.tsx';
 import RemoveFilterButton from './RemoveFilterButton/RemoveFilterButton.tsx';
 
 export default function FilterItem({ filter, columns }: FilterItemProps): JSX.Element {
-  const { upsertFilters } = useTabStore();
+  const upsertFilters = useTabStore((state) => state.upsertFilters);
 
   const [currentFilter, setCurrentFilter] = useState<FilterType>({
     index: filter.index,

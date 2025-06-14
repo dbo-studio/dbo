@@ -8,7 +8,8 @@ export const useCellSelection = (
   row: RowType,
   rowIndex: number,
   columnId: string,
-  setSelectedRows: (rows: SelectedRow[]) => void
+  setSelectedRows: (rows: SelectedRow[]) => void,
+  editable: boolean
 ): CellSelectionReturn => {
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const updateEditingCell = useDataStore((state) => state.updateEditingCell);
@@ -28,7 +29,7 @@ export const useCellSelection = (
 
   const handleClick = useCallback(
     (e: React.MouseEvent): void => {
-      if (clickTimeoutRef.current) {
+      if (clickTimeoutRef.current && editable) {
         clearTimeout(clickTimeoutRef.current);
         clickTimeoutRef.current = null;
 

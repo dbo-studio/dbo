@@ -1,6 +1,6 @@
 import type { RunQueryResponseType } from '@/api/query/types.ts';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { useSelectedTab } from '@/hooks';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook.ts';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import type { FilterType } from '@/types/Tab';
@@ -15,8 +15,6 @@ export default function Filters(): JSX.Element {
 
   const columns = useDataStore((state) => state.columns);
   const runQuery = useDataStore((state) => state.runQuery);
-
-  if (!selectedTab) return <></>;
 
   return (
     <Box id='#filters' p={1} borderBottom={(theme): string => `1px solid ${theme.palette.divider}`}>

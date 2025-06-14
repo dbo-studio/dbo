@@ -17,6 +17,7 @@ export type DataGridTableCellProps = {
   updateEditedRows: (rows: any) => Promise<void>;
   updateRow: (row: any) => Promise<void>;
   setSelectedRows: (rows: SelectedRow[]) => void;
+  editable: boolean;
 };
 
 export type DataGridTableRowProps = {
@@ -33,6 +34,7 @@ export type DataGridTableRowProps = {
   updateEditedRows: (rows: any) => Promise<void>;
   updateRow: (row: any) => Promise<void>;
   updateSelectedRows: (rows: SelectedRow[]) => void;
+  editable: boolean;
 };
 
 export type TableColumnsProps = {
@@ -73,6 +75,7 @@ export type DataGridTableBodyRowsProps = {
   updateEditedRows: (rows: any) => Promise<void>;
   updateRow: (row: any) => Promise<void>;
   updateSelectedRows: (rows: any) => void;
+  editable: boolean;
 };
 export type DataGridTableHeaderRowProps = {
   columns: ColumnType[];

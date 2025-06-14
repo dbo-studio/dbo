@@ -60,6 +60,7 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
         <StyledTable>
           <DataGridTableHeaderRow columns={tableColumns} onColumnResize={handleColumnResize} />
           <DataGridTableBodyRows
+            editable={editable}
             rows={rows}
             columns={tableColumns}
             context={handleContextMenu}

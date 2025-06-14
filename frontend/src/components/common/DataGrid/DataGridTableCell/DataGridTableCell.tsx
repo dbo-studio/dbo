@@ -14,7 +14,8 @@ export const DataGridTableCell = memo(
     editedRows,
     updateEditedRows,
     updateRow,
-    setSelectedRows
+    setSelectedRows,
+    editable
   }: DataGridTableCellProps) => {
     const placeholder = String(value === null ? 'NULL' : value || '');
     const cellValue = String(value || '');
@@ -32,7 +33,7 @@ export const DataGridTableCell = memo(
       updateRow
     );
 
-    const { handleClick } = useCellSelection(row, rowIndex, columnId, setSelectedRows);
+    const { handleClick } = useCellSelection(row, rowIndex, columnId, setSelectedRows, editable);
 
     useEffect(() => {
       if (isEditing && inputRef.current) {
@@ -55,7 +56,7 @@ export const DataGridTableCell = memo(
       };
     }, [isEditing]);
 
-    if (isEditing) {
+    if (isEditing && editable) {
       return (
         <CellInput
           ref={inputRef}
@@ -73,7 +74,7 @@ export const DataGridTableCell = memo(
     }
 
     return (
-      <CellContainer ref={cellRef} onClick={(e: React.MouseEvent): void => handleClick(e)}>
+      <CellContainer ref={cellRef} onClick={(e: React.MouseEvent): void => handleClick(e, updateEditingCell)}>
         <CellContent>{placeholder}</CellContent>
       </CellContainer>
     );

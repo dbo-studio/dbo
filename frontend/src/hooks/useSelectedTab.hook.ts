@@ -3,7 +3,7 @@ import type { TabType } from '@/types';
 import { useMemo } from 'react';
 
 export const useSelectedTab = (): TabType | undefined => {
-  const selectedTab = useTabStore((state) => state.selectedTab);
+  const { selectedTab } = useTabStore();
 
   return useMemo(() => {
     return selectedTab();

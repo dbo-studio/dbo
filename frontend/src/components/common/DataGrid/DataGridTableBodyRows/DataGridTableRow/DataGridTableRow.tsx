@@ -18,7 +18,8 @@ const DataGridTableRow = memo(
     editedRows,
     updateEditedRows,
     updateRow,
-    updateSelectedRows
+    updateSelectedRows,
+    editable
   }: DataGridTableRowProps) => {
     const handleSelect = useCallback(
       (columnId: string) => {
@@ -103,6 +104,7 @@ const DataGridTableRow = memo(
                 updateEditedRows={updateEditedRows}
                 updateRow={updateRow}
                 setSelectedRows={updateSelectedRows}
+                editable={editable}
               />
             </TableCell>
           );

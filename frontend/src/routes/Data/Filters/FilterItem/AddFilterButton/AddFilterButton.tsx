@@ -6,7 +6,7 @@ import type { JSX } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import type { AddFilterButtonProps } from '../../types.ts';
 export default function AddFilterButton({ columns }: AddFilterButtonProps): JSX.Element {
-  const { upsertFilters } = useTabStore();
+  const upsertFilters = useTabStore((state) => state.upsertFilters);
 
   const handleAddNewFilter = async (): Promise<void> => {
     await upsertFilters({

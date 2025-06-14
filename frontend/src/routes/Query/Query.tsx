@@ -22,7 +22,9 @@ export default function Query(): JSX.Element {
 
   const [value, setValue] = useState('');
   const [showGrid, setShowGrid] = useState(false);
-  const { getRows, getColumns, isDataFetching } = useDataStore();
+  const rows = useDataStore((state) => state.rows);
+  const columns = useDataStore((state) => state.columns);
+  const isDataFetching = useDataStore((state) => state.isDataFetching);
 
   const { data: autocomplete } = useQuery({
     queryKey: ['autocomplete', currentConnection?.id, selectedTab?.options?.database, selectedTab?.options?.schema],
@@ -48,8 +50,6 @@ export default function Query(): JSX.Element {
     updateQuery(query);
   };
 
-  const headers = getColumns(true);
-
   return (
     <>
       <QueryEditorActionBar
@@ -72,9 +72,9 @@ export default function Query(): JSX.Element {
           />
         </Box>
 
-        {showGrid && headers.length > 0 && (
+        {showGrid && columns && columns.length > 0 && (
           <ResizableYBox height={windowSize.heightNumber ? windowSize.heightNumber / 2 : 0} direction={'btt'}>
-            <DataGrid editable={false} rows={getRows()} columns={getColumns(true)} loading={isDataFetching} />
+            <DataGrid editable={false} rows={rows ?? []} columns={columns ?? []} loading={isDataFetching} />
           </ResizableYBox>
         )}
       </Box>

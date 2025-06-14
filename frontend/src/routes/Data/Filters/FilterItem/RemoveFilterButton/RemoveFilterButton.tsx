@@ -6,8 +6,8 @@ import type { JSX } from 'react';
 import type { RemoveFilterButtonProps } from '../../types.ts';
 
 export default function RemoveFilterButton({ filter }: RemoveFilterButtonProps): JSX.Element {
-  const { removeFilter } = useTabStore();
-  const { runQuery } = useDataStore();
+  const removeFilter = useTabStore((state) => state.removeFilter);
+  const runQuery = useDataStore((state) => state.runQuery);
 
   const handleRemoveFilter = (): void => {
     removeFilter(filter);
