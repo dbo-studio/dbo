@@ -24,7 +24,6 @@ export type DataGridTableRowProps = {
   row: RowType;
   rowIndex: number;
   columns: ColumnType[];
-  columnSizes: Record<string, number>;
   context: (e: React.MouseEvent) => void;
   isEdited: boolean;
   isUnsaved: boolean;
@@ -67,7 +66,6 @@ export type DataGridTableBodyRowsProps = {
   rows: RowType[];
   columns: ColumnType[];
   context: (event: React.MouseEvent) => void;
-  columnSizes: Record<string, number>;
   removedRows: RowType[];
   unsavedRows: RowType[];
   selectedRows: SelectedRow[];
@@ -79,7 +77,8 @@ export type DataGridTableBodyRowsProps = {
 };
 export type DataGridTableHeaderRowProps = {
   columns: ColumnType[];
-  onColumnResize?: (columnSizes: Record<string, number>) => void;
+  startResize: (columnId: string, event: React.MouseEvent | React.TouchEvent) => void;
+  resizingColumnId: string | null;
 };
 
 export type CellProps = {

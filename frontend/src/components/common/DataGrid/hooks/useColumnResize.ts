@@ -18,12 +18,19 @@ interface UseColumnResizeReturn {
 export function useColumnResize({
   columns,
   defaultColumnWidth = 200,
-  minColumnWidth = 200,
+  minColumnWidth = 50,
   maxColumnWidth = Number.MAX_SAFE_INTEGER,
   onColumnResize
 }: UseColumnResizeProps): UseColumnResizeReturn {
   // Store column sizes in a state
-  const [columnSizes, setColumnSizes] = useState<Record<string, number>>({});
+  const [columnSizes, setColumnSizes] = useState<Record<string, number>>(() => {
+    const initialSizes: Record<string, number> = {};
+    for (const column of columns) {
+      initialSizes[column.name] = defaultColumnWidth;
+    }
+    initialSizes.select = 30; // Fixed width for checkbox column
+    return initialSizes;
+  });
   const [isResizing, setIsResizing] = useState(false);
   const [resizingColumnId, setResizingColumnId] = useState<string | null>(null);
 
@@ -45,27 +52,18 @@ export function useColumnResize({
 
   // Initialize column sizes on mount or when columns change
   useEffect(() => {
-    const initialSizes: Record<string, number> = {};
-
-    // First, preserve any existing column sizes
-    for (const key in columnSizesRef.current) {
-      initialSizes[key] = columnSizesRef.current[key];
-    }
-
-    // Then ensure all columns have a defined width
-    for (const column of columns) {
-      // If column doesn't have a size yet, set it to default
-      if (!initialSizes[column.name]) {
-        initialSizes[column.name] = defaultColumnWidth;
+    setColumnSizes((prevSizes) => {
+      const newSizes = { ...prevSizes };
+      for (const column of columns) {
+        if (!newSizes[column.name]) {
+          newSizes[column.name] = defaultColumnWidth;
+        }
       }
-    }
-
-    // Also add the 'select' column if it's not already there
-    if (!initialSizes.select) {
-      initialSizes.select = 30; // Fixed width for checkbox column
-    }
-
-    setColumnSizes(initialSizes);
+      if (!newSizes.select) {
+        newSizes.select = 30;
+      }
+      return newSizes;
+    });
   }, [columns, defaultColumnWidth]);
 
   // Event handlers

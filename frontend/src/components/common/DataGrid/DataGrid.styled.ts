@@ -9,14 +9,12 @@ export const TableHeader = styled('th')(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
   borderRight: `1px solid ${theme.palette.divider}`,
   padding: '2px 8px',
-  minWidth: '200px',
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
 
   WebkitTransform: 'translateZ(0)',
-  transform: 'translateZ(0)',
-  transition: 'width 0.1s ease'
+  transform: 'translateZ(0)'
 }));
 
 export const TableCell = styled('td')(({ theme }) => ({
@@ -26,13 +24,11 @@ export const TableCell = styled('td')(({ theme }) => ({
   boxSizing: 'border-box',
   color: theme.palette.text.text,
   fontSize: theme.typography.subtitle2.fontSize,
-  minWidth: '200px',
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   WebkitTransform: 'translateZ(0)',
   transform: 'translateZ(0)',
-  transition: 'width 0.1s ease',
 
   '.selected-highlight &': {
     backgroundColor: `${theme.palette.action.selected}`,

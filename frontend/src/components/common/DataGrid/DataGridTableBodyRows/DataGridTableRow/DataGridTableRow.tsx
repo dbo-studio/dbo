@@ -9,7 +9,6 @@ const DataGridTableRow = memo(
     row,
     rowIndex,
     columns,
-    columnSizes,
     context,
     isSelected,
     isEdited,
@@ -90,9 +89,6 @@ const DataGridTableRow = memo(
               onContextMenu={(e): void => {
                 context(e);
                 handleSelect(columnId);
-              }}
-              style={{
-                width: columnSizes[columnId] || 200
               }}
             >
               <DataGridTableCell

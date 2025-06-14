@@ -7,7 +7,6 @@ export default function DataGridTableBodyRows({
   columns,
   rows,
   context,
-  columnSizes,
   removedRows,
   unsavedRows,
   selectedRows,
@@ -37,7 +36,6 @@ export default function DataGridTableBodyRows({
             row={row}
             rowIndex={rowIndex}
             columns={columns}
-            columnSizes={columnSizes}
             context={context}
             isSelected={isSelected}
             isEdited={isEdited}

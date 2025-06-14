@@ -3,17 +3,13 @@ import { Checkbox } from '@mui/material';
 import type { JSX } from 'react';
 import { StyledTableRow, TableHeader } from '../DataGrid.styled';
 import DataGridResizer from '../DataGridResizer/DataGridResizer';
-import { useColumnResize } from '../hooks/useColumnResize';
 import type { DataGridTableHeaderRowProps } from '../types';
 
-export default function DataGridTableHeaderRow({ columns, onColumnResize }: DataGridTableHeaderRowProps): JSX.Element {
-  const { columnSizes, startResize, resizingColumnId } = useColumnResize({
-    columns,
-    defaultColumnWidth: 200,
-    minColumnWidth: 200,
-    onColumnResize
-  });
-
+export default function DataGridTableHeaderRow({
+  columns,
+  startResize,
+  resizingColumnId
+}: DataGridTableHeaderRowProps): JSX.Element {
   const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
 
   return (
@@ -63,8 +59,7 @@ export default function DataGridTableHeaderRow({ columns, onColumnResize }: Data
             <TableHeader
               key={column.name}
               style={{
-                position: 'relative',
-                width: columnSizes[column.name] || 200
+                position: 'relative'
               }}
             >
               {column.name}

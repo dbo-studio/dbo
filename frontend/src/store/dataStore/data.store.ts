@@ -37,6 +37,12 @@ export const useDataStore = create<DataState>()(
   devtools(
     (set, get, ...state) => ({
       loadDataFromIndexedDB: async (): Promise<{ rows: RowType[]; columns: ColumnType[] } | null> => {
+        get().updateRows([]);
+        get().updateColumns([]);
+        get().updateRemovedRows(undefined);
+        get().updateUnsavedRows([]);
+        get().updateSelectedRows([]);
+
         const selectedTabId = useTabStore.getState().selectedTabId;
         if (!selectedTabId) return null;
 
