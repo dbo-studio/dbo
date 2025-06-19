@@ -5,10 +5,12 @@ import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor';
 import { variables } from '@/core/theme/variables';
 import { Box, Checkbox, Typography } from '@mui/material';
-import type { JSX } from 'react';
+import { type JSX, useState } from 'react';
 import type { SimpleFieldProps } from '../types';
 
 export default function SimpleField({ field, onChange, size = 'medium' }: SimpleFieldProps): JSX.Element {
+  const [localValue, setLocalValue] = useState(field.value);
+
   const handleChangeSelect = (value: SelectInputOption): void => {
     if (field.type === 'multi-select') {
       onChange(value ? value?.map((item: any) => item.value) : []);
@@ -23,8 +25,12 @@ export default function SimpleField({ field, onChange, size = 'medium' }: Simple
         <FieldInput
           margin={size === 'small' ? 'none' : undefined}
           label={size === 'medium' ? field.name : undefined}
-          value={field.value || ''}
-          onChange={(e): void => onChange(e.target.value)}
+          value={localValue || ''}
+          onChange={(e): void => setLocalValue(e.target.value)}
+          onBlur={(e): void => {
+            setLocalValue(e.target.value);
+            onChange(e.target.value);
+          }}
           size={size}
           fullWidth
         />
