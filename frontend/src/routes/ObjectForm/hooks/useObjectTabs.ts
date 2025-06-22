@@ -14,7 +14,7 @@ export const useObjectTabs = (): {
   const selectedTab = useSelectedTab();
   const [selectedTabIndex, setSelectedTabIndex] = useState(selectedTab?.options?.tabId);
   const currentConnection = useCurrentConnection();
-  const { updateSelectedTab } = useTabStore();
+  const updateSelectedTab = useTabStore.getState().updateSelectedTab;
 
   const { data: tabs } = useQuery({
     queryKey: ['objectTabs', selectedTab?.id, currentConnection?.id, selectedTab?.options?.action],

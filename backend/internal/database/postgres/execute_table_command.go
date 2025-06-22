@@ -12,7 +12,7 @@ func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.Tre
 	var tableName string
 
 	if tabId != contract.TableTab && action != contract.DropTableAction {
-		return queries, tableName, nil
+		return queries, "", nil
 	}
 
 	if action == contract.CreateTableAction {
@@ -53,27 +53,27 @@ func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.Tre
 		}
 
 		params := dtoParams[tabId]
-		tableName = *params.New.Name
+		tableName = *params.Old.Name
 
-		if params.New.Name != nil {
+		if params.Old.Name != nil && params.New.Name != nil {
 			queries = append(queries, fmt.Sprintf("ALTER TABLE %s RENAME TO %s", *params.Old.Name, *params.New.Name))
 			params.Old.Name = params.New.Name
 		}
 
-		if params.New.Tablespace != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET TABLESPACE %s", *params.Old.Tablespace, *params.New.Tablespace))
+		if params.Old.Name != nil && params.New.Tablespace != nil {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET TABLESPACE %s", *params.Old.Name, *params.New.Tablespace))
 		}
 
-		if params.New.Persistence != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET %s", *params.Old.Persistence, *params.New.Persistence))
+		if params.Old.Name != nil && params.New.Persistence != nil {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET %s", *params.Old.Name, *params.New.Persistence))
 		}
 
-		if params.New.Owner != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE %s OWNER TO \"%s\"", *params.Old.Owner, *params.New.Owner))
+		if params.Old.Name != nil && params.New.Owner != nil {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s OWNER TO \"%s\"", *params.Old.Name, *params.New.Owner))
 		}
 
-		if params.New.Comment != nil {
-			queries = append(queries, fmt.Sprintf("COMMENT ON TABLE %s IS '%s'", *params.Old.Comment, *params.New.Comment))
+		if params.Old.Name != nil && params.New.Comment != nil {
+			queries = append(queries, fmt.Sprintf("COMMENT ON TABLE %s IS '%s'", *params.Old.Name, *params.New.Comment))
 		}
 	}
 

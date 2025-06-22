@@ -41,23 +41,23 @@ func (r *PostgresRepository) handleDatabaseCommands(node PGNode, tabId contract.
 	}
 
 	if action == contract.EditDatabaseAction {
-		if params.New.Name != nil {
+		if params.Old.Name != nil && params.New.Name != nil {
 			query := fmt.Sprintf("ALTER DATABASE %s RENAME TO %s", *params.Old.Name, *params.New.Name)
 			queries = append(queries, query)
 			params.Old.Name = params.New.Name
 		}
 
-		if params.New.Owner != nil {
-			query := fmt.Sprintf("ALTER DATABASE %s OWNER TO %s", *params.Old.Owner, *params.New.Owner)
+		if params.Old.Name != nil && params.New.Owner != nil {
+			query := fmt.Sprintf("ALTER DATABASE %s OWNER TO %s", *params.Old.Name, *params.New.Owner)
 			queries = append(queries, query)
 		}
 
-		if params.New.Tablespace != nil {
-			query := fmt.Sprintf("ALTER DATABASE %s SET TABLESPACE = %s", *params.Old.Tablespace, *params.New.Tablespace)
+		if params.Old.Name != nil && params.New.Tablespace != nil {
+			query := fmt.Sprintf("ALTER DATABASE %s SET TABLESPACE = %s", *params.Old.Name, *params.New.Tablespace)
 			queries = append(queries, query)
 		}
 
-		if params.New.Comment != nil {
+		if params.Old.Name != nil && params.New.Comment != nil {
 			queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS %s", *params.Old.Name, *params.New.Comment))
 		}
 	}

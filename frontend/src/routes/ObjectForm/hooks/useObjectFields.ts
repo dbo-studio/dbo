@@ -10,11 +10,10 @@ export const useObjectFields = (
   isDetail = false
 ): {
   fields: FormFieldType[];
-  resetForm: () => void;
 } => {
   const selectedTab = useSelectedTab();
   const currentConnection = useCurrentConnection();
-  const { getFormData, resetFormData, updateFormData } = useDataStore();
+  const { getFormData, updateFormData } = useDataStore();
   const { data: fields } = useQuery({
     queryKey: [
       'tabFields',
@@ -56,16 +55,10 @@ export const useObjectFields = (
     return selectedTab?.options?.tabId || '';
   };
 
-  const resetForm = (): void => {
-    if (!selectedTab?.options?.tabId) return;
-    resetFormData(selectedTab?.id ?? '', getTabId());
-  };
-
-  // Initialize or update form data when fields change from the server
   useEffect(() => {
     if (fields && selectedTab?.options?.tabId) {
       const formData = getFormData(selectedTab?.id ?? '', getTabId());
-      // Only initialize if no form data exists for this tab
+
       if (!formData) {
         const initialFields = fields.map((field) => ({
           ...field,
@@ -91,7 +84,6 @@ export const useObjectFields = (
   }, [fields, selectedTab?.options?.tabId, getFormData, getTabId]);
 
   return {
-    fields: currentFields ?? [],
-    resetForm
+    fields: currentFields ?? []
   };
 };

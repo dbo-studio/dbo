@@ -71,15 +71,15 @@ func columnListToResponse(columns []Column) []dto.Column {
 		}
 
 		if column.CharacterMaximumLength.Valid {
-			col.Length = lo.ToPtr[int32](column.CharacterMaximumLength.Int32)
+			col.Length = lo.ToPtr(column.CharacterMaximumLength.Int32)
 		}
 
 		if column.ColumnDefault.Valid {
-			col.Default = lo.ToPtr[string](column.ColumnDefault.String)
+			col.Default = lo.ToPtr(column.ColumnDefault.String)
 		}
 
 		if column.Comment.Valid {
-			col.Comment = lo.ToPtr[string](column.Comment.String)
+			col.Comment = lo.ToPtr(column.Comment.String)
 		}
 
 		data = append(data, col)

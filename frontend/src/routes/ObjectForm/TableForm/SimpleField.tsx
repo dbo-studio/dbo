@@ -5,7 +5,7 @@ import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor';
 import { variables } from '@/core/theme/variables';
 import { Box, Checkbox, Typography } from '@mui/material';
-import { type JSX, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import type { SimpleFieldProps } from '../types';
 
 export default function SimpleField({ field, onChange, size = 'medium' }: SimpleFieldProps): JSX.Element {
@@ -19,6 +19,10 @@ export default function SimpleField({ field, onChange, size = 'medium' }: Simple
     }
   };
 
+  useEffect(() => {
+    setLocalValue(field.value);
+  }, [field]);
+
   switch (field.type) {
     case 'text':
       return (
@@ -26,7 +30,9 @@ export default function SimpleField({ field, onChange, size = 'medium' }: Simple
           margin={size === 'small' ? 'none' : undefined}
           label={size === 'medium' ? field.name : undefined}
           value={localValue || ''}
-          onChange={(e): void => setLocalValue(e.target.value)}
+          onChange={(e): void => {
+            setLocalValue(e.target.value);
+          }}
           onBlur={(e): void => {
             setLocalValue(e.target.value);
             onChange(e.target.value);
@@ -98,6 +104,9 @@ export default function SimpleField({ field, onChange, size = 'medium' }: Simple
                   schemas: [],
                   tables: [],
                   columns: {}
+                }}
+                onRunQuery={(query): void => {
+                  console.log('🚀 ~ SimpleField ~ query:', query);
                 }}
               />
             </Box>

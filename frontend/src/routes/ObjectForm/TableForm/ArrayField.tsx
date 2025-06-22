@@ -22,7 +22,9 @@ export default function ArrayField({ field, onChange }: ArrayFieldProps): JSX.El
     if (newFields[index]?.fields) {
       const targetField = newFields[index].fields?.find((f: FormFieldType) => f.id === fieldId);
       if (targetField) {
-        targetField.originalValue = targetField.value;
+        if (targetField.originalValue === undefined) {
+          targetField.originalValue = targetField.value;
+        }
         targetField.value = fieldValue;
       }
     }
@@ -33,10 +35,25 @@ export default function ArrayField({ field, onChange }: ArrayFieldProps): JSX.El
   const handleDelete = (index: number): void => {
     const newFields = field.fields?.map((item, i) => {
       if (i === index) {
-        return { ...item, deleted: true };
+        item.value = {
+          ...item,
+          deleted: true,
+          fields: item.fields?.map((i) => {
+            if (i.name === 'Name') {
+              return {
+                ...i,
+                deleted: true
+              };
+            }
+            return i;
+          })
+        };
+
+        return item;
       }
       return item;
     });
+
     onChange(newFields || []);
   };
 
@@ -59,7 +76,9 @@ export default function ArrayField({ field, onChange }: ArrayFieldProps): JSX.El
           <TableBody>
             {field?.fields?.map((item, index) => (
               <TableRow
-                sx={{ display: item.id === 'empty' || item.deleted ? 'none' : 'table-row' }}
+                sx={{
+                  display: item.id === 'empty' || item?.value?.deleted ? 'none' : 'table-row'
+                }}
                 key={`${field.id}-${index}-${item.name || ''}`}
               >
                 {item?.fields?.map((option) => {

@@ -1,5 +1,9 @@
 {
     "cSpell.words": [
-        "Tablespace"
+        "gorm",
+        "samber",
+        "Tablespace",
+        "VARBIT",
+        "varchar"
     ]
 }

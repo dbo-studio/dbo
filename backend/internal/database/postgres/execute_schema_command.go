@@ -34,16 +34,16 @@ func (r *PostgresRepository) handleSchemaCommands(node PGNode, tabId contract.Tr
 	}
 
 	if action == contract.EditSchemaAction {
-		if params.New.Name != nil {
+		if params.Old.Name != nil && params.New.Name != nil {
 			queries = append(queries, fmt.Sprintf("ALTER SCHEMA %s RENAME TO %s", *params.Old.Name, *params.New.Name))
 			params.Old.Name = params.New.Name
 		}
 
-		if params.New.Owner != nil {
+		if params.Old.Name != nil && params.New.Owner != nil {
 			queries = append(queries, fmt.Sprintf("ALTER SCHEMA %s OWNER TO %s", *params.Old.Name, *params.New.Owner))
 		}
 
-		if params.New.Comment != nil {
+		if params.Old.Name != nil && params.New.Comment != nil {
 			queries = append(queries, fmt.Sprintf("COMMENT ON SCHEMA %s IS %s", *params.Old.Name, *params.New.Comment))
 		}
 	}

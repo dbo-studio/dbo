@@ -17,22 +17,22 @@ export const useObjectActions = (): {
 } => {
   const queryClient = useQueryClient();
   const currentConnection = useCurrentConnection();
-  const { updateFormData, getFormData, resetFormData, formDataByTab } = useDataStore();
+  const formDataByTab = useDataStore.getState().formDataByTab;
   const selectedTab = useSelectedTab();
+
   const action = selectedTab?.options?.action || '';
-  const { reloadTree } = useTreeStore();
+  const tabId = selectedTab?.options?.tabId || '';
+
+  const updateFormData = useDataStore.getState().updateFormData;
+  const getFormData = useDataStore.getState().getFormData;
+  const resetFormData = useDataStore.getState().resetFormData;
+  const reloadTree = useTreeStore.getState().reloadTree;
 
   const { mutateAsync: executeAction, isPending: pendingExecuteAction } = useMutation({
     mutationFn: api.tree.executeAction,
     onSuccess: (): void => {
       queryClient.invalidateQueries({
-        queryKey: [
-          'tabFields',
-          currentConnection?.id,
-          selectedTab?.id,
-          selectedTab?.options?.action,
-          selectedTab?.options?.tabId
-        ]
+        queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, action, tabId]
       });
       reloadTree();
     },
@@ -56,8 +56,8 @@ export const useObjectActions = (): {
                     if (item.fields) {
                       return item.fields.reduce(
                         (itemAcc: Record<string, any>, nestedField: FormFieldType) => {
-                          if (item.deleted) {
-                            itemAcc.deleted = item.deleted;
+                          if (item?.value?.deleted) {
+                            itemAcc.deleted = item.value.deleted;
                           }
 
                           if (item.added) {
@@ -128,16 +128,19 @@ export const useObjectActions = (): {
   };
 
   const handleCancel = async (): Promise<void> => {
-    if (!currentConnection || !selectedTab?.options?.tabId || !selectedTab) return;
+    if (!currentConnection || !tabId || !selectedTab) return;
 
-    try {
-      resetFormData(selectedTab?.options?.tabId, action);
+    resetFormData(selectedTab?.id ?? '', tabId);
 
-      toast.info('Changes discarded');
-    } catch (error) {
-      console.error('Cancel error:', error);
-      toast.error('Failed to reset form');
-    }
+    queryClient.refetchQueries({
+      queryKey: ['objectTabs', selectedTab?.id, currentConnection?.id, action]
+    });
+
+    queryClient.refetchQueries({
+      queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, action, tabId]
+    });
+
+    toast.info('Changes discarded');
   };
 
   const handleAddArrayItem = (field: FormFieldType): void => {
@@ -157,7 +160,7 @@ export const useObjectActions = (): {
     };
 
     // Get current form data and update it
-    const formData = getFormData(selectedTab?.id ?? '', selectedTab?.options?.tabId);
+    const formData = getFormData(selectedTab?.id ?? '', tabId);
     if (!formData) return;
 
     // Find the field to update
@@ -171,13 +174,15 @@ export const useObjectActions = (): {
       return f;
     });
 
-    updateFormData(selectedTab?.id ?? '', selectedTab?.options?.tabId, updatedFields);
+    updateFormData(selectedTab?.id ?? '', tabId, updatedFields);
   };
 
   const handleFieldChange = (field: string, value: any): void => {
     if (!selectedTab?.options?.tabId) return;
 
-    const currentFormData = getFormData(selectedTab?.id ?? '', selectedTab?.options?.tabId);
+    ['objectTabs', selectedTab?.id, currentConnection?.id, selectedTab?.options?.action];
+
+    const currentFormData = getFormData(selectedTab?.id ?? '', tabId);
     if (!currentFormData) return;
 
     // Update the field that changed while preserving other fields
@@ -191,7 +196,7 @@ export const useObjectActions = (): {
       return formField;
     });
 
-    updateFormData(selectedTab?.id ?? '', selectedTab?.options?.tabId, updatedFields);
+    updateFormData(selectedTab?.id ?? '', tabId, updatedFields);
   };
 
   return {

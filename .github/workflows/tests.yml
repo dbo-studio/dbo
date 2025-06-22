@@ -20,7 +20,7 @@ jobs:
       - name: Verify go.mod is tidy
         working-directory: ./backend
         run: |
-          go mod tidy -go=1.23
+          go mod tidy
           git diff --exit-code
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
