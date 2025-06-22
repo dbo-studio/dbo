@@ -6,7 +6,7 @@
 
 # DBO Studio
 
-DBO Studio is a minimal and open source database gui
+DBO Studio is a minimal and open source database GUI
 
 > [!WARNING]
 > Please keep in mind that DBO is not stable and it is still under active development.
