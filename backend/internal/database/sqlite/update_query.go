@@ -1,4 +1,4 @@
-package databasePostgres
+package databaseSqlite
 
 import (
 	"fmt"
@@ -8,17 +8,16 @@ import (
 	"gorm.io/gorm"
 )
 
-func (r *PostgresRepository) UpdateQuery(req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error) {
+func (r *SQLiteRepository) UpdateQuery(req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error) {
 	if req == nil {
 		return nil, fmt.Errorf("nil request")
 	}
 
-	node := extractNode(req.NodeId)
-	if node.Schema == "" || node.Table == "" {
-		return nil, fmt.Errorf("invalid node: schema or table missing")
+	if req.NodeId == "" {
+		return nil, fmt.Errorf("invalid node: table missing")
 	}
 
-	queries := r.generateQueries(req, node)
+	queries := r.generateQueries(req, req.NodeId)
 	if len(queries) == 0 {
 		return &dto.UpdateQueryResponse{
 			Query:        []string{},
@@ -48,7 +47,7 @@ func (r *PostgresRepository) UpdateQuery(req *dto.UpdateQueryRequest) (*dto.Upda
 	}, nil
 }
 
-func (r *PostgresRepository) generateQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
+func (r *SQLiteRepository) generateQueries(req *dto.UpdateQueryRequest, node string) []string {
 	var queries []string
 
 	queries = append(queries, r.generateUpdateQueries(req, node)...)
@@ -58,14 +57,14 @@ func (r *PostgresRepository) generateQueries(req *dto.UpdateQueryRequest, node P
 	return queries
 }
 
-func (r *PostgresRepository) generateUpdateQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
+func (r *SQLiteRepository) generateUpdateQueries(req *dto.UpdateQueryRequest, node string) []string {
 	if req == nil || req.EditedItems == nil {
 		return nil
 	}
 
 	var queries []string
 
-	keys, err := r.getPrimaryKeys(Table{node.Table})
+	keys, err := r.getPrimaryKeys(Table{node})
 	if err != nil {
 		return nil
 	}
@@ -83,9 +82,8 @@ func (r *PostgresRepository) generateUpdateQueries(req *dto.UpdateQueryRequest, 
 		}
 
 		query := fmt.Sprintf(
-			`UPDATE "%s"."%s" SET %s WHERE %s`,
-			node.Schema,
-			node.Table,
+			`UPDATE "%s" SET %s WHERE %s`,
+			node,
 			strings.Join(setClauses, ", "),
 			strings.Join(whereClauses, " AND "),
 		)
@@ -96,14 +94,14 @@ func (r *PostgresRepository) generateUpdateQueries(req *dto.UpdateQueryRequest, 
 	return queries
 }
 
-func (r *PostgresRepository) generateDeleteQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
+func (r *SQLiteRepository) generateDeleteQueries(req *dto.UpdateQueryRequest, node string) []string {
 	if req == nil || req.DeletedItems == nil {
 		return nil
 	}
 
 	var queries []string
 
-	keys, err := r.getPrimaryKeys(Table{node.Table})
+	keys, err := r.getPrimaryKeys(Table{node})
 	if err != nil {
 		return nil
 	}
@@ -119,9 +117,8 @@ func (r *PostgresRepository) generateDeleteQueries(req *dto.UpdateQueryRequest, 
 		}
 
 		query := fmt.Sprintf(
-			`DELETE FROM "%s"."%s" WHERE %s`,
-			node.Schema,
-			node.Table,
+			`DELETE FROM "%s" WHERE %s`,
+			node,
 			strings.Join(whereClauses, " AND "),
 		)
 
@@ -131,7 +128,7 @@ func (r *PostgresRepository) generateDeleteQueries(req *dto.UpdateQueryRequest, 
 	return queries
 }
 
-func (r *PostgresRepository) generateInsertQueries(req *dto.UpdateQueryRequest, node PGNode) []string {
+func (r *SQLiteRepository) generateInsertQueries(req *dto.UpdateQueryRequest, node string) []string {
 	if req == nil || req.AddedItems == nil {
 		return nil
 	}
@@ -163,9 +160,8 @@ func (r *PostgresRepository) generateInsertQueries(req *dto.UpdateQueryRequest, 
 		}
 
 		query := fmt.Sprintf(
-			`INSERT INTO "%s"."%s" (%s) VALUES (%s)`,
-			node.Schema,
-			node.Table,
+			`INSERT INTO "%s" (%s) VALUES (%s)`,
+			node,
 			strings.Join(columns, ", "),
 			strings.Join(values, ", "),
 		)
@@ -193,7 +189,7 @@ func buildSetClauses(values map[string]interface{}) []string {
 	return setClauses
 }
 
-func (r *PostgresRepository) buildWhereClauses(primaryKeys []string, conditions map[string]interface{}) []string {
+func (r *SQLiteRepository) buildWhereClauses(primaryKeys []string, conditions map[string]interface{}) []string {
 	conditionKeys := map[string]interface{}{}
 
 	if len(primaryKeys) > 0 {

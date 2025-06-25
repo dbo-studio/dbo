@@ -160,6 +160,10 @@ func (r *PostgresRepository) getColumns(table string, schema string, columnNames
 		Order("cols.ordinal_position").
 		Scan(&columns).Error
 
+	if err != nil {
+		return nil, err
+	}
+
 	for i, column := range columns {
 		columns[i].MappedType = columnMappedFormat(column.DataType)
 		columns[i].Editable = editable
@@ -167,10 +171,6 @@ func (r *PostgresRepository) getColumns(table string, schema string, columnNames
 		if len(columnNames) > 0 {
 			columns[i].IsActive = slices.Contains(columnNames, column.ColumnName)
 		}
-	}
-
-	if err != nil {
-		return nil, err
 	}
 
 	return columns, err

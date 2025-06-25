@@ -1,4 +1,4 @@
-package databasePostgres
+package databaseSqlite
 
 import (
 	"strings"
@@ -8,7 +8,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *PostgresRepository) RunRawQuery(req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
+func (r *SQLiteRepository) RunRawQuery(req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
 	startTime := time.Now()
 	result, err := runRawQuery(r, req)
 	endTime := time.Since(startTime)
@@ -19,7 +19,7 @@ func (r *PostgresRepository) RunRawQuery(req *dto.RawQueryRequest) (*dto.RawQuer
 	return result, nil
 }
 
-func runRawQuery(r *PostgresRepository, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
+func runRawQuery(r *SQLiteRepository, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
 	queryResults := make([]map[string]any, 0)
 
 	rows, err := r.db.Raw(req.Query).Rows()

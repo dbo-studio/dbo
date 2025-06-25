@@ -1,4 +1,4 @@
-package databasePostgres
+package databaseSqlite
 
 import (
 	"errors"
@@ -9,12 +9,12 @@ import (
 	"github.com/samber/lo"
 )
 
-func (r *PostgresRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
-	node := extractNode(req.NodeId)
+func (r *SQLiteRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
+	node := req.NodeId
 	query := runQueryGenerator(req, node)
 	queryResults := make([]map[string]any, 0)
 
-	if node.Table == "" {
+	if req.NodeId == "" {
 		return nil, errors.New("table or view not found")
 	}
 
@@ -27,7 +27,7 @@ func (r *PostgresRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryRe
 		queryResults[i]["dbo_index"] = i
 	}
 
-	columns, err := r.getColumns(node.Table, node.Schema, req.Columns, true)
+	columns, err := r.getColumns(node, req.Columns, true)
 	if err != nil {
 		return nil, result.Error
 	}
@@ -39,7 +39,7 @@ func (r *PostgresRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryRe
 	}, nil
 }
 
-func runQueryGenerator(dto *dto.RunQueryRequest, node PGNode) string {
+func runQueryGenerator(dto *dto.RunQueryRequest, node string) string {
 	var sb strings.Builder
 
 	// SELECT clause
@@ -47,7 +47,7 @@ func runQueryGenerator(dto *dto.RunQueryRequest, node PGNode) string {
 	if len(dto.Columns) > 0 {
 		selectColumns = strings.Join(dto.Columns, ", ")
 	}
-	_, _ = fmt.Fprintf(&sb, "SELECT %s FROM %q", selectColumns, node.Table)
+	_, _ = fmt.Fprintf(&sb, "SELECT %s FROM %q", selectColumns, node)
 
 	// WHERE clause
 	if len(dto.Filters) > 0 {
