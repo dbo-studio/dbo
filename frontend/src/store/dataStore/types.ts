@@ -46,8 +46,10 @@ export type DataUnsavedRowsSlice = {
 
 export type DataQuerySlice = {
   isDataFetching: boolean;
+  reRunQuery: boolean;
   runQuery: () => Promise<RunQueryResponseType | undefined>;
   runRawQuery: (query?: string) => Promise<RunQueryResponseType | undefined>;
+  toggleReRunQuery: () => void;
   toggleDataFetching: (loading?: boolean) => void;
 };
 

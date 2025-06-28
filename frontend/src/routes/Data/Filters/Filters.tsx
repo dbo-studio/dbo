@@ -1,4 +1,3 @@
-import type { RunQueryResponseType } from '@/api/query/types.ts';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook.ts';
 import locales from '@/locales';
@@ -14,7 +13,7 @@ export default function Filters(): JSX.Element {
   const selectedTab = useSelectedTab();
 
   const columns = useDataStore((state) => state.columns);
-  const runQuery = useDataStore((state) => state.runQuery);
+  const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
 
   return (
     <Box id='#filters' p={1} borderBottom={(theme): string => `1px solid ${theme.palette.divider}`}>
@@ -29,7 +28,7 @@ export default function Filters(): JSX.Element {
       {(selectedTab?.filters?.length ?? 0) > 0 && (
         <Box display='flex' justifyContent='flex-start' mx={1} mt={1}>
           <Button
-            onClick={(): Promise<RunQueryResponseType | undefined> => runQuery()}
+            onClick={(): void => toggleReRunQuery()}
             size='small'
             variant='outlined'
             endIcon={<CustomIcon type='check' size='xs' />}

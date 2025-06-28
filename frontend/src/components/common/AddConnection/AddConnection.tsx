@@ -24,6 +24,8 @@ export default function AddConnection(): JSX.Element {
   const [step, setStep] = useState(0);
   const showAddConnection = useSettingStore((state) => state.showAddConnection);
 
+  const toggleShowAddConnection = useSettingStore((state) => state.toggleShowAddConnection);
+
   const { mutateAsync: createConnectionMutation, isPending: createConnectionPending } = useMutation({
     mutationFn: api.connection.createConnection,
     onSuccess: (): void => {
@@ -45,7 +47,7 @@ export default function AddConnection(): JSX.Element {
 
   const handleClose = (): void => {
     setConnectionType(undefined);
-    useSettingStore.getState().toggleShowAddConnection(false);
+    toggleShowAddConnection(false);
     setStep(0);
   };
 

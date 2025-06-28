@@ -15,7 +15,7 @@ export default function Columns(): JSX.Element {
   const isDataFetching = useDataStore((state) => state.isDataFetching);
 
   const updateColumns = useDataStore((state) => state.updateColumns);
-  const runQuery = useDataStore((state) => state.runQuery);
+  const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
   const updateTabColumns = useTabStore((state) => state.updateColumns);
 
   const handleCheckToggle = async (column: ColumnType): Promise<void> => {
@@ -33,7 +33,7 @@ export default function Columns(): JSX.Element {
     await updateColumns(newColumns);
     const c = newColumns.filter((c) => c.isActive).map((c) => c.name);
     updateTabColumns([...c]);
-    runQuery().then();
+    toggleReRunQuery();
   };
 
   return (
