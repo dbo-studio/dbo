@@ -12,9 +12,6 @@ export default function DataGridTableBodyRows({
   selectedRows,
   editedRows,
   editable,
-  updateEditedRows,
-  updateRow,
-  updateSelectedRows
 }: DataGridTableBodyRowsProps): JSX.Element {
   const removedRowsMap = useMemo(() => new Map(removedRows.map((row) => [row.dbo_index, true])), [removedRows]);
   const unsavedRowsMap = useMemo(() => new Map(unsavedRows.map((row) => [row.dbo_index, true])), [unsavedRows]);
@@ -42,9 +39,6 @@ export default function DataGridTableBodyRows({
             isUnsaved={isUnsaved}
             isRemoved={isRemoved}
             editedRows={editedRows}
-            updateEditedRows={updateEditedRows}
-            updateRow={updateRow}
-            updateSelectedRows={updateSelectedRows}
           />
         );
       })}

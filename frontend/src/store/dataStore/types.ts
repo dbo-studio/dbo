@@ -15,7 +15,7 @@ export type DataRowSlice = {
 
 export type DataSelectedRowsSlice = {
   selectedRows: SelectedRow[];
-  updateSelectedRows: (rows: SelectedRow[]) => Promise<void>;
+  updateSelectedRows: (rows: SelectedRow[], replace?: boolean) => Promise<void>;
 };
 
 export type DataColumnSlice = {

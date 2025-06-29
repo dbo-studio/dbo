@@ -3,17 +3,12 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useCallback, useEffect, useRef } from 'react';
 import type { CellEditingReturn } from '../types';
 
-export const useCellEditing = (
-  row: any,
-  columnId: string,
-  cellValue: string,
-  editedRows: any,
-  updateEditedRows: (rows: any) => Promise<void>,
-  updateRow: (row: any) => Promise<void>
-): CellEditingReturn => {
+export const useCellEditing = (row: any, columnId: string, cellValue: string, editedRows: any): CellEditingReturn => {
   const inputRef = useRef<HTMLInputElement>(null);
   const updateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const updateEditingCell = useDataStore((state) => state.updateEditingCell);
+  const updateEditedRows = useDataStore((state) => state.updateEditedRows);
+  const updateRow = useDataStore((state) => state.updateRow);
 
   const handleRowChange = useCallback(
     (e: React.FocusEvent<HTMLInputElement>): void => {
@@ -24,7 +19,7 @@ export const useCellEditing = (
           [columnId]: newValue
         };
 
-        updateRow(newValue);
+        updateRow(newRow);
         if (updateTimeoutRef.current) {
           clearTimeout(updateTimeoutRef.current);
         }

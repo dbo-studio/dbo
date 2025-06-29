@@ -12,9 +12,6 @@ export const DataGridTableCell = memo(
     columnId,
     value,
     editedRows,
-    updateEditedRows,
-    updateRow,
-    setSelectedRows,
     editable
   }: DataGridTableCellProps) => {
     const placeholder = String(value === null ? 'NULL' : value || '');
@@ -29,11 +26,9 @@ export const DataGridTableCell = memo(
       columnId,
       cellValue,
       editedRows,
-      updateEditedRows,
-      updateRow
     );
 
-    const { handleClick } = useCellSelection(row, rowIndex, columnId, setSelectedRows, editable);
+    const { handleClick } = useCellSelection(row, rowIndex, columnId, editable);
 
     useEffect(() => {
       if (isEditing && inputRef.current) {

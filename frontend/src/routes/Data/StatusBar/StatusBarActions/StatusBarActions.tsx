@@ -109,7 +109,7 @@ export default function StatusBarActions(): JSX.Element {
 
     await updateRemovedRows([]);
 
-    await updateSelectedRows([]);
+    await updateSelectedRows([], true);
   };
 
   const handleRefresh = async (): Promise<void> => {

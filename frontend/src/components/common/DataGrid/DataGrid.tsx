@@ -20,10 +20,6 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
   const unsavedRows = useDataStore((state) => state.unSavedRows);
   const selectedRows = useDataStore((state) => state.selectedRows);
 
-  const updateEditedRows = useDataStore((state) => state.updateEditedRows);
-  const updateRow = useDataStore((state) => state.updateRow);
-  const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
-
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
   useHandleScroll(tableContainerRef);
@@ -82,9 +78,6 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
             unsavedRows={unsavedRows}
             selectedRows={selectedRows}
             editedRows={editedRows}
-            updateEditedRows={updateEditedRows}
-            updateRow={updateRow}
-            updateSelectedRows={updateSelectedRows}
           />
         </StyledTable>
       </TableContainer>

@@ -1,3 +1,4 @@
+import { useDataStore } from '@/store/dataStore/data.store';
 import { Checkbox } from '@mui/material';
 import { memo, useCallback } from 'react';
 import { StyledTableRow, TableCell } from '../../DataGrid.styled';
@@ -15,11 +16,10 @@ const DataGridTableRow = memo(
     isUnsaved,
     isRemoved,
     editedRows,
-    updateEditedRows,
-    updateRow,
-    updateSelectedRows,
     editable
   }: DataGridTableRowProps) => {
+    const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
+
     const handleSelect = useCallback(
       (columnId: string) => {
         updateSelectedRows([
@@ -28,10 +28,26 @@ const DataGridTableRow = memo(
             selectedColumn: columnId,
             row: row
           }
-        ]);
+        ], true);
       },
       [updateSelectedRows, rowIndex, row]
     );
+
+    const handleSelectCheckBox = (e: React.ChangeEvent<HTMLInputElement>): void => {
+      if (e.target.checked) {
+        updateSelectedRows([
+          {
+            index: rowIndex,
+            selectedColumn: '',
+            row
+          }
+        ]);
+      } else {
+        const selectedRows = useDataStore.getState().selectedRows;
+        const newSelectedRows = selectedRows.filter((row) => row.index !== rowIndex);
+        updateSelectedRows(newSelectedRows, true);
+      }
+    };
 
     return (
       <StyledTableRow
@@ -62,22 +78,8 @@ const DataGridTableRow = memo(
                   sx={{ padding: 0 }}
                   size={'small'}
                   checked={isSelected}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>): void => {
-                    if (e.target.checked) {
-                      updateSelectedRows([
-                        {
-                          index: rowIndex,
-                          selectedColumn: '',
-                          row
-                        }
-                      ]);
-                    } else {
-                      updateSelectedRows([]);
-                    }
-                  }}
-                  onClick={(e: React.MouseEvent): void => {
-                    e.stopPropagation();
-                  }}
+                  onChange={handleSelectCheckBox}
+                  onClick={(e: React.MouseEvent): void => e.stopPropagation()}
                 />
               </TableCell>
             );
@@ -97,9 +99,6 @@ const DataGridTableRow = memo(
                 columnId={columnId}
                 value={value}
                 editedRows={editedRows}
-                updateEditedRows={updateEditedRows}
-                updateRow={updateRow}
-                setSelectedRows={updateSelectedRows}
                 editable={editable}
               />
             </TableCell>
