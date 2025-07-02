@@ -25,6 +25,7 @@ export default function StatusBarActions(): JSX.Element {
   const restoreEditedRows = useDataStore((state) => state.restoreEditedRows);
   const updateUnsavedRows = useDataStore((state) => state.updateUnsavedRows);
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
+  const toggleReRender = useDataStore((state) => state.toggleReRender);
 
   const { mutateAsync: updateQueryMutation, isPending: updateQueryPending } = useMutation({
     mutationFn: api.query.updateQuery,
@@ -110,6 +111,7 @@ export default function StatusBarActions(): JSX.Element {
     await updateRemovedRows([]);
 
     await updateSelectedRows([], true);
+    toggleReRender();
   };
 
   const handleRefresh = async (): Promise<void> => {

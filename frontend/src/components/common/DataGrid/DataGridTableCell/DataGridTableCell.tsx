@@ -6,13 +6,27 @@ import { useCellSelection } from '../hooks/useCellSelection';
 import type { DataGridTableCellProps } from '../types';
 
 export const DataGridTableCell = memo(
-  ({ row, rowIndex, columnId, value, editedRows, editable }: DataGridTableCellProps) => {
+  ({
+    row,
+    rowIndex,
+    columnId,
+    value,
+    editedRows,
+    editable
+  }: DataGridTableCellProps) => {
+    const placeholder = String(value === null ? 'NULL' : value || '');
+    const cellValue = String(value || '');
     const cellRef = useRef<HTMLDivElement>(null);
     const updateEditingCell = useDataStore((state) => state.updateEditingCell);
     const editingCell = useDataStore((state) => state.editingCell);
     const isEditing = editingCell?.rowIndex === rowIndex && editingCell?.columnId === columnId;
 
-    const { inputRef, handleRowChange, localValue, handleInputChange, displayValue } = useCellEditing(row, columnId, value, editedRows);
+    const { inputRef, handleRowChange } = useCellEditing(
+      row,
+      columnId,
+      cellValue,
+      editedRows,
+    );
 
     const { handleClick } = useCellSelection(row, rowIndex, columnId, editable);
 
@@ -41,8 +55,7 @@ export const DataGridTableCell = memo(
       return (
         <CellInput
           ref={inputRef}
-          value={localValue}
-          onChange={handleInputChange}
+          defaultValue={cellValue}
           onBlur={handleRowChange}
           onKeyDown={(e): void => {
             if (e.key === 'Enter' || e.key === 'Escape') {
@@ -55,7 +68,7 @@ export const DataGridTableCell = memo(
 
     return (
       <CellContainer ref={cellRef} onClick={(e: React.MouseEvent): void => handleClick(e, updateEditingCell)}>
-        <CellContent>{displayValue}</CellContent>
+        <CellContent>{placeholder}</CellContent>
       </CellContainer>
     );
   },

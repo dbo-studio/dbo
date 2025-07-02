@@ -14,8 +14,12 @@ export const createDataQuerySlice: StateCreator<
 > = (set, get) => ({
   isDataFetching: false,
   reRunQuery: false,
+  reRender: false,
   toggleReRunQuery(): void {
     set({ reRunQuery: !get().reRunQuery });
+  },
+  toggleReRender(): void {
+    set({ reRender: !get().reRender });
   },
   toggleDataFetching: (loading?: boolean): void => {
     set({ isDataFetching: loading ?? !get().isDataFetching });

@@ -21,6 +21,7 @@ export default function Data(): JSX.Element {
 
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const reRunQuery = useDataStore((state) => state.reRunQuery);
+  const reRender = useDataStore((state) => state.reRender);
 
   const loadDataFromIndexedDB = useDataStore((state) => state.loadDataFromIndexedDB);
   const runQuery = useDataStore((state) => state.runQuery);
@@ -67,6 +68,13 @@ export default function Data(): JSX.Element {
   useEffect(() => {
     handleReRunQuery();
   }, [reRunQuery]);
+
+  useEffect(() => {
+    setTableData({
+      rows: useDataStore.getState().rows ?? [],
+      columns: useDataStore.getState().columns ?? []
+    });
+  }, [reRender]);
 
   return (
     <>

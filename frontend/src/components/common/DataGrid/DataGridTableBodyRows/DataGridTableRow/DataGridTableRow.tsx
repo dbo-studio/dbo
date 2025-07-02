@@ -22,38 +22,32 @@ const DataGridTableRow = memo(
 
     const handleSelect = useCallback(
       (columnId: string) => {
-        updateSelectedRows(
-          [
-            {
-              index: rowIndex,
-              selectedColumn: columnId,
-              row: row
-            }
-          ],
-          true
-        );
+        updateSelectedRows([
+          {
+            index: rowIndex,
+            selectedColumn: columnId,
+            row: row
+          }
+        ], true);
       },
       [updateSelectedRows, rowIndex, row]
     );
 
-    const handleSelectCheckBox = useCallback(
-      (e: React.ChangeEvent<HTMLInputElement>): void => {
-        if (e.target.checked) {
-          updateSelectedRows([
-            {
-              index: rowIndex,
-              selectedColumn: '',
-              row
-            }
-          ]);
-        } else {
-          const selectedRows = useDataStore.getState().selectedRows;
-          const newSelectedRows = selectedRows.filter((row) => row.index !== rowIndex);
-          updateSelectedRows(newSelectedRows, true);
-        }
-      },
-      [updateSelectedRows, rowIndex, row]
-    );
+    const handleSelectCheckBox = (e: React.ChangeEvent<HTMLInputElement>): void => {
+      if (e.target.checked) {
+        updateSelectedRows([
+          {
+            index: rowIndex,
+            selectedColumn: '',
+            row
+          }
+        ]);
+      } else {
+        const selectedRows = useDataStore.getState().selectedRows;
+        const newSelectedRows = selectedRows.filter((row) => row.index !== rowIndex);
+        updateSelectedRows(newSelectedRows, true);
+      }
+    };
 
     return (
       <StyledTableRow
