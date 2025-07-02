@@ -1,18 +1,32 @@
 import { handleRowChangeLog } from '@/core/utils';
 import { useDataStore } from '@/store/dataStore/data.store';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CellEditingReturn } from '../types';
 
-export const useCellEditing = (row: any, columnId: string, cellValue: string, editedRows: any): CellEditingReturn => {
+export const useCellEditing = (
+  row: any,
+  columnId: string,
+  cellValue: string | null,
+  editedRows: any
+): CellEditingReturn => {
   const inputRef = useRef<HTMLInputElement>(null);
   const updateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const [localValue, setLocalValue] = useState(cellValue);
   const updateEditingCell = useDataStore((state) => state.updateEditingCell);
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
   const updateRow = useDataStore((state) => state.updateRow);
 
+  const displayValue = useMemo((): string => {
+    return String(localValue === null ? 'NULL' : localValue || '');
+  }, [localValue]);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>): void => {
+    setLocalValue(e.target.value);
+  }, []);
+
   const handleRowChange = useCallback(
-    (e: React.FocusEvent<HTMLInputElement>): void => {
-      const newValue = e.target.value;
+    (_: React.FocusEvent<HTMLInputElement>): void => {
+      const newValue = localValue;
       if (newValue !== cellValue) {
         const newRow = {
           ...row,
@@ -24,7 +38,6 @@ export const useCellEditing = (row: any, columnId: string, cellValue: string, ed
           clearTimeout(updateTimeoutRef.current);
         }
 
-        // Update IndexedDB in the background
         updateTimeoutRef.current = setTimeout(() => {
           const newEditedRows = handleRowChangeLog(editedRows, row, columnId, row[columnId], newValue);
           Promise.all([updateEditedRows(newEditedRows), updateRow(newRow)]).catch(console.error);
@@ -32,7 +45,7 @@ export const useCellEditing = (row: any, columnId: string, cellValue: string, ed
       }
       updateEditingCell(null);
     },
-    [row, columnId, cellValue, editedRows, updateEditedRows, updateRow, updateEditingCell]
+    [row, columnId, cellValue, localValue, editedRows, updateEditedRows, updateRow, updateEditingCell]
   );
 
   useEffect((): (() => void) => {
@@ -45,6 +58,9 @@ export const useCellEditing = (row: any, columnId: string, cellValue: string, ed
 
   return {
     inputRef,
-    handleRowChange
+    handleRowChange,
+    localValue: localValue || '',
+    handleInputChange,
+    displayValue
   };
 };

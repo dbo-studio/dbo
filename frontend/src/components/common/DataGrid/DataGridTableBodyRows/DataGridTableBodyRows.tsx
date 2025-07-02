@@ -11,7 +11,7 @@ export default function DataGridTableBodyRows({
   unsavedRows,
   selectedRows,
   editedRows,
-  editable,
+  editable
 }: DataGridTableBodyRowsProps): JSX.Element {
   const removedRowsMap = useMemo(() => new Map(removedRows.map((row) => [row.dbo_index, true])), [removedRows]);
   const unsavedRowsMap = useMemo(() => new Map(unsavedRows.map((row) => [row.dbo_index, true])), [unsavedRows]);

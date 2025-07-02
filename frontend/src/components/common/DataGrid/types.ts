@@ -33,6 +33,9 @@ export type DataGridTableRowProps = {
 export type CellEditingReturn = {
   inputRef: React.RefObject<HTMLInputElement | null>;
   handleRowChange: (e: React.FocusEvent<HTMLInputElement>) => void;
+  localValue: string;
+  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  displayValue: string;
 };
 
 export type CellSelectionReturn = {
