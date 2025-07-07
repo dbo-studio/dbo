@@ -1,21 +1,34 @@
-import * as sa from '@/store/settingStore/setting.store.ts';
+import { createSpy, renderWithProviders, resetAllMocks, setupStoreMocks } from '@/test/utils/test-helpers.tsx';
 import { screen } from '@testing-library/dom';
-import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 import Actions from './Actions.tsx';
 
 describe('Actions.tsx', () => {
-  const spy = vi.spyOn(sa, 'useSettingStore');
-  const mockUpdateSidebar = vi.fn();
-
   beforeEach(() => {
-    vi.mock('@/store/settingStore/setting.store.ts', () => ({
-      useSettingStore: vi.fn()
-    }));
+    resetAllMocks();
+  });
 
-    spy.mockReturnValue({
+  test('should render the Actions', () => {
+    setupStoreMocks.settingStore({
+      sidebar: {
+        leftWidth: 285,
+        rightWidth: 285,
+        showLeft: true,
+        showRight: true
+      }
+    });
+
+    renderWithProviders(<Actions />);
+    expect(screen.getByLabelText('sideRight')).not.toBeNull();
+    expect(screen.getByLabelText('sideLeft')).not.toBeNull();
+  });
+
+  test('should update close right sidebar', async () => {
+    const mockUpdateSidebar = createSpy();
+
+    setupStoreMocks.settingStore({
       sidebar: {
         leftWidth: 285,
         rightWidth: 285,
@@ -24,16 +37,8 @@ describe('Actions.tsx', () => {
       },
       updateSidebar: mockUpdateSidebar
     });
-  });
 
-  test('should render the the Actions', () => {
-    render(<Actions />);
-    expect(screen.getByLabelText('sideRight')).not.toBeNull();
-    expect(screen.getByLabelText('sideLeft')).not.toBeNull();
-  });
-
-  test('should update close right sidebar', async () => {
-    render(<Actions />);
+    renderWithProviders(<Actions />);
     await userEvent.click(screen.getByLabelText('sideRight'));
 
     expect(mockUpdateSidebar).toHaveBeenCalledWith({
@@ -42,7 +47,9 @@ describe('Actions.tsx', () => {
   });
 
   test('should update open right sidebar', async () => {
-    spy.mockReturnValue({
+    const mockUpdateSidebar = createSpy();
+
+    setupStoreMocks.settingStore({
       sidebar: {
         leftWidth: 285,
         rightWidth: 285,
@@ -52,7 +59,7 @@ describe('Actions.tsx', () => {
       updateSidebar: mockUpdateSidebar
     });
 
-    render(<Actions />);
+    renderWithProviders(<Actions />);
 
     await userEvent.click(screen.getByLabelText('sideRight'));
 
@@ -63,7 +70,19 @@ describe('Actions.tsx', () => {
   });
 
   test('should update close left sidebar', async () => {
-    render(<Actions />);
+    const mockUpdateSidebar = createSpy();
+
+    setupStoreMocks.settingStore({
+      sidebar: {
+        leftWidth: 285,
+        rightWidth: 285,
+        showLeft: true,
+        showRight: true
+      },
+      updateSidebar: mockUpdateSidebar
+    });
+
+    renderWithProviders(<Actions />);
     await userEvent.click(screen.getByLabelText('sideLeft'));
 
     expect(mockUpdateSidebar).toHaveBeenCalledWith({
@@ -72,7 +91,9 @@ describe('Actions.tsx', () => {
   });
 
   test('should update open left sidebar', async () => {
-    spy.mockReturnValue({
+    const mockUpdateSidebar = createSpy();
+
+    setupStoreMocks.settingStore({
       sidebar: {
         leftWidth: 285,
         rightWidth: 285,
@@ -81,7 +102,8 @@ describe('Actions.tsx', () => {
       },
       updateSidebar: mockUpdateSidebar
     });
-    render(<Actions />);
+
+    renderWithProviders(<Actions />);
     await userEvent.click(screen.getByLabelText('sideLeft'));
 
     expect(mockUpdateSidebar).toHaveBeenCalledWith({

@@ -1,16 +1,20 @@
 import locales from '@/locales';
-import { renderWithProviders } from '@/test/test-utils';
+import { renderWithProviders, resetAllMocks } from '@/test/utils/test-helpers.tsx';
 import { screen } from '@testing-library/dom';
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 import Settings from './Settings';
 
 describe('Settings.tsx', () => {
-  test('should render the the settings', () => {
+  beforeEach(() => {
+    resetAllMocks();
+  });
+
+  test('should render the settings', () => {
     renderWithProviders(<Settings open={true} />);
     expect(screen.getAllByText(locales.theme)).not.toBeNull();
   });
 
-  test('should close setting after click ', () => {
+  test('should close setting after click', () => {
     renderWithProviders(<Settings open={true} />);
     expect(screen.getAllByText(locales.theme)).not.toBeNull();
   });

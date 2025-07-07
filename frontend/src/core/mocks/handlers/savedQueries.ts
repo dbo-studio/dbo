@@ -8,8 +8,10 @@ const savedQueriesHandler = [
       data: [
         {
           id: 1,
+          connectionId: 1,
           name: 'data_src',
-          query: "SELECT * FROM 'data_src';"
+          query: "SELECT * FROM 'data_src';",
+          createdAt: '2025-07-07 16:56:13'
         }
       ],
       message: ''

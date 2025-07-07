@@ -1,16 +1,16 @@
 import ThemePanel from '@/components/common/Settings/ThemePanel/ThemePanel.tsx';
 import locales from '@/locales';
-import * as setting from '@/store/settingStore/setting.store.ts';
-import { renderWithProviders } from '@/test/test-utils';
+import { createSpy, renderWithProviders, resetAllMocks, setupStoreMocks } from '@/test/utils/test-helpers.tsx';
 import { screen } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 describe('ThemePanel.tsx', () => {
-  const spy = vi.spyOn(setting, 'useSettingStore');
-  const mockUpdateIsDark = vi.fn();
+  beforeEach(() => {
+    resetAllMocks();
+  });
 
-  test('should render the the theme panel', () => {
+  test('should render the theme panel', () => {
     renderWithProviders(<ThemePanel />);
 
     expect(screen.queryByText(locales.theme)).not.toBeNull();
@@ -18,9 +18,11 @@ describe('ThemePanel.tsx', () => {
   });
 
   test('should change theme after click on ThemeItem', async () => {
-    spy.mockReturnValue({
+    const mockToggleIsDark = createSpy();
+
+    setupStoreMocks.settingStore({
       isDark: true,
-      toggleIsDark: mockUpdateIsDark
+      toggleIsDark: mockToggleIsDark
     });
 
     renderWithProviders(<ThemePanel />);
@@ -32,6 +34,6 @@ describe('ThemePanel.tsx', () => {
     }
 
     await userEvent.click(lightTheme);
-    expect(mockUpdateIsDark).toHaveBeenCalledWith(false);
+    expect(mockToggleIsDark).toHaveBeenCalledWith(false);
   });
 });

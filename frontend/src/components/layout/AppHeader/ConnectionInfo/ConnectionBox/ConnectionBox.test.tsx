@@ -1,19 +1,20 @@
 import { connectionDetailModel } from '@/core/mocks/handlers/connections.ts';
 import locales from '@/locales';
-import * as conn from '@/store/connectionStore/connection.store.ts';
-import { renderWithProviders } from '@/test/test-utils.tsx';
-import type { ConnectionType } from '@/types';
+import { createSpy, renderWithProviders, resetAllMocks, setupStoreMocks } from '@/test/utils/test-helpers.tsx';
 import { screen } from '@testing-library/dom';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 import ConnectionBox from './ConnectionBox.tsx';
 
 describe('ConnectionBox.tsx', () => {
-  const spy = vi.spyOn(conn, 'useConnectionStore');
   const connection = connectionDetailModel;
 
-  test('should show error when state loading ', () => {
-    spy.mockReturnValue({
-      currentConnection: (): null => null,
+  beforeEach(() => {
+    resetAllMocks();
+  });
+
+  test('should show error when state loading', () => {
+    setupStoreMocks.connectionStore({
+      currentConnection: createSpy().mockReturnValue(null),
       loading: 'loading'
     });
 
@@ -22,8 +23,8 @@ describe('ConnectionBox.tsx', () => {
   });
 
   test('should show error when loading failed', () => {
-    spy.mockReturnValue({
-      currentConnection: (): null => null,
+    setupStoreMocks.connectionStore({
+      currentConnection: createSpy().mockReturnValue(null),
       loading: 'error'
     });
 
@@ -31,9 +32,9 @@ describe('ConnectionBox.tsx', () => {
     expect(screen.getByText(locales.connection_error)).not.toBeNull();
   });
 
-  test('should render the the connection box', () => {
-    spy.mockReturnValue({
-      currentConnection: (): null => null,
+  test('should render the connection box', () => {
+    setupStoreMocks.connectionStore({
+      currentConnection: createSpy().mockReturnValue(null),
       loading: 'finished'
     });
 
@@ -42,8 +43,8 @@ describe('ConnectionBox.tsx', () => {
   });
 
   test('should with connection', () => {
-    spy.mockReturnValue({
-      currentConnection: (): ConnectionType => connection,
+    setupStoreMocks.connectionStore({
+      currentConnection: createSpy().mockReturnValue(connection),
       loading: 'finished'
     });
 
