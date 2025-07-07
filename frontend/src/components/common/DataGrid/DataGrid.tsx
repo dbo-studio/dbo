@@ -62,12 +62,7 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
             startResize={startResize}
             resizingColumnId={resizingColumnId}
           />
-          <DataGridTableBodyRows
-            editable={editable}
-            rows={rows}
-            columns={tableColumns}
-            context={handleContextMenu}
-          />
+          <DataGridTableBodyRows editable={editable} rows={rows} columns={tableColumns} context={handleContextMenu} />
         </StyledTable>
       </TableContainer>
       <DataGridContextMenu contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />

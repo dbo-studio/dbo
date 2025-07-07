@@ -22,7 +22,7 @@ export default function Home(): JSX.Element | null {
         } else {
           eruda.default.destroy();
         }
-      } catch (_) { }
+      } catch (_) {}
     });
   }, [debug]);
 

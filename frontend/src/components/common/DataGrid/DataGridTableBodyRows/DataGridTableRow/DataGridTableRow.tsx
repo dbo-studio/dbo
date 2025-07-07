@@ -95,13 +95,7 @@ const DataGridTableRow = memo(
                 handleSelect(columnId);
               }}
             >
-              <DataGridTableCell
-                row={row}
-                rowIndex={rowIndex}
-                columnId={columnId}
-                value={value}
-                editable={editable}
-              />
+              <DataGridTableCell row={row} rowIndex={rowIndex} columnId={columnId} value={value} editable={editable} />
             </TableCell>
           );
         })}

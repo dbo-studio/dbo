@@ -55,7 +55,7 @@ export default function ConnectionItemContextMenu({
       updateTabs([]);
       toast.success(locales.connection_delete_success);
       return;
-    } catch (err) { }
+    } catch (err) {}
   };
 
   const handleEditConnection = (connection: ConnectionType | undefined): void => {

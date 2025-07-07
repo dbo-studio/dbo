@@ -34,7 +34,7 @@ export default function StatusBarPagination(): JSX.Element {
       pagination
     });
 
-    toggleReRunQuery()
+    toggleReRunQuery();
   };
 
   return (
