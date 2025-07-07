@@ -11,9 +11,10 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { PaginationSettingStyled } from './PaginationSetting.styled';
 
 export default function PaginationSetting(): JSX.Element {
-  const { updateSelectedTab } = useTabStore();
-  const { runQuery, loading } = useDataStore();
+  const isDataFetching = useDataStore((state) => state.isDataFetching);
   const selectedTab = useSelectedTab();
+  const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
+  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [limit, setLimit] = useState<number>(selectedTab?.pagination?.limit ?? 0);
@@ -39,7 +40,7 @@ export default function PaginationSetting(): JSX.Element {
   };
 
   const handleUpdateState = (): void => {
-    if (!selectedTab || loading) {
+    if (!selectedTab || isDataFetching) {
       return;
     }
 
@@ -61,7 +62,14 @@ export default function PaginationSetting(): JSX.Element {
 
     setAnchorEl(null);
 
-    runQuery();
+    toggleReRunQuery();
+  };
+
+  const handleChangeLimit = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const reg = /^[0-9]*$/;
+    if (reg.test(e.target.value)) {
+      setLimit(Number(e.target.value));
+    }
   };
 
   return (
@@ -77,10 +85,9 @@ export default function PaginationSetting(): JSX.Element {
               error={!!errors.limit}
               helpertext={errors.limit}
               value={limit}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>): void => setLimit(Number(e.target.value))}
+              onChange={handleChangeLimit}
               size='small'
               placeholder={locales.limit}
-              type='number'
               label={locales.limit}
             />
             <Button variant='contained' onClick={handleUpdateState} size='small' fullWidth>

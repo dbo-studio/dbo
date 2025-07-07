@@ -3,7 +3,7 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useCallback, useEffect, useRef } from 'react';
 import type { CellEditingReturn } from '../types';
 
-export const useCellEditing = (row: any, columnId: string, cellValue: string, editedRows: any): CellEditingReturn => {
+export const useCellEditing = (row: any, columnId: string, cellValue: string): CellEditingReturn => {
   const inputRef = useRef<HTMLInputElement>(null);
   const updateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const updateEditingCell = useDataStore((state) => state.updateEditingCell);
@@ -13,6 +13,8 @@ export const useCellEditing = (row: any, columnId: string, cellValue: string, ed
 
   const handleRowChange = useCallback(
     (e: React.FocusEvent<HTMLInputElement>): void => {
+      const editedRows = useDataStore.getState().editedRows;
+
       const newValue = e.target.value;
       if (newValue !== cellValue) {
         const newRow = {
@@ -25,15 +27,14 @@ export const useCellEditing = (row: any, columnId: string, cellValue: string, ed
           clearTimeout(updateTimeoutRef.current);
         }
 
-        // updateTimeoutRef.current = setTimeout(() => {
         const newEditedRows = handleRowChangeLog(editedRows, row, columnId, row[columnId], newValue);
         Promise.all([updateEditedRows(newEditedRows), updateRow(newRow)]).catch(console.error);
-        // }, 100);
+
         toggleReRender();
       }
       updateEditingCell(null);
     },
-    [row, columnId, cellValue, editedRows, updateEditedRows, updateRow, updateEditingCell]
+    [row, columnId, cellValue, updateEditedRows, updateRow, updateEditingCell]
   );
 
   useEffect((): (() => void) => {

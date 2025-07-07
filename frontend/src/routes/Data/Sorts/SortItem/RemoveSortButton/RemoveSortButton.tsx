@@ -6,8 +6,8 @@ import type { JSX } from 'react';
 import type { RemoveSortButtonProps } from '../../types.ts';
 
 export default function RemoveSortButton({ sort }: RemoveSortButtonProps): JSX.Element {
-  const { removeSort } = useTabStore();
-  const { runQuery } = useDataStore();
+  const removeSort = useTabStore((state) => state.removeSort);
+  const runQuery = useDataStore((state) => state.runQuery);
 
   const handleRemoveSort = (): void => {
     removeSort(sort);

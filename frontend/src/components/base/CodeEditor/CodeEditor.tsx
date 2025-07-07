@@ -8,7 +8,7 @@ import { editorConfig } from './helpers/editorConfig.ts';
 export default function CodeEditor({ value, onChange, width, height }: CodeEditorProps): JSX.Element {
   const hostRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
-  const { isDark } = useSettingStore();
+  const isDark = useSettingStore((state) => state.isDark);
 
   useEffect(() => {
     if (hostRef.current && !editorRef.current) {

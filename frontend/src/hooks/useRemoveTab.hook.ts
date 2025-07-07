@@ -3,7 +3,9 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import type { TabType } from '@/types';
 
 export function useRemoveTab(): [(tabId: string) => TabType | null | undefined] {
-  const { removeTab, getTabs, updateSelectedTab } = useTabStore();
+  const removeTab = useTabStore((state) => state.removeTab);
+  const getTabs = useTabStore((state) => state.getTabs);
+  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
   const remove = (tabId: string): TabType | null | undefined => {
     if (getTabs().length === 1) {

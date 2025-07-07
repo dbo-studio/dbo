@@ -6,8 +6,9 @@ import type { TabType } from '@/types';
 import { type JSX, memo, useMemo } from 'react';
 
 const PanelTabs = memo((): JSX.Element => {
-  const { currentConnectionId } = useConnectionStore();
-  const { tabs, getTabs } = useTabStore();
+  const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
+  const tabs = useTabStore((state) => state.tabs);
+  const getTabs = useTabStore((state) => state.getTabs);
 
   const tabList = useMemo(() => getTabs(), [currentConnectionId, tabs]);
 

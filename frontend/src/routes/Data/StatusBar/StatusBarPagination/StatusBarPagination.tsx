@@ -10,9 +10,10 @@ import PaginationSetting from './PaginationSetting/PaginationSetting';
 
 export default function StatusBarPagination(): JSX.Element {
   const theme = useTheme();
-  const { updateSelectedTab } = useTabStore();
-  const { runQuery, isDataFetching } = useDataStore();
+  const isDataFetching = useDataStore((state) => state.isDataFetching);
   const selectedTab = useSelectedTab();
+  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
+  const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
 
   const handlePagination = (mode: 'prev' | 'next'): void => {
     if (!selectedTab || isDataFetching) {
@@ -33,7 +34,7 @@ export default function StatusBarPagination(): JSX.Element {
       pagination
     });
 
-    runQuery().then();
+    toggleReRunQuery()
   };
 
   return (

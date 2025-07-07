@@ -15,20 +15,22 @@ const DataGridTableRow = memo(
     isEdited,
     isUnsaved,
     isRemoved,
-    editedRows,
     editable
   }: DataGridTableRowProps) => {
     const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
 
     const handleSelect = useCallback(
       (columnId: string) => {
-        updateSelectedRows([
-          {
-            index: rowIndex,
-            selectedColumn: columnId,
-            row: row
-          }
-        ], true);
+        updateSelectedRows(
+          [
+            {
+              index: rowIndex,
+              selectedColumn: columnId,
+              row: row
+            }
+          ],
+          true
+        );
       },
       [updateSelectedRows, rowIndex, row]
     );
@@ -98,7 +100,6 @@ const DataGridTableRow = memo(
                 rowIndex={rowIndex}
                 columnId={columnId}
                 value={value}
-                editedRows={editedRows}
                 editable={editable}
               />
             </TableCell>

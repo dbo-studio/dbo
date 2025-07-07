@@ -1,4 +1,3 @@
-import type { SelectedRow } from '@/store/dataStore/types';
 import type { ColumnType, RowType } from '@/types';
 
 export type DataGridProps = {
@@ -13,7 +12,6 @@ export type DataGridTableCellProps = {
   rowIndex: number;
   columnId: string;
   value: any;
-  editedRows: any;
   editable: boolean;
 };
 
@@ -26,7 +24,6 @@ export type DataGridTableRowProps = {
   isUnsaved: boolean;
   isSelected: boolean;
   isRemoved: boolean;
-  editedRows: any;
   editable: boolean;
 };
 
@@ -50,10 +47,6 @@ export type DataGridTableBodyRowsProps = {
   rows: RowType[];
   columns: ColumnType[];
   context: (event: React.MouseEvent) => void;
-  removedRows: RowType[];
-  unsavedRows: RowType[];
-  selectedRows: SelectedRow[];
-  editedRows: any[];
   editable: boolean;
 };
 export type DataGridTableHeaderRowProps = {

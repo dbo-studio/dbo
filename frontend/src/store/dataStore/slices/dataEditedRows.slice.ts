@@ -54,10 +54,10 @@ export const createDataEditedRowsSlice: StateCreator<
       }
     }
 
-    get().updateRows(currentRows);
     set({ editedRows: [] });
+    get().updateRows(currentRows);
 
-    debouncedSaveRowsAndEditedRows(selectedTabId, currentRows, []);
+    // debouncedSaveRowsAndEditedRows(selectedTabId, currentRows, []);
 
     return Promise.resolve();
   },

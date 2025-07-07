@@ -4,7 +4,8 @@ import { Box, Divider, Switch, Typography } from '@mui/material';
 import type { JSX } from 'react';
 
 export default function General(): JSX.Element {
-  const { toggleDebug, debug } = useSettingStore();
+  const debug = useSettingStore((state) => state.debug);
+  const toggleDebug = useSettingStore((state) => state.toggleDebug);
 
   const handleChangeDebugMode = (event: React.ChangeEvent<HTMLInputElement>): void => {
     toggleDebug(event?.target?.checked);

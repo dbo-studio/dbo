@@ -11,7 +11,14 @@ import TreeNode from './TreeNode/TreeNode';
 
 export default function ObjectTreeView(): JSX.Element {
   const currentConnection = useCurrentConnection();
-  const { getTree, isLoading, treeError, reloadTree, addLoadedParentId, toggleIsLoading } = useTreeStore();
+  const isLoading = useTreeStore((state) => state.isLoading);
+  const treeError = useTreeStore((state) => state.treeError);
+
+  const getTree = useTreeStore((state) => state.getTree);
+  const addLoadedParentId = useTreeStore((state) => state.addLoadedParentId);
+  const toggleIsLoading = useTreeStore((state) => state.toggleIsLoading);
+  const reloadTree = useTreeStore((state) => state.reloadTree);
+
   const parentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
 
