@@ -6,7 +6,6 @@ import type { TabStore } from '@/store/tabStore/types';
 import type { TreeStore } from '@/store/treeStore/types';
 import { vi } from 'vitest';
 
-// Default mock implementations for all stores
 export const defaultSettingStoreMock: SettingStore = {
   sidebar: {
     leftWidth: 285,
