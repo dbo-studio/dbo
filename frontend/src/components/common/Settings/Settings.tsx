@@ -51,7 +51,7 @@ const tabs: MenuPanelTabType[] = [
 export default function Settings({ open }: { open: boolean }): JSX.Element {
   const [content, setContent] = useState<JSX.Element>();
   const theme = useTheme();
-  const { toggleShowSettings } = useSettingStore();
+  const toggleShowSettings = useSettingStore((state) => state.toggleShowSettings);
 
   function handleOnClose(): void {
     toggleShowSettings(false);

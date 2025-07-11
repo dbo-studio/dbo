@@ -39,7 +39,7 @@ export const createDataRemovedRowsSlice: StateCreator<
     set({ removedRows: rows });
 
     get().discardUnsavedRows(unsavedRows);
-    get().updateSelectedRows([]);
+    get().updateSelectedRows([], true);
 
     debouncedSaveRemovedRows(selectedTabId, rows ?? []);
 

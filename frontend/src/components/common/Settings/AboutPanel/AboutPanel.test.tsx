@@ -1,11 +1,15 @@
 import locales from '@/locales';
-import { renderWithProviders } from '@/test/test-utils';
+import { renderWithProviders, resetAllMocks } from '@/test/utils/test-helpers.tsx';
 import { screen } from '@testing-library/dom';
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 import AboutPanel from './AboutPanel';
 
 describe('AboutPanel.tsx', () => {
-  test('should render the the about panel', () => {
+  beforeEach(() => {
+    resetAllMocks();
+  });
+
+  test('should render the about panel', () => {
     renderWithProviders(<AboutPanel />);
     expect(screen.getAllByText(locales.releases_url)).not.toBeNull();
     expect(screen.getAllByText(locales.report_an_issue)).not.toBeNull();

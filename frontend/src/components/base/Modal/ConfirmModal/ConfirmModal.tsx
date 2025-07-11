@@ -6,7 +6,14 @@ import { type JSX, useEffect, useState } from 'react';
 import { ModalStyled } from '../Modal.styled.ts';
 
 export default function ConfirmModal(): JSX.Element {
-  const { isOpen, mode, title, description, onCancel, onSuccess, close } = useConfirmModalStore();
+  const isOpen = useConfirmModalStore((state) => state.isOpen);
+  const mode = useConfirmModalStore((state) => state.mode);
+  const title = useConfirmModalStore((state) => state.title);
+  const description = useConfirmModalStore((state) => state.description);
+  const onCancel = useConfirmModalStore((state) => state.onCancel);
+  const onSuccess = useConfirmModalStore((state) => state.onSuccess);
+  const close = useConfirmModalStore((state) => state.close);
+
   const [style, setStyle] = useState({});
   const theme = useTheme();
 

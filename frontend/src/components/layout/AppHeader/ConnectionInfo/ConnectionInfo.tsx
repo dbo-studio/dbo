@@ -22,11 +22,11 @@ export default function ConnectionInfo(): JSX.Element {
   const showSettings = useSettingStore((state) => state.showSettings);
   const toggleShowAddConnection = useSettingStore((state) => state.toggleShowAddConnection);
 
-  const runQuery = useDataStore.getState().runQuery;
-  const runRawQuery = useDataStore.getState().runRawQuery;
-  const reloadTree = useTreeStore.getState().reloadTree;
-  const addEditorTab = useTabStore.getState().addEditorTab;
-  const updateSelectedTab = useTabStore.getState().updateSelectedTab;
+  const runQuery = useDataStore((state) => state.runQuery);
+  const runRawQuery = useDataStore((state) => state.runRawQuery);
+  const reloadTree = useTreeStore((state) => state.reloadTree);
+  const addEditorTab = useTabStore((state) => state.addEditorTab);
+  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
   useShortcut(shortcuts.reloadTab, () => handleRefresh());
 

@@ -6,17 +6,7 @@ import { useCellSelection } from '../hooks/useCellSelection';
 import type { DataGridTableCellProps } from '../types';
 
 export const DataGridTableCell = memo(
-  ({
-    row,
-    rowIndex,
-    columnId,
-    value,
-    editedRows,
-    updateEditedRows,
-    updateRow,
-    setSelectedRows,
-    editable
-  }: DataGridTableCellProps) => {
+  ({ row, rowIndex, columnId, value, editable }: DataGridTableCellProps) => {
     const placeholder = String(value === null ? 'NULL' : value || '');
     const cellValue = String(value || '');
     const cellRef = useRef<HTMLDivElement>(null);
@@ -24,16 +14,9 @@ export const DataGridTableCell = memo(
     const editingCell = useDataStore((state) => state.editingCell);
     const isEditing = editingCell?.rowIndex === rowIndex && editingCell?.columnId === columnId;
 
-    const { inputRef, handleRowChange } = useCellEditing(
-      row,
-      columnId,
-      cellValue,
-      editedRows,
-      updateEditedRows,
-      updateRow
-    );
+    const { inputRef, handleRowChange } = useCellEditing(row, columnId, cellValue);
 
-    const { handleClick } = useCellSelection(row, rowIndex, columnId, setSelectedRows, editable);
+    const { handleClick } = useCellSelection(row, rowIndex, columnId, editable);
 
     useEffect(() => {
       if (isEditing && inputRef.current) {
@@ -63,10 +46,8 @@ export const DataGridTableCell = memo(
           defaultValue={cellValue}
           onBlur={handleRowChange}
           onKeyDown={(e): void => {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' || e.key === 'Escape') {
               e.currentTarget.blur();
-            } else if (e.key === 'Escape') {
-              updateEditingCell(null);
             }
           }}
         />

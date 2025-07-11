@@ -1,5 +1,4 @@
 import { useContextMenu } from '@/hooks';
-import { useDataStore } from '@/store/dataStore/data.store';
 import type { ColumnType } from '@/types';
 import { Box, CircularProgress } from '@mui/material';
 import { type JSX, useMemo, useRef } from 'react';
@@ -14,16 +13,6 @@ import type { DataGridProps } from './types';
 
 export default function DataGrid({ rows, columns, loading, editable = true }: DataGridProps): JSX.Element {
   const tableContainerRef = useRef<HTMLDivElement>(null);
-
-  const editedRows = useDataStore((state) => state.editedRows);
-  const removedRows = useDataStore((state) => state.removedRows);
-  const unsavedRows = useDataStore((state) => state.unSavedRows);
-  const selectedRows = useDataStore((state) => state.selectedRows);
-
-  const updateEditedRows = useDataStore((state) => state.updateEditedRows);
-  const updateRow = useDataStore((state) => state.updateRow);
-  const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
-
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
   useHandleScroll(tableContainerRef);
@@ -73,19 +62,7 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
             startResize={startResize}
             resizingColumnId={resizingColumnId}
           />
-          <DataGridTableBodyRows
-            editable={editable}
-            rows={rows}
-            columns={tableColumns}
-            context={handleContextMenu}
-            removedRows={removedRows}
-            unsavedRows={unsavedRows}
-            selectedRows={selectedRows}
-            editedRows={editedRows}
-            updateEditedRows={updateEditedRows}
-            updateRow={updateRow}
-            updateSelectedRows={updateSelectedRows}
-          />
+          <DataGridTableBodyRows editable={editable} rows={rows} columns={tableColumns} context={handleContextMenu} />
         </StyledTable>
       </TableContainer>
       <DataGridContextMenu contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />

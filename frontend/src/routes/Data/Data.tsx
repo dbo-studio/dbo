@@ -20,8 +20,9 @@ export default function Data(): JSX.Element {
   const [showColumns, setShowColumns] = useState(false);
 
   const selectedTabId = useTabStore((state) => state.selectedTabId);
+  const reRunQuery = useDataStore((state) => state.reRunQuery);
+  const reRender = useDataStore((state) => state.reRender);
 
-  const toggleDataFetching = useDataStore((state) => state.toggleDataFetching);
   const loadDataFromIndexedDB = useDataStore((state) => state.loadDataFromIndexedDB);
   const runQuery = useDataStore((state) => state.runQuery);
 
@@ -31,7 +32,6 @@ export default function Data(): JSX.Element {
       columns: []
     });
 
-    toggleDataFetching(true);
     try {
       const result = await loadDataFromIndexedDB();
       if (!result) {
@@ -45,26 +45,36 @@ export default function Data(): JSX.Element {
       }
     } catch (error) {
       console.error('🚀 ~ loadData ~ error:', error);
-      await useDataStore.getState().runQuery();
-    } finally {
-      useDataStore.getState().toggleDataFetching(false);
     }
+  };
+
+  const handleReRunQuery = async (): Promise<void> => {
+    const res = await runQuery();
+    setTableData({
+      rows: res?.data ?? [],
+      columns: res?.columns.filter((column) => column.isActive) ?? []
+    });
   };
 
   useEffect(() => {
     setIsGridReady(false);
 
-    const timer = setTimeout(() => {
-      loadData();
-      setIsGridReady(true);
-    }, 100);
+    if (!mounted || !selectedTabId) return;
 
-    return (): void => clearTimeout(timer);
-  }, [selectedTabId]);
+    loadData();
+    setIsGridReady(true);
+  }, [selectedTabId, mounted]);
 
-  if (!mounted || !selectedTabId) {
-    return <></>;
-  }
+  useEffect(() => {
+    handleReRunQuery();
+  }, [reRunQuery]);
+
+  useEffect(() => {
+    setTableData({
+      rows: useDataStore.getState().rows ?? [],
+      columns: useDataStore.getState().columns ?? []
+    });
+  }, [reRender]);
 
   return (
     <>

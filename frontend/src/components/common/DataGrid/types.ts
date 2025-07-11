@@ -1,4 +1,3 @@
-import type { SelectedRow } from '@/store/dataStore/types';
 import type { ColumnType, RowType } from '@/types';
 
 export type DataGridProps = {
@@ -13,10 +12,6 @@ export type DataGridTableCellProps = {
   rowIndex: number;
   columnId: string;
   value: any;
-  editedRows: any;
-  updateEditedRows: (rows: any) => Promise<void>;
-  updateRow: (row: any) => Promise<void>;
-  setSelectedRows: (rows: SelectedRow[]) => void;
   editable: boolean;
 };
 
@@ -29,21 +24,7 @@ export type DataGridTableRowProps = {
   isUnsaved: boolean;
   isSelected: boolean;
   isRemoved: boolean;
-  editedRows: any;
-  updateEditedRows: (rows: any) => Promise<void>;
-  updateRow: (row: any) => Promise<void>;
-  updateSelectedRows: (rows: SelectedRow[]) => void;
   editable: boolean;
-};
-
-export type TableColumnsProps = {
-  rows: RowType[];
-  columns: ColumnType[];
-  editingCell: { rowIndex: number; columnId: string } | null;
-  setEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void;
-  updateEditedRows: (rows: any) => Promise<void>;
-  updateRow: (row: any) => Promise<void>;
-  editedRows: any;
 };
 
 export type CellEditingReturn = {
@@ -66,13 +47,6 @@ export type DataGridTableBodyRowsProps = {
   rows: RowType[];
   columns: ColumnType[];
   context: (event: React.MouseEvent) => void;
-  removedRows: RowType[];
-  unsavedRows: RowType[];
-  selectedRows: SelectedRow[];
-  editedRows: any[];
-  updateEditedRows: (rows: any) => Promise<void>;
-  updateRow: (row: any) => Promise<void>;
-  updateSelectedRows: (rows: any) => void;
   editable: boolean;
 };
 export type DataGridTableHeaderRowProps = {

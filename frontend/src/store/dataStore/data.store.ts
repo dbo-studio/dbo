@@ -56,7 +56,7 @@ export const useDataStore = create<DataState>()(
             get().updateEditedRows(dbEditedRows);
             get().updateRemovedRows(dbRemovedRows);
             get().updateUnsavedRows(dbUnsavedRows);
-            get().updateSelectedRows(dbSelectedRows);
+            get().updateSelectedRows(dbSelectedRows, true);
             return { rows: dbRows, columns: dbColumns.filter((column) => column.isActive) };
           }
         } catch (error) {

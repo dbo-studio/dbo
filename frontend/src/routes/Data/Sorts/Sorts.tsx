@@ -1,4 +1,3 @@
-import type { RunQueryResponseType } from '@/api/query/types.ts';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useSelectedTab } from '@/hooks';
 import locales from '@/locales';
@@ -14,7 +13,7 @@ export default function Sorts(): JSX.Element {
   const selectedTab = useSelectedTab();
 
   const columns = useDataStore((state) => state.columns);
-  const runQuery = useDataStore((state) => state.runQuery);
+  const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
 
   if (!selectedTab) return <></>;
 
@@ -31,7 +30,7 @@ export default function Sorts(): JSX.Element {
       {(selectedTab?.sorts?.length ?? 0) > 0 && (
         <Box display='flex' justifyContent='flex-start' mx={1} mt={1}>
           <Button
-            onClick={(): Promise<RunQueryResponseType | undefined> => runQuery()}
+            onClick={(): void => toggleReRunQuery()}
             size='small'
             variant='outlined'
             endIcon={<CustomIcon type='check' size='xs' />}

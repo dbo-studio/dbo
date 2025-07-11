@@ -16,14 +16,14 @@ export const useActionDetection = (
   actionDetection: (event: React.MouseEvent, node: TreeNodeType) => Promise<void>;
 } => {
   const queryClient = useQueryClient();
-
-  const addTab = useTabStore.getState().addTab;
-  const addObjectTab = useTabStore.getState().addObjectTab;
-  const updateSelectedTab = useTabStore.getState().updateSelectedTab;
-
   const confirmModal = useConfirmModalStore();
   const currentConnection = useCurrentConnection();
-  const { reloadTree } = useTreeStore();
+
+  const addTab = useTabStore((state) => state.addTab);
+  const addObjectTab = useTabStore((state) => state.addObjectTab);
+  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
+  const reloadTree = useTreeStore((state) => state.reloadTree);
+
   const [copy] = useCopyToClipboard();
 
   const { mutateAsync: executeActionMutation, isPending: pendingExecuteAction } = useMutation({
