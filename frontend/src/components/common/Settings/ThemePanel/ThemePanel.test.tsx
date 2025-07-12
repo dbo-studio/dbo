@@ -22,7 +22,6 @@ import { beforeEach, describe, expect, test } from 'vitest';
 //   })
 // }));
 
-
 describe('ThemePanel.tsx', () => {
   beforeEach(() => {
     resetAllMocks();
@@ -44,8 +43,6 @@ describe('ThemePanel.tsx', () => {
   test('should change theme after click on ThemeItem', async () => {
     // const mockToggleIsDark = vi.fn();
     await setupStoreMocks.settingStore();
-
-
 
     renderWithProviders(<ThemePanel />);
     const lightTheme = screen.queryByText(locales.light);

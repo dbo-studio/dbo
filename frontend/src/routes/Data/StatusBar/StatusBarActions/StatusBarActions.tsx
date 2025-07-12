@@ -6,11 +6,13 @@ import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { createEmptyRow } from '@/core/utils';
 import { useCurrentConnection } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
+import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, IconButton, Stack } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import type { JSX } from 'react';
+import { toast } from 'sonner';
 
 export default function StatusBarActions(): JSX.Element {
   const isDataFetching = useDataStore((state) => state.isDataFetching);
@@ -55,13 +57,15 @@ export default function StatusBarActions(): JSX.Element {
       }
 
       try {
-        await updateQueryMutation({
+        const res = await updateQueryMutation({
           connectionId: currentConnection.id,
           nodeId: selectedTab.nodeId,
           edited: editedRows,
           removed: removedRows,
           added: unsavedRows
         });
+
+        toast.success(`${locales.changes_saved_successfully}. ${locales.row_affected}: ${res.rowAffected}`);
       } catch (error) {
         console.log(error);
       }

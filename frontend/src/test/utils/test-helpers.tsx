@@ -3,7 +3,6 @@ import { type RenderOptions, render } from '@testing-library/react';
 import type { ReactElement, ReactNode } from 'react';
 import { vi } from 'vitest';
 
-
 import {
   createConfirmModalStoreMock,
   createConnectionStoreMock,
@@ -203,7 +202,7 @@ export const createTestEnvironment = (): { cleanup: () => void; addCleanup: (fn:
 export const setupDOMMocks = (): void => {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
-    value: vi.fn().mockImplementation(query => ({
+    value: vi.fn().mockImplementation((query) => ({
       matches: false,
       media: query,
       onchange: null,
@@ -211,8 +210,8 @@ export const setupDOMMocks = (): void => {
       removeListener: vi.fn(), // deprecated
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })),
+      dispatchEvent: vi.fn()
+    }))
   });
 
   Object.defineProperty(document, 'createRange', {
@@ -222,17 +221,17 @@ export const setupDOMMocks = (): void => {
       setEnd: vi.fn(),
       commonAncestorContainer: {
         nodeName: 'BODY',
-        ownerDocument: document,
+        ownerDocument: document
       },
       cloneRange: vi.fn().mockReturnValue({
         setStart: vi.fn(),
         setEnd: vi.fn(),
         commonAncestorContainer: {
           nodeName: 'BODY',
-          ownerDocument: document,
-        },
-      }),
-    })),
+          ownerDocument: document
+        }
+      })
+    }))
   });
 
   Object.defineProperty(window, 'getSelection', {
@@ -240,8 +239,8 @@ export const setupDOMMocks = (): void => {
     value: vi.fn().mockImplementation(() => ({
       removeAllRanges: vi.fn(),
       addRange: vi.fn(),
-      toString: vi.fn().mockReturnValue(''),
-    })),
+      toString: vi.fn().mockReturnValue('')
+    }))
   });
 };
 
