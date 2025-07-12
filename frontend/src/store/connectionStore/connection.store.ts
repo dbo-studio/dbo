@@ -1,11 +1,11 @@
 import type { ConnectionType } from '@/types';
-import { create } from 'zustand';
+import { create, type StoreApi, type UseBoundStore } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import type { ConnectionStore, LoadingType } from './types';
 
 type ConnectionState = ConnectionStore;
 
-export const useConnectionStore = create<ConnectionState>()(
+export const useConnectionStore: UseBoundStore<StoreApi<ConnectionState>> = create<ConnectionState>()(
   devtools(
     (set, get) => ({
       loading: 'finished',

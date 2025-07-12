@@ -1,11 +1,11 @@
 import { constants } from '@/core/constants';
-import { create } from 'zustand';
+import { create, type StoreApi, type UseBoundStore } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import type { SettingStore, SidebarType } from './types';
 
 type SettingState = SettingStore;
 
-export const useSettingStore = create<SettingState>()(
+export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<SettingState>()(
   devtools(
     persist(
       (set, get) => ({

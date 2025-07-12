@@ -2,8 +2,9 @@ import api from '@/api';
 import { getTree } from '@/api/tree';
 import type { TreeNodeType } from '@/api/tree/types';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { create } from 'zustand';
+import { create, type StoreApi, type UseBoundStore } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
+
 import type { TreeStore } from './types';
 
 const getCurrentConnectionId = (): number | undefined => {
@@ -11,7 +12,7 @@ const getCurrentConnectionId = (): number | undefined => {
   return connectionStore.currentConnectionId ? Number(connectionStore.currentConnectionId) : undefined;
 };
 
-export const useTreeStore = create<TreeStore>()(
+export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore>()(
   devtools(
     persist(
       (set, get) => ({
@@ -206,7 +207,7 @@ export const useTreeStore = create<TreeStore>()(
             set({ isLoading: false, treeError: error as Error });
           }
         },
-        toggleIsLoading(isLoading): void {
+        toggleIsLoading(isLoading: boolean): void {
           set({ isLoading });
         }
       }),

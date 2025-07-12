@@ -1,6 +1,6 @@
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import type { ColumnType, RowType } from '@/types';
-import { create } from 'zustand';
+import { create, type StoreApi, type UseBoundStore } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { useTabStore } from '../tabStore/tab.store';
 import { createDataColumnSlice } from './slices/dataColumn.slice';
@@ -33,7 +33,7 @@ type DataState = DataStore &
   DataQuerySlice &
   DataFormDataSlice;
 
-export const useDataStore = create<DataState>()(
+export const useDataStore: UseBoundStore<StoreApi<DataState>> = create<DataState>()(
   devtools(
     (set, get, ...state) => ({
       loadDataFromIndexedDB: async (): Promise<{ rows: RowType[]; columns: ColumnType[] } | null> => {

@@ -1,6 +1,5 @@
-import { create } from 'zustand';
+import { create, type StoreApi, type UseBoundStore } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-
 import type { TabType } from '@/types';
 import { useConnectionStore } from '../connectionStore/connection.store';
 import { createTabColumnSlice } from './slices/tabColumn.slice';
@@ -12,12 +11,12 @@ import type { TabDataSlice, TabFilterSlice, TabQuerySlice, TabSettingSlice, TabS
 
 type TabState = TabStore & TabSettingSlice & TabQuerySlice & TabFilterSlice & TabSortSlice & TabDataSlice;
 
-const initialize = {
+const initialize: any = {
   tabs: [],
   selectedTabId: undefined
 };
 
-export const useTabStore = create<TabState>()(
+export const useTabStore: UseBoundStore<StoreApi<TabState>> = create<TabState>()(
   devtools(
     persist(
       (set, get, ...state) => ({
