@@ -1,4 +1,4 @@
-import { debouncedSaveEditedAndUnsaved, debouncedSaveRowsAndEditedRows } from '@/core/utils/indexdbHelper';
+import { debouncedSaveEditedAndUnsaved } from '@/core/utils/indexdbHelper';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { EditedRow } from '@/types';
 import type { StateCreator } from 'zustand';
@@ -56,8 +56,6 @@ export const createDataEditedRowsSlice: StateCreator<
 
     set({ editedRows: [] });
     get().updateRows(currentRows);
-
-    // debouncedSaveRowsAndEditedRows(selectedTabId, currentRows, []);
 
     return Promise.resolve();
   },
