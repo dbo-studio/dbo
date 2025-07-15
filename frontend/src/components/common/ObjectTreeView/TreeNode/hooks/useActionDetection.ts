@@ -1,7 +1,7 @@
 import api from '@/api';
 import type { TreeNodeType } from '@/api/tree/types';
 import { TabMode } from '@/core/enums';
-import { useCopyToClipboard, useCurrentConnection, useSelectedTab } from '@/hooks';
+import { useCopyToClipboard, useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -29,13 +29,13 @@ export const useActionDetection = (
   const { mutateAsync: executeActionMutation, isPending: pendingExecuteAction } = useMutation({
     mutationFn: api.tree.executeAction,
     onSuccess: async (_, variables): Promise<void> => {
-      const selectedTab = useSelectedTab();
+      const selectedTab = useTabStore.getState().selectedTab();
       queryClient.invalidateQueries({
         queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, variables.nodeId]
       });
       await reloadTree();
     },
-    onError: (error): void => {
+    onError: (error: Error): void => {
       console.error('🚀 ~ actionDetection:', error);
     }
   });
@@ -80,7 +80,7 @@ export const useActionDetection = (
               }
 
               try {
-                const selectedTab = useSelectedTab();
+                const selectedTab = useTabStore.getState().selectedTab();
                 await executeActionMutation({
                   nodeId: node.id,
                   action: node.action.name,
@@ -93,7 +93,9 @@ export const useActionDetection = (
                 });
 
                 toast.success(locales.action_executed_successfully);
-              } catch (error) {}
+              } catch (error) {
+                console.log('🚀 ~ handleCopy ~ error:', error);
+              }
             }
           );
           break;

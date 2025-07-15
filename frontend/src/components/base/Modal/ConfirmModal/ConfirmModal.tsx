@@ -54,13 +54,17 @@ export default function ConfirmModal(): JSX.Element {
     <ModalStyled open={isOpen}>
       <ConfirmModalStyled>
         <Box flex={1} mb={theme.spacing(1)}>
-          <Box mb={theme.spacing(2)}>
-            <Typography variant='h6' component='h2'>
-              {title}
-            </Typography>
-            <Typography sx={{ mt: 2 }} color={theme.palette.text.text}>
-              {description}
-            </Typography>
+          <Box mb={theme.spacing(title ? 2 : 0)}>
+            {title && (
+              <Typography variant='h6' component='h2'>
+                {title}
+              </Typography>
+            )}
+            {description && (
+              <Typography sx={{ mt: title ? 2 : 0 }} color={theme.palette.text.text}>
+                {description}
+              </Typography>
+            )}
           </Box>
         </Box>
         <Box display={'flex'} justifyContent={'end'}>
