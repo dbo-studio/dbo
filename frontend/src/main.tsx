@@ -29,7 +29,7 @@ enableMocking().then(() => {
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
       <ThemeProvider>
-        <GlobalStyles styles={(theme): Interpolation<Theme> => globalStyles(theme)} />
+        <GlobalStyles styles={(theme: Theme): Interpolation<Theme> => globalStyles(theme)} />
         <CssBaseline />
         <QueryClientProvider client={queryClient}>
           <Home />
