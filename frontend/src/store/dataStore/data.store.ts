@@ -50,21 +50,24 @@ export const useDataStore: UseBoundStore<StoreApi<DataState>> = create<DataState
           const dbUnsavedRows = await indexedDBService.getUnsavedRows(selectedTabId);
           const dbSelectedRows = await indexedDBService.getSelectedRows(selectedTabId);
 
+          get().updateRows(dbRows);
+          get().updateColumns(dbColumns);
+          get().updateEditedRows(dbEditedRows);
+          get().updateRemovedRows(dbRemovedRows);
+          get().updateUnsavedRows(dbUnsavedRows);
+          get().updateSelectedRows(dbSelectedRows, true);
+
           if (dbRows.length > 0 && dbColumns.length > 0) {
-            get().updateRows(dbRows);
-            get().updateColumns(dbColumns);
-            get().updateEditedRows(dbEditedRows);
-            get().updateRemovedRows(dbRemovedRows);
-            get().updateUnsavedRows(dbUnsavedRows);
-            get().updateSelectedRows(dbSelectedRows, true);
+            get().toggleDataFetching(false);
             return { rows: dbRows, columns: dbColumns.filter((column) => column.isActive) };
           }
+
+          return null;
         } catch (error) {
-          console.error('Error loading data from IndexedDB:', error);
-        } finally {
           get().toggleDataFetching(false);
+          console.error('Error loading data from IndexedDB:', error);
+          return null;
         }
-        return null;
       },
       ...createDataRowSlice(set, get, ...state),
       ...createDataEditedRowsSlice(set, get, ...state),

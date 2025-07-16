@@ -1,7 +1,7 @@
 import { TabMode } from '@/core/enums';
+import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { useRemoveTab as useRemoveTabHook } from '@/hooks/useRemoveTab.hook.ts';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
-import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { TabType } from '@/types';
 import { useCallback } from 'react';
@@ -12,11 +12,11 @@ export const useRemoveTab = (): { handleRemoveTab: (tabId: string) => void } => 
   const confirmModal = useConfirmModalStore();
 
   const handleRemoveTab = useCallback(
-    (tabId: string): void => {
+    async (tabId: string): Promise<void> => {
       const selectedTab = useTabStore.getState().tabs.find((tab) => tab.id === tabId);
       if (!selectedTab) return;
 
-      if (needConfirm(selectedTab)) {
+      if (await needConfirm(selectedTab)) {
         confirmModal.warning(undefined, 'Are you sure you want to close this tab?', () => {
           remove(tabId);
         });
@@ -27,7 +27,7 @@ export const useRemoveTab = (): { handleRemoveTab: (tabId: string) => void } => 
     [removeTab, updateSelectedTab]
   );
 
-  const needConfirm = (tab: TabType): boolean => {
+  const needConfirm = async (tab: TabType): Promise<boolean> => {
     if (tab.mode === TabMode.Query && useTabStore.getState().getQuery(tab.id) !== '') {
       return true;
     }
@@ -37,8 +37,10 @@ export const useRemoveTab = (): { handleRemoveTab: (tabId: string) => void } => 
     }
 
     if (tab.mode === TabMode.Data) {
-      const editedRows = useDataStore.getState().editedRows;
-      const unsavedRows = useDataStore.getState().unSavedRows;
+      const [editedRows, unsavedRows] = await Promise.all([
+        indexedDBService.getEditedRows(tab.id),
+        indexedDBService.getUnsavedRows(tab.id)
+      ]);
 
       if ((editedRows && editedRows.length > 0) || (unsavedRows && unsavedRows.length > 0)) {
         return true;
