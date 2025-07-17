@@ -6,7 +6,6 @@ import type { CellEditingReturn } from '../types';
 export const useCellEditing = (row: any, columnId: string, cellValue: string): CellEditingReturn => {
   const inputRef = useRef<HTMLInputElement>(null);
   const updateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const updateEditingCell = useDataStore((state) => state.updateEditingCell);
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
   const updateRow = useDataStore((state) => state.updateRow);
   const toggleReRender = useDataStore((state) => state.toggleReRender);
@@ -32,9 +31,8 @@ export const useCellEditing = (row: any, columnId: string, cellValue: string): C
 
         toggleReRender();
       }
-      updateEditingCell(null);
     },
-    [row, columnId, cellValue, updateEditedRows, updateRow, updateEditingCell]
+    [row, columnId, cellValue, updateEditedRows, updateRow]
   );
 
   useEffect((): (() => void) => {

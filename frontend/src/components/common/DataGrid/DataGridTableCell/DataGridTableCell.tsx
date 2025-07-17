@@ -1,5 +1,4 @@
-import { useDataStore } from '@/store/dataStore/data.store';
-import { memo, useEffect, useRef } from 'react';
+import { memo, useEffect } from 'react';
 import { CellContainer, CellContent, CellInput } from '../DataGrid.styled';
 import { useCellEditing } from '../hooks/useCellEditing';
 import { useCellSelection } from '../hooks/useCellSelection';
@@ -9,14 +8,10 @@ export const DataGridTableCell = memo(
   ({ row, rowIndex, columnId, value, editable }: DataGridTableCellProps) => {
     const placeholder = String(value === null ? 'NULL' : value || '');
     const cellValue = String(value || '');
-    const cellRef = useRef<HTMLDivElement>(null);
-    const updateEditingCell = useDataStore((state) => state.updateEditingCell);
-    const editingCell = useDataStore((state) => state.editingCell);
-    const isEditing = editingCell?.rowIndex === rowIndex && editingCell?.columnId === columnId;
 
     const { inputRef, handleRowChange } = useCellEditing(row, columnId, cellValue);
 
-    const { handleClick } = useCellSelection(row, rowIndex, columnId, editable);
+    const { handleClick, isEditing, setIsEditing } = useCellSelection(row, rowIndex, columnId, editable);
 
     useEffect(() => {
       if (isEditing && inputRef.current) {
@@ -24,27 +19,17 @@ export const DataGridTableCell = memo(
       }
     }, [isEditing]);
 
-    useEffect((): (() => void) => {
-      const handleClickOutside = (event: MouseEvent): void => {
-        if (isEditing && cellRef.current && !cellRef.current.contains(event.target as Node)) {
-          if (inputRef.current) {
-            inputRef.current.blur();
-          }
-        }
-      };
-
-      document.addEventListener('mousedown', handleClickOutside);
-      return (): void => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }, [isEditing]);
+    const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>): void => {
+      setIsEditing(false);
+      handleRowChange(e);
+    };
 
     if (isEditing && editable) {
       return (
         <CellInput
           ref={inputRef}
           defaultValue={cellValue}
-          onBlur={handleRowChange}
+          onBlur={handleInputBlur}
           onKeyDown={(e): void => {
             if (e.key === 'Enter' || e.key === 'Escape') {
               e.currentTarget.blur();
@@ -55,7 +40,7 @@ export const DataGridTableCell = memo(
     }
 
     return (
-      <CellContainer ref={cellRef} onClick={(e: React.MouseEvent): void => handleClick(e, updateEditingCell)}>
+      <CellContainer onClick={(e: React.MouseEvent): void => handleClick(e)}>
         <CellContent>{placeholder}</CellContent>
       </CellContainer>
     );

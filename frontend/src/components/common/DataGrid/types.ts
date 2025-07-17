@@ -33,10 +33,9 @@ export type CellEditingReturn = {
 };
 
 export type CellSelectionReturn = {
-  handleClick: (
-    e: React.MouseEvent,
-    setEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void
-  ) => void;
+  handleClick: (e: React.MouseEvent) => void;
+  isEditing: boolean;
+  setIsEditing: (isEditing: boolean) => void;
 };
 
 export interface RowSelectionReturn {
