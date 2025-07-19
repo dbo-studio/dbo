@@ -2,7 +2,7 @@ import type { AutoCompleteType } from '@/types';
 import { languages } from 'monaco-editor/esm/vs/editor/editor.api';
 import type { ICompletionItem } from 'monaco-sql-languages';
 
-const prefixLabel = (languageId: string, text: string) => {
+const prefixLabel = (languageId: string, text: string): string => {
   const prefix = languageId ? languageId.replace(/sql/gi, '').toLocaleLowerCase() : '';
   return prefix ? `${prefix}_${text}` : text;
 };
@@ -15,11 +15,11 @@ let autocomplete: AutoCompleteType = {
   columns: {}
 };
 
-export function changeMetaProviderSetting(at: AutoCompleteType) {
+export function changeMetaProviderSetting(at: AutoCompleteType): void {
   autocomplete = at;
 }
 
-export function getDataBasesAndSchemas(languageId: string) {
+export function getDataBasesAndSchemas(languageId: string): ICompletionItem[] {
   const databaseAndSchemas = getDataBases(languageId);
 
   databaseAndSchemas.concat(getSchemas(languageId));

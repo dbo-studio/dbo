@@ -1,13 +1,7 @@
 import type { ThemeModeEnum } from '@/core/enums';
 import { alpha } from '@mui/material';
 
-declare module '@mui/material/styles/createPalette' {
-  export interface Palette {
-    accent: PaletteColor;
-    white: PaletteColor;
-    black: PaletteColor;
-    gradient: PaletteColor;
-  }
+declare module '@mui/material/styles' {
   export interface TypeBackground {
     default: string;
     paper: string;
@@ -95,7 +89,7 @@ const colorPalette = {
   action: {
     light: {
       active: GREY[600],
-      hover: '#fafbfd',
+      hover: '#eaebec',
       selected: '#dbecfa',
       disabled: alpha(GREY[500], 0.8),
       disabledBackground: alpha(GREY[500], 0.24),
@@ -105,7 +99,7 @@ const colorPalette = {
     },
     dark: {
       active: GREY[600],
-      hover: '#25282A',
+      hover: '#44464d',
       selected: '#103148',
       disabled: '#515761',
       disabledBackground: '#212229',
@@ -119,9 +113,9 @@ const colorPalette = {
       text: '#343741',
       title: '#1a1c21',
       subdued: '#646a77',
-      success: '#007871',
-      warning: '#83650a',
-      danger: '#bd271e',
+      success: '#343741',
+      warning: '#343741',
+      danger: '#343741',
       primary: '#006bb8',
       secondary: '#ba3d76',
       disabled: '#a2abba',
@@ -132,9 +126,9 @@ const colorPalette = {
       text: '#dfe5ef',
       title: '#dfe5ef',
       subdued: '#7a7f89',
-      success: '#7dded8',
-      warning: '#f3d371',
-      danger: '#f86b63',
+      success: '#fff',
+      warning: '#fff',
+      danger: '#fff',
       primary: '#36a2ef',
       secondary: '#f68fbe',
       disabled: '#515761',
@@ -162,7 +156,7 @@ const colorPalette = {
   }
 };
 
-export default function palette(themeMode: ThemeModeEnum) {
+export default function palette(themeMode: ThemeModeEnum): any {
   const theme = {
     light: {
       primary: {

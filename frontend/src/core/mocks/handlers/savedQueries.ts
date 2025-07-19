@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
 
-export const DELETE_SAVED_QUERY = (id: number) => `/saved/${id}`;
+export const DELETE_SAVED_QUERY = (id: number): string => `/saved/${id}`;
 
 const savedQueriesHandler = [
   http.get('/api/saved', () => {
@@ -8,8 +8,10 @@ const savedQueriesHandler = [
       data: [
         {
           id: 1,
+          connectionId: 1,
           name: 'data_src',
-          query: "SELECT * FROM 'data_src';"
+          query: "SELECT * FROM 'data_src';",
+          createdAt: '2025-07-07 16:56:13'
         }
       ],
       message: ''

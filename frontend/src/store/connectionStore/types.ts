@@ -2,13 +2,13 @@ import type { ConnectionType } from '@/types';
 
 export type ConnectionStore = {
   loading: LoadingType;
-  updateLoading: (loading: LoadingType) => void;
-  showEditConnection: ConnectionType | undefined;
   connections: ConnectionType[] | undefined;
-  currentConnection: ConnectionType | undefined;
+  currentConnectionId: string | number | undefined;
+
+  currentConnection: () => ConnectionType | undefined;
+  updateLoading: (loading: LoadingType) => void;
   updateConnections: (connections: ConnectionType[]) => void;
   updateCurrentConnection: (connection: ConnectionType | undefined) => void;
-  updateShowEditConnection: (connections: ConnectionType | undefined) => void;
 };
 
 export type LoadingType = 'loading' | 'error' | 'finished';

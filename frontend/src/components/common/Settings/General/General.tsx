@@ -1,13 +1,14 @@
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { Box, Divider, Switch, Typography } from '@mui/material';
-import type * as React from 'react';
+import type { JSX } from 'react';
 
-export default function General() {
-  const { updateDebug, debug } = useSettingStore();
+export default function General(): JSX.Element {
+  const debug = useSettingStore((state) => state.debug);
+  const toggleDebug = useSettingStore((state) => state.toggleDebug);
 
-  const handleChangeDebugMode = (event: React.ChangeEvent<HTMLInputElement>) => {
-    updateDebug(event?.target?.checked);
+  const handleChangeDebugMode = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    toggleDebug(event?.target?.checked);
   };
 
   return (

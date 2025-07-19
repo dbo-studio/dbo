@@ -1,62 +1,28 @@
 package model
 
 import (
-	"database/sql"
-	"math/rand"
+	"time"
 
 	"github.com/go-faker/faker/v4"
 )
 
 type Connection struct {
-	ID              uint `gorm:"primaryKey,autoIncrement"`
-	Name            string
-	Host            string
-	Username        string
-	Password        sql.NullString
-	Port            int32
-	Database        sql.NullString
-	IsActive        bool
-	CurrentSchema   sql.NullString
-	CurrentDatabase sql.NullString
-	CreatedAt       sql.NullTime `gorm:"autoCreateTime"`
-	UpdatedAt       sql.NullTime `gorm:"autoUpdateTime"`
-}
-
-type ConnectionResource struct {
-	ID       uint   `json:"id"`
-	Name     string `json:"name"`
-	Host     string `json:"host"`
-	Username string `json:"username"`
-	Port     int32  `json:"port"`
-	Database string `json:"database"`
+	ID             uint `gorm:"primaryKey,autoIncrement"`
+	Name           string
+	ConnectionType string
+	Options        string
+	IsActive       bool
+	Version        *string
+	CreatedAt      *time.Time `gorm:"autoCreateTime"`
+	UpdatedAt      *time.Time `gorm:"autoUpdateTime"`
+	Histories      []History  `gorm:"foreignKey:ConnectionID;constraint:OnDelete:CASCADE"`
 }
 
 func (c Connection) FakeConnection() *Connection {
-	port := rand.Int()
-
 	return &Connection{
-		Name:     faker.Name(),
-		Host:     faker.IPv4(),
-		Username: faker.Username(),
-		Password: sql.NullString{
-			Valid:  true,
-			String: faker.Password(),
-		},
-		Port: int32(port),
-		Database: sql.NullString{
-			Valid:  true,
-			String: faker.Name(),
-		},
-		CreatedAt: sql.NullTime{},
-		UpdatedAt: sql.NullTime{},
-		CurrentSchema: sql.NullString{
-			Valid:  true,
-			String: faker.Name(),
-		},
-		CurrentDatabase: sql.NullString{
-			Valid:  true,
-			String: faker.Name(),
-		},
+		Name:      faker.Name(),
+		CreatedAt: nil,
+		UpdatedAt: nil,
 	}
 }
 

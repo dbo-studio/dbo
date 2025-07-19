@@ -13,7 +13,7 @@ import { completionService } from './completionService';
 
 /** define MonacoEnvironment.getWorker  */
 (globalThis as any).MonacoEnvironment = {
-  getWorker(_: any, label: string) {
+  getWorker(_: any, label: string): Worker {
     if (label === LanguageIdEnum.PG) {
       return new PGSQLWorker();
     }

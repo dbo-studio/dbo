@@ -1,15 +1,17 @@
 import Loading from '@/components/layout/AppHeader/ConnectionInfo/ConnectionBox/Loading/Loading.tsx';
 import type { ConnectionBoxStatus } from '@/components/layout/AppHeader/ConnectionInfo/types.ts';
+import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store.ts';
 import { Box, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import { ConnectionBoxStyled } from './ConnectionBox.styled.ts';
 
-export default function ConnectionBox() {
-  const { currentConnection, loading } = useConnectionStore();
+export default function ConnectionBox(): JSX.Element {
+  const loading = useConnectionStore((state) => state.loading);
   const [info, setInfo] = useState('');
   const [status, setStatus] = useState<ConnectionBoxStatus>('loading');
+  const currentConnection = useCurrentConnection();
 
   useEffect(() => {
     if (loading === 'loading') {
@@ -23,15 +25,13 @@ export default function ConnectionBox() {
       return;
     }
 
-    if (!currentConnection || !currentConnection.currentSchema) {
+    if (!currentConnection) {
       setInfo(locales.no_active_connection);
       setStatus('disable');
       return;
     }
 
-    setInfo(
-      `${currentConnection?.name} | ${currentConnection?.driver} ${currentConnection?.version} : ${currentConnection.currentSchema} :  SQL Query`
-    );
+    setInfo(currentConnection.info);
     setStatus('finished');
   }, [currentConnection, loading]);
 

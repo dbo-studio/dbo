@@ -2,11 +2,18 @@ import { ConfirmModalStyled } from '@/components/base/Modal/ConfirmModal/Confirm
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store.ts';
 import { Box, Button, Typography, useTheme } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import { ModalStyled } from '../Modal.styled.ts';
 
-export default function ConfirmModal() {
-  const { isOpen, mode, title, description, onCancel, onSuccess, close } = useConfirmModalStore();
+export default function ConfirmModal(): JSX.Element {
+  const isOpen = useConfirmModalStore((state) => state.isOpen);
+  const mode = useConfirmModalStore((state) => state.mode);
+  const title = useConfirmModalStore((state) => state.title);
+  const description = useConfirmModalStore((state) => state.description);
+  const onCancel = useConfirmModalStore((state) => state.onCancel);
+  const onSuccess = useConfirmModalStore((state) => state.onSuccess);
+  const close = useConfirmModalStore((state) => state.close);
+
   const [style, setStyle] = useState({});
   const theme = useTheme();
 
@@ -33,12 +40,12 @@ export default function ConfirmModal() {
     }
   }, [mode]);
 
-  const handleCancel = () => {
+  const handleCancel = (): void => {
     onCancel?.();
     close();
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = (): void => {
     onSuccess?.();
     close();
   };
@@ -47,13 +54,17 @@ export default function ConfirmModal() {
     <ModalStyled open={isOpen}>
       <ConfirmModalStyled>
         <Box flex={1} mb={theme.spacing(1)}>
-          <Box mb={theme.spacing(2)}>
-            <Typography fontSize={'1.9286rem'} fontWeight={'bold'} color={theme.palette.text.text} variant='h1'>
-              {title}
-            </Typography>
-            <Typography mt={theme.spacing(2)} color={theme.palette.text.text}>
-              {description}
-            </Typography>
+          <Box mb={theme.spacing(title ? 2 : 0)}>
+            {title && (
+              <Typography variant='h6' component='h2'>
+                {title}
+              </Typography>
+            )}
+            {description && (
+              <Typography sx={{ mt: title ? 2 : 0 }} color={theme.palette.text.text}>
+                {description}
+              </Typography>
+            )}
           </Box>
         </Box>
         <Box display={'flex'} justifyContent={'end'}>

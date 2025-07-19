@@ -2,9 +2,9 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { constants } from '@/core/constants';
 import locales from '@/locales';
 import { Box, Typography, useTheme } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 
-export default function AboutPanel() {
+export default function AboutPanel(): JSX.Element {
   const theme = useTheme();
   const [about, setAbout] = useState<{
     version: string | null;

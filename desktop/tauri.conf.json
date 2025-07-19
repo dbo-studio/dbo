@@ -36,7 +36,7 @@
       "exceptionDomain": "",
       "frameworks": [],
       "providerShortName": null,
-      "signingIdentity": "-"
+      "signingIdentity": null
     },
     "resources": [],
     "shortDescription": "Modern and easy to use SQL client",
@@ -49,7 +49,7 @@
   },
   "productName": "DBO",
   "mainBinaryName": "DBO",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "identifier": "com.dbostudio.dev",
   "plugins": {
     "updater": {

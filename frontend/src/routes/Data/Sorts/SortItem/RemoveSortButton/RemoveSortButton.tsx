@@ -2,13 +2,14 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { IconButton } from '@mui/material';
+import type { JSX } from 'react';
 import type { RemoveSortButtonProps } from '../../types.ts';
 
-export default function RemoveSortButton({ sort }: RemoveSortButtonProps) {
-  const { removeSort } = useTabStore();
-  const { runQuery } = useDataStore();
+export default function RemoveSortButton({ sort }: RemoveSortButtonProps): JSX.Element {
+  const removeSort = useTabStore((state) => state.removeSort);
+  const runQuery = useDataStore((state) => state.runQuery);
 
-  const handleRemoveSort = () => {
+  const handleRemoveSort = (): void => {
     removeSort(sort);
     if (sort.isActive) {
       runQuery().then();

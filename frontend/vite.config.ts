@@ -1,13 +1,25 @@
-import path from 'node:path';
 import react from '@vitejs/plugin-react-swc';
+import path from 'node:path';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
 
 const host = process.env.TAURI_DEV_HOST;
+const ReactCompilerConfig = {};
+
 
 export default defineConfig({
   clearScreen: host === undefined,
-  plugins: [react(), tsconfigPaths()],
+  plugins: [ 
+    react({
+      //@ts-ignore
+      babel: {
+        plugins: [
+          ["babel-plugin-react-compiler", ReactCompilerConfig],
+        ],
+      },
+    }),
+    tsconfigPaths()
+  ],
   envPrefix: ['VITE_', 'TAURI_ENV_*'],
   resolve: {
     alias: {
@@ -36,7 +48,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: 'vitest.setup.js',
+    setupFiles: './src/test/vitest.setup.js',
+    css: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html']
@@ -48,6 +61,12 @@ export default defineConfig({
         find: /^monaco-editor$/,
         replacement: `${__dirname}/node_modules/monaco-editor/esm/vs/editor/editor.api`
       }
-    ]
+    ],
+    environmentOptions: {
+      jsdom: {
+        resources: 'usable',
+        pretendToBeVisual: true
+      }
+    }
   }
 });

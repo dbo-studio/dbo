@@ -1,6 +1,7 @@
+import { debouncedSaveRows } from '@/core/utils/indexdbHelper';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import type { RowType } from '@/types';
 import type { StateCreator } from 'zustand';
-import { useTabStore } from '../../tabStore/tab.store';
 import type { DataColumnSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
 
 export const createDataRowSlice: StateCreator<
@@ -9,51 +10,30 @@ export const createDataRowSlice: StateCreator<
   [],
   DataRowSlice
 > = (set, get) => ({
-  rows: {},
-  getRows: (): RowType[] => {
-    const selectedTab = useTabStore.getState().getSelectedTab();
-    const rows = get().rows;
-    if (!selectedTab || !rows[selectedTab.id]) {
-      return [];
-    }
-    return rows[selectedTab.id];
+  rows: undefined,
+  getRow: (row: RowType): RowType | undefined => {
+    return get().rows?.find((r) => r.dbo_index === row.dbo_index);
   },
-  getRow: (dboIndex: number): RowType => {
-    return get()
-      .getRows()
-      .find((r) => r.dbo_index === dboIndex);
-  },
-  updateRows: async (items: RowType[]) => {
-    const selectedTab = useTabStore.getState().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
-
-    const rows = get().rows;
-    rows[selectedTab.id] = items;
+  updateRows: async (rows: RowType[]): Promise<void> => {
+    const selectedTabId = useTabStore.getState().selectedTabId;
+    if (!selectedTabId) return;
 
     set({ rows });
+    debouncedSaveRows(selectedTabId, rows);
+
+    return Promise.resolve();
   },
-  updateRow: (item: RowType) => {
-    const selectedTab = useTabStore.getState().getSelectedTab();
-    if (!selectedTab) return;
-
+  updateRow: async (row: RowType): Promise<void> => {
     const rows = get().rows;
-    rows[selectedTab.id] = get()
-      .getRows()
-      .map((r) => {
-        if (r.dbo_index === item.dbo_index) return item;
-        return r;
-      });
+    const selectedTabId = useTabStore.getState().selectedTabId;
 
-    set({ rows });
-  },
-  removeRowsByTabId: (tabId: string) => {
-    const rows = get().rows;
-    if (rows[tabId]) {
-      delete rows[tabId];
-    }
+    if (!selectedTabId || !rows) return;
 
-    set({ rows: rows });
+    const newRows = rows.map((r) => (r.dbo_index === row.dbo_index ? row : r));
+
+    set({ rows: newRows });
+    debouncedSaveRows(selectedTabId, newRows);
+
+    return Promise.resolve();
   }
 });

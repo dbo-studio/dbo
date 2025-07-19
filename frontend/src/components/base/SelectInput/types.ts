@@ -8,9 +8,11 @@ export type SelectInputProps = {
   size?: 'medium' | 'small';
   options: SelectInputOption[];
   onChange: (value: SelectInputOption) => void;
+  isMulti?: boolean;
 };
 
 export type SelectInputOption = {
+  [x: string]: any;
   value: any;
   label: string;
 };

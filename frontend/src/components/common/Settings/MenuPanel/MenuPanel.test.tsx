@@ -1,7 +1,6 @@
+import { renderWithProviders, resetAllMocks } from '@/test/utils/test-helpers.tsx';
 import { screen } from '@testing-library/dom';
-import { render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 import type { MenuPanelTabType } from '../types';
 import MenuPanel from './MenuPanel';
 
@@ -11,12 +10,12 @@ const tabs: MenuPanelTabType[] = [
 ];
 
 describe('MenuPanel.tsx', () => {
-  test('should render the the about panel with correct tabs in web', () => {
-    render(
-      <MemoryRouter>
-        <MenuPanel tabs={tabs} onChange={() => {}} />
-      </MemoryRouter>
-    );
+  beforeEach(() => {
+    resetAllMocks();
+  });
+
+  test('should render the about panel with correct tabs in web', () => {
+    renderWithProviders(<MenuPanel tabs={tabs} onChange={(): void => {}} />);
     expect(screen.getAllByText('Tab1')).not.toBeNull();
     expect(screen.queryByText('Tab2')).toBeNull();
   });

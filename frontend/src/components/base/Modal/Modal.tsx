@@ -1,14 +1,15 @@
 import { Box, Divider, Typography, useTheme } from '@mui/material';
+import type { JSX } from 'react';
 import { ModalStyled, ModalWrapperStyled } from './Modal.styled';
 import type { ModalProps } from './types';
 
-export default function Modal({ open, title, children, padding, onClose }: ModalProps) {
+export default function Modal({ open, title, children, padding, onClose }: ModalProps): JSX.Element {
   const theme = useTheme();
 
   return (
     <ModalStyled
       open={open}
-      onClose={() => {
+      onClose={(): void => {
         onClose ? onClose() : null;
       }}
     >

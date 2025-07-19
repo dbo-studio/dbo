@@ -1,3 +1,4 @@
+import type { ConnectionType } from '@/types';
 import { http, HttpResponse } from 'msw';
 
 const connectionHandler = [
@@ -61,47 +62,36 @@ const connectionHandler = [
 
 const connectionListItemModel = {
   id: 1,
-  name: 'localhost',
-  type: 'SQL',
-  driver: 'PostgreSQL',
-  auth: {
-    database: 'default',
-    host: 'sample-pgsql',
+  name: 'dmt',
+  isActive: true,
+  info: 'dmt | postgresql 15.8 :  SQL Query',
+  icon: 'postgresql',
+  type: 'postgresql',
+  options: {
+    database: 'shopping_order',
+    host: 'postgres.domestic-mock-server.orb.local',
+    password: '',
     port: 5432,
+    uri: '',
     username: 'default'
-  },
-  is_active: true
+  }
 };
 
 const connectionDetailModel = {
   id: 1,
-  name: 'sample_db',
-  type: 'SQL',
-  driver: 'PostgreSQL',
-  version: '16.1',
-  is_active: true,
-  current_database: 'default',
-  current_schema: 'public',
-  auth: {
-    database: 'default',
-    host: 'sample-pgsql',
+  name: 'dmt',
+  isActive: true,
+  info: 'dmt | postgresql 15.8 :  SQL Query',
+  icon: 'postgresql',
+  type: 'postgresql',
+  options: {
+    database: 'shopping_order',
+    host: 'postgres.domestic-mock-server.orb.local',
+    password: '',
     port: 5432,
+    uri: '',
     username: 'default'
-  },
-  databases: ['postgres', 'default'],
-  schemas: ['public', 'test1', 'test2'],
-  tables: [
-    'data_src',
-    'datsrcln',
-    'deriv_cd',
-    'fd_group',
-    'food_des',
-    'footnote',
-    'nut_data',
-    'nutr_def',
-    'src_cd',
-    'weight'
-  ]
-};
+  }
+} as ConnectionType;
 
 export { connectionDetailModel, connectionHandler, connectionListItemModel };

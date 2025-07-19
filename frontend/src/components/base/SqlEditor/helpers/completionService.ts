@@ -4,7 +4,7 @@ import { type CompletionService, EntityContextType, type ICompletionItem } from 
 import type { editor } from 'monaco-editor';
 import { getColumns, getDataBasesAndSchemas, getTables, getViews } from './dbMetaProvider';
 
-const haveCatalogSQLType = (languageId: string) => {
+const haveCatalogSQLType = (languageId: string): boolean => {
   return ['flinksql', 'trinosql'].includes(languageId.toLowerCase());
 };
 

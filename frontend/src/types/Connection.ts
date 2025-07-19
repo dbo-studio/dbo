@@ -1,21 +1,9 @@
 export interface ConnectionType {
   id: number;
   name: string;
-  type: string;
-  driver: string;
-  version?: string;
-  currentDatabase?: string;
-  currentSchema?: string;
+  type: 'postgresql';
   isActive: boolean;
-  auth: ConnectionAuthType;
-  databases?: string[];
-  schemas?: string[];
-  tables?: string[];
-}
-
-export interface ConnectionAuthType {
-  database: string;
-  host: string;
-  port: number;
-  username: string;
+  info: string;
+  icon: string;
+  options: any;
 }
