@@ -1,6 +1,6 @@
 {
   "name": "dbo",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "scripts": {
     "dev": "vite",
     "dev:live": "NODE_ENV=development VITE_PUBLIC_SERVER_URL=http://localhost:8080/api vite",
