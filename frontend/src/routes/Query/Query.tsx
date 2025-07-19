@@ -74,6 +74,8 @@ export default function Query(): JSX.Element {
     } catch (error) {
       console.error('🚀 ~ loadData ~ error:', error);
     }
+
+    toggleDataFetching(false);
   };
 
   const runQuery = async (query?: string): Promise<void> => {
