@@ -2,10 +2,8 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/driver"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
@@ -15,14 +13,12 @@ import (
 var _ IConnectionRepo = (*IConnectionRepoImpl)(nil)
 
 type IConnectionRepoImpl struct {
-	db      *gorm.DB
-	drivers *driver.DriverEngine
+	db *gorm.DB
 }
 
-func NewConnectionRepo(db *gorm.DB, drivers *driver.DriverEngine) *IConnectionRepoImpl {
+func NewConnectionRepo(db *gorm.DB) *IConnectionRepoImpl {
 	return &IConnectionRepoImpl{
-		db:      db,
-		drivers: drivers,
+		db: db,
 	}
 }
 
@@ -35,96 +31,52 @@ func (c IConnectionRepoImpl) Index(_ context.Context) (*[]model.Connection, erro
 
 func (c IConnectionRepoImpl) Find(_ context.Context, id int32) (*model.Connection, error) {
 	var connection model.Connection
-	result := c.db.Where("id", "=", id).First(&connection)
+	result := c.db.Where("id = ?", id).First(&connection)
 
 	return &connection, result.Error
 }
 
-func (c IConnectionRepoImpl) Create(_ context.Context, dto *dto.CreateConnectionRequest) (*model.Connection, error) {
+func (c IConnectionRepoImpl) Create(ctx context.Context, dto *dto.CreateConnectionRequest) (*model.Connection, error) {
 	connection := &model.Connection{
-		Name:      dto.Name,
-		Host:      dto.Host,
-		Username:  dto.Username,
-		Port:      dto.Port,
-		IsActive:  false,
-		CreatedAt: sql.NullTime{},
-		UpdatedAt: sql.NullTime{},
+		Name:           dto.Name,
+		ConnectionType: dto.Type,
+		Options:        string(dto.Options),
+		IsActive:       true,
+		CreatedAt:      nil,
+		UpdatedAt:      nil,
 	}
 
-	if dto.Password != nil {
-		connection.Password = sql.NullString{
-			Valid:  true,
-			String: lo.FromPtr[string](dto.Password),
-		}
-	}
-
-	if dto.Database != nil {
-		connection.Database = sql.NullString{
-			Valid:  true,
-			String: lo.FromPtr[string](dto.Database),
-		}
-
-		connection.CurrentDatabase = sql.NullString{
-			Valid:  true,
-			String: lo.FromPtr[string](dto.Database),
-		}
-	}
-
-	result := c.db.Save(connection)
-
+	result := c.db.WithContext(ctx).Save(connection)
 	return connection, result.Error
 }
 
-func (c IConnectionRepoImpl) Delete(_ context.Context, connection *model.Connection) error {
-	result := c.db.Delete(connection)
+func (c IConnectionRepoImpl) Delete(ctx context.Context, connection *model.Connection) error {
+	result := c.db.WithContext(ctx).Delete(connection)
 	return result.Error
 }
 
-func (c IConnectionRepoImpl) Update(_ context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) (*model.Connection, error) {
+func (c IConnectionRepoImpl) Update(ctx context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) (*model.Connection, error) {
 	connection.Name = helper.OptionalString(req.Name, connection.Name)
-	connection.Host = helper.OptionalString(req.Host, connection.Host)
-	connection.Username = helper.OptionalString(req.Username, connection.Username)
-	connection.Password = sql.NullString{
-		Valid:  true,
-		String: helper.OptionalString(req.Password, connection.Password.String),
-	}
-	connection.Port = helper.OptionalInt32(req.Port, connection.Port)
-	connection.Database = sql.NullString{
-		Valid:  true,
-		String: helper.OptionalString(req.Database, connection.Database.String),
-	}
 	connection.IsActive = helper.OptionalBool(req.IsActive, connection.IsActive)
-	connection.CurrentDatabase = sql.NullString{
-		Valid:  true,
-		String: helper.OptionalString(req.CurrentDatabase, connection.CurrentDatabase.String),
-	}
+	connection.Options = string(req.Options)
 
-	if req.CurrentDatabase != nil && req.CurrentSchema == nil {
-		schemas, _ := c.drivers.Pgsql.Schemas(int32(connection.ID), *req.CurrentDatabase, false)
-		var currentSchema string
-		if len(schemas) > 0 {
-			currentSchema = schemas[0]
-		}
-		connection.CurrentSchema = sql.NullString{
-			Valid:  true,
-			String: currentSchema,
-		}
-	} else {
-		connection.CurrentSchema = sql.NullString{
-			Valid:  true,
-			String: helper.OptionalString(req.CurrentSchema, connection.CurrentSchema.String),
-		}
-	}
-
-	result := c.db.Save(&connection)
+	result := c.db.WithContext(ctx).Save(&connection)
 
 	return connection, result.Error
 }
 
-func (c IConnectionRepoImpl) MakeAllConnectionsNotDefault(_ context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) error {
+func (c IConnectionRepoImpl) MakeAllConnectionsNotDefault(ctx context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) error {
 	if req.IsActive != nil && *req.IsActive {
-		result := c.db.Model(&model.Connection{}).Not("id", connection.ID).Update("is_active", false)
+		result := c.db.WithContext(ctx).Model(&model.Connection{}).Not("id", connection.ID).Update("is_active", false)
 		return result.Error
 	}
 	return nil
+}
+
+func (c IConnectionRepoImpl) UpdateVersion(ctx context.Context, connection *model.Connection, version string) (*model.Connection, error) {
+	connection.Version = lo.ToPtr(version)
+
+	result := c.db.WithContext(ctx).Save(&connection)
+
+	return connection, result.Error
 }

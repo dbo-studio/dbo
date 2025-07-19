@@ -4,8 +4,7 @@ export type SavedQueryItemProps = {
   query: SavedQueryType;
   selected: boolean;
   onClick: () => void;
-  onChange: (query: SavedQueryType) => void;
-  onDelete: () => void;
+  onChange: () => void;
 };
 
 export type SavedQueryContextMenuProps = {

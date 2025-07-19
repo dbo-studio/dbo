@@ -1,5 +1,5 @@
-import { Box, styled } from '@mui/material';
 import { variables } from '@/core/theme/variables.ts';
+import { Box, styled } from '@mui/material';
 
 export const ResizableModalWrapperStyled = styled(Box)(({ theme }) => ({
   overflow: 'hidden',

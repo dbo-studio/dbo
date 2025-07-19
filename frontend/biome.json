@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "formatter": {
     "enabled": true,
     "formatWithErrors": false,
@@ -21,6 +21,18 @@
       },
       "a11y": {
         "useKeyWithClickEvents": "off"
+      },
+      "style": {
+        "noParameterAssign": "error",
+        "useAsConstAssertion": "error",
+        "useDefaultParameterLast": "error",
+        "useEnumInitializers": "error",
+        "useSelfClosingElements": "error",
+        "useSingleVarDeclarator": "error",
+        "noUnusedTemplateLiteral": "error",
+        "useNumberNamespace": "error",
+        "noInferrableTypes": "error",
+        "noUselessElse": "error"
       }
     }
   },
@@ -37,9 +49,8 @@
       "attributePosition": "auto"
     }
   },
-  "overrides": [
-    {
-      "include": ["src/*.ts", "src/*.tsx"]
-    }
-  ]
+  "files": {
+    "includes": ["**/src/**/*.ts", "**/src/**/*.tsx"]
+  },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } }
 }

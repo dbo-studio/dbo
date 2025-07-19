@@ -1,62 +1,99 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { useTabStore } from '@/store/tabStore/tab.store';
-import { Grid2, IconButton, Stack, useTheme } from '@mui/material';
+import { Box, Grid, IconButton, Stack, useTheme } from '@mui/material';
+import { type JSX, useState } from 'react';
+import Filters from '../Filters/Filters';
+import QueryPreview from '../QueryPreview/QueryPreview';
+import Sorts from '../Sorts/Sorts';
+import type { ActionBarProps } from './types';
 
-export default function ActionBar() {
+export default function ActionBar({ showColumns, setShowColumns }: ActionBarProps): JSX.Element {
   const theme = useTheme();
-  const { setShowQueryPreview, setShowFilters, setShowSorts, setShowColumns } = useTabStore();
-  const { getSelectedTab } = useTabStore();
+  const [show, setShow] = useState({
+    showFilters: false,
+    showSorts: false,
+    showQuery: false
+  });
 
-  const handleToggle = (type: 'filter' | 'query' | 'sort' | 'column') => {
+  const handleToggle = (type: 'filter' | 'query' | 'sort' | 'column'): void => {
     switch (type) {
       case 'filter':
-        setShowFilters(!getSelectedTab()?.showFilters);
+        setShow({
+          showFilters: !show.showFilters,
+          showSorts: false,
+          showQuery: false
+        });
         break;
       case 'query':
-        setShowQueryPreview(!getSelectedTab()?.showQuery);
+        setShow({
+          showFilters: false,
+          showSorts: false,
+          showQuery: !show.showQuery
+        });
         break;
       case 'sort':
-        setShowSorts(!getSelectedTab()?.showSorts);
+        setShow({
+          showFilters: false,
+          showSorts: !show.showSorts,
+          showQuery: false
+        });
         break;
       case 'column':
-        setShowColumns(!getSelectedTab()?.showColumns);
+        setShowColumns(!showColumns);
         break;
     }
   };
 
   return (
-    <Stack
-      id='action-bar'
-      borderBottom={`1px solid ${theme.palette.divider}`}
-      borderTop={`1px solid ${theme.palette.divider}`}
-      padding=' 8px'
-      maxHeight={40}
-      direction='row'
-      justifyContent='space-between'
-      alignItems='center'
-    >
-      <Stack direction={'row'} spacing={1} display='flex' justifyContent='flex-start'>
-        <IconButton aria-label='grid' onClick={() => handleToggle('column')}>
-          <CustomIcon type='grid' size='s' />
-        </IconButton>
-        <IconButton className='toggle-filters' onClick={() => handleToggle('filter')}>
-          <CustomIcon type='filter' size='s' />
-        </IconButton>
-        <IconButton aria-label='sort' onClick={() => handleToggle('sort')}>
-          <CustomIcon type='sort' size='s' />
-        </IconButton>
-      </Stack>
-      <Grid2 size={{ md: 8 }} display='flex' justifyContent='flex-end'>
-        <IconButton className='toggle-code-preview' onClick={() => handleToggle('query')}>
-          <CustomIcon type='code' size='s' />
-        </IconButton>
-        {/* <IconButton aria-label='export'>
+    <Box>
+      <Stack
+        id='action-bar'
+        borderBottom={`1px solid ${theme.palette.divider}`}
+        borderTop={`1px solid ${theme.palette.divider}`}
+        padding=' 8px'
+        maxHeight={40}
+        direction='row'
+        justifyContent='space-between'
+        alignItems='center'
+      >
+        <Stack direction={'row'} spacing={1} display='flex' justifyContent='flex-start'>
+          <IconButton
+            className={showColumns ? 'active' : ''}
+            aria-label='grid'
+            onClick={(): void => handleToggle('column')}
+          >
+            <CustomIcon type='grid' size='s' />
+          </IconButton>
+          <IconButton className={show.showFilters ? 'active' : ''} onClick={(): void => handleToggle('filter')}>
+            <CustomIcon type='filter' size='s' />
+          </IconButton>
+          <IconButton
+            className={show.showSorts ? 'active' : ''}
+            aria-label='sort'
+            onClick={(): void => handleToggle('sort')}
+          >
+            <CustomIcon type='sort' size='s' />
+          </IconButton>
+        </Stack>
+        <Grid size={{ md: 8 }} display='flex' justifyContent='flex-end'>
+          <IconButton
+            className={show.showQuery ? 'active' : 'toggle-code-preview'}
+            onClick={(): void => handleToggle('query')}
+          >
+            <CustomIcon type='code' size='s' />
+          </IconButton>
+
+          {/* <IconButton aria-label='export'>
           <CustomIcon type='export' size='s' />
         </IconButton>
         <IconButton aria-label='import'>
           <CustomIcon type='import' size='s' />
         </IconButton> */}
-      </Grid2>
-    </Stack>
+        </Grid>
+      </Stack>
+
+      {show.showFilters && <Filters />}
+      {show.showSorts && <Sorts />}
+      {show.showQuery && <QueryPreview />}
+    </Box>
   );
 }

@@ -1,18 +1,19 @@
 import { constants } from '@/core/constants';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { Direction } from '@mui/material';
-import { createTheme, type ThemeOptions, ThemeProvider as MUIThemeProvider } from '@mui/material/styles';
+import { ThemeProvider as MUIThemeProvider, type ThemeOptions, createTheme } from '@mui/material/styles';
 import type React from 'react';
+import type { JSX } from 'react';
 import { ThemeModeEnum } from '../enums';
 import componentsOverride from './overrides';
-import palette from './palette_improved';
+import palette from './palette';
 
 type Props = {
   children: React.ReactNode;
 };
 
-export default function ThemeProvider({ children }: Props) {
-  const { isDark } = useSettingStore();
+export default function ThemeProvider({ children }: Props): JSX.Element {
+  const isDark = useSettingStore((state) => state.isDark);
 
   const themeOptions: ThemeOptions = {
     palette: palette(isDark ? ThemeModeEnum.Dark : ThemeModeEnum.Light),

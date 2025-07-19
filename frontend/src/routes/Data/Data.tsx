@@ -1,31 +1,94 @@
-import DataGrid from '@/components/shared/DBDataGrid/DataGrid.tsx';
-import StatusBar from '@/components/shared/StatusBar/StatusBar';
-import Sorts from '@/routes/Data/Sorts/Sorts.tsx';
-import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import DataGrid from '@/components/common/DataGrid/DataGrid';
+import { useMount } from '@/hooks';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { Box } from '@mui/material';
+import type { ColumnType, RowType } from '@/types';
+import { Box, CircularProgress } from '@mui/material';
+import type { JSX } from 'react';
+import { useEffect, useState } from 'react';
 import ActionBar from './ActionBar/ActionBar';
 import Columns from './Columns/Columns';
-import Filters from './Filters/Filters';
-import QueryPreview from './QueryPreview/QueryPreview';
+import StatusBar from './StatusBar/StatusBar';
 
-export default function Data() {
-  const { getSelectedTab } = useTabStore();
-  const { currentConnection } = useConnectionStore();
+export default function Data(): JSX.Element {
+  const mounted = useMount();
+  const [tableData, setTableData] = useState({
+    rows: [] as RowType[],
+    columns: [] as ColumnType[]
+  });
+  const [isGridReady, setIsGridReady] = useState(false);
+  const [showColumns, setShowColumns] = useState(false);
 
-  if (!getSelectedTab() || !currentConnection) {
-    return <></>;
-  }
+  const selectedTabId = useTabStore((state) => state.selectedTabId);
+  const reRunQuery = useDataStore((state) => state.reRunQuery);
+  const reRender = useDataStore((state) => state.reRender);
+
+  const loadDataFromIndexedDB = useDataStore((state) => state.loadDataFromIndexedDB);
+  const runQuery = useDataStore((state) => state.runQuery);
+
+  const loadData = async (): Promise<void> => {
+    setTableData({
+      rows: [],
+      columns: []
+    });
+
+    try {
+      const result = await loadDataFromIndexedDB();
+      if (!result) {
+        const res = await runQuery();
+        setTableData({
+          rows: res?.data ?? [],
+          columns: res?.columns.filter((column) => column.isActive) ?? []
+        });
+      } else {
+        setTableData(result);
+      }
+    } catch (error) {
+      console.error('🚀 ~ loadData ~ error:', error);
+    }
+  };
+
+  const handleReRunQuery = async (): Promise<void> => {
+    const res = await runQuery();
+    setTableData({
+      rows: res?.data ?? [],
+      columns: res?.columns.filter((column) => column.isActive) ?? []
+    });
+  };
+
+  useEffect(() => {
+    setIsGridReady(false);
+
+    if (!mounted || !selectedTabId) return;
+
+    loadData();
+    setIsGridReady(true);
+  }, [selectedTabId, mounted]);
+
+  useEffect(() => {
+    handleReRunQuery();
+  }, [reRunQuery]);
+
+  useEffect(() => {
+    setTableData({
+      rows: useDataStore.getState().rows ?? [],
+      columns: useDataStore.getState().columns ?? []
+    });
+  }, [reRender]);
 
   return (
     <>
-      <ActionBar />
-      {getSelectedTab()?.showFilters && <Filters />}
-      {getSelectedTab()?.showSorts && <Sorts />}
-      {getSelectedTab()?.showQuery && <QueryPreview />}
+      <ActionBar showColumns={showColumns} setShowColumns={setShowColumns} />
       <Box overflow='hidden' flex={1} display='flex' flexDirection='row'>
-        {getSelectedTab()?.showColumns && <Columns />}
-        <DataGrid editable={true} />
+        {showColumns && <Columns />}
+        {tableData.columns.length > 0 &&
+          (isGridReady ? (
+            <DataGrid rows={tableData.rows} columns={tableData.columns} loading={false} />
+          ) : (
+            <Box display='flex' justifyContent='center' alignItems='center' width='100%'>
+              <CircularProgress size={30} />
+            </Box>
+          ))}
       </Box>
       <StatusBar />
     </>

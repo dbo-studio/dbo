@@ -3,15 +3,13 @@ import type { StateCreator } from 'zustand';
 import type { TabFilterSlice, TabStore } from '../types';
 
 export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [], TabFilterSlice> = (_, get) => ({
-  upsertFilters: async (filter: FilterType) => {
-    const selectedTab = get().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
+  upsertFilters: (filter: FilterType): void => {
+    const tab = get().selectedTab();
+    if (!tab) return;
 
-    const findFilter = selectedTab.filters.find((f: FilterType) => f.index === filter.index);
+    const findFilter = tab.filters?.find((f: FilterType) => f.index === filter.index);
     if (!findFilter) {
-      selectedTab.filters.push(filter);
+      tab.filters?.push(filter);
     } else {
       findFilter.column = filter.column;
       findFilter.value = filter.value;
@@ -20,25 +18,13 @@ export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [
       findFilter.isActive = filter.isActive;
     }
 
-    get().updateSelectedTab(selectedTab);
+    get().updateSelectedTab(tab);
   },
-  removeFilter: (filter: FilterType) => {
-    const selectedTab = get().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
+  removeFilter: (filter: FilterType): void => {
+    const tab = get().selectedTab();
+    if (!tab) return;
 
-    selectedTab.filters = selectedTab.filters.filter((f: FilterType) => f.index !== filter.index);
-    get().updateSelectedTab(selectedTab);
-  },
-  setShowFilters: (show: boolean) => {
-    const selectedTab = get().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
-
-    selectedTab.showFilters = show;
-    selectedTab.showSorts = false;
-    get().updateSelectedTab(selectedTab);
+    tab.filters = tab?.filters?.filter((f: FilterType) => f.index !== filter.index);
+    get().updateSelectedTab(tab);
   }
 });

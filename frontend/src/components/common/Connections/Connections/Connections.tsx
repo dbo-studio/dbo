@@ -1,33 +1,64 @@
-import api from '@/api';
-import useAPI from '@/hooks/useApi.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { ConnectionType } from '@/types';
-import { useEffect, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 
-import type { updateConnectionType } from '@/api/connection/types';
-import useNavigate from '@/hooks/useNavigate.hook';
-import axios from 'axios';
-import { useSearchParams } from 'react-router-dom';
-import { toast } from 'sonner';
+import api from '@/api';
+import AddConnection from '@/components/common/AddConnection/AddConnection';
+import { useSettingStore } from '@/store/settingStore/setting.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import EditConnection from '../../AddConnection/EditConnection';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { ConnectionsStyled } from './Connections.styled';
 import { EmptySpaceStyle } from './EmptySpace.styled';
-import AddConnection from '@/components/common/Connections/AddConnection/AddConnection.tsx';
-import EditConnection from '@/components/common/Connections/EditConnection/EditConnection.tsx';
 
-export default function Connections() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { currentConnection, connections, updateCurrentConnection, updateLoading, loading } = useConnectionStore();
+export default function Connections(): JSX.Element {
   const [loadingConnectionId, setLoadingConnectionId] = useState<number | undefined>(undefined);
-  const navigate = useNavigate();
 
-  const { request: getConnectionDetail } = useAPI({
-    apiMethod: api.connection.getConnectionDetail
+  const loading = useConnectionStore((state) => state.loading);
+  const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
+
+  const currentConnection = useConnectionStore((state) => state.currentConnection);
+  const updateLoading = useConnectionStore((state) => state.updateLoading);
+  const updateCurrentConnection = useConnectionStore((state) => state.updateCurrentConnection);
+  const updateConnections = useConnectionStore((state) => state.updateConnections);
+  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
+  const toggleShowAddConnection = useSettingStore((state) => state.toggleShowAddConnection);
+
+  const { data: connections } = useQuery({
+    queryKey: ['connections'],
+    queryFn: async (): Promise<ConnectionType[]> => {
+      updateLoading('loading');
+      try {
+        const connections = await api.connection.getConnectionList();
+        updateConnections(connections);
+        if (!currentConnectionId) {
+          updateCurrentConnection(connections.find((c) => c.isActive));
+        }
+        updateLoading('finished');
+        return connections;
+      } catch (error) {
+        updateLoading('error');
+        throw error;
+      }
+    }
   });
 
-  const { request: updateConnection, pending: pendingUpdateConnection } = useAPI({
-    apiMethod: api.connection.updateConnection
+  const { mutateAsync: updateConnectionMutation, isPending: pendingUpdateConnection } = useMutation({
+    mutationFn: (id: number): Promise<ConnectionType> => api.connection.updateConnection(id, { isActive: true }),
+    onMutate: (id: number): void => {
+      setLoadingConnectionId(id);
+      updateLoading('loading');
+    },
+    onSuccess: (c: ConnectionType): void => {
+      updateLoading('finished');
+      updateCurrentConnection(c);
+    },
+    onError: (error): void => {
+      console.error('🚀 ~ updateConnectionMutation ~ error:', error);
+      updateLoading('error');
+    }
   });
 
   useEffect(() => {
@@ -36,50 +67,20 @@ export default function Connections() {
     }
 
     if (connections.length === 0) {
-      searchParams.set('showAddConnection', 'true');
-      setSearchParams(searchParams);
-    }
-
-    if (connections.length > 0) {
-      const activeConnection = connections.filter((c: ConnectionType) => c.isActive);
-      if (activeConnection.length > 0) handleChangeCurrentConnection(activeConnection[0]).then();
-    } else {
-      searchParams.set('showAddConnection', 'true');
-      setSearchParams(searchParams);
+      toggleShowAddConnection(true);
     }
   }, [connections]);
 
-  const handleChangeCurrentConnection = async (c: ConnectionType) => {
-    if (c.id === currentConnection?.id || loading === 'loading') {
+  const handleChangeCurrentConnection = async (c: ConnectionType): Promise<void> => {
+    const tabs = useTabStore.getState().tabs;
+    if (c.id === currentConnection()?.id || loading === 'loading') {
       return;
     }
-
     try {
-      setLoadingConnectionId(c.id);
-      updateLoading('loading');
-      const connectionDetail = await getConnectionDetail({
-        connectionID: c?.id,
-        fromCache: true
-      });
-
-      await updateConnection({
-        id: c.id,
-        is_active: true
-      } as updateConnectionType);
-
-      updateCurrentConnection(connectionDetail);
-      updateLoading('finished');
-
-      navigate({
-        connectionId: c.id,
-        tabId: ''
-      });
+      await updateConnectionMutation(c.id);
+      updateSelectedTab(tabs.find((t) => t.connectionId === c.id));
     } catch (error) {
-      updateLoading('error');
-      if (axios.isAxiosError(error)) {
-        toast.error(error.message);
-      }
-      console.log('🚀 ~ handleChangeCurrentConnection ~ err:', error);
+      console.error('🚀 ~ handleChangeCurrentConnection ~ error:', error);
     }
   };
 
@@ -90,9 +91,9 @@ export default function Connections() {
       {connections?.map((c: ConnectionType) => (
         <ConnectionItem
           loading={pendingUpdateConnection && loadingConnectionId === c.id}
-          onClick={() => handleChangeCurrentConnection(c)}
+          onClick={(): Promise<void> => handleChangeCurrentConnection(c)}
           key={uuid()}
-          selected={c.id === currentConnection?.id}
+          selected={c.id === currentConnection()?.id}
           connection={c}
         />
       ))}

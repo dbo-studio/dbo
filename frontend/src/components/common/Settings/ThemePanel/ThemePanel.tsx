@@ -1,21 +1,22 @@
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Divider, Typography, useMediaQuery } from '@mui/material';
-import { useEffect } from 'react';
+import { type JSX, useEffect } from 'react';
 import ThemeItem from './ThemeItem/ThemeItem';
 
-export default function ThemePanel() {
-  const { isDark, updateIsDark } = useSettingStore();
+export default function ThemePanel(): JSX.Element {
+  const isDark = useSettingStore((state) => state.isDark);
+  const toggleIsDark = useSettingStore((state) => state.toggleIsDark);
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
 
   useEffect(() => {
     if (isDark === undefined && prefersDarkMode) {
-      updateIsDark(prefersDarkMode);
+      toggleIsDark(prefersDarkMode);
     }
   }, []);
 
-  const handleToggle = (isDark: boolean) => {
-    updateIsDark(isDark);
+  const handleToggle = (isDark: boolean): void => {
+    toggleIsDark(isDark);
   };
 
   return (
@@ -30,8 +31,8 @@ export default function ThemePanel() {
       </Box>
       <Divider />
       <Box display={'flex'} mt={2}>
-        <ThemeItem selected={isDark !== false} onClick={() => handleToggle(true)} isDark={true} />
-        <ThemeItem selected={!isDark} onClick={() => handleToggle(false)} isDark={false} />
+        <ThemeItem selected={isDark !== false} onClick={(): void => handleToggle(true)} isDark={true} />
+        <ThemeItem selected={!isDark} onClick={(): void => handleToggle(false)} isDark={false} />
       </Box>
     </Box>
   );

@@ -1,22 +1,28 @@
 import type { EventFor } from '@/types';
 import { Box } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
+import { type JSX, useEffect, useRef, useState } from 'react';
 import ResizableToggle from './ResizableToggle';
 import type { ResizableBoxXProps } from './types';
 
-export default function ResizableXBox({ direction, width, maxWidth, children, onChange }: ResizableBoxXProps) {
+export default function ResizableXBox({
+  direction,
+  width,
+  maxWidth,
+  children,
+  onChange
+}: ResizableBoxXProps): JSX.Element {
   const [boxWidth, setBoxWidth] = useState(width);
   const [isResizing, setIsResizing] = useState(false);
   const [initialX, setInitialX] = useState(0);
   const currentWidthRef = useRef(boxWidth);
 
-  const handleMouseDown = (event: EventFor<'div', 'onMouseDown'>) => {
+  const handleMouseDown = (event: EventFor<'div', 'onMouseDown'>): void => {
     event.preventDefault();
     setIsResizing(true);
     setInitialX(event.clientX);
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (): void => {
     if (!isResizing) return;
 
     if (onChange) {
@@ -30,7 +36,7 @@ export default function ResizableXBox({ direction, width, maxWidth, children, on
     setIsResizing(false);
   };
 
-  const handleMouseMove = (event: any) => {
+  const handleMouseMove = (event: any): void => {
     if (!isResizing) return;
 
     const newWidth =
@@ -55,7 +61,7 @@ export default function ResizableXBox({ direction, width, maxWidth, children, on
       document.removeEventListener('mouseup', handleMouseUp);
     }
 
-    return () => {
+    return (): void => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
