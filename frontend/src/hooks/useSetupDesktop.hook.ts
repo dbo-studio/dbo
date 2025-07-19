@@ -1,10 +1,10 @@
-import { changeUrl } from '@/core/services/api/intialize';
+import { changeUrl } from '@/core/api';
 import { tools } from '@/core/utils';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from 'react';
 
-export const useSetupDesktop = () => {
+export const useSetupDesktop = (): boolean => {
   const [loaded, setLoaded] = useState(false);
   const reset = useTabStore((state) => state.reset);
 
@@ -25,13 +25,13 @@ export const useSetupDesktop = () => {
   return loaded;
 };
 
-const setup = async () => {
+const setup = async (): Promise<void> => {
   disableDefaultContextMenu();
   await setupMenu();
   await setupBackend();
 };
 
-const setupBackend = async () => {
+const setupBackend = async (): Promise<void> => {
   const response = await invoke('get_backend_host');
   if (response === '') {
     alert('cant found empty port!');
@@ -41,7 +41,7 @@ const setupBackend = async () => {
   changeUrl(response as string);
 };
 
-const disableDefaultContextMenu = () => {
+const disableDefaultContextMenu = (): void => {
   if (process.env.NODE_ENV === 'development') {
     return;
   }
@@ -58,11 +58,24 @@ const disableDefaultContextMenu = () => {
   document.addEventListener(
     'selectstart',
     (e) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
       e.preventDefault();
       return false;
     },
     { capture: true }
   );
+
+  document.addEventListener(
+    'keydown',
+    (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+        return;
+      }
+    },
+    { capture: true }
+  );
 };
 
-const setupMenu = async () => {};
+const setupMenu = async (): Promise<void> => {};

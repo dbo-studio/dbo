@@ -2,8 +2,12 @@ package serviceConnection
 
 import (
 	"context"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
+	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/goccy/go-json"
 )
 
 func (s IConnectionServiceImpl) Update(ctx context.Context, connectionId int32, req *dto.UpdateConnectionRequest) (*dto.ConnectionDetailResponse, error) {
@@ -12,12 +16,21 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionId int32, 
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	updatedConnection, err := s.connectionRepo.Update(ctx, connection, req)
-	if err != nil {
-		return nil, apperror.InternalServerError(err)
+	var options string
+	switch connection.ConnectionType {
+	case string(databaseContract.Postgresql):
+		options, err = databaseConnection.UpdatePostgresqlConnection(json.RawMessage(connection.Options), req.Options)
+	case string(databaseContract.Sqlite):
+		options, err = databaseConnection.UpdateSQLiteConnection(json.RawMessage(connection.Options), req.Options)
 	}
 
-	err = s.cacheRepo.FlushCache(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Options = json.RawMessage(options)
+
+	updatedConnection, err := s.connectionRepo.Update(ctx, connection, req)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -27,7 +40,5 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionId int32, 
 		return nil, apperror.InternalServerError(err)
 	}
 
-	s.drivers.Pgsql.Close(int32(connection.ID))
-
-	return s.connectionDetail(ctx, updatedConnection, false)
+	return connectionDetailModelToResponse(updatedConnection), nil
 }

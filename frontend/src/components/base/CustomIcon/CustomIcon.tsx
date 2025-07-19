@@ -1,5 +1,6 @@
 import { useTheme } from '@mui/material';
 import { icons } from 'lucide-react';
+import type { JSX } from 'react';
 import { type IconProps, IconTypes } from './types';
 
 const sizes = {
@@ -21,7 +22,7 @@ const sizes = {
   }
 };
 
-export default function CustomIcon({ type, size = 's', width, height, onClick }: IconProps) {
+export default function CustomIcon({ type, size = 's', width, height, onClick }: IconProps): JSX.Element {
   const theme = useTheme();
 
   let w = sizes[size].width;

@@ -1,7 +1,9 @@
-export type RowType = any;
+export type RowType = {
+  dbo_index: number;
+  [key: string]: any;
+};
 
 export interface ColumnType {
-  key: string;
   name: string;
   type: string;
   isActive: boolean;
@@ -12,12 +14,6 @@ export interface ColumnType {
   mappedType: string;
   selected?: boolean;
   editable?: boolean;
-  editMode?: {
-    name?: boolean;
-    default?: boolean;
-    length?: boolean;
-    comment?: boolean;
-  };
 }
 
 export interface EditedColumnType extends ColumnType {

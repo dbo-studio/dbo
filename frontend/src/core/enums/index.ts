@@ -1,2 +1,2 @@
-export * from './tab-mode.enum';
-export * from './theme-mode.enum';
+export * from './tabMode.enum';
+export * from './themeMode.enum';

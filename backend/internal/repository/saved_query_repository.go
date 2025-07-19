@@ -22,10 +22,13 @@ func NewSavedQueryRepo(db *gorm.DB) *ISavedQueryRepoImpl {
 	}
 }
 
-func (I ISavedQueryRepoImpl) Index(_ context.Context, pagination *dto.PaginationRequest) (*[]model.SavedQuery, error) {
+func (I ISavedQueryRepoImpl) Index(_ context.Context, req *dto.SavedQueryListRequest) (*[]model.SavedQuery, error) {
 	var items []model.SavedQuery
 
-	result := I.db.Scopes(scope.Paginate(pagination)).Order("created_at desc").Find(&items)
+	result := I.db.Scopes(scope.Paginate(&req.PaginationRequest)).
+		Where("connection_id = ?", req.ConnectionId).
+		Order("created_at desc").
+		Find(&items)
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -36,7 +39,7 @@ func (I ISavedQueryRepoImpl) Index(_ context.Context, pagination *dto.Pagination
 
 func (I ISavedQueryRepoImpl) Find(_ context.Context, id int32) (*model.SavedQuery, error) {
 	var query model.SavedQuery
-	result := I.db.Where("id", "=", id).First(&query)
+	result := I.db.Where("id = ?", id).First(&query)
 
 	return &query, result.Error
 }
@@ -52,6 +55,8 @@ func (I ISavedQueryRepoImpl) Create(_ context.Context, dto *dto.CreateSavedQuery
 	} else {
 		query.Name = *dto.Name
 	}
+
+	query.ConnectionID = uint(dto.ConnectionId)
 	query.Query = dto.Query
 	result := I.db.Save(&query)
 	return &query, result.Error

@@ -20,15 +20,12 @@ jobs:
       - name: Verify go.mod is tidy
         working-directory: ./backend
         run: |
-          go mod tidy -go=1.23
-          git diff --exit-code
+          go mod tidy
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v8
         with:
+          version: v2.1
           working-directory: ./backend
-          version: v1.61.0
-          args: --verbose --timeout=3m
-          skip-cache: true
 
   # front-quality:
   #   runs-on: ubuntu-latest

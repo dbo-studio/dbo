@@ -1,56 +1,49 @@
-import { fireEvent, render } from '@testing-library/react';
 import General from '@/components/common/Settings/General/General';
-import * as setting from '@/store/settingStore/setting.store.ts';
-import { useSettingStore } from '@/store/settingStore/setting.store.ts';
-import { describe, expect, vi } from 'vitest';
-import { screen } from '@testing-library/dom';
-import { MemoryRouter } from 'react-router-dom';
 import locales from '@/locales';
-
-const spy = vi.spyOn(setting, 'useSettingStore');
+import { createSpy, renderWithProviders, resetAllMocks, setupStoreMocks } from '@/test/utils/test-helpers.tsx';
+import { screen } from '@testing-library/dom';
+import { fireEvent } from '@testing-library/react';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 describe('General.tsx', () => {
   beforeEach(() => {
-    spy.mockReturnValue({
-      updateDebug: vi.fn(),
-      debug: false
-    });
+    resetAllMocks();
   });
 
-  it('renders the General component', () => {
-    render(
-      <MemoryRouter>
-        <General />
-      </MemoryRouter>
-    );
+  test('should render the General component', () => {
+    setupStoreMocks.settingStore({
+      debug: false
+    });
+
+    renderWithProviders(<General />);
 
     expect(screen.queryByText(locales.general)).not.toBeNull();
     expect(screen.queryByText(locales.debug_mode)).not.toBeNull();
     expect(screen.queryByText(locales.enable_debug_console)).not.toBeNull();
   });
 
-  it('toggles debug mode switch', () => {
-    const { updateDebug } = useSettingStore();
-    render(
-      <MemoryRouter>
-        <General />
-      </MemoryRouter>
-    );
+  test('should toggle debug mode switch', () => {
+    const mockToggleDebug = createSpy();
+
+    setupStoreMocks.settingStore({
+      debug: false,
+      toggleDebug: mockToggleDebug
+    });
+
+    renderWithProviders(<General />);
+
     const switchElement = screen.getByRole('checkbox');
     fireEvent.click(switchElement);
-    expect(updateDebug).toHaveBeenCalledWith(true);
+
+    expect(mockToggleDebug).toHaveBeenCalledWith(true);
   });
 
-  it('displays the correct initial state of the switch', () => {
-    spy.mockReturnValueOnce({
-      updateDebug: vi.fn(),
+  test('should display the correct initial state of the switch when debug is true', () => {
+    setupStoreMocks.settingStore({
       debug: true
     });
-    render(
-      <MemoryRouter>
-        <General />
-      </MemoryRouter>
-    );
+
+    renderWithProviders(<General />);
 
     expect(screen.queryByRole('checkbox', { checked: true })).not.toBeNull();
   });

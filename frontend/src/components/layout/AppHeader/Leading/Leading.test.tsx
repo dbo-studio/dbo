@@ -1,26 +1,21 @@
+import { renderWithProviders, resetAllMocks } from '@/test/utils/test-helpers.tsx';
 import { screen } from '@testing-library/dom';
-import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 import Leading from './Leading.tsx';
 
 describe('Leading.tsx', () => {
-  test('should render the the Leading', () => {
-    render(
-      <MemoryRouter>
-        <Leading />
-      </MemoryRouter>
-    );
+  beforeEach(() => {
+    resetAllMocks();
+  });
+
+  test('should render the Leading', () => {
+    renderWithProviders(<Leading />);
     expect(screen.getByLabelText('settings')).not.toBeNull();
   });
 
   test('should open settings', async () => {
-    render(
-      <MemoryRouter>
-        <Leading />
-      </MemoryRouter>
-    );
+    renderWithProviders(<Leading />);
 
     await userEvent.click(screen.getByLabelText('settings'));
   });

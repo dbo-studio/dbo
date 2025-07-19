@@ -1,11 +1,12 @@
 import locales from '@/locales';
 import { Typography } from '@mui/material';
+import type { JSX } from 'react';
 import type { ThemeItemProps } from '../../types';
 import { ThemeItemStyled } from './ThemeItem.styled';
 
-export default function ThemeItem({ isDark, selected, onClick }: ThemeItemProps) {
+export default function ThemeItem({ isDark, selected, onClick }: ThemeItemProps): JSX.Element {
   return (
-    <ThemeItemStyled onClick={() => onClick()} selected={selected}>
+    <ThemeItemStyled onClick={(): void => onClick()} selected={selected}>
       <img
         width={150}
         height={93}

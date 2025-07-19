@@ -3,49 +3,33 @@ import type { StateCreator } from 'zustand';
 import type { TabSortSlice, TabStore } from '../types';
 
 export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], TabSortSlice> = (_, get) => ({
-  upsertSorts: async (sort: SortType) => {
-    const selectedTab = get().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
+  upsertSorts: async (sort: SortType): Promise<void> => {
+    const tab = get().selectedTab();
+    if (!tab) return;
 
-    const findSort = selectedTab.sorts.find((s: SortType) => s.index === sort.index);
+    const findSort = tab.sorts?.find((s: SortType) => s.index === sort.index);
     if (!findSort) {
-      selectedTab.sorts.push(sort);
+      tab.sorts?.push(sort);
     } else {
       findSort.column = sort.column;
       findSort.operator = sort.operator;
       findSort.isActive = sort.isActive;
     }
 
-    get().updateSelectedTab(selectedTab);
+    get().updateSelectedTab(tab);
   },
-  removeSort: (sort: SortType) => {
-    const selectedTab = get().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
+  removeSort: (sort: SortType): void => {
+    const tab = get().selectedTab();
+    if (!tab) return;
 
-    selectedTab.sorts = selectedTab.sorts.filter((s: SortType) => s.index !== sort.index);
-    get().updateSelectedTab(selectedTab);
+    tab.sorts = tab.sorts?.filter((s: SortType) => s.index !== sort.index);
+    get().updateSelectedTab(tab);
   },
-  setShowSorts: (show: boolean) => {
-    const selectedTab = get().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
+  updateSorts: (sorts: SortType[]): void => {
+    const tab = get().selectedTab();
+    if (!tab) return;
 
-    selectedTab.showSorts = show;
-    selectedTab.showFilters = false;
-    get().updateSelectedTab(selectedTab);
-  },
-  updateSorts: async (sorts: SortType[]) => {
-    const selectedTab = get().getSelectedTab();
-    if (!selectedTab) {
-      return;
-    }
-
-    selectedTab.sorts = sorts;
-    get().updateSelectedTab(selectedTab);
+    tab.sorts = sorts;
+    get().updateSelectedTab(tab);
   }
 });

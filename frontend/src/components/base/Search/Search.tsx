@@ -1,38 +1,39 @@
 import locales from '@/locales';
 import type { EventFor } from '@/types';
 import { Box, InputAdornment, InputBase } from '@mui/material';
-import { useState } from 'react';
+import { type JSX, useState } from 'react';
 import CustomIcon from '../CustomIcon/CustomIcon';
 
-export default function Search({ onChange }: { onChange: (value: string) => void }) {
+export default function Search({ onChange }: { onChange: (value: string) => void }): JSX.Element {
   const [value, setValue] = useState('');
 
-  const onChangeHandler = (e: EventFor<'input', 'onChange'>) => {
+  const onChangeHandler = (e: EventFor<'input', 'onChange'>): void => {
     setValue(e.target.value);
     onChange(e.target.value);
   };
 
-  const handleClear = () => {
+  const handleClear = (): void => {
     setValue('');
     onChange('');
   };
 
   return (
-    <Box mt={1}>
+    <Box>
       <InputBase
+        size='small'
         value={value}
         onChange={onChangeHandler}
         fullWidth={true}
         placeholder={locales.search}
         startAdornment={
           <InputAdornment position='start'>
-            <CustomIcon type='search' height={12} width={12} />
+            <CustomIcon type='search' size='xs' />
           </InputAdornment>
         }
         endAdornment={
           value.length > 0 && (
             <InputAdornment position='end' onClick={handleClear} sx={{ cursor: 'pointer' }}>
-              <CustomIcon type='close' height={12} width={12} />
+              <CustomIcon type='close' size='xs' />
             </InputAdornment>
           )
         }

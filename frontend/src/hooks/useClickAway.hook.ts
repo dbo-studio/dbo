@@ -1,8 +1,7 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import type { EventFor } from '@/types';
+import { type RefObject, useEffect, useLayoutEffect, useRef } from 'react';
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
-export function useClickAway(cb) {
+export function useClickAway(cb: any): RefObject<any> {
   const ref = useRef(null);
   const refCb = useRef(cb);
 
@@ -11,22 +10,22 @@ export function useClickAway(cb) {
   });
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    const handler = (e) => {
+    const handler = (e: EventFor<'div', 'onMouseDown'>): void => {
       const element = ref.current;
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
+      // @ts-ignore
       if (element && !element.contains(e.target)) {
         refCb.current(e);
       }
     };
-
+    // @ts-ignore
     document.addEventListener('mousedown', handler);
+    // @ts-ignore
     document.addEventListener('touchstart', handler);
 
-    return () => {
+    return (): void => {
+      // @ts-ignore
       document.removeEventListener('mousedown', handler);
+      // @ts-ignore
       document.removeEventListener('touchstart', handler);
     };
   }, []);

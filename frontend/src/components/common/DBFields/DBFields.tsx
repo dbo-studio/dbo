@@ -3,40 +3,41 @@ import Search from '@/components/base/Search/Search';
 import { useDataStore } from '@/store/dataStore/data.store';
 import type { RowType } from '@/types';
 import { Box } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 
-export default function DBFields() {
-  const { getColumns, getSelectedRows } = useDataStore();
+export default function DBFields(): JSX.Element {
+  const columns = useDataStore((state) => state.columns);
+  const selectedRows = useDataStore((state) => state.selectedRows);
+
   const [fields, setFields] = useState<any[]>([]);
   const [search, setSearch] = useState<string>('');
   const [selectedRow, setSelectedRow] = useState<RowType | undefined>(undefined);
 
   useEffect(() => {
-    const rows = getSelectedRows();
-    if (rows.length === 0) return;
+    if (selectedRows.length === 0) return;
 
-    const row = rows[rows.length - 1].data;
+    const row = selectedRows[selectedRows.length - 1].row;
     if (row !== selectedRow) {
       setSelectedRow(row);
     }
-  }, [getSelectedRows()]);
+  }, [selectedRows, selectedRow]);
 
   useEffect(() => {
     generateFields(search);
   }, [search, selectedRow]);
 
-  function generateFields(value: string) {
+  function generateFields(value: string): void {
     if (!selectedRow) return;
 
     const data: any[] = [];
-    getColumns()
-      .filter((c: any) => {
+    columns
+      ?.filter((c: any) => {
         return c.name.toLocaleLowerCase().includes(value.toLocaleLowerCase());
       })
       .map((c: any) => {
-        if (!selectedRow[c.key]) return;
+        if (!selectedRow[c.name]) return;
         data.push({
-          value: selectedRow[c.key],
+          value: selectedRow[c.name],
           ...c
         });
       });
@@ -46,7 +47,9 @@ export default function DBFields() {
 
   return (
     <>
-      <Search onChange={(value: string) => setSearch(value)} />
+      <Box mt={1}>
+        <Search onChange={(value: string): void => setSearch(value)} />
+      </Box>
       {fields.length > 0 && (
         <Box mt={1} data-testid='db-field'>
           {fields.map(
@@ -56,7 +59,7 @@ export default function DBFields() {
                   size='small'
                   value={item.value}
                   fullWidth={true}
-                  key={`${item.key}_${index}`}
+                  key={`${item.name}_${index}`}
                   label={item.name}
                   typelabel={item.type}
                   type={item.type}

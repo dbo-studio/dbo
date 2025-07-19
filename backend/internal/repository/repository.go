@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/driver"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"gorm.io/gorm"
@@ -15,6 +15,7 @@ type IConnectionRepo interface {
 	Create(ctx context.Context, dto *dto.CreateConnectionRequest) (*model.Connection, error)
 	Delete(ctx context.Context, connection *model.Connection) error
 	Update(ctx context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) (*model.Connection, error)
+	UpdateVersion(ctx context.Context, connection *model.Connection, version string) (*model.Connection, error)
 	MakeAllConnectionsNotDefault(ctx context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) error
 }
 
@@ -27,11 +28,12 @@ type ICacheRepo interface {
 }
 
 type IHistoryRepo interface {
-	Index(ctx context.Context, pagination *dto.PaginationRequest) (*[]model.History, error)
+	Index(ctx context.Context, pagination *dto.HistoryListRequest) (*[]model.History, error)
+	DeleteAll(_ context.Context, connectionID uint) error
 }
 
 type ISavedQueryRepo interface {
-	Index(ctx context.Context, pagination *dto.PaginationRequest) (*[]model.SavedQuery, error)
+	Index(ctx context.Context, pagination *dto.SavedQueryListRequest) (*[]model.SavedQuery, error)
 	Find(ctx context.Context, id int32) (*model.SavedQuery, error)
 	Create(ctx context.Context, dto *dto.CreateSavedQueryRequest) (*model.SavedQuery, error)
 	Delete(ctx context.Context, query *model.SavedQuery) error
@@ -45,10 +47,9 @@ type Repository struct {
 	SavedQueryRepo ISavedQueryRepo
 }
 
-func NewRepository(_ context.Context, db *gorm.DB, cache cache.Cache, drivers *driver.DriverEngine) *Repository {
+func NewRepository(_ context.Context, db *gorm.DB, cache cache.Cache) *Repository {
 	return &Repository{
-		ConnectionRepo: NewConnectionRepo(db, drivers),
-		CacheRepo:      NewCacheRepo(cache, drivers, db),
+		ConnectionRepo: NewConnectionRepo(db),
 		HistoryRepo:    NewHistoryRepo(db),
 		SavedQueryRepo: NewSavedQueryRepo(db),
 	}

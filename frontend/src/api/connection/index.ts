@@ -1,52 +1,39 @@
-import api from '@/core/services/api';
-import {
-  CREATE_CONNECTION,
-  DELETE_CONNECTION,
-  GET_CONNECTION_DETAIL,
-  GET_CONNECTION_LIST,
-  TEST_CONNECTION,
-  UPDATE_CONNECTION
-} from './endpoints';
-import { transformConnectionDetail, transformConnections } from './transformers';
-import type { connectionDetailType, createConnectionType, updateConnectionType } from './types';
+import { api } from '@/core/api';
+import type { ConnectionType } from '@/types';
+import type { CreateConnectionRequestType, UpdateConnectionRequestType } from './types';
 
-export const getConnectionList = async () => {
-  return api.get(GET_CONNECTION_LIST()).then(transformConnections);
+const endpoint = {
+  connectionList: (): string => '/connections',
+  connectionDetail: (connectionID: string | number): string => `/connections/${connectionID}`,
+  createConnection: (): string => '/connections',
+  updateConnection: (connectionID: string | number): string => `/connections/${connectionID}`,
+  deleteConnection: (connectionID: string | number): string => `/connections/${connectionID}`,
+  pingConnection: (): string => '/connections/ping'
 };
 
-export const getConnectionDetail = async (data: connectionDetailType) => {
-  return api
-    .get(GET_CONNECTION_DETAIL(data.connectionID), {
-      from_cache: data.fromCache
-    })
-    .then(transformConnectionDetail);
+export const getConnectionList = async (): Promise<ConnectionType[]> => {
+  return (await api.get(endpoint.connectionList())).data.data as ConnectionType[];
 };
 
-export const createConnection = async (data: createConnectionType) => {
-  return api
-    .post(CREATE_CONNECTION(), {
-      ...data,
-      port: Number(data.port)
-    })
-    .then(transformConnectionDetail);
+export const getConnectionDetail = async (id: string | number): Promise<ConnectionType> => {
+  return (await api.get(endpoint.connectionDetail(id))).data.data as ConnectionType;
 };
 
-export const updateConnection = async (data: updateConnectionType) => {
-  return api
-    .patch(UPDATE_CONNECTION(data.id), {
-      ...data,
-      port: Number(data.port)
-    })
-    .then(transformConnectionDetail);
+export const createConnection = async (data: CreateConnectionRequestType): Promise<ConnectionType> => {
+  return (await api.post(endpoint.createConnection(), data)).data.data as ConnectionType;
 };
 
-export const deleteConnection = async (connectionId: string | number) => {
-  return api.del(DELETE_CONNECTION(connectionId)).then(transformConnections);
+export const updateConnection = async (
+  id: string | number,
+  data: UpdateConnectionRequestType
+): Promise<ConnectionType> => {
+  return (await api.patch(endpoint.updateConnection(id), data)).data.data as ConnectionType;
 };
 
-export const testConnection = async (data: createConnectionType) => {
-  return api.post(TEST_CONNECTION(), {
-    ...data,
-    port: Number(data.port)
-  });
+export const deleteConnection = async (id: string | number): Promise<void> => {
+  await api.delete(endpoint.deleteConnection(id));
+};
+
+export const pingConnection = async (data: CreateConnectionRequestType): Promise<void> => {
+  return api.post(endpoint.pingConnection(), data);
 };

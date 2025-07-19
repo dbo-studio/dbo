@@ -2,6 +2,7 @@ package serviceHistory
 
 import (
 	"context"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/apperror"
@@ -9,7 +10,8 @@ import (
 )
 
 type IHistoryService interface {
-	Index(ctx context.Context, dto *dto.HistoryListRequest) (*dto.HistoryListResponse, error)
+	Index(ctx context.Context, req *dto.HistoryListRequest) (*dto.HistoryListResponse, error)
+	DeleteAll(ctx context.Context, req *dto.DeleteHistoryRequest) error
 }
 
 var _ IHistoryService = (*IHistoryServiceImpl)(nil)
@@ -18,6 +20,8 @@ type IHistoryServiceImpl struct {
 	historyRepo repository.IHistoryRepo
 }
 
+// DeleteAll implements IHistoryService.
+
 func NewHistoryService(hr repository.IHistoryRepo) *IHistoryServiceImpl {
 	return &IHistoryServiceImpl{
 		historyRepo: hr,
@@ -25,7 +29,7 @@ func NewHistoryService(hr repository.IHistoryRepo) *IHistoryServiceImpl {
 }
 
 func (i IHistoryServiceImpl) Index(ctx context.Context, req *dto.HistoryListRequest) (*dto.HistoryListResponse, error) {
-	histories, err := i.historyRepo.Index(ctx, &req.PaginationRequest)
+	histories, err := i.historyRepo.Index(ctx, req)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -33,13 +37,18 @@ func (i IHistoryServiceImpl) Index(ctx context.Context, req *dto.HistoryListRequ
 	data := make([]dto.HistoryListItem, 0)
 	for _, h := range lo.FromPtr(histories) {
 		data = append(data, dto.HistoryListItem{
-			ID:        int64(h.ID),
-			Query:     h.Query,
-			CreatedAt: h.CreatedAt.Time.Format("2006-01-02 15:04:05"),
+			ID:           int64(h.ID),
+			ConnectionId: int32(h.ConnectionID),
+			Query:        h.Query,
+			CreatedAt:    h.CreatedAt.Format("2006-01-02 15:04:05"),
 		})
 	}
 
 	return &dto.HistoryListResponse{
 		Items: data,
 	}, nil
+}
+
+func (i *IHistoryServiceImpl) DeleteAll(ctx context.Context, req *dto.DeleteHistoryRequest) error {
+	return i.historyRepo.DeleteAll(ctx, uint(req.ConnectionId))
 }

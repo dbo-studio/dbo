@@ -1,39 +1,44 @@
-import { updateDesign } from '@/api/design';
-import type { UpdateDesignItemType } from '@/api/design/types';
 import { runQuery, runRawQuery } from '@/api/query';
-import { cleanupUpdateDesignObject } from '@/core/utils';
+import type { RunQueryResponseType } from '@/api/query/types';
+import { debouncedSaveToIndexedDB } from '@/core/utils/indexdbHelper';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { StateCreator } from 'zustand';
-import { useConnectionStore } from '../../connectionStore/connection.store';
 import { useTabStore } from '../../tabStore/tab.store';
-import type { DataColumnSlice, DataEditedColumnSlice, DataQuerySlice, DataRowSlice, DataStore } from '../types';
+import type { DataColumnSlice, DataQuerySlice, DataRowSlice, DataStore } from '../types';
 
 export const createDataQuerySlice: StateCreator<
-  DataStore & DataQuerySlice & DataColumnSlice & DataEditedColumnSlice & DataRowSlice,
+  DataStore & DataQuerySlice & DataColumnSlice & DataRowSlice,
   [],
   [],
   DataQuerySlice
 > = (set, get) => ({
-  loading: false,
-  toggleDataFetching: true,
-  runQuery: async () => {
-    const currentConnection = useConnectionStore.getState().currentConnection;
-    const selectedTab = useTabStore.getState().getSelectedTab();
-    if (!selectedTab || !currentConnection) {
-      return;
-    }
+  isDataFetching: false,
+  reRunQuery: false,
+  reRender: false,
+  toggleReRunQuery(): void {
+    set({ reRunQuery: !get().reRunQuery });
+  },
+  toggleReRender(): void {
+    set({ reRender: !get().reRender });
+  },
+  toggleDataFetching: (loading?: boolean): void => {
+    set({ isDataFetching: loading ?? !get().isDataFetching });
+  },
+  runQuery: async (): Promise<RunQueryResponseType | undefined> => {
+    const tab = useTabStore.getState().selectedTab();
+    if (!tab) return;
 
-    const filters = selectedTab.filters ?? [];
-    const sorts = selectedTab.sorts ?? [];
+    const filters = tab.filters ?? [];
+    const sorts = tab.sorts ?? [];
 
     try {
-      set({ loading: true });
+      get().toggleDataFetching(true);
       const res = await runQuery({
-        connection_id: currentConnection.id,
-        table: selectedTab.table,
-        schema: currentConnection.currentSchema ?? '',
-        limit: selectedTab.pagination.limit,
-        offset: (selectedTab.pagination.page - 1) * selectedTab.pagination.limit,
-        columns: selectedTab.columns ?? [],
+        connectionId: Number(tab.connectionId),
+        nodeId: tab.nodeId,
+        limit: tab.pagination?.limit ?? 100,
+        page: tab.pagination?.page ?? 1,
+        columns: tab.columns ?? [],
         filters: filters.filter(
           (f) =>
             f.column.length > 0 &&
@@ -46,95 +51,44 @@ export const createDataQuerySlice: StateCreator<
       });
 
       useTabStore.getState().updateQuery(res.query);
-      await Promise.all([get().updateRows(res.data), get().updateColumns(res.structures)]);
-      set({ toggleDataFetching: !get().toggleDataFetching });
-    } catch (error) {
-      // @ts-ignore
-      throw new Error(error?.response?.data?.message);
-    } finally {
-      set({ loading: false });
-    }
-  },
-  runRawQuery: async () => {
-    const currentConnection = useConnectionStore.getState().currentConnection;
-    const selectedTab = useTabStore.getState().getSelectedTab();
-    if (!selectedTab || !currentConnection) {
-      return;
-    }
 
-    try {
-      set({ loading: true });
-      const res = await runRawQuery({
-        connection_id: currentConnection.id,
-        query: useTabStore.getState().getQuery()
-      });
+      Promise.all([
+        get().updateRows(res.data),
+        get().updateColumns(res.columns),
+        debouncedSaveToIndexedDB(tab.id, res.data, res.columns)
+      ]);
 
-      useTabStore.getState().updateQuery(res.query);
-      await Promise.all([get().updateRows(res.data), get().updateColumns(res.structures)]);
-      set({ toggleDataFetching: !get().toggleDataFetching });
+      return res;
     } catch (error) {
       console.log('🚀 ~ runQuery: ~ error:', error);
     } finally {
-      set({ loading: false });
+      get().toggleDataFetching(false);
     }
   },
-  updateDesignsQuery: async () => {
-    const currentConnection = useConnectionStore.getState().currentConnection;
-    const selectedTab = useTabStore.getState().getSelectedTab();
-    if (!selectedTab || !currentConnection) {
-      return;
-    }
-
-    const columns = get().getEditedColumns();
-    if (columns.length === 0) {
-      return;
-    }
-
-    const added = columns
-      .filter((c) => c.unsaved)
-      .map((c) => {
-        return cleanupUpdateDesignObject(c?.new ?? null);
-      });
-
-    const edited = columns
-      .filter((c) => !c.unsaved && c.edited)
-      .map((c) => {
-        const data = cleanupUpdateDesignObject(c?.new ?? null);
-        if (c?.old?.name !== c?.new?.name) {
-          data.rename = c?.new?.name;
-          data.name = c?.old?.name;
-        } else {
-          data.name = c.name;
-        }
-
-        return data;
-      });
-
-    const removed = columns
-      .filter((c) => c.deleted)
-      .map((c) => {
-        return c.name;
-      });
+  runRawQuery: async (query?: string): Promise<RunQueryResponseType | undefined> => {
+    const selectedTabId = useTabStore.getState().selectedTabId;
+    const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+    if (!currentConnectionId || !selectedTabId) return;
 
     try {
-      set({ loading: true });
-      const res = await updateDesign({
-        connection_id: currentConnection.id,
-        table: selectedTab.table,
-        schema: currentConnection.currentSchema ?? '',
-        database: currentConnection.currentDatabase ?? '',
-        edited: edited as UpdateDesignItemType[],
-        removed: Array.from(removed),
-        added: added as UpdateDesignItemType[]
+      get().toggleDataFetching(true);
+      const res = await runRawQuery({
+        connectionId: Number(currentConnectionId),
+        query: query ? query : useTabStore.getState().getQuery()
       });
 
       useTabStore.getState().updateQuery(res.query);
-      await Promise.all([get().updateEditedColumns([])]);
+      Promise.all([
+        get().updateRows(res.data),
+        get().updateColumns(res.columns),
+        debouncedSaveToIndexedDB(selectedTabId, res.data, res.columns)
+      ]);
+
+      return res;
     } catch (error) {
-      // @ts-ignore
-      throw new Error(error?.response?.data?.message);
+      console.log('🚀 ~ runRawQuery: ~ error:', error);
     } finally {
-      set({ loading: false });
+      get().toggleDataFetching(false);
     }
   }
 });

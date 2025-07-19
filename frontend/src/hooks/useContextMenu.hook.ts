@@ -1,24 +1,30 @@
-import type React from 'react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
-export const useContextMenu = () => {
+export const useContextMenu = (): {
+  contextMenuPosition: { mouseX: number; mouseY: number } | null;
+  handleContextMenu: (event: React.MouseEvent) => void;
+  handleCloseContextMenu: () => void;
+} => {
   const [contextMenuPosition, setContextMenuPosition] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
-  const handleContextMenu = (event: React.MouseEvent) => {
-    event.preventDefault();
-    if (contextMenuPosition != null) {
-      return;
-    }
+  const handleContextMenu = useCallback(
+    (event: React.MouseEvent) => {
+      event.preventDefault();
+      setContextMenuPosition(
+        contextMenuPosition === null
+          ? {
+              mouseX: event.clientX + 2,
+              mouseY: event.clientY - 6
+            }
+          : null
+      );
+    },
+    [contextMenuPosition]
+  );
 
-    setContextMenuPosition({
-      mouseX: event.clientX + 2,
-      mouseY: event.clientY - 6
-    });
-  };
-
-  const handleCloseContextMenu = () => {
+  const handleCloseContextMenu = useCallback(() => {
     setContextMenuPosition(null);
-  };
+  }, []);
 
   return { contextMenuPosition, handleContextMenu, handleCloseContextMenu };
 };

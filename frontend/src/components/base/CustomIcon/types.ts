@@ -22,14 +22,14 @@ export const IconTypes = {
   refresh: 'RotateCcw',
   search: 'Search',
   sql: 'FileJson',
-  arrowDown: 'ChevronUp',
+  arrowDown: 'ChevronDown',
   arrowRight: 'ChevronRight',
   arrowLeft: 'ChevronLeft',
   arrowUp: 'ChevronUp',
   columnToken: 'columnToken',
   grid: 'Grid3x3',
   gridBlue: 'Grid3x3',
-  filter: 'Filter',
+  filter: 'Funnel',
   sort: 'ArrowDownWideNarrow',
   code: 'Code',
   export: 'FileUp',
@@ -59,5 +59,7 @@ export const IconTypes = {
   shortcuts: 'SquareSlash',
   update: 'Download',
   about: 'Info',
-  externalLink: 'ExternalLink'
+  externalLink: 'ExternalLink',
+  postgresql: 'postgresql',
+  network: 'Network'
 };
