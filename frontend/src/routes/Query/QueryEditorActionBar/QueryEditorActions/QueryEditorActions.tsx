@@ -4,7 +4,6 @@ import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconBu
 import { shortcuts, tools } from '@/core/utils';
 import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
-import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton, Stack, Tooltip } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -12,10 +11,8 @@ import type { JSX } from 'react';
 import { toast } from 'sonner';
 import type { QueryEditorActionsProps } from '../../types';
 
-export default function QueryEditorActions({ onFormat, onRunQuery }: QueryEditorActionsProps): JSX.Element {
+export default function QueryEditorActions({ onFormat, onRunQuery, loading }: QueryEditorActionsProps): JSX.Element {
   const queryClient = useQueryClient();
-  const isDataFetching = useDataStore((state) => state.isDataFetching);
-
   const updateQuery = useTabStore((state) => state.updateQuery);
   const getQuery = useTabStore((state) => state.getQuery);
 
@@ -81,12 +78,7 @@ export default function QueryEditorActions({ onFormat, onRunQuery }: QueryEditor
         </IconButton>
       </Tooltip>
       <Tooltip title={shortcuts.runQuery.command}>
-        <LoadingIconButton
-          disabled={isDataFetching}
-          loading={isDataFetching}
-          color='primary'
-          onClick={(): void => onRunQuery()}
-        >
+        <LoadingIconButton disabled={loading} loading={loading} color='primary' onClick={(): void => onRunQuery()}>
           <CustomIcon type='play' />
         </LoadingIconButton>
       </Tooltip>

@@ -87,6 +87,7 @@ export default function Query(): JSX.Element {
   return (
     <>
       <QueryEditorActionBar
+        loading={isDataFetching}
         onRunQuery={runQuery}
         databases={autocomplete?.databases ?? []}
         schemas={autocomplete?.schemas ?? []}
