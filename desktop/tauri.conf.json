@@ -51,6 +51,14 @@
   "mainBinaryName": "DBO",
   "version": "0.2.3",
   "identifier": "com.dbostudio.dev",
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEU2NzZEOTdDMkU4RTVFOTIKUldTU1hvNHVmTmwyNW9mbE9CK0liUlNKZmIxbnhhRlVIYm81QlZwUG9xUXA0MEZ0VW4vdjZiWW0K",
+      "endpoints": [
+        "https://github.com/dbo-studio/dbo/releases/latest/download/latest.json"
+      ]
+    }
+  },
   "app": {
     "windows": [
       {
