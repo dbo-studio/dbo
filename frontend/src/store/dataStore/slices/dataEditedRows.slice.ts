@@ -53,7 +53,7 @@ export const createDataEditedRowsSlice: StateCreator<
       }
     }
 
-    set({ editedRows: [] });
+    get().updateEditedRows([]);
     get().updateRows(currentRows);
 
     return Promise.resolve();
