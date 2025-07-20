@@ -1,3 +1,4 @@
+import { useDataStore } from '@/store/dataStore/data.store';
 import type { JSX } from 'react';
 import { useMemo } from 'react';
 import type { DataGridTableBodyRowsProps } from '../types';
@@ -7,15 +8,13 @@ export default function DataGridTableBodyRows({
   columns,
   rows,
   context,
-  removedRows,
-  unsavedRows,
-  selectedRows,
-  editedRows,
-  editable,
-  updateEditedRows,
-  updateRow,
-  updateSelectedRows
+  editable
 }: DataGridTableBodyRowsProps): JSX.Element {
+  const editedRows = useDataStore((state) => state.editedRows);
+  const removedRows = useDataStore((state) => state.removedRows);
+  const unsavedRows = useDataStore((state) => state.unSavedRows);
+  const selectedRows = useDataStore((state) => state.selectedRows);
+
   const removedRowsMap = useMemo(() => new Map(removedRows.map((row) => [row.dbo_index, true])), [removedRows]);
   const unsavedRowsMap = useMemo(() => new Map(unsavedRows.map((row) => [row.dbo_index, true])), [unsavedRows]);
   const editedRowsMap = useMemo(() => new Map(editedRows.map((row) => [row.dboIndex, true])), [editedRows]);
@@ -41,10 +40,6 @@ export default function DataGridTableBodyRows({
             isEdited={isEdited}
             isUnsaved={isUnsaved}
             isRemoved={isRemoved}
-            editedRows={editedRows}
-            updateEditedRows={updateEditedRows}
-            updateRow={updateRow}
-            updateSelectedRows={updateSelectedRows}
           />
         );
       })}

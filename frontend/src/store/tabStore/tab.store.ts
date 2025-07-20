@@ -1,7 +1,6 @@
-import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
-
 import type { TabType } from '@/types';
+import { create, type StoreApi, type UseBoundStore } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
 import { useConnectionStore } from '../connectionStore/connection.store';
 import { createTabColumnSlice } from './slices/tabColumn.slice';
 import { createTabFilterSlice } from './slices/tabFilter.slice';
@@ -12,12 +11,12 @@ import type { TabDataSlice, TabFilterSlice, TabQuerySlice, TabSettingSlice, TabS
 
 type TabState = TabStore & TabSettingSlice & TabQuerySlice & TabFilterSlice & TabSortSlice & TabDataSlice;
 
-const initialize = {
+const initialize: any = {
   tabs: [],
   selectedTabId: undefined
 };
 
-export const useTabStore = create<TabState>()(
+export const useTabStore: UseBoundStore<StoreApi<TabState>> = create<TabState>()(
   devtools(
     persist(
       (set, get, ...state) => ({
@@ -51,15 +50,7 @@ export const useTabStore = create<TabState>()(
           return get().tabs.find((t) => t.connectionId === currentConnectionId && t.id === get().selectedTabId);
         },
         updateTabs: (newTabs: TabType[]): void => {
-          const currentConnectionId = useConnectionStore.getState().currentConnectionId;
-          if (!currentConnectionId) {
-            return;
-          }
-
-          const tabs = get().tabs.filter((t) => t.connectionId !== currentConnectionId);
-          tabs.push(...newTabs);
-
-          set({ tabs });
+          set({ tabs: newTabs });
         },
         updateSelectedTab: (newSelectedTab: TabType | undefined): void => {
           if (newSelectedTab === undefined) {
@@ -67,18 +58,16 @@ export const useTabStore = create<TabState>()(
             return;
           }
 
-          const tabs = get()
-            .getTabs()
-            .map((t: TabType) => {
-              if (
-                t.id === newSelectedTab.id &&
-                t.mode === newSelectedTab.mode &&
-                t.connectionId === newSelectedTab.connectionId
-              ) {
-                return newSelectedTab;
-              }
-              return t;
-            });
+          const tabs = get().tabs.map((t: TabType) => {
+            if (
+              t.id === newSelectedTab.id &&
+              t.mode === newSelectedTab.mode &&
+              t.connectionId === newSelectedTab.connectionId
+            ) {
+              return newSelectedTab;
+            }
+            return t;
+          });
 
           set({ tabs, selectedTabId: newSelectedTab.id });
         },

@@ -32,7 +32,7 @@ export type TabSettingSlice = {
 };
 
 export type TabQuerySlice = {
-  getQuery: () => string;
+  getQuery: (tabId?: string) => string;
   updateQuery: (query: string) => void;
   removeQuery: (tabId: string) => void;
 };

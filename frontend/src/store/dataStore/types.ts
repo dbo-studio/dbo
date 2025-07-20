@@ -15,7 +15,7 @@ export type DataRowSlice = {
 
 export type DataSelectedRowsSlice = {
   selectedRows: SelectedRow[];
-  updateSelectedRows: (rows: SelectedRow[]) => Promise<void>;
+  updateSelectedRows: (rows: SelectedRow[], replace?: boolean) => Promise<void>;
 };
 
 export type DataColumnSlice = {
@@ -26,10 +26,8 @@ export type DataColumnSlice = {
 
 export type DataEditedRowsSlice = {
   editedRows: EditedRow[];
-  editingCell: { rowIndex: number; columnId: string } | null;
   updateEditedRows: (rows: EditedRow[]) => Promise<void>;
   restoreEditedRows: () => Promise<void>;
-  updateEditingCell: (cell: { rowIndex: number; columnId: string } | null) => void;
 };
 
 export type DataRemovedRowsSlice = {
@@ -46,8 +44,12 @@ export type DataUnsavedRowsSlice = {
 
 export type DataQuerySlice = {
   isDataFetching: boolean;
+  reRunQuery: boolean;
+  reRender: boolean;
   runQuery: () => Promise<RunQueryResponseType | undefined>;
   runRawQuery: (query?: string) => Promise<RunQueryResponseType | undefined>;
+  toggleReRunQuery: () => void;
+  toggleReRender: () => void;
   toggleDataFetching: (loading?: boolean) => void;
 };
 

@@ -8,7 +8,8 @@ export default function QueryEditorActionBar({
   databases,
   schemas,
   onFormat,
-  onRunQuery
+  onRunQuery,
+  loading
 }: QueryEditorActionBarProps): JSX.Element {
   const [localDatabases, setLocalDatabases] = useState<string[]>([]);
   const [localSchemas, setLocalSchemas] = useState<string[]>([]);
@@ -37,7 +38,7 @@ export default function QueryEditorActionBar({
         <QueryEditorLeading databases={localDatabases} schemas={localSchemas} />
       </Grid>
       <Grid size={{ md: 8 }} display='flex' justifyContent='flex-end'>
-        <QueryEditorActions onFormat={onFormat} onRunQuery={onRunQuery} />
+        <QueryEditorActions loading={loading} onFormat={onFormat} onRunQuery={onRunQuery} />
       </Grid>
     </Stack>
   );

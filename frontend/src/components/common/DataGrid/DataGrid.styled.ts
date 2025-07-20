@@ -52,13 +52,13 @@ export const TableCell = styled('td')(({ theme }) => ({
   }
 }));
 
-export const StyledTable = styled('table')(({ theme }) => ({
+export const StyledTable = styled('table')(() => ({
   borderSpacing: 0,
   tableLayout: 'fixed',
   borderCollapse: 'separate'
 }));
 
-export const CellContent = styled('div')(({ theme }) => ({
+export const CellContent = styled('div')(() => ({
   width: '100%',
   height: '22px',
   cursor: 'pointer',
@@ -82,7 +82,7 @@ export const CellInput = styled('input')(({ theme }) => ({
   color: theme.palette.text.text
 }));
 
-export const TableContainer = styled('div')(({ theme }) => ({
+export const TableContainer = styled('div')(() => ({
   width: '100%',
   height: '100%',
   overflow: 'auto',
@@ -125,7 +125,7 @@ export const Resizer = styled('div')(({ theme }) => ({
   }
 }));
 
-export const CellContainer = styled('div')(({ theme }) => ({
+export const CellContainer = styled('div')(() => ({
   position: 'relative',
   width: '100%',
   height: '100%',

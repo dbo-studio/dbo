@@ -58,8 +58,21 @@ const disableDefaultContextMenu = (): void => {
   document.addEventListener(
     'selectstart',
     (e) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
       e.preventDefault();
       return false;
+    },
+    { capture: true }
+  );
+
+  document.addEventListener(
+    'keydown',
+    (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+        return;
+      }
     },
     { capture: true }
   );

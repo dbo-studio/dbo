@@ -8,7 +8,7 @@ import type { QueryEditorLeadingProps } from '../../types';
 
 export default function QueryEditorLeading({ databases, schemas }: QueryEditorLeadingProps): JSX.Element {
   const selectedTab = useSelectedTab();
-  const { updateSelectedTab } = useTabStore();
+  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
   const [localSchema, setLocalSchema] = useState<string>(selectedTab?.options?.schema ?? '');
   const [localDatabase, setLocalDatabase] = useState<string>(selectedTab?.options?.database ?? '');

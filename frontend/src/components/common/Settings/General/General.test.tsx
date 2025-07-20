@@ -1,23 +1,20 @@
 import General from '@/components/common/Settings/General/General';
 import locales from '@/locales';
-import * as setting from '@/store/settingStore/setting.store.ts';
-import { useSettingStore } from '@/store/settingStore/setting.store.ts';
-import { renderWithProviders } from '@/test/test-utils';
+import { createSpy, renderWithProviders, resetAllMocks, setupStoreMocks } from '@/test/utils/test-helpers.tsx';
 import { screen } from '@testing-library/dom';
 import { fireEvent } from '@testing-library/react';
-import { describe, expect, vi } from 'vitest';
-
-const spy = vi.spyOn(setting, 'useSettingStore');
+import { beforeEach, describe, expect, test } from 'vitest';
 
 describe('General.tsx', () => {
   beforeEach(() => {
-    spy.mockReturnValue({
-      toggleDebug: vi.fn(),
-      debug: false
-    });
+    resetAllMocks();
   });
 
-  it('renders the General component', () => {
+  test('should render the General component', () => {
+    setupStoreMocks.settingStore({
+      debug: false
+    });
+
     renderWithProviders(<General />);
 
     expect(screen.queryByText(locales.general)).not.toBeNull();
@@ -25,19 +22,27 @@ describe('General.tsx', () => {
     expect(screen.queryByText(locales.enable_debug_console)).not.toBeNull();
   });
 
-  it('toggles debug mode switch', () => {
-    const { toggleDebug } = useSettingStore();
+  test('should toggle debug mode switch', () => {
+    const mockToggleDebug = createSpy();
+
+    setupStoreMocks.settingStore({
+      debug: false,
+      toggleDebug: mockToggleDebug
+    });
+
     renderWithProviders(<General />);
+
     const switchElement = screen.getByRole('checkbox');
     fireEvent.click(switchElement);
-    expect(toggleDebug).toHaveBeenCalledWith(true);
+
+    expect(mockToggleDebug).toHaveBeenCalledWith(true);
   });
 
-  it('displays the correct initial state of the switch', () => {
-    spy.mockReturnValueOnce({
-      updateDebug: vi.fn(),
+  test('should display the correct initial state of the switch when debug is true', () => {
+    setupStoreMocks.settingStore({
       debug: true
     });
+
     renderWithProviders(<General />);
 
     expect(screen.queryByRole('checkbox', { checked: true })).not.toBeNull();

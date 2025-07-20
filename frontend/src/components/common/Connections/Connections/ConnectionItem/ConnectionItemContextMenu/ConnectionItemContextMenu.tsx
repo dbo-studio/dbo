@@ -32,8 +32,9 @@ export default function ConnectionItemContextMenu({
     }
   });
 
-  const { updateSelectedTab, updateTabs } = useTabStore();
   const showModal = useConfirmModalStore((state) => state.danger);
+  const updateTabs = useTabStore((state) => state.updateTabs);
+  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
   const handleOpenConfirm = async (connection: ConnectionType): Promise<void> => {
     showModal(locales.delete_action, locales.connection_delete_confirm, () => {

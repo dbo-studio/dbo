@@ -11,7 +11,8 @@ import AddSortButton from './AddSortButton/AddSortButton.tsx';
 import RemoveSortButton from './RemoveSortButton/RemoveSortButton.tsx';
 
 export default function SortItem({ sort, columns }: SortItemProps): JSX.Element {
-  const { upsertSorts } = useTabStore();
+  const upsertSorts = useTabStore((state) => state.upsertSorts);
+
   const [currentSort, setCurrentSort] = useState<SortType>({
     index: sort.index,
     column: sort.column,

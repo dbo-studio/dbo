@@ -48,7 +48,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: 'vitest.setup.js',
+    setupFiles: './src/test/vitest.setup.js',
+    css: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html']
@@ -60,6 +61,12 @@ export default defineConfig({
         find: /^monaco-editor$/,
         replacement: `${__dirname}/node_modules/monaco-editor/esm/vs/editor/editor.api`
       }
-    ]
+    ],
+    environmentOptions: {
+      jsdom: {
+        resources: 'usable',
+        pretendToBeVisual: true
+      }
+    }
   }
 });

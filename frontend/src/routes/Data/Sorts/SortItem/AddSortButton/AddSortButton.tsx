@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import type { AddSortButtonProps } from '../../types.ts';
 
 export default function AddSortButton({ columns }: AddSortButtonProps): JSX.Element {
-  const { upsertSorts } = useTabStore();
+  const upsertSorts = useTabStore((state) => state.upsertSorts);
 
   const handleAddNewSort = async (): Promise<void> => {
     await upsertSorts({
@@ -17,6 +17,7 @@ export default function AddSortButton({ columns }: AddSortButtonProps): JSX.Elem
       isActive: true
     });
   };
+
   return (
     <IconButton aria-label={'add-sort-btn'} className='add-sort-btn' onClick={handleAddNewSort}>
       <CustomIcon type='plus' size='s' />

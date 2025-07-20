@@ -8,6 +8,7 @@ export type QueryEditorLeadingProps = {
 export type QueryEditorActionsProps = {
   onFormat: () => void;
   onRunQuery: (query?: string) => void;
+  loading: boolean;
 };
 
 export type QueryEditorActionBarProps = {
@@ -15,6 +16,7 @@ export type QueryEditorActionBarProps = {
   schemas: string[];
   onFormat: () => void;
   onRunQuery: (query?: string) => void;
+  loading: boolean;
 };
 
 export type QueryEditorProps = {

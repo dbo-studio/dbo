@@ -12,10 +12,17 @@ export const createDataQuerySlice: StateCreator<
   [],
   DataQuerySlice
 > = (set, get) => ({
-  loading: false,
   isDataFetching: false,
+  reRunQuery: false,
+  reRender: false,
+  toggleReRunQuery(): void {
+    set({ reRunQuery: !get().reRunQuery });
+  },
+  toggleReRender(): void {
+    set({ reRender: !get().reRender });
+  },
   toggleDataFetching: (loading?: boolean): void => {
-    set({ isDataFetching: loading !== undefined ? loading : !get().isDataFetching });
+    set({ isDataFetching: loading ?? !get().isDataFetching });
   },
   runQuery: async (): Promise<RunQueryResponseType | undefined> => {
     const tab = useTabStore.getState().selectedTab();

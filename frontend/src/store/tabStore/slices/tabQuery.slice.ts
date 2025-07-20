@@ -22,12 +22,12 @@ const setStoredQueries = (queries: Record<string, string>): void => {
 };
 
 export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [], TabQuerySlice> = (_, get) => ({
-  getQuery: (): string => {
-    const tabId = get().selectedTabId;
-    if (!tabId) return '';
+  getQuery: (tabId?: string): string => {
+    const tab = tabId ?? get().selectedTabId;
+    if (!tab) return '';
 
     const storedQueries = getStoredQueries();
-    const storedQuery = storedQueries[tabId];
+    const storedQuery = storedQueries[tab];
 
     if (storedQuery && tools.isValidJSON(storedQuery)) {
       return JSON.parse(storedQuery);

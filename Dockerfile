@@ -1,4 +1,4 @@
-FROM node:20.12.2 as frontend
+FROM node:24 as frontend
 
 ARG RELEASE="release"
 

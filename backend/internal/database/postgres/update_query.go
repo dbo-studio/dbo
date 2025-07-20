@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"gorm.io/gorm"
 )
 
@@ -151,11 +152,7 @@ func (r *PostgresRepository) generateInsertQueries(req *dto.UpdateQueryRequest, 
 			}
 
 			columns = append(columns, fmt.Sprintf(`"%s"`, key))
-			if value == nil {
-				values = append(values, "NULL")
-			} else {
-				values = append(values, fmt.Sprintf(`'%v'`, value))
-			}
+			values = append(values, helper.FormatSQLValue(value))
 		}
 
 		if len(columns) == 0 {
@@ -186,7 +183,7 @@ func buildSetClauses(values map[string]interface{}) []string {
 		case "@DEFAULT":
 			setClauses = append(setClauses, fmt.Sprintf(`"%s" = DEFAULT`, key))
 		default:
-			setClauses = append(setClauses, fmt.Sprintf(`"%s" = '%v'`, key, value))
+			setClauses = append(setClauses, fmt.Sprintf(`"%s" = %s`, key, helper.FormatSQLValue(value)))
 		}
 	}
 
@@ -213,7 +210,7 @@ func (r *PostgresRepository) buildWhereClauses(primaryKeys []string, conditions 
 		if value == nil {
 			whereClauses = append(whereClauses, fmt.Sprintf(`"%s" IS NULL`, key))
 		} else {
-			whereClauses = append(whereClauses, fmt.Sprintf(`"%s" = '%v'`, key, value))
+			whereClauses = append(whereClauses, fmt.Sprintf(`"%s" = %s`, key, helper.FormatSQLValue(value)))
 		}
 	}
 

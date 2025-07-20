@@ -8,7 +8,7 @@ import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AutoCompleteType, ColumnType, RowType } from '@/types';
-import { Box } from '@mui/material';
+import { Box, type Theme } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { type JSX, useEffect, useState } from 'react';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
@@ -74,6 +74,8 @@ export default function Query(): JSX.Element {
     } catch (error) {
       console.error('🚀 ~ loadData ~ error:', error);
     }
+
+    toggleDataFetching(false);
   };
 
   const runQuery = async (query?: string): Promise<void> => {
@@ -87,6 +89,7 @@ export default function Query(): JSX.Element {
   return (
     <>
       <QueryEditorActionBar
+        loading={isDataFetching}
         onRunQuery={runQuery}
         databases={autocomplete?.databases ?? []}
         schemas={autocomplete?.schemas ?? []}
@@ -97,7 +100,7 @@ export default function Query(): JSX.Element {
           display={'flex'}
           minHeight={'0'}
           flex={1}
-          borderBottom={(theme): string => `1px solid ${theme.palette.divider}`}
+          borderBottom={(theme: Theme): string => `1px solid ${theme.palette.divider}`}
         >
           <SqlEditor
             onRunQuery={runQuery}

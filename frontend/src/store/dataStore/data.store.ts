@@ -1,6 +1,6 @@
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import type { ColumnType, RowType } from '@/types';
-import { create } from 'zustand';
+import { create, type StoreApi, type UseBoundStore } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { useTabStore } from '../tabStore/tab.store';
 import { createDataColumnSlice } from './slices/dataColumn.slice';
@@ -33,7 +33,7 @@ type DataState = DataStore &
   DataQuerySlice &
   DataFormDataSlice;
 
-export const useDataStore = create<DataState>()(
+export const useDataStore: UseBoundStore<StoreApi<DataState>> = create<DataState>()(
   devtools(
     (set, get, ...state) => ({
       loadDataFromIndexedDB: async (): Promise<{ rows: RowType[]; columns: ColumnType[] } | null> => {
@@ -50,21 +50,24 @@ export const useDataStore = create<DataState>()(
           const dbUnsavedRows = await indexedDBService.getUnsavedRows(selectedTabId);
           const dbSelectedRows = await indexedDBService.getSelectedRows(selectedTabId);
 
+          get().updateRows(dbRows);
+          get().updateColumns(dbColumns);
+          get().updateEditedRows(dbEditedRows);
+          get().updateRemovedRows(dbRemovedRows);
+          get().updateUnsavedRows(dbUnsavedRows);
+          get().updateSelectedRows(dbSelectedRows, true);
+
           if (dbRows.length > 0 && dbColumns.length > 0) {
-            get().updateRows(dbRows);
-            get().updateColumns(dbColumns);
-            get().updateEditedRows(dbEditedRows);
-            get().updateRemovedRows(dbRemovedRows);
-            get().updateUnsavedRows(dbUnsavedRows);
-            get().updateSelectedRows(dbSelectedRows);
+            get().toggleDataFetching(false);
             return { rows: dbRows, columns: dbColumns.filter((column) => column.isActive) };
           }
+
+          return null;
         } catch (error) {
-          console.error('Error loading data from IndexedDB:', error);
-        } finally {
           get().toggleDataFetching(false);
+          console.error('Error loading data from IndexedDB:', error);
+          return null;
         }
-        return null;
       },
       ...createDataRowSlice(set, get, ...state),
       ...createDataEditedRowsSlice(set, get, ...state),

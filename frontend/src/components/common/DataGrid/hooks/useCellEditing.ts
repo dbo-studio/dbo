@@ -3,20 +3,17 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useCallback, useEffect, useRef } from 'react';
 import type { CellEditingReturn } from '../types';
 
-export const useCellEditing = (
-  row: any,
-  columnId: string,
-  cellValue: string,
-  editedRows: any,
-  updateEditedRows: (rows: any) => Promise<void>,
-  updateRow: (row: any) => Promise<void>
-): CellEditingReturn => {
+export const useCellEditing = (row: any, columnId: string, cellValue: string): CellEditingReturn => {
   const inputRef = useRef<HTMLInputElement>(null);
   const updateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const updateEditingCell = useDataStore((state) => state.updateEditingCell);
+  const updateEditedRows = useDataStore((state) => state.updateEditedRows);
+  const updateRow = useDataStore((state) => state.updateRow);
+  const toggleReRender = useDataStore((state) => state.toggleReRender);
 
   const handleRowChange = useCallback(
     (e: React.FocusEvent<HTMLInputElement>): void => {
+      const editedRows = useDataStore.getState().editedRows;
+
       const newValue = e.target.value;
       if (newValue !== cellValue) {
         const newRow = {
@@ -24,20 +21,18 @@ export const useCellEditing = (
           [columnId]: newValue
         };
 
-        updateRow(newValue);
+        updateRow(newRow);
         if (updateTimeoutRef.current) {
           clearTimeout(updateTimeoutRef.current);
         }
 
-        // Update IndexedDB in the background
-        updateTimeoutRef.current = setTimeout(() => {
-          const newEditedRows = handleRowChangeLog(editedRows, row, columnId, row[columnId], newValue);
-          Promise.all([updateEditedRows(newEditedRows), updateRow(newRow)]).catch(console.error);
-        }, 100);
+        const newEditedRows = handleRowChangeLog(editedRows, row, columnId, row[columnId], newValue);
+        Promise.all([updateEditedRows(newEditedRows), updateRow(newRow)]).catch(console.error);
+
+        toggleReRender();
       }
-      updateEditingCell(null);
     },
-    [row, columnId, cellValue, editedRows, updateEditedRows, updateRow, updateEditingCell]
+    [row, columnId, cellValue, updateEditedRows, updateRow]
   );
 
   useEffect((): (() => void) => {

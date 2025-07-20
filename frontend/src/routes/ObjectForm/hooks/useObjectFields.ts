@@ -13,7 +13,10 @@ export const useObjectFields = (
 } => {
   const selectedTab = useSelectedTab();
   const currentConnection = useCurrentConnection();
-  const { getFormData, updateFormData } = useDataStore();
+
+  const getFormData = useDataStore((state) => state.getFormData);
+  const updateFormData = useDataStore((state) => state.updateFormData);
+
   const { data: fields } = useQuery({
     queryKey: [
       'tabFields',

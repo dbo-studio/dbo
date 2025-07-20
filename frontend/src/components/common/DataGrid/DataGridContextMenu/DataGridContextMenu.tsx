@@ -17,12 +17,12 @@ export default function DataGridContextMenu({
   contextMenu: ContextMenuType;
   onClose: () => void;
 }): JSX.Element {
-  const { toggleShowQuickLookEditor } = useSettingStore();
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const selectedRows = useDataStore((state) => state.selectedRows);
   const editedRows = useDataStore((state) => state.editedRows);
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
   const updateRow = useDataStore((state) => state.updateRow);
+  const toggleShowQuickLookEditor = useSettingStore((state) => state.toggleShowQuickLookEditor);
 
   const [copy] = useCopyToClipboard();
 

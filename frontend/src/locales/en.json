@@ -120,5 +120,6 @@
   "set_value": "Set value",
   "set_default": "Set default",
   "set_empty": "Set empty",
-  "set_null": "Set null"
+  "set_null": "Set null",
+  "row_affected": "Row affected"
 }

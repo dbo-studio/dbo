@@ -1,30 +1,32 @@
 import { useDataStore } from '@/store/dataStore/data.store';
-import type { SelectedRow } from '@/store/dataStore/types';
 import type { RowType } from '@/types';
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { CellSelectionReturn } from '../types';
 
 export const useCellSelection = (
   row: RowType,
   rowIndex: number,
   columnId: string,
-  setSelectedRows: (rows: SelectedRow[]) => void,
   editable: boolean
 ): CellSelectionReturn => {
+  const [isEditing, setIsEditing] = useState(false);
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const updateEditingCell = useDataStore((state) => state.updateEditingCell);
+  const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
 
   const handleSelect = useCallback(
-    (e: React.MouseEvent): void => {
-      setSelectedRows([
-        {
-          index: rowIndex,
-          selectedColumn: columnId,
-          row
-        }
-      ]);
+    (_: React.MouseEvent): void => {
+      updateSelectedRows(
+        [
+          {
+            index: rowIndex,
+            selectedColumn: columnId,
+            row
+          }
+        ],
+        true
+      );
     },
-    [setSelectedRows, rowIndex, columnId, row]
+    [updateSelectedRows, rowIndex, columnId, row]
   );
 
   const handleClick = useCallback(
@@ -33,7 +35,7 @@ export const useCellSelection = (
         clearTimeout(clickTimeoutRef.current);
         clickTimeoutRef.current = null;
 
-        updateEditingCell({ rowIndex, columnId });
+        setIsEditing(true);
         handleSelect(e);
       } else {
         clickTimeoutRef.current = setTimeout(() => {
@@ -42,10 +44,12 @@ export const useCellSelection = (
         }, 250);
       }
     },
-    [handleSelect, rowIndex, columnId, updateEditingCell]
+    [handleSelect, editable]
   );
 
   return {
-    handleClick
+    handleClick,
+    isEditing,
+    setIsEditing
   };
 };

@@ -1,33 +1,28 @@
 import { structureModel } from '@/core/mocks/handlers/queries.ts';
-import * as useDataStore from '@/store/dataStore/data.store.ts';
-import { renderWithProviders } from '@/test/test-utils';
+import { createSpy, renderWithProviders, resetAllMocks, setupStoreMocks } from '@/test/utils/test-helpers.tsx';
 import { screen } from '@testing-library/dom';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 import DBFields from './DBFields';
 
 describe('DBField.tsx', () => {
-  const spy = vi.spyOn(useDataStore, 'useDataStore');
-  const mockGetColumns = vi.fn();
-  const mockSelectedRows = vi.fn();
-
   beforeEach(() => {
-    spy.mockReturnValue({
-      getColumns: mockGetColumns,
-      getSelectedRows: mockSelectedRows
-    });
+    resetAllMocks();
   });
 
-  test('should render the the db fields', () => {
+  test('should render the db fields', () => {
     const data = structureModel;
-    mockGetColumns.mockReturnValue(data.structures);
-    mockSelectedRows.mockReturnValue([
-      {
-        index: 0,
-        data: data.data[0]
-      }
-    ]);
+
+    setupStoreMocks.dataStore({
+      getColumns: createSpy().mockReturnValue(data.structures),
+      getSelectedRows: createSpy().mockReturnValue([
+        {
+          index: 0,
+          data: data.data[0]
+        }
+      ])
+    });
 
     renderWithProviders(<DBFields />);
     expect(screen.getByTestId('db-field')).not.toBeNull();
@@ -35,13 +30,16 @@ describe('DBField.tsx', () => {
 
   test('should render fields', () => {
     const data = structureModel;
-    mockGetColumns.mockReturnValue(data.structures);
-    mockSelectedRows.mockReturnValue([
-      {
-        index: 0,
-        data: data.data[0]
-      }
-    ]);
+
+    setupStoreMocks.dataStore({
+      getColumns: createSpy().mockReturnValue(data.structures),
+      getSelectedRows: createSpy().mockReturnValue([
+        {
+          index: 0,
+          data: data.data[0]
+        }
+      ])
+    });
 
     renderWithProviders(<DBFields />);
     expect(screen.getByText('datasrc_id')).not.toBeNull();
@@ -49,13 +47,16 @@ describe('DBField.tsx', () => {
 
   test('should show correct fields after search', async () => {
     const data = structureModel;
-    mockGetColumns.mockReturnValue(data.structures);
-    mockSelectedRows.mockReturnValue([
-      {
-        index: 0,
-        data: data.data[0]
-      }
-    ]);
+
+    setupStoreMocks.dataStore({
+      getColumns: createSpy().mockReturnValue(data.structures),
+      getSelectedRows: createSpy().mockReturnValue([
+        {
+          index: 0,
+          data: data.data[0]
+        }
+      ])
+    });
 
     renderWithProviders(<DBFields />);
 
@@ -72,13 +73,16 @@ describe('DBField.tsx', () => {
     const columns = data.structures;
     // @ts-ignore
     columns[0].test_fake_row = 'test';
-    mockGetColumns.mockReturnValue(columns);
-    mockSelectedRows.mockReturnValue([
-      {
-        index: 0,
-        data: data.data[0]
-      }
-    ]);
+
+    setupStoreMocks.dataStore({
+      getColumns: createSpy().mockReturnValue(columns),
+      getSelectedRows: createSpy().mockReturnValue([
+        {
+          index: 0,
+          data: data.data[0]
+        }
+      ])
+    });
 
     renderWithProviders(<DBFields />);
 

@@ -12,16 +12,18 @@ export const createTabSettingSlice: StateCreator<
   [],
   [],
   TabSettingSlice
-> = (_, get) => ({
+> = (_set, get) => ({
   addTab: (table: string, id?: string, editable?: boolean): TabType => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;
     if (!currentConnectionId) {
       throw new Error('No current connection id');
     }
 
-    const tabs = get().getTabs();
+    const tabs = get().tabs;
 
-    const findTab = tabs.find((t: TabType) => t.mode === TabMode.Data && t.table === table);
+    const findTab = tabs.find(
+      (t: TabType) => t.mode === TabMode.Data && t.table === table && t.connectionId === currentConnectionId
+    );
 
     if (findTab) {
       get().switchTab(findTab.id);
@@ -68,8 +70,11 @@ export const createTabSettingSlice: StateCreator<
       throw new Error('No current connection id');
     }
 
-    const tabs = get().getTabs();
-    const findTab = tabs.find((t: TabType) => t.mode === TabMode.Query && (t.query === '' || t.query === '""'));
+    const tabs = get().tabs;
+    const findTab = tabs.find(
+      (t: TabType) =>
+        t.mode === TabMode.Query && (t.query === '' || t.query === '""') && t.connectionId === currentConnectionId
+    );
 
     if (findTab) {
       findTab.mode = TabMode.Query;
@@ -102,8 +107,10 @@ export const createTabSettingSlice: StateCreator<
       throw new Error('No current connection id');
     }
 
-    const tabs = get().getTabs();
-    const findTab = tabs.find((t: TabType) => t.mode === mode && t.nodeId === nodeId);
+    const tabs = get().tabs;
+    const findTab = tabs.find(
+      (t: TabType) => t.mode === mode && t.nodeId === nodeId && t.connectionId === currentConnectionId
+    );
 
     if (findTab) {
       get().switchTab(findTab.id);
@@ -124,12 +131,8 @@ export const createTabSettingSlice: StateCreator<
     return get().handleAddNewTab(tabs, newTab);
   },
   removeTab: (tabId: string): TabType | null | undefined => {
-    const tabIndex = get()
-      .getTabs()
-      .findIndex((t: TabType) => t.id === tabId);
-    const newTabs = get()
-      .getTabs()
-      .filter((t: TabType) => t.id !== tabId);
+    const tabIndex = get().tabs.findIndex((t: TabType) => t.id === tabId);
+    const newTabs = get().tabs.filter((t: TabType) => t.id !== tabId);
 
     let newTab: TabType | null | undefined = null;
 

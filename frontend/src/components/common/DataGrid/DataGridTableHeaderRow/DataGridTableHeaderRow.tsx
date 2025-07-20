@@ -42,9 +42,9 @@ export default function DataGridTableHeaderRow({
                         selectedColumn: '',
                         row
                       }));
-                      updateSelectedRows(allRows);
+                      updateSelectedRows(allRows, true);
                     } else {
-                      updateSelectedRows([]);
+                      updateSelectedRows([], true);
                     }
                   }}
                   onClick={(e: React.MouseEvent): void => {
