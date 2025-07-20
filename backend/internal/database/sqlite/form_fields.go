@@ -32,24 +32,17 @@ func (r *SQLiteRepository) GetFormFields(nodeID string, tabID contract.TreeTab, 
 		return r.tableFields(action)
 	case contract.TableColumnsTab:
 		return helper.BuildFieldArray(r.tableColumnFields())
+	case contract.TableKeysTab:
+		return helper.BuildFieldArray(r.getKeyOptions(nodeID))
 	case contract.TableForeignKeysTab:
-		return helper.BuildFieldArray(r.foreignKeyOptions(node))
+		return helper.BuildFieldArray(r.foreignKeyOptions(nodeID))
 	case contract.TableIndexesTab:
-		return helper.BuildFieldArray(r.indexOptions(node))
-	case contract.TableTriggersTab:
-		return helper.BuildFieldArray(r.triggerOptions(node))
+		return helper.BuildFieldArray(r.indexOptions(nodeID))
 	case contract.TableChecksTab:
 		return helper.BuildFieldArray(r.checkOptions())
-	case contract.TableKeysTab:
-		return helper.BuildFieldArray(r.getKeyOptions(node))
-	case contract.TableSequenceTab:
-		return helper.BuildFieldArray(r.sequenceFields())
 
 	case contract.ViewTab:
 		return r.viewFields()
-
-	case contract.MaterializedViewTab:
-		return r.materializedViewFields()
 	}
 
 	return []contract.FormField{}

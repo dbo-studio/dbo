@@ -1,7 +1,6 @@
 package databaseSqlite
 
 import (
-	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -13,19 +12,14 @@ type SQLiteRepository struct {
 	connection *model.Connection
 }
 
-// AutoComplete implements databaseContract.DatabaseRepository.
-func (r *SQLiteRepository) AutoComplete(dto *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
-	panic("unimplemented")
-}
+// AutoComplete method is implemented in auto_complete.go
 
-// Execute implements databaseContract.DatabaseRepository.
-func (r *SQLiteRepository) Execute(nodeID string, action contract.TreeNodeActionName, params []byte) error {
-	panic("unimplemented")
-}
+// Execute method is implemented in execute.go
 
 // Objects implements databaseContract.DatabaseRepository.
 func (r *SQLiteRepository) Objects(nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) ([]contract.FormField, error) {
-	panic("unimplemented")
+	// This method is implemented in form_fields.go
+	return r.GetFormFields(nodeID, tabID, action), nil
 }
 
 func NewSQLiteRepository(connection *model.Connection, cm *databaseConnection.ConnectionManager) (contract.DatabaseRepository, error) {
