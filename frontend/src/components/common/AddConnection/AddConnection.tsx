@@ -8,13 +8,19 @@ import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
 import ConnectionSelection from './ConnectionSelection/ConnectionSelection';
 import PostgreSQL from './Postgresql/Postgresql';
+import SQLite from './SQLite/SQLite';
 import type { SelectionConnectionType } from './types';
 
 const connectionTypes: SelectionConnectionType[] = [
   {
     name: 'PostgreSQL',
-    logo: '/images/connections/postgresql_logo.svg',
+    logo: 'postgresql',
     component: PostgreSQL
+  },
+  {
+    name: 'SQLite',
+    logo: 'sqlite',
+    component: SQLite
   }
 ];
 

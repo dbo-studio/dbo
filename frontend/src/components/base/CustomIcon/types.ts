@@ -61,5 +61,6 @@ export const IconTypes = {
   about: 'Info',
   externalLink: 'ExternalLink',
   postgresql: 'postgresql',
+  sqlite: 'sqlite',
   network: 'Network'
 };

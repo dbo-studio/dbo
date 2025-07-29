@@ -11,10 +11,10 @@ func (r *SQLiteRepository) GetFormTabs(action contract.TreeNodeActionName) []con
 		return []contract.FormTab{
 			{ID: contract.TableTab, Name: "Table"},
 			{ID: contract.TableColumnsTab, Name: "Columns"},
-			{ID: contract.TableKeysTab, Name: "Keys"},
+			// {ID: contract.TableKeysTab, Name: "Keys"},
 			{ID: contract.TableForeignKeysTab, Name: "Foreign Keys"},
-			{ID: contract.TableIndexesTab, Name: "Indexes"},
-			{ID: contract.TableChecksTab, Name: "Checks"},
+			// {ID: contract.TableIndexesTab, Name: "Indexes"},
+			// {ID: contract.TableChecksTab, Name: "Checks"},
 		}
 	case contract.CreateViewAction, contract.EditViewAction:
 		return []contract.FormTab{
@@ -32,24 +32,17 @@ func (r *SQLiteRepository) GetFormFields(nodeID string, tabID contract.TreeTab, 
 		return r.tableFields(action)
 	case contract.TableColumnsTab:
 		return helper.BuildFieldArray(r.tableColumnFields())
+	// case contract.TableKeysTab:
+	// 	return helper.BuildFieldArray(r.getKeyOptions(nodeID))
 	case contract.TableForeignKeysTab:
-		return helper.BuildFieldArray(r.foreignKeyOptions(node))
-	case contract.TableIndexesTab:
-		return helper.BuildFieldArray(r.indexOptions(node))
-	case contract.TableTriggersTab:
-		return helper.BuildFieldArray(r.triggerOptions(node))
-	case contract.TableChecksTab:
-		return helper.BuildFieldArray(r.checkOptions())
-	case contract.TableKeysTab:
-		return helper.BuildFieldArray(r.getKeyOptions(node))
-	case contract.TableSequenceTab:
-		return helper.BuildFieldArray(r.sequenceFields())
+		return helper.BuildFieldArray(r.foreignKeyOptions(nodeID))
+	// case contract.TableIndexesTab:
+	// 	return helper.BuildFieldArray(r.indexOptions(nodeID))
+	// case contract.TableChecksTab:
+	// 	return helper.BuildFieldArray(r.checkOptions())
 
 	case contract.ViewTab:
 		return r.viewFields()
-
-	case contract.MaterializedViewTab:
-		return r.materializedViewFields()
 	}
 
 	return []contract.FormField{}

@@ -30,9 +30,8 @@ func (r *SQLiteRepository) tableColumnFields() []contract.FormField {
 func (r *SQLiteRepository) foreignKeyOptions(node string) []contract.FormField {
 	return []contract.FormField{
 		{ID: "constraint_name", Name: "Constraint Name", Type: "text", Required: true},
-		{ID: "comment", Name: "Comment", Type: "text"},
-		{ID: "ref_columns", Name: "Source Columns", Type: "multi-select", Fields: r.tableColumnsList(node), Required: true},
 		{ID: "target_table", Name: "Target Table", Type: "select", Fields: r.tablesList(node), Required: true},
+		{ID: "ref_columns", Name: "Source Columns", Type: "multi-select", Fields: r.tableColumnsList(node), Required: true},
 		{ID: "target_columns", Name: "Target Columns", Type: "chip", Required: true},
 		{ID: "update_action", Name: "On Update", Type: "select", Fields: []contract.FormField{
 			{Value: "NO ACTION", Name: "NO ACTION"},
@@ -50,64 +49,6 @@ func (r *SQLiteRepository) foreignKeyOptions(node string) []contract.FormField {
 		}},
 		{ID: "is_deferrable", Name: "Deferrable", Type: "checkbox"},
 		{ID: "initially_deferred", Name: "Initially Deferred", Type: "checkbox"},
-	}
-}
-
-func (r *SQLiteRepository) getKeyOptions(node string) []contract.FormField {
-	return []contract.FormField{
-		{ID: "name", Name: "Name", Type: "text", Required: true},
-		{ID: "comment", Name: "Comment", Type: "text"},
-		{ID: "primary", Name: "Primary", Type: "checkbox"},
-		{ID: "deferrable", Name: "Deferrable", Type: "checkbox"},
-		{ID: "initially_deferred", Name: "Initially Deferred", Type: "checkbox"},
-		{ID: "columns", Name: "Columns", Type: "multi-select", Fields: r.tableColumnsList(node)},
-		{ID: "exclude_operator", Name: "Exclude operator", Type: "text"},
-	}
-}
-
-func (r *SQLiteRepository) indexOptions(node string) []contract.FormField {
-	return []contract.FormField{
-		{ID: "name", Name: "Name", Type: "text"},
-		{ID: "comment", Name: "Comment", Type: "text"},
-		{ID: "unique", Name: "Unique", Type: "checkbox"},
-		{ID: "columns", Name: "Columns", Type: "multi-select", Fields: r.tableColumnsList(node)},
-		{ID: "condition", Name: "Condition", Type: "text"},
-		{ID: "include_columns", Name: "Include Columns", Type: "text"},
-		{ID: "access_method", Name: "Access Method", Type: "select", Fields: []contract.FormField{
-			{Value: "btree", Name: "btree"},
-			{Value: "hash", Name: "hash"},
-			{Value: "gin", Name: "gin"},
-			{Value: "gist", Name: "gist"},
-			{Value: "spgist", Name: "spgist"},
-			{Value: "brin", Name: "brin"},
-		}},
-		{ID: "tablespace", Name: "Tablespace", Type: "select", Fields: r.tablespaceOptions()},
-	}
-}
-
-func (r *SQLiteRepository) checkOptions() []contract.FormField {
-	return []contract.FormField{
-		{ID: "name", Name: "Name", Type: "text"},
-		{ID: "comment", Name: "Comment", Type: "text"},
-		{ID: "deferrable", Name: "Deferrable", Type: "checkbox"},
-		{ID: "initially_deferred", Name: "Initially Deferred", Type: "checkbox"},
-		{ID: "no_inherit", Name: "No Inherit", Type: "checkbox"},
-		{ID: "predicate", Name: "Predicate", Type: "text"},
-	}
-}
-
-func (r *SQLiteRepository) persistenceOptions(action contract.TreeNodeActionName) []contract.FormField {
-	if action == contract.EditTableAction {
-		return []contract.FormField{
-			{Value: "LOGGED", Name: "LOGGED"},
-			{Value: "UNLOGGED", Name: "UNLOGGED"},
-		}
-	}
-
-	return []contract.FormField{
-		{Value: "LOGGED", Name: "LOGGED"},
-		{Value: "UNLOGGED", Name: "UNLOGGED"},
-		{Value: "TEMPORARY", Name: "TEMPORARY"},
 	}
 }
 
@@ -170,8 +111,6 @@ func (r *SQLiteRepository) tableColumnsList(node string) []contract.FormField {
 		Select("a.attname as value, a.attname as name").
 		Joins("JOIN pg_class c ON c.oid = a.attrelid").
 		Joins("JOIN pg_namespace n ON n.oid = c.relnamespace").
-		Where("n.nspname = ? AND c.relname = ? AND a.attnum > 0 AND NOT a.attisdropped",
-			node.Schema, node.Table).
 		Order("a.attnum").
 		Scan(&results).Error
 
@@ -200,7 +139,6 @@ func (r *SQLiteRepository) tablesList(node string) []contract.FormField {
 	err := r.db.Table("pg_class c").
 		Select("c.relname as value, c.relname as name").
 		Joins("JOIN pg_namespace n ON n.oid = c.relnamespace").
-		Where("n.nspname = ? AND c.relkind = 'r'", node.Schema).
 		Order("c.relname").
 		Scan(&results).Error
 	if err != nil {
@@ -276,64 +214,9 @@ func (r *SQLiteRepository) encodingOptions() []contract.FormField {
 	}
 }
 
-func (r *SQLiteRepository) tablespaceOptions() []contract.FormField {
-	type tablespaceResult struct {
-		Value string `gorm:"column:value"`
-		Name  string `gorm:"column:name"`
-	}
-
-	var results []tablespaceResult
-	err := r.db.Table("pg_tablespace").
-		Select("spcname as value, spcname as name").
-		Order("spcname").
-		Scan(&results).Error
-	if err != nil {
-		return []contract.FormField{}
-	}
-
-	tablespaces := make([]contract.FormField, len(results))
-	for i, result := range results {
-		tablespaces[i] = contract.FormField{
-			Value: result.Value,
-			Name:  result.Name,
-		}
-	}
-
-	return tablespaces
-}
-
 func (r *SQLiteRepository) viewFields() []contract.FormField {
 	return []contract.FormField{
 		{ID: "name", Name: "Name", Type: "text", Required: true},
-		{ID: "comment", Name: "Comment", Type: "text"},
-		{ID: "check_option", Name: "Check Option", Type: "select", Fields: []contract.FormField{
-			{Value: "LOCAL", Name: "LOCAL"},
-			{Value: "CASCADE", Name: "CASCADE"},
-		}},
 		{ID: "query", Name: "Query", Type: "query", Required: true},
-	}
-}
-
-func (r *SQLiteRepository) materializedViewFields() []contract.FormField {
-	return []contract.FormField{
-		{ID: "name", Name: "Name", Type: "text", Required: true},
-		{ID: "comment", Name: "Comment", Type: "text"},
-		{ID: "tablespace", Name: "Tablespace", Type: "select", Fields: r.tablespaceOptions()},
-		{ID: "rolname", Name: "Owner", Type: "text"},
-		{ID: "query", Name: "Query", Type: "query", Required: true},
-	}
-}
-
-func (r *SQLiteRepository) sequenceFields() []contract.FormField {
-	return []contract.FormField{
-		{ID: "name", Name: "Name", Type: "text"},
-		{ID: "comment", Name: "Comment", Type: "text"},
-		{ID: "increment", Name: "Increment", Type: "text"},
-		{ID: "min_value", Name: "Min Value", Type: "text"},
-		{ID: "max_value", Name: "Max Value", Type: "text"},
-		{ID: "start_value", Name: "Start Value", Type: "text"},
-		{ID: "cache", Name: "Cache", Type: "text"},
-		{ID: "cycle", Name: "Cycle", Type: "checkbox"},
-		{ID: "owned_by", Name: "Owned By", Type: "text"},
 	}
 }

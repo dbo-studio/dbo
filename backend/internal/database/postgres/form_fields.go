@@ -55,16 +55,16 @@ func (r *PostgresRepository) GetFormFields(nodeID string, tabID contract.TreeTab
 		return helper.BuildFieldArray(r.tableColumnFields())
 	case contract.TableForeignKeysTab:
 		return helper.BuildFieldArray(r.foreignKeyOptions(node))
-	case contract.TableIndexesTab:
-		return helper.BuildFieldArray(r.indexOptions(node))
-	case contract.TableTriggersTab:
-		return helper.BuildFieldArray(r.triggerOptions(node))
-	case contract.TableChecksTab:
-		return helper.BuildFieldArray(r.checkOptions())
-	case contract.TableKeysTab:
-		return helper.BuildFieldArray(r.getKeyOptions(node))
-	case contract.TableSequenceTab:
-		return helper.BuildFieldArray(r.sequenceFields())
+	// case contract.TableIndexesTab:
+	// 	return helper.BuildFieldArray(r.indexOptions(node))
+	// case contract.TableTriggersTab:
+	// 	return helper.BuildFieldArray(r.triggerOptions(node))
+	// case contract.TableChecksTab:
+	// 	return helper.BuildFieldArray(r.checkOptions())
+	// case contract.TableKeysTab:
+	// 	return helper.BuildFieldArray(r.getKeyOptions(node))
+	// case contract.TableSequenceTab:
+	// 	return helper.BuildFieldArray(r.sequenceFields())
 
 	case contract.ViewTab:
 		return r.viewFields()

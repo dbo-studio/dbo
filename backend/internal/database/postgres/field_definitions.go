@@ -51,8 +51,8 @@ func (r *PostgresRepository) foreignKeyOptions(node PGNode) []contract.FormField
 	return []contract.FormField{
 		{ID: "constraint_name", Name: "Constraint Name", Type: "text", Required: true},
 		{ID: "comment", Name: "Comment", Type: "text"},
-		{ID: "ref_columns", Name: "Source Columns", Type: "multi-select", Fields: r.tableColumnsList(node), Required: true},
 		{ID: "target_table", Name: "Target Table", Type: "select", Fields: r.tablesList(node), Required: true},
+		{ID: "ref_columns", Name: "Source Columns", Type: "multi-select", Fields: r.tableColumnsList(node), Required: true},
 		{ID: "target_columns", Name: "Target Columns", Type: "chip", Required: true},
 		{ID: "update_action", Name: "On Update", Type: "select", Fields: []contract.FormField{
 			{Value: "NO ACTION", Name: "NO ACTION"},

@@ -1,9 +1,10 @@
 import type { CreateConnectionRequestType } from '@/api/connection/types';
+import type { IconTypes } from '@/components/base/CustomIcon/types';
 import type { ConnectionType } from '@/types';
 
 export type SelectionConnectionType = {
   name: string;
-  logo: string;
+  logo: keyof typeof IconTypes;
   component: React.ComponentType<ConnectionSettingsProps>;
 };
 
