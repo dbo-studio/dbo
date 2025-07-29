@@ -1,7 +1,7 @@
 export interface ConnectionType {
   id: number;
   name: string;
-  type: 'postgresql';
+  type: 'postgresql' | 'sqlite';
   isActive: boolean;
   info: string;
   icon: string;

@@ -2,14 +2,12 @@ import type { CreateConnectionRequestType } from '@/api/connection/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
-import { tools } from '@/core/utils';
 import locales from '@/locales';
 import { LoadingButton } from '@mui/lab';
-import { Box, Button, IconButton, Stack } from '@mui/material';
+import { Box, Button, Stack } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import { open } from '@tauri-apps/plugin-dialog';
 import type { JSX } from 'react';
-import { useEffect, useState } from 'react';
 import * as v from 'valibot';
 
 import type { ConnectionSettingsProps } from '../types';
@@ -17,7 +15,7 @@ import type { ConnectionSettingsProps } from '../types';
 const formSchema = v.object({
   isPing: v.boolean(),
   name: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
-  file: v.string()
+  path: v.string()
 });
 
 export default function SQLite({
@@ -28,16 +26,6 @@ export default function SQLite({
   pingLoading,
   submitLoading
 }: ConnectionSettingsProps): JSX.Element {
-  const [isTauriEnv, setIsTauriEnv] = useState<boolean>(false);
-
-  useEffect(() => {
-    const checkTauri = async (): Promise<void> => {
-      const isTauri = await tools.isTauri();
-      setIsTauriEnv(isTauri);
-    };
-    checkTauri();
-  }, []);
-
   const form = useForm({
     validators: {
       //@ts-ignore
@@ -62,19 +50,18 @@ export default function SQLite({
     defaultValues: {
       isPing: false,
       name: connection?.name ?? '',
-      file: connection?.options?.file ?? ''
+      path: connection?.options?.path ?? ''
     }
   });
 
   const handleFileSelect = async (): Promise<void> => {
-    if (!isTauriEnv) return;
     const selected = await open({
       multiple: false,
       directory: false
     });
 
     if (typeof selected === 'string') {
-      form.setFieldValue('file', selected);
+      form.setFieldValue('path', selected);
     }
   };
 
@@ -103,29 +90,30 @@ export default function SQLite({
             )}
           </form.Field>
 
-          <Box display={'flex'} flexDirection={'column'}>
-            <form.Field name='file'>
-              {(field): JSX.Element => (
-                <>
-                  <Box display={'flex'} alignItems={'flex-end'} flex={1}>
-                    <FieldInput
-                      value={field.state.value}
-                      error={field.state.meta.errors.length > 0}
-                      label={locales.file}
-                      onChange={(e): void => field.handleChange(e.target.value)}
-                      sx={{ flex: 1 }}
-                    />
-                    {isTauriEnv && (
-                      <IconButton onClick={handleFileSelect} size='small' sx={{ mb: 1 }}>
-                        <CustomIcon type='ellipsisVertical' size='s' />
-                      </IconButton>
-                    )}
-                  </Box>
-                  <FormError mb={1} errors={field.state.meta.errors} />
-                </>
-              )}
-            </form.Field>
-          </Box>
+          <form.Field name='path'>
+            {(field): JSX.Element => (
+              <Box display={'flex'} flexDirection={'row'} flex={1} alignItems={'center'}>
+                <Box flex={1}>
+                  <FieldInput
+                    value={field.state.value}
+                    error={field.state.meta.errors.length > 0}
+                    label={locales.file}
+                    onChange={(e): void => field.handleChange(e.target.value)}
+                  />
+                </Box>
+                {/* <IconButton onClick={handleFileSelect} size='small'> */}
+                <Button
+                  sx={{ minWidth: 32, marginLeft: 1, padding: '0 !important' }}
+                  onClick={handleFileSelect}
+                  size='small'
+                >
+                  <CustomIcon type='ellipsisVertical' size='s' />
+                </Button>
+                {/* </IconButton> */}
+                <FormError mb={1} errors={field.state.meta.errors} />
+              </Box>
+            )}
+          </form.Field>
         </form>
       </Box>
 
