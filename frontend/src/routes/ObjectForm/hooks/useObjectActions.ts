@@ -17,7 +17,7 @@ export const useObjectActions = (): {
 } => {
   const queryClient = useQueryClient();
   const currentConnection = useCurrentConnection();
-  const formDataByTab = useDataStore.getState().formDataByTab;
+  const formDataByTab = useDataStore((state) => state.formDataByTab);
   const selectedTab = useSelectedTab();
 
   const action = selectedTab?.options?.action || '';

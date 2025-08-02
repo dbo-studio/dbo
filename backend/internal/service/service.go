@@ -25,6 +25,6 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		HistoryService:    serviceHistory.NewHistoryService(repo.HistoryRepo),
 		SavedQueryService: serviceSavedQuery.NewSavedQueryService(repo.SavedQueryRepo),
 		TreeService:       serviceTree.NewTreeService(repo.ConnectionRepo, cm),
-		QueryService:      serviceQuery.NewQueryService(repo.ConnectionRepo, cm, cache),
+		QueryService:      serviceQuery.NewQueryService(repo.ConnectionRepo, repo.HistoryRepo, cm, cache),
 	}
 }

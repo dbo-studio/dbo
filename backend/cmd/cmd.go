@@ -43,10 +43,11 @@ func Execute() {
 		appLogger.Fatal(err)
 	}
 
-	cm := databaseConnection.NewConnectionManager(appDB, appLogger)
 	cache := sqlite.NewSQLiteCache(appDB)
-
 	rr := repository.NewRepository(ctx, appDB, cache)
+
+	cm := databaseConnection.NewConnectionManager(appDB, appLogger, rr.HistoryRepo)
+
 	ss := service.NewService(rr, cm, cache)
 
 	restServer := server.New(appLogger, server.Handlers{

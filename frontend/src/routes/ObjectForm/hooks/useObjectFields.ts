@@ -14,8 +14,7 @@ export const useObjectFields = (
   const selectedTab = useSelectedTab();
   const currentConnection = useCurrentConnection();
 
-  const getFormData = useDataStore((state) => state.getFormData);
-  const updateFormData = useDataStore((state) => state.updateFormData);
+  const { getFormData, updateFormData } = useDataStore();
 
   const { data: fields } = useQuery({
     queryKey: [
@@ -28,17 +27,17 @@ export const useObjectFields = (
     queryFn: (): Promise<FormFieldType[]> =>
       isDetail
         ? api.tree.getObject({
-            nodeId: selectedTab?.nodeId ?? '',
-            action: selectedTab?.options?.action,
-            tabId: selectedTab?.options?.tabId || '',
-            connectionId: currentConnection?.id || 0
-          })
+          nodeId: selectedTab?.nodeId ?? '',
+          action: selectedTab?.options?.action,
+          tabId: selectedTab?.options?.tabId || '',
+          connectionId: currentConnection?.id || 0
+        })
         : api.tree.getFields({
-            nodeId: selectedTab?.nodeId ?? '',
-            action: selectedTab?.options?.action,
-            tabId: selectedTab?.options?.tabId || '',
-            connectionId: currentConnection?.id || 0
-          }),
+          nodeId: selectedTab?.nodeId ?? '',
+          action: selectedTab?.options?.action,
+          tabId: selectedTab?.options?.tabId || '',
+          connectionId: currentConnection?.id || 0
+        }),
     enabled: !!(
       currentConnection?.id &&
       selectedTab?.id &&

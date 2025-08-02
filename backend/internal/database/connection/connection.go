@@ -7,6 +7,7 @@ import (
 
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlserver"
@@ -23,15 +24,15 @@ type ConnectionManager struct {
 	connections map[uint]*conn
 	mu          sync.Mutex
 	logger      logger.Logger
-	appDB       *gorm.DB
+	historyRepo repository.IHistoryRepo
 }
 
-func NewConnectionManager(appDB *gorm.DB, logger logger.Logger) *ConnectionManager {
+func NewConnectionManager(appDB *gorm.DB, logger logger.Logger, historyRepo repository.IHistoryRepo) *ConnectionManager {
 	cm := &ConnectionManager{
 		connections: make(map[uint]*conn),
 		mu:          sync.Mutex{},
 		logger:      logger,
-		appDB:       appDB,
+		historyRepo: historyRepo,
 	}
 	go cm.cleanupInactiveConnections()
 	return cm
@@ -73,7 +74,7 @@ func (cm *ConnectionManager) GetConnection(connection *model.Connection) (*gorm.
 		return nil, err
 	}
 
-	RegisterHistoryHooks(db, cm.appDB, connection.ID)
+	RegisterHistoryHooks(db, cm.historyRepo, connection.ID)
 
 	sqlDB, _ := db.DB()
 	sqlDB.SetMaxOpenConns(10)
@@ -112,7 +113,7 @@ func (cm *ConnectionManager) cleanupInactiveConnections() {
 	}
 }
 
-func RegisterHistoryHooks(db *gorm.DB, appDB *gorm.DB, connectionID uint) {
+func RegisterHistoryHooks(db *gorm.DB, historyRepo repository.IHistoryRepo, connectionID uint) {
 	cb := db.Callback()
 
 	saveHistory := func(db *gorm.DB) {
@@ -124,16 +125,10 @@ func RegisterHistoryHooks(db *gorm.DB, appDB *gorm.DB, connectionID uint) {
 			return
 		}
 
-		history := model.History{
-			ConnectionID: connectionID,
-			Query:        db.Dialector.Explain(db.Statement.SQL.String(), db.Statement.Vars...),
+		err := historyRepo.Create(db.Statement.Context, connectionID, db.Statement.SQL.String())
+		if err != nil {
+			db.Logger.Error(db.Statement.Context, "failed to save query history: %v", err)
 		}
-
-		err := appDB.Session(&gorm.Session{
-			NewDB:                  true,
-			SkipHooks:              true,
-			SkipDefaultTransaction: true,
-		}).Create(&history).Error
 
 		if err != nil {
 			db.Logger.Error(db.Statement.Context, "failed to save query history: %v", err)
