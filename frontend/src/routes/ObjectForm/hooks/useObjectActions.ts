@@ -180,8 +180,6 @@ export const useObjectActions = (): {
   const handleFieldChange = (field: string, value: any): void => {
     if (!selectedTab?.options?.tabId) return;
 
-    ['objectTabs', selectedTab?.id, currentConnection?.id, selectedTab?.options?.action];
-
     const currentFormData = getFormData(selectedTab?.id ?? '', tabId);
     if (!currentFormData) return;
 
