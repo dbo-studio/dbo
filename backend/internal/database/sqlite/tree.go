@@ -58,7 +58,7 @@ func buildRoot(r *SQLiteRepository) (*contract.TreeNode, error) {
 
 	for _, c := range containers {
 		root.Children = append(root.Children, contract.TreeNode{
-			ID:          fmt.Sprintf("%s", c.id),
+			ID:          string(c.id),
 			Name:        c.name,
 			Type:        c.id,
 			HasChildren: true,

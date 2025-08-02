@@ -109,34 +109,6 @@ func (r *PostgresRepository) getMaterializedViewList(schema Schema) ([]Materiali
 	return mvs, err
 }
 
-type Index struct {
-	Name string `gorm:"column:indexname"`
-}
-
-func (r *PostgresRepository) getIndexList(schema Schema) ([]Index, error) {
-	indexes := make([]Index, 0)
-	err := r.db.Select("indexname").
-		Table("pg_indexes").
-		Where("schemaname = ?", schema.Name).
-		Find(&indexes).Error
-
-	return indexes, err
-}
-
-type Sequence struct {
-	Name string `gorm:"column:sequencename"`
-}
-
-func (r *PostgresRepository) getSequenceList(schema Schema) ([]Sequence, error) {
-	sequences := make([]Sequence, 0)
-	err := r.db.Select("sequencename").
-		Table("pg_sequences").
-		Where("schemaname = ?", schema.Name).
-		Find(&sequences).Error
-
-	return sequences, err
-}
-
 type Column struct {
 	OrdinalPosition        int32          `gorm:"column:ordinal_position"`
 	ColumnName             string         `gorm:"column:column_name"`
