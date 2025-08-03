@@ -27,7 +27,7 @@ type ConnectionManager struct {
 	historyRepo repository.IHistoryRepo
 }
 
-func NewConnectionManager(appDB *gorm.DB, logger logger.Logger, historyRepo repository.IHistoryRepo) *ConnectionManager {
+func NewConnectionManager(logger logger.Logger, historyRepo repository.IHistoryRepo) *ConnectionManager {
 	cm := &ConnectionManager{
 		connections: make(map[uint]*conn),
 		mu:          sync.Mutex{},

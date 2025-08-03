@@ -4,26 +4,7 @@ run:
   issues-exit-code: 2
   allow-parallel-runners: true
   allow-serial-runners: true
-linters:
-  enable:
-    - testifylint
-    - unconvert
-  exclusions:
-    generated: lax
-    presets:
-      - comments
-      - common-false-positives
-      - legacy
-      - std-error-handling
-    paths:
-      - test
-      - third_party$
-      - builtin$
-      - examples$
-formatters:
-  exclusions:
-    generated: lax
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
+#linters:
+#  enable:
+#    - testifylint
+#    - unconvert

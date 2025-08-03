@@ -46,7 +46,7 @@ func Execute() {
 	cache := sqlite.NewSQLiteCache(appDB)
 	rr := repository.NewRepository(ctx, appDB, cache)
 
-	cm := databaseConnection.NewConnectionManager(appDB, appLogger, rr.HistoryRepo)
+	cm := databaseConnection.NewConnectionManager(appLogger, rr.HistoryRepo)
 
 	ss := service.NewService(rr, cm, cache)
 

@@ -14,18 +14,6 @@ func (r *SQLiteRepository) Tree(parentID string) (*contract.TreeNode, error) {
 	}
 
 	return buildContainer(r, contract.TreeNodeType(parentID))
-
-	// parts := strings.Split(parentID, ".")
-	// switch len(parts) {
-	// case 1:
-	// 	return buildDatabase(r, parts[0])
-	// case 2:
-	// 	return buildSchema(r, parts[0], parts[1])
-	// case 3:
-	// 	return buildContainer(r, parts[0], parts[1], contract.TreeNodeType(parts[2]))
-	// default:
-	// 	return nil, fmt.Errorf("unsupported parent_id: %s", parentID)
-	// }
 }
 
 func buildRoot(r *SQLiteRepository) (*contract.TreeNode, error) {

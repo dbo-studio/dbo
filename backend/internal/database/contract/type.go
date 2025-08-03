@@ -20,12 +20,12 @@ type TreeNodeAction struct {
 }
 
 type FormField struct {
-	ID       string      `json:"id"`
-	Name     string      `json:"name"`
-	Type     string      `json:"type"`
-	Required bool        `json:"required"`
-	Value    any         `json:"value"`
-	Fields   []FormField `json:"fields,omitempty"`
+	ID       string                `json:"id"`
+	Name     string                `json:"name"`
+	Type     TreeFormFieldTypeEnum `json:"type"`
+	Required bool                  `json:"required"`
+	Value    any                   `json:"value"`
+	Fields   []FormField           `json:"fields,omitempty"`
 }
 
 type FormTab struct {
