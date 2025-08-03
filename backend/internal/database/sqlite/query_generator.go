@@ -83,3 +83,83 @@ func (r *SQLiteRepository) getPrimaryKeys(table Table) ([]string, error) {
 
 	return lo.Map(primaryKeys, func(x Column, _ int) string { return x.ColumnName }), nil
 }
+
+func (r *SQLiteRepository) getTableInfo(tableName string) (*Table, error) {
+	var table Table
+	err := r.db.Raw(`
+		SELECT tbl_name as name
+		FROM sqlite_master 
+		WHERE type = 'table' 
+		AND tbl_name = ?
+	`, tableName).Scan(&table).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &table, nil
+}
+
+func (r *SQLiteRepository) getViewInfo(viewName string) (*View, error) {
+	var view View
+	err := r.db.Raw(`
+		SELECT tbl_name as name
+		FROM sqlite_master 
+		WHERE type = 'view' 
+		AND tbl_name = ?
+	`, viewName).Scan(&view).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &view, nil
+}
+
+func (r *SQLiteRepository) getViewDefinition(viewName string) (string, error) {
+	var definition string
+	err := r.db.Raw(`
+		SELECT sql 
+		FROM sqlite_master 
+		WHERE type = 'view' 
+		AND tbl_name = ?
+	`, viewName).Scan(&definition).Error
+
+	if err != nil {
+		return "", err
+	}
+
+	return definition, nil
+}
+
+func (r *SQLiteRepository) tableExists(tableName string) (bool, error) {
+	var count int64
+	err := r.db.Raw(`
+		SELECT COUNT(*) 
+		FROM sqlite_master 
+		WHERE type = 'table' 
+		AND tbl_name = ?
+	`, tableName).Scan(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func (r *SQLiteRepository) viewExists(viewName string) (bool, error) {
+	var count int64
+	err := r.db.Raw(`
+		SELECT COUNT(*) 
+		FROM sqlite_master 
+		WHERE type = 'view' 
+		AND tbl_name = ?
+	`, viewName).Scan(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
