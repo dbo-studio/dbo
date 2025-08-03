@@ -11,4 +11,3 @@ export type CreatableSelectInputProps = {
   onChange: (value: SelectInputOption) => void;
   isMulti?: boolean;
 };
-
