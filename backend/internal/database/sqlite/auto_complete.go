@@ -24,4 +24,5 @@ func (r *SQLiteRepository) AutoComplete(req *dto.AutoCompleteRequest) (*dto.Auto
 		response.Tables = append(response.Tables, table.Name)
 	}
 
+	return response, nil
 }
