@@ -27,7 +27,7 @@ export function getDataBasesAndSchemas(languageId: string): ICompletionItem[] {
   return databaseAndSchemas;
 }
 
-export function getDataBases(languageId: string): ICompletionItem[] {
+function getDataBases(languageId: string): ICompletionItem[] {
   const databaseCompletions = autocomplete.databases.map((db) => ({
     label: db,
     kind: languages.CompletionItemKind.Field,
@@ -38,7 +38,7 @@ export function getDataBases(languageId: string): ICompletionItem[] {
   return databaseCompletions;
 }
 
-export function getSchemas(languageId: string): ICompletionItem[] {
+function getSchemas(languageId: string): ICompletionItem[] {
   const schemaCompletions = autocomplete.schemas.map((sc) => ({
     label: sc,
     kind: languages.CompletionItemKind.Field,

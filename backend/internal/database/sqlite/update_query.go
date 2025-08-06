@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"gorm.io/gorm"
 )
 
@@ -151,7 +152,7 @@ func (r *SQLiteRepository) generateInsertQueries(req *dto.UpdateQueryRequest, no
 			if value == nil {
 				values = append(values, "NULL")
 			} else {
-				values = append(values, fmt.Sprintf(`'%v'`, value))
+				values = append(values, helper.FormatSQLValue(value))
 			}
 		}
 

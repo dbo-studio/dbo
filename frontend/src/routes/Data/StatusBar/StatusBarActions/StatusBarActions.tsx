@@ -1,6 +1,8 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton';
+import { ExportButton } from '@/components/common/ExportButton/ExportButton';
+import { ImportButton } from '@/components/common/ImportButton/ImportButton';
 import { TabMode } from '@/core/enums';
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { createEmptyRow } from '@/core/utils';
@@ -126,6 +128,8 @@ export default function StatusBarActions(): JSX.Element {
   return (
     <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'} width={208}>
       <Box>
+        <ImportButton />
+        <ExportButton connectionId={currentConnection?.id ?? 1} query={selectedTab?.query ?? ''} />
         <IconButton disabled={updateQueryPending || isDataFetching} onClick={handleAddAction}>
           <CustomIcon type='plus' size='s' />
         </IconButton>

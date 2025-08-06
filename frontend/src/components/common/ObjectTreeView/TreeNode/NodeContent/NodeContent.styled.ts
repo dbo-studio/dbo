@@ -3,11 +3,12 @@ import Box from '@mui/material/Box';
 import { styled } from '@mui/material/styles';
 
 export const NodeLabel = styled(Box, {
-  shouldForwardProp: (prop: string): boolean => prop !== 'isFocused'
-})<{ isFocused?: boolean }>(({ theme, isFocused }) => ({
+  shouldForwardProp: (prop): boolean => prop !== 'isFocused' && prop !== 'level'
+})<{ isFocused?: boolean; level: number }>(({ theme, isFocused, level }) => ({
+  padding: theme.spacing(0.4),
+  paddingLeft: `${level * 20}px`,
   display: 'flex',
   alignItems: 'center',
-  padding: theme.spacing(0.2, 0.4),
   cursor: 'pointer',
   borderRadius: variables.radius.small,
   width: '100%',
@@ -22,6 +23,10 @@ export const NodeLabel = styled(Box, {
     backgroundColor: theme.palette.action.hover
   },
   ...(isFocused && {
-    backgroundColor: theme.palette.action.hover
+    backgroundColor: theme.palette.action.hover,
+    '& p': {
+      fontWeight: 500,
+      color: theme.palette.text.primary
+    }
   })
 }));

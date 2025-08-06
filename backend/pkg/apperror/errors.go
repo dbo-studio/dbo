@@ -9,6 +9,8 @@ import (
 var (
 	ErrConnectionNotFound = errors.New("connection not found")
 	ErrSavedQueryNotFound = errors.New("query not found")
+	ErrJobCannotCancel    = errors.New("job cannot cancel")
+	ErrJobNotCompleted    = errors.New("job not completed")
 )
 
 type AppError struct {

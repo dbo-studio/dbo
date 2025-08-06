@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/goccy/go-json"
 )
@@ -38,7 +39,9 @@ func RawJsonToStruct[T any](value json.RawMessage) (T, error) {
 func FormatSQLValue(value interface{}) string {
 	switch v := value.(type) {
 	case string:
-		return fmt.Sprintf("'%s'", v)
+		// Escape single quotes by doubling them
+		escaped := strings.ReplaceAll(v, "'", "''")
+		return fmt.Sprintf("'%s'", escaped)
 	case int, int8, int16, int32, int64:
 		return fmt.Sprintf("%d", v)
 	case uint, uint8, uint16, uint32, uint64:

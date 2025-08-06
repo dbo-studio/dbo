@@ -16,7 +16,7 @@ func NewDatabaseRepository(connection *model.Connection, cm *databaseConnection.
 	//	return databaseMysql.NewMySQLRepository(connection, cm)
 	case string(databaseContract.Postgresql):
 		return databasePostgres.NewPostgresRepository(connection, cm)
-	case "sqlite":
+	case string(databaseContract.Sqlite):
 		return databaseSqlite.NewSQLiteRepository(connection, cm)
 	//case "sqlserver":
 	//	return databaseSqlserver.NewSQLServerRepository(connection, cm)

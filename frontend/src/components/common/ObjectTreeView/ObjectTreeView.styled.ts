@@ -1,6 +1,4 @@
-import { Box } from '@mui/material';
-
-import { styled } from '@mui/material';
+import { Box, styled } from '@mui/material';
 
 export const TreeViewContainerStyled = styled(Box)({
   display: 'flex',
@@ -29,10 +27,4 @@ export const TreeViewContentStyled = styled(Box)(({ theme }) => ({
   '&::-webkit-scrollbar-track': {
     backgroundColor: 'transparent'
   }
-}));
-
-export const SearchBoxStyled = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(1),
-  borderBottom: `1px solid ${theme.palette.divider}`,
-  backgroundColor: theme.palette.background.paper
 }));

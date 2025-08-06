@@ -9,8 +9,8 @@ import (
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/handler"
 	"github.com/dbo-studio/dbo/internal/app/server"
+	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
-	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/cache/sqlite"
 	"github.com/dbo-studio/dbo/pkg/db"
 	"github.com/dbo-studio/dbo/pkg/helper"
@@ -38,7 +38,7 @@ func Execute() {
 	cfg := config.New()
 	appLogger := zap.New(cfg)
 	appDB := db.New(cfg, appLogger).DB
-	err := appDB.AutoMigrate(&model.CacheItem{}, &model.Connection{}, &model.SavedQuery{}, &model.History{})
+	err := database.AutoMigrate(appDB)
 	if err != nil {
 		appLogger.Fatal(err)
 	}
@@ -48,7 +48,7 @@ func Execute() {
 
 	cm := databaseConnection.NewConnectionManager(appLogger, rr.HistoryRepo)
 
-	ss := service.NewService(rr, cm, cache)
+	ss := service.NewService(appLogger, rr, cm, cache)
 
 	restServer := server.New(appLogger, server.Handlers{
 		Connection:   handler.NewConnectionHandler(appLogger, ss.ConnectionService),
@@ -56,6 +56,8 @@ func Execute() {
 		History:      handler.NewHistoryHandler(appLogger, ss.HistoryService),
 		TreeHandler:  handler.NewTreeHandler(appLogger, ss.TreeService),
 		QueryHandler: handler.NewQueryHandler(appLogger, ss.QueryService),
+		ImportExport: handler.NewImportExportHandler(appLogger, ss.ImportExportService),
+		Job:          handler.NewJobHandler(appLogger, ss.JobService),
 	})
 
 	if err := restServer.Start(helper.IsLocal(), cfg.App.Port); err != nil {

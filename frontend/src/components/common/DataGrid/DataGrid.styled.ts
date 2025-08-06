@@ -141,26 +141,3 @@ export const CellContainer = styled('div')(() => ({
     userSelect: 'text'
   }
 }));
-
-export const EditButton = styled('button')(({ theme }) => ({
-  position: 'absolute',
-  right: '2px',
-  background: theme.palette.primary.main,
-  color: theme.palette.primary.contrastText,
-  border: 'none',
-  borderRadius: '3px',
-  width: '20px',
-  height: '20px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  cursor: 'pointer',
-  opacity: 0,
-  transition: 'opacity 0.2s',
-  '&:hover': {
-    opacity: 1
-  },
-  '.cell-hover &': {
-    opacity: 0.7
-  }
-}));

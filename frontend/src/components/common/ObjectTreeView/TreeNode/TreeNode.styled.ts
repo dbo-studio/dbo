@@ -1,7 +1,6 @@
-import { variables } from '@/core/theme/variables';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
+import Typography from '@mui/material/Typography';
 
 export const TreeNodeContainer = styled(Box)({
   flexDirection: 'column',
@@ -15,34 +14,6 @@ export const TreeNodeContainer = styled(Box)({
   position: 'relative'
 });
 
-export const NodeLabel = styled(Box, {
-  shouldForwardProp: (prop): boolean => prop !== 'isFocused' && prop !== 'level'
-})<{ isFocused?: boolean; level: number }>(({ theme, isFocused, level }) => ({
-  padding: theme.spacing(0.4),
-  paddingLeft: `${level * 20}px`,
-  display: 'flex',
-  alignItems: 'center',
-  cursor: 'pointer',
-  borderRadius: variables.radius.small,
-  width: '100%',
-  overflow: 'hidden',
-  border: '1px solid transparent',
-  height: '22px',
-  transition: 'background-color 0.1s ease',
-  position: 'relative',
-  zIndex: 1,
-  gap: theme.spacing(0.5),
-  '&:hover': {
-    backgroundColor: theme.palette.action.hover
-  },
-  ...(isFocused && {
-    backgroundColor: theme.palette.action.hover,
-    '& p': {
-      fontWeight: 500,
-      color: theme.palette.text.primary
-    }
-  })
-}));
 
 export const NodeContent = styled(Box)({
   display: 'flex',

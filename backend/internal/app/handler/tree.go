@@ -21,16 +21,16 @@ func NewTreeHandler(logger logger.Logger, treeService serviceTree.ITreeService) 
 func (h *TreeHandler) TreeHandler(c fiber.Ctx) error {
 	req := new(dto.TreeListRequest)
 	if err := c.Bind().Query(req); err != nil {
-		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}
 
-	result, err := h.treeService.Tree(c.Context(), req)
+	result, err := h.treeService.Tree(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())
-		return response.ErrorBuilder(err).Send(c)
+		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder(result).Send(c)
+	return response.SuccessBuilder().WithData(result).Send(c)
 }
 
 func (h *TreeHandler) Tabs(c fiber.Ctx) error {
@@ -40,13 +40,13 @@ func (h *TreeHandler) Tabs(c fiber.Ctx) error {
 		NodeId:       fiber.Params[string](c, "nodeId"),
 	}
 
-	result, err := h.treeService.Tabs(c.Context(), req)
+	result, err := h.treeService.Tabs(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())
-		return response.ErrorBuilder(err).Send(c)
+		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder(result).Send(c)
+	return response.SuccessBuilder().WithData(result).Send(c)
 }
 
 func (h *TreeHandler) ObjectFields(c fiber.Ctx) error {
@@ -57,13 +57,13 @@ func (h *TreeHandler) ObjectFields(c fiber.Ctx) error {
 		TabId:        fiber.Params[string](c, "tabId"),
 	}
 
-	result, err := h.treeService.TabObject(c.Context(), req)
+	result, err := h.treeService.TabObject(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())
-		return response.ErrorBuilder(err).Send(c)
+		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder(result).Send(c)
+	return response.SuccessBuilder().WithData(result).Send(c)
 }
 
 func (h *TreeHandler) ObjectDetail(c fiber.Ctx) error {
@@ -74,13 +74,13 @@ func (h *TreeHandler) ObjectDetail(c fiber.Ctx) error {
 		Action:       fiber.Params[string](c, "action"),
 	}
 
-	result, err := h.treeService.ObjectDetail(c.Context(), req)
+	result, err := h.treeService.ObjectDetail(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())
-		return response.ErrorBuilder(err).Send(c)
+		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder(result).Send(c)
+	return response.SuccessBuilder().WithData(result).Send(c)
 }
 
 func (h *TreeHandler) ExecuteHandler(c fiber.Ctx) error {
@@ -91,11 +91,11 @@ func (h *TreeHandler) ExecuteHandler(c fiber.Ctx) error {
 		Params:       c.Body(),
 	}
 
-	err := h.treeService.ObjectExecute(c.Context(), req)
+	err := h.treeService.ObjectExecute(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())
-		return response.ErrorBuilder(err).Send(c)
+		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder(nil).Send(c)
+	return response.SuccessBuilder().Send(c)
 }

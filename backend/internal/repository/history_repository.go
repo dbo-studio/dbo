@@ -9,13 +9,11 @@ import (
 	"gorm.io/gorm"
 )
 
-var _ IHistoryRepo = (*IHistoryRepoImpl)(nil)
-
 type IHistoryRepoImpl struct {
 	db *gorm.DB
 }
 
-func NewHistoryRepo(db *gorm.DB) *IHistoryRepoImpl {
+func NewHistoryRepo(db *gorm.DB) IHistoryRepo {
 	return &IHistoryRepoImpl{
 		db: db,
 	}

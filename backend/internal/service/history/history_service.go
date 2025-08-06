@@ -14,15 +14,11 @@ type IHistoryService interface {
 	DeleteAll(ctx context.Context, req *dto.DeleteHistoryRequest) error
 }
 
-var _ IHistoryService = (*IHistoryServiceImpl)(nil)
-
 type IHistoryServiceImpl struct {
 	historyRepo repository.IHistoryRepo
 }
 
-// DeleteAll implements IHistoryService.
-
-func NewHistoryService(hr repository.IHistoryRepo) *IHistoryServiceImpl {
+func NewHistoryService(hr repository.IHistoryRepo) IHistoryService {
 	return &IHistoryServiceImpl{
 		historyRepo: hr,
 	}
@@ -49,6 +45,6 @@ func (i IHistoryServiceImpl) Index(ctx context.Context, req *dto.HistoryListRequ
 	}, nil
 }
 
-func (i *IHistoryServiceImpl) DeleteAll(ctx context.Context, req *dto.DeleteHistoryRequest) error {
+func (i IHistoryServiceImpl) DeleteAll(ctx context.Context, req *dto.DeleteHistoryRequest) error {
 	return i.historyRepo.DeleteAll(ctx, uint(req.ConnectionId))
 }

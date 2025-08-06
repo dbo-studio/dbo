@@ -22,95 +22,95 @@ func NewConnectionHandler(logger logger.Logger, connectionService serviceConnect
 }
 
 func (h ConnectionHandler) Connections(c fiber.Ctx) error {
-	data, err := h.connectionService.Index(c.Context())
+	data, err := h.connectionService.Index(c)
 	if err != nil {
 		h.logger.Error(err.Error())
-		return response.ErrorBuilder(err).Send(c)
+		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder(data.Connections).Send(c)
+	return response.SuccessBuilder().WithData(data.Connections).Send(c)
 }
 
-func (h ConnectionHandler) CreateConnection(c fiber.Ctx) error {
+func (h ConnectionHandler) Create(c fiber.Ctx) error {
 	req := new(dto.CreateConnectionRequest)
 	if err := c.Bind().Body(req); err != nil {
-		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}
 
 	if err := req.Validate(); err != nil {
-		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
 	}
 
-	connection, err := h.connectionService.Create(c.Context(), req)
+	connection, err := h.connectionService.Create(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())
-		return response.ErrorBuilder(err).Send(c)
+		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder(connection).Send(c)
+	return response.SuccessBuilder().WithData(connection).Send(c)
 }
 
-func (h ConnectionHandler) ConnectionDetail(c fiber.Ctx) error {
+func (h ConnectionHandler) Detail(c fiber.Ctx) error {
 	req := &dto.ConnectionDetailRequest{
 		ConnectionId: fiber.Params[int32](c, "id"),
 	}
 
-	connection, err := h.connectionService.Detail(c.Context(), req)
+	connection, err := h.connectionService.Detail(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())
-		return response.ErrorBuilder(err).Send(c)
+		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder(connection).Send(c)
+	return response.SuccessBuilder().WithData(connection).Send(c)
 }
 
-func (h ConnectionHandler) DeleteConnection(c fiber.Ctx) error {
+func (h ConnectionHandler) Delete(c fiber.Ctx) error {
 	connectionId := fiber.Params[int32](c, "id")
-	data, err := h.connectionService.Delete(c.Context(), connectionId)
+	data, err := h.connectionService.Delete(c, connectionId)
 	if err != nil {
 		h.logger.Error(err.Error())
-		return response.ErrorBuilder(err).Send(c)
+		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder(data.Connections).Send(c)
+	return response.SuccessBuilder().WithData(data.Connections).Send(c)
 }
 
-func (h ConnectionHandler) PingConnection(c fiber.Ctx) error {
+func (h ConnectionHandler) Ping(c fiber.Ctx) error {
 	req := new(dto.CreateConnectionRequest)
 	if err := c.Bind().Body(req); err != nil {
-		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}
 
 	if err := req.Validate(); err != nil {
-		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
 	}
 
-	err := h.connectionService.Ping(c.Context(), req)
+	err := h.connectionService.Ping(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())
-		return response.ErrorBuilder(err).Send(c)
+		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder("").Send(c)
+	return response.SuccessBuilder().Send(c)
 }
 
-func (h ConnectionHandler) UpdateConnection(c fiber.Ctx) error {
+func (h ConnectionHandler) Update(c fiber.Ctx) error {
 	connectionId := fiber.Params[int32](c, "id")
 	req := new(dto.UpdateConnectionRequest)
 
 	if err := c.Bind().Body(req); err != nil {
-		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}
 
 	if err := req.Validate(); err != nil {
-		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
 	}
 
-	connection, err := h.connectionService.Update(c.Context(), connectionId, req)
+	connection, err := h.connectionService.Update(c, connectionId, req)
 	if err != nil {
 		h.logger.Error(err.Error())
-		return response.ErrorBuilder(err).Send(c)
+		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder(connection).Send(c)
+	return response.SuccessBuilder().WithData(connection).Send(c)
 }

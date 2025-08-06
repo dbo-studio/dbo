@@ -10,13 +10,11 @@ import (
 	"gorm.io/gorm"
 )
 
-var _ ISavedQueryRepo = (*ISavedQueryRepoImpl)(nil)
-
 type ISavedQueryRepoImpl struct {
 	db *gorm.DB
 }
 
-func NewSavedQueryRepo(db *gorm.DB) *ISavedQueryRepoImpl {
+func NewSavedQueryRepo(db *gorm.DB) ISavedQueryRepo {
 	return &ISavedQueryRepoImpl{
 		db: db,
 	}

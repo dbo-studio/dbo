@@ -9,7 +9,7 @@ const ReactCompilerConfig = {};
 
 export default defineConfig({
   clearScreen: host === undefined,
-  plugins: [ 
+  plugins: [
     react({
       //@ts-ignore
       babel: {
