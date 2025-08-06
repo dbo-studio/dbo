@@ -1,6 +1,8 @@
 package databaseSqlite
 
 import (
+	"database/sql"
+	"log"
 	"strings"
 	"time"
 
@@ -30,7 +32,12 @@ func runRawQuery(r *SQLiteRepository, req *dto.RawQueryRequest) (*dto.RawQueryRe
 		}, err
 	}
 
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}(rows)
 
 	columns, err := rows.Columns()
 	if err != nil {

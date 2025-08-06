@@ -3,6 +3,8 @@ package import_export
 import (
 	"context"
 	"io"
+	"log"
+	"mime/multipart"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -31,7 +33,12 @@ func (s IImportExportImpl) Import(_ context.Context, req *dto.ImportRequest) (*d
 	if err != nil {
 		return nil, apperror.BadRequest(err)
 	}
-	defer file.Close()
+	defer func(file multipart.File) {
+		err := file.Close()
+		if err != nil {
+			log.Printf("Error closing file: %v", err)
+		}
+	}(file)
 
 	fileData, err := io.ReadAll(file)
 	if err != nil {

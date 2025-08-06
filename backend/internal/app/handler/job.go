@@ -59,5 +59,5 @@ func (h JobHandler) Result(c fiber.Ctx) error {
 		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder().Send(c)
+	return nil
 }

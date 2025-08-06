@@ -1,6 +1,8 @@
 package databasePostgres
 
 import (
+	"database/sql"
+	"log"
 	"strings"
 	"time"
 
@@ -30,7 +32,12 @@ func runRawQuery(r *PostgresRepository, req *dto.RawQueryRequest) (*dto.RawQuery
 		}, err
 	}
 
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}(rows)
 
 	columns, err := rows.Columns()
 	if err != nil {

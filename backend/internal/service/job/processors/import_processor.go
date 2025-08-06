@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"encoding/csv"
 	"encoding/json"
 
 	"github.com/blastrain/vitess-sqlparser/sqlparser"
@@ -17,6 +16,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/internal/service/job"
+	"github.com/dbo-studio/dbo/pkg/csv"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 )
@@ -84,6 +84,10 @@ func (p *ImportProcessor) Process(job *model.Job) error {
 }
 
 func (p *ImportProcessor) processLargeFile(job *model.Job, dbRepo databaseContract.DatabaseRepository, data dto.ImportJob, fileData []byte) error {
+	if job.Status == model.JobStatusCancelled {
+		return fmt.Errorf("job was cancelled")
+	}
+
 	err := p.jobManager.UpdateJobProgress(job, 30, "Parsing file")
 	if err != nil {
 		return err
@@ -98,7 +102,7 @@ func (p *ImportProcessor) processLargeFile(job *model.Job, dbRepo databaseContra
 
 	switch data.Format {
 	case "csv":
-		rows, columnNames, err = parseCSVFile(fileData)
+		rows, columnNames, err = csv.Reader(string(fileData))
 	case "json":
 		rows, columnNames, err = parseJSONFile(fileData)
 	case "sql":
@@ -119,10 +123,6 @@ func (p *ImportProcessor) processLargeFile(job *model.Job, dbRepo databaseContra
 	err = p.jobManager.UpdateJobProgress(job, 40, fmt.Sprintf("Starting chunked import - %d rows in %d chunks", totalRows, totalChunks))
 	if err != nil {
 		return err
-	}
-
-	if job.Status == "cancelled" {
-		return fmt.Errorf("job was cancelled")
 	}
 
 	var successRows, failedRows int
@@ -256,23 +256,6 @@ func parseJSONFile(fileData []byte) ([][]string, []string, error) {
 		}
 		rows = append(rows, rowData)
 	}
-
-	return rows, columns, nil
-}
-
-func parseCSVFile(fileData []byte) ([][]string, []string, error) {
-	reader := csv.NewReader(strings.NewReader(string(fileData)))
-	allRows, err := reader.ReadAll()
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse CSV: %w", err)
-	}
-
-	if len(allRows) == 0 {
-		return nil, nil, fmt.Errorf("empty CSV file")
-	}
-
-	columns := allRows[0]
-	rows := allRows[1:]
 
 	return rows, columns, nil
 }
