@@ -60,7 +60,7 @@ export default function QueryEditorActions({ onFormat, onRunQuery, loading }: Qu
         connectionId: currentConnection?.id ?? 0,
         query: getQuery()
       });
-    } catch (error) { }
+    } catch (error) {}
   };
 
   const checkQueryLength = (): boolean => {
@@ -104,7 +104,13 @@ export default function QueryEditorActions({ onFormat, onRunQuery, loading }: Qu
         </LoadingIconButton>
       </Tooltip>
 
-      <ExportModal onClose={() => setShowExport({ ...showExport, show: false })} show={showExport.show} connectionId={showExport.connectionId} query={showExport.query} table={showExport.table} />
+      <ExportModal
+        onClose={() => setShowExport({ ...showExport, show: false })}
+        show={showExport.show}
+        connectionId={showExport.connectionId}
+        query={showExport.query}
+        table={showExport.table}
+      />
     </Stack>
   );
 }

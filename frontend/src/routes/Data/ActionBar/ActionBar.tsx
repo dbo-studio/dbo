@@ -24,10 +24,9 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
     table: ''
   });
 
-
   const handleShowExport = () => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;
-    const table = useTabStore.getState().selectedTab()?.table ?? 'exported_table'
+    const table = useTabStore.getState().selectedTab()?.table ?? 'exported_table';
     const query = useTabStore.getState().selectedTab()?.query ?? '';
 
     setShowExport({
@@ -38,10 +37,9 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
     });
   };
 
-
   const handleShowImport = () => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;
-    const table = useTabStore.getState().selectedTab()?.table ?? 'exported_table'
+    const table = useTabStore.getState().selectedTab()?.table ?? 'exported_table';
 
     setShowImport({
       show: true,
@@ -49,8 +47,6 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
       table: table
     });
   };
-
-
 
   const [show, setShow] = useState({
     showFilters: false,
@@ -119,7 +115,6 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
           </IconButton>
         </Stack>
         <Grid size={{ md: 8 }} display='flex' justifyContent='flex-end'>
-
           <IconButton aria-label='export' onClick={handleShowExport}>
             <CustomIcon type='export' size='s' />
           </IconButton>
@@ -137,8 +132,19 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
         </Grid>
       </Stack>
 
-      <ExportModal onClose={() => setShowExport({ ...showExport, show: false })} show={showExport.show} connectionId={showExport.connectionId} query={showExport.query} table={showExport.table} />
-      <ImportModal onClose={() => setShowImport({ ...showImport, show: false })} show={showImport.show} connectionId={showImport.connectionId} table={showImport.table} />
+      <ExportModal
+        onClose={() => setShowExport({ ...showExport, show: false })}
+        show={showExport.show}
+        connectionId={showExport.connectionId}
+        query={showExport.query}
+        table={showExport.table}
+      />
+      <ImportModal
+        onClose={() => setShowImport({ ...showImport, show: false })}
+        show={showImport.show}
+        connectionId={showImport.connectionId}
+        table={showImport.table}
+      />
 
       {show.showFilters && <Filters />}
       {show.showSorts && <Sorts />}

@@ -19,7 +19,7 @@ export const useCellEditing = (row: any, columnId: string, cellValue: string): C
       const newValue = e.target.value;
       if (newValue !== cellValue) {
         const newRow = {
-          ...foundRow ?? row,
+          ...(foundRow ?? row),
           [columnId]: newValue
         };
 

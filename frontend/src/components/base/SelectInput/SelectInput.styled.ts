@@ -19,12 +19,13 @@ export const SelectInputStyles = (
     backgroundColor: theme.palette.background.default,
     borderBottom: error
       ? `1px solid ${theme.palette.error.main}`
-      : `1px solid ${isFocused
-        ? theme.palette.mode === ThemeModeEnum.Dark
-          ? theme.palette.primary.dark
-          : theme.palette.primary
-        : theme.palette.divider
-      }`,
+      : `1px solid ${
+          isFocused
+            ? theme.palette.mode === ThemeModeEnum.Dark
+              ? theme.palette.primary.dark
+              : theme.palette.primary
+            : theme.palette.divider
+        }`,
     alignItems: 'center'
   }),
   menu: (styles): any => ({
@@ -111,6 +112,6 @@ export const SelectInputStyles = (
 
   menuPortal: (styles): any => ({
     ...styles,
-    zIndex: 99999,
+    zIndex: 99999
   })
 });

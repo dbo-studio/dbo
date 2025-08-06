@@ -11,4 +11,3 @@ export * from './useSetupDesktop.hook';
 export * from './useShortcut.hook';
 export * from './useUUID.hook';
 export * from './useWindowSize.hook';
-

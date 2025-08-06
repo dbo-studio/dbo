@@ -14,7 +14,6 @@ export const TreeNodeContainer = styled(Box)({
   position: 'relative'
 });
 
-
 export const NodeContent = styled(Box)({
   display: 'flex',
   alignItems: 'center',
