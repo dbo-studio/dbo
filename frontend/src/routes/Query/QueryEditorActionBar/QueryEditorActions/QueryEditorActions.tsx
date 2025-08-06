@@ -1,21 +1,28 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton';
+import { ExportModal } from '@/components/common/ExportModal/ExportButton';
 import { shortcuts, tools } from '@/core/utils';
 import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton, Stack, Tooltip } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { JSX } from 'react';
+import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
 import type { QueryEditorActionsProps } from '../../types';
 
 export default function QueryEditorActions({ onFormat, onRunQuery, loading }: QueryEditorActionsProps): JSX.Element {
   const queryClient = useQueryClient();
+  const [showExport, setShowExport] = useState({
+    show: false,
+    connectionId: 0,
+    query: '',
+    table: ''
+  });
+
   const updateQuery = useTabStore((state) => state.updateQuery);
   const getQuery = useTabStore((state) => state.getQuery);
-
   const currentConnection = useCurrentConnection();
 
   const { mutateAsync: createSavedQueryMutation } = useMutation({
@@ -53,11 +60,20 @@ export default function QueryEditorActions({ onFormat, onRunQuery, loading }: Qu
         connectionId: currentConnection?.id ?? 0,
         query: getQuery()
       });
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const checkQueryLength = (): boolean => {
     return getQuery().length > 0;
+  };
+
+  const handleExport = (): void => {
+    setShowExport({
+      show: true,
+      connectionId: currentConnection?.id ?? 0,
+      query: getQuery(),
+      table: 'exported_table'
+    });
   };
 
   return (
@@ -65,6 +81,11 @@ export default function QueryEditorActions({ onFormat, onRunQuery, loading }: Qu
       <Tooltip title={locales.save}>
         <IconButton color='default' onClick={saveQuery}>
           <CustomIcon type='save' />
+        </IconButton>
+      </Tooltip>
+      <Tooltip title={locales.export}>
+        <IconButton color='default' onClick={handleExport}>
+          <CustomIcon type='export' />
         </IconButton>
       </Tooltip>
       <Tooltip title={locales.minify}>
@@ -82,6 +103,8 @@ export default function QueryEditorActions({ onFormat, onRunQuery, loading }: Qu
           <CustomIcon type='play' />
         </LoadingIconButton>
       </Tooltip>
+
+      <ExportModal onClose={() => setShowExport({ ...showExport, show: false })} show={showExport.show} connectionId={showExport.connectionId} query={showExport.query} table={showExport.table} />
     </Stack>
   );
 }

@@ -9,15 +9,17 @@ export const useCellEditing = (row: any, columnId: string, cellValue: string): C
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
   const updateRow = useDataStore((state) => state.updateRow);
   const toggleReRender = useDataStore((state) => state.toggleReRender);
+  const getRow = useDataStore((state) => state.getRow);
 
   const handleRowChange = useCallback(
     (e: React.FocusEvent<HTMLInputElement>): void => {
       const editedRows = useDataStore.getState().editedRows;
+      const foundRow = getRow(row);
 
       const newValue = e.target.value;
       if (newValue !== cellValue) {
         const newRow = {
-          ...row,
+          ...foundRow ?? row,
           [columnId]: newValue
         };
 

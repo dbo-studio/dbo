@@ -1,37 +1,30 @@
 import api from '@/api';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import FieldInput from '@/components/base/FieldInput/FieldInput';
 import Modal from '@/components/base/Modal/Modal';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
-import { tools } from '@/core/utils/tools';
 import locales from '@/locales';
-import { Box, Button, TextField } from '@mui/material';
+import { Box, Button, IconButton } from '@mui/material';
 import { save } from '@tauri-apps/plugin-dialog';
 import type React from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { JobProgressModal } from '../JobProgressModal/JobProgressModal';
-import { useTabStore } from '@/store/tabStore/tab.store';
+import type { ExportModalProps } from './types';
 
-interface ExportButtonProps {
-    connectionId: number;
-    query: string;
-    onExport?: () => void;
-}
-
-export const ExportButton: React.FC<ExportButtonProps> = ({ connectionId, query, onExport }) => {
-    const [showOptions, setShowOptions] = useState(false);
+export function ExportModal({ show, connectionId, query, table, onClose }: ExportModalProps) {
     const [format, setFormat] = useState('sql');
     const [showProgress, setShowProgress] = useState(false);
     const [jobId, setJobId] = useState<string | null>(null);
-    const [isTauri, setIsTauri] = useState(false);
+    const [isTauri, setIsTauri] = useState(true);
     const [savePath, setSavePath] = useState('');
 
-
-    useEffect(() => {
-        const checkTauri = async () => {
-            const tauriResult = await tools.isTauri();
-            setIsTauri(tauriResult);
-        };
-        checkTauri();
-    }, []);
+    // useEffect(() => {
+    //     const checkTauri = async () => {
+    //         const tauriResult = await tools.isTauri();
+    //         setIsTauri(tauriResult);
+    //     };
+    //     checkTauri();
+    // }, []);
 
     const handleSelectFile = async () => {
         if (!save) {
@@ -43,7 +36,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({ connectionId, query,
             // Generate default filename based on current date and time
             const now = new Date();
             const timestamp = now.toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '_');
-            const defaultFileName = `export_${timestamp}.${format}`;
+            const defaultFileName = `export_${table}_${timestamp}.${format}`;
 
             const filePath = await save({
                 defaultPath: defaultFileName,
@@ -65,36 +58,27 @@ export const ExportButton: React.FC<ExportButtonProps> = ({ connectionId, query,
 
     const handleExport = async () => {
         try {
-            console.log('Starting export with:', { query, format, savePath });
             const response = await api.importExport.exportData({
                 connectionId,
-                table: useTabStore.getState().selectedTab()?.table ?? '',
+                table,
                 query,
                 format,
                 savePath: isTauri ? savePath : undefined,
             });
-            console.log('Export response:', response);
 
-            // Extract jobId from response
             const jobId = response?.jobId;
-            console.log('Extracted jobId:', jobId);
 
             setJobId(jobId);
             setShowProgress(true);
-            setShowOptions(false);
-            onExport?.();
+            onClose();
         } catch (error) {
-            console.error('Export failed:', error);
+            console.log("🚀 ~ handleExport ~ error:", error)
         }
     };
 
     return (
         <>
-            <Button onClick={() => setShowOptions(true)} variant="contained">
-                Export
-            </Button>
-
-            <Modal open={showOptions} title="Export Options" onClose={() => setShowOptions(false)}>
+            <Modal open={show} title="Export Options" onClose={() => onClose()}>
                 <Box display={'flex'} flexDirection={'column'} flex={1}>
                     <Box flex={1}>
                         <SelectInput
@@ -110,32 +94,27 @@ export const ExportButton: React.FC<ExportButtonProps> = ({ connectionId, query,
                         />
 
                         {isTauri && (
-                            <Box sx={{ mt: 2 }}>
-                                <TextField
-                                    fullWidth
-                                    label="Save Path"
-                                    value={savePath}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSavePath(e.target.value)}
-                                    placeholder="Enter file path or click Browse"
-                                    margin="normal"
-                                    size="small"
-                                    InputProps={{
-                                        endAdornment: (
-                                            <Button
-                                                size="small"
-                                                onClick={handleSelectFile}
-                                                sx={{ minWidth: 'auto', px: 1 }}
-                                            >
-                                                Browse
-                                            </Button>
-                                        ),
-                                    }}
-                                />
+                            <Box sx={{ mt: 2, display: 'flex', alignItems: 'center' }}>
+                                <Box sx={{ flex: 1 }}>
+                                    <FieldInput
+                                        onClick={handleSelectFile}
+                                        fullWidth
+                                        label={locales.save_path}
+                                        value={savePath}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSavePath(e.target.value)}
+                                        placeholder="Enter file path or click Browse"
+                                    />
+                                </Box>
+                                <IconButton
+                                    onClick={handleSelectFile}
+                                >
+                                    <CustomIcon type='ellipsisVertical' size='s' />
+                                </IconButton>
                             </Box>
                         )}
                     </Box>
                     <Box display={'flex'} mt={2} justifyContent={'space-between'}>
-                        <Button size='small' onClick={() => setShowOptions(false)}>
+                        <Button size='small' onClick={() => onClose()}>
                             {locales.cancel}
                         </Button>
 
@@ -160,4 +139,4 @@ export const ExportButton: React.FC<ExportButtonProps> = ({ connectionId, query,
             />
         </>
     );
-}; 
+}

@@ -3,15 +3,14 @@ import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
 import Modal from '@/components/base/Modal/Modal';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
-import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
-import { useTabStore } from '@/store/tabStore/tab.store';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { Box, Button, Checkbox, FormControl, FormControlLabel } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import { useState } from 'react';
 import * as v from 'valibot';
 import { JobProgressModal } from '../JobProgressModal/JobProgressModal';
-import { useDataStore } from '@/store/dataStore/data.store';
+import type { ImportModalProps } from './types';
 
 const formSchema = v.object({
     file: v.pipe(
@@ -23,12 +22,9 @@ const formSchema = v.object({
     maxErrors: v.pipe(v.number(), v.minValue(0), v.maxValue(100)),
 });
 
-export function ImportButton() {
-    const [showModal, setShowModal] = useState(false);
+export function ImportModal({ show, connectionId, table, onClose }: ImportModalProps) {
     const [showProgress, setShowProgress] = useState(false);
     const [jobId, setJobId] = useState<string | null>(null);
-
-    const currentConnection = useCurrentConnection();
 
     const form = useForm({
         validators: {
@@ -37,10 +33,10 @@ export function ImportButton() {
         },
 
         onSubmit: async ({ value }) => {
-            if (!value.file || !currentConnection) return;
+            if (!value.file) return;
             const response = await api.importExport.importData({
-                connectionId: currentConnection.id,
-                table: useTabStore.getState().selectedTab()?.table ?? '',
+                connectionId: connectionId,
+                table,
                 data: value.file,
                 format: value.format,
                 continueOnError: value.continueOnError,
@@ -50,7 +46,7 @@ export function ImportButton() {
 
             setJobId(response.jobId);
             setShowProgress(true);
-            setShowModal(false);
+            onClose();
             form.reset();
 
             useDataStore.getState().runQuery();
@@ -64,10 +60,6 @@ export function ImportButton() {
             maxErrors: 0,
         },
     });
-
-    const handleImportClick = () => {
-        setShowModal(true);
-    };
 
     const getFileFormat = (fileName: string): 'sql' | 'json' | 'csv' => {
         const extension = fileName.split('.').pop()?.toLowerCase();
@@ -84,17 +76,13 @@ export function ImportButton() {
     };
 
     const handleCloseModal = () => {
-        setShowModal(false);
+        onClose();
         form.reset();
     };
 
     return (
         <>
-            <Button variant="contained" onClick={handleImportClick}>
-                Import
-            </Button>
-
-            <Modal open={showModal} title="Import Data" onClose={handleCloseModal}>
+            <Modal open={show} title="Import Data" onClose={() => onClose()}>
                 <Box flex={1} display={'flex'} flexDirection={'column'}>
                     <Box flex={1}>
                         <form.Field

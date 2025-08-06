@@ -126,5 +126,7 @@
   "set_empty": "Set empty",
   "set_null": "Set null",
   "row_affected": "Row affected",
-  "file":"file"
+  "file":"file",
+  "save_path":"Save path",
+  "browse":"Browse"
 }
