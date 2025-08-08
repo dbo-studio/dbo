@@ -15,7 +15,7 @@ func (r *PostgresRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryRe
 	queryResults := make([]map[string]any, 0)
 
 	if node.Table == "" {
-		return nil, errors.New("table not found")
+		return nil, errors.New("table or view not found")
 	}
 
 	result := r.db.Raw(query).Find(&queryResults)
@@ -31,8 +31,6 @@ func (r *PostgresRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryRe
 	if err != nil {
 		return nil, result.Error
 	}
-
-	//p.DBLogger(query)
 
 	return &dto.RunQueryResponse{
 		Query:   query,

@@ -5,6 +5,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 )
 
@@ -15,7 +16,7 @@ func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tabId contra
 		return queries, nil
 	}
 
-	paramsDto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableColumnParams](data)
+	paramsDto, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.PostgresTableColumnParams](data)
 	if err != nil {
 		return nil, err
 	}

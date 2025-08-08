@@ -9,13 +9,11 @@ import (
 	"gorm.io/gorm"
 )
 
-var _ IHistoryRepo = (*IHistoryRepoImpl)(nil)
-
 type IHistoryRepoImpl struct {
 	db *gorm.DB
 }
 
-func NewHistoryRepo(db *gorm.DB) *IHistoryRepoImpl {
+func NewHistoryRepo(db *gorm.DB) IHistoryRepo {
 	return &IHistoryRepoImpl{
 		db: db,
 	}
@@ -34,6 +32,17 @@ func (h IHistoryRepoImpl) Index(_ context.Context, req *dto.HistoryListRequest) 
 	}
 
 	return &histories, nil
+}
+
+func (h IHistoryRepoImpl) Create(ctx context.Context, connectionID uint, query string) error {
+	return h.db.Session(&gorm.Session{
+		NewDB:                  true,
+		SkipHooks:              true,
+		SkipDefaultTransaction: true,
+	}).Create(&model.History{
+		ConnectionID: connectionID,
+		Query:        query,
+	}).Error
 }
 
 func (I IHistoryRepoImpl) DeleteAll(_ context.Context, connectionID uint) error {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 )
 
@@ -16,7 +17,7 @@ func (r *PostgresRepository) handleViewCommands(node PGNode, tabId contract.Tree
 		return queries, nil
 	}
 
-	dto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresViewParams](data)
+	dto, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.PostgresViewParams](data)
 	if err != nil {
 		return nil, err
 	}

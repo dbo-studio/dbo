@@ -6,6 +6,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 )
 
@@ -16,7 +17,7 @@ func (r *PostgresRepository) handleForeignKeyCommands(node PGNode, tabId contrac
 		return queries, nil
 	}
 
-	paramsDto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableForeignKeyParams](data)
+	paramsDto, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.PostgresTableForeignKeyParams](data)
 	if err != nil {
 		return nil, err
 	}

@@ -16,6 +16,8 @@ type Handlers struct {
 	History      *handler.HistoryHandler
 	TreeHandler  *handler.TreeHandler
 	QueryHandler *handler.QueryHandler
+	ImportExport *handler.ImportExportHandler
+	Job          *handler.JobHandler
 }
 
 type Server struct {

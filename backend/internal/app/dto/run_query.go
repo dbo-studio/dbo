@@ -17,7 +17,7 @@ type (
 
 	RunQueryResponse struct {
 		Query   string   `json:"query"`
-		Data    any      `json:"data"`
+		Data    []map[string]any      `json:"data"`
 		Columns []Column `json:"columns"`
 	}
 )

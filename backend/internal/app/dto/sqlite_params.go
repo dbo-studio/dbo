@@ -8,33 +8,74 @@ type SQLiteUpdateConnectionParams struct {
 	Path *string `json:"path"`
 }
 
-type SQLiteCreateTableParams struct {
-	Name    string             `json:"name"`
-	Columns []ColumnDefinition `json:"columns"`
+type SQLiteTableParams struct {
+	New *SQLiteTableParamsData `json:"new"`
+	Old *SQLiteTableParamsData `json:"old"`
 }
 
-// SQLiteUpdateTableParams برای ویرایش جدول در SQLite
-type SQLiteUpdateTableParams struct {
-	OldName    string             `json:"oldName"`
-	NewName    string             `json:"newName"`
-	AddColumns []ColumnDefinition `json:"addColumns"`
+type SQLiteTableParamsData struct {
+	Name         *string `json:"name"`
+	Temporary    *bool   `json:"temporary"`
+	Strict       *bool   `json:"strict"`
+	WithoutRowid *bool   `json:"without_rowid"`
 }
 
-// SQLiteCreateObjectParams برای ساخت اشیا در SQLite (فقط View)
-type SQLiteCreateObjectParams struct {
-	Name      string   `json:"name"`
-	Type      string   `json:"type"` // "view", "index"
-	Query     string   `json:"query,omitempty"`
-	OrReplace bool     `json:"orReplace,omitempty"`
-	TableName string   `json:"tableName,omitempty"` // برای Index
-	Columns   []string `json:"columns,omitempty"`   // برای Index
+type SQLiteTableColumnParams struct {
+	Columns []SQLiteTableColumn `json:"columns"`
 }
 
-type SQLiteUpdateObjectParams struct {
-	Name      string   `json:"name"`
-	Type      string   `json:"type"` // "view", "index"
-	Query     string   `json:"query,omitempty"`
-	OrReplace bool     `json:"orReplace,omitempty"`
-	TableName string   `json:"tableName,omitempty"`
-	Columns   []string `json:"columns,omitempty"`
+type SQLiteTableColumn struct {
+	New     *SQLiteTableColumnData `json:"new"`
+	Old     *SQLiteTableColumnData `json:"old"`
+	Added   *bool                  `json:"added"`
+	Deleted *bool                  `json:"deleted"`
+}
+
+type SQLiteTableColumnData struct {
+	Name            *string `json:"name"`
+	DataType        *string `json:"type"`
+	NotNull         *bool   `json:"not_null"`
+	ColumnKind      *string `json:"column_kind"`
+	Default         *string `json:"dflt_value"`
+	OnNullConflicts *string `json:"on_null_conflicts"`
+	CollectionName  *string `json:"collection_name"`
+}
+
+type SQLiteTableForeignKeyParams struct {
+	Columns []SQLiteTableForeignKey `json:"columns"`
+}
+
+type SQLiteTableForeignKey struct {
+	New     *SQLiteTableForeignKeyData `json:"new"`
+	Old     *SQLiteTableForeignKeyData `json:"old"`
+	Added   *bool                      `json:"added"`
+	Deleted *bool                      `json:"deleted"`
+}
+
+type SQLiteTableForeignKeyData struct {
+	ConstraintName    *string  `json:"name"`
+	SourceColumns     []string `json:"ref_columns"`
+	TargetTable       *string  `json:"target_table"`
+	TargetColumns     []string `json:"target_columns"`
+	OnUpdate          *string  `json:"update_action"`
+	OnDelete          *string  `json:"delete_action"`
+	IsDeferrable      *bool    `json:"is_deferrable"`
+	InitiallyDeferred *bool    `json:"initially_deferred"`
+}
+
+type SQLiteTableKeyParams struct {
+	Keys []SQLiteTableKey `json:"columns"`
+}
+
+type SQLiteTableKey struct {
+	New     *SQLiteTableKeyData `json:"new"`
+	Old     *SQLiteTableKeyData `json:"old"`
+	Added   *bool               `json:"added"`
+	Deleted *bool               `json:"deleted"`
+}
+
+type SQLiteTableKeyData struct {
+	Name    *string  `json:"name"`
+	Columns []string `json:"columns"`
+	Type    *string  `json:"type"`
 }

@@ -2,170 +2,133 @@ package databaseSqlite
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
+	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func createObject(r *SQLiteRepository, params interface{}) error {
-	switch p := params.(type) {
-	case dto.SQLiteCreateTableParams:
-		query := fmt.Sprintf("CREATE TABLE %s (", p.Name)
-		for i, col := range p.Columns {
-			colDef := fmt.Sprintf("%s %s", col.Name, col.DataType)
-			if col.NotNull {
-				colDef += " NOT NULL"
-			}
-			if col.Primary {
-				colDef += " PRIMARY KEY"
-			}
-			if col.Default != "" {
-				colDef += fmt.Sprintf(" DEFAULT '%s'", col.Default)
-			}
-			if i < len(p.Columns)-1 {
-				colDef += ", "
-			}
-			query += colDef
-		}
-		query += ")"
-		return r.db.Exec(query).Error
-	case dto.SQLiteCreateObjectParams:
-		switch p.Type {
-		case "view":
-			query := "CREATE "
-			if p.OrReplace {
-				query += "OR REPLACE "
-			}
-			query += fmt.Sprintf("VIEW %s AS %s", p.Name, p.Query)
-			return r.db.Exec(query).Error
-		case "index":
-			query := fmt.Sprintf("CREATE INDEX %s ON %s (%s)", p.Name, p.TableName, strings.Join(p.Columns, ", "))
-			return r.db.Exec(query).Error
-		default:
-			return fmt.Errorf("SQLite: unsupported object type: %s", p.Type)
-		}
-	default:
-		return fmt.Errorf("SQLite: invalid params for CreateObject")
+func (r *SQLiteRepository) Objects(nodeID string, tabID contract.TreeTab, _ contract.TreeNodeActionName) ([]contract.FormField, error) {
+	switch tabID {
+
+	case contract.TableTab:
+		return r.getTableInfo(nodeID)
+	case contract.TableColumnsTab:
+		return r.getTableColumns(nodeID)
+	case contract.TableForeignKeysTab:
+		return r.getTableForeignKeys(nodeID)
+	case contract.TableKeysTab:
+		return r.getTableKeys(nodeID)
+
+	case contract.ViewTab:
+		return r.getViewInfo(nodeID)
 	}
+
+	return nil, fmt.Errorf("SQLite: unsupported object or tab: %s", tabID)
 }
 
-func dropObject(r *SQLiteRepository, params interface{}) error {
-	switch p := params.(type) {
-	case dto.DropTableParams:
-		query := "DROP TABLE "
-		if p.IfExists {
-			query += "IF EXISTS "
-		}
-		query += p.Name
-		return r.db.Exec(query).Error
-	case dto.DropObjectParams:
-		switch p.Type {
-		case "view", "index":
-			query := fmt.Sprintf("DROP %s ", strings.ToUpper(p.Type))
-			if p.IfExists {
-				query += "IF EXISTS "
-			}
-			query += p.Name
-			return r.db.Exec(query).Error
-		default:
-			return fmt.Errorf("SQLite: unsupported object type for drop: %s", p.Type)
-		}
-	default:
-		return fmt.Errorf("SQLite: invalid params for DropObject")
-	}
+func (r *SQLiteRepository) getViewInfo(node string) ([]contract.FormField, error) {
+	fields := r.viewFields()
+
+	query := r.db.Table("sqlite_master").
+		Select(`
+			name,
+			NULL as comment,
+			sql as query,
+			NULL as check_option
+		`).
+		Where("type = 'view' AND name = ?", node)
+
+	return helper.BuildObjectResponse(query, fields)
 }
 
-func updateObject(r *SQLiteRepository, params interface{}) error {
-	switch p := params.(type) {
-	case dto.SQLiteUpdateTableParams:
-		if p.NewName != "" && p.NewName != p.OldName {
-			query := fmt.Sprintf("ALTER TABLE %s RENAME TO %s", p.OldName, p.NewName)
-			if err := r.db.Exec(query).Error; err != nil {
-				return err
-			}
-		}
-		if len(p.AddColumns) > 0 {
-			for _, col := range p.AddColumns {
-				query := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s", p.OldName, col.Name, col.DataType)
-				if col.NotNull {
-					query += " NOT NULL"
-				}
-				if col.Default != "" {
-					query += fmt.Sprintf(" DEFAULT '%s'", col.Default)
-				}
-				if err := r.db.Exec(query).Error; err != nil {
-					return err
-				}
-			}
-		}
-		return nil
-	case dto.SQLiteUpdateObjectParams:
-		switch p.Type {
-		case "view":
-			query := "CREATE "
-			if p.OrReplace {
-				query += "OR REPLACE "
-			}
-			query += fmt.Sprintf("VIEW %s AS %s", p.Name, p.Query)
-			return r.db.Exec(query).Error
-		case "index":
-			query := fmt.Sprintf("DROP INDEX IF EXISTS %s; CREATE INDEX %s ON %s (%s)", p.Name, p.Name, p.TableName, strings.Join(p.Columns, ", "))
-			return r.db.Exec(query).Error
-		default:
-			return fmt.Errorf("SQLite: unsupported object type for update: %s", p.Type)
-		}
-	default:
-		return fmt.Errorf("SQLite: invalid params for UpdateObject")
-	}
+func (r *SQLiteRepository) getTableForeignKeys(node string) ([]contract.FormField, error) {
+	fields := r.foreignKeyOptions(node)
+
+	query := r.db.Raw(`
+		SELECT 
+			id as constraint_name,
+			'from' as columns,
+			'table' as target_table,
+			'to' as ref_columns,
+			'on_update' as update_action,
+			'on_delete' as delete_action
+		FROM pragma_foreign_key_list(?)
+	`, node)
+
+	return helper.BuildArrayResponse(query, fields)
 }
 
-func getObjectData(r *SQLiteRepository, nodeID, objType string) (interface{}, error) {
-	switch objType {
-	case "table":
-		var columns []struct {
-			Name       string `gorm:"column:name"`
-			DataType   string `gorm:"column:type"`
-			NotNull    int    `gorm:"column:notnull"`
-			PrimaryKey int    `gorm:"column:pk"`
-			DefaultVal string `gorm:"column:dflt_value"`
-		}
-		err := r.db.Raw("PRAGMA table_info(?)", nodeID).Scan(&columns).Error
-		if err != nil {
-			return nil, err
-		}
-		tableColumns := make([]dto.ColumnDefinition, len(columns))
-		for i, col := range columns {
-			tableColumns[i] = dto.ColumnDefinition{
-				Name:     col.Name,
-				DataType: col.DataType,
-				NotNull:  col.NotNull == 1,
-				Primary:  col.PrimaryKey == 1,
-				Default:  col.DefaultVal,
-			}
-		}
-		return dto.SQLiteCreateTableParams{Name: nodeID, Columns: tableColumns}, nil
-	case "view":
-		var query string
-		err := r.db.Raw("SELECT sql FROM sqlite_master WHERE type='view' AND name=?", nodeID).Scan(&query).Error
-		if err != nil {
-			return nil, err
-		}
-		return dto.SQLiteCreateObjectParams{Name: nodeID, Type: "view", Query: query, OrReplace: false}, nil
-	case "index":
-		var tableName string
-		var columns []string
-		err := r.db.Raw("SELECT tbl_name FROM sqlite_master WHERE type='index' AND name=?", nodeID).Scan(&tableName).Error
-		if err != nil {
-			return nil, err
-		}
-		err = r.db.Raw("PRAGMA index_info(?)", nodeID).Scan(&struct {
-			Columns []string `gorm:"column:name"`
-		}{Columns: columns}).Error
-		if err != nil {
-			return nil, err
-		}
-		return dto.SQLiteCreateObjectParams{Name: nodeID, Type: "index", TableName: tableName, Columns: columns}, nil
-	default:
-		return nil, fmt.Errorf("SQLite: unsupported object type: %s", objType)
-	}
+func (r *SQLiteRepository) getTableColumns(node string) ([]contract.FormField, error) {
+	fields := r.tableColumnFields()
+
+	query := r.db.Raw(`
+		SELECT 
+			pti.name,
+			pti.type,
+			pti."notnull" as not_null,
+			pti.dflt_value,
+			pti.pk,
+			CASE 
+				WHEN sm.sql LIKE '%GENERATED ALWAYS AS%' AND sm.sql LIKE '%STORED%' THEN 'GENERATED_STORED'
+				WHEN sm.sql LIKE '%GENERATED ALWAYS AS%' THEN 'GENERATED_VIRTUAL'
+				ELSE 'NORMAL'
+			END as column_kind,
+			CASE 
+				WHEN sm.sql LIKE '%COLLATE ROLLBACK%' THEN 'ROLLBACK'
+				WHEN sm.sql LIKE '%COLLATE NOCASE%' THEN 'NOCASE'
+				WHEN sm.sql LIKE '%COLLATE RTRIM%' THEN 'RTRIM'
+				ELSE NULL
+			END as collection_name,
+			CASE 
+				WHEN sm.sql LIKE '%ON CONFLICT ROLLBACK%' THEN 'ROLLBACK'
+				WHEN sm.sql LIKE '%ON CONFLICT ABORT%' THEN 'ABORT'
+				WHEN sm.sql LIKE '%ON CONFLICT FAIL%' THEN 'FAIL'
+				WHEN sm.sql LIKE '%ON CONFLICT IGNORE%' THEN 'IGNORE'
+				WHEN sm.sql LIKE '%ON CONFLICT REPLACE%' THEN 'REPLACE'
+				ELSE NULL
+			END as on_null_conflicts
+		FROM pragma_table_info(?) pti
+		JOIN sqlite_master sm ON sm.name = ? AND sm.type = 'table'
+	`, node, node)
+
+	return helper.BuildArrayResponse(query, fields)
+}
+
+func (r *SQLiteRepository) getTableInfo(node string) ([]contract.FormField, error) {
+	fields := r.tableFields()
+
+	query := r.db.Raw(`
+		SELECT 
+			name,
+			CASE 
+				WHEN sql LIKE '%TEMPORARY%' THEN 1 
+				ELSE 0 
+			END as temporary,
+			CASE 
+				WHEN sql LIKE '%STRICT%' THEN 1 
+				ELSE 0 
+			END as strict,
+			CASE 
+				WHEN sql LIKE '%WITHOUT ROWID%' THEN 1 
+				ELSE 0 
+			END as without_rowid
+		FROM sqlite_master 
+		WHERE type = 'table' AND name = ?
+	`, node)
+
+	return helper.BuildObjectResponse(query, fields)
+}
+
+func (r *SQLiteRepository) getTableKeys(node string) ([]contract.FormField, error) {
+	fields := r.keyOptions(node)
+
+	query := r.db.Raw(`
+		SELECT 
+			name,
+			'PRIMARY' as type
+		FROM pragma_table_info(?)
+		WHERE pk > 0
+	`, node)
+
+	return helper.BuildArrayResponse(query, fields)
 }

@@ -88,7 +88,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: 1.23
+          go-version: 1.24
           check-latest: true
 
       - name: Build Go Backend
@@ -145,7 +145,7 @@ jobs:
       - name: Sync Release to Website
         run: |
           echo "Syncing release v${{ env.PACKAGE_VERSION }} to website..."
-          curl -X POST ${{ secrets.WEBSITE_SYNC_URL }}/api/sync-releases/${{ needs.create-release.outputs.release_id }} \
+          curl -X POST ${{ secrets.WEBSITE_SYNC_URL }}/api/sync/releases/${{ needs.create-release.outputs.release_id }} \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${{ secrets.API_SYNC_TOKEN }}"
         env:

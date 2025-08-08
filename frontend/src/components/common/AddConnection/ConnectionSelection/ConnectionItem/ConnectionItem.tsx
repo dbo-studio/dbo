@@ -8,9 +8,9 @@ export default function ConnectionItem({ connection, selected, onClick }: Connec
   return (
     <ConnectionItemStyled selected={selected} onClick={(): void => onClick(connection)}>
       <ConnectionItemLogoStyled>
-        <CustomIcon type={'postgresql'} size='l' />
+        <CustomIcon type={connection.logo} size='l' />
       </ConnectionItemLogoStyled>
-      <Typography color={'textText'} variant='subtitle2'>
+      <Typography color={'textText'} variant='caption'>
         {connection.name}
       </Typography>
     </ConnectionItemStyled>
