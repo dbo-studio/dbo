@@ -3,6 +3,7 @@ package job
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 
@@ -151,31 +152,58 @@ func (jm *IJobManagerImpl) worker() {
 }
 
 func (jm *IJobManagerImpl) processPendingJobs() {
+	runningJobs, err := jm.jobRepo.GetRunningJobs(context.Background())
+	if err != nil {
+		jm.logger.Error(fmt.Sprintf("Failed to get running jobs: %v", err))
+		return
+	}
+
+	if len(runningJobs) > 1 {
+		sort.Slice(runningJobs, func(i, j int) bool {
+			var ti, tj time.Time
+			if runningJobs[i].StartedAt != nil {
+				ti = *runningJobs[i].StartedAt
+			} else {
+				ti = runningJobs[i].CreatedAt
+			}
+			if runningJobs[j].StartedAt != nil {
+				tj = *runningJobs[j].StartedAt
+			} else {
+				tj = runningJobs[j].CreatedAt
+			}
+			return ti.After(tj)
+		})
+
+		for _, rj := range runningJobs[1:] {
+			jobCopy := rj
+			_ = jm.updateJobStatus(&jobCopy, model.JobStatusCancelled, "Cancelled due to single-run policy")
+		}
+	}
+
+	runningJobs, err = jm.jobRepo.GetRunningJobs(context.Background())
+	if err != nil {
+		jm.logger.Error(fmt.Sprintf("Failed to re-check running jobs: %v", err))
+		return
+	}
+	if len(runningJobs) >= 1 {
+		return
+	}
+
 	jobs, err := jm.jobRepo.GetPendingJobs(context.Background())
 	if err != nil {
 		jm.logger.Error(fmt.Sprintf("Failed to get pending jobs: %v", err))
 		return
 	}
-
-	for _, job := range jobs {
-		runningJobs, err := jm.jobRepo.GetRunningJobs(context.Background())
-		if err != nil {
-			jm.logger.Error(fmt.Sprintf("Failed to get running jobs: %v", err))
-			continue
-		}
-
-		if len(runningJobs) >= 3 {
-			jm.logger.Error(fmt.Sprintf("Too many running jobs (%d), skipping job %d", len(runningJobs), job.ID))
-			continue
-		}
-
-		go func(j model.Job) {
-			err := jm.processJob(&j)
-			if err != nil {
-				jm.logger.Error(fmt.Sprintf("Failed to process job %d: %v", j.ID, err))
-			}
-		}(job)
+	if len(jobs) == 0 {
+		return
 	}
+
+	j := jobs[0]
+	go func(j model.Job) {
+		if err := jm.processJob(&j); err != nil {
+			jm.logger.Error(fmt.Sprintf("Failed to process job %d: %v", j.ID, err))
+		}
+	}(j)
 }
 
 func (jm *IJobManagerImpl) Shutdown() {
