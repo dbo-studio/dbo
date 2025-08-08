@@ -1,7 +1,8 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
+import { NodeLabel } from '@/components/common/ObjectTreeView/TreeNode/NodeContent/NodeContent.styled';
 import CircularProgress from '@mui/material/CircularProgress';
 import type { JSX } from 'react';
-import { LoadingIndicator, NodeContent as NodeContentStyled, NodeLabel, NodeName } from '../TreeNode.styled';
+import { LoadingIndicator, NodeContent as NodeContentStyled, NodeName } from '../TreeNode.styled';
 import type { NodeContentProps } from '../types';
 
 export function NodeContent({

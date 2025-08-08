@@ -15,4 +15,5 @@ type DatabaseRepository interface {
 	Objects(nodeID string, tabID TreeTab, action TreeNodeActionName) ([]FormField, error)
 	Execute(nodeID string, action TreeNodeActionName, params []byte) error
 	AutoComplete(dto *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error)
+	ImportData(job dto.ImportJob, rows [][]string, columns []string) (*ImportResult, error)
 }

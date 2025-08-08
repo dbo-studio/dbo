@@ -17,8 +17,6 @@ type IConnectionService interface {
 	Ping(ctx context.Context, req *dto.CreateConnectionRequest) error
 }
 
-var _ IConnectionService = (*IConnectionServiceImpl)(nil)
-
 type IConnectionServiceImpl struct {
 	connectionRepo repository.IConnectionRepo
 	cm             *databaseConnection.ConnectionManager
@@ -27,7 +25,7 @@ type IConnectionServiceImpl struct {
 func NewConnectionService(
 	connectionRepo repository.IConnectionRepo,
 	cm *databaseConnection.ConnectionManager,
-) *IConnectionServiceImpl {
+) IConnectionService {
 	return &IConnectionServiceImpl{
 		connectionRepo: connectionRepo,
 		cm:             cm,

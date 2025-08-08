@@ -1,6 +1,5 @@
-import ChipInput from '@/components/base/ChipInput/ChipInput';
+import CreatableSelectInput from '@/components/base/CreatableSelectInput/CreatableSelectInput';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
-import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor';
 import { variables } from '@/core/theme/variables';
@@ -52,7 +51,7 @@ export default function SimpleField({ field, onChange, size = 'medium' }: Simple
     case 'multi-select':
       return (
         <Box mb={size === 'small' ? 0 : 1}>
-          <SelectInput
+          <CreatableSelectInput
             isMulti={field.type === 'multi-select'}
             label={size === 'medium' ? field.name : undefined}
             value={field.value || (field.type === 'multi-select' ? [] : '')}
@@ -63,17 +62,6 @@ export default function SimpleField({ field, onChange, size = 'medium' }: Simple
               })) || []
             }
             onChange={handleChangeSelect}
-            size={size}
-          />
-        </Box>
-      );
-    case 'chip':
-      return (
-        <Box mb={size === 'small' ? 0 : 1}>
-          <ChipInput
-            label={size === 'medium' ? field.name : undefined}
-            value={field.value || []}
-            onChange={(e): void => onChange(e)}
             size={size}
           />
         </Box>

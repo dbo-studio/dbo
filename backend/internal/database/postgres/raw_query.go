@@ -1,6 +1,8 @@
 package databasePostgres
 
 import (
+	"database/sql"
+	"log"
 	"strings"
 	"time"
 
@@ -12,8 +14,8 @@ func (r *PostgresRepository) RunRawQuery(req *dto.RawQueryRequest) (*dto.RawQuer
 	startTime := time.Now()
 	result, err := runRawQuery(r, req)
 	endTime := time.Since(startTime)
-	if err != nil || !isQuery(req.Query) {
-		return commandResponseBuilder(result, endTime, err), nil
+	if err != nil || !helper.IsQuery(req.Query) {
+		return helper.CommandResponseBuilder(result, endTime, err), nil
 	}
 
 	return result, nil
@@ -30,7 +32,12 @@ func runRawQuery(r *PostgresRepository, req *dto.RawQueryRequest) (*dto.RawQuery
 		}, err
 	}
 
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}(rows)
 
 	columns, err := rows.Columns()
 	if err != nil {
@@ -67,60 +74,9 @@ func runRawQuery(r *PostgresRepository, req *dto.RawQueryRequest) (*dto.RawQuery
 		})
 	}
 
-	//p.DBLogger(req.Query)
-
 	return &dto.RawQueryResponse{
 		Query:   req.Query,
 		Data:    queryResults,
 		Columns: structures,
 	}, nil
-}
-
-func commandResponseBuilder(queryResult *dto.RawQueryResponse, endTime time.Duration, err error) *dto.RawQueryResponse {
-	message := "OK"
-	if err != nil {
-		message = err.Error()
-	}
-
-	newStructures := []dto.Column{
-		{
-			Name:       "Query",
-			Type:       "Varchar",
-			MappedType: "string",
-			NotNull:    false,
-			Length:     nil,
-			Default:    nil,
-			IsActive:   true,
-		},
-		{
-			Name:       "Message",
-			Type:       "Varchar",
-			MappedType: "string",
-			NotNull:    false,
-			Length:     nil,
-			Default:    nil,
-			IsActive:   true,
-		},
-		{
-			Name:       "Duration",
-			Type:       "Varchar",
-			MappedType: "string",
-			NotNull:    false,
-			Length:     nil,
-			Default:    nil,
-			IsActive:   true,
-		},
-	}
-
-	return &dto.RawQueryResponse{
-		Query: queryResult.Query,
-		Data: []map[string]any{
-			{
-				"Query":    queryResult.Query,
-				"Message":  message,
-				"Duration": helper.FloatToString(endTime.Seconds()),
-			},
-		},
-		Columns: newStructures,
-	}
 }

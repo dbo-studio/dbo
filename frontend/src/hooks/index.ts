@@ -3,6 +3,7 @@ export * from './useContextMenu.hook';
 export * from './useCopyToClipboard.hook';
 export * from './useCurrentConnection.hook';
 export * from './useDebounce.hook';
+export * from './useJobPolling.hook';
 export * from './useMount.hook';
 export * from './useRemoveTab.hook';
 export * from './useSelectedTab.hook';

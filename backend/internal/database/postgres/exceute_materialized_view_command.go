@@ -5,6 +5,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 func (r *PostgresRepository) handleMaterializedViewCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
@@ -14,7 +15,7 @@ func (r *PostgresRepository) handleMaterializedViewCommands(node PGNode, tabId c
 		return queries, nil
 	}
 
-	dto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresMaterializedViewParams](data)
+	dto, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.PostgresMaterializedViewParams](data)
 	if err != nil {
 		return nil, err
 	}

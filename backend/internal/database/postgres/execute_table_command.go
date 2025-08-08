@@ -5,6 +5,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
@@ -16,7 +17,7 @@ func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.Tre
 	}
 
 	if action == contract.CreateTableAction {
-		dto, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableParams](params)
+		dto, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.PostgresTableParams](params)
 		if err != nil {
 			return nil, tableName, err
 		}
@@ -47,7 +48,7 @@ func (r *PostgresRepository) handleTableCommands(node PGNode, tabId contract.Tre
 	}
 
 	if action == contract.EditTableAction {
-		dtoParams, err := convertToDTO[map[contract.TreeTab]*dto.PostgresTableParams](params)
+		dtoParams, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.PostgresTableParams](params)
 		if err != nil {
 			return nil, tableName, err
 		}

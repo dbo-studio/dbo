@@ -14,8 +14,7 @@ export const useObjectFields = (
   const selectedTab = useSelectedTab();
   const currentConnection = useCurrentConnection();
 
-  const getFormData = useDataStore((state) => state.getFormData);
-  const updateFormData = useDataStore((state) => state.updateFormData);
+  const { getFormData, updateFormData } = useDataStore();
 
   const { data: fields } = useQuery({
     queryKey: [

@@ -39,7 +39,7 @@ func connectionInfo(connection *model.Connection) string {
 	case "mysql":
 		return "mysql"
 	case "sqlite":
-		return "sqlite"
+		return fmt.Sprintf("%s | %s %s :  SQL Query", connection.Name, connection.ConnectionType, *connection.Version)
 	case "sqlserver":
 		return "sqlserver"
 	default:

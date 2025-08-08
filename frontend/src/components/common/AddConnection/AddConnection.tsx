@@ -13,9 +13,14 @@ import type { SelectionConnectionType } from './types';
 const connectionTypes: SelectionConnectionType[] = [
   {
     name: 'PostgreSQL',
-    logo: '/images/connections/postgresql_logo.svg',
+    logo: 'postgresql',
     component: PostgreSQL
   }
+  // {
+  //   name: 'SQLite',
+  //   logo: 'sqlite',
+  //   component: SQLite
+  // }
 ];
 
 export default function AddConnection(): JSX.Element {

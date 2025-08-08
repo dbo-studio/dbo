@@ -7,6 +7,7 @@ export const ConnectionItemStyled = styled(Box)<ConnectionItemStyledProps>(({ th
   background: selected ? theme.palette.background.paper : 'unset',
   padding: theme.spacing(1),
   display: 'flex',
+  width: 85,
   justifyContent: 'center',
   alignItems: 'center',
   flexDirection: 'column',

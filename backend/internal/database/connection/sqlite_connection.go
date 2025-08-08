@@ -40,7 +40,7 @@ func UpdateSQLiteConnection(oldParams json.RawMessage, newParams json.RawMessage
 		return "", apperror.Validation(errors.New("invalid params"))
 	}
 
-	newOptions.Path = helper.Optional[string](newOptions.Path, oldOptions.Path)
+	newOptions.Path = helper.Optional(newOptions.Path, oldOptions.Path)
 	return helper.StructToJson(newOptions), nil
 }
 

@@ -29,6 +29,7 @@ type ICacheRepo interface {
 
 type IHistoryRepo interface {
 	Index(ctx context.Context, pagination *dto.HistoryListRequest) (*[]model.History, error)
+	Create(ctx context.Context, connectionID uint, query string) error
 	DeleteAll(_ context.Context, connectionID uint) error
 }
 
@@ -40,17 +41,30 @@ type ISavedQueryRepo interface {
 	Update(ctx context.Context, query *model.SavedQuery, req *dto.UpdateSavedQueryRequest) (*model.SavedQuery, error)
 }
 
+type IJobRepo interface {
+	Create(ctx context.Context, job *model.Job) error
+	Find(ctx context.Context, id int32) (*model.Job, error)
+	Update(ctx context.Context, job *model.Job) error
+	GetPendingJobs(ctx context.Context) ([]model.Job, error)
+	GetRunningJobs(ctx context.Context) ([]model.Job, error)
+	DeleteOldJobs(ctx context.Context, days int) error
+}
+
 type Repository struct {
+	DB             *gorm.DB
 	ConnectionRepo IConnectionRepo
 	CacheRepo      ICacheRepo
 	HistoryRepo    IHistoryRepo
 	SavedQueryRepo ISavedQueryRepo
+	JobRepo        IJobRepo
 }
 
 func NewRepository(_ context.Context, db *gorm.DB, cache cache.Cache) *Repository {
 	return &Repository{
+		DB:             db,
 		ConnectionRepo: NewConnectionRepo(db),
 		HistoryRepo:    NewHistoryRepo(db),
 		SavedQueryRepo: NewSavedQueryRepo(db),
+		JobRepo:        NewJobRepo(db),
 	}
 }

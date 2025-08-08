@@ -26,7 +26,7 @@ function setupStore(sidebar = defaultSidebar, updateSidebar?: any): void {
 describe('Actions.tsx', () => {
   beforeEach(() => {
     resetAllMocks();
-    vi.resetModules(); // برای اطمینان از پاک شدن mock قبلی
+    vi.resetModules();
   });
 
   test('should render the Actions', () => {

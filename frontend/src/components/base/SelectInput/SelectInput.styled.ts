@@ -108,5 +108,10 @@ export const SelectInputStyles = (
   placeholder: (styles): any => ({
     ...styles,
     fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize
+  }),
+
+  menuPortal: (styles): any => ({
+    ...styles,
+    zIndex: 99999
   })
 });

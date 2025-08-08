@@ -4,16 +4,16 @@ export type ConnectionDetailRequestType = {
 
 export type CreateConnectionRequestType = {
   name: string;
-  type: 'postgresql';
+  type: 'postgresql' | 'sqlite';
   isActive?: boolean;
-  options: PostgresqlOptionsType;
+  options: PostgresqlOptionsType | SQLiteOptionsType;
 };
 
 export type UpdateConnectionRequestType = {
   name?: string;
-  type?: 'postgresql';
+  type?: 'postgresql' | 'sqlite';
   isActive?: boolean;
-  options?: PostgresqlOptionsType;
+  options?: PostgresqlOptionsType | SQLiteOptionsType;
 };
 
 export type PostgresqlOptionsType = {
@@ -23,4 +23,9 @@ export type PostgresqlOptionsType = {
   password?: string;
   database?: string;
   uri?: string;
+};
+
+export type SQLiteOptionsType = {
+  file?: string;
+  isPing?: boolean;
 };

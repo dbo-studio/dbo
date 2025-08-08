@@ -1,6 +1,7 @@
 import { structureModel } from '@/core/mocks/handlers/queries.ts';
+import locales from '@/locales';
 import { createSpy, renderWithProviders, resetAllMocks, setupStoreMocks } from '@/test/utils/test-helpers.tsx';
-import { screen } from '@testing-library/dom';
+import { screen, waitFor } from '@testing-library/dom';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vitest';
@@ -60,12 +61,11 @@ describe('DBField.tsx', () => {
 
     renderWithProviders(<DBFields />);
 
-    const inputElement = await screen.findAllByPlaceholderText('Search');
-    await userEvent.type(inputElement[0], 'auth');
-    expect(inputElement[0]).toHaveValue('auth');
+    const inputElement = (await screen.findAllByPlaceholderText(locales.search))[0] as HTMLInputElement;
+    await userEvent.type(inputElement, 'auth');
 
-    expect(screen.queryByText('datasrc_id')).toBeNull();
-    expect(screen.getByText('authors')).toBeVisible();
+    await waitFor(() => expect(screen.queryByText('datasrc_id')).toBeNull());
+    expect(await screen.findByText('authors')).toBeVisible();
   });
 
   test('should skip wrong property of row', async () => {
