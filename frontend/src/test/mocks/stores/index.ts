@@ -50,13 +50,13 @@ export const defaultSettingStoreMock: SettingStore = {
 export const defaultDataStoreMock: DataStore &
   Partial<
     DataColumnSlice &
-    DataSelectedRowsSlice &
-    DataRowSlice &
-    DataEditedRowsSlice &
-    DataRemovedRowsSlice &
-    DataUnsavedRowsSlice &
-    DataQuerySlice &
-    DataFormDataSlice
+      DataSelectedRowsSlice &
+      DataRowSlice &
+      DataEditedRowsSlice &
+      DataRemovedRowsSlice &
+      DataUnsavedRowsSlice &
+      DataQuerySlice &
+      DataFormDataSlice
   > = {
   // Core
   loadDataFromIndexedDB: vi.fn().mockResolvedValue(null),

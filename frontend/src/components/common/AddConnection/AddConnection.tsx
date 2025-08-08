@@ -8,7 +8,6 @@ import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
 import ConnectionSelection from './ConnectionSelection/ConnectionSelection';
 import PostgreSQL from './Postgresql/Postgresql';
-import SQLite from './SQLite/SQLite';
 import type { SelectionConnectionType } from './types';
 
 const connectionTypes: SelectionConnectionType[] = [
@@ -17,11 +16,11 @@ const connectionTypes: SelectionConnectionType[] = [
     logo: 'postgresql',
     component: PostgreSQL
   },
-  {
-    name: 'SQLite',
-    logo: 'sqlite',
-    component: SQLite
-  }
+  // {
+  //   name: 'SQLite',
+  //   logo: 'sqlite',
+  //   component: SQLite
+  // }
 ];
 
 export default function AddConnection(): JSX.Element {

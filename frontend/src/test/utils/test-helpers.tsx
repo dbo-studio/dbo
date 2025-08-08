@@ -68,15 +68,19 @@ export const setupStoreMocks = {
     if (mapped.getColumns && !mapped.columns) {
       try {
         mapped.columns = mapped.getColumns();
-      } catch { }
+      } catch {}
     }
     if (mapped.getSelectedRows && !mapped.selectedRows) {
       try {
         const legacyRows = mapped.getSelectedRows();
         mapped.selectedRows = Array.isArray(legacyRows)
-          ? legacyRows.map((r: any) => ({ index: r.index, selectedColumn: r.selectedColumn ?? '', row: r.data ?? r.row }))
+          ? legacyRows.map((r: any) => ({
+              index: r.index,
+              selectedColumn: r.selectedColumn ?? '',
+              row: r.data ?? r.row
+            }))
           : [];
-      } catch { }
+      } catch {}
     }
     const mock = createDataStoreMock(mapped);
     vi.spyOn(dataStore, 'useDataStore').mockImplementation(
