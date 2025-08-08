@@ -15,7 +15,7 @@ const connectionTypes: SelectionConnectionType[] = [
     name: 'PostgreSQL',
     logo: 'postgresql',
     component: PostgreSQL
-  },
+  }
   // {
   //   name: 'SQLite',
   //   logo: 'sqlite',
