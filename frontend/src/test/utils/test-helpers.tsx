@@ -2,6 +2,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type RenderOptions, render } from '@testing-library/react';
 import type { ReactElement, ReactNode } from 'react';
 import { vi } from 'vitest';
+import * as confirmModalStore from '../../store/confirmModal/confirmModal.store.ts';
+import * as connectionStore from '../../store/connectionStore/connection.store.ts';
+import * as dataStore from '../../store/dataStore/data.store.ts';
+import * as settingStore from '../../store/settingStore/setting.store.ts';
+import * as tabStore from '../../store/tabStore/tab.store.ts';
+import * as treeStore from '../../store/treeStore/tree.store.ts';
 
 import {
   createConfirmModalStoreMock,
@@ -49,31 +55,62 @@ export function renderWithProviders(ui: ReactElement, options: RenderOptions = {
 
 // Store mock setup helpers using vi.spyOn
 export const setupStoreMocks = {
-  settingStore: async (overrides = {}): Promise<any> => {
-    const settingStore = await import('../../store/settingStore/setting.store.ts');
-    const mock = createSettingStoreMock(overrides);
-    vi.spyOn(settingStore, 'useSettingStore').mockReturnValue(mock);
+  settingStore: (overrides = {}): any => {
+    const mock = createSettingStoreMock(overrides as any);
+    vi.spyOn(settingStore, 'useSettingStore').mockImplementation(
+      createZustandSelectorMock(mock) as unknown as typeof settingStore.useSettingStore
+    );
     return mock;
   },
-  dataStore: async (overrides = {}): Promise<any> => {
-    const dataStore = await import('../../store/dataStore/data.store.ts');
-    vi.spyOn(dataStore, 'useDataStore').mockReturnValue(createDataStoreMock(overrides));
+  dataStore: (overrides = {}): any => {
+    // Backward-compat mapping for legacy overrides
+    const mapped = { ...overrides } as any;
+    if (mapped.getColumns && !mapped.columns) {
+      try {
+        mapped.columns = mapped.getColumns();
+      } catch { }
+    }
+    if (mapped.getSelectedRows && !mapped.selectedRows) {
+      try {
+        const legacyRows = mapped.getSelectedRows();
+        mapped.selectedRows = Array.isArray(legacyRows)
+          ? legacyRows.map((r: any) => ({ index: r.index, selectedColumn: r.selectedColumn ?? '', row: r.data ?? r.row }))
+          : [];
+      } catch { }
+    }
+    const mock = createDataStoreMock(mapped);
+    vi.spyOn(dataStore, 'useDataStore').mockImplementation(
+      createZustandSelectorMock(mock) as unknown as typeof dataStore.useDataStore
+    );
+    return mock;
   },
-  tabStore: async (overrides = {}): Promise<any> => {
-    const tabStore = await import('../../store/tabStore/tab.store.ts');
-    vi.spyOn(tabStore, 'useTabStore').mockReturnValue(createTabStoreMock(overrides));
+  tabStore: (overrides = {}): any => {
+    const mock = createTabStoreMock(overrides as any);
+    vi.spyOn(tabStore, 'useTabStore').mockImplementation(
+      createZustandSelectorMock(mock) as unknown as typeof tabStore.useTabStore
+    );
+    return mock;
   },
-  treeStore: async (overrides = {}): Promise<any> => {
-    const treeStore = await import('../../store/treeStore/tree.store.ts');
-    vi.spyOn(treeStore, 'useTreeStore').mockReturnValue(createTreeStoreMock(overrides));
+  treeStore: (overrides = {}): any => {
+    const mock = createTreeStoreMock(overrides as any);
+    vi.spyOn(treeStore, 'useTreeStore').mockImplementation(
+      createZustandSelectorMock(mock) as unknown as typeof treeStore.useTreeStore
+    );
+    return mock;
   },
-  connectionStore: async (overrides = {}): Promise<any> => {
-    const connectionStore = await import('../../store/connectionStore/connection.store.ts');
-    vi.spyOn(connectionStore, 'useConnectionStore').mockReturnValue(createConnectionStoreMock(overrides));
+  connectionStore: (overrides = {}): any => {
+    const mock = createConnectionStoreMock(overrides as any);
+    vi.spyOn(connectionStore, 'useConnectionStore').mockImplementation(
+      createZustandSelectorMock(mock) as unknown as typeof connectionStore.useConnectionStore
+    );
+    return mock;
   },
-  confirmModalStore: async (overrides = {}): Promise<any> => {
-    const confirmModalStore = await import('../../store/confirmModal/confirmModal.store.ts');
-    vi.spyOn(confirmModalStore, 'useConfirmModalStore').mockReturnValue(createConfirmModalStoreMock(overrides));
+  confirmModalStore: (overrides = {}): any => {
+    const mock = createConfirmModalStoreMock(overrides as any);
+    vi.spyOn(confirmModalStore, 'useConfirmModalStore').mockImplementation(
+      createZustandSelectorMock(mock) as unknown as typeof confirmModalStore.useConfirmModalStore
+    );
+    return mock;
   }
 };
 
@@ -244,7 +281,10 @@ export const setupDOMMocks = (): void => {
   });
 };
 
-export function createZustandSelectorMock<T extends object>(state: T): (selector: (s: T) => any) => any {
-  // biome-ignore lint/nursery/useExplicitType: <explanation>
-  return (selector: (s: T) => any) => selector(state);
+export function createZustandSelectorMock<T extends object>(state: T): unknown {
+  // Return a function compatible with Zustand's hook signature: useStore(selector?, equalityFn?)
+  return (selector?: (s: any) => any): any => {
+    if (typeof selector === 'function') return selector(state as any);
+    return state;
+  };
 }

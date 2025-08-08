@@ -80,7 +80,7 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
 
   return (
     <>
-      <Modal open={show} title='Import Data' onClose={() => onClose()}>
+      <Modal open={show} title={locales.import_data} onClose={() => onClose()}>
         <Box flex={1} display={'flex'} flexDirection={'column'}>
           <Box flex={1}>
             <form.Field name='file'>
@@ -103,7 +103,7 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
                   />
                   <label htmlFor='import-file-input'>
                     <Button component='span' variant='outlined' fullWidth>
-                      {field.state.value ? field.state.value.name : 'Choose File'}
+                      {field.state.value ? field.state.value.name : locales.choose_file}
                     </Button>
                   </label>
                   <FormError mb={1} errors={field.state.meta.errors} />
@@ -189,7 +189,7 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
         open={showProgress}
         jobId={jobId}
         onClose={() => setShowProgress(false)}
-        title='Importing Data'
+        title={locales.importing_data}
       />
     </>
   );
