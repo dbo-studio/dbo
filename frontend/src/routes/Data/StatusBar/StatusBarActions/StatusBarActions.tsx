@@ -87,6 +87,7 @@ export default function StatusBarActions(): JSX.Element {
 
     await updateRows(rows);
     await addUnsavedRows(emptyRow);
+    toggleReRender();
 
     toggleScrollToBottom(true);
   };

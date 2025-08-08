@@ -22,38 +22,38 @@ func (h *HistoryHandler) Histories(c fiber.Ctx) error {
 	req := new(dto.HistoryListRequest)
 
 	if err := c.Bind().Query(req); err != nil {
-		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}
 
 	if err := req.Validate(); err != nil {
-		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
 	}
 
-	items, err := h.historyService.Index(c.Context(), req)
+	items, err := h.historyService.Index(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())
-		return response.ErrorBuilder(err).Send(c)
+		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder(items.Items).Send(c)
+	return response.SuccessBuilder().WithData(items.Items).Send(c)
 }
 
 func (h *HistoryHandler) Delete(c fiber.Ctx) error {
 	req := new(dto.DeleteHistoryRequest)
 
 	if err := c.Bind().Query(req); err != nil {
-		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}
 
 	if err := req.Validate(); err != nil {
-		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
 	}
 
-	err := h.historyService.DeleteAll(c.Context(), req)
+	err := h.historyService.DeleteAll(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())
-		return response.ErrorBuilder(err).Send(c)
+		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder("").Send(c)
+	return response.SuccessBuilder().Send(c)
 }

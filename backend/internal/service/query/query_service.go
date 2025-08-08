@@ -24,13 +24,14 @@ type IQueryService interface {
 var _ IQueryService = (*IQueryServiceImpl)(nil)
 
 type IQueryServiceImpl struct {
+	historyRepo    repository.IHistoryRepo
 	connectionRepo repository.IConnectionRepo
 	cm             *databaseConnection.ConnectionManager
 	cache          cache.Cache
 }
 
-func NewQueryService(connectionRepo repository.IConnectionRepo, cm *databaseConnection.ConnectionManager, cache cache.Cache) IQueryService {
-	return &IQueryServiceImpl{connectionRepo, cm, cache}
+func NewQueryService(connectionRepo repository.IConnectionRepo, historyRepo repository.IHistoryRepo, cm *databaseConnection.ConnectionManager, cache cache.Cache) IQueryService {
+	return &IQueryServiceImpl{historyRepo, connectionRepo, cm, cache}
 }
 
 func (i IQueryServiceImpl) Run(ctx context.Context, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
@@ -54,6 +55,11 @@ func (i IQueryServiceImpl) Raw(ctx context.Context, req *dto.RawQueryRequest) (*
 	}
 
 	repo, err := database.NewDatabaseRepository(connection, i.cm)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	err = i.historyRepo.Create(ctx, connection.ID, req.Query)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}

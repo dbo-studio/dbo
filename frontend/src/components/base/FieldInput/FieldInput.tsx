@@ -1,7 +1,7 @@
 import type { EventFor } from '@/types';
 import { Box, InputBase, Typography, useTheme } from '@mui/material';
 import dayjs from 'dayjs';
-import { type JSX, forwardRef, useEffect, useState } from 'react';
+import { forwardRef, type JSX, useEffect, useState } from 'react';
 import type { FieldInputProps } from './types';
 
 export default forwardRef(function FieldInput(props: FieldInputProps, _): JSX.Element {
@@ -52,7 +52,8 @@ export default forwardRef(function FieldInput(props: FieldInputProps, _): JSX.El
         onChange={handleOnChange}
         sx={{
           borderColor: props.error ? theme.palette.error.main : theme.palette.divider,
-          marginBottom: props.error || props.margin === 'none' ? '0px' : theme.spacing(1)
+          marginBottom: props.error || props.margin === 'none' ? '0px' : theme.spacing(1),
+          ...props.sx
         }}
         {...props}
       />

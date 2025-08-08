@@ -10,13 +10,11 @@ import (
 	"gorm.io/gorm"
 )
 
-var _ IConnectionRepo = (*IConnectionRepoImpl)(nil)
-
 type IConnectionRepoImpl struct {
 	db *gorm.DB
 }
 
-func NewConnectionRepo(db *gorm.DB) *IConnectionRepoImpl {
+func NewConnectionRepo(db *gorm.DB) IConnectionRepo {
 	return &IConnectionRepoImpl{
 		db: db,
 	}

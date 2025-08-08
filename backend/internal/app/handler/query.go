@@ -22,61 +22,61 @@ func (h QueryHandler) Run(c fiber.Ctx) error {
 	req := new(dto.RunQueryRequest)
 
 	if err := c.Bind().Body(req); err != nil {
-		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}
 
 	if err := req.Validate(); err != nil {
-		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
 	}
 
-	result, err := h.queryService.Run(c.Context(), req)
+	result, err := h.queryService.Run(c, req)
 
 	if err != nil {
 		h.logger.Error(err.Error())
-		return response.ErrorBuilder(err).Send(c)
+		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder(result).Send(c)
+	return response.SuccessBuilder().WithData(result).Send(c)
 }
 
 func (h QueryHandler) Raw(c fiber.Ctx) error {
 	req := new(dto.RawQueryRequest)
 
 	if err := c.Bind().Body(req); err != nil {
-		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}
 
 	if err := req.Validate(); err != nil {
-		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
 	}
 
-	result, err := h.queryService.Raw(c.Context(), req)
+	result, err := h.queryService.Raw(c, req)
 
 	if err != nil {
 		h.logger.Error(err.Error())
-		return response.ErrorBuilder(err).Send(c)
+		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder(result).Send(c)
+	return response.SuccessBuilder().WithData(result).Send(c)
 }
 
 func (h QueryHandler) Update(c fiber.Ctx) error {
 	req := new(dto.UpdateQueryRequest)
 
 	if err := c.Bind().Body(req); err != nil {
-		return response.ErrorBuilder(apperror.BadRequest(err)).Send(c)
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}
 
 	if err := req.Validate(); err != nil {
-		return response.ErrorBuilder(apperror.Validation(err)).Send(c)
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
 	}
 
-	result, err := h.queryService.Update(c.Context(), req)
+	result, err := h.queryService.Update(c, req)
 
 	if err != nil {
 		h.logger.Error(err.Error())
-		return response.ErrorBuilder(err).Send(c)
+		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder(result).Send(c)
+	return response.SuccessBuilder().WithData(result).Send(c)
 }

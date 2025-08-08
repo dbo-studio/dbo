@@ -4,12 +4,13 @@ import (
 	"net/url"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 func (r *PostgresRepository) Execute(nodeID string, action contract.TreeNodeActionName, params []byte) error {
 	node := extractNode(nodeID)
 	type ExecuteParams map[contract.TreeTab]any
-	executeParams, err := convertToDTO[ExecuteParams](params)
+	executeParams, err := helper.ConvertToDTO[ExecuteParams](params)
 	if err != nil {
 		return err
 	}

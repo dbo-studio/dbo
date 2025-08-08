@@ -21,12 +21,12 @@ func (r *Server) routing() {
 	query.Get("/autocomplete", r.handlers.QueryHandler.Autocomplete)
 
 	connection := api.Group("connections")
-	connection.Get("/:id", r.handlers.Connection.ConnectionDetail)
+	connection.Get("/:id", r.handlers.Connection.Detail)
 	connection.Get("/", r.handlers.Connection.Connections)
-	connection.Post("/", r.handlers.Connection.CreateConnection)
-	connection.Post("/ping", r.handlers.Connection.PingConnection)
-	connection.Patch("/:id", r.handlers.Connection.UpdateConnection)
-	connection.Delete("/:id", r.handlers.Connection.DeleteConnection)
+	connection.Post("/", r.handlers.Connection.Create)
+	connection.Post("/ping", r.handlers.Connection.Ping)
+	connection.Patch("/:id", r.handlers.Connection.Update)
+	connection.Delete("/:id", r.handlers.Connection.Delete)
 
 	saved := api.Group("saved")
 	saved.Get("/", r.handlers.SavedQuery.Index)
@@ -37,4 +37,13 @@ func (r *Server) routing() {
 	history := api.Group("histories")
 	history.Get("/", r.handlers.History.Histories)
 	history.Delete("/", r.handlers.History.Delete)
+
+	api.Post("/import", r.handlers.ImportExport.Start)
+	api.Post("/export", r.handlers.ImportExport.Export)
+
+	job := api.Group("jobs")
+	job.Get("/:id", r.handlers.Job.Detail)
+	job.Delete("/:id", r.handlers.Job.Cancel)
+	job.Get("/:id/result", r.handlers.Job.Result)
+
 }

@@ -9,6 +9,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import PostgreSQL from './Postgresql/Postgresql';
+import SQLite from './SQLite/SQLite';
 
 export default function EditConnection(): JSX.Element {
   const queryClient = useQueryClient();
@@ -73,6 +74,17 @@ export default function EditConnection(): JSX.Element {
     <Modal open={showEditConnection !== undefined && showEditConnection !== false} title={locales.edit_connection}>
       {activeConnection?.type === 'postgresql' && (
         <PostgreSQL
+          connection={activeConnection}
+          pingLoading={pingConnectionPending}
+          submitLoading={updateConnectionPending}
+          onClose={handleClose}
+          onPing={handlePingConnection}
+          onSubmit={handleUpdateConnection}
+        />
+      )}
+
+      {activeConnection?.type === 'sqlite' && (
+        <SQLite
           connection={activeConnection}
           pingLoading={pingConnectionPending}
           submitLoading={updateConnectionPending}

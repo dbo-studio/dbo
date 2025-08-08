@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 func (r *PostgresRepository) Objects(nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) ([]contract.FormField, error) {
@@ -62,7 +63,7 @@ func (r *PostgresRepository) getTableSequence(node PGNode) ([]contract.FormField
 		Joins("JOIN pg_namespace n ON n.oid = c.relnamespace AND n.nspname = s.sequence_schema").
 		Where("s.sequence_schema = ? AND s.sequence_name = ?", node.Schema, node.Table)
 
-	return buildObjectResponse(query, fields)
+	return helper.BuildObjectResponse(query, fields)
 }
 
 func (r *PostgresRepository) getMaterializedViewInfo(node PGNode) ([]contract.FormField, error) {
@@ -83,7 +84,7 @@ func (r *PostgresRepository) getMaterializedViewInfo(node PGNode) ([]contract.Fo
 		Joins("LEFT JOIN pg_matviews AS m ON m.matviewname = c.relname AND m.schemaname = n.nspname").
 		Where("c.relname = ? AND c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)", node.Table, node.Schema)
 
-	return buildObjectResponse(query, fields)
+	return helper.BuildObjectResponse(query, fields)
 }
 
 func (r *PostgresRepository) getViewInfo(node PGNode) ([]contract.FormField, error) {
@@ -101,7 +102,7 @@ func (r *PostgresRepository) getViewInfo(node PGNode) ([]contract.FormField, err
 		Joins("LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0").
 		Where("c.relname = ? AND n.nspname = ? AND c.relkind = 'v'", node.Table, node.Schema)
 
-	return buildObjectResponse(query, fields)
+	return helper.BuildObjectResponse(query, fields)
 }
 
 func (r *PostgresRepository) getTableChecks(node PGNode) ([]contract.FormField, error) {
@@ -120,7 +121,7 @@ func (r *PostgresRepository) getTableChecks(node PGNode) ([]contract.FormField, 
 		Joins("LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0").
 		Where("c.conrelid = (SELECT oid FROM pg_class WHERE relname = ? AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)) AND c.contype = 'c'", node.Table, node.Schema)
 
-	return buildArrayResponse(query, fields)
+	return helper.BuildArrayResponse(query, fields)
 }
 
 func (r *PostgresRepository) getTableTriggers(node PGNode) ([]contract.FormField, error) {
@@ -160,7 +161,7 @@ func (r *PostgresRepository) getTableTriggers(node PGNode) ([]contract.FormField
 		Where("c.relname = ? AND n.nspname = ?", node.Table, node.Schema).
 		Group("t.tgname, d.description, t.tgtype, p.proname, t.oid")
 
-	return buildArrayResponse(query, fields)
+	return helper.BuildArrayResponse(query, fields)
 }
 
 func (r *PostgresRepository) getTableIndexes(node PGNode) ([]contract.FormField, error) {
@@ -185,7 +186,7 @@ func (r *PostgresRepository) getTableIndexes(node PGNode) ([]contract.FormField,
 		Where("n.nspname = ? AND c.relname = ?", node.Schema, node.Table).
 		Group("i.relname, ix.indisunique, ix.indisprimary, am.amname, t.spcname, i.oid")
 
-	return buildArrayResponse(query, fields)
+	return helper.BuildArrayResponse(query, fields)
 }
 
 func (r *PostgresRepository) getTableForeignKeys(node PGNode) ([]contract.FormField, error) {
@@ -224,7 +225,7 @@ func (r *PostgresRepository) getTableForeignKeys(node PGNode) ([]contract.FormFi
 		Where("n.nspname = ? AND t.relname = ? AND c.contype = 'f'", node.Schema, node.Table).
 		Group("c.conname, ct.relname, c.confupdtype, c.confdeltype, c.condeferrable, c.condeferred, d.description, c.conkey, c.confkey")
 
-	return buildArrayResponse(query, fields)
+	return helper.BuildArrayResponse(query, fields)
 }
 
 func (r *PostgresRepository) getTableColumns(node PGNode) ([]contract.FormField, error) {
@@ -253,7 +254,7 @@ func (r *PostgresRepository) getTableColumns(node PGNode) ([]contract.FormField,
 		Where("n.nspname = ? AND c.relname = ? AND a.attnum > 0 AND NOT a.attisdropped", node.Schema, node.Table).
 		Order("a.attnum")
 
-	return buildArrayResponse(query, fields)
+	return helper.BuildArrayResponse(query, fields)
 }
 
 func (r *PostgresRepository) getSchemaInfo(node PGNode) ([]contract.FormField, error) {
@@ -269,7 +270,7 @@ func (r *PostgresRepository) getSchemaInfo(node PGNode) ([]contract.FormField, e
 		Joins("LEFT JOIN pg_description d ON d.objoid = n.oid AND d.objsubid = 0").
 		Where("n.nspname = ?", node.Schema)
 
-	return buildObjectResponse(query, fields)
+	return helper.BuildObjectResponse(query, fields)
 }
 
 func (r *PostgresRepository) getDatabaseInfo(node PGNode) ([]contract.FormField, error) {
@@ -288,7 +289,7 @@ func (r *PostgresRepository) getDatabaseInfo(node PGNode) ([]contract.FormField,
 		Joins("LEFT JOIN pg_tablespace t ON t.oid = d.dattablespace").
 		Where("d.datname = ?", node.Database)
 
-	return buildObjectResponse(query, fields)
+	return helper.BuildObjectResponse(query, fields)
 }
 
 func (r *PostgresRepository) getTableInfo(node PGNode, action contract.TreeNodeActionName) ([]contract.FormField, error) {
@@ -312,7 +313,7 @@ func (r *PostgresRepository) getTableInfo(node PGNode, action contract.TreeNodeA
 		Joins("LEFT JOIN pg_description pd ON pd.objoid = c.oid AND pd.objsubid = 0").
 		Where("c.relname = ? AND n.nspname = ?", node.Table, node.Schema)
 
-	return buildObjectResponse(query, fields)
+	return helper.BuildObjectResponse(query, fields)
 }
 
 func (r *PostgresRepository) getTableKeys(node PGNode) ([]contract.FormField, error) {
@@ -334,5 +335,5 @@ func (r *PostgresRepository) getTableKeys(node PGNode) ([]contract.FormField, er
 		Where("c.conrelid = (SELECT oid FROM pg_class WHERE relname = ? AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)) AND c.contype = 'p'", node.Table, node.Schema).
 		Group("c.conname, d.description, c.contype, c.condeferrable, c.condeferred, c.oid")
 
-	return buildArrayResponse(query, fields)
+	return helper.BuildArrayResponse(query, fields)
 }
