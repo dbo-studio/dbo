@@ -20,7 +20,9 @@ type (
 	ImportResponse struct {
 		JobId int32 `json:"jobId"`
 	}
+)
 
+type (
 	ImportJob struct {
 		ConnectionId    int32
 		Table           string

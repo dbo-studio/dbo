@@ -31,6 +31,7 @@ func (r *PostgresRepository) AutoComplete(data *dto.AutoCompleteRequest) (*dto.A
 	if data.Schema != nil {
 		tables, err = r.getTableList(Schema{Name: lo.FromPtr(data.Schema)})
 	} else {
+		// اگر اسکیمایی مشخص نشده، تمام جداول را برمی‌گردانیم
 		tables, err = r.getAllTableList()
 	}
 
@@ -38,15 +39,24 @@ func (r *PostgresRepository) AutoComplete(data *dto.AutoCompleteRequest) (*dto.A
 		return nil, err
 	}
 
+	// همیشه ستون‌های هر جدول را برگردان تا context کامل‌تر شود
 	columns := make(map[string][]string)
+	schemaName := ""
 	if data.Schema != nil {
-		for _, table := range tables {
-			columnResult, err := r.getColumns(table.Name, lo.FromPtr(data.Schema), nil, false)
-			if err != nil {
-				return nil, err
-			}
-			columns[table.Name] = lo.Map(columnResult, func(x Column, _ int) string { return x.ColumnName })
+		schemaName = lo.FromPtr(data.Schema)
+	}
+	for _, table := range tables {
+		// اگر schemaName خالی باشد، getColumns نیاز به اسکیمای معتبر دارد؛
+		// در این حالت، از information_schema برای همه اسکیمه‌ها خوانده‌ایم و getColumns ما نیاز به اسکیمای مشخص دارد.
+		// پس وقتی اسکیمایی مشخص نیست، این بخش را رد می‌کنیم تا خطا ندهد.
+		if schemaName == "" {
+			continue
 		}
+		columnResult, err := r.getColumns(table.Name, schemaName, nil, false)
+		if err != nil {
+			return nil, err
+		}
+		columns[table.Name] = lo.Map(columnResult, func(x Column, _ int) string { return x.ColumnName })
 	}
 
 	return &dto.AutoCompleteResponse{

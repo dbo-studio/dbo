@@ -1,0 +1,27 @@
+package dto
+
+import "github.com/invopop/validation"
+
+type (
+	AIProviderUpdateRequest struct {
+		Name        *string  `json:"name"`
+		Type        *string  `json:"type"`
+		Url         *string  `json:"url"`
+		ApiKey      *string  `json:"apiKey"`
+		Model       *string  `json:"model"`
+		Temperature *float32 `json:"temperature"`
+		MaxTokens   *int     `json:"maxTokens"`
+	}
+)
+
+func (req AIProviderUpdateRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.Name, validation.Length(1, 100)),
+		validation.Field(&req.Type, validation.In("openai")),
+		validation.Field(&req.Url, validation.Length(1, 255)),
+		validation.Field(&req.ApiKey, validation.Length(1, 2048)),
+		validation.Field(&req.Model, validation.Length(1, 128)),
+		validation.Field(&req.Temperature, validation.Min(0.0), validation.Max(1.0)),
+		validation.Field(&req.MaxTokens, validation.Min(1), validation.Max(10000)),
+	)
+}

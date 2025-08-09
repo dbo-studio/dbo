@@ -15,5 +15,8 @@ type DatabaseRepository interface {
 	Objects(nodeID string, tabID TreeTab, action TreeNodeActionName) ([]FormField, error)
 	Execute(nodeID string, action TreeNodeActionName, params []byte) error
 	AutoComplete(dto *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error)
+	// BuildDDLContext optionally returns a full DDL text; implementations may return empty and error=nil
+	// Deprecated in this iteration; kept for future extension
+	// BuildDDLContext(database *string, schema *string) (string, error)
 	ImportData(job dto.ImportJob, rows [][]string, columns []string) (*ImportResult, error)
 }

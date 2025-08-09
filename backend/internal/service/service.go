@@ -3,6 +3,7 @@ package service
 import (
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/repository"
+	serviceAI "github.com/dbo-studio/dbo/internal/service/ai"
 	serviceConnection "github.com/dbo-studio/dbo/internal/service/connection"
 	serviceHistory "github.com/dbo-studio/dbo/internal/service/history"
 	serviceImportExport "github.com/dbo-studio/dbo/internal/service/import_export"
@@ -25,6 +26,7 @@ type Service struct {
 	ImportExportService serviceImportExport.IImportExport
 	JobService          serviceJob.IJobService
 	JobManager          serviceJob.IJobManager
+	AIService           serviceAI.IAIService
 }
 
 func NewService(logger logger.Logger, repo *repository.Repository, cm *databaseConnection.ConnectionManager, cache cache.Cache) *Service {
@@ -43,5 +45,6 @@ func NewService(logger logger.Logger, repo *repository.Repository, cm *databaseC
 		ImportExportService: serviceImportExport.NewImportExportService(jobManager),
 		JobService:          serviceJob.NewJobService(jobRepo),
 		JobManager:          jobManager,
+		AIService:           serviceAI.NewAIService(repo.ConnectionRepo, cm, logger, repo.AiRepo, cache),
 	}
 }

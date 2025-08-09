@@ -20,6 +20,21 @@ func (r *Server) routing() {
 	query.Post("/update", r.handlers.QueryHandler.Update)
 	query.Get("/autocomplete", r.handlers.QueryHandler.Autocomplete)
 
+	ai := api.Group("ai")
+	ai.Post("/chat", r.handlers.AI.Chat)
+	ai.Post("/complete", r.handlers.AI.Complete)
+
+	ai.Get("/provider", r.handlers.AIProfile.Index)
+	ai.Post("/provider", r.handlers.AIProfile.Create)
+	ai.Patch("/provider", r.handlers.AIProfile.Update)
+	ai.Delete("/provider/:id", r.handlers.AIProfile.Delete)
+
+	ai.Get("/threads", r.handlers.AIThread.List)
+	ai.Post("/threads", r.handlers.AIThread.Create)
+	ai.Delete("/threads/:id", r.handlers.AIThread.Delete)
+	ai.Get("/threads/:id/messages", r.handlers.AIThread.Messages)
+	ai.Post("/threads/:id/messages", r.handlers.AIThread.AddMessage)
+
 	connection := api.Group("connections")
 	connection.Get("/:id", r.handlers.Connection.Detail)
 	connection.Get("/", r.handlers.Connection.Connections)

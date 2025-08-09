@@ -45,6 +45,6 @@ func (h IHistoryRepoImpl) Create(ctx context.Context, connectionID uint, query s
 	}).Error
 }
 
-func (I IHistoryRepoImpl) DeleteAll(_ context.Context, connectionID uint) error {
-	return I.db.Where("connection_id = ?", connectionID).Delete(&model.History{}).Error
+func (I IHistoryRepoImpl) DeleteAll(ctx context.Context, connectionID uint) error {
+	return I.db.WithContext(ctx).Where("connection_id = ?", connectionID).Delete(&model.History{}).Error
 }

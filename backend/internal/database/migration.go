@@ -11,5 +11,8 @@ func AutoMigrate(db *gorm.DB) error {
 		&model.History{},
 		&model.SavedQuery{},
 		&model.Job{},
+		&model.AIProvider{},
+		&model.AIThread{},
+		&model.AIMessage{},
 	)
 }

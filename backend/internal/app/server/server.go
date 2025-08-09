@@ -18,6 +18,9 @@ type Handlers struct {
 	QueryHandler *handler.QueryHandler
 	ImportExport *handler.ImportExportHandler
 	Job          *handler.JobHandler
+	AI           *handler.AIHandler
+	AIProfile    *handler.AIProfileHandler
+	AIThread     *handler.AIThreadHandler
 }
 
 type Server struct {
