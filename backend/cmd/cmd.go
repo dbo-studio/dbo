@@ -58,9 +58,9 @@ func Execute() {
 		QueryHandler: handler.NewQueryHandler(appLogger, ss.QueryService),
 		ImportExport: handler.NewImportExportHandler(appLogger, ss.ImportExportService),
 		Job:          handler.NewJobHandler(appLogger, ss.JobService),
-		AI:           handler.NewAIHandler(appLogger, ss.AIService),
-		AIProfile:    handler.NewAIProfileHandler(rr.AiRepo),
-		AIThread:     handler.NewAIThreadHandler(rr.AiRepo),
+		AI:           handler.NewAiHandler(appLogger, ss.AiService),
+		AiProvider:   handler.NewAiProviderHandler(appLogger, ss.AiProviderService),
+		AiChat:       handler.NewAiChatHandler(appLogger, ss.AiChatService),
 	})
 
 	if err := restServer.Start(helper.IsLocal(), cfg.App.Port); err != nil {

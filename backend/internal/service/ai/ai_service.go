@@ -1,71 +1,291 @@
 package serviceAI
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"strings"
-
-	"crypto/sha1"
-	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
+	aiCache "github.com/dbo-studio/dbo/internal/service/ai/cache"
+	"github.com/dbo-studio/dbo/internal/service/ai/provider"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/logger"
 )
 
-type IAIService interface {
-	Chat(ctx context.Context, req *dto.AIChatRequest) (*dto.AIChatResponse, error)
-	Complete(ctx context.Context, req *dto.AIInlineCompleteRequest) (*dto.AIInlineCompleteResponse, error)
+type IAiService interface {
+	Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.AiChatResponse, error)
+	Complete(ctx context.Context, req *dto.AiInlineCompleteRequest) (*dto.AiInlineCompleteResponse, error)
 }
 
-type AIServiceImpl struct {
-	connectionRepo repository.IConnectionRepo
-	cm             *databaseConnection.ConnectionManager
-	logger         logger.Logger
-	cache          cache.Cache
-	aiRepo         repository.IAiRepo
+type AiServiceImpl struct {
+	connectionRepo  repository.IConnectionRepo
+	aiProviderRepo  repository.IAiProviderRepo
+	aiChatRepo      repository.IAiChatRepo
+	cm              *databaseConnection.ConnectionManager
+	logger          logger.Logger
+	cacheManager    aiCache.ICacheManager
+	providerFactory *provider.ProviderFactory
 }
 
 func NewAIService(
 	connectionRepo repository.IConnectionRepo,
+	aiProviderRepo repository.IAiProviderRepo,
+	aiChatRepo repository.IAiChatRepo,
 	cm *databaseConnection.ConnectionManager,
 	logger logger.Logger,
-	aiRepo repository.IAiRepo,
 	cache cache.Cache,
-) IAIService {
-	return &AIServiceImpl{
-		connectionRepo: connectionRepo,
-		cm:             cm,
-		logger:         logger,
-		cache:          cache,
-		aiRepo:         aiRepo,
+) IAiService {
+	return &AiServiceImpl{
+		connectionRepo:  connectionRepo,
+		aiProviderRepo:  aiProviderRepo,
+		aiChatRepo:      aiChatRepo,
+		cm:              cm,
+		logger:          logger,
+		cacheManager:    aiCache.NewCacheManager(cache),
+		providerFactory: provider.NewProviderFactory(),
 	}
 }
 
-func (s *AIServiceImpl) Chat(ctx context.Context, req *dto.AIChatRequest) (*dto.AIChatResponse, error) {
+func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.AiChatResponse, error) {
+	aiProvider, dbProvider, err := s.createProvider(ctx, req.ProviderId)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	chatId, chatHistory, err := s.manageChatHistory(ctx, req)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
 	conn, err := s.connectionRepo.Find(ctx, req.ConnectionId)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
+
 	repo, err := database.NewDatabaseRepository(conn, s.cm)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
 
-	// Build lightweight context from autocomplete
-	contextStr, _ := buildContextFromAutocomplete(repo, req.ConnectionId, req.Database, req.Schema)
+	contextStr, _ := s.buildContextFromAutocomplete(repo, req.ConnectionId, req.Database, req.Schema)
 
-	// Call provider (OpenAI-compatible minimal)
-	prov := normalizeProvider(req.Provider)
-	s.logger.Info(fmt.Sprintf("AI Chat → provider=%s model=%s baseUrl=%s msgs=%d ctxLen=%d", prov.ProviderId, prov.Model, safeBaseURL(prov.BaseUrl), len(req.Messages), len(contextStr)))
+	// لاگ کردن درخواست
+	s.logChatRequest(req, contextStr)
+
+	// ترکیب تاریخچه چت با پیام‌های جدید
+	allMessages := append(chatHistory, req.Messages...)
+
+	// ساخت درخواست provider
+	providerReq := &provider.ChatRequest{
+		Messages:    allMessages,
+		Model:       req.Model,
+		Temperature: dbProvider.Temperature,
+		MaxTokens:   dbProvider.MaxTokens,
+		Context:     contextStr,
+	}
+
+	// ارسال درخواست به AI provider
+	providerResp, err := aiProvider.Chat(ctx, providerReq)
+	if err != nil {
+		s.logger.Error(fmt.Sprintf("AI Chat error: %v", err))
+		return nil, err
+	}
+
+	// ذخیره پیام‌های جدید در تاریخچه
+	if err := s.saveChatMessages(ctx, chatId, req.Messages, providerResp.Message); err != nil {
+		s.logger.Error(fmt.Sprintf("Failed to save chat messages: %v", err))
+		// ادامه می‌دهیم حتی اگر ذخیره‌سازی شکست بخورد
+	}
+
+	// ساخت پاسخ
+	response := &dto.AiChatResponse{
+		ChatId:  chatId,
+		Message: providerResp.Message,
+	}
+
+	// لاگ کردن پاسخ
+	s.logChatResponse(response)
+
+	return response, nil
+}
+
+func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteRequest) (*dto.AiInlineCompleteResponse, error) {
+	aiProvider, dbProvider, err := s.createProvider(ctx, req.ProviderId)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	cacheKey := s.cacheManager.GenerateCompletionKey(req, dbProvider)
+	if cachedResponse, found := s.cacheManager.GetCompletionResponse(cacheKey); found {
+		s.logger.Info("AI Complete ← cache hit")
+		return cachedResponse, nil
+	}
+
+	conn, err := s.connectionRepo.Find(ctx, req.ConnectionId)
+	if err != nil {
+		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	repo, err := database.NewDatabaseRepository(conn, s.cm)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	contextStr, _ := s.buildContextFromAutocomplete(repo, req.ConnectionId, req.Database, req.Schema)
+
+	s.logCompletionRequest(req, contextStr)
+
+	providerReq := &provider.CompletionRequest{
+		Prompt:      req.Prompt,
+		Suffix:      req.Suffix,
+		Language:    req.Language,
+		Model:       req.Model,
+		Temperature: dbProvider.Temperature,
+		MaxTokens:   dbProvider.MaxTokens,
+		Context:     contextStr,
+	}
+
+	providerResp, err := aiProvider.Complete(ctx, providerReq)
+	if err != nil {
+		s.logger.Error(fmt.Sprintf("AI Complete error: %v", err))
+		return nil, err
+	}
+
+	response := &dto.AiInlineCompleteResponse{
+		Completion: providerResp.Completion,
+	}
+
+	s.logCompletionResponse(response)
+
+	s.cacheManager.SetCompletionResponse(cacheKey, response, aiCache.GetDefaultCompletionTTL())
+
+	return response, nil
+}
+
+func (s *AiServiceImpl) createProvider(ctx context.Context, providerId *uint) (provider.IAIProvider, *model.AiProvider, error) {
+	dbProvider, err := s.aiProviderRepo.Find(ctx, *providerId)
+	if err != nil {
+		return nil, nil, fmt.Errorf("provider with id %d not found: %w", *providerId, err)
+	}
+
+	aiProvider, err := s.providerFactory.CreateProvider(dbProvider)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return aiProvider, dbProvider, nil
+}
+
+// manageChatHistory مدیریت تاریخچه چت - ایجاد چت جدید یا پیدا کردن چت موجود
+func (s *AiServiceImpl) manageChatHistory(ctx context.Context, req *dto.AiChatRequest) (uint, []dto.AiMessage, error) {
+	var chatId uint
+	var chatHistory []dto.AiMessage
+
+	if req.ChatId != nil {
+		// چت موجود - بارگیری تاریخچه
+		existingChat, err := s.aiChatRepo.Find(ctx, *req.ChatId)
+		if err != nil {
+			return 0, nil, apperror.NotFound(apperror.ErrAiChatNotFound)
+		}
+
+		chatId = existingChat.ID
+
+		// تبدیل پیام‌های دیتابیس به DTO
+		for _, msg := range existingChat.Messages {
+			chatHistory = append(chatHistory, dto.AiMessage{
+				Role:    msg.Role,
+				Content: msg.Content,
+			})
+		}
+	} else {
+		// چت جدید - ایجاد
+		chat, err := s.aiChatRepo.Create(ctx, &dto.AiChatCreateRequest{
+			Title: s.generateChatTitle(req.Messages),
+		})
+
+		if err != nil {
+			return 0, nil, fmt.Errorf("failed to create new chat: %w", err)
+		}
+
+		chatId = chat.ID
+		chatHistory = []dto.AiMessage{} // چت جدید - تاریخچه خالی
+	}
+
+	return chatId, chatHistory, nil
+}
+
+// saveChatMessages ذخیره پیام‌های جدید در تاریخچه چت
+func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chatId uint, userMessages []dto.AiMessage, aiResponse dto.AiMessage) error {
+	// ذخیره پیام‌های کاربر
+	for _, msg := range userMessages {
+		chatMessage := &model.AiChatMessage{
+			ChatId:  chatId,
+			Role:    msg.Role,
+			Content: msg.Content,
+		}
+		if err := s.aiChatRepo.AddMessage(ctx, chatMessage); err != nil {
+			return fmt.Errorf("failed to save user message: %w", err)
+		}
+	}
+
+	// ذخیره پاسخ AI
+	aiMessage := &model.AiChatMessage{
+		ChatId:  chatId,
+		Role:    aiResponse.Role,
+		Content: aiResponse.Content,
+	}
+	if err := s.aiChatRepo.AddMessage(ctx, aiMessage); err != nil {
+		return fmt.Errorf("failed to save AI response: %w", err)
+	}
+
+	return nil
+}
+
+// generateChatTitle تولید عنوان برای چت جدید
+func (s *AiServiceImpl) generateChatTitle(messages []dto.AiMessage) string {
+	if len(messages) == 0 {
+		return "New Chat"
+	}
+
+	// استفاده از اولین پیام کاربر به عنوان عنوان
+	firstUserMessage := ""
+	for _, msg := range messages {
+		if msg.Role == "user" {
+			firstUserMessage = msg.Content
+			break
+		}
+	}
+
+	if firstUserMessage == "" {
+		return "New Chat"
+	}
+
+	// محدود کردن طول عنوان
+	if len(firstUserMessage) > 50 {
+		return firstUserMessage[:50] + "..."
+	}
+
+	return firstUserMessage
+}
+
+func (s *AiServiceImpl) logChatRequest(req *dto.AiChatRequest, contextStr string) {
+	providerInfo := "unknown"
+	modelInfo := "unknown"
+	baseURL := ""
+
+	if req.ProviderId != nil {
+		providerInfo = fmt.Sprintf("id:%d", *req.ProviderId)
+	}
+
+	s.logger.Info(fmt.Sprintf("AI Chat → provider=%s model=%s baseUrl=%s msgs=%d ctxLen=%d",
+		providerInfo, modelInfo, baseURL, len(req.Messages), len(contextStr)))
+
 	if len(req.Messages) > 0 {
 		last := req.Messages[len(req.Messages)-1].Content
 		if len(last) > 120 {
@@ -73,99 +293,46 @@ func (s *AIServiceImpl) Chat(ctx context.Context, req *dto.AIChatRequest) (*dto.
 		}
 		s.logger.Info(fmt.Sprintf("AI Chat lastMsg: %q", last))
 	}
-	payload := map[string]any{
-		"model":       prov.Model,
-		"temperature": valueOr(prov.Temperature, 0.2),
-		"max_tokens":  valueOr(prov.MaxTokens, 512),
-		"messages":    append([]map[string]string{{"role": "system", "content": fmt.Sprintf("Context:\n%s", contextStr)}}, toOpenAI(req.Messages)...),
-	}
-	body, _ := json.Marshal(payload)
-	httpReq, _ := http.NewRequestWithContext(ctx, http.MethodPost, baseURL(prov)+"/chat/completions", bytes.NewReader(body))
-	httpReq.Header.Set("Content-Type", "application/json")
-	if prov.ApiKey != nil && *prov.ApiKey != "" {
-		httpReq.Header.Set("Authorization", "Bearer "+*prov.ApiKey)
-	}
-	resp, err := http.DefaultClient.Do(httpReq)
-	if err != nil {
-		s.logger.Error(fmt.Sprintf("AI Chat http error: %v", err))
-		return nil, apperror.InternalServerError(err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		s.logger.Error(fmt.Sprintf("AI Chat bad status: %s", resp.Status))
-		return nil, apperror.InternalServerError(fmt.Errorf("ai error: %s", resp.Status))
-	}
-	var out struct {
-		Choices []struct {
-			Message struct{ Role, Content string }
-		}
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-		return nil, apperror.InternalServerError(err)
-	}
-	if len(out.Choices) == 0 {
-		return &dto.AIChatResponse{Message: dto.AIMessage{Role: "assistant", Content: ""}}, nil
-	}
-	content := out.Choices[0].Message.Content
+}
+
+func (s *AiServiceImpl) logChatResponse(response *dto.AiChatResponse) {
+	content := response.Message.Content
 	preview := content
 	if len(preview) > 120 {
 		preview = preview[:120] + "…"
 	}
 	s.logger.Info(fmt.Sprintf("AI Chat ← len=%d preview=%q", len(content), preview))
-	return &dto.AIChatResponse{Message: dto.AIMessage{Role: out.Choices[0].Message.Role, Content: content}}, nil
 }
 
-func (s *AIServiceImpl) Complete(ctx context.Context, req *dto.AIInlineCompleteRequest) (*dto.AIInlineCompleteResponse, error) {
-	conn, err := s.connectionRepo.Find(ctx, req.ConnectionId)
-	if err != nil {
-		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
-	}
-	repo, err := database.NewDatabaseRepository(conn, s.cm)
-	if err != nil {
-		return nil, apperror.InternalServerError(err)
+func (s *AiServiceImpl) logCompletionRequest(req *dto.AiInlineCompleteRequest, contextStr string) {
+	providerInfo := "unknown"
+	modelInfo := "unknown"
+	baseURL := ""
+
+	if req.ProviderId != nil {
+		providerInfo = fmt.Sprintf("id:%d", *req.ProviderId)
 	}
 
-	contextStr, _ := buildContextFromAutocomplete(repo, req.ConnectionId, req.Database, req.Schema)
-	prov := normalizeProvider(req.Provider)
-	// try /completions
-	prompt := buildCompletionPrompt(req.Prompt, req.Suffix, req.Language, contextStr)
 	suffixLen := 0
 	if req.Suffix != nil {
 		suffixLen = len(*req.Suffix)
 	}
-	s.logger.Info(fmt.Sprintf("AI Complete → provider=%s model=%s baseUrl=%s prefixLen=%d suffixLen=%d ctxLen=%d", prov.ProviderId, prov.Model, safeBaseURL(prov.BaseUrl), len(req.Prompt), suffixLen, len(contextStr)))
-	if comp, ok := callCompletions(ctx, prov, prompt); ok {
-		prev := comp
-		if len(prev) > 120 {
-			prev = prev[:120] + "…"
-		}
-		s.logger.Info(fmt.Sprintf("AI Complete ← (legacy) len=%d preview=%q", len(comp), prev))
-		return &dto.AIInlineCompleteResponse{Completion: comp}, nil
+
+	s.logger.Info(fmt.Sprintf("AI Complete → provider=%s model=%s baseUrl=%s prefixLen=%d suffixLen=%d ctxLen=%d",
+		providerInfo, modelInfo, baseURL, len(req.Prompt), suffixLen, len(contextStr)))
+}
+
+func (s *AiServiceImpl) logCompletionResponse(response *dto.AiInlineCompleteResponse) {
+	completion := response.Completion
+	preview := completion
+	if len(preview) > 120 {
+		preview = preview[:120] + "…"
 	}
-	// fallback /chat/completions with 1-minute cache
-	cacheKey := s.cacheKey(req, prov)
-	if v, ok := s.cache.Get(cacheKey); ok {
-		if cached, ok2 := v.(string); ok2 {
-			s.logger.Info("AI Complete ← cache hit")
-			return &dto.AIInlineCompleteResponse{Completion: cached}, nil
-		}
-	}
-	comp, err := callChatForCompletion(ctx, prov, prompt)
-	if err != nil {
-		s.logger.Error(fmt.Sprintf("AI Complete http error: %v", err))
-		return nil, apperror.InternalServerError(err)
-	}
-	prev := comp
-	if len(prev) > 120 {
-		prev = prev[:120] + "…"
-	}
-	s.logger.Info(fmt.Sprintf("AI Complete ← len=%d preview=%q", len(comp), prev))
-	s.cache.Set(cacheKey, comp, 1*time.Minute)
-	return &dto.AIInlineCompleteResponse{Completion: comp}, nil
+	s.logger.Info(fmt.Sprintf("AI Complete ← len=%d preview=%q", len(completion), preview))
 }
 
 // buildContextFromAutocomplete builds a simple context string using available autocomplete metadata
-func buildContextFromAutocomplete(repo databaseContract.DatabaseRepository, connectionId int32, databaseName *string, schemaName *string) (string, error) {
+func (s *AiServiceImpl) buildContextFromAutocomplete(repo databaseContract.DatabaseRepository, connectionId int32, databaseName *string, schemaName *string) (string, error) {
 	ac, err := repo.AutoComplete(&dto.AutoCompleteRequest{ConnectionId: connectionId, Database: databaseName, Schema: schemaName, FromCache: false})
 	if err != nil {
 		return "", err
@@ -187,12 +354,10 @@ func buildContextFromAutocomplete(repo databaseContract.DatabaseRepository, conn
 	colMap := make(map[tableKey][]string)
 
 	if schemaName != nil {
-		// رد کردن اسکیمه‌های سیستمی
 		if isSystemSchema(*schemaName) {
-			// هیچ چیز بازنگردان تا نویز نشود
 			return "", nil
 		}
-		// Columns already present in ac.Columns keyed by table name
+
 		for _, t := range ac.Tables {
 			if isSystemRelation(t) {
 				continue
@@ -204,7 +369,6 @@ func buildContextFromAutocomplete(repo databaseContract.DatabaseRepository, conn
 			}
 		}
 	} else {
-		// No schema specified → iterate schemas and fetch columns for each
 		for _, sc := range ac.Schemas {
 			if isSystemSchema(sc) {
 				continue
@@ -291,127 +455,4 @@ func isSystemRelation(name string) bool {
 		return true
 	}
 	return false
-}
-
-// helpers
-func valueOr[T any](p *T, d T) T {
-	if p != nil {
-		return *p
-	}
-	return d
-}
-func baseURL(p aiProv) string {
-	if p.BaseUrl != nil && *p.BaseUrl != "" {
-		return strings.TrimRight(*p.BaseUrl, "/")
-	}
-	return "https://api.openai.com/v1"
-}
-
-func safeBaseURL(u *string) string {
-	if u == nil {
-		return ""
-	}
-	return *u
-}
-
-func (s *AIServiceImpl) cacheKey(req *dto.AIInlineCompleteRequest, p aiProv) string {
-	base := safeBaseURL(p.BaseUrl)
-	lang := ""
-	if req.Language != nil {
-		lang = *req.Language
-	}
-	suf := ""
-	if req.Suffix != nil {
-		suf = *req.Suffix
-	}
-	sum := sha1.Sum([]byte(req.Prompt + "|" + suf + "|" + base + "|" + p.Model + "|" + lang))
-	return fmt.Sprintf("ai_complete:%x", sum)
-}
-
-type aiProv struct {
-	ProviderId  string
-	BaseUrl     *string
-	ApiKey      *string
-	Model       string
-	Temperature *float32
-	MaxTokens   *int
-}
-
-func normalizeProvider(in *dto.AIProviderSettings) aiProv {
-	if in == nil {
-		return aiProv{ProviderId: "openai-compatible", Model: "gpt-3.5-turbo"}
-	}
-	return aiProv{ProviderId: in.ProviderId, BaseUrl: in.BaseUrl, ApiKey: in.ApiKey, Model: in.Model, Temperature: in.Temperature, MaxTokens: in.MaxTokens}
-}
-func toOpenAI(msgs []dto.AIMessage) []map[string]string {
-	res := make([]map[string]string, 0, len(msgs))
-	for _, m := range msgs {
-		res = append(res, map[string]string{"role": m.Role, "content": m.Content})
-	}
-	return res
-}
-func buildCompletionPrompt(prefix string, suffix *string, lang *string, ctxStr string) string {
-	sb := strings.Builder{}
-	sb.WriteString("You are a code autocomplete engine. Use the provided DB context when helpful.\n\n")
-	if lang != nil && *lang != "" {
-		sb.WriteString("Language: " + *lang + "\n")
-	}
-	if ctxStr != "" {
-		sb.WriteString("Context:\n" + ctxStr + "\n\n")
-	}
-	sb.WriteString("Prefix:\n" + prefix + "\n\n")
-	if suffix != nil {
-		sb.WriteString("Suffix:\n" + *suffix + "\n\n")
-	}
-	sb.WriteString("Continue the code only, no explanations.")
-	return sb.String()
-}
-func callCompletions(ctx context.Context, p aiProv, prompt string) (string, bool) {
-	payload := map[string]any{"model": p.Model, "prompt": prompt, "temperature": valueOr(p.Temperature, 0.2), "max_tokens": valueOr(p.MaxTokens, 128)}
-	body, _ := json.Marshal(payload)
-	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, baseURL(p)+"/completions", bytes.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
-	if p.ApiKey != nil && *p.ApiKey != "" {
-		req.Header.Set("Authorization", "Bearer "+*p.ApiKey)
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil || resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return "", false
-	}
-	defer resp.Body.Close()
-	var out struct{ Choices []struct{ Text string } }
-	if json.NewDecoder(resp.Body).Decode(&out) != nil {
-		return "", false
-	}
-	if len(out.Choices) == 0 {
-		return "", false
-	}
-	return out.Choices[0].Text, true
-}
-func callChatForCompletion(ctx context.Context, p aiProv, prompt string) (string, error) {
-	payload := map[string]any{"model": p.Model, "temperature": valueOr(p.Temperature, 0.2), "max_tokens": valueOr(p.MaxTokens, 128), "messages": []map[string]string{{"role": "system", "content": "Return only the continuation."}, {"role": "user", "content": prompt}}}
-	body, _ := json.Marshal(payload)
-	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, baseURL(p)+"/chat/completions", bytes.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
-	if p.ApiKey != nil && *p.ApiKey != "" {
-		req.Header.Set("Authorization", "Bearer "+*p.ApiKey)
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return "", fmt.Errorf("ai error: %s", resp.Status)
-	}
-	var out struct {
-		Choices []struct{ Message struct{ Content string } }
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-		return "", err
-	}
-	if len(out.Choices) == 0 {
-		return "", nil
-	}
-	return out.Choices[0].Message.Content, nil
 }

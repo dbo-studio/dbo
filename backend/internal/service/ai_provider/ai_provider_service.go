@@ -9,22 +9,21 @@ import (
 )
 
 type IAiProviderService interface {
-	Index(ctx context.Context) (*dto.AIProviderListResponse, error)
-	Find(ctx context.Context, id uint) (*dto.AIProviderDetailResponse, error)
-	Create(ctx context.Context, dto *dto.AIProviderCreateRequest) (*dto.AIProviderDetailResponse, error)
-	Update(ctx context.Context, id uint, dto *dto.AIProviderUpdateRequest) (*dto.AIProviderDetailResponse, error)
-	Delete(ctx context.Context, id uint) error
+	Index(ctx context.Context) (*dto.AiProviderListResponse, error)
+	Find(ctx context.Context, id uint) (*dto.AiProviderDetailResponse, error)
+	Create(ctx context.Context, dto *dto.AiProviderCreateRequest) (*dto.AiProviderDetailResponse, error)
+	Update(ctx context.Context, id uint, dto *dto.AiProviderUpdateRequest) (*dto.AiProviderDetailResponse, error)
 }
 
 type IAiProviderServiceImpl struct {
-	aiProviderRepo repository.IAIProviderRepo
+	aiProviderRepo repository.IAiProviderRepo
 }
 
-func NewAiProviderService(aiProviderRepo repository.IAIProviderRepo) IAiProviderService {
+func NewAiProviderService(aiProviderRepo repository.IAiProviderRepo) IAiProviderService {
 	return &IAiProviderServiceImpl{aiProviderRepo: aiProviderRepo}
 }
 
-func (i *IAiProviderServiceImpl) Index(ctx context.Context) (*dto.AIProviderListResponse, error) {
+func (i *IAiProviderServiceImpl) Index(ctx context.Context) (*dto.AiProviderListResponse, error) {
 	result, err := i.aiProviderRepo.Index(ctx)
 	if err != nil {
 		return nil, err
@@ -33,7 +32,7 @@ func (i *IAiProviderServiceImpl) Index(ctx context.Context) (*dto.AIProviderList
 	return aiProviderListModelToResponse(&result), nil
 }
 
-func (i *IAiProviderServiceImpl) Find(ctx context.Context, id uint) (*dto.AIProviderDetailResponse, error) {
+func (i *IAiProviderServiceImpl) Find(ctx context.Context, id uint) (*dto.AiProviderDetailResponse, error) {
 	aiProvider, err := i.aiProviderRepo.Find(ctx, id)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
@@ -42,7 +41,7 @@ func (i *IAiProviderServiceImpl) Find(ctx context.Context, id uint) (*dto.AIProv
 	return aiProviderDetailModelToResponse(aiProvider), nil
 }
 
-func (i *IAiProviderServiceImpl) Create(ctx context.Context, dto *dto.AIProviderCreateRequest) (*dto.AIProviderDetailResponse, error) {
+func (i *IAiProviderServiceImpl) Create(ctx context.Context, dto *dto.AiProviderCreateRequest) (*dto.AiProviderDetailResponse, error) {
 	aiProvider, err := i.aiProviderRepo.Create(ctx, dto)
 	if err != nil {
 		return nil, err
@@ -51,7 +50,7 @@ func (i *IAiProviderServiceImpl) Create(ctx context.Context, dto *dto.AIProvider
 	return aiProviderDetailModelToResponse(aiProvider), nil
 }
 
-func (i *IAiProviderServiceImpl) Update(ctx context.Context, id uint, dto *dto.AIProviderUpdateRequest) (*dto.AIProviderDetailResponse, error) {
+func (i *IAiProviderServiceImpl) Update(ctx context.Context, id uint, dto *dto.AiProviderUpdateRequest) (*dto.AiProviderDetailResponse, error) {
 	aiProvider, err := i.aiProviderRepo.Find(ctx, id)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrAIProviderNotFound)
@@ -63,18 +62,4 @@ func (i *IAiProviderServiceImpl) Update(ctx context.Context, id uint, dto *dto.A
 	}
 
 	return aiProviderDetailModelToResponse(aiProvider), nil
-}
-
-func (i *IAiProviderServiceImpl) Delete(ctx context.Context, id uint) error {
-	aiProvider, err := i.aiProviderRepo.Find(ctx, id)
-	if err != nil {
-		return apperror.NotFound(apperror.ErrAIProviderNotFound)
-	}
-
-	err = i.aiProviderRepo.Delete(ctx, aiProvider)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

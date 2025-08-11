@@ -1,11 +1,11 @@
 package dto
 
 type (
-	AIProviderDetailRequest struct {
-		AIProviderId uint
+	AiProviderDetailRequest struct {
+		AiProviderId uint
 	}
 
-	AIProviderDetailResponse struct {
-		AIProvider
+	AiProviderDetailResponse struct {
+		AiProvider
 	}
 )

@@ -50,12 +50,19 @@ type IJobRepo interface {
 	DeleteOldJobs(ctx context.Context, days int) error
 }
 
-type IAIProviderRepo interface {
-	Index(ctx context.Context) ([]model.AIProvider, error)
-	Find(ctx context.Context, id uint) (*model.AIProvider, error)
-	Create(ctx context.Context, dto *dto.AIProviderCreateRequest) (*model.AIProvider, error)
-	Update(ctx context.Context, provider *model.AIProvider, dto *dto.AIProviderUpdateRequest) (*model.AIProvider, error)
-	Delete(ctx context.Context, provider *model.AIProvider) error
+type IAiProviderRepo interface {
+	Index(ctx context.Context) ([]model.AiProvider, error)
+	Find(ctx context.Context, id uint) (*model.AiProvider, error)
+	Create(ctx context.Context, dto *dto.AiProviderCreateRequest) (*model.AiProvider, error)
+	Update(ctx context.Context, provider *model.AiProvider, dto *dto.AiProviderUpdateRequest) (*model.AiProvider, error)
+}
+
+type IAiChatRepo interface {
+	List(ctx context.Context) ([]model.AiChat, error)
+	Find(ctx context.Context, id uint) (*model.AiChat, error)
+	Create(ctx context.Context, dto *dto.AiChatCreateRequest) (*model.AiChat, error)
+	Delete(ctx context.Context, chat *model.AiChat) error
+	AddMessage(ctx context.Context, m *model.AiChatMessage) error
 }
 
 type Repository struct {
@@ -65,8 +72,8 @@ type Repository struct {
 	HistoryRepo    IHistoryRepo
 	SavedQueryRepo ISavedQueryRepo
 	JobRepo        IJobRepo
-	AiRepo         IAiRepo
-	AIProviderRepo IAIProviderRepo
+	AiChatRepo     IAiChatRepo
+	AiProviderRepo IAiProviderRepo
 }
 
 func NewRepository(_ context.Context, db *gorm.DB, cache cache.Cache) *Repository {
@@ -76,7 +83,7 @@ func NewRepository(_ context.Context, db *gorm.DB, cache cache.Cache) *Repositor
 		HistoryRepo:    NewHistoryRepo(db),
 		SavedQueryRepo: NewSavedQueryRepo(db),
 		JobRepo:        NewJobRepo(db),
-		AiRepo:         NewAiRepo(db),
-		AIProviderRepo: NewAIProviderRepo(db),
+		AiChatRepo:     NewAiChatRepo(db),
+		AiProviderRepo: NewAiProviderRepo(db),
 	}
 }

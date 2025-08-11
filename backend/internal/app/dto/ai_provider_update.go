@@ -3,8 +3,7 @@ package dto
 import "github.com/invopop/validation"
 
 type (
-	AIProviderUpdateRequest struct {
-		Name        *string  `json:"name"`
+	AiProviderUpdateRequest struct {
 		Type        *string  `json:"type"`
 		Url         *string  `json:"url"`
 		ApiKey      *string  `json:"apiKey"`
@@ -14,9 +13,8 @@ type (
 	}
 )
 
-func (req AIProviderUpdateRequest) Validate() error {
+func (req AiProviderUpdateRequest) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.Name, validation.Length(1, 100)),
 		validation.Field(&req.Type, validation.In("openai")),
 		validation.Field(&req.Url, validation.Length(1, 255)),
 		validation.Field(&req.ApiKey, validation.Length(1, 2048)),

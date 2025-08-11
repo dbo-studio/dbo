@@ -2,13 +2,12 @@ package model
 
 import "time"
 
-type AIProvider struct {
+type AiProvider struct {
 	ID          uint           `gorm:"primaryKey,autoIncrement"`
-	Name        string         `gorm:"size:100;not null"`
 	Type        AIProviderType `gorm:"size:64;not null"`
-	Url         string         `gorm:"size:255"`
 	ApiKey      string         `gorm:"size:2048;not null"`
-	Model       string         `gorm:"size:128;not null"`
+	Url         *string        `gorm:"size:255"`
+	Model       *string        `gorm:"size:128"`
 	Temperature *float32
 	MaxTokens   *int
 	CreatedAt   time.Time

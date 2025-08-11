@@ -11,17 +11,17 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-type AIHandler struct {
+type AiHandler struct {
 	logger    logger.Logger
-	aiService serviceAI.IAIService
+	aiService serviceAI.IAiService
 }
 
-func NewAIHandler(logger logger.Logger, ai serviceAI.IAIService) *AIHandler {
-	return &AIHandler{logger: logger, aiService: ai}
+func NewAiHandler(logger logger.Logger, ai serviceAI.IAiService) *AiHandler {
+	return &AiHandler{logger: logger, aiService: ai}
 }
 
-func (h AIHandler) Chat(c fiber.Ctx) error {
-	req := new(dto.AIChatRequest)
+func (h AiHandler) Chat(c fiber.Ctx) error {
+	req := new(dto.AiChatRequest)
 	if err := c.Bind().Body(req); err != nil {
 		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}
@@ -33,8 +33,8 @@ func (h AIHandler) Chat(c fiber.Ctx) error {
 	return response.SuccessBuilder().WithData(res).Send(c)
 }
 
-func (h AIHandler) Complete(c fiber.Ctx) error {
-	req := new(dto.AIInlineCompleteRequest)
+func (h AiHandler) Complete(c fiber.Ctx) error {
+	req := new(dto.AiInlineCompleteRequest)
 	if err := c.Bind().Body(req); err != nil {
 		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}

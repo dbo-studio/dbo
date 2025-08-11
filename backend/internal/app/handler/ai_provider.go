@@ -9,19 +9,19 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-type AIProfileHandler struct {
+type AiProviderHandler struct {
 	logger            logger.Logger
 	aiProviderService serviceAiProvider.IAiProviderService
 }
 
-func NewAiProviderHandler(logger logger.Logger, aiProviderService serviceAiProvider.IAiProviderService) *AIProfileHandler {
-	return &AIProfileHandler{
+func NewAiProviderHandler(logger logger.Logger, aiProviderService serviceAiProvider.IAiProviderService) *AiProviderHandler {
+	return &AiProviderHandler{
 		logger:            logger,
 		aiProviderService: aiProviderService,
 	}
 }
 
-func (h AIProfileHandler) Index(c fiber.Ctx) error {
+func (h AiProviderHandler) Providers(c fiber.Ctx) error {
 	items, err := h.aiProviderService.Index(c)
 	if err != nil {
 		h.logger.Error(err.Error())
@@ -31,8 +31,8 @@ func (h AIProfileHandler) Index(c fiber.Ctx) error {
 	return response.SuccessBuilder().WithData(items.Items).Send(c)
 }
 
-func (h AIProfileHandler) Create(c fiber.Ctx) error {
-	req := new(dto.AIProviderCreateRequest)
+func (h AiProviderHandler) Create(c fiber.Ctx) error {
+	req := new(dto.AiProviderCreateRequest)
 	if err := c.Bind().Body(req); err != nil {
 		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}
@@ -50,9 +50,9 @@ func (h AIProfileHandler) Create(c fiber.Ctx) error {
 	return response.SuccessBuilder().WithData(result).Send(c)
 }
 
-func (h AIProfileHandler) Update(c fiber.Ctx) error {
+func (h AiProviderHandler) Update(c fiber.Ctx) error {
 	queryId := fiber.Params[uint](c, "id")
-	req := new(dto.AIProviderUpdateRequest)
+	req := new(dto.AiProviderUpdateRequest)
 
 	if err := c.Bind().Body(req); err != nil {
 		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
@@ -69,16 +69,4 @@ func (h AIProfileHandler) Update(c fiber.Ctx) error {
 	}
 
 	return response.SuccessBuilder().WithData(result).Send(c)
-}
-
-func (h AIProfileHandler) Delete(c fiber.Ctx) error {
-	queryId := fiber.Params[uint](c, "id")
-	err := h.aiProviderService.Delete(c, queryId)
-
-	if err != nil {
-		h.logger.Error(err.Error())
-		return response.ErrorBuilder().FromError(err).Send(c)
-	}
-
-	return response.SuccessBuilder().Send(c)
 }

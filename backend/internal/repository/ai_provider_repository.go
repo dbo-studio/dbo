@@ -10,54 +10,48 @@ import (
 	"gorm.io/gorm"
 )
 
-type IAIProviderRepoImpl struct {
+type AiProviderRepoImpl struct {
 	db *gorm.DB
 }
 
-func NewAIProviderRepo(db *gorm.DB) IAIProviderRepo {
-	return &IAIProviderRepoImpl{db: db}
+func NewAiProviderRepo(db *gorm.DB) IAiProviderRepo {
+	return &AiProviderRepoImpl{db: db}
 }
 
-func (r *IAIProviderRepoImpl) Index(ctx context.Context) ([]model.AIProvider, error) {
-	var items []model.AIProvider
+func (r AiProviderRepoImpl) Index(ctx context.Context) ([]model.AiProvider, error) {
+	var items []model.AiProvider
 	return items, r.db.WithContext(ctx).Order("id desc").Find(&items).Error
 }
 
-func (r *IAIProviderRepoImpl) Find(ctx context.Context, id uint) (*model.AIProvider, error) {
-	var item model.AIProvider
+func (r AiProviderRepoImpl) Find(ctx context.Context, id uint) (*model.AiProvider, error) {
+	var item model.AiProvider
 	return &item, r.db.WithContext(ctx).First(&item, id).Error
 }
 
-func (r *IAIProviderRepoImpl) Create(ctx context.Context, dto *dto.AIProviderCreateRequest) (*model.AIProvider, error) {
-	var model = &model.AIProvider{
-		Name:        dto.Name,
+func (r AiProviderRepoImpl) Create(ctx context.Context, dto *dto.AiProviderCreateRequest) (*model.AiProvider, error) {
+	var provider = &model.AiProvider{
 		Type:        model.AIProviderType(dto.Type),
 		Url:         dto.Url,
 		ApiKey:      dto.ApiKey,
 		Model:       dto.Model,
-		Temperature: helper.OptionalAndEmpty(lo.ToPtr(dto.Temperature), lo.ToPtr(float32(0.2))),
-		MaxTokens:   helper.OptionalAndEmpty(lo.ToPtr(dto.MaxTokens), lo.ToPtr(512)),
+		Temperature: helper.OptionalAndEmpty(dto.Temperature, lo.ToPtr(float32(0.2))),
+		MaxTokens:   helper.OptionalAndEmpty(dto.MaxTokens, lo.ToPtr(512)),
 	}
 
-	result := r.db.WithContext(ctx).Create(model)
+	result := r.db.WithContext(ctx).Create(provider)
 
-	return model, result.Error
+	return provider, result.Error
 }
 
-func (r *IAIProviderRepoImpl) Update(ctx context.Context, provider *model.AIProvider, dto *dto.AIProviderUpdateRequest) (*model.AIProvider, error) {
-	provider.Name = helper.OptionalString(dto.Name, provider.Name)
+func (r AiProviderRepoImpl) Update(ctx context.Context, provider *model.AiProvider, dto *dto.AiProviderUpdateRequest) (*model.AiProvider, error) {
 	provider.Type = model.AIProviderType(helper.OptionalString(dto.Type, string(provider.Type)))
-	provider.Url = lo.FromPtr(helper.Optional(dto.Url, lo.ToPtr(provider.Url)))
+	provider.Url = helper.Optional(dto.Url, provider.Url)
 	provider.ApiKey = lo.FromPtr(helper.Optional(dto.ApiKey, lo.ToPtr(provider.ApiKey)))
-	provider.Model = lo.FromPtr(helper.Optional(dto.Model, lo.ToPtr(provider.Model)))
+	provider.Model = helper.Optional(dto.Model, provider.Model)
 	provider.Temperature = helper.Optional(dto.Temperature, provider.Temperature)
 	provider.MaxTokens = helper.Optional(dto.MaxTokens, provider.MaxTokens)
 
 	result := r.db.WithContext(ctx).Save(provider)
 
 	return provider, result.Error
-}
-
-func (r *IAIProviderRepoImpl) Delete(ctx context.Context, provider *model.AIProvider) error {
-	return r.db.WithContext(ctx).Delete(provider).Error
 }

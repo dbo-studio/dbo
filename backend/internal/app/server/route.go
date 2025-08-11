@@ -24,16 +24,14 @@ func (r *Server) routing() {
 	ai.Post("/chat", r.handlers.AI.Chat)
 	ai.Post("/complete", r.handlers.AI.Complete)
 
-	ai.Get("/provider", r.handlers.AIProfile.Index)
-	ai.Post("/provider", r.handlers.AIProfile.Create)
-	ai.Patch("/provider", r.handlers.AIProfile.Update)
-	ai.Delete("/provider/:id", r.handlers.AIProfile.Delete)
+	ai.Get("/provider", r.handlers.AiProvider.Providers)
+	ai.Post("/provider", r.handlers.AiProvider.Create)
+	ai.Patch("/provider/:id", r.handlers.AiProvider.Update)
 
-	ai.Get("/threads", r.handlers.AIThread.List)
-	ai.Post("/threads", r.handlers.AIThread.Create)
-	ai.Delete("/threads/:id", r.handlers.AIThread.Delete)
-	ai.Get("/threads/:id/messages", r.handlers.AIThread.Messages)
-	ai.Post("/threads/:id/messages", r.handlers.AIThread.AddMessage)
+	ai.Get("/chats", r.handlers.AiChat.Chats)
+	ai.Post("/chats", r.handlers.AiChat.Create)
+	ai.Get("/chats/:id", r.handlers.AiChat.Detail)
+	ai.Delete("/chats/:id", r.handlers.AiChat.Delete)
 
 	connection := api.Group("connections")
 	connection.Get("/:id", r.handlers.Connection.Detail)
@@ -44,7 +42,7 @@ func (r *Server) routing() {
 	connection.Delete("/:id", r.handlers.Connection.Delete)
 
 	saved := api.Group("saved")
-	saved.Get("/", r.handlers.SavedQuery.Index)
+	saved.Get("/", r.handlers.SavedQuery.SavedQueries)
 	saved.Post("/", r.handlers.SavedQuery.Create)
 	saved.Patch("/:id", r.handlers.SavedQuery.Update)
 	saved.Delete("/:id", r.handlers.SavedQuery.Delete)

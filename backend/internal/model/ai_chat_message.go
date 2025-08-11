@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-type AIChatMessage struct {
+type AiChatMessage struct {
 	ID        uint   `gorm:"primaryKey,autoIncrement"`
 	ChatId    uint   `gorm:"index;not null"`
 	Role      string `gorm:"size:32;not null"`

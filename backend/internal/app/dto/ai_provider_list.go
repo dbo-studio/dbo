@@ -1,19 +1,18 @@
 package dto
 
 type (
-	AIProviderListResponse struct {
-		Items []AIProvider
+	AiProviderListResponse struct {
+		Items []AiProvider
 	}
 )
 
 type (
-	AIProvider struct {
+	AiProvider struct {
 		ID          uint     `json:"id"`
-		Name        string   `json:"name"`
 		Type        string   `json:"type"`
-		Url         string   `json:"url"`
 		ApiKey      string   `json:"apiKey"`
-		Model       string   `json:"model"`
+		Url         *string  `json:"url"`
+		Model       *string  `json:"model"`
 		Temperature *float32 `json:"temperature"`
 		MaxTokens   *int     `json:"maxTokens"`
 	}

@@ -5,27 +5,26 @@ import (
 	"github.com/dbo-studio/dbo/internal/model"
 )
 
-func aiProviderDetailModelToResponse(aiProvider *model.AIProvider) *dto.AIProviderDetailResponse {
-	return &dto.AIProviderDetailResponse{
-		AIProvider: aiProviderModelToDto(aiProvider),
+func aiProviderDetailModelToResponse(aiProvider *model.AiProvider) *dto.AiProviderDetailResponse {
+	return &dto.AiProviderDetailResponse{
+		AiProvider: aiProviderModelToDto(aiProvider),
 	}
 }
 
-func aiProviderListModelToResponse(aiProviders *[]model.AIProvider) *dto.AIProviderListResponse {
-	data := make([]dto.AIProvider, 0)
+func aiProviderListModelToResponse(aiProviders *[]model.AiProvider) *dto.AiProviderListResponse {
+	data := make([]dto.AiProvider, 0)
 	for _, aiProvider := range *aiProviders {
 		data = append(data, aiProviderModelToDto(&aiProvider))
 	}
 
-	return &dto.AIProviderListResponse{
+	return &dto.AiProviderListResponse{
 		Items: data,
 	}
 }
 
-func aiProviderModelToDto(aiProvider *model.AIProvider) dto.AIProvider {
-	return dto.AIProvider{
+func aiProviderModelToDto(aiProvider *model.AiProvider) dto.AiProvider {
+	return dto.AiProvider{
 		ID:          aiProvider.ID,
-		Name:        aiProvider.Name,
 		Type:        string(aiProvider.Type),
 		Url:         aiProvider.Url,
 		ApiKey:      aiProvider.ApiKey,
