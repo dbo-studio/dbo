@@ -47,7 +47,7 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
     newRow[row.selectedColumn] = value;
     updateRow(newRow);
     toggleShowQuickLookEditor(false);
-    toggleReRender()
+    toggleReRender();
   };
 
   useEffect(() => {

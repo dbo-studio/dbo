@@ -1,15 +1,15 @@
-import { LanguageIdEnum, setupLanguageFeatures } from 'monaco-sql-languages';
-
 import { shikiToMonaco } from '@shikijs/monaco';
-import * as monaco from 'monaco-editor';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+import { LanguageIdEnum, setupLanguageFeatures } from 'monaco-sql-languages';
 import PGSQLWorker from 'monaco-sql-languages/esm/languages/pgsql/pgsql.worker?worker';
-import { createHighlighter } from 'shiki';
+import { createHighlighter } from 'shiki/bundle/web';
 import { completionService } from './completionService';
+import { registerInlineAIProvider } from './registerInlineAIProvider';
 
 /** define MonacoEnvironment.getWorker  */
 (globalThis as any).MonacoEnvironment = {
@@ -76,3 +76,6 @@ setupLanguageFeatures(LanguageIdEnum.PG, {
   },
   preprocessCode
 });
+
+// Register inline AI provider (ghost text)
+registerInlineAIProvider(monaco, LanguageIdEnum.PG);
