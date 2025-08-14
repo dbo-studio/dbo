@@ -7,7 +7,7 @@ type AiProvider struct {
 	Type        AIProviderType `gorm:"size:64;not null"`
 	ApiKey      *string        `gorm:"size:2048"`
 	Url         *string        `gorm:"size:255"`
-	Models      []string      `gorm:"type:json;serializer:json"`
+	Models      []string       `gorm:"type:json;serializer:json"`
 	Temperature *float32
 	MaxTokens   *int
 	CreatedAt   time.Time

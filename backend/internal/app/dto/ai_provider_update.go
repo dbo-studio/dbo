@@ -19,4 +19,3 @@ func (req AiProviderUpdateRequest) Validate() error {
 		validation.Field(&req.MaxTokens, validation.Min(1), validation.Max(10000)),
 	)
 }
-	
