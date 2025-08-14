@@ -23,6 +23,7 @@ export default function DataGridContextMenu({
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
   const updateRow = useDataStore((state) => state.updateRow);
   const toggleShowQuickLookEditor = useSettingStore((state) => state.toggleShowQuickLookEditor);
+  const toggleReRender = useDataStore((state) => state.toggleReRender);
 
   const [copy] = useCopyToClipboard();
 
@@ -47,6 +48,8 @@ export default function DataGridContextMenu({
       updateRow(newRow).catch((error) => {
         console.error('Error updating row:', error);
       });
+
+      toggleReRender();
     }
   };
 
