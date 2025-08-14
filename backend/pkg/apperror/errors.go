@@ -13,6 +13,7 @@ var (
 	ErrJobCannotCancel    = errors.New("job cannot cancel")
 	ErrJobNotCompleted    = errors.New("job not completed")
 	ErrAiChatNotFound     = errors.New("ai chat not found")
+	ErrProviderNotConfigured = errors.New("provider not configured")
 )
 
 type AppError struct {

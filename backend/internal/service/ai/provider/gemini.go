@@ -11,15 +11,15 @@ import (
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/gofiber/fiber/v3/client"
+	"github.com/samber/lo"
 )
 
 type GeminiProvider struct {
 	timeout int
 	url     string
-	apiKey  string
+	apiKey  *string
 }
 
-// NewGeminiProvider ایجاد پروایدر Gemini جدید
 func NewGeminiProvider(provider *model.AiProvider) IAIProvider {
 	url := "https://generativelanguage.googleapis.com"
 
@@ -87,7 +87,6 @@ func (p *GeminiProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespo
 		return nil, apperror.InternalServerError(fmt.Errorf("API error: status %d, body: %s", resp.StatusCode(), string(resp.Body())))
 	}
 
-	// پارس کردن پاسخ
 	var response struct {
 		Candidates []struct {
 			Content struct {
@@ -229,8 +228,8 @@ func (p *GeminiProvider) GetHttpClient() *client.Client {
 	cc.SetTimeout(time.Duration(p.timeout) * time.Second)
 	cc.AddHeader("Content-Type", "application/json")
 
-	if p.apiKey != "" {
-		cc.AddHeader("Authorization", "Bearer "+p.apiKey)
+	if p.apiKey != nil {
+		cc.AddHeader("Authorization", "Bearer "+lo.FromPtr(p.apiKey))
 	}
 
 	return cc

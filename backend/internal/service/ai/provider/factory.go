@@ -28,20 +28,3 @@ func (f *ProviderFactory) CreateProvider(provider *model.AiProvider) (IAIProvide
 		return nil, fmt.Errorf("unsupported provider type: %s", provider.Type)
 	}
 }
-
-func (f *ProviderFactory) GetDefaultModel(providerType model.AIProviderType) string {
-	switch providerType {
-	case model.AIProviderTypeOpenAI:
-		return "gpt-3.5-turbo"
-	case model.AIProviderTypeAnthropic:
-		return "claude-3-haiku-20240307"
-	case model.AIProviderTypeGemini:
-		return "gemini-pro"
-	case model.AIProviderTypeGroq:
-		return "llama3-8b-8192"
-	case model.AIProviderTypeOllama:
-		return "llama2"
-	default:
-		return "gpt-3.5-turbo"
-	}
-}

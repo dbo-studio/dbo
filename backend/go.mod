@@ -6,7 +6,6 @@ toolchain go1.24.1
 
 require (
 	github.com/blastrain/vitess-sqlparser v0.0.0-20201030050434-a139afbb1aba
-	github.com/go-faker/faker/v4 v4.6.1
 	github.com/goccy/go-json v0.10.5
 	github.com/gofiber/fiber/v3 v3.0.0-beta.5
 	github.com/invopop/validation v0.8.0

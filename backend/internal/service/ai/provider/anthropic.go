@@ -11,12 +11,13 @@ import (
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/gofiber/fiber/v3/client"
+	"github.com/samber/lo"
 )
 
 type AnthropicProvider struct {
 	timeout int
 	url     string
-	apiKey  string
+	apiKey  *string
 }
 
 func NewAnthropicProvider(provider *model.AiProvider) IAIProvider {
@@ -201,8 +202,8 @@ func (p *AnthropicProvider) GetHttpClient() *client.Client {
 	cc.SetTimeout(time.Duration(p.timeout) * time.Second)
 	cc.AddHeader("Content-Type", "application/json")
 
-	if p.apiKey != "" {
-		cc.AddHeader("Authorization", "Bearer "+p.apiKey)
+	if p.apiKey != nil {
+		cc.AddHeader("Authorization", "Bearer "+lo.FromPtr(p.apiKey))
 	}
 
 	return cc

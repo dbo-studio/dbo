@@ -17,7 +17,7 @@ import (
 type OpenAIProvider struct {
 	timeout int
 	url     string
-	apiKey  string
+	apiKey  *string
 }
 
 func NewOpenAIProvider(provider *model.AiProvider) IAIProvider {
@@ -109,7 +109,6 @@ func (p *OpenAIProvider) Complete(ctx context.Context, req *CompletionRequest) (
 	return p.completionViaChat(ctx, req)
 }
 
-// tryCompletionsEndpoint تلاش برای استفاده از endpoint مخصوص completion
 func (p *OpenAIProvider) tryCompletionsEndpoint(ctx context.Context, req *CompletionRequest) (string, bool) {
 	prompt := p.buildCompletionPrompt(req)
 
@@ -154,7 +153,6 @@ func (p *OpenAIProvider) tryCompletionsEndpoint(ctx context.Context, req *Comple
 	return response.Choices[0].Text, true
 }
 
-// completionViaChat تکمیل کد از طریق chat endpoint
 func (p *OpenAIProvider) completionViaChat(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {
 	prompt := p.buildCompletionPrompt(req)
 
@@ -208,7 +206,6 @@ func (p *OpenAIProvider) completionViaChat(ctx context.Context, req *CompletionR
 	}, nil
 }
 
-// buildCompletionPrompt ساخت prompt برای تکمیل کد
 func (p *OpenAIProvider) buildCompletionPrompt(req *CompletionRequest) string {
 	var sb strings.Builder
 
@@ -237,7 +234,7 @@ func (p *OpenAIProvider) GetHttpClient() *client.Client {
 	cc := client.New()
 	cc.SetTimeout(time.Duration(p.timeout) * time.Second)
 	cc.SetHeaders(map[string]string{
-		"Authorization": "Bearer " + p.apiKey,
+		"Authorization": "Bearer " + lo.FromPtr(p.apiKey),
 		"Content-Type":  "application/json",
 	})
 	return cc

@@ -17,7 +17,7 @@ import (
 type OllamaProvider struct {
 	timeout int
 	url     string
-	apiKey  string
+	apiKey  *string
 }
 
 func NewOllamaProvider(provider *model.AiProvider) IAIProvider {
@@ -53,7 +53,7 @@ func (p *OllamaProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespo
 	payload := map[string]interface{}{
 		"model":    req.Model,
 		"messages": messages,
-		"stream":   false, // غیرفعال کردن streaming برای سادگی
+		"stream":   false,
 	}
 
 	options := make(map[string]interface{})
@@ -173,8 +173,8 @@ func (p *OllamaProvider) GetHttpClient() *client.Client {
 	cc.SetTimeout(time.Duration(p.timeout) * time.Second)
 	cc.AddHeader("Content-Type", "application/json")
 
-	if p.apiKey != "" {
-		cc.AddHeader("Authorization", "Bearer "+p.apiKey)
+	if p.apiKey != nil {
+		cc.AddHeader("Authorization", "Bearer "+lo.FromPtr(p.apiKey))
 	}
 
 	return cc

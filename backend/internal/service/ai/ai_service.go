@@ -58,6 +58,10 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		return nil, apperror.InternalServerError(err)
 	}
 
+	if dbProvider.ApiKey == nil || *dbProvider.ApiKey == "" || dbProvider.Url == nil || *dbProvider.Url == "" {
+		return nil, apperror.BadRequest(apperror.ErrProviderNotConfigured)
+	}
+
 	chatId, chatHistory, err := s.manageChatHistory(ctx, req)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
@@ -75,13 +79,10 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 
 	contextStr, _ := s.buildContextFromAutocomplete(repo, req.ConnectionId, req.Database, req.Schema)
 
-	// لاگ کردن درخواست
 	s.logChatRequest(req, contextStr)
 
-	// ترکیب تاریخچه چت با پیام‌های جدید
 	allMessages := append(chatHistory, req.Messages...)
 
-	// ساخت درخواست provider
 	providerReq := &provider.ChatRequest{
 		Messages:    allMessages,
 		Model:       req.Model,
@@ -90,26 +91,21 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		Context:     contextStr,
 	}
 
-	// ارسال درخواست به AI provider
 	providerResp, err := aiProvider.Chat(ctx, providerReq)
 	if err != nil {
 		s.logger.Error(fmt.Sprintf("AI Chat error: %v", err))
 		return nil, err
 	}
 
-	// ذخیره پیام‌های جدید در تاریخچه
 	if err := s.saveChatMessages(ctx, chatId, req.Messages, providerResp.Message); err != nil {
 		s.logger.Error(fmt.Sprintf("Failed to save chat messages: %v", err))
-		// ادامه می‌دهیم حتی اگر ذخیره‌سازی شکست بخورد
 	}
 
-	// ساخت پاسخ
 	response := &dto.AiChatResponse{
 		ChatId:  chatId,
 		Message: providerResp.Message,
 	}
 
-	// لاگ کردن پاسخ
 	s.logChatResponse(response)
 
 	return response, nil
@@ -182,13 +178,11 @@ func (s *AiServiceImpl) createProvider(ctx context.Context, providerId *uint) (p
 	return aiProvider, dbProvider, nil
 }
 
-// manageChatHistory مدیریت تاریخچه چت - ایجاد چت جدید یا پیدا کردن چت موجود
 func (s *AiServiceImpl) manageChatHistory(ctx context.Context, req *dto.AiChatRequest) (uint, []dto.AiMessage, error) {
 	var chatId uint
 	var chatHistory []dto.AiMessage
 
 	if req.ChatId != nil {
-		// چت موجود - بارگیری تاریخچه
 		existingChat, err := s.aiChatRepo.Find(ctx, *req.ChatId)
 		if err != nil {
 			return 0, nil, apperror.NotFound(apperror.ErrAiChatNotFound)
@@ -196,7 +190,6 @@ func (s *AiServiceImpl) manageChatHistory(ctx context.Context, req *dto.AiChatRe
 
 		chatId = existingChat.ID
 
-		// تبدیل پیام‌های دیتابیس به DTO
 		for _, msg := range existingChat.Messages {
 			chatHistory = append(chatHistory, dto.AiMessage{
 				Role:    msg.Role,
@@ -204,7 +197,6 @@ func (s *AiServiceImpl) manageChatHistory(ctx context.Context, req *dto.AiChatRe
 			})
 		}
 	} else {
-		// چت جدید - ایجاد
 		chat, err := s.aiChatRepo.Create(ctx, &dto.AiChatCreateRequest{
 			Title: s.generateChatTitle(req.Messages),
 		})
@@ -214,15 +206,13 @@ func (s *AiServiceImpl) manageChatHistory(ctx context.Context, req *dto.AiChatRe
 		}
 
 		chatId = chat.ID
-		chatHistory = []dto.AiMessage{} // چت جدید - تاریخچه خالی
+		chatHistory = []dto.AiMessage{}
 	}
 
 	return chatId, chatHistory, nil
 }
 
-// saveChatMessages ذخیره پیام‌های جدید در تاریخچه چت
 func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chatId uint, userMessages []dto.AiMessage, aiResponse dto.AiMessage) error {
-	// ذخیره پیام‌های کاربر
 	for _, msg := range userMessages {
 		chatMessage := &model.AiChatMessage{
 			ChatId:  chatId,
@@ -234,7 +224,6 @@ func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chatId uint, userM
 		}
 	}
 
-	// ذخیره پاسخ AI
 	aiMessage := &model.AiChatMessage{
 		ChatId:  chatId,
 		Role:    aiResponse.Role,
@@ -247,13 +236,11 @@ func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chatId uint, userM
 	return nil
 }
 
-// generateChatTitle تولید عنوان برای چت جدید
 func (s *AiServiceImpl) generateChatTitle(messages []dto.AiMessage) string {
 	if len(messages) == 0 {
 		return "New Chat"
 	}
 
-	// استفاده از اولین پیام کاربر به عنوان عنوان
 	firstUserMessage := ""
 	for _, msg := range messages {
 		if msg.Role == "user" {
@@ -266,7 +253,6 @@ func (s *AiServiceImpl) generateChatTitle(messages []dto.AiMessage) string {
 		return "New Chat"
 	}
 
-	// محدود کردن طول عنوان
 	if len(firstUserMessage) > 50 {
 		return firstUserMessage[:50] + "..."
 	}
@@ -331,7 +317,6 @@ func (s *AiServiceImpl) logCompletionResponse(response *dto.AiInlineCompleteResp
 	s.logger.Info(fmt.Sprintf("AI Complete ← len=%d preview=%q", len(completion), preview))
 }
 
-// buildContextFromAutocomplete builds a simple context string using available autocomplete metadata
 func (s *AiServiceImpl) buildContextFromAutocomplete(repo databaseContract.DatabaseRepository, connectionId int32, databaseName *string, schemaName *string) (string, error) {
 	ac, err := repo.AutoComplete(&dto.AutoCompleteRequest{ConnectionId: connectionId, Database: databaseName, Schema: schemaName, FromCache: false})
 	if err != nil {
@@ -349,7 +334,6 @@ func (s *AiServiceImpl) buildContextFromAutocomplete(repo databaseContract.Datab
 		sb.WriteString("\n")
 	}
 
-	// Build a complete table->columns list. If schema is not specified, fetch per-schema columns.
 	type tableKey struct{ schema, table string }
 	colMap := make(map[tableKey][]string)
 
@@ -395,7 +379,6 @@ func (s *AiServiceImpl) buildContextFromAutocomplete(repo databaseContract.Datab
 		sb.WriteString("Tables and columns:\n")
 		if len(colMap) > 0 {
 			for k, cols := range colMap {
-				// print as schema.table when schema present
 				name := k.table
 				if k.schema != "" {
 					name = k.schema + "." + k.table
@@ -409,7 +392,6 @@ func (s *AiServiceImpl) buildContextFromAutocomplete(repo databaseContract.Datab
 				sb.WriteString("\n")
 			}
 		} else {
-			// fallback: tables without columns
 			for _, t := range ac.Tables {
 				sb.WriteString("- ")
 				sb.WriteString(t)
@@ -418,7 +400,6 @@ func (s *AiServiceImpl) buildContextFromAutocomplete(repo databaseContract.Datab
 		}
 	}
 	if len(ac.Views) > 0 {
-		// فیلتر ویوهای سیستمی
 		filteredViews := make([]string, 0, len(ac.Views))
 		for _, v := range ac.Views {
 			if !isSystemRelation(v) {
@@ -434,7 +415,6 @@ func (s *AiServiceImpl) buildContextFromAutocomplete(repo databaseContract.Datab
 	return sb.String(), nil
 }
 
-// فیلتر کردن اشیای سیستمی برای جلوگیری از ارسال نویز به مدل
 func isSystemSchema(name string) bool {
 	n := strings.ToLower(name)
 	if n == "pg_catalog" || n == "information_schema" {

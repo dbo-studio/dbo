@@ -9,10 +9,9 @@ import (
 type GroqProvider struct {
 	timeout int
 	url     string
-	apiKey  string
+	apiKey  *string
 }
 
-// NewGroqProvider ایجاد پروایدر Groq جدید
 func NewGroqProvider(provider *model.AiProvider) IAIProvider {
 	url := "https://api.groq.com/openai/v1"
 

@@ -24,14 +24,15 @@ func (r *Server) routing() {
 	ai.Post("/chat", r.handlers.AI.Chat)
 	ai.Post("/complete", r.handlers.AI.Complete)
 
-	ai.Get("/provider", r.handlers.AiProvider.Providers)
-	ai.Post("/provider", r.handlers.AiProvider.Create)
-	ai.Patch("/provider/:id", r.handlers.AiProvider.Update)
+	aiProvider := ai.Group("providers")
+	aiProvider.Get("/", r.handlers.AiProvider.Providers)
+	aiProvider.Patch("/:id", r.handlers.AiProvider.Update)
 
-	ai.Get("/chats", r.handlers.AiChat.Chats)
-	ai.Post("/chats", r.handlers.AiChat.Create)
-	ai.Get("/chats/:id", r.handlers.AiChat.Detail)
-	ai.Delete("/chats/:id", r.handlers.AiChat.Delete)
+	aiChat := ai.Group("chats")
+	aiChat.Get("/", r.handlers.AiChat.Chats)
+	aiChat.Post("/", r.handlers.AiChat.Create)
+	aiChat.Get("/:id", r.handlers.AiChat.Detail)
+	aiChat.Delete("/:id", r.handlers.AiChat.Delete)
 
 	connection := api.Group("connections")
 	connection.Get("/:id", r.handlers.Connection.Detail)
