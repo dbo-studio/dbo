@@ -4,8 +4,7 @@ import Search from '@/components/base/Search/Search';
 import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import type { HistoryType } from '@/types/History';
-import { LoadingButton } from '@mui/lab';
-import { Box, ClickAwayListener, IconButton, LinearProgress, Stack, useTheme } from '@mui/material';
+import { Box, Button, ClickAwayListener, IconButton, LinearProgress, Stack, useTheme } from '@mui/material';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
@@ -87,23 +86,22 @@ export default function Histories(): JSX.Element {
               {status === 'pending' ? (
                 <LinearProgress data-testid='linear-progress' style={{ marginTop: '8px' }} />
               ) : (
-                <>
-                  {filteredHistories.map((query) => (
-                    <HistoryItem
-                      onClick={(): void => setSelected(query.id)}
-                      key={uuid()}
-                      history={query}
-                      selected={selected === query.id}
-                    />
-                  ))}
-                </>
+                filteredHistories.map((query) => (
+                  <HistoryItem
+                    onClick={(): void => setSelected(query.id)}
+                    key={uuid()}
+                    history={query}
+                    selected={selected === query.id}
+                  />
+                ))
               )}
             </Stack>
           </Box>
         </Box>
         {hasNextPage && (
           <Box flex={1} display='flex' justifyContent='center' mt={2} mb={2}>
-            <LoadingButton
+            <Button
+              loadingPosition='start'
               disabled={isFetchingNextPage}
               loading={isFetchingNextPage}
               onClick={handleLoadMore}
@@ -111,7 +109,7 @@ export default function Histories(): JSX.Element {
               variant='contained'
             >
               <span>{locales.load_more}</span>
-            </LoadingButton>
+            </Button>
           </Box>
         )}
       </Box>

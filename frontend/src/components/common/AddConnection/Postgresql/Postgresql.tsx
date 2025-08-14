@@ -2,7 +2,6 @@ import type { CreateConnectionRequestType } from '@/api/connection/types';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
 import locales from '@/locales';
-import { LoadingButton } from '@mui/lab';
 import { Box, Button, Checkbox, Stack, Typography } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import { type JSX, useState } from 'react';
@@ -207,7 +206,8 @@ export default function PostgreSQL({
           {locales.cancel}
         </Button>
         <Stack spacing={1} direction={'row'}>
-          <LoadingButton
+          <Button
+            loadingPosition='start'
             disabled={pingLoading}
             loading={pingLoading}
             onClick={(): void => {
@@ -219,8 +219,9 @@ export default function PostgreSQL({
             color='secondary'
           >
             <span>{locales.test}</span>
-          </LoadingButton>
-          <LoadingButton
+          </Button>
+          <Button
+            loadingPosition='start'
             disabled={submitLoading}
             loading={submitLoading}
             onClick={(): void => {
@@ -231,7 +232,7 @@ export default function PostgreSQL({
             variant='contained'
           >
             <span>{connection ? locales.update : locales.create}</span>
-          </LoadingButton>
+          </Button>
         </Stack>
       </Box>
     </Box>

@@ -3,8 +3,7 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import type { SavedQueryType } from '@/types';
-import { LoadingButton } from '@mui/lab';
-import { Box, ClickAwayListener, IconButton, LinearProgress, Stack, useTheme } from '@mui/material';
+import { Box, Button, ClickAwayListener, IconButton, LinearProgress, Stack, useTheme } from '@mui/material';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useRef, useState } from 'react';
 import Search from '../../base/Search/Search';
@@ -83,25 +82,24 @@ export default function SavedQueries(): JSX.Element {
             {status === 'pending' ? (
               <LinearProgress style={{ marginTop: '8px' }} />
             ) : (
-              <>
-                {filteredSavedQueries.map((query) => (
-                  <SavedQueryItem
-                    onChange={handleRefresh}
-                    onClick={(): void => {
-                      setSelected(query.id);
-                    }}
-                    key={query.id}
-                    query={query}
-                    selected={selected === query.id}
-                  />
-                ))}
-              </>
+              filteredSavedQueries.map((query) => (
+                <SavedQueryItem
+                  onChange={handleRefresh}
+                  onClick={(): void => {
+                    setSelected(query.id);
+                  }}
+                  key={query.id}
+                  query={query}
+                  selected={selected === query.id}
+                />
+              ))
             )}
           </Stack>
         </Box>
         {hasNextPage && (
           <Box flex={1} display='flex' justifyContent='center' mt={2} mb={2}>
-            <LoadingButton
+            <Button
+              loadingPosition='start'
               disabled={isFetchingNextPage}
               loading={isFetchingNextPage}
               onClick={handleLoadMore}
@@ -109,7 +107,7 @@ export default function SavedQueries(): JSX.Element {
               variant='contained'
             >
               <span>{locales.load_more}</span>
-            </LoadingButton>
+            </Button>
           </Box>
         )}
       </Box>
