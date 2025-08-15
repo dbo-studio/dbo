@@ -32,7 +32,8 @@ func (r AiChatRepoImpl) Find(ctx context.Context, id uint) (*model.AiChat, error
 
 func (r AiChatRepoImpl) Create(ctx context.Context, dto *dto.AiChatCreateRequest) (*model.AiChat, error) {
 	var chat = &model.AiChat{
-		Title: dto.Title,
+		Title:        dto.Title,
+		ConnectionID: uint(dto.ConnectionId),
 	}
 
 	result := r.db.WithContext(ctx).Create(chat)

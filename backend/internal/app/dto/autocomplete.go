@@ -8,6 +8,7 @@ type (
 		FromCache    bool    `query:"fromCache"`
 		Database     *string `query:"database"`
 		Schema       *string `query:"schema"`
+		SkipSystem   *bool   `query:"skipSystem"`
 	}
 
 	AutoCompleteResponse struct {

@@ -1,5 +1,7 @@
 package dto
 
+import "github.com/invopop/validation"
+
 type (
 	TreeListRequest struct {
 		ConnectionId int32
@@ -33,3 +35,9 @@ type (
 		Params       []byte
 	}
 )
+
+func (req TreeListRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
+	)
+}

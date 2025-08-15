@@ -1,9 +1,10 @@
-package provider
+package serviceAiProvider
 
 import (
 	"context"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/model"
 )
 
 type IAIProvider interface {
@@ -12,11 +13,11 @@ type IAIProvider interface {
 }
 
 type ChatRequest struct {
-	Messages    []dto.AiMessage `json:"messages"`
-	Model       string          `json:"model"`
-	Temperature *float32        `json:"temperature,omitempty"`
-	MaxTokens   *int            `json:"max_tokens,omitempty"`
-	Context     string          `json:"context,omitempty"`
+	Messages    []model.AiChatMessage `json:"messages"`
+	Model       string                `json:"model"`
+	Temperature *float32              `json:"temperature,omitempty"`
+	MaxTokens   *int                  `json:"max_tokens,omitempty"`
+	Context     string                `json:"context,omitempty"`
 }
 
 type ChatResponse struct {

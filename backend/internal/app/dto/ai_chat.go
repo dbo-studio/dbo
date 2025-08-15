@@ -1,15 +1,15 @@
 package dto
 
+import "github.com/invopop/validation"
+
 type (
 	AiChatRequest struct {
 		ConnectionId int32             `json:"connectionId"`
-		Database     *string           `json:"database,omitempty"`
-		Schema       *string           `json:"schema,omitempty"`
-		ChatId       *uint             `json:"chatId,omitempty"`
-		ProviderId   *uint             `json:"providerId,omitempty"`
+		ProviderId   int32             `json:"providerId"`
 		Model        string            `json:"model"`
-		Messages     []AiMessage       `json:"messages"`
-		ContextOpts  *AiContextOptions `json:"contextOpts,omitempty"`
+		Message      string            `json:"message"`
+		ChatId       *int32            `json:"chatId"`
+		ContextOpts  *AiContextOptions `json:"contextOpts"`
 	}
 
 	AiChatResponse struct {
@@ -20,9 +20,11 @@ type (
 
 type (
 	AiContextOptions struct {
-		IncludeDDL     bool `json:"includeDDL"`
-		IncludeTables  bool `json:"includeTables"`
-		IncludeColumns bool `json:"includeColumns"`
+		Query     *string  `json:"query"`
+		Databases []string `json:"databases"`
+		Schemas   []string `json:"schemas"`
+		Tables    []string `json:"tables"`
+		Views     []string `json:"views"`
 	}
 
 	AiMessage struct {
@@ -31,3 +33,13 @@ type (
 		CreatedAt string `json:"createdAt"`
 	}
 )
+
+func (req AiChatRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
+		validation.Field(&req.ProviderId, validation.Required, validation.Min(0)),
+		validation.Field(&req.Model, validation.Required, validation.Min(0)),
+		validation.Field(&req.Message, validation.Required, validation.Length(0, 500)),
+		validation.Field(&req.ChatId, validation.Min(0)),
+	)
+}

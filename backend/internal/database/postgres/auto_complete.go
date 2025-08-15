@@ -15,14 +15,14 @@ func (r *PostgresRepository) AutoComplete(data *dto.AutoCompleteRequest) (*dto.A
 	if data.Database != nil && data.Schema != nil {
 		views, err = r.getViewList(Database{Name: lo.FromPtr(data.Database)}, Schema{Name: lo.FromPtr(data.Schema)})
 	} else {
-		views, err = r.getAllViewList()
+		views, err = r.getAllViewList(data.SkipSystem)
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	schemas, err := r.getAllSchemaList()
+	schemas, err := r.getAllSchemaList(data.SkipSystem)
 	if err != nil {
 		return nil, err
 	}
@@ -31,32 +31,22 @@ func (r *PostgresRepository) AutoComplete(data *dto.AutoCompleteRequest) (*dto.A
 	if data.Schema != nil {
 		tables, err = r.getTableList(Schema{Name: lo.FromPtr(data.Schema)})
 	} else {
-		// اگر اسکیمایی مشخص نشده، تمام جداول را برمی‌گردانیم
-		tables, err = r.getAllTableList()
+		tables, err = r.getAllTableList(data.SkipSystem)
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	// همیشه ستون‌های هر جدول را برگردان تا context کامل‌تر شود
 	columns := make(map[string][]string)
-	schemaName := ""
 	if data.Schema != nil {
-		schemaName = lo.FromPtr(data.Schema)
-	}
-	for _, table := range tables {
-		// اگر schemaName خالی باشد، getColumns نیاز به اسکیمای معتبر دارد؛
-		// در این حالت، از information_schema برای همه اسکیمه‌ها خوانده‌ایم و getColumns ما نیاز به اسکیمای مشخص دارد.
-		// پس وقتی اسکیمایی مشخص نیست، این بخش را رد می‌کنیم تا خطا ندهد.
-		if schemaName == "" {
-			continue
+		for _, table := range tables {
+			columnResult, err := r.getColumns(table.Name, lo.FromPtr(data.Schema), nil, false)
+			if err != nil {
+				return nil, err
+			}
+			columns[table.Name] = lo.Map(columnResult, func(x Column, _ int) string { return x.ColumnName })
 		}
-		columnResult, err := r.getColumns(table.Name, schemaName, nil, false)
-		if err != nil {
-			return nil, err
-		}
-		columns[table.Name] = lo.Map(columnResult, func(x Column, _ int) string { return x.ColumnName })
 	}
 
 	return &dto.AutoCompleteResponse{

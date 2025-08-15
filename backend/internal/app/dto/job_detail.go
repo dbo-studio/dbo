@@ -2,11 +2,11 @@ package dto
 
 type (
 	JobDetailRequest struct {
-		ConnectionId int32
+		JobId int32
 	}
 
 	JobDetailResponse struct {
-		ID       int32  `json:"id"`
+		ID       uint   `json:"id"`
 		Type     string `json:"type"`
 		Status   string `json:"status"`
 		Progress int    `json:"progress"`

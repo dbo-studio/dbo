@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"context"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	serviceAI "github.com/dbo-studio/dbo/internal/service/ai"
 	"github.com/dbo-studio/dbo/pkg/apperror"
@@ -25,12 +23,18 @@ func (h AiHandler) Chat(c fiber.Ctx) error {
 	if err := c.Bind().Body(req); err != nil {
 		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}
-	res, err := h.aiService.Chat(context.Background(), req)
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	result, err := h.aiService.Chat(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)
 	}
-	return response.SuccessBuilder().WithData(res).Send(c)
+
+	return response.SuccessBuilder().WithData(result).Send(c)
 }
 
 func (h AiHandler) Complete(c fiber.Ctx) error {
@@ -38,10 +42,16 @@ func (h AiHandler) Complete(c fiber.Ctx) error {
 	if err := c.Bind().Body(req); err != nil {
 		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}
-	res, err := h.aiService.Complete(context.Background(), req)
-	if err != nil {
-		h.logger.Error(err.Error())
-		return response.ErrorBuilder().FromError(err).Send(c)
-	}
-	return response.SuccessBuilder().WithData(res).Send(c)
+
+	// if err := req.Validate(); err != nil {
+	// 	return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	// }
+
+	// result, err := h.aiService.Complete(c, req)
+	// if err != nil {
+	// 	h.logger.Error(err.Error())
+	// 	return response.ErrorBuilder().FromError(err).Send(c)
+	// }
+
+	return response.SuccessBuilder().WithData("").Send(c)
 }

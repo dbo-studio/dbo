@@ -34,7 +34,7 @@ func (i *IAiProviderServiceImpl) Find(ctx context.Context, id uint) (*dto.AiProv
 func (i *IAiProviderServiceImpl) Update(ctx context.Context, id uint, dto *dto.AiProviderUpdateRequest) (*dto.AiProviderDetailResponse, error) {
 	aiProvider, err := i.aiProviderRepo.Find(ctx, id)
 	if err != nil {
-		return nil, apperror.NotFound(apperror.ErrAIProviderNotFound)
+		return nil, apperror.NotFound(apperror.ErrAiProviderNotFound)
 	}
 
 	aiProvider, err = i.aiProviderRepo.Update(ctx, aiProvider, dto)

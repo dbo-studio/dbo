@@ -32,13 +32,13 @@ func NewJobService(jr repository.IJobRepo) IJobService {
 }
 
 func (i IJobServiceImpl) Detail(ctx context.Context, req *dto.JobDetailRequest) (*dto.JobDetailResponse, error) {
-	job, err := i.jobRepo.Find(ctx, req.ConnectionId)
+	job, err := i.jobRepo.Find(ctx, req.JobId)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
 	return &dto.JobDetailResponse{
-		ID:       int32(job.ID),
+		ID:       job.ID,
 		Type:     string(job.Type),
 		Status:   string(job.Status),
 		Result:   job.Result,
@@ -49,7 +49,7 @@ func (i IJobServiceImpl) Detail(ctx context.Context, req *dto.JobDetailRequest) 
 }
 
 func (i IJobServiceImpl) Cancel(ctx context.Context, req *dto.JobDetailRequest) error {
-	job, err := i.jobRepo.Find(ctx, req.ConnectionId)
+	job, err := i.jobRepo.Find(ctx, req.JobId)
 	if err != nil {
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
@@ -66,7 +66,7 @@ func (i IJobServiceImpl) Cancel(ctx context.Context, req *dto.JobDetailRequest) 
 }
 
 func (i IJobServiceImpl) Result(c fiber.Ctx, req *dto.JobDetailRequest) error {
-	job, err := i.jobRepo.Find(c, req.ConnectionId)
+	job, err := i.jobRepo.Find(c, req.JobId)
 	if err != nil {
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
