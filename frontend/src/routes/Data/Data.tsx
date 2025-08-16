@@ -1,17 +1,18 @@
 import DataGrid from '@/components/common/DataGrid/DataGrid';
-import { useMount } from '@/hooks';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ColumnType, RowType } from '@/types';
 import { Box, CircularProgress } from '@mui/material';
 import type { JSX } from 'react';
 import { useEffect, useState } from 'react';
+import { useIsMounted } from 'usehooks-ts';
 import ActionBar from './ActionBar/ActionBar';
 import Columns from './Columns/Columns';
 import StatusBar from './StatusBar/StatusBar';
 
 export default function Data(): JSX.Element {
-  const mounted = useMount();
+  const isMounted = useIsMounted();
+
   const [tableData, setTableData] = useState({
     rows: [] as RowType[],
     columns: [] as ColumnType[]
@@ -59,11 +60,11 @@ export default function Data(): JSX.Element {
   useEffect(() => {
     setIsGridReady(false);
 
-    if (!mounted || !selectedTabId) return;
+    if (!isMounted || !selectedTabId) return;
 
     loadData();
     setIsGridReady(true);
-  }, [selectedTabId, mounted]);
+  }, [selectedTabId, isMounted]);
 
   useEffect(() => {
     handleReRunQuery();

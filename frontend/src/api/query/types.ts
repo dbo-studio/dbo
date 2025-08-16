@@ -20,6 +20,7 @@ export type AutoCompleteRequestType = {
   fromCache?: boolean;
   database?: string;
   schema?: string;
+  skipSystem?: boolean;
 };
 
 export type RunQueryResponseType = {

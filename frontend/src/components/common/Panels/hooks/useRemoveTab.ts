@@ -1,10 +1,10 @@
 import { TabMode } from '@/core/enums';
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
-import { useRemoveTab as useRemoveTabHook } from '@/hooks/useRemoveTab.hook.ts';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { TabType } from '@/types';
+import type { TabType } from '@/types';
 import { useCallback } from 'react';
+import { useRemoveTab as useRemoveTabHook } from './useRemoveTab.hook';
 
 export const useRemoveTab = (): { handleRemoveTab: (tabId: string) => void } => {
   const [removeTab] = useRemoveTabHook();

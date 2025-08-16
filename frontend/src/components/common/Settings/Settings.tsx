@@ -1,10 +1,11 @@
 import Modal from '@/components/base/Modal/Modal';
-import General from '@/components/common/Settings/General/General.tsx';
+import GeneralPanel from '@/components/common/Settings/GeneralPanel/GeneralPanel';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Grid, useTheme } from '@mui/material';
 import { type JSX, useState } from 'react';
 import AboutPanel from './AboutPanel/AboutPanel';
+import AiPanel from './AiPanel/AiPanel';
 import MenuPanel from './MenuPanel/MenuPanel';
 import ShortcutPanel from './ShortcutPanel/ShortcutPanel';
 import ThemePanel from './ThemePanel/ThemePanel';
@@ -16,7 +17,7 @@ const tabs: MenuPanelTabType[] = [
     name: locales.general,
     onlyDesktop: false,
     icon: 'settings',
-    content: <General />
+    content: <GeneralPanel />
   },
   {
     id: 1,
@@ -32,6 +33,13 @@ const tabs: MenuPanelTabType[] = [
     icon: 'shortcuts',
     content: <ShortcutPanel />
   },
+  {
+    id: 3,
+    name: 'AI',
+    onlyDesktop: false,
+    icon: 'about',
+    content: <AiPanel />
+  },
   // {
   //   id: 2,
   //   name: locales.update,
@@ -40,7 +48,7 @@ const tabs: MenuPanelTabType[] = [
   //   content: <UpdatePanel />
   // },
   {
-    id: 3,
+    id: 4,
     name: locales.about,
     onlyDesktop: false,
     icon: 'about',

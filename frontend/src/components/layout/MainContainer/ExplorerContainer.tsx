@@ -47,8 +47,8 @@ export default React.memo(function ExplorerContainer(): JSX.Element {
       maxWidth={500}
     >
       <ExplorerContainerStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
-        <Tabs value={selectedTabId} onChange={onSelectedTabChanged}>
-          <Tab label={locales.fields} />
+        <Tabs variant='fullWidth' value={selectedTabId} onChange={onSelectedTabChanged}>
+          <Tab label={locales.items} />
           <Tab label={locales.queries} />
           <Tab label={locales.history} />
         </Tabs>

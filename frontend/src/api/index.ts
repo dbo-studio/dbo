@@ -1,3 +1,6 @@
+import * as ai from './ai';
+import * as aiChat from './ai_chat';
+import * as aiProvider from './ai_provider';
 import * as connection from './connection';
 import * as histories from './history';
 import * as importExport from './importExport';
@@ -13,7 +16,10 @@ const api = {
   histories,
   tree,
   importExport,
-  job
+  job,
+  ai,
+  aiProvider,
+  aiChat
 };
 
 export default api;

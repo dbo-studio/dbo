@@ -47,13 +47,13 @@ export default function StatusBarPagination(): JSX.Element {
             disabled={selectedTab?.pagination?.page === 1}
             onClick={(): void => handlePagination('prev')}
           >
-            <CustomIcon type='arrowLeft' size='s' />
+            <CustomIcon type='chevronLeft' size='s' />
           </IconButton>
           <Typography color={'textText'} fontWeight={'bold'} textAlign={'center'} minWidth={54}>
             {selectedTab?.pagination?.page ?? 1}
           </Typography>
           <IconButton onClick={(): void => handlePagination('next')}>
-            <CustomIcon type='arrowRight' size='s' />
+            <CustomIcon type='chevronRight' size='s' />
           </IconButton>
         </>
       )}

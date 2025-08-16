@@ -3,7 +3,7 @@ import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { Box, Divider, Switch, Typography } from '@mui/material';
 import type { JSX } from 'react';
 
-export default function General(): JSX.Element {
+export default function GeneralPanel(): JSX.Element {
   const debug = useSettingStore((state) => state.debug);
   const toggleDebug = useSettingStore((state) => state.toggleDebug);
 

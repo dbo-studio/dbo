@@ -1,14 +1,14 @@
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
-import { useCopyToClipboard } from '@/hooks';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { JSX } from 'react';
 import { toast } from 'sonner';
 import type { HistoryContextMenuProps } from '../../types';
+import { useCopyToClipboard } from 'usehooks-ts';
 
 export default function HistoryContextMenu({ history, contextMenu, onClose }: HistoryContextMenuProps): JSX.Element {
-  const [copy] = useCopyToClipboard();
+  const [_, copy] = useCopyToClipboard();
 
   const addEditorTab = useTabStore((state) => state.addEditorTab);
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);

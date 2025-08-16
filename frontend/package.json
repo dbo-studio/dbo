@@ -7,7 +7,7 @@
     "build": "tsc --noEmit && vite build",
     "lint": "biome check src",
     "preview": "vite preview",
-    "format": "biome format --write --config-path=./biome.json src"
+    "format": "biome format --write src"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -32,12 +32,13 @@
     "shiki": "^3.9.2",
     "sonner": "^2.0.7",
     "sql-formatter": "^15.6.5",
+    "usehooks-ts": "^3.1.1",
     "uuid": "^11.1.0",
     "valibot": "^1.1.0",
     "zustand": "^5.0.7"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.1.4",
+    "@biomejs/biome": "2.2.0",
     "@faker-js/faker": "^9.9.0",
     "@shikijs/monaco": "^3.9.2",
     "@types/node": "^24.0.4",

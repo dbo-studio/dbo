@@ -1,13 +1,13 @@
 import api from '@/api';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
-import { useCopyToClipboard } from '@/hooks';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useMutation } from '@tanstack/react-query';
 import type { JSX } from 'react';
 import { toast } from 'sonner';
+import { useCopyToClipboard } from 'usehooks-ts';
 import type { SavedQueryContextMenuProps } from '../../types';
 
 export default function SavedQueryContextMenu({
@@ -17,7 +17,7 @@ export default function SavedQueryContextMenu({
   onDelete,
   onChange
 }: SavedQueryContextMenuProps): JSX.Element {
-  const [copy] = useCopyToClipboard();
+  const [_, copy] = useCopyToClipboard();
   const addEditorTab = useTabStore.getState().addEditorTab;
   const updateSelectedTab = useTabStore.getState().updateSelectedTab;
   const showModal = useConfirmModalStore((state) => state.danger);

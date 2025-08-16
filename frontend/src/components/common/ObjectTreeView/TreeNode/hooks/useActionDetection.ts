@@ -1,7 +1,7 @@
 import api from '@/api';
 import type { TreeNodeType } from '@/api/tree/types';
 import { TabMode } from '@/core/enums';
-import { useCopyToClipboard, useCurrentConnection } from '@/hooks';
+import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -9,6 +9,7 @@ import { useTreeStore } from '@/store/treeStore/tree.store';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
+import { useCopyToClipboard } from 'usehooks-ts';
 
 export const useActionDetection = (
   expandNode: (event: React.MouseEvent, focus?: boolean) => Promise<void>
@@ -24,7 +25,7 @@ export const useActionDetection = (
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
   const reloadTree = useTreeStore((state) => state.reloadTree);
 
-  const [copy] = useCopyToClipboard();
+  const [_, copy] = useCopyToClipboard();
 
   const { mutateAsync: executeActionMutation, isPending: pendingExecuteAction } = useMutation({
     mutationFn: api.tree.executeAction,

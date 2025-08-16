@@ -22,7 +22,7 @@ const sizes = {
   }
 };
 
-export default function CustomIcon({ type, size = 's', width, height, onClick }: IconProps): JSX.Element {
+export default function CustomIcon({ type, size = 's', width, height, onClick, className }: IconProps): JSX.Element {
   const theme = useTheme();
 
   let w = sizes[size].width;
@@ -39,12 +39,13 @@ export default function CustomIcon({ type, size = 's', width, height, onClick }:
   // @ts-expect-error
   const LucideIcon = icons[IconTypes[type]];
   if (!LucideIcon) {
-    return <img onClick={onClick} src={`/icons/${type}.svg`} alt={type} width={w} height={h} />;
+    return <img onClick={onClick} src={`/icons/${type}.svg`} alt={type} width={w} height={h} className={className} />;
   }
 
   return (
     <LucideIcon
       onClick={onClick}
+      className={className}
       style={{ color: theme.palette.text.text, display: 'inline-block' }}
       strokeWidth={1.5}
       size={w}

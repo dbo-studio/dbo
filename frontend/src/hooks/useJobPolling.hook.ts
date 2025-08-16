@@ -8,11 +8,6 @@ type JobType = {
   progress: number;
   message: string;
   error?: string;
-  data?: any;
-  result?: any;
-  createdAt: string;
-  startedAt?: string;
-  completedAt?: string;
 };
 
 type UseJobPollingOptions = {
@@ -43,13 +38,11 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
 
     const initialFetch = async () => {
       try {
-        const response = await api.job.detail(jobId);
-        const jobData = response;
+        const jobData = await api.job.detail(jobId);
 
         setJob(jobData);
         setError(null);
 
-        // Call callbacks
         options.onStatusChange?.(jobData.status, jobData.message);
         options.onProgress?.(jobData.progress, jobData.message);
 
@@ -61,12 +54,10 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
           options.onError?.(jobData.error);
         }
 
-        // Check if job is completed
         if (jobData.status === 'completed' || jobData.status === 'failed' || jobData.status === 'cancelled') {
           setIsPolling(false);
-          // Only call onComplete if this is the first time we see the completed status
           options.onComplete?.(jobData);
-          return; // Stop polling
+          return;
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch job status');
@@ -77,16 +68,12 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
     initialFetch();
 
     intervalRef.current = setInterval(async () => {
-      console.log('Polling interval triggered for jobId:', jobId);
       try {
-        const response = await api.job.detail(jobId);
-        const jobData = response; // getJobStatus already returns the job data
-        console.log('Job status response:', jobData);
+        const jobData = await api.job.detail(jobId);
 
         setJob(jobData);
         setError(null);
 
-        // Call callbacks
         options.onStatusChange?.(jobData.status, jobData.message);
         options.onProgress?.(jobData.progress, jobData.message);
 
@@ -98,26 +85,22 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
           options.onError?.(jobData.error);
         }
 
-        // Check if job is completed
         if (jobData.status === 'completed' || jobData.status === 'failed' || jobData.status === 'cancelled') {
           setIsPolling(false);
-          // Clear interval when job is completed
           if (intervalRef.current) {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
           }
-          // Only call onComplete if this is the first time we see the completed status
           options.onComplete?.(jobData);
-          return; // Stop polling
+          return;
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch job status');
-        console.error('Error fetching job status:', err);
+        console.log('🚀 ~ useJobPolling ~ err:', err);
       }
     }, pollingInterval);
 
     return () => {
-      console.log('Cleaning up polling for jobId:', jobId);
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
@@ -131,12 +114,10 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
 
     try {
       await api.job.cancel(jobId);
-      // Fetch updated status
-      const response = await api.job.detail(jobId);
-      const jobData = response.data;
+      const jobData = await api.job.detail(jobId);
       setJob(jobData);
     } catch (err) {
-      console.error('Error cancelling job:', err);
+      console.log('🚀 ~ useJobPolling ~ err:', err);
     }
   }, [jobId]);
 

@@ -1,7 +1,6 @@
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
 import { handleRowChangeLog } from '@/core/utils';
-import { useCopyToClipboard } from '@/hooks';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -9,6 +8,7 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ContextMenuType } from '@/types';
 import type { JSX } from 'react';
 import { toast } from 'sonner';
+import { useCopyToClipboard } from 'usehooks-ts';
 
 export default function DataGridContextMenu({
   contextMenu,
@@ -25,7 +25,7 @@ export default function DataGridContextMenu({
   const toggleShowQuickLookEditor = useSettingStore((state) => state.toggleShowQuickLookEditor);
   const toggleReRender = useDataStore((state) => state.toggleReRender);
 
-  const [copy] = useCopyToClipboard();
+  const [_, copy] = useCopyToClipboard();
 
   const valueReplacer = (newValue: any): void => {
     if (!selectedTabId) return;

@@ -152,5 +152,18 @@
   "successful": "successful",
   "failed": "failed",
   "total_rows": "total rows",
-  "export_completed_successfully": "Export completed successfully"
+  "export_completed_successfully": "Export completed successfully",
+  "items": "Items",
+  "assistant": "Assistant",
+  "provider": "Provider",
+  "api_key": "Api key",
+  "url": "URL",
+  "model": "Model",
+  "temperature": "Temperature",
+  "max_tokens": "Max Tokens",
+  "max": "Max",
+  "api_key_required": "Api key is required",
+  "url_required": "Base URL is required",
+  "new_chat": "New chat",
+  "ask_anything": "Ask anything..."
 }

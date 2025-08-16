@@ -8,6 +8,7 @@ export type IconProps = {
   onClick?: MouseEventHandler | undefined;
   width?: number;
   height?: number;
+  className?: string;
 };
 
 export const IconTypes = {
@@ -22,10 +23,14 @@ export const IconTypes = {
   refresh: 'RotateCcw',
   search: 'Search',
   sql: 'FileJson',
-  arrowDown: 'ChevronDown',
-  arrowRight: 'ChevronRight',
-  arrowLeft: 'ChevronLeft',
-  arrowUp: 'ChevronUp',
+  chevronDown: 'ChevronDown',
+  chevronRight: 'ChevronRight',
+  chevronLeft: 'ChevronLeft',
+  chevronUp: 'ChevronUp',
+  arrowDown: 'ArrowDown',
+  arrowRight: 'ArrowRight',
+  arrowLeft: 'ArrowLeft',
+  arrowUp: 'ArrowUp',
   columnToken: 'columnToken',
   grid: 'Grid3x3',
   gridBlue: 'Grid3x3',
@@ -62,5 +67,7 @@ export const IconTypes = {
   externalLink: 'ExternalLink',
   postgresql: 'postgresql',
   sqlite: 'sqlite',
-  network: 'Network'
+  network: 'Network',
+  send: 'Send',
+  at: 'AtSign'
 };

@@ -10,12 +10,20 @@ export const editorConfig: editor.IStandaloneEditorConstructionOptions = {
   folding: false,
   automaticLayout: true,
   contextmenu: false,
+  // Disable auto suggestion widget; require manual trigger (e.g., Ctrl+Space)
+  quickSuggestions: false,
+  suggestOnTriggerCharacters: false,
+  wordBasedSuggestions: 'off',
+  acceptSuggestionOnEnter: 'smart',
+  tabCompletion: 'off',
+  parameterHints: { enabled: false },
   minimap: {
     enabled: false
   },
   wordWrap: 'on',
   fixedOverflowWidgets: true,
   scrollBeyondLastLine: false,
+  inlineSuggest: { enabled: true },
   suggestFontSize: 12,
   padding: {
     top: 8,

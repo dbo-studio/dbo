@@ -13,7 +13,9 @@ export const EndContainerStyled = styled(Box)(({ theme }) => ({
   borderLeft: `1px solid ${theme.palette.divider}`,
   borderTop: `1px solid ${theme.palette.divider}`,
   overflow: 'auto',
-  background: theme.palette.background.subdued
+  background: theme.palette.background.subdued,
+  display: 'flex',
+  flexDirection: 'column'
 }));
 
 export const StartContainerStyled = styled(Box)(({ theme }) => ({

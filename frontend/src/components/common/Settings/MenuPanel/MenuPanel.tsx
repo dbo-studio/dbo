@@ -6,7 +6,7 @@ import { MenuPanelStyled } from './MenuPanel.styled';
 import MenuPanelItem from './MenuPanelItem/MenuPanelItem';
 
 export default function MenuPanel({ tabs, onChange }: MenuPanelProps): JSX.Element {
-  const uuids = useUUID(4);
+  const uuids = useUUID(tabs.length);
   const [selectedTabId, setSelectedTabId] = useState(tabs[0].id);
   const [isDesktop, setIsDesktop] = useState(false);
 

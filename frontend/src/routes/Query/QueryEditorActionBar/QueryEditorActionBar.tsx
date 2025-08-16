@@ -26,7 +26,6 @@ export default function QueryEditorActionBar({
 
   return (
     <Stack
-      id='action-bar'
       borderBottom={(theme): string => `1px solid ${theme.palette.divider}`}
       borderTop={(theme): string => `1px solid ${theme.palette.divider}`}
       padding={1}
