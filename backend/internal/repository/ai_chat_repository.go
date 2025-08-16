@@ -31,8 +31,13 @@ func (r AiChatRepoImpl) Find(ctx context.Context, id uint) (*model.AiChat, error
 }
 
 func (r AiChatRepoImpl) Create(ctx context.Context, dto *dto.AiChatCreateRequest) (*model.AiChat, error) {
+	title := dto.Title
+	if len(dto.Title) > 20 {
+		title = dto.Title[0:20]
+	}
+
 	var chat = &model.AiChat{
-		Title:        dto.Title,
+		Title:        title,
 		ConnectionID: uint(dto.ConnectionId),
 	}
 

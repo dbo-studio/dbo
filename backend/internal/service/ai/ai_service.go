@@ -70,7 +70,10 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		return nil, apperror.InternalServerError(err)
 	}
 
-	contextStr, _ := s.buildContextFromAutocomplete(repo, req)
+	contextStr, err := repo.AiContext(req)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
 
 	providerReq := &serviceAiProvider.ChatRequest{
 		Messages:    chat.Messages,

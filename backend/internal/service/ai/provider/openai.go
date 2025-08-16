@@ -209,7 +209,7 @@ func (p *OpenAIProvider) completionViaChat(ctx context.Context, req *CompletionR
 func (p *OpenAIProvider) buildCompletionPrompt(req *CompletionRequest) string {
 	var sb strings.Builder
 
-	sb.WriteString("You are a code autocomplete engine. Use the provided DB context when helpful.\n\n")
+	sb.WriteString(startedPrompt)
 
 	if req.Language != nil && *req.Language != "" {
 		sb.WriteString("Language: " + *req.Language + "\n")

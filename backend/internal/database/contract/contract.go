@@ -16,4 +16,5 @@ type DatabaseRepository interface {
 	Execute(nodeID string, action TreeNodeActionName, params []byte) error
 	AutoComplete(dto *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error)
 	ImportData(job dto.ImportJob, rows [][]string, columns []string) (*ImportResult, error)
+	AiContext(dto *dto.AiChatRequest) (string, error)
 }

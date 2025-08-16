@@ -20,11 +20,11 @@ type (
 
 type (
 	AiContextOptions struct {
-		Query     *string  `json:"query"`
-		Databases []string `json:"databases"`
-		Schemas   []string `json:"schemas"`
-		Tables    []string `json:"tables"`
-		Views     []string `json:"views"`
+		Query    *string  `json:"query"`
+		Database string   `json:"database"`
+		Schema   *string  `json:"schema"`
+		Tables   []string `json:"tables"`
+		Views    []string `json:"views"`
 	}
 
 	AiMessage struct {
@@ -38,7 +38,7 @@ func (req AiChatRequest) Validate() error {
 	return validation.ValidateStruct(&req,
 		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
 		validation.Field(&req.ProviderId, validation.Required, validation.Min(0)),
-		validation.Field(&req.Model, validation.Required, validation.Min(0)),
+		validation.Field(&req.Model, validation.Required, validation.Length(0, 50)),
 		validation.Field(&req.Message, validation.Required, validation.Length(0, 500)),
 		validation.Field(&req.ChatId, validation.Min(0)),
 	)

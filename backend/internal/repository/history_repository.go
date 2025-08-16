@@ -34,7 +34,7 @@ func (h IHistoryRepoImpl) Index(_ context.Context, req *dto.HistoryListRequest) 
 	return &histories, nil
 }
 
-func (h IHistoryRepoImpl) Create(ctx context.Context, connectionID uint, query string) error {
+func (h IHistoryRepoImpl) Create(_ context.Context, connectionID uint, query string) error {
 	return h.db.Session(&gorm.Session{
 		NewDB:                  true,
 		SkipHooks:              true,

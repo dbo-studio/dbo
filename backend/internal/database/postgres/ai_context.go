@@ -2,7 +2,6 @@ package databasePostgres
 
 import (
 	"fmt"
-	"slices"
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -14,6 +13,28 @@ type ForeignKeyInfo struct {
 	ReferencedColumn string
 }
 
+/*
+this is a sample of the AI context
+Database: default
+Schema: public
+
+Tables:
+1. data_src
+  - datasrc_id (PK, character)
+  - authors (character varying)
+  - title (character varying)
+  - year (integer)
+  - journal (text)
+  - vol_city (text)
+  - issue_state (text)
+  - start_page (text)
+  - end_page (text)
+
+2. datsrcln
+  - ndb_no (PK, FK → nut_data.nutr_no, character)
+  - nutr_no (PK, FK → nut_data.nutr_no, character)
+  - datasrc_id (PK, FK → data_src.datasrc_id, character)
+*/
 func (r *PostgresRepository) AiContext(req *dto.AiChatRequest) (string, error) {
 	var sb strings.Builder
 
@@ -39,46 +60,63 @@ func (r *PostgresRepository) AiContext(req *dto.AiChatRequest) (string, error) {
 	for _, table := range req.ContextOpts.Tables {
 		sb.WriteString(fmt.Sprintf("%d. %s\n", tableCounter, table))
 
-		// Get detailed column information using getColumns
 		columns, err := r.getColumns(table, lo.FromPtr(req.ContextOpts.Schema), []string{}, false)
 		if err != nil {
 			return "", err
 		}
 
-		// Get primary keys for this table
 		primaryKeys, err := r.getPrimaryKeys(Table{Name: table})
 		if err != nil {
 			return "", err
 		}
 
-		// Get foreign keys for this table
 		foreignKeys, err := r.getForeignKeys(table, lo.FromPtr(req.ContextOpts.Schema))
 		if err != nil {
 			return "", err
 		}
 
-		// Display columns with their details
+		externalRefs := make(map[string]string)
+		contextTables := make(map[string]bool)
+		for _, t := range req.ContextOpts.Tables {
+			contextTables[t] = true
+		}
+
 		for _, column := range columns {
 			sb.WriteString("   - ")
 			sb.WriteString(column.ColumnName)
 			sb.WriteString(" (")
 
-			// Check if it's a primary key
-			if slices.Contains(primaryKeys, column.ColumnName) {
-				sb.WriteString("PK, ")
-			}
-
-			// Check if it's a foreign key
 			if fkInfo, exists := foreignKeys[column.ColumnName]; exists {
-				sb.WriteString("FK → ")
-				sb.WriteString(fkInfo.ReferencedTable)
-				sb.WriteString(".")
-				sb.WriteString(fkInfo.ReferencedColumn)
-				sb.WriteString(", ")
+				if contextTables[fkInfo.ReferencedTable] {
+					sb.WriteString("FK → ")
+					sb.WriteString(fkInfo.ReferencedTable)
+					sb.WriteString(".")
+					sb.WriteString(fkInfo.ReferencedColumn)
+					sb.WriteString(", ")
+				} else {
+					externalRefs[column.ColumnName] = fmt.Sprintf("FK → %s.%s (external)", fkInfo.ReferencedTable, fkInfo.ReferencedColumn)
+				}
 			}
 
-			sb.WriteString(column.DataType)
+			sb.WriteString(column.MappedType)
 			sb.WriteString(")\n")
+		}
+
+		if len(primaryKeys) > 1 {
+			sb.WriteString("   - PRIMARY KEY (")
+			sb.WriteString(strings.Join(primaryKeys, ", "))
+			sb.WriteString(")\n")
+		}
+
+		if len(externalRefs) > 0 {
+			sb.WriteString("   - External References:\n")
+			for colName, ref := range externalRefs {
+				sb.WriteString("     * ")
+				sb.WriteString(colName)
+				sb.WriteString(": ")
+				sb.WriteString(ref)
+				sb.WriteString("\n")
+			}
 		}
 
 		sb.WriteString("\n")
@@ -86,43 +124,4 @@ func (r *PostgresRepository) AiContext(req *dto.AiChatRequest) (string, error) {
 	}
 
 	return sb.String(), nil
-}
-
-func (r *PostgresRepository) getForeignKeys(table string, schema string) (map[string]ForeignKeyInfo, error) {
-	foreignKeys := make(map[string]ForeignKeyInfo)
-
-	rows, err := r.db.Raw(`
-		SELECT 
-			kcu.column_name,
-			ccu.table_name AS referenced_table,
-			ccu.column_name AS referenced_column
-		FROM information_schema.table_constraints AS tc
-		JOIN information_schema.key_column_usage AS kcu
-			ON tc.constraint_name = kcu.constraint_name
-			AND tc.table_schema = kcu.table_schema
-		JOIN information_schema.constraint_column_usage AS ccu
-			ON ccu.constraint_name = tc.constraint_name
-			AND ccu.table_schema = tc.table_schema
-		WHERE tc.constraint_type = 'FOREIGN KEY'
-			AND tc.table_name = ?
-			AND tc.table_schema = ?
-	`, table, schema).Rows()
-
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var columnName, referencedTable, referencedColumn string
-		if err := rows.Scan(&columnName, &referencedTable, &referencedColumn); err != nil {
-			return nil, err
-		}
-		foreignKeys[columnName] = ForeignKeyInfo{
-			ReferencedTable:  referencedTable,
-			ReferencedColumn: referencedColumn,
-		}
-	}
-
-	return foreignKeys, nil
 }
