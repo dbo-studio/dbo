@@ -13,7 +13,7 @@ import (
 
 type ICacheManager interface {
 	GetCompletionResponse(key string) (*dto.AiInlineCompleteResponse, bool)
-	SetCompletionResponse(key string, response *dto.AiInlineCompleteResponse, ttl time.Duration)
+	SetCompletionResponse(key string, response *dto.AiInlineCompleteResponse, ttl time.Duration) error
 	GenerateCompletionKey(req *dto.AiInlineCompleteRequest, provider *model.AiProvider) string
 }
 
@@ -41,8 +41,8 @@ func (cm *CacheManager) GetCompletionResponse(key string) (*dto.AiInlineComplete
 	return nil, false
 }
 
-func (cm *CacheManager) SetCompletionResponse(key string, response *dto.AiInlineCompleteResponse, ttl time.Duration) {
-	cm.cache.Set(key, response, &ttl)
+func (cm *CacheManager) SetCompletionResponse(key string, response *dto.AiInlineCompleteResponse, ttl time.Duration) error {
+	return cm.cache.Set(key, response, &ttl)
 }
 
 func (cm *CacheManager) GenerateCompletionKey(req *dto.AiInlineCompleteRequest, provider *model.AiProvider) string {

@@ -166,29 +166,6 @@ func (r *PostgresRepository) getColumns(table string, schema string, columnNames
 	return columns, err
 }
 
-func (r *PostgresRepository) getColumnsBySchema(schema Schema, editable bool) ([]Column, error) {
-	columns := make([]Column, 0)
-
-	err := r.db.Table("information_schema.columns AS cols").
-		Select("cols.ordinal_position, cols.column_name, cols.data_type, cols.is_nullable, cols.column_default, cols.character_maximum_length, des.description AS column_comment").
-		Joins("LEFT JOIN pg_catalog.pg_description AS des ON (des.objoid = (SELECT c.oid FROM pg_catalog.pg_class AS c WHERE c.relname = cols.table_name LIMIT 1) AND des.objsubid = cols.ordinal_position)").
-		Where("cols.table_schema = ?", schema).
-		Order("cols.ordinal_position").
-		Scan(&columns).Error
-
-	for i, column := range columns {
-		columns[i].MappedType = columnMappedFormat(column.DataType)
-		columns[i].Editable = editable
-		columns[i].IsActive = true
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return columns, err
-}
-
 type Template struct {
 	Name string `gorm:"column:datname"`
 }
