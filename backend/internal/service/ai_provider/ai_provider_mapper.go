@@ -28,6 +28,7 @@ func aiProviderModelToDto(aiProvider *model.AiProvider) dto.AiProvider {
 		Type:        string(aiProvider.Type),
 		Url:         aiProvider.Url,
 		ApiKey:      aiProvider.ApiKey,
+		Timeout:     aiProvider.Timeout,
 		Models:      aiProvider.Models,
 		Temperature: aiProvider.Temperature,
 		MaxTokens:   aiProvider.MaxTokens,

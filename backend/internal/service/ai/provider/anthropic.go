@@ -5,28 +5,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/gofiber/fiber/v3/client"
-	"github.com/samber/lo"
 )
 
 type AnthropicProvider struct {
-	timeout int
-	url     string
-	apiKey  *string
+	*BaseProvider
 }
 
 func NewAnthropicProvider(provider *model.AiProvider) IAIProvider {
-	url := "https://api.anthropic.com"
-
 	return &AnthropicProvider{
-		timeout: 30,
-		url:     url,
-		apiKey:  provider.ApiKey,
+		BaseProvider: NewBaseProvider(provider),
 	}
 }
 
@@ -74,7 +66,11 @@ func (p *AnthropicProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRe
 			Text string `json:"text"`
 			Type string `json:"type"`
 		} `json:"content"`
-		Role string `json:"role"`
+		Role  string `json:"role"`
+		Usage struct {
+			InputTokens  int `json:"input_tokens"`
+			OutputTokens int `json:"output_tokens"`
+		} `json:"usage"`
 	}
 
 	if err := json.Unmarshal(resp.Body(), &response); err != nil {
@@ -140,6 +136,10 @@ func (p *AnthropicProvider) Complete(ctx context.Context, req *CompletionRequest
 			Text string `json:"text"`
 			Type string `json:"type"`
 		} `json:"content"`
+		Usage struct {
+			InputTokens  int `json:"input_tokens"`
+			OutputTokens int `json:"output_tokens"`
+		} `json:"usage"`
 	}
 
 	if err := json.Unmarshal(resp.Body(), &response); err != nil {
@@ -162,49 +162,13 @@ func (p *AnthropicProvider) Complete(ctx context.Context, req *CompletionRequest
 	}, nil
 }
 
-func (p *AnthropicProvider) convertRole(role string) string {
+func (p *AnthropicProvider) convertRole(role model.AiChatMessageRole) string {
 	switch role {
-	case "system":
-		return "user"
-	case "assistant":
+	case model.AiChatMessageRoleSystem:
+		return "system"
+	case model.AiChatMessageRoleAssistant:
 		return "assistant"
 	default:
 		return "user"
 	}
-}
-
-func (p *AnthropicProvider) buildCompletionPrompt(req *CompletionRequest) string {
-	var sb strings.Builder
-
-	sb.WriteString(startedPrompt)
-
-	if req.Language != nil && *req.Language != "" {
-		sb.WriteString("Language: " + *req.Language + "\n")
-	}
-
-	if req.Context != "" {
-		sb.WriteString("Context:\n" + req.Context + "\n\n")
-	}
-
-	sb.WriteString("Prefix:\n" + req.Prompt + "\n\n")
-
-	if req.Suffix != nil && *req.Suffix != "" {
-		sb.WriteString("Suffix:\n" + *req.Suffix + "\n\n")
-	}
-
-	sb.WriteString("Continue the code only, no explanations.")
-
-	return sb.String()
-}
-
-func (p *AnthropicProvider) GetHttpClient() *client.Client {
-	cc := client.New()
-	cc.SetTimeout(time.Duration(p.timeout) * time.Second)
-	cc.AddHeader("Content-Type", "application/json")
-
-	if p.apiKey != nil {
-		cc.AddHeader("Authorization", "Bearer "+lo.FromPtr(p.apiKey))
-	}
-
-	return cc
 }

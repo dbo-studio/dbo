@@ -4,32 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
-	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/gofiber/fiber/v3/client"
-	"github.com/samber/lo"
 )
 
 type OpenAIProvider struct {
-	timeout int
-	url     string
-	apiKey  *string
+	*BaseProvider
 }
 
 func NewOpenAIProvider(provider *model.AiProvider) IAIProvider {
-	url := "https://api.openai.com/v1"
-	if provider.Url != nil {
-		url = strings.TrimRight(lo.FromPtr(provider.Url), "/")
-	}
-
 	return &OpenAIProvider{
-		timeout: 30,
-		url:     url,
-		apiKey:  provider.ApiKey,
+		BaseProvider: NewBaseProvider(provider),
 	}
 }
 
@@ -45,7 +33,7 @@ func (p *OpenAIProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespo
 
 	for _, msg := range req.Messages {
 		messages = append(messages, map[string]string{
-			"role":    msg.Role,
+			"role":    string(msg.Role),
 			"content": msg.Content,
 		})
 	}
@@ -204,38 +192,4 @@ func (p *OpenAIProvider) completionViaChat(ctx context.Context, req *CompletionR
 	return &CompletionResponse{
 		Completion: response.Choices[0].Message.Content,
 	}, nil
-}
-
-func (p *OpenAIProvider) buildCompletionPrompt(req *CompletionRequest) string {
-	var sb strings.Builder
-
-	sb.WriteString(startedPrompt)
-
-	if req.Language != nil && *req.Language != "" {
-		sb.WriteString("Language: " + *req.Language + "\n")
-	}
-
-	if req.Context != "" {
-		sb.WriteString("Context:\n" + req.Context + "\n\n")
-	}
-
-	sb.WriteString("Prefix:\n" + req.Prompt + "\n\n")
-
-	if req.Suffix != nil && *req.Suffix != "" {
-		sb.WriteString("Suffix:\n" + *req.Suffix + "\n\n")
-	}
-
-	sb.WriteString("Continue the code only, no explanations.")
-
-	return sb.String()
-}
-
-func (p *OpenAIProvider) GetHttpClient() *client.Client {
-	cc := client.New()
-	cc.SetTimeout(time.Duration(p.timeout) * time.Second)
-	cc.SetHeaders(map[string]string{
-		"Authorization": "Bearer " + lo.FromPtr(p.apiKey),
-		"Content-Type":  "application/json",
-	})
-	return cc
 }

@@ -8,36 +8,42 @@ import (
 )
 
 type AiProviderConfig struct {
-	Type   model.AIProviderType
-	Url    string
-	Models []string
+	Type    model.AIProviderType
+	Url     string
+	Models  []string
+	Timeout int
 }
 
 var configs = []AiProviderConfig{
 	{
-		Type:   model.AIProviderTypeOpenAI,
-		Url:    "https://api.openai.com/v1",
-		Models: []string{"gpt-5", "gpt-4o"},
+		Type:    model.AIProviderTypeOpenAI,
+		Url:     "https://api.openai.com/v1",
+		Models:  []string{"gpt-5", "gpt-4o"},
+		Timeout: 30,
 	},
 	{
-		Type:   model.AIProviderTypeAnthropic,
-		Url:    "https://api.anthropic.com/v1",
-		Models: []string{"claude-3-5-sonnet-20240620"},
+		Type:    model.AIProviderTypeAnthropic,
+		Url:     "https://api.anthropic.com/v1",
+		Models:  []string{"claude-3-5-sonnet-20240620"},
+		Timeout: 30,
 	},
 	{
-		Type:   model.AIProviderTypeGemini,
-		Url:    "https://api.gemini.com/v1",
-		Models: []string{"gemini-2.0-flash-001"},
+		Type:    model.AIProviderTypeGemini,
+		Url:     "https://generativelanguage.googleapis.com",
+		Models:  []string{"gemini-2.0-flash"},
+		Timeout: 30,
 	},
 	{
-		Type:   model.AIProviderTypeGroq,
-		Url:    "https://api.groq.com/v1",
-		Models: []string{"groq-3-7-sonnet-20240620"},
+		Type:    model.AIProviderTypeGroq,
+		Url:     "https://api.groq.com/v1",
+		Models:  []string{"groq-3-7-sonnet-20240620"},
+		Timeout: 30,
 	},
 	{
-		Type:   model.AIProviderTypeOllama,
-		Url:    "http://localhost:11434",
-		Models: []string{"llama3.1"},
+		Type:    model.AIProviderTypeOllama,
+		Url:     "http://localhost:11434",
+		Models:  []string{"llama3.1"},
+		Timeout: 60,
 	},
 }
 
@@ -50,9 +56,10 @@ func (i *IAiProviderServiceImpl) Index(ctx context.Context) (*dto.AiProviderList
 	if len(result) < len(configs) {
 		for _, config := range configs {
 			provider := &model.AiProvider{
-				Type:   config.Type,
-				Url:    &config.Url,
-				Models: config.Models,
+				Type:    config.Type,
+				Url:     config.Url,
+				Models:  config.Models,
+				Timeout: config.Timeout,
 			}
 			_, err := i.aiProviderRepo.CreateIfNotExists(ctx, provider)
 			if err != nil {

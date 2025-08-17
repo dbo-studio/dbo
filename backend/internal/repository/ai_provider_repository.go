@@ -6,6 +6,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
 
@@ -39,7 +40,7 @@ func (r AiProviderRepoImpl) CreateIfNotExists(ctx context.Context, provider *mod
 }
 
 func (r AiProviderRepoImpl) Update(ctx context.Context, provider *model.AiProvider, dto *dto.AiProviderUpdateRequest) (*model.AiProvider, error) {
-	provider.Url = helper.Optional(dto.Url, provider.Url)
+	provider.Url = lo.FromPtr(helper.Optional(dto.Url, lo.ToPtr(provider.Url)))
 	provider.ApiKey = helper.Optional(dto.ApiKey, provider.ApiKey)
 	provider.Temperature = helper.Optional(dto.Temperature, provider.Temperature)
 	provider.MaxTokens = helper.Optional(dto.MaxTokens, provider.MaxTokens)

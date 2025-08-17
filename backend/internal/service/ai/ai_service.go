@@ -3,10 +3,12 @@ package serviceAi
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
+	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceAiCache "github.com/dbo-studio/dbo/internal/service/ai/cache"
 	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
@@ -30,12 +32,11 @@ type AiServiceImpl struct {
 	providerFactory *serviceAiProvider.ProviderFactory
 }
 
-func NewAIService(
+func NewAiService(
 	connectionRepo repository.IConnectionRepo,
 	aiProviderRepo repository.IAiProviderRepo,
 	aiChatRepo repository.IAiChatRepo,
 	cm *databaseConnection.ConnectionManager,
-	logger logger.Logger,
 	cache cache.Cache,
 ) IAiService {
 	return &AiServiceImpl{
@@ -43,7 +44,6 @@ func NewAIService(
 		aiProviderRepo:  aiProviderRepo,
 		aiChatRepo:      aiChatRepo,
 		cm:              cm,
-		logger:          logger,
 		cacheManager:    serviceAiCache.NewCacheManager(cache),
 		providerFactory: serviceAiProvider.NewProviderFactory(),
 	}
@@ -75,6 +75,11 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		return nil, apperror.InternalServerError(err)
 	}
 
+	chat.Messages = append(chat.Messages, model.AiChatMessage{
+		Role:    model.AiChatMessageRoleUser,
+		Content: req.Message,
+	})
+
 	providerReq := &serviceAiProvider.ChatRequest{
 		Messages:    chat.Messages,
 		Model:       req.Model,
@@ -85,17 +90,20 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 
 	providerResp, err := aiProvider.Chat(ctx, providerReq)
 	if err != nil {
-		s.logger.Error(fmt.Sprintf("AI Chat error: %v", err))
 		return nil, err
 	}
 
-	// if err := s.saveChatMessages(ctx, chat.ID, chat.Messages, providerResp.Message); err != nil {
-	// 	s.logger.Error(fmt.Sprintf("Failed to save chat messages: %v", err))
-	// }
+	if err := s.saveChatMessages(ctx, chat, req.Message, providerResp.Message.Content); err != nil {
+		s.logger.Error(fmt.Sprintf("Failed to save chat messages: %v", err))
+	}
 
 	response := &dto.AiChatResponse{
-		ChatId:  chat.ID,
-		Message: providerResp.Message,
+		ChatId: chat.ID,
+		Message: dto.AiMessage{
+			Role:      providerResp.Message.Role,
+			Content:   providerResp.Message.Content,
+			CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+		},
 	}
 
 	return response, nil

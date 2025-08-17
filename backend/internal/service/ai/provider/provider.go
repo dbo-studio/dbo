@@ -37,5 +37,3 @@ type CompletionRequest struct {
 type CompletionResponse struct {
 	Completion string `json:"completion"`
 }
-
-const startedPrompt = "You are an SQL generator. Given the schema below, produce ONLY executable SQL queries. Do not add explanations unless asked.\n\n"

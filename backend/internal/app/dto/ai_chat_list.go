@@ -1,7 +1,5 @@
 package dto
 
-import "time"
-
 type (
 	AiChatListResponse struct {
 		Chats []AiChatItem
@@ -10,8 +8,8 @@ type (
 
 type (
 	AiChatItem struct {
-		ID        uint      `json:"id"`
-		Title     string    `json:"title"`
-		CreatedAt time.Time `json:"createdAt"`
+		ID        uint   `json:"id"`
+		Title     string `json:"title"`
+		CreatedAt string `json:"createdAt"`
 	}
 )

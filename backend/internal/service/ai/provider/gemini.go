@@ -11,47 +11,34 @@ import (
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/gofiber/fiber/v3/client"
-	"github.com/samber/lo"
 )
 
 type GeminiProvider struct {
-	timeout int
-	url     string
-	apiKey  *string
+	*BaseProvider
 }
 
 func NewGeminiProvider(provider *model.AiProvider) IAIProvider {
-	url := "https://generativelanguage.googleapis.com"
-
 	return &GeminiProvider{
-		timeout: 30,
-		url:     url,
-		apiKey:  provider.ApiKey,
+		BaseProvider: NewBaseProvider(provider),
 	}
 }
 
 func (p *GeminiProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
 	contents := make([]map[string]interface{}, 0, len(req.Messages)+1)
 
+	// Add context as the first user message if provided
 	if req.Context != "" {
 		contents = append(contents, map[string]interface{}{
 			"role": "user",
 			"parts": []map[string]string{
-				{"text": fmt.Sprintf("Context:\n%s", req.Context)},
-			},
-		})
-		contents = append(contents, map[string]interface{}{
-			"role": "model",
-			"parts": []map[string]string{
-				{"text": "I understand the context. How can I help you?"},
+				{"text": fmt.Sprintf("Context:\n%s\n\nPlease use this context for the following conversation.", req.Context)},
 			},
 		})
 	}
 
 	for _, msg := range req.Messages {
-		role := p.convertRole(msg.Role)
 		contents = append(contents, map[string]interface{}{
-			"role": role,
+			"role": p.convertRole(msg.Role),
 			"parts": []map[string]string{
 				{"text": msg.Content},
 			},
@@ -73,9 +60,13 @@ func (p *GeminiProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespo
 		payload["generationConfig"] = generationConfig
 	}
 
-	url := fmt.Sprintf("%s/v1beta/models/%s:generateContent?key=%s", p.url, req.Model, p.apiKey)
+	url := fmt.Sprintf("%s/v1beta/models/%s:generateContent?key=%s", p.url, req.Model, *p.apiKey)
 
-	resp, err := p.GetHttpClient().Post(url, client.Config{
+	httpClient := client.New()
+	httpClient.SetTimeout(time.Duration(p.timeout) * time.Second)
+	httpClient.AddHeader("Content-Type", "application/json")
+
+	resp, err := httpClient.Post(url, client.Config{
 		Body: payload,
 	})
 
@@ -96,10 +87,17 @@ func (p *GeminiProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespo
 				Role string `json:"role"`
 			} `json:"content"`
 		} `json:"candidates"`
+		PromptFeedback *struct {
+			BlockReason string `json:"blockReason"`
+		} `json:"promptFeedback,omitempty"`
 	}
 
 	if err := json.Unmarshal(resp.Body(), &response); err != nil {
 		return nil, apperror.InternalServerError(fmt.Errorf("failed to parse response: %v", err))
+	}
+
+	if response.PromptFeedback != nil && response.PromptFeedback.BlockReason != "" {
+		return nil, apperror.BadRequest(fmt.Errorf("content blocked: %s", response.PromptFeedback.BlockReason))
 	}
 
 	if len(response.Candidates) == 0 || len(response.Candidates[0].Content.Parts) == 0 {
@@ -148,9 +146,14 @@ func (p *GeminiProvider) Complete(ctx context.Context, req *CompletionRequest) (
 		payload["generationConfig"] = generationConfig
 	}
 
-	url := fmt.Sprintf("%s/v1beta/models/%s:generateContent?key=%s", p.url, req.Model, p.apiKey)
+	url := fmt.Sprintf("%s/v1beta/models/%s:generateContent?key=%s", p.url, req.Model, *p.apiKey)
 
-	resp, err := p.GetHttpClient().Post(url, client.Config{
+	// Create a new client without Authorization header for Gemini
+	httpClient := client.New()
+	httpClient.SetTimeout(time.Duration(p.timeout) * time.Second)
+	httpClient.AddHeader("Content-Type", "application/json")
+
+	resp, err := httpClient.Post(url, client.Config{
 		Body: payload,
 	})
 
@@ -170,10 +173,17 @@ func (p *GeminiProvider) Complete(ctx context.Context, req *CompletionRequest) (
 				} `json:"parts"`
 			} `json:"content"`
 		} `json:"candidates"`
+		PromptFeedback *struct {
+			BlockReason string `json:"blockReason"`
+		} `json:"promptFeedback,omitempty"`
 	}
 
 	if err := json.Unmarshal(resp.Body(), &response); err != nil {
 		return nil, apperror.InternalServerError(fmt.Errorf("failed to parse response: %v", err))
+	}
+
+	if response.PromptFeedback != nil && response.PromptFeedback.BlockReason != "" {
+		return nil, apperror.BadRequest(fmt.Errorf("content blocked: %s", response.PromptFeedback.BlockReason))
 	}
 
 	if len(response.Candidates) == 0 || len(response.Candidates[0].Content.Parts) == 0 {
@@ -190,47 +200,11 @@ func (p *GeminiProvider) Complete(ctx context.Context, req *CompletionRequest) (
 	}, nil
 }
 
-func (p *GeminiProvider) convertRole(role string) string {
+func (p *GeminiProvider) convertRole(role model.AiChatMessageRole) string {
 	switch role {
-	case "assistant":
+	case model.AiChatMessageRoleAssistant:
 		return "model"
 	default:
 		return "user"
 	}
-}
-
-func (p *GeminiProvider) buildCompletionPrompt(req *CompletionRequest) string {
-	var sb strings.Builder
-
-	sb.WriteString(startedPrompt)
-
-	if req.Language != nil && *req.Language != "" {
-		sb.WriteString("Language: " + *req.Language + "\n")
-	}
-
-	if req.Context != "" {
-		sb.WriteString("Context:\n" + req.Context + "\n\n")
-	}
-
-	sb.WriteString("Prefix:\n" + req.Prompt + "\n\n")
-
-	if req.Suffix != nil && *req.Suffix != "" {
-		sb.WriteString("Suffix:\n" + *req.Suffix + "\n\n")
-	}
-
-	sb.WriteString("Continue the code only, no explanations.")
-
-	return sb.String()
-}
-
-func (p *GeminiProvider) GetHttpClient() *client.Client {
-	cc := client.New()
-	cc.SetTimeout(time.Duration(p.timeout) * time.Second)
-	cc.AddHeader("Content-Type", "application/json")
-
-	if p.apiKey != nil {
-		cc.AddHeader("Authorization", "Bearer "+lo.FromPtr(p.apiKey))
-	}
-
-	return cc
 }

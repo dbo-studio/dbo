@@ -5,11 +5,12 @@ import "time"
 type AiProvider struct {
 	ID          uint           `gorm:"primaryKey,autoIncrement"`
 	Type        AIProviderType `gorm:"size:64;not null"`
+	Url         string         `gorm:"size:255"`
 	ApiKey      *string        `gorm:"size:2048"`
-	Url         *string        `gorm:"size:255"`
-	Models      []string       `gorm:"type:json;serializer:json"`
+	Timeout     int
 	Temperature *float32
 	MaxTokens   *int
+	Models      []string `gorm:"type:json;serializer:json"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }

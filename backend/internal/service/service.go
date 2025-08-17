@@ -49,7 +49,7 @@ func NewService(logger logger.Logger, repo *repository.Repository, cm *databaseC
 		ImportExportService: serviceImportExport.NewImportExportService(jobManager),
 		JobService:          serviceJob.NewJobService(jobRepo),
 		JobManager:          jobManager,
-		AiService:           serviceAI.NewAIService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, cm, logger, cache),
+		AiService:           serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, cm, cache),
 		AiProviderService:   serviceAiProvider.NewAiProviderService(repo.AiProviderRepo),
 		AiChatService:       serviceAiChat.NewAiChatService(repo.AiChatRepo),
 	}

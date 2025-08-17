@@ -11,7 +11,8 @@ type (
 		ID          uint     `json:"id"`
 		Type        string   `json:"type"`
 		ApiKey      *string  `json:"apiKey"`
-		Url         *string  `json:"url"`
+		Url         string   `json:"url"`
+		Timeout     int      `json:"timeout"`
 		Models      []string `json:"models"`
 		Temperature *float32 `json:"temperature"`
 		MaxTokens   *int     `json:"maxTokens"`

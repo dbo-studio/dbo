@@ -9,7 +9,6 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/cache"
-	"github.com/samber/lo"
 )
 
 type ICacheManager interface {
@@ -51,8 +50,8 @@ func (cm *CacheManager) GenerateCompletionKey(req *dto.AiInlineCompleteRequest, 
 
 	if provider != nil {
 		keyBuilder += fmt.Sprintf("provider:%d|model:%s|", provider.ID, strings.Join(provider.Models, ","))
-		if provider.Url != nil {
-			keyBuilder += fmt.Sprintf("baseurl:%s|", lo.FromPtr(provider.Url))
+		if provider.Url != "" {
+			keyBuilder += fmt.Sprintf("baseurl:%s|", provider.Url)
 		}
 		if provider.Temperature != nil {
 			keyBuilder += fmt.Sprintf("temp:%.2f|", *provider.Temperature)

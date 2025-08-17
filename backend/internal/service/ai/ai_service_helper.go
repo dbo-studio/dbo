@@ -2,7 +2,6 @@ package serviceAi
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -22,7 +21,7 @@ func (s *AiServiceImpl) createProvider(ctx context.Context, providerId uint) (se
 		return nil, nil, err
 	}
 
-	if dbProvider.ApiKey == nil || *dbProvider.ApiKey == "" || dbProvider.Url == nil || *dbProvider.Url == "" {
+	if dbProvider.ApiKey == nil || *dbProvider.ApiKey == "" || dbProvider.Url == "" {
 		return nil, nil, apperror.BadRequest(apperror.ErrProviderNotConfigured)
 	}
 
@@ -50,25 +49,21 @@ func (s *AiServiceImpl) findChat(ctx context.Context, req *dto.AiChatRequest) (*
 	return chat, nil
 }
 
-func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chatId uint, userMessages []dto.AiMessage, aiResponse dto.AiMessage) error {
-	for _, msg := range userMessages {
-		chatMessage := &model.AiChatMessage{
-			ChatId:  chatId,
-			Role:    msg.Role,
-			Content: msg.Content,
-		}
-		if err := s.aiChatRepo.AddMessage(ctx, chatMessage); err != nil {
-			return fmt.Errorf("failed to save user message: %w", err)
-		}
+func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat, userMessage string, aiMessage string) error {
+	if err := s.aiChatRepo.AddMessage(ctx, &model.AiChatMessage{
+		ChatId:  chat.ID,
+		Role:    model.AiChatMessageRoleUser,
+		Content: userMessage,
+	}); err != nil {
+		return err
 	}
 
-	aiMessage := &model.AiChatMessage{
-		ChatId:  chatId,
-		Role:    aiResponse.Role,
-		Content: aiResponse.Content,
-	}
-	if err := s.aiChatRepo.AddMessage(ctx, aiMessage); err != nil {
-		return fmt.Errorf("failed to save AI response: %w", err)
+	if err := s.aiChatRepo.AddMessage(ctx, &model.AiChatMessage{
+		ChatId:  chat.ID,
+		Role:    model.AiChatMessageRoleAssistant,
+		Content: aiMessage,
+	}); err != nil {
+		return err
 	}
 
 	return nil

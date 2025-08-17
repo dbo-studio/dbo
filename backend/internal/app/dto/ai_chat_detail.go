@@ -1,7 +1,5 @@
 package dto
 
-import "time"
-
 type (
 	AiChatDetailRequest struct {
 		AiChatId uint
@@ -10,7 +8,7 @@ type (
 	AiChatDetailResponse struct {
 		ID        uint        `json:"id"`
 		Title     string      `json:"title"`
-		CreatedAt time.Time   `json:"createdAt"`
+		CreatedAt string      `json:"createdAt"`
 		Messages  []AiMessage `json:"messages"`
 	}
 )

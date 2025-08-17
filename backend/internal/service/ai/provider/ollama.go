@@ -4,32 +4,21 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
-	"time"
+	"log"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/gofiber/fiber/v3/client"
-	"github.com/samber/lo"
 )
 
 type OllamaProvider struct {
-	timeout int
-	url     string
-	apiKey  *string
+	*BaseProvider
 }
 
 func NewOllamaProvider(provider *model.AiProvider) IAIProvider {
-	url := "http://localhost:11434"
-	if provider.Url != nil {
-		url = strings.TrimRight(lo.FromPtr(provider.Url), "/")
-	}
-
 	return &OllamaProvider{
-		timeout: 60,
-		url:     url,
-		apiKey:  provider.ApiKey,
+		BaseProvider: NewBaseProvider(provider),
 	}
 }
 
@@ -45,7 +34,7 @@ func (p *OllamaProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespo
 
 	for _, msg := range req.Messages {
 		messages = append(messages, map[string]string{
-			"role":    msg.Role,
+			"role":    string(msg.Role),
 			"content": msg.Content,
 		})
 	}
@@ -79,7 +68,6 @@ func (p *OllamaProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespo
 		return nil, apperror.InternalServerError(fmt.Errorf("API error: status %d, body: %s", resp.StatusCode(), string(resp.Body())))
 	}
 
-	// پارس کردن پاسخ
 	var response struct {
 		Message struct {
 			Role    string `json:"role"`
@@ -142,40 +130,4 @@ func (p *OllamaProvider) Complete(ctx context.Context, req *CompletionRequest) (
 	return &CompletionResponse{
 		Completion: response.Response,
 	}, nil
-}
-
-func (p *OllamaProvider) buildCompletionPrompt(req *CompletionRequest) string {
-	var sb strings.Builder
-
-	sb.WriteString(startedPrompt)
-
-	if req.Language != nil && *req.Language != "" {
-		sb.WriteString("Language: " + *req.Language + "\n")
-	}
-
-	if req.Context != "" {
-		sb.WriteString("Context:\n" + req.Context + "\n\n")
-	}
-
-	sb.WriteString("Prefix:\n" + req.Prompt + "\n\n")
-
-	if req.Suffix != nil && *req.Suffix != "" {
-		sb.WriteString("Suffix:\n" + *req.Suffix + "\n\n")
-	}
-
-	sb.WriteString("Continue the code only, no explanations.")
-
-	return sb.String()
-}
-
-func (p *OllamaProvider) GetHttpClient() *client.Client {
-	cc := client.New()
-	cc.SetTimeout(time.Duration(p.timeout) * time.Second)
-	cc.AddHeader("Content-Type", "application/json")
-
-	if p.apiKey != nil {
-		cc.AddHeader("Authorization", "Bearer "+lo.FromPtr(p.apiKey))
-	}
-
-	return cc
 }
