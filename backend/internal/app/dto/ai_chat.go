@@ -13,8 +13,8 @@ type (
 	}
 
 	AiChatResponse struct {
-		ChatId  uint      `json:"chatId"`
-		Message AiMessage `json:"message"`
+		ChatId   uint        `json:"chatId"`
+		Messages []AiMessage `json:"messages"`
 	}
 )
 
@@ -30,6 +30,8 @@ type (
 	AiMessage struct {
 		Role      string `json:"role"`
 		Content   string `json:"content"`
+		Type      string `json:"type"`
+		Language  string `json:"language"`
 		CreatedAt string `json:"createdAt"`
 	}
 )

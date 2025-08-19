@@ -27,6 +27,8 @@ func aiChatDetailToResponse(chat *model.AiChat) *dto.AiChatDetailResponse {
 		messages[i] = dto.AiMessage{
 			Role:      string(message.Role),
 			Content:   message.Content,
+			Type:      string(message.Type),
+			Language:  string(message.Language),
 			CreatedAt: message.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
 	}

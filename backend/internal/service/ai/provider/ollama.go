@@ -4,30 +4,42 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/gofiber/fiber/v3/client"
+	"github.com/samber/lo"
 )
 
 type OllamaProvider struct {
 	*BaseProvider
 }
 
-func NewOllamaProvider(provider *model.AiProvider) IAIProvider {
+func NewOllamaProvider(provider *model.AiProvider) IAiProvider {
+	provider.ApiKey = lo.ToPtr("-")
 	return &OllamaProvider{
 		BaseProvider: NewBaseProvider(provider),
 	}
 }
 
 func (p *OllamaProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
+	if req == nil {
+		return nil, apperror.BadRequest(fmt.Errorf("request cannot be nil"))
+	}
+
+	if req.Model == "" {
+		return nil, apperror.BadRequest(fmt.Errorf("model is required"))
+	}
+
 	messages := make([]map[string]string, 0, len(req.Messages)+1)
 
 	if req.Context != "" {
+		systemPrompt := p.buildChatPrompt(req)
+
 		messages = append(messages, map[string]string{
 			"role":    "system",
-			"content": fmt.Sprintf("Context:\n%s", req.Context),
+			"content": systemPrompt,
 		})
 	}
 
@@ -67,26 +79,64 @@ func (p *OllamaProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespo
 		return nil, apperror.InternalServerError(fmt.Errorf("API error: status %d, body: %s", resp.StatusCode(), string(resp.Body())))
 	}
 
-	var response struct {
-		Message struct {
-			Role    string `json:"role"`
-			Content string `json:"content"`
-		} `json:"message"`
-	}
-
-	if err := json.Unmarshal(resp.Body(), &response); err != nil {
+	var rawResp AiMessageResponse
+	if err := json.Unmarshal(resp.Body(), &rawResp); err != nil {
 		return nil, apperror.InternalServerError(fmt.Errorf("failed to parse response: %v", err))
 	}
 
+	if !rawResp.Done {
+		return nil, apperror.InternalServerError(fmt.Errorf("incomplete response from Ollama"))
+	}
+
+	var aiResponse struct {
+		Contents []AiMessageContent `json:"contents"`
+	}
+
+	if err := json.Unmarshal([]byte(rawResp.Message.Content), &aiResponse); err == nil && len(aiResponse.Contents) > 0 {
+		contents := make([]model.AiChatMessageContent, len(aiResponse.Contents))
+		for i, content := range aiResponse.Contents {
+			contents[i] = model.AiChatMessageContent{
+				Type:     content.Type,
+				Content:  content.Content,
+				Language: content.Language,
+			}
+		}
+
+		return &ChatResponse{
+			Role:     model.AiChatMessageRole(rawResp.Message.Role),
+			Content:  rawResp.Message.Content,
+			Type:     aiResponse.Contents[0].Type,
+			Language: aiResponse.Contents[0].Language,
+			Contents: contents,
+		}, nil
+	}
+
+	// Fallback: try to parse as single content format
+	var aiMsg AiMessageContent
+	if err := json.Unmarshal([]byte(rawResp.Message.Content), &aiMsg); err != nil {
+		aiMsg = AiMessageContent{
+			Type:    model.AiChatMessageTypeExplanation,
+			Content: strings.TrimSpace(rawResp.Message.Content),
+		}
+	}
+
 	return &ChatResponse{
-		Message: dto.AiMessage{
-			Role:    response.Message.Role,
-			Content: response.Message.Content,
-		},
+		Role:     model.AiChatMessageRole(rawResp.Message.Role),
+		Content:  aiMsg.Content,
+		Type:     aiMsg.Type,
+		Language: aiMsg.Language,
 	}, nil
 }
 
 func (p *OllamaProvider) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {
+	if req == nil {
+		return nil, apperror.BadRequest(fmt.Errorf("request cannot be nil"))
+	}
+
+	if req.Model == "" {
+		return nil, apperror.BadRequest(fmt.Errorf("model is required"))
+	}
+
 	prompt := p.buildCompletionPrompt(req)
 
 	payload := map[string]interface{}{
@@ -120,13 +170,18 @@ func (p *OllamaProvider) Complete(ctx context.Context, req *CompletionRequest) (
 
 	var response struct {
 		Response string `json:"response"`
+		Done     bool   `json:"done"`
 	}
 
 	if err := json.Unmarshal(resp.Body(), &response); err != nil {
 		return nil, apperror.InternalServerError(fmt.Errorf("failed to parse response: %v", err))
 	}
 
+	if !response.Done {
+		return nil, apperror.InternalServerError(fmt.Errorf("incomplete response from Ollama"))
+	}
+
 	return &CompletionResponse{
-		Completion: response.Response,
+		Completion: strings.TrimSpace(response.Response),
 	}, nil
 }

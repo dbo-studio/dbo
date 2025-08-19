@@ -12,7 +12,7 @@ func NewProviderFactory() *ProviderFactory {
 	return &ProviderFactory{}
 }
 
-func (f *ProviderFactory) CreateProvider(provider *model.AiProvider) (IAIProvider, error) {
+func (f *ProviderFactory) CreateProvider(provider *model.AiProvider) (IAiProvider, error) {
 	switch provider.Type {
 	case model.AIProviderTypeOpenAI:
 		return NewOpenAIProvider(provider), nil

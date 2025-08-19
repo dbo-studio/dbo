@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/gofiber/fiber/v3/client"
@@ -16,7 +15,7 @@ type AnthropicProvider struct {
 	*BaseProvider
 }
 
-func NewAnthropicProvider(provider *model.AiProvider) IAIProvider {
+func NewAnthropicProvider(provider *model.AiProvider) IAiProvider {
 	return &AnthropicProvider{
 		BaseProvider: NewBaseProvider(provider),
 	}
@@ -79,7 +78,8 @@ func (p *AnthropicProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRe
 
 	if len(response.Content) == 0 {
 		return &ChatResponse{
-			Message: dto.AiMessage{Role: "assistant", Content: ""},
+			Role:    model.AiChatMessageRoleAssistant,
+			Content: "",
 		}, nil
 	}
 
@@ -90,12 +90,10 @@ func (p *AnthropicProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRe
 		}
 	}
 
-	return &ChatResponse{
-		Message: dto.AiMessage{
-			Role:    response.Role,
-			Content: content.String(),
-		},
-	}, nil
+	return convertToStructuredResponse(
+		content.String(),
+		model.AiChatMessageRole(response.Role),
+	), nil
 }
 
 func (p *AnthropicProvider) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {

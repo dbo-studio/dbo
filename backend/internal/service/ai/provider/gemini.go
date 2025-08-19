@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/gofiber/fiber/v3/client"
@@ -17,7 +16,7 @@ type GeminiProvider struct {
 	*BaseProvider
 }
 
-func NewGeminiProvider(provider *model.AiProvider) IAIProvider {
+func NewGeminiProvider(provider *model.AiProvider) IAiProvider {
 	return &GeminiProvider{
 		BaseProvider: NewBaseProvider(provider),
 	}
@@ -102,7 +101,8 @@ func (p *GeminiProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespo
 
 	if len(response.Candidates) == 0 || len(response.Candidates[0].Content.Parts) == 0 {
 		return &ChatResponse{
-			Message: dto.AiMessage{Role: "assistant", Content: ""},
+			Role:    model.AiChatMessageRoleAssistant,
+			Content: "",
 		}, nil
 	}
 
@@ -111,12 +111,10 @@ func (p *GeminiProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespo
 		content.WriteString(part.Text)
 	}
 
-	return &ChatResponse{
-		Message: dto.AiMessage{
-			Role:    "assistant",
-			Content: content.String(),
-		},
-	}, nil
+	return convertToStructuredResponse(
+		content.String(),
+		model.AiChatMessageRoleAssistant,
+	), nil
 }
 
 func (p *GeminiProvider) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {

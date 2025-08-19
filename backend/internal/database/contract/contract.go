@@ -1,8 +1,6 @@
 package databaseContract
 
-import (
-	"github.com/dbo-studio/dbo/internal/app/dto"
-)
+import "github.com/dbo-studio/dbo/internal/app/dto"
 
 type DatabaseRepository interface {
 	Version() (string, error)

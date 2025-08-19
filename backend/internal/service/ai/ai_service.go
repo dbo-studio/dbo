@@ -93,18 +93,42 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		return nil, err
 	}
 
-	if err := s.saveChatMessages(ctx, chat, req.Message, providerResp.Message.Content); err != nil {
+	if err := s.saveChatMessages(ctx, chat, req.Message, providerResp); err != nil {
 		s.logger.Error(fmt.Sprintf("Failed to save chat messages: %v", err))
 	}
 
 	response := &dto.AiChatResponse{
 		ChatId: chat.ID,
-		Message: dto.AiMessage{
-			Role:      providerResp.Message.Role,
-			Content:   providerResp.Message.Content,
-			CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
-		},
 	}
+
+	response.Messages = append(response.Messages, dto.AiMessage{
+		Role:      string(model.AiChatMessageRoleUser),
+		Content:   req.Message,
+		Type:      string(model.AiChatMessageTypeExplanation),
+		Language:  string(model.AiChatMessageLanguageText),
+		CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+	})
+
+	if len(providerResp.Contents) > 0 {
+		for _, content := range providerResp.Contents {
+			response.Messages = append(response.Messages, dto.AiMessage{
+				Role:      string(providerResp.Role),
+				Content:   content.Content,
+				Type:      string(content.Type),
+				Language:  string(content.Language),
+				CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+			})
+		}
+		return response, nil
+	}
+
+	response.Messages = append(response.Messages, dto.AiMessage{
+		Role:      string(providerResp.Role),
+		Content:   providerResp.Content,
+		Type:      string(providerResp.Type),
+		Language:  string(providerResp.Language),
+		CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+	})
 
 	return response, nil
 }

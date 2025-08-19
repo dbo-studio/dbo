@@ -23,7 +23,9 @@ func (r AiChatRepoImpl) List(ctx context.Context) ([]model.AiChat, error) {
 
 func (r AiChatRepoImpl) Find(ctx context.Context, id uint) (*model.AiChat, error) {
 	var chat model.AiChat
-	err := r.db.WithContext(ctx).Preload("Messages").First(&chat, id).Error
+	err := r.db.WithContext(ctx).
+		Preload("Messages", "role <> ?", model.AiChatMessageRoleSystem).
+		First(&chat, id).Error
 	if err != nil {
 		return nil, err
 	}

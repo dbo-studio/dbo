@@ -2,12 +2,13 @@ package serviceAiProvider
 
 import (
 	"context"
+	"encoding/json"
+	"strings"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 )
 
-type IAIProvider interface {
+type IAiProvider interface {
 	Chat(ctx context.Context, req *ChatRequest) (*ChatResponse, error)
 	Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error)
 }
@@ -21,7 +22,11 @@ type ChatRequest struct {
 }
 
 type ChatResponse struct {
-	Message dto.AiMessage `json:"message"`
+	Role     model.AiChatMessageRole      `json:"role"`
+	Content  string                       `json:"content"`
+	Type     model.AiChatMessageType      `json:"type"`
+	Language model.AiChatMessageLanguage  `json:"language"`
+	Contents []model.AiChatMessageContent `json:"contents,omitempty"`
 }
 
 type CompletionRequest struct {
@@ -36,4 +41,68 @@ type CompletionRequest struct {
 
 type CompletionResponse struct {
 	Completion string `json:"completion"`
+}
+
+type AiMessageResponse struct {
+	Message struct {
+		Role    string `json:"role"`
+		Content string `json:"content"`
+	} `json:"message"`
+	Done bool `json:"done"`
+}
+
+type AiMessageContent struct {
+	Type     model.AiChatMessageType     `json:"type"`
+	Content  string                      `json:"content"`
+	Language model.AiChatMessageLanguage `json:"language,omitempty"`
+}
+
+// Helper function to convert simple content to structured response
+func convertToStructuredResponse(content string, role model.AiChatMessageRole) *ChatResponse {
+	// Try to parse as structured response first
+	var structuredResponse struct {
+		Contents []AiMessageContent `json:"contents"`
+	}
+
+	if err := json.Unmarshal([]byte(content), &structuredResponse); err == nil && len(structuredResponse.Contents) > 0 {
+		// Convert to model types
+		contents := make([]model.AiChatMessageContent, len(structuredResponse.Contents))
+		for i, content := range structuredResponse.Contents {
+			contents[i] = model.AiChatMessageContent{
+				Type:     content.Type,
+				Content:  content.Content,
+				Language: content.Language,
+			}
+		}
+
+		return &ChatResponse{
+			Role:     role,
+			Content:  content, // Keep original for backward compatibility
+			Type:     contents[0].Type,
+			Language: contents[0].Language,
+			Contents: contents,
+		}
+	}
+
+	// Fallback to simple content
+	messageType := model.AiChatMessageTypeExplanation
+	language := model.AiChatMessageLanguageText
+
+	// Try to detect if it's code
+	trimmedContent := strings.TrimSpace(content)
+	if strings.Contains(strings.ToLower(trimmedContent), "select") ||
+		strings.Contains(strings.ToLower(trimmedContent), "insert") ||
+		strings.Contains(strings.ToLower(trimmedContent), "update") ||
+		strings.Contains(strings.ToLower(trimmedContent), "delete") ||
+		strings.Contains(strings.ToLower(trimmedContent), "create") {
+		messageType = model.AiChatMessageTypeCode
+		language = model.AiChatMessageLanguageSql
+	}
+
+	return &ChatResponse{
+		Role:     role,
+		Content:  content,
+		Type:     messageType,
+		Language: language,
+	}
 }

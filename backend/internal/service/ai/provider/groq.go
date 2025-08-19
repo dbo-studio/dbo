@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/gofiber/fiber/v3/client"
@@ -15,7 +14,7 @@ type GroqProvider struct {
 	*BaseProvider
 }
 
-func NewGroqProvider(provider *model.AiProvider) IAIProvider {
+func NewGroqProvider(provider *model.AiProvider) IAiProvider {
 	return &GroqProvider{
 		BaseProvider: NewBaseProvider(provider),
 	}
@@ -77,16 +76,15 @@ func (p *GroqProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespons
 
 	if len(response.Choices) == 0 {
 		return &ChatResponse{
-			Message: dto.AiMessage{Role: "assistant", Content: ""},
+			Role:    model.AiChatMessageRoleAssistant,
+			Content: "",
 		}, nil
 	}
 
-	return &ChatResponse{
-		Message: dto.AiMessage{
-			Role:    response.Choices[0].Message.Role,
-			Content: response.Choices[0].Message.Content,
-		},
-	}, nil
+	return convertToStructuredResponse(
+		response.Choices[0].Message.Content,
+		model.AiChatMessageRole(response.Choices[0].Message.Role),
+	), nil
 }
 
 func (p *GroqProvider) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {

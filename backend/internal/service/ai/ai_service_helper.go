@@ -10,7 +10,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func (s *AiServiceImpl) createProvider(ctx context.Context, providerId uint) (serviceAiProvider.IAIProvider, *model.AiProvider, error) {
+func (s *AiServiceImpl) createProvider(ctx context.Context, providerId uint) (serviceAiProvider.IAiProvider, *model.AiProvider, error) {
 	dbProvider, err := s.aiProviderRepo.Find(ctx, providerId)
 	if err != nil {
 		return nil, nil, apperror.NotFound(apperror.ErrAiProviderNotFound)
@@ -49,21 +49,39 @@ func (s *AiServiceImpl) findChat(ctx context.Context, req *dto.AiChatRequest) (*
 	return chat, nil
 }
 
-func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat, userMessage string, aiMessage string) error {
+func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat, userMessage string, aiMessage *serviceAiProvider.ChatResponse) error {
 	if err := s.aiChatRepo.AddMessage(ctx, &model.AiChatMessage{
-		ChatId:  chat.ID,
-		Role:    model.AiChatMessageRoleUser,
-		Content: userMessage,
+		ChatId:   chat.ID,
+		Role:     model.AiChatMessageRoleUser,
+		Content:  userMessage,
+		Type:     model.AiChatMessageTypeExplanation,
+		Language: model.AiChatMessageLanguageText,
 	}); err != nil {
 		return err
 	}
 
-	if err := s.aiChatRepo.AddMessage(ctx, &model.AiChatMessage{
-		ChatId:  chat.ID,
-		Role:    model.AiChatMessageRoleAssistant,
-		Content: aiMessage,
-	}); err != nil {
-		return err
+	if len(aiMessage.Contents) > 0 {
+		for _, content := range aiMessage.Contents {
+			if err := s.aiChatRepo.AddMessage(ctx, &model.AiChatMessage{
+				ChatId:   chat.ID,
+				Role:     model.AiChatMessageRoleAssistant,
+				Content:  content.Content,
+				Type:     content.Type,
+				Language: content.Language,
+			}); err != nil {
+				return err
+			}
+		}
+	} else {
+		if err := s.aiChatRepo.AddMessage(ctx, &model.AiChatMessage{
+			ChatId:   chat.ID,
+			Role:     model.AiChatMessageRoleAssistant,
+			Content:  aiMessage.Content,
+			Type:     aiMessage.Type,
+			Language: aiMessage.Language,
+		}); err != nil {
+			return err
+		}
 	}
 
 	return nil
