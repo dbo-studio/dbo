@@ -90,8 +90,8 @@ func (p *AnthropicProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRe
 		}
 	}
 
-	return convertToStructuredResponse(
-		content.String(),
+	return p.convertToStructuredResponse(
+		strings.TrimSpace(content.String()),
 		model.AiChatMessageRole(response.Role),
 	), nil
 }

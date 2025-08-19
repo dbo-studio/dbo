@@ -88,44 +88,10 @@ func (p *OllamaProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespo
 		return nil, apperror.InternalServerError(fmt.Errorf("incomplete response from Ollama"))
 	}
 
-	var aiResponse struct {
-		Contents []AiMessageContent `json:"contents"`
-	}
-
-	if err := json.Unmarshal([]byte(rawResp.Message.Content), &aiResponse); err == nil && len(aiResponse.Contents) > 0 {
-		contents := make([]model.AiChatMessageContent, len(aiResponse.Contents))
-		for i, content := range aiResponse.Contents {
-			contents[i] = model.AiChatMessageContent{
-				Type:     content.Type,
-				Content:  content.Content,
-				Language: content.Language,
-			}
-		}
-
-		return &ChatResponse{
-			Role:     model.AiChatMessageRole(rawResp.Message.Role),
-			Content:  rawResp.Message.Content,
-			Type:     aiResponse.Contents[0].Type,
-			Language: aiResponse.Contents[0].Language,
-			Contents: contents,
-		}, nil
-	}
-
-	// Fallback: try to parse as single content format
-	var aiMsg AiMessageContent
-	if err := json.Unmarshal([]byte(rawResp.Message.Content), &aiMsg); err != nil {
-		aiMsg = AiMessageContent{
-			Type:    model.AiChatMessageTypeExplanation,
-			Content: strings.TrimSpace(rawResp.Message.Content),
-		}
-	}
-
-	return &ChatResponse{
-		Role:     model.AiChatMessageRole(rawResp.Message.Role),
-		Content:  aiMsg.Content,
-		Type:     aiMsg.Type,
-		Language: aiMsg.Language,
-	}, nil
+	return p.convertToStructuredResponse(
+		strings.TrimSpace(rawResp.Message.Content),
+		model.AiChatMessageRole(rawResp.Message.Role),
+	), nil
 }
 
 func (p *OllamaProvider) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {

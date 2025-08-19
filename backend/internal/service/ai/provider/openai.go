@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
@@ -81,8 +82,8 @@ func (p *OpenAIProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespo
 		}, nil
 	}
 
-	return convertToStructuredResponse(
-		response.Choices[0].Message.Content,
+	return p.convertToStructuredResponse(
+		strings.TrimSpace(response.Choices[0].Message.Content),
 		model.AiChatMessageRole(response.Choices[0].Message.Role),
 	), nil
 }

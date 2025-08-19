@@ -111,9 +111,9 @@ func (p *GeminiProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespo
 		content.WriteString(part.Text)
 	}
 
-	return convertToStructuredResponse(
-		content.String(),
-		model.AiChatMessageRoleAssistant,
+	return p.convertToStructuredResponse(
+		strings.TrimSpace(content.String()),
+		model.AiChatMessageRole(response.Candidates[0].Content.Role),
 	), nil
 }
 
