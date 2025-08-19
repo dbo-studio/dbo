@@ -1,27 +1,23 @@
 import api from '@/api';
+import type { AiChatRequest, AiContextOptsType } from '@/api/ai/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { useCurrentConnection } from '@/hooks';
+import { TabMode } from '@/core/enums';
+import { useCurrentConnection, useSelectedTab } from '@/hooks';
+import { useAiStore } from '@/store/aiStore/ai.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AutoCompleteType } from '@/types';
-import { IconButton, Stack } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
-import type { ContextItemType } from '../types';
+import { Box, CircularProgress, IconButton, Stack } from '@mui/material';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { ChatBoxStyled } from './ChatBox.styled';
 import ChatContext from './ChatContext/ChatContext';
 import ChatTextInput from './ChatTextInput/ChatTextInput';
 import Providers from './Providers/Providers';
 
 export default function ChatBox() {
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [contextItems, setContextItems] = useState<Record<string, string[]>>({
-    databases: [],
-    schemas: [],
-    tables: [],
-    views: []
-  });
-
   const currentConnection = useCurrentConnection();
+  const selectedTab = useSelectedTab();
+  const context = useAiStore((state) => state.context);
+  const addMessage = useAiStore((state) => state.addMessage);
 
   const { data: autocomplete } = useQuery({
     queryKey: ['ai_autocomplete', currentConnection?.id],
@@ -34,29 +30,53 @@ export default function ChatBox() {
     enabled: !!currentConnection
   });
 
-  console.log(autocomplete);
+  const { mutateAsync: chatMutation, isPending } = useMutation({
+    mutationFn: api.ai.chat,
+    onError: (error: Error): void => {
+      console.log('🚀 ~ AIChatPanel ~ error:', error);
+    }
+  });
 
   const handleSend = async () => {
-    console.log('handleSend');
-    if (!input.trim() || loading) return;
-    setLoading(true);
-  };
+    if (!context.input.trim() || isPending || !context.database) return;
 
-  const handleContextChange = (contextItems: Record<ContextItemType, string[]>) => {
-    setContextItems(contextItems);
+    const contextOpts: AiContextOptsType = {
+      database: context.database,
+      schema: context.schema,
+      tables: context.tables,
+      views: context.views
+    };
+
+    if (selectedTab?.mode === TabMode.Query && selectedTab?.query) {
+      contextOpts.query = useTabStore.getState().getQuery(selectedTab?.id);
+    }
+
+    const chat = await chatMutation({
+      connectionId: currentConnection?.id ?? 0,
+      providerId: 1,
+      model: 1,
+      message: context.input.trim(),
+      contextOpts
+    } as AiChatRequest);
+
+    console.log('🚀 ~ handleSend ~ chat:', chat);
   };
 
   return (
     <ChatBoxStyled>
-      {autocomplete && (
-        <ChatContext autocomplete={autocomplete} contextItems={contextItems} onContextChange={handleContextChange} />
-      )}
-      <ChatTextInput value={input} onChange={setInput} onSend={handleSend} />
+      {autocomplete && <ChatContext autocomplete={autocomplete} />}
+      <ChatTextInput onSend={handleSend} />
       <Stack direction={'row'} justifyContent={'space-between'} alignItems={'center'}>
         <Providers />
-        <IconButton onClick={handleSend}>
-          <CustomIcon type='arrowUp' />
-        </IconButton>
+        {isPending ? (
+          <Box pr={1}>
+            <CircularProgress size={13} />
+          </Box>
+        ) : (
+          <IconButton onClick={handleSend}>
+            <CustomIcon type='arrowUp' />
+          </IconButton>
+        )}
       </Stack>
     </ChatBoxStyled>
   );

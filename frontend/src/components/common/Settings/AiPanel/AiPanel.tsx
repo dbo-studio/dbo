@@ -3,7 +3,7 @@ import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
-import type { AIProvider } from '@/types/AiProvider';
+import type { AiProviderType } from '@/types';
 import { Box, Button } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 export default function AiPanel() {
   const providers = useAiStore((state) => state.providers);
   const updateProvider = useAiStore((state) => state.updateProvider);
-  const [provider, setProvider] = useState<AIProvider | undefined>(providers?.[0]);
+  const [provider, setProvider] = useState<AiProviderType | undefined>(providers?.[0]);
   const [error, setError] = useState<{
     apiKey: string | undefined;
     url: string | undefined;
@@ -22,7 +22,7 @@ export default function AiPanel() {
   });
 
   const { mutateAsync: updateProviderMutation, isPending: pendingUpdateProvider } = useMutation({
-    mutationFn: async (provider: AIProvider): Promise<AIProvider> => {
+    mutationFn: async (provider: AiProviderType): Promise<AiProviderType> => {
       setError({
         apiKey: undefined,
         url: undefined
@@ -63,7 +63,7 @@ export default function AiPanel() {
       <FieldInput
         label={locales.api_key}
         value={provider?.apiKey ?? ''}
-        onChange={(e) => setProvider({ ...provider, apiKey: e.target.value } as AIProvider)}
+        onChange={(e) => setProvider({ ...provider, apiKey: e.target.value } as AiProviderType)}
         helpertext={error.apiKey}
         error={!!error.apiKey}
       />
@@ -71,7 +71,7 @@ export default function AiPanel() {
       <FieldInput
         label={locales.url}
         value={provider?.url}
-        onChange={(e) => setProvider({ ...provider, url: e.target.value } as AIProvider)}
+        onChange={(e) => setProvider({ ...provider, url: e.target.value } as AiProviderType)}
         helpertext={error.url}
         error={!!error.url}
       />
@@ -82,7 +82,12 @@ export default function AiPanel() {
         label={locales.temperature}
         typelabel={`${locales.max} 1.0`}
         value={provider?.temperature ?? ''}
-        onChange={(e) => setProvider({ ...provider, temperature: Number.parseFloat(e.target.value) } as AIProvider)}
+        onChange={(e) =>
+          setProvider({
+            ...provider,
+            temperature: Number.parseFloat(e.target.value)
+          } as AiProviderType)
+        }
       />
 
       <FieldInput
@@ -91,7 +96,26 @@ export default function AiPanel() {
         type='number'
         label={locales.max_tokens}
         value={provider?.maxTokens ?? ''}
-        onChange={(e) => setProvider({ ...provider, maxTokens: Number.parseInt(e.target.value) } as AIProvider)}
+        onChange={(e) =>
+          setProvider({
+            ...provider,
+            maxTokens: Number.parseInt(e.target.value)
+          } as AiProviderType)
+        }
+      />
+
+      <FieldInput
+        placeholder='30'
+        typelabel={`${locales.max} 1000`}
+        type='number'
+        label={locales.timeout}
+        value={provider?.timeout ?? ''}
+        onChange={(e) =>
+          setProvider({
+            ...provider,
+            timeout: Number.parseInt(e.target.value)
+          } as AiProviderType)
+        }
       />
 
       <Box display={'flex'} mt={2} justifyContent={'space-between'}>
@@ -101,7 +125,7 @@ export default function AiPanel() {
           disabled={pendingUpdateProvider}
           loading={pendingUpdateProvider}
           onClick={(): void => {
-            updateProviderMutation(provider as AIProvider);
+            updateProviderMutation(provider as AiProviderType);
           }}
           size='small'
           variant='contained'

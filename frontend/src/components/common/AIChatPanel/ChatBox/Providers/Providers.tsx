@@ -32,13 +32,23 @@ export default function Providers() {
     <Stack direction={'row'} spacing={1}>
       <SelectInput
         size='small'
-        options={providers?.map((provider) => ({ label: provider.type, value: provider.type })) ?? []}
+        options={
+          providers?.map((provider) => ({
+            label: provider.type,
+            value: provider.type
+          })) ?? []
+        }
         onChange={(option) => handleProviderChange(option.value)}
         value={currentProvider?.type}
       />
       <SelectInput
         size='small'
-        options={currentProvider?.models?.map((model) => ({ label: model, value: model })) ?? []}
+        options={
+          currentProvider?.models?.map((model) => ({
+            label: model,
+            value: model
+          })) ?? []
+        }
         onChange={(option) => updateCurrentModel(currentProvider?.type ?? '', option.value)}
         value={getCurrentModel(currentProvider?.type ?? '')}
       />

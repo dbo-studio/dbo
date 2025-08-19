@@ -1,4 +1,4 @@
-import type { AIProvider } from '@/types/AiProvider';
+import type { AiProviderType } from '@/types';
 import type { StateCreator } from 'zustand';
 import type { AiProviderSlice } from '../types';
 
@@ -6,15 +6,15 @@ export const createAiProviderSlice: StateCreator<AiProviderSlice, [], [], AiProv
   providers: undefined,
   currentProvider: undefined,
   currentModel: {},
-  updateProviders: async (providers: AIProvider[]) => {
+  updateProviders: async (providers: AiProviderType[]) => {
     set({ providers });
   },
-  updateProvider: async (provider: AIProvider) => {
+  updateProvider: async (provider: AiProviderType) => {
     const providers = get().providers ?? [];
     const updatedProviders = providers.map((p) => (p.id === provider.id ? provider : p));
     set({ providers: updatedProviders });
   },
-  updateCurrentProvider: (provider: AIProvider) => {
+  updateCurrentProvider: (provider: AiProviderType) => {
     set({ currentProvider: provider });
   },
   getCurrentModel: (provider: string) => {

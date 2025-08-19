@@ -1,16 +1,17 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import type { AIMessage } from '@/core/ai/types';
+import { useAiStore } from '@/store/aiStore/ai.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, Button, Stack, Typography } from '@mui/material';
 
-export default function Messages({ messages }: { messages: AIMessage[] }) {
+export default function Messages() {
+  const currentChat = useAiStore((state) => state.currentChat);
+
   return (
     <Box display={'flex'} flex={1}>
-      asdad
       <Box flex={1} overflow={'auto'} p={1}>
         <Stack spacing={1}>
-          {messages.map((m, idx) => (
-            <Box key={idx} p={1} borderRadius={1} bgcolor={m.role === 'user' ? 'action.hover' : 'background.paper'}>
+          {currentChat?.messages.map((m) => (
+            <Box key={m.id} p={1} borderRadius={1} bgcolor={m.role === 'user' ? 'action.hover' : 'background.paper'}>
               <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'}>
                 <Typography variant='caption' color='text.secondary'>
                   {m.role === 'user' ? 'You' : 'AI'}

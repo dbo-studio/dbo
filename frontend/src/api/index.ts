@@ -1,6 +1,6 @@
 import * as ai from './ai';
-import * as aiChat from './ai_chat';
-import * as aiProvider from './ai_provider';
+import * as aiChat from './aiChat';
+import * as aiProvider from './aiProvider';
 import * as connection from './connection';
 import * as histories from './history';
 import * as importExport from './importExport';

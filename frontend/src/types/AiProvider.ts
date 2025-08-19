@@ -1,4 +1,4 @@
-export type AIProvider = {
+export type AiProviderType = {
   id: number;
   type: 'openai' | 'anthropic' | 'gemini' | 'groq' | 'ollama';
   apiKey?: string;
@@ -6,4 +6,5 @@ export type AIProvider = {
   models?: string[];
   temperature?: number;
   maxTokens?: number;
+  timeout?: number;
 };

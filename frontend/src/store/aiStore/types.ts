@@ -1,30 +1,35 @@
-import type { AIMessage } from '@/api/ai';
-import type { AIProvider } from '@/types/AiProvider';
+import type { AiChatType, AiContextType, AiMessageType, AiProviderType } from '@/types';
 
 export type AIThread = {
   id: number;
   title: string;
   createdAt: number;
-  messages: AIMessage[];
+  messages: AiMessageType[];
 };
 
-export type AiStore = {
-  threads: AIThread[];
-  currentThreadId: string | null;
-  newThread: (title?: string) => Promise<number>;
-  selectThread: (id: number) => void;
-  deleteThread: (id: number) => Promise<void>;
-  addMessageToCurrent: (m: AIMessage) => Promise<void>;
-  currentMessages: () => AIMessage[];
-};
+export type AiStore = {};
 
 export type AiProviderSlice = {
-  providers: AIProvider[] | undefined;
-  currentProvider: AIProvider | undefined;
+  providers: AiProviderType[] | undefined;
+  currentProvider: AiProviderType | undefined;
   currentModel: Record<string, string>;
-  updateCurrentProvider: (provider: AIProvider) => void;
-  updateProviders: (providers: AIProvider[]) => Promise<void>;
-  updateProvider: (provider: AIProvider) => Promise<void>;
+  updateCurrentProvider: (provider: AiProviderType) => void;
+  updateProviders: (providers: AiProviderType[]) => Promise<void>;
+  updateProvider: (provider: AiProviderType) => Promise<void>;
   getCurrentModel: (provider: string) => string | undefined;
   updateCurrentModel: (provider: string, model: string) => void;
+};
+
+export type AiChatSlice = {
+  chats: AiChatType[];
+  currentChat: AiChatType | undefined;
+  updateCurrentChat: (chat: AiChatType) => void;
+  updateChats: (chats: AiChatType[]) => Promise<void>;
+  addChat: (chat: AiChatType) => Promise<void>;
+  addMessage: (chatId: number, message: AiMessageType) => Promise<void>;
+};
+
+export type AiContextSlice = {
+  context: AiContextType;
+  updateContext: (context: AiContextType) => void;
 };

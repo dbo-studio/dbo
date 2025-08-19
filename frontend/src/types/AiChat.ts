@@ -1,12 +1,21 @@
-export type AIChat = {
+export type AiChatType = {
   id: number;
   title: string;
   createdAt: string;
-  messages: AIMessage[];
+  messages: AiMessageType[];
 };
 
-export type AIMessage = {
-  role: string;
+export type AiMessageType = {
+  id: number;
+  role: 'system' | 'user' | 'assistant';
   content: string;
   createdAt: string;
+};
+
+export type AiContextType = {
+  input: string;
+  database: string | undefined;
+  schema: string | undefined;
+  tables: string[];
+  views: string[];
 };
