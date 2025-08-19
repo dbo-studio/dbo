@@ -34,12 +34,22 @@ func (s *AiServiceImpl) findChat(ctx context.Context, req *dto.AiChatRequest) (*
 		if err != nil {
 			return nil, apperror.NotFound(apperror.ErrAiChatNotFound)
 		}
+
+		chat.ProviderId = lo.ToPtr(uint(req.ProviderId))
+		chat.Model = lo.ToPtr(req.Model)
+
+		if err := s.aiChatRepo.Update(ctx, chat); err != nil {
+			return nil, apperror.InternalServerError(err)
+		}
+
 		return chat, nil
 	}
 
 	chat, err := s.aiChatRepo.Create(ctx, &dto.AiChatCreateRequest{
 		Title:        req.Message,
 		ConnectionId: req.ConnectionId,
+		ProviderId:   lo.ToPtr(req.ProviderId),
+		Model:        lo.ToPtr(req.Model),
 	})
 
 	if err != nil {

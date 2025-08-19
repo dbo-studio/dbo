@@ -2,6 +2,7 @@ package serviceAiProvider
 
 import (
 	"encoding/json"
+	"regexp"
 	"strings"
 	"time"
 
@@ -111,51 +112,41 @@ func (p *BaseProvider) buildChatPrompt(req *ChatRequest) string {
 	sb.WriteString("Schema:\n")
 	sb.WriteString(req.Context)
 
+	if req.Query != "" {
+		sb.WriteString("\nCurrent Query:\n")
+		sb.WriteString(req.Query)
+		sb.WriteString("\n")
+	}
+
 	return sb.String()
 }
 
-func (p *BaseProvider) convertToStructuredResponse(content string, role model.AiChatMessageRole) *ChatResponse {
+func (p *BaseProvider) convertToStructuredResponse(content string, role model.AiChatMessageRole) (*ChatResponse, error) {
 	var structuredResponse struct {
 		Contents []AiMessageContent `json:"contents"`
 	}
 
-	if err := json.Unmarshal([]byte(content), &structuredResponse); err == nil && len(structuredResponse.Contents) > 0 {
-		contents := make([]model.AiChatMessageContent, len(structuredResponse.Contents))
-		for i, content := range structuredResponse.Contents {
-			contents[i] = model.AiChatMessageContent{
-				Type:     content.Type,
-				Content:  content.Content,
-				Language: content.Language,
-			}
-		}
+	re := regexp.MustCompile(`\\([^"\\/bfnrtu])`)
+	clean := re.ReplaceAllString(content, "$1")
 
-		return &ChatResponse{
-			Role:     role,
-			Content:  content,
-			Type:     contents[0].Type,
-			Language: contents[0].Language,
-			Contents: contents,
-		}
+	err := json.Unmarshal([]byte(clean), &structuredResponse)
+	if err != nil {
+		return nil, err
 	}
-
-	// fallback to simple content
-	messageType := model.AiChatMessageTypeExplanation
-	language := model.AiChatMessageLanguageText
-
-	trimmedContent := strings.TrimSpace(content)
-	if strings.Contains(strings.ToLower(trimmedContent), "select") ||
-		strings.Contains(strings.ToLower(trimmedContent), "insert") ||
-		strings.Contains(strings.ToLower(trimmedContent), "update") ||
-		strings.Contains(strings.ToLower(trimmedContent), "delete") ||
-		strings.Contains(strings.ToLower(trimmedContent), "create") {
-		messageType = model.AiChatMessageTypeCode
-		language = model.AiChatMessageLanguageSql
+	contents := make([]model.AiChatMessageContent, len(structuredResponse.Contents))
+	for i, content := range structuredResponse.Contents {
+		contents[i] = model.AiChatMessageContent{
+			Type:     content.Type,
+			Content:  content.Content,
+			Language: content.Language,
+		}
 	}
 
 	return &ChatResponse{
 		Role:     role,
 		Content:  content,
-		Type:     messageType,
-		Language: language,
-	}
+		Type:     contents[0].Type,
+		Language: contents[0].Language,
+		Contents: contents,
+	}, nil
 }

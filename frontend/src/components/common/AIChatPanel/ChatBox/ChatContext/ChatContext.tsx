@@ -1,10 +1,7 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import SelectInput from '@/components/base/SelectInput/SelectInput';
-import { useSelectedTab } from '@/hooks';
-import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { Box, Divider, IconButton, Stack } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import type { ChatContextProps, ContextItemType } from '../../types';
 import { ChatContextStyled } from './ChatContext.styled';
 import ChatContextItem from './ChatContextItem/ChatContextModalItem';
@@ -16,11 +13,7 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
   const [open, setOpen] = useState(false);
 
   const context = useAiStore((state) => state.context);
-  const selectedTab = useSelectedTab();
   const updateContext = useAiStore((state) => state.updateContext);
-
-  const [localSchema, setLocalSchema] = useState<string>('');
-  const [localDatabase, setLocalDatabase] = useState<string>('');
 
   const [localContext, setLocalContext] = useState<{
     tables: string[];
@@ -29,18 +22,6 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
     tables: context.tables,
     views: context.views
   });
-
-  useEffect(() => {
-    if (!selectedTab) return;
-
-    const database =
-      localDatabase === '' ? (selectedTab?.options?.database ?? autocomplete?.databases[0]) : localDatabase;
-    const schema = localSchema === '' ? (selectedTab?.options?.schema ?? autocomplete?.schemas[0]) : localSchema;
-
-    setLocalDatabase(database);
-    setLocalSchema(schema);
-    updateContext({ ...context, database, schema });
-  }, []);
 
   const handleToggle = () => {
     setOpen((prevOpen) => !prevOpen);
@@ -56,16 +37,6 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
     }
   };
 
-  const handleDatabaseChange = (database: string) => {
-    setLocalDatabase(database);
-    updateContext({ ...context, database });
-  };
-
-  const handleSchemaChange = (schema: string) => {
-    setLocalSchema(schema);
-    updateContext({ ...context, schema });
-  };
-
   return (
     <Box>
       <Stack
@@ -79,29 +50,13 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
         <IconButton ref={anchorRef} onClick={handleToggle}>
           <CustomIcon type='at' size='s' />
         </IconButton>
-        <SelectInput
-          emptylabel={locales.no_active_database_find}
-          value={localDatabase}
-          disabled={autocomplete?.databases?.length === 0}
-          size='small'
-          options={autocomplete?.databases.map((s) => ({ value: s, label: s })) ?? []}
-          onChange={(e): void => handleDatabaseChange(e.value)}
-        />
-        <SelectInput
-          emptylabel={locales.no_active_schema_find}
-          value={localSchema}
-          disabled={autocomplete?.schemas?.length === 0}
-          size='small'
-          options={autocomplete?.schemas.map((s) => ({ value: s, label: s })) ?? []}
-          onChange={(e): void => handleSchemaChange(e.value)}
-        />
 
         {context.tables.map((item) => (
-          <ChatContextItem key={item} name={item} type={'tables'} onClick={() => handleContextChange(item, 'tables')} />
+          <ChatContextItem key={item} name={item} onClick={() => handleContextChange(item, 'tables')} />
         ))}
 
         {context.views.map((item) => (
-          <ChatContextItem key={item} name={item} type={'views'} onClick={() => handleContextChange(item, 'views')} />
+          <ChatContextItem key={item} name={item} onClick={() => handleContextChange(item, 'views')} />
         ))}
       </Stack>
 

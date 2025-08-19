@@ -2,33 +2,25 @@ import api from '@/api';
 import type { AiChatRequest, AiContextOptsType } from '@/api/ai/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { TabMode } from '@/core/enums';
-import { useCurrentConnection, useSelectedTab } from '@/hooks';
+import { useSelectedTab } from '@/hooks';
 import { useAiStore } from '@/store/aiStore/ai.store';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AutoCompleteType } from '@/types';
 import { Box, CircularProgress, IconButton, Stack } from '@mui/material';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { ChatBoxStyled } from './ChatBox.styled';
 import ChatContext from './ChatContext/ChatContext';
 import ChatTextInput from './ChatTextInput/ChatTextInput';
 import Providers from './Providers/Providers';
 
-export default function ChatBox() {
-  const currentConnection = useCurrentConnection();
+export default function ChatBox({ autocomplete }: { autocomplete: AutoCompleteType }) {
+  const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
+  const currentChat = useAiStore((state) => state.currentChat);
+
   const selectedTab = useSelectedTab();
   const context = useAiStore((state) => state.context);
   const addMessage = useAiStore((state) => state.addMessage);
-
-  const { data: autocomplete } = useQuery({
-    queryKey: ['ai_autocomplete', currentConnection?.id],
-    queryFn: async (): Promise<AutoCompleteType> =>
-      api.query.autoComplete({
-        connectionId: currentConnection?.id ?? 0,
-        fromCache: true,
-        skipSystem: true
-      }),
-    enabled: !!currentConnection
-  });
 
   const { mutateAsync: chatMutation, isPending } = useMutation({
     mutationFn: api.ai.chat,
@@ -38,13 +30,14 @@ export default function ChatBox() {
   });
 
   const handleSend = async () => {
-    if (!context.input.trim() || isPending || !context.database) return;
+    if (!currentChat || !context.input.trim() || isPending || !context.database) return;
 
     const contextOpts: AiContextOptsType = {
       database: context.database,
       schema: context.schema,
       tables: context.tables,
-      views: context.views
+      views: context.views,
+      query: ''
     };
 
     if (selectedTab?.mode === TabMode.Query && selectedTab?.query) {
@@ -52,14 +45,15 @@ export default function ChatBox() {
     }
 
     const chat = await chatMutation({
-      connectionId: currentConnection?.id ?? 0,
-      providerId: 1,
-      model: 1,
+      connectionId: Number(currentConnectionId),
+      providerId: currentChat?.providerId ?? 0,
+      chatId: currentChat?.id,
+      model: currentChat?.model,
       message: context.input.trim(),
       contextOpts
     } as AiChatRequest);
 
-    console.log('🚀 ~ handleSend ~ chat:', chat);
+    addMessage(currentChat, chat.messages);
   };
 
   return (

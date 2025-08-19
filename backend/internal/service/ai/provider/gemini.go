@@ -114,7 +114,7 @@ func (p *GeminiProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespo
 	return p.convertToStructuredResponse(
 		strings.TrimSpace(content.String()),
 		model.AiChatMessageRole(response.Candidates[0].Content.Role),
-	), nil
+	)
 }
 
 func (p *GeminiProvider) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {

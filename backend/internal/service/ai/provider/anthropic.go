@@ -93,7 +93,7 @@ func (p *AnthropicProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRe
 	return p.convertToStructuredResponse(
 		strings.TrimSpace(content.String()),
 		model.AiChatMessageRole(response.Role),
-	), nil
+	)
 }
 
 func (p *AnthropicProvider) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {

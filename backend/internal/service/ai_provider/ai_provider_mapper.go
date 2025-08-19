@@ -32,5 +32,6 @@ func aiProviderModelToDto(aiProvider *model.AiProvider) dto.AiProvider {
 		Models:      aiProvider.Models,
 		Temperature: aiProvider.Temperature,
 		MaxTokens:   aiProvider.MaxTokens,
+		LastUsedAt:  aiProvider.LastUsedAt.Format("2006-01-02 15:04:05"),
 	}
 }

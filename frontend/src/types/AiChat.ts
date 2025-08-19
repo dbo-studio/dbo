@@ -1,15 +1,18 @@
 export type AiChatType = {
   id: number;
   title: string;
+  providerId: number;
+  model: string;
   createdAt: string;
   messages: AiMessageType[];
 };
 
 export type AiMessageType = {
-  id: number;
-  role: 'system' | 'user' | 'assistant';
+  role: 'user' | 'assistant';
   content: string;
   createdAt: string;
+  language: "sql" | "go" | "js" | "python" | "json" | "yaml" | "text";
+  type: 'code' | 'explanation';
 };
 
 export type AiContextType = {

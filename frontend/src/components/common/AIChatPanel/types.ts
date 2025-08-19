@@ -1,12 +1,19 @@
-import type { AiChatType, AutoCompleteType } from '@/types';
+import type { AiChatType, AiMessageType, AutoCompleteType } from '@/types';
 
 export type AIChatPanelProps = {
   context?: string;
 };
 
 export type ChatProps = {
+  chats: AiChatType[];
   currentChat: AiChatType | undefined;
   onChatChange: (chat: AiChatType) => void;
+};
+
+export type ChatItemProps = {
+  chat: AiChatType;
+  selected: boolean;
+  onClick: () => void;
 };
 
 export type ChatTextInputProps = {
@@ -33,8 +40,11 @@ export type ChatContextModalItemProps = {
 
 export type ChatContextItemProps = {
   name: string;
-  type: ContextItemType;
-  onClick: (name: string, type: ContextItemType) => void;
+  onClick: () => void;
 };
 
 export type ContextItemType = 'tables' | 'views';
+
+export type ExplanationMessageProps = {
+  message: AiMessageType;
+};

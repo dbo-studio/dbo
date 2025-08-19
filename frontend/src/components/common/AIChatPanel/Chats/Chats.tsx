@@ -1,26 +1,13 @@
-import api from '@/api';
-import { Button } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
 import type { ChatProps } from '../types';
+import ChatItem from './ChatItem/ChatItem';
+import { ChatsStyled } from './Chats.styled';
 
-export default function Chats({ currentChat, onChatChange }: ChatProps) {
-  const { data: chats } = useQuery({
-    queryKey: ['aiChats'],
-    queryFn: api.aiChat.getChats
-  });
-
+export default function Chats({ chats, currentChat, onChatChange }: ChatProps) {
   return (
-    <div>
+    <ChatsStyled>
       {chats?.map((chat) => (
-        <Button
-          key={chat.id}
-          size='small'
-          variant={String(currentChat?.id) === String(chat.id) ? 'contained' : 'text'}
-          onClick={() => onChatChange(chat)}
-        >
-          {chat.title}
-        </Button>
+        <ChatItem key={chat.id} chat={chat} selected={currentChat?.id === chat.id} onClick={() => onChatChange(chat)} />
       ))}
-    </div>
+    </ChatsStyled>
   );
 }

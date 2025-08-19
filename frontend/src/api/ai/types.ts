@@ -12,7 +12,7 @@ export type AiChatRequest = {
   connectionId: number;
   providerId: number;
   chatId?: number;
-  model: number;
+  model: string;
   message: string;
   contextOpts?: AiContextOptsType;
 };

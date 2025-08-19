@@ -5,6 +5,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
 
@@ -18,7 +19,7 @@ func NewAiChatRepo(db *gorm.DB) IAiChatRepo {
 
 func (r AiChatRepoImpl) List(ctx context.Context) ([]model.AiChat, error) {
 	var items []model.AiChat
-	return items, r.db.WithContext(ctx).Order("id desc").Find(&items).Error
+	return items, r.db.WithContext(ctx).Order("updated_at desc").Find(&items).Error
 }
 
 func (r AiChatRepoImpl) Find(ctx context.Context, id uint) (*model.AiChat, error) {
@@ -41,11 +42,17 @@ func (r AiChatRepoImpl) Create(ctx context.Context, dto *dto.AiChatCreateRequest
 	var chat = &model.AiChat{
 		Title:        title,
 		ConnectionID: uint(dto.ConnectionId),
+		ProviderId:   lo.ToPtr(uint(lo.FromPtr(dto.ProviderId))),
+		Model:        dto.Model,
 	}
 
 	result := r.db.WithContext(ctx).Create(chat)
 
 	return chat, result.Error
+}
+
+func (r AiChatRepoImpl) Update(ctx context.Context, chat *model.AiChat) error {
+	return r.db.WithContext(ctx).Save(chat).Error
 }
 
 func (r AiChatRepoImpl) Delete(ctx context.Context, chat *model.AiChat) error {

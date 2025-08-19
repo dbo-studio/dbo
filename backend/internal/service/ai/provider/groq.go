@@ -85,7 +85,7 @@ func (p *GroqProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespons
 	return p.convertToStructuredResponse(
 		strings.TrimSpace(response.Choices[0].Message.Content),
 		model.AiChatMessageRole(response.Choices[0].Message.Role),
-	), nil
+	)
 }
 
 func (p *GroqProvider) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {

@@ -11,6 +11,7 @@ type AiProvider struct {
 	Temperature *float32
 	MaxTokens   *int
 	Models      []string `gorm:"type:json;serializer:json"`
+	LastUsedAt  time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }

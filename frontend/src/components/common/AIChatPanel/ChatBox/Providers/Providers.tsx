@@ -1,32 +1,13 @@
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { Stack } from '@mui/material';
-import { useEffect } from 'react';
 
 export default function Providers() {
   const providers = useAiStore((state) => state.providers);
-  const currentProvider = useAiStore((state) => state.currentProvider);
+  const currentChat = useAiStore((state) => state.currentChat);
+  const updateCurrentChat = useAiStore((state) => state.updateCurrentChat);
 
-  const getCurrentModel = useAiStore((state) => state.getCurrentModel);
-  const updateCurrentProvider = useAiStore((state) => state.updateCurrentProvider);
-  const updateCurrentModel = useAiStore((state) => state.updateCurrentModel);
-
-  const handleProviderChange = (providerType: string) => {
-    const provider = providers?.find((provider) => provider.type === providerType);
-    if (provider) {
-      updateCurrentProvider(provider);
-    }
-  };
-
-  useEffect(() => {
-    if (providers?.length && !currentProvider) {
-      updateCurrentProvider(providers[0]);
-    }
-
-    if (currentProvider?.models && !getCurrentModel(currentProvider.type)) {
-      updateCurrentModel(currentProvider.type, currentProvider.models[0]);
-    }
-  }, [providers, currentProvider]);
+  if (!currentChat) return null;
 
   return (
     <Stack direction={'row'} spacing={1}>
@@ -35,22 +16,24 @@ export default function Providers() {
         options={
           providers?.map((provider) => ({
             label: provider.type,
-            value: provider.type
+            value: provider.id.toString()
           })) ?? []
         }
-        onChange={(option) => handleProviderChange(option.value)}
-        value={currentProvider?.type}
+        onChange={(option) => updateCurrentChat({ ...currentChat, providerId: option.value })}
+        value={currentChat?.providerId.toString()}
       />
       <SelectInput
         size='small'
         options={
-          currentProvider?.models?.map((model) => ({
-            label: model,
-            value: model
-          })) ?? []
+          providers
+            ?.find((provider) => provider.id === currentChat?.providerId)
+            ?.models?.map((model) => ({
+              label: model,
+              value: model
+            })) ?? []
         }
-        onChange={(option) => updateCurrentModel(currentProvider?.type ?? '', option.value)}
-        value={getCurrentModel(currentProvider?.type ?? '')}
+        onChange={(option) => updateCurrentChat({ ...currentChat, model: option.value })}
+        value={currentChat?.model}
       />
     </Stack>
   );

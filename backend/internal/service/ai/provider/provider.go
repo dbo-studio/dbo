@@ -17,6 +17,7 @@ type ChatRequest struct {
 	Temperature *float32              `json:"temperature,omitempty"`
 	MaxTokens   *int                  `json:"max_tokens,omitempty"`
 	Context     string                `json:"context,omitempty"`
+	Query       string                `json:"query,omitempty"`
 }
 
 type ChatResponse struct {

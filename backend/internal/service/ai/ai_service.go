@@ -15,6 +15,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/logger"
+	"github.com/samber/lo"
 )
 
 type IAiService interface {
@@ -86,6 +87,7 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		Temperature: dbProvider.Temperature,
 		MaxTokens:   dbProvider.MaxTokens,
 		Context:     contextStr,
+		Query:       lo.FromPtr(req.ContextOpts.Query),
 	}
 
 	providerResp, err := aiProvider.Chat(ctx, providerReq)
@@ -109,26 +111,25 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
 	})
 
-	if len(providerResp.Contents) > 0 {
-		for _, content := range providerResp.Contents {
-			response.Messages = append(response.Messages, dto.AiMessage{
-				Role:      string(providerResp.Role),
-				Content:   content.Content,
-				Type:      string(content.Type),
-				Language:  string(content.Language),
-				CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
-			})
-		}
-		return response, nil
+	if len(providerResp.Contents) == 0 {
+		response.Messages = append(response.Messages, dto.AiMessage{
+			Role:      string(providerResp.Role),
+			Content:   providerResp.Content,
+			Type:      string(providerResp.Type),
+			Language:  string(providerResp.Language),
+			CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+		})
 	}
 
-	response.Messages = append(response.Messages, dto.AiMessage{
-		Role:      string(providerResp.Role),
-		Content:   providerResp.Content,
-		Type:      string(providerResp.Type),
-		Language:  string(providerResp.Language),
-		CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
-	})
+	for _, content := range providerResp.Contents {
+		response.Messages = append(response.Messages, dto.AiMessage{
+			Role:      string(providerResp.Role),
+			Content:   content.Content,
+			Type:      string(content.Type),
+			Language:  string(content.Language),
+			CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+		})
+	}
 
 	return response, nil
 }

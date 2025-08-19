@@ -2,6 +2,7 @@ package serviceAiProvider
 
 import (
 	"context"
+	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -24,7 +25,7 @@ var configs = []AiProviderConfig{
 	{
 		Type:    model.AIProviderTypeAnthropic,
 		Url:     "https://api.anthropic.com/v1",
-		Models:  []string{"claude-3-5-sonnet-20240620"},
+		Models:  []string{"claude-3-5-sonnet"},
 		Timeout: 30,
 	},
 	{
@@ -36,7 +37,7 @@ var configs = []AiProviderConfig{
 	{
 		Type:    model.AIProviderTypeGroq,
 		Url:     "https://api.groq.com/v1",
-		Models:  []string{"groq-3-7-sonnet-20240620"},
+		Models:  []string{"groq-3-7-sonnet"},
 		Timeout: 30,
 	},
 	{
@@ -56,10 +57,11 @@ func (i *IAiProviderServiceImpl) Index(ctx context.Context) (*dto.AiProviderList
 	if len(result) < len(configs) {
 		for _, config := range configs {
 			provider := &model.AiProvider{
-				Type:    config.Type,
-				Url:     config.Url,
-				Models:  config.Models,
-				Timeout: config.Timeout,
+				Type:       config.Type,
+				Url:        config.Url,
+				Models:     config.Models,
+				Timeout:    config.Timeout,
+				LastUsedAt: time.Now(),
 			}
 			_, err := i.aiProviderRepo.CreateIfNotExists(ctx, provider)
 			if err != nil {

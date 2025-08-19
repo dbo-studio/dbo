@@ -7,17 +7,11 @@ export type AIThread = {
   messages: AiMessageType[];
 };
 
-export type AiStore = {};
 
 export type AiProviderSlice = {
   providers: AiProviderType[] | undefined;
-  currentProvider: AiProviderType | undefined;
-  currentModel: Record<string, string>;
-  updateCurrentProvider: (provider: AiProviderType) => void;
   updateProviders: (providers: AiProviderType[]) => Promise<void>;
   updateProvider: (provider: AiProviderType) => Promise<void>;
-  getCurrentModel: (provider: string) => string | undefined;
-  updateCurrentModel: (provider: string, model: string) => void;
 };
 
 export type AiChatSlice = {
@@ -26,7 +20,7 @@ export type AiChatSlice = {
   updateCurrentChat: (chat: AiChatType) => void;
   updateChats: (chats: AiChatType[]) => Promise<void>;
   addChat: (chat: AiChatType) => Promise<void>;
-  addMessage: (chatId: number, message: AiMessageType) => Promise<void>;
+  addMessage: (chat: AiChatType, messages: AiMessageType[]) => Promise<void>;
 };
 
 export type AiContextSlice = {

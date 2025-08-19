@@ -3,9 +3,9 @@ import { devtools } from 'zustand/middleware';
 import { createAiChatSlice } from './slices/aiChat.slice';
 import { createAiContextSlice } from './slices/aiContext.slice';
 import { createAiProviderSlice } from './slices/aiProvider.slice';
-import type { AiChatSlice, AiContextSlice, AiProviderSlice, AiStore } from './types';
+import type { AiChatSlice, AiContextSlice, AiProviderSlice } from './types';
 
-type AiState = AiStore & AiProviderSlice & AiChatSlice & AiContextSlice;
+type AiState = AiProviderSlice & AiChatSlice & AiContextSlice;
 
 export const useAiStore: UseBoundStore<StoreApi<AiState>> = create<AiState>()(
   devtools(

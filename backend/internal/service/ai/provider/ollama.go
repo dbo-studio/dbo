@@ -91,7 +91,7 @@ func (p *OllamaProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespo
 	return p.convertToStructuredResponse(
 		strings.TrimSpace(rawResp.Message.Content),
 		model.AiChatMessageRole(rawResp.Message.Role),
-	), nil
+	)
 }
 
 func (p *OllamaProvider) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {

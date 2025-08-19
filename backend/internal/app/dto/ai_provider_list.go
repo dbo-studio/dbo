@@ -16,5 +16,6 @@ type (
 		Models      []string `json:"models"`
 		Temperature *float32 `json:"temperature"`
 		MaxTokens   *int     `json:"maxTokens"`
+		LastUsedAt  string   `json:"lastUsedAt"`
 	}
 )

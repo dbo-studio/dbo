@@ -85,7 +85,7 @@ func (p *OpenAIProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespo
 	return p.convertToStructuredResponse(
 		strings.TrimSpace(response.Choices[0].Message.Content),
 		model.AiChatMessageRole(response.Choices[0].Message.Role),
-	), nil
+	)
 }
 
 func (p *OpenAIProvider) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {

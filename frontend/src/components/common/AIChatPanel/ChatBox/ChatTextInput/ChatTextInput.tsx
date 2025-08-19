@@ -1,7 +1,7 @@
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { Box } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ChatTextInputProps } from '../../types';
 import { ChatTextInputStyled } from './ChatTextInput.styled';
 
@@ -16,6 +16,10 @@ export default function ChatTextInput({ onSend }: ChatTextInputProps) {
     updateContext({ ...context, input: e.target.value });
   };
 
+  useEffect(() => {
+    setInput(context.input);
+  }, [context.input]);
+
   return (
     <Box flex={1} sx={{ overflowY: 'scroll' }}>
       <ChatTextInputStyled
@@ -26,6 +30,8 @@ export default function ChatTextInput({ onSend }: ChatTextInputProps) {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             onSend();
+            updateContext({ ...context, input: '' });
+            setInput('');
           }
         }}
       />
