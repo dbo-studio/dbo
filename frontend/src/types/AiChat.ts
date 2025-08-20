@@ -11,8 +11,9 @@ export type AiMessageType = {
   role: 'user' | 'assistant';
   content: string;
   createdAt: string;
-  language: "sql" | "go" | "js" | "python" | "json" | "yaml" | "text";
+  language: 'sql' | 'go' | 'js' | 'python' | 'json' | 'yaml' | 'text';
   type: 'code' | 'explanation';
+  isNew?: boolean;
 };
 
 export type AiContextType = {

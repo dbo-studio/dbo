@@ -19,10 +19,14 @@ export const createAiChatSlice: StateCreator<AiChatSlice, [], [], AiChatSlice> =
   addMessage: async (chat: AiChatType, messages: AiMessageType[]) => {
     if (!chat.messages) {
       chat.messages = [];
-    };
+    }
+
+    for (const message of messages) {
+      message.isNew = true;
+    }
 
     const updatedChat = { ...chat, messages: [...chat.messages, ...messages] };
 
-    get().updateCurrentChat(updatedChat)
+    get().updateCurrentChat(updatedChat);
   }
 });

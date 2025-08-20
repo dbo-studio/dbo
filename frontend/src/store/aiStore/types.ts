@@ -7,7 +7,6 @@ export type AIThread = {
   messages: AiMessageType[];
 };
 
-
 export type AiProviderSlice = {
   providers: AiProviderType[] | undefined;
   updateProviders: (providers: AiProviderType[]) => Promise<void>;

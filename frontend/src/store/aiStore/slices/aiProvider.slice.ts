@@ -11,5 +11,5 @@ export const createAiProviderSlice: StateCreator<AiProviderSlice, [], [], AiProv
     const providers = get().providers ?? [];
     const updatedProviders = providers.map((p) => (p.id === provider.id ? provider : p));
     set({ providers: updatedProviders });
-  },
+  }
 });

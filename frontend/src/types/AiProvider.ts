@@ -7,5 +7,5 @@ export type AiProviderType = {
   temperature?: number;
   maxTokens?: number;
   timeout?: number;
-  lastUsedAt: string
+  lastUsedAt: string;
 };
