@@ -46,7 +46,7 @@ export default function EndContainer(): JSX.Element {
           <Tab label={locales.assistant} />
           <Tab label={locales.fields} />
         </Tabs>
-        <Box role='tabpanel' flex={1}>
+        <Box role='tabpanel' flex={1} minHeight={0}>
           {selectedTabContent}
         </Box>
       </EndContainerStyled>

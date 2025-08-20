@@ -27,6 +27,8 @@ export const ExplorerContainerStyled = styled(Box)(({ theme }) => ({
   padding: theme.spacing(1),
   borderBottom: `1px solid ${theme.palette.divider}`,
   borderRight: `1px solid ${theme.palette.divider}`,
-  overflow: 'auto',
+  overflow: 'hidden',
+  display: 'flex',
+  flexDirection: 'column',
   background: theme.palette.background.subdued
 }));

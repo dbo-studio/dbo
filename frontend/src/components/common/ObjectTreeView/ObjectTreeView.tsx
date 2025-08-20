@@ -53,6 +53,7 @@ export default function ObjectTreeView(): JSX.Element {
       });
       return nodes?.children || [];
     } catch (error) {
+      console.log('🚀 ~ fetchChildren ~ error:', error);
       return [];
     }
   };

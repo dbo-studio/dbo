@@ -53,7 +53,9 @@ export default React.memo(function ExplorerContainer(): JSX.Element {
           <Tab label={locales.history} />
         </Tabs>
 
-        <Box role='tabpanel'>{selectedTabContent}</Box>
+        <Box role='tabpanel' flex={1} minHeight={0}>
+          {selectedTabContent}
+        </Box>
       </ExplorerContainerStyled>
     </ResizableXBox>
   );

@@ -6,6 +6,7 @@ import type { AiChatType, AutoCompleteType } from '@/types';
 import { Box, LinearProgress, Stack } from '@mui/material';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import AddChat from './AddChat/AddChat';
+import { HeaderContainerStyled } from './AiChatPanel.styled';
 import ChatBox from './ChatBox/ChatBox';
 import Chats from './Chats/Chats';
 import DatabaseSchema from './DatabaseSchema/DatabaseSchema';
@@ -78,22 +79,24 @@ export default function AIChatPanel() {
     updateCurrentChat(detail);
   };
 
+  if (isLoading) {
+    return (
+      <Box p={1}>
+        <LinearProgress sx={{ height: 2 }} />
+      </Box>
+    );
+  }
+
   return (
-    <Box height={'100%'} display={'flex'} flexDirection={'column'}>
-      {isLoading ? (
-        <Box p={1}>
-          <LinearProgress sx={{ height: 2 }} />
-        </Box>
-      ) : (
-        <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'} pt={1} pb={1}>
-          <Chats chats={chats ?? []} currentChat={currentChat} onChatChange={handleChatChange} />
-          <Stack direction={'row'} gap={1} alignItems={'center'}>
-            <AddChat onClick={handleCreateChat} />
-          </Stack>
+    <Box height={'100%'} minHeight={0} position={'relative'} display={'flex'} flexDirection={'column'}>
+      <HeaderContainerStyled>
+        <Chats chats={chats ?? []} currentChat={currentChat} onChatChange={handleChatChange} />
+        <Stack direction={'row'} gap={1} alignItems={'center'}>
+          <AddChat onClick={handleCreateChat} />
         </Stack>
-      )}
-      <Box flex={1} display={'flex'} flexDirection={'column'} justifyContent={'space-between'} height={'100%'}>
-        <Messages messages={currentChat?.messages ?? []} />
+      </HeaderContainerStyled>
+      <Messages messages={currentChat?.messages ?? []} />
+      <Box>
         {autocomplete && <DatabaseSchema autocomplete={autocomplete} />}
         {autocomplete && currentChat && <ChatBox autocomplete={autocomplete} />}
       </Box>
