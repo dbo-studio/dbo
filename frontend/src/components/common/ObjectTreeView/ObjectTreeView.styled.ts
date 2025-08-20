@@ -14,5 +14,5 @@ export const TreeViewContentStyled = styled(Box)(({ theme }) => ({
   flex: 1,
   minHeight: 0,
   padding: '4px 0',
-  marginTop: theme.spacing(1),
+  marginTop: theme.spacing(1)
 }));
