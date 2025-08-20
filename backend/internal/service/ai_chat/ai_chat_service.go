@@ -35,7 +35,7 @@ func (s IAiChatServiceImpl) Index(ctx context.Context) (*dto.AiChatListResponse,
 }
 
 func (s IAiChatServiceImpl) Detail(ctx context.Context, req *dto.AiChatDetailRequest) (*dto.AiChatDetailResponse, error) {
-	chat, err := s.aiChatRepo.Find(ctx, req.AiChatId)
+	chat, err := s.aiChatRepo.Find(ctx, req.AiChatId, &req.PaginationRequest)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrAiChatNotFound)
 	}
@@ -53,7 +53,7 @@ func (s IAiChatServiceImpl) Create(ctx context.Context, req *dto.AiChatCreateReq
 }
 
 func (s IAiChatServiceImpl) Delete(ctx context.Context, chatId uint) (*dto.AiChatListResponse, error) {
-	chat, err := s.aiChatRepo.Find(ctx, chatId)
+	chat, err := s.aiChatRepo.Find(ctx, chatId, nil)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrAiChatNotFound)
 	}

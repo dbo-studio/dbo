@@ -25,7 +25,6 @@ func NewGeminiProvider(provider *model.AiProvider) IAiProvider {
 func (p *GeminiProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
 	contents := make([]map[string]interface{}, 0, len(req.Messages)+1)
 
-	// Add context as the first user message if provided
 	if req.Context != "" {
 		contents = append(contents, map[string]interface{}{
 			"role": "user",

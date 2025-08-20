@@ -17,7 +17,9 @@ export default function ChatTextInput({ onSend }: ChatTextInputProps) {
   };
 
   useEffect(() => {
-    setInput(context.input);
+    if (context.input === '') {
+      setInput('');
+    }
   }, [context.input]);
 
   return (
@@ -30,8 +32,6 @@ export default function ChatTextInput({ onSend }: ChatTextInputProps) {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             onSend();
-            updateContext({ ...context, input: '' });
-            setInput('');
           }
         }}
       />

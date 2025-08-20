@@ -5,6 +5,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/dbo-studio/dbo/pkg/db/scope"
 	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
@@ -22,14 +23,30 @@ func (r AiChatRepoImpl) List(ctx context.Context) ([]model.AiChat, error) {
 	return items, r.db.WithContext(ctx).Order("updated_at desc").Find(&items).Error
 }
 
-func (r AiChatRepoImpl) Find(ctx context.Context, id uint) (*model.AiChat, error) {
+func (r AiChatRepoImpl) Find(ctx context.Context, id uint, pagination *dto.PaginationRequest) (*model.AiChat, error) {
 	var chat model.AiChat
-	err := r.db.WithContext(ctx).
-		Preload("Messages", "role <> ?", model.AiChatMessageRoleSystem).
-		First(&chat, id).Error
+	err := r.db.WithContext(ctx).First(&chat, id).Error
 	if err != nil {
 		return nil, err
 	}
+
+	var messages []model.AiChatMessage
+
+	db := r.db.WithContext(ctx)
+	if pagination != nil {
+		db = db.Scopes(scope.Paginate(pagination))
+	}
+
+	err = db.Where("chat_id = ?", id).
+		Order("created_at desc").
+		Find(&messages).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	chat.Messages = messages
+
 	return &chat, nil
 }
 
@@ -60,5 +77,9 @@ func (r AiChatRepoImpl) Delete(ctx context.Context, chat *model.AiChat) error {
 }
 
 func (r AiChatRepoImpl) AddMessage(ctx context.Context, m *model.AiChatMessage) error {
+	if len(m.Content) == 0 {
+		return nil
+	}
+
 	return r.db.WithContext(ctx).Create(m).Error
 }

@@ -59,7 +59,7 @@ type IAiProviderRepo interface {
 
 type IAiChatRepo interface {
 	List(ctx context.Context) ([]model.AiChat, error)
-	Find(ctx context.Context, id uint) (*model.AiChat, error)
+	Find(ctx context.Context, id uint, pagination *dto.PaginationRequest) (*model.AiChat, error)
 	Update(ctx context.Context, chat *model.AiChat) error
 	Create(ctx context.Context, dto *dto.AiChatCreateRequest) (*model.AiChat, error)
 	Delete(ctx context.Context, chat *model.AiChat) error

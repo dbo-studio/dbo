@@ -30,7 +30,10 @@ func (s *AiServiceImpl) createProvider(ctx context.Context, providerId uint) (se
 
 func (s *AiServiceImpl) findChat(ctx context.Context, req *dto.AiChatRequest) (*model.AiChat, error) {
 	if req.ChatId != nil {
-		chat, err := s.aiChatRepo.Find(ctx, uint(lo.FromPtr(req.ChatId)))
+		chat, err := s.aiChatRepo.Find(ctx, uint(lo.FromPtr(req.ChatId)), &dto.PaginationRequest{
+			Page:  lo.ToPtr(1),
+			Count: lo.ToPtr(10),
+		})
 		if err != nil {
 			return nil, apperror.NotFound(apperror.ErrAiChatNotFound)
 		}

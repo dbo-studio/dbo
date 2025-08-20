@@ -21,6 +21,7 @@ export default function ChatBox({ autocomplete }: { autocomplete: AutoCompleteTy
   const selectedTab = useSelectedTab();
   const context = useAiStore((state) => state.context);
   const addMessage = useAiStore((state) => state.addMessage);
+  const updateContext = useAiStore((state) => state.updateContext);
 
   const { mutateAsync: chatMutation, isPending } = useMutation({
     mutationFn: api.ai.chat,
@@ -54,6 +55,8 @@ export default function ChatBox({ autocomplete }: { autocomplete: AutoCompleteTy
     } as AiChatRequest);
 
     addMessage(currentChat, chat.messages);
+
+    updateContext({ ...context, input: '' });
   };
 
   return (

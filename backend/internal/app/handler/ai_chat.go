@@ -9,6 +9,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/dbo-studio/dbo/pkg/response"
 	"github.com/gofiber/fiber/v3"
+	"github.com/samber/lo"
 )
 
 type AiChatHandler struct {
@@ -35,6 +36,10 @@ func (h AiChatHandler) Chats(c fiber.Ctx) error {
 func (h AiChatHandler) Detail(c fiber.Ctx) error {
 	req := &dto.AiChatDetailRequest{
 		AiChatId: fiber.Params[uint](c, "id"),
+		PaginationRequest: dto.PaginationRequest{
+			Page:  lo.ToPtr(fiber.Query(c, "page", 1)),
+			Count: lo.ToPtr(fiber.Query(c, "count", 10)),
+		},
 	}
 
 	connection, err := h.aiChatService.Detail(c, req)

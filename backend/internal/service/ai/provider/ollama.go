@@ -23,15 +23,7 @@ func NewOllamaProvider(provider *model.AiProvider) IAiProvider {
 	}
 }
 
-func (p *OllamaProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
-	if req == nil {
-		return nil, apperror.BadRequest(fmt.Errorf("request cannot be nil"))
-	}
-
-	if req.Model == "" {
-		return nil, apperror.BadRequest(fmt.Errorf("model is required"))
-	}
-
+func (p *OllamaProvider) Chat(_ context.Context, req *ChatRequest) (*ChatResponse, error) {
 	messages := make([]map[string]string, 0, len(req.Messages)+1)
 
 	if req.Context != "" {
@@ -94,7 +86,7 @@ func (p *OllamaProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespo
 	)
 }
 
-func (p *OllamaProvider) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {
+func (p *OllamaProvider) Complete(_ context.Context, req *CompletionRequest) (*CompletionResponse, error) {
 	if req == nil {
 		return nil, apperror.BadRequest(fmt.Errorf("request cannot be nil"))
 	}
