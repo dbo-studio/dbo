@@ -3,8 +3,9 @@ import { useSelectedTab } from '@/hooks';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import type { AutoCompleteType } from '@/types';
-import { Stack, Typography } from '@mui/material';
+import { Stack } from '@mui/material';
 import { useEffect, useState } from 'react';
+import { DatabaseSchemaStyled } from './DatabaseSchema.styled';
 
 export default function DatabaseSchema({ autocomplete }: { autocomplete: AutoCompleteType }) {
   const [localSchema, setLocalSchema] = useState<string>('');
@@ -37,11 +38,8 @@ export default function DatabaseSchema({ autocomplete }: { autocomplete: AutoCom
   };
 
   return (
-    <Stack direction={'row'} spacing={1}>
-      <Stack direction={'row'} spacing={1} alignItems={'center'}>
-        <Typography variant='caption' color='textText'>
-          {locales.database}:
-        </Typography>
+    <DatabaseSchemaStyled>
+      <Stack direction={'row'} spacing={1} justifyContent={'space-between'}>
         <SelectInput
           emptylabel={locales.no_active_database_find}
           value={localDatabase}
@@ -50,11 +48,6 @@ export default function DatabaseSchema({ autocomplete }: { autocomplete: AutoCom
           options={autocomplete?.databases.map((s) => ({ value: s, label: s })) ?? []}
           onChange={(e): void => handleDatabaseChange(e.value)}
         />
-      </Stack>
-      <Stack direction={'row'} spacing={1} alignItems={'center'}>
-        <Typography variant='caption' color='textText'>
-          {locales.schema}:
-        </Typography>
         <SelectInput
           emptylabel={locales.no_active_schema_find}
           value={localSchema}
@@ -64,6 +57,6 @@ export default function DatabaseSchema({ autocomplete }: { autocomplete: AutoCom
           onChange={(e): void => handleSchemaChange(e.value)}
         />
       </Stack>
-    </Stack>
+    </DatabaseSchemaStyled>
   );
 }

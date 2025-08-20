@@ -53,3 +53,7 @@ export type MessagesProps = {
   messages: AiMessageType[];
   onLoadMore?: () => Promise<void>;
 };
+
+export type CodeMessageProps = {
+  message: AiMessageType;
+};

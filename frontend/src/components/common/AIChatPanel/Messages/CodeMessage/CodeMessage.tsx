@@ -1,26 +1,35 @@
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlighter';
-import { useTabStore } from '@/store/tabStore/tab.store';
-import type { AiMessageType } from '@/types';
-import { Box, useTheme } from '@mui/material';
-
-interface CodeMessageProps {
-  message: AiMessageType;
-}
+import locales from '@/locales';
+import { useSettingStore } from '@/store/settingStore/setting.store';
+import { IconButton } from '@mui/material';
+import { toast } from 'sonner';
+import { useCopyToClipboard } from 'usehooks-ts';
+import type { CodeMessageProps } from '../../types';
+import { CodeMessageHeaderStyled, CodeMessageStyled } from './CodeMessage.styled';
 
 export default function CodeMessage({ message }: CodeMessageProps) {
-  const theme = useTheme();
+  const [_, copy] = useCopyToClipboard();
+  const isDark = useSettingStore((state) => state.isDark);
 
-  const handleInsertClick = () => {
-    const getQuery = useTabStore.getState().getQuery;
-    const updateQuery = useTabStore.getState().updateQuery;
-    const current = getQuery?.() ?? '';
-    const next = current ? `${current}\n${message.content}` : message.content;
-    updateQuery?.(next);
+  const handleCopy = async (): Promise<void> => {
+    try {
+      await copy(message.content);
+      toast.success(locales.copied);
+    } catch (error) {
+      console.log('🚀 ~ handleCopy ~ error:', error);
+    }
   };
 
   return (
-    <Box>
-      <SyntaxHighlighter value={message.content} isDark={theme.palette.mode === 'dark'} />
-    </Box>
+    <CodeMessageStyled>
+      <CodeMessageHeaderStyled isDark={isDark ?? false}>
+        <CustomIcon type='code' />
+        <IconButton onClick={handleCopy}>
+          <CustomIcon type='copy' />
+        </IconButton>
+      </CodeMessageHeaderStyled>
+      <SyntaxHighlighter value={message.content} isDark={isDark ?? false} />
+    </CodeMessageStyled>
   );
 }
