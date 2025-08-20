@@ -14,8 +14,8 @@ export const getChats = async (): Promise<AiChatType[]> => {
   return (await api.get(endpoint.list())).data.data as AiChatType[];
 };
 
-export const getChatDetail = async (id: string | number): Promise<AiChatType> => {
-  return (await api.get(endpoint.detail(id))).data.data as AiChatType;
+export const getChatDetail = async (id: string | number, page: number, count: number): Promise<AiChatType> => {
+  return (await api.get(endpoint.detail(id), { params: { page, count } })).data.data as AiChatType;
 };
 
 export const createChat = async (data: CreateChatRequestType): Promise<AiChatType> => {

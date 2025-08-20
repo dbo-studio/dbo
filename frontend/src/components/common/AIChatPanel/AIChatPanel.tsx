@@ -74,7 +74,7 @@ export default function AIChatPanel() {
   };
 
   const handleChatChange = async (chat: AiChatType) => {
-    const detail = await api.aiChat.getChatDetail(chat.id);
+    const detail = await api.aiChat.getChatDetail(chat.id, 1, 100);
     updateCurrentChat(detail);
   };
 

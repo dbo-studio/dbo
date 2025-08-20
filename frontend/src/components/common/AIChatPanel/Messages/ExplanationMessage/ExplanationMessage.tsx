@@ -5,7 +5,7 @@ import { ExplanationMessageStyled } from './ExplanationMessage.styled';
 
 export default function ExplanationMessage({ message }: ExplanationMessageProps) {
   return (
-    <ExplanationMessageStyled isUser={message.role === 'user'}>
+    <ExplanationMessageStyled user={message.role === 'user'}>
       {message.role === 'assistant' && message.isNew ? (
         <TypewriterEffectText text={message.content} speed={30} />
       ) : (
