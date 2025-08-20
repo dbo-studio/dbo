@@ -48,3 +48,8 @@ export type ContextItemType = 'tables' | 'views';
 export type ExplanationMessageProps = {
   message: AiMessageType;
 };
+
+export type MessagesProps = {
+  messages: AiMessageType[];
+  onLoadMore?: () => Promise<void>;
+}

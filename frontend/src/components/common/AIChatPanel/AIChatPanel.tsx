@@ -3,8 +3,9 @@ import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { AiChatType, AutoCompleteType } from '@/types';
-import { Box, LinearProgress, Stack } from '@mui/material';
+import { Box, Button, LinearProgress, Stack, Typography } from '@mui/material';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import AddChat from './AddChat/AddChat';
 import { HeaderContainerStyled } from './AiChatPanel.styled';
 import ChatBox from './ChatBox/ChatBox';
@@ -12,11 +13,12 @@ import Chats from './Chats/Chats';
 import DatabaseSchema from './DatabaseSchema/DatabaseSchema';
 import Messages from './Messages/Messages';
 
-export default function AIChatPanel() {
+export default function AiChatPanel() {
   const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
   const currentChat = useAiStore((state) => state.currentChat);
   const providers = useAiStore((state) => state.providers);
   const chats = useAiStore((state) => state.chats);
+  const [page, setPage] = useState(1);
 
   const updateChats = useAiStore((state) => state.updateChats);
   const updateCurrentChat = useAiStore((state) => state.updateCurrentChat);
@@ -75,7 +77,7 @@ export default function AIChatPanel() {
   };
 
   const handleChatChange = async (chat: AiChatType) => {
-    const detail = await api.aiChat.getChatDetail(chat.id, 1, 100);
+    const detail = await api.aiChat.getChatDetail(chat.id, 1, 5);
     updateCurrentChat(detail);
   };
 

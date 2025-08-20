@@ -67,7 +67,7 @@ export default function Histories(): JSX.Element {
 
   return (
     <ClickAwayListener onClickAway={(): void => setSelected(null)}>
-      <Box mt={1} display={'flex'} flexDirection={'column'}>
+      <Box mt={1} display={'flex'} flexDirection={'column'} flex={1} minHeight={0}>
         <Box>
           <Stack spacing={1} direction={'row'} alignContent={'center'} justifyContent={'center'} alignItems={'center'}>
             <Box flex={1}>
@@ -80,38 +80,37 @@ export default function Histories(): JSX.Element {
           </Stack>
         </Box>
 
-        <Box>
-          <Box mt={theme.spacing(1)} ref={listRef} flex={1}>
-            <Stack spacing={1}>
-              {status === 'pending' ? (
-                <LinearProgress data-testid='linear-progress' style={{ marginTop: '8px' }} />
-              ) : (
-                filteredHistories.map((query) => (
-                  <HistoryItem
-                    onClick={(): void => setSelected(query.id)}
-                    key={uuid()}
-                    history={query}
-                    selected={selected === query.id}
-                  />
-                ))
-              )}
-            </Stack>
-          </Box>
+        <Box mt={theme.spacing(1)} ref={listRef} flex={1} minHeight={0} overflow={'auto'}>
+          <Stack spacing={1}>
+            {status === 'pending' ? (
+              <LinearProgress data-testid='linear-progress' style={{ marginTop: '8px' }} />
+            ) : (
+              filteredHistories.map((query) => (
+                <HistoryItem
+                  onClick={(): void => setSelected(query.id)}
+                  key={uuid()}
+                  history={query}
+                  selected={selected === query.id}
+                />
+              ))
+            )}
+          </Stack>
+
+          {hasNextPage && (
+            <Box display='flex' justifyContent='center' mt={2} mb={2}>
+              <Button
+                loadingPosition='start'
+                disabled={isFetchingNextPage}
+                loading={isFetchingNextPage}
+                onClick={handleLoadMore}
+                fullWidth
+                variant='contained'
+              >
+                <span>{locales.load_more}</span>
+              </Button>
+            </Box>
+          )}
         </Box>
-        {hasNextPage && (
-          <Box flex={1} display='flex' justifyContent='center' mt={2} mb={2}>
-            <Button
-              loadingPosition='start'
-              disabled={isFetchingNextPage}
-              loading={isFetchingNextPage}
-              onClick={handleLoadMore}
-              fullWidth
-              variant='contained'
-            >
-              <span>{locales.load_more}</span>
-            </Button>
-          </Box>
-        )}
       </Box>
     </ClickAwayListener>
   );

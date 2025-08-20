@@ -1,4 +1,4 @@
-import AIChatPanel from '@/components/common/AIChatPanel/AIChatPanel';
+import AiChatPanel from '@/components/common/AiChatPanel/AiChatPanel';
 import DBFields from '@/components/common/DBFields/DBFields';
 import { useWindowSize } from '@/hooks/useWindowSize.hook';
 import locales from '@/locales';
@@ -11,7 +11,7 @@ import { EndContainerStyled } from './Container.styled';
 const tabs = [
   {
     id: 0,
-    component: AIChatPanel
+    component: AiChatPanel
   },
   {
     id: 1,

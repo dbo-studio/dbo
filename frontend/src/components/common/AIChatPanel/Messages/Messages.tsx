@@ -1,18 +1,11 @@
-import type { AiMessageType } from '@/types';
-import { Stack } from '@mui/material';
+import { Button, Stack, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef } from 'react';
+import type { MessagesProps } from '../types';
 import CodeMessage from './CodeMessage/CodeMessage';
 import ExplanationMessage from './ExplanationMessage/ExplanationMessage';
 import { MessagesStyled } from './Messages.styled';
 
-interface MessagesProps {
-  messages: AiMessageType[];
-  onLoadMore?: () => Promise<void>;
-  isLoadingMore?: boolean;
-  hasMore?: boolean;
-}
-
-export default function Messages({ messages }: MessagesProps) {
+export default function Messages({ messages, onLoadMore }: MessagesProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -35,6 +28,9 @@ export default function Messages({ messages }: MessagesProps) {
 
   return (
     <MessagesStyled ref={messagesContainerRef}>
+      <Button variant='outlined' onClick={onLoadMore} size='small'>
+        <Typography variant='caption'>Load More</Typography>
+      </Button>
       <Stack spacing={1} p={1}>
         {messages.map((message, index) =>
           message.type === 'code' ? (
