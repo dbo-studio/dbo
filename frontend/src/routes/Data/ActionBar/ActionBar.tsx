@@ -86,7 +86,6 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
   return (
     <Box>
       <Stack
-        id='action-bar'
         borderBottom={`1px solid ${theme.palette.divider}`}
         borderTop={`1px solid ${theme.palette.divider}`}
         padding=' 8px'

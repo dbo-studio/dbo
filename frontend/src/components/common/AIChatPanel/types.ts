@@ -52,4 +52,4 @@ export type ExplanationMessageProps = {
 export type MessagesProps = {
   messages: AiMessageType[];
   onLoadMore?: () => Promise<void>;
-}
+};
