@@ -3,7 +3,7 @@ import { useSelectedTab } from '@/hooks';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import type { AutoCompleteType } from '@/types';
-import { Box, Stack } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 export default function DatabaseSchema({ autocomplete }: { autocomplete: AutoCompleteType }) {
@@ -38,22 +38,32 @@ export default function DatabaseSchema({ autocomplete }: { autocomplete: AutoCom
 
   return (
     <Stack direction={'row'} spacing={1}>
-      <SelectInput
-        emptylabel={locales.no_active_database_find}
-        value={localDatabase}
-        disabled={autocomplete?.databases?.length === 0}
-        size='small'
-        options={autocomplete?.databases.map((s) => ({ value: s, label: s })) ?? []}
-        onChange={(e): void => handleDatabaseChange(e.value)}
-      />
-      <SelectInput
-        emptylabel={locales.no_active_schema_find}
-        value={localSchema}
-        disabled={autocomplete?.schemas?.length === 0}
-        size='small'
-        options={autocomplete?.schemas.map((s) => ({ value: s, label: s })) ?? []}
-        onChange={(e): void => handleSchemaChange(e.value)}
-      />
+      <Stack direction={'row'} spacing={1} alignItems={'center'}>
+        <Typography variant='caption' color='textText'>
+          {locales.database}:
+        </Typography>
+        <SelectInput
+          emptylabel={locales.no_active_database_find}
+          value={localDatabase}
+          disabled={autocomplete?.databases?.length === 0}
+          size='small'
+          options={autocomplete?.databases.map((s) => ({ value: s, label: s })) ?? []}
+          onChange={(e): void => handleDatabaseChange(e.value)}
+        />
+      </Stack>
+      <Stack direction={'row'} spacing={1} alignItems={'center'}>
+        <Typography variant='caption' color='textText'>
+          {locales.schema}:
+        </Typography>
+        <SelectInput
+          emptylabel={locales.no_active_schema_find}
+          value={localSchema}
+          disabled={autocomplete?.schemas?.length === 0}
+          size='small'
+          options={autocomplete?.schemas.map((s) => ({ value: s, label: s })) ?? []}
+          onChange={(e): void => handleSchemaChange(e.value)}
+        />
+      </Stack>
     </Stack>
   );
 }

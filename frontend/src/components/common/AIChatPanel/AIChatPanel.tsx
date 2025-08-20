@@ -3,7 +3,7 @@ import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { AiChatType, AutoCompleteType } from '@/types';
-import { Box, Button, LinearProgress, Stack, Typography } from '@mui/material';
+import { Box, LinearProgress, Stack } from '@mui/material';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import AddChat from './AddChat/AddChat';
@@ -77,8 +77,17 @@ export default function AiChatPanel() {
   };
 
   const handleChatChange = async (chat: AiChatType) => {
-    const detail = await api.aiChat.getChatDetail(chat.id, 1, 5);
+    const detail = await api.aiChat.getChatDetail(chat.id, 1, 10);
     updateCurrentChat(detail);
+  };
+
+  const handleLoadMore = async (): Promise<void> => {
+    if (!currentChat) return;
+
+    setPage(page + 1);
+    const detail = await api.aiChat.getChatDetail(currentChat.id, page + 1, 10);
+    currentChat.messages.unshift(...detail.messages);
+    updateCurrentChat(currentChat);
   };
 
   if (isLoading) {
@@ -97,7 +106,7 @@ export default function AiChatPanel() {
           <AddChat onClick={handleCreateChat} />
         </Stack>
       </HeaderContainerStyled>
-      <Messages messages={currentChat?.messages ?? []} />
+      <Messages messages={currentChat?.messages ?? []} onLoadMore={handleLoadMore} />
       <Box>
         {autocomplete && <DatabaseSchema autocomplete={autocomplete} />}
         {autocomplete && currentChat && <ChatBox autocomplete={autocomplete} />}
