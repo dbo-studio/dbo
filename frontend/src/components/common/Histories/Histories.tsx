@@ -1,7 +1,7 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import Search from '@/components/base/Search/Search';
-import { useCurrentConnection } from '@/hooks';
+import { useContextMenu, useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import type { HistoryType } from '@/types/History';
 import { Box, Button, ClickAwayListener, IconButton, LinearProgress, Stack, useTheme } from '@mui/material';
@@ -9,6 +9,7 @@ import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import DeleteHistoryIcon from './DeleteHistoryIcon';
+import HistoryContextMenu from './HistoryContextMenu/HistoryContextMenu';
 import HistoryItem from './HistoryItem/HistoryItem';
 
 type HistoryResponse = HistoryType[];
@@ -16,10 +17,12 @@ type HistoryResponse = HistoryType[];
 export default function Histories(): JSX.Element {
   const theme = useTheme();
   const queryClient = useQueryClient();
-  const [selected, setSelected] = useState<number | null>(null);
+  const [selected, setSelected] = useState<HistoryType | null>(null);
   const [search, setSearch] = useState('');
   const currentConnection = useCurrentConnection();
   const listRef = useRef<HTMLDivElement>(null);
+
+  const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, refetch } = useInfiniteQuery<
     HistoryResponse,
@@ -87,10 +90,11 @@ export default function Histories(): JSX.Element {
             ) : (
               filteredHistories.map((query) => (
                 <HistoryItem
-                  onClick={(): void => setSelected(query.id)}
+                  context={handleContextMenu}
+                  onClick={(): void => setSelected(query)}
                   key={uuid()}
                   history={query}
-                  selected={selected === query.id}
+                  selected={selected?.id === query.id}
                 />
               ))
             )}
@@ -111,6 +115,10 @@ export default function Histories(): JSX.Element {
             </Box>
           )}
         </Box>
+
+        {selected && (
+          <HistoryContextMenu history={selected} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
+        )}
       </Box>
     </ClickAwayListener>
   );

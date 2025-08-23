@@ -8,7 +8,7 @@ import { useMutation } from '@tanstack/react-query';
 import type { JSX } from 'react';
 import { toast } from 'sonner';
 import { useCopyToClipboard } from 'usehooks-ts';
-import type { SavedQueryContextMenuProps } from '../../types';
+import type { SavedQueryContextMenuProps } from '../types';
 
 export default function SavedQueryContextMenu({
   query,

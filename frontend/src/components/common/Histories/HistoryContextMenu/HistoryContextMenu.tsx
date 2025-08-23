@@ -4,8 +4,8 @@ import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { JSX } from 'react';
 import { toast } from 'sonner';
-import type { HistoryContextMenuProps } from '../../types';
 import { useCopyToClipboard } from 'usehooks-ts';
+import type { HistoryContextMenuProps } from '../types';
 
 export default function HistoryContextMenu({ history, contextMenu, onClose }: HistoryContextMenuProps): JSX.Element {
   const [_, copy] = useCopyToClipboard();

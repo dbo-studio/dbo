@@ -7,7 +7,7 @@ import { Box, Button, ClickAwayListener, IconButton, LinearProgress, Stack, useT
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useRef, useState } from 'react';
 import Search from '../../base/Search/Search';
-import SavedQueryContextMenu from './SavedQueryItem/SavedQueryContextMenu/SavedQueryContextMenu';
+import SavedQueryContextMenu from './SavedQueryContextMenu/SavedQueryContextMenu';
 import SavedQueryItem from './SavedQueryItem/SavedQueryItem';
 
 export default function SavedQueries(): JSX.Element {
