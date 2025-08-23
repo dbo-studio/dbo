@@ -1,21 +1,23 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
-import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton';
-import { useContextMenu } from '@/hooks';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { Box, ClickAwayListener, IconButton, Typography, useTheme } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
-import { type JSX, useState } from 'react';
+import { type JSX, useCallback, useState } from 'react';
 import type { SavedQueryItemProps } from '../types';
-import SavedQueryContextMenu from './SavedQueryContextMenu/SavedQueryContextMenu';
 import { SavedQueryItemStyled } from './SavedQueryItem.styled';
 
-export default function SavedQueryItem({ query, selected, onChange, onClick }: SavedQueryItemProps): JSX.Element {
-  const theme = useTheme();
-  const [editMode, setEditMode] = useState(false);
+export default function SavedQueryItem({
+  query,
+  selected,
+  onChange,
+  onClick,
+  context,
+  isEditMode,
+  onEditMode
+}: SavedQueryItemProps): JSX.Element {
   const [name, setName] = useState(query.name);
-  const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
   const addEditorTab = useTabStore.getState().addEditorTab;
   const updateSelectedTab = useTabStore.getState().updateSelectedTab;
@@ -27,71 +29,73 @@ export default function SavedQueryItem({ query, selected, onChange, onClick }: S
     }
   });
 
-  const handleEditMode = (edit: boolean): void => {
-    setEditMode(edit);
-    handleCloseContextMenu();
-  };
+  const handleDiscardChanges = useCallback((): void => {
+    onEditMode(false);
+    onChange();
+  }, [onEditMode, onChange]);
 
-  const handleSaveChange = async (): Promise<void> => {
+  const handleSaveChange = useCallback(async (): Promise<void> => {
     try {
       const newQuery = {
         ...query,
         name
       };
       await updateSavedQueryMutation(newQuery);
-      setEditMode(false);
       onChange();
-    } catch (err) {
+      onEditMode(false);
+    } catch (_) {
       handleDiscardChanges();
     }
-  };
+  }, [query, name, updateSavedQueryMutation, onChange, onEditMode, handleDiscardChanges]);
 
-  const handleDiscardChanges = (): void => {
-    setName(query.name);
-    setEditMode(false);
-  };
-
-  const handleRun = (): void => {
+  const handleRun = useCallback((): void => {
+    if (isEditMode) return;
     const tab = addEditorTab(query.query);
     updateSelectedTab(tab);
-  };
+  }, [isEditMode, addEditorTab, query.query, updateSelectedTab]);
 
   return (
-    <ClickAwayListener onClickAway={handleDiscardChanges}>
-      <SavedQueryItemStyled selected={selected} onContextMenu={handleContextMenu}>
-        <Box flex={1} mr={theme.spacing(1)} onDoubleClick={handleRun} onClick={(): void => onClick()}>
-          {editMode ? (
-            <FieldInput
-              size='small'
-              fullWidth={true}
-              type='text'
-              value={name}
-              onChange={(e): void => setName(e.target.value)}
-              margin='none'
-            />
-          ) : (
-            <Typography variant='body2'>{query.name}</Typography>
-          )}
-        </Box>
-
-        {editMode ? (
-          <LoadingIconButton loading={isPending} disabled={query.name === name || isPending} onClick={handleSaveChange}>
-            <CustomIcon type='check' size='s' />
-          </LoadingIconButton>
+    <SavedQueryItemStyled
+      selected={selected}
+      onContextMenu={(e) => {
+        context(e);
+        onClick();
+      }}
+    >
+      <Box flex={1} mr={1} onDoubleClick={handleRun} onClick={(): void => onClick()}>
+        {isEditMode ? (
+          <FieldInput
+            size='small'
+            fullWidth={true}
+            type='text'
+            value={name}
+            onChange={(e): void => setName(e.target.value)}
+            margin='none'
+          />
         ) : (
-          <IconButton onClick={handleContextMenu}>
-            <CustomIcon type='ellipsisVertical' size='s' />
-          </IconButton>
+          <Typography variant='body2'>{query.name}</Typography>
         )}
+      </Box>
 
-        <SavedQueryContextMenu
-          query={query}
-          contextMenu={contextMenuPosition}
-          onClose={handleCloseContextMenu}
-          onDelete={(): void => onChange()}
-          onChange={(): void => handleEditMode(true)}
-        />
-      </SavedQueryItemStyled>
-    </ClickAwayListener>
+      {isEditMode ? (
+        <>
+          <IconButton onClick={handleDiscardChanges}>
+            <CustomIcon type='close' size='xs' />
+          </IconButton>
+          <IconButton loading={isPending} disabled={query.name === name || isPending} onClick={handleSaveChange}>
+            <CustomIcon type='check' size='xs' />
+          </IconButton>
+        </>
+      ) : (
+        <IconButton
+          onClick={(e) => {
+            context(e);
+            onClick();
+          }}
+        >
+          <CustomIcon type='ellipsisVertical' size='s' />
+        </IconButton>
+      )}
+    </SavedQueryItemStyled>
   );
 }

@@ -14,8 +14,8 @@ export default function SavedQueryContextMenu({
   query,
   contextMenu,
   onClose,
-  onDelete,
-  onChange
+  onChange,
+  onEditMode
 }: SavedQueryContextMenuProps): JSX.Element {
   const [_, copy] = useCopyToClipboard();
   const addEditorTab = useTabStore.getState().addEditorTab;
@@ -26,7 +26,7 @@ export default function SavedQueryContextMenu({
     mutationFn: api.savedQueries.deleteSavedQuery,
     onSuccess: (): void => {
       toast.success(locales.query_saved_successfully);
-      onDelete();
+      onChange();
     },
     onError: (error: Error): void => {
       console.error('🚀 ~ deleteSavedQueryMutation ~ error:', error);
@@ -37,7 +37,7 @@ export default function SavedQueryContextMenu({
     showModal(locales.delete_action, locales.query_saved_delete_confirm, async () => {
       try {
         await deleteSavedQueryMutation(query.id);
-      } catch (err) {}
+      } catch (_) {}
     });
   };
 
@@ -53,6 +53,11 @@ export default function SavedQueryContextMenu({
   const handleRun = (): void => {
     const tab = addEditorTab(query.query);
     updateSelectedTab(tab);
+  };
+
+  const handleEditMode = (): void => {
+    onEditMode(true);
+    onClose();
   };
 
   const menu: MenuType[] = [
@@ -71,7 +76,7 @@ export default function SavedQueryContextMenu({
     {
       name: locales.rename,
       icon: 'pen',
-      action: onChange
+      action: handleEditMode
     },
     {
       name: locales.delete,

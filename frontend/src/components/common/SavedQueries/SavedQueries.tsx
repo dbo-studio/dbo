@@ -1,21 +1,24 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { useCurrentConnection } from '@/hooks';
+import { useContextMenu, useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import type { SavedQueryType } from '@/types';
 import { Box, Button, ClickAwayListener, IconButton, LinearProgress, Stack, useTheme } from '@mui/material';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useRef, useState } from 'react';
 import Search from '../../base/Search/Search';
+import SavedQueryContextMenu from './SavedQueryItem/SavedQueryContextMenu/SavedQueryContextMenu';
 import SavedQueryItem from './SavedQueryItem/SavedQueryItem';
 
 export default function SavedQueries(): JSX.Element {
   const theme = useTheme();
   const queryClient = useQueryClient();
-  const [selected, setSelected] = useState<number | null>(null);
+  const [selected, setSelected] = useState<SavedQueryType | null>(null);
+  const [isEditMode, setIsEditMode] = useState<SavedQueryType | null>(null);
   const [search, setSearch] = useState('');
   const currentConnection = useCurrentConnection();
   const listRef = useRef<HTMLDivElement>(null);
+  const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
   type SavedQueryResponse = SavedQueryType[];
 
@@ -84,13 +87,18 @@ export default function SavedQueries(): JSX.Element {
             ) : (
               filteredSavedQueries.map((query) => (
                 <SavedQueryItem
+                  context={handleContextMenu}
                   onChange={handleRefresh}
-                  onClick={(): void => {
-                    setSelected(query.id);
-                  }}
+                  onClick={(): void => setSelected(query)}
                   key={query.id}
                   query={query}
-                  selected={selected === query.id}
+                  selected={selected?.id === query.id}
+                  isEditMode={isEditMode?.id === query.id}
+                  onEditMode={(isEditMode): void => {
+                    if (query === selected) {
+                      setIsEditMode(isEditMode ? query : null);
+                    }
+                  }}
                 />
               ))
             )}
@@ -110,6 +118,17 @@ export default function SavedQueries(): JSX.Element {
             </Box>
           )}
         </Box>
+        {selected && (
+          <SavedQueryContextMenu
+            onChange={handleRefresh}
+            onClose={handleCloseContextMenu}
+            query={selected}
+            contextMenu={contextMenuPosition}
+            onEditMode={(isEditMode): void => {
+              setIsEditMode(isEditMode ? selected : null);
+            }}
+          />
+        )}
       </Box>
     </ClickAwayListener>
   );
