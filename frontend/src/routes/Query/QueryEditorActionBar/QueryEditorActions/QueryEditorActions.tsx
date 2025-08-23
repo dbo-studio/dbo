@@ -1,6 +1,5 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton';
 import { ExportModal } from '@/components/common/ExportModal/ExportButton';
 import { shortcuts, tools } from '@/core/utils';
 import { useCurrentConnection } from '@/hooks';
@@ -55,12 +54,10 @@ export default function QueryEditorActions({ onFormat, onRunQuery, loading }: Qu
       return;
     }
 
-    try {
-      await createSavedQueryMutation({
-        connectionId: currentConnection?.id ?? 0,
-        query: getQuery()
-      });
-    } catch (error) {}
+    await createSavedQueryMutation({
+      connectionId: currentConnection?.id ?? 0,
+      query: getQuery()
+    });
   };
 
   const checkQueryLength = (): boolean => {
@@ -99,9 +96,9 @@ export default function QueryEditorActions({ onFormat, onRunQuery, loading }: Qu
         </IconButton>
       </Tooltip>
       <Tooltip title={shortcuts.runQuery.command}>
-        <LoadingIconButton disabled={loading} loading={loading} color='primary' onClick={(): void => onRunQuery()}>
+        <IconButton disabled={loading} loading={loading} color='primary' onClick={(): void => onRunQuery()}>
           <CustomIcon type='play' />
-        </LoadingIconButton>
+        </IconButton>
       </Tooltip>
 
       <ExportModal

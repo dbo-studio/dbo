@@ -1,5 +1,4 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton.tsx';
 import Settings from '@/components/common/Settings/Settings';
 import { TabMode } from '@/core/enums';
 import { shortcuts } from '@/core/utils';
@@ -79,14 +78,14 @@ export default function ConnectionInfo(): JSX.Element {
 
       <Grid size={{ md: 3 }}>
         <Stack direction={'row'} justifyContent='flex-start'>
-          <LoadingIconButton
+          <IconButton
             aria-label={'refresh'}
             onClick={handleRefresh}
             loading={loading === 'loading'}
             disabled={loading === 'loading'}
           >
             <CustomIcon type={'refresh'} />
-          </LoadingIconButton>
+          </IconButton>
           <IconButton aria-label={'sql'} disabled={!currentConnection} onClick={handleAddEditorTab}>
             <CustomIcon type={'sql'} size={'m'} />
           </IconButton>
