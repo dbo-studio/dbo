@@ -1,3 +1,4 @@
+import locales from '@/locales';
 import { Button, Stack, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef } from 'react';
 import type { MessagesProps } from '../types';
@@ -28,9 +29,11 @@ export default function Messages({ messages, onLoadMore }: MessagesProps) {
 
   return (
     <MessagesStyled ref={messagesContainerRef}>
-      <Button variant='outlined' onClick={onLoadMore} size='small'>
-        <Typography variant='caption'>Load More</Typography>
-      </Button>
+      {messages.filter((message) => message.isNew === false).length > 0 && (
+        <Button variant='outlined' onClick={onLoadMore} size='small'>
+          <Typography variant='caption'>{locales.load_more}</Typography>
+        </Button>
+      )}
       <Stack spacing={1} p={1}>
         {messages.map((message, index) =>
           message.type === 'code' ? (

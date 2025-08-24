@@ -9,10 +9,10 @@ import (
 )
 
 type IAiChatService interface {
-	Index(ctx context.Context) (*dto.AiChatListResponse, error)
+	Index(ctx context.Context, req *dto.AiChatListRequest) (*dto.AiChatListResponse, error)
 	Detail(ctx context.Context, dto *dto.AiChatDetailRequest) (*dto.AiChatDetailResponse, error)
 	Create(ctx context.Context, chat *dto.AiChatCreateRequest) (*dto.AiChatDetailResponse, error)
-	Delete(ctx context.Context, chatId uint) (*dto.AiChatListResponse, error)
+	Delete(ctx context.Context, chatId uint) error
 }
 
 type IAiChatServiceImpl struct {
@@ -25,8 +25,8 @@ func NewAiChatService(aiChatRepo repository.IAiChatRepo) IAiChatService {
 	}
 }
 
-func (s IAiChatServiceImpl) Index(ctx context.Context) (*dto.AiChatListResponse, error) {
-	chats, err := s.aiChatRepo.List(ctx)
+func (s IAiChatServiceImpl) Index(ctx context.Context, req *dto.AiChatListRequest) (*dto.AiChatListResponse, error) {
+	chats, err := s.aiChatRepo.List(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -52,16 +52,11 @@ func (s IAiChatServiceImpl) Create(ctx context.Context, req *dto.AiChatCreateReq
 	return aiChatDetailToResponse(chat), nil
 }
 
-func (s IAiChatServiceImpl) Delete(ctx context.Context, chatId uint) (*dto.AiChatListResponse, error) {
+func (s IAiChatServiceImpl) Delete(ctx context.Context, chatId uint) error {
 	chat, err := s.aiChatRepo.Find(ctx, chatId, nil)
 	if err != nil {
-		return nil, apperror.NotFound(apperror.ErrAiChatNotFound)
+		return apperror.NotFound(apperror.ErrAiChatNotFound)
 	}
 
-	err = s.aiChatRepo.Delete(ctx, chat)
-	if err != nil {
-		return nil, err
-	}
-
-	return s.Index(ctx)
+	return s.aiChatRepo.Delete(ctx, chat)
 }

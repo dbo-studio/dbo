@@ -25,5 +25,7 @@ type (
 func (req HistoryListRequest) Validate() error {
 	return validation.ValidateStruct(&req,
 		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
+		validation.Field(&req.PaginationRequest.Count, validation.Required, validation.Min(1), validation.Max(100)),
+		validation.Field(&req.PaginationRequest.Page, validation.Required, validation.Min(1), validation.Max(100)),
 	)
 }

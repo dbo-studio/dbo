@@ -1,16 +1,17 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import DropDownMenu from '@/components/base/DropDownMenu/DropDownMenu';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { Box, Divider, IconButton, Stack } from '@mui/material';
 import { useRef, useState } from 'react';
+import { useToggle } from 'usehooks-ts';
 import type { ChatContextProps, ContextItemType } from '../../types';
 import { ChatContextStyled } from './ChatContext.styled';
 import ChatContextItem from './ChatContextItem/ChatContextModalItem';
-import ChatContextModal from './ChatContextModal/ChatContextModal';
-import ChatContextModalItem from './ChatContextModal/ChatContextModalItem/ChatContextModalItem';
+import ChatContextModalItem from './ChatContextModalItem/ChatContextModalItem';
 
 export default function ChatContext({ autocomplete }: ChatContextProps) {
   const anchorRef = useRef<HTMLButtonElement>(null);
-  const [open, setOpen] = useState(false);
+  const [isOpen, toggleOpen, setOpen] = useToggle(false);
 
   const context = useAiStore((state) => state.context);
   const updateContext = useAiStore((state) => state.updateContext);
@@ -22,10 +23,6 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
     tables: context.tables,
     views: context.views
   });
-
-  const handleToggle = () => {
-    setOpen((prevOpen) => !prevOpen);
-  };
 
   const handleContextChange = (name: string, type: ContextItemType) => {
     setLocalContext({ ...localContext, [type]: [...localContext[type], name] });
@@ -47,7 +44,7 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
         alignContent={'center'}
         spacing={1}
       >
-        <IconButton ref={anchorRef} onClick={handleToggle}>
+        <IconButton ref={anchorRef} onClick={toggleOpen}>
           <CustomIcon type='at' size='s' />
         </IconButton>
 
@@ -60,7 +57,7 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
         ))}
       </Stack>
 
-      <ChatContextModal open={open} onClose={() => setOpen(false)} anchorRef={anchorRef}>
+      <DropDownMenu open={isOpen} onClose={() => setOpen(false)} anchorRef={anchorRef}>
         <ChatContextStyled>
           {autocomplete?.tables.map((table) => (
             <ChatContextModalItem
@@ -82,7 +79,7 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
             />
           ))}
         </ChatContextStyled>
-      </ChatContextModal>
+      </DropDownMenu>
     </Box>
   );
 }

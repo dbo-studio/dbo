@@ -14,7 +14,7 @@ export const createAiChatSlice: StateCreator<AiChatSlice, [], [], AiChatSlice> =
     set({ chats });
   },
   addChat: async (chat: AiChatType) => {
-    set({ chats: [...get().chats, chat] });
+    set({ chats: [chat, ...get().chats] });
   },
   addMessage: async (chat: AiChatType, messages: AiMessageType[]) => {
     if (!chat.messages) {

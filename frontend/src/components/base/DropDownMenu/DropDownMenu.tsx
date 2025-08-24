@@ -1,8 +1,8 @@
 import { ClickAwayListener, Grow, Paper, Popper } from '@mui/material';
 import { useEffect, useRef } from 'react';
-import type { ChatContextModalProps } from '../../../types';
+import type { DropDownMenuProps } from './types';
 
-export default function ChatContextModal({ open, onClose, anchorRef, children }: ChatContextModalProps) {
+export default function DropDownMenu({ open, onClose, anchorRef, children }: DropDownMenuProps) {
   const handleClose = (event: Event | React.SyntheticEvent) => {
     if (anchorRef?.current?.contains(event.target as HTMLElement)) return;
     onClose();

@@ -18,9 +18,19 @@ func NewAiChatRepo(db *gorm.DB) IAiChatRepo {
 	}
 }
 
-func (r AiChatRepoImpl) List(ctx context.Context) ([]model.AiChat, error) {
-	var items []model.AiChat
-	return items, r.db.WithContext(ctx).Order("updated_at desc").Find(&items).Error
+func (r AiChatRepoImpl) List(ctx context.Context, req *dto.AiChatListRequest) ([]model.AiChat, error) {
+	var chats []model.AiChat
+
+	result := r.db.Scopes(scope.Paginate(&req.PaginationRequest)).
+		Where("connection_id = ?", req.ConnectionId).
+		Order("updated_at desc").
+		Find(&chats)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return chats, nil
 }
 
 func (r AiChatRepoImpl) Find(ctx context.Context, id uint, pagination *dto.PaginationRequest) (*model.AiChat, error) {
@@ -54,6 +64,11 @@ func (r AiChatRepoImpl) Create(ctx context.Context, dto *dto.AiChatCreateRequest
 	title := dto.Title
 	if len(dto.Title) > 20 {
 		title = dto.Title[0:20]
+	}
+
+	err := r.db.WithContext(ctx).Where("id IN (SELECT ai_chats.id FROM ai_chats LEFT JOIN ai_chat_messages ON ai_chats.id = ai_chat_messages.chat_id GROUP BY ai_chats.id HAVING COUNT(ai_chat_messages.id) = 0)").Delete(&model.AiChat{}).Error
+	if err != nil {
+		return nil, err
 	}
 
 	var chat = &model.AiChat{

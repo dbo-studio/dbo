@@ -27,7 +27,11 @@ export default function AiChatPanel() {
   const { isLoading } = useQuery({
     queryKey: ['aiChats', currentConnectionId],
     queryFn: async () => {
-      const chats = await api.aiChat.getChats();
+      const chats = await api.aiChat.getChats({
+        connectionId: currentConnectionId ?? 0,
+        page: 1,
+        count: 1
+      });
       updateChats(chats);
       if (!currentChat) {
         if (chats.length > 0) {
@@ -77,7 +81,11 @@ export default function AiChatPanel() {
   };
 
   const handleChatChange = async (chat: AiChatType) => {
-    const detail = await api.aiChat.getChatDetail(chat.id, 1, 10);
+    const detail = await api.aiChat.getChatDetail({
+      id: chat.id,
+      page: 1,
+      count: 10
+    });
     updateCurrentChat(detail);
   };
 
@@ -85,7 +93,11 @@ export default function AiChatPanel() {
     if (!currentChat) return;
 
     setPage(page + 1);
-    const detail = await api.aiChat.getChatDetail(currentChat.id, page + 1, 10);
+    const detail = await api.aiChat.getChatDetail({
+      id: currentChat.id,
+      page: page + 1,
+      count: 10
+    });
     currentChat.messages.unshift(...detail.messages);
     updateCurrentChat(currentChat);
   };
@@ -102,8 +114,9 @@ export default function AiChatPanel() {
     <Box height={'100%'} minHeight={0} position={'relative'} display={'flex'} flexDirection={'column'}>
       <HeaderContainerStyled>
         <Chats chats={chats ?? []} currentChat={currentChat} onChatChange={handleChatChange} />
-        <Stack direction={'row'} gap={1} alignItems={'center'}>
+        <Stack direction={'row'} alignItems={'center'}>
           <AddChat onClick={handleCreateChat} />
+          {/* <ChatOptions /> */}
         </Stack>
       </HeaderContainerStyled>
       <Messages messages={currentChat?.messages ?? []} onLoadMore={handleLoadMore} />

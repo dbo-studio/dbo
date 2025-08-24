@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"context"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	serviceAiChat "github.com/dbo-studio/dbo/internal/service/ai_chat"
 	"github.com/dbo-studio/dbo/pkg/apperror"
@@ -25,8 +23,19 @@ func NewAiChatHandler(logger logger.Logger, aiChatService serviceAiChat.IAiChatS
 }
 
 func (h AiChatHandler) Chats(c fiber.Ctx) error {
-	items, err := h.aiChatService.Index(context.Background())
+	req := new(dto.AiChatListRequest)
+
+	if err := c.Bind().Query(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	items, err := h.aiChatService.Index(c, req)
 	if err != nil {
+		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
@@ -72,11 +81,11 @@ func (h AiChatHandler) Create(c fiber.Ctx) error {
 
 func (h AiChatHandler) Delete(c fiber.Ctx) error {
 	chatId := fiber.Params[uint](c, "id")
-	data, err := h.aiChatService.Delete(c, chatId)
+	err := h.aiChatService.Delete(c, chatId)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder().WithData(data.Chats).Send(c)
+	return response.SuccessBuilder().Send(c)
 }
