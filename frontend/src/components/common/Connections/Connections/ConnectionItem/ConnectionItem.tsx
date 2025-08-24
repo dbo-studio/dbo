@@ -21,7 +21,12 @@ export default function ConnectionItem({
   };
 
   return (
-    <ConnectionItemStyled onContextMenu={handleContextMenu} selected={selected} onClick={handleClick}>
+    <ConnectionItemStyled
+      data-testid={`connection-item-${connection.name}`}
+      onContextMenu={handleContextMenu}
+      selected={selected}
+      onClick={handleClick}
+    >
       <Tooltip title={connection.name}>
         <Box maxWidth={50}>
           <CustomIcon type='databaseZap' size='m' />

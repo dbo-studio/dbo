@@ -49,7 +49,13 @@ export default function ConnectionSelection({ connections, onSubmit, onClose }: 
         <Button size='small' onClick={onClose}>
           {locales.cancel}
         </Button>
-        <Button onClick={handleOnSubmit} disabled={!connectionType} size='small' variant='contained'>
+        <Button
+          data-testid='select-connection'
+          onClick={handleOnSubmit}
+          disabled={!connectionType}
+          size='small'
+          variant='contained'
+        >
           {locales.create}
         </Button>
       </Box>
