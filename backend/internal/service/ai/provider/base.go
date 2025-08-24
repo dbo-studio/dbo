@@ -1,10 +1,11 @@
 package serviceAiProvider
 
 import (
-	"encoding/json"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/goccy/go-json"
 
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/gofiber/fiber/v3/client"

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"encoding/json"
+	"github.com/goccy/go-json"
 
 	"github.com/blastrain/vitess-sqlparser/sqlparser"
 	"github.com/dbo-studio/dbo/internal/app/dto"
