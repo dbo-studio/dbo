@@ -2,11 +2,12 @@ package db
 
 import (
 	"fmt"
-	"github.com/dbo-studio/dbo/pkg/logger"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/dbo-studio/dbo/pkg/logger"
 
 	"github.com/dbo-studio/dbo/config"
 	"gorm.io/driver/sqlite"
@@ -58,6 +59,11 @@ func getDBPath(cfg *config.Config, logger logger.Logger) string {
 
 	if cfg.App.Env == "docker" {
 		return defaultPath
+	}
+
+	if cfg.App.Env == "testing" {
+		dbPath := "data/" + cfg.App.DatabaseName + "_testing.db"
+		return dbPath
 	}
 
 	homeDir, err := os.UserHomeDir()

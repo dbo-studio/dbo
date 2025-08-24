@@ -15,6 +15,6 @@ RUN go install github.com/air-verse/air@latest
 
 RUN go mod download
 
-EXPOSE 8080
+EXPOSE ${APP_ENV}
 
 CMD ["air", "-c", ".air.toml"]
