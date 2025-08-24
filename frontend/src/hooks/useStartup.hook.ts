@@ -10,13 +10,15 @@ export const useStartup = (): boolean => {
   const done = useSetupDesktop();
   const debug = useSettingStore((state) => state.debug);
   const updateProviders = useAiStore((state) => state.updateProviders);
+  const updateVersion = useSettingStore((state) => state.updateVersion);
 
-  const { isLoading: isLoadingProviders } = useQuery({
-    queryKey: ['providers'],
+  const { isLoading: isLoadingConfig } = useQuery({
+    queryKey: ['config'],
     queryFn: async () => {
-      const providers = await api.aiProvider.getProviders();
-      updateProviders(providers);
-      return providers;
+      const config = await api.config.getConfig();
+      updateProviders(config.providers);
+      updateVersion(config.version);
+      return config;
     }
   });
 
@@ -44,5 +46,5 @@ export const useStartup = (): boolean => {
     }
   }, [debug]);
 
-  return done && !isLoadingProviders;
+  return done && !isLoadingConfig;
 };

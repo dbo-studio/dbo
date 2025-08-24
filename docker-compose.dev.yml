@@ -32,7 +32,6 @@ services:
       - ./frontend/package.json:/package.json
     environment:
       VITE_PUBLIC_SERVER_URL: "http://localhost:8080/api"
-      VITE_VERSION: $(cat ./docs/VERSION)
       NODE_ENV: "development"
     ports:
       - "3000:3000"

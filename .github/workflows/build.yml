@@ -83,8 +83,6 @@ jobs:
       - name: Build Frontend with Version
         run: npm run build
         working-directory: ./frontend
-        env:
-          VITE_VERSION: ${{ env.PACKAGE_VERSION }}
 
       - uses: actions/setup-go@v5
         with:

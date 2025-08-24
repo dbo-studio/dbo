@@ -16,7 +16,6 @@ VERSION=$(cat ./scripts/VERSION)
 BACKEND_DIR=./../backend
 FRONTEND_DIR=./../frontend
 DESKTOP_DIR=./../desktop
-export VITE_VERSION=$VERSION
 
 ## check go version
 check_go() {

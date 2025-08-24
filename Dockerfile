@@ -2,8 +2,6 @@ FROM node:24 as frontend
 
 ARG RELEASE="release"
 
-ENV VITE_VERSION=${VITE_VERSION}
-
 WORKDIR /frontend
 
 COPY ./frontend .
