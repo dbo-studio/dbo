@@ -62,8 +62,7 @@ func getDBPath(cfg *config.Config, logger logger.Logger) string {
 	}
 
 	if cfg.App.Env == "testing" {
-		dbPath := "data/" + cfg.App.DatabaseName + "_testing.db"
-		return dbPath
+		return ":memory:"
 	}
 
 	homeDir, err := os.UserHomeDir()
