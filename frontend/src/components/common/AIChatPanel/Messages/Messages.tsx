@@ -43,7 +43,7 @@ export default function Messages({ messages, loading, onLoadMore }: MessagesProp
           )
         )}
 
-        {true && (
+        {loading && (
           <>
             <Divider />
             <Stack direction={'row'} spacing={1} alignItems={'center'}>
