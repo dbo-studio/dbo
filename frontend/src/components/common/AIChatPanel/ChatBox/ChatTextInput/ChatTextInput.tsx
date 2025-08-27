@@ -1,11 +1,11 @@
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { Box } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { ChatTextInputProps } from '../../types';
 import { ChatTextInputStyled } from './ChatTextInput.styled';
 
-export default function ChatTextInput({ onSend }: ChatTextInputProps) {
+export default function ChatTextInput({ loading, onSend }: ChatTextInputProps) {
   const context = useAiStore((state) => state.context);
   const updateContext = useAiStore((state) => state.updateContext);
 
@@ -16,24 +16,22 @@ export default function ChatTextInput({ onSend }: ChatTextInputProps) {
     updateContext({ ...context, input: e.target.value });
   };
 
-  useEffect(() => {
-    if (context.input === '') {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
       setInput('');
+      onSend();
     }
-  }, [context.input]);
+  };
 
   return (
     <Box flex={1} sx={{ overflowY: 'scroll' }}>
       <ChatTextInputStyled
+        disabled={loading}
         placeholder={locales.ask_anything}
         value={input}
         onChange={handleChange}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            onSend();
-          }
-        }}
+        onKeyDown={handleKeyDown}
       />
     </Box>
   );

@@ -17,6 +17,7 @@ export type ChatItemProps = {
 };
 
 export type ChatTextInputProps = {
+  loading: boolean;
   onSend: () => void;
 };
 
@@ -40,10 +41,11 @@ export type ChatContextModalItemProps = {
 
 export type ChatContextItemProps = {
   name: string;
+  type: 'tables' | 'views' | 'database' | 'schema';
   onClick: () => void;
 };
 
-export type ContextItemType = 'tables' | 'views';
+export type ContextItemType = 'tables' | 'views' | 'database' | 'schema';
 
 export type ExplanationMessageProps = {
   message: AiMessageType;
@@ -51,9 +53,16 @@ export type ExplanationMessageProps = {
 
 export type MessagesProps = {
   messages: AiMessageType[];
+  loading: boolean;
   onLoadMore?: () => Promise<void>;
 };
 
 export type CodeMessageProps = {
   message: AiMessageType;
+};
+
+export type ChatBoxProps = {
+  onSend: () => void;
+  loading: boolean;
+  autocomplete: AutoCompleteType;
 };

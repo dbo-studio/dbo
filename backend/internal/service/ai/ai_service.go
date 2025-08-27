@@ -103,13 +103,13 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		ChatId: chat.ID,
 	}
 
-	response.Messages = append(response.Messages, dto.AiMessage{
-		Role:      string(model.AiChatMessageRoleUser),
-		Content:   req.Message,
-		Type:      string(model.AiChatMessageTypeExplanation),
-		Language:  string(model.AiChatMessageLanguageText),
-		CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
-	})
+	// response.Messages = append(response.Messages, dto.AiMessage{
+	// 	Role:      string(model.AiChatMessageRoleUser),
+	// 	Content:   req.Message,
+	// 	Type:      string(model.AiChatMessageTypeExplanation),
+	// 	Language:  string(model.AiChatMessageLanguageText),
+	// 	CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+	// })
 
 	if len(providerResp.Contents) == 0 {
 		response.Messages = append(response.Messages, dto.AiMessage{

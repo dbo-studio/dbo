@@ -166,5 +166,6 @@
 	"url_required": "Base URL is required",
 	"new_chat": "New chat",
 	"ask_anything": "Ask anything...",
-	"timeout": "Timeout"
+	"timeout": "Timeout",
+	"thinking": "Thinking"
 }

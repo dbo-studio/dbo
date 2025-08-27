@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"slices"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -55,6 +56,7 @@ func (r AiChatRepoImpl) Find(ctx context.Context, id uint, pagination *dto.Pagin
 		return nil, err
 	}
 
+	slices.Reverse(messages)
 	chat.Messages = messages
 
 	return &chat, nil

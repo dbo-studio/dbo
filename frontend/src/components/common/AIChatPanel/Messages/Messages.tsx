@@ -1,12 +1,12 @@
 import locales from '@/locales';
-import { Button, Stack, Typography } from '@mui/material';
+import { Button, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef } from 'react';
 import type { MessagesProps } from '../types';
 import CodeMessage from './CodeMessage/CodeMessage';
 import ExplanationMessage from './ExplanationMessage/ExplanationMessage';
 import { MessagesStyled } from './Messages.styled';
 
-export default function Messages({ messages, onLoadMore }: MessagesProps) {
+export default function Messages({ messages, loading, onLoadMore }: MessagesProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -41,6 +41,18 @@ export default function Messages({ messages, onLoadMore }: MessagesProps) {
           ) : (
             <ExplanationMessage key={`${message.role}-${index}-${message.createdAt}`} message={message} />
           )
+        )}
+
+        {true && (
+          <>
+            <Divider />
+            <Stack direction={'row'} spacing={1} alignItems={'center'}>
+              <Typography variant='subtitle1' color='textSubdued'>
+                {locales.thinking}
+              </Typography>
+              <CircularProgress size={15} color='primary' />
+            </Stack>
+          </>
         )}
       </Stack>
     </MessagesStyled>

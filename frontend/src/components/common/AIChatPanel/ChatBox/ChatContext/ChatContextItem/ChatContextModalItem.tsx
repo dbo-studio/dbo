@@ -5,7 +5,7 @@ import { useHover } from 'usehooks-ts';
 import type { ChatContextItemProps } from '../../../types';
 import { ChatContextItemStyled } from './ChatContextModalItem.styled';
 
-export default function ChatContextItem({ name, onClick }: ChatContextItemProps): JSX.Element {
+export default function ChatContextItem({ name, type, onClick }: ChatContextItemProps): JSX.Element {
   const hoverRef = useRef<HTMLElement | null>(null);
   // @ts-expect-error
   const isHover = useHover(hoverRef);
@@ -13,7 +13,11 @@ export default function ChatContextItem({ name, onClick }: ChatContextItemProps)
   return (
     <ChatContextItemStyled ref={hoverRef}>
       <Stack direction={'row'} spacing={1} alignItems={'center'}>
-        {isHover ? <CustomIcon type='close' size='xs' onClick={onClick} /> : <CustomIcon type={'sheet'} size='xs' />}
+        {isHover ? (
+          <CustomIcon type='close' size='xs' onClick={onClick} />
+        ) : (
+          <CustomIcon type={type === 'database' ? 'database' : 'sheet'} size='xs' />
+        )}
 
         <Typography color={'textText'} variant='caption'>
           {name}

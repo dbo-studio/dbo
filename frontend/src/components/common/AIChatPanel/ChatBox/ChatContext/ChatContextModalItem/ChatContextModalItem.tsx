@@ -13,7 +13,7 @@ export default function ChatContextModalItem({
   return (
     <ChatContextModalItemStyled onClick={(): void => onClick(name, type)}>
       <Stack direction={'row'} spacing={1} alignItems={'center'}>
-        <CustomIcon type={'sheet'} size='xs' />
+        <CustomIcon type={type === 'database' ? 'database' : 'sheet'} size='xs' />
 
         <Typography color={'textText'} variant='caption'>
           {name}

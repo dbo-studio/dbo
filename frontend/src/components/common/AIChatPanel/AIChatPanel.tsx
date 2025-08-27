@@ -1,7 +1,11 @@
 import api from '@/api';
+import type { AiChatRequest, AiContextOptsType } from '@/api/ai/types';
+import { TabMode } from '@/core/enums';
+import { useSelectedTab } from '@/hooks';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AiChatType, AutoCompleteType } from '@/types';
 import { Box, LinearProgress, Stack } from '@mui/material';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -10,7 +14,6 @@ import AddChat from './AddChat/AddChat';
 import { HeaderContainerStyled } from './AiChatPanel.styled';
 import ChatBox from './ChatBox/ChatBox';
 import Chats from './Chats/Chats';
-import DatabaseSchema from './DatabaseSchema/DatabaseSchema';
 import Messages from './Messages/Messages';
 
 export default function AiChatPanel() {
@@ -20,9 +23,14 @@ export default function AiChatPanel() {
   const chats = useAiStore((state) => state.chats);
   const [page, setPage] = useState(1);
 
+  const selectedTab = useSelectedTab();
+  const context = useAiStore((state) => state.context);
+
   const updateChats = useAiStore((state) => state.updateChats);
   const updateCurrentChat = useAiStore((state) => state.updateCurrentChat);
   const addChat = useAiStore((state) => state.addChat);
+  const addMessage = useAiStore((state) => state.addMessage);
+  const updateContext = useAiStore((state) => state.updateContext);
 
   const { isLoading } = useQuery({
     queryKey: ['aiChats', currentConnectionId],
@@ -43,6 +51,13 @@ export default function AiChatPanel() {
       return chats;
     },
     enabled: !!currentConnectionId
+  });
+
+  const { mutateAsync: chatMutation, isPending: chatPending } = useMutation({
+    mutationFn: api.ai.chat,
+    onError: (error: Error): void => {
+      console.log('🚀 ~ AIChatPanel ~ error:', error);
+    }
   });
 
   const { data: autocomplete } = useQuery({
@@ -102,6 +117,46 @@ export default function AiChatPanel() {
     updateCurrentChat(currentChat);
   };
 
+  const handleSend = async () => {
+    if (!currentChat || !context.input.trim() || chatPending || !context.database) return;
+
+    const contextOpts: AiContextOptsType = {
+      database: context.database,
+      schema: context.schema,
+      tables: context.tables,
+      views: context.views,
+      query: ''
+    };
+
+    if (selectedTab?.mode === TabMode.Query && selectedTab?.query) {
+      contextOpts.query = useTabStore.getState().getQuery(selectedTab?.id);
+    }
+
+    addMessage(currentChat, [
+      {
+        role: 'user',
+        content: context.input.trim(),
+        createdAt: new Date().toISOString(),
+        language: 'text',
+        type: 'explanation',
+        isNew: true
+      }
+    ]);
+
+    const chat = await chatMutation({
+      connectionId: Number(currentConnectionId),
+      providerId: currentChat?.providerId ?? 0,
+      chatId: currentChat?.id,
+      model: currentChat?.model,
+      message: context.input.trim(),
+      contextOpts
+    } as AiChatRequest);
+
+    addMessage(currentChat, chat.messages);
+
+    updateContext({ ...context, input: '' });
+  };
+
   if (isLoading) {
     return (
       <Box p={1}>
@@ -119,10 +174,11 @@ export default function AiChatPanel() {
           {/* <ChatOptions /> */}
         </Stack>
       </HeaderContainerStyled>
-      <Messages messages={currentChat?.messages ?? []} onLoadMore={handleLoadMore} />
+      <Messages loading={chatPending} messages={currentChat?.messages ?? []} onLoadMore={handleLoadMore} />
       <Box>
-        {autocomplete && <DatabaseSchema autocomplete={autocomplete} />}
-        {autocomplete && currentChat && <ChatBox autocomplete={autocomplete} />}
+        {autocomplete && currentChat && (
+          <ChatBox loading={chatPending} onSend={handleSend} autocomplete={autocomplete} />
+        )}
       </Box>
     </Box>
   );
