@@ -145,4 +145,18 @@ test('Connections', async ({page}) => {
         
         await expect(page.getByTestId('connection-item-local2-edited')).toBeHidden();
     });
+
+    await test.step('Handle refresh connection', async () => {
+        await page.waitForTimeout(2000);
+
+        await page.getByTestId('connection-item-local').click({ button: 'right' });
+       
+        const refreshConnectionPromise = page.waitForResponse(response => 
+            response.url().includes('connections') && response.status() === 200,
+            { timeout: 10000 }
+        );
+        
+        await page.getByRole("menu").getByRole("menuitem", { name: "Refresh" }).click();
+        await refreshConnectionPromise;
+    });
 });
