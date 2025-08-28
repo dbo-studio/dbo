@@ -39,14 +39,16 @@ func NewAiService(
 	aiChatRepo repository.IAiChatRepo,
 	cm *databaseConnection.ConnectionManager,
 	cache cache.Cache,
+	logger logger.Logger,
 ) IAiService {
 	return &AiServiceImpl{
 		connectionRepo:  connectionRepo,
 		aiProviderRepo:  aiProviderRepo,
 		aiChatRepo:      aiChatRepo,
 		cm:              cm,
+		logger:          logger,
 		cacheManager:    serviceAiCache.NewCacheManager(cache),
-		providerFactory: serviceAiProvider.NewProviderFactory(),
+		providerFactory: serviceAiProvider.NewProviderFactory(logger),
 	}
 }
 

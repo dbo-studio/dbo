@@ -8,6 +8,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/gofiber/fiber/v3/client"
 )
 
@@ -15,9 +16,9 @@ type GroqProvider struct {
 	*BaseProvider
 }
 
-func NewGroqProvider(provider *model.AiProvider) IAiProvider {
+func NewGroqProvider(provider *model.AiProvider, logger logger.Logger) IAiProvider {
 	return &GroqProvider{
-		BaseProvider: NewBaseProvider(provider),
+		BaseProvider: NewBaseProvider(provider, logger),
 	}
 }
 
@@ -50,7 +51,7 @@ func (p *GroqProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatRespons
 		payload["max_tokens"] = *req.MaxTokens
 	}
 
-	resp, err := p.GetHttpClient().Post(p.GetURL()+"/chat/completions", client.Config{
+	resp, err := p.GetHttpClient().Post(p.url+"/chat/completions", client.Config{
 		Body: payload,
 	})
 
@@ -114,7 +115,7 @@ func (p *GroqProvider) Complete(ctx context.Context, req *CompletionRequest) (*C
 		payload["max_tokens"] = *req.MaxTokens
 	}
 
-	resp, err := p.GetHttpClient().Post(p.GetURL()+"/chat/completions", client.Config{
+	resp, err := p.GetHttpClient().Post(p.url+"/chat/completions", client.Config{
 		Body: payload,
 	})
 

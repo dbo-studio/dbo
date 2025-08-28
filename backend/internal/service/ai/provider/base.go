@@ -2,29 +2,32 @@ package serviceAiProvider
 
 import (
 	"encoding/json"
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/gofiber/fiber/v3/client"
 	"github.com/samber/lo"
-	"go.uber.org/zap"
 )
 
 type BaseProvider struct {
 	timeout int
 	url     string
 	apiKey  *string
+	logger  logger.Logger
 }
 
-func NewBaseProvider(provider *model.AiProvider) *BaseProvider {
+func NewBaseProvider(provider *model.AiProvider, logger logger.Logger) *BaseProvider {
 	url := strings.TrimRight(provider.Url, "/")
 
 	return &BaseProvider{
 		timeout: provider.Timeout,
 		url:     url,
 		apiKey:  provider.ApiKey,
+		logger:  logger,
 	}
 }
 
@@ -38,10 +41,6 @@ func (p *BaseProvider) GetHttpClient() *client.Client {
 	}
 
 	return cc
-}
-
-func (p *BaseProvider) GetURL() string {
-	return p.url
 }
 
 func (p *BaseProvider) buildCompletionPrompt(req *CompletionRequest) string {
@@ -130,19 +129,25 @@ func (p *BaseProvider) convertToStructuredResponse(content string, role model.Ai
 
 	re := regexp.MustCompile(`\\([^"\\/bfnrtu])`)
 	clean := re.ReplaceAllString(content, "$1")
+	contents := make([]model.AiChatMessageContent, len(structuredResponse.Contents))
 
 	err := json.Unmarshal([]byte(clean), &structuredResponse)
 	if err != nil {
-		zap.L().Error("Failed to unmarshal JSON", zap.Error(err), zap.String("content", content))
-		return nil, err
-	}
-	contents := make([]model.AiChatMessageContent, len(structuredResponse.Contents))
-	for i, content := range structuredResponse.Contents {
-		contents[i] = model.AiChatMessageContent{
-			Type:     content.Type,
-			Content:  content.Content,
-			Language: content.Language,
+		p.logger.Error(fmt.Sprintf("Failed to unmarshal JSON: %v, content: %s", err, content))
+		contents = append(contents, model.AiChatMessageContent{
+			Type:     "explanation",
+			Content:  clean,
+			Language: "text",
+		})
+	} else {
+		for i, content := range structuredResponse.Contents {
+			contents[i] = model.AiChatMessageContent{
+				Type:     content.Type,
+				Content:  content.Content,
+				Language: content.Language,
+			}
 		}
+
 	}
 
 	return &ChatResponse{

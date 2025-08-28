@@ -8,6 +8,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/gofiber/fiber/v3/client"
 )
 
@@ -15,9 +16,9 @@ type AnthropicProvider struct {
 	*BaseProvider
 }
 
-func NewAnthropicProvider(provider *model.AiProvider) IAiProvider {
+func NewAnthropicProvider(provider *model.AiProvider, logger logger.Logger) IAiProvider {
 	return &AnthropicProvider{
-		BaseProvider: NewBaseProvider(provider),
+		BaseProvider: NewBaseProvider(provider, logger),
 	}
 }
 

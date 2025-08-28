@@ -8,6 +8,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/gofiber/fiber/v3/client"
 	"github.com/samber/lo"
 )
@@ -16,10 +17,10 @@ type OllamaProvider struct {
 	*BaseProvider
 }
 
-func NewOllamaProvider(provider *model.AiProvider) IAiProvider {
+func NewOllamaProvider(provider *model.AiProvider, logger logger.Logger) IAiProvider {
 	provider.ApiKey = lo.ToPtr("-")
 	return &OllamaProvider{
-		BaseProvider: NewBaseProvider(provider),
+		BaseProvider: NewBaseProvider(provider, logger),
 	}
 }
 

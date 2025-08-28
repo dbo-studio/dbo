@@ -9,6 +9,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/gofiber/fiber/v3/client"
 )
 
@@ -16,9 +17,9 @@ type GeminiProvider struct {
 	*BaseProvider
 }
 
-func NewGeminiProvider(provider *model.AiProvider) IAiProvider {
+func NewGeminiProvider(provider *model.AiProvider, logger logger.Logger) IAiProvider {
 	return &GeminiProvider{
-		BaseProvider: NewBaseProvider(provider),
+		BaseProvider: NewBaseProvider(provider, logger),
 	}
 }
 
