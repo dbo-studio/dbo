@@ -13,6 +13,7 @@ import { useState } from 'react';
 import AddChat from './AddChat/AddChat';
 import { HeaderContainerStyled } from './AiChatPanel.styled';
 import ChatBox from './ChatBox/ChatBox';
+import ChatOptions from './ChatOptions/ChatOptions';
 import Chats from './Chats/Chats';
 import Messages from './Messages/Messages';
 
@@ -96,6 +97,8 @@ export default function AiChatPanel() {
   };
 
   const handleChatChange = async (chat: AiChatType) => {
+    if (chat.id === currentChat?.id) return;
+
     const detail = await api.aiChat.getChatDetail({
       id: chat.id,
       page: 1,
@@ -118,7 +121,7 @@ export default function AiChatPanel() {
   };
 
   const handleSend = async () => {
-    if (!currentChat || !context.input.trim() || chatPending || !context.database) return;
+    if (!currentChat || !context.input.trim() || chatPending) return;
 
     const contextOpts: AiContextOptsType = {
       database: context.database,
@@ -152,9 +155,22 @@ export default function AiChatPanel() {
       contextOpts
     } as AiChatRequest);
 
-    addMessage(currentChat, chat.messages);
-
     updateContext({ ...context, input: '' });
+    addMessage(currentChat, chat.messages);
+  };
+
+  const handleChatDelete = (chat: AiChatType) => {
+    const newChats = chats.filter((c) => c.id !== chat.id);
+    updateChats(newChats);
+
+    if (currentChat?.id === chat.id) {
+      if (newChats.length > 0) {
+        handleChatChange(newChats[newChats.length - 1]);
+        return;
+      }
+
+      handleCreateChat();
+    }
   };
 
   if (isLoading) {
@@ -168,10 +184,15 @@ export default function AiChatPanel() {
   return (
     <Box height={'100%'} minHeight={0} position={'relative'} display={'flex'} flexDirection={'column'}>
       <HeaderContainerStyled>
-        <Chats chats={chats ?? []} currentChat={currentChat} onChatChange={handleChatChange} />
+        <Chats
+          chats={chats ?? []}
+          currentChat={currentChat}
+          onChatChange={handleChatChange}
+          onChatDelete={handleChatDelete}
+        />
         <Stack direction={'row'} alignItems={'center'}>
-          <AddChat onClick={handleCreateChat} />
           {/* <ChatOptions /> */}
+          <AddChat onClick={handleCreateChat} />
         </Stack>
       </HeaderContainerStyled>
       <Messages loading={chatPending} messages={currentChat?.messages ?? []} onLoadMore={handleLoadMore} />

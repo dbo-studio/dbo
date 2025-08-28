@@ -8,7 +8,7 @@ export const ChatContextStyled = styled(Stack)(({ theme }) => ({
   padding: theme.spacing(1),
   border: `1px solid ${theme.palette.divider}`,
   borderRadius: variables.radius.medium,
-  backgroundColor: theme.palette.background.paper,
+  backgroundColor: theme.palette.background.default,
   boxShadow: 'none',
   zIndex: 1000,
   overflow: 'auto'

@@ -2,7 +2,7 @@ import type { AiMessageType } from '@/types';
 
 export type AiContextOptsType = {
   query?: string;
-  database: string;
+  database?: string;
   schema?: string;
   tables?: string[];
   views?: string[];
@@ -18,6 +18,7 @@ export type AiChatRequest = {
 };
 export type AiChatResponse = {
   chatId: number;
+  title: string;
   messages: AiMessageType[];
 };
 

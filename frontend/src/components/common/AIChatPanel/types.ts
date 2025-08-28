@@ -8,12 +8,14 @@ export type ChatProps = {
   chats: AiChatType[];
   currentChat: AiChatType | undefined;
   onChatChange: (chat: AiChatType) => void;
+  onChatDelete: (chat: AiChatType) => void;
 };
 
 export type ChatItemProps = {
   chat: AiChatType;
   selected: boolean;
   onClick: () => void;
+  onDelete: () => void;
 };
 
 export type ChatTextInputProps = {

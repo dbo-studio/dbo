@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"slices"
+	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -68,7 +69,11 @@ func (r AiChatRepoImpl) Create(ctx context.Context, dto *dto.AiChatCreateRequest
 		title = dto.Title[0:20]
 	}
 
-	err := r.db.WithContext(ctx).Where("id IN (SELECT ai_chats.id FROM ai_chats LEFT JOIN ai_chat_messages ON ai_chats.id = ai_chat_messages.chat_id GROUP BY ai_chats.id HAVING COUNT(ai_chat_messages.id) = 0)").Delete(&model.AiChat{}).Error
+	err := r.db.WithContext(ctx).
+		Where("id IN (SELECT ai_chats.id FROM ai_chats LEFT JOIN ai_chat_messages ON ai_chats.id = ai_chat_messages.chat_id GROUP BY ai_chats.id HAVING COUNT(ai_chat_messages.id) = 0)").
+		Where("created_at < ?", time.Now().Add(-time.Hour*24)).
+		Delete(&model.AiChat{}).Error
+
 	if err != nil {
 		return nil, err
 	}

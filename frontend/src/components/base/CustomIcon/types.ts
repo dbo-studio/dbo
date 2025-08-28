@@ -69,5 +69,6 @@ export const IconTypes = {
   sqlite: 'sqlite',
   network: 'Network',
   send: 'Send',
-  at: 'AtSign'
+  at: 'AtSign',
+  history: 'History'
 };

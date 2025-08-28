@@ -41,7 +41,7 @@ func (r *PostgresRepository) AutoComplete(data *dto.AutoCompleteRequest) (*dto.A
 	columns := make(map[string][]string)
 	if data.Schema != nil {
 		for _, table := range tables {
-			columnResult, err := r.getColumns(table.Name, lo.FromPtr(data.Schema), nil, false)
+			columnResult, err := r.getColumns(table.Name, data.Schema, nil, false)
 			if err != nil {
 				return nil, err
 			}

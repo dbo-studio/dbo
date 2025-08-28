@@ -14,6 +14,7 @@ type (
 
 	AiChatResponse struct {
 		ChatId   uint        `json:"chatId"`
+		Title    string      `json:"title"`
 		Messages []AiMessage `json:"messages"`
 	}
 )
@@ -21,7 +22,7 @@ type (
 type (
 	AiContextOptions struct {
 		Query    *string  `json:"query"`
-		Database string   `json:"database"`
+		Database *string  `json:"database"`
 		Schema   *string  `json:"schema"`
 		Tables   []string `json:"tables"`
 		Views    []string `json:"views"`

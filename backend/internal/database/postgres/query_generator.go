@@ -140,17 +140,20 @@ type Column struct {
 	IsActive               bool           `gorm:"-"`
 }
 
-func (r *PostgresRepository) getColumns(table string, schema string, columnNames []string, editable bool) ([]Column, error) {
+func (r *PostgresRepository) getColumns(table string, schema *string, columnNames []string, editable bool) ([]Column, error) {
 	columns := make([]Column, 0)
 
-	err := r.db.Table("information_schema.columns AS cols").
+	query := r.db.Table("information_schema.columns AS cols").
 		Select("cols.ordinal_position, cols.column_name, cols.data_type, cols.is_nullable, cols.column_default, cols.character_maximum_length, des.description AS column_comment").
 		Joins("LEFT JOIN pg_catalog.pg_description AS des ON (des.objoid = (SELECT c.oid FROM pg_catalog.pg_class AS c WHERE c.relname = cols.table_name LIMIT 1) AND des.objsubid = cols.ordinal_position)").
-		Where("cols.table_schema = ? AND cols.table_name = ?", schema, table).
-		Order("cols.ordinal_position").
-		Scan(&columns).Error
+		Where("cols.table_name = ?", table).
+		Order("cols.ordinal_position")
 
-	if err != nil {
+	if schema != nil {
+		query = query.Where("cols.table_schema = ?", schema)
+	}
+
+	if err := query.Scan(&columns).Error; err != nil {
 		return nil, err
 	}
 
@@ -163,7 +166,7 @@ func (r *PostgresRepository) getColumns(table string, schema string, columnNames
 		}
 	}
 
-	return columns, err
+	return columns, nil
 }
 
 type Template struct {
@@ -198,19 +201,22 @@ type ForeignKey struct {
 	ReferencedColumn string `gorm:"column:referenced_column"`
 }
 
-func (r *PostgresRepository) getForeignKeys(table string, schema string) (map[string]ForeignKey, error) {
+func (r *PostgresRepository) getForeignKeys(table string, schema *string) (map[string]ForeignKey, error) {
 	foreignKeys := make(map[string]ForeignKey)
 
 	var results []ForeignKey
 
-	err := r.db.Table("information_schema.table_constraints AS tc").
+	query := r.db.Table("information_schema.table_constraints AS tc").
 		Select("kcu.column_name, ccu.table_name AS referenced_table, ccu.column_name AS referenced_column").
 		Joins("JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema").
 		Joins("JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name AND ccu.table_schema = tc.table_schema").
-		Where("tc.constraint_type = ? AND tc.table_name = ? AND tc.table_schema = ?", "FOREIGN KEY", table, schema).
-		Scan(&results).Error
+		Where("tc.constraint_type = ? AND tc.table_name = ?", "FOREIGN KEY", table)
 
-	if err != nil {
+	if schema != nil {
+		query = query.Where("tc.table_schema = ?", *schema)
+	}
+
+	if err := query.Scan(&results).Error; err != nil {
 		return nil, err
 	}
 

@@ -76,6 +76,10 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		return nil, apperror.InternalServerError(err)
 	}
 
+	if err := s.updateChatTitle(ctx, chat, req.Message); err != nil {
+		return nil, err
+	}
+
 	chat.Messages = append(chat.Messages, model.AiChatMessage{
 		Role:    model.AiChatMessageRoleUser,
 		Content: req.Message,
@@ -101,15 +105,8 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 
 	response := &dto.AiChatResponse{
 		ChatId: chat.ID,
+		Title:  chat.Title,
 	}
-
-	// response.Messages = append(response.Messages, dto.AiMessage{
-	// 	Role:      string(model.AiChatMessageRoleUser),
-	// 	Content:   req.Message,
-	// 	Type:      string(model.AiChatMessageTypeExplanation),
-	// 	Language:  string(model.AiChatMessageLanguageText),
-	// 	CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
-	// })
 
 	if len(providerResp.Contents) == 0 {
 		response.Messages = append(response.Messages, dto.AiMessage{

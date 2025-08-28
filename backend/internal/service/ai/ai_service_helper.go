@@ -63,15 +63,6 @@ func (s *AiServiceImpl) findChat(ctx context.Context, req *dto.AiChatRequest) (*
 }
 
 func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat, userMessage string, aiMessage *serviceAiProvider.ChatResponse) error {
-	if len(chat.Messages) == 0 {
-		title := userMessage
-		if len(userMessage) > 20 {
-			title = userMessage[0:20]
-		}
-		chat.Title = title
-		s.aiChatRepo.Update(ctx, chat)
-	}
-
 	if err := s.aiChatRepo.AddMessage(ctx, &model.AiChatMessage{
 		ChatId:   chat.ID,
 		Role:     model.AiChatMessageRoleUser,
@@ -105,6 +96,22 @@ func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat
 		Language: aiMessage.Language,
 	}); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (s *AiServiceImpl) updateChatTitle(ctx context.Context, chat *model.AiChat, userMessage string) error {
+	if len(chat.Messages) == 0 {
+		title := userMessage
+		if len(userMessage) > 20 {
+			title = userMessage[0:20]
+		}
+
+		chat.Title = title
+		if err := s.aiChatRepo.Update(ctx, chat); err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -42,13 +42,13 @@ func (r *PostgresRepository) AiContext(req *dto.AiChatRequest) (string, error) {
 		return "", nil
 	}
 
-	if req.ContextOpts.Database != "" {
+	if lo.FromPtr(req.ContextOpts.Database) != "" {
 		sb.WriteString("Database: ")
-		sb.WriteString(req.ContextOpts.Database)
+		sb.WriteString(*req.ContextOpts.Database)
 		sb.WriteString("\n")
 	}
 
-	if req.ContextOpts.Schema != nil && *req.ContextOpts.Schema != "" {
+	if lo.FromPtr(req.ContextOpts.Schema) != "" {
 		sb.WriteString("Schema: ")
 		sb.WriteString(*req.ContextOpts.Schema)
 		sb.WriteString("\n")
@@ -56,11 +56,31 @@ func (r *PostgresRepository) AiContext(req *dto.AiChatRequest) (string, error) {
 
 	sb.WriteString("\nTables:\n")
 
+	if len(req.ContextOpts.Tables) == 0 {
+		tableList, err := r.getAllTableList(lo.ToPtr(true))
+		if err != nil {
+			return "", err
+		}
+		req.ContextOpts.Tables = lo.Map(tableList, func(table Table, _ int) string {
+			return table.Name
+		})
+	}
+
+	if len(req.ContextOpts.Views) == 0 {
+		viewList, err := r.getAllViewList(lo.ToPtr(true))
+		if err != nil {
+			return "", err
+		}
+		req.ContextOpts.Views = lo.Map(viewList, func(view View, _ int) string {
+			return view.Name
+		})
+	}
+
 	tableCounter := 1
 	for _, table := range req.ContextOpts.Tables {
 		sb.WriteString(fmt.Sprintf("%d. %s\n", tableCounter, table))
 
-		columns, err := r.getColumns(table, lo.FromPtr(req.ContextOpts.Schema), []string{}, false)
+		columns, err := r.getColumns(table, req.ContextOpts.Schema, []string{}, false)
 		if err != nil {
 			return "", err
 		}
@@ -70,7 +90,7 @@ func (r *PostgresRepository) AiContext(req *dto.AiChatRequest) (string, error) {
 			return "", err
 		}
 
-		foreignKeys, err := r.getForeignKeys(table, lo.FromPtr(req.ContextOpts.Schema))
+		foreignKeys, err := r.getForeignKeys(table, req.ContextOpts.Schema)
 		if err != nil {
 			return "", err
 		}
@@ -121,6 +141,31 @@ func (r *PostgresRepository) AiContext(req *dto.AiChatRequest) (string, error) {
 
 		sb.WriteString("\n")
 		tableCounter++
+	}
+
+	if len(req.ContextOpts.Views) > 0 {
+		sb.WriteString("\nViews:\n")
+
+		viewCounter := 1
+		for _, view := range req.ContextOpts.Views {
+			sb.WriteString(fmt.Sprintf("%d. %s\n", viewCounter, view))
+
+			columns, err := r.getColumns(view, req.ContextOpts.Schema, []string{}, false)
+			if err != nil {
+				return "", err
+			}
+
+			for _, column := range columns {
+				sb.WriteString("   - ")
+				sb.WriteString(column.ColumnName)
+				sb.WriteString(" (")
+				sb.WriteString(column.MappedType)
+				sb.WriteString(")\n")
+			}
+
+			sb.WriteString("\n")
+			viewCounter++
+		}
 	}
 
 	return sb.String(), nil
