@@ -1,12 +1,15 @@
 import { shikiToMonaco } from '@shikijs/monaco';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
-import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
-import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
-import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import { LanguageIdEnum, setupLanguageFeatures } from 'monaco-sql-languages';
+
+import 'monaco-sql-languages/esm/languages/mysql/mysql.contribution';
+import 'monaco-sql-languages/esm/languages/pgsql/pgsql.contribution';
+
+import MySQLWorker from 'monaco-sql-languages/esm/languages/mysql/mysql.worker?worker';
 import PGSQLWorker from 'monaco-sql-languages/esm/languages/pgsql/pgsql.worker?worker';
+
 import { createHighlighter } from 'shiki/bundle/web';
 import { completionService } from './completionService';
 import { registerInlineAIProvider } from './registerInlineAIProvider';
@@ -18,18 +21,14 @@ import { registerInlineAIProvider } from './registerInlineAIProvider';
       return new PGSQLWorker();
     }
 
+    if (label === LanguageIdEnum.MYSQL) {
+      return new MySQLWorker();
+    }
+
     if (label === 'json') {
       return new jsonWorker();
     }
-    if (label === 'css' || label === 'scss' || label === 'less') {
-      return new cssWorker();
-    }
-    if (label === 'html' || label === 'handlebars' || label === 'razor') {
-      return new htmlWorker();
-    }
-    if (label === 'typescript' || label === 'javascript') {
-      return new tsWorker();
-    }
+
     return new editorWorker();
   }
 };
