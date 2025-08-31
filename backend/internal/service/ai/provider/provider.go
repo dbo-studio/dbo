@@ -31,7 +31,6 @@ type ChatResponse struct {
 type CompletionRequest struct {
 	Prompt      string   `json:"prompt"`
 	Suffix      *string  `json:"suffix,omitempty"`
-	Language    *string  `json:"language,omitempty"`
 	Model       string   `json:"model"`
 	Temperature *float32 `json:"temperature,omitempty"`
 	MaxTokens   *int     `json:"max_tokens,omitempty"`

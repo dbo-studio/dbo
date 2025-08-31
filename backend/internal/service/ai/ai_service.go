@@ -10,7 +10,6 @@ import (
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
-	serviceAiCache "github.com/dbo-studio/dbo/internal/service/ai/cache"
 	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/cache"
@@ -29,8 +28,8 @@ type AiServiceImpl struct {
 	aiChatRepo      repository.IAiChatRepo
 	cm              *databaseConnection.ConnectionManager
 	logger          logger.Logger
-	cacheManager    serviceAiCache.ICacheManager
 	providerFactory *serviceAiProvider.ProviderFactory
+	cache           cache.Cache
 }
 
 func NewAiService(
@@ -47,7 +46,7 @@ func NewAiService(
 		aiChatRepo:      aiChatRepo,
 		cm:              cm,
 		logger:          logger,
-		cacheManager:    serviceAiCache.NewCacheManager(cache),
+		cache:           cache,
 		providerFactory: serviceAiProvider.NewProviderFactory(logger),
 	}
 }
@@ -134,54 +133,48 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 }
 
 func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteRequest) (*dto.AiInlineCompleteResponse, error) {
-	// aiProvider, dbProvider, err := s.createProvider(ctx, req.ProviderId)
-	// if err != nil {
-	// 	return nil, apperror.InternalServerError(err)
-	// }
+	aiProvider, dbProvider, err := s.createProvider(ctx, uint(req.ProviderId))
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
 
-	// cacheKey := s.cacheManager.GenerateCompletionKey(req, dbProvider)
-	// if cachedResponse, found := s.cacheManager.GetCompletionResponse(cacheKey); found {
-	// 	s.logger.Info("AI Complete ← cache hit")
-	// 	return cachedResponse, nil
-	// }
+	cacheKey := s.generateCompletionKey(req, dbProvider)
+	if cachedResponse, found := s.getCompletionResponse(cacheKey); found {
+		return cachedResponse, nil
+	}
 
-	// conn, err := s.connectionRepo.Find(ctx, req.ConnectionId)
-	// if err != nil {
-	// 	return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
-	// }
+	conn, err := s.connectionRepo.Find(ctx, req.ConnectionId)
+	if err != nil {
+		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
 
-	// repo, err := database.NewDatabaseRepository(conn, s.cm)
-	// if err != nil {
-	// 	return nil, apperror.InternalServerError(err)
-	// }
+	repo, err := database.NewDatabaseRepository(conn, s.cm)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
 
-	// contextStr, _ := s.buildContextFromAutocomplete(repo, req.ConnectionId, req.Database, req.Schema)
+	contextStr := repo.AiCompleteContext(req)
 
-	// s.logCompletionRequest(req, contextStr)
+	providerReq := &serviceAiProvider.CompletionRequest{
+		Prompt:      req.ContextOpts.Prompt,
+		Suffix:      req.ContextOpts.Suffix,
+		Model:       req.Model,
+		Temperature: dbProvider.Temperature,
+		MaxTokens:   dbProvider.MaxTokens,
+		Context:     contextStr,
+	}
 
-	// providerReq := &provider.CompletionRequest{
-	// 	Prompt:      req.Prompt,
-	// 	Suffix:      req.Suffix,
-	// 	Language:    req.Language,
-	// 	Model:       req.Model,
-	// 	Temperature: dbProvider.Temperature,
-	// 	MaxTokens:   dbProvider.MaxTokens,
-	// 	Context:     contextStr,
-	// }
+	providerResp, err := aiProvider.Complete(ctx, providerReq)
+	if err != nil {
+		s.logger.Error(fmt.Sprintf("AI Complete error: %v", err))
+		return nil, err
+	}
 
-	// providerResp, err := aiProvider.Complete(ctx, providerReq)
-	// if err != nil {
-	// 	s.logger.Error(fmt.Sprintf("AI Complete error: %v", err))
-	// 	return nil, err
-	// }
+	response := &dto.AiInlineCompleteResponse{
+		Completion: providerResp.Completion,
+	}
 
-	// response := &dto.AiInlineCompleteResponse{
-	// 	Completion: providerResp.Completion,
-	// }
+	s.setCompletionResponse(cacheKey, response, 5*time.Minute)
 
-	// s.logCompletionResponse(response)
-
-	// s.cacheManager.SetCompletionResponse(cacheKey, response, aiCache.GetDefaultCompletionTTL())
-
-	return nil, nil
+	return response, nil
 }

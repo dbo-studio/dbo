@@ -46,25 +46,22 @@ func (p *BaseProvider) GetHttpClient() *client.Client {
 func (p *BaseProvider) buildCompletionPrompt(req *CompletionRequest) string {
 	var sb strings.Builder
 
-	sb.WriteString(p.buildChatPrompt(&ChatRequest{
-		Context: req.Context,
-	}))
-
-	if req.Language != nil && *req.Language != "" {
-		sb.WriteString("Language: " + *req.Language + "\n")
-	}
+	sb.WriteString("You are an SQL completion assistant. ")
+	sb.WriteString("Complete the SQL query with only the missing part. ")
+	sb.WriteString("Return ONLY the completion text, no explanations, no JSON, no markdown. ")
+	sb.WriteString("Just continue the SQL exactly where it left off.\n\n")
 
 	if req.Context != "" {
 		sb.WriteString("Context:\n" + req.Context + "\n\n")
 	}
 
-	sb.WriteString("Prefix:\n" + req.Prompt + "\n\n")
+	sb.WriteString("Current SQL:\n" + req.Prompt + "\n\n")
 
 	if req.Suffix != nil && *req.Suffix != "" {
 		sb.WriteString("Suffix:\n" + *req.Suffix + "\n\n")
 	}
 
-	sb.WriteString("Continue the code only, no explanations.")
+	sb.WriteString("Complete the SQL query. Return ONLY the completion text:")
 
 	return sb.String()
 }

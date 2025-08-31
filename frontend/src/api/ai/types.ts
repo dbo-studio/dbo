@@ -24,12 +24,16 @@ export type AiChatResponse = {
 
 export type AICompleteRequest = {
   connectionId: number;
+  providerId: number;
+  model: string;
+  contextOpts: AiCompleteContextOptsType;
+};
+
+export type AiCompleteContextOptsType = {
   database?: string;
   schema?: string;
   prompt: string;
   suffix?: string;
-  language?: string;
-  provider?: any;
 };
 
 export type AICompleteResponse = { completion: string };

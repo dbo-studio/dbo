@@ -23,7 +23,6 @@ export const editorConfig: editor.IStandaloneEditorConstructionOptions = {
   wordWrap: 'on',
   fixedOverflowWidgets: true,
   scrollBeyondLastLine: false,
-  inlineSuggest: { enabled: true },
   suggestFontSize: 12,
   padding: {
     top: 8,
@@ -36,5 +35,6 @@ export const editorConfig: editor.IStandaloneEditorConstructionOptions = {
   },
   fontSize: 14,
   fontWeight: 'bold',
-  fontFamily: 'JetBrainsMono-Bold'
+  fontFamily: 'JetBrainsMono-Bold',
+  inlineSuggest: { enabled: true, mode: 'prefix' }
 };

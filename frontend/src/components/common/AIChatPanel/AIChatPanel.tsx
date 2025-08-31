@@ -13,7 +13,6 @@ import { useState } from 'react';
 import AddChat from './AddChat/AddChat';
 import { HeaderContainerStyled } from './AiChatPanel.styled';
 import ChatBox from './ChatBox/ChatBox';
-import ChatOptions from './ChatOptions/ChatOptions';
 import Chats from './Chats/Chats';
 import Messages from './Messages/Messages';
 
@@ -146,6 +145,8 @@ export default function AiChatPanel() {
       }
     ]);
 
+    updateContext({ ...context, input: '' });
+
     const chat = await chatMutation({
       connectionId: Number(currentConnectionId),
       providerId: currentChat?.providerId ?? 0,
@@ -155,7 +156,6 @@ export default function AiChatPanel() {
       contextOpts
     } as AiChatRequest);
 
-    updateContext({ ...context, input: '' });
     addMessage(currentChat, chat.messages);
   };
 

@@ -34,14 +34,16 @@ import { registerInlineAIProvider } from './registerInlineAIProvider';
   }
 };
 
-monaco.languages.json.jsonDefaults.setModeConfiguration({
-  ...monaco.languages.json.jsonDefaults.modeConfiguration,
-  completionItems: false
-});
+if (monaco.languages.json?.jsonDefaults) {
+  monaco.languages.json.jsonDefaults.setModeConfiguration({
+    ...monaco.languages.json.jsonDefaults.modeConfiguration,
+    completionItems: false
+  });
 
-monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
-  validate: false
-});
+  monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+    validate: false
+  });
+}
 
 const highlighter = await createHighlighter({
   themes: ['github-light', 'github-dark'],
@@ -77,5 +79,4 @@ setupLanguageFeatures(LanguageIdEnum.PG, {
   preprocessCode
 });
 
-// Register inline AI provider (ghost text)
 registerInlineAIProvider(monaco, LanguageIdEnum.PG);

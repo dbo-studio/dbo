@@ -43,15 +43,15 @@ func (h AiHandler) Complete(c fiber.Ctx) error {
 		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}
 
-	// if err := req.Validate(); err != nil {
-	// 	return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
-	// }
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
 
-	// result, err := h.aiService.Complete(c, req)
-	// if err != nil {
-	// 	h.logger.Error(err.Error())
-	// 	return response.ErrorBuilder().FromError(err).Send(c)
-	// }
+	result, err := h.aiService.Complete(c, req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
 
-	return response.SuccessBuilder().WithData("").Send(c)
+	return response.SuccessBuilder().WithData(result).Send(c)
 }

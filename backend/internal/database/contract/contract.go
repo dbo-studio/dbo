@@ -15,4 +15,5 @@ type DatabaseRepository interface {
 	AutoComplete(dto *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error)
 	ImportData(job dto.ImportJob, rows [][]string, columns []string) (*ImportResult, error)
 	AiContext(dto *dto.AiChatRequest) (string, error)
+	AiCompleteContext(dto *dto.AiInlineCompleteRequest) string
 }

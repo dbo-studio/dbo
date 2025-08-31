@@ -1,5 +1,5 @@
 import { api } from '@/core/api';
-import type { AiChatRequest, AICompleteRequest, AICompleteResponse, AiChatResponse } from './types';
+import type { AICompleteRequest, AICompleteResponse, AiChatRequest, AiChatResponse } from './types';
 
 const endpoint = {
   chat: (): string => '/ai/chat',

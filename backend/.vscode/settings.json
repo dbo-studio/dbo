@@ -16,7 +16,8 @@
         "samber",
         "Tablespace",
         "VARBIT",
-        "varchar"
+        "varchar",
+        "Vitess"
     ],
     // "go.lintTool": "golangci-lint",
     // "go.lintFlags": [

@@ -1,6 +1,3 @@
-import { complete as apiComplete } from '@/api/ai';
-import { useCurrentConnection } from '@/hooks';
-import { useAiStore } from '@/store/aiStore/ai.store';
 import type { editor } from 'monaco-editor';
 import { languages, type Position } from 'monaco-editor/esm/vs/editor/editor.api';
 import { type CompletionService, EntityContextType, type ICompletionItem } from 'monaco-sql-languages/esm/main';
@@ -141,50 +138,6 @@ export const completionService: CompletionService = async (
         existColumnInTableCompletions = true;
       }
     }
-  }
-
-  // Basic AI suggestion appended at the top
-  try {
-    const { settings } = useAiStore.getState();
-    const currentConnection = (useCurrentConnection as any)?.();
-    const textBeforeCursor = model.getValueInRange({
-      startLineNumber: 1,
-      startColumn: 1,
-      endLineNumber: position.lineNumber,
-      endColumn: position.column
-    });
-    const textAfterCursor = model.getValueInRange({
-      startLineNumber: position.lineNumber,
-      startColumn: position.column,
-      endLineNumber: model.getLineCount(),
-      endColumn: model.getLineMaxColumn(model.getLineCount())
-    });
-    if (textBeforeCursor.trim()) {
-      const ai = await apiComplete({
-        connectionId: currentConnection?.id ?? 0,
-        prompt: textBeforeCursor,
-        suffix: textAfterCursor,
-        language: languageId,
-        provider: {
-          providerId: 'openai-compatible',
-          baseUrl: settings.baseUrl,
-          apiKey: settings.apiKey,
-          model: settings.model,
-          temperature: settings.temperature,
-          maxTokens: settings.maxTokens
-        }
-      });
-      if (ai.completion && ai.completion.trim()) {
-        syntaxCompletionItems.unshift({
-          label: ai.completion.split('\n')[0].slice(0, 64),
-          insertText: ai.completion,
-          kind: languages.CompletionItemKind.Snippet,
-          detail: 'AI'
-        } as ICompletionItem);
-      }
-    }
-  } catch {
-    // ignore
   }
 
   return [...syntaxCompletionItems, ...keywordsCompletionItems];

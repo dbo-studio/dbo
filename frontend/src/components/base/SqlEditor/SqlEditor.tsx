@@ -32,17 +32,6 @@ export default function SqlEditor({
         theme: isDark ? 'github-dark' : 'github-light',
         language: LanguageIdEnum.PG
       });
-      // enable inline suggestions explicitly for safety
-      editorRef.current.updateOptions({ inlineSuggest: { enabled: true } });
-      // ensure runtime options keep suggestions manual-only
-      editorRef.current.updateOptions({
-        quickSuggestions: false,
-        suggestOnTriggerCharacters: false,
-        wordBasedSuggestions: 'off',
-        acceptSuggestionOnEnter: 'smart',
-        tabCompletion: 'off',
-        parameterHints: { enabled: false }
-      });
     }
 
     const model = editorRef.current?.getModel();

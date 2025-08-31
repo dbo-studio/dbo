@@ -72,7 +72,7 @@ export function getViews(languageId: string): ICompletionItem[] {
 }
 
 export function getColumns(languageId: string, tableName?: string): ICompletionItem[] {
-  if (!tableName || !Object.prototype.hasOwnProperty.call(autocomplete.columns, tableName)) {
+  if (!tableName || !(tableName in autocomplete.columns)) {
     return [];
   }
   const columnCompletions = autocomplete.columns[tableName].map((c) => ({

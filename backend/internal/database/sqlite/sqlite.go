@@ -13,6 +13,11 @@ type SQLiteRepository struct {
 	connection *model.Connection
 }
 
+// AiCompleteContext implements databaseContract.DatabaseRepository.
+func (r *SQLiteRepository) AiCompleteContext(dto *dto.AiInlineCompleteRequest) string {
+	panic("unimplemented")
+}
+
 // AiContext implements databaseContract.DatabaseRepository.
 func (r *SQLiteRepository) AiContext(dto *dto.AiChatRequest) (string, error) {
 	panic("unimplemented")
