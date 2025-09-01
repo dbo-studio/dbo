@@ -22,7 +22,6 @@ export const useActionDetection = (
 
   const addTab = useTabStore((state) => state.addTab);
   const addObjectTab = useTabStore((state) => state.addObjectTab);
-  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
   const reloadTree = useTreeStore((state) => state.reloadTree);
 
   const [_, copy] = useCopyToClipboard();
@@ -52,18 +51,15 @@ export const useActionDetection = (
         case 'tab': {
           switch (node.action.params.path) {
             case 'object': {
-              const tab = addObjectTab(node.action.title, node.id, node.action.name, TabMode.Object);
-              updateSelectedTab(tab);
+              addObjectTab(node.action.title, node.id, node.action.name, TabMode.Object);
               break;
             }
             case 'object-detail': {
-              const tab = addObjectTab(node.action.title, node.id, node.action.name, TabMode.ObjectDetail);
-              updateSelectedTab(tab);
+              addObjectTab(node.action.title, node.id, node.action.name, TabMode.ObjectDetail);
               break;
             }
             case 'data': {
-              const tab = addTab(node.action.params.table, node.id, node.action.params.editable);
-              updateSelectedTab(tab);
+              addTab(node.action.params.table, node.id, node.action.params.editable);
               break;
             }
           }

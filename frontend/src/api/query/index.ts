@@ -16,12 +16,15 @@ const endpoint = {
   autoComplete: (): string => '/query/autocomplete'
 };
 
-export const runQuery = async (data: RunQueryRequestType): Promise<RunQueryResponseType> => {
-  return (await api.post(endpoint.runQuery(), data)).data.data as RunQueryResponseType;
+export const runQuery = async (data: RunQueryRequestType, signal?: AbortSignal): Promise<RunQueryResponseType> => {
+  return (await api.post(endpoint.runQuery(), data, { signal })).data.data as RunQueryResponseType;
 };
 
-export const runRawQuery = async (data: RunRawQueryRequestType): Promise<RunQueryResponseType> => {
-  return (await api.post(endpoint.runRawQuery(), data)).data.data as RunQueryResponseType;
+export const runRawQuery = async (
+  data: RunRawQueryRequestType,
+  signal?: AbortSignal
+): Promise<RunQueryResponseType> => {
+  return (await api.post(endpoint.runRawQuery(), data, { signal })).data.data as RunQueryResponseType;
 };
 
 export const autoComplete = async (data: AutoCompleteRequestType): Promise<AutoCompleteType> => {

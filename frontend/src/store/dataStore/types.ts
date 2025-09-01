@@ -46,8 +46,8 @@ export type DataQuerySlice = {
   isDataFetching: boolean;
   reRunQuery: boolean;
   reRender: boolean;
-  runQuery: () => Promise<RunQueryResponseType | undefined>;
-  runRawQuery: (query?: string) => Promise<RunQueryResponseType | undefined>;
+  runQuery: (abortController?: AbortController) => Promise<RunQueryResponseType | undefined>;
+  runRawQuery: (query?: string, abortController?: AbortController) => Promise<RunQueryResponseType | undefined>;
   toggleReRunQuery: () => void;
   toggleReRender: () => void;
   toggleDataFetching: (loading?: boolean) => void;

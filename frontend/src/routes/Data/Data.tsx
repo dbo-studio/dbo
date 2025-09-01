@@ -4,7 +4,7 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ColumnType, RowType } from '@/types';
 import { Box, CircularProgress } from '@mui/material';
 import type { JSX } from 'react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useIsMounted } from 'usehooks-ts';
 import ActionBar from './ActionBar/ActionBar';
 import Columns from './Columns/Columns';
@@ -27,7 +27,9 @@ export default function Data(): JSX.Element {
   const loadDataFromIndexedDB = useDataStore((state) => state.loadDataFromIndexedDB);
   const runQuery = useDataStore((state) => state.runQuery);
 
-  const loadData = async (): Promise<void> => {
+  const currentAbortControllerRef = useRef<AbortController | null>(null);
+
+  const loadData = useCallback(async (): Promise<void> => {
     setTableData({
       rows: [],
       columns: []
@@ -36,37 +38,50 @@ export default function Data(): JSX.Element {
     try {
       const result = await loadDataFromIndexedDB();
       if (!result) {
-        const res = await runQuery();
-        setTableData({
-          rows: res?.data ?? [],
-          columns: res?.columns.filter((column) => column.isActive) ?? []
-        });
+        const abortController = new AbortController();
+        currentAbortControllerRef.current = abortController;
+
+        const res = await runQuery(abortController);
+        if (res && !abortController.signal.aborted) {
+          setTableData({
+            rows: res?.data ?? [],
+            columns: res?.columns.filter((column) => column.isActive) ?? []
+          });
+        }
       } else {
         setTableData(result);
       }
     } catch (error) {
       console.error('🚀 ~ loadData ~ error:', error);
     }
-  };
+  }, [loadDataFromIndexedDB, runQuery]);
 
-  const handleReRunQuery = async (): Promise<void> => {
-    const res = await runQuery();
+  const handleReRunQuery = useCallback(async (): Promise<void> => {
+    const abortController = new AbortController();
+    currentAbortControllerRef.current = abortController;
+
+    const res = await runQuery(abortController);
     setTableData({
       rows: res?.data ?? [],
       columns: res?.columns.filter((column) => column.isActive) ?? []
     });
-  };
+  }, [runQuery]);
 
   useEffect(() => {
     setIsGridReady(false);
+    if (!isMounted || !selectedTabId) {
+      setIsGridReady(true);
+      return;
+    }
 
-    if (!isMounted || !selectedTabId) return;
-
-    loadData();
-    setIsGridReady(true);
-  }, [selectedTabId, isMounted]);
+    cancelCurrentQuery();
+    loadData().then(() => {
+      setIsGridReady(true);
+    });
+  }, [selectedTabId]);
 
   useEffect(() => {
+    cancelCurrentQuery();
     handleReRunQuery();
   }, [reRunQuery]);
 
@@ -76,6 +91,13 @@ export default function Data(): JSX.Element {
       columns: useDataStore.getState().columns ?? []
     });
   }, [reRender]);
+
+  const cancelCurrentQuery = useCallback(() => {
+    if (currentAbortControllerRef.current) {
+      currentAbortControllerRef.current.abort();
+      currentAbortControllerRef.current = null;
+    }
+  }, []);
 
   return (
     <>
