@@ -11,6 +11,7 @@ import (
 )
 
 type Handlers struct {
+	Config       *handler.ConfigHandler
 	Connection   *handler.ConnectionHandler
 	SavedQuery   *handler.SavedQueryHandler
 	History      *handler.HistoryHandler

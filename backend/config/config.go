@@ -29,6 +29,7 @@ func New() *Config {
 			Name:         "dbo",
 			Port:         os.Getenv("APP_PORT"),
 			Env:          os.Getenv("APP_ENV"),
+			Version:      "0.2.5",
 			DatabaseName: "dbo.db",
 		},
 		Sentry: Sentry{

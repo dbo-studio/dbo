@@ -2,6 +2,7 @@ export type SettingStore = {
   sidebar: SidebarType;
   isDark: boolean | undefined;
   debug: boolean;
+  version: string;
   showAddConnection: boolean;
   showEditConnection: number | boolean;
   showQuickLookEditor: boolean;
@@ -17,6 +18,7 @@ export type SettingStore = {
   toggleShowSettings(show?: boolean): void;
   toggleScrollToBottom(scroll?: boolean): void;
   toggleEnableEditorAi(enable?: boolean): void;
+  updateVersion(version: string): void;
 };
 
 export type SidebarType = {

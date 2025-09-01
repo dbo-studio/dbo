@@ -51,6 +51,7 @@ func Execute() {
 	ss := service.NewService(appLogger, rr, cm, cache)
 
 	restServer := server.New(appLogger, server.Handlers{
+		Config:       handler.NewConfigHandler(cfg, ss.AiProviderService),
 		Connection:   handler.NewConnectionHandler(appLogger, ss.ConnectionService),
 		SavedQuery:   handler.NewSavedQueryHandler(appLogger, ss.SavedQueryService),
 		History:      handler.NewHistoryHandler(appLogger, ss.HistoryService),

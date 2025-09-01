@@ -48,7 +48,6 @@
     "@vitejs/plugin-react-swc": "^4.0.0",
     "babel-plugin-react-compiler": "19.1.0-rc.3",
     "eruda": "^3.4.3",
-    "msw": "^2.10.2",
     "typescript": "^5.9.2",
     "vite": "^7.0.6",
     "vite-tsconfig-paths": "^5.1.4"

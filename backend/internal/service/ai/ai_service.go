@@ -183,7 +183,10 @@ func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteR
 	}
 
 	if providerResp.Completion != "" {
-		s.setCompletionResponse(cacheKey, response, 5*time.Minute)
+		err := s.setCompletionResponse(cacheKey, response, 5*time.Minute)
+		if err != nil {
+			s.logger.Error(err)
+		}
 	}
 
 	return response, nil

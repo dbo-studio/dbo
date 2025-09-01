@@ -7,6 +7,8 @@ func (r *Server) routing() {
 
 	api := r.app.Group("/api")
 
+	api.Get("/config", r.handlers.Config.Config)
+
 	tree := api.Group("tree")
 	tree.Get("/", r.handlers.TreeHandler.TreeHandler)
 	tree.Get("/:nodeId/tabs/:action", r.handlers.TreeHandler.Tabs)

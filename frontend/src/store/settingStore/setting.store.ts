@@ -17,12 +17,16 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
         },
         isDark: false,
         debug: false,
+        version: '',
         showAddConnection: false,
         showEditConnection: false,
         showQuickLookEditor: false,
         scrollToBottom: true,
         showSettings: false,
         enableEditorAi: false,
+        updateVersion: (version: string): void => {
+          set({ version: version });
+        },
         toggleDebug: (debug?: boolean): void => {
           set({ debug: debug !== undefined ? debug : !get().debug });
         },
