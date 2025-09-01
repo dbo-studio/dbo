@@ -26,7 +26,7 @@ export default function Providers() {
         size='small'
         options={
           providers
-            ?.find((provider) => provider.id === currentChat?.providerId)
+            ?.find((provider) => provider.id === Number(currentChat?.providerId))
             ?.models?.map((model) => ({
               label: model,
               value: model

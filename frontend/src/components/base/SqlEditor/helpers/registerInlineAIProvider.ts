@@ -1,6 +1,7 @@
 import api from '@/api';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import type * as MonacoNS from 'monaco-editor/esm/vs/editor/editor.api';
 
 type CompletionItemType = {
@@ -66,6 +67,10 @@ async function fetchCompletion(requestData: any): Promise<string> {
 export function registerInlineAIProvider(monaco: typeof MonacoNS, languageId: string) {
   monaco.languages.registerInlineCompletionsProvider(languageId, {
     provideInlineCompletions: async (model, position, _, token) => {
+      if (!useSettingStore.getState().enableEditorAi) {
+        return { items: [] };
+      }
+
       if (token.isCancellationRequested) {
         return { items: [] };
       }

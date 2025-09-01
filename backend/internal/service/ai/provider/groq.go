@@ -22,6 +22,14 @@ func NewGroqProvider(provider *model.AiProvider, logger logger.Logger) IAiProvid
 	}
 }
 
+func (p *GroqProvider) Validate() bool {
+	if p.apiKey == nil || *p.apiKey == "" || p.url == "" {
+		return false
+	}
+
+	return true
+}
+
 func (p *GroqProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
 	messages := make([]map[string]string, 0, len(req.Messages)+1)
 

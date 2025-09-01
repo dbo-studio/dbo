@@ -22,6 +22,14 @@ func NewAnthropicProvider(provider *model.AiProvider, logger logger.Logger) IAiP
 	}
 }
 
+func (p *AnthropicProvider) Validate() bool {
+	if p.apiKey == nil || *p.apiKey == "" || p.url == "" {
+		return false
+	}
+
+	return true
+}
+
 func (p *AnthropicProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
 	messages := make([]map[string]string, 0, len(req.Messages))
 

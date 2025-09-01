@@ -7,6 +7,7 @@ export type SettingStore = {
   showQuickLookEditor: boolean;
   scrollToBottom: boolean;
   showSettings: boolean;
+  enableEditorAi: boolean;
   updateSidebar(sidebar: Partial<SidebarType>): void;
   toggleIsDark(isDark?: boolean): void;
   toggleDebug(debug?: boolean): void;
@@ -15,6 +16,7 @@ export type SettingStore = {
   toggleShowQuickLookEditor(show?: boolean): void;
   toggleShowSettings(show?: boolean): void;
   toggleScrollToBottom(scroll?: boolean): void;
+  toggleEnableEditorAi(enable?: boolean): void;
 };
 
 export type SidebarType = {

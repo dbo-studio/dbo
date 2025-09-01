@@ -62,6 +62,10 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		return nil, err
 	}
 
+	if aiProvider.Validate() {
+		return nil, apperror.BadRequest(apperror.ErrProviderNotConfigured)
+	}
+
 	conn, err := s.connectionRepo.Find(ctx, req.ConnectionId)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
@@ -148,6 +152,10 @@ func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteR
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
+	if aiProvider.Validate() {
+		return nil, apperror.BadRequest(apperror.ErrProviderNotConfigured)
+	}
+
 	repo, err := database.NewDatabaseRepository(conn, s.cm)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
@@ -174,7 +182,9 @@ func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteR
 		Completion: providerResp.Completion,
 	}
 
-	s.setCompletionResponse(cacheKey, response, 5*time.Minute)
+	if providerResp.Completion != "" {
+		s.setCompletionResponse(cacheKey, response, 5*time.Minute)
+	}
 
 	return response, nil
 }

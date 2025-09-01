@@ -167,5 +167,7 @@
 	"new_chat": "New chat",
 	"ask_anything": "Ask anything...",
 	"timeout": "Timeout",
-	"thinking": "Thinking"
+	"thinking": "Thinking",
+	"enable_ai": "Enable AI",
+	"disable_ai": "Disable AI"
 }

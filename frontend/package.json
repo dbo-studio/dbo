@@ -23,7 +23,7 @@
     "axios": "^1.11.0",
     "dayjs": "^1.11.13",
     "idb": "^8.0.0",
-    "lucide-react": "^0.539.0",
+    "lucide-react": "^0.542.0",
     "monaco-editor": "^0.52.2",
     "monaco-sql-languages": "^0.15.1",
     "react": "^19.1.0",
@@ -38,7 +38,7 @@
     "zustand": "^5.0.7"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.2.0",
+    "@biomejs/biome": "2.2.2",
     "@faker-js/faker": "^9.9.0",
     "@shikijs/monaco": "^3.9.2",
     "@types/node": "^24.0.4",
@@ -46,7 +46,7 @@
     "@types/react-dom": "^19.1.6",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react-swc": "^4.0.0",
-    "babel-plugin-react-compiler": "19.1.0-rc.2",
+    "babel-plugin-react-compiler": "19.1.0-rc.3",
     "eruda": "^3.4.3",
     "msw": "^2.10.2",
     "typescript": "^5.9.2",

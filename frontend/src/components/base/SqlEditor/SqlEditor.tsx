@@ -60,7 +60,7 @@ export default function SqlEditor({
         } catch (_) {
           /* noop */
         }
-      }, 300);
+      }, 500);
     });
 
     editorRef.current?.onDidBlurEditorText(() => {

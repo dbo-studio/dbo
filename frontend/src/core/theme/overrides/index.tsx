@@ -5,6 +5,7 @@ import IconButton from './IconButton';
 import Input from './Input';
 import Menu from './Menu';
 import Select from './Select';
+import Switch from './Switch';
 import Table from './Table';
 import Tabs from './Tabs';
 
@@ -17,6 +18,7 @@ export default function ComponentsOverrides(theme: Theme): Components {
     Button(theme),
     IconButton(theme),
     Menu(theme),
-    Table(theme)
+    Table(theme),
+    Switch(theme)
   );
 }

@@ -21,10 +21,6 @@ func (s *AiServiceImpl) createProvider(ctx context.Context, providerId uint) (se
 		return nil, nil, err
 	}
 
-	if dbProvider.ApiKey == nil || *dbProvider.ApiKey == "" || dbProvider.Url == "" {
-		return nil, nil, apperror.BadRequest(apperror.ErrProviderNotConfigured)
-	}
-
 	return aiProvider, dbProvider, nil
 }
 

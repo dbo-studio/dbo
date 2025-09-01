@@ -106,7 +106,15 @@ export default function Query(): JSX.Element {
             onRunQuery={runQuery}
             onMount={(): void => setShowGrid(true)}
             onChange={handleUpdateState}
-            autocomplete={autocomplete ?? { databases: [], schemas: [], tables: [], columns: {}, views: [] }}
+            autocomplete={
+              autocomplete ?? {
+                databases: [],
+                schemas: [],
+                tables: [],
+                columns: {},
+                views: []
+              }
+            }
             value={value}
           />
         </Box>

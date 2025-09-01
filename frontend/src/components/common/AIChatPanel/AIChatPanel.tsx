@@ -149,7 +149,7 @@ export default function AiChatPanel() {
 
     const chat = await chatMutation({
       connectionId: Number(currentConnectionId),
-      providerId: currentChat?.providerId ?? 0,
+      providerId: Number(currentChat?.providerId) ?? 0,
       chatId: currentChat?.id,
       model: currentChat?.model,
       message: context.input.trim(),

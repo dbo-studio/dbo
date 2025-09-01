@@ -70,5 +70,6 @@ export const IconTypes = {
   network: 'Network',
   send: 'Send',
   at: 'AtSign',
-  history: 'History'
+  history: 'History',
+  bot: 'Bot'
 };

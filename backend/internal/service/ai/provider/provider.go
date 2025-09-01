@@ -9,6 +9,7 @@ import (
 type IAiProvider interface {
 	Chat(ctx context.Context, req *ChatRequest) (*ChatResponse, error)
 	Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error)
+	Validate() bool
 }
 
 type ChatRequest struct {

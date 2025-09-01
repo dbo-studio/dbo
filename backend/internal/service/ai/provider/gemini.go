@@ -23,6 +23,14 @@ func NewGeminiProvider(provider *model.AiProvider, logger logger.Logger) IAiProv
 	}
 }
 
+func (p *GeminiProvider) Validate() bool {
+	if p.apiKey == nil || *p.apiKey == "" || p.url == "" {
+		return false
+	}
+
+	return true
+}
+
 func (p *GeminiProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
 	contents := make([]map[string]interface{}, 0, len(req.Messages)+1)
 

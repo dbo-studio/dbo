@@ -11,17 +11,17 @@ import (
 )
 
 func (cm *AiServiceImpl) getCompletionResponse(key string) (*dto.AiInlineCompleteResponse, bool) {
-	var response dto.AiInlineCompleteResponse
-	if err := cm.cache.Get(key, &response); err == nil {
-		return &response, true
+	var response *dto.AiInlineCompleteResponse
+	err := cm.cache.Get(key, &response)
+	if err != nil {
+		return nil, false
 	}
 
-	var str string
-	if err := cm.cache.Get(key, &str); err == nil {
-		return &dto.AiInlineCompleteResponse{Completion: str}, true
+	if response == nil {
+		return nil, false
 	}
 
-	return nil, false
+	return response, true
 }
 
 func (cm *AiServiceImpl) setCompletionResponse(key string, response *dto.AiInlineCompleteResponse, ttl time.Duration) error {

@@ -22,6 +22,7 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
         showQuickLookEditor: false,
         scrollToBottom: true,
         showSettings: false,
+        enableEditorAi: false,
         toggleDebug: (debug?: boolean): void => {
           set({ debug: debug !== undefined ? debug : !get().debug });
         },
@@ -47,6 +48,9 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
         },
         toggleScrollToBottom: (scroll?: boolean): void => {
           set({ scrollToBottom: scroll !== undefined ? scroll : !get().scrollToBottom });
+        },
+        toggleEnableEditorAi: (enable?: boolean): void => {
+          set({ enableEditorAi: enable !== undefined ? enable : !get().enableEditorAi });
         }
       }),
       { name: 'settings' }

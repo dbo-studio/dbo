@@ -24,6 +24,10 @@ func NewOllamaProvider(provider *model.AiProvider, logger logger.Logger) IAiProv
 	}
 }
 
+func (p *OllamaProvider) Validate() bool {
+	return p.url == ""
+}
+
 func (p *OllamaProvider) Chat(_ context.Context, req *ChatRequest) (*ChatResponse, error) {
 	messages := make([]map[string]string, 0, len(req.Messages)+1)
 
