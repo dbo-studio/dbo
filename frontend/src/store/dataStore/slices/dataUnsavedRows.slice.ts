@@ -7,7 +7,7 @@ import type { DataColumnSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } f
 
 export const createDataUnsavedRowsSlice: StateCreator<
   DataStore & DataUnsavedRowsSlice & DataRowSlice & DataColumnSlice,
-  [],
+  [['zustand/devtools', never]],
   [],
   DataUnsavedRowsSlice
 > = (set, get) => ({
@@ -38,7 +38,7 @@ export const createDataUnsavedRowsSlice: StateCreator<
     const selectedTabId = useTabStore.getState().selectedTabId;
     if (!selectedTabId) return Promise.resolve();
 
-    set({ unSavedRows });
+    set({ unSavedRows }, undefined, 'updateUnsavedRows');
 
     debouncedSaveUnsavedRows(selectedTabId, unSavedRows);
     return Promise.resolve();
