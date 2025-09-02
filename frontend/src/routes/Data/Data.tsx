@@ -23,20 +23,15 @@ export default function Data(): JSX.Element {
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const reRunQuery = useDataStore((state) => state.reRunQuery);
   const reRender = useDataStore((state) => state.reRender);
-
-  const previousReRunQueryRef = useRef<boolean>(reRunQuery);
-  const previousReRenderRef = useRef<boolean>(reRender);
-
   const loadDataFromIndexedDB = useDataStore((state) => state.loadDataFromIndexedDB);
   const runQuery = useDataStore((state) => state.runQuery);
 
+  const previousReRunQueryRef = useRef<boolean>(reRunQuery);
+  const previousReRenderRef = useRef<boolean>(reRender);
   const currentAbortControllerRef = useRef<AbortController | null>(null);
 
   const loadData = useCallback(async (): Promise<void> => {
-    setTableData({
-      rows: [],
-      columns: []
-    });
+    setTableData({ rows: [], columns: [] });
 
     try {
       const result = await loadDataFromIndexedDB();
@@ -70,6 +65,13 @@ export default function Data(): JSX.Element {
     });
   }, [runQuery]);
 
+  const cancelCurrentQuery = useCallback(() => {
+    if (currentAbortControllerRef.current) {
+      currentAbortControllerRef.current.abort();
+      currentAbortControllerRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     setIsGridReady(false);
     if (!isMounted || !selectedTabId) {
@@ -81,7 +83,7 @@ export default function Data(): JSX.Element {
     loadData().then(() => {
       setIsGridReady(true);
     });
-  }, [selectedTabId]);
+  }, [selectedTabId, isMounted, loadData, cancelCurrentQuery]);
 
   useEffect(() => {
     if (previousReRunQueryRef.current !== reRunQuery) {
@@ -89,7 +91,7 @@ export default function Data(): JSX.Element {
       handleReRunQuery();
       previousReRunQueryRef.current = reRunQuery;
     }
-  }, [reRunQuery]);
+  }, [reRunQuery, handleReRunQuery, cancelCurrentQuery]);
 
   useEffect(() => {
     if (previousReRenderRef.current !== reRender) {
@@ -97,16 +99,9 @@ export default function Data(): JSX.Element {
         rows: useDataStore.getState().rows ?? [],
         columns: useDataStore.getState().columns ?? []
       });
+      previousReRenderRef.current = reRender;
     }
-    previousReRenderRef.current = reRender;
   }, [reRender]);
-
-  const cancelCurrentQuery = useCallback(() => {
-    if (currentAbortControllerRef.current) {
-      currentAbortControllerRef.current.abort();
-      currentAbortControllerRef.current = null;
-    }
-  }, []);
 
   return (
     <>
