@@ -1,4 +1,3 @@
-import api from '@/api';
 import { getTree } from '@/api/tree';
 import type { TreeNodeType } from '@/api/tree/types';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
@@ -26,9 +25,7 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
           const currentConnection = getCurrentConnectionId();
           if (!currentConnection) return;
 
-          set((state) => ({
-            tree: { ...state.tree, [currentConnection]: tree }
-          }));
+          set({ tree: { ...get().tree, [currentConnection]: tree } }, undefined, 'setTree');
         },
 
         getTree: (): TreeNodeType | null => {
@@ -42,12 +39,16 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
           const currentConnection = getCurrentConnectionId();
           if (!currentConnection) return;
 
-          set((state) => ({
-            expandedNodes: {
-              ...state.expandedNodes,
-              [currentConnection]: [...(state.expandedNodes[currentConnection] || []), nodeId]
-            }
-          }));
+          set(
+            {
+              expandedNodes: {
+                ...get().expandedNodes,
+                [currentConnection]: [...(get().expandedNodes[currentConnection] || []), nodeId]
+              }
+            },
+            undefined,
+            'expandNode'
+          );
         },
 
         collapseNode: (nodeId: string): void => {
@@ -137,32 +138,34 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
           const currentConnection = getCurrentConnectionId();
           if (!currentConnection) return;
 
-          set((state) => {
-            const currentTree = state.tree[currentConnection];
-            if (!currentTree) return state;
+          const currentTree = get().tree[currentConnection];
+          if (!currentTree) return;
 
-            const updateNodeChildren = (node: TreeNodeType): TreeNodeType => {
-              if (node.id === nodeId) {
-                return { ...node, children };
-              }
+          const updateNodeChildren = (node: TreeNodeType): TreeNodeType => {
+            if (node.id === nodeId) {
+              return { ...node, children };
+            }
 
-              if (node.children.length === 0) {
-                return node;
-              }
-
-              return {
-                ...node,
-                children: node.children.map(updateNodeChildren)
-              };
-            };
+            if (node.children.length === 0) {
+              return node;
+            }
 
             return {
+              ...node,
+              children: node.children.map(updateNodeChildren)
+            };
+          };
+
+          set(
+            {
               tree: {
-                ...state.tree,
+                ...get().tree,
                 [currentConnection]: updateNodeChildren(currentTree)
               }
-            };
-          });
+            },
+            undefined,
+            'setNodeChildren'
+          );
         },
 
         reloadTree: async (): Promise<void> => {
@@ -178,37 +181,26 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
             });
 
             if (!treeData) {
-              set({ isLoading: false, treeError: undefined });
+              set({ isLoading: false, treeError: undefined }, undefined, 'reloadTree');
               return;
             }
 
             get().setTree(treeData);
-
-            const loadedParentIds = get().getLoadedParentIds();
-
-            for (const parentId of loadedParentIds) {
-              try {
-                const childrenData = await api.tree.getTree({
-                  parentId,
-                  connectionId: currentConnection || 0
-                });
-
-                if (childrenData?.children) {
-                  get().setNodeChildren(parentId, childrenData.children);
-                }
-              } catch (childError) {
-                console.error(`Failed to reload children for node ${parentId}:`, childError);
-              }
-            }
-
-            set({ isLoading: false, treeError: undefined });
+            set({ isLoading: false, treeError: undefined }, undefined, 'reloadTree');
           } catch (error) {
             console.error('Failed to reload tree:', error);
             set({ isLoading: false, treeError: error as Error });
           }
         },
         toggleIsLoading(isLoading: boolean): void {
-          set({ isLoading });
+          set({ isLoading }, undefined, 'toggleIsLoading');
+        },
+        reset: (): void => {
+          set(
+            { tree: {}, expandedNodes: {}, loadedParentIds: {}, isLoading: false, treeError: undefined },
+            undefined,
+            'reset'
+          );
         }
       }),
       {
