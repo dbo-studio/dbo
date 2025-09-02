@@ -1,7 +1,9 @@
 import api from '@/api';
 import type { TreeNodeType } from '@/api/tree/types';
+import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
+import { MenuType } from '@/components/base/ContextMenu/types';
 import Search from '@/components/base/Search/Search';
-import { useCurrentConnection } from '@/hooks';
+import { useContextMenu, useCurrentConnection } from '@/hooks';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { Box, LinearProgress } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
@@ -13,11 +15,14 @@ export default function ObjectTreeView(): JSX.Element {
   const currentConnection = useCurrentConnection();
   const isLoading = useTreeStore((state) => state.isLoading);
   const treeError = useTreeStore((state) => state.treeError);
+  const [menu, setMenu] = useState<MenuType[]>([]);
 
   const getTree = useTreeStore((state) => state.getTree);
   const addLoadedParentId = useTreeStore((state) => state.addLoadedParentId);
   const toggleIsLoading = useTreeStore((state) => state.toggleIsLoading);
   const reloadTree = useTreeStore((state) => state.reloadTree);
+
+  const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
   const parentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
@@ -54,6 +59,12 @@ export default function ObjectTreeView(): JSX.Element {
     }
   };
 
+  const onContextMenu = (event: React.MouseEvent, menu: MenuType[]): void => {
+    event.stopPropagation();
+    setMenu(menu);
+    handleContextMenu(event);
+  };
+
   return (
     <TreeViewContainerStyled>
       <Box mt={1}>
@@ -75,7 +86,12 @@ export default function ObjectTreeView(): JSX.Element {
             nodeIndex={0}
             level={0}
             searchTerm={searchTerm}
+            onContextMenu={onContextMenu}
           />
+        )}
+
+        {menu.length > 0 && (
+          <ContextMenu menu={menu} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
         )}
       </TreeViewContentStyled>
     </TreeViewContainerStyled>

@@ -1,15 +1,18 @@
 import type { TreeNodeType } from '@/api/tree/types';
+import type { MenuType } from '@/components/base/ContextMenu/types';
 import type React from 'react';
 import type { RefObject } from 'react';
 
 export type TreeNodeProps = {
   node: TreeNodeType;
-  fetchChildren: (parentId: string) => Promise<TreeNodeType[]>;
   parentRefs?: React.RefObject<Map<string, HTMLDivElement>>;
   nodeIndex?: number;
   level?: number;
-  onFocusChange?: (id: string) => void;
   searchTerm?: string;
+
+  fetchChildren: (parentId: string) => Promise<TreeNodeType[]>;
+  onFocusChange?: (id: string) => void;
+  onContextMenu: (event: React.MouseEvent, menu: MenuType[]) => void;
 };
 
 export type NodeContentProps = {
