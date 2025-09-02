@@ -127,7 +127,7 @@ func (p *BaseProvider) convertToStructuredResponse(content string, role model.Ai
 
 	re := regexp.MustCompile(`\\([^"\\/bfnrtu])`)
 	clean := re.ReplaceAllString(content, "$1")
-	contents := make([]model.AiChatMessageContent, len(structuredResponse.Contents))
+	contents := make([]model.AiChatMessageContent, 0)
 
 	err := json.Unmarshal([]byte(clean), &structuredResponse)
 	if err != nil {
@@ -138,14 +138,17 @@ func (p *BaseProvider) convertToStructuredResponse(content string, role model.Ai
 			Language: "text",
 		})
 	} else {
-		for i, content := range structuredResponse.Contents {
-			contents[i] = model.AiChatMessageContent{
+		for _, content := range structuredResponse.Contents {
+			if content.Language == nil {
+				content.Language = lo.ToPtr(model.AiChatMessageLanguageText)
+			}
+
+			contents = append(contents, model.AiChatMessageContent{
 				Type:     content.Type,
 				Content:  content.Content,
-				Language: content.Language,
-			}
+				Language: lo.FromPtr(content.Language),
+			})
 		}
-
 	}
 
 	return &ChatResponse{

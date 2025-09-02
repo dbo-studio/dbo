@@ -51,7 +51,7 @@ type AiMessageResponse struct {
 }
 
 type AiMessageContent struct {
-	Type     model.AiChatMessageType     `json:"type"`
-	Content  string                      `json:"content"`
-	Language model.AiChatMessageLanguage `json:"language,omitempty"`
+	Type     model.AiChatMessageType      `json:"type"`
+	Content  string                       `json:"content"`
+	Language *model.AiChatMessageLanguage `json:"language,omitempty"`
 }

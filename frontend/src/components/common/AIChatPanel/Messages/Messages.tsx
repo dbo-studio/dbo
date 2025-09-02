@@ -34,7 +34,7 @@ export default function Messages({ messages, loading, onLoadMore }: MessagesProp
           <Typography variant='caption'>{locales.load_more}</Typography>
         </Button>
       )}
-      <Stack spacing={1} p={1}>
+      <Stack spacing={1 / 2}>
         {messages.map((message, index) =>
           message.type === 'code' ? (
             <CodeMessage key={`${message.role}-${index}-${message.createdAt}`} message={message} />
