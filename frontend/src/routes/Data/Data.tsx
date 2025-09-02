@@ -24,6 +24,9 @@ export default function Data(): JSX.Element {
   const reRunQuery = useDataStore((state) => state.reRunQuery);
   const reRender = useDataStore((state) => state.reRender);
 
+  const previousReRunQueryRef = useRef<boolean>(reRunQuery);
+  const previousReRenderRef = useRef<boolean>(reRender);
+
   const loadDataFromIndexedDB = useDataStore((state) => state.loadDataFromIndexedDB);
   const runQuery = useDataStore((state) => state.runQuery);
 
@@ -81,15 +84,21 @@ export default function Data(): JSX.Element {
   }, [selectedTabId]);
 
   useEffect(() => {
-    cancelCurrentQuery();
-    handleReRunQuery();
+    if (previousReRunQueryRef.current !== reRunQuery) {
+      cancelCurrentQuery();
+      handleReRunQuery();
+      previousReRunQueryRef.current = reRunQuery;
+    }
   }, [reRunQuery]);
 
   useEffect(() => {
-    setTableData({
-      rows: useDataStore.getState().rows ?? [],
-      columns: useDataStore.getState().columns ?? []
-    });
+    if (previousReRenderRef.current !== reRender) {
+      setTableData({
+        rows: useDataStore.getState().rows ?? [],
+        columns: useDataStore.getState().columns ?? []
+      });
+    }
+    previousReRenderRef.current = reRender;
   }, [reRender]);
 
   const cancelCurrentQuery = useCallback(() => {
