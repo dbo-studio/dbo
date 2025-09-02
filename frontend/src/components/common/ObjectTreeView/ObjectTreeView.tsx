@@ -39,10 +39,6 @@ export default function ObjectTreeView(): JSX.Element {
     }
   }, [currentConnection?.id, tree, treeError]);
 
-  useEffect(() => {
-    reloadTree();
-  }, [currentConnection?.id]);
-
   const fetchChildren = async (parentId: string): Promise<TreeNodeType[]> => {
     try {
       addLoadedParentId(parentId);

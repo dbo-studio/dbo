@@ -1,3 +1,4 @@
+import api from '@/api';
 import { getTree } from '@/api/tree';
 import type { TreeNodeType } from '@/api/tree/types';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
@@ -181,19 +182,37 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
             });
 
             if (!treeData) {
-              set({ isLoading: false, treeError: undefined }, undefined, 'reloadTree');
+              set({ isLoading: false, treeError: undefined });
               return;
             }
 
             get().setTree(treeData);
-            set({ isLoading: false, treeError: undefined }, undefined, 'reloadTree');
+
+            const loadedParentIds = get().getLoadedParentIds();
+
+            for (const parentId of loadedParentIds) {
+              try {
+                const childrenData = await api.tree.getTree({
+                  parentId,
+                  connectionId: currentConnection || 0
+                });
+
+                if (childrenData?.children) {
+                  get().setNodeChildren(parentId, childrenData.children);
+                }
+              } catch (childError) {
+                console.error(`Failed to reload children for node ${parentId}:`, childError);
+              }
+            }
+
+            set({ isLoading: false, treeError: undefined });
           } catch (error) {
             console.error('Failed to reload tree:', error);
             set({ isLoading: false, treeError: error as Error });
           }
         },
         toggleIsLoading(isLoading: boolean): void {
-          set({ isLoading }, undefined, 'toggleIsLoading');
+          set({ isLoading });
         },
         reset: (): void => {
           set(
