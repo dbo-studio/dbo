@@ -5,8 +5,6 @@ import "github.com/invopop/validation"
 type (
 	AiChatRequest struct {
 		ConnectionId int32             `json:"connectionId"`
-		ProviderId   int32             `json:"providerId"`
-		Model        string            `json:"model"`
 		Message      string            `json:"message"`
 		ChatId       *int32            `json:"chatId"`
 		ContextOpts  *AiContextOptions `json:"contextOpts"`
@@ -40,8 +38,6 @@ type (
 func (req AiChatRequest) Validate() error {
 	return validation.ValidateStruct(&req,
 		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
-		validation.Field(&req.ProviderId, validation.Required, validation.Min(0)),
-		validation.Field(&req.Model, validation.Required, validation.Length(0, 50)),
 		validation.Field(&req.Message, validation.Required, validation.Length(0, 500)),
 		validation.Field(&req.ChatId, validation.Min(0)),
 	)

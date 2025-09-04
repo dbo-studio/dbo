@@ -25,10 +25,6 @@ export default function ConnectionItemContextMenu({
       queryClient.invalidateQueries({
         queryKey: ['connections']
       });
-    },
-    onError: (error: Error): void => {
-      console.error('🚀 ~ deleteConnectionMutation ~ error:', error);
-      toast.success(locales.connection_delete_success);
     }
   });
 
@@ -55,7 +51,9 @@ export default function ConnectionItemContextMenu({
       updateTabs([]);
       toast.success(locales.connection_delete_success);
       return;
-    } catch (err) {}
+    } catch (err) {
+      console.debug('🚀 ~ deleteConnectionMutation ~ error:', err);
+    }
   };
 
   const handleEditConnection = (connection: ConnectionType | undefined): void => {

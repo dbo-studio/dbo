@@ -4,10 +4,8 @@ import "github.com/invopop/validation"
 
 type (
 	AiChatCreateRequest struct {
-		ConnectionId int32   `json:"connectionId"`
-		Title        string  `json:"title"`
-		ProviderId   *int32  `json:"providerId"`
-		Model        *string `json:"model"`
+		ConnectionId int32  `json:"connectionId"`
+		Title        string `json:"title"`
 	}
 )
 

@@ -30,10 +30,7 @@ export default function ObjectTreeView(): JSX.Element {
   const tree = useMemo(() => getTree(), [getTree(), currentConnection?.id]);
 
   const { mutateAsync: getChildrenMutation } = useMutation({
-    mutationFn: api.tree.getTree,
-    onError: (error): void => {
-      console.error('🚀 ~ getChildrenMutation ~ error:', error);
-    }
+    mutationFn: api.tree.getTree
   });
 
   useEffect(() => {
@@ -54,7 +51,7 @@ export default function ObjectTreeView(): JSX.Element {
       });
       return nodes?.children || [];
     } catch (error) {
-      console.log('🚀 ~ fetchChildren ~ error:', error);
+      console.debug('🚀 ~ fetchChildren ~ error:', error);
       return [];
     }
   };

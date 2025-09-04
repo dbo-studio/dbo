@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -60,7 +59,6 @@ func (i IJobServiceImpl) Cancel(ctx context.Context, req *dto.JobDetailRequest) 
 
 	job.Status = model.JobStatusCancelled
 	job.Message = "Job cancelled by user"
-	job.UpdatedAt = time.Now()
 
 	return i.jobRepo.Update(ctx, job)
 }

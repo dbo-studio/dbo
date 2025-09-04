@@ -10,11 +10,9 @@ func aiChatToResponse(chats *[]model.AiChat) *dto.AiChatListResponse {
 	result := make([]dto.AiChatItem, len(lo.FromPtr(chats)))
 	for i, chat := range lo.FromPtr(chats) {
 		result[i] = dto.AiChatItem{
-			ID:         chat.ID,
-			Title:      chat.Title,
-			ProviderId: chat.ProviderId,
-			Model:      chat.Model,
-			CreatedAt:  chat.CreatedAt.Format("2006-01-02 15:04:05"),
+			ID:        chat.ID,
+			Title:     chat.Title,
+			CreatedAt: chat.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
 	}
 
@@ -36,11 +34,9 @@ func aiChatDetailToResponse(chat *model.AiChat) *dto.AiChatDetailResponse {
 	}
 
 	return &dto.AiChatDetailResponse{
-		ID:         chat.ID,
-		Title:      chat.Title,
-		ProviderId: chat.ProviderId,
-		Model:      chat.Model,
-		CreatedAt:  chat.CreatedAt.Format("2006-01-02 15:04:05"),
-		Messages:   messages,
+		ID:        chat.ID,
+		Title:     chat.Title,
+		CreatedAt: chat.CreatedAt.Format("2006-01-02 15:04:05"),
+		Messages:  messages,
 	}
 }

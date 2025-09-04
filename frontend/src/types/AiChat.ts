@@ -1,8 +1,6 @@
 export type AiChatType = {
   id: number;
   title: string;
-  providerId: number;
-  model: string;
   createdAt: string;
   messages: AiMessageType[];
 };

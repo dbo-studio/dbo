@@ -1,10 +1,11 @@
 import api from '@/api';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import type { AiProviderType } from '@/types';
-import { Box, Button } from '@mui/material';
+import { Box, Button, Chip, IconButton, Stack } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -13,19 +14,24 @@ export default function AiPanel() {
   const providers = useAiStore((state) => state.providers);
   const updateProvider = useAiStore((state) => state.updateProvider);
   const [provider, setProvider] = useState<AiProviderType | undefined>(providers?.[0]);
+  const [newModel, setNewModel] = useState<string>('');
+
   const [error, setError] = useState<{
     apiKey: string | undefined;
     url: string | undefined;
+    timeout: string | undefined;
   }>({
     apiKey: undefined,
-    url: undefined
+    url: undefined,
+    timeout: undefined
   });
 
   const { mutateAsync: updateProviderMutation, isPending: pendingUpdateProvider } = useMutation({
     mutationFn: async (provider: AiProviderType): Promise<AiProviderType> => {
       setError({
         apiKey: undefined,
-        url: undefined
+        url: undefined,
+        timeout: undefined
       });
 
       if (!provider?.apiKey || provider?.apiKey.length === 0) {
@@ -38,16 +44,27 @@ export default function AiPanel() {
         return provider;
       }
 
-      const updatedProvider = await api.aiProvider.updateProvider(provider.id, provider);
+      const updatedProvider = await api.aiProvider.updateProvider(provider.id, {
+        apiKey: provider.apiKey,
+        url: provider.url,
+        timeout: provider.timeout,
+        models: provider.models
+      });
+      setNewModel('');
       updateProvider(updatedProvider);
       setProvider(updatedProvider);
       toast.success(locales.changes_saved_successfully);
       return updatedProvider;
-    },
-    onError: (error): void => {
-      console.error('🚀 ~ updateConnectionMutation ~ error:', error);
     }
   });
+
+  const handleSubmit = () => {
+    try {
+      updateProviderMutation(provider as AiProviderType);
+    } catch (error) {
+      console.debug('🚀 ~ handleSubmit ~ error:', error);
+    }
+  };
 
   return (
     <Box p={2} display={'flex'} flexDirection={'column'} gap={2}>
@@ -77,34 +94,6 @@ export default function AiPanel() {
       />
 
       <FieldInput
-        placeholder='0.2'
-        type='number'
-        label={locales.temperature}
-        typelabel={`${locales.max} 1.0`}
-        value={provider?.temperature ?? ''}
-        onChange={(e) =>
-          setProvider({
-            ...provider,
-            temperature: Number.parseFloat(e.target.value)
-          } as AiProviderType)
-        }
-      />
-
-      <FieldInput
-        placeholder='512'
-        typelabel={`${locales.max} 10000`}
-        type='number'
-        label={locales.max_tokens}
-        value={provider?.maxTokens ?? ''}
-        onChange={(e) =>
-          setProvider({
-            ...provider,
-            maxTokens: Number.parseInt(e.target.value)
-          } as AiProviderType)
-        }
-      />
-
-      <FieldInput
         placeholder='30'
         typelabel={`${locales.max} 1000`}
         type='number'
@@ -118,15 +107,46 @@ export default function AiPanel() {
         }
       />
 
+      <Stack direction={'row'} alignItems={'center'} spacing={1}>
+        <Box flex={1}>
+          <FieldInput label={locales.add_model} onChange={(e) => setNewModel(e.target.value)} value={newModel} />
+        </Box>
+        <Box>
+          <IconButton
+            onClick={() => {
+              setProvider({
+                ...provider,
+                models: [...(provider?.models ?? []), newModel]
+              } as AiProviderType);
+            }}
+          >
+            <CustomIcon type='plus' />
+          </IconButton>
+        </Box>
+      </Stack>
+
+      <Stack direction={'row'} spacing={1}>
+        {provider?.models.map((model) => (
+          <Chip
+            key={model}
+            label={model}
+            onDelete={() => {
+              setProvider({
+                ...provider,
+                models: provider?.models?.filter((m) => m !== model) ?? []
+              } as AiProviderType);
+            }}
+          />
+        ))}
+      </Stack>
+
       <Box display={'flex'} mt={2} justifyContent={'space-between'}>
         <Button
           fullWidth
           loadingPosition='start'
           disabled={pendingUpdateProvider}
           loading={pendingUpdateProvider}
-          onClick={(): void => {
-            updateProviderMutation(provider as AiProviderType);
-          }}
+          onClick={handleSubmit}
           size='small'
           variant='contained'
         >

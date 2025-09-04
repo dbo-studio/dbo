@@ -8,7 +8,6 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/db/scope"
-	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
 
@@ -81,8 +80,6 @@ func (r AiChatRepoImpl) Create(ctx context.Context, dto *dto.AiChatCreateRequest
 	var chat = &model.AiChat{
 		Title:        title,
 		ConnectionID: uint(dto.ConnectionId),
-		ProviderId:   lo.ToPtr(uint(lo.FromPtr(dto.ProviderId))),
-		Model:        dto.Model,
 	}
 
 	result := r.db.WithContext(ctx).Create(chat)

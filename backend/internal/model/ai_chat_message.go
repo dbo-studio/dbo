@@ -9,7 +9,7 @@ type AiChatMessage struct {
 	Content   string            `gorm:"type:text;not null"`
 	Type      AiChatMessageType
 	Language  AiChatMessageLanguage
-	CreatedAt time.Time
+	CreatedAt *time.Time `gorm:"autoCreateTime"`
 }
 
 type AiChatMessageContent struct {

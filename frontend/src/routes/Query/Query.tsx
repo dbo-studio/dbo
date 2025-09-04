@@ -72,7 +72,7 @@ export default function Query(): JSX.Element {
         setTableData(result);
       }
     } catch (error) {
-      console.error('🚀 ~ loadData ~ error:', error);
+      console.debug('🚀 ~ loadData ~ error:', error);
     }
 
     toggleDataFetching(false);

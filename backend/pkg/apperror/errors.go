@@ -14,6 +14,7 @@ var (
 	ErrJobNotCompleted       = errors.New("job not completed")
 	ErrAiChatNotFound        = errors.New("ai chat not found")
 	ErrProviderNotConfigured = errors.New("provider not configured")
+	ErrAiNoSelectedModel     = errors.New("select a model first")
 )
 
 type AppError struct {

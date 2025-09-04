@@ -1,47 +1,95 @@
 package serviceAiProvider
 
 import (
-	"fmt"
+	"context"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/goccy/go-json"
+	"github.com/openai/openai-go/v2"
 
 	"github.com/dbo-studio/dbo/internal/model"
-	"github.com/dbo-studio/dbo/pkg/logger"
-	"github.com/gofiber/fiber/v3/client"
+	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/samber/lo"
 )
 
 type BaseProvider struct {
-	timeout int
-	url     string
-	apiKey  *string
-	logger  logger.Logger
+	client  openai.Client
+	context context.Context
 }
 
-func NewBaseProvider(provider *model.AiProvider, logger logger.Logger) *BaseProvider {
-	url := strings.TrimRight(provider.Url, "/")
-
+func NewBaseProvider(ctx context.Context, client openai.Client) IAiProvider {
 	return &BaseProvider{
-		timeout: provider.Timeout,
-		url:     url,
-		apiKey:  provider.ApiKey,
-		logger:  logger,
+		client:  client,
+		context: ctx,
 	}
 }
 
-func (p *BaseProvider) GetHttpClient() *client.Client {
-	cc := client.New()
-	cc.SetTimeout(time.Duration(p.timeout) * time.Second)
-	cc.AddHeader("Content-Type", "application/json")
+func (p *BaseProvider) Chat(_ context.Context, req *ChatRequest) (*ChatResponse, error) {
+	messages := make([]openai.ChatCompletionMessageParamUnion, 0, len(req.Messages)+1)
 
-	if p.apiKey != nil {
-		cc.AddHeader("Authorization", "Bearer "+lo.FromPtr(p.apiKey))
+	messages = append(messages, openai.ChatCompletionMessageParamUnion{
+		OfSystem: &openai.ChatCompletionSystemMessageParam{
+			Content: openai.ChatCompletionSystemMessageParamContentUnion{
+				OfString: openai.String(p.buildChatPrompt(req)),
+			},
+		},
+	})
+
+	for _, msg := range req.Messages {
+		if msg.Role == model.AiChatMessageRoleAssistant {
+			messages = append(messages, openai.ChatCompletionMessageParamUnion{
+				OfAssistant: &openai.ChatCompletionAssistantMessageParam{
+					Content: openai.ChatCompletionAssistantMessageParamContentUnion{
+						OfString: openai.String(msg.Content),
+					},
+				},
+			})
+		} else {
+			messages = append(messages, openai.ChatCompletionMessageParamUnion{
+				OfUser: &openai.ChatCompletionUserMessageParam{
+					Content: openai.ChatCompletionUserMessageParamContentUnion{
+						OfString: openai.String(msg.Content),
+					},
+				},
+			})
+		}
+
 	}
 
-	return cc
+	chatCompletion, err := p.client.Chat.Completions.New(
+		p.context,
+		openai.ChatCompletionNewParams{
+			Messages: messages,
+			Model:    req.Model,
+		},
+	)
+
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	return p.convertToStructuredResponse(
+		strings.TrimSpace(chatCompletion.Choices[0].Message.Content),
+		model.AiChatMessageRole(chatCompletion.Choices[0].Message.Role),
+	)
+}
+
+func (p *BaseProvider) Complete(_ context.Context, req *CompletionRequest) (*CompletionResponse, error) {
+	chatCompletion, err := p.client.Completions.New(p.context, openai.CompletionNewParams{
+		Model: openai.CompletionNewParamsModel(req.Model),
+		Prompt: openai.CompletionNewParamsPromptUnion{
+			OfString: openai.String(p.buildCompletionPrompt(req)),
+		},
+	})
+
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	return &CompletionResponse{
+		Completion: strings.TrimSpace(chatCompletion.Choices[0].Text),
+	}, nil
 }
 
 func (p *BaseProvider) buildCompletionPrompt(req *CompletionRequest) string {
@@ -127,11 +175,16 @@ func (p *BaseProvider) convertToStructuredResponse(content string, role model.Ai
 
 	re := regexp.MustCompile(`\\([^"\\/bfnrtu])`)
 	clean := re.ReplaceAllString(content, "$1")
+
+	if strings.HasPrefix(clean, "```json") {
+		clean = strings.TrimPrefix(clean, "```json")
+		clean = strings.TrimSuffix(clean, "```")
+	}
+
 	contents := make([]model.AiChatMessageContent, 0)
 
 	err := json.Unmarshal([]byte(clean), &structuredResponse)
 	if err != nil {
-		p.logger.Error(fmt.Sprintf("Failed to unmarshal JSON: %v, content: %s", err, content))
 		contents = append(contents, model.AiChatMessageContent{
 			Type:     "explanation",
 			Content:  clean,

@@ -9,42 +9,54 @@ import (
 )
 
 type AiProviderConfig struct {
-	Type    model.AIProviderType
-	Url     string
-	Models  []string
-	Timeout int
+	Type     model.AIProviderType
+	Url      string
+	Models   []string
+	Model    string
+	IsActive bool
+	Timeout  int
 }
 
 var configs = []AiProviderConfig{
 	{
-		Type:    model.AIProviderTypeOpenAI,
-		Url:     "https://api.openai.com/v1",
-		Models:  []string{"gpt-5", "gpt-4o"},
-		Timeout: 30,
+		Type:     model.AIProviderTypeOpenAI,
+		Url:      "https://api.openai.com/v1",
+		Models:   []string{"gpt-5", "gpt-4o"},
+		Model:    "gpt-5",
+		IsActive: true,
+		Timeout:  30,
 	},
 	{
-		Type:    model.AIProviderTypeAnthropic,
-		Url:     "https://api.anthropic.com/v1",
-		Models:  []string{"claude-3-5-sonnet"},
-		Timeout: 30,
+		Type:     model.AIProviderTypeAnthropic,
+		Url:      "https://api.anthropic.com/v1",
+		Models:   []string{"claude-3-5-sonnet"},
+		Model:    "claude-3-5-sonnet",
+		IsActive: false,
+		Timeout:  30,
 	},
 	{
-		Type:    model.AIProviderTypeGemini,
-		Url:     "https://generativelanguage.googleapis.com",
-		Models:  []string{"gemini-2.0-flash"},
-		Timeout: 30,
+		Type:     model.AIProviderTypeGemini,
+		Url:      "https://generativelanguage.googleapis.com/v1beta/openai",
+		Models:   []string{"gemini-2.0-flash"},
+		Model:    "gemini-2.0-flash",
+		IsActive: false,
+		Timeout:  30,
 	},
 	{
-		Type:    model.AIProviderTypeGroq,
-		Url:     "https://api.groq.com/v1",
-		Models:  []string{"groq-3-7-sonnet"},
-		Timeout: 30,
+		Type:     model.AIProviderTypeGroq,
+		Url:      "https://api.x.ai/v1",
+		Models:   []string{"grok-4"},
+		Model:    "grok-4",
+		IsActive: false,
+		Timeout:  30,
 	},
 	{
-		Type:    model.AIProviderTypeOllama,
-		Url:     "http://localhost:11434",
-		Models:  []string{"llama3.1"},
-		Timeout: 60,
+		Type:     model.AIProviderTypeOllama,
+		Url:      "http://localhost:11434/v1",
+		Models:   []string{"llama3.1"},
+		Model:    "llama3.1",
+		IsActive: false,
+		Timeout:  60,
 	},
 }
 
@@ -61,6 +73,8 @@ func (i *IAiProviderServiceImpl) Index(ctx context.Context) (*dto.AiProviderList
 				Url:        config.Url,
 				Models:     config.Models,
 				Timeout:    config.Timeout,
+				Model:      config.Model,
+				IsActive:   config.IsActive,
 				LastUsedAt: time.Now(),
 			}
 			_, err := i.aiProviderRepo.CreateIfNotExists(ctx, provider)

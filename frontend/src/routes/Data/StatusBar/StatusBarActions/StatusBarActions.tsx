@@ -32,9 +32,6 @@ export default function StatusBarActions(): JSX.Element {
     mutationFn: api.query.updateQuery,
     onSuccess: async (): Promise<void> => {
       handleRefresh();
-    },
-    onError: (error: Error): void => {
-      console.error('🚀 ~ updateQueryMutation ~ error:', error);
     }
   });
 
@@ -66,7 +63,7 @@ export default function StatusBarActions(): JSX.Element {
 
         toast.success(`${locales.changes_saved_successfully}. ${locales.row_affected}: ${res.rowAffected}`);
       } catch (error) {
-        console.log(error);
+        console.debug('🚀 ~ handleSave ~ error:', error);
       }
     }
   };

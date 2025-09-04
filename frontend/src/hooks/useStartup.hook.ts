@@ -27,7 +27,7 @@ export const useStartup = (): boolean => {
   useEffect(() => {
     resetTree();
     indexedDBService.clearAllTableData().catch((err: unknown) => {
-      console.log('🚀 ~ useEffect ~ err:', err);
+      console.debug('🚀 ~ useEffect ~ err:', err);
     });
   }, []);
 

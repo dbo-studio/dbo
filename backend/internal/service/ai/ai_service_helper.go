@@ -10,15 +10,15 @@ import (
 	"github.com/samber/lo"
 )
 
-func (s *AiServiceImpl) createProvider(ctx context.Context, providerId uint) (serviceAiProvider.IAiProvider, *model.AiProvider, error) {
-	dbProvider, err := s.aiProviderRepo.Find(ctx, providerId)
+func (s *AiServiceImpl) createProvider(ctx context.Context) (serviceAiProvider.IAiProvider, *model.AiProvider, error) {
+	dbProvider, err := s.aiProviderRepo.FindActive(ctx)
 	if err != nil {
 		return nil, nil, apperror.NotFound(apperror.ErrAiProviderNotFound)
 	}
 
-	aiProvider, err := s.providerFactory.CreateProvider(dbProvider)
+	aiProvider, err := s.providerFactory.CreateProvider(ctx, dbProvider)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, apperror.BadRequest(apperror.ErrProviderNotConfigured)
 	}
 
 	return aiProvider, dbProvider, nil
@@ -28,14 +28,11 @@ func (s *AiServiceImpl) findChat(ctx context.Context, req *dto.AiChatRequest) (*
 	if req.ChatId != nil {
 		chat, err := s.aiChatRepo.Find(ctx, uint(lo.FromPtr(req.ChatId)), &dto.PaginationRequest{
 			Page:  lo.ToPtr(1),
-			Count: lo.ToPtr(10),
+			Count: lo.ToPtr(5),
 		})
 		if err != nil {
 			return nil, apperror.NotFound(apperror.ErrAiChatNotFound)
 		}
-
-		chat.ProviderId = lo.ToPtr(uint(req.ProviderId))
-		chat.Model = lo.ToPtr(req.Model)
 
 		if err := s.aiChatRepo.Update(ctx, chat); err != nil {
 			return nil, apperror.InternalServerError(err)
@@ -47,8 +44,6 @@ func (s *AiServiceImpl) findChat(ctx context.Context, req *dto.AiChatRequest) (*
 	chat, err := s.aiChatRepo.Create(ctx, &dto.AiChatCreateRequest{
 		Title:        req.Message,
 		ConnectionId: req.ConnectionId,
-		ProviderId:   lo.ToPtr(req.ProviderId),
-		Model:        lo.ToPtr(req.Model),
 	})
 
 	if err != nil {

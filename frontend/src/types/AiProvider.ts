@@ -3,9 +3,9 @@ export type AiProviderType = {
   type: 'openai' | 'anthropic' | 'gemini' | 'groq' | 'ollama';
   apiKey?: string;
   url: string;
-  models?: string[];
-  temperature?: number;
-  maxTokens?: number;
+  models: string[];
   timeout?: number;
+  isActive: boolean;
+  model: string;
   lastUsedAt: string;
 };

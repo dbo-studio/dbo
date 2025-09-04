@@ -37,7 +37,7 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.log('🚀 ~ handleDownload ~ error:', error);
+      console.debug('🚀 ~ handleDownload ~ error:', error);
     }
   };
 

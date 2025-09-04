@@ -18,7 +18,7 @@ export default function HistoryContextMenu({ history, contextMenu, onClose }: Hi
       await copy(history.query);
       toast.success(locales.copied);
     } catch (error) {
-      console.log('🚀 ~ handleCopy ~ error:', error);
+      console.debug('🚀 ~ handleCopy ~ error:', error);
     }
   };
 

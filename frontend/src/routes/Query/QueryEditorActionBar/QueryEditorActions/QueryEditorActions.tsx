@@ -31,9 +31,6 @@ export default function QueryEditorActions({ onFormat, onRunQuery, loading }: Qu
         queryKey: ['savedQueries', currentConnection?.id]
       });
       toast.success(locales.query_saved_successfully);
-    },
-    onError: (error: Error): void => {
-      console.error('🚀 ~ createSavedQueryMutation ~ error:', error);
     }
   });
 
@@ -54,10 +51,14 @@ export default function QueryEditorActions({ onFormat, onRunQuery, loading }: Qu
       return;
     }
 
-    await createSavedQueryMutation({
-      connectionId: currentConnection?.id ?? 0,
-      query: getQuery()
-    });
+    try {
+      await createSavedQueryMutation({
+        connectionId: currentConnection?.id ?? 0,
+        query: getQuery()
+      });
+    } catch (error) {
+      console.debug('🚀 ~ saveQuery ~ error:', error);
+    }
   };
 
   const checkQueryLength = (): boolean => {

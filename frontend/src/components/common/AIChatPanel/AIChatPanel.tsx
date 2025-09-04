@@ -19,12 +19,10 @@ import Messages from './Messages/Messages';
 export default function AiChatPanel() {
   const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
   const currentChat = useAiStore((state) => state.currentChat);
-  const providers = useAiStore((state) => state.providers);
   const chats = useAiStore((state) => state.chats);
   const [page, setPage] = useState(1);
 
   const selectedTab = useSelectedTab();
-  const context = useAiStore((state) => state.context);
 
   const updateChats = useAiStore((state) => state.updateChats);
   const updateCurrentChat = useAiStore((state) => state.updateCurrentChat);
@@ -54,10 +52,7 @@ export default function AiChatPanel() {
   });
 
   const { mutateAsync: chatMutation, isPending: chatPending } = useMutation({
-    mutationFn: api.ai.chat,
-    onError: (error: Error): void => {
-      console.log('🚀 ~ AIChatPanel ~ error:', error);
-    }
+    mutationFn: api.ai.chat
   });
 
   const { data: autocomplete } = useQuery({
@@ -71,28 +66,21 @@ export default function AiChatPanel() {
   });
 
   const { mutateAsync: createChatMutation } = useMutation({
-    mutationFn: api.aiChat.createChat,
-    onError: (error: Error): void => {
-      console.error('🚀 ~ createChatMutation ~ error:', error);
-    }
+    mutationFn: api.aiChat.createChat
   });
 
   const handleCreateChat = async (): Promise<void> => {
-    if (!providers) return;
+    try {
+      const chat = await createChatMutation({
+        connectionId: currentConnectionId ?? 0,
+        title: locales.new_chat
+      });
 
-    const sortedProviders = providers.sort(
-      (a, b) => new Date(b.lastUsedAt).getTime() - new Date(a.lastUsedAt).getTime()
-    );
-
-    const chat = await createChatMutation({
-      connectionId: currentConnectionId ?? 0,
-      title: locales.new_chat,
-      providerId: sortedProviders[0]?.id,
-      model: sortedProviders[0]?.models?.[0]
-    });
-
-    addChat(chat);
-    handleChatChange(chat);
+      addChat(chat);
+      handleChatChange(chat);
+    } catch (error) {
+      console.debug('🚀 ~ handleCreateChat ~ error:', error);
+    }
   };
 
   const handleChatChange = async (chat: AiChatType) => {
@@ -120,6 +108,7 @@ export default function AiChatPanel() {
   };
 
   const handleSend = async () => {
+    const context = useAiStore.getState().context;
     if (!currentChat || !context.input.trim() || chatPending) return;
 
     const contextOpts: AiContextOptsType = {
@@ -130,7 +119,7 @@ export default function AiChatPanel() {
       query: ''
     };
 
-    if (selectedTab?.mode === TabMode.Query && selectedTab?.query) {
+    if (selectedTab?.mode === TabMode.Query) {
       contextOpts.query = useTabStore.getState().getQuery(selectedTab?.id);
     }
 
@@ -147,16 +136,19 @@ export default function AiChatPanel() {
 
     updateContext({ ...context, input: '' });
 
-    const chat = await chatMutation({
-      connectionId: Number(currentConnectionId),
-      providerId: Number(currentChat?.providerId) ?? 0,
-      chatId: currentChat?.id,
-      model: currentChat?.model,
-      message: context.input.trim(),
-      contextOpts
-    } as AiChatRequest);
+    try {
+      const chat = await chatMutation({
+        connectionId: Number(currentConnectionId),
+        chatId: currentChat?.id,
+        message: context.input.trim(),
+        contextOpts
+      } as AiChatRequest);
 
-    addMessage(currentChat, chat.messages);
+      const updatedChat = addMessage(currentChat, chat.messages);
+      updateCurrentChat({ ...updatedChat, title: chat.title });
+    } catch (error) {
+      console.debug('🚀 ~ handleSend ~ error:', error);
+    }
   };
 
   const handleChatDelete = (chat: AiChatType) => {

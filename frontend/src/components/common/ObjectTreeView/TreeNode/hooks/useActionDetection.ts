@@ -34,9 +34,6 @@ export const useActionDetection = (
         queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, variables.nodeId]
       });
       await reloadTree();
-    },
-    onError: (error: Error): void => {
-      console.error('🚀 ~ actionDetection:', error);
     }
   });
 
@@ -91,7 +88,7 @@ export const useActionDetection = (
 
                 toast.success(locales.action_executed_successfully);
               } catch (error) {
-                console.log('🚀 ~ handleCopy ~ error:', error);
+                console.debug('🚀 ~ actionDetection ~ error:', error);
               }
             }
           );
@@ -103,7 +100,7 @@ export const useActionDetection = (
               await copy(node.name);
               toast.success(locales.copied);
             } catch (error) {
-              console.log('🚀 ~ handleCopy ~ error:', error);
+              console.debug('🚀 ~ handleCopy ~ error:', error);
             }
           }
 

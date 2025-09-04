@@ -53,8 +53,10 @@ type IJobRepo interface {
 type IAiProviderRepo interface {
 	Index(ctx context.Context) ([]model.AiProvider, error)
 	Find(ctx context.Context, id uint) (*model.AiProvider, error)
+	FindActive(ctx context.Context) (*model.AiProvider, error)
 	CreateIfNotExists(ctx context.Context, provider *model.AiProvider) (*model.AiProvider, error)
 	Update(ctx context.Context, provider *model.AiProvider, dto *dto.AiProviderUpdateRequest) (*model.AiProvider, error)
+	MakeAllProvidersNotActive(ctx context.Context, provider *model.AiProvider, req *dto.AiProviderUpdateRequest) error
 }
 
 type IAiChatRepo interface {

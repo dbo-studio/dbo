@@ -5,8 +5,6 @@ import "github.com/invopop/validation"
 type (
 	AiInlineCompleteRequest struct {
 		ConnectionId int32                          `json:"connectionId"`
-		ProviderId   int32                          `json:"providerId"`
-		Model        string                         `json:"model"`
 		ContextOpts  AiInlineCompleteContextOptions `json:"contextOpts"`
 	}
 
@@ -27,6 +25,5 @@ type (
 func (req AiInlineCompleteRequest) Validate() error {
 	return validation.ValidateStruct(&req,
 		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
-		validation.Field(&req.ProviderId, validation.Required, validation.Min(0)),
 	)
 }

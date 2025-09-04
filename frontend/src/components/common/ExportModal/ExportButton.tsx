@@ -73,7 +73,7 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
       setShowProgress(true);
       onClose();
     } catch (error) {
-      console.log('🚀 ~ handleExport ~ error:', error);
+      console.debug('🚀 ~ handleExport ~ error:', error);
     }
   };
 

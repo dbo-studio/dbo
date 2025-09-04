@@ -23,7 +23,6 @@ export type TabType = {
   nodeId: string;
   name: string;
   table?: string;
-  query?: string;
   pagination?: TabDataPagination;
   showQuery?: boolean;
   showColumns?: boolean;

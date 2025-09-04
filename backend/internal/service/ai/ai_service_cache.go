@@ -3,11 +3,9 @@ package serviceAi
 import (
 	"crypto/sha1"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/model"
 )
 
 func (cm *AiServiceImpl) getCompletionResponse(key string) (*dto.AiInlineCompleteResponse, bool) {
@@ -28,21 +26,8 @@ func (cm *AiServiceImpl) setCompletionResponse(key string, response *dto.AiInlin
 	return cm.cache.Set(key, response, &ttl)
 }
 
-func (cm *AiServiceImpl) generateCompletionKey(req *dto.AiInlineCompleteRequest, provider *model.AiProvider) string {
+func (cm *AiServiceImpl) generateCompletionKey(req *dto.AiInlineCompleteRequest) string {
 	var keyBuilder string
-
-	if provider != nil {
-		keyBuilder += fmt.Sprintf("provider:%d|model:%s|", provider.ID, strings.Join(provider.Models, ","))
-		if provider.Url != "" {
-			keyBuilder += fmt.Sprintf("baseurl:%s|", provider.Url)
-		}
-		if provider.Temperature != nil {
-			keyBuilder += fmt.Sprintf("temp:%.2f|", *provider.Temperature)
-		}
-		if provider.MaxTokens != nil {
-			keyBuilder += fmt.Sprintf("maxtokens:%d|", *provider.MaxTokens)
-		}
-	}
 
 	keyBuilder += fmt.Sprintf("conn:%d|", req.ConnectionId)
 

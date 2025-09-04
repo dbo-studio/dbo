@@ -70,7 +70,7 @@ export const createDataQuerySlice: StateCreator<
       if (error instanceof Error && error.name === 'CanceledError') {
         return;
       }
-      console.log('🚀 ~ runQuery: ~ error:', error);
+      console.debug('🚀 ~ runQuery: ~ error:', error);
     } finally {
       get().toggleDataFetching(false);
     }
@@ -106,7 +106,7 @@ export const createDataQuerySlice: StateCreator<
       if (error instanceof Error && error.name === 'CanceledError') {
         return;
       }
-      console.log('🚀 ~ runRawQuery: ~ error:', error);
+      console.debug('🚀 ~ runRawQuery: ~ error:', error);
     } finally {
       get().toggleDataFetching(false);
     }

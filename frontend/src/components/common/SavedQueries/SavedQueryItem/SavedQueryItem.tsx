@@ -23,10 +23,7 @@ export default function SavedQueryItem({
   const updateSelectedTab = useTabStore.getState().updateSelectedTab;
 
   const { mutateAsync: updateSavedQueryMutation, isPending } = useMutation({
-    mutationFn: api.savedQueries.updateSavedQuery,
-    onError: (error: Error): void => {
-      console.error('🚀 ~ updateSavedQueryMutation ~ error:', error);
-    }
+    mutationFn: api.savedQueries.updateSavedQuery
   });
 
   const handleDiscardChanges = useCallback((): void => {
@@ -36,14 +33,13 @@ export default function SavedQueryItem({
 
   const handleSaveChange = useCallback(async (): Promise<void> => {
     try {
-      const newQuery = {
-        ...query,
-        name
-      };
+      const newQuery = { ...query, name };
       await updateSavedQueryMutation(newQuery);
+
       onChange();
       onEditMode(false);
-    } catch (_) {
+    } catch (error) {
+      console.debug('🚀 ~ handleSaveChange ~ error:', error);
       handleDiscardChanges();
     }
   }, [query, name, updateSavedQueryMutation, onChange, onEditMode, handleDiscardChanges]);

@@ -27,9 +27,6 @@ export default function SavedQueryContextMenu({
     onSuccess: (): void => {
       toast.success(locales.query_saved_successfully);
       onChange();
-    },
-    onError: (error: Error): void => {
-      console.error('🚀 ~ deleteSavedQueryMutation ~ error:', error);
     }
   });
 
@@ -37,7 +34,9 @@ export default function SavedQueryContextMenu({
     showModal(locales.delete_action, locales.query_saved_delete_confirm, async () => {
       try {
         await deleteSavedQueryMutation(query.id);
-      } catch (_) {}
+      } catch (error) {
+        console.debug('🚀 ~ handleDelete ~ error:', error);
+      }
     });
   };
 
@@ -46,7 +45,7 @@ export default function SavedQueryContextMenu({
       await copy(query.query);
       toast.success(locales.copied);
     } catch (error) {
-      console.log('🚀 ~ handleCopy ~ error:', error);
+      console.debug('🚀 ~ handleCopy ~ error:', error);
     }
   };
 

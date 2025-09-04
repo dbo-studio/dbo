@@ -1,34 +1,31 @@
 package serviceAiProvider
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/dbo-studio/dbo/internal/model"
-	"github.com/dbo-studio/dbo/pkg/logger"
 )
 
 type ProviderFactory struct {
-	logger logger.Logger
 }
 
-func NewProviderFactory(logger logger.Logger) *ProviderFactory {
-	return &ProviderFactory{
-		logger: logger,
-	}
+func NewProviderFactory() *ProviderFactory {
+	return &ProviderFactory{}
 }
 
-func (f *ProviderFactory) CreateProvider(provider *model.AiProvider) (IAiProvider, error) {
+func (f *ProviderFactory) CreateProvider(ctx context.Context, provider *model.AiProvider) (IAiProvider, error) {
 	switch provider.Type {
 	case model.AIProviderTypeOpenAI:
-		return NewOpenAIProvider(provider, f.logger), nil
+		return NewOpenAIProvider(ctx, provider)
 	case model.AIProviderTypeAnthropic:
-		return NewAnthropicProvider(provider, f.logger), nil
+		return NewAnthropicProvider(ctx, provider)
 	case model.AIProviderTypeGemini:
-		return NewGeminiProvider(provider, f.logger), nil
+		return NewGeminiProvider(ctx, provider)
 	case model.AIProviderTypeGroq:
-		return NewGroqProvider(provider, f.logger), nil
+		return NewGroqProvider(ctx, provider)
 	case model.AIProviderTypeOllama:
-		return NewOllamaProvider(provider, f.logger), nil
+		return NewOllamaProvider(ctx, provider)
 	default:
 		return nil, fmt.Errorf("unsupported provider type: %s", provider.Type)
 	}

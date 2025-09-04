@@ -17,13 +17,13 @@ export default function CodeMessage({ message }: CodeMessageProps) {
       await copy(message.content);
       toast.success(locales.copied);
     } catch (error) {
-      console.log('🚀 ~ handleCopy ~ error:', error);
+      console.debug('🚀 ~ handleCopy ~ error:', error);
     }
   };
 
   return (
     <CodeMessageStyled>
-      <CodeMessageHeaderStyled isDark={isDark ?? false}>
+      <CodeMessageHeaderStyled isdark={isDark?.toString() ?? 'false'}>
         <CustomIcon type='code' />
         <IconButton onClick={handleCopy}>
           <CustomIcon type='copy' />

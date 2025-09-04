@@ -9,16 +9,13 @@ import (
 type IAiProvider interface {
 	Chat(ctx context.Context, req *ChatRequest) (*ChatResponse, error)
 	Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error)
-	Validate() bool
 }
 
 type ChatRequest struct {
-	Messages    []model.AiChatMessage `json:"messages"`
-	Model       string                `json:"model"`
-	Temperature *float32              `json:"temperature,omitempty"`
-	MaxTokens   *int                  `json:"max_tokens,omitempty"`
-	Context     string                `json:"context,omitempty"`
-	Query       string                `json:"query,omitempty"`
+	Messages []model.AiChatMessage `json:"messages"`
+	Model    string                `json:"model"`
+	Context  string                `json:"context,omitempty"`
+	Query    string                `json:"query,omitempty"`
 }
 
 type ChatResponse struct {
@@ -30,12 +27,10 @@ type ChatResponse struct {
 }
 
 type CompletionRequest struct {
-	Prompt      string   `json:"prompt"`
-	Suffix      *string  `json:"suffix,omitempty"`
-	Model       string   `json:"model"`
-	Temperature *float32 `json:"temperature,omitempty"`
-	MaxTokens   *int     `json:"max_tokens,omitempty"`
-	Context     string   `json:"context,omitempty"`
+	Prompt  string  `json:"prompt"`
+	Suffix  *string `json:"suffix,omitempty"`
+	Model   string  `json:"model"`
+	Context string  `json:"context,omitempty"`
 }
 
 type CompletionResponse struct {

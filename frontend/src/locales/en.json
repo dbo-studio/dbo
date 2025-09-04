@@ -166,8 +166,9 @@
 	"url_required": "Base URL is required",
 	"new_chat": "New chat",
 	"ask_anything": "Ask anything...",
-	"timeout": "Timeout",
+	"timeout": "Timeout (seconds)",
 	"thinking": "Thinking",
 	"enable_ai": "Enable AI",
-	"disable_ai": "Disable AI"
+	"disable_ai": "Disable AI",
+	"add_model": "Add model"
 }

@@ -102,7 +102,7 @@ export default function DataGridContextMenu({
           await copy(row.row[row.selectedColumn]);
           toast.success(locales.copied);
         } catch (error) {
-          console.log('🚀 ~ handleCopy ~ error:', error);
+          console.debug('🚀 ~ handleCopy ~ error:', error);
         }
       }
     }

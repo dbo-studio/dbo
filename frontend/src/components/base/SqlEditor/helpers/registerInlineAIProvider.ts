@@ -1,5 +1,4 @@
 import api from '@/api';
-import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import type * as MonacoNS from 'monaco-editor/esm/vs/editor/editor.api';
@@ -75,10 +74,9 @@ export function registerInlineAIProvider(monaco: typeof MonacoNS, languageId: st
         return { items: [] };
       }
 
-      const currentChat = useAiStore.getState().currentChat;
       const currentConnection = useConnectionStore.getState().currentConnection;
 
-      if (!currentConnection()?.id || !currentChat) {
+      if (!currentConnection()?.id) {
         return { items: [] };
       }
 
@@ -97,8 +95,6 @@ export function registerInlineAIProvider(monaco: typeof MonacoNS, languageId: st
 
             const requestData = {
               connectionId: currentConnection()?.id ?? 0,
-              providerId: currentChat.providerId,
-              model: currentChat.model,
               contextOpts: {
                 database: currentConnection()?.options?.database,
                 schema: currentConnection()?.options?.schema,
@@ -118,6 +114,7 @@ export function registerInlineAIProvider(monaco: typeof MonacoNS, languageId: st
               items: [createCompletionItem(completionText, position)]
             });
           } catch (err) {
+            useSettingStore.getState().toggleEnableEditorAi(false);
             console.debug('Inline AI provider error:', err);
             resolve({ items: [] });
           } finally {

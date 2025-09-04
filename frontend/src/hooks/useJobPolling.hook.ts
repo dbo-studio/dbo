@@ -96,7 +96,7 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch job status');
-        console.log('🚀 ~ useJobPolling ~ err:', err);
+        console.debug('🚀 ~ useJobPolling ~ err:', err);
       }
     }, pollingInterval);
 
@@ -117,7 +117,7 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
       const jobData = await api.job.detail(jobId);
       setJob(jobData);
     } catch (err) {
-      console.log('🚀 ~ useJobPolling ~ err:', err);
+      console.debug('🚀 ~ useJobPolling ~ err:', err);
     }
   }, [jobId]);
 

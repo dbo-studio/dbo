@@ -50,7 +50,7 @@ export default function Data(): JSX.Element {
         setTableData(result);
       }
     } catch (error) {
-      console.error('🚀 ~ loadData ~ error:', error);
+      console.debug('🚀 ~ loadData ~ error:', error);
     }
   }, [loadDataFromIndexedDB, runQuery]);
 

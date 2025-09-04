@@ -19,7 +19,7 @@ export type AiChatSlice = {
   updateCurrentChat: (chat: AiChatType) => void;
   updateChats: (chats: AiChatType[]) => Promise<void>;
   addChat: (chat: AiChatType) => Promise<void>;
-  addMessage: (chat: AiChatType, messages: AiMessageType[]) => Promise<void>;
+  addMessage: (chat: AiChatType, messages: AiMessageType[]) => AiChatType;
 };
 
 export type AiContextSlice = {

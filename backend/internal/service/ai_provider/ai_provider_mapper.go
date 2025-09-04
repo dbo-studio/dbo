@@ -23,15 +23,19 @@ func aiProviderListModelToResponse(aiProviders *[]model.AiProvider) *dto.AiProvi
 }
 
 func aiProviderModelToDto(aiProvider *model.AiProvider) dto.AiProvider {
+	if len(aiProvider.Models) == 0 {
+		aiProvider.Models = make([]string, 0)
+	}
+
 	return dto.AiProvider{
-		ID:          aiProvider.ID,
-		Type:        string(aiProvider.Type),
-		Url:         aiProvider.Url,
-		ApiKey:      aiProvider.ApiKey,
-		Timeout:     aiProvider.Timeout,
-		Models:      aiProvider.Models,
-		Temperature: aiProvider.Temperature,
-		MaxTokens:   aiProvider.MaxTokens,
-		LastUsedAt:  aiProvider.LastUsedAt.Format("2006-01-02 15:04:05"),
+		ID:         aiProvider.ID,
+		Type:       string(aiProvider.Type),
+		Url:        aiProvider.Url,
+		ApiKey:     aiProvider.ApiKey,
+		Timeout:    aiProvider.Timeout,
+		Models:     aiProvider.Models,
+		Model:      aiProvider.Model,
+		IsActive:   aiProvider.IsActive,
+		LastUsedAt: aiProvider.LastUsedAt.Format("2006-01-02 15:04:05"),
 	}
 }
