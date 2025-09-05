@@ -75,6 +75,7 @@ export default function AddConnection(): JSX.Element {
 
     try {
       await createConnectionMutation(data);
+      handleClose();
       toast.success(locales.connection_create_success);
     } catch (error) {
       console.debug('🚀 ~ handleCreateConnection ~ error:', error);

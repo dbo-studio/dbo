@@ -13,7 +13,7 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           leftWidth: constants.defaultSidebarWidth,
           rightWidth: constants.defaultSidebarWidth,
           showLeft: true,
-          showRight: true
+          showRight: false
         },
         isDark: false,
         debug: false,
