@@ -14,12 +14,14 @@ export const useSetupDesktop = (): boolean => {
       .then((e) => {
         if (!e) return;
         reset();
-        setup().then();
+        setup().then(() => {
+          setLoaded(true);
+        });
       })
       .catch((e) => {
         console.log('=>(useSetupDesktop.hook.ts:28) e', e);
-      })
-      .finally(() => setLoaded(true));
+        setLoaded(true);
+      });
   }, []);
 
   return loaded;
