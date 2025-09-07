@@ -1,5 +1,5 @@
-import { listen } from "@tauri-apps/api/event";
-import { ServerEvent } from "./types";
+import { listen } from '@tauri-apps/api/event';
+import { ServerEvent } from './types';
 
 export const streams = {
   window: {
@@ -9,6 +9,6 @@ export const streams = {
 
     willExitFullScreen: (callback: () => void) => {
       listen(ServerEvent.WindowWillExitFullScreen, () => callback());
-    },
-  },
+    }
+  }
 };

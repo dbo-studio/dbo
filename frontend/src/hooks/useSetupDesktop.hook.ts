@@ -4,7 +4,7 @@ import { tools } from '@/core/utils';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { platform } from '@tauri-apps/plugin-os';
 import { useEffect, useState } from 'react';
 
@@ -88,7 +88,7 @@ const setupTitleBar = async (): Promise<void> => {
   const updateTitleBar = useSettingStore.getState().updateTitleBar;
   const p = platform();
 
-  if (p !== "macos") {
+  if (p !== 'macos') {
     return;
   }
 
@@ -98,23 +98,24 @@ const setupTitleBar = async (): Promise<void> => {
     onHeaderAreaClick: async () => {
       const window = getCurrentWebviewWindow();
       await window.startDragging();
-    },
+    }
   });
 
   getCurrentWindow().onResized(() => {
-    getCurrentWindow().isFullscreen().then((isFullscreen) => {
-      if (isFullscreen) {
-        updateTitleBar({
-          paddingLeft: 16,
-          paddingTop: 4,
-        });
-
-      } else {
-        updateTitleBar({
-          paddingLeft: 80,
-          paddingTop: 4,
-        });
-      }
-    });
+    getCurrentWindow()
+      .isFullscreen()
+      .then((isFullscreen) => {
+        if (isFullscreen) {
+          updateTitleBar({
+            paddingLeft: 16,
+            paddingTop: 4
+          });
+        } else {
+          updateTitleBar({
+            paddingLeft: 80,
+            paddingTop: 4
+          });
+        }
+      });
   });
 };

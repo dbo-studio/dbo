@@ -36,7 +36,6 @@ export type ThemeItemProps = {
   onClick: () => void;
 };
 
-
 export type SettingsProps = {
   open: boolean;
   tab?: number;

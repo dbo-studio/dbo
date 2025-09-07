@@ -13,9 +13,20 @@ export default function AppHeader(): JSX.Element {
   const onClick = async () => titleBar.onHeaderAreaClick();
 
   return (
-    <AppHeaderStyled className={'app-header'} container spacing={0} justifyContent={'space-between'}
-      style={{ backgroundColor: "transparent", backdropFilter: "blur(15px)", WebkitBackdropFilter: "blur(15px)", paddingLeft: titleBar.paddingLeft, paddingTop: titleBar.paddingTop }}
-      onMouseDown={onClick}>
+    <AppHeaderStyled
+      className={'app-header'}
+      container
+      spacing={0}
+      justifyContent={'space-between'}
+      style={{
+        backgroundColor: 'transparent',
+        backdropFilter: 'blur(15px)',
+        WebkitBackdropFilter: 'blur(15px)',
+        paddingLeft: titleBar.paddingLeft,
+        paddingTop: titleBar.paddingTop
+      }}
+      onMouseDown={onClick}
+    >
       <Grid size={{ md: 2 }} display={matches ? 'flex' : 'none'} justifyContent={'flex-start'}>
         <Leading />
       </Grid>
