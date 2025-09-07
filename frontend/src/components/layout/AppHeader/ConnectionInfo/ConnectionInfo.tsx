@@ -61,7 +61,7 @@ export default function ConnectionInfo(): JSX.Element {
 
   return (
     <Stack direction={'row'} justifyContent={'center'} alignItems={'center'}>
-      <Settings open={showSettings} />
+      <Settings open={showSettings.open} />
       <Grid size={{ md: 3 }}>
         <Stack direction={'row'} justifyContent='flex-end'>
           <IconButton data-testid='add-connection' onClick={(): void => toggleShowAddConnection(true)}>

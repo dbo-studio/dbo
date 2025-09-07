@@ -5,9 +5,9 @@ import type { MenuPanelProps } from '../types';
 import { MenuPanelStyled } from './MenuPanel.styled';
 import MenuPanelItem from './MenuPanelItem/MenuPanelItem';
 
-export default function MenuPanel({ tabs, onChange }: MenuPanelProps): JSX.Element {
+export default function MenuPanel({ tabs, onChange, defaultTabId }: MenuPanelProps): JSX.Element {
   const uuids = useUUID(tabs.length);
-  const [selectedTabId, setSelectedTabId] = useState(tabs[0].id);
+  const [selectedTabId, setSelectedTabId] = useState(defaultTabId ?? tabs[0].id);
   const [isDesktop, setIsDesktop] = useState(false);
 
   const selectedTabContent = useMemo(() => {

@@ -7,18 +7,29 @@ export type SettingStore = {
   showEditConnection: number | boolean;
   showQuickLookEditor: boolean;
   scrollToBottom: boolean;
-  showSettings: boolean;
+  showSettings: {
+    open: boolean;
+    tab: number;
+  };
   enableEditorAi: boolean;
+  titleBar: TitleBarType;
   updateSidebar(sidebar: Partial<SidebarType>): void;
   toggleIsDark(isDark?: boolean): void;
   toggleDebug(debug?: boolean): void;
   toggleShowAddConnection(show?: boolean): void;
   toggleShowEditConnection(show?: boolean | number): void;
   toggleShowQuickLookEditor(show?: boolean): void;
-  toggleShowSettings(show?: boolean): void;
+  toggleShowSettings(show?: boolean, tab?: number): void;
   toggleScrollToBottom(scroll?: boolean): void;
   toggleEnableEditorAi(enable?: boolean): void;
   updateVersion(version: string): void;
+  updateTitleBar(titleBar: Partial<TitleBarType>): void;
+};
+
+export type TitleBarType = {
+  paddingLeft: number;
+  paddingTop: number;
+  onHeaderAreaClick: () => void;
 };
 
 export type SidebarType = {

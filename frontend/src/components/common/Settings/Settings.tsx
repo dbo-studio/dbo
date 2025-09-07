@@ -9,7 +9,7 @@ import AiPanel from './AiPanel/AiPanel';
 import MenuPanel from './MenuPanel/MenuPanel';
 import ShortcutPanel from './ShortcutPanel/ShortcutPanel';
 import ThemePanel from './ThemePanel/ThemePanel';
-import type { MenuPanelTabType } from './types';
+import type { MenuPanelTabType, SettingsProps } from './types';
 
 const tabs: MenuPanelTabType[] = [
   {
@@ -56,7 +56,7 @@ const tabs: MenuPanelTabType[] = [
   }
 ];
 
-export default function Settings({ open }: { open: boolean }): JSX.Element {
+export default function Settings({ open, tab }: SettingsProps): JSX.Element {
   const [content, setContent] = useState<JSX.Element>();
   const theme = useTheme();
   const toggleShowSettings = useSettingStore((state) => state.toggleShowSettings);
@@ -69,7 +69,7 @@ export default function Settings({ open }: { open: boolean }): JSX.Element {
     <Modal open={open} padding='0px' onClose={handleOnClose}>
       <Grid width='850px' container spacing={0} flex={1}>
         <Grid size={{ md: 3 }} display={'flex'} flexDirection={'column'}>
-          <MenuPanel tabs={tabs} onChange={(c): void => setContent(c)} />
+          <MenuPanel tabs={tabs} onChange={(c): void => setContent(c)} defaultTabId={tab} />
         </Grid>
         <Grid size={{ md: 9 }} flex={1} p={theme.spacing(2)}>
           {content}

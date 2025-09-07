@@ -1,7 +1,7 @@
 import { constants } from '@/core/constants';
 import { create, type StoreApi, type UseBoundStore } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import type { SettingStore, SidebarType } from './types';
+import type { SettingStore, SidebarType, TitleBarType } from './types';
 
 type SettingState = SettingStore;
 
@@ -22,8 +22,16 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
         showEditConnection: false,
         showQuickLookEditor: false,
         scrollToBottom: true,
-        showSettings: false,
+        showSettings: {
+          open: false,
+          tab: 0
+        },
         enableEditorAi: false,
+        titleBar: {
+          paddingLeft: 0,
+          paddingTop: 0,
+          onHeaderAreaClick: () => {}
+        },
         updateVersion: (version: string): void => {
           set({ version: version }, undefined, 'updateVersion');
         },
@@ -59,8 +67,11 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
             'toggleShowQuickLookEditor'
           );
         },
-        toggleShowSettings: (show?: boolean): void => {
-          set({ showSettings: show !== undefined ? show : !get().showSettings }, undefined, 'toggleShowSettings');
+        toggleShowSettings: (show?: boolean, tab?: number): void => {
+          show = show !== undefined ? show : !get().showSettings.open;
+          tab = tab !== undefined ? tab : 0;
+
+          set({ showSettings: { open: show, tab: tab } }, undefined, 'toggleShowSettings');
         },
         toggleScrollToBottom: (scroll?: boolean): void => {
           set(
@@ -75,6 +86,10 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
             undefined,
             'toggleEnableEditorAi'
           );
+        },
+        updateTitleBar: (titleBar: Partial<TitleBarType>): void => {
+          const newTitleBar = { ...get().titleBar, ...titleBar };
+          set({ titleBar: newTitleBar }, undefined, 'updateTitleBar');
         }
       }),
       { name: 'settings' }
