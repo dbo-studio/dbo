@@ -59,6 +59,8 @@
     ]
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "*"
+    "@rollup/rollup-linux-x64-gnu": "*",
+    "@rollup/rollup-darwin-x64": "*",
+    "@rollup/rollup-win32-x64-msvc": "*"
   }
 }
