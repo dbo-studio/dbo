@@ -1,6 +1,6 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { ExportModal } from '@/components/common/ExportModal/ExportButton';
+import { ExportModal } from '@/components/common/ExportModal/ExportModal';
 import { shortcuts, tools } from '@/core/utils';
 import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';

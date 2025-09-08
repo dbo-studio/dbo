@@ -206,7 +206,7 @@ func parseSQLFile(fileData []byte) ([][]string, []string, error) {
 
 	stmt, err := sqlparser.Parse(sql)
 	if err != nil {
-		panic(err)
+		return nil, nil, err
 	}
 
 	insertStmt, ok := stmt.(*sqlparser.Insert)
@@ -252,7 +252,7 @@ func parseJSONFile(fileData []byte) ([][]string, []string, error) {
 		var rowData []string
 		for _, colName := range columns {
 			value := row[colName]
-			rowData = append(rowData, fmt.Sprintf("%v", helper.FormatSQLValue(value)))
+			rowData = append(rowData, helper.FormatSQLValue(value))
 		}
 		rows = append(rows, rowData)
 	}

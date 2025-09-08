@@ -1,6 +1,6 @@
-import { constants } from '@/core/constants';
 import { create, type StoreApi, type UseBoundStore } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
+import { constants } from '@/core/constants';
 import type { SettingStore, SidebarType, TitleBarType } from './types';
 
 type SettingState = SettingStore;
@@ -28,9 +28,9 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
         },
         enableEditorAi: false,
         titleBar: {
-          paddingLeft: 0,
-          paddingTop: 0,
-          onHeaderAreaClick: () => {}
+          paddingLeft: 16,
+          paddingTop: 8,
+          onHeaderAreaClick: () => { }
         },
         updateVersion: (version: string): void => {
           set({ version: version }, undefined, 'updateVersion');
@@ -68,10 +68,10 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           );
         },
         toggleShowSettings: (show?: boolean, tab?: number): void => {
-          show = show !== undefined ? show : !get().showSettings.open;
-          tab = tab !== undefined ? tab : 0;
+          const newShow = show !== undefined ? show : !get().showSettings.open;
+          const newTab = tab !== undefined ? tab : 0;
 
-          set({ showSettings: { open: show, tab: tab } }, undefined, 'toggleShowSettings');
+          set({ showSettings: { open: newShow, tab: newTab } }, undefined, 'toggleShowSettings');
         },
         toggleScrollToBottom: (scroll?: boolean): void => {
           set(

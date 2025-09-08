@@ -6,6 +6,7 @@ import SelectInput from '@/components/base/SelectInput/SelectInput';
 import { tools } from '@/core/utils';
 import locales from '@/locales';
 import { Box, Button, IconButton } from '@mui/material';
+import { useMutation } from '@tanstack/react-query';
 import { save } from '@tauri-apps/plugin-dialog';
 import type React from 'react';
 import { useEffect, useState } from 'react';
@@ -18,6 +19,10 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
   const [jobId, setJobId] = useState<string | null>(null);
   const [isTauri, setIsTauri] = useState(false);
   const [savePath, setSavePath] = useState('');
+
+  const { mutateAsync: exportDataMutation } = useMutation({
+    mutationFn: api.importExport.exportData,
+  });
 
   useEffect(() => {
     const checkTauri = async () => {
@@ -59,7 +64,7 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
 
   const handleExport = async () => {
     try {
-      const response = await api.importExport.exportData({
+      const response = await exportDataMutation({
         connectionId,
         table,
         query,
@@ -67,9 +72,7 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
         savePath: isTauri ? savePath : undefined
       });
 
-      const jobId = response?.jobId;
-
-      setJobId(jobId);
+      setJobId(response?.jobId);
       setShowProgress(true);
       onClose();
     } catch (error) {

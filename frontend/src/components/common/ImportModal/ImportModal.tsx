@@ -7,9 +7,11 @@ import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { Box, Button, Checkbox, FormControl, FormControlLabel } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
+import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import * as v from 'valibot';
 import { JobProgressModal } from '../JobProgressModal/JobProgressModal';
+import ImportButton from './ImportButton/ImportButton';
 import type { ImportModalProps } from './types';
 
 const formSchema = v.object({
@@ -24,6 +26,11 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
   const [showProgress, setShowProgress] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
 
+  const { mutateAsync: importDataMutation } = useMutation({
+    mutationFn: api.importExport.importData,
+  });
+
+
   const form = useForm({
     validators: {
       //@ts-ignore
@@ -32,7 +39,7 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
 
     onSubmit: async ({ value }) => {
       if (!value.file) return;
-      const response = await api.importExport.importData({
+      const response = await importDataMutation({
         connectionId: connectionId,
         table,
         data: value.file,
@@ -85,29 +92,17 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
           <Box flex={1}>
             <form.Field name='file'>
               {(field) => (
-                <div style={{ marginBottom: '16px' }}>
-                  <input
-                    type='file'
-                    accept='.sql,.json,.csv'
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (file) {
-                        field.handleChange(file);
-                        // Auto-detect format based on file extension
-                        const detectedFormat = getFileFormat(file.name);
-                        form.setFieldValue('format', detectedFormat);
-                      }
-                    }}
-                    style={{ display: 'none' }}
-                    id='import-file-input'
-                  />
-                  <label htmlFor='import-file-input'>
-                    <Button component='span' variant='outlined' fullWidth>
-                      {field.state.value ? field.state.value.name : locales.choose_file}
-                    </Button>
-                  </label>
+                <Box>
+                  <ImportButton onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) {
+                      field.handleChange(file);
+                      const detectedFormat = getFileFormat(file.name);
+                      form.setFieldValue('format', detectedFormat);
+                    }
+                  }} />
                   <FormError mb={1} errors={field.state.meta.errors} />
-                </div>
+                </Box>
               )}
             </form.Field>
 

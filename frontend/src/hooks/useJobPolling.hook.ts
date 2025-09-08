@@ -1,4 +1,5 @@
 import api from '@/api';
+import { useMutation } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 type JobType = {
@@ -25,7 +26,14 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { pollingInterval = 1000 } = options;
+  const { mutateAsync: getJobMutation } = useMutation({
+    mutationFn: api.job.detail,
+  });
+
+  const { mutateAsync: cancelJobMutation } = useMutation({
+    mutationFn: api.job.cancel,
+  });
+
 
   useEffect(() => {
     if (!jobId) {
@@ -38,7 +46,7 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
 
     const initialFetch = async () => {
       try {
-        const jobData = await api.job.detail(jobId);
+        const jobData = await getJobMutation(jobId);
 
         setJob(jobData);
         setError(null);
@@ -69,7 +77,7 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
 
     intervalRef.current = setInterval(async () => {
       try {
-        const jobData = await api.job.detail(jobId);
+        const jobData = await getJobMutation(jobId);
 
         setJob(jobData);
         setError(null);
@@ -98,7 +106,7 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
         setError(err instanceof Error ? err.message : 'Failed to fetch job status');
         console.debug('🚀 ~ useJobPolling ~ err:', err);
       }
-    }, pollingInterval);
+    }, options.pollingInterval || 1000);
 
     return () => {
       if (intervalRef.current) {
@@ -107,14 +115,14 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
       }
       setIsPolling(false);
     };
-  }, [jobId, pollingInterval]);
+  }, [jobId, options.pollingInterval || 1000]);
 
   const cancelJob = useCallback(async () => {
     if (!jobId) return;
 
     try {
-      await api.job.cancel(jobId);
-      const jobData = await api.job.detail(jobId);
+      await cancelJobMutation(jobId);
+      const jobData = await getJobMutation(jobId);
       setJob(jobData);
     } catch (err) {
       console.debug('🚀 ~ useJobPolling ~ err:', err);

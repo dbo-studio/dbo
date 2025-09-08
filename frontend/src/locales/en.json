@@ -170,5 +170,6 @@
 	"thinking": "Thinking",
 	"enable_ai": "Enable AI",
 	"disable_ai": "Disable AI",
-	"add_model": "Add model"
+	"add_model": "Add model",
+	"drag_and_drop_file": "Drag and drop file or"
 }
