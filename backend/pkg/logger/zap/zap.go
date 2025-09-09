@@ -37,6 +37,7 @@ func New(cfg *config.Config) logger.Logger {
 
 	f, err := os.OpenFile(logFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o666)
 	fmt.Println("log path: " + logFilePath)
+	cfg.App.LogPath = logFilePath
 	if err != nil {
 		l.Fatalln(err)
 	}

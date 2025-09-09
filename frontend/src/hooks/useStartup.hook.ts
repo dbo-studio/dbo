@@ -11,8 +11,8 @@ export const useStartup = (): boolean => {
   const done = useSetupDesktop();
   const debug = useSettingStore((state) => state.debug);
   const updateProviders = useAiStore((state) => state.updateProviders);
-  const updateVersion = useSettingStore((state) => state.updateVersion);
-  const updateNewReleaseVersion = useSettingStore((state) => state.updateNewReleaseVersion);
+  const updateGeneral = useSettingStore((state) => state.updateGeneral);
+
   const resetTree = useTreeStore((state) => state.reset);
 
   const { isLoading: isLoadingConfig } = useQuery({
@@ -20,12 +20,15 @@ export const useStartup = (): boolean => {
     queryFn: async () => {
       const config = await api.config.getConfig();
       updateProviders(config.providers);
-      updateVersion(config.version);
-      if (config.newReleaseVersion) {
-        updateNewReleaseVersion(config.newReleaseVersion);
-      }
+      updateGeneral({
+        logsPath: config.logsPath,
+        version: config.version,
+        release: config.newReleaseVersion
+      });
+
       return config;
-    }
+    },
+    enabled: done
   });
 
   useEffect(() => {
@@ -40,7 +43,7 @@ export const useStartup = (): boolean => {
       import('eruda').then((eruda) => {
         try {
           eruda.default.init();
-        } catch (_) {}
+        } catch (_) { }
       });
     }
   }, [debug]);

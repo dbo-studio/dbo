@@ -44,6 +44,14 @@
         }
       ]
     },
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [
+        {
+           "path": "**/*"
+        }
+      ]
+    },
     "shell:allow-open",
     "dialog:allow-open",
     "dialog:allow-save",

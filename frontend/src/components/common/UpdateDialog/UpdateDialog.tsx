@@ -9,60 +9,52 @@ import { UpdateDialogStyled } from './UpdateDialog.styled';
 
 export default function UpdateDialog() {
   const [show, setShow] = useState(false);
-  const newReleaseVersion = useSettingStore((state) => state.newReleaseVersion);
+  const release = useSettingStore((state) => state.general.release);
+  const ignoredRelease = useSettingStore((state) => state.ignoredRelease);
+  const updateIgnoredRelease = useSettingStore((state) => state.updateIgnoredRelease);
 
   useEffect(() => {
-    console.log(newReleaseVersion);
-    if (newReleaseVersion !== undefined && !newReleaseVersion.ignore) {
+    if (release && release.name !== ignoredRelease) {
       setShow(true);
     }
-  }, [newReleaseVersion]);
+  }, [release]);
 
   const handleOnClose = () => {
-    if (newReleaseVersion?.release?.isMinimum) return;
+    if (release?.isMinimum) return;
     setShow(false);
   };
 
   const handleOnIgnore = () => {
-    useSettingStore.setState({ newReleaseVersion: { ...newReleaseVersion, ignore: true } });
+    if (release === undefined) return;
+
+    updateIgnoredRelease(release?.name);
     setShow(false);
   };
 
   const handleOnUpdate = () => {
-    window.open(newReleaseVersion.release?.url, '_blank');
-    if (newReleaseVersion?.release?.isMinimum) return;
+    if (release === undefined) return;
+    window.open(release?.url, '_blank');
     setShow(false);
   };
 
-  if (!newReleaseVersion) {
+  if (!release) {
     return null;
   }
 
   return (
-    <Modal title={locales.new_version_available} open={show} onClose={() => {}}>
+    <Modal title={locales.new_version_available} open={show} onClose={() => { }}>
       <Box flex={1} display={'flex'} flexDirection={'column'} overflow={'scroll'}>
         <UpdateDialogStyled>
-          <Markdown>{newReleaseVersion.release?.body}</Markdown>
+          <Markdown>{release.body}</Markdown>
         </UpdateDialogStyled>
       </Box>
 
       <Box display={'flex'} justifyContent={'space-between'}>
         <Stack direction={'row'} spacing={1}>
-          <Button
-            disabled={newReleaseVersion?.release?.isMinimum}
-            onClick={handleOnClose}
-            size='small'
-            color='info'
-            variant='outlined'
-          >
+          <Button disabled={release.isMinimum} onClick={handleOnClose} size='small' color='info' variant='outlined'>
             {locales.cancel}
           </Button>
-          <Button
-            disabled={newReleaseVersion?.release?.isMinimum}
-            onClick={handleOnIgnore}
-            size='small'
-            variant='outlined'
-          >
+          <Button disabled={release.isMinimum} onClick={handleOnIgnore} size='small' variant='outlined'>
             {locales.ignore_this_update}
           </Button>
         </Stack>

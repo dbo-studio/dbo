@@ -7,7 +7,7 @@ import type { JSX } from 'react';
 
 export default function AboutPanel(): JSX.Element {
   const theme = useTheme();
-  const version = useSettingStore((state) => state.version);
+  const version = useSettingStore((state) => state.general.version);
 
   return (
     <Box>

@@ -4,10 +4,11 @@ export type ConfigResponseType = {
   url: string;
   version: string;
   providers: AiProviderType[];
-  newReleaseVersion?: NewReleaseType;
+  newReleaseVersion?: CheckUpdateResponseType;
+  logsPath: string;
 };
 
-export type NewReleaseType = {
+export type CheckUpdateResponseType = {
   name: string;
   url: string;
   body: string;

@@ -1,10 +1,9 @@
-import type { NewReleaseType } from '@/api/config/types';
+import type { CheckUpdateResponseType } from '@/api/config/types';
 
 export type SettingStore = {
   sidebar: SidebarType;
   isDark: boolean | undefined;
   debug: boolean;
-  version: string;
   showAddConnection: boolean;
   showEditConnection: number | boolean;
   showQuickLookEditor: boolean;
@@ -15,10 +14,8 @@ export type SettingStore = {
   };
   enableEditorAi: boolean;
   titleBar: TitleBarType;
-  newReleaseVersion: {
-    ignore: boolean;
-    release: NewReleaseType | undefined;
-  };
+  ignoredRelease: string;
+  general: GeneralSettingType;
   updateSidebar(sidebar: Partial<SidebarType>): void;
   toggleIsDark(isDark?: boolean): void;
   toggleDebug(debug?: boolean): void;
@@ -28,9 +25,9 @@ export type SettingStore = {
   toggleShowSettings(show?: boolean, tab?: number): void;
   toggleScrollToBottom(scroll?: boolean): void;
   toggleEnableEditorAi(enable?: boolean): void;
-  updateVersion(version: string): void;
   updateTitleBar(titleBar: Partial<TitleBarType>): void;
-  updateNewReleaseVersion(newReleaseVersion: NewReleaseType, ignore?: boolean): void;
+  updateIgnoredRelease(releaseName: string): void;
+  updateGeneral(general: Partial<GeneralSettingType>): void;
 };
 
 export type TitleBarType = {
@@ -44,4 +41,10 @@ export type SidebarType = {
   rightWidth: number;
   showLeft: boolean;
   leftWidth: number;
+};
+
+export type GeneralSettingType = {
+  logsPath: string;
+  version: string;
+  release: CheckUpdateResponseType | undefined;
 };

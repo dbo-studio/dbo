@@ -173,5 +173,13 @@
 	"add_model": "Add model",
 	"drag_and_drop_file": "Drag and drop file or",
 	"new_version_available": "New version available",
-	"ignore_this_update": "Ignore this update"
+	"ignore_this_update": "Ignore this update",
+	"settings": "Settings",
+	"left_sidebar": "Left sidebar",
+	"right_sidebar": "Right sidebar",
+	"open_editor": "Open editor",
+	"connections": "Connections",
+	"check":"Check",
+	"you_are_up_to_date": "You are up to date!",
+	"show_logs": "Show logs"
 }

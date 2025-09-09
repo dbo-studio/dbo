@@ -25,17 +25,8 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
 
     try {
       const blob = await api.job.result(jobId);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-
       const fileName = job?.result?.fileName || 'export';
-      link.setAttribute('download', fileName);
-
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      tools.fileDownload(blob, fileName);
     } catch (error) {
       console.debug('🚀 ~ handleDownload ~ error:', error);
     }

@@ -12,6 +12,7 @@ type App struct {
 	Version       string
 	ReleaseUrlApi string
 	ReleaseUrl    string
+	LogPath       string
 }
 
 type Sentry struct {
@@ -31,7 +32,7 @@ func New() *Config {
 			Name:          "dbo",
 			Port:          os.Getenv("APP_PORT"),
 			Env:           os.Getenv("APP_ENV"),
-			Version:       "0.2.4",
+			Version:       "v0.2.5",
 			DatabaseName:  "dbo.db",
 			ReleaseUrlApi: "https://dbo-studio.com/api/config",
 			ReleaseUrl:    "https://dbo-studio.com/releases",

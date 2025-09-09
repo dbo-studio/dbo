@@ -10,7 +10,9 @@ export default function AppHeader(): JSX.Element {
   const matches = useMediaQuery((theme: Theme) => theme.breakpoints.up('sm'));
   const titleBar = useSettingStore((state) => state.titleBar);
 
-  const onClick = async () => titleBar.onHeaderAreaClick();
+  const onClick = async () => {
+    titleBar.onHeaderAreaClick?.();
+  };
 
   return (
     <AppHeaderStyled
