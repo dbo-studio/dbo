@@ -52,9 +52,8 @@ func New(cfg *config.Config) logger.Logger {
 	core := zapcore.NewCore(enc, ws, zapcore.ErrorLevel)
 
 	z := zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
-	sugarLogger := z.Sugar()
 
-	return &log{sugarLogger}
+	return &log{z.Sugar()}
 }
 
 func (log *log) Error(msg any) {

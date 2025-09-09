@@ -16,6 +16,7 @@ type IJobManager interface {
 	RegisterProcessor(processor JobProcessor)
 	CreateJob(jobType model.JobType, data string) (*model.Job, error)
 	UpdateJobProgress(job *model.Job, progress int, message string) error
+	CancelAllJobs() error
 }
 
 type IJobManagerImpl struct {
@@ -201,8 +202,35 @@ func (jm *IJobManagerImpl) processPendingJobs() {
 	}(j)
 }
 
-func (jm *IJobManagerImpl) Shutdown() {
-	jm.workerCancel()
-	jm.workerWg.Wait()
-	jm.logger.Info("JobManager shutdown completed")
+func (jm *IJobManagerImpl) CancelAllJobs() error {
+	runningJobs, err := jm.jobRepo.GetRunningJobs(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to get running jobs: %w", err)
+	}
+
+	for _, job := range runningJobs {
+		err := jm.updateJobStatus(&job, model.JobStatusCancelled, "Cancelled due to application shutdown")
+		if err != nil {
+			jm.logger.Error(fmt.Sprintf("Failed to cancel job %d: %v", job.ID, err))
+		} else {
+			jm.logger.Info(fmt.Sprintf("Cancelled job %d due to shutdown", job.ID))
+		}
+	}
+
+	pendingJobs, err := jm.jobRepo.GetPendingJobs(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to get pending jobs: %w", err)
+	}
+
+	for _, job := range pendingJobs {
+		err := jm.updateJobStatus(&job, model.JobStatusCancelled, "Cancelled due to application shutdown")
+		if err != nil {
+			jm.logger.Error(fmt.Sprintf("Failed to cancel pending job %d: %v", job.ID, err))
+		} else {
+			jm.logger.Info(fmt.Sprintf("Cancelled pending job %d due to shutdown", job.ID))
+		}
+	}
+
+	jm.logger.Info(fmt.Sprintf("Cancelled %d running jobs and %d pending jobs", len(runningJobs), len(pendingJobs)))
+	return nil
 }
