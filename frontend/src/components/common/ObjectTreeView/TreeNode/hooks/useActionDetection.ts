@@ -33,7 +33,7 @@ export const useActionDetection = (
       queryClient.invalidateQueries({
         queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, variables.nodeId]
       });
-      await reloadTree();
+      await reloadTree(false);
     }
   });
 
@@ -105,7 +105,7 @@ export const useActionDetection = (
           }
 
           if (node.action.name === 'refresh') {
-            await reloadTree();
+            await reloadTree(false);
           }
 
           break;

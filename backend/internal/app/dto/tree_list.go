@@ -4,8 +4,9 @@ import "github.com/invopop/validation"
 
 type (
 	TreeListRequest struct {
-		ConnectionId int32
-		ParentId     string
+		ConnectionId int32  `json:"connectionId"`
+		ParentId     string `json:"parentId"`
+		FromCache    *bool  `json:"fromCache"`
 	}
 
 	ObjectTabsRequest struct {

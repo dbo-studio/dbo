@@ -1,7 +1,7 @@
 import api from '@/api';
 import type { TreeNodeType } from '@/api/tree/types';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
-import { MenuType } from '@/components/base/ContextMenu/types';
+import type { MenuType } from '@/components/base/ContextMenu/types';
 import Search from '@/components/base/Search/Search';
 import { useContextMenu, useCurrentConnection } from '@/hooks';
 import { useTreeStore } from '@/store/treeStore/tree.store';
@@ -35,7 +35,7 @@ export default function ObjectTreeView(): JSX.Element {
 
   useEffect(() => {
     if (!treeError && !tree && !isLoading && currentConnection?.id) {
-      reloadTree();
+      reloadTree(true);
     } else if (isLoading) {
       toggleIsLoading(false);
     }
@@ -47,7 +47,8 @@ export default function ObjectTreeView(): JSX.Element {
 
       const nodes = await getChildrenMutation({
         parentId,
-        connectionId: currentConnection?.id || 0
+        connectionId: currentConnection?.id || 0,
+        fromCache: true
       });
       return nodes?.children || [];
     } catch (error) {

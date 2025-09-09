@@ -45,7 +45,7 @@ export default function ConnectionInfo(): JSX.Element {
       return;
     }
 
-    reloadTree();
+    reloadTree(false);
 
     if (!selectedTab) return;
 

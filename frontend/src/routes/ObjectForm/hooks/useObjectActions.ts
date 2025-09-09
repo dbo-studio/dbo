@@ -34,7 +34,7 @@ export const useObjectActions = (): {
       queryClient.invalidateQueries({
         queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, action, tabId]
       });
-      reloadTree();
+      reloadTree(false);
     }
   });
 
