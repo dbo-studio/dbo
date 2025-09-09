@@ -29,6 +29,7 @@
     "monaco-sql-languages": "^0.15.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-markdown": "^10.1.0",
     "react-select": "^5.10.2",
     "shiki": "^3.9.2",
     "sonner": "^2.0.7",
@@ -59,8 +60,6 @@
     ]
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "*",
-    "@rollup/rollup-darwin-x64": "*",
-    "@rollup/rollup-win32-x64-msvc": "*"
+    "@rollup/rollup-linux-x64-gnu": "*"
   }
 }

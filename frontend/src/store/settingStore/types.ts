@@ -1,3 +1,5 @@
+import type { NewReleaseType } from '@/api/config/types';
+
 export type SettingStore = {
   sidebar: SidebarType;
   isDark: boolean | undefined;
@@ -13,6 +15,10 @@ export type SettingStore = {
   };
   enableEditorAi: boolean;
   titleBar: TitleBarType;
+  newReleaseVersion: {
+    ignore: boolean;
+    release: NewReleaseType | undefined;
+  };
   updateSidebar(sidebar: Partial<SidebarType>): void;
   toggleIsDark(isDark?: boolean): void;
   toggleDebug(debug?: boolean): void;
@@ -24,6 +30,7 @@ export type SettingStore = {
   toggleEnableEditorAi(enable?: boolean): void;
   updateVersion(version: string): void;
   updateTitleBar(titleBar: Partial<TitleBarType>): void;
+  updateNewReleaseVersion(newReleaseVersion: NewReleaseType, ignore?: boolean): void;
 };
 
 export type TitleBarType = {

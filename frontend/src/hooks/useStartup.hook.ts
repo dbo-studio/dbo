@@ -12,6 +12,7 @@ export const useStartup = (): boolean => {
   const debug = useSettingStore((state) => state.debug);
   const updateProviders = useAiStore((state) => state.updateProviders);
   const updateVersion = useSettingStore((state) => state.updateVersion);
+  const updateNewReleaseVersion = useSettingStore((state) => state.updateNewReleaseVersion);
   const resetTree = useTreeStore((state) => state.reset);
 
   const { isLoading: isLoadingConfig } = useQuery({
@@ -20,6 +21,9 @@ export const useStartup = (): boolean => {
       const config = await api.config.getConfig();
       updateProviders(config.providers);
       updateVersion(config.version);
+      if (config.newReleaseVersion) {
+        updateNewReleaseVersion(config.newReleaseVersion);
+      }
       return config;
     }
   });

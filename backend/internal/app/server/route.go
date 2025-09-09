@@ -8,6 +8,7 @@ func (r *Server) routing() {
 	api := r.app.Group("/api")
 
 	api.Get("/config", r.handlers.Config.Config)
+	api.Get("/config/check-update", r.handlers.Config.CheckUpdate)
 
 	tree := api.Group("tree")
 	tree.Get("/", r.handlers.TreeHandler.TreeHandler)

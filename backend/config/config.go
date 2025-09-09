@@ -5,11 +5,13 @@ import (
 )
 
 type App struct {
-	Name         string
-	Port         string
-	Env          string
-	DatabaseName string
-	Version      string
+	Name          string
+	Port          string
+	Env           string
+	DatabaseName  string
+	Version       string
+	ReleaseUrlApi string
+	ReleaseUrl    string
 }
 
 type Sentry struct {
@@ -26,11 +28,13 @@ var config *Config
 func New() *Config {
 	config = &Config{
 		App: App{
-			Name:         "dbo",
-			Port:         os.Getenv("APP_PORT"),
-			Env:          os.Getenv("APP_ENV"),
-			Version:      "0.2.5",
-			DatabaseName: "dbo.db",
+			Name:          "dbo",
+			Port:          os.Getenv("APP_PORT"),
+			Env:           os.Getenv("APP_ENV"),
+			Version:       "0.2.4",
+			DatabaseName:  "dbo.db",
+			ReleaseUrlApi: "https://dbo-studio.com/api/config",
+			ReleaseUrl:    "https://dbo-studio.com/releases",
 		},
 		Sentry: Sentry{
 			Dsn: os.Getenv("SENTRY_DNS"),

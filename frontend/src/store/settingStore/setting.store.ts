@@ -1,6 +1,7 @@
+import type { NewReleaseType } from '@/api/config/types';
+import { constants } from '@/core/constants';
 import { create, type StoreApi, type UseBoundStore } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { constants } from '@/core/constants';
 import type { SettingStore, SidebarType, TitleBarType } from './types';
 
 type SettingState = SettingStore;
@@ -30,7 +31,11 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
         titleBar: {
           paddingLeft: 16,
           paddingTop: 8,
-          onHeaderAreaClick: () => { }
+          onHeaderAreaClick: () => {}
+        },
+        newReleaseVersion: {
+          ignore: false,
+          release: undefined
         },
         updateVersion: (version: string): void => {
           set({ version: version }, undefined, 'updateVersion');
@@ -90,6 +95,18 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
         updateTitleBar: (titleBar: Partial<TitleBarType>): void => {
           const newTitleBar = { ...get().titleBar, ...titleBar };
           set({ titleBar: newTitleBar }, undefined, 'updateTitleBar');
+        },
+        updateNewReleaseVersion: (newReleaseVersion: NewReleaseType, ignore?: boolean): void => {
+          const release = get().newReleaseVersion;
+          if (ignore === undefined && get().newReleaseVersion.release?.name === newReleaseVersion.name) {
+            release.ignore = get().newReleaseVersion.ignore;
+          } else {
+            release.ignore = ignore || false;
+          }
+          release.release = newReleaseVersion;
+
+          set({ newReleaseVersion: release }, undefined, 'updateNewReleaseVersion');
+          set({ newReleaseVersion: release }, undefined, 'updateNewReleaseVersion');
         }
       }),
       { name: 'settings' }

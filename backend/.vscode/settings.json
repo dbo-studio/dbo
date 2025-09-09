@@ -14,6 +14,7 @@
         "rolname",
         "RTRIM",
         "samber",
+        "sqlparser",
         "Tablespace",
         "VARBIT",
         "varchar",

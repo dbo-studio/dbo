@@ -171,5 +171,7 @@
 	"enable_ai": "Enable AI",
 	"disable_ai": "Disable AI",
 	"add_model": "Add model",
-	"drag_and_drop_file": "Drag and drop file or"
+	"drag_and_drop_file": "Drag and drop file or",
+	"new_version_available": "New version available",
+	"ignore_this_update": "Ignore this update"
 }
