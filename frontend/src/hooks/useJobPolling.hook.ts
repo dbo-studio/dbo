@@ -9,6 +9,7 @@ type JobType = {
   progress: number;
   message: string;
   error?: string;
+  result?: any;
 };
 
 type UseJobPollingOptions = {
@@ -27,13 +28,12 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const { mutateAsync: getJobMutation } = useMutation({
-    mutationFn: api.job.detail,
+    mutationFn: api.job.detail
   });
 
   const { mutateAsync: cancelJobMutation } = useMutation({
-    mutationFn: api.job.cancel,
+    mutationFn: api.job.cancel
   });
-
 
   useEffect(() => {
     if (!jobId) {

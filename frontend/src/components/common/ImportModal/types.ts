@@ -5,11 +5,10 @@ export type ImportModalProps = {
   onClose: () => void;
 };
 
-
 export type ImportButtonProps = {
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
 export type ImportButtonStyledProps = {
   drag?: boolean;
-}
+};

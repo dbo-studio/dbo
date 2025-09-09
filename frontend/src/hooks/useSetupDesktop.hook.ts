@@ -16,7 +16,10 @@ export const useSetupDesktop = (): boolean => {
     tools
       .isTauri()
       .then((e) => {
-        if (!e) return;
+        if (!e) {
+          setLoaded(true);
+          return;
+        }
         reset();
         setup().then(() => {
           setLoaded(true);
@@ -94,7 +97,7 @@ const setupTitleBar = async (): Promise<void> => {
 
   updateTitleBar({
     paddingLeft: 80,
-    paddingTop: 4,
+    paddingTop: 8,
     onHeaderAreaClick: async () => {
       const window = getCurrentWebviewWindow();
       await window.startDragging();
@@ -108,12 +111,12 @@ const setupTitleBar = async (): Promise<void> => {
         if (isFullscreen) {
           updateTitleBar({
             paddingLeft: 16,
-            paddingTop: 4
+            paddingTop: 8
           });
         } else {
           updateTitleBar({
             paddingLeft: 80,
-            paddingTop: 4
+            paddingTop: 8
           });
         }
       });

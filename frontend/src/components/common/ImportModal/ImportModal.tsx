@@ -27,9 +27,8 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
   const [jobId, setJobId] = useState<string | null>(null);
 
   const { mutateAsync: importDataMutation } = useMutation({
-    mutationFn: api.importExport.importData,
+    mutationFn: api.importExport.importData
   });
-
 
   const form = useForm({
     validators: {
@@ -93,14 +92,16 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
             <form.Field name='file'>
               {(field) => (
                 <Box>
-                  <ImportButton onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    if (file) {
-                      field.handleChange(file);
-                      const detectedFormat = getFileFormat(file.name);
-                      form.setFieldValue('format', detectedFormat);
-                    }
-                  }} />
+                  <ImportButton
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) {
+                        field.handleChange(file);
+                        const detectedFormat = getFileFormat(file.name);
+                        form.setFieldValue('format', detectedFormat);
+                      }
+                    }}
+                  />
                   <FormError mb={1} errors={field.state.meta.errors} />
                 </Box>
               )}

@@ -21,7 +21,7 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
   const [savePath, setSavePath] = useState('');
 
   const { mutateAsync: exportDataMutation } = useMutation({
-    mutationFn: api.importExport.exportData,
+    mutationFn: api.importExport.exportData
   });
 
   useEffect(() => {
