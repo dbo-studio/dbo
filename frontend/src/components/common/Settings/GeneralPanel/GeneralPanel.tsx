@@ -5,7 +5,6 @@ import { CheckUpdate } from './CheckUpdate/CheckUpdate';
 import { DebugMode } from './DebugMode/DebugMode';
 import { ShowLogs } from './ShowLogs/ShowLogs';
 
-
 export default function GeneralPanel(): JSX.Element {
   return (
     <Box>
@@ -17,8 +16,6 @@ export default function GeneralPanel(): JSX.Element {
       <CheckUpdate />
       <DebugMode />
       <ShowLogs />
-
-
 
       {/*<Box mt={1}>*/}
       {/*  <Box display={'flex'} mb={1} flexDirection={'row'} alignItems={'center'} justifyContent={'space-between'}>*/}

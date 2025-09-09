@@ -13,24 +13,21 @@ export default function Leading(): JSX.Element {
 
   return (
     <Stack spacing={2} direction='row' justifyContent='flex-start'>
-      {
-        release ? (
-          <Tooltip title={locales.new_version_available}>
-            <IconButton aria-label='settings' onClick={openSettings}>
-              <Badge variant='dot' color='warning'>
-                <CustomIcon type={'settings'} size={'m'} />
-              </Badge>
-            </IconButton>
-          </Tooltip>
-        ) :
-          (
-            <Tooltip title={locales.settings}>
-              <IconButton aria-label='settings' onClick={openSettings}>
-                <CustomIcon type={'settings'} size={'m'} />
-              </IconButton>
-            </Tooltip>
-          )
-      }
+      {release ? (
+        <Tooltip title={locales.new_version_available}>
+          <IconButton aria-label='settings' onClick={openSettings}>
+            <Badge variant='dot' color='warning'>
+              <CustomIcon type={'settings'} size={'m'} />
+            </Badge>
+          </IconButton>
+        </Tooltip>
+      ) : (
+        <Tooltip title={locales.settings}>
+          <IconButton aria-label='settings' onClick={openSettings}>
+            <CustomIcon type={'settings'} size={'m'} />
+          </IconButton>
+        </Tooltip>
+      )}
     </Stack>
   );
 }

@@ -43,7 +43,7 @@ export const useStartup = (): boolean => {
       import('eruda').then((eruda) => {
         try {
           eruda.default.init();
-        } catch (_) { }
+        } catch (_) {}
       });
     }
   }, [debug]);

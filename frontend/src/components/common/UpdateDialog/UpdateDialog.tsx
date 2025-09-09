@@ -42,7 +42,7 @@ export default function UpdateDialog() {
   }
 
   return (
-    <Modal title={locales.new_version_available} open={show} onClose={() => { }}>
+    <Modal title={locales.new_version_available} open={show} onClose={() => {}}>
       <Box flex={1} display={'flex'} flexDirection={'column'} overflow={'scroll'}>
         <UpdateDialogStyled>
           <Markdown>{release.body}</Markdown>

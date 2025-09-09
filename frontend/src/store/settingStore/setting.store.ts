@@ -30,7 +30,7 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
         titleBar: {
           paddingLeft: 16,
           paddingTop: 8,
-          onHeaderAreaClick: () => { }
+          onHeaderAreaClick: () => {}
         },
         ignoredRelease: '',
         general: {
