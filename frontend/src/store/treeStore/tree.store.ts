@@ -26,9 +26,7 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
           const currentConnection = getCurrentConnectionId();
           if (!currentConnection) return;
 
-          set((state) => ({
-            tree: { ...state.tree, [currentConnection]: tree }
-          }));
+          set({ tree: { ...get().tree, [currentConnection]: tree } }, undefined, 'setTree');
         },
 
         getTree: (): TreeNodeType | null => {
@@ -42,12 +40,16 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
           const currentConnection = getCurrentConnectionId();
           if (!currentConnection) return;
 
-          set((state) => ({
-            expandedNodes: {
-              ...state.expandedNodes,
-              [currentConnection]: [...(state.expandedNodes[currentConnection] || []), nodeId]
-            }
-          }));
+          set(
+            {
+              expandedNodes: {
+                ...get().expandedNodes,
+                [currentConnection]: [...(get().expandedNodes[currentConnection] || []), nodeId]
+              }
+            },
+            undefined,
+            'expandNode'
+          );
         },
 
         collapseNode: (nodeId: string): void => {
@@ -137,35 +139,37 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
           const currentConnection = getCurrentConnectionId();
           if (!currentConnection) return;
 
-          set((state) => {
-            const currentTree = state.tree[currentConnection];
-            if (!currentTree) return state;
+          const currentTree = get().tree[currentConnection];
+          if (!currentTree) return;
 
-            const updateNodeChildren = (node: TreeNodeType): TreeNodeType => {
-              if (node.id === nodeId) {
-                return { ...node, children };
-              }
+          const updateNodeChildren = (node: TreeNodeType): TreeNodeType => {
+            if (node.id === nodeId) {
+              return { ...node, children };
+            }
 
-              if (node.children.length === 0) {
-                return node;
-              }
-
-              return {
-                ...node,
-                children: node.children.map(updateNodeChildren)
-              };
-            };
+            if (node.children.length === 0) {
+              return node;
+            }
 
             return {
+              ...node,
+              children: node.children.map(updateNodeChildren)
+            };
+          };
+
+          set(
+            {
               tree: {
-                ...state.tree,
+                ...get().tree,
                 [currentConnection]: updateNodeChildren(currentTree)
               }
-            };
-          });
+            },
+            undefined,
+            'setNodeChildren'
+          );
         },
 
-        reloadTree: async (): Promise<void> => {
+        reloadTree: async (fromCache: boolean): Promise<void> => {
           const currentConnection = getCurrentConnectionId();
           if (!currentConnection || get().isLoading) return;
 
@@ -174,7 +178,8 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
           try {
             const treeData = await getTree({
               parentId: null,
-              connectionId: currentConnection || 0
+              connectionId: currentConnection || 0,
+              fromCache
             });
 
             if (!treeData) {
@@ -190,7 +195,8 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
               try {
                 const childrenData = await api.tree.getTree({
                   parentId,
-                  connectionId: currentConnection || 0
+                  connectionId: currentConnection || 0,
+                  fromCache
                 });
 
                 if (childrenData?.children) {
@@ -209,6 +215,13 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
         },
         toggleIsLoading(isLoading: boolean): void {
           set({ isLoading });
+        },
+        reset: (): void => {
+          set(
+            { tree: {}, expandedNodes: {}, loadedParentIds: {}, isLoading: false, treeError: undefined },
+            undefined,
+            'reset'
+          );
         }
       }),
       {

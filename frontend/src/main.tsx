@@ -14,39 +14,26 @@ import './components/base/SqlEditor/helpers/languageSetup.ts';
 import ThemeProvider from './core/theme/index.tsx';
 import Home from './routes/index.tsx';
 
-enableMocking().then(() => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        refetchOnWindowFocus: false,
-        refetchOnMount: false,
-        retry: false
-      }
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      retry: false
     }
-  });
-
-  // biome-ignore lint: reason
-  ReactDOM.createRoot(document.getElementById('root')!).render(
-    <React.StrictMode>
-      <ThemeProvider>
-        <GlobalStyles styles={(theme: Theme): Interpolation<Theme> => globalStyles(theme)} />
-        <CssBaseline />
-        <QueryClientProvider client={queryClient}>
-          <Home />
-        </QueryClientProvider>
-        <Toaster position='bottom-center' duration={5000} richColors closeButton={true} />
-      </ThemeProvider>
-    </React.StrictMode>
-  );
+  }
 });
 
-// biome-ignore lint/nursery/useExplicitType: <explanation>
-async function enableMocking() {
-  if (process.env.NODE_ENV !== 'development') {
-    return;
-  }
-
-  const { worker } = await import('./core/mocks/browser.ts');
-
-  return worker.start();
-}
+// biome-ignore lint: reason
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <ThemeProvider>
+      <GlobalStyles styles={(theme: Theme): Interpolation<Theme> => globalStyles(theme)} />
+      <CssBaseline />
+      <QueryClientProvider client={queryClient}>
+        <Home />
+      </QueryClientProvider>
+      <Toaster position='bottom-center' duration={5000} richColors closeButton={true} />
+    </ThemeProvider>
+  </React.StrictMode>
+);

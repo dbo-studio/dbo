@@ -2,8 +2,6 @@ FROM node:24 as frontend
 
 ARG RELEASE="release"
 
-ENV VITE_VERSION=${VITE_VERSION}
-
 WORKDIR /frontend
 
 COPY ./frontend .
@@ -12,7 +10,7 @@ RUN npm i -g typescript
 RUN npm i --force
 RUN npm run build
 
-FROM golang:1.24-alpine as backend
+FROM golang:1.25-alpine as backend
 
 ENV APP_PORT=${APP_PORT}
 ENV APP_ENV=docker

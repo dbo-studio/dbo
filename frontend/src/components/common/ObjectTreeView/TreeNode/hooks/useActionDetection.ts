@@ -1,7 +1,7 @@
 import api from '@/api';
 import type { TreeNodeType } from '@/api/tree/types';
 import { TabMode } from '@/core/enums';
-import { useCopyToClipboard, useCurrentConnection } from '@/hooks';
+import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -9,6 +9,7 @@ import { useTreeStore } from '@/store/treeStore/tree.store';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
+import { useCopyToClipboard } from 'usehooks-ts';
 
 export const useActionDetection = (
   expandNode: (event: React.MouseEvent, focus?: boolean) => Promise<void>
@@ -21,10 +22,9 @@ export const useActionDetection = (
 
   const addTab = useTabStore((state) => state.addTab);
   const addObjectTab = useTabStore((state) => state.addObjectTab);
-  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
   const reloadTree = useTreeStore((state) => state.reloadTree);
 
-  const [copy] = useCopyToClipboard();
+  const [_, copy] = useCopyToClipboard();
 
   const { mutateAsync: executeActionMutation, isPending: pendingExecuteAction } = useMutation({
     mutationFn: api.tree.executeAction,
@@ -33,10 +33,7 @@ export const useActionDetection = (
       queryClient.invalidateQueries({
         queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, variables.nodeId]
       });
-      await reloadTree();
-    },
-    onError: (error: Error): void => {
-      console.error('🚀 ~ actionDetection:', error);
+      await reloadTree(false);
     }
   });
 
@@ -51,18 +48,15 @@ export const useActionDetection = (
         case 'tab': {
           switch (node.action.params.path) {
             case 'object': {
-              const tab = addObjectTab(node.action.title, node.id, node.action.name, TabMode.Object);
-              updateSelectedTab(tab);
+              addObjectTab(node.action.title, node.id, node.action.name, TabMode.Object);
               break;
             }
             case 'object-detail': {
-              const tab = addObjectTab(node.action.title, node.id, node.action.name, TabMode.ObjectDetail);
-              updateSelectedTab(tab);
+              addObjectTab(node.action.title, node.id, node.action.name, TabMode.ObjectDetail);
               break;
             }
             case 'data': {
-              const tab = addTab(node.action.params.table, node.id, node.action.params.editable);
-              updateSelectedTab(tab);
+              addTab(node.action.params.table, node.id, node.action.params.editable);
               break;
             }
           }
@@ -94,7 +88,7 @@ export const useActionDetection = (
 
                 toast.success(locales.action_executed_successfully);
               } catch (error) {
-                console.log('🚀 ~ handleCopy ~ error:', error);
+                console.debug('🚀 ~ actionDetection ~ error:', error);
               }
             }
           );
@@ -106,12 +100,12 @@ export const useActionDetection = (
               await copy(node.name);
               toast.success(locales.copied);
             } catch (error) {
-              console.log('🚀 ~ handleCopy ~ error:', error);
+              console.debug('🚀 ~ handleCopy ~ error:', error);
             }
           }
 
           if (node.action.name === 'refresh') {
-            await reloadTree();
+            await reloadTree(false);
           }
 
           break;

@@ -15,6 +15,7 @@ export type TreeStore = {
   setNodeChildren: (nodeId: string, children: TreeNodeType[]) => void;
   addLoadedParentId: (parentId: string) => void;
   getLoadedParentIds: () => string[];
-  reloadTree: () => Promise<void>;
+  reloadTree: (fromCache: boolean) => Promise<void>;
   toggleIsLoading: (isLoading: boolean) => void;
+  reset: () => void;
 };

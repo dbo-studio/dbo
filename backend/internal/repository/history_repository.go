@@ -34,7 +34,7 @@ func (h IHistoryRepoImpl) Index(_ context.Context, req *dto.HistoryListRequest) 
 	return &histories, nil
 }
 
-func (h IHistoryRepoImpl) Create(ctx context.Context, connectionID uint, query string) error {
+func (h IHistoryRepoImpl) Create(_ context.Context, connectionID uint, query string) error {
 	return h.db.Session(&gorm.Session{
 		NewDB:                  true,
 		SkipHooks:              true,
@@ -45,6 +45,6 @@ func (h IHistoryRepoImpl) Create(ctx context.Context, connectionID uint, query s
 	}).Error
 }
 
-func (I IHistoryRepoImpl) DeleteAll(_ context.Context, connectionID uint) error {
-	return I.db.Where("connection_id = ?", connectionID).Delete(&model.History{}).Error
+func (I IHistoryRepoImpl) DeleteAll(ctx context.Context, connectionID uint) error {
+	return I.db.WithContext(ctx).Where("connection_id = ?", connectionID).Delete(&model.History{}).Error
 }

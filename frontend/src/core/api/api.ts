@@ -25,7 +25,7 @@ api.interceptors.response.use(
       }
     } else if (error.request) {
       toast.error('Network error. Please check your connection.');
-    } else {
+    } else if (error.code !== 'ERR_CANCELED') {
       toast.error('An unexpected error occurred.');
     }
 

@@ -96,7 +96,7 @@ export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuP
         <Stack width={'100%'} alignItems={'center'} justifyContent={'space-between'} direction={'row'}>
           {m.name}
           <Stack direction={'row'} spacing={1}>
-            {m.children && <CustomIcon type='arrowRight' />}
+            {m.children && <CustomIcon type='chevronRight' />}
             {m.icon && <CustomIcon type={m.icon} />}
           </Stack>
         </Stack>

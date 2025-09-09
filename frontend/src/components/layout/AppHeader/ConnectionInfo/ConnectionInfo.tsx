@@ -1,15 +1,15 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton.tsx';
 import Settings from '@/components/common/Settings/Settings';
 import { TabMode } from '@/core/enums';
 import { shortcuts } from '@/core/utils';
 import { useCurrentConnection, useShortcut } from '@/hooks';
+import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store.ts';
-import { Grid, IconButton, Stack } from '@mui/material';
+import { Grid, IconButton, Stack, Tooltip } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 import type { JSX } from 'react';
 import ConnectionBox from './ConnectionBox/ConnectionBox';
@@ -46,7 +46,7 @@ export default function ConnectionInfo(): JSX.Element {
       return;
     }
 
-    reloadTree();
+    reloadTree(false);
 
     if (!selectedTab) return;
 
@@ -62,12 +62,14 @@ export default function ConnectionInfo(): JSX.Element {
 
   return (
     <Stack direction={'row'} justifyContent={'center'} alignItems={'center'}>
-      <Settings open={showSettings} />
+      <Settings open={showSettings.open} />
       <Grid size={{ md: 3 }}>
         <Stack direction={'row'} justifyContent='flex-end'>
-          <IconButton aria-label='connections' onClick={(): void => toggleShowAddConnection(true)}>
-            <CustomIcon type={'connection'} size={'m'} />
-          </IconButton>
+          <Tooltip title={locales.connections}>
+            <IconButton data-testid='add-connection' onClick={(): void => toggleShowAddConnection(true)}>
+              <CustomIcon type={'connection'} size={'m'} />
+            </IconButton>
+          </Tooltip>
           {/* <IconButton aria-label='lock'>
             <CustomIcon type={'lock'} size={'m'} />
           </IconButton> */}
@@ -79,17 +81,21 @@ export default function ConnectionInfo(): JSX.Element {
 
       <Grid size={{ md: 3 }}>
         <Stack direction={'row'} justifyContent='flex-start'>
-          <LoadingIconButton
-            aria-label={'refresh'}
-            onClick={handleRefresh}
-            loading={loading === 'loading'}
-            disabled={loading === 'loading'}
-          >
-            <CustomIcon type={'refresh'} />
-          </LoadingIconButton>
-          <IconButton aria-label={'sql'} disabled={!currentConnection} onClick={handleAddEditorTab}>
-            <CustomIcon type={'sql'} size={'m'} />
-          </IconButton>
+          <Tooltip title={locales.refresh}>
+            <IconButton
+              aria-label={'refresh'}
+              onClick={handleRefresh}
+              loading={loading === 'loading'}
+              disabled={loading === 'loading'}
+            >
+              <CustomIcon type={'refresh'} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={locales.open_editor}>
+            <IconButton aria-label={'sql'} disabled={!currentConnection} onClick={handleAddEditorTab}>
+              <CustomIcon type={'sql'} size={'m'} />
+            </IconButton>
+          </Tooltip>
         </Stack>
       </Grid>
     </Stack>

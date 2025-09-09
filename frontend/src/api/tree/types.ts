@@ -1,6 +1,7 @@
 export type TreeRequestType = {
   connectionId: number;
   parentId: string | null;
+  fromCache?: boolean;
 };
 
 export type TreeResponseType = TreeNodeType;

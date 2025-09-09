@@ -1,6 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { ExportModal } from '@/components/common/ExportModal/ExportButton';
-import { ImportModal } from '@/components/common/ImportModal/ImportButton';
+import { ExportModal } from '@/components/common/ExportModal/ExportModal';
+import { ImportModal } from '@/components/common/ImportModal/ImportModal';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, Grid, IconButton, Stack, useTheme } from '@mui/material';
@@ -86,7 +86,6 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
   return (
     <Box>
       <Stack
-        id='action-bar'
         borderBottom={`1px solid ${theme.palette.divider}`}
         borderTop={`1px solid ${theme.palette.divider}`}
         padding=' 8px'

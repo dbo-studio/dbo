@@ -24,6 +24,10 @@ func (h *TreeHandler) TreeHandler(c fiber.Ctx) error {
 		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}
 
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
 	result, err := h.treeService.Tree(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())

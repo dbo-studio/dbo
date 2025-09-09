@@ -5,14 +5,17 @@ export type SavedQueryItemProps = {
   selected: boolean;
   onClick: () => void;
   onChange: () => void;
+  context: (event: React.MouseEvent) => void;
+  isEditMode: boolean;
+  onEditMode: (isEditMode: boolean) => void;
 };
 
 export type SavedQueryContextMenuProps = {
   query: SavedQueryType;
   contextMenu: ContextMenuType;
   onClose: () => void;
-  onDelete: () => void;
-  onChange: () => void;
+  onChange: () => Promise<void>;
+  onEditMode: (isEditMode: boolean) => void;
 };
 
 export type SavedQueryItemStyledProps = {

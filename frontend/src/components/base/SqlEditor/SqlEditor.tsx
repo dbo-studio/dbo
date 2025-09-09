@@ -1,11 +1,10 @@
 import type { SqlEditorProps } from '@/components/base/SqlEditor/types.ts';
-import * as monaco from 'monaco-editor';
-import { LanguageIdEnum } from 'monaco-sql-languages';
-
 import { shortcuts } from '@/core/utils/shortcuts.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { Box } from '@mui/material';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import { LanguageIdEnum } from 'monaco-sql-languages';
 import type { JSX } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { changeMetaProviderSetting } from './helpers/dbMetaProvider.ts';
@@ -22,6 +21,7 @@ export default function SqlEditor({
   const hostRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
   const [mount, setMount] = useState(false);
+  const inlineTriggerTimerRef = useRef<number | null>(null);
   const isDark = useSettingStore((state) => state.isDark);
   const selectedTabId = useTabStore((state) => state.selectedTabId);
 
@@ -48,6 +48,19 @@ export default function SqlEditor({
       if (currentValue && currentValue !== value.toString()) {
         onChange?.(currentValue);
       }
+      // Debounced trigger for inline suggestions (ghost text)
+      if (inlineTriggerTimerRef.current) {
+        window.clearTimeout(inlineTriggerTimerRef.current);
+      }
+      inlineTriggerTimerRef.current = window.setTimeout(() => {
+        try {
+          const text = editorRef.current?.getValue() ?? '';
+          if (text.trim().length === 0) return;
+          editorRef.current?.trigger('inlineAI', 'editor.action.inlineSuggest.trigger', {});
+        } catch (_) {
+          /* noop */
+        }
+      }, 500);
     });
 
     editorRef.current?.onDidBlurEditorText(() => {

@@ -1,4 +1,5 @@
 import api from '@/api';
+import { useMutation } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 type JobType = {
@@ -8,11 +9,7 @@ type JobType = {
   progress: number;
   message: string;
   error?: string;
-  data?: any;
   result?: any;
-  createdAt: string;
-  startedAt?: string;
-  completedAt?: string;
 };
 
 type UseJobPollingOptions = {
@@ -30,7 +27,13 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { pollingInterval = 1000 } = options;
+  const { mutateAsync: getJobMutation } = useMutation({
+    mutationFn: api.job.detail
+  });
+
+  const { mutateAsync: cancelJobMutation } = useMutation({
+    mutationFn: api.job.cancel
+  });
 
   useEffect(() => {
     if (!jobId) {
@@ -43,13 +46,11 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
 
     const initialFetch = async () => {
       try {
-        const response = await api.job.detail(jobId);
-        const jobData = response;
+        const jobData = await getJobMutation(jobId);
 
         setJob(jobData);
         setError(null);
 
-        // Call callbacks
         options.onStatusChange?.(jobData.status, jobData.message);
         options.onProgress?.(jobData.progress, jobData.message);
 
@@ -61,12 +62,10 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
           options.onError?.(jobData.error);
         }
 
-        // Check if job is completed
         if (jobData.status === 'completed' || jobData.status === 'failed' || jobData.status === 'cancelled') {
           setIsPolling(false);
-          // Only call onComplete if this is the first time we see the completed status
           options.onComplete?.(jobData);
-          return; // Stop polling
+          return;
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch job status');
@@ -77,16 +76,12 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
     initialFetch();
 
     intervalRef.current = setInterval(async () => {
-      console.log('Polling interval triggered for jobId:', jobId);
       try {
-        const response = await api.job.detail(jobId);
-        const jobData = response; // getJobStatus already returns the job data
-        console.log('Job status response:', jobData);
+        const jobData = await getJobMutation(jobId);
 
         setJob(jobData);
         setError(null);
 
-        // Call callbacks
         options.onStatusChange?.(jobData.status, jobData.message);
         options.onProgress?.(jobData.progress, jobData.message);
 
@@ -98,45 +93,39 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
           options.onError?.(jobData.error);
         }
 
-        // Check if job is completed
         if (jobData.status === 'completed' || jobData.status === 'failed' || jobData.status === 'cancelled') {
           setIsPolling(false);
-          // Clear interval when job is completed
           if (intervalRef.current) {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
           }
-          // Only call onComplete if this is the first time we see the completed status
           options.onComplete?.(jobData);
-          return; // Stop polling
+          return;
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch job status');
-        console.error('Error fetching job status:', err);
+        console.debug('🚀 ~ useJobPolling ~ err:', err);
       }
-    }, pollingInterval);
+    }, options.pollingInterval || 1000);
 
     return () => {
-      console.log('Cleaning up polling for jobId:', jobId);
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
       setIsPolling(false);
     };
-  }, [jobId, pollingInterval]);
+  }, [jobId, options.pollingInterval || 1000]);
 
   const cancelJob = useCallback(async () => {
     if (!jobId) return;
 
     try {
-      await api.job.cancel(jobId);
-      // Fetch updated status
-      const response = await api.job.detail(jobId);
-      const jobData = response.data;
+      await cancelJobMutation(jobId);
+      const jobData = await getJobMutation(jobId);
       setJob(jobData);
     } catch (err) {
-      console.error('Error cancelling job:', err);
+      console.debug('🚀 ~ useJobPolling ~ err:', err);
     }
   }, [jobId]);
 

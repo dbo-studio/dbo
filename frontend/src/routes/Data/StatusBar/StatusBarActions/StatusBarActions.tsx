@@ -1,6 +1,5 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton';
 import { TabMode } from '@/core/enums';
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { createEmptyRow } from '@/core/utils';
@@ -33,9 +32,6 @@ export default function StatusBarActions(): JSX.Element {
     mutationFn: api.query.updateQuery,
     onSuccess: async (): Promise<void> => {
       handleRefresh();
-    },
-    onError: (error: Error): void => {
-      console.error('🚀 ~ updateQueryMutation ~ error:', error);
     }
   });
 
@@ -67,7 +63,7 @@ export default function StatusBarActions(): JSX.Element {
 
         toast.success(`${locales.changes_saved_successfully}. ${locales.row_affected}: ${res.rowAffected}`);
       } catch (error) {
-        console.log(error);
+        console.debug('🚀 ~ handleSave ~ error:', error);
       }
     }
   };
@@ -136,21 +132,17 @@ export default function StatusBarActions(): JSX.Element {
         </IconButton>
       </Box>
       <Box ml={1} mr={1}>
-        <LoadingIconButton onClick={handleSave}>
+        <IconButton onClick={handleSave}>
           <CustomIcon type='check' size='s' />
-        </LoadingIconButton>
+        </IconButton>
         <IconButton onClick={handleDiscardChanges} disabled={updateQueryPending || isDataFetching}>
           <CustomIcon type='close' size='s' />
         </IconButton>
       </Box>
       <Box>
-        <LoadingIconButton
-          loading={isDataFetching}
-          disabled={updateQueryPending || isDataFetching}
-          onClick={handleRefresh}
-        >
+        <IconButton loading={isDataFetching} disabled={updateQueryPending || isDataFetching} onClick={handleRefresh}>
           <CustomIcon type='refresh' size='s' />
-        </LoadingIconButton>
+        </IconButton>
 
         {/* <IconButton>
           <CustomIcon type='stop' size='s' />

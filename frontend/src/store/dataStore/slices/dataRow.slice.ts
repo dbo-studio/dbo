@@ -6,7 +6,7 @@ import type { DataColumnSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } f
 
 export const createDataRowSlice: StateCreator<
   DataStore & DataRowSlice & DataColumnSlice & DataUnsavedRowsSlice,
-  [],
+  [['zustand/devtools', never]],
   [],
   DataRowSlice
 > = (set, get) => ({
@@ -18,7 +18,7 @@ export const createDataRowSlice: StateCreator<
     const selectedTabId = useTabStore.getState().selectedTabId;
     if (!selectedTabId) return;
 
-    set({ rows });
+    set({ rows }, undefined, 'updateRows');
     debouncedSaveRows(selectedTabId, rows);
 
     return Promise.resolve();
@@ -31,7 +31,7 @@ export const createDataRowSlice: StateCreator<
 
     const newRows = rows.map((r) => (r.dbo_index === row.dbo_index ? row : r));
 
-    set({ rows: newRows });
+    set({ rows: newRows }, undefined, 'updateRow');
     debouncedSaveRows(selectedTabId, newRows);
 
     return Promise.resolve();

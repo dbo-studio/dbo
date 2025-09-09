@@ -34,10 +34,7 @@ export const useObjectActions = (): {
       queryClient.invalidateQueries({
         queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, action, tabId]
       });
-      reloadTree();
-    },
-    onError: (error): void => {
-      console.error('🚀 ~ handleSave ~ error:', error);
+      reloadTree(false);
     }
   });
 
@@ -123,7 +120,7 @@ export const useObjectActions = (): {
 
       toast.success(locales.changes_saved_successfully);
     } catch (error) {
-      console.error('🚀 ~ handleSave ~ error:', error);
+      console.debug('🚀 ~ handleSave ~ error:', error);
     }
   };
 

@@ -15,6 +15,7 @@ export type MenuPanelItemStyledProps = {
 export type MenuPanelProps = {
   tabs: MenuPanelTabType[];
   onChange: (el: JSX.Element | undefined) => void;
+  defaultTabId?: number;
 };
 
 export type MenuPanelTabType = {
@@ -33,4 +34,9 @@ export type ThemeItemProps = {
   isDark: boolean;
   selected: boolean;
   onClick: () => void;
+};
+
+export type SettingsProps = {
+  open: boolean;
+  tab?: number;
 };

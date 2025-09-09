@@ -12,7 +12,7 @@ import type {
 
 export const createDataRemovedRowsSlice: StateCreator<
   DataStore & DataRemovedRowsSlice & DataRowSlice & DataUnsavedRowsSlice & DataSelectedRowsSlice,
-  [],
+  [['zustand/devtools', never]],
   [],
   DataRemovedRowsSlice
 > = (set, get) => ({
@@ -22,7 +22,7 @@ export const createDataRemovedRowsSlice: StateCreator<
     if (!selectedTabId) return Promise.resolve();
 
     if (removedRows) {
-      set({ removedRows });
+      set({ removedRows }, undefined, 'updateRemovedRows');
       debouncedSaveRemovedRows(selectedTabId, removedRows ?? []);
       return Promise.resolve();
     }
@@ -37,7 +37,7 @@ export const createDataRemovedRowsSlice: StateCreator<
       .rows?.filter((r: RowType) => selectedIndexes.has(r.dbo_index) && !unsavedIndexes.has(r.dbo_index))
       .map((row) => (row.id ? { id: row.id, dbo_index: row.dbo_index } : row));
 
-    set({ removedRows: rows });
+    set({ removedRows: rows }, undefined, 'updateRemovedRows');
 
     get().discardUnsavedRows(unsavedRows);
     get().updateSelectedRows([], true);

@@ -1,7 +1,6 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import LoadingIconButton from '@/components/base/LoadingIconButton/LoadingIconButton';
-import { ExportModal } from '@/components/common/ExportModal/ExportButton';
+import { ExportModal } from '@/components/common/ExportModal/ExportModal';
 import { shortcuts, tools } from '@/core/utils';
 import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
@@ -32,9 +31,6 @@ export default function QueryEditorActions({ onFormat, onRunQuery, loading }: Qu
         queryKey: ['savedQueries', currentConnection?.id]
       });
       toast.success(locales.query_saved_successfully);
-    },
-    onError: (error: Error): void => {
-      console.error('🚀 ~ createSavedQueryMutation ~ error:', error);
     }
   });
 
@@ -60,7 +56,9 @@ export default function QueryEditorActions({ onFormat, onRunQuery, loading }: Qu
         connectionId: currentConnection?.id ?? 0,
         query: getQuery()
       });
-    } catch (error) {}
+    } catch (error) {
+      console.debug('🚀 ~ saveQuery ~ error:', error);
+    }
   };
 
   const checkQueryLength = (): boolean => {
@@ -99,9 +97,9 @@ export default function QueryEditorActions({ onFormat, onRunQuery, loading }: Qu
         </IconButton>
       </Tooltip>
       <Tooltip title={shortcuts.runQuery.command}>
-        <LoadingIconButton disabled={loading} loading={loading} color='primary' onClick={(): void => onRunQuery()}>
+        <IconButton disabled={loading} loading={loading} color='primary' onClick={(): void => onRunQuery()}>
           <CustomIcon type='play' />
-        </LoadingIconButton>
+        </IconButton>
       </Tooltip>
 
       <ExportModal

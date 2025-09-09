@@ -7,6 +7,10 @@ func (r *Server) routing() {
 
 	api := r.app.Group("/api")
 
+	api.Get("/config", r.handlers.Config.Config)
+	api.Get("/config/check-update", r.handlers.Config.CheckUpdate)
+	api.Get("/config/logs", r.handlers.Config.Logs)
+
 	tree := api.Group("tree")
 	tree.Get("/", r.handlers.TreeHandler.TreeHandler)
 	tree.Get("/:nodeId/tabs/:action", r.handlers.TreeHandler.Tabs)
@@ -20,6 +24,20 @@ func (r *Server) routing() {
 	query.Post("/update", r.handlers.QueryHandler.Update)
 	query.Get("/autocomplete", r.handlers.QueryHandler.Autocomplete)
 
+	ai := api.Group("ai")
+	ai.Post("/chat", r.handlers.AI.Chat)
+	ai.Post("/complete", r.handlers.AI.Complete)
+
+	aiProvider := ai.Group("providers")
+	aiProvider.Get("/", r.handlers.AiProvider.Providers)
+	aiProvider.Patch("/:id", r.handlers.AiProvider.Update)
+
+	aiChat := ai.Group("chats")
+	aiChat.Get("/", r.handlers.AiChat.Chats)
+	aiChat.Post("/", r.handlers.AiChat.Create)
+	aiChat.Get("/:id", r.handlers.AiChat.Detail)
+	aiChat.Delete("/:id", r.handlers.AiChat.Delete)
+
 	connection := api.Group("connections")
 	connection.Get("/:id", r.handlers.Connection.Detail)
 	connection.Get("/", r.handlers.Connection.Connections)
@@ -29,7 +47,7 @@ func (r *Server) routing() {
 	connection.Delete("/:id", r.handlers.Connection.Delete)
 
 	saved := api.Group("saved")
-	saved.Get("/", r.handlers.SavedQuery.Index)
+	saved.Get("/", r.handlers.SavedQuery.SavedQueries)
 	saved.Post("/", r.handlers.SavedQuery.Create)
 	saved.Patch("/:id", r.handlers.SavedQuery.Update)
 	saved.Delete("/:id", r.handlers.SavedQuery.Delete)

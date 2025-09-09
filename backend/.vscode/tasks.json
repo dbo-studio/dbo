@@ -1,0 +1,15 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "free_up_port",
+			"command": "lsof -ti:8080 | xargs kill -9",
+			"presentation": {
+				"reveal": "silent",
+				"revealProblems": "onProblem",
+				"close": true
+			}
+		}
+	]
+}

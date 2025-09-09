@@ -13,18 +13,22 @@ export const EndContainerStyled = styled(Box)(({ theme }) => ({
   borderLeft: `1px solid ${theme.palette.divider}`,
   borderTop: `1px solid ${theme.palette.divider}`,
   overflow: 'auto',
-  background: theme.palette.background.subdued
+  background: theme.palette.background.subdued,
+  display: 'flex',
+  flexDirection: 'column'
 }));
 
 export const StartContainerStyled = styled(Box)(({ theme }) => ({
   borderLeft: `1px solid ${theme.palette.divider}`,
-  overflow: 'auto'
+  overflow: 'hidden'
 }));
 
 export const ExplorerContainerStyled = styled(Box)(({ theme }) => ({
   padding: theme.spacing(1),
   borderBottom: `1px solid ${theme.palette.divider}`,
   borderRight: `1px solid ${theme.palette.divider}`,
-  overflow: 'auto',
+  overflow: 'hidden',
+  display: 'flex',
+  flexDirection: 'column',
   background: theme.palette.background.subdued
 }));

@@ -4,12 +4,13 @@ import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { TabType } from '@/types';
-import { Box, IconButton, Typography, useTheme } from '@mui/material';
+import { Box, IconButton, type Theme, Typography, useMediaQuery, useTheme } from '@mui/material';
 import type { JSX } from 'react';
 import PaginationSetting from './PaginationSetting/PaginationSetting';
 
 export default function StatusBarPagination(): JSX.Element {
   const theme = useTheme();
+  const matches = useMediaQuery((theme: Theme) => theme.breakpoints.up('sm'));
   const isDataFetching = useDataStore((state) => state.isDataFetching);
   const selectedTab = useSelectedTab();
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
@@ -38,7 +39,13 @@ export default function StatusBarPagination(): JSX.Element {
   };
 
   return (
-    <Box alignItems={'center'} justifyContent={'flex-end'} display={'flex'} flexDirection={'row'} width={208}>
+    <Box
+      alignItems={'center'}
+      justifyContent={'flex-end'}
+      display={matches ? 'flex' : 'none'}
+      flexDirection={'row'}
+      width={208}
+    >
       {selectedTab?.mode && selectedTab?.mode === TabMode.Data && (
         <>
           <PaginationSetting />
@@ -47,13 +54,13 @@ export default function StatusBarPagination(): JSX.Element {
             disabled={selectedTab?.pagination?.page === 1}
             onClick={(): void => handlePagination('prev')}
           >
-            <CustomIcon type='arrowLeft' size='s' />
+            <CustomIcon type='chevronLeft' size='s' />
           </IconButton>
           <Typography color={'textText'} fontWeight={'bold'} textAlign={'center'} minWidth={54}>
             {selectedTab?.pagination?.page ?? 1}
           </Typography>
           <IconButton onClick={(): void => handlePagination('next')}>
-            <CustomIcon type='arrowRight' size='s' />
+            <CustomIcon type='chevronRight' size='s' />
           </IconButton>
         </>
       )}

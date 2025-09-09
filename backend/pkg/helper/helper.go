@@ -39,7 +39,10 @@ func RawJsonToStruct[T any](value json.RawMessage) (T, error) {
 func FormatSQLValue(value interface{}) string {
 	switch v := value.(type) {
 	case string:
-		// Escape single quotes by doubling them
+		if isAlreadyQuoted(v) {
+			return v
+		}
+		// If not quoted, escape single quotes and add quotes
 		escaped := strings.ReplaceAll(v, "'", "''")
 		return fmt.Sprintf("'%s'", escaped)
 	case int, int8, int16, int32, int64:
@@ -55,4 +58,11 @@ func FormatSQLValue(value interface{}) string {
 		// For other types, use %v but convert to string first to avoid scientific notation
 		return fmt.Sprintf("'%s'", fmt.Sprintf("%v", v))
 	}
+}
+
+func isAlreadyQuoted(s string) bool {
+	if len(s) < 2 {
+		return false
+	}
+	return s[0] == '\'' && s[len(s)-1] == '\''
 }

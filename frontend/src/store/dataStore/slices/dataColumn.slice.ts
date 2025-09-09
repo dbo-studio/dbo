@@ -4,10 +4,12 @@ import type { ColumnType } from '@/types';
 import type { StateCreator } from 'zustand';
 import type { DataColumnSlice, DataStore } from '../types';
 
-export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, [], [], DataColumnSlice> = (
-  set,
-  get
-) => ({
+export const createDataColumnSlice: StateCreator<
+  DataStore & DataColumnSlice,
+  [['zustand/devtools', never]],
+  [],
+  DataColumnSlice
+> = (set, get) => ({
   columns: undefined,
   getActiveColumns: (): ColumnType[] => {
     return get().columns?.filter((c) => c.isActive) ?? [];
@@ -16,7 +18,7 @@ export const createDataColumnSlice: StateCreator<DataStore & DataColumnSlice, []
     const selectedTabId = useTabStore.getState().selectedTabId;
     if (!selectedTabId) return;
 
-    set({ columns });
+    set({ columns }, undefined, 'updateColumns');
     debouncedSaveColumns(selectedTabId, columns);
     return Promise.resolve();
   }

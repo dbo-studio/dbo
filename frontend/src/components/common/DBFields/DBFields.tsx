@@ -34,6 +34,7 @@ export default function DBFields(): JSX.Element {
       ?.filter((c: any) => {
         return c.name.toLocaleLowerCase().includes(value.toLocaleLowerCase());
       })
+      // biome-ignore lint/suspicious/useIterableCallbackReturn: <explanation>
       .map((c: any) => {
         if (!selectedRow[c.name]) return;
         data.push({

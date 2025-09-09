@@ -2,7 +2,6 @@ import type { CreateConnectionRequestType } from '@/api/connection/types';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
 import locales from '@/locales';
-import { LoadingButton } from '@mui/lab';
 import { Box, Button, Checkbox, Stack, Typography } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import { type JSX, useState } from 'react';
@@ -83,6 +82,7 @@ export default function PostgreSQL({
             {(field): JSX.Element => (
               <Box>
                 <FieldInput
+                  name='name'
                   value={field.state.value}
                   error={field.state.meta.errors.length > 0}
                   fullWidth={true}
@@ -98,6 +98,7 @@ export default function PostgreSQL({
               {(field): JSX.Element => (
                 <Box>
                   <FieldInput
+                    name='host'
                     placeholder='localhost'
                     disabled={useUri}
                     value={field.state.value}
@@ -114,6 +115,7 @@ export default function PostgreSQL({
               {(field): JSX.Element => (
                 <Box>
                   <FieldInput
+                    name='port'
                     disabled={useUri}
                     placeholder={'5432'}
                     value={field.state.value}
@@ -133,6 +135,7 @@ export default function PostgreSQL({
                 <Box>
                   <FieldInput
                     mb={1}
+                    name='username'
                     disabled={useUri}
                     value={field.state.value}
                     error={field.state.meta.errors.length > 0}
@@ -148,6 +151,7 @@ export default function PostgreSQL({
               {(field): JSX.Element => (
                 <Box>
                   <FieldInput
+                    name='password'
                     disabled={useUri}
                     value={field.state.value}
                     error={field.state.meta.errors.length > 0}
@@ -164,6 +168,7 @@ export default function PostgreSQL({
             {(field): JSX.Element => (
               <>
                 <FieldInput
+                  name='database'
                   disabled={useUri}
                   value={field.state.value}
                   error={field.state.meta.errors.length > 0}
@@ -188,6 +193,7 @@ export default function PostgreSQL({
               {(field): JSX.Element => (
                 <>
                   <FieldInput
+                    name='uri'
                     value={field.state.value}
                     error={field.state.meta.errors.length > 0}
                     label={locales.uri}
@@ -207,7 +213,9 @@ export default function PostgreSQL({
           {locales.cancel}
         </Button>
         <Stack spacing={1} direction={'row'}>
-          <LoadingButton
+          <Button
+            data-testid='test-connection'
+            loadingPosition='start'
             disabled={pingLoading}
             loading={pingLoading}
             onClick={(): void => {
@@ -218,9 +226,11 @@ export default function PostgreSQL({
             variant='contained'
             color='secondary'
           >
-            <span>{locales.test}</span>
-          </LoadingButton>
-          <LoadingButton
+            {locales.test}
+          </Button>
+          <Button
+            data-testid='create-connection'
+            loadingPosition='start'
             disabled={submitLoading}
             loading={submitLoading}
             onClick={(): void => {
@@ -230,8 +240,8 @@ export default function PostgreSQL({
             size='small'
             variant='contained'
           >
-            <span>{connection ? locales.update : locales.create}</span>
-          </LoadingButton>
+            {connection ? locales.update : locales.create}
+          </Button>
         </Stack>
       </Box>
     </Box>

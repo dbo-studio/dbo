@@ -1,4 +1,4 @@
-FROM golang:1.24-alpine
+FROM golang:1.25-alpine
 
 ENV APP_PORT=${APP_PORT}
 ENV APP_ENV=${APP_ENV}
@@ -15,6 +15,6 @@ RUN go install github.com/air-verse/air@latest
 
 RUN go mod download
 
-EXPOSE 8080
+EXPOSE ${APP_ENV}
 
 CMD ["air", "-c", ".air.toml"]

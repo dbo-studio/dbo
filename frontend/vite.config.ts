@@ -1,11 +1,10 @@
 import react from '@vitejs/plugin-react-swc';
 import path from 'node:path';
+import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
-import { defineConfig } from 'vitest/config';
 
 const host = process.env.TAURI_DEV_HOST;
 const ReactCompilerConfig = {};
-
 
 export default defineConfig({
   clearScreen: host === undefined,
@@ -43,30 +42,6 @@ export default defineConfig({
     drop: ['console', 'debugger'],
     supported: {
       'top-level-await': true
-    }
-  },
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: './src/test/vitest.setup.js',
-    css: false,
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html']
-    },
-    exclude: ['node_modules'],
-    reporters: process.env.GITHUB_ACTIONS ? ['dot', 'github-actions'] : ['dot'],
-    alias: [
-      {
-        find: /^monaco-editor$/,
-        replacement: `${__dirname}/node_modules/monaco-editor/esm/vs/editor/editor.api`
-      }
-    ],
-    environmentOptions: {
-      jsdom: {
-        resources: 'usable',
-        pretendToBeVisual: true
-      }
     }
   }
 });

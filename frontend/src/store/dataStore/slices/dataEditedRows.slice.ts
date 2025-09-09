@@ -6,7 +6,7 @@ import type { DataEditedRowsSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice
 
 export const createDataEditedRowsSlice: StateCreator<
   DataStore & DataEditedRowsSlice & DataRowSlice & DataUnsavedRowsSlice,
-  [],
+  [['zustand/devtools', never]],
   [],
   DataEditedRowsSlice
 > = (set, get) => ({
@@ -32,7 +32,7 @@ export const createDataEditedRowsSlice: StateCreator<
       }
     }
 
-    set({ editedRows: rowsToKeep });
+    set({ editedRows: rowsToKeep }, undefined, 'updateEditedRows');
     get().updateUnsavedRows(currentUnsavedRows);
 
     debouncedSaveEditedAndUnsaved(selectedTabId, rowsToKeep, currentUnsavedRows);

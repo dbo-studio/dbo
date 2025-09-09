@@ -1,13 +1,12 @@
-import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import type { ConnectionType } from '@/types';
-import { type JSX, useEffect, useState } from 'react';
-import { v4 as uuid } from 'uuid';
-
 import api from '@/api';
 import AddConnection from '@/components/common/AddConnection/AddConnection';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import type { ConnectionType } from '@/types';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { type JSX, useEffect, useState } from 'react';
+import { v4 as uuid } from 'uuid';
 import EditConnection from '../../AddConnection/EditConnection';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { ConnectionsStyled } from './Connections.styled';
@@ -54,10 +53,6 @@ export default function Connections(): JSX.Element {
     onSuccess: (c: ConnectionType): void => {
       updateLoading('finished');
       updateCurrentConnection(c);
-    },
-    onError: (error): void => {
-      console.error('🚀 ~ updateConnectionMutation ~ error:', error);
-      updateLoading('error');
     }
   });
 
@@ -80,7 +75,8 @@ export default function Connections(): JSX.Element {
       await updateConnectionMutation(c.id);
       updateSelectedTab(tabs.find((t) => t.connectionId === c.id));
     } catch (error) {
-      console.error('🚀 ~ handleChangeCurrentConnection ~ error:', error);
+      updateLoading('error');
+      console.debug('🚀 ~ handleChangeCurrentConnection ~ error:', error);
     }
   };
 

@@ -6,7 +6,6 @@ import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { IconButton } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { JSX } from 'react';
-import { toast } from 'sonner';
 
 export default function DeleteHistoryIcon(): JSX.Element {
   const queryClient = useQueryClient();
@@ -19,10 +18,6 @@ export default function DeleteHistoryIcon(): JSX.Element {
       queryClient.invalidateQueries({
         queryKey: ['histories', currentConnection?.id]
       });
-    },
-    onError: (error: Error): void => {
-      console.error('🚀 ~ deleteHistoryMutation ~ error:', error);
-      toast.success(locales.history_delete_success);
     }
   });
 
@@ -35,8 +30,9 @@ export default function DeleteHistoryIcon(): JSX.Element {
   const handleDeleteAllHistories = async (): Promise<void> => {
     try {
       await deleteHistoryMutation(currentConnection?.id ?? 0);
-      return;
-    } catch (err) {}
+    } catch (err) {
+      console.debug('🚀 ~ handleDeleteAllHistories ~ err:', err);
+    }
   };
 
   return (

@@ -92,7 +92,7 @@ func (i IQueryServiceImpl) AutoComplete(ctx context.Context, req *dto.AutoComple
 		return nil, apperror.InternalServerError(err)
 	}
 
-	resultFromCache, err := i.findResultFromCache(req.ConnectionId, req.Database, req.Schema, req.FromCache)
+	resultFromCache, err := i.findResultFromCache(req)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -107,7 +107,7 @@ func (i IQueryServiceImpl) AutoComplete(ctx context.Context, req *dto.AutoComple
 	}
 
 	ttl := 60 * time.Minute
-	err = i.cache.Set(i.cacheName(req.ConnectionId, req.Database, req.Schema), autocomplete, &ttl)
+	err = i.cache.Set(i.cacheName(req), autocomplete, &ttl)
 	if err != nil {
 		return nil, err
 	}
@@ -115,12 +115,12 @@ func (i IQueryServiceImpl) AutoComplete(ctx context.Context, req *dto.AutoComple
 	return autocomplete, nil
 }
 
-func (i IQueryServiceImpl) findResultFromCache(connectionID int32, database *string, schema *string, fromCache bool) (*dto.AutoCompleteResponse, error) {
+func (i IQueryServiceImpl) findResultFromCache(req *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
 	var result *dto.AutoCompleteResponse
 	err := i.cache.ConditionalGet(
-		i.cacheName(connectionID, database, schema),
+		i.cacheName(req),
 		&result,
-		fromCache,
+		req.FromCache,
 	)
 
 	if err != nil {
@@ -130,6 +130,6 @@ func (i IQueryServiceImpl) findResultFromCache(connectionID int32, database *str
 	return result, nil
 }
 
-func (i IQueryServiceImpl) cacheName(connectionID int32, database *string, schema *string) string {
-	return fmt.Sprintf("auto_complete_connection_%d_database_%s_schema_%s", connectionID, lo.FromPtr(database), lo.FromPtr(schema))
+func (i IQueryServiceImpl) cacheName(req *dto.AutoCompleteRequest) string {
+	return fmt.Sprintf("auto_complete:connection_%d_database_%s_schema_%s_skipSystem_%t", req.ConnectionId, lo.FromPtr(req.Database), lo.FromPtr(req.Schema), lo.FromPtr(req.SkipSystem))
 }

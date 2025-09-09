@@ -72,7 +72,7 @@ export default function Query(): JSX.Element {
         setTableData(result);
       }
     } catch (error) {
-      console.error('🚀 ~ loadData ~ error:', error);
+      console.debug('🚀 ~ loadData ~ error:', error);
     }
 
     toggleDataFetching(false);
@@ -106,7 +106,15 @@ export default function Query(): JSX.Element {
             onRunQuery={runQuery}
             onMount={(): void => setShowGrid(true)}
             onChange={handleUpdateState}
-            autocomplete={autocomplete ?? { databases: [], schemas: [], tables: [], columns: {}, views: [] }}
+            autocomplete={
+              autocomplete ?? {
+                databases: [],
+                schemas: [],
+                tables: [],
+                columns: {},
+                views: []
+              }
+            }
             value={value}
           />
         </Box>

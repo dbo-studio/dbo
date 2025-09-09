@@ -94,7 +94,7 @@ export default function SimpleField({ field, onChange, size = 'medium' }: Simple
                   columns: {}
                 }}
                 onRunQuery={(query): void => {
-                  console.log('🚀 ~ SimpleField ~ query:', query);
+                  console.debug('🚀 ~ SimpleField ~ query:', query);
                 }}
               />
             </Box>
