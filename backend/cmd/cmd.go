@@ -50,7 +50,10 @@ func Execute() {
 
 	ss := service.NewService(cfg, appLogger, rr, cm, cache)
 
-	ss.JobManager.CancelAllJobs()
+	err = ss.JobManager.CancelAllJobs()
+	if err != nil {
+		appLogger.Error(err)
+	}
 
 	restServer := server.New(appLogger, server.Handlers{
 		Config:       handler.NewConfigHandler(appLogger, ss.ConfigService),
