@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use std::{env, net::TcpListener};
-use tauri::{plugin, App, Manager, WindowEvent};
+use tauri::{App, Manager};
 use tauri_plugin_decorum::WebviewWindowExt;
 use tauri_plugin_shell::process::CommandEvent;
 use tauri_plugin_shell::ShellExt;
@@ -22,14 +22,12 @@ fn main() {
         .plugin(tauri_plugin_decorum::init())
         .invoke_handler(tauri::generate_handler![get_backend_host])
         .setup(|app| {
-            let main_window = app.get_webview_window("main").unwrap();
-            main_window.create_overlay_titlebar().unwrap();
-
             #[cfg(target_os = "macos")]
             {
+                let main_window = app.get_webview_window("main").unwrap();
+                main_window.create_overlay_titlebar().unwrap();
+
                 main_window.set_traffic_lights_inset(12.0, 16.0).unwrap();
-                main_window.make_transparent().unwrap();
-                main_window.set_window_level(25).unwrap();
             }
 
             env::set_var("APP_ENV", "production");

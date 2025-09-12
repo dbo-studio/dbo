@@ -1,0 +1,23 @@
+{
+  "app": {
+    "windows": [
+      {
+        "height": 800,
+        "resizable": true,
+        "title": "DBO",
+        "width": 1280,
+        "center": true,
+        "minWidth": 1280,
+        "minHeight": 700,
+        "x": 0,
+        "y": 0,
+        "decorations": true,
+        "hiddenTitle": true,
+        "titleBarStyle": "Overlay"
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  }
+}
