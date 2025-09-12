@@ -10,6 +10,13 @@ export const editorConfig: editor.IStandaloneEditorConstructionOptions = {
   folding: false,
   automaticLayout: true,
   contextmenu: false,
+  // Disable auto suggestion widget; require manual trigger (e.g., Ctrl+Space)
+  quickSuggestions: false,
+  suggestOnTriggerCharacters: false,
+  wordBasedSuggestions: 'off',
+  acceptSuggestionOnEnter: 'smart',
+  tabCompletion: 'off',
+  parameterHints: { enabled: false },
   minimap: {
     enabled: false
   },
@@ -28,5 +35,6 @@ export const editorConfig: editor.IStandaloneEditorConstructionOptions = {
   },
   fontSize: 14,
   fontWeight: 'bold',
-  fontFamily: 'JetBrainsMono-Bold'
+  fontFamily: 'JetBrainsMono-Bold',
+  inlineSuggest: { enabled: true, mode: 'prefix' }
 };

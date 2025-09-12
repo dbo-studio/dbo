@@ -1,6 +1,7 @@
 package databaseSqlite
 
 import (
+	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -10,6 +11,16 @@ import (
 type SQLiteRepository struct {
 	db         *gorm.DB
 	connection *model.Connection
+}
+
+// AiCompleteContext implements databaseContract.DatabaseRepository.
+func (r *SQLiteRepository) AiCompleteContext(dto *dto.AiInlineCompleteRequest) string {
+	panic("unimplemented")
+}
+
+// AiContext implements databaseContract.DatabaseRepository.
+func (r *SQLiteRepository) AiContext(dto *dto.AiChatRequest) (string, error) {
+	panic("unimplemented")
 }
 
 func NewSQLiteRepository(connection *model.Connection, cm *databaseConnection.ConnectionManager) (contract.DatabaseRepository, error) {

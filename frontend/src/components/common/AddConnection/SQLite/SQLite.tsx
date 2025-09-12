@@ -3,7 +3,6 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
 import locales from '@/locales';
-import { LoadingButton } from '@mui/lab';
 import { Box, Button, Stack } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import { open } from '@tauri-apps/plugin-dialog';
@@ -122,7 +121,8 @@ export default function SQLite({
           {locales.cancel}
         </Button>
         <Stack spacing={1} direction={'row'}>
-          <LoadingButton
+          <Button
+            loadingPosition='start'
             disabled={pingLoading}
             loading={pingLoading}
             onClick={(): void => {
@@ -134,8 +134,9 @@ export default function SQLite({
             color='secondary'
           >
             <span>{locales.test}</span>
-          </LoadingButton>
-          <LoadingButton
+          </Button>
+          <Button
+            loadingPosition='start'
             disabled={submitLoading}
             loading={submitLoading}
             onClick={(): void => {
@@ -146,7 +147,7 @@ export default function SQLite({
             variant='contained'
           >
             <span>{connection ? locales.update : locales.create}</span>
-          </LoadingButton>
+          </Button>
         </Stack>
       </Box>
     </Box>

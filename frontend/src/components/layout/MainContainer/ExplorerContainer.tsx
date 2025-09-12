@@ -47,13 +47,15 @@ export default React.memo(function ExplorerContainer(): JSX.Element {
       maxWidth={500}
     >
       <ExplorerContainerStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
-        <Tabs value={selectedTabId} onChange={onSelectedTabChanged}>
-          <Tab label={locales.fields} />
+        <Tabs variant='fullWidth' value={selectedTabId} onChange={onSelectedTabChanged}>
+          <Tab label={locales.items} />
           <Tab label={locales.queries} />
           <Tab label={locales.history} />
         </Tabs>
 
-        <Box role='tabpanel'>{selectedTabContent}</Box>
+        <Box role='tabpanel' flex={1} minHeight={0} display={'flex'} flexDirection={'column'}>
+          {selectedTabContent}
+        </Box>
       </ExplorerContainerStyled>
     </ResizableXBox>
   );

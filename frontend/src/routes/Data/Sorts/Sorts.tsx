@@ -18,7 +18,7 @@ export default function Sorts(): JSX.Element {
   if (!selectedTab) return <></>;
 
   return (
-    <Box id='#sorts' p={1} borderBottom={(theme): string => `1px solid ${theme.palette.divider}`}>
+    <Box p={1} borderBottom={(theme): string => `1px solid ${theme.palette.divider}`}>
       {selectedTab?.sorts?.length === 0 ? (
         <AddSortButton columns={columns ?? []} />
       ) : (

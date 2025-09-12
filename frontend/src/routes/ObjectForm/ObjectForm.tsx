@@ -1,9 +1,9 @@
 import { useObjectTabs } from '@/routes/ObjectForm/hooks/useObjectTabs';
 import type { JSX } from 'react';
+import { useObjectFields } from './hooks/useObjectFields';
 import { ObjectFormStyled } from './ObjectForm.styled';
 import ObjectTabs from './ObjectTabs/ObjectTabs';
 import TableForm from './TableForm/TableForm';
-import { useObjectFields } from './hooks/useObjectFields';
 
 export default function ObjectForm({ isDetail = false }: { isDetail?: boolean }): JSX.Element {
   const { tabs, selectedTabIndex, handleTabChange } = useObjectTabs();

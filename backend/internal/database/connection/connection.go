@@ -50,7 +50,6 @@ func (cm *ConnectionManager) GetConnection(connection *model.Connection) (*gorm.
 				return conn.DB, nil
 			}
 		}
-		cm.logger.Error(err)
 		delete(cm.connections, connection.ID)
 	}
 
@@ -105,8 +104,6 @@ func (cm *ConnectionManager) cleanupInactiveConnections() {
 						return
 					}
 				}
-
-				cm.logger.Error(err)
 			}
 		}
 		cm.mu.Unlock()

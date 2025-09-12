@@ -27,7 +27,7 @@ func (r *PostgresRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryRe
 		queryResults[i]["dbo_index"] = i
 	}
 
-	columns, err := r.getColumns(node.Table, node.Schema, req.Columns, true)
+	columns, err := r.getColumns(node.Table, &node.Schema, req.Columns, true)
 	if err != nil {
 		return nil, result.Error
 	}

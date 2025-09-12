@@ -80,15 +80,17 @@ jobs:
         run: npm install --force
         working-directory: ./frontend
 
+      - name: Install SWC Dependencies
+        run: npm install @swc/core@latest @vitejs/plugin-react-swc@latest
+        working-directory: ./frontend
+
       - name: Build Frontend with Version
         run: npm run build
         working-directory: ./frontend
-        env:
-          VITE_VERSION: ${{ env.PACKAGE_VERSION }}
 
       - uses: actions/setup-go@v5
         with:
-          go-version: 1.24
+          go-version: 1.25
           check-latest: true
 
       - name: Build Go Backend
@@ -138,7 +140,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: process.env.release_id,
-              draft: false,
+              draft: true,
               prerelease: false
             });
   

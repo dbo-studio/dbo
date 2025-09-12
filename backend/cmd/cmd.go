@@ -48,9 +48,15 @@ func Execute() {
 
 	cm := databaseConnection.NewConnectionManager(appLogger, rr.HistoryRepo)
 
-	ss := service.NewService(appLogger, rr, cm, cache)
+	ss := service.NewService(cfg, appLogger, rr, cm, cache)
+
+	err = ss.JobManager.CancelAllJobs()
+	if err != nil {
+		appLogger.Error(err)
+	}
 
 	restServer := server.New(appLogger, server.Handlers{
+		Config:       handler.NewConfigHandler(appLogger, ss.ConfigService),
 		Connection:   handler.NewConnectionHandler(appLogger, ss.ConnectionService),
 		SavedQuery:   handler.NewSavedQueryHandler(appLogger, ss.SavedQueryService),
 		History:      handler.NewHistoryHandler(appLogger, ss.HistoryService),
@@ -58,6 +64,9 @@ func Execute() {
 		QueryHandler: handler.NewQueryHandler(appLogger, ss.QueryService),
 		ImportExport: handler.NewImportExportHandler(appLogger, ss.ImportExportService),
 		Job:          handler.NewJobHandler(appLogger, ss.JobService),
+		AI:           handler.NewAiHandler(appLogger, ss.AiService),
+		AiProvider:   handler.NewAiProviderHandler(appLogger, ss.AiProviderService),
+		AiChat:       handler.NewAiChatHandler(appLogger, ss.AiChatService),
 	})
 
 	if err := restServer.Start(helper.IsLocal(), cfg.App.Port); err != nil {

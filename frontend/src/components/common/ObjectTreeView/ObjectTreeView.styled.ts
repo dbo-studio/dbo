@@ -12,19 +12,7 @@ export const TreeViewContainerStyled = styled(Box)({
 export const TreeViewContentStyled = styled(Box)(({ theme }) => ({
   overflow: 'auto',
   flex: 1,
+  minHeight: 0,
   padding: '4px 0',
-  marginTop: theme.spacing(1),
-  '&::-webkit-scrollbar': {
-    width: '10px'
-  },
-  '&::-webkit-scrollbar-thumb': {
-    backgroundColor: 'rgba(100, 100, 100, 0.4)',
-    borderRadius: '3px',
-    '&:hover': {
-      backgroundColor: 'rgba(100, 100, 100, 0.7)'
-    }
-  },
-  '&::-webkit-scrollbar-track': {
-    backgroundColor: 'transparent'
-  }
+  marginTop: theme.spacing(1)
 }));

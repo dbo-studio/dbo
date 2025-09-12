@@ -10,6 +10,7 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}",
+            "preLaunchTask": "free_up_port",
             "env": {
                 "APP_PORT": "8080",
                 "APP_ENV": "docker"

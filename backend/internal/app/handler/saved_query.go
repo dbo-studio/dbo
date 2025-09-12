@@ -21,7 +21,7 @@ func NewSavedQueryHandler(logger logger.Logger, savedQueryService serviceSavedQu
 	}
 }
 
-func (h SavedQueryHandler) Index(c fiber.Ctx) error {
+func (h SavedQueryHandler) SavedQueries(c fiber.Ctx) error {
 	req := new(dto.SavedQueryListRequest)
 
 	if err := c.Bind().Query(req); err != nil {

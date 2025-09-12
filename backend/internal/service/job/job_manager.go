@@ -16,6 +16,7 @@ type IJobManager interface {
 	RegisterProcessor(processor JobProcessor)
 	CreateJob(jobType model.JobType, data string) (*model.Job, error)
 	UpdateJobProgress(job *model.Job, progress int, message string) error
+	CancelAllJobs() error
 }
 
 type IJobManagerImpl struct {
@@ -53,13 +54,11 @@ func (jm *IJobManagerImpl) RegisterProcessor(processor JobProcessor) {
 
 func (jm *IJobManagerImpl) CreateJob(jobType model.JobType, data string) (*model.Job, error) {
 	job := &model.Job{
-		Type:      jobType,
-		Status:    model.JobStatusPending,
-		Progress:  0,
-		Message:   "Job created",
-		Data:      data,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		Type:     jobType,
+		Status:   model.JobStatusPending,
+		Progress: 0,
+		Message:  "Job created",
+		Data:     data,
 	}
 
 	err := jm.jobRepo.Create(context.Background(), job)
@@ -74,14 +73,12 @@ func (jm *IJobManagerImpl) CreateJob(jobType model.JobType, data string) (*model
 func (jm *IJobManagerImpl) UpdateJobProgress(job *model.Job, progress int, message string) error {
 	job.Progress = progress
 	job.Message = message
-	job.UpdatedAt = time.Now()
 	return jm.jobRepo.Update(context.Background(), job)
 }
 
 func (jm *IJobManagerImpl) updateJobStatus(job *model.Job, status model.JobStatus, message string) error {
 	job.Status = status
 	job.Message = message
-	job.UpdatedAt = time.Now()
 
 	if status == model.JobStatusRunning && job.StartedAt == nil {
 		now := time.Now()
@@ -99,7 +96,6 @@ func (jm *IJobManagerImpl) updateJobStatus(job *model.Job, status model.JobStatu
 func (jm *IJobManagerImpl) updateJobError(job *model.Job, error string) error {
 	job.Error = error
 	job.Status = model.JobStatusFailed
-	job.UpdatedAt = time.Now()
 	now := time.Now()
 	job.CompletedAt = &now
 	return jm.jobRepo.Update(context.Background(), job)
@@ -164,12 +160,12 @@ func (jm *IJobManagerImpl) processPendingJobs() {
 			if runningJobs[i].StartedAt != nil {
 				ti = *runningJobs[i].StartedAt
 			} else {
-				ti = runningJobs[i].CreatedAt
+				ti = *runningJobs[i].CreatedAt
 			}
 			if runningJobs[j].StartedAt != nil {
 				tj = *runningJobs[j].StartedAt
 			} else {
-				tj = runningJobs[j].CreatedAt
+				tj = *runningJobs[j].CreatedAt
 			}
 			return ti.After(tj)
 		})
@@ -206,8 +202,35 @@ func (jm *IJobManagerImpl) processPendingJobs() {
 	}(j)
 }
 
-func (jm *IJobManagerImpl) Shutdown() {
-	jm.workerCancel()
-	jm.workerWg.Wait()
-	jm.logger.Info("JobManager shutdown completed")
+func (jm *IJobManagerImpl) CancelAllJobs() error {
+	runningJobs, err := jm.jobRepo.GetRunningJobs(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to get running jobs: %w", err)
+	}
+
+	for _, job := range runningJobs {
+		err := jm.updateJobStatus(&job, model.JobStatusCancelled, "Cancelled due to application shutdown")
+		if err != nil {
+			jm.logger.Error(fmt.Sprintf("Failed to cancel job %d: %v", job.ID, err))
+		} else {
+			jm.logger.Info(fmt.Sprintf("Cancelled job %d due to shutdown", job.ID))
+		}
+	}
+
+	pendingJobs, err := jm.jobRepo.GetPendingJobs(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to get pending jobs: %w", err)
+	}
+
+	for _, job := range pendingJobs {
+		err := jm.updateJobStatus(&job, model.JobStatusCancelled, "Cancelled due to application shutdown")
+		if err != nil {
+			jm.logger.Error(fmt.Sprintf("Failed to cancel pending job %d: %v", job.ID, err))
+		} else {
+			jm.logger.Info(fmt.Sprintf("Cancelled pending job %d due to shutdown", job.ID))
+		}
+	}
+
+	jm.logger.Info(fmt.Sprintf("Cancelled %d running jobs and %d pending jobs", len(runningJobs), len(pendingJobs)))
+	return nil
 }

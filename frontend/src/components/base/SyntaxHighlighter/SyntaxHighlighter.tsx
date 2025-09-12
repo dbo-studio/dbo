@@ -1,5 +1,5 @@
 import { type JSX, useEffect, useState } from 'react';
-import { codeToHtml } from 'shiki';
+import { codeToHtml } from 'shiki/bundle/web';
 import { SyntaxHighlighterStyled } from './SyntaxHighlighter.styled';
 import type { SyntaxHighlighterProps } from './types';
 

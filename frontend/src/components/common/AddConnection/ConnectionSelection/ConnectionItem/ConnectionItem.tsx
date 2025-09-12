@@ -6,7 +6,11 @@ import { ConnectionItemLogoStyled, ConnectionItemStyled } from './ConnectionItem
 
 export default function ConnectionItem({ connection, selected, onClick }: ConnectionItemProps): JSX.Element {
   return (
-    <ConnectionItemStyled selected={selected} onClick={(): void => onClick(connection)}>
+    <ConnectionItemStyled
+      data-testid={`selected-connection-${connection.name}`}
+      selected={selected}
+      onClick={(): void => onClick(connection)}
+    >
       <ConnectionItemLogoStyled>
         <CustomIcon type={connection.logo} size='l' />
       </ConnectionItemLogoStyled>

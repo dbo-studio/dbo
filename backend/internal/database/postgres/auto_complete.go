@@ -15,14 +15,14 @@ func (r *PostgresRepository) AutoComplete(data *dto.AutoCompleteRequest) (*dto.A
 	if data.Database != nil && data.Schema != nil {
 		views, err = r.getViewList(Database{Name: lo.FromPtr(data.Database)}, Schema{Name: lo.FromPtr(data.Schema)})
 	} else {
-		views, err = r.getAllViewList()
+		views, err = r.getAllViewList(data.SkipSystem)
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	schemas, err := r.getAllSchemaList()
+	schemas, err := r.getAllSchemaList(data.SkipSystem)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func (r *PostgresRepository) AutoComplete(data *dto.AutoCompleteRequest) (*dto.A
 	if data.Schema != nil {
 		tables, err = r.getTableList(Schema{Name: lo.FromPtr(data.Schema)})
 	} else {
-		tables, err = r.getAllTableList()
+		tables, err = r.getAllTableList(data.SkipSystem)
 	}
 
 	if err != nil {
@@ -41,7 +41,7 @@ func (r *PostgresRepository) AutoComplete(data *dto.AutoCompleteRequest) (*dto.A
 	columns := make(map[string][]string)
 	if data.Schema != nil {
 		for _, table := range tables {
-			columnResult, err := r.getColumns(table.Name, lo.FromPtr(data.Schema), nil, false)
+			columnResult, err := r.getColumns(table.Name, data.Schema, nil, false)
 			if err != nil {
 				return nil, err
 			}

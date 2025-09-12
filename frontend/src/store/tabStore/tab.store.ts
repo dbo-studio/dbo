@@ -22,7 +22,7 @@ export const useTabStore: UseBoundStore<StoreApi<TabState>> = create<TabState>()
       (set, get, ...state) => ({
         ...initialize,
         reset: (): void => {
-          set({ ...initialize });
+          set({ ...initialize }, undefined, 'reset');
         },
         getTabs: (): TabType[] => {
           const currentConnectionId = useConnectionStore.getState().currentConnectionId;
@@ -41,7 +41,7 @@ export const useTabStore: UseBoundStore<StoreApi<TabState>> = create<TabState>()
           if (!get().selectedTabId) {
             const selectedTab = get().tabs.find((t) => t.connectionId === currentConnectionId);
             if (selectedTab) {
-              set({ selectedTabId: selectedTab.id });
+              set({ selectedTabId: selectedTab.id }, undefined, 'selectedTab');
             }
 
             return selectedTab;
@@ -50,7 +50,7 @@ export const useTabStore: UseBoundStore<StoreApi<TabState>> = create<TabState>()
           return get().tabs.find((t) => t.connectionId === currentConnectionId && t.id === get().selectedTabId);
         },
         updateTabs: (newTabs: TabType[]): void => {
-          set({ tabs: newTabs });
+          set({ tabs: newTabs }, undefined, 'updateTabs');
         },
         updateSelectedTab: (newSelectedTab: TabType | undefined): void => {
           if (newSelectedTab === undefined) {
@@ -69,7 +69,7 @@ export const useTabStore: UseBoundStore<StoreApi<TabState>> = create<TabState>()
             return t;
           });
 
-          set({ tabs, selectedTabId: newSelectedTab.id });
+          set({ tabs, selectedTabId: newSelectedTab.id }, undefined, 'updateSelectedTab');
         },
         ...createTabSettingSlice(set, get, ...state),
         ...createTabQuerySlice(set, get, ...state),

@@ -37,17 +37,11 @@ export default function AddConnection(): JSX.Element {
       queryClient.invalidateQueries({
         queryKey: ['connections']
       });
-    },
-    onError: (error): void => {
-      console.error('🚀 ~ createConnectionMutation ~ error:', error);
     }
   });
 
   const { mutateAsync: pingConnectionMutation, isPending: pingConnectionPending } = useMutation({
-    mutationFn: api.connection.pingConnection,
-    onError: (error): void => {
-      console.error('🚀 ~ pingConnectionMutation ~ error:', error);
-    }
+    mutationFn: api.connection.pingConnection
   });
 
   const handleClose = (): void => {
@@ -66,8 +60,12 @@ export default function AddConnection(): JSX.Element {
       return;
     }
 
-    await pingConnectionMutation(data);
-    toast.success(locales.connection_test_success);
+    try {
+      await pingConnectionMutation(data);
+      toast.success(locales.connection_test_success);
+    } catch (error) {
+      console.debug('🚀 ~ handlePingConnection ~ error:', error);
+    }
   };
 
   const handleCreateConnection = async (data: CreateConnectionRequestType): Promise<void> => {
@@ -75,9 +73,13 @@ export default function AddConnection(): JSX.Element {
       return;
     }
 
-    await createConnectionMutation(data);
-    toast.success(locales.connection_create_success);
-    handleClose();
+    try {
+      await createConnectionMutation(data);
+      handleClose();
+      toast.success(locales.connection_create_success);
+    } catch (error) {
+      console.debug('🚀 ~ handleCreateConnection ~ error:', error);
+    }
   };
 
   return (

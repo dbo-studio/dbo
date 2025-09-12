@@ -49,7 +49,7 @@
   },
   "productName": "DBO",
   "mainBinaryName": "DBO",
-  "version": "0.2.5",
+  "version": "0.3.0",
   "identifier": "com.dbostudio.dev",
   "plugins": {
     "updater": {
@@ -70,7 +70,10 @@
         "minWidth": 1280,
         "minHeight": 700,
         "x": 0,
-        "y": 0
+        "y": 0,
+        "decorations": true,
+        "hiddenTitle": true,
+        "titleBarStyle": "Overlay"
       }
     ],
     "security": {

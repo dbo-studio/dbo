@@ -2,6 +2,8 @@ package serviceTree
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
@@ -9,6 +11,8 @@ import (
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/dbo-studio/dbo/pkg/cache"
+	"github.com/samber/lo"
 )
 
 type ITreeService interface {
@@ -24,16 +28,26 @@ var _ ITreeService = (*ITreeServiceImpl)(nil)
 type ITreeServiceImpl struct {
 	connectionRepo repository.IConnectionRepo
 	cm             *databaseConnection.ConnectionManager
+	cache          cache.Cache
 }
 
-func NewTreeService(cr repository.IConnectionRepo, cm *databaseConnection.ConnectionManager) *ITreeServiceImpl {
+func NewTreeService(cache cache.Cache, cr repository.IConnectionRepo, cm *databaseConnection.ConnectionManager) *ITreeServiceImpl {
 	return &ITreeServiceImpl{
 		connectionRepo: cr,
 		cm:             cm,
+		cache:          cache,
 	}
 }
 
 func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (*contract.TreeNode, error) {
+	if lo.FromPtr(req.FromCache) {
+		var tree *contract.TreeNode
+		err := i.cache.Get(fmt.Sprintf("tree_%d_%s", req.ConnectionId, req.ParentId), &tree)
+		if err == nil && tree != nil {
+			return tree, nil
+		}
+	}
+
 	connection, err := i.connectionRepo.Find(ctx, req.ConnectionId)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
@@ -47,6 +61,11 @@ func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (*
 	tree, err := repo.Tree(req.ParentId)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
+	}
+
+	err = i.cache.Set(fmt.Sprintf("tree_%d_%s", req.ConnectionId, req.ParentId), tree, lo.ToPtr(time.Minute*30))
+	if err != nil {
+		return nil, err
 	}
 
 	return tree, nil

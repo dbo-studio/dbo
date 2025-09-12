@@ -5,6 +5,7 @@ export type HistoryItemProps = {
   history: HistoryType;
   selected: boolean;
   onClick: () => void;
+  context: (e: React.MouseEvent<HTMLDivElement>) => void;
 };
 
 export type HistoryContextMenuProps = {

@@ -20,7 +20,7 @@ func NewSavedQueryRepo(db *gorm.DB) ISavedQueryRepo {
 	}
 }
 
-func (I ISavedQueryRepoImpl) Index(_ context.Context, req *dto.SavedQueryListRequest) (*[]model.SavedQuery, error) {
+func (I ISavedQueryRepoImpl) Index(ctx context.Context, req *dto.SavedQueryListRequest) (*[]model.SavedQuery, error) {
 	var items []model.SavedQuery
 
 	result := I.db.Scopes(scope.Paginate(&req.PaginationRequest)).
@@ -35,14 +35,14 @@ func (I ISavedQueryRepoImpl) Index(_ context.Context, req *dto.SavedQueryListReq
 	return &items, nil
 }
 
-func (I ISavedQueryRepoImpl) Find(_ context.Context, id int32) (*model.SavedQuery, error) {
+func (I ISavedQueryRepoImpl) Find(ctx context.Context, id int32) (*model.SavedQuery, error) {
 	var query model.SavedQuery
-	result := I.db.Where("id = ?", id).First(&query)
+	result := I.db.WithContext(ctx).Where("id = ?", id).First(&query)
 
 	return &query, result.Error
 }
 
-func (I ISavedQueryRepoImpl) Create(_ context.Context, dto *dto.CreateSavedQueryRequest) (*model.SavedQuery, error) {
+func (I ISavedQueryRepoImpl) Create(ctx context.Context, dto *dto.CreateSavedQueryRequest) (*model.SavedQuery, error) {
 	var query model.SavedQuery
 	if dto.Name == nil {
 		if len(dto.Query) > 20 {
@@ -56,15 +56,15 @@ func (I ISavedQueryRepoImpl) Create(_ context.Context, dto *dto.CreateSavedQuery
 
 	query.ConnectionID = uint(dto.ConnectionId)
 	query.Query = dto.Query
-	result := I.db.Save(&query)
+	result := I.db.WithContext(ctx).Save(&query)
 	return &query, result.Error
 }
 
-func (I ISavedQueryRepoImpl) Delete(_ context.Context, query *model.SavedQuery) error {
-	return I.db.Delete(query).Error
+func (I ISavedQueryRepoImpl) Delete(ctx context.Context, query *model.SavedQuery) error {
+	return I.db.WithContext(ctx).Delete(query).Error
 }
 
-func (I ISavedQueryRepoImpl) Update(_ context.Context, query *model.SavedQuery, req *dto.UpdateSavedQueryRequest) (*model.SavedQuery, error) {
+func (I ISavedQueryRepoImpl) Update(ctx context.Context, query *model.SavedQuery, req *dto.UpdateSavedQueryRequest) (*model.SavedQuery, error) {
 	if req.Name != nil && len(*req.Name) == 0 {
 		query.Name = req.Query[0:10]
 	} else {
@@ -72,6 +72,6 @@ func (I ISavedQueryRepoImpl) Update(_ context.Context, query *model.SavedQuery, 
 	}
 
 	query.Query = req.Query
-	result := I.db.Save(&query)
+	result := I.db.WithContext(ctx).Save(&query)
 	return query, result.Error
 }

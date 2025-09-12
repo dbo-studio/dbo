@@ -2,24 +2,26 @@ package sqlite
 
 import (
 	"errors"
-	"github.com/dbo-studio/dbo/internal/model"
 	"time"
+
+	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/dbo-studio/dbo/pkg/cache"
 
 	"github.com/goccy/go-json"
 	"gorm.io/gorm"
 )
 
-type SQLiteCache struct {
+type ISQLiteCacheImpl struct {
 	db *gorm.DB
 }
 
-func NewSQLiteCache(db *gorm.DB) *SQLiteCache {
-	return &SQLiteCache{
+func NewSQLiteCache(db *gorm.DB) cache.Cache {
+	return &ISQLiteCacheImpl{
 		db: db,
 	}
 }
 
-func (c *SQLiteCache) ConditionalGet(key string, result any, condition bool) error {
+func (c *ISQLiteCacheImpl) ConditionalGet(key string, result any, condition bool) error {
 	if condition {
 		return c.Get(key, result)
 	}
@@ -27,7 +29,7 @@ func (c *SQLiteCache) ConditionalGet(key string, result any, condition bool) err
 	return nil
 }
 
-func (c *SQLiteCache) Get(key string, result any) error {
+func (c *ISQLiteCacheImpl) Get(key string, result any) error {
 	var item model.CacheItem
 	err := c.db.First(&item, "key = ?", key).Error
 
@@ -49,7 +51,7 @@ func (c *SQLiteCache) Get(key string, result any) error {
 	return json.Unmarshal([]byte(item.Value), &result)
 }
 
-func (c *SQLiteCache) Set(key string, value any, ttl *time.Duration) error {
+func (c *ISQLiteCacheImpl) Set(key string, value any, ttl *time.Duration) error {
 	var expiration int64
 	if ttl != nil {
 		expiration = time.Now().Add(*ttl).Unix()
@@ -69,6 +71,6 @@ func (c *SQLiteCache) Set(key string, value any, ttl *time.Duration) error {
 	}).Error
 }
 
-func (c *SQLiteCache) Delete(key string) error {
+func (c *ISQLiteCacheImpl) Delete(key string) error {
 	return c.db.Delete(&model.CacheItem{}, "key = ?", key).Error
 }

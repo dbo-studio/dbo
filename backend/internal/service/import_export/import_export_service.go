@@ -69,7 +69,7 @@ func (s IImportExportImpl) Export(_ context.Context, req *dto.ExportRequest) (*d
 	if req.ChunkSize <= 0 {
 		req.ChunkSize = 1000
 	}
-	
+
 	j, err := s.jobManager.CreateJob(model.JobTypeExport, helper.StructToJson(req))
 	if err != nil {
 		return nil, err

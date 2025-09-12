@@ -1,22 +1,13 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { constants } from '@/core/constants';
 import locales from '@/locales';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Typography, useTheme } from '@mui/material';
-import { type JSX, useEffect, useState } from 'react';
+import type { JSX } from 'react';
 
 export default function AboutPanel(): JSX.Element {
   const theme = useTheme();
-  const [about, setAbout] = useState<{
-    version: string | null;
-  }>({
-    version: null
-  });
-
-  useEffect(() => {
-    setAbout({
-      version: import.meta.env.VITE_VERSION
-    });
-  }, []);
+  const version = useSettingStore((state) => state.general.version);
 
   return (
     <Box>
@@ -24,12 +15,10 @@ export default function AboutPanel(): JSX.Element {
         <img src='/app-icon/icon-512.png' alt='logo' height={100} width={100} />
       </Box>
 
-      {about.version && (
-        <Box mt={theme.spacing(2)} textAlign={'center'}>
-          <Typography variant='caption'>{locales.version}</Typography>
-          <Typography variant='subtitle2'>{about.version}</Typography>
-        </Box>
-      )}
+      <Box mt={theme.spacing(2)} textAlign={'center'}>
+        <Typography variant='caption'>{locales.version}</Typography>
+        <Typography variant='subtitle2'>{version}</Typography>
+      </Box>
 
       <Box mt={theme.spacing(2)} display={'flex'} alignItems={'center'} flexDirection={'column'}>
         <Box display={'flex'} flexDirection={'row'} alignItems={'center'}>

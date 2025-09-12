@@ -1,3 +1,5 @@
+export * from './AiChat';
+export * from './AiProvider';
 export * from './Api';
 export * from './Autocomplete';
 export * from './Connection';

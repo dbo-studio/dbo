@@ -33,10 +33,10 @@ type Job struct {
 	Error       string
 	Data        string    `grom:"not null"`
 	Result      JobResult `gorm:"type:json;serializer:json"`
-	CreatedAt   time.Time `gorm:"not null"`
 	StartedAt   *time.Time
 	CompletedAt *time.Time
-	UpdatedAt   time.Time
+	CreatedAt   *time.Time `gorm:"autoCreateTime"`
+	UpdatedAt   *time.Time `gorm:"autoUpdateTime"`
 }
 
 type JobResult struct {

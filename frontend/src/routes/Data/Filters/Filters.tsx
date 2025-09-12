@@ -16,7 +16,7 @@ export default function Filters(): JSX.Element {
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
 
   return (
-    <Box id='#filters' p={1} borderBottom={(theme): string => `1px solid ${theme.palette.divider}`}>
+    <Box p={1} borderBottom={(theme): string => `1px solid ${theme.palette.divider}`}>
       {selectedTab?.filters?.length === 0 ? (
         <AddFilterButton columns={columns ?? []} />
       ) : (

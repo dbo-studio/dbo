@@ -1,7 +1,6 @@
-import { type Position, languages } from 'monaco-editor/esm/vs/editor/editor.api';
-import { type CompletionService, EntityContextType, type ICompletionItem } from 'monaco-sql-languages/esm/main';
-
 import type { editor } from 'monaco-editor';
+import { languages, type Position } from 'monaco-editor/esm/vs/editor/editor.api';
+import { type CompletionService, EntityContextType, type ICompletionItem } from 'monaco-sql-languages/esm/main';
 import { getColumns, getDataBasesAndSchemas, getTables, getViews } from './dbMetaProvider';
 
 const haveCatalogSQLType = (languageId: string): boolean => {
@@ -140,6 +139,7 @@ export const completionService: CompletionService = async (
       }
     }
   }
+
   return [...syntaxCompletionItems, ...keywordsCompletionItems];
 };
 

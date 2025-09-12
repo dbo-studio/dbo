@@ -8,7 +8,7 @@ services:
       - ./backend:/back/
     environment:
       APP_PORT: "8080"
-      APP_ENV: "local"
+      APP_ENV: "testing"
       DB_TEST_CONNECTION: "pgsql"
       DB_TEST_HOST: "sample-pgsql"
       DB_TEST_PORT: "5432"
@@ -17,6 +17,9 @@ services:
       DB_TEST_PASSWORD: "secret"
     ports:
       - "8080:8080"
+    depends_on:
+      - sample-pgsql
+
   frontend:
     container_name: dbo-studio-dev-frontend
     build:
@@ -29,10 +32,13 @@ services:
       - ./frontend/package.json:/package.json
     environment:
       VITE_PUBLIC_SERVER_URL: "http://localhost:8080/api"
-      VITE_VERSION: $(cat ./docs/VERSION)
       NODE_ENV: "development"
     ports:
       - "3000:3000"
+    depends_on:
+      - backend
+      - sample-pgsql
+
   sample-pgsql:
     container_name: dbo-studio-sample-pgsql
     image: postgres:16.1

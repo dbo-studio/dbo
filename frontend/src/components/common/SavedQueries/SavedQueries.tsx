@@ -1,22 +1,24 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { useCurrentConnection } from '@/hooks';
+import { useContextMenu, useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import type { SavedQueryType } from '@/types';
-import { LoadingButton } from '@mui/lab';
-import { Box, ClickAwayListener, IconButton, LinearProgress, Stack, useTheme } from '@mui/material';
+import { Box, Button, ClickAwayListener, IconButton, LinearProgress, Stack, useTheme } from '@mui/material';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useRef, useState } from 'react';
 import Search from '../../base/Search/Search';
+import SavedQueryContextMenu from './SavedQueryContextMenu/SavedQueryContextMenu';
 import SavedQueryItem from './SavedQueryItem/SavedQueryItem';
 
 export default function SavedQueries(): JSX.Element {
   const theme = useTheme();
   const queryClient = useQueryClient();
-  const [selected, setSelected] = useState<number | null>(null);
+  const [selected, setSelected] = useState<SavedQueryType | null>(null);
+  const [isEditMode, setIsEditMode] = useState<SavedQueryType | null>(null);
   const [search, setSearch] = useState('');
   const currentConnection = useCurrentConnection();
   const listRef = useRef<HTMLDivElement>(null);
+  const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
   type SavedQueryResponse = SavedQueryType[];
 
@@ -66,7 +68,7 @@ export default function SavedQueries(): JSX.Element {
 
   return (
     <ClickAwayListener onClickAway={(): void => setSelected(null)}>
-      <Box mt={1} display={'flex'} flexDirection={'column'}>
+      <Box mt={1} display={'flex'} flexDirection={'column'} minHeight={0}>
         <Box>
           <Stack spacing={1} direction={'row'} alignContent={'center'} justifyContent={'center'} alignItems={'center'}>
             <Box flex={1}>
@@ -78,39 +80,54 @@ export default function SavedQueries(): JSX.Element {
           </Stack>
         </Box>
 
-        <Box mt={theme.spacing(1)} ref={listRef} flex={1}>
+        <Box mt={theme.spacing(1)} ref={listRef} flex={1} minHeight={0} overflow={'auto'}>
           <Stack spacing={1}>
             {status === 'pending' ? (
               <LinearProgress style={{ marginTop: '8px' }} />
             ) : (
-              <>
-                {filteredSavedQueries.map((query) => (
-                  <SavedQueryItem
-                    onChange={handleRefresh}
-                    onClick={(): void => {
-                      setSelected(query.id);
-                    }}
-                    key={query.id}
-                    query={query}
-                    selected={selected === query.id}
-                  />
-                ))}
-              </>
+              filteredSavedQueries.map((query) => (
+                <SavedQueryItem
+                  context={handleContextMenu}
+                  onChange={handleRefresh}
+                  onClick={(): void => setSelected(query)}
+                  key={query.id}
+                  query={query}
+                  selected={selected?.id === query.id}
+                  isEditMode={isEditMode?.id === query.id}
+                  onEditMode={(isEditMode): void => {
+                    if (query === selected) {
+                      setIsEditMode(isEditMode ? query : null);
+                    }
+                  }}
+                />
+              ))
             )}
           </Stack>
+          {hasNextPage && (
+            <Box flex={1} display='flex' justifyContent='center' mt={2} mb={2}>
+              <Button
+                loadingPosition='start'
+                disabled={isFetchingNextPage}
+                loading={isFetchingNextPage}
+                onClick={handleLoadMore}
+                fullWidth
+                variant='contained'
+              >
+                <span>{locales.load_more}</span>
+              </Button>
+            </Box>
+          )}
         </Box>
-        {hasNextPage && (
-          <Box flex={1} display='flex' justifyContent='center' mt={2} mb={2}>
-            <LoadingButton
-              disabled={isFetchingNextPage}
-              loading={isFetchingNextPage}
-              onClick={handleLoadMore}
-              fullWidth
-              variant='contained'
-            >
-              <span>{locales.load_more}</span>
-            </LoadingButton>
-          </Box>
+        {selected && (
+          <SavedQueryContextMenu
+            onChange={handleRefresh}
+            onClose={handleCloseContextMenu}
+            query={selected}
+            contextMenu={contextMenuPosition}
+            onEditMode={(isEditMode): void => {
+              setIsEditMode(isEditMode ? selected : null);
+            }}
+          />
         )}
       </Box>
     </ClickAwayListener>

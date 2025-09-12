@@ -1,7 +1,8 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use std::{env, net::TcpListener};
-use tauri::App;
+use tauri::{App, Manager};
+use tauri_plugin_decorum::WebviewWindowExt;
 use tauri_plugin_shell::process::CommandEvent;
 use tauri_plugin_shell::ShellExt;
 
@@ -9,6 +10,7 @@ fn main() {
     let _ = fix_path_env::fix();
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -17,12 +19,21 @@ fn main() {
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_decorum::init())
         .invoke_handler(tauri::generate_handler![get_backend_host])
-        .setup(|_app| {
+        .setup(|app| {
+            #[cfg(target_os = "macos")]
+            {
+                let main_window = app.get_webview_window("main").unwrap();
+                main_window.create_overlay_titlebar().unwrap();
+
+                main_window.set_traffic_lights_inset(12.0, 16.0).unwrap();
+            }
+
             env::set_var("APP_ENV", "production");
             let port = find_free_port();
             env::set_var("APP_PORT", port.to_string());
-            run_server(_app);
+            run_server(app);
 
             Ok(())
         })

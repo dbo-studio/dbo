@@ -20,7 +20,6 @@ export default function CreatableSelectInput({
   const [localOptions, setLocalOptions] = useState(options);
 
   const handleChange = (selected: any): void => {
-    console.log('🚀 ~ handleChange ~ selected:', selected);
     onChange(selected);
   };
 
