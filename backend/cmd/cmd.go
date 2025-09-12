@@ -50,6 +50,11 @@ func Execute() {
 
 	ss := service.NewService(cfg, appLogger, rr, cm, cache)
 
+	err = ss.JobManager.CancelAllJobs()
+	if err != nil {
+		appLogger.Error(err)
+	}
+
 	restServer := server.New(appLogger, server.Handlers{
 		Config:       handler.NewConfigHandler(appLogger, ss.ConfigService),
 		Connection:   handler.NewConnectionHandler(appLogger, ss.ConnectionService),

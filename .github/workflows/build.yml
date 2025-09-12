@@ -50,12 +50,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: "macos-latest"
-            args: "--target aarch64-apple-darwin"
-          - platform: "macos-13"
-            args: "--target x86_64-apple-darwin"
-          - platform: "ubuntu-22.04"
-            args: ""
+          # - platform: "macos-latest"
+          #   args: "--target aarch64-apple-darwin"
+          # - platform: "macos-13"
+          #   args: "--target x86_64-apple-darwin"
+          # - platform: "ubuntu-22.04"
+          #   args: ""
           - platform: "windows-latest"
             args: ""
 
@@ -78,6 +78,10 @@ jobs:
      
       - name: Install Frontend Dependencies
         run: npm install --force
+        working-directory: ./frontend
+
+      - name: Install SWC Dependencies
+        run: npm install @swc/core@latest @vitejs/plugin-react-swc@latest
         working-directory: ./frontend
 
       - name: Build Frontend with Version
@@ -136,7 +140,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: process.env.release_id,
-              draft: false,
+              draft: true,
               prerelease: false
             });
   
