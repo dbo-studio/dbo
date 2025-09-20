@@ -231,6 +231,5 @@ func (jm *IJobManagerImpl) CancelAllJobs() error {
 		}
 	}
 
-	jm.logger.Info(fmt.Sprintf("Cancelled %d running jobs and %d pending jobs", len(runningJobs), len(pendingJobs)))
 	return nil
 }

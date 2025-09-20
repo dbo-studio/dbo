@@ -79,3 +79,21 @@ type SQLiteTableKeyData struct {
 	Columns []string `json:"columns"`
 	Type    *string  `json:"type"`
 }
+
+type SQLiteIndexParams struct {
+	Indexes []SQLiteIndex `json:"columns"`
+}
+
+type SQLiteIndex struct {
+	New     *SQLiteIndexData `json:"new"`
+	Old     *SQLiteIndexData `json:"old"`
+	Added   *bool            `json:"added"`
+	Deleted *bool            `json:"deleted"`
+}
+
+type SQLiteIndexData struct {
+	Name    *string  `json:"name"`
+	Columns []string `json:"columns"`
+	Unique  *bool    `json:"unique"`
+	Order   *string  `json:"order"`
+}

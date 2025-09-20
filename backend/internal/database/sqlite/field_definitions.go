@@ -35,7 +35,7 @@ func (r *SQLiteRepository) keyOptions(node string) []contract.FormField {
 
 func (r *SQLiteRepository) foreignKeyOptions(node string) []contract.FormField {
 	return []contract.FormField{
-		{ID: "name", Name: "Constraint Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "constraint_name", Name: "Constraint Name", Type: contract.FormFieldTypeText, Required: true},
 		{ID: "target_table", Name: "Target Table", Type: contract.FormFieldTypeSelect, Fields: r.tablesList(), Required: true},
 		{ID: "ref_columns", Name: "Source Columns", Type: contract.FormFieldTypeMultiSelect, Fields: r.tableColumnsList(node), Required: true},
 		{ID: "target_columns", Name: "Target Columns", Type: contract.FormFieldTypeMultiSelect, Required: true},
@@ -55,6 +55,18 @@ func (r *SQLiteRepository) foreignKeyOptions(node string) []contract.FormField {
 		}},
 		{ID: "is_deferrable", Name: "Deferrable", Type: contract.FormFieldTypeCheckBox},
 		{ID: "initially_deferred", Name: "Initially Deferred", Type: contract.FormFieldTypeCheckBox},
+	}
+}
+
+func (r *SQLiteRepository) indexOptions(node string) []contract.FormField {
+	return []contract.FormField{
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "columns", Name: "Columns", Type: contract.FormFieldTypeMultiSelect, Fields: r.tableColumnsList(node)},
+		{ID: "unique", Name: "Unique", Type: contract.FormFieldTypeCheckBox},
+		{ID: "order", Name: "Order", Type: contract.FormFieldTypeSelect, Fields: []contract.FormField{
+			{Value: "ASC", Name: "ASC"},
+			{Value: "DESC", Name: "DESC"},
+		}},
 	}
 }
 

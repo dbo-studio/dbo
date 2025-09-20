@@ -35,6 +35,10 @@ func BuildObjectResponse(query *gorm.DB, fields []contract.FormField) ([]contrac
 		return nil, err
 	}
 
+	return BuildObjectResponseFromResult(results, fields)
+}
+
+func BuildObjectResponseFromResult(results []map[string]any, fields []contract.FormField) ([]contract.FormField, error) {
 	if len(results) == 0 {
 		return fields, nil
 	}
@@ -55,6 +59,10 @@ func BuildArrayResponse(query *gorm.DB, fields []contract.FormField) ([]contract
 		return nil, err
 	}
 
+	return BuildArrayResponseFromResult(results, fields)
+}
+
+func BuildArrayResponseFromResult(results []map[string]any, fields []contract.FormField) ([]contract.FormField, error) {
 	if len(results) == 0 {
 		return []contract.FormField{
 			{
