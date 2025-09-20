@@ -31,7 +31,7 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
           {locales.database}:
         </Typography>
         <SelectInput
-          emptylabel={locales.no_active_database_find}
+          emptylabel={locales.database}
           value={localDatabase}
           disabled={databases?.length === 0}
           size='small'
@@ -45,7 +45,7 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
           {locales.schema}:
         </Typography>
         <SelectInput
-          emptylabel={locales.no_active_schema_find}
+          emptylabel={locales.schema}
           value={localSchema}
           disabled={schemas?.length === 0}
           size='small'
