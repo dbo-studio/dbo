@@ -15,21 +15,27 @@ export const createDataEditedRowsSlice: StateCreator<
     const selectedTabId = useTabStore.getState().selectedTabId;
     if (!selectedTabId) return Promise.resolve();
 
-    const currentUnsavedRows = [...get().unSavedRows];
+    let currentUnsavedRows = [...get().unSavedRows];
     const rowsToKeep: EditedRow[] = [];
 
     for (const editedRow of editedRows) {
-      const isUnsaved = currentUnsavedRows.some((r) => r.dbo_index === editedRow.dboIndex);
-      if (isUnsaved) {
-        const { dboIndex, ...data } = editedRow;
-        const newUnsavedRow = {
-          ...data.new,
-          dbo_index: dboIndex
-        };
-        currentUnsavedRows.push(newUnsavedRow);
-      } else {
+      const isUnsavedRow = currentUnsavedRows.some((r) => r.dbo_index === editedRow.dboIndex);
+      if (!isUnsavedRow) {
         rowsToKeep.push(editedRow);
+        continue;
       }
+
+      currentUnsavedRows = currentUnsavedRows.map((r) => {
+        if (r.dbo_index === editedRow.dboIndex) {
+          const { dboIndex, ...data } = editedRow;
+          return {
+            ...r,
+            ...data.new,
+            dbo_index: dboIndex
+          };
+        }
+        return r;
+      })
     }
 
     set({ editedRows: rowsToKeep }, undefined, 'updateEditedRows');

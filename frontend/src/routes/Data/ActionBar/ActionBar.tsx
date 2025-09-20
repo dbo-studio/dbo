@@ -27,7 +27,7 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
   const handleShowExport = () => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;
     const table = useTabStore.getState().selectedTab()?.table ?? 'exported_table';
-    const query = useTabStore.getState().selectedTab()?.query ?? '';
+    const query = useTabStore.getState().getQuery() ?? '';
 
     setShowExport({
       show: true,
