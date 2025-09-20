@@ -21,9 +21,6 @@ export default function AppHeader(): JSX.Element {
       spacing={0}
       justifyContent={'space-between'}
       style={{
-        backgroundColor: 'transparent',
-        backdropFilter: 'blur(15px)',
-        WebkitBackdropFilter: 'blur(15px)',
         paddingLeft: titleBar.paddingLeft,
         paddingTop: titleBar.paddingTop
       }}

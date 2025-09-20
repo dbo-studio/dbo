@@ -100,7 +100,6 @@ export default function StatusBarActions(): JSX.Element {
     const rows = await indexedDBService.getRows(selectedTab?.id ?? '');
     const unsavedRows = await indexedDBService.getUnsavedRows(selectedTab?.id ?? '');
 
-    await restoreEditedRows();
     await updateUnsavedRows([]);
 
     if (unsavedRows.length > 0) {
@@ -110,6 +109,8 @@ export default function StatusBarActions(): JSX.Element {
     }
 
     await updateRemovedRows([]);
+    await restoreEditedRows();
+
 
     await updateSelectedRows([], true);
     toggleReRender();
