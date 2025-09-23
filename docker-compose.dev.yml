@@ -47,9 +47,25 @@ services:
     volumes:
       - "./docker/data/pgsql:/var/lib/postgresql/data"
       - "./docs/sample_db/public.sql:/docker-entrypoint-initdb.d/public.sql"
-    restart: always
     platform: "linux/amd64"
     environment:
       POSTGRES_DB: default
       POSTGRES_USER: default
       POSTGRES_PASSWORD: secret
+
+  jaeger:
+    container_name: dbo-studio-jaeger
+    image: cr.jaegertracing.io/jaegertracing/jaeger:2.10.0
+    volumes:
+      - ./docker/jaeger:/data:Z
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+      - "5778:5778"
+      - "9411:9411"
+    environment:
+      SPAN_STORAGE_TYPE: badger
+      BADGER_EPHEMERAL: false
+      BADGER_DIRECTORY_VALUE: /data/badger
+      BADGER_DIRECTORY_KEY: /data/badger

@@ -15,13 +15,14 @@ type App struct {
 	LogPath       string
 }
 
-type Sentry struct {
-	Dsn string
+type Trace struct {
+	JaegerHost  string
+	EnableTrace bool
 }
 
 type Config struct {
-	App    App
-	Sentry Sentry
+	App   App
+	Trace Trace
 }
 
 var config *Config
@@ -37,8 +38,9 @@ func New() *Config {
 			ReleaseUrlApi: "https://dbo-studio.com/api/config",
 			ReleaseUrl:    "https://dbo-studio.com/releases",
 		},
-		Sentry: Sentry{
-			Dsn: os.Getenv("SENTRY_DNS"),
+		Trace: Trace{
+			JaegerHost:  os.Getenv("JAEGER_HOST"),
+			EnableTrace: os.Getenv("ENABLE_TRACE") == "true",
 		},
 	}
 
