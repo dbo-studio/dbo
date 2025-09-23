@@ -61,6 +61,7 @@ func runRawQuery(r *SQLiteRepository, req *dto.RawQueryRequest) (*dto.RawQueryRe
 	for i := range queryResults {
 		queryResults[i]["dbo_index"] = i
 		queryResults[i]["editable"] = false
+		queryResults[i] = helper.SanitizeQueryResults(queryResults[i])
 	}
 
 	structures := make([]dto.Column, 0)

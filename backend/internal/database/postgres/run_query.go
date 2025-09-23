@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 )
 
@@ -23,8 +24,9 @@ func (r *PostgresRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryRe
 		return nil, result.Error
 	}
 
-	for i := range queryResults {
+	for i, row := range queryResults {
 		queryResults[i]["dbo_index"] = i
+		queryResults[i] = helper.SanitizeQueryResults(row)
 	}
 
 	columns, err := r.getColumns(node.Table, &node.Schema, req.Columns, true)

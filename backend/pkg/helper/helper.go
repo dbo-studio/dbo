@@ -66,3 +66,19 @@ func isAlreadyQuoted(s string) bool {
 	}
 	return s[0] == '\'' && s[len(s)-1] == '\''
 }
+
+func SanitizeQueryResults(row map[string]any) map[string]any {
+	sanitized := make(map[string]any)
+	for key, value := range row {
+		switch v := value.(type) {
+		case float64:
+			sanitized[key] = strconv.FormatFloat(v, 'f', -1, 64)
+		case []byte:
+			sanitized[key] = string(v)
+		default:
+			sanitized[key] = v
+		}
+	}
+
+	return sanitized
+}
