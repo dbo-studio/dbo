@@ -6,8 +6,8 @@ import type { DataGridTableCellProps } from '../types';
 
 export const DataGridTableCell = memo(
   ({ row, rowIndex, columnId, value, editable }: DataGridTableCellProps) => {
-    const placeholder = String(value === null ? 'NULL' : value || '');
-    const cellValue = String(value || '');
+    const placeholder = String(value === null || value === undefined ? 'NULL' : value);
+    const cellValue = String(value == null || value === undefined ? '' : value);
 
     const { inputRef, handleRowChange } = useCellEditing(row, columnId, cellValue);
 
