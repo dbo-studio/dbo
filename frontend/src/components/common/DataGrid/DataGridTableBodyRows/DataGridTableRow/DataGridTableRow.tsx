@@ -1,6 +1,6 @@
 import { useDataStore } from '@/store/dataStore/data.store';
-import { Checkbox } from '@mui/material';
-import { memo, useCallback } from 'react';
+import { Checkbox, useTheme } from '@mui/material';
+import { memo, useCallback, useMemo } from 'react';
 import { StyledTableRow, TableCell } from '../../DataGrid.styled';
 import { DataGridTableCell } from '../../DataGridTableCell/DataGridTableCell';
 import type { DataGridTableRowProps } from '../../types';
@@ -17,7 +17,18 @@ const DataGridTableRow = memo(
     isRemoved,
     editable
   }: DataGridTableRowProps) => {
+    const theme = useTheme();
     const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
+
+    // the row style is used to apply background color to the row based on the row index
+    // because the rows are virtualized, we need to apply the background color to the row based on the row index
+    const hasHighlight = isRemoved || isUnsaved || isEdited || isSelected;
+    const rowStyle = useMemo(
+      () => ({
+        backgroundColor: !hasHighlight && rowIndex % 2 !== 0 ? theme.palette.background.subdued : undefined
+      }),
+      [rowIndex, theme.palette.background.subdued, hasHighlight]
+    );
 
     const handleSelect = useCallback(
       (columnId: string) => {
@@ -35,31 +46,38 @@ const DataGridTableRow = memo(
       [updateSelectedRows, rowIndex, row]
     );
 
-    const handleSelectCheckBox = (e: React.ChangeEvent<HTMLInputElement>): void => {
-      if (e.target.checked) {
-        updateSelectedRows([
-          {
-            index: rowIndex,
-            selectedColumn: '',
-            row
-          }
-        ]);
-      } else {
-        const selectedRows = useDataStore.getState().selectedRows;
-        const newSelectedRows = selectedRows.filter((row) => row.index !== rowIndex);
-        updateSelectedRows(newSelectedRows, true);
-      }
-    };
+    const handleSelectCheckBox = useCallback(
+      (e: React.ChangeEvent<HTMLInputElement>): void => {
+        if (e.target.checked) {
+          updateSelectedRows([
+            {
+              index: rowIndex,
+              selectedColumn: '',
+              row
+            }
+          ]);
+        } else {
+          const selectedRows = useDataStore.getState().selectedRows;
+          const newSelectedRows = selectedRows.filter((selectedRow) => selectedRow.index !== rowIndex);
+          updateSelectedRows(newSelectedRows, true);
+        }
+      },
+      [updateSelectedRows, rowIndex, row]
+    );
 
-    return (
-      <StyledTableRow
-        className={`
+    const className = useMemo(
+      () =>
+        `
         ${isRemoved ? 'removed-highlight' : ''}
         ${isUnsaved ? 'unsaved-highlight' : ''}
         ${isEdited ? 'edit-highlight' : ''}
         ${isSelected ? 'selected-highlight' : ''}
-      `.trim()}
-      >
+      `.trim(),
+      [isRemoved, isUnsaved, isEdited, isSelected]
+    );
+
+    return (
+      <StyledTableRow className={className} style={rowStyle}>
         {columns.map((column) => {
           const columnId = column.name;
           const value = row[columnId];
@@ -100,6 +118,20 @@ const DataGridTableRow = memo(
           );
         })}
       </StyledTableRow>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison function for better memoization
+    return (
+      prevProps.row.dbo_index === nextProps.row.dbo_index &&
+      prevProps.rowIndex === nextProps.rowIndex &&
+      prevProps.isSelected === nextProps.isSelected &&
+      prevProps.isEdited === nextProps.isEdited &&
+      prevProps.isUnsaved === nextProps.isUnsaved &&
+      prevProps.isRemoved === nextProps.isRemoved &&
+      prevProps.editable === nextProps.editable &&
+      prevProps.columns.length === nextProps.columns.length &&
+      prevProps.columns.every((col, idx) => col.name === nextProps.columns[idx]?.name)
     );
   }
 );

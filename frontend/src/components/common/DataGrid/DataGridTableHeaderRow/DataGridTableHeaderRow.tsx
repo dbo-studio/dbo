@@ -1,7 +1,7 @@
 import { useDataStore } from '@/store/dataStore/data.store';
 import { Checkbox } from '@mui/material';
 import type { JSX } from 'react';
-import { StyledTableRow, TableHeader } from '../DataGrid.styled';
+import { StyledTableHead, StyledTableRow, TableHeader } from '../DataGrid.styled';
 import DataGridResizer from '../DataGridResizer/DataGridResizer';
 import type { DataGridTableHeaderRowProps } from '../types';
 
@@ -13,7 +13,7 @@ export default function DataGridTableHeaderRow({
   const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
 
   return (
-    <thead>
+    <StyledTableHead>
       <StyledTableRow>
         {columns.map((column) => {
           const isCurrentColumnResizing = resizingColumnId === column.name;
@@ -72,6 +72,6 @@ export default function DataGridTableHeaderRow({
           );
         })}
       </StyledTableRow>
-    </thead>
+    </StyledTableHead>
   );
 }

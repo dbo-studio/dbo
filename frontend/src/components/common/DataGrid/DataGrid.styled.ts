@@ -94,10 +94,14 @@ export const TableContainer = styled('div')(() => ({
   WebkitOverflowScrolling: 'touch'
 }));
 
-export const StyledTableRow = styled('tr')(({ theme }) => ({
-  '&:nth-of-type(odd)': {
-    backgroundColor: theme.palette.background.subdued
-  }
+export const StyledTableRow = styled('tr')(() => ({}));
+
+export const StyledTableHead = styled('thead')(({ theme }) => ({
+  position: 'sticky',
+  top: 0,
+  zIndex: 10,
+  backgroundColor: theme.palette.background.default,
+  boxShadow: theme.palette.mode === 'dark' ? '0 2px 4px rgba(0, 0, 0, 0.3)' : '0 2px 4px rgba(0, 0, 0, 0.1)'
 }));
 
 export const Resizer = styled('div')(({ theme }) => ({
