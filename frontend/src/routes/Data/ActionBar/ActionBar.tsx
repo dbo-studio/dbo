@@ -1,17 +1,23 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { ExportModal } from '@/components/common/ExportModal/ExportModal';
 import { ImportModal } from '@/components/common/ImportModal/ImportModal';
+import { useSelectedTab } from '@/hooks';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { Box, Grid, IconButton, Stack, useTheme } from '@mui/material';
+import { Badge, Box, Grid, IconButton, Stack, useTheme } from '@mui/material';
 import { type JSX, useState } from 'react';
-import Filters from '../Filters/Filters';
-import QueryPreview from '../QueryPreview/QueryPreview';
-import Sorts from '../Sorts/Sorts';
+import Filters from './Filters/Filters';
+import QueryPreview from './QueryPreview/QueryPreview';
+import Sorts from './Sorts/Sorts';
 import type { ActionBarProps } from './types';
 
 export default function ActionBar({ showColumns, setShowColumns }: ActionBarProps): JSX.Element {
   const theme = useTheme();
+  const selectedTab = useSelectedTab();
+
+  const sortCount = selectedTab?.sorts?.filter((sort) => sort.isActive).length ?? 0;
+  const filterCount = selectedTab?.filters?.filter((filter) => filter.isActive).length ?? 0;
+
   const [showExport, setShowExport] = useState({
     show: false,
     connectionId: 0,
@@ -103,14 +109,18 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
             <CustomIcon type='grid' size='s' />
           </IconButton>
           <IconButton className={show.showFilters ? 'active' : ''} onClick={(): void => handleToggle('filter')}>
-            <CustomIcon type='filter' size='s' />
+            <Badge badgeContent={filterCount} color='secondary' variant='dot'>
+              <CustomIcon type='filter' size='s' />
+            </Badge>
           </IconButton>
           <IconButton
             className={show.showSorts ? 'active' : ''}
             aria-label='sort'
             onClick={(): void => handleToggle('sort')}
           >
-            <CustomIcon type='sort' size='s' />
+            <Badge badgeContent={sortCount} color='secondary' variant='dot'>
+              <CustomIcon type='sort' size='s' />
+            </Badge>
           </IconButton>
         </Stack>
         <Grid size={{ md: 8 }} display='flex' justifyContent='flex-end'>
