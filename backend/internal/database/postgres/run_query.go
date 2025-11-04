@@ -12,7 +12,7 @@ import (
 
 func (r *PostgresRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
 	node := extractNode(req.NodeId)
-	query := runQueryGenerator(req, node)
+	query := r.runQueryGenerator(req, node)
 	queryResults := make([]map[string]any, 0)
 
 	if node.Table == "" {
@@ -41,7 +41,7 @@ func (r *PostgresRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryRe
 	}, nil
 }
 
-func runQueryGenerator(dto *dto.RunQueryRequest, node PGNode) string {
+func (r *PostgresRepository) runQueryGenerator(dto *dto.RunQueryRequest, node PGNode) string {
 	var sb strings.Builder
 
 	// SELECT clause
@@ -70,6 +70,14 @@ func runQueryGenerator(dto *dto.RunQueryRequest, node PGNode) string {
 			sortClauses[i] = fmt.Sprintf("%s %s", sort.Column, sort.Operator)
 		}
 		sb.WriteString(strings.Join(sortClauses, ", "))
+	} else {
+		keys, err := r.getPrimaryKeys(Table{node.Table})
+		if err != nil {
+			return ""
+		}
+
+		sb.WriteString(" ORDER BY ")
+		sb.WriteString(strings.Join(keys, ", "))
 	}
 
 	// LIMIT and OFFSET
