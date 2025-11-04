@@ -22,7 +22,7 @@ export default function ConnectionInfo(): JSX.Element {
   const showSettings = useSettingStore((state) => state.showSettings);
   const toggleShowAddConnection = useSettingStore((state) => state.toggleShowAddConnection);
 
-  const runQuery = useDataStore((state) => state.runQuery);
+  const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
   const runRawQuery = useDataStore((state) => state.runRawQuery);
   const reloadTree = useTreeStore((state) => state.reloadTree);
   const addEditorTab = useTabStore((state) => state.addEditorTab);
@@ -56,7 +56,7 @@ export default function ConnectionInfo(): JSX.Element {
     }
 
     if (selectedTab?.mode === TabMode.Data) {
-      runQuery();
+      toggleReRunQuery();
     }
   };
 
