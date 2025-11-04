@@ -16,6 +16,7 @@ export default function DataGridResizer({ columnId, isResizing, onResizeStart }:
 
   return (
     <Resizer
+      data-resizer
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
       className={`resizer ${isResizing ? 'isResizing' : ''}`}

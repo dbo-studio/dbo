@@ -1,6 +1,6 @@
-import { useDataStore } from '@/store/dataStore/data.store';
 import type { JSX } from 'react';
-import { useMemo } from 'react';
+import { PaddingTableCell } from '../DataGrid.styled';
+import { useRowStateLookup } from '../hooks/useRowStateLookup';
 import type { DataGridTableBodyRowsProps } from '../types';
 import DataGridTableRow from './DataGridTableRow/DataGridTableRow';
 
@@ -8,41 +8,54 @@ export default function DataGridTableBodyRows({
   columns,
   rows,
   context,
-  editable
-}: DataGridTableBodyRowsProps): JSX.Element {
-  const editedRows = useDataStore((state) => state.editedRows);
-  const removedRows = useDataStore((state) => state.removedRows);
-  const unsavedRows = useDataStore((state) => state.unSavedRows);
-  const selectedRows = useDataStore((state) => state.selectedRows);
-
-  const removedRowsMap = useMemo(() => new Map(removedRows.map((row) => [row.dbo_index, true])), [removedRows]);
-  const unsavedRowsMap = useMemo(() => new Map(unsavedRows.map((row) => [row.dbo_index, true])), [unsavedRows]);
-  const editedRowsMap = useMemo(() => new Map(editedRows.map((row) => [row.dboIndex, true])), [editedRows]);
-  const selectedRowsMap = useMemo(() => new Map(selectedRows.map((row) => [row.index, true])), [selectedRows]);
+  editable,
+  virtualRows,
+  paddingTop,
+  paddingBottom,
+  searchTerm,
+  currentMatch
+}: DataGridTableBodyRowsProps & {
+  virtualRows: Array<{ index: number; start: number; end: number; size: number }>;
+  paddingTop: number;
+  paddingBottom: number;
+}): JSX.Element {
+  const { getRowState } = useRowStateLookup();
 
   return (
     <tbody>
-      {rows.map((row, rowIndex) => {
-        const isRemoved = removedRowsMap.has(row.dbo_index);
-        const isUnsaved = unsavedRowsMap.has(row.dbo_index);
-        const isEdited = editedRowsMap.has(row.dbo_index);
-        const isSelected = selectedRowsMap.has(rowIndex);
+      {paddingTop > 0 && (
+        <tr>
+          <PaddingTableCell colSpan={columns.length} height={paddingTop} />
+        </tr>
+      )}
+      {virtualRows.map((virtualRow) => {
+        const row = rows[virtualRow.index];
+        if (!row) return null;
+
+        const rowState = getRowState(row.dbo_index, virtualRow.index);
 
         return (
           <DataGridTableRow
             key={`row-${row.dbo_index}`}
             editable={editable}
             row={row}
-            rowIndex={rowIndex}
+            rowIndex={virtualRow.index}
             columns={columns}
             context={context}
-            isSelected={isSelected}
-            isEdited={isEdited}
-            isUnsaved={isUnsaved}
-            isRemoved={isRemoved}
+            isSelected={rowState.isSelected}
+            isEdited={rowState.isEdited}
+            isUnsaved={rowState.isUnsaved}
+            isRemoved={rowState.isRemoved}
+            searchTerm={searchTerm}
+            currentMatch={currentMatch}
           />
         );
       })}
+      {paddingBottom > 0 && (
+        <tr>
+          <PaddingTableCell colSpan={columns.length} height={paddingBottom} />
+        </tr>
+      )}
     </tbody>
   );
 }
