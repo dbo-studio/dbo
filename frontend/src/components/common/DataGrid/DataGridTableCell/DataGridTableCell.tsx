@@ -67,9 +67,10 @@ export const DataGridTableCell = memo(
     };
 
     const cellClassName = useMemo(
-      () => clsx({
-        'is-current-match': isCurrentMatch
-      }),
+      () =>
+        clsx({
+          'is-current-match': isCurrentMatch
+        }),
       [isCurrentMatch]
     );
 

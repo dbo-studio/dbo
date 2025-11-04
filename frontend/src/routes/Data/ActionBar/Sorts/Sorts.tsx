@@ -29,7 +29,6 @@ export default function Sorts(): JSX.Element {
     toggleReRunQuery();
   };
 
-
   if (!selectedTab) return <></>;
 
   return (

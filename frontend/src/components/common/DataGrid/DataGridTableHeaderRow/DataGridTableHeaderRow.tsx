@@ -43,17 +43,21 @@ export default function DataGridTableHeaderRow({
       const currentSort = getColumnSort(columnName);
 
       if (!currentSort) {
-        await updateSorts([{
-          index: uuidv4(),
-          column: columnName,
-          operator: PgsqlSorts[0],
-          isActive: true
-        }]);
+        await updateSorts([
+          {
+            index: uuidv4(),
+            column: columnName,
+            operator: PgsqlSorts[0],
+            isActive: true
+          }
+        ]);
       } else if (currentSort.operator === PgsqlSorts[0]) {
-        await updateSorts([{
-          ...currentSort,
-          operator: PgsqlSorts[1]
-        }]);
+        await updateSorts([
+          {
+            ...currentSort,
+            operator: PgsqlSorts[1]
+          }
+        ]);
       } else {
         removeSort(currentSort);
       }
@@ -68,7 +72,6 @@ export default function DataGridTableHeaderRow({
       }
 
       toggleReRunQuery();
-
     },
     [getColumnSort, updateSorts, removeSort, toggleReRunQuery]
   );
@@ -81,9 +84,7 @@ export default function DataGridTableHeaderRow({
 
           if (column.name === 'select') {
             return (
-              <SelectTableHeader
-                key={column.name}
-              >
+              <SelectTableHeader key={column.name}>
                 <Checkbox
                   sx={{ padding: 0 }}
                   size={'small'}
@@ -109,13 +110,11 @@ export default function DataGridTableHeaderRow({
           }
 
           const columnSort = getColumnSort(column.name);
-          const sortIcon = columnSort?.operator === 'ASC' ? 'arrowUp' : columnSort?.operator === 'DESC' ? 'arrowDown' : 'sort';
+          const sortIcon =
+            columnSort?.operator === 'ASC' ? 'arrowUp' : columnSort?.operator === 'DESC' ? 'arrowDown' : 'sort';
 
           return (
-            <SortableTableHeader
-              key={column.name}
-              onClick={(e): Promise<void> => handleColumnSort(column.name, e)}
-            >
+            <SortableTableHeader key={column.name} onClick={(e): Promise<void> => handleColumnSort(column.name, e)}>
               <Box display='flex' alignItems='center' gap={0.5}>
                 <span>{column.name}</span>
                 <CustomIcon type={sortIcon} size='xs' />

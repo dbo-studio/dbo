@@ -182,7 +182,7 @@ export const HighlightedTextMatch = styled('span')(({ theme }) => ({
     fontWeight: 'bold'
   },
   '&.is-match.is-current-match': {
-    color: theme.palette.text.warning,
+    color: theme.palette.text.warning
   }
 }));
 

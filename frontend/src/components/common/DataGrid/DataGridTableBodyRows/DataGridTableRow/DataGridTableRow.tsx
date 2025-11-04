@@ -63,13 +63,14 @@ const DataGridTableRow = memo(
     );
 
     const rowClassName = useMemo(
-      () => clsx({
-        'removed-highlight': isRemoved,
-        'unsaved-highlight': isUnsaved,
-        'edit-highlight': isEdited,
-        'selected-highlight': isSelected,
-        'is-striped': isStriped
-      }),
+      () =>
+        clsx({
+          'removed-highlight': isRemoved,
+          'unsaved-highlight': isUnsaved,
+          'edit-highlight': isEdited,
+          'selected-highlight': isSelected,
+          'is-striped': isStriped
+        }),
       [isRemoved, isUnsaved, isEdited, isSelected, isStriped]
     );
 
@@ -79,7 +80,9 @@ const DataGridTableRow = memo(
           const columnId = column.name;
           const value = row[columnId];
           const isSearchMatch = searchTerm
-            ? String(value ?? '').toLowerCase().includes(searchTerm.toLowerCase())
+            ? String(value ?? '')
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase())
             : false;
           const isCurrentMatch = currentMatch?.rowIndex === rowIndex && currentMatch?.columnIndex === columnIndex;
 

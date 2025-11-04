@@ -33,8 +33,7 @@ export function useDataGridVirtualization({
   const totalSize = rowVirtualizer.getTotalSize();
 
   const paddingTop = virtualRows.length > 0 ? (virtualRows[0]?.start ?? 0) : 0;
-  const paddingBottom =
-    virtualRows.length > 0 ? totalSize - (virtualRows[virtualRows.length - 1]?.end ?? 0) : 0;
+  const paddingBottom = virtualRows.length > 0 ? totalSize - (virtualRows[virtualRows.length - 1]?.end ?? 0) : 0;
 
   return {
     virtualRows,
@@ -44,4 +43,3 @@ export function useDataGridVirtualization({
     rowVirtualizer
   };
 }
-
