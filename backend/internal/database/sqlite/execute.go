@@ -14,14 +14,10 @@ func (r *SQLiteRepository) Execute(nodeID string, action contract.TreeNodeAction
 		return err
 	}
 
-	var queries []string
-
-	tableQueries, err := r.handleTableCommands(nodeID, executeParams, action, params)
+	queries, err := r.handleTableCommands(nodeID, executeParams, action, params)
 	if err != nil {
 		return err
 	}
-
-	queries = append(queries, tableQueries...)
 
 	for _, query := range queries {
 		if query == "" {

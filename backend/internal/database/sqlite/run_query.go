@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 )
 
@@ -24,7 +25,7 @@ func (r *SQLiteRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryResp
 	}
 
 	for i := range queryResults {
-		queryResults[i]["dbo_index"] = i
+		queryResults[i]["dbo_index"] = helper.SanitizeQueryResults(queryResults[i])
 	}
 
 	columns, err := r.getColumns(node, req.Columns, true)

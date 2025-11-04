@@ -13,8 +13,7 @@ func (r *SQLiteRepository) GetFormTabs(action contract.TreeNodeActionName) []con
 			{ID: contract.TableColumnsTab, Name: "Columns"},
 			{ID: contract.TableKeysTab, Name: "Keys"},
 			{ID: contract.TableForeignKeysTab, Name: "Foreign Keys"},
-			// {ID: contract.TableIndexesTab, Name: "Indexes"},
-			// {ID: contract.TableChecksTab, Name: "Checks"},
+			{ID: contract.TableIndexesTab, Name: "Indexes"},
 		}
 	case contract.CreateViewAction, contract.EditViewAction:
 		return []contract.FormTab{
@@ -36,10 +35,8 @@ func (r *SQLiteRepository) GetFormFields(nodeID string, tabID contract.TreeTab, 
 		return helper.BuildFieldArray(r.keyOptions(nodeID))
 	case contract.TableForeignKeysTab:
 		return helper.BuildFieldArray(r.foreignKeyOptions(nodeID))
-	// case contract.TableIndexesTab:
-	// 	return helper.BuildFieldArray(r.indexOptions(nodeID))
-	// case contract.TableChecksTab:
-	// 	return helper.BuildFieldArray(r.checkOptions())
+	case contract.TableIndexesTab:
+		return helper.BuildFieldArray(r.indexOptions(nodeID))
 
 	case contract.ViewTab:
 		return r.viewFields()

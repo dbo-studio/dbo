@@ -35,7 +35,7 @@ export const createDataEditedRowsSlice: StateCreator<
           };
         }
         return r;
-      })
+      });
     }
 
     set({ editedRows: rowsToKeep }, undefined, 'updateEditedRows');
