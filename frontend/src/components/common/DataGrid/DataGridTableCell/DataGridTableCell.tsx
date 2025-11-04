@@ -14,7 +14,6 @@ export const DataGridTableCell = memo(
 
     const { handleClick, isEditing, setIsEditing } = useCellSelection(row, rowIndex, columnId, editable);
 
-    // Highlight search term in cell content
     const highlightedContent = useMemo(() => {
       if (!searchTerm || !isSearchMatch) {
         return <span>{placeholder}</span>;

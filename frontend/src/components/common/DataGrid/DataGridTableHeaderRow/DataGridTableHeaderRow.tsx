@@ -3,6 +3,7 @@ import { PgsqlSorts } from '@/core/constants';
 import { useSelectedTab } from '@/hooks';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import type { TabType } from '@/types';
 import { Box, Checkbox } from '@mui/material';
 import type { JSX } from 'react';
 import { useCallback } from 'react';
@@ -21,6 +22,7 @@ export default function DataGridTableHeaderRow({
   const removeSort = useTabStore((state) => state.removeSort);
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
   const updateSorts = useTabStore((state) => state.updateSorts);
+  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
   const getColumnSort = useCallback(
     (columnName: string) => {
@@ -47,17 +49,25 @@ export default function DataGridTableHeaderRow({
           operator: PgsqlSorts[0],
           isActive: true
         }]);
-        toggleReRunQuery();
-      } else if (currentSort.operator === 'ASC') {
+      } else if (currentSort.operator === PgsqlSorts[0]) {
         await updateSorts([{
           ...currentSort,
           operator: PgsqlSorts[1]
         }]);
-        toggleReRunQuery();
       } else {
         removeSort(currentSort);
-        toggleReRunQuery();
       }
+
+      if (selectedTab?.pagination?.page ?? 0 > 1) {
+        const pagination = selectedTab?.pagination ?? { page: 1, limit: 100 };
+        pagination.page = 1;
+        updateSelectedTab({
+          ...(selectedTab ?? ({} as TabType)),
+          pagination
+        });
+      }
+
+      toggleReRunQuery();
 
     },
     [getColumnSort, updateSorts, removeSort, toggleReRunQuery]

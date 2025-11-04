@@ -1,17 +1,13 @@
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useMemo } from 'react';
 
-/**
- * Optimized hook for row state lookups
- * Uses Sets for O(1) lookup performance instead of O(n) array operations
- */
+
 export function useRowStateLookup() {
     const editedRows = useDataStore((state) => state.editedRows);
     const removedRows = useDataStore((state) => state.removedRows);
     const unsavedRows = useDataStore((state) => state.unSavedRows);
     const selectedRows = useDataStore((state) => state.selectedRows);
 
-    // Use Sets for O(1) lookup instead of O(n) array operations
     const removedRowsSet = useMemo(() => {
         const set = new Set<number>();
         for (const row of removedRows) {

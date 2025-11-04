@@ -29,7 +29,7 @@ export default function SearchDialog({ open, onClose, search }: SearchDialogProp
         search.clearSearch();
     };
 
-    const handleKeyDown = (e: KeyboardEvent): void => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
         if (e.key === 'Enter') {
             search.nextMatch();
         }
