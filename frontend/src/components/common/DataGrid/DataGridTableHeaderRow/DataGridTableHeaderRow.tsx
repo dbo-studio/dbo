@@ -7,7 +7,7 @@ import { Box, Checkbox } from '@mui/material';
 import type { JSX } from 'react';
 import { useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { StyledTableHead, StyledTableRow, TableHeader } from '../DataGrid.styled';
+import { SelectTableHeader, SortableTableHeader, StyledTableHead, StyledTableRow } from '../DataGrid.styled';
 import DataGridResizer from '../DataGridResizer/DataGridResizer';
 import type { DataGridTableHeaderRowProps } from '../types';
 
@@ -71,16 +71,8 @@ export default function DataGridTableHeaderRow({
 
           if (column.name === 'select') {
             return (
-              <TableHeader
+              <SelectTableHeader
                 key={column.name}
-                style={{
-                  position: 'relative',
-                  minWidth: '30px',
-                  maxWidth: '30px',
-                  width: '30px',
-                  boxSizing: 'border-box',
-                  padding: 0
-                }}
               >
                 <Checkbox
                   sx={{ padding: 0 }}
@@ -102,7 +94,7 @@ export default function DataGridTableHeaderRow({
                     e.stopPropagation();
                   }}
                 />
-              </TableHeader>
+              </SelectTableHeader>
             );
           }
 
@@ -110,12 +102,8 @@ export default function DataGridTableHeaderRow({
           const sortIcon = columnSort?.operator === 'ASC' ? 'arrowUp' : columnSort?.operator === 'DESC' ? 'arrowDown' : 'sort';
 
           return (
-            <TableHeader
+            <SortableTableHeader
               key={column.name}
-              style={{
-                position: 'relative',
-                cursor: 'pointer'
-              }}
               onClick={(e): Promise<void> => handleColumnSort(column.name, e)}
             >
               <Box display='flex' alignItems='center' gap={0.5}>
@@ -127,7 +115,7 @@ export default function DataGridTableHeaderRow({
                 isResizing={isCurrentColumnResizing}
                 onResizeStart={startResize}
               />
-            </TableHeader>
+            </SortableTableHeader>
           );
         })}
       </StyledTableRow>

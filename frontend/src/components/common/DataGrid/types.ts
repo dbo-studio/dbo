@@ -13,6 +13,9 @@ export type DataGridTableCellProps = {
   columnId: string;
   value: any;
   editable: boolean;
+  searchTerm?: string;
+  isSearchMatch?: boolean;
+  isCurrentMatch?: boolean;
 };
 
 export type DataGridTableRowProps = {
@@ -25,6 +28,8 @@ export type DataGridTableRowProps = {
   isSelected: boolean;
   isRemoved: boolean;
   editable: boolean;
+  searchTerm?: string;
+  currentMatch?: { rowIndex: number; columnIndex: number } | null;
 };
 
 export type CellEditingReturn = {
@@ -47,6 +52,8 @@ export type DataGridTableBodyRowsProps = {
   columns: ColumnType[];
   context: (event: React.MouseEvent) => void;
   editable: boolean;
+  searchTerm?: string;
+  currentMatch?: { rowIndex: number; columnIndex: number } | null;
 };
 export type DataGridTableHeaderRowProps = {
   columns: ColumnType[];

@@ -1,19 +1,21 @@
 import { useContextMenu } from '@/hooks';
-import type { ColumnType } from '@/types';
 import { Box, CircularProgress } from '@mui/material';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import { type JSX, useMemo, useRef } from 'react';
-import { StyledTable, TableContainer } from './DataGrid.styled';
+import { type JSX, useRef } from 'react';
+import { StyledCol, StyledTable, TableContainer, VirtualTableWrapper } from './DataGrid.styled';
 import DataGridContextMenu from './DataGridContextMenu/DataGridContextMenu';
 import DataGridTableBodyRows from './DataGridTableBodyRows/DataGridTableBodyRows';
 import DataGridTableHeaderRow from './DataGridTableHeaderRow/DataGridTableHeaderRow';
 import { useColumnResize } from './hooks/useColumnResize';
+import { useDataGridColumns } from './hooks/useDataGridColumns';
+import { useDataGridSearch } from './hooks/useDataGridSearch';
+import { useDataGridSearchIntegration } from './hooks/useDataGridSearchIntegration';
+import { useDataGridVirtualization } from './hooks/useDataGridVirtualization';
 import { useHandleScroll } from './hooks/useHandleScroll';
 import QuickViewDialog from './QuickViewDialog/QuickViewDialog';
+import SearchDialog from './SearchDialog/SearchDialog';
 import type { DataGridProps } from './types';
 
-const ROW_HEIGHT = 22; // Height of each row in pixels
-const HEADER_HEIGHT = 40; // Approximate height of header row
+const HEADER_HEIGHT = 40;
 
 export default function DataGrid({ rows, columns, loading, editable = true }: DataGridProps): JSX.Element {
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -27,40 +29,20 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
     minColumnWidth: 50
   });
 
-  const tableColumns = useMemo((): ColumnType[] => {
-    return [
-      {
-        name: 'select',
-        type: 'checkbox',
-        isActive: true,
-        notNull: false,
-        length: '1',
-        comment: '',
-        default: '',
-        mappedType: ''
-      },
-      ...columns
-    ];
-  }, [columns]);
+  const { tableColumns, totalTableWidth } = useDataGridColumns({ columns, columnSizes });
 
-  const totalTableWidth = useMemo(() => {
-    return Object.values(columnSizes).reduce((total, width) => total + width, 0);
-  }, [columnSizes]);
-
-  const rowVirtualizer = useVirtualizer({
-    count: rows.length,
-    getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => ROW_HEIGHT,
-    overscan: 10, // Render 10 extra rows outside viewport for smooth scrolling
-    enabled: rows.length > 0 && !loading
+  const { virtualRows, paddingTop, paddingBottom, totalSize, rowVirtualizer } = useDataGridVirtualization({
+    rowsCount: rows.length,
+    loading,
+    tableContainerRef
   });
 
-  const virtualRows = rowVirtualizer.getVirtualItems();
-  const totalSize = rowVirtualizer.getTotalSize();
+  const search = useDataGridSearch({ rows, columns: tableColumns });
 
-  const paddingTop = virtualRows.length > 0 ? (virtualRows[0]?.start ?? 0) : 0;
-  const paddingBottom =
-    virtualRows.length > 0 ? totalSize - (virtualRows[virtualRows.length - 1]?.end ?? 0) : 0;
+  const { isSearchDialogOpen, setIsSearchDialogOpen, currentMatch } = useDataGridSearchIntegration({
+    search,
+    rowVirtualizer
+  });
 
   return loading ? (
     <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
@@ -70,11 +52,12 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
     <>
       <QuickViewDialog editable={editable} />
       <TableContainer ref={tableContainerRef}>
-        <div style={{ height: `${totalSize + HEADER_HEIGHT}px`, position: 'relative' }}>
-          <StyledTable style={{ width: totalTableWidth }}>
+        <SearchDialog open={isSearchDialogOpen} onClose={() => setIsSearchDialogOpen(false)} search={search} />
+        <VirtualTableWrapper height={totalSize + HEADER_HEIGHT}>
+          <StyledTable width={totalTableWidth}>
             <colgroup>
               {tableColumns.map((column) => (
-                <col key={column.name} style={{ width: columnSizes[column.name] }} />
+                <StyledCol key={column.name} width={columnSizes[column.name]} />
               ))}
             </colgroup>
             <DataGridTableHeaderRow
@@ -90,9 +73,11 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
               virtualRows={virtualRows}
               paddingTop={paddingTop}
               paddingBottom={paddingBottom}
+              searchTerm={search.searchTerm}
+              currentMatch={currentMatch}
             />
           </StyledTable>
-        </div>
+        </VirtualTableWrapper>
       </TableContainer>
       <DataGridContextMenu contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
     </>

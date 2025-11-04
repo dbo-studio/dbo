@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { PaddingTableCell } from '../DataGrid.styled';
 import { useRowStateLookup } from '../hooks/useRowStateLookup';
 import type { DataGridTableBodyRowsProps } from '../types';
 import DataGridTableRow from './DataGridTableRow/DataGridTableRow';
@@ -10,7 +11,9 @@ export default function DataGridTableBodyRows({
   editable,
   virtualRows,
   paddingTop,
-  paddingBottom
+  paddingBottom,
+  searchTerm,
+  currentMatch
 }: DataGridTableBodyRowsProps & {
   virtualRows: Array<{ index: number; start: number; end: number; size: number }>;
   paddingTop: number;
@@ -22,7 +25,7 @@ export default function DataGridTableBodyRows({
     <tbody>
       {paddingTop > 0 && (
         <tr>
-          <td colSpan={columns.length} style={{ height: `${paddingTop}px`, padding: 0, border: 'none' }} />
+          <PaddingTableCell colSpan={columns.length} height={paddingTop} />
         </tr>
       )}
       {virtualRows.map((virtualRow) => {
@@ -43,12 +46,14 @@ export default function DataGridTableBodyRows({
             isEdited={rowState.isEdited}
             isUnsaved={rowState.isUnsaved}
             isRemoved={rowState.isRemoved}
+            searchTerm={searchTerm}
+            currentMatch={currentMatch}
           />
         );
       })}
       {paddingBottom > 0 && (
         <tr>
-          <td colSpan={columns.length} style={{ height: `${paddingBottom}px`, padding: 0, border: 'none' }} />
+          <PaddingTableCell colSpan={columns.length} height={paddingBottom} />
         </tr>
       )}
     </tbody>

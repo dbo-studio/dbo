@@ -1,7 +1,8 @@
 import { useDataStore } from '@/store/dataStore/data.store';
-import { Checkbox, useTheme } from '@mui/material';
+import { Checkbox } from '@mui/material';
+import clsx from 'clsx';
 import { memo, useCallback, useMemo } from 'react';
-import { StyledTableRow, TableCell } from '../../DataGrid.styled';
+import { SelectTableCell, StyledTableRow, TableCell } from '../../DataGrid.styled';
 import { DataGridTableCell } from '../../DataGridTableCell/DataGridTableCell';
 import type { DataGridTableRowProps } from '../../types';
 
@@ -15,20 +16,16 @@ const DataGridTableRow = memo(
     isEdited,
     isUnsaved,
     isRemoved,
-    editable
+    editable,
+    searchTerm,
+    currentMatch
   }: DataGridTableRowProps) => {
-    const theme = useTheme();
     const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
 
     // the row style is used to apply background color to the row based on the row index
     // because the rows are virtualized, we need to apply the background color to the row based on the row index
     const hasHighlight = isRemoved || isUnsaved || isEdited || isSelected;
-    const rowStyle = useMemo(
-      () => ({
-        backgroundColor: !hasHighlight && rowIndex % 2 !== 0 ? theme.palette.background.subdued : undefined
-      }),
-      [rowIndex, theme.palette.background.subdued, hasHighlight]
-    );
+    const isStriped = !hasHighlight && rowIndex % 2 !== 0;
 
     const handleSelect = useCallback(
       (columnId: string) => {
@@ -65,35 +62,30 @@ const DataGridTableRow = memo(
       [updateSelectedRows, rowIndex, row]
     );
 
-    const className = useMemo(
-      () =>
-        `
-        ${isRemoved ? 'removed-highlight' : ''}
-        ${isUnsaved ? 'unsaved-highlight' : ''}
-        ${isEdited ? 'edit-highlight' : ''}
-        ${isSelected ? 'selected-highlight' : ''}
-      `.trim(),
-      [isRemoved, isUnsaved, isEdited, isSelected]
+    const rowClassName = useMemo(
+      () => clsx({
+        'removed-highlight': isRemoved,
+        'unsaved-highlight': isUnsaved,
+        'edit-highlight': isEdited,
+        'selected-highlight': isSelected,
+        'is-striped': isStriped
+      }),
+      [isRemoved, isUnsaved, isEdited, isSelected, isStriped]
     );
 
     return (
-      <StyledTableRow className={className} style={rowStyle}>
-        {columns.map((column) => {
+      <StyledTableRow className={rowClassName}>
+        {columns.map((column, columnIndex) => {
           const columnId = column.name;
           const value = row[columnId];
+          const isSearchMatch = searchTerm
+            ? String(value ?? '').toLowerCase().includes(searchTerm.toLowerCase())
+            : false;
+          const isCurrentMatch = currentMatch?.rowIndex === rowIndex && currentMatch?.columnIndex === columnIndex;
 
           if (columnId === 'select') {
             return (
-              <TableCell
-                key={`cell-${rowIndex}-${columnId}`}
-                style={{
-                  width: '30px',
-                  minWidth: '30px',
-                  maxWidth: '30px',
-                  boxSizing: 'border-box',
-                  textAlign: 'center'
-                }}
-              >
+              <SelectTableCell key={`cell-${rowIndex}-${columnId}`}>
                 <Checkbox
                   sx={{ padding: 0 }}
                   size={'small'}
@@ -101,7 +93,7 @@ const DataGridTableRow = memo(
                   onChange={handleSelectCheckBox}
                   onClick={(e: React.MouseEvent): void => e.stopPropagation()}
                 />
-              </TableCell>
+              </SelectTableCell>
             );
           }
 
@@ -113,7 +105,16 @@ const DataGridTableRow = memo(
                 handleSelect(columnId);
               }}
             >
-              <DataGridTableCell row={row} rowIndex={rowIndex} columnId={columnId} value={value} editable={editable} />
+              <DataGridTableCell
+                row={row}
+                rowIndex={rowIndex}
+                columnId={columnId}
+                value={value}
+                editable={editable}
+                searchTerm={searchTerm}
+                isSearchMatch={isSearchMatch}
+                isCurrentMatch={isCurrentMatch}
+              />
             </TableCell>
           );
         })}
@@ -121,7 +122,6 @@ const DataGridTableRow = memo(
     );
   },
   (prevProps, nextProps) => {
-    // Custom comparison function for better memoization
     return (
       prevProps.row.dbo_index === nextProps.row.dbo_index &&
       prevProps.rowIndex === nextProps.rowIndex &&
@@ -131,7 +131,10 @@ const DataGridTableRow = memo(
       prevProps.isRemoved === nextProps.isRemoved &&
       prevProps.editable === nextProps.editable &&
       prevProps.columns.length === nextProps.columns.length &&
-      prevProps.columns.every((col, idx) => col.name === nextProps.columns[idx]?.name)
+      prevProps.columns.every((col, idx) => col.name === nextProps.columns[idx]?.name) &&
+      prevProps.searchTerm === nextProps.searchTerm &&
+      prevProps.currentMatch?.rowIndex === nextProps.currentMatch?.rowIndex &&
+      prevProps.currentMatch?.columnIndex === nextProps.currentMatch?.columnIndex
     );
   }
 );
