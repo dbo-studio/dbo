@@ -29,6 +29,16 @@ export default function SearchDialog({ open, onClose, search }: SearchDialogProp
         search.clearSearch();
     };
 
+    const handleKeyDown = (e: KeyboardEvent): void => {
+        if (e.key === 'Enter') {
+            search.nextMatch();
+        }
+
+        if (e.key === 'Escape') {
+            handleClose();
+        }
+    };
+
     if (!open) return <></>;
 
     return (
@@ -41,6 +51,7 @@ export default function SearchDialog({ open, onClose, search }: SearchDialogProp
                     value={search.searchTerm}
                     onChange={(e): void => search.setSearchTerm(e.target.value)}
                     size='small'
+                    onKeyDown={handleKeyDown}
                 />
 
 

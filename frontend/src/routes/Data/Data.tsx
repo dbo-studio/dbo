@@ -115,7 +115,7 @@ export default function Data(): JSX.Element {
   return (
     <>
       <ActionBar showColumns={showColumns} setShowColumns={setShowColumns} />
-      <Box overflow='hidden' flex={1} display='flex' flexDirection='row'>
+      <Box position='relative' overflow='hidden' flex={1} display='flex' flexDirection='row'>
         {showColumns && <Columns />}
         {tableData.columns.length > 0 &&
           (isGridReady ? (

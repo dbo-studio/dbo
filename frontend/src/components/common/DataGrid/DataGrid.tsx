@@ -51,8 +51,8 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
   ) : (
     <>
       <QuickViewDialog editable={editable} />
+      <SearchDialog open={isSearchDialogOpen} onClose={() => setIsSearchDialogOpen(false)} search={search} />
       <TableContainer ref={tableContainerRef}>
-        <SearchDialog open={isSearchDialogOpen} onClose={() => setIsSearchDialogOpen(false)} search={search} />
         <VirtualTableWrapper height={totalSize + HEADER_HEIGHT}>
           <StyledTable width={totalTableWidth}>
             <colgroup>
