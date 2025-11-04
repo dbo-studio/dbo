@@ -32,7 +32,7 @@ func New() *Config {
 			Name:          "dbo",
 			Port:          os.Getenv("APP_PORT"),
 			Env:           os.Getenv("APP_ENV"),
-			Version:       "v0.3.0",
+			Version:       "v0.3.1",
 			DatabaseName:  "dbo.db",
 			ReleaseUrlApi: "https://dbo-studio.com/api/config",
 			ReleaseUrl:    "https://dbo-studio.com/releases",

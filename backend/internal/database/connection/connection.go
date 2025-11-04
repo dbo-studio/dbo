@@ -88,7 +88,7 @@ func (cm *ConnectionManager) GetConnection(connection *model.Connection) (*gorm.
 }
 
 func (cm *ConnectionManager) cleanupInactiveConnections() {
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(60 * time.Second)
 	defer ticker.Stop()
 
 	for range ticker.C {

@@ -111,7 +111,6 @@ export default function StatusBarActions(): JSX.Element {
     await updateRemovedRows([]);
     await restoreEditedRows();
 
-
     await updateSelectedRows([], true);
     toggleReRender();
   };

@@ -1,5 +1,5 @@
 import { getTauriVersion } from '@tauri-apps/api/app';
-import { type SqlLanguage, format } from 'sql-formatter';
+import { format, type SqlLanguage } from 'sql-formatter';
 import { isNumber, isObject } from '.';
 
 export const tools = {
@@ -35,7 +35,7 @@ export const tools = {
   isTauri: async (): Promise<boolean> => {
     try {
       return (await getTauriVersion()) !== null;
-    } catch (e) {
+    } catch (_) {
       return false;
     }
   },

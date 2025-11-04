@@ -2,7 +2,9 @@ package databaseSqlite
 
 import (
 	"database/sql"
+	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/samber/lo"
 )
@@ -82,4 +84,19 @@ func (r *SQLiteRepository) getPrimaryKeys(table Table) ([]string, error) {
 	primaryKeys := lo.Filter(columns, func(x Column, _ int) bool { return x.IsPrimaryKey == "1" })
 
 	return lo.Map(primaryKeys, func(x Column, _ int) string { return x.ColumnName }), nil
+}
+
+func (r *SQLiteRepository) getTableDDL(table string) (string, error) {
+	var createSQL string
+
+	r.db.Table("sqlite_master").
+		Select("sql").Where("type = 'table' AND name = ?", table).
+		Limit(1).
+		Scan(&createSQL)
+
+	if strings.TrimSpace(createSQL) == "" {
+		return "", fmt.Errorf("table %s not found in sqlite_master", table)
+	}
+
+	return createSQL, nil
 }

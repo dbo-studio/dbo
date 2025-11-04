@@ -61,6 +61,7 @@ func runRawQuery(r *PostgresRepository, req *dto.RawQueryRequest) (*dto.RawQuery
 	for i := range queryResults {
 		queryResults[i]["dbo_index"] = i
 		queryResults[i]["editable"] = false
+		queryResults[i] = helper.SanitizeQueryResults(queryResults[i])
 	}
 
 	structures := make([]dto.Column, 0)

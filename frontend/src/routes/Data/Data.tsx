@@ -7,7 +7,7 @@ import type { JSX } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useIsMounted } from 'usehooks-ts';
 import ActionBar from './ActionBar/ActionBar';
-import Columns from './Columns/Columns';
+import Columns from './ActionBar/Columns/Columns';
 import StatusBar from './StatusBar/StatusBar';
 
 export default function Data(): JSX.Element {
@@ -59,10 +59,12 @@ export default function Data(): JSX.Element {
     currentAbortControllerRef.current = abortController;
 
     const res = await runQuery(abortController);
-    setTableData({
-      rows: res?.data ?? [],
-      columns: res?.columns.filter((column) => column.isActive) ?? []
-    });
+    if (res && !abortController.signal.aborted) {
+      setTableData({
+        rows: res.data ?? [],
+        columns: res.columns.filter((column) => column.isActive) ?? []
+      });
+    }
   }, [runQuery]);
 
   const cancelCurrentQuery = useCallback(() => {
@@ -88,7 +90,14 @@ export default function Data(): JSX.Element {
   useEffect(() => {
     if (previousReRunQueryRef.current !== reRunQuery) {
       cancelCurrentQuery();
-      handleReRunQuery();
+      setIsGridReady(false);
+      handleReRunQuery()
+        .then(() => {
+          setIsGridReady(true);
+        })
+        .catch(() => {
+          setIsGridReady(true);
+        });
       previousReRunQueryRef.current = reRunQuery;
     }
   }, [reRunQuery, handleReRunQuery, cancelCurrentQuery]);
@@ -106,7 +115,7 @@ export default function Data(): JSX.Element {
   return (
     <>
       <ActionBar showColumns={showColumns} setShowColumns={setShowColumns} />
-      <Box overflow='hidden' flex={1} display='flex' flexDirection='row'>
+      <Box position='relative' overflow='hidden' flex={1} display='flex' flexDirection='row'>
         {showColumns && <Columns />}
         {tableData.columns.length > 0 &&
           (isGridReady ? (

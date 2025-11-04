@@ -1,6 +1,7 @@
 import { changeUrl } from '@/core/api';
 import { commands, streams } from '@/core/tauri';
 import { tools } from '@/core/utils';
+import { switchToDesktopShortcuts } from '@/core/utils/shortcuts';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
@@ -47,6 +48,8 @@ const setupBackend = async (): Promise<void> => {
   }
 
   changeUrl(response as string);
+  changeUrl(response as string);
+  switchToDesktopShortcuts();
 };
 
 const disableDefaultContextMenu = (): void => {

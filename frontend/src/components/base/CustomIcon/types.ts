@@ -22,7 +22,7 @@ export const IconTypes = {
   database: 'Database',
   refresh: 'RotateCcw',
   search: 'Search',
-  sql: 'FileJson',
+  sql: 'FileBraces',
   chevronDown: 'ChevronDown',
   chevronRight: 'ChevronRight',
   chevronLeft: 'ChevronLeft',

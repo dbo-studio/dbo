@@ -22,9 +22,6 @@ const PanelTabItem: React.FC<{ tab: TabType }> = memo(({ tab }): JSX.Element => 
 
   const menu = usePanelTabMenu(tab);
 
-  const addEditorTab = useTabStore((state) => state.addEditorTab);
-  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
-
   useEffect(() => {
     const tabId = selectedTabId;
     if (tabId && tabRefs.current?.[tabId]) {
@@ -35,11 +32,6 @@ const PanelTabItem: React.FC<{ tab: TabType }> = memo(({ tab }): JSX.Element => 
       });
     }
   }, [selectedTabId]);
-
-  const addNewEmptyTab = useCallback((): void => {
-    const tab = addEditorTab();
-    updateSelectedTab(tab);
-  }, [addEditorTab, updateSelectedTab]);
 
   const handleTabClick = useCallback((): void => {
     handleSwitchTab(tab.id);
@@ -53,7 +45,6 @@ const PanelTabItem: React.FC<{ tab: TabType }> = memo(({ tab }): JSX.Element => 
     [handleRemoveTab, tab.id]
   );
 
-  useShortcut(shortcuts.newTab, addNewEmptyTab);
   useShortcut(shortcuts.closeTab, () => handleRemoveTab(selectedTabId ?? ''));
 
   return (
