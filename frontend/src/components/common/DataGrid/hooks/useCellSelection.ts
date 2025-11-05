@@ -11,6 +11,7 @@ export const useCellSelection = (
 ): CellSelectionReturn => {
   const [isEditing, setIsEditing] = useState(false);
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastClickTimeRef = useRef<number>(0);
   const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
 
   const handleSelect = useCallback(
@@ -31,17 +32,29 @@ export const useCellSelection = (
 
   const handleClick = useCallback(
     (e: React.MouseEvent): void => {
-      if (clickTimeoutRef.current && editable) {
+      const now = Date.now();
+      const timeSinceLastClick = now - lastClickTimeRef.current;
+
+      const doubleClickThreshold = 200;
+
+      if (clickTimeoutRef.current) {
         clearTimeout(clickTimeoutRef.current);
         clickTimeoutRef.current = null;
+      }
 
+      if (timeSinceLastClick < doubleClickThreshold && editable) {
         setIsEditing(true);
         handleSelect(e);
+        lastClickTimeRef.current = 0;
       } else {
-        clickTimeoutRef.current = setTimeout(() => {
-          handleSelect(e);
-          clickTimeoutRef.current = null;
-        }, 250);
+        handleSelect(e);
+        lastClickTimeRef.current = now;
+
+        if (editable) {
+          clickTimeoutRef.current = setTimeout(() => {
+            clickTimeoutRef.current = null;
+          }, doubleClickThreshold);
+        }
       }
     },
     [handleSelect, editable]

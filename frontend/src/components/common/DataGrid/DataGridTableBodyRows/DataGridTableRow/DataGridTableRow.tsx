@@ -125,8 +125,13 @@ const DataGridTableRow = memo(
     );
   },
   (prevProps, nextProps) => {
+    const rowChanged = prevProps.row !== nextProps.row;
+
+    if (rowChanged) {
+      return false;
+    }
+
     return (
-      prevProps.row.dbo_index === nextProps.row.dbo_index &&
       prevProps.rowIndex === nextProps.rowIndex &&
       prevProps.isSelected === nextProps.isSelected &&
       prevProps.isEdited === nextProps.isEdited &&
