@@ -23,11 +23,10 @@ export default function DataGridContextMenu({
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
   const updateRow = useDataStore((state) => state.updateRow);
   const toggleShowQuickLookEditor = useSettingStore((state) => state.toggleShowQuickLookEditor);
-  const toggleReRender = useDataStore((state) => state.toggleReRender);
 
   const [_, copy] = useCopyToClipboard();
 
-  const valueReplacer = (newValue: any): void => {
+  const valueReplacer = (newValue: string | null | undefined): void => {
     if (!selectedTabId) return;
 
     for (const row of selectedRows) {
@@ -48,8 +47,6 @@ export default function DataGridContextMenu({
       updateRow(newRow).catch((error) => {
         console.error('Error updating row:', error);
       });
-
-      toggleReRender();
     }
   };
 

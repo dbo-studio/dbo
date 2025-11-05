@@ -4,50 +4,43 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ColumnType, RowType } from '@/types';
 import { Box, CircularProgress } from '@mui/material';
 import type { JSX } from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useIsMounted } from 'usehooks-ts';
 import ActionBar from './ActionBar/ActionBar';
 import Columns from './ActionBar/Columns/Columns';
 import StatusBar from './StatusBar/StatusBar';
 
+const EMPTY_ROWS: RowType[] = [];
+const EMPTY_COLUMNS: ColumnType[] = [];
+
 export default function Data(): JSX.Element {
   const isMounted = useIsMounted();
 
-  const [tableData, setTableData] = useState({
-    rows: [] as RowType[],
-    columns: [] as ColumnType[]
-  });
   const [isGridReady, setIsGridReady] = useState(false);
   const [showColumns, setShowColumns] = useState(false);
 
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const reRunQuery = useDataStore((state) => state.reRunQuery);
-  const reRender = useDataStore((state) => state.reRender);
+
+  const rows = useDataStore((state) => state.rows ?? EMPTY_ROWS);
+  const allColumns = useDataStore((state) => state.columns ?? EMPTY_COLUMNS);
+
+  const activeColumns = useMemo(() => allColumns.filter((column) => column.isActive), [allColumns]);
+
   const loadDataFromIndexedDB = useDataStore((state) => state.loadDataFromIndexedDB);
   const runQuery = useDataStore((state) => state.runQuery);
 
   const previousReRunQueryRef = useRef<boolean>(reRunQuery);
-  const previousReRenderRef = useRef<boolean>(reRender);
   const currentAbortControllerRef = useRef<AbortController | null>(null);
 
   const loadData = useCallback(async (): Promise<void> => {
-    setTableData({ rows: [], columns: [] });
-
     try {
       const result = await loadDataFromIndexedDB();
       if (!result) {
         const abortController = new AbortController();
         currentAbortControllerRef.current = abortController;
 
-        const res = await runQuery(abortController);
-        if (res && !abortController.signal.aborted) {
-          setTableData({
-            rows: res?.data ?? [],
-            columns: res?.columns.filter((column) => column.isActive) ?? []
-          });
-        }
-      } else {
-        setTableData(result);
+        await runQuery(abortController);
       }
     } catch (error) {
       console.debug('🚀 ~ loadData ~ error:', error);
@@ -58,13 +51,7 @@ export default function Data(): JSX.Element {
     const abortController = new AbortController();
     currentAbortControllerRef.current = abortController;
 
-    const res = await runQuery(abortController);
-    if (res && !abortController.signal.aborted) {
-      setTableData({
-        rows: res.data ?? [],
-        columns: res.columns.filter((column) => column.isActive) ?? []
-      });
-    }
+    await runQuery(abortController);
   }, [runQuery]);
 
   const cancelCurrentQuery = useCallback(() => {
@@ -102,24 +89,14 @@ export default function Data(): JSX.Element {
     }
   }, [reRunQuery, handleReRunQuery, cancelCurrentQuery]);
 
-  useEffect(() => {
-    if (previousReRenderRef.current !== reRender) {
-      setTableData({
-        rows: useDataStore.getState().rows ?? [],
-        columns: useDataStore.getState().columns ?? []
-      });
-      previousReRenderRef.current = reRender;
-    }
-  }, [reRender]);
-
   return (
     <>
       <ActionBar showColumns={showColumns} setShowColumns={setShowColumns} />
       <Box position='relative' overflow='hidden' flex={1} display='flex' flexDirection='row'>
         {showColumns && <Columns />}
-        {tableData.columns.length > 0 &&
+        {activeColumns.length > 0 &&
           (isGridReady ? (
-            <DataGrid rows={tableData.rows} columns={tableData.columns} loading={false} />
+            <DataGrid rows={rows} columns={activeColumns} loading={false} />
           ) : (
             <Box display='flex' justifyContent='center' alignItems='center' width='100%'>
               <CircularProgress size={30} />

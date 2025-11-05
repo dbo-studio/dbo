@@ -72,12 +72,10 @@ func (r *PostgresRepository) runQueryGenerator(dto *dto.RunQueryRequest, node PG
 		sb.WriteString(strings.Join(sortClauses, ", "))
 	} else {
 		keys, err := r.getPrimaryKeys(Table{node.Table})
-		if err != nil {
-			return ""
+		if err == nil && len(keys) > 0 {
+			sb.WriteString(" ORDER BY ")
+			sb.WriteString(strings.Join(keys, ", "))
 		}
-
-		sb.WriteString(" ORDER BY ")
-		sb.WriteString(strings.Join(keys, ", "))
 	}
 
 	// LIMIT and OFFSET

@@ -26,7 +26,6 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
   const toggleShowQuickLookEditor = useSettingStore((state) => state.toggleShowQuickLookEditor);
   const updateRow = useDataStore((state) => state.updateRow);
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
-  const toggleReRender = useDataStore((state) => state.toggleReRender);
 
   const handleClose = (): void => {
     if (!row) {
@@ -47,7 +46,6 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
     newRow[row.selectedColumn] = value;
     updateRow(newRow);
     toggleShowQuickLookEditor(false);
-    toggleReRender();
   };
 
   useEffect(() => {
