@@ -25,9 +25,11 @@ export const useCellEditing = (row: RowType, columnId: string, cellValue: string
 
         const newEditedRows = handleRowChangeLog(editedRows, row, columnId, row[columnId], newValue);
 
-        updateRow(newRow).then(() => {
-          updateEditedRows(newEditedRows).catch(console.error);
-        }).catch(console.error);
+        updateRow(newRow)
+          .then(() => {
+            updateEditedRows(newEditedRows).catch(console.error);
+          })
+          .catch(console.error);
       }
     },
     [row, columnId, cellValue, updateEditedRows, updateRow]

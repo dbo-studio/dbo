@@ -81,8 +81,8 @@ const DataGridTableRow = memo(
           const value = row[columnId];
           const isSearchMatch = searchTerm
             ? String(value ?? '')
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase())
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase())
             : false;
           const isCurrentMatch = currentMatch?.rowIndex === rowIndex && currentMatch?.columnIndex === columnIndex;
 

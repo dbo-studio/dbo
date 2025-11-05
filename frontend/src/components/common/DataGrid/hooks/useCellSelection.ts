@@ -47,7 +47,6 @@ export const useCellSelection = (
         handleSelect(e);
         lastClickTimeRef.current = 0;
       } else {
-
         handleSelect(e);
         lastClickTimeRef.current = now;
 
