@@ -47,7 +47,6 @@ export default function DataGridContextMenu({
       updateRow(newRow).catch((error) => {
         console.error('Error updating row:', error);
       });
-
     }
   };
 
