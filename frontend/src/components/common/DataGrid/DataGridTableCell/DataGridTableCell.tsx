@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { memo, useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo } from 'react';
 import { CellContainer, CellContent, CellInput, HighlightedTextMatch } from '../DataGrid.styled';
 import { useCellEditing } from '../hooks/useCellEditing';
 import { useCellSelection } from '../hooks/useCellSelection';
@@ -57,14 +57,20 @@ export const DataGridTableCell = memo(
 
     useEffect(() => {
       if (isEditing && inputRef.current) {
-        inputRef.current.focus();
+        requestAnimationFrame(() => {
+          inputRef.current?.focus();
+          inputRef.current?.select();
+        });
       }
-    }, [isEditing]);
+    }, [isEditing, inputRef.current]);
 
-    const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>): void => {
-      setIsEditing(false);
-      handleRowChange(e);
-    };
+    const handleInputBlur = useCallback(
+      (e: React.FocusEvent<HTMLInputElement>): void => {
+        setIsEditing(false);
+        handleRowChange(e);
+      },
+      [setIsEditing, handleRowChange]
+    );
 
     const cellClassName = useMemo(
       () =>

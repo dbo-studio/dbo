@@ -1,6 +1,5 @@
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { StateCreator } from 'zustand';
-import { useDataStore } from '../data.store';
 import type { DataSelectedRowsSlice, DataStore, SelectedRow } from '../types';
 
 export const createDataSelectedRowsSlice: StateCreator<
@@ -8,17 +7,32 @@ export const createDataSelectedRowsSlice: StateCreator<
   [['zustand/devtools', never]],
   [],
   DataSelectedRowsSlice
-> = (set) => ({
+> = (set, get) => ({
   selectedRows: [],
   updateSelectedRows: (rows: SelectedRow[], replace?: boolean): Promise<void> => {
     const selectedTabId = useTabStore.getState().selectedTabId;
     if (!selectedTabId) return Promise.resolve();
 
-    set(
-      { selectedRows: replace ? rows : [...useDataStore.getState().selectedRows, ...rows] },
-      undefined,
-      'updateSelectedRows'
-    );
+    const currentSelectedRows = get().selectedRows;
+    let newSelectedRows: SelectedRow[];
+
+    if (replace) {
+      if (
+        currentSelectedRows.length === rows.length &&
+        currentSelectedRows.every(
+          (current, index) =>
+            current.index === rows[index]?.index &&
+            current.selectedColumn === rows[index]?.selectedColumn
+        )
+      ) {
+        return Promise.resolve();
+      }
+      newSelectedRows = rows;
+    } else {
+      newSelectedRows = [...currentSelectedRows, ...rows];
+    }
+
+    set({ selectedRows: newSelectedRows }, undefined, 'updateSelectedRows');
     return Promise.resolve();
   }
 });
