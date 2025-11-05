@@ -21,8 +21,7 @@ export const createDataSelectedRowsSlice: StateCreator<
         currentSelectedRows.length === rows.length &&
         currentSelectedRows.every(
           (current, index) =>
-            current.index === rows[index]?.index &&
-            current.selectedColumn === rows[index]?.selectedColumn
+            current.index === rows[index]?.index && current.selectedColumn === rows[index]?.selectedColumn
         )
       ) {
         return Promise.resolve();

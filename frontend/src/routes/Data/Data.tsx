@@ -25,10 +25,7 @@ export default function Data(): JSX.Element {
   const rows = useDataStore((state) => state.rows ?? EMPTY_ROWS);
   const allColumns = useDataStore((state) => state.columns ?? EMPTY_COLUMNS);
 
-  const activeColumns = useMemo(
-    () => allColumns.filter((column) => column.isActive),
-    [allColumns]
-  );
+  const activeColumns = useMemo(() => allColumns.filter((column) => column.isActive), [allColumns]);
 
   const loadDataFromIndexedDB = useDataStore((state) => state.loadDataFromIndexedDB);
   const runQuery = useDataStore((state) => state.runQuery);
