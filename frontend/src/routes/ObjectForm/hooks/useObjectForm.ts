@@ -36,12 +36,7 @@ export interface UseObjectFormReturn {
  * Standalone hook for managing object form data
  * Works independently from tabStore
  */
-export function useObjectForm({
-  nodeId,
-  action,
-  enabled = true,
-  onSuccess
-}: UseObjectFormParams): UseObjectFormReturn {
+export function useObjectForm({ nodeId, action, enabled = true, onSuccess }: UseObjectFormParams): UseObjectFormReturn {
   const currentConnection = useCurrentConnection();
   const queryClient = useQueryClient();
   const reloadTree = useTreeStore.getState().reloadTree;
@@ -292,4 +287,3 @@ export function useObjectForm({
     refetch
   };
 }
-

@@ -62,4 +62,3 @@ func (r *ISchemaDiagramRepoImpl) CreateOrUpdate(ctx context.Context, connectionI
 	diagram.Layout = string(layoutJSON)
 	return r.db.WithContext(ctx).Save(&diagram).Error
 }
-

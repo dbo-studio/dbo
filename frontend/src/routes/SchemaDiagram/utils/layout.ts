@@ -73,4 +73,3 @@ export function getLayoutedElements(
 
   return { nodes, edges };
 }
-

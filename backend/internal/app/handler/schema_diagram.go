@@ -96,4 +96,3 @@ func (h *SchemaDiagramHandler) DeleteRelationship(c fiber.Ctx) error {
 
 	return response.SuccessBuilder().Send(c)
 }
-

@@ -101,4 +101,3 @@ func (s *ISchemaDiagramServiceImpl) DeleteRelationship(ctx context.Context, req 
 
 	return repo.DeleteRelationship(req)
 }
-

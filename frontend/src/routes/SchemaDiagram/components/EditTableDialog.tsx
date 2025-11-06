@@ -21,13 +21,7 @@ export interface EditTableDialogProps {
   onSuccess?: () => void;
 }
 
-export default function EditTableDialog({
-  open,
-  onClose,
-  nodeId,
-  tableName,
-  onSuccess
-}: EditTableDialogProps) {
+export default function EditTableDialog({ open, onClose, nodeId, tableName, onSuccess }: EditTableDialogProps) {
   const {
     tabs,
     selectedTabId,
@@ -134,4 +128,3 @@ export default function EditTableDialog({
     </Dialog>
   );
 }
-

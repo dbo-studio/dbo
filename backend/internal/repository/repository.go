@@ -74,15 +74,15 @@ type ISchemaDiagramRepo interface {
 }
 
 type Repository struct {
-	DB                 *gorm.DB
-	ConnectionRepo     IConnectionRepo
-	CacheRepo          ICacheRepo
-	HistoryRepo        IHistoryRepo
-	SavedQueryRepo     ISavedQueryRepo
-	JobRepo            IJobRepo
-	AiChatRepo         IAiChatRepo
-	AiProviderRepo     IAiProviderRepo
-	SchemaDiagramRepo  ISchemaDiagramRepo
+	DB                *gorm.DB
+	ConnectionRepo    IConnectionRepo
+	CacheRepo         ICacheRepo
+	HistoryRepo       IHistoryRepo
+	SavedQueryRepo    ISavedQueryRepo
+	JobRepo           IJobRepo
+	AiChatRepo        IAiChatRepo
+	AiProviderRepo    IAiProviderRepo
+	SchemaDiagramRepo ISchemaDiagramRepo
 }
 
 func NewRepository(_ context.Context, db *gorm.DB, cache cache.Cache) *Repository {

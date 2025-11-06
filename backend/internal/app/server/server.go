@@ -11,18 +11,18 @@ import (
 )
 
 type Handlers struct {
-	Config            *handler.ConfigHandler
-	Connection        *handler.ConnectionHandler
-	SavedQuery        *handler.SavedQueryHandler
-	History           *handler.HistoryHandler
-	TreeHandler       *handler.TreeHandler
-	QueryHandler      *handler.QueryHandler
-	ImportExport      *handler.ImportExportHandler
-	Job               *handler.JobHandler
-	AI                *handler.AiHandler
-	AiProvider        *handler.AiProviderHandler
-	AiChat            *handler.AiChatHandler
-	SchemaDiagram     *handler.SchemaDiagramHandler
+	Config        *handler.ConfigHandler
+	Connection    *handler.ConnectionHandler
+	SavedQuery    *handler.SavedQueryHandler
+	History       *handler.HistoryHandler
+	TreeHandler   *handler.TreeHandler
+	QueryHandler  *handler.QueryHandler
+	ImportExport  *handler.ImportExportHandler
+	Job           *handler.JobHandler
+	AI            *handler.AiHandler
+	AiProvider    *handler.AiProviderHandler
+	AiChat        *handler.AiChatHandler
+	SchemaDiagram *handler.SchemaDiagramHandler
 }
 
 type Server struct {

@@ -68,7 +68,12 @@ export default function SchemaDiagram(): JSX.Element {
     targetTable: null
   });
 
-  const { data, isLoading, error, refetch: refetchDiagram } = useQuery<SchemaDiagramResponse>({
+  const {
+    data,
+    isLoading,
+    error,
+    refetch: refetchDiagram
+  } = useQuery<SchemaDiagramResponse>({
     queryKey: ['schemaDiagram', currentConnection?.id, schema],
     queryFn: async () => {
       if (!currentConnection?.id) throw new Error('No connection');
@@ -163,10 +168,10 @@ export default function SchemaDiagram(): JSX.Element {
   const onConnect = useCallback(
     (params: Connection) => {
       if (!params.source || !params.target || !params.sourceHandle || !params.targetHandle) return;
-      
+
       const sourceTable = data?.tables.find((t) => t.id === params.source);
       const targetTable = data?.tables.find((t) => t.id === params.target);
-      
+
       if (sourceTable && targetTable) {
         setCreateRelationshipDialog({
           open: true,
@@ -217,11 +222,7 @@ export default function SchemaDiagram(): JSX.Element {
 
   const handleAutoLayout = useCallback(() => {
     if (!data?.tables) return;
-    const { nodes: layoutedNodes } = getLayoutedElements(
-      data.tables,
-      data.relationships || [],
-      layoutDirection
-    );
+    const { nodes: layoutedNodes } = getLayoutedElements(data.tables, data.relationships || [], layoutDirection);
     setNodes(layoutedNodes);
   }, [data, layoutDirection, setNodes]);
 
@@ -358,4 +359,3 @@ export default function SchemaDiagram(): JSX.Element {
     </Box>
   );
 }
-

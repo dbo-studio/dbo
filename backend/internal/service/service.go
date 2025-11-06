@@ -23,19 +23,19 @@ import (
 )
 
 type Service struct {
-	ConnectionService     serviceConnection.IConnectionService
-	HistoryService        serviceHistory.IHistoryService
-	SavedQueryService     serviceSavedQuery.ISavedQueryService
-	TreeService           serviceTree.ITreeService
-	QueryService          serviceQuery.IQueryService
-	ImportExportService   serviceImportExport.IImportExport
-	JobService            serviceJob.IJobService
-	JobManager            serviceJob.IJobManager
-	AiService             serviceAI.IAiService
-	AiProviderService     serviceAiProvider.IAiProviderService
-	AiChatService         serviceAiChat.IAiChatService
-	ConfigService         serviceConfig.IConfigService
-	SchemaDiagramService  serviceSchemaDiagram.ISchemaDiagramService
+	ConnectionService    serviceConnection.IConnectionService
+	HistoryService       serviceHistory.IHistoryService
+	SavedQueryService    serviceSavedQuery.ISavedQueryService
+	TreeService          serviceTree.ITreeService
+	QueryService         serviceQuery.IQueryService
+	ImportExportService  serviceImportExport.IImportExport
+	JobService           serviceJob.IJobService
+	JobManager           serviceJob.IJobManager
+	AiService            serviceAI.IAiService
+	AiProviderService    serviceAiProvider.IAiProviderService
+	AiChatService        serviceAiChat.IAiChatService
+	ConfigService        serviceConfig.IConfigService
+	SchemaDiagramService serviceSchemaDiagram.ISchemaDiagramService
 }
 
 func NewService(cfg *config.Config, logger logger.Logger, repo *repository.Repository, cm *databaseConnection.ConnectionManager, cache cache.Cache) *Service {

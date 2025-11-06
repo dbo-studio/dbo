@@ -20,13 +20,7 @@ export interface AddColumnDialogProps {
   onSuccess?: () => void;
 }
 
-export default function AddColumnDialog({
-  open,
-  onClose,
-  nodeId,
-  tableName,
-  onSuccess
-}: AddColumnDialogProps) {
+export default function AddColumnDialog({ open, onClose, nodeId, tableName, onSuccess }: AddColumnDialogProps) {
   const {
     tabs,
     selectedTabId,
@@ -194,4 +188,3 @@ export default function AddColumnDialog({
     </Dialog>
   );
 }
-
