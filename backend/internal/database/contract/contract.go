@@ -16,4 +16,7 @@ type DatabaseRepository interface {
 	ImportData(job dto.ImportJob, rows [][]string, columns []string) (*ImportResult, error)
 	AiContext(dto *dto.AiChatRequest) (string, error)
 	AiCompleteContext(dto *dto.AiInlineCompleteRequest) string
+	SchemaDiagram(dto *dto.SchemaDiagramRequest) (*dto.SchemaDiagramResponse, error)
+	CreateRelationship(dto *dto.SaveRelationshipRequest) error
+	DeleteRelationship(dto *dto.DeleteRelationshipRequest) error
 }

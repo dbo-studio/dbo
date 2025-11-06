@@ -19,11 +19,12 @@ type (
 
 type (
 	AiContextOptions struct {
-		Query    *string  `json:"query"`
-		Database *string  `json:"database"`
-		Schema   *string  `json:"schema"`
-		Tables   []string `json:"tables"`
-		Views    []string `json:"views"`
+		Query          *string  `json:"query"`
+		Database       *string  `json:"database"`
+		Schema         *string  `json:"schema"`
+		Tables         []string `json:"tables"`
+		Views          []string `json:"views"`
+		SchemaDiagram  *bool    `json:"schemaDiagram"` // If true, include full schema diagram structure
 	}
 
 	AiMessage struct {

@@ -68,25 +68,32 @@ type IAiChatRepo interface {
 	AddMessage(ctx context.Context, m *model.AiChatMessage) error
 }
 
+type ISchemaDiagramRepo interface {
+	Find(ctx context.Context, connectionID uint, schema string) (*model.SchemaDiagram, error)
+	CreateOrUpdate(ctx context.Context, connectionID uint, schema string, layout *dto.DiagramLayout) error
+}
+
 type Repository struct {
-	DB             *gorm.DB
-	ConnectionRepo IConnectionRepo
-	CacheRepo      ICacheRepo
-	HistoryRepo    IHistoryRepo
-	SavedQueryRepo ISavedQueryRepo
-	JobRepo        IJobRepo
-	AiChatRepo     IAiChatRepo
-	AiProviderRepo IAiProviderRepo
+	DB                 *gorm.DB
+	ConnectionRepo     IConnectionRepo
+	CacheRepo          ICacheRepo
+	HistoryRepo        IHistoryRepo
+	SavedQueryRepo     ISavedQueryRepo
+	JobRepo            IJobRepo
+	AiChatRepo         IAiChatRepo
+	AiProviderRepo     IAiProviderRepo
+	SchemaDiagramRepo  ISchemaDiagramRepo
 }
 
 func NewRepository(_ context.Context, db *gorm.DB, cache cache.Cache) *Repository {
 	return &Repository{
-		DB:             db,
-		ConnectionRepo: NewConnectionRepo(db),
-		HistoryRepo:    NewHistoryRepo(db),
-		SavedQueryRepo: NewSavedQueryRepo(db),
-		JobRepo:        NewJobRepo(db),
-		AiChatRepo:     NewAiChatRepo(db),
-		AiProviderRepo: NewAiProviderRepo(db),
+		DB:                db,
+		ConnectionRepo:    NewConnectionRepo(db),
+		HistoryRepo:       NewHistoryRepo(db),
+		SavedQueryRepo:    NewSavedQueryRepo(db),
+		JobRepo:           NewJobRepo(db),
+		AiChatRepo:        NewAiChatRepo(db),
+		AiProviderRepo:    NewAiProviderRepo(db),
+		SchemaDiagramRepo: NewSchemaDiagramRepo(db),
 	}
 }

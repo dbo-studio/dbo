@@ -15,5 +15,6 @@ func AutoMigrate(db *gorm.DB) error {
 		&model.AiProvider{},
 		&model.AiChat{},
 		&model.AiChatMessage{},
+		&model.SchemaDiagram{},
 	)
 }

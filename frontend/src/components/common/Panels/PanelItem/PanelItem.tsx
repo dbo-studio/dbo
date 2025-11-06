@@ -3,6 +3,7 @@ import { useSelectedTab } from '@/hooks';
 import Data from '@/routes/Data/Data';
 import ObjectForm from '@/routes/ObjectForm/ObjectForm';
 import Query from '@/routes/Query/Query';
+import SchemaDiagram from '@/routes/SchemaDiagram/SchemaDiagram';
 import { Box } from '@mui/material';
 import type { JSX } from 'react';
 
@@ -16,7 +17,8 @@ export default function PanelItem(): JSX.Element {
         ? (selectedTab.mode === TabMode.Data && <Data />) ||
           (selectedTab.mode === TabMode.Query && <Query />) ||
           (selectedTab.mode === TabMode.Object && <ObjectForm />) ||
-          (selectedTab.mode === TabMode.ObjectDetail && <ObjectForm isDetail={true} />)
+          (selectedTab.mode === TabMode.ObjectDetail && <ObjectForm isDetail={true} />) ||
+          (selectedTab.mode === TabMode.SchemaDiagram && <SchemaDiagram />)
         : null}
     </Box>
   );

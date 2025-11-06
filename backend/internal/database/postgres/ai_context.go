@@ -42,6 +42,11 @@ func (r *PostgresRepository) AiContext(req *dto.AiChatRequest) (string, error) {
 		return "", nil
 	}
 
+	// If schema diagram mode is enabled, use node-based context
+	if lo.FromPtr(req.ContextOpts.SchemaDiagram) {
+		return r.AiSchemaDiagramContext(req)
+	}
+
 	if lo.FromPtr(req.ContextOpts.Database) != "" {
 		sb.WriteString("Database: ")
 		sb.WriteString(*req.ContextOpts.Database)

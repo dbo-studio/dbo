@@ -16,45 +16,35 @@ import type { ArrayFieldProps } from '../types';
 import SimpleField from './SimpleField';
 
 export default function ArrayField({ field, onChange }: ArrayFieldProps): JSX.Element {
+  // Use field.value as the source of truth (controlled component)
+  const arrayValue = field.value || [];
+
   const handleItemChange = (index: number, fieldId: string, fieldValue: any): void => {
-    const newFields = [...(field.fields || [])];
-
-    if (newFields[index]?.fields) {
-      const targetField = newFields[index].fields?.find((f: FormFieldType) => f.id === fieldId);
-      if (targetField) {
-        if (targetField.originalValue === undefined) {
-          targetField.originalValue = targetField.value;
-        }
-        targetField.value = fieldValue;
-      }
-    }
-
-    onChange(newFields);
-  };
-
-  const handleDelete = (index: number): void => {
-    const newFields = field.fields?.map((item, i) => {
+    const newArray = arrayValue.map((item: any, i: number) => {
       if (i === index) {
-        item.value = {
+        return {
           ...item,
-          deleted: true,
-          fields: item.fields?.map((i) => {
-            if (i.name === 'Name') {
-              return {
-                ...i,
-                deleted: true
-              };
-            }
-            return i;
-          })
+          [fieldId]: fieldValue
         };
-
-        return item;
       }
       return item;
     });
 
-    onChange(newFields || []);
+    onChange(newArray);
+  };
+
+  const handleDelete = (index: number): void => {
+    const newArray = arrayValue.map((item: any, i: number) => {
+      if (i === index) {
+        return {
+          ...item,
+          deleted: true
+        };
+      }
+      return item;
+    });
+
+    onChange(newArray);
   };
 
   return (
@@ -74,33 +64,40 @@ export default function ArrayField({ field, onChange }: ArrayFieldProps): JSX.El
             </TableRow>
           </TableHead>
           <TableBody>
-            {field?.fields?.map((item, index) => (
-              <TableRow
-                sx={{
-                  display: item.id === 'empty' || item?.value?.deleted ? 'none' : 'table-row'
-                }}
-                key={`${field.id}-${index}-${item.name || ''}`}
-              >
-                {item?.fields?.map((option) => {
-                  return (
-                    <TableCell key={option.id} sx={{ minWidth: 150 }}>
-                      <SimpleField
-                        size='small'
-                        field={option}
-                        onChange={(newValue): void => handleItemChange(index, option.id, newValue)}
-                      />
-                    </TableCell>
-                  );
-                })}
-                <TableCell>
-                  <Stack direction={'row'} spacing={1}>
-                    <IconButton size='small' onClick={(): void => handleDelete(index)}>
-                      <CustomIcon type='delete' />
-                    </IconButton>
-                  </Stack>
-                </TableCell>
-              </TableRow>
-            ))}
+            {arrayValue.map((item: any, index: number) => {
+              // Skip deleted items
+              if (item?.deleted) return null;
+
+              // Get template fields from field.fields[0] if available
+              const templateFields = field.fields?.[0]?.fields || [];
+
+              return (
+                <TableRow key={`${field.id}-${index}-${item.id || index}`}>
+                  {templateFields.map((option: FormFieldType) => {
+                    const itemValue = item[option.id] ?? option.value;
+                    return (
+                      <TableCell key={option.id} sx={{ minWidth: 150 }}>
+                        <SimpleField
+                          size='small'
+                          field={{
+                            ...option,
+                            value: itemValue
+                          }}
+                          onChange={(newValue): void => handleItemChange(index, option.id, newValue)}
+                        />
+                      </TableCell>
+                    );
+                  })}
+                  <TableCell>
+                    <Stack direction={'row'} spacing={1}>
+                      <IconButton size='small' onClick={(): void => handleDelete(index)}>
+                        <CustomIcon type='delete' />
+                      </IconButton>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>

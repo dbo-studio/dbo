@@ -26,6 +26,7 @@ export type TabSettingSlice = {
   addTab: (table: string, id?: string, editable?: boolean) => TabType;
   addObjectTab: (title: string, nodeId: string, action: string, mode: TabMode) => TabType;
   addEditorTab: (query?: string) => TabType;
+  addSchemaDiagramTab: (schema?: string) => TabType;
   removeTab: (tabId: string) => TabType | null | undefined;
   switchTab: (tabId: string | null) => void;
   handleAddNewTab: (tabs: TabType[], newTab: TabType) => TabType;

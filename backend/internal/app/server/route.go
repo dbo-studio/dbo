@@ -64,4 +64,10 @@ func (r *Server) routing() {
 	job.Delete("/:id", r.handlers.Job.Cancel)
 	job.Get("/:id/result", r.handlers.Job.Result)
 
+	schemaDiagram := api.Group("schema-diagram")
+	schemaDiagram.Get("/", r.handlers.SchemaDiagram.GetDiagram)
+	schemaDiagram.Post("/layout", r.handlers.SchemaDiagram.SaveLayout)
+	schemaDiagram.Post("/relationship", r.handlers.SchemaDiagram.CreateRelationship)
+	schemaDiagram.Delete("/relationship", r.handlers.SchemaDiagram.DeleteRelationship)
+
 }

@@ -56,17 +56,18 @@ func Execute() {
 	}
 
 	restServer := server.New(appLogger, server.Handlers{
-		Config:       handler.NewConfigHandler(appLogger, ss.ConfigService),
-		Connection:   handler.NewConnectionHandler(appLogger, ss.ConnectionService),
-		SavedQuery:   handler.NewSavedQueryHandler(appLogger, ss.SavedQueryService),
-		History:      handler.NewHistoryHandler(appLogger, ss.HistoryService),
-		TreeHandler:  handler.NewTreeHandler(appLogger, ss.TreeService),
-		QueryHandler: handler.NewQueryHandler(appLogger, ss.QueryService),
-		ImportExport: handler.NewImportExportHandler(appLogger, ss.ImportExportService),
-		Job:          handler.NewJobHandler(appLogger, ss.JobService),
-		AI:           handler.NewAiHandler(appLogger, ss.AiService),
-		AiProvider:   handler.NewAiProviderHandler(appLogger, ss.AiProviderService),
-		AiChat:       handler.NewAiChatHandler(appLogger, ss.AiChatService),
+		Config:        handler.NewConfigHandler(appLogger, ss.ConfigService),
+		Connection:    handler.NewConnectionHandler(appLogger, ss.ConnectionService),
+		SavedQuery:    handler.NewSavedQueryHandler(appLogger, ss.SavedQueryService),
+		History:       handler.NewHistoryHandler(appLogger, ss.HistoryService),
+		TreeHandler:   handler.NewTreeHandler(appLogger, ss.TreeService),
+		QueryHandler:  handler.NewQueryHandler(appLogger, ss.QueryService),
+		ImportExport:  handler.NewImportExportHandler(appLogger, ss.ImportExportService),
+		Job:           handler.NewJobHandler(appLogger, ss.JobService),
+		AI:            handler.NewAiHandler(appLogger, ss.AiService),
+		AiProvider:    handler.NewAiProviderHandler(appLogger, ss.AiProviderService),
+		AiChat:        handler.NewAiChatHandler(appLogger, ss.AiChatService),
+		SchemaDiagram: handler.NewSchemaDiagramHandler(appLogger, ss.SchemaDiagramService),
 	})
 
 	if err := restServer.Start(helper.IsLocal(), cfg.App.Port); err != nil {

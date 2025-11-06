@@ -1,0 +1,17 @@
+.table-node {
+  font-family: 'Roboto', sans-serif;
+}
+
+.table-node.selected {
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.5);
+}
+
+.react-flow__handle {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.table-node:hover .react-flow__handle {
+  opacity: 1;
+}
+

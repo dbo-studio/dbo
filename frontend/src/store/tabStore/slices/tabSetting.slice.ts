@@ -132,6 +132,39 @@ export const createTabSettingSlice: StateCreator<
 
     return get().handleAddNewTab(tabs, newTab);
   },
+  addSchemaDiagramTab: (schema?: string): TabType => {
+    const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+    if (!currentConnectionId) {
+      throw new Error('No current connection id');
+    }
+
+    const tabs = get().tabs;
+    const schemaName = schema || 'public';
+    const tabName = `Schema Diagram: ${schemaName}`;
+
+    const findTab = tabs.find(
+      (t: TabType) =>
+        t.mode === TabMode.SchemaDiagram && t.connectionId === currentConnectionId && t.options?.schema === schemaName
+    );
+
+    if (findTab) {
+      get().switchTab(findTab.id);
+      return findTab;
+    }
+
+    const newTab: TabType = {
+      id: uuidv4(),
+      connectionId: currentConnectionId,
+      name: tabName,
+      nodeId: '',
+      mode: TabMode.SchemaDiagram,
+      options: {
+        schema: schemaName
+      }
+    };
+
+    return get().handleAddNewTab(tabs, newTab);
+  },
   removeTab: (tabId: string): TabType | null | undefined => {
     const tabIndex = get().tabs.findIndex((t: TabType) => t.id === tabId);
     const newTabs = get().tabs.filter((t: TabType) => t.id !== tabId);

@@ -45,7 +45,7 @@ func (r *PostgresRepository) handleSchemaCommands(node PGNode, tabId contract.Tr
 		}
 
 		if params.Old.Name != nil && params.New.Comment != nil {
-			queries = append(queries, fmt.Sprintf("COMMENT ON SCHEMA %s IS %s", *params.Old.Name, *params.New.Comment))
+			queries = append(queries, fmt.Sprintf("COMMENT ON SCHEMA %s IS '%s'", *params.Old.Name, *params.New.Comment))
 		}
 	}
 

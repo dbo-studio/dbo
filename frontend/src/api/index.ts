@@ -8,6 +8,7 @@ import * as importExport from './importExport';
 import * as job from './job';
 import * as query from './query';
 import * as savedQueries from './savedQuery';
+import * as schemaDiagram from './schemaDiagram';
 import * as tree from './tree';
 
 const api = {
@@ -21,7 +22,8 @@ const api = {
   job,
   ai,
   aiProvider,
-  aiChat
+  aiChat,
+  schemaDiagram
 };
 
 export default api;

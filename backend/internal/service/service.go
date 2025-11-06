@@ -15,6 +15,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/service/job/processors"
 	serviceQuery "github.com/dbo-studio/dbo/internal/service/query"
 	serviceSavedQuery "github.com/dbo-studio/dbo/internal/service/saved_query"
+	serviceSchemaDiagram "github.com/dbo-studio/dbo/internal/service/schema_diagram"
 
 	serviceTree "github.com/dbo-studio/dbo/internal/service/tree"
 	"github.com/dbo-studio/dbo/pkg/cache"
@@ -22,18 +23,19 @@ import (
 )
 
 type Service struct {
-	ConnectionService   serviceConnection.IConnectionService
-	HistoryService      serviceHistory.IHistoryService
-	SavedQueryService   serviceSavedQuery.ISavedQueryService
-	TreeService         serviceTree.ITreeService
-	QueryService        serviceQuery.IQueryService
-	ImportExportService serviceImportExport.IImportExport
-	JobService          serviceJob.IJobService
-	JobManager          serviceJob.IJobManager
-	AiService           serviceAI.IAiService
-	AiProviderService   serviceAiProvider.IAiProviderService
-	AiChatService       serviceAiChat.IAiChatService
-	ConfigService       serviceConfig.IConfigService
+	ConnectionService     serviceConnection.IConnectionService
+	HistoryService        serviceHistory.IHistoryService
+	SavedQueryService     serviceSavedQuery.ISavedQueryService
+	TreeService           serviceTree.ITreeService
+	QueryService          serviceQuery.IQueryService
+	ImportExportService   serviceImportExport.IImportExport
+	JobService            serviceJob.IJobService
+	JobManager            serviceJob.IJobManager
+	AiService             serviceAI.IAiService
+	AiProviderService     serviceAiProvider.IAiProviderService
+	AiChatService         serviceAiChat.IAiChatService
+	ConfigService         serviceConfig.IConfigService
+	SchemaDiagramService  serviceSchemaDiagram.ISchemaDiagramService
 }
 
 func NewService(cfg *config.Config, logger logger.Logger, repo *repository.Repository, cm *databaseConnection.ConnectionManager, cache cache.Cache) *Service {
@@ -46,17 +48,18 @@ func NewService(cfg *config.Config, logger logger.Logger, repo *repository.Repos
 	aiProviderService := serviceAiProvider.NewAiProviderService(repo.AiProviderRepo)
 
 	return &Service{
-		ConnectionService:   serviceConnection.NewConnectionService(repo.ConnectionRepo, cm),
-		HistoryService:      serviceHistory.NewHistoryService(repo.HistoryRepo),
-		SavedQueryService:   serviceSavedQuery.NewSavedQueryService(repo.SavedQueryRepo),
-		TreeService:         serviceTree.NewTreeService(cache, repo.ConnectionRepo, cm),
-		QueryService:        serviceQuery.NewQueryService(repo.ConnectionRepo, repo.HistoryRepo, cm, cache),
-		ImportExportService: serviceImportExport.NewImportExportService(jobManager),
-		JobService:          serviceJob.NewJobService(jobRepo),
-		JobManager:          jobManager,
-		AiService:           serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, cm, cache, logger),
-		AiProviderService:   aiProviderService,
-		AiChatService:       serviceAiChat.NewAiChatService(repo.AiChatRepo),
-		ConfigService:       serviceConfig.NewConfigService(cfg, cache, aiProviderService),
+		ConnectionService:    serviceConnection.NewConnectionService(repo.ConnectionRepo, cm),
+		HistoryService:       serviceHistory.NewHistoryService(repo.HistoryRepo),
+		SavedQueryService:    serviceSavedQuery.NewSavedQueryService(repo.SavedQueryRepo),
+		TreeService:          serviceTree.NewTreeService(cache, repo.ConnectionRepo, cm),
+		QueryService:         serviceQuery.NewQueryService(repo.ConnectionRepo, repo.HistoryRepo, cm, cache),
+		ImportExportService:  serviceImportExport.NewImportExportService(jobManager),
+		JobService:           serviceJob.NewJobService(jobRepo),
+		JobManager:           jobManager,
+		AiService:            serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, cm, cache, logger),
+		AiProviderService:    aiProviderService,
+		AiChatService:        serviceAiChat.NewAiChatService(repo.AiChatRepo),
+		ConfigService:        serviceConfig.NewConfigService(cfg, cache, aiProviderService),
+		SchemaDiagramService: serviceSchemaDiagram.NewSchemaDiagramService(repo.ConnectionRepo, repo.SchemaDiagramRepo, cm),
 	}
 }

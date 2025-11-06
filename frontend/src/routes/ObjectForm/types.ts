@@ -24,6 +24,14 @@ export type SimpleFieldProps = {
 
 export type TableFormProps = {
   formSchema: FormFieldType[];
+  formData?: Record<string, any>;
+  onFieldChange?: (fieldId: string, value: any) => void;
+  onArrayFieldChange?: (fieldId: string, value: any[]) => void;
+  onAddArrayItem?: (fieldId: string) => void;
+  showStatusBar?: boolean;
+  onSave?: () => void | Promise<void>;
+  onCancel?: () => void;
+  isSaving?: boolean;
 };
 
 export type StatusBarProps = {
