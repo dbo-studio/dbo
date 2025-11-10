@@ -27,7 +27,7 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 		return nil, apperror.InternalServerError(err)
 	}
 
-	repo, err := database.NewDatabaseRepository(connection, s.cm)
+	repo, err := database.NewDatabaseRepository(ctx, connection, s.cm, s.cache)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}

@@ -37,10 +37,11 @@ func buildRoot(r *PostgresRepository) (*contract.TreeNode, error) {
 		ContextMenu: r.ContextMenu(contract.DatabaseContainerNodeType),
 		Children:    make([]contract.TreeNode, 0),
 	}
-	databases, err := r.getDatabaseList()
+	databases, err := r.databases(true)
 	if err != nil {
 		return nil, apperror.DriverError(err)
 	}
+
 	for _, db := range databases {
 		root.Children = append(root.Children, contract.TreeNode{
 			ID:          db.Name,
@@ -64,10 +65,11 @@ func buildDatabase(r *PostgresRepository, dbName string) (*contract.TreeNode, er
 		ContextMenu: r.ContextMenu(contract.DatabaseNodeType),
 		Children:    make([]contract.TreeNode, 0),
 	}
-	schemas, err := r.getSchemaList(Database{Name: dbName})
+	schemas, err := r.schemas(&dbName, true)
 	if err != nil {
 		return nil, apperror.DriverError(err)
 	}
+
 	for _, schema := range schemas {
 		dbNode.Children = append(dbNode.Children, contract.TreeNode{
 			ID:          fmt.Sprintf("%s.%s", dbName, schema.Name),
@@ -136,7 +138,7 @@ func buildContainer(r *PostgresRepository, dbName, schemaName string, container 
 	}
 	switch container {
 	case contract.TableContainerNodeType:
-		tables, err := r.getTableList(Schema{Name: schemaName})
+		tables, err := r.tables(&schemaName, true)
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}
@@ -159,7 +161,7 @@ func buildContainer(r *PostgresRepository, dbName, schemaName string, container 
 			})
 		}
 	case contract.ViewContainerNodeType:
-		views, err := r.getViewList(Database{Name: dbName}, Schema{Name: schemaName})
+		views, err := r.views(&dbName, &schemaName, true)
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}
@@ -182,7 +184,7 @@ func buildContainer(r *PostgresRepository, dbName, schemaName string, container 
 			})
 		}
 	case contract.MaterializedViewContainerNodeType:
-		mvs, err := r.getMaterializedViewList(Schema{Name: schemaName})
+		mvs, err := r.materializedViews(&schemaName, true)
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}

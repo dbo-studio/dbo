@@ -1,3 +1,6 @@
+import { Box, LinearProgress, Stack } from '@mui/material';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import api from '@/api';
 import type { AiChatRequest, AiContextOptsType } from '@/api/ai/types';
 import { TabMode } from '@/core/enums';
@@ -7,9 +10,6 @@ import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AiChatType, AutoCompleteType } from '@/types';
-import { Box, LinearProgress, Stack } from '@mui/material';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
 import AddChat from './AddChat/AddChat';
 import { HeaderContainerStyled } from './AiChatPanel.styled';
 import ChatBox from './ChatBox/ChatBox';
@@ -59,9 +59,7 @@ export default function AiChatPanel() {
     queryKey: ['ai_autocomplete', currentConnectionId],
     queryFn: async (): Promise<AutoCompleteType> =>
       api.query.autoComplete({
-        connectionId: Number(currentConnectionId),
-        fromCache: true,
-        skipSystem: true
+        connectionId: Number(currentConnectionId)
       })
   });
 

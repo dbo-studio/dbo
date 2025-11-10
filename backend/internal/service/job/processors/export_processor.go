@@ -14,6 +14,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/internal/service/job"
+	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/csv"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
@@ -23,13 +24,15 @@ type ExportProcessor struct {
 	jobManager     job.IJobManager
 	cm             *databaseConnection.ConnectionManager
 	connectionRepo repository.IConnectionRepo
+	cache          cache.Cache
 }
 
-func NewExportProcessor(jobManager job.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo) *ExportProcessor {
+func NewExportProcessor(jobManager job.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, cache cache.Cache) *ExportProcessor {
 	return &ExportProcessor{
 		jobManager:     jobManager,
 		cm:             cm,
 		connectionRepo: connectionRepo,
+		cache:          cache,
 	}
 }
 
@@ -38,6 +41,8 @@ func (p *ExportProcessor) GetType() model.JobType {
 }
 
 func (p *ExportProcessor) Process(job *model.Job) error {
+	ctx := context.Background()
+
 	if job.Status == model.JobStatusCancelled {
 		return fmt.Errorf("job was cancelled")
 	}
@@ -47,12 +52,12 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 		return err
 	}
 
-	connection, err := p.connectionRepo.Find(context.Background(), data.ConnectionId)
+	connection, err := p.connectionRepo.Find(ctx, data.ConnectionId)
 	if err != nil {
 		return err
 	}
 
-	repo, err := database.NewDatabaseRepository(connection, p.cm)
+	repo, err := database.NewDatabaseRepository(ctx, connection, p.cm, p.cache)
 	if err != nil {
 		return err
 	}

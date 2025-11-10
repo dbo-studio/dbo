@@ -40,13 +40,13 @@ func NewService(cfg *config.Config, logger logger.Logger, repo *repository.Repos
 	jobRepo := repository.NewJobRepo(repo.DB)
 	jobManager := serviceJob.NewJobManager(jobRepo, logger)
 
-	jobManager.RegisterProcessor(processors.NewImportProcessor(jobManager, cm, repo.ConnectionRepo))
-	jobManager.RegisterProcessor(processors.NewExportProcessor(jobManager, cm, repo.ConnectionRepo))
+	jobManager.RegisterProcessor(processors.NewImportProcessor(jobManager, cm, repo.ConnectionRepo, cache))
+	jobManager.RegisterProcessor(processors.NewExportProcessor(jobManager, cm, repo.ConnectionRepo, cache))
 
 	aiProviderService := serviceAiProvider.NewAiProviderService(repo.AiProviderRepo)
 
 	return &Service{
-		ConnectionService:   serviceConnection.NewConnectionService(repo.ConnectionRepo, cm),
+		ConnectionService:   serviceConnection.NewConnectionService(repo.ConnectionRepo, cm, cache),
 		HistoryService:      serviceHistory.NewHistoryService(repo.HistoryRepo),
 		SavedQueryService:   serviceSavedQuery.NewSavedQueryService(repo.SavedQueryRepo),
 		TreeService:         serviceTree.NewTreeService(cache, repo.ConnectionRepo, cm),

@@ -16,6 +16,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/internal/service/job"
+	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/csv"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
@@ -25,13 +26,15 @@ type ImportProcessor struct {
 	jobManager     job.IJobManager
 	cm             *databaseConnection.ConnectionManager
 	connectionRepo repository.IConnectionRepo
+	cache          cache.Cache
 }
 
-func NewImportProcessor(jobManager job.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo) *ImportProcessor {
+func NewImportProcessor(jobManager job.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, cache cache.Cache) *ImportProcessor {
 	return &ImportProcessor{
 		jobManager:     jobManager,
 		cm:             cm,
 		connectionRepo: connectionRepo,
+		cache:          cache,
 	}
 }
 
@@ -40,6 +43,8 @@ func (p *ImportProcessor) GetType() model.JobType {
 }
 
 func (p *ImportProcessor) Process(job *model.Job) error {
+	ctx := context.Background()
+
 	data, err := helper.ConvertToDTO[dto.ImportJob]([]byte(job.Data))
 	if err != nil {
 		return fmt.Errorf("could not convert job data to DTO: %v", err)
@@ -52,12 +57,12 @@ func (p *ImportProcessor) Process(job *model.Job) error {
 		fileData = data.Data
 	}
 
-	connection, err := p.connectionRepo.Find(context.Background(), data.ConnectionId)
+	connection, err := p.connectionRepo.Find(ctx, data.ConnectionId)
 	if err != nil {
 		return err
 	}
 
-	repo, err := database.NewDatabaseRepository(connection, p.cm)
+	repo, err := database.NewDatabaseRepository(ctx, connection, p.cm, p.cache)
 	if err != nil {
 		return err
 	}

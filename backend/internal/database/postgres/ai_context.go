@@ -2,6 +2,7 @@ package databasePostgres
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -57,7 +58,7 @@ func (r *PostgresRepository) AiContext(req *dto.AiChatRequest) (string, error) {
 	sb.WriteString("\nTables:\n")
 
 	if len(req.ContextOpts.Tables) == 0 {
-		tableList, err := r.getAllTableList(lo.ToPtr(true))
+		tableList, err := r.tables(nil, true)
 		if err != nil {
 			return "", err
 		}
@@ -67,7 +68,7 @@ func (r *PostgresRepository) AiContext(req *dto.AiChatRequest) (string, error) {
 	}
 
 	if len(req.ContextOpts.Views) == 0 {
-		viewList, err := r.getAllViewList(lo.ToPtr(true))
+		viewList, err := r.views(nil, nil, true)
 		if err != nil {
 			return "", err
 		}
@@ -80,22 +81,16 @@ func (r *PostgresRepository) AiContext(req *dto.AiChatRequest) (string, error) {
 	for _, table := range req.ContextOpts.Tables {
 		sb.WriteString(fmt.Sprintf("%d. %s\n", tableCounter, table))
 
-		columns, err := r.getColumns(table, req.ContextOpts.Schema, []string{}, false)
+		columns, err := r.columns(&table, req.ContextOpts.Schema, []string{}, false, true)
 		if err != nil {
 			return "", err
 		}
 
-		primaryKeys, err := r.getPrimaryKeys(Table{Name: table})
+		primaryKeys, err := r.primaryKeys(&table, true)
 		if err != nil {
 			return "", err
 		}
 
-		foreignKeys, err := r.getForeignKeys(table, req.ContextOpts.Schema)
-		if err != nil {
-			return "", err
-		}
-
-		externalRefs := make(map[string]string)
 		contextTables := make(map[string]bool)
 		for _, t := range req.ContextOpts.Tables {
 			contextTables[t] = true
@@ -105,38 +100,18 @@ func (r *PostgresRepository) AiContext(req *dto.AiChatRequest) (string, error) {
 			sb.WriteString("   - ")
 			sb.WriteString(column.ColumnName)
 			sb.WriteString(" (")
-
-			if fkInfo, exists := foreignKeys[column.ColumnName]; exists {
-				if contextTables[fkInfo.ReferencedTable] {
-					sb.WriteString("FK → ")
-					sb.WriteString(fkInfo.ReferencedTable)
-					sb.WriteString(".")
-					sb.WriteString(fkInfo.ReferencedColumn)
-					sb.WriteString(", ")
-				} else {
-					externalRefs[column.ColumnName] = fmt.Sprintf("FK → %s.%s (external)", fkInfo.ReferencedTable, fkInfo.ReferencedColumn)
-				}
-			}
-
-			sb.WriteString(column.MappedType)
+			sb.WriteString(columnContextDescriptor(column))
 			sb.WriteString(")\n")
 		}
 
 		if len(primaryKeys) > 1 {
-			sb.WriteString("   - PRIMARY KEY (")
-			sb.WriteString(strings.Join(primaryKeys, ", "))
-			sb.WriteString(")\n")
-		}
+			primaryKeysList := lo.Map(primaryKeys, func(pk PrimaryKey, _ int) string {
+				return pk.ColumnName
+			})
 
-		if len(externalRefs) > 0 {
-			sb.WriteString("   - External References:\n")
-			for colName, ref := range externalRefs {
-				sb.WriteString("     * ")
-				sb.WriteString(colName)
-				sb.WriteString(": ")
-				sb.WriteString(ref)
-				sb.WriteString("\n")
-			}
+			sb.WriteString("   - PRIMARY KEY (")
+			sb.WriteString(strings.Join(primaryKeysList, ", "))
+			sb.WriteString(")\n")
 		}
 
 		sb.WriteString("\n")
@@ -150,7 +125,7 @@ func (r *PostgresRepository) AiContext(req *dto.AiChatRequest) (string, error) {
 		for _, view := range req.ContextOpts.Views {
 			sb.WriteString(fmt.Sprintf("%d. %s\n", viewCounter, view))
 
-			columns, err := r.getColumns(view, req.ContextOpts.Schema, []string{}, false)
+			columns, err := r.columns(&view, req.ContextOpts.Schema, []string{}, false, true)
 			if err != nil {
 				return "", err
 			}
@@ -171,6 +146,23 @@ func (r *PostgresRepository) AiContext(req *dto.AiChatRequest) (string, error) {
 	return sb.String(), nil
 }
 
+/*
+this is a sample of the AI complete context
+Database: default
+Schema: public
+
+Tables:
+1. data_src
+  - datasrc_id (PK, character(6))
+  - authors (character varying(256))
+  - title (character varying)
+  - year (integer)
+  - journal (text)
+  - vol_city (text)
+  - issue_state (text)
+  - start_page (text)
+  - end_page (text)
+*/
 func (r *PostgresRepository) AiCompleteContext(req *dto.AiInlineCompleteRequest) string {
 	var contextBuilder strings.Builder
 
@@ -201,22 +193,16 @@ func (r *PostgresRepository) AiCompleteContext(req *dto.AiInlineCompleteRequest)
 	for _, table := range sqlResult.Tables {
 		contextBuilder.WriteString(fmt.Sprintf("%d. %s\n", tableCounter, table))
 
-		columns, err := r.getColumns(table, req.ContextOpts.Schema, []string{}, false)
+		columns, err := r.columns(&table, req.ContextOpts.Schema, []string{}, false, true)
 		if err != nil {
 			return ""
 		}
 
-		primaryKeys, err := r.getPrimaryKeys(Table{Name: table})
+		primaryKeys, err := r.primaryKeys(&table, true)
 		if err != nil {
 			return ""
 		}
 
-		foreignKeys, err := r.getForeignKeys(table, req.ContextOpts.Schema)
-		if err != nil {
-			return ""
-		}
-
-		externalRefs := make(map[string]string)
 		contextTables := make(map[string]bool)
 		for _, t := range sqlResult.Tables {
 			contextTables[t] = true
@@ -226,38 +212,18 @@ func (r *PostgresRepository) AiCompleteContext(req *dto.AiInlineCompleteRequest)
 			contextBuilder.WriteString("   - ")
 			contextBuilder.WriteString(column.ColumnName)
 			contextBuilder.WriteString(" (")
-
-			if fkInfo, exists := foreignKeys[column.ColumnName]; exists {
-				if contextTables[fkInfo.ReferencedTable] {
-					contextBuilder.WriteString("FK → ")
-					contextBuilder.WriteString(fkInfo.ReferencedTable)
-					contextBuilder.WriteString(".")
-					contextBuilder.WriteString(fkInfo.ReferencedColumn)
-					contextBuilder.WriteString(", ")
-				} else {
-					externalRefs[column.ColumnName] = fmt.Sprintf("FK → %s.%s (external)", fkInfo.ReferencedTable, fkInfo.ReferencedColumn)
-				}
-			}
-
-			contextBuilder.WriteString(column.MappedType)
+			contextBuilder.WriteString(columnContextDescriptor(column))
 			contextBuilder.WriteString(")\n")
 		}
 
 		if len(primaryKeys) > 1 {
-			contextBuilder.WriteString("   - PRIMARY KEY (")
-			contextBuilder.WriteString(strings.Join(primaryKeys, ", "))
-			contextBuilder.WriteString(")\n")
-		}
+			primaryKeysList := lo.Map(primaryKeys, func(pk PrimaryKey, _ int) string {
+				return pk.ColumnName
+			})
 
-		if len(externalRefs) > 0 {
-			contextBuilder.WriteString("   - External References:\n")
-			for colName, ref := range externalRefs {
-				contextBuilder.WriteString("     * ")
-				contextBuilder.WriteString(colName)
-				contextBuilder.WriteString(": ")
-				contextBuilder.WriteString(ref)
-				contextBuilder.WriteString("\n")
-			}
+			contextBuilder.WriteString("   - PRIMARY KEY (")
+			contextBuilder.WriteString(strings.Join(primaryKeysList, ", "))
+			contextBuilder.WriteString(")\n")
 		}
 
 		contextBuilder.WriteString("\n")
@@ -271,7 +237,7 @@ func (r *PostgresRepository) AiCompleteContext(req *dto.AiInlineCompleteRequest)
 		for _, view := range sqlResult.Views {
 			contextBuilder.WriteString(fmt.Sprintf("%d. %s\n", viewCounter, view))
 
-			columns, err := r.getColumns(view, sqlResult.Schema, []string{}, false)
+			columns, err := r.columns(&view, sqlResult.Schema, []string{}, false, true)
 			if err != nil {
 				return ""
 			}
@@ -290,4 +256,42 @@ func (r *PostgresRepository) AiCompleteContext(req *dto.AiInlineCompleteRequest)
 	}
 
 	return contextBuilder.String()
+}
+
+func columnContextDescriptor(column Column) string {
+	descriptors := make([]string, 0, 3)
+
+	if column.PrimaryKey != nil {
+		descriptors = append(descriptors, "PK")
+	}
+
+	if column.ForeignKey != nil {
+		fk := column.ForeignKey
+		refColumn := fk.RefColumns
+
+		if len(fk.RefColumnsList) > 0 {
+			refColumn = fk.RefColumnsList[0]
+		}
+
+		if len(fk.ColumnsList) == len(fk.RefColumnsList) {
+			if idx := slices.Index(fk.ColumnsList, column.ColumnName); idx >= 0 {
+				refColumn = fk.RefColumnsList[idx]
+			}
+		}
+
+		descriptors = append(descriptors, fmt.Sprintf("FK → %s.%s", fk.TargetTable, refColumn))
+	}
+
+	descriptors = append(descriptors, columnTypeForContext(column))
+
+	return strings.Join(descriptors, ", ")
+}
+
+func columnTypeForContext(column Column) string {
+	dataType := strings.TrimSpace(column.DataType)
+	if dataType != "" {
+		return dataType
+	}
+
+	return column.MappedType
 }

@@ -29,7 +29,7 @@ func (r *PostgresRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryRe
 		queryResults[i] = helper.SanitizeQueryResults(row)
 	}
 
-	columns, err := r.getColumns(node.Table, &node.Schema, req.Columns, true)
+	columns, err := r.columns(&node.Table, &node.Schema, req.Columns, true, true)
 	if err != nil {
 		return nil, result.Error
 	}
@@ -71,10 +71,12 @@ func (r *PostgresRepository) runQueryGenerator(dto *dto.RunQueryRequest, node PG
 		}
 		sb.WriteString(strings.Join(sortClauses, ", "))
 	} else {
-		keys, err := r.getPrimaryKeys(Table{node.Table})
+		keys, err := r.primaryKeys(&node.Table, true)
 		if err == nil && len(keys) > 0 {
 			sb.WriteString(" ORDER BY ")
-			sb.WriteString(strings.Join(keys, ", "))
+			sb.WriteString(strings.Join(lo.Map(keys, func(key PrimaryKey, _ int) string {
+				return key.ColumnName
+			}), ", "))
 		}
 	}
 

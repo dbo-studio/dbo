@@ -6,6 +6,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
 
@@ -66,10 +67,14 @@ func (r *PostgresRepository) generateUpdateQueries(req *dto.UpdateQueryRequest, 
 
 	var queries []string
 
-	keys, err := r.getPrimaryKeys(Table{node.Table})
+	keys, err := r.primaryKeys(&node.Table, true)
 	if err != nil {
 		return nil
 	}
+
+	primaryKeys := lo.Map(keys, func(key PrimaryKey, _ int) string {
+		return key.ColumnName
+	})
 
 	for _, editedItem := range req.EditedItems {
 		if len(editedItem.Values) == 0 || len(editedItem.Conditions) == 0 {
@@ -77,7 +82,7 @@ func (r *PostgresRepository) generateUpdateQueries(req *dto.UpdateQueryRequest, 
 		}
 
 		setClauses := buildSetClauses(editedItem.Values)
-		whereClauses := r.buildWhereClauses(keys, editedItem.Conditions)
+		whereClauses := r.buildWhereClauses(primaryKeys, editedItem.Conditions)
 
 		if len(setClauses) == 0 || len(whereClauses) == 0 {
 			continue
@@ -104,17 +109,22 @@ func (r *PostgresRepository) generateDeleteQueries(req *dto.UpdateQueryRequest, 
 
 	var queries []string
 
-	keys, err := r.getPrimaryKeys(Table{node.Table})
+	keys, err := r.primaryKeys(&node.Table, true)
 	if err != nil {
 		return nil
 	}
+
+	primaryKeys := lo.Map(keys, func(key PrimaryKey, _ int) string {
+		return key.ColumnName
+	})
 
 	for _, deletedItem := range req.DeletedItems {
 		if len(deletedItem) == 0 {
 			continue
 		}
 
-		whereClauses := r.buildWhereClauses(keys, deletedItem)
+		whereClauses := r.buildWhereClauses(primaryKeys, deletedItem)
+
 		if len(whereClauses) == 0 {
 			continue
 		}

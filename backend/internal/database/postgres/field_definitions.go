@@ -86,7 +86,7 @@ func (r *PostgresRepository) getKeyOptions(node PGNode) []contract.FormField {
 }
 
 func (r *PostgresRepository) templateOptions() []contract.FormField {
-	templates, err := r.getTemplates()
+	templates, err := r.templates(true)
 	if err != nil {
 		return []contract.FormField{}
 	}

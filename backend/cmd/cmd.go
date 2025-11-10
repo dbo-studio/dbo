@@ -9,8 +9,8 @@ import (
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/handler"
 	"github.com/dbo-studio/dbo/internal/app/server"
-	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
+	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/cache/sqlite"
 	"github.com/dbo-studio/dbo/pkg/db"
 	"github.com/dbo-studio/dbo/pkg/helper"
@@ -38,7 +38,17 @@ func Execute() {
 	cfg := config.New()
 	appLogger := zap.New(cfg)
 	appDB := db.New(cfg, appLogger).DB
-	err := database.AutoMigrate(appDB)
+	err := appDB.AutoMigrate(
+		&model.CacheItem{},
+		&model.Connection{},
+		&model.History{},
+		&model.SavedQuery{},
+		&model.Job{},
+		&model.AiProvider{},
+		&model.AiChat{},
+		&model.AiChatMessage{},
+	)
+
 	if err != nil {
 		appLogger.Fatal(err)
 	}

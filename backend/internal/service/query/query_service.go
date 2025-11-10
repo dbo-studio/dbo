@@ -40,7 +40,7 @@ func (i IQueryServiceImpl) Run(ctx context.Context, req *dto.RunQueryRequest) (*
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(connection, i.cm)
+	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm, i.cache)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -54,7 +54,7 @@ func (i IQueryServiceImpl) Raw(ctx context.Context, req *dto.RawQueryRequest) (*
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(connection, i.cm)
+	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm, i.cache)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -73,7 +73,7 @@ func (i IQueryServiceImpl) Update(ctx context.Context, req *dto.UpdateQueryReque
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(connection, i.cm)
+	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm, i.cache)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -87,7 +87,7 @@ func (i IQueryServiceImpl) AutoComplete(ctx context.Context, req *dto.AutoComple
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(connection, i.cm)
+	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm, i.cache)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -120,7 +120,7 @@ func (i IQueryServiceImpl) findResultFromCache(req *dto.AutoCompleteRequest) (*d
 	err := i.cache.ConditionalGet(
 		i.cacheName(req),
 		&result,
-		req.FromCache,
+		true,
 	)
 
 	if err != nil {
@@ -131,5 +131,5 @@ func (i IQueryServiceImpl) findResultFromCache(req *dto.AutoCompleteRequest) (*d
 }
 
 func (i IQueryServiceImpl) cacheName(req *dto.AutoCompleteRequest) string {
-	return fmt.Sprintf("auto_complete:connection_%d_database_%s_schema_%s_skipSystem_%t", req.ConnectionId, lo.FromPtr(req.Database), lo.FromPtr(req.Schema), lo.FromPtr(req.SkipSystem))
+	return fmt.Sprintf("auto_complete:connection_%d_database_%s_schema_%s", req.ConnectionId, lo.FromPtr(req.Database), lo.FromPtr(req.Schema))
 }

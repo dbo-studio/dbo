@@ -6,32 +6,32 @@ import (
 )
 
 func (r *PostgresRepository) AutoComplete(data *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
-	databases, err := r.getDatabaseList()
+	databases, err := r.databases(true)
 	if err != nil {
 		return nil, err
 	}
 
 	var views []View
 	if data.Database != nil && data.Schema != nil {
-		views, err = r.getViewList(Database{Name: lo.FromPtr(data.Database)}, Schema{Name: lo.FromPtr(data.Schema)})
+		views, err = r.views(data.Database, data.Schema, true)
 	} else {
-		views, err = r.getAllViewList(data.SkipSystem)
+		views, err = r.views(nil, nil, true)
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	schemas, err := r.getAllSchemaList(data.SkipSystem)
+	schemas, err := r.schemas(data.Database, true)
 	if err != nil {
 		return nil, err
 	}
 
 	var tables []Table
 	if data.Schema != nil {
-		tables, err = r.getTableList(Schema{Name: lo.FromPtr(data.Schema)})
+		tables, err = r.tables(data.Schema, true)
 	} else {
-		tables, err = r.getAllTableList(data.SkipSystem)
+		tables, err = r.tables(nil, true)
 	}
 
 	if err != nil {
@@ -41,7 +41,7 @@ func (r *PostgresRepository) AutoComplete(data *dto.AutoCompleteRequest) (*dto.A
 	columns := make(map[string][]string)
 	if data.Schema != nil {
 		for _, table := range tables {
-			columnResult, err := r.getColumns(table.Name, data.Schema, nil, false)
+			columnResult, err := r.columns(&table.Name, data.Schema, nil, false, true)
 			if err != nil {
 				return nil, err
 			}

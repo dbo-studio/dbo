@@ -53,7 +53,7 @@ func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (*
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(connection, i.cm)
+	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm, i.cache)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -77,7 +77,7 @@ func (i ITreeServiceImpl) Tabs(ctx context.Context, req *dto.ObjectTabsRequest) 
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(connection, i.cm)
+	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm, i.cache)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -91,7 +91,7 @@ func (i ITreeServiceImpl) TabObject(ctx context.Context, req *dto.ObjectFieldsRe
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(connection, i.cm)
+	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm, i.cache)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -107,7 +107,7 @@ func (i ITreeServiceImpl) ObjectDetail(ctx context.Context, req *dto.ObjectDetai
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(connection, i.cm)
+	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm, i.cache)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -125,7 +125,7 @@ func (i ITreeServiceImpl) ObjectExecute(ctx context.Context, req *dto.ObjectExec
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(connection, i.cm)
+	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm, i.cache)
 	if err != nil {
 		return apperror.InternalServerError(err)
 	}

@@ -1,6 +1,7 @@
 package databaseConnection
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -38,14 +39,14 @@ func NewConnectionManager(logger logger.Logger, historyRepo repository.IHistoryR
 	return cm
 }
 
-func (cm *ConnectionManager) GetConnection(connection *model.Connection) (*gorm.DB, error) {
+func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *model.Connection) (*gorm.DB, error) {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 
 	if conn, exists := cm.connections[connection.ID]; exists {
 		db, err := conn.DB.DB()
 		if err == nil {
-			if err := db.Ping(); err == nil {
+			if err := db.PingContext(ctx); err == nil {
 				conn.LastUsed = time.Now()
 				return conn.DB, nil
 			}

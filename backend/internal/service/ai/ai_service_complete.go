@@ -44,7 +44,7 @@ func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteR
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(conn, s.cm)
+	repo, err := database.NewDatabaseRepository(ctx, conn, s.cm, s.cache)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
