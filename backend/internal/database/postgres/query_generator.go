@@ -30,7 +30,7 @@ func (r *PostgresRepository) databases(ctx context.Context, fromCache bool) ([]D
 		}
 	}
 
-	err := r.db.Select("datname").
+	err := r.db.WithContext(ctx).Select("datname").
 		Table("pg_database").
 		Where("datistemplate = false").
 		Order("datname").
@@ -69,7 +69,7 @@ func (r *PostgresRepository) schemas(ctx context.Context, database *string, from
 		}
 	}
 
-	query := r.db.Select("schema_name").
+	query := r.db.WithContext(ctx).Select("schema_name").
 		Table("information_schema.schemata").
 		Where("schema_name NOT IN ('pg_catalog', 'information_schema')")
 
@@ -114,7 +114,7 @@ func (r *PostgresRepository) tables(ctx context.Context, schema *string, fromCac
 		}
 	}
 
-	query := r.db.Table("pg_namespace AS n").
+	query := r.db.WithContext(ctx).Table("pg_namespace AS n").
 		Select("n.nspname AS schema_name, t.tablename AS table_name").
 		Joins("LEFT JOIN pg_tables t ON n.nspname = t.schemaname::name").
 		Where("n.nspname NOT IN ('pg_catalog', 'information_schema')").
@@ -160,7 +160,7 @@ func (r *PostgresRepository) views(ctx context.Context, database *string, schema
 		}
 	}
 
-	query := r.db.Select("table_name").
+	query := r.db.WithContext(ctx).Select("table_name").
 		Table("information_schema.views").
 		Where("table_schema NOT IN ('pg_catalog', 'information_schema')")
 
@@ -209,7 +209,7 @@ func (r *PostgresRepository) materializedViews(ctx context.Context, schema *stri
 		}
 	}
 
-	query := r.db.Select("matviewname").
+	query := r.db.WithContext(ctx).Select("matviewname").
 		Table("pg_matviews").
 		Where("schemaname NOT IN ('pg_catalog', 'information_schema')")
 
@@ -269,7 +269,7 @@ func (r *PostgresRepository) columns(ctx context.Context, table *string, schema 
 		}
 	}
 
-	query := r.db.Table("pg_attribute AS a").
+	query := r.db.WithContext(ctx).Table("pg_attribute AS a").
 		Select(`
 			a.attnum AS ordinal_position,
 			a.attname AS column_name,
@@ -391,7 +391,7 @@ func (r *PostgresRepository) templates(ctx context.Context, fromCache bool) ([]T
 		}
 	}
 
-	err := r.db.Table("pg_database").
+	err := r.db.WithContext(ctx).Table("pg_database").
 		Select("datname").
 		Where("datistemplate = true").
 		Order("datname").
@@ -430,7 +430,7 @@ func (r *PostgresRepository) primaryKeys(ctx context.Context, table *string, fro
 		}
 	}
 
-	query := r.db.Table("information_schema.table_constraints AS tc").
+	query := r.db.WithContext(ctx).Table("information_schema.table_constraints AS tc").
 		Select("kcu.column_name").
 		Joins("JOIN information_schema.key_column_usage AS kcu ON kcu.constraint_name = tc.constraint_name AND kcu.table_schema = tc.table_schema").
 		Where("tc.constraint_type = 'PRIMARY KEY'")
@@ -487,7 +487,7 @@ func (r *PostgresRepository) foreignKeys(ctx context.Context, table *string, sch
 		}
 	}
 
-	query := r.db.Table("pg_constraint c").
+	query := r.db.WithContext(ctx).Table("pg_constraint c").
 		Select(`
 			c.conname as constraint_name,
 			array_to_string(array_agg(a.attname ORDER BY array_position(c.conkey, a.attnum)), ', ') as columns,

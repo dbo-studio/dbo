@@ -8,6 +8,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/samber/lo"
+	"golang.org/x/sync/errgroup"
 )
 
 type ForeignKeyInfo struct {
@@ -78,69 +79,99 @@ func (r *PostgresRepository) AiContext(ctx context.Context, req *dto.AiChatReque
 		})
 	}
 
-	tableCounter := 1
-	for _, table := range req.ContextOpts.Tables {
-		sb.WriteString(fmt.Sprintf("%d. %s\n", tableCounter, table))
+	tableSections := make([]string, len(req.ContextOpts.Tables))
+	gTables, gTablesCtx := errgroup.WithContext(ctx)
 
-		columns, err := r.columns(ctx, &table, req.ContextOpts.Schema, []string{}, false, true)
-		if err != nil {
-			return "", err
-		}
+	for idx, table := range req.ContextOpts.Tables {
+		idx := idx
+		tableName := table
 
-		primaryKeys, err := r.primaryKeys(ctx, &table, true)
-		if err != nil {
-			return "", err
-		}
+		gTables.Go(func() error {
+			columns, err := r.columns(gTablesCtx, &tableName, req.ContextOpts.Schema, []string{}, false, true)
+			if err != nil {
+				return err
+			}
 
-		contextTables := make(map[string]bool)
-		for _, t := range req.ContextOpts.Tables {
-			contextTables[t] = true
-		}
+			var sectionBuilder strings.Builder
+			sectionBuilder.WriteString(fmt.Sprintf("%d. %s\n", idx+1, tableName))
 
-		for _, column := range columns {
-			sb.WriteString("   - ")
-			sb.WriteString(column.ColumnName)
-			sb.WriteString(" (")
-			sb.WriteString(columnContextDescriptor(column))
-			sb.WriteString(")\n")
-		}
+			pkSet := make(map[string]struct{})
+			pkList := make([]string, 0)
 
-		if len(primaryKeys) > 1 {
-			primaryKeysList := lo.Map(primaryKeys, func(pk PrimaryKey, _ int) string {
-				return pk.ColumnName
-			})
+			for _, column := range columns {
+				sectionBuilder.WriteString("   - ")
+				sectionBuilder.WriteString(column.ColumnName)
+				sectionBuilder.WriteString(" (")
+				sectionBuilder.WriteString(columnContextDescriptor(column))
+				sectionBuilder.WriteString(")\n")
 
-			sb.WriteString("   - PRIMARY KEY (")
-			sb.WriteString(strings.Join(primaryKeysList, ", "))
-			sb.WriteString(")\n")
-		}
+				if column.PrimaryKey != nil {
+					if _, exists := pkSet[column.ColumnName]; !exists {
+						pkSet[column.ColumnName] = struct{}{}
+						pkList = append(pkList, column.ColumnName)
+					}
+				}
+			}
 
-		sb.WriteString("\n")
-		tableCounter++
+			if len(pkList) > 1 {
+				sectionBuilder.WriteString("   - PRIMARY KEY (")
+				sectionBuilder.WriteString(strings.Join(pkList, ", "))
+				sectionBuilder.WriteString(")\n")
+			}
+
+			sectionBuilder.WriteString("\n")
+			tableSections[idx] = sectionBuilder.String()
+			return nil
+		})
+	}
+
+	if err := gTables.Wait(); err != nil {
+		return "", err
+	}
+
+	for _, section := range tableSections {
+		sb.WriteString(section)
 	}
 
 	if len(req.ContextOpts.Views) > 0 {
 		sb.WriteString("\nViews:\n")
 
-		viewCounter := 1
-		for _, view := range req.ContextOpts.Views {
-			sb.WriteString(fmt.Sprintf("%d. %s\n", viewCounter, view))
+		viewSections := make([]string, len(req.ContextOpts.Views))
+		gViews, gViewsCtx := errgroup.WithContext(ctx)
 
-			columns, err := r.columns(ctx, &view, req.ContextOpts.Schema, []string{}, false, true)
-			if err != nil {
-				return "", err
-			}
+		for idx, view := range req.ContextOpts.Views {
+			idx := idx
+			viewName := view
 
-			for _, column := range columns {
-				sb.WriteString("   - ")
-				sb.WriteString(column.ColumnName)
-				sb.WriteString(" (")
-				sb.WriteString(column.MappedType)
-				sb.WriteString(")\n")
-			}
+			gViews.Go(func() error {
+				columns, err := r.columns(gViewsCtx, &viewName, req.ContextOpts.Schema, []string{}, false, true)
+				if err != nil {
+					return err
+				}
 
-			sb.WriteString("\n")
-			viewCounter++
+				var sectionBuilder strings.Builder
+				sectionBuilder.WriteString(fmt.Sprintf("%d. %s\n", idx+1, viewName))
+
+				for _, column := range columns {
+					sectionBuilder.WriteString("   - ")
+					sectionBuilder.WriteString(column.ColumnName)
+					sectionBuilder.WriteString(" (")
+					sectionBuilder.WriteString(column.MappedType)
+					sectionBuilder.WriteString(")\n")
+				}
+
+				sectionBuilder.WriteString("\n")
+				viewSections[idx] = sectionBuilder.String()
+				return nil
+			})
+		}
+
+		if err := gViews.Wait(); err != nil {
+			return "", err
+		}
+
+		for _, section := range viewSections {
+			sb.WriteString(section)
 		}
 	}
 
@@ -190,69 +221,99 @@ func (r *PostgresRepository) AiCompleteContext(ctx context.Context, req *dto.AiI
 		contextBuilder.WriteString("\n")
 	}
 
-	tableCounter := 1
-	for _, table := range sqlResult.Tables {
-		contextBuilder.WriteString(fmt.Sprintf("%d. %s\n", tableCounter, table))
+	tableSections := make([]string, len(sqlResult.Tables))
+	gTables, gTablesCtx := errgroup.WithContext(ctx)
 
-		columns, err := r.columns(ctx, &table, req.ContextOpts.Schema, []string{}, false, true)
-		if err != nil {
-			return ""
-		}
+	for idx, table := range sqlResult.Tables {
+		idx := idx
+		tableName := table
 
-		primaryKeys, err := r.primaryKeys(ctx, &table, true)
-		if err != nil {
-			return ""
-		}
+		gTables.Go(func() error {
+			columns, err := r.columns(gTablesCtx, &tableName, req.ContextOpts.Schema, []string{}, false, true)
+			if err != nil {
+				return err
+			}
 
-		contextTables := make(map[string]bool)
-		for _, t := range sqlResult.Tables {
-			contextTables[t] = true
-		}
+			var sectionBuilder strings.Builder
+			sectionBuilder.WriteString(fmt.Sprintf("%d. %s\n", idx+1, tableName))
 
-		for _, column := range columns {
-			contextBuilder.WriteString("   - ")
-			contextBuilder.WriteString(column.ColumnName)
-			contextBuilder.WriteString(" (")
-			contextBuilder.WriteString(columnContextDescriptor(column))
-			contextBuilder.WriteString(")\n")
-		}
+			pkSet := make(map[string]struct{})
+			pkList := make([]string, 0)
 
-		if len(primaryKeys) > 1 {
-			primaryKeysList := lo.Map(primaryKeys, func(pk PrimaryKey, _ int) string {
-				return pk.ColumnName
-			})
+			for _, column := range columns {
+				sectionBuilder.WriteString("   - ")
+				sectionBuilder.WriteString(column.ColumnName)
+				sectionBuilder.WriteString(" (")
+				sectionBuilder.WriteString(columnContextDescriptor(column))
+				sectionBuilder.WriteString(")\n")
 
-			contextBuilder.WriteString("   - PRIMARY KEY (")
-			contextBuilder.WriteString(strings.Join(primaryKeysList, ", "))
-			contextBuilder.WriteString(")\n")
-		}
+				if column.PrimaryKey != nil {
+					if _, exists := pkSet[column.ColumnName]; !exists {
+						pkSet[column.ColumnName] = struct{}{}
+						pkList = append(pkList, column.ColumnName)
+					}
+				}
+			}
 
-		contextBuilder.WriteString("\n")
-		tableCounter++
+			if len(pkList) > 1 {
+				sectionBuilder.WriteString("   - PRIMARY KEY (")
+				sectionBuilder.WriteString(strings.Join(pkList, ", "))
+				sectionBuilder.WriteString(")\n")
+			}
+
+			sectionBuilder.WriteString("\n")
+			tableSections[idx] = sectionBuilder.String()
+			return nil
+		})
+	}
+
+	if err := gTables.Wait(); err != nil {
+		return ""
+	}
+
+	for _, section := range tableSections {
+		contextBuilder.WriteString(section)
 	}
 
 	if len(sqlResult.Views) > 0 {
 		contextBuilder.WriteString("\nViews:\n")
 
-		viewCounter := 1
-		for _, view := range sqlResult.Views {
-			contextBuilder.WriteString(fmt.Sprintf("%d. %s\n", viewCounter, view))
+		viewSections := make([]string, len(sqlResult.Views))
+		gViews, gViewsCtx := errgroup.WithContext(ctx)
 
-			columns, err := r.columns(ctx, &view, sqlResult.Schema, []string{}, false, true)
-			if err != nil {
-				return ""
-			}
+		for idx, view := range sqlResult.Views {
+			idx := idx
+			viewName := view
 
-			for _, column := range columns {
-				contextBuilder.WriteString("   - ")
-				contextBuilder.WriteString(column.ColumnName)
-				contextBuilder.WriteString(" (")
-				contextBuilder.WriteString(column.MappedType)
-				contextBuilder.WriteString(")\n")
-			}
+			gViews.Go(func() error {
+				columns, err := r.columns(gViewsCtx, &viewName, sqlResult.Schema, []string{}, false, true)
+				if err != nil {
+					return err
+				}
 
-			contextBuilder.WriteString("\n")
-			viewCounter++
+				var sectionBuilder strings.Builder
+				sectionBuilder.WriteString(fmt.Sprintf("%d. %s\n", idx+1, viewName))
+
+				for _, column := range columns {
+					sectionBuilder.WriteString("   - ")
+					sectionBuilder.WriteString(column.ColumnName)
+					sectionBuilder.WriteString(" (")
+					sectionBuilder.WriteString(column.MappedType)
+					sectionBuilder.WriteString(")\n")
+				}
+
+				sectionBuilder.WriteString("\n")
+				viewSections[idx] = sectionBuilder.String()
+				return nil
+			})
+		}
+
+		if err := gViews.Wait(); err != nil {
+			return ""
+		}
+
+		for _, section := range viewSections {
+			contextBuilder.WriteString(section)
 		}
 	}
 

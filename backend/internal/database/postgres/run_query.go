@@ -9,30 +9,46 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
+	"golang.org/x/sync/errgroup"
 )
 
 func (r *PostgresRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
 	node := extractNode(req.NodeId)
 	query := r.runQueryGenerator(ctx, req, node)
 	queryResults := make([]map[string]any, 0)
+	columns := make([]Column, 0)
 
 	if node.Table == "" {
 		return nil, errors.New("table or view not found")
 	}
 
-	result := r.db.WithContext(ctx).Raw(query).Find(&queryResults)
-	if result.Error != nil {
-		return nil, result.Error
-	}
+	g, gctx := errgroup.WithContext(ctx)
 
-	for i, row := range queryResults {
-		queryResults[i]["dbo_index"] = i
-		queryResults[i] = helper.SanitizeQueryResults(row)
-	}
+	g.Go(func() error {
+		err := r.db.WithContext(gctx).Raw(query).Find(&queryResults).Error
+		if err != nil {
+			return err
+		}
 
-	columns, err := r.columns(ctx, &node.Table, &node.Schema, req.Columns, true, true)
-	if err != nil {
-		return nil, result.Error
+		for i, row := range queryResults {
+			queryResults[i]["dbo_index"] = i
+			queryResults[i] = helper.SanitizeQueryResults(row)
+		}
+
+		return nil
+	})
+
+	g.Go(func() error {
+		result, err := r.columns(gctx, &node.Table, &node.Schema, req.Columns, true, true)
+		if err != nil {
+			return err
+		}
+		columns = result
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return nil, err
 	}
 
 	return &dto.RunQueryResponse{
