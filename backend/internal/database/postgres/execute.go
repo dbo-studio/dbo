@@ -1,13 +1,14 @@
 package databasePostgres
 
 import (
+	"context"
 	"net/url"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *PostgresRepository) Execute(nodeID string, action contract.TreeNodeActionName, params []byte) error {
+func (r *PostgresRepository) Execute(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) error {
 	node := extractNode(nodeID)
 	type ExecuteParams map[contract.TreeTab]any
 	executeParams, err := helper.ConvertToDTO[ExecuteParams](params)

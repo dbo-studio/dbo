@@ -1,6 +1,7 @@
 package databaseSqlite
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -10,7 +11,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func (r *SQLiteRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
+func (r *SQLiteRepository) RunQuery(_ context.Context, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
 	node := req.NodeId
 	query := runQueryGenerator(req, node)
 	queryResults := make([]map[string]any, 0)

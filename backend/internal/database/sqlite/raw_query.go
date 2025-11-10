@@ -1,6 +1,7 @@
 package databaseSqlite
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"strings"
@@ -10,7 +11,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *SQLiteRepository) RunRawQuery(req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
+func (r *SQLiteRepository) RunRawQuery(_ context.Context, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
 	startTime := time.Now()
 	result, err := runRawQuery(r, req)
 	endTime := time.Since(startTime)

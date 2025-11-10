@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -27,12 +28,12 @@ type ExportProcessor struct {
 	cache          cache.Cache
 }
 
-func NewExportProcessor(jobManager job.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, cache cache.Cache) *ExportProcessor {
+func NewExportProcessor(jobManager job.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo) *ExportProcessor {
 	return &ExportProcessor{
 		jobManager:     jobManager,
 		cm:             cm,
 		connectionRepo: connectionRepo,
-		cache:          cache,
+		cache:          container.Instance().Cache(),
 	}
 }
 
@@ -57,7 +58,7 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 		return err
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, connection, p.cm, p.cache)
+	repo, err := database.NewDatabaseRepository(ctx, connection, p.cm)
 	if err != nil {
 		return err
 	}
@@ -72,7 +73,7 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 		return err
 	}
 
-	result, err := repo.RunRawQuery(&dto.RawQueryRequest{
+	result, err := repo.RunRawQuery(ctx, &dto.RawQueryRequest{
 		ConnectionId: int32(connection.ID),
 		Query:        data.Query,
 	})

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/model"
 	"gorm.io/gorm"
 )
@@ -11,8 +12,10 @@ type JobRepository struct {
 	db *gorm.DB
 }
 
-func NewJobRepo(db *gorm.DB) IJobRepo {
-	return &JobRepository{db: db}
+func NewJobRepo() IJobRepo {
+	return &JobRepository{
+		db: container.Instance().DB(),
+	}
 }
 
 func (r JobRepository) Create(ctx context.Context, job *model.Job) error {

@@ -1,6 +1,7 @@
 package databasePostgres
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"strings"
@@ -36,7 +37,7 @@ Tables:
   - nutr_no (PK, FK → nut_data.nutr_no, character)
   - datasrc_id (PK, FK → data_src.datasrc_id, character)
 */
-func (r *PostgresRepository) AiContext(req *dto.AiChatRequest) (string, error) {
+func (r *PostgresRepository) AiContext(ctx context.Context, req *dto.AiChatRequest) (string, error) {
 	var sb strings.Builder
 
 	if req.ContextOpts == nil {
@@ -58,7 +59,7 @@ func (r *PostgresRepository) AiContext(req *dto.AiChatRequest) (string, error) {
 	sb.WriteString("\nTables:\n")
 
 	if len(req.ContextOpts.Tables) == 0 {
-		tableList, err := r.tables(nil, true)
+		tableList, err := r.tables(ctx, nil, true)
 		if err != nil {
 			return "", err
 		}
@@ -68,7 +69,7 @@ func (r *PostgresRepository) AiContext(req *dto.AiChatRequest) (string, error) {
 	}
 
 	if len(req.ContextOpts.Views) == 0 {
-		viewList, err := r.views(nil, nil, true)
+		viewList, err := r.views(ctx, nil, nil, true)
 		if err != nil {
 			return "", err
 		}
@@ -81,12 +82,12 @@ func (r *PostgresRepository) AiContext(req *dto.AiChatRequest) (string, error) {
 	for _, table := range req.ContextOpts.Tables {
 		sb.WriteString(fmt.Sprintf("%d. %s\n", tableCounter, table))
 
-		columns, err := r.columns(&table, req.ContextOpts.Schema, []string{}, false, true)
+		columns, err := r.columns(ctx, &table, req.ContextOpts.Schema, []string{}, false, true)
 		if err != nil {
 			return "", err
 		}
 
-		primaryKeys, err := r.primaryKeys(&table, true)
+		primaryKeys, err := r.primaryKeys(ctx, &table, true)
 		if err != nil {
 			return "", err
 		}
@@ -125,7 +126,7 @@ func (r *PostgresRepository) AiContext(req *dto.AiChatRequest) (string, error) {
 		for _, view := range req.ContextOpts.Views {
 			sb.WriteString(fmt.Sprintf("%d. %s\n", viewCounter, view))
 
-			columns, err := r.columns(&view, req.ContextOpts.Schema, []string{}, false, true)
+			columns, err := r.columns(ctx, &view, req.ContextOpts.Schema, []string{}, false, true)
 			if err != nil {
 				return "", err
 			}
@@ -163,7 +164,7 @@ Tables:
   - start_page (text)
   - end_page (text)
 */
-func (r *PostgresRepository) AiCompleteContext(req *dto.AiInlineCompleteRequest) string {
+func (r *PostgresRepository) AiCompleteContext(ctx context.Context, req *dto.AiInlineCompleteRequest) string {
 	var contextBuilder strings.Builder
 
 	sqlResult := r.parseSQL(req.ContextOpts.Prompt)
@@ -193,12 +194,12 @@ func (r *PostgresRepository) AiCompleteContext(req *dto.AiInlineCompleteRequest)
 	for _, table := range sqlResult.Tables {
 		contextBuilder.WriteString(fmt.Sprintf("%d. %s\n", tableCounter, table))
 
-		columns, err := r.columns(&table, req.ContextOpts.Schema, []string{}, false, true)
+		columns, err := r.columns(ctx, &table, req.ContextOpts.Schema, []string{}, false, true)
 		if err != nil {
 			return ""
 		}
 
-		primaryKeys, err := r.primaryKeys(&table, true)
+		primaryKeys, err := r.primaryKeys(ctx, &table, true)
 		if err != nil {
 			return ""
 		}
@@ -237,7 +238,7 @@ func (r *PostgresRepository) AiCompleteContext(req *dto.AiInlineCompleteRequest)
 		for _, view := range sqlResult.Views {
 			contextBuilder.WriteString(fmt.Sprintf("%d. %s\n", viewCounter, view))
 
-			columns, err := r.columns(&view, sqlResult.Schema, []string{}, false, true)
+			columns, err := r.columns(ctx, &view, sqlResult.Schema, []string{}, false, true)
 			if err != nil {
 				return ""
 			}

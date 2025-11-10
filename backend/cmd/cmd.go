@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -9,6 +8,7 @@ import (
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/handler"
 	"github.com/dbo-studio/dbo/internal/app/server"
+	"github.com/dbo-studio/dbo/internal/container"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/cache/sqlite"
@@ -33,11 +33,16 @@ func ServeCommand() *cobra.Command {
 }
 
 func Execute() {
-	ctx := context.Background()
-
 	cfg := config.New()
+	appContainer := container.Instance()
+	appContainer.SetConfig(cfg)
+
 	appLogger := zap.New(cfg)
+	appContainer.SetLogger(appLogger)
+
 	appDB := db.New(cfg, appLogger).DB
+	appContainer.SetDB(appDB)
+
 	err := appDB.AutoMigrate(
 		&model.CacheItem{},
 		&model.Connection{},
@@ -54,11 +59,11 @@ func Execute() {
 	}
 
 	cache := sqlite.NewSQLiteCache(appDB)
-	rr := repository.NewRepository(ctx, appDB, cache)
+	appContainer.SetCache(cache)
 
-	cm := databaseConnection.NewConnectionManager(appLogger, rr.HistoryRepo)
-
-	ss := service.NewService(cfg, appLogger, rr, cm, cache)
+	rr := repository.NewRepository()
+	cm := databaseConnection.NewConnectionManager(rr.HistoryRepo)
+	ss := service.NewService(rr, cm)
 
 	err = ss.JobManager.CancelAllJobs()
 	if err != nil {
@@ -66,17 +71,17 @@ func Execute() {
 	}
 
 	restServer := server.New(appLogger, server.Handlers{
-		Config:       handler.NewConfigHandler(appLogger, ss.ConfigService),
-		Connection:   handler.NewConnectionHandler(appLogger, ss.ConnectionService),
-		SavedQuery:   handler.NewSavedQueryHandler(appLogger, ss.SavedQueryService),
-		History:      handler.NewHistoryHandler(appLogger, ss.HistoryService),
-		TreeHandler:  handler.NewTreeHandler(appLogger, ss.TreeService),
-		QueryHandler: handler.NewQueryHandler(appLogger, ss.QueryService),
-		ImportExport: handler.NewImportExportHandler(appLogger, ss.ImportExportService),
-		Job:          handler.NewJobHandler(appLogger, ss.JobService),
-		AI:           handler.NewAiHandler(appLogger, ss.AiService),
-		AiProvider:   handler.NewAiProviderHandler(appLogger, ss.AiProviderService),
-		AiChat:       handler.NewAiChatHandler(appLogger, ss.AiChatService),
+		Config:       handler.NewConfigHandler(ss.ConfigService),
+		Connection:   handler.NewConnectionHandler(ss.ConnectionService),
+		SavedQuery:   handler.NewSavedQueryHandler(ss.SavedQueryService),
+		History:      handler.NewHistoryHandler(ss.HistoryService),
+		TreeHandler:  handler.NewTreeHandler(ss.TreeService),
+		QueryHandler: handler.NewQueryHandler(ss.QueryService),
+		ImportExport: handler.NewImportExportHandler(ss.ImportExportService),
+		Job:          handler.NewJobHandler(ss.JobService),
+		AI:           handler.NewAiHandler(ss.AiService),
+		AiProvider:   handler.NewAiProviderHandler(ss.AiProviderService),
+		AiChat:       handler.NewAiChatHandler(ss.AiChatService),
 	})
 
 	if err := restServer.Start(helper.IsLocal(), cfg.App.Port); err != nil {

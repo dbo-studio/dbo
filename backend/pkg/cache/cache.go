@@ -1,12 +1,13 @@
 package cache
 
 import (
+	"context"
 	"time"
 )
 
 type Cache interface {
-	ConditionalGet(key string, result any, condition bool) error
-	Get(key string, result any) error
-	Set(key string, value any, ttl *time.Duration) error
-	Delete(key string) error
+	ConditionalGet(ctx context.Context, key string, result any, condition bool) error
+	Get(ctx context.Context, key string, result any) error
+	Set(ctx context.Context, key string, value any, ttl *time.Duration) error
+	Delete(ctx context.Context, key string) error
 }

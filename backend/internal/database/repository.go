@@ -9,17 +9,16 @@ import (
 	databasePostgres "github.com/dbo-studio/dbo/internal/database/postgres"
 	databaseSqlite "github.com/dbo-studio/dbo/internal/database/sqlite"
 	"github.com/dbo-studio/dbo/internal/model"
-	"github.com/dbo-studio/dbo/pkg/cache"
 )
 
-func NewDatabaseRepository(ctx context.Context, connection *model.Connection, cm *databaseConnection.ConnectionManager, cache cache.Cache) (databaseContract.DatabaseRepository, error) {
+func NewDatabaseRepository(ctx context.Context, connection *model.Connection, cm *databaseConnection.ConnectionManager) (databaseContract.DatabaseRepository, error) {
 	switch connection.ConnectionType {
 	//case "mysql":
 	//	return databaseMysql.NewMySQLRepository(connection, cm)
 	case string(databaseContract.Postgresql):
-		return databasePostgres.NewPostgresRepository(ctx, connection, cm, cache)
+		return databasePostgres.NewPostgresRepository(ctx, connection, cm)
 	case string(databaseContract.Sqlite):
-		return databaseSqlite.NewSQLiteRepository(ctx, connection, cm, cache)
+		return databaseSqlite.NewSQLiteRepository(ctx, connection, cm)
 	//case "sqlserver":
 	//	return databaseSqlserver.NewSQLServerRepository(connection, cm)
 	default:

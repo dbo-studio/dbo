@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dbo-studio/dbo/internal/container"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
@@ -28,11 +29,11 @@ type ConnectionManager struct {
 	historyRepo repository.IHistoryRepo
 }
 
-func NewConnectionManager(logger logger.Logger, historyRepo repository.IHistoryRepo) *ConnectionManager {
+func NewConnectionManager(historyRepo repository.IHistoryRepo) *ConnectionManager {
 	cm := &ConnectionManager{
 		connections: make(map[uint]*conn),
 		mu:          sync.Mutex{},
-		logger:      logger,
+		logger:      container.Instance().Logger(),
 		historyRepo: historyRepo,
 	}
 	go cm.cleanupInactiveConnections()

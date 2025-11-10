@@ -1,6 +1,7 @@
 package databaseSqlite
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -9,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (r *SQLiteRepository) UpdateQuery(req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error) {
+func (r *SQLiteRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error) {
 	if req == nil {
 		return nil, fmt.Errorf("nil request")
 	}

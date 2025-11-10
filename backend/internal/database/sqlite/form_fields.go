@@ -1,11 +1,13 @@
 package databaseSqlite
 
 import (
+	"context"
+
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *SQLiteRepository) GetFormTabs(action contract.TreeNodeActionName) []contract.FormTab {
+func (r *SQLiteRepository) GetFormTabs(_ context.Context, action contract.TreeNodeActionName) []contract.FormTab {
 	switch action {
 	case contract.CreateTableAction, contract.EditTableAction:
 		return []contract.FormTab{
@@ -24,7 +26,7 @@ func (r *SQLiteRepository) GetFormTabs(action contract.TreeNodeActionName) []con
 	}
 }
 
-func (r *SQLiteRepository) GetFormFields(nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) []contract.FormField {
+func (r *SQLiteRepository) GetFormFields(_ context.Context, nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) []contract.FormField {
 
 	switch tabID {
 	case contract.TableTab:

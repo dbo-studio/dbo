@@ -1,19 +1,20 @@
 package databasePostgres
 
 import (
+	"context"
 	"fmt"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *PostgresRepository) Objects(nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) ([]contract.FormField, error) {
+func (r *PostgresRepository) Objects(ctx context.Context, nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) ([]contract.FormField, error) {
 	node := extractNode(nodeID)
 
 	switch tabID {
 
 	case contract.DatabaseTab:
-		return r.getDatabaseInfo(node)
+		return r.getDatabaseInfo(ctx, node)
 
 	case contract.SchemaTab:
 		return r.getSchemaInfo(node)
@@ -273,8 +274,8 @@ func (r *PostgresRepository) getSchemaInfo(node PGNode) ([]contract.FormField, e
 	return helper.BuildObjectResponse(query, fields)
 }
 
-func (r *PostgresRepository) getDatabaseInfo(node PGNode) ([]contract.FormField, error) {
-	fields := r.databaseFields()
+func (r *PostgresRepository) getDatabaseInfo(ctx context.Context, node PGNode) ([]contract.FormField, error) {
+	fields := r.databaseFields(ctx)
 
 	query := r.db.Table("pg_database d").
 		Select(`

@@ -1,13 +1,14 @@
 package databaseSqlite
 
 import (
+	"context"
 	"net/url"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *SQLiteRepository) Execute(nodeID string, action contract.TreeNodeActionName, params []byte) error {
+func (r *SQLiteRepository) Execute(_ context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) error {
 	type ExecuteParams map[contract.TreeTab]any
 	executeParams, err := helper.ConvertToDTO[ExecuteParams](params)
 	if err != nil {

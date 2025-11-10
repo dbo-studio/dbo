@@ -1,37 +1,39 @@
 package databasePostgres
 
 import (
+	"context"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/samber/lo"
 )
 
-func (r *PostgresRepository) AutoComplete(data *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
-	databases, err := r.databases(true)
+func (r *PostgresRepository) AutoComplete(ctx context.Context, data *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
+	databases, err := r.databases(ctx, true)
 	if err != nil {
 		return nil, err
 	}
 
 	var views []View
 	if data.Database != nil && data.Schema != nil {
-		views, err = r.views(data.Database, data.Schema, true)
+		views, err = r.views(ctx, data.Database, data.Schema, true)
 	} else {
-		views, err = r.views(nil, nil, true)
+		views, err = r.views(ctx, nil, nil, true)
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	schemas, err := r.schemas(data.Database, true)
+	schemas, err := r.schemas(ctx, data.Database, true)
 	if err != nil {
 		return nil, err
 	}
 
 	var tables []Table
 	if data.Schema != nil {
-		tables, err = r.tables(data.Schema, true)
+		tables, err = r.tables(ctx, data.Schema, true)
 	} else {
-		tables, err = r.tables(nil, true)
+		tables, err = r.tables(ctx, nil, true)
 	}
 
 	if err != nil {
@@ -41,7 +43,7 @@ func (r *PostgresRepository) AutoComplete(data *dto.AutoCompleteRequest) (*dto.A
 	columns := make(map[string][]string)
 	if data.Schema != nil {
 		for _, table := range tables {
-			columnResult, err := r.columns(&table.Name, data.Schema, nil, false, true)
+			columnResult, err := r.columns(ctx, &table.Name, data.Schema, nil, false, true)
 			if err != nil {
 				return nil, err
 			}

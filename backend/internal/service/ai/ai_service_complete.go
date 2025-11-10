@@ -35,7 +35,7 @@ func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteR
 	}
 
 	cacheKey := s.generateCompletionKey(req)
-	if cachedResponse, found := s.getCompletionResponse(cacheKey); found {
+	if cachedResponse, found := s.getCompletionResponse(ctx, cacheKey); found {
 		return cachedResponse, nil
 	}
 
@@ -44,12 +44,12 @@ func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteR
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, conn, s.cm, s.cache)
+	repo, err := database.NewDatabaseRepository(ctx, conn, s.cm)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
 
-	contextStr := repo.AiCompleteContext(req)
+	contextStr := repo.AiCompleteContext(ctx, req)
 
 	providerReq := &serviceAiProvider.CompletionRequest{
 		Prompt:  req.ContextOpts.Prompt,
@@ -69,7 +69,7 @@ func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteR
 	}
 
 	if providerResp.Completion != "" {
-		err := s.setCompletionResponse(cacheKey, response, 5*time.Minute)
+		err := s.setCompletionResponse(ctx, cacheKey, response, 5*time.Minute)
 		if err != nil {
 			s.logger.Error(err)
 		}

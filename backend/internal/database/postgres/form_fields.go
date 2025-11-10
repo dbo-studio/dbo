@@ -1,11 +1,13 @@
 package databasePostgres
 
 import (
+	"context"
+
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *PostgresRepository) GetFormTabs(action contract.TreeNodeActionName) []contract.FormTab {
+func (r *PostgresRepository) GetFormTabs(_ context.Context, action contract.TreeNodeActionName) []contract.FormTab {
 	switch action {
 	case contract.CreateDatabaseAction, contract.EditDatabaseAction:
 		return []contract.FormTab{
@@ -39,12 +41,12 @@ func (r *PostgresRepository) GetFormTabs(action contract.TreeNodeActionName) []c
 	}
 }
 
-func (r *PostgresRepository) GetFormFields(nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) []contract.FormField {
+func (r *PostgresRepository) GetFormFields(ctx context.Context, nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) []contract.FormField {
 	node := extractNode(nodeID)
 
 	switch tabID {
 	case contract.DatabaseTab:
-		return r.databaseFields()
+		return r.databaseFields(ctx)
 
 	case contract.SchemaTab:
 		return r.schemaFields()

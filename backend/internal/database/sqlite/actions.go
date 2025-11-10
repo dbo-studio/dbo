@@ -1,10 +1,12 @@
 package databaseSqlite
 
 import (
+	"context"
+
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
-func (r *SQLiteRepository) ContextMenu(nodeType contract.TreeNodeType) []contract.TreeNodeAction {
+func (r *SQLiteRepository) ContextMenu(_ context.Context, nodeType contract.TreeNodeType) []contract.TreeNodeAction {
 	actions := make([]contract.TreeNodeAction, 0)
 	defaultActions := []contract.TreeNodeAction{
 		{

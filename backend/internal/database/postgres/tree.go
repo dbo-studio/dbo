@@ -1,6 +1,7 @@
 package databasePostgres
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -9,25 +10,25 @@ import (
 	"github.com/samber/lo"
 )
 
-func (r *PostgresRepository) Tree(parentID string) (*contract.TreeNode, error) {
+func (r *PostgresRepository) Tree(ctx context.Context, parentID string) (*contract.TreeNode, error) {
 	if parentID == "" {
-		return buildRoot(r)
+		return buildRoot(ctx, r)
 	}
 
 	parts := strings.Split(parentID, ".")
 	switch len(parts) {
 	case 1:
-		return buildDatabase(r, parts[0])
+		return buildDatabase(ctx, r, parts[0])
 	case 2:
-		return buildSchema(r, parts[0], parts[1])
+		return buildSchema(ctx, r, parts[0], parts[1])
 	case 3:
-		return buildContainer(r, parts[0], parts[1], contract.TreeNodeType(parts[2]))
+		return buildContainer(ctx, r, parts[0], parts[1], contract.TreeNodeType(parts[2]))
 	default:
 		return nil, fmt.Errorf("unsupported parent_id: %s", parentID)
 	}
 }
 
-func buildRoot(r *PostgresRepository) (*contract.TreeNode, error) {
+func buildRoot(ctx context.Context, r *PostgresRepository) (*contract.TreeNode, error) {
 	root := &contract.TreeNode{
 		ID:          fmt.Sprintf("%d@database", r.connection.ID),
 		Name:        r.connection.Name,
@@ -37,7 +38,7 @@ func buildRoot(r *PostgresRepository) (*contract.TreeNode, error) {
 		ContextMenu: r.ContextMenu(contract.DatabaseContainerNodeType),
 		Children:    make([]contract.TreeNode, 0),
 	}
-	databases, err := r.databases(true)
+	databases, err := r.databases(ctx, true)
 	if err != nil {
 		return nil, apperror.DriverError(err)
 	}
@@ -56,7 +57,7 @@ func buildRoot(r *PostgresRepository) (*contract.TreeNode, error) {
 	return root, nil
 }
 
-func buildDatabase(r *PostgresRepository, dbName string) (*contract.TreeNode, error) {
+func buildDatabase(ctx context.Context, r *PostgresRepository, dbName string) (*contract.TreeNode, error) {
 	dbNode := &contract.TreeNode{
 		ID:          dbName,
 		Name:        dbName,
@@ -65,7 +66,7 @@ func buildDatabase(r *PostgresRepository, dbName string) (*contract.TreeNode, er
 		ContextMenu: r.ContextMenu(contract.DatabaseNodeType),
 		Children:    make([]contract.TreeNode, 0),
 	}
-	schemas, err := r.schemas(&dbName, true)
+	schemas, err := r.schemas(ctx, &dbName, true)
 	if err != nil {
 		return nil, apperror.DriverError(err)
 	}
@@ -84,7 +85,7 @@ func buildDatabase(r *PostgresRepository, dbName string) (*contract.TreeNode, er
 	return dbNode, nil
 }
 
-func buildSchema(r *PostgresRepository, dbName, schemaName string) (*contract.TreeNode, error) {
+func buildSchema(ctx context.Context, r *PostgresRepository, dbName, schemaName string) (*contract.TreeNode, error) {
 	schemaNode := &contract.TreeNode{
 		ID:          fmt.Sprintf("%s.%s", dbName, schemaName),
 		Name:        schemaName,
@@ -127,7 +128,7 @@ func buildSchema(r *PostgresRepository, dbName, schemaName string) (*contract.Tr
 	return schemaNode, nil
 }
 
-func buildContainer(r *PostgresRepository, dbName, schemaName string, container contract.TreeNodeType) (*contract.TreeNode, error) {
+func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaName string, container contract.TreeNodeType) (*contract.TreeNode, error) {
 	containerNode := &contract.TreeNode{
 		ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, container),
 		Name:        string(container),
@@ -138,7 +139,7 @@ func buildContainer(r *PostgresRepository, dbName, schemaName string, container 
 	}
 	switch container {
 	case contract.TableContainerNodeType:
-		tables, err := r.tables(&schemaName, true)
+		tables, err := r.tables(ctx, &schemaName, true)
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}
@@ -161,7 +162,7 @@ func buildContainer(r *PostgresRepository, dbName, schemaName string, container 
 			})
 		}
 	case contract.ViewContainerNodeType:
-		views, err := r.views(&dbName, &schemaName, true)
+		views, err := r.views(ctx, &dbName, &schemaName, true)
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}
@@ -184,7 +185,7 @@ func buildContainer(r *PostgresRepository, dbName, schemaName string, container 
 			})
 		}
 	case contract.MaterializedViewContainerNodeType:
-		mvs, err := r.materializedViews(&schemaName, true)
+		mvs, err := r.materializedViews(ctx, &schemaName, true)
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}

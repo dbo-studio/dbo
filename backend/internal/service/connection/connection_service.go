@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/container"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/cache"
@@ -27,12 +28,11 @@ type IConnectionServiceImpl struct {
 func NewConnectionService(
 	connectionRepo repository.IConnectionRepo,
 	cm *databaseConnection.ConnectionManager,
-	cache cache.Cache,
 ) IConnectionService {
 	return &IConnectionServiceImpl{
 		connectionRepo: connectionRepo,
 		cm:             cm,
-		cache:          cache,
+		cache:          container.Instance().Cache(),
 	}
 }
 

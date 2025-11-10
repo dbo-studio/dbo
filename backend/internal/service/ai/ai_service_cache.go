@@ -1,6 +1,7 @@
 package serviceAi
 
 import (
+	"context"
 	"crypto/sha1"
 	"fmt"
 	"time"
@@ -8,9 +9,9 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 )
 
-func (cm *AiServiceImpl) getCompletionResponse(key string) (*dto.AiInlineCompleteResponse, bool) {
+func (cm *AiServiceImpl) getCompletionResponse(ctx context.Context, key string) (*dto.AiInlineCompleteResponse, bool) {
 	var response *dto.AiInlineCompleteResponse
-	err := cm.cache.Get(key, &response)
+	err := cm.cache.Get(ctx, key, &response)
 	if err != nil {
 		return nil, false
 	}
@@ -22,8 +23,8 @@ func (cm *AiServiceImpl) getCompletionResponse(key string) (*dto.AiInlineComplet
 	return response, true
 }
 
-func (cm *AiServiceImpl) setCompletionResponse(key string, response *dto.AiInlineCompleteResponse, ttl time.Duration) error {
-	return cm.cache.Set(key, response, &ttl)
+func (cm *AiServiceImpl) setCompletionResponse(ctx context.Context, key string, response *dto.AiInlineCompleteResponse, ttl time.Duration) error {
+	return cm.cache.Set(ctx, key, response, &ttl)
 }
 
 func (cm *AiServiceImpl) generateCompletionKey(req *dto.AiInlineCompleteRequest) string {

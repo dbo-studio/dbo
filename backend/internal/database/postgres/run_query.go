@@ -1,6 +1,7 @@
 package databasePostgres
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -10,16 +11,16 @@ import (
 	"github.com/samber/lo"
 )
 
-func (r *PostgresRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
+func (r *PostgresRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
 	node := extractNode(req.NodeId)
-	query := r.runQueryGenerator(req, node)
+	query := r.runQueryGenerator(ctx, req, node)
 	queryResults := make([]map[string]any, 0)
 
 	if node.Table == "" {
 		return nil, errors.New("table or view not found")
 	}
 
-	result := r.db.Raw(query).Find(&queryResults)
+	result := r.db.WithContext(ctx).Raw(query).Find(&queryResults)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -29,7 +30,7 @@ func (r *PostgresRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryRe
 		queryResults[i] = helper.SanitizeQueryResults(row)
 	}
 
-	columns, err := r.columns(&node.Table, &node.Schema, req.Columns, true, true)
+	columns, err := r.columns(ctx, &node.Table, &node.Schema, req.Columns, true, true)
 	if err != nil {
 		return nil, result.Error
 	}
@@ -41,7 +42,7 @@ func (r *PostgresRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryRe
 	}, nil
 }
 
-func (r *PostgresRepository) runQueryGenerator(dto *dto.RunQueryRequest, node PGNode) string {
+func (r *PostgresRepository) runQueryGenerator(ctx context.Context, dto *dto.RunQueryRequest, node PGNode) string {
 	var sb strings.Builder
 
 	// SELECT clause
@@ -71,7 +72,7 @@ func (r *PostgresRepository) runQueryGenerator(dto *dto.RunQueryRequest, node PG
 		}
 		sb.WriteString(strings.Join(sortClauses, ", "))
 	} else {
-		keys, err := r.primaryKeys(&node.Table, true)
+		keys, err := r.primaryKeys(ctx, &node.Table, true)
 		if err == nil && len(keys) > 0 {
 			sb.WriteString(" ORDER BY ")
 			sb.WriteString(strings.Join(lo.Map(keys, func(key PrimaryKey, _ int) string {

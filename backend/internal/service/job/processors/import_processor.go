@@ -10,6 +10,7 @@ import (
 
 	"github.com/blastrain/vitess-sqlparser/sqlparser"
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
@@ -29,12 +30,12 @@ type ImportProcessor struct {
 	cache          cache.Cache
 }
 
-func NewImportProcessor(jobManager job.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, cache cache.Cache) *ImportProcessor {
+func NewImportProcessor(jobManager job.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo) *ImportProcessor {
 	return &ImportProcessor{
 		jobManager:     jobManager,
 		cm:             cm,
 		connectionRepo: connectionRepo,
-		cache:          cache,
+		cache:          container.Instance().Cache(),
 	}
 }
 
@@ -62,7 +63,7 @@ func (p *ImportProcessor) Process(job *model.Job) error {
 		return err
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, connection, p.cm, p.cache)
+	repo, err := database.NewDatabaseRepository(ctx, connection, p.cm)
 	if err != nil {
 		return err
 	}
@@ -85,10 +86,10 @@ func (p *ImportProcessor) Process(job *model.Job) error {
 		return fmt.Errorf("job was cancelled")
 	}
 
-	return p.processLargeFile(job, repo, data, fileData)
+	return p.processLargeFile(ctx, job, repo, data, fileData)
 }
 
-func (p *ImportProcessor) processLargeFile(job *model.Job, dbRepo databaseContract.DatabaseRepository, data dto.ImportJob, fileData []byte) error {
+func (p *ImportProcessor) processLargeFile(ctx context.Context, job *model.Job, dbRepo databaseContract.DatabaseRepository, data dto.ImportJob, fileData []byte) error {
 	if job.Status == model.JobStatusCancelled {
 		return fmt.Errorf("job was cancelled")
 	}
@@ -144,7 +145,7 @@ func (p *ImportProcessor) processLargeFile(job *model.Job, dbRepo databaseContra
 			return fmt.Errorf("job was cancelled")
 		}
 
-		chunkSuccess, chunkFailed, chunkErrors := p.processChunk(dbRepo, data, columnNames, chunk)
+		chunkSuccess, chunkFailed, chunkErrors := p.processChunk(ctx, dbRepo, data, columnNames, chunk)
 		successRows += chunkSuccess
 		failedRows += chunkFailed
 		errors = append(errors, chunkErrors...)
@@ -175,11 +176,11 @@ func (p *ImportProcessor) processLargeFile(job *model.Job, dbRepo databaseContra
 	return nil
 }
 
-func (p *ImportProcessor) processChunk(dbRepo databaseContract.DatabaseRepository, options dto.ImportJob, columnNames []string, rows [][]string) (int, int, []databaseContract.ImportError) {
+func (p *ImportProcessor) processChunk(ctx context.Context, dbRepo databaseContract.DatabaseRepository, options dto.ImportJob, columnNames []string, rows [][]string) (int, int, []databaseContract.ImportError) {
 	var successRows, failedRows int
 	var errors []databaseContract.ImportError
 
-	importResult, err := dbRepo.ImportData(options, rows, columnNames)
+	importResult, err := dbRepo.ImportData(ctx, options, rows, columnNames)
 	if err != nil {
 		for i, row := range rows {
 			failedRows++

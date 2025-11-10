@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
@@ -31,18 +32,18 @@ type ITreeServiceImpl struct {
 	cache          cache.Cache
 }
 
-func NewTreeService(cache cache.Cache, cr repository.IConnectionRepo, cm *databaseConnection.ConnectionManager) *ITreeServiceImpl {
+func NewTreeService(cr repository.IConnectionRepo, cm *databaseConnection.ConnectionManager) *ITreeServiceImpl {
 	return &ITreeServiceImpl{
 		connectionRepo: cr,
 		cm:             cm,
-		cache:          cache,
+		cache:          container.Instance().Cache(),
 	}
 }
 
 func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (*contract.TreeNode, error) {
 	if lo.FromPtr(req.FromCache) {
 		var tree *contract.TreeNode
-		err := i.cache.Get(fmt.Sprintf("tree_%d_%s", req.ConnectionId, req.ParentId), &tree)
+		err := i.cache.Get(ctx, fmt.Sprintf("tree_%d_%s", req.ConnectionId, req.ParentId), &tree)
 		if err == nil && tree != nil {
 			return tree, nil
 		}
@@ -53,17 +54,17 @@ func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (*
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm, i.cache)
+	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
 
-	tree, err := repo.Tree(req.ParentId)
+	tree, err := repo.Tree(ctx, req.ParentId)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
 
-	err = i.cache.Set(fmt.Sprintf("tree_%d_%s", req.ConnectionId, req.ParentId), tree, lo.ToPtr(time.Minute*30))
+	err = i.cache.Set(ctx, fmt.Sprintf("tree_%d_%s", req.ConnectionId, req.ParentId), tree, lo.ToPtr(time.Minute*30))
 	if err != nil {
 		return nil, err
 	}
@@ -77,12 +78,12 @@ func (i ITreeServiceImpl) Tabs(ctx context.Context, req *dto.ObjectTabsRequest) 
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm, i.cache)
+	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
 
-	return repo.GetFormTabs(contract.TreeNodeActionName(req.Action)), nil
+	return repo.GetFormTabs(ctx, contract.TreeNodeActionName(req.Action)), nil
 }
 
 func (i ITreeServiceImpl) TabObject(ctx context.Context, req *dto.ObjectFieldsRequest) ([]contract.FormField, error) {
@@ -91,12 +92,12 @@ func (i ITreeServiceImpl) TabObject(ctx context.Context, req *dto.ObjectFieldsRe
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm, i.cache)
+	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
 
-	fields := repo.GetFormFields(req.NodeId, contract.TreeTab(req.TabId), contract.TreeNodeActionName(req.Action))
+	fields := repo.GetFormFields(ctx, req.NodeId, contract.TreeTab(req.TabId), contract.TreeNodeActionName(req.Action))
 
 	return fields, nil
 }
@@ -107,12 +108,12 @@ func (i ITreeServiceImpl) ObjectDetail(ctx context.Context, req *dto.ObjectDetai
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm, i.cache)
+	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
 
-	data, err := repo.Objects(req.NodeId, contract.TreeTab(req.TabId), contract.TreeNodeActionName(req.Action))
+	data, err := repo.Objects(ctx, req.NodeId, contract.TreeTab(req.TabId), contract.TreeNodeActionName(req.Action))
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -125,12 +126,12 @@ func (i ITreeServiceImpl) ObjectExecute(ctx context.Context, req *dto.ObjectExec
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm, i.cache)
+	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {
 		return apperror.InternalServerError(err)
 	}
 
-	err = repo.Execute(req.NodeId, contract.TreeNodeActionName(req.Action), req.Params)
+	err = repo.Execute(ctx, req.NodeId, contract.TreeNodeActionName(req.Action), req.Params)
 	if err != nil {
 		return apperror.InternalServerError(err)
 	}

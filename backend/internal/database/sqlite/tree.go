@@ -1,6 +1,7 @@
 package databaseSqlite
 
 import (
+	"context"
 	"fmt"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
@@ -8,22 +9,22 @@ import (
 	"github.com/samber/lo"
 )
 
-func (r *SQLiteRepository) Tree(parentID string) (*contract.TreeNode, error) {
+func (r *SQLiteRepository) Tree(ctx context.Context, parentID string) (*contract.TreeNode, error) {
 	if parentID == "" {
-		return buildRoot(r)
+		return buildRoot(ctx, r)
 	}
 
-	return buildContainer(r, contract.TreeNodeType(parentID))
+	return buildContainer(ctx, r, contract.TreeNodeType(parentID))
 }
 
-func buildRoot(r *SQLiteRepository) (*contract.TreeNode, error) {
+func buildRoot(ctx context.Context, r *SQLiteRepository) (*contract.TreeNode, error) {
 	root := &contract.TreeNode{
 		ID:          fmt.Sprintf("%d@database", r.connection.ID),
 		Name:        r.connection.Name,
 		Icon:        lo.ToPtr("sqlite"),
 		Type:        contract.TableContainerNodeType,
 		HasChildren: true,
-		ContextMenu: r.ContextMenu(contract.TableContainerNodeType),
+		ContextMenu: r.ContextMenu(ctx, contract.TableContainerNodeType),
 		Children:    make([]contract.TreeNode, 0),
 	}
 
@@ -35,12 +36,12 @@ func buildRoot(r *SQLiteRepository) (*contract.TreeNode, error) {
 		{
 			"Tables",
 			contract.TableContainerNodeType,
-			r.ContextMenu(contract.TableContainerNodeType),
+			r.ContextMenu(ctx, contract.TableContainerNodeType),
 		},
 		{
 			"Views",
 			contract.ViewContainerNodeType,
-			r.ContextMenu(contract.ViewContainerNodeType),
+			r.ContextMenu(ctx, contract.ViewContainerNodeType),
 		},
 	}
 
@@ -58,13 +59,13 @@ func buildRoot(r *SQLiteRepository) (*contract.TreeNode, error) {
 	return root, nil
 }
 
-func buildContainer(r *SQLiteRepository, container contract.TreeNodeType) (*contract.TreeNode, error) {
+func buildContainer(ctx context.Context, r *SQLiteRepository, container contract.TreeNodeType) (*contract.TreeNode, error) {
 	containerNode := &contract.TreeNode{
 		ID:          string(container),
 		Name:        string(container),
 		Type:        container,
 		HasChildren: true,
-		ContextMenu: r.ContextMenu(container),
+		ContextMenu: r.ContextMenu(ctx, container),
 		Children:    make([]contract.TreeNode, 0),
 	}
 	switch container {
@@ -87,7 +88,7 @@ func buildContainer(r *SQLiteRepository, container contract.TreeNodeType) (*cont
 						"editable": true,
 					},
 				},
-				ContextMenu: r.ContextMenu(contract.TableNodeType),
+				ContextMenu: r.ContextMenu(ctx, contract.TableNodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}
@@ -110,7 +111,7 @@ func buildContainer(r *SQLiteRepository, container contract.TreeNodeType) (*cont
 						"editable": false,
 					},
 				},
-				ContextMenu: r.ContextMenu(contract.ViewNodeType),
+				ContextMenu: r.ContextMenu(ctx, contract.ViewNodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/dbo-studio/dbo/config"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceAI "github.com/dbo-studio/dbo/internal/service/ai"
@@ -17,8 +16,6 @@ import (
 	serviceSavedQuery "github.com/dbo-studio/dbo/internal/service/saved_query"
 
 	serviceTree "github.com/dbo-studio/dbo/internal/service/tree"
-	"github.com/dbo-studio/dbo/pkg/cache"
-	"github.com/dbo-studio/dbo/pkg/logger"
 )
 
 type Service struct {
@@ -36,27 +33,27 @@ type Service struct {
 	ConfigService       serviceConfig.IConfigService
 }
 
-func NewService(cfg *config.Config, logger logger.Logger, repo *repository.Repository, cm *databaseConnection.ConnectionManager, cache cache.Cache) *Service {
-	jobRepo := repository.NewJobRepo(repo.DB)
-	jobManager := serviceJob.NewJobManager(jobRepo, logger)
+func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionManager) *Service {
+	jobRepo := repository.NewJobRepo()
+	jobManager := serviceJob.NewJobManager(jobRepo)
 
-	jobManager.RegisterProcessor(processors.NewImportProcessor(jobManager, cm, repo.ConnectionRepo, cache))
-	jobManager.RegisterProcessor(processors.NewExportProcessor(jobManager, cm, repo.ConnectionRepo, cache))
+	jobManager.RegisterProcessor(processors.NewImportProcessor(jobManager, cm, repo.ConnectionRepo))
+	jobManager.RegisterProcessor(processors.NewExportProcessor(jobManager, cm, repo.ConnectionRepo))
 
 	aiProviderService := serviceAiProvider.NewAiProviderService(repo.AiProviderRepo)
 
 	return &Service{
-		ConnectionService:   serviceConnection.NewConnectionService(repo.ConnectionRepo, cm, cache),
+		ConnectionService:   serviceConnection.NewConnectionService(repo.ConnectionRepo, cm),
 		HistoryService:      serviceHistory.NewHistoryService(repo.HistoryRepo),
 		SavedQueryService:   serviceSavedQuery.NewSavedQueryService(repo.SavedQueryRepo),
-		TreeService:         serviceTree.NewTreeService(cache, repo.ConnectionRepo, cm),
-		QueryService:        serviceQuery.NewQueryService(repo.ConnectionRepo, repo.HistoryRepo, cm, cache),
+		TreeService:         serviceTree.NewTreeService(repo.ConnectionRepo, cm),
+		QueryService:        serviceQuery.NewQueryService(repo.ConnectionRepo, repo.HistoryRepo, cm),
 		ImportExportService: serviceImportExport.NewImportExportService(jobManager),
 		JobService:          serviceJob.NewJobService(jobRepo),
 		JobManager:          jobManager,
-		AiService:           serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, cm, cache, logger),
+		AiService:           serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, cm),
 		AiProviderService:   aiProviderService,
 		AiChatService:       serviceAiChat.NewAiChatService(repo.AiChatRepo),
-		ConfigService:       serviceConfig.NewConfigService(cfg, cache, aiProviderService),
+		ConfigService:       serviceConfig.NewConfigService(aiProviderService),
 	}
 }

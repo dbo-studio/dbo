@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/container"
 	serviceTree "github.com/dbo-studio/dbo/internal/service/tree"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -14,8 +15,11 @@ type TreeHandler struct {
 	treeService serviceTree.ITreeService
 }
 
-func NewTreeHandler(logger logger.Logger, treeService serviceTree.ITreeService) *TreeHandler {
-	return &TreeHandler{logger, treeService}
+func NewTreeHandler(treeService serviceTree.ITreeService) *TreeHandler {
+	return &TreeHandler{
+		logger:      container.Instance().Logger(),
+		treeService: treeService,
+	}
 }
 
 func (h *TreeHandler) TreeHandler(c fiber.Ctx) error {

@@ -1,10 +1,12 @@
 package databaseSqlite
 
 import (
+	"context"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 )
 
-func (r *SQLiteRepository) AutoComplete(req *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
+func (r *SQLiteRepository) AutoComplete(_ context.Context, req *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
 	// For SQLite, we can provide basic autocomplete for table and column names
 	response := &dto.AutoCompleteResponse{
 		Databases: []string{},

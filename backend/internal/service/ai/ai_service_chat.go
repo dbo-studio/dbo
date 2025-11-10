@@ -29,12 +29,12 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, conn, s.cm, s.cache)
+	repo, err := database.NewDatabaseRepository(ctx, conn, s.cm)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
 
-	contextStr, err := repo.AiContext(req)
+	contextStr, err := repo.AiContext(ctx, req)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}

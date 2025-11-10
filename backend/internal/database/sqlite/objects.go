@@ -1,13 +1,14 @@
 package databaseSqlite
 
 import (
+	"context"
 	"fmt"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *SQLiteRepository) Objects(nodeID string, tabID contract.TreeTab, _ contract.TreeNodeActionName) ([]contract.FormField, error) {
+func (r *SQLiteRepository) Objects(ctx context.Context, nodeID string, tabID contract.TreeTab, _ contract.TreeNodeActionName) ([]contract.FormField, error) {
 	switch tabID {
 
 	case contract.TableTab:

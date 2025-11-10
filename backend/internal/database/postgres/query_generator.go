@@ -1,24 +1,26 @@
 package databasePostgres
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/samber/lo"
+	"golang.org/x/sync/errgroup"
 )
 
 type Database struct {
 	Name string `gorm:"column:datname"`
 }
 
-func (r *PostgresRepository) databases(fromCache bool) ([]Database, error) {
+func (r *PostgresRepository) databases(ctx context.Context, fromCache bool) ([]Database, error) {
 	databases := make([]Database, 0)
 	cacheKey := r.cacheKey("databases")
 
 	if fromCache {
-		err := r.cache.Get(cacheKey, &databases)
+		err := r.cache.Get(ctx, cacheKey, &databases)
 		if err != nil {
 			return nil, err
 		}
@@ -38,21 +40,26 @@ func (r *PostgresRepository) databases(fromCache bool) ([]Database, error) {
 		return nil, err
 	}
 
-	err = r.cache.Set(cacheKey, databases, nil)
+	go func() {
+		err := r.cache.Set(ctx, cacheKey, databases, nil)
+		if err != nil {
+			r.logger.Error(err)
+		}
+	}()
 
-	return databases, err
+	return databases, nil
 }
 
 type Schema struct {
 	Name string `gorm:"column:schema_name"`
 }
 
-func (r *PostgresRepository) schemas(database *string, fromCache bool) ([]Schema, error) {
+func (r *PostgresRepository) schemas(ctx context.Context, database *string, fromCache bool) ([]Schema, error) {
 	schemas := make([]Schema, 0)
 	cacheKey := r.cacheKey("schemas", lo.FromPtr(database))
 
 	if fromCache {
-		err := r.cache.Get(cacheKey, &schemas)
+		err := r.cache.Get(ctx, cacheKey, &schemas)
 		if err != nil {
 			return nil, err
 		}
@@ -78,21 +85,26 @@ func (r *PostgresRepository) schemas(database *string, fromCache bool) ([]Schema
 		return nil, err
 	}
 
-	err = r.cache.Set(cacheKey, schemas, nil)
+	go func() {
+		err := r.cache.Set(ctx, cacheKey, schemas, nil)
+		if err != nil {
+			r.logger.Error(err)
+		}
+	}()
 
-	return schemas, err
+	return schemas, nil
 }
 
 type Table struct {
 	Name string `gorm:"column:table_name"`
 }
 
-func (r *PostgresRepository) tables(schema *string, fromCache bool) ([]Table, error) {
+func (r *PostgresRepository) tables(ctx context.Context, schema *string, fromCache bool) ([]Table, error) {
 	tables := make([]Table, 0)
 	cacheKey := r.cacheKey("tables", lo.FromPtr(schema))
 
 	if fromCache {
-		err := r.cache.Get(cacheKey, &tables)
+		err := r.cache.Get(ctx, cacheKey, &tables)
 		if err != nil {
 			return nil, err
 		}
@@ -119,21 +131,26 @@ func (r *PostgresRepository) tables(schema *string, fromCache bool) ([]Table, er
 		return nil, err
 	}
 
-	err = r.cache.Set(cacheKey, tables, nil)
+	go func() {
+		err := r.cache.Set(ctx, cacheKey, tables, nil)
+		if err != nil {
+			r.logger.Error(err)
+		}
+	}()
 
-	return tables, err
+	return tables, nil
 }
 
 type View struct {
 	Name string `gorm:"column:table_name"`
 }
 
-func (r *PostgresRepository) views(database *string, schema *string, fromCache bool) ([]View, error) {
+func (r *PostgresRepository) views(ctx context.Context, database *string, schema *string, fromCache bool) ([]View, error) {
 	views := make([]View, 0)
 	cacheKey := r.cacheKey("views", lo.FromPtr(database), lo.FromPtr(schema))
 
 	if fromCache {
-		err := r.cache.Get(cacheKey, &views)
+		err := r.cache.Get(ctx, cacheKey, &views)
 		if err != nil {
 			return nil, err
 		}
@@ -163,21 +180,26 @@ func (r *PostgresRepository) views(database *string, schema *string, fromCache b
 		return nil, err
 	}
 
-	err = r.cache.Set(cacheKey, views, nil)
+	go func() {
+		err := r.cache.Set(ctx, cacheKey, views, nil)
+		if err != nil {
+			r.logger.Error(err)
+		}
+	}()
 
-	return views, err
+	return views, nil
 }
 
 type MaterializedView struct {
 	Name string `gorm:"column:matviewname"`
 }
 
-func (r *PostgresRepository) materializedViews(schema *string, fromCache bool) ([]MaterializedView, error) {
+func (r *PostgresRepository) materializedViews(ctx context.Context, schema *string, fromCache bool) ([]MaterializedView, error) {
 	mvs := make([]MaterializedView, 0)
 	cacheKey := r.cacheKey("materialized_views", lo.FromPtr(schema))
 
 	if fromCache {
-		err := r.cache.Get(cacheKey, &mvs)
+		err := r.cache.Get(ctx, cacheKey, &mvs)
 		if err != nil {
 			return nil, err
 		}
@@ -203,9 +225,14 @@ func (r *PostgresRepository) materializedViews(schema *string, fromCache bool) (
 		return nil, err
 	}
 
-	err = r.cache.Set(cacheKey, mvs, nil)
+	go func() {
+		err := r.cache.Set(ctx, cacheKey, mvs, nil)
+		if err != nil {
+			r.logger.Error(err)
+		}
+	}()
 
-	return mvs, err
+	return mvs, nil
 }
 
 type Column struct {
@@ -227,12 +254,12 @@ type Column struct {
 	ForeignKey *ForeignKey `gorm:"-"`
 }
 
-func (r *PostgresRepository) columns(table *string, schema *string, columnNames []string, editable bool, fromCache bool) ([]Column, error) {
+func (r *PostgresRepository) columns(ctx context.Context, table *string, schema *string, columnNames []string, editable bool, fromCache bool) ([]Column, error) {
 	columns := make([]Column, 0)
 	cacheKey := r.cacheKey("columns", lo.FromPtr(table), lo.FromPtr(schema), strings.Join(columnNames, ","), strconv.FormatBool(editable))
 
 	if fromCache {
-		err := r.cache.Get(cacheKey, &columns)
+		err := r.cache.Get(ctx, cacheKey, &columns)
 		if err != nil {
 			return nil, err
 		}
@@ -274,21 +301,39 @@ func (r *PostgresRepository) columns(table *string, schema *string, columnNames 
 		query = query.Where("n.nspname = ?", lo.FromPtr(schema))
 	}
 
-	err := query.
-		Order("a.attnum").
-		Find(&columns).Error
+	g, gctx := errgroup.WithContext(ctx)
+	var pkList []PrimaryKey
+	var fkList []ForeignKey
 
-	if err != nil {
-		return nil, err
-	}
+	g.Go(func() error {
+		err := query.WithContext(gctx).
+			Order("a.attnum").
+			Find(&columns).Error
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 
-	pkList, err := r.primaryKeys(table, fromCache)
-	if err != nil {
-		return nil, err
-	}
+	g.Go(func() error {
+		list, err := r.primaryKeys(gctx, table, fromCache)
+		if err != nil {
+			return err
+		}
+		pkList = list
+		return nil
+	})
 
-	fkList, err := r.foreignKeys(table, schema, fromCache)
-	if err != nil {
+	g.Go(func() error {
+		list, err := r.foreignKeys(gctx, table, schema, fromCache)
+		if err != nil {
+			return err
+		}
+		fkList = list
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
 		return nil, err
 	}
 
@@ -317,21 +362,26 @@ func (r *PostgresRepository) columns(table *string, schema *string, columnNames 
 		}
 	}
 
-	err = r.cache.Set(cacheKey, columns, nil)
+	go func() {
+		err := r.cache.Set(ctx, cacheKey, columns, nil)
+		if err != nil {
+			r.logger.Error(err)
+		}
+	}()
 
-	return columns, err
+	return columns, nil
 }
 
 type Template struct {
 	Name string `gorm:"column:datname"`
 }
 
-func (r *PostgresRepository) templates(fromCache bool) ([]Template, error) {
+func (r *PostgresRepository) templates(ctx context.Context, fromCache bool) ([]Template, error) {
 	templates := make([]Template, 0)
 	cacheKey := r.cacheKey("templates")
 
 	if fromCache {
-		err := r.cache.Get(cacheKey, &templates)
+		err := r.cache.Get(ctx, cacheKey, &templates)
 		if err != nil {
 			return nil, err
 		}
@@ -351,21 +401,26 @@ func (r *PostgresRepository) templates(fromCache bool) ([]Template, error) {
 		return nil, err
 	}
 
-	err = r.cache.Set(cacheKey, templates, nil)
+	go func() {
+		err := r.cache.Set(ctx, cacheKey, templates, nil)
+		if err != nil {
+			r.logger.Error(err)
+		}
+	}()
 
-	return templates, err
+	return templates, nil
 }
 
 type PrimaryKey struct {
 	ColumnName string `gorm:"column:column_name"`
 }
 
-func (r *PostgresRepository) primaryKeys(table *string, fromCache bool) ([]PrimaryKey, error) {
+func (r *PostgresRepository) primaryKeys(ctx context.Context, table *string, fromCache bool) ([]PrimaryKey, error) {
 	primaryKeys := make([]PrimaryKey, 0)
 	cacheKey := r.cacheKey("primary_keys", lo.FromPtr(table))
 
 	if fromCache {
-		err := r.cache.Get(cacheKey, &primaryKeys)
+		err := r.cache.Get(ctx, cacheKey, &primaryKeys)
 		if err != nil {
 			return nil, err
 		}
@@ -392,9 +447,14 @@ func (r *PostgresRepository) primaryKeys(table *string, fromCache bool) ([]Prima
 		return nil, err
 	}
 
-	err = r.cache.Set(cacheKey, primaryKeys, nil)
+	go func() {
+		err := r.cache.Set(ctx, cacheKey, primaryKeys, nil)
+		if err != nil {
+			r.logger.Error(err)
+		}
+	}()
 
-	return primaryKeys, err
+	return primaryKeys, nil
 }
 
 type ForeignKey struct {
@@ -412,12 +472,12 @@ type ForeignKey struct {
 	RefColumnsList []string `gorm:"-"`
 }
 
-func (r *PostgresRepository) foreignKeys(table *string, schema *string, fromCache bool) ([]ForeignKey, error) {
+func (r *PostgresRepository) foreignKeys(ctx context.Context, table *string, schema *string, fromCache bool) ([]ForeignKey, error) {
 	foreignKeys := make([]ForeignKey, 0)
 	cacheKey := r.cacheKey("foreign_keys", lo.FromPtr(table), lo.FromPtr(schema))
 
 	if fromCache {
-		err := r.cache.Get(cacheKey, &foreignKeys)
+		err := r.cache.Get(ctx, cacheKey, &foreignKeys)
 		if err != nil {
 			return nil, err
 		}
@@ -490,7 +550,12 @@ func (r *PostgresRepository) foreignKeys(table *string, schema *string, fromCach
 		}
 	}
 
-	err = r.cache.Set(cacheKey, foreignKeys, nil)
+	go func() {
+		err := r.cache.Set(ctx, cacheKey, foreignKeys, nil)
+		if err != nil {
+			r.logger.Error(err)
+		}
+	}()
 
 	return foreignKeys, err
 }

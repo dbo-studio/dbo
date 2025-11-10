@@ -1,14 +1,16 @@
 package databasePostgres
 
 import (
+	"context"
+
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
-func (r *PostgresRepository) databaseFields() []contract.FormField {
+func (r *PostgresRepository) databaseFields(ctx context.Context) []contract.FormField {
 	return []contract.FormField{
 		{ID: "datname", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
 		{ID: "rolname", Name: "Owner", Type: contract.FormFieldTypeText},
-		{ID: "template", Name: "Template", Type: contract.FormFieldTypeSelect, Fields: r.templateOptions()},
+		{ID: "template", Name: "Template", Type: contract.FormFieldTypeSelect, Fields: r.templateOptions(ctx)},
 		{ID: "tablespace", Name: "Tablespace", Type: contract.FormFieldTypeSelect, Fields: r.tablespaceOptions()},
 		{ID: "description", Name: "Comment", Type: contract.FormFieldTypeText},
 	}
@@ -85,8 +87,8 @@ func (r *PostgresRepository) getKeyOptions(node PGNode) []contract.FormField {
 	}
 }
 
-func (r *PostgresRepository) templateOptions() []contract.FormField {
-	templates, err := r.templates(true)
+func (r *PostgresRepository) templateOptions(ctx context.Context) []contract.FormField {
+	templates, err := r.templates(ctx, true)
 	if err != nil {
 		return []contract.FormField{}
 	}
