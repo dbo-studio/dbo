@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/samber/lo"
 	"golang.org/x/sync/errgroup"
@@ -40,12 +41,7 @@ func (r *PostgresRepository) databases(ctx context.Context, fromCache bool) ([]D
 		return nil, err
 	}
 
-	go func() {
-		err := r.cache.Set(ctx, cacheKey, databases, nil)
-		if err != nil {
-			r.logger.Error(err)
-		}
-	}()
+	go r.updateCache(ctx, cacheKey, databases)
 
 	return databases, nil
 }
@@ -85,12 +81,7 @@ func (r *PostgresRepository) schemas(ctx context.Context, database *string, from
 		return nil, err
 	}
 
-	go func() {
-		err := r.cache.Set(ctx, cacheKey, schemas, nil)
-		if err != nil {
-			r.logger.Error(err)
-		}
-	}()
+	go r.updateCache(ctx, cacheKey, schemas)
 
 	return schemas, nil
 }
@@ -131,12 +122,7 @@ func (r *PostgresRepository) tables(ctx context.Context, schema *string, fromCac
 		return nil, err
 	}
 
-	go func() {
-		err := r.cache.Set(ctx, cacheKey, tables, nil)
-		if err != nil {
-			r.logger.Error(err)
-		}
-	}()
+	go r.updateCache(ctx, cacheKey, tables)
 
 	return tables, nil
 }
@@ -180,12 +166,7 @@ func (r *PostgresRepository) views(ctx context.Context, database *string, schema
 		return nil, err
 	}
 
-	go func() {
-		err := r.cache.Set(ctx, cacheKey, views, nil)
-		if err != nil {
-			r.logger.Error(err)
-		}
-	}()
+	go r.updateCache(ctx, cacheKey, views)
 
 	return views, nil
 }
@@ -225,12 +206,7 @@ func (r *PostgresRepository) materializedViews(ctx context.Context, schema *stri
 		return nil, err
 	}
 
-	go func() {
-		err := r.cache.Set(ctx, cacheKey, mvs, nil)
-		if err != nil {
-			r.logger.Error(err)
-		}
-	}()
+	go r.updateCache(ctx, cacheKey, mvs)
 
 	return mvs, nil
 }
@@ -362,12 +338,7 @@ func (r *PostgresRepository) columns(ctx context.Context, table *string, schema 
 		}
 	}
 
-	go func() {
-		err := r.cache.Set(ctx, cacheKey, columns, nil)
-		if err != nil {
-			r.logger.Error(err)
-		}
-	}()
+	go r.updateCache(ctx, cacheKey, columns)
 
 	return columns, nil
 }
@@ -401,12 +372,7 @@ func (r *PostgresRepository) templates(ctx context.Context, fromCache bool) ([]T
 		return nil, err
 	}
 
-	go func() {
-		err := r.cache.Set(ctx, cacheKey, templates, nil)
-		if err != nil {
-			r.logger.Error(err)
-		}
-	}()
+	go r.updateCache(ctx, cacheKey, templates)
 
 	return templates, nil
 }
@@ -447,12 +413,7 @@ func (r *PostgresRepository) primaryKeys(ctx context.Context, table *string, fro
 		return nil, err
 	}
 
-	go func() {
-		err := r.cache.Set(ctx, cacheKey, primaryKeys, nil)
-		if err != nil {
-			r.logger.Error(err)
-		}
-	}()
+	go r.updateCache(ctx, cacheKey, primaryKeys)
 
 	return primaryKeys, nil
 }
@@ -550,16 +511,193 @@ func (r *PostgresRepository) foreignKeys(ctx context.Context, table *string, sch
 		}
 	}
 
-	go func() {
-		err := r.cache.Set(ctx, cacheKey, foreignKeys, nil)
-		if err != nil {
-			r.logger.Error(err)
-		}
-	}()
+	go r.updateCache(ctx, cacheKey, foreignKeys)
 
-	return foreignKeys, err
+	return foreignKeys, nil
+}
+
+type TableKey struct {
+	Name              string  `gorm:"column:name"`
+	Comment           *string `gorm:"column:comment"`
+	Primary           bool    `gorm:"column:primary"`
+	Deferrable        bool    `gorm:"column:deferrable"`
+	InitiallyDeferred bool    `gorm:"column:initially_deferred"`
+	Columns           string  `gorm:"column:columns"`
+	ExcludeOperator   string  `gorm:"column:exclude_operator"`
+
+	ColumnsList []string `gorm:"-"`
+}
+
+func (r *PostgresRepository) tableKeys(ctx context.Context, table *string, schema *string, fromCache bool) ([]TableKey, error) {
+	keys := make([]TableKey, 0)
+	cacheKey := r.cacheKey("keys", lo.FromPtr(table), lo.FromPtr(schema))
+
+	if fromCache {
+		err := r.cache.Get(ctx, cacheKey, &keys)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(keys) > 0 {
+			return keys, nil
+		}
+	}
+
+	query := r.db.WithContext(ctx).Table("pg_constraint c").
+		Select(`
+			c.conname as name,
+			d.description as comment,
+			(c.contype = 'p') as primary,
+			c.condeferrable as deferrable,
+			c.condeferred as initially_deferred,
+			array_to_string(array_agg(a.attname), ', ') as columns,
+			pg_get_constraintdef(c.oid) as exclude_operator
+		`).
+		Joins("JOIN pg_namespace n ON n.oid = c.connamespace").
+		Joins("LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0").
+		Joins("LEFT JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)")
+
+	if table != nil {
+		query = query.Where("c.conrelid = (SELECT oid FROM pg_class WHERE relname = ? AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?))", lo.FromPtr(table), lo.FromPtr(schema))
+	}
+
+	if schema != nil {
+		query = query.Where("n.nspname = ?", lo.FromPtr(schema))
+	}
+
+	err := query.
+		Group("c.conname, d.description, c.contype, c.condeferrable, c.condeferred, c.oid").
+		Find(&keys).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range keys {
+		cols := strings.Split(keys[i].Columns, ",")
+		keys[i].ColumnsList = make([]string, len(cols))
+		for j, col := range cols {
+			keys[i].ColumnsList[j] = strings.TrimSpace(col)
+		}
+	}
+
+	go r.updateCache(ctx, cacheKey, keys)
+
+	return keys, nil
+}
+
+type TableInfo struct {
+	Name        string  `gorm:"column:relname"`
+	Description *string `gorm:"column:description"`
+	Persistence string  `gorm:"column:persistence"`
+	Tablespace  string  `gorm:"column:tablespace"`
+	Owner       string  `gorm:"column:rolname"`
+}
+
+func (r *PostgresRepository) tableInfo(ctx context.Context, table *string, schema *string, fromCache bool) (*TableInfo, error) {
+	tableInfo := TableInfo{}
+	cacheKey := r.cacheKey("table_info", lo.FromPtr(table), lo.FromPtr(schema))
+
+	if fromCache {
+		err := r.cache.Get(ctx, cacheKey, &tableInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		if tableInfo.Name != "" {
+			return &tableInfo, nil
+		}
+	}
+
+	query := r.db.Table("pg_class c").
+		Select(`
+			c.relname,
+			pd.description,
+			CASE c.relpersistence
+				WHEN 'p' THEN 'LOGGED'
+				WHEN 'u' THEN 'UNLOGGED'
+				WHEN 't' THEN 'TEMPORARY'
+			END as persistence,
+			t.spcname as tablespace,
+			r.rolname
+		`).
+		Joins("JOIN pg_namespace n ON n.oid = c.relnamespace").
+		Joins("LEFT JOIN pg_roles r ON r.oid = c.relowner").
+		Joins("LEFT JOIN pg_tablespace t ON t.oid = c.reltablespace").
+		Joins("LEFT JOIN pg_description pd ON pd.objoid = c.oid AND pd.objsubid = 0")
+
+	if table != nil {
+		query = query.Where("c.relname = ?", lo.FromPtr(table))
+	}
+
+	if schema != nil {
+		query = query.Where("n.nspname = ?", lo.FromPtr(schema))
+	}
+
+	err := query.First(&tableInfo).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	go r.updateCache(ctx, cacheKey, tableInfo)
+
+	return &tableInfo, nil
+}
+
+type DatabaseInfo struct {
+	Name        string  `gorm:"column:datname"`
+	Owner       string  `gorm:"column:rolname"`
+	Template    string  `gorm:"column:template"`
+	Description *string `gorm:"column:description"`
+	Tablespace  *string `gorm:"column:tablespace"`
+}
+
+func (r *PostgresRepository) databaseInfo(ctx context.Context, database string, fromCache bool) (*DatabaseInfo, error) {
+	databaseInfo := DatabaseInfo{}
+	cacheKey := r.cacheKey("database_info", database)
+
+	if fromCache {
+		err := r.cache.Get(ctx, cacheKey, &databaseInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		if databaseInfo.Name != "" {
+			return &databaseInfo, nil
+		}
+	}
+
+	err := r.db.WithContext(ctx).Table("pg_database d").
+		Select(`
+			d.datname,
+			r.rolname,
+			pg_encoding_to_char(d.encoding) as encoding,
+			des.description,
+			t.spcname as tablespace
+		`).
+		Joins("JOIN pg_roles r ON r.oid = d.datdba").
+		Joins("LEFT JOIN pg_shdescription des ON des.objoid = d.oid").
+		Joins("LEFT JOIN pg_tablespace t ON t.oid = d.dattablespace").
+		Where("d.datname = ?", database).
+		First(&databaseInfo).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	go r.updateCache(ctx, cacheKey, databaseInfo)
+
+	return &databaseInfo, nil
 }
 
 func (r *PostgresRepository) cacheKey(args ...string) string {
 	return fmt.Sprintf("query_generator:%d:%s", r.connection.ID, strings.Join(args, "_"))
+}
+
+func (r *PostgresRepository) updateCache(ctx context.Context, cacheKey string, value any) {
+	err := r.cache.Set(ctx, cacheKey, value, lo.ToPtr(time.Hour))
+	if err != nil {
+		r.logger.Error(err)
+	}
 }

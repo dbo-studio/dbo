@@ -25,7 +25,7 @@ func (r *PostgresRepository) GetFormTabs(_ context.Context, action contract.Tree
 			// {ID: contract.TableIndexesTab, Name: "Indexes"},
 			// {ID: contract.TableTriggersTab, Name: "Triggers"},
 			// {ID: contract.TableChecksTab, Name: "Checks"},
-			// {ID: contract.TableKeysTab, Name: "Keys"},
+			{ID: contract.TableKeysTab, Name: "Keys"},
 			// {ID: contract.TableSequenceTab, Name: "Sequence"},
 		}
 	case contract.CreateViewAction, contract.EditViewAction:
@@ -63,8 +63,8 @@ func (r *PostgresRepository) GetFormFields(ctx context.Context, nodeID string, t
 	// 	return helper.BuildFieldArray(r.triggerOptions(node))
 	// case contract.TableChecksTab:
 	// 	return helper.BuildFieldArray(r.checkOptions())
-	// case contract.TableKeysTab:
-	// 	return helper.BuildFieldArray(r.getKeyOptions(node))
+	case contract.TableKeysTab:
+		return helper.BuildFieldArray(r.getKeyOptions(node))
 	// case contract.TableSequenceTab:
 	// 	return helper.BuildFieldArray(r.sequenceFields())
 

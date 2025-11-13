@@ -277,64 +277,59 @@ func (r *PostgresRepository) getSchemaInfo(node PGNode) ([]contract.FormField, e
 func (r *PostgresRepository) getDatabaseInfo(ctx context.Context, node PGNode) ([]contract.FormField, error) {
 	fields := r.databaseFields(ctx)
 
-	query := r.db.Table("pg_database d").
-		Select(`
-			d.datname,
-			r.rolname,
-			pg_encoding_to_char(d.encoding) as encoding,
-			des.description,
-			t.spcname as tablespace
-		`).
-		Joins("JOIN pg_roles r ON r.oid = d.datdba").
-		Joins("LEFT JOIN pg_shdescription des ON des.objoid = d.oid").
-		Joins("LEFT JOIN pg_tablespace t ON t.oid = d.dattablespace").
-		Where("d.datname = ?", node.Database)
+	databaseInfo, err := r.databaseInfo(ctx, node.Database, true)
+	if err != nil {
+		return nil, err
+	}
 
-	return helper.BuildObjectResponse(query, fields)
+	databaseInfoMap := map[string]any{}
+	databaseInfoMap["datname"] = databaseInfo.Name
+	databaseInfoMap["rolname"] = databaseInfo.Owner
+	databaseInfoMap["template"] = databaseInfo.Template
+	databaseInfoMap["description"] = databaseInfo.Description
+	databaseInfoMap["tablespace"] = databaseInfo.Tablespace
+
+	return helper.BuildObjectResponseFromResult([]map[string]any{databaseInfoMap}, fields)
 }
 
 func (r *PostgresRepository) getTableInfo(node PGNode, action contract.TreeNodeActionName) ([]contract.FormField, error) {
 	fields := r.tableFields(action)
 
-	query := r.db.Table("pg_class c").
-		Select(`
-			c.relname,
-			pd.description,
-			CASE c.relpersistence
-				WHEN 'p' THEN 'LOGGED'
-				WHEN 'u' THEN 'UNLOGGED'
-				WHEN 't' THEN 'TEMPORARY'
-			END as persistence,
-			t.spcname as tablespace,
-			r.rolname
-		`).
-		Joins("JOIN pg_namespace n ON n.oid = c.relnamespace").
-		Joins("LEFT JOIN pg_roles r ON r.oid = c.relowner").
-		Joins("LEFT JOIN pg_tablespace t ON t.oid = c.reltablespace").
-		Joins("LEFT JOIN pg_description pd ON pd.objoid = c.oid AND pd.objsubid = 0").
-		Where("c.relname = ? AND n.nspname = ?", node.Table, node.Schema)
+	tableInfo, err := r.tableInfo(context.Background(), &node.Table, &node.Schema, true)
+	if err != nil {
+		return nil, err
+	}
 
-	return helper.BuildObjectResponse(query, fields)
+	tableInfoMap := map[string]any{}
+	tableInfoMap["relname"] = tableInfo.Name
+	tableInfoMap["description"] = tableInfo.Description
+	tableInfoMap["persistence"] = tableInfo.Persistence
+	tableInfoMap["tablespace"] = tableInfo.Tablespace
+	tableInfoMap["rolname"] = tableInfo.Owner
+
+	return helper.BuildObjectResponseFromResult([]map[string]any{tableInfoMap}, fields)
 }
 
 func (r *PostgresRepository) getTableKeys(node PGNode) ([]contract.FormField, error) {
 	fields := r.getKeyOptions(node)
 
-	query := r.db.Table("pg_constraint c").
-		Select(`
-			c.conname as name,
-			d.description as comment,
-			(c.contype = 'p') as primary,
-			c.condeferrable as deferrable,
-			c.condeferred as initially_deferred,
-			array_to_string(array_agg(a.attname), ', ') as columns,
-			pg_get_constraintdef(c.oid) as exclude_operator
-		`).
-		Joins("JOIN pg_namespace n ON n.oid = c.connamespace").
-		Joins("LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0").
-		Joins("LEFT JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)").
-		Where("c.conrelid = (SELECT oid FROM pg_class WHERE relname = ? AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = ?)) AND c.contype = 'p'", node.Table, node.Schema).
-		Group("c.conname, d.description, c.contype, c.condeferrable, c.condeferred, c.oid")
+	keys, err := r.tableKeys(context.Background(), &node.Table, &node.Schema, true)
+	if err != nil {
+		return nil, err
+	}
 
-	return helper.BuildArrayResponse(query, fields)
+	keysMap := make([]map[string]any, 0)
+	for _, key := range keys {
+		keysMap = append(keysMap, map[string]any{
+			"name":               key.Name,
+			"comment":            key.Comment,
+			"primary":            key.Primary,
+			"deferrable":         key.Deferrable,
+			"initially_deferred": key.InitiallyDeferred,
+			"columns":            key.Columns,
+			"exclude_operator":   key.ExcludeOperator,
+		})
+	}
+
+	return helper.BuildArrayResponseFromResult(keysMap, fields)
 }
