@@ -114,7 +114,6 @@ export const useFormData = (tabId: string | null, isEditMode: boolean): FormData
     }
 
     const initialFields = createInitialFormState(schema, data, isArray);
-    updateFormData(selectedTab.id, storageKey, initialFields);
 
     return {
       schema: initialFields,
@@ -122,7 +121,7 @@ export const useFormData = (tabId: string | null, isEditMode: boolean): FormData
       isArray,
       originalData: data
     };
-  }, [response, tabId, selectedTab?.id, formDataByTab, updateFormData]);
+  }, [response, tabId, selectedTab?.id, formDataByTab]);
 
   useEffect(() => {
     if (!response || !tabId || !selectedTab?.id) return;

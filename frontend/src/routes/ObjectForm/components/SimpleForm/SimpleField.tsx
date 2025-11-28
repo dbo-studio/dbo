@@ -7,7 +7,12 @@ import { Box, Checkbox, Typography } from '@mui/material';
 import React from 'react';
 import type { SimpleFieldProps } from '../../types';
 
-export default function SimpleField({ field, onChange, dynamicOptions, isArrayForm }: SimpleFieldProps): React.JSX.Element {
+export default function SimpleField({
+  field,
+  onChange,
+  dynamicOptions,
+  isArrayForm
+}: SimpleFieldProps): React.JSX.Element {
   const handleSelectChange = (value: SelectInputOption | SelectInputOption[] | null): void => {
     if (field.type === 'multi-select') {
       const multiValue = Array.isArray(value) ? value.map((item) => item.value) : [];
@@ -24,7 +29,7 @@ export default function SimpleField({ field, onChange, dynamicOptions, isArrayFo
     case 'text':
       return (
         <FieldInput
-          size={isArrayForm ? 'small' : "medium"}
+          size={isArrayForm ? 'small' : 'medium'}
           value={(field.value as string) || ''}
           onChange={(e): void => onChange(e.target.value)}
           fullWidth
@@ -37,7 +42,11 @@ export default function SimpleField({ field, onChange, dynamicOptions, isArrayFo
     case 'checkbox':
       return (
         <Box display='flex' alignItems='center'>
-          <Checkbox size={isArrayForm ? 'small' : "medium"} checked={(field.value as boolean) || false} onChange={(e): void => onChange(e.target.checked)} />
+          <Checkbox
+            size={isArrayForm ? 'small' : 'medium'}
+            checked={(field.value as boolean) || false}
+            onChange={(e): void => onChange(e.target.checked)}
+          />
           {isArrayForm && <Typography>{field.name}</Typography>}
         </Box>
       );
@@ -50,7 +59,7 @@ export default function SimpleField({ field, onChange, dynamicOptions, isArrayFo
             isMulti={field.type === 'multi-select'}
             label={isArrayForm ? undefined : field.name}
             value={field.value}
-            size={isArrayForm ? 'small' : "medium"}
+            size={isArrayForm ? 'small' : 'medium'}
             options={fieldOptions.map((opt) => ({
               value: opt.value,
               label: opt.label
