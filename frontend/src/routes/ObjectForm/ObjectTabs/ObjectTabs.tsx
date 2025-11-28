@@ -1,4 +1,4 @@
-import type { ObjectTabType } from '@/api/tree/types';
+import type { ObjectTabType } from '@/types/Tree';
 import { Tab, Tabs } from '@mui/material';
 import type { JSX } from 'react';
 import type { ObjectTabProps } from '../types';

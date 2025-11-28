@@ -1,7 +1,9 @@
 import { SelectInputStyles } from '@/components/base/SelectInput/SelectInput.styled.ts';
 import { Box, Typography, useTheme } from '@mui/material';
-import { type JSX, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import type { ActionMeta } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
+import type { SelectInputOption } from '../SelectInput/types';
 import type { CreatableSelectInputProps } from './types';
 
 export default function CreatableSelectInput({
@@ -14,45 +16,67 @@ export default function CreatableSelectInput({
   emptylabel,
   error,
   isMulti
-}: CreatableSelectInputProps): JSX.Element {
+}: CreatableSelectInputProps): React.JSX.Element {
   const theme = useTheme();
 
   const [localOptions, setLocalOptions] = useState(options);
 
-  const handleChange = (selected: any): void => {
-    onChange(selected);
+  useEffect(() => {
+    setLocalOptions(options);
+  }, [options]);
+
+  const handleChange = (selected: unknown, _actionMeta: ActionMeta<unknown>): void => {
+    // actionMeta is required by react-select but we don't use it - eslint-disable-next-line is handled by prefix _
+    void _actionMeta;
+    onChange(selected as SelectInputOption | SelectInputOption[] | null);
   };
 
-  const getValue = (): any => {
-    if (!value) return null;
+  const getValue = (): SelectInputOption | SelectInputOption[] | null => {
+    if (value === null || value === undefined) return null;
 
     if (isMulti) {
-      return localOptions.filter((option) => value.includes(option.value));
+      // Multi-select must always be array (validated in useFormData)
+      if (!Array.isArray(value)) {
+        console.error('[CreatableSelectInput] Invalid format for multi-select: expected array, got', typeof value);
+        return [];
+      }
+      return localOptions.filter((option) => (value as string[]).includes(option.value));
     }
 
+    // For single select, value should be string
+    if (Array.isArray(value)) {
+      console.error('[CreatableSelectInput] Invalid format for single-select: expected string, got array');
+      const firstValue = value.length > 0 ? value[0] : null;
+      return firstValue ? localOptions.find((option) => option.value === firstValue) || null : null;
+    }
     return localOptions.find((option) => option.value === value) || null;
   };
 
-  const handleCreateOption = (inputValue: string) => {
+  const handleCreateOption = (inputValue: string): void => {
     const newOption = { value: inputValue.toLowerCase(), label: inputValue };
     setLocalOptions([...localOptions, newOption]);
 
     if (!isMulti) {
-      handleChange(newOption);
+      handleChange(newOption, { action: 'create-option' } as ActionMeta<unknown>);
       return;
     }
 
-    const newValue = [];
-    for (const key in (value || []) as string[]) {
-      newValue.push({
-        value: value?.[key],
-        label: value?.[key]
-      });
+    // Multi-select must always be array (validated in useFormData)
+    if (!Array.isArray(value)) {
+      console.error('[CreatableSelectInput] Invalid format for multi-select in handleCreateOption: expected array, got', typeof value);
+      handleChange([newOption], { action: 'create-option' } as ActionMeta<unknown>);
+      return;
     }
 
-    newValue.push(newOption);
+    // Create new array with existing values and new option
+    const currentValueArray = value as string[];
+    const newValueArray = currentValueArray.map((val) => ({
+      value: val,
+      label: localOptions.find((opt) => opt.value === val)?.label ?? String(val)
+    }));
 
-    handleChange(newValue);
+    newValueArray.push(newOption);
+    handleChange(newValueArray, { action: 'create-option' } as ActionMeta<unknown>);
   };
 
   return (

@@ -14,9 +14,8 @@ func (r *Server) routing() {
 	tree := api.Group("tree")
 	tree.Get("/", r.handlers.TreeHandler.TreeHandler)
 	tree.Get("/:nodeId/tabs/:action", r.handlers.TreeHandler.Tabs)
-	tree.Get("/:nodeId/tabs/:action/fields/:tabId/schema", r.handlers.TreeHandler.GetFormSchema)
 	tree.Get("/:nodeId/tabs/:action/fields/:tabId/object", r.handlers.TreeHandler.ObjectDetail)
-	tree.Get("/:nodeId/tabs/:action/fields/:tabId/dynamic", r.handlers.TreeHandler.GetDynamicFieldOptions)
+	tree.Get("/:nodeId/dynamic", r.handlers.TreeHandler.GetDynamicFieldOptions)
 	tree.Post("/:nodeId/tabs/:action/fields/object", r.handlers.TreeHandler.ExecuteHandler)
 
 	query := api.Group("query")

@@ -19,7 +19,6 @@ import (
 type ITreeService interface {
 	Tree(ctx context.Context, req *dto.TreeListRequest) (*contract.TreeNode, error)
 	Tabs(ctx context.Context, req *dto.ObjectTabsRequest) ([]contract.FormTab, error)
-	GetFormSchema(ctx context.Context, req *dto.ObjectFieldsRequest) ([]contract.FormField, error)
 	ObjectDetail(ctx context.Context, req *dto.ObjectDetailRequest) (*contract.FormResponse, error)
 	GetDynamicFieldOptions(ctx context.Context, req *dto.DynamicFieldOptionsRequest) ([]contract.FormFieldOption, error)
 	ObjectExecute(ctx context.Context, req *dto.ObjectExecuteRequest) error
@@ -87,20 +86,6 @@ func (i ITreeServiceImpl) Tabs(ctx context.Context, req *dto.ObjectTabsRequest) 
 	return repo.GetFormTabs(ctx, contract.TreeNodeActionName(req.Action)), nil
 }
 
-func (i ITreeServiceImpl) GetFormSchema(ctx context.Context, req *dto.ObjectFieldsRequest) ([]contract.FormField, error) {
-	connection, err := i.connectionRepo.Find(ctx, req.ConnectionId)
-	if err != nil {
-		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
-	}
-
-	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
-	if err != nil {
-		return nil, apperror.InternalServerError(err)
-	}
-
-	return repo.GetFormSchema(ctx, req.NodeId, contract.TreeTab(req.TabId), contract.TreeNodeActionName(req.Action)), nil
-}
-
 func (i ITreeServiceImpl) ObjectDetail(ctx context.Context, req *dto.ObjectDetailRequest) (*contract.FormResponse, error) {
 	connection, err := i.connectionRepo.Find(ctx, req.ConnectionId)
 	if err != nil {
@@ -150,7 +135,6 @@ func (i ITreeServiceImpl) GetDynamicFieldOptions(ctx context.Context, req *dto.D
 
 	dynamicReq := &contract.DynamicFieldRequest{
 		NodeID:     req.NodeId,
-		TabID:      contract.TreeTab(req.TabId),
 		Parameters: req.Parameters,
 	}
 

@@ -21,8 +21,8 @@ const endpoints = {
   getObject: (nodeId: string, action: string, tabId: string): string =>
     `/tree/${nodeId}/tabs/${action}/fields/${tabId}/object`,
   executeAction: (nodeId: string, action: string): string => `/tree/${nodeId}/tabs/${action}/fields/object`,
-  getDynamicFieldOptions: (nodeId: string, action: string, tabId: string, fieldId: string): string =>
-    `/tree/${nodeId}/tabs/${action}/fields/${tabId}/dynamic/${fieldId}`
+  getDynamicFieldOptions: (nodeId: string): string =>
+    `/tree/${nodeId}/dynamic`
 };
 
 export const getTree = async (params: TreeRequestType): Promise<TreeResponseType> => {
@@ -44,15 +44,13 @@ export const getTabs = async (params: TabRequestType): Promise<TabResponseType> 
 };
 
 export const getSchema = async (params: SchemaRequestType): Promise<FormSchemaResponseType> => {
-  const response = (
+  return (
     await api.get(endpoints.getSchema(params.nodeId, params.action, params.tabId), {
       params: {
         connectionId: params.connectionId
       }
     })
   ).data.data as FormSchemaResponseType;
-
-  return response;
 };
 
 export const getObject = async (params: ObjectRequestType): Promise<FormObjectResponseType> => {
@@ -78,7 +76,7 @@ export const executeAction = async (params: SaveObjectRequestType): Promise<void
 
 export const getDynamicFieldOptions = async (params: DynamicFieldRequestType): Promise<DynamicFieldResponse> => {
   return (
-    await api.get(endpoints.getDynamicFieldOptions(params.nodeId, params.action, params.tabId, params.fieldId), {
+    await api.get(endpoints.getDynamicFieldOptions(params.nodeId), {
       params: {
         connectionId: params.connectionId,
         ...params.parameters

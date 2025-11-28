@@ -10,13 +10,14 @@ export const useObjectTabs = (): {
   tabs: TabResponseType;
   selectedTabIndex: string;
   handleTabChange: (index: string) => void;
+  isLoading: boolean;
 } => {
   const selectedTab = useSelectedTab();
   const [selectedTabIndex, setSelectedTabIndex] = useState(selectedTab?.options?.tabId);
   const currentConnection = useCurrentConnection();
   const updateSelectedTab = useTabStore.getState().updateSelectedTab;
 
-  const { data: tabs } = useQuery({
+  const { data: tabs, isLoading } = useQuery({
     queryKey: ['objectTabs', selectedTab?.id, currentConnection?.id, selectedTab?.options?.action],
     queryFn: (): Promise<TabResponseType> =>
       api.tree.getTabs({
@@ -62,6 +63,7 @@ export const useObjectTabs = (): {
   return {
     tabs: tabs ?? [],
     selectedTabIndex,
-    handleTabChange
+    handleTabChange,
+    isLoading
   };
 };

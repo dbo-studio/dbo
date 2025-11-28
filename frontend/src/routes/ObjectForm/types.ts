@@ -1,4 +1,4 @@
-import type { FormFieldType, ObjectTabType } from '@/api/tree/types';
+import type { FormFieldOption, FormFieldType, ObjectTabType } from '@/api/tree/types';
 
 export type ObjectTabProps = {
   tabs: ObjectTabType[];
@@ -8,7 +8,7 @@ export type ObjectTabProps = {
 
 export type ArrayFieldProps = {
   field: FormFieldType;
-  onChange: (value: any[]) => void;
+  onChange: (field: FormFieldType) => void;
 };
 
 export type FormFieldsProps = {
@@ -20,6 +20,8 @@ export type SimpleFieldProps = {
   field: FormFieldType;
   onChange: (value: any) => void;
   size?: 'small' | 'medium';
+  dynamicOptions?: FormFieldOption[];
+  isLoadingDynamic?: boolean;
 };
 
 export type TableFormProps = {

@@ -141,8 +141,8 @@ func (r *PostgresRepository) getTableForeignKeys(ctx context.Context, node PGNod
 			"constraint_name":    foreignKey.ConstraintName,
 			"comment":            foreignKey.Comment,
 			"target_table":       foreignKey.TargetTable,
-			"ref_columns":        foreignKey.RefColumns,
-			"target_columns":     foreignKey.Columns,
+			"ref_columns":        foreignKey.RefColumnsList,
+			"target_columns":     foreignKey.ColumnsList,
 			"update_action":      foreignKey.UpdateAction,
 			"delete_action":      foreignKey.DeleteAction,
 			"is_deferrable":      foreignKey.IsDeferrable,
@@ -173,7 +173,7 @@ func (r *PostgresRepository) getTableKeys(ctx context.Context, node PGNode) (*co
 			"primary":            key.Primary,
 			"deferrable":         key.Deferrable,
 			"initially_deferred": key.InitiallyDeferred,
-			"columns":            key.Columns,
+			"columns":            key.ColumnsList,
 			"exclude_operator":   key.ExcludeOperator,
 		})
 	}

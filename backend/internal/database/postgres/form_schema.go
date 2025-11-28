@@ -6,31 +6,6 @@ import (
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
-func (r *PostgresRepository) GetFormSchema(ctx context.Context, nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) []contract.FormField {
-	node := extractNode(nodeID)
-
-	switch tabID {
-	case contract.DatabaseTab:
-		return r.databaseFields(ctx)
-	case contract.SchemaTab:
-		return r.schemaFields()
-	case contract.TableTab:
-		return r.tableFields(ctx, action)
-	case contract.TableColumnsTab:
-		return r.tableColumnFields()
-	case contract.TableForeignKeysTab:
-		return r.foreignKeyFields(ctx, node)
-	case contract.TableKeysTab:
-		return r.keyFields(ctx, node)
-	case contract.ViewTab:
-		return r.viewFields()
-	case contract.MaterializedViewTab:
-		return r.materializedViewFields(ctx)
-	default:
-		return []contract.FormField{}
-	}
-}
-
 func (r *PostgresRepository) databaseFields(ctx context.Context) []contract.FormField {
 	return []contract.FormField{
 		{ID: "datname", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
@@ -89,7 +64,7 @@ func (r *PostgresRepository) foreignKeyFields(ctx context.Context, node PGNode) 
 				FieldID: "target_table",
 				Parameters: map[string]string{
 					"field": "columns",
-					"table": node.Table,
+					"table": "?",
 				},
 			},
 		},

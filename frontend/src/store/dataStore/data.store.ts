@@ -36,7 +36,10 @@ type DataState = DataStore &
 export const useDataStore: UseBoundStore<StoreApi<DataState>> = create<DataState>()(
   devtools(
     (set, get, ...state) => ({
-      loadDataFromIndexedDB: async (): Promise<{ rows: RowType[]; columns: ColumnType[] } | null> => {
+      loadDataFromIndexedDB: async (): Promise<{
+        rows: RowType[];
+        columns: ColumnType[];
+      } | null> => {
         const selectedTabId = useTabStore.getState().selectedTabId;
         if (!selectedTabId) return null;
 
@@ -59,7 +62,10 @@ export const useDataStore: UseBoundStore<StoreApi<DataState>> = create<DataState
 
           if (dbRows.length > 0 && dbColumns.length > 0) {
             get().toggleDataFetching(false);
-            return { rows: dbRows, columns: dbColumns.filter((column) => column.isActive) };
+            return {
+              rows: dbRows,
+              columns: dbColumns.filter((column) => column.isActive)
+            };
           }
 
           return null;

@@ -1,15 +1,19 @@
+import type { FormFieldOption, FormFieldType } from '@/api/tree/types';
 import CreatableSelectInput from '@/components/base/CreatableSelectInput/CreatableSelectInput';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor';
 import { variables } from '@/core/theme/variables';
 import { Box, Checkbox, Typography } from '@mui/material';
-import { type JSX, useEffect, useState } from 'react';
+import type { JSX } from 'react';
 import type { SimpleFieldProps } from '../types';
 
-export default function SimpleField({ field, onChange, size = 'medium' }: SimpleFieldProps): JSX.Element {
-  const [localValue, setLocalValue] = useState(field.value);
-
+export default function SimpleField({
+  field,
+  onChange,
+  size = 'medium',
+  dynamicOptions
+}: SimpleFieldProps): JSX.Element {
   const handleChangeSelect = (value: SelectInputOption): void => {
     if (field.type === 'multi-select') {
       onChange(value ? value?.map((item: any) => item.value) : []);
@@ -18,9 +22,8 @@ export default function SimpleField({ field, onChange, size = 'medium' }: Simple
     }
   };
 
-  useEffect(() => {
-    setLocalValue(field.value);
-  }, [field]);
+  // Use dynamicOptions if available, otherwise use metadata.options (new) or field.fields (legacy)
+  const fieldOptions = dynamicOptions || field.metadata?.options || field.fields;
 
   switch (field.type) {
     case 'text':
@@ -28,14 +31,8 @@ export default function SimpleField({ field, onChange, size = 'medium' }: Simple
         <FieldInput
           margin={size === 'small' ? 'none' : undefined}
           label={size === 'medium' ? field.name : undefined}
-          value={localValue || ''}
-          onChange={(e): void => {
-            setLocalValue(e.target.value);
-          }}
-          onBlur={(e): void => {
-            setLocalValue(e.target.value);
-            onChange(e.target.value);
-          }}
+          value={field.value || ''}
+          onChange={(e): void => onChange(e.target.value)}
           size={size}
           fullWidth
         />
@@ -56,10 +53,17 @@ export default function SimpleField({ field, onChange, size = 'medium' }: Simple
             label={size === 'medium' ? field.name : undefined}
             value={field.value || (field.type === 'multi-select' ? [] : '')}
             options={
-              field.fields?.map((opt) => ({
-                value: opt.value,
-                label: opt.name
-              })) || []
+              fieldOptions?.map((opt: FormFieldOption | FormFieldType) => {
+                // Handle FormFieldOption (from metadata.options or dynamicOptions)
+                if ('value' in opt && 'label' in opt && !('type' in opt)) {
+                  return { value: opt.value, label: opt.label };
+                }
+                // Handle legacy format (FormFieldType with type 'option' in fields)
+                return {
+                  value: (opt as FormFieldType).value ?? (opt as FormFieldType).id,
+                  label: (opt as FormFieldType).name ?? ''
+                };
+              }) || []
             }
             onChange={handleChangeSelect}
             size={size}

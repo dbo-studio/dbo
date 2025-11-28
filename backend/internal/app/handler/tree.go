@@ -57,23 +57,6 @@ func (h *TreeHandler) Tabs(c fiber.Ctx) error {
 	return response.SuccessBuilder().WithData(result).Send(c)
 }
 
-func (h *TreeHandler) GetFormSchema(c fiber.Ctx) error {
-	req := &dto.ObjectFieldsRequest{
-		ConnectionId: fiber.Query[int32](c, "connectionId"),
-		Action:       fiber.Params[string](c, "action"),
-		NodeId:       fiber.Params[string](c, "nodeId"),
-		TabId:        fiber.Params[string](c, "tabId"),
-	}
-
-	result, err := h.treeService.GetFormSchema(c, req)
-	if err != nil {
-		h.logger.Error(err.Error())
-		return response.ErrorBuilder().FromError(err).Send(c)
-	}
-
-	return response.SuccessBuilder().WithData(result).Send(c)
-}
-
 func (h *TreeHandler) ObjectDetail(c fiber.Ctx) error {
 	req := &dto.ObjectDetailRequest{
 		ConnectionId: fiber.Query[int32](c, "connectionId"),
@@ -112,8 +95,6 @@ func (h *TreeHandler) GetDynamicFieldOptions(c fiber.Ctx) error {
 	req := &dto.DynamicFieldOptionsRequest{
 		ConnectionId: fiber.Query[int32](c, "connectionId"),
 		NodeId:       c.Params("nodeId"),
-		TabId:        c.Params("tabId"),
-		Action:       c.Params("action"),
 		Parameters:   c.Queries(),
 	}
 

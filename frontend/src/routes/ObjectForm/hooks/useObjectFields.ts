@@ -1,22 +1,24 @@
 import api from '@/api';
-import type { FormFieldType } from '@/api/tree/types';
+import { FormObjectResponseType, FormSchemaResponseType } from '@/api/tree/types';
 import { useCurrentConnection } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
+import type { FormFieldType } from '@/types/Tree';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 
 export const useObjectFields = (
-  isDetail = false
+  isDetail: boolean
 ): {
   fields: FormFieldType[];
+  isLoading: boolean;
 } => {
   const selectedTab = useSelectedTab();
   const currentConnection = useCurrentConnection();
 
   const { getFormData, updateFormData } = useDataStore();
 
-  const { data: fields } = useQuery({
+  const { data: formResponse } = useQuery({
     queryKey: [
       'tabFields',
       currentConnection?.id,
@@ -24,7 +26,7 @@ export const useObjectFields = (
       selectedTab?.options?.action,
       selectedTab?.options?.tabId
     ],
-    queryFn: (): Promise<FormFieldType[]> =>
+    queryFn: (): Promise<FormObjectResponseType | FormSchemaResponseType> =>
       isDetail
         ? api.tree.getObject({
             nodeId: selectedTab?.nodeId ?? '',
@@ -32,7 +34,7 @@ export const useObjectFields = (
             tabId: selectedTab?.options?.tabId || '',
             connectionId: currentConnection?.id || 0
           })
-        : api.tree.getFields({
+        : api.tree.getSchema({
             nodeId: selectedTab?.nodeId ?? '',
             action: selectedTab?.options?.action,
             tabId: selectedTab?.options?.tabId || '',
@@ -44,13 +46,7 @@ export const useObjectFields = (
       selectedTab?.options?.action &&
       selectedTab?.options?.tabId &&
       selectedTab?.nodeId
-    ),
-    select: (data): FormFieldType[] => {
-      return data.map((field) => ({
-        ...field,
-        originalValue: field.value
-      }));
-    }
+    )
   });
 
   const getTabId = (): string => {

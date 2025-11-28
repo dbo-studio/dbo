@@ -1,4 +1,5 @@
 import { useTabStore } from '@/store/tabStore/tab.store';
+import type { FormFieldWithState } from '@/types/Tree';
 import type { StateCreator } from 'zustand';
 import type { DataFormDataSlice } from '../types';
 
@@ -10,12 +11,12 @@ export const createDataFormDataSlice: StateCreator<
 > = (set, get) => ({
   formDataByTab: {},
 
-  getFormData: (tabId: string, objectTabId: string): any[] | undefined => {
+  getFormData: (tabId: string, objectTabId: string): FormFieldWithState[] | undefined => {
     const formData = get().formDataByTab?.[tabId]?.[objectTabId];
     return formData;
   },
 
-  updateFormData: (tabId: string, objectTabId: string, data: any[]): void => {
+  updateFormData: (tabId: string, objectTabId: string, data: FormFieldWithState[]): void => {
     if (!tabId || !objectTabId) return;
 
     set(
