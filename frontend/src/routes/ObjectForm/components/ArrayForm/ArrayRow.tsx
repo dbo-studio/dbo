@@ -26,8 +26,9 @@ function ArrayRow({ schema, rowData, onFieldChange, onDelete }: ArrayRowProps): 
   return (
     <TableRow>
       {fieldsWithValues.map((field) => (
-        <TableCell key={field.id} sx={{ minWidth: 150 }}>
+        <TableCell key={field.id} sx={{ minWidth: 180 }}>
           <SimpleField
+            isArrayForm={true}
             field={field}
             onChange={(value): void => onFieldChange(field.id, value)}
             dynamicOptions={field.dependsOn ? getDynamicOptions(field.id) : undefined}

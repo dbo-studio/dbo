@@ -1,4 +1,4 @@
-import { Box } from '@mui/material';
+import { Box, Grid } from '@mui/material';
 import React, { memo, useMemo } from 'react';
 import { useDynamicField } from '../../hooks/useDynamicField';
 import type { FormValue, SimpleFormProps } from '../../types';
@@ -18,10 +18,11 @@ function SimpleForm({ schema, onFieldChange }: SimpleFormProps): React.JSX.Eleme
   const { getDynamicOptions, isLoadingDynamicField } = useDynamicField(schema, formValues);
 
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 2, mt: 1 }}>
+    <Grid direction={'row'} mt={1}>
       {fieldsWithValues.map((field) => (
         <Box key={field.id} sx={{ gridColumn: field.type === 'query' ? '1 / -1' : 'auto' }}>
           <SimpleField
+            isArrayForm={false}
             field={field}
             onChange={(value): void => onFieldChange(field.id, value)}
             dynamicOptions={field.dependsOn ? getDynamicOptions(field.id) : undefined}
@@ -29,7 +30,7 @@ function SimpleForm({ schema, onFieldChange }: SimpleFormProps): React.JSX.Eleme
           />
         </Box>
       ))}
-    </Box>
+    </Grid>
   );
 }
 

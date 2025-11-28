@@ -34,6 +34,7 @@ export type SimpleFieldProps = {
   onChange: (value: FormValue) => void;
   dynamicOptions?: FormFieldOptionType[];
   isLoadingDynamic?: boolean;
+  isArrayForm?: boolean;
 };
 
 export type FormStatusBarProps = {

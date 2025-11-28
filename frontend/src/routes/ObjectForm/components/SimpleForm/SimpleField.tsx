@@ -7,7 +7,7 @@ import { Box, Checkbox, Typography } from '@mui/material';
 import React from 'react';
 import type { SimpleFieldProps } from '../../types';
 
-export default function SimpleField({ field, onChange, dynamicOptions }: SimpleFieldProps): React.JSX.Element {
+export default function SimpleField({ field, onChange, dynamicOptions, isArrayForm }: SimpleFieldProps): React.JSX.Element {
   const handleSelectChange = (value: SelectInputOption | SelectInputOption[] | null): void => {
     if (field.type === 'multi-select') {
       const multiValue = Array.isArray(value) ? value.map((item) => item.value) : [];
@@ -24,19 +24,21 @@ export default function SimpleField({ field, onChange, dynamicOptions }: SimpleF
     case 'text':
       return (
         <FieldInput
-          label={field.name}
+          size={isArrayForm ? 'small' : "medium"}
           value={(field.value as string) || ''}
           onChange={(e): void => onChange(e.target.value)}
           fullWidth
           required={field.required}
+          margin={isArrayForm ? 'none' : undefined}
+          label={isArrayForm ? undefined : field.name}
         />
       );
 
     case 'checkbox':
       return (
         <Box display='flex' alignItems='center'>
-          <Checkbox checked={(field.value as boolean) || false} onChange={(e): void => onChange(e.target.checked)} />
-          <Typography>{field.name}</Typography>
+          <Checkbox size={isArrayForm ? 'small' : "medium"} checked={(field.value as boolean) || false} onChange={(e): void => onChange(e.target.checked)} />
+          {isArrayForm && <Typography>{field.name}</Typography>}
         </Box>
       );
 
@@ -46,8 +48,9 @@ export default function SimpleField({ field, onChange, dynamicOptions }: SimpleF
         <Box mb={1}>
           <CreatableSelectInput
             isMulti={field.type === 'multi-select'}
-            label={field.name}
+            label={isArrayForm ? undefined : field.name}
             value={field.value}
+            size={isArrayForm ? 'small' : "medium"}
             options={fieldOptions.map((opt) => ({
               value: opt.value,
               label: opt.label
@@ -60,9 +63,11 @@ export default function SimpleField({ field, onChange, dynamicOptions }: SimpleF
     case 'query':
       return (
         <Box>
-          <Typography variant='caption' color='text.secondary' mb={1} display='block'>
-            {field.name}
-          </Typography>
+          {!isArrayForm && (
+            <Typography variant='caption' color='textText'>
+              {field.name}
+            </Typography>
+          )}
           <Box
             display='flex'
             width='100%'
