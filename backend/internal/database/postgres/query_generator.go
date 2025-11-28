@@ -190,21 +190,23 @@ func (r *PostgresRepository) views(ctx context.Context, database *string, schema
 		}
 	}
 
-	query := r.db.WithContext(ctx).Select("table_name, description, NULL as check_option, definition as query").
-		Table("pg_views v").
-		Joins("JOIN pg_namespace n ON n.oid = v.viewnamespace").
-		Joins("LEFT JOIN pg_description d ON d.objoid = v.oid AND d.objsubid = 0").
-		Where("v.viewname NOT IN ('pg_catalog', 'information_schema')")
-
-	if database != nil {
-		query = query.Where("n.datname = ?", lo.FromPtr(database))
-	}
+	query := r.db.WithContext(ctx).Table("pg_class c").
+		Select(`
+			c.relname as table_name,
+			d.description as comment,
+			NULL as check_option,
+			pg_get_viewdef(c.oid, true) as query
+		`).
+		Joins("JOIN pg_namespace n ON n.oid = c.relnamespace").
+		Joins("LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0").
+		Where("c.relkind = 'v'").
+		Where("n.nspname NOT IN ('pg_catalog', 'information_schema')")
 
 	if schema != nil {
 		query = query.Where("n.nspname = ?", lo.FromPtr(schema))
 	}
 
-	err := query.Order("table_name").Find(&views).Error
+	err := query.Order("c.relname").Find(&views).Error
 	if err != nil {
 		return nil, err
 	}
