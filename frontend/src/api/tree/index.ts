@@ -21,8 +21,7 @@ const endpoints = {
   getObject: (nodeId: string, action: string, tabId: string): string =>
     `/tree/${nodeId}/tabs/${action}/fields/${tabId}/object`,
   executeAction: (nodeId: string, action: string): string => `/tree/${nodeId}/tabs/${action}/fields/object`,
-  getDynamicFieldOptions: (nodeId: string): string =>
-    `/tree/${nodeId}/dynamic`
+  getDynamicFieldOptions: (nodeId: string): string => `/tree/${nodeId}/dynamic`
 };
 
 export const getTree = async (params: TreeRequestType): Promise<TreeResponseType> => {

@@ -63,7 +63,10 @@ export default function CreatableSelectInput({
 
     // Multi-select must always be array (validated in useFormData)
     if (!Array.isArray(value)) {
-      console.error('[CreatableSelectInput] Invalid format for multi-select in handleCreateOption: expected array, got', typeof value);
+      console.error(
+        '[CreatableSelectInput] Invalid format for multi-select in handleCreateOption: expected array, got',
+        typeof value
+      );
       handleChange([newOption], { action: 'create-option' } as ActionMeta<unknown>);
       return;
     }

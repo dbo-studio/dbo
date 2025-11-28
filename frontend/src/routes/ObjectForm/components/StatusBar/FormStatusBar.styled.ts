@@ -1,6 +1,6 @@
 import { Box, styled } from '@mui/material';
 
-export const StatusBarStyled = styled(Box)(({ theme }) => ({
+export const FormStatusBarStyled = styled(Box)(({ theme }) => ({
   background: theme.palette.background.default,
   width: '100%',
   borderTop: `1px solid ${theme.palette.divider}`,

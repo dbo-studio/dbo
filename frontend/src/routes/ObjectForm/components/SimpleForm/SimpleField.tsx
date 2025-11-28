@@ -7,11 +7,7 @@ import { Box, Checkbox, Typography } from '@mui/material';
 import React from 'react';
 import type { SimpleFieldProps } from '../../types';
 
-export default function SimpleField({
-  field,
-  onChange,
-  dynamicOptions
-}: SimpleFieldProps): React.JSX.Element {
+export default function SimpleField({ field, onChange, dynamicOptions }: SimpleFieldProps): React.JSX.Element {
   const handleSelectChange = (value: SelectInputOption | SelectInputOption[] | null): void => {
     if (field.type === 'multi-select') {
       const multiValue = Array.isArray(value) ? value.map((item) => item.value) : [];

@@ -16,35 +16,31 @@ type DynamicFieldState = {
 
 type FormValues = Record<string, string | number | boolean | string[] | null | undefined>;
 
-const buildCacheKey = (
-  fieldId: string,
-  dependsOn: FieldDependencyType,
-  formValues: FormValues
-): string => {
+const buildCacheKey = (fieldId: string, dependsOn: FieldDependencyType, formValues: FormValues): string => {
   const dependentValue = formValues[dependsOn.fieldId] ?? '';
 
   const params = dependsOn.parameters
     ? Object.keys(dependsOn.parameters)
-      .map((key) => {
-        const paramValue = dependsOn.parameters?.[key];
-        let resolvedValue = '';
+        .map((key) => {
+          const paramValue = dependsOn.parameters?.[key];
+          let resolvedValue = '';
 
-        if (paramValue === '?') {
-          // If value is "?", use the dependsOn.fieldId value from formValues
-          const val = formValues[dependsOn.fieldId];
-          resolvedValue = val !== undefined && val !== null ? String(val) : '';
-        } else if (typeof paramValue === 'string' && formValues[paramValue] !== undefined) {
-          // If paramValue is a field id reference
-          const val = formValues[paramValue];
-          resolvedValue = val !== undefined && val !== null ? String(val) : '';
-        } else {
-          // Otherwise use the paramValue as is
-          resolvedValue = paramValue !== undefined && paramValue !== null ? String(paramValue) : '';
-        }
+          if (paramValue === '?') {
+            // If value is "?", use the dependsOn.fieldId value from formValues
+            const val = formValues[dependsOn.fieldId];
+            resolvedValue = val !== undefined && val !== null ? String(val) : '';
+          } else if (typeof paramValue === 'string' && formValues[paramValue] !== undefined) {
+            // If paramValue is a field id reference
+            const val = formValues[paramValue];
+            resolvedValue = val !== undefined && val !== null ? String(val) : '';
+          } else {
+            // Otherwise use the paramValue as is
+            resolvedValue = paramValue !== undefined && paramValue !== null ? String(paramValue) : '';
+          }
 
-        return `${key}:${resolvedValue}`;
-      })
-      .join(',')
+          return `${key}:${resolvedValue}`;
+        })
+        .join(',')
     : '';
 
   return `${fieldId}_${dependsOn.fieldId}_${dependentValue}_${params}`;
@@ -126,7 +122,7 @@ export const useDynamicField = (
           connectionId: currentConnection.id,
           nodeId: selectedTab.nodeId,
           parameters: {
-            ...parameters,
+            ...parameters
           }
         });
 

@@ -6,7 +6,7 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import type { FormFieldType, FormFieldWithState } from '@/types/Tree';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
-import type { FormDataState, FormValue } from '@/routes/ObjectForm/types';
+import type { FormDataState, FormValue } from '../types';
 
 const createInitialFormState = (
   schema: FormFieldType[],

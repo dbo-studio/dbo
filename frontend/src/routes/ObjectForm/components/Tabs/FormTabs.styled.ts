@@ -1,6 +1,6 @@
 import { Box, styled } from '@mui/material';
 
-export const ObjectTabsStyled = styled(Box)(({ theme }) => ({
+export const FormTabsStyled = styled(Box)(({ theme }) => ({
   marginTop: theme.spacing(1),
   borderRight: `1px solid ${theme.palette.divider}`,
   padding: theme.spacing(1),
