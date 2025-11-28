@@ -13,7 +13,11 @@ import (
 )
 
 type Database struct {
-	Name string `gorm:"column:datname"`
+	Name        string  `gorm:"column:datname"`
+	Owner       string  `gorm:"column:rolname"`
+	Template    string  `gorm:"column:template"`
+	Description *string `gorm:"column:description"`
+	Tablespace  *string `gorm:"column:tablespace"`
 }
 
 func (r *PostgresRepository) databases(ctx context.Context, fromCache bool) ([]Database, error) {
@@ -31,11 +35,18 @@ func (r *PostgresRepository) databases(ctx context.Context, fromCache bool) ([]D
 		}
 	}
 
-	err := r.db.WithContext(ctx).Select("datname").
-		Table("pg_database").
-		Where("datistemplate = false").
-		Order("datname").
-		Find(&databases).Error
+	err := r.db.WithContext(ctx).Table("pg_database d").
+		Select(`
+			d.datname,
+			r.rolname,
+			pg_encoding_to_char(d.encoding) as encoding,
+			des.description,
+			t.spcname as tablespace
+		`).
+		Joins("JOIN pg_roles r ON r.oid = d.datdba").
+		Joins("LEFT JOIN pg_shdescription des ON des.objoid = d.oid").
+		Joins("LEFT JOIN pg_tablespace t ON t.oid = d.dattablespace").
+		First(&databases).Error
 
 	if err != nil {
 		return nil, err
@@ -47,7 +58,9 @@ func (r *PostgresRepository) databases(ctx context.Context, fromCache bool) ([]D
 }
 
 type Schema struct {
-	Name string `gorm:"column:schema_name"`
+	Name    string  `gorm:"column:nspname"`
+	Owner   string  `gorm:"column:rolname"`
+	Comment *string `gorm:"column:description"`
 }
 
 func (r *PostgresRepository) schemas(ctx context.Context, database *string, fromCache bool) ([]Schema, error) {
@@ -65,17 +78,31 @@ func (r *PostgresRepository) schemas(ctx context.Context, database *string, from
 		}
 	}
 
-	query := r.db.WithContext(ctx).Select("schema_name").
-		Table("information_schema.schemata").
-		Where("schema_name NOT IN ('pg_catalog', 'information_schema')")
-
-	if database != nil {
-		query = query.Where("catalog_name = ?", lo.FromPtr(database))
-	}
+	query := r.db.WithContext(ctx).Table("pg_namespace n").
+		Select(`
+		n.nspname AS nspname,
+		r.rolname AS rolname,
+		d.description AS description
+	`).
+		Joins("LEFT JOIN pg_roles r ON r.oid = n.nspowner").
+		Joins("LEFT JOIN pg_description d ON d.objoid = n.oid AND d.classoid = 'pg_namespace'::regclass").
+		Where("n.nspname NOT IN ('pg_catalog', 'information_schema')")
 
 	err := query.
-		Order("schema_name").
+		Order("n.nspname").
 		Find(&schemas).Error
+
+	// query := r.db.WithContext(ctx).Select("schema_name").
+	// 	Table("information_schema.schemata").
+	// 	Where("schema_name NOT IN ('pg_catalog', 'information_schema')")
+
+	// if database != nil {
+	// 	query = query.Where("catalog_name = ?", lo.FromPtr(database))
+	// }
+
+	// err := query.
+	// 	Order("schema_name").
+	// 	Find(&schemas).Error
 
 	if err != nil {
 		return nil, err
@@ -87,7 +114,11 @@ func (r *PostgresRepository) schemas(ctx context.Context, database *string, from
 }
 
 type Table struct {
-	Name string `gorm:"column:table_name"`
+	Name        string  `gorm:"column:relname"`
+	Description *string `gorm:"column:description"`
+	Persistence string  `gorm:"column:persistence"`
+	TableSpace  string  `gorm:"column:tablespace"`
+	Owner       string  `gorm:"column:rolname"`
 }
 
 func (r *PostgresRepository) tables(ctx context.Context, schema *string, fromCache bool) ([]Table, error) {
@@ -105,19 +136,29 @@ func (r *PostgresRepository) tables(ctx context.Context, schema *string, fromCac
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("pg_namespace AS n").
-		Select("n.nspname AS schema_name, t.tablename AS table_name").
-		Joins("LEFT JOIN pg_tables t ON n.nspname = t.schemaname::name").
-		Where("n.nspname NOT IN ('pg_catalog', 'information_schema')").
-		Where("t.tablename != ''")
+	query := r.db.WithContext(ctx).Table("pg_class c").
+		Select(`
+		c.relname,
+		pd.description,
+		CASE c.relpersistence
+			WHEN 'p' THEN 'LOGGED'
+			WHEN 'u' THEN 'UNLOGGED'
+			WHEN 't' THEN 'TEMPORARY'
+		END as persistence,
+		t.spcname as tablespace,
+		r.rolname
+	`).
+		Joins("JOIN pg_namespace n ON n.oid = c.relnamespace").
+		Joins("LEFT JOIN pg_roles r ON r.oid = c.relowner").
+		Joins("LEFT JOIN pg_tablespace t ON t.oid = c.reltablespace").
+		Joins("LEFT JOIN pg_description pd ON pd.objoid = c.oid AND pd.objsubid = 0").
+		Where("c.relkind = 'r'")
 
 	if schema != nil {
 		query = query.Where("n.nspname = ?", lo.FromPtr(schema))
 	}
 
-	err := query.Order("table_name").
-		Find(&tables).Error
-
+	err := query.Order("c.relname").Find(&tables).Error
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +169,10 @@ func (r *PostgresRepository) tables(ctx context.Context, schema *string, fromCac
 }
 
 type View struct {
-	Name string `gorm:"column:table_name"`
+	Name        string  `gorm:"column:table_name"`
+	Comment     *string `gorm:"column:comment"`
+	CheckOption *string `gorm:"column:check_option"`
+	Query       *string `gorm:"column:query"`
 }
 
 func (r *PostgresRepository) views(ctx context.Context, database *string, schema *string, fromCache bool) ([]View, error) {
@@ -146,22 +190,21 @@ func (r *PostgresRepository) views(ctx context.Context, database *string, schema
 		}
 	}
 
-	query := r.db.WithContext(ctx).Select("table_name").
-		Table("information_schema.views").
-		Where("table_schema NOT IN ('pg_catalog', 'information_schema')")
+	query := r.db.WithContext(ctx).Select("table_name, description, NULL as check_option, definition as query").
+		Table("pg_views v").
+		Joins("JOIN pg_namespace n ON n.oid = v.viewnamespace").
+		Joins("LEFT JOIN pg_description d ON d.objoid = v.oid AND d.objsubid = 0").
+		Where("v.viewname NOT IN ('pg_catalog', 'information_schema')")
 
 	if database != nil {
-		query = query.Where("table_catalog = ?", lo.FromPtr(database))
+		query = query.Where("n.datname = ?", lo.FromPtr(database))
 	}
 
 	if schema != nil {
-		query = query.Where("table_schema = ?", lo.FromPtr(schema))
+		query = query.Where("n.nspname = ?", lo.FromPtr(schema))
 	}
 
-	err := query.
-		Order("table_name").
-		Find(&views).Error
-
+	err := query.Order("table_name").Find(&views).Error
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +215,11 @@ func (r *PostgresRepository) views(ctx context.Context, database *string, schema
 }
 
 type MaterializedView struct {
-	Name string `gorm:"column:matviewname"`
+	Name       string  `gorm:"column:matviewname"`
+	Comment    *string `gorm:"column:comment"`
+	Tablespace *string `gorm:"column:tablespace"`
+	Owner      *string `gorm:"column:rolname"`
+	Query      *string `gorm:"column:query"`
 }
 
 func (r *PostgresRepository) materializedViews(ctx context.Context, schema *string, fromCache bool) ([]MaterializedView, error) {
@@ -190,18 +237,20 @@ func (r *PostgresRepository) materializedViews(ctx context.Context, schema *stri
 		}
 	}
 
-	query := r.db.WithContext(ctx).Select("matviewname").
-		Table("pg_matviews").
-		Where("schemaname NOT IN ('pg_catalog', 'information_schema')")
+	query := r.db.WithContext(ctx).Table("pg_class AS c").
+		Select("c.relname as name, d.description as comment, t.spcname as tablespace, r.rolname as rolname, m.definition as query").
+		Joins("JOIN pg_namespace AS n ON n.oid = c.relnamespace").
+		Joins("LEFT JOIN pg_description AS d ON d.objoid = c.oid AND d.objsubid = 0").
+		Joins("LEFT JOIN pg_tablespace AS t ON t.oid = c.reltablespace").
+		Joins("LEFT JOIN pg_roles r ON r.oid = c.relowner").
+		Joins("LEFT JOIN pg_matviews AS m ON m.matviewname = c.relname AND m.schemaname = n.nspname").
+		Where("c.relkind = 'm'")
 
 	if schema != nil {
-		query = query.Where("schemaname = ?", lo.FromPtr(schema))
+		query = query.Where("n.nspname = ?", lo.FromPtr(schema))
 	}
 
-	err := query.
-		Order("matviewname").
-		Find(&mvs).Error
-
+	err := query.Order("c.relname").Find(&mvs).Error
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +289,7 @@ func (r *PostgresRepository) columns(ctx context.Context, table *string, schema 
 			return nil, err
 		}
 
-		if len(columnNames) > 0 {
+		if len(columns) > 0 {
 			return columns, nil
 		}
 	}
@@ -249,7 +298,7 @@ func (r *PostgresRepository) columns(ctx context.Context, table *string, schema 
 		Select(`
 			a.attnum AS ordinal_position,
 			a.attname AS column_name,
-			format_type(a.atttypid, a.atttypmod) AS data_type,
+			format_type(a.atttypid, NULL) as data_type,
 			CASE WHEN a.attnotnull THEN 'NO' ELSE 'YES' END AS is_nullable,
 			COALESCE(pg_get_expr(ad.adbin, ad.adrelid), col.column_default) AS column_default,
 			col.character_maximum_length,
@@ -405,10 +454,7 @@ func (r *PostgresRepository) primaryKeys(ctx context.Context, table *string, fro
 		query = query.Where("tc.table_name = ?", lo.FromPtr(table))
 	}
 
-	err := query.
-		Order("kcu.column_name").
-		Find(&primaryKeys).Error
-
+	err := query.Order("kcu.column_name").Find(&primaryKeys).Error
 	if err != nil {
 		return nil, err
 	}
@@ -586,109 +632,37 @@ func (r *PostgresRepository) tableKeys(ctx context.Context, table *string, schem
 	return keys, nil
 }
 
-type TableInfo struct {
-	Name        string  `gorm:"column:relname"`
-	Description *string `gorm:"column:description"`
-	Persistence string  `gorm:"column:persistence"`
-	Tablespace  string  `gorm:"column:tablespace"`
-	Owner       string  `gorm:"column:rolname"`
+type Tablespace struct {
+	Name string `gorm:"column:spcname"`
 }
 
-func (r *PostgresRepository) tableInfo(ctx context.Context, table *string, schema *string, fromCache bool) (*TableInfo, error) {
-	tableInfo := TableInfo{}
-	cacheKey := r.cacheKey("table_info", lo.FromPtr(table), lo.FromPtr(schema))
+func (r *PostgresRepository) tablespaces(ctx context.Context, fromCache bool) ([]Tablespace, error) {
+	tablespaces := make([]Tablespace, 0)
+	cacheKey := r.cacheKey("tablespaces")
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &tableInfo)
+		err := r.cache.Get(ctx, cacheKey, &tablespaces)
 		if err != nil {
 			return nil, err
 		}
 
-		if tableInfo.Name != "" {
-			return &tableInfo, nil
+		if len(tablespaces) > 0 {
+			return tablespaces, nil
 		}
 	}
 
-	query := r.db.Table("pg_class c").
-		Select(`
-			c.relname,
-			pd.description,
-			CASE c.relpersistence
-				WHEN 'p' THEN 'LOGGED'
-				WHEN 'u' THEN 'UNLOGGED'
-				WHEN 't' THEN 'TEMPORARY'
-			END as persistence,
-			t.spcname as tablespace,
-			r.rolname
-		`).
-		Joins("JOIN pg_namespace n ON n.oid = c.relnamespace").
-		Joins("LEFT JOIN pg_roles r ON r.oid = c.relowner").
-		Joins("LEFT JOIN pg_tablespace t ON t.oid = c.reltablespace").
-		Joins("LEFT JOIN pg_description pd ON pd.objoid = c.oid AND pd.objsubid = 0")
-
-	if table != nil {
-		query = query.Where("c.relname = ?", lo.FromPtr(table))
-	}
-
-	if schema != nil {
-		query = query.Where("n.nspname = ?", lo.FromPtr(schema))
-	}
-
-	err := query.First(&tableInfo).Error
+	err := r.db.WithContext(ctx).Table("pg_tablespace").
+		Select("spcname").
+		Order("spcname").
+		Find(&tablespaces).Error
 
 	if err != nil {
 		return nil, err
 	}
 
-	go r.updateCache(ctx, cacheKey, tableInfo)
+	go r.updateCache(ctx, cacheKey, tablespaces)
 
-	return &tableInfo, nil
-}
-
-type DatabaseInfo struct {
-	Name        string  `gorm:"column:datname"`
-	Owner       string  `gorm:"column:rolname"`
-	Template    string  `gorm:"column:template"`
-	Description *string `gorm:"column:description"`
-	Tablespace  *string `gorm:"column:tablespace"`
-}
-
-func (r *PostgresRepository) databaseInfo(ctx context.Context, database string, fromCache bool) (*DatabaseInfo, error) {
-	databaseInfo := DatabaseInfo{}
-	cacheKey := r.cacheKey("database_info", database)
-
-	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &databaseInfo)
-		if err != nil {
-			return nil, err
-		}
-
-		if databaseInfo.Name != "" {
-			return &databaseInfo, nil
-		}
-	}
-
-	err := r.db.WithContext(ctx).Table("pg_database d").
-		Select(`
-			d.datname,
-			r.rolname,
-			pg_encoding_to_char(d.encoding) as encoding,
-			des.description,
-			t.spcname as tablespace
-		`).
-		Joins("JOIN pg_roles r ON r.oid = d.datdba").
-		Joins("LEFT JOIN pg_shdescription des ON des.objoid = d.oid").
-		Joins("LEFT JOIN pg_tablespace t ON t.oid = d.dattablespace").
-		Where("d.datname = ?", database).
-		First(&databaseInfo).Error
-
-	if err != nil {
-		return nil, err
-	}
-
-	go r.updateCache(ctx, cacheKey, databaseInfo)
-
-	return &databaseInfo, nil
+	return tablespaces, nil
 }
 
 func (r *PostgresRepository) cacheKey(args ...string) string {

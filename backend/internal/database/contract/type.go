@@ -22,17 +22,41 @@ type TreeNodeAction struct {
 }
 
 type FormField struct {
-	ID       string                `json:"id"`
-	Name     string                `json:"name"`
-	Type     TreeFormFieldTypeEnum `json:"type"`
-	Required bool                  `json:"required"`
-	Value    any                   `json:"value"`
-	Fields   []FormField           `json:"fields,omitempty"`
+	ID        string                `json:"id"`
+	Name      string                `json:"name"`
+	Type      TreeFormFieldTypeEnum `json:"type"`
+	Required  bool                  `json:"required"`
+	Value     any                   `json:"value,omitempty"`
+	Options   []FormFieldOption     `json:"options,omitempty"`
+	DependsOn *FieldDependency      `json:"dependsOn,omitempty"`
 }
 
 type FormTab struct {
 	ID   TreeTab `json:"id"`
 	Name string  `json:"name"`
+}
+
+type FormResponse struct {
+	IsArray bool             `json:"isArray"`
+	Schema  []FormField      `json:"schema"`
+	Data    []map[string]any `json:"data"`
+}
+
+type FormFieldOption struct {
+	Value any    `json:"value"`
+	Label string `json:"label"`
+}
+
+type FieldDependency struct {
+	FieldID    string            `json:"fieldId"`
+	Parameters map[string]string `json:"parameters"`
+}
+
+type DynamicFieldRequest struct {
+	NodeID     string            `json:"nodeId"`
+	TabID      TreeTab           `json:"tabId"`
+	FieldID    string            `json:"fieldId"`
+	Parameters map[string]string `json:"parameters"`
 }
 
 type ImportOptions struct {

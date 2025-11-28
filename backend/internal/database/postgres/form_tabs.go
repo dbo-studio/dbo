@@ -4,7 +4,6 @@ import (
 	"context"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
-	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 func (r *PostgresRepository) GetFormTabs(_ context.Context, action contract.TreeNodeActionName) []contract.FormTab {
@@ -39,41 +38,4 @@ func (r *PostgresRepository) GetFormTabs(_ context.Context, action contract.Tree
 	default:
 		return []contract.FormTab{}
 	}
-}
-
-func (r *PostgresRepository) GetFormFields(ctx context.Context, nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) []contract.FormField {
-	node := extractNode(nodeID)
-
-	switch tabID {
-	case contract.DatabaseTab:
-		return r.databaseFields(ctx)
-
-	case contract.SchemaTab:
-		return r.schemaFields()
-
-	case contract.TableTab:
-		return r.tableFields(action)
-	case contract.TableColumnsTab:
-		return helper.BuildFieldArray(r.tableColumnFields())
-	case contract.TableForeignKeysTab:
-		return helper.BuildFieldArray(r.foreignKeyOptions(node))
-	// case contract.TableIndexesTab:
-	// 	return helper.BuildFieldArray(r.indexOptions(node))
-	// case contract.TableTriggersTab:
-	// 	return helper.BuildFieldArray(r.triggerOptions(node))
-	// case contract.TableChecksTab:
-	// 	return helper.BuildFieldArray(r.checkOptions())
-	case contract.TableKeysTab:
-		return helper.BuildFieldArray(r.getKeyOptions(node))
-	// case contract.TableSequenceTab:
-	// 	return helper.BuildFieldArray(r.sequenceFields())
-
-	case contract.ViewTab:
-		return r.viewFields()
-
-	case contract.MaterializedViewTab:
-		return r.materializedViewFields()
-	}
-
-	return []contract.FormField{}
 }

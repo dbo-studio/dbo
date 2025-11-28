@@ -1,3 +1,5 @@
+import { FormFieldOptionType, FormFieldType, ObjectTabType, TreeNodeType } from "@/types/Tree";
+
 export type TreeRequestType = {
   connectionId: number;
   parentId: string | null;
@@ -14,31 +16,33 @@ export type TabRequestType = {
 
 export type TabResponseType = ObjectTabType[];
 
-export type ObjectTabType = {
-  id: string;
-  name: string;
-};
 
-export type FieldRequestType = {
+export type SchemaRequestType = {
   connectionId: number;
   action: string;
   nodeId: string;
   tabId: string;
 };
 
-export type FieldResponseType = FormFieldType[];
+export type FormSchemaResponseType = FormFieldType[];
 
-export type FormFieldType = {
-  id: string;
-  name: string;
-  type: string;
-  required: boolean;
-  value?: any;
-  originalValue?: any;
-  fields?: FormFieldType[];
-  deleted?: boolean;
-  added?: boolean;
+export type FormObjectResponseType = {
+  isArray: boolean;
+  schema: FormFieldType[];
+  data: Record<string, any>[];
+}
+
+
+export type DynamicFieldRequestType = {
+  connectionId: number;
+  nodeId: string;
+  action: string;
+  tabId: string;
+  fieldId: string;
+  parameters: Record<string, any>;
 };
+
+export type DynamicFieldResponse = FormFieldOptionType[]
 
 export type ObjectRequestType = {
   connectionId: number;
@@ -53,23 +57,3 @@ export type SaveObjectRequestType = {
   action: string;
   data: Record<string, any>;
 };
-
-export type TreeNodeType = {
-  id: string;
-  name: string;
-  type: string;
-  icon?: string;
-  hasChildren?: boolean;
-  action: TreeNodeActionType;
-  contextMenu: TreeNodeActionType[];
-  children: TreeNodeType[];
-};
-
-export type TreeNodeActionType = {
-  title: string;
-  name: string;
-  type: TreeNodeActionTypesType;
-  params: Record<string, any>;
-};
-
-export type TreeNodeActionTypesType = 'form' | 'command' | 'action' | 'route' | 'tab';

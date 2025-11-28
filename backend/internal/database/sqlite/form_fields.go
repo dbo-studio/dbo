@@ -4,7 +4,6 @@ import (
 	"context"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
-	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 func (r *SQLiteRepository) GetFormTabs(_ context.Context, action contract.TreeNodeActionName) []contract.FormTab {
@@ -24,25 +23,4 @@ func (r *SQLiteRepository) GetFormTabs(_ context.Context, action contract.TreeNo
 	default:
 		return []contract.FormTab{}
 	}
-}
-
-func (r *SQLiteRepository) GetFormFields(_ context.Context, nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) []contract.FormField {
-
-	switch tabID {
-	case contract.TableTab:
-		return r.tableFields()
-	case contract.TableColumnsTab:
-		return helper.BuildFieldArray(r.tableColumnFields())
-	case contract.TableKeysTab:
-		return helper.BuildFieldArray(r.keyOptions(nodeID))
-	case contract.TableForeignKeysTab:
-		return helper.BuildFieldArray(r.foreignKeyOptions(nodeID))
-	case contract.TableIndexesTab:
-		return helper.BuildFieldArray(r.indexOptions(nodeID))
-
-	case contract.ViewTab:
-		return r.viewFields()
-	}
-
-	return []contract.FormField{}
 }

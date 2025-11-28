@@ -129,10 +129,6 @@ func RegisterHistoryHooks(db *gorm.DB, historyRepo repository.IHistoryRepo, conn
 		if err != nil {
 			db.Logger.Error(db.Statement.Context, "failed to save query history: %v", err)
 		}
-
-		if err != nil {
-			db.Logger.Error(db.Statement.Context, "failed to save query history: %v", err)
-		}
 	}
 
 	err := cb.Query().After("gorm:after_query").Register("custom:save_history_query", saveHistory)

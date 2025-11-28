@@ -35,6 +35,14 @@ type (
 		Action       string
 		Params       []byte
 	}
+
+	DynamicFieldOptionsRequest struct {
+		ConnectionId int32             `json:"connectionId"`
+		NodeId       string            `json:"nodeId"`
+		TabId        string            `json:"tabId"`
+		Action       string            `json:"action"`
+		Parameters   map[string]string `json:"parameters"`
+	}
 )
 
 func (req TreeListRequest) Validate() error {
