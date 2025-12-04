@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/model"
@@ -74,4 +75,8 @@ func (c *ISQLiteCacheImpl) Set(ctx context.Context, key string, value any, ttl *
 
 func (c *ISQLiteCacheImpl) Delete(ctx context.Context, key string) error {
 	return c.db.WithContext(ctx).Delete(&model.CacheItem{}, "key = ?", key).Error
+}
+
+func (c *ISQLiteCacheImpl) DeleteByPrefix(ctx context.Context, prefix string) error {
+	return c.db.WithContext(ctx).Delete(&model.CacheItem{}, "key LIKE ?", fmt.Sprintf("%s%%", prefix)).Error
 }

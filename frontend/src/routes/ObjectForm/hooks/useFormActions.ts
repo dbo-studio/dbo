@@ -83,24 +83,27 @@ export const useFormActions = (
         return columns.length > 0 ? { [tabId]: { Columns: columns } } : null;
       }
 
-      const currentData: Record<string, FormValue> = {};
-      currentFields.forEach((field) => {
-        currentData[field.id] = field.value;
-      });
+      const newData: Record<string, FormValue> = {};
+      const oldData: Record<string, FormValue> = {};
 
       const originalDataObj = originalData?.[0] ?? {};
-      const changes: Record<string, FormValue> = {};
 
       currentFields.forEach((field) => {
         const currentValue = field.value;
-        const originalValue = field.originalValue ?? originalDataObj[field.id];
+        const originalValue = field.originalValue ?? originalDataObj[field.id] ?? null;
 
-        if (JSON.stringify(currentValue) !== JSON.stringify(originalValue)) {
-          changes[field.id] = currentValue;
+        const hasChanged = JSON.stringify(currentValue) !== JSON.stringify(originalValue);
+
+        if (hasChanged) {
+          newData[field.id] = currentValue;
         }
+
+        oldData[field.id] = originalValue;
       });
 
-      return Object.keys(changes).length > 0 ? { [tabId]: changes } : null;
+      const hasChanges = Object.keys(newData).length > 0;
+
+      return hasChanges ? { [tabId]: { new: newData, old: oldData } } : null;
     },
     []
   );

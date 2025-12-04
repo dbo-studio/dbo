@@ -30,7 +30,7 @@ func (cm *AiServiceImpl) setCompletionResponse(ctx context.Context, key string, 
 func (cm *AiServiceImpl) generateCompletionKey(req *dto.AiInlineCompleteRequest) string {
 	var keyBuilder string
 
-	keyBuilder += fmt.Sprintf("conn:%d|", req.ConnectionId)
+	keyBuilder += ""
 
 	if req.ContextOpts.Database != nil {
 		keyBuilder += fmt.Sprintf("db:%s|", *req.ContextOpts.Database)
@@ -45,5 +45,5 @@ func (cm *AiServiceImpl) generateCompletionKey(req *dto.AiInlineCompleteRequest)
 	}
 
 	hash := sha1.Sum([]byte(keyBuilder))
-	return fmt.Sprintf("ai_complete:%x", hash)
+	return fmt.Sprintf("c:%d:ai_complete:%x", req.ConnectionId, hash)
 }

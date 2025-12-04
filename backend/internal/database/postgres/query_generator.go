@@ -52,7 +52,7 @@ func (r *PostgresRepository) databases(ctx context.Context, fromCache bool) ([]D
 		return nil, err
 	}
 
-	go r.updateCache(ctx, cacheKey, databases)
+	r.updateCache(ctx, cacheKey, databases)
 
 	return databases, nil
 }
@@ -108,7 +108,7 @@ func (r *PostgresRepository) schemas(ctx context.Context, database *string, from
 		return nil, err
 	}
 
-	go r.updateCache(ctx, cacheKey, schemas)
+	r.updateCache(ctx, cacheKey, schemas)
 
 	return schemas, nil
 }
@@ -163,7 +163,7 @@ func (r *PostgresRepository) tables(ctx context.Context, schema *string, fromCac
 		return nil, err
 	}
 
-	go r.updateCache(ctx, cacheKey, tables)
+	r.updateCache(ctx, cacheKey, tables)
 
 	return tables, nil
 }
@@ -211,7 +211,7 @@ func (r *PostgresRepository) views(ctx context.Context, database *string, schema
 		return nil, err
 	}
 
-	go r.updateCache(ctx, cacheKey, views)
+	r.updateCache(ctx, cacheKey, views)
 
 	return views, nil
 }
@@ -257,7 +257,7 @@ func (r *PostgresRepository) materializedViews(ctx context.Context, schema *stri
 		return nil, err
 	}
 
-	go r.updateCache(ctx, cacheKey, mvs)
+	r.updateCache(ctx, cacheKey, mvs)
 
 	return mvs, nil
 }
@@ -389,7 +389,7 @@ func (r *PostgresRepository) columns(ctx context.Context, table *string, schema 
 		}
 	}
 
-	go r.updateCache(ctx, cacheKey, columns)
+	r.updateCache(ctx, cacheKey, columns)
 
 	return columns, nil
 }
@@ -423,7 +423,7 @@ func (r *PostgresRepository) templates(ctx context.Context, fromCache bool) ([]T
 		return nil, err
 	}
 
-	go r.updateCache(ctx, cacheKey, templates)
+	r.updateCache(ctx, cacheKey, templates)
 
 	return templates, nil
 }
@@ -461,7 +461,7 @@ func (r *PostgresRepository) primaryKeys(ctx context.Context, table *string, fro
 		return nil, err
 	}
 
-	go r.updateCache(ctx, cacheKey, primaryKeys)
+	r.updateCache(ctx, cacheKey, primaryKeys)
 
 	return primaryKeys, nil
 }
@@ -559,7 +559,7 @@ func (r *PostgresRepository) foreignKeys(ctx context.Context, table *string, sch
 		}
 	}
 
-	go r.updateCache(ctx, cacheKey, foreignKeys)
+	r.updateCache(ctx, cacheKey, foreignKeys)
 
 	return foreignKeys, nil
 }
@@ -629,7 +629,7 @@ func (r *PostgresRepository) tableKeys(ctx context.Context, table *string, schem
 		}
 	}
 
-	go r.updateCache(ctx, cacheKey, keys)
+	r.updateCache(ctx, cacheKey, keys)
 
 	return keys, nil
 }
@@ -662,18 +662,22 @@ func (r *PostgresRepository) tablespaces(ctx context.Context, fromCache bool) ([
 		return nil, err
 	}
 
-	go r.updateCache(ctx, cacheKey, tablespaces)
+	r.updateCache(ctx, cacheKey, tablespaces)
 
 	return tablespaces, nil
 }
 
 func (r *PostgresRepository) cacheKey(args ...string) string {
-	return fmt.Sprintf("query_generator:%d:%s", r.connection.ID, strings.Join(args, "_"))
+	return fmt.Sprintf("c:%d:query_generator:%s", r.connection.ID, strings.Join(args, "_"))
 }
 
 func (r *PostgresRepository) updateCache(ctx context.Context, cacheKey string, value any) {
-	err := r.cache.Set(ctx, cacheKey, value, lo.ToPtr(time.Hour))
-	if err != nil {
-		r.logger.Error(err)
-	}
+	// Use background context to avoid context cancellation issues in goroutine
+	go func() {
+		bgCtx := context.Background()
+		err := r.cache.Set(bgCtx, cacheKey, value, lo.ToPtr(time.Hour))
+		if err != nil {
+			r.logger.Error(err)
+		}
+	}()
 }

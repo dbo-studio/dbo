@@ -28,13 +28,13 @@ export type FormSchemaResponseType = FormFieldType[];
 export type FormObjectResponseType = {
   isArray: boolean;
   schema: FormFieldType[];
-  data: Record<string, any>[];
+  data: Record<string, unknown>[];
 };
 
 export type DynamicFieldRequestType = {
   connectionId: number;
   nodeId: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
 };
 
 export type DynamicFieldResponse = FormFieldOptionType[];
@@ -50,5 +50,5 @@ export type SaveObjectRequestType = {
   connectionId: number;
   nodeId: string;
   action: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
 };

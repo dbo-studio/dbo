@@ -138,5 +138,5 @@ func (i IQueryServiceImpl) findResultFromCache(ctx context.Context, req *dto.Aut
 }
 
 func (i IQueryServiceImpl) cacheName(req *dto.AutoCompleteRequest) string {
-	return fmt.Sprintf("auto_complete:connection_%d_database_%s_schema_%s", req.ConnectionId, lo.FromPtr(req.Database), lo.FromPtr(req.Schema))
+	return fmt.Sprintf("c:%d:auto_complete:database_%s_schema_%s", req.ConnectionId, lo.FromPtr(req.Database), lo.FromPtr(req.Schema))
 }
