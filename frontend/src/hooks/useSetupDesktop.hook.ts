@@ -29,7 +29,7 @@ export const useSetupDesktop = (): boolean => {
         console.log('=>(useSetupDesktop.hook.ts:28) e', e);
         setLoaded(true);
       });
-  }, []);
+  }, [reset]);
 
   return loaded;
 };
@@ -74,16 +74,6 @@ const disableDefaultContextMenu = (): void => {
       }
       e.preventDefault();
       return false;
-    },
-    { capture: true }
-  );
-
-  document.addEventListener(
-    'keydown',
-    (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
-        return;
-      }
     },
     { capture: true }
   );
