@@ -6,6 +6,7 @@ import (
 
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
+	databaseMysql "github.com/dbo-studio/dbo/internal/database/mysql"
 	databasePostgres "github.com/dbo-studio/dbo/internal/database/postgres"
 	databaseSqlite "github.com/dbo-studio/dbo/internal/database/sqlite"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -13,8 +14,8 @@ import (
 
 func NewDatabaseRepository(ctx context.Context, connection *model.Connection, cm *databaseConnection.ConnectionManager) (databaseContract.DatabaseRepository, error) {
 	switch connection.ConnectionType {
-	//case "mysql":
-	//	return databaseMysql.NewMySQLRepository(connection, cm)
+	case string(databaseContract.Mysql):
+		return databaseMysql.NewMySQLRepository(ctx, connection, cm)
 	case string(databaseContract.Postgresql):
 		return databasePostgres.NewPostgresRepository(ctx, connection, cm)
 	case string(databaseContract.Sqlite):
