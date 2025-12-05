@@ -1,12 +1,12 @@
 import api from '@/api';
-import type { FormObjectResponseType, FormSchemaResponseType } from '@/api/tree/types';
+import type { FormObjectResponseType } from '@/api/tree/types';
 import { useCurrentConnection } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
-import type { FormFieldType, FormFieldWithState } from '@/types/Tree';
+import type { FormFieldType, FormFieldWithState, FormValue } from '@/types/Tree';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
-import type { FormDataState, FormValue } from '../types';
+import type { FormDataState } from '../types';
 
 const createInitialFormState = (
   schema: FormFieldType[],
@@ -17,7 +17,7 @@ const createInitialFormState = (
     return schema.map((field) => ({
       ...field,
       value: data.length > 0 ? data.map((row) => row[field.id] ?? null) : []
-    }));
+    })) as FormFieldWithState[];
   }
 
   const firstRow = data[0] ?? {};
@@ -71,20 +71,13 @@ export const useFormData = (tabId: string | null, isEditMode: boolean): FormData
       isEditMode,
       selectedTab?.nodeId
     ],
-    queryFn: (): Promise<FormObjectResponseType | FormSchemaResponseType> =>
-      isEditMode
-        ? api.tree.getObject({
-            nodeId: selectedTab?.nodeId ?? '',
-            action: selectedTab?.options?.action ?? '',
-            tabId: tabId ?? '',
-            connectionId: currentConnection?.id ?? 0
-          })
-        : api.tree.getSchema({
-            nodeId: selectedTab?.nodeId ?? '',
-            action: selectedTab?.options?.action ?? '',
-            tabId: tabId ?? '',
-            connectionId: currentConnection?.id ?? 0
-          }),
+    queryFn: (): Promise<FormObjectResponseType> =>
+      api.tree.getObject({
+        nodeId: selectedTab?.nodeId ?? '',
+        action: selectedTab?.options?.action ?? '',
+        tabId: tabId ?? '',
+        connectionId: currentConnection?.id ?? 0
+      }),
     enabled: !!(
       currentConnection?.id &&
       selectedTab?.id &&
@@ -97,9 +90,9 @@ export const useFormData = (tabId: string | null, isEditMode: boolean): FormData
   const formState = useMemo((): FormDataState | null => {
     if (!response || !tabId || !selectedTab?.id) return null;
 
-    const isArray = 'isArray' in response ? response.isArray : false;
-    const schema: FormFieldType[] = 'isArray' in response ? response.schema : (response as FormSchemaResponseType);
-    const data: Record<string, FormValue>[] = 'data' in response ? response.data : [];
+    const isArray = response.isArray;
+    const schema: FormFieldType[] = response.schema;
+    const data: Record<string, FormValue>[] = response.data as Record<string, FormValue>[];
 
     const storageKey = `${selectedTab.id}_${tabId}`;
     const cachedData = formDataByTab[selectedTab.id]?.[storageKey] as FormFieldWithState[] | undefined;
@@ -114,6 +107,7 @@ export const useFormData = (tabId: string | null, isEditMode: boolean): FormData
     }
 
     const initialFields = createInitialFormState(schema, data, isArray);
+    updateFormData(selectedTab.id, storageKey, initialFields);
 
     return {
       schema: initialFields,
@@ -121,7 +115,7 @@ export const useFormData = (tabId: string | null, isEditMode: boolean): FormData
       isArray,
       originalData: data
     };
-  }, [response, tabId, selectedTab?.id, formDataByTab]);
+  }, [response, tabId, selectedTab?.id, formDataByTab, updateFormData]);
 
   useEffect(() => {
     if (!response || !tabId || !selectedTab?.id) return;
@@ -130,9 +124,10 @@ export const useFormData = (tabId: string | null, isEditMode: boolean): FormData
     const cachedData = getFormData(selectedTab.id, storageKey) as FormFieldWithState[] | undefined;
 
     if (!cachedData || cachedData.length === 0) {
-      const isArray = 'isArray' in response ? response.isArray : false;
-      const schema: FormFieldType[] = 'isArray' in response ? response.schema : (response as FormSchemaResponseType);
-      const data: Record<string, FormValue>[] = 'data' in response ? response.data : [];
+      const isArray = response.isArray;
+      const schema = response.schema;
+      const data = response.data;
+
       const initialFields = createInitialFormState(schema, data, isArray);
       updateFormData(selectedTab.id, storageKey, initialFields);
     }

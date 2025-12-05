@@ -1,8 +1,6 @@
-import type { FormFieldOptionType, FormFieldWithState, ObjectTabType } from '@/types/Tree';
+import type { FormFieldOptionType, FormFieldWithState, FormValue, ObjectTabType } from '@/types/Tree';
 
 export type FormFieldWithValue = FormFieldWithState;
-
-export type FormValue = string | number | boolean | string[] | null | undefined;
 
 export type FormTabProps = {
   tabs: ObjectTabType[];

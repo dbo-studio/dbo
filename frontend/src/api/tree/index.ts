@@ -2,10 +2,8 @@ import type {
   DynamicFieldRequestType,
   DynamicFieldResponse,
   FormObjectResponseType,
-  FormSchemaResponseType,
   ObjectRequestType,
   SaveObjectRequestType,
-  SchemaRequestType,
   TabRequestType,
   TabResponseType,
   TreeRequestType,
@@ -16,8 +14,6 @@ import { api } from '@/core/api';
 const endpoints = {
   getTree: (): string => '/tree',
   getTabs: (nodeId: string, action: string): string => `/tree/${nodeId}/tabs/${action}`,
-  getSchema: (nodeId: string, action: string, tabId: string): string =>
-    `/tree/${nodeId}/tabs/${action}/fields/${tabId}/schema`,
   getObject: (nodeId: string, action: string, tabId: string): string =>
     `/tree/${nodeId}/tabs/${action}/fields/${tabId}/object`,
   executeAction: (nodeId: string, action: string): string => `/tree/${nodeId}/tabs/${action}/fields/object`,
@@ -40,16 +36,6 @@ export const getTabs = async (params: TabRequestType): Promise<TabResponseType> 
       }
     })
   ).data.data as TabResponseType;
-};
-
-export const getSchema = async (params: SchemaRequestType): Promise<FormSchemaResponseType> => {
-  return (
-    await api.get(endpoints.getSchema(params.nodeId, params.action, params.tabId), {
-      params: {
-        connectionId: params.connectionId
-      }
-    })
-  ).data.data as FormSchemaResponseType;
 };
 
 export const getObject = async (params: ObjectRequestType): Promise<FormObjectResponseType> => {

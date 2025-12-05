@@ -1,4 +1,4 @@
-import { FormFieldOptionType, FormFieldType, ObjectTabType, TreeNodeType } from '@/types/Tree';
+import { FormFieldOptionType, FormFieldType, FormValue, ObjectTabType, TreeNodeType } from '@/types/Tree';
 
 export type TreeRequestType = {
   connectionId: number;
@@ -16,19 +16,10 @@ export type TabRequestType = {
 
 export type TabResponseType = ObjectTabType[];
 
-export type SchemaRequestType = {
-  connectionId: number;
-  action: string;
-  nodeId: string;
-  tabId: string;
-};
-
-export type FormSchemaResponseType = FormFieldType[];
-
 export type FormObjectResponseType = {
   isArray: boolean;
   schema: FormFieldType[];
-  data: Record<string, unknown>[];
+  data: Record<string, FormValue>[];
 };
 
 export type DynamicFieldRequestType = {
@@ -50,5 +41,5 @@ export type SaveObjectRequestType = {
   connectionId: number;
   nodeId: string;
   action: string;
-  data: Record<string, unknown>;
+  data: Record<string, FormValue>;
 };

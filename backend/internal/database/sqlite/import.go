@@ -29,7 +29,7 @@ func (r *SQLiteRepository) ImportData(ctx context.Context, job dto.ImportJob, ro
 			strings.Join(columns, ", "),
 			strings.Join(row, ", "))
 
-		err := r.db.Exec(insertQuery).Error
+		err := r.db.WithContext(ctx).Exec(insertQuery).Error
 
 		if err != nil {
 			failedRows++

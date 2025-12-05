@@ -237,34 +237,34 @@ func (r *SQLiteRepository) buildColumnDefinitions(columns []dto.SQLiteTableColum
 	var columnDefs []string
 	for _, col := range columns {
 
-		columnDef := fmt.Sprintf("%s %s", quoteIdent(*col.New.Name), *col.New.DataType)
+		columnDef := fmt.Sprintf("%s %s", quoteIdent(lo.FromPtr(col.New.Name)), lo.FromPtr(col.New.DataType))
 
-		if col.New.ColumnKind != nil && *col.New.ColumnKind == "generated" {
+		if col.New.ColumnKind != nil && lo.FromPtr(col.New.ColumnKind) == "generated" {
 			columnDef += " GENERATED ALWAYS AS"
-			if col.New.Default != nil && *col.New.Default != "" {
-				columnDef += fmt.Sprintf(" (%s)", *col.New.Default)
+			if col.New.Default != nil && lo.FromPtr(col.New.Default) != "" {
+				columnDef += fmt.Sprintf(" (%s)", lo.FromPtr(col.New.Default))
 			}
-			if col.New.CollectionName != nil && *col.New.CollectionName == "stored" {
+			if col.New.CollectionName != nil && lo.FromPtr(col.New.CollectionName) == "stored" {
 				columnDef += " STORED"
 			} else {
 				columnDef += " VIRTUAL"
 			}
 		} else {
-			if col.New.NotNull != nil && *col.New.NotNull {
+			if col.New.NotNull != nil && lo.FromPtr(col.New.NotNull) {
 				columnDef += " NOT NULL"
 			}
 
-			if col.New.Default != nil && *col.New.Default != "" {
-				columnDef += fmt.Sprintf(" DEFAULT %s", *col.New.Default)
+			if col.New.Default != nil && lo.FromPtr(col.New.Default) != "" {
+				columnDef += fmt.Sprintf(" DEFAULT %s", lo.FromPtr(col.New.Default))
 			}
 		}
 
-		if col.New.CollectionName != nil && *col.New.CollectionName != "" && *col.New.CollectionName != "stored" {
-			columnDef += fmt.Sprintf(" COLLATE %s", *col.New.CollectionName)
+		if col.New.CollectionName != nil && lo.FromPtr(col.New.CollectionName) != "" && lo.FromPtr(col.New.CollectionName) != "stored" {
+			columnDef += fmt.Sprintf(" COLLATE %s", lo.FromPtr(col.New.CollectionName))
 		}
 
-		if col.New.OnNullConflicts != nil && *col.New.OnNullConflicts != "" {
-			columnDef += fmt.Sprintf(" ON CONFLICT %s", *col.New.OnNullConflicts)
+		if col.New.OnNullConflicts != nil && lo.FromPtr(col.New.OnNullConflicts) != "" {
+			columnDef += fmt.Sprintf(" ON CONFLICT %s", lo.FromPtr(col.New.OnNullConflicts))
 		}
 
 		columnDefs = append(columnDefs, columnDef)
@@ -310,7 +310,7 @@ func (r *SQLiteRepository) buildForeignKeyDefinitions(foreignKeys []dto.SQLiteTa
 
 		var constraintDef string
 
-		if fk.New.ConstraintName != nil && *fk.New.ConstraintName != "" {
+		if fk.New.ConstraintName != nil && lo.FromPtr(fk.New.ConstraintName) != "" {
 			constraintDef = fmt.Sprintf("CONSTRAINT %s ", quoteIdent(*fk.New.ConstraintName))
 		}
 
@@ -325,7 +325,7 @@ func (r *SQLiteRepository) buildForeignKeyDefinitions(foreignKeys []dto.SQLiteTa
 		constraintDef += ") REFERENCES "
 
 		if fk.New.TargetTable != nil {
-			constraintDef += quoteIdent(*fk.New.TargetTable)
+			constraintDef += quoteIdent(lo.FromPtr(fk.New.TargetTable))
 		}
 
 		if len(fk.New.TargetColumns) > 0 {
@@ -336,18 +336,18 @@ func (r *SQLiteRepository) buildForeignKeyDefinitions(foreignKeys []dto.SQLiteTa
 			constraintDef += " (" + strings.Join(q, ", ") + ")"
 		}
 
-		if fk.New.OnUpdate != nil && *fk.New.OnUpdate != "" {
-			constraintDef += fmt.Sprintf(" ON UPDATE %s", *fk.New.OnUpdate)
+		if fk.New.OnUpdate != nil && lo.FromPtr(fk.New.OnUpdate) != "" {
+			constraintDef += fmt.Sprintf(" ON UPDATE %s", lo.FromPtr(fk.New.OnUpdate))
 		}
 
-		if fk.New.OnDelete != nil && *fk.New.OnDelete != "" {
-			constraintDef += fmt.Sprintf(" ON DELETE %s", *fk.New.OnDelete)
+		if fk.New.OnDelete != nil && lo.FromPtr(fk.New.OnDelete) != "" {
+			constraintDef += fmt.Sprintf(" ON DELETE %s", lo.FromPtr(fk.New.OnDelete))
 		}
 
-		if fk.New.IsDeferrable != nil && *fk.New.IsDeferrable {
+		if fk.New.IsDeferrable != nil && lo.FromPtr(fk.New.IsDeferrable) {
 			constraintDef += " DEFERRABLE"
 
-			if fk.New.InitiallyDeferred != nil && *fk.New.InitiallyDeferred {
+			if fk.New.InitiallyDeferred != nil && lo.FromPtr(fk.New.InitiallyDeferred) {
 				constraintDef += " INITIALLY DEFERRED"
 			}
 		}
@@ -395,13 +395,13 @@ func (r *SQLiteRepository) buildKeyDefinitions(keys []dto.SQLiteTableKey) string
 
 		var keyDef string
 
-		if key.New.Name != nil && *key.New.Name != "" {
+		if key.New.Name != nil && lo.FromPtr(key.New.Name) != "" {
 			keyDef = fmt.Sprintf("CONSTRAINT %s ", quoteIdent(*key.New.Name))
 		}
 
 		keyType := ""
 		if key.New.Type != nil {
-			switch *key.New.Type {
+			switch lo.FromPtr(key.New.Type) {
 			case "PRIMARY", "PRIMARY KEY":
 				keyType = "PRIMARY KEY"
 			case "UNIQUE":
@@ -452,11 +452,11 @@ func (r *SQLiteRepository) buildCreateIndexesQueries(tableName string, indexes [
 		if idx.New == nil {
 			continue
 		}
-		if idx.Added != nil && !*idx.Added {
+		if idx.Added != nil && !lo.FromPtr(idx.Added) {
 			continue
 		}
 		unique := ""
-		if idx.New.Unique != nil && *idx.New.Unique {
+		if idx.New.Unique != nil && lo.FromPtr(idx.New.Unique) {
 			unique = "UNIQUE "
 		}
 		name := lo.FromPtr(idx.New.Name)
@@ -464,8 +464,8 @@ func (r *SQLiteRepository) buildCreateIndexesQueries(tableName string, indexes [
 			name = fmt.Sprintf("%s_%s_idx", tableName, strings.Join(idx.New.Columns, "_"))
 		}
 		order := ""
-		if idx.New.Order != nil && *idx.New.Order != "" {
-			order = " " + *idx.New.Order
+		if idx.New.Order != nil && lo.FromPtr(idx.New.Order) != "" {
+			order = " " + lo.FromPtr(idx.New.Order)
 		}
 		cols := make([]string, len(idx.New.Columns))
 		for i, c := range idx.New.Columns {
@@ -484,19 +484,19 @@ func (r *SQLiteRepository) buildEditIndexesQueries(tableName string, indexes []d
 
 	var queries []string
 	for _, idx := range indexes {
-		if idx.Deleted != nil && *idx.Deleted && idx.Old != nil && idx.Old.Name != nil {
-			queries = append(queries, fmt.Sprintf("DROP INDEX IF EXISTS %s", quoteIdent(*idx.Old.Name)))
+		if idx.Deleted != nil && lo.FromPtr(idx.Deleted) && idx.Old != nil && idx.Old.Name != nil {
+			queries = append(queries, fmt.Sprintf("DROP INDEX IF EXISTS %s", quoteIdent(lo.FromPtr(idx.Old.Name))))
 			continue
 		}
 
-		if idx.Added != nil && *idx.Added {
+		if idx.Added != nil && lo.FromPtr(idx.Added) {
 			queries = append(queries, r.buildCreateIndexesQueries(tableName, []dto.SQLiteIndex{idx})...)
 			continue
 		}
 
-		if idx.New != nil && idx.Old != nil && idx.New.Name != nil && idx.Old.Name != nil && *idx.New.Name != *idx.Old.Name {
+		if idx.New != nil && idx.Old != nil && idx.New.Name != nil && idx.Old.Name != nil && lo.FromPtr(idx.New.Name) != lo.FromPtr(idx.Old.Name) {
 			// SQLite safe path: DROP+CREATE
-			queries = append(queries, fmt.Sprintf("DROP INDEX IF EXISTS %s", quoteIdent(*idx.Old.Name)))
+			queries = append(queries, fmt.Sprintf("DROP INDEX IF EXISTS %s", quoteIdent(lo.FromPtr(idx.Old.Name))))
 			queries = append(queries, r.buildCreateIndexesQueries(tableName, []dto.SQLiteIndex{idx})...)
 			continue
 		}

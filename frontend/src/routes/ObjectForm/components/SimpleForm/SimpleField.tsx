@@ -47,7 +47,7 @@ export default function SimpleField({
             checked={(field.value as boolean) || false}
             onChange={(e): void => onChange(e.target.checked)}
           />
-          {isArrayForm && <Typography>{field.name}</Typography>}
+          <Typography>{field.name}</Typography>
         </Box>
       );
 
@@ -58,7 +58,7 @@ export default function SimpleField({
           <CreatableSelectInput
             isMulti={field.type === 'multi-select'}
             label={isArrayForm ? undefined : field.name}
-            value={field.value}
+            value={field.value as string | string[] | null}
             size={isArrayForm ? 'small' : 'medium'}
             options={fieldOptions.map((opt) => ({
               value: opt.value,

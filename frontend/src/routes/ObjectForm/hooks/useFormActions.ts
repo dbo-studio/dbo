@@ -4,11 +4,11 @@ import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
-import type { FormFieldWithState } from '@/types/Tree';
+import type { FormFieldWithState, FormValue } from '@/types/Tree';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
-import type { FormDataState, FormValue } from '../types';
+import type { FormDataState } from '../types';
 
 export const useFormActions = (
   tabId: string | null
@@ -132,7 +132,7 @@ export const useFormActions = (
           nodeId: selectedTab.nodeId,
           action: selectedTab.options?.action ?? '',
           connectionId: currentConnection.id,
-          data: payload
+          data: payload as Record<string, FormValue>
         });
 
         toast.success(locales.changes_saved_successfully);

@@ -1,6 +1,6 @@
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
-import type { FormFieldWithState } from '@/types/Tree';
+import type { FormFieldWithState, FormValue } from '@/types/Tree';
 import { Box, CircularProgress } from '@mui/material';
 import React, { useCallback } from 'react';
 import ArrayForm from './components/ArrayForm/ArrayForm';
@@ -11,7 +11,6 @@ import { useFormActions } from './hooks/useFormActions';
 import { useFormData } from './hooks/useFormData';
 import { useTabs } from './hooks/useTabs';
 import { ObjectFormStyled } from './ObjectForm.styled';
-import type { FormValue } from './types';
 
 export default function ObjectForm({ isDetail }: { isDetail: boolean }): React.JSX.Element {
   const { tabs, selectedTabId, isLoading: isLoadingTabs, handleTabChange } = useTabs();

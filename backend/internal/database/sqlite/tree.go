@@ -24,7 +24,7 @@ func buildRoot(ctx context.Context, r *SQLiteRepository) (*contract.TreeNode, er
 		Icon:        lo.ToPtr("sqlite"),
 		Type:        contract.TableContainerNodeType,
 		HasChildren: true,
-		ContextMenu: r.ContextMenu(ctx, contract.TableContainerNodeType),
+		ContextMenu: r.ContextMenu(contract.TableContainerNodeType),
 		Children:    make([]contract.TreeNode, 0),
 	}
 
@@ -36,12 +36,12 @@ func buildRoot(ctx context.Context, r *SQLiteRepository) (*contract.TreeNode, er
 		{
 			"Tables",
 			contract.TableContainerNodeType,
-			r.ContextMenu(ctx, contract.TableContainerNodeType),
+			r.ContextMenu(contract.TableContainerNodeType),
 		},
 		{
 			"Views",
 			contract.ViewContainerNodeType,
-			r.ContextMenu(ctx, contract.ViewContainerNodeType),
+			r.ContextMenu(contract.ViewContainerNodeType),
 		},
 	}
 
@@ -65,7 +65,7 @@ func buildContainer(ctx context.Context, r *SQLiteRepository, container contract
 		Name:        string(container),
 		Type:        container,
 		HasChildren: true,
-		ContextMenu: r.ContextMenu(ctx, container),
+		ContextMenu: r.ContextMenu(container),
 		Children:    make([]contract.TreeNode, 0),
 	}
 	switch container {
@@ -88,16 +88,16 @@ func buildContainer(ctx context.Context, r *SQLiteRepository, container contract
 						"editable": true,
 					},
 				},
-				ContextMenu: r.ContextMenu(ctx, contract.TableNodeType),
+				ContextMenu: r.ContextMenu(contract.TableNodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}
 	case contract.ViewContainerNodeType:
-		views, err := r.getAllViewList()
+		viewList, err := r.getAllViewList()
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}
-		for _, view := range views {
+		for _, view := range viewList {
 			containerNode.Children = append(containerNode.Children, contract.TreeNode{
 				ID:   view.Name,
 				Name: view.Name,
@@ -111,7 +111,7 @@ func buildContainer(ctx context.Context, r *SQLiteRepository, container contract
 						"editable": false,
 					},
 				},
-				ContextMenu: r.ContextMenu(ctx, contract.ViewNodeType),
+				ContextMenu: r.ContextMenu(contract.ViewNodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}

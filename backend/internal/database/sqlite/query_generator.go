@@ -1,6 +1,7 @@
 package databaseSqlite
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"slices"
@@ -23,12 +24,12 @@ func (r *SQLiteRepository) getAllTableList() ([]Table, error) {
 	return tables, err
 }
 
-type View struct {
+type ViewBasic struct {
 	Name string `gorm:"column:tbl_name"`
 }
 
-func (r *SQLiteRepository) getAllViewList() ([]View, error) {
-	views := make([]View, 0)
+func (r *SQLiteRepository) getAllViewList() ([]ViewBasic, error) {
+	views := make([]ViewBasic, 0)
 	err := r.db.Table("sqlite_master").
 		Select("tbl_name").
 		Where("type = 'view'").
@@ -99,4 +100,110 @@ func (r *SQLiteRepository) getTableDDL(table string) (string, error) {
 	}
 
 	return createSQL, nil
+}
+
+type View struct {
+	Name  string  `gorm:"column:tbl_name"`
+	Query *string `gorm:"column:sql"`
+}
+
+func (r *SQLiteRepository) views(ctx context.Context, fromCache bool) ([]View, error) {
+	views := make([]View, 0)
+	cacheKey := r.cacheKey("views")
+
+	if fromCache {
+		err := r.cache.Get(ctx, cacheKey, &views)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(views) > 0 {
+			return views, nil
+		}
+	}
+
+	err := r.db.WithContext(ctx).Table("sqlite_master").
+		Select("tbl_name, sql").
+		Where("type = 'view'").
+		Order("tbl_name").
+		Find(&views).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	r.updateCache(ctx, cacheKey, views)
+
+	return views, nil
+}
+
+type ForeignKey struct {
+	ConstraintName    string
+	Columns           []string
+	TargetTable       string
+	RefColumns        []string
+	UpdateAction      string
+	DeleteAction      string
+	IsDeferrable      bool
+	InitiallyDeferred bool
+}
+
+func (r *SQLiteRepository) foreignKeys(ctx context.Context, table string, fromCache bool) ([]ForeignKey, error) {
+	foreignKeys := make([]ForeignKey, 0)
+	cacheKey := r.cacheKey("foreign_keys", table)
+
+	if fromCache {
+		err := r.cache.Get(ctx, cacheKey, &foreignKeys)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(foreignKeys) > 0 {
+			return foreignKeys, nil
+		}
+	}
+
+	type pragmaFK struct {
+		ID       int    `gorm:"column:id"`
+		Seq      int    `gorm:"column:seq"`
+		Table    string `gorm:"column:table"`
+		From     string `gorm:"column:from"`
+		To       string `gorm:"column:to"`
+		OnUpdate string `gorm:"column:on_update"`
+		OnDelete string `gorm:"column:on_delete"`
+		Match    string `gorm:"column:match"`
+	}
+
+	var fkRows []pragmaFK
+	err := r.db.WithContext(ctx).Raw(fmt.Sprintf("PRAGMA foreign_key_list(%s)", quoteIdent(table))).Scan(&fkRows).Error
+	if err != nil {
+		return nil, err
+	}
+
+	fkMap := make(map[int]*ForeignKey)
+	for _, row := range fkRows {
+		if fk, exists := fkMap[row.ID]; exists {
+			fk.Columns = append(fk.Columns, row.From)
+			fk.RefColumns = append(fk.RefColumns, row.To)
+		} else {
+			fkMap[row.ID] = &ForeignKey{
+				ConstraintName:    fmt.Sprintf("fk_%s_%s_%d", table, row.Table, row.ID),
+				Columns:           []string{row.From},
+				TargetTable:       row.Table,
+				RefColumns:        []string{row.To},
+				UpdateAction:      row.OnUpdate,
+				DeleteAction:      row.OnDelete,
+				IsDeferrable:      false,
+				InitiallyDeferred: false,
+			}
+		}
+	}
+
+	for _, fk := range fkMap {
+		foreignKeys = append(foreignKeys, *fk)
+	}
+
+	r.updateCache(ctx, cacheKey, foreignKeys)
+
+	return foreignKeys, nil
 }

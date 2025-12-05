@@ -1,7 +1,8 @@
+import type { FormValue } from '@/types/Tree';
 import { Box, Grid } from '@mui/material';
 import React, { memo, useMemo } from 'react';
 import { useDynamicField } from '../../hooks/useDynamicField';
-import type { FormValue, SimpleFormProps } from '../../types';
+import type { SimpleFormProps } from '../../types';
 import SimpleField from './SimpleField';
 
 function SimpleForm({ schema, onFieldChange }: SimpleFormProps): React.JSX.Element {

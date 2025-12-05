@@ -1,10 +1,12 @@
 package databaseSqlite
 
 import (
+	"context"
+
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
-func (r *SQLiteRepository) tableFields() []contract.FormField {
+func (r *SQLiteRepository) tableFields(ctx context.Context, action contract.TreeNodeActionName) []contract.FormField {
 	return []contract.FormField{
 		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
 		{ID: "temporary", Name: "Is temporary", Type: contract.FormFieldTypeCheckBox},
@@ -25,19 +27,19 @@ func (r *SQLiteRepository) tableColumnFields() []contract.FormField {
 	}
 }
 
-func (r *SQLiteRepository) keyOptions(node string) []contract.FormField {
+func (r *SQLiteRepository) keyFields(ctx context.Context, node string) []contract.FormField {
 	return []contract.FormField{
 		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
-		{ID: "columns", Name: "Columns", Type: contract.FormFieldTypeMultiSelect, Options: r.tableColumnsList(node)},
+		{ID: "columns", Name: "Columns", Type: contract.FormFieldTypeMultiSelect, Options: r.tableColumnsOptions(ctx, node)},
 		{ID: "type", Name: "Type", Type: contract.FormFieldTypeSelect, Options: r.keyTypeOptions(), Required: true},
 	}
 }
 
-func (r *SQLiteRepository) foreignKeyOptions(node string) []contract.FormField {
+func (r *SQLiteRepository) foreignKeyFields(ctx context.Context, node string) []contract.FormField {
 	return []contract.FormField{
 		{ID: "constraint_name", Name: "Constraint Name", Type: contract.FormFieldTypeText, Required: true},
-		{ID: "target_table", Name: "Target Table", Type: contract.FormFieldTypeSelect, Options: r.tablesList(), Required: true},
-		{ID: "ref_columns", Name: "Source Columns", Type: contract.FormFieldTypeMultiSelect, Options: r.tableColumnsList(node), Required: true},
+		{ID: "target_table", Name: "Target Table", Type: contract.FormFieldTypeSelect, Options: r.tablesListOptions(ctx), Required: true},
+		{ID: "ref_columns", Name: "Source Columns", Type: contract.FormFieldTypeMultiSelect, Options: r.tableColumnsOptions(ctx, node), Required: true},
 		{ID: "target_columns", Name: "Target Columns", Type: contract.FormFieldTypeMultiSelect, Required: true},
 		{ID: "update_action", Name: "On Update", Type: contract.FormFieldTypeSelect, Options: []contract.FormFieldOption{
 			{Value: "NO ACTION", Label: "NO ACTION"},
@@ -58,10 +60,10 @@ func (r *SQLiteRepository) foreignKeyOptions(node string) []contract.FormField {
 	}
 }
 
-func (r *SQLiteRepository) indexOptions(node string) []contract.FormField {
+func (r *SQLiteRepository) indexOptions(ctx context.Context, node string) []contract.FormField {
 	return []contract.FormField{
 		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
-		{ID: "columns", Name: "Columns", Type: contract.FormFieldTypeMultiSelect, Options: r.tableColumnsList(node)},
+		{ID: "columns", Name: "Columns", Type: contract.FormFieldTypeMultiSelect, Options: r.tableColumnsOptions(ctx, node)},
 		{ID: "unique", Name: "Unique", Type: contract.FormFieldTypeCheckBox},
 		{ID: "order", Name: "Order", Type: contract.FormFieldTypeSelect, Options: []contract.FormFieldOption{
 			{Value: "ASC", Label: "ASC"},
@@ -107,7 +109,7 @@ func (r *SQLiteRepository) onNullConflictsOptions() []contract.FormFieldOption {
 	}
 }
 
-func (r *SQLiteRepository) tableColumnsList(node string) []contract.FormFieldOption {
+func (r *SQLiteRepository) tableColumnsOptions(ctx context.Context, node string) []contract.FormFieldOption {
 	type columnResult struct {
 		Value string `gorm:"column:value"`
 		Name  string `gorm:"column:name"`
@@ -135,7 +137,7 @@ func (r *SQLiteRepository) tableColumnsList(node string) []contract.FormFieldOpt
 	return columns
 }
 
-func (r *SQLiteRepository) tablesList() []contract.FormFieldOption {
+func (r *SQLiteRepository) tablesListOptions(ctx context.Context) []contract.FormFieldOption {
 	type tableResult struct {
 		Value string `gorm:"column:value"`
 		Name  string `gorm:"column:name"`
@@ -166,7 +168,7 @@ func (r *SQLiteRepository) tablesList() []contract.FormFieldOption {
 func (r *SQLiteRepository) viewFields() []contract.FormField {
 	return []contract.FormField{
 		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
-		{ID: "query", Name: "Query", Type: "query", Required: true},
+		{ID: "query", Name: "Query", Type: contract.FormFieldTypeQuery, Required: true},
 	}
 }
 
