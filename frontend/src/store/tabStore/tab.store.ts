@@ -71,6 +71,22 @@ export const useTabStore: UseBoundStore<StoreApi<TabState>> = create<TabState>()
 
           set({ tabs, selectedTabId: newSelectedTab.id }, undefined, 'updateSelectedTab');
         },
+        reorderTabs: (activeId: string, overId: string): void => {
+          const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+          if (!currentConnectionId) return;
+
+          const tabs = get().tabs;
+          const activeIndex = tabs.findIndex((t) => t.id === activeId && t.connectionId === currentConnectionId);
+          const overIndex = tabs.findIndex((t) => t.id === overId && t.connectionId === currentConnectionId);
+
+          if (activeIndex === -1 || overIndex === -1 || activeIndex === overIndex) return;
+
+          const newTabs = [...tabs];
+          const [removed] = newTabs.splice(activeIndex, 1);
+          newTabs.splice(overIndex, 0, removed);
+
+          set({ tabs: newTabs }, undefined, 'reorderTabs');
+        },
         ...createTabSettingSlice(set, get, ...state),
         ...createTabQuerySlice(set, get, ...state),
         ...createTabFilterSlice(set, get, ...state),

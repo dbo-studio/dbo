@@ -6,6 +6,8 @@ export const PanelTabsStyled = styled(Box)(() => ({
   overflowY: 'hidden',
   scrollbarWidth: 'none',
   msOverflowStyle: 'none',
+  touchAction: 'pan-x',
+  contain: 'layout style',
   '&::-webkit-scrollbar': {
     display: 'none'
   }
