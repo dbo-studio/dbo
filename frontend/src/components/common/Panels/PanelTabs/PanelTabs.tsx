@@ -22,12 +22,9 @@ const PanelTabs: React.FC = memo((): JSX.Element => {
     [reorderTabs]
   );
 
-  const renderTabItem = useCallback(
-    (tab: TabType): JSX.Element => {
-      return <PanelTabItem tab={tab} key={`${tab.id}-${tab.mode}`} />;
-    },
-    []
-  );
+  const renderTabItem = useCallback((tab: TabType): JSX.Element => {
+    return <PanelTabItem tab={tab} key={`${tab.id}-${tab.mode}`} />;
+  }, []);
 
   const getTabId = useCallback((tab: TabType): string => {
     return tab.id;
