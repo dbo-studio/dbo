@@ -18,6 +18,7 @@ export default function TreeNode({
   nodeIndex = 0,
   level = 0,
   searchTerm = '',
+  selectedNodeId,
   fetchChildren,
   onFocusChange,
   onContextMenu
@@ -29,6 +30,7 @@ export default function TreeNode({
   const { isNodeExpanded, expandNode, collapseNode, setNodeChildren } = useTreeStore();
 
   const isExpanded = isNodeExpanded(node.id);
+  const isSelected = node.id === selectedNodeId;
 
   useEffect(() => {
     setNode(initialNode);
@@ -120,6 +122,7 @@ export default function TreeNode({
         node={node}
         nodeRef={nodeRef}
         isFocused={isFocused}
+        isSelected={isSelected}
         isExpanded={isExpanded}
         isLoading={isLoading}
         hasChildren={node.hasChildren}
@@ -148,6 +151,7 @@ export default function TreeNode({
               onFocusChange={onFocusChange}
               searchTerm={searchTerm}
               onContextMenu={onContextMenu}
+              selectedNodeId={selectedNodeId}
             />
           ))}
         </ChildrenContainer>

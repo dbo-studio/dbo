@@ -9,6 +9,7 @@ export function NodeContent({
   node,
   nodeRef,
   isFocused,
+  isSelected,
   isExpanded,
   isLoading,
   hasChildren,
@@ -30,6 +31,7 @@ export function NodeContent({
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       isFocused={isFocused}
+      isSelected={isSelected}
       level={level}
       role='treeitem'
       aria-expanded={hasChildren ? isExpanded : undefined}
