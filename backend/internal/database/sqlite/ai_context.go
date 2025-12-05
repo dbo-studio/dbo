@@ -170,4 +170,3 @@ func columnTypeForContext(column Column) string {
 
 	return column.MappedType
 }
-

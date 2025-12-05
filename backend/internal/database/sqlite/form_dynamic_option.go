@@ -35,4 +35,3 @@ func (r *SQLiteRepository) GetDynamicFieldOptions(ctx context.Context, req *cont
 
 	return nil, errors.New("field is required in parameters")
 }
-
