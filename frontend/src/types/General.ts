@@ -1,7 +1,7 @@
 export interface SimpleObject<T = unknown> {
   [k: string]: T;
 }
-export type ArgumentType<F extends () => void> = F extends (...args: infer A) => any ? A[0] : never;
+export type ArgumentType<F extends () => void> = F extends (...args: infer A) => unknown ? A[0] : never;
 export type SimpleFunction = () => void;
 
 export type ContextMenuType = {
@@ -12,6 +12,6 @@ export type ContextMenuType = {
 export type ShortcutType = {
   label: string;
   monaco: number[];
-  command: string;
+  command: string[]; // Array of key names for Kbd component
   shortcut: (event: KeyboardEvent) => boolean;
 };
