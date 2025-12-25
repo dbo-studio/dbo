@@ -11,7 +11,6 @@ import (
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/logger"
-	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlserver"
 
 	"gorm.io/gorm"
@@ -58,7 +57,7 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 	var dialect gorm.Dialector
 	switch connection.ConnectionType {
 	case string(databaseContract.Mysql):
-		dialect = mysql.Open(connection.Name)
+		dialect = OpenMysqlConnection(connection)
 	case string(databaseContract.Postgresql):
 		dialect = OpenPostgresqlConnection(connection)
 	case string(databaseContract.Sqlite):

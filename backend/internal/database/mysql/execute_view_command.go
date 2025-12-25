@@ -63,3 +63,5 @@ func formatQuery(query *string) *string {
 	return &formattedQuery
 }
 
+
+

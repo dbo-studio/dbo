@@ -1,6 +1,6 @@
 package dto
 
-type PostgresqlCreateConnectionParams struct {
+type MysqlCreateConnectionParams struct {
 	Database *string `json:"database"`
 	Host     string  `json:"host"`
 	Port     int32   `json:"port"`
@@ -9,7 +9,7 @@ type PostgresqlCreateConnectionParams struct {
 	URI      *string `json:"uri"`
 }
 
-type PostgresqlUpdateConnectionParams struct {
+type MysqlUpdateConnectionParams struct {
 	Host     *string `json:"host"`
 	Username *string `json:"username"`
 	Password *string `json:"password"`
@@ -18,12 +18,12 @@ type PostgresqlUpdateConnectionParams struct {
 	URI      *string `json:"uri"`
 }
 
-type PostgresDatabaseParams struct {
-	New *PostgresDatabaseParamsData `json:"new"`
-	Old *PostgresDatabaseParamsData `json:"old"`
+type MysqlDatabaseParams struct {
+	New *MysqlDatabaseParamsData `json:"new"`
+	Old *MysqlDatabaseParamsData `json:"old"`
 }
 
-type PostgresDatabaseParamsData struct {
+type MysqlDatabaseParamsData struct {
 	Name       *string `json:"datname"`
 	Owner      *string `json:"rolname"`
 	Template   *string `json:"template"`
@@ -31,23 +31,23 @@ type PostgresDatabaseParamsData struct {
 	Comment    *string `json:"description"`
 }
 
-type PostgresSchemaParams struct {
-	New *PostgresSchemaParamsData `json:"new"`
-	Old *PostgresSchemaParamsData `json:"old"`
+type MysqlSchemaParams struct {
+	New *MysqlSchemaParamsData `json:"new"`
+	Old *MysqlSchemaParamsData `json:"old"`
 }
 
-type PostgresSchemaParamsData struct {
+type MysqlSchemaParamsData struct {
 	Name    *string `json:"nspname"`
 	Owner   *string `json:"rolname"`
 	Comment *string `json:"description"`
 }
 
-type PostgresTableParams struct {
-	New *PostgresTableParamsData `json:"new"`
-	Old *PostgresTableParamsData `json:"old"`
+type MysqlTableParams struct {
+	New *MysqlTableParamsData `json:"new"`
+	Old *MysqlTableParamsData `json:"old"`
 }
 
-type PostgresTableParamsData struct {
+type MysqlTableParamsData struct {
 	Name        *string `json:"relname"`
 	Comment     *string `json:"description"`
 	Persistence *string `json:"persistence"`
@@ -55,24 +55,24 @@ type PostgresTableParamsData struct {
 	Owner       *string `json:"rolname"`
 }
 
-type PostgresViewParams struct {
-	New *PostgresViewParamsData `json:"new"`
-	Old *PostgresViewParamsData `json:"old"`
+type MysqlViewParams struct {
+	New *MysqlViewParamsData `json:"new"`
+	Old *MysqlViewParamsData `json:"old"`
 }
 
-type PostgresViewParamsData struct {
+type MysqlViewParamsData struct {
 	Name        *string `json:"name"`
 	Query       *string `json:"query"`
 	Comment     *string `json:"comment"`
 	CheckOption *string `json:"check_option"`
 }
 
-type PostgresMaterializedViewParams struct {
-	New *PostgresMaterializedViewData `json:"new"`
-	Old *PostgresMaterializedViewData `json:"old"`
+type MysqlMaterializedViewParams struct {
+	New *MysqlMaterializedViewData `json:"new"`
+	Old *MysqlMaterializedViewData `json:"old"`
 }
 
-type PostgresMaterializedViewData struct {
+type MysqlMaterializedViewData struct {
 	Name       *string `json:"name"`
 	Comment    *string `json:"comment"`
 	Tablespace *string `json:"tablespace"`
@@ -80,7 +80,7 @@ type PostgresMaterializedViewData struct {
 	Query      *string `json:"query"`
 }
 
-type PostgresIndexParams struct {
+type MysqlIndexParams struct {
 	Name           *string `json:"name"`
 	Comment        *string `json:"comment"`
 	Unique         *bool   `json:"unique"`
@@ -91,7 +91,7 @@ type PostgresIndexParams struct {
 	Tablespace     *string `json:"tablespace"`
 }
 
-type PostgresSequenceParams struct {
+type MysqlSequenceParams struct {
 	Name       *string `json:"name"`
 	Comment    *string `json:"comment"`
 	Increment  *int64  `json:"increment"`
@@ -103,18 +103,18 @@ type PostgresSequenceParams struct {
 	OwnedBy    *string `json:"owned_by"`
 }
 
-type PostgresTableColumnParams struct {
-	Columns []PostgresTableColumn `json:"columns"`
+type MysqlTableColumnParams struct {
+	Columns []MysqlTableColumn `json:"columns"`
 }
 
-type PostgresTableColumn struct {
-	New     *PostgresTableColumnData `json:"new"`
-	Old     *PostgresTableColumnData `json:"old"`
-	Added   *bool                    `json:"added"`
-	Deleted *bool                    `json:"deleted"`
+type MysqlTableColumn struct {
+	New     *MysqlTableColumnData `json:"new"`
+	Old     *MysqlTableColumnData `json:"old"`
+	Added   *bool                 `json:"added"`
+	Deleted *bool                 `json:"deleted"`
 }
 
-type PostgresTableColumnData struct {
+type MysqlTableColumnData struct {
 	Name         *string `json:"column_name"`
 	DataType     *string `json:"data_type"`
 	NotNull      *bool   `json:"not_null"`
@@ -127,18 +127,18 @@ type PostgresTableColumnData struct {
 	IsGenerated  *bool   `json:"is_generated"`
 }
 
-type PostgresTableForeignKeyParams struct {
-	Columns []PostgresTableForeignKey `json:"columns"`
+type MysqlTableForeignKeyParams struct {
+	Columns []MysqlTableForeignKey `json:"columns"`
 }
 
-type PostgresTableForeignKey struct {
-	New     *PostgresTableForeignKeyData `json:"new"`
-	Old     *PostgresTableForeignKeyData `json:"old"`
-	Added   *bool                        `json:"added"`
-	Deleted *bool                        `json:"deleted"`
+type MysqlTableForeignKey struct {
+	New     *MysqlTableForeignKeyData `json:"new"`
+	Old     *MysqlTableForeignKeyData `json:"old"`
+	Added   *bool                     `json:"added"`
+	Deleted *bool                     `json:"deleted"`
 }
 
-type PostgresTableForeignKeyData struct {
+type MysqlTableForeignKeyData struct {
 	ConstraintName    *string  `json:"constraint_name"`
 	Comment           *string  `json:"comment"`
 	SourceColumns     []string `json:"ref_columns"`

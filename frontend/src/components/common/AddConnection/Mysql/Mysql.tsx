@@ -23,7 +23,7 @@ const formSchema = v.object({
   uri: v.string()
 });
 
-export default function PostgreSQL({
+export default function Mysql({
   connection,
   onClose,
   onPing,
@@ -40,7 +40,7 @@ export default function PostgreSQL({
     onSubmit: async ({ value }): Promise<void> => {
       const data = {
         name: value.name,
-        type: 'postgresql',
+        type: 'mysql',
         options: {
           ...value,
           port: Number(value.port)
@@ -116,7 +116,7 @@ export default function PostgreSQL({
                   <FieldInput
                     name='port'
                     disabled={useUri}
-                    placeholder={'5432'}
+                    placeholder={'3306'}
                     value={field.state.value}
                     error={field.state.meta.errors.length > 0}
                     label={locales.port}
