@@ -1,7 +1,7 @@
 import locales from '@/locales';
 import { Typography } from '@mui/material';
 import type { JSX } from 'react';
-import type { ThemeItemProps } from '../../types';
+import type { ThemeItemProps } from '../../../types';
 import { ThemeItemStyled } from './ThemeItem.styled';
 
 export default function ThemeItem({ isDark, selected, onClick }: ThemeItemProps): JSX.Element {
