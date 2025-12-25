@@ -8,13 +8,14 @@ import { editorConfig } from './helpers/editorConfig.ts';
 export default function CodeEditor({ value, onChange, width, height }: CodeEditorProps): JSX.Element {
   const hostRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
-  const isDark = useSettingStore((state) => state.isDark);
+  const theme = useSettingStore((state) => state.theme);
 
   useEffect(() => {
     if (hostRef.current && !editorRef.current) {
       editorRef.current = monaco.editor.create(hostRef.current, {
         ...editorConfig,
-        theme: isDark ? 'github-dark' : 'github-light',
+        theme: theme.editorTheme,
+        fontSize: theme.editorFontSize,
         language: 'json'
       });
     }
@@ -39,10 +40,11 @@ export default function CodeEditor({ value, onChange, width, height }: CodeEdito
   useEffect(() => {
     if (editorRef.current) {
       editorRef.current.updateOptions({
-        theme: isDark ? 'github-dark' : 'github-light'
+        theme: theme.editorTheme,
+        fontSize: theme.editorFontSize
       });
     }
-  }, [isDark]);
+  }, [theme.editorTheme, theme.editorFontSize]);
 
   useEffect(() => {
     if (editorRef.current) {

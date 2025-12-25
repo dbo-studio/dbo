@@ -76,7 +76,7 @@ export function registerInlineAIProvider(monaco: typeof Monaco, languageId: stri
       _context: Monaco.languages.InlineCompletionContext,
       token: Monaco.CancellationToken
     ) => {
-      if (!useSettingStore.getState().enableEditorAi) {
+      if (!useSettingStore.getState().editor.enableEditorAi) {
         return { items: [] };
       }
 
@@ -150,8 +150,8 @@ export function registerInlineAIProvider(monaco: typeof Monaco, languageId: stri
               providerId: activeProvider.id,
               model: activeProvider.model,
               contextOpts: {
-                database: currentConnection()?.options?.database,
-                schema: currentConnection()?.options?.schema,
+                database: currentConnection()?.options?.database as string | undefined,
+                schema: currentConnection()?.options?.schema as string | undefined,
                 prompt: prefix,
                 suffix: suffix
               }
@@ -196,7 +196,7 @@ export function registerInlineAIProvider(monaco: typeof Monaco, languageId: stri
             }
 
             console.debug('Inline AI provider error:', err);
-            useSettingStore.getState().toggleEnableEditorAi(false);
+            useSettingStore.getState().updateEditor({ enableEditorAi: false });
             resolve({ items: [] });
           } finally {
             // Clear current request reference if this is still the active request and wasn't aborted

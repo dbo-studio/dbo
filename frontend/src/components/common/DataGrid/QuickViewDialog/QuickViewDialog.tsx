@@ -11,7 +11,7 @@ import { type JSX, useEffect, useState } from 'react';
 
 const getRowValue = (row: SelectedRow): string | undefined => {
   if (!row || !row.selectedColumn) return undefined;
-  return row.row[row.selectedColumn];
+  return row.row[row.selectedColumn] as string | undefined;
 };
 
 export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX.Element {
@@ -21,21 +21,21 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
 
   const selectedRows = useDataStore((state) => state.selectedRows);
   const editedRows = useDataStore((state) => state.editedRows);
-  const showQuickLookEditor = useSettingStore((state) => state.showQuickLookEditor);
+  const showQuickLookEditor = useSettingStore((state) => state.ui.showQuickLookEditor);
 
-  const toggleShowQuickLookEditor = useSettingStore((state) => state.toggleShowQuickLookEditor);
+  const updateUI = useSettingStore((state) => state.updateUI);
   const updateRow = useDataStore((state) => state.updateRow);
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
 
   const handleClose = (): void => {
     if (!row) {
-      toggleShowQuickLookEditor(false);
+      updateUI({ showQuickLookEditor: false });
       return;
     }
 
     const rowValue = getRowValue(row);
     if (rowValue === undefined || value === rowValue || !editable) {
-      toggleShowQuickLookEditor(false);
+      updateUI({ showQuickLookEditor: false });
       return;
     }
 
@@ -45,7 +45,7 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
     const newRow = { ...row.row };
     newRow[row.selectedColumn] = value;
     updateRow(newRow);
-    toggleShowQuickLookEditor(false);
+    updateUI({ showQuickLookEditor: false });
   };
 
   useEffect(() => {

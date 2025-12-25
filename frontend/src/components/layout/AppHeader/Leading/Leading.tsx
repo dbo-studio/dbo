@@ -8,7 +8,7 @@ export default function Leading(): JSX.Element {
   const release = useSettingStore((state) => state.general.release);
 
   const openSettings = (): void => {
-    useSettingStore.getState().toggleShowSettings(true);
+    useSettingStore.getState().updateUI({ showSettings: { open: true, tab: 0 } });
   };
 
   return (

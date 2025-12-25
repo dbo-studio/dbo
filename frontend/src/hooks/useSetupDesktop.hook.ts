@@ -80,33 +80,47 @@ const disableDefaultContextMenu = (): void => {
 };
 
 const setupTitleBar = async (): Promise<void> => {
-  const updateTitleBar = useSettingStore.getState().updateTitleBar;
+  const updateUI = useSettingStore.getState().updateUI;
   const p = platform();
 
   if (p !== 'macos') {
     return;
   }
 
-  updateTitleBar({
-    paddingLeft: 80,
-    paddingTop: 8,
-    onHeaderAreaClick: async () => {
-      const window = getCurrentWebviewWindow();
-      await window.startDragging();
+  updateUI({
+    titleBar: {
+      paddingLeft: 80,
+      paddingTop: 8,
+      onHeaderAreaClick: async () => {
+        const window = getCurrentWebviewWindow();
+        await window.startDragging();
+      }
     }
   });
 
   streams.window.willEnterFullScreen(() => {
-    updateTitleBar({
-      paddingLeft: 16,
-      paddingTop: 8
+    updateUI({
+      titleBar: {
+        paddingLeft: 16,
+        paddingTop: 8,
+        onHeaderAreaClick: async () => {
+          const window = getCurrentWebviewWindow();
+          await window.startDragging();
+        }
+      }
     });
   });
 
   streams.window.willExitFullScreen(() => {
-    updateTitleBar({
-      paddingLeft: 80,
-      paddingTop: 8
+    updateUI({
+      titleBar: {
+        paddingLeft: 80,
+        paddingTop: 8,
+        onHeaderAreaClick: async () => {
+          const window = getCurrentWebviewWindow();
+          await window.startDragging();
+        }
+      }
     });
   });
 };

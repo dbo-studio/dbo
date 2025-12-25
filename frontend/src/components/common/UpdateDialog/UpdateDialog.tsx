@@ -10,8 +10,8 @@ import { UpdateDialogStyled } from './UpdateDialog.styled';
 export default function UpdateDialog() {
   const [show, setShow] = useState(false);
   const release = useSettingStore((state) => state.general.release);
-  const ignoredRelease = useSettingStore((state) => state.ignoredRelease);
-  const updateIgnoredRelease = useSettingStore((state) => state.updateIgnoredRelease);
+  const ignoredRelease = useSettingStore((state) => state.general.ignoredRelease);
+  const updateGeneral = useSettingStore((state) => state.updateGeneral);
 
   useEffect(() => {
     if (release && release.name !== ignoredRelease) {
@@ -27,7 +27,7 @@ export default function UpdateDialog() {
   const handleOnIgnore = () => {
     if (release === undefined) return;
 
-    updateIgnoredRelease(release?.name);
+    updateGeneral({ ignoredRelease: release.name });
     setShow(false);
   };
 
@@ -42,7 +42,7 @@ export default function UpdateDialog() {
   }
 
   return (
-    <Modal title={locales.new_version_available} open={show} onClose={() => {}}>
+    <Modal title={locales.new_version_available} open={show} onClose={() => { }}>
       <Box flex={1} display={'flex'} flexDirection={'column'} overflow={'scroll'}>
         <UpdateDialogStyled>
           <Markdown>{release.body}</Markdown>

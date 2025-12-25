@@ -18,7 +18,7 @@ export default function StatusBarActions(): JSX.Element {
   const selectedTab = useSelectedTab();
   const currentConnection = useCurrentConnection();
 
-  const toggleScrollToBottom = useSettingStore((state) => state.toggleScrollToBottom);
+  const updateEditor = useSettingStore((state) => state.updateEditor);
   const addUnsavedRows = useDataStore((state) => state.addUnsavedRows);
   const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
   const updateRows = useDataStore((state) => state.updateRows);
@@ -83,7 +83,7 @@ export default function StatusBarActions(): JSX.Element {
     await updateRows(rows);
     await addUnsavedRows(emptyRow);
 
-    toggleScrollToBottom(true);
+    updateEditor({ scrollToBottom: true });
   };
 
   const handleRemoveAction = async (): Promise<void> => {

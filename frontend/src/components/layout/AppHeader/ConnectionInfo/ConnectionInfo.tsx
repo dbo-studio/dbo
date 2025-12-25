@@ -19,8 +19,8 @@ export default function ConnectionInfo(): JSX.Element {
   const currentConnection = useCurrentConnection();
   const loading = useConnectionStore((state) => state.loading);
 
-  const showSettings = useSettingStore((state) => state.showSettings);
-  const toggleShowAddConnection = useSettingStore((state) => state.toggleShowAddConnection);
+  const showSettings = useSettingStore((state) => state.ui.showSettings);
+  const updateUI = useSettingStore((state) => state.updateUI);
 
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
   const runRawQuery = useDataStore((state) => state.runRawQuery);
@@ -66,7 +66,7 @@ export default function ConnectionInfo(): JSX.Element {
       <Grid size={{ md: 3 }}>
         <Stack direction={'row'} justifyContent='flex-end'>
           <Tooltip title={locales.connections}>
-            <IconButton data-testid='add-connection' onClick={(): void => toggleShowAddConnection(true)}>
+            <IconButton data-testid='add-connection' onClick={(): void => updateUI({ showAddConnection: true })}>
               <CustomIcon type={'connection'} size={'m'} />
             </IconButton>
           </Tooltip>

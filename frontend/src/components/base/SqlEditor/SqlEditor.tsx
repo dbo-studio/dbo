@@ -23,7 +23,7 @@ export default function SqlEditor({
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const [editor, setEditor] = useState<Monaco.editor.IStandaloneCodeEditor | null>(null);
-  const isDark = useSettingStore((state) => state.isDark);
+  const theme = useSettingStore((state) => state.theme);
   const selectedTabId = useTabStore((state) => state.selectedTabId);
 
   useInlineAITrigger(editor);
@@ -34,7 +34,7 @@ export default function SqlEditor({
     setEditor(editorInstance);
 
     editorInstance.addAction({
-      id: shortcuts.runQuery.command,
+      id: shortcuts.runQuery.command.join('+'),
       keybindings: shortcuts.runQuery.monaco,
       run: (): void => onRunQuery(editorInstance.getValue()),
       label: shortcuts.runQuery.label
@@ -79,10 +79,13 @@ export default function SqlEditor({
       <Editor
         height='100%'
         width='100%'
-        theme={isDark ? 'github-dark' : 'github-light'}
+        theme={theme.editorTheme}
         language='sql'
         value={value}
-        options={editorConfig}
+        options={{
+          ...editorConfig,
+          fontSize: theme.editorFontSize
+        }}
         beforeMount={setupLanguage}
         onMount={handleEditorDidMount}
         onChange={handleEditorChange}

@@ -1,6 +1,6 @@
 import { variables } from '@/core/theme/variables';
 import { Box, styled } from '@mui/material';
-import type { ThemeItemStyledProps } from '../../types';
+import { ThemeItemStyledProps } from '../../../types';
 
 export const ThemeItemStyled = styled(Box)<ThemeItemStyledProps>(({ theme, selected }) => ({
   borderRadius: variables.radius.medium,

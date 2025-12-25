@@ -1,7 +1,7 @@
 import { constants } from '@/core/constants';
 import { create, type StoreApi, type UseBoundStore } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import type { GeneralSettingType, SettingStore, SidebarType, TitleBarType } from './types';
+import type { EditorSettings, GeneralSettings, SettingStore, ThemeSettings, UISettings } from './types';
 
 type SettingState = SettingStore;
 
@@ -9,97 +9,69 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
   devtools(
     persist(
       (set, get) => ({
-        sidebar: {
-          leftWidth: constants.defaultSidebarWidth,
-          rightWidth: constants.defaultSidebarWidth,
-          showLeft: true,
-          showRight: false
+        ui: {
+          sidebar: {
+            leftWidth: constants.defaultSidebarWidth,
+            rightWidth: constants.defaultSidebarWidth,
+            showLeft: true,
+            showRight: false
+          },
+          showAddConnection: false,
+          showEditConnection: false,
+          showQuickLookEditor: false,
+          showSettings: {
+            open: false,
+            tab: 0
+          },
+          titleBar: {
+            paddingLeft: 16,
+            paddingTop: 8,
+            onHeaderAreaClick: () => {}
+          }
         },
-        isDark: false,
-        debug: false,
-        version: '',
-        showAddConnection: false,
-        showEditConnection: false,
-        showQuickLookEditor: false,
-        scrollToBottom: true,
-        showSettings: {
-          open: false,
-          tab: 0
+        theme: {
+          isDark: false,
+          appFont: 'Roboto',
+          editorTheme: 'github-light',
+          editorFontSize: 14
         },
-        enableEditorAi: false,
-        titleBar: {
-          paddingLeft: 16,
-          paddingTop: 8,
-          onHeaderAreaClick: () => {}
+        editor: {
+          enableEditorAi: false,
+          scrollToBottom: false
         },
-        ignoredRelease: '',
         general: {
+          debug: false,
+          enableErrorReporting: false,
+          ignoredRelease: '',
           logsPath: '',
           version: '',
           release: undefined
         },
-        toggleDebug: (debug?: boolean): void => {
-          set({ debug: debug !== undefined ? debug : !get().debug }, undefined, 'toggleDebug');
+        setup: {
+          hasCompletedSetup: false
         },
-        updateSidebar: (sidebar: Partial<SidebarType>): void => {
-          const oldSidebar = get().sidebar;
-          const newSidebar = { ...oldSidebar, ...sidebar };
-          set({ sidebar: newSidebar }, undefined, 'updateSidebar');
+        updateUI: (ui: Partial<UISettings>): void => {
+          const oldUI = get().ui;
+          const newUI = { ...oldUI, ...ui };
+          set({ ui: newUI }, undefined, 'updateUI');
         },
-        toggleIsDark: (isDark?: boolean): void => {
-          set({ isDark: isDark !== undefined ? isDark : !get().isDark }, undefined, 'toggleIsDark');
+        updateTheme: (theme: Partial<ThemeSettings>): void => {
+          const oldTheme = get().theme;
+          const newTheme = { ...oldTheme, ...theme };
+          set({ theme: newTheme }, undefined, 'updateTheme');
         },
-        toggleShowAddConnection: (show?: boolean): void => {
-          set(
-            { showAddConnection: show !== undefined ? show : !get().showAddConnection },
-            undefined,
-            'toggleShowAddConnection'
-          );
+        updateEditor: (editor: Partial<EditorSettings>): void => {
+          const oldEditor = get().editor;
+          const newEditor = { ...oldEditor, ...editor };
+          set({ editor: newEditor }, undefined, 'updateEditor');
         },
-        toggleShowEditConnection: (show?: boolean | number): void => {
-          set(
-            { showEditConnection: show !== undefined ? show : !get().showEditConnection },
-            undefined,
-            'toggleShowEditConnection'
-          );
-        },
-        toggleShowQuickLookEditor: (show?: boolean): void => {
-          set(
-            { showQuickLookEditor: show !== undefined ? show : !get().showQuickLookEditor },
-            undefined,
-            'toggleShowQuickLookEditor'
-          );
-        },
-        toggleShowSettings: (show?: boolean, tab?: number): void => {
-          const newShow = show !== undefined ? show : !get().showSettings.open;
-          const newTab = tab !== undefined ? tab : 0;
-
-          set({ showSettings: { open: newShow, tab: newTab } }, undefined, 'toggleShowSettings');
-        },
-        toggleScrollToBottom: (scroll?: boolean): void => {
-          set(
-            { scrollToBottom: scroll !== undefined ? scroll : !get().scrollToBottom },
-            undefined,
-            'toggleScrollToBottom'
-          );
-        },
-        toggleEnableEditorAi: (enable?: boolean): void => {
-          set(
-            { enableEditorAi: enable !== undefined ? enable : !get().enableEditorAi },
-            undefined,
-            'toggleEnableEditorAi'
-          );
-        },
-        updateTitleBar: (titleBar: Partial<TitleBarType>): void => {
-          const newTitleBar = { ...get().titleBar, ...titleBar };
-          set({ titleBar: newTitleBar }, undefined, 'updateTitleBar');
-        },
-        updateIgnoredRelease: (releaseName: string): void => {
-          set({ ignoredRelease: releaseName }, undefined, 'updateIgnoredRelease');
-        },
-        updateGeneral: (general: Partial<GeneralSettingType>): void => {
-          const newGeneral = { ...get().general, ...general };
+        updateGeneral: (general: Partial<GeneralSettings>): void => {
+          const oldGeneral = get().general;
+          const newGeneral = { ...oldGeneral, ...general };
           set({ general: newGeneral }, undefined, 'updateGeneral');
+        },
+        completeSetup: (): void => {
+          set({ setup: { hasCompletedSetup: true } }, undefined, 'completeSetup');
         }
       }),
       { name: 'settings' }
