@@ -1,72 +1,65 @@
-import FieldInput from '@/components/base/FieldInput/FieldInput.tsx';
 import Search from '@/components/base/Search/Search';
 import { useDataStore } from '@/store/dataStore/data.store';
 import type { RowType } from '@/types';
 import { Box } from '@mui/material';
-import { type JSX, useEffect, useState } from 'react';
+import { type JSX, useEffect, useMemo, useState } from 'react';
+import { DBFieldItem } from './DBFieldItem/DBFieldItem';
 
 export default function DBFields(): JSX.Element {
   const columns = useDataStore((state) => state.columns);
   const selectedRows = useDataStore((state) => state.selectedRows);
+  const rows = useDataStore((state) => state.rows);
 
-  const [fields, setFields] = useState<any[]>([]);
   const [search, setSearch] = useState<string>('');
   const [selectedRow, setSelectedRow] = useState<RowType | undefined>(undefined);
 
   useEffect(() => {
-    if (selectedRows.length === 0) return;
+    if (selectedRows.length === 0) {
+      setSelectedRow(undefined);
+      return;
+    }
 
     const row = selectedRows[selectedRows.length - 1].row;
-    if (row !== selectedRow) {
-      setSelectedRow(row);
-    }
-  }, [selectedRows, selectedRow]);
+    const latestRow = rows?.find((r) => r.dbo_index === row.dbo_index) ?? row;
 
-  useEffect(() => {
-    generateFields(search);
-  }, [search, selectedRow]);
-
-  function generateFields(value: string): void {
-    if (!selectedRow) return;
-
-    const data: any[] = [];
-    columns
-      ?.filter((c: any) => {
-        return c.name.toLocaleLowerCase().includes(value.toLocaleLowerCase());
-      })
-      // biome-ignore lint/suspicious/useIterableCallbackReturn: <explanation>
-      .map((c: any) => {
-        if (!selectedRow[c.name]) return;
-        data.push({
-          value: selectedRow[c.name],
-          ...c
-        });
+    // Update if it's a different row or if the row data has changed
+    if (!selectedRow || latestRow.dbo_index !== selectedRow.dbo_index) {
+      setSelectedRow(latestRow);
+    } else {
+      // Check if any field values have changed
+      const hasChanges = columns?.some((col) => {
+        const oldValue = selectedRow[col.name];
+        const newValue = latestRow[col.name];
+        return oldValue !== newValue;
       });
 
-    setFields(data);
-  }
+      if (hasChanges) {
+        setSelectedRow(latestRow);
+      }
+    }
+  }, [selectedRows, rows, selectedRow, columns]);
+
+  const filteredColumns = useMemo(() => {
+    if (!selectedRow || !columns) return [];
+
+    const searchLower = search.toLowerCase();
+    return columns.filter((column) => {
+      const hasValue = selectedRow[column.name] !== undefined && selectedRow[column.name] !== null;
+      const matchesSearch = column.name.toLowerCase().includes(searchLower);
+      return hasValue && matchesSearch;
+    });
+  }, [selectedRow, columns, search]);
 
   return (
     <>
       <Box mt={1}>
         <Search onChange={(value: string): void => setSearch(value)} />
       </Box>
-      {fields.length > 0 && (
+      {selectedRow && filteredColumns.length > 0 && (
         <Box mt={1} data-testid='db-field'>
-          {fields.map(
-            (item, index) =>
-              item.name && (
-                <FieldInput
-                  size='small'
-                  value={item.value}
-                  fullWidth={true}
-                  key={`${item.name}_${index}`}
-                  label={item.name}
-                  typelabel={item.type}
-                  type={item.type}
-                />
-              )
-          )}
+          {filteredColumns.map((column) => (
+            <DBFieldItem key={column.name} row={selectedRow} column={column} />
+          ))}
         </Box>
       )}
     </>
