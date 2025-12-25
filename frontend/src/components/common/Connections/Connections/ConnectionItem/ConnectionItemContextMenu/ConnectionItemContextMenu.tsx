@@ -17,7 +17,7 @@ export default function ConnectionItemContextMenu({
   onClose
 }: ConnectionContextMenuProps): JSX.Element {
   const queryClient = useQueryClient();
-  const toggleShowEditConnection = useSettingStore((state) => state.toggleShowEditConnection);
+  const updateUI = useSettingStore((state) => state.updateUI);
 
   const { mutateAsync: deleteConnectionMutation } = useMutation({
     mutationFn: api.connection.deleteConnection,
@@ -57,7 +57,7 @@ export default function ConnectionItemContextMenu({
   };
 
   const handleEditConnection = (connection: ConnectionType | undefined): void => {
-    if (connection) toggleShowEditConnection(connection.id);
+    if (connection) updateUI({ showEditConnection: connection.id });
   };
 
   const menu: MenuType[] = [

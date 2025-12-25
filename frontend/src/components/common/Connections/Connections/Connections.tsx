@@ -23,7 +23,7 @@ export default function Connections(): JSX.Element {
   const updateCurrentConnection = useConnectionStore((state) => state.updateCurrentConnection);
   const updateConnections = useConnectionStore((state) => state.updateConnections);
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
-  const toggleShowAddConnection = useSettingStore((state) => state.toggleShowAddConnection);
+  const updateUI = useSettingStore((state) => state.updateUI);
 
   const { data: connections } = useQuery({
     queryKey: ['connections'],
@@ -62,7 +62,7 @@ export default function Connections(): JSX.Element {
     }
 
     if (connections.length === 0) {
-      toggleShowAddConnection(true);
+      updateUI({ showAddConnection: true });
     }
   }, [connections]);
 

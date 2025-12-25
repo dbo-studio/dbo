@@ -16,8 +16,8 @@ export default function EditConnection(): JSX.Element {
   const [activeConnection, setActiveConnection] = useState<ConnectionType | undefined>(undefined);
   const connections = useConnectionStore((state) => state.connections);
 
-  const showEditConnection = useSettingStore((state) => state.showEditConnection);
-  const toggleShowEditConnection = useSettingStore((state) => state.toggleShowEditConnection);
+  const showEditConnection = useSettingStore((state) => state.ui.showEditConnection);
+  const updateUI = useSettingStore((state) => state.updateUI);
 
   const { mutateAsync: updateConnectionMutation, isPending: updateConnectionPending } = useMutation({
     mutationFn: (variables: { id: number; data: CreateConnectionRequestType }): Promise<ConnectionType> =>
@@ -35,7 +35,7 @@ export default function EditConnection(): JSX.Element {
 
   const handleClose = (): void => {
     setActiveConnection(undefined);
-    toggleShowEditConnection(false);
+    updateUI({ showEditConnection: false });
   };
 
   const handlePingConnection = async (data: CreateConnectionRequestType): Promise<void> => {
@@ -68,7 +68,11 @@ export default function EditConnection(): JSX.Element {
   useEffect(() => {
     if (showEditConnection) {
       const connection = connections?.find((connection) => connection.id === Number(showEditConnection));
-      connection ? setActiveConnection(connection) : toggleShowEditConnection(false);
+      if (connection) {
+        setActiveConnection(connection);
+      } else {
+        updateUI({ showEditConnection: false });
+      }
     }
   }, [showEditConnection]);
 
