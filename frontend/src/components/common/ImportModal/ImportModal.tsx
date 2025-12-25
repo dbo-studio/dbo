@@ -32,7 +32,8 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
 
   const form = useForm({
     validators: {
-      //@ts-ignore
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-expect-error
       onSubmit: formSchema
     },
 
@@ -119,6 +120,8 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
                     helpertext={field.state.meta.errors.join(', ')}
                     error={field.state.meta.errors.length > 0}
                     value={field.state.value}
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
                     onChange={(value) => field.handleChange(value.value)}
                     label={locales.format}
                   />

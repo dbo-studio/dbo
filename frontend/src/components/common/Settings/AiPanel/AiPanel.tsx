@@ -2,6 +2,7 @@ import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
+import { SelectInputOption } from '@/components/base/SelectInput/types';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import type { AiProviderType } from '@/types';
@@ -72,7 +73,7 @@ export default function AiPanel() {
         label={locales.provider}
         value={provider?.type}
         onChange={(e) => {
-          setProvider(providers?.find((p) => p.type === e.value) ?? providers?.[0]);
+          setProvider(providers?.find((p) => p.type === (e as SelectInputOption)?.value) ?? providers?.[0]);
         }}
         options={providers?.map((m) => ({ label: m.type, value: m.type })) ?? []}
       />

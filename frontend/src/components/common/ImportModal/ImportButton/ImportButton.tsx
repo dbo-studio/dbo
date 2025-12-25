@@ -54,8 +54,7 @@ export default function ImportButton({ onChange }: ImportButtonProps) {
 
   return (
     <ImportButtonStyled
-      //@ts-ignore
-      component='label'
+      as='label'
       tabIndex={-1}
       drag={isDragOver}
       onDragOver={handleDragOver}

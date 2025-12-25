@@ -57,10 +57,13 @@ export default function Histories(): JSX.Element {
 
   const handleRefresh = async (): Promise<void> => {
     await refetch();
-    queryClient.setQueryData(['histories', currentConnection?.id], (data: any) => ({
-      pages: [data?.pages[0]],
-      pageParams: [1]
-    }));
+    queryClient.setQueryData(
+      ['histories', currentConnection?.id],
+      (data: { pages: HistoryResponse; pageParams: number[] }) => ({
+        pages: [data?.pages[0]],
+        pageParams: [1]
+      })
+    );
   };
 
   const allHistories = data?.pages.flat() ?? [];

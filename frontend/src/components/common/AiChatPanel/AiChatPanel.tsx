@@ -1,6 +1,3 @@
-import { Box, LinearProgress, Stack } from '@mui/material';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
 import api from '@/api';
 import type { AiChatRequest, AiContextOptsType } from '@/api/ai/types';
 import { TabMode } from '@/core/enums';
@@ -10,6 +7,9 @@ import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AiChatType, AutoCompleteType } from '@/types';
+import { Box, LinearProgress, Stack } from '@mui/material';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import AddChat from './AddChat/AddChat';
 import { HeaderContainerStyled } from './AiChatPanel.styled';
 import ChatBox from './ChatBox/ChatBox';
@@ -31,7 +31,7 @@ export default function AiChatPanel() {
   const updateContext = useAiStore((state) => state.updateContext);
 
   const { isLoading } = useQuery({
-    queryKey: ['aiChats', currentConnectionId],
+    queryKey: ['aiChats', currentConnectionId, currentChat],
     queryFn: async () => {
       const chats = await api.aiChat.getChats({
         connectionId: currentConnectionId ?? 0,
@@ -48,7 +48,7 @@ export default function AiChatPanel() {
       }
       return chats;
     },
-    enabled: !!currentConnectionId
+    enabled: !!currentConnectionId && !!currentChat?.id
   });
 
   const { mutateAsync: chatMutation, isPending: chatPending } = useMutation({

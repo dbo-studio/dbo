@@ -11,7 +11,7 @@ import type { TabDataSlice, TabFilterSlice, TabQuerySlice, TabSettingSlice, TabS
 
 type TabState = TabStore & TabSettingSlice & TabQuerySlice & TabFilterSlice & TabSortSlice & TabDataSlice;
 
-const initialize: any = {
+const initialize: { tabs: TabType[]; selectedTabId: string | undefined } = {
   tabs: [],
   selectedTabId: undefined
 };

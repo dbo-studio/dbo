@@ -23,7 +23,7 @@ export type AutoCompleteRequestType = {
 
 export type RunQueryResponseType = {
   query: string;
-  data: any[];
+  data: unknown[];
   columns: ColumnType[];
 };
 

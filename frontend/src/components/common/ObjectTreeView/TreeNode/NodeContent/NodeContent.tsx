@@ -4,6 +4,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import type { JSX } from 'react';
 import { LoadingIndicator, NodeContent as NodeContentStyled, NodeName } from '../TreeNode.styled';
 import type { NodeContentProps } from '../types';
+import { IconTypes } from '@/components/base/CustomIcon/types';
 
 export function NodeContent({
   node,
@@ -48,7 +49,7 @@ export function NodeContent({
             size='s'
           />
         )}
-        {node.icon && <CustomIcon type={node.icon as any} size='s' />}
+        {node.icon && <CustomIcon type={node.icon as keyof typeof IconTypes} size='s' />}
         <NodeName isLeaf={!hasChildren}>{node.name}</NodeName>
         {isLoading && (
           <LoadingIndicator>

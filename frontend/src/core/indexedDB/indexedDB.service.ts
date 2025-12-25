@@ -120,6 +120,7 @@ class IndexedDBService {
     for (const row of rows) {
       const key = `${tabId}-${row.dbo_index}`;
       await tx.store.put({
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         //@ts-ignore
         key,
         tabId,
@@ -169,7 +170,8 @@ class IndexedDBService {
     for (const row of rows) {
       const key = `${tabId}-${row.dboIndex}`;
       await tx.store.put({
-        //@ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-expect-error
         key,
         tabId,
         rowIndex: row.dboIndex,
@@ -203,7 +205,8 @@ class IndexedDBService {
     for (const row of rows) {
       const key = `${tabId}-${row.dbo_index}`;
       await tx.store.put({
-        //@ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-expect-error
         key,
         tabId,
         rowIndex: row.dbo_index,
@@ -237,7 +240,8 @@ class IndexedDBService {
     for (const row of rows) {
       const key = `${tabId}-${row.dbo_index}`;
       await tx.store.put({
-        //@ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-expect-error
         key,
         tabId,
         rowIndex: row.dbo_index,
@@ -270,7 +274,8 @@ class IndexedDBService {
     for (const row of rows) {
       const key = `${tabId}-${row.index}`;
       await tx.store.put({
-        //@ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-expect-error
         key,
         tabId,
         rowIndex: row.index,

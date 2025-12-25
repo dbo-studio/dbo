@@ -13,7 +13,7 @@ export const createDataFormDataSlice: StateCreator<
 
   getFormData: (tabId: string, objectTabId: string): FormFieldWithState[] | undefined => {
     const formData = get().formDataByTab?.[tabId]?.[objectTabId];
-    return formData;
+    return formData as FormFieldWithState[] | undefined;
   },
 
   updateFormData: (tabId: string, objectTabId: string, data: FormFieldWithState[]): void => {
@@ -45,7 +45,8 @@ export const createDataFormDataSlice: StateCreator<
     set(
       (state) => {
         const currentTabData = state.formDataByTab[tabId] || {};
-        const { [objectTabId]: _, ...remainingData } = currentTabData;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { [objectTabId]: _ignored, ...remainingData } = currentTabData;
 
         return {
           formDataByTab: {

@@ -1,1 +1,1 @@
-export type MethodType = (data?: any) => Promise<any>;
+export type MethodType = (data?: unknown) => Promise<unknown>;

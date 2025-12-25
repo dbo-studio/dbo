@@ -1,10 +1,12 @@
 import type { EventFor } from '@/types';
 import { Box, InputBase, Typography, useTheme } from '@mui/material';
 import dayjs from 'dayjs';
+import type React from 'react';
 import { forwardRef, type JSX, useEffect, useState } from 'react';
 import type { FieldInputProps } from './types';
 
-export default forwardRef(function FieldInput(props: FieldInputProps, _): JSX.Element {
+/* eslint-disable @typescript-eslint/no-unused-vars */
+export default forwardRef(function FieldInput(props: FieldInputProps, _: React.Ref<HTMLInputElement>): JSX.Element {
   const theme = useTheme();
   const [value, setValue] = useState('');
 

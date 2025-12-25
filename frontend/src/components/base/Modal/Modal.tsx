@@ -7,12 +7,7 @@ export default function Modal({ open, title, children, padding, onClose }: Modal
   const theme = useTheme();
 
   return (
-    <ModalStyled
-      open={open}
-      onClose={(): void => {
-        onClose ? onClose() : null;
-      }}
-    >
+    <ModalStyled open={open} onClose={onClose ?? undefined}>
       <ModalWrapperStyled padding={`${padding} !important`}>
         {title && (
           <Box mb={theme.spacing(1)}>
