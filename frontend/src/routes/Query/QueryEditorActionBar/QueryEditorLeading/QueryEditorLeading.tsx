@@ -16,8 +16,8 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
   const enableEditorAi = useSettingStore((state) => state.editor.enableEditorAi);
   const updateEditor = useSettingStore((state) => state.updateEditor);
 
-  const [localSchema, setLocalSchema] = useState<string>(selectedTab?.options?.schema as string ?? '');
-  const [localDatabase, setLocalDatabase] = useState<string>(selectedTab?.options?.database as string ?? '');
+  const [localSchema, setLocalSchema] = useState<string>((selectedTab?.options?.schema as string) ?? '');
+  const [localDatabase, setLocalDatabase] = useState<string>((selectedTab?.options?.database as string) ?? '');
 
   useEffect(() => {
     if (!selectedTab) return;

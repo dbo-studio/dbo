@@ -88,14 +88,14 @@ func (r *MySQLRepository) getTableColumns(ctx context.Context, node MySQLNode) (
 	result := []map[string]any{}
 	for _, column := range columns {
 		result = append(result, map[string]any{
-			"COLUMN_NAME":             column.ColumnName,
-			"DATA_TYPE":               column.DataType,
-			"IS_NULLABLE":             column.IsNullable == "NO",
-			"COLUMN_DEFAULT":          column.ColumnDefault,
-			"COLUMN_COMMENT":          column.Comment,
+			"COLUMN_NAME":              column.ColumnName,
+			"DATA_TYPE":                column.DataType,
+			"IS_NULLABLE":              column.IsNullable == "NO",
+			"COLUMN_DEFAULT":           column.ColumnDefault,
+			"COLUMN_COMMENT":           column.Comment,
 			"CHARACTER_MAXIMUM_LENGTH": column.CharacterMaximumLength,
-			"NUMERIC_SCALE":           column.NumericScale,
-			"AUTO_INCREMENT":          false,
+			"NUMERIC_SCALE":            column.NumericScale,
+			"AUTO_INCREMENT":           false,
 		})
 	}
 
@@ -112,12 +112,12 @@ func (r *MySQLRepository) getTableForeignKeys(ctx context.Context, node MySQLNod
 	result := []map[string]any{}
 	for _, foreignKey := range foreignKeys {
 		result = append(result, map[string]any{
-			"CONSTRAINT_NAME":      foreignKey.ConstraintName,
-			"REFERENCED_TABLE_NAME": foreignKey.TargetTable,
-			"COLUMN_NAME":          foreignKey.ColumnsList,
+			"CONSTRAINT_NAME":        foreignKey.ConstraintName,
+			"REFERENCED_TABLE_NAME":  foreignKey.TargetTable,
+			"COLUMN_NAME":            foreignKey.ColumnsList,
 			"REFERENCED_COLUMN_NAME": foreignKey.RefColumnsList,
-			"UPDATE_RULE":          foreignKey.UpdateAction,
-			"DELETE_RULE":          foreignKey.DeleteAction,
+			"UPDATE_RULE":            foreignKey.UpdateAction,
+			"DELETE_RULE":            foreignKey.DeleteAction,
 		})
 	}
 
@@ -169,8 +169,8 @@ func (r *MySQLRepository) getViewInfo(ctx context.Context, node MySQLNode) (*con
 				query = *view.Query
 			}
 			result = append(result, map[string]any{
-				"TABLE_NAME":    view.Name,
-				"TABLE_COMMENT": view.Comment,
+				"TABLE_NAME":      view.Name,
+				"TABLE_COMMENT":   view.Comment,
 				"VIEW_DEFINITION": query,
 			})
 		}
@@ -178,6 +178,3 @@ func (r *MySQLRepository) getViewInfo(ctx context.Context, node MySQLNode) (*con
 
 	return helper.BuildObjectFormResponseFromResults(result, fields)
 }
-
-
-

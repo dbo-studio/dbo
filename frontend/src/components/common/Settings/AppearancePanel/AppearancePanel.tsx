@@ -5,9 +5,6 @@ import EditorTheme from './EditorTheme/EditorTheme';
 import Font from './Font/Font';
 import Theme from './Theme/Theme';
 
-
-
-
 export default function AppearancePanel(): JSX.Element {
   return (
     <Box>
@@ -19,7 +16,6 @@ export default function AppearancePanel(): JSX.Element {
           {locales.appearance_description}
         </Typography>
       </Box>
-
 
       <Theme />
       <Font />
