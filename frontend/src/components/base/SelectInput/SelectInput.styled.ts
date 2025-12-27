@@ -1,14 +1,15 @@
 import { ThemeModeEnum } from '@/core/enums';
 import { variables } from '@/core/theme/variables.ts';
 import type { Theme } from '@mui/material/styles';
-import type { StylesConfig } from 'react-select';
+import type { CSSObjectWithLabel, GroupBase, StylesConfig } from 'react-select';
+import type { SelectInputOption } from './types';
 
 export const SelectInputStyles = (
   theme: Theme,
   error: undefined | boolean,
   size?: 'small' | 'medium'
-): StylesConfig => ({
-  control: (_, { isFocused }): any => ({
+): StylesConfig<SelectInputOption, boolean, GroupBase<SelectInputOption>> => ({
+  control: (_, { isFocused }): CSSObjectWithLabel => ({
     color: theme.palette.text.text,
     display: 'flex',
     border: `1px solid ${error ? theme.palette.error.main : theme.palette.divider}`,
@@ -28,13 +29,13 @@ export const SelectInputStyles = (
         }`,
     alignItems: 'center'
   }),
-  menu: (styles): any => ({
+  menu: (styles): CSSObjectWithLabel => ({
     ...styles,
     padding: '0px 2px',
     backgroundColor: theme.palette.background.default,
     cursor: 'pointer'
   }),
-  option: (_, { isFocused }): any => ({
+  option: (_, { isFocused }): CSSObjectWithLabel => ({
     padding: '4px 8px',
     overflow: 'hidden',
     color: theme.palette.text.text,
@@ -45,20 +46,20 @@ export const SelectInputStyles = (
       backgroundColor: theme.palette.background.paper
     }
   }),
-  input: (styles): any => ({
+  input: (styles): CSSObjectWithLabel => ({
     ...styles,
     margin: 0,
     padding: 0,
     color: theme.palette.text.text,
     fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize
   }),
-  singleValue: (styles): any => ({
+  singleValue: (styles): CSSObjectWithLabel => ({
     ...styles,
     color: theme.palette.text.text,
     fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize
   }),
   // Updated multi-value components
-  multiValue: (base): any => ({
+  multiValue: (base): CSSObjectWithLabel => ({
     ...base,
     flexShrink: 0,
     margin: '2px 4px 2px 0',
@@ -66,7 +67,7 @@ export const SelectInputStyles = (
     borderRadius: variables.radius.small
   }),
 
-  multiValueLabel: (styles): any => ({
+  multiValueLabel: (styles): CSSObjectWithLabel => ({
     ...styles,
     color: theme.palette.primary.contrastText,
     fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize,
@@ -74,7 +75,7 @@ export const SelectInputStyles = (
     fontWeight: 500
   }),
 
-  multiValueRemove: (styles): any => ({
+  multiValueRemove: (styles): CSSObjectWithLabel => ({
     ...styles,
     color: theme.palette.primary.contrastText,
     opacity: 0.7,
@@ -85,7 +86,7 @@ export const SelectInputStyles = (
     }
   }),
 
-  valueContainer: (base): any => ({
+  valueContainer: (base): CSSObjectWithLabel => ({
     ...base,
     display: 'flex',
     flexDirection: 'row',
@@ -105,12 +106,12 @@ export const SelectInputStyles = (
     }
   }),
 
-  placeholder: (styles): any => ({
+  placeholder: (styles): CSSObjectWithLabel => ({
     ...styles,
     fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize
   }),
 
-  menuPortal: (styles): any => ({
+  menuPortal: (styles): CSSObjectWithLabel => ({
     ...styles,
     zIndex: 99999
   })

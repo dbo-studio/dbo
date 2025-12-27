@@ -1,14 +1,13 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { Stack, Typography } from '@mui/material';
-import { type JSX, useRef } from 'react';
+import { type JSX, RefObject, useRef } from 'react';
 import { useHover } from 'usehooks-ts';
 import type { ChatContextItemProps } from '../../../types';
 import { ChatContextItemStyled } from './ChatContextModalItem.styled';
 
 export default function ChatContextItem({ name, type, onClick }: ChatContextItemProps): JSX.Element {
   const hoverRef = useRef<HTMLElement | null>(null);
-  // @ts-expect-error
-  const isHover = useHover(hoverRef);
+  const isHover = useHover(hoverRef as RefObject<HTMLElement>);
 
   return (
     <ChatContextItemStyled ref={hoverRef}>

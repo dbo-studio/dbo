@@ -103,14 +103,6 @@ type PostgresSequenceParams struct {
 	OwnedBy    *string `json:"owned_by"`
 }
 
-type ColumnDefinition struct {
-	Name     string `json:"name"`
-	DataType string `json:"dataType"`
-	NotNull  bool   `json:"notNull,omitempty"`
-	Primary  bool   `json:"primary,omitempty"`
-	Default  string `json:"default,omitempty"`
-}
-
 type PostgresTableColumnParams struct {
 	Columns []PostgresTableColumn `json:"columns"`
 }

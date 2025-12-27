@@ -51,12 +51,12 @@ func (i IConfigServiceImpl) CheckUpdate(ctx context.Context) (*dto.ConfigCheckUp
 	}
 
 	if isNewer {
-		err := i.cache.Set("new_release_version", response, nil)
+		err := i.cache.Set(ctx, "new_release_version", response, nil)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		err := i.cache.Delete("new_release_version")
+		err := i.cache.Delete(ctx, "new_release_version")
 		if err != nil {
 			return nil, err
 		}

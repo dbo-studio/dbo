@@ -1,6 +1,7 @@
 package databaseSqlite
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"strings"
@@ -10,9 +11,9 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *SQLiteRepository) RunRawQuery(req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
+func (r *SQLiteRepository) RunRawQuery(ctx context.Context, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
 	startTime := time.Now()
-	result, err := runRawQuery(r, req)
+	result, err := runRawQuery(ctx, r, req)
 	endTime := time.Since(startTime)
 	if err != nil || !helper.IsQuery(req.Query) {
 		return helper.CommandResponseBuilder(result, endTime, err), nil
@@ -21,10 +22,10 @@ func (r *SQLiteRepository) RunRawQuery(req *dto.RawQueryRequest) (*dto.RawQueryR
 	return result, nil
 }
 
-func runRawQuery(r *SQLiteRepository, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
+func runRawQuery(ctx context.Context, r *SQLiteRepository, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
 	queryResults := make([]map[string]any, 0)
 
-	rows, err := r.db.Raw(req.Query).Rows()
+	rows, err := r.db.WithContext(ctx).Raw(req.Query).Rows()
 	if err != nil {
 		return &dto.RawQueryResponse{
 			Query: req.Query,
@@ -51,7 +52,7 @@ func runRawQuery(r *SQLiteRepository, req *dto.RawQueryRequest) (*dto.RawQueryRe
 
 	for rows.Next() {
 		var data map[string]any
-		err := r.db.ScanRows(rows, &data)
+		err := r.db.WithContext(ctx).ScanRows(rows, &data)
 		if err != nil {
 			return nil, err
 		}

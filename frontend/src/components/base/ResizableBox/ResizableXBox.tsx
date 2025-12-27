@@ -36,7 +36,7 @@ export default function ResizableXBox({
     setIsResizing(false);
   };
 
-  const handleMouseMove = (event: any): void => {
+  const handleMouseMove = (event: MouseEvent): void => {
     if (!isResizing) return;
 
     const newWidth =

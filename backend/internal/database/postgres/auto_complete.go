@@ -1,52 +1,96 @@
 package databasePostgres
 
 import (
+	"context"
+	"sync"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/samber/lo"
+	"golang.org/x/sync/errgroup"
 )
 
-func (r *PostgresRepository) AutoComplete(data *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
-	databases, err := r.getDatabaseList()
-	if err != nil {
-		return nil, err
-	}
+func (r *PostgresRepository) AutoComplete(ctx context.Context, data *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
+	g, gctx := errgroup.WithContext(ctx)
 
+	var databases []Database
 	var views []View
-	if data.Database != nil && data.Schema != nil {
-		views, err = r.getViewList(Database{Name: lo.FromPtr(data.Database)}, Schema{Name: lo.FromPtr(data.Schema)})
-	} else {
-		views, err = r.getAllViewList(data.SkipSystem)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	schemas, err := r.getAllSchemaList(data.SkipSystem)
-	if err != nil {
-		return nil, err
-	}
-
+	var schemas []Schema
 	var tables []Table
-	if data.Schema != nil {
-		tables, err = r.getTableList(Schema{Name: lo.FromPtr(data.Schema)})
-	} else {
-		tables, err = r.getAllTableList(data.SkipSystem)
-	}
 
-	if err != nil {
+	g.Go(func() error {
+		result, err := r.databases(gctx, true)
+		if err != nil {
+			return err
+		}
+		databases = result
+		return nil
+	})
+
+	g.Go(func() error {
+		var err error
+		if data.Database != nil && data.Schema != nil {
+			views, err = r.views(gctx, data.Database, data.Schema, true)
+		} else {
+			views, err = r.views(gctx, nil, nil, true)
+		}
+		return err
+	})
+
+	g.Go(func() error {
+		result, err := r.schemas(gctx, data.Database, true)
+		if err != nil {
+			return err
+		}
+		schemas = result
+		return nil
+	})
+
+	g.Go(func() error {
+		var err error
+		if data.Schema != nil {
+			tables, err = r.tables(gctx, data.Schema, true)
+		} else {
+			tables, err = r.tables(gctx, nil, true)
+		}
+		return err
+	})
+
+	if err := g.Wait(); err != nil {
 		return nil, err
 	}
 
 	columns := make(map[string][]string)
+
 	if data.Schema != nil {
+		gColumns, gColumnsCtx := errgroup.WithContext(ctx)
+		var columnMap sync.Map
+
 		for _, table := range tables {
-			columnResult, err := r.getColumns(table.Name, data.Schema, nil, false)
-			if err != nil {
-				return nil, err
-			}
-			columns[table.Name] = lo.Map(columnResult, func(x Column, _ int) string { return x.ColumnName })
+			tableName := table.Name
+			gColumns.Go(func() error {
+				columnResult, err := r.columns(gColumnsCtx, &tableName, data.Schema, nil, false, true)
+				if err != nil {
+					return err
+				}
+				columnMap.Store(tableName, lo.Map(columnResult, func(x Column, _ int) string { return x.ColumnName }))
+				return nil
+			})
 		}
+
+		if err := gColumns.Wait(); err != nil {
+			return nil, err
+		}
+
+		columnMap.Range(func(key, value any) bool {
+			tableName, ok := key.(string)
+			if !ok {
+				return true
+			}
+			if columnList, ok := value.([]string); ok {
+				columns[tableName] = columnList
+			}
+			return true
+		})
 	}
 
 	return &dto.AutoCompleteResponse{

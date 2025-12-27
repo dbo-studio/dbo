@@ -1,7 +1,7 @@
 import api from '@/api';
 import { getTree } from '@/api/tree';
-import type { TreeNodeType } from '@/api/tree/types';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import type { TreeNodeType } from '@/types/Tree';
 import { create, type StoreApi, type UseBoundStore } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
@@ -218,7 +218,13 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
         },
         reset: (): void => {
           set(
-            { tree: {}, expandedNodes: {}, loadedParentIds: {}, isLoading: false, treeError: undefined },
+            {
+              tree: {},
+              expandedNodes: {},
+              loadedParentIds: {},
+              isLoading: false,
+              treeError: undefined
+            },
             undefined,
             'reset'
           );

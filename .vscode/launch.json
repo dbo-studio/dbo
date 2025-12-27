@@ -5,12 +5,15 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(OSX) Launch",
-            "type": "lldb",
+            "name": "Launch Package",
+            "type": "go",
             "request": "launch",
-            "program": "${workspaceRoot}/target/debug/foo",
-            "args": [],
-            "cwd": "${workspaceRoot}",
+            "mode": "auto",
+            "program": "${workspaceFolder}/backend/",
+            "env": {
+                "APP_PORT": "8080",
+                "APP_ENV": "docker"
+            }
         }
     ]
 }

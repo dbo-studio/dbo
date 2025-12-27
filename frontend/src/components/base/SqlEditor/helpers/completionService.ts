@@ -1,159 +1,98 @@
-import type { editor } from 'monaco-editor';
-import { languages, type Position } from 'monaco-editor/esm/vs/editor/editor.api';
-import { type CompletionService, EntityContextType, type ICompletionItem } from 'monaco-sql-languages/esm/main';
+import type * as Monaco from 'monaco-editor';
+import { CompletionItemInsertTextRule, CompletionItemKind, SQL_KEYWORDS } from './constants';
 import { getColumns, getDataBasesAndSchemas, getTables, getViews } from './dbMetaProvider';
+import { getAllTableNames, getSqlFunctions, getTableForAlias, parseSqlContext } from './sqlParser';
 
-const haveCatalogSQLType = (languageId: string): boolean => {
-  return ['flinksql', 'trinosql'].includes(languageId.toLowerCase());
-};
+export const completionService = async (
+  model: Monaco.editor.ITextModel,
+  position: Monaco.Position
+): Promise<Monaco.languages.CompletionList> => {
+  const word = model.getWordUntilPosition(position);
+  const range = {
+    startLineNumber: position.lineNumber,
+    endLineNumber: position.lineNumber,
+    startColumn: word.startColumn,
+    endColumn: word.endColumn
+  };
 
-// const namedSchemaSQLType = (languageId: string) => {
-//   return ['trinosql', 'hivesql', 'sparksql', 'pgsql'].includes(languageId);
-// };
-
-export const completionService: CompletionService = async (
-  model: editor.ITextModel,
-  position: Position,
-  _completionContext,
-  suggestions
-) => {
-  if (!suggestions) {
-    return Promise.resolve([]);
-  }
   const languageId = model.getLanguageId();
+  const context = parseSqlContext(model, position);
+  const suggestions: Monaco.languages.CompletionItem[] = [];
 
-  const haveCatalog = haveCatalogSQLType(languageId);
-  // const getDBOrSchema = namedSchemaSQLType(languageId) ? getSchemas : getDataBases;
-  const getDBOrSchema = getDataBasesAndSchemas;
-
-  const { keywords, syntax } = suggestions;
-
-  const keywordsCompletionItems: ICompletionItem[] = keywords.map((kw) => ({
-    label: kw,
-    kind: languages.CompletionItemKind.Keyword,
-    detail: 'Keywords',
-    sortText: `2${kw}`
-  }));
-
-  let syntaxCompletionItems: ICompletionItem[] = [];
-
-  let existDatabaseCompletions = false;
-  let existDatabaseInCatCompletions = false;
-  let existTableCompletions = false;
-  let existTableInDbCompletions = false;
-  let existViewCompletions = false;
-  let existViewInDbCompletions = false;
-  let existColumnCompletions = false;
-  let existColumnInTableCompletions = false;
-
-  for (let i = 0; i < syntax.length; i++) {
-    const { syntaxContextType, wordRanges } = syntax[i];
-    const words = wordRanges.map((wr) => wr.text);
-    const wordCount = words.length;
-
-    if (
-      syntaxContextType === EntityContextType.DATABASE ||
-      syntaxContextType === EntityContextType.TABLE_CREATE ||
-      syntaxContextType === EntityContextType.VIEW_CREATE
-    ) {
-      if (!existDatabaseCompletions && wordCount <= 1) {
-        syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId));
-        existDatabaseCompletions = true;
-      }
-
-      if (!existDatabaseInCatCompletions && haveCatalog && wordCount >= 2 && wordCount <= 3) {
-        syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId));
-        existDatabaseInCatCompletions = true;
-      }
-    }
-
-    if (syntaxContextType === EntityContextType.TABLE) {
-      if (wordCount <= 1) {
-        if (!existDatabaseCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId));
-          existDatabaseCompletions = true;
-        }
-
-        if (!existTableCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(getTables(languageId));
-          existTableCompletions = true;
-        }
-      } else if (wordCount >= 2 && wordCount <= 3) {
-        if (!existDatabaseInCatCompletions && haveCatalog) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId));
-          existDatabaseInCatCompletions = true;
-        }
-
-        if (!existTableInDbCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(getTables(languageId));
-          existTableInDbCompletions = true;
-        }
-      } else if (wordCount >= 4 && wordCount <= 5) {
-        if (!existTableInDbCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(getTables(languageId));
-          existTableInDbCompletions = true;
-        }
-      }
-    }
-
-    if (syntaxContextType === EntityContextType.VIEW) {
-      if (wordCount <= 1) {
-        if (!existDatabaseCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId));
-          existDatabaseCompletions = true;
-        }
-
-        if (!existViewCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(getViews(languageId));
-          existViewCompletions = true;
-        }
-      } else if (wordCount >= 2 && wordCount <= 3) {
-        if (!existDatabaseInCatCompletions && haveCatalog) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(getDBOrSchema(languageId));
-          existDatabaseInCatCompletions = true;
-        }
-
-        if (!existViewInDbCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(getViews(languageId));
-          existViewInDbCompletions = true;
-        }
-      } else if (wordCount >= 4 && wordCount <= 5) {
-        if (!existViewInDbCompletions) {
-          syntaxCompletionItems = syntaxCompletionItems.concat(getViews(languageId));
-          existViewInDbCompletions = true;
-        }
-      }
-    }
-
-    if (syntaxContextType === EntityContextType.COLUMN || syntaxContextType === EntityContextType.FUNCTION) {
-      const tableName = getCurrentTableName(model, position);
-
-      if (!existColumnCompletions && !tableName) {
-        syntaxCompletionItems = syntaxCompletionItems.concat(getColumns(languageId, undefined));
-        existColumnCompletions = true;
-      }
-
-      if (!existColumnInTableCompletions && tableName) {
-        syntaxCompletionItems = syntaxCompletionItems.concat(getColumns(languageId, tableName));
-        existColumnInTableCompletions = true;
-      }
-    }
-  }
-
-  return [...syntaxCompletionItems, ...keywordsCompletionItems];
-};
-
-function getCurrentTableName(model: editor.ITextModel, position: Position): string | null {
   const currentLineContent = model.getLineContent(position.lineNumber);
-  const previousLineContent = position.lineNumber > 1 ? model.getLineContent(position.lineNumber - 1) : '';
-  const sqlText = `${previousLineContent} ${currentLineContent}`;
+  const textBeforeCursor = currentLineContent.substring(0, position.column - 1);
+  const dotMatch = textBeforeCursor.match(/([a-zA-Z0-9_]+)\.$/);
 
-  const tableNameRegex = /from\s+([a-zA-Z_][\w]*)/i;
-  const match = tableNameRegex.exec(sqlText);
-
-  if (match?.[1]) {
-    return match[1];
+  let tableForColumns: string | null = null;
+  if (dotMatch) {
+    const possibleTableOrAlias = dotMatch[1];
+    tableForColumns =
+      getTableForAlias(model, position, possibleTableOrAlias) ||
+      (context.tables.includes(possibleTableOrAlias) ? possibleTableOrAlias : null);
   }
 
-  return null;
-}
+  suggestions.push(
+    ...SQL_KEYWORDS.map((keyword) => ({
+      label: keyword,
+      kind: CompletionItemKind.Keyword,
+      detail: 'Keyword',
+      insertText: keyword,
+      range
+    }))
+  );
+
+  if (context.isInSelect || context.isInWhere || context.currentClause === 'HAVING') {
+    const functions = getSqlFunctions();
+    suggestions.push(
+      ...functions.map((func) => ({
+        label: func.label,
+        kind: func.kind, // Function
+        detail: func.detail,
+        insertText: func.insertText,
+        insertTextRules: CompletionItemInsertTextRule.InsertAsSnippet,
+        range,
+        documentation: func.detail
+      }))
+    );
+  }
+
+  // Context-aware suggestions
+  if (context.isInFrom || context.isInJoin) {
+    // After FROM or JOIN, suggest tables and views
+    suggestions.push(...getDataBasesAndSchemas(languageId).map((item) => ({ ...item, range })));
+    suggestions.push(...getTables(languageId).map((item) => ({ ...item, range })));
+    suggestions.push(...getViews(languageId).map((item) => ({ ...item, range })));
+  } else if (tableForColumns) {
+    // If we're typing table.column, show columns for that table
+    suggestions.push(...getColumns(languageId, tableForColumns).map((item) => ({ ...item, range })));
+  } else if (context.isInSelect || context.isInWhere || context.isInGroupBy || context.isInOrderBy) {
+    // In SELECT, WHERE, GROUP BY, or ORDER BY - suggest columns from all tables in query
+    const allTables = getAllTableNames(model, position);
+
+    if (allTables.length > 0) {
+      // Multi-table column suggestions
+      for (const tableName of allTables) {
+        const columns = getColumns(languageId, tableName);
+        suggestions.push(
+          ...columns.map((col) => ({
+            ...col,
+            range,
+            label: `${tableName}.${col.label}`,
+            insertText: `${tableName}.${col.insertText}`,
+            detail: `${col.detail} from ${tableName}`
+          }))
+        );
+      }
+    } else {
+      // No tables found yet, suggest tables/views
+      suggestions.push(...getTables(languageId).map((item) => ({ ...item, range })));
+      suggestions.push(...getViews(languageId).map((item) => ({ ...item, range })));
+    }
+  } else {
+    // Default: suggest tables and views
+    suggestions.push(...getTables(languageId).map((item) => ({ ...item, range })));
+    suggestions.push(...getViews(languageId).map((item) => ({ ...item, range })));
+  }
+
+  return { suggestions };
+};

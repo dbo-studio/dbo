@@ -96,7 +96,7 @@ export default function QueryEditorActions({ onFormat, onRunQuery, loading }: Qu
           <CustomIcon type='wand_sparkles' />
         </IconButton>
       </Tooltip>
-      <Tooltip title={shortcuts.runQuery.command}>
+      <Tooltip title={shortcuts.runQuery.command.join('+')}>
         <IconButton disabled={loading} loading={loading} color='primary' onClick={(): void => onRunQuery()}>
           <CustomIcon type='play' />
         </IconButton>

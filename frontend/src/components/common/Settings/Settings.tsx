@@ -6,9 +6,10 @@ import { Grid, useTheme } from '@mui/material';
 import { type JSX, useState } from 'react';
 import AboutPanel from './AboutPanel/AboutPanel';
 import AiPanel from './AiPanel/AiPanel';
+import AppearancePanel from './AppearancePanel/AppearancePanel';
 import MenuPanel from './MenuPanel/MenuPanel';
+import { SettingsContentStyled } from './Setting.styled';
 import ShortcutPanel from './ShortcutPanel/ShortcutPanel';
-import ThemePanel from './ThemePanel/ThemePanel';
 import type { MenuPanelTabType, SettingsProps } from './types';
 
 const tabs: MenuPanelTabType[] = [
@@ -21,10 +22,10 @@ const tabs: MenuPanelTabType[] = [
   },
   {
     id: 1,
-    name: locales.theme,
+    name: locales.appearance,
     onlyDesktop: false,
     icon: 'theme',
-    content: <ThemePanel />
+    content: <AppearancePanel />
   },
   {
     id: 2,
@@ -40,13 +41,6 @@ const tabs: MenuPanelTabType[] = [
     icon: 'about',
     content: <AiPanel />
   },
-  // {
-  //   id: 2,
-  //   name: locales.update,
-  //   onlyDesktop: true,
-  //   icon: 'update',
-  //   content: <UpdatePanel />
-  // },
   {
     id: 4,
     name: locales.about,
@@ -59,10 +53,10 @@ const tabs: MenuPanelTabType[] = [
 export default function Settings({ open, tab }: SettingsProps): JSX.Element {
   const [content, setContent] = useState<JSX.Element>();
   const theme = useTheme();
-  const toggleShowSettings = useSettingStore((state) => state.toggleShowSettings);
+  const updateUI = useSettingStore((state) => state.updateUI);
 
   function handleOnClose(): void {
-    toggleShowSettings(false);
+    updateUI({ showSettings: { open: false, tab: 0 } });
   }
 
   return (
@@ -71,9 +65,9 @@ export default function Settings({ open, tab }: SettingsProps): JSX.Element {
         <Grid size={{ md: 3 }} display={'flex'} flexDirection={'column'}>
           <MenuPanel tabs={tabs} onChange={(c): void => setContent(c)} defaultTabId={tab} />
         </Grid>
-        <Grid size={{ md: 9 }} flex={1} p={theme.spacing(2)}>
+        <SettingsContentStyled size={{ md: 9 }} flex={1} p={theme.spacing(2)}>
           {content}
-        </Grid>
+        </SettingsContentStyled>
       </Grid>
     </Modal>
   );

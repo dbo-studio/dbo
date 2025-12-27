@@ -1,6 +1,7 @@
 import type { RunQueryResponseType } from '@/api/query/types';
 import type { EditedRow } from '@/types';
 import type { ColumnType, RowType } from '@/types/Data';
+import { FormFieldWithState } from '@/types/Tree';
 
 export type DataStore = {
   loadDataFromIndexedDB: () => Promise<{ rows: RowType[]; columns: ColumnType[] } | null>;
@@ -60,8 +61,8 @@ export type SelectedRow = {
 };
 
 export type DataFormDataSlice = {
-  formDataByTab: Record<string, Record<string, any>>;
-  getFormData: (tabId: string, objectTabId: string) => any[] | undefined;
-  updateFormData: (tabId: string, objectTabId: string, data: any[]) => void;
+  formDataByTab: Record<string, Record<string, unknown>>;
+  getFormData: (tabId: string, objectTabId: string) => unknown[] | undefined;
+  updateFormData: (tabId: string, objectTabId: string, data: FormFieldWithState[]) => void;
   resetFormData: (tabId: string, objectTabId: string) => void;
 };

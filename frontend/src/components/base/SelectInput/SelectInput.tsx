@@ -1,5 +1,5 @@
 import { SelectInputStyles } from '@/components/base/SelectInput/SelectInput.styled.ts';
-import type { SelectInputProps } from '@/components/base/SelectInput/types.ts';
+import type { SelectInputOption, SelectInputProps } from '@/components/base/SelectInput/types.ts';
 import { Box, Typography, useTheme } from '@mui/material';
 import type { JSX } from 'react';
 import Select from 'react-select';
@@ -18,15 +18,11 @@ export default function SelectInput({
 }: SelectInputProps): JSX.Element {
   const theme = useTheme();
 
-  const handleChange = (selected: any): void => {
-    onChange(selected);
-  };
-
-  const getValue = (): any => {
+  const getValue = (): SelectInputOption | SelectInputOption[] | null => {
     if (!value) return null;
 
     if (isMulti) {
-      return options.filter((option) => value.includes(option.value));
+      return options.filter((option) => value.includes(option.value as string));
     }
     return options.find((option) => option.value === value) || null;
   };
@@ -46,7 +42,7 @@ export default function SelectInput({
         value={getValue()}
         options={options}
         menuPlacement={'auto'}
-        onChange={handleChange}
+        onChange={onChange}
         styles={SelectInputStyles(theme, error, size)}
         menuPortalTarget={document.body}
       />

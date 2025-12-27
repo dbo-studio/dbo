@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/container"
 	serviceTree "github.com/dbo-studio/dbo/internal/service/tree"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -14,8 +15,11 @@ type TreeHandler struct {
 	treeService serviceTree.ITreeService
 }
 
-func NewTreeHandler(logger logger.Logger, treeService serviceTree.ITreeService) *TreeHandler {
-	return &TreeHandler{logger, treeService}
+func NewTreeHandler(treeService serviceTree.ITreeService) *TreeHandler {
+	return &TreeHandler{
+		logger:      container.Instance().Logger(),
+		treeService: treeService,
+	}
 }
 
 func (h *TreeHandler) TreeHandler(c fiber.Ctx) error {
@@ -45,23 +49,6 @@ func (h *TreeHandler) Tabs(c fiber.Ctx) error {
 	}
 
 	result, err := h.treeService.Tabs(c, req)
-	if err != nil {
-		h.logger.Error(err.Error())
-		return response.ErrorBuilder().FromError(err).Send(c)
-	}
-
-	return response.SuccessBuilder().WithData(result).Send(c)
-}
-
-func (h *TreeHandler) ObjectFields(c fiber.Ctx) error {
-	req := &dto.ObjectFieldsRequest{
-		ConnectionId: fiber.Query[int32](c, "connectionId"),
-		Action:       fiber.Params[string](c, "action"),
-		NodeId:       fiber.Params[string](c, "nodeId"),
-		TabId:        fiber.Params[string](c, "tabId"),
-	}
-
-	result, err := h.treeService.TabObject(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)
@@ -102,4 +89,20 @@ func (h *TreeHandler) ExecuteHandler(c fiber.Ctx) error {
 	}
 
 	return response.SuccessBuilder().Send(c)
+}
+
+func (h *TreeHandler) GetDynamicFieldOptions(c fiber.Ctx) error {
+	req := &dto.DynamicFieldOptionsRequest{
+		ConnectionId: fiber.Query[int32](c, "connectionId"),
+		NodeId:       c.Params("nodeId"),
+		Parameters:   c.Queries(),
+	}
+
+	result, err := h.treeService.GetDynamicFieldOptions(c, req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(result).Send(c)
 }

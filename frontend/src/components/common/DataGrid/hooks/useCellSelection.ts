@@ -15,7 +15,8 @@ export const useCellSelection = (
   const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
 
   const handleSelect = useCallback(
-    (_: React.MouseEvent): void => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (e: React.MouseEvent): void => {
       updateSelectedRows(
         [
           {

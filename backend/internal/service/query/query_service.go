@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/repository"
@@ -30,8 +31,13 @@ type IQueryServiceImpl struct {
 	cache          cache.Cache
 }
 
-func NewQueryService(connectionRepo repository.IConnectionRepo, historyRepo repository.IHistoryRepo, cm *databaseConnection.ConnectionManager, cache cache.Cache) IQueryService {
-	return &IQueryServiceImpl{historyRepo, connectionRepo, cm, cache}
+func NewQueryService(connectionRepo repository.IConnectionRepo, historyRepo repository.IHistoryRepo, cm *databaseConnection.ConnectionManager) IQueryService {
+	return &IQueryServiceImpl{
+		historyRepo:    historyRepo,
+		connectionRepo: connectionRepo,
+		cm:             cm,
+		cache:          container.Instance().Cache(),
+	}
 }
 
 func (i IQueryServiceImpl) Run(ctx context.Context, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
@@ -40,12 +46,12 @@ func (i IQueryServiceImpl) Run(ctx context.Context, req *dto.RunQueryRequest) (*
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(connection, i.cm)
+	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
 
-	return repo.RunQuery(req)
+	return repo.RunQuery(ctx, req)
 }
 
 func (i IQueryServiceImpl) Raw(ctx context.Context, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
@@ -54,7 +60,7 @@ func (i IQueryServiceImpl) Raw(ctx context.Context, req *dto.RawQueryRequest) (*
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(connection, i.cm)
+	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -64,7 +70,7 @@ func (i IQueryServiceImpl) Raw(ctx context.Context, req *dto.RawQueryRequest) (*
 		return nil, apperror.InternalServerError(err)
 	}
 
-	return repo.RunRawQuery(req)
+	return repo.RunRawQuery(ctx, req)
 }
 
 func (i IQueryServiceImpl) Update(ctx context.Context, req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error) {
@@ -73,12 +79,12 @@ func (i IQueryServiceImpl) Update(ctx context.Context, req *dto.UpdateQueryReque
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(connection, i.cm)
+	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
 
-	return repo.UpdateQuery(req)
+	return repo.UpdateQuery(ctx, req)
 }
 
 func (i IQueryServiceImpl) AutoComplete(ctx context.Context, req *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
@@ -87,12 +93,12 @@ func (i IQueryServiceImpl) AutoComplete(ctx context.Context, req *dto.AutoComple
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(connection, i.cm)
+	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
 
-	resultFromCache, err := i.findResultFromCache(req)
+	resultFromCache, err := i.findResultFromCache(ctx, req)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -101,13 +107,13 @@ func (i IQueryServiceImpl) AutoComplete(ctx context.Context, req *dto.AutoComple
 		return resultFromCache, nil
 	}
 
-	autocomplete, err := repo.AutoComplete(req)
+	autocomplete, err := repo.AutoComplete(ctx, req)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
 
 	ttl := 60 * time.Minute
-	err = i.cache.Set(i.cacheName(req), autocomplete, &ttl)
+	err = i.cache.Set(ctx, i.cacheName(req), autocomplete, &ttl)
 	if err != nil {
 		return nil, err
 	}
@@ -115,12 +121,13 @@ func (i IQueryServiceImpl) AutoComplete(ctx context.Context, req *dto.AutoComple
 	return autocomplete, nil
 }
 
-func (i IQueryServiceImpl) findResultFromCache(req *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
+func (i IQueryServiceImpl) findResultFromCache(ctx context.Context, req *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
 	var result *dto.AutoCompleteResponse
 	err := i.cache.ConditionalGet(
+		ctx,
 		i.cacheName(req),
 		&result,
-		req.FromCache,
+		true,
 	)
 
 	if err != nil {
@@ -131,5 +138,5 @@ func (i IQueryServiceImpl) findResultFromCache(req *dto.AutoCompleteRequest) (*d
 }
 
 func (i IQueryServiceImpl) cacheName(req *dto.AutoCompleteRequest) string {
-	return fmt.Sprintf("auto_complete:connection_%d_database_%s_schema_%s_skipSystem_%t", req.ConnectionId, lo.FromPtr(req.Database), lo.FromPtr(req.Schema), lo.FromPtr(req.SkipSystem))
+	return fmt.Sprintf("c:%d:auto_complete:database_%s_schema_%s", req.ConnectionId, lo.FromPtr(req.Database), lo.FromPtr(req.Schema))
 }

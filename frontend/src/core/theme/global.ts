@@ -5,7 +5,8 @@ export const globalStyles = (theme: Theme): Interpolation<Theme> => {
     '*': {
       userSelect: 'none', // Disable text selection
       WebkitUserSelect: 'none', // For Safari
-      msUserSelect: 'none' // For IE/Edge
+      msUserSelect: 'none', // For IE/Edge
+      MozUserSelect: 'none' // For Firefox
     },
     html: {
       overscrollBehavior: 'none'

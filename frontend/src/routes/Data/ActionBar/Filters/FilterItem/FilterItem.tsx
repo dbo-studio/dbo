@@ -6,6 +6,7 @@ import { type JSX, useCallback, useState } from 'react';
 
 import FieldInput from '@/components/base/FieldInput/FieldInput.tsx';
 import SelectInput from '@/components/base/SelectInput/SelectInput.tsx';
+import { SelectInputOption } from '@/components/base/SelectInput/types.ts';
 import locales from '@/locales';
 import type { FilterItemProps } from '../types.ts';
 import AddFilterButton from './AddFilterButton/AddFilterButton.tsx';
@@ -24,14 +25,14 @@ export default function FilterItem({ filter, columns }: FilterItemProps): JSX.El
   });
 
   const handleChange = useCallback(
-    (type: 'column' | 'operator' | 'value' | 'next' | 'isActive', value: any): FilterType => {
+    (type: 'column' | 'operator' | 'value' | 'next' | 'isActive', value: string | boolean): FilterType => {
       const newFilter = {
         index: currentFilter.index,
-        column: type === 'column' ? value : currentFilter.column,
-        operator: type === 'operator' ? value : currentFilter.operator,
-        value: type === 'value' ? value : currentFilter.value,
-        next: type === 'next' ? value : currentFilter.next,
-        isActive: type === 'isActive' ? value : currentFilter.isActive
+        column: type === 'column' ? (value as string) : currentFilter.column,
+        operator: type === 'operator' ? (value as string) : currentFilter.operator,
+        value: type === 'value' ? (value as string | number) : currentFilter.value,
+        next: type === 'next' ? (value as string) : currentFilter.next,
+        isActive: type === 'isActive' ? (value as boolean) : currentFilter.isActive
       };
 
       setCurrentFilter(newFilter);
@@ -58,7 +59,9 @@ export default function FilterItem({ filter, columns }: FilterItemProps): JSX.El
           disabled={columns.length === 0}
           size='small'
           options={columns.map((c) => ({ value: c.name as string, label: c.name }))}
-          onChange={(e): void => upsertFilters(handleChange('column', e.value))}
+          onChange={(e): void =>
+            upsertFilters(handleChange('column', (e as unknown as SelectInputOption).value as string))
+          }
         />
       </Box>
       <Box mr={1} ml={1}>
@@ -66,7 +69,9 @@ export default function FilterItem({ filter, columns }: FilterItemProps): JSX.El
           value={currentFilter.operator}
           size='small'
           options={PgsqlFilterConditions.map((c) => ({ value: c as string, label: c }))}
-          onChange={(e): void => upsertFilters(handleChange('operator', e.value))}
+          onChange={(e): void =>
+            upsertFilters(handleChange('operator', (e as unknown as SelectInputOption).value as string))
+          }
         />
       </Box>
       <Box flex={1} mr={1}>
@@ -84,7 +89,9 @@ export default function FilterItem({ filter, columns }: FilterItemProps): JSX.El
           value={currentFilter.next}
           size='small'
           options={PgsqlFilterNext.map((c) => ({ value: c as string, label: c }))}
-          onChange={(e): void => upsertFilters(handleChange('next', e.value))}
+          onChange={(e): void =>
+            upsertFilters(handleChange('next', (e as unknown as SelectInputOption).value as string))
+          }
         />
       </Box>
       <Box ml={1} mr={1}>

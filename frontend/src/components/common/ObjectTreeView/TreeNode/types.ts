@@ -9,6 +9,7 @@ export type TreeNodeProps = {
   nodeIndex?: number;
   level?: number;
   searchTerm?: string;
+  selectedNodeId?: string;
 
   fetchChildren: (parentId: string) => Promise<TreeNodeType[]>;
   onFocusChange?: (id: string) => void;
@@ -19,6 +20,7 @@ export type NodeContentProps = {
   node: TreeNodeType;
   nodeRef: RefObject<HTMLDivElement | null>;
   isFocused: boolean;
+  isSelected: boolean;
   isExpanded: boolean;
   isLoading: boolean;
   hasChildren?: boolean;

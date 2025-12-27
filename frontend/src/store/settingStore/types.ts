@@ -1,33 +1,54 @@
 import type { CheckUpdateResponseType } from '@/api/config/types';
 
 export type SettingStore = {
+  ui: UISettings;
+  theme: ThemeSettings;
+  editor: EditorSettings;
+  general: GeneralSettings;
+  setup: SetupSettings;
+
+  updateUI(ui: Partial<UISettings>): void;
+  updateTheme(theme: Partial<ThemeSettings>): void;
+  updateEditor(editor: Partial<EditorSettings>): void;
+  updateGeneral(general: Partial<GeneralSettings>): void;
+  completeSetup(): void;
+};
+
+export type UISettings = {
   sidebar: SidebarType;
-  isDark: boolean | undefined;
-  debug: boolean;
   showAddConnection: boolean;
   showEditConnection: number | boolean;
   showQuickLookEditor: boolean;
-  scrollToBottom: boolean;
   showSettings: {
     open: boolean;
     tab: number;
   };
-  enableEditorAi: boolean;
   titleBar: TitleBarType;
+};
+
+export type ThemeSettings = {
+  isDark: boolean | undefined;
+  appFont: string;
+  editorTheme: 'github-light' | 'github-dark';
+  editorFontSize: number;
+};
+
+export type EditorSettings = {
+  enableEditorAi: boolean;
+  scrollToBottom: boolean;
+};
+
+export type GeneralSettings = {
+  debug: boolean;
+  enableErrorReporting: boolean;
   ignoredRelease: string;
-  general: GeneralSettingType;
-  updateSidebar(sidebar: Partial<SidebarType>): void;
-  toggleIsDark(isDark?: boolean): void;
-  toggleDebug(debug?: boolean): void;
-  toggleShowAddConnection(show?: boolean): void;
-  toggleShowEditConnection(show?: boolean | number): void;
-  toggleShowQuickLookEditor(show?: boolean): void;
-  toggleShowSettings(show?: boolean, tab?: number): void;
-  toggleScrollToBottom(scroll?: boolean): void;
-  toggleEnableEditorAi(enable?: boolean): void;
-  updateTitleBar(titleBar: Partial<TitleBarType>): void;
-  updateIgnoredRelease(releaseName: string): void;
-  updateGeneral(general: Partial<GeneralSettingType>): void;
+  logsPath: string;
+  version: string;
+  release: CheckUpdateResponseType | undefined;
+};
+
+export type SetupSettings = {
+  hasCompletedSetup: boolean;
 };
 
 export type TitleBarType = {
@@ -41,10 +62,4 @@ export type SidebarType = {
   rightWidth: number;
   showLeft: boolean;
   leftWidth: number;
-};
-
-export type GeneralSettingType = {
-  logsPath: string;
-  version: string;
-  release: CheckUpdateResponseType | undefined;
 };

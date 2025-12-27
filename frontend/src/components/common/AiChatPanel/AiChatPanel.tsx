@@ -31,7 +31,7 @@ export default function AiChatPanel() {
   const updateContext = useAiStore((state) => state.updateContext);
 
   const { isLoading } = useQuery({
-    queryKey: ['aiChats', currentConnectionId],
+    queryKey: ['aiChats', currentConnectionId, currentChat],
     queryFn: async () => {
       const chats = await api.aiChat.getChats({
         connectionId: currentConnectionId ?? 0,
@@ -48,7 +48,7 @@ export default function AiChatPanel() {
       }
       return chats;
     },
-    enabled: !!currentConnectionId
+    enabled: !!currentConnectionId && !!currentChat?.id
   });
 
   const { mutateAsync: chatMutation, isPending: chatPending } = useMutation({
@@ -59,9 +59,7 @@ export default function AiChatPanel() {
     queryKey: ['ai_autocomplete', currentConnectionId],
     queryFn: async (): Promise<AutoCompleteType> =>
       api.query.autoComplete({
-        connectionId: Number(currentConnectionId),
-        fromCache: true,
-        skipSystem: true
+        connectionId: Number(currentConnectionId)
       })
   });
 

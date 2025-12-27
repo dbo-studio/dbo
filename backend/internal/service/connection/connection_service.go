@@ -4,8 +4,10 @@ import (
 	"context"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/container"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/repository"
+	"github.com/dbo-studio/dbo/pkg/cache"
 )
 
 type IConnectionService interface {
@@ -20,6 +22,7 @@ type IConnectionService interface {
 type IConnectionServiceImpl struct {
 	connectionRepo repository.IConnectionRepo
 	cm             *databaseConnection.ConnectionManager
+	cache          cache.Cache
 }
 
 func NewConnectionService(
@@ -29,6 +32,7 @@ func NewConnectionService(
 	return &IConnectionServiceImpl{
 		connectionRepo: connectionRepo,
 		cm:             cm,
+		cache:          container.Instance().Cache(),
 	}
 }
 

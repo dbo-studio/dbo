@@ -16,6 +16,17 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    const isCancelled =
+      error.code === 'ERR_CANCELED' ||
+      error.name === 'CanceledError' ||
+      error.name === 'AbortError' ||
+      error.message?.toLowerCase().includes('canceled') ||
+      error.message?.toLowerCase().includes('aborted');
+
+    if (isCancelled) {
+      return Promise.reject(error);
+    }
+
     if (error.response) {
       const status = error.response.status;
       const message = error.response.data?.message || 'An error occurred';
@@ -25,7 +36,7 @@ api.interceptors.response.use(
       }
     } else if (error.request) {
       toast.error('Network error. Please check your connection.');
-    } else if (error.code !== 'ERR_CANCELED') {
+    } else {
       toast.error('An unexpected error occurred.');
     }
 

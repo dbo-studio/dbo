@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/container"
 	serviceAI "github.com/dbo-studio/dbo/internal/service/ai"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -14,8 +15,11 @@ type AiHandler struct {
 	aiService serviceAI.IAiService
 }
 
-func NewAiHandler(logger logger.Logger, ai serviceAI.IAiService) *AiHandler {
-	return &AiHandler{logger: logger, aiService: ai}
+func NewAiHandler(ai serviceAI.IAiService) *AiHandler {
+	return &AiHandler{
+		logger:    container.Instance().Logger(),
+		aiService: ai,
+	}
 }
 
 func (h AiHandler) Chat(c fiber.Ctx) error {

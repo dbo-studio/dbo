@@ -1,7 +1,9 @@
 package sqlite
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/model"
@@ -21,17 +23,17 @@ func NewSQLiteCache(db *gorm.DB) cache.Cache {
 	}
 }
 
-func (c *ISQLiteCacheImpl) ConditionalGet(key string, result any, condition bool) error {
+func (c *ISQLiteCacheImpl) ConditionalGet(ctx context.Context, key string, result any, condition bool) error {
 	if condition {
-		return c.Get(key, result)
+		return c.Get(ctx, key, result)
 	}
 
 	return nil
 }
 
-func (c *ISQLiteCacheImpl) Get(key string, result any) error {
+func (c *ISQLiteCacheImpl) Get(ctx context.Context, key string, result any) error {
 	var item model.CacheItem
-	err := c.db.First(&item, "key = ?", key).Error
+	err := c.db.WithContext(ctx).First(&item, "key = ?", key).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -41,7 +43,7 @@ func (c *ISQLiteCacheImpl) Get(key string, result any) error {
 	}
 
 	if item.Expiration > 0 && time.Now().Unix() > item.Expiration {
-		err = c.Delete(key)
+		err = c.Delete(ctx, key)
 		if err != nil {
 			return err
 		}
@@ -51,7 +53,7 @@ func (c *ISQLiteCacheImpl) Get(key string, result any) error {
 	return json.Unmarshal([]byte(item.Value), &result)
 }
 
-func (c *ISQLiteCacheImpl) Set(key string, value any, ttl *time.Duration) error {
+func (c *ISQLiteCacheImpl) Set(ctx context.Context, key string, value any, ttl *time.Duration) error {
 	var expiration int64
 	if ttl != nil {
 		expiration = time.Now().Add(*ttl).Unix()
@@ -64,13 +66,17 @@ func (c *ISQLiteCacheImpl) Set(key string, value any, ttl *time.Duration) error 
 		return err
 	}
 
-	return c.db.Save(&model.CacheItem{
+	return c.db.WithContext(ctx).Save(&model.CacheItem{
 		Key:        key,
 		Value:      string(jsonValue),
 		Expiration: expiration,
 	}).Error
 }
 
-func (c *ISQLiteCacheImpl) Delete(key string) error {
-	return c.db.Delete(&model.CacheItem{}, "key = ?", key).Error
+func (c *ISQLiteCacheImpl) Delete(ctx context.Context, key string) error {
+	return c.db.WithContext(ctx).Delete(&model.CacheItem{}, "key = ?", key).Error
+}
+
+func (c *ISQLiteCacheImpl) DeleteByPrefix(ctx context.Context, prefix string) error {
+	return c.db.WithContext(ctx).Delete(&model.CacheItem{}, "key LIKE ?", fmt.Sprintf("%s%%", prefix)).Error
 }

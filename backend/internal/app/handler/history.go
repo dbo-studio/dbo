@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/container"
 	serviceHistory "github.com/dbo-studio/dbo/internal/service/history"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -14,8 +15,11 @@ type HistoryHandler struct {
 	historyService serviceHistory.IHistoryService
 }
 
-func NewHistoryHandler(logger logger.Logger, historyService serviceHistory.IHistoryService) *HistoryHandler {
-	return &HistoryHandler{logger, historyService}
+func NewHistoryHandler(historyService serviceHistory.IHistoryService) *HistoryHandler {
+	return &HistoryHandler{
+		logger:         container.Instance().Logger(),
+		historyService: historyService,
+	}
 }
 
 func (h *HistoryHandler) Histories(c fiber.Ctx) error {

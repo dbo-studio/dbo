@@ -4,16 +4,16 @@ export type ConnectionDetailRequestType = {
 
 export type CreateConnectionRequestType = {
   name: string;
-  type: 'postgresql' | 'sqlite';
+  type: 'postgresql' | 'sqlite' | 'mysql';
   isActive?: boolean;
-  options: PostgresqlOptionsType | SQLiteOptionsType;
+  options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
 };
 
 export type UpdateConnectionRequestType = {
   name?: string;
-  type?: 'postgresql' | 'sqlite';
+  type?: 'postgresql' | 'sqlite' | 'mysql';
   isActive?: boolean;
-  options?: PostgresqlOptionsType | SQLiteOptionsType;
+  options?: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
 };
 
 export type PostgresqlOptionsType = {
@@ -24,6 +24,8 @@ export type PostgresqlOptionsType = {
   database?: string;
   uri?: string;
 };
+
+export type MysqlOptionsType = PostgresqlOptionsType;
 
 export type SQLiteOptionsType = {
   file?: string;

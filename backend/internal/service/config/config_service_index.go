@@ -13,7 +13,7 @@ func (i IConfigServiceImpl) Index(ctx context.Context) (*dto.ConfigListResponse,
 	}
 
 	go func() {
-		_, err := i.CheckUpdate(context.Background())
+		_, err := i.CheckUpdate(ctx)
 		if err != nil {
 			return
 		}
@@ -28,7 +28,7 @@ func (i IConfigServiceImpl) Index(ctx context.Context) (*dto.ConfigListResponse,
 	}
 
 	var newReleaseVersion *dto.ConfigCheckUpdateResponse
-	err = i.cache.Get("new_release_version", &newReleaseVersion)
+	err = i.cache.Get(ctx, "new_release_version", &newReleaseVersion)
 	if err != nil {
 		return nil, err
 	}

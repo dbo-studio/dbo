@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/container"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
@@ -31,16 +32,14 @@ func NewAiService(
 	aiProviderRepo repository.IAiProviderRepo,
 	aiChatRepo repository.IAiChatRepo,
 	cm *databaseConnection.ConnectionManager,
-	cache cache.Cache,
-	logger logger.Logger,
 ) IAiService {
 	return &AiServiceImpl{
 		connectionRepo:  connectionRepo,
 		aiProviderRepo:  aiProviderRepo,
 		aiChatRepo:      aiChatRepo,
 		cm:              cm,
-		logger:          logger,
-		cache:           cache,
+		logger:          container.Instance().Logger(),
+		cache:           container.Instance().Cache(),
 		providerFactory: serviceAiProvider.NewProviderFactory(),
 	}
 }

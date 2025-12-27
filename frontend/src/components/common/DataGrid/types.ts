@@ -8,10 +8,10 @@ export type DataGridProps = {
 };
 
 export type DataGridTableCellProps = {
-  row: any;
+  row: RowType;
   rowIndex: number;
   columnId: string;
-  value: any;
+  value: string | number | boolean | null | undefined;
   editable: boolean;
   searchTerm?: string;
   isSearchMatch?: boolean;
@@ -62,9 +62,9 @@ export type DataGridTableHeaderRowProps = {
 };
 
 export type CellProps = {
-  row: any;
+  row: RowType;
   rowIndex: number;
-  value: any;
+  value: string | number | boolean | null | undefined;
   onRowUpdate: (newValue: string) => void;
 };
 

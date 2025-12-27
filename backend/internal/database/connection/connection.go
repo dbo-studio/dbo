@@ -1,15 +1,16 @@
 package databaseConnection
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
 
+	"github.com/dbo-studio/dbo/internal/container"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/logger"
-	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlserver"
 
 	"gorm.io/gorm"
@@ -27,25 +28,25 @@ type ConnectionManager struct {
 	historyRepo repository.IHistoryRepo
 }
 
-func NewConnectionManager(logger logger.Logger, historyRepo repository.IHistoryRepo) *ConnectionManager {
+func NewConnectionManager(historyRepo repository.IHistoryRepo) *ConnectionManager {
 	cm := &ConnectionManager{
 		connections: make(map[uint]*conn),
 		mu:          sync.Mutex{},
-		logger:      logger,
+		logger:      container.Instance().Logger(),
 		historyRepo: historyRepo,
 	}
 	go cm.cleanupInactiveConnections()
 	return cm
 }
 
-func (cm *ConnectionManager) GetConnection(connection *model.Connection) (*gorm.DB, error) {
+func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *model.Connection) (*gorm.DB, error) {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 
 	if conn, exists := cm.connections[connection.ID]; exists {
 		db, err := conn.DB.DB()
 		if err == nil {
-			if err := db.Ping(); err == nil {
+			if err := db.PingContext(ctx); err == nil {
 				conn.LastUsed = time.Now()
 				return conn.DB, nil
 			}
@@ -56,7 +57,7 @@ func (cm *ConnectionManager) GetConnection(connection *model.Connection) (*gorm.
 	var dialect gorm.Dialector
 	switch connection.ConnectionType {
 	case string(databaseContract.Mysql):
-		dialect = mysql.Open(connection.Name)
+		dialect = OpenMysqlConnection(connection)
 	case string(databaseContract.Postgresql):
 		dialect = OpenPostgresqlConnection(connection)
 	case string(databaseContract.Sqlite):
@@ -124,10 +125,6 @@ func RegisterHistoryHooks(db *gorm.DB, historyRepo repository.IHistoryRepo, conn
 
 		//nolint
 		err := historyRepo.Create(db.Statement.Context, connectionID, db.Dialector.Explain(db.Statement.SQL.String(), db.Statement.Vars...))
-		if err != nil {
-			db.Logger.Error(db.Statement.Context, "failed to save query history: %v", err)
-		}
-
 		if err != nil {
 			db.Logger.Error(db.Statement.Context, "failed to save query history: %v", err)
 		}

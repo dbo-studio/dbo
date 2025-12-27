@@ -156,7 +156,7 @@ const colorPalette = {
   }
 };
 
-export default function palette(themeMode: ThemeModeEnum): any {
+export default function palette(themeMode: ThemeModeEnum): Record<string, unknown> {
   const theme = {
     light: {
       primary: {

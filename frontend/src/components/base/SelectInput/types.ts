@@ -1,3 +1,5 @@
+import { OnChangeValue } from 'react-select';
+
 export type SelectInputProps = {
   disabled?: boolean;
   label?: string;
@@ -7,12 +9,12 @@ export type SelectInputProps = {
   error?: boolean;
   size?: 'medium' | 'small';
   options: SelectInputOption[];
-  onChange: (value: SelectInputOption) => void;
+  onChange: (value: OnChangeValue<SelectInputOption, boolean>) => void;
   isMulti?: boolean;
 };
 
 export type SelectInputOption = {
-  [x: string]: any;
-  value: any;
+  [x: string]: unknown;
+  value: unknown;
   label: string;
 };

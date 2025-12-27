@@ -1,6 +1,7 @@
 package databaseSqlite
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -10,7 +11,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *SQLiteRepository) ImportData(job dto.ImportJob, rows [][]string, columns []string) (*contract.ImportResult, error) {
+func (r *SQLiteRepository) ImportData(ctx context.Context, job dto.ImportJob, rows [][]string, columns []string) (*contract.ImportResult, error) {
 	startTime := time.Now()
 	var errors []contract.ImportError
 	successRows := 0
@@ -28,7 +29,7 @@ func (r *SQLiteRepository) ImportData(job dto.ImportJob, rows [][]string, column
 			strings.Join(columns, ", "),
 			strings.Join(row, ", "))
 
-		err := r.db.Exec(insertQuery).Error
+		err := r.db.WithContext(ctx).Exec(insertQuery).Error
 
 		if err != nil {
 			failedRows++

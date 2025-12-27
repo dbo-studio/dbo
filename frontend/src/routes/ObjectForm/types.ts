@@ -1,34 +1,51 @@
-import type { FormFieldType, ObjectTabType } from '@/api/tree/types';
+import type { FormFieldOptionType, FormFieldWithState, FormValue, ObjectTabType } from '@/types/Tree';
 
-export type ObjectTabProps = {
+export type FormFieldWithValue = FormFieldWithState;
+
+export type FormTabProps = {
   tabs: ObjectTabType[];
-  selectedTabIndex: string;
-  setSelectedTabIndex: (index: string) => void;
+  selectedTabId: string | null;
+  onTabChange: (tabId: string) => void;
 };
 
-export type ArrayFieldProps = {
-  field: FormFieldType;
-  onChange: (value: any[]) => void;
+export type SimpleFormProps = {
+  schema: FormFieldWithValue[];
+  data?: Record<string, FormValue>;
+  onFieldChange: (fieldId: string, value: FormValue) => void;
 };
 
-export type FormFieldsProps = {
-  fields: FormFieldType[];
-  onChange: (fieldId: string, value: any) => void;
+export type ArrayFormProps = {
+  schema: FormFieldWithValue[];
+  data: Record<string, FormValue>[];
+  onDataChange: (data: Record<string, FormValue>[]) => void;
+};
+
+export type ArrayRowProps = {
+  schema: FormFieldWithValue[];
+  rowData: Record<string, FormValue>;
+  onFieldChange: (fieldId: string, value: FormValue) => void;
+  onDelete: () => void;
 };
 
 export type SimpleFieldProps = {
-  field: FormFieldType;
-  onChange: (value: any) => void;
-  size?: 'small' | 'medium';
+  field: FormFieldWithValue;
+  onChange: (value: FormValue) => void;
+  dynamicOptions?: FormFieldOptionType[];
+  isLoadingDynamic?: boolean;
+  isArrayForm?: boolean;
 };
 
-export type TableFormProps = {
-  formSchema: FormFieldType[];
-};
-
-export type StatusBarProps = {
+export type FormStatusBarProps = {
   onSave: () => void;
   onCancel: () => void;
-  onAdd?: () => void;
+  onAddRow?: () => void;
+  isArrayForm?: boolean;
   disabled?: boolean;
+};
+
+export type FormDataState = {
+  schema: FormFieldWithValue[];
+  data: Record<string, FormValue>[];
+  isArray: boolean;
+  originalData?: Record<string, FormValue>[];
 };

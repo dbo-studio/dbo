@@ -5,8 +5,6 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
-	"github.com/dbo-studio/dbo/pkg/cache"
-	"gorm.io/gorm"
 )
 
 type IConnectionRepo interface {
@@ -69,7 +67,6 @@ type IAiChatRepo interface {
 }
 
 type Repository struct {
-	DB             *gorm.DB
 	ConnectionRepo IConnectionRepo
 	CacheRepo      ICacheRepo
 	HistoryRepo    IHistoryRepo
@@ -79,14 +76,13 @@ type Repository struct {
 	AiProviderRepo IAiProviderRepo
 }
 
-func NewRepository(_ context.Context, db *gorm.DB, cache cache.Cache) *Repository {
+func NewRepository() *Repository {
 	return &Repository{
-		DB:             db,
-		ConnectionRepo: NewConnectionRepo(db),
-		HistoryRepo:    NewHistoryRepo(db),
-		SavedQueryRepo: NewSavedQueryRepo(db),
-		JobRepo:        NewJobRepo(db),
-		AiChatRepo:     NewAiChatRepo(db),
-		AiProviderRepo: NewAiProviderRepo(db),
+		ConnectionRepo: NewConnectionRepo(),
+		HistoryRepo:    NewHistoryRepo(),
+		SavedQueryRepo: NewSavedQueryRepo(),
+		JobRepo:        NewJobRepo(),
+		AiChatRepo:     NewAiChatRepo(),
+		AiProviderRepo: NewAiProviderRepo(),
 	}
 }

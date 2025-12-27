@@ -13,11 +13,14 @@ type Props = {
 };
 
 export default function ThemeProvider({ children }: Props): JSX.Element {
-  const isDark = useSettingStore((state) => state.isDark);
+  const settingsTheme = useSettingStore((state) => state.theme);
 
   const themeOptions: ThemeOptions = {
-    palette: palette(isDark ? ThemeModeEnum.Dark : ThemeModeEnum.Light),
-    direction: constants.direction as Direction
+    palette: palette(settingsTheme.isDark ? ThemeModeEnum.Dark : ThemeModeEnum.Light),
+    direction: constants.direction as Direction,
+    typography: {
+      fontFamily: settingsTheme.appFont
+    }
   };
 
   const theme = createTheme(themeOptions);

@@ -15,13 +15,6 @@ type (
 		Action       string
 	}
 
-	ObjectFieldsRequest struct {
-		ConnectionId int32
-		NodeId       string
-		TabId        string
-		Action       string
-	}
-
 	ObjectDetailRequest struct {
 		ConnectionId int32
 		NodeId       string
@@ -34,6 +27,12 @@ type (
 		NodeId       string
 		Action       string
 		Params       []byte
+	}
+
+	DynamicFieldOptionsRequest struct {
+		ConnectionId int32             `json:"connectionId"`
+		NodeId       string            `json:"nodeId"`
+		Parameters   map[string]string `json:"parameters"`
 	}
 )
 

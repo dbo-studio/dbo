@@ -4,8 +4,8 @@ export const handleRowChangeLog = (
   editedRows: EditedRow[],
   oldRow: RowType,
   rowKey: string,
-  oldValue: any,
-  newValue: any
+  oldValue: unknown,
+  newValue: unknown
 ): EditedRow[] => {
   const dboIndex = oldRow.dbo_index;
 
@@ -13,9 +13,11 @@ export const handleRowChangeLog = (
   const existingRowIndex = editedRows.findIndex((row) => row.dboIndex === dboIndex);
   const existingRow = existingRowIndex !== -1 ? editedRows[existingRowIndex] : null;
 
-  //@ts-ignore
-  const oldObject: RowType = existingRow ? existingRow.old : {};
-  //@ts-ignore
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const oldObject: RowType = existingRow ? existingRow.old : { dbo_index: 0 };
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   const newObject: RowType = existingRow ? existingRow.new : {};
 
   oldObject[rowKey] = oldValue;

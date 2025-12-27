@@ -1,6 +1,7 @@
 package databaseSqlite
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -8,29 +9,46 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
+	"golang.org/x/sync/errgroup"
 )
 
-func (r *SQLiteRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
+func (r *SQLiteRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
 	node := req.NodeId
-	query := runQueryGenerator(req, node)
+	query := r.runQueryGenerator(ctx, req, node)
 	queryResults := make([]map[string]any, 0)
+	columns := make([]Column, 0)
 
-	if req.NodeId == "" {
+	if node == "" {
 		return nil, errors.New("table or view not found")
 	}
 
-	result := r.db.Raw(query).Find(&queryResults)
-	if result.Error != nil {
-		return nil, result.Error
-	}
+	g, gctx := errgroup.WithContext(ctx)
 
-	for i := range queryResults {
-		queryResults[i]["dbo_index"] = helper.SanitizeQueryResults(queryResults[i])
-	}
+	g.Go(func() error {
+		err := r.db.WithContext(gctx).Raw(query).Find(&queryResults).Error
+		if err != nil {
+			return err
+		}
 
-	columns, err := r.getColumns(node, req.Columns, true)
-	if err != nil {
-		return nil, result.Error
+		for i, row := range queryResults {
+			queryResults[i]["dbo_index"] = i
+			queryResults[i] = helper.SanitizeQueryResults(row)
+		}
+
+		return nil
+	})
+
+	g.Go(func() error {
+		result, err := r.getColumns(node, req.Columns, true)
+		if err != nil {
+			return err
+		}
+		columns = result
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return nil, err
 	}
 
 	return &dto.RunQueryResponse{
@@ -40,7 +58,7 @@ func (r *SQLiteRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryResp
 	}, nil
 }
 
-func runQueryGenerator(dto *dto.RunQueryRequest, node string) string {
+func (r *SQLiteRepository) runQueryGenerator(ctx context.Context, dto *dto.RunQueryRequest, node string) string {
 	var sb strings.Builder
 
 	// SELECT clause
@@ -69,6 +87,12 @@ func runQueryGenerator(dto *dto.RunQueryRequest, node string) string {
 			sortClauses[i] = fmt.Sprintf("%s %s", sort.Column, sort.Operator)
 		}
 		sb.WriteString(strings.Join(sortClauses, ", "))
+	} else {
+		keys, err := r.getPrimaryKeys(Table{node})
+		if err == nil && len(keys) > 0 {
+			sb.WriteString(" ORDER BY ")
+			sb.WriteString(strings.Join(keys, ", "))
+		}
 	}
 
 	// LIMIT and OFFSET

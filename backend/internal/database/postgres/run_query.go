@@ -1,6 +1,7 @@
 package databasePostgres
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -8,30 +9,46 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
+	"golang.org/x/sync/errgroup"
 )
 
-func (r *PostgresRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
+func (r *PostgresRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
 	node := extractNode(req.NodeId)
-	query := r.runQueryGenerator(req, node)
+	query := r.runQueryGenerator(ctx, req, node)
 	queryResults := make([]map[string]any, 0)
+	columns := make([]Column, 0)
 
 	if node.Table == "" {
 		return nil, errors.New("table or view not found")
 	}
 
-	result := r.db.Raw(query).Find(&queryResults)
-	if result.Error != nil {
-		return nil, result.Error
-	}
+	g, gctx := errgroup.WithContext(ctx)
 
-	for i, row := range queryResults {
-		queryResults[i]["dbo_index"] = i
-		queryResults[i] = helper.SanitizeQueryResults(row)
-	}
+	g.Go(func() error {
+		err := r.db.WithContext(gctx).Raw(query).Find(&queryResults).Error
+		if err != nil {
+			return err
+		}
 
-	columns, err := r.getColumns(node.Table, &node.Schema, req.Columns, true)
-	if err != nil {
-		return nil, result.Error
+		for i, row := range queryResults {
+			queryResults[i]["dbo_index"] = i
+			queryResults[i] = helper.SanitizeQueryResults(row)
+		}
+
+		return nil
+	})
+
+	g.Go(func() error {
+		result, err := r.columns(gctx, &node.Table, &node.Schema, req.Columns, true, true)
+		if err != nil {
+			return err
+		}
+		columns = result
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return nil, err
 	}
 
 	return &dto.RunQueryResponse{
@@ -41,7 +58,7 @@ func (r *PostgresRepository) RunQuery(req *dto.RunQueryRequest) (*dto.RunQueryRe
 	}, nil
 }
 
-func (r *PostgresRepository) runQueryGenerator(dto *dto.RunQueryRequest, node PGNode) string {
+func (r *PostgresRepository) runQueryGenerator(ctx context.Context, dto *dto.RunQueryRequest, node PGNode) string {
 	var sb strings.Builder
 
 	// SELECT clause
@@ -71,10 +88,12 @@ func (r *PostgresRepository) runQueryGenerator(dto *dto.RunQueryRequest, node PG
 		}
 		sb.WriteString(strings.Join(sortClauses, ", "))
 	} else {
-		keys, err := r.getPrimaryKeys(Table{node.Table})
+		keys, err := r.primaryKeys(ctx, &node.Table, true)
 		if err == nil && len(keys) > 0 {
 			sb.WriteString(" ORDER BY ")
-			sb.WriteString(strings.Join(keys, ", "))
+			sb.WriteString(strings.Join(lo.Map(keys, func(key PrimaryKey, _ int) string {
+				return key.ColumnName
+			}), ", "))
 		}
 	}
 

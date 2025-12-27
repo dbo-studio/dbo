@@ -5,6 +5,7 @@ import { Box, Checkbox } from '@mui/material';
 import { type JSX, useState } from 'react';
 
 import SelectInput from '@/components/base/SelectInput/SelectInput.tsx';
+import { SelectInputOption } from '@/components/base/SelectInput/types.ts';
 import locales from '@/locales';
 import type { SortItemProps } from '../types.ts';
 import AddSortButton from './AddSortButton/AddSortButton.tsx';
@@ -20,12 +21,12 @@ export default function SortItem({ sort, columns }: SortItemProps): JSX.Element 
     isActive: sort.isActive
   });
 
-  const handleChange = async (type: 'column' | 'operator' | 'isActive', value: any): Promise<void> => {
+  const handleChange = async (type: 'column' | 'operator' | 'isActive', value: string | boolean): Promise<void> => {
     const newSort = {
       index: currentSort.index,
-      column: type === 'column' ? value : currentSort.column,
-      operator: type === 'operator' ? value : currentSort.operator,
-      isActive: type === 'isActive' ? value : currentSort.isActive
+      column: type === 'column' ? (value as string) : currentSort.column,
+      operator: type === 'operator' ? (value as string) : currentSort.operator,
+      isActive: type === 'isActive' ? (value as boolean) : currentSort.isActive
     };
 
     setCurrentSort(newSort);
@@ -48,7 +49,7 @@ export default function SortItem({ sort, columns }: SortItemProps): JSX.Element 
           disabled={columns.length === 0}
           size='small'
           options={columns.map((c) => ({ value: c.name as string, label: c.name }))}
-          onChange={(e): Promise<void> => handleChange('column', e.value)}
+          onChange={(e): Promise<void> => handleChange('column', (e as unknown as SelectInputOption).value as string)}
         />
       </Box>
       <Box mr={1} ml={1}>
@@ -56,7 +57,7 @@ export default function SortItem({ sort, columns }: SortItemProps): JSX.Element 
           value={currentSort.operator}
           size='small'
           options={PgsqlSorts.map((c) => ({ value: c as string, label: c }))}
-          onChange={(e): Promise<void> => handleChange('operator', e.value)}
+          onChange={(e): Promise<void> => handleChange('operator', (e as unknown as SelectInputOption).value as string)}
         />
       </Box>
       <Box ml={1} mr={1}>

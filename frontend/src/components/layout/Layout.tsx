@@ -13,7 +13,7 @@ import StartContainer from './MainContainer/StartContainer';
 
 export default function Layout(): JSX.Element {
   const windowSize = useWindowSize(true);
-  const sidebar = useSettingStore((state) => state.sidebar);
+  const sidebar = useSettingStore((state) => state.ui.sidebar);
   const currentConnection = useCurrentConnection();
 
   return (

@@ -8,7 +8,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
-func (s IConnectionServiceImpl) Ping(_ context.Context, req *dto.CreateConnectionRequest) error {
+func (s IConnectionServiceImpl) Ping(ctx context.Context, req *dto.CreateConnectionRequest) error {
 	req, err := s.createConnectionDto(req)
 	if err != nil {
 		return apperror.DriverError(err)
@@ -20,7 +20,7 @@ func (s IConnectionServiceImpl) Ping(_ context.Context, req *dto.CreateConnectio
 		Options:        string(req.Options),
 	}
 
-	_, err = s.cm.GetConnection(connection)
+	_, err = s.cm.GetConnection(ctx, connection)
 
 	return err
 }
