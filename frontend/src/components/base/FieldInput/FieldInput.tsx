@@ -1,6 +1,5 @@
 import type { EventFor } from '@/types';
 import { Box, InputBase, Typography, useTheme } from '@mui/material';
-import dayjs from 'dayjs';
 import type React from 'react';
 import { forwardRef, type JSX, useEffect, useState } from 'react';
 import type { FieldInputProps } from './types';
@@ -11,11 +10,7 @@ export default forwardRef(function FieldInput(props: FieldInputProps, _: React.R
   const [value, setValue] = useState('');
 
   useEffect(() => {
-    if (props.type === 'date' || props.type === 'date_time' || props.type === 'dateTime') {
-      setValue(dayjs('2022-04-17T15:30').format('YYYY-MM-DD'));
-    } else {
       setValue(props.value as '');
-    }
   }, [props.type, props.value]);
 
   const handleOnChange = (e: EventFor<'input', 'onChange'>): void => {

@@ -8,8 +8,7 @@
   "author": "DBO Studio",
   "license": "MIT",
   "devDependencies": {
-    "@biomejs/biome": "2.2.0",
-    "@tauri-apps/cli": "^2.5.0",
-    "lefthook": "^1.11.12"
+    "@tauri-apps/cli": "^2.9.6",
+    "lefthook": "^2.0.13"
   }
 }
