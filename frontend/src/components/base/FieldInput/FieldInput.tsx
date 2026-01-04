@@ -10,7 +10,7 @@ export default forwardRef(function FieldInput(props: FieldInputProps, _: React.R
   const [value, setValue] = useState('');
 
   useEffect(() => {
-      setValue(props.value as '');
+    setValue(props.value as '');
   }, [props.type, props.value]);
 
   const handleOnChange = (e: EventFor<'input', 'onChange'>): void => {
