@@ -55,7 +55,7 @@ func buildRoot(ctx context.Context, r *MySQLRepository) (*contract.TreeNode, err
 	return root, nil
 }
 
-func buildDatabase(ctx context.Context, r *MySQLRepository, dbName string) (*contract.TreeNode, error) {
+func buildDatabase(_ context.Context, r *MySQLRepository, dbName string) (*contract.TreeNode, error) {
 	dbNode := &contract.TreeNode{
 		ID:          dbName,
 		Name:        dbName,

@@ -69,13 +69,7 @@ export default function SqlEditor({
   }, [selectedTabId]);
 
   return (
-    <Box
-      ref={boxRef}
-      sx={{
-        height: '100%',
-        width: '100%'
-      }}
-    >
+    <Box ref={boxRef} width='100%' height='100%'>
       <Editor
         height='100%'
         width='100%'

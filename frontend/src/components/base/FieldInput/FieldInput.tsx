@@ -25,7 +25,7 @@ export default forwardRef(function FieldInput(props: FieldInputProps, _: React.R
     }
   };
 
-  const handleOnBlue = (e: EventFor<'input', 'onBlur'>): void => {
+  const handleOnBlur = (e: EventFor<'input', 'onBlur'>): void => {
     setValue(e.target.value);
     if (props.onBlur) {
       props.onBlur(e);
@@ -44,13 +44,9 @@ export default forwardRef(function FieldInput(props: FieldInputProps, _: React.R
       </Box>
       <InputBase
         spellCheck={'false'}
-        size={props.size}
-        fullWidth={props.fullWidth}
-        type={props.type}
         value={value}
-        name={props.name}
         autoComplete='off'
-        onBlur={handleOnBlue}
+        onBlur={handleOnBlur}
         onChange={handleOnChange}
         sx={{
           borderColor: props.error ? theme.palette.error.main : theme.palette.divider,

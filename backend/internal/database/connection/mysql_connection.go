@@ -20,7 +20,7 @@ type MysqlCreateParams dto.MysqlCreateConnectionParams
 type MysqlUpdateParams dto.MysqlUpdateConnectionParams
 
 func CreateMysqlConnection(params json.RawMessage) (string, error) {
-	options, err := helper.RawJsonToStruct[PgsqlCreateParams](params)
+	options, err := helper.RawJsonToStruct[MysqlCreateParams](params)
 	if err != nil {
 		return "", apperror.Validation(errors.New("invalid params"))
 	}
@@ -67,19 +67,13 @@ func OpenMysqlConnection(connection *model.Connection) gorm.Dialector {
 		return mysql.Open(*options.URI)
 	}
 
-	dsn := fmt.Sprintf("host=%s port=%s user=%s ",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
+		options.Username,
+		lo.FromPtr(options.Password),
 		options.Host,
 		strconv.Itoa(int(options.Port)),
-		options.Username,
+		lo.FromPtr(options.Database),
 	)
-
-	if options.Database != nil && len(lo.FromPtr(options.Database)) > 0 {
-		dsn += fmt.Sprintf("dbname=%s ", lo.FromPtr(options.Database))
-	}
-
-	if options.Password != nil && len(lo.FromPtr(options.Password)) > 0 {
-		dsn += fmt.Sprintf("password=%s", lo.FromPtr(options.Password))
-	}
 
 	return mysql.New(mysql.Config{
 		DSN: dsn,
@@ -88,10 +82,11 @@ func OpenMysqlConnection(connection *model.Connection) gorm.Dialector {
 
 func (req MysqlCreateParams) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.Host, validation.When(req.URI == nil && *req.URI == "", validation.Required), validation.Length(0, 120)),
-		validation.Field(&req.Username, validation.When(req.URI == nil && *req.URI == "", validation.Required), validation.Length(0, 120)),
+		validation.Field(&req.Host, validation.When(lo.FromPtr(req.URI) == "", validation.Required), validation.Length(0, 120)),
+		validation.Field(&req.Username, validation.When(lo.FromPtr(req.URI) == "", validation.Required), validation.Length(0, 120)),
+		validation.Field(&req.Port, validation.When(lo.FromPtr(req.URI) == "", validation.Required), validation.Min(0)),
+		validation.Field(&req.Database, validation.Length(0, 120)),
 		validation.Field(&req.Password, validation.Length(0, 120)),
-		validation.Field(&req.Port, validation.When(req.URI == nil && *req.URI == "", validation.Required), validation.Min(0)),
 		validation.Field(&req.URI, validation.Length(0, 120)),
 	)
 }

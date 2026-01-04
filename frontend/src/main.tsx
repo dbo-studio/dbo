@@ -24,7 +24,6 @@ const queryClient = new QueryClient({
   }
 });
 
-// biome-ignore lint: reason
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider>

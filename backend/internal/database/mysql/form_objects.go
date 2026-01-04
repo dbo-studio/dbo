@@ -49,7 +49,7 @@ func (r *MySQLRepository) getDatabaseInfo(ctx context.Context, node MySQLNode) (
 	return helper.BuildObjectFormResponseFromResults(result, fields)
 }
 
-func (r *MySQLRepository) databaseFields(ctx context.Context) []contract.FormField {
+func (r *MySQLRepository) databaseFields(_ context.Context) []contract.FormField {
 	return []contract.FormField{
 		{ID: "SCHEMA_NAME", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
 	}
