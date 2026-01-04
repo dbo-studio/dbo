@@ -3,11 +3,11 @@ import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Divider, Switch, Typography } from '@mui/material';
 
 export function DebugMode() {
-  const debug = useSettingStore((state) => state.debug);
-  const toggleDebug = useSettingStore((state) => state.toggleDebug);
+  const debug = useSettingStore((state) => state.general.debug);
+  const updateGeneral = useSettingStore((state) => state.updateGeneral);
 
   const handleChangeDebugMode = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    toggleDebug(event?.target?.checked);
+    updateGeneral({ debug: event?.target?.checked });
   };
 
   return (

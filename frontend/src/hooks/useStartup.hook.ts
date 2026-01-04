@@ -9,7 +9,7 @@ import { useSetupDesktop } from './useSetupDesktop.hook';
 
 export const useStartup = (): boolean => {
   const done = useSetupDesktop();
-  const debug = useSettingStore((state) => state.debug);
+  const debug = useSettingStore((state) => state.general.debug);
   const updateProviders = useAiStore((state) => state.updateProviders);
   const updateGeneral = useSettingStore((state) => state.updateGeneral);
 
@@ -43,7 +43,9 @@ export const useStartup = (): boolean => {
       import('eruda').then((eruda) => {
         try {
           eruda.default.init();
-        } catch (_) {}
+        } catch {
+          // Ignore error
+        }
       });
     }
   }, [debug]);

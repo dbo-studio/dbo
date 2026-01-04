@@ -1,11 +1,14 @@
 import { useVirtualizer, type VirtualItem, type Virtualizer } from '@tanstack/react-virtual';
+import { type RefObject, useEffect, useState } from 'react';
 
 const ROW_HEIGHT = 22;
+const DEFAULT_OVERSCAN = 30;
+const OVERSCAN_MULTIPLIER = 3;
 
 export type UseDataGridVirtualizationProps = {
   rowsCount: number;
   loading: boolean;
-  tableContainerRef: React.RefObject<HTMLDivElement | null>;
+  tableContainerRef: RefObject<HTMLDivElement | null>;
 };
 
 export type UseDataGridVirtualizationReturn = {
@@ -21,11 +24,49 @@ export function useDataGridVirtualization({
   loading,
   tableContainerRef
 }: UseDataGridVirtualizationProps): UseDataGridVirtualizationReturn {
+  const [overScan, setOverScan] = useState<number>(DEFAULT_OVERSCAN);
+
+  useEffect(() => {
+    const element = tableContainerRef.current;
+    if (!element) {
+      setOverScan(DEFAULT_OVERSCAN);
+      return;
+    }
+
+    const calculateOverScan = (): number => {
+      const containerHeight = element.clientHeight;
+      if (containerHeight <= 0) return DEFAULT_OVERSCAN;
+
+      const estimatedVisibleRows = Math.ceil(containerHeight / ROW_HEIGHT);
+      return Math.max(DEFAULT_OVERSCAN, estimatedVisibleRows * OVERSCAN_MULTIPLIER);
+    };
+
+    const updateOverScan = (): void => {
+      setOverScan(calculateOverScan());
+    };
+
+    updateOverScan();
+
+    if (typeof ResizeObserver === 'undefined') {
+      return;
+    }
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateOverScan();
+    });
+
+    resizeObserver.observe(element);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [tableContainerRef]);
+
   const rowVirtualizer = useVirtualizer<HTMLDivElement, Element>({
     count: rowsCount,
     getScrollElement: () => tableContainerRef.current,
     estimateSize: () => ROW_HEIGHT,
-    overscan: 10,
+    overscan: overScan,
     enabled: rowsCount > 0 && !loading
   });
 

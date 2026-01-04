@@ -5,5 +5,5 @@ export interface ConnectionType {
   isActive: boolean;
   info: string;
   icon: string;
-  options: any;
+  options: Record<string, string | number | boolean>;
 }

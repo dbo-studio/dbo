@@ -1,9 +1,11 @@
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { useCallback, useEffect } from 'react';
+import { RefObject, useCallback, useEffect, useRef } from 'react';
 
-export const useHandleScroll = (tableRef: any): void => {
-  const scrollToBottom = useSettingStore((state) => state.scrollToBottom);
-  const toggleScrollToBottom = useSettingStore((state) => state.toggleScrollToBottom);
+export const useHandleScroll = (tableRef: RefObject<HTMLDivElement>): void => {
+  const scrollToBottom = useSettingStore((state) => state.editor.scrollToBottom);
+  const updateEditor = useSettingStore((state) => state.updateEditor);
+  const prevScrollToBottomRef = useRef(false);
+  const isInitialMountRef = useRef(true);
 
   const handleScrollToBottom = useCallback(() => {
     if (tableRef.current) {
@@ -12,12 +14,20 @@ export const useHandleScroll = (tableRef: any): void => {
         behavior: 'smooth'
       });
     }
-    toggleScrollToBottom(false);
-  }, [tableRef]);
+    updateEditor({ scrollToBottom: false });
+  }, [tableRef, updateEditor]);
 
   useEffect(() => {
-    if (scrollToBottom) {
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      prevScrollToBottomRef.current = scrollToBottom;
+      return;
+    }
+
+    if (scrollToBottom && !prevScrollToBottomRef.current) {
       handleScrollToBottom();
     }
-  }, [scrollToBottom]);
+
+    prevScrollToBottomRef.current = scrollToBottom;
+  }, [scrollToBottom, handleScrollToBottom]);
 };

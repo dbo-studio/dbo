@@ -1,5 +1,6 @@
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu.tsx';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
+import SortableItem from '@/components/base/SortableList/SortableItem/SortableItem';
 import { PanelTabItemStyled } from '@/components/common/Panels/PanelTabs/PanelTabItem/PanelTabItem.styled.ts';
 import { shortcuts } from '@/core/utils';
 import { useContextMenu, useShortcut } from '@/hooks';
@@ -12,7 +13,7 @@ import { usePanelTabMenu } from '../../hooks/usePanelTabMenu';
 import { useRemoveTab } from '../../hooks/useRemoveTab';
 import { useSwitchTab } from '../../hooks/useSwitchTab';
 
-const PanelTabItem: React.FC<{ tab: TabType }> = memo(({ tab }): JSX.Element => {
+const PanelTabItem: React.FC<{ tab: TabType }> = memo(({ tab }: { tab: TabType }): JSX.Element => {
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const tabRefs = useRef<Record<string, HTMLElement>>({});
 
@@ -21,6 +22,21 @@ const PanelTabItem: React.FC<{ tab: TabType }> = memo(({ tab }): JSX.Element => 
   const { handleRemoveTab } = useRemoveTab();
 
   const menu = usePanelTabMenu(tab);
+
+  const handleTabClick = useCallback((): void => {
+    handleSwitchTab(tab.id);
+  }, [handleSwitchTab, tab.id]);
+
+  const handleCloseClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>): void => {
+      e.stopPropagation();
+      e.preventDefault();
+      handleRemoveTab(tab.id);
+    },
+    [handleRemoveTab, tab.id]
+  );
+
+  useShortcut(shortcuts.closeTab, () => handleRemoveTab(selectedTabId ?? ''));
 
   useEffect(() => {
     const tabId = selectedTabId;
@@ -33,20 +49,6 @@ const PanelTabItem: React.FC<{ tab: TabType }> = memo(({ tab }): JSX.Element => 
     }
   }, [selectedTabId]);
 
-  const handleTabClick = useCallback((): void => {
-    handleSwitchTab(tab.id);
-  }, [handleSwitchTab, tab.id]);
-
-  const handleCloseClick = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>): void => {
-      e.stopPropagation();
-      handleRemoveTab(tab.id);
-    },
-    [handleRemoveTab, tab.id]
-  );
-
-  useShortcut(shortcuts.closeTab, () => handleRemoveTab(selectedTabId ?? ''));
-
   return (
     <Box
       onContextMenu={handleContextMenu}
@@ -54,23 +56,25 @@ const PanelTabItem: React.FC<{ tab: TabType }> = memo(({ tab }): JSX.Element => 
         tabRefs.current[tab.id] = el;
       }}
     >
-      <PanelTabItemStyled selected={selectedTabId === tab.id} onClick={handleTabClick}>
-        <Box display={'flex'} overflow={'hidden'} flexGrow={1} justifyContent={'center'} alignItems={'center'}>
-          <Tooltip title={tab.name} placement={'bottom'} key={tab.id}>
-            <Typography
-              display={'inline-block'}
-              component={'span'}
-              overflow={'hidden'}
-              textOverflow={'ellipsis'}
-              maxWidth={'100px'}
-              variant='subtitle2'
-            >
-              {tab.name}
-            </Typography>
-          </Tooltip>
-        </Box>
-        <CustomIcon type='close' size='s' onClick={handleCloseClick} />
-      </PanelTabItemStyled>
+      <SortableItem id={tab.id} onClick={handleTabClick}>
+        <PanelTabItemStyled selected={selectedTabId === tab.id}>
+          <Box display={'flex'} overflow={'hidden'} flexGrow={1} justifyContent={'center'} alignItems={'center'}>
+            <Tooltip title={tab.name} placement={'bottom'} key={tab.id}>
+              <Typography
+                display={'inline-block'}
+                component={'span'}
+                overflow={'hidden'}
+                textOverflow={'ellipsis'}
+                maxWidth={'100px'}
+                variant='subtitle2'
+              >
+                {tab.name}
+              </Typography>
+            </Tooltip>
+          </Box>
+          <CustomIcon type='close' size='s' onClick={handleCloseClick} />
+        </PanelTabItemStyled>
+      </SortableItem>
       <ContextMenu menu={menu} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
     </Box>
   );

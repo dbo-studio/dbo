@@ -9,6 +9,7 @@ export type TabStore = {
   getTabs: () => TabType[];
   updateTabs: (tabs: TabType[]) => void;
   updateSelectedTab: (selectedTab: TabType | undefined) => void;
+  reorderTabs: (activeId: string, overId: string) => void;
 };
 
 export type TabFilterSlice = {

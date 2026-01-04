@@ -1,13 +1,13 @@
 import { useDataStore } from '@/store/dataStore/data.store';
 import { Checkbox } from '@mui/material';
 import clsx from 'clsx';
-import { memo, useCallback, useMemo } from 'react';
+import { JSX, memo, useCallback, useMemo } from 'react';
 import { SelectTableCell, StyledTableRow, TableCell } from '../../DataGrid.styled';
 import { DataGridTableCell } from '../../DataGridTableCell/DataGridTableCell';
 import type { DataGridTableRowProps } from '../../types';
 
 const DataGridTableRow = memo(
-  ({
+  function DataGridTableRow({
     row,
     rowIndex,
     columns,
@@ -19,16 +19,16 @@ const DataGridTableRow = memo(
     editable,
     searchTerm,
     currentMatch
-  }: DataGridTableRowProps) => {
+  }: DataGridTableRowProps): JSX.Element {
     const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
 
     // the row style is used to apply background color to the row based on the row index
     // because the rows are virtualized, we need to apply the background color to the row based on the row index
-    const hasHighlight = isRemoved || isUnsaved || isEdited || isSelected;
-    const isStriped = !hasHighlight && rowIndex % 2 !== 0;
+    const hasHighlight: boolean = isRemoved || isUnsaved || isEdited || isSelected;
+    const isStriped: boolean = !hasHighlight && rowIndex % 2 !== 0;
 
     const handleSelect = useCallback(
-      (columnId: string) => {
+      (columnId: string): void => {
         updateSelectedRows(
           [
             {
@@ -55,7 +55,9 @@ const DataGridTableRow = memo(
           ]);
         } else {
           const selectedRows = useDataStore.getState().selectedRows;
-          const newSelectedRows = selectedRows.filter((selectedRow) => selectedRow.index !== rowIndex);
+          const newSelectedRows = selectedRows.filter(
+            (selectedRow: { index: number }) => selectedRow.index !== rowIndex
+          );
           updateSelectedRows(newSelectedRows, true);
         }
       },
@@ -78,12 +80,24 @@ const DataGridTableRow = memo(
       <StyledTableRow className={rowClassName}>
         {columns.map((column, columnIndex) => {
           const columnId = column.name;
-          const value = row[columnId];
-          const isSearchMatch = searchTerm
-            ? String(value ?? '')
-                .toLowerCase()
-                .includes(searchTerm.toLowerCase())
-            : false;
+          const value =
+            row[columnId] !== undefined &&
+            (typeof row[columnId] === 'string' ||
+              typeof row[columnId] === 'number' ||
+              typeof row[columnId] === 'boolean' ||
+              row[columnId] === null)
+              ? (row[columnId] as string | number | boolean | null)
+              : undefined;
+
+          const isSearchMatch =
+            searchTerm && typeof value === 'string'
+              ? value.toLowerCase().includes(searchTerm.toLowerCase())
+              : searchTerm
+                ? String(value ?? '')
+                    .toLowerCase()
+                    .includes(searchTerm.toLowerCase())
+                : false;
+
           const isCurrentMatch = currentMatch?.rowIndex === rowIndex && currentMatch?.columnIndex === columnIndex;
 
           if (columnId === 'select') {
@@ -124,7 +138,7 @@ const DataGridTableRow = memo(
       </StyledTableRow>
     );
   },
-  (prevProps, nextProps) => {
+  (prevProps: DataGridTableRowProps, nextProps: DataGridTableRowProps): boolean => {
     const rowChanged = prevProps.row !== nextProps.row;
 
     if (rowChanged) {

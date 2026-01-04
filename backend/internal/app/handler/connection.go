@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/container"
 	serviceConnection "github.com/dbo-studio/dbo/internal/service/connection"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -14,9 +15,9 @@ type ConnectionHandler struct {
 	connectionService serviceConnection.IConnectionService
 }
 
-func NewConnectionHandler(logger logger.Logger, connectionService serviceConnection.IConnectionService) *ConnectionHandler {
+func NewConnectionHandler(connectionService serviceConnection.IConnectionService) *ConnectionHandler {
 	return &ConnectionHandler{
-		logger:            logger,
+		logger:            container.Instance().Logger(),
 		connectionService: connectionService,
 	}
 }

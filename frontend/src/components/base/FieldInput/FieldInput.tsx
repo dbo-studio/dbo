@@ -1,19 +1,16 @@
 import type { EventFor } from '@/types';
 import { Box, InputBase, Typography, useTheme } from '@mui/material';
-import dayjs from 'dayjs';
+import type React from 'react';
 import { forwardRef, type JSX, useEffect, useState } from 'react';
 import type { FieldInputProps } from './types';
 
-export default forwardRef(function FieldInput(props: FieldInputProps, _): JSX.Element {
+/* eslint-disable @typescript-eslint/no-unused-vars */
+export default forwardRef(function FieldInput(props: FieldInputProps, _: React.Ref<HTMLInputElement>): JSX.Element {
   const theme = useTheme();
   const [value, setValue] = useState('');
 
   useEffect(() => {
-    if (props.type === 'date' || props.type === 'date_time' || props.type === 'dateTime') {
-      setValue(dayjs('2022-04-17T15:30').format('YYYY-MM-DD'));
-    } else {
-      setValue(props.value as '');
-    }
+    setValue(props.value as '');
   }, [props.type, props.value]);
 
   const handleOnChange = (e: EventFor<'input', 'onChange'>): void => {
@@ -23,7 +20,7 @@ export default forwardRef(function FieldInput(props: FieldInputProps, _): JSX.El
     }
   };
 
-  const handleOnBlue = (e: EventFor<'input', 'onBlur'>): void => {
+  const handleOnBlur = (e: EventFor<'input', 'onBlur'>): void => {
     setValue(e.target.value);
     if (props.onBlur) {
       props.onBlur(e);
@@ -42,13 +39,9 @@ export default forwardRef(function FieldInput(props: FieldInputProps, _): JSX.El
       </Box>
       <InputBase
         spellCheck={'false'}
-        size={props.size}
-        fullWidth={props.fullWidth}
-        type={props.type}
         value={value}
-        name={props.name}
         autoComplete='off'
-        onBlur={handleOnBlue}
+        onBlur={handleOnBlur}
         onChange={handleOnChange}
         sx={{
           borderColor: props.error ? theme.palette.error.main : theme.palette.divider,

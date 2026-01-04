@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/container"
 	serviceAiChat "github.com/dbo-studio/dbo/internal/service/ai_chat"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -15,9 +16,9 @@ type AiChatHandler struct {
 	aiChatService serviceAiChat.IAiChatService
 }
 
-func NewAiChatHandler(logger logger.Logger, aiChatService serviceAiChat.IAiChatService) *AiChatHandler {
+func NewAiChatHandler(aiChatService serviceAiChat.IAiChatService) *AiChatHandler {
 	return &AiChatHandler{
-		logger:        logger,
+		logger:        container.Instance().Logger(),
 		aiChatService: aiChatService,
 	}
 }

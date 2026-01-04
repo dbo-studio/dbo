@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-use std::{env, net::TcpListener};
-use tauri::{App, Manager};
+use std::{env, net::TcpListener, net::TcpStream, time::Duration};
+use tauri::{AppHandle, Manager};
 use tauri_plugin_decorum::WebviewWindowExt;
 use tauri_plugin_shell::process::CommandEvent;
 use tauri_plugin_shell::ShellExt;
@@ -30,10 +30,18 @@ fn main() {
                 main_window.set_traffic_lights_inset(12.0, 16.0).unwrap();
             }
 
-            env::set_var("APP_ENV", "production");
+            unsafe { env::set_var("APP_ENV", "production") };
             let port = find_free_port();
-            env::set_var("APP_PORT", port.to_string());
-            run_server(app);
+            unsafe { env::set_var("APP_PORT", port.to_string()) };
+
+            // Start the server
+            let app_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                run_server(app_handle).await;
+            });
+
+            // Wait for the server to be ready before showing the window
+            wait_for_server_ready(port);
 
             Ok(())
         })
@@ -43,12 +51,7 @@ fn main() {
 
 #[tauri::command]
 fn get_backend_host() -> String {
-    return String::from(
-        "http://127.0.0.1:".to_string()
-            + &env::var("APP_PORT").unwrap().to_string()
-            + "/api".into(),
-    )
-    .to_string();
+    return "http://127.0.0.1:".to_string() + &env::var("APP_PORT").unwrap().to_string() + "/api";
 }
 
 fn find_free_port() -> u16 {
@@ -67,7 +70,7 @@ fn find_free_port() -> u16 {
     return default;
 }
 
-fn run_server(app: &mut App) {
+async fn run_server(app: AppHandle) {
     // Try to create the sidecar command
     let sidecar_command = match app.shell().sidecar("dbo-bin") {
         Ok(command) => command,
@@ -114,4 +117,28 @@ fn run_server(app: &mut App) {
             eprintln!("Failed to terminate sidecar process: {}", e);
         }
     });
+}
+
+fn wait_for_server_ready(port: u16) {
+    let max_attempts = 60; // Maximum 30 seconds (60 * 500ms)
+    let check_interval = Duration::from_millis(500);
+
+    for attempt in 1..=max_attempts {
+        // Try to connect to the server port
+        match TcpStream::connect(format!("127.0.0.1:{}", port)) {
+            Ok(_) => {
+                // Server is ready, but wait a bit more to ensure it's fully initialized
+                std::thread::sleep(Duration::from_millis(200));
+                println!("Server is ready on port {}", port);
+                return;
+            }
+            Err(_) => {
+                if attempt < max_attempts {
+                    std::thread::sleep(check_interval);
+                } else {
+                    eprintln!("Server failed to start within {} seconds", max_attempts / 2);
+                }
+            }
+        }
+    }
 }

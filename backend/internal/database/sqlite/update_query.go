@@ -1,6 +1,7 @@
 package databaseSqlite
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -9,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (r *SQLiteRepository) UpdateQuery(req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error) {
+func (r *SQLiteRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error) {
 	if req == nil {
 		return nil, fmt.Errorf("nil request")
 	}
@@ -27,7 +28,7 @@ func (r *SQLiteRepository) UpdateQuery(req *dto.UpdateQueryRequest) (*dto.Update
 	}
 
 	rowsAffected := 0
-	err := r.db.Transaction(func(tx *gorm.DB) error {
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, query := range queries {
 			result := tx.Exec(query)
 			if result.Error != nil {
@@ -183,7 +184,7 @@ func buildSetClauses(values map[string]interface{}) []string {
 		case "@DEFAULT":
 			setClauses = append(setClauses, fmt.Sprintf(`"%s" = DEFAULT`, key))
 		default:
-			setClauses = append(setClauses, fmt.Sprintf(`"%s" = '%v'`, key, value))
+			setClauses = append(setClauses, fmt.Sprintf(`"%s" = %s`, key, helper.FormatSQLValue(value)))
 		}
 	}
 
@@ -210,7 +211,7 @@ func (r *SQLiteRepository) buildWhereClauses(primaryKeys []string, conditions ma
 		if value == nil {
 			whereClauses = append(whereClauses, fmt.Sprintf(`"%s" IS NULL`, key))
 		} else {
-			whereClauses = append(whereClauses, fmt.Sprintf(`"%s" = '%v'`, key, value))
+			whereClauses = append(whereClauses, fmt.Sprintf(`"%s" = %s`, key, helper.FormatSQLValue(value)))
 		}
 	}
 

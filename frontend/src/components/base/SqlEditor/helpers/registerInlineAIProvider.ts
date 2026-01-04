@@ -1,7 +1,10 @@
 import api from '@/api';
+import type { AICompleteRequest } from '@/api/ai/types';
+import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import type * as MonacoNS from 'monaco-editor/esm/vs/editor/editor.api';
+import type * as Monaco from 'monaco-editor';
+import { DEBOUNCE_DELAYS, MIN_TEXT_LENGTH_FOR_AI } from './constants';
 
 type CompletionItemType = {
   insertText: string;
@@ -13,13 +16,12 @@ type CompletionItemType = {
   };
 };
 
-const DEBOUNCE_DELAY = 300;
-const MIN_TEXT_LENGTH = 10;
-
 let currentRequest: AbortController | null = null;
 let debounceTimer: NodeJS.Timeout | null = null;
 
-function createCompletionItem(text: string, position: MonacoNS.Position): CompletionItemType {
+function createCompletionItem(text: string, position: Monaco.Position): CompletionItemType {
+  // For inline completions, range should start and end at the current cursor position
+  // Monaco will handle displaying the suggestion as "ghost text" after the cursor
   return {
     insertText: text,
     range: {
@@ -31,7 +33,7 @@ function createCompletionItem(text: string, position: MonacoNS.Position): Comple
   };
 }
 
-function getTextRange(model: MonacoNS.editor.ITextModel, position: MonacoNS.Position) {
+function getTextRange(model: Monaco.editor.ITextModel, position: Monaco.Position) {
   const prefix = model.getValueInRange({
     startLineNumber: 1,
     startColumn: 1,
@@ -52,21 +54,29 @@ function getTextRange(model: MonacoNS.editor.ITextModel, position: MonacoNS.Posi
 function cleanupPreviousRequest() {
   if (currentRequest) {
     currentRequest.abort();
+    currentRequest = null;
   }
+
   if (debounceTimer) {
     clearTimeout(debounceTimer);
+    debounceTimer = null;
   }
 }
 
-async function fetchCompletion(requestData: any): Promise<string> {
-  const response = await api.ai.complete(requestData);
+async function fetchCompletion(requestData: AICompleteRequest, signal?: AbortSignal): Promise<string> {
+  const response = await api.ai.complete(requestData, signal);
   return response.completion ?? '';
 }
 
-export function registerInlineAIProvider(monaco: typeof MonacoNS, languageId: string) {
+export function registerInlineAIProvider(monaco: typeof Monaco, languageId: string) {
   monaco.languages.registerInlineCompletionsProvider(languageId, {
-    provideInlineCompletions: async (model, position, _, token) => {
-      if (!useSettingStore.getState().enableEditorAi) {
+    provideInlineCompletions: async (
+      model: Monaco.editor.ITextModel,
+      position: Monaco.Position,
+      _context: Monaco.languages.InlineCompletionContext,
+      token: Monaco.CancellationToken
+    ) => {
+      if (!useSettingStore.getState().editor.enableEditorAi) {
         return { items: [] };
       }
 
@@ -82,47 +92,126 @@ export function registerInlineAIProvider(monaco: typeof MonacoNS, languageId: st
 
       const { prefix, suffix } = getTextRange(model, position);
 
-      if (prefix.trim().length < MIN_TEXT_LENGTH) {
+      if (prefix.trim().length < MIN_TEXT_LENGTH_FOR_AI) {
         return { items: [] };
       }
 
+      // Cancel any previous request and clear debounce timer
       cleanupPreviousRequest();
 
-      return new Promise((resolve) => {
-        debounceTimer = setTimeout(async () => {
-          try {
-            currentRequest = new AbortController();
+      // Capture initial position and model
+      const initialPosition = position;
 
-            const requestData = {
+      return new Promise((resolve) => {
+        // Set up debounce timer for this request
+        const timerId = setTimeout(async () => {
+          // Check if this timer was cancelled by cleanupPreviousRequest
+          if (debounceTimer !== timerId) {
+            resolve({ items: [] });
+            return;
+          }
+
+          // Clear timer reference as we're about to make the request
+          debounceTimer = null;
+
+          if (token.isCancellationRequested) {
+            resolve({ items: [] });
+            return;
+          }
+
+          const currentPosition = model.getPositionAt(model.getOffsetAt(initialPosition));
+
+          if (model.isDisposed()) {
+            resolve({ items: [] });
+            return;
+          }
+
+          // Cancel previous request if exists
+          if (currentRequest) {
+            currentRequest.abort();
+          }
+
+          // Create new AbortController for this request
+          const abortController = new AbortController();
+          const abortSignal = abortController.signal;
+          currentRequest = abortController;
+
+          try {
+            const providers = useAiStore.getState().providers;
+            const activeProvider = providers?.find((p) => p.isActive);
+
+            if (!activeProvider) {
+              resolve({ items: [] });
+              return;
+            }
+
+            const requestData: AICompleteRequest = {
               connectionId: currentConnection()?.id ?? 0,
+              providerId: activeProvider.id,
+              model: activeProvider.model,
               contextOpts: {
-                database: currentConnection()?.options?.database,
-                schema: currentConnection()?.options?.schema,
+                database: currentConnection()?.options?.database as string | undefined,
+                schema: currentConnection()?.options?.schema as string | undefined,
                 prompt: prefix,
                 suffix: suffix
               }
             };
 
-            const completionText = await fetchCompletion(requestData);
+            const completionText = await fetchCompletion(requestData, abortSignal);
 
-            if (!completionText.trim()) {
+            if (abortSignal.aborted || token.isCancellationRequested) {
               resolve({ items: [] });
               return;
             }
 
-            resolve({
-              items: [createCompletionItem(completionText, position)]
-            });
+            if (!model.isDisposed() && completionText.trim()) {
+              const finalPosition = model.getPositionAt(
+                Math.min(model.getOffsetAt(currentPosition), model.getValueLength())
+              );
+
+              const completionItem = createCompletionItem(completionText, finalPosition);
+              console.debug('Inline AI completion created:', {
+                textLength: completionText.length,
+                preview: completionText.substring(0, 50),
+                position: finalPosition,
+                range: completionItem.range
+              });
+              resolve({
+                items: [completionItem]
+              });
+            } else {
+              console.debug('Inline AI completion skipped:', {
+                modelDisposed: model.isDisposed(),
+                textEmpty: !completionText.trim()
+              });
+              resolve({ items: [] });
+            }
           } catch (err) {
-            useSettingStore.getState().toggleEnableEditorAi(false);
+            if (
+              err instanceof Error &&
+              (err.name === 'CanceledError' || err.name === 'AbortError' || err.message.includes('canceled'))
+            ) {
+              resolve({ items: [] });
+              return;
+            }
+
             console.debug('Inline AI provider error:', err);
+            useSettingStore.getState().updateEditor({ enableEditorAi: false });
             resolve({ items: [] });
           } finally {
-            currentRequest = null;
+            // Clear current request reference if this is still the active request and wasn't aborted
+            if (currentRequest === abortController && !abortSignal.aborted) {
+              currentRequest = null;
+            }
           }
-        }, DEBOUNCE_DELAY);
+        }, DEBOUNCE_DELAYS.inlineAIProvider);
+
+        // Store timer ID so we can check if it was cancelled
+        debounceTimer = timerId;
       });
     },
-    freeInlineCompletions: () => {}
+    disposeInlineCompletions: () => {
+      cleanupPreviousRequest();
+    }
   });
 }

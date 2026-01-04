@@ -27,12 +27,12 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 		return nil, apperror.InternalServerError(err)
 	}
 
-	repo, err := database.NewDatabaseRepository(connection, s.cm)
+	repo, err := database.NewDatabaseRepository(ctx, connection, s.cm)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
 
-	version, err := repo.Version()
+	version, err := repo.Version(ctx)
 
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
@@ -55,6 +55,8 @@ func (s IConnectionServiceImpl) createConnectionDto(req *dto.CreateConnectionReq
 		options, err = databaseConnection.CreatePostgresqlConnection(req.Options)
 	case string(databaseContract.Sqlite):
 		options, err = databaseConnection.CreateSQLiteConnection(req.Options)
+	case string(databaseContract.Mysql):
+		options, err = databaseConnection.CreateMysqlConnection(req.Options)
 	}
 
 	if err != nil {

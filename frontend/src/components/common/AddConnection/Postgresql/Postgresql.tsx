@@ -35,7 +35,6 @@ export default function PostgreSQL({
 
   const form = useForm({
     validators: {
-      //@ts-ignore
       onSubmit: formSchema
     },
     onSubmit: async ({ value }): Promise<void> => {

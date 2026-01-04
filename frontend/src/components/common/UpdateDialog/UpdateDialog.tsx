@@ -10,14 +10,14 @@ import { UpdateDialogStyled } from './UpdateDialog.styled';
 export default function UpdateDialog() {
   const [show, setShow] = useState(false);
   const release = useSettingStore((state) => state.general.release);
-  const ignoredRelease = useSettingStore((state) => state.ignoredRelease);
-  const updateIgnoredRelease = useSettingStore((state) => state.updateIgnoredRelease);
+  const ignoredRelease = useSettingStore((state) => state.general.ignoredRelease);
+  const updateGeneral = useSettingStore((state) => state.updateGeneral);
 
   useEffect(() => {
     if (release && release.name !== ignoredRelease) {
       setShow(true);
     }
-  }, [release]);
+  }, [release, ignoredRelease]);
 
   const handleOnClose = () => {
     if (release?.isMinimum) return;
@@ -27,7 +27,7 @@ export default function UpdateDialog() {
   const handleOnIgnore = () => {
     if (release === undefined) return;
 
-    updateIgnoredRelease(release?.name);
+    updateGeneral({ ignoredRelease: release.name });
     setShow(false);
   };
 

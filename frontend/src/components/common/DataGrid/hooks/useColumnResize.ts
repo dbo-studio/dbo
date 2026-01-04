@@ -1,13 +1,11 @@
 import type { ColumnType } from '@/types';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-interface UseColumnResizeProps {
+type UseColumnResizeProps = {
   columns: ColumnType[];
   defaultColumnWidth?: number;
-  minColumnWidth?: number;
-  maxColumnWidth?: number;
   onColumnResize?: (columnSizes: Record<string, number>) => void;
-}
+};
 
 interface UseColumnResizeReturn {
   columnSizes: Record<string, number>;
@@ -18,8 +16,6 @@ interface UseColumnResizeReturn {
 export function useColumnResize({
   columns,
   defaultColumnWidth = 200,
-  minColumnWidth = 50,
-  maxColumnWidth = Number.MAX_SAFE_INTEGER,
   onColumnResize
 }: UseColumnResizeProps): UseColumnResizeReturn {
   // Store column sizes in a state

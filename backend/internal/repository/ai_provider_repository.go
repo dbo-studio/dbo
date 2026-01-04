@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
@@ -14,8 +15,10 @@ type AiProviderRepoImpl struct {
 	db *gorm.DB
 }
 
-func NewAiProviderRepo(db *gorm.DB) IAiProviderRepo {
-	return &AiProviderRepoImpl{db: db}
+func NewAiProviderRepo() IAiProviderRepo {
+	return &AiProviderRepoImpl{
+		db: container.Instance().DB(),
+	}
 }
 
 func (r AiProviderRepoImpl) Index(ctx context.Context) ([]model.AiProvider, error) {

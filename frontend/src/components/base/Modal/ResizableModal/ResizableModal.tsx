@@ -14,7 +14,7 @@ export default function ResizableModal({ open, title, children, onClose, onResiz
   const [isResizing, setIsResizing] = useState(false);
 
   useEffect(() => {
-    const handleMouseMove = (e: any): void => {
+    const handleMouseMove = (e: MouseEvent): void => {
       if (!isResizing) return;
 
       const newWidth = e.clientX - startPosition.x + dimensions.width / 2;
@@ -42,11 +42,11 @@ export default function ResizableModal({ open, title, children, onClose, onResiz
     };
   }, [isResizing, startPosition, dimensions]);
 
-  const handleResizeStart = (e: any): void => {
-    const rect = e.currentTarget.parentElement.getBoundingClientRect();
+  const handleResizeStart = (e: React.MouseEvent<HTMLDivElement>): void => {
+    const rect = (e.currentTarget as HTMLElement).parentElement?.getBoundingClientRect();
     setStartPosition({
-      x: e.clientX - rect.width / 2,
-      y: e.clientY - rect.height / 2
+      x: e.clientX - (rect?.width ?? 0) / 2,
+      y: e.clientY - (rect?.height ?? 0) / 2
     });
     setIsResizing(true);
     e.preventDefault();
@@ -75,7 +75,7 @@ export default function ResizableModal({ open, title, children, onClose, onResiz
           </Box>
         )}
         {children}
-        <ResizeHandle onMouseDown={handleResizeStart} />
+        <ResizeHandle onMouseDown={(e: React.MouseEvent<HTMLDivElement>): void => handleResizeStart(e)} />
       </ResizableModalWrapperStyled>
     </ModalStyled>
   );

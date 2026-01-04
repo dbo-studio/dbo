@@ -27,7 +27,6 @@ export default function SQLite({
 }: ConnectionSettingsProps): JSX.Element {
   const form = useForm({
     validators: {
-      //@ts-ignore
       onSubmit: formSchema
     },
     onSubmit: async ({ value }): Promise<void> => {

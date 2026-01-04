@@ -6,30 +6,50 @@ import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { platform } from '@tauri-apps/plugin-os';
+import axios from 'axios';
 import { useEffect, useState } from 'react';
+
+const BACKEND_HEALTH_CHECK_CONFIG = {
+  maxAttempts: 60,
+  intervalMs: 500,
+  timeout: 2000
+} as const;
+
+const TITLE_BAR_CONFIG = {
+  normal: {
+    paddingLeft: 80,
+    paddingTop: 8
+  },
+  fullScreen: {
+    paddingLeft: 16,
+    paddingTop: 8
+  }
+} as const;
 
 export const useSetupDesktop = (): boolean => {
   const [loaded, setLoaded] = useState(false);
   const reset = useTabStore((state) => state.reset);
 
   useEffect(() => {
-    tools
-      .isTauri()
-      .then((e) => {
-        if (!e) {
+    const initializeDesktop = async (): Promise<void> => {
+      try {
+        const isTauri = await tools.isTauri();
+        if (!isTauri) {
           setLoaded(true);
           return;
         }
+
         reset();
-        setup().then(() => {
-          setLoaded(true);
-        });
-      })
-      .catch((e) => {
-        console.log('=>(useSetupDesktop.hook.ts:28) e', e);
+        await setup();
         setLoaded(true);
-      });
-  }, []);
+      } catch (error) {
+        console.error('Error during desktop setup:', error);
+        setLoaded(true);
+      }
+    };
+
+    initializeDesktop();
+  }, [reset]);
 
   return loaded;
 };
@@ -40,15 +60,38 @@ const setup = async (): Promise<void> => {
   await setupBackend();
 };
 
+const waitForBackendReady = async (baseUrl: string): Promise<void> => {
+  const tempApi = axios.create({
+    baseURL: baseUrl,
+    timeout: BACKEND_HEALTH_CHECK_CONFIG.timeout,
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+
+  for (let attempt = 1; attempt <= BACKEND_HEALTH_CHECK_CONFIG.maxAttempts; attempt++) {
+    try {
+      await tempApi.get('/config');
+      return;
+    } catch (error) {
+      if (attempt < BACKEND_HEALTH_CHECK_CONFIG.maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, BACKEND_HEALTH_CHECK_CONFIG.intervalMs));
+      } else {
+        throw new Error('Backend failed to start within the expected time');
+      }
+    }
+  }
+};
+
 const setupBackend = async (): Promise<void> => {
-  const response = await commands.getBackendHost();
-  if (response === '') {
-    alert('cant found empty port!');
-    return;
+  const backendHost = await commands.getBackendHost();
+  if (!backendHost || backendHost.trim() === '') {
+    console.error('Backend host is empty, cannot setup backend');
+    throw new Error('Backend host is not available');
   }
 
-  changeUrl(response as string);
-  changeUrl(response as string);
+  changeUrl(backendHost);
+  await waitForBackendReady(backendHost);
   switchToDesktopShortcuts();
 };
 
@@ -57,66 +100,51 @@ const disableDefaultContextMenu = (): void => {
     return;
   }
 
-  document.addEventListener(
-    'contextmenu',
-    (e) => {
-      e.preventDefault();
-      return false;
-    },
-    { capture: true }
-  );
+  const preventContextMenu = (e: Event): void => {
+    e.preventDefault();
+  };
 
-  document.addEventListener(
-    'selectstart',
-    (e) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return;
-      }
-      e.preventDefault();
-      return false;
-    },
-    { capture: true }
-  );
+  const preventSelectStart = (e: Event): void => {
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      return;
+    }
+    e.preventDefault();
+  };
 
-  document.addEventListener(
-    'keydown',
-    (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
-        return;
-      }
-    },
-    { capture: true }
-  );
+  document.addEventListener('contextmenu', preventContextMenu, { capture: true });
+  document.addEventListener('selectstart', preventSelectStart, { capture: true });
+};
+
+const createHeaderAreaClickHandler = async (): Promise<void> => {
+  const window = getCurrentWebviewWindow();
+  await window.startDragging();
 };
 
 const setupTitleBar = async (): Promise<void> => {
-  const updateTitleBar = useSettingStore.getState().updateTitleBar;
-  const p = platform();
+  const updateUI = useSettingStore.getState().updateUI;
+  const currentPlatform = await platform();
 
-  if (p !== 'macos') {
+  if (currentPlatform !== 'macos') {
     return;
   }
 
-  updateTitleBar({
-    paddingLeft: 80,
-    paddingTop: 8,
-    onHeaderAreaClick: async () => {
-      const window = getCurrentWebviewWindow();
-      await window.startDragging();
-    }
-  });
+  const updateTitleBar = (config: typeof TITLE_BAR_CONFIG.normal | typeof TITLE_BAR_CONFIG.fullScreen): void => {
+    updateUI({
+      titleBar: {
+        paddingLeft: config.paddingLeft,
+        paddingTop: config.paddingTop,
+        onHeaderAreaClick: createHeaderAreaClickHandler
+      }
+    });
+  };
+
+  updateTitleBar(TITLE_BAR_CONFIG.normal);
 
   streams.window.willEnterFullScreen(() => {
-    updateTitleBar({
-      paddingLeft: 16,
-      paddingTop: 8
-    });
+    updateTitleBar(TITLE_BAR_CONFIG.fullScreen);
   });
 
   streams.window.willExitFullScreen(() => {
-    updateTitleBar({
-      paddingLeft: 80,
-      paddingTop: 8
-    });
+    updateTitleBar(TITLE_BAR_CONFIG.normal);
   });
 };

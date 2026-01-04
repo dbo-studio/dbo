@@ -1,5 +1,5 @@
 import { api } from '@/core/api';
-import type { JobDetailResponse } from './types';
+import type { JobDetailResponseType } from './types';
 
 const endpoint = {
   detail: (jobId: string): string => `/jobs/${jobId}`,
@@ -7,8 +7,8 @@ const endpoint = {
   result: (jobId: string): string => `/jobs/${jobId}/result`
 };
 
-export const detail = async (jobId: string): Promise<JobDetailResponse> => {
-  return (await api.get(endpoint.detail(jobId))).data.data as JobDetailResponse;
+export const detail = async (jobId: string): Promise<JobDetailResponseType> => {
+  return (await api.get(endpoint.detail(jobId))).data.data as JobDetailResponseType;
 };
 
 export const cancel = async (jobId: string): Promise<void> => {

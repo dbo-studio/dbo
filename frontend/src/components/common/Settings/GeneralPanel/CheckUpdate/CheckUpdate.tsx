@@ -1,8 +1,10 @@
 import api from '@/api';
+import { tools } from '@/core/utils';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Button, Divider, Typography } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
+import { openPath } from '@tauri-apps/plugin-opener';
 import { useState } from 'react';
 
 export function CheckUpdate() {
@@ -30,7 +32,11 @@ export function CheckUpdate() {
   };
 
   const handleUpdate = async () => {
-    window.open(general.release?.url, '_blank');
+    if (await tools.isTauri()) {
+      await openPath(general.release?.url ?? '');
+    } else {
+      window.open(general.release?.url, '_blank');
+    }
   };
 
   return (

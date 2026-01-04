@@ -1,4 +1,3 @@
-import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { TabType } from '@/types';
 import { useCallback } from 'react';
@@ -6,7 +5,6 @@ import { useCallback } from 'react';
 export const useSwitchTab = (): { handleSwitchTab: (tabId: string) => void } => {
   const getTabs = useTabStore((state) => state.getTabs);
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
-  const confirmModal = useConfirmModalStore();
 
   const handleSwitchTab = useCallback(
     (tabId: string): void => {

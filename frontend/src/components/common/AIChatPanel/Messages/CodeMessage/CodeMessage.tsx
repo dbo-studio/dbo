@@ -9,8 +9,8 @@ import type { CodeMessageProps } from '../../types';
 import { CodeMessageHeaderStyled, CodeMessageStyled } from './CodeMessage.styled';
 
 export default function CodeMessage({ message }: CodeMessageProps) {
-  const [_, copy] = useCopyToClipboard();
-  const isDark = useSettingStore((state) => state.isDark);
+  const [, copy] = useCopyToClipboard();
+  const isDark = useSettingStore((state) => state.theme.isDark);
 
   const handleCopy = async (): Promise<void> => {
     try {
@@ -29,7 +29,7 @@ export default function CodeMessage({ message }: CodeMessageProps) {
           <CustomIcon type='copy' />
         </IconButton>
       </CodeMessageHeaderStyled>
-      <SyntaxHighlighter value={message.content} isDark={isDark ?? false} />
+      <SyntaxHighlighter value={message.content} />
     </CodeMessageStyled>
   );
 }

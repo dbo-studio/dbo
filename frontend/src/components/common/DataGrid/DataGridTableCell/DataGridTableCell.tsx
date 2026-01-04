@@ -1,12 +1,21 @@
 import clsx from 'clsx';
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { JSX, memo, useCallback, useEffect, useMemo } from 'react';
 import { CellContainer, CellContent, CellInput, HighlightedTextMatch } from '../DataGrid.styled';
 import { useCellEditing } from '../hooks/useCellEditing';
 import { useCellSelection } from '../hooks/useCellSelection';
 import type { DataGridTableCellProps } from '../types';
 
 export const DataGridTableCell = memo(
-  ({ row, rowIndex, columnId, value, editable, searchTerm, isSearchMatch, isCurrentMatch }: DataGridTableCellProps) => {
+  function DataGridTableCell({
+    row,
+    rowIndex,
+    columnId,
+    value,
+    editable,
+    searchTerm,
+    isSearchMatch,
+    isCurrentMatch
+  }: DataGridTableCellProps): JSX.Element {
     const placeholder = String(value === null || value === undefined ? 'NULL' : value);
     const cellValue = String(value == null || value === undefined ? '' : value);
 

@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/samber/lo"
 )
 
 type PGNode struct {
@@ -35,12 +34,17 @@ func extractNode(node string) PGNode {
 }
 
 func columnMappedFormat(dataType string) string {
-	switch dataType {
-	case "VARCHAR", "TEXT", "UUID", "TIMESTAMP", "VARBIT":
+	normalized := strings.ToUpper(strings.TrimSpace(dataType))
+	if idx := strings.Index(normalized, "("); idx > -1 {
+		normalized = normalized[:idx]
+	}
+
+	switch normalized {
+	case "VARCHAR", "CHARACTER VARYING", "CHARACTER", "TEXT", "UUID", "TIMESTAMP", "TIMESTAMP WITHOUT TIME ZONE", "TIMESTAMP WITH TIME ZONE", "VARBIT", "BIT VARYING", "JSON", "JSONB":
 		return "string"
-	case "BOOL":
+	case "BOOL", "BOOLEAN":
 		return "boolean"
-	case "INT", "INTEGER", "BIT", "FLOAT":
+	case "INT", "INTEGER", "SMALLINT", "BIGINT", "BIT", "FLOAT", "REAL", "DOUBLE PRECISION", "NUMERIC", "DECIMAL", "SERIAL", "BIGSERIAL":
 		return "number"
 	default:
 		return "string"
@@ -57,24 +61,10 @@ func columnListToResponse(columns []Column) []dto.Column {
 		col.MappedType = column.MappedType
 		col.Editable = column.Editable
 		col.IsActive = column.IsActive
-
-		if column.IsNullable == "NO" {
-			col.NotNull = false
-		} else {
-			col.NotNull = true
-		}
-
-		if column.CharacterMaximumLength.Valid {
-			col.Length = lo.ToPtr(column.CharacterMaximumLength.Int32)
-		}
-
-		if column.ColumnDefault.Valid {
-			col.Default = lo.ToPtr(column.ColumnDefault.String)
-		}
-
-		if column.Comment.Valid {
-			col.Comment = lo.ToPtr(column.Comment.String)
-		}
+		col.Length = column.CharacterMaximumLength
+		col.Default = column.ColumnDefault
+		col.Comment = column.Comment
+		col.NotNull = column.IsNullable == "NO"
 
 		data = append(data, col)
 	}

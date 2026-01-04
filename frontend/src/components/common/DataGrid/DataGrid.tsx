@@ -1,6 +1,6 @@
 import { useContextMenu } from '@/hooks';
 import { Box, CircularProgress } from '@mui/material';
-import { type JSX, useRef } from 'react';
+import { RefObject, useRef, type JSX } from 'react';
 import { StyledCol, StyledTable, TableContainer, VirtualTableWrapper } from './DataGrid.styled';
 import DataGridContextMenu from './DataGridContextMenu/DataGridContextMenu';
 import DataGridTableBodyRows from './DataGridTableBodyRows/DataGridTableBodyRows';
@@ -21,12 +21,11 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
-  useHandleScroll(tableContainerRef);
+  useHandleScroll(tableContainerRef as RefObject<HTMLDivElement>);
 
   const { columnSizes, startResize, resizingColumnId } = useColumnResize({
     columns,
-    defaultColumnWidth: 200,
-    minColumnWidth: 50
+    defaultColumnWidth: 200
   });
 
   const { tableColumns, totalTableWidth } = useDataGridColumns({ columns, columnSizes });

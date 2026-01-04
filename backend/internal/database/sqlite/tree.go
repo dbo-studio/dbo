@@ -1,6 +1,7 @@
 package databaseSqlite
 
 import (
+	"context"
 	"fmt"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
@@ -8,15 +9,15 @@ import (
 	"github.com/samber/lo"
 )
 
-func (r *SQLiteRepository) Tree(parentID string) (*contract.TreeNode, error) {
+func (r *SQLiteRepository) Tree(ctx context.Context, parentID string) (*contract.TreeNode, error) {
 	if parentID == "" {
-		return buildRoot(r)
+		return buildRoot(ctx, r)
 	}
 
-	return buildContainer(r, contract.TreeNodeType(parentID))
+	return buildContainer(ctx, r, contract.TreeNodeType(parentID))
 }
 
-func buildRoot(r *SQLiteRepository) (*contract.TreeNode, error) {
+func buildRoot(ctx context.Context, r *SQLiteRepository) (*contract.TreeNode, error) {
 	root := &contract.TreeNode{
 		ID:          fmt.Sprintf("%d@database", r.connection.ID),
 		Name:        r.connection.Name,
@@ -58,7 +59,7 @@ func buildRoot(r *SQLiteRepository) (*contract.TreeNode, error) {
 	return root, nil
 }
 
-func buildContainer(r *SQLiteRepository, container contract.TreeNodeType) (*contract.TreeNode, error) {
+func buildContainer(ctx context.Context, r *SQLiteRepository, container contract.TreeNodeType) (*contract.TreeNode, error) {
 	containerNode := &contract.TreeNode{
 		ID:          string(container),
 		Name:        string(container),
@@ -92,11 +93,11 @@ func buildContainer(r *SQLiteRepository, container contract.TreeNodeType) (*cont
 			})
 		}
 	case contract.ViewContainerNodeType:
-		views, err := r.getAllViewList()
+		viewList, err := r.getAllViewList()
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}
-		for _, view := range views {
+		for _, view := range viewList {
 			containerNode.Children = append(containerNode.Children, contract.TreeNode{
 				ID:   view.Name,
 				Name: view.Name,

@@ -7,16 +7,17 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import { Stack, Switch, Tooltip, Typography } from '@mui/material';
 import { type JSX, useEffect, useState } from 'react';
 import type { QueryEditorLeadingProps } from '../../types';
+import type { SelectInputOption } from '@/components/base/SelectInput/types';
 
 export default function QueryEditorLeading({ databases, schemas }: QueryEditorLeadingProps): JSX.Element {
   const selectedTab = useSelectedTab();
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
-  const enableEditorAi = useSettingStore((state) => state.enableEditorAi);
-  const toggleEnableEditorAi = useSettingStore((state) => state.toggleEnableEditorAi);
+  const enableEditorAi = useSettingStore((state) => state.editor.enableEditorAi);
+  const updateEditor = useSettingStore((state) => state.updateEditor);
 
-  const [localSchema, setLocalSchema] = useState<string>(selectedTab?.options?.schema ?? '');
-  const [localDatabase, setLocalDatabase] = useState<string>(selectedTab?.options?.database ?? '');
+  const [localSchema, setLocalSchema] = useState<string>((selectedTab?.options?.schema as string) ?? '');
+  const [localDatabase, setLocalDatabase] = useState<string>((selectedTab?.options?.database as string) ?? '');
 
   useEffect(() => {
     if (!selectedTab) return;
@@ -36,7 +37,7 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
           disabled={databases?.length === 0}
           size='small'
           options={databases.map((s) => ({ value: s, label: s }))}
-          onChange={(e): void => setLocalDatabase(e.value)}
+          onChange={(e): void => setLocalDatabase((e as SelectInputOption)?.value as string)}
         />
       </Stack>
 
@@ -50,14 +51,18 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
           disabled={schemas?.length === 0}
           size='small'
           options={schemas.map((s) => ({ value: s, label: s }))}
-          onChange={(e): void => setLocalSchema(e.value)}
+          onChange={(e): void => setLocalSchema((e as SelectInputOption)?.value as string)}
         />
       </Stack>
 
       <Stack direction={'row'} spacing={1} alignItems={'center'}>
         <CustomIcon type='bot' />
         <Tooltip title={enableEditorAi ? locales.enable_ai : locales.disable_ai}>
-          <Switch size='small' checked={enableEditorAi} onChange={() => toggleEnableEditorAi()} />
+          <Switch
+            size='small'
+            checked={enableEditorAi}
+            onChange={() => updateEditor({ enableEditorAi: !enableEditorAi })}
+          />
         </Tooltip>
       </Stack>
     </Stack>

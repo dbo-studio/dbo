@@ -1,11 +1,11 @@
 import api from '@/api';
-import type { TreeNodeType } from '@/api/tree/types';
 import { TabMode } from '@/core/enums';
 import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
+import { TreeNodeType } from '@/types/Tree';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
@@ -24,7 +24,7 @@ export const useActionDetection = (
   const addObjectTab = useTabStore((state) => state.addObjectTab);
   const reloadTree = useTreeStore((state) => state.reloadTree);
 
-  const [_, copy] = useCopyToClipboard();
+  const [, copy] = useCopyToClipboard();
 
   const { mutateAsync: executeActionMutation, isPending: pendingExecuteAction } = useMutation({
     mutationFn: api.tree.executeAction,
@@ -56,7 +56,7 @@ export const useActionDetection = (
               break;
             }
             case 'data': {
-              addTab(node.action.params.table, node.id, node.action.params.editable);
+              addTab(node.action.params.table as string, node.id, node.action.params.editable as boolean);
               break;
             }
           }
@@ -79,6 +79,8 @@ export const useActionDetection = (
                   nodeId: node.id,
                   action: node.action.name,
                   connectionId: currentConnection.id,
+                  /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+                  // @ts-ignore
                   data: {
                     [selectedTab?.id ?? '']: {
                       [node.id]: {}

@@ -36,7 +36,9 @@ export default function Filters(): JSX.Element {
         <AddFilterButton columns={columns ?? []} />
       ) : (
         selectedTab?.filters?.map((filter: FilterType) => {
-          return <FilterItem key={uuid()} columns={columns ?? []} filter={filter} />;
+          return (
+            <FilterItem apply={(): void => handleApplyFilters()} key={uuid()} columns={columns ?? []} filter={filter} />
+          );
         })
       )}
 

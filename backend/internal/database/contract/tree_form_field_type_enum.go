@@ -7,4 +7,5 @@ const (
 	FormFieldTypeSelect      TreeFormFieldTypeEnum = "select"
 	FormFieldTypeMultiSelect TreeFormFieldTypeEnum = "multi-select"
 	FormFieldTypeCheckBox    TreeFormFieldTypeEnum = "checkbox"
+	FormFieldTypeQuery       TreeFormFieldTypeEnum = "query"
 )

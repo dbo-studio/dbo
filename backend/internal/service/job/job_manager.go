@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -29,7 +30,7 @@ type IJobManagerImpl struct {
 	logger       logger.Logger
 }
 
-func NewJobManager(jobRepo repository.IJobRepo, logger logger.Logger) IJobManager {
+func NewJobManager(jobRepo repository.IJobRepo) IJobManager {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	jm := IJobManagerImpl{
@@ -37,7 +38,7 @@ func NewJobManager(jobRepo repository.IJobRepo, logger logger.Logger) IJobManage
 		processors:   make(map[model.JobType]JobProcessor),
 		workerCtx:    ctx,
 		workerCancel: cancel,
-		logger:       logger,
+		logger:       container.Instance().Logger(),
 	}
 
 	jm.workerWg.Add(1)

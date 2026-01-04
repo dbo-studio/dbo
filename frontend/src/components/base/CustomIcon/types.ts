@@ -71,5 +71,6 @@ export const IconTypes = {
   send: 'Send',
   at: 'AtSign',
   history: 'History',
-  bot: 'Bot'
+  bot: 'Bot',
+  mysql: 'mysql'
 };

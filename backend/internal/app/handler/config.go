@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/dbo-studio/dbo/internal/container"
 	serviceConfig "github.com/dbo-studio/dbo/internal/service/config"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/dbo-studio/dbo/pkg/response"
@@ -12,9 +13,9 @@ type ConfigHandler struct {
 	configService serviceConfig.IConfigService
 }
 
-func NewConfigHandler(logger logger.Logger, configService serviceConfig.IConfigService) *ConfigHandler {
+func NewConfigHandler(configService serviceConfig.IConfigService) *ConfigHandler {
 	return &ConfigHandler{
-		logger:        logger,
+		logger:        container.Instance().Logger(),
 		configService: configService,
 	}
 }

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/service/import_export"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -14,9 +15,9 @@ type ImportExportHandler struct {
 	importExportService import_export.IImportExport
 }
 
-func NewImportExportHandler(logger logger.Logger, importExportService import_export.IImportExport) *ImportExportHandler {
+func NewImportExportHandler(importExportService import_export.IImportExport) *ImportExportHandler {
 	return &ImportExportHandler{
-		logger:              logger,
+		logger:              container.Instance().Logger(),
 		importExportService: importExportService,
 	}
 }

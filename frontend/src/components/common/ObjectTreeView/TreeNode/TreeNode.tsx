@@ -1,5 +1,3 @@
-import type { TreeNodeType } from '@/api/tree/types';
-import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import { useTreeNodeHandlers } from '@/components/common/ObjectTreeView/TreeNode/hooks/useTreeNodeHandlers';
 import { useTreeNodeMenu } from '@/components/common/ObjectTreeView/TreeNode/hooks/useTreeNodeMenu';
 import { NodeContent } from '@/components/common/ObjectTreeView/TreeNode/NodeContent/NodeContent';
@@ -9,6 +7,7 @@ import {
 } from '@/components/common/ObjectTreeView/TreeNode/TreeNode.styled';
 import type { TreeNodeProps } from '@/components/common/ObjectTreeView/TreeNode/types';
 import { useTreeStore } from '@/store/treeStore/tree.store';
+import { TreeNodeType } from '@/types/Tree';
 import { Fragment, type JSX, useCallback, useEffect, useRef, useState } from 'react';
 import { useActionDetection } from './hooks/useActionDetection';
 
@@ -18,6 +17,7 @@ export default function TreeNode({
   nodeIndex = 0,
   level = 0,
   searchTerm = '',
+  selectedNodeId,
   fetchChildren,
   onFocusChange,
   onContextMenu
@@ -29,6 +29,7 @@ export default function TreeNode({
   const { isNodeExpanded, expandNode, collapseNode, setNodeChildren } = useTreeStore();
 
   const isExpanded = isNodeExpanded(node.id);
+  const isSelected = node.id === selectedNodeId;
 
   useEffect(() => {
     setNode(initialNode);
@@ -44,8 +45,7 @@ export default function TreeNode({
   }, [node.id, parentRefs]);
 
   const handleSetChildren = (newChildren: TreeNodeType[]): void => {
-    //@ts-ignore
-    const children = typeof newChildren === 'function' ? newChildren(node.children) : newChildren;
+    const children = Array.isArray(newChildren) ? newChildren : [];
     setNode((prev) => ({
       ...prev,
       children: Array.isArray(children) ? children : []
@@ -77,6 +77,7 @@ export default function TreeNode({
     setIsFocused,
     fetchChildren,
     parentRefs,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     nodeRef,
     nodeIndex,
@@ -120,6 +121,7 @@ export default function TreeNode({
         node={node}
         nodeRef={nodeRef}
         isFocused={isFocused}
+        isSelected={isSelected}
         isExpanded={isExpanded}
         isLoading={isLoading}
         hasChildren={node.hasChildren}
@@ -132,9 +134,6 @@ export default function TreeNode({
         handleBlur={handleBlur}
         handleKeyDown={handleKeyDown}
       />
-      {/* {menu.length > 0 && (
-        <ContextMenu menu={menu} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
-      )} */}
       {isExpanded && node.children.length > 0 && (
         <ChildrenContainer>
           {node.children.map((child, index) => (
@@ -148,6 +147,7 @@ export default function TreeNode({
               onFocusChange={onFocusChange}
               searchTerm={searchTerm}
               onContextMenu={onContextMenu}
+              selectedNodeId={selectedNodeId}
             />
           ))}
         </ChildrenContainer>

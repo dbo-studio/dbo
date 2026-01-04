@@ -3,7 +3,7 @@ import type { TreeNodeType } from '@/api/tree/types';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
 import Search from '@/components/base/Search/Search';
-import { useContextMenu, useCurrentConnection } from '@/hooks';
+import { useContextMenu, useCurrentConnection, useSelectedTab } from '@/hooks';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { Box, LinearProgress } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
@@ -13,6 +13,7 @@ import TreeNode from './TreeNode/TreeNode';
 
 export default function ObjectTreeView(): JSX.Element {
   const currentConnection = useCurrentConnection();
+  const selectedTab = useSelectedTab();
   const isLoading = useTreeStore((state) => state.isLoading);
   const treeError = useTreeStore((state) => state.treeError);
   const [menu, setMenu] = useState<MenuType[]>([]);
@@ -85,6 +86,7 @@ export default function ObjectTreeView(): JSX.Element {
             level={0}
             searchTerm={searchTerm}
             onContextMenu={onContextMenu}
+            selectedNodeId={selectedTab?.nodeId}
           />
         )}
 

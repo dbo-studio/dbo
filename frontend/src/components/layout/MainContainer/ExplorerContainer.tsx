@@ -27,8 +27,8 @@ const tabs = [
 export default React.memo(function ExplorerContainer(): JSX.Element {
   const windowSize = useWindowSize();
   const [selectedTabId, setSelectedTabId] = useState(0);
-  const sidebar = useSettingStore((state) => state.sidebar);
-  const updateSidebar = useSettingStore((state) => state.updateSidebar);
+  const sidebar = useSettingStore((state) => state.ui.sidebar);
+  const updateUI = useSettingStore((state) => state.updateUI);
 
   const selectedTabContent = useMemo(() => {
     const Component = tabs.find((obj) => obj.id === Number(selectedTabId))?.component;
@@ -41,7 +41,7 @@ export default React.memo(function ExplorerContainer(): JSX.Element {
 
   return (
     <ResizableXBox
-      onChange={(width: number): void => updateSidebar({ leftWidth: width })}
+      onChange={(width: number): void => updateUI({ sidebar: { ...sidebar, leftWidth: width } })}
       width={sidebar.leftWidth}
       direction='rtl'
       maxWidth={500}

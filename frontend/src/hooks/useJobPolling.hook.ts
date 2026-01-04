@@ -1,22 +1,13 @@
 import api from '@/api';
+import { JobType } from '@/types/Job';
 import { useMutation } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
-
-type JobType = {
-  id: string;
-  type: 'import' | 'export';
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
-  progress: number;
-  message: string;
-  error?: string;
-  result?: any;
-};
 
 type UseJobPollingOptions = {
   onProgress?: (progress: number, message: string) => void;
   onStatusChange?: (status: string, message: string) => void;
   onError?: (error: string) => void;
-  onResult?: (result: any) => void;
+  onResult?: (result: unknown) => void;
   onComplete?: (job: JobType) => void;
   pollingInterval?: number;
 };

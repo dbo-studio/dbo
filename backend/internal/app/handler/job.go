@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/container"
 	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/dbo-studio/dbo/pkg/response"
@@ -13,9 +14,9 @@ type JobHandler struct {
 	jobService serviceJob.IJobService
 }
 
-func NewJobHandler(logger logger.Logger, jobService serviceJob.IJobService) *JobHandler {
+func NewJobHandler(jobService serviceJob.IJobService) *JobHandler {
 	return &JobHandler{
-		logger:     logger,
+		logger:     container.Instance().Logger(),
 		jobService: jobService,
 	}
 }

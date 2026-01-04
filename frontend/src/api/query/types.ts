@@ -17,15 +17,13 @@ export type RunRawQueryRequestType = {
 
 export type AutoCompleteRequestType = {
   connectionId: number;
-  fromCache?: boolean;
   database?: string;
   schema?: string;
-  skipSystem?: boolean;
 };
 
 export type RunQueryResponseType = {
   query: string;
-  data: any[];
+  data: unknown[];
   columns: ColumnType[];
 };
 

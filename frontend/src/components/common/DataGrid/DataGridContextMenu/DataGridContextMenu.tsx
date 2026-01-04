@@ -22,9 +22,9 @@ export default function DataGridContextMenu({
   const editedRows = useDataStore((state) => state.editedRows);
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
   const updateRow = useDataStore((state) => state.updateRow);
-  const toggleShowQuickLookEditor = useSettingStore((state) => state.toggleShowQuickLookEditor);
+  const updateUI = useSettingStore((state) => state.updateUI);
 
-  const [_, copy] = useCopyToClipboard();
+  const [, copy] = useCopyToClipboard();
 
   const valueReplacer = (newValue: string | null | undefined): void => {
     if (!selectedTabId) return;
@@ -55,7 +55,7 @@ export default function DataGridContextMenu({
       name: locales.quick_look_editor,
       closeBeforeAction: true,
       action: (): void => {
-        toggleShowQuickLookEditor(true);
+        updateUI({ showQuickLookEditor: true });
       }
     },
     {
@@ -96,7 +96,7 @@ export default function DataGridContextMenu({
         if (!row || !row.row || !row.selectedColumn) return;
 
         try {
-          await copy(row.row[row.selectedColumn]);
+          await copy(row.row[row.selectedColumn] as string);
           toast.success(locales.copied);
         } catch (error) {
           console.debug('🚀 ~ handleCopy ~ error:', error);

@@ -2,6 +2,7 @@ import api from '@/api';
 import { tools } from '@/core/utils/tools';
 import { useJobPolling } from '@/hooks/useJobPolling.hook';
 import locales from '@/locales';
+import { ErrorType, ImportResultType } from '@/types/Job';
 import { Box, Button, LinearProgress, List, ListItem, ListItemText, Modal, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { JobProgressModalContainer } from './JobProgressModal.styled';
@@ -38,7 +39,7 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
     switch (job.status) {
       case 'completed':
         if (job.type === 'import') {
-          const result = job.result;
+          const result = job.result as ImportResultType;
           const successRows = result?.successRows || result?.successCount || 0;
           const failedRows = result?.failedRows || result?.failedCount || 0;
           const totalRows = result?.totalRows || 0;
@@ -104,7 +105,7 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
                     {locales.error_details} ({job.result.errors.length} {locales.errors}):
                   </Typography>
                   <List dense sx={{ maxHeight: 200, overflow: 'auto' }}>
-                    {job.result.errors.slice(0, 10).map((error: any) => (
+                    {job.result.errors.slice(0, 10).map((error: ErrorType) => (
                       <ListItem key={error.row || error.line}>
                         <ListItemText
                           primary={`${locales.row} ${error.row || error.line}: ${error.message}`}

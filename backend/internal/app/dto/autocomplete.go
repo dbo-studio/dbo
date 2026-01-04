@@ -5,10 +5,8 @@ import "github.com/invopop/validation"
 type (
 	AutoCompleteRequest struct {
 		ConnectionId int32   `query:"connectionId"`
-		FromCache    bool    `query:"fromCache"`
 		Database     *string `query:"database"`
 		Schema       *string `query:"schema"`
-		SkipSystem   *bool   `query:"skipSystem"`
 	}
 
 	AutoCompleteResponse struct {

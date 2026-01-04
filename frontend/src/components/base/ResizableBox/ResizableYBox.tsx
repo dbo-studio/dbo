@@ -29,7 +29,7 @@ export default function ResizableYBox(props: ResizableBoxYProps): JSX.Element {
     setIsResizing(false);
   };
 
-  const handleMouseMove = (event: any): void => {
+  const handleMouseMove = (event: MouseEvent): void => {
     if (!isResizing) return;
 
     const newHeight =

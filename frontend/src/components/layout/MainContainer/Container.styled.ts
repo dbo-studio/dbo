@@ -20,7 +20,7 @@ export const EndContainerStyled = styled(Box)(({ theme }) => ({
 
 export const StartContainerStyled = styled(Box)(({ theme }) => ({
   borderLeft: `1px solid ${theme.palette.divider}`,
-  overflow: 'hidden'
+  overflow: 'auto'
 }));
 
 export const ExplorerContainerStyled = styled(Box)(({ theme }) => ({

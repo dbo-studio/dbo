@@ -39,7 +39,6 @@ export default function Query(): JSX.Element {
     queryFn: async (): Promise<AutoCompleteType> =>
       api.query.autoComplete({
         connectionId: currentConnection?.id ?? 0,
-        fromCache: false,
         database: selectedTab?.options?.database === '' ? undefined : selectedTab?.options?.database,
         schema: selectedTab?.options?.schema === '' ? undefined : selectedTab?.options?.schema
       }),

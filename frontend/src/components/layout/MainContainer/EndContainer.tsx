@@ -21,8 +21,8 @@ const tabs = [
 
 export default function EndContainer(): JSX.Element {
   const windowSize = useWindowSize();
-  const sidebar = useSettingStore((state) => state.sidebar);
-  const updateSidebar = useSettingStore((state) => state.updateSidebar);
+  const sidebar = useSettingStore((state) => state.ui.sidebar);
+  const updateUI = useSettingStore((state) => state.updateUI);
   const [selectedTabId, setSelectedTabId] = useState(0);
 
   const selectedTabContent = useMemo(() => {
@@ -36,7 +36,7 @@ export default function EndContainer(): JSX.Element {
 
   return (
     <ResizableXBox
-      onChange={(width: number): void => updateSidebar({ rightWidth: width })}
+      onChange={(width: number): void => updateUI({ sidebar: { ...sidebar, rightWidth: width } })}
       width={sidebar.rightWidth}
       direction='ltr'
       maxWidth={500}

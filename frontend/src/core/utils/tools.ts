@@ -17,11 +17,13 @@ export const tools = {
       (isObject(data) && Object.keys(data).length === 0)
     );
   },
-  cleanObject: (obj: any): any => {
+  cleanObject: (obj: unknown): unknown => {
     if (!isObject(obj)) return {};
     const newObj = { ...obj };
     for (const key of Object.keys(newObj)) {
-      newObj[key] === undefined ? delete newObj[key] : {};
+      if (newObj[key] === undefined) {
+        delete newObj[key];
+      }
     }
     return newObj;
   },
@@ -35,7 +37,7 @@ export const tools = {
   isTauri: async (): Promise<boolean> => {
     try {
       return (await getTauriVersion()) !== null;
-    } catch (_) {
+    } catch {
       return false;
     }
   },
@@ -64,7 +66,7 @@ export const tools = {
     try {
       JSON.parse(value);
       return true;
-    } catch (e) {
+    } catch {
       return false;
     }
   },
