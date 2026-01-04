@@ -102,3 +102,4 @@ func (r *MySQLRepository) handleForeignKeyCommands(node MySQLNode, tabId contrac
 
 	return queries, nil
 }
+

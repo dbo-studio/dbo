@@ -56,7 +56,7 @@ const PanelTabItem: React.FC<{ tab: TabType }> = memo(({ tab }: { tab: TabType }
         tabRefs.current[tab.id] = el;
       }}
     >
-      <SortableItem id={tab.id} onClick={handleTabClick}>
+      <SortableItem  id={tab.id} onClick={handleTabClick}>
         <PanelTabItemStyled selected={selectedTabId === tab.id}>
           <Box display={'flex'} overflow={'hidden'} flexGrow={1} justifyContent={'center'} alignItems={'center'}>
             <Tooltip title={tab.name} placement={'bottom'} key={tab.id}>
