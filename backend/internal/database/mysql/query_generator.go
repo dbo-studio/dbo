@@ -2,6 +2,7 @@ package databaseMysql
 
 import (
 	"context"
+	"errors"
 	"slices"
 	"strconv"
 	"strings"
@@ -258,6 +259,11 @@ func (r *MySQLRepository) primaryKeys(ctx context.Context, database *string, tab
 
 	err := query.Order("kcu.ORDINAL_POSITION").Find(&primaryKeys).Error
 	if err != nil {
+		// If context was canceled, return empty list instead of error
+		// This can happen when errgroup cancels context if another goroutine completes/fails
+		if errors.Is(err, context.Canceled) {
+			return []PrimaryKey{}, nil
+		}
 		return nil, err
 	}
 
@@ -312,6 +318,11 @@ func (r *MySQLRepository) foreignKeys(ctx context.Context, database *string, tab
 
 	err := query.Order("kcu.CONSTRAINT_NAME, kcu.ORDINAL_POSITION").Find(&foreignKeys).Error
 	if err != nil {
+		// If context was canceled, return empty list instead of error
+		// This can happen when errgroup cancels context if another goroutine completes/fails
+		if errors.Is(err, context.Canceled) {
+			return []ForeignKey{}, nil
+		}
 		return nil, err
 	}
 
