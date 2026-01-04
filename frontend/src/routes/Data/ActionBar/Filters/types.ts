@@ -4,6 +4,7 @@ import type { ColumnType } from '@/types/Data';
 export type FilterItemProps = {
   filter: FilterType;
   columns: ColumnType[];
+  apply: () => void;
 };
 
 export type AddFilterButtonProps = {
@@ -12,4 +13,5 @@ export type AddFilterButtonProps = {
 
 export type RemoveFilterButtonProps = {
   filter: FilterType;
+  apply: () => void;
 };

@@ -12,7 +12,7 @@ import type { FilterItemProps } from '../types.ts';
 import AddFilterButton from './AddFilterButton/AddFilterButton.tsx';
 import RemoveFilterButton from './RemoveFilterButton/RemoveFilterButton.tsx';
 
-export default function FilterItem({ filter, columns }: FilterItemProps): JSX.Element {
+export default function FilterItem({ filter, columns, apply }: FilterItemProps): JSX.Element {
   const upsertFilters = useTabStore((state) => state.upsertFilters);
 
   const [currentFilter, setCurrentFilter] = useState<FilterType>({
@@ -40,6 +40,13 @@ export default function FilterItem({ filter, columns }: FilterItemProps): JSX.El
     },
     []
   );
+
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>): Promise<void> => {
+    if (e.key === 'Enter') {
+      await upsertFilters(currentFilter);
+      apply();
+    }
+  };
 
   return (
     <Box aria-label={'filter-item'} className='filter-item' display='flex' flexDirection='row' alignItems='center'>
@@ -82,6 +89,7 @@ export default function FilterItem({ filter, columns }: FilterItemProps): JSX.El
           value={currentFilter.value}
           onBlur={(): void => upsertFilters(currentFilter)}
           onChange={(e: EventFor<'input', 'onChange'>): FilterType => handleChange('value', e.target.value)}
+          onKeyDown={handleKeyDown}
         />
       </Box>
       <Box>
@@ -95,7 +103,7 @@ export default function FilterItem({ filter, columns }: FilterItemProps): JSX.El
         />
       </Box>
       <Box ml={1} mr={1}>
-        <RemoveFilterButton filter={filter} />
+        <RemoveFilterButton apply={apply} filter={filter} />
         <AddFilterButton columns={columns} />
       </Box>
     </Box>

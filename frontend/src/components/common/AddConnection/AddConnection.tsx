@@ -10,7 +10,6 @@ import ConnectionSelection from './ConnectionSelection/ConnectionSelection';
 import PostgreSQL from './Postgresql/Postgresql';
 import SQLite from './SQLite/SQLite';
 import type { SelectionConnectionType } from './types';
-import Mysql from './Mysql/Mysql';
 
 const connectionTypes: SelectionConnectionType[] = [
   {
@@ -18,11 +17,11 @@ const connectionTypes: SelectionConnectionType[] = [
     logo: 'postgresql',
     component: PostgreSQL
   },
-  {
-    name: 'MySQL',
-    logo: 'mysql',
-    component: Mysql
-  },
+  // {
+  //   name: 'MySQL',
+  //   logo: 'mysql',
+  //   component: Mysql
+  // },
   {
     name: 'SQLite',
     logo: 'sqlite',
