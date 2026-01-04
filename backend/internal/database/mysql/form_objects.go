@@ -178,3 +178,4 @@ func (r *MySQLRepository) getViewInfo(ctx context.Context, node MySQLNode) (*con
 
 	return helper.BuildObjectFormResponseFromResults(result, fields)
 }
+

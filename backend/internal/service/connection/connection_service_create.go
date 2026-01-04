@@ -55,6 +55,8 @@ func (s IConnectionServiceImpl) createConnectionDto(req *dto.CreateConnectionReq
 		options, err = databaseConnection.CreatePostgresqlConnection(req.Options)
 	case string(databaseContract.Sqlite):
 		options, err = databaseConnection.CreateSQLiteConnection(req.Options)
+	case string(databaseContract.Mysql):
+		options, err = databaseConnection.CreateMysqlConnection(req.Options)
 	}
 
 	if err != nil {
