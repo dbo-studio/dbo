@@ -26,10 +26,10 @@ DBO Studio is a minimal and open source database GUI
 
 ## Supported Databases
 - [x] Postgresql
+- [x] Sqlite
 - [ ] Mysql
 - [ ] MariaDB
 - [ ] SQLServer
-- [ ] Sqlite
 
 We plan to add more databases as soon as possible.
 
