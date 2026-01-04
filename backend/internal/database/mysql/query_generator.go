@@ -348,15 +348,3 @@ func (r *MySQLRepository) foreignKeys(ctx context.Context, database *string, tab
 
 	return result, nil
 }
-
-func (r *MySQLRepository) getTableDDL(database string, tableName string) (string, error) {
-	var result struct {
-		Table       string `gorm:"column:Table"`
-		CreateTable string `gorm:"column:Create Table"`
-	}
-	err := r.db.Raw("SHOW CREATE TABLE `" + database + "`.`" + tableName + "`").Scan(&result).Error
-	if err != nil {
-		return "", err
-	}
-	return result.CreateTable, nil
-}

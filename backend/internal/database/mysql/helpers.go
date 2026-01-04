@@ -37,7 +37,7 @@ func (r *MySQLRepository) cacheKey(args ...string) string {
 	return fmt.Sprintf("c:%d:mysql:%s", r.connection.ID, strings.Join(args, "_"))
 }
 
-func (r *MySQLRepository) updateCache(ctx context.Context, cacheKey string, value any) {
+func (r *MySQLRepository) updateCache(_ context.Context, cacheKey string, value any) {
 	go func() {
 		bgCtx := context.Background()
 		err := r.cache.Set(bgCtx, cacheKey, value, lo.ToPtr(time.Hour))

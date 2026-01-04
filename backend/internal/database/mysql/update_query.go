@@ -143,7 +143,7 @@ func (r *MySQLRepository) generateDeleteQueries(ctx context.Context, req *dto.Up
 	return queries
 }
 
-func (r *MySQLRepository) generateInsertQueries(ctx context.Context, req *dto.UpdateQueryRequest, node MySQLNode) []string {
+func (r *MySQLRepository) generateInsertQueries(_ context.Context, req *dto.UpdateQueryRequest, node MySQLNode) []string {
 	if req == nil || req.AddedItems == nil {
 		return nil
 	}
@@ -201,7 +201,7 @@ func buildSetClauses(values map[string]interface{}) []string {
 	return setClauses
 }
 
-func (r *MySQLRepository) buildWhereClauses(ctx context.Context, primaryKeys []string, conditions map[string]interface{}) []string {
+func (r *MySQLRepository) buildWhereClauses(_ context.Context, primaryKeys []string, conditions map[string]interface{}) []string {
 	conditionKeys := map[string]interface{}{}
 
 	if len(primaryKeys) > 0 {

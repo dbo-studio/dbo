@@ -6,7 +6,7 @@ import (
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
-func (r *MySQLRepository) tableFields(ctx context.Context, action contract.TreeNodeActionName) []contract.FormField {
+func (r *MySQLRepository) tableFields(_ context.Context, _ contract.TreeNodeActionName) []contract.FormField {
 	return []contract.FormField{
 		{ID: "TABLE_NAME", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
 		{ID: "TABLE_COMMENT", Name: "Comment", Type: contract.FormFieldTypeText},
