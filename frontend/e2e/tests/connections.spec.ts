@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test';
 
-test('Connections', async ({page}) => {
+test('Connections', async ({ page }) => {
     await page.goto('/');
-    
+
     await page.waitForLoadState('networkidle');
-    
+
     await page.waitForTimeout(1000);
 
     await test.step('Create a new connection', async () => {
@@ -19,19 +19,19 @@ test('Connections', async ({page}) => {
         await page.locator('input[name="username"]').fill('default');
         await page.locator('input[name="password"]').fill('secret');
 
-        const testConnectionPromise = page.waitForResponse(response => 
+        const testConnectionPromise = page.waitForResponse(response =>
             response.url().includes('connections/ping') && response.status() === 200,
             { timeout: 10000 }
         );
-        
+
         await page.getByTestId('test-connection').click();
         await testConnectionPromise;
 
-        const createConnectionPromise = page.waitForResponse(response => 
+        const createConnectionPromise = page.waitForResponse(response =>
             response.url().includes('connections') && response.status() === 200,
             { timeout: 10000 }
         );
-        
+
         await page.getByTestId('create-connection').click();
         await createConnectionPromise;
 
@@ -42,7 +42,7 @@ test('Connections', async ({page}) => {
 
     await test.step('Create another connection', async () => {
         await page.waitForTimeout(1000);
-        
+
         await page.waitForLoadState('networkidle');
 
         await page.getByTestId('add-connection').click();
@@ -57,19 +57,19 @@ test('Connections', async ({page}) => {
         await page.locator('input[name="username"]').fill('default');
         await page.locator('input[name="password"]').fill('secret');
 
-        const testConnectionPromise = page.waitForResponse(response => 
+        const testConnectionPromise = page.waitForResponse(response =>
             response.url().includes('connections/ping') && response.status() === 200,
             { timeout: 10000 }
         );
-        
+
         await page.getByTestId('test-connection').click();
         await testConnectionPromise;
 
-        const createConnectionPromise = page.waitForResponse(response => 
+        const createConnectionPromise = page.waitForResponse(response =>
             response.url().includes('connections') && response.status() === 200,
             { timeout: 10000 }
         );
-        
+
         await page.getByTestId('create-connection').click();
         await createConnectionPromise;
 
@@ -102,7 +102,7 @@ test('Connections', async ({page}) => {
 
         await page.getByTestId('connection-item-local2').click({ button: 'right' });
         await page.getByRole("menu").getByRole("menuitem", { name: "Edit" }).click();
-        
+
         await expect(page.getByText('Edit connection')).toBeVisible();
 
         await expect(page.locator('input[name="name"]')).toHaveValue("local2");
@@ -112,19 +112,19 @@ test('Connections', async ({page}) => {
 
         await page.locator('input[name="name"]').fill("local2-edited");
 
-        const testConnectionPromise = page.waitForResponse(response => 
+        const testConnectionPromise = page.waitForResponse(response =>
             response.url().includes('connections/ping') && response.status() === 200,
             { timeout: 10000 }
         );
-        
+
         await page.getByTestId('test-connection').click();
         await testConnectionPromise;
 
-        const createConnectionPromise = page.waitForResponse(response => 
+        const createConnectionPromise = page.waitForResponse(response =>
             response.url().includes('connections') && response.status() === 200,
             { timeout: 10000 }
         );
-        
+
         await page.getByTestId('create-connection').click();
         await createConnectionPromise;
 
@@ -138,11 +138,11 @@ test('Connections', async ({page}) => {
 
         await page.getByTestId('connection-item-local2-edited').click({ button: 'right' });
         await page.getByRole("menu").getByRole("menuitem", { name: "Delete" }).click();
-        
+
         await expect(page.getByRole("menu").getByRole("menuitem", { name: "Delete" })).toBeHidden();
         await expect(page.getByRole('heading', { name: 'Delete action!' })).toBeVisible()
         page.getByRole('button', { name: 'Yes' }).click()
-        
+
         await expect(page.getByTestId('connection-item-local2-edited')).toBeHidden();
     });
 
@@ -150,13 +150,14 @@ test('Connections', async ({page}) => {
         await page.waitForTimeout(2000);
 
         await page.getByTestId('connection-item-local').click({ button: 'right' });
-       
-        const refreshConnectionPromise = page.waitForResponse(response => 
+
+        const refreshConnectionPromise = page.waitForResponse(response =>
             response.url().includes('connections') && response.status() === 200,
             { timeout: 10000 }
         );
-        
+
         await page.getByRole("menu").getByRole("menuitem", { name: "Refresh" }).click();
         await refreshConnectionPromise;
     });
 });
+
