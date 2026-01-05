@@ -185,5 +185,7 @@
   "connections": "Connections",
   "check": "Check",
   "you_are_up_to_date": "You are up to date!",
-  "show_logs": "Show logs"
+  "show_logs": "Show logs",
+  "analytics": "Analytics",
+  "enable_analytics": "Enable analytics"
 }

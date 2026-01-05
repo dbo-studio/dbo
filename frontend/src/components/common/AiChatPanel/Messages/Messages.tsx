@@ -29,8 +29,8 @@ export default function Messages({ messages, loading, onLoadMore }: MessagesProp
 
   return (
     <MessagesStyled ref={messagesContainerRef}>
-      {messages.filter((message) => message.isNew === false).length > 0 && (
-        <Button variant='outlined' onClick={onLoadMore} size='small'>
+      {messages.filter((message) => !message.isNew).length > 0 && (
+        <Button sx={{ marginBottom: 1 }} variant='outlined' onClick={onLoadMore} size='small'>
           <Typography variant='caption'>{locales.load_more}</Typography>
         </Button>
       )}

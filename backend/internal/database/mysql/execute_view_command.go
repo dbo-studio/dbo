@@ -62,3 +62,4 @@ func formatQuery(query *string) *string {
 	formattedQuery = strings.ReplaceAll(formattedQuery, ";", "")
 	return &formattedQuery
 }
+
