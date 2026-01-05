@@ -28,7 +28,7 @@ export const createAiChatSlice: StateCreator<AiChatSlice, [], [], AiChatSlice> =
       message.isNew = true;
     }
 
-    const updatedChat = { ...chat, messages: [...currentChat.messages, ...messages] };
+    const updatedChat = { ...chat, messages: [...(currentChat.messages ?? []), ...messages] };
 
     get().updateCurrentChat(updatedChat);
 

@@ -41,6 +41,7 @@ export type EditorSettings = {
 export type GeneralSettings = {
   debug: boolean;
   enableErrorReporting: boolean;
+  enableAnalytics: boolean;
   ignoredRelease: string;
   logsPath: string;
   version: string;
