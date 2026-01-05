@@ -42,6 +42,7 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
         general: {
           debug: false,
           enableErrorReporting: false,
+          enableAnalytics: true,
           ignoredRelease: '',
           logsPath: '',
           version: '',

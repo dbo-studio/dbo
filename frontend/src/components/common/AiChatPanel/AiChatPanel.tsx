@@ -48,7 +48,7 @@ export default function AiChatPanel() {
       }
       return chats;
     },
-    enabled: !!currentConnectionId && !!currentChat?.id
+    enabled: !!currentConnectionId
   });
 
   const { mutateAsync: chatMutation, isPending: chatPending } = useMutation({
@@ -121,7 +121,7 @@ export default function AiChatPanel() {
       contextOpts.query = useTabStore.getState().getQuery(selectedTab?.id);
     }
 
-    addMessage(currentChat, [
+    const oldChat = addMessage(currentChat, [
       {
         role: 'user',
         content: context.input.trim(),
@@ -142,8 +142,10 @@ export default function AiChatPanel() {
         contextOpts
       } as AiChatRequest);
 
-      const updatedChat = addMessage(currentChat, chat.messages);
-      updateCurrentChat({ ...updatedChat, title: chat.title });
+      const updatedChat = addMessage(oldChat, chat.messages);
+      if (chat.title !== oldChat.title) {
+        updateCurrentChat({ ...updatedChat, title: chat.title });
+      }
     } catch (error) {
       console.debug('🚀 ~ handleSend ~ error:', error);
     }
