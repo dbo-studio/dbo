@@ -1,163 +1,187 @@
 import { expect, test } from '@playwright/test';
+import { ConnectionPage, SqlEditorPage, SidebarPage, type ConnectionConfig } from '../pages';
 
-test('Connections', async ({ page }) => {
-    await page.goto('/');
+/**
+ * Connection Management Scenario
+ * 
+ * Tests the full connection lifecycle using Page Object Model.
+ */
+test.describe('Connection Management', () => {
+    const testPrefix = 'conn-test';
 
-    await page.waitForLoadState('networkidle');
+    test('Create and delete a connection', async ({ page }) => {
+        const connectionPage = new ConnectionPage(page);
+        const connectionName = `${testPrefix}-${Date.now()}`;
+        const config: ConnectionConfig = {
+            name: connectionName,
+            host: 'sample-pgsql',
+            port: '5432',
+            username: 'default',
+            password: 'secret',
+            type: 'PostgreSQL'
+        };
 
-    await page.waitForTimeout(1000);
+        await connectionPage.goto();
+        await connectionPage.waitForReady();
 
-    await test.step('Create a new connection', async () => {
-        await expect(page.getByText('New connection')).toBeVisible();
+        await test.step('Create a new connection', async () => {
+            await connectionPage.createConnection(config);
+            await expect(connectionPage.getConnectionItem(connectionName)).toBeVisible();
+        });
 
-        await page.getByTestId('selected-connection-PostgreSQL').click();
-        await page.getByTestId('select-connection').click();
+        await test.step('Activate connection', async () => {
+            await connectionPage.activateConnection(connectionName);
+            await expect(connectionPage.getConnectionHeading(connectionName)).toBeVisible();
+        });
 
-        await page.locator('input[name="name"]').fill('local');
-        await page.locator('input[name="host"]').fill('sample-pgsql');
-        await page.locator('input[name="port"]').fill('5432');
-        await page.locator('input[name="username"]').fill('default');
-        await page.locator('input[name="password"]').fill('secret');
-
-        const testConnectionPromise = page.waitForResponse(response =>
-            response.url().includes('connections/ping') && response.status() === 200,
-            { timeout: 10000 }
-        );
-
-        await page.getByTestId('test-connection').click();
-        await testConnectionPromise;
-
-        const createConnectionPromise = page.waitForResponse(response =>
-            response.url().includes('connections') && response.status() === 200,
-            { timeout: 10000 }
-        );
-
-        await page.getByTestId('create-connection').click();
-        await createConnectionPromise;
-
-        await expect(page.getByText('New connection')).toBeHidden();
-        await page.waitForTimeout(1000);
-        await expect(page.getByTestId('connection-item-local')).toBeVisible();
+        await test.step('Delete the connection', async () => {
+            await connectionPage.deleteConnection(connectionName);
+        });
     });
 
-    await test.step('Create another connection', async () => {
-        await page.waitForTimeout(1000);
+    test('Edit connection', async ({ page }) => {
+        const connectionPage = new ConnectionPage(page);
+        const connectionName = `${testPrefix}-edit-${Date.now()}`;
+        const editedName = `${connectionName}-edited`;
+        const config: ConnectionConfig = {
+            name: connectionName,
+            host: 'sample-pgsql',
+            port: '5432',
+            username: 'default',
+            password: 'secret',
+            type: 'PostgreSQL'
+        };
 
-        await page.waitForLoadState('networkidle');
+        await connectionPage.goto();
+        await connectionPage.waitForReady();
 
-        await page.getByTestId('add-connection').click();
-        await expect(page.getByText('New connection')).toBeVisible();
+        await test.step('Create connection', async () => {
+            await connectionPage.createConnection(config);
+        });
 
-        await page.getByTestId('selected-connection-PostgreSQL').click();
-        await page.getByTestId('select-connection').click();
+        await test.step('Open edit dialog', async () => {
+            await connectionPage.editConnection(connectionName);
+            await expect(connectionPage.nameInput).toHaveValue(connectionName);
+        });
 
-        await page.locator('input[name="name"]').fill('local2');
-        await page.locator('input[name="host"]').fill('sample-pgsql');
-        await page.locator('input[name="port"]').fill('5432');
-        await page.locator('input[name="username"]').fill('default');
-        await page.locator('input[name="password"]').fill('secret');
+        await test.step('Update connection name', async () => {
+            await connectionPage.nameInput.fill(editedName);
+            await connectionPage.testConnection();
+            await connectionPage.submitConnection();
+            await expect(connectionPage.getConnectionItem(editedName)).toBeVisible();
+        });
 
-        const testConnectionPromise = page.waitForResponse(response =>
-            response.url().includes('connections/ping') && response.status() === 200,
-            { timeout: 10000 }
-        );
-
-        await page.getByTestId('test-connection').click();
-        await testConnectionPromise;
-
-        const createConnectionPromise = page.waitForResponse(response =>
-            response.url().includes('connections') && response.status() === 200,
-            { timeout: 10000 }
-        );
-
-        await page.getByTestId('create-connection').click();
-        await createConnectionPromise;
-
-        await expect(page.getByText('New connection')).toBeHidden();
-        await page.waitForTimeout(1000);
-        await expect(page.getByTestId('connection-item-local2')).toBeVisible();
+        await test.step('Cleanup', async () => {
+            await connectionPage.deleteConnection(editedName);
+        });
     });
 
-    await test.step('Switch to the first connection', async () => {
-        await page.waitForTimeout(1000);
-        await page.getByTestId('connection-item-local').click();
+    test('Refresh connection', async ({ page }) => {
+        const connectionPage = new ConnectionPage(page);
+        const connectionName = `${testPrefix}-refresh-${Date.now()}`;
+        const config: ConnectionConfig = {
+            name: connectionName,
+            host: 'sample-pgsql',
+            port: '5432',
+            username: 'default',
+            password: 'secret',
+            type: 'PostgreSQL'
+        };
 
-        await expect(page.getByRole('heading', { name: 'local | postgresql 16.1 : SQL' })).toBeVisible();
+        await connectionPage.goto();
+        await connectionPage.waitForReady();
+
+        await test.step('Create and activate connection', async () => {
+            await connectionPage.createConnection(config);
+            await connectionPage.activateConnection(connectionName);
+        });
+
+        await test.step('Refresh connection via context menu', async () => {
+            await connectionPage.refreshConnection(connectionName);
+        });
+
+        await test.step('Cleanup', async () => {
+            await connectionPage.deleteConnection(connectionName);
+        });
     });
 
-    await test.step('Show connection context menu', async () => {
-        await page.waitForTimeout(1000);
+    test('Connection context menu options', async ({ page }) => {
+        const connectionPage = new ConnectionPage(page);
+        const connectionName = `${testPrefix}-menu-${Date.now()}`;
+        const config: ConnectionConfig = {
+            name: connectionName,
+            host: 'sample-pgsql',
+            port: '5432',
+            username: 'default',
+            password: 'secret',
+            type: 'PostgreSQL'
+        };
 
-        await page.getByTestId('connection-item-local2').click({ button: 'right' });
+        await connectionPage.goto();
+        await connectionPage.waitForReady();
 
-        await expect(page.getByRole("menu").getByRole("menuitem", { name: "Edit" })).toBeVisible();
-        await expect(page.getByRole("menu").getByRole("menuitem", { name: "Delete" })).toBeVisible();
-        await expect(page.getByRole("menu").getByRole("menuitem", { name: "Refresh" })).toBeVisible();
+        await test.step('Create connection', async () => {
+            await connectionPage.createConnection(config);
+        });
 
-        await page.locator('.MuiBackdrop-root').click()
+        await test.step('Verify context menu options', async () => {
+            await connectionPage.openContextMenu(connectionName);
+
+            const menu = page.getByRole('menu');
+            await expect(menu.getByRole('menuitem', { name: 'Edit' })).toBeVisible();
+            await expect(menu.getByRole('menuitem', { name: 'Delete' })).toBeVisible();
+            await expect(menu.getByRole('menuitem', { name: 'Refresh' })).toBeVisible();
+
+            await connectionPage.closeContextMenu();
+        });
+
+        await test.step('Cleanup', async () => {
+            await connectionPage.deleteConnection(connectionName);
+        });
     });
 
-    await test.step("Edit the second connection", async () => {
-        await page.waitForTimeout(1000);
+    test('Create schema via SQL query', async ({ page }) => {
+        const connectionPage = new ConnectionPage(page);
+        const sqlEditor = new SqlEditorPage(page);
+        const sidebar = new SidebarPage(page);
 
-        await page.getByTestId('connection-item-local2').click({ button: 'right' });
-        await page.getByRole("menu").getByRole("menuitem", { name: "Edit" }).click();
+        const connectionName = `${testPrefix}-schema-${Date.now()}`;
+        const schemaName = `e2e_schema_${Date.now()}`;
+        const config: ConnectionConfig = {
+            name: connectionName,
+            host: 'sample-pgsql',
+            port: '5432',
+            username: 'default',
+            password: 'secret',
+            type: 'PostgreSQL'
+        };
 
-        await expect(page.getByText('Edit connection')).toBeVisible();
+        await connectionPage.goto();
+        await connectionPage.waitForReady();
 
-        await expect(page.locator('input[name="name"]')).toHaveValue("local2");
-        await expect(page.locator('input[name="host"]')).toHaveValue("sample-pgsql");
-        await expect(page.locator('input[name="port"]')).toHaveValue("5432");
-        await expect(page.locator('input[name="username"]')).toHaveValue("default");
+        await test.step('Setup connection', async () => {
+            await connectionPage.setupConnection(config);
+        });
 
-        await page.locator('input[name="name"]').fill("local2-edited");
+        await test.step('Open SQL editor', async () => {
+            await sqlEditor.open();
+        });
 
-        const testConnectionPromise = page.waitForResponse(response =>
-            response.url().includes('connections/ping') && response.status() === 200,
-            { timeout: 10000 }
-        );
+        await test.step('Create schema via SQL', async () => {
+            await sqlEditor.typeAndRun(`CREATE SCHEMA IF NOT EXISTS ${schemaName};`);
+        });
 
-        await page.getByTestId('test-connection').click();
-        await testConnectionPromise;
+        await test.step('Verify schema in tree view', async () => {
+            await sidebar.switchTo('Items');
+            await sidebar.expectItemVisible(schemaName);
+        });
 
-        const createConnectionPromise = page.waitForResponse(response =>
-            response.url().includes('connections') && response.status() === 200,
-            { timeout: 10000 }
-        );
+        await test.step('Drop schema', async () => {
+            await sqlEditor.typeAndRun(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE;`);
+        });
 
-        await page.getByTestId('create-connection').click();
-        await createConnectionPromise;
-
-        await expect(page.getByText('New connection')).toBeHidden();
-        await page.waitForTimeout(1000);
-        await expect(page.getByTestId('connection-item-local2-edited')).toBeVisible();
-    })
-
-    await test.step('Delete the second connection', async () => {
-        await page.waitForTimeout(2000);
-
-        await page.getByTestId('connection-item-local2-edited').click({ button: 'right' });
-        await page.getByRole("menu").getByRole("menuitem", { name: "Delete" }).click();
-
-        await expect(page.getByRole("menu").getByRole("menuitem", { name: "Delete" })).toBeHidden();
-        await expect(page.getByRole('heading', { name: 'Delete action!' })).toBeVisible()
-        page.getByRole('button', { name: 'Yes' }).click()
-
-        await expect(page.getByTestId('connection-item-local2-edited')).toBeHidden();
-    });
-
-    await test.step('Handle refresh connection', async () => {
-        await page.waitForTimeout(2000);
-
-        await page.getByTestId('connection-item-local').click({ button: 'right' });
-
-        const refreshConnectionPromise = page.waitForResponse(response =>
-            response.url().includes('connections') && response.status() === 200,
-            { timeout: 10000 }
-        );
-
-        await page.getByRole("menu").getByRole("menuitem", { name: "Refresh" }).click();
-        await refreshConnectionPromise;
+        await test.step('Cleanup', async () => {
+            await connectionPage.deleteConnection(connectionName);
+        });
     });
 });
-
