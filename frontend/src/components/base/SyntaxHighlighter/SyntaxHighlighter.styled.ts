@@ -6,7 +6,7 @@ export const SyntaxHighlighterStyled = styled('div')(({ theme }) => ({
     padding: theme.spacing(1),
     fontSize: 13,
     fontWeight: 'bold',
-    fontFamily: 'JetBrainsMono-Bold',
+    fontFamily: "'JetBrains Mono', monospace",
     whiteSpace: 'pre-wrap !important',
     '& *': {
       userSelect: 'text',

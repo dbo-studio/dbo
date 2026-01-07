@@ -28,5 +28,5 @@ export const editorConfig: editor.IStandaloneEditorConstructionOptions = {
   },
   fontSize: 14,
   fontWeight: 'bold',
-  fontFamily: 'JetBrainsMono-Bold'
+  fontFamily: "'JetBrains Mono', monospace"
 };

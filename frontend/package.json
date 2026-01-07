@@ -16,7 +16,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
-    "@fontsource-variable/jetbrains-mono": "^5.2.8",
+    "@fontsource/jetbrains-mono": "^5.2.8",
     "@fontsource/roboto": "^5.2.8",
     "@monaco-editor/react": "^4.7.0",
     "@mui/material": "^7.3.4",
