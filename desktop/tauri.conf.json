@@ -18,6 +18,16 @@
     "externalBin": [
       "bin/dbo-bin"
     ],
+    "fileAssociations": [
+      {
+        "ext": [
+          "sql"
+        ],
+        "name": "SQL File",
+        "description": "SQL Query File",
+        "role": "Editor"
+      }
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

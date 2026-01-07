@@ -1,4 +1,5 @@
 import { useCurrentConnection, useWindowSize } from '@/hooks';
+import { useFileOpen } from '@/hooks/useFileOpen.hook';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Grid } from '@mui/material';
 import type { JSX } from 'react';
@@ -15,6 +16,9 @@ export default function Layout(): JSX.Element {
   const windowSize = useWindowSize(true);
   const sidebar = useSettingStore((state) => state.ui.sidebar);
   const currentConnection = useCurrentConnection();
+
+  // Listen for SQL file open events from desktop
+  useFileOpen();
 
   return (
     <LayoutStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>

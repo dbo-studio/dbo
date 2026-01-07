@@ -3,9 +3,10 @@
 
 use std::env;
 use std::net::TcpListener;
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
-use tauri::{AppHandle, Manager, RunEvent};
+use tauri::{AppHandle, Emitter, Manager, RunEvent};
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
 
@@ -17,6 +18,7 @@ use tauri_plugin_decorum::WebviewWindowExt;
 // =============================================================================
 
 type SidecarChild = Arc<Mutex<Option<CommandChild>>>;
+type PendingFiles = Arc<Mutex<Vec<String>>>;
 
 // =============================================================================
 // Constants
@@ -34,6 +36,9 @@ fn main() {
     let sidecar_child: SidecarChild = Arc::new(Mutex::new(None));
     let sidecar_child_for_cleanup = sidecar_child.clone();
 
+    // Collect SQL files from command line arguments
+    let pending_files: PendingFiles = Arc::new(Mutex::new(collect_sql_files_from_args()));
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
@@ -46,16 +51,25 @@ fn main() {
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_decorum::init())
         .manage(sidecar_child.clone())
-        .invoke_handler(tauri::generate_handler![get_backend_host])
+        .manage(pending_files.clone())
+        .invoke_handler(tauri::generate_handler![get_backend_host, get_pending_files])
         .setup(|app| {
             setup_macos_window(app)?;
             setup_environment();
             start_backend_server(app);
+
+            // Emit pending files after a short delay to ensure frontend is ready
+            let app_handle = app.handle().clone();
+            std::thread::spawn(move || {
+                std::thread::sleep(std::time::Duration::from_millis(2000));
+                emit_pending_files(&app_handle);
+            });
+
             Ok(())
         })
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
-        .run(move |_, event| {
+        .run(move |_app_handle, event| {
             if let RunEvent::Exit = event {
                 cleanup_sidecar(&sidecar_child_for_cleanup);
             }
@@ -70,6 +84,17 @@ fn main() {
 fn get_backend_host() -> String {
     let port = env::var("APP_PORT").unwrap_or_else(|_| DEFAULT_PORT.to_string());
     format!("http://127.0.0.1:{}/api", port)
+}
+
+#[tauri::command]
+fn get_pending_files(pending_files: tauri::State<PendingFiles>) -> Vec<String> {
+    if let Ok(mut files) = pending_files.lock() {
+        let result = files.clone();
+        files.clear();
+        result
+    } else {
+        Vec::new()
+    }
 }
 
 // =============================================================================
@@ -167,6 +192,45 @@ fn cleanup_sidecar(sidecar_child: &SidecarChild) {
                 Ok(_) => println!("Sidecar process terminated successfully"),
                 Err(e) => eprintln!("Failed to terminate sidecar: {}", e),
             }
+        }
+    }
+}
+
+// =============================================================================
+// File Handling
+// =============================================================================
+
+fn collect_sql_files_from_args() -> Vec<String> {
+    env::args()
+        .skip(1) // Skip the executable path
+        .filter_map(|arg| {
+            let path = PathBuf::from(&arg);
+            if path.extension().map(|e| e == "sql").unwrap_or(false) && path.exists() {
+                std::fs::read_to_string(&path).ok()
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+fn emit_pending_files(app_handle: &AppHandle) {
+    let pending_files = app_handle.state::<PendingFiles>();
+    let files_to_emit: Vec<String> = {
+        if let Ok(files) = pending_files.lock() {
+            files.clone()
+        } else {
+            return;
+        }
+    };
+
+    for content in files_to_emit {
+        let payload = serde_json::json!({
+            "content": content
+        });
+
+        if let Err(e) = app_handle.emit("open-sql-file", payload) {
+            eprintln!("Failed to emit open-sql-file event: {}", e);
         }
     }
 }
