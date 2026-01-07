@@ -1,13 +1,38 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-use std::{env, net::TcpListener, net::TcpStream, time::Duration};
-use tauri::{AppHandle, Manager};
-use tauri_plugin_decorum::WebviewWindowExt;
-use tauri_plugin_shell::process::CommandEvent;
+
+use std::env;
+use std::net::TcpListener;
+use std::sync::{Arc, Mutex};
+
+use tauri::{AppHandle, Manager, RunEvent};
+use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
+
+#[cfg(target_os = "macos")]
+use tauri_plugin_decorum::WebviewWindowExt;
+
+// =============================================================================
+// Types
+// =============================================================================
+
+type SidecarChild = Arc<Mutex<Option<CommandChild>>>;
+
+// =============================================================================
+// Constants
+// =============================================================================
+
+const DEFAULT_PORT: u16 = 5124;
+
+// =============================================================================
+// Main
+// =============================================================================
 
 fn main() {
     let _ = fix_path_env::fix();
+
+    let sidecar_child: SidecarChild = Arc::new(Mutex::new(None));
+    let sidecar_child_for_cleanup = sidecar_child.clone();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
@@ -20,125 +45,140 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_decorum::init())
+        .manage(sidecar_child.clone())
         .invoke_handler(tauri::generate_handler![get_backend_host])
         .setup(|app| {
-            #[cfg(target_os = "macos")]
-            {
-                let main_window = app.get_webview_window("main").unwrap();
-                main_window.create_overlay_titlebar().unwrap();
-
-                main_window.set_traffic_lights_inset(12.0, 16.0).unwrap();
-            }
-
-            unsafe { env::set_var("APP_ENV", "production") };
-            let port = find_free_port();
-            unsafe { env::set_var("APP_PORT", port.to_string()) };
-
-            // Start the server
-            let app_handle = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                run_server(app_handle).await;
-            });
-
-            // Wait for the server to be ready before showing the window
-            wait_for_server_ready(port);
-
+            setup_macos_window(app)?;
+            setup_environment();
+            start_backend_server(app);
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(move |_, event| {
+            if let RunEvent::Exit = event {
+                cleanup_sidecar(&sidecar_child_for_cleanup);
+            }
+        });
 }
+
+// =============================================================================
+// Commands
+// =============================================================================
 
 #[tauri::command]
 fn get_backend_host() -> String {
-    return "http://127.0.0.1:".to_string() + &env::var("APP_PORT").unwrap().to_string() + "/api";
+    let port = env::var("APP_PORT").unwrap_or_else(|_| DEFAULT_PORT.to_string());
+    format!("http://127.0.0.1:{}/api", port)
 }
 
-fn find_free_port() -> u16 {
-    let default = 5124;
-    match TcpListener::bind("127.0.0.1:0") {
-        Ok(listener) => {
-            if let Ok(addr) = listener.local_addr() {
-                return addr.port();
-            } else {
-                return default;
-            }
-        }
-        Err(_) => {}
+// =============================================================================
+// Setup Functions
+// =============================================================================
+
+#[cfg(target_os = "macos")]
+fn setup_macos_window(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    let main_window = app.get_webview_window("main").unwrap();
+    main_window.create_overlay_titlebar().unwrap();
+    main_window.set_traffic_lights_inset(12.0, 16.0).unwrap();
+    Ok(())
+}
+
+#[cfg(not(target_os = "macos"))]
+fn setup_macos_window(_app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    Ok(())
+}
+
+fn setup_environment() {
+    let port = find_free_port();
+    unsafe {
+        env::set_var("APP_ENV", "production");
+        env::set_var("APP_PORT", port.to_string());
     }
-
-    return default;
 }
 
-async fn run_server(app: AppHandle) {
-    // Try to create the sidecar command
+fn start_backend_server(app: &tauri::App) {
+    let app_handle = app.handle().clone();
+    tauri::async_runtime::spawn(async move {
+        run_sidecar(app_handle).await;
+    });
+}
+
+// =============================================================================
+// Sidecar Management
+// =============================================================================
+
+async fn run_sidecar(app: AppHandle) {
     let sidecar_command = match app.shell().sidecar("dbo-bin") {
-        Ok(command) => command,
+        Ok(cmd) => cmd,
         Err(e) => {
             eprintln!("Failed to create sidecar command: {}", e);
             return;
         }
     };
 
-    // Spawn the sidecar process
-    let (mut rx, mut child) = match sidecar_command.spawn() {
-        Ok((rx, child)) => (rx, child),
+    let (mut rx, child) = match sidecar_command.spawn() {
+        Ok(result) => result,
         Err(e) => {
             eprintln!("Failed to spawn sidecar process: {}", e);
             return;
         }
     };
 
-    // Handle the sidecar process asynchronously
+    // Store child in app state for cleanup on exit
+    let sidecar_state = app.state::<SidecarChild>();
+    if let Ok(mut child_opt) = sidecar_state.lock() {
+        *child_opt = Some(child);
+    }
+
+    let sidecar_state_for_events = sidecar_state.inner().clone();
+
     tauri::async_runtime::spawn(async move {
         while let Some(event) = rx.recv().await {
             match event {
-                CommandEvent::Stdout(line_bytes) => {
-                    let line = String::from_utf8_lossy(&line_bytes);
-                    println!("Received message: {}", line);
-
-                    // Try writing to the child's stdin
-                    if let Err(e) = child.write(b"message from Rust\n") {
-                        eprintln!("Failed to write to child stdin: {}", e);
+                CommandEvent::Stdout(data) => {
+                    println!("Sidecar: {}", String::from_utf8_lossy(&data));
+                }
+                CommandEvent::Stderr(data) => {
+                    eprintln!("Sidecar error: {}", String::from_utf8_lossy(&data));
+                }
+                CommandEvent::Terminated(status) => {
+                    eprintln!("Sidecar terminated unexpectedly: {:?}", status);
+                    if let Ok(mut child_opt) = sidecar_state_for_events.lock() {
+                        child_opt.take();
                     }
+                    break;
                 }
-                CommandEvent::Stderr(err_bytes) => {
-                    let error_line = String::from_utf8_lossy(&err_bytes);
-                    eprintln!("Error from sidecar: {}", error_line);
+                CommandEvent::Error(error) => {
+                    eprintln!("Sidecar error event: {}", error);
                 }
-                other_event => {
-                    println!("Received other event: {:?}", other_event);
-                }
+                _ => {}
             }
-        }
-
-        // Ensure the child process is terminated properly
-        if let Err(e) = child.kill() {
-            eprintln!("Failed to terminate sidecar process: {}", e);
         }
     });
 }
 
-fn wait_for_server_ready(port: u16) {
-    let max_attempts = 60; // Maximum 30 seconds (60 * 500ms)
-    let check_interval = Duration::from_millis(500);
+fn cleanup_sidecar(sidecar_child: &SidecarChild) {
+    println!("Application exiting, cleaning up sidecar...");
 
-    for attempt in 1..=max_attempts {
-        // Try to connect to the server port
-        match TcpStream::connect(format!("127.0.0.1:{}", port)) {
-            Ok(_) => {
-                // Server is ready, but wait a bit more to ensure it's fully initialized
-                std::thread::sleep(Duration::from_millis(200));
-                println!("Server is ready on port {}", port);
-                return;
-            }
-            Err(_) => {
-                if attempt < max_attempts {
-                    std::thread::sleep(check_interval);
-                } else {
-                    eprintln!("Server failed to start within {} seconds", max_attempts / 2);
-                }
+    if let Ok(mut child_opt) = sidecar_child.lock() {
+        if let Some(child) = child_opt.take() {
+            match child.kill() {
+                Ok(_) => println!("Sidecar process terminated successfully"),
+                Err(e) => eprintln!("Failed to terminate sidecar: {}", e),
             }
         }
     }
+}
+
+// =============================================================================
+// Utility Functions
+// =============================================================================
+
+fn find_free_port() -> u16 {
+    TcpListener::bind("127.0.0.1:0")
+        .ok()
+        .and_then(|listener| listener.local_addr().ok())
+        .map(|addr| addr.port())
+        .unwrap_or(DEFAULT_PORT)
 }

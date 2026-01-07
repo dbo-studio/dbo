@@ -143,12 +143,3 @@ jobs:
               draft: true,
               prerelease: false
             });
-  
-      - name: Sync Release to Website
-        run: |
-          echo "Syncing release v${{ env.PACKAGE_VERSION }} to website..."
-          curl -X POST ${{ secrets.WEBSITE_SYNC_URL }}/api/sync/releases/${{ needs.create-release.outputs.release_id }} \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${{ secrets.API_SYNC_TOKEN }}"
-        env:
-          WEBSITE_SYNC_URL: ${{ secrets.WEBSITE_SYNC_URL }}

@@ -14,10 +14,7 @@ const fonts = [
   { value: 'Georgia', label: 'Georgia' },
   { value: 'Verdana', label: 'Verdana' },
   { value: 'Courier New', label: 'Courier New' },
-  { value: 'JetBrainsMono-Regular', label: 'JetBrainsMono-Regular' },
-  { value: 'JetBrainsMono-Medium', label: 'JetBrainsMono-Medium' },
-  { value: 'JetBrainsMono-Bold', label: 'JetBrainsMono-Bold' },
-  { value: 'JetBrainsMono', label: 'JetBrainsMono' }
+  { value: "'JetBrains Mono', monospace", label: 'JetBrains Mono' }
 ];
 
 export default function Font(): JSX.Element {
