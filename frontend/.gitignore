@@ -30,3 +30,5 @@ dbo
 /coverage
 .celp-ai
 .dev-dist
+test-results
+playwright-report
