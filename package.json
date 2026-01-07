@@ -2,8 +2,7 @@
   "name": "dbo",
   "scripts": {
     "lefthook": "lefthook",
-    "tauri": "tauri",
-    "biome": "biome"
+    "tauri": "tauri"
   },
   "author": "DBO Studio",
   "license": "MIT",
