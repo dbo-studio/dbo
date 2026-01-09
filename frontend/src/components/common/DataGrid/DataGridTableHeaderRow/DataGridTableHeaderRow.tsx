@@ -1,5 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { PgsqlSorts } from '@/core/constants';
+import { tools } from '@/core/utils';
 import { useSelectedTab } from '@/hooks';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -7,7 +8,6 @@ import type { DataTabType, TabType } from '@/types';
 import { Box, Checkbox } from '@mui/material';
 import type { JSX } from 'react';
 import { useCallback } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import { SelectTableHeader, SortableTableHeader, StyledTableHead, StyledTableRow } from '../DataGrid.styled';
 import DataGridResizer from '../DataGridResizer/DataGridResizer';
 import type { DataGridTableHeaderRowProps } from '../types';
@@ -45,7 +45,7 @@ export default function DataGridTableHeaderRow({
       if (!currentSort) {
         await updateSorts([
           {
-            index: uuidv4(),
+            index: tools.uuid(),
             column: columnName,
             operator: PgsqlSorts[0],
             isActive: true

@@ -1,5 +1,6 @@
 import { getTauriVersion } from '@tauri-apps/api/app';
 import { format, type SqlLanguage } from 'sql-formatter';
+import { v7 } from 'uuid';
 import { isNumber, isObject } from '.';
 
 export const tools = {
@@ -84,5 +85,8 @@ export const tools = {
     link.click();
     link.remove();
     window.URL.revokeObjectURL(url);
+  },
+  uuid: (): string => {
+    return v7();
   }
 };

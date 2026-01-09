@@ -1,10 +1,10 @@
+import { tools } from '@/core/utils';
 import { useWindowSize } from '@/hooks/useWindowSize.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ColumnType } from '@/types/Data';
 import { Box, type Theme, useTheme } from '@mui/material';
 import type { JSX } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import ColumnItem from './ColumnItem';
 
 export default function Columns(): JSX.Element {
@@ -49,7 +49,7 @@ export default function Columns(): JSX.Element {
       minWidth={'130px'}
     >
       {columns?.map((c: ColumnType) => (
-        <ColumnItem onClick={(): Promise<void> => handleCheckToggle(c)} key={uuidv4()} column={c} />
+        <ColumnItem onClick={(): Promise<void> => handleCheckToggle(c)} key={tools.uuid()} column={c} />
       ))}
     </Box>
   );

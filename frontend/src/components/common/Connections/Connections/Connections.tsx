@@ -1,12 +1,12 @@
 import api from '@/api';
 import AddConnection from '@/components/common/AddConnection/AddConnection';
+import { tools } from '@/core/utils';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ConnectionType } from '@/types';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { type JSX, useEffect, useState } from 'react';
-import { v4 as uuid } from 'uuid';
 import EditConnection from '../../AddConnection/EditConnection';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import { ConnectionsStyled } from './Connections.styled';
@@ -88,7 +88,7 @@ export default function Connections(): JSX.Element {
         <ConnectionItem
           loading={pendingUpdateConnection && loadingConnectionId === c.id}
           onClick={(): Promise<void> => handleChangeCurrentConnection(c)}
-          key={uuid()}
+          key={tools.uuid()}
           selected={c.id === currentConnection()?.id}
           connection={c}
         />

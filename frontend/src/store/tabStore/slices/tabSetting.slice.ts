@@ -1,7 +1,7 @@
 import { TabMode } from '@/core/enums';
+import { tools } from '@/core/utils';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { DataTabType, EditorTabType, ObjectTabType, TabType } from '@/types/Tab';
-import { v4 as uuidv4 } from 'uuid';
 import type { StateCreator } from 'zustand';
 import type { TabQuerySlice, TabSettingSlice, TabStore } from '../types';
 
@@ -31,7 +31,7 @@ export const createTabSettingSlice: StateCreator<
     }
 
     const newTab: DataTabType = {
-      id: uuidv4(),
+      id: tools.uuid(),
       connectionId: currentConnectionId,
       nodeId: id,
       name: table,
@@ -70,7 +70,7 @@ export const createTabSettingSlice: StateCreator<
     }
 
     const newTab: EditorTabType = {
-      id: uuidv4(),
+      id: tools.uuid(),
       name: query ? query.slice(0, 10) : 'Editor',
       connectionId: currentConnectionId,
       nodeId: '',
@@ -102,7 +102,7 @@ export const createTabSettingSlice: StateCreator<
     }
 
     const newTab: ObjectTabType = {
-      id: uuidv4(),
+      id: tools.uuid(),
       connectionId: currentConnectionId,
       name: title,
       nodeId: nodeId,

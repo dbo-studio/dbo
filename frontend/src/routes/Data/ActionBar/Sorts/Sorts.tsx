@@ -1,4 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { tools } from '@/core/utils/tools.ts';
 import { useSelectedTab } from '@/hooks';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
@@ -6,7 +7,6 @@ import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { DataTabType, SortType, TabType } from '@/types';
 import { Box, Button } from '@mui/material';
 import type { JSX } from 'react';
-import { v4 as uuid } from 'uuid';
 import AddSortButton from './SortItem/AddSortButton/AddSortButton.tsx';
 import SortItem from './SortItem/SortItem.tsx';
 
@@ -37,7 +37,7 @@ export default function Sorts(): JSX.Element {
         <AddSortButton columns={columns ?? []} />
       ) : (
         selectedTab?.sorts?.map((sort: SortType) => {
-          return <SortItem key={uuid()} columns={columns ?? []} sort={sort} />;
+          return <SortItem key={tools.uuid()} columns={columns ?? []} sort={sort} />;
         })
       )}
 
