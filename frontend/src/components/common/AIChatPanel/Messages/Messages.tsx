@@ -1,5 +1,5 @@
 import locales from '@/locales';
-import { Button, CircularProgress, Divider, Stack, Typography } from '@mui/material';
+import { Button, CircularProgress, Stack, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef } from 'react';
 import type { MessagesProps } from '../types';
 import CodeMessage from './CodeMessage/CodeMessage';
@@ -29,7 +29,7 @@ export default function Messages({ messages, loading, onLoadMore }: MessagesProp
 
   return (
     <MessagesStyled ref={messagesContainerRef}>
-      {messages.filter((message) => !message.isNew).length > 0 && (
+      {messages.filter((message) => !message.isNew).length > 10 && (
         <Button sx={{ marginBottom: 1 }} variant='outlined' onClick={onLoadMore} size='small'>
           <Typography variant='caption'>{locales.load_more}</Typography>
         </Button>
@@ -45,12 +45,11 @@ export default function Messages({ messages, loading, onLoadMore }: MessagesProp
 
         {loading && (
           <>
-            <Divider />
             <Stack direction={'row'} spacing={1} alignItems={'center'}>
-              <Typography variant='subtitle1' color='textSubdued'>
-                {locales.thinking}
-              </Typography>
               <CircularProgress size={15} color='primary' />
+              <Typography variant='subtitle1' color='textSubdued'>
+                {locales.thinking}...
+              </Typography>
             </Stack>
           </>
         )}
