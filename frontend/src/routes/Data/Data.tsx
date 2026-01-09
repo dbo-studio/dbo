@@ -1,7 +1,8 @@
 import DataGrid from '@/components/common/DataGrid/DataGrid';
+import { useSelectedTab } from '@/hooks';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { ColumnType, RowType } from '@/types';
+import type { ColumnType, DataTabType, RowType } from '@/types';
 import { Box, CircularProgress } from '@mui/material';
 import type { JSX } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -15,6 +16,7 @@ const EMPTY_COLUMNS: ColumnType[] = [];
 
 export default function Data(): JSX.Element {
   const isMounted = useIsMounted();
+  const selectedTab = useSelectedTab<DataTabType>();
 
   const [isGridReady, setIsGridReady] = useState(false);
   const [showColumns, setShowColumns] = useState(false);
@@ -96,7 +98,7 @@ export default function Data(): JSX.Element {
         {showColumns && <Columns />}
         {activeColumns.length > 0 &&
           (isGridReady ? (
-            <DataGrid rows={rows} columns={activeColumns} loading={false} />
+            <DataGrid rows={rows} columns={activeColumns} loading={false} editable={selectedTab?.editable} />
           ) : (
             <Box display='flex' justifyContent='center' alignItems='center' width='100%'>
               <CircularProgress size={30} />

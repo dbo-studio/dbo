@@ -4,6 +4,7 @@ import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
+import { ObjectTabType } from '@/types';
 import type { FormFieldWithState, FormValue } from '@/types/Tree';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
@@ -19,7 +20,7 @@ export const useFormActions = (
 } => {
   const queryClient = useQueryClient();
   const currentConnection = useCurrentConnection();
-  const selectedTab = useSelectedTab();
+  const selectedTab = useSelectedTab<ObjectTabType>();
   const { getFormData, resetFormData, updateFormData } = useDataStore();
   const { reloadTree } = useTreeStore();
 
@@ -27,7 +28,7 @@ export const useFormActions = (
     mutationFn: api.tree.executeAction,
     onSuccess: (): void => {
       queryClient.invalidateQueries({
-        queryKey: ['formData', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, tabId]
+        queryKey: ['formData', currentConnection?.id, selectedTab?.id, selectedTab?.action, tabId]
       });
       reloadTree(false);
     }
@@ -130,7 +131,7 @@ export const useFormActions = (
 
         await executeAction({
           nodeId: selectedTab.nodeId,
-          action: selectedTab.options?.action ?? '',
+          action: selectedTab?.action ?? '',
           connectionId: currentConnection.id,
           data: payload as Record<string, FormValue>
         });
@@ -157,7 +158,7 @@ export const useFormActions = (
     resetFormData(selectedTab.id, storageKey);
 
     queryClient.refetchQueries({
-      queryKey: ['formData', currentConnection?.id, selectedTab.id, selectedTab.options?.action, tabId]
+      queryKey: ['formData', currentConnection?.id, selectedTab.id, selectedTab?.action, tabId]
     });
 
     toast.info('Changes discarded');

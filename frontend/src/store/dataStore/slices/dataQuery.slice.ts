@@ -5,6 +5,7 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
 import type { DataColumnSlice, DataQuerySlice, DataRowSlice, DataStore } from '../types';
+import { DataTabType } from '@/types';
 
 export const createDataQuerySlice: StateCreator<
   DataStore & DataQuerySlice & DataColumnSlice & DataRowSlice,
@@ -25,7 +26,7 @@ export const createDataQuerySlice: StateCreator<
     set({ isDataFetching: loading ?? !get().isDataFetching }, undefined, 'toggleDataFetching');
   },
   runQuery: async (abortController?: AbortController): Promise<RunQueryResponseType | undefined> => {
-    const tab = useTabStore.getState().selectedTab();
+    const tab = useTabStore.getState().selectedTab<DataTabType>();
     if (!tab) return;
 
     const filters = tab.filters ?? [];

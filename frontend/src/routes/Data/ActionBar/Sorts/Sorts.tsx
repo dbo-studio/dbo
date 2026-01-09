@@ -3,7 +3,7 @@ import { useSelectedTab } from '@/hooks';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
-import type { SortType, TabType } from '@/types';
+import type { DataTabType, SortType, TabType } from '@/types';
 import { Box, Button } from '@mui/material';
 import type { JSX } from 'react';
 import { v4 as uuid } from 'uuid';
@@ -11,7 +11,7 @@ import AddSortButton from './SortItem/AddSortButton/AddSortButton.tsx';
 import SortItem from './SortItem/SortItem.tsx';
 
 export default function Sorts(): JSX.Element {
-  const selectedTab = useSelectedTab();
+  const selectedTab = useSelectedTab<DataTabType>();
   const columns = useDataStore((state) => state.columns);
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);

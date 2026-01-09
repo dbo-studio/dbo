@@ -7,6 +7,7 @@ import type { FormFieldType, FormFieldWithState, FormValue } from '@/types/Tree'
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 import type { FormDataState } from '../types';
+import { ObjectTabType } from '@/types';
 
 const createInitialFormState = (
   schema: FormFieldType[],
@@ -56,7 +57,7 @@ const convertFieldsToData = (fields: FormFieldWithState[], isArray: boolean): Re
 };
 
 export const useFormData = (tabId: string | null, isEditMode: boolean): FormDataState | null => {
-  const selectedTab = useSelectedTab();
+  const selectedTab = useSelectedTab<ObjectTabType>();
   const currentConnection = useCurrentConnection();
   const { getFormData, updateFormData } = useDataStore();
   const formDataByTab = useDataStore((state) => state.formDataByTab);
@@ -66,7 +67,7 @@ export const useFormData = (tabId: string | null, isEditMode: boolean): FormData
       'formData',
       currentConnection?.id,
       selectedTab?.id,
-      selectedTab?.options?.action,
+      selectedTab?.action,
       tabId,
       isEditMode,
       selectedTab?.nodeId
@@ -74,17 +75,11 @@ export const useFormData = (tabId: string | null, isEditMode: boolean): FormData
     queryFn: (): Promise<FormObjectResponseType> =>
       api.tree.getObject({
         nodeId: selectedTab?.nodeId ?? '',
-        action: selectedTab?.options?.action ?? '',
+        action: selectedTab?.action ?? '',
         tabId: tabId ?? '',
         connectionId: currentConnection?.id ?? 0
       }),
-    enabled: !!(
-      currentConnection?.id &&
-      selectedTab?.id &&
-      selectedTab?.options?.action &&
-      tabId &&
-      selectedTab?.nodeId
-    )
+    enabled: !!(currentConnection?.id && selectedTab?.id && selectedTab?.action && tabId && selectedTab?.nodeId)
   });
 
   const formState = useMemo((): FormDataState | null => {

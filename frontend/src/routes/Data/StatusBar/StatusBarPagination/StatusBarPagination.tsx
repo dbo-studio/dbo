@@ -3,7 +3,7 @@ import { TabMode } from '@/core/enums';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { TabType } from '@/types';
+import type { DataTabType, TabType } from '@/types';
 import { Box, IconButton, type Theme, Typography, useMediaQuery, useTheme } from '@mui/material';
 import type { JSX } from 'react';
 import PaginationSetting from './PaginationSetting/PaginationSetting';
@@ -12,7 +12,7 @@ export default function StatusBarPagination(): JSX.Element {
   const theme = useTheme();
   const matches = useMediaQuery((theme: Theme) => theme.breakpoints.up('sm'));
   const isDataFetching = useDataStore((state) => state.isDataFetching);
-  const selectedTab = useSelectedTab();
+  const selectedTab = useSelectedTab<DataTabType>();
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
 

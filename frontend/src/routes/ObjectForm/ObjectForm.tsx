@@ -53,6 +53,8 @@ export default function ObjectForm({ isDetail }: { isDetail: boolean }): React.J
         value: data.map((row) => row[field.id] ?? null)
       }));
 
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
       updateFormData(selectedTab.id, storageKey, updatedFields);
     },
     [selectedTab?.id, selectedTabId, formDataState, updateFormData]

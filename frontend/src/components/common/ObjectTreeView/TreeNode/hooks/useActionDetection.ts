@@ -20,7 +20,7 @@ export const useActionDetection = (
   const confirmModal = useConfirmModalStore();
   const currentConnection = useCurrentConnection();
 
-  const addTab = useTabStore((state) => state.addTab);
+  const addDataTab = useTabStore((state) => state.addDataTab);
   const addObjectTab = useTabStore((state) => state.addObjectTab);
   const reloadTree = useTreeStore((state) => state.reloadTree);
 
@@ -31,7 +31,7 @@ export const useActionDetection = (
     onSuccess: async (_, variables): Promise<void> => {
       const selectedTab = useTabStore.getState().selectedTab();
       queryClient.invalidateQueries({
-        queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, variables.nodeId]
+        queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.action, variables.nodeId]
       });
       await reloadTree(false);
     }
@@ -56,7 +56,7 @@ export const useActionDetection = (
               break;
             }
             case 'data': {
-              addTab(node.action.params.table as string, node.id, node.action.params.editable as boolean);
+              addDataTab(node.action.params.table as string, node.id, node.action.params.editable as boolean);
               break;
             }
           }

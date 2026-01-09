@@ -3,7 +3,7 @@ import { PgsqlSorts } from '@/core/constants';
 import { useSelectedTab } from '@/hooks';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { TabType } from '@/types';
+import type { DataTabType, TabType } from '@/types';
 import { Box, Checkbox } from '@mui/material';
 import type { JSX } from 'react';
 import { useCallback } from 'react';
@@ -18,7 +18,7 @@ export default function DataGridTableHeaderRow({
   resizingColumnId
 }: DataGridTableHeaderRowProps): JSX.Element {
   const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
-  const selectedTab = useSelectedTab();
+  const selectedTab = useSelectedTab<DataTabType>();
   const removeSort = useTabStore((state) => state.removeSort);
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
   const updateSorts = useTabStore((state) => state.updateSorts);
