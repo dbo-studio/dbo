@@ -9,6 +9,7 @@
     "active": true,
     "category": "DeveloperTool",
     "copyright": "",
+    "publisher": "DBO Studio",
     "targets": [
       "deb",
       "nsis",
