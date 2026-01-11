@@ -47,7 +47,7 @@ export default function Messages({ messages, loading, onLoadMore }: MessagesProp
           <>
             <Stack direction={'row'} spacing={1} alignItems={'center'}>
               <CircularProgress size={15} color='primary' />
-              <Typography variant='subtitle1' color='textSubdued'>
+              <Typography variant={'body2'} color='textSubdued'>
                 {locales.thinking}...
               </Typography>
             </Stack>
