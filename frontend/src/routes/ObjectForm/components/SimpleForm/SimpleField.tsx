@@ -47,7 +47,9 @@ export default function SimpleField({
             checked={(field.value as boolean) || false}
             onChange={(e): void => onChange(e.target.checked)}
           />
-          <Typography>{field.name}</Typography>
+          <Typography variant='caption' color='textText'>
+            {field.name}
+          </Typography>
         </Box>
       );
 
