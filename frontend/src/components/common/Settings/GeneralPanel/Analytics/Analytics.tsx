@@ -21,7 +21,7 @@ export function Analytics() {
   };
 
   return (
-    <Box mt={2}>
+    <Box mt={1}>
       <Box display={'flex'} mb={1} flexDirection={'row'} alignItems={'center'} justifyContent={'space-between'}>
         <Box>
           <Typography color={'textTitle'} variant={'subtitle2'}>

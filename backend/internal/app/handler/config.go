@@ -49,3 +49,13 @@ func (h ConfigHandler) Logs(c fiber.Ctx) error {
 
 	return nil
 }
+
+func (h ConfigHandler) ResetFactory(c fiber.Ctx) error {
+	err := h.configService.ResetFactory(c)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().Send(c)
+}

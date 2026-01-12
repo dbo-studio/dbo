@@ -15,6 +15,7 @@ type IConfigService interface {
 	Index(ctx context.Context) (*dto.ConfigListResponse, error)
 	CheckUpdate(ctx context.Context) (*dto.ConfigCheckUpdateResponse, error)
 	Logs(ctx fiber.Ctx) error
+	ResetFactory(ctx context.Context) error
 }
 
 type IConfigServiceImpl struct {
