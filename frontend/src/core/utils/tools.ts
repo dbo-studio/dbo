@@ -1,7 +1,6 @@
 import { getTauriVersion } from '@tauri-apps/api/app';
 import { format, type SqlLanguage } from 'sql-formatter';
 import { v7 } from 'uuid';
-import { isNumber, isObject } from '.';
 
 export const tools = {
   screenMaxHeight: (asNumber?: boolean): string | number => {
@@ -11,24 +10,6 @@ export const tools = {
   screenFullHeight: (asNumber?: boolean): string | number => {
     return asNumber ? window?.innerHeight : `${window?.innerHeight}px`;
   },
-  isEmpty: (data: unknown): data is never | undefined | null => {
-    return (
-      (!data && !isNumber(data)) ||
-      (Array.isArray(data) && data.length === 0) ||
-      (isObject(data) && Object.keys(data).length === 0)
-    );
-  },
-  cleanObject: (obj: unknown): unknown => {
-    if (!isObject(obj)) return {};
-    const newObj = { ...obj };
-    for (const key of Object.keys(newObj)) {
-      if (newObj[key] === undefined) {
-        delete newObj[key];
-      }
-    }
-    return newObj;
-  },
-
   isMac: (): boolean => {
     const { userAgent } = navigator;
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
