@@ -25,6 +25,10 @@ export default function HistoryItem({ history, selected, onClick, context }: His
     >
       <Box flex={1} mr={theme.spacing(1)} onDoubleClick={handleRun} onClick={(): void => onClick()}>
         <Typography variant='body2'>{history.query.slice(0, 50)}</Typography>
+
+        <Typography variant='caption' color='textSubdued'>
+          {history.createdAt}
+        </Typography>
       </Box>
 
       <IconButton
