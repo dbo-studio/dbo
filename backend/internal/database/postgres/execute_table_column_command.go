@@ -56,7 +56,7 @@ func handleCreateColumn(node PGNode, column dto.PostgresTableColumn) []string {
 	}
 
 	if column.New.NumericScale != nil {
-		columnDef = fmt.Sprintf("%s(%d,%s)", columnDef, *column.New.MaxLength, *column.New.NumericScale)
+		columnDef = fmt.Sprintf("%s(%d,%d)", columnDef, *column.New.MaxLength, *column.New.NumericScale)
 	}
 
 	if lo.FromPtr(column.New.NotNull) {
@@ -118,7 +118,7 @@ func handleEditColumn(node PGNode, column dto.PostgresTableColumn) []string {
 			if isCharacterType(*column.New.DataType) {
 				dataTypeQuery = fmt.Sprintf("%s(%d)", dataTypeQuery, *column.New.MaxLength)
 			} else if isNumericType(*column.New.DataType) && column.New.NumericScale != nil {
-				dataTypeQuery = fmt.Sprintf("%s(%d,%s)", dataTypeQuery, *column.New.MaxLength, *column.New.NumericScale)
+				dataTypeQuery = fmt.Sprintf("%s(%d,%d)", dataTypeQuery, *column.New.MaxLength, *column.New.NumericScale)
 			}
 		}
 
