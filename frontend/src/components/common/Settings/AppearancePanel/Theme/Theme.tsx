@@ -1,6 +1,5 @@
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import { SelectInputOption } from '@/components/base/SelectInput/types';
-import { getThemeOptions } from '@/core/theme/themeRegistry';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Divider, Typography, useMediaQuery } from '@mui/material';
@@ -38,7 +37,12 @@ export default function Theme(): JSX.Element {
       <Box>
         <SelectInput
           value={theme.themeName}
-          options={getThemeOptions()}
+          options={[
+            { label: 'DBO', value: 'dbo' },
+            { label: 'VSCode', value: 'vscode' },
+            { label: 'ShadCN', value: 'shadcn' },
+            { label: 'Elastic', value: 'elastic' }
+          ]}
           onChange={(value): void => updateTheme({ themeName: (value as SelectInputOption)?.value as string })}
         />
       </Box>
