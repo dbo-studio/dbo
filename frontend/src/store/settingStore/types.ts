@@ -31,6 +31,7 @@ export type ThemeSettings = {
   appFont: string;
   editorTheme: 'github-light' | 'github-dark';
   editorFontSize: number;
+  themeName: string;
 };
 
 export type EditorSettings = {
