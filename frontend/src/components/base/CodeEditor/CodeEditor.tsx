@@ -8,11 +8,14 @@ import { editorConfig } from './helpers/editorConfig.ts';
 export default function CodeEditor({ value, onChange, width, height }: CodeEditorProps): JSX.Element {
   const theme = useSettingStore((state) => state.theme);
 
-  const handleEditorChange = useCallback((value: string | undefined) => {
-    if (value !== undefined) {
-      onChange(value);
-    }
-  }, [onChange]);
+  const handleEditorChange = useCallback(
+    (value: string | undefined) => {
+      if (value !== undefined) {
+        onChange(value);
+      }
+    },
+    [onChange]
+  );
 
   return (
     <Box
@@ -29,12 +32,12 @@ export default function CodeEditor({ value, onChange, width, height }: CodeEdito
       <MonacoEditor
         height={height || '100%'}
         width={width || '100%'}
-        language="json"
+        language='json'
         value={value}
         onChange={handleEditorChange}
         theme={theme.editorTheme}
         options={{
-          ...editorConfig,
+          ...editorConfig
         }}
       />
     </Box>

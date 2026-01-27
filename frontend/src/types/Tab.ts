@@ -43,8 +43,8 @@ export type DataTabType = BaseTab & {
 
 export type EditorTabType = BaseTab & {
   name: string;
-  database: '';
-  schema: '';
+  database: string;
+  schema: string;
 };
 
 export type ObjectTabType = BaseTab & {
