@@ -2,6 +2,7 @@ package databaseConnection
 
 import (
 	"errors"
+	"os"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -24,6 +25,10 @@ func CreateSQLiteConnection(params json.RawMessage) (string, error) {
 
 	if err := options.Validate(); err != nil {
 		return "", apperror.Validation(err)
+	}
+
+	if _, err := os.Stat(options.Path); errors.Is(err, os.ErrNotExist) {
+		return "", apperror.Validation(errors.New("sqlite file not found"))
 	}
 
 	return string(params), nil
