@@ -122,7 +122,7 @@ type PostgresTableColumnData struct {
 	Default      *string `json:"column_default"`
 	Comment      *string `json:"comment"`
 	MaxLength    *int    `json:"character_maximum_length"`
-	NumericScale *string `json:"numeric_scale"`
+	NumericScale *int    `json:"numeric_scale"`
 	IsIdentity   *bool   `json:"is_identity"`
 	IsGenerated  *bool   `json:"is_generated"`
 }

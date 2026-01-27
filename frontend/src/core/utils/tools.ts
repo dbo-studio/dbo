@@ -1,6 +1,7 @@
 import { getTauriVersion } from '@tauri-apps/api/app';
 import { format, type SqlLanguage } from 'sql-formatter';
 import { v7 } from 'uuid';
+import { isNumber, isObject } from './type';
 
 export const tools = {
   screenMaxHeight: (asNumber?: boolean): string | number => {
@@ -69,5 +70,12 @@ export const tools = {
   },
   uuid: (): string => {
     return v7();
+  },
+  isEmpty: (data: unknown): data is never | undefined | null => {
+    return (
+      (!data && !isNumber(data)) ||
+      (Array.isArray(data) && data.length === 0) ||
+      (isObject(data) && Object.keys(data).length === 0)
+    );
   }
 };
