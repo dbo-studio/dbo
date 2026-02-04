@@ -32,7 +32,7 @@ export const useTabStore: UseBoundStore<StoreApi<TabState>> = create<TabState>()
 
           return get().tabs.filter((t) => t.connectionId === currentConnectionId);
         },
-        selectedTab: (): TabType | undefined => {
+        selectedTab: <T extends TabType>(): T | undefined => {
           const currentConnectionId = useConnectionStore.getState().currentConnectionId;
           if (!currentConnectionId) {
             return undefined;
@@ -44,10 +44,10 @@ export const useTabStore: UseBoundStore<StoreApi<TabState>> = create<TabState>()
               set({ selectedTabId: selectedTab.id }, undefined, 'selectedTab');
             }
 
-            return selectedTab;
+            return selectedTab as T;
           }
 
-          return get().tabs.find((t) => t.connectionId === currentConnectionId && t.id === get().selectedTabId);
+          return get().tabs.find((t) => t.connectionId === currentConnectionId && t.id === get().selectedTabId) as T;
         },
         updateTabs: (newTabs: TabType[]): void => {
           set({ tabs: newTabs }, undefined, 'updateTabs');

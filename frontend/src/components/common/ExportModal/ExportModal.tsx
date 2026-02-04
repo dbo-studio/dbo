@@ -5,7 +5,7 @@ import Modal from '@/components/base/Modal/Modal';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import { tools } from '@/core/utils';
 import locales from '@/locales';
-import { Box, Button, IconButton } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { save } from '@tauri-apps/plugin-dialog';
 import type React from 'react';
@@ -107,11 +107,9 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
                     value={savePath}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSavePath(e.target.value)}
                     placeholder={locales.enter_file_path_or_click_browse}
+                    endAdornment={<CustomIcon type='ellipsisVertical' onClick={handleSelectFile} />}
                   />
                 </Box>
-                <IconButton onClick={handleSelectFile}>
-                  <CustomIcon type='ellipsisVertical' size='s' />
-                </IconButton>
               </Box>
             )}
           </Box>

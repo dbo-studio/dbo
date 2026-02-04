@@ -16,7 +16,10 @@ export const VisuallyHiddenInputStyled = styled('input')({
 export const ImportButtonStyled = styled(Button)<ImportButtonStyledProps>(({ theme, drag }) => ({
   border: '1px solid #000',
   width: '100%',
-  height: '100px',
+  height: '50px',
+  justifyContent: 'center',
+  alignItems: 'center',
+  display: 'flex',
   borderStyle: 'dashed',
   background: drag ? theme.palette.action.hover : theme.palette.background.default,
   borderColor: drag ? theme.palette.primary.main : theme.palette.divider,

@@ -1,17 +1,17 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { tools } from '@/core/utils/tools.ts';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook.ts';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
-import type { FilterType, TabType } from '@/types/Tab';
+import type { DataTabType, FilterType, TabType } from '@/types/Tab';
 import { Box, Button } from '@mui/material';
 import type { JSX } from 'react';
-import { v4 as uuid } from 'uuid';
 import AddFilterButton from './FilterItem/AddFilterButton/AddFilterButton.tsx';
 import FilterItem from './FilterItem/FilterItem.tsx';
 
 export default function Filters(): JSX.Element {
-  const selectedTab = useSelectedTab();
+  const selectedTab = useSelectedTab<DataTabType>();
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
   const columns = useDataStore((state) => state.columns);
@@ -37,7 +37,12 @@ export default function Filters(): JSX.Element {
       ) : (
         selectedTab?.filters?.map((filter: FilterType) => {
           return (
-            <FilterItem apply={(): void => handleApplyFilters()} key={uuid()} columns={columns ?? []} filter={filter} />
+            <FilterItem
+              apply={(): void => handleApplyFilters()}
+              key={tools.uuid()}
+              columns={columns ?? []}
+              filter={filter}
+            />
           );
         })
       )}

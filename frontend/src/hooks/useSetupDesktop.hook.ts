@@ -73,7 +73,8 @@ const waitForBackendReady = async (baseUrl: string): Promise<void> => {
     try {
       await tempApi.get('/config');
       return;
-    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (err) {
       if (attempt < BACKEND_HEALTH_CHECK_CONFIG.maxAttempts) {
         await new Promise((resolve) => setTimeout(resolve, BACKEND_HEALTH_CHECK_CONFIG.intervalMs));
       } else {

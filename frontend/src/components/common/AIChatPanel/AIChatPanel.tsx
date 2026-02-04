@@ -7,49 +7,28 @@ import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AiChatType, AutoCompleteType } from '@/types';
-import { Box, LinearProgress, Stack } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import AddChat from './AddChat/AddChat';
 import { HeaderContainerStyled } from './AiChatPanel.styled';
 import ChatBox from './ChatBox/ChatBox';
+import ChatHistory from './ChatHistory/ChatHistory';
 import Chats from './Chats/Chats';
 import Messages from './Messages/Messages';
 
 export default function AiChatPanel() {
+  const selectedTab = useSelectedTab();
   const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
   const currentChat = useAiStore((state) => state.currentChat);
   const chats = useAiStore((state) => state.chats);
   const [page, setPage] = useState(1);
-
-  const selectedTab = useSelectedTab();
 
   const updateChats = useAiStore((state) => state.updateChats);
   const updateCurrentChat = useAiStore((state) => state.updateCurrentChat);
   const addChat = useAiStore((state) => state.addChat);
   const addMessage = useAiStore((state) => state.addMessage);
   const updateContext = useAiStore((state) => state.updateContext);
-
-  const { isLoading } = useQuery({
-    queryKey: ['aiChats', currentConnectionId, currentChat],
-    queryFn: async () => {
-      const chats = await api.aiChat.getChats({
-        connectionId: currentConnectionId ?? 0,
-        page: 1,
-        count: 1
-      });
-      updateChats(chats);
-      if (!currentChat) {
-        if (chats.length > 0) {
-          handleChatChange(chats[0]);
-        } else {
-          handleCreateChat();
-        }
-      }
-      return chats;
-    },
-    enabled: !!currentConnectionId
-  });
 
   const { mutateAsync: chatMutation, isPending: chatPending } = useMutation({
     mutationFn: api.ai.chat
@@ -81,7 +60,7 @@ export default function AiChatPanel() {
     }
   };
 
-  const handleChatChange = async (chat: AiChatType) => {
+  const handleChatChange = useCallback(async (chat: AiChatType) => {
     if (chat.id === currentChat?.id) return;
 
     const detail = await api.aiChat.getChatDetail({
@@ -90,9 +69,9 @@ export default function AiChatPanel() {
       count: 10
     });
     updateCurrentChat(detail);
-  };
+  }, []);
 
-  const handleLoadMore = async (): Promise<void> => {
+  const handleLoadMore = useCallback(async (): Promise<void> => {
     if (!currentChat) return;
 
     setPage(page + 1);
@@ -103,7 +82,7 @@ export default function AiChatPanel() {
     });
     currentChat.messages.unshift(...detail.messages);
     updateCurrentChat(currentChat);
-  };
+  }, []);
 
   const handleSend = async () => {
     const context = useAiStore.getState().context;
@@ -151,27 +130,19 @@ export default function AiChatPanel() {
     }
   };
 
-  const handleChatDelete = (chat: AiChatType) => {
-    const newChats = chats.filter((c) => c.id !== chat.id);
-    updateChats(newChats);
+  const handleChatDelete = useCallback(
+    (chat: AiChatType) => {
+      const newChats = chats.filter((c) => c.id !== chat.id);
+      updateChats(newChats);
 
-    if (currentChat?.id === chat.id) {
-      if (newChats.length > 0) {
+      if (currentChat?.id === chat.id && newChats.length > 0) {
         handleChatChange(newChats[newChats.length - 1]);
-        return;
+      } else if (newChats.length === 0) {
+        updateCurrentChat(undefined);
       }
-
-      handleCreateChat();
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <Box p={1}>
-        <LinearProgress sx={{ height: 2 }} />
-      </Box>
-    );
-  }
+    },
+    [chats]
+  );
 
   return (
     <Box height={'100%'} minHeight={0} position={'relative'} display={'flex'} flexDirection={'column'}>
@@ -183,8 +154,8 @@ export default function AiChatPanel() {
           onChatDelete={handleChatDelete}
         />
         <Stack direction={'row'} alignItems={'center'}>
-          {/* <ChatOptions /> */}
           <AddChat onClick={handleCreateChat} />
+          <ChatHistory />
         </Stack>
       </HeaderContainerStyled>
       <Messages loading={chatPending} messages={currentChat?.messages ?? []} onLoadMore={handleLoadMore} />

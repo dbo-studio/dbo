@@ -1,54 +1,76 @@
 import type { ThemeModeEnum } from '@/core/enums';
 import { alpha } from '@mui/material';
 
+declare module '@mui/material/styles' {
+  export interface TypeBackground {
+    default: string;
+    paper: string;
+    neutral?: string;
+    primary: string;
+    subdued: string;
+    secondary: string;
+    success: string;
+    warning: string;
+    danger: string;
+  }
+  export interface TypeText {
+    text: string;
+    title: string;
+    subdued: string;
+    success: string;
+    warning: string;
+    danger: string;
+    highlight: string;
+    placeholder: string;
+  }
+}
+
 const GREY = {
   0: '#FFFFFF',
-  50: '#F9F9F9',
-  100: '#F3F3F3',
-  200: '#E8E8E8',
-  300: '#D4D4D4',
-  400: '#CECECE',
-  500: '#969696',
-  600: '#6A6A6A',
-  700: '#525252',
-  800: '#3E3E42',
-  900: '#252526',
-  950: '#1E1E1E'
+  100: '#F9FAFB',
+  200: '#F4F6F8',
+  300: '#DFE3E8',
+  400: '#C4CDD5',
+  500: '#919EAB',
+  600: '#637381',
+  700: '#454F5B',
+  800: '#212B36',
+  900: '#161C24'
 };
 
 const PRIMARY = {
-  light: '#007ACC',
-  main: '#007ACC',
-  dark: '#007ACC'
+  light: '#07C',
+  main: '#07C',
+  dark: '#36A2EF'
 };
 
 const SECONDARY = {
-  light: '#0066BF',
-  main: '#9CDCFE',
-  dark: '#9CDCFE'
+  light: '#f04e98',
+  main: '#f04e98',
+  dark: '#f68fbe'
 };
 
 const INFO = {
-  light: '#007ACC',
-  main: '#75BEFF',
-  dark: '#75BEFF'
+  light: '#74CAFF',
+  main: '#74CAFF',
+  dark: '#36a2ef'
 };
 
 const SUCCESS = {
-  light: '#16825D',
-  main: '#89D185',
-  dark: '#89D185'
+  light: '#00bfb3',
+  main: '#00bfb3',
+  dark: '#7dded8'
 };
 
 const WARNING = {
-  light: '#BF8803',
-  dark: '#CCA700'
+  light: '#fec514',
+  dark: '#f3d371'
 };
 
 const ERROR = {
-  light: '#A1260D',
-  main: '#F48771',
-  dark: '#F48771'
+  light: '#bd271e',
+  main: '#bd271e',
+  dark: '#f86b63'
 };
 
 const colorPalette = {
@@ -61,26 +83,26 @@ const colorPalette = {
   warning: WARNING,
   error: ERROR,
   grey: GREY,
-  disabled: { light: '#CECECE', dark: '#6E6E6E' },
+  disabled: { light: '#CCCCCC', dark: '#AAAAAA' },
   constant: { white: '#FFFFFF', black: '#222222' },
-  divider: { light: '#CECECE', dark: '#3E3E42' },
+  divider: { light: '#d3dae6', dark: '#343741' },
   action: {
     light: {
       active: GREY[600],
-      hover: '#E8E8E8',
-      selected: '#E7F0FA',
+      hover: '#eaebec',
+      selected: '#dbecfa',
       disabled: alpha(GREY[500], 0.8),
       disabledBackground: alpha(GREY[500], 0.24),
-      focus: alpha(PRIMARY.light, 0.24),
+      focus: alpha(GREY[500], 0.24),
       hoverOpacity: 0.08,
       disabledOpacity: 0.48
     },
     dark: {
       active: GREY[600],
-      hover: '#2A2D2E',
-      selected: '#264F78',
-      disabled: '#6E6E6E',
-      disabledBackground: '#3E3E42',
+      hover: '#44464d',
+      selected: '#103148',
+      disabled: '#515761',
+      disabledBackground: '#212229',
       focus: alpha(GREY[500], 0.24),
       hoverOpacity: 0.08,
       disabledOpacity: 0.48
@@ -88,53 +110,53 @@ const colorPalette = {
   },
   text: {
     light: {
-      text: '#333333',
-      title: '#000000',
-      subdued: '#6A6A6A',
-      success: '#333333',
-      warning: '#333333',
-      danger: '#333333',
-      primary: '#007ACC',
-      secondary: '#0066BF',
-      disabled: '#969696',
-      highlight: '#E7F0FA',
-      placeholder: '#969696'
+      text: '#343741',
+      title: '#1a1c21',
+      subdued: '#646a77',
+      success: '#343741',
+      warning: '#343741',
+      danger: '#343741',
+      primary: '#006bb8',
+      secondary: '#ba3d76',
+      disabled: '#a2abba',
+      highlight: '#fff9e8',
+      placeholder: '#69707d'
     },
     dark: {
-      text: '#CCCCCC',
-      title: '#CCCCCC',
-      subdued: '#858585',
+      text: '#dfe5ef',
+      title: '#dfe5ef',
+      subdued: '#7a7f89',
       success: '#fff',
       warning: '#fff',
       danger: '#fff',
-      primary: '#75BEFF',
-      secondary: '#9CDCFE',
-      disabled: '#6E6E6E',
-      highlight: '#264F78',
-      placeholder: '#6E6E6E'
+      primary: '#36a2ef',
+      secondary: '#f68fbe',
+      disabled: '#515761',
+      highlight: '#2e2d25',
+      placeholder: '#81858f'
     }
   },
   background: {
     light: {
-      primary: '#FFFFFF',
-      subdued: '#F3F3F3',
-      secondary: '#E8E8E8',
-      success: '#D7EDDB',
-      warning: '#FDF4DC',
-      danger: '#F1DFDD'
+      primary: '#fff',
+      subdued: '#f7f8fc',
+      secondary: '#FEEDF5',
+      success: '#daebc2',
+      warning: '#ffe18e',
+      danger: '#f5a6b0'
     },
     dark: {
-      primary: '#1E1E1E',
-      subdued: '#252526',
-      secondary: '#2A2D2E',
-      success: '#2D4A2D',
-      warning: '#4A3D1A',
-      danger: '#4A2D2D'
+      primary: '#1A1C1E',
+      subdued: '#25282A',
+      secondary: '#343A40',
+      success: '#558c3c',
+      warning: '#8b6926',
+      danger: '#8e2f31'
     }
   }
 };
 
-export default function palette(themeMode: ThemeModeEnum): Record<string, unknown> {
+export default function dboPalette(themeMode: ThemeModeEnum): Record<string, unknown> {
   const theme = {
     light: {
       primary: {

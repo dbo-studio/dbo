@@ -3,6 +3,7 @@ import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlig
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { IconButton } from '@mui/material';
+import { Box } from '@mui/system';
 import { toast } from 'sonner';
 import { useCopyToClipboard } from 'usehooks-ts';
 import type { CodeMessageProps } from '../../types';
@@ -24,7 +25,9 @@ export default function CodeMessage({ message }: CodeMessageProps) {
   return (
     <CodeMessageStyled>
       <CodeMessageHeaderStyled isdark={isDark?.toString() ?? 'false'}>
-        <CustomIcon type='code' />
+        <Box ml={1} display={'flex'}>
+          <CustomIcon type='code' />
+        </Box>
         <IconButton onClick={handleCopy}>
           <CustomIcon type='copy' />
         </IconButton>

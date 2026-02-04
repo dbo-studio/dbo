@@ -1,3 +1,6 @@
+import SelectInput from '@/components/base/SelectInput/SelectInput';
+import { SelectInputOption } from '@/components/base/SelectInput/types';
+import { getThemeOptions } from '@/core/theme/themeRegistry';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Divider, Typography, useMediaQuery } from '@mui/material';
@@ -31,6 +34,13 @@ export default function Theme(): JSX.Element {
       <Box display={'flex'} mt={2} mb={4}>
         <ThemeItem selected={theme.isDark !== false} onClick={(): void => handleToggle(true)} isDark={true} />
         <ThemeItem selected={!theme.isDark} onClick={(): void => handleToggle(false)} isDark={false} />
+      </Box>
+      <Box>
+        <SelectInput
+          value={theme.themeName}
+          options={getThemeOptions()}
+          onChange={(value): void => updateTheme({ themeName: (value as SelectInputOption)?.value as string })}
+        />
       </Box>
     </Box>
   );

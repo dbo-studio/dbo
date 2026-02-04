@@ -18,7 +18,15 @@ export default function DropDownMenu({ open, onClose, anchorRef, children }: Dro
   }, [open]);
 
   return (
-    <Popper open={open} anchorEl={anchorRef?.current} role='menu' placement='top-start' transition disablePortal>
+    <Popper
+      open={open}
+      anchorEl={anchorRef?.current}
+      role='menu'
+      placement='top-start'
+      transition
+      disablePortal
+      sx={{ zIndex: '999' }}
+    >
       {({ TransitionProps }) => (
         <Grow
           {...TransitionProps}

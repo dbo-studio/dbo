@@ -5,8 +5,7 @@ import type { SavedQueryItemStyledProps } from '../types';
 export const SavedQueryItemStyled = styled(Box)<SavedQueryItemStyledProps>(({ theme, selected }) => ({
   padding: `${theme.spacing(1 / 2)} ${theme.spacing(1)}`,
   cursor: 'pointer',
-  borderBottom: `1px solid ${theme.palette.divider}`,
-  border: `1px solid ${selected ? theme.palette.divider : 'transparent'}`,
+  border: `1px solid ${theme.palette.divider}`,
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',

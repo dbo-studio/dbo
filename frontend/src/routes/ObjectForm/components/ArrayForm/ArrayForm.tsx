@@ -1,6 +1,7 @@
+import { FormValue } from '@/types/Tree';
 import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import React, { memo, useCallback } from 'react';
-import type { ArrayFormProps, FormValue } from '../../types';
+import type { ArrayFormProps } from '../../types';
 import ArrayRow from './ArrayRow';
 
 function ArrayForm({ schema, data, onDataChange }: ArrayFormProps): React.JSX.Element {

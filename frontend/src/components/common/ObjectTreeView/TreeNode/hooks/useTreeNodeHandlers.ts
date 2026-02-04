@@ -1,4 +1,4 @@
-import type { TreeNodeType } from '@/api/tree/types';
+import { TreeNodeType } from '@/types/Tree';
 import type React from 'react';
 import { useCallback } from 'react';
 

@@ -4,7 +4,8 @@ import type { CheckUpdateResponseType, ConfigResponseType } from './types';
 const endpoint = {
   config: (): string => '/config',
   checkUpdate: (): string => '/config/check-update',
-  logsPath: (): string => '/config/logs'
+  logsPath: (): string => '/config/logs',
+  resetFactory: (): string => '/config/reset'
 };
 
 export const getConfig = async (): Promise<ConfigResponseType> => {
@@ -21,4 +22,8 @@ export const getLogsPath = async (): Promise<Blob> => {
   });
 
   return response.data;
+};
+
+export const resetFactory = async (): Promise<void> => {
+  await api.post(endpoint.resetFactory());
 };

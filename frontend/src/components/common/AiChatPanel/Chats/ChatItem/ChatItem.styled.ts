@@ -4,6 +4,7 @@ import { styled } from '@mui/material/styles';
 
 export const ChatItemStyled = styled('div')<{ selected: boolean }>(({ selected, theme }) => ({
   maxWidth: 150,
+  minWidth: 100,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'start',
@@ -11,6 +12,7 @@ export const ChatItemStyled = styled('div')<{ selected: boolean }>(({ selected, 
   borderRadius: variables.radius.small,
   backgroundColor: selected ? theme.palette.primary.main : theme.palette.background.default,
   color: selected ? theme.palette.background.default : theme.palette.text.text,
+  border: `1px solid ${theme.palette.divider}`,
   cursor: 'pointer',
   marginRight: theme.spacing(1),
   position: 'relative',
@@ -27,5 +29,5 @@ export const ChatItemIconStyled = styled(CustomIcon)<{ selected: boolean }>(({ t
   top: 2,
   borderRadius: '50%',
   opacity: 0,
-  backgroundColor: selected ? theme.palette.primary.main : theme.palette.background.default
+  color: `${selected ? theme.palette.background.default : theme.palette.text.text} !important`
 }));

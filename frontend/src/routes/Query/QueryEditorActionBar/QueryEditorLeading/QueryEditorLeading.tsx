@@ -1,28 +1,29 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
+import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import { EditorTabType } from '@/types';
 import { Stack, Switch, Tooltip, Typography } from '@mui/material';
 import { type JSX, useEffect, useState } from 'react';
 import type { QueryEditorLeadingProps } from '../../types';
-import type { SelectInputOption } from '@/components/base/SelectInput/types';
 
 export default function QueryEditorLeading({ databases, schemas }: QueryEditorLeadingProps): JSX.Element {
-  const selectedTab = useSelectedTab();
+  const selectedTab = useSelectedTab<EditorTabType>();
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
   const enableEditorAi = useSettingStore((state) => state.editor.enableEditorAi);
   const updateEditor = useSettingStore((state) => state.updateEditor);
 
-  const [localSchema, setLocalSchema] = useState<string>((selectedTab?.options?.schema as string) ?? '');
-  const [localDatabase, setLocalDatabase] = useState<string>((selectedTab?.options?.database as string) ?? '');
+  const [localSchema, setLocalSchema] = useState<string>((selectedTab?.schema as string) ?? '');
+  const [localDatabase, setLocalDatabase] = useState<string>((selectedTab?.database as string) ?? '');
 
   useEffect(() => {
     if (!selectedTab) return;
 
-    updateSelectedTab({ ...selectedTab, options: { database: localDatabase, schema: localSchema } });
+    updateSelectedTab({ ...selectedTab, database: localDatabase, schema: localSchema });
   }, [localSchema, localDatabase]);
 
   return (

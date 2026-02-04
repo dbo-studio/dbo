@@ -7,14 +7,14 @@ import { useCurrentConnection, useShortcut, useWindowSize } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { AutoCompleteType, ColumnType, RowType } from '@/types';
+import type { AutoCompleteType, ColumnType, EditorTabType, RowType } from '@/types';
 import { Box, type Theme } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { type JSX, useEffect, useState } from 'react';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
 
 export default function Query(): JSX.Element {
-  const selectedTab = useSelectedTab();
+  const selectedTab = useSelectedTab<EditorTabType>();
   const currentConnection = useCurrentConnection();
   const windowSize = useWindowSize();
   const [tableData, setTableData] = useState({
@@ -35,12 +35,12 @@ export default function Query(): JSX.Element {
   useShortcut(shortcuts.runQuery, () => runRawQuery());
 
   const { data: autocomplete } = useQuery({
-    queryKey: ['autocomplete', currentConnection?.id, selectedTab?.options?.database, selectedTab?.options?.schema],
+    queryKey: ['autocomplete', currentConnection?.id, selectedTab?.database, selectedTab?.schema],
     queryFn: async (): Promise<AutoCompleteType> =>
       api.query.autoComplete({
         connectionId: currentConnection?.id ?? 0,
-        database: selectedTab?.options?.database === '' ? undefined : selectedTab?.options?.database,
-        schema: selectedTab?.options?.schema === '' ? undefined : selectedTab?.options?.schema
+        database: selectedTab?.database === '' ? undefined : selectedTab?.database,
+        schema: selectedTab?.schema === '' ? undefined : selectedTab?.schema
       }),
     enabled: !!currentConnection
   });

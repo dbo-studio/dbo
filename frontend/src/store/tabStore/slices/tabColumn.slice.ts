@@ -1,9 +1,10 @@
 import type { StateCreator } from 'zustand';
 import type { TabDataSlice, TabStore } from '../types';
+import { DataTabType } from '@/types';
 
 export const createTabColumnSlice: StateCreator<TabStore & TabDataSlice, [], [], TabDataSlice> = (_, get) => ({
   updateColumns: (columns: string[]): void => {
-    const tab = get().selectedTab();
+    const tab = get().selectedTab<DataTabType>();
     if (!tab) return;
 
     tab.columns = columns;

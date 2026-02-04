@@ -4,6 +4,7 @@ import { ImportModal } from '@/components/common/ImportModal/ImportModal';
 import { useSelectedTab } from '@/hooks';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import { DataTabType } from '@/types';
 import { Badge, Box, Grid, IconButton, Stack, useTheme } from '@mui/material';
 import { type JSX, useState } from 'react';
 import Filters from './Filters/Filters';
@@ -13,7 +14,7 @@ import type { ActionBarProps } from './types';
 
 export default function ActionBar({ showColumns, setShowColumns }: ActionBarProps): JSX.Element {
   const theme = useTheme();
-  const selectedTab = useSelectedTab();
+  const selectedTab = useSelectedTab<DataTabType>();
 
   const sortCount = selectedTab?.sorts?.filter((sort) => sort.isActive).length ?? 0;
   const filterCount = selectedTab?.filters?.filter((filter) => filter.isActive).length ?? 0;
@@ -32,7 +33,7 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
 
   const handleShowExport = () => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;
-    const table = useTabStore.getState().selectedTab()?.table ?? 'exported_table';
+    const table = useTabStore.getState().selectedTab<DataTabType>()?.table ?? 'exported_table';
     const query = useTabStore.getState().getQuery() ?? '';
 
     setShowExport({
@@ -45,7 +46,7 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
 
   const handleShowImport = () => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;
-    const table = useTabStore.getState().selectedTab()?.table ?? 'exported_table';
+    const table = useTabStore.getState().selectedTab<DataTabType>()?.table ?? 'exported_table';
 
     setShowImport({
       show: true,

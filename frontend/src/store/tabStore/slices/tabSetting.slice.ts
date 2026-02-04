@@ -1,7 +1,7 @@
 import { TabMode } from '@/core/enums';
+import { tools } from '@/core/utils';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import type { TabType } from '@/types/Tab';
-import { v4 as uuidv4 } from 'uuid';
+import type { DataTabType, EditorTabType, ObjectTabType, TabType } from '@/types/Tab';
 import type { StateCreator } from 'zustand';
 import type { TabQuerySlice, TabSettingSlice, TabStore } from '../types';
 
@@ -13,16 +13,16 @@ export const createTabSettingSlice: StateCreator<
   [],
   TabSettingSlice
 > = (_set, get) => ({
-  addTab: (table: string, id?: string, editable?: boolean): TabType => {
+  addDataTab: (table: string, id: string, editable?: boolean): DataTabType => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;
     if (!currentConnectionId) {
       throw new Error('No current connection id');
     }
 
-    const tabs = get().tabs;
+    const tabs = get().tabs as DataTabType[];
 
     const findTab = tabs.find(
-      (t: TabType) => t.mode === TabMode.Data && t.table === table && t.connectionId === currentConnectionId
+      (t) => t.mode === TabMode.Data && t.table === table && t.connectionId === currentConnectionId
     );
 
     if (findTab) {
@@ -30,16 +30,13 @@ export const createTabSettingSlice: StateCreator<
       return findTab;
     }
 
-    const newTab: TabType = {
-      id: uuidv4(),
+    const newTab: DataTabType = {
+      id: tools.uuid(),
       connectionId: currentConnectionId,
-      nodeId: id ?? '',
+      nodeId: id,
       name: table,
       table: table,
-      query: `SELECT * FROM ${table}`,
-      options: {
-        editable: editable === undefined ? false : editable
-      },
+      editable: editable === undefined ? false : editable,
       filters: [],
       sorts: [],
       columns: [],
@@ -54,29 +51,17 @@ export const createTabSettingSlice: StateCreator<
       mode: TabMode.Data
     };
 
-    if (tabs.length < maxTabs) {
-      get().updateTabs([...tabs, newTab]);
-    } else {
-      get().updateTabs([...tabs.slice(1), newTab]);
-    }
-    get().switchTab(newTab.id);
-
-    return newTab;
+    return get().handleAddNewTab(tabs, newTab) as DataTabType;
   },
 
-  addEditorTab: (query?: string): TabType => {
+  addEditorTab: (query?: string): EditorTabType => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;
     if (!currentConnectionId) {
       throw new Error('No current connection id');
     }
 
-    const tabs = get().tabs;
-    const findTab = tabs.find(
-      (t: TabType) =>
-        t.mode === TabMode.Query &&
-        (query ? t.query === query : t.query === '' || t.query === '""') &&
-        t.connectionId === currentConnectionId
-    );
+    const tabs = get().tabs as EditorTabType[];
+    const findTab = tabs.find((t) => t.mode === TabMode.Query && t.connectionId === currentConnectionId);
 
     if (findTab) {
       findTab.mode = TabMode.Query;
@@ -84,32 +69,29 @@ export const createTabSettingSlice: StateCreator<
       return findTab;
     }
 
-    const newTab: TabType = {
-      id: uuidv4(),
+    const newTab: EditorTabType = {
+      id: tools.uuid(),
       name: query ? query.slice(0, 10) : 'Editor',
       connectionId: currentConnectionId,
       nodeId: '',
       mode: TabMode.Query,
-      query: query ? query : '',
-      options: {
-        database: '',
-        schema: ''
-      }
+      database: '',
+      schema: ''
     };
 
     const addedTab = get().handleAddNewTab(tabs, newTab);
     if (query) {
       get().updateQuery(query);
     }
-    return addedTab;
+    return addedTab as EditorTabType;
   },
-  addObjectTab: (title: string, nodeId: string, action: string, mode: TabMode): TabType => {
+  addObjectTab: (title: string, nodeId: string, action: string, mode: TabMode): ObjectTabType => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;
     if (!currentConnectionId) {
       throw new Error('No current connection id');
     }
 
-    const tabs = get().tabs;
+    const tabs = get().tabs as ObjectTabType[];
     const findTab = tabs.find(
       (t: TabType) => t.mode === mode && t.nodeId === nodeId && t.connectionId === currentConnectionId
     );
@@ -119,18 +101,17 @@ export const createTabSettingSlice: StateCreator<
       return findTab;
     }
 
-    const newTab: TabType = {
-      id: uuidv4(),
+    const newTab: ObjectTabType = {
+      id: tools.uuid(),
       connectionId: currentConnectionId,
       name: title,
       nodeId: nodeId,
       mode: mode,
-      options: {
-        action: action
-      }
+      action: action,
+      objectTabId: null
     };
 
-    return get().handleAddNewTab(tabs, newTab);
+    return get().handleAddNewTab(tabs, newTab) as ObjectTabType;
   },
   removeTab: (tabId: string): TabType | null | undefined => {
     const tabIndex = get().tabs.findIndex((t: TabType) => t.id === tabId);

@@ -1,76 +1,54 @@
 import type { ThemeModeEnum } from '@/core/enums';
 import { alpha } from '@mui/material';
 
-declare module '@mui/material/styles' {
-  export interface TypeBackground {
-    default: string;
-    paper: string;
-    neutral?: string;
-    primary: string;
-    subdued: string;
-    secondary: string;
-    success: string;
-    warning: string;
-    danger: string;
-  }
-  export interface TypeText {
-    text: string;
-    title: string;
-    subdued: string;
-    success: string;
-    warning: string;
-    danger: string;
-    highlight: string;
-    placeholder: string;
-  }
-}
-
 const GREY = {
   0: '#FFFFFF',
-  100: '#F9FAFB',
-  200: '#F4F6F8',
-  300: '#DFE3E8',
-  400: '#C4CDD5',
-  500: '#919EAB',
-  600: '#637381',
-  700: '#454F5B',
-  800: '#212B36',
-  900: '#161C24'
+  50: '#FAFAFA',
+  100: '#F4F4F5',
+  200: '#E4E4E7',
+  300: '#D4D4D8',
+  400: '#A1A1AA',
+  500: '#71717A',
+  600: '#52525B',
+  700: '#3F3F46',
+  800: '#27272A',
+  900: '#18181B',
+  950: '#09090B'
 };
 
 const PRIMARY = {
-  light: '#07C',
-  main: '#07C',
-  dark: '#36A2EF'
+  light: '#0F172A',
+  main: '#0F172A',
+  dark: '#F8FAFC'
 };
 
 const SECONDARY = {
-  light: '#f04e98',
-  main: '#f04e98',
-  dark: '#f68fbe'
+  light: '#64748B',
+  main: '#64748B',
+  dark: '#CBD5E1'
 };
 
 const INFO = {
-  light: '#74CAFF',
-  main: '#74CAFF',
-  dark: '#36a2ef'
+  light: '#0EA5E9',
+  main: '#0EA5E9',
+  dark: '#38BDF8'
 };
 
 const SUCCESS = {
-  light: '#00bfb3',
-  main: '#00bfb3',
-  dark: '#7dded8'
+  light: '#10B981',
+  main: '#10B981',
+  dark: '#34D399'
 };
 
 const WARNING = {
-  light: '#fec514',
-  dark: '#f3d371'
+  light: '#F59E0B',
+  dark: '#FBBF24'
 };
 
 const ERROR = {
-  light: '#bd271e',
-  main: '#bd271e',
-  dark: '#f86b63'
+  light: '#EF4444',
+  main: '#EF4444',
+  dark: '#F87171'
 };
 
 const colorPalette = {
@@ -83,80 +61,80 @@ const colorPalette = {
   warning: WARNING,
   error: ERROR,
   grey: GREY,
-  disabled: { light: '#CCCCCC', dark: '#AAAAAA' },
-  constant: { white: '#FFFFFF', black: '#222222' },
-  divider: { light: '#d3dae6', dark: '#343741' },
+  disabled: { light: '#A1A1AA', dark: '#52525B' },
+  constant: { white: '#FFFFFF', black: '#09090B' },
+  divider: { light: '#E4E4E7', dark: '#27272A' },
   action: {
     light: {
       active: GREY[600],
-      hover: '#eaebec',
-      selected: '#dbecfa',
-      disabled: alpha(GREY[500], 0.8),
-      disabledBackground: alpha(GREY[500], 0.24),
-      focus: alpha(GREY[500], 0.24),
+      hover: '#F4F4F5',
+      selected: '#F1F5F9',
+      disabled: alpha(GREY[400], 0.8),
+      disabledBackground: alpha(GREY[400], 0.24),
+      focus: alpha(PRIMARY.light, 0.24),
       hoverOpacity: 0.08,
       disabledOpacity: 0.48
     },
     dark: {
       active: GREY[600],
-      hover: '#44464d',
-      selected: '#103148',
-      disabled: '#515761',
-      disabledBackground: '#212229',
-      focus: alpha(GREY[500], 0.24),
+      hover: '#27272A',
+      selected: '#18181B',
+      disabled: '#52525B',
+      disabledBackground: '#27272A',
+      focus: alpha(PRIMARY.dark, 0.24),
       hoverOpacity: 0.08,
       disabledOpacity: 0.48
     }
   },
   text: {
     light: {
-      text: '#343741',
-      title: '#1a1c21',
-      subdued: '#646a77',
-      success: '#343741',
-      warning: '#343741',
-      danger: '#343741',
-      primary: '#006bb8',
-      secondary: '#ba3d76',
-      disabled: '#a2abba',
-      highlight: '#fff9e8',
-      placeholder: '#69707d'
+      text: '#09090B',
+      title: '#09090B',
+      subdued: '#52525B',
+      success: '#09090B',
+      warning: '#09090B',
+      danger: '#09090B',
+      primary: '#0F172A',
+      secondary: '#64748B',
+      disabled: '#A1A1AA',
+      highlight: '#F1F5F9',
+      placeholder: '#71717A'
     },
     dark: {
-      text: '#dfe5ef',
-      title: '#dfe5ef',
-      subdued: '#7a7f89',
-      success: '#fff',
-      warning: '#fff',
-      danger: '#fff',
-      primary: '#36a2ef',
-      secondary: '#f68fbe',
-      disabled: '#515761',
-      highlight: '#2e2d25',
-      placeholder: '#81858f'
+      text: '#FAFAFA',
+      title: '#FAFAFA',
+      subdued: '#A1A1AA',
+      success: '#FAFAFA',
+      warning: '#FAFAFA',
+      danger: '#FAFAFA',
+      primary: '#F8FAFC',
+      secondary: '#CBD5E1',
+      disabled: '#52525B',
+      highlight: '#27272A',
+      placeholder: '#71717A'
     }
   },
   background: {
     light: {
-      primary: '#fff',
-      subdued: '#f7f8fc',
-      secondary: '#FEEDF5',
-      success: '#daebc2',
-      warning: '#ffe18e',
-      danger: '#f5a6b0'
+      primary: '#FFFFFF',
+      subdued: '#FAFAFA',
+      secondary: '#F4F4F5',
+      success: '#D1FAE5',
+      warning: '#FEF3C7',
+      danger: '#FEE2E2'
     },
     dark: {
-      primary: '#1A1C1E',
-      subdued: '#25282A',
-      secondary: '#343A40',
-      success: '#558c3c',
-      warning: '#8b6926',
-      danger: '#8e2f31'
+      primary: '#09090B',
+      subdued: '#18181B',
+      secondary: '#27272A',
+      success: '#065F46',
+      warning: '#78350F',
+      danger: '#991B1B'
     }
   }
 };
 
-export default function palette(themeMode: ThemeModeEnum): Record<string, unknown> {
+export default function shadcnPalette(themeMode: ThemeModeEnum): Record<string, unknown> {
   const theme = {
     light: {
       primary: {

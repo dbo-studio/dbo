@@ -7,8 +7,10 @@ import { Box, Button, Stack } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import { open } from '@tauri-apps/plugin-dialog';
 import type { JSX } from 'react';
+import { useEffect, useState } from 'react';
 import * as v from 'valibot';
 
+import { tools } from '@/core/utils';
 import type { ConnectionSettingsProps } from '../types';
 
 const formSchema = v.object({
@@ -25,6 +27,14 @@ export default function SQLite({
   pingLoading,
   submitLoading
 }: ConnectionSettingsProps): JSX.Element {
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    tools.isTauri().then((result) => {
+      setIsDesktop(result);
+    });
+  }, []);
+
   const form = useForm({
     validators: {
       onSubmit: formSchema
@@ -35,7 +45,6 @@ export default function SQLite({
         type: 'sqlite',
         options: value
       } as CreateConnectionRequestType;
-      console.log('data', data);
 
       if (value.isPing) {
         onPing(data);
@@ -53,13 +62,15 @@ export default function SQLite({
   });
 
   const handleFileSelect = async (): Promise<void> => {
-    const selected = await open({
-      multiple: false,
-      directory: false
-    });
+    if (isDesktop) {
+      const selected = await open({
+        multiple: false,
+        directory: false
+      });
 
-    if (typeof selected === 'string') {
-      form.setFieldValue('path', selected);
+      if (typeof selected === 'string') {
+        form.setFieldValue('path', selected);
+      }
     }
   };
 
@@ -97,17 +108,9 @@ export default function SQLite({
                     error={field.state.meta.errors.length > 0}
                     label={locales.file}
                     onChange={(e): void => field.handleChange(e.target.value)}
+                    endAdornment={isDesktop && <CustomIcon type='ellipsisVertical' onClick={handleFileSelect} />}
                   />
                 </Box>
-                {/* <IconButton onClick={handleFileSelect} size='small'> */}
-                <Button
-                  sx={{ minWidth: 32, marginLeft: 1, padding: '0 !important' }}
-                  onClick={handleFileSelect}
-                  size='small'
-                >
-                  <CustomIcon type='ellipsisVertical' size='s' />
-                </Button>
-                {/* </IconButton> */}
                 <FormError mb={1} errors={field.state.meta.errors} />
               </Box>
             )}

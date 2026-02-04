@@ -2,6 +2,7 @@ import api from '@/api';
 import type { DynamicFieldResponse } from '@/api/tree/types';
 import { useCurrentConnection } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
+import { ObjectTabType } from '@/types';
 import type { FieldDependencyType, FormFieldOptionType, FormFieldType } from '@/types/Tree';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -54,14 +55,14 @@ export const useDynamicField = (
   isLoadingDynamicField: (fieldId: string) => boolean;
   refreshDynamicField: (fieldId: string, dependsOn: FieldDependencyType) => Promise<void>;
 } => {
-  const selectedTab = useSelectedTab();
+  const selectedTab = useSelectedTab<ObjectTabType>();
   const currentConnection = useCurrentConnection();
   const [dynamicState, setDynamicState] = useState<DynamicFieldState>({});
   const cacheKeysRef = useRef<Record<string, string>>({});
 
   const fetchDynamicOptions = useCallback(
     async (field: FormFieldType, dependsOn: FieldDependencyType): Promise<void> => {
-      if (!dependsOn?.fieldId || !currentConnection?.id || !selectedTab?.nodeId || !selectedTab?.options?.tabId) {
+      if (!dependsOn?.fieldId || !currentConnection?.id || !selectedTab?.nodeId || !selectedTab?.objectTabId) {
         return;
       }
 
@@ -149,7 +150,7 @@ export const useDynamicField = (
         }));
       }
     },
-    [currentConnection?.id, selectedTab?.nodeId, selectedTab?.options, formValues]
+    [currentConnection?.id, selectedTab?.nodeId, selectedTab?.objectTabId, formValues]
   );
 
   useEffect(() => {

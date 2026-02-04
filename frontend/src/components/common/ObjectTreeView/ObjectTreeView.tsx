@@ -1,5 +1,4 @@
 import api from '@/api';
-import type { TreeNodeType } from '@/api/tree/types';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
 import Search from '@/components/base/Search/Search';
@@ -10,6 +9,7 @@ import { useMutation } from '@tanstack/react-query';
 import { type JSX, useEffect, useMemo, useRef, useState } from 'react';
 import { TreeViewContainerStyled, TreeViewContentStyled } from './ObjectTreeView.styled';
 import TreeNode from './TreeNode/TreeNode';
+import { TreeNodeType } from '@/types/Tree';
 
 export default function ObjectTreeView(): JSX.Element {
   const currentConnection = useCurrentConnection();

@@ -1,10 +1,10 @@
-import type { SortType } from '@/types';
+import type { DataTabType, SortType } from '@/types';
 import type { StateCreator } from 'zustand';
 import type { TabSortSlice, TabStore } from '../types';
 
 export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], TabSortSlice> = (_, get) => ({
   upsertSorts: async (sort: SortType): Promise<void> => {
-    const tab = get().selectedTab();
+    const tab = get().selectedTab<DataTabType>();
     if (!tab) return;
 
     const findSort = tab.sorts?.find((s: SortType) => s.index === sort.index);
@@ -19,14 +19,14 @@ export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], T
     get().updateSelectedTab(tab);
   },
   removeSort: (sort: SortType): void => {
-    const tab = get().selectedTab();
+    const tab = get().selectedTab<DataTabType>();
     if (!tab) return;
 
     tab.sorts = tab.sorts?.filter((s: SortType) => s.index !== sort.index);
     get().updateSelectedTab(tab);
   },
   updateSorts: (sorts: SortType[]): void => {
-    const tab = get().selectedTab();
+    const tab = get().selectedTab<DataTabType>();
     if (!tab) return;
 
     tab.sorts = sorts;
