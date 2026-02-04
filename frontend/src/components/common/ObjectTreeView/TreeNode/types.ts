@@ -1,5 +1,5 @@
-import type { TreeNodeType } from '@/api/tree/types';
 import type { MenuType } from '@/components/base/ContextMenu/types';
+import { TreeNodeType } from '@/types/Tree';
 import type React from 'react';
 import type { RefObject } from 'react';
 

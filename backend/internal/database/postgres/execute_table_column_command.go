@@ -52,11 +52,11 @@ func handleCreateColumn(node PGNode, column dto.PostgresTableColumn) []string {
 	columnDef := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s", node.Table, *column.New.Name, *column.New.DataType)
 
 	if column.New.MaxLength != nil {
-		columnDef = fmt.Sprintf("%s(%s)", columnDef, *column.New.MaxLength)
+		columnDef = fmt.Sprintf("%s(%d)", columnDef, *column.New.MaxLength)
 	}
 
 	if column.New.NumericScale != nil {
-		columnDef = fmt.Sprintf("%s(%s,%s)", columnDef, *column.New.MaxLength, *column.New.NumericScale)
+		columnDef = fmt.Sprintf("%s(%d,%d)", columnDef, *column.New.MaxLength, *column.New.NumericScale)
 	}
 
 	if lo.FromPtr(column.New.NotNull) {
@@ -114,11 +114,11 @@ func handleEditColumn(node PGNode, column dto.PostgresTableColumn) []string {
 		dataTypeQuery := fmt.Sprintf(`%s ALTER COLUMN "%s" TYPE %s USING "%s"::%s`,
 			alter, *column.Old.Name, *column.New.DataType, *column.Old.Name, *column.New.DataType)
 
-		if column.New.MaxLength != nil && *column.New.MaxLength != "" {
+		if column.New.MaxLength != nil {
 			if isCharacterType(*column.New.DataType) {
-				dataTypeQuery = fmt.Sprintf("%s(%s)", dataTypeQuery, *column.New.MaxLength)
+				dataTypeQuery = fmt.Sprintf("%s(%d)", dataTypeQuery, *column.New.MaxLength)
 			} else if isNumericType(*column.New.DataType) && column.New.NumericScale != nil {
-				dataTypeQuery = fmt.Sprintf("%s(%s,%s)", dataTypeQuery, *column.New.MaxLength, *column.New.NumericScale)
+				dataTypeQuery = fmt.Sprintf("%s(%d,%d)", dataTypeQuery, *column.New.MaxLength, *column.New.NumericScale)
 			}
 		}
 

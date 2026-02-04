@@ -187,5 +187,8 @@
   "you_are_up_to_date": "You are up to date!",
   "show_logs": "Show logs",
   "analytics": "Analytics",
-  "enable_analytics": "Enable analytics"
+  "enable_analytics": "Enable analytics",
+  "reset_factory": "Reset factory",
+  "reset_factory_description": "Delete all DBO's data",
+  "reset_factory_confirm": "Are you sure delete all data?"
 }

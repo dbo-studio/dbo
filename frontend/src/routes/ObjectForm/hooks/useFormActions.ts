@@ -1,11 +1,14 @@
 import api from '@/api';
+import { tools } from '@/core/utils';
 import { useCurrentConnection } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
+import { ObjectTabType } from '@/types';
 import type { FormFieldWithState, FormValue } from '@/types/Tree';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { diff } from 'deep-object-diff';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 import type { FormDataState } from '../types';
@@ -19,7 +22,7 @@ export const useFormActions = (
 } => {
   const queryClient = useQueryClient();
   const currentConnection = useCurrentConnection();
-  const selectedTab = useSelectedTab();
+  const selectedTab = useSelectedTab<ObjectTabType>();
   const { getFormData, resetFormData, updateFormData } = useDataStore();
   const { reloadTree } = useTreeStore();
 
@@ -27,7 +30,7 @@ export const useFormActions = (
     mutationFn: api.tree.executeAction,
     onSuccess: (): void => {
       queryClient.invalidateQueries({
-        queryKey: ['formData', currentConnection?.id, selectedTab?.id, selectedTab?.options?.action, tabId]
+        queryKey: ['formData', currentConnection?.id, selectedTab?.id, selectedTab?.action, tabId]
       });
       reloadTree(false);
     }
@@ -67,8 +70,8 @@ export const useFormActions = (
           if (!originalRow) {
             columns.push({ New: currentRow, Old: {}, Added: true });
           } else {
-            const hasChanges = JSON.stringify(currentRow) !== JSON.stringify(originalRow);
-            if (hasChanges) {
+            const hasChanged = diff(currentRow, originalRow);
+            if (!tools.isEmpty(hasChanged)) {
               columns.push({ New: currentRow, Old: originalRow });
             }
           }
@@ -130,7 +133,7 @@ export const useFormActions = (
 
         await executeAction({
           nodeId: selectedTab.nodeId,
-          action: selectedTab.options?.action ?? '',
+          action: selectedTab?.action ?? '',
           connectionId: currentConnection.id,
           data: payload as Record<string, FormValue>
         });
@@ -157,7 +160,7 @@ export const useFormActions = (
     resetFormData(selectedTab.id, storageKey);
 
     queryClient.refetchQueries({
-      queryKey: ['formData', currentConnection?.id, selectedTab.id, selectedTab.options?.action, tabId]
+      queryKey: ['formData', currentConnection?.id, selectedTab.id, selectedTab?.action, tabId]
     });
 
     toast.info('Changes discarded');

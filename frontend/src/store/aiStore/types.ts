@@ -16,7 +16,7 @@ export type AiProviderSlice = {
 export type AiChatSlice = {
   chats: AiChatType[];
   currentChat: AiChatType | undefined;
-  updateCurrentChat: (chat: AiChatType) => void;
+  updateCurrentChat: (chat: AiChatType | undefined) => void;
   updateChats: (chats: AiChatType[]) => Promise<void>;
   addChat: (chat: AiChatType) => Promise<void>;
   addMessage: (chat: AiChatType, messages: AiMessageType[]) => AiChatType;

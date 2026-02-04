@@ -18,7 +18,7 @@ export const CodeMessageHeaderStyled = styled(Box)<{ isdark: string }>(({ theme,
   flexDirection: 'row',
   justifyContent: 'space-between',
   alignItems: 'center',
-  padding: `${theme.spacing(1)} ${theme.spacing(1 / 2)}`,
+  padding: `${theme.spacing(1 / 2)}`,
   backgroundColor: isdark === 'true' ? theme.palette.background.default : theme.palette.background.paper,
   color: theme.palette.text.primary,
   borderRadius: variables.radius.medium

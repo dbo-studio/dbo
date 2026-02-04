@@ -74,7 +74,7 @@ export default function ImportButton({ onChange }: ImportButtonProps) {
         </Typography>
       )}
 
-      <VisuallyHiddenInputStyled accept='.sql,.json,.csv' type='file' onChange={handleChange} multiple />
+      <VisuallyHiddenInputStyled accept='.sql,.json,.csv' type='file' onChange={handleChange} />
     </ImportButtonStyled>
   );
 }

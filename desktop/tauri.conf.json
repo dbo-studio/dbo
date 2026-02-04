@@ -9,6 +9,7 @@
     "active": true,
     "category": "DeveloperTool",
     "copyright": "",
+    "publisher": "DBO Studio",
     "targets": [
       "deb",
       "nsis",
@@ -49,7 +50,7 @@
   },
   "productName": "DBO",
   "mainBinaryName": "DBO",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "identifier": "com.dbostudio.dev",
   "plugins": {
     "updater": {

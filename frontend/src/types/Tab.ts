@@ -17,10 +17,17 @@ export type FilterType = {
   isActive: boolean;
 };
 
-export type TabType = {
+export type TabType = DataTabType | EditorTabType | ObjectTabType;
+
+type BaseTab = {
   id: string;
   connectionId: string | number;
   nodeId: string;
+  action?: string;
+  mode: TabMode;
+};
+
+export type DataTabType = BaseTab & {
   name: string;
   table?: string;
   pagination?: TabDataPagination;
@@ -31,8 +38,18 @@ export type TabType = {
   sorts?: SortType[];
   filters?: FilterType[];
   columns?: string[];
-  mode: TabMode;
-  options?: Record<string, unknown>;
+  editable: boolean;
+};
+
+export type EditorTabType = BaseTab & {
+  name: string;
+  database: string;
+  schema: string;
+};
+
+export type ObjectTabType = BaseTab & {
+  name: string;
+  objectTabId: string | null;
 };
 
 export type EditedRow = {

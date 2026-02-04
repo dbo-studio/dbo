@@ -2,8 +2,9 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { IconButton, Stack, TableCell, TableRow } from '@mui/material';
 import React, { memo, useMemo } from 'react';
 import { useDynamicField } from '../../hooks/useDynamicField';
-import type { ArrayRowProps, FormValue } from '../../types';
+import type { ArrayRowProps } from '../../types';
 import SimpleField from '../SimpleForm/SimpleField';
+import { FormValue } from '@/types/Tree';
 
 function ArrayRow({ schema, rowData, onFieldChange, onDelete }: ArrayRowProps): React.JSX.Element {
   const fieldsWithValues = useMemo(() => {

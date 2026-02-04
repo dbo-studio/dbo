@@ -1,4 +1,5 @@
 import { constants } from '@/core/constants';
+import { getDefaultTheme } from '@/core/theme/themeRegistry';
 import { create, type StoreApi, type UseBoundStore } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import type { EditorSettings, GeneralSettings, SettingStore, ThemeSettings, UISettings } from './types';
@@ -33,7 +34,8 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           isDark: false,
           appFont: 'Roboto',
           editorTheme: 'github-light',
-          editorFontSize: 14
+          editorFontSize: 14,
+          themeName: getDefaultTheme()
         },
         editor: {
           enableEditorAi: false,

@@ -15,13 +15,8 @@ type App struct {
 	LogPath       string
 }
 
-type Sentry struct {
-	Dsn string
-}
-
 type Config struct {
-	App    App
-	Sentry Sentry
+	App App
 }
 
 var config *Config
@@ -32,13 +27,10 @@ func New() *Config {
 			Name:          "dbo",
 			Port:          os.Getenv("APP_PORT"),
 			Env:           os.Getenv("APP_ENV"),
-			Version:       "v0.4.0",
+			Version:       "v0.4.2",
 			DatabaseName:  "dbo.db",
 			ReleaseUrlApi: "https://dbo-studio.com/api/config",
 			ReleaseUrl:    "https://dbo-studio.com/releases",
-		},
-		Sentry: Sentry{
-			Dsn: os.Getenv("SENTRY_DNS"),
 		},
 	}
 

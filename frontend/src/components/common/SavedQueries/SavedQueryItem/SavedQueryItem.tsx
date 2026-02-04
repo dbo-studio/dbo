@@ -71,6 +71,10 @@ export default function SavedQueryItem({
         ) : (
           <Typography variant='body2'>{query.name}</Typography>
         )}
+
+        <Typography variant='caption' color='textSubdued'>
+          {query.createdAt}
+        </Typography>
       </Box>
 
       {isEditMode ? (

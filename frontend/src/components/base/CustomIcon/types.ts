@@ -72,5 +72,6 @@ export const IconTypes = {
   at: 'AtSign',
   history: 'History',
   bot: 'Bot',
-  mysql: 'mysql'
+  mysql: 'mysql',
+  message: 'MessageSquare'
 };

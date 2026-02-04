@@ -16,7 +16,7 @@ func (r *MySQLRepository) handleTableColumnCommands(node MySQLNode, tabId contra
 		return queries, nil
 	}
 
-	paramsDto, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.PostgresTableColumnParams](data)
+	paramsDto, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.MysqlTableColumnParams](data)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (r *MySQLRepository) handleTableColumnCommands(node MySQLNode, tabId contra
 	return queries, nil
 }
 
-func (r *MySQLRepository) handleCreateColumn(node MySQLNode, column dto.PostgresTableColumn) []string {
+func (r *MySQLRepository) handleCreateColumn(node MySQLNode, column dto.MysqlTableColumn) []string {
 	queries := []string{}
 
 	columnDef := fmt.Sprintf("ALTER TABLE `%s`.`%s` ADD COLUMN `%s` %s", node.Database, node.Table, *column.New.Name, *column.New.DataType)
@@ -76,7 +76,7 @@ func (r *MySQLRepository) handleCreateColumn(node MySQLNode, column dto.Postgres
 	return queries
 }
 
-func (r *MySQLRepository) handleEditColumn(node MySQLNode, column dto.PostgresTableColumn) []string {
+func (r *MySQLRepository) handleEditColumn(node MySQLNode, column dto.MysqlTableColumn) []string {
 	queries := []string{}
 
 	alter := fmt.Sprintf("ALTER TABLE `%s`.`%s`", node.Database, node.Table)
@@ -99,7 +99,7 @@ func (r *MySQLRepository) handleEditColumn(node MySQLNode, column dto.PostgresTa
 		dataTypeQuery := fmt.Sprintf("%s MODIFY COLUMN `%s` %s",
 			alter, *column.Old.Name, *column.New.DataType)
 
-		if column.New.MaxLength != nil && *column.New.MaxLength != "" {
+		if column.New.MaxLength != nil {
 			if isCharacterType(*column.New.DataType) {
 				dataTypeQuery = fmt.Sprintf("%s(%s)", dataTypeQuery, *column.New.MaxLength)
 			} else if isNumericType(*column.New.DataType) && column.New.NumericScale != nil {

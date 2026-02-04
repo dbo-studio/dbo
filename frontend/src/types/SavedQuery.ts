@@ -3,4 +3,5 @@ export type SavedQueryType = {
   connectionId: number;
   name: string;
   query: string;
+  createdAt: string;
 };

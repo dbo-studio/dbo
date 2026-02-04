@@ -3,148 +3,151 @@ import { alpha } from '@mui/material';
 
 const GREY = {
   0: '#FFFFFF',
-  50: '#F5F7FA',
-  100: '#E8ECF0',
-  200: '#D3DAE6',
-  300: '#BDC5D3',
-  400: '#98A2B3',
-  500: '#69707D',
-  600: '#535966',
-  700: '#343741',
-  800: '#1A1D21',
-  900: '#0F1114',
-  950: '#000000'
+  100: '#F5F5F5',
+  200: '#EEEEEE',
+  300: '#E0E0E0',
+  400: '#BDBDBD',
+  500: '#9E9E9E',
+  600: '#757575',
+  700: '#616161',
+  800: '#424242',
+  900: '#212121'
 };
 
 const PRIMARY = {
-  light: '#0079A5',
-  main: '#0079A5',
-  dark: '#00A3C4'
+  light: '#5882FA',
+  main: '#1E88E5',
+  dark: '#0D47A1'
 };
 
 const SECONDARY = {
-  light: '#343741',
-  main: '#343741',
-  dark: '#BDC5D3'
+  light: '#FF7EB9',
+  main: '#F50057',
+  dark: '#C51162'
 };
 
 const INFO = {
-  light: '#006BB4',
-  main: '#006BB4',
-  dark: '#1BA9F5'
+  light: '#3399FF',
+  main: '#0277BD',
+  dark: '#004C8A'
 };
 
 const SUCCESS = {
-  light: '#017D73',
-  main: '#017D73',
-  dark: '#00BFB3'
+  light: '#66BB6A',
+  main: '#43A047',
+  dark: '#2E7D32'
 };
 
 const WARNING = {
-  light: '#F5A700',
-  dark: '#FFBF00'
+  light: '#FFCC00',
+  main: '#FF8F00',
+  dark: '#E65100'
 };
 
 const ERROR = {
-  light: '#BD271E',
-  main: '#BD271E',
-  dark: '#F66'
+  light: '#EF5350',
+  main: '#D32F2F',
+  dark: '#B71C1C'
 };
 
 const colorPalette = {
   common: { black: '#000', white: '#fff' },
   primary: PRIMARY,
   secondary: SECONDARY,
-  accent: PRIMARY,
+  accent: SECONDARY,
   info: INFO,
   success: SUCCESS,
   warning: WARNING,
   error: ERROR,
   grey: GREY,
-  disabled: { light: '#98A2B3', dark: '#535966' },
-  constant: { white: '#FFFFFF', black: '#000000' },
-  divider: { light: '#D3DAE6', dark: '#343741' },
+  disabled: { light: '#CCCCCC', dark: '#666666' },
+  constant: { white: '#FFFFFF', black: '#222222' },
+  divider: { light: '#E0E0E0', dark: '#424242' },
   action: {
     light: {
-      active: GREY[600],
-      hover: '#F5F7FA',
-      selected: '#E8ECF0',
-      disabled: alpha(GREY[400], 0.8),
-      disabledBackground: alpha(GREY[400], 0.24),
-      focus: alpha(PRIMARY.light, 0.24),
+      active: GREY[700],
+      hover: alpha(GREY[300], 0.24),
+      selected: alpha(PRIMARY.main, 0.08),
+      disabled: alpha(GREY[500], 0.8),
+      disabledBackground: alpha(GREY[500], 0.24),
+      focus: alpha(GREY[500], 0.24),
       hoverOpacity: 0.08,
       disabledOpacity: 0.48
     },
     dark: {
-      active: GREY[600],
-      hover: '#1A1D21',
-      selected: '#343741',
-      disabled: '#535966',
-      disabledBackground: '#1A1D21',
-      focus: alpha(PRIMARY.dark, 0.24),
+      active: GREY[300],
+      hover: alpha(GREY[600], 0.24),
+      selected: alpha(PRIMARY.main, 0.16),
+      disabled: alpha(GREY[500], 0.8),
+      disabledBackground: alpha(GREY[500], 0.24),
+      focus: alpha(GREY[500], 0.24),
       hoverOpacity: 0.08,
       disabledOpacity: 0.48
     }
   },
   text: {
     light: {
-      text: '#343741',
-      title: '#000000',
-      subdued: '#535966',
-      success: '#343741',
-      warning: '#343741',
-      danger: '#343741',
-      primary: '#0079A5',
-      secondary: '#343741',
-      disabled: '#98A2B3',
-      highlight: '#E8ECF0',
-      placeholder: '#69707D'
+      text: GREY[900],
+      title: GREY[900],
+      subdued: GREY[600],
+      success: SUCCESS.main,
+      warning: WARNING.main,
+      danger: ERROR.main,
+      primary: PRIMARY.main,
+      secondary: SECONDARY.main,
+      disabled: GREY[500],
+      highlight: '#FFF9C4',
+      placeholder: GREY[500]
     },
     dark: {
-      text: '#D3DAE6',
-      title: '#F5F7FA',
-      subdued: '#98A2B3',
-      success: '#F5F7FA',
-      warning: '#F5F7FA',
-      danger: '#F5F7FA',
-      primary: '#00A3C4',
-      secondary: '#BDC5D3',
-      disabled: '#535966',
-      highlight: '#343741',
-      placeholder: '#69707D'
+      text: '#FFFFFF',
+      title: '#FFFFFF',
+      subdued: GREY[400],
+      success: '#66BB6A',
+      warning: '#FFD54F',
+      danger: '#EF5350',
+      primary: PRIMARY.light,
+      secondary: SECONDARY.light,
+      disabled: GREY[600],
+      highlight: '#3E2723',
+      placeholder: GREY[500]
     }
   },
   background: {
     light: {
       primary: '#FFFFFF',
-      subdued: '#F5F7FA',
-      secondary: '#E8ECF0',
-      success: '#E0F2ED',
-      warning: '#FFF4E0',
-      danger: '#FEE2E2'
+      subdued: GREY[100],
+      secondary: '#F5F7FA',
+      success: '#E8F5E9',
+      warning: '#FFFDE7',
+      danger: '#FFEBEE'
     },
     dark: {
-      primary: '#0F1114',
-      subdued: '#1A1D21',
-      secondary: '#343741',
-      success: '#014D47',
-      warning: '#7D5700',
-      danger: '#5D1E19'
+      primary: '#121212',
+      subdued: '#1E1E1E',
+      secondary: '#1D1D1D',
+      success: '#1B5E20',
+      warning: '#E65100',
+      danger: '#B71C1C'
     }
   }
 };
 
-export default function palette(themeMode: ThemeModeEnum): Record<string, unknown> {
+export default function materialPalette(themeMode: ThemeModeEnum): Record<string, unknown> {
   const theme = {
     light: {
       primary: {
-        main: colorPalette.primary.light
+        main: colorPalette.primary.main,
+        light: colorPalette.primary.light,
+        dark: colorPalette.primary.dark
       },
       secondary: {
-        main: colorPalette.secondary.light
+        main: colorPalette.secondary.main,
+        light: colorPalette.secondary.light,
+        dark: colorPalette.secondary.dark
       },
       accent: {
-        main: colorPalette.accent.light
+        main: colorPalette.accent.main
       },
       white: {
         main: colorPalette.constant.white
@@ -153,13 +156,19 @@ export default function palette(themeMode: ThemeModeEnum): Record<string, unknow
         main: colorPalette.constant.black
       },
       error: {
-        main: colorPalette.error.light
+        main: colorPalette.error.main,
+        light: colorPalette.error.light,
+        dark: colorPalette.error.dark
       },
       warning: {
-        main: colorPalette.warning.light
+        main: colorPalette.warning.main,
+        light: colorPalette.warning.light,
+        dark: colorPalette.warning.dark
       },
       success: {
-        main: colorPalette.success.light
+        main: colorPalette.success.main,
+        light: colorPalette.success.light,
+        dark: colorPalette.success.dark
       },
       background: {
         default: colorPalette.background.light.primary,
@@ -187,13 +196,17 @@ export default function palette(themeMode: ThemeModeEnum): Record<string, unknow
     },
     dark: {
       primary: {
-        main: colorPalette.primary.dark
+        main: colorPalette.primary.main,
+        light: colorPalette.primary.light,
+        dark: colorPalette.primary.dark
       },
       secondary: {
-        main: colorPalette.secondary.dark
+        main: colorPalette.secondary.main,
+        light: colorPalette.secondary.light,
+        dark: colorPalette.secondary.dark
       },
       accent: {
-        main: colorPalette.accent.dark
+        main: colorPalette.accent.main
       },
       white: {
         main: colorPalette.constant.white
@@ -202,13 +215,19 @@ export default function palette(themeMode: ThemeModeEnum): Record<string, unknow
         main: colorPalette.constant.black
       },
       error: {
-        main: colorPalette.error.dark
+        main: colorPalette.error.main,
+        light: colorPalette.error.light,
+        dark: colorPalette.error.dark
       },
       warning: {
-        main: colorPalette.warning.dark
+        main: colorPalette.warning.main,
+        light: colorPalette.warning.light,
+        dark: colorPalette.warning.dark
       },
       success: {
-        main: colorPalette.success.dark
+        main: colorPalette.success.main,
+        light: colorPalette.success.light,
+        dark: colorPalette.success.dark
       },
       background: {
         default: colorPalette.background.dark.primary,
