@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -10,7 +11,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/server"
 	"github.com/dbo-studio/dbo/internal/container"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
-	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/dbo-studio/dbo/internal/migrations"
 	"github.com/dbo-studio/dbo/pkg/cache/sqlite"
 	"github.com/dbo-studio/dbo/pkg/db"
 	"github.com/dbo-studio/dbo/pkg/helper"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/internal/service"
+	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/spf13/cobra"
 )
 
@@ -40,21 +42,16 @@ func Execute() {
 	appLogger := zap.New(cfg)
 	appContainer.SetLogger(appLogger)
 
-	appDB := db.New(cfg, appLogger).DB
+	sqliteDB := db.New(cfg, appLogger)
+	appDB := sqliteDB.DB
 	appContainer.SetDB(appDB)
 
-	err := appDB.AutoMigrate(
-		&model.CacheItem{},
-		&model.Connection{},
-		&model.History{},
-		&model.SavedQuery{},
-		&model.Job{},
-		&model.AiProvider{},
-		&model.AiChat{},
-		&model.AiChatMessage{},
-	)
-
+	rawDB, err := appDB.DB()
 	if err != nil {
+		appLogger.Fatal(err)
+	}
+
+	if err := migrations.Up(context.Background(), rawDB); err != nil {
 		appLogger.Fatal(err)
 	}
 
@@ -62,8 +59,9 @@ func Execute() {
 	appContainer.SetCache(cache)
 
 	rr := repository.NewRepository()
-	cm := databaseConnection.NewConnectionManager(rr.HistoryRepo)
-	ss := service.NewService(rr, cm)
+	secretStore := secretStore.NewSecretStore(cfg, rr.WebSessionRepo, rr.WebConnectionSecretRepo, appLogger)
+	cm := databaseConnection.NewConnectionManager(rr.HistoryRepo, secretStore, appLogger)
+	ss := service.NewService(rr, cm, secretStore)
 
 	err = ss.JobManager.CancelAllJobs()
 	if err != nil {
@@ -82,7 +80,7 @@ func Execute() {
 		AI:           handler.NewAiHandler(ss.AiService),
 		AiProvider:   handler.NewAiProviderHandler(ss.AiProviderService),
 		AiChat:       handler.NewAiChatHandler(ss.AiChatService),
-	})
+	}, rr.ConnectionRepo, rr.WebSessionRepo, cm, secretStore)
 
 	if err := restServer.Start(helper.IsLocal(), cfg.App.Port); err != nil {
 		msg := fmt.Sprintf("error happen while serving: %v", err)

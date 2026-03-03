@@ -40,11 +40,11 @@ func (r *Server) routing() {
 	aiChat.Delete("/:id", r.handlers.AiChat.Delete)
 
 	connection := api.Group("connections")
-	connection.Get("/:id", r.handlers.Connection.Detail)
 	connection.Get("/", r.handlers.Connection.Connections)
 	connection.Post("/", r.handlers.Connection.Create)
 	connection.Post("/ping", r.handlers.Connection.Ping)
 	connection.Patch("/:id", r.handlers.Connection.Update)
+	connection.Post("/:id/credentials", r.handlers.Connection.SetCredentials)
 	connection.Delete("/:id", r.handlers.Connection.Delete)
 
 	saved := api.Group("saved")

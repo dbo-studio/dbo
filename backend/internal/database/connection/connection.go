@@ -6,34 +6,53 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dbo-studio/dbo/internal/container"
+	"gorm.io/driver/sqlserver"
+	"gorm.io/gorm"
+
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
-	"github.com/dbo-studio/dbo/internal/repository"
+	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger"
-	"gorm.io/driver/sqlserver"
-
-	"gorm.io/gorm"
 )
+
+type IConnectionManager interface {
+	IsOpen(ctx context.Context, ownerID string, connectionID uint) bool
+	Close(ctx context.Context, ownerID string, connectionID uint) error
+	ListOpen(ownerID string) []uint
+}
 
 type conn struct {
 	DB       *gorm.DB
 	LastUsed time.Time
 }
 
-type ConnectionManager struct {
-	connections map[uint]*conn
-	mu          sync.Mutex
-	logger      logger.Logger
-	historyRepo repository.IHistoryRepo
+type connKey struct {
+	OwnerID      string
+	ConnectionID uint
 }
 
-func NewConnectionManager(historyRepo repository.IHistoryRepo) *ConnectionManager {
+type HistoryWriter interface {
+	Create(ctx context.Context, connectionID uint, query string) error
+}
+
+type ConnectionManager struct {
+	connections map[connKey]*conn
+	mu          sync.Mutex
+	logger      logger.Logger
+	historyRepo HistoryWriter
+	secrets     secretStore.ISecretStore
+	safetyTTL   time.Duration
+}
+
+func NewConnectionManager(historyRepo HistoryWriter, secrets secretStore.ISecretStore, appLogger logger.Logger) *ConnectionManager {
 	cm := &ConnectionManager{
-		connections: make(map[uint]*conn),
+		connections: make(map[connKey]*conn),
 		mu:          sync.Mutex{},
-		logger:      container.Instance().Logger(),
+		logger:      appLogger,
 		historyRepo: historyRepo,
+		secrets:     secrets,
+		safetyTTL:   6 * time.Hour,
 	}
 	go cm.cleanupInactiveConnections()
 	return cm
@@ -43,7 +62,10 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 
-	if conn, exists := cm.connections[connection.ID]; exists {
+	ownerID := helper.CtxOwnerID(ctx)
+	key := connKey{OwnerID: ownerID, ConnectionID: connection.ID}
+
+	if conn, exists := cm.connections[key]; exists {
 		db, err := conn.DB.DB()
 		if err == nil {
 			if err := db.PingContext(ctx); err == nil {
@@ -51,7 +73,15 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 				return conn.DB, nil
 			}
 		}
-		delete(cm.connections, connection.ID)
+		delete(cm.connections, key)
+		_ = cm.closeConn(conn)
+	}
+
+	// Ensure connection has password when needed.
+	if cm.secrets != nil {
+		if err := secretStore.HydrateConnectionPassword(ctx, cm.secrets, ownerID, connection); err != nil {
+			return nil, err
+		}
 	}
 
 	var dialect gorm.Dialector
@@ -81,11 +111,61 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 	sqlDB.SetMaxIdleConns(5)
 	sqlDB.SetConnMaxLifetime(5 * time.Minute)
 
-	cm.connections[connection.ID] = &conn{
+	cm.connections[key] = &conn{
 		DB:       db,
 		LastUsed: time.Now(),
 	}
 	return db, nil
+}
+
+func (cm *ConnectionManager) IsOpen(ctx context.Context, ownerID string, connectionID uint) bool {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+
+	key := connKey{OwnerID: ownerID, ConnectionID: connectionID}
+	c, ok := cm.connections[key]
+	if !ok {
+		return false
+	}
+
+	sqlDB, err := c.DB.DB()
+	if err != nil {
+		delete(cm.connections, key)
+		return false
+	}
+	if err := sqlDB.PingContext(ctx); err != nil {
+		delete(cm.connections, key)
+		_ = cm.closeConn(c)
+		return false
+	}
+
+	return true
+}
+
+func (cm *ConnectionManager) Close(ctx context.Context, ownerID string, connectionID uint) error {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+
+	key := connKey{OwnerID: ownerID, ConnectionID: connectionID}
+	c, ok := cm.connections[key]
+	if !ok {
+		return nil
+	}
+	delete(cm.connections, key)
+	return cm.closeConn(c)
+}
+
+func (cm *ConnectionManager) ListOpen(ownerID string) []uint {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+
+	out := make([]uint, 0)
+	for k := range cm.connections {
+		if k.OwnerID == ownerID {
+			out = append(out, k.ConnectionID)
+		}
+	}
+	return out
 }
 
 func (cm *ConnectionManager) cleanupInactiveConnections() {
@@ -94,24 +174,38 @@ func (cm *ConnectionManager) cleanupInactiveConnections() {
 
 	for range ticker.C {
 		cm.mu.Lock()
-		for id, conn := range cm.connections {
-			if time.Since(conn.LastUsed) > 30*time.Second {
-				delete(cm.connections, id)
-				db, err := conn.DB.DB()
-				if err == nil {
-					err = db.Close()
-					if err != nil {
-						cm.logger.Error(err)
-						return
-					}
+		for key, conn := range cm.connections {
+			if time.Since(conn.LastUsed) <= cm.safetyTTL {
+				continue
+			}
+
+			db, err := conn.DB.DB()
+			if err == nil {
+				if db.Stats().InUse > 0 {
+					conn.LastUsed = time.Now()
+					continue
 				}
 			}
+
+			delete(cm.connections, key)
+			_ = cm.closeConn(conn)
 		}
 		cm.mu.Unlock()
 	}
 }
 
-func RegisterHistoryHooks(db *gorm.DB, historyRepo repository.IHistoryRepo, connectionID uint) {
+func (cm *ConnectionManager) closeConn(c *conn) error {
+	if c == nil || c.DB == nil {
+		return nil
+	}
+	db, err := c.DB.DB()
+	if err != nil {
+		return nil
+	}
+	return db.Close()
+}
+
+func RegisterHistoryHooks(db *gorm.DB, historyRepo HistoryWriter, connectionID uint) {
 	cb := db.Callback()
 
 	saveHistory := func(db *gorm.DB) {

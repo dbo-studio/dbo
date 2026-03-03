@@ -2,26 +2,42 @@ import type { CreateConnectionRequestType } from '@/api/connection/types';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
 import locales from '@/locales';
-import { Box, Button, Checkbox, Stack, Typography } from '@mui/material';
+import { Box, Button, Checkbox, FormControlLabel, Stack } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
-import { type JSX, useState } from 'react';
+import { type JSX } from 'react';
 import * as v from 'valibot';
 
 import type { ConnectionSettingsProps } from '../types';
 
-const formSchema = v.object({
-  isPing: v.boolean(),
-  name: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
-  host: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
-  port: v.pipe(
-    v.string(),
-    v.check((input) => !Number.isNaN(Number.parseInt(input, 10)), 'Expected number, received a string')
-  ),
-  username: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
-  password: v.string(),
-  database: v.string(),
-  uri: v.string()
-});
+const formSchema = v.union([
+  v.object({
+    useUri: v.literal(true),
+    isPing: v.boolean(),
+    rememberPassword: v.boolean(),
+    name: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
+    host: v.string(),
+    port: v.string(),
+    username: v.string(),
+    password: v.string(),
+    database: v.string(),
+    uri: v.pipe(v.string(), v.minLength(1, 'At least 1 character'))
+  }),
+  v.object({
+    useUri: v.literal(false),
+    isPing: v.boolean(),
+    rememberPassword: v.boolean(),
+    name: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
+    host: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
+    port: v.pipe(
+      v.string(),
+      v.check((input) => !Number.isNaN(Number.parseInt(input, 10)), 'Expected number, received a string')
+    ),
+    username: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
+    password: v.string(),
+    database: v.string(),
+    uri: v.string()
+  })
+]);
 
 export default function PostgreSQL({
   connection,
@@ -31,18 +47,22 @@ export default function PostgreSQL({
   pingLoading,
   submitLoading
 }: ConnectionSettingsProps): JSX.Element {
-  const [useUri, setUseUri] = useState(false);
-
   const form = useForm({
     validators: {
+      onChange: formSchema,
       onSubmit: formSchema
     },
     onSubmit: async ({ value }): Promise<void> => {
       const data = {
         name: value.name,
         type: 'postgresql',
+        rememberPassword: value.rememberPassword,
         options: {
-          ...value,
+          host: value.host,
+          username: value.username,
+          password: value.password,
+          database: value.database,
+          uri: value.uri,
           port: Number(value.port)
         }
       } as CreateConnectionRequestType;
@@ -56,7 +76,9 @@ export default function PostgreSQL({
       form.reset();
     },
     defaultValues: {
+      useUri: Boolean(connection?.options.uri),
       isPing: false,
+      rememberPassword: false,
       name: connection?.name ?? '',
       host: connection?.options.host ?? '',
       port: connection?.options.port.toString() ?? '',
@@ -92,115 +114,153 @@ export default function PostgreSQL({
               </Box>
             )}
           </form.Field>
-          <Stack direction='row' spacing={2}>
-            <form.Field name='host'>
-              {(field): JSX.Element => (
-                <Box>
-                  <FieldInput
-                    name='host'
-                    placeholder='localhost'
-                    disabled={useUri}
-                    value={field.state.value}
-                    error={field.state.meta.errors.length > 0}
-                    label={locales.host}
-                    onChange={(e): void => field.handleChange(e.target.value)}
-                  />
-                  <FormError mb={1} errors={field.state.meta.errors} />
-                </Box>
-              )}
-            </form.Field>
-
-            <form.Field name='port'>
-              {(field): JSX.Element => (
-                <Box>
-                  <FieldInput
-                    name='port'
-                    disabled={useUri}
-                    placeholder={'5432'}
-                    value={field.state.value}
-                    error={field.state.meta.errors.length > 0}
-                    label={locales.port}
-                    type='number'
-                    onChange={(e): void => field.handleChange(e.target.value)}
-                  />
-                  <FormError mb={1} errors={field.state.meta.errors} />
-                </Box>
-              )}
-            </form.Field>
-          </Stack>
-          <Stack direction='row' spacing={2}>
-            <form.Field name='username'>
-              {(field): JSX.Element => (
-                <Box>
-                  <FieldInput
-                    mb={1}
-                    name='username'
-                    disabled={useUri}
-                    value={field.state.value}
-                    error={field.state.meta.errors.length > 0}
-                    label={locales.username}
-                    onChange={(e): void => field.handleChange(e.target.value)}
-                  />
-                  <FormError mb={1} errors={field.state.meta.errors} />
-                </Box>
-              )}
-            </form.Field>
-
-            <form.Field name='password'>
-              {(field): JSX.Element => (
-                <Box>
-                  <FieldInput
-                    name='password'
-                    disabled={useUri}
-                    value={field.state.value}
-                    error={field.state.meta.errors.length > 0}
-                    label={locales.password}
-                    onChange={(e): void => field.handleChange(e.target.value)}
-                  />
-                  <FormError mb={1} errors={field.state.meta.errors} />
-                </Box>
-              )}
-            </form.Field>
-          </Stack>
-
-          <form.Field name='database'>
-            {(field): JSX.Element => (
+          <form.Subscribe selector={(state) => state.values.useUri}>
+            {(useUri): JSX.Element => (
               <>
-                <FieldInput
-                  name='database'
-                  disabled={useUri}
-                  value={field.state.value}
-                  error={field.state.meta.errors.length > 0}
-                  label={locales.database}
-                  fullWidth={true}
-                  onChange={(e): void => field.handleChange(e.target.value)}
-                />
-                <FormError mb={1} errors={field.state.meta.errors} />
+                <Stack direction='row' spacing={2}>
+                  <form.Field name='host'>
+                    {(field): JSX.Element => (
+                      <Box>
+                        <FieldInput
+                          name='host'
+                          placeholder='localhost'
+                          disabled={useUri}
+                          value={field.state.value}
+                          error={field.state.meta.errors.length > 0}
+                          label={locales.host}
+                          onChange={(e): void => field.handleChange(e.target.value)}
+                        />
+                        <FormError mb={1} errors={field.state.meta.errors} />
+                      </Box>
+                    )}
+                  </form.Field>
+
+                  <form.Field name='port'>
+                    {(field): JSX.Element => (
+                      <Box>
+                        <FieldInput
+                          name='port'
+                          disabled={useUri}
+                          placeholder={'5432'}
+                          value={field.state.value}
+                          error={field.state.meta.errors.length > 0}
+                          label={locales.port}
+                          type='number'
+                          onChange={(e): void => field.handleChange(e.target.value)}
+                        />
+                        <FormError mb={1} errors={field.state.meta.errors} />
+                      </Box>
+                    )}
+                  </form.Field>
+                </Stack>
+                <Stack direction='row' spacing={2}>
+                  <form.Field name='username'>
+                    {(field): JSX.Element => (
+                      <Box>
+                        <FieldInput
+                          mb={1}
+                          name='username'
+                          disabled={useUri}
+                          value={field.state.value}
+                          error={field.state.meta.errors.length > 0}
+                          label={locales.username}
+                          onChange={(e): void => field.handleChange(e.target.value)}
+                        />
+                        <FormError mb={1} errors={field.state.meta.errors} />
+                      </Box>
+                    )}
+                  </form.Field>
+
+                  <form.Field name='password'>
+                    {(field): JSX.Element => (
+                      <Box>
+                        <FieldInput
+                          name='password'
+                          disabled={useUri}
+                          value={field.state.value}
+                          error={field.state.meta.errors.length > 0}
+                          label={locales.password}
+                          onChange={(e): void => field.handleChange(e.target.value)}
+                        />
+                        <FormError mb={1} errors={field.state.meta.errors} />
+                      </Box>
+                    )}
+                  </form.Field>
+                </Stack>
+
+                <form.Field name='database'>
+                  {(field): JSX.Element => (
+                    <>
+                      <FieldInput
+                        name='database'
+                        disabled={useUri}
+                        value={field.state.value}
+                        error={field.state.meta.errors.length > 0}
+                        label={locales.database}
+                        fullWidth={true}
+                        onChange={(e): void => field.handleChange(e.target.value)}
+                      />
+                      <FormError mb={1} errors={field.state.meta.errors} />
+                    </>
+                  )}
+                </form.Field>
               </>
             )}
-          </form.Field>
+          </form.Subscribe>
 
           <Box display={'flex'} flexDirection={'column'}>
-            <Box display={'flex'} alignItems={'center'}>
-              <Checkbox checked={useUri} size={'small'} onChange={(e): void => setUseUri(e.target.checked)} />
-              <Typography fontSize={'13px'} color='textText'>
-                {locales.use_uri}
-              </Typography>
+            <Box display={'flex'} alignItems={'center'} mb={1}>
+              <form.Field name='useUri'>
+                {(field): JSX.Element => (
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={field.state.value}
+                        size={'small'}
+                        onChange={(e): void => field.handleChange(e.target.checked)}
+                      />
+                    }
+                    label={locales.use_uri}
+                  />
+                )}
+              </form.Field>
             </Box>
 
-            <form.Field name='uri'>
+            <form.Subscribe selector={(state) => state.values.useUri}>
+              {(useUri): JSX.Element => (
+                <form.Field name='uri'>
+                  {(field): JSX.Element => (
+                    <>
+                      <FieldInput
+                        name='uri'
+                        value={field.state.value}
+                        error={field.state.meta.errors.length > 0}
+                        label={locales.uri}
+                        onChange={(e): void => field.handleChange(e.target.value)}
+                        disabled={!useUri}
+                        placeholder='postgres://username:password@hostname:port/dbname'
+                      />
+                      <FormError mb={1} errors={field.state.meta.errors} />
+                    </>
+                  )}
+                </form.Field>
+              )}
+            </form.Subscribe>
+          </Box>
+
+          <Box display={'flex'} alignItems={'center'} mb={1}>
+            <form.Field name='rememberPassword'>
               {(field): JSX.Element => (
-                <>
-                  <FieldInput
-                    name='uri'
-                    value={field.state.value}
-                    error={field.state.meta.errors.length > 0}
-                    label={locales.uri}
-                    onChange={(e): void => field.handleChange(e.target.value)}
-                    disabled={!useUri}
-                  />
-                  <FormError mb={1} errors={field.state.meta.errors} />
-                </>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={field.state.value}
+                      size={'small'}
+                      onChange={(e): void => field.handleChange(e.target.checked)}
+                    />
+                  }
+                  label={locales.remember_password}
+                />
               )}
             </form.Field>
           </Box>
@@ -215,7 +275,6 @@ export default function PostgreSQL({
           <Button
             data-testid='test-connection'
             loadingPosition='start'
-            disabled={pingLoading}
             loading={pingLoading}
             onClick={(): void => {
               form.state.values.isPing = true;
@@ -230,7 +289,6 @@ export default function PostgreSQL({
           <Button
             data-testid='create-connection'
             loadingPosition='start'
-            disabled={submitLoading}
             loading={submitLoading}
             onClick={(): void => {
               form.state.values.isPing = false;

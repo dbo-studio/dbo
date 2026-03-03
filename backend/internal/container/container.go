@@ -4,6 +4,8 @@ import (
 	"sync"
 
 	"github.com/dbo-studio/dbo/config"
+	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
+	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"gorm.io/gorm"
@@ -15,6 +17,8 @@ type Container struct {
 	config *config.Config
 	cache  cache.Cache
 	db     *gorm.DB
+	secret secretStore.ISecretStore
+	cm     databaseConnection.IConnectionManager
 }
 
 var (
@@ -76,3 +80,27 @@ func (c *Container) DB() *gorm.DB {
 	defer c.mu.RUnlock()
 	return c.db
 }
+
+// func (c *Container) SetSecretStore(s secretStore.ISecretStore) {
+// 	c.mu.Lock()
+// 	defer c.mu.Unlock()
+// 	c.secret = s
+// }
+
+// func (c *Container) SecretStore() secretStore.ISecretStore {
+// 	c.mu.RLock()
+// 	defer c.mu.RUnlock()
+// 	return c.secret
+// }
+
+// func (c *Container) SetConnectionManager(cm databaseConnection.IConnectionManager) {
+// 	c.mu.Lock()
+// 	defer c.mu.Unlock()
+// 	c.cm = cm
+// }
+
+// func (c *Container) ConnectionManager() databaseConnection.IConnectionManager {
+// 	c.mu.RLock()
+// 	defer c.mu.RUnlock()
+// 	return c.cm
+// }

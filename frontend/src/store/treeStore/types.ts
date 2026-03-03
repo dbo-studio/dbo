@@ -1,4 +1,4 @@
-import type { TreeNodeType } from '@/api/tree/types';
+import { TreeNodeType } from "@/types/Tree";
 
 export type TreeStore = {
   tree: Record<string, TreeNodeType>;

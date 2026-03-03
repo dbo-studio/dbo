@@ -20,6 +20,8 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           showAddConnection: false,
           showEditConnection: false,
           showQuickLookEditor: false,
+          showConnectionPasswordPrompt: false,
+          passwordPromptConnectionId: undefined,
           showSettings: {
             open: false,
             tab: 0

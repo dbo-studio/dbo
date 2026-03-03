@@ -105,7 +105,7 @@ func getLogPath(cfg *config.Config) string {
 	var logPath string
 	appName := cfg.App.Name
 
-	if cfg.App.Env == "docker" {
+	if cfg.App.Env == config.EnvironmentDocker {
 		return defaultPath
 	}
 

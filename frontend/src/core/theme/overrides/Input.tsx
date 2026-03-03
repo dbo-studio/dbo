@@ -16,6 +16,9 @@ export default function Input(theme: Theme): Components {
           '&.Mui-disabled': {
             '& svg': { color: theme.palette.text.disabled }
           },
+          '&.Mui-error': {
+            border: `1px solid ${theme.palette.error.main} !important`
+          },
           '&.Mui-focused': {
             borderBottom: `1px solid ${theme.palette.mode === ThemeModeEnum.Dark ? theme.palette.primary.dark : theme.palette.primary.light}`
           },
@@ -46,6 +49,16 @@ export default function Input(theme: Theme): Components {
             ':focus': {
               background: 'transparent'
             }
+          },
+        }
+      }
+    },
+    MuiFormControlLabel: {
+      styleOverrides: {
+        root: {
+          color: theme.palette.text.text,
+          "& .MuiTypography-root": {
+            fontSize: "13px"
           }
         }
       }

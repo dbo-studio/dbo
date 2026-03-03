@@ -29,7 +29,7 @@ export default function ConnectionItem({
     >
       <Tooltip title={connection.name}>
         <Box maxWidth={50}>
-          <CustomIcon type='databaseZap' size='m' />
+          <CustomIcon type={connection.isOpen ? 'databaseZap' : 'database'} size='m' />
           {loading ? (
             <Box>
               <CircularProgress size={15} color='primary' />

@@ -19,6 +19,8 @@ export type UISettings = {
   showAddConnection: boolean;
   showEditConnection: number | boolean;
   showQuickLookEditor: boolean;
+  showConnectionPasswordPrompt: boolean;
+  passwordPromptConnectionId?: number;
   showSettings: {
     open: boolean;
     tab: number;

@@ -3,6 +3,7 @@ export interface ConnectionType {
   name: string;
   type: 'postgresql' | 'sqlite';
   isActive: boolean;
+  isOpen: boolean;
   info: string;
   icon: string;
   options: Record<string, string | number | boolean>;

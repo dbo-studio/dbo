@@ -38,7 +38,7 @@ func UpdateMysqlConnection(oldParams json.RawMessage, newParams json.RawMessage)
 		return "", apperror.Validation(errors.New("invalid params"))
 	}
 
-	newOptions, err := helper.RawJsonToStruct[PgsqlUpdateParams](newParams)
+	newOptions, err := helper.RawJsonToStruct[MysqlUpdateParams](newParams)
 	if err != nil {
 		return "", apperror.Validation(errors.New("invalid params"))
 	}

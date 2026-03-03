@@ -1,11 +1,11 @@
-package server
+package middleware
 
 import (
 	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v3"
 )
 
-func skipClearRequestMiddleware(c fiber.Ctx) error {
+func SkipClearRequestMiddleware(c fiber.Ctx) error {
 	body := c.Body()
 	var data map[string]interface{}
 
@@ -24,7 +24,6 @@ func skipClearRequestMiddleware(c fiber.Ctx) error {
 
 func removeDboIndex(data map[string]interface{}) map[string]interface{} {
 	for _, value := range data {
-		// Check if the value is a nested map
 		if nestedMap, ok := value.(map[string]interface{}); ok {
 			// Recursively remove `dbo_index` from nested map
 			removeDboIndex(nestedMap)

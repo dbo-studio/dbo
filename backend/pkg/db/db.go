@@ -19,6 +19,7 @@ type SqlLite struct {
 	logger logger.Logger
 	DB     *gorm.DB
 	cfg    *config.Config
+	path   string
 }
 
 func New(cfg *config.Config, logger logger.Logger) *SqlLite {
@@ -37,7 +38,12 @@ func New(cfg *config.Config, logger logger.Logger) *SqlLite {
 		logger: logger,
 		DB:     db,
 		cfg:    cfg,
+		path:   path,
 	}
+}
+
+func (m *SqlLite) Path() string {
+	return m.path
 }
 
 func (m *SqlLite) Close() {
@@ -57,11 +63,11 @@ func getDBPath(cfg *config.Config, logger logger.Logger) string {
 	dbName := cfg.App.DatabaseName
 	appName := cfg.App.Name
 
-	if cfg.App.Env == "docker" {
+	if cfg.App.Env == config.EnvironmentDocker {
 		return defaultPath
 	}
 
-	if cfg.App.Env == "testing" {
+	if cfg.App.Env == config.EnvironmentTesting {
 		return "data/testing_" + cfg.App.DatabaseName
 	}
 

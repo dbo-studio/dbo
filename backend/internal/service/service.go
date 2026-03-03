@@ -14,6 +14,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/service/job/processors"
 	serviceQuery "github.com/dbo-studio/dbo/internal/service/query"
 	serviceSavedQuery "github.com/dbo-studio/dbo/internal/service/saved_query"
+	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 
 	serviceTree "github.com/dbo-studio/dbo/internal/service/tree"
 )
@@ -33,17 +34,17 @@ type Service struct {
 	ConfigService       serviceConfig.IConfigService
 }
 
-func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionManager) *Service {
+func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionManager, ss secretStore.ISecretStore) *Service {
 	jobRepo := repository.NewJobRepo()
 	jobManager := serviceJob.NewJobManager(jobRepo)
 
-	jobManager.RegisterProcessor(processors.NewImportProcessor(jobManager, cm, repo.ConnectionRepo))
-	jobManager.RegisterProcessor(processors.NewExportProcessor(jobManager, cm, repo.ConnectionRepo))
+	jobManager.RegisterProcessor(processors.NewImportProcessor(jobManager, cm, repo.ConnectionRepo, ss))
+	jobManager.RegisterProcessor(processors.NewExportProcessor(jobManager, cm, repo.ConnectionRepo, ss))
 
 	aiProviderService := serviceAiProvider.NewAiProviderService(repo.AiProviderRepo)
 
 	return &Service{
-		ConnectionService:   serviceConnection.NewConnectionService(repo.ConnectionRepo, cm),
+		ConnectionService:   serviceConnection.NewConnectionService(repo.ConnectionRepo, cm, ss),
 		HistoryService:      serviceHistory.NewHistoryService(repo.HistoryRepo),
 		SavedQueryService:   serviceSavedQuery.NewSavedQueryService(repo.SavedQueryRepo),
 		TreeService:         serviceTree.NewTreeService(repo.ConnectionRepo, cm),
@@ -54,6 +55,6 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		AiService:           serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, cm),
 		AiProviderService:   aiProviderService,
 		AiChatService:       serviceAiChat.NewAiChatService(repo.AiChatRepo),
-		ConfigService:       serviceConfig.NewConfigService(aiProviderService),
+		ConfigService:       serviceConfig.NewConfigService(repo.ConfigRepo, aiProviderService),
 	}
 }

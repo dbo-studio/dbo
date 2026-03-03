@@ -7,7 +7,8 @@ import (
 type App struct {
 	Name          string
 	Port          string
-	Env           string
+	Env           Environment
+	Client        Client
 	DatabaseName  string
 	Version       string
 	ReleaseUrlApi string
@@ -26,7 +27,8 @@ func New() *Config {
 		App: App{
 			Name:          "dbo",
 			Port:          os.Getenv("APP_PORT"),
-			Env:           os.Getenv("APP_ENV"),
+			Env:           Environment(os.Getenv("APP_ENV")),
+			Client:        Client(os.Getenv("APP_CLIENT")),
 			Version:       "v0.4.2",
 			DatabaseName:  "dbo.db",
 			ReleaseUrlApi: "https://dbo-studio.com/api/config",

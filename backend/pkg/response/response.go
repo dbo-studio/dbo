@@ -9,8 +9,9 @@ import (
 )
 
 type FailedResponse struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
 type FailedResponseBuilder struct {
@@ -33,6 +34,11 @@ func (b *FailedResponseBuilder) WithCode(code int) *FailedResponseBuilder {
 
 func (b *FailedResponseBuilder) WithMessage(message string) *FailedResponseBuilder {
 	b.response.Message = message
+	return b
+}
+
+func (b *FailedResponseBuilder) WithData(data interface{}) *FailedResponseBuilder {
+	b.response.Data = data
 	return b
 }
 

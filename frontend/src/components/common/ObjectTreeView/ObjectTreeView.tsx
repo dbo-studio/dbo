@@ -4,12 +4,12 @@ import type { MenuType } from '@/components/base/ContextMenu/types';
 import Search from '@/components/base/Search/Search';
 import { useContextMenu, useCurrentConnection, useSelectedTab } from '@/hooks';
 import { useTreeStore } from '@/store/treeStore/tree.store';
+import { TreeNodeType } from '@/types/Tree';
 import { Box, LinearProgress } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { type JSX, useEffect, useMemo, useRef, useState } from 'react';
 import { TreeViewContainerStyled, TreeViewContentStyled } from './ObjectTreeView.styled';
 import TreeNode from './TreeNode/TreeNode';
-import { TreeNodeType } from '@/types/Tree';
 
 export default function ObjectTreeView(): JSX.Element {
   const currentConnection = useCurrentConnection();
@@ -36,6 +36,7 @@ export default function ObjectTreeView(): JSX.Element {
 
   useEffect(() => {
     if (!treeError && !tree && !isLoading && currentConnection?.id) {
+
       reloadTree(true);
     } else if (isLoading) {
       toggleIsLoading(false);

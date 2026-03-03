@@ -5,10 +5,11 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ConnectionType } from '@/types';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useEffect, useState } from 'react';
 import EditConnection from '../../AddConnection/EditConnection';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
+import ConnectionPasswordPromptModal from './ConnectionPasswordPrompt/ConnectionPasswordPrompt';
 import { ConnectionsStyled } from './Connections.styled';
 import { EmptySpaceStyle } from './EmptySpace.styled';
 
@@ -17,6 +18,7 @@ export default function Connections(): JSX.Element {
 
   const loading = useConnectionStore((state) => state.loading);
   const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
+  const queryClient = useQueryClient();
 
   const currentConnection = useConnectionStore((state) => state.currentConnection);
   const updateLoading = useConnectionStore((state) => state.updateLoading);
@@ -53,6 +55,9 @@ export default function Connections(): JSX.Element {
     onSuccess: (c: ConnectionType): void => {
       updateLoading('finished');
       updateCurrentConnection(c);
+      queryClient.invalidateQueries({
+        queryKey: ['connections']
+      });
     }
   });
 
@@ -84,6 +89,7 @@ export default function Connections(): JSX.Element {
     <ConnectionsStyled>
       <AddConnection />
       <EditConnection />
+      <ConnectionPasswordPromptModal />
       {connections?.map((c: ConnectionType) => (
         <ConnectionItem
           loading={pendingUpdateConnection && loadingConnectionId === c.id}

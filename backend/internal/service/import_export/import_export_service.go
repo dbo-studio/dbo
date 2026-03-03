@@ -28,7 +28,7 @@ func NewImportExportService(jobManager job.IJobManager) IImportExport {
 	}
 }
 
-func (s IImportExportImpl) Import(_ context.Context, req *dto.ImportRequest) (*dto.ImportResponse, error) {
+func (s IImportExportImpl) Import(ctx context.Context, req *dto.ImportRequest) (*dto.ImportResponse, error) {
 	file, err := req.Data.Open()
 	if err != nil {
 		return nil, apperror.BadRequest(err)
@@ -46,6 +46,7 @@ func (s IImportExportImpl) Import(_ context.Context, req *dto.ImportRequest) (*d
 	}
 
 	jobData := helper.StructToJson(dto.ImportJob{
+		OwnerID:         helper.CtxOwnerID(ctx),
 		ConnectionId:    req.ConnectionId,
 		Table:           req.Table,
 		Data:            fileData,
@@ -65,12 +66,15 @@ func (s IImportExportImpl) Import(_ context.Context, req *dto.ImportRequest) (*d
 	}, nil
 }
 
-func (s IImportExportImpl) Export(_ context.Context, req *dto.ExportRequest) (*dto.ExportResponse, error) {
+func (s IImportExportImpl) Export(ctx context.Context, req *dto.ExportRequest) (*dto.ExportResponse, error) {
 	if req.ChunkSize <= 0 {
 		req.ChunkSize = 1000
 	}
 
-	j, err := s.jobManager.CreateJob(model.JobTypeExport, helper.StructToJson(req))
+	j, err := s.jobManager.CreateJob(model.JobTypeExport, helper.StructToJson(dto.ExportJob{
+		OwnerID:       helper.CtxOwnerID(ctx),
+		ExportRequest: *req,
+	}))
 	if err != nil {
 		return nil, err
 	}

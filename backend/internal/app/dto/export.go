@@ -17,6 +17,11 @@ type (
 	ExportResponse struct {
 		JobId int32 `json:"jobId"`
 	}
+
+	ExportJob struct {
+		OwnerID string `json:"ownerId"`
+		ExportRequest
+	}
 )
 
 func (req ExportRequest) Validate() error {

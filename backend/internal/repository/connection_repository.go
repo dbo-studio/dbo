@@ -21,22 +21,29 @@ func NewConnectionRepo() IConnectionRepo {
 	}
 }
 
-func (c IConnectionRepoImpl) Index(_ context.Context) (*[]model.Connection, error) {
+func (c IConnectionRepoImpl) Index(ctx context.Context) (*[]model.Connection, error) {
 	var connections []model.Connection
-	result := c.db.Find(&connections)
+	ownerID := helper.CtxOwnerID(ctx)
+	result := c.db.WithContext(ctx).Where("owner_id = ?", ownerID).Find(&connections)
 
 	return &connections, result.Error
 }
 
 func (c IConnectionRepoImpl) Find(ctx context.Context, id int32) (*model.Connection, error) {
+	ownerID := helper.CtxOwnerID(ctx)
+	return c.FindByIDAndOwner(ctx, id, ownerID)
+}
+
+func (c IConnectionRepoImpl) FindByIDAndOwner(ctx context.Context, id int32, ownerID string) (*model.Connection, error) {
 	var connection model.Connection
-	result := c.db.WithContext(ctx).Where("id = ?", id).First(&connection)
+	result := c.db.WithContext(ctx).Where("id = ? AND owner_id = ?", id, ownerID).First(&connection)
 
 	return &connection, result.Error
 }
 
 func (c IConnectionRepoImpl) Create(ctx context.Context, dto *dto.CreateConnectionRequest) (*model.Connection, error) {
 	connection := &model.Connection{
+		OwnerID:        helper.CtxOwnerID(ctx),
 		Name:           dto.Name,
 		ConnectionType: dto.Type,
 		Options:        string(dto.Options),
@@ -64,12 +71,15 @@ func (c IConnectionRepoImpl) Update(ctx context.Context, connection *model.Conne
 	return connection, result.Error
 }
 
-func (c IConnectionRepoImpl) MakeAllConnectionsNotDefault(ctx context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) error {
-	if req.IsActive != nil && *req.IsActive {
-		result := c.db.WithContext(ctx).Model(&model.Connection{}).Not("id", connection.ID).Update("is_active", false)
-		return result.Error
+func (c IConnectionRepoImpl) MakeAllConnectionsNotDefault(ctx context.Context, exceptedConnection *model.Connection) error {
+	ownerID := helper.CtxOwnerID(ctx)
+	query := c.db.WithContext(ctx).Model(&model.Connection{}).Where("owner_id = ?", ownerID)
+
+	if exceptedConnection != nil {
+		query = query.Not("id", exceptedConnection.ID)
 	}
-	return nil
+
+	return query.Update("is_active", false).Error
 }
 
 func (c IConnectionRepoImpl) UpdateVersion(ctx context.Context, connection *model.Connection, version string) (*model.Connection, error) {

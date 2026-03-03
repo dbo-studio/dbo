@@ -7,9 +7,11 @@ import (
 
 type (
 	UpdateConnectionRequest struct {
-		Name     *string         `json:"name"`
-		IsActive *bool           `json:"isActive"`
-		Options  json.RawMessage `json:"options"`
+		Name             *string         `json:"name"`
+		IsActive         *bool           `json:"isActive"`
+		IsClose          *bool           `json:"isClose"`
+		RememberPassword *bool           `json:"rememberPassword,omitempty"`
+		Options          json.RawMessage `json:"options"`
 	}
 )
 

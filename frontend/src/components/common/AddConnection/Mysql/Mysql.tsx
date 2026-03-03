@@ -2,7 +2,7 @@ import type { CreateConnectionRequestType } from '@/api/connection/types';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
 import locales from '@/locales';
-import { Box, Button, Checkbox, Stack, Typography } from '@mui/material';
+import { Box, Button, Checkbox, FormControlLabel, Stack } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import { type JSX, useState } from 'react';
 import * as v from 'valibot';
@@ -11,6 +11,7 @@ import type { ConnectionSettingsProps } from '../types';
 
 const formSchema = v.object({
   isPing: v.boolean(),
+  rememberPassword: v.boolean(),
   name: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
   host: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
   port: v.pipe(
@@ -41,9 +42,14 @@ export default function Mysql({
       const data = {
         name: value.name,
         type: 'mysql',
+        rememberPassword: value.rememberPassword,
         options: {
-          ...value,
-          port: Number(value.port)
+          host: value.host,
+          port: Number(value.port),
+          username: value.username,
+          password: value.password,
+          database: value.database,
+          uri: value.uri
         }
       } as CreateConnectionRequestType;
 
@@ -57,6 +63,7 @@ export default function Mysql({
     },
     defaultValues: {
       isPing: false,
+      rememberPassword: false,
       name: connection?.name ?? '',
       host: connection?.options.host ?? '',
       port: connection?.options.port.toString() ?? '',
@@ -180,12 +187,35 @@ export default function Mysql({
             )}
           </form.Field>
 
+          <Box display={'flex'} alignItems={'center'} mb={1}>
+            <form.Field name='rememberPassword'>
+              {(field): JSX.Element => (
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={field.state.value}
+                      size={'small'}
+                      onChange={(e): void => field.handleChange(e.target.checked)}
+                    />
+                  }
+                  label={locales.remember_password}
+                />
+              )}
+            </form.Field>
+          </Box>
+
           <Box display={'flex'} flexDirection={'column'}>
-            <Box display={'flex'} alignItems={'center'}>
-              <Checkbox checked={useUri} size={'small'} onChange={(e): void => setUseUri(e.target.checked)} />
-              <Typography fontSize={'13px'} color='textText'>
-                {locales.use_uri}
-              </Typography>
+            <Box display={'flex'} alignItems={'center'} mb={1}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={useUri}
+                    size={'small'}
+                    onChange={(e): void => setUseUri(e.target.checked)}
+                  />
+                }
+                label={locales.use_uri}
+              />
             </Box>
 
             <form.Field name='uri'>

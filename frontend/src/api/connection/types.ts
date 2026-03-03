@@ -5,15 +5,22 @@ export type ConnectionDetailRequestType = {
 export type CreateConnectionRequestType = {
   name: string;
   type: 'postgresql' | 'sqlite' | 'mysql';
-  isActive?: boolean;
   options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
+  rememberPassword?: boolean;
 };
 
 export type UpdateConnectionRequestType = {
   name?: string;
   type?: 'postgresql' | 'sqlite' | 'mysql';
   isActive?: boolean;
+  isClose?: boolean;
+  rememberPassword?: boolean;
   options?: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
+};
+
+export type SetConnectionCredentialsRequestType = {
+  password: string;
+  rememberPassword: boolean;
 };
 
 export type PostgresqlOptionsType = {

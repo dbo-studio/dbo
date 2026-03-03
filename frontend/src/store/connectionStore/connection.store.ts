@@ -19,10 +19,10 @@ export const useConnectionStore: UseBoundStore<StoreApi<ConnectionState>> = crea
         return connections.find((c) => c.id === Number(currentConnectionId));
       },
       updateLoading: (loading: LoadingType): void => {
-        set({ loading });
+        set({ loading }, undefined, 'updateLoading');
       },
       updateConnections: (connections: ConnectionType[]): void => {
-        set({ connections });
+        set({ connections }, undefined, 'updateConnections');
       },
       updateCurrentConnection: (currentConnection: ConnectionType | undefined): void => {
         if (!currentConnection) return;
@@ -40,7 +40,10 @@ export const useConnectionStore: UseBoundStore<StoreApi<ConnectionState>> = crea
           return c;
         });
 
-        set({ connections, currentConnectionId: currentConnection.id });
+        set({ connections, currentConnectionId: currentConnection.id }, undefined, 'updateCurrentConnection');
+      },
+      clearCurrentConnection: (): void => {
+        set({ currentConnectionId: undefined }, undefined, 'clearCurrentConnection');
       }
     }),
     { name: 'connections' }

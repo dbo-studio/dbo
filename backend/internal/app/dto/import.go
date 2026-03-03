@@ -24,6 +24,7 @@ type (
 
 type (
 	ImportJob struct {
+		OwnerID         string
 		ConnectionId    int32
 		Table           string
 		Data            []byte

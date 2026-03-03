@@ -8,42 +8,60 @@ import (
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/goccy/go-json"
+	"github.com/samber/lo"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 )
 
-func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConnectionRequest) (*dto.ConnectionDetailResponse, error) {
+func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConnectionRequest) error {
 	err := s.Ping(ctx, req)
 	if err != nil {
-		return nil, apperror.DriverError(err)
+		return apperror.DriverError(err)
 	}
 
 	req, err = s.createConnectionDto(req)
 	if err != nil {
-		return nil, apperror.DriverError(err)
+		return apperror.DriverError(err)
 	}
+
+	password, strippedOptions, err := extractPasswordAndStrip(req.Options)
+	if err != nil {
+		return apperror.InternalServerError(err)
+	}
+
+	req.Options = strippedOptions
 
 	connection, err := s.connectionRepo.Create(ctx, req)
 	if err != nil {
-		return nil, apperror.InternalServerError(err)
+		return apperror.InternalServerError(err)
+	}
+
+	if password != "" {
+		ownerID := helper.CtxOwnerID(ctx)
+		remember := lo.FromPtrOr(req.RememberPassword, false)
+		if err := s.secrets.SetConnectionPassword(ctx, ownerID, connection.ID, password, remember); err != nil {
+			return apperror.InternalServerError(err)
+		}
 	}
 
 	repo, err := database.NewDatabaseRepository(ctx, connection, s.cm)
 	if err != nil {
-		return nil, apperror.InternalServerError(err)
+		return apperror.InternalServerError(err)
 	}
 
 	version, err := repo.Version(ctx)
 
 	if err != nil {
-		return nil, apperror.InternalServerError(err)
+		return apperror.InternalServerError(err)
 	}
 
-	connection, err = s.connectionRepo.UpdateVersion(ctx, connection, version)
-	if err != nil {
-		return nil, apperror.InternalServerError(err)
+	if _, err = s.connectionRepo.UpdateVersion(ctx, connection, version); err != nil {
+		return apperror.InternalServerError(err)
 	}
 
-	return connectionDetailModelToResponse(connection), nil
+	return nil
 }
 
 func (s IConnectionServiceImpl) createConnectionDto(req *dto.CreateConnectionRequest) (*dto.CreateConnectionRequest, error) {
@@ -66,4 +84,22 @@ func (s IConnectionServiceImpl) createConnectionDto(req *dto.CreateConnectionReq
 	req.Options = json.RawMessage(options)
 
 	return req, nil
+}
+
+func extractPasswordAndStrip(options json.RawMessage) (string, json.RawMessage, error) {
+	if len(options) == 0 {
+		return "", options, nil
+	}
+
+	password := gjson.GetBytes(options, "password").String()
+	if password == "" {
+		return "", options, nil
+	}
+
+	stripped, err := sjson.DeleteBytes(options, "password")
+	if err != nil {
+		return "", options, err
+	}
+
+	return password, stripped, nil
 }
