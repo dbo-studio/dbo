@@ -1,17 +1,18 @@
 package server
 
 import (
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/compress"
+	"github.com/gofiber/fiber/v3/middleware/cors"
+	fiberLogger "github.com/gofiber/fiber/v3/middleware/logger"
+	"github.com/gofiber/fiber/v3/middleware/recover"
+
 	"github.com/dbo-studio/dbo/internal/app/handler"
 	"github.com/dbo-studio/dbo/internal/app/server/middleware"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/repository"
 	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/logger"
-	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/middleware/compress"
-	"github.com/gofiber/fiber/v3/middleware/cors"
-	fiberLogger "github.com/gofiber/fiber/v3/middleware/logger"
-	"github.com/gofiber/fiber/v3/middleware/recover"
 )
 
 type Handlers struct {
@@ -77,7 +78,6 @@ func (r *Server) Start(isLocal bool, port string) error {
 
 	r.app.Use(middleware.SkipClearRequestMiddleware)
 	r.app.Use(middleware.OwnerSessionMiddleware(r.webSessionRepo))
-	r.app.Use(middleware.ConnectionPasswordMiddleware(r.connectionRepo, r.cm, r.ss))
 
 	r.routing()
 	return r.app.Listen(":" + port)

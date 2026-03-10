@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/cryptoutil"
 )
@@ -57,7 +58,7 @@ func (s *WebCacheStore) GetConnectionPassword(ctx context.Context, ownerID strin
 		return "", err
 	}
 	if item == nil {
-		return "", ErrSecretNotFound
+		return "", apperror.Unauthorized()
 	}
 
 	plaintext, err := cryptoutil.DecryptAESGCM(s.aesKey, item.Ciphertext)

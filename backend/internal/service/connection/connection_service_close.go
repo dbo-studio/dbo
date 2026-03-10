@@ -2,10 +2,8 @@ package serviceConnection
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
-	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
@@ -26,11 +24,12 @@ func (s IConnectionServiceImpl) Close(ctx context.Context, connectionId int32) e
 	// Clear temporary secret on manual close.
 	if s.secrets != nil {
 		temporary, err := s.secrets.IsTemporaryConnectionPassword(ctx, ownerID, connection.ID)
-		if err != nil && !errors.Is(err, secretStore.ErrSecretNotFound) {
-			return apperror.InternalServerError(fmt.Errorf("failed to check secret meta: %w", err))
+		if err != nil {
+			return err
 		}
+
 		if temporary {
-			if err := s.secrets.DeleteConnectionPassword(ctx, ownerID, connection.ID); err != nil && !errors.Is(err, secretStore.ErrSecretNotFound) {
+			if err := s.secrets.DeleteConnectionPassword(ctx, ownerID, connection.ID); err != nil {
 				return err
 			}
 		}

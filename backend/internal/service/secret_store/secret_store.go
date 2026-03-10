@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
-	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -14,8 +13,6 @@ import (
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/pkg/logger"
 )
-
-var ErrSecretNotFound = errors.New("secret not found")
 
 type ISecretStore interface {
 	SetConnectionPassword(ctx context.Context, ownerID string, connectionID uint, password string, remember bool) error

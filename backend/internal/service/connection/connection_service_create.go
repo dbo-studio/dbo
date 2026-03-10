@@ -3,16 +3,17 @@ package serviceConnection
 import (
 	"context"
 
+	"github.com/goccy/go-json"
+	"github.com/samber/lo"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
-	"github.com/goccy/go-json"
-	"github.com/samber/lo"
-	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
 )
 
 func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConnectionRequest) error {
@@ -48,7 +49,7 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 
 	repo, err := database.NewDatabaseRepository(ctx, connection, s.cm)
 	if err != nil {
-		return apperror.InternalServerError(err)
+		return err
 	}
 
 	version, err := repo.Version(ctx)

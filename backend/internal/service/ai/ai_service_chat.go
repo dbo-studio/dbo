@@ -31,7 +31,7 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 
 	repo, err := database.NewDatabaseRepository(ctx, conn, s.cm)
 	if err != nil {
-		return nil, apperror.InternalServerError(err)
+		return nil, err
 	}
 
 	contextStr, err := repo.AiContext(ctx, req)

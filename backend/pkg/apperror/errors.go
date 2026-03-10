@@ -7,16 +7,16 @@ import (
 )
 
 var (
-	ErrConnectionNotFound         = errors.New("connection not found")
+	ErrConnectionNotFound          = errors.New("connection not found")
 	ErrWebConnectionSecretNotFound = errors.New("web connection secret not found")
-	ErrSavedQueryNotFound    = errors.New("query not found")
-	ErrAiProviderNotFound    = errors.New("ai provider not found")
-	ErrJobCannotCancel       = errors.New("job cannot cancel")
-	ErrJobNotCompleted       = errors.New("job not completed")
-	ErrAiChatNotFound        = errors.New("ai chat not found")
-	ErrProviderNotConfigured = errors.New("provider not configured")
-	ErrAiNoSelectedModel     = errors.New("select a model first")
-	ErrPasswordRequired      = errors.New("password_required")
+	ErrSavedQueryNotFound          = errors.New("query not found")
+	ErrAiProviderNotFound          = errors.New("ai provider not found")
+	ErrJobCannotCancel             = errors.New("job cannot cancel")
+	ErrJobNotCompleted             = errors.New("job not completed")
+	ErrAiChatNotFound              = errors.New("ai chat not found")
+	ErrProviderNotConfigured       = errors.New("provider not configured")
+	ErrAiNoSelectedModel           = errors.New("select a model first")
+	ErrPasswordRequired            = errors.New("password_required")
 )
 
 type AppError struct {
@@ -57,18 +57,10 @@ func InternalServerError(err error) error {
 	}
 }
 
-func Unauthorized(err error) error {
+func Unauthorized() error {
 	return &AppError{
 		Code:    http.StatusUnauthorized,
 		Message: "unauthorized",
-		Err:     err,
-	}
-}
-
-func PasswordRequired() error {
-	return &AppError{
-		Code:    http.StatusUnauthorized,
-		Message: "password_required",
 		Err:     ErrPasswordRequired,
 	}
 }

@@ -2,7 +2,6 @@ package processors
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -19,7 +18,6 @@ import (
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/internal/service/job"
 	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
-	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/csv"
 	"github.com/dbo-studio/dbo/pkg/helper"
@@ -71,11 +69,9 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 	if connection.ConnectionType != "sqlite" {
 		pw, err := p.secrets.GetConnectionPassword(ctx, ownerID, connection.ID)
 		if err != nil {
-			if errors.Is(err, secretStore.ErrSecretNotFound) {
-				return apperror.PasswordRequired()
-			}
 			return err
 		}
+
 		ctx = helper.CtxWithConnectionPassword(ctx, pw)
 	}
 
