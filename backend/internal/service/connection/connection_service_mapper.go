@@ -4,39 +4,44 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/goccy/go-json"
+	"github.com/tidwall/sjson"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/model"
-	"github.com/goccy/go-json"
-	"github.com/tidwall/sjson"
 )
 
 func connectionsToResponse(ctx context.Context, ownerID string, cm *databaseConnection.ConnectionManager, connections *[]model.Connection) *dto.ConnectionsResponse {
 	data := make([]dto.Connection, 0)
 	for _, c := range *connections {
-		options, _ := sjson.Set(c.Options, "password", "")
-		var j map[string]any
-		_ = json.Unmarshal([]byte(options), &j)
-
-		isOpen := false
-		if cm != nil {
-			isOpen = cm.IsOpen(ctx, ownerID, c.ID)
-		}
-
-		data = append(data, dto.Connection{
-			ID:       int64(c.ID),
-			Name:     c.Name,
-			Icon:     c.ConnectionType,
-			IsActive: c.IsActive,
-			IsOpen:   isOpen,
-			Type:     c.ConnectionType,
-			Info:     connectionInfo(&c),
-			Options:  j,
-		})
+		data = append(data, connectionToResponse(ctx, ownerID, cm, &c))
 	}
 
 	return &dto.ConnectionsResponse{
 		Connections: data,
+	}
+}
+
+func connectionToResponse(ctx context.Context, ownerID string, cm *databaseConnection.ConnectionManager, connection *model.Connection) dto.Connection {
+	options, _ := sjson.Set(connection.Options, "password", "")
+	var j map[string]any
+	_ = json.Unmarshal([]byte(options), &j)
+
+	isOpen := false
+	if cm != nil {
+		isOpen = cm.IsOpen(ctx, ownerID, connection.ID)
+	}
+
+	return dto.Connection{
+		ID:       int64(connection.ID),
+		Name:     connection.Name,
+		Icon:     connection.ConnectionType,
+		IsActive: connection.IsActive,
+		IsOpen:   isOpen,
+		Type:     connection.ConnectionType,
+		Info:     connectionInfo(connection),
+		Options:  j,
 	}
 }
 

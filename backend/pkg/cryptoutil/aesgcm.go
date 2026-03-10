@@ -5,16 +5,14 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
-	"errors"
 	"io"
-)
 
-var ErrInvalidKey = errors.New("invalid key")
-var ErrDecryptFailed = errors.New("decrypt failed")
+	"github.com/dbo-studio/dbo/pkg/apperror"
+)
 
 func EncryptAESGCM(key []byte, plaintext []byte) (string, error) {
 	if len(key) != 32 {
-		return "", ErrInvalidKey
+		return "", apperror.ErrInvalidEncryptionKey
 	}
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -37,7 +35,7 @@ func EncryptAESGCM(key []byte, plaintext []byte) (string, error) {
 
 func DecryptAESGCM(key []byte, encoded string) ([]byte, error) {
 	if len(key) != 32 {
-		return nil, ErrInvalidKey
+		return nil, apperror.ErrInvalidEncryptionKey
 	}
 	raw, err := base64.RawURLEncoding.DecodeString(encoded)
 	if err != nil {
@@ -52,13 +50,13 @@ func DecryptAESGCM(key []byte, encoded string) ([]byte, error) {
 		return nil, err
 	}
 	if len(raw) < gcm.NonceSize() {
-		return nil, ErrDecryptFailed
+		return nil, apperror.ErrDecryptionFailed
 	}
 	nonce := raw[:gcm.NonceSize()]
 	cipherText := raw[gcm.NonceSize():]
 	plaintext, err := gcm.Open(nil, nonce, cipherText, nil)
 	if err != nil {
-		return nil, ErrDecryptFailed
+		return nil, apperror.ErrDecryptionFailed
 	}
 	return plaintext, nil
 }

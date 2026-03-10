@@ -1,13 +1,14 @@
 package handler
 
 import (
+	"github.com/gofiber/fiber/v3"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/container"
 	serviceConnection "github.com/dbo-studio/dbo/internal/service/connection"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/dbo-studio/dbo/pkg/response"
-	"github.com/gofiber/fiber/v3"
 )
 
 type ConnectionHandler struct {
@@ -74,12 +75,13 @@ func (h ConnectionHandler) Update(c fiber.Ctx) error {
 		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
 	}
 
-	if err := h.connectionService.Update(c, connectionId, req); err != nil {
+	result, err := h.connectionService.Update(c, connectionId, req)
+	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder().Send(c)
+	return response.SuccessBuilder().WithData(result).Send(c)
 }
 
 func (h ConnectionHandler) SetCredentials(c fiber.Ctx) error {

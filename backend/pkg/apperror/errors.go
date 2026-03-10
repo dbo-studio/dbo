@@ -17,12 +17,15 @@ var (
 	ErrProviderNotConfigured       = errors.New("provider not configured")
 	ErrAiNoSelectedModel           = errors.New("select a model first")
 	ErrPasswordRequired            = errors.New("password_required")
+	ErrInvalidEncryptionKey        = errors.New("invalid encryption key")
+	ErrDecryptionFailed            = errors.New("decryption failed")
 )
 
 type AppError struct {
 	Code    int
 	Err     error
 	Message string
+	Data    map[string]any
 }
 
 func Equals(err error, expectedErr error) bool {
@@ -57,11 +60,12 @@ func InternalServerError(err error) error {
 	}
 }
 
-func Unauthorized() error {
+func Unauthorized(connectionId uint) error {
 	return &AppError{
 		Code:    http.StatusUnauthorized,
 		Message: "unauthorized",
 		Err:     ErrPasswordRequired,
+		Data:    map[string]any{"connectionId": connectionId},
 	}
 }
 

@@ -34,16 +34,16 @@ api.interceptors.response.use(
     if (error.response) {
       const status = error.response.status;
       const message = error.response.data?.message || 'An error occurred';
-      const responseData = error.response.data?.data;
 
       if (status === 401 && message === 'password_required') {
-        const connectionId = responseData?.connectionId ?? extractConnectionIdFromConfig(error.config);
+        const connectionId = error.response.data?.data?.connectionId;
         if (connectionId != null) {
           useSettingStore.getState().updateUI({
             showConnectionPasswordPrompt: true,
             passwordPromptConnectionId: Number(connectionId)
           });
         }
+
         return Promise.reject(error);
       }
 
@@ -59,21 +59,6 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-function extractConnectionIdFromConfig(config: { url?: string; params?: Record<string, unknown>; data?: unknown }): number | null {
-  if (!config) return null;
-  if (config.params && typeof config.params.connectionId !== 'undefined') {
-    const id = Number(config.params.connectionId);
-    return Number.isNaN(id) ? null : id;
-  }
-  if (config.data && typeof config.data === 'object' && config.data !== null && 'connectionId' in config.data) {
-    const id = Number((config.data as { connectionId?: unknown }).connectionId);
-    return Number.isNaN(id) ? null : id;
-  }
-  const url = config.url ?? '';
-  const pathMatch = /\/connections\/(\d+)/.exec(url);
-  return pathMatch ? Number(pathMatch[1]) || null : null;
-}
 
 const changeUrl = (url: string): void => {
   api.defaults.baseURL = url;

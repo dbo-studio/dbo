@@ -57,8 +57,9 @@ func (s *WebCacheStore) GetConnectionPassword(ctx context.Context, ownerID strin
 	if err := s.cache.Get(ctx, s.key(ownerID, connectionID), &item); err != nil {
 		return "", err
 	}
+
 	if item == nil {
-		return "", apperror.Unauthorized()
+		return "", apperror.Unauthorized(connectionID)
 	}
 
 	plaintext, err := cryptoutil.DecryptAESGCM(s.aesKey, item.Ciphertext)

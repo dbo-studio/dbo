@@ -67,7 +67,7 @@ func (s *WebDBStore) GetConnectionPassword(ctx context.Context, ownerID string, 
 	item, err := s.webConnectionSecretRepo.FindBySessionAndConnection(ctx, ownerID, connectionID)
 	if err != nil {
 		if errors.Is(err, apperror.ErrWebConnectionSecretNotFound) {
-			return "", apperror.Unauthorized()
+			return "", apperror.Unauthorized(connectionID)
 		}
 		return "", err
 	}
@@ -75,7 +75,7 @@ func (s *WebDBStore) GetConnectionPassword(ctx context.Context, ownerID string, 
 	now := time.Now()
 	if item.ExpiresAt != nil && now.After(*item.ExpiresAt) {
 		if err := s.webConnectionSecretRepo.Delete(ctx, ownerID, connectionID); err != nil {
-			return "", apperror.Unauthorized()
+			return "", apperror.Unauthorized(connectionID)
 		}
 	}
 
@@ -106,7 +106,7 @@ func (s *WebDBStore) IsTemporaryConnectionPassword(ctx context.Context, ownerID 
 	item, err := s.webConnectionSecretRepo.FindBySessionAndConnection(ctx, ownerID, connectionID)
 	if err != nil {
 		if errors.Is(err, apperror.ErrWebConnectionSecretNotFound) {
-			return false, apperror.Unauthorized()
+			return false, apperror.Unauthorized(connectionID)
 		}
 		return false, err
 	}

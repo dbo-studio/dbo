@@ -4,14 +4,15 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/gofiber/fiber/v3"
+
+	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
 type FailedResponse struct {
-	Code    int         `json:"code"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data,omitempty"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    any    `json:"data,omitempty"`
 }
 
 type FailedResponseBuilder struct {
@@ -27,28 +28,15 @@ func ErrorBuilder() *FailedResponseBuilder {
 	}
 }
 
-func (b *FailedResponseBuilder) WithCode(code int) *FailedResponseBuilder {
-	b.response.Code = code
-	return b
-}
-
-func (b *FailedResponseBuilder) WithMessage(message string) *FailedResponseBuilder {
-	b.response.Message = message
-	return b
-}
-
-func (b *FailedResponseBuilder) WithData(data interface{}) *FailedResponseBuilder {
-	b.response.Data = data
-	return b
-}
-
 func (b *FailedResponseBuilder) FromError(err error) *FailedResponseBuilder {
 	var appErr *apperror.AppError
+
 	if errors.As(err, &appErr) {
 		var ae *apperror.AppError
 		errors.As(err, &ae)
 		b.response.Code = ae.Code
 		b.response.Message = ae.Error()
+		b.response.Data = appErr.Data
 	} else {
 		b.response.Message = err.Error()
 	}
@@ -66,7 +54,6 @@ func (b *FailedResponseBuilder) Send(app fiber.Ctx) error {
 type SuccessResponse struct {
 	Data    any    `json:"data"`
 	Message string `json:"message"`
-	Meta    any    `json:"meta,omitempty"`
 }
 
 type SuccessResponseBuilder struct {
@@ -78,7 +65,6 @@ func SuccessBuilder() *SuccessResponseBuilder {
 		response: SuccessResponse{
 			Data:    nil,
 			Message: "",
-			Meta:    nil,
 		},
 	}
 }
@@ -91,15 +77,6 @@ func (b *SuccessResponseBuilder) WithData(data any) *SuccessResponseBuilder {
 func (b *SuccessResponseBuilder) WithMessage(message string) *SuccessResponseBuilder {
 	b.response.Message = message
 	return b
-}
-
-func (b *SuccessResponseBuilder) WithMeta(meta any) *SuccessResponseBuilder {
-	b.response.Meta = meta
-	return b
-}
-
-func (b *SuccessResponseBuilder) Build() SuccessResponse {
-	return b.response
 }
 
 func (b *SuccessResponseBuilder) Send(app fiber.Ctx) error {

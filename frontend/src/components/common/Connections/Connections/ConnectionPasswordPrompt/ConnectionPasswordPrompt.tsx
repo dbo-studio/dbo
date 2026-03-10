@@ -6,6 +6,7 @@ import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
+import { EventFor } from '@/types';
 import { Box, Button, Checkbox, FormControlLabel } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useEffect, useMemo, useState } from 'react';
@@ -20,7 +21,7 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
   const show = useSettingStore((s) => s.ui.showConnectionPasswordPrompt);
   const connectionId = useSettingStore((s) => s.ui.passwordPromptConnectionId);
   const updateUI = useSettingStore((s) => s.updateUI);
-  const reloadTree = useTreeStore((state) => state.reloadTree)
+  const resetTree = useTreeStore((state) => state.reset)
   const queryClient = useQueryClient();
   const clearCurrentConnection = useConnectionStore((state) => state.clearCurrentConnection);
 
@@ -32,33 +33,20 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
     return result.success ? [] : result.issues.map((i) => i.message);
   }, [password, rememberPassword]);
 
-  const { mutateAsync, isPending } = useMutation({
+  const { mutateAsync: setPasswordMutation, isPending } = useMutation({
     mutationFn: async (): Promise<void> => {
       if (!connectionId) {
         throw new Error('Missing connectionId');
       }
       await api.connection.setConnectionCredentials(connectionId, { password, rememberPassword });
-    },
-    onSuccess: (): void => {
-      setPassword('');
-      setRememberPassword(false);
-      updateUI({ showConnectionPasswordPrompt: false, passwordPromptConnectionId: undefined });
-      reloadTree(false)
-      queryClient.invalidateQueries({
-        queryKey: ['connections']
-      });
     }
   });
 
 
   useEffect(() => {
     if (!show) return;
-    console.log('asdasd');
-
     clearCurrentConnection();
   }, [show])
-
-
 
   const handleClose = (): void => {
     setPassword('');
@@ -66,31 +54,51 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
     updateUI({ showConnectionPasswordPrompt: false, passwordPromptConnectionId: undefined });
   };
 
+
+  const handleSubmit = async (e: EventFor<"form", "onSubmit"> | EventFor<"button", "onClick">) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await setPasswordMutation()
+      setPassword('');
+      setRememberPassword(false);
+      updateUI({ showConnectionPasswordPrompt: false, passwordPromptConnectionId: undefined });
+      resetTree()
+      queryClient.invalidateQueries({
+        queryKey: ['connections']
+      });
+    } catch (e) {
+      console.debug("🚀 ~ handleSubmit ~ e:", e)
+    }
+  }
+
   return (
     <Modal open={show} title={locales.password} onClose={handleClose}>
-      <Box flex={1} display={'flex'} flexDirection={'column'}>
-        <FieldInput
-          name='password'
-          value={password}
-          label={locales.password}
-          error={validationErrors.length > 0}
-          onChange={(e): void => setPassword(e.target.value)}
-        />
-        <FormError mb={0} errors={validationErrors} />
-
-        <Box display={'flex'} alignItems={'center'} mb={1}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={rememberPassword}
-                size={'small'}
-                onChange={(e): void => setRememberPassword(e.target.checked)}
-              />
-            }
-            label={locales.remember_password}
+      <form onSubmit={handleSubmit}>
+        <Box flex={1} display={'flex'} flexDirection={'column'}>
+          <FieldInput
+            name='password'
+            value={password}
+            label={locales.password}
+            error={validationErrors.length > 0}
+            onChange={(e): void => setPassword(e.target.value)}
           />
+          <FormError mb={0} errors={validationErrors} />
+
+          <Box display={'flex'} alignItems={'center'} mb={1}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={rememberPassword}
+                  size={'small'}
+                  onChange={(e): void => setRememberPassword(e.target.checked)}
+                />
+              }
+              label={locales.remember_password}
+            />
+          </Box>
         </Box>
-      </Box>
+      </form>
 
       <Box display={'flex'} mt={2} justifyContent={'space-between'}>
 
@@ -101,9 +109,7 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
           size='small'
           variant='contained'
           disabled={isPending || validationErrors.length > 0 || !connectionId}
-          onClick={(): void => {
-            mutateAsync().then();
-          }}
+          onClick={handleSubmit}
         >
           {locales.save}
         </Button>

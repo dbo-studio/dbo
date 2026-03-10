@@ -6,21 +6,21 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/spf13/cobra"
+
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/handler"
 	"github.com/dbo-studio/dbo/internal/app/server"
 	"github.com/dbo-studio/dbo/internal/container"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/migrations"
+	"github.com/dbo-studio/dbo/internal/repository"
+	"github.com/dbo-studio/dbo/internal/service"
+	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/cache/sqlite"
 	"github.com/dbo-studio/dbo/pkg/db"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger/zap"
-
-	"github.com/dbo-studio/dbo/internal/repository"
-	"github.com/dbo-studio/dbo/internal/service"
-	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
-	"github.com/spf13/cobra"
 )
 
 func ServeCommand() *cobra.Command {
@@ -80,7 +80,7 @@ func Execute() {
 		AI:           handler.NewAiHandler(ss.AiService),
 		AiProvider:   handler.NewAiProviderHandler(ss.AiProviderService),
 		AiChat:       handler.NewAiChatHandler(ss.AiChatService),
-	}, rr.ConnectionRepo, rr.WebSessionRepo, cm, secretStore)
+	}, rr.WebSessionRepo)
 
 	if err := restServer.Start(helper.IsLocal(), cfg.App.Port); err != nil {
 		msg := fmt.Sprintf("error happen while serving: %v", err)

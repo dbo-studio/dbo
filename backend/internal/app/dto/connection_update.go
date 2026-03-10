@@ -13,6 +13,10 @@ type (
 		RememberPassword *bool           `json:"rememberPassword,omitempty"`
 		Options          json.RawMessage `json:"options"`
 	}
+
+	UpdateConnectionResponse struct {
+		Connection
+	}
 )
 
 func (ccr UpdateConnectionRequest) Validate() error {

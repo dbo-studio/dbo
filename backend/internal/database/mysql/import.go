@@ -62,7 +62,7 @@ func (r *MySQLRepository) ImportData(ctx context.Context, job dto.ImportJob, row
 		FailedRows:  failedRows,
 		Errors:      errors,
 		Duration:    time.Since(startTime),
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"format":    job.Format,
 			"tableName": job.Table,
 		},

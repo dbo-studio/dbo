@@ -24,7 +24,7 @@ func (s IConnectionServiceImpl) Close(ctx context.Context, connectionId int32) e
 	// Clear temporary secret on manual close.
 	if s.secrets != nil {
 		temporary, err := s.secrets.IsTemporaryConnectionPassword(ctx, ownerID, connection.ID)
-		if err != nil {
+		if err != nil && apperror.Equals(err, apperror.ErrPasswordRequired) {
 			return err
 		}
 

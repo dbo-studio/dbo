@@ -3,21 +3,24 @@ package serviceConnection
 import (
 	"context"
 
+	"github.com/goccy/go-json"
+	"github.com/samber/lo"
+	"github.com/tidwall/sjson"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
-	"github.com/goccy/go-json"
-	"github.com/samber/lo"
-	"github.com/tidwall/sjson"
 )
 
-func (s IConnectionServiceImpl) Update(ctx context.Context, connectionId int32, req *dto.UpdateConnectionRequest) error {
+func (s IConnectionServiceImpl) Update(ctx context.Context, connectionId int32, req *dto.UpdateConnectionRequest) (*dto.UpdateConnectionResponse, error) {
 	connection, err := s.connectionRepo.Find(ctx, connectionId)
 	if err != nil {
-		return apperror.NotFound(apperror.ErrConnectionNotFound)
+		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
+
+	ownerID := helper.CtxOwnerID(ctx)
 
 	// Preserve existing options when the request doesn't include them (e.g. toggling active connection).
 	if len(req.Options) == 0 {
@@ -26,21 +29,20 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionId int32, 
 
 	if lo.FromPtrOr(req.IsClose, false) {
 		if err := s.Close(ctx, connectionId); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	password, strippedOptions, err := extractPasswordAndStrip(req.Options)
 	if err != nil {
-		return apperror.InternalServerError(err)
+		return nil, apperror.InternalServerError(err)
 	}
 	req.Options = strippedOptions
 
 	if password != "" {
-		ownerID := helper.CtxOwnerID(ctx)
 		remember := req.RememberPassword != nil && *req.RememberPassword
 		if err := s.secrets.SetConnectionPassword(ctx, ownerID, connection.ID, password, remember); err != nil {
-			return apperror.InternalServerError(err)
+			return nil, apperror.InternalServerError(err)
 		}
 	}
 
@@ -55,7 +57,7 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionId int32, 
 	}
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Ensure password is never persisted in Connection.Options.
@@ -65,15 +67,18 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionId int32, 
 		req.Options = json.RawMessage(options)
 	}
 
-	if _, err := s.connectionRepo.Update(ctx, connection, req); err != nil {
-		return apperror.InternalServerError(err)
+	updatedConnection, err := s.connectionRepo.Update(ctx, connection, req)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
 	}
 
 	if lo.FromPtrOr(req.IsActive, false) {
 		if err := s.connectionRepo.MakeAllConnectionsNotDefault(ctx, connection); err != nil {
-			return apperror.InternalServerError(err)
+			return nil, apperror.InternalServerError(err)
 		}
 	}
 
-	return nil
+	return &dto.UpdateConnectionResponse{
+		Connection: connectionToResponse(ctx, ownerID, s.cm, updatedConnection),
+	}, nil
 }

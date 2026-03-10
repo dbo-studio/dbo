@@ -9,9 +9,8 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/handler"
 	"github.com/dbo-studio/dbo/internal/app/server/middleware"
-	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/repository"
-	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
+	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
 )
 
@@ -32,34 +31,23 @@ type Handlers struct {
 type Server struct {
 	app            *fiber.App
 	handlers       Handlers
-	connectionRepo repository.IConnectionRepo
 	webSessionRepo repository.IWebSessionRepo
-	cm             databaseConnection.IConnectionManager
-	ss             secretStore.ISecretStore
 }
 
 func New(
 	logger logger.Logger,
 	handlers Handlers,
-	connectionRepo repository.IConnectionRepo,
 	webSessionRepo repository.IWebSessionRepo,
-	cm databaseConnection.IConnectionManager,
-	ss secretStore.ISecretStore,
 ) *Server {
 	return &Server{
 		app: fiber.New(fiber.Config{
 			ErrorHandler: func(ctx fiber.Ctx, err error) error {
 				logger.Error(err)
-				return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-					"message": "Internal Server Error",
-				})
+				return apperror.InternalServerError(err)
 			},
 		}),
 		handlers:       handlers,
-		connectionRepo: connectionRepo,
 		webSessionRepo: webSessionRepo,
-		cm:             cm,
-		ss:             ss,
 	}
 }
 

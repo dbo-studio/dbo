@@ -14,7 +14,7 @@ import (
 type IConnectionService interface {
 	Index(ctx context.Context) (*dto.ConnectionsResponse, error)
 	Create(ctx context.Context, req *dto.CreateConnectionRequest) error
-	Update(ctx context.Context, connectionId int32, req *dto.UpdateConnectionRequest) error
+	Update(ctx context.Context, connectionId int32, req *dto.UpdateConnectionRequest) (*dto.UpdateConnectionResponse, error)
 	Delete(ctx context.Context, connectionId int32) (*dto.ConnectionsResponse, error)
 	Close(ctx context.Context, connectionId int32) error
 	Ping(ctx context.Context, req *dto.CreateConnectionRequest) error
