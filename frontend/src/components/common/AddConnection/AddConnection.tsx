@@ -1,5 +1,5 @@
 import api from '@/api';
-import type { CreateConnectionRequestType } from '@/api/connection/types';
+import type { CreateConnectionRequestType, PingConnectionRequestType } from '@/api/connection/types';
 import Modal from '@/components/base/Modal/Modal';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -56,7 +56,7 @@ export default function AddConnection(): JSX.Element {
     setStep(1);
   };
 
-  const handlePingConnection = async (data: CreateConnectionRequestType): Promise<void> => {
+  const handlePingConnection = async (data: PingConnectionRequestType): Promise<void> => {
     if (pingConnectionPending) {
       return;
     }

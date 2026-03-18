@@ -3,13 +3,14 @@ package databaseSqlite
 import (
 	"context"
 
+	"gorm.io/gorm"
+
 	"github.com/dbo-studio/dbo/internal/container"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/logger"
-	"gorm.io/gorm"
 )
 
 type SQLiteRepository struct {
@@ -24,7 +25,7 @@ func (r *SQLiteRepository) GetFormSchema(ctx context.Context, nodeID string, tab
 	case contract.CreateTableAction, contract.EditTableAction:
 		switch tabID {
 		case contract.TableTab:
-			return r.tableFields(ctx, action)
+			return r.tableFields()
 		case contract.TableColumnsTab:
 			return r.tableColumnFields()
 		case contract.TableForeignKeysTab:
@@ -43,7 +44,7 @@ func (r *SQLiteRepository) GetFormSchema(ctx context.Context, nodeID string, tab
 }
 
 func NewSQLiteRepository(ctx context.Context, connection *model.Connection, cm *databaseConnection.ConnectionManager) (contract.DatabaseRepository, error) {
-	db, err := cm.GetConnection(ctx, connection)
+	db, err := cm.GetConnection(ctx, connection, true)
 	if err != nil {
 		return nil, err
 	}

@@ -3,10 +3,11 @@ package databasePostgres
 import (
 	"fmt"
 
+	"github.com/samber/lo"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
-	"github.com/samber/lo"
 )
 
 func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {

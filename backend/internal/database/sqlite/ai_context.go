@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/samber/lo"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/dbo-studio/dbo/internal/app/dto"
 )
 
 func (r *SQLiteRepository) AiContext(ctx context.Context, req *dto.AiChatRequest) (string, error) {

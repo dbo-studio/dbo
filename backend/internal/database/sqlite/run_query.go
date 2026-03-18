@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 func (r *SQLiteRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
@@ -58,7 +59,7 @@ func (r *SQLiteRepository) RunQuery(ctx context.Context, req *dto.RunQueryReques
 	}, nil
 }
 
-func (r *SQLiteRepository) runQueryGenerator(ctx context.Context, dto *dto.RunQueryRequest, node string) string {
+func (r *SQLiteRepository) runQueryGenerator(_ context.Context, dto *dto.RunQueryRequest, node string) string {
 	var sb strings.Builder
 
 	// SELECT clause

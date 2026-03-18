@@ -6,7 +6,7 @@ import (
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
-func (r *SQLiteRepository) tableFields(ctx context.Context, action contract.TreeNodeActionName) []contract.FormField {
+func (r *SQLiteRepository) tableFields() []contract.FormField {
 	return []contract.FormField{
 		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
 		{ID: "temporary", Name: "Is temporary", Type: contract.FormFieldTypeCheckBox},
@@ -116,7 +116,7 @@ func (r *SQLiteRepository) tableColumnsOptions(ctx context.Context, node string)
 	}
 
 	var results []columnResult
-	err := r.db.Raw(`
+	err := r.db.WithContext(ctx).Raw(`
 		SELECT name as value, name as name 
 		FROM pragma_table_info(?) 
 		WHERE name IS NOT NULL 
@@ -144,7 +144,7 @@ func (r *SQLiteRepository) tablesListOptions(ctx context.Context) []contract.For
 	}
 
 	var results []tableResult
-	err := r.db.Raw(`
+	err := r.db.WithContext(ctx).Raw(`
 		SELECT name as value, name as name 
 		FROM sqlite_master 
 		WHERE type = 'table' AND name NOT LIKE 'sqlite_%'

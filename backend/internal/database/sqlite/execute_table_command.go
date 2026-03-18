@@ -3,10 +3,11 @@ package databaseSqlite
 import (
 	"fmt"
 
+	"github.com/samber/lo"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
-	"github.com/samber/lo"
 )
 
 func (r *SQLiteRepository) handleTableCommands(node string, tabId map[contract.TreeTab]any, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
@@ -33,7 +34,7 @@ func (r *SQLiteRepository) handleTableCommands(node string, tabId map[contract.T
 	case contract.CreateTableAction:
 		return r.buildCreateTableQueries(paramsMap), "", nil
 	case contract.EditTableAction:
-		return r.buildEditTableQueries(paramsMap, node)
+		return r.buildEditTableQueries(paramsMap)
 	default:
 		return []string{}, "", nil
 	}
@@ -138,7 +139,7 @@ func (r *SQLiteRepository) buildCreateTableQueries(paramsMap *tableParamsMap) []
 	return queries
 }
 
-func (r *SQLiteRepository) buildEditTableQueries(paramsMap *tableParamsMap, node string) ([]string, string, error) {
+func (r *SQLiteRepository) buildEditTableQueries(paramsMap *tableParamsMap) ([]string, string, error) {
 	oldName := *paramsMap.tableParams.Old.Name
 	newName := r.getNewTableName(paramsMap.tableParams, oldName)
 	tmpTableName := r.getUniqueTmpTableName(newName)

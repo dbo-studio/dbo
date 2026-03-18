@@ -6,9 +6,10 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/samber/lo"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/dbo-studio/dbo/internal/app/dto"
 )
 
 type ForeignKeyInfo struct {

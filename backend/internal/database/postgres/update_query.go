@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 	"gorm.io/gorm"
+
+	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 func (r *PostgresRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error) {
@@ -143,7 +144,7 @@ func (r *PostgresRepository) generateDeleteQueries(ctx context.Context, req *dto
 	return queries
 }
 
-func (r *PostgresRepository) generateInsertQueries(ctx context.Context, req *dto.UpdateQueryRequest, node PGNode) []string {
+func (r *PostgresRepository) generateInsertQueries(_ context.Context, req *dto.UpdateQueryRequest, node PGNode) []string {
 	if req == nil || req.AddedItems == nil {
 		return nil
 	}
@@ -184,7 +185,7 @@ func (r *PostgresRepository) generateInsertQueries(ctx context.Context, req *dto
 	return queries
 }
 
-func buildSetClauses(values map[string]interface{}) []string {
+func buildSetClauses(values map[string]any) []string {
 	var setClauses []string
 
 	for key, value := range values {
@@ -201,8 +202,8 @@ func buildSetClauses(values map[string]interface{}) []string {
 	return setClauses
 }
 
-func (r *PostgresRepository) buildWhereClauses(ctx context.Context, primaryKeys []string, conditions map[string]interface{}) []string {
-	conditionKeys := map[string]interface{}{}
+func (r *PostgresRepository) buildWhereClauses(_ context.Context, primaryKeys []string, conditions map[string]any) []string {
+	conditionKeys := map[string]any{}
 
 	if len(primaryKeys) > 0 {
 		for _, key := range primaryKeys {

@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/samber/lo"
+
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
-	"github.com/samber/lo"
 )
 
 func (r *PostgresRepository) Tree(ctx context.Context, parentID string) (*contract.TreeNode, error) {
@@ -85,7 +86,7 @@ func buildDatabase(ctx context.Context, r *PostgresRepository, dbName string) (*
 	return dbNode, nil
 }
 
-func buildSchema(ctx context.Context, r *PostgresRepository, dbName, schemaName string) (*contract.TreeNode, error) {
+func buildSchema(_ context.Context, r *PostgresRepository, dbName, schemaName string) (*contract.TreeNode, error) {
 	schemaNode := &contract.TreeNode{
 		ID:          fmt.Sprintf("%s.%s", dbName, schemaName),
 		Name:        schemaName,
@@ -151,7 +152,7 @@ func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaNa
 				Type: contract.TableNodeType,
 				Action: &contract.TreeNodeAction{
 					Type: contract.TreeNodeActionTypeTab,
-					Params: map[string]interface{}{
+					Params: map[string]any{
 						"path":     "data",
 						"table":    table.Name,
 						"editable": true,
@@ -174,7 +175,7 @@ func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaNa
 				Icon: lo.ToPtr("sheet"),
 				Action: &contract.TreeNodeAction{
 					Type: contract.TreeNodeActionTypeTab,
-					Params: map[string]interface{}{
+					Params: map[string]any{
 						"path":     "data",
 						"table":    view.Name,
 						"editable": false,
@@ -196,7 +197,7 @@ func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaNa
 				Type: contract.MaterializedViewNodeType,
 				Action: &contract.TreeNodeAction{
 					Type: contract.TreeNodeActionTypeTab,
-					Params: map[string]interface{}{
+					Params: map[string]any{
 						"path":     "data",
 						"table":    mv.Name,
 						"editable": false,

@@ -671,7 +671,7 @@ func (r *PostgresRepository) cacheKey(args ...string) string {
 	return fmt.Sprintf("c:%d:query_generator:%s", r.connection.ID, strings.Join(args, "_"))
 }
 
-func (r *PostgresRepository) updateCache(ctx context.Context, cacheKey string, value any) {
+func (r *PostgresRepository) updateCache(_ context.Context, cacheKey string, value any) {
 	// Use background context to avoid context cancellation issues in goroutine
 	go func() {
 		bgCtx := context.Background()

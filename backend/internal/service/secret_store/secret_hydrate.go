@@ -3,10 +3,11 @@ package secretStore
 import (
 	"context"
 
-	"github.com/dbo-studio/dbo/internal/model"
-	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
+
+	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 // HydrateConnectionPassword injects the connection password into connection.Options when needed.
@@ -15,9 +16,11 @@ func HydrateConnectionPassword(ctx context.Context, store ISecretStore, ownerID 
 	if connection == nil {
 		return nil
 	}
+
 	if connection.ConnectionType == "sqlite" {
 		return nil
 	}
+
 	if connection.Options != "" {
 		if gjson.Get(connection.Options, "password").String() != "" {
 			return nil
@@ -42,6 +45,7 @@ func HydrateConnectionPassword(ctx context.Context, store ISecretStore, ownerID 
 	if err != nil {
 		return err
 	}
+
 	connection.Options = options
 	return nil
 }

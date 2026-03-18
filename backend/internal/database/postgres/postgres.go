@@ -4,13 +4,14 @@ import (
 	"context"
 	"strings"
 
+	"gorm.io/gorm"
+
 	"github.com/dbo-studio/dbo/internal/container"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/logger"
-	"gorm.io/gorm"
 )
 
 type PostgresRepository struct {
@@ -21,7 +22,7 @@ type PostgresRepository struct {
 }
 
 func NewPostgresRepository(ctx context.Context, connection *model.Connection, cm *databaseConnection.ConnectionManager) (contract.DatabaseRepository, error) {
-	db, err := cm.GetConnection(ctx, connection)
+	db, err := cm.GetConnection(ctx, connection, true)
 	if err != nil {
 		return nil, err
 	}

@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/samber/lo"
+
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
-	"github.com/samber/lo"
 )
 
 func (r *SQLiteRepository) Tree(ctx context.Context, parentID string) (*contract.TreeNode, error) {
@@ -17,7 +18,7 @@ func (r *SQLiteRepository) Tree(ctx context.Context, parentID string) (*contract
 	return buildContainer(ctx, r, contract.TreeNodeType(parentID))
 }
 
-func buildRoot(ctx context.Context, r *SQLiteRepository) (*contract.TreeNode, error) {
+func buildRoot(_ context.Context, r *SQLiteRepository) (*contract.TreeNode, error) {
 	root := &contract.TreeNode{
 		ID:          fmt.Sprintf("%d@database", r.connection.ID),
 		Name:        r.connection.Name,
@@ -59,7 +60,7 @@ func buildRoot(ctx context.Context, r *SQLiteRepository) (*contract.TreeNode, er
 	return root, nil
 }
 
-func buildContainer(ctx context.Context, r *SQLiteRepository, container contract.TreeNodeType) (*contract.TreeNode, error) {
+func buildContainer(_ context.Context, r *SQLiteRepository, container contract.TreeNodeType) (*contract.TreeNode, error) {
 	containerNode := &contract.TreeNode{
 		ID:          string(container),
 		Name:        string(container),
@@ -82,7 +83,7 @@ func buildContainer(ctx context.Context, r *SQLiteRepository, container contract
 				Type: contract.TableNodeType,
 				Action: &contract.TreeNodeAction{
 					Type: contract.TreeNodeActionTypeTab,
-					Params: map[string]interface{}{
+					Params: map[string]any{
 						"path":     "data",
 						"table":    table.Name,
 						"editable": true,
@@ -105,7 +106,7 @@ func buildContainer(ctx context.Context, r *SQLiteRepository, container contract
 				Icon: lo.ToPtr("sheet"),
 				Action: &contract.TreeNodeAction{
 					Type: contract.TreeNodeActionTypeTab,
-					Params: map[string]interface{}{
+					Params: map[string]any{
 						"path":     "data",
 						"table":    view.Name,
 						"editable": false,

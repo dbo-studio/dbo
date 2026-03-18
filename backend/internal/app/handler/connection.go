@@ -45,7 +45,7 @@ func (h ConnectionHandler) Delete(c fiber.Ctx) error {
 }
 
 func (h ConnectionHandler) Ping(c fiber.Ctx) error {
-	req := new(dto.CreateConnectionRequest)
+	req := new(dto.PingConnectionRequest)
 	if err := c.Bind().Body(req); err != nil {
 		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}

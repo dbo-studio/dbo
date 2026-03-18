@@ -58,7 +58,7 @@ func NewConnectionManager(historyRepo HistoryWriter, secrets secretStore.ISecret
 	return cm
 }
 
-func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *model.Connection) (*gorm.DB, error) {
+func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *model.Connection, withHydration bool) (*gorm.DB, error) {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 
@@ -78,7 +78,7 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 	}
 
 	// Ensure connection has password when needed.
-	if cm.secrets != nil {
+	if cm.secrets != nil && withHydration {
 		if err := secretStore.HydrateConnectionPassword(ctx, cm.secrets, ownerID, connection); err != nil {
 			return nil, err
 		}

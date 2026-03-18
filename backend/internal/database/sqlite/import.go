@@ -57,7 +57,7 @@ func (r *SQLiteRepository) ImportData(ctx context.Context, job dto.ImportJob, ro
 		FailedRows:  failedRows,
 		Errors:      errors,
 		Duration:    time.Since(startTime),
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"format":    job.Format,
 			"tableName": job.Table,
 		},

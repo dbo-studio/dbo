@@ -5,8 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/samber/lo"
+
+	"github.com/dbo-studio/dbo/internal/app/dto"
 )
 
 func (r *SQLiteRepository) getNewTableName(tableParams *dto.SQLiteTableParams, oldName string) string {

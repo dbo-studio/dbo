@@ -17,7 +17,7 @@ type IConnectionService interface {
 	Update(ctx context.Context, connectionId int32, req *dto.UpdateConnectionRequest) (*dto.UpdateConnectionResponse, error)
 	Delete(ctx context.Context, connectionId int32) (*dto.ConnectionsResponse, error)
 	Close(ctx context.Context, connectionId int32) error
-	Ping(ctx context.Context, req *dto.CreateConnectionRequest) error
+	Ping(ctx context.Context, req *dto.PingConnectionRequest) error
 	SetCredentials(ctx context.Context, connectionId int32, req *dto.ConnectionCredentialsRequest) error
 }
 

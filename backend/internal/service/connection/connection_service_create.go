@@ -17,7 +17,12 @@ import (
 )
 
 func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConnectionRequest) error {
-	err := s.Ping(ctx, req)
+	err := s.Ping(ctx, &dto.PingConnectionRequest{
+		ID:      nil,
+		Type:    req.Type,
+		Options: req.Options,
+	})
+
 	if err != nil {
 		return apperror.DriverError(err)
 	}

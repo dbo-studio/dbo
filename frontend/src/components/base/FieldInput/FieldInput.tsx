@@ -5,7 +5,7 @@ import { forwardRef, type JSX, useEffect, useState } from 'react';
 import type { FieldInputProps } from './types';
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
-export default forwardRef(function FieldInput(props: FieldInputProps, _: React.Ref<HTMLInputElement>): JSX.Element {
+export default forwardRef(function FieldInput(props: FieldInputProps, forRef: React.Ref<HTMLInputElement>): JSX.Element {
   const theme = useTheme();
   const [value, setValue] = useState('');
 
@@ -38,6 +38,7 @@ export default forwardRef(function FieldInput(props: FieldInputProps, _: React.R
         </Typography>
       </Box>
       <InputBase
+        ref={forRef}
         spellCheck={'false'}
         value={value}
         autoComplete='off'

@@ -2,6 +2,7 @@ import { api } from '@/core/api';
 import type { ConnectionType } from '@/types';
 import type {
   CreateConnectionRequestType,
+  PingConnectionRequestType,
   SetConnectionCredentialsRequestType,
   UpdateConnectionRequestType
 } from './types';
@@ -31,16 +32,15 @@ export const updateConnection = async (
 };
 
 export const setConnectionCredentials = async (
-  id: string | number,
   data: SetConnectionCredentialsRequestType
 ): Promise<void> => {
-  await api.post(endpoint.setCredentials(id), data);
+  await api.post(endpoint.setCredentials(data.id), data);
 };
 
 export const deleteConnection = async (id: string | number): Promise<void> => {
   await api.delete(endpoint.deleteConnection(id));
 };
 
-export const pingConnection = async (data: CreateConnectionRequestType): Promise<void> => {
+export const pingConnection = async (data: PingConnectionRequestType): Promise<void> => {
   return api.post(endpoint.pingConnection(), data);
 };

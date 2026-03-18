@@ -11,7 +11,7 @@ import (
 func (r *SQLiteRepository) Objects(ctx context.Context, nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
 	switch tabID {
 	case contract.TableTab:
-		return r.getTableInfo(ctx, nodeID, action)
+		return r.getTableInfo(nodeID)
 	case contract.TableColumnsTab:
 		return r.getTableColumns(ctx, nodeID)
 	case contract.TableForeignKeysTab:
@@ -25,8 +25,8 @@ func (r *SQLiteRepository) Objects(ctx context.Context, nodeID string, tabID con
 	}
 }
 
-func (r *SQLiteRepository) getTableInfo(ctx context.Context, nodeID string, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
-	fields := r.tableFields(ctx, action)
+func (r *SQLiteRepository) getTableInfo(nodeID string) (*contract.FormResponse, error) {
+	fields := r.tableFields()
 
 	tables, err := r.getAllTableList()
 	if err != nil {
@@ -48,7 +48,7 @@ func (r *SQLiteRepository) getTableInfo(ctx context.Context, nodeID string, acti
 	return helper.BuildObjectFormResponseFromResults(result, fields)
 }
 
-func (r *SQLiteRepository) getTableColumns(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
+func (r *SQLiteRepository) getTableColumns(_ context.Context, nodeID string) (*contract.FormResponse, error) {
 	fields := r.tableColumnFields()
 	columns, err := r.getColumns(nodeID, []string{}, true)
 	if err != nil {

@@ -1,5 +1,5 @@
 import api from '@/api';
-import type { CreateConnectionRequestType } from '@/api/connection/types';
+import type { PingConnectionRequestType, UpdateConnectionRequestType } from '@/api/connection/types';
 import Modal from '@/components/base/Modal/Modal';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
@@ -20,7 +20,7 @@ export default function EditConnection(): JSX.Element {
   const updateUI = useSettingStore((state) => state.updateUI);
 
   const { mutateAsync: updateConnectionMutation, isPending: updateConnectionPending } = useMutation({
-    mutationFn: (variables: { id: number; data: CreateConnectionRequestType }): Promise<ConnectionType> =>
+    mutationFn: (variables: { id: number; data: UpdateConnectionRequestType }): Promise<ConnectionType> =>
       api.connection.updateConnection(variables.id, variables.data)
   });
 
@@ -33,20 +33,24 @@ export default function EditConnection(): JSX.Element {
     updateUI({ showEditConnection: false });
   };
 
-  const handlePingConnection = async (data: CreateConnectionRequestType): Promise<void> => {
+  const handlePingConnection = async (data: PingConnectionRequestType): Promise<void> => {
     if (pingConnectionPending) {
       return;
     }
 
     try {
-      await pingConnectionMutation(data);
+      await pingConnectionMutation({
+        id: activeConnection?.id,
+        type: data.type,
+        options: data.options
+      });
       toast.success(locales.connection_test_success);
     } catch (error) {
       console.debug('🚀 ~ handlePingConnection ~ error:', error);
     }
   };
 
-  const handleUpdateConnection = async (data: CreateConnectionRequestType): Promise<void> => {
+  const handleUpdateConnection = async (data: UpdateConnectionRequestType): Promise<void> => {
     if (updateConnectionPending || !activeConnection) {
       return;
     }

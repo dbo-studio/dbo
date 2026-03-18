@@ -9,7 +9,14 @@ export type CreateConnectionRequestType = {
   rememberPassword?: boolean;
 };
 
+export type PingConnectionRequestType = {
+  id?: number;
+  type: 'postgresql' | 'sqlite' | 'mysql';
+  options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
+};
+
 export type UpdateConnectionRequestType = {
+  id?: string | number,
   name?: string;
   type?: 'postgresql' | 'sqlite' | 'mysql';
   isActive?: boolean;
@@ -19,6 +26,7 @@ export type UpdateConnectionRequestType = {
 };
 
 export type SetConnectionCredentialsRequestType = {
+  id: string | number,
   password: string;
   rememberPassword: boolean;
 };

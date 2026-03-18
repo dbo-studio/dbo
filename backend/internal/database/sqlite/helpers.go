@@ -6,15 +6,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/samber/lo"
+
+	"github.com/dbo-studio/dbo/internal/app/dto"
 )
 
 func (r *SQLiteRepository) cacheKey(args ...string) string {
 	return fmt.Sprintf("c:%d:sqlite:%s", r.connection.ID, strings.Join(args, "_"))
 }
 
-func (r *SQLiteRepository) updateCache(ctx context.Context, cacheKey string, value any) {
+func (r *SQLiteRepository) updateCache(_ context.Context, cacheKey string, value any) {
 	go func() {
 		bgCtx := context.Background()
 		err := r.cache.Set(bgCtx, cacheKey, value, lo.ToPtr(time.Hour))

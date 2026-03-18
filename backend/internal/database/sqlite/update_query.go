@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"gorm.io/gorm"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/pkg/helper"
-	"gorm.io/gorm"
 )
 
 func (r *SQLiteRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error) {
@@ -174,7 +175,7 @@ func (r *SQLiteRepository) generateInsertQueries(req *dto.UpdateQueryRequest, no
 	return queries
 }
 
-func buildSetClauses(values map[string]interface{}) []string {
+func buildSetClauses(values map[string]any) []string {
 	var setClauses []string
 
 	for key, value := range values {
@@ -191,8 +192,8 @@ func buildSetClauses(values map[string]interface{}) []string {
 	return setClauses
 }
 
-func (r *SQLiteRepository) buildWhereClauses(primaryKeys []string, conditions map[string]interface{}) []string {
-	conditionKeys := map[string]interface{}{}
+func (r *SQLiteRepository) buildWhereClauses(primaryKeys []string, conditions map[string]any) []string {
+	conditionKeys := map[string]any{}
 
 	if len(primaryKeys) > 0 {
 		for _, key := range primaryKeys {
