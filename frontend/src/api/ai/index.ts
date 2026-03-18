@@ -6,8 +6,8 @@ const endpoint = {
   complete: (): string => '/ai/complete'
 };
 
-export const chat = async (data: AiChatRequest): Promise<AiChatResponse> => {
-  return (await api.post<{ data: AiChatResponse }>(endpoint.chat(), data)).data.data;
+export const chat = async (data: AiChatRequest, signal?: AbortSignal): Promise<AiChatResponse> => {
+  return (await api.post<{ data: AiChatResponse }>(endpoint.chat(), data, { signal })).data.data;
 };
 
 export const complete = async (data: AICompleteRequest, signal?: AbortSignal): Promise<AICompleteResponse> => {

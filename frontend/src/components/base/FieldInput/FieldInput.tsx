@@ -4,7 +4,6 @@ import type React from 'react';
 import { forwardRef, type JSX, useEffect, useState } from 'react';
 import type { FieldInputProps } from './types';
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
 export default forwardRef(function FieldInput(
   props: FieldInputProps,
   forRef: React.Ref<HTMLInputElement>

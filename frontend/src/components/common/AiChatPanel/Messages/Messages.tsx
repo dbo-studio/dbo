@@ -1,4 +1,5 @@
 import locales from '@/locales';
+import { useAiStore } from '@/store/aiStore/ai.store';
 import { Button, CircularProgress, Stack, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef } from 'react';
 import { useAiChat } from '../hooks/useAiChat';
@@ -8,7 +9,9 @@ import { MessagesStyled } from './Messages.styled';
 
 export default function Messages() {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const { currentChat, handleLoadMore, chatPending } = useAiChat();
+  const currentChat = useAiStore((state) => state.currentChat);
+
+  const { handleLoadMore, chatPending } = useAiChat();
 
   const messages = currentChat?.messages ?? [];
 

@@ -73,5 +73,6 @@ export const IconTypes = {
   history: 'History',
   bot: 'Bot',
   mysql: 'mysql',
-  message: 'MessageSquare'
+  message: 'MessageSquare',
+  pause: 'Pause'
 };

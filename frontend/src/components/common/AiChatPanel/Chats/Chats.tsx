@@ -1,9 +1,12 @@
+import { useAiStore } from '@/store/aiStore/ai.store';
 import { useAiChat } from '../hooks/useAiChat';
 import ChatItem from './ChatItem/ChatItem';
 import { ChatsStyled } from './Chats.styled';
 
 export default function Chats() {
-  const { handleChatChange, handleChatDelete, chats, currentChat } = useAiChat();
+  const currentChat = useAiStore((state) => state.currentChat);
+  const chats = useAiStore((state) => state.chats);
+  const { handleChatChange, handleChatDelete } = useAiChat();
 
   return (
     <ChatsStyled>
