@@ -3,14 +3,14 @@ import { TreeNodeType } from '@/types/Tree';
 
 export function useTreeNodeMenu(
   node: TreeNodeType,
-  actionDetection: (event: React.MouseEvent, node: TreeNodeType) => void
+  actionDetection: (event: React.MouseEvent, node: TreeNodeType) => Promise<void>
 ): {
   menu: MenuType[];
 } {
   const menu: MenuType[] =
     node?.contextMenu?.map((action) => ({
       name: action.title,
-      action: (): void =>
+      action: (): Promise<void> =>
         actionDetection({ stopPropagation: () => {} } as React.MouseEvent, {
           ...node,
           action

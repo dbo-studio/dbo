@@ -25,13 +25,7 @@ export default function QueryEditorActions({ onFormat, onRunQuery, loading }: Qu
   const currentConnection = useCurrentConnection();
 
   const { mutateAsync: createSavedQueryMutation } = useMutation({
-    mutationFn: api.savedQueries.createSavedQuery,
-    onSuccess: (): void => {
-      queryClient.invalidateQueries({
-        queryKey: ['savedQueries', currentConnection?.id]
-      });
-      toast.success(locales.query_saved_successfully);
-    }
+    mutationFn: api.savedQueries.createSavedQuery
   });
 
   const handleFormatSql = (): void => {
@@ -56,6 +50,12 @@ export default function QueryEditorActions({ onFormat, onRunQuery, loading }: Qu
         connectionId: currentConnection?.id ?? 0,
         query: getQuery()
       });
+
+      await queryClient.invalidateQueries({
+        queryKey: ['savedQueries', currentConnection?.id]
+      });
+
+      toast.success(locales.query_saved_successfully);
     } catch (error) {
       console.debug('🚀 ~ saveQuery ~ error:', error);
     }
@@ -77,7 +77,7 @@ export default function QueryEditorActions({ onFormat, onRunQuery, loading }: Qu
   return (
     <Stack spacing={2} direction={'row'}>
       <Tooltip title={locales.save}>
-        <IconButton color='default' onClick={saveQuery}>
+        <IconButton color='default' onClick={() => void saveQuery()}>
           <CustomIcon type='save' />
         </IconButton>
       </Tooltip>

@@ -3,11 +3,11 @@ import type { FormObjectResponseType } from '@/api/tree/types';
 import { useCurrentConnection } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
+import { ObjectTabType } from '@/types';
 import type { FormFieldType, FormFieldWithState, FormValue } from '@/types/Tree';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 import type { FormDataState } from '../types';
-import { ObjectTabType } from '@/types';
 
 const createInitialFormState = (
   schema: FormFieldType[],
@@ -87,7 +87,7 @@ export const useFormData = (tabId: string | null, isEditMode: boolean): FormData
 
     const isArray = response.isArray;
     const schema: FormFieldType[] = response.schema;
-    const data: Record<string, FormValue>[] = response.data as Record<string, FormValue>[];
+    const data: Record<string, FormValue>[] = response.data;
 
     const storageKey = `${selectedTab.id}_${tabId}`;
     const cachedData = formDataByTab[selectedTab.id]?.[storageKey] as FormFieldWithState[] | undefined;

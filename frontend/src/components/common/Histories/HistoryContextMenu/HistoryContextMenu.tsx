@@ -13,13 +13,9 @@ export default function HistoryContextMenu({ history, contextMenu, onClose }: Hi
   const addEditorTab = useTabStore((state) => state.addEditorTab);
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
-  const handleCopy = async (): Promise<void> => {
-    try {
-      await copy(history.query);
-      toast.success(locales.copied);
-    } catch (error) {
-      console.debug('🚀 ~ handleCopy ~ error:', error);
-    }
+  const handleCopy = (): void => {
+    copy(history.query).catch((e) => console.debug('🚀 ~ handleCopy ~ error:', e));
+    toast.success(locales.copied);
   };
 
   const handleRun = (): void => {

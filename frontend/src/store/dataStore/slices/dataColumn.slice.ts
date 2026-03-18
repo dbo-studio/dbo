@@ -19,7 +19,8 @@ export const createDataColumnSlice: StateCreator<
     if (!selectedTabId) return;
 
     set({ columns }, undefined, 'updateColumns');
-    debouncedSaveColumns(selectedTabId, columns);
+    await debouncedSaveColumns(selectedTabId, columns);
+
     return Promise.resolve();
   }
 });

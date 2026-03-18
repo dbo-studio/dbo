@@ -71,9 +71,9 @@ export default function Data(): JSX.Element {
     }
 
     cancelCurrentQuery();
-    loadData().then(() => {
-      setIsGridReady(true);
-    });
+    loadData()
+      .then(() => setIsGridReady(true))
+      .catch((e) => console.debug('🚀 ~ Data ~ e:', e));
   }, [selectedTabId, isMounted, loadData, cancelCurrentQuery]);
 
   useEffect(() => {

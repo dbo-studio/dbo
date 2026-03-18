@@ -22,28 +22,23 @@ export default function ConnectionItemContextMenu({
   const updateUI = useSettingStore((state) => state.updateUI);
 
   const { mutateAsync: deleteConnectionMutation } = useMutation({
-    mutationFn: api.connection.deleteConnection,
-    onSuccess: (): void => {
-      queryClient.invalidateQueries({
-        queryKey: ['connections']
-      });
-    }
+    mutationFn: api.connection.deleteConnection
   });
 
   const showModal = useConfirmModalStore((state) => state.danger);
   const updateTabs = useTabStore((state) => state.updateTabs);
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
   const clearCurrentConnection = useConnectionStore((state) => state.clearCurrentConnection);
-  const resetTree = useTreeStore((state) => state.reset)
+  const resetTree = useTreeStore((state) => state.reset);
 
-  const handleOpenConfirm = async (connection: ConnectionType): Promise<void> => {
+  const handleOpenConfirm = (connection: ConnectionType): void => {
     showModal(locales.delete_action, locales.connection_delete_confirm, () => {
-      handleDeleteConnection(connection);
+      handleDeleteConnection(connection).catch((e) => console.log('🚀 ~ handleOpenConfirm ~ e:', e));
     });
   };
 
-  const handleRefresh = (): void => {
-    queryClient.invalidateQueries({
+  const handleRefresh = async (): Promise<void> => {
+    await queryClient.invalidateQueries({
       queryKey: ['connections']
     });
   };
@@ -51,6 +46,10 @@ export default function ConnectionItemContextMenu({
   const handleDeleteConnection = async (connection: ConnectionType): Promise<void> => {
     try {
       await deleteConnectionMutation(connection.id);
+      await queryClient.invalidateQueries({
+        queryKey: ['connections']
+      });
+
       updateSelectedTab(undefined);
       updateTabs([]);
       toast.success(locales.connection_delete_success);
@@ -71,7 +70,7 @@ export default function ConnectionItemContextMenu({
 
       if (Number(currentConnectionId) === connection.id) {
         clearCurrentConnection();
-        resetTree()
+        resetTree();
       }
 
       toast.success(locales.connection_closed_success);
@@ -90,19 +89,19 @@ export default function ConnectionItemContextMenu({
     {
       name: locales.close_connection,
       icon: 'close',
-      action: (): Promise<void> => handleCloseConnection(connection),
+      action: () => void handleCloseConnection(connection),
       closeBeforeAction: true
     },
     {
       name: locales.delete,
       icon: 'delete',
-      action: (): Promise<void> => handleOpenConfirm(connection),
+      action: () => void handleOpenConfirm(connection),
       closeBeforeAction: true
     },
     {
       name: locales.refresh,
       icon: 'refresh',
-      action: (): void => handleRefresh(),
+      action: () => void handleRefresh(),
       closeBeforeAction: true
     }
   ];

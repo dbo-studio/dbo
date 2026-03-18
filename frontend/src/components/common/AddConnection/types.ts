@@ -28,7 +28,7 @@ export type ConnectionSettingsProps = {
   connection?: ConnectionType;
   pingLoading: boolean;
   submitLoading: boolean;
-  onSubmit(data: CreateConnectionRequestType): void;
-  onPing(data: CreateConnectionRequestType): void;
+  onSubmit: (data: CreateConnectionRequestType) => void;
+  onPing: (data: CreateConnectionRequestType) => void;
   onClose: () => void;
 };

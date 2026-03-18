@@ -4,6 +4,7 @@ import { useJobPolling } from '@/hooks/useJobPolling.hook';
 import locales from '@/locales';
 import { ErrorType, ImportResultType } from '@/types/Job';
 import { Box, Button, LinearProgress, List, ListItem, ListItemText, Modal, Typography } from '@mui/material';
+import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { JobProgressModalContainer } from './JobProgressModal.styled';
 import type { JobProgressModalProps } from './types';
@@ -11,12 +12,15 @@ import type { JobProgressModalProps } from './types';
 export function JobProgressModal({ open, jobId, onClose, title }: JobProgressModalProps) {
   const [isTauri, setIsTauri] = useState(false);
 
+  const { mutateAsync: jobResultMutation } = useMutation({
+    mutationFn: api.job.result
+  });
+
   useEffect(() => {
-    const checkTauri = async () => {
+    void (async () => {
       const tauriResult = await tools.isTauri();
       setIsTauri(tauriResult);
-    };
-    checkTauri();
+    })();
   }, []);
 
   const { job, error: pollingError, cancelJob } = useJobPolling(jobId);
@@ -25,7 +29,7 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
     if (!jobId) return;
 
     try {
-      const blob = await api.job.result(jobId);
+      const blob = await jobResultMutation(jobId);
       const fileName = job?.result?.fileName || 'export';
       tools.fileDownload(blob, fileName);
     } catch (error) {
@@ -82,7 +86,7 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
 
             {job.status === 'running' && (
               <Box sx={{ mt: 2 }}>
-                <Button variant='outlined' onClick={cancelJob} fullWidth>
+                <Button variant='outlined' onClick={() => void cancelJob()} fullWidth>
                   {locales.cancel_job}
                 </Button>
               </Box>
@@ -90,7 +94,7 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
 
             {job.status === 'completed' && job.type === 'export' && !isTauri && (
               <Box sx={{ mt: 2 }}>
-                <Button variant='contained' onClick={handleDownload} fullWidth>
+                <Button variant='contained' onClick={() => void handleDownload()} fullWidth>
                   {locales.download_file}
                 </Button>
               </Box>

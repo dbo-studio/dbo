@@ -6,7 +6,11 @@ import type { TabType } from '@/types';
 import { useCallback } from 'react';
 import { useRemoveTab as useRemoveTabHook } from './useRemoveTab.hook';
 
-export const useRemoveTab = (): { handleRemoveTab: (tabId: string) => void } => {
+type useRemoveTabReturn = {
+  handleRemoveTab: (tabId: string) => Promise<void>;
+};
+
+export const useRemoveTab = (): useRemoveTabReturn => {
   const [removeTab] = useRemoveTabHook();
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
   const confirmModal = useConfirmModalStore();

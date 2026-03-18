@@ -38,7 +38,7 @@ export default function Mysql({
     validators: {
       onSubmit: formSchema
     },
-    onSubmit: async ({ value }): Promise<void> => {
+    onSubmit: ({ value }): void => {
       const data = {
         name: value.name,
         type: 'mysql',
@@ -81,7 +81,7 @@ export default function Mysql({
           onSubmit={(e): void => {
             e.preventDefault();
             e.stopPropagation();
-            form.handleSubmit().then();
+            void form.handleSubmit().then();
           }}
         >
           <form.Field name='name'>
@@ -208,11 +208,7 @@ export default function Mysql({
             <Box display={'flex'} alignItems={'center'} mb={1}>
               <FormControlLabel
                 control={
-                  <Checkbox
-                    checked={useUri}
-                    size={'small'}
-                    onChange={(e): void => setUseUri(e.target.checked)}
-                  />
+                  <Checkbox checked={useUri} size={'small'} onChange={(e): void => setUseUri(e.target.checked)} />
                 }
                 label={locales.use_uri}
               />
@@ -249,7 +245,7 @@ export default function Mysql({
             loading={pingLoading}
             onClick={(): void => {
               form.state.values.isPing = true;
-              form.handleSubmit().then();
+              void form.handleSubmit().then();
             }}
             size='small'
             variant='contained'
@@ -264,7 +260,7 @@ export default function Mysql({
             loading={submitLoading}
             onClick={(): void => {
               form.state.values.isPing = false;
-              form.handleSubmit().then();
+              void form.handleSubmit().then();
             }}
             size='small'
             variant='contained'

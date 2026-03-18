@@ -17,18 +17,18 @@ const endpoint = {
 };
 
 export const runQuery = async (data: RunQueryRequestType, signal?: AbortSignal): Promise<RunQueryResponseType> => {
-  return (await api.post(endpoint.runQuery(), data, { signal })).data.data as RunQueryResponseType;
+  return (await api.post<{ data: RunQueryResponseType }>(endpoint.runQuery(), data, { signal })).data.data;
 };
 
 export const runRawQuery = async (
   data: RunRawQueryRequestType,
   signal?: AbortSignal
 ): Promise<RunQueryResponseType> => {
-  return (await api.post(endpoint.runRawQuery(), data, { signal })).data.data as RunQueryResponseType;
+  return (await api.post<{ data: RunQueryResponseType }>(endpoint.runRawQuery(), data, { signal })).data.data;
 };
 
 export const autoComplete = async (data: AutoCompleteRequestType): Promise<AutoCompleteType> => {
-  return (await api.get(endpoint.autoComplete(), { params: data })).data.data as AutoCompleteType;
+  return (await api.get<{ data: AutoCompleteType }>(endpoint.autoComplete(), { params: data })).data.data;
 };
 
 export const updateQuery = async (data: UpdateQueryRequestType): Promise<UpdateQueryResponseType> => {
@@ -53,5 +53,5 @@ export const updateQuery = async (data: UpdateQueryRequestType): Promise<UpdateQ
     });
   }
 
-  return (await api.post(endpoint.updateQuery(), formattedData)).data.data as UpdateQueryResponseType;
+  return (await api.post<{ data: UpdateQueryResponseType }>(endpoint.updateQuery(), formattedData)).data.data;
 };

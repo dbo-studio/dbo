@@ -3,6 +3,7 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import Modal from '@/components/base/Modal/Modal';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
+import { SelectInputOption } from '@/components/base/SelectInput/types';
 import { tools } from '@/core/utils';
 import locales from '@/locales';
 import { Box, Button } from '@mui/material';
@@ -25,16 +26,17 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
   });
 
   useEffect(() => {
-    const checkTauri = async () => {
-      const tauriResult = await tools.isTauri();
-      setIsTauri(tauriResult);
-    };
-    checkTauri();
+    tools
+      .isTauri()
+      .then((tauriResult) => setIsTauri(tauriResult))
+      .catch((e) => {
+        console.debug('🚀 ~ ExportModal ~ e:', e);
+      });
   }, []);
 
   const handleSelectFile = async () => {
     if (!save) {
-      console.warn('Tauri dialog not available');
+      console.debug('Tauri dialog not available');
       return;
     }
 
@@ -88,7 +90,7 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
             <SelectInput
               emptylabel={locales.no_column_found}
               value={format}
-              onChange={(e) => setFormat(e.value)}
+              onChange={(e) => setFormat((e as SelectInputOption)?.value as string)}
               label={locales.format}
               options={[
                 { label: 'SQL', value: 'sql' },
@@ -101,13 +103,13 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
               <Box sx={{ mt: 2, display: 'flex', alignItems: 'center' }}>
                 <Box sx={{ flex: 1 }}>
                   <FieldInput
-                    onClick={handleSelectFile}
+                    onClick={() => void handleSelectFile()}
                     fullWidth
                     label={locales.save_path}
                     value={savePath}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSavePath(e.target.value)}
                     placeholder={locales.enter_file_path_or_click_browse}
-                    endAdornment={<CustomIcon type='ellipsisVertical' onClick={handleSelectFile} />}
+                    endAdornment={<CustomIcon type='ellipsisVertical' onClick={() => void handleSelectFile()} />}
                   />
                 </Box>
               </Box>
@@ -118,7 +120,12 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
               {locales.cancel}
             </Button>
 
-            <Button onClick={handleExport} size='small' variant='contained' disabled={isTauri && !savePath.trim()}>
+            <Button
+              onClick={() => void handleExport()}
+              size='small'
+              variant='contained'
+              disabled={isTauri && !savePath.trim()}
+            >
               <span>{locales.export}</span>
             </Button>
           </Box>

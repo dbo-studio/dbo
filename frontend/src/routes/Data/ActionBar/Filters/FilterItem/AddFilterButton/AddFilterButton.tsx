@@ -8,8 +8,8 @@ import type { AddFilterButtonProps } from '../../types.ts';
 export default function AddFilterButton({ columns }: AddFilterButtonProps): JSX.Element {
   const upsertFilters = useTabStore((state) => state.upsertFilters);
 
-  const handleAddNewFilter = async (): Promise<void> => {
-    await upsertFilters({
+  const handleAddNewFilter = (): void => {
+    upsertFilters({
       index: tools.uuid(),
       column: columns[0].name,
       operator: PgsqlFilterConditions[0],

@@ -49,7 +49,7 @@ export default function Columns(): JSX.Element {
       minWidth={'130px'}
     >
       {columns?.map((c: ColumnType) => (
-        <ColumnItem onClick={(): Promise<void> => handleCheckToggle(c)} key={tools.uuid()} column={c} />
+        <ColumnItem onClick={() => void handleCheckToggle(c)} key={tools.uuid()} column={c} />
       ))}
     </Box>
   );

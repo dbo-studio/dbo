@@ -63,7 +63,9 @@ class IndexedDBService {
   private readonly DB_VERSION = 1;
 
   constructor() {
-    this.initDB();
+    this.initDB().catch((e) => {
+      console.debug('🚀 ~ IndexedDBService ~ constructor ~ e:', e);
+    });
   }
 
   private initDB(): Promise<IDBPDatabase<TableDataDB>> {

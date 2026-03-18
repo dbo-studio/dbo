@@ -46,7 +46,7 @@ export default function Providers() {
     if (!provider) return;
 
     try {
-      const res = await updateProviderMutation({ providerId: provider.id, data: { model: option.value } });
+      const res = await updateProviderMutation({ providerId: provider.id, data: { model: option.value as string } });
       updateProvider(res);
     } catch (error) {
       console.debug('🚀 ~ handleModelChange ~ error:', error);
@@ -63,7 +63,7 @@ export default function Providers() {
             value: provider.id.toString()
           })) ?? []
         }
-        onChange={handleProviderChange}
+        onChange={(value) => void handleProviderChange(value as SelectInputOption)}
         value={provider?.id.toString()}
       />
       <SelectInput
@@ -74,7 +74,7 @@ export default function Providers() {
             value: model
           })) ?? []
         }
-        onChange={handleModelChange}
+        onChange={(value) => void handleModelChange(value as SelectInputOption)}
         value={provider?.model}
       />
     </Stack>

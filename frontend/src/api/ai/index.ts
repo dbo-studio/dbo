@@ -7,9 +7,9 @@ const endpoint = {
 };
 
 export const chat = async (data: AiChatRequest): Promise<AiChatResponse> => {
-  return (await api.post(endpoint.chat(), data)).data.data as AiChatResponse;
+  return (await api.post<{ data: AiChatResponse }>(endpoint.chat(), data)).data.data;
 };
 
 export const complete = async (data: AICompleteRequest, signal?: AbortSignal): Promise<AICompleteResponse> => {
-  return (await api.post(endpoint.complete(), data, { signal })).data.data as AICompleteResponse;
+  return (await api.post<{ data: AICompleteResponse }>(endpoint.complete(), data, { signal })).data.data;
 };

@@ -28,7 +28,7 @@ export default function CodeMessage({ message }: CodeMessageProps) {
         <Box ml={1} display={'flex'}>
           <CustomIcon type='code' />
         </Box>
-        <IconButton onClick={handleCopy}>
+        <IconButton onClick={() => void handleCopy()}>
           <CustomIcon type='copy' />
         </IconButton>
       </CodeMessageHeaderStyled>

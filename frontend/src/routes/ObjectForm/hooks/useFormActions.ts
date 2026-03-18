@@ -17,7 +17,7 @@ export const useFormActions = (
   tabId: string | null
 ): {
   handleSave: (formState: FormDataState) => Promise<void>;
-  handleCancel: () => void;
+  handleCancel: () => Promise<void>;
   isLoading: boolean;
 } => {
   const queryClient = useQueryClient();
@@ -27,13 +27,7 @@ export const useFormActions = (
   const { reloadTree } = useTreeStore();
 
   const { mutateAsync: executeAction, isPending } = useMutation({
-    mutationFn: api.tree.executeAction,
-    onSuccess: (): void => {
-      queryClient.invalidateQueries({
-        queryKey: ['formData', currentConnection?.id, selectedTab?.id, selectedTab?.action, tabId]
-      });
-      reloadTree(false);
-    }
+    mutationFn: api.tree.executeAction
   });
 
   const buildSavePayload = useCallback(
@@ -138,6 +132,12 @@ export const useFormActions = (
           data: payload as Record<string, FormValue>
         });
 
+        await queryClient.invalidateQueries({
+          queryKey: ['formData', currentConnection?.id, selectedTab?.id, selectedTab?.action, tabId]
+        });
+
+        await reloadTree(false);
+
         toast.success(locales.changes_saved_successfully);
 
         const updatedFields = currentFields.map((field) => ({
@@ -153,13 +153,13 @@ export const useFormActions = (
     [currentConnection, selectedTab, tabId, isPending, getFormData, buildSavePayload, executeAction, updateFormData]
   );
 
-  const handleCancel = useCallback((): void => {
+  const handleCancel = useCallback(async (): Promise<void> => {
     if (!selectedTab || !tabId) return;
 
     const storageKey = `${selectedTab.id}_${tabId}`;
     resetFormData(selectedTab.id, storageKey);
 
-    queryClient.refetchQueries({
+    await queryClient.refetchQueries({
       queryKey: ['formData', currentConnection?.id, selectedTab.id, selectedTab?.action, tabId]
     });
 

@@ -90,13 +90,13 @@ export default function DataGridContextMenu({
     {
       name: 'Copy',
       closeAfterAction: true,
-      action: async (): Promise<void> => {
+      action: () => {
         if (!selectedRows.length) return;
         const row = selectedRows[selectedRows.length - 1];
         if (!row || !row.row || !row.selectedColumn) return;
 
         try {
-          await copy(row.row[row.selectedColumn] as string);
+          copy(row.row[row.selectedColumn] as string).catch((e) => console.log('🚀 ~ DataGridContextMenu ~ e:', e));
           toast.success(locales.copied);
         } catch (error) {
           console.debug('🚀 ~ handleCopy ~ error:', error);

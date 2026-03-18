@@ -36,7 +36,7 @@ export default function ObjectTreeView(): JSX.Element {
 
   useEffect(() => {
     if (!treeError && !tree && !isLoading && currentConnection?.id) {
-      reloadTree(true);
+      reloadTree(true).catch((e) => console.log('🚀 ~ ObjectTreeView ~ e:', e));
     } else if (isLoading) {
       toggleIsLoading(false);
     }

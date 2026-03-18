@@ -31,7 +31,7 @@ export const useSetupDesktop = (): boolean => {
   const reset = useTabStore((state) => state.reset);
 
   useEffect(() => {
-    const initializeDesktop = async (): Promise<void> => {
+    void (async (): Promise<void> => {
       try {
         const isTauri = await tools.isTauri();
         if (!isTauri) {
@@ -46,9 +46,7 @@ export const useSetupDesktop = (): boolean => {
         console.error('Error during desktop setup:', error);
         setLoaded(true);
       }
-    };
-
-    initializeDesktop();
+    })();
   }, [reset]);
 
   return loaded;
@@ -56,7 +54,7 @@ export const useSetupDesktop = (): boolean => {
 
 const setup = async (): Promise<void> => {
   disableDefaultContextMenu();
-  await setupTitleBar();
+  setupTitleBar();
   await setupBackend();
 };
 
@@ -116,14 +114,14 @@ const disableDefaultContextMenu = (): void => {
   document.addEventListener('selectstart', preventSelectStart, { capture: true });
 };
 
-const createHeaderAreaClickHandler = async (): Promise<void> => {
+const createHeaderAreaClickHandler = (): void => {
   const window = getCurrentWebviewWindow();
-  await window.startDragging();
+  window.startDragging().catch((e) => console.log('🚀 ~ createHeaderAreaClickHandler ~ e:', e));
 };
 
-const setupTitleBar = async (): Promise<void> => {
+const setupTitleBar = (): void => {
   const updateUI = useSettingStore.getState().updateUI;
-  const currentPlatform = await platform();
+  const currentPlatform = platform();
 
   if (currentPlatform !== 'macos') {
     return;

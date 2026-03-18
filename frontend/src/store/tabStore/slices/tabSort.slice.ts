@@ -3,7 +3,7 @@ import type { StateCreator } from 'zustand';
 import type { TabSortSlice, TabStore } from '../types';
 
 export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], TabSortSlice> = (_, get) => ({
-  upsertSorts: async (sort: SortType): Promise<void> => {
+  upsertSorts: (sort: SortType): void => {
     const tab = get().selectedTab<DataTabType>();
     if (!tab) return;
 

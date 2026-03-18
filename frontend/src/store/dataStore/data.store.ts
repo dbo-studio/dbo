@@ -46,18 +46,23 @@ export const useDataStore: UseBoundStore<StoreApi<DataState>> = create<DataState
         get().toggleDataFetching(true);
 
         try {
-          const dbRows = await indexedDBService.getRows(selectedTabId);
-          const dbColumns = await indexedDBService.getColumns(selectedTabId);
-          const dbEditedRows = await indexedDBService.getEditedRows(selectedTabId);
-          const dbRemovedRows = await indexedDBService.getRemovedRows(selectedTabId);
-          const dbUnsavedRows = await indexedDBService.getUnsavedRows(selectedTabId);
-          const dbSelectedRows = await indexedDBService.getSelectedRows(selectedTabId);
+          const [dbRows, dbColumns, dbEditedRows, dbRemovedRows, dbUnsavedRows, dbSelectedRows] = await Promise.all([
+            indexedDBService.getRows(selectedTabId),
+            indexedDBService.getColumns(selectedTabId),
+            indexedDBService.getEditedRows(selectedTabId),
+            indexedDBService.getRemovedRows(selectedTabId),
+            indexedDBService.getUnsavedRows(selectedTabId),
+            indexedDBService.getSelectedRows(selectedTabId)
+          ]);
 
-          get().updateRows(dbRows);
-          get().updateColumns(dbColumns);
-          get().updateEditedRows(dbEditedRows);
-          get().updateRemovedRows(dbRemovedRows);
-          get().updateUnsavedRows(dbUnsavedRows);
+          await Promise.all([
+            get().updateRows(dbRows),
+            get().updateColumns(dbColumns),
+            get().updateEditedRows(dbEditedRows),
+            get().updateRemovedRows(dbRemovedRows),
+            get().updateUnsavedRows(dbUnsavedRows)
+          ]);
+
           get().updateSelectedRows(dbSelectedRows, true);
 
           if (dbRows.length > 0 && dbColumns.length > 0) {

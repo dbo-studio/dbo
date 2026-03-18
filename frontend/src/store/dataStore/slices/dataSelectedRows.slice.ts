@@ -9,9 +9,9 @@ export const createDataSelectedRowsSlice: StateCreator<
   DataSelectedRowsSlice
 > = (set, get) => ({
   selectedRows: [],
-  updateSelectedRows: (rows: SelectedRow[], replace?: boolean): Promise<void> => {
+  updateSelectedRows: (rows: SelectedRow[], replace?: boolean): void => {
     const selectedTabId = useTabStore.getState().selectedTabId;
-    if (!selectedTabId) return Promise.resolve();
+    if (!selectedTabId) return;
 
     const currentSelectedRows = get().selectedRows;
     let newSelectedRows: SelectedRow[];
@@ -24,7 +24,7 @@ export const createDataSelectedRowsSlice: StateCreator<
             current.index === rows[index]?.index && current.selectedColumn === rows[index]?.selectedColumn
         )
       ) {
-        return Promise.resolve();
+        return;
       }
       newSelectedRows = rows;
     } else {
@@ -32,6 +32,5 @@ export const createDataSelectedRowsSlice: StateCreator<
     }
 
     set({ selectedRows: newSelectedRows }, undefined, 'updateSelectedRows');
-    return Promise.resolve();
   }
 });

@@ -28,10 +28,7 @@ export default function StatusBarActions(): JSX.Element {
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
 
   const { mutateAsync: updateQueryMutation, isPending: updateQueryPending } = useMutation({
-    mutationFn: api.query.updateQuery,
-    onSuccess: async (): Promise<void> => {
-      handleRefresh();
-    }
+    mutationFn: api.query.updateQuery
   });
 
   const handleSave = async (): Promise<void> => {
@@ -59,6 +56,7 @@ export default function StatusBarActions(): JSX.Element {
           removed: removedRows,
           added: unsavedRows
         });
+        await handleRefresh();
 
         toast.success(`${locales.changes_saved_successfully}. ${locales.row_affected}: ${res.rowAffected}`);
       } catch (error) {
@@ -81,7 +79,7 @@ export default function StatusBarActions(): JSX.Element {
     rows.push(emptyRow);
 
     await updateRows(rows);
-    await addUnsavedRows(emptyRow);
+    addUnsavedRows(emptyRow);
 
     updateEditor({ scrollToBottom: true });
   };
@@ -106,10 +104,9 @@ export default function StatusBarActions(): JSX.Element {
       await updateRows(updatedRows);
     }
 
-    await updateRemovedRows([]);
-    await restoreEditedRows();
+    await Promise.all([updateRemovedRows([]), restoreEditedRows()]);
 
-    await updateSelectedRows([], true);
+    updateSelectedRows([], true);
   };
 
   const handleRefresh = async (): Promise<void> => {
@@ -120,24 +117,28 @@ export default function StatusBarActions(): JSX.Element {
   return (
     <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'} width={208}>
       <Box>
-        <IconButton disabled={updateQueryPending || isDataFetching} onClick={handleAddAction}>
+        <IconButton disabled={updateQueryPending || isDataFetching} onClick={() => void handleAddAction()}>
           <CustomIcon type='plus' size='s' />
         </IconButton>
 
-        <IconButton disabled={updateQueryPending || isDataFetching} onClick={handleRemoveAction}>
+        <IconButton disabled={updateQueryPending || isDataFetching} onClick={() => void handleRemoveAction()}>
           <CustomIcon type='mines' size='s' />
         </IconButton>
       </Box>
       <Box ml={1} mr={1}>
-        <IconButton onClick={handleSave}>
+        <IconButton onClick={() => void handleSave()}>
           <CustomIcon type='check' size='s' />
         </IconButton>
-        <IconButton onClick={handleDiscardChanges} disabled={updateQueryPending || isDataFetching}>
+        <IconButton onClick={() => void handleDiscardChanges()} disabled={updateQueryPending || isDataFetching}>
           <CustomIcon type='close' size='s' />
         </IconButton>
       </Box>
       <Box>
-        <IconButton loading={isDataFetching} disabled={updateQueryPending || isDataFetching} onClick={handleRefresh}>
+        <IconButton
+          loading={isDataFetching}
+          disabled={updateQueryPending || isDataFetching}
+          onClick={() => void handleRefresh()}
+        >
           <CustomIcon type='refresh' size='s' />
         </IconButton>
 

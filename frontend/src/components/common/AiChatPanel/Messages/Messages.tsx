@@ -1,13 +1,16 @@
 import locales from '@/locales';
 import { Button, CircularProgress, Stack, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef } from 'react';
-import type { MessagesProps } from '../types';
+import { useAiChat } from '../hooks/useAiChat';
 import CodeMessage from './CodeMessage/CodeMessage';
 import ExplanationMessage from './ExplanationMessage/ExplanationMessage';
 import { MessagesStyled } from './Messages.styled';
 
-export default function Messages({ messages, loading, onLoadMore }: MessagesProps) {
+export default function Messages() {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const { currentChat, handleLoadMore, chatPending } = useAiChat();
+
+  const messages = currentChat?.messages ?? [];
 
   const scrollToBottom = useCallback(() => {
     if (messagesContainerRef.current) {
@@ -30,7 +33,7 @@ export default function Messages({ messages, loading, onLoadMore }: MessagesProp
   return (
     <MessagesStyled ref={messagesContainerRef}>
       {messages.filter((message) => !message.isNew).length > 10 && (
-        <Button sx={{ marginBottom: 1 }} variant='outlined' onClick={onLoadMore} size='small'>
+        <Button sx={{ marginBottom: 1 }} variant='outlined' onClick={() => void handleLoadMore()} size='small'>
           <Typography variant='caption'>{locales.load_more}</Typography>
         </Button>
       )}
@@ -43,7 +46,7 @@ export default function Messages({ messages, loading, onLoadMore }: MessagesProp
           )
         )}
 
-        {loading && (
+        {chatPending && (
           <>
             <Stack direction={'row'} spacing={1} alignItems={'center'}>
               <CircularProgress size={15} color='primary' />

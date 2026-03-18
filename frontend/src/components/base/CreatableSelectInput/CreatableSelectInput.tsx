@@ -26,7 +26,6 @@ export default function CreatableSelectInput({
   }, [options]);
 
   const handleChange = (selected: unknown, _actionMeta: ActionMeta<unknown>): void => {
-    // actionMeta is required by react-select but we don't use it - eslint-disable-next-line is handled by prefix _
     void _actionMeta;
     onChange(selected as SelectInputOption | SelectInputOption[] | null);
   };
@@ -35,29 +34,27 @@ export default function CreatableSelectInput({
     if (value === null || value === undefined) return null;
 
     if (isMulti) {
-      // Multi-select must always be array (validated in useFormData)
       if (!Array.isArray(value)) {
-        console.error('[CreatableSelectInput] Invalid format for multi-select: expected array, got', typeof value);
+        console.debug('[CreatableSelectInput] Invalid format for multi-select: expected array, got', typeof value);
         return [];
       }
-      // Map each value to its option, creating one if it doesn't exist (for newly created options)
-      return (value as string[]).map((val) => {
+
+      return value.map((val) => {
         const found = localOptions.find((option) => option.value === val);
         return found || { value: val, label: val };
       });
     }
 
-    // For single select, value should be string
     if (Array.isArray(value)) {
-      console.error('[CreatableSelectInput] Invalid format for single-select: expected string, got array');
+      console.debug('[CreatableSelectInput] Invalid format for single-select: expected string, got array');
       const firstValue = value.length > 0 ? value[0] : null;
       if (!firstValue) return null;
       const found = localOptions.find((option) => option.value === firstValue);
       return found || { value: firstValue, label: firstValue };
     }
     const found = localOptions.find((option) => option.value === value);
-    // If option not found in localOptions, create one (for newly created options)
-    return found || { value: value as string, label: value as string };
+
+    return found || { value: value, label: value };
   };
 
   const handleCreateOption = (inputValue: string): void => {
@@ -65,16 +62,11 @@ export default function CreatableSelectInput({
     const updatedOptions = [...localOptions, newOption];
     setLocalOptions(updatedOptions);
 
-    // react-select automatically calls onChange after onCreateOption,
-    // but we need to ensure the new option is available in localOptions
-    // So we manually trigger onChange to ensure the value is set correctly
     if (!isMulti) {
-      // For single select, directly set the new option
       handleChange(newOption, { action: 'create-option' } as ActionMeta<unknown>);
       return;
     }
 
-    // Multi-select must always be array (validated in useFormData)
     if (!Array.isArray(value)) {
       console.error(
         '[CreatableSelectInput] Invalid format for multi-select in handleCreateOption: expected array, got',
@@ -84,9 +76,7 @@ export default function CreatableSelectInput({
       return;
     }
 
-    // Create new array with existing values and new option
-    // Use updatedOptions to get labels for existing values
-    const currentValueArray = value as string[];
+    const currentValueArray = value;
     const newValueArray = currentValueArray.map((val) => {
       const existingOption = updatedOptions.find((opt) => opt.value === val);
       return existingOption || { value: val, label: String(val) };

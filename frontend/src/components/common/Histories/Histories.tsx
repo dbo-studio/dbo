@@ -46,18 +46,17 @@ export default function Histories(): JSX.Element {
     initialPageParam: 1
   });
 
-  const handleLoadMore = (): void => {
+  const handleLoadMore = async (): Promise<void> => {
     const currentScrollPos = listRef.current?.scrollTop;
-    fetchNextPage().then(() => {
-      if (listRef.current && currentScrollPos !== undefined) {
-        listRef.current.scrollTop = currentScrollPos;
-      }
-    });
+    await fetchNextPage();
+    if (listRef.current && currentScrollPos !== undefined) {
+      listRef.current.scrollTop = currentScrollPos;
+    }
   };
 
   const handleRefresh = async (): Promise<void> => {
     await refetch();
-    queryClient.setQueryData(
+    await queryClient.setQueryData(
       ['histories', currentConnection?.id],
       (data: { pages: HistoryResponse; pageParams: number[] }) => ({
         pages: [data?.pages[0]],
@@ -80,7 +79,7 @@ export default function Histories(): JSX.Element {
               <Search onChange={(name): void => setSearch(name)} />
             </Box>
             <DeleteHistoryIcon />
-            <IconButton onClick={handleRefresh}>
+            <IconButton onClick={() => void handleRefresh()}>
               <CustomIcon size='s' type={'refresh'} />
             </IconButton>
           </Stack>
@@ -109,7 +108,7 @@ export default function Histories(): JSX.Element {
                 loadingPosition='start'
                 disabled={isFetchingNextPage}
                 loading={isFetchingNextPage}
-                onClick={handleLoadMore}
+                onClick={() => void handleLoadMore()}
                 fullWidth
                 variant='contained'
               >

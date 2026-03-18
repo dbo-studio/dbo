@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS cache_items (
 
 CREATE TABLE IF NOT EXISTS connections (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  owner_id TEXT NOT NULL DEFAULT 'desktop',
   name TEXT NOT NULL,
   connection_type TEXT NOT NULL,
   options TEXT NOT NULL DEFAULT '',
@@ -18,7 +17,6 @@ CREATE TABLE IF NOT EXISTS connections (
   created_at DATETIME,
   updated_at DATETIME
 );
-CREATE INDEX IF NOT EXISTS idx_connections_owner_id ON connections(owner_id);
 
 CREATE TABLE IF NOT EXISTS histories (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

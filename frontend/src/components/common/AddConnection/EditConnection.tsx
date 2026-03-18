@@ -21,12 +21,7 @@ export default function EditConnection(): JSX.Element {
 
   const { mutateAsync: updateConnectionMutation, isPending: updateConnectionPending } = useMutation({
     mutationFn: (variables: { id: number; data: CreateConnectionRequestType }): Promise<ConnectionType> =>
-      api.connection.updateConnection(variables.id, variables.data),
-    onSuccess: (): void => {
-      queryClient.invalidateQueries({
-        queryKey: ['connections']
-      });
-    }
+      api.connection.updateConnection(variables.id, variables.data)
   });
 
   const { mutateAsync: pingConnectionMutation, isPending: pingConnectionPending } = useMutation({
@@ -58,6 +53,7 @@ export default function EditConnection(): JSX.Element {
 
     try {
       await updateConnectionMutation({ id: activeConnection.id, data });
+      await queryClient.invalidateQueries({ queryKey: ['connections'] });
       toast.success(locales.connection_update_success);
       handleClose();
     } catch (error) {
@@ -84,8 +80,8 @@ export default function EditConnection(): JSX.Element {
           pingLoading={pingConnectionPending}
           submitLoading={updateConnectionPending}
           onClose={handleClose}
-          onPing={handlePingConnection}
-          onSubmit={handleUpdateConnection}
+          onPing={(data) => void handlePingConnection(data)}
+          onSubmit={(data) => void handleUpdateConnection(data)}
         />
       )}
 
@@ -95,8 +91,8 @@ export default function EditConnection(): JSX.Element {
           pingLoading={pingConnectionPending}
           submitLoading={updateConnectionPending}
           onClose={handleClose}
-          onPing={handlePingConnection}
-          onSubmit={handleUpdateConnection}
+          onPing={(data) => void handlePingConnection(data)}
+          onSubmit={(data) => void handleUpdateConnection(data)}
         />
       )}
     </Modal>

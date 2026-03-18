@@ -4,24 +4,32 @@ import { createHighlighter } from 'shiki/bundle/web';
 import { completionService } from './completionService';
 import { registerInlineAIProvider } from './registerInlineAIProvider';
 
-let isSetup = false;
+let setupPromise: Promise<void> | null = null;
 
-export const setupLanguage = async (monaco: typeof Monaco) => {
-  if (isSetup) return;
+export const setupLanguage = async (monaco: typeof Monaco, theme: string) => {
+  if (setupPromise) return setupPromise;
 
-  const highlighter = await createHighlighter({
-    themes: ['github-light', 'github-dark'],
-    langs: ['sql', 'json']
-  });
+  setupPromise = (async () => {
+    const highlighter = await createHighlighter({
+      themes: ['github-light', 'github-dark'],
+      langs: ['sql', 'json', 'html', 'yml', 'markdown']
+    });
 
-  shikiToMonaco(highlighter, monaco);
+    shikiToMonaco(highlighter, monaco);
 
-  monaco.languages.registerCompletionItemProvider('sql', {
-    triggerCharacters: [' ', '.', '"', "'", '`'],
-    provideCompletionItems: completionService
-  });
+    monaco.languages.registerCompletionItemProvider('sql', {
+      triggerCharacters: [' ', '.', '"', "'", '`'],
+      provideCompletionItems: completionService
+    });
 
-  registerInlineAIProvider(monaco, 'sql');
+    monaco.editor.setTheme(theme);
 
-  isSetup = true;
+    registerInlineAIProvider(monaco, 'sql');
+  })();
+
+  return setupPromise;
+};
+
+export const waitForLanguageSetup = (): Promise<void> => {
+  return setupPromise ?? Promise.resolve();
 };

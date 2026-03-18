@@ -31,12 +31,12 @@ const PanelTabItem: React.FC<{ tab: TabType }> = memo(({ tab }: { tab: TabType }
     (e: React.MouseEvent<HTMLButtonElement>): void => {
       e.stopPropagation();
       e.preventDefault();
-      handleRemoveTab(tab.id);
+      handleRemoveTab(tab.id).catch((e) => console.log('🚀 ~ PanelTabItem ~ e:', e));
     },
     [handleRemoveTab, tab.id]
   );
 
-  useShortcut(shortcuts.closeTab, () => handleRemoveTab(selectedTabId ?? ''));
+  useShortcut(shortcuts.closeTab, () => void handleRemoveTab(selectedTabId ?? ''));
 
   useEffect(() => {
     const tabId = selectedTabId;

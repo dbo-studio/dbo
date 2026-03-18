@@ -21,7 +21,9 @@ export const createDataUnsavedRowsSlice: StateCreator<
       const filteredRow = createEmptyRow(columns);
       filteredRow.dbo_index = rows.length === 0 ? 0 : rows[rows.length - 1].dbo_index + 1;
       const newRows = [...rows, filteredRow];
-      get().updateRows(newRows).then();
+      get()
+        .updateRows(newRows)
+        .catch((e) => console.debug('🚀 ~ createDataUnsavedRowsSlice ~ e:', e));
       //save empty row to unSavedRows
       unSavedRows = [...unSavedRows, filteredRow];
     } else {
@@ -32,15 +34,17 @@ export const createDataUnsavedRowsSlice: StateCreator<
         unSavedRows = unSavedRows.map((row, idx) => (idx === findValueIndex ? { ...row, ...newRow } : row));
       }
     }
-    get().updateUnsavedRows(unSavedRows);
+    get()
+      .updateUnsavedRows(unSavedRows)
+      .catch((e) => console.debug('🚀 ~ createDataUnsavedRowsSlice ~ e:', e));
   },
-  updateUnsavedRows: (unSavedRows: RowType[]): Promise<void> => {
+  updateUnsavedRows: async (unSavedRows: RowType[]): Promise<void> => {
     const selectedTabId = useTabStore.getState().selectedTabId;
     if (!selectedTabId) return Promise.resolve();
 
     set({ unSavedRows }, undefined, 'updateUnsavedRows');
 
-    debouncedSaveUnsavedRows(selectedTabId, unSavedRows);
+    await debouncedSaveUnsavedRows(selectedTabId, unSavedRows);
     return Promise.resolve();
   },
   discardUnsavedRows: async (rows?: RowType[]): Promise<void> => {
@@ -52,6 +56,6 @@ export const createDataUnsavedRowsSlice: StateCreator<
     if (!updatedRows) return;
 
     await get().updateRows(updatedRows);
-    get().updateUnsavedRows([]);
+    await get().updateUnsavedRows([]);
   }
 });

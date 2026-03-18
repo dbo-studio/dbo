@@ -32,7 +32,7 @@ export default function Query(): JSX.Element {
   const [showGrid, setShowGrid] = useState(false);
   const isDataFetching = useDataStore((state) => state.isDataFetching);
 
-  useShortcut(shortcuts.runQuery, () => runRawQuery());
+  useShortcut(shortcuts.runQuery, () => void runRawQuery());
 
   const { data: autocomplete } = useQuery({
     queryKey: ['autocomplete', currentConnection?.id, selectedTab?.database, selectedTab?.schema],
@@ -47,7 +47,7 @@ export default function Query(): JSX.Element {
 
   useEffect(() => {
     handleChangeValue();
-    loadData();
+    void loadData().catch((e) => console.log('🚀 ~ Query ~ e:', e));
   }, [selectedTab?.id, autocomplete]);
 
   const handleChangeValue = (): void => {
@@ -89,7 +89,7 @@ export default function Query(): JSX.Element {
     <>
       <QueryEditorActionBar
         loading={isDataFetching}
-        onRunQuery={runQuery}
+        onRunQuery={() => void runQuery()}
         databases={autocomplete?.databases ?? []}
         schemas={autocomplete?.schemas ?? []}
         onFormat={(): void => handleChangeValue()}
@@ -102,7 +102,7 @@ export default function Query(): JSX.Element {
           borderBottom={(theme: Theme): string => `1px solid ${theme.palette.divider}`}
         >
           <SqlEditor
-            onRunQuery={runQuery}
+            onRunQuery={() => void runQuery()}
             onMount={(): void => setShowGrid(true)}
             onChange={handleUpdateState}
             autocomplete={

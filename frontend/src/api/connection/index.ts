@@ -16,7 +16,7 @@ const endpoint = {
 };
 
 export const getConnectionList = async (): Promise<ConnectionType[]> => {
-  return (await api.get(endpoint.connectionList())).data.data as ConnectionType[];
+  return (await api.get<{ data: ConnectionType[] }>(endpoint.connectionList())).data.data;
 };
 
 export const createConnection = async (data: CreateConnectionRequestType): Promise<void> => {
@@ -27,7 +27,7 @@ export const updateConnection = async (
   id: string | number,
   data: UpdateConnectionRequestType
 ): Promise<ConnectionType> => {
-  return (await api.patch(endpoint.updateConnection(id), data)).data.data as ConnectionType;
+  return (await api.patch<{ data: ConnectionType }>(endpoint.updateConnection(id), data)).data.data;
 };
 
 export const setConnectionCredentials = async (

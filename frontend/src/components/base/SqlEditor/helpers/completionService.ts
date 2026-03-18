@@ -3,10 +3,10 @@ import { CompletionItemInsertTextRule, CompletionItemKind, SQL_KEYWORDS } from '
 import { getColumns, getDataBasesAndSchemas, getTables, getViews } from './dbMetaProvider';
 import { getAllTableNames, getSqlFunctions, getTableForAlias, parseSqlContext } from './sqlParser';
 
-export const completionService = async (
+export const completionService = (
   model: Monaco.editor.ITextModel,
   position: Monaco.Position
-): Promise<Monaco.languages.CompletionList> => {
+): Monaco.languages.CompletionList => {
   const word = model.getWordUntilPosition(position);
   const range = {
     startLineNumber: position.lineNumber,
@@ -77,7 +77,7 @@ export const completionService = async (
           ...columns.map((col) => ({
             ...col,
             range,
-            label: `${tableName}.${col.label}`,
+            label: `${tableName}.${col.label as string}`,
             insertText: `${tableName}.${col.insertText}`,
             detail: `${col.detail} from ${tableName}`
           }))

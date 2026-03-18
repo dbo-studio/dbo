@@ -4,6 +4,7 @@ import pluginReact from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import { defineConfig } from 'eslint/config';
 import globals from 'globals';
+import path from 'node:path';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
@@ -19,9 +20,17 @@ export default defineConfig([
     ]
   },
   js.configs.recommended,
-  ...tseslint.configs.recommended,
+  ...tseslint.configs.recommendedTypeChecked,
   pluginReact.configs.flat.recommended,
   ...pluginQuery.configs['flat/recommended'],
+  {
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: path.dirname(new URL(import.meta.url).pathname)
+      }
+    }
+  },
   {
     settings: {
       react: {

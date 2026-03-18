@@ -54,7 +54,7 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
       onClose();
       form.reset();
 
-      useDataStore.getState().runQuery();
+      await useDataStore.getState().runQuery();
       useDataStore.getState().toggleReRunQuery();
     },
     defaultValues: {
@@ -122,7 +122,7 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
                     value={field.state.value}
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-ignore
-                    onChange={(value) => field.handleChange(value.value)}
+                    onChange={(value) => field.handleChange(value.value as string)}
                     label={locales.format}
                   />
                 </FormControl>
@@ -177,7 +177,7 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
             <Button size='small' onClick={handleCloseModal}>
               {locales.cancel}
             </Button>
-            <Button onClick={() => form.handleSubmit()} variant='contained' size='small'>
+            <Button onClick={() => void form.handleSubmit()} variant='contained' size='small'>
               {locales.import}
             </Button>
           </Box>

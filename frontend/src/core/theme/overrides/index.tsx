@@ -20,5 +20,5 @@ export default function ComponentsOverrides(theme: Theme): Components {
     Menu(theme),
     Table(theme),
     Switch(theme)
-  );
+  ) as Components;
 }

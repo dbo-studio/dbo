@@ -82,11 +82,11 @@ const DataGridTableRow = memo(
           const columnId = column.name;
           const value =
             row[columnId] !== undefined &&
-              (typeof row[columnId] === 'string' ||
-                typeof row[columnId] === 'number' ||
-                typeof row[columnId] === 'boolean' ||
-                row[columnId] === null)
-              ? (row[columnId] as string | number | boolean | null)
+            (typeof row[columnId] === 'string' ||
+              typeof row[columnId] === 'number' ||
+              typeof row[columnId] === 'boolean' ||
+              row[columnId] === null)
+              ? row[columnId]
               : undefined;
 
           const isSearchMatch =
@@ -94,8 +94,8 @@ const DataGridTableRow = memo(
               ? value.toLowerCase().includes(searchTerm.toLowerCase())
               : searchTerm
                 ? String(value ?? '')
-                  .toLowerCase()
-                  .includes(searchTerm.toLowerCase())
+                    .toLowerCase()
+                    .includes(searchTerm.toLowerCase())
                 : false;
 
           const isCurrentMatch = currentMatch?.rowIndex === rowIndex && currentMatch?.columnIndex === columnIndex;

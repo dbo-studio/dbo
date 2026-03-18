@@ -17,113 +17,120 @@ export default function DataGridTableHeaderRow({
   startResize,
   resizingColumnId
 }: DataGridTableHeaderRowProps): JSX.Element {
-  const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
   const selectedTab = useSelectedTab<DataTabType>();
-  const removeSort = useTabStore((state) => state.removeSort);
-  const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
-  const updateSorts = useTabStore((state) => state.updateSorts);
-  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
+
+  const rows = useDataStore((s) => s.rows);
+  const updateSelectedRows = useDataStore((s) => s.updateSelectedRows);
+  const toggleReRunQuery = useDataStore((s) => s.toggleReRunQuery);
+
+  const removeSort = useTabStore((s) => s.removeSort);
+  const updateSorts = useTabStore((s) => s.updateSorts);
+  const updateSelectedTab = useTabStore((s) => s.updateSelectedTab);
+
+  const sorts = selectedTab?.sorts ?? [];
 
   const getColumnSort = useCallback(
-    (columnName: string) => {
-      if (!selectedTab?.sorts) return null;
-      return selectedTab.sorts.find((sort) => sort.column === columnName && sort.isActive) ?? null;
-    },
-    [selectedTab?.sorts]
+    (column: string) => sorts.find((s) => s.column === column && s.isActive) ?? null,
+    [sorts]
   );
 
+  const resetPaginationIfNeeded = useCallback(() => {
+    if ((selectedTab?.pagination?.page ?? 0) <= 1) return;
+
+    const pagination = { ...(selectedTab?.pagination ?? { page: 1, limit: 100 }), page: 1 };
+
+    updateSelectedTab({
+      ...(selectedTab ?? ({} as TabType)),
+      pagination
+    });
+  }, [selectedTab, updateSelectedTab]);
+
   const handleColumnSort = useCallback(
-    async (columnName: string, e: React.MouseEvent): Promise<void> => {
+    (column: string, e: React.MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.closest('[data-resizer]') || target.closest('input[type="checkbox"]') || target.tagName === 'INPUT') {
-        return;
-      }
+
+      if (target.closest('[data-resizer]') || target.closest('input')) return;
 
       e.stopPropagation();
-      const currentSort = getColumnSort(columnName);
+
+      const currentSort = getColumnSort(column);
 
       if (!currentSort) {
-        await updateSorts([
+        updateSorts([
           {
             index: tools.uuid(),
-            column: columnName,
+            column,
             operator: PgsqlSorts[0],
             isActive: true
           }
         ]);
       } else if (currentSort.operator === PgsqlSorts[0]) {
-        await updateSorts([
-          {
-            ...currentSort,
-            operator: PgsqlSorts[1]
-          }
-        ]);
+        updateSorts([{ ...currentSort, operator: PgsqlSorts[1] }]);
       } else {
         removeSort(currentSort);
       }
 
-      if (selectedTab?.pagination?.page ?? 0 > 1) {
-        const pagination = selectedTab?.pagination ?? { page: 1, limit: 100 };
-        pagination.page = 1;
-        updateSelectedTab({
-          ...(selectedTab ?? ({} as TabType)),
-          pagination
-        });
-      }
-
+      resetPaginationIfNeeded();
       toggleReRunQuery();
     },
-    [getColumnSort, updateSorts, removeSort, toggleReRunQuery]
+    [getColumnSort, removeSort, resetPaginationIfNeeded, toggleReRunQuery, updateSorts]
   );
+
+  const handleSelectAll = useCallback(
+    (checked: boolean) => {
+      if (!checked) {
+        updateSelectedRows([], true);
+        return;
+      }
+
+      const allRows =
+        rows?.map((row, index) => ({
+          index,
+          selectedColumn: '',
+          row
+        })) ?? [];
+
+      updateSelectedRows(allRows, true);
+    },
+    [rows, updateSelectedRows]
+  );
+
+  const getSortIcon = (operator?: string) => {
+    if (operator === 'ASC') return 'arrowUp';
+    if (operator === 'DESC') return 'arrowDown';
+    return 'sort';
+  };
 
   return (
     <StyledTableHead>
       <StyledTableRow>
         {columns.map((column) => {
-          const isCurrentColumnResizing = resizingColumnId === column.name;
+          const isResizing = resizingColumnId === column.name;
 
           if (column.name === 'select') {
             return (
-              <SelectTableHeader key={column.name}>
+              <SelectTableHeader key='select'>
                 <Checkbox
-                  sx={{ padding: 0 }}
-                  size={'small'}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>): void => {
-                    if (e.target.checked) {
-                      const rows = useDataStore.getState().rows ?? [];
-                      const allRows = rows.map((row, index) => ({
-                        index,
-                        selectedColumn: '',
-                        row
-                      }));
-                      updateSelectedRows(allRows, true);
-                    } else {
-                      updateSelectedRows([], true);
-                    }
-                  }}
-                  onClick={(e: React.MouseEvent): void => {
-                    e.stopPropagation();
-                  }}
+                  sx={{ p: 0 }}
+                  size='small'
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  onClick={(e) => e.stopPropagation()}
                 />
               </SelectTableHeader>
             );
           }
 
           const columnSort = getColumnSort(column.name);
-          const sortIcon =
-            columnSort?.operator === 'ASC' ? 'arrowUp' : columnSort?.operator === 'DESC' ? 'arrowDown' : 'sort';
+          const sortIcon = getSortIcon(columnSort?.operator);
 
           return (
-            <SortableTableHeader key={column.name} onClick={(e): Promise<void> => handleColumnSort(column.name, e)}>
+            <SortableTableHeader key={column.name} onClick={(e) => handleColumnSort(column.name, e)}>
               <Box display='flex' alignItems='center' gap={0.5}>
                 <span>{column.name}</span>
                 <CustomIcon type={sortIcon} size='xs' />
               </Box>
-              <DataGridResizer
-                columnId={column.name}
-                isResizing={isCurrentColumnResizing}
-                onResizeStart={startResize}
-              />
+
+              <DataGridResizer columnId={column.name} isResizing={isResizing} onResizeStart={startResize} />
             </SortableTableHeader>
           );
         })}

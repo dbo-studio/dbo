@@ -28,17 +28,17 @@ export default function ConnectionInfo(): JSX.Element {
   const addEditorTab = useTabStore((state) => state.addEditorTab);
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
-  useShortcut(shortcuts.reloadTab, () => handleRefresh());
+  useShortcut(shortcuts.reloadTab, () => void handleRefresh());
 
   const handleAddEditorTab = (): void => {
     const tab = addEditorTab();
     updateSelectedTab(tab);
   };
 
-  const handleRefresh = (): void => {
+  const handleRefresh = async (): Promise<void> => {
     const selectedTab = useTabStore.getState().selectedTab();
 
-    queryClient.invalidateQueries({
+    await queryClient.invalidateQueries({
       queryKey: ['connections']
     });
 
@@ -46,12 +46,12 @@ export default function ConnectionInfo(): JSX.Element {
       return;
     }
 
-    reloadTree(false);
+    await reloadTree(false);
 
     if (!selectedTab) return;
 
     if (selectedTab?.mode === TabMode.Query) {
-      runRawQuery();
+      await runRawQuery();
       return;
     }
 
@@ -84,7 +84,7 @@ export default function ConnectionInfo(): JSX.Element {
           <Tooltip title={locales.refresh}>
             <IconButton
               aria-label={'refresh'}
-              onClick={handleRefresh}
+              onClick={() => void handleRefresh()}
               loading={loading === 'loading'}
               disabled={loading === 'loading'}
             >

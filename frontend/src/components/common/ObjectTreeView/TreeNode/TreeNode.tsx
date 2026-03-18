@@ -128,8 +128,8 @@ export default function TreeNode({
         level={level}
         nodeIndex={nodeIndex}
         focusNode={focusNode}
-        actionDetection={actionDetection}
-        expandNode={handleExpandNode}
+        actionDetection={(event, node) => void actionDetection(event, node)}
+        expandNode={(event, moveFocusToChild) => handleExpandNode(event, moveFocusToChild)}
         handleContextMenu={handleContextMenu}
         handleBlur={handleBlur}
         handleKeyDown={handleKeyDown}

@@ -18,7 +18,8 @@ export default function MenuPanel({ tabs, onChange, defaultTabId }: MenuPanelPro
     tools
       .isTauri()
       .then((e) => e ?? setIsDesktop(e))
-      .catch();
+      .catch((e) => console.debug('🚀 ~ MenuPanel ~ e:', e));
+
     onChange(selectedTabContent);
   }, [selectedTabId]);
 

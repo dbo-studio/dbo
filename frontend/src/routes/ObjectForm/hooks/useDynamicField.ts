@@ -44,7 +44,7 @@ const buildCacheKey = (fieldId: string, dependsOn: FieldDependencyType, formValu
         .join(',')
     : '';
 
-  return `${fieldId}_${dependsOn.fieldId}_${dependentValue}_${params}`;
+  return `${fieldId}_${dependsOn.fieldId}_${dependentValue.toString()}_${params}`;
 };
 
 export const useDynamicField = (
@@ -158,7 +158,7 @@ export const useDynamicField = (
 
     dependentFields.forEach((field) => {
       if (!field.dependsOn) return;
-      fetchDynamicOptions(field, field.dependsOn);
+      fetchDynamicOptions(field, field.dependsOn).catch((e) => console.debug('🚀 ~ useDynamicField ~ e:', e));
     });
   }, [fields, formValues, fetchDynamicOptions]);
 

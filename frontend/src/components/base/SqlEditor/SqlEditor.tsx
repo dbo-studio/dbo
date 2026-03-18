@@ -2,7 +2,7 @@ import type { SqlEditorProps } from '@/components/base/SqlEditor/types.ts';
 import { shortcuts } from '@/core/utils/shortcuts.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
-import Editor, { type OnMount } from '@monaco-editor/react';
+import Editor, { useMonaco, type OnMount } from '@monaco-editor/react';
 import { Box, CircularProgress } from '@mui/material';
 import type * as Monaco from 'monaco-editor';
 import { useEffect, useRef, useState, type JSX } from 'react';
@@ -24,6 +24,7 @@ export default function SqlEditor({
   const boxRef = useRef<HTMLDivElement>(null);
   const [editor, setEditor] = useState<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const theme = useSettingStore((state) => state.theme);
+  const monaco = useMonaco();
   const selectedTabId = useTabStore((state) => state.selectedTabId);
 
   useInlineAITrigger(editor);
@@ -68,6 +69,14 @@ export default function SqlEditor({
     }
   }, [selectedTabId]);
 
+  useEffect(() => {
+    if (monaco) {
+      void (async () => {
+        await setupLanguage(monaco, theme.editorTheme);
+      })();
+    }
+  }, [monaco, theme.editorTheme]);
+
   return (
     <Box ref={boxRef} width='100%' height='100%'>
       <Editor
@@ -80,7 +89,6 @@ export default function SqlEditor({
           ...editorConfig,
           fontSize: theme.editorFontSize
         }}
-        beforeMount={setupLanguage}
         onMount={handleEditorDidMount}
         onChange={handleEditorChange}
         loading={

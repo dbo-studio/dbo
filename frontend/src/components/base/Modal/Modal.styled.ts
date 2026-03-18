@@ -3,7 +3,7 @@ import { Box, Modal, styled } from '@mui/material';
 
 export const ModalStyled = styled(Modal)(() => ({})) as typeof Modal;
 
-export const ModalWrapperStyled = styled(Box)(({ theme }) => ({
+export const ModalWrapperStyled = styled(Box)<{ padding: string | undefined }>(({ theme, padding }) => ({
   minHeight: '400px',
   minWidth: '400px',
   borderRadius: variables.radius.medium,
@@ -12,10 +12,10 @@ export const ModalWrapperStyled = styled(Box)(({ theme }) => ({
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  padding: theme.spacing(2),
+  padding: padding ?? theme.spacing(2),
   display: 'flex',
   flexDirection: 'column',
   ':focus-visible': {
     outline: 'unset'
   }
-})) as typeof Box;
+}));

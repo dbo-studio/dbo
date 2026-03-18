@@ -30,16 +30,17 @@ export default function SQLite({
   const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
-    tools.isTauri().then((result) => {
-      setIsDesktop(result);
-    });
+    tools
+      .isTauri()
+      .then((result) => setIsDesktop(result))
+      .catch((e) => console.log('🚀 ~ SQLite ~ e:', e));
   }, []);
 
   const form = useForm({
     validators: {
       onSubmit: formSchema
     },
-    onSubmit: async ({ value }): Promise<void> => {
+    onSubmit: ({ value }): void => {
       const data = {
         name: value.name,
         type: 'sqlite',
@@ -81,7 +82,7 @@ export default function SQLite({
           onSubmit={(e): void => {
             e.preventDefault();
             e.stopPropagation();
-            form.handleSubmit().then();
+            void form.handleSubmit().then();
           }}
         >
           <form.Field name='name'>
@@ -108,7 +109,9 @@ export default function SQLite({
                     error={field.state.meta.errors.length > 0}
                     label={locales.file}
                     onChange={(e): void => field.handleChange(e.target.value)}
-                    endAdornment={isDesktop && <CustomIcon type='ellipsisVertical' onClick={handleFileSelect} />}
+                    endAdornment={
+                      isDesktop && <CustomIcon type='ellipsisVertical' onClick={() => void handleFileSelect()} />
+                    }
                   />
                 </Box>
                 <FormError mb={1} errors={field.state.meta.errors} />
@@ -129,7 +132,7 @@ export default function SQLite({
             loading={pingLoading}
             onClick={(): void => {
               form.state.values.isPing = true;
-              form.handleSubmit().then();
+              void form.handleSubmit().then();
             }}
             size='small'
             variant='contained'
@@ -143,7 +146,7 @@ export default function SQLite({
             loading={submitLoading}
             onClick={(): void => {
               form.state.values.isPing = false;
-              form.handleSubmit().then();
+              void form.handleSubmit().then();
             }}
             size='small'
             variant='contained'

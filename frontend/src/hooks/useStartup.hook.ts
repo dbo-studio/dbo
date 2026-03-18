@@ -40,13 +40,15 @@ export const useStartup = (): boolean => {
 
   useEffect(() => {
     if (debug) {
-      import('eruda').then((eruda) => {
-        try {
-          eruda.default.init();
-        } catch {
-          // Ignore error
-        }
-      });
+      import('eruda')
+        .then((eruda) => {
+          try {
+            eruda.default.init();
+          } catch {
+            // Ignore error
+          }
+        })
+        .catch((e) => console.debug('🚀 ~ useStartup ~ e:', e));
     }
   }, [debug]);
 

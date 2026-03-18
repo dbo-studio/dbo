@@ -9,16 +9,16 @@ export type AIThread = {
 
 export type AiProviderSlice = {
   providers: AiProviderType[] | undefined;
-  updateProviders: (providers: AiProviderType[]) => Promise<void>;
-  updateProvider: (provider: AiProviderType) => Promise<void>;
+  updateProviders: (providers: AiProviderType[]) => void;
+  updateProvider: (provider: AiProviderType) => void;
 };
 
 export type AiChatSlice = {
   chats: AiChatType[];
   currentChat: AiChatType | undefined;
   updateCurrentChat: (chat: AiChatType | undefined) => void;
-  updateChats: (chats: AiChatType[]) => Promise<void>;
-  addChat: (chat: AiChatType) => Promise<void>;
+  updateChats: (chats: AiChatType[]) => void;
+  addChat: (chat: AiChatType) => void;
   addMessage: (chat: AiChatType, messages: AiMessageType[]) => AiChatType;
 };
 

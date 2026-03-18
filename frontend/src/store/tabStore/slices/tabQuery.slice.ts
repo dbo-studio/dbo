@@ -7,7 +7,7 @@ const STORAGE_KEY = 'dbo_tab_queries';
 const getStoredQueries = (): Record<string, string> => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : {};
+    return stored ? (JSON.parse(stored) as Record<string, string>) : {};
   } catch {
     return {};
   }
@@ -30,7 +30,7 @@ export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [],
     const storedQuery = storedQueries[tab];
 
     if (storedQuery && tools.isValidJSON(storedQuery)) {
-      return JSON.parse(storedQuery);
+      return JSON.parse(storedQuery) as string;
     }
 
     return storedQuery ?? '';

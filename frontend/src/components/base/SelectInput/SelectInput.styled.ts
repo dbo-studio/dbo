@@ -1,4 +1,3 @@
-import { ThemeModeEnum } from '@/core/enums';
 import { variables } from '@/core/theme/variables.ts';
 import type { Theme } from '@mui/material/styles';
 import type { CSSObjectWithLabel, GroupBase, StylesConfig } from 'react-select';
@@ -22,9 +21,9 @@ export const SelectInputStyles = (
       ? `1px solid ${theme.palette.error.main}`
       : `1px solid ${
           isFocused
-            ? theme.palette.mode === ThemeModeEnum.Dark
+            ? theme.palette.mode === 'dark'
               ? theme.palette.primary.dark
-              : theme.palette.primary
+              : theme.palette.primary.light
             : theme.palette.divider
         }`,
     alignItems: 'center'

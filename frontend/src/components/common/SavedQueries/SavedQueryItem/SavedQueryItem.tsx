@@ -82,7 +82,11 @@ export default function SavedQueryItem({
           <IconButton onClick={handleDiscardChanges}>
             <CustomIcon type='close' size='xs' />
           </IconButton>
-          <IconButton loading={isPending} disabled={query.name === name || isPending} onClick={handleSaveChange}>
+          <IconButton
+            loading={isPending}
+            disabled={query.name === name || isPending}
+            onClick={() => void handleSaveChange()}
+          >
             <CustomIcon type='check' size='xs' />
           </IconButton>
         </>

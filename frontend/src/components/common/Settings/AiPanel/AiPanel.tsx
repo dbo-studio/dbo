@@ -60,11 +60,7 @@ export default function AiPanel() {
   });
 
   const handleSubmit = () => {
-    try {
-      updateProviderMutation(provider as AiProviderType);
-    } catch (error) {
-      console.debug('🚀 ~ handleSubmit ~ error:', error);
-    }
+    updateProviderMutation(provider as AiProviderType).catch((e) => console.debug('🚀 ~ handleSubmit ~ error:', e));
   };
 
   return (

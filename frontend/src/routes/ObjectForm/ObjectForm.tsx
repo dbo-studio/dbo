@@ -102,8 +102,8 @@ export default function ObjectForm({ isDetail }: { isDetail: boolean }): React.J
           </Box>
 
           <FormStatusBar
-            onSave={handleSaveClick}
-            onCancel={handleCancel}
+            onSave={() => void handleSaveClick()}
+            onCancel={() => void handleCancel()}
             onAddRow={formDataState.isArray ? handleAddRow : undefined}
             isArrayForm={formDataState.isArray}
             disabled={isSaving}

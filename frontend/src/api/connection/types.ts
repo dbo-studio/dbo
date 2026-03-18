@@ -32,7 +32,14 @@ export type PostgresqlOptionsType = {
   uri?: string;
 };
 
-export type MysqlOptionsType = PostgresqlOptionsType;
+export type MysqlOptionsType = {
+  host?: string;
+  port?: number;
+  username?: string;
+  password?: string;
+  database?: string;
+  uri?: string;
+};
 
 export type SQLiteOptionsType = {
   file?: string;

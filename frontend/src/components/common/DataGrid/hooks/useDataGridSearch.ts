@@ -43,12 +43,11 @@ export function useDataGridSearch({ rows, columns }: UseDataGridSearchProps): Us
     rows.forEach((row, rowIndex) => {
       columns.forEach((column, columnIndex) => {
         const columnId = column.name;
-        // Skip checkbox column
         if (columnId === 'select') {
           return;
         }
 
-        const value = row[columnId];
+        const value = row[columnId] as string;
         const valueString = value == null ? 'NULL' : String(value);
         const valueLower = valueString.toLowerCase();
 
@@ -67,7 +66,6 @@ export function useDataGridSearch({ rows, columns }: UseDataGridSearchProps): Us
     return results;
   }, [rows, columns, searchTerm]);
 
-  // Reset current match index when search term or matches change
   useEffect(() => {
     if (matches.length > 0) {
       setCurrentMatchIndex(0);

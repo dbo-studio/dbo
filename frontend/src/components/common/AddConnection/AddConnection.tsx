@@ -38,12 +38,7 @@ export default function AddConnection(): JSX.Element {
   const updateUI = useSettingStore((state) => state.updateUI);
 
   const { mutateAsync: createConnectionMutation, isPending: createConnectionPending } = useMutation({
-    mutationFn: api.connection.createConnection,
-    onSuccess: (): void => {
-      queryClient.invalidateQueries({
-        queryKey: ['connections']
-      });
-    }
+    mutationFn: api.connection.createConnection
   });
 
   const { mutateAsync: pingConnectionMutation, isPending: pingConnectionPending } = useMutation({
@@ -81,6 +76,9 @@ export default function AddConnection(): JSX.Element {
 
     try {
       await createConnectionMutation(data);
+      await queryClient.invalidateQueries({
+        queryKey: ['connections']
+      });
       handleClose();
       toast.success(locales.connection_create_success);
     } catch (error) {
@@ -98,8 +96,8 @@ export default function AddConnection(): JSX.Element {
           pingLoading={pingConnectionPending}
           submitLoading={createConnectionPending}
           onClose={handleClose}
-          onPing={handlePingConnection}
-          onSubmit={handleCreateConnection}
+          onPing={(data) => void handlePingConnection(data)}
+          onSubmit={(data) => void handleCreateConnection(data)}
         />
       )}
     </Modal>

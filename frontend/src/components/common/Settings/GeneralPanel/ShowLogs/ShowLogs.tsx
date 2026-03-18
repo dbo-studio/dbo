@@ -33,7 +33,7 @@ export function ShowLogs() {
           </Typography>
         </Box>
 
-        <Button variant={'outlined'} size={'small'} onClick={handleOpenLogs}>
+        <Button variant={'outlined'} size={'small'} onClick={() => void handleOpenLogs()}>
           {locales.open}
         </Button>
       </Box>

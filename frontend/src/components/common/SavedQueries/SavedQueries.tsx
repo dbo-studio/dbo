@@ -44,13 +44,12 @@ export default function SavedQueries(): JSX.Element {
     initialPageParam: 1
   });
 
-  const handleLoadMore = (): void => {
+  const handleLoadMore = async (): Promise<void> => {
     const currentScrollPos = listRef.current?.scrollTop;
-    fetchNextPage().then(() => {
-      if (listRef.current && currentScrollPos !== undefined) {
-        listRef.current.scrollTop = currentScrollPos;
-      }
-    });
+    await fetchNextPage();
+    if (listRef.current && currentScrollPos !== undefined) {
+      listRef.current.scrollTop = currentScrollPos;
+    }
   };
 
   const handleRefresh = async (): Promise<void> => {
@@ -77,7 +76,7 @@ export default function SavedQueries(): JSX.Element {
             <Box flex={1}>
               <Search onChange={(name): void => setSearch(name)} />
             </Box>
-            <IconButton onClick={handleRefresh}>
+            <IconButton onClick={() => void handleRefresh()}>
               <CustomIcon size='s' type={'refresh'} />
             </IconButton>
           </Stack>
@@ -91,7 +90,7 @@ export default function SavedQueries(): JSX.Element {
               filteredSavedQueries.map((query) => (
                 <SavedQueryItem
                   context={handleContextMenu}
-                  onChange={handleRefresh}
+                  onChange={() => void handleRefresh()}
                   onClick={(): void => setSelected(query)}
                   key={query.id}
                   query={query}
@@ -112,7 +111,7 @@ export default function SavedQueries(): JSX.Element {
                 loadingPosition='start'
                 disabled={isFetchingNextPage}
                 loading={isFetchingNextPage}
-                onClick={handleLoadMore}
+                onClick={() => void handleLoadMore()}
                 fullWidth
                 variant='contained'
               >

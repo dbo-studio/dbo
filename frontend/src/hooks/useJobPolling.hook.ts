@@ -26,6 +26,70 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
     mutationFn: api.job.cancel
   });
 
+  const initialFetch = async () => {
+    try {
+      if (!jobId) return;
+      const jobData = await getJobMutation(jobId);
+
+      setJob(jobData);
+      setError(null);
+
+      options.onStatusChange?.(jobData.status, jobData.message);
+      options.onProgress?.(jobData.progress, jobData.message);
+
+      if (jobData.result) {
+        options.onResult?.(jobData.result);
+      }
+
+      if (jobData.error) {
+        options.onError?.(jobData.error);
+      }
+
+      if (jobData.status === 'completed' || jobData.status === 'failed' || jobData.status === 'cancelled') {
+        setIsPolling(false);
+        options.onComplete?.(jobData);
+        return;
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch job status');
+      console.error('Error fetching job status:', err);
+    }
+  };
+
+  const refetchApi = async () => {
+    try {
+      if (!jobId) return;
+      const jobData = await getJobMutation(jobId);
+
+      setJob(jobData);
+      setError(null);
+
+      options.onStatusChange?.(jobData.status, jobData.message);
+      options.onProgress?.(jobData.progress, jobData.message);
+
+      if (jobData.result) {
+        options.onResult?.(jobData.result);
+      }
+
+      if (jobData.error) {
+        options.onError?.(jobData.error);
+      }
+
+      if (jobData.status === 'completed' || jobData.status === 'failed' || jobData.status === 'cancelled') {
+        setIsPolling(false);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        options.onComplete?.(jobData);
+        return;
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch job status');
+      console.debug('🚀 ~ useJobPolling ~ err:', err);
+    }
+  };
+
   useEffect(() => {
     if (!jobId) {
       setJob(null);
@@ -34,69 +98,10 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
     }
 
     setIsPolling(true);
+    initialFetch().catch((e) => console.debug('🚀 ~ useJobPolling ~ e:', e));
 
-    const initialFetch = async () => {
-      try {
-        const jobData = await getJobMutation(jobId);
-
-        setJob(jobData);
-        setError(null);
-
-        options.onStatusChange?.(jobData.status, jobData.message);
-        options.onProgress?.(jobData.progress, jobData.message);
-
-        if (jobData.result) {
-          options.onResult?.(jobData.result);
-        }
-
-        if (jobData.error) {
-          options.onError?.(jobData.error);
-        }
-
-        if (jobData.status === 'completed' || jobData.status === 'failed' || jobData.status === 'cancelled') {
-          setIsPolling(false);
-          options.onComplete?.(jobData);
-          return;
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch job status');
-        console.error('Error fetching job status:', err);
-      }
-    };
-
-    initialFetch();
-
-    intervalRef.current = setInterval(async () => {
-      try {
-        const jobData = await getJobMutation(jobId);
-
-        setJob(jobData);
-        setError(null);
-
-        options.onStatusChange?.(jobData.status, jobData.message);
-        options.onProgress?.(jobData.progress, jobData.message);
-
-        if (jobData.result) {
-          options.onResult?.(jobData.result);
-        }
-
-        if (jobData.error) {
-          options.onError?.(jobData.error);
-        }
-
-        if (jobData.status === 'completed' || jobData.status === 'failed' || jobData.status === 'cancelled') {
-          setIsPolling(false);
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
-          options.onComplete?.(jobData);
-          return;
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch job status');
-        console.debug('🚀 ~ useJobPolling ~ err:', err);
-      }
+    intervalRef.current = setInterval(() => {
+      refetchApi().catch((e) => console.debug('🚀 ~ useJobPolling ~ e:', e));
     }, options.pollingInterval || 1000);
 
     return () => {

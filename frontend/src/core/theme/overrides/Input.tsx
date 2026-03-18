@@ -1,4 +1,3 @@
-import { ThemeModeEnum } from '@/core/enums';
 import type { Components, Theme } from '@mui/material/styles';
 import { variables } from '../variables';
 
@@ -20,7 +19,7 @@ export default function Input(theme: Theme): Components {
             border: `1px solid ${theme.palette.error.main} !important`
           },
           '&.Mui-focused': {
-            borderBottom: `1px solid ${theme.palette.mode === ThemeModeEnum.Dark ? theme.palette.primary.dark : theme.palette.primary.light}`
+            borderBottom: `1px solid ${theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.light}`
           },
           ':before': {
             borderBottom: 'none !important'
@@ -49,7 +48,7 @@ export default function Input(theme: Theme): Components {
             ':focus': {
               background: 'transparent'
             }
-          },
+          }
         }
       }
     },
@@ -57,8 +56,8 @@ export default function Input(theme: Theme): Components {
       styleOverrides: {
         root: {
           color: theme.palette.text.text,
-          "& .MuiTypography-root": {
-            fontSize: "13px"
+          '& .MuiTypography-root': {
+            fontSize: '13px'
           }
         }
       }

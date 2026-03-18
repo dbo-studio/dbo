@@ -9,7 +9,9 @@ export default function SyntaxHighlighter({ value }: SyntaxHighlighterProps): JS
   const theme = useSettingStore((state) => state.theme.editorTheme);
 
   useEffect(() => {
-    shikiWrapper(value, theme).then((_html) => setHtml(_html));
+    shikiWrapper(value, theme)
+      .then((_html) => setHtml(_html))
+      .catch((e) => console.debug('🚀 ~ SyntaxHighlighter ~ e:', e));
   }, [value, theme]);
 
   return (

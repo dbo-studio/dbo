@@ -27,14 +27,7 @@ export const useActionDetection = (
   const [, copy] = useCopyToClipboard();
 
   const { mutateAsync: executeActionMutation, isPending: pendingExecuteAction } = useMutation({
-    mutationFn: api.tree.executeAction,
-    onSuccess: async (_, variables): Promise<void> => {
-      const selectedTab = useTabStore.getState().selectedTab();
-      queryClient.invalidateQueries({
-        queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.action, variables.nodeId]
-      });
-      await reloadTree(false);
-    }
+    mutationFn: api.tree.executeAction
   });
 
   const actionDetection = useCallback(
@@ -68,30 +61,38 @@ export const useActionDetection = (
           confirmModal.danger(
             `Confirm ${node.action.title}`,
             `Are you sure you want to ${node.action.title} ${node.name}?`,
-            async () => {
-              if (pendingExecuteAction) {
-                return;
-              }
+            () => {
+              void (async () => {
+                if (pendingExecuteAction) {
+                  return;
+                }
 
-              try {
-                const selectedTab = useTabStore.getState().selectedTab();
-                await executeActionMutation({
-                  nodeId: node.id,
-                  action: node.action.name,
-                  connectionId: currentConnection.id,
-                  /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
-                  // @ts-ignore
-                  data: {
-                    [selectedTab?.id ?? '']: {
-                      [node.id]: {}
+                try {
+                  const selectedTab = useTabStore.getState().selectedTab();
+                  await executeActionMutation({
+                    nodeId: node.id,
+                    action: node.action.name,
+                    connectionId: currentConnection.id,
+                    /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+                    // @ts-ignore
+                    data: {
+                      [selectedTab?.id ?? '']: {
+                        [node.id]: {}
+                      }
                     }
-                  }
-                });
+                  });
 
-                toast.success(locales.action_executed_successfully);
-              } catch (error) {
-                console.debug('🚀 ~ actionDetection ~ error:', error);
-              }
+                  await queryClient.invalidateQueries({
+                    queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.action, node.id]
+                  });
+
+                  await reloadTree(false);
+
+                  toast.success(locales.action_executed_successfully);
+                } catch (error) {
+                  console.debug('🚀 ~ actionDetection ~ error:', error);
+                }
+              })();
             }
           );
           break;

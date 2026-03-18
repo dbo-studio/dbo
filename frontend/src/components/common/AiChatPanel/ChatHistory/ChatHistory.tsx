@@ -35,12 +35,7 @@ export default function ChatHistory() {
   });
 
   const { mutateAsync: deleteChatMutation } = useMutation({
-    mutationFn: api.aiChat.deleteChat,
-    onSuccess: (): void => {
-      queryClient.invalidateQueries({
-        queryKey: ['aiChatHistory', currentConnectionId]
-      });
-    }
+    mutationFn: api.aiChat.deleteChat
   });
 
   const handleSelectChat = useCallback(
@@ -49,7 +44,7 @@ export default function ChatHistory() {
 
       const foundChat = chats.find((c) => c.id === item.id);
       if (!foundChat) {
-        await addChat(item);
+        addChat(item);
       }
 
       try {
@@ -70,12 +65,15 @@ export default function ChatHistory() {
     async (chat: AiChatType) => {
       try {
         await deleteChatMutation(chat.id);
+        await queryClient.invalidateQueries({
+          queryKey: ['aiChatHistory', currentConnectionId]
+        });
 
         const newChats = chats.filter((c) => c.id !== chat.id);
         updateChats(newChats);
         if (currentChat?.id === chat.id) {
           if (newChats.length > 0) {
-            handleSelectChat(newChats[newChats.length - 1]);
+            await handleSelectChat(newChats[newChats.length - 1]);
           } else {
             updateCurrentChat(undefined);
           }
@@ -103,8 +101,8 @@ export default function ChatHistory() {
             <ChatHistoryItem
               key={tools.uuid()}
               item={item}
-              onClick={() => handleSelectChat(item)}
-              onDelete={() => handleDelete(item)}
+              onClick={() => void handleSelectChat(item)}
+              onDelete={() => void handleDelete(item)}
             />
           ))}
         </ChatHistoryStyled>

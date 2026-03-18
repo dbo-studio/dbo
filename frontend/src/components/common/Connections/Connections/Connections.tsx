@@ -51,13 +51,6 @@ export default function Connections(): JSX.Element {
     onMutate: (id: number): void => {
       setLoadingConnectionId(id);
       updateLoading('loading');
-    },
-    onSuccess: (c: ConnectionType): void => {
-      updateLoading('finished');
-      updateCurrentConnection(c);
-      queryClient.invalidateQueries({
-        queryKey: ['connections']
-      });
     }
   });
 
@@ -78,6 +71,11 @@ export default function Connections(): JSX.Element {
     }
     try {
       await updateConnectionMutation(c.id);
+      updateLoading('finished');
+      updateCurrentConnection(c);
+      await queryClient.invalidateQueries({
+        queryKey: ['connections']
+      });
       updateSelectedTab(tabs.find((t) => t.connectionId === c.id));
     } catch (error) {
       updateLoading('error');
@@ -93,7 +91,7 @@ export default function Connections(): JSX.Element {
       {connections?.map((c: ConnectionType) => (
         <ConnectionItem
           loading={pendingUpdateConnection && loadingConnectionId === c.id}
-          onClick={(): Promise<void> => handleChangeCurrentConnection(c)}
+          onClick={() => void handleChangeCurrentConnection(c)}
           key={tools.uuid()}
           selected={c.id === currentConnection()?.id}
           connection={c}

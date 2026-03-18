@@ -27,7 +27,7 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
   const updateRow = useDataStore((state) => state.updateRow);
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
 
-  const handleClose = (): void => {
+  const handleClose = async (): Promise<void> => {
     if (!row) {
       updateUI({ showQuickLookEditor: false });
       return;
@@ -41,10 +41,10 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
 
     const newEditedRows = handleRowChangeLog(editedRows, row.row, row.selectedColumn, rowValue, value);
 
-    updateEditedRows(newEditedRows);
+    await updateEditedRows(newEditedRows);
     const newRow = { ...row.row };
     newRow[row.selectedColumn] = value;
-    updateRow(newRow);
+    await updateRow(newRow);
     updateUI({ showQuickLookEditor: false });
   };
 
@@ -64,7 +64,7 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
 
   return (
     <ResizableModal
-      onClose={handleClose}
+      onClose={() => void handleClose()}
       open={showQuickLookEditor}
       title={`${locales.quick_look_editor} : ${row?.selectedColumn ?? ''}`}
       onResize={(width: number, height: number): void => setDimensions({ width, height })}

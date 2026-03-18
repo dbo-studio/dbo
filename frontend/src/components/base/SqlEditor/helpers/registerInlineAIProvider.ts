@@ -104,106 +104,96 @@ export function registerInlineAIProvider(monaco: typeof Monaco, languageId: stri
 
       return new Promise((resolve) => {
         // Set up debounce timer for this request
-        const timerId = setTimeout(async () => {
-          // Check if this timer was cancelled by cleanupPreviousRequest
-          if (debounceTimer !== timerId) {
-            resolve({ items: [] });
-            return;
-          }
-
-          // Clear timer reference as we're about to make the request
-          debounceTimer = null;
-
-          if (token.isCancellationRequested) {
-            resolve({ items: [] });
-            return;
-          }
-
-          const currentPosition = model.getPositionAt(model.getOffsetAt(initialPosition));
-
-          if (model.isDisposed()) {
-            resolve({ items: [] });
-            return;
-          }
-
-          // Cancel previous request if exists
-          if (currentRequest) {
-            currentRequest.abort();
-          }
-
-          // Create new AbortController for this request
-          const abortController = new AbortController();
-          const abortSignal = abortController.signal;
-          currentRequest = abortController;
-
-          try {
-            const providers = useAiStore.getState().providers;
-            const activeProvider = providers?.find((p) => p.isActive);
-
-            if (!activeProvider) {
+        const timerId = setTimeout(() => {
+          void (async () => {
+            // Check if this timer was cancelled by cleanupPreviousRequest
+            if (debounceTimer !== timerId) {
               resolve({ items: [] });
               return;
             }
 
-            const requestData: AICompleteRequest = {
-              connectionId: currentConnection()?.id ?? 0,
-              providerId: activeProvider.id,
-              model: activeProvider.model,
-              contextOpts: {
-                database: currentConnection()?.options?.database as string | undefined,
-                schema: currentConnection()?.options?.schema as string | undefined,
-                prompt: prefix,
-                suffix: suffix
+            // Clear timer reference as we're about to make the request
+            debounceTimer = null;
+
+            if (token.isCancellationRequested) {
+              resolve({ items: [] });
+              return;
+            }
+
+            const currentPosition = model.getPositionAt(model.getOffsetAt(initialPosition));
+
+            if (model.isDisposed()) {
+              resolve({ items: [] });
+              return;
+            }
+
+            if (currentRequest) {
+              currentRequest.abort();
+            }
+
+            const abortController = new AbortController();
+            const abortSignal = abortController.signal;
+            currentRequest = abortController;
+
+            try {
+              const providers = useAiStore.getState().providers;
+              const activeProvider = providers?.find((p) => p.isActive);
+
+              if (!activeProvider) {
+                resolve({ items: [] });
+                return;
               }
-            };
 
-            const completionText = await fetchCompletion(requestData, abortSignal);
+              const requestData: AICompleteRequest = {
+                connectionId: currentConnection()?.id ?? 0,
+                providerId: activeProvider.id,
+                model: activeProvider.model,
+                contextOpts: {
+                  database: currentConnection()?.options?.database as string | undefined,
+                  schema: currentConnection()?.options?.schema as string | undefined,
+                  prompt: prefix,
+                  suffix: suffix
+                }
+              };
 
-            if (abortSignal.aborted || token.isCancellationRequested) {
+              const completionText = await fetchCompletion(requestData, abortSignal);
+
+              if (abortSignal.aborted || token.isCancellationRequested) {
+                resolve({ items: [] });
+                return;
+              }
+
+              if (!model.isDisposed() && completionText.trim()) {
+                const finalPosition = model.getPositionAt(
+                  Math.min(model.getOffsetAt(currentPosition), model.getValueLength())
+                );
+
+                const completionItem = createCompletionItem(completionText, finalPosition);
+
+                resolve({
+                  items: [completionItem]
+                });
+              } else {
+                resolve({ items: [] });
+              }
+            } catch (err) {
+              if (
+                err instanceof Error &&
+                (err.name === 'CanceledError' || err.name === 'AbortError' || err.message.includes('canceled'))
+              ) {
+                resolve({ items: [] });
+                return;
+              }
+
+              console.debug('Inline AI provider error:', err);
+              useSettingStore.getState().updateEditor({ enableEditorAi: false });
               resolve({ items: [] });
-              return;
+            } finally {
+              if (currentRequest === abortController && !abortSignal.aborted) {
+                currentRequest = null;
+              }
             }
-
-            if (!model.isDisposed() && completionText.trim()) {
-              const finalPosition = model.getPositionAt(
-                Math.min(model.getOffsetAt(currentPosition), model.getValueLength())
-              );
-
-              const completionItem = createCompletionItem(completionText, finalPosition);
-              console.debug('Inline AI completion created:', {
-                textLength: completionText.length,
-                preview: completionText.substring(0, 50),
-                position: finalPosition,
-                range: completionItem.range
-              });
-              resolve({
-                items: [completionItem]
-              });
-            } else {
-              console.debug('Inline AI completion skipped:', {
-                modelDisposed: model.isDisposed(),
-                textEmpty: !completionText.trim()
-              });
-              resolve({ items: [] });
-            }
-          } catch (err) {
-            if (
-              err instanceof Error &&
-              (err.name === 'CanceledError' || err.name === 'AbortError' || err.message.includes('canceled'))
-            ) {
-              resolve({ items: [] });
-              return;
-            }
-
-            console.debug('Inline AI provider error:', err);
-            useSettingStore.getState().updateEditor({ enableEditorAi: false });
-            resolve({ items: [] });
-          } finally {
-            // Clear current request reference if this is still the active request and wasn't aborted
-            if (currentRequest === abortController && !abortSignal.aborted) {
-              currentRequest = null;
-            }
-          }
+          })();
         }, DEBOUNCE_DELAYS.inlineAIProvider);
 
         // Store timer ID so we can check if it was cancelled

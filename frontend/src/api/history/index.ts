@@ -9,10 +9,10 @@ const endpoint = {
 
 export const getHistories = async (params: HistoryRequestType): Promise<HistoryType[]> => {
   return (
-    await api.get(endpoint.getHistories(), {
+    await api.get<{ data: HistoryType[] }>(endpoint.getHistories(), {
       params
     })
-  ).data.data as HistoryType[];
+  ).data.data;
 };
 
 export const deleteHistories = async (connectionId: number): Promise<void> => {

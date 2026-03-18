@@ -41,9 +41,9 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
     []
   );
 
-  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>): Promise<void> => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
     if (e.key === 'Enter') {
-      await upsertFilters(currentFilter);
+      upsertFilters(currentFilter);
       apply();
     }
   };
@@ -65,7 +65,7 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
           value={currentFilter.column}
           disabled={columns.length === 0}
           size='small'
-          options={columns.map((c) => ({ value: c.name as string, label: c.name }))}
+          options={columns.map((c) => ({ value: c.name, label: c.name }))}
           onChange={(e): void =>
             upsertFilters(handleChange('column', (e as unknown as SelectInputOption).value as string))
           }
@@ -75,7 +75,7 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
         <SelectInput
           value={currentFilter.operator}
           size='small'
-          options={PgsqlFilterConditions.map((c) => ({ value: c as string, label: c }))}
+          options={PgsqlFilterConditions.map((c) => ({ value: c, label: c }))}
           onChange={(e): void =>
             upsertFilters(handleChange('operator', (e as unknown as SelectInputOption).value as string))
           }
@@ -96,7 +96,7 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
         <SelectInput
           value={currentFilter.next}
           size='small'
-          options={PgsqlFilterNext.map((c) => ({ value: c as string, label: c }))}
+          options={PgsqlFilterNext.map((c) => ({ value: c, label: c }))}
           onChange={(e): void =>
             upsertFilters(handleChange('next', (e as unknown as SelectInputOption).value as string))
           }

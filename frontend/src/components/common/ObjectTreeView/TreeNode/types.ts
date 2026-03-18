@@ -28,7 +28,7 @@ export type NodeContentProps = {
   nodeIndex: number;
   focusNode: (event: React.MouseEvent) => void;
   actionDetection: (event: React.MouseEvent, node: TreeNodeType) => void;
-  expandNode: (event: React.MouseEvent | React.KeyboardEvent, moveFocusToChild: boolean) => void;
+  expandNode: (event: React.MouseEvent | React.KeyboardEvent, moveFocusToChild: boolean) => Promise<void>;
   handleContextMenu: (event: React.MouseEvent) => void;
   handleBlur: () => void;
   handleKeyDown: (event: React.KeyboardEvent) => void;

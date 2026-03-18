@@ -40,7 +40,7 @@ export default function EditorTheme(): JSX.Element {
       <Box sx={{ mt: 4, px: 2, mb: 4 }}>
         <Slider
           value={theme.editorFontSize}
-          onChange={(_, value): void => updateTheme({ editorFontSize: value as number })}
+          onChange={(_, value): void => updateTheme({ editorFontSize: value })}
           min={10}
           max={24}
           step={1}

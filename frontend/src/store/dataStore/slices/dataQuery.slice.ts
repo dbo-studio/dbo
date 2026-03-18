@@ -2,10 +2,10 @@ import { runQuery, runRawQuery } from '@/api/query';
 import type { RunQueryResponseType } from '@/api/query/types';
 import { debouncedSaveToIndexedDB } from '@/core/utils/indexdbHelper';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { DataTabType } from '@/types';
 import type { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
 import type { DataColumnSlice, DataQuerySlice, DataRowSlice, DataStore } from '../types';
-import { DataTabType } from '@/types';
 
 export const createDataQuerySlice: StateCreator<
   DataStore & DataQuerySlice & DataColumnSlice & DataRowSlice,
@@ -64,7 +64,9 @@ export const createDataQuerySlice: StateCreator<
         get().updateRows(res.data),
         get().updateColumns(res.columns),
         debouncedSaveToIndexedDB(tab.id, res.data, res.columns)
-      ]);
+      ]).catch((e) => {
+        console.debug('🚀 ~ createDataQuerySlice ~ e:', e);
+      });
 
       return res;
     } catch (error) {
@@ -100,7 +102,9 @@ export const createDataQuerySlice: StateCreator<
         get().updateRows(res.data),
         get().updateColumns(res.columns),
         debouncedSaveToIndexedDB(selectedTabId, res.data, res.columns)
-      ]);
+      ]).catch((e) => {
+        console.debug('🚀 ~ createDataQuerySlice ~ e:', e);
+      });
 
       return res;
     } catch (error) {

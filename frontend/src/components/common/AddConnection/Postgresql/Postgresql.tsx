@@ -52,7 +52,7 @@ export default function PostgreSQL({
       onChange: formSchema,
       onSubmit: formSchema
     },
-    onSubmit: async ({ value }): Promise<void> => {
+    onSubmit: ({ value }): void => {
       const data = {
         name: value.name,
         type: 'postgresql',
@@ -96,7 +96,7 @@ export default function PostgreSQL({
           onSubmit={(e): void => {
             e.preventDefault();
             e.stopPropagation();
-            form.handleSubmit().then();
+            void form.handleSubmit();
           }}
         >
           <form.Field name='name'>
@@ -278,7 +278,7 @@ export default function PostgreSQL({
             loading={pingLoading}
             onClick={(): void => {
               form.state.values.isPing = true;
-              form.handleSubmit().then();
+              void form.handleSubmit();
             }}
             size='small'
             variant='contained'
@@ -292,7 +292,7 @@ export default function PostgreSQL({
             loading={submitLoading}
             onClick={(): void => {
               form.state.values.isPing = false;
-              form.handleSubmit().then();
+              void form.handleSubmit();
             }}
             size='small'
             variant='contained'

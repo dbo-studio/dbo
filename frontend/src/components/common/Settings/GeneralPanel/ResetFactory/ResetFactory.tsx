@@ -11,12 +11,14 @@ export function ResetFactory() {
     mutationFn: async () => await api.config.resetFactory()
   });
 
-  const handleOpenConfirm = async (): Promise<void> => {
+  const handleOpenConfirm = (): void => {
     showModal(locales.delete_action, locales.reset_factory_confirm, () => {
-      resetFactory().then(() => {
-        localStorage.clear();
-        window.location.reload();
-      });
+      resetFactory()
+        .then(() => {
+          localStorage.clear();
+          window.location.reload();
+        })
+        .catch((e) => console.debug('🚀 ~ handleOpenConfirm ~ e:', e));
     });
   };
 

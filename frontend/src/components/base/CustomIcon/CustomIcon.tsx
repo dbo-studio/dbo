@@ -1,4 +1,5 @@
 import { useTheme } from '@mui/material';
+import type { LucideIcon } from 'lucide-react';
 import { icons } from 'lucide-react';
 import type { JSX } from 'react';
 import { type IconProps, IconTypes } from './types';
@@ -35,9 +36,8 @@ export default function CustomIcon({ type, size = 's', width, height, onClick, c
     h = height;
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error
-  const LucideIcon = icons[IconTypes[type]];
+  const iconName = IconTypes[type] as keyof typeof icons;
+  const LucideIcon: LucideIcon | undefined = icons[iconName];
   if (!LucideIcon) {
     return <img onClick={onClick} src={`/icons/${type}.svg`} alt={type} width={w} height={h} className={className} />;
   }

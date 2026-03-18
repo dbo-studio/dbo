@@ -21,7 +21,7 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
   const show = useSettingStore((s) => s.ui.showConnectionPasswordPrompt);
   const connectionId = useSettingStore((s) => s.ui.passwordPromptConnectionId);
   const updateUI = useSettingStore((s) => s.updateUI);
-  const resetTree = useTreeStore((state) => state.reset)
+  const resetTree = useTreeStore((state) => state.reset);
   const queryClient = useQueryClient();
   const clearCurrentConnection = useConnectionStore((state) => state.clearCurrentConnection);
 
@@ -42,11 +42,10 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
     }
   });
 
-
   useEffect(() => {
     if (!show) return;
     clearCurrentConnection();
-  }, [show])
+  }, [show]);
 
   const handleClose = (): void => {
     setPassword('');
@@ -54,27 +53,26 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
     updateUI({ showConnectionPasswordPrompt: false, passwordPromptConnectionId: undefined });
   };
 
-
-  const handleSubmit = async (e: EventFor<"form", "onSubmit"> | EventFor<"button", "onClick">) => {
+  const handleSubmit = async (e: EventFor<'form', 'onSubmit'> | EventFor<'button', 'onClick'>) => {
     e.preventDefault();
     e.stopPropagation();
     try {
-      await setPasswordMutation()
+      await setPasswordMutation();
       setPassword('');
       setRememberPassword(false);
       updateUI({ showConnectionPasswordPrompt: false, passwordPromptConnectionId: undefined });
-      resetTree()
-      queryClient.invalidateQueries({
+      resetTree();
+      await queryClient.invalidateQueries({
         queryKey: ['connections']
       });
     } catch (e) {
-      console.debug("🚀 ~ handleSubmit ~ e:", e)
+      console.debug('🚀 ~ handleSubmit ~ e:', e);
     }
-  }
+  };
 
   return (
     <Modal open={show} title={locales.password} onClose={handleClose}>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={(e) => void handleSubmit(e)}>
         <Box flex={1} display={'flex'} flexDirection={'column'}>
           <FieldInput
             name='password'
@@ -101,7 +99,6 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
       </form>
 
       <Box display={'flex'} mt={2} justifyContent={'space-between'}>
-
         <Button size='small' onClick={handleClose}>
           {locales.cancel}
         </Button>
@@ -109,7 +106,7 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
           size='small'
           variant='contained'
           disabled={isPending || validationErrors.length > 0 || !connectionId}
-          onClick={handleSubmit}
+          onClick={(e) => void handleSubmit(e)}
         >
           {locales.save}
         </Button>

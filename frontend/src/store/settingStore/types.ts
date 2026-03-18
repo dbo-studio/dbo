@@ -7,10 +7,10 @@ export type SettingStore = {
   general: GeneralSettings;
   setup: SetupSettings;
 
-  updateUI(ui: Partial<UISettings>): void;
-  updateTheme(theme: Partial<ThemeSettings>): void;
-  updateEditor(editor: Partial<EditorSettings>): void;
-  updateGeneral(general: Partial<GeneralSettings>): void;
+  updateUI: (ui: Partial<UISettings>) => void;
+  updateTheme: (theme: Partial<ThemeSettings>) => void;
+  updateEditor: (editor: Partial<EditorSettings>) => void;
+  updateGeneral: (general: Partial<GeneralSettings>) => void;
   completeSetup(): void;
 };
 
