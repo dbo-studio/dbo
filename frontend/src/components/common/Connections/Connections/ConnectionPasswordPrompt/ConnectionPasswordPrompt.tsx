@@ -21,7 +21,7 @@ const formSchema = v.object({
 export default function ConnectionPasswordPromptModal(): JSX.Element {
   const show = useSettingStore((s) => s.ui.showConnectionPasswordPrompt);
   const connectionId = useSettingStore((s) => s.ui.passwordPromptConnectionId);
-  const connections = useConnectionStore((state) => state.connections)
+  const connections = useConnectionStore((state) => state.connections);
   const updateUI = useSettingStore((s) => s.updateUI);
   const resetTree = useTreeStore((state) => state.reset);
   const queryClient = useQueryClient();
@@ -55,7 +55,7 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
   };
 
   const handleSubmit = async (e: EventFor<'form', 'onSubmit'> | EventFor<'button', 'onClick'>) => {
-    if (!connectionId) return
+    if (!connectionId) return;
 
     e.preventDefault();
     e.stopPropagation();
@@ -73,29 +73,27 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
     }
   };
 
-
   const handlePing = async (e: EventFor<'button', 'onClick'>) => {
-    if (!connectionId) return
+    if (!connectionId) return;
 
     e.preventDefault();
     e.stopPropagation();
 
     try {
-      const currentConnection = connections?.find((c) => c.id = connectionId)
-      if (!currentConnection) return
+      const currentConnection = connections?.find((c) => (c.id = connectionId));
+      if (!currentConnection) return;
 
       const options = {
         ...currentConnection.options,
         password
-      }
+      };
 
       await pingConnectionMutation({ id: connectionId, type: currentConnection.type, options });
       toast.success(locales.connection_test_success);
     } catch (e) {
       console.debug('🚀 ~ handlePing ~ e:', e);
     }
-  }
-
+  };
 
   return (
     <Modal open={show} title={locales.password} onClose={handleClose}>

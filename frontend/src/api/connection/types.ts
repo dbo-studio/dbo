@@ -16,7 +16,7 @@ export type PingConnectionRequestType = {
 };
 
 export type UpdateConnectionRequestType = {
-  id?: string | number,
+  id?: string | number;
   name?: string;
   type?: 'postgresql' | 'sqlite' | 'mysql';
   isActive?: boolean;
@@ -26,7 +26,7 @@ export type UpdateConnectionRequestType = {
 };
 
 export type SetConnectionCredentialsRequestType = {
-  id: string | number,
+  id: string | number;
   password: string;
   rememberPassword: boolean;
 };

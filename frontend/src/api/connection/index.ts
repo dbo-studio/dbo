@@ -31,9 +31,7 @@ export const updateConnection = async (
   return (await api.patch<{ data: ConnectionType }>(endpoint.updateConnection(id), data)).data.data;
 };
 
-export const setConnectionCredentials = async (
-  data: SetConnectionCredentialsRequestType
-): Promise<void> => {
+export const setConnectionCredentials = async (data: SetConnectionCredentialsRequestType): Promise<void> => {
   await api.post(endpoint.setCredentials(data.id), data);
 };
 
