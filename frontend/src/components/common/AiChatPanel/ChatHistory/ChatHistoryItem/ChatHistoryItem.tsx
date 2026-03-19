@@ -5,8 +5,8 @@ import { ChatHistoryItemProps } from '../types';
 
 export default function ChatHistoryItem({ item, onClick, onDelete }: ChatHistoryItemProps) {
   return (
-    <ChatHistoryItemStyled justifyContent={'space-between'} width={'100%'} direction={'row'}>
-      <Box display={'flex'} alignItems={'center'} onClick={onClick}>
+    <ChatHistoryItemStyled justifyContent={'space-between'} width={'100%'} direction={'row'} onClick={onClick}>
+      <Box display={'flex'} alignItems={'center'} >
         <CustomIcon type={'message'} size='xs' />
 
         <Typography color={'textText'} variant='caption' ml={1}>

@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/samber/lo"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
 	"github.com/dbo-studio/dbo/internal/model"
 	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	"github.com/dbo-studio/dbo/pkg/apperror"
-	"github.com/samber/lo"
 )
 
 func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.AiChatResponse, error) {
@@ -55,13 +56,14 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		Query:    lo.FromPtr(req.ContextOpts.Query),
 	}
 
-	providerResp, err := provider.Chat(ctx, providerReq)
-	if err != nil {
-		return nil, err
-	}
+	providerResp, providerResErr := provider.Chat(ctx, providerReq)
 
 	if err := s.saveChatMessages(ctx, chat, req.Message, providerResp); err != nil {
 		s.logger.Error(fmt.Sprintf("Failed to save chat messages: %v", err))
+	}
+
+	if providerResErr != nil {
+		return nil, providerResErr
 	}
 
 	response := &dto.AiChatResponse{

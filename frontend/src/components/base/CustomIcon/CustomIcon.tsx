@@ -23,7 +23,7 @@ const sizes = {
   }
 };
 
-export default function CustomIcon({ type, size = 's', width, height, onClick, className }: IconProps): JSX.Element {
+export default function CustomIcon({ type, size = 's', width, height, onClick, className, color }: IconProps): JSX.Element {
   const theme = useTheme();
 
   let w = sizes[size].width;
@@ -46,7 +46,7 @@ export default function CustomIcon({ type, size = 's', width, height, onClick, c
     <LucideIcon
       onClick={onClick}
       className={className}
-      style={{ color: theme.palette.text.text, display: 'inline-block' }}
+      style={{ color: color ? color : theme.palette.text.text, display: 'inline-block' }}
       strokeWidth={1.5}
       size={w}
     />

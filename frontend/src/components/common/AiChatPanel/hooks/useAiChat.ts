@@ -1,7 +1,6 @@
 import api from '@/api';
 import { AiChatRequest, AiContextOptsType } from '@/api/ai/types';
 import { TabMode } from '@/core/enums';
-import { useSelectedTab } from '@/hooks';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
@@ -25,7 +24,7 @@ export const useAiChat = (): useAiChatReturnType => {
   const [page, setPage] = useState(1);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const selectedTab = useSelectedTab();
+  const connectionId = useConnectionStore((state) => state.currentConnectionId);
 
   const updateChats = useAiStore((state) => state.updateChats);
   const updateCurrentChat = useAiStore((state) => state.updateCurrentChat);
@@ -45,11 +44,12 @@ export const useAiChat = (): useAiChatReturnType => {
   });
 
   const { data: autocomplete } = useQuery({
-    queryKey: ['ai_autocomplete', useConnectionStore.getState().currentConnectionId],
+    queryKey: ['ai_autocomplete', connectionId],
     queryFn: async (): Promise<AutoCompleteType> =>
       api.query.autoComplete({
-        connectionId: Number(useConnectionStore.getState().currentConnectionId)
-      })
+        connectionId: Number(connectionId)
+      }),
+    enabled: !!connectionId
   });
 
   const { mutateAsync: createChatMutation } = useMutation({
@@ -59,7 +59,7 @@ export const useAiChat = (): useAiChatReturnType => {
   const handleCreateChat = async (): Promise<void> => {
     try {
       const chat = await createChatMutation({
-        connectionId: useConnectionStore.getState().currentConnectionId ?? 0,
+        connectionId: connectionId ?? 0,
         title: locales.new_chat
       });
 
@@ -71,7 +71,8 @@ export const useAiChat = (): useAiChatReturnType => {
   };
 
   const handleChatChange = useCallback(async (chat: AiChatType) => {
-    if (chat.id === useAiStore.getState().currentChat?.id) return;
+    const currentChat = useAiStore.getState().currentChat;
+    if (chat.id === currentChat?.id) return;
 
     const detail = await api.aiChat.getChatDetail({
       id: chat.id,
@@ -103,6 +104,7 @@ export const useAiChat = (): useAiChatReturnType => {
 
   const handleSend = async () => {
     const currentChat = useAiStore.getState().currentChat;
+    const selectedTab = useTabStore.getState().selectedTab();
     const context = useAiStore.getState().context;
     if (!currentChat || !context.input.trim() || chatPending) return;
 
@@ -133,7 +135,7 @@ export const useAiChat = (): useAiChatReturnType => {
 
     try {
       const chat = await chatMutation({
-        connectionId: Number(useConnectionStore.getState().currentConnectionId),
+        connectionId: Number(connectionId),
         chatId: currentChat?.id,
         message: context.input.trim(),
         contextOpts

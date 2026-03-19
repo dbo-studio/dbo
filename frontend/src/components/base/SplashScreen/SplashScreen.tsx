@@ -1,19 +1,10 @@
 import { Box, CircularProgress, Fade } from '@mui/material';
 import type { JSX } from 'react';
+import { SplashScreenWrapperStyled } from './SplashScreen.styled';
 
 export default function SplashScreen(): JSX.Element {
   return (
-    <Box
-      display='flex'
-      flexDirection='column'
-      justifyContent='center'
-      alignItems='center'
-      width='100vw'
-      height='100vh'
-      sx={{
-        backgroundColor: (theme) => theme.palette.background.default
-      }}
-    >
+    <SplashScreenWrapperStyled >
       <Fade in={true} timeout={1000}>
         <Box display='flex' flexDirection='column' justifyContent='center' alignItems='center' gap={4}>
           <Box>
@@ -22,6 +13,6 @@ export default function SplashScreen(): JSX.Element {
           <CircularProgress />
         </Box>
       </Fade>
-    </Box>
+    </SplashScreenWrapperStyled>
   );
 }

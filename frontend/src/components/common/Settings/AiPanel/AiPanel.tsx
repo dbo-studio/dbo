@@ -18,11 +18,9 @@ export default function AiPanel() {
   const [newModel, setNewModel] = useState<string>('');
 
   const [error, setError] = useState<{
-    apiKey: string | undefined;
     url: string | undefined;
     timeout: string | undefined;
   }>({
-    apiKey: undefined,
     url: undefined,
     timeout: undefined
   });
@@ -30,15 +28,9 @@ export default function AiPanel() {
   const { mutateAsync: updateProviderMutation, isPending: pendingUpdateProvider } = useMutation({
     mutationFn: async (provider: AiProviderType): Promise<AiProviderType> => {
       setError({
-        apiKey: undefined,
         url: undefined,
         timeout: undefined
       });
-
-      if (!provider?.apiKey || provider?.apiKey.length === 0) {
-        setError({ ...error, apiKey: locales.api_key_required });
-        return provider;
-      }
 
       if (!provider?.url || provider?.url.length === 0) {
         setError({ ...error, url: locales.url_required });
@@ -63,6 +55,27 @@ export default function AiPanel() {
     updateProviderMutation(provider as AiProviderType).catch((e) => console.debug('🚀 ~ handleSubmit ~ error:', e));
   };
 
+  const handleAddModel = () => {
+    setProvider({
+      ...provider,
+      models: [...(provider?.models ?? []), newModel]
+    } as AiProviderType);
+  };
+
+  const handleRemoveModel = (model: string) => {
+    setProvider({
+      ...provider,
+      models: provider?.models?.filter((m) => m !== model) ?? []
+    } as AiProviderType);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleAddModel();
+    }
+  };
+
   return (
     <Box p={2} display={'flex'} flexDirection={'column'} gap={2}>
       <SelectInput
@@ -78,8 +91,6 @@ export default function AiPanel() {
         label={locales.api_key}
         value={provider?.apiKey ?? ''}
         onChange={(e) => setProvider({ ...provider, apiKey: e.target.value } as AiProviderType)}
-        helpertext={error.apiKey}
-        error={!!error.apiKey}
       />
 
       <FieldInput
@@ -106,17 +117,15 @@ export default function AiPanel() {
 
       <Stack direction={'row'} alignItems={'center'} spacing={1}>
         <Box flex={1}>
-          <FieldInput label={locales.add_model} onChange={(e) => setNewModel(e.target.value)} value={newModel} />
+          <FieldInput
+            label={locales.add_model}
+            onKeyDown={handleKeyDown}
+            onChange={(e) => setNewModel(e.target.value)}
+            value={newModel}
+          />
         </Box>
         <Box>
-          <IconButton
-            onClick={() => {
-              setProvider({
-                ...provider,
-                models: [...(provider?.models ?? []), newModel]
-              } as AiProviderType);
-            }}
-          >
+          <IconButton onClick={handleAddModel}>
             <CustomIcon type='plus' />
           </IconButton>
         </Box>
@@ -124,16 +133,7 @@ export default function AiPanel() {
 
       <Stack direction={'row'} spacing={1}>
         {provider?.models.map((model) => (
-          <Chip
-            key={model}
-            label={model}
-            onDelete={() => {
-              setProvider({
-                ...provider,
-                models: provider?.models?.filter((m) => m !== model) ?? []
-              } as AiProviderType);
-            }}
-          />
+          <Chip key={model} label={model} onDelete={() => handleRemoveModel(model)} />
         ))}
       </Stack>
 

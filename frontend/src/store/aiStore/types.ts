@@ -24,5 +24,7 @@ export type AiChatSlice = {
 
 export type AiContextSlice = {
   context: AiContextType;
+  messageEdit: boolean;
+  toggleMessageEdit: () => void;
   updateContext: (context: AiContextType) => void;
 };

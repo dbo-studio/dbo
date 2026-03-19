@@ -8,6 +8,7 @@ import { ChatTextInputStyled } from './ChatTextInput.styled';
 export default function ChatTextInput({ loading, onSend }: ChatTextInputProps) {
   const context = useAiStore((state) => state.context);
   const updateContext = useAiStore((state) => state.updateContext);
+  const messageEdit = useAiStore((state) => state.messageEdit);
 
   const [input, setInput] = useState(context.input);
 
@@ -28,6 +29,10 @@ export default function ChatTextInput({ loading, onSend }: ChatTextInputProps) {
       setInput('');
     }
   }, [context.input]);
+
+  useEffect(() => {
+    setInput(context.input);
+  }, [messageEdit])
 
   return (
     <Box flex={1} sx={{ overflowY: 'scroll' }}>

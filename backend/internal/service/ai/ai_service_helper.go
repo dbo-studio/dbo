@@ -3,11 +3,12 @@ package serviceAi
 import (
 	"context"
 
+	"github.com/samber/lo"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	"github.com/dbo-studio/dbo/pkg/apperror"
-	"github.com/samber/lo"
 )
 
 func (s *AiServiceImpl) createProvider(ctx context.Context) (serviceAiProvider.IAiProvider, *model.AiProvider, error) {
@@ -62,6 +63,10 @@ func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat
 		Language: model.AiChatMessageLanguageText,
 	}); err != nil {
 		return err
+	}
+
+	if aiMessage == nil {
+		return nil
 	}
 
 	if len(aiMessage.Contents) > 0 {

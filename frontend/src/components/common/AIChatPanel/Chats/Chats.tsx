@@ -1,13 +1,8 @@
-import { useAiStore } from '@/store/aiStore/ai.store';
-import { useAiChat } from '../hooks/useAiChat';
+import { ChatsProps } from '../types';
 import ChatItem from './ChatItem/ChatItem';
 import { ChatsStyled } from './Chats.styled';
 
-export default function Chats() {
-  const currentChat = useAiStore((state) => state.currentChat);
-  const chats = useAiStore((state) => state.chats);
-  const { handleChatChange, handleChatDelete } = useAiChat();
-
+export default function Chats({ currentChat, chats, onChatChange, onChatDelete }: ChatsProps) {
   return (
     <ChatsStyled>
       {chats?.map((chat) => (
@@ -15,8 +10,8 @@ export default function Chats() {
           key={chat.id}
           chat={chat}
           selected={currentChat?.id === chat.id}
-          onClick={() => void handleChatChange(chat)}
-          onDelete={() => void handleChatDelete(chat)}
+          onClick={() => onChatChange(chat)}
+          onDelete={() => onChatDelete(chat)}
         />
       ))}
     </ChatsStyled>

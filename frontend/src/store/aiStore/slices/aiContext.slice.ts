@@ -2,7 +2,10 @@ import type { AiContextType } from '@/types';
 import type { StateCreator } from 'zustand';
 import type { AiContextSlice } from '../types';
 
-export const createAiContextSlice: StateCreator<AiContextSlice, [], [], AiContextSlice> = (set) => ({
+export const createAiContextSlice: StateCreator<AiContextSlice, [['zustand/devtools', never]], [], AiContextSlice> = (
+  set,
+  get
+) => ({
   context: {
     input: '',
     database: undefined,
@@ -10,7 +13,11 @@ export const createAiContextSlice: StateCreator<AiContextSlice, [], [], AiContex
     tables: [],
     views: []
   },
+  messageEdit: false,
   updateContext: (context: AiContextType) => {
-    set({ context });
+    set({ context }, undefined, 'updateContext');
+  },
+  toggleMessageEdit: (): void => {
+    set({ messageEdit: !get().messageEdit }, undefined, 'toggleMessageEdit');
   }
 });
