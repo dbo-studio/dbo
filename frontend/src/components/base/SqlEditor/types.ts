@@ -13,3 +13,7 @@ export type SqlEditorSettingType = {
   database: string;
   schema: string;
 };
+
+export interface SqlEditorRef {
+  getSelectedQuery: () => string | undefined;
+}

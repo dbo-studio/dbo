@@ -1,6 +1,7 @@
 import api from '@/api';
 import ResizableYBox from '@/components/base/ResizableBox/ResizableYBox.tsx';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor.tsx';
+import { SqlEditorRef } from '@/components/base/SqlEditor/types';
 import DataGrid from '@/components/common/DataGrid/DataGrid';
 import { shortcuts } from '@/core/utils';
 import { useCurrentConnection, useShortcut, useWindowSize } from '@/hooks';
@@ -10,13 +11,15 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AutoCompleteType, ColumnType, EditorTabType, RowType } from '@/types';
 import { Box, type Theme } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
-import { type JSX, useEffect, useState } from 'react';
+import { type JSX, useEffect, useRef, useState } from 'react';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
 
 export default function Query(): JSX.Element {
   const selectedTab = useSelectedTab<EditorTabType>();
   const currentConnection = useCurrentConnection();
   const windowSize = useWindowSize();
+  const sqlEditorRef = useRef<SqlEditorRef>(null);
+
   const [tableData, setTableData] = useState({
     rows: [] as RowType[],
     columns: [] as ColumnType[]
@@ -32,7 +35,7 @@ export default function Query(): JSX.Element {
   const [showGrid, setShowGrid] = useState(false);
   const isDataFetching = useDataStore((state) => state.isDataFetching);
 
-  useShortcut(shortcuts.runQuery, () => void runRawQuery());
+  useShortcut(shortcuts.runQuery, () => void runQuery());
 
   const { data: autocomplete } = useQuery({
     queryKey: ['autocomplete', currentConnection?.id, selectedTab?.database, selectedTab?.schema],
@@ -77,8 +80,9 @@ export default function Query(): JSX.Element {
     toggleDataFetching(false);
   };
 
-  const runQuery = async (query?: string): Promise<void> => {
-    const res = await runRawQuery(query);
+  const runQuery = async (): Promise<void> => {
+    const selectedQuery = sqlEditorRef.current?.getSelectedQuery();
+    const res = await runRawQuery(selectedQuery === "" ? undefined : selectedQuery);
     setTableData({
       rows: res?.data ?? [],
       columns: res?.columns.filter((column) => column.isActive) ?? []
@@ -102,6 +106,7 @@ export default function Query(): JSX.Element {
           borderBottom={(theme: Theme): string => `1px solid ${theme.palette.divider}`}
         >
           <SqlEditor
+            ref={sqlEditorRef}
             onRunQuery={() => void runQuery()}
             onMount={(): void => setShowGrid(true)}
             onChange={handleUpdateState}

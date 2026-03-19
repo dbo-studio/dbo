@@ -1,25 +1,27 @@
-import type { SqlEditorProps } from '@/components/base/SqlEditor/types.ts';
+import type { SqlEditorProps, SqlEditorRef } from '@/components/base/SqlEditor/types.ts';
 import { shortcuts } from '@/core/utils/shortcuts.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import Editor, { useMonaco, type OnMount } from '@monaco-editor/react';
 import { Box, CircularProgress } from '@mui/material';
 import type * as Monaco from 'monaco-editor';
-import { useEffect, useRef, useState, type JSX } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type JSX } from 'react';
 import { changeMetaProviderSetting } from './helpers/dbMetaProvider.ts';
 import { editorConfig } from './helpers/editorConfig.ts';
 import { setupLanguage } from './helpers/languageSetup.ts';
 import { useInlineAITrigger } from './hooks/useInlineAITrigger.ts';
 import { useSqlValidation } from './hooks/useSqlValidation.ts';
 
-export default function SqlEditor({
+
+//todo: should check performance of realtime text selection monitor and use forward ref
+export default forwardRef<SqlEditorRef, SqlEditorProps>(function SqlEditor({
   autocomplete,
   value,
   onChange,
   onBlur,
   onMount,
   onRunQuery
-}: SqlEditorProps): JSX.Element {
+}: SqlEditorProps, ref): JSX.Element {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const [editor, setEditor] = useState<Monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -58,6 +60,20 @@ export default function SqlEditor({
       onChange(newValue);
     }
   };
+
+  useImperativeHandle(ref, () => ({
+    getSelectedQuery: (): string | undefined => {
+      const editor = editorRef.current;
+      if (!editor) return undefined;
+
+      const selection = editor.getSelection();
+      if (selection && !selection.isEmpty()) {
+        return editor.getModel()?.getValueInRange(selection);
+      }
+      return editor.getValue();
+    },
+  }));
+
 
   useEffect(() => {
     changeMetaProviderSetting(autocomplete);
@@ -99,4 +115,4 @@ export default function SqlEditor({
       />
     </Box>
   );
-}
+});
