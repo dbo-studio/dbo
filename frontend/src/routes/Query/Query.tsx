@@ -82,7 +82,7 @@ export default function Query(): JSX.Element {
 
   const runQuery = async (): Promise<void> => {
     const selectedQuery = sqlEditorRef.current?.getSelectedQuery();
-    const res = await runRawQuery(selectedQuery === "" ? undefined : selectedQuery);
+    const res = await runRawQuery(selectedQuery === '' ? undefined : selectedQuery);
     setTableData({
       rows: res?.data ?? [],
       columns: res?.columns.filter((column) => column.isActive) ?? []

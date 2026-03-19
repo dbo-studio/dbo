@@ -11,12 +11,10 @@ export default defineConfig({
   clearScreen: host === undefined,
   plugins: [
     react({
-      //@ts-ignore
+      //@ts-expect-error-error
       babel: {
-        plugins: [
-          ["babel-plugin-react-compiler", ReactCompilerConfig],
-        ],
-      },
+        plugins: [['babel-plugin-react-compiler', ReactCompilerConfig]]
+      }
     }),
     VitePWA({
       injectRegister: 'auto',
@@ -57,7 +55,7 @@ export default defineConfig({
         ]
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 8000000,
+        maximumFileSizeToCacheInBytes: 8000000
       }
     }),
     tsconfigPaths()

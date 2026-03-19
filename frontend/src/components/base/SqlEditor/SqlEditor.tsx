@@ -12,16 +12,11 @@ import { setupLanguage } from './helpers/languageSetup.ts';
 import { useInlineAITrigger } from './hooks/useInlineAITrigger.ts';
 import { useSqlValidation } from './hooks/useSqlValidation.ts';
 
-
 //todo: should check performance of realtime text selection monitor and use forward ref
-export default forwardRef<SqlEditorRef, SqlEditorProps>(function SqlEditor({
-  autocomplete,
-  value,
-  onChange,
-  onBlur,
-  onMount,
-  onRunQuery
-}: SqlEditorProps, ref): JSX.Element {
+export default forwardRef<SqlEditorRef, SqlEditorProps>(function SqlEditor(
+  { autocomplete, value, onChange, onBlur, onMount, onRunQuery }: SqlEditorProps,
+  ref
+): JSX.Element {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const [editor, setEditor] = useState<Monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -71,9 +66,8 @@ export default forwardRef<SqlEditorRef, SqlEditorProps>(function SqlEditor({
         return editor.getModel()?.getValueInRange(selection);
       }
       return editor.getValue();
-    },
+    }
   }));
-
 
   useEffect(() => {
     changeMetaProviderSetting(autocomplete);

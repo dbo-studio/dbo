@@ -32,7 +32,7 @@ export default function ChatTextInput({ loading, onSend }: ChatTextInputProps) {
 
   useEffect(() => {
     setInput(context.input);
-  }, [messageEdit])
+  }, [messageEdit]);
 
   return (
     <Box flex={1} sx={{ overflowY: 'scroll' }}>

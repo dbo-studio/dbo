@@ -23,7 +23,15 @@ const sizes = {
   }
 };
 
-export default function CustomIcon({ type, size = 's', width, height, onClick, className, color }: IconProps): JSX.Element {
+export default function CustomIcon({
+  type,
+  size = 's',
+  width,
+  height,
+  onClick,
+  className,
+  color
+}: IconProps): JSX.Element {
   const theme = useTheme();
 
   let w = sizes[size].width;

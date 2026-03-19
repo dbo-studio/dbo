@@ -20,8 +20,8 @@ export default function AiChatPanel() {
     handleChatDelete
   } = useAiChat();
 
-  const currentChat = useAiStore((state) => state.currentChat)
-  const chats = useAiStore((state) => state.chats)
+  const currentChat = useAiStore((state) => state.currentChat);
+  const chats = useAiStore((state) => state.chats);
 
   return (
     <Box height={'100%'} minHeight={0} position={'relative'} display={'flex'} flexDirection={'column'}>

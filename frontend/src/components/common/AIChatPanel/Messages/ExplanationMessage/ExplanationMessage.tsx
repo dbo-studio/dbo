@@ -17,7 +17,7 @@ export default function ExplanationMessage({ message }: ExplanationMessageProps)
       input: message.content
     });
 
-    toggleMessageEdit()
+    toggleMessageEdit();
   };
 
   return (

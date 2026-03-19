@@ -63,7 +63,7 @@ export const createTabSettingSlice: StateCreator<
     const tabs = get().tabs as EditorTabType[];
     const findTab = tabs.find((t) => t.mode === TabMode.Query && t.connectionId === currentConnectionId);
 
-    if (findTab) {
+    if (findTab && get().getQuery() == '') {
       findTab.mode = TabMode.Query;
       get().switchTab(findTab.id);
       return findTab;

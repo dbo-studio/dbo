@@ -4,7 +4,7 @@ import { SplashScreenWrapperStyled } from './SplashScreen.styled';
 
 export default function SplashScreen(): JSX.Element {
   return (
-    <SplashScreenWrapperStyled >
+    <SplashScreenWrapperStyled>
       <Fade in={true} timeout={1000}>
         <Box display='flex' flexDirection='column' justifyContent='center' alignItems='center' gap={4}>
           <Box>
