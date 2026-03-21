@@ -195,5 +195,9 @@
   "reset_factory": "Reset factory",
   "reset_factory_description": "Delete all DBO's data",
   "reset_factory_confirm": "Are you sure delete all data?",
-  "inline_query_placeholder": "Enter condition, id = 1"
+  "inline_query_placeholder": "Enter condition, id = 1",
+  "filters": "Filters",
+  "sorts": "Sorts",
+  "query_preview": "Query preview",
+  "chat_history": "Chat history"
 }

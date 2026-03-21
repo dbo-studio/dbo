@@ -2,10 +2,11 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { ExportModal } from '@/components/common/ExportModal/ExportModal';
 import { ImportModal } from '@/components/common/ImportModal/ImportModal';
 import { useSelectedTab } from '@/hooks';
+import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { DataTabType } from '@/types';
-import { Badge, Box, Grid, IconButton, Stack, useTheme } from '@mui/material';
+import { Badge, Box, Grid, IconButton, Stack, Tooltip, useTheme } from '@mui/material';
 import { type JSX, useState } from 'react';
 import Filters from './Filters/Filters';
 import InlineQuery from './InlineQuery/InlineQuery';
@@ -105,44 +106,56 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
           <InlineQuery />
         </Grid>
         <Grid size={{ md: 4 }} display='flex' justifyContent='flex-end'>
-          <IconButton className={show.showFilters ? 'active' : ''} onClick={(): void => handleToggle('filter')}>
-            <Badge badgeContent={filterCount} color='secondary' variant='dot'>
-              <CustomIcon type='filter' size='s' />
-            </Badge>
-          </IconButton>
+          <Tooltip title={locales.filters}>
+            <IconButton className={show.showFilters ? 'active' : ''} onClick={(): void => handleToggle('filter')}>
+              <Badge badgeContent={filterCount} color='secondary' variant='dot'>
+                <CustomIcon type='filter' size='s' />
+              </Badge>
+            </IconButton>
+          </Tooltip>
 
-          <IconButton
-            className={show.showSorts ? 'active' : ''}
-            aria-label='sort'
-            onClick={(): void => handleToggle('sort')}
-          >
-            <Badge badgeContent={sortCount} color='secondary' variant='dot'>
-              <CustomIcon type='sort' size='s' />
-            </Badge>
-          </IconButton>
+          <Tooltip title={locales.sorts}>
+            <IconButton
+              className={show.showSorts ? 'active' : ''}
+              aria-label='sort'
+              onClick={(): void => handleToggle('sort')}
+            >
+              <Badge badgeContent={sortCount} color='secondary' variant='dot'>
+                <CustomIcon type='sort' size='s' />
+              </Badge>
+            </IconButton>
+          </Tooltip>
 
-          <IconButton
-            className={showColumns ? 'active' : ''}
-            aria-label='grid'
-            onClick={(): void => handleToggle('column')}
-          >
-            <CustomIcon type='grid' size='s' />
-          </IconButton>
+          <Tooltip title={locales.columns}>
+            <IconButton
+              className={showColumns ? 'active' : ''}
+              aria-label='grid'
+              onClick={(): void => handleToggle('column')}
+            >
+              <CustomIcon type='grid' size='s' />
+            </IconButton>
+          </Tooltip>
 
-          <IconButton aria-label='export' onClick={handleShowExport}>
-            <CustomIcon type='export' size='s' />
-          </IconButton>
+          <Tooltip title={locales.export}>
+            <IconButton aria-label='export' onClick={handleShowExport}>
+              <CustomIcon type='export' size='s' />
+            </IconButton>
+          </Tooltip>
 
-          <IconButton aria-label='import' onClick={handleShowImport}>
-            <CustomIcon type='import' size='s' />
-          </IconButton>
+          <Tooltip title={locales.import}>
+            <IconButton aria-label='import' onClick={handleShowImport}>
+              <CustomIcon type='import' size='s' />
+            </IconButton>
+          </Tooltip>
 
-          <IconButton
-            className={show.showQuery ? 'active' : 'toggle-code-preview'}
-            onClick={(): void => handleToggle('query')}
-          >
-            <CustomIcon type='code' size='s' />
-          </IconButton>
+          <Tooltip title={locales.query_preview}>
+            <IconButton
+              className={show.showQuery ? 'active' : 'toggle-code-preview'}
+              onClick={(): void => handleToggle('query')}
+            >
+              <CustomIcon type='code' size='s' />
+            </IconButton>
+          </Tooltip>
         </Grid>
       </Stack>
 

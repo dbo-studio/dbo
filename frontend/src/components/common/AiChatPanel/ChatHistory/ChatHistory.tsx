@@ -5,11 +5,12 @@ import { tools } from '@/core/utils';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { AiChatType } from '@/types';
-import { Box, IconButton } from '@mui/material';
+import { Box, IconButton, Tooltip } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
 import { ChatHistoryStyled } from './ChatHistory.styled';
 import ChatHistoryItem from './ChatHistoryItem/ChatHistoryItem';
+import locales from '@/locales';
 
 export default function ChatHistory() {
   const [open, setOpen] = useState(false);
@@ -91,9 +92,11 @@ export default function ChatHistory() {
 
   return (
     <Box>
-      <IconButton ref={anchorRef} onClick={() => setOpen(true)}>
-        <CustomIcon type='history' />
-      </IconButton>
+      <Tooltip title={locales.chat_history}>
+        <IconButton ref={anchorRef} onClick={() => setOpen(true)}>
+          <CustomIcon type='history' />
+        </IconButton>
+      </Tooltip>
 
       <DropDownMenu open={open} onClose={() => setOpen(false)} anchorRef={anchorRef}>
         <ChatHistoryStyled>
