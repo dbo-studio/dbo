@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
 import ConnectionSelection from './ConnectionSelection/ConnectionSelection';
+import Mysql from './Mysql/Mysql';
 import PostgreSQL from './Postgresql/Postgresql';
 import SQLite from './SQLite/SQLite';
 import type { SelectionConnectionType } from './types';
@@ -17,11 +18,11 @@ const connectionTypes: SelectionConnectionType[] = [
     logo: 'postgresql',
     component: PostgreSQL
   },
-  // {
-  //   name: 'MySQL',
-  //   logo: 'mysql',
-  //   component: Mysql
-  // },
+  {
+    name: 'MySQL',
+    logo: 'mysql',
+    component: Mysql
+  },
   {
     name: 'SQLite',
     logo: 'sqlite',

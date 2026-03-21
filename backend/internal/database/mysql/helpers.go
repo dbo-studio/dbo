@@ -6,8 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/samber/lo"
+
+	"github.com/dbo-studio/dbo/internal/app/dto"
 )
 
 type MySQLNode struct {
@@ -53,7 +54,7 @@ type Column struct {
 	DataType               string  `gorm:"column:DATA_TYPE"`
 	IsNullable             string  `gorm:"column:IS_NULLABLE"`
 	ColumnDefault          *string `gorm:"column:COLUMN_DEFAULT"`
-	CharacterMaximumLength *int32  `gorm:"column:CHARACTER_MAXIMUM_LENGTH"`
+	CharacterMaximumLength *int64  `gorm:"column:CHARACTER_MAXIMUM_LENGTH"`
 	Comment                *string `gorm:"column:COLUMN_COMMENT"`
 	NumericScale           *int32  `gorm:"column:NUMERIC_SCALE"`
 

@@ -19,7 +19,7 @@ type Column struct {
 	Name       string  `json:"name"`
 	Type       string  `json:"type"`
 	NotNull    bool    `json:"notNull"`
-	Length     *int32  `json:"length"`
+	Length     *int64  `json:"length"`
 	Default    *string `json:"default"`
 	Comment    *string `json:"comment"`
 	MappedType string  `json:"mappedType"`

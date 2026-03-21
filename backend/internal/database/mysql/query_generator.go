@@ -69,17 +69,20 @@ func (r *MySQLRepository) tables(ctx context.Context, database *string, fromCach
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("information_schema.TABLES").
+	query := r.db.WithContext(ctx).
+		Table("information_schema.TABLES AS t").
 		Select(`
-			TABLE_NAME,
-			TABLE_COMMENT,
-			ENGINE,
-			TABLE_TYPE,
-			ROW_FORMAT,
-			AUTO_INCREMENT
-		`).
-		Where("TABLE_TYPE = 'BASE TABLE'").
-		Where("TABLE_SCHEMA = ?", lo.FromPtr(database))
+		t.TABLE_NAME,
+		t.TABLE_COMMENT,
+		t.ENGINE,
+		t.TABLE_TYPE,
+		t.ROW_FORMAT,
+		t.AUTO_INCREMENT
+	`).Where("t.TABLE_TYPE = ?", "BASE TABLE")
+
+	if database != nil {
+		query = query.Where("t.TABLE_SCHEMA = ?", lo.FromPtr(database))
+	}
 
 	err := query.Order("TABLE_NAME").Find(&tables).Error
 	if err != nil {
@@ -112,13 +115,12 @@ func (r *MySQLRepository) views(ctx context.Context, database *string, fromCache
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("information_schema.VIEWS").
+	query := r.db.WithContext(ctx).
+		Table("information_schema.VIEWS").
 		Select(`
-			TABLE_NAME,
-			TABLE_COMMENT,
-			VIEW_DEFINITION
-		`).
-		Where("TABLE_SCHEMA = ?", lo.FromPtr(database))
+		TABLE_NAME,
+		VIEW_DEFINITION
+	`).Where("TABLE_SCHEMA = ?", lo.FromPtr(database))
 
 	err := query.Order("TABLE_NAME").Find(&views).Error
 	if err != nil {
@@ -247,10 +249,16 @@ func (r *MySQLRepository) primaryKeys(ctx context.Context, database *string, tab
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("information_schema.TABLE_CONSTRAINTS AS tc").
+	query := r.db.WithContext(ctx).
+		Table("information_schema.TABLE_CONSTRAINTS AS tc").
 		Select("kcu.COLUMN_NAME").
-		Joins("JOIN information_schema.KEY_COLUMN_USAGE AS kcu ON kcu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME AND kcu.TABLE_SCHEMA = tc.TABLE_SCHEMA").
-		Where("tc.CONSTRAINT_TYPE = 'PRIMARY KEY'").
+		Joins(`
+		JOIN information_schema.KEY_COLUMN_USAGE AS kcu 
+			ON kcu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+			AND kcu.TABLE_SCHEMA = tc.TABLE_SCHEMA
+			AND kcu.TABLE_NAME = tc.TABLE_NAME
+	`).
+		Where("tc.CONSTRAINT_TYPE = ?", "PRIMARY KEY").
 		Where("tc.TABLE_SCHEMA = ?", lo.FromPtr(database))
 
 	if table != nil {
@@ -259,8 +267,6 @@ func (r *MySQLRepository) primaryKeys(ctx context.Context, database *string, tab
 
 	err := query.Order("kcu.ORDINAL_POSITION").Find(&primaryKeys).Error
 	if err != nil {
-		// If context was canceled, return empty list instead of error
-		// This can happen when errgroup cancels context if another goroutine completes/fails
 		if errors.Is(err, context.Canceled) {
 			return []PrimaryKey{}, nil
 		}

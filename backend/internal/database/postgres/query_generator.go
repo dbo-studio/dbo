@@ -268,7 +268,7 @@ type Column struct {
 	DataType               string  `gorm:"column:data_type"`
 	IsNullable             string  `gorm:"column:is_nullable"`
 	ColumnDefault          *string `gorm:"column:column_default"`
-	CharacterMaximumLength *int32  `gorm:"column:character_maximum_length"`
+	CharacterMaximumLength *int64  `gorm:"column:character_maximum_length"`
 	Comment                *string `gorm:"column:column_comment"`
 	NumericScale           *int32  `gorm:"column:numeric_scale"`
 	IsIdentity             bool    `gorm:"column:is_identity"`

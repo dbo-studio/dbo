@@ -43,7 +43,7 @@ export const createTabSettingSlice: StateCreator<
       columns: [],
       pagination: {
         page: 1,
-        limit: 100
+        limit: 50
       },
       showColumns: false,
       showFilters: false,
