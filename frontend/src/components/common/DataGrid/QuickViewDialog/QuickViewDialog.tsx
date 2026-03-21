@@ -1,4 +1,4 @@
-import CodeEditor from '@/components/base/CodeEditor/CodeEditor.tsx';
+import CodeEditor from '@/components/base/CodeEditor/CodeEditor';
 import ResizableModal from '@/components/base/Modal/ResizableModal/ResizableModal.tsx';
 import type { QuickViewDialogProps } from '@/components/common/DataGrid/QuickViewDialog/types';
 import { handleRowChangeLog } from '@/core/utils';
@@ -71,7 +71,11 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
     >
       <Box display={'flex'} flex={1} flexDirection={'column'}>
         <Box overflow={'auto'} display={'flex'} flex={1}>
-          <CodeEditor width={dimensions.width} value={value ?? ''} onChange={(v: string): void => setValue(v)} />
+          <CodeEditor
+            width={dimensions.width}
+            value={value?.toString() ?? ''}
+            onChange={(v: string): void => setValue(v)}
+          />
         </Box>
       </Box>
     </ResizableModal>

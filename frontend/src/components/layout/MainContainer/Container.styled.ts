@@ -11,7 +11,6 @@ export const EndContainerStyled = styled(Box)(({ theme }) => ({
   padding: theme.spacing(1),
   borderRight: `1px solid ${theme.palette.divider}`,
   borderLeft: `1px solid ${theme.palette.divider}`,
-  borderTop: `1px solid ${theme.palette.divider}`,
   overflow: 'auto',
   background: theme.palette.background.subdued,
   display: 'flex',
