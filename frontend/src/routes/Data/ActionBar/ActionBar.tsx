@@ -8,6 +8,7 @@ import { DataTabType } from '@/types';
 import { Badge, Box, Grid, IconButton, Stack, useTheme } from '@mui/material';
 import { type JSX, useState } from 'react';
 import Filters from './Filters/Filters';
+import InlineQuery from './InlineQuery/InlineQuery';
 import QueryPreview from './QueryPreview/QueryPreview';
 import Sorts from './Sorts/Sorts';
 import type { ActionBarProps } from './types';
@@ -98,22 +99,18 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
         padding=' 8px'
         maxHeight={40}
         direction='row'
-        justifyContent='space-between'
         alignItems='center'
       >
-        <Stack direction={'row'} spacing={1} display='flex' justifyContent='flex-start'>
-          <IconButton
-            className={showColumns ? 'active' : ''}
-            aria-label='grid'
-            onClick={(): void => handleToggle('column')}
-          >
-            <CustomIcon type='grid' size='s' />
-          </IconButton>
+        <Grid size={{ md: 8 }}>
+          <InlineQuery />
+        </Grid>
+        <Grid size={{ md: 4 }} display='flex' justifyContent='flex-end'>
           <IconButton className={show.showFilters ? 'active' : ''} onClick={(): void => handleToggle('filter')}>
             <Badge badgeContent={filterCount} color='secondary' variant='dot'>
               <CustomIcon type='filter' size='s' />
             </Badge>
           </IconButton>
+
           <IconButton
             className={show.showSorts ? 'active' : ''}
             aria-label='sort'
@@ -123,8 +120,15 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
               <CustomIcon type='sort' size='s' />
             </Badge>
           </IconButton>
-        </Stack>
-        <Grid size={{ md: 8 }} display='flex' justifyContent='flex-end'>
+
+          <IconButton
+            className={showColumns ? 'active' : ''}
+            aria-label='grid'
+            onClick={(): void => handleToggle('column')}
+          >
+            <CustomIcon type='grid' size='s' />
+          </IconButton>
+
           <IconButton aria-label='export' onClick={handleShowExport}>
             <CustomIcon type='export' size='s' />
           </IconButton>

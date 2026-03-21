@@ -1,6 +1,4 @@
-/**
- * Monaco Editor constants and configuration values
- */
+export const themes = ['github-light', 'github-dark'];
 
 // Completion Item Kinds (from Monaco Editor)
 export const CompletionItemKind = {

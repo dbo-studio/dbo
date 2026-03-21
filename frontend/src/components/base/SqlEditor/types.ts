@@ -3,6 +3,7 @@ import type { AutoCompleteType } from '@/types';
 export type SqlEditorProps = {
   autocomplete: AutoCompleteType;
   value: string;
+  placeholder?: string;
   onChange?: (value: string) => void;
   onBlur?: (value: string) => void;
   onMount?: () => void;

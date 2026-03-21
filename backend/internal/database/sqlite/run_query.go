@@ -62,6 +62,10 @@ func (r *SQLiteRepository) RunQuery(ctx context.Context, req *dto.RunQueryReques
 func (r *SQLiteRepository) runQueryGenerator(_ context.Context, dto *dto.RunQueryRequest, node string) string {
 	var sb strings.Builder
 
+	if lo.FromPtrOr(dto.InlineQuery, "") != "" {
+		return fmt.Sprintf("SELECT * FROM `%s` WHERE %s", node, *dto.InlineQuery)
+	}
+
 	// SELECT clause
 	selectColumns := "*"
 	if len(dto.Columns) > 0 {

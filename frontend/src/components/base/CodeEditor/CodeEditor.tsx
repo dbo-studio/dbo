@@ -1,10 +1,10 @@
 import type { CodeEditorProps } from '@/components/base/CodeEditor/types.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
-import MonacoEditor, { useMonaco } from '@monaco-editor/react';
+import { Editor, useMonaco } from '@monaco-editor/react';
 import { Box } from '@mui/material';
 import { type JSX, useCallback, useEffect } from 'react';
-import { setupLanguage } from '../SqlEditor/helpers/languageSetup.ts';
 import { editorConfig } from './helpers/editorConfig.ts';
+import { setupLanguage } from './helpers/languageSetup.ts';
 
 export default function CodeEditor({ value, onChange, width, height }: CodeEditorProps): JSX.Element {
   const theme = useSettingStore((state) => state.theme);
@@ -39,7 +39,7 @@ export default function CodeEditor({ value, onChange, width, height }: CodeEdito
         }
       }}
     >
-      <MonacoEditor
+      <Editor
         height={height || '100%'}
         width={width || '100%'}
         language='json'

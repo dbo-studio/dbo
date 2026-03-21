@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 func (r *MySQLRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
@@ -60,6 +61,10 @@ func (r *MySQLRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequest
 
 func (r *MySQLRepository) runQueryGenerator(ctx context.Context, dto *dto.RunQueryRequest, node MySQLNode) string {
 	var sb strings.Builder
+
+	if lo.FromPtrOr(dto.InlineQuery, "") != "" {
+		return fmt.Sprintf("SELECT * FROM `%s`.`%s` WHERE %s", node.Database, node.Table, *dto.InlineQuery)
+	}
 
 	selectColumns := "*"
 	if len(dto.Columns) > 0 {

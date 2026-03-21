@@ -1,5 +1,5 @@
 import { variables } from '@/core/theme/variables';
-import { Box, styled } from '@mui/material';
+import { Box, Button, styled } from '@mui/material';
 
 export const ChatBoxStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -12,4 +12,17 @@ export const ChatBoxStyled = styled(Box)(({ theme }) => ({
   width: '100%',
   marginTop: theme.spacing(1),
   maxHeight: '300px'
+}));
+
+export const SendButtonStyled = styled(Button)(({ theme }) => ({
+  width: '24px',
+  height: '24px',
+  padding: '5px',
+  minWidth: 'unset',
+  marginLeft: theme.spacing(1),
+  borderRadius: 100,
+  boxShadow: 'none',
+  '& svg': {
+    color: (theme.palette.mode === 'light' ? '#fff' : theme.palette.text.subdued) + ' !important'
+  }
 }));

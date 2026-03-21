@@ -5,7 +5,7 @@ import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import Editor, { useMonaco, type OnMount } from '@monaco-editor/react';
 import { Box, CircularProgress } from '@mui/material';
 import type * as Monaco from 'monaco-editor';
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type JSX } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, type JSX } from 'react';
 import { changeMetaProviderSetting } from './helpers/dbMetaProvider.ts';
 import { editorConfig } from './helpers/editorConfig.ts';
 import { setupLanguage } from './helpers/languageSetup.ts';
@@ -18,18 +18,15 @@ export default forwardRef<SqlEditorRef, SqlEditorProps>(function SqlEditor(
   ref
 ): JSX.Element {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor>(null);
-  const boxRef = useRef<HTMLDivElement>(null);
-  const [editor, setEditor] = useState<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const theme = useSettingStore((state) => state.theme);
   const monaco = useMonaco();
   const selectedTabId = useTabStore((state) => state.selectedTabId);
 
-  useInlineAITrigger(editor);
-  useSqlValidation(editor, value);
+  useInlineAITrigger(editorRef.current);
+  useSqlValidation(editorRef.current, value);
 
   const handleEditorDidMount: OnMount = (editorInstance) => {
     editorRef.current = editorInstance;
-    setEditor(editorInstance);
 
     editorInstance.addAction({
       id: shortcuts.runQuery.command.join('+'),
@@ -88,7 +85,7 @@ export default forwardRef<SqlEditorRef, SqlEditorProps>(function SqlEditor(
   }, [monaco, theme.editorTheme]);
 
   return (
-    <Box ref={boxRef} width='100%' height='100%'>
+    <Box width='100%' height='100%'>
       <Editor
         height='100%'
         width='100%'

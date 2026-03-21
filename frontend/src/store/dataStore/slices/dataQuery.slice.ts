@@ -41,6 +41,7 @@ export const createDataQuerySlice: StateCreator<
           limit: tab.pagination?.limit ?? 100,
           page: tab.pagination?.page ?? 1,
           columns: tab.columns ?? [],
+          inlineQuery: tab.inlineQuery,
           filters: filters.filter(
             (f) =>
               f.column.length > 0 &&

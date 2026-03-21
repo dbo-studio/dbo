@@ -10,6 +10,7 @@ type (
 		NodeId       string      `json:"nodeId"`
 		Limit        *int        `json:"limit"`
 		Page         *int        `json:"page"`
+		InlineQuery  *string     `json:"inlineQuery"`
 		Filters      []FilterDto `json:"filters"`
 		Sorts        []SortDto   `json:"sorts"`
 		Columns      []string

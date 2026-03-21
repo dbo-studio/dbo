@@ -194,5 +194,6 @@
   "enable_analytics": "Enable analytics",
   "reset_factory": "Reset factory",
   "reset_factory_description": "Delete all DBO's data",
-  "reset_factory_confirm": "Are you sure delete all data?"
+  "reset_factory_confirm": "Are you sure delete all data?",
+  "inline_query_placeholder": "Enter condition, id = 1"
 }

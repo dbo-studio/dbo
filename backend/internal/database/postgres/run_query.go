@@ -62,6 +62,10 @@ func (r *PostgresRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequ
 func (r *PostgresRepository) runQueryGenerator(ctx context.Context, dto *dto.RunQueryRequest, node PGNode) string {
 	var sb strings.Builder
 
+	if lo.FromPtrOr(dto.InlineQuery, "") != "" {
+		return fmt.Sprintf("SELECT * FROM `%s`.`%s` WHERE %s", node.Database, node.Table, *dto.InlineQuery)
+	}
+
 	// SELECT clause
 	selectColumns := "*"
 	if len(dto.Columns) > 0 {

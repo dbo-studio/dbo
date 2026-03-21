@@ -1,9 +1,7 @@
 import { shikiToMonaco } from '@shikijs/monaco';
 import type * as Monaco from 'monaco-editor';
 import { createHighlighter } from 'shiki/bundle/web';
-import { completionService } from './completionService';
-import { themes } from './constants';
-import { registerInlineAIProvider } from './registerInlineAIProvider';
+import { themes } from '../../SqlEditor/helpers/constants';
 
 let setupPromise: Promise<void> | null = null;
 
@@ -18,14 +16,7 @@ export const setupLanguage = async (monaco: typeof Monaco, theme: string) => {
 
     shikiToMonaco(highlighter, monaco);
 
-    monaco.languages.registerCompletionItemProvider('sql', {
-      triggerCharacters: [' ', '.', '"', "'", '`'],
-      provideCompletionItems: completionService
-    });
-
     monaco.editor.setTheme(theme);
-
-    registerInlineAIProvider(monaco, 'sql');
   })();
 
   return setupPromise;

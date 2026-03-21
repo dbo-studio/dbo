@@ -1,7 +1,7 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { IconButton, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
 import type { ChatBoxProps } from '../types';
-import { ChatBoxStyled } from './ChatBox.styled';
+import { ChatBoxStyled, SendButtonStyled } from './ChatBox.styled';
 import ChatContext from './ChatContext/ChatContext';
 import ChatTextInput from './ChatTextInput/ChatTextInput';
 import Providers from './Providers/Providers';
@@ -14,13 +14,13 @@ export default function ChatBox({ autocomplete, loading, onSend, onCancel }: Cha
       <Stack direction={'row'} justifyContent={'space-between'} alignItems={'center'}>
         <Providers />
         {loading ? (
-          <IconButton onClick={onCancel}>
+          <SendButtonStyled onClick={onCancel}>
             <CustomIcon type='pause' />
-          </IconButton>
+          </SendButtonStyled>
         ) : (
-          <IconButton onClick={onSend} sx={{ border: (theme) => `1px solid ${theme.palette.divider}` }}>
+          <SendButtonStyled onClick={onSend} variant='contained'>
             <CustomIcon type='arrowUp' />
-          </IconButton>
+          </SendButtonStyled>
         )}
       </Stack>
     </ChatBoxStyled>

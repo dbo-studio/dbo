@@ -32,6 +32,7 @@ export const createTabSettingSlice: StateCreator<
 
     const newTab: DataTabType = {
       id: tools.uuid(),
+      inlineQuery: '',
       connectionId: currentConnectionId,
       nodeId: id,
       name: table,

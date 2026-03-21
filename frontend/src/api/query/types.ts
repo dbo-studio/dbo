@@ -5,6 +5,7 @@ export type RunQueryRequestType = {
   nodeId: string;
   limit: number;
   page: number;
+  inlineQuery?: string;
   columns: string[];
   filters: FilterType[];
   sorts: SortType[];
