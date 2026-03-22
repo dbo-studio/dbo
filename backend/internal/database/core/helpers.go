@@ -5,26 +5,19 @@ import (
 	"strings"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
-func (*BaseRepository) ExtractNode(node string) contract.DBNode {
-	parts := strings.Split(node, ".")
-
-	var database, schema, table string
-
-	switch len(parts) {
-	case 1:
-		database = parts[0]
-	case 2:
-		database, schema = parts[0], parts[1]
-	case 3:
-		database, schema, table = parts[0], parts[1], parts[2]
-	}
-
-	return contract.DBNode{
-		Database: database,
-		Schema:   schema,
-		Table:    table,
+func (r *BaseRepository) ExtractNode(node string) contract.DBNode {
+	switch r.Connection().ConnectionType {
+	case string(databaseContract.Mysql):
+		return r.mysqlNode(node)
+	case string(databaseContract.Postgresql):
+		return r.postgresqlNode(node)
+	case string(databaseContract.Sqlite):
+		return r.sqliteNode(node)
+	default:
+		return databaseContract.DBNode{}
 	}
 }
 
@@ -88,4 +81,49 @@ func (*BaseRepository) SanitizeQueryResults(row map[string]any) map[string]any {
 	}
 
 	return sanitized
+}
+
+func (*BaseRepository) postgresqlNode(nodeId string) contract.DBNode {
+	parts := strings.Split(nodeId, ".")
+
+	var database, schema, table string
+
+	switch len(parts) {
+	case 1:
+		database = parts[0]
+	case 2:
+		database, schema = parts[0], parts[1]
+	case 3:
+		database, schema, table = parts[0], parts[1], parts[2]
+	}
+
+	return contract.DBNode{
+		Database: database,
+		Schema:   schema,
+		Table:    table,
+	}
+}
+
+func (*BaseRepository) mysqlNode(nodeId string) contract.DBNode {
+	parts := strings.Split(nodeId, ".")
+
+	var database, table string
+
+	switch len(parts) {
+	case 1:
+		database = parts[0]
+	case 2:
+		database, table = parts[0], parts[1]
+	}
+
+	return contract.DBNode{
+		Database: database,
+		Table:    table,
+	}
+}
+
+func (*BaseRepository) sqliteNode(nodeId string) contract.DBNode {
+	return contract.DBNode{
+		Table: nodeId,
+	}
 }

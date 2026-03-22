@@ -114,7 +114,7 @@ func (r *PostgresRepository) getTableColumns(ctx context.Context, node contract.
 			"column_name":              column.ColumnName,
 			"data_type":                column.DataType,
 			"not_null":                 column.IsNullable == "NO",
-			"primary":                  column.PrimaryKey != nil,
+			"primary":                  column.IsPrimaryKey,
 			"column_default":           column.ColumnDefault,
 			"comment":                  column.Comment,
 			"character_maximum_length": column.CharacterMaximumLength,

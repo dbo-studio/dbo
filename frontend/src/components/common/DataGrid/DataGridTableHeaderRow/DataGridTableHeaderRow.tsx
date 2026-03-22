@@ -5,7 +5,7 @@ import { useSelectedTab } from '@/hooks';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { DataTabType, TabType } from '@/types';
-import { Box, Checkbox } from '@mui/material';
+import { Box, Checkbox, Stack, Typography, useTheme } from '@mui/material';
 import type { JSX } from 'react';
 import { useCallback } from 'react';
 import { SelectTableHeader, SortableTableHeader, StyledTableHead, StyledTableRow } from '../DataGrid.styled';
@@ -18,6 +18,7 @@ export default function DataGridTableHeaderRow({
   resizingColumnId
 }: DataGridTableHeaderRowProps): JSX.Element {
   const selectedTab = useSelectedTab<DataTabType>();
+  const theme = useTheme();
 
   const rows = useDataStore((s) => s.rows);
   const updateSelectedRows = useDataStore((s) => s.updateSelectedRows);
@@ -125,8 +126,14 @@ export default function DataGridTableHeaderRow({
 
           return (
             <SortableTableHeader key={column.name} onClick={(e) => handleColumnSort(column.name, e)}>
-              <Box display='flex' alignItems='center' gap={0.5}>
-                <span>{column.name}</span>
+              <Box display='flex' alignItems='center' gap={0.5} justifyContent={'space-between'}>
+                <Stack spacing={1} direction={'row'} alignItems={'center'}>
+                  <Typography variant='body2'>{column.name}</Typography>
+                  <Typography fontSize={10} color={theme.palette.text.placeholder}>
+                    ({column.type})
+                  </Typography>
+                  {column.isPrimaryKey && <CustomIcon type={'key'} size='xs' color={theme.palette.text.placeholder} />}
+                </Stack>
                 <CustomIcon type={sortIcon} size='xs' />
               </Box>
 

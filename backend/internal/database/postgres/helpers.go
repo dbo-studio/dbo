@@ -18,6 +18,7 @@ func columnListToResponse(columns []Column) []dto.Column {
 		col.Default = column.ColumnDefault
 		col.Comment = column.Comment
 		col.NotNull = column.IsNullable == "NO"
+		col.IsPrimaryKey = column.IsPrimaryKey
 
 		data = append(data, col)
 	}

@@ -16,11 +16,11 @@ type Column struct {
 	Comment                *string `gorm:"column:COLUMN_COMMENT"`
 	NumericScale           *int32  `gorm:"column:NUMERIC_SCALE"`
 
-	MappedType string      `gorm:"-"`
-	Editable   bool        `gorm:"-"`
-	IsActive   bool        `gorm:"-"`
-	PrimaryKey *PrimaryKey `gorm:"-"`
-	ForeignKey *ForeignKey `gorm:"-"`
+	MappedType   string      `gorm:"-"`
+	Editable     bool        `gorm:"-"`
+	IsActive     bool        `gorm:"-"`
+	IsPrimaryKey bool        `gorm:"-"`
+	ForeignKey   *ForeignKey `gorm:"-"`
 }
 
 func columnListToResponse(columns []Column) []dto.Column {
@@ -37,6 +37,7 @@ func columnListToResponse(columns []Column) []dto.Column {
 		col.Default = column.ColumnDefault
 		col.Comment = column.Comment
 		col.NotNull = column.IsNullable == "NO"
+		col.IsPrimaryKey = column.IsPrimaryKey
 
 		data = append(data, col)
 	}

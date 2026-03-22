@@ -16,6 +16,7 @@ func columnListToResponse(columns []Column) []dto.Column {
 		col.MappedType = column.MappedType
 		col.Editable = column.Editable
 		col.IsActive = column.IsActive
+		col.IsPrimaryKey = column.IsPrimaryKey == "1"
 
 		if column.IsNullable == "0" {
 			col.NotNull = false

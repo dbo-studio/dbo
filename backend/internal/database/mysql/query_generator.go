@@ -210,7 +210,7 @@ func (r *MySQLRepository) columns(ctx context.Context, database *string, table *
 			columns[i].IsActive = slices.Contains(columnNames, column.ColumnName)
 		}
 
-		primary, pkFound := lo.Find(pkList, func(pk PrimaryKey) bool {
+		_, pkFound := lo.Find(pkList, func(pk PrimaryKey) bool {
 			return pk.ColumnName == column.ColumnName
 		})
 
@@ -219,7 +219,7 @@ func (r *MySQLRepository) columns(ctx context.Context, database *string, table *
 		})
 
 		if pkFound {
-			columns[i].PrimaryKey = &primary
+			columns[i].IsPrimaryKey = true
 		}
 
 		if fkFound {

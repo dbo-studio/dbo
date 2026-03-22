@@ -16,15 +16,16 @@ type (
 )
 
 type Column struct {
-	Name       string  `json:"name"`
-	Type       string  `json:"type"`
-	NotNull    bool    `json:"notNull"`
-	Length     *int64  `json:"length"`
-	Default    *string `json:"default"`
-	Comment    *string `json:"comment"`
-	MappedType string  `json:"mappedType"`
-	Editable   bool    `json:"editable"`
-	IsActive   bool    `json:"isActive"`
+	Name         string  `json:"name"`
+	Type         string  `json:"type"`
+	NotNull      bool    `json:"notNull"`
+	Length       *int64  `json:"length"`
+	Default      *string `json:"default"`
+	Comment      *string `json:"comment"`
+	MappedType   string  `json:"mappedType"`
+	Editable     bool    `json:"editable"`
+	IsActive     bool    `json:"isActive"`
+	IsPrimaryKey bool    `json:"isPrimaryKey"`
 }
 
 func (req RawQueryRequest) Validate() error {

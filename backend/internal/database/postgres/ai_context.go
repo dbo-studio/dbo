@@ -106,7 +106,7 @@ func (r *PostgresRepository) AiContext(ctx context.Context, req *dto.AiChatReque
 				sectionBuilder.WriteString(columnContextDescriptor(column))
 				sectionBuilder.WriteString(")\n")
 
-				if column.PrimaryKey != nil {
+				if column.IsPrimaryKey {
 					if _, exists := pkSet[column.ColumnName]; !exists {
 						pkSet[column.ColumnName] = struct{}{}
 						pkList = append(pkList, column.ColumnName)
@@ -248,7 +248,7 @@ func (r *PostgresRepository) AiCompleteContext(ctx context.Context, req *dto.AiI
 				sectionBuilder.WriteString(columnContextDescriptor(column))
 				sectionBuilder.WriteString(")\n")
 
-				if column.PrimaryKey != nil {
+				if column.IsPrimaryKey {
 					if _, exists := pkSet[column.ColumnName]; !exists {
 						pkSet[column.ColumnName] = struct{}{}
 						pkList = append(pkList, column.ColumnName)
@@ -324,7 +324,7 @@ func (r *PostgresRepository) AiCompleteContext(ctx context.Context, req *dto.AiI
 func columnContextDescriptor(column Column) string {
 	descriptors := make([]string, 0, 3)
 
-	if column.PrimaryKey != nil {
+	if column.IsPrimaryKey {
 		descriptors = append(descriptors, "PK")
 	}
 

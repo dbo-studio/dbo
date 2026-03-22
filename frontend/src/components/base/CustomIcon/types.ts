@@ -75,5 +75,6 @@ export const IconTypes = {
   bot: 'Bot',
   mysql: 'mysql',
   message: 'MessageSquare',
-  pause: 'Pause'
+  pause: 'Pause',
+  key: 'KeyRound'
 };

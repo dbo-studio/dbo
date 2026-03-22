@@ -262,11 +262,11 @@ type Column struct {
 	IsIdentity             bool    `gorm:"column:is_identity"`
 	IsGenerated            bool    `gorm:"column:is_generated"`
 
-	MappedType string      `gorm:"-"`
-	Editable   bool        `gorm:"-"`
-	IsActive   bool        `gorm:"-"`
-	PrimaryKey *PrimaryKey `gorm:"-"`
-	ForeignKey *ForeignKey `gorm:"-"`
+	MappedType   string      `gorm:"-"`
+	Editable     bool        `gorm:"-"`
+	IsActive     bool        `gorm:"-"`
+	IsPrimaryKey bool        `gorm:"-"`
+	ForeignKey   *ForeignKey `gorm:"-"`
 }
 
 func (r *PostgresRepository) columns(ctx context.Context, table *string, schema *string, columnNames []string, editable bool, fromCache bool) ([]Column, error) {
@@ -360,7 +360,7 @@ func (r *PostgresRepository) columns(ctx context.Context, table *string, schema 
 			columns[i].IsActive = slices.Contains(columnNames, column.ColumnName)
 		}
 
-		primary, pkFound := lo.Find(pkList, func(pk PrimaryKey) bool {
+		_, pkFound := lo.Find(pkList, func(pk PrimaryKey) bool {
 			return pk.ColumnName == column.ColumnName
 		})
 
@@ -369,7 +369,7 @@ func (r *PostgresRepository) columns(ctx context.Context, table *string, schema 
 		})
 
 		if pkFound {
-			columns[i].PrimaryKey = &primary
+			columns[i].IsPrimaryKey = true
 		}
 
 		if fkFound {

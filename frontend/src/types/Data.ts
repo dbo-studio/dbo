@@ -6,14 +6,15 @@ export type RowType = {
 export interface ColumnType {
   name: string;
   type: string;
-  isActive: boolean;
   notNull: boolean;
   length: string;
-  comment: string;
   default: string;
+  comment: string;
   mappedType: string;
-  selected?: boolean;
   editable?: boolean;
+  isActive: boolean;
+  isPrimaryKey: boolean;
+  selected?: boolean;
 }
 
 export interface EditedColumnType extends ColumnType {

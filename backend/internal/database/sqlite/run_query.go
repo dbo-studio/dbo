@@ -10,15 +10,16 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	contract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
 func (r *SQLiteRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
-	node := req.NodeId
+	node := r.base.ExtractNode(req.NodeId)
 	query := r.runQueryGenerator(ctx, req, node)
 	queryResults := make([]map[string]any, 0)
 	columns := make([]Column, 0)
 
-	if node == "" {
+	if node.Table == "" {
 		return nil, errors.New("table or view not found")
 	}
 
@@ -39,7 +40,7 @@ func (r *SQLiteRepository) RunQuery(ctx context.Context, req *dto.RunQueryReques
 	})
 
 	g.Go(func() error {
-		result, err := r.getColumns(ctx, node, req.Columns, true)
+		result, err := r.getColumns(ctx, node.Table, req.Columns, true)
 		if err != nil {
 			return err
 		}
@@ -58,7 +59,7 @@ func (r *SQLiteRepository) RunQuery(ctx context.Context, req *dto.RunQueryReques
 	}, nil
 }
 
-func (r *SQLiteRepository) runQueryGenerator(ctx context.Context, dto *dto.RunQueryRequest, node string) string {
+func (r *SQLiteRepository) runQueryGenerator(ctx context.Context, dto *dto.RunQueryRequest, node contract.DBNode) string {
 	var sb strings.Builder
 
 	if lo.FromPtrOr(dto.InlineQuery, "") != "" {
@@ -70,7 +71,7 @@ func (r *SQLiteRepository) runQueryGenerator(ctx context.Context, dto *dto.RunQu
 	if len(dto.Columns) > 0 {
 		selectColumns = strings.Join(dto.Columns, ", ")
 	}
-	_, _ = fmt.Fprintf(&sb, "SELECT %s FROM %q", selectColumns, node)
+	_, _ = fmt.Fprintf(&sb, "SELECT %s FROM %q", selectColumns, node.Table)
 
 	// WHERE clause
 	if len(dto.Filters) > 0 {
@@ -92,7 +93,7 @@ func (r *SQLiteRepository) runQueryGenerator(ctx context.Context, dto *dto.RunQu
 		}
 		sb.WriteString(strings.Join(sortClauses, ", "))
 	} else {
-		keys, err := r.getPrimaryKeys(ctx, Table{node})
+		keys, err := r.getPrimaryKeys(ctx, Table{node.Table})
 		if err == nil && len(keys) > 0 {
 			sb.WriteString(" ORDER BY ")
 			sb.WriteString(strings.Join(keys, ", "))
