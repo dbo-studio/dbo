@@ -1,6 +1,7 @@
 package databaseSqlite
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/samber/lo"
@@ -10,7 +11,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *SQLiteRepository) handleTableCommands(node string, tabId map[contract.TreeTab]any, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
+func (r *SQLiteRepository) handleTableCommands(ctx context.Context, node string, tabId map[contract.TreeTab]any, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
 	if !r.isTableRelatedAction(tabId, action) {
 		return []string{}, "", nil
 	}
@@ -27,7 +28,7 @@ func (r *SQLiteRepository) handleTableCommands(node string, tabId map[contract.T
 	r.initializeTableParams(paramsMap.tableParams, node)
 
 	if action == contract.EditTableAction {
-		r.populateParamsFromDatabase(paramsMap, *paramsMap.tableParams.Old.Name)
+		r.populateParamsFromDatabase(ctx, paramsMap, *paramsMap.tableParams.Old.Name)
 	}
 
 	switch action {
@@ -117,11 +118,11 @@ func (r *SQLiteRepository) initializeTableParams(tableParams *dto.SQLiteTablePar
 	}
 }
 
-func (r *SQLiteRepository) populateParamsFromDatabase(paramsMap *tableParamsMap, tableName string) {
-	tableDDL := r.populateTableParamsFromDDL(paramsMap.tableParams)
-	r.populateColumnParamsFromDDL(paramsMap.columnParams, tableDDL)
+func (r *SQLiteRepository) populateParamsFromDatabase(ctx context.Context, paramsMap *tableParamsMap, tableName string) {
+	tableDDL := r.populateTableParamsFromDDL(ctx, paramsMap.tableParams)
+	r.populateColumnParamsFromDDL(ctx, paramsMap.columnParams, tableDDL)
 	r.populateForeignKeyParamsFromDB(paramsMap.foreignKeyParams, tableName)
-	r.populateKeyParamsFromDB(paramsMap.keyParams, tableName)
+	r.populateKeyParamsFromDB(ctx, paramsMap.keyParams, tableName)
 }
 
 func (r *SQLiteRepository) buildCreateTableQueries(paramsMap *tableParamsMap) []string {

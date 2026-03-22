@@ -116,7 +116,7 @@ func (r *SQLiteRepository) tableColumnsOptions(ctx context.Context, node string)
 	}
 
 	var results []columnResult
-	err := r.db.WithContext(ctx).Raw(`
+	err := r.base.DB().WithContext(ctx).Raw(`
 		SELECT name as value, name as name 
 		FROM pragma_table_info(?) 
 		WHERE name IS NOT NULL 
@@ -144,7 +144,7 @@ func (r *SQLiteRepository) tablesListOptions(ctx context.Context) []contract.For
 	}
 
 	var results []tableResult
-	err := r.db.WithContext(ctx).Raw(`
+	err := r.base.DB().WithContext(ctx).Raw(`
 		SELECT name as value, name as name 
 		FROM sqlite_master 
 		WHERE type = 'table' AND name NOT LIKE 'sqlite_%'

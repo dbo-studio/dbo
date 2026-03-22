@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/samber/lo"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
-	"github.com/samber/lo"
 )
 
-func (r *MySQLRepository) handleForeignKeyCommands(node MySQLNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
+func (r *MySQLRepository) handleForeignKeyCommands(node contract.DBNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
 	if tabId != contract.TableForeignKeysTab || node.Table == "" || (action != contract.CreateTableAction && action != contract.EditTableAction) {

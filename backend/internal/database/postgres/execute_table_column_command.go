@@ -10,7 +10,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
+func (r *PostgresRepository) handleTableColumnCommands(node contract.DBNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
 	if tabId != contract.TableColumnsTab || node.Table == "" || (action != contract.CreateTableAction && action != contract.EditTableAction) {
@@ -26,7 +26,7 @@ func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tabId contra
 
 	if action == contract.CreateTableAction {
 		for _, column := range params.Columns {
-			queries = append(queries, handleCreateColumn(node, column)...)
+			queries = append(queries, r.handleCreateColumn(node, column)...)
 		}
 	}
 
@@ -37,9 +37,9 @@ func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tabId contra
 			}
 
 			if lo.FromPtr(column.Added) {
-				queries = append(queries, handleCreateColumn(node, column)...)
+				queries = append(queries, r.handleCreateColumn(node, column)...)
 			} else {
-				queries = append(queries, handleEditColumn(node, column)...)
+				queries = append(queries, r.handleEditColumn(node, column)...)
 			}
 		}
 	}
@@ -47,7 +47,7 @@ func (r *PostgresRepository) handleTableColumnCommands(node PGNode, tabId contra
 	return queries, nil
 }
 
-func handleCreateColumn(node PGNode, column dto.PostgresTableColumn) []string {
+func (r *PostgresRepository) handleCreateColumn(node contract.DBNode, column dto.PostgresTableColumn) []string {
 	queries := []string{}
 
 	columnDef := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s", node.Table, *column.New.Name, *column.New.DataType)
@@ -92,7 +92,7 @@ func handleCreateColumn(node PGNode, column dto.PostgresTableColumn) []string {
 	return queries
 }
 
-func handleEditColumn(node PGNode, column dto.PostgresTableColumn) []string {
+func (r *PostgresRepository) handleEditColumn(node contract.DBNode, column dto.PostgresTableColumn) []string {
 	queries := []string{}
 
 	alter := fmt.Sprintf(`ALTER TABLE "%s"."%s" `, node.Schema, node.Table)
@@ -116,9 +116,9 @@ func handleEditColumn(node PGNode, column dto.PostgresTableColumn) []string {
 			alter, *column.Old.Name, *column.New.DataType, *column.Old.Name, *column.New.DataType)
 
 		if column.New.MaxLength != nil {
-			if isCharacterType(*column.New.DataType) {
+			if r.base.IsCharacterType(*column.New.DataType) {
 				dataTypeQuery = fmt.Sprintf("%s(%d)", dataTypeQuery, *column.New.MaxLength)
-			} else if isNumericType(*column.New.DataType) && column.New.NumericScale != nil {
+			} else if r.base.IsNumericType(*column.New.DataType) && column.New.NumericScale != nil {
 				dataTypeQuery = fmt.Sprintf("%s(%d,%d)", dataTypeQuery, *column.New.MaxLength, *column.New.NumericScale)
 			}
 		}

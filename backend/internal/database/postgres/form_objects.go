@@ -5,11 +5,10 @@ import (
 	"fmt"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
-	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 func (r *PostgresRepository) Objects(ctx context.Context, nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
-	node := extractNode(nodeID)
+	node := r.base.ExtractNode(nodeID)
 
 	switch tabID {
 	case contract.DatabaseTab:
@@ -33,7 +32,7 @@ func (r *PostgresRepository) Objects(ctx context.Context, nodeID string, tabID c
 	}
 }
 
-func (r *PostgresRepository) getDatabaseInfo(ctx context.Context, node PGNode) (*contract.FormResponse, error) {
+func (r *PostgresRepository) getDatabaseInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.databaseFields(ctx)
 
 	databases, err := r.databases(ctx, true)
@@ -54,10 +53,10 @@ func (r *PostgresRepository) getDatabaseInfo(ctx context.Context, node PGNode) (
 		}
 	}
 
-	return helper.BuildObjectFormResponseFromResults(result, fields)
+	return r.base.BuildObjectFormResponseFromResults(result, fields)
 }
 
-func (r *PostgresRepository) getSchemaInfo(ctx context.Context, node PGNode) (*contract.FormResponse, error) {
+func (r *PostgresRepository) getSchemaInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.schemaFields()
 	schemas, err := r.schemas(ctx, &node.Database, true)
 	if err != nil {
@@ -75,10 +74,10 @@ func (r *PostgresRepository) getSchemaInfo(ctx context.Context, node PGNode) (*c
 		}
 	}
 
-	return helper.BuildObjectFormResponseFromResults(result, fields)
+	return r.base.BuildObjectFormResponseFromResults(result, fields)
 }
 
-func (r *PostgresRepository) getTableInfo(ctx context.Context, node PGNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
+func (r *PostgresRepository) getTableInfo(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
 	fields := r.tableFields(ctx, action)
 
 	tables, err := r.tables(ctx, &node.Schema, true)
@@ -99,10 +98,10 @@ func (r *PostgresRepository) getTableInfo(ctx context.Context, node PGNode, acti
 		}
 	}
 
-	return helper.BuildObjectFormResponseFromResults(result, fields)
+	return r.base.BuildObjectFormResponseFromResults(result, fields)
 }
 
-func (r *PostgresRepository) getTableColumns(ctx context.Context, node PGNode) (*contract.FormResponse, error) {
+func (r *PostgresRepository) getTableColumns(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.tableColumnFields()
 	columns, err := r.columns(ctx, &node.Table, &node.Schema, []string{}, true, true)
 	if err != nil {
@@ -125,10 +124,10 @@ func (r *PostgresRepository) getTableColumns(ctx context.Context, node PGNode) (
 		})
 	}
 
-	return helper.BuildFormResponseFromResults(result, fields)
+	return r.base.BuildFormResponseFromResults(result, fields)
 }
 
-func (r *PostgresRepository) getTableForeignKeys(ctx context.Context, node PGNode) (*contract.FormResponse, error) {
+func (r *PostgresRepository) getTableForeignKeys(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.foreignKeyFields(ctx, node)
 	foreignKeys, err := r.foreignKeys(ctx, &node.Table, &node.Schema, true)
 	if err != nil {
@@ -150,7 +149,7 @@ func (r *PostgresRepository) getTableForeignKeys(ctx context.Context, node PGNod
 		})
 	}
 
-	response, err := helper.BuildFormResponseFromResults(result, fields)
+	response, err := r.base.BuildFormResponseFromResults(result, fields)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +157,7 @@ func (r *PostgresRepository) getTableForeignKeys(ctx context.Context, node PGNod
 	return response, nil
 }
 
-func (r *PostgresRepository) getTableKeys(ctx context.Context, node PGNode) (*contract.FormResponse, error) {
+func (r *PostgresRepository) getTableKeys(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.keyFields(ctx, node)
 	keys, err := r.tableKeys(ctx, &node.Table, &node.Schema, true)
 	if err != nil {
@@ -178,10 +177,10 @@ func (r *PostgresRepository) getTableKeys(ctx context.Context, node PGNode) (*co
 		})
 	}
 
-	return helper.BuildFormResponseFromResults(result, fields)
+	return r.base.BuildFormResponseFromResults(result, fields)
 }
 
-func (r *PostgresRepository) getViewInfo(ctx context.Context, node PGNode) (*contract.FormResponse, error) {
+func (r *PostgresRepository) getViewInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.viewFields()
 	views, err := r.views(ctx, &node.Database, &node.Schema, true)
 	if err != nil {
@@ -200,10 +199,10 @@ func (r *PostgresRepository) getViewInfo(ctx context.Context, node PGNode) (*con
 		}
 	}
 
-	return helper.BuildObjectFormResponseFromResults(result, fields)
+	return r.base.BuildObjectFormResponseFromResults(result, fields)
 }
 
-func (r *PostgresRepository) getMaterializedViewInfo(ctx context.Context, node PGNode) (*contract.FormResponse, error) {
+func (r *PostgresRepository) getMaterializedViewInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.materializedViewFields(ctx)
 	materializedViews, err := r.materializedViews(ctx, &node.Schema, true)
 	if err != nil {
@@ -223,5 +222,5 @@ func (r *PostgresRepository) getMaterializedViewInfo(ctx context.Context, node P
 		}
 	}
 
-	return helper.BuildObjectFormResponseFromResults(result, fields)
+	return r.base.BuildObjectFormResponseFromResults(result, fields)
 }

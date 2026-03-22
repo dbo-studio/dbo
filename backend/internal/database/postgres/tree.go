@@ -31,8 +31,8 @@ func (r *PostgresRepository) Tree(ctx context.Context, parentID string) (*contra
 
 func buildRoot(ctx context.Context, r *PostgresRepository) (*contract.TreeNode, error) {
 	root := &contract.TreeNode{
-		ID:          fmt.Sprintf("%d@database", r.connection.ID),
-		Name:        r.connection.Name,
+		ID:          fmt.Sprintf("%d@database", r.base.Connection().ID),
+		Name:        r.base.Connection().Name,
 		Icon:        lo.ToPtr("postgresql"),
 		Type:        contract.DatabaseContainerNodeType,
 		HasChildren: true,

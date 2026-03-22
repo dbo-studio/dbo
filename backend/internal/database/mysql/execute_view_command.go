@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/samber/lo"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
-	"github.com/samber/lo"
 )
 
-func (r *MySQLRepository) handleViewCommands(node MySQLNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
+func (r *MySQLRepository) handleViewCommands(node contract.DBNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
 	if action != contract.CreateViewAction && action != contract.EditViewAction && action != contract.DropViewAction {

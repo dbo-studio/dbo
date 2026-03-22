@@ -9,7 +9,7 @@ import (
 )
 
 func (r *PostgresRepository) Execute(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) error {
-	node := extractNode(nodeID)
+	node := r.base.ExtractNode(nodeID)
 	type ExecuteParams map[contract.TreeTab]any
 	executeParams, err := helper.ConvertToDTO[ExecuteParams](params)
 	if err != nil {
@@ -77,7 +77,7 @@ func (r *PostgresRepository) Execute(ctx context.Context, nodeID string, action 
 			return err
 		}
 
-		if err := r.db.Exec(query).Error; err != nil {
+		if err := r.base.DB().WithContext(ctx).Exec(query).Error; err != nil {
 			return err
 		}
 	}

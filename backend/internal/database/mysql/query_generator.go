@@ -3,9 +3,11 @@ package databaseMysql
 import (
 	"context"
 	"errors"
+	"fmt"
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/samber/lo"
 	"golang.org/x/sync/errgroup"
@@ -20,7 +22,7 @@ func (r *MySQLRepository) databases(ctx context.Context, fromCache bool) ([]Data
 	cacheKey := r.cacheKey("databases")
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &databases)
+		err := r.base.Cache().Get(ctx, cacheKey, &databases)
 		if err != nil {
 			return nil, err
 		}
@@ -30,7 +32,7 @@ func (r *MySQLRepository) databases(ctx context.Context, fromCache bool) ([]Data
 		}
 	}
 
-	err := r.db.WithContext(ctx).Table("information_schema.SCHEMATA").
+	err := r.base.DB().WithContext(ctx).Table("information_schema.SCHEMATA").
 		Select("SCHEMA_NAME").
 		Where("SCHEMA_NAME NOT IN ('information_schema', 'mysql', 'performance_schema', 'sys')").
 		Order("SCHEMA_NAME").
@@ -59,7 +61,7 @@ func (r *MySQLRepository) tables(ctx context.Context, database *string, fromCach
 	cacheKey := r.cacheKey("tables", lo.FromPtr(database))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &tables)
+		err := r.base.Cache().Get(ctx, cacheKey, &tables)
 		if err != nil {
 			return nil, err
 		}
@@ -69,7 +71,7 @@ func (r *MySQLRepository) tables(ctx context.Context, database *string, fromCach
 		}
 	}
 
-	query := r.db.WithContext(ctx).
+	query := r.base.DB().WithContext(ctx).
 		Table("information_schema.TABLES AS t").
 		Select(`
 		t.TABLE_NAME,
@@ -105,7 +107,7 @@ func (r *MySQLRepository) views(ctx context.Context, database *string, fromCache
 	cacheKey := r.cacheKey("views", lo.FromPtr(database))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &views)
+		err := r.base.Cache().Get(ctx, cacheKey, &views)
 		if err != nil {
 			return nil, err
 		}
@@ -115,7 +117,7 @@ func (r *MySQLRepository) views(ctx context.Context, database *string, fromCache
 		}
 	}
 
-	query := r.db.WithContext(ctx).
+	query := r.base.DB().WithContext(ctx).
 		Table("information_schema.VIEWS").
 		Select(`
 		TABLE_NAME,
@@ -137,7 +139,7 @@ func (r *MySQLRepository) columns(ctx context.Context, database *string, table *
 	cacheKey := r.cacheKey("columns", lo.FromPtr(database), lo.FromPtr(table), strings.Join(columnNames, ","), strconv.FormatBool(editable))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &columns)
+		err := r.base.Cache().Get(ctx, cacheKey, &columns)
 		if err != nil {
 			return nil, err
 		}
@@ -147,7 +149,7 @@ func (r *MySQLRepository) columns(ctx context.Context, database *string, table *
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("information_schema.COLUMNS").
+	query := r.base.DB().WithContext(ctx).Table("information_schema.COLUMNS").
 		Select(`
 			ORDINAL_POSITION,
 			COLUMN_NAME,
@@ -201,7 +203,7 @@ func (r *MySQLRepository) columns(ctx context.Context, database *string, table *
 	}
 
 	for i, column := range columns {
-		columns[i].MappedType = columnMappedFormat(column.DataType)
+		columns[i].MappedType = r.base.ColumnMappedFormat(column.DataType)
 		columns[i].Editable = editable
 		columns[i].IsActive = true
 		if len(columnNames) > 0 {
@@ -239,7 +241,7 @@ func (r *MySQLRepository) primaryKeys(ctx context.Context, database *string, tab
 	cacheKey := r.cacheKey("primary_keys", lo.FromPtr(database), lo.FromPtr(table))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &primaryKeys)
+		err := r.base.Cache().Get(ctx, cacheKey, &primaryKeys)
 		if err != nil {
 			return nil, err
 		}
@@ -249,7 +251,7 @@ func (r *MySQLRepository) primaryKeys(ctx context.Context, database *string, tab
 		}
 	}
 
-	query := r.db.WithContext(ctx).
+	query := r.base.DB().WithContext(ctx).
 		Table("information_schema.TABLE_CONSTRAINTS AS tc").
 		Select("kcu.COLUMN_NAME").
 		Joins(`
@@ -295,7 +297,7 @@ func (r *MySQLRepository) foreignKeys(ctx context.Context, database *string, tab
 	cacheKey := r.cacheKey("foreign_keys", lo.FromPtr(database), lo.FromPtr(table))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &foreignKeys)
+		err := r.base.Cache().Get(ctx, cacheKey, &foreignKeys)
 		if err != nil {
 			return nil, err
 		}
@@ -305,7 +307,7 @@ func (r *MySQLRepository) foreignKeys(ctx context.Context, database *string, tab
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("information_schema.KEY_COLUMN_USAGE AS kcu").
+	query := r.base.DB().WithContext(ctx).Table("information_schema.KEY_COLUMN_USAGE AS kcu").
 		Select(`
 			kcu.CONSTRAINT_NAME,
 			kcu.COLUMN_NAME,
@@ -353,4 +355,18 @@ func (r *MySQLRepository) foreignKeys(ctx context.Context, database *string, tab
 	r.updateCache(ctx, cacheKey, result)
 
 	return result, nil
+}
+
+func (r *MySQLRepository) cacheKey(args ...string) string {
+	return fmt.Sprintf("c:%d:mysql:%s", r.base.Connection().ID, strings.Join(args, "_"))
+}
+
+func (r *MySQLRepository) updateCache(_ context.Context, cacheKey string, value any) {
+	go func() {
+		bgCtx := context.Background()
+		err := r.base.Cache().Set(bgCtx, cacheKey, value, lo.ToPtr(time.Hour))
+		if err != nil {
+			r.base.Logger().Error(err)
+		}
+	}()
 }

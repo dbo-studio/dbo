@@ -26,7 +26,7 @@ func (r *SQLiteRepository) Execute(ctx context.Context, nodeID string, action co
 			return err
 		}
 
-		tableQueries, tmpName, err := r.handleTableCommands(nodeID, executeParams, action, params)
+		tableQueries, tmpName, err := r.handleTableCommands(ctx, nodeID, executeParams, action, params)
 		if err != nil {
 			return err
 		}
@@ -55,7 +55,7 @@ func (r *SQLiteRepository) Execute(ctx context.Context, nodeID string, action co
 			return err
 		}
 
-		if err := r.db.WithContext(ctx).Exec(query).Error; err != nil {
+		if err := r.base.DB().WithContext(ctx).Exec(query).Error; err != nil {
 			// Cleanup tmp table if it exists
 			if tmpTableName != "" {
 				r.cleanupTmpTable(ctx, tmpTableName)
@@ -84,6 +84,6 @@ func (r *SQLiteRepository) cleanupTmpTable(ctx context.Context, tmpTableName str
 
 	// Use IF EXISTS to avoid errors if table doesn't exist
 	cleanupQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s", quoteIdent(tmpTableName))
-	_ = r.db.WithContext(ctx).Exec(cleanupQuery).Error
+	_ = r.base.DB().WithContext(ctx).Exec(cleanupQuery).Error
 	// Ignore error - this is cleanup, we don't want to mask the original error
 }

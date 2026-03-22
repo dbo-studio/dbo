@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
@@ -17,7 +18,7 @@ func (r *PostgresRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQue
 		return nil, fmt.Errorf("nil request")
 	}
 
-	node := extractNode(req.NodeId)
+	node := r.base.ExtractNode(req.NodeId)
 	if node.Schema == "" || node.Table == "" {
 		return nil, fmt.Errorf("invalid node: schema or table missing")
 	}
@@ -31,7 +32,7 @@ func (r *PostgresRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQue
 	}
 
 	rowsAffected := 0
-	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	err := r.base.DB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, query := range queries {
 			result := tx.Exec(query)
 			if result.Error != nil {
@@ -52,7 +53,7 @@ func (r *PostgresRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQue
 	}, nil
 }
 
-func (r *PostgresRepository) generateQueries(ctx context.Context, req *dto.UpdateQueryRequest, node PGNode) []string {
+func (r *PostgresRepository) generateQueries(ctx context.Context, req *dto.UpdateQueryRequest, node contract.DBNode) []string {
 	var queries []string
 
 	queries = append(queries, r.generateUpdateQueries(ctx, req, node)...)
@@ -62,7 +63,7 @@ func (r *PostgresRepository) generateQueries(ctx context.Context, req *dto.Updat
 	return queries
 }
 
-func (r *PostgresRepository) generateUpdateQueries(ctx context.Context, req *dto.UpdateQueryRequest, node PGNode) []string {
+func (r *PostgresRepository) generateUpdateQueries(ctx context.Context, req *dto.UpdateQueryRequest, node contract.DBNode) []string {
 	if req == nil || req.EditedItems == nil {
 		return nil
 	}
@@ -104,7 +105,7 @@ func (r *PostgresRepository) generateUpdateQueries(ctx context.Context, req *dto
 	return queries
 }
 
-func (r *PostgresRepository) generateDeleteQueries(ctx context.Context, req *dto.UpdateQueryRequest, node PGNode) []string {
+func (r *PostgresRepository) generateDeleteQueries(ctx context.Context, req *dto.UpdateQueryRequest, node contract.DBNode) []string {
 	if req == nil || req.DeletedItems == nil {
 		return nil
 	}
@@ -144,7 +145,7 @@ func (r *PostgresRepository) generateDeleteQueries(ctx context.Context, req *dto
 	return queries
 }
 
-func (r *PostgresRepository) generateInsertQueries(_ context.Context, req *dto.UpdateQueryRequest, node PGNode) []string {
+func (r *PostgresRepository) generateInsertQueries(_ context.Context, req *dto.UpdateQueryRequest, node contract.DBNode) []string {
 	if req == nil || req.AddedItems == nil {
 		return nil
 	}

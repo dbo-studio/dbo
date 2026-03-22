@@ -8,7 +8,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *MySQLRepository) handleTableCommands(node MySQLNode, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
+func (r *MySQLRepository) handleTableCommands(node contract.DBNode, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
 	queries := []string{}
 	var tableName string
 

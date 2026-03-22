@@ -10,11 +10,11 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/pkg/helper"
+	contract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
 func (r *PostgresRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
-	node := extractNode(req.NodeId)
+	node := r.base.ExtractNode(req.NodeId)
 	query := r.runQueryGenerator(ctx, req, node)
 	queryResults := make([]map[string]any, 0)
 	columns := make([]Column, 0)
@@ -26,14 +26,14 @@ func (r *PostgresRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequ
 	g, gctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		err := r.db.WithContext(gctx).Raw(query).Find(&queryResults).Error
+		err := r.base.DB().WithContext(gctx).Raw(query).Find(&queryResults).Error
 		if err != nil {
 			return err
 		}
 
 		for i, row := range queryResults {
 			queryResults[i]["dbo_index"] = i
-			queryResults[i] = helper.SanitizeQueryResults(row)
+			queryResults[i] = r.base.SanitizeQueryResults(row)
 		}
 
 		return nil
@@ -59,7 +59,7 @@ func (r *PostgresRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequ
 	}, nil
 }
 
-func (r *PostgresRepository) runQueryGenerator(ctx context.Context, dto *dto.RunQueryRequest, node PGNode) string {
+func (r *PostgresRepository) runQueryGenerator(ctx context.Context, dto *dto.RunQueryRequest, node contract.DBNode) string {
 	var sb strings.Builder
 
 	if lo.FromPtrOr(dto.InlineQuery, "") != "" {

@@ -5,13 +5,12 @@ import (
 	"fmt"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
-	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 func (r *SQLiteRepository) Objects(ctx context.Context, nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
 	switch tabID {
 	case contract.TableTab:
-		return r.getTableInfo(nodeID)
+		return r.getTableInfo(ctx, nodeID)
 	case contract.TableColumnsTab:
 		return r.getTableColumns(ctx, nodeID)
 	case contract.TableForeignKeysTab:
@@ -25,10 +24,10 @@ func (r *SQLiteRepository) Objects(ctx context.Context, nodeID string, tabID con
 	}
 }
 
-func (r *SQLiteRepository) getTableInfo(nodeID string) (*contract.FormResponse, error) {
+func (r *SQLiteRepository) getTableInfo(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
 	fields := r.tableFields()
 
-	tables, err := r.getAllTableList()
+	tables, err := r.getAllTableList(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -45,12 +44,12 @@ func (r *SQLiteRepository) getTableInfo(nodeID string) (*contract.FormResponse, 
 		}
 	}
 
-	return helper.BuildObjectFormResponseFromResults(result, fields)
+	return r.base.BuildObjectFormResponseFromResults(result, fields)
 }
 
-func (r *SQLiteRepository) getTableColumns(_ context.Context, nodeID string) (*contract.FormResponse, error) {
+func (r *SQLiteRepository) getTableColumns(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
 	fields := r.tableColumnFields()
-	columns, err := r.getColumns(nodeID, []string{}, true)
+	columns, err := r.getColumns(ctx, nodeID, []string{}, true)
 	if err != nil {
 		return nil, err
 	}
@@ -68,12 +67,12 @@ func (r *SQLiteRepository) getTableColumns(_ context.Context, nodeID string) (*c
 		})
 	}
 
-	return helper.BuildFormResponseFromResults(result, fields)
+	return r.base.BuildFormResponseFromResults(result, fields)
 }
 
 func (r *SQLiteRepository) getTableForeignKeys(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
 	fields := r.foreignKeyFields(ctx, nodeID)
-	foreignKeys, err := r.foreignKeys(ctx, nodeID, true)
+	foreignKeys, err := r.foreignKeys(ctx, nodeID)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +91,7 @@ func (r *SQLiteRepository) getTableForeignKeys(ctx context.Context, nodeID strin
 		})
 	}
 
-	response, err := helper.BuildFormResponseFromResults(result, fields)
+	response, err := r.base.BuildFormResponseFromResults(result, fields)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +102,7 @@ func (r *SQLiteRepository) getTableForeignKeys(ctx context.Context, nodeID strin
 func (r *SQLiteRepository) getTableKeys(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
 	fields := r.keyFields(ctx, nodeID)
 
-	columns, err := r.getColumns(nodeID, []string{}, true)
+	columns, err := r.getColumns(ctx, nodeID, []string{}, true)
 	if err != nil {
 		return nil, err
 	}
@@ -125,12 +124,12 @@ func (r *SQLiteRepository) getTableKeys(ctx context.Context, nodeID string) (*co
 		})
 	}
 
-	return helper.BuildFormResponseFromResults(result, fields)
+	return r.base.BuildFormResponseFromResults(result, fields)
 }
 
 func (r *SQLiteRepository) getViewInfo(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
 	fields := r.viewFields()
-	views, err := r.views(ctx, true)
+	views, err := r.views(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -149,5 +148,5 @@ func (r *SQLiteRepository) getViewInfo(ctx context.Context, nodeID string) (*con
 		}
 	}
 
-	return helper.BuildObjectFormResponseFromResults(result, fields)
+	return r.base.BuildObjectFormResponseFromResults(result, fields)
 }

@@ -5,11 +5,10 @@ import (
 	"fmt"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
-	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 func (r *MySQLRepository) Objects(ctx context.Context, nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
-	node := extractNode(nodeID)
+	node := r.base.ExtractNode(nodeID)
 
 	switch tabID {
 	case contract.DatabaseTab:
@@ -29,7 +28,7 @@ func (r *MySQLRepository) Objects(ctx context.Context, nodeID string, tabID cont
 	}
 }
 
-func (r *MySQLRepository) getDatabaseInfo(ctx context.Context, node MySQLNode) (*contract.FormResponse, error) {
+func (r *MySQLRepository) getDatabaseInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.databaseFields(ctx)
 
 	databases, err := r.databases(ctx, true)
@@ -46,7 +45,7 @@ func (r *MySQLRepository) getDatabaseInfo(ctx context.Context, node MySQLNode) (
 		}
 	}
 
-	return helper.BuildObjectFormResponseFromResults(result, fields)
+	return r.base.BuildObjectFormResponseFromResults(result, fields)
 }
 
 func (r *MySQLRepository) databaseFields(_ context.Context) []contract.FormField {
@@ -55,7 +54,7 @@ func (r *MySQLRepository) databaseFields(_ context.Context) []contract.FormField
 	}
 }
 
-func (r *MySQLRepository) getTableInfo(ctx context.Context, node MySQLNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
+func (r *MySQLRepository) getTableInfo(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
 	fields := r.tableFields(ctx, action)
 
 	tables, err := r.tables(ctx, &node.Database, true)
@@ -75,10 +74,10 @@ func (r *MySQLRepository) getTableInfo(ctx context.Context, node MySQLNode, acti
 		}
 	}
 
-	return helper.BuildObjectFormResponseFromResults(result, fields)
+	return r.base.BuildObjectFormResponseFromResults(result, fields)
 }
 
-func (r *MySQLRepository) getTableColumns(ctx context.Context, node MySQLNode) (*contract.FormResponse, error) {
+func (r *MySQLRepository) getTableColumns(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.tableColumnFields()
 	columns, err := r.columns(ctx, &node.Database, &node.Table, []string{}, true, true)
 	if err != nil {
@@ -99,10 +98,10 @@ func (r *MySQLRepository) getTableColumns(ctx context.Context, node MySQLNode) (
 		})
 	}
 
-	return helper.BuildFormResponseFromResults(result, fields)
+	return r.base.BuildFormResponseFromResults(result, fields)
 }
 
-func (r *MySQLRepository) getTableForeignKeys(ctx context.Context, node MySQLNode) (*contract.FormResponse, error) {
+func (r *MySQLRepository) getTableForeignKeys(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.foreignKeyFields(ctx, fmt.Sprintf("%s.%s", node.Database, node.Table))
 	foreignKeys, err := r.foreignKeys(ctx, &node.Database, &node.Table, true)
 	if err != nil {
@@ -121,7 +120,7 @@ func (r *MySQLRepository) getTableForeignKeys(ctx context.Context, node MySQLNod
 		})
 	}
 
-	response, err := helper.BuildFormResponseFromResults(result, fields)
+	response, err := r.base.BuildFormResponseFromResults(result, fields)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +128,7 @@ func (r *MySQLRepository) getTableForeignKeys(ctx context.Context, node MySQLNod
 	return response, nil
 }
 
-func (r *MySQLRepository) getTableKeys(ctx context.Context, node MySQLNode) (*contract.FormResponse, error) {
+func (r *MySQLRepository) getTableKeys(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.keyFields(ctx, fmt.Sprintf("%s.%s", node.Database, node.Table))
 
 	primaryKeys, err := r.primaryKeys(ctx, &node.Database, &node.Table, true)
@@ -151,10 +150,10 @@ func (r *MySQLRepository) getTableKeys(ctx context.Context, node MySQLNode) (*co
 		})
 	}
 
-	return helper.BuildFormResponseFromResults(result, fields)
+	return r.base.BuildFormResponseFromResults(result, fields)
 }
 
-func (r *MySQLRepository) getViewInfo(ctx context.Context, node MySQLNode) (*contract.FormResponse, error) {
+func (r *MySQLRepository) getViewInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.viewFields()
 	views, err := r.views(ctx, &node.Database, true)
 	if err != nil {
@@ -176,5 +175,5 @@ func (r *MySQLRepository) getViewInfo(ctx context.Context, node MySQLNode) (*con
 		}
 	}
 
-	return helper.BuildObjectFormResponseFromResults(result, fields)
+	return r.base.BuildObjectFormResponseFromResults(result, fields)
 }

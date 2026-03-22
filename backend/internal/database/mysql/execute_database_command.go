@@ -8,7 +8,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *MySQLRepository) handleDatabaseCommands(node MySQLNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
+func (r *MySQLRepository) handleDatabaseCommands(node contract.DBNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
 	if action != contract.CreateDatabaseAction && action != contract.EditDatabaseAction && action != contract.DropDatabaseAction {

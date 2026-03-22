@@ -17,7 +17,7 @@ func (r *SQLiteRepository) AutoComplete(ctx context.Context, req *dto.AutoComple
 	var tables []Table
 
 	g.Go(func() error {
-		result, err := r.getAllViewList()
+		result, err := r.getAllViewList(ctx)
 		if err != nil {
 			return err
 		}
@@ -26,7 +26,7 @@ func (r *SQLiteRepository) AutoComplete(ctx context.Context, req *dto.AutoComple
 	})
 
 	g.Go(func() error {
-		result, err := r.getAllTableList()
+		result, err := r.getAllTableList(ctx)
 		if err != nil {
 			return err
 		}
@@ -47,7 +47,7 @@ func (r *SQLiteRepository) AutoComplete(ctx context.Context, req *dto.AutoComple
 		for _, table := range tables {
 			tableName := table.Name
 			gColumns.Go(func() error {
-				columnResult, err := r.getColumns(tableName, nil, false)
+				columnResult, err := r.getColumns(ctx, tableName, nil, false)
 				if err != nil {
 					return err
 				}

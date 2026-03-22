@@ -1,52 +1,10 @@
 package databaseMysql
 
 import (
-	"context"
-	"fmt"
 	"strings"
-	"time"
-
-	"github.com/samber/lo"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 )
-
-type MySQLNode struct {
-	Database string
-	Table    string
-}
-
-func extractNode(node string) MySQLNode {
-	parts := strings.Split(node, ".")
-
-	var database, table string
-
-	switch len(parts) {
-	case 1:
-		database = parts[0]
-	case 2:
-		database, table = parts[0], parts[1]
-	}
-
-	return MySQLNode{
-		Database: database,
-		Table:    table,
-	}
-}
-
-func (r *MySQLRepository) cacheKey(args ...string) string {
-	return fmt.Sprintf("c:%d:mysql:%s", r.connection.ID, strings.Join(args, "_"))
-}
-
-func (r *MySQLRepository) updateCache(_ context.Context, cacheKey string, value any) {
-	go func() {
-		bgCtx := context.Background()
-		err := r.cache.Set(bgCtx, cacheKey, value, lo.ToPtr(time.Hour))
-		if err != nil {
-			r.logger.Error(err)
-		}
-	}()
-}
 
 type Column struct {
 	OrdinalPosition        int32   `gorm:"column:ORDINAL_POSITION"`
@@ -63,30 +21,6 @@ type Column struct {
 	IsActive   bool        `gorm:"-"`
 	PrimaryKey *PrimaryKey `gorm:"-"`
 	ForeignKey *ForeignKey `gorm:"-"`
-}
-
-func columnMappedFormat(dataType string) string {
-	normalized := strings.ToUpper(strings.TrimSpace(dataType))
-	if idx := strings.Index(normalized, "("); idx > -1 {
-		normalized = normalized[:idx]
-	}
-
-	switch normalized {
-	case "VARCHAR", "CHAR", "TEXT", "TINYTEXT", "MEDIUMTEXT", "LONGTEXT", "ENUM", "SET", "JSON":
-		return "string"
-	case "TINYINT", "SMALLINT", "MEDIUMINT", "INT", "INTEGER", "BIGINT", "BIT":
-		return "number"
-	case "FLOAT", "DOUBLE", "DECIMAL", "NUMERIC":
-		return "number"
-	case "DATE", "TIME", "DATETIME", "TIMESTAMP", "YEAR":
-		return "datetime"
-	case "BOOLEAN", "BOOL":
-		return "boolean"
-	case "BLOB", "TINYBLOB", "MEDIUMBLOB", "LONGBLOB", "BINARY", "VARBINARY":
-		return "blob"
-	default:
-		return "string"
-	}
 }
 
 func columnListToResponse(columns []Column) []dto.Column {

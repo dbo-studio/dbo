@@ -9,13 +9,13 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 )
 
-func (r *SQLiteRepository) populateTableParamsFromDDL(tableParams *dto.SQLiteTableParams) string {
+func (r *SQLiteRepository) populateTableParamsFromDDL(ctx context.Context, tableParams *dto.SQLiteTableParams) string {
 	if tableParams == nil || tableParams.Old == nil || tableParams.Old.Name == nil {
 		return ""
 	}
 
 	tableName := *tableParams.Old.Name
-	tableDDL, err := r.getTableDDL(tableName)
+	tableDDL, err := r.getTableDDL(ctx, tableName)
 	if err != nil {
 		r.setDefaultTableParams(tableParams)
 		return ""
@@ -91,7 +91,7 @@ func (r *SQLiteRepository) populateTableParamsFromDDLString(tableParams *dto.SQL
 	}
 }
 
-func (r *SQLiteRepository) populateColumnParamsFromDDL(columnParams *dto.SQLiteTableColumnParams, tableDDL string) {
+func (r *SQLiteRepository) populateColumnParamsFromDDL(ctx context.Context, columnParams *dto.SQLiteTableColumnParams, tableDDL string) {
 	if columnParams == nil || len(columnParams.Columns) > 0 || tableDDL == "" {
 		return
 	}
@@ -101,7 +101,7 @@ func (r *SQLiteRepository) populateColumnParamsFromDDL(columnParams *dto.SQLiteT
 		return
 	}
 
-	columns, err := r.getColumns(tableName, []string{}, false)
+	columns, err := r.getColumns(ctx, tableName, []string{}, false)
 	if err != nil {
 		return
 	}
@@ -156,7 +156,7 @@ func (r *SQLiteRepository) populateForeignKeyParamsFromDB(foreignKeyParams *dto.
 	}
 
 	ctx := context.Background()
-	fks, err := r.foreignKeys(ctx, tableName, false)
+	fks, err := r.foreignKeys(ctx, tableName)
 	if err != nil || len(fks) == 0 {
 		return
 	}
@@ -188,12 +188,12 @@ func (r *SQLiteRepository) convertForeignKeysToDTO(fks []ForeignKey) []dto.SQLit
 	return result
 }
 
-func (r *SQLiteRepository) populateKeyParamsFromDB(keyParams *dto.SQLiteTableKeyParams, tableName string) {
+func (r *SQLiteRepository) populateKeyParamsFromDB(ctx context.Context, keyParams *dto.SQLiteTableKeyParams, tableName string) {
 	if keyParams == nil || len(keyParams.Keys) > 0 {
 		return
 	}
 
-	pkColumns, err := r.getPrimaryKeys(Table{Name: tableName})
+	pkColumns, err := r.getPrimaryKeys(ctx, Table{Name: tableName})
 	if err != nil || len(pkColumns) == 0 {
 		return
 	}

@@ -10,7 +10,6 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 func (r *SQLiteRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
@@ -26,21 +25,21 @@ func (r *SQLiteRepository) RunQuery(ctx context.Context, req *dto.RunQueryReques
 	g, gctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		err := r.db.WithContext(gctx).Raw(query).Find(&queryResults).Error
+		err := r.base.DB().WithContext(gctx).Raw(query).Find(&queryResults).Error
 		if err != nil {
 			return err
 		}
 
 		for i, row := range queryResults {
 			queryResults[i]["dbo_index"] = i
-			queryResults[i] = helper.SanitizeQueryResults(row)
+			queryResults[i] = r.base.SanitizeQueryResults(row)
 		}
 
 		return nil
 	})
 
 	g.Go(func() error {
-		result, err := r.getColumns(node, req.Columns, true)
+		result, err := r.getColumns(ctx, node, req.Columns, true)
 		if err != nil {
 			return err
 		}
@@ -59,7 +58,7 @@ func (r *SQLiteRepository) RunQuery(ctx context.Context, req *dto.RunQueryReques
 	}, nil
 }
 
-func (r *SQLiteRepository) runQueryGenerator(_ context.Context, dto *dto.RunQueryRequest, node string) string {
+func (r *SQLiteRepository) runQueryGenerator(ctx context.Context, dto *dto.RunQueryRequest, node string) string {
 	var sb strings.Builder
 
 	if lo.FromPtrOr(dto.InlineQuery, "") != "" {
@@ -93,7 +92,7 @@ func (r *SQLiteRepository) runQueryGenerator(_ context.Context, dto *dto.RunQuer
 		}
 		sb.WriteString(strings.Join(sortClauses, ", "))
 	} else {
-		keys, err := r.getPrimaryKeys(Table{node})
+		keys, err := r.getPrimaryKeys(ctx, Table{node})
 		if err == nil && len(keys) > 0 {
 			sb.WriteString(" ORDER BY ")
 			sb.WriteString(strings.Join(keys, ", "))

@@ -11,7 +11,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *PostgresRepository) handleViewCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
+func (r *PostgresRepository) handleViewCommands(node contract.DBNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
 	if action != contract.CreateViewAction && action != contract.EditViewAction && action != contract.DropViewAction {

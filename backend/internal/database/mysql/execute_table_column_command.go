@@ -3,13 +3,14 @@ package databaseMysql
 import (
 	"fmt"
 
+	"github.com/samber/lo"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
-	"github.com/samber/lo"
 )
 
-func (r *MySQLRepository) handleTableColumnCommands(node MySQLNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
+func (r *MySQLRepository) handleTableColumnCommands(node contract.DBNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
 	if tabId != contract.TableColumnsTab || node.Table == "" || (action != contract.CreateTableAction && action != contract.EditTableAction) {
@@ -46,7 +47,7 @@ func (r *MySQLRepository) handleTableColumnCommands(node MySQLNode, tabId contra
 	return queries, nil
 }
 
-func (r *MySQLRepository) handleCreateColumn(node MySQLNode, column dto.MysqlTableColumn) []string {
+func (r *MySQLRepository) handleCreateColumn(node contract.DBNode, column dto.MysqlTableColumn) []string {
 	queries := []string{}
 
 	columnDef := fmt.Sprintf("ALTER TABLE `%s`.`%s` ADD COLUMN `%s` %s", node.Database, node.Table, *column.New.Name, *column.New.DataType)
@@ -76,7 +77,7 @@ func (r *MySQLRepository) handleCreateColumn(node MySQLNode, column dto.MysqlTab
 	return queries
 }
 
-func (r *MySQLRepository) handleEditColumn(node MySQLNode, column dto.MysqlTableColumn) []string {
+func (r *MySQLRepository) handleEditColumn(node contract.DBNode, column dto.MysqlTableColumn) []string {
 	queries := []string{}
 
 	alter := fmt.Sprintf("ALTER TABLE `%s`.`%s`", node.Database, node.Table)

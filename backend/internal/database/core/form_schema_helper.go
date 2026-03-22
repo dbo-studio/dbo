@@ -1,10 +1,10 @@
-package helper
+package databaseCore
 
 import (
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
-func BuildObjectFormResponseFromResults(results []map[string]any, fields []contract.FormField) (*contract.FormResponse, error) {
+func (*BaseRepository) BuildObjectFormResponseFromResults(results []map[string]any, fields []contract.FormField) (*contract.FormResponse, error) {
 	var data []map[string]any
 	if len(results) > 0 {
 		data = []map[string]any{results[0]}
@@ -19,7 +19,7 @@ func BuildObjectFormResponseFromResults(results []map[string]any, fields []contr
 	}, nil
 }
 
-func BuildFormResponseFromResults(results []map[string]any, fields []contract.FormField) (*contract.FormResponse, error) {
+func (*BaseRepository) BuildFormResponseFromResults(results []map[string]any, fields []contract.FormField) (*contract.FormResponse, error) {
 	if len(results) == 0 {
 		return &contract.FormResponse{
 			IsArray: true,

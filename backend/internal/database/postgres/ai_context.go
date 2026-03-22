@@ -199,7 +199,7 @@ Tables:
 func (r *PostgresRepository) AiCompleteContext(ctx context.Context, req *dto.AiInlineCompleteRequest) string {
 	var contextBuilder strings.Builder
 
-	sqlResult := r.parseSQL(req.ContextOpts.Prompt)
+	sqlResult := r.base.ParseSQL(req.ContextOpts.Prompt)
 
 	if sqlResult.Database != nil {
 		contextBuilder.WriteString("Database: " + *sqlResult.Database)

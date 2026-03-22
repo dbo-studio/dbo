@@ -1,4 +1,4 @@
-package databaseSqlite
+package databaseCore
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *SQLiteRepository) ImportData(ctx context.Context, job dto.ImportJob, rows [][]string, columns []string) (*contract.ImportResult, error) {
+func (r *BaseRepository) ImportData(ctx context.Context, job dto.ImportJob, rows [][]string, columns []string) (*contract.ImportResult, error) {
 	startTime := time.Now()
 	var errors []contract.ImportError
 	successRows := 0

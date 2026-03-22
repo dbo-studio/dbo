@@ -1,6 +1,8 @@
 package databaseContract
 
-import "time"
+import (
+	"time"
+)
 
 type TreeNode struct {
 	ID          string           `json:"id"`
@@ -66,12 +68,12 @@ type ImportOptions struct {
 }
 
 type ImportResult struct {
-	TotalRows   int                    `json:"totalRows"`
-	SuccessRows int                    `json:"successRows"`
-	FailedRows  int                    `json:"failedRows"`
-	Errors      []ImportError          `json:"errors"`
-	Duration    time.Duration          `json:"duration"`
-	Metadata    map[string]interface{} `json:"metadata"`
+	TotalRows   int            `json:"totalRows"`
+	SuccessRows int            `json:"successRows"`
+	FailedRows  int            `json:"failedRows"`
+	Errors      []ImportError  `json:"errors"`
+	Duration    time.Duration  `json:"duration"`
+	Metadata    map[string]any `json:"metadata"`
 }
 
 type ImportError struct {
@@ -102,4 +104,12 @@ type ExportProgress struct {
 	Message       string    `json:"message"`
 	Error         string    `json:"error"`
 	LastUpdated   time.Time `json:"lastUpdated"`
+}
+
+//----------------------------
+
+type DBNode struct {
+	Database string
+	Schema   string
+	Table    string
 }

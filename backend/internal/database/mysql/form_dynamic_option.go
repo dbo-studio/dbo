@@ -8,7 +8,7 @@ import (
 )
 
 func (r *MySQLRepository) GetDynamicFieldOptions(ctx context.Context, req *contract.DynamicFieldRequest) ([]contract.FormFieldOption, error) {
-	node := extractNode(req.NodeID)
+	node := r.base.ExtractNode(req.NodeID)
 	params := req.Parameters
 
 	switch params["field"] {

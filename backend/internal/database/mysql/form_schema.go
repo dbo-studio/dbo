@@ -29,7 +29,7 @@ func (r *MySQLRepository) tableColumnFields() []contract.FormField {
 }
 
 func (r *MySQLRepository) foreignKeyFields(ctx context.Context, nodeID string) []contract.FormField {
-	node := extractNode(nodeID)
+	node := r.base.ExtractNode(nodeID)
 	return []contract.FormField{
 		{ID: "CONSTRAINT_NAME", Name: "Constraint Name", Type: contract.FormFieldTypeText, Required: true},
 		{ID: "REFERENCED_TABLE_NAME", Name: "Target Table", Type: contract.FormFieldTypeSelect, Options: r.tablesListOptions(ctx, node.Database), Required: true},
@@ -65,7 +65,7 @@ func (r *MySQLRepository) foreignKeyFields(ctx context.Context, nodeID string) [
 }
 
 func (r *MySQLRepository) keyFields(ctx context.Context, nodeID string) []contract.FormField {
-	node := extractNode(nodeID)
+	node := r.base.ExtractNode(nodeID)
 	return []contract.FormField{
 		{ID: "CONSTRAINT_NAME", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
 		{ID: "COLUMN_NAME", Name: "Columns", Type: contract.FormFieldTypeMultiSelect, Options: r.tableColumnsOptions(ctx, node.Database, node.Table), Required: true},
@@ -77,7 +77,7 @@ func (r *MySQLRepository) keyFields(ctx context.Context, nodeID string) []contra
 }
 
 func (r *MySQLRepository) indexOptions(ctx context.Context, nodeID string) []contract.FormField {
-	node := extractNode(nodeID)
+	node := r.base.ExtractNode(nodeID)
 	return []contract.FormField{
 		{ID: "INDEX_NAME", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
 		{ID: "COLUMN_NAME", Name: "Columns", Type: contract.FormFieldTypeMultiSelect, Options: r.tableColumnsOptions(ctx, node.Database, node.Table), Required: true},

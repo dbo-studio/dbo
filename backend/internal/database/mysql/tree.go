@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/samber/lo"
+
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
-	"github.com/samber/lo"
 )
 
 func (r *MySQLRepository) Tree(ctx context.Context, parentID string) (*contract.TreeNode, error) {
@@ -28,8 +29,8 @@ func (r *MySQLRepository) Tree(ctx context.Context, parentID string) (*contract.
 
 func buildRoot(ctx context.Context, r *MySQLRepository) (*contract.TreeNode, error) {
 	root := &contract.TreeNode{
-		ID:          fmt.Sprintf("%d@database", r.connection.ID),
-		Name:        r.connection.Name,
+		ID:          fmt.Sprintf("%d@database", r.base.Connection().ID),
+		Name:        r.base.Connection().Name,
 		Icon:        lo.ToPtr("mysql"),
 		Type:        contract.DatabaseContainerNodeType,
 		HasChildren: true,
@@ -120,7 +121,7 @@ func buildContainer(ctx context.Context, r *MySQLRepository, dbName string, cont
 				Type: contract.TableNodeType,
 				Action: &contract.TreeNodeAction{
 					Type: contract.TreeNodeActionTypeTab,
-					Params: map[string]interface{}{
+					Params: map[string]any{
 						"path":     "data",
 						"table":    table.Name,
 						"editable": true,
@@ -143,7 +144,7 @@ func buildContainer(ctx context.Context, r *MySQLRepository, dbName string, cont
 				Icon: lo.ToPtr("sheet"),
 				Action: &contract.TreeNodeAction{
 					Type: contract.TreeNodeActionTypeTab,
-					Params: map[string]interface{}{
+					Params: map[string]any{
 						"path":     "data",
 						"table":    view.Name,
 						"editable": false,

@@ -1,4 +1,4 @@
-package databasePostgres
+package databaseCore
 
 import (
 	"regexp"
@@ -16,7 +16,7 @@ type SQLParseResult struct {
 	Schema            *string
 }
 
-func (r *PostgresRepository) parseSQL(sqlText string) *SQLParseResult {
+func (r *BaseRepository) ParseSQL(sqlText string) *SQLParseResult {
 	result := &SQLParseResult{
 		Tables:            make([]string, 0),
 		Views:             make([]string, 0),

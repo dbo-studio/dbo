@@ -1,4 +1,4 @@
-package databaseMysql
+package databaseCore
 
 import (
 	"context"
@@ -8,21 +8,20 @@ import (
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *MySQLRepository) RunRawQuery(ctx context.Context, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
+func (r *BaseRepository) RunRawQuery(ctx context.Context, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
 	startTime := time.Now()
 	result, err := runRawQuery(ctx, r, req)
 	endTime := time.Since(startTime)
-	if err != nil || !helper.IsQuery(req.Query) {
-		return helper.CommandResponseBuilder(result, endTime, err), nil
+	if err != nil || !r.IsQuery(req.Query) {
+		return r.CommandResponseBuilder(result, endTime, err), nil
 	}
 
 	return result, nil
 }
 
-func runRawQuery(ctx context.Context, r *MySQLRepository, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
+func runRawQuery(ctx context.Context, r *BaseRepository, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
 	queryResults := make([]map[string]any, 0)
 
 	rows, err := r.db.WithContext(ctx).Raw(req.Query).Rows()
@@ -62,7 +61,7 @@ func runRawQuery(ctx context.Context, r *MySQLRepository, req *dto.RawQueryReque
 	for i := range queryResults {
 		queryResults[i]["dbo_index"] = i
 		queryResults[i]["editable"] = false
-		queryResults[i] = helper.SanitizeQueryResults(queryResults[i])
+		queryResults[i] = r.SanitizeQueryResults(queryResults[i])
 	}
 
 	structures := make([]dto.Column, 0)
@@ -71,7 +70,7 @@ func runRawQuery(ctx context.Context, r *MySQLRepository, req *dto.RawQueryReque
 		structures = append(structures, dto.Column{
 			Name:       column,
 			Type:       strings.ToLower(columnTypes[i].DatabaseTypeName()),
-			MappedType: columnMappedFormat(columnTypes[i].Name()),
+			MappedType: r.ColumnMappedFormat(columnTypes[i].Name()),
 			IsActive:   true,
 		})
 	}

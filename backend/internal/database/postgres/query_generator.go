@@ -25,7 +25,7 @@ func (r *PostgresRepository) databases(ctx context.Context, fromCache bool) ([]D
 	cacheKey := r.cacheKey("databases")
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &databases)
+		err := r.base.Cache().Get(ctx, cacheKey, &databases)
 		if err != nil {
 			return nil, err
 		}
@@ -35,7 +35,7 @@ func (r *PostgresRepository) databases(ctx context.Context, fromCache bool) ([]D
 		}
 	}
 
-	err := r.db.WithContext(ctx).Table("pg_database d").
+	err := r.base.DB().WithContext(ctx).Table("pg_database d").
 		Select(`
 			d.datname,
 			r.rolname,
@@ -68,7 +68,7 @@ func (r *PostgresRepository) schemas(ctx context.Context, database *string, from
 	cacheKey := r.cacheKey("schemas", lo.FromPtr(database))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &schemas)
+		err := r.base.Cache().Get(ctx, cacheKey, &schemas)
 		if err != nil {
 			return nil, err
 		}
@@ -78,7 +78,7 @@ func (r *PostgresRepository) schemas(ctx context.Context, database *string, from
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("pg_namespace n").
+	query := r.base.DB().WithContext(ctx).Table("pg_namespace n").
 		Select(`
 		n.nspname AS nspname,
 		r.rolname AS rolname,
@@ -91,18 +91,6 @@ func (r *PostgresRepository) schemas(ctx context.Context, database *string, from
 	err := query.
 		Order("n.nspname").
 		Find(&schemas).Error
-
-	// query := r.db.WithContext(ctx).Select("schema_name").
-	// 	Table("information_schema.schemata").
-	// 	Where("schema_name NOT IN ('pg_catalog', 'information_schema')")
-
-	// if database != nil {
-	// 	query = query.Where("catalog_name = ?", lo.FromPtr(database))
-	// }
-
-	// err := query.
-	// 	Order("schema_name").
-	// 	Find(&schemas).Error
 
 	if err != nil {
 		return nil, err
@@ -126,7 +114,7 @@ func (r *PostgresRepository) tables(ctx context.Context, schema *string, fromCac
 	cacheKey := r.cacheKey("tables", lo.FromPtr(schema))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &tables)
+		err := r.base.Cache().Get(ctx, cacheKey, &tables)
 		if err != nil {
 			return nil, err
 		}
@@ -136,7 +124,7 @@ func (r *PostgresRepository) tables(ctx context.Context, schema *string, fromCac
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("pg_class c").
+	query := r.base.DB().WithContext(ctx).Table("pg_class c").
 		Select(`
 		c.relname,
 		pd.description,
@@ -180,7 +168,7 @@ func (r *PostgresRepository) views(ctx context.Context, database *string, schema
 	cacheKey := r.cacheKey("views", lo.FromPtr(database), lo.FromPtr(schema))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &views)
+		err := r.base.Cache().Get(ctx, cacheKey, &views)
 		if err != nil {
 			return nil, err
 		}
@@ -190,7 +178,7 @@ func (r *PostgresRepository) views(ctx context.Context, database *string, schema
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("pg_class c").
+	query := r.base.DB().WithContext(ctx).Table("pg_class c").
 		Select(`
 			c.relname as table_name,
 			d.description as comment,
@@ -229,7 +217,7 @@ func (r *PostgresRepository) materializedViews(ctx context.Context, schema *stri
 	cacheKey := r.cacheKey("materialized_views", lo.FromPtr(schema))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &mvs)
+		err := r.base.Cache().Get(ctx, cacheKey, &mvs)
 		if err != nil {
 			return nil, err
 		}
@@ -239,7 +227,7 @@ func (r *PostgresRepository) materializedViews(ctx context.Context, schema *stri
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("pg_class AS c").
+	query := r.base.DB().WithContext(ctx).Table("pg_class AS c").
 		Select("c.relname as name, d.description as comment, t.spcname as tablespace, r.rolname as rolname, m.definition as query").
 		Joins("JOIN pg_namespace AS n ON n.oid = c.relnamespace").
 		Joins("LEFT JOIN pg_description AS d ON d.objoid = c.oid AND d.objsubid = 0").
@@ -286,7 +274,7 @@ func (r *PostgresRepository) columns(ctx context.Context, table *string, schema 
 	cacheKey := r.cacheKey("columns", lo.FromPtr(table), lo.FromPtr(schema), strings.Join(columnNames, ","), strconv.FormatBool(editable))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &columns)
+		err := r.base.Cache().Get(ctx, cacheKey, &columns)
 		if err != nil {
 			return nil, err
 		}
@@ -296,7 +284,7 @@ func (r *PostgresRepository) columns(ctx context.Context, table *string, schema 
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("pg_attribute AS a").
+	query := r.base.DB().WithContext(ctx).Table("pg_attribute AS a").
 		Select(`
 			a.attnum AS ordinal_position,
 			a.attname AS column_name,
@@ -365,7 +353,7 @@ func (r *PostgresRepository) columns(ctx context.Context, table *string, schema 
 	}
 
 	for i, column := range columns {
-		columns[i].MappedType = columnMappedFormat(column.DataType)
+		columns[i].MappedType = r.base.ColumnMappedFormat(column.DataType)
 		columns[i].Editable = editable
 		columns[i].IsActive = true
 		if len(columnNames) > 0 {
@@ -403,7 +391,7 @@ func (r *PostgresRepository) templates(ctx context.Context, fromCache bool) ([]T
 	cacheKey := r.cacheKey("templates")
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &templates)
+		err := r.base.Cache().Get(ctx, cacheKey, &templates)
 		if err != nil {
 			return nil, err
 		}
@@ -413,7 +401,7 @@ func (r *PostgresRepository) templates(ctx context.Context, fromCache bool) ([]T
 		}
 	}
 
-	err := r.db.WithContext(ctx).Table("pg_database").
+	err := r.base.DB().WithContext(ctx).Table("pg_database").
 		Select("datname").
 		Where("datistemplate = true").
 		Order("datname").
@@ -437,7 +425,7 @@ func (r *PostgresRepository) primaryKeys(ctx context.Context, table *string, fro
 	cacheKey := r.cacheKey("primary_keys", lo.FromPtr(table))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &primaryKeys)
+		err := r.base.Cache().Get(ctx, cacheKey, &primaryKeys)
 		if err != nil {
 			return nil, err
 		}
@@ -447,7 +435,7 @@ func (r *PostgresRepository) primaryKeys(ctx context.Context, table *string, fro
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("information_schema.table_constraints AS tc").
+	query := r.base.DB().WithContext(ctx).Table("information_schema.table_constraints AS tc").
 		Select("kcu.column_name").
 		Joins("JOIN information_schema.key_column_usage AS kcu ON kcu.constraint_name = tc.constraint_name AND kcu.table_schema = tc.table_schema").
 		Where("tc.constraint_type = 'PRIMARY KEY'")
@@ -486,7 +474,7 @@ func (r *PostgresRepository) foreignKeys(ctx context.Context, table *string, sch
 	cacheKey := r.cacheKey("foreign_keys", lo.FromPtr(table), lo.FromPtr(schema))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &foreignKeys)
+		err := r.base.Cache().Get(ctx, cacheKey, &foreignKeys)
 		if err != nil {
 			return nil, err
 		}
@@ -496,7 +484,7 @@ func (r *PostgresRepository) foreignKeys(ctx context.Context, table *string, sch
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("pg_constraint c").
+	query := r.base.DB().WithContext(ctx).Table("pg_constraint c").
 		Select(`
 			c.conname as constraint_name,
 			array_to_string(array_agg(a.attname ORDER BY array_position(c.conkey, a.attnum)), ', ') as columns,
@@ -581,7 +569,7 @@ func (r *PostgresRepository) tableKeys(ctx context.Context, table *string, schem
 	cacheKey := r.cacheKey("keys", lo.FromPtr(table), lo.FromPtr(schema))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &keys)
+		err := r.base.Cache().Get(ctx, cacheKey, &keys)
 		if err != nil {
 			return nil, err
 		}
@@ -591,7 +579,7 @@ func (r *PostgresRepository) tableKeys(ctx context.Context, table *string, schem
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("pg_constraint c").
+	query := r.base.DB().WithContext(ctx).Table("pg_constraint c").
 		Select(`
 			c.conname as name,
 			d.description as comment,
@@ -643,7 +631,7 @@ func (r *PostgresRepository) tablespaces(ctx context.Context, fromCache bool) ([
 	cacheKey := r.cacheKey("tablespaces")
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &tablespaces)
+		err := r.base.Cache().Get(ctx, cacheKey, &tablespaces)
 		if err != nil {
 			return nil, err
 		}
@@ -653,7 +641,7 @@ func (r *PostgresRepository) tablespaces(ctx context.Context, fromCache bool) ([
 		}
 	}
 
-	err := r.db.WithContext(ctx).Table("pg_tablespace").
+	err := r.base.DB().WithContext(ctx).Table("pg_tablespace").
 		Select("spcname").
 		Order("spcname").
 		Find(&tablespaces).Error
@@ -668,16 +656,15 @@ func (r *PostgresRepository) tablespaces(ctx context.Context, fromCache bool) ([
 }
 
 func (r *PostgresRepository) cacheKey(args ...string) string {
-	return fmt.Sprintf("c:%d:query_generator:%s", r.connection.ID, strings.Join(args, "_"))
+	return fmt.Sprintf("c:%d:posgresql:query_generator:%s", r.base.Connection().ID, strings.Join(args, "_"))
 }
 
 func (r *PostgresRepository) updateCache(_ context.Context, cacheKey string, value any) {
-	// Use background context to avoid context cancellation issues in goroutine
 	go func() {
 		bgCtx := context.Background()
-		err := r.cache.Set(bgCtx, cacheKey, value, lo.ToPtr(time.Hour))
+		err := r.base.Cache().Set(bgCtx, cacheKey, value, lo.ToPtr(time.Hour))
 		if err != nil {
-			r.logger.Error(err)
+			r.base.Logger().Error(err)
 		}
 	}()
 }
