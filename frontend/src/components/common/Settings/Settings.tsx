@@ -2,7 +2,7 @@ import Modal from '@/components/base/Modal/Modal';
 import GeneralPanel from '@/components/common/Settings/GeneralPanel/GeneralPanel';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Grid, useTheme } from '@mui/material';
+import { Box, Divider, Grid, Typography, useTheme } from '@mui/material';
 import { type JSX, useState } from 'react';
 import AboutPanel from './AboutPanel/AboutPanel';
 import AiPanel from './AiPanel/AiPanel';
@@ -23,6 +23,7 @@ const tabs: MenuPanelTabType[] = [
   {
     id: 1,
     name: locales.appearance,
+    description: locales.appearance_description,
     onlyDesktop: false,
     icon: 'theme',
     content: <AppearancePanel />
@@ -36,7 +37,8 @@ const tabs: MenuPanelTabType[] = [
   },
   {
     id: 3,
-    name: 'AI',
+    name: locales.ai_settings,
+    description: locales.ai_settings_description,
     onlyDesktop: false,
     icon: 'about',
     content: <AiPanel />
@@ -50,8 +52,8 @@ const tabs: MenuPanelTabType[] = [
   }
 ];
 
-export default function Settings({ open, tab }: SettingsProps): JSX.Element {
-  const [content, setContent] = useState<JSX.Element>();
+export default function Settings({ open }: SettingsProps): JSX.Element {
+  const [currentTab, setCurrentTab] = useState<MenuPanelTabType | undefined>();
   const theme = useTheme();
   const updateUI = useSettingStore((state) => state.updateUI);
 
@@ -63,10 +65,23 @@ export default function Settings({ open, tab }: SettingsProps): JSX.Element {
     <Modal open={open} padding='0px' onClose={handleOnClose}>
       <Grid width='850px' container spacing={0} flex={1}>
         <Grid size={{ md: 3 }} display={'flex'} flexDirection={'column'}>
-          <MenuPanel tabs={tabs} onChange={(c): void => setContent(c)} defaultTabId={tab} />
+          <MenuPanel tabs={tabs} onChange={(c): void => setCurrentTab(c)} defaultTab={currentTab} />
         </Grid>
         <SettingsContentStyled size={{ md: 9 }} flex={1} p={theme.spacing(2)}>
-          {content}
+          <Box mb={2}>
+            <Typography color='textTitle' variant='h6'>
+              {currentTab?.name}
+            </Typography>
+            {currentTab?.description && (
+              <Typography color='textText' variant='body2'>
+                {currentTab?.description}
+              </Typography>
+            )}
+            <Box mt={1}>
+              <Divider />
+            </Box>
+          </Box>
+          {currentTab?.content}
         </SettingsContentStyled>
       </Grid>
     </Modal>

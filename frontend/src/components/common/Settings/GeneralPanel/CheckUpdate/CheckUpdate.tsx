@@ -2,7 +2,7 @@ import api from '@/api';
 import { tools } from '@/core/utils';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Box, Button, Divider, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { openPath } from '@tauri-apps/plugin-opener';
 import { useState } from 'react';
@@ -40,37 +40,34 @@ export function CheckUpdate() {
   };
 
   return (
-    <Box mt={1}>
-      <Box display={'flex'} mb={1} flexDirection={'row'} alignItems={'center'} justifyContent={'space-between'}>
-        <Box>
-          {general.release ? (
-            <Typography color={'textText'} variant={'subtitle2'}>
-              {locales.new_version_available} : {general.release?.name}
-            </Typography>
-          ) : (
-            <Typography color={'textText'} variant={'subtitle2'}>
-              {locales.check_for_updates}
-            </Typography>
-          )}
-        </Box>
-
-        {!general.release ? (
-          <Button
-            loading={isCheckUpdatePending}
-            loadingPosition='start'
-            variant={'outlined'}
-            size={'small'}
-            onClick={() => void handleCheckUpdate()}
-          >
-            {buttonText}
-          </Button>
+    <Box display={'flex'} mb={1} flexDirection={'row'} alignItems={'center'} justifyContent={'space-between'}>
+      <Box>
+        {general.release ? (
+          <Typography color={'textText'} variant={'subtitle2'}>
+            {locales.new_version_available} : {general.release?.name}
+          </Typography>
         ) : (
-          <Button variant={'outlined'} size={'small'} onClick={() => void handleUpdate()}>
-            {buttonText}
-          </Button>
+          <Typography color={'textText'} variant={'subtitle2'}>
+            {locales.check_for_updates}
+          </Typography>
         )}
       </Box>
-      <Divider />
+
+      {!general.release ? (
+        <Button
+          loading={isCheckUpdatePending}
+          loadingPosition='start'
+          variant={'outlined'}
+          size={'small'}
+          onClick={() => void handleCheckUpdate()}
+        >
+          {buttonText}
+        </Button>
+      ) : (
+        <Button variant={'outlined'} size={'small'} onClick={() => void handleUpdate()}>
+          {buttonText}
+        </Button>
+      )}
     </Box>
   );
 }

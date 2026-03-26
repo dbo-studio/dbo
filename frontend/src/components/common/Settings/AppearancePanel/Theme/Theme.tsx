@@ -27,7 +27,7 @@ export default function Theme(): JSX.Element {
 
   return (
     <Box>
-      <Box mb={1} mt={3}>
+      <Box mb={1}>
         <Typography variant='body1'>{locales.application_theme}</Typography>
       </Box>
       <Divider />

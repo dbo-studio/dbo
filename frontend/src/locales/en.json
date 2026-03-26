@@ -95,6 +95,8 @@
   "application_theme": "Application theme",
   "application_font": "Application font",
   "application_font_preview": "Preview: The Awesome DBO Studio",
+  "ai_settings": "AI",
+  "ai_settings_description": "Configure Ai settings to access autocomplete and chat.",
   "editor_theme": "Editor theme",
   "shortcuts": "Shortcuts",
   "about": "About",

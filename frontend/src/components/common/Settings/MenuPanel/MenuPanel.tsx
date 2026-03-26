@@ -5,13 +5,13 @@ import type { MenuPanelProps } from '../types';
 import { MenuPanelStyled } from './MenuPanel.styled';
 import MenuPanelItem from './MenuPanelItem/MenuPanelItem';
 
-export default function MenuPanel({ tabs, onChange, defaultTabId }: MenuPanelProps): JSX.Element {
+export default function MenuPanel({ tabs, onChange, defaultTab }: MenuPanelProps): JSX.Element {
   const uuids = useUUID(tabs.length);
-  const [selectedTabId, setSelectedTabId] = useState(defaultTabId ?? tabs[0].id);
+  const [selectedTabId, setSelectedTabId] = useState(defaultTab?.id ?? tabs[0].id);
   const [isDesktop, setIsDesktop] = useState(false);
 
-  const selectedTabContent = useMemo(() => {
-    return tabs.find((obj) => obj.id === selectedTabId)?.content;
+  const selectedTab = useMemo(() => {
+    return tabs.find((obj) => obj.id === selectedTabId);
   }, [selectedTabId]);
 
   useEffect(() => {
@@ -20,7 +20,7 @@ export default function MenuPanel({ tabs, onChange, defaultTabId }: MenuPanelPro
       .then((e) => e ?? setIsDesktop(e))
       .catch((e) => console.debug('🚀 ~ MenuPanel ~ e:', e));
 
-    onChange(selectedTabContent);
+    onChange(selectedTab);
   }, [selectedTabId]);
 
   return (

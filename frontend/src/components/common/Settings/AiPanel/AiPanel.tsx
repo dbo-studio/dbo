@@ -77,78 +77,80 @@ export default function AiPanel() {
   };
 
   return (
-    <Box p={2} display={'flex'} flexDirection={'column'} gap={2}>
-      <SelectInput
-        label={locales.provider}
-        value={provider?.type}
-        onChange={(e) => {
-          setProvider(providers?.find((p) => p.type === (e as SelectInputOption)?.value) ?? providers?.[0]);
-        }}
-        options={providers?.map((m) => ({ label: m.type, value: m.type })) ?? []}
-      />
+    <Box>
+      <Box display={'flex'} flexDirection={'column'} gap={2}>
+        <SelectInput
+          label={locales.provider}
+          value={provider?.type}
+          onChange={(e) => {
+            setProvider(providers?.find((p) => p.type === (e as SelectInputOption)?.value) ?? providers?.[0]);
+          }}
+          options={providers?.map((m) => ({ label: m.type, value: m.type })) ?? []}
+        />
 
-      <FieldInput
-        label={locales.api_key}
-        value={provider?.apiKey ?? ''}
-        onChange={(e) => setProvider({ ...provider, apiKey: e.target.value } as AiProviderType)}
-      />
+        <FieldInput
+          label={locales.api_key}
+          value={provider?.apiKey ?? ''}
+          onChange={(e) => setProvider({ ...provider, apiKey: e.target.value } as AiProviderType)}
+        />
 
-      <FieldInput
-        label={locales.url}
-        value={provider?.url}
-        onChange={(e) => setProvider({ ...provider, url: e.target.value } as AiProviderType)}
-        helpertext={error.url}
-        error={!!error.url}
-      />
+        <FieldInput
+          label={locales.url}
+          value={provider?.url}
+          onChange={(e) => setProvider({ ...provider, url: e.target.value } as AiProviderType)}
+          helpertext={error.url}
+          error={!!error.url}
+        />
 
-      <FieldInput
-        placeholder='30'
-        typelabel={`${locales.max} 1000`}
-        type='number'
-        label={locales.timeout}
-        value={provider?.timeout ?? ''}
-        onChange={(e) =>
-          setProvider({
-            ...provider,
-            timeout: Number.parseInt(e.target.value)
-          } as AiProviderType)
-        }
-      />
+        <FieldInput
+          placeholder='30'
+          typelabel={`${locales.max} 1000`}
+          type='number'
+          label={locales.timeout}
+          value={provider?.timeout ?? ''}
+          onChange={(e) =>
+            setProvider({
+              ...provider,
+              timeout: Number.parseInt(e.target.value)
+            } as AiProviderType)
+          }
+        />
 
-      <Stack direction={'row'} alignItems={'center'} spacing={1}>
-        <Box flex={1}>
-          <FieldInput
-            label={locales.add_model}
-            onKeyDown={handleKeyDown}
-            onChange={(e) => setNewModel(e.target.value)}
-            value={newModel}
-          />
+        <Stack direction={'row'} alignItems={'center'} spacing={1}>
+          <Box flex={1}>
+            <FieldInput
+              label={locales.add_model}
+              onKeyDown={handleKeyDown}
+              onChange={(e) => setNewModel(e.target.value)}
+              value={newModel}
+            />
+          </Box>
+          <Box>
+            <IconButton onClick={handleAddModel}>
+              <CustomIcon type='plus' />
+            </IconButton>
+          </Box>
+        </Stack>
+
+        <Stack direction={'row'} spacing={1}>
+          {provider?.models.map((model) => (
+            <Chip key={model} label={model} onDelete={() => handleRemoveModel(model)} />
+          ))}
+        </Stack>
+
+        <Box display={'flex'} mt={2} justifyContent={'space-between'}>
+          <Button
+            fullWidth
+            loadingPosition='start'
+            disabled={pendingUpdateProvider}
+            loading={pendingUpdateProvider}
+            onClick={handleSubmit}
+            size='small'
+            variant='contained'
+          >
+            <span>{locales.save}</span>
+          </Button>
         </Box>
-        <Box>
-          <IconButton onClick={handleAddModel}>
-            <CustomIcon type='plus' />
-          </IconButton>
-        </Box>
-      </Stack>
-
-      <Stack direction={'row'} spacing={1}>
-        {provider?.models.map((model) => (
-          <Chip key={model} label={model} onDelete={() => handleRemoveModel(model)} />
-        ))}
-      </Stack>
-
-      <Box display={'flex'} mt={2} justifyContent={'space-between'}>
-        <Button
-          fullWidth
-          loadingPosition='start'
-          disabled={pendingUpdateProvider}
-          loading={pendingUpdateProvider}
-          onClick={handleSubmit}
-          size='small'
-          variant='contained'
-        >
-          <span>{locales.save}</span>
-        </Button>
       </Box>
     </Box>
   );
