@@ -18,8 +18,7 @@ const endpoints = {
   getObject: (nodeId: string, action: string, tabId: string): string =>
     `/tree/${nodeId}/tabs/${action}/fields/${tabId}/object`,
   executeAction: (nodeId: string, action: string): string => `/tree/${nodeId}/tabs/${action}/fields/object`,
-  previewExecute: (nodeId: string, action: string): string =>
-    `/tree/${nodeId}/tabs/${action}/fields/object/preview`,
+  previewExecute: (nodeId: string, action: string): string => `/tree/${nodeId}/tabs/${action}/fields/object/preview`,
   getDynamicFieldOptions: (nodeId: string): string => `/tree/${nodeId}/dynamic`
 };
 

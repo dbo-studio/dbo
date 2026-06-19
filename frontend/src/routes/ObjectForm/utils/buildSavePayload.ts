@@ -21,12 +21,26 @@ const mapFieldId = (tabId: string, fieldId: string): string => {
   return fieldId;
 };
 
+const toPayloadValue = (value: FormValue | FormValue[] | undefined): FormValue => {
+  if (value === undefined) return null;
+  if (Array.isArray(value)) {
+    const result: string[] = [];
+    for (const item of value) {
+      if (typeof item === 'string') {
+        result.push(item);
+      }
+    }
+    return result;
+  }
+  return value ?? null;
+};
+
 const rowToRecord = (row: FormFieldType[], tabId: string, useOriginal = false): Record<string, FormValue> => {
   const record: Record<string, FormValue> = {};
 
   for (const cell of row) {
     const key = mapFieldId(tabId, cell.id);
-    record[key] = useOriginal ? (cell.originalValue ?? null) : (cell.value ?? null);
+    record[key] = toPayloadValue(useOriginal ? cell.originalValue : cell.value);
   }
 
   return record;
@@ -44,16 +58,13 @@ const buildGeneralRecord = (general: GeneralFieldType[], useOriginal = false): R
   const record: Record<string, FormValue> = {};
 
   for (const field of general) {
-    record[field.id] = useOriginal ? (field.originalValue ?? null) : (field.value ?? null);
+    record[field.id] = toPayloadValue(useOriginal ? field.originalValue : field.value);
   }
 
   return record;
 };
 
-const buildTablePayload = (
-  general: GeneralFieldType[],
-  action: string
-): Record<string, unknown> | null => {
+const buildTablePayload = (general: GeneralFieldType[], action: string): Record<string, unknown> | null => {
   if (!TABLE_ACTIONS.has(action)) return null;
 
   const hasChanges = hasGeneralChanges(general);
@@ -149,9 +160,7 @@ export const buildSavePayload = (
 ): Record<string, unknown> | null => {
   const payload: Record<string, unknown> = {};
 
-  const firstTabData = tabs
-    .map((tab) => formDataByTab[`${objectPrefix}_${tab.id}`])
-    .find((data) => data !== undefined);
+  const firstTabData = tabs.map((tab) => formDataByTab[`${objectPrefix}_${tab.id}`]).find((data) => data !== undefined);
 
   if (firstTabData && TABLE_ACTIONS.has(action)) {
     const tablePayload = buildTablePayload(firstTabData.general, action);
