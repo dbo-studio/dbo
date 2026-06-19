@@ -18,6 +18,7 @@ func (r *Server) routing() {
 	tree.Get("/:nodeId/tabs/:action/fields/:tabId/object", r.handlers.TreeHandler.ObjectDetail)
 	tree.Get("/:nodeId/dynamic", r.handlers.TreeHandler.GetDynamicFieldOptions)
 	tree.Post("/:nodeId/tabs/:action/fields/object", r.handlers.TreeHandler.ExecuteHandler)
+	tree.Post("/:nodeId/tabs/:action/fields/object/preview", r.handlers.TreeHandler.PreviewExecuteHandler)
 
 	query := api.Group("query")
 	query.Post("/run", r.handlers.QueryHandler.Run)

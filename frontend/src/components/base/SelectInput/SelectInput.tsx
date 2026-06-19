@@ -48,7 +48,11 @@ export default function SelectInput({
       />
 
       {helpertext && (
-        <Typography color={theme.palette.error.main} variant='caption'>
+        <Typography
+          color={theme.palette.error.main}
+          variant='caption'
+          sx={{ marginBottom: (theme) => theme.spacing(1) }}
+        >
           {helpertext}
         </Typography>
       )}

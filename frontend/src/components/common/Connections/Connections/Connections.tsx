@@ -28,7 +28,7 @@ export default function Connections(): JSX.Element {
   const updateUI = useSettingStore((state) => state.updateUI);
 
   const { data: connections } = useQuery({
-    queryKey: ['connections'],
+    queryKey: ['connections', updateLoading, updateConnections, currentConnectionId, updateCurrentConnection],
     queryFn: async (): Promise<ConnectionType[]> => {
       updateLoading('loading');
       try {

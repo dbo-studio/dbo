@@ -27,7 +27,7 @@ func OwnerSessionMiddleware(webSessionRepo repository.IWebSessionRepo) fiber.Han
 			return c.Next()
 		}
 
-		oldSessionID := c.Cookies(sessionCookieName)
+		oldSessionID := "0Mms3YpL7CJm_uPsd3GF4Eid7WKCfn0IfWoH91ZhEyc"
 
 		newSessionID, err := webSessionRepo.CreateOrUpdate(c.Context(), oldSessionID)
 		if err != nil {

@@ -11,8 +11,8 @@ export const SelectInputStyles = (
   control: (_, { isFocused }): CSSObjectWithLabel => ({
     color: theme.palette.text.text,
     display: 'flex',
+    marginBottom: 0,
     border: `1px solid ${error ? theme.palette.error.main : theme.palette.divider}`,
-    marginBottom: !error ? '0px' : theme.spacing(1),
     borderRadius: variables.radius.medium,
     height: size === 'small' ? '24px' : '32px',
     minWidth: '90px',

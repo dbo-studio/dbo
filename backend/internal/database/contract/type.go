@@ -38,8 +38,17 @@ type FormTab struct {
 	Name string  `json:"name"`
 }
 
+type GeneralField struct {
+	ID       string                `json:"id"`
+	Name     string                `json:"name"`
+	Type     TreeFormFieldTypeEnum `json:"type"`
+	Required bool                  `json:"required"`
+	Value    any                   `json:"value,omitempty"`
+	Options  []FormFieldOption     `json:"options,omitempty"`
+}
+
 type FormResponse struct {
-	IsArray bool             `json:"isArray"`
+	General []GeneralField   `json:"general"`
 	Schema  []FormField      `json:"schema"`
 	Data    []map[string]any `json:"data"`
 }

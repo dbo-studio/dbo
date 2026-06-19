@@ -10,34 +10,47 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *SQLiteRepository) Execute(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) error {
+func (r *SQLiteRepository) buildExecuteQueries(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
 	type ExecuteParams map[contract.TreeTab]any
 	executeParams, err := helper.ConvertToDTO[ExecuteParams](params)
 	if err != nil {
-		return err
+		return nil, "", err
 	}
 
 	queries := []string{}
-	var tmpTableName string // For cleanup in case of error
+	var tmpTableName string
 
 	for tabId := range executeParams {
 		viewQueries, err := r.handleViewCommands(nodeID, tabId, action, params)
 		if err != nil {
-			return err
+			return nil, "", err
 		}
 
 		tableQueries, tmpName, err := r.handleTableCommands(ctx, nodeID, executeParams, action, params)
 		if err != nil {
-			return err
+			return nil, "", err
 		}
 
-		// Store tmp table name for cleanup (only for EditTableAction)
 		if tmpName != "" {
 			tmpTableName = tmpName
 		}
 
 		queries = append(queries, viewQueries...)
 		queries = append(queries, tableQueries...)
+	}
+
+	return queries, tmpTableName, nil
+}
+
+func (r *SQLiteRepository) PreviewExecute(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, error) {
+	queries, _, err := r.buildExecuteQueries(ctx, nodeID, action, params)
+	return queries, err
+}
+
+func (r *SQLiteRepository) Execute(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) error {
+	queries, tmpTableName, err := r.buildExecuteQueries(ctx, nodeID, action, params)
+	if err != nil {
+		return err
 	}
 
 	// Execute queries with cleanup on error

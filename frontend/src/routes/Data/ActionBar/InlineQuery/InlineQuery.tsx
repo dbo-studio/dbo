@@ -32,8 +32,8 @@ export default function InlineQuery() {
   };
 
   return (
-    <Stack direction={'row'} flex={1} alignItems={'center'}>
-      <Box flex={1}>
+    <Stack direction='row' flex={1} minWidth={0} alignItems='center'>
+      <Box flex={1} minWidth={0}>
         <InlineSqlEditor
           columns={columns ?? []}
           placeholder={locales.inline_query_placeholder}

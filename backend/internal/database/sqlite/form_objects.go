@@ -9,8 +9,6 @@ import (
 
 func (r *SQLiteRepository) Objects(ctx context.Context, nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
 	switch tabID {
-	case contract.TableTab:
-		return r.getTableInfo(ctx, nodeID)
 	case contract.TableColumnsTab:
 		return r.getTableColumns(ctx, nodeID)
 	case contract.TableForeignKeysTab:
@@ -24,7 +22,7 @@ func (r *SQLiteRepository) Objects(ctx context.Context, nodeID string, tabID con
 	}
 }
 
-func (r *SQLiteRepository) getTableInfo(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
+func (r *SQLiteRepository) getTableInfo(ctx context.Context, nodeID string) ([]contract.GeneralField, error) {
 	fields := r.tableFields()
 
 	tables, err := r.getAllTableList(ctx)
@@ -32,19 +30,19 @@ func (r *SQLiteRepository) getTableInfo(ctx context.Context, nodeID string) (*co
 		return nil, err
 	}
 
-	result := []map[string]any{}
+	result := map[string]any{}
 	for _, table := range tables {
 		if table.Name == nodeID {
-			result = append(result, map[string]any{
+			result = map[string]any{
 				"name":          table.Name,
 				"temporary":     false,
 				"strict":        false,
 				"without_rowid": false,
-			})
+			}
 		}
 	}
 
-	return r.base.BuildObjectFormResponseFromResults(result, fields)
+	return r.base.BuildGeneralFormResult(result, fields)
 }
 
 func (r *SQLiteRepository) getTableColumns(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
@@ -67,7 +65,13 @@ func (r *SQLiteRepository) getTableColumns(ctx context.Context, nodeID string) (
 		})
 	}
 
-	return r.base.BuildFormResponseFromResults(result, fields)
+	tableInfo, err := r.getTableInfo(ctx, nodeID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return r.base.SampleBuildFormResponseFromResults(tableInfo, result, fields)
 }
 
 func (r *SQLiteRepository) getTableForeignKeys(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
@@ -91,12 +95,13 @@ func (r *SQLiteRepository) getTableForeignKeys(ctx context.Context, nodeID strin
 		})
 	}
 
-	response, err := r.base.BuildFormResponseFromResults(result, fields)
+	tableInfo, err := r.getTableInfo(ctx, nodeID)
+
 	if err != nil {
 		return nil, err
 	}
 
-	return response, nil
+	return r.base.SampleBuildFormResponseFromResults(tableInfo, result, fields)
 }
 
 func (r *SQLiteRepository) getTableKeys(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
@@ -124,7 +129,13 @@ func (r *SQLiteRepository) getTableKeys(ctx context.Context, nodeID string) (*co
 		})
 	}
 
-	return r.base.BuildFormResponseFromResults(result, fields)
+	tableInfo, err := r.getTableInfo(ctx, nodeID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return r.base.SampleBuildFormResponseFromResults(tableInfo, result, fields)
 }
 
 func (r *SQLiteRepository) getViewInfo(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
@@ -148,5 +159,11 @@ func (r *SQLiteRepository) getViewInfo(ctx context.Context, nodeID string) (*con
 		}
 	}
 
-	return r.base.BuildObjectFormResponseFromResults(result, fields)
+	tableInfo, err := r.getTableInfo(ctx, nodeID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return r.base.SampleBuildFormResponseFromResults(tableInfo, result, fields)
 }

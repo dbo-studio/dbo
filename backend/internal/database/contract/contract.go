@@ -16,6 +16,7 @@ type DatabaseRepository interface {
 	Objects(ctx context.Context, nodeID string, tabID TreeTab, action TreeNodeActionName) (*FormResponse, error)
 	GetDynamicFieldOptions(ctx context.Context, req *DynamicFieldRequest) ([]FormFieldOption, error)
 	Execute(ctx context.Context, nodeID string, action TreeNodeActionName, params []byte) error
+	PreviewExecute(ctx context.Context, nodeID string, action TreeNodeActionName, params []byte) ([]string, error)
 	AutoComplete(ctx context.Context, dto *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error)
 	ImportData(ctx context.Context, job dto.ImportJob, rows [][]string, columns []string) (*ImportResult, error)
 	AiContext(ctx context.Context, dto *dto.AiChatRequest) (string, error)

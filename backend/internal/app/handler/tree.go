@@ -91,6 +91,23 @@ func (h *TreeHandler) ExecuteHandler(c fiber.Ctx) error {
 	return response.SuccessBuilder().Send(c)
 }
 
+func (h *TreeHandler) PreviewExecuteHandler(c fiber.Ctx) error {
+	req := &dto.ObjectExecuteRequest{
+		ConnectionId: fiber.Query[int32](c, "connectionId"),
+		NodeId:       fiber.Params[string](c, "nodeId"),
+		Action:       fiber.Params[string](c, "action"),
+		Params:       c.Body(),
+	}
+
+	queries, err := h.treeService.ObjectPreviewExecute(c, req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(map[string][]string{"queries": queries}).Send(c)
+}
+
 func (h *TreeHandler) GetDynamicFieldOptions(c fiber.Ctx) error {
 	req := &dto.DynamicFieldOptionsRequest{
 		ConnectionId: fiber.Query[int32](c, "connectionId"),

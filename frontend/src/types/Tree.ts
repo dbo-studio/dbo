@@ -26,22 +26,22 @@ export type ObjectTabType = {
   name: string;
 };
 
-export type FormFieldType = {
-  id: string;
-  name: string;
-  type: FormFieldTypesType;
-  required: boolean;
-  options?: FormFieldOptionType[];
-  dependsOn?: FieldDependencyType;
-};
+// export type FormFieldType = {
+//   id: string;
+//   name: string;
+//   type: FormFieldTypesType;
+//   required: boolean;
+//   options?: FormFieldOptionType[];
+//   dependsOn?: FieldDependencyType;
+// };
 
-export type FormFieldWithState = FormFieldType & {
-  value?: FormValue;
-  originalValue?: FormValue;
-  added?: boolean;
-  deleted?: boolean;
-  updated?: boolean;
-};
+// export type FormFieldWithState = FormFieldType & {
+//   value?: FormValue;
+//   originalValue?: FormValue;
+//   added?: boolean;
+//   deleted?: boolean;
+//   updated?: boolean;
+// };
 
 export type FormFieldOptionType = {
   value: string | number;
@@ -51,4 +51,34 @@ export type FormFieldOptionType = {
 export type FieldDependencyType = {
   fieldId: string;
   parameters?: Record<string, string>;
+};
+
+//////////////////////
+
+export type GeneralFieldType = {
+  id: string;
+  name: string;
+  type: FormFieldTypesType;
+  value: FormValue | FormValue[];
+  required: boolean;
+  options?: FormFieldOptionType[];
+
+  originalValue?: FormValue | FormValue[];
+};
+
+export type FormSchemaType = {
+  id: string;
+  name: string;
+  type: FormFieldTypesType;
+  required: boolean;
+  options?: FormFieldOptionType[];
+  dependsOn?: FieldDependencyType;
+};
+
+export type FormFieldType = FormSchemaType & {
+  value?: FormValue | FormValue[];
+  originalValue?: FormValue | FormValue[];
+  added?: boolean;
+  deleted?: boolean;
+  updated?: boolean;
 };

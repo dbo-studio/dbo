@@ -15,7 +15,8 @@ export default function CreatableSelectInput({
   onChange,
   emptylabel,
   error,
-  isMulti
+  isMulti,
+  isLoading
 }: CreatableSelectInputProps): React.JSX.Element {
   const theme = useTheme();
 
@@ -35,7 +36,6 @@ export default function CreatableSelectInput({
 
     if (isMulti) {
       if (!Array.isArray(value)) {
-        console.debug('[CreatableSelectInput] Invalid format for multi-select: expected array, got', typeof value);
         return [];
       }
 
@@ -94,6 +94,7 @@ export default function CreatableSelectInput({
         </Typography>
       )}
       <CreatableSelect
+        isLoading={isLoading}
         isMulti={isMulti}
         placeholder={options.length === 0 && emptylabel}
         components={{ IndicatorSeparator: null }}
@@ -108,7 +109,11 @@ export default function CreatableSelectInput({
       />
 
       {helpertext && (
-        <Typography color={theme.palette.error.main} variant='caption'>
+        <Typography
+          color={theme.palette.error.main}
+          variant='caption'
+          sx={{ marginBottom: (theme) => theme.spacing(1) }}
+        >
           {helpertext}
         </Typography>
       )}

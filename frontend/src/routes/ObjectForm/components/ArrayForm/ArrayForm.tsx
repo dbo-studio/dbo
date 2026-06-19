@@ -1,37 +1,70 @@
-import { FormValue } from '@/types/Tree';
+import { useFormObjectStore } from '@/store/formObject/formObject.store';
+import { FormFieldType, FormValue } from '@/types/Tree';
 import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import React, { memo, useCallback } from 'react';
-import type { ArrayFormProps } from '../../types';
+import React, { memo, useCallback, useEffect } from 'react';
+import { useDynamicField } from '../../hooks/useDynamicField';
 import ArrayRow from './ArrayRow';
 
-function ArrayForm({ schema, data, onDataChange }: ArrayFormProps): React.JSX.Element {
-  const handleFieldChange = useCallback(
-    (rowIndex: number, fieldId: string, value: FormValue): void => {
-      const updatedData = [...data];
-      updatedData[rowIndex] = {
-        ...updatedData[rowIndex],
-        [fieldId]: value
-      };
-      onDataChange(updatedData);
+function ArrayForm({ objectTabId }: { objectTabId: string }): React.JSX.Element {
+  const form = useFormObjectStore((state) => state.getFormData(objectTabId));
+  const updateFormField = useFormObjectStore((state) => state.updateFormField);
+  const markRowDeleted = useFormObjectStore((state) => state.markRowDeleted);
+  const { getDynamicFieldStateKey, refreshDynamicField, getDynamicOptions, isLoadingDynamicField } =
+    useDynamicField(objectTabId);
+
+  const refreshRowDynamicFields = useCallback(
+    (row: FormFieldType[], rowIndex: number, changedFieldId?: string) => {
+      row.forEach((field) => {
+        if (!field.dependsOn) {
+          return;
+        }
+
+        if (changedFieldId && field.dependsOn.fieldId !== changedFieldId) {
+          return;
+        }
+
+        void refreshDynamicField(getDynamicFieldStateKey(rowIndex, field.id), field, row);
+      });
     },
-    [data, onDataChange]
+    [getDynamicFieldStateKey, refreshDynamicField]
   );
 
-  const handleDelete = useCallback(
-    (rowIndex: number): void => {
-      const updatedData = data.filter((_, index) => index !== rowIndex);
-      onDataChange(updatedData);
+  useEffect(() => {
+    form?.data.forEach((row, rowIndex) => {
+      refreshRowDynamicFields(row, rowIndex);
+    });
+  }, [form?.data, refreshRowDynamicFields]);
+
+  const handleFieldChange = useCallback(
+    (rowIndex: number, field: FormFieldType, value: FormValue | FormValue[]) => {
+      if (!form) {
+        return;
+      }
+
+      const nextRows = form.data.map((row, currentRowIndex) => {
+        if (currentRowIndex !== rowIndex) {
+          return row;
+        }
+
+        return row.map((cell) => (cell.id === field.id ? { ...cell, value } : cell));
+      });
+
+      updateFormField(objectTabId, rowIndex, field.id, value);
+
+      nextRows.forEach((row, currentRowIndex) => {
+        refreshRowDynamicFields(row, currentRowIndex, field.id);
+      });
     },
-    [data, onDataChange]
+    [form, objectTabId, refreshRowDynamicFields, updateFormField]
   );
 
   return (
-    <Box height='100%' display='flex' flexDirection='column'>
-      <TableContainer>
+    <Box height='100%' display='flex' flexDirection='column' flex={1}>
+      <TableContainer sx={{ flex: 1 }}>
         <Table sx={{ minWidth: 650 }}>
           <TableHead>
-            <TableRow>
-              {schema.map((field) => (
+            <TableRow sx={{ border: 'none !important' }}>
+              {form?.schema.map((field) => (
                 <TableCell key={field.id} sx={{ minWidth: 150 }}>
                   {field.name}
                 </TableCell>
@@ -40,15 +73,24 @@ function ArrayForm({ schema, data, onDataChange }: ArrayFormProps): React.JSX.El
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map((row, index) => (
-              <ArrayRow
-                key={index}
-                schema={schema}
-                rowData={row}
-                onFieldChange={(fieldId, value): void => handleFieldChange(index, fieldId, value)}
-                onDelete={(): void => handleDelete(index)}
-              />
-            ))}
+            {form?.data.map((row, rowIndex) => {
+              if (row.some((cell) => cell.deleted)) {
+                return null;
+              }
+
+              return (
+                <ArrayRow
+                  rowIndex={rowIndex}
+                  key={rowIndex}
+                  rows={row}
+                  getDynamicFieldStateKey={getDynamicFieldStateKey}
+                  getDynamicOptions={getDynamicOptions}
+                  isLoadingDynamicField={isLoadingDynamicField}
+                  onFieldChange={(field, value): void => handleFieldChange(rowIndex, field, value)}
+                  onDelete={(): void => markRowDeleted(objectTabId, row)}
+                />
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>

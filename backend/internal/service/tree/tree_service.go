@@ -23,6 +23,7 @@ type ITreeService interface {
 	ObjectDetail(ctx context.Context, req *dto.ObjectDetailRequest) (*contract.FormResponse, error)
 	GetDynamicFieldOptions(ctx context.Context, req *dto.DynamicFieldOptionsRequest) ([]contract.FormFieldOption, error)
 	ObjectExecute(ctx context.Context, req *dto.ObjectExecuteRequest) error
+	ObjectPreviewExecute(ctx context.Context, req *dto.ObjectExecuteRequest) ([]string, error)
 }
 
 var _ ITreeService = (*ITreeServiceImpl)(nil)
@@ -126,6 +127,24 @@ func (i ITreeServiceImpl) ObjectExecute(ctx context.Context, req *dto.ObjectExec
 		return apperror.InternalServerError(err)
 	}
 	return nil
+}
+
+func (i ITreeServiceImpl) ObjectPreviewExecute(ctx context.Context, req *dto.ObjectExecuteRequest) ([]string, error) {
+	connection, err := i.connectionRepo.Find(ctx, req.ConnectionId)
+	if err != nil {
+		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
+	if err != nil {
+		return nil, err
+	}
+
+	queries, err := repo.PreviewExecute(ctx, req.NodeId, contract.TreeNodeActionName(req.Action), req.Params)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+	return queries, nil
 }
 
 func (i ITreeServiceImpl) GetDynamicFieldOptions(ctx context.Context, req *dto.DynamicFieldOptionsRequest) ([]contract.FormFieldOption, error) {

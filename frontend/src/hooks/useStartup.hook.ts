@@ -16,7 +16,7 @@ export const useStartup = (): boolean => {
   const resetTree = useTreeStore((state) => state.reset);
 
   const { isLoading: isLoadingConfig } = useQuery({
-    queryKey: ['config'],
+    queryKey: ['config', updateProviders, updateGeneral],
     queryFn: async () => {
       const config = await api.config.getConfig();
       updateProviders(config.providers);

@@ -91,17 +91,23 @@ func (r *SQLiteRepository) populateTableParamsFromDDLString(tableParams *dto.SQL
 	}
 }
 
-func (r *SQLiteRepository) populateColumnParamsFromDDL(ctx context.Context, columnParams *dto.SQLiteTableColumnParams, tableDDL string) {
-	if columnParams == nil || len(columnParams.Columns) > 0 || tableDDL == "" {
+func (r *SQLiteRepository) populateColumnParamsFromDDL(ctx context.Context, columnParams *dto.SQLiteTableColumnParams, tableDDL string, tableName string) {
+	if columnParams == nil || len(columnParams.Columns) > 0 {
 		return
 	}
 
-	tableName := r.extractTableNameFromDDL(tableDDL)
-	if tableName == "" {
+	resolvedTableName := tableName
+	if tableDDL != "" {
+		if name := r.extractTableNameFromDDL(tableDDL); name != "" {
+			resolvedTableName = name
+		}
+	}
+
+	if resolvedTableName == "" {
 		return
 	}
 
-	columns, err := r.getColumns(ctx, tableName, []string{}, false)
+	columns, err := r.getColumns(ctx, resolvedTableName, []string{}, false)
 	if err != nil {
 		return
 	}

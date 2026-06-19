@@ -1,4 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import Grid, { GridItem } from '@/components/base/Grid/Grid';
 import { ExportModal } from '@/components/common/ExportModal/ExportModal';
 import { ImportModal } from '@/components/common/ImportModal/ImportModal';
 import { useSelectedTab } from '@/hooks';
@@ -6,7 +7,7 @@ import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { DataTabType } from '@/types';
-import { Badge, Box, Grid, IconButton, Stack, Tooltip, useTheme } from '@mui/material';
+import { Badge, Box, IconButton, Tooltip, useTheme } from '@mui/material';
 import { type JSX, useState } from 'react';
 import Filters from './Filters/Filters';
 import InlineQuery from './InlineQuery/InlineQuery';
@@ -94,18 +95,27 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
 
   return (
     <Box>
-      <Stack
+      <Grid
         borderBottom={`1px solid ${theme.palette.divider}`}
         borderTop={`1px solid ${theme.palette.divider}`}
-        padding=' 8px'
-        maxHeight={40}
-        direction='row'
-        alignItems='center'
+        padding='8px'
+        minHeight={40}
+        gap={1}
+        templateColumns={{
+          xs: 'minmax(0, 1fr) max-content'
+        }}
       >
-        <Grid size={{ md: 8 }}>
+        <GridItem minWidth={0}>
           <InlineQuery />
-        </Grid>
-        <Grid size={{ md: 4 }} display='flex' justifyContent='flex-end'>
+        </GridItem>
+        <GridItem
+          display='flex'
+          alignItems='center'
+          justifyContent='flex-end'
+          flexWrap='nowrap'
+          flexShrink={0}
+          gap={0.5}
+        >
           <Tooltip title={locales.filters}>
             <IconButton className={show.showFilters ? 'active' : ''} onClick={(): void => handleToggle('filter')}>
               <Badge badgeContent={filterCount} color='secondary' variant='dot'>
@@ -156,8 +166,8 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
               <CustomIcon type='code' size='s' />
             </IconButton>
           </Tooltip>
-        </Grid>
-      </Stack>
+        </GridItem>
+      </Grid>
 
       <ExportModal
         onClose={() => setShowExport({ ...showExport, show: false })}

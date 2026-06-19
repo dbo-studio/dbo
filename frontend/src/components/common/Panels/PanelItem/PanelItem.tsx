@@ -15,8 +15,8 @@ export default function PanelItem(): JSX.Element {
       {selectedTab
         ? (selectedTab.mode === TabMode.Data && <Data />) ||
           (selectedTab.mode === TabMode.Query && <Query />) ||
-          (selectedTab.mode === TabMode.Object && <ObjectForm isDetail={false} />) ||
-          (selectedTab.mode === TabMode.ObjectDetail && <ObjectForm isDetail={true} />)
+          (selectedTab.mode === TabMode.Object && <ObjectForm />) ||
+          (selectedTab.mode === TabMode.ObjectDetail && <ObjectForm />)
         : null}
     </Box>
   );
