@@ -63,7 +63,7 @@ func (r *PostgresRepository) runQueryGenerator(ctx context.Context, dto *dto.Run
 	var sb strings.Builder
 
 	if lo.FromPtrOr(dto.InlineQuery, "") != "" {
-		return fmt.Sprintf("SELECT * FROM `%s`.`%s` WHERE %s", node.Database, node.Table, *dto.InlineQuery)
+		return fmt.Sprintf(`SELECT * FROM "%s"."%s" WHERE %s`, node.Schema, node.Table, *dto.InlineQuery)
 	}
 
 	// SELECT clause
