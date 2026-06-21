@@ -6,14 +6,14 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { DataTabType } from '@/types';
 import { Box, Stack } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SubmitButtonStyled } from './InlineQuery.styled';
 
 export default function InlineQuery() {
   const selectedTab = useSelectedTab<DataTabType>();
   const columns = useDataStore((state) => state.columns);
-
   const [value, setValue] = useState(selectedTab?.inlineQuery ?? '');
+
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
   const runQuery = useDataStore((state) => state.runQuery);
 
@@ -25,6 +25,10 @@ export default function InlineQuery() {
       inlineQuery: v
     });
   };
+
+  useEffect(() => {
+    setValue(selectedTab?.inlineQuery ?? '');
+  }, [selectedTab?.id]);
 
   const handleRunQuery = async (query?: string) => {
     if (query !== undefined) handleUpdateQuery(query);
