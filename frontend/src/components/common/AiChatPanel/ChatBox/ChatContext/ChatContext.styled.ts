@@ -2,6 +2,13 @@ import { variables } from '@/core/theme/variables';
 import { Stack } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
+export const ChatContextTagsStyled = styled(Stack)(() => ({
+  alignItems: 'center',
+  justifyContent: 'flex-start',
+  flexWrap: 'wrap',
+  alignContent: 'center'
+}));
+
 export const ChatContextStyled = styled(Stack)(({ theme }) => ({
   width: '200px',
   height: '200px',

@@ -1,7 +1,7 @@
 import { useContextMenu } from '@/hooks';
-import { Box, CircularProgress } from '@mui/material';
+import { CircularProgress } from '@mui/material';
 import { RefObject, useRef, type JSX } from 'react';
-import { StyledCol, StyledTable, TableContainer, VirtualTableWrapper } from './DataGrid.styled';
+import { DataGridLoadingStyled, StyledCol, StyledTable, TableContainer, VirtualTableWrapper } from './DataGrid.styled';
 import DataGridContextMenu from './DataGridContextMenu/DataGridContextMenu';
 import DataGridTableBodyRows from './DataGridTableBodyRows/DataGridTableBodyRows';
 import DataGridTableHeaderRow from './DataGridTableHeaderRow/DataGridTableHeaderRow';
@@ -44,9 +44,9 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
   });
 
   return loading ? (
-    <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
+    <DataGridLoadingStyled>
       <CircularProgress size={30} />
-    </Box>
+    </DataGridLoadingStyled>
   ) : (
     <>
       <QuickViewDialog editable={editable} />

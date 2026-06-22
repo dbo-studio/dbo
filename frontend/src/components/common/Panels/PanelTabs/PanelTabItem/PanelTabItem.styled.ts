@@ -1,6 +1,21 @@
 import type { PanelTabItemStyledProps } from '@/components/common/Panels/types.ts';
 import { variables } from '@/core/theme/variables.ts';
-import { Box, styled } from '@mui/material';
+import { Box, styled, Typography, type TypographyProps } from '@mui/material';
+
+export const PanelTabContentStyled = styled(Box)(() => ({
+  display: 'flex',
+  overflow: 'hidden',
+  flexGrow: 1,
+  justifyContent: 'center',
+  alignItems: 'center'
+}));
+
+export const PanelTabNameStyled = styled(Typography)<TypographyProps>(() => ({
+  display: 'inline-block',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  maxWidth: '100px'
+}));
 
 export const PanelTabItemStyled = styled(Box)<PanelTabItemStyledProps>(({ theme, selected }) => ({
   position: 'relative',

@@ -1,9 +1,10 @@
 import type { Theme } from '@mui/material';
-import { Grid, Stack, useMediaQuery } from '@mui/material';
+import { Grid, useMediaQuery } from '@mui/material';
 import { type JSX, useEffect, useState } from 'react';
 import type { QueryEditorActionBarProps } from '../types';
 import QueryEditorActions from './QueryEditorActions/QueryEditorActions';
 import QueryEditorLeading from './QueryEditorLeading/QueryEditorLeading';
+import { QueryEditorActionBarStackStyled } from './QueryEditorActionBar.styled';
 
 export default function QueryEditorActionBar({
   databases,
@@ -27,20 +28,25 @@ export default function QueryEditorActionBar({
   }, [databases, schemas]);
 
   return (
-    <Stack
-      borderBottom={(theme): string => `1px solid ${theme.palette.divider}`}
-      borderTop={(theme): string => `1px solid ${theme.palette.divider}`}
-      padding={1}
-      direction='row'
-      justifyContent='space-between'
-      alignItems='center'
-    >
-      <Grid size={{ md: 8 }} display='flex' justifyContent='flex-start'>
+    <QueryEditorActionBarStackStyled direction='row'>
+      <Grid
+        size={{ md: 8 }}
+        sx={{
+          display: 'flex',
+          justifyContent: 'flex-start'
+        }}
+      >
         <QueryEditorLeading databases={localDatabases} schemas={localSchemas} />
       </Grid>
-      <Grid size={{ md: 8 }} display={matches ? 'flex' : 'none'} justifyContent='flex-end'>
+      <Grid
+        size={{ md: 8 }}
+        sx={{
+          display: matches ? 'flex' : 'none',
+          justifyContent: 'flex-end'
+        }}
+      >
         <QueryEditorActions loading={loading} onFormat={onFormat} onRunQuery={onRunQuery} />
       </Grid>
-    </Stack>
+    </QueryEditorActionBarStackStyled>
   );
 }

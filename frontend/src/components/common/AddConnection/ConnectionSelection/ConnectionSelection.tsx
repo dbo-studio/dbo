@@ -5,7 +5,7 @@ import { type JSX, useState } from 'react';
 import Search from '../../../base/Search/Search';
 import type { ConnectionSelectionProps, SelectionConnectionType } from '../types';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
-import { ConnectionWrapperStyled } from './ConnectionSelection.styled';
+import { ConnectionSelectionContainerStyled, ConnectionWrapperStyled } from './ConnectionSelection.styled';
 
 export default function ConnectionSelection({ connections, onSubmit, onClose }: ConnectionSelectionProps): JSX.Element {
   const uuids = useUUID(connections.length);
@@ -31,8 +31,13 @@ export default function ConnectionSelection({ connections, onSubmit, onClose }: 
   };
 
   return (
-    <Box flex={1} display={'flex'} flexDirection={'column'}>
-      <Box flex={1} mt={1}>
+    <ConnectionSelectionContainerStyled>
+      <Box
+        sx={{
+          flex: 1,
+          mt: 1
+        }}
+      >
         <Search onChange={handleSearch} />
         <ConnectionWrapperStyled>
           {visibleConnections.map((c, index: number) => (
@@ -45,7 +50,12 @@ export default function ConnectionSelection({ connections, onSubmit, onClose }: 
           ))}
         </ConnectionWrapperStyled>
       </Box>
-      <Box display={'flex'} justifyContent={'space-between'}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between'
+        }}
+      >
         <Button size='small' onClick={onClose}>
           {locales.cancel}
         </Button>
@@ -59,6 +69,6 @@ export default function ConnectionSelection({ connections, onSubmit, onClose }: 
           {locales.create}
         </Button>
       </Box>
-    </Box>
+    </ConnectionSelectionContainerStyled>
   );
 }

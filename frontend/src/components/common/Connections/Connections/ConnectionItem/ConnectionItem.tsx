@@ -28,7 +28,11 @@ export default function ConnectionItem({
       onClick={handleClick}
     >
       <Tooltip title={connection.name}>
-        <Box maxWidth={50}>
+        <Box
+          sx={{
+            maxWidth: 50
+          }}
+        >
           <CustomIcon type={connection.isOpen ? 'databaseZap' : 'database'} size='m' />
           {loading ? (
             <Box>

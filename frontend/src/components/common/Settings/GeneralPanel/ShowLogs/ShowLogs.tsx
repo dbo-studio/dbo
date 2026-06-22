@@ -4,6 +4,7 @@ import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Button, Divider, Typography } from '@mui/material';
 import { openPath } from '@tauri-apps/plugin-opener';
+import { GeneralPanelSettingRowStyled } from '../GeneralPanel.styled';
 
 export function ShowLogs() {
   const general = useSettingStore((state) => state.general);
@@ -22,8 +23,12 @@ export function ShowLogs() {
   };
 
   return (
-    <Box mt={1}>
-      <Box display={'flex'} mb={1} flexDirection={'row'} alignItems={'center'} justifyContent={'space-between'}>
+    <Box
+      sx={{
+        mt: 1
+      }}
+    >
+      <GeneralPanelSettingRowStyled>
         <Box>
           <Typography color={'textText'} variant={'subtitle2'}>
             {locales.show_logs}
@@ -36,7 +41,7 @@ export function ShowLogs() {
         <Button variant={'outlined'} size={'small'} onClick={() => void handleOpenLogs()}>
           {locales.open}
         </Button>
-      </Box>
+      </GeneralPanelSettingRowStyled>
       <Divider />
     </Box>
   );

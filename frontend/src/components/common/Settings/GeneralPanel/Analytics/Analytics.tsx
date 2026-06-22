@@ -2,6 +2,7 @@ import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Divider, Switch, Typography } from '@mui/material';
 import { useEffect } from 'react';
+import { GeneralPanelSettingRowStyled } from '../GeneralPanel.styled';
 
 export function Analytics() {
   const enableAnalytics = useSettingStore((state) => state.general.enableAnalytics);
@@ -21,8 +22,12 @@ export function Analytics() {
   };
 
   return (
-    <Box mt={1}>
-      <Box display={'flex'} mb={1} flexDirection={'row'} alignItems={'center'} justifyContent={'space-between'}>
+    <Box
+      sx={{
+        mt: 1
+      }}
+    >
+      <GeneralPanelSettingRowStyled>
         <Box>
           <Typography color={'textTitle'} variant={'subtitle2'}>
             {locales.analytics}
@@ -33,7 +38,7 @@ export function Analytics() {
         </Box>
 
         <Switch checked={enableAnalytics} onChange={handleChangeAnalytics} />
-      </Box>
+      </GeneralPanelSettingRowStyled>
       <Divider />
     </Box>
   );

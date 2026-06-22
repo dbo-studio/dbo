@@ -17,7 +17,7 @@ export default function Layout(): JSX.Element {
   const currentConnection = useCurrentConnection();
 
   return (
-    <LayoutStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
+    <LayoutStyled containerHeight={windowSize.heightNumber}>
       <ConfirmModal />
       <UpdateDialog />
       <AppHeader />
@@ -31,7 +31,12 @@ export default function Layout(): JSX.Element {
           </Grid>
         )}
         {currentConnection && (
-          <Grid flex={1} minWidth={0}>
+          <Grid
+            sx={{
+              flex: 1,
+              minWidth: 0
+            }}
+          >
             <CenterContainer />
           </Grid>
         )}

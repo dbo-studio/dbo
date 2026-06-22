@@ -11,7 +11,13 @@ export default function ChatContextItem({ name, type, onClick }: ChatContextItem
 
   return (
     <ChatContextItemStyled ref={hoverRef}>
-      <Stack direction={'row'} spacing={1} alignItems={'center'}>
+      <Stack
+        direction={'row'}
+        spacing={1}
+        sx={{
+          alignItems: 'center'
+        }}
+      >
         {isHover ? (
           <CustomIcon type='close' size='xs' onClick={onClick} />
         ) : (

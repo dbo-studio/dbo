@@ -1,6 +1,6 @@
 import { useFormObjectStore } from '@/store/formObject/formObject.store';
 import { ObjectTabType } from '@/types';
-import { Box, CircularProgress, Stack } from '@mui/material';
+import { CircularProgress, Stack } from '@mui/material';
 import React from 'react';
 import ArrayForm from './components/ArrayForm/ArrayForm';
 import GeneralForm from './components/GeneralForm/GeneralForm';
@@ -10,7 +10,7 @@ import FormTabs from './components/Tabs/FormTabs';
 import { useFormData } from './hooks/useFormData';
 import { useFormSave } from './hooks/useFormSave';
 import { useTabs } from './hooks/useTabs';
-import { ObjectFormStyled } from './ObjectForm.styled';
+import { ObjectFormContentStyled, ObjectFormLoadingStyled, ObjectFormStyled } from './ObjectForm.styled';
 
 export default function ObjectForm(): React.JSX.Element {
   const { tabs, selectedTabId, isLoading: isLoadingTabs, handleTabChange } = useTabs();
@@ -30,17 +30,21 @@ export default function ObjectForm(): React.JSX.Element {
       {!isLoading && tabs.length > 0 && (
         <FormTabs tabs={tabs} selectedTabId={selectedTabId} onTabChange={handleTabChange} />
       )}
-
       {(isLoadingTabs || isLoading) && (
-        <Box display='flex' justifyContent='center' alignItems='center' flex={1} minHeight={200}>
+        <ObjectFormLoadingStyled>
           <CircularProgress size={30} />
-        </Box>
+        </ObjectFormLoadingStyled>
       )}
-
       {!isLoadingTabs && !isLoading && (
-        <Box overflow={'hidden'} flexDirection={'column'} display={'flex'} width={'100%'}>
+        <ObjectFormContentStyled>
           <GeneralForm objectTabId={objectTabId} />
-          <Stack flex={1} overflow='auto' direction={'column'}>
+          <Stack
+            direction={'column'}
+            sx={{
+              flex: 1,
+              overflow: 'auto'
+            }}
+          >
             <ArrayForm objectTabId={objectTabId} />
           </Stack>
 
@@ -51,9 +55,8 @@ export default function ObjectForm(): React.JSX.Element {
             isArrayForm={isArrayTab}
             disabled={isSaving}
           />
-        </Box>
+        </ObjectFormContentStyled>
       )}
-
       <QueryPreviewModal
         open={previewState.isOpen}
         queries={previewState.queries}

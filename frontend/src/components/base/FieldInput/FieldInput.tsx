@@ -1,7 +1,8 @@
 import type { EventFor } from '@/types';
-import { Box, InputBase, Typography, useTheme } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 import type React from 'react';
 import { forwardRef, type JSX, useEffect, useState } from 'react';
+import { FieldInputInputStyled, FieldInputLabelRowStyled } from './FieldInput.styled';
 import type { FieldInputProps } from './types';
 
 export default forwardRef(function FieldInput(
@@ -30,31 +31,40 @@ export default forwardRef(function FieldInput(
   };
 
   return (
-    <Box display={'flex'} flexDirection={'column'}>
-      <Box display={'flex'} flexDirection={'row'} justifyContent={'space-between'}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
+      <FieldInputLabelRowStyled>
         <Typography color={'textText'} variant='caption'>
           {props.label}
         </Typography>
         <Typography color={'textText'} variant='caption'>
           {props.typelabel}
         </Typography>
-      </Box>
-      <InputBase
+      </FieldInputLabelRowStyled>
+      <FieldInputInputStyled
         ref={forRef}
         spellCheck={'false'}
         value={value}
         autoComplete='off'
         onBlur={handleOnBlur}
         onChange={handleOnChange}
-        sx={{
-          borderColor: props.error ? theme.palette.error.main : theme.palette.divider,
-          marginBottom: props.error || props.margin === 'none' ? '0px' : theme.spacing(1),
-          ...props.sx
-        }}
+        error={props.error}
+        margin={props.margin}
+        sx={props.sx}
         {...props}
       />
       {props.helpertext && (
-        <Typography mb={theme.spacing(props.mb ?? 0)} color={'error'} variant='caption'>
+        <Typography
+          color={'error'}
+          variant='caption'
+          sx={{
+            mb: theme.spacing(props.mb ?? 0)
+          }}
+        >
           {props.helpertext}
         </Typography>
       )}

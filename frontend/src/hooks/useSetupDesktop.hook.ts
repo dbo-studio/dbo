@@ -71,12 +71,13 @@ const waitForBackendReady = async (baseUrl: string): Promise<void> => {
     try {
       await tempApi.get('/config');
       return;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       if (attempt < BACKEND_HEALTH_CHECK_CONFIG.maxAttempts) {
         await new Promise((resolve) => setTimeout(resolve, BACKEND_HEALTH_CHECK_CONFIG.intervalMs));
       } else {
-        throw new Error('Backend failed to start within the expected time');
+        const error = new Error('Backend failed to start within the expected time') as Error & { cause: unknown };
+        error.cause = err;
+        throw error;
       }
     }
   }
@@ -95,7 +96,7 @@ const setupBackend = async (): Promise<void> => {
 };
 
 const disableDefaultContextMenu = (): void => {
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     return;
   }
 

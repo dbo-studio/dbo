@@ -85,7 +85,12 @@ export default forwardRef<SqlEditorRef, SqlEditorProps>(function SqlEditor(
   }, [monaco, theme.editorTheme]);
 
   return (
-    <Box width='100%' height='100%'>
+    <Box
+      sx={{
+        width: '100%',
+        height: '100%'
+      }}
+    >
       <Editor
         height='100%'
         width='100%'

@@ -58,7 +58,14 @@ export default function SavedQueryItem({
         onClick();
       }}
     >
-      <Box flex={1} mr={1} onDoubleClick={handleRun} onClick={(): void => onClick()}>
+      <Box
+        onDoubleClick={handleRun}
+        onClick={(): void => onClick()}
+        sx={{
+          flex: 1,
+          mr: 1
+        }}
+      >
         {isEditMode ? (
           <FieldInput
             size='small'
@@ -76,7 +83,6 @@ export default function SavedQueryItem({
           {query.createdAt}
         </Typography>
       </Box>
-
       {isEditMode ? (
         <>
           <IconButton onClick={handleDiscardChanges}>

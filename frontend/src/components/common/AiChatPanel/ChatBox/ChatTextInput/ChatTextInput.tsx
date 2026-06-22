@@ -35,7 +35,12 @@ export default function ChatTextInput({ loading, onSend }: ChatTextInputProps) {
   }, [messageEdit]);
 
   return (
-    <Box flex={1} sx={{ overflowY: 'scroll' }}>
+    <Box
+      sx={{
+        flex: 1,
+        overflowY: 'scroll'
+      }}
+    >
       <ChatTextInputStyled
         disabled={loading}
         placeholder={locales.ask_anything}

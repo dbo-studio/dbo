@@ -1,5 +1,4 @@
-import { styled } from '@mui/material';
-import { Box } from '@mui/system';
+import { Box, styled } from '@mui/material';
 
 export const SplashScreenWrapperStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -10,3 +9,11 @@ export const SplashScreenWrapperStyled = styled(Box)(({ theme }) => ({
   height: '100vh',
   background: theme.palette.background.default
 }));
+
+export const SplashScreenContentStyled = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  alignItems: 'center',
+  gap: 4
+});

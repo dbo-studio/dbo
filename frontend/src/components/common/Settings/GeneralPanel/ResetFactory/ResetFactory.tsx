@@ -3,6 +3,7 @@ import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { Box, Button, Divider, Typography } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
+import { GeneralPanelSettingRowStyled } from '../GeneralPanel.styled';
 
 export function ResetFactory() {
   const showModal = useConfirmModalStore((state) => state.danger);
@@ -23,8 +24,12 @@ export function ResetFactory() {
   };
 
   return (
-    <Box mt={1}>
-      <Box display={'flex'} mb={1} flexDirection={'row'} alignItems={'center'} justifyContent={'space-between'}>
+    <Box
+      sx={{
+        mt: 1
+      }}
+    >
+      <GeneralPanelSettingRowStyled>
         <Box>
           <Typography color={'textText'} variant={'subtitle2'}>
             {locales.reset_factory}
@@ -37,7 +42,7 @@ export function ResetFactory() {
         <Button variant={'outlined'} size={'small'} color={'error'} onClick={handleOpenConfirm} loading={isPending}>
           {locales.delete}
         </Button>
-      </Box>
+      </GeneralPanelSettingRowStyled>
       <Divider />
     </Box>
   );

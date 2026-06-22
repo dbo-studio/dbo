@@ -19,20 +19,31 @@ export default function AppHeader(): JSX.Element {
       className={'app-header'}
       container
       spacing={0}
-      justifyContent={'space-between'}
       style={{
         paddingLeft: titleBar.paddingLeft,
         paddingTop: titleBar.paddingTop
       }}
       onMouseDown={onClick}
     >
-      <Grid size={{ md: 2 }} display={matches ? 'flex' : 'none'} justifyContent={'flex-start'}>
+      <Grid
+        size={{ md: 2 }}
+        sx={{
+          display: matches ? 'flex' : 'none',
+          justifyContent: 'flex-start'
+        }}
+      >
         <Leading />
       </Grid>
       <Grid size={{ md: 8 }}>
         <ConnectionInfo />
       </Grid>
-      <Grid size={{ md: 2 }} display={matches ? 'flex' : 'none'} justifyContent={'flex-end'}>
+      <Grid
+        size={{ md: 2 }}
+        sx={{
+          display: matches ? 'flex' : 'none',
+          justifyContent: 'flex-end'
+        }}
+      >
         <Actions />
       </Grid>
     </AppHeaderStyled>

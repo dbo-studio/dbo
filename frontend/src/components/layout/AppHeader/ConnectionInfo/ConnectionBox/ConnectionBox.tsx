@@ -3,9 +3,9 @@ import type { ConnectionBoxStatus } from '@/components/layout/AppHeader/Connecti
 import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store.ts';
-import { Box, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import { type JSX, useEffect, useState } from 'react';
-import { ConnectionBoxStyled } from './ConnectionBox.styled.ts';
+import { ConnectionBoxContentStyled, ConnectionBoxStyled } from './ConnectionBox.styled.ts';
 
 export default function ConnectionBox(): JSX.Element {
   const loading = useConnectionStore((state) => state.loading);
@@ -37,14 +37,14 @@ export default function ConnectionBox(): JSX.Element {
 
   return (
     <ConnectionBoxStyled status={status}>
-      <Box display={'flex'} alignItems={'center'} flexDirection={'row'}>
+      <ConnectionBoxContentStyled>
         <Typography variant='body2' component='h6'>
           {loading === 'loading' && locales.connecting}
           {loading === 'finished' && info}
           {loading === 'error' && info}
         </Typography>
         {loading === 'loading' && <Loading />}
-      </Box>
+      </ConnectionBoxContentStyled>
     </ConnectionBoxStyled>
   );
 }

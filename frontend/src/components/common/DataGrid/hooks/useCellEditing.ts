@@ -6,7 +6,7 @@ import type { CellEditingReturn } from '../types';
 
 export const useCellEditing = (row: RowType, columnId: string, cellValue: string): CellEditingReturn => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const updateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
   const updateRow = useDataStore((state) => state.updateRow);
 

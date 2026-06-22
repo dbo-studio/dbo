@@ -41,12 +41,18 @@ export default function EndContainer(): JSX.Element {
       direction='ltr'
       maxWidth={500}
     >
-      <EndContainerStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
+      <EndContainerStyled containerHeight={windowSize.heightNumber}>
         <Tabs variant='fullWidth' value={selectedTabId} onChange={onSelectedTabChanged}>
           <Tab label={locales.assistant} />
           <Tab label={locales.fields} />
         </Tabs>
-        <Box role='tabpanel' flex={1} minHeight={0}>
+        <Box
+          role='tabpanel'
+          sx={{
+            flex: 1,
+            minHeight: 0
+          }}
+        >
           {selectedTabContent}
         </Box>
       </EndContainerStyled>

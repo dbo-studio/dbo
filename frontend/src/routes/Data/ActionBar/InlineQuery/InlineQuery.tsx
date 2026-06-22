@@ -5,9 +5,9 @@ import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { DataTabType } from '@/types';
-import { Box, Stack } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { SubmitButtonStyled } from './InlineQuery.styled';
+import { Box } from '@mui/material';
+import { useCallback, useEffect, useState } from 'react';
+import { InlineQueryStackStyled, SubmitButtonStyled } from './InlineQuery.styled';
 
 export default function InlineQuery() {
   const selectedTab = useSelectedTab<DataTabType>();
@@ -17,27 +17,32 @@ export default function InlineQuery() {
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
   const runQuery = useDataStore((state) => state.runQuery);
 
-  const handleUpdateQuery = (v: string) => {
-    if (!selectedTab) return;
-
+  const handleUpdateQuery = useCallback((v: string) => {
+    const tab = useTabStore.getState().selectedTab<DataTabType>();
+    if (!tab) return;
     updateSelectedTab({
-      ...selectedTab,
+      ...tab,
       inlineQuery: v
     });
-  };
+  }, []);
 
   useEffect(() => {
     setValue(selectedTab?.inlineQuery ?? '');
   }, [selectedTab?.id]);
 
-  const handleRunQuery = async (query?: string) => {
+  const handleRunQuery = useCallback(async (query?: string) => {
     if (query !== undefined) handleUpdateQuery(query);
     await runQuery();
-  };
+  }, []);
 
   return (
-    <Stack direction='row' flex={1} minWidth={0} alignItems='center'>
-      <Box flex={1} minWidth={0}>
+    <InlineQueryStackStyled direction='row'>
+      <Box
+        sx={{
+          flex: 1,
+          minWidth: 0
+        }}
+      >
         <InlineSqlEditor
           columns={columns ?? []}
           placeholder={locales.inline_query_placeholder}
@@ -47,10 +52,9 @@ export default function InlineQuery() {
           onEnter={(q) => void handleRunQuery(q)}
         />
       </Box>
-
       <SubmitButtonStyled variant='contained' onClick={() => void handleRunQuery()}>
         <CustomIcon type='check' size='s' />
       </SubmitButtonStyled>
-    </Stack>
+    </InlineQueryStackStyled>
   );
 }

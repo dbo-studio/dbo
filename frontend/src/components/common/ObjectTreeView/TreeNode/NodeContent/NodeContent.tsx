@@ -44,7 +44,9 @@ export function NodeContent({
       <NodeContentStyled>
         {hasChildren && (
           <CustomIcon
-            onClick={(e): void => expandNode(e, false)}
+            onClick={(e): void => {
+              void expandNode(e, false);
+            }}
             type={isExpanded ? 'chevronDown' : 'chevronRight'}
             size='s'
           />

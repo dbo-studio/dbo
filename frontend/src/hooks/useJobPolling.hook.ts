@@ -16,7 +16,7 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
   const [job, setJob] = useState<JobType | null>(null);
   const [isPolling, setIsPolling] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { mutateAsync: getJobMutation } = useMutation({
     mutationFn: api.job.detail

@@ -23,7 +23,12 @@ export default function Actions(): JSX.Element {
   };
 
   return (
-    <Stack direction='row' justifyContent='flex-end'>
+    <Stack
+      direction='row'
+      sx={{
+        justifyContent: 'flex-end'
+      }}
+    >
       {release ? (
         <Tooltip title={locales.new_version_available}>
           <IconButton aria-label='settings' onClick={openSettings}>

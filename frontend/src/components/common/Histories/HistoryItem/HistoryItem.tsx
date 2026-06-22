@@ -23,14 +23,20 @@ export default function HistoryItem({ history, selected, onClick, context }: His
         context(e);
       }}
     >
-      <Box flex={1} mr={theme.spacing(1)} onDoubleClick={handleRun} onClick={(): void => onClick()}>
+      <Box
+        onDoubleClick={handleRun}
+        onClick={(): void => onClick()}
+        sx={{
+          flex: 1,
+          mr: theme.spacing(1)
+        }}
+      >
         <Typography variant='body2'>{history.query.slice(0, 50)}</Typography>
 
         <Typography variant='caption' color='textSubdued'>
           {history.createdAt}
         </Typography>
       </Box>
-
       <IconButton
         onClick={(e) => {
           onClick();

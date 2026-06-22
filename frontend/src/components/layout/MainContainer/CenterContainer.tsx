@@ -8,7 +8,7 @@ export default function CenterContainer(): JSX.Element {
   const windowSize = useWindowSize();
 
   return (
-    <CenterContainerStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
+    <CenterContainerStyled containerHeight={windowSize.heightNumber}>
       <Panels />
     </CenterContainerStyled>
   );

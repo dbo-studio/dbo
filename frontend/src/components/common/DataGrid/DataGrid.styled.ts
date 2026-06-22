@@ -1,5 +1,6 @@
 import { variables } from '@/core/theme/variables';
 import { styled } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 export const TableHeader = styled('th')(({ theme }) => ({
   backgroundColor: theme.palette.background.default,
@@ -252,4 +253,17 @@ export const PaddingTableCell = styled('td')<{ height?: number }>(({ height }) =
 export const VirtualTableWrapper = styled('div')<{ height?: number }>(({ height }) => ({
   position: 'relative',
   ...(height !== undefined && { height: `${height}px` })
+}));
+
+export const DataGridLoadingStyled = styled(Box)(() => ({
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  flex: 1
+}));
+
+export const SearchMatchCountStyled = styled(Typography)(({ theme }) => ({
+  color: theme.palette.text.secondary,
+  fontSize: '12px',
+  whiteSpace: 'nowrap'
 }));

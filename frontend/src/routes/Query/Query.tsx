@@ -9,10 +9,11 @@ import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AutoCompleteType, ColumnType, EditorTabType, RowType } from '@/types';
-import { Box, type Theme } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
-import { type JSX, useEffect, useRef, useState } from 'react';
+import type { JSX } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
+import { QueryContainerStyled, QueryEditorBoxStyled } from './Query.styled';
 
 export default function Query(): JSX.Element {
   const selectedTab = useSelectedTab<EditorTabType>();
@@ -98,13 +99,8 @@ export default function Query(): JSX.Element {
         schemas={autocomplete?.schemas ?? []}
         onFormat={(): void => handleChangeValue()}
       />
-      <Box display={'flex'} flexDirection={'column'} height={windowSize.height}>
-        <Box
-          display={'flex'}
-          minHeight={'0'}
-          flex={1}
-          borderBottom={(theme: Theme): string => `1px solid ${theme.palette.divider}`}
-        >
+      <QueryContainerStyled height={windowSize.height}>
+        <QueryEditorBoxStyled>
           <SqlEditor
             ref={sqlEditorRef}
             onRunQuery={() => void runQuery()}
@@ -121,14 +117,14 @@ export default function Query(): JSX.Element {
             }
             value={value}
           />
-        </Box>
+        </QueryEditorBoxStyled>
 
         {showGrid && tableData.columns.length > 0 && (
           <ResizableYBox height={windowSize.heightNumber ? windowSize.heightNumber / 2 : 0} direction={'btt'}>
             <DataGrid editable={false} rows={tableData.rows} columns={tableData.columns} loading={isDataFetching} />
           </ResizableYBox>
         )}
-      </Box>
+      </QueryContainerStyled>
     </>
   );
 }

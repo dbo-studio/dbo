@@ -28,7 +28,13 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
 
   return (
     <Stack spacing={2} direction={'row'}>
-      <Stack direction={'row'} spacing={1} alignItems={'center'}>
+      <Stack
+        direction={'row'}
+        spacing={1}
+        sx={{
+          alignItems: 'center'
+        }}
+      >
         <Typography variant='caption' color='textText'>
           {locales.database}:
         </Typography>
@@ -41,8 +47,13 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
           onChange={(e): void => setLocalDatabase((e as SelectInputOption)?.value as string)}
         />
       </Stack>
-
-      <Stack direction={'row'} spacing={1} alignItems={'center'}>
+      <Stack
+        direction={'row'}
+        spacing={1}
+        sx={{
+          alignItems: 'center'
+        }}
+      >
         <Typography color='textText' variant='caption'>
           {locales.schema}:
         </Typography>
@@ -55,8 +66,13 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
           onChange={(e): void => setLocalSchema((e as SelectInputOption)?.value as string)}
         />
       </Stack>
-
-      <Stack direction={'row'} spacing={1} alignItems={'center'}>
+      <Stack
+        direction={'row'}
+        spacing={1}
+        sx={{
+          alignItems: 'center'
+        }}
+      >
         <CustomIcon type='bot' />
         <Tooltip title={enableEditorAi ? locales.enable_ai : locales.disable_ai}>
           <Switch

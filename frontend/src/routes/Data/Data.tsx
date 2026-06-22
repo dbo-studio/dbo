@@ -3,12 +3,13 @@ import { useSelectedTab } from '@/hooks';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ColumnType, DataTabType, RowType } from '@/types';
-import { Box, CircularProgress } from '@mui/material';
+import { CircularProgress } from '@mui/material';
 import type { JSX } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useIsMounted } from 'usehooks-ts';
 import ActionBar from './ActionBar/ActionBar';
 import Columns from './ActionBar/Columns/Columns';
+import { DataContentStyled, DataLoadingStyled } from './Data.styled';
 import StatusBar from './StatusBar/StatusBar';
 
 const EMPTY_ROWS: RowType[] = [];
@@ -94,17 +95,17 @@ export default function Data(): JSX.Element {
   return (
     <>
       <ActionBar showColumns={showColumns} setShowColumns={setShowColumns} />
-      <Box position='relative' overflow='hidden' flex={1} display='flex' flexDirection='row'>
+      <DataContentStyled>
         {showColumns && <Columns />}
         {activeColumns.length > 0 &&
           (isGridReady ? (
             <DataGrid rows={rows} columns={activeColumns} loading={false} editable={selectedTab?.editable} />
           ) : (
-            <Box display='flex' justifyContent='center' alignItems='center' width='100%'>
+            <DataLoadingStyled>
               <CircularProgress size={30} />
-            </Box>
+            </DataLoadingStyled>
           ))}
-      </Box>
+      </DataContentStyled>
       <StatusBar />
     </>
   );

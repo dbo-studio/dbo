@@ -2,12 +2,12 @@ import ObjectTreeView from '@/components/common/ObjectTreeView/ObjectTreeView.ts
 import { useWindowSize } from '@/hooks/useWindowSize.hook';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Box, Tab, Tabs } from '@mui/material';
+import { Tab, Tabs } from '@mui/material';
 import React, { type JSX, type SyntheticEvent, useMemo, useState } from 'react';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
 import Histories from '../../common/Histories/Histories';
 import SavedQueries from '../../common/SavedQueries/SavedQueries';
-import { ExplorerContainerStyled } from './Container.styled';
+import { ExplorerContainerStyled, ExplorerTabPanelStyled } from './Container.styled';
 
 const tabs = [
   {
@@ -46,16 +46,14 @@ export default React.memo(function ExplorerContainer(): JSX.Element {
       direction='rtl'
       maxWidth={500}
     >
-      <ExplorerContainerStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
+      <ExplorerContainerStyled containerHeight={windowSize.heightNumber}>
         <Tabs variant='fullWidth' value={selectedTabId} onChange={onSelectedTabChanged}>
           <Tab label={locales.items} />
           <Tab label={locales.queries} />
           <Tab label={locales.history} />
         </Tabs>
 
-        <Box role='tabpanel' flex={1} minHeight={0} display={'flex'} flexDirection={'column'}>
-          {selectedTabContent}
-        </Box>
+        <ExplorerTabPanelStyled role='tabpanel'>{selectedTabContent}</ExplorerTabPanelStyled>
       </ExplorerContainerStyled>
     </ResizableXBox>
   );

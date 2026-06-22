@@ -61,10 +61,21 @@ export default function ConnectionInfo(): JSX.Element {
   };
 
   return (
-    <Stack direction={'row'} justifyContent={'center'} alignItems={'center'}>
+    <Stack
+      direction={'row'}
+      sx={{
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}
+    >
       <Settings open={showSettings.open} />
       <Grid size={{ md: 3 }}>
-        <Stack direction={'row'} justifyContent='flex-end'>
+        <Stack
+          direction={'row'}
+          sx={{
+            justifyContent: 'flex-end'
+          }}
+        >
           <Tooltip title={locales.connections}>
             <IconButton data-testid='add-connection' onClick={(): void => updateUI({ showAddConnection: true })}>
               <CustomIcon type={'connection'} size={'m'} />
@@ -75,12 +86,22 @@ export default function ConnectionInfo(): JSX.Element {
           </IconButton> */}
         </Stack>
       </Grid>
-      <Grid mr={1} ml={1} size={{ md: 8 }}>
+      <Grid
+        size={{ md: 8 }}
+        sx={{
+          mr: 1,
+          ml: 1
+        }}
+      >
         <ConnectionBox />
       </Grid>
-
       <Grid size={{ md: 3 }}>
-        <Stack direction={'row'} justifyContent='flex-start'>
+        <Stack
+          direction={'row'}
+          sx={{
+            justifyContent: 'flex-start'
+          }}
+        >
           <Tooltip title={locales.refresh}>
             <IconButton
               aria-label={'refresh'}

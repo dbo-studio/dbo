@@ -25,8 +25,19 @@ export default function ExplanationMessage({ message }: ExplanationMessageProps)
       {message.role === 'assistant' && message.isNew ? (
         <TypewriterEffectText text={message.content} speed={30} />
       ) : (
-        <Stack direction={'row'} justifyContent={'space-between'}>
-          <Typography variant={'body2'} whiteSpace={'pre-wrap'} lineHeight={1.6}>
+        <Stack
+          direction={'row'}
+          sx={{
+            justifyContent: 'space-between'
+          }}
+        >
+          <Typography
+            variant={'body2'}
+            sx={{
+              whiteSpace: 'pre-wrap',
+              lineHeight: 1.6
+            }}
+          >
             {message.content}
           </Typography>
 

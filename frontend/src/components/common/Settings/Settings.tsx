@@ -63,12 +63,35 @@ export default function Settings({ open }: SettingsProps): JSX.Element {
 
   return (
     <Modal open={open} padding='0px' onClose={handleOnClose}>
-      <Grid width='850px' container spacing={0} flex={1}>
-        <Grid size={{ md: 3 }} display={'flex'} flexDirection={'column'}>
+      <Grid
+        container
+        spacing={0}
+        sx={{
+          width: '850px',
+          flex: 1
+        }}
+      >
+        <Grid
+          size={{ md: 3 }}
+          sx={{
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+        >
           <MenuPanel tabs={tabs} onChange={(c): void => setCurrentTab(c)} defaultTab={currentTab} />
         </Grid>
-        <SettingsContentStyled size={{ md: 9 }} flex={1} p={theme.spacing(2)}>
-          <Box mb={2}>
+        <SettingsContentStyled
+          size={{ md: 9 }}
+          sx={{
+            flex: 1,
+            p: theme.spacing(2)
+          }}
+        >
+          <Box
+            sx={{
+              mb: 2
+            }}
+          >
             <Typography color='textTitle' variant='h6'>
               {currentTab?.name}
             </Typography>
@@ -77,7 +100,11 @@ export default function Settings({ open }: SettingsProps): JSX.Element {
                 {currentTab?.description}
               </Typography>
             )}
-            <Box mt={1}>
+            <Box
+              sx={{
+                mt: 1
+              }}
+            >
               <Divider />
             </Box>
           </Box>

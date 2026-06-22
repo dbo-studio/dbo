@@ -1,3 +1,5 @@
+import { fixupConfigRules, fixupPluginRules } from '@eslint/compat';
+import type { Plugin } from '@eslint/core';
 import js from '@eslint/js';
 import pluginQuery from '@tanstack/eslint-plugin-query';
 import pluginReact from 'eslint-plugin-react';
@@ -21,7 +23,7 @@ export default defineConfig([
   },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
-  pluginReact.configs.flat.recommended,
+  ...fixupConfigRules(pluginReact.configs.flat.recommended),
   ...pluginQuery.configs['flat/recommended'],
   {
     languageOptions: {
@@ -39,7 +41,7 @@ export default defineConfig([
     },
     files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     plugins: {
-      'react-hooks': reactHooks
+      'react-hooks': fixupPluginRules(reactHooks as unknown as Plugin)
     },
     languageOptions: { globals: globals.browser },
     rules: {

@@ -2,10 +2,10 @@ import CreatableSelectInput from '@/components/base/CreatableSelectInput/Creatab
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor';
-import { variables } from '@/core/theme/variables';
 import { FormFieldOptionType, FormFieldType, FormValue } from '@/types/Tree';
 import { Box, Checkbox, Stack, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
+import { SqlEditorContainerStyled } from './SimpleField.styled';
 
 export default function SimpleField({
   field,
@@ -43,7 +43,12 @@ export default function SimpleField({
   switch (field.type) {
     case 'text':
       return (
-        <Stack direction={'row'} alignItems={'center'}>
+        <Stack
+          direction={'row'}
+          sx={{
+            alignItems: 'center'
+          }}
+        >
           <FieldInput
             size={isArrayForm ? 'small' : 'medium'}
             value={localValue || ''}
@@ -59,7 +64,12 @@ export default function SimpleField({
 
     case 'checkbox':
       return (
-        <Box display='flex' alignItems='center'>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center'
+          }}
+        >
           <Checkbox
             size={'small'}
             checked={(localValue as boolean) || false}
@@ -99,14 +109,7 @@ export default function SimpleField({
               {field.name}
             </Typography>
           )}
-          <Box
-            display='flex'
-            width='100%'
-            minHeight={250}
-            border={1}
-            borderColor='divider'
-            borderRadius={variables.radius.medium}
-          >
+          <SqlEditorContainerStyled>
             <SqlEditor
               value={(localValue as string) ?? ''}
               onChange={(value): void => setLocalValue(value)}
@@ -122,7 +125,7 @@ export default function SimpleField({
                 console.debug('Query executed:', query);
               }}
             />
-          </Box>
+          </SqlEditorContainerStyled>
         </Box>
       );
 

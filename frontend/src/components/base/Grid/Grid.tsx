@@ -1,4 +1,4 @@
-import { Box, type BoxProps } from '@mui/material';
+import { Box, type BoxProps, type SxProps, type Theme } from '@mui/material';
 import {
   createContext,
   type CSSProperties,
@@ -153,15 +153,17 @@ export default function Grid({
       <Box
         ref={gridRef}
         {...props}
-        sx={[
-          {
-            display: 'grid',
-            gridTemplateColumns: resolvedTemplateColumns ?? `repeat(${resolvedColumns}, minmax(0, 1fr))`,
-            gridAutoRows: resolvedAutoRows,
-            gridAutoFlow: resolvedAutoFlow
-          },
-          sx
-        ]}
+        sx={
+          [
+            {
+              display: 'grid',
+              gridTemplateColumns: resolvedTemplateColumns ?? `repeat(${resolvedColumns}, minmax(0, 1fr))`,
+              gridAutoRows: resolvedAutoRows,
+              gridAutoFlow: resolvedAutoFlow
+            },
+            ...(sx ? [sx] : [])
+          ] as SxProps<Theme>
+        }
       >
         {children}
       </Box>
@@ -177,13 +179,15 @@ export function GridItem({ children, span, column, row, sx, ...props }: GridItem
   return (
     <Box
       {...props}
-      sx={[
-        {
-          gridColumn,
-          gridRow
-        },
-        sx
-      ]}
+      sx={
+        [
+          {
+            gridColumn,
+            gridRow
+          },
+          ...(sx ? [sx] : [])
+        ] as SxProps<Theme>
+      }
     >
       {children}
     </Box>

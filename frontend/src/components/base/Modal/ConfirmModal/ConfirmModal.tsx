@@ -53,8 +53,17 @@ export default function ConfirmModal(): JSX.Element {
   return (
     <ModalStyled open={isOpen}>
       <ConfirmModalStyled>
-        <Box flex={1} mb={theme.spacing(1)}>
-          <Box mb={theme.spacing(title ? 2 : 0)}>
+        <Box
+          sx={{
+            flex: 1,
+            mb: theme.spacing(1)
+          }}
+        >
+          <Box
+            sx={{
+              mb: theme.spacing(title ? 2 : 0)
+            }}
+          >
             {title && (
               <Typography variant='h6' component='h2'>
                 {title}
@@ -67,7 +76,12 @@ export default function ConfirmModal(): JSX.Element {
             )}
           </Box>
         </Box>
-        <Box display={'flex'} justifyContent={'end'}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'end'
+          }}
+        >
           <Button
             variant='text'
             style={{

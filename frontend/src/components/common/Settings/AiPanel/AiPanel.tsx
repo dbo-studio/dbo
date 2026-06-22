@@ -10,6 +10,7 @@ import { Box, Button, Chip, IconButton, Stack } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { AiPanelFooterStyled, AiPanelFormStyled } from './AiPanel.styled';
 
 export default function AiPanel() {
   const providers = useAiStore((state) => state.providers);
@@ -78,7 +79,7 @@ export default function AiPanel() {
 
   return (
     <Box>
-      <Box display={'flex'} flexDirection={'column'} gap={2}>
+      <AiPanelFormStyled>
         <SelectInput
           label={locales.provider}
           value={provider?.type}
@@ -116,8 +117,18 @@ export default function AiPanel() {
           }
         />
 
-        <Stack direction={'row'} alignItems={'center'} spacing={1}>
-          <Box flex={1}>
+        <Stack
+          direction={'row'}
+          spacing={1}
+          sx={{
+            alignItems: 'center'
+          }}
+        >
+          <Box
+            sx={{
+              flex: 1
+            }}
+          >
             <FieldInput
               label={locales.add_model}
               onKeyDown={handleKeyDown}
@@ -138,7 +149,7 @@ export default function AiPanel() {
           ))}
         </Stack>
 
-        <Box display={'flex'} mt={2} justifyContent={'space-between'}>
+        <AiPanelFooterStyled>
           <Button
             fullWidth
             loadingPosition='start'
@@ -150,8 +161,8 @@ export default function AiPanel() {
           >
             <span>{locales.save}</span>
           </Button>
-        </Box>
-      </Box>
+        </AiPanelFooterStyled>
+      </AiPanelFormStyled>
     </Box>
   );
 }

@@ -11,7 +11,13 @@ export default function ChatBox({ autocomplete, loading, onSend, onCancel }: Cha
     <ChatBoxStyled>
       {autocomplete && <ChatContext autocomplete={autocomplete} />}
       <ChatTextInput loading={loading} onSend={onSend} />
-      <Stack direction={'row'} justifyContent={'space-between'} alignItems={'center'}>
+      <Stack
+        direction={'row'}
+        sx={{
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}
+      >
         <Providers />
         {loading ? (
           <SendButtonStyled onClick={onCancel}>

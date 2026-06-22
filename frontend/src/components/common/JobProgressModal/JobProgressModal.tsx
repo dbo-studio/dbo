@@ -67,20 +67,37 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
         </Typography>
 
         {pollingError && (
-          <Typography variant='body2' color='error.main' gutterBottom>
+          <Typography
+            variant='body2'
+            gutterBottom
+            sx={{
+              color: 'error.main'
+            }}
+          >
             {locales.error}: {pollingError}
           </Typography>
         )}
 
         {job && (
           <>
-            <Typography variant='body2' color='text.secondary' gutterBottom>
+            <Typography
+              variant='body2'
+              gutterBottom
+              sx={{
+                color: 'text.secondary'
+              }}
+            >
               {getStatusMessage()}
             </Typography>
 
             <LinearProgress variant='determinate' value={job.progress} sx={{ mb: 2 }} />
 
-            <Typography variant='body2' color='text.secondary'>
+            <Typography
+              variant='body2'
+              sx={{
+                color: 'text.secondary'
+              }}
+            >
               {locales.progress}: {job.progress}%
             </Typography>
 

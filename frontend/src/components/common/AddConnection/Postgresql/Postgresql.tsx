@@ -8,6 +8,11 @@ import { type JSX } from 'react';
 import * as v from 'valibot';
 
 import type { ConnectionSettingsProps } from '../types';
+import {
+  ConnectionFormCheckboxRowStyled,
+  ConnectionFormContainerStyled,
+  ConnectionFormFooterStyled
+} from '../AddConnection.styled';
 
 const formSchema = v.union([
   v.object({
@@ -90,8 +95,12 @@ export default function PostgreSQL({
   });
 
   return (
-    <Box flex={1} display={'flex'} flexDirection={'column'}>
-      <Box flex={1}>
+    <ConnectionFormContainerStyled>
+      <Box
+        sx={{
+          flex: 1
+        }}
+      >
         <form
           onSubmit={(e): void => {
             e.preventDefault();
@@ -208,8 +217,13 @@ export default function PostgreSQL({
             )}
           </form.Subscribe>
 
-          <Box display={'flex'} flexDirection={'column'}>
-            <Box display={'flex'} alignItems={'center'} mb={1}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
+            <ConnectionFormCheckboxRowStyled>
               <form.Field name='useUri'>
                 {(field): JSX.Element => (
                   <FormControlLabel
@@ -224,7 +238,7 @@ export default function PostgreSQL({
                   />
                 )}
               </form.Field>
-            </Box>
+            </ConnectionFormCheckboxRowStyled>
 
             <form.Subscribe selector={(state) => state.values.useUri}>
               {(useUri): JSX.Element => (
@@ -248,7 +262,7 @@ export default function PostgreSQL({
             </form.Subscribe>
           </Box>
 
-          <Box display={'flex'} alignItems={'center'} mb={1}>
+          <ConnectionFormCheckboxRowStyled>
             <form.Field name='rememberPassword'>
               {(field): JSX.Element => (
                 <FormControlLabel
@@ -263,11 +277,10 @@ export default function PostgreSQL({
                 />
               )}
             </form.Field>
-          </Box>
+          </ConnectionFormCheckboxRowStyled>
         </form>
       </Box>
-
-      <Box display={'flex'} mt={2} justifyContent={'space-between'}>
+      <ConnectionFormFooterStyled>
         <Button size='small' onClick={onClose}>
           {locales.cancel}
         </Button>
@@ -300,7 +313,7 @@ export default function PostgreSQL({
             {connection ? locales.update : locales.create}
           </Button>
         </Stack>
-      </Box>
-    </Box>
+      </ConnectionFormFooterStyled>
+    </ConnectionFormContainerStyled>
   );
 }

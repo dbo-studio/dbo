@@ -1,7 +1,7 @@
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { Box, Stack } from '@mui/material';
 import AddChat from './AddChat/AddChat';
-import { HeaderContainerStyled } from './AiChatPanel.styled';
+import { AiChatPanelContainerStyled, HeaderContainerStyled } from './AiChatPanel.styled';
 import ChatBox from './ChatBox/ChatBox';
 import ChatHistory from './ChatHistory/ChatHistory';
 import Chats from './Chats/Chats';
@@ -24,7 +24,7 @@ export default function AiChatPanel() {
   const chats = useAiStore((state) => state.chats);
 
   return (
-    <Box height={'100%'} minHeight={0} position={'relative'} display={'flex'} flexDirection={'column'}>
+    <AiChatPanelContainerStyled>
       <HeaderContainerStyled>
         <Chats
           chats={chats ?? []}
@@ -32,7 +32,12 @@ export default function AiChatPanel() {
           onChatChange={(chat) => void handleChatChange(chat)}
           onChatDelete={(chat) => void handleChatDelete(chat)}
         />
-        <Stack direction={'row'} alignItems={'center'}>
+        <Stack
+          direction={'row'}
+          sx={{
+            alignItems: 'center'
+          }}
+        >
           <AddChat onClick={() => void handleCreateChat()} />
           <ChatHistory />
         </Stack>
@@ -48,6 +53,6 @@ export default function AiChatPanel() {
           />
         )}
       </Box>
-    </Box>
+    </AiChatPanelContainerStyled>
   );
 }

@@ -1,6 +1,6 @@
 import type { EventFor } from '@/types';
-import { Box } from '@mui/material';
 import { type JSX, useEffect, useRef, useState } from 'react';
+import { ResizableYBoxStyled } from './ResizableYBox.styled';
 import ResizableToggle from './ResizableToggle';
 import type { ResizableBoxYProps } from './types';
 
@@ -60,9 +60,9 @@ export default function ResizableYBox(props: ResizableBoxYProps): JSX.Element {
   }, [isResizing]);
 
   return (
-    <Box display={'flex'} position={'relative'} overflow={'hidden'} height={boxHeight}>
+    <ResizableYBoxStyled boxHeight={boxHeight}>
       <ResizableToggle onMouseDown={handleMouseDown} direction={props.direction} />
       {props.children}
-    </Box>
+    </ResizableYBoxStyled>
   );
 }

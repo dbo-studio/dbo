@@ -18,6 +18,7 @@ export function useDataGridColumns({ columns, columnSizes }: UseDataGridColumnsP
         name: 'select',
         type: 'checkbox',
         isActive: true,
+        isPrimaryKey: false,
         notNull: false,
         length: '1',
         comment: '',

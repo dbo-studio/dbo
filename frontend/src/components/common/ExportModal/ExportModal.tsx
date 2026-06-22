@@ -12,6 +12,7 @@ import { save } from '@tauri-apps/plugin-dialog';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { JobProgressModal } from '../JobProgressModal/JobProgressModal';
+import { ExportModalContainerStyled, ExportModalFooterStyled, ExportModalPathRowStyled } from './ExportModal.styled';
 import type { ExportModalProps } from './types';
 
 export function ExportModal({ show, connectionId, query, table, onClose }: ExportModalProps) {
@@ -85,8 +86,12 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
   return (
     <>
       <Modal open={show} title={locales.export_options} onClose={() => onClose()}>
-        <Box display={'flex'} flexDirection={'column'} flex={1}>
-          <Box flex={1}>
+        <ExportModalContainerStyled>
+          <Box
+            sx={{
+              flex: 1
+            }}
+          >
             <SelectInput
               emptylabel={locales.no_column_found}
               value={format}
@@ -100,7 +105,7 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
             />
 
             {isTauri && (
-              <Box sx={{ mt: 2, display: 'flex', alignItems: 'center' }}>
+              <ExportModalPathRowStyled>
                 <Box sx={{ flex: 1 }}>
                   <FieldInput
                     onClick={() => void handleSelectFile()}
@@ -112,10 +117,10 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
                     endAdornment={<CustomIcon type='ellipsisVertical' onClick={() => void handleSelectFile()} />}
                   />
                 </Box>
-              </Box>
+              </ExportModalPathRowStyled>
             )}
           </Box>
-          <Box display={'flex'} mt={2} justifyContent={'space-between'}>
+          <ExportModalFooterStyled>
             <Button size='small' onClick={() => onClose()}>
               {locales.cancel}
             </Button>
@@ -128,10 +133,9 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
             >
               <span>{locales.export}</span>
             </Button>
-          </Box>
-        </Box>
+          </ExportModalFooterStyled>
+        </ExportModalContainerStyled>
       </Modal>
-
       <JobProgressModal
         open={showProgress}
         jobId={jobId}

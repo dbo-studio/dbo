@@ -1,8 +1,9 @@
 import { useFormObjectStore } from '@/store/formObject/formObject.store';
 import { FormFieldType, FormValue } from '@/types/Tree';
-import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import React, { memo, useCallback, useEffect } from 'react';
 import { useDynamicField } from '../../hooks/useDynamicField';
+import { ArrayFormContainerStyled } from './ArrayForm.styled';
 import ArrayRow from './ArrayRow';
 
 function ArrayForm({ objectTabId }: { objectTabId: string }): React.JSX.Element {
@@ -59,7 +60,7 @@ function ArrayForm({ objectTabId }: { objectTabId: string }): React.JSX.Element 
   );
 
   return (
-    <Box height='100%' display='flex' flexDirection='column' flex={1}>
+    <ArrayFormContainerStyled>
       <TableContainer sx={{ flex: 1 }}>
         <Table sx={{ minWidth: 650 }}>
           <TableHead>
@@ -94,7 +95,7 @@ function ArrayForm({ objectTabId }: { objectTabId: string }): React.JSX.Element 
           </TableBody>
         </Table>
       </TableContainer>
-    </Box>
+    </ArrayFormContainerStyled>
   );
 }
 

@@ -10,7 +10,11 @@ export default function Modal({ open, title, children, padding, onClose }: Modal
     <ModalStyled open={open} onClose={onClose ?? undefined}>
       <ModalWrapperStyled padding={padding}>
         {title && (
-          <Box mb={theme.spacing(1)}>
+          <Box
+            sx={{
+              mb: theme.spacing(1)
+            }}
+          >
             <Typography color={'textTitle'} variant='h6'>
               {title}
             </Typography>

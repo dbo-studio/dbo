@@ -6,6 +6,7 @@ import { Box, Button, Typography } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { openPath } from '@tauri-apps/plugin-opener';
 import { useState } from 'react';
+import { GeneralPanelSettingRowStyled } from '../GeneralPanel.styled';
 
 export function CheckUpdate() {
   const general = useSettingStore((state) => state.general);
@@ -40,7 +41,7 @@ export function CheckUpdate() {
   };
 
   return (
-    <Box display={'flex'} mb={1} flexDirection={'row'} alignItems={'center'} justifyContent={'space-between'}>
+    <GeneralPanelSettingRowStyled>
       <Box>
         {general.release ? (
           <Typography color={'textText'} variant={'subtitle2'}>
@@ -52,7 +53,6 @@ export function CheckUpdate() {
           </Typography>
         )}
       </Box>
-
       {!general.release ? (
         <Button
           loading={isCheckUpdatePending}
@@ -68,6 +68,6 @@ export function CheckUpdate() {
           {buttonText}
         </Button>
       )}
-    </Box>
+    </GeneralPanelSettingRowStyled>
   );
 }

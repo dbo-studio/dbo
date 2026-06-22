@@ -1,6 +1,20 @@
 import { Box, styled } from '@mui/material';
 
-export const LayoutStyled = styled(Box)(({ theme }) => ({
+export type ContainerHeightProps = {
+  containerHeight?: number;
+};
+
+const containerHeightStyles = ({ containerHeight }: ContainerHeightProps) =>
+  containerHeight !== undefined
+    ? {
+        maxHeight: containerHeight,
+        minHeight: containerHeight,
+        height: containerHeight
+      }
+    : {};
+
+export const LayoutStyled = styled(Box)<ContainerHeightProps>(({ theme, containerHeight }) => ({
   backgroundColor: theme.palette.background.default,
-  overflow: 'hidden'
+  overflow: 'hidden',
+  ...containerHeightStyles({ containerHeight })
 }));

@@ -1,9 +1,9 @@
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { restrictToHorizontalAxis, restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Box } from '@mui/material';
 import type { JSX } from 'react';
 import { memo, useCallback, useMemo } from 'react';
+import { SortableListContainerStyled } from './SortableList.styled';
 import type { SortableListProps } from './types';
 
 function SortableList<T>({
@@ -71,17 +71,9 @@ function SortableList<T>({
       modifiers={[modifier]}
     >
       <SortableContext items={itemIds} strategy={strategy}>
-        <Box
-          className={className}
-          sx={{
-            display: 'flex',
-            flexDirection: direction === 'horizontal' ? 'row' : 'column',
-            touchAction: direction === 'horizontal' ? 'pan-x' : 'pan-y',
-            contain: 'layout style'
-          }}
-        >
+        <SortableListContainerStyled className={className} direction={direction}>
           {renderedItems}
-        </Box>
+        </SortableListContainerStyled>
       </SortableContext>
     </DndContext>
   );

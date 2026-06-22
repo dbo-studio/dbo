@@ -8,10 +8,11 @@ import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Box, IconButton, Stack } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import type { JSX } from 'react';
 import { toast } from 'sonner';
+import { StatusBarActionsStackStyled } from './StatusBarActions.styled';
 
 export default function StatusBarActions(): JSX.Element {
   const isDataFetching = useDataStore((state) => state.isDataFetching);
@@ -115,7 +116,7 @@ export default function StatusBarActions(): JSX.Element {
   };
 
   return (
-    <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'} width={208}>
+    <StatusBarActionsStackStyled direction={'row'}>
       <Box>
         <IconButton disabled={updateQueryPending || isDataFetching} onClick={() => void handleAddAction()}>
           <CustomIcon type='plus' size='s' />
@@ -125,7 +126,12 @@ export default function StatusBarActions(): JSX.Element {
           <CustomIcon type='mines' size='s' />
         </IconButton>
       </Box>
-      <Box ml={1} mr={1}>
+      <Box
+        sx={{
+          ml: 1,
+          mr: 1
+        }}
+      >
         <IconButton onClick={() => void handleSave()}>
           <CustomIcon type='check' size='s' />
         </IconButton>
@@ -146,6 +152,6 @@ export default function StatusBarActions(): JSX.Element {
           <CustomIcon type='stop' size='s' />
         </IconButton> */}
       </Box>
-    </Stack>
+    </StatusBarActionsStackStyled>
   );
 }

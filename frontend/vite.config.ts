@@ -1,21 +1,16 @@
-import react from '@vitejs/plugin-react-swc';
-import path from 'node:path';
+import babel from '@rolldown/plugin-babel';
+import react, { reactCompilerPreset } from '@vitejs/plugin-react';
+
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 const host = process.env.TAURI_DEV_HOST;
-const ReactCompilerConfig = {};
 
 export default defineConfig({
   clearScreen: host === undefined,
   plugins: [
-    react({
-      //@ts-expect-error-error
-      babel: {
-        plugins: [['babel-plugin-react-compiler', ReactCompilerConfig]]
-      }
-    }),
+    react(),
+    babel({ presets: [reactCompilerPreset()] }),
     VitePWA({
       injectRegister: 'auto',
       registerType: 'autoUpdate',
@@ -57,14 +52,11 @@ export default defineConfig({
       workbox: {
         maximumFileSizeToCacheInBytes: 8000000
       }
-    }),
-    tsconfigPaths()
+    })
   ],
   envPrefix: ['VITE_', 'TAURI_ENV_*'],
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src')
-    }
+    tsconfigPaths: true
   },
   server: {
     strictPort: true,
@@ -75,14 +67,18 @@ export default defineConfig({
     target:
       process.env.TAURI_PLATFORM === 'windows' || process.env.TAURI_PLATFORM === 'linux' ? 'chrome105' : 'safari13',
     // don't minify for debug builds
-    minify: process.env.NODE_ENV !== 'development' || !process.env.TAURI_DEBUG ? 'esbuild' : false,
+    minify: process.env.NODE_ENV !== 'development' || !process.env.TAURI_DEBUG ? 'oxc' : false,
     // produce sourcemaps for debug builds
-    sourcemap: !!process.env.TAURI_DEBUG
-  },
-  esbuild: {
-    drop: ['console', 'debugger'],
-    supported: {
-      'top-level-await': true
+    sourcemap: !!process.env.TAURI_DEBUG,
+    rolldownOptions: {
+      output: {
+        minify: {
+          compress: {
+            dropConsole: true,
+            dropDebugger: true
+          }
+        }
+      }
     }
   }
 });

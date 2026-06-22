@@ -25,3 +25,9 @@ export const ConnectionBoxStyled = styled(Box)<ConnectionBoxStyledProps>(({ them
     fontSize: 12
   }
 }));
+
+export const ConnectionBoxContentStyled = styled(Box)(() => ({
+  display: 'flex',
+  alignItems: 'center',
+  flexDirection: 'row'
+}));

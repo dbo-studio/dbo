@@ -28,7 +28,12 @@ export default function SelectInput({
   };
 
   return (
-    <Box display={'flex'} flexDirection={'column'}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
       {label && (
         <Typography color={theme.palette.text.text} variant='caption'>
           {label}
@@ -46,7 +51,6 @@ export default function SelectInput({
         styles={SelectInputStyles(theme, error, size)}
         menuPortalTarget={document.body}
       />
-
       {helpertext && (
         <Typography
           color={theme.palette.error.main}

@@ -3,6 +3,7 @@ import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlig
 import locales from '@/locales';
 import { Box, Button, CircularProgress } from '@mui/material';
 import React from 'react';
+import { QueryPreviewActionsStyled, QueryPreviewContentStyled } from './QueryPreviewModal.styled';
 
 type QueryPreviewModalProps = {
   open: boolean;
@@ -26,11 +27,11 @@ export default function QueryPreviewModal({
 
   return (
     <Modal open={open} title={locales.query_preview} onClose={onCancel}>
-      <Box display={'flex'} flexDirection={'column'} flex={1}>
-        <Box flex={1}>
+      <QueryPreviewContentStyled>
+        <Box sx={{ flex: 1 }}>
           <SyntaxHighlighter value={formattedQueries} />
         </Box>
-        <Box display={'flex'} mt={2} justifyContent={'space-between'}>
+        <QueryPreviewActionsStyled>
           <Button variant='text' size='small' disabled={isExecuting} onClick={onCancel}>
             {locales.cancel}
           </Button>
@@ -43,8 +44,8 @@ export default function QueryPreviewModal({
           >
             {locales.object_form_execute_queries}
           </Button>
-        </Box>
-      </Box>
+        </QueryPreviewActionsStyled>
+      </QueryPreviewContentStyled>
     </Modal>
   );
 }

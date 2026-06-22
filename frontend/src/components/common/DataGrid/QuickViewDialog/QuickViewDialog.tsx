@@ -6,8 +6,8 @@ import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import type { SelectedRow } from '@/store/dataStore/types.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Box } from '@mui/material';
 import { type JSX, useEffect, useState } from 'react';
+import { QuickViewDialogContainerStyled, QuickViewDialogEditorStyled } from './QuickViewDialog.styled';
 
 const getRowValue = (row: SelectedRow): string | undefined => {
   if (!row || !row.selectedColumn) return undefined;
@@ -69,15 +69,15 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
       title={`${locales.quick_look_editor} : ${row?.selectedColumn ?? ''}`}
       onResize={(width: number, height: number): void => setDimensions({ width, height })}
     >
-      <Box display={'flex'} flex={1} flexDirection={'column'}>
-        <Box overflow={'auto'} display={'flex'} flex={1}>
+      <QuickViewDialogContainerStyled>
+        <QuickViewDialogEditorStyled>
           <CodeEditor
             width={dimensions.width}
             value={value?.toString() ?? ''}
             onChange={(v: string): void => setValue(v)}
           />
-        </Box>
-      </Box>
+        </QuickViewDialogEditorStyled>
+      </QuickViewDialogContainerStyled>
     </ResizableModal>
   );
 }

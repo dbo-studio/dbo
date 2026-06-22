@@ -5,12 +5,13 @@ import { useSelectedTab } from '@/hooks';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { DataTabType, TabType } from '@/types';
-import { Box, Checkbox, Stack, Typography, useTheme } from '@mui/material';
+import { Checkbox, Stack, Typography, useTheme } from '@mui/material';
 import type { JSX } from 'react';
 import { useCallback } from 'react';
 import { SelectTableHeader, SortableTableHeader, StyledTableHead, StyledTableRow } from '../DataGrid.styled';
 import DataGridResizer from '../DataGridResizer/DataGridResizer';
 import type { DataGridTableHeaderRowProps } from '../types';
+import { HeaderColumnContentStyled, HeaderColumnTypeStyled } from './DataGridTableHeaderRow.styled';
 
 export default function DataGridTableHeaderRow({
   columns,
@@ -126,17 +127,20 @@ export default function DataGridTableHeaderRow({
 
           return (
             <SortableTableHeader key={column.name} onClick={(e) => handleColumnSort(column.name, e)}>
-              <Box display='flex' alignItems='center' gap={0.5} justifyContent={'space-between'}>
-                <Stack spacing={1} direction={'row'} alignItems={'center'}>
+              <HeaderColumnContentStyled>
+                <Stack
+                  spacing={1}
+                  direction={'row'}
+                  sx={{
+                    alignItems: 'center'
+                  }}
+                >
                   <Typography variant='body2'>{column.name}</Typography>
-                  <Typography fontSize={10} color={theme.palette.text.placeholder}>
-                    ({column.type})
-                  </Typography>
+                  <HeaderColumnTypeStyled>({column.type})</HeaderColumnTypeStyled>
                   {column.isPrimaryKey && <CustomIcon type={'key'} size='xs' color={theme.palette.text.placeholder} />}
                 </Stack>
                 <CustomIcon type={sortIcon} size='xs' />
-              </Box>
-
+              </HeaderColumnContentStyled>
               <DataGridResizer columnId={column.name} isResizing={isResizing} onResizeStart={startResize} />
             </SortableTableHeader>
           );

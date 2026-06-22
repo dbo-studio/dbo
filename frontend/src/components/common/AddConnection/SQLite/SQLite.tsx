@@ -12,6 +12,11 @@ import * as v from 'valibot';
 
 import { tools } from '@/core/utils';
 import type { ConnectionSettingsProps } from '../types';
+import {
+  ConnectionFormContainerStyled,
+  ConnectionFormFooterStyled,
+  SQLitePathRowStyled
+} from '../AddConnection.styled';
 
 const formSchema = v.object({
   isPing: v.boolean(),
@@ -76,8 +81,12 @@ export default function SQLite({
   };
 
   return (
-    <Box flex={1} display={'flex'} flexDirection={'column'}>
-      <Box flex={1}>
+    <ConnectionFormContainerStyled>
+      <Box
+        sx={{
+          flex: 1
+        }}
+      >
         <form
           onSubmit={(e): void => {
             e.preventDefault();
@@ -102,8 +111,12 @@ export default function SQLite({
 
           <form.Field name='path'>
             {(field): JSX.Element => (
-              <Box display={'flex'} flexDirection={'row'} flex={1} alignItems={'center'}>
-                <Box flex={1}>
+              <SQLitePathRowStyled>
+                <Box
+                  sx={{
+                    flex: 1
+                  }}
+                >
                   <FieldInput
                     value={field.state.value}
                     error={field.state.meta.errors.length > 0}
@@ -115,13 +128,12 @@ export default function SQLite({
                   />
                 </Box>
                 <FormError mb={1} errors={field.state.meta.errors} />
-              </Box>
+              </SQLitePathRowStyled>
             )}
           </form.Field>
         </form>
       </Box>
-
-      <Box display={'flex'} mt={2} justifyContent={'space-between'}>
+      <ConnectionFormFooterStyled>
         <Button size='small' onClick={onClose}>
           {locales.cancel}
         </Button>
@@ -154,7 +166,7 @@ export default function SQLite({
             <span>{connection ? locales.update : locales.create}</span>
           </Button>
         </Stack>
-      </Box>
-    </Box>
+      </ConnectionFormFooterStyled>
+    </ConnectionFormContainerStyled>
   );
 }

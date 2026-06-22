@@ -9,6 +9,7 @@ import SelectInput from '@/components/base/SelectInput/SelectInput.tsx';
 import { SelectInputOption } from '@/components/base/SelectInput/types.ts';
 import locales from '@/locales';
 import type { FilterItemProps } from '../types.ts';
+import { FilterItemStyled } from './FilterItem.styled';
 import AddFilterButton from './AddFilterButton/AddFilterButton.tsx';
 import RemoveFilterButton from './RemoveFilterButton/RemoveFilterButton.tsx';
 
@@ -49,7 +50,7 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
   };
 
   return (
-    <Box aria-label={'filter-item'} className='filter-item' display='flex' flexDirection='row' alignItems='center'>
+    <FilterItemStyled aria-label={'filter-item'} className='filter-item'>
       <Box>
         <Checkbox
           size='small'
@@ -71,7 +72,12 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
           }
         />
       </Box>
-      <Box mr={1} ml={1}>
+      <Box
+        sx={{
+          mr: 1,
+          ml: 1
+        }}
+      >
         <SelectInput
           value={currentFilter.operator}
           size='small'
@@ -81,7 +87,12 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
           }
         />
       </Box>
-      <Box flex={1} mr={1}>
+      <Box
+        sx={{
+          flex: 1,
+          mr: 1
+        }}
+      >
         <FieldInput
           margin='none'
           fullWidth
@@ -102,10 +113,15 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
           }
         />
       </Box>
-      <Box ml={1} mr={1}>
+      <Box
+        sx={{
+          ml: 1,
+          mr: 1
+        }}
+      >
         <RemoveFilterButton apply={apply} filter={filter} />
         <AddFilterButton columns={columns} />
       </Box>
-    </Box>
+    </FilterItemStyled>
   );
 }

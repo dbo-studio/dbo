@@ -17,7 +17,7 @@ type CompletionItemType = {
 };
 
 let currentRequest: AbortController | null = null;
-let debounceTimer: NodeJS.Timeout | null = null;
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 function createCompletionItem(text: string, position: Monaco.Position): CompletionItemType {
   // For inline completions, range should start and end at the current cursor position

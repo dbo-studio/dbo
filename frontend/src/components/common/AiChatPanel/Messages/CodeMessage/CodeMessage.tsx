@@ -25,7 +25,12 @@ export default function CodeMessage({ message }: CodeMessageProps) {
   return (
     <CodeMessageStyled>
       <CodeMessageHeaderStyled isdark={isDark?.toString() ?? 'false'}>
-        <Box ml={1} display={'flex'}>
+        <Box
+          sx={{
+            ml: 1,
+            display: 'flex'
+          }}
+        >
           <CustomIcon type='code' />
         </Box>
         <IconButton onClick={() => void handleCopy()}>

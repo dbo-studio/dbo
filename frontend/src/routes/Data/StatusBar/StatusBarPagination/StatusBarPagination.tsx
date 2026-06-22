@@ -4,9 +4,10 @@ import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { DataTabType, TabType } from '@/types';
-import { Box, IconButton, type Theme, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { IconButton, type Theme, useMediaQuery, useTheme } from '@mui/material';
 import type { JSX } from 'react';
 import PaginationSetting from './PaginationSetting/PaginationSetting';
+import { PageNumberStyled, StatusBarPaginationStyled } from './StatusBarPagination.styled';
 
 export default function StatusBarPagination(): JSX.Element {
   const theme = useTheme();
@@ -39,13 +40,7 @@ export default function StatusBarPagination(): JSX.Element {
   };
 
   return (
-    <Box
-      alignItems={'center'}
-      justifyContent={'flex-end'}
-      display={matches ? 'flex' : 'none'}
-      flexDirection={'row'}
-      width={208}
-    >
+    <StatusBarPaginationStyled visible={matches}>
       {selectedTab?.mode && selectedTab?.mode === TabMode.Data && (
         <>
           <PaginationSetting />
@@ -56,14 +51,12 @@ export default function StatusBarPagination(): JSX.Element {
           >
             <CustomIcon type='chevronLeft' size='s' />
           </IconButton>
-          <Typography color={'textText'} fontWeight={'bold'} textAlign={'center'} minWidth={54}>
-            {selectedTab?.pagination?.page ?? 1}
-          </Typography>
+          <PageNumberStyled color={'textText'}>{selectedTab?.pagination?.page ?? 1}</PageNumberStyled>
           <IconButton onClick={(): void => handlePagination('next')}>
             <CustomIcon type='chevronRight' size='s' />
           </IconButton>
         </>
       )}
-    </Box>
+    </StatusBarPaginationStyled>
   );
 }

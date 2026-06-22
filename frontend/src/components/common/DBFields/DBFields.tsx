@@ -52,11 +52,20 @@ export default function DBFields(): JSX.Element {
 
   return (
     <>
-      <Box mt={1}>
+      <Box
+        sx={{
+          mt: 1
+        }}
+      >
         <Search onChange={(value: string): void => setSearch(value)} />
       </Box>
       {selectedRow && filteredColumns.length > 0 && (
-        <Box mt={1} data-testid='db-field'>
+        <Box
+          data-testid='db-field'
+          sx={{
+            mt: 1
+          }}
+        >
           {filteredColumns.map((column) => (
             <DBFieldItem key={column.name} row={selectedRow} column={column} />
           ))}

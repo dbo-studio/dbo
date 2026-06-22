@@ -5,7 +5,7 @@ import { Box, Button } from '@mui/material';
 import { Stack } from '@mui/system';
 import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
-import { UpdateDialogStyled } from './UpdateDialog.styled';
+import { UpdateDialogContentStyled, UpdateDialogStyled } from './UpdateDialog.styled';
 
 export default function UpdateDialog() {
   const [show, setShow] = useState(false);
@@ -43,13 +43,17 @@ export default function UpdateDialog() {
 
   return (
     <Modal title={locales.new_version_available} open={show} onClose={() => {}}>
-      <Box flex={1} display={'flex'} flexDirection={'column'} overflow={'scroll'}>
+      <UpdateDialogContentStyled>
         <UpdateDialogStyled>
           <Markdown>{release.body}</Markdown>
         </UpdateDialogStyled>
-      </Box>
-
-      <Box display={'flex'} justifyContent={'space-between'}>
+      </UpdateDialogContentStyled>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between'
+        }}
+      >
         <Stack direction={'row'} spacing={1}>
           <Button disabled={release.isMinimum} onClick={handleOnClose} size='small' color='info' variant='outlined'>
             {locales.cancel}

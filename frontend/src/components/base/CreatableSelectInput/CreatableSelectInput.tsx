@@ -87,7 +87,13 @@ export default function CreatableSelectInput({
   };
 
   return (
-    <Box display={'flex'} flexDirection={'column'} className={'creatable'}>
+    <Box
+      className={'creatable'}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
       {label && (
         <Typography color={theme.palette.text.text} variant='caption'>
           {label}
@@ -107,7 +113,6 @@ export default function CreatableSelectInput({
         onCreateOption={handleCreateOption}
         isClearable={true}
       />
-
       {helpertext && (
         <Typography
           color={theme.palette.error.main}

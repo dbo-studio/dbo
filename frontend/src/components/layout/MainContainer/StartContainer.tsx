@@ -7,7 +7,7 @@ export default function StartContainer(): JSX.Element {
   const windowSize = useWindowSize();
 
   return (
-    <StartContainerStyled maxHeight={windowSize.height} minHeight={windowSize.height} height={windowSize.height}>
+    <StartContainerStyled containerHeight={windowSize.heightNumber}>
       <Connections />
     </StartContainerStyled>
   );

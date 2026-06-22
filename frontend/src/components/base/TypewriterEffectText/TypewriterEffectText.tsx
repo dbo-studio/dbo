@@ -46,7 +46,13 @@ export default function TypewriterEffectText({ text, speed = 30 }: TypewriterEff
   }, [text, enableTypewriter]);
 
   return (
-    <Typography variant='body2' whiteSpace={'pre-wrap'} lineHeight={1.6}>
+    <Typography
+      variant='body2'
+      sx={{
+        whiteSpace: 'pre-wrap',
+        lineHeight: 1.6
+      }}
+    >
       {displayedText}
       {enableTypewriter && currentIndex < text.length && <TypewriterCursor>|</TypewriterCursor>}
     </Typography>

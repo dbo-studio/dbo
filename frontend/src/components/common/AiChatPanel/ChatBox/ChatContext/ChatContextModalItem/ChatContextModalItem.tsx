@@ -12,14 +12,19 @@ export default function ChatContextModalItem({
 }: ChatContextModalItemProps): JSX.Element {
   return (
     <ChatContextModalItemStyled onClick={(): void => onClick(name, type)}>
-      <Stack direction={'row'} spacing={1} alignItems={'center'}>
+      <Stack
+        direction={'row'}
+        spacing={1}
+        sx={{
+          alignItems: 'center'
+        }}
+      >
         <CustomIcon type={type === 'database' ? 'database' : 'sheet'} size='xs' />
 
         <Typography color={'textText'} variant='caption'>
           {name}
         </Typography>
       </Stack>
-
       {isActive && <CustomIcon type='check' size='xs' />}
     </ChatContextModalItemStyled>
   );

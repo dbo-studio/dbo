@@ -8,6 +8,11 @@ import { type JSX, useState } from 'react';
 import * as v from 'valibot';
 
 import type { ConnectionSettingsProps } from '../types';
+import {
+  ConnectionFormCheckboxRowStyled,
+  ConnectionFormContainerStyled,
+  ConnectionFormFooterStyled
+} from '../AddConnection.styled';
 
 const formSchema = v.object({
   isPing: v.boolean(),
@@ -75,8 +80,12 @@ export default function Mysql({
   });
 
   return (
-    <Box flex={1} display={'flex'} flexDirection={'column'}>
-      <Box flex={1}>
+    <ConnectionFormContainerStyled>
+      <Box
+        sx={{
+          flex: 1
+        }}
+      >
         <form
           onSubmit={(e): void => {
             e.preventDefault();
@@ -187,7 +196,7 @@ export default function Mysql({
             )}
           </form.Field>
 
-          <Box display={'flex'} alignItems={'center'} mb={1}>
+          <ConnectionFormCheckboxRowStyled>
             <form.Field name='rememberPassword'>
               {(field): JSX.Element => (
                 <FormControlLabel
@@ -202,17 +211,22 @@ export default function Mysql({
                 />
               )}
             </form.Field>
-          </Box>
+          </ConnectionFormCheckboxRowStyled>
 
-          <Box display={'flex'} flexDirection={'column'}>
-            <Box display={'flex'} alignItems={'center'} mb={1}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
+            <ConnectionFormCheckboxRowStyled>
               <FormControlLabel
                 control={
                   <Checkbox checked={useUri} size={'small'} onChange={(e): void => setUseUri(e.target.checked)} />
                 }
                 label={locales.use_uri}
               />
-            </Box>
+            </ConnectionFormCheckboxRowStyled>
 
             <form.Field name='uri'>
               {(field): JSX.Element => (
@@ -232,8 +246,7 @@ export default function Mysql({
           </Box>
         </form>
       </Box>
-
-      <Box display={'flex'} mt={2} justifyContent={'space-between'}>
+      <ConnectionFormFooterStyled>
         <Button size='small' onClick={onClose}>
           {locales.cancel}
         </Button>
@@ -268,7 +281,7 @@ export default function Mysql({
             {connection ? locales.update : locales.create}
           </Button>
         </Stack>
-      </Box>
-    </Box>
+      </ConnectionFormFooterStyled>
+    </ConnectionFormContainerStyled>
   );
 }

@@ -45,7 +45,13 @@ export default function Messages({ messages, loading, onLoadMore }: MessagesProp
 
         {loading && (
           <>
-            <Stack direction={'row'} spacing={1} alignItems={'center'}>
+            <Stack
+              direction={'row'}
+              spacing={1}
+              sx={{
+                alignItems: 'center'
+              }}
+            >
               <CircularProgress size={15} color='primary' />
               <Typography variant={'body2'} color='textSubdued'>
                 {locales.thinking}...

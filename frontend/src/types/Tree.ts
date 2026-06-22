@@ -82,3 +82,5 @@ export type FormFieldType = FormSchemaType & {
   deleted?: boolean;
   updated?: boolean;
 };
+
+export type FormFieldWithState = FormFieldType;

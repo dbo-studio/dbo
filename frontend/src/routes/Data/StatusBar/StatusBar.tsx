@@ -5,7 +5,7 @@ import StatusBarPagination from './StatusBarPagination/StatusBarPagination';
 
 export default function StatusBar(): JSX.Element {
   return (
-    <StatusBarStyled direction={'row'} justifyContent={'space-between'}>
+    <StatusBarStyled direction='row'>
       <StatusBarActions />
       <StatusBarPagination />
     </StatusBarStyled>
