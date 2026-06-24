@@ -23,15 +23,15 @@ export class SqlEditorPage extends BasePage {
         this.minifyButton = page.getByRole('button', { name: /minify/i });
     }
 
-    async open(): Promise<void> {
-        try {
-            await this.openEditorButton.click({ timeout: 2000 });
-        } catch {
-            // Fallback to keyboard shortcut
-            await this.pressKey('Control+N');
-        }
-        await this.wait(500);
+  async open(): Promise<void> {
+    if (await this.editor.isVisible().catch(() => false)) {
+      return;
     }
+
+    await this.page.getByRole('button', { name: 'sql' }).click();
+    await expect(this.editor).toBeVisible({ timeout: 15000 });
+    await this.wait(500);
+  }
 
     async focus(): Promise<void> {
         await this.editor.click();

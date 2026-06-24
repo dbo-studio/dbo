@@ -34,7 +34,7 @@ func (r *MySQLRepository) buildExecuteQueries(ctx context.Context, nodeID string
 			return nil, err
 		}
 
-		if node.Table == "" {
+		if t != "" {
 			node.Table = t
 		}
 

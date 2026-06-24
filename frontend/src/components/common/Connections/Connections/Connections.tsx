@@ -16,7 +16,6 @@ import { EmptySpaceStyle } from './EmptySpace.styled';
 export default function Connections(): JSX.Element {
   const [loadingConnectionId, setLoadingConnectionId] = useState<number | undefined>(undefined);
 
-  const loading = useConnectionStore((state) => state.loading);
   const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
   const queryClient = useQueryClient();
 
@@ -34,7 +33,7 @@ export default function Connections(): JSX.Element {
       try {
         const connections = await api.connection.getConnectionList();
         updateConnections(connections);
-        if (!currentConnectionId) {
+        if (!useConnectionStore.getState().currentConnectionId) {
           updateCurrentConnection(connections.find((c) => c.isActive));
         }
         updateLoading('finished');
@@ -55,6 +54,19 @@ export default function Connections(): JSX.Element {
   });
 
   useEffect(() => {
+    if (!connections?.length) {
+      return;
+    }
+
+    if (!useConnectionStore.getState().currentConnectionId) {
+      const active = connections.find((c) => c.isActive);
+      if (active) {
+        updateCurrentConnection(active);
+      }
+    }
+  }, [connections, updateCurrentConnection]);
+
+  useEffect(() => {
     if (!connections) {
       return;
     }
@@ -62,11 +74,12 @@ export default function Connections(): JSX.Element {
     if (connections.length === 0) {
       updateUI({ showAddConnection: true });
     }
-  }, [connections]);
+  }, [connections, updateUI]);
 
   const handleChangeCurrentConnection = async (c: ConnectionType): Promise<void> => {
     const tabs = useTabStore.getState().tabs;
-    if (c.id === currentConnection()?.id || loading === 'loading') {
+    const store = useConnectionStore.getState();
+    if (c.id === store.currentConnection()?.id || store.loading === 'loading') {
       return;
     }
     try {

@@ -14,15 +14,15 @@ export default function FormStatusBar({
   return (
     <FormStatusBarStyled>
       {isArrayForm && onAddRow && (
-        <IconButton sx={{ marginRight: 2 }} disabled={disabled} onClick={onAddRow}>
+        <IconButton sx={{ marginRight: 2 }} disabled={disabled} onClick={onAddRow} data-testid='object-form-add-row'>
           <CustomIcon type='plus' size='s' />
         </IconButton>
       )}
       <Box>
-        <IconButton disabled={disabled} onClick={onSave}>
+        <IconButton disabled={disabled} onClick={onSave} data-testid='object-form-save'>
           <CustomIcon type='check' size='s' />
         </IconButton>
-        <IconButton disabled={disabled} onClick={onCancel}>
+        <IconButton disabled={disabled} onClick={onCancel} data-testid='object-form-cancel'>
           <CustomIcon type='close' size='s' />
         </IconButton>
       </Box>

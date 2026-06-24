@@ -89,6 +89,7 @@ export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuP
         onClick={(): void => handleClick(m)}
         key={isNested ? `nested-${m.name}-${index}` : uuids[index]}
         onMouseEnter={(e): void => m.children && handleMouseEnter(e, m.children)}
+        data-testid={`context-menu-item-${m.name.toLowerCase().replace(/\s+/g, '-')}`}
         sx={{
           minHeight: '36px',
           position: 'relative'

@@ -44,7 +44,7 @@ func (r *PostgresRepository) buildExecuteQueries(ctx context.Context, nodeID str
 			return nil, err
 		}
 
-		if node.Table == "" {
+		if t != "" {
 			node.Table = t
 		}
 

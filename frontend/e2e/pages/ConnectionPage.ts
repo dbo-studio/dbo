@@ -49,13 +49,39 @@ export class ConnectionPage extends BasePage {
   }
 
   getConnectionConfig(name: string): ConnectionConfig {
+    return this.getPostgreSQLConfig(name);
+  }
+
+  getPostgreSQLConfig(name: string): ConnectionConfig {
     return {
-      name: name,
+      name,
       host: 'localhost',
       port: '5432',
       username: 'default',
       password: 'secret',
       type: 'PostgreSQL'
+    };
+  }
+
+  getMySQLConfig(name: string): ConnectionConfig {
+    return {
+      name,
+      host: 'localhost',
+      port: '3306',
+      username: 'default',
+      password: 'secret',
+      type: 'MySQL'
+    };
+  }
+
+  getSQLiteConfig(name: string, filePath?: string): ConnectionConfig {
+    return {
+      name,
+      host: filePath ?? `/tmp/dbo-e2e-${Date.now()}.db`,
+      port: '',
+      username: '',
+      password: '',
+      type: 'SQLite'
     };
   }
 
@@ -74,14 +100,38 @@ export class ConnectionPage extends BasePage {
   }
 
   async isNewConnectionModalVisible(): Promise<boolean> {
-    return await this.newConnectionModal.isVisible().catch(() => false);
+    return await this.page
+      .getByRole('heading', { name: 'New connection' })
+      .isVisible()
+      .catch(() => false);
+  }
+
+  async waitForReady(): Promise<void> {
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page
+      .waitForResponse((response) => response.url().includes('connections') && response.status() === 200, {
+        timeout: 30000
+      })
+      .catch(() => undefined);
+    await this.wait(1000);
   }
 
   async openNewConnectionModal(): Promise<void> {
-    if (!(await this.isNewConnectionModalVisible())) {
-      await this.addConnectionButton.click();
+    const modalHeading = this.page.getByRole('heading', { name: 'New connection' });
+    const addBtn = this.addConnectionButton;
+
+    if (await modalHeading.isVisible().catch(() => false)) {
+      return;
     }
-    await expect(this.newConnectionModal).toBeVisible();
+
+    await addBtn.waitFor({ state: 'visible', timeout: 30000 });
+
+    if (await modalHeading.isVisible().catch(() => false)) {
+      return;
+    }
+
+    await addBtn.click();
+    await expect(modalHeading).toBeVisible();
   }
 
   async fillConnectionForm(config: ConnectionConfig): Promise<void> {
@@ -124,19 +174,55 @@ export class ConnectionPage extends BasePage {
     await this.testConnection();
     await this.submitConnection();
     await expect(this.getConnectionItem(config.name)).toBeVisible();
+    await this.page.reload({ waitUntil: 'networkidle' });
+    await this.waitForReady();
+    await this.getConnectionItem(config.name).click();
+    await this.waitForConnectionActive();
   }
 
-  async activateConnection(name: string): Promise<void> {
-    await this.getConnectionItem(name).click();
+  async waitForConnectionActive(): Promise<void> {
+    await expect(this.page.getByRole('button', { name: 'sql' })).toBeEnabled({ timeout: 30000 });
+    await expect(this.page.getByRole('treeitem').first()).toBeVisible({ timeout: 30000 });
+  }
+
+  async handlePasswordPrompt(password: string): Promise<void> {
+    const heading = this.page.getByRole('heading', { name: 'Password', exact: true });
+    if (!(await heading.isVisible({ timeout: 5000 }).catch(() => false))) {
+      return;
+    }
+
+    await this.passwordInput.fill(password);
+
+    const savePromise = this.page.waitForResponse(
+      (response) => response.url().includes('credentials') && response.status() === 200,
+      { timeout: 15000 }
+    );
+    await this.page.getByRole('button', { name: 'Save' }).click();
+    await savePromise;
     await this.wait(1000);
+  }
+
+  async activateConnection(name: string, password = 'secret'): Promise<void> {
+    const responsePromise = this.page.waitForResponse(
+      (response) =>
+        response.url().includes('connections') &&
+        ['PUT', 'PATCH'].includes(response.request().method()) &&
+        response.status() === 200,
+      { timeout: 15000 }
+    );
+    await this.getConnectionItem(name).click();
+    await responsePromise.catch(() => undefined);
+    await this.handlePasswordPrompt(password);
+    await this.waitForConnectionActive();
   }
 
   async setupConnection(config: ConnectionConfig): Promise<void> {
     const exists = await this.connectionExists(config.name);
     if (!exists) {
       await this.createConnection(config);
+      return;
     }
-    await this.activateConnection(config.name);
+    await this.activateConnection(config.name, config.password);
   }
 
   async openContextMenu(connectionName: string): Promise<void> {

@@ -4,4 +4,6 @@ export { SqlEditorPage } from './SqlEditorPage';
 export { DataGridPage } from './DataGridPage';
 export { SidebarPage, type SidebarTab } from './SidebarPage';
 export { SettingsPage, type SettingsPanel } from './SettingsPage';
+export { ObjectFormPage } from './ObjectFormPage';
+export { ObjectTreePage } from './ObjectTreePage';
 

@@ -37,6 +37,7 @@ export function NodeContent({
       role='treeitem'
       aria-expanded={hasChildren ? isExpanded : undefined}
       aria-label={`${node.name} (${node.type})`}
+      data-testid={`tree-node-${node.name.toLowerCase().replace(/\s+/g, '-')}`}
       tabIndex={0}
       data-level={level}
       data-index={nodeIndex}

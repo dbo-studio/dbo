@@ -29,7 +29,7 @@ function ArrayRow({
         const stateKey = getDynamicFieldStateKey(rowIndex, field.id);
 
         return (
-          <TableCell key={field.id} sx={{ minWidth: 180 }}>
+          <TableCell key={field.id} sx={{ minWidth: 180 }} data-testid={`object-form-cell-${rowIndex}-${field.id}`}>
             <SimpleField
               isArrayForm={true}
               field={field}

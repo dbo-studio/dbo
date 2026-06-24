@@ -1,4 +1,4 @@
-import { FormObjectData } from '@/store/formObject/types';
+import type { FormObjectData } from '@/store/formObject/types';
 import { ObjectTabType } from '@/types';
 import { FormFieldType, FormValue, GeneralFieldType } from '@/types/Tree';
 
@@ -22,7 +22,7 @@ const mapFieldId = (tabId: string, fieldId: string): string => {
 };
 
 const toPayloadValue = (value: FormValue | FormValue[] | undefined): FormValue => {
-  if (value === undefined) return null;
+  if (value === undefined || value === null || value === '') return null;
   if (Array.isArray(value)) {
     const result: string[] = [];
     for (const item of value) {
@@ -64,16 +64,34 @@ const buildGeneralRecord = (general: GeneralFieldType[], useOriginal = false): R
   return record;
 };
 
-const buildTablePayload = (general: GeneralFieldType[], action: string): Record<string, unknown> | null => {
+const hasTableTabChanges = (formData: FormObjectData): boolean => {
+  if (formData.general.length > 0) {
+    return hasGeneralChanges(formData.general);
+  }
+
+  const row = formData.data[0];
+  if (!row) return false;
+
+  return row.some((cell) => JSON.stringify(cell.value) !== JSON.stringify(cell.originalValue));
+};
+
+const buildTablePayload = (formData: FormObjectData, action: string): Record<string, unknown> | null => {
   if (!TABLE_ACTIONS.has(action)) return null;
 
-  const hasChanges = hasGeneralChanges(general);
+  const hasChanges = hasTableTabChanges(formData);
   if (action === 'editTable' && !hasChanges) return null;
+
+  const newRecord =
+    formData.general.length > 0 ? buildGeneralRecord(formData.general) : rowToRecord(formData.data[0] ?? [], 'table');
+  const oldRecord =
+    formData.general.length > 0
+      ? buildGeneralRecord(formData.general, true)
+      : rowToRecord(formData.data[0] ?? [], 'table', true);
 
   return {
     table: {
-      new: buildGeneralRecord(general),
-      old: buildGeneralRecord(general, true)
+      new: newRecord,
+      old: oldRecord
     }
   };
 };
@@ -160,10 +178,10 @@ export const buildSavePayload = (
 ): Record<string, unknown> | null => {
   const payload: Record<string, unknown> = {};
 
-  const firstTabData = tabs.map((tab) => formDataByTab[`${objectPrefix}_${tab.id}`]).find((data) => data !== undefined);
+  const tableTabData = formDataByTab[`${objectPrefix}_table`];
 
-  if (firstTabData && TABLE_ACTIONS.has(action)) {
-    const tablePayload = buildTablePayload(firstTabData.general, action);
+  if (tableTabData && TABLE_ACTIONS.has(action)) {
+    const tablePayload = buildTablePayload(tableTabData, action);
     if (tablePayload) {
       Object.assign(payload, tablePayload);
     }
@@ -204,8 +222,9 @@ export const extractNodeIdAfterSave = (
   action: string
 ): string | null => {
   const tablePayload = payload.table as ObjectNamePayload | undefined;
-  if (tablePayload?.new?.name) {
-    const newName = String(tablePayload.new.name);
+  const tableNewName = tablePayload?.new?.name ?? tablePayload?.new?.relname;
+  if (tableNewName) {
+    const newName = String(tableNewName);
     if (action === 'createTable' || newName !== currentNodeId) {
       return newName;
     }

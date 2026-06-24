@@ -5,9 +5,16 @@ import { useMemo } from 'react';
 export const useCurrentConnection = (): ConnectionType | undefined => {
   const connections = useConnectionStore((state) => state.connections);
   const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
-  const currentConnection = useConnectionStore((state) => state.currentConnection);
 
   return useMemo(() => {
-    return currentConnection();
-  }, [connections, currentConnectionId, currentConnection]);
+    if (!connections?.length) {
+      return undefined;
+    }
+
+    if (currentConnectionId) {
+      return connections.find((c) => c.id === Number(currentConnectionId));
+    }
+
+    return connections.find((c) => c.isActive);
+  }, [connections, currentConnectionId]);
 };

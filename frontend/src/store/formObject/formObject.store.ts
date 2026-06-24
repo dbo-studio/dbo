@@ -319,7 +319,7 @@ const mapResponseIntoFormObject = (response: FormObjectResponseType): FormObject
     })
   );
 
-  const mappedGeneral = general.map((g) => ({
+  const mappedGeneral = (general ?? []).map((g) => ({
     ...g,
     originalValue: g.value
   }));
