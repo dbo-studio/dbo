@@ -1,13 +1,13 @@
-import { fixupConfigRules, fixupPluginRules } from '@eslint/compat';
-import type { Plugin } from '@eslint/core';
+import eslintReact from '@eslint-react/eslint-plugin';
 import js from '@eslint/js';
 import pluginQuery from '@tanstack/eslint-plugin-query';
-import pluginReact from 'eslint-plugin-react';
-import reactHooks from 'eslint-plugin-react-hooks';
 import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import tseslint from 'typescript-eslint';
+
+const tsconfigRootDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig([
   {
@@ -21,32 +21,23 @@ export default defineConfig([
       '**/*.bundle.js'
     ]
   },
-  js.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
-  ...fixupConfigRules(pluginReact.configs.flat.recommended),
-  ...pluginQuery.configs['flat/recommended'],
   {
+    files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    extends: [
+      js.configs.recommended,
+      ...tseslint.configs.recommendedTypeChecked,
+      eslintReact.configs['recommended-typescript'],
+      ...pluginQuery.configs['flat/recommended']
+    ],
     languageOptions: {
+      parser: tseslint.parser,
       parserOptions: {
         projectService: true,
-        tsconfigRootDir: path.dirname(new URL(import.meta.url).pathname)
-      }
-    }
-  },
-  {
-    settings: {
-      react: {
-        version: '19.2.0'
-      }
+        tsconfigRootDir
+      },
+      globals: globals.browser
     },
-    files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    plugins: {
-      'react-hooks': fixupPluginRules(reactHooks as unknown as Plugin)
-    },
-    languageOptions: { globals: globals.browser },
     rules: {
-      'react/react-in-jsx-scope': 'off',
-      'react/jsx-uses-react': 'off',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'off'
     }
