@@ -9,7 +9,11 @@ export const globalStyles = (theme: Theme): Interpolation<Theme> => {
       MozUserSelect: 'none' // For Firefox
     },
     html: {
-      overscrollBehavior: 'none'
+      overscrollBehavior: 'none',
+      height: '100%'
+    },
+    '#root': {
+      height: '100%'
     },
     '*::-webkit-scrollbar': {
       width: '3px !important'

@@ -1,8 +1,12 @@
 import type { Theme } from '@mui/material';
-import { Grid, useMediaQuery } from '@mui/material';
-import { type JSX, useState } from 'react';
+import { useMediaQuery } from '@mui/material';
+import type { JSX } from 'react';
 import type { QueryEditorActionBarProps } from '../types';
-import { QueryEditorActionBarStackStyled } from './QueryEditorActionBar.styled';
+import {
+  QueryEditorActionBarActionsBoxStyled,
+  QueryEditorActionBarBoxStyled,
+  QueryEditorActionBarStackStyled
+} from './QueryEditorActionBar.styled';
 import QueryEditorActions from './QueryEditorActions/QueryEditorActions';
 import QueryEditorLeading from './QueryEditorLeading/QueryEditorLeading';
 
@@ -15,36 +19,14 @@ export default function QueryEditorActionBar({
   aiExplainDisabled,
   loading
 }: QueryEditorActionBarProps): JSX.Element {
-  const [localDatabases, setLocalDatabases] = useState<string[]>([]);
-  const [localSchemas, setLocalSchemas] = useState<string[]>([]);
-  const matches = useMediaQuery((theme: Theme) => theme.breakpoints.up('sm'));
-
-  if (localDatabases.length === 0 && databases.length > 0) {
-    setLocalDatabases(databases);
-  }
-
-  if (localSchemas.length === 0 && schemas.length > 0) {
-    setLocalSchemas(schemas);
-  }
+  const isCompact = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'));
 
   return (
-    <QueryEditorActionBarStackStyled direction='row'>
-      <Grid
-        size={{ md: 8 }}
-        sx={{
-          display: 'flex',
-          justifyContent: 'flex-start'
-        }}
-      >
-        <QueryEditorLeading databases={localDatabases} schemas={localSchemas} />
-      </Grid>
-      <Grid
-        size={{ md: 8 }}
-        sx={{
-          display: matches ? 'flex' : 'none',
-          justifyContent: 'flex-end'
-        }}
-      >
+    <QueryEditorActionBarStackStyled direction={isCompact ? 'column' : 'row'} spacing={isCompact ? 1 : 0}>
+      <QueryEditorActionBarBoxStyled isCompact={isCompact}>
+        <QueryEditorLeading databases={databases} schemas={schemas} />
+      </QueryEditorActionBarBoxStyled>
+      <QueryEditorActionBarActionsBoxStyled isCompact={isCompact}>
         <QueryEditorActions
           loading={loading}
           onFormat={onFormat}
@@ -52,7 +34,7 @@ export default function QueryEditorActionBar({
           onAiExplain={onAiExplain}
           aiExplainDisabled={aiExplainDisabled}
         />
-      </Grid>
+      </QueryEditorActionBarActionsBoxStyled>
     </QueryEditorActionBarStackStyled>
   );
 }

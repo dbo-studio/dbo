@@ -1,9 +1,10 @@
 import api from '@/api';
 import AddConnection from '@/components/common/AddConnection/AddConnection';
 import { tools } from '@/core/utils';
+import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { matchConnectionId } from '@/store/tabStore/connectionId';
 import { useSettingStore } from '@/store/settingStore/setting.store';
+import { matchConnectionId } from '@/store/tabStore/connectionId';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ConnectionType } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -12,10 +13,16 @@ import EditConnection from '../../AddConnection/EditConnection';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import ConnectionPasswordPromptModal from './ConnectionPasswordPrompt/ConnectionPasswordPrompt';
 import { ConnectionsStyled } from './Connections.styled';
+import ConnectionsEmptyState from './ConnectionsEmptyState';
 import { EmptySpaceStyle } from './EmptySpace.styled';
 
-export default function Connections(): JSX.Element {
+type ConnectionsProps = {
+  expanded?: boolean;
+};
+
+export default function Connections({ expanded = false }: ConnectionsProps): JSX.Element {
   const [loadingConnectionId, setLoadingConnectionId] = useState<number | undefined>(undefined);
+  const { showConnectionsRail } = useLayoutMode();
 
   const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
   const queryClient = useQueryClient();
@@ -72,10 +79,10 @@ export default function Connections(): JSX.Element {
       return;
     }
 
-    if (connections.length === 0) {
+    if (connections.length === 0 && showConnectionsRail) {
       updateUI({ showAddConnection: true });
     }
-  }, [connections, updateUI]);
+  }, [connections, showConnectionsRail, updateUI]);
 
   const handleChangeCurrentConnection = async (c: ConnectionType): Promise<void> => {
     const tabs = useTabStore.getState().tabs;
@@ -100,21 +107,29 @@ export default function Connections(): JSX.Element {
     }
   };
 
+  const hasConnections = Boolean(connections && connections.length > 0);
+
   return (
-    <ConnectionsStyled>
+    <ConnectionsStyled expanded={expanded} expandedLayout={hasConnections ? 'grid' : 'column'}>
       <AddConnection />
       <EditConnection />
       <ConnectionPasswordPromptModal />
-      {connections?.map((c: ConnectionType) => (
-        <ConnectionItem
-          loading={pendingUpdateConnection && loadingConnectionId === c.id}
-          onClick={() => void handleChangeCurrentConnection(c)}
-          key={tools.uuid()}
-          selected={c.id === currentConnection()?.id}
-          connection={c}
-        />
-      ))}
-      <EmptySpaceStyle />
+      {expanded && !hasConnections ? (
+        <ConnectionsEmptyState />
+      ) : (
+        <>
+          {connections?.map((c: ConnectionType) => (
+            <ConnectionItem
+              loading={pendingUpdateConnection && loadingConnectionId === c.id}
+              onClick={() => void handleChangeCurrentConnection(c)}
+              key={tools.uuid()}
+              selected={c.id === currentConnection()?.id}
+              connection={c}
+            />
+          ))}
+          {!expanded && <EmptySpaceStyle />}
+        </>
+      )}
     </ConnectionsStyled>
   );
 }

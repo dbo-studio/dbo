@@ -21,7 +21,7 @@ const setStoredQueries = (queries: Record<string, string>): void => {
   }
 };
 
-export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [], TabQuerySlice> = (set, get) => ({
+export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [], TabQuerySlice> = (_set, get) => ({
   getQuery: (tabId?: string): string => {
     const tab = tabId ?? get().selectedTabId;
     if (!tab) return '';

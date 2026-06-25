@@ -1,9 +1,52 @@
 import { Box, styled } from '@mui/material';
 
-export const ConnectionsStyled = styled(Box)(({ theme }) => ({
+type ConnectionsStyledProps = {
+  expanded?: boolean;
+  expandedLayout?: 'grid' | 'column';
+};
+
+export const ConnectionsStyled = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'expanded' && prop !== 'expandedLayout'
+})<ConnectionsStyledProps>(({ theme, expanded, expandedLayout = 'grid' }) => ({
   height: '100%',
+  background: theme.palette.background.subdued,
+  ...(expanded
+    ? expandedLayout === 'grid'
+      ? {
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+          alignContent: 'start',
+          gap: theme.spacing(1),
+          padding: theme.spacing(1),
+          overflow: 'auto',
+          flex: 1,
+          minHeight: 0,
+          minWidth: 0,
+          width: '100%'
+        }
+      : {
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          minHeight: 0,
+          minWidth: 0,
+          width: '100%'
+        }
+    : {
+        display: 'flex',
+        flexDirection: 'column',
+        minWidth: '83px'
+      })
+}));
+
+export const EmptyConnectionsStyled = styled(Box)(() => ({
   display: 'flex',
   flexDirection: 'column',
-  background: theme.palette.background.subdued,
-  minWidth: '83px'
+  alignItems: 'center',
+  justifyContent: 'center',
+  flex: 1,
+  gap: 2,
+  p: 3,
+  minHeight: 240,
+  width: '100%'
 }));

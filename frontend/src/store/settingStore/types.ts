@@ -16,6 +16,7 @@ export type SettingStore = {
 
 export type UISettings = {
   sidebar: SidebarType;
+  showConnectionsDrawer: boolean;
   showAddConnection: boolean;
   showEditConnection: number | boolean;
   showQuickLookEditor: boolean;

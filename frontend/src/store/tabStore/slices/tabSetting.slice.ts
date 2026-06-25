@@ -10,7 +10,7 @@ const maxTabs = 15;
 
 export const createTabSettingSlice: StateCreator<
   TabStore & TabSettingSlice & TabQuerySlice,
-  [],
+  [['zustand/devtools', never]],
   [],
   TabSettingSlice
 > = (set, get) => ({

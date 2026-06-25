@@ -5,16 +5,18 @@ import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { createEmptyRow } from '@/core/utils';
 import { useCurrentConnection } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
+import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Box, IconButton } from '@mui/material';
+import { IconButton } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import type { JSX } from 'react';
 import { toast } from 'sonner';
 import { StatusBarActionsStackStyled } from './StatusBarActions.styled';
 
 export default function StatusBarActions(): JSX.Element {
+  const { isMobile } = useLayoutMode();
   const isDataFetching = useDataStore((state) => state.isDataFetching);
   const selectedTab = useSelectedTab();
   const currentConnection = useCurrentConnection();
@@ -116,42 +118,30 @@ export default function StatusBarActions(): JSX.Element {
   };
 
   return (
-    <StatusBarActionsStackStyled direction={'row'}>
-      <Box>
-        <IconButton disabled={updateQueryPending || isDataFetching} onClick={() => void handleAddAction()}>
-          <CustomIcon type='plus' size='s' />
-        </IconButton>
+    <StatusBarActionsStackStyled mobile={isMobile}>
+      <IconButton disabled={updateQueryPending || isDataFetching} onClick={() => void handleAddAction()}>
+        <CustomIcon type='plus' size='s' />
+      </IconButton>
 
-        <IconButton disabled={updateQueryPending || isDataFetching} onClick={() => void handleRemoveAction()}>
-          <CustomIcon type='mines' size='s' />
-        </IconButton>
-      </Box>
-      <Box
-        sx={{
-          ml: 1,
-          mr: 1
-        }}
+      <IconButton disabled={updateQueryPending || isDataFetching} onClick={() => void handleRemoveAction()}>
+        <CustomIcon type='mines' size='s' />
+      </IconButton>
+
+      <IconButton onClick={() => void handleSave()}>
+        <CustomIcon type='check' size='s' />
+      </IconButton>
+
+      <IconButton onClick={() => void handleDiscardChanges()} disabled={updateQueryPending || isDataFetching}>
+        <CustomIcon type='close' size='s' />
+      </IconButton>
+
+      <IconButton
+        loading={isDataFetching}
+        disabled={updateQueryPending || isDataFetching}
+        onClick={() => void handleRefresh()}
       >
-        <IconButton onClick={() => void handleSave()}>
-          <CustomIcon type='check' size='s' />
-        </IconButton>
-        <IconButton onClick={() => void handleDiscardChanges()} disabled={updateQueryPending || isDataFetching}>
-          <CustomIcon type='close' size='s' />
-        </IconButton>
-      </Box>
-      <Box>
-        <IconButton
-          loading={isDataFetching}
-          disabled={updateQueryPending || isDataFetching}
-          onClick={() => void handleRefresh()}
-        >
-          <CustomIcon type='refresh' size='s' />
-        </IconButton>
-
-        {/* <IconButton>
-          <CustomIcon type='stop' size='s' />
-        </IconButton> */}
-      </Box>
+        <CustomIcon type='refresh' size='s' />
+      </IconButton>
     </StatusBarActionsStackStyled>
   );
 }

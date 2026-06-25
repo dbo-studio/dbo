@@ -1,14 +1,15 @@
 import Modal from '@/components/base/Modal/Modal';
 import GeneralPanel from '@/components/common/Settings/GeneralPanel/GeneralPanel';
+import { useLayoutMode } from '@/hooks';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Box, Divider, Grid, Typography, useTheme } from '@mui/material';
+import { Box, Divider, Grid, Tab, Tabs, Typography, useTheme } from '@mui/material';
 import { type JSX, useState } from 'react';
 import AboutPanel from './AboutPanel/AboutPanel';
 import AiPanel from './AiPanel/AiPanel';
 import AppearancePanel from './AppearancePanel/AppearancePanel';
 import MenuPanel from './MenuPanel/MenuPanel';
-import { SettingsContentStyled } from './Setting.styled';
+import { SettingsContentGridStyled, SettingsContentStyled } from './Setting.styled';
 import ShortcutPanel from './ShortcutPanel/ShortcutPanel';
 import type { MenuPanelTabType, SettingsProps } from './types';
 
@@ -55,9 +56,18 @@ const tabs: MenuPanelTabType[] = [
 export default function Settings({ open }: SettingsProps): JSX.Element {
   const [currentTab, setCurrentTab] = useState<MenuPanelTabType | undefined>();
   const theme = useTheme();
+  const { isMobile } = useLayoutMode();
   const showSettings = useSettingStore((state) => state.ui.showSettings);
   const updateUI = useSettingStore((state) => state.updateUI);
   const defaultMenuTab = tabs.find((tab) => tab.id === showSettings.tab) ?? tabs[0];
+  const [prevSync, setPrevSync] = useState({ open, tab: showSettings.tab });
+
+  if (open !== prevSync.open || (open && prevSync.tab !== showSettings.tab)) {
+    setPrevSync({ open, tab: showSettings.tab });
+    if (open) {
+      setCurrentTab(defaultMenuTab);
+    }
+  }
 
   function handleOnClose(): void {
     updateUI({ showSettings: { open: false, tab: 0, aiTab: undefined } });
@@ -65,18 +75,11 @@ export default function Settings({ open }: SettingsProps): JSX.Element {
 
   return (
     <Modal open={open} padding='0px' onClose={handleOnClose}>
-      <Grid
-        container
-        spacing={0}
-        sx={{
-          width: '850px',
-          flex: 1
-        }}
-      >
+      <SettingsContentGridStyled container spacing={0}>
         <Grid
           size={{ md: 3 }}
           sx={{
-            display: 'flex',
+            display: isMobile ? 'none' : 'flex',
             flexDirection: 'column'
           }}
         >
@@ -91,9 +94,24 @@ export default function Settings({ open }: SettingsProps): JSX.Element {
           size={{ md: 9 }}
           sx={{
             flex: 1,
-            p: theme.spacing(2)
+            p: theme.spacing(2),
+            minWidth: 0,
+            overflow: 'auto'
           }}
         >
+          {isMobile && (
+            <Tabs
+              value={currentTab?.id ?? defaultMenuTab.id}
+              onChange={(_, id: number): void => setCurrentTab(tabs.find((tab) => tab.id === id) ?? tabs[0])}
+              variant='scrollable'
+              scrollButtons='auto'
+              sx={{ mb: 2 }}
+            >
+              {tabs.map((tab) => (
+                <Tab key={tab.id} value={tab.id} label={tab.name} />
+              ))}
+            </Tabs>
+          )}
           <Box
             sx={{
               mb: 2
@@ -121,7 +139,7 @@ export default function Settings({ open }: SettingsProps): JSX.Element {
             currentTab?.content
           )}
         </SettingsContentStyled>
-      </Grid>
+      </SettingsContentGridStyled>
     </Modal>
   );
 }

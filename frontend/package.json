@@ -3,7 +3,7 @@
   "version": "0.4.2",
   "scripts": {
     "dev": "NODE_ENV=development VITE_PUBLIC_SERVER_URL=/api vite",
-    "build": "tsc --noEmit --noEmit -p tsconfig.app.json && vite build",
+    "build": "tsc --noEmit -p tsconfig.app.json && vite build",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "preview": "vite preview",

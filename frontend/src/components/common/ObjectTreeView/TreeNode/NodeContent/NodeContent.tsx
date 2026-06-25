@@ -1,5 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
 import { NodeLabel } from '@/components/common/ObjectTreeView/TreeNode/NodeContent/NodeContent.styled';
+import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
 import CircularProgress from '@mui/material/CircularProgress';
 import type { JSX } from 'react';
 import { LoadingIndicator, NodeContent as NodeContentStyled, NodeName } from '../TreeNode.styled';
@@ -23,11 +24,23 @@ export function NodeContent({
   handleBlur,
   handleKeyDown
 }: NodeContentProps): JSX.Element {
+  const { isTouch, useSidebarOverlay } = useLayoutMode();
+  const preferSingleClick = isTouch || useSidebarOverlay;
+
+  const handleClick = (event: React.MouseEvent): void => {
+    if (preferSingleClick) {
+      void actionDetection(event, node);
+      return;
+    }
+
+    focusNode(event);
+  };
+
   return (
     <NodeLabel
       ref={nodeRef}
-      onClick={focusNode}
-      onDoubleClick={(e): void => actionDetection(e, node)}
+      onClick={handleClick}
+      onDoubleClick={preferSingleClick ? undefined : (event): void => actionDetection(event, node)}
       onContextMenu={handleContextMenu}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}

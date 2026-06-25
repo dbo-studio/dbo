@@ -18,6 +18,7 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
             showRight: false,
             rightSidebarTab: 0
           },
+          showConnectionsDrawer: false,
           showAddConnection: false,
           showEditConnection: false,
           showQuickLookEditor: false,

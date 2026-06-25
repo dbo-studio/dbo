@@ -13,13 +13,13 @@ export function useAiBridge() {
   const setBridgeRequest = useAiStore((s) => s.setBridgeRequest);
   const updateContext = useAiStore((s) => s.updateContext);
   const updateUI = useSettingStore((s) => s.updateUI);
-  const sidebar = useSettingStore((s) => s.ui.sidebar);
 
   const openAssistant = useCallback(
     (tab = 0) => {
+      const sidebar = useSettingStore.getState().ui.sidebar;
       updateUI({ sidebar: { ...sidebar, showRight: true, rightSidebarTab: tab } });
     },
-    [sidebar, updateUI]
+    [updateUI]
   );
 
   const prefillChat = useCallback(

@@ -1,17 +1,17 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { TabMode } from '@/core/enums';
+import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { DataTabType, TabType } from '@/types';
-import { IconButton, type Theme, useMediaQuery, useTheme } from '@mui/material';
+import { IconButton } from '@mui/material';
 import type { JSX } from 'react';
 import PaginationSetting from './PaginationSetting/PaginationSetting';
 import { PageNumberStyled, StatusBarPaginationStyled } from './StatusBarPagination.styled';
 
 export default function StatusBarPagination(): JSX.Element {
-  const theme = useTheme();
-  const matches = useMediaQuery((theme: Theme) => theme.breakpoints.up('sm'));
+  const { isMobile } = useLayoutMode();
   const isDataFetching = useDataStore((state) => state.isDataFetching);
   const selectedTab = useSelectedTab<DataTabType>();
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
@@ -40,18 +40,16 @@ export default function StatusBarPagination(): JSX.Element {
   };
 
   return (
-    <StatusBarPaginationStyled visible={matches}>
+    <StatusBarPaginationStyled mobile={isMobile}>
       {selectedTab?.mode && selectedTab?.mode === TabMode.Data && (
         <>
           <PaginationSetting />
-          <IconButton
-            style={{ marginLeft: theme.spacing(1) }}
-            disabled={selectedTab?.pagination?.page === 1}
-            onClick={(): void => handlePagination('prev')}
-          >
+          <IconButton disabled={selectedTab?.pagination?.page === 1} onClick={(): void => handlePagination('prev')}>
             <CustomIcon type='chevronLeft' size='s' />
           </IconButton>
-          <PageNumberStyled color={'textText'}>{selectedTab?.pagination?.page ?? 1}</PageNumberStyled>
+          <PageNumberStyled mobile={isMobile} color='textText'>
+            {selectedTab?.pagination?.page ?? 1}
+          </PageNumberStyled>
           <IconButton onClick={(): void => handlePagination('next')}>
             <CustomIcon type='chevronRight' size='s' />
           </IconButton>

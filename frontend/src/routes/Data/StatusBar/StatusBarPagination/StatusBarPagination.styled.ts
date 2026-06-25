@@ -1,19 +1,30 @@
 import { Box, styled, Typography } from '@mui/material';
 
 type StatusBarPaginationStyledProps = {
-  visible: boolean;
+  mobile?: boolean;
 };
 
-export const StatusBarPaginationStyled = styled(Box)<StatusBarPaginationStyledProps>(({ visible }) => ({
+export const StatusBarPaginationStyled = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'mobile'
+})<StatusBarPaginationStyledProps>(({ mobile }) => ({
   alignItems: 'center',
-  justifyContent: 'flex-end',
-  display: visible ? 'flex' : 'none',
+  display: 'flex',
   flexDirection: 'row',
-  width: 208
+  flexShrink: 0,
+  justifyContent: mobile ? 'flex-end' : 'flex-end',
+  width: mobile ? 'auto' : 208
 }));
 
-export const PageNumberStyled = styled(Typography)(() => ({
+type PageNumberStyledProps = {
+  mobile?: boolean;
+};
+
+export const PageNumberStyled = styled(Typography, {
+  shouldForwardProp: (prop) => prop !== 'mobile'
+})<PageNumberStyledProps>(({ mobile }) => ({
   fontWeight: 'bold',
   textAlign: 'center',
-  minWidth: 54
+  minWidth: mobile ? 28 : 54,
+  fontSize: mobile ? '0.8125rem' : undefined,
+  lineHeight: 1
 }));

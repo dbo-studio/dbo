@@ -1,49 +1,70 @@
 import { Box, styled } from '@mui/material';
-import type { ContainerHeightProps } from '../Layout.styled';
 
-const containerHeightStyles = ({ containerHeight }: ContainerHeightProps) =>
-  containerHeight !== undefined
-    ? {
-        maxHeight: containerHeight,
-        minHeight: containerHeight,
-        height: containerHeight
-      }
-    : {};
+const containerBaseStyles = {
+  height: '100%',
+  minHeight: 0
+};
 
-export const CenterContainerStyled = styled(Box)<ContainerHeightProps>(({ theme, containerHeight }) => ({
+export const CenterContainerStyled = styled(Box)(({ theme }) => ({
+  ...containerBaseStyles,
   borderBottom: `1px solid ${theme.palette.divider}`,
   overflow: 'hidden',
   display: 'flex',
   flexDirection: 'column',
-  ...containerHeightStyles({ containerHeight })
+  flex: 1,
+  minWidth: 0
 }));
 
-export const EndContainerStyled = styled(Box)<ContainerHeightProps>(({ theme, containerHeight }) => ({
+type EndContainerStyledProps = {
+  fullPage?: boolean;
+};
+
+export const EndContainerStyled = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'fullPage'
+})<EndContainerStyledProps>(({ theme, fullPage }) => ({
+  ...containerBaseStyles,
   padding: theme.spacing(1),
-  borderRight: `1px solid ${theme.palette.divider}`,
-  borderLeft: `1px solid ${theme.palette.divider}`,
+  borderRight: fullPage ? 'none' : `1px solid ${theme.palette.divider}`,
+  borderLeft: fullPage ? 'none' : `1px solid ${theme.palette.divider}`,
   overflow: 'auto',
   background: theme.palette.background.subdued,
   display: 'flex',
   flexDirection: 'column',
-  ...containerHeightStyles({ containerHeight })
+  ...(fullPage && {
+    flex: 1,
+    width: '100%',
+    minWidth: 0,
+    overflow: 'hidden'
+  })
 }));
 
-export const StartContainerStyled = styled(Box)<ContainerHeightProps>(({ theme, containerHeight }) => ({
+export const StartContainerStyled = styled(Box)(({ theme }) => ({
+  ...containerBaseStyles,
   borderLeft: `1px solid ${theme.palette.divider}`,
   overflow: 'auto',
-  ...containerHeightStyles({ containerHeight })
+  flexShrink: 0
 }));
 
-export const ExplorerContainerStyled = styled(Box)<ContainerHeightProps>(({ theme, containerHeight }) => ({
+type ExplorerContainerStyledProps = {
+  fullPage?: boolean;
+};
+
+export const ExplorerContainerStyled = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'fullPage'
+})<ExplorerContainerStyledProps>(({ theme, fullPage }) => ({
+  ...containerBaseStyles,
   padding: theme.spacing(1),
-  borderBottom: `1px solid ${theme.palette.divider}`,
-  borderRight: `1px solid ${theme.palette.divider}`,
+  borderBottom: fullPage ? 'none' : `1px solid ${theme.palette.divider}`,
+  borderRight: fullPage ? 'none' : `1px solid ${theme.palette.divider}`,
   overflow: 'hidden',
   display: 'flex',
   flexDirection: 'column',
   background: theme.palette.background.subdued,
-  ...containerHeightStyles({ containerHeight })
+  ...(fullPage && {
+    flex: 1,
+    width: '100%',
+    minWidth: 0
+  })
 }));
 
 export const ExplorerTabPanelStyled = styled(Box)(() => ({

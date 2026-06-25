@@ -1,7 +1,15 @@
 import { Stack, styled } from '@mui/material';
 
-export const StatusBarActionsStackStyled = styled(Stack)(() => ({
+type StatusBarActionsStackStyledProps = {
+  mobile?: boolean;
+};
+
+export const StatusBarActionsStackStyled = styled(Stack, {
+  shouldForwardProp: (prop) => prop !== 'mobile'
+})<StatusBarActionsStackStyledProps>(({ mobile }) => ({
   alignItems: 'center',
-  justifyContent: 'space-between',
-  width: 208
+  flexDirection: 'row',
+  flexShrink: 0,
+  justifyContent: mobile ? 'flex-start' : 'space-between',
+  width: mobile ? 'auto' : 208
 }));

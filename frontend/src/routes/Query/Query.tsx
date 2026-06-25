@@ -5,25 +5,29 @@ import SqlEditor from '@/components/base/SqlEditor/SqlEditor.tsx';
 import { SqlEditorRef } from '@/components/base/SqlEditor/types';
 import DataGrid from '@/components/common/DataGrid/DataGrid';
 import { shortcuts } from '@/core/utils';
-import { useCurrentConnection, useShortcut, useWindowSize } from '@/hooks';
+import { useCurrentConnection, useLayoutMode, useShortcut, useWindowSize } from '@/hooks';
 import { useAiBridge } from '@/hooks/useAiBridge';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AutoCompleteType, ColumnType, EditorTabType, RowType } from '@/types';
+import { Tab, Tabs } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
-import type { JSX } from 'react';
+import type { JSX, SyntheticEvent } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { QueryContainerStyled, QueryEditorBoxStyled } from './Query.styled';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
 import QueryErrorBanner from './QueryErrorBanner/QueryErrorBanner';
 
+type QueryMobileView = 'editor' | 'results';
+
 export default function Query(): JSX.Element {
   const selectedTab = useSelectedTab<EditorTabType>();
   const currentConnection = useCurrentConnection();
   const windowSize = useWindowSize();
+  const { isMobile } = useLayoutMode();
   const sqlEditorRef = useRef<SqlEditorRef>(null);
 
   const [tableData, setTableData] = useState({
@@ -41,11 +45,13 @@ export default function Query(): JSX.Element {
 
   const [value, setValue] = useState('');
   const [showGrid, setShowGrid] = useState(false);
+  const [mobileView, setMobileView] = useState<QueryMobileView>('editor');
   const [prevTabId, setPrevTabId] = useState(selectedTab?.id);
 
   if (selectedTab?.id !== prevTabId) {
     setPrevTabId(selectedTab?.id);
     setValue(getQuery());
+    setMobileView('editor');
   }
 
   const isDataFetching = useDataStore((state) => state.isDataFetching);
@@ -93,17 +99,23 @@ export default function Query(): JSX.Element {
     void loadData().catch((e) => console.log('🚀 ~ Query ~ e:', e));
   }, [selectedTab?.id, autocomplete, loadData]);
 
-  const applyQueryResult = useCallback((res: RunQueryResponseType | undefined): void => {
-    const columns = res?.columns.filter((column) => column.isActive) ?? [];
-    setTableData({
-      rows: res?.data ?? [],
-      columns
-    });
+  const applyQueryResult = useCallback(
+    (res: RunQueryResponseType | undefined): void => {
+      const columns = res?.columns.filter((column) => column.isActive) ?? [];
+      setTableData({
+        rows: res?.data ?? [],
+        columns
+      });
 
-    if (columns.length > 0) {
-      setShowGrid(true);
-    }
-  }, []);
+      if (columns.length > 0) {
+        setShowGrid(true);
+        if (isMobile) {
+          setMobileView('results');
+        }
+      }
+    },
+    [isMobile]
+  );
 
   const executeRawQuery = useCallback(
     async (sql?: string): Promise<RunQueryResponseType | undefined> => {
@@ -151,6 +163,13 @@ export default function Query(): JSX.Element {
     askAboutSelection(sql, 'explain');
   };
 
+  const handleMobileViewChange = (_: SyntheticEvent, nextView: QueryMobileView): void => {
+    setMobileView(nextView);
+  };
+
+  const hasResults = showGrid && tableData.columns.length > 0;
+  const showMobileTabs = isMobile && hasResults;
+
   return (
     <>
       <QueryEditorActionBar
@@ -163,33 +182,46 @@ export default function Query(): JSX.Element {
         onFormat={(): void => setValue(getQuery())}
       />
       <QueryErrorBanner />
-      <QueryContainerStyled height={windowSize.height}>
-        <QueryEditorBoxStyled>
-          <SqlEditor
-            ref={sqlEditorRef}
-            onRunQuery={() => void runQuery()}
-            onMount={(): void => setShowGrid(true)}
-            onChange={handleUpdateState}
-            onAiSelection={(sql, action) => askAboutSelection(sql, action)}
-            hasQueryError={!!lastQueryError}
-            autocomplete={
-              autocomplete ?? {
-                databases: [],
-                schemas: [],
-                tables: [],
-                columns: {},
-                views: []
+      {showMobileTabs && (
+        <Tabs value={mobileView} onChange={handleMobileViewChange} variant='fullWidth'>
+          <Tab value='editor' label={locales.query_editor} />
+          <Tab value='results' label={locales.query_results} />
+        </Tabs>
+      )}
+      <QueryContainerStyled height={isMobile ? '100%' : windowSize.height}>
+        {(!isMobile || mobileView === 'editor') && (
+          <QueryEditorBoxStyled>
+            <SqlEditor
+              ref={sqlEditorRef}
+              onRunQuery={() => void runQuery()}
+              onMount={(): void => setShowGrid(true)}
+              onChange={handleUpdateState}
+              onAiSelection={(sql, action) => askAboutSelection(sql, action)}
+              hasQueryError={!!lastQueryError}
+              autocomplete={
+                autocomplete ?? {
+                  databases: [],
+                  schemas: [],
+                  tables: [],
+                  columns: {},
+                  views: []
+                }
               }
-            }
-            value={value}
-          />
-        </QueryEditorBoxStyled>
-
-        {showGrid && tableData.columns.length > 0 && (
-          <ResizableYBox height={windowSize.heightNumber ? windowSize.heightNumber / 2 : 0} direction={'btt'}>
-            <DataGrid editable={false} rows={tableData.rows} columns={tableData.columns} loading={isDataFetching} />
-          </ResizableYBox>
+              value={value}
+            />
+          </QueryEditorBoxStyled>
         )}
+
+        {hasResults &&
+          (isMobile ? (
+            mobileView === 'results' && (
+              <DataGrid editable={false} rows={tableData.rows} columns={tableData.columns} loading={isDataFetching} />
+            )
+          ) : (
+            <ResizableYBox height={windowSize.heightNumber ? windowSize.heightNumber / 2 : 0} direction={'btt'}>
+              <DataGrid editable={false} rows={tableData.rows} columns={tableData.columns} loading={isDataFetching} />
+            </ResizableYBox>
+          ))}
       </QueryContainerStyled>
     </>
   );

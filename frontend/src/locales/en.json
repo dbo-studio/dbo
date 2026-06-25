@@ -1,5 +1,6 @@
 {
   "no_active_connection": "No active connection",
+  "connections_empty_hint": "Add a database connection to get started",
   "data": "Data",
   "structure": "Structure",
   "design": "Design",
@@ -195,6 +196,9 @@
   "right_sidebar": "Right sidebar",
   "open_editor": "Open editor",
   "connections": "Connections",
+  "workspace": "Workspace",
+  "query_editor": "Editor",
+  "query_results": "Results",
   "check": "Check",
   "you_are_up_to_date": "You are up to date!",
   "show_logs": "Show logs",

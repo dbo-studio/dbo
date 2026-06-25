@@ -13,8 +13,13 @@ import { Grid, IconButton, Stack, Tooltip } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 import type { JSX } from 'react';
 import ConnectionBox from './ConnectionBox/ConnectionBox';
+import { ConnectionInfoStyled } from './ConnectionInfo.styled';
 
-export default function ConnectionInfo(): JSX.Element {
+type ConnectionInfoProps = {
+  compact?: boolean;
+};
+
+export default function ConnectionInfo({ compact = false }: ConnectionInfoProps): JSX.Element {
   const queryClient = useQueryClient();
   const currentConnection = useCurrentConnection();
   const loading = useConnectionStore((state) => state.loading);
@@ -59,64 +64,60 @@ export default function ConnectionInfo(): JSX.Element {
   };
 
   return (
-    <Stack
-      direction={'row'}
-      sx={{
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}
-    >
+    <ConnectionInfoStyled direction={'row'}>
       <Settings open={showSettings.open} />
-      <Grid size={{ md: 3 }}>
-        <Stack
-          direction={'row'}
-          sx={{
-            justifyContent: 'flex-end'
-          }}
-        >
-          <Tooltip title={locales.connections}>
-            <IconButton data-testid='add-connection' onClick={(): void => updateUI({ showAddConnection: true })}>
-              <CustomIcon type={'connection'} size={'m'} />
-            </IconButton>
-          </Tooltip>
-          {/* <IconButton aria-label='lock'>
-            <CustomIcon type={'lock'} size={'m'} />
-          </IconButton> */}
-        </Stack>
-      </Grid>
+      {!compact && (
+        <Grid size={{ md: 3 }}>
+          <Stack
+            direction={'row'}
+            sx={{
+              justifyContent: 'flex-end'
+            }}
+          >
+            <Tooltip title={locales.connections}>
+              <IconButton data-testid='add-connection' onClick={(): void => updateUI({ showAddConnection: true })}>
+                <CustomIcon type={'connection'} size={'m'} />
+              </IconButton>
+            </Tooltip>
+          </Stack>
+        </Grid>
+      )}
       <Grid
-        size={{ md: 8 }}
+        size='grow'
         sx={{
-          mr: 1,
-          ml: 1
+          mr: compact ? 0 : 1,
+          ml: compact ? 0 : 1,
+          minWidth: 0
         }}
       >
         <ConnectionBox />
       </Grid>
-      <Grid size={{ md: 3 }}>
-        <Stack
-          direction={'row'}
-          sx={{
-            justifyContent: 'flex-start'
-          }}
-        >
-          <Tooltip title={locales.refresh}>
-            <IconButton
-              aria-label={'refresh'}
-              onClick={() => void handleRefresh()}
-              loading={loading === 'loading'}
-              disabled={loading === 'loading'}
-            >
-              <CustomIcon type={'refresh'} />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={locales.open_editor}>
-            <IconButton aria-label={'sql'} disabled={!currentConnection} onClick={handleAddEditorTab}>
-              <CustomIcon type={'sql'} size={'m'} />
-            </IconButton>
-          </Tooltip>
-        </Stack>
-      </Grid>
-    </Stack>
+      {!compact && (
+        <Grid size={{ md: 3 }}>
+          <Stack
+            direction={'row'}
+            sx={{
+              justifyContent: 'flex-start'
+            }}
+          >
+            <Tooltip title={locales.refresh}>
+              <IconButton
+                aria-label={'refresh'}
+                onClick={() => void handleRefresh()}
+                loading={loading === 'loading'}
+                disabled={loading === 'loading'}
+              >
+                <CustomIcon type={'refresh'} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={locales.open_editor}>
+              <IconButton aria-label={'sql'} disabled={!currentConnection} onClick={handleAddEditorTab}>
+                <CustomIcon type={'sql'} size={'m'} />
+              </IconButton>
+            </Tooltip>
+          </Stack>
+        </Grid>
+      )}
+    </ConnectionInfoStyled>
   );
 }

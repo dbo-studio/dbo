@@ -1,5 +1,5 @@
 import ObjectTreeView from '@/components/common/ObjectTreeView/ObjectTreeView.tsx';
-import { useWindowSize } from '@/hooks/useWindowSize.hook';
+import { getSidebarMaxWidth, useLayoutMode, useWindowSize } from '@/hooks';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Tab, Tabs } from '@mui/material';
@@ -24,8 +24,17 @@ const tabs = [
   }
 ];
 
-export default React.memo(function ExplorerContainer(): JSX.Element {
+type ExplorerContainerProps = {
+  overlay?: boolean;
+  fullPage?: boolean;
+};
+
+export default React.memo(function ExplorerContainer({
+  overlay = false,
+  fullPage = false
+}: ExplorerContainerProps): JSX.Element {
   const windowSize = useWindowSize();
+  const { isCompact } = useLayoutMode();
   const [selectedTabId, setSelectedTabId] = useState(0);
   const sidebar = useSettingStore((state) => state.ui.sidebar);
   const updateUI = useSettingStore((state) => state.updateUI);
@@ -39,22 +48,32 @@ export default React.memo(function ExplorerContainer(): JSX.Element {
     setSelectedTabId(id);
   };
 
+  const maxWidth = isCompact && windowSize.widthNumber ? getSidebarMaxWidth(windowSize.widthNumber) : 500;
+
+  const content = (
+    <ExplorerContainerStyled fullPage={fullPage}>
+      <Tabs variant='fullWidth' value={selectedTabId} onChange={onSelectedTabChanged}>
+        <Tab label={locales.items} />
+        <Tab label={locales.queries} />
+        <Tab label={locales.history} />
+      </Tabs>
+
+      <ExplorerTabPanelStyled role='tabpanel'>{selectedTabContent}</ExplorerTabPanelStyled>
+    </ExplorerContainerStyled>
+  );
+
+  if (overlay) {
+    return content;
+  }
+
   return (
     <ResizableXBox
       onChange={(width: number): void => updateUI({ sidebar: { ...sidebar, leftWidth: width } })}
       width={sidebar.leftWidth}
       direction='rtl'
-      maxWidth={500}
+      maxWidth={maxWidth}
     >
-      <ExplorerContainerStyled containerHeight={windowSize.heightNumber}>
-        <Tabs variant='fullWidth' value={selectedTabId} onChange={onSelectedTabChanged}>
-          <Tab label={locales.items} />
-          <Tab label={locales.queries} />
-          <Tab label={locales.history} />
-        </Tabs>
-
-        <ExplorerTabPanelStyled role='tabpanel'>{selectedTabContent}</ExplorerTabPanelStyled>
-      </ExplorerContainerStyled>
+      {content}
     </ResizableXBox>
   );
 });
