@@ -4,7 +4,7 @@ import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor';
 import { FormFieldOptionType, FormFieldType, FormValue } from '@/types/Tree';
 import { Box, Checkbox, Stack, Typography } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { SqlEditorContainerStyled } from './SimpleField.styled';
 
 export default function SimpleField({
@@ -21,6 +21,12 @@ export default function SimpleField({
   isArrayForm?: boolean;
 }): React.JSX.Element {
   const [localValue, setLocalValue] = useState<FormValue | FormValue[]>(field.value);
+  const [prevFieldValue, setPrevFieldValue] = useState(field.value);
+
+  if (field.value !== prevFieldValue) {
+    setPrevFieldValue(field.value);
+    setLocalValue(field.value);
+  }
 
   const handleSelectChange = (value: SelectInputOption | SelectInputOption[] | null): void => {
     if (field.type === 'multi-select') {
@@ -32,12 +38,6 @@ export default function SimpleField({
     }
   };
 
-  useEffect(() => {
-    if (field.value !== localValue) {
-      setLocalValue(field.value);
-    }
-  }, [field]);
-
   const fieldOptions = dynamicOptions || field.options || [];
 
   switch (field.type) {
@@ -46,7 +46,8 @@ export default function SimpleField({
         <Stack
           direction={'row'}
           sx={{
-            alignItems: 'center'
+            alignItems: 'center',
+            width: isArrayForm ? undefined : '100%'
           }}
         >
           <FieldInput
@@ -85,7 +86,7 @@ export default function SimpleField({
     case 'select':
     case 'multi-select':
       return (
-        <Box>
+        <Box sx={{ width: isArrayForm ? undefined : '100%' }}>
           <CreatableSelectInput
             isLoading={isLoadingDynamic}
             isMulti={field.type === 'multi-select'}
@@ -103,7 +104,7 @@ export default function SimpleField({
 
     case 'query':
       return (
-        <Box>
+        <Box sx={{ width: isArrayForm ? undefined : '100%' }}>
           {!isArrayForm && (
             <Typography variant='caption' color='textText'>
               {field.name}

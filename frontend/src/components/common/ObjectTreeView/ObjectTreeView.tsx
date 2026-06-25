@@ -7,7 +7,7 @@ import { useTreeStore } from '@/store/treeStore/tree.store';
 import { TreeNodeType } from '@/types/Tree';
 import { Box, LinearProgress } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
-import { type JSX, useEffect, useMemo, useRef, useState } from 'react';
+import { type JSX, useEffect, useRef, useState } from 'react';
 import { TreeViewContainerStyled, TreeViewContentStyled } from './ObjectTreeView.styled';
 import TreeNode from './TreeNode/TreeNode';
 
@@ -18,17 +18,17 @@ export default function ObjectTreeView(): JSX.Element {
   const treeError = useTreeStore((state) => state.treeError);
   const [menu, setMenu] = useState<MenuType[]>([]);
 
-  const getTree = useTreeStore((state) => state.getTree);
   const addLoadedParentId = useTreeStore((state) => state.addLoadedParentId);
-  const toggleIsLoading = useTreeStore((state) => state.toggleIsLoading);
   const reloadTree = useTreeStore((state) => state.reloadTree);
 
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
-  const parentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const parentRefsRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
 
-  const tree = useMemo(() => getTree(), [getTree(), currentConnection?.id]);
+  const tree = useTreeStore((state) =>
+    currentConnection?.id ? (state.tree[currentConnection.id] ?? null) : null
+  );
 
   const { mutateAsync: getChildrenMutation } = useMutation({
     mutationFn: api.tree.getTree
@@ -37,10 +37,8 @@ export default function ObjectTreeView(): JSX.Element {
   useEffect(() => {
     if (!treeError && !tree && !isLoading && currentConnection?.id) {
       reloadTree(true).catch((e) => console.log('🚀 ~ ObjectTreeView ~ e:', e));
-    } else if (isLoading) {
-      toggleIsLoading(false);
     }
-  }, [currentConnection?.id, tree, treeError]);
+  }, [currentConnection?.id, tree, treeError, isLoading, reloadTree]);
 
   const fetchChildren = async (parentId: string): Promise<TreeNodeType[]> => {
     try {
@@ -88,7 +86,7 @@ export default function ObjectTreeView(): JSX.Element {
           <TreeNode
             node={tree}
             fetchChildren={fetchChildren}
-            parentRefs={parentRefs}
+            parentRefsRef={parentRefsRef}
             nodeIndex={0}
             level={0}
             searchTerm={searchTerm}

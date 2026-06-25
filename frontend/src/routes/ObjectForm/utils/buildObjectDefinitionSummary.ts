@@ -84,9 +84,7 @@ export const readObjectNameFromForm = (
 
 const CONTAINER_SUFFIXES = new Set(['tableContainer', 'viewContainer', 'materializedViewContainer']);
 
-export const parseObjectNodeId = (
-  nodeId: string
-): { database?: string; schema?: string; objectName?: string } => {
+export const parseObjectNodeId = (nodeId: string): { database?: string; schema?: string; objectName?: string } => {
   const parts = nodeId.split('.');
   const last = parts[parts.length - 1];
 

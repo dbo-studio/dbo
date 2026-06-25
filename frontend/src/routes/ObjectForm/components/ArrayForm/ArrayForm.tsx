@@ -1,10 +1,23 @@
 import { useFormObjectStore } from '@/store/formObject/formObject.store';
 import { FormFieldType, FormValue } from '@/types/Tree';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import React, { memo, useCallback, useEffect } from 'react';
+import React, { memo, useCallback, useEffect, useRef } from 'react';
 import { useDynamicField } from '../../hooks/useDynamicField';
 import { ArrayFormContainerStyled } from './ArrayForm.styled';
 import ArrayRow from './ArrayRow';
+
+function getStableRowKey(rowKeys: WeakMap<FormFieldType[], string>, row: FormFieldType[]): string {
+  const existingKey = rowKeys.get(row);
+  if (existingKey) {
+    return existingKey;
+  }
+
+  const key = row.some((cell) => cell.added)
+    ? crypto.randomUUID()
+    : row.map((cell) => `${cell.id}:${String(cell.originalValue ?? '')}`).join('|');
+  rowKeys.set(row, key);
+  return key;
+}
 
 function ArrayForm({ objectTabId }: { objectTabId: string }): React.JSX.Element {
   const form = useFormObjectStore((state) => state.getFormData(objectTabId));
@@ -12,6 +25,7 @@ function ArrayForm({ objectTabId }: { objectTabId: string }): React.JSX.Element 
   const markRowDeleted = useFormObjectStore((state) => state.markRowDeleted);
   const { getDynamicFieldStateKey, refreshDynamicField, getDynamicOptions, isLoadingDynamicField } =
     useDynamicField(objectTabId);
+  const rowKeysRef = useRef(new WeakMap<FormFieldType[], string>());
 
   const refreshRowDynamicFields = useCallback(
     (row: FormFieldType[], rowIndex: number, changedFieldId?: string) => {
@@ -82,7 +96,7 @@ function ArrayForm({ objectTabId }: { objectTabId: string }): React.JSX.Element 
               return (
                 <ArrayRow
                   rowIndex={rowIndex}
-                  key={rowIndex}
+                  key={getStableRowKey(rowKeysRef.current, row)}
                   rows={row}
                   getDynamicFieldStateKey={getDynamicFieldStateKey}
                   getDynamicOptions={getDynamicOptions}

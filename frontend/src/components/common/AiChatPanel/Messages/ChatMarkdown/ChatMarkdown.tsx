@@ -5,7 +5,7 @@ import ChatDataTable from '../ChatDataTable/ChatDataTable';
 import { messageMarkdownSx } from '../messageMarkdownSx';
 import { splitStreamingMarkdown } from '../splitStreamingMarkdown';
 import { StreamingCursorStyled } from '../StreamingPreview/StreamingPreview.styled';
-import { splitChatContent } from '../../utils/chatTableContent';
+import { splitChatContent, type ChatContentSegment } from '../../utils/chatTableContent';
 
 type ChatMarkdownProps = {
   content: string;
@@ -13,20 +13,31 @@ type ChatMarkdownProps = {
   showCursor?: boolean;
 };
 
+const getSegmentKey = (segment: ChatContentSegment): string => {
+  if (segment.type === 'table') {
+    const headers = Object.keys(segment.rows[0] ?? {}).join('-');
+    return `table-${headers}-${segment.rows.length}-${JSON.stringify(segment.rows[0] ?? {})}`;
+  }
+
+  return `md-${segment.content.length}-${segment.content.slice(0, 64)}`;
+};
+
 const renderSegments = (text: string, theme: Theme): JSX.Element[] => {
   const segments = splitChatContent(text);
 
-  return segments.map((segment, index) => {
+  return segments.map((segment) => {
+    const key = getSegmentKey(segment);
+
     if (segment.type === 'table') {
-      return <ChatDataTable key={`table-${index}`} rows={segment.rows} />;
+      return <ChatDataTable key={key} rows={segment.rows} />;
     }
 
     if (!segment.content.trim()) {
-      return <Box key={`md-${index}`} />;
+      return <Box key={key} />;
     }
 
     return (
-      <Typography key={`md-${index}`} component='div' variant='body2' sx={messageMarkdownSx(theme)}>
+      <Typography key={key} component='div' variant='body2' sx={messageMarkdownSx(theme)}>
         <Markdown>{segment.content}</Markdown>
       </Typography>
     );

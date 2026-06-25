@@ -41,6 +41,13 @@ export default function Query(): JSX.Element {
 
   const [value, setValue] = useState('');
   const [showGrid, setShowGrid] = useState(false);
+  const [prevTabId, setPrevTabId] = useState(selectedTab?.id);
+
+  if (selectedTab?.id !== prevTabId) {
+    setPrevTabId(selectedTab?.id);
+    setValue(getQuery());
+  }
+
   const isDataFetching = useDataStore((state) => state.isDataFetching);
   const lastQueryError = useDataStore((state) => state.lastQueryError);
   const { askAboutSelection } = useAiBridge();
@@ -58,16 +65,33 @@ export default function Query(): JSX.Element {
     enabled: !!currentConnection
   });
 
-  useEffect(() => {
-    handleChangeValue();
+  const loadData = useCallback(async (): Promise<void> => {
+    setTableData({
+      rows: [],
+      columns: []
+    });
 
+    toggleDataFetching(true);
+    try {
+      const result = await loadDataFromIndexedDB();
+      if (result) {
+        setTableData(result);
+      }
+    } catch (error) {
+      console.debug('🚀 ~ loadData ~ error:', error);
+    }
+
+    toggleDataFetching(false);
+  }, [loadDataFromIndexedDB, toggleDataFetching]);
+
+  useEffect(() => {
     const pending = useDataStore.getState().pendingEditorQueryRun;
     if (pending?.tabId === selectedTab?.id) {
       return;
     }
 
     void loadData().catch((e) => console.log('🚀 ~ Query ~ e:', e));
-  }, [selectedTab?.id, autocomplete]);
+  }, [selectedTab?.id, autocomplete, loadData]);
 
   const applyQueryResult = useCallback((res: RunQueryResponseType | undefined): void => {
     const columns = res?.columns.filter((column) => column.isActive) ?? [];
@@ -110,31 +134,8 @@ export default function Query(): JSX.Element {
     void runPending();
   }, [pendingEditorQueryRun, selectedTab?.id, clearPendingEditorQueryRun, executeRawQuery]);
 
-  const handleChangeValue = (): void => {
-    setValue(getQuery());
-  };
-
   const handleUpdateState = (query: string): void => {
     updateQuery(query);
-  };
-
-  const loadData = async (): Promise<void> => {
-    setTableData({
-      rows: [],
-      columns: []
-    });
-
-    toggleDataFetching(true);
-    try {
-      const result = await loadDataFromIndexedDB();
-      if (result) {
-        setTableData(result);
-      }
-    } catch (error) {
-      console.debug('🚀 ~ loadData ~ error:', error);
-    }
-
-    toggleDataFetching(false);
   };
 
   const runQuery = async (): Promise<void> => {
@@ -159,7 +160,7 @@ export default function Query(): JSX.Element {
         aiExplainDisabled={!value.trim()}
         databases={autocomplete?.databases ?? []}
         schemas={autocomplete?.schemas ?? []}
-        onFormat={(): void => handleChangeValue()}
+        onFormat={(): void => setValue(getQuery())}
       />
       <QueryErrorBanner />
       <QueryContainerStyled height={windowSize.height}>

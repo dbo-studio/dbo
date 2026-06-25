@@ -24,6 +24,7 @@ export type UISettings = {
   showSettings: {
     open: boolean;
     tab: number;
+    aiTab?: 'providers' | 'mcp';
   };
   titleBar: TitleBarType;
 };

@@ -6,34 +6,43 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { DataTabType } from '@/types';
 import { Box } from '@mui/material';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { InlineQueryStackStyled, SubmitButtonStyled } from './InlineQuery.styled';
 
 export default function InlineQuery() {
   const selectedTab = useSelectedTab<DataTabType>();
   const columns = useDataStore((state) => state.columns);
-  const [value, setValue] = useState(selectedTab?.inlineQuery ?? '');
+  const tabInlineQuery = selectedTab?.inlineQuery ?? '';
+  const [value, setValue] = useState(tabInlineQuery);
+  const [prevTabId, setPrevTabId] = useState(selectedTab?.id);
+
+  if (selectedTab?.id !== prevTabId) {
+    setPrevTabId(selectedTab?.id);
+    setValue(tabInlineQuery);
+  }
 
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
   const runQuery = useDataStore((state) => state.runQuery);
 
-  const handleUpdateQuery = useCallback((v: string) => {
-    const tab = useTabStore.getState().selectedTab<DataTabType>();
-    if (!tab) return;
-    updateSelectedTab({
-      ...tab,
-      inlineQuery: v
-    });
-  }, []);
+  const handleUpdateQuery = useCallback(
+    (v: string) => {
+      const tab = useTabStore.getState().selectedTab<DataTabType>();
+      if (!tab) return;
+      updateSelectedTab({
+        ...tab,
+        inlineQuery: v
+      });
+    },
+    [updateSelectedTab]
+  );
 
-  useEffect(() => {
-    setValue(selectedTab?.inlineQuery ?? '');
-  }, [selectedTab?.id]);
-
-  const handleRunQuery = useCallback(async (query?: string) => {
-    if (query !== undefined) handleUpdateQuery(query);
-    await runQuery();
-  }, []);
+  const handleRunQuery = useCallback(
+    async (query?: string) => {
+      if (query !== undefined) handleUpdateQuery(query);
+      await runQuery();
+    },
+    [handleUpdateQuery, runQuery]
+  );
 
   return (
     <InlineQueryStackStyled direction='row'>

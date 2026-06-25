@@ -51,7 +51,7 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
   useEffect(() => {
     if (!show) return;
     clearCurrentConnection();
-  }, [show]);
+  }, [show, clearCurrentConnection]);
 
   const handleClose = (): void => {
     setPassword('');

@@ -1,4 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { TabMode } from '@/core/enums';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -13,22 +14,13 @@ type ChatEmptyStateProps = {
 export default function ChatEmptyState({ onSelectPrompt }: ChatEmptyStateProps) {
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const tabs = useTabStore((state) => state.tabs);
+  const getQuery = useTabStore((state) => state.getQuery);
   const context = useAiStore((state) => state.context);
 
-  const promptKeys = useMemo(
-    () => getChatPromptSuggestions(),
-    [
-      selectedTabId,
-      tabs,
-      context.database,
-      context.schema,
-      context.tables,
-      context.views,
-      context.querySnippet,
-      context.selectedQuery,
-      context.queryError
-    ]
-  );
+  const selectedTab = tabs.find((tab) => tab.id === selectedTabId);
+  const editorQuery = selectedTab?.mode === TabMode.Query ? (getQuery(selectedTab.id) || '').trim() : '';
+
+  const promptKeys = useMemo(() => getChatPromptSuggestions(context, editorQuery), [context, editorQuery]);
 
   return (
     <Stack

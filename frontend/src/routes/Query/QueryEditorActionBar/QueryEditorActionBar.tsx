@@ -1,6 +1,6 @@
 import type { Theme } from '@mui/material';
 import { Grid, useMediaQuery } from '@mui/material';
-import { type JSX, useEffect, useState } from 'react';
+import { type JSX, useState } from 'react';
 import type { QueryEditorActionBarProps } from '../types';
 import { QueryEditorActionBarStackStyled } from './QueryEditorActionBar.styled';
 import QueryEditorActions from './QueryEditorActions/QueryEditorActions';
@@ -19,15 +19,13 @@ export default function QueryEditorActionBar({
   const [localSchemas, setLocalSchemas] = useState<string[]>([]);
   const matches = useMediaQuery((theme: Theme) => theme.breakpoints.up('sm'));
 
-  useEffect(() => {
-    if (localDatabases.length === 0) {
-      setLocalDatabases(databases);
-    }
+  if (localDatabases.length === 0 && databases.length > 0) {
+    setLocalDatabases(databases);
+  }
 
-    if (localSchemas.length === 0) {
-      setLocalSchemas(schemas);
-    }
-  }, [databases, localDatabases.length, localSchemas.length, schemas]);
+  if (localSchemas.length === 0 && schemas.length > 0) {
+    setLocalSchemas(schemas);
+  }
 
   return (
     <QueryEditorActionBarStackStyled direction='row'>

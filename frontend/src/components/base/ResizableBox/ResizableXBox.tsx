@@ -1,5 +1,5 @@
 import type { EventFor } from '@/types';
-import { type JSX, useEffect, useRef, useState } from 'react';
+import { type JSX, useCallback, useEffect, useRef, useState } from 'react';
 import { ResizableXBoxStyled } from './ResizableXBox.styled';
 import ResizableToggle from './ResizableToggle';
 import type { ResizableBoxXProps } from './types';
@@ -16,13 +16,15 @@ export default function ResizableXBox({
   const [initialX, setInitialX] = useState(0);
   const currentWidthRef = useRef(boxWidth);
 
+  currentWidthRef.current = boxWidth;
+
   const handleMouseDown = (event: EventFor<'div', 'onMouseDown'>): void => {
     event.preventDefault();
     setIsResizing(true);
     setInitialX(event.clientX);
   };
 
-  const handleMouseUp = (): void => {
+  const handleMouseUp = useCallback((): void => {
     if (!isResizing) return;
 
     if (onChange) {
@@ -34,23 +36,26 @@ export default function ResizableXBox({
       }
     }
     setIsResizing(false);
-  };
+  }, [isResizing, maxWidth, onChange]);
 
-  const handleMouseMove = (event: MouseEvent): void => {
-    if (!isResizing) return;
+  const handleMouseMove = useCallback(
+    (event: MouseEvent): void => {
+      if (!isResizing) return;
 
-    const newWidth =
-      direction === 'ltr'
-        ? Math.max(boxWidth - (event.clientX - initialX), 50)
-        : Math.max(boxWidth + (event.clientX - initialX), 50);
+      const newWidth =
+        direction === 'ltr'
+          ? Math.max(boxWidth - (event.clientX - initialX), 50)
+          : Math.max(boxWidth + (event.clientX - initialX), 50);
 
-    if (maxWidth && newWidth > maxWidth) return;
+      if (maxWidth && newWidth > maxWidth) return;
 
-    setBoxWidth(newWidth);
-    currentWidthRef.current = newWidth;
+      setBoxWidth(newWidth);
+      currentWidthRef.current = newWidth;
 
-    setInitialX(event.clientX);
-  };
+      setInitialX(event.clientX);
+    },
+    [boxWidth, direction, initialX, isResizing, maxWidth]
+  );
 
   useEffect(() => {
     if (isResizing) {
@@ -65,7 +70,7 @@ export default function ResizableXBox({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isResizing]);
+  }, [handleMouseMove, handleMouseUp, isResizing]);
 
   return (
     <ResizableXBoxStyled boxWidth={boxWidth}>

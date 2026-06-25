@@ -1,12 +1,11 @@
 import { handleRowChangeLog } from '@/core/utils';
 import { useDataStore } from '@/store/dataStore/data.store';
 import type { RowType } from '@/types';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import type { CellEditingReturn } from '../types';
 
 export const useCellEditing = (row: RowType, columnId: string, cellValue: string): CellEditingReturn => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
   const updateRow = useDataStore((state) => state.updateRow);
 
@@ -34,14 +33,6 @@ export const useCellEditing = (row: RowType, columnId: string, cellValue: string
     },
     [row, columnId, cellValue, updateEditedRows, updateRow]
   );
-
-  useEffect((): (() => void) => {
-    return (): void => {
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current);
-      }
-    };
-  }, []);
 
   return {
     inputRef,

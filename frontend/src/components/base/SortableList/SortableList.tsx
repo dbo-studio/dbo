@@ -4,7 +4,7 @@ import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type D
 import { restrictToHorizontalAxis, restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { JSX } from 'react';
-import { useCallback } from 'react';
+import { Fragment, useCallback } from 'react';
 import { SortableListContainerStyled } from './SortableList.styled';
 import type { SortableListProps } from './types';
 
@@ -61,8 +61,6 @@ function SortableList<T>({
     onDragCancel?.();
   }, [onDragCancel]);
 
-  const renderedItems = items.map((item, index) => renderItem(item, index));
-
   return (
     <DndContext
       sensors={sensors}
@@ -74,7 +72,9 @@ function SortableList<T>({
     >
       <SortableContext items={itemIds} strategy={strategy}>
         <SortableListContainerStyled className={className} direction={direction}>
-          {renderedItems}
+          {items.map((item, index) => (
+            <Fragment key={getItemId(item)}>{renderItem(item, index)}</Fragment>
+          ))}
         </SortableListContainerStyled>
       </SortableContext>
     </DndContext>
@@ -83,4 +83,4 @@ function SortableList<T>({
 
 SortableList.displayName = 'SortableList';
 
-export default SortableList as typeof SortableList;
+export default SortableList;

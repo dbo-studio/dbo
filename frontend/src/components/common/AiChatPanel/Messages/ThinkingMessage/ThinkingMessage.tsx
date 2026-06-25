@@ -3,7 +3,7 @@ import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { Box, Collapse, Stack, Typography } from '@mui/material';
 import { keyframes } from '@mui/material/styles';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ThinkingMessageStyled } from './ThinkingMessage.styled';
 
 const pulse = keyframes`
@@ -25,16 +25,13 @@ export default function ThinkingMessage({
   defaultCollapsed = false
 }: ThinkingMessageProps) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed && !isLive);
+  const [prevProps, setPrevProps] = useState({ defaultCollapsed, isLive });
   const streaming = useAiStore((state) => state.streaming);
 
-  useEffect(() => {
-    if (!isLive && defaultCollapsed) {
-      setCollapsed(true);
-    }
-    if (isLive) {
-      setCollapsed(false);
-    }
-  }, [defaultCollapsed, isLive]);
+  if (prevProps.defaultCollapsed !== defaultCollapsed || prevProps.isLive !== isLive) {
+    setPrevProps({ defaultCollapsed, isLive });
+    setCollapsed(isLive ? false : defaultCollapsed);
+  }
 
   const displayDurationMs = durationMs ?? streaming.thinkingDurationMs;
   const seconds = displayDurationMs ? Math.max(1, Math.round(displayDurationMs / 1000)) : undefined;

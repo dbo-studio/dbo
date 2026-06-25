@@ -7,7 +7,7 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import type { DataTabType, TabType } from '@/types';
 import { Checkbox, Stack, Typography, useTheme } from '@mui/material';
 import type { JSX } from 'react';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { SelectTableHeader, SortableTableHeader, StyledTableHead, StyledTableRow } from '../DataGrid.styled';
 import DataGridResizer from '../DataGridResizer/DataGridResizer';
 import type { DataGridTableHeaderRowProps } from '../types';
@@ -29,7 +29,7 @@ export default function DataGridTableHeaderRow({
   const updateSorts = useTabStore((s) => s.updateSorts);
   const updateSelectedTab = useTabStore((s) => s.updateSelectedTab);
 
-  const sorts = selectedTab?.sorts ?? [];
+  const sorts = useMemo(() => selectedTab?.sorts ?? [], [selectedTab?.sorts]);
 
   const getColumnSort = useCallback(
     (column: string) => sorts.find((s) => s.column === column && s.isActive) ?? null,

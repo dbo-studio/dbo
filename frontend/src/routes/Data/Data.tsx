@@ -23,6 +23,12 @@ export default function Data(): JSX.Element {
   const [showColumns, setShowColumns] = useState(false);
 
   const selectedTabId = useTabStore((state) => state.selectedTabId);
+  const [prevSelectedTabId, setPrevSelectedTabId] = useState(selectedTabId);
+
+  if (selectedTabId !== prevSelectedTabId) {
+    setPrevSelectedTabId(selectedTabId);
+    setIsGridReady(false);
+  }
   const reRunQuery = useDataStore((state) => state.reRunQuery);
 
   const rows = useDataStore((state) => state.rows ?? EMPTY_ROWS);
@@ -65,9 +71,7 @@ export default function Data(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    setIsGridReady(false);
     if (!isMounted || !selectedTabId) {
-      setIsGridReady(true);
       return;
     }
 
@@ -98,7 +102,7 @@ export default function Data(): JSX.Element {
       <DataContentStyled>
         {showColumns && <Columns />}
         {activeColumns.length > 0 &&
-          (isGridReady ? (
+          (!isMounted || !selectedTabId || isGridReady ? (
             <DataGrid rows={rows} columns={activeColumns} loading={false} editable={selectedTab?.editable} />
           ) : (
             <DataLoadingStyled>

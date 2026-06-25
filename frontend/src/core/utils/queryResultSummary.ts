@@ -15,9 +15,7 @@ const formatCellForMarkdown = (value: unknown): string => {
 };
 
 const escapeMarkdownCell = (value: unknown): string =>
-  formatCellForMarkdown(value)
-    .replace(/\|/g, '\\|')
-    .replace(/\n/g, ' ');
+  formatCellForMarkdown(value).replace(/\|/g, '\\|').replace(/\n/g, ' ');
 
 const formatSampleRowsTable = (rows: Record<string, unknown>[], maxRows = 3): string => {
   if (rows.length === 0) {
@@ -32,7 +30,9 @@ const formatSampleRowsTable = (rows: Record<string, unknown>[], maxRows = 3): st
   const sample = rows.slice(0, maxRows);
   const header = `| ${columns.join(' | ')} |`;
   const separator = `| ${columns.map(() => '---').join(' | ')} |`;
-  const body = sample.map((row) => `| ${columns.map((column) => escapeMarkdownCell(row[column])).join(' | ')} |`).join('\n');
+  const body = sample
+    .map((row) => `| ${columns.map((column) => escapeMarkdownCell(row[column])).join(' | ')} |`)
+    .join('\n');
 
   return `${header}\n${separator}\n${body}`;
 };

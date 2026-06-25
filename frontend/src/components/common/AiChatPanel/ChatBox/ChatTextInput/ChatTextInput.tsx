@@ -1,7 +1,7 @@
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { Box, List, ListItemButton, Paper } from '@mui/material';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { ChatTextInputProps } from '../../types';
 import type { AutoCompleteType } from '@/types';
 import { ChatTextInputStyled } from './ChatTextInput.styled';
@@ -37,9 +37,17 @@ export default function ChatTextInput({ loading, onSend, autocomplete }: ChatTex
   const updateContext = useAiStore((state) => state.updateContext);
   const messageEdit = useAiStore((state) => state.messageEdit);
 
-  const [input, setInput] = useState(context.input);
+  const [input, setInput] = useState(() => context.input);
   const [mention, setMention] = useState<MentionState | null>(null);
   const [cursorPos, setCursorPos] = useState(0);
+  const [prevMessageEdit, setPrevMessageEdit] = useState(messageEdit);
+
+  if (messageEdit !== prevMessageEdit) {
+    setPrevMessageEdit(messageEdit);
+    setInput(context.input);
+  } else if (context.input === '' && input !== '') {
+    setInput('');
+  }
 
   const mentionOptions = useMemo(
     () => buildMentionOptions(autocomplete, mention?.query ?? ''),
@@ -76,16 +84,6 @@ export default function ChatTextInput({ loading, onSend, autocomplete }: ChatTex
       onSend();
     }
   };
-
-  useEffect(() => {
-    if (context.input === '') {
-      setInput('');
-    }
-  }, [context.input]);
-
-  useEffect(() => {
-    setInput(context.input);
-  }, [messageEdit]);
 
   return (
     <Box sx={{ flex: 1, overflowY: 'scroll', position: 'relative' }}>

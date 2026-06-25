@@ -17,7 +17,7 @@ export default function Theme(): JSX.Element {
     if (theme.isDark === undefined && prefersDarkMode) {
       updateTheme({ isDark: prefersDarkMode });
     }
-  }, []);
+  }, [theme.isDark, prefersDarkMode, updateTheme]);
 
   const handleToggle = (isDark: boolean): void => {
     updateTheme({

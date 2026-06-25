@@ -16,6 +16,7 @@ export default function SyntaxHighlighter({ value, lang = 'sql' }: SyntaxHighlig
 
   return (
     <SyntaxHighlighterStyled>
+      {/* eslint-disable-next-line @eslint-react/dom-no-dangerously-set-innerhtml -- Shiki renders trusted syntax HTML */}
       <div dangerouslySetInnerHTML={{ __html: html }} />
     </SyntaxHighlighterStyled>
   );

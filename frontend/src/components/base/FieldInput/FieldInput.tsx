@@ -1,33 +1,42 @@
 import type { EventFor } from '@/types';
 import { Box, Typography, useTheme } from '@mui/material';
 import type React from 'react';
-import { forwardRef, type JSX, useEffect, useState } from 'react';
+import { type JSX, useState } from 'react';
 import { FieldInputInputStyled, FieldInputLabelRowStyled } from './FieldInput.styled';
 import type { FieldInputProps } from './types';
 
-export default forwardRef(function FieldInput(
-  props: FieldInputProps,
-  forRef: React.Ref<HTMLInputElement>
-): JSX.Element {
+export default function FieldInput({
+  ref,
+  label,
+  helpertext,
+  typelabel,
+  value: valueProp,
+  type,
+  onChange,
+  onBlur,
+  error,
+  margin,
+  sx,
+  mb,
+  ...props
+}: FieldInputProps & { ref?: React.Ref<HTMLInputElement> }): JSX.Element {
   const theme = useTheme();
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState(() => valueProp as string);
+  const [prevSync, setPrevSync] = useState({ type, value: valueProp });
 
-  useEffect(() => {
-    setValue(props.value as '');
-  }, [props.type, props.value]);
+  if (prevSync.type !== type || prevSync.value !== valueProp) {
+    setPrevSync({ type, value: valueProp });
+    setValue(valueProp as string);
+  }
 
   const handleOnChange = (e: EventFor<'input', 'onChange'>): void => {
     setValue(e.target.value);
-    if (props.onChange) {
-      props.onChange(e);
-    }
+    onChange?.(e);
   };
 
   const handleOnBlur = (e: EventFor<'input', 'onBlur'>): void => {
     setValue(e.target.value);
-    if (props.onBlur) {
-      props.onBlur(e);
-    }
+    onBlur?.(e);
   };
 
   return (
@@ -39,35 +48,36 @@ export default forwardRef(function FieldInput(
     >
       <FieldInputLabelRowStyled>
         <Typography color={'textText'} variant='caption'>
-          {props.label}
+          {label}
         </Typography>
         <Typography color={'textText'} variant='caption'>
-          {props.typelabel}
+          {typelabel}
         </Typography>
       </FieldInputLabelRowStyled>
       <FieldInputInputStyled
-        ref={forRef}
+        ref={ref}
         spellCheck={'false'}
         value={value}
         autoComplete='off'
         onBlur={handleOnBlur}
         onChange={handleOnChange}
-        error={props.error}
-        margin={props.margin}
-        sx={props.sx}
+        error={error}
+        margin={margin}
+        sx={sx}
+        type={type}
         {...props}
       />
-      {props.helpertext && (
+      {helpertext && (
         <Typography
           color={'error'}
           variant='caption'
           sx={{
-            mb: theme.spacing(props.mb ?? 0)
+            mb: theme.spacing(mb ?? 0)
           }}
         >
-          {props.helpertext}
+          {helpertext}
         </Typography>
       )}
     </Box>
   );
-});
+}

@@ -7,8 +7,12 @@ import McpPanel from './McpPanel/McpPanel';
 
 type AiSettingsTab = 'providers' | 'mcp';
 
-export default function AiPanel() {
-  const [tab, setTab] = useState<AiSettingsTab>('providers');
+type AiPanelProps = {
+  initialTab?: AiSettingsTab;
+};
+
+export default function AiPanel({ initialTab = 'providers' }: AiPanelProps) {
+  const [tab, setTab] = useState<AiSettingsTab>(initialTab);
 
   return (
     <>

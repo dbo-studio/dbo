@@ -39,7 +39,7 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
       setCurrentFilter(newFilter);
       return newFilter;
     },
-    []
+    [currentFilter]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {

@@ -3,22 +3,36 @@ import {
   ResizeHandle
 } from '@/components/base/Modal/ResizableModal/ ResizableModal.styled.ts';
 import { Box, Divider, Typography, useTheme } from '@mui/material';
-import { type JSX, useEffect, useState } from 'react';
+import { type JSX, useEffect, useRef, useState } from 'react';
 import { ModalStyled } from '../Modal.styled.ts';
 import type { ResizableModalProps } from '../types.ts';
 
+const DEFAULT_DIMENSIONS = { width: 400, height: 400 };
+
 export default function ResizableModal({ open, title, children, onClose, onResize }: ResizableModalProps): JSX.Element {
   const theme = useTheme();
-  const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
+  const [dimensions, setDimensions] = useState(DEFAULT_DIMENSIONS);
   const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
   const [isResizing, setIsResizing] = useState(false);
+  const dimensionsRef = useRef(dimensions);
+  const onResizeRef = useRef(onResize);
+  const prevOpenRef = useRef(open);
+
+  dimensionsRef.current = dimensions;
+  onResizeRef.current = onResize;
+
+  if (open && !prevOpenRef.current) {
+    setDimensions(DEFAULT_DIMENSIONS);
+  }
+  prevOpenRef.current = open;
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent): void => {
       if (!isResizing) return;
 
-      const newWidth = e.clientX - startPosition.x + dimensions.width / 2;
-      const newHeight = e.clientY - startPosition.y + dimensions.height / 2;
+      const currentDimensions = dimensionsRef.current;
+      const newWidth = e.clientX - startPosition.x + currentDimensions.width / 2;
+      const newHeight = e.clientY - startPosition.y + currentDimensions.height / 2;
 
       setDimensions({
         width: Math.max(newWidth, 300),
@@ -28,7 +42,8 @@ export default function ResizableModal({ open, title, children, onClose, onResiz
 
     const handleMouseUp = (): void => {
       setIsResizing(false);
-      onResize(dimensions.width, dimensions.height);
+      const { width, height } = dimensionsRef.current;
+      onResizeRef.current?.(width, height);
     };
 
     if (isResizing) {
@@ -40,7 +55,7 @@ export default function ResizableModal({ open, title, children, onClose, onResiz
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isResizing, startPosition, dimensions]);
+  }, [isResizing, startPosition]);
 
   const handleResizeStart = (e: React.MouseEvent<HTMLDivElement>): void => {
     const rect = (e.currentTarget as HTMLElement).parentElement?.getBoundingClientRect();
@@ -51,12 +66,6 @@ export default function ResizableModal({ open, title, children, onClose, onResiz
     setIsResizing(true);
     e.preventDefault();
   };
-
-  useEffect(() => {
-    if (open) {
-      setDimensions({ width: 400, height: 400 });
-    }
-  }, [open]);
 
   return (
     <ModalStyled open={open} onClose={(): void => onClose?.()}>

@@ -97,8 +97,8 @@ export default function Messages({ messages, loading, onLoadMore, onSelectPrompt
       {showEmpty && onSelectPrompt && <ChatEmptyState onSelectPrompt={onSelectPrompt} />}
 
       <MessagesListStyled>
-        {messages.map((message, index) => (
-          <MessageGroupStyled key={`${message.role}-${index}-${message.createdAt}`}>
+        {messages.map((message) => (
+          <MessageGroupStyled key={`${message.role}-${message.createdAt}-${message.content.slice(0, 48)}`}>
             {message.thinking?.content && (
               <ThinkingMessage
                 content={message.thinking.content}
@@ -113,9 +113,7 @@ export default function Messages({ messages, loading, onLoadMore, onSelectPrompt
         {streaming.status === 'streaming' && (
           <MessageGroupStyled>
             <ToolStepsMessage />
-            {(streaming.thinkingContent ||
-              streaming.statusLabel ||
-              !streaming.previewContent) && (
+            {(streaming.thinkingContent || streaming.statusLabel || !streaming.previewContent) && (
               <ThinkingMessage
                 content={streaming.thinkingContent || streaming.statusLabel || ''}
                 isLive={!streaming.previewContent}

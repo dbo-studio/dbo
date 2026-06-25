@@ -21,7 +21,7 @@ import { useSwitchTab } from '../../hooks/useSwitchTab';
 
 export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
   const selectedTabId = useTabStore((state) => state.selectedTabId);
-  const tabRefs = useRef<Record<string, HTMLElement>>({});
+  const tabRefsRef = useRef<Record<string, HTMLElement>>({});
 
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
   const { handleSwitchTab } = useSwitchTab();
@@ -46,8 +46,8 @@ export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
 
   useEffect(() => {
     const tabId = selectedTabId;
-    if (tabId && tabRefs.current?.[tabId]) {
-      tabRefs.current[tabId].scrollIntoView({
+    if (tabId && tabRefsRef.current?.[tabId]) {
+      tabRefsRef.current[tabId].scrollIntoView({
         behavior: 'smooth',
         block: 'nearest',
         inline: 'center'
@@ -59,7 +59,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
     <Box
       onContextMenu={handleContextMenu}
       ref={(el: HTMLElement): void => {
-        tabRefs.current[tab.id] = el;
+        tabRefsRef.current[tab.id] = el;
       }}
     >
       <SortableItem id={tab.id} onClick={handleTabClick}>

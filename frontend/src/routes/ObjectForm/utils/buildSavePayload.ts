@@ -108,7 +108,9 @@ const buildTablePayload = (formData: FormObjectData, action: string): Record<str
   if (action === 'editTable' && !hasChanges) return null;
 
   const newRecord =
-    formData.general.length > 0 ? buildGeneralTableRecord(formData.general) : rowToRecord(formData.data[0] ?? [], 'table');
+    formData.general.length > 0
+      ? buildGeneralTableRecord(formData.general)
+      : rowToRecord(formData.data[0] ?? [], 'table');
   const oldRecord =
     formData.general.length > 0
       ? buildGeneralTableRecord(formData.general, true)

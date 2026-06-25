@@ -42,7 +42,17 @@ export const useFormData = (tabId: string | null): UseFormDataReturn => {
         setFormObject(objectTabId, response);
       }
     })();
-  }, [tabId, selectedTab?.id, selectedTab?.nodeId, selectedTab?.action, objectTabId, currentConnection?.id]);
+  }, [
+    tabId,
+    selectedTab?.id,
+    selectedTab?.nodeId,
+    selectedTab?.action,
+    objectTabId,
+    currentConnection?.id,
+    formDataMutation,
+    getFormData,
+    setFormObject
+  ]);
 
   return {
     isLoading: isPending,

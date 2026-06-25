@@ -2,7 +2,7 @@ import { ConfirmModalStyled } from '@/components/base/Modal/ConfirmModal/Confirm
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store.ts';
 import { Box, Button, Typography, useTheme } from '@mui/material';
-import { type JSX, useEffect, useState } from 'react';
+import { type JSX, useMemo } from 'react';
 import { ModalStyled } from '../Modal.styled.ts';
 
 export default function ConfirmModal(): JSX.Element {
@@ -14,31 +14,32 @@ export default function ConfirmModal(): JSX.Element {
   const onSuccess = useConfirmModalStore((state) => state.onSuccess);
   const close = useConfirmModalStore((state) => state.close);
 
-  const [style, setStyle] = useState({});
   const theme = useTheme();
 
-  useEffect(() => {
+  const style = useMemo(() => {
     if (mode === 'danger') {
-      setStyle({
+      return {
         background: theme.palette.background.danger,
         color: theme.palette.text.danger
-      });
+      };
     }
 
     if (mode === 'success') {
-      setStyle({
+      return {
         background: theme.palette.background.success,
         color: theme.palette.text.success
-      });
+      };
     }
 
     if (mode === 'warning') {
-      setStyle({
+      return {
         background: theme.palette.background.warning,
         color: theme.palette.text.warning
-      });
+      };
     }
-  }, [mode]);
+
+    return {};
+  }, [mode, theme]);
 
   const handleCancel = (): void => {
     onCancel?.();

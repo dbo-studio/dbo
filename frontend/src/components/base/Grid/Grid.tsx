@@ -4,7 +4,7 @@ import {
   type CSSProperties,
   type JSX,
   type ReactNode,
-  useContext,
+  use,
   useEffect,
   useMemo,
   useRef,
@@ -149,7 +149,7 @@ export default function Grid({
   const resolvedAutoFlow = resolveResponsiveValue(autoFlow, activeBreakpoint);
 
   return (
-    <GridBreakpointContext.Provider value={activeBreakpoint}>
+    <GridBreakpointContext value={activeBreakpoint}>
       <Box
         ref={gridRef}
         {...props}
@@ -167,12 +167,12 @@ export default function Grid({
       >
         {children}
       </Box>
-    </GridBreakpointContext.Provider>
+    </GridBreakpointContext>
   );
 }
 
 export function GridItem({ children, span, column, row, sx, ...props }: GridItemProps): JSX.Element {
-  const activeBreakpoint = useContext(GridBreakpointContext);
+  const activeBreakpoint = use(GridBreakpointContext);
   const gridColumn = getGridColumnValue(span, column, activeBreakpoint);
   const gridRow = resolveResponsiveValue(row, activeBreakpoint);
 

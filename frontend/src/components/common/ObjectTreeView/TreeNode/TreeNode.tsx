@@ -8,12 +8,12 @@ import {
 import type { TreeNodeProps } from '@/components/common/ObjectTreeView/TreeNode/types';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { TreeNodeType } from '@/types/Tree';
-import { Fragment, type JSX, useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, type JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useActionDetection } from './hooks/useActionDetection';
 
 export default function TreeNode({
   node: initialNode,
-  parentRefs = { current: new Map() },
+  parentRefsRef = { current: new Map() },
   nodeIndex = 0,
   level = 0,
   searchTerm = '',
@@ -22,35 +22,36 @@ export default function TreeNode({
   onFocusChange,
   onContextMenu
 }: TreeNodeProps): JSX.Element {
-  const [node, setNode] = useState<TreeNodeType>(initialNode);
+  const [localChildren, setLocalChildren] = useState<TreeNodeType[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const { isNodeExpanded, expandNode, collapseNode, setNodeChildren } = useTreeStore();
 
+  const node = useMemo(
+    () => ({
+      ...initialNode,
+      children: localChildren ?? initialNode.children
+    }),
+    [initialNode, localChildren]
+  );
+
   const isExpanded = isNodeExpanded(node.id);
   const isSelected = node.id === selectedNodeId;
 
   useEffect(() => {
-    setNode(initialNode);
-  }, [initialNode]);
-
-  useEffect(() => {
+    const parentRefsMap = parentRefsRef.current;
     if (nodeRef.current) {
-      parentRefs.current.set(node.id, nodeRef.current);
+      parentRefsMap.set(node.id, nodeRef.current);
     }
     return (): void => {
-      parentRefs.current.delete(node.id);
+      parentRefsMap.delete(node.id);
     };
-  }, [node.id, parentRefs]);
+  }, [node.id, parentRefsRef]);
 
   const handleSetChildren = (newChildren: TreeNodeType[]): void => {
     const children = Array.isArray(newChildren) ? newChildren : [];
-    setNode((prev) => ({
-      ...prev,
-      children: Array.isArray(children) ? children : []
-    }));
-
+    setLocalChildren(Array.isArray(children) ? children : []);
     setNodeChildren(node.id, Array.isArray(children) ? children : []);
   };
 
@@ -76,7 +77,7 @@ export default function TreeNode({
     setIsLoading,
     setIsFocused,
     fetchChildren,
-    parentRefs,
+    parentRefsRef,
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     nodeRef,
@@ -93,7 +94,7 @@ export default function TreeNode({
       event.stopPropagation();
       onContextMenu(event, menu);
     },
-    [node, onContextMenu]
+    [menu, onContextMenu]
   );
 
   const matchesSearch = useCallback(
@@ -141,7 +142,7 @@ export default function TreeNode({
               key={child.id}
               node={child}
               fetchChildren={fetchChildren}
-              parentRefs={parentRefs}
+              parentRefsRef={parentRefsRef}
               nodeIndex={index}
               level={level + 1}
               onFocusChange={onFocusChange}

@@ -36,12 +36,7 @@ export default function ObjectForm(): React.JSX.Element {
     if (!selectedTab?.id || !currentConnection?.id) return;
 
     const formDataByTab = await prefetchObjectFormTabs(selectedTab, tabs, currentConnection.id);
-    const objectDefinition = buildObjectDefinitionSummary(
-      formDataByTab,
-      selectedTab.id,
-      tabs,
-      selectedTab.action
-    );
+    const objectDefinition = buildObjectDefinitionSummary(formDataByTab, selectedTab.id, tabs, selectedTab.action);
 
     if (!objectDefinition.trim()) return;
 

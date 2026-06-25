@@ -89,19 +89,16 @@ export default function ChatDataTable({ rows }: ChatDataTableProps): JSX.Element
                   : `row-${formatCellValue(row[columns[0]])}-${rowIndex}`;
 
               return (
-              <StyledTableRow
-                key={rowKey}
-                className={rowIndex % 2 === 1 ? 'is-striped' : undefined}
-              >
-                {columns.map((column) => {
-                  const value = formatCellValue(row[column]);
-                  return (
-                    <ChatTableCell key={column}>
-                      <ChatCellContent title={value}>{value}</ChatCellContent>
-                    </ChatTableCell>
-                  );
-                })}
-              </StyledTableRow>
+                <StyledTableRow key={rowKey} className={rowIndex % 2 === 1 ? 'is-striped' : undefined}>
+                  {columns.map((column) => {
+                    const value = formatCellValue(row[column]);
+                    return (
+                      <ChatTableCell key={column}>
+                        <ChatCellContent title={value}>{value}</ChatCellContent>
+                      </ChatTableCell>
+                    );
+                  })}
+                </StyledTableRow>
               );
             })}
           </tbody>

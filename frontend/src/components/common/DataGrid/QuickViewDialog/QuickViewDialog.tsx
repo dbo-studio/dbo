@@ -6,7 +6,7 @@ import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import type { SelectedRow } from '@/store/dataStore/types.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { type JSX, useEffect, useState } from 'react';
+import { type JSX, useMemo, useState } from 'react';
 import { QuickViewDialogContainerStyled, QuickViewDialogEditorStyled } from './QuickViewDialog.styled';
 
 const getRowValue = (row: SelectedRow): string | undefined => {
@@ -15,9 +15,7 @@ const getRowValue = (row: SelectedRow): string | undefined => {
 };
 
 export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX.Element {
-  const [value, setValue] = useState<string | undefined>(undefined);
   const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
-  const [row, setRow] = useState<SelectedRow>();
 
   const selectedRows = useDataStore((state) => state.selectedRows);
   const editedRows = useDataStore((state) => state.editedRows);
@@ -27,46 +25,55 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
   const updateRow = useDataStore((state) => state.updateRow);
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
 
+  const activeRow = useMemo((): SelectedRow | undefined => {
+    if (!showQuickLookEditor || selectedRows.length === 0) {
+      return undefined;
+    }
+
+    const row = selectedRows[selectedRows.length - 1];
+    if (!row.selectedColumn) {
+      return undefined;
+    }
+
+    return row;
+  }, [showQuickLookEditor, selectedRows]);
+
+  const sourceValue = activeRow ? getRowValue(activeRow) : undefined;
+  const activeRowKey = activeRow ? `${activeRow.index}-${activeRow.selectedColumn}` : '';
+  const [valueSourceKey, setValueSourceKey] = useState(activeRowKey);
+  const [value, setValue] = useState<string | undefined>(sourceValue);
+
+  if (activeRowKey !== valueSourceKey) {
+    setValueSourceKey(activeRowKey);
+    setValue(sourceValue);
+  }
+
   const handleClose = async (): Promise<void> => {
-    if (!row) {
+    if (!activeRow) {
       updateUI({ showQuickLookEditor: false });
       return;
     }
 
-    const rowValue = getRowValue(row);
+    const rowValue = getRowValue(activeRow);
     if (rowValue === undefined || value === rowValue || !editable) {
       updateUI({ showQuickLookEditor: false });
       return;
     }
 
-    const newEditedRows = handleRowChangeLog(editedRows, row.row, row.selectedColumn, rowValue, value);
+    const newEditedRows = handleRowChangeLog(editedRows, activeRow.row, activeRow.selectedColumn, rowValue, value);
 
     await updateEditedRows(newEditedRows);
-    const newRow = { ...row.row };
-    newRow[row.selectedColumn] = value;
+    const newRow = { ...activeRow.row };
+    newRow[activeRow.selectedColumn] = value;
     await updateRow(newRow);
     updateUI({ showQuickLookEditor: false });
   };
-
-  useEffect(() => {
-    if (!showQuickLookEditor) return;
-
-    if (selectedRows.length === 0) {
-      return;
-    }
-
-    const row = selectedRows[selectedRows.length - 1];
-    if (!row.selectedColumn) return;
-
-    setRow(row);
-    setValue(getRowValue(row));
-  }, [showQuickLookEditor, selectedRows]);
 
   return (
     <ResizableModal
       onClose={() => void handleClose()}
       open={showQuickLookEditor}
-      title={`${locales.quick_look_editor} : ${row?.selectedColumn ?? ''}`}
+      title={`${locales.quick_look_editor} : ${activeRow?.selectedColumn ?? ''}`}
       onResize={(width: number, height: number): void => setDimensions({ width, height })}
     >
       <QuickViewDialogContainerStyled>

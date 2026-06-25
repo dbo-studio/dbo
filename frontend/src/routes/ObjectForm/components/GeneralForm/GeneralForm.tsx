@@ -2,10 +2,13 @@ import locales from '@/locales';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useFormObjectStore } from '@/store/formObject/formObject.store';
 import { ObjectTabType } from '@/types';
-import { Box, Typography } from '@mui/material';
+import { FormFieldType } from '@/types/Tree';
+import { Typography } from '@mui/material';
 import React, { memo } from 'react';
 import SimpleField from '../SimpleForm/SimpleField';
-import { GeneralFormFieldsStackStyled, GeneralFormStyled } from './GeneralForm.styled';
+import { GeneralFormFieldStyled, GeneralFormFieldsGridStyled, GeneralFormStyled } from './GeneralForm.styled';
+
+const isFullWidthGeneralField = (field: FormFieldType): boolean => field.type === 'query';
 
 function SimpleForm({ objectTabId }: { objectTabId: string }): React.JSX.Element {
   const selectedTab = useSelectedTab<ObjectTabType>();
@@ -16,12 +19,14 @@ function SimpleForm({ objectTabId }: { objectTabId: string }): React.JSX.Element
 
   return (
     <GeneralFormStyled>
-      <Typography variant='body1'>{locales.general_info}</Typography>
-      <GeneralFormFieldsStackStyled direction={'row'}>
+      <Typography variant='subtitle2' color='text.secondary'>
+        {locales.general_info}
+      </Typography>
+      <GeneralFormFieldsGridStyled>
         {general?.map((field) => (
-          <Box
+          <GeneralFormFieldStyled
             key={field.id}
-            sx={{ gridColumn: field.type === 'query' ? '1 / -1' : 'auto' }}
+            fullWidth={isFullWidthGeneralField(field)}
             data-testid={`object-form-field-${field.id}`}
           >
             <SimpleField
@@ -31,9 +36,9 @@ function SimpleForm({ objectTabId }: { objectTabId: string }): React.JSX.Element
               dynamicOptions={undefined}
               isLoadingDynamic={false}
             />
-          </Box>
+          </GeneralFormFieldStyled>
         ))}
-      </GeneralFormFieldsStackStyled>
+      </GeneralFormFieldsGridStyled>
     </GeneralFormStyled>
   );
 }

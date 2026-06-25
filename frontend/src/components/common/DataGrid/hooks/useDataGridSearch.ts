@@ -1,5 +1,5 @@
 import type { ColumnType, RowType } from '@/types';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 export type SearchMatch = {
   rowIndex: number;
@@ -66,13 +66,13 @@ export function useDataGridSearch({ rows, columns }: UseDataGridSearchProps): Us
     return results;
   }, [rows, columns, searchTerm]);
 
-  useEffect(() => {
-    if (matches.length > 0) {
-      setCurrentMatchIndex(0);
-    } else {
-      setCurrentMatchIndex(0);
-    }
-  }, [searchTerm, matches.length]);
+  const safeCurrentMatchIndex =
+    matches.length > 0 ? ((currentMatchIndex % matches.length) + matches.length) % matches.length : 0;
+
+  const setSearchTermWithReset = useCallback((term: string) => {
+    setSearchTerm(term);
+    setCurrentMatchIndex(0);
+  }, []);
 
   const nextMatch = useCallback(() => {
     if (matches.length === 0) return;
@@ -93,9 +93,9 @@ export function useDataGridSearch({ rows, columns }: UseDataGridSearchProps): Us
 
   return {
     searchTerm,
-    setSearchTerm,
+    setSearchTerm: setSearchTermWithReset,
     matches,
-    currentMatchIndex,
+    currentMatchIndex: safeCurrentMatchIndex,
     setCurrentMatchIndex,
     nextMatch,
     previousMatch,

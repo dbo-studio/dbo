@@ -7,7 +7,7 @@ import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import type { ConnectionType } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { type JSX, useEffect, useState } from 'react';
+import { type JSX, useEffect } from 'react';
 import { toast } from 'sonner';
 import Mysql from './Mysql/Mysql';
 import PostgreSQL from './Postgresql/Postgresql';
@@ -15,13 +15,16 @@ import SQLite from './SQLite/SQLite';
 
 export default function EditConnection(): JSX.Element {
   const queryClient = useQueryClient();
-  const [activeConnection, setActiveConnection] = useState<ConnectionType | undefined>(undefined);
   const connections = useConnectionStore((state) => state.connections);
   const updateConnections = useConnectionStore((state) => state.updateConnections);
   const resetTree = useTreeStore((state) => state.reset);
 
   const showEditConnection = useSettingStore((state) => state.ui.showEditConnection);
   const updateUI = useSettingStore((state) => state.updateUI);
+
+  const activeConnection = showEditConnection
+    ? connections?.find((connection) => connection.id === Number(showEditConnection))
+    : undefined;
 
   const { mutateAsync: updateConnectionMutation, isPending: updateConnectionPending } = useMutation({
     mutationFn: (variables: { id: number; data: CreateConnectionRequestType }): Promise<ConnectionType> =>
@@ -33,7 +36,6 @@ export default function EditConnection(): JSX.Element {
   });
 
   const handleClose = (): void => {
-    setActiveConnection(undefined);
     updateUI({ showEditConnection: false });
   };
 
@@ -84,15 +86,10 @@ export default function EditConnection(): JSX.Element {
   };
 
   useEffect(() => {
-    if (showEditConnection) {
-      const connection = connections?.find((connection) => connection.id === Number(showEditConnection));
-      if (connection) {
-        setActiveConnection(connection);
-      } else {
-        updateUI({ showEditConnection: false });
-      }
+    if (showEditConnection && !activeConnection) {
+      updateUI({ showEditConnection: false });
     }
-  }, [showEditConnection]);
+  }, [activeConnection, showEditConnection, updateUI]);
 
   return (
     <Modal open={showEditConnection !== undefined && showEditConnection !== false} title={locales.edit_connection}>

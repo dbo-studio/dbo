@@ -55,10 +55,12 @@ const tabs: MenuPanelTabType[] = [
 export default function Settings({ open }: SettingsProps): JSX.Element {
   const [currentTab, setCurrentTab] = useState<MenuPanelTabType | undefined>();
   const theme = useTheme();
+  const showSettings = useSettingStore((state) => state.ui.showSettings);
   const updateUI = useSettingStore((state) => state.updateUI);
+  const defaultMenuTab = tabs.find((tab) => tab.id === showSettings.tab) ?? tabs[0];
 
   function handleOnClose(): void {
-    updateUI({ showSettings: { open: false, tab: 0 } });
+    updateUI({ showSettings: { open: false, tab: 0, aiTab: undefined } });
   }
 
   return (
@@ -78,7 +80,12 @@ export default function Settings({ open }: SettingsProps): JSX.Element {
             flexDirection: 'column'
           }}
         >
-          <MenuPanel tabs={tabs} onChange={(c): void => setCurrentTab(c)} defaultTab={currentTab} />
+          <MenuPanel
+            key={open ? `settings-${showSettings.tab}` : 'settings-closed'}
+            tabs={tabs}
+            onChange={(c): void => setCurrentTab(c)}
+            defaultTab={open ? defaultMenuTab : currentTab}
+          />
         </Grid>
         <SettingsContentStyled
           size={{ md: 9 }}
@@ -108,7 +115,11 @@ export default function Settings({ open }: SettingsProps): JSX.Element {
               <Divider />
             </Box>
           </Box>
-          {currentTab?.content}
+          {currentTab?.id === 3 ? (
+            <AiPanel key={showSettings.aiTab ?? 'providers'} initialTab={showSettings.aiTab ?? 'providers'} />
+          ) : (
+            currentTab?.content
+          )}
         </SettingsContentStyled>
       </Grid>
     </Modal>
