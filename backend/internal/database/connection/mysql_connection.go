@@ -20,7 +20,7 @@ type MysqlCreateParams dto.MysqlCreateConnectionParams
 type MysqlUpdateParams dto.MysqlUpdateConnectionParams
 
 func CreateMysqlConnection(params json.RawMessage) (string, error) {
-	options, err := helper.RawJsonToStruct[MysqlCreateParams](params)
+	options, err := helper.RawJSONToStruct[MysqlCreateParams](params)
 	if err != nil {
 		return "", apperror.Validation(errors.New("invalid params"))
 	}
@@ -33,12 +33,12 @@ func CreateMysqlConnection(params json.RawMessage) (string, error) {
 }
 
 func UpdateMysqlConnection(oldParams json.RawMessage, newParams json.RawMessage) (string, error) {
-	oldOptions, err := helper.RawJsonToStruct[MysqlUpdateParams](oldParams)
+	oldOptions, err := helper.RawJSONToStruct[MysqlUpdateParams](oldParams)
 	if err != nil {
 		return "", apperror.Validation(errors.New("invalid params"))
 	}
 
-	newOptions, err := helper.RawJsonToStruct[MysqlUpdateParams](newParams)
+	newOptions, err := helper.RawJSONToStruct[MysqlUpdateParams](newParams)
 	if err != nil {
 		return "", apperror.Validation(errors.New("invalid params"))
 	}
@@ -51,14 +51,27 @@ func UpdateMysqlConnection(oldParams json.RawMessage, newParams json.RawMessage)
 	newOptions.Username = helper.OptionalAndEmpty(newOptions.Username, oldOptions.Username)
 	newOptions.Password = helper.OptionalAndEmpty(newOptions.Password, oldOptions.Password)
 	newOptions.Port = helper.OptionalAndEmpty(newOptions.Port, oldOptions.Port)
-	newOptions.Database = helper.OptionalAndEmpty(newOptions.Database, oldOptions.Database)
-	newOptions.URI = helper.OptionalAndEmpty(newOptions.URI, oldOptions.URI)
+	newOptions.Database = helper.OptionalOrKeep(newOptions.Database, oldOptions.Database)
+	newOptions.URI = helper.OptionalOrKeep(newOptions.URI, oldOptions.URI)
 
-	return helper.StructToJson(newOptions), nil
+	return mysqlUpdateParamsToCreateJSON(newOptions), nil
+}
+
+func mysqlUpdateParamsToCreateJSON(opts MysqlUpdateParams) string {
+	params := dto.MysqlCreateConnectionParams{
+		Host:     lo.FromPtrOr(opts.Host, ""),
+		Port:     lo.FromPtrOr(opts.Port, 0),
+		Username: lo.FromPtrOr(opts.Username, ""),
+		Password: opts.Password,
+		Database: opts.Database,
+		URI:      opts.URI,
+	}
+
+	return helper.StructToJSON(params)
 }
 
 func OpenMysqlConnection(connection *model.Connection) gorm.Dialector {
-	options, err := helper.RawJsonToStruct[dto.MysqlCreateConnectionParams](json.RawMessage(connection.Options))
+	options, err := helper.RawJSONToStruct[dto.MysqlCreateConnectionParams](json.RawMessage(connection.Options))
 	if err != nil {
 		return nil
 	}

@@ -19,7 +19,7 @@ func NewJobRepo() IJobRepo {
 }
 
 func (r JobRepository) Create(ctx context.Context, job *model.Job) error {
-	return r.db.Create(job).Error
+	return r.db.WithContext(ctx).Create(job).Error
 }
 
 func (r JobRepository) Find(ctx context.Context, id int32) (*model.Job, error) {

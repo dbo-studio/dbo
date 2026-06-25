@@ -8,7 +8,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *MySQLRepository) buildExecuteQueries(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, error) {
+func (r *MySQLRepository) buildExecuteQueries(_ context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, error) {
 	node := r.base.ExtractNode(nodeID)
 	type ExecuteParams map[contract.TreeTab]any
 	executeParams, err := helper.ConvertToDTO[ExecuteParams](params)
@@ -18,18 +18,18 @@ func (r *MySQLRepository) buildExecuteQueries(ctx context.Context, nodeID string
 
 	queries := []string{}
 
-	for tabId := range executeParams {
-		dbQueries, err := r.handleDatabaseCommands(node, tabId, action, params)
+	for tabID := range executeParams {
+		dbQueries, err := r.handleDatabaseCommands(node, tabID, action, params)
 		if err != nil {
 			return nil, err
 		}
 
-		viewQueries, err := r.handleViewCommands(node, tabId, action, params)
+		viewQueries, err := r.handleViewCommands(node, tabID, action, params)
 		if err != nil {
 			return nil, err
 		}
 
-		tableQueries, t, err := r.handleTableCommands(node, tabId, action, params)
+		tableQueries, t, err := r.handleTableCommands(node, tabID, action, params)
 		if err != nil {
 			return nil, err
 		}
@@ -38,12 +38,12 @@ func (r *MySQLRepository) buildExecuteQueries(ctx context.Context, nodeID string
 			node.Table = t
 		}
 
-		tableColumnQueries, err := r.handleTableColumnCommands(node, tabId, action, params)
+		tableColumnQueries, err := r.handleTableColumnCommands(node, tabID, action, params)
 		if err != nil {
 			return nil, err
 		}
 
-		tableForeignKeyQueries, err := r.handleForeignKeyCommands(node, tabId, action, params)
+		tableForeignKeyQueries, err := r.handleForeignKeyCommands(node, tabID, action, params)
 		if err != nil {
 			return nil, err
 		}

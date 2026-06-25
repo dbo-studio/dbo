@@ -1,17 +1,16 @@
 package server
 
 import (
-	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/middleware/compress"
-	"github.com/gofiber/fiber/v3/middleware/cors"
-	fiberLogger "github.com/gofiber/fiber/v3/middleware/logger"
-	"github.com/gofiber/fiber/v3/middleware/recover"
-
 	"github.com/dbo-studio/dbo/internal/app/handler"
 	"github.com/dbo-studio/dbo/internal/app/server/middleware"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/compress"
+	"github.com/gofiber/fiber/v3/middleware/cors"
+	fiberLogger "github.com/gofiber/fiber/v3/middleware/logger"
+	"github.com/gofiber/fiber/v3/middleware/recover"
 )
 
 type Handlers struct {
@@ -26,6 +25,7 @@ type Handlers struct {
 	AI           *handler.AiHandler
 	AiProvider   *handler.AiProviderHandler
 	AiChat       *handler.AiChatHandler
+	Mcp          *handler.McpHandler
 }
 
 type Server struct {
@@ -41,7 +41,7 @@ func New(
 ) *Server {
 	return &Server{
 		app: fiber.New(fiber.Config{
-			ErrorHandler: func(ctx fiber.Ctx, err error) error {
+			ErrorHandler: func(_ fiber.Ctx, err error) error {
 				logger.Error(err)
 				return apperror.InternalServerError(err)
 			},

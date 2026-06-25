@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/samber/lo"
-
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/samber/lo"
 )
 
 func (r *SQLiteRepository) Tree(ctx context.Context, parentID string) (*contract.TreeNode, error) {

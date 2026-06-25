@@ -7,22 +7,21 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/dbo-studio/dbo/pkg/logger"
-
 	"github.com/dbo-studio/dbo/config"
+	"github.com/dbo-studio/dbo/pkg/logger"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	l "gorm.io/gorm/logger"
 )
 
-type SqlLite struct {
+type SQLLite struct {
 	logger logger.Logger
 	DB     *gorm.DB
 	cfg    *config.Config
 	path   string
 }
 
-func New(cfg *config.Config, logger logger.Logger) *SqlLite {
+func New(cfg *config.Config, logger logger.Logger) *SQLLite {
 	path := getDBPath(cfg, logger)
 	fmt.Println("db path: " + path)
 
@@ -34,7 +33,7 @@ func New(cfg *config.Config, logger logger.Logger) *SqlLite {
 		logger.Fatal(err)
 	}
 
-	return &SqlLite{
+	return &SQLLite{
 		logger: logger,
 		DB:     db,
 		cfg:    cfg,
@@ -42,11 +41,11 @@ func New(cfg *config.Config, logger logger.Logger) *SqlLite {
 	}
 }
 
-func (m *SqlLite) Path() string {
+func (m *SQLLite) Path() string {
 	return m.path
 }
 
-func (m *SqlLite) Close() {
+func (m *SQLLite) Close() {
 	sqlDB, err := m.DB.DB()
 	if err != nil {
 		log.Fatalln(err)

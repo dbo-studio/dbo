@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/spf13/cobra"
-
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/handler"
 	"github.com/dbo-studio/dbo/internal/app/server"
@@ -21,20 +19,31 @@ import (
 	"github.com/dbo-studio/dbo/pkg/db"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger/zap"
+	"github.com/joho/godotenv"
+	"github.com/spf13/cobra"
 )
 
 func ServeCommand() *cobra.Command {
 	cmdServe := &cobra.Command{
 		Use:   "serve",
 		Short: "Serve application",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			Execute()
 		},
 	}
 	return cmdServe
 }
 
+func loadEnvFiles() {
+	for _, path := range []string{".env", "../.env"} {
+		if err := godotenv.Load(path); err == nil {
+			return
+		}
+	}
+}
+
 func Execute() {
+	loadEnvFiles()
 	cfg := config.New()
 	appContainer := container.Instance()
 	appContainer.SetConfig(cfg)
@@ -80,9 +89,10 @@ func Execute() {
 		AI:           handler.NewAiHandler(ss.AiService),
 		AiProvider:   handler.NewAiProviderHandler(ss.AiProviderService),
 		AiChat:       handler.NewAiChatHandler(ss.AiChatService),
+		Mcp:          handler.NewMcpHandler(ss.McpService),
 	}, rr.WebSessionRepo)
 
-	if err := restServer.Start(helper.IsLocal(), cfg.App.Port); err != nil {
+	if err := restServer.Start(helper.IsLocal(), cfg.App.ResolvedPort()); err != nil {
 		msg := fmt.Sprintf("error happen while serving: %v", err)
 		appLogger.Error(errors.New(msg))
 		log.Println(msg)

@@ -4,7 +4,7 @@ import "github.com/invopop/validation"
 
 type (
 	AutoCompleteRequest struct {
-		ConnectionId int32   `query:"connectionId"`
+		ConnectionID int32   `query:"connectionId"`
 		Database     *string `query:"database"`
 		Schema       *string `query:"schema"`
 	}
@@ -20,6 +20,6 @@ type (
 
 func (req AutoCompleteRequest) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
 	)
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *PostgresRepository) handleMaterializedViewCommands(node contract.DBNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
+func (r *PostgresRepository) handleMaterializedViewCommands(node contract.DBNode, tabID contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
 	if action != contract.CreateMaterializedViewAction && action != contract.EditMaterializedViewAction && action != contract.DropMaterializedViewAction {
@@ -20,7 +20,7 @@ func (r *PostgresRepository) handleMaterializedViewCommands(node contract.DBNode
 		return nil, err
 	}
 
-	params := dto[tabId]
+	params := dto[tabID]
 
 	if params.New != nil && params.New.Query != nil {
 		params.New.Query = formatQuery(params.New.Query)

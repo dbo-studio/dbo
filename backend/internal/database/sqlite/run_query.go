@@ -6,15 +6,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/samber/lo"
-	"golang.org/x/sync/errgroup"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/samber/lo"
+	"golang.org/x/sync/errgroup"
 )
 
 func (r *SQLiteRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
-	node := r.base.ExtractNode(req.NodeId)
+	node := r.base.ExtractNode(req.NodeID)
 	query := r.runQueryGenerator(ctx, req, node)
 	queryResults := make([]map[string]any, 0)
 	columns := make([]Column, 0)

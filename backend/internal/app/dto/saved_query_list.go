@@ -4,7 +4,7 @@ import "github.com/invopop/validation"
 
 type (
 	SavedQueryListRequest struct {
-		ConnectionId int32 `query:"connectionId"`
+		ConnectionID int32 `query:"connectionId"`
 		PaginationRequest
 	}
 
@@ -16,7 +16,7 @@ type (
 type (
 	SavedQuery struct {
 		ID           int64  `json:"id"`
-		ConnectionId int32  `json:"connectionId"`
+		ConnectionID int32  `json:"connectionId"`
 		Name         string `json:"name"`
 		Query        string `json:"query"`
 		CreatedAt    string `json:"createdAt"`
@@ -25,6 +25,6 @@ type (
 
 func (req SavedQueryListRequest) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
 	)
 }

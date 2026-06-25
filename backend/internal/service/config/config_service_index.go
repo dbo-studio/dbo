@@ -22,7 +22,7 @@ func (i IConfigServiceImpl) Index(ctx context.Context) (*dto.ConfigListResponse,
 	response := &dto.ConfigListResponse{
 		Version:           i.cfg.App.Version,
 		NewReleaseVersion: nil,
-		Url:               "http://127.0.0.1:" + i.cfg.App.Port + "/api",
+		URL:               i.cfg.App.APIPublicURL(),
 		Providers:         providers.Items,
 		LogsPath:          i.cfg.App.LogPath,
 	}

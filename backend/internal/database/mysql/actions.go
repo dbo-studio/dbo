@@ -4,7 +4,7 @@ import (
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
-func (r *MySQLRepository) ContextMenu(nodeType contract.TreeNodeType) []contract.TreeNodeAction {
+func (r *MySQLRepository) ContextMenu(_ contract.TreeNodeType) []contract.TreeNodeAction {
 	actions := make([]contract.TreeNodeAction, 0)
 	defaultActions := []contract.TreeNodeAction{
 		{

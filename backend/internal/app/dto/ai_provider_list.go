@@ -10,8 +10,8 @@ type (
 	AiProvider struct {
 		ID         uint     `json:"id"`
 		Type       string   `json:"type"`
-		ApiKey     *string  `json:"apiKey"`
-		Url        string   `json:"url"`
+		APIKey     *string  `json:"apiKey"`
+		URL        string   `json:"url"`
 		Timeout    int      `json:"timeout"`
 		Models     []string `json:"models"`
 		IsActive   bool     `json:"isActive"`

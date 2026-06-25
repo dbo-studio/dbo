@@ -20,8 +20,8 @@ func (r *SQLiteRepository) buildExecuteQueries(ctx context.Context, nodeID strin
 	queries := []string{}
 	var tmpTableName string
 
-	for tabId := range executeParams {
-		viewQueries, err := r.handleViewCommands(nodeID, tabId, action, params)
+	for tabID := range executeParams {
+		viewQueries, err := r.handleViewCommands(nodeID, tabID, action, params)
 		if err != nil {
 			return nil, "", err
 		}

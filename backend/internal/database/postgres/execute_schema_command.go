@@ -8,7 +8,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *PostgresRepository) handleSchemaCommands(node contract.DBNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
+func (r *PostgresRepository) handleSchemaCommands(node contract.DBNode, tabID contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
 	if action != contract.CreateSchemaAction && action != contract.EditSchemaAction && action != contract.DropSchemaAction {
@@ -20,7 +20,7 @@ func (r *PostgresRepository) handleSchemaCommands(node contract.DBNode, tabId co
 		return nil, err
 	}
 
-	params := dto[tabId]
+	params := dto[tabID]
 
 	if action == contract.CreateSchemaAction {
 		queries = append(queries, fmt.Sprintf("CREATE SCHEMA %s", *params.New.Name))

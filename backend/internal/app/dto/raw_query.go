@@ -4,7 +4,7 @@ import "github.com/invopop/validation"
 
 type (
 	RawQueryRequest struct {
-		ConnectionId int32  `json:"connectionId"`
+		ConnectionID int32  `json:"connectionId"`
 		Query        string `json:"query"`
 	}
 
@@ -30,7 +30,7 @@ type Column struct {
 
 func (req RawQueryRequest) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
 		validation.Field(&req.Query, validation.Required),
 	)
 }

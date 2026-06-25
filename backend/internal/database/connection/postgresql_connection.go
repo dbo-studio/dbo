@@ -20,7 +20,7 @@ type PgsqlCreateParams dto.PostgresqlCreateConnectionParams
 type PgsqlUpdateParams dto.PostgresqlUpdateConnectionParams
 
 func CreatePostgresqlConnection(params json.RawMessage) (string, error) {
-	options, err := helper.RawJsonToStruct[PgsqlCreateParams](params)
+	options, err := helper.RawJSONToStruct[PgsqlCreateParams](params)
 	if err != nil {
 		return "", apperror.Validation(errors.New("invalid params"))
 	}
@@ -33,12 +33,12 @@ func CreatePostgresqlConnection(params json.RawMessage) (string, error) {
 }
 
 func UpdatePostgresqlConnection(oldParams json.RawMessage, newParams json.RawMessage) (string, error) {
-	oldOptions, err := helper.RawJsonToStruct[PgsqlUpdateParams](oldParams)
+	oldOptions, err := helper.RawJSONToStruct[PgsqlUpdateParams](oldParams)
 	if err != nil {
 		return "", apperror.Validation(errors.New("invalid params"))
 	}
 
-	newOptions, err := helper.RawJsonToStruct[PgsqlUpdateParams](newParams)
+	newOptions, err := helper.RawJSONToStruct[PgsqlUpdateParams](newParams)
 	if err != nil {
 		return "", apperror.Validation(errors.New("invalid params"))
 	}
@@ -51,14 +51,27 @@ func UpdatePostgresqlConnection(oldParams json.RawMessage, newParams json.RawMes
 	newOptions.Username = helper.OptionalAndEmpty(newOptions.Username, oldOptions.Username)
 	newOptions.Password = helper.OptionalAndEmpty(newOptions.Password, oldOptions.Password)
 	newOptions.Port = helper.OptionalAndEmpty(newOptions.Port, oldOptions.Port)
-	newOptions.Database = helper.OptionalAndEmpty(newOptions.Database, oldOptions.Database)
-	newOptions.URI = helper.OptionalAndEmpty(newOptions.URI, oldOptions.URI)
+	newOptions.Database = helper.OptionalOrKeep(newOptions.Database, oldOptions.Database)
+	newOptions.URI = helper.OptionalOrKeep(newOptions.URI, oldOptions.URI)
 
-	return helper.StructToJson(newOptions), nil
+	return pgsqlUpdateParamsToCreateJSON(newOptions), nil
+}
+
+func pgsqlUpdateParamsToCreateJSON(opts PgsqlUpdateParams) string {
+	params := dto.PostgresqlCreateConnectionParams{
+		Host:     lo.FromPtrOr(opts.Host, ""),
+		Port:     lo.FromPtrOr(opts.Port, 0),
+		Username: lo.FromPtrOr(opts.Username, ""),
+		Password: opts.Password,
+		Database: opts.Database,
+		URI:      opts.URI,
+	}
+
+	return helper.StructToJSON(params)
 }
 
 func OpenPostgresqlConnection(connection *model.Connection) gorm.Dialector {
-	options, err := helper.RawJsonToStruct[dto.PostgresqlCreateConnectionParams](json.RawMessage(connection.Options))
+	options, err := helper.RawJSONToStruct[dto.PostgresqlCreateConnectionParams](json.RawMessage(connection.Options))
 	if err != nil {
 		return nil
 	}

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/samber/lo"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/database"
@@ -15,6 +13,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/cache"
+	"github.com/samber/lo"
 )
 
 type ITreeService interface {
@@ -51,7 +50,7 @@ func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (*
 		}
 	}
 
-	connection, err := i.connectionRepo.Find(ctx, req.ConnectionId)
+	connection, err := i.connectionRepo.Find(ctx, req.ConnectionID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
@@ -66,7 +65,7 @@ func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (*
 		return nil, err
 	}
 
-	tree, err := repo.Tree(ctx, req.ParentId)
+	tree, err := repo.Tree(ctx, req.ParentID)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -80,7 +79,7 @@ func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (*
 }
 
 func (i ITreeServiceImpl) Tabs(ctx context.Context, req *dto.ObjectTabsRequest) ([]contract.FormTab, error) {
-	connection, err := i.connectionRepo.Find(ctx, req.ConnectionId)
+	connection, err := i.connectionRepo.Find(ctx, req.ConnectionID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
@@ -94,7 +93,7 @@ func (i ITreeServiceImpl) Tabs(ctx context.Context, req *dto.ObjectTabsRequest) 
 }
 
 func (i ITreeServiceImpl) ObjectDetail(ctx context.Context, req *dto.ObjectDetailRequest) (*contract.FormResponse, error) {
-	connection, err := i.connectionRepo.Find(ctx, req.ConnectionId)
+	connection, err := i.connectionRepo.Find(ctx, req.ConnectionID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
@@ -104,7 +103,7 @@ func (i ITreeServiceImpl) ObjectDetail(ctx context.Context, req *dto.ObjectDetai
 		return nil, err
 	}
 
-	data, err := repo.Objects(ctx, req.NodeId, contract.TreeTab(req.TabId), contract.TreeNodeActionName(req.Action))
+	data, err := repo.Objects(ctx, req.NodeID, contract.TreeTab(req.TabID), contract.TreeNodeActionName(req.Action))
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -112,7 +111,7 @@ func (i ITreeServiceImpl) ObjectDetail(ctx context.Context, req *dto.ObjectDetai
 }
 
 func (i ITreeServiceImpl) ObjectExecute(ctx context.Context, req *dto.ObjectExecuteRequest) error {
-	connection, err := i.connectionRepo.Find(ctx, req.ConnectionId)
+	connection, err := i.connectionRepo.Find(ctx, req.ConnectionID)
 	if err != nil {
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
@@ -122,7 +121,7 @@ func (i ITreeServiceImpl) ObjectExecute(ctx context.Context, req *dto.ObjectExec
 		return err
 	}
 
-	err = repo.Execute(ctx, req.NodeId, contract.TreeNodeActionName(req.Action), req.Params)
+	err = repo.Execute(ctx, req.NodeID, contract.TreeNodeActionName(req.Action), req.Params)
 	if err != nil {
 		return apperror.InternalServerError(err)
 	}
@@ -130,7 +129,7 @@ func (i ITreeServiceImpl) ObjectExecute(ctx context.Context, req *dto.ObjectExec
 }
 
 func (i ITreeServiceImpl) ObjectPreviewExecute(ctx context.Context, req *dto.ObjectExecuteRequest) ([]string, error) {
-	connection, err := i.connectionRepo.Find(ctx, req.ConnectionId)
+	connection, err := i.connectionRepo.Find(ctx, req.ConnectionID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
@@ -140,7 +139,7 @@ func (i ITreeServiceImpl) ObjectPreviewExecute(ctx context.Context, req *dto.Obj
 		return nil, err
 	}
 
-	queries, err := repo.PreviewExecute(ctx, req.NodeId, contract.TreeNodeActionName(req.Action), req.Params)
+	queries, err := repo.PreviewExecute(ctx, req.NodeID, contract.TreeNodeActionName(req.Action), req.Params)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -148,7 +147,7 @@ func (i ITreeServiceImpl) ObjectPreviewExecute(ctx context.Context, req *dto.Obj
 }
 
 func (i ITreeServiceImpl) GetDynamicFieldOptions(ctx context.Context, req *dto.DynamicFieldOptionsRequest) ([]contract.FormFieldOption, error) {
-	connection, err := i.connectionRepo.Find(ctx, req.ConnectionId)
+	connection, err := i.connectionRepo.Find(ctx, req.ConnectionID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
@@ -159,7 +158,7 @@ func (i ITreeServiceImpl) GetDynamicFieldOptions(ctx context.Context, req *dto.D
 	}
 
 	dynamicReq := &contract.DynamicFieldRequest{
-		NodeID:     req.NodeId,
+		NodeID:     req.NodeID,
 		Parameters: req.Parameters,
 	}
 
@@ -172,5 +171,5 @@ func (i ITreeServiceImpl) GetDynamicFieldOptions(ctx context.Context, req *dto.D
 }
 
 func (i ITreeServiceImpl) cacheName(req *dto.TreeListRequest) string {
-	return fmt.Sprintf("c:%d:tree:%s", req.ConnectionId, req.ParentId)
+	return fmt.Sprintf("c:%d:tree:%s", req.ConnectionID, req.ParentID)
 }

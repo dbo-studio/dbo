@@ -4,14 +4,14 @@ import "github.com/invopop/validation"
 
 type (
 	AiChatRequest struct {
-		ConnectionId int32             `json:"connectionId"`
+		ConnectionID int32             `json:"connectionId"`
 		Message      string            `json:"message"`
-		ChatId       *int32            `json:"chatId"`
+		ChatID       *int32            `json:"chatId"`
 		ContextOpts  *AiContextOptions `json:"contextOpts"`
 	}
 
 	AiChatResponse struct {
-		ChatId   uint        `json:"chatId"`
+		ChatID   uint        `json:"chatId"`
 		Title    string      `json:"title"`
 		Messages []AiMessage `json:"messages"`
 	}
@@ -19,11 +19,14 @@ type (
 
 type (
 	AiContextOptions struct {
-		Query    *string  `json:"query"`
-		Database *string  `json:"database"`
-		Schema   *string  `json:"schema"`
-		Tables   []string `json:"tables"`
-		Views    []string `json:"views"`
+		Query              *string  `json:"query"`
+		SelectedQuery      *string  `json:"selectedQuery"`
+		Database           *string  `json:"database"`
+		Schema             *string  `json:"schema"`
+		Tables             []string `json:"tables"`
+		Views              []string `json:"views"`
+		QueryError         *string  `json:"queryError"`
+		QueryResultSummary *string  `json:"queryResultSummary"`
 	}
 
 	AiMessage struct {
@@ -37,8 +40,8 @@ type (
 
 func (req AiChatRequest) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
-		validation.Field(&req.Message, validation.Required, validation.Length(0, 500)),
-		validation.Field(&req.ChatId, validation.Min(0)),
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
+		validation.Field(&req.Message, validation.Required, validation.Length(0, 10000)),
+		validation.Field(&req.ChatID, validation.Min(0)),
 	)
 }

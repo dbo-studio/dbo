@@ -6,14 +6,13 @@ import (
 	"sync"
 	"time"
 
-	"gorm.io/driver/sqlserver"
-	"gorm.io/gorm"
-
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger"
+	"gorm.io/driver/sqlserver"
+	"gorm.io/gorm"
 )
 
 type IConnectionManager interface {
@@ -142,7 +141,7 @@ func (cm *ConnectionManager) IsOpen(ctx context.Context, ownerID string, connect
 	return true
 }
 
-func (cm *ConnectionManager) Close(ctx context.Context, ownerID string, connectionID uint) error {
+func (cm *ConnectionManager) Close(_ context.Context, ownerID string, connectionID uint) error {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 

@@ -5,8 +5,8 @@ import "time"
 type AiProvider struct {
 	ID                     uint           `gorm:"primaryKey,autoIncrement"`
 	Type                   AIProviderType `gorm:"size:64;not null"`
-	Url                    string         `gorm:"size:255"`
-	ApiKey                 *string        `gorm:"size:2048"`
+	URL                    string         `gorm:"size:255"`
+	APIKey                 *string        `gorm:"size:2048"`
 	Timeout                int
 	Models                 []string `gorm:"type:json;serializer:json"`
 	IsActive               bool     `gorm:"default:false"`

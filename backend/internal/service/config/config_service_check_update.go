@@ -26,7 +26,7 @@ func (i IConfigServiceImpl) CheckUpdate(ctx context.Context) (*dto.ConfigCheckUp
 	cc := client.New()
 	cc.SetTimeout(10 * time.Second)
 
-	resp, err := cc.Get(i.cfg.App.ReleaseUrlApi)
+	resp, err := cc.Get(i.cfg.App.ReleaseURLAPI)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (i IConfigServiceImpl) CheckUpdate(ctx context.Context) (*dto.ConfigCheckUp
 
 	response := &dto.ConfigCheckUpdateResponse{
 		Name:        releaseResponse.Data.Name,
-		Url:         i.cfg.App.ReleaseUrl,
+		URL:         i.cfg.App.ReleaseURL,
 		Body:        releaseResponse.Data.Body,
 		PublishedAt: releaseResponse.Data.PublishedAt,
 		IsMinimum:   releaseResponse.Data.IsMinimum,

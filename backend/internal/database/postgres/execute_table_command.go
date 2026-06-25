@@ -8,11 +8,11 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *PostgresRepository) handleTableCommands(node contract.DBNode, tabId contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
+func (r *PostgresRepository) handleTableCommands(node contract.DBNode, tabID contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
 	queries := []string{}
 	var tableName string
 
-	if tabId != contract.TableTab && action != contract.DropTableAction {
+	if tabID != contract.TableTab && action != contract.DropTableAction {
 		return queries, "", nil
 	}
 
@@ -22,7 +22,7 @@ func (r *PostgresRepository) handleTableCommands(node contract.DBNode, tabId con
 			return nil, tableName, err
 		}
 
-		params := dto[tabId]
+		params := dto[tabID]
 
 		tableName = *params.New.Name
 		query := fmt.Sprintf("CREATE TABLE %s (", *params.New.Name)
@@ -53,7 +53,7 @@ func (r *PostgresRepository) handleTableCommands(node contract.DBNode, tabId con
 			return nil, tableName, err
 		}
 
-		params := dtoParams[tabId]
+		params := dtoParams[tabID]
 		tableName = *params.Old.Name
 
 		if params.Old.Name != nil && params.New.Name != nil {

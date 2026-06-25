@@ -4,11 +4,10 @@ import (
 	"strconv"
 	"strings"
 
-	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
-func (r *BaseRepository) ExtractNode(node string) contract.DBNode {
+func (r *BaseRepository) ExtractNode(node string) databaseContract.DBNode {
 	switch r.Connection().ConnectionType {
 	case string(databaseContract.Mysql):
 		return r.mysqlNode(node)
@@ -83,8 +82,8 @@ func (*BaseRepository) SanitizeQueryResults(row map[string]any) map[string]any {
 	return sanitized
 }
 
-func (*BaseRepository) postgresqlNode(nodeId string) contract.DBNode {
-	parts := strings.Split(nodeId, ".")
+func (*BaseRepository) postgresqlNode(nodeID string) databaseContract.DBNode {
+	parts := strings.Split(nodeID, ".")
 
 	var database, schema, table string
 
@@ -97,15 +96,15 @@ func (*BaseRepository) postgresqlNode(nodeId string) contract.DBNode {
 		database, schema, table = parts[0], parts[1], parts[2]
 	}
 
-	return contract.DBNode{
+	return databaseContract.DBNode{
 		Database: database,
 		Schema:   schema,
 		Table:    table,
 	}
 }
 
-func (*BaseRepository) mysqlNode(nodeId string) contract.DBNode {
-	parts := strings.Split(nodeId, ".")
+func (*BaseRepository) mysqlNode(nodeID string) databaseContract.DBNode {
+	parts := strings.Split(nodeID, ".")
 
 	var database, table string
 
@@ -116,14 +115,14 @@ func (*BaseRepository) mysqlNode(nodeId string) contract.DBNode {
 		database, table = parts[0], parts[1]
 	}
 
-	return contract.DBNode{
+	return databaseContract.DBNode{
 		Database: database,
 		Table:    table,
 	}
 }
 
-func (*BaseRepository) sqliteNode(nodeId string) contract.DBNode {
-	return contract.DBNode{
-		Table: nodeId,
+func (*BaseRepository) sqliteNode(nodeID string) databaseContract.DBNode {
+	return databaseContract.DBNode{
+		Table: nodeID,
 	}
 }

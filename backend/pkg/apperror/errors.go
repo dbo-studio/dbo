@@ -60,12 +60,12 @@ func InternalServerError(err error) error {
 	}
 }
 
-func Unauthorized(connectionId uint) error {
+func Unauthorized(connectionID uint) error {
 	return &AppError{
 		Code:    http.StatusUnauthorized,
 		Message: "unauthorized",
 		Err:     ErrPasswordRequired,
-		Data:    map[string]any{"connectionId": connectionId},
+		Data:    map[string]any{"connectionId": connectionID},
 	}
 }
 

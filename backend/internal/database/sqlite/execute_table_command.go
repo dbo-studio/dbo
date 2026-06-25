@@ -4,15 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/samber/lo"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/samber/lo"
 )
 
-func (r *SQLiteRepository) handleTableCommands(ctx context.Context, node string, tabId map[contract.TreeTab]any, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
-	if !r.isTableRelatedAction(tabId, action) {
+func (r *SQLiteRepository) handleTableCommands(ctx context.Context, node string, tabID map[contract.TreeTab]any, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
+	if !r.isTableRelatedAction(tabID, action) {
 		return []string{}, "", nil
 	}
 
@@ -84,13 +83,13 @@ func (r *SQLiteRepository) parseTableParams(params []byte) (*tableParamsMap, err
 	}, nil
 }
 
-func (r *SQLiteRepository) isTableRelatedAction(tabId map[contract.TreeTab]any, action contract.TreeNodeActionName) bool {
+func (r *SQLiteRepository) isTableRelatedAction(tabID map[contract.TreeTab]any, action contract.TreeNodeActionName) bool {
 	if action == contract.DropTableAction {
 		return true
 	}
 
 	var treeTab contract.TreeTab
-	for key := range tabId {
+	for key := range tabID {
 		treeTab = key
 		break
 	}

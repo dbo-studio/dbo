@@ -1,14 +1,13 @@
 package middleware
 
 import (
-	"github.com/gofiber/fiber/v3"
-
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/response"
+	"github.com/gofiber/fiber/v3"
 )
 
 const sessionCookieName = "dbo_sid"
@@ -24,10 +23,11 @@ func OwnerSessionMiddleware(webSessionRepo repository.IWebSessionRepo) fiber.Han
 		if cfg != nil && cfg.App.Client == config.ClientDesktop {
 			ownerID := "desktop"
 			c.Locals(helper.CtxOwnerIDKey, ownerID)
+			c.SetContext(helper.CtxWithOwnerID(c.Context(), ownerID))
 			return c.Next()
 		}
 
-		oldSessionID := "0Mms3YpL7CJm_uPsd3GF4Eid7WKCfn0IfWoH91ZhEyc"
+		oldSessionID := c.Cookies(sessionCookieName)
 
 		newSessionID, err := webSessionRepo.CreateOrUpdate(c.Context(), oldSessionID)
 		if err != nil {
@@ -46,6 +46,7 @@ func OwnerSessionMiddleware(webSessionRepo repository.IWebSessionRepo) fiber.Han
 		}
 
 		c.Locals(helper.CtxOwnerIDKey, newSessionID)
+		c.SetContext(helper.CtxWithOwnerID(c.Context(), newSessionID))
 
 		return c.Next()
 	}

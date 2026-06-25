@@ -4,9 +4,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/gofiber/fiber/v3"
-
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/gofiber/fiber/v3"
 )
 
 type FailedResponse struct {

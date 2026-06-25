@@ -24,8 +24,8 @@ func NewSavedQueryRepo() ISavedQueryRepo {
 func (I ISavedQueryRepoImpl) Index(ctx context.Context, req *dto.SavedQueryListRequest) (*[]model.SavedQuery, error) {
 	var items []model.SavedQuery
 
-	result := I.db.Scopes(scope.Paginate(&req.PaginationRequest)).
-		Where("connection_id = ?", req.ConnectionId).
+	result := I.db.WithContext(ctx).Scopes(scope.Paginate(&req.PaginationRequest)).
+		Where("connection_id = ?", req.ConnectionID).
 		Order("created_at desc").
 		Find(&items)
 
@@ -55,7 +55,7 @@ func (I ISavedQueryRepoImpl) Create(ctx context.Context, dto *dto.CreateSavedQue
 		query.Name = *dto.Name
 	}
 
-	query.ConnectionID = uint(dto.ConnectionId)
+	query.ConnectionID = uint(dto.ConnectionID)
 	query.Query = dto.Query
 	result := I.db.WithContext(ctx).Save(&query)
 	return &query, result.Error

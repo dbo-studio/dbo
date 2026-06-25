@@ -3,13 +3,12 @@ package databaseCore
 import (
 	"context"
 
-	"gorm.io/gorm"
-
 	"github.com/dbo-studio/dbo/internal/container"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/logger"
+	"gorm.io/gorm"
 )
 
 type BaseRepository struct {

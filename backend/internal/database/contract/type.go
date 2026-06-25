@@ -122,3 +122,25 @@ type DBNode struct {
 	Schema   string
 	Table    string
 }
+
+type AIContextOptions struct {
+	Database *string
+	Schema   *string
+	Tables   []string
+	Views    []string
+}
+
+type AIContextForeignKey struct {
+	TargetTable string
+	Columns     []string
+	RefColumns  []string
+	RefColumn   string
+}
+
+type AIContextColumn struct {
+	Name         string
+	MappedType   string
+	DataType     string
+	IsPrimaryKey bool
+	ForeignKey   *AIContextForeignKey
+}

@@ -46,7 +46,7 @@ func (r *PostgresRepository) databases(ctx context.Context, fromCache bool) ([]D
 		Joins("JOIN pg_roles r ON r.oid = d.datdba").
 		Joins("LEFT JOIN pg_shdescription des ON des.objoid = d.oid").
 		Joins("LEFT JOIN pg_tablespace t ON t.oid = d.dattablespace").
-		First(&databases).Error
+		Find(&databases).Error
 
 	if err != nil {
 		return nil, err

@@ -95,6 +95,7 @@ type Repository struct {
 	JobRepo                 IJobRepo
 	AiChatRepo              IAiChatRepo
 	AiProviderRepo          IAiProviderRepo
+	McpSettingsRepo         IMcpSettingsRepo
 }
 
 func NewRepository() *Repository {
@@ -108,5 +109,6 @@ func NewRepository() *Repository {
 		JobRepo:                 NewJobRepo(),
 		AiChatRepo:              NewAiChatRepo(),
 		AiProviderRepo:          NewAiProviderRepo(),
+		McpSettingsRepo:         NewMcpSettingsRepo(),
 	}
 }

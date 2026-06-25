@@ -45,9 +45,9 @@ func (s IImportExportImpl) Import(ctx context.Context, req *dto.ImportRequest) (
 		return nil, apperror.BadRequest(err)
 	}
 
-	jobData := helper.StructToJson(dto.ImportJob{
+	jobData := helper.StructToJSON(dto.ImportJob{
 		OwnerID:         helper.CtxOwnerID(ctx),
-		ConnectionId:    req.ConnectionId,
+		ConnectionID:    req.ConnectionID,
 		Table:           req.Table,
 		Data:            fileData,
 		Format:          req.Format,
@@ -62,7 +62,7 @@ func (s IImportExportImpl) Import(ctx context.Context, req *dto.ImportRequest) (
 	}
 
 	return &dto.ImportResponse{
-		JobId: int32(j.ID),
+		JobID: int32(j.ID),
 	}, nil
 }
 
@@ -71,7 +71,7 @@ func (s IImportExportImpl) Export(ctx context.Context, req *dto.ExportRequest) (
 		req.ChunkSize = 1000
 	}
 
-	j, err := s.jobManager.CreateJob(model.JobTypeExport, helper.StructToJson(dto.ExportJob{
+	j, err := s.jobManager.CreateJob(model.JobTypeExport, helper.StructToJSON(dto.ExportJob{
 		OwnerID:       helper.CtxOwnerID(ctx),
 		ExportRequest: *req,
 	}))
@@ -80,6 +80,6 @@ func (s IImportExportImpl) Export(ctx context.Context, req *dto.ExportRequest) (
 	}
 
 	return &dto.ExportResponse{
-		JobId: int32(j.ID),
+		JobID: int32(j.ID),
 	}, nil
 }

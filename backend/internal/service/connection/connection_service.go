@@ -14,11 +14,11 @@ import (
 type IConnectionService interface {
 	Index(ctx context.Context) (*dto.ConnectionsResponse, error)
 	Create(ctx context.Context, req *dto.CreateConnectionRequest) error
-	Update(ctx context.Context, connectionId int32, req *dto.UpdateConnectionRequest) (*dto.UpdateConnectionResponse, error)
-	Delete(ctx context.Context, connectionId int32) (*dto.ConnectionsResponse, error)
-	Close(ctx context.Context, connectionId int32) error
+	Update(ctx context.Context, connectionID int32, req *dto.UpdateConnectionRequest) (*dto.UpdateConnectionResponse, error)
+	Delete(ctx context.Context, connectionID int32) (*dto.ConnectionsResponse, error)
+	Close(ctx context.Context, connectionID int32) error
 	Ping(ctx context.Context, req *dto.PingConnectionRequest) error
-	SetCredentials(ctx context.Context, connectionId int32, req *dto.ConnectionCredentialsRequest) error
+	SetCredentials(ctx context.Context, connectionID int32, req *dto.ConnectionCredentialsRequest) error
 }
 
 type IConnectionServiceImpl struct {

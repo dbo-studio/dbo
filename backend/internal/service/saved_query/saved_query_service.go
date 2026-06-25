@@ -2,6 +2,7 @@ package serviceSavedQuery
 
 import (
 	"context"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/apperror"
@@ -10,8 +11,8 @@ import (
 type ISavedQueryService interface {
 	Index(ctx context.Context, dto *dto.SavedQueryListRequest) (*dto.SavedQueryListResponse, error)
 	Create(ctx context.Context, dto *dto.CreateSavedQueryRequest) (*dto.CreateSavedQueryResponse, error)
-	Update(ctx context.Context, queryId int32, req *dto.UpdateSavedQueryRequest) (*dto.UpdateSavedQueryResponse, error)
-	Delete(ctx context.Context, queryId int32) (*dto.SavedQueryListResponse, error)
+	Update(ctx context.Context, queryID int32, req *dto.UpdateSavedQueryRequest) (*dto.UpdateSavedQueryResponse, error)
+	Delete(ctx context.Context, queryID int32) (*dto.SavedQueryListResponse, error)
 }
 
 var _ ISavedQueryService = (*ISavedQueryServiceImpl)(nil)
@@ -44,8 +45,8 @@ func (h ISavedQueryServiceImpl) Create(ctx context.Context, dto *dto.CreateSaved
 	return createRes(savedQuery), nil
 }
 
-func (h ISavedQueryServiceImpl) Update(ctx context.Context, queryId int32, req *dto.UpdateSavedQueryRequest) (*dto.UpdateSavedQueryResponse, error) {
-	query, err := h.savedQueryRepo.Find(ctx, queryId)
+func (h ISavedQueryServiceImpl) Update(ctx context.Context, queryID int32, req *dto.UpdateSavedQueryRequest) (*dto.UpdateSavedQueryResponse, error) {
+	query, err := h.savedQueryRepo.Find(ctx, queryID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrSavedQueryNotFound)
 	}
@@ -58,8 +59,8 @@ func (h ISavedQueryServiceImpl) Update(ctx context.Context, queryId int32, req *
 	return updateRes(updatedQuery), nil
 }
 
-func (h ISavedQueryServiceImpl) Delete(ctx context.Context, queryId int32) (*dto.SavedQueryListResponse, error) {
-	query, err := h.savedQueryRepo.Find(ctx, queryId)
+func (h ISavedQueryServiceImpl) Delete(ctx context.Context, queryID int32) (*dto.SavedQueryListResponse, error) {
+	query, err := h.savedQueryRepo.Find(ctx, queryID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrSavedQueryNotFound)
 	}

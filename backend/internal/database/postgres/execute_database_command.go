@@ -8,7 +8,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *PostgresRepository) handleDatabaseCommands(node contract.DBNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
+func (r *PostgresRepository) handleDatabaseCommands(node contract.DBNode, tabID contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
 	if action != contract.CreateDatabaseAction && action != contract.EditDatabaseAction && action != contract.DropDatabaseAction {
@@ -20,7 +20,7 @@ func (r *PostgresRepository) handleDatabaseCommands(node contract.DBNode, tabId 
 		return nil, err
 	}
 
-	params := dto[tabId]
+	params := dto[tabID]
 
 	if action == contract.CreateDatabaseAction {
 		query := fmt.Sprintf("CREATE DATABASE %s", *params.New.Name)

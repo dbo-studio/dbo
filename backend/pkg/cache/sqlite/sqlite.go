@@ -8,7 +8,6 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/cache"
-
 	"github.com/goccy/go-json"
 	"gorm.io/gorm"
 )

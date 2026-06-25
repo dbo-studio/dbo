@@ -6,8 +6,8 @@ import (
 
 type (
 	RunQueryRequest struct {
-		ConnectionId int32       `json:"connectionId"`
-		NodeId       string      `json:"nodeId"`
+		ConnectionID int32       `json:"connectionId"`
+		NodeID       string      `json:"nodeId"`
 		Limit        *int        `json:"limit"`
 		Page         *int        `json:"page"`
 		InlineQuery  *string     `json:"inlineQuery"`
@@ -37,8 +37,8 @@ type SortDto struct {
 
 func (req RunQueryRequest) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
-		validation.Field(&req.NodeId, validation.Required, validation.Length(0, 120)),
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
+		validation.Field(&req.NodeID, validation.Required, validation.Length(0, 120)),
 		validation.Field(&req.Limit, validation.Min(1)),
 		validation.Field(&req.Page, validation.Min(1)),
 		validation.Field(&req.Filters),

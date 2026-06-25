@@ -7,7 +7,7 @@ import (
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
-func (r *SQLiteRepository) Objects(ctx context.Context, nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
+func (r *SQLiteRepository) Objects(ctx context.Context, nodeID string, tabID contract.TreeTab, _ contract.TreeNodeActionName) (*contract.FormResponse, error) {
 	switch tabID {
 	case contract.TableColumnsTab:
 		return r.getTableColumns(ctx, nodeID)

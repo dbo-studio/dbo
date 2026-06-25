@@ -4,9 +4,8 @@ import (
 	"context"
 	"strings"
 
-	"github.com/samber/lo"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/samber/lo"
 )
 
 func (r *SQLiteRepository) populateTableParamsFromDDL(ctx context.Context, tableParams *dto.SQLiteTableParams) string {

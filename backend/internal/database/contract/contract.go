@@ -7,6 +7,12 @@ import (
 )
 
 type DatabaseRepository interface {
+	QueryRepository
+	AIContextRepository
+	AIMetadataRepository
+}
+
+type QueryRepository interface {
 	Version(ctx context.Context) (string, error)
 	RunQuery(ctx context.Context, dto *dto.RunQueryRequest) (*dto.RunQueryResponse, error)
 	UpdateQuery(ctx context.Context, dto *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error)
@@ -19,6 +25,29 @@ type DatabaseRepository interface {
 	PreviewExecute(ctx context.Context, nodeID string, action TreeNodeActionName, params []byte) ([]string, error)
 	AutoComplete(ctx context.Context, dto *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error)
 	ImportData(ctx context.Context, job dto.ImportJob, rows [][]string, columns []string) (*ImportResult, error)
+}
+
+type AIContextRepository interface {
 	AiContext(ctx context.Context, dto *dto.AiChatRequest) (string, error)
 	AiCompleteContext(ctx context.Context, dto *dto.AiInlineCompleteRequest) string
+}
+
+type AIMetadataRepository interface {
+	ListTableNames(ctx context.Context, schema *string) ([]string, error)
+	ListViewNames(ctx context.Context, schema *string) ([]string, error)
+	DescribeTable(ctx context.Context, table string, schema *string) (string, error)
+}
+
+type RawQueryRepository interface {
+	RunRawQuery(ctx context.Context, dto *dto.RawQueryRequest) (*dto.RawQueryResponse, error)
+}
+
+type DBToolsRepository interface {
+	AIMetadataRepository
+	RawQueryRepository
+}
+
+type AIContextColumnProvider interface {
+	TableColumns(ctx context.Context, table string, opts AIContextOptions) ([]AIContextColumn, error)
+	ViewColumns(ctx context.Context, view string, opts AIContextOptions) ([]AIContextColumn, error)
 }

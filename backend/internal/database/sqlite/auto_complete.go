@@ -4,13 +4,12 @@ import (
 	"context"
 	"sync"
 
+	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/samber/lo"
 	"golang.org/x/sync/errgroup"
-
-	"github.com/dbo-studio/dbo/internal/app/dto"
 )
 
-func (r *SQLiteRepository) AutoComplete(ctx context.Context, req *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
+func (r *SQLiteRepository) AutoComplete(ctx context.Context, _ *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
 	g, _ := errgroup.WithContext(ctx)
 
 	var views []ViewBasic

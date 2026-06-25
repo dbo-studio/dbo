@@ -4,8 +4,8 @@ import "github.com/invopop/validation"
 
 type (
 	UpdateQueryRequest struct {
-		ConnectionId int32            `json:"connectionId"`
-		NodeId       string           `json:"nodeId"`
+		ConnectionID int32            `json:"connectionId"`
+		NodeID       string           `json:"nodeId"`
 		EditedItems  []EditedItem     `json:"edited"`
 		DeletedItems []map[string]any `json:"deleted"`
 		AddedItems   []map[string]any `json:"added"`
@@ -24,8 +24,8 @@ type EditedItem struct {
 
 func (req UpdateQueryRequest) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
-		validation.Field(&req.NodeId, validation.Required, validation.Length(0, 120)),
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
+		validation.Field(&req.NodeID, validation.Required, validation.Length(0, 120)),
 		validation.Field(&req.EditedItems),
 	)
 }

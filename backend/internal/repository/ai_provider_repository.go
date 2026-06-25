@@ -48,8 +48,8 @@ func (r AiProviderRepoImpl) CreateIfNotExists(ctx context.Context, provider *mod
 }
 
 func (r AiProviderRepoImpl) Update(ctx context.Context, provider *model.AiProvider, dto *dto.AiProviderUpdateRequest) (*model.AiProvider, error) {
-	provider.Url = lo.FromPtr(helper.Optional(dto.Url, lo.ToPtr(provider.Url)))
-	provider.ApiKey = helper.Optional(dto.ApiKey, provider.ApiKey)
+	provider.URL = lo.FromPtr(helper.Optional(dto.URL, lo.ToPtr(provider.URL)))
+	provider.APIKey = helper.Optional(dto.APIKey, provider.APIKey)
 	provider.Timeout = lo.FromPtr(helper.Optional(dto.Timeout, lo.ToPtr(provider.Timeout)))
 	provider.IsActive = lo.FromPtr(helper.Optional(dto.IsActive, lo.ToPtr(provider.IsActive)))
 	provider.Model = lo.FromPtr(helper.Optional(dto.Model, lo.ToPtr(provider.Model)))
@@ -63,9 +63,9 @@ func (r AiProviderRepoImpl) Update(ctx context.Context, provider *model.AiProvid
 	return provider, result.Error
 }
 
-func (c AiProviderRepoImpl) MakeAllProvidersNotActive(ctx context.Context, provider *model.AiProvider, req *dto.AiProviderUpdateRequest) error {
+func (r AiProviderRepoImpl) MakeAllProvidersNotActive(ctx context.Context, provider *model.AiProvider, req *dto.AiProviderUpdateRequest) error {
 	if req.IsActive != nil && *req.IsActive {
-		result := c.db.WithContext(ctx).Model(&model.AiProvider{}).Not("id", provider.ID).Update("is_active", false)
+		result := r.db.WithContext(ctx).Model(&model.AiProvider{}).Not("id", provider.ID).Update("is_active", false)
 		return result.Error
 	}
 	return nil
