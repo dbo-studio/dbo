@@ -47,12 +47,15 @@ func (req RunQueryRequest) Validate() error {
 }
 
 func (req FilterDto) Validate() error {
-	return validation.ValidateStruct(&req,
+	rules := []*validation.FieldRules{
 		validation.Field(&req.Column, validation.Required, validation.Length(0, 120)),
 		validation.Field(&req.Operator, validation.Required),
-		validation.Field(&req.Value, validation.Required),
 		validation.Field(&req.Next, validation.Required),
-	)
+	}
+	if FilterRequiresValue(req.Operator) {
+		rules = append(rules, validation.Field(&req.Value, validation.Required))
+	}
+	return validation.ValidateStruct(&req, rules...)
 }
 
 func (req SortDto) Validate() error {

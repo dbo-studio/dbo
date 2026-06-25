@@ -11,6 +11,7 @@ export type SelectInputProps = {
   options: SelectInputOption[];
   onChange: (value: OnChangeValue<SelectInputOption, boolean>) => void;
   isMulti?: boolean;
+  style?: React.CSSProperties;
 };
 
 export type SelectInputOption = {

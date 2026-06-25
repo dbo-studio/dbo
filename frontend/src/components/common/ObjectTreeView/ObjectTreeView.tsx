@@ -26,9 +26,7 @@ export default function ObjectTreeView(): JSX.Element {
   const parentRefsRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
 
-  const tree = useTreeStore((state) =>
-    currentConnection?.id ? (state.tree[currentConnection.id] ?? null) : null
-  );
+  const tree = useTreeStore((state) => (currentConnection?.id ? (state.tree[currentConnection.id] ?? null) : null));
 
   const { mutateAsync: getChildrenMutation } = useMutation({
     mutationFn: api.tree.getTree

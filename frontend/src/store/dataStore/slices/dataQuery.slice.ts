@@ -1,4 +1,5 @@
 import { runQuery, runRawQuery } from '@/api/query';
+import { filterOperatorRequiresValue } from '@/core/constants';
 import type { RunQueryResponseType } from '@/api/query/types';
 import { debouncedSaveToIndexedDB } from '@/core/utils/indexdbHelper';
 import { extractQueryError, summarizeQueryResult } from '@/core/utils/queryResultSummary';
@@ -61,9 +62,9 @@ export const createDataQuerySlice: StateCreator<
             (f) =>
               f.column.length > 0 &&
               f.operator.length > 0 &&
-              f.value.toString().length > 0 &&
               f.next.length > 0 &&
-              f.isActive
+              f.isActive &&
+              (filterOperatorRequiresValue(f.operator) ? f.value.toString().length > 0 : true)
           ),
           sorts: sorts.filter((f) => f.column.length > 0 && f.operator.length > 0 && f.isActive)
         },

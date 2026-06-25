@@ -1,4 +1,4 @@
-import { PgsqlFilterConditions, PgsqlFilterNext } from '@/core/constants';
+import { filterOperatorRequiresValue, PgsqlFilterConditions, PgsqlFilterNext } from '@/core/constants';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { EventFor, FilterType } from '@/types';
 import { Box, Checkbox } from '@mui/material';
@@ -9,8 +9,8 @@ import SelectInput from '@/components/base/SelectInput/SelectInput.tsx';
 import { SelectInputOption } from '@/components/base/SelectInput/types.ts';
 import locales from '@/locales';
 import type { FilterItemProps } from '../types.ts';
-import { FilterItemStyled } from './FilterItem.styled';
 import AddFilterButton from './AddFilterButton/AddFilterButton.tsx';
+import { FilterItemStyled } from './FilterItem.styled';
 import RemoveFilterButton from './RemoveFilterButton/RemoveFilterButton.tsx';
 
 export default function FilterItem({ filter, columns, apply }: FilterItemProps): JSX.Element {
@@ -25,13 +25,21 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
     isActive: filter.isActive
   });
 
+  const requiresValue = filterOperatorRequiresValue(currentFilter.operator);
+
   const handleChange = useCallback(
     (type: 'column' | 'operator' | 'value' | 'next' | 'isActive', value: string | boolean): FilterType => {
+      const operator = type === 'operator' ? (value as string) : currentFilter.operator;
       const newFilter = {
         index: currentFilter.index,
         column: type === 'column' ? (value as string) : currentFilter.column,
-        operator: type === 'operator' ? (value as string) : currentFilter.operator,
-        value: type === 'value' ? (value as string | number) : currentFilter.value,
+        operator,
+        value:
+          type === 'value'
+            ? (value as string | number)
+            : type === 'operator' && !filterOperatorRequiresValue(operator)
+              ? ''
+              : currentFilter.value,
         next: type === 'next' ? (value as string) : currentFilter.next,
         isActive: type === 'isActive' ? (value as boolean) : currentFilter.isActive
       };
@@ -81,7 +89,10 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
         <SelectInput
           value={currentFilter.operator}
           size='small'
-          options={PgsqlFilterConditions.map((c) => ({ value: c, label: c }))}
+          style={{
+            minWidth: '120px'
+          }}
+          options={PgsqlFilterConditions.map((c) => ({ value: c.value, label: c.label }))}
           onChange={(e): void =>
             upsertFilters(handleChange('operator', (e as unknown as SelectInputOption).value as string))
           }
@@ -97,7 +108,8 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
           margin='none'
           fullWidth
           size='small'
-          value={currentFilter.value}
+          disabled={!requiresValue}
+          value={requiresValue ? currentFilter.value : ''}
           onBlur={(): void => upsertFilters(currentFilter)}
           onChange={(e: EventFor<'input', 'onChange'>): FilterType => handleChange('value', e.target.value)}
           onKeyDown={handleKeyDown}

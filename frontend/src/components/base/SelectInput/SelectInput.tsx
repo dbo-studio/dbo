@@ -14,7 +14,8 @@ export default function SelectInput({
   emptylabel,
   disabled,
   error,
-  isMulti
+  isMulti,
+  style
 }: SelectInputProps): JSX.Element {
   const theme = useTheme();
 
@@ -29,6 +30,7 @@ export default function SelectInput({
 
   return (
     <Box
+      style={style}
       sx={{
         display: 'flex',
         flexDirection: 'column'
