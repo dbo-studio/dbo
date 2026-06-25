@@ -71,24 +71,31 @@ func (*BaseRepository) SampleBuildFormResponseFromResults(general []contract.Gen
 }
 
 func (*BaseRepository) BuildGeneralFormResult(results map[string]any, fields []contract.FormField) ([]contract.GeneralField, error) {
-	generalFields := make([]contract.GeneralField, 0)
+	return buildGeneralFormFieldsFromSchema(fields, results), nil
+}
 
-	if len(results) == 0 {
-		return generalFields, nil
-	}
+func (*BaseRepository) BuildGeneralFormFieldsFromSchema(fields []contract.FormField, results map[string]any) ([]contract.GeneralField, error) {
+	return buildGeneralFormFieldsFromSchema(fields, results), nil
+}
+
+func buildGeneralFormFieldsFromSchema(fields []contract.FormField, results map[string]any) []contract.GeneralField {
+	generalFields := make([]contract.GeneralField, 0, len(fields))
 
 	for _, f := range fields {
-		if val, exists := results[f.ID]; exists {
-			generalFields = append(generalFields, contract.GeneralField{
-				ID:       f.ID,
-				Name:     f.Name,
-				Type:     f.Type,
-				Required: f.Required,
-				Value:    val,
-				Options:  f.Options,
-			})
+		val, exists := results[f.ID]
+		if !exists {
+			val = nil
 		}
+
+		generalFields = append(generalFields, contract.GeneralField{
+			ID:       f.ID,
+			Name:     f.Name,
+			Type:     f.Type,
+			Required: f.Required,
+			Value:    val,
+			Options:  f.Options,
+		})
 	}
 
-	return generalFields, nil
+	return generalFields
 }

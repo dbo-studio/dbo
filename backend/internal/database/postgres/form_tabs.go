@@ -18,7 +18,6 @@ func (r *PostgresRepository) GetFormTabs(_ context.Context, action contract.Tree
 		}
 	case contract.CreateTableAction, contract.EditTableAction:
 		return []contract.FormTab{
-			{ID: contract.TableTab, Name: "Table"},
 			{ID: contract.TableColumnsTab, Name: "Columns"},
 			{ID: contract.TableForeignKeysTab, Name: "Foreign Keys"},
 			// {ID: contract.TableIndexesTab, Name: "Indexes"},

@@ -1,5 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { Box, IconButton } from '@mui/material';
+import locales from '@/locales';
+import { Box, IconButton, Tooltip } from '@mui/material';
 import type { JSX } from 'react';
 import type { FormStatusBarProps } from '../../types';
 import { FormStatusBarStyled } from './FormStatusBar.styled';
@@ -8,6 +9,7 @@ export default function FormStatusBar({
   onSave,
   onCancel,
   onAddRow,
+  onAiSuggest,
   isArrayForm,
   disabled
 }: FormStatusBarProps): JSX.Element {
@@ -25,6 +27,14 @@ export default function FormStatusBar({
         <IconButton disabled={disabled} onClick={onCancel} data-testid='object-form-cancel'>
           <CustomIcon type='close' size='s' />
         </IconButton>
+
+        {onAiSuggest && (
+          <Tooltip title={locales.ai_suggest_definition}>
+            <IconButton disabled={disabled} onClick={onAiSuggest} data-testid='object-form-ai-suggest'>
+              <CustomIcon type='sparkles' size='s' />
+            </IconButton>
+          </Tooltip>
+        )}
       </Box>
     </FormStatusBarStyled>
   );

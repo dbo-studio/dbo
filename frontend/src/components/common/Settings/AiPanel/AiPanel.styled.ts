@@ -1,13 +1,17 @@
 import { Box, styled } from '@mui/material';
 
-export const AiPanelFormStyled = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: theme.spacing(2)
+export const AiPanelTabsStyled = styled(Box)(() => ({
+  '& .MuiTabs-indicator': {
+    height: 2
+  }
 }));
 
-export const AiPanelFooterStyled = styled(Box)(({ theme }) => ({
+export const McpSectionStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
-  marginTop: theme.spacing(2),
-  justifyContent: 'space-between'
+  flexDirection: 'column',
+  gap: theme.spacing(1.5),
+  padding: theme.spacing(2),
+  borderRadius: theme.shape.borderRadius,
+  border: `1px solid ${theme.palette.divider}`,
+  backgroundColor: theme.palette.background.paper
 }));

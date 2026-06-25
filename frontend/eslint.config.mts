@@ -5,6 +5,7 @@ import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
 const tsconfigRootDir = path.dirname(fileURLToPath(import.meta.url));
@@ -36,6 +37,9 @@ export default defineConfig([
         tsconfigRootDir
       },
       globals: globals.browser
+    },
+    plugins: {
+      'react-hooks': reactHooks
     },
     rules: {
       'react-hooks/rules-of-hooks': 'error',

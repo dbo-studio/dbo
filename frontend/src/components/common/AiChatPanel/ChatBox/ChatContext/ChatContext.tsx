@@ -1,5 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import DropDownMenu from '@/components/base/DropDownMenu/DropDownMenu';
+import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import type { AiContextType } from '@/types';
 import { Box, Divider, IconButton } from '@mui/material';
@@ -78,6 +79,33 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
         {context.views.map((item) => (
           <ChatContextItem type='views' key={item} name={item} onClick={() => handleContextChange(item, 'views')} />
         ))}
+
+        {context.querySnippet && (
+          <ChatContextItem
+            type='tables'
+            key='query-snippet'
+            name={`${locales.context_query}: ${context.querySnippet}`}
+            onClick={() => {}}
+          />
+        )}
+
+        {context.queryError && (
+          <ChatContextItem
+            type='tables'
+            key='query-error'
+            name={`${locales.context_error}: ${context.queryError}`}
+            onClick={() => {}}
+          />
+        )}
+
+        {context.queryResultSummary && (
+          <ChatContextItem
+            type='tables'
+            key='query-result'
+            name={`${locales.context_result}: ${context.queryResultSummary}`}
+            onClick={() => {}}
+          />
+        )}
       </ChatContextTagsStyled>
       <DropDownMenu open={isOpen} onClose={() => setOpen(false)} anchorRef={anchorRef}>
         <ChatContextStyled>

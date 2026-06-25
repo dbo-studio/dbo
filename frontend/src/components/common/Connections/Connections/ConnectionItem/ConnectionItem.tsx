@@ -1,9 +1,9 @@
 import { useContextMenu } from '@/hooks';
-import { Box, CircularProgress, Tooltip, Typography } from '@mui/material';
+import { Box, CircularProgress, Tooltip } from '@mui/material';
 import type { JSX } from 'react';
 import CustomIcon from '../../../../base/CustomIcon/CustomIcon';
 import type { ConnectionItemProps } from '../../types';
-import { ConnectionItemStyled } from './ConnectionItem.styled';
+import { ConnectionItemNameStyled, ConnectionItemStyled } from './ConnectionItem.styled';
 import ConnectionItemContextMenu from './ConnectionItemContextMenu/ConnectionItemContextMenu';
 
 export default function ConnectionItem({
@@ -27,24 +27,18 @@ export default function ConnectionItem({
       selected={selected}
       onClick={handleClick}
     >
-      <Tooltip title={connection.name}>
-        <Box
-          sx={{
-            maxWidth: 50
-          }}
-        >
-          <CustomIcon type={connection.isOpen ? 'databaseZap' : 'database'} size='m' />
-          {loading ? (
-            <Box>
-              <CircularProgress size={15} color='primary' />
-            </Box>
-          ) : (
-            <Typography component={'p'} variant='caption' noWrap>
-              {connection.name}
-            </Typography>
-          )}
+      <CustomIcon type={connection.isOpen ? 'databaseZap' : 'database'} size='m' />
+      {loading ? (
+        <Box>
+          <CircularProgress size={15} color='primary' />
         </Box>
-      </Tooltip>
+      ) : (
+        <Tooltip title={connection.name} enterDelay={500}>
+          <ConnectionItemNameStyled component='p' variant='caption'>
+            {connection.name}
+          </ConnectionItemNameStyled>
+        </Tooltip>
+      )}
       <ConnectionItemContextMenu
         connection={connection}
         contextMenu={contextMenuPosition}

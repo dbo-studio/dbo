@@ -74,7 +74,7 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
         }}
       >
         <CustomIcon type='bot' />
-        <Tooltip title={enableEditorAi ? locales.enable_ai : locales.disable_ai}>
+        <Tooltip title={enableEditorAi ? locales.disable_ai : locales.enable_ai}>
           <Switch
             size='small'
             checked={enableEditorAi}

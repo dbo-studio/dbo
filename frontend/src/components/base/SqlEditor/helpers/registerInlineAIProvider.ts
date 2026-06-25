@@ -5,51 +5,10 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import type * as Monaco from 'monaco-editor';
 import { DEBOUNCE_DELAYS, MIN_TEXT_LENGTH_FOR_AI } from './constants';
-
-type CompletionItemType = {
-  insertText: string;
-  range: {
-    startLineNumber: number;
-    startColumn: number;
-    endLineNumber: number;
-    endColumn: number;
-  };
-};
+import { createCompletionItem, getTextRange, sanitizeInlineCompletion } from './inlineCompletionUtils';
 
 let currentRequest: AbortController | null = null;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-
-function createCompletionItem(text: string, position: Monaco.Position): CompletionItemType {
-  // For inline completions, range should start and end at the current cursor position
-  // Monaco will handle displaying the suggestion as "ghost text" after the cursor
-  return {
-    insertText: text,
-    range: {
-      startLineNumber: position.lineNumber,
-      startColumn: position.column,
-      endLineNumber: position.lineNumber,
-      endColumn: position.column
-    }
-  };
-}
-
-function getTextRange(model: Monaco.editor.ITextModel, position: Monaco.Position) {
-  const prefix = model.getValueInRange({
-    startLineNumber: 1,
-    startColumn: 1,
-    endLineNumber: position.lineNumber,
-    endColumn: position.column
-  });
-
-  const suffix = model.getValueInRange({
-    startLineNumber: position.lineNumber,
-    startColumn: position.column,
-    endLineNumber: model.getLineCount(),
-    endColumn: model.getLineMaxColumn(model.getLineCount())
-  });
-
-  return { prefix, suffix };
-}
 
 function cleanupPreviousRequest() {
   if (currentRequest) {
@@ -90,29 +49,22 @@ export function registerInlineAIProvider(monaco: typeof Monaco, languageId: stri
         return { items: [] };
       }
 
-      const { prefix, suffix } = getTextRange(model, position);
-
-      if (prefix.trim().length < MIN_TEXT_LENGTH_FOR_AI) {
+      if (getTextRange(model, position).prefix.trim().length < MIN_TEXT_LENGTH_FOR_AI) {
         return { items: [] };
       }
 
-      // Cancel any previous request and clear debounce timer
       cleanupPreviousRequest();
 
-      // Capture initial position and model
       const initialPosition = position;
 
       return new Promise((resolve) => {
-        // Set up debounce timer for this request
         const timerId = setTimeout(() => {
           void (async () => {
-            // Check if this timer was cancelled by cleanupPreviousRequest
             if (debounceTimer !== timerId) {
               resolve({ items: [] });
               return;
             }
 
-            // Clear timer reference as we're about to make the request
             debounceTimer = null;
 
             if (token.isCancellationRequested) {
@@ -123,6 +75,13 @@ export function registerInlineAIProvider(monaco: typeof Monaco, languageId: stri
             const currentPosition = model.getPositionAt(model.getOffsetAt(initialPosition));
 
             if (model.isDisposed()) {
+              resolve({ items: [] });
+              return;
+            }
+
+            const { prefix, suffix } = getTextRange(model, currentPosition);
+
+            if (prefix.trim().length < MIN_TEXT_LENGTH_FOR_AI) {
               resolve({ items: [] });
               return;
             }
@@ -156,22 +115,22 @@ export function registerInlineAIProvider(monaco: typeof Monaco, languageId: stri
                 }
               };
 
-              const completionText = await fetchCompletion(requestData, abortSignal);
+              const rawCompletion = await fetchCompletion(requestData, abortSignal);
 
               if (abortSignal.aborted || token.isCancellationRequested) {
                 resolve({ items: [] });
                 return;
               }
 
+              const completionText = sanitizeInlineCompletion(prefix, suffix, rawCompletion);
+
               if (!model.isDisposed() && completionText.trim()) {
                 const finalPosition = model.getPositionAt(
                   Math.min(model.getOffsetAt(currentPosition), model.getValueLength())
                 );
 
-                const completionItem = createCompletionItem(completionText, finalPosition);
-
                 resolve({
-                  items: [completionItem]
+                  items: [createCompletionItem(completionText, finalPosition)]
                 });
               } else {
                 resolve({ items: [] });
@@ -196,7 +155,6 @@ export function registerInlineAIProvider(monaco: typeof Monaco, languageId: stri
           })();
         }, DEBOUNCE_DELAYS.inlineAIProvider);
 
-        // Store timer ID so we can check if it was cancelled
         debounceTimer = timerId;
       });
     },

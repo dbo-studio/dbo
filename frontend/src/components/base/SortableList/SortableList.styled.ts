@@ -9,6 +9,5 @@ export const SortableListContainerStyled = styled(Box, {
 })<SortableListContainerStyledProps>(({ direction }) => ({
   display: 'flex',
   flexDirection: direction === 'horizontal' ? 'row' : 'column',
-  touchAction: direction === 'horizontal' ? 'pan-x' : 'pan-y',
-  contain: 'layout style'
+  touchAction: direction === 'horizontal' ? 'pan-x' : 'pan-y'
 }));

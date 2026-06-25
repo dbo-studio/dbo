@@ -14,10 +14,35 @@ type ColumnChange = {
   deleted?: boolean;
 };
 
+const MYSQL_TABLE_FIELD_MAP: Record<string, string> = {
+  TABLE_NAME: 'relname',
+  TABLE_COMMENT: 'description'
+};
+
+const MYSQL_COLUMN_FIELD_MAP: Record<string, string> = {
+  COLUMN_NAME: 'column_name',
+  DATA_TYPE: 'data_type',
+  IS_NULLABLE: 'not_null',
+  COLUMN_DEFAULT: 'column_default',
+  COLUMN_COMMENT: 'comment',
+  CHARACTER_MAXIMUM_LENGTH: 'character_maximum_length',
+  NUMERIC_SCALE: 'numeric_scale',
+  AUTO_INCREMENT: 'is_identity'
+};
+
 const mapFieldId = (tabId: string, fieldId: string): string => {
   if (tabId === 'table_foreign_keys' && fieldId === 'constraint_name') {
     return 'name';
   }
+
+  if (tabId === 'table' && MYSQL_TABLE_FIELD_MAP[fieldId]) {
+    return MYSQL_TABLE_FIELD_MAP[fieldId];
+  }
+
+  if (tabId === 'table_columns' && MYSQL_COLUMN_FIELD_MAP[fieldId]) {
+    return MYSQL_COLUMN_FIELD_MAP[fieldId];
+  }
+
   return fieldId;
 };
 
@@ -54,11 +79,12 @@ const isRowUpdated = (row: FormFieldType[]): boolean =>
 const hasGeneralChanges = (general: GeneralFieldType[]): boolean =>
   general.some((field) => JSON.stringify(field.value) !== JSON.stringify(field.originalValue));
 
-const buildGeneralRecord = (general: GeneralFieldType[], useOriginal = false): Record<string, FormValue> => {
+const buildGeneralTableRecord = (general: GeneralFieldType[], useOriginal = false): Record<string, FormValue> => {
   const record: Record<string, FormValue> = {};
 
   for (const field of general) {
-    record[field.id] = toPayloadValue(useOriginal ? field.originalValue : field.value);
+    const key = MYSQL_TABLE_FIELD_MAP[field.id] ?? field.id;
+    record[key] = toPayloadValue(useOriginal ? field.originalValue : field.value);
   }
 
   return record;
@@ -82,10 +108,10 @@ const buildTablePayload = (formData: FormObjectData, action: string): Record<str
   if (action === 'editTable' && !hasChanges) return null;
 
   const newRecord =
-    formData.general.length > 0 ? buildGeneralRecord(formData.general) : rowToRecord(formData.data[0] ?? [], 'table');
+    formData.general.length > 0 ? buildGeneralTableRecord(formData.general) : rowToRecord(formData.data[0] ?? [], 'table');
   const oldRecord =
     formData.general.length > 0
-      ? buildGeneralRecord(formData.general, true)
+      ? buildGeneralTableRecord(formData.general, true)
       : rowToRecord(formData.data[0] ?? [], 'table', true);
 
   return {
@@ -179,9 +205,13 @@ export const buildSavePayload = (
   const payload: Record<string, unknown> = {};
 
   const tableTabData = formDataByTab[`${objectPrefix}_table`];
+  const columnsTabData = formDataByTab[`${objectPrefix}_table_columns`];
 
-  if (tableTabData && TABLE_ACTIONS.has(action)) {
-    const tablePayload = buildTablePayload(tableTabData, action);
+  if (TABLE_ACTIONS.has(action)) {
+    const tablePayload =
+      (tableTabData ? buildTablePayload(tableTabData, action) : null) ??
+      (columnsTabData?.general.length ? buildTablePayload(columnsTabData, action) : null);
+
     if (tablePayload) {
       Object.assign(payload, tablePayload);
     }

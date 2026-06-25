@@ -1,19 +1,24 @@
 import api from '@/api';
+import type { RunQueryResponseType } from '@/api/query/types';
 import ResizableYBox from '@/components/base/ResizableBox/ResizableYBox.tsx';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor.tsx';
 import { SqlEditorRef } from '@/components/base/SqlEditor/types';
 import DataGrid from '@/components/common/DataGrid/DataGrid';
 import { shortcuts } from '@/core/utils';
 import { useCurrentConnection, useShortcut, useWindowSize } from '@/hooks';
+import { useAiBridge } from '@/hooks/useAiBridge';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
+import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AutoCompleteType, ColumnType, EditorTabType, RowType } from '@/types';
 import { useQuery } from '@tanstack/react-query';
 import type { JSX } from 'react';
-import { useEffect, useRef, useState } from 'react';
-import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { QueryContainerStyled, QueryEditorBoxStyled } from './Query.styled';
+import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
+import QueryErrorBanner from './QueryErrorBanner/QueryErrorBanner';
 
 export default function Query(): JSX.Element {
   const selectedTab = useSelectedTab<EditorTabType>();
@@ -31,10 +36,14 @@ export default function Query(): JSX.Element {
   const runRawQuery = useDataStore((state) => state.runRawQuery);
   const loadDataFromIndexedDB = useDataStore((state) => state.loadDataFromIndexedDB);
   const toggleDataFetching = useDataStore((state) => state.toggleDataFetching);
+  const pendingEditorQueryRun = useDataStore((state) => state.pendingEditorQueryRun);
+  const clearPendingEditorQueryRun = useDataStore((state) => state.clearPendingEditorQueryRun);
 
   const [value, setValue] = useState('');
   const [showGrid, setShowGrid] = useState(false);
   const isDataFetching = useDataStore((state) => state.isDataFetching);
+  const lastQueryError = useDataStore((state) => state.lastQueryError);
+  const { askAboutSelection } = useAiBridge();
 
   useShortcut(shortcuts.runQuery, () => void runQuery());
 
@@ -51,8 +60,55 @@ export default function Query(): JSX.Element {
 
   useEffect(() => {
     handleChangeValue();
+
+    const pending = useDataStore.getState().pendingEditorQueryRun;
+    if (pending?.tabId === selectedTab?.id) {
+      return;
+    }
+
     void loadData().catch((e) => console.log('🚀 ~ Query ~ e:', e));
   }, [selectedTab?.id, autocomplete]);
+
+  const applyQueryResult = useCallback((res: RunQueryResponseType | undefined): void => {
+    const columns = res?.columns.filter((column) => column.isActive) ?? [];
+    setTableData({
+      rows: res?.data ?? [],
+      columns
+    });
+
+    if (columns.length > 0) {
+      setShowGrid(true);
+    }
+  }, []);
+
+  const executeRawQuery = useCallback(
+    async (sql?: string): Promise<RunQueryResponseType | undefined> => {
+      const res = await runRawQuery(sql);
+      applyQueryResult(res);
+      return res;
+    },
+    [applyQueryResult, runRawQuery]
+  );
+
+  useEffect(() => {
+    if (!pendingEditorQueryRun || pendingEditorQueryRun.tabId !== selectedTab?.id) {
+      return;
+    }
+
+    const { query } = pendingEditorQueryRun;
+    clearPendingEditorQueryRun();
+
+    const runPending = async (): Promise<void> => {
+      setValue(query);
+      setShowGrid(true);
+      const res = await executeRawQuery(query);
+      if (res) {
+        toast.success(locales.run_query);
+      }
+    };
+
+    void runPending();
+  }, [pendingEditorQueryRun, selectedTab?.id, clearPendingEditorQueryRun, executeRawQuery]);
 
   const handleChangeValue = (): void => {
     setValue(getQuery());
@@ -83,11 +139,15 @@ export default function Query(): JSX.Element {
 
   const runQuery = async (): Promise<void> => {
     const selectedQuery = sqlEditorRef.current?.getSelectedQuery();
-    const res = await runRawQuery(selectedQuery === '' ? undefined : selectedQuery);
-    setTableData({
-      rows: res?.data ?? [],
-      columns: res?.columns.filter((column) => column.isActive) ?? []
-    });
+    await executeRawQuery(selectedQuery === '' ? undefined : selectedQuery);
+  };
+
+  const handleAiExplain = (): void => {
+    const sql = sqlEditorRef.current?.getSelectedQuery()?.trim();
+    if (!sql) {
+      return;
+    }
+    askAboutSelection(sql, 'explain');
   };
 
   return (
@@ -95,10 +155,13 @@ export default function Query(): JSX.Element {
       <QueryEditorActionBar
         loading={isDataFetching}
         onRunQuery={() => void runQuery()}
+        onAiExplain={handleAiExplain}
+        aiExplainDisabled={!value.trim()}
         databases={autocomplete?.databases ?? []}
         schemas={autocomplete?.schemas ?? []}
         onFormat={(): void => handleChangeValue()}
       />
+      <QueryErrorBanner />
       <QueryContainerStyled height={windowSize.height}>
         <QueryEditorBoxStyled>
           <SqlEditor
@@ -106,6 +169,8 @@ export default function Query(): JSX.Element {
             onRunQuery={() => void runQuery()}
             onMount={(): void => setShowGrid(true)}
             onChange={handleUpdateState}
+            onAiSelection={(sql, action) => askAboutSelection(sql, action)}
+            hasQueryError={!!lastQueryError}
             autocomplete={
               autocomplete ?? {
                 databases: [],

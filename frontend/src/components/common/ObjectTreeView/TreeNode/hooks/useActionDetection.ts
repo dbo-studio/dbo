@@ -115,7 +115,18 @@ export const useActionDetection = (
         }
       }
     },
-    [confirmModal, currentConnection?.id, expandNode, executeActionMutation, pendingExecuteAction, reloadTree]
+    [
+      expandNode,
+      addObjectTab,
+      addDataTab,
+      currentConnection,
+      confirmModal,
+      pendingExecuteAction,
+      executeActionMutation,
+      queryClient,
+      reloadTree,
+      copy
+    ]
   );
 
   return { actionDetection };

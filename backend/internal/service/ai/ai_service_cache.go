@@ -45,5 +45,5 @@ func (cm *AiServiceImpl) generateCompletionKey(req *dto.AiInlineCompleteRequest)
 	}
 
 	hash := sha1.Sum([]byte(keyBuilder))
-	return fmt.Sprintf("c:%d:ai_complete:%x", req.ConnectionId, hash)
+	return fmt.Sprintf("c:%d:ai_complete:%x", req.ConnectionID, hash)
 }

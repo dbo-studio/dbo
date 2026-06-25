@@ -26,8 +26,8 @@ export default function ConnectionItemContextMenu({
   });
 
   const showModal = useConfirmModalStore((state) => state.danger);
-  const updateTabs = useTabStore((state) => state.updateTabs);
-  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
+  const showWarningModal = useConfirmModalStore((state) => state.warning);
+  const resetTabs = useTabStore((state) => state.reset);
   const clearCurrentConnection = useConnectionStore((state) => state.clearCurrentConnection);
   const resetTree = useTreeStore((state) => state.reset);
 
@@ -50,8 +50,7 @@ export default function ConnectionItemContextMenu({
         queryKey: ['connections']
       });
 
-      updateSelectedTab(undefined);
-      updateTabs([]);
+      resetTabs();
       toast.success(locales.connection_delete_success);
       return;
     } catch (err) {
@@ -59,11 +58,7 @@ export default function ConnectionItemContextMenu({
     }
   };
 
-  const handleEditConnection = (connection: ConnectionType | undefined): void => {
-    if (connection) updateUI({ showEditConnection: connection.id });
-  };
-
-  const handleCloseConnection = async (connection: ConnectionType): Promise<void> => {
+  const handleCloseConnection = async (connection: ConnectionType): Promise<boolean> => {
     try {
       const currentConnectionId = useConnectionStore.getState().currentConnectionId;
       await api.connection.updateConnection(connection.id, { isActive: false, isClose: true });
@@ -73,18 +68,55 @@ export default function ConnectionItemContextMenu({
         resetTree();
       }
 
+      await queryClient.invalidateQueries({
+        queryKey: ['connections']
+      });
+
       toast.success(locales.connection_closed_success);
+      return true;
     } catch (err) {
       console.debug('🚀 ~ closeConnectionMutation ~ error:', err);
       toast.error(locales.connection_close_failed);
+      return false;
     }
+  };
+
+  const needsCloseBeforeEdit = (target: ConnectionType): boolean => {
+    const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+
+    return target.isOpen || target.isActive || Number(currentConnectionId) === target.id;
+  };
+
+  const handleEditConnection = (target: ConnectionType | undefined): void => {
+    if (!target) {
+      return;
+    }
+
+    const openEdit = (): void => {
+      updateUI({ showEditConnection: target.id });
+    };
+
+    if (!needsCloseBeforeEdit(target)) {
+      openEdit();
+      return;
+    }
+
+    showWarningModal(locales.edit_connection, locales.connection_edit_confirm, () => {
+      void (async (): Promise<void> => {
+        const closed = await handleCloseConnection(target);
+        if (closed) {
+          openEdit();
+        }
+      })();
+    });
   };
 
   const menu: MenuType[] = [
     {
       name: locales.edit,
       icon: 'settings',
-      action: (): void => handleEditConnection(connection)
+      action: (): void => handleEditConnection(connection),
+      closeBeforeAction: true
     },
     {
       name: locales.close_connection,

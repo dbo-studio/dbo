@@ -50,7 +50,8 @@ export default defineConfig({
         ]
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 8000000
+        maximumFileSizeToCacheInBytes: 8000000,
+        navigateFallbackDenylist: [/^\/api/]
       }
     })
   ],
@@ -61,7 +62,13 @@ export default defineConfig({
   server: {
     strictPort: true,
     host: host !== undefined ? host : true,
-    port: 3000
+    port: 3000,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
+      }
+    }
   },
   build: {
     target:

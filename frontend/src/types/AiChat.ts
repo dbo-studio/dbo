@@ -12,6 +12,10 @@ export type AiMessageType = {
   language: 'sql' | 'go' | 'js' | 'python' | 'json' | 'yaml' | 'text';
   type: 'code' | 'explanation';
   isNew?: boolean;
+  thinking?: {
+    content: string;
+    durationMs: number;
+  };
 };
 
 export type AiContextType = {
@@ -20,4 +24,17 @@ export type AiContextType = {
   schema: string | undefined;
   tables: string[];
   views: string[];
+  selectedQuery?: string;
+  querySnippet?: string;
+  queryError?: string;
+  queryResultSummary?: string;
+  objectDefinition?: string;
 };
+
+export type AiBridgeRequest = {
+  message?: string;
+  autoSend?: boolean;
+  contextPatch?: Partial<AiContextType>;
+};
+
+export type AiSelectionAction = 'explain' | 'optimize' | 'fix';

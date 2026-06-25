@@ -1,5 +1,5 @@
 import { variables } from '@/core/theme/variables';
-import { Stack } from '@mui/material';
+import { Stack, Typography, type TypographyProps } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 export const ChatContextTagsStyled = styled(Stack)(() => ({
@@ -19,4 +19,12 @@ export const ChatContextStyled = styled(Stack)(({ theme }) => ({
   boxShadow: 'none',
   zIndex: 1000,
   overflow: 'auto'
+}));
+
+export const ChatContextItemNameStyled = styled(Typography)<TypographyProps>(() => ({
+  display: 'block',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+  minWidth: 0
 }));

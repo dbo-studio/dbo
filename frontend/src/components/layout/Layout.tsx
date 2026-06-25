@@ -1,5 +1,9 @@
-import { useCurrentConnection, useWindowSize } from '@/hooks';
+import { TabMode } from '@/core/enums';
+import { shortcuts } from '@/core/utils';
+import { useCurrentConnection, useShortcut, useWindowSize } from '@/hooks';
+import { useAiBridge } from '@/hooks/useAiBridge';
 import { useSettingStore } from '@/store/settingStore/setting.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { Grid } from '@mui/material';
 import type { JSX } from 'react';
 import ConfirmModal from '../base/Modal/ConfirmModal/ConfirmModal.tsx';
@@ -15,6 +19,18 @@ export default function Layout(): JSX.Element {
   const windowSize = useWindowSize(true);
   const sidebar = useSettingStore((state) => state.ui.sidebar);
   const currentConnection = useCurrentConnection();
+  const { openAssistant, prefillChat } = useAiBridge();
+
+  useShortcut(shortcuts.openAssistant, () => {
+    const selectedTab = useTabStore.getState().selectedTab();
+    if (selectedTab?.mode === TabMode.Query) {
+      const query = useTabStore.getState().getQuery();
+      if (query) {
+        prefillChat('', false, { querySnippet: query });
+      }
+    }
+    openAssistant(0);
+  });
 
   return (
     <LayoutStyled containerHeight={windowSize.heightNumber}>

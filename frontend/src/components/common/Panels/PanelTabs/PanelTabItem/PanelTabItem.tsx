@@ -1,3 +1,5 @@
+'use no memo';
+
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu.tsx';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
 import SortableItem from '@/components/base/SortableList/SortableItem/SortableItem';
@@ -12,12 +14,12 @@ import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { TabType } from '@/types';
 import { Box, Tooltip } from '@mui/material';
 import type { JSX } from 'react';
-import { memo, useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { usePanelTabMenu } from '../../hooks/usePanelTabMenu';
 import { useRemoveTab } from '../../hooks/useRemoveTab';
 import { useSwitchTab } from '../../hooks/useSwitchTab';
 
-const PanelTabItem: React.FC<{ tab: TabType }> = memo(({ tab }: { tab: TabType }): JSX.Element => {
+export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const tabRefs = useRef<Record<string, HTMLElement>>({});
 
@@ -63,7 +65,7 @@ const PanelTabItem: React.FC<{ tab: TabType }> = memo(({ tab }: { tab: TabType }
       <SortableItem id={tab.id} onClick={handleTabClick}>
         <PanelTabItemStyled selected={selectedTabId === tab.id}>
           <PanelTabContentStyled>
-            <Tooltip title={tab.name} placement={'bottom'} key={tab.id}>
+            <Tooltip title={tab.name} placement={'bottom'}>
               <PanelTabNameStyled component={'span'} variant='subtitle2'>
                 {tab.name}
               </PanelTabNameStyled>
@@ -75,8 +77,4 @@ const PanelTabItem: React.FC<{ tab: TabType }> = memo(({ tab }: { tab: TabType }
       <ContextMenu menu={menu} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
     </Box>
   );
-});
-
-PanelTabItem.displayName = 'PanelTabItem';
-
-export default PanelTabItem;
+}

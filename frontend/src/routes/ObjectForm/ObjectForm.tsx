@@ -1,7 +1,10 @@
+import { useAiBridge } from '@/hooks/useAiBridge';
+import { useCurrentConnection } from '@/hooks';
+import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useFormObjectStore } from '@/store/formObject/formObject.store';
 import { ObjectTabType } from '@/types';
 import { CircularProgress, Stack } from '@mui/material';
-import React from 'react';
+import React, { useCallback } from 'react';
 import ArrayForm from './components/ArrayForm/ArrayForm';
 import GeneralForm from './components/GeneralForm/GeneralForm';
 import QueryPreviewModal from './components/QueryPreviewModal/QueryPreviewModal';
@@ -10,6 +13,12 @@ import FormTabs from './components/Tabs/FormTabs';
 import { useFormData } from './hooks/useFormData';
 import { useFormSave } from './hooks/useFormSave';
 import { useTabs } from './hooks/useTabs';
+import {
+  buildObjectDefinitionSummary,
+  parseObjectNodeId,
+  readObjectNameFromForm
+} from './utils/buildObjectDefinitionSummary';
+import { prefetchObjectFormTabs } from './utils/prefetchObjectFormTabs';
 import { ObjectFormContentStyled, ObjectFormLoadingStyled, ObjectFormStyled } from './ObjectForm.styled';
 
 export default function ObjectForm(): React.JSX.Element {
@@ -17,8 +26,42 @@ export default function ObjectForm(): React.JSX.Element {
   const { isLoading, objectTabId } = useFormData(selectedTabId);
 
   const addRow = useFormObjectStore((state) => state.addRow);
+  const selectedTab = useSelectedTab<ObjectTabType>();
+  const currentConnection = useCurrentConnection();
+  const { prefillChat } = useAiBridge();
 
   const isArrayTab = selectedTabId !== 'view' && selectedTabId !== null;
+
+  const handleAiSuggest = useCallback(async (): Promise<void> => {
+    if (!selectedTab?.id || !currentConnection?.id) return;
+
+    const formDataByTab = await prefetchObjectFormTabs(selectedTab, tabs, currentConnection.id);
+    const objectDefinition = buildObjectDefinitionSummary(
+      formDataByTab,
+      selectedTab.id,
+      tabs,
+      selectedTab.action
+    );
+
+    if (!objectDefinition.trim()) return;
+
+    const nodeContext = parseObjectNodeId(selectedTab.nodeId);
+    const objectName = nodeContext.objectName ?? readObjectNameFromForm(formDataByTab, selectedTab.id);
+    const isViewAction = selectedTab.action === 'createView' || selectedTab.action === 'editView';
+    const isCreateAction = selectedTab.action?.startsWith('create') ?? false;
+
+    prefillChat('Suggest improvements for this object definition.', true, {
+      database: nodeContext.database,
+      schema: nodeContext.schema,
+      tables: !isViewAction && objectName && !isCreateAction ? [objectName] : [],
+      views: isViewAction && objectName && !isCreateAction ? [objectName] : [],
+      objectDefinition,
+      queryResultSummary: undefined,
+      querySnippet: undefined,
+      selectedQuery: undefined,
+      queryError: undefined
+    });
+  }, [currentConnection?.id, prefillChat, selectedTab, tabs]);
 
   const { handleSave, handleCancel, handleConfirmExecute, handleClosePreview, isSaving, previewState } = useFormSave({
     tabs: tabs as ObjectTabType[],
@@ -52,6 +95,7 @@ export default function ObjectForm(): React.JSX.Element {
             onSave={() => void handleSave()}
             onCancel={() => void handleCancel()}
             onAddRow={isArrayTab ? () => addRow(objectTabId) : undefined}
+            onAiSuggest={() => void handleAiSuggest()}
             isArrayForm={isArrayTab}
             disabled={isSaving}
           />

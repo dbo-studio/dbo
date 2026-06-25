@@ -19,7 +19,11 @@ function SimpleForm({ objectTabId }: { objectTabId: string }): React.JSX.Element
       <Typography variant='body1'>{locales.general_info}</Typography>
       <GeneralFormFieldsStackStyled direction={'row'}>
         {general?.map((field) => (
-          <Box key={field.id} sx={{ gridColumn: field.type === 'query' ? '1 / -1' : 'auto' }} data-testid={`object-form-field-${field.id}`}>
+          <Box
+            key={field.id}
+            sx={{ gridColumn: field.type === 'query' ? '1 / -1' : 'auto' }}
+            data-testid={`object-form-field-${field.id}`}
+          >
             <SimpleField
               isArrayForm={false}
               field={field}

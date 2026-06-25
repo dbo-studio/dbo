@@ -19,8 +19,12 @@ export default function SavedQueryItem({
 }: SavedQueryItemProps): JSX.Element {
   const [name, setName] = useState(query.name);
 
-  const addEditorTab = useTabStore.getState().addEditorTab;
-  const updateSelectedTab = useTabStore.getState().updateSelectedTab;
+  const addEditorTab = useTabStore((state) => state.addEditorTab);
+
+  const handleRun = useCallback((): void => {
+    if (isEditMode) return;
+    addEditorTab(query.query);
+  }, [isEditMode, addEditorTab, query.query]);
 
   const { mutateAsync: updateSavedQueryMutation, isPending } = useMutation({
     mutationFn: api.savedQueries.updateSavedQuery
@@ -43,12 +47,6 @@ export default function SavedQueryItem({
       handleDiscardChanges();
     }
   }, [query, name, updateSavedQueryMutation, onChange, onEditMode, handleDiscardChanges]);
-
-  const handleRun = useCallback((): void => {
-    if (isEditMode) return;
-    const tab = addEditorTab(query.query);
-    updateSelectedTab(tab);
-  }, [isEditMode, addEditorTab, query.query, updateSelectedTab]);
 
   return (
     <SavedQueryItemStyled

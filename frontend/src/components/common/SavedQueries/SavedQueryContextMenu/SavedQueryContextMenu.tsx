@@ -18,8 +18,7 @@ export default function SavedQueryContextMenu({
   onEditMode
 }: SavedQueryContextMenuProps): JSX.Element {
   const [, copy] = useCopyToClipboard();
-  const addEditorTab = useTabStore.getState().addEditorTab;
-  const updateSelectedTab = useTabStore.getState().updateSelectedTab;
+  const addEditorTab = useTabStore((state) => state.addEditorTab);
   const showModal = useConfirmModalStore((state) => state.danger);
 
   const { mutateAsync: deleteSavedQueryMutation } = useMutation({
@@ -46,8 +45,7 @@ export default function SavedQueryContextMenu({
   };
 
   const handleRun = (): void => {
-    const tab = addEditorTab(query.query);
-    updateSelectedTab(tab);
+    addEditorTab(query.query);
   };
 
   const handleEditMode = (): void => {

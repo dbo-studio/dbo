@@ -8,12 +8,10 @@ import { HistoryItemStyled } from './HistoryItem.styled';
 export default function HistoryItem({ history, selected, onClick, context }: HistoryItemProps): JSX.Element {
   const theme = useTheme();
   const addEditorTab = useTabStore((state) => state.addEditorTab);
-  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
   const handleRun = useCallback((): void => {
-    const tab = addEditorTab(history.query);
-    updateSelectedTab(tab);
-  }, [addEditorTab, history.query, updateSelectedTab]);
+    addEditorTab(history.query);
+  }, [addEditorTab, history.query]);
 
   return (
     <HistoryItemStyled

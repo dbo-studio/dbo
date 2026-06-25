@@ -76,5 +76,7 @@ export const IconTypes = {
   mysql: 'mysql',
   message: 'MessageSquare',
   pause: 'Pause',
-  key: 'KeyRound'
+  key: 'KeyRound',
+  undo: 'Undo2',
+  sparkles: 'Sparkles'
 };

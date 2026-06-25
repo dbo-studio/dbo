@@ -136,6 +136,12 @@ export class ConnectionPage extends BasePage {
 
   async fillConnectionForm(config: ConnectionConfig): Promise<void> {
     await this.nameInput.fill(config.name);
+
+    if (config.type === 'SQLite') {
+      await this.page.locator('input[name="path"]').fill(config.host);
+      return;
+    }
+
     await this.hostInput.fill(config.host);
     await this.portInput.fill(config.port);
     await this.usernameInput.fill(config.username);

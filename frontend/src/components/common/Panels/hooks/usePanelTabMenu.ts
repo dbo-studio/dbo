@@ -8,7 +8,7 @@ import { useRemoveTab } from './useRemoveTab';
 export const usePanelTabMenu = (tab: TabType): MenuType[] => {
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const getTabs = useTabStore((state) => state.getTabs);
-  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
+  const switchTab = useTabStore((state) => state.switchTab);
   const { handleRemoveTab } = useRemoveTab();
 
   const menu = useMemo<MenuType[]>(
@@ -38,12 +38,12 @@ export const usePanelTabMenu = (tab: TabType): MenuType[] => {
           for (const t of getTabs()) {
             handleRemoveTab(t.id).catch((e) => console.log('🚀 ~ usePanelTabMenu ~ e:', e));
           }
-          updateSelectedTab(undefined);
+          switchTab(null);
         },
         closeAfterAction: true
       }
     ],
-    [tab, selectedTabId, getTabs, handleRemoveTab, updateSelectedTab]
+    [tab, selectedTabId, getTabs, handleRemoveTab, switchTab]
   );
 
   return menu;

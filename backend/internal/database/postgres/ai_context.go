@@ -42,7 +42,7 @@ func (r *PostgresRepository) AiContext(ctx context.Context, req *dto.AiChatReque
 	}
 
 	tables := req.ContextOpts.Tables
-	if len(tables) == 0 {
+	if len(tables) == 0 && lo.FromPtr(req.ContextOpts.ObjectDefinition) == "" {
 		list, err := r.ListTableNames(ctx, req.ContextOpts.Schema)
 		if err != nil {
 			return "", err
@@ -51,7 +51,7 @@ func (r *PostgresRepository) AiContext(ctx context.Context, req *dto.AiChatReque
 	}
 
 	views := req.ContextOpts.Views
-	if len(views) == 0 {
+	if len(views) == 0 && lo.FromPtr(req.ContextOpts.ObjectDefinition) == "" {
 		list, err := r.ListViewNames(ctx, req.ContextOpts.Schema)
 		if err != nil {
 			return "", err

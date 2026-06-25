@@ -1,3 +1,5 @@
+'use no memo';
+
 import { TabMode } from '@/core/enums';
 import { useSelectedTab } from '@/hooks';
 import Data from '@/routes/Data/Data';

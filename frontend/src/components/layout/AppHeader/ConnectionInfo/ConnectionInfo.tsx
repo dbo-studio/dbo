@@ -26,13 +26,11 @@ export default function ConnectionInfo(): JSX.Element {
   const runRawQuery = useDataStore((state) => state.runRawQuery);
   const reloadTree = useTreeStore((state) => state.reloadTree);
   const addEditorTab = useTabStore((state) => state.addEditorTab);
-  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
   useShortcut(shortcuts.reloadTab, () => void handleRefresh());
 
   const handleAddEditorTab = (): void => {
-    const tab = addEditorTab();
-    updateSelectedTab(tab);
+    addEditorTab();
   };
 
   const handleRefresh = async (): Promise<void> => {

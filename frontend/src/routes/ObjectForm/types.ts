@@ -10,6 +10,7 @@ export type FormStatusBarProps = {
   onSave: () => void;
   onCancel: () => void;
   onAddRow?: () => void;
+  onAiSuggest?: () => void;
   isArrayForm?: boolean;
   disabled?: boolean;
 };

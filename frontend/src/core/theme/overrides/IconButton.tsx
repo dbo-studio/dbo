@@ -15,6 +15,9 @@ export default function IconButton(theme: Theme): Components {
           '&.active': {
             backgroundColor: theme.palette.background.paper,
             '& svg': { color: `${theme.palette.text.primary} !important` }
+          },
+          '&.MuiIconButton-loading > *:not(.MuiIconButton-loadingWrapper)': {
+            visibility: 'hidden'
           }
         }
       }

@@ -2,6 +2,7 @@ import api from '@/api';
 import AddConnection from '@/components/common/AddConnection/AddConnection';
 import { tools } from '@/core/utils';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { matchConnectionId } from '@/store/tabStore/connectionId';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ConnectionType } from '@/types';
@@ -23,7 +24,7 @@ export default function Connections(): JSX.Element {
   const updateLoading = useConnectionStore((state) => state.updateLoading);
   const updateCurrentConnection = useConnectionStore((state) => state.updateCurrentConnection);
   const updateConnections = useConnectionStore((state) => state.updateConnections);
-  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
+  const switchTab = useTabStore((state) => state.switchTab);
   const updateUI = useSettingStore((state) => state.updateUI);
 
   const { data: connections } = useQuery({
@@ -89,7 +90,10 @@ export default function Connections(): JSX.Element {
       await queryClient.invalidateQueries({
         queryKey: ['connections']
       });
-      updateSelectedTab(tabs.find((t) => t.connectionId === c.id));
+      const connectionTabs = tabs.filter((tab) => matchConnectionId(tab.connectionId, c.id));
+      const selectedTabId = useTabStore.getState().selectedTabId;
+      const activeTab = connectionTabs.find((tab) => tab.id === selectedTabId) ?? connectionTabs[0];
+      switchTab(activeTab?.id ?? null);
     } catch (error) {
       updateLoading('error');
       console.debug('🚀 ~ handleChangeCurrentConnection ~ error:', error);

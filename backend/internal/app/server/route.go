@@ -45,6 +45,7 @@ func (r *Server) routing() {
 	mcp.Get("/status", r.handlers.Mcp.Status)
 	mcp.Post("/update", r.handlers.Mcp.Update)
 	mcp.Post("/regenerate-token", r.handlers.Mcp.RegenerateToken)
+	mcp.All("", r.handlers.Mcp.Proxy)
 	mcp.All("/*", r.handlers.Mcp.Proxy)
 
 	connection := api.Group("connections")

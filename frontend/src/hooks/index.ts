@@ -1,3 +1,4 @@
+export * from './useConnectionTabs.hook';
 export * from './useContextMenu.hook';
 export * from './useCurrentConnection.hook';
 export * from './useJobPolling.hook';
@@ -7,3 +8,4 @@ export * from './useShortcut.hook';
 export * from './useStartup.hook';
 export * from './useUUID.hook';
 export * from './useWindowSize.hook';
+export * from './useAiBridge';

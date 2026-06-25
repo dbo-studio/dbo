@@ -15,7 +15,7 @@ func (r *MySQLRepository) AiContext(ctx context.Context, req *dto.AiChatRequest)
 	}
 
 	tables := req.ContextOpts.Tables
-	if len(tables) == 0 {
+	if len(tables) == 0 && lo.FromPtr(req.ContextOpts.ObjectDefinition) == "" {
 		list, err := r.ListTableNames(ctx, req.ContextOpts.Database)
 		if err != nil {
 			return "", err
@@ -24,7 +24,7 @@ func (r *MySQLRepository) AiContext(ctx context.Context, req *dto.AiChatRequest)
 	}
 
 	views := req.ContextOpts.Views
-	if len(views) == 0 {
+	if len(views) == 0 && lo.FromPtr(req.ContextOpts.ObjectDefinition) == "" {
 		list, err := r.ListViewNames(ctx, req.ContextOpts.Database)
 		if err != nil {
 			return "", err

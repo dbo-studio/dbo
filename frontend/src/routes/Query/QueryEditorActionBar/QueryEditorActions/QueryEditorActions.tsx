@@ -11,7 +11,13 @@ import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
 import type { QueryEditorActionsProps } from '../../types';
 
-export default function QueryEditorActions({ onFormat, onRunQuery, loading }: QueryEditorActionsProps): JSX.Element {
+export default function QueryEditorActions({
+  onFormat,
+  onRunQuery,
+  onAiExplain,
+  aiExplainDisabled = false,
+  loading
+}: QueryEditorActionsProps): JSX.Element {
   const queryClient = useQueryClient();
   const [showExport, setShowExport] = useState({
     show: false,
@@ -94,6 +100,11 @@ export default function QueryEditorActions({ onFormat, onRunQuery, loading }: Qu
       <Tooltip title={locales.beatify}>
         <IconButton color='default' onClick={handleFormatSql}>
           <CustomIcon type='wand_sparkles' />
+        </IconButton>
+      </Tooltip>
+      <Tooltip title={locales.ai_explain}>
+        <IconButton color='default' onClick={onAiExplain} disabled={aiExplainDisabled}>
+          <CustomIcon type='sparkles' />
         </IconButton>
       </Tooltip>
       <Tooltip title={shortcuts.runQuery.command.join('+')}>

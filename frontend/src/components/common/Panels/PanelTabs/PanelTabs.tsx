@@ -1,19 +1,17 @@
+'use no memo';
+
 import SortableList from '@/components/base/SortableList/SortableList';
 import PanelTabItem from '@/components/common/Panels/PanelTabs/PanelTabItem/PanelTabItem.tsx';
 import { PanelTabsStyled } from '@/components/common/Panels/PanelTabs/PanelTabs.styled.ts';
-import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useConnectionTabs } from '@/hooks/useConnectionTabs.hook';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { TabType } from '@/types';
 import type { JSX } from 'react';
-import { memo, useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 
-const PanelTabs: React.FC = memo((): JSX.Element => {
-  const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
-  const tabs = useTabStore((state) => state.tabs);
-  const getTabs = useTabStore((state) => state.getTabs);
+export default function PanelTabs(): JSX.Element {
+  const tabList = useConnectionTabs();
   const reorderTabs = useTabStore((state) => state.reorderTabs);
-
-  const tabList = useMemo(() => getTabs(), [currentConnectionId, tabs, getTabs]);
 
   const handleReorder = useCallback(
     (activeId: string, overId: string): void => {
@@ -23,16 +21,15 @@ const PanelTabs: React.FC = memo((): JSX.Element => {
   );
 
   const renderTabItem = useCallback((tab: TabType): JSX.Element => {
-    return <PanelTabItem tab={tab} key={`${tab.id}-${tab.mode}`} />;
+    return <PanelTabItem tab={tab} />;
   }, []);
 
-  const getTabId = useCallback((tab: TabType): string => {
-    return tab.id;
-  }, []);
+  const getTabId = useCallback((tab: TabType): string => tab.id, []);
 
   return (
     <PanelTabsStyled>
       <SortableList
+        key={tabList.map((tab) => tab.id).join('|')}
         items={tabList}
         onReorder={handleReorder}
         renderItem={renderTabItem}
@@ -43,8 +40,4 @@ const PanelTabs: React.FC = memo((): JSX.Element => {
       />
     </PanelTabsStyled>
   );
-});
-
-PanelTabs.displayName = 'PanelTabs';
-
-export default PanelTabs;
+}

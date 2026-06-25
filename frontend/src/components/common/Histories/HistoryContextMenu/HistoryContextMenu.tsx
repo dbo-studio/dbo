@@ -11,7 +11,6 @@ export default function HistoryContextMenu({ history, contextMenu, onClose }: Hi
   const [, copy] = useCopyToClipboard();
 
   const addEditorTab = useTabStore((state) => state.addEditorTab);
-  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
   const handleCopy = (): void => {
     copy(history.query).catch((e) => console.debug('🚀 ~ handleCopy ~ error:', e));
@@ -19,8 +18,7 @@ export default function HistoryContextMenu({ history, contextMenu, onClose }: Hi
   };
 
   const handleRun = (): void => {
-    const tab = addEditorTab(history.query);
-    updateSelectedTab(tab);
+    addEditorTab(history.query);
   };
 
   const menu: MenuType[] = [

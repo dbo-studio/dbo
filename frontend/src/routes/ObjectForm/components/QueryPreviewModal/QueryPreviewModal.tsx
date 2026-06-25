@@ -32,7 +32,13 @@ export default function QueryPreviewModal({
           <SyntaxHighlighter value={formattedQueries} />
         </Box>
         <QueryPreviewActionsStyled>
-          <Button variant='text' size='small' disabled={isExecuting} onClick={onCancel} data-testid='object-form-preview-cancel'>
+          <Button
+            variant='text'
+            size='small'
+            disabled={isExecuting}
+            onClick={onCancel}
+            data-testid='object-form-preview-cancel'
+          >
             {locales.cancel}
           </Button>
           <Button

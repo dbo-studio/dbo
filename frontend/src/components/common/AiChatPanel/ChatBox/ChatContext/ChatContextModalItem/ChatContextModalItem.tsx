@@ -1,7 +1,8 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { Stack, Typography } from '@mui/material';
+import { Stack, Tooltip } from '@mui/material';
 import type { JSX } from 'react';
 import type { ChatContextModalItemProps } from '../../../types';
+import { ChatContextItemNameStyled } from '../ChatContext.styled';
 import { ChatContextModalItemStyled } from './ChatContextModalItem.styled';
 
 export default function ChatContextModalItem({
@@ -16,14 +17,19 @@ export default function ChatContextModalItem({
         direction={'row'}
         spacing={1}
         sx={{
-          alignItems: 'center'
+          alignItems: 'center',
+          minWidth: 0,
+          flex: 1,
+          overflow: 'hidden'
         }}
       >
         <CustomIcon type={type === 'database' ? 'database' : 'sheet'} size='xs' />
 
-        <Typography color={'textText'} variant='caption'>
-          {name}
-        </Typography>
+        <Tooltip title={name} enterDelay={500}>
+          <ChatContextItemNameStyled color={'textText'} variant='caption'>
+            {name}
+          </ChatContextItemNameStyled>
+        </Tooltip>
       </Stack>
       {isActive && <CustomIcon type='check' size='xs' />}
     </ChatContextModalItemStyled>

@@ -14,7 +14,6 @@ func (r *MySQLRepository) GetFormTabs(_ context.Context, action contract.TreeNod
 		}
 	case contract.CreateTableAction, contract.EditTableAction:
 		return []contract.FormTab{
-			{ID: contract.TableTab, Name: "Table"},
 			{ID: contract.TableColumnsTab, Name: "Columns"},
 			{ID: contract.TableForeignKeysTab, Name: "Foreign Keys"},
 			{ID: contract.TableKeysTab, Name: "Keys"},

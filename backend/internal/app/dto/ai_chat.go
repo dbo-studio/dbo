@@ -27,6 +27,7 @@ type (
 		Views              []string `json:"views"`
 		QueryError         *string  `json:"queryError"`
 		QueryResultSummary *string  `json:"queryResultSummary"`
+		ObjectDefinition   *string  `json:"objectDefinition"`
 	}
 
 	AiMessage struct {

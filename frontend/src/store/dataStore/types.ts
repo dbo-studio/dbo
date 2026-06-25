@@ -43,12 +43,23 @@ export type DataUnsavedRowsSlice = {
   discardUnsavedRows: (rows?: RowType[]) => Promise<void>;
 };
 
+export type PendingEditorQueryRun = {
+  tabId: string;
+  query: string;
+};
+
 export type DataQuerySlice = {
   isDataFetching: boolean;
   reRunQuery: boolean;
   reRender: boolean;
+  lastQueryError: string | undefined;
+  lastQueryResult: string | undefined;
+  pendingEditorQueryRun?: PendingEditorQueryRun;
+  clearLastQueryError: () => void;
+  clearPendingEditorQueryRun: () => void;
   runQuery: (abortController?: AbortController) => Promise<RunQueryResponseType | undefined>;
   runRawQuery: (query?: string, abortController?: AbortController) => Promise<RunQueryResponseType | undefined>;
+  runQueryInEditor: (query: string) => void;
   toggleReRunQuery: () => void;
   toggleReRender: () => void;
   toggleDataFetching: (loading?: boolean) => void;

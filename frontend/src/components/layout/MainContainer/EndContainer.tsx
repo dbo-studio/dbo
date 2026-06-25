@@ -4,7 +4,7 @@ import { useWindowSize } from '@/hooks/useWindowSize.hook';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Tab, Tabs } from '@mui/material';
-import { type JSX, type SyntheticEvent, useMemo, useState } from 'react';
+import { type JSX, type SyntheticEvent, useMemo } from 'react';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
 import { EndContainerStyled } from './Container.styled';
 
@@ -23,7 +23,7 @@ export default function EndContainer(): JSX.Element {
   const windowSize = useWindowSize();
   const sidebar = useSettingStore((state) => state.ui.sidebar);
   const updateUI = useSettingStore((state) => state.updateUI);
-  const [selectedTabId, setSelectedTabId] = useState(0);
+  const selectedTabId = sidebar.rightSidebarTab ?? 0;
 
   const selectedTabContent = useMemo(() => {
     const Component = tabs.find((obj) => obj.id === Number(selectedTabId))?.component;
@@ -31,7 +31,7 @@ export default function EndContainer(): JSX.Element {
   }, [selectedTabId]);
 
   const onSelectedTabChanged = (_: SyntheticEvent, id: number): void => {
-    setSelectedTabId(id);
+    updateUI({ sidebar: { ...sidebar, rightSidebarTab: id } });
   };
 
   return (

@@ -1,10 +1,13 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/container"
 	serviceMcp "github.com/dbo-studio/dbo/internal/service/mcp"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/dbo-studio/dbo/pkg/response"
 	"github.com/gofiber/fiber/v3"
@@ -56,14 +59,19 @@ func (h McpHandler) RegenerateToken(c fiber.Ctx) error {
 }
 
 func (h McpHandler) Proxy(c fiber.Ctx) error {
-	if !h.mcpService.IsEnabled(c) {
-		return response.ErrorBuilder().FromError(apperror.Unauthorized(0)).Send(c)
-	}
-
 	token := serviceMcp.ExtractBearer(c.Get("Authorization"))
-	if token == "" || !h.mcpService.ValidateToken(c, token) {
+	settings, ok := h.mcpService.AuthenticateToken(c, token)
+	if !ok {
 		return response.ErrorBuilder().FromError(apperror.Unauthorized(0)).Send(c)
 	}
 
-	return adaptor.HTTPHandler(h.mcpService.HTTPHandler())(c)
+	c.Locals(helper.CtxOwnerIDKey, settings.OwnerID)
+	ownerCtx := helper.CtxWithOwnerID(c.Context(), settings.OwnerID)
+	c.SetContext(ownerCtx)
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h.mcpService.HTTPHandler().ServeHTTP(w, r.WithContext(ownerCtx))
+	})
+
+	return adaptor.HTTPHandlerWithContext(handler)(c)
 }

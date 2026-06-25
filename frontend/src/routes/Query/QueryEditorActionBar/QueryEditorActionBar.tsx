@@ -2,15 +2,17 @@ import type { Theme } from '@mui/material';
 import { Grid, useMediaQuery } from '@mui/material';
 import { type JSX, useEffect, useState } from 'react';
 import type { QueryEditorActionBarProps } from '../types';
+import { QueryEditorActionBarStackStyled } from './QueryEditorActionBar.styled';
 import QueryEditorActions from './QueryEditorActions/QueryEditorActions';
 import QueryEditorLeading from './QueryEditorLeading/QueryEditorLeading';
-import { QueryEditorActionBarStackStyled } from './QueryEditorActionBar.styled';
 
 export default function QueryEditorActionBar({
   databases,
   schemas,
   onFormat,
   onRunQuery,
+  onAiExplain,
+  aiExplainDisabled,
   loading
 }: QueryEditorActionBarProps): JSX.Element {
   const [localDatabases, setLocalDatabases] = useState<string[]>([]);
@@ -25,7 +27,7 @@ export default function QueryEditorActionBar({
     if (localSchemas.length === 0) {
       setLocalSchemas(schemas);
     }
-  }, [databases, schemas]);
+  }, [databases, localDatabases.length, localSchemas.length, schemas]);
 
   return (
     <QueryEditorActionBarStackStyled direction='row'>
@@ -45,7 +47,13 @@ export default function QueryEditorActionBar({
           justifyContent: 'flex-end'
         }}
       >
-        <QueryEditorActions loading={loading} onFormat={onFormat} onRunQuery={onRunQuery} />
+        <QueryEditorActions
+          loading={loading}
+          onFormat={onFormat}
+          onRunQuery={onRunQuery}
+          onAiExplain={onAiExplain}
+          aiExplainDisabled={aiExplainDisabled}
+        />
       </Grid>
     </QueryEditorActionBarStackStyled>
   );

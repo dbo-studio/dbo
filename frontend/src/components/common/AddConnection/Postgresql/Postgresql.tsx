@@ -54,7 +54,6 @@ export default function PostgreSQL({
 }: ConnectionSettingsProps): JSX.Element {
   const form = useForm({
     validators: {
-      onChange: formSchema,
       onSubmit: formSchema
     },
     onSubmit: ({ value }): void => {
