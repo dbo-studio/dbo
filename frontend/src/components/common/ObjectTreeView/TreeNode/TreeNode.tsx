@@ -6,9 +6,11 @@ import {
   HoverableTreeNodeContainerStyled
 } from '@/components/common/ObjectTreeView/TreeNode/TreeNode.styled';
 import type { TreeNodeProps } from '@/components/common/ObjectTreeView/TreeNode/types';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection.hook';
+import { findTreeNode } from '@/store/treeStore/findTreeNode';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { TreeNodeType } from '@/types/Tree';
-import { Fragment, type JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, type JSX, useCallback, useEffect, useRef, useState } from 'react';
 import { useActionDetection } from './hooks/useActionDetection';
 
 export default function TreeNode({
@@ -22,19 +24,21 @@ export default function TreeNode({
   onFocusChange,
   onContextMenu
 }: TreeNodeProps): JSX.Element {
-  const [localChildren, setLocalChildren] = useState<TreeNodeType[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const nodeRef = useRef<HTMLDivElement | null>(null);
+  const currentConnection = useCurrentConnection();
   const { isNodeExpanded, expandNode, collapseNode, setNodeChildren } = useTreeStore();
 
-  const node = useMemo(
-    () => ({
-      ...initialNode,
-      children: localChildren ?? initialNode.children
-    }),
-    [initialNode, localChildren]
-  );
+  const node =
+    useTreeStore((state) => {
+      if (!currentConnection?.id) {
+        return initialNode;
+      }
+
+      const root = state.tree[currentConnection.id];
+      return findTreeNode(root, initialNode.id) ?? initialNode;
+    }) ?? initialNode;
 
   const isExpanded = isNodeExpanded(node.id);
   const isSelected = node.id === selectedNodeId;
@@ -51,8 +55,7 @@ export default function TreeNode({
 
   const handleSetChildren = (newChildren: TreeNodeType[]): void => {
     const children = Array.isArray(newChildren) ? newChildren : [];
-    setLocalChildren(Array.isArray(children) ? children : []);
-    setNodeChildren(node.id, Array.isArray(children) ? children : []);
+    setNodeChildren(node.id, children);
   };
 
   const handleIsExpanded = (expanded: boolean): void => {
@@ -70,7 +73,7 @@ export default function TreeNode({
     handleKeyDown
   } = useTreeNodeHandlers({
     node,
-    children: node.children,
+    children: node.children ?? [],
     isExpanded,
     setIsExpanded: handleIsExpanded,
     setChildren: handleSetChildren,
@@ -98,23 +101,24 @@ export default function TreeNode({
   );
 
   const matchesSearch = useCallback(
-    (node: TreeNodeType): boolean => {
+    (treeNode: TreeNodeType): boolean => {
       if (!searchTerm) return true;
 
       const searchLower = searchTerm.toLowerCase();
-      const nodeNameLower = node.name.toLowerCase();
+      const nodeNameLower = treeNode.name.toLowerCase();
 
       if (nodeNameLower.includes(searchLower)) return true;
 
-      return node.children.some((child) => matchesSearch(child));
+      return (treeNode.children ?? []).some((child) => matchesSearch(child));
     },
     [searchTerm]
   );
 
-  // If search term is present and node doesn't match, don't render
   if (searchTerm && !matchesSearch(node)) {
     return <Fragment />;
   }
+
+  const children = node.children ?? [];
 
   return (
     <HoverableTreeNodeContainerStyled>
@@ -129,15 +133,15 @@ export default function TreeNode({
         level={level}
         nodeIndex={nodeIndex}
         focusNode={focusNode}
-        actionDetection={(event, node) => void actionDetection(event, node)}
+        actionDetection={(event, treeNode) => void actionDetection(event, treeNode)}
         expandNode={(event, moveFocusToChild) => handleExpandNode(event, moveFocusToChild)}
         handleContextMenu={handleContextMenu}
         handleBlur={handleBlur}
         handleKeyDown={handleKeyDown}
       />
-      {isExpanded && node.children.length > 0 && (
+      {isExpanded && children.length > 0 && (
         <ChildrenContainer>
-          {node.children.map((child, index) => (
+          {children.map((child, index) => (
             <TreeNode
               key={child.id}
               node={child}

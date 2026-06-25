@@ -147,7 +147,7 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
               return { ...node, children };
             }
 
-            if (node.children.length === 0) {
+            if (!node.children?.length) {
               return node;
             }
 
@@ -171,7 +171,7 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
 
         reloadTree: async (fromCache: boolean): Promise<void> => {
           const currentConnection = getCurrentConnectionId();
-          if (!currentConnection || get().isLoading) return;
+          if (!currentConnection) return;
 
           set({ isLoading: true });
 
@@ -231,7 +231,11 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
         }
       }),
       {
-        name: 'tree'
+        name: 'tree',
+        partialize: (state) => ({
+          expandedNodes: state.expandedNodes,
+          loadedParentIds: state.loadedParentIds
+        })
       }
     ),
     {

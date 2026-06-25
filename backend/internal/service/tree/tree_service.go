@@ -125,6 +125,11 @@ func (i ITreeServiceImpl) ObjectExecute(ctx context.Context, req *dto.ObjectExec
 	if err != nil {
 		return apperror.InternalServerError(err)
 	}
+
+	if err := i.cache.DeleteByPrefix(ctx, fmt.Sprintf("c:%d", req.ConnectionID)); err != nil {
+		return apperror.InternalServerError(err)
+	}
+
 	return nil
 }
 

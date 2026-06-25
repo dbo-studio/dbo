@@ -15,7 +15,6 @@ import EndContainer from './MainContainer/EndContainer.tsx';
 import ExplorerContainer from './MainContainer/ExplorerContainer.tsx';
 import StartContainer from './MainContainer/StartContainer';
 import MobileConnectionsPanel from './MobileConnectionsPanel/MobileConnectionsPanel';
-import NoConnectionWorkspace from './NoConnectionWorkspace/NoConnectionWorkspace';
 import SidebarDrawer from './SidebarDrawer/SidebarDrawer';
 
 export default function Layout(): JSX.Element {
@@ -64,7 +63,7 @@ export default function Layout(): JSX.Element {
           <SidebarDrawer open={showExplorer} onClose={closeLeftSidebar} anchor='left'>
             <ExplorerContainer overlay fullPage={isMobile} />
           </SidebarDrawer>
-          {currentConnection ? <CenterContainer /> : <NoConnectionWorkspace />}
+          <CenterContainer />
           <SidebarDrawer open={showAssistant} onClose={closeRightSidebar} anchor='right'>
             <EndContainer overlay fullPage={isMobile} />
           </SidebarDrawer>
@@ -75,7 +74,7 @@ export default function Layout(): JSX.Element {
     return (
       <>
         {showExplorer && <ExplorerContainer />}
-        {currentConnection ? <CenterContainer /> : <NoConnectionWorkspace />}
+        <CenterContainer />
         {showAssistant && <EndContainer />}
       </>
     );
