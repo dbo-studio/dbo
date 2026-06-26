@@ -42,7 +42,7 @@ function ArrayRow({
       })}
       <TableCell>
         <Stack direction='row' spacing={1}>
-          <IconButton size='small' onClick={onDelete}>
+          <IconButton size='small' onClick={onDelete} data-testid={`object-form-delete-row-${rowIndex}`}>
             <CustomIcon type='delete' />
           </IconButton>
         </Stack>

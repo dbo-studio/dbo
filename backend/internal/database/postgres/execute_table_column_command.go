@@ -12,6 +12,8 @@ import (
 func (r *PostgresRepository) handleTableColumnCommands(node contract.DBNode, tabID contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
+	node = resolveCreateTableNode(node, action, data)
+
 	if tabID != contract.TableColumnsTab || node.Table == "" || (action != contract.CreateTableAction && action != contract.EditTableAction) {
 		return queries, nil
 	}
@@ -49,7 +51,8 @@ func (r *PostgresRepository) handleTableColumnCommands(node contract.DBNode, tab
 func (r *PostgresRepository) handleCreateColumn(node contract.DBNode, column dto.PostgresTableColumn) []string {
 	queries := []string{}
 
-	columnDef := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s", node.Table, *column.New.Name, *column.New.DataType)
+	tableRef := qualifiedTableName(node.Schema, node.Table)
+	columnDef := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s", tableRef, *column.New.Name, *column.New.DataType)
 
 	if column.New.MaxLength != nil {
 		columnDef = fmt.Sprintf("%s(%d)", columnDef, *column.New.MaxLength)
@@ -85,7 +88,7 @@ func (r *PostgresRepository) handleCreateColumn(node contract.DBNode, column dto
 
 	if column.New.Comment != nil {
 		queries = append(queries, fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'",
-			node.Table, *column.New.Name, *column.New.Comment))
+			tableRef, *column.New.Name, *column.New.Comment))
 	}
 
 	return queries
@@ -152,4 +155,23 @@ func (r *PostgresRepository) handleEditColumn(node contract.DBNode, column dto.P
 	}
 
 	return queries
+}
+
+func resolveCreateTableNode(node contract.DBNode, action contract.TreeNodeActionName, data []byte) contract.DBNode {
+	if action != contract.CreateTableAction || node.Table != string(contract.TableContainerNodeType) {
+		return node
+	}
+
+	tableParams, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.PostgresTableParams](data)
+	if err != nil {
+		return node
+	}
+
+	params := tableParams[contract.GeneralTab]
+	if params == nil || params.New == nil || params.New.Name == nil {
+		return node
+	}
+
+	node.Table = *params.New.Name
+	return node
 }

@@ -49,6 +49,22 @@ func (r *MySQLRepository) handleViewCommands(node contract.DBNode, tabID contrac
 		}
 	}
 
+	if action == contract.EditViewAction {
+		viewName := node.Table
+		if params.New.Name != nil {
+			viewName = *params.New.Name
+		}
+
+		if params.New.Query != nil {
+			query := fmt.Sprintf("CREATE OR REPLACE VIEW `%s`.`%s` AS %s", node.Database, viewName, *params.New.Query)
+			queries = append(queries, query)
+		}
+
+		if params.New.Comment != nil {
+			queries = append(queries, fmt.Sprintf("ALTER VIEW `%s`.`%s` COMMENT = '%s'", node.Database, viewName, *params.New.Comment))
+		}
+	}
+
 	if action == contract.DropViewAction {
 		query := fmt.Sprintf("DROP VIEW `%s`.`%s`", node.Database, node.Table)
 		queries = append(queries, query)

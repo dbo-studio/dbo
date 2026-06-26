@@ -23,7 +23,7 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 	})
 
 	if err != nil {
-		return apperror.DriverError(err)
+		return err
 	}
 
 	req, err = s.createConnectionDto(req)

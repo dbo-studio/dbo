@@ -21,7 +21,11 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
   /* Workers for parallel execution */
-  workers: process.env.CI ? 1 : 4,
+  workers: process.env.PLAYWRIGHT_WORKERS
+    ? Number(process.env.PLAYWRIGHT_WORKERS)
+    : process.env.CI
+      ? 2
+      : 4,
   /* Test timeout — Object Form save can be slow */
   timeout: 120000,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */

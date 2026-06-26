@@ -13,6 +13,8 @@ import (
 func (r *PostgresRepository) handleForeignKeyCommands(node contract.DBNode, tabID contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
+	node = resolveCreateTableNode(node, action, data)
+
 	if tabID != contract.TableForeignKeysTab || node.Table == "" || (action != contract.CreateTableAction && action != contract.EditTableAction) {
 		return queries, nil
 	}
@@ -27,7 +29,7 @@ func (r *PostgresRepository) handleForeignKeyCommands(node contract.DBNode, tabI
 	if action == contract.CreateTableAction {
 		for _, column := range params.Columns {
 			columnDef := fmt.Sprintf("ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s)",
-				node.Table,
+				qualifiedTableName(node.Schema, node.Table),
 				*column.New.ConstraintName,
 				strings.Join(column.New.SourceColumns, ","),
 				*column.New.TargetTable,

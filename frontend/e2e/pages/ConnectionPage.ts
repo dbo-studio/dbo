@@ -7,6 +7,7 @@ export interface ConnectionConfig {
   port: string;
   username: string;
   password: string;
+  database?: string;
   type?: 'PostgreSQL' | 'MySQL' | 'SQLite';
 }
 
@@ -46,43 +47,6 @@ export class ConnectionPage extends BasePage {
     this.portInput = page.locator('input[name="port"]');
     this.usernameInput = page.locator('input[name="username"]');
     this.passwordInput = page.locator('input[name="password"]');
-  }
-
-  getConnectionConfig(name: string): ConnectionConfig {
-    return this.getPostgreSQLConfig(name);
-  }
-
-  getPostgreSQLConfig(name: string): ConnectionConfig {
-    return {
-      name,
-      host: 'localhost',
-      port: '5432',
-      username: 'default',
-      password: 'secret',
-      type: 'PostgreSQL'
-    };
-  }
-
-  getMySQLConfig(name: string): ConnectionConfig {
-    return {
-      name,
-      host: 'localhost',
-      port: '3306',
-      username: 'default',
-      password: 'secret',
-      type: 'MySQL'
-    };
-  }
-
-  getSQLiteConfig(name: string, filePath?: string): ConnectionConfig {
-    return {
-      name,
-      host: filePath ?? `/tmp/dbo-e2e-${Date.now()}.db`,
-      port: '',
-      username: '',
-      password: '',
-      type: 'SQLite'
-    };
   }
 
   getConnectionItem(name: string): Locator {
@@ -142,10 +106,16 @@ export class ConnectionPage extends BasePage {
       return;
     }
 
+    await this.hostInput.clear();
     await this.hostInput.fill(config.host);
+    await this.portInput.clear();
     await this.portInput.fill(config.port);
     await this.usernameInput.fill(config.username);
     await this.passwordInput.fill(config.password);
+
+    if (config.database) {
+      await this.page.locator('input[name="database"]').fill(config.database);
+    }
   }
 
   async selectConnectionType(type: string = 'PostgreSQL'): Promise<void> {
@@ -155,17 +125,22 @@ export class ConnectionPage extends BasePage {
 
   async testConnection(): Promise<void> {
     const responsePromise = this.page.waitForResponse(
-      (response) => response.url().includes('connections/ping') && response.status() === 200,
-      { timeout: 10000 }
+      (response) => response.url().includes('connections/ping') && response.request().method() === 'POST',
+      { timeout: 30000 }
     );
     await this.testConnectionButton.click();
-    await responsePromise;
+    const response = await responsePromise;
+    expect(response.status()).toBe(200);
   }
 
   async submitConnection(): Promise<void> {
     const responsePromise = this.page.waitForResponse(
-      (response) => response.url().includes('connections') && response.status() === 200,
-      { timeout: 10000 }
+      (response) =>
+        response.url().includes('/connections') &&
+        !response.url().includes('/ping') &&
+        response.request().method() === 'POST' &&
+        response.status() === 200,
+      { timeout: 30000 }
     );
     await this.createConnectionButton.click();
     await responsePromise;
@@ -223,12 +198,16 @@ export class ConnectionPage extends BasePage {
   }
 
   async setupConnection(config: ConnectionConfig): Promise<void> {
-    const exists = await this.connectionExists(config.name);
-    if (!exists) {
-      await this.createConnection(config);
-      return;
-    }
-    await this.activateConnection(config.name, config.password);
+    const { withConnectionSetupLock } = await import('../helpers/connectionSetupLock');
+
+    await withConnectionSetupLock(async () => {
+      const exists = await this.connectionExists(config.name);
+      if (!exists) {
+        await this.createConnection(config);
+        return;
+      }
+      await this.activateConnection(config.name, config.password);
+    });
   }
 
   async openContextMenu(connectionName: string): Promise<void> {

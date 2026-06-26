@@ -1,4 +1,5 @@
 import { test } from '@playwright/test';
+import { getDbConfig } from '../fixtures/dbConfigs';
 import { ConnectionPage, SidebarPage, SqlEditorPage } from '../pages';
 
 /**
@@ -15,7 +16,7 @@ test.describe('Saved Queries & History', () => {
     const sidebar = new SidebarPage(page);
 
     const connectionName = `${testPrefix}-hist-${Date.now()}`;
-    const config = connectionPage.getConnectionConfig(connectionName);
+    const config = getDbConfig('postgresql', connectionName);
 
     await connectionPage.goto();
     await connectionPage.waitForReady();
@@ -47,7 +48,7 @@ test.describe('Saved Queries & History', () => {
     const connectionName = `${testPrefix}-saved-${Date.now()}`;
     const uniqueMarker = `E2E_${Date.now()}`;
     const uniqueQuery = `SELECT '${uniqueMarker}' AS test_marker;`;
-    const config = connectionPage.getConnectionConfig(connectionName);
+    const config = getDbConfig('postgresql', connectionName);
 
     await connectionPage.goto();
     await connectionPage.waitForReady();
@@ -88,7 +89,7 @@ test.describe('Saved Queries & History', () => {
     const connectionName = `${testPrefix}-run-${Date.now()}`;
     const uniqueMarker = `RUN_TEST_${Date.now()}`;
     const uniqueQuery = `SELECT '${uniqueMarker}' AS marker;`;
-    const config = connectionPage.getConnectionConfig(connectionName);
+    const config = getDbConfig('postgresql', connectionName);
 
     await connectionPage.goto();
     await connectionPage.waitForReady();
@@ -127,7 +128,7 @@ test.describe('Saved Queries & History', () => {
     const connectionName = `${testPrefix}-histrun-${Date.now()}`;
     const uniqueMarker = `HIST_${Date.now()}`;
     const uniqueQuery = `SELECT '${uniqueMarker}' AS history_test;`;
-    const config = connectionPage.getConnectionConfig(connectionName);
+    const config = getDbConfig('postgresql', connectionName);
 
     await connectionPage.goto();
     await connectionPage.waitForReady();
@@ -160,7 +161,7 @@ test.describe('Saved Queries & History', () => {
     const connectionName = `${testPrefix}-copy-${Date.now()}`;
     const uniqueMarker = `COPY_${Date.now()}`;
     const uniqueQuery = `SELECT '${uniqueMarker}' AS copy_test;`;
-    const config = connectionPage.getConnectionConfig(connectionName);
+    const config = getDbConfig('postgresql', connectionName);
 
     await connectionPage.goto();
     await connectionPage.waitForReady();

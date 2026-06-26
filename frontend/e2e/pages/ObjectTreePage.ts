@@ -47,6 +47,23 @@ export class ObjectTreePage extends BasePage {
     await this.clickContextMenuAction(actionTitle);
   }
 
+  async confirmDangerAction(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Yes' }).click();
+    await this.wait(500);
+  }
+
+  async dropObject(nodeName: string, actionTitle: string): Promise<void> {
+    const executePromise = this.page.waitForResponse(
+      (response) => response.url().includes('/fields/object') && !response.url().includes('/preview'),
+      { timeout: 60000 }
+    );
+
+    await this.runTreeAction(nodeName, actionTitle);
+    await this.confirmDangerAction();
+    await executePromise;
+    await this.waitForTreeLoad();
+  }
+
   async waitForTreeLoad(): Promise<void> {
     await this.page
       .locator('[role="progressbar"]')

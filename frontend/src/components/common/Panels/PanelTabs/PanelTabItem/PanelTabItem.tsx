@@ -19,6 +19,8 @@ import { usePanelTabMenu } from '../../hooks/usePanelTabMenu';
 import { useRemoveTab } from '../../hooks/useRemoveTab';
 import { useSwitchTab } from '../../hooks/useSwitchTab';
 
+const toTestIdSlug = (name: string): string => name.toLowerCase().replace(/\s+/g, '-');
+
 export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const tabRefsRef = useRef<Record<string, HTMLElement>>({});
@@ -63,7 +65,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
       }}
     >
       <SortableItem id={tab.id} onClick={handleTabClick}>
-        <PanelTabItemStyled selected={selectedTabId === tab.id}>
+        <PanelTabItemStyled selected={selectedTabId === tab.id} data-testid={`workspace-tab-${toTestIdSlug(tab.name)}`}>
           <PanelTabContentStyled>
             <Tooltip title={tab.name} placement={'bottom'}>
               <PanelTabNameStyled component={'span'} variant='subtitle2'>

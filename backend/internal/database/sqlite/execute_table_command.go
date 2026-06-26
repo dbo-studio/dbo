@@ -75,7 +75,7 @@ func (r *SQLiteRepository) parseTableParams(params []byte) (*tableParamsMap, err
 	}
 
 	return &tableParamsMap{
-		tableParams:      tableParamsDto[contract.TableTab],
+		tableParams:      tableParamsDto[contract.GeneralTab],
 		columnParams:     columnParamsDto[contract.TableColumnsTab],
 		foreignKeyParams: foreignKeyParamsDto[contract.TableForeignKeysTab],
 		keyParams:        keyParamsDto[contract.TableKeysTab],
@@ -94,7 +94,7 @@ func (r *SQLiteRepository) isTableRelatedAction(tabID map[contract.TreeTab]any, 
 		break
 	}
 
-	return treeTab == contract.TableTab ||
+	return treeTab == contract.GeneralTab ||
 		treeTab == contract.TableColumnsTab ||
 		treeTab == contract.TableForeignKeysTab ||
 		treeTab == contract.TableKeysTab ||

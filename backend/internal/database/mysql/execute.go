@@ -9,7 +9,7 @@ import (
 )
 
 func (r *MySQLRepository) buildExecuteQueries(_ context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, error) {
-	node := r.base.ExtractNode(nodeID)
+	node := resolveCreateTableNode(r.base.ExtractNode(nodeID), action, params)
 	type ExecuteParams map[contract.TreeTab]any
 	executeParams, err := helper.ConvertToDTO[ExecuteParams](params)
 	if err != nil {
@@ -48,11 +48,23 @@ func (r *MySQLRepository) buildExecuteQueries(_ context.Context, nodeID string, 
 			return nil, err
 		}
 
+		tableKeyQueries, err := r.handleTableKeyCommands(node, tabID, action, params)
+		if err != nil {
+			return nil, err
+		}
+
+		tableIndexQueries, err := r.handleTableIndexCommands(node, tabID, action, params)
+		if err != nil {
+			return nil, err
+		}
+
 		queries = append(queries, dbQueries...)
 		queries = append(queries, viewQueries...)
 		queries = append(queries, tableQueries...)
 		queries = append(queries, tableColumnQueries...)
 		queries = append(queries, tableForeignKeyQueries...)
+		queries = append(queries, tableKeyQueries...)
+		queries = append(queries, tableIndexQueries...)
 	}
 
 	return queries, nil

@@ -149,3 +149,38 @@ type MysqlTableForeignKeyData struct {
 	IsDeferrable      *bool    `json:"is_deferrable"`
 	InitiallyDeferred *bool    `json:"initially_deferred"`
 }
+
+type MysqlTableKeyParams struct {
+	Columns []MysqlTableKey `json:"columns"`
+}
+
+type MysqlTableKey struct {
+	New     *MysqlTableKeyData `json:"new"`
+	Old     *MysqlTableKeyData `json:"old"`
+	Added   *bool              `json:"added"`
+	Deleted *bool              `json:"deleted"`
+}
+
+type MysqlTableKeyData struct {
+	ConstraintName *string  `json:"constraint_name"`
+	Columns        []string `json:"ref_columns"`
+	ConstraintType *string  `json:"constraint_type"`
+}
+
+type MysqlTableIndexParams struct {
+	Columns []MysqlTableIndex `json:"columns"`
+}
+
+type MysqlTableIndex struct {
+	New     *MysqlTableIndexData `json:"new"`
+	Old     *MysqlTableIndexData `json:"old"`
+	Added   *bool                `json:"added"`
+	Deleted *bool                `json:"deleted"`
+}
+
+type MysqlTableIndexData struct {
+	IndexName *string  `json:"index_name"`
+	Columns   []string `json:"ref_columns"`
+	NonUnique *bool    `json:"non_unique"`
+	Collation *string  `json:"collation"`
+}

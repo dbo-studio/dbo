@@ -41,7 +41,6 @@ func (s IConnectionServiceImpl) Ping(ctx context.Context, req *dto.PingConnectio
 	if _, err = s.cm.GetConnection(ctx, connection, false); err != nil {
 		return err
 	}
-
 	if err := s.cm.Close(ctx, ownerID, connection.ID); err != nil {
 		return err
 	}

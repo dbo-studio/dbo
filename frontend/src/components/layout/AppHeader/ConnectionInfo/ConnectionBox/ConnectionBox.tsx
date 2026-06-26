@@ -42,7 +42,7 @@ export default function ConnectionBox(): JSX.Element {
   return (
     <ConnectionBoxStyled status={status}>
       <ConnectionBoxContentStyled>
-        <Typography variant='body2' component='h6'>
+        <Typography variant='body2' component='h6' noWrap>
           {loading === 'loading' && locales.connecting}
           {loading === 'finished' && info}
           {loading === 'error' && info}

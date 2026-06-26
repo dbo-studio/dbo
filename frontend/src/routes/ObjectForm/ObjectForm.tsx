@@ -30,7 +30,9 @@ export default function ObjectForm(): React.JSX.Element {
   const currentConnection = useCurrentConnection();
   const { prefillChat } = useAiBridge();
 
-  const isArrayTab = selectedTabId !== 'view' && selectedTabId !== null;
+  const formData = useFormObjectStore((state) => state.getFormData(objectTabId));
+  const showGeneralForm = (formData?.general.length ?? 0) > 0;
+  const showArrayForm = (formData?.schema.length ?? 0) > 0;
 
   const handleAiSuggest = useCallback(async (): Promise<void> => {
     if (!selectedTab?.id || !currentConnection?.id) return;
@@ -75,23 +77,25 @@ export default function ObjectForm(): React.JSX.Element {
       )}
       {!isLoadingTabs && !isLoading && (
         <ObjectFormContentStyled>
-          <GeneralForm objectTabId={objectTabId} />
-          <Stack
-            direction={'column'}
-            sx={{
-              flex: 1,
-              overflow: 'auto'
-            }}
-          >
-            <ArrayForm objectTabId={objectTabId} />
-          </Stack>
+          {showGeneralForm && <GeneralForm objectTabId={objectTabId} />}
+          {showArrayForm && (
+            <Stack
+              direction={'column'}
+              sx={{
+                flex: 1,
+                overflow: 'auto'
+              }}
+            >
+              <ArrayForm objectTabId={objectTabId} />
+            </Stack>
+          )}
 
           <FormStatusBar
             onSave={() => void handleSave()}
             onCancel={() => void handleCancel()}
-            onAddRow={isArrayTab ? () => addRow(objectTabId) : undefined}
+            onAddRow={showArrayForm ? () => addRow(objectTabId) : undefined}
             onAiSuggest={() => void handleAiSuggest()}
-            isArrayForm={isArrayTab}
+            isArrayForm={showArrayForm}
             disabled={isSaving}
           />
         </ObjectFormContentStyled>

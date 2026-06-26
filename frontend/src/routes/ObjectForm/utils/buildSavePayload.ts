@@ -2,48 +2,13 @@ import type { FormObjectData } from '@/store/formObject/types';
 import { ObjectTabType } from '@/types';
 import { FormFieldType, FormValue, GeneralFieldType } from '@/types/Tree';
 
-const ARRAY_TAB_IDS = new Set(['table_columns', 'table_keys', 'table_foreign_keys']);
-
 const TABLE_ACTIONS = new Set(['createTable', 'editTable']);
-const VIEW_ACTIONS = new Set(['createView', 'editView']);
 
 type ColumnChange = {
   new: Record<string, FormValue>;
   old: Record<string, FormValue>;
   added?: boolean;
   deleted?: boolean;
-};
-
-const MYSQL_TABLE_FIELD_MAP: Record<string, string> = {
-  TABLE_NAME: 'relname',
-  TABLE_COMMENT: 'description'
-};
-
-const MYSQL_COLUMN_FIELD_MAP: Record<string, string> = {
-  COLUMN_NAME: 'column_name',
-  DATA_TYPE: 'data_type',
-  IS_NULLABLE: 'not_null',
-  COLUMN_DEFAULT: 'column_default',
-  COLUMN_COMMENT: 'comment',
-  CHARACTER_MAXIMUM_LENGTH: 'character_maximum_length',
-  NUMERIC_SCALE: 'numeric_scale',
-  AUTO_INCREMENT: 'is_identity'
-};
-
-const mapFieldId = (tabId: string, fieldId: string): string => {
-  if (tabId === 'table_foreign_keys' && fieldId === 'constraint_name') {
-    return 'name';
-  }
-
-  if (tabId === 'table' && MYSQL_TABLE_FIELD_MAP[fieldId]) {
-    return MYSQL_TABLE_FIELD_MAP[fieldId];
-  }
-
-  if (tabId === 'table_columns' && MYSQL_COLUMN_FIELD_MAP[fieldId]) {
-    return MYSQL_COLUMN_FIELD_MAP[fieldId];
-  }
-
-  return fieldId;
 };
 
 const toPayloadValue = (value: FormValue | FormValue[] | undefined): FormValue => {
@@ -60,12 +25,11 @@ const toPayloadValue = (value: FormValue | FormValue[] | undefined): FormValue =
   return value ?? null;
 };
 
-const rowToRecord = (row: FormFieldType[], tabId: string, useOriginal = false): Record<string, FormValue> => {
+const rowToRecord = (row: FormFieldType[], useOriginal = false): Record<string, FormValue> => {
   const record: Record<string, FormValue> = {};
 
   for (const cell of row) {
-    const key = mapFieldId(tabId, cell.id);
-    record[key] = toPayloadValue(useOriginal ? cell.originalValue : cell.value);
+    record[cell.id] = toPayloadValue(useOriginal ? cell.originalValue : cell.value);
   }
 
   return record;
@@ -79,48 +43,33 @@ const isRowUpdated = (row: FormFieldType[]): boolean =>
 const hasGeneralChanges = (general: GeneralFieldType[]): boolean =>
   general.some((field) => JSON.stringify(field.value) !== JSON.stringify(field.originalValue));
 
-const buildGeneralTableRecord = (general: GeneralFieldType[], useOriginal = false): Record<string, FormValue> => {
+const buildGeneralRecord = (general: GeneralFieldType[], useOriginal = false): Record<string, FormValue> => {
   const record: Record<string, FormValue> = {};
 
   for (const field of general) {
-    const key = MYSQL_TABLE_FIELD_MAP[field.id] ?? field.id;
-    record[key] = toPayloadValue(useOriginal ? field.originalValue : field.value);
+    record[field.id] = toPayloadValue(useOriginal ? field.originalValue : field.value);
   }
 
   return record;
 };
 
-const hasTableTabChanges = (formData: FormObjectData): boolean => {
-  if (formData.general.length > 0) {
-    return hasGeneralChanges(formData.general);
-  }
+const buildNewOldPair = (general: GeneralFieldType[]): { new: Record<string, FormValue>; old: Record<string, FormValue> } => ({
+  new: buildGeneralRecord(general),
+  old: buildGeneralRecord(general, true)
+});
 
-  const row = formData.data[0];
-  if (!row) return false;
+const buildGeneralTabPayload = (
+  saveKey: string,
+  formData: FormObjectData,
+  action: string
+): Record<string, unknown> | null => {
+  if (formData.general.length === 0) return null;
 
-  return row.some((cell) => JSON.stringify(cell.value) !== JSON.stringify(cell.originalValue));
-};
-
-const buildTablePayload = (formData: FormObjectData, action: string): Record<string, unknown> | null => {
-  if (!TABLE_ACTIONS.has(action)) return null;
-
-  const hasChanges = hasTableTabChanges(formData);
-  if (action === 'editTable' && !hasChanges) return null;
-
-  const newRecord =
-    formData.general.length > 0
-      ? buildGeneralTableRecord(formData.general)
-      : rowToRecord(formData.data[0] ?? [], 'table');
-  const oldRecord =
-    formData.general.length > 0
-      ? buildGeneralTableRecord(formData.general, true)
-      : rowToRecord(formData.data[0] ?? [], 'table', true);
+  const isEdit = action.startsWith('edit');
+  if (isEdit && !hasGeneralChanges(formData.general)) return null;
 
   return {
-    table: {
-      new: newRecord,
-      old: oldRecord
-    }
+    [saveKey]: buildNewOldPair(formData.general)
   };
 };
 
@@ -129,6 +78,8 @@ const buildArrayTabPayload = (
   formData: FormObjectData,
   action: string
 ): Record<string, unknown> | null => {
+  if (formData.schema.length === 0) return null;
+
   const columns: ColumnChange[] = [];
   const isCreate = action === 'createTable';
 
@@ -138,7 +89,7 @@ const buildArrayTabPayload = (
     if (isCreate) {
       if (!isRowDeleted(row)) {
         columns.push({
-          new: rowToRecord(row, tabId),
+          new: rowToRecord(row),
           old: {},
           added: true
         });
@@ -147,7 +98,7 @@ const buildArrayTabPayload = (
     }
 
     if (isRowDeleted(row)) {
-      const oldRecord = rowToRecord(row, tabId, true);
+      const oldRecord = rowToRecord(row, true);
       columns.push({
         new: oldRecord,
         old: oldRecord,
@@ -158,7 +109,7 @@ const buildArrayTabPayload = (
 
     if (isRowAdded(row)) {
       columns.push({
-        new: rowToRecord(row, tabId),
+        new: rowToRecord(row),
         old: {},
         added: true
       });
@@ -167,8 +118,8 @@ const buildArrayTabPayload = (
 
     if (isRowUpdated(row)) {
       columns.push({
-        new: rowToRecord(row, tabId),
-        old: rowToRecord(row, tabId, true)
+        new: rowToRecord(row),
+        old: rowToRecord(row, true)
       });
     }
   }
@@ -180,22 +131,16 @@ const buildArrayTabPayload = (
   };
 };
 
-const buildViewPayload = (formData: FormObjectData, action: string): Record<string, unknown> | null => {
-  if (!VIEW_ACTIONS.has(action)) return null;
+const resolveGeneralSaveKey = (tabId: string, action: string): string | null => {
+  if (TABLE_ACTIONS.has(action)) {
+    return 'general';
+  }
 
-  const row = formData.data[0];
-  if (!row) return null;
+  if (tabId === 'database' || tabId === 'schema' || tabId === 'view' || tabId === 'materialized_view') {
+    return tabId;
+  }
 
-  const hasChanges = row.some((cell) => JSON.stringify(cell.value) !== JSON.stringify(cell.originalValue));
-
-  if (action === 'editView' && !hasChanges) return null;
-
-  return {
-    view: {
-      new: rowToRecord(row, 'view'),
-      old: rowToRecord(row, 'view', true)
-    }
-  };
+  return null;
 };
 
 export const buildSavePayload = (
@@ -206,37 +151,22 @@ export const buildSavePayload = (
 ): Record<string, unknown> | null => {
   const payload: Record<string, unknown> = {};
 
-  const tableTabData = formDataByTab[`${objectPrefix}_table`];
-  const columnsTabData = formDataByTab[`${objectPrefix}_table_columns`];
-
-  if (TABLE_ACTIONS.has(action)) {
-    const tablePayload =
-      (tableTabData ? buildTablePayload(tableTabData, action) : null) ??
-      (columnsTabData?.general.length ? buildTablePayload(columnsTabData, action) : null);
-
-    if (tablePayload) {
-      Object.assign(payload, tablePayload);
-    }
-  }
-
   for (const tab of tabs) {
     const tabKey = `${objectPrefix}_${tab.id}`;
     const formData = formDataByTab[tabKey];
     if (!formData) continue;
 
-    if (ARRAY_TAB_IDS.has(tab.id)) {
-      const arrayPayload = buildArrayTabPayload(tab.id, formData, action);
-      if (arrayPayload) {
-        Object.assign(payload, arrayPayload);
+    const generalSaveKey = resolveGeneralSaveKey(tab.id, action);
+    if (generalSaveKey) {
+      const generalPayload = buildGeneralTabPayload(generalSaveKey, formData, action);
+      if (generalPayload) {
+        Object.assign(payload, generalPayload);
       }
-      continue;
     }
 
-    if (tab.id === 'view') {
-      const viewPayload = buildViewPayload(formData, action);
-      if (viewPayload) {
-        Object.assign(payload, viewPayload);
-      }
+    const arrayPayload = buildArrayTabPayload(tab.id, formData, action);
+    if (arrayPayload) {
+      Object.assign(payload, arrayPayload);
     }
   }
 
@@ -253,8 +183,17 @@ export const extractNodeIdAfterSave = (
   currentNodeId: string,
   action: string
 ): string | null => {
-  const tablePayload = payload.table as ObjectNamePayload | undefined;
-  const tableNewName = tablePayload?.new?.name ?? tablePayload?.new?.relname;
+  const databasePayload = payload.database as ObjectNamePayload | undefined;
+  const databaseNewName = databasePayload?.new?.datname;
+  if (databaseNewName) {
+    const newName = String(databaseNewName);
+    if (action === 'createDatabase' || newName !== currentNodeId) {
+      return newName;
+    }
+  }
+
+  const generalPayload = payload.general as ObjectNamePayload | undefined;
+  const tableNewName = generalPayload?.new?.name ?? generalPayload?.new?.relname;
   if (tableNewName) {
     const newName = String(tableNewName);
     if (action === 'createTable' || newName !== currentNodeId) {
@@ -263,9 +202,28 @@ export const extractNodeIdAfterSave = (
   }
 
   const viewPayload = payload.view as ObjectNamePayload | undefined;
-  if (viewPayload?.new?.name) {
-    const newName = String(viewPayload.new.name);
+  const viewNewName = viewPayload?.new?.name;
+  if (viewNewName) {
+    const newName = String(viewNewName);
     if (action === 'createView' || newName !== currentNodeId) {
+      return newName;
+    }
+  }
+
+  const schemaPayload = payload.schema as ObjectNamePayload | undefined;
+  const schemaNewName = schemaPayload?.new?.nspname;
+  if (schemaNewName) {
+    const newName = String(schemaNewName);
+    if (action === 'createSchema' || newName !== currentNodeId) {
+      return newName;
+    }
+  }
+
+  const materializedViewPayload = payload.materialized_view as ObjectNamePayload | undefined;
+  const matViewNewName = materializedViewPayload?.new?.name;
+  if (matViewNewName) {
+    const newName = String(matViewNewName);
+    if (action === 'createMaterializedView' || newName !== currentNodeId) {
       return newName;
     }
   }

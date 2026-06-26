@@ -1,20 +1,41 @@
 import { test } from '@playwright/test';
 import { CREATE_TABLE_SCENARIOS, EDIT_TABLE_SCENARIOS } from '../fixtures/objectFormScenarios';
-import { createTableViaObjectForm, editTableAddColumn, setupConnectionForEngine } from '../helpers/objectFormTable';
+import { uniqueTestSuffix } from '../fixtures/uniqueSuffix';
+import {
+  cleanupObjectFormTable,
+  createTableViaObjectForm,
+  editTableAddColumn,
+  setupConnectionForEngine,
+  setupPostgresObjectFormDatabase
+} from '../helpers/objectFormTable';
 
 for (const scenario of CREATE_TABLE_SCENARIOS) {
   test.describe(`Object Form [${scenario.engine}]`, () => {
-    test('Create table via Object Form', async ({ page }) => {
-      const connectionName = `object-form-${scenario.engine}-${Date.now()}`;
-      const tableName = `e2e_obj_table_${Date.now()}`;
-      const connectionPage = await setupConnectionForEngine(page, scenario.engine, connectionName);
+    test('Create table via Object Form', async ({ page }, testInfo) => {
+      const suffix = uniqueTestSuffix(testInfo);
+      const connectionName = `object-form-${scenario.engine}-${suffix}`;
+      const tableName = `e2e_obj_table_${suffix}`;
+      const databaseName = scenario.engine === 'postgresql' ? `e2e_obj_db_${suffix}` : undefined;
+      const sqlitePath = scenario.engine === 'sqlite' ? `/tmp/dbo-e2e-${suffix}.db` : undefined;
+
+      await setupConnectionForEngine(page, scenario.engine, connectionName, sqlitePath);
+
+      if (databaseName) {
+        await setupPostgresObjectFormDatabase(page, connectionName, databaseName);
+      }
 
       await test.step('Create table', async () => {
-        await createTableViaObjectForm(page, connectionName, scenario, tableName);
+        await createTableViaObjectForm(
+          page,
+          connectionName,
+          scenario,
+          tableName,
+          databaseName ?? 'default'
+        );
       });
 
       await test.step('Cleanup', async () => {
-        await connectionPage.deleteConnection(connectionName);
+        await cleanupObjectFormTable(page, connectionName, tableName, { databaseName, sqlitePath });
       });
     });
   });
@@ -22,19 +43,33 @@ for (const scenario of CREATE_TABLE_SCENARIOS) {
 
 for (const scenario of EDIT_TABLE_SCENARIOS) {
   test.describe(`Object Form edit [${scenario.engine}]`, () => {
-    test('Add column via Edit table', async ({ page }) => {
+    test('Add column via Edit table', async ({ page }, testInfo) => {
       const createScenario = CREATE_TABLE_SCENARIOS.find((item) => item.engine === scenario.engine);
       if (!createScenario) {
         throw new Error(`Missing create scenario for ${scenario.engine}`);
       }
 
-      const connectionName = `object-form-edit-${scenario.engine}-${Date.now()}`;
-      const tableName = `e2e_obj_edit_${Date.now()}`;
+      const suffix = uniqueTestSuffix(testInfo);
+      const connectionName = `object-form-edit-${scenario.engine}-${suffix}`;
+      const tableName = `e2e_obj_edit_${suffix}`;
       const newColumnName = 'notes';
-      const connectionPage = await setupConnectionForEngine(page, scenario.engine, connectionName);
+      const databaseName = scenario.engine === 'postgresql' ? `e2e_obj_db_${suffix}` : undefined;
+      const sqlitePath = scenario.engine === 'sqlite' ? `/tmp/dbo-e2e-${suffix}.db` : undefined;
+
+      await setupConnectionForEngine(page, scenario.engine, connectionName, sqlitePath);
+
+      if (databaseName) {
+        await setupPostgresObjectFormDatabase(page, connectionName, databaseName);
+      }
 
       await test.step('Create base table', async () => {
-        await createTableViaObjectForm(page, connectionName, createScenario, tableName);
+        await createTableViaObjectForm(
+          page,
+          connectionName,
+          createScenario,
+          tableName,
+          databaseName ?? 'default'
+        );
       });
 
       await test.step('Add column', async () => {
@@ -42,7 +77,7 @@ for (const scenario of EDIT_TABLE_SCENARIOS) {
       });
 
       await test.step('Cleanup', async () => {
-        await connectionPage.deleteConnection(connectionName);
+        await cleanupObjectFormTable(page, connectionName, tableName, { databaseName, sqlitePath });
       });
     });
   });

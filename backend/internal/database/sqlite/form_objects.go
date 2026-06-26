@@ -66,12 +66,11 @@ func (r *SQLiteRepository) getTableColumns(ctx context.Context, nodeID string) (
 	}
 
 	tableInfo, err := r.getTableInfo(ctx, nodeID)
-
 	if err != nil {
 		return nil, err
 	}
 
-	return r.base.SampleBuildFormResponseFromResults(tableInfo, result, fields)
+	return r.base.BuildHybridFormResponse(tableInfo, result, fields)
 }
 
 func (r *SQLiteRepository) getTableForeignKeys(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
@@ -95,13 +94,7 @@ func (r *SQLiteRepository) getTableForeignKeys(ctx context.Context, nodeID strin
 		})
 	}
 
-	tableInfo, err := r.getTableInfo(ctx, nodeID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return r.base.SampleBuildFormResponseFromResults(tableInfo, result, fields)
+	return r.base.BuildArrayFormResponse(result, fields)
 }
 
 func (r *SQLiteRepository) getTableKeys(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
@@ -129,13 +122,7 @@ func (r *SQLiteRepository) getTableKeys(ctx context.Context, nodeID string) (*co
 		})
 	}
 
-	tableInfo, err := r.getTableInfo(ctx, nodeID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return r.base.SampleBuildFormResponseFromResults(tableInfo, result, fields)
+	return r.base.BuildArrayFormResponse(result, fields)
 }
 
 func (r *SQLiteRepository) getViewInfo(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
@@ -145,25 +132,20 @@ func (r *SQLiteRepository) getViewInfo(ctx context.Context, nodeID string) (*con
 		return nil, err
 	}
 
-	result := []map[string]any{}
+	row := map[string]any{}
 	for _, view := range views {
 		if view.Name == nodeID {
 			query := ""
 			if view.Query != nil {
 				query = *view.Query
 			}
-			result = append(result, map[string]any{
+			row = map[string]any{
 				"name":  view.Name,
 				"query": query,
-			})
+			}
+			break
 		}
 	}
 
-	tableInfo, err := r.getTableInfo(ctx, nodeID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return r.base.SampleBuildFormResponseFromResults(tableInfo, result, fields)
+	return r.base.BuildGeneralFormResponse(fields, row)
 }

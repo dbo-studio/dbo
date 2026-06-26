@@ -4,7 +4,7 @@ export type TableNameFieldLocation = 'general' | 'array';
 
 export type CreateTableScenario = {
   engine: DbEngine;
-  treePath: (connectionName: string) => string[];
+  treePath: (connectionName: string, databaseName?: string) => string[];
   tableTabId: string | null;
   tableName: { location: TableNameFieldLocation; fieldId: string; rowIndex?: number };
   columnsTabId: string;
@@ -17,7 +17,7 @@ export type CreateTableScenario = {
 
 export type EditTableScenario = {
   engine: DbEngine;
-  treePath: (connectionName: string) => string[];
+  treePath: (connectionName: string, databaseName?: string) => string[];
   columnsTabId: string;
   columnNameFieldId: string;
   columnTypeFieldId: string;
@@ -28,7 +28,7 @@ export type EditTableScenario = {
 export const CREATE_TABLE_SCENARIOS: CreateTableScenario[] = [
   {
     engine: 'postgresql',
-    treePath: (connectionName) => [connectionName, 'default', 'public'],
+    treePath: (connectionName, databaseName = 'default') => [connectionName, databaseName, 'public'],
     tableTabId: null,
     tableName: { location: 'general', fieldId: 'relname' },
     columnsTabId: 'table_columns',
@@ -42,10 +42,10 @@ export const CREATE_TABLE_SCENARIOS: CreateTableScenario[] = [
     engine: 'mysql',
     treePath: (connectionName) => [connectionName, 'default'],
     tableTabId: null,
-    tableName: { location: 'general', fieldId: 'TABLE_NAME' },
+    tableName: { location: 'general', fieldId: 'relname' },
     columnsTabId: 'table_columns',
-    columnNameFieldId: 'COLUMN_NAME',
-    columnTypeFieldId: 'DATA_TYPE',
+    columnNameFieldId: 'column_name',
+    columnTypeFieldId: 'data_type',
     integerTypeLabel: 'INT',
     textTypeLabel: 'VARCHAR',
     previewCreatePattern: /CREATE TABLE/i
@@ -67,7 +67,7 @@ export const CREATE_TABLE_SCENARIOS: CreateTableScenario[] = [
 export const EDIT_TABLE_SCENARIOS: EditTableScenario[] = [
   {
     engine: 'postgresql',
-    treePath: (connectionName) => [connectionName, 'default', 'public'],
+    treePath: (connectionName, databaseName = 'default') => [connectionName, databaseName, 'public'],
     columnsTabId: 'table_columns',
     columnNameFieldId: 'column_name',
     columnTypeFieldId: 'data_type',
@@ -78,8 +78,8 @@ export const EDIT_TABLE_SCENARIOS: EditTableScenario[] = [
     engine: 'mysql',
     treePath: (connectionName) => [connectionName, 'default'],
     columnsTabId: 'table_columns',
-    columnNameFieldId: 'COLUMN_NAME',
-    columnTypeFieldId: 'DATA_TYPE',
+    columnNameFieldId: 'column_name',
+    columnTypeFieldId: 'data_type',
     textTypeLabel: 'VARCHAR',
     previewEditPattern: /ADD COLUMN/i
   },

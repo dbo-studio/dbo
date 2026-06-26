@@ -58,6 +58,11 @@ func (r *PostgresRepository) buildExecuteQueries(_ context.Context, nodeID strin
 			return nil, err
 		}
 
+		tableKeyQueries, err := r.handleTableKeyCommands(node, tabID, action, params)
+		if err != nil {
+			return nil, err
+		}
+
 		queries = append(queries, dbQueries...)
 		queries = append(queries, viewQueries...)
 		queries = append(queries, materializedViewQueries...)
@@ -65,6 +70,7 @@ func (r *PostgresRepository) buildExecuteQueries(_ context.Context, nodeID strin
 		queries = append(queries, tableQueries...)
 		queries = append(queries, tableColumnQueries...)
 		queries = append(queries, tableForeignKeyQueries...)
+		queries = append(queries, tableKeyQueries...)
 	}
 
 	return queries, nil

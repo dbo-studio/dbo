@@ -19,6 +19,8 @@ func (r *MySQLRepository) Objects(ctx context.Context, nodeID string, tabID cont
 		return r.getTableForeignKeys(ctx, node, action)
 	case contract.TableKeysTab:
 		return r.getTableKeys(ctx, node, action)
+	case contract.TableIndexesTab:
+		return r.getTableIndexes(ctx, node, action)
 	case contract.ViewTab:
 		return r.getViewInfo(ctx, node)
 	default:
@@ -38,17 +40,22 @@ func (r *MySQLRepository) getDatabaseInfo(ctx context.Context, node contract.DBN
 	for _, database := range databases {
 		if database.Name == node.Database {
 			result = append(result, map[string]any{
-				"SCHEMA_NAME": database.Name,
+				"datname": database.Name,
 			})
 		}
 	}
 
-	return r.base.BuildObjectFormResponseFromResults(result, fields)
+	row := map[string]any{}
+	if len(result) > 0 {
+		row = result[0]
+	}
+
+	return r.base.BuildGeneralFormResponse(fields, row)
 }
 
 func (r *MySQLRepository) databaseFields(_ context.Context) []contract.FormField {
 	return []contract.FormField{
-		{ID: "SCHEMA_NAME", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "datname", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
 	}
 }
 
@@ -65,10 +72,10 @@ func (r *MySQLRepository) getTableGeneralFields(ctx context.Context, node contra
 		for _, table := range tables {
 			if table.Name == node.Table {
 				result = map[string]any{
-					"TABLE_NAME":    table.Name,
-					"TABLE_COMMENT": table.Comment,
-					"ENGINE":        table.Engine,
-					"ROW_FORMAT":    table.RowFormat,
+					"relname":     table.Name,
+					"description": table.Comment,
+					"ENGINE":      table.Engine,
+					"ROW_FORMAT":  table.RowFormat,
 				}
 				break
 			}
@@ -90,14 +97,14 @@ func (r *MySQLRepository) getTableColumns(ctx context.Context, node contract.DBN
 
 		for _, column := range columns {
 			result = append(result, map[string]any{
-				"COLUMN_NAME":              column.ColumnName,
-				"DATA_TYPE":                column.DataType,
-				"IS_NULLABLE":              column.IsNullable == "NO",
-				"COLUMN_DEFAULT":           column.ColumnDefault,
-				"COLUMN_COMMENT":           column.Comment,
-				"CHARACTER_MAXIMUM_LENGTH": column.CharacterMaximumLength,
-				"NUMERIC_SCALE":            column.NumericScale,
-				"AUTO_INCREMENT":           false,
+				"column_name":              column.ColumnName,
+				"data_type":                column.DataType,
+				"not_null":                 column.IsNullable == "NO",
+				"column_default":           column.ColumnDefault,
+				"comment":                  column.Comment,
+				"character_maximum_length": column.CharacterMaximumLength,
+				"numeric_scale":            column.NumericScale,
+				"is_identity":              false,
 			})
 		}
 	}
@@ -107,7 +114,7 @@ func (r *MySQLRepository) getTableColumns(ctx context.Context, node contract.DBN
 		return nil, err
 	}
 
-	return r.base.SampleBuildFormResponseFromResults(tableInfo, result, fields)
+	return r.base.BuildHybridFormResponse(tableInfo, result, fields)
 }
 
 func (r *MySQLRepository) getTableForeignKeys(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
@@ -122,22 +129,17 @@ func (r *MySQLRepository) getTableForeignKeys(ctx context.Context, node contract
 
 		for _, foreignKey := range foreignKeys {
 			result = append(result, map[string]any{
-				"CONSTRAINT_NAME":        foreignKey.ConstraintName,
-				"REFERENCED_TABLE_NAME":  foreignKey.TargetTable,
-				"COLUMN_NAME":            foreignKey.ColumnsList,
-				"REFERENCED_COLUMN_NAME": foreignKey.RefColumnsList,
-				"UPDATE_RULE":            foreignKey.UpdateAction,
-				"DELETE_RULE":            foreignKey.DeleteAction,
+				"constraint_name": foreignKey.ConstraintName,
+				"target_table":    foreignKey.TargetTable,
+				"ref_columns":     foreignKey.ColumnsList,
+				"target_columns":  foreignKey.RefColumnsList,
+				"update_action":   foreignKey.UpdateAction,
+				"delete_action":   foreignKey.DeleteAction,
 			})
 		}
 	}
 
-	tableInfo, err := r.getTableGeneralFields(ctx, node, action)
-	if err != nil {
-		return nil, err
-	}
-
-	return r.base.SampleBuildFormResponseFromResults(tableInfo, result, fields)
+	return r.base.BuildArrayFormResponse(result, fields)
 }
 
 func (r *MySQLRepository) getTableKeys(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
@@ -156,19 +158,56 @@ func (r *MySQLRepository) getTableKeys(ctx context.Context, node contract.DBNode
 				columns[i] = pk.ColumnName
 			}
 			result = append(result, map[string]any{
-				"CONSTRAINT_NAME": "PRIMARY",
-				"CONSTRAINT_TYPE": "PRIMARY KEY",
-				"COLUMN_NAME":     columns,
+				"constraint_name": "PRIMARY",
+				"constraint_type": "PRIMARY KEY",
+				"ref_columns":     columns,
 			})
 		}
 	}
 
-	tableInfo, err := r.getTableGeneralFields(ctx, node, action)
-	if err != nil {
-		return nil, err
+	return r.base.BuildArrayFormResponse(result, fields)
+}
+
+func (r *MySQLRepository) getTableIndexes(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
+	fields := r.indexOptions(ctx, fmt.Sprintf("%s.%s", node.Database, node.Table))
+	result := []map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		indexes, err := r.tableIndexes(ctx, node.Database, node.Table)
+		if err != nil {
+			return nil, err
+		}
+
+		indexMap := make(map[string]map[string]any)
+		indexOrder := make([]string, 0)
+
+		for _, index := range indexes {
+			if index.IndexName == "PRIMARY" {
+				continue
+			}
+
+			entry, exists := indexMap[index.IndexName]
+			if !exists {
+				entry = map[string]any{
+					"index_name":  index.IndexName,
+					"ref_columns": []string{},
+					"non_unique":  index.NonUnique == 1,
+					"collation":   index.Collation,
+				}
+				indexMap[index.IndexName] = entry
+				indexOrder = append(indexOrder, index.IndexName)
+			}
+
+			cols := entry["ref_columns"].([]string)
+			entry["ref_columns"] = append(cols, index.ColumnName)
+		}
+
+		for _, name := range indexOrder {
+			result = append(result, indexMap[name])
+		}
 	}
 
-	return r.base.SampleBuildFormResponseFromResults(tableInfo, result, fields)
+	return r.base.BuildArrayFormResponse(result, fields)
 }
 
 func (r *MySQLRepository) getViewInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
@@ -186,12 +225,17 @@ func (r *MySQLRepository) getViewInfo(ctx context.Context, node contract.DBNode)
 				query = *view.Query
 			}
 			result = append(result, map[string]any{
-				"TABLE_NAME":      view.Name,
-				"TABLE_COMMENT":   view.Comment,
-				"VIEW_DEFINITION": query,
+				"name":    view.Name,
+				"comment": view.Comment,
+				"query":   query,
 			})
 		}
 	}
 
-	return r.base.BuildObjectFormResponseFromResults(result, fields)
+	row := map[string]any{}
+	if len(result) > 0 {
+		row = result[0]
+	}
+
+	return r.base.BuildGeneralFormResponse(fields, row)
 }

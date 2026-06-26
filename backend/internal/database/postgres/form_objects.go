@@ -51,7 +51,12 @@ func (r *PostgresRepository) getDatabaseInfo(ctx context.Context, node contract.
 		}
 	}
 
-	return r.base.BuildObjectFormResponseFromResults(result, fields)
+	row := map[string]any{}
+	if len(result) > 0 {
+		row = result[0]
+	}
+
+	return r.base.BuildGeneralFormResponse(fields, row)
 }
 
 func (r *PostgresRepository) getSchemaInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
@@ -72,7 +77,12 @@ func (r *PostgresRepository) getSchemaInfo(ctx context.Context, node contract.DB
 		}
 	}
 
-	return r.base.BuildObjectFormResponseFromResults(result, fields)
+	row := map[string]any{}
+	if len(result) > 0 {
+		row = result[0]
+	}
+
+	return r.base.BuildGeneralFormResponse(fields, row)
 }
 
 func (r *PostgresRepository) getTableGeneralFields(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) ([]contract.GeneralField, error) {
@@ -133,7 +143,7 @@ func (r *PostgresRepository) getTableColumns(ctx context.Context, node contract.
 		return nil, err
 	}
 
-	return r.base.SampleBuildFormResponseFromResults(tableInfo, result, fields)
+	return r.base.BuildHybridFormResponse(tableInfo, result, fields)
 }
 
 func (r *PostgresRepository) getTableForeignKeys(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
@@ -161,12 +171,7 @@ func (r *PostgresRepository) getTableForeignKeys(ctx context.Context, node contr
 		}
 	}
 
-	tableInfo, err := r.getTableGeneralFields(ctx, node, action)
-	if err != nil {
-		return nil, err
-	}
-
-	return r.base.SampleBuildFormResponseFromResults(tableInfo, result, fields)
+	return r.base.BuildArrayFormResponse(result, fields)
 }
 
 func (r *PostgresRepository) getTableKeys(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
@@ -192,12 +197,7 @@ func (r *PostgresRepository) getTableKeys(ctx context.Context, node contract.DBN
 		}
 	}
 
-	tableInfo, err := r.getTableGeneralFields(ctx, node, action)
-	if err != nil {
-		return nil, err
-	}
-
-	return r.base.SampleBuildFormResponseFromResults(tableInfo, result, fields)
+	return r.base.BuildArrayFormResponse(result, fields)
 }
 
 func (r *PostgresRepository) getViewInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
@@ -219,7 +219,12 @@ func (r *PostgresRepository) getViewInfo(ctx context.Context, node contract.DBNo
 		}
 	}
 
-	return r.base.BuildObjectFormResponseFromResults(result, fields)
+	row := map[string]any{}
+	if len(result) > 0 {
+		row = result[0]
+	}
+
+	return r.base.BuildGeneralFormResponse(fields, row)
 }
 
 func (r *PostgresRepository) getMaterializedViewInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
@@ -242,5 +247,10 @@ func (r *PostgresRepository) getMaterializedViewInfo(ctx context.Context, node c
 		}
 	}
 
-	return r.base.BuildObjectFormResponseFromResults(result, fields)
+	row := map[string]any{}
+	if len(result) > 0 {
+		row = result[0]
+	}
+
+	return r.base.BuildGeneralFormResponse(fields, row)
 }

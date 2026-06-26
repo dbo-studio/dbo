@@ -7,28 +7,29 @@ const baseCredentials = {
   password: 'secret'
 };
 
-export function getDbConfig(engine: DbEngine, name: string): ConnectionConfig {
+export function getDbConfig(engine: DbEngine, name: string, sqlitePath?: string): ConnectionConfig {
   switch (engine) {
     case 'postgresql':
       return {
         name,
-        host: 'localhost',
-        port: '5432',
+        host: process.env.PGSQL_TEST_HOST ?? 'sample-pgsql',
+        port: process.env.PGSQL_TEST_PORT ?? '5432',
         ...baseCredentials,
         type: 'PostgreSQL'
       };
     case 'mysql':
       return {
         name,
-        host: 'localhost',
-        port: '3306',
+        host: process.env.MYSQL_TEST_HOST ?? 'sample-mysql',
+        port: process.env.MYSQL_TEST_PORT ?? '3306',
+        database: 'default',
         ...baseCredentials,
         type: 'MySQL'
       };
     case 'sqlite':
       return {
         name,
-        host: `/tmp/dbo-e2e-${Date.now()}.db`,
+        host: sqlitePath ?? `/tmp/dbo-e2e-${Date.now()}.db`,
         port: '',
         username: '',
         password: '',

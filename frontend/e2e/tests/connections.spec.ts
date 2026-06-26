@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { getDbConfig } from '../fixtures/dbConfigs';
 import { ConnectionPage, SidebarPage, SqlEditorPage } from '../pages';
 
 /**
@@ -12,7 +13,7 @@ test.describe('Connection Management', () => {
   test('Create and delete a connection', async ({ page }) => {
     const connectionPage = new ConnectionPage(page);
     const connectionName = `${testPrefix}-${Date.now()}`;
-    const config = connectionPage.getConnectionConfig(connectionName);
+    const config = getDbConfig('postgresql', connectionName);
 
     await connectionPage.goto();
     await connectionPage.waitForReady();
@@ -35,7 +36,7 @@ test.describe('Connection Management', () => {
   test('Edit connection', async ({ page }) => {
     const connectionPage = new ConnectionPage(page);
     const connectionName = `${testPrefix}-edit-${Date.now()}`;
-    const config = connectionPage.getConnectionConfig(connectionName);
+    const config = getDbConfig('postgresql', connectionName);
     const editedName = `${connectionName}-edited`;
 
     await connectionPage.goto();
@@ -65,7 +66,7 @@ test.describe('Connection Management', () => {
   test('Refresh connection', async ({ page }) => {
     const connectionPage = new ConnectionPage(page);
     const connectionName = `${testPrefix}-refresh-${Date.now()}`;
-    const config = connectionPage.getConnectionConfig(connectionName);
+    const config = getDbConfig('postgresql', connectionName);
 
     await connectionPage.goto();
     await connectionPage.waitForReady();
@@ -87,7 +88,7 @@ test.describe('Connection Management', () => {
   test('Connection context menu options', async ({ page }) => {
     const connectionPage = new ConnectionPage(page);
     const connectionName = `${testPrefix}-menu-${Date.now()}`;
-    const config = connectionPage.getConnectionConfig(connectionName);
+    const config = getDbConfig('postgresql', connectionName);
 
     await connectionPage.goto();
     await connectionPage.waitForReady();
@@ -119,7 +120,7 @@ test.describe('Connection Management', () => {
 
     const connectionName = `${testPrefix}-schema-${Date.now()}`;
     const schemaName = `e2e_schema_${Date.now()}`;
-    const config = connectionPage.getConnectionConfig(connectionName);
+    const config = getDbConfig('postgresql', connectionName);
 
     await connectionPage.goto();
     await connectionPage.waitForReady();

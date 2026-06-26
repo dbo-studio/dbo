@@ -12,7 +12,13 @@ import (
 func (r *MySQLRepository) handleTableColumnCommands(node contract.DBNode, tabID contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
-	if tabID != contract.TableColumnsTab || node.Table == "" || (action != contract.CreateTableAction && action != contract.EditTableAction) {
+	node = resolveCreateTableNode(node, action, data)
+
+	if action == contract.CreateTableAction {
+		return queries, nil
+	}
+
+	if tabID != contract.TableColumnsTab || node.Table == "" || action != contract.EditTableAction {
 		return queries, nil
 	}
 
@@ -22,12 +28,6 @@ func (r *MySQLRepository) handleTableColumnCommands(node contract.DBNode, tabID 
 	}
 
 	params := paramsDto[tabID]
-
-	if action == contract.CreateTableAction {
-		for _, column := range params.Columns {
-			queries = append(queries, r.handleCreateColumn(node, column)...)
-		}
-	}
 
 	if action == contract.EditTableAction {
 		for _, column := range params.Columns {

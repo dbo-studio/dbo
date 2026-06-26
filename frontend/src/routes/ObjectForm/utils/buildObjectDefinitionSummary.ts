@@ -55,28 +55,19 @@ export const buildObjectDefinitionSummary = (
 
 export const readObjectNameFromForm = (
   formDataByTab: Record<string, FormObjectData>,
-  objectPrefix: string
+  _objectPrefix: string
 ): string | undefined => {
   for (const formData of Object.values(formDataByTab)) {
     if (!formData.general.length) continue;
 
     for (const field of formData.general) {
-      if (['name', 'relname', 'TABLE_NAME', 'datname', 'nspname'].includes(field.id)) {
+      if (['name', 'relname', 'datname', 'nspname'].includes(field.id)) {
         const value = field.value;
         if (typeof value === 'string' && value.trim()) {
           return value.trim();
         }
       }
     }
-  }
-
-  const tableTab = formDataByTab[`${objectPrefix}_table`];
-  const nameCell = tableTab?.data[0]?.find((cell) =>
-    ['name', 'relname', 'TABLE_NAME', 'datname', 'nspname'].includes(cell.id)
-  );
-  const value = nameCell?.value;
-  if (typeof value === 'string' && value.trim()) {
-    return value.trim();
   }
 
   return undefined;

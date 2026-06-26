@@ -49,6 +49,20 @@ func (r *PostgresRepository) handleViewCommands(node contract.DBNode, tabID cont
 		}
 	}
 
+	if action == contract.EditViewAction {
+		if params.Old.Name != nil && params.New.Query != nil {
+			query := fmt.Sprintf(`CREATE OR REPLACE VIEW "%s"."%s" AS %s`, node.Schema, *params.Old.Name, *params.New.Query)
+			if params.New.CheckOption != nil {
+				query += fmt.Sprintf(" WITH %s CHECK OPTION", *params.New.CheckOption)
+			}
+			queries = append(queries, query)
+		}
+
+		if params.Old.Name != nil && params.New.Comment != nil {
+			queries = append(queries, fmt.Sprintf("COMMENT ON VIEW \"%s\".\"%s\" IS '%s'", node.Schema, *params.Old.Name, *params.New.Comment))
+		}
+	}
+
 	if action == contract.DropViewAction {
 		query := fmt.Sprintf(`DROP VIEW "%s"."%s"`, node.Schema, node.Table)
 		queries = append(queries, query)

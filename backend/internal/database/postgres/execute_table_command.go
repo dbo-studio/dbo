@@ -12,7 +12,7 @@ func (r *PostgresRepository) handleTableCommands(node contract.DBNode, tabID con
 	queries := []string{}
 	var tableName string
 
-	if tabID != contract.TableTab && action != contract.DropTableAction {
+	if tabID != contract.GeneralTab && action != contract.DropTableAction {
 		return queries, "", nil
 	}
 
@@ -25,7 +25,8 @@ func (r *PostgresRepository) handleTableCommands(node contract.DBNode, tabID con
 		params := dto[tabID]
 
 		tableName = *params.New.Name
-		query := fmt.Sprintf("CREATE TABLE %s (", *params.New.Name)
+		tableRef := qualifiedTableName(node.Schema, tableName)
+		query := fmt.Sprintf("CREATE TABLE %s (", tableRef)
 		if params.New.Tablespace != nil {
 			query += fmt.Sprintf(") TABLESPACE %s", *params.New.Tablespace)
 		} else {
@@ -35,15 +36,15 @@ func (r *PostgresRepository) handleTableCommands(node contract.DBNode, tabID con
 		queries = append(queries, query)
 
 		if params.New.Persistence != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET %s", *params.New.Name, *params.New.Persistence))
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET %s", tableRef, *params.New.Persistence))
 		}
 
 		if params.New.Owner != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE %s OWNER TO \"%s\"", *params.New.Name, *params.New.Owner))
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s OWNER TO \"%s\"", tableRef, *params.New.Owner))
 		}
 
 		if params.New.Comment != nil {
-			queries = append(queries, fmt.Sprintf("COMMENT ON TABLE %s IS '%s'", *params.New.Name, *params.New.Comment))
+			queries = append(queries, fmt.Sprintf("COMMENT ON TABLE %s IS '%s'", tableRef, *params.New.Comment))
 		}
 	}
 
@@ -79,7 +80,7 @@ func (r *PostgresRepository) handleTableCommands(node contract.DBNode, tabID con
 	}
 
 	if action == contract.DropTableAction {
-		query := fmt.Sprintf("DROP TABLE %s", node.Table)
+		query := fmt.Sprintf("DROP TABLE %s", qualifiedTableName(node.Schema, node.Table))
 		queries = append(queries, query)
 	}
 

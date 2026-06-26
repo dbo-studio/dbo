@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { ConnectionPage, DataGridPage, SqlEditorPage, type ConnectionConfig } from '../pages';
+import { getDbConfig } from '../fixtures/dbConfigs';
+import { ConnectionPage, DataGridPage, SqlEditorPage } from '../pages';
 
 /**
  * Query CRUD Scenario
@@ -16,7 +17,7 @@ test.describe('Query CRUD Operations', () => {
 
     const connectionName = `${testPrefix}-${Date.now()}`;
     const tableName = `e2e_users_${Date.now()}`;
-    const config = connectionPage.getConnectionConfig(connectionName);
+    const config = getDbConfig('postgresql', connectionName);
 
     await connectionPage.goto();
     await connectionPage.waitForReady();
@@ -102,14 +103,7 @@ INSERT INTO ${tableName} (name, email) VALUES
     const connectionName = `${testPrefix}-multi-${Date.now()}`;
     const table1 = `e2e_categories_${Date.now()}`;
     const table2 = `e2e_products_${Date.now()}`;
-    const config: ConnectionConfig = {
-      name: connectionName,
-      host: 'sample-pgsql',
-      port: '5432',
-      username: 'default',
-      password: 'secret',
-      type: 'PostgreSQL'
-    };
+    const config = getDbConfig('postgresql', connectionName);
 
     await connectionPage.goto();
     await connectionPage.waitForReady();

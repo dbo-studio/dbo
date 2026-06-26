@@ -37,7 +37,11 @@ export class ObjectFormPage extends BasePage {
   }
 
   async selectTab(tabId: string): Promise<void> {
-    await this.getTab(tabId).click();
+    await this.page.keyboard.press('Escape');
+    const tab = this.getTab(tabId);
+    if ((await tab.getAttribute('aria-selected')) !== 'true') {
+      await tab.click({ force: true });
+    }
     await this.wait(500);
     await this.waitForReady();
   }
@@ -65,15 +69,85 @@ export class ObjectFormPage extends BasePage {
     await this.fillTextField(this.getArrayCell(rowIndex, fieldId), value);
   }
 
+  private getCellCombobox(cell: Locator): Locator {
+    return cell.getByRole('combobox');
+  }
+
   async selectArrayCellOption(rowIndex: number, fieldId: string, optionLabel: string): Promise<void> {
     const cell = this.getArrayCell(rowIndex, fieldId);
-    await cell.locator('input').first().click();
+    const combobox = this.getCellCombobox(cell);
+    await combobox.click();
+    await combobox.fill(optionLabel);
     await this.page.getByRole('option', { name: optionLabel, exact: true }).click();
+    await this.wait(300);
+  }
+
+  async selectMultiSelectOptions(rowIndex: number, fieldId: string, optionLabels: string[]): Promise<void> {
+    const cell = this.getArrayCell(rowIndex, fieldId);
+
+    for (const label of optionLabels) {
+      const combobox = this.getCellCombobox(cell);
+      await combobox.click();
+      await combobox.fill(label);
+
+      const existingOption = this.page.getByRole('option', { name: label, exact: true });
+      if (await existingOption.isVisible().catch(() => false)) {
+        await existingOption.click();
+      } else {
+        await this.page.getByRole('option', { name: `Create "${label}"` }).click();
+      }
+
+      await this.wait(200);
+    }
+
+    await this.page.keyboard.press('Escape');
+    await this.wait(300);
+  }
+
+  async selectGeneralOption(fieldId: string, optionLabel: string): Promise<void> {
+    const field = this.getGeneralField(fieldId);
+    await field.locator('input').first().click();
+    await this.page.getByRole('option', { name: optionLabel, exact: true }).click();
+    await this.wait(300);
+  }
+
+  async toggleArrayCheckbox(rowIndex: number, fieldId: string, checked = true): Promise<void> {
+    const cell = this.getArrayCell(rowIndex, fieldId);
+    const checkbox = cell.locator('input[type="checkbox"]');
+    const isChecked = await checkbox.isChecked();
+
+    if (isChecked !== checked) {
+      await checkbox.click();
+      await this.wait(200);
+    }
+  }
+
+  async fillQueryCell(rowIndex: number, fieldId: string, sql: string): Promise<void> {
+    await this.fillQueryField(this.getArrayCell(rowIndex, fieldId), sql);
+  }
+
+  async fillGeneralQueryField(fieldId: string, sql: string): Promise<void> {
+    await this.fillQueryField(this.getGeneralField(fieldId), sql);
+  }
+
+  private async fillQueryField(container: Locator, sql: string): Promise<void> {
+    const editor = container.locator('.monaco-editor').first();
+    await editor.waitFor({ state: 'visible', timeout: 10000 });
+    await editor.click();
+    await this.page.keyboard.press('ControlOrMeta+A');
+    await this.page.keyboard.press('Backspace');
+    await this.page.keyboard.type(sql);
+    await this.page.keyboard.press('Tab');
     await this.wait(300);
   }
 
   async addRow(): Promise<void> {
     await this.addRowButton.click();
+    await this.wait(300);
+  }
+
+  async deleteArrayRow(rowIndex: number): Promise<void> {
+    await this.page.getByTestId(`object-form-delete-row-${rowIndex}`).click();
     await this.wait(300);
   }
 
@@ -98,7 +172,10 @@ export class ObjectFormPage extends BasePage {
     );
     await this.executeButton.click();
     const response = await executePromise;
-    expect(response.status()).toBe(200);
+    if (response.status() !== 200) {
+      const body = await response.text().catch(() => '');
+      throw new Error(`Execute failed with ${response.status()}: ${body.slice(0, 500)}`);
+    }
     await expect(this.previewModal).toBeHidden({ timeout: 10000 });
   }
 
@@ -110,5 +187,43 @@ export class ObjectFormPage extends BasePage {
   async cancelPreview(): Promise<void> {
     await this.previewCancelButton.click();
     await expect(this.previewModal).toBeHidden();
+  }
+
+  private getWorkspaceTab(title: string): Locator {
+    const slug = title.toLowerCase().replace(/\s+/g, '-');
+    return this.page.getByTestId(`workspace-tab-${slug}`);
+  }
+
+  private async resolveWorkspaceTab(title: string): Promise<Locator> {
+    const byTestId = this.getWorkspaceTab(title);
+    if (await byTestId.isVisible().catch(() => false)) {
+      return byTestId;
+    }
+
+    return this.page.getByRole('button', { name: title, exact: true }).first();
+  }
+
+  async activateWorkspaceTab(title: string): Promise<void> {
+    await this.ensureWorkspaceTab(title);
+  }
+
+  async ensureWorkspaceTab(title: string): Promise<void> {
+    const tab = await this.resolveWorkspaceTab(title);
+    await expect(tab).toBeVisible({ timeout: 30000 });
+    await this.page.keyboard.press('Escape');
+    await tab.click();
+    await this.wait(500);
+    await this.waitForReady();
+  }
+
+  async closeWorkspaceTab(title: string): Promise<void> {
+    const tab = await this.resolveWorkspaceTab(title);
+    if (!(await tab.isVisible().catch(() => false))) {
+      return;
+    }
+
+    await tab.hover();
+    await tab.locator('svg').last().click({ force: true });
+    await this.wait(500);
   }
 }

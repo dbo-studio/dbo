@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { getDbConfig } from '../fixtures/dbConfigs';
 import { ConnectionPage, SettingsPage } from '../pages';
 
 /**
@@ -14,7 +15,7 @@ test.describe('Settings & Theme', () => {
     const settingsPage = new SettingsPage(page);
 
     const connectionName = `${testPrefix}-theme-${Date.now()}`;
-    const config = connectionPage.getConnectionConfig(connectionName);
+    const config = getDbConfig('postgresql', connectionName);
 
     await connectionPage.goto();
     await connectionPage.waitForReady();
@@ -72,7 +73,7 @@ test.describe('Settings & Theme', () => {
     const settingsPage = new SettingsPage(page);
 
     const connectionName = `${testPrefix}-panels-${Date.now()}`;
-    const config = connectionPage.getConnectionConfig(connectionName);
+    const config = getDbConfig('postgresql', connectionName);
 
     await connectionPage.goto();
     await connectionPage.waitForReady();
@@ -129,7 +130,7 @@ test.describe('Settings & Theme', () => {
     const settingsPage = new SettingsPage(page);
 
     const connectionName = `${testPrefix}-sidebar-${Date.now()}`;
-    const config = connectionPage.getConnectionConfig(connectionName);
+    const config = getDbConfig('postgresql', connectionName);
 
     await connectionPage.goto();
     await connectionPage.waitForReady();

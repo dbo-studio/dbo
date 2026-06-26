@@ -12,31 +12,18 @@ func (r *MySQLRepository) handleTableCommands(node contract.DBNode, tabID contra
 	queries := []string{}
 	var tableName string
 
-	if tabID != contract.TableTab && action != contract.DropTableAction {
+	if tabID != contract.GeneralTab && action != contract.DropTableAction {
 		return queries, "", nil
 	}
 
 	if action == contract.CreateTableAction {
-		dto, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.PostgresTableParams](params)
+		query, name, err := buildMysqlCreateTableQuery(node, params)
 		if err != nil {
 			return nil, tableName, err
 		}
 
-		params := dto[tabID]
-
-		tableName = *params.New.Name
-		query := fmt.Sprintf("CREATE TABLE `%s`.`%s` (", node.Database, *params.New.Name)
-		query += ")"
-
-		if params.New.Comment != nil {
-			query += fmt.Sprintf(" COMMENT='%s'", *params.New.Comment)
-		}
-
+		tableName = name
 		queries = append(queries, query)
-
-		if params.New.Comment != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE `%s`.`%s` COMMENT = '%s'", node.Database, *params.New.Name, *params.New.Comment))
-		}
 	}
 
 	if action == contract.EditTableAction {

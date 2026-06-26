@@ -9,6 +9,7 @@ import (
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
+	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"gorm.io/driver/sqlserver"
@@ -100,7 +101,7 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 
 	db, err := gorm.Open(dialect, &gorm.Config{})
 	if err != nil {
-		return nil, err
+		return nil, apperror.DriverError(err)
 	}
 
 	RegisterHistoryHooks(db, cm.historyRepo, connection.ID)

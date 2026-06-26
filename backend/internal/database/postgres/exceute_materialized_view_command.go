@@ -52,7 +52,7 @@ func (r *PostgresRepository) handleMaterializedViewCommands(node contract.DBNode
 		}
 	}
 
-	if action == contract.DropViewAction {
+	if action == contract.DropMaterializedViewAction {
 		query := fmt.Sprintf(`DROP MATERIALIZED VIEW "%s"."%s"`, node.Schema, node.Table)
 		queries = append(queries, query)
 	}
