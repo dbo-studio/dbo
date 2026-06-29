@@ -1,6 +1,8 @@
 import { expect, type Page } from '@playwright/test';
 import type { CreateTableScenario, EditTableScenario } from '../fixtures/objectFormScenarios';
-import { createDatabase } from './objectFormPostgresLifecycle';
+import type { DbEngine } from '../fixtures/dbConfigs';
+import { createDatabase as createMysqlDatabase } from './objectFormMysqlLifecycle';
+import { createDatabase as createPostgresDatabase } from './objectFormPostgresLifecycle';
 import { ConnectionPage, ObjectFormPage, ObjectTreePage } from '../pages';
 
 export async function fillTableName(objectForm: ObjectFormPage, scenario: CreateTableScenario, tableName: string): Promise<void> {
@@ -36,13 +38,14 @@ export async function addIdColumn(
 export async function addTextColumn(
   objectForm: ObjectFormPage,
   scenario: EditTableScenario,
-  rowIndex: number,
   columnName: string
 ): Promise<void> {
   await objectForm.selectTab(scenario.columnsTabId);
-  await objectForm.addRow();
+  const rowIndex = await objectForm.addArrayRow(scenario.columnNameFieldId);
   await objectForm.fillArrayCell(rowIndex, scenario.columnNameFieldId, columnName);
   await objectForm.selectArrayCellOption(rowIndex, scenario.columnTypeFieldId, scenario.textTypeLabel);
+  // Re-fill after combobox selection so blur commits text into the form store.
+  await objectForm.fillArrayCell(rowIndex, scenario.columnNameFieldId, columnName);
 }
 
 export async function createTableViaObjectForm(
@@ -50,10 +53,14 @@ export async function createTableViaObjectForm(
   connectionName: string,
   scenario: CreateTableScenario,
   tableName: string,
-  databaseName = 'default'
+  databaseName?: string
 ): Promise<void> {
   const tree = new ObjectTreePage(page);
   const objectForm = new ObjectFormPage(page);
+
+  if ((scenario.engine === 'postgresql' || scenario.engine === 'mysql') && !databaseName) {
+    throw new Error(`databaseName is required for ${scenario.engine} object-form table tests`);
+  }
 
   await tree.expandPath(scenario.treePath(connectionName, databaseName));
   await tree.runTreeAction('Tables', 'Create table');
@@ -94,9 +101,9 @@ export async function editTableAddColumn(
 
   await tree.runTreeAction(tableName, 'Edit table');
   await objectForm.waitForReady();
-  await objectForm.ensureWorkspaceTab(tableName);
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
   await objectForm.waitForReady();
-  await addTextColumn(objectForm, scenario, 1, columnName);
+  await addTextColumn(objectForm, scenario, columnName);
 
   await objectForm.selectTab(scenario.columnsTabId);
   await objectForm.wait(300);
@@ -123,26 +130,47 @@ export async function setupConnectionForEngine(
   return connectionPage;
 }
 
+export async function setupObjectFormDatabase(
+  page: Page,
+  engine: DbEngine,
+  connectionName: string,
+  databaseName: string
+): Promise<void> {
+  if (engine === 'postgresql') {
+    await createPostgresDatabase(page, connectionName, databaseName);
+    return;
+  }
+
+  if (engine === 'mysql') {
+    await createMysqlDatabase(page, connectionName, databaseName);
+  }
+}
+
+/** @deprecated Use setupObjectFormDatabase */
 export async function setupPostgresObjectFormDatabase(
   page: Page,
   connectionName: string,
   databaseName: string
 ): Promise<void> {
-  await createDatabase(page, connectionName, databaseName);
+  await setupObjectFormDatabase(page, 'postgresql', connectionName, databaseName);
 }
 
 export async function cleanupObjectFormTable(
   page: Page,
   connectionName: string,
   tableName: string,
-  options?: { databaseName?: string; sqlitePath?: string }
+  options?: { databaseName?: string; sqlitePath?: string; engine?: DbEngine }
 ): Promise<ConnectionPage> {
   const tree = new ObjectTreePage(page);
   const connectionPage = new ConnectionPage(page);
   const databaseName = options?.databaseName;
 
   if (databaseName) {
-    await tree.expandPath([connectionName, databaseName, 'public']);
+    const objectPath =
+      options?.engine === 'postgresql'
+        ? [connectionName, databaseName, 'public']
+        : [connectionName, databaseName];
+    await tree.expandPath(objectPath);
     await tree.dropObject(tableName, 'Drop table');
     await tree.expandNode(connectionName);
     await tree.dropObject(databaseName, 'Drop database');
@@ -150,8 +178,7 @@ export async function cleanupObjectFormTable(
     await tree.expandPath([connectionName]);
     await tree.dropObject(tableName, 'Drop table');
   } else {
-    await tree.expandPath([connectionName, 'default']);
-    await tree.dropObject(tableName, 'Drop table');
+    throw new Error('cleanupObjectFormTable requires databaseName or sqlitePath');
   }
 
   await connectionPage.deleteConnection(connectionName);

@@ -35,12 +35,12 @@ func (r *MySQLRepository) handleTableCommands(node contract.DBNode, tabID contra
 		params := dtoParams[tabID]
 		tableName = *params.Old.Name
 
-		if params.Old.Name != nil && params.New.Name != nil {
+		if params.Old.Name != nil && params.New.Name != nil && *params.Old.Name != *params.New.Name {
 			queries = append(queries, fmt.Sprintf("ALTER TABLE `%s`.`%s` RENAME TO `%s`", node.Database, *params.Old.Name, *params.New.Name))
 			params.Old.Name = params.New.Name
 		}
 
-		if params.Old.Name != nil && params.New.Comment != nil {
+		if params.Old.Name != nil && params.New.Comment != nil && *params.New.Comment != "" {
 			queries = append(queries, fmt.Sprintf("ALTER TABLE `%s`.`%s` COMMENT = '%s'", node.Database, *params.Old.Name, *params.New.Comment))
 		}
 	}

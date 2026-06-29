@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 
+	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
@@ -20,7 +21,7 @@ func (r *SQLiteRepository) buildExecuteQueries(ctx context.Context, nodeID strin
 	queries := []string{}
 	var tmpTableName string
 
-	for tabID := range executeParams {
+	for _, tabID := range databaseCore.SortedExecuteTabs(executeParams) {
 		viewQueries, err := r.handleViewCommands(nodeID, tabID, action, params)
 		if err != nil {
 			return nil, "", err

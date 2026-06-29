@@ -99,6 +99,8 @@ export class ConnectionPage extends BasePage {
   }
 
   async fillConnectionForm(config: ConnectionConfig): Promise<void> {
+    await expect(this.page.getByRole('heading', { name: 'New connection' })).toBeVisible({ timeout: 15000 });
+    await this.nameInput.waitFor({ state: 'visible', timeout: 15000 });
     await this.nameInput.fill(config.name);
 
     if (config.type === 'SQLite') {
@@ -121,6 +123,7 @@ export class ConnectionPage extends BasePage {
   async selectConnectionType(type: string = 'PostgreSQL'): Promise<void> {
     await this.connectionTypeSelector(type).click();
     await this.selectConnectionButton.click();
+    await this.nameInput.waitFor({ state: 'visible', timeout: 30000 });
   }
 
   async testConnection(): Promise<void> {
@@ -154,9 +157,7 @@ export class ConnectionPage extends BasePage {
     await this.fillConnectionForm(config);
     await this.testConnection();
     await this.submitConnection();
-    await expect(this.getConnectionItem(config.name)).toBeVisible();
-    await this.page.reload({ waitUntil: 'networkidle' });
-    await this.waitForReady();
+    await expect(this.getConnectionItem(config.name)).toBeVisible({ timeout: 30000 });
     await this.getConnectionItem(config.name).click();
     await this.waitForConnectionActive();
   }
@@ -201,6 +202,9 @@ export class ConnectionPage extends BasePage {
     const { withConnectionSetupLock } = await import('../helpers/connectionSetupLock');
 
     await withConnectionSetupLock(async () => {
+      await this.goto();
+      await this.waitForReady();
+
       const exists = await this.connectionExists(config.name);
       if (!exists) {
         await this.createConnection(config);

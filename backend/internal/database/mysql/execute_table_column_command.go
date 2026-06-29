@@ -49,15 +49,7 @@ func (r *MySQLRepository) handleTableColumnCommands(node contract.DBNode, tabID 
 func (r *MySQLRepository) handleCreateColumn(node contract.DBNode, column dto.MysqlTableColumn) []string {
 	queries := []string{}
 
-	columnDef := fmt.Sprintf("ALTER TABLE `%s`.`%s` ADD COLUMN `%s` %s", node.Database, node.Table, *column.New.Name, *column.New.DataType)
-
-	if column.New.MaxLength != nil && *column.New.MaxLength != "" {
-		if isCharacterType(*column.New.DataType) {
-			columnDef = fmt.Sprintf("%s(%s)", columnDef, *column.New.MaxLength)
-		} else if isNumericType(*column.New.DataType) && column.New.NumericScale != nil {
-			columnDef = fmt.Sprintf("%s(%s,%s)", columnDef, *column.New.MaxLength, *column.New.NumericScale)
-		}
-	}
+	columnDef := fmt.Sprintf("ALTER TABLE `%s`.`%s` ADD COLUMN `%s` %s", node.Database, node.Table, *column.New.Name, formatMysqlColumnType(*column.New.DataType, column.New.MaxLength, column.New.NumericScale))
 
 	if lo.FromPtr(column.New.NotNull) {
 		columnDef += " NOT NULL"
@@ -97,15 +89,7 @@ func (r *MySQLRepository) handleEditColumn(node contract.DBNode, column dto.Mysq
 
 	if column.Old.DataType != nil && column.New.DataType != nil && *column.Old.DataType != *column.New.DataType {
 		dataTypeQuery := fmt.Sprintf("%s MODIFY COLUMN `%s` %s",
-			alter, *column.Old.Name, *column.New.DataType)
-
-		if column.New.MaxLength != nil {
-			if isCharacterType(*column.New.DataType) {
-				dataTypeQuery = fmt.Sprintf("%s(%s)", dataTypeQuery, *column.New.MaxLength)
-			} else if isNumericType(*column.New.DataType) && column.New.NumericScale != nil {
-				dataTypeQuery = fmt.Sprintf("%s(%s,%s)", dataTypeQuery, *column.New.MaxLength, *column.New.NumericScale)
-			}
-		}
+			alter, *column.Old.Name, formatMysqlColumnType(*column.New.DataType, column.New.MaxLength, column.New.NumericScale))
 
 		queries = append(queries, dataTypeQuery)
 	}

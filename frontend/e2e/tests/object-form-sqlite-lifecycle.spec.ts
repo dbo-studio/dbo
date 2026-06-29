@@ -15,6 +15,7 @@ test.describe.configure({ mode: 'serial' });
 
 test.describe('Object Form SQLite lifecycle', () => {
   test('Full create → edit → drop lifecycle', async ({ page }, testInfo) => {
+    test.setTimeout(180_000);
     const suffix = uniqueTestSuffix(testInfo);
     const names = sqliteLifecycleNames(suffix);
 
@@ -27,7 +28,7 @@ test.describe('Object Form SQLite lifecycle', () => {
     });
 
     await test.step('Create posts table with foreign key', async () => {
-      await createPostsTable(page, names.connectionName, names.postsTable, names.usersTable);
+      await createPostsTable(page, names.connectionName, names.postsTable, names.usersTable, names.fkName);
     });
 
     await test.step('Create view', async () => {

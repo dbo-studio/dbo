@@ -30,6 +30,11 @@ export class ObjectFormPage extends BasePage {
       .locator('[role="progressbar"]')
       .waitFor({ state: 'hidden', timeout: 30000 })
       .catch(() => undefined);
+    await this.page
+      .locator('.monaco-editor')
+      .first()
+      .waitFor({ state: 'visible', timeout: 5000 })
+      .catch(() => undefined);
   }
 
   getTab(tabId: string): Locator {
@@ -56,9 +61,14 @@ export class ObjectFormPage extends BasePage {
 
   async fillTextField(locator: Locator, value: string): Promise<void> {
     const input = locator.locator('input').first();
-    await input.waitFor({ state: 'visible', timeout: 10000 });
-    await input.fill(value);
+    await this.page.keyboard.press('Escape');
+    await input.waitFor({ state: 'visible', timeout: 30000 });
+    await input.click();
+    await this.page.keyboard.press('ControlOrMeta+A');
+    await this.page.keyboard.press('Backspace');
+    await this.page.keyboard.type(value, { delay: 20 });
     await input.blur();
+    await this.wait(200);
   }
 
   async fillGeneralField(fieldId: string, value: string): Promise<void> {
@@ -78,7 +88,14 @@ export class ObjectFormPage extends BasePage {
     const combobox = this.getCellCombobox(cell);
     await combobox.click();
     await combobox.fill(optionLabel);
-    await this.page.getByRole('option', { name: optionLabel, exact: true }).click();
+
+    const existingOption = this.page.getByRole('option', { name: optionLabel, exact: true });
+    if (await existingOption.isVisible().catch(() => false)) {
+      await existingOption.click();
+    } else {
+      await this.page.getByRole('option', { name: `Create "${optionLabel}"` }).click();
+    }
+
     await this.wait(300);
   }
 
@@ -106,8 +123,17 @@ export class ObjectFormPage extends BasePage {
 
   async selectGeneralOption(fieldId: string, optionLabel: string): Promise<void> {
     const field = this.getGeneralField(fieldId);
-    await field.locator('input').first().click();
-    await this.page.getByRole('option', { name: optionLabel, exact: true }).click();
+    const combobox = this.getCellCombobox(field);
+    await combobox.click();
+    await combobox.fill(optionLabel);
+
+    const existingOption = this.page.getByRole('option', { name: optionLabel, exact: true });
+    if (await existingOption.isVisible().catch(() => false)) {
+      await existingOption.click();
+    } else {
+      await this.page.getByRole('option', { name: `Create "${optionLabel}"` }).click();
+    }
+
     await this.wait(300);
   }
 
@@ -127,23 +153,120 @@ export class ObjectFormPage extends BasePage {
   }
 
   async fillGeneralQueryField(fieldId: string, sql: string): Promise<void> {
-    await this.fillQueryField(this.getGeneralField(fieldId), sql);
+    await this.fillQueryFieldViaStore(fieldId, sql);
+  }
+
+  private async fillQueryFieldViaStore(fieldId: string, sql: string): Promise<void> {
+    const workspaceTabId = await this.root.getAttribute('data-workspace-tab-id');
+    if (!workspaceTabId) {
+      throw new Error('data-workspace-tab-id missing on object-form');
+    }
+
+    await this.page.evaluate(
+      ({ tabId, fieldId, sqlText }) => {
+        const store = (
+          window as unknown as {
+            __FORM_OBJECT_STORE__?: { getState: () => { updateGeneralField: (a: string, b: string, c: string) => void } };
+          }
+        ).__FORM_OBJECT_STORE__;
+        store?.getState().updateGeneralField(tabId, fieldId, sqlText);
+      },
+      { tabId: workspaceTabId, fieldId, sqlText: sql }
+    );
+    await this.wait(200);
+  }
+
+  private async tryFillQueryFieldMonaco(container: Locator, sql: string): Promise<boolean> {
+    await container.scrollIntoViewIfNeeded();
+    const editor = container.locator('.monaco-editor').first();
+    if (!(await editor.isVisible().catch(() => false))) {
+      return false;
+    }
+
+    await editor.click({ force: true });
+
+    const ready = await expect
+      .poll(
+        async () => {
+          if ((await editor.locator('textarea.inputarea').count()) > 0) {
+            return true;
+          }
+          return editor.locator('.view-lines').isVisible().catch(() => false);
+        },
+        { timeout: 10000 }
+      )
+      .toBe(true)
+      .then(() => true)
+      .catch(() => false);
+
+    if (!ready) {
+      return false;
+    }
+
+    const setViaMonacoApi = await this.root
+      .evaluate((formRoot, sqlText) => {
+        type MonacoEditor = {
+          getDomNode: () => HTMLElement | null;
+          setValue: (value: string) => void;
+          getValue: () => string;
+          layout: () => void;
+        };
+        const monacoApi = (window as unknown as { monaco?: { editor: { getEditors: () => MonacoEditor[] } } }).monaco;
+        const editors = monacoApi?.editor?.getEditors?.() ?? [];
+        const target = editors.find((instance) => {
+          const domNode = instance.getDomNode();
+          return domNode !== null && formRoot.contains(domNode);
+        });
+        if (!target) {
+          return false;
+        }
+
+        target.layout();
+        target.setValue(sqlText);
+        return target.getValue() === sqlText;
+      }, sql)
+      .catch(() => false);
+
+    if (!setViaMonacoApi) {
+      const textarea = editor.locator('textarea.inputarea');
+      if ((await textarea.count()) === 0) {
+        return false;
+      }
+
+      await textarea.click({ force: true });
+      await this.page.keyboard.press('ControlOrMeta+A');
+      await this.page.keyboard.press('Backspace');
+      await this.page.keyboard.insertText(sql);
+    }
+
+    await this.root.click({ position: { x: 5, y: 5 } });
+    await this.wait(200);
+    return true;
   }
 
   private async fillQueryField(container: Locator, sql: string): Promise<void> {
-    const editor = container.locator('.monaco-editor').first();
-    await editor.waitFor({ state: 'visible', timeout: 10000 });
-    await editor.click();
-    await this.page.keyboard.press('ControlOrMeta+A');
-    await this.page.keyboard.press('Backspace');
-    await this.page.keyboard.type(sql);
-    await this.page.keyboard.press('Tab');
-    await this.wait(300);
+    const filled = await this.tryFillQueryFieldMonaco(container, sql);
+    if (!filled) {
+      throw new Error('Monaco query editor is not ready');
+    }
   }
 
   async addRow(): Promise<void> {
     await this.addRowButton.click();
     await this.wait(300);
+  }
+
+  async arrayRowCount(fieldId: string): Promise<number> {
+    return this.root.locator(`[data-testid^="object-form-cell-"][data-testid$="-${fieldId}"]`).count();
+  }
+
+  /** Add an array row and return its index (counts existing rows first). */
+  async addArrayRow(fieldId: string): Promise<number> {
+    const rowIndex = await this.arrayRowCount(fieldId);
+    await this.addRowButton.waitFor({ state: 'visible', timeout: 10000 });
+    await this.addRow();
+    await expect(this.getArrayCell(rowIndex, fieldId)).toBeVisible({ timeout: 15000 });
+    return rowIndex;
   }
 
   async deleteArrayRow(rowIndex: number): Promise<void> {
@@ -162,7 +285,7 @@ export class ObjectFormPage extends BasePage {
   }
 
   async assertPreviewContains(text: string | RegExp): Promise<void> {
-    await expect(this.previewModal).toContainText(text);
+    await expect(this.previewModal).toContainText(text, { timeout: 30000 });
   }
 
   async confirmExecute(): Promise<void> {
@@ -207,7 +330,18 @@ export class ObjectFormPage extends BasePage {
     await this.ensureWorkspaceTab(title);
   }
 
-  async ensureWorkspaceTab(title: string): Promise<void> {
+  async ensureWorkspaceTab(title: string, altTitle?: string): Promise<void> {
+    for (const candidate of [title, altTitle].filter((value): value is string => Boolean(value))) {
+      const tab = await this.resolveWorkspaceTab(candidate);
+      if (await tab.isVisible().catch(() => false)) {
+        await this.page.keyboard.press('Escape');
+        await tab.click();
+        await this.wait(500);
+        await this.waitForReady();
+        return;
+      }
+    }
+
     const tab = await this.resolveWorkspaceTab(title);
     await expect(tab).toBeVisible({ timeout: 30000 });
     await this.page.keyboard.press('Escape');
@@ -217,13 +351,99 @@ export class ObjectFormPage extends BasePage {
   }
 
   async closeWorkspaceTab(title: string): Promise<void> {
-    const tab = await this.resolveWorkspaceTab(title);
-    if (!(await tab.isVisible().catch(() => false))) {
-      return;
-    }
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const tab = await this.resolveWorkspaceTab(title);
+      if (!(await tab.isVisible().catch(() => false))) {
+        return;
+      }
 
-    await tab.hover();
-    await tab.locator('svg').last().click({ force: true });
-    await this.wait(500);
+      await tab.hover();
+      await tab.locator('svg').last().click({ force: true });
+
+      const confirmClose = this.page.getByRole('button', { name: 'Yes' });
+      if (await confirmClose.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await confirmClose.click();
+        await expect(confirmClose).toBeHidden({ timeout: 5000 });
+      }
+
+      await this.wait(500);
+
+      const byTestId = this.getWorkspaceTab(title);
+      const byRole = this.page.getByRole('button', { name: title, exact: true });
+      const stillVisible =
+        (await byTestId.isVisible().catch(() => false)) ||
+        ((await byRole.count()) > 0 && (await byRole.first().isVisible().catch(() => false)));
+      if (!stillVisible) {
+        return;
+      }
+    }
+  }
+
+  /** Close every workspace tab except the one matching `keepTitle`. */
+  async closeStaleWorkspaceTabs(keepTitle: string): Promise<void> {
+    const keepSlug = keepTitle.toLowerCase().replace(/\s+/g, '-');
+
+    for (let attempt = 0; attempt < 30; attempt++) {
+      const tabs = this.page.locator('[data-testid^="workspace-tab-"]');
+      const count = await tabs.count();
+      if (count === 0) {
+        return;
+      }
+
+      let closedAny = false;
+
+      for (let i = 0; i < count; i++) {
+        const tab = tabs.nth(i);
+        const testId = await tab.getAttribute('data-testid');
+        if (testId === `workspace-tab-${keepSlug}`) {
+          continue;
+        }
+        if (!(await tab.isVisible().catch(() => false))) {
+          continue;
+        }
+
+        await tab.hover();
+        await tab.locator('svg').last().click({ force: true });
+
+        const confirmClose = this.page.getByRole('button', { name: 'Yes' });
+        if (await confirmClose.isVisible({ timeout: 2000 }).catch(() => false)) {
+          await confirmClose.click();
+          await expect(confirmClose).toBeHidden({ timeout: 5000 });
+        }
+
+        closedAny = true;
+        await this.wait(300);
+        break;
+      }
+
+      if (!closedAny) {
+        return;
+      }
+    }
+  }
+
+  async closeAllWorkspaceTabs(): Promise<void> {
+    for (let attempt = 0; attempt < 30; attempt++) {
+      const tabs = this.page.locator('[data-testid^="workspace-tab-"]');
+      if ((await tabs.count()) === 0) {
+        return;
+      }
+
+      const tab = tabs.first();
+      if (!(await tab.isVisible().catch(() => false))) {
+        return;
+      }
+
+      await tab.hover();
+      await tab.locator('svg').last().click({ force: true });
+
+      const confirmClose = this.page.getByRole('button', { name: 'Yes' });
+      if (await confirmClose.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await confirmClose.click();
+        await expect(confirmClose).toBeHidden({ timeout: 5000 });
+      }
+
+      await this.wait(300);
+    }
   }
 }

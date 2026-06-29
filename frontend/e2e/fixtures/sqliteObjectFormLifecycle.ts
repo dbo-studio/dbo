@@ -35,12 +35,14 @@ export function sqliteLifecycleNames(suffix: string): {
   usersTable: string;
   postsTable: string;
   viewName: string;
+  fkName: string;
 } {
   return {
     connectionName: `e2e-sqlite-lifecycle-${suffix}`,
     dbPath: `/tmp/dbo-e2e-lifecycle-${suffix}.db`,
     usersTable: `users_${suffix}`,
     postsTable: `posts_${suffix}`,
-    viewName: `v_posts_${suffix}`
+    viewName: `v_posts_${suffix}`,
+    fkName: `fk_posts_${suffix}`
   };
 }

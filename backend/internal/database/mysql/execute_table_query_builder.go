@@ -77,15 +77,7 @@ func buildMysqlInlineColumnDefinition(column *dto.MysqlTableColumnData) string {
 		return ""
 	}
 
-	def := fmt.Sprintf("`%s` %s", *column.Name, *column.DataType)
-
-	if column.MaxLength != nil && *column.MaxLength != "" {
-		if isCharacterType(*column.DataType) {
-			def = fmt.Sprintf("%s(%s)", def, *column.MaxLength)
-		} else if isNumericType(*column.DataType) && column.NumericScale != nil {
-			def = fmt.Sprintf("%s(%s,%s)", def, *column.MaxLength, *column.NumericScale)
-		}
-	}
+	def := fmt.Sprintf("`%s` %s", *column.Name, formatMysqlColumnType(*column.DataType, column.MaxLength, column.NumericScale))
 
 	if lo.FromPtr(column.NotNull) {
 		def += " NOT NULL"

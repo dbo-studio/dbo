@@ -21,9 +21,19 @@ export async function createDatabase(page: Page, connectionName: string, databas
   const tree = new ObjectTreePage(page);
   const objectForm = new ObjectFormPage(page);
 
+  await objectForm.closeAllWorkspaceTabs();
   await tree.runTreeAction(connectionName, 'Create database');
   await objectForm.waitForReady();
-  await expect(objectForm.getTab(T.database)).toBeVisible();
+  await objectForm.ensureWorkspaceTab('Create database');
+  await objectForm.waitForReady();
+  await expect
+    .poll(
+      async () =>
+        (await objectForm.getTab(T.database).isVisible()) &&
+        (await objectForm.getGeneralField(F.databaseName).locator('input').isVisible()),
+      { timeout: 60000 }
+    )
+    .toBe(true);
 
   await objectForm.fillGeneralField(F.databaseName, databaseName);
   await objectForm.save();
@@ -52,34 +62,32 @@ export async function createUsersTable(page: Page, connectionName: string, datab
   await objectForm.fillArrayCell(0, F.columnName, 'id');
   await objectForm.selectArrayCellOption(0, F.columnType, 'INT');
 
+  await objectForm.selectTab(T.keys);
+  const keyRowIndex = await objectForm.addArrayRow(F.keyName);
+  await objectForm.fillArrayCell(keyRowIndex, F.keyName, 'pk_users');
+  await objectForm.selectMultiSelectOptions(keyRowIndex, F.keyColumns, ['id']);
+  await objectForm.selectArrayCellOption(keyRowIndex, F.keyType, 'PRIMARY KEY');
+
   await objectForm.save();
   await objectForm.assertPreviewContains(P.createTable);
   await objectForm.assertPreviewContains('id');
+  await objectForm.assertPreviewContains(P.primaryKey);
   await objectForm.confirmExecute();
+
+  await tree.expandNode('Tables');
+  await expect(tree.getTreeNode(tableName)).toBeVisible({ timeout: 15000 });
 
   await tree.runTreeAction(tableName, 'Edit table');
   await objectForm.waitForReady();
-  await objectForm.ensureWorkspaceTab(tableName);
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
   await objectForm.waitForReady();
   await objectForm.selectTab(T.columns);
-  await objectForm.addRow();
-  await objectForm.fillArrayCell(1, F.columnName, 'email');
-  await objectForm.selectArrayCellOption(1, F.columnType, 'VARCHAR');
+  const emailRowIndex = await objectForm.addArrayRow(F.columnName);
+  await objectForm.fillArrayCell(emailRowIndex, F.columnName, 'email');
+  await objectForm.selectArrayCellOption(emailRowIndex, F.columnType, 'VARCHAR');
+  await objectForm.fillArrayCell(emailRowIndex, F.columnName, 'email');
   await objectForm.save();
   await objectForm.assertPreviewContains(P.addColumn);
-  await objectForm.confirmExecute();
-
-  await tree.runTreeAction(tableName, 'Edit table');
-  await objectForm.waitForReady();
-  await objectForm.ensureWorkspaceTab(tableName);
-  await objectForm.waitForReady();
-  await objectForm.selectTab(T.keys);
-  await objectForm.addRow();
-  await objectForm.fillArrayCell(0, F.keyName, 'pk_users');
-  await objectForm.selectMultiSelectOptions(0, F.keyColumns, ['id']);
-  await objectForm.selectArrayCellOption(0, F.keyType, 'PRIMARY KEY');
-  await objectForm.save();
-  await objectForm.assertPreviewContains(P.primaryKey);
   await objectForm.confirmExecute();
 
   await tree.expandNode('Tables');
@@ -91,7 +99,8 @@ export async function createPostsTable(
   connectionName: string,
   databaseName: string,
   tableName: string,
-  usersTable: string
+  usersTable: string,
+  constraintNames: { fkName: string; indexName: string }
 ): Promise<void> {
   const tree = new ObjectTreePage(page);
   const objectForm = new ObjectFormPage(page);
@@ -108,58 +117,64 @@ export async function createPostsTable(
   await objectForm.addRow();
   await objectForm.fillArrayCell(0, F.columnName, 'id');
   await objectForm.selectArrayCellOption(0, F.columnType, 'INT');
-  await objectForm.addRow();
-  await objectForm.fillArrayCell(1, F.columnName, 'user_id');
-  await objectForm.selectArrayCellOption(1, F.columnType, 'INT');
+
+  await objectForm.selectTab(T.keys);
+  const createKeyRowIndex = await objectForm.addArrayRow(F.keyName);
+  await objectForm.fillArrayCell(createKeyRowIndex, F.keyName, 'pk_posts');
+  await objectForm.selectMultiSelectOptions(createKeyRowIndex, F.keyColumns, ['id']);
+  await objectForm.selectArrayCellOption(createKeyRowIndex, F.keyType, 'PRIMARY KEY');
 
   await objectForm.save();
   await objectForm.assertPreviewContains(P.createTable);
-  await objectForm.confirmExecute();
-
-  await tree.runTreeAction(tableName, 'Edit table');
-  await objectForm.waitForReady();
-  await objectForm.ensureWorkspaceTab(tableName);
-  await objectForm.waitForReady();
-
-  await objectForm.selectTab(T.keys);
-  await objectForm.addRow();
-  await objectForm.fillArrayCell(0, F.keyName, 'pk_posts');
-  await objectForm.selectMultiSelectOptions(0, F.keyColumns, ['id']);
-  await objectForm.selectArrayCellOption(0, F.keyType, 'PRIMARY KEY');
-  await objectForm.save();
   await objectForm.assertPreviewContains(P.primaryKey);
   await objectForm.confirmExecute();
 
+  await tree.expandNode('Tables');
+  await expect(tree.getTreeNode(tableName)).toBeVisible({ timeout: 15000 });
+
   await tree.runTreeAction(tableName, 'Edit table');
   await objectForm.waitForReady();
-  await objectForm.ensureWorkspaceTab(tableName);
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
   await objectForm.waitForReady();
+  await objectForm.selectTab(T.columns);
+  const userIdRowIndex = await objectForm.addArrayRow(F.columnName);
+  await objectForm.fillArrayCell(userIdRowIndex, F.columnName, 'user_id');
+  await objectForm.selectArrayCellOption(userIdRowIndex, F.columnType, 'INT');
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.addColumn);
+  await objectForm.confirmExecute();
+
+  await tree.runTreeAction(tableName, 'Edit table');
+  await objectForm.waitForReady();
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
+  await objectForm.waitForReady();
+
   await objectForm.selectTab(T.foreignKeys);
-  await objectForm.addRow();
-  await objectForm.fillArrayCell(0, F.fkName, 'fk_posts_user');
+  const fkRowIndex = await objectForm.addArrayRow(F.fkName);
+  await objectForm.fillArrayCell(fkRowIndex, F.fkName, constraintNames.fkName);
 
   const dynamicOptionsPromise = page.waitForResponse(
     (response) => response.url().includes('/dynamic') && response.status() === 200,
     { timeout: 15000 }
   );
-  await objectForm.selectArrayCellOption(0, F.fkTargetTable, usersTable);
+  await objectForm.selectArrayCellOption(fkRowIndex, F.fkTargetTable, usersTable);
   await dynamicOptionsPromise.catch(() => undefined);
   await objectForm.wait(500);
 
-  await objectForm.selectMultiSelectOptions(0, F.fkSourceColumns, ['user_id']);
-  await objectForm.selectMultiSelectOptions(0, F.fkTargetColumns, ['id']);
+  await objectForm.selectMultiSelectOptions(fkRowIndex, F.fkSourceColumns, ['user_id']);
+  await objectForm.selectMultiSelectOptions(fkRowIndex, F.fkTargetColumns, ['id']);
   await objectForm.save();
   await objectForm.assertPreviewContains(P.foreignKey);
   await objectForm.confirmExecute();
 
   await tree.runTreeAction(tableName, 'Edit table');
   await objectForm.waitForReady();
-  await objectForm.ensureWorkspaceTab(tableName);
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
   await objectForm.waitForReady();
   await objectForm.selectTab(T.indexes);
-  await objectForm.addRow();
-  await objectForm.fillArrayCell(0, F.indexName, 'idx_posts_user_id');
-  await objectForm.selectMultiSelectOptions(0, F.indexColumns, ['user_id']);
+  const indexRowIndex = await objectForm.addArrayRow(F.indexName);
+  await objectForm.fillArrayCell(indexRowIndex, F.indexName, constraintNames.indexName);
+  await objectForm.selectMultiSelectOptions(indexRowIndex, F.indexColumns, ['user_id']);
   await objectForm.save();
   await objectForm.assertPreviewContains(P.createIndex);
   await objectForm.confirmExecute();
@@ -173,16 +188,20 @@ export async function createView(
   connectionName: string,
   databaseName: string,
   viewName: string,
-  postsTable: string
+  postsTable: string,
+  usersTable: string
 ): Promise<void> {
   const tree = new ObjectTreePage(page);
   const objectForm = new ObjectFormPage(page);
 
   await tree.expandPath([connectionName, databaseName]);
+  await objectForm.closeAllWorkspaceTabs();
   await tree.runTreeAction('Views', 'Create view');
   await objectForm.waitForReady();
   await objectForm.activateWorkspaceTab('Create view');
   await objectForm.waitForReady();
+  await objectForm.closeStaleWorkspaceTabs('Create view');
+  await objectForm.wait(500);
 
   await objectForm.fillGeneralField(F.viewName, viewName);
   await objectForm.fillGeneralQueryField(F.viewQuery, `SELECT id, user_id FROM ${postsTable}`);
@@ -202,13 +221,14 @@ export async function editUsersTableAddColumn(page: Page, tableName: string): Pr
 
   await tree.runTreeAction(tableName, 'Edit table');
   await objectForm.waitForReady();
-  await objectForm.ensureWorkspaceTab(tableName);
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
   await objectForm.waitForReady();
 
   await objectForm.selectTab(T.columns);
-  await objectForm.addRow();
-  await objectForm.fillArrayCell(2, F.columnName, 'notes');
-  await objectForm.selectArrayCellOption(2, F.columnType, 'TEXT');
+  const notesRowIndex = await objectForm.addArrayRow(F.columnName);
+  await objectForm.fillArrayCell(notesRowIndex, F.columnName, 'notes');
+  await objectForm.selectArrayCellOption(notesRowIndex, F.columnType, 'TEXT');
+  await objectForm.fillArrayCell(notesRowIndex, F.columnName, 'notes');
 
   await objectForm.save();
   await objectForm.assertPreviewContains(P.addColumn);
@@ -223,8 +243,10 @@ export async function editViewQuery(page: Page, viewName: string, postsTable: st
 
   await tree.runTreeAction(viewName, 'Edit view');
   await objectForm.waitForReady();
-  await objectForm.activateWorkspaceTab('Edit view');
+  await objectForm.ensureWorkspaceTab(viewName, 'Edit view');
   await objectForm.waitForReady();
+  await objectForm.selectTab(T.view);
+  await objectForm.wait(500);
 
   await objectForm.fillGeneralQueryField(F.viewQuery, `SELECT COUNT(*) AS total FROM ${postsTable}`);
 
@@ -260,7 +282,7 @@ export async function cleanupMysqlLifecycle(
   await tree.dropObject(names.usersTable, 'Drop table');
   await expect(tree.getTreeNode(names.usersTable)).toBeHidden({ timeout: 15000 });
 
-  if (options?.dropDatabase !== false && names.databaseName !== 'default') {
+  if (options?.dropDatabase !== false) {
     await tree.expandNode(names.connectionName);
     await tree.dropObject(names.databaseName, 'Drop database');
     await expect(tree.getTreeNode(names.databaseName)).toBeHidden({ timeout: 15000 });

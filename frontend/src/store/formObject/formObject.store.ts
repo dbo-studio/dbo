@@ -330,3 +330,9 @@ const mapResponseIntoFormObject = (response: FormObjectResponseType): FormObject
     data: mappedData
   };
 };
+
+//for e2e testing
+if (import.meta.env.DEV) {
+  (globalThis as typeof globalThis & { __FORM_OBJECT_STORE__?: typeof useFormObjectStore }).__FORM_OBJECT_STORE__ =
+    useFormObjectStore;
+}

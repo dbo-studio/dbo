@@ -23,7 +23,8 @@ export function getDbConfig(engine: DbEngine, name: string, sqlitePath?: string)
         host: process.env.MYSQL_TEST_HOST ?? 'sample-mysql',
         port: process.env.MYSQL_TEST_PORT ?? '3306',
         database: 'default',
-        ...baseCredentials,
+        username: process.env.MYSQL_TEST_USER ?? 'root',
+        password: process.env.MYSQL_TEST_PASSWORD ?? 'secret',
         type: 'MySQL'
       };
     case 'sqlite':

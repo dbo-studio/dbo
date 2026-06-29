@@ -3,6 +3,7 @@ import { mysqlLifecycleNames } from '../fixtures/mysqlObjectFormLifecycle';
 import { uniqueTestSuffix } from '../fixtures/uniqueSuffix';
 import {
   cleanupMysqlLifecycle,
+  createDatabase,
   createPostsTable,
   createUsersTable,
   createView,
@@ -15,10 +16,15 @@ test.describe.configure({ mode: 'serial' });
 
 test.describe('Object Form MySQL lifecycle', () => {
   test('Full create → edit → drop lifecycle', async ({ page }, testInfo) => {
-    const names = { ...mysqlLifecycleNames(uniqueTestSuffix(testInfo)), databaseName: 'default' };
+    test.setTimeout(300_000);
+    const names = mysqlLifecycleNames(uniqueTestSuffix(testInfo));
 
     await test.step('Connect to MySQL', async () => {
       await setupMysqlConnection(page, names.connectionName);
+    });
+
+    await test.step('Create isolated database', async () => {
+      await createDatabase(page, names.connectionName, names.databaseName);
     });
 
     await test.step('Create users table with columns and primary key', async () => {
@@ -26,11 +32,18 @@ test.describe('Object Form MySQL lifecycle', () => {
     });
 
     await test.step('Create posts table with foreign key and index', async () => {
-      await createPostsTable(page, names.connectionName, names.databaseName, names.postsTable, names.usersTable);
+      await createPostsTable(
+        page,
+        names.connectionName,
+        names.databaseName,
+        names.postsTable,
+        names.usersTable,
+        { fkName: names.fkName, indexName: names.indexName }
+      );
     });
 
     await test.step('Create view', async () => {
-      await createView(page, names.connectionName, names.databaseName, names.viewName, names.postsTable);
+      await createView(page, names.connectionName, names.databaseName, names.viewName, names.postsTable, names.usersTable);
     });
 
     await test.step('Edit users table — add column', async () => {
@@ -42,7 +55,7 @@ test.describe('Object Form MySQL lifecycle', () => {
     });
 
     await test.step('Cleanup — drop all objects and connection', async () => {
-      await cleanupMysqlLifecycle(page, names, { dropDatabase: false });
+      await cleanupMysqlLifecycle(page, names);
     });
   });
 });

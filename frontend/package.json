@@ -10,6 +10,7 @@
     "format": "prettier --write src",
     "test:e2e": "playwright test --ui --config e2e/playwright.config.ts",
     "test:e2e:object-form": "playwright test --config e2e/playwright.config.ts e2e/tests/object-form-*.spec.ts",
+    "test:e2e:object-form:serial": "PLAYWRIGHT_WORKERS=1 playwright test --config e2e/playwright.config.ts e2e/tests/object-form-table.spec.ts e2e/tests/object-form-postgres-lifecycle.spec.ts e2e/tests/object-form-postgres-edit-table.spec.ts e2e/tests/object-form-postgres-schema-matview.spec.ts e2e/tests/object-form-mysql-lifecycle.spec.ts e2e/tests/object-form-sqlite-lifecycle.spec.ts",
     "test:e2e:object-form:parallel": "PLAYWRIGHT_WORKERS=2 playwright test --config e2e/playwright.config.ts e2e/tests/object-form-*.spec.ts",
     "test:e2e:ui": "playwright test --ui --config e2e/playwright.config.ts",
     "test:e2e:codegen": "playwright codegen http://localhost:3000"

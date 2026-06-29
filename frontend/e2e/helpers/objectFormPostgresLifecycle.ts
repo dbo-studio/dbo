@@ -21,11 +21,19 @@ export async function createDatabase(page: Page, connectionName: string, databas
   const tree = new ObjectTreePage(page);
   const objectForm = new ObjectFormPage(page);
 
+  await objectForm.closeAllWorkspaceTabs();
   await tree.runTreeAction(connectionName, 'Create database');
   await objectForm.waitForReady();
-  await objectForm.activateWorkspaceTab('Create database');
+  await objectForm.ensureWorkspaceTab('Create database');
   await objectForm.waitForReady();
-  await expect(objectForm.getTab(T.database)).toBeVisible();
+  await expect
+    .poll(
+      async () =>
+        (await objectForm.getTab(T.database).isVisible()) &&
+        (await objectForm.getGeneralField(F.databaseName).locator('input').isVisible()),
+      { timeout: 60000 }
+    )
+    .toBe(true);
 
   await objectForm.fillGeneralField(F.databaseName, databaseName);
   await objectForm.save();
@@ -138,8 +146,12 @@ export async function createView(
   await objectForm.waitForReady();
   await objectForm.activateWorkspaceTab('Create view');
   await objectForm.waitForReady();
+  await objectForm.closeStaleWorkspaceTabs('Create view');
+  await objectForm.wait(500);
 
   await objectForm.fillGeneralField(F.viewName, viewName);
+  await objectForm.getGeneralField(F.viewQuery).click();
+  await objectForm.wait(1000);
   await objectForm.fillGeneralQueryField(F.viewQuery, `SELECT id, user_id FROM ${postsTable}`);
 
   await objectForm.save();
@@ -157,13 +169,14 @@ export async function editUsersTableAddColumn(page: Page, tableName: string): Pr
 
   await tree.runTreeAction(tableName, 'Edit table');
   await objectForm.waitForReady();
-  await objectForm.activateWorkspaceTab('Edit table');
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
   await objectForm.waitForReady();
 
   await objectForm.selectTab(T.columns);
-  await objectForm.addRow();
-  await objectForm.fillArrayCell(2, F.columnName, 'notes');
-  await objectForm.selectArrayCellOption(2, F.columnType, 'text');
+  const notesRowIndex = await objectForm.addArrayRow(F.columnName);
+  await objectForm.fillArrayCell(notesRowIndex, F.columnName, 'notes');
+  await objectForm.selectArrayCellOption(notesRowIndex, F.columnType, 'text');
+  await objectForm.fillArrayCell(notesRowIndex, F.columnName, 'notes');
 
   await objectForm.save();
   await objectForm.assertPreviewContains(P.addColumn);

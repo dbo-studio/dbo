@@ -17,6 +17,7 @@ export default function SqlEditor({
   ref,
   autocomplete,
   value,
+  editorHeight,
   onChange,
   onBlur,
   onMount,
@@ -63,9 +64,16 @@ export default function SqlEditor({
       registerAiAction('ai-fix-selection', locales.ai_fix_selection, 'fix');
     }
 
+    editorInstance.onDidChangeModelContent(() => {
+      const currentValue = editorInstance.getValue();
+      if (onChange && currentValue !== (value?.toString() ?? '')) {
+        onChange(currentValue);
+      }
+    });
+
     editorInstance.onDidBlurEditorText(() => {
       const currentValue = editorInstance.getValue();
-      if (currentValue && currentValue !== value.toString()) {
+      if (currentValue !== (value?.toString() ?? '')) {
         onBlur?.(currentValue);
       }
     });
@@ -105,6 +113,13 @@ export default function SqlEditor({
   }, [selectedTabId]);
 
   useEffect(() => {
+    return () => {
+      editorRef.current?.dispose();
+      editorRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
     if (monaco) {
       void (async () => {
         await setupLanguage(monaco, theme.editorTheme);
@@ -120,7 +135,7 @@ export default function SqlEditor({
       }}
     >
       <Editor
-        height='100%'
+        height={editorHeight ?? '100%'}
         width='100%'
         theme={theme.editorTheme}
         language='sql'

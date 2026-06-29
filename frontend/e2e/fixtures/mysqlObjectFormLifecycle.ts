@@ -42,12 +42,16 @@ export function mysqlLifecycleNames(suffix: string): {
   usersTable: string;
   postsTable: string;
   viewName: string;
+  fkName: string;
+  indexName: string;
 } {
   return {
     connectionName: `e2e-mysql-lifecycle-${suffix}`,
     databaseName: `e2e_db_${suffix}`,
     usersTable: `users_${suffix}`,
     postsTable: `posts_${suffix}`,
-    viewName: `v_posts_${suffix}`
+    viewName: `v_posts_${suffix}`,
+    fkName: `fk_posts_${suffix}`,
+    indexName: `idx_posts_user_${suffix}`
   };
 }

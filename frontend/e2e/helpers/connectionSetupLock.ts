@@ -4,6 +4,8 @@ import path from 'node:path';
 
 const LOCK_FILE = path.join(os.tmpdir(), 'dbo-e2e-connection-setup.lock');
 const MAX_LOCK_AGE_MS = 120_000;
+const LOCK_POLL_MS = 250;
+const MAX_LOCK_WAIT_MS = 90_000;
 
 function isLockStale(): boolean {
   try {
@@ -15,7 +17,9 @@ function isLockStale(): boolean {
 }
 
 async function acquireConnectionSetupLock(): Promise<() => void> {
-  while (true) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < MAX_LOCK_WAIT_MS) {
     try {
       fs.writeFileSync(LOCK_FILE, `${process.pid}:${Date.now()}`, { flag: 'wx' });
       return () => {
@@ -33,9 +37,11 @@ async function acquireConnectionSetupLock(): Promise<() => void> {
           // ignore
         }
       }
-      await new Promise((resolve) => setTimeout(resolve, 250));
+      await new Promise((resolve) => setTimeout(resolve, LOCK_POLL_MS));
     }
   }
+
+  throw new Error(`Timed out after ${MAX_LOCK_WAIT_MS}ms waiting for connection setup lock`);
 }
 
 /** Serialize connection modal setup across parallel Playwright workers. */

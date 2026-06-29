@@ -67,7 +67,7 @@ func TestBuildMysqlCreateTableQuery(t *testing.T) {
 		t.Fatalf("tableName = %q", tableName)
 	}
 
-	want := "CREATE TABLE `default`.`users_test` (`id` INT, `email` VARCHAR, PRIMARY KEY (`id`))"
+	want := "CREATE TABLE `default`.`users_test` (`id` INT, `email` VARCHAR(255), PRIMARY KEY (`id`))"
 	if query != want {
 		t.Fatalf("query = %q, want %q", query, want)
 	}

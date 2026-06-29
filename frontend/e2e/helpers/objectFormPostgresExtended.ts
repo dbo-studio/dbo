@@ -90,9 +90,13 @@ export async function createViewInSchema(
   await objectForm.waitForReady();
   await objectForm.activateWorkspaceTab('Create view');
   await objectForm.waitForReady();
+  await objectForm.closeStaleWorkspaceTabs('Create view');
+  await objectForm.wait(500);
 
   await objectForm.fillGeneralField(F.viewName, viewName);
-  await objectForm.fillGeneralQueryField(F.viewQuery, `SELECT id FROM ${tableName}`);
+  await objectForm.getGeneralField(F.viewQuery).click();
+  await objectForm.wait(1000);
+  await objectForm.fillGeneralQueryField(F.viewQuery, `SELECT id FROM ${schemaName}.${tableName}`);
 
   await objectForm.save();
   await objectForm.assertPreviewContains(P.createView);
@@ -121,7 +125,7 @@ export async function createMaterializedView(
 
   await expect(objectForm.getGeneralField(F.matViewName)).toBeVisible({ timeout: 30000 });
   await objectForm.fillGeneralField(F.matViewName, matViewName);
-  await objectForm.fillGeneralQueryField(F.matViewQuery, `SELECT id FROM ${tableName}`);
+  await objectForm.fillGeneralQueryField(F.matViewQuery, `SELECT id FROM ${schemaName}.${tableName}`);
 
   await objectForm.save();
   await objectForm.assertPreviewContains(P.createMaterializedView);
@@ -199,7 +203,7 @@ export async function editTableSetNotNull(page: Page, tableName: string, columnR
 
   await tree.runTreeAction(tableName, 'Edit table');
   await objectForm.waitForReady();
-  await objectForm.activateWorkspaceTab('Edit table');
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
   await objectForm.waitForReady();
   await objectForm.selectTab(T.columns);
   await objectForm.toggleArrayCheckbox(columnRowIndex, F.columnNotNull, true);
@@ -220,7 +224,7 @@ export async function editTableSetDefault(
 
   await tree.runTreeAction(tableName, 'Edit table');
   await objectForm.waitForReady();
-  await objectForm.activateWorkspaceTab('Edit table');
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
   await objectForm.waitForReady();
   await objectForm.selectTab(T.columns);
   await objectForm.fillArrayCell(columnRowIndex, F.columnDefault, defaultValue);
@@ -241,7 +245,7 @@ export async function editTableSetColumnComment(
 
   await tree.runTreeAction(tableName, 'Edit table');
   await objectForm.waitForReady();
-  await objectForm.activateWorkspaceTab('Edit table');
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
   await objectForm.waitForReady();
   await objectForm.selectTab(T.columns);
   await objectForm.fillArrayCell(columnRowIndex, F.columnComment, comment);
@@ -257,7 +261,7 @@ export async function editTableDropForeignKey(page: Page, tableName: string, fkR
 
   await tree.runTreeAction(tableName, 'Edit table');
   await objectForm.waitForReady();
-  await objectForm.activateWorkspaceTab('Edit table');
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
   await objectForm.waitForReady();
   await objectForm.selectTab(T.foreignKeys);
   await objectForm.deleteArrayRow(fkRowIndex);
@@ -273,7 +277,7 @@ export async function editTableDropColumn(page: Page, tableName: string, columnR
 
   await tree.runTreeAction(tableName, 'Edit table');
   await objectForm.waitForReady();
-  await objectForm.activateWorkspaceTab('Edit table');
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
   await objectForm.waitForReady();
   await objectForm.selectTab(T.columns);
   await objectForm.deleteArrayRow(columnRowIndex);
@@ -289,7 +293,7 @@ export async function editTableComment(page: Page, tableName: string, comment: s
 
   await tree.runTreeAction(tableName, 'Edit table');
   await objectForm.waitForReady();
-  await objectForm.activateWorkspaceTab('Edit table');
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
   await objectForm.waitForReady();
 
   await objectForm.fillGeneralField(F.tableComment, comment);
@@ -304,7 +308,7 @@ export async function editTableRename(page: Page, tableName: string, renamedTabl
 
   await tree.runTreeAction(tableName, 'Edit table');
   await objectForm.waitForReady();
-  await objectForm.activateWorkspaceTab('Edit table');
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
   await objectForm.waitForReady();
 
   await objectForm.fillGeneralField(F.tableName, renamedTableName);
@@ -326,7 +330,7 @@ export async function editTableChangeColumnType(
 
   await tree.runTreeAction(tableName, 'Edit table');
   await objectForm.waitForReady();
-  await objectForm.activateWorkspaceTab('Edit table');
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
   await objectForm.waitForReady();
   await objectForm.selectTab(T.columns);
   await objectForm.selectArrayCellOption(columnRowIndex, F.columnType, dataType);
@@ -347,7 +351,7 @@ export async function editTableAddUniqueKey(
 
   await tree.runTreeAction(tableName, 'Edit table');
   await objectForm.waitForReady();
-  await objectForm.activateWorkspaceTab('Edit table');
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
   await objectForm.waitForReady();
   await objectForm.selectTab(T.keys);
   const existingRows = await page.getByTestId(/^object-form-delete-row-/).count();
@@ -367,7 +371,7 @@ export async function editTableDropKey(page: Page, tableName: string, keyRowInde
 
   await tree.runTreeAction(tableName, 'Edit table');
   await objectForm.waitForReady();
-  await objectForm.activateWorkspaceTab('Edit table');
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
   await objectForm.waitForReady();
   await objectForm.selectTab(T.keys);
   await objectForm.deleteArrayRow(keyRowIndex);

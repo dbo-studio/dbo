@@ -6,6 +6,7 @@ export type SqlEditorProps = {
   autocomplete: AutoCompleteType;
   value: string;
   placeholder?: string;
+  editorHeight?: string | number;
   onChange?: (value: string) => void;
   onBlur?: (value: string) => void;
   onMount?: () => void;

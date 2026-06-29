@@ -6,7 +6,7 @@ import {
   createTableViaObjectForm,
   editTableAddColumn,
   setupConnectionForEngine,
-  setupPostgresObjectFormDatabase
+  setupObjectFormDatabase
 } from '../helpers/objectFormTable';
 
 for (const scenario of CREATE_TABLE_SCENARIOS) {
@@ -15,27 +15,26 @@ for (const scenario of CREATE_TABLE_SCENARIOS) {
       const suffix = uniqueTestSuffix(testInfo);
       const connectionName = `object-form-${scenario.engine}-${suffix}`;
       const tableName = `e2e_obj_table_${suffix}`;
-      const databaseName = scenario.engine === 'postgresql' ? `e2e_obj_db_${suffix}` : undefined;
+      const databaseName =
+        scenario.engine === 'postgresql' || scenario.engine === 'mysql' ? `e2e_obj_db_${suffix}` : undefined;
       const sqlitePath = scenario.engine === 'sqlite' ? `/tmp/dbo-e2e-${suffix}.db` : undefined;
 
       await setupConnectionForEngine(page, scenario.engine, connectionName, sqlitePath);
 
       if (databaseName) {
-        await setupPostgresObjectFormDatabase(page, connectionName, databaseName);
+        await setupObjectFormDatabase(page, scenario.engine, connectionName, databaseName);
       }
 
       await test.step('Create table', async () => {
-        await createTableViaObjectForm(
-          page,
-          connectionName,
-          scenario,
-          tableName,
-          databaseName ?? 'default'
-        );
+        await createTableViaObjectForm(page, connectionName, scenario, tableName, databaseName);
       });
 
       await test.step('Cleanup', async () => {
-        await cleanupObjectFormTable(page, connectionName, tableName, { databaseName, sqlitePath });
+        await cleanupObjectFormTable(page, connectionName, tableName, {
+          databaseName,
+          sqlitePath,
+          engine: scenario.engine
+        });
       });
     });
   });
@@ -53,23 +52,18 @@ for (const scenario of EDIT_TABLE_SCENARIOS) {
       const connectionName = `object-form-edit-${scenario.engine}-${suffix}`;
       const tableName = `e2e_obj_edit_${suffix}`;
       const newColumnName = 'notes';
-      const databaseName = scenario.engine === 'postgresql' ? `e2e_obj_db_${suffix}` : undefined;
+      const databaseName =
+        scenario.engine === 'postgresql' || scenario.engine === 'mysql' ? `e2e_obj_db_${suffix}` : undefined;
       const sqlitePath = scenario.engine === 'sqlite' ? `/tmp/dbo-e2e-${suffix}.db` : undefined;
 
       await setupConnectionForEngine(page, scenario.engine, connectionName, sqlitePath);
 
       if (databaseName) {
-        await setupPostgresObjectFormDatabase(page, connectionName, databaseName);
+        await setupObjectFormDatabase(page, scenario.engine, connectionName, databaseName);
       }
 
       await test.step('Create base table', async () => {
-        await createTableViaObjectForm(
-          page,
-          connectionName,
-          createScenario,
-          tableName,
-          databaseName ?? 'default'
-        );
+        await createTableViaObjectForm(page, connectionName, createScenario, tableName, databaseName);
       });
 
       await test.step('Add column', async () => {
@@ -77,7 +71,11 @@ for (const scenario of EDIT_TABLE_SCENARIOS) {
       });
 
       await test.step('Cleanup', async () => {
-        await cleanupObjectFormTable(page, connectionName, tableName, { databaseName, sqlitePath });
+        await cleanupObjectFormTable(page, connectionName, tableName, {
+          databaseName,
+          sqlitePath,
+          engine: scenario.engine
+        });
       });
     });
   });

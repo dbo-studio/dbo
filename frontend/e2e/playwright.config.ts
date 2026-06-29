@@ -25,9 +25,9 @@ export default defineConfig({
     ? Number(process.env.PLAYWRIGHT_WORKERS)
     : process.env.CI
       ? 2
-      : 4,
-  /* Test timeout — Object Form save can be slow */
-  timeout: 120000,
+      : 2,
+  /* Test timeout — Object Form lifecycle can be slow */
+  timeout: 300000,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */

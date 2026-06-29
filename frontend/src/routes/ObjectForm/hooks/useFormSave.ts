@@ -89,6 +89,10 @@ export const useFormSave = ({
     if (!currentConnection || !selectedTab?.id || isPreviewing || isExecuting) return;
 
     try {
+      if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+
       const formDataByTab = await prefetchTabs();
       const payload = buildSavePayload(formDataByTab, tabs, selectedTab.action ?? '', selectedTab.id);
 

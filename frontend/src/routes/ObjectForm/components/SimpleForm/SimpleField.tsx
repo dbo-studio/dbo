@@ -112,8 +112,12 @@ export default function SimpleField({
           )}
           <SqlEditorContainerStyled>
             <SqlEditor
+              editorHeight={250}
               value={(localValue as string) ?? ''}
-              onChange={(value): void => setLocalValue(value)}
+              onChange={(value): void => {
+                setLocalValue(value);
+                onChange(value);
+              }}
               onBlur={(value): void => onChange(value)}
               autocomplete={{
                 databases: [],

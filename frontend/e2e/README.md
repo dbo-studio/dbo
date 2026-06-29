@@ -26,8 +26,8 @@ cd frontend
 # all tests
 npm run test:e2e
 
-# Full Object Form suite — parallel across files (recommended)
-PLAYWRIGHT_BASE_URL=http://localhost:3000 npm run test:e2e:object-form:parallel
+# Run tests in this order (lighter specs first; long MySQL lifecycle near the end)
+npm run test:e2e:object-form:serial
 
 # Object Form suite with default workers
 PLAYWRIGHT_BASE_URL=http://localhost:3000 npm run test:e2e:object-form
@@ -38,9 +38,9 @@ PLAYWRIGHT_BASE_URL=http://localhost:3000 \
   e2e/tests/object-form-postgres-lifecycle.spec.ts --workers=1
 ```
 
-Use `--workers=1` only when debugging a single flaky lifecycle file, not for normal runs. Lifecycle specs use `describe.configure({ mode: 'serial' })` **inside** each file (steps share state). Different spec files run safely in parallel because each uses unique connection/database names (`Date.now()` suffix).
+Use `npm run test:e2e:object-form:serial` for a stable local/CI run (`PLAYWRIGHT_WORKERS=1`, explicit file order). Use `test:e2e:object-form:parallel` only after serial is green.
 
-Worker count: set `PLAYWRIGHT_WORKERS` or use the npm scripts above. Default is 4 locally, 2 on CI.
+Worker count: default is **2** in `playwright.config.ts`; override with `PLAYWRIGHT_WORKERS`. Test timeout is **300s** (lifecycle specs can run 3+ minutes each).
 
 UI mode:
 
@@ -89,10 +89,26 @@ e2e/
 ### Stabilization notes
 
 - After **Create database**, the workspace tab is **renamed to the database name**. Close that tab before **Create schema** so a fresh tab opens.
+- Before **Create view**, call `closeAllWorkspaceTabs()` / `closeStaleWorkspaceTabs('Create view')` so Monaco is not starved by stale editors.
+- **View / matview query fields:** `fillGeneralQueryField` writes to the Zustand store (dev hook `__FORM_OBJECT_STORE__`) when Monaco is inaccessible; schema-qualified SQL is required for objects in custom schemas (`schema.table`).
+- Closing workspace tabs confirms **“Are you sure you want to close this tab?”** — handled in `closeWorkspaceTab` / `closeStaleWorkspaceTabs`.
+- `ensureWorkspaceTab(tableName, 'Edit table')` resolves tabs named after the table or the generic **Edit table** label.
 - FK column multiselect on create table: when options are empty, use the creatable path (`Create "user_id"`).
-- Query cells (Monaco): type via keyboard on `.monaco-editor`, not the hidden textarea. Use `fillGeneralQueryField` for view/matview query fields on the **general** tab.
 - MUI tabs can be blocked by tooltips; `selectTab` uses `force: true` and `Escape`.
 - Table save payload uses the **`general`** key for table metadata (`relname`, `description`, …), not a separate `table` tab.
+
+### Object Form E2E pass status (serial, `workers=1`)
+
+| Spec | Tests | Status |
+|------|-------|--------|
+| `object-form-table` | PG/MySQL create + edit | **Pass** (MySQL + PG create; MySQL edit) |
+| `object-form-mysql-lifecycle` | 1 lifecycle | **Pass** |
+| `object-form-postgres-lifecycle` | 1 lifecycle | **Pass** (run alone; may need backend restart after a long prior run) |
+| `object-form-postgres-edit-table` | deep edits | Verify after backend restart |
+| `object-form-postgres-schema-matview` | schema/matview | Verify (matview uses `schema.table` in query) |
+| `object-form-sqlite-lifecycle` | 1 lifecycle | Requires SQLite path writable by API (`/tmp/…`) |
+
+Restart backend after Go changes: `docker restart dbo-studio-dev-api`
 
 ---
 
@@ -215,9 +231,11 @@ Parameterized for **PostgreSQL, MySQL, SQLite**: one table with two columns, the
 |--------|---------|
 | `waitForReady()` | `object-form` visible + loading finished |
 | `selectTab(tabId)` | Inner form tab (Columns, FK, Keys, …) |
-| `ensureWorkspaceTab(title)` | Switch workspace tab (e.g. "Create schema") |
-| `closeWorkspaceTab(title)` | Close a workspace tab |
-| `fillGeneralField` / `fillGeneralQueryField` | Fill general-tab fields (including view query) |
+| `ensureWorkspaceTab(title, altTitle?)` | Switch workspace tab (fallback title for Edit table/view) |
+| `closeWorkspaceTab(title)` | Close a workspace tab (confirms dialog) |
+| `closeStaleWorkspaceTabs(keepTitle)` | Close all workspace tabs except one |
+| `closeAllWorkspaceTabs()` | Close every workspace tab |
+| `fillGeneralField` / `fillGeneralQueryField` | Fill general-tab fields; query uses store fallback in dev |
 | `fillArrayCell` | Fill array-tab cells |
 | `selectMultiSelectOptions` | FK/keys columns (creatable) |
 | `fillQueryCell` | Monaco SQL in array rows (legacy) |
@@ -256,7 +274,10 @@ POSTGRES_LIFECYCLE_PREVIEW  // RegExp for SQL preview asserts
 | `relation "tablecontainer" does not exist` | Stale backend; needs `resolveCreateTableNode` + restart |
 | Schema preview never opens | `buildSavePayload` must emit a `schema` payload |
 | Table missing in custom schema tree | `CREATE TABLE` must be schema-qualified; re-expand tree |
-| Edit view fails on MySQL/SQLite | Use `fillGeneralQueryField`, not `fillQueryCell(0, …)` |
+| Edit view fails on MySQL (`Incorrect table name ''`) | Backend `resolveMysqlTableNode` must map single-segment view node IDs; restart API |
+| Monaco “not accessible” on view create | Close stale workspace tabs; `fillGeneralQueryField` store fallback; `SqlEditor` fixed height in Object Form |
+| PG lifecycle fails only in full serial batch | Run `docker restart dbo-studio-dev-api` or use `test:e2e:object-form:serial` file order (MySQL lifecycle last) |
+| SQLite connection modal timeout | Ensure API can write SQLite path; use unique `/tmp/dbo-e2e-*.db` per run |
 
 HTML report: `frontend/playwright-report/`  
 Failure screenshots/traces: `frontend/test-results/`

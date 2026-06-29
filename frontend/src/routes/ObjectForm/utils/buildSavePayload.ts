@@ -53,7 +53,9 @@ const buildGeneralRecord = (general: GeneralFieldType[], useOriginal = false): R
   return record;
 };
 
-const buildNewOldPair = (general: GeneralFieldType[]): { new: Record<string, FormValue>; old: Record<string, FormValue> } => ({
+const buildNewOldPair = (
+  general: GeneralFieldType[]
+): { new: Record<string, FormValue>; old: Record<string, FormValue> } => ({
   new: buildGeneralRecord(general),
   old: buildGeneralRecord(general, true)
 });

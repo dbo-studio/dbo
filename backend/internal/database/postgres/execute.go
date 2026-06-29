@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/url"
 
+	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
@@ -18,7 +19,7 @@ func (r *PostgresRepository) buildExecuteQueries(_ context.Context, nodeID strin
 
 	queries := []string{}
 
-	for tabID := range executeParams {
+	for _, tabID := range databaseCore.SortedExecuteTabs(executeParams) {
 		dbQueries, err := r.handleDatabaseCommands(node, tabID, action, params)
 		if err != nil {
 			return nil, err

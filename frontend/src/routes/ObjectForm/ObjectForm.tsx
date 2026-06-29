@@ -66,7 +66,11 @@ export default function ObjectForm(): React.JSX.Element {
   });
 
   return (
-    <ObjectFormStyled data-testid='object-form'>
+    <ObjectFormStyled
+      data-testid='object-form'
+      data-object-tab-id={objectTabId}
+      data-workspace-tab-id={selectedTab?.id ?? ''}
+    >
       {!isLoading && tabs.length > 0 && (
         <FormTabs tabs={tabs} selectedTabId={selectedTabId} onTabChange={handleTabChange} />
       )}

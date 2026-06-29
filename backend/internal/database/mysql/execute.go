@@ -4,12 +4,13 @@ import (
 	"context"
 	"net/url"
 
+	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 func (r *MySQLRepository) buildExecuteQueries(_ context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, error) {
-	node := resolveCreateTableNode(r.base.ExtractNode(nodeID), action, params)
+	node := r.resolveMysqlTableNode(resolveCreateTableNode(r.base.ExtractNode(nodeID), action, params), action)
 	type ExecuteParams map[contract.TreeTab]any
 	executeParams, err := helper.ConvertToDTO[ExecuteParams](params)
 	if err != nil {
@@ -18,7 +19,7 @@ func (r *MySQLRepository) buildExecuteQueries(_ context.Context, nodeID string, 
 
 	queries := []string{}
 
-	for tabID := range executeParams {
+	for _, tabID := range databaseCore.SortedExecuteTabs(executeParams) {
 		dbQueries, err := r.handleDatabaseCommands(node, tabID, action, params)
 		if err != nil {
 			return nil, err

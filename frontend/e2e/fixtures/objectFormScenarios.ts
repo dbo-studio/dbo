@@ -40,7 +40,7 @@ export const CREATE_TABLE_SCENARIOS: CreateTableScenario[] = [
   },
   {
     engine: 'mysql',
-    treePath: (connectionName) => [connectionName, 'default'],
+    treePath: (connectionName, databaseName = 'default') => [connectionName, databaseName],
     tableTabId: null,
     tableName: { location: 'general', fieldId: 'relname' },
     columnsTabId: 'table_columns',
@@ -76,7 +76,7 @@ export const EDIT_TABLE_SCENARIOS: EditTableScenario[] = [
   },
   {
     engine: 'mysql',
-    treePath: (connectionName) => [connectionName, 'default'],
+    treePath: (connectionName, databaseName = 'default') => [connectionName, databaseName],
     columnsTabId: 'table_columns',
     columnNameFieldId: 'column_name',
     columnTypeFieldId: 'data_type',
