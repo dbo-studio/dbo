@@ -64,8 +64,11 @@ type IConfigRepo interface {
 }
 
 type IWebSessionRepo interface {
+	Create(ctx context.Context) (string, error)
 	CreateOrUpdate(ctx context.Context, sessionID string) (string, error)
+	EnsureSession(ctx context.Context, sessionID string) error
 	TouchLastSeen(ctx context.Context, sessionID string, at time.Time) error
+	TouchLastSeenDebounced(ctx context.Context, sessionID string, interval time.Duration) error
 }
 
 type IWebConnectionSecretRepo interface {

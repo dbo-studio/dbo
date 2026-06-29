@@ -3,12 +3,12 @@ package databaseMysql
 import (
 	"context"
 	"errors"
-	"fmt"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/samber/lo"
 	"golang.org/x/sync/errgroup"
 )
@@ -19,7 +19,7 @@ type Database struct {
 
 func (r *MySQLRepository) databases(ctx context.Context, fromCache bool) ([]Database, error) {
 	databases := make([]Database, 0)
-	cacheKey := r.cacheKey("databases")
+	cacheKey := cache.MySQLQueryKey(r.base.Connection().ID, "databases")
 
 	if fromCache {
 		err := r.base.Cache().Get(ctx, cacheKey, &databases)
@@ -58,7 +58,7 @@ type Table struct {
 
 func (r *MySQLRepository) tables(ctx context.Context, database *string, fromCache bool) ([]Table, error) {
 	tables := make([]Table, 0)
-	cacheKey := r.cacheKey("tables", lo.FromPtr(database))
+	cacheKey := cache.MySQLQueryKey(r.base.Connection().ID, "tables", lo.FromPtr(database))
 
 	if fromCache {
 		err := r.base.Cache().Get(ctx, cacheKey, &tables)
@@ -104,7 +104,7 @@ type View struct {
 
 func (r *MySQLRepository) views(ctx context.Context, database *string, fromCache bool) ([]View, error) {
 	views := make([]View, 0)
-	cacheKey := r.cacheKey("views", lo.FromPtr(database))
+	cacheKey := cache.MySQLQueryKey(r.base.Connection().ID, "views", lo.FromPtr(database))
 
 	if fromCache {
 		err := r.base.Cache().Get(ctx, cacheKey, &views)
@@ -136,7 +136,7 @@ func (r *MySQLRepository) views(ctx context.Context, database *string, fromCache
 
 func (r *MySQLRepository) columns(ctx context.Context, database *string, table *string, columnNames []string, editable bool, fromCache bool) ([]Column, error) {
 	columns := make([]Column, 0)
-	cacheKey := r.cacheKey("columns", lo.FromPtr(database), lo.FromPtr(table), strings.Join(columnNames, ","), strconv.FormatBool(editable))
+	cacheKey := cache.MySQLQueryKey(r.base.Connection().ID, "columns", lo.FromPtr(database), lo.FromPtr(table), strings.Join(columnNames, ","), strconv.FormatBool(editable))
 
 	if fromCache {
 		err := r.base.Cache().Get(ctx, cacheKey, &columns)
@@ -238,7 +238,7 @@ type PrimaryKey struct {
 
 func (r *MySQLRepository) primaryKeys(ctx context.Context, database *string, table *string, fromCache bool) ([]PrimaryKey, error) {
 	primaryKeys := make([]PrimaryKey, 0)
-	cacheKey := r.cacheKey("primary_keys", lo.FromPtr(database), lo.FromPtr(table))
+	cacheKey := cache.MySQLQueryKey(r.base.Connection().ID, "primary_keys", lo.FromPtr(database), lo.FromPtr(table))
 
 	if fromCache {
 		err := r.base.Cache().Get(ctx, cacheKey, &primaryKeys)
@@ -294,7 +294,7 @@ type ForeignKey struct {
 
 func (r *MySQLRepository) foreignKeys(ctx context.Context, database *string, table *string, fromCache bool) ([]ForeignKey, error) {
 	foreignKeys := make([]ForeignKey, 0)
-	cacheKey := r.cacheKey("foreign_keys", lo.FromPtr(database), lo.FromPtr(table))
+	cacheKey := cache.MySQLQueryKey(r.base.Connection().ID, "foreign_keys", lo.FromPtr(database), lo.FromPtr(table))
 
 	if fromCache {
 		err := r.base.Cache().Get(ctx, cacheKey, &foreignKeys)
@@ -355,10 +355,6 @@ func (r *MySQLRepository) foreignKeys(ctx context.Context, database *string, tab
 	r.updateCache(ctx, cacheKey, result)
 
 	return result, nil
-}
-
-func (r *MySQLRepository) cacheKey(args ...string) string {
-	return fmt.Sprintf("c:%d:mysql:%s", r.base.Connection().ID, strings.Join(args, "_"))
 }
 
 func (r *MySQLRepository) updateCache(_ context.Context, cacheKey string, value any) {

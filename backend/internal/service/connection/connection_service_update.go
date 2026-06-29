@@ -8,6 +8,7 @@ import (
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/goccy/go-json"
 	"github.com/samber/lo"
@@ -81,7 +82,7 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 			}
 		}
 
-		if err := s.cache.DeleteByPrefix(ctx, fmt.Sprintf("c:%d", connection.ID)); err != nil {
+		if err := s.cache.DeleteByPrefix(ctx, cache.ConnectionPrefix(connection.ID)); err != nil {
 			return nil, apperror.InternalServerError(err)
 		}
 	}

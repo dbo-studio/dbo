@@ -32,8 +32,12 @@ func Equals(err error, expectedErr error) bool {
 	return strings.EqualFold(err.Error(), expectedErr.Error())
 }
 
-func (h AppError) Error() string {
+func (h *AppError) Error() string {
 	return h.Err.Error()
+}
+
+func (h *AppError) Unwrap() error {
+	return h.Err
 }
 
 func BadRequest(err error) error {
@@ -53,11 +57,64 @@ func Validation(err error) error {
 }
 
 func InternalServerError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	var appErr *AppError
+	if errors.As(err, &appErr) {
+		return err
+	}
+
 	return &AppError{
 		Code:    http.StatusInternalServerError,
 		Message: "internal_server_error",
 		Err:     err,
 	}
+}
+
+// Resolve returns the most specific AppError in err's chain.
+// Client errors (4xx) are preferred over server errors (5xx).
+func Resolve(err error) *AppError {
+	var best *AppError
+
+	for current := err; current != nil; current = errors.Unwrap(current) {
+		best = collectAppErrors(current, best)
+	}
+
+	return best
+}
+
+func collectAppErrors(err error, best *AppError) *AppError {
+	var appErr *AppError
+	if !errors.As(err, &appErr) {
+		return best
+	}
+
+	best = preferAppError(appErr, best)
+	if appErr.Err != nil {
+		best = collectAppErrors(appErr.Err, best)
+	}
+
+	return best
+}
+
+func preferAppError(candidate, current *AppError) *AppError {
+	if current == nil {
+		return candidate
+	}
+
+	candidateIsServer := candidate.Code >= http.StatusInternalServerError
+	currentIsServer := current.Code >= http.StatusInternalServerError
+
+	if candidateIsServer && !currentIsServer {
+		return current
+	}
+	if !candidateIsServer && currentIsServer {
+		return candidate
+	}
+
+	return candidate
 }
 
 func Unauthorized(connectionID uint) error {

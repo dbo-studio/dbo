@@ -69,6 +69,13 @@ func (r *Registry) repoFor(ctx context.Context, connectionID int32) (databaseCon
 	return repo, nil
 }
 
+func (r *Registry) resolveDatabase(args map[string]any, toolCtx ToolContext) *string {
+	if v, ok := args["database"].(string); ok && v != "" {
+		return &v
+	}
+	return toolCtx.Database
+}
+
 func (r *Registry) resolveSchema(args map[string]any, toolCtx ToolContext) *string {
 	if v, ok := args["schema"].(string); ok && v != "" {
 		return &v
@@ -81,8 +88,9 @@ func (r *Registry) listTables(ctx context.Context, args map[string]any, toolCtx 
 	if err != nil {
 		return "", err
 	}
+	database := r.resolveDatabase(args, toolCtx)
 	schema := r.resolveSchema(args, toolCtx)
-	names, err := repo.ListTableNames(ctx, schema)
+	names, err := repo.ListTableNames(ctx, database, schema)
 	if err != nil {
 		return "", err
 	}
@@ -94,8 +102,9 @@ func (r *Registry) listViews(ctx context.Context, args map[string]any, toolCtx T
 	if err != nil {
 		return "", err
 	}
+	database := r.resolveDatabase(args, toolCtx)
 	schema := r.resolveSchema(args, toolCtx)
-	names, err := repo.ListViewNames(ctx, schema)
+	names, err := repo.ListViewNames(ctx, database, schema)
 	if err != nil {
 		return "", err
 	}
@@ -111,8 +120,9 @@ func (r *Registry) describeTable(ctx context.Context, args map[string]any, toolC
 	if err != nil {
 		return "", err
 	}
+	database := r.resolveDatabase(args, toolCtx)
 	schema := r.resolveSchema(args, toolCtx)
-	return repo.DescribeTable(ctx, table, schema)
+	return repo.DescribeTable(ctx, table, database, schema)
 }
 
 func (r *Registry) executeSQL(ctx context.Context, args map[string]any, toolCtx ToolContext) (string, error) {

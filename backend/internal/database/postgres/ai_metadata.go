@@ -7,8 +7,8 @@ import (
 	"github.com/samber/lo"
 )
 
-func (r *PostgresRepository) ListTableNames(ctx context.Context, schema *string) ([]string, error) {
-	tableList, err := r.tables(ctx, schema, true)
+func (r *PostgresRepository) ListTableNames(ctx context.Context, database, schema *string) ([]string, error) {
+	tableList, err := r.tables(ctx, database, schema, true)
 	if err != nil {
 		return nil, err
 	}
@@ -17,8 +17,8 @@ func (r *PostgresRepository) ListTableNames(ctx context.Context, schema *string)
 	}), nil
 }
 
-func (r *PostgresRepository) ListViewNames(ctx context.Context, schema *string) ([]string, error) {
-	viewList, err := r.views(ctx, nil, schema, true)
+func (r *PostgresRepository) ListViewNames(ctx context.Context, database, schema *string) ([]string, error) {
+	viewList, err := r.views(ctx, database, schema, true)
 	if err != nil {
 		return nil, err
 	}
@@ -27,11 +27,12 @@ func (r *PostgresRepository) ListViewNames(ctx context.Context, schema *string) 
 	}), nil
 }
 
-func (r *PostgresRepository) DescribeTable(ctx context.Context, table string, schema *string) (string, error) {
+func (r *PostgresRepository) DescribeTable(ctx context.Context, table string, database, schema *string) (string, error) {
 	return r.AiContext(ctx, &dto.AiChatRequest{
 		ContextOpts: &dto.AiContextOptions{
-			Schema: schema,
-			Tables: []string{table},
+			Database: database,
+			Schema:   schema,
+			Tables:   []string{table},
 		},
 	})
 }

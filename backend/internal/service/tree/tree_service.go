@@ -2,7 +2,6 @@ package serviceTree
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -44,7 +43,7 @@ func NewTreeService(cr repository.IConnectionRepo, cm *databaseConnection.Connec
 func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (*contract.TreeNode, error) {
 	if lo.FromPtr(req.FromCache) {
 		var tree *contract.TreeNode
-		err := i.cache.Get(ctx, i.cacheName(req), &tree)
+		err := i.cache.Get(ctx, cache.TreeKey(uint(req.ConnectionID), req.ParentID), &tree)
 		if err == nil && tree != nil {
 			return tree, nil
 		}
@@ -53,11 +52,6 @@ func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (*
 	connection, err := i.connectionRepo.Find(ctx, req.ConnectionID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
-	}
-
-	err = i.cache.DeleteByPrefix(ctx, fmt.Sprintf("c:%d", connection.ID))
-	if err != nil {
-		return nil, apperror.InternalServerError(err)
 	}
 
 	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
@@ -70,7 +64,7 @@ func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (*
 		return nil, apperror.InternalServerError(err)
 	}
 
-	err = i.cache.Set(ctx, i.cacheName(req), tree, lo.ToPtr(time.Minute*30))
+	err = i.cache.Set(ctx, cache.TreeKey(uint(req.ConnectionID), req.ParentID), tree, lo.ToPtr(time.Minute*30))
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +120,7 @@ func (i ITreeServiceImpl) ObjectExecute(ctx context.Context, req *dto.ObjectExec
 		return apperror.InternalServerError(err)
 	}
 
-	if err := i.cache.DeleteByPrefix(ctx, fmt.Sprintf("c:%d", req.ConnectionID)); err != nil {
+	if err := i.cache.DeleteByPrefix(ctx, cache.TreeCachePrefix(uint(req.ConnectionID))); err != nil {
 		return apperror.InternalServerError(err)
 	}
 
@@ -173,8 +167,4 @@ func (i ITreeServiceImpl) GetDynamicFieldOptions(ctx context.Context, req *dto.D
 	}
 
 	return options, nil
-}
-
-func (i ITreeServiceImpl) cacheName(req *dto.TreeListRequest) string {
-	return fmt.Sprintf("c:%d:tree:%s", req.ConnectionID, req.ParentID)
 }

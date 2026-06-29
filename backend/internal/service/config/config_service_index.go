@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/pkg/cache"
 )
 
 func (i IConfigServiceImpl) Index(ctx context.Context) (*dto.ConfigListResponse, error) {
@@ -28,7 +29,7 @@ func (i IConfigServiceImpl) Index(ctx context.Context) (*dto.ConfigListResponse,
 	}
 
 	var newReleaseVersion *dto.ConfigCheckUpdateResponse
-	err = i.cache.Get(ctx, "new_release_version", &newReleaseVersion)
+	err = i.cache.Get(ctx, cache.NewReleaseVersionKey, &newReleaseVersion)
 	if err != nil {
 		return nil, err
 	}

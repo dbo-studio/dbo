@@ -22,10 +22,15 @@ func (r *PostgresRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequ
 		return nil, errors.New("table or view not found")
 	}
 
+	conn, err := r.db(ctx, &node.Database)
+	if err != nil {
+		return nil, err
+	}
+
 	g, gctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		err := r.base.DB().WithContext(gctx).Raw(query).Find(&queryResults).Error
+		err := conn.WithContext(gctx).Raw(query).Find(&queryResults).Error
 		if err != nil {
 			return err
 		}
@@ -39,7 +44,7 @@ func (r *PostgresRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequ
 	})
 
 	g.Go(func() error {
-		result, err := r.columns(gctx, &node.Table, &node.Schema, req.Columns, true, true)
+		result, err := r.columns(gctx, &node.Database, &node.Table, &node.Schema, req.Columns, true, true)
 		if err != nil {
 			return err
 		}
@@ -96,7 +101,7 @@ func (r *PostgresRepository) runQueryGenerator(ctx context.Context, req *dto.Run
 		}
 		sb.WriteString(strings.Join(sortClauses, ", "))
 	} else {
-		keys, err := r.primaryKeys(ctx, &node.Table, true)
+		keys, err := r.primaryKeys(ctx, &node.Database, &node.Table, true)
 		if err == nil && len(keys) > 0 {
 			sb.WriteString(" ORDER BY ")
 			sb.WriteString(strings.Join(lo.Map(keys, func(key PrimaryKey, _ int) string {

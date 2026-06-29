@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { TabMode } from '@/core/enums';
 import { useAiStore } from '@/store/aiStore/ai.store';
-import { useTabStore } from '@/store/tabStore/tab.store';
+import { selectTabs, useTabStore } from '@/store/tabStore/tab.store';
 import type { DataTabType, EditorTabType } from '@/types/Tab';
 
 const QUERY_DEBOUNCE_MS = 500;
 
 export const useAiAutoContext = (): void => {
   const selectedTabId = useTabStore((state) => state.selectedTabId);
-  const tabs = useTabStore((state) => state.tabs);
+  const tabs = useTabStore(selectTabs);
   const updateContext = useAiStore((state) => state.updateContext);
   const manualOverrideRef = useRef(false);
   const queryDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);

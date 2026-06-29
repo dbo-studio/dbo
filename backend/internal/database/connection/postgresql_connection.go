@@ -3,7 +3,9 @@ package databaseConnection
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -71,13 +73,42 @@ func pgsqlUpdateParamsToCreateJSON(opts PgsqlUpdateParams) string {
 }
 
 func OpenPostgresqlConnection(connection *model.Connection) gorm.Dialector {
+	return openPostgresqlConnection(connection, "")
+}
+
+func OpenPostgresqlConnectionForDatabase(connection *model.Connection, databaseName string) gorm.Dialector {
+	return openPostgresqlConnection(connection, databaseName)
+}
+
+func DefaultPostgresqlDatabase(connection *model.Connection) string {
+	options, err := helper.RawJSONToStruct[dto.PostgresqlCreateConnectionParams](json.RawMessage(connection.Options))
+	if err != nil {
+		return ""
+	}
+
+	if options.URI != nil && *options.URI != "" {
+		parsed, err := url.Parse(*options.URI)
+		if err != nil {
+			return ""
+		}
+		return strings.TrimPrefix(parsed.Path, "/")
+	}
+
+	return lo.FromPtr(options.Database)
+}
+
+func openPostgresqlConnection(connection *model.Connection, databaseName string) gorm.Dialector {
 	options, err := helper.RawJSONToStruct[dto.PostgresqlCreateConnectionParams](json.RawMessage(connection.Options))
 	if err != nil {
 		return nil
 	}
 
 	if options.URI != nil && *options.URI != "" {
-		return postgres.Open(*options.URI)
+		uri := *options.URI
+		if databaseName != "" {
+			uri = overridePostgresqlURIDatabase(uri, databaseName)
+		}
+		return postgres.Open(uri)
 	}
 
 	dsn := fmt.Sprintf("host=%s port=%s user=%s ",
@@ -86,8 +117,12 @@ func OpenPostgresqlConnection(connection *model.Connection) gorm.Dialector {
 		options.Username,
 	)
 
-	if options.Database != nil && len(lo.FromPtr(options.Database)) > 0 {
-		dsn += fmt.Sprintf("dbname=%s ", lo.FromPtr(options.Database))
+	dbName := lo.FromPtr(options.Database)
+	if databaseName != "" {
+		dbName = databaseName
+	}
+	if dbName != "" {
+		dsn += fmt.Sprintf("dbname=%s ", dbName)
 	}
 
 	if options.Password != nil && len(lo.FromPtr(options.Password)) > 0 {
@@ -97,6 +132,15 @@ func OpenPostgresqlConnection(connection *model.Connection) gorm.Dialector {
 	return postgres.New(postgres.Config{
 		DSN: dsn,
 	})
+}
+
+func overridePostgresqlURIDatabase(uri, databaseName string) string {
+	parsed, err := url.Parse(uri)
+	if err != nil {
+		return uri
+	}
+	parsed.Path = "/" + databaseName
+	return parsed.String()
 }
 
 func (req PgsqlCreateParams) Validate() error {

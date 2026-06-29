@@ -5,7 +5,7 @@ import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { matchConnectionId } from '@/store/tabStore/connectionId';
-import { useTabStore } from '@/store/tabStore/tab.store';
+import { useTabStore, selectTabs } from '@/store/tabStore/tab.store';
 import type { ConnectionType } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useEffect, useState } from 'react';
@@ -85,7 +85,7 @@ export default function Connections({ expanded = false }: ConnectionsProps): JSX
   }, [connections, showConnectionsRail, updateUI]);
 
   const handleChangeCurrentConnection = async (c: ConnectionType): Promise<void> => {
-    const tabs = useTabStore.getState().tabs;
+    const tabs = selectTabs(useTabStore.getState());
     const store = useConnectionStore.getState();
     if (c.id === store.currentConnection()?.id || store.loading === 'loading') {
       return;

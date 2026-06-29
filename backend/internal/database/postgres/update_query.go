@@ -31,7 +31,12 @@ func (r *PostgresRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQue
 	}
 
 	rowsAffected := 0
-	err := r.base.DB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	conn, err := r.db(ctx, &node.Database)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, query := range queries {
 			result := tx.Exec(query)
 			if result.Error != nil {
@@ -69,7 +74,7 @@ func (r *PostgresRepository) generateUpdateQueries(ctx context.Context, req *dto
 
 	var queries []string
 
-	keys, err := r.primaryKeys(ctx, &node.Table, true)
+	keys, err := r.primaryKeys(ctx, &node.Database, &node.Table, true)
 	if err != nil {
 		return nil
 	}
@@ -111,7 +116,7 @@ func (r *PostgresRepository) generateDeleteQueries(ctx context.Context, req *dto
 
 	var queries []string
 
-	keys, err := r.primaryKeys(ctx, &node.Table, true)
+	keys, err := r.primaryKeys(ctx, &node.Database, &node.Table, true)
 	if err != nil {
 		return nil
 	}

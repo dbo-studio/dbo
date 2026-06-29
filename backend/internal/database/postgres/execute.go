@@ -4,9 +4,10 @@ import (
 	"context"
 	"net/url"
 
-	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"gorm.io/gorm"
 )
 
 func (r *PostgresRepository) buildExecuteQueries(_ context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, error) {
@@ -82,7 +83,13 @@ func (r *PostgresRepository) PreviewExecute(ctx context.Context, nodeID string, 
 }
 
 func (r *PostgresRepository) Execute(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) error {
+	node := r.base.ExtractNode(nodeID)
 	queries, err := r.buildExecuteQueries(ctx, nodeID, action, params)
+	if err != nil {
+		return err
+	}
+
+	conn, err := r.executeConn(ctx, node, action)
 	if err != nil {
 		return err
 	}
@@ -97,10 +104,19 @@ func (r *PostgresRepository) Execute(ctx context.Context, nodeID string, action 
 			return err
 		}
 
-		if err := r.base.DB().WithContext(ctx).Exec(query).Error; err != nil {
+		if err := conn.WithContext(ctx).Exec(query).Error; err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func (r *PostgresRepository) executeConn(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*gorm.DB, error) {
+	switch action {
+	case contract.CreateDatabaseAction, contract.EditDatabaseAction, contract.DropDatabaseAction:
+		return r.base.DB(), nil
+	default:
+		return r.db(ctx, &node.Database)
+	}
 }

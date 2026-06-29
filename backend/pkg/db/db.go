@@ -25,11 +25,15 @@ func New(cfg *config.Config, logger logger.Logger) *SQLLite {
 	path := getDBPath(cfg, logger)
 	fmt.Println("db path: " + path)
 
-	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{
+	db, err := gorm.Open(sqlite.Open(appSQLiteDSN(path)), &gorm.Config{
 		Logger:                                   l.Default.LogMode(l.Silent),
 		DisableForeignKeyConstraintWhenMigrating: true,
 	})
 	if err != nil {
+		logger.Fatal(err)
+	}
+
+	if err := configureAppSQLite(db); err != nil {
 		logger.Fatal(err)
 	}
 

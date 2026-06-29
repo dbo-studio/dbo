@@ -2,12 +2,12 @@
 
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { matchConnectionId } from '@/store/tabStore/connectionId';
-import { useTabStore } from '@/store/tabStore/tab.store';
+import { selectTabs, useTabStore } from '@/store/tabStore/tab.store';
 import type { TabType } from '@/types';
 import { useEffect, useMemo } from 'react';
 
 export const useSelectedTab = <T extends TabType>(): T | undefined => {
-  const tabs = useTabStore((state) => state.tabs);
+  const tabs = useTabStore(selectTabs);
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
   const switchTab = useTabStore((state) => state.switchTab);

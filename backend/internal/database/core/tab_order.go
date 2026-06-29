@@ -7,20 +7,20 @@ import (
 )
 
 var treeTabOrder = map[contract.TreeTab]int{
-	contract.GeneralTab:            0,
-	contract.DatabaseTab:           1,
-	contract.SchemaTab:             2,
-	contract.ViewTab:               3,
-	contract.MaterializedViewTab:   4,
-	contract.TableTab:              5,
-	contract.TableColumnsTab:       10,
-	contract.TableKeysTab:          11,
-	contract.TableForeignKeysTab:   12,
-	contract.TableIndexesTab:       13,
-	contract.TableTriggersTab:      14,
-	contract.TableChecksTab:        15,
-	contract.TableStorageTab:       16,
-	contract.TableSequenceTab:      17,
+	contract.GeneralTab:          0,
+	contract.DatabaseTab:         1,
+	contract.SchemaTab:           2,
+	contract.ViewTab:             3,
+	contract.MaterializedViewTab: 4,
+	contract.TableTab:            5,
+	contract.TableColumnsTab:     10,
+	contract.TableKeysTab:        11,
+	contract.TableForeignKeysTab: 12,
+	contract.TableIndexesTab:     13,
+	contract.TableTriggersTab:    14,
+	contract.TableChecksTab:      15,
+	contract.TableStorageTab:     16,
+	contract.TableSequenceTab:    17,
 }
 
 // SortedExecuteTabs returns execute payload tabs in deterministic SQL generation order.

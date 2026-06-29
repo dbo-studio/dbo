@@ -2,6 +2,7 @@ import { TabMode } from '@/core/enums';
 import { tools } from '@/core/utils';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { matchConnectionId } from '@/store/tabStore/connectionId';
+import { selectTabs } from '@/store/tabStore/tabs';
 import type { DataTabType, EditorTabType, ObjectTabType, TabType } from '@/types/Tab';
 import type { StateCreator } from 'zustand';
 import type { TabQuerySlice, TabSettingSlice, TabStore } from '../types';
@@ -20,7 +21,7 @@ export const createTabSettingSlice: StateCreator<
       throw new Error('No current connection id');
     }
 
-    const tabs = get().tabs as DataTabType[];
+    const tabs = selectTabs(get()) as DataTabType[];
 
     const findTab = tabs.find(
       (tab) =>
@@ -63,7 +64,7 @@ export const createTabSettingSlice: StateCreator<
       throw new Error('No current connection id');
     }
 
-    const tabs = get().tabs as EditorTabType[];
+    const tabs = selectTabs(get()) as EditorTabType[];
     const findTab = tabs.find(
       (tab) => tab.mode === TabMode.Query && matchConnectionId(tab.connectionId, currentConnectionId)
     );
@@ -95,7 +96,7 @@ export const createTabSettingSlice: StateCreator<
       throw new Error('No current connection id');
     }
 
-    const tabs = get().tabs as ObjectTabType[];
+    const tabs = selectTabs(get()) as ObjectTabType[];
     const findTab = tabs.find(
       (tab: TabType) =>
         tab.mode === mode && tab.nodeId === nodeId && matchConnectionId(tab.connectionId, currentConnectionId)
@@ -119,7 +120,7 @@ export const createTabSettingSlice: StateCreator<
     return get().handleAddNewTab(tabs, newTab) as ObjectTabType;
   },
   removeTab: (tabId: string): TabType | null | undefined => {
-    const tabs = get().tabs;
+    const tabs = selectTabs(get());
     const tabIndex = tabs.findIndex((tab) => tab.id === tabId);
     if (tabIndex === -1) {
       return null;
@@ -159,13 +160,13 @@ export const createTabSettingSlice: StateCreator<
       return;
     }
 
-    if (get().tabs.some((tab) => tab.id === tabId)) {
+    if (selectTabs(get()).some((tab) => tab.id === tabId)) {
       set({ selectedTabId: tabId }, undefined, 'switchTab');
     }
   },
 
   handleAddNewTab: (_tabs: TabType[], newTab: TabType): TabType => {
-    const tabs = get().tabs;
+    const tabs = selectTabs(get());
     const nextTabs = tabs.length < maxTabs ? [...tabs, newTab] : [...tabs.slice(1), newTab];
 
     set({ tabs: nextTabs, selectedTabId: newTab.id }, undefined, 'handleAddNewTab');

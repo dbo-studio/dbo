@@ -90,7 +90,7 @@ func (r *PostgresRepository) getTableGeneralFields(ctx context.Context, node con
 	result := map[string]any{}
 
 	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
-		tables, err := r.tables(ctx, &node.Schema, true)
+		tables, err := r.tables(ctx, &node.Database, &node.Schema, true)
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +117,7 @@ func (r *PostgresRepository) getTableColumns(ctx context.Context, node contract.
 	result := []map[string]any{}
 
 	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
-		columns, err := r.columns(ctx, &node.Table, &node.Schema, []string{}, true, true)
+		columns, err := r.columns(ctx, &node.Database, &node.Table, &node.Schema, []string{}, true, true)
 		if err != nil {
 			return nil, err
 		}
@@ -151,7 +151,7 @@ func (r *PostgresRepository) getTableForeignKeys(ctx context.Context, node contr
 	result := []map[string]any{}
 
 	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
-		foreignKeys, err := r.foreignKeys(ctx, &node.Table, &node.Schema, true)
+		foreignKeys, err := r.foreignKeys(ctx, &node.Database, &node.Table, &node.Schema, true)
 		if err != nil {
 			return nil, err
 		}
@@ -179,7 +179,7 @@ func (r *PostgresRepository) getTableKeys(ctx context.Context, node contract.DBN
 	result := []map[string]any{}
 
 	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
-		keys, err := r.tableKeys(ctx, &node.Table, &node.Schema, true)
+		keys, err := r.tableKeys(ctx, &node.Database, &node.Table, &node.Schema, true)
 		if err != nil {
 			return nil, err
 		}
@@ -229,7 +229,7 @@ func (r *PostgresRepository) getViewInfo(ctx context.Context, node contract.DBNo
 
 func (r *PostgresRepository) getMaterializedViewInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.materializedViewFields(ctx)
-	materializedViews, err := r.materializedViews(ctx, &node.Schema, true)
+	materializedViews, err := r.materializedViews(ctx, &node.Database, &node.Schema, true)
 	if err != nil {
 		return nil, err
 	}

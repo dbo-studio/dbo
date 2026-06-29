@@ -48,9 +48,9 @@ func (r *PostgresRepository) AutoComplete(ctx context.Context, data *dto.AutoCom
 	g.Go(func() error {
 		var err error
 		if data.Schema != nil {
-			tables, err = r.tables(gctx, data.Schema, true)
+			tables, err = r.tables(gctx, data.Database, data.Schema, true)
 		} else {
-			tables, err = r.tables(gctx, nil, true)
+			tables, err = r.tables(gctx, data.Database, nil, true)
 		}
 		return err
 	})
@@ -67,7 +67,7 @@ func (r *PostgresRepository) AutoComplete(ctx context.Context, data *dto.AutoCom
 	for _, table := range tables {
 		tableName := table.Name
 		gColumns.Go(func() error {
-			columnResult, err := r.columns(gColumnsCtx, &tableName, data.Schema, nil, false, true)
+			columnResult, err := r.columns(gColumnsCtx, data.Database, &tableName, data.Schema, nil, false, true)
 			if err != nil {
 				return err
 			}

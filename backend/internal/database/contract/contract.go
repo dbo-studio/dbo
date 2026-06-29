@@ -33,9 +33,9 @@ type AIContextRepository interface {
 }
 
 type AIMetadataRepository interface {
-	ListTableNames(ctx context.Context, schema *string) ([]string, error)
-	ListViewNames(ctx context.Context, schema *string) ([]string, error)
-	DescribeTable(ctx context.Context, table string, schema *string) (string, error)
+	ListTableNames(ctx context.Context, database, schema *string) ([]string, error)
+	ListViewNames(ctx context.Context, database, schema *string) ([]string, error)
+	DescribeTable(ctx context.Context, table string, database, schema *string) (string, error)
 }
 
 type RawQueryRepository interface {

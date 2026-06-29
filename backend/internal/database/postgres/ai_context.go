@@ -43,20 +43,24 @@ func (r *PostgresRepository) AiContext(ctx context.Context, req *dto.AiChatReque
 
 	tables := req.ContextOpts.Tables
 	if len(tables) == 0 && lo.FromPtr(req.ContextOpts.ObjectDefinition) == "" {
-		list, err := r.ListTableNames(ctx, req.ContextOpts.Schema)
+		list, err := r.tables(ctx, req.ContextOpts.Database, req.ContextOpts.Schema, true)
 		if err != nil {
 			return "", err
 		}
-		tables = list
+		tables = lo.Map(list, func(table Table, _ int) string {
+			return table.Name
+		})
 	}
 
 	views := req.ContextOpts.Views
 	if len(views) == 0 && lo.FromPtr(req.ContextOpts.ObjectDefinition) == "" {
-		list, err := r.ListViewNames(ctx, req.ContextOpts.Schema)
+		list, err := r.views(ctx, req.ContextOpts.Database, req.ContextOpts.Schema, true)
 		if err != nil {
 			return "", err
 		}
-		views = list
+		views = lo.Map(list, func(view View, _ int) string {
+			return view.Name
+		})
 	}
 
 	return databaseCore.BuildAIChatContext(ctx, databaseContract.AIContextOptions{
@@ -112,7 +116,7 @@ type postgresAIContextProvider struct {
 }
 
 func (p postgresAIContextProvider) TableColumns(ctx context.Context, table string, opts databaseContract.AIContextOptions) ([]databaseContract.AIContextColumn, error) {
-	columns, err := p.repo.columns(ctx, &table, opts.Schema, []string{}, false, true)
+	columns, err := p.repo.columns(ctx, opts.Database, &table, opts.Schema, []string{}, false, true)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +124,7 @@ func (p postgresAIContextProvider) TableColumns(ctx context.Context, table strin
 }
 
 func (p postgresAIContextProvider) ViewColumns(ctx context.Context, view string, opts databaseContract.AIContextOptions) ([]databaseContract.AIContextColumn, error) {
-	columns, err := p.repo.columns(ctx, &view, opts.Schema, []string{}, false, true)
+	columns, err := p.repo.columns(ctx, opts.Database, &view, opts.Schema, []string{}, false, true)
 	if err != nil {
 		return nil, err
 	}

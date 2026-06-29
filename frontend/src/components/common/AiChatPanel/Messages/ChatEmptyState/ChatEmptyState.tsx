@@ -2,7 +2,7 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { TabMode } from '@/core/enums';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
-import { useTabStore } from '@/store/tabStore/tab.store';
+import { selectTabs, useTabStore } from '@/store/tabStore/tab.store';
 import { Button, Stack, Typography } from '@mui/material';
 import { useMemo } from 'react';
 import { getChatPromptSuggestions } from '../../utils/chatPromptSuggestions';
@@ -13,7 +13,7 @@ type ChatEmptyStateProps = {
 
 export default function ChatEmptyState({ onSelectPrompt }: ChatEmptyStateProps) {
   const selectedTabId = useTabStore((state) => state.selectedTabId);
-  const tabs = useTabStore((state) => state.tabs);
+  const tabs = useTabStore(selectTabs);
   const getQuery = useTabStore((state) => state.getQuery);
   const context = useAiStore((state) => state.context);
 

@@ -30,6 +30,7 @@ type conn struct {
 type connKey struct {
 	OwnerID      string
 	ConnectionID uint
+	Database     string
 }
 
 type HistoryWriter interface {
@@ -118,6 +119,64 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 	return db, nil
 }
 
+func (cm *ConnectionManager) GetConnectionForDatabase(ctx context.Context, connection *model.Connection, databaseName string, withHydration bool) (*gorm.DB, error) {
+	if connection.ConnectionType != string(databaseContract.Postgresql) || databaseName == "" {
+		return cm.GetConnection(ctx, connection, withHydration)
+	}
+
+	defaultDatabase := DefaultPostgresqlDatabase(connection)
+	if databaseName == defaultDatabase {
+		return cm.GetConnection(ctx, connection, withHydration)
+	}
+
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+
+	ownerID := helper.CtxOwnerID(ctx)
+	key := connKey{OwnerID: ownerID, ConnectionID: connection.ID, Database: databaseName}
+
+	if conn, exists := cm.connections[key]; exists {
+		db, err := conn.DB.DB()
+		if err == nil {
+			if err := db.PingContext(ctx); err == nil {
+				conn.LastUsed = time.Now()
+				return conn.DB, nil
+			}
+		}
+		delete(cm.connections, key)
+		_ = cm.closeConn(conn)
+	}
+
+	if cm.secrets != nil && withHydration {
+		if err := secretStore.HydrateConnectionPassword(ctx, cm.secrets, ownerID, connection); err != nil {
+			return nil, err
+		}
+	}
+
+	dialect := OpenPostgresqlConnectionForDatabase(connection, databaseName)
+	if dialect == nil {
+		return nil, fmt.Errorf("failed to open postgresql connection for database %q", databaseName)
+	}
+
+	db, err := gorm.Open(dialect, &gorm.Config{})
+	if err != nil {
+		return nil, apperror.DriverError(err)
+	}
+
+	RegisterHistoryHooks(db, cm.historyRepo, connection.ID)
+
+	sqlDB, _ := db.DB()
+	sqlDB.SetMaxOpenConns(10)
+	sqlDB.SetMaxIdleConns(5)
+	sqlDB.SetConnMaxLifetime(5 * time.Minute)
+
+	cm.connections[key] = &conn{
+		DB:       db,
+		LastUsed: time.Now(),
+	}
+	return db, nil
+}
+
 func (cm *ConnectionManager) IsOpen(ctx context.Context, ownerID string, connectionID uint) bool {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
@@ -146,13 +205,13 @@ func (cm *ConnectionManager) Close(_ context.Context, ownerID string, connection
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 
-	key := connKey{OwnerID: ownerID, ConnectionID: connectionID}
-	c, ok := cm.connections[key]
-	if !ok {
-		return nil
+	for key, c := range cm.connections {
+		if key.OwnerID == ownerID && key.ConnectionID == connectionID {
+			delete(cm.connections, key)
+			_ = cm.closeConn(c)
+		}
 	}
-	delete(cm.connections, key)
-	return cm.closeConn(c)
+	return nil
 }
 
 func (cm *ConnectionManager) ListOpen(ownerID string) []uint {
