@@ -9,7 +9,6 @@ export type QueryEditorActionsProps = {
   onFormat: () => void;
   onRunQuery: (query?: string) => void;
   onAiExplain: () => void;
-  aiExplainDisabled?: boolean;
   loading: boolean;
 };
 
@@ -19,7 +18,6 @@ export type QueryEditorActionBarProps = {
   onFormat: () => void;
   onRunQuery: (query?: string) => void;
   onAiExplain: () => void;
-  aiExplainDisabled?: boolean;
   loading: boolean;
 };
 

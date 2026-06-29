@@ -176,7 +176,6 @@ export default function Query(): JSX.Element {
         loading={isDataFetching}
         onRunQuery={() => void runQuery()}
         onAiExplain={handleAiExplain}
-        aiExplainDisabled={!value.trim()}
         databases={autocomplete?.databases ?? []}
         schemas={autocomplete?.schemas ?? []}
         onFormat={(): void => setValue(getQuery())}

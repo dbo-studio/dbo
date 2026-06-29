@@ -16,7 +16,6 @@ export default function QueryEditorActionBar({
   onFormat,
   onRunQuery,
   onAiExplain,
-  aiExplainDisabled,
   loading
 }: QueryEditorActionBarProps): JSX.Element {
   const isCompact = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'));
@@ -32,7 +31,6 @@ export default function QueryEditorActionBar({
           onFormat={onFormat}
           onRunQuery={onRunQuery}
           onAiExplain={onAiExplain}
-          aiExplainDisabled={aiExplainDisabled}
         />
       </QueryEditorActionBarActionsBoxStyled>
     </QueryEditorActionBarStackStyled>

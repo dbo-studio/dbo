@@ -15,7 +15,6 @@ export default function QueryEditorActions({
   onFormat,
   onRunQuery,
   onAiExplain,
-  aiExplainDisabled = false,
   loading
 }: QueryEditorActionsProps): JSX.Element {
   const queryClient = useQueryClient();
@@ -103,7 +102,7 @@ export default function QueryEditorActions({
         </IconButton>
       </Tooltip>
       <Tooltip title={locales.ai_explain}>
-        <IconButton color='default' onClick={onAiExplain} disabled={aiExplainDisabled}>
+        <IconButton color='default' onClick={onAiExplain}>
           <CustomIcon type='sparkles' />
         </IconButton>
       </Tooltip>
