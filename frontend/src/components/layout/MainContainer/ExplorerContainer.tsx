@@ -1,13 +1,14 @@
 import ObjectTreeView from '@/components/common/ObjectTreeView/ObjectTreeView.tsx';
+import SidebarSectionTabs from '@/components/base/SidebarSectionTabs/SidebarSectionTabs';
+import { SidebarTabPanelStyled } from '@/components/base/SidebarSectionTabs/SidebarSectionTabs.styled';
 import { getSidebarMaxWidth, useLayoutMode, useWindowSize } from '@/hooks';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Tab, Tabs } from '@mui/material';
-import React, { type JSX, type SyntheticEvent, useMemo, useState } from 'react';
+import React, { type JSX, useMemo, useState } from 'react';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
 import Histories from '../../common/Histories/Histories';
 import SavedQueries from '../../common/SavedQueries/SavedQueries';
-import { ExplorerContainerStyled, ExplorerTabPanelStyled } from './Container.styled';
+import { ExplorerContainerStyled } from './Container.styled';
 
 const tabs = [
   {
@@ -23,6 +24,12 @@ const tabs = [
     component: Histories
   }
 ];
+
+const sectionTabs = [
+  { id: 0, label: locales.items },
+  { id: 1, label: locales.queries },
+  { id: 2, label: locales.history }
+] as const;
 
 type ExplorerContainerProps = {
   overlay?: boolean;
@@ -44,21 +51,13 @@ export default React.memo(function ExplorerContainer({
     return Component ? <Component /> : null;
   }, [selectedTabId]);
 
-  const onSelectedTabChanged = (_: SyntheticEvent, id: number): void => {
-    setSelectedTabId(id);
-  };
-
   const maxWidth = isCompact && windowSize.widthNumber ? getSidebarMaxWidth(windowSize.widthNumber) : 500;
 
   const content = (
     <ExplorerContainerStyled fullPage={fullPage}>
-      <Tabs variant='fullWidth' value={selectedTabId} onChange={onSelectedTabChanged}>
-        <Tab label={locales.items} />
-        <Tab label={locales.queries} />
-        <Tab label={locales.history} />
-      </Tabs>
+      <SidebarSectionTabs value={selectedTabId} onChange={setSelectedTabId} tabs={[...sectionTabs]} />
 
-      <ExplorerTabPanelStyled role='tabpanel'>{selectedTabContent}</ExplorerTabPanelStyled>
+      <SidebarTabPanelStyled role='tabpanel'>{selectedTabContent}</SidebarTabPanelStyled>
     </ExplorerContainerStyled>
   );
 

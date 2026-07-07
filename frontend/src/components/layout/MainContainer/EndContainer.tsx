@@ -1,10 +1,11 @@
 import AiChatPanel from '@/components/common/AiChatPanel/AiChatPanel';
 import DBFields from '@/components/common/DBFields/DBFields';
+import SidebarSectionTabs from '@/components/base/SidebarSectionTabs/SidebarSectionTabs';
+import { SidebarTabPanelStyled } from '@/components/base/SidebarSectionTabs/SidebarSectionTabs.styled';
 import { getSidebarMaxWidth, useLayoutMode, useWindowSize } from '@/hooks';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Box, Tab, Tabs } from '@mui/material';
-import { type JSX, type SyntheticEvent, useMemo } from 'react';
+import { type JSX, useMemo } from 'react';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
 import { EndContainerStyled } from './Container.styled';
 
@@ -18,6 +19,11 @@ const tabs = [
     component: DBFields
   }
 ];
+
+const sectionTabs = [
+  { id: 0, label: locales.assistant },
+  { id: 1, label: locales.fields }
+] as const;
 
 type EndContainerProps = {
   overlay?: boolean;
@@ -36,27 +42,16 @@ export default function EndContainer({ overlay = false, fullPage = false }: EndC
     return Component ? <Component /> : null;
   }, [selectedTabId]);
 
-  const onSelectedTabChanged = (_: SyntheticEvent, id: number): void => {
-    updateUI({ sidebar: { ...sidebar, rightSidebarTab: id } });
-  };
-
   const maxWidth = isCompact && windowSize.widthNumber ? getSidebarMaxWidth(windowSize.widthNumber) : 500;
 
   const content = (
     <EndContainerStyled fullPage={fullPage}>
-      <Tabs variant='fullWidth' value={selectedTabId} onChange={onSelectedTabChanged}>
-        <Tab label={locales.assistant} />
-        <Tab label={locales.fields} />
-      </Tabs>
-      <Box
-        role='tabpanel'
-        sx={{
-          flex: 1,
-          minHeight: 0
-        }}
-      >
-        {selectedTabContent}
-      </Box>
+      <SidebarSectionTabs
+        value={selectedTabId}
+        onChange={(id): void => updateUI({ sidebar: { ...sidebar, rightSidebarTab: id } })}
+        tabs={[...sectionTabs]}
+      />
+      <SidebarTabPanelStyled role='tabpanel'>{selectedTabContent}</SidebarTabPanelStyled>
     </EndContainerStyled>
   );
 

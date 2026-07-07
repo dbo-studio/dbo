@@ -1,7 +1,13 @@
 import { useContextMenu } from '@/hooks';
 import { CircularProgress } from '@mui/material';
 import { RefObject, useRef, type JSX } from 'react';
-import { DataGridLoadingOverlayStyled, StyledCol, StyledTable, TableContainer, VirtualTableWrapper } from './DataGrid.styled';
+import {
+  DataGridLoadingOverlayStyled,
+  StyledCol,
+  StyledTable,
+  TableContainer,
+  VirtualTableWrapper
+} from './DataGrid.styled';
 import DataGridContextMenu from './DataGridContextMenu/DataGridContextMenu';
 import DataGridTableBodyRows from './DataGridTableBodyRows/DataGridTableBodyRows';
 import DataGridTableHeaderRow from './DataGridTableHeaderRow/DataGridTableHeaderRow';

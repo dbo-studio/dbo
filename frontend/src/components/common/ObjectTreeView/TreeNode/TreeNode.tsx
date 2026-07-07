@@ -44,10 +44,13 @@ function TreeNode({
     };
   }, [node.id, parentRefsRef]);
 
-  const handleSetChildren = useCallback((newChildren: TreeNodeType[]): void => {
-    const children = Array.isArray(newChildren) ? newChildren : [];
-    useTreeStore.getState().setNodeChildren(node.id, children);
-  }, [node.id]);
+  const handleSetChildren = useCallback(
+    (newChildren: TreeNodeType[]): void => {
+      const children = Array.isArray(newChildren) ? newChildren : [];
+      useTreeStore.getState().setNodeChildren(node.id, children);
+    },
+    [node.id]
+  );
 
   const handleIsExpanded = useCallback(
     (expanded: boolean): void => {
