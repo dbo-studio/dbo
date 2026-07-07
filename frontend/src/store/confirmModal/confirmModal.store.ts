@@ -10,11 +10,13 @@ const initialState: {
   mode: ConfirmModalModel;
   title?: string | undefined;
   description?: string | undefined;
+  confirmLabel?: string | undefined;
 } = {
   isOpen: false,
   mode: 'success',
   title: undefined,
-  description: undefined
+  description: undefined,
+  confirmLabel: undefined
 };
 
 export const useConfirmModalStore: UseBoundStore<StoreApi<ConfirmModalState>> = create<ConfirmModalState>()(
@@ -28,7 +30,8 @@ export const useConfirmModalStore: UseBoundStore<StoreApi<ConfirmModalState>> = 
         title?: string,
         description?: string,
         onSuccess?: () => void,
-        onCancel?: () => void
+        onCancel?: () => void,
+        confirmLabel?: string
       ): void =>
         set((state) => ({
           ...state,
@@ -36,15 +39,31 @@ export const useConfirmModalStore: UseBoundStore<StoreApi<ConfirmModalState>> = 
           mode: mode,
           title,
           description,
+          confirmLabel,
           onCancel,
           onSuccess
         })),
-      success: (title?: string, description?: string, onSuccess?: () => void, onCancel?: () => void): void =>
-        get().show('success', title, description, onSuccess, onCancel),
-      danger: (title?: string, description?: string, onSuccess?: () => void, onCancel?: () => void): void =>
-        get().show('danger', title, description, onSuccess, onCancel),
-      warning: (title?: string, description?: string, onSuccess?: () => void, onCancel?: () => void): void =>
-        get().show('warning', title, description, onSuccess, onCancel)
+      success: (
+        title?: string,
+        description?: string,
+        onSuccess?: () => void,
+        onCancel?: () => void,
+        confirmLabel?: string
+      ): void => get().show('success', title, description, onSuccess, onCancel, confirmLabel),
+      danger: (
+        title?: string,
+        description?: string,
+        onSuccess?: () => void,
+        onCancel?: () => void,
+        confirmLabel?: string
+      ): void => get().show('danger', title, description, onSuccess, onCancel, confirmLabel),
+      warning: (
+        title?: string,
+        description?: string,
+        onSuccess?: () => void,
+        onCancel?: () => void,
+        confirmLabel?: string
+      ): void => get().show('warning', title, description, onSuccess, onCancel, confirmLabel)
     }),
     { name: 'confirm_modal' }
   )

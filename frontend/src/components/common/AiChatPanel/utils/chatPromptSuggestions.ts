@@ -4,13 +4,11 @@ export type ChatPromptKey =
   | 'ai_prompt_explain_query'
   | 'ai_prompt_optimize_query'
   | 'ai_prompt_write_join'
-  | 'ai_prompt_debug_error'
   | 'ai_prompt_list_tables'
   | 'ai_prompt_explore_schema';
 
 export function getChatPromptSuggestions(context: AiContextType, editorQuery = ''): ChatPromptKey[] {
   const hasQuery = Boolean(context.selectedQuery?.trim() || context.querySnippet?.trim() || editorQuery.trim());
-  const hasError = Boolean(context.queryError?.trim());
   const hasSchemaContext = Boolean(
     context.database || context.schema || context.tables.length > 0 || context.views.length > 0
   );
@@ -23,10 +21,6 @@ export function getChatPromptSuggestions(context: AiContextType, editorQuery = '
 
   if (hasSchemaContext || hasQuery) {
     suggestions.push('ai_prompt_write_join');
-  }
-
-  if (hasError) {
-    suggestions.push('ai_prompt_debug_error');
   }
 
   if (suggestions.length === 0) {

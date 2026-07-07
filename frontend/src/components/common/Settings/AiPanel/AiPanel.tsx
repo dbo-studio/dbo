@@ -1,7 +1,6 @@
+import SidebarSectionTabs from '@/components/base/SidebarSectionTabs/SidebarSectionTabs';
 import locales from '@/locales';
-import { Tab, Tabs } from '@mui/material';
 import { useState } from 'react';
-import { AiPanelTabsStyled } from './AiPanel.styled';
 import AiProvidersPanel from './AiProvidersPanel/AiProvidersPanel';
 import McpPanel from './McpPanel/McpPanel';
 
@@ -11,17 +10,17 @@ type AiPanelProps = {
   initialTab?: AiSettingsTab;
 };
 
+const sectionTabs = [
+  { id: 'providers' as const, label: locales.ai_tab_providers },
+  { id: 'mcp' as const, label: locales.ai_tab_mcp }
+];
+
 export default function AiPanel({ initialTab = 'providers' }: AiPanelProps) {
   const [tab, setTab] = useState<AiSettingsTab>(initialTab);
 
   return (
     <>
-      <AiPanelTabsStyled>
-        <Tabs value={tab} onChange={(_, value: AiSettingsTab) => setTab(value)} variant='fullWidth'>
-          <Tab value='providers' label={locales.ai_tab_providers} />
-          <Tab value='mcp' label={locales.ai_tab_mcp} />
-        </Tabs>
-      </AiPanelTabsStyled>
+      <SidebarSectionTabs value={tab} onChange={setTab} tabs={sectionTabs} aria-label={locales.ai_settings} />
 
       {tab === 'providers' ? <AiProvidersPanel /> : <McpPanel />}
     </>

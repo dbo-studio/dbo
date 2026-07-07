@@ -52,14 +52,12 @@ export type DataQuerySlice = {
   isDataFetching: boolean;
   reRunQuery: boolean;
   reRender: boolean;
-  lastQueryError: string | undefined;
   lastQueryResult: string | undefined;
   pendingEditorQueryRun?: PendingEditorQueryRun;
   gridEditable: boolean;
   updatableNodeId?: string;
   editableReason?: string;
   drivingTable?: string;
-  clearLastQueryError: () => void;
   clearPendingEditorQueryRun: () => void;
   runQuery: (abortController?: AbortController) => Promise<RunQueryResponseType | undefined>;
   runRawQuery: (query?: string, abortController?: AbortController) => Promise<RunQueryResponseType | undefined>;

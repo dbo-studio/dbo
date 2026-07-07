@@ -25,7 +25,6 @@ type (
 		Schema             *string  `json:"schema"`
 		Tables             []string `json:"tables"`
 		Views              []string `json:"views"`
-		QueryError         *string  `json:"queryError"`
 		QueryResultSummary *string  `json:"queryResultSummary"`
 		ObjectDefinition   *string  `json:"objectDefinition"`
 	}

@@ -1,12 +1,13 @@
 import api from '@/api';
+import Modal from '@/components/base/Modal/Modal';
 import { tools } from '@/core/utils/tools';
 import { useJobPolling } from '@/hooks/useJobPolling.hook';
 import locales from '@/locales';
 import { ErrorType, ImportResultType } from '@/types/Job';
-import { Box, Button, LinearProgress, List, ListItem, ListItemText, Modal, Typography } from '@mui/material';
+import { Box, Button, LinearProgress, List, ListItem, ListItemText, Typography } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { JobProgressModalContainer } from './JobProgressModal.styled';
+import { toast } from 'sonner';
 import type { JobProgressModalProps } from './types';
 
 export function JobProgressModal({ open, jobId, onClose, title }: JobProgressModalProps) {
@@ -34,6 +35,7 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
       tools.fileDownload(blob, fileName);
     } catch (error) {
       console.debug('🚀 ~ handleDownload ~ error:', error);
+      toast.error(locales.download_failed);
     }
   };
 
@@ -60,44 +62,23 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
   };
 
   return (
-    <Modal open={open} onClose={onClose}>
-      <JobProgressModalContainer>
-        <Typography variant='h6' gutterBottom>
-          {title}
-        </Typography>
-
+    <Modal open={open} onClose={onClose} title={title} padding='24px'>
+      <Box sx={{ width: 'min(500px, calc(100vw - 64px))' }}>
         {pollingError && (
-          <Typography
-            variant='body2'
-            gutterBottom
-            sx={{
-              color: 'error.main'
-            }}
-          >
+          <Typography variant='body2' gutterBottom color='error.main'>
             {locales.error}: {pollingError}
           </Typography>
         )}
 
         {job && (
           <>
-            <Typography
-              variant='body2'
-              gutterBottom
-              sx={{
-                color: 'text.secondary'
-              }}
-            >
+            <Typography variant='body2' gutterBottom color='textSubdued'>
               {getStatusMessage()}
             </Typography>
 
             <LinearProgress variant='determinate' value={job.progress} sx={{ mb: 2 }} />
 
-            <Typography
-              variant='body2'
-              sx={{
-                color: 'text.secondary'
-              }}
-            >
+            <Typography variant='body2' color='textSubdued'>
               {locales.progress}: {job.progress}%
             </Typography>
 
@@ -155,7 +136,7 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
             )}
           </>
         )}
-      </JobProgressModalContainer>
+      </Box>
     </Modal>
   );
 }

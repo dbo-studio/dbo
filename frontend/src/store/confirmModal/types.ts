@@ -3,6 +3,7 @@ export type ConfirmModalStore = {
   mode: ConfirmModalModel;
   title?: string | undefined;
   description?: string | undefined;
+  confirmLabel?: string | undefined;
   onCancel?: () => void;
   onSuccess?: () => void;
   open: () => void;
@@ -12,11 +13,30 @@ export type ConfirmModalStore = {
     title?: string,
     description?: string,
     onSuccess?: () => void,
-    onCancel?: () => void
+    onCancel?: () => void,
+    confirmLabel?: string
   ) => void;
-  success: (title?: string, description?: string, onSuccess?: () => void, onCancel?: () => void) => void;
-  danger: (title?: string, description?: string, onSuccess?: () => void, onCancel?: () => void) => void;
-  warning: (title?: string, description?: string, onSuccess?: () => void, onCancel?: () => void) => void;
+  success: (
+    title?: string,
+    description?: string,
+    onSuccess?: () => void,
+    onCancel?: () => void,
+    confirmLabel?: string
+  ) => void;
+  danger: (
+    title?: string,
+    description?: string,
+    onSuccess?: () => void,
+    onCancel?: () => void,
+    confirmLabel?: string
+  ) => void;
+  warning: (
+    title?: string,
+    description?: string,
+    onSuccess?: () => void,
+    onCancel?: () => void,
+    confirmLabel?: string
+  ) => void;
 };
 
 export type ConfirmModalModel = 'success' | 'danger' | 'warning';

@@ -35,7 +35,6 @@ export default function McpStatusButton(): JSX.Element {
   const { data: status } = useQuery({
     queryKey: ['mcp-status'],
     queryFn: api.mcp.getStatus,
-    refetchInterval: 30_000,
     refetchOnWindowFocus: true
   });
 

@@ -44,10 +44,6 @@ const buildContextOpts = (): AiContextOptsType => {
     contextOpts.query = context.querySnippet;
   }
 
-  if (context.queryError) {
-    contextOpts.queryError = context.queryError;
-  }
-
   if (context.queryResultSummary) {
     contextOpts.queryResultSummary = context.queryResultSummary;
   }

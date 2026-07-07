@@ -271,5 +271,21 @@
   "ai_natural_filter": "Filter with AI",
   "ai_welcome_title": "How can I help with your database?",
   "ai_welcome_subtitle": "Ask about queries, schema, or optimization. Context from your active tab is included automatically.",
-  "scroll_to_bottom": "Scroll to bottom"
+  "scroll_to_bottom": "Scroll to bottom",
+  "data_empty_title": "No data to display",
+  "data_empty_description": "Open a table from the explorer to view its rows.",
+  "query_empty_results_title": "No results yet",
+  "query_empty_results_description": "Run your query to see results here.",
+  "save_failed": "Failed to save changes",
+  "download_failed": "Failed to download file",
+  "grid_legend_unsaved": "New",
+  "grid_legend_edited": "Edited",
+  "grid_legend_removed": "Deleted",
+  "add_row": "Add row",
+  "remove_row": "Remove row",
+  "discard_changes": "Discard changes",
+  "previous_page": "Previous page",
+  "next_page": "Next page",
+  "preview_failed": "Failed to preview changes",
+  "discard_failed": "Failed to discard changes"
 }

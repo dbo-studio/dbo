@@ -12,7 +12,6 @@ export type SqlEditorProps = {
   onMount?: () => void;
   onRunQuery: (query?: string) => void;
   onAiSelection?: (sql: string, action: AiSelectionAction) => void;
-  hasQueryError?: boolean;
 };
 
 export type SqlEditorSettingType = {

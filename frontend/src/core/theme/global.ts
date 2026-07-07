@@ -1,13 +1,8 @@
 import type { Interpolation, Theme } from '@mui/material';
+import { scrollbarStyles } from './scrollbar';
 
 export const globalStyles = (theme: Theme): Interpolation<Theme> => {
   return {
-    '*': {
-      userSelect: 'none', // Disable text selection
-      WebkitUserSelect: 'none', // For Safari
-      msUserSelect: 'none', // For IE/Edge
-      MozUserSelect: 'none' // For Firefox
-    },
     html: {
       overscrollBehavior: 'none',
       height: '100%'
@@ -15,19 +10,18 @@ export const globalStyles = (theme: Theme): Interpolation<Theme> => {
     '#root': {
       height: '100%'
     },
-    '*::-webkit-scrollbar': {
-      width: '3px !important'
+    '.select-none': {
+      userSelect: 'none',
+      WebkitUserSelect: 'none',
+      msUserSelect: 'none',
+      MozUserSelect: 'none'
     },
-    '*::-webkit-scrollbar-thumb': {
-      backgroundColor:
-        theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' + ' !important',
-      borderRadius: '3px !important'
+    '.select-text': {
+      userSelect: 'text',
+      WebkitUserSelect: 'text',
+      msUserSelect: 'text',
+      MozUserSelect: 'text'
     },
-    '*::-webkit-scrollbar-thumb:hover': {
-      backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' + ' !important'
-    },
-    '*::-webkit-scrollbar-track': {
-      backgroundColor: 'transparent !important'
-    }
+    ...scrollbarStyles(theme)
   };
 };

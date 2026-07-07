@@ -1,11 +1,5 @@
 import { Box, styled } from '@mui/material';
 
-export const AiPanelTabsStyled = styled(Box)(() => ({
-  '& .MuiTabs-indicator': {
-    height: 2
-  }
-}));
-
 export const McpSectionStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',

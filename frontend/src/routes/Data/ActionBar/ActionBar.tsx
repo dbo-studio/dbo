@@ -105,7 +105,11 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
         </GridItem>
         <ActionBarActionsGridItemStyled>
           <Tooltip title={locales.filters}>
-            <IconButton className={show.showFilters ? 'active' : ''} onClick={(): void => handleToggle('filter')}>
+            <IconButton
+              aria-label={locales.filters}
+              className={show.showFilters ? 'active' : ''}
+              onClick={(): void => handleToggle('filter')}
+            >
               <Badge badgeContent={filterCount} color='secondary' variant='dot'>
                 <CustomIcon type='filter' size='s' />
               </Badge>
@@ -148,6 +152,7 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
 
           <Tooltip title={locales.query_preview}>
             <IconButton
+              aria-label={locales.query_preview}
               className={show.showQuery ? 'active' : 'toggle-code-preview'}
               onClick={(): void => handleToggle('query')}
             >

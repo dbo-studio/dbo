@@ -10,7 +10,7 @@ import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { DataTabType, EditedRow, RowType } from '@/types';
-import { IconButton } from '@mui/material';
+import { IconButton, Tooltip } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import type { JSX } from 'react';
 import { toast } from 'sonner';
@@ -91,6 +91,7 @@ export default function StatusBarActions(): JSX.Element {
       toast.success(`${locales.changes_saved_successfully}. ${locales.row_affected}: ${res.rowAffected}`);
     } catch (error) {
       console.debug('🚀 ~ handleSave ~ error:', error);
+      toast.error(locales.save_failed);
     }
   };
 
@@ -168,35 +169,49 @@ export default function StatusBarActions(): JSX.Element {
     return <></>;
   }
 
+  const disabled = updateQueryPending || isDataFetching;
+
   return (
     <StatusBarActionsStackStyled mobile={isMobile}>
-      <IconButton disabled={updateQueryPending || isDataFetching} onClick={() => void handleAddAction()}>
-        <CustomIcon type='plus' size='s' />
-      </IconButton>
+      <Tooltip title={locales.add_row}>
+        <IconButton aria-label={locales.add_row} disabled={disabled} onClick={() => void handleAddAction()}>
+          <CustomIcon type='plus' size='s' />
+        </IconButton>
+      </Tooltip>
 
-      <IconButton disabled={updateQueryPending || isDataFetching} onClick={() => void handleRemoveAction()}>
-        <CustomIcon type='mines' size='s' />
-      </IconButton>
+      <Tooltip title={locales.remove_row}>
+        <IconButton aria-label={locales.remove_row} disabled={disabled} onClick={() => void handleRemoveAction()}>
+          <CustomIcon type='mines' size='s' />
+        </IconButton>
+      </Tooltip>
 
-      <IconButton
-        data-testid='grid-save'
-        disabled={updateQueryPending || isDataFetching}
-        onClick={() => void handleSave()}
-      >
-        <CustomIcon type='check' size='s' />
-      </IconButton>
+      <Tooltip title={locales.save}>
+        <IconButton
+          aria-label={locales.save}
+          data-testid='grid-save'
+          disabled={disabled}
+          onClick={() => void handleSave()}
+        >
+          <CustomIcon type='check' size='s' />
+        </IconButton>
+      </Tooltip>
 
-      <IconButton onClick={() => void handleDiscardChanges()} disabled={updateQueryPending || isDataFetching}>
-        <CustomIcon type='close' size='s' />
-      </IconButton>
+      <Tooltip title={locales.discard_changes}>
+        <IconButton aria-label={locales.discard_changes} disabled={disabled} onClick={() => void handleDiscardChanges()}>
+          <CustomIcon type='close' size='s' />
+        </IconButton>
+      </Tooltip>
 
-      <IconButton
-        loading={isDataFetching}
-        disabled={updateQueryPending || isDataFetching}
-        onClick={() => void handleRefresh()}
-      >
-        <CustomIcon type='refresh' size='s' />
-      </IconButton>
+      <Tooltip title={locales.refresh}>
+        <IconButton
+          aria-label={locales.refresh}
+          loading={isDataFetching}
+          disabled={disabled}
+          onClick={() => void handleRefresh()}
+        >
+          <CustomIcon type='refresh' size='s' />
+        </IconButton>
+      </Tooltip>
     </StatusBarActionsStackStyled>
   );
 }

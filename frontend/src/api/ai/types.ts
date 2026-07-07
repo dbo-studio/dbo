@@ -7,7 +7,6 @@ export type AiContextOptsType = {
   schema?: string;
   tables?: string[];
   views?: string[];
-  queryError?: string;
   queryResultSummary?: string;
   objectDefinition?: string;
 };

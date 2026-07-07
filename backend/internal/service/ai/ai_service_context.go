@@ -33,7 +33,6 @@ func buildProviderChatRequest(
 		providerReq.Query = lo.FromPtr(opts.Query)
 	}
 
-	providerReq.QueryError = lo.FromPtr(opts.QueryError)
 	providerReq.QueryResultSummary = lo.FromPtr(opts.QueryResultSummary)
 	providerReq.ObjectDefinition = lo.FromPtr(opts.ObjectDefinition)
 

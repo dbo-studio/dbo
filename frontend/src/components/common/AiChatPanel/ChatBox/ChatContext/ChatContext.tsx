@@ -89,15 +89,6 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
           />
         )}
 
-        {context.queryError && (
-          <ChatContextItem
-            type='tables'
-            key='query-error'
-            name={`${locales.context_error}: ${context.queryError}`}
-            onClick={() => {}}
-          />
-        )}
-
         {context.queryResultSummary && (
           <ChatContextItem
             type='tables'

@@ -274,7 +274,7 @@ export const DataGridLoadingOverlayStyled = styled(Box)(({ theme }) => ({
 }));
 
 export const SearchMatchCountStyled = styled(Typography)(({ theme }) => ({
-  color: theme.palette.text.secondary,
+  color: theme.palette.text.subdued,
   fontSize: '12px',
   whiteSpace: 'nowrap'
 }));

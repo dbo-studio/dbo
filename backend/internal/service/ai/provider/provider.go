@@ -20,7 +20,6 @@ type ChatRequest struct {
 	Context            string                `json:"context,omitempty"`
 	Query              string                `json:"query,omitempty"`
 	SelectedQuery      string                `json:"selectedQuery,omitempty"`
-	QueryError         string                `json:"queryError,omitempty"`
 	QueryResultSummary string                `json:"queryResultSummary,omitempty"`
 	ObjectDefinition   string                `json:"objectDefinition,omitempty"`
 	UseMarkdownPrompt  bool                  `json:"-"`

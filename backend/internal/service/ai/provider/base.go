@@ -292,12 +292,6 @@ func (p *BaseProvider) appendQueryContext(sb *strings.Builder, req *ChatRequest)
 		sb.WriteString("\n")
 	}
 
-	if req.QueryError != "" {
-		sb.WriteString("\nLast query error:\n")
-		sb.WriteString(req.QueryError)
-		sb.WriteString("\n")
-	}
-
 	if req.QueryResultSummary != "" {
 		sb.WriteString("\nLast query result:\n")
 		sb.WriteString(req.QueryResultSummary)

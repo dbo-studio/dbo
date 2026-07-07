@@ -2,10 +2,11 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { TabMode } from '@/core/enums';
 import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
+import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { DataTabType, TabType } from '@/types';
-import { IconButton } from '@mui/material';
+import { IconButton, Tooltip } from '@mui/material';
 import type { JSX } from 'react';
 import PaginationSetting from './PaginationSetting/PaginationSetting';
 import { PageNumberStyled, StatusBarPaginationStyled } from './StatusBarPagination.styled';
@@ -44,15 +45,23 @@ export default function StatusBarPagination(): JSX.Element {
       {selectedTab?.mode && selectedTab?.mode === TabMode.Data && (
         <>
           <PaginationSetting />
-          <IconButton disabled={selectedTab?.pagination?.page === 1} onClick={(): void => handlePagination('prev')}>
-            <CustomIcon type='chevronLeft' size='s' />
-          </IconButton>
+          <Tooltip title={locales.previous_page}>
+            <IconButton
+              aria-label={locales.previous_page}
+              disabled={selectedTab?.pagination?.page === 1}
+              onClick={(): void => handlePagination('prev')}
+            >
+              <CustomIcon type='chevronLeft' size='s' />
+            </IconButton>
+          </Tooltip>
           <PageNumberStyled mobile={isMobile} color='textText'>
             {selectedTab?.pagination?.page ?? 1}
           </PageNumberStyled>
-          <IconButton onClick={(): void => handlePagination('next')}>
-            <CustomIcon type='chevronRight' size='s' />
-          </IconButton>
+          <Tooltip title={locales.next_page}>
+            <IconButton aria-label={locales.next_page} onClick={(): void => handlePagination('next')}>
+              <CustomIcon type='chevronRight' size='s' />
+            </IconButton>
+          </Tooltip>
         </>
       )}
     </StatusBarPaginationStyled>

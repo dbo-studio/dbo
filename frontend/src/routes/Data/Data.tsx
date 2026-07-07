@@ -1,14 +1,17 @@
 import DataGrid from '@/components/common/DataGrid/DataGrid';
+import EmptyState from '@/components/base/EmptyState/EmptyState';
 import { useSelectedTab } from '@/hooks';
+import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ColumnType, DataTabType, RowType } from '@/types';
+import { CircularProgress } from '@mui/material';
 import type { JSX } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useIsMounted } from 'usehooks-ts';
 import ActionBar from './ActionBar/ActionBar';
 import Columns from './ActionBar/Columns/Columns';
-import { DataContentStyled } from './Data.styled';
+import { DataContentStyled, DataLoadingStyled } from './Data.styled';
 import StatusBar from './StatusBar/StatusBar';
 
 const EMPTY_ROWS: RowType[] = [];
@@ -87,8 +90,18 @@ export default function Data(): JSX.Element {
       <ActionBar showColumns={showColumns} setShowColumns={setShowColumns} />
       <DataContentStyled>
         {showColumns && <Columns />}
-        {activeColumns.length > 0 && (
+        {activeColumns.length > 0 ? (
           <DataGrid rows={rows} columns={activeColumns} loading={isGridLoading} editable={selectedTab?.editable} />
+        ) : isGridLoading ? (
+          <DataLoadingStyled>
+            <CircularProgress size={30} />
+          </DataLoadingStyled>
+        ) : (
+          <EmptyState
+            icon='grid'
+            title={locales.data_empty_title}
+            description={locales.data_empty_description}
+          />
         )}
       </DataContentStyled>
       <StatusBar />

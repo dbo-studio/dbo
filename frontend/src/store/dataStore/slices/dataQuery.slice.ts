@@ -3,7 +3,7 @@ import type { GridMetaType, RunQueryResponseType } from '@/api/query/types';
 import { filterOperatorRequiresValue } from '@/core/constants';
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { debouncedSaveToIndexedDB } from '@/core/utils/indexdbHelper';
-import { extractQueryError, summarizeQueryResult } from '@/core/utils/queryResultSummary';
+import { summarizeQueryResult } from '@/core/utils/queryResultSummary';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { DataTabType, EditorTabType } from '@/types';
@@ -36,16 +36,12 @@ export const createDataQuerySlice: StateCreator<
   isDataFetching: false,
   reRunQuery: false,
   reRender: false,
-  lastQueryError: undefined,
   lastQueryResult: undefined,
   pendingEditorQueryRun: undefined,
   gridEditable: false,
   updatableNodeId: undefined,
   editableReason: undefined,
   drivingTable: undefined,
-  clearLastQueryError: (): void => {
-    set({ lastQueryError: undefined }, undefined, 'clearLastQueryError');
-  },
   clearPendingEditorQueryRun: (): void => {
     set({ pendingEditorQueryRun: undefined }, undefined, 'clearPendingEditorQueryRun');
   },
@@ -134,11 +130,10 @@ export const createDataQuerySlice: StateCreator<
       });
 
       const summary = summarizeQueryResult(res);
-      set({ lastQueryResult: summary, lastQueryError: undefined }, undefined, 'runQuerySuccess');
+      set({ lastQueryResult: summary }, undefined, 'runQuerySuccess');
       useAiStore.getState().updateContext({
         ...useAiStore.getState().context,
-        queryResultSummary: summary,
-        queryError: undefined
+        queryResultSummary: summary
       });
 
       return res;
@@ -146,13 +141,6 @@ export const createDataQuerySlice: StateCreator<
       if (error instanceof Error && error.name === 'CanceledError') {
         return;
       }
-      const message = extractQueryError(error);
-      set({ lastQueryError: message, lastQueryResult: undefined }, undefined, 'runQueryError');
-      useAiStore.getState().updateContext({
-        ...useAiStore.getState().context,
-        queryError: message,
-        queryResultSummary: undefined
-      });
       console.debug('🚀 ~ runQuery: ~ error:', error);
     } finally {
       get().toggleDataFetching(false);
@@ -203,11 +191,10 @@ export const createDataQuerySlice: StateCreator<
       ]);
 
       const summary = summarizeQueryResult(res);
-      set({ lastQueryResult: summary, lastQueryError: undefined }, undefined, 'runRawQuerySuccess');
+      set({ lastQueryResult: summary }, undefined, 'runRawQuerySuccess');
       useAiStore.getState().updateContext({
         ...useAiStore.getState().context,
-        queryResultSummary: summary,
-        queryError: undefined
+        queryResultSummary: summary
       });
 
       return res;
@@ -215,13 +202,6 @@ export const createDataQuerySlice: StateCreator<
       if (error instanceof Error && error.name === 'CanceledError') {
         return;
       }
-      const message = extractQueryError(error);
-      set({ lastQueryError: message, lastQueryResult: undefined }, undefined, 'runRawQueryError');
-      useAiStore.getState().updateContext({
-        ...useAiStore.getState().context,
-        queryError: message,
-        queryResultSummary: undefined
-      });
       console.debug('🚀 ~ runRawQuery: ~ error:', error);
     } finally {
       get().toggleDataFetching(false);

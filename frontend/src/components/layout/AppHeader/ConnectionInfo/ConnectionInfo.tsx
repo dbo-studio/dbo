@@ -75,7 +75,11 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
             }}
           >
             <Tooltip title={locales.connections}>
-              <IconButton data-testid='add-connection' onClick={(): void => updateUI({ showAddConnection: true })}>
+              <IconButton
+                aria-label={locales.connections}
+                data-testid='add-connection'
+                onClick={(): void => updateUI({ showAddConnection: true })}
+              >
                 <CustomIcon type={'connection'} size={'m'} />
               </IconButton>
             </Tooltip>

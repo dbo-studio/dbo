@@ -55,8 +55,7 @@ export default function ObjectForm(): React.JSX.Element {
       objectDefinition,
       queryResultSummary: undefined,
       querySnippet: undefined,
-      selectedQuery: undefined,
-      queryError: undefined
+      selectedQuery: undefined
     });
   }, [currentConnection?.id, prefillChat, selectedTab, tabs]);
 

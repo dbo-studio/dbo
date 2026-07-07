@@ -1,7 +1,7 @@
-import { useCallback } from 'react';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { AiContextType, AiSelectionAction } from '@/types';
+import { useCallback } from 'react';
 
 const ACTION_PROMPTS: Record<AiSelectionAction, string> = {
   explain: 'Explain this SQL query in detail.',
@@ -47,10 +47,9 @@ export function useAiBridge() {
   );
 
   const askAboutError = useCallback(
-    (error: string, query?: string) => {
+    (query?: string) => {
       const message = 'Help me fix this query error.';
       prefillChat(message, true, {
-        queryError: error,
         selectedQuery: query,
         input: message
       });

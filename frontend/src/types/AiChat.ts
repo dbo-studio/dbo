@@ -26,7 +26,6 @@ export type AiContextType = {
   views: string[];
   selectedQuery?: string;
   querySnippet?: string;
-  queryError?: string;
   queryResultSummary?: string;
   objectDefinition?: string;
 };

@@ -10,6 +10,7 @@ export default function ConfirmModal(): JSX.Element {
   const mode = useConfirmModalStore((state) => state.mode);
   const title = useConfirmModalStore((state) => state.title);
   const description = useConfirmModalStore((state) => state.description);
+  const confirmLabel = useConfirmModalStore((state) => state.confirmLabel);
   const onCancel = useConfirmModalStore((state) => state.onCancel);
   const onSuccess = useConfirmModalStore((state) => state.onSuccess);
   const close = useConfirmModalStore((state) => state.close);
@@ -51,8 +52,10 @@ export default function ConfirmModal(): JSX.Element {
     close();
   };
 
+  const resolvedConfirmLabel = confirmLabel ?? (mode === 'danger' ? locales.delete : locales.yes);
+
   return (
-    <ModalStyled open={isOpen}>
+    <ModalStyled open={isOpen} onClose={handleCancel}>
       <ConfirmModalStyled>
         <Box
           sx={{
@@ -66,12 +69,12 @@ export default function ConfirmModal(): JSX.Element {
             }}
           >
             {title && (
-              <Typography variant='h6' component='h2'>
+              <Typography color='textTitle' variant='h6' component='h2'>
                 {title}
               </Typography>
             )}
             {description && (
-              <Typography sx={{ mt: title ? 2 : 0 }} color={theme.palette.text.text}>
+              <Typography sx={{ mt: title ? 2 : 0, userSelect: 'text' }} color='textText'>
                 {description}
               </Typography>
             )}
@@ -94,7 +97,7 @@ export default function ConfirmModal(): JSX.Element {
             {locales.cancel}
           </Button>
           <Button style={style} onClick={handleConfirm} size='small' variant='contained'>
-            {locales.yes}
+            {resolvedConfirmLabel}
           </Button>
         </Box>
       </ConfirmModalStyled>

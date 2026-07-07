@@ -4,7 +4,7 @@ import { styled } from '@mui/material';
 export const ActionBarGridStyled = styled(Grid)(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
   borderTop: `1px solid ${theme.palette.divider}`,
-  padding: '8px',
+  padding: theme.spacing(1),
   minHeight: 40,
   gap: theme.spacing(1)
 }));

@@ -44,10 +44,3 @@ export function summarizeQueryResult(res: RunQueryResponseType): string {
 
   return `${rowCount} row(s), columns: ${columns}${table ? `\nSample rows:\n${table}` : ''}`;
 }
-
-export function extractQueryError(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return String(error);
-}

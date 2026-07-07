@@ -41,7 +41,7 @@ const tabs: MenuPanelTabType[] = [
     name: locales.ai_settings,
     description: locales.ai_settings_description,
     onlyDesktop: false,
-    icon: 'about',
+    icon: 'bot',
     content: <AiPanel />
   },
   {

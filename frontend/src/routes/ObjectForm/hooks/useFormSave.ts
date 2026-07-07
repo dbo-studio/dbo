@@ -115,7 +115,7 @@ export const useFormSave = ({
       });
     } catch (error) {
       console.error('Save preview error:', error);
-      toast.error('Failed to preview changes');
+      toast.error(locales.preview_failed);
     }
   }, [currentConnection, selectedTab, isPreviewing, isExecuting, prefetchTabs, tabs, previewExecute]);
 
@@ -168,7 +168,7 @@ export const useFormSave = ({
       toast.success(locales.changes_saved_successfully);
     } catch (error) {
       console.error('Save error:', error);
-      toast.error('Failed to save changes');
+      toast.error(locales.save_failed);
     }
   }, [
     currentConnection,
@@ -208,7 +208,7 @@ export const useFormSave = ({
       toast.info(locales.changes_discarded);
     } catch (error) {
       console.error('Cancel error:', error);
-      toast.error('Failed to discard changes');
+      toast.error(locales.discard_failed);
     }
   }, [selectedTab, currentConnection, tabs, getObject, setFormObject]);
 

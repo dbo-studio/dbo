@@ -63,6 +63,7 @@ export default function QueryEditorActions({
       toast.success(locales.query_saved_successfully);
     } catch (error) {
       console.debug('🚀 ~ saveQuery ~ error:', error);
+      toast.error(locales.save_failed);
     }
   };
 
@@ -82,32 +83,38 @@ export default function QueryEditorActions({
   return (
     <Stack spacing={2} direction={'row'}>
       <Tooltip title={locales.save}>
-        <IconButton color='default' onClick={() => void saveQuery()}>
+        <IconButton aria-label={locales.save} color='default' onClick={() => void saveQuery()}>
           <CustomIcon type='save' />
         </IconButton>
       </Tooltip>
       <Tooltip title={locales.export}>
-        <IconButton color='default' onClick={handleExport}>
+        <IconButton aria-label={locales.export} color='default' onClick={handleExport}>
           <CustomIcon type='export' />
         </IconButton>
       </Tooltip>
       <Tooltip title={locales.minify}>
-        <IconButton color='default' onClick={handleMinifySql}>
+        <IconButton aria-label={locales.minify} color='default' onClick={handleMinifySql}>
           <CustomIcon type='pickaxe' />
         </IconButton>
       </Tooltip>
       <Tooltip title={locales.beatify}>
-        <IconButton color='default' onClick={handleFormatSql}>
+        <IconButton aria-label={locales.beatify} color='default' onClick={handleFormatSql}>
           <CustomIcon type='wand_sparkles' />
         </IconButton>
       </Tooltip>
       <Tooltip title={locales.ai_explain}>
-        <IconButton color='default' onClick={onAiExplain}>
+        <IconButton aria-label={locales.ai_explain} color='default' onClick={onAiExplain}>
           <CustomIcon type='sparkles' />
         </IconButton>
       </Tooltip>
       <Tooltip title={shortcuts.runQuery.command.join('+')}>
-        <IconButton disabled={loading} loading={loading} color='primary' onClick={(): void => onRunQuery()}>
+        <IconButton
+          aria-label={locales.run_query}
+          disabled={loading}
+          loading={loading}
+          color='primary'
+          onClick={(): void => onRunQuery()}
+        >
           <CustomIcon type='play' />
         </IconButton>
       </Tooltip>

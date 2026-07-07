@@ -1,9 +1,9 @@
 import api from '@/api';
 import type { RunQueryResponseType } from '@/api/query/types';
+import EmptyState from '@/components/base/EmptyState/EmptyState';
 import ResizableYBox from '@/components/base/ResizableBox/ResizableYBox.tsx';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor.tsx';
 import { SqlEditorRef } from '@/components/base/SqlEditor/types';
-import QueryResultGrid from './QueryResultGrid/QueryResultGrid';
 import { shortcuts } from '@/core/utils';
 import { useCurrentConnection, useLayoutMode, useShortcut, useWindowSize } from '@/hooks';
 import { useAiBridge } from '@/hooks/useAiBridge';
@@ -19,7 +19,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { QueryContainerStyled, QueryEditorBoxStyled } from './Query.styled';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
-import QueryErrorBanner from './QueryErrorBanner/QueryErrorBanner';
+import QueryResultGrid from './QueryResultGrid/QueryResultGrid';
 
 type QueryMobileView = 'editor' | 'results';
 
@@ -60,7 +60,6 @@ export default function Query(): JSX.Element {
   }
 
   const isDataFetching = useDataStore((state) => state.isDataFetching);
-  const lastQueryError = useDataStore((state) => state.lastQueryError);
   const { askAboutSelection } = useAiBridge();
 
   useShortcut(shortcuts.runQuery, () => void runQuery());
@@ -194,11 +193,10 @@ export default function Query(): JSX.Element {
         schemas={autocomplete?.schemas ?? []}
         onFormat={(): void => setValue(getQuery())}
       />
-      <QueryErrorBanner />
       {showMobileTabs && (
-        <Tabs value={mobileView} onChange={handleMobileViewChange} variant='fullWidth'>
-          <Tab value='editor' label={locales.query_editor} />
-          <Tab value='results' label={locales.query_results} />
+        <Tabs className='MuiTabs-flat' value={mobileView} onChange={handleMobileViewChange} variant='fullWidth'>
+          <Tab className='Mui-flat' value='editor' label={locales.query_editor} />
+          <Tab className='Mui-flat' value='results' label={locales.query_results} />
         </Tabs>
       )}
       <QueryContainerStyled height={isMobile ? '100%' : windowSize.height}>
@@ -209,7 +207,6 @@ export default function Query(): JSX.Element {
               onRunQuery={() => void runQuery()}
               onChange={handleUpdateState}
               onAiSelection={(sql, action) => askAboutSelection(sql, action)}
-              hasQueryError={!!lastQueryError}
               autocomplete={
                 autocomplete ?? {
                   databases: [],
@@ -224,8 +221,8 @@ export default function Query(): JSX.Element {
           </QueryEditorBoxStyled>
         )}
 
-        {hasResults &&
-          (isMobile ? (
+        {hasResults ? (
+          isMobile ? (
             mobileView === 'results' && (
               <QueryResultGrid loading={isDataFetching} rows={displayRows} columns={displayColumns} />
             )
@@ -233,7 +230,17 @@ export default function Query(): JSX.Element {
             <ResizableYBox height={resultsPanelHeight} direction={'btt'}>
               <QueryResultGrid loading={isDataFetching} rows={displayRows} columns={displayColumns} />
             </ResizableYBox>
-          ))}
+          )
+        ) : (
+          !isDataFetching &&
+          !isMobile && (
+            <EmptyState
+              icon='sql'
+              title={locales.query_empty_results_title}
+              description={locales.query_empty_results_description}
+            />
+          )
+        )}
       </QueryContainerStyled>
     </>
   );
