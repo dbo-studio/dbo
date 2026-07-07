@@ -7,7 +7,7 @@ import { useTreeStore } from '@/store/treeStore/tree.store';
 import { TreeNodeType } from '@/types/Tree';
 import { Box, LinearProgress } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
-import { type JSX, useEffect, useRef, useState } from 'react';
+import { type JSX, useCallback, useEffect, useRef, useState } from 'react';
 import { TreeViewContainerStyled, TreeViewContentStyled } from './ObjectTreeView.styled';
 import TreeNode from './TreeNode/TreeNode';
 
@@ -38,27 +38,33 @@ export default function ObjectTreeView(): JSX.Element {
     }
   }, [currentConnection?.id, tree, treeError, isLoading, reloadTree]);
 
-  const fetchChildren = async (parentId: string): Promise<TreeNodeType[]> => {
-    try {
-      addLoadedParentId(parentId);
+  const fetchChildren = useCallback(
+    async (parentId: string): Promise<TreeNodeType[]> => {
+      try {
+        addLoadedParentId(parentId);
 
-      const nodes = await getChildrenMutation({
-        parentId,
-        connectionId: currentConnection?.id || 0,
-        fromCache: true
-      });
-      return nodes?.children || [];
-    } catch (error) {
-      console.debug('🚀 ~ fetchChildren ~ error:', error);
-      return [];
-    }
-  };
+        const nodes = await getChildrenMutation({
+          parentId,
+          connectionId: currentConnection?.id || 0,
+          fromCache: true
+        });
+        return nodes?.children || [];
+      } catch (error) {
+        console.debug('🚀 ~ fetchChildren ~ error:', error);
+        return [];
+      }
+    },
+    [addLoadedParentId, currentConnection?.id, getChildrenMutation]
+  );
 
-  const onContextMenu = (event: React.MouseEvent, menu: MenuType[]): void => {
-    event.stopPropagation();
-    setMenu(menu);
-    handleContextMenu(event);
-  };
+  const onContextMenu = useCallback(
+    (event: React.MouseEvent, menu: MenuType[]): void => {
+      event.stopPropagation();
+      setMenu(menu);
+      handleContextMenu(event);
+    },
+    [handleContextMenu]
+  );
 
   return (
     <TreeViewContainerStyled>

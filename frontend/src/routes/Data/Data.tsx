@@ -3,13 +3,12 @@ import { useSelectedTab } from '@/hooks';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ColumnType, DataTabType, RowType } from '@/types';
-import { CircularProgress } from '@mui/material';
 import type { JSX } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useIsMounted } from 'usehooks-ts';
 import ActionBar from './ActionBar/ActionBar';
 import Columns from './ActionBar/Columns/Columns';
-import { DataContentStyled, DataLoadingStyled } from './Data.styled';
+import { DataContentStyled } from './Data.styled';
 import StatusBar from './StatusBar/StatusBar';
 
 const EMPTY_ROWS: RowType[] = [];
@@ -19,17 +18,11 @@ export default function Data(): JSX.Element {
   const isMounted = useIsMounted();
   const selectedTab = useSelectedTab<DataTabType>();
 
-  const [isGridReady, setIsGridReady] = useState(false);
   const [showColumns, setShowColumns] = useState(false);
 
   const selectedTabId = useTabStore((state) => state.selectedTabId);
-  const [prevSelectedTabId, setPrevSelectedTabId] = useState(selectedTabId);
-
-  if (selectedTabId !== prevSelectedTabId) {
-    setPrevSelectedTabId(selectedTabId);
-    setIsGridReady(false);
-  }
   const reRunQuery = useDataStore((state) => state.reRunQuery);
+  const isDataFetching = useDataStore((state) => state.isDataFetching);
 
   const rows = useDataStore((state) => state.rows ?? EMPTY_ROWS);
   const allColumns = useDataStore((state) => state.columns ?? EMPTY_COLUMNS);
@@ -76,39 +69,27 @@ export default function Data(): JSX.Element {
     }
 
     cancelCurrentQuery();
-    loadData()
-      .then(() => setIsGridReady(true))
-      .catch((e) => console.debug('🚀 ~ Data ~ e:', e));
+    loadData().catch((e) => console.debug('🚀 ~ Data ~ e:', e));
   }, [selectedTabId, isMounted, loadData, cancelCurrentQuery]);
 
   useEffect(() => {
     if (previousReRunQueryRef.current !== reRunQuery) {
       cancelCurrentQuery();
-      setIsGridReady(false);
-      handleReRunQuery()
-        .then(() => {
-          setIsGridReady(true);
-        })
-        .catch(() => {
-          setIsGridReady(true);
-        });
+      handleReRunQuery().catch(() => undefined);
       previousReRunQueryRef.current = reRunQuery;
     }
   }, [reRunQuery, handleReRunQuery, cancelCurrentQuery]);
+
+  const isGridLoading = !isMounted || !selectedTabId || isDataFetching;
 
   return (
     <>
       <ActionBar showColumns={showColumns} setShowColumns={setShowColumns} />
       <DataContentStyled>
         {showColumns && <Columns />}
-        {activeColumns.length > 0 &&
-          (!isMounted || !selectedTabId || isGridReady ? (
-            <DataGrid rows={rows} columns={activeColumns} loading={false} editable={selectedTab?.editable} />
-          ) : (
-            <DataLoadingStyled>
-              <CircularProgress size={30} />
-            </DataLoadingStyled>
-          ))}
+        {activeColumns.length > 0 && (
+          <DataGrid rows={rows} columns={activeColumns} loading={isGridLoading} editable={selectedTab?.editable} />
+        )}
       </DataContentStyled>
       <StatusBar />
     </>

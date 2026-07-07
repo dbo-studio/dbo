@@ -262,6 +262,17 @@ export const DataGridLoadingStyled = styled(Box)(() => ({
   flex: 1
 }));
 
+export const DataGridLoadingOverlayStyled = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  inset: 0,
+  zIndex: 2,
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  backgroundColor: theme.palette.background.default,
+  opacity: 0.72
+}));
+
 export const SearchMatchCountStyled = styled(Typography)(({ theme }) => ({
   color: theme.palette.text.secondary,
   fontSize: '12px',

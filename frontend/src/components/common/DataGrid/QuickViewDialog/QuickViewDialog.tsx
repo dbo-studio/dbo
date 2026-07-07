@@ -19,6 +19,7 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
 
   const selectedRows = useDataStore((state) => state.selectedRows);
   const editedRows = useDataStore((state) => state.editedRows);
+  const columns = useDataStore((state) => state.columns ?? []);
   const showQuickLookEditor = useSettingStore((state) => state.ui.showQuickLookEditor);
 
   const updateUI = useSettingStore((state) => state.updateUI);
@@ -60,7 +61,14 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
       return;
     }
 
-    const newEditedRows = handleRowChangeLog(editedRows, activeRow.row, activeRow.selectedColumn, rowValue, value);
+    const newEditedRows = handleRowChangeLog(
+      editedRows,
+      activeRow.row,
+      activeRow.selectedColumn,
+      rowValue,
+      value,
+      columns
+    );
 
     await updateEditedRows(newEditedRows);
     const newRow = { ...activeRow.row };

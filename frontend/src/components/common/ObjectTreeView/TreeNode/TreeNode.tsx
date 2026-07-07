@@ -7,14 +7,15 @@ import {
 } from '@/components/common/ObjectTreeView/TreeNode/TreeNode.styled';
 import type { TreeNodeProps } from '@/components/common/ObjectTreeView/TreeNode/types';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection.hook';
-import { findTreeNode } from '@/store/treeStore/findTreeNode';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { TreeNodeType } from '@/types/Tree';
-import { Fragment, type JSX, useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, memo, type JSX, useCallback, useEffect, useRef, useState } from 'react';
+import { areTreeNodePropsEqual } from './areTreeNodePropsEqual';
 import { useActionDetection } from './hooks/useActionDetection';
+import { useIsTreeNodeExpanded } from './hooks/useIsTreeNodeExpanded';
 
-export default function TreeNode({
-  node: initialNode,
+function TreeNode({
+  node,
   parentRefsRef = { current: new Map() },
   nodeIndex = 0,
   level = 0,
@@ -28,19 +29,9 @@ export default function TreeNode({
   const [isFocused, setIsFocused] = useState(false);
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const currentConnection = useCurrentConnection();
-  const { isNodeExpanded, expandNode, collapseNode, setNodeChildren } = useTreeStore();
+  const connectionId = currentConnection?.id;
+  const isExpanded = useIsTreeNodeExpanded(node.id, connectionId);
 
-  const node =
-    useTreeStore((state) => {
-      if (!currentConnection?.id) {
-        return initialNode;
-      }
-
-      const root = state.tree[currentConnection.id];
-      return findTreeNode(root, initialNode.id) ?? initialNode;
-    }) ?? initialNode;
-
-  const isExpanded = isNodeExpanded(node.id);
   const isSelected = node.id === selectedNodeId;
 
   useEffect(() => {
@@ -53,18 +44,22 @@ export default function TreeNode({
     };
   }, [node.id, parentRefsRef]);
 
-  const handleSetChildren = (newChildren: TreeNodeType[]): void => {
+  const handleSetChildren = useCallback((newChildren: TreeNodeType[]): void => {
     const children = Array.isArray(newChildren) ? newChildren : [];
-    setNodeChildren(node.id, children);
-  };
+    useTreeStore.getState().setNodeChildren(node.id, children);
+  }, [node.id]);
 
-  const handleIsExpanded = (expanded: boolean): void => {
-    if (expanded) {
-      expandNode(node.id);
-    } else {
-      collapseNode(node.id);
-    }
-  };
+  const handleIsExpanded = useCallback(
+    (expanded: boolean): void => {
+      const { expandNode, collapseNode } = useTreeStore.getState();
+      if (expanded) {
+        expandNode(node.id);
+      } else {
+        collapseNode(node.id);
+      }
+    },
+    [node.id]
+  );
 
   const {
     expandNode: handleExpandNode,
@@ -160,3 +155,5 @@ export default function TreeNode({
     </HoverableTreeNodeContainerStyled>
   );
 }
+
+export default memo(TreeNode, areTreeNodePropsEqual);

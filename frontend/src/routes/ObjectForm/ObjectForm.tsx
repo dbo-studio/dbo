@@ -43,7 +43,7 @@ export default function ObjectForm(): React.JSX.Element {
     if (!objectDefinition.trim()) return;
 
     const nodeContext = parseObjectNodeId(selectedTab.nodeId);
-    const objectName = nodeContext.objectName ?? readObjectNameFromForm(formDataByTab, selectedTab.id);
+    const objectName = nodeContext.objectName ?? readObjectNameFromForm(formDataByTab);
     const isViewAction = selectedTab.action === 'createView' || selectedTab.action === 'editView';
     const isCreateAction = selectedTab.action?.startsWith('create') ?? false;
 

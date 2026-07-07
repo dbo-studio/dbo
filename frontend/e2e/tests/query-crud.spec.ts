@@ -65,6 +65,17 @@ INSERT INTO ${tableName} (name, email) VALUES
       await dataGrid.expectCellVisible('Bob Wilson');
     });
 
+    await test.step('Inline edit and save from result grid', async () => {
+      await sqlEditor.typeAndRun(`SELECT * FROM ${tableName} ORDER BY id;`);
+      await dataGrid.waitForData();
+      await dataGrid.editCell('Jane Smith', 'Jane Inline');
+      await dataGrid.saveChanges();
+
+      await sqlEditor.typeAndRun(`SELECT * FROM ${tableName} WHERE email = 'jane@example.com';`);
+      await dataGrid.waitForData();
+      await dataGrid.expectCellVisible('Jane Inline');
+    });
+
     await test.step('Update data', async () => {
       await sqlEditor.typeAndRun(`UPDATE ${tableName} SET name = 'John Updated' WHERE email = 'john@example.com';`);
 
@@ -167,6 +178,26 @@ ORDER BY p.price DESC;
 
       await dataGrid.expectCellVisible('Laptop');
       await dataGrid.expectCellVisible('Electronics');
+    });
+
+    await test.step('JOIN result allows editing driving table only', async () => {
+      await dataGrid.editCell('Laptop', 'Laptop Pro');
+      await dataGrid.saveChanges();
+
+      await sqlEditor.typeAndRun(`SELECT name FROM ${table2} WHERE name = 'Laptop Pro';`);
+      await dataGrid.waitForData();
+      await dataGrid.expectCellVisible('Laptop Pro');
+
+      await sqlEditor.typeAndRun(
+        `
+SELECT p.name as product, c.name as category, p.price 
+FROM ${table2} p 
+JOIN ${table1} c ON p.category_id = c.id 
+ORDER BY p.price DESC;
+        `.trim()
+      );
+      await dataGrid.waitForData();
+      await dataGrid.expectCellNotEditable('Electronics');
     });
 
     await test.step('Cleanup tables', async () => {

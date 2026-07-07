@@ -3,7 +3,7 @@ import type { RunQueryResponseType } from '@/api/query/types';
 import ResizableYBox from '@/components/base/ResizableBox/ResizableYBox.tsx';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor.tsx';
 import { SqlEditorRef } from '@/components/base/SqlEditor/types';
-import DataGrid from '@/components/common/DataGrid/DataGrid';
+import QueryResultGrid from './QueryResultGrid/QueryResultGrid';
 import { shortcuts } from '@/core/utils';
 import { useCurrentConnection, useLayoutMode, useShortcut, useWindowSize } from '@/hooks';
 import { useAiBridge } from '@/hooks/useAiBridge';
@@ -15,13 +15,19 @@ import type { AutoCompleteType, ColumnType, EditorTabType, RowType } from '@/typ
 import { Tab, Tabs } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import type { JSX, SyntheticEvent } from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { QueryContainerStyled, QueryEditorBoxStyled } from './Query.styled';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
 import QueryErrorBanner from './QueryErrorBanner/QueryErrorBanner';
 
 type QueryMobileView = 'editor' | 'results';
+
+const EMPTY_ROWS: RowType[] = [];
+const EMPTY_COLUMNS: ColumnType[] = [];
+
+const getActiveColumns = (columns: ColumnType[] | undefined): ColumnType[] =>
+  columns?.filter((column) => column.isActive !== false) ?? [];
 
 export default function Query(): JSX.Element {
   const selectedTab = useSelectedTab<EditorTabType>();
@@ -30,28 +36,27 @@ export default function Query(): JSX.Element {
   const { isMobile } = useLayoutMode();
   const sqlEditorRef = useRef<SqlEditorRef>(null);
 
-  const [tableData, setTableData] = useState({
-    rows: [] as RowType[],
-    columns: [] as ColumnType[]
+  const [tableData, setTableData] = useState<{ rows: RowType[]; columns: ColumnType[] }>({
+    rows: EMPTY_ROWS,
+    columns: EMPTY_COLUMNS
   });
 
   const getQuery = useTabStore((state) => state.getQuery);
   const updateQuery = useTabStore((state) => state.updateQuery);
   const runRawQuery = useDataStore((state) => state.runRawQuery);
   const loadDataFromIndexedDB = useDataStore((state) => state.loadDataFromIndexedDB);
-  const toggleDataFetching = useDataStore((state) => state.toggleDataFetching);
   const pendingEditorQueryRun = useDataStore((state) => state.pendingEditorQueryRun);
   const clearPendingEditorQueryRun = useDataStore((state) => state.clearPendingEditorQueryRun);
 
   const [value, setValue] = useState('');
-  const [showGrid, setShowGrid] = useState(false);
   const [mobileView, setMobileView] = useState<QueryMobileView>('editor');
   const [prevTabId, setPrevTabId] = useState(selectedTab?.id);
 
   if (selectedTab?.id !== prevTabId) {
     setPrevTabId(selectedTab?.id);
-    setValue(getQuery());
+    setValue(getQuery(selectedTab?.id));
     setMobileView('editor');
+    setTableData({ rows: EMPTY_ROWS, columns: EMPTY_COLUMNS });
   }
 
   const isDataFetching = useDataStore((state) => state.isDataFetching);
@@ -72,46 +77,50 @@ export default function Query(): JSX.Element {
   });
 
   const loadData = useCallback(async (): Promise<void> => {
-    setTableData({
-      rows: [],
-      columns: []
-    });
-
-    toggleDataFetching(true);
     try {
       const result = await loadDataFromIndexedDB();
       if (result) {
-        setTableData(result);
+        setTableData({
+          rows: result.rows,
+          columns: result.columns
+        });
       }
     } catch (error) {
       console.debug('🚀 ~ loadData ~ error:', error);
     }
-
-    toggleDataFetching(false);
-  }, [loadDataFromIndexedDB, toggleDataFetching]);
+  }, [loadDataFromIndexedDB]);
 
   useEffect(() => {
+    if (!selectedTab?.id) {
+      return;
+    }
+
+    setValue(getQuery(selectedTab.id));
+  }, [selectedTab?.id, getQuery]);
+
+  useEffect(() => {
+    if (!selectedTab?.id) {
+      return;
+    }
+
     const pending = useDataStore.getState().pendingEditorQueryRun;
-    if (pending?.tabId === selectedTab?.id) {
+    if (pending?.tabId === selectedTab.id) {
       return;
     }
 
     void loadData().catch((e) => console.log('🚀 ~ Query ~ e:', e));
-  }, [selectedTab?.id, autocomplete, loadData]);
+  }, [selectedTab?.id, loadData]);
 
   const applyQueryResult = useCallback(
     (res: RunQueryResponseType | undefined): void => {
-      const columns = res?.columns.filter((column) => column.isActive) ?? [];
+      const columns = getActiveColumns(res?.columns);
       setTableData({
-        rows: res?.data ?? [],
+        rows: res?.data ?? EMPTY_ROWS,
         columns
       });
 
-      if (columns.length > 0) {
-        setShowGrid(true);
-        if (isMobile) {
-          setMobileView('results');
-        }
+      if (columns.length > 0 && isMobile) {
+        setMobileView('results');
       }
     },
     [isMobile]
@@ -136,7 +145,7 @@ export default function Query(): JSX.Element {
 
     const runPending = async (): Promise<void> => {
       setValue(query);
-      setShowGrid(true);
+      updateQuery(query);
       const res = await executeRawQuery(query);
       if (res) {
         toast.success(locales.run_query);
@@ -144,9 +153,10 @@ export default function Query(): JSX.Element {
     };
 
     void runPending();
-  }, [pendingEditorQueryRun, selectedTab?.id, clearPendingEditorQueryRun, executeRawQuery]);
+  }, [pendingEditorQueryRun, selectedTab?.id, clearPendingEditorQueryRun, executeRawQuery, updateQuery]);
 
   const handleUpdateState = (query: string): void => {
+    setValue(query);
     updateQuery(query);
   };
 
@@ -167,8 +177,12 @@ export default function Query(): JSX.Element {
     setMobileView(nextView);
   };
 
-  const hasResults = showGrid && tableData.columns.length > 0;
+  const displayRows = tableData.rows;
+  const displayColumns = useMemo(() => getActiveColumns(tableData.columns), [tableData.columns]);
+
+  const hasResults = displayColumns.length > 0;
   const showMobileTabs = isMobile && hasResults;
+  const resultsPanelHeight = Math.max(Math.floor((windowSize.heightNumber ?? 600) / 2), 200);
 
   return (
     <>
@@ -193,7 +207,6 @@ export default function Query(): JSX.Element {
             <SqlEditor
               ref={sqlEditorRef}
               onRunQuery={() => void runQuery()}
-              onMount={(): void => setShowGrid(true)}
               onChange={handleUpdateState}
               onAiSelection={(sql, action) => askAboutSelection(sql, action)}
               hasQueryError={!!lastQueryError}
@@ -214,11 +227,11 @@ export default function Query(): JSX.Element {
         {hasResults &&
           (isMobile ? (
             mobileView === 'results' && (
-              <DataGrid editable={false} rows={tableData.rows} columns={tableData.columns} loading={isDataFetching} />
+              <QueryResultGrid loading={isDataFetching} rows={displayRows} columns={displayColumns} />
             )
           ) : (
-            <ResizableYBox height={windowSize.heightNumber ? windowSize.heightNumber / 2 : 0} direction={'btt'}>
-              <DataGrid editable={false} rows={tableData.rows} columns={tableData.columns} loading={isDataFetching} />
+            <ResizableYBox height={resultsPanelHeight} direction={'btt'}>
+              <QueryResultGrid loading={isDataFetching} rows={displayRows} columns={displayColumns} />
             </ResizableYBox>
           ))}
       </QueryContainerStyled>

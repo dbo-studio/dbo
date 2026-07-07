@@ -1,17 +1,34 @@
 import { runQuery, runRawQuery } from '@/api/query';
+import type { GridMetaType, RunQueryResponseType } from '@/api/query/types';
 import { filterOperatorRequiresValue } from '@/core/constants';
-import type { RunQueryResponseType } from '@/api/query/types';
+import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { debouncedSaveToIndexedDB } from '@/core/utils/indexdbHelper';
 import { extractQueryError, summarizeQueryResult } from '@/core/utils/queryResultSummary';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { DataTabType } from '@/types';
+import { DataTabType, EditorTabType } from '@/types';
 import type { StateCreator } from 'zustand';
 import { useTabStore } from '../../tabStore/tab.store';
-import type { DataColumnSlice, DataQuerySlice, DataRowSlice, DataStore } from '../types';
+import type {
+  DataColumnSlice,
+  DataEditedRowsSlice,
+  DataQuerySlice,
+  DataRemovedRowsSlice,
+  DataRowSlice,
+  DataSelectedRowsSlice,
+  DataStore,
+  DataUnsavedRowsSlice
+} from '../types';
 
 export const createDataQuerySlice: StateCreator<
-  DataStore & DataQuerySlice & DataColumnSlice & DataRowSlice,
+  DataStore &
+    DataQuerySlice &
+    DataColumnSlice &
+    DataRowSlice &
+    DataEditedRowsSlice &
+    DataRemovedRowsSlice &
+    DataUnsavedRowsSlice &
+    DataSelectedRowsSlice,
   [['zustand/devtools', never]],
   [],
   DataQuerySlice
@@ -22,6 +39,10 @@ export const createDataQuerySlice: StateCreator<
   lastQueryError: undefined,
   lastQueryResult: undefined,
   pendingEditorQueryRun: undefined,
+  gridEditable: false,
+  updatableNodeId: undefined,
+  editableReason: undefined,
+  drivingTable: undefined,
   clearLastQueryError: (): void => {
     set({ lastQueryError: undefined }, undefined, 'clearLastQueryError');
   },
@@ -41,6 +62,27 @@ export const createDataQuerySlice: StateCreator<
   toggleDataFetching: (loading?: boolean): void => {
     set({ isDataFetching: loading ?? !get().isDataFetching }, undefined, 'toggleDataFetching');
   },
+  updateGridMeta: async (meta: GridMetaType): Promise<void> => {
+    const selectedTabId = useTabStore.getState().selectedTabId;
+    set(
+      {
+        gridEditable: meta.gridEditable,
+        updatableNodeId: meta.updatableNodeId,
+        editableReason: meta.editableReason,
+        drivingTable: meta.drivingTable
+      },
+      undefined,
+      'updateGridMeta'
+    );
+
+    if (selectedTabId) {
+      await indexedDBService.saveGridMeta(selectedTabId, meta);
+    }
+  },
+  clearGridChanges: async (): Promise<void> => {
+    await Promise.all([get().updateEditedRows([]), get().updateRemovedRows([]), get().updateUnsavedRows([])]);
+    get().updateSelectedRows([], true);
+  },
   runQuery: async (abortController?: AbortController): Promise<RunQueryResponseType | undefined> => {
     const tab = useTabStore.getState().selectedTab<DataTabType>();
     if (!tab) return;
@@ -50,6 +92,12 @@ export const createDataQuerySlice: StateCreator<
 
     try {
       get().toggleDataFetching(true);
+      await get().clearGridChanges();
+      await get().updateGridMeta({
+        gridEditable: tab.editable,
+        updatableNodeId: tab.nodeId
+      });
+
       const res = await runQuery(
         {
           connectionId: Number(tab.connectionId),
@@ -112,15 +160,20 @@ export const createDataQuerySlice: StateCreator<
   },
   runRawQuery: async (query?: string, abortController?: AbortController): Promise<RunQueryResponseType | undefined> => {
     const selectedTabId = useTabStore.getState().selectedTabId;
+    const selectedTab = useTabStore.getState().selectedTab<EditorTabType>();
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;
     if (!currentConnectionId || !selectedTabId) return;
 
     try {
       get().toggleDataFetching(true);
+      await get().clearGridChanges();
+
       const res = await runRawQuery(
         {
           connectionId: Number(currentConnectionId),
-          query: query ? query : useTabStore.getState().getQuery()
+          query: query ? query : useTabStore.getState().getQuery(),
+          database: selectedTab?.database || undefined,
+          schema: selectedTab?.schema || undefined
         },
         abortController?.signal
       );
@@ -129,14 +182,25 @@ export const createDataQuerySlice: StateCreator<
         return;
       }
 
-      useTabStore.getState().updateQuery(res.query);
-      Promise.all([
+      if (res.query) {
+        useTabStore.getState().updateQuery(res.query);
+      }
+
+      const gridMeta: GridMetaType = {
+        gridEditable: !!res.editable,
+        updatableNodeId: res.nodeId,
+        editableReason: res.editableReason,
+        drivingTable: res.drivingTable
+      };
+
+      await get().updateGridMeta(gridMeta);
+
+      await Promise.all([
         get().updateRows(res.data),
         get().updateColumns(res.columns),
-        debouncedSaveToIndexedDB(selectedTabId, res.data, res.columns)
-      ]).catch((e) => {
-        console.debug('🚀 ~ createDataQuerySlice ~ e:', e);
-      });
+        indexedDBService.saveRows(selectedTabId, res.data),
+        indexedDBService.saveColumns(selectedTabId, res.columns, gridMeta)
+      ]);
 
       const summary = summarizeQueryResult(res);
       set({ lastQueryResult: summary, lastQueryError: undefined }, undefined, 'runRawQuerySuccess');

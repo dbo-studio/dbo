@@ -26,12 +26,7 @@ export default function QueryEditorActionBar({
         <QueryEditorLeading databases={databases} schemas={schemas} />
       </QueryEditorActionBarBoxStyled>
       <QueryEditorActionBarActionsBoxStyled isCompact={isCompact}>
-        <QueryEditorActions
-          loading={loading}
-          onFormat={onFormat}
-          onRunQuery={onRunQuery}
-          onAiExplain={onAiExplain}
-        />
+        <QueryEditorActions loading={loading} onFormat={onFormat} onRunQuery={onRunQuery} onAiExplain={onAiExplain} />
       </QueryEditorActionBarActionsBoxStyled>
     </QueryEditorActionBarStackStyled>
   );

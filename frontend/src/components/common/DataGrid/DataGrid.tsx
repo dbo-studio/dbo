@@ -1,7 +1,7 @@
 import { useContextMenu } from '@/hooks';
 import { CircularProgress } from '@mui/material';
 import { RefObject, useRef, type JSX } from 'react';
-import { DataGridLoadingStyled, StyledCol, StyledTable, TableContainer, VirtualTableWrapper } from './DataGrid.styled';
+import { DataGridLoadingOverlayStyled, StyledCol, StyledTable, TableContainer, VirtualTableWrapper } from './DataGrid.styled';
 import DataGridContextMenu from './DataGridContextMenu/DataGridContextMenu';
 import DataGridTableBodyRows from './DataGridTableBodyRows/DataGridTableBodyRows';
 import DataGridTableHeaderRow from './DataGridTableHeaderRow/DataGridTableHeaderRow';
@@ -43,15 +43,16 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
     rowVirtualizer
   });
 
-  return loading ? (
-    <DataGridLoadingStyled>
-      <CircularProgress size={30} />
-    </DataGridLoadingStyled>
-  ) : (
+  return (
     <>
       <QuickViewDialog editable={editable} />
       <SearchDialog open={isSearchDialogOpen} onClose={() => setIsSearchDialogOpen(false)} search={search} />
-      <TableContainer ref={tableContainerRef}>
+      <TableContainer ref={tableContainerRef} sx={{ position: 'relative', flex: 1, minHeight: 0 }}>
+        {loading && (
+          <DataGridLoadingOverlayStyled>
+            <CircularProgress size={30} />
+          </DataGridLoadingOverlayStyled>
+        )}
         <VirtualTableWrapper height={totalSize + HEADER_HEIGHT}>
           <StyledTable width={totalTableWidth}>
             <colgroup>
@@ -63,6 +64,7 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
               columns={tableColumns}
               startResize={startResize}
               resizingColumnId={resizingColumnId}
+              editable={editable}
             />
             <DataGridTableBodyRows
               editable={editable}

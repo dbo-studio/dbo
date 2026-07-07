@@ -1,4 +1,4 @@
-import type { RunQueryResponseType } from '@/api/query/types';
+import type { GridMetaType, RunQueryResponseType } from '@/api/query/types';
 import type { EditedRow } from '@/types';
 import type { ColumnType, RowType } from '@/types/Data';
 import { FormFieldWithState } from '@/types/Tree';
@@ -55,6 +55,10 @@ export type DataQuerySlice = {
   lastQueryError: string | undefined;
   lastQueryResult: string | undefined;
   pendingEditorQueryRun?: PendingEditorQueryRun;
+  gridEditable: boolean;
+  updatableNodeId?: string;
+  editableReason?: string;
+  drivingTable?: string;
   clearLastQueryError: () => void;
   clearPendingEditorQueryRun: () => void;
   runQuery: (abortController?: AbortController) => Promise<RunQueryResponseType | undefined>;
@@ -63,6 +67,8 @@ export type DataQuerySlice = {
   toggleReRunQuery: () => void;
   toggleReRender: () => void;
   toggleDataFetching: (loading?: boolean) => void;
+  updateGridMeta: (meta: GridMetaType) => Promise<void>;
+  clearGridChanges: () => Promise<void>;
 };
 
 export type SelectedRow = {
@@ -77,3 +83,13 @@ export type DataFormDataSlice = {
   updateFormData: (tabId: string, objectTabId: string, data: FormFieldWithState[]) => void;
   resetFormData: (tabId: string, objectTabId: string) => void;
 };
+
+export type DataState = DataStore &
+  DataRowSlice &
+  DataSelectedRowsSlice &
+  DataEditedRowsSlice &
+  DataRemovedRowsSlice &
+  DataUnsavedRowsSlice &
+  DataColumnSlice &
+  DataQuerySlice &
+  DataFormDataSlice;

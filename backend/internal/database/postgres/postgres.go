@@ -37,7 +37,3 @@ func (r *PostgresRepository) Version(ctx context.Context) (string, error) {
 func (r *PostgresRepository) ImportData(ctx context.Context, job dto.ImportJob, rows [][]string, columns []string) (*contract.ImportResult, error) {
 	return r.base.ImportData(ctx, job, rows, columns)
 }
-
-func (r *PostgresRepository) RunRawQuery(ctx context.Context, dto *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
-	return r.base.RunRawQuery(ctx, dto)
-}

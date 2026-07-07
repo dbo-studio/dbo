@@ -16,7 +16,8 @@ import { HeaderColumnContentStyled, HeaderColumnTypeStyled } from './DataGridTab
 export default function DataGridTableHeaderRow({
   columns,
   startResize,
-  resizingColumnId
+  resizingColumnId,
+  editable = false
 }: DataGridTableHeaderRowProps): JSX.Element {
   const selectedTab = useSelectedTab<DataTabType>();
   const theme = useTheme();
@@ -138,6 +139,9 @@ export default function DataGridTableHeaderRow({
                   <Typography variant='body2'>{column.name}</Typography>
                   <HeaderColumnTypeStyled>({column.type})</HeaderColumnTypeStyled>
                   {column.isPrimaryKey && <CustomIcon type={'key'} size='xs' color={theme.palette.text.placeholder} />}
+                  {editable && column.editable === false && (
+                    <CustomIcon type='lock' size='xs' color={theme.palette.text.placeholder} />
+                  )}
                 </Stack>
                 <CustomIcon type={sortIcon} size='xs' />
               </HeaderColumnContentStyled>

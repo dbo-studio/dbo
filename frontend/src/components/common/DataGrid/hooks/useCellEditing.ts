@@ -8,11 +8,13 @@ export const useCellEditing = (row: RowType, columnId: string, cellValue: string
   const inputRef = useRef<HTMLInputElement>(null);
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
   const updateRow = useDataStore((state) => state.updateRow);
+  const columns = useDataStore((state) => state.columns ?? []);
 
   const handleRowChange = useCallback(
     (e: React.FocusEvent<HTMLInputElement>): void => {
       const store = useDataStore.getState();
       const editedRows = store.editedRows;
+      const activeColumns = store.columns ?? columns;
       const foundRow = store.rows?.find((r) => r.dbo_index === row.dbo_index);
 
       const newValue = e.target.value;
@@ -22,7 +24,7 @@ export const useCellEditing = (row: RowType, columnId: string, cellValue: string
           [columnId]: newValue
         };
 
-        const newEditedRows = handleRowChangeLog(editedRows, row, columnId, row[columnId], newValue);
+        const newEditedRows = handleRowChangeLog(editedRows, row, columnId, row[columnId], newValue, activeColumns);
 
         updateRow(newRow)
           .then(() => {
@@ -31,7 +33,7 @@ export const useCellEditing = (row: RowType, columnId: string, cellValue: string
           .catch(console.error);
       }
     },
-    [row, columnId, cellValue, updateEditedRows, updateRow]
+    [row, columnId, cellValue, columns, updateEditedRows, updateRow]
   );
 
   return {

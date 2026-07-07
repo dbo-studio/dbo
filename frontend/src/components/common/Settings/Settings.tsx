@@ -75,7 +75,7 @@ export default function Settings({ open }: SettingsProps): JSX.Element {
 
   return (
     <Modal open={open} padding='0px' onClose={handleOnClose}>
-      <SettingsContentGridStyled container spacing={0}>
+      <SettingsContentGridStyled container spacing={0} isMobile={isMobile}>
         <Grid
           size={{ md: 3 }}
           sx={{

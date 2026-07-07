@@ -36,6 +36,7 @@ export type TabQuerySlice = {
   getQuery: (tabId?: string) => string;
   updateQuery: (query: string) => void;
   removeQuery: (tabId: string) => void;
+  clearStoredQueries: () => void;
 };
 
 export type TabDataSlice = {

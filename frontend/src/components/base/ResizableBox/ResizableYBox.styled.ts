@@ -8,7 +8,10 @@ export const ResizableYBoxStyled = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'boxHeight'
 })<ResizableYBoxStyledProps>(({ boxHeight }) => ({
   display: 'flex',
+  flexDirection: 'column',
   position: 'relative',
   overflow: 'hidden',
-  height: boxHeight
+  height: boxHeight,
+  minHeight: 0,
+  width: '100%'
 }));

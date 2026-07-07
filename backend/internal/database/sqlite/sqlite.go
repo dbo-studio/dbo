@@ -35,7 +35,3 @@ func (r *SQLiteRepository) Version(ctx context.Context) (string, error) {
 func (r *SQLiteRepository) ImportData(ctx context.Context, job dto.ImportJob, rows [][]string, columns []string) (*contract.ImportResult, error) {
 	return r.base.ImportData(ctx, job, rows, columns)
 }
-
-func (r *SQLiteRepository) RunRawQuery(ctx context.Context, dto *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
-	return r.base.RunRawQuery(ctx, dto)
-}

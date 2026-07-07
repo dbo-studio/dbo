@@ -53,10 +53,7 @@ export const buildObjectDefinitionSummary = (
   return sections.join('\n\n');
 };
 
-export const readObjectNameFromForm = (
-  formDataByTab: Record<string, FormObjectData>,
-  _objectPrefix: string
-): string | undefined => {
+export const readObjectNameFromForm = (formDataByTab: Record<string, FormObjectData>): string | undefined => {
   for (const formData of Object.values(formDataByTab)) {
     if (!formData.general.length) continue;
 
