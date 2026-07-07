@@ -97,11 +97,7 @@ export default function Data(): JSX.Element {
             <CircularProgress size={30} />
           </DataLoadingStyled>
         ) : (
-          <EmptyState
-            icon='grid'
-            title={locales.data_empty_title}
-            description={locales.data_empty_description}
-          />
+          <EmptyState icon='grid' title={locales.data_empty_title} description={locales.data_empty_description} />
         )}
       </DataContentStyled>
       <StatusBar />

@@ -35,7 +35,12 @@ export default function FormStatusBar({
           </IconButton>
         </Tooltip>
         <Tooltip title={locales.cancel}>
-          <IconButton aria-label={locales.cancel} disabled={disabled} onClick={onCancel} data-testid='object-form-cancel'>
+          <IconButton
+            aria-label={locales.cancel}
+            disabled={disabled}
+            onClick={onCancel}
+            data-testid='object-form-cancel'
+          >
             <CustomIcon type='close' size='s' />
           </IconButton>
         </Tooltip>

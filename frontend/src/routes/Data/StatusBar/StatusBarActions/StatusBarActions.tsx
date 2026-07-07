@@ -197,7 +197,11 @@ export default function StatusBarActions(): JSX.Element {
       </Tooltip>
 
       <Tooltip title={locales.discard_changes}>
-        <IconButton aria-label={locales.discard_changes} disabled={disabled} onClick={() => void handleDiscardChanges()}>
+        <IconButton
+          aria-label={locales.discard_changes}
+          disabled={disabled}
+          onClick={() => void handleDiscardChanges()}
+        >
           <CustomIcon type='close' size='s' />
         </IconButton>
       </Tooltip>
