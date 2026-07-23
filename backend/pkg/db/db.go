@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -61,6 +62,13 @@ func (m *SQLLite) Close() {
 }
 
 func getDBPath(cfg *config.Config, logger logger.Logger) string {
+	if override := strings.TrimSpace(os.Getenv("APP_DATABASE_PATH")); override != "" {
+		if err := os.MkdirAll(filepath.Dir(override), 0700); err != nil {
+			logger.Info(err.Error())
+		}
+		return override
+	}
+
 	defaultPath := "data/" + cfg.App.DatabaseName
 	var dbPath string
 	dbName := cfg.App.DatabaseName

@@ -62,10 +62,10 @@ export default defineConfig({
   server: {
     strictPort: true,
     host: host !== undefined ? host : true,
-    port: 3000,
+    port: Number(process.env.VITE_PORT ?? 300),
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: process.env.API_PROXY_TARGET ?? 'http://localhost:8080',
         changeOrigin: true
       }
     }

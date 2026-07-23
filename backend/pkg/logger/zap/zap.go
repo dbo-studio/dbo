@@ -99,6 +99,10 @@ func getStackTrace() string {
 }
 
 func getLogPath(cfg *config.Config) string {
+	if override := os.Getenv("APP_LOG_PATH"); override != "" {
+		return override
+	}
+
 	defaultPath := "data/logs"
 	var logPath string
 	appName := cfg.App.Name

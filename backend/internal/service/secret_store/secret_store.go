@@ -70,6 +70,10 @@ func LoadOrCreateAppSecretKey(cfg *config.Config) (string, error) {
 }
 
 func appSecretKeyPath(cfg *config.Config) (string, error) {
+	if override := strings.TrimSpace(os.Getenv("APP_SECRET_KEY_PATH")); override != "" {
+		return override, nil
+	}
+
 	if cfg.App.Env == config.EnvironmentDocker {
 		return "data/app_secret.key", nil
 	}

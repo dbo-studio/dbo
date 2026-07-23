@@ -1,4 +1,4 @@
-import { type Page } from '@playwright/test';
+import { type Page } from "@playwright/test";
 
 /**
  * Base Page Object - contains common functionality for all pages
@@ -11,7 +11,7 @@ export abstract class BasePage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto('/');
+    await this.page.goto("/");
   }
 
   async waitForReady(): Promise<void> {
@@ -19,10 +19,17 @@ export abstract class BasePage {
     await this.page.waitForTimeout(2000);
   }
 
-  async waitForResponse(urlPattern: string, timeout: number = 10000): Promise<void> {
-    await this.page.waitForResponse((response) => response.url().includes(urlPattern) && response.status() === 200, {
-      timeout
-    });
+  async waitForResponse(
+    urlPattern: string,
+    timeout: number = 10000,
+  ): Promise<void> {
+    await this.page.waitForResponse(
+      (response) =>
+        response.url().includes(urlPattern) && response.status() === 200,
+      {
+        timeout,
+      },
+    );
   }
 
   async pressKey(key: string): Promise<void> {

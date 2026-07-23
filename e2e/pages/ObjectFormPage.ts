@@ -1,5 +1,5 @@
-import { expect, type Locator, type Page } from '@playwright/test';
-import { BasePage } from './BasePage';
+import { expect, type Locator, type Page } from "@playwright/test";
+import { BasePage } from "./BasePage";
 
 /**
  * Page Object for Object Form (create/edit database objects)
@@ -15,25 +15,25 @@ export class ObjectFormPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.root = page.getByTestId('object-form');
-    this.saveButton = page.getByTestId('object-form-save');
-    this.cancelButton = page.getByTestId('object-form-cancel');
-    this.addRowButton = page.getByTestId('object-form-add-row');
-    this.previewModal = page.getByTestId('object-form-preview-modal');
-    this.executeButton = page.getByTestId('object-form-execute');
-    this.previewCancelButton = page.getByTestId('object-form-preview-cancel');
+    this.root = page.getByTestId("object-form");
+    this.saveButton = page.getByTestId("object-form-save");
+    this.cancelButton = page.getByTestId("object-form-cancel");
+    this.addRowButton = page.getByTestId("object-form-add-row");
+    this.previewModal = page.getByTestId("object-form-preview-modal");
+    this.executeButton = page.getByTestId("object-form-execute");
+    this.previewCancelButton = page.getByTestId("object-form-preview-cancel");
   }
 
   async waitForReady(): Promise<void> {
     await expect(this.root).toBeVisible({ timeout: 30000 });
     await this.page
       .locator('[role="progressbar"]')
-      .waitFor({ state: 'hidden', timeout: 30000 })
+      .waitFor({ state: "hidden", timeout: 30000 })
       .catch(() => undefined);
     await this.page
-      .locator('.monaco-editor')
+      .locator(".monaco-editor")
       .first()
-      .waitFor({ state: 'visible', timeout: 5000 })
+      .waitFor({ state: "visible", timeout: 5000 })
       .catch(() => undefined);
   }
 
@@ -42,9 +42,9 @@ export class ObjectFormPage extends BasePage {
   }
 
   async selectTab(tabId: string): Promise<void> {
-    await this.page.keyboard.press('Escape');
+    await this.page.keyboard.press("Escape");
     const tab = this.getTab(tabId);
-    if ((await tab.getAttribute('aria-selected')) !== 'true') {
+    if ((await tab.getAttribute("aria-selected")) !== "true") {
       await tab.click({ force: true });
     }
     await this.wait(500);
@@ -60,12 +60,12 @@ export class ObjectFormPage extends BasePage {
   }
 
   async fillTextField(locator: Locator, value: string): Promise<void> {
-    const input = locator.locator('input').first();
-    await this.page.keyboard.press('Escape');
-    await input.waitFor({ state: 'visible', timeout: 30000 });
+    const input = locator.locator("input").first();
+    await this.page.keyboard.press("Escape");
+    await input.waitFor({ state: "visible", timeout: 30000 });
     await input.click();
-    await this.page.keyboard.press('ControlOrMeta+A');
-    await this.page.keyboard.press('Backspace');
+    await this.page.keyboard.press("ControlOrMeta+A");
+    await this.page.keyboard.press("Backspace");
     await this.page.keyboard.type(value, { delay: 20 });
     await input.blur();
     await this.wait(200);
@@ -75,31 +75,48 @@ export class ObjectFormPage extends BasePage {
     await this.fillTextField(this.getGeneralField(fieldId), value);
   }
 
-  async fillArrayCell(rowIndex: number, fieldId: string, value: string): Promise<void> {
+  async fillArrayCell(
+    rowIndex: number,
+    fieldId: string,
+    value: string,
+  ): Promise<void> {
     await this.fillTextField(this.getArrayCell(rowIndex, fieldId), value);
   }
 
   private getCellCombobox(cell: Locator): Locator {
-    return cell.getByRole('combobox');
+    return cell.getByRole("combobox");
   }
 
-  async selectArrayCellOption(rowIndex: number, fieldId: string, optionLabel: string): Promise<void> {
+  async selectArrayCellOption(
+    rowIndex: number,
+    fieldId: string,
+    optionLabel: string,
+  ): Promise<void> {
     const cell = this.getArrayCell(rowIndex, fieldId);
     const combobox = this.getCellCombobox(cell);
     await combobox.click();
     await combobox.fill(optionLabel);
 
-    const existingOption = this.page.getByRole('option', { name: optionLabel, exact: true });
+    const existingOption = this.page.getByRole("option", {
+      name: optionLabel,
+      exact: true,
+    });
     if (await existingOption.isVisible().catch(() => false)) {
       await existingOption.click();
     } else {
-      await this.page.getByRole('option', { name: `Create "${optionLabel}"` }).click();
+      await this.page
+        .getByRole("option", { name: `Create "${optionLabel}"` })
+        .click();
     }
 
     await this.wait(300);
   }
 
-  async selectMultiSelectOptions(rowIndex: number, fieldId: string, optionLabels: string[]): Promise<void> {
+  async selectMultiSelectOptions(
+    rowIndex: number,
+    fieldId: string,
+    optionLabels: string[],
+  ): Promise<void> {
     const cell = this.getArrayCell(rowIndex, fieldId);
 
     for (const label of optionLabels) {
@@ -107,37 +124,54 @@ export class ObjectFormPage extends BasePage {
       await combobox.click();
       await combobox.fill(label);
 
-      const existingOption = this.page.getByRole('option', { name: label, exact: true });
+      const existingOption = this.page.getByRole("option", {
+        name: label,
+        exact: true,
+      });
       if (await existingOption.isVisible().catch(() => false)) {
         await existingOption.click();
       } else {
-        await this.page.getByRole('option', { name: `Create "${label}"` }).click();
+        await this.page
+          .getByRole("option", { name: `Create "${label}"` })
+          .click();
       }
 
       await this.wait(200);
     }
 
-    await this.page.keyboard.press('Escape');
+    await this.page.keyboard.press("Escape");
     await this.wait(300);
   }
 
-  async selectGeneralOption(fieldId: string, optionLabel: string): Promise<void> {
+  async selectGeneralOption(
+    fieldId: string,
+    optionLabel: string,
+  ): Promise<void> {
     const field = this.getGeneralField(fieldId);
     const combobox = this.getCellCombobox(field);
     await combobox.click();
     await combobox.fill(optionLabel);
 
-    const existingOption = this.page.getByRole('option', { name: optionLabel, exact: true });
+    const existingOption = this.page.getByRole("option", {
+      name: optionLabel,
+      exact: true,
+    });
     if (await existingOption.isVisible().catch(() => false)) {
       await existingOption.click();
     } else {
-      await this.page.getByRole('option', { name: `Create "${optionLabel}"` }).click();
+      await this.page
+        .getByRole("option", { name: `Create "${optionLabel}"` })
+        .click();
     }
 
     await this.wait(300);
   }
 
-  async toggleArrayCheckbox(rowIndex: number, fieldId: string, checked = true): Promise<void> {
+  async toggleArrayCheckbox(
+    rowIndex: number,
+    fieldId: string,
+    checked = true,
+  ): Promise<void> {
     const cell = this.getArrayCell(rowIndex, fieldId);
     const checkbox = cell.locator('input[type="checkbox"]');
     const isChecked = await checkbox.isChecked();
@@ -148,107 +182,37 @@ export class ObjectFormPage extends BasePage {
     }
   }
 
-  async fillQueryCell(rowIndex: number, fieldId: string, sql: string): Promise<void> {
-    await this.fillQueryField(this.getArrayCell(rowIndex, fieldId), sql);
-  }
-
   async fillGeneralQueryField(fieldId: string, sql: string): Promise<void> {
     await this.fillQueryFieldViaStore(fieldId, sql);
   }
 
-  private async fillQueryFieldViaStore(fieldId: string, sql: string): Promise<void> {
-    const workspaceTabId = await this.root.getAttribute('data-workspace-tab-id');
+  private async fillQueryFieldViaStore(
+    fieldId: string,
+    sql: string,
+  ): Promise<void> {
+    const workspaceTabId = await this.root.getAttribute(
+      "data-workspace-tab-id",
+    );
     if (!workspaceTabId) {
-      throw new Error('data-workspace-tab-id missing on object-form');
+      throw new Error("data-workspace-tab-id missing on object-form");
     }
 
     await this.page.evaluate(
       ({ tabId, fieldId, sqlText }) => {
         const store = (
           window as unknown as {
-            __FORM_OBJECT_STORE__?: { getState: () => { updateGeneralField: (a: string, b: string, c: string) => void } };
+            __FORM_OBJECT_STORE__?: {
+              getState: () => {
+                updateGeneralField: (a: string, b: string, c: string) => void;
+              };
+            };
           }
         ).__FORM_OBJECT_STORE__;
         store?.getState().updateGeneralField(tabId, fieldId, sqlText);
       },
-      { tabId: workspaceTabId, fieldId, sqlText: sql }
+      { tabId: workspaceTabId, fieldId, sqlText: sql },
     );
     await this.wait(200);
-  }
-
-  private async tryFillQueryFieldMonaco(container: Locator, sql: string): Promise<boolean> {
-    await container.scrollIntoViewIfNeeded();
-    const editor = container.locator('.monaco-editor').first();
-    if (!(await editor.isVisible().catch(() => false))) {
-      return false;
-    }
-
-    await editor.click({ force: true });
-
-    const ready = await expect
-      .poll(
-        async () => {
-          if ((await editor.locator('textarea.inputarea').count()) > 0) {
-            return true;
-          }
-          return editor.locator('.view-lines').isVisible().catch(() => false);
-        },
-        { timeout: 10000 }
-      )
-      .toBe(true)
-      .then(() => true)
-      .catch(() => false);
-
-    if (!ready) {
-      return false;
-    }
-
-    const setViaMonacoApi = await this.root
-      .evaluate((formRoot, sqlText) => {
-        type MonacoEditor = {
-          getDomNode: () => HTMLElement | null;
-          setValue: (value: string) => void;
-          getValue: () => string;
-          layout: () => void;
-        };
-        const monacoApi = (window as unknown as { monaco?: { editor: { getEditors: () => MonacoEditor[] } } }).monaco;
-        const editors = monacoApi?.editor?.getEditors?.() ?? [];
-        const target = editors.find((instance) => {
-          const domNode = instance.getDomNode();
-          return domNode !== null && formRoot.contains(domNode);
-        });
-        if (!target) {
-          return false;
-        }
-
-        target.layout();
-        target.setValue(sqlText);
-        return target.getValue() === sqlText;
-      }, sql)
-      .catch(() => false);
-
-    if (!setViaMonacoApi) {
-      const textarea = editor.locator('textarea.inputarea');
-      if ((await textarea.count()) === 0) {
-        return false;
-      }
-
-      await textarea.click({ force: true });
-      await this.page.keyboard.press('ControlOrMeta+A');
-      await this.page.keyboard.press('Backspace');
-      await this.page.keyboard.insertText(sql);
-    }
-
-    await this.root.click({ position: { x: 5, y: 5 } });
-    await this.wait(200);
-    return true;
-  }
-
-  private async fillQueryField(container: Locator, sql: string): Promise<void> {
-    const filled = await this.tryFillQueryFieldMonaco(container, sql);
-    if (!filled) {
-      throw new Error('Monaco query editor is not ready');
-    }
   }
 
   async addRow(): Promise<void> {
@@ -257,15 +221,19 @@ export class ObjectFormPage extends BasePage {
   }
 
   async arrayRowCount(fieldId: string): Promise<number> {
-    return this.root.locator(`[data-testid^="object-form-cell-"][data-testid$="-${fieldId}"]`).count();
+    return this.root
+      .locator(`[data-testid^="object-form-cell-"][data-testid$="-${fieldId}"]`)
+      .count();
   }
 
   /** Add an array row and return its index (counts existing rows first). */
   async addArrayRow(fieldId: string): Promise<number> {
     const rowIndex = await this.arrayRowCount(fieldId);
-    await this.addRowButton.waitFor({ state: 'visible', timeout: 10000 });
+    await this.addRowButton.waitFor({ state: "visible", timeout: 10000 });
     await this.addRow();
-    await expect(this.getArrayCell(rowIndex, fieldId)).toBeVisible({ timeout: 15000 });
+    await expect(this.getArrayCell(rowIndex, fieldId)).toBeVisible({
+      timeout: 15000,
+    });
     return rowIndex;
   }
 
@@ -275,9 +243,12 @@ export class ObjectFormPage extends BasePage {
   }
 
   async save(): Promise<void> {
-    const previewPromise = this.page.waitForResponse((response) => response.url().includes('/fields/object/preview'), {
-      timeout: 30000
-    });
+    const previewPromise = this.page.waitForResponse(
+      (response) => response.url().includes("/fields/object/preview"),
+      {
+        timeout: 30000,
+      },
+    );
     await this.saveButton.click();
     const response = await previewPromise;
     expect(response.status()).toBe(200);
@@ -290,14 +261,18 @@ export class ObjectFormPage extends BasePage {
 
   async confirmExecute(): Promise<void> {
     const executePromise = this.page.waitForResponse(
-      (response) => response.url().includes('/fields/object') && !response.url().includes('/preview'),
-      { timeout: 60000 }
+      (response) =>
+        response.url().includes("/fields/object") &&
+        !response.url().includes("/preview"),
+      { timeout: 60000 },
     );
     await this.executeButton.click();
     const response = await executePromise;
     if (response.status() !== 200) {
-      const body = await response.text().catch(() => '');
-      throw new Error(`Execute failed with ${response.status()}: ${body.slice(0, 500)}`);
+      const body = await response.text().catch(() => "");
+      throw new Error(
+        `Execute failed with ${response.status()}: ${body.slice(0, 500)}`,
+      );
     }
     await expect(this.previewModal).toBeHidden({ timeout: 10000 });
   }
@@ -313,7 +288,7 @@ export class ObjectFormPage extends BasePage {
   }
 
   private getWorkspaceTab(title: string): Locator {
-    const slug = title.toLowerCase().replace(/\s+/g, '-');
+    const slug = title.toLowerCase().replace(/\s+/g, "-");
     return this.page.getByTestId(`workspace-tab-${slug}`);
   }
 
@@ -323,7 +298,7 @@ export class ObjectFormPage extends BasePage {
       return byTestId;
     }
 
-    return this.page.getByRole('button', { name: title, exact: true }).first();
+    return this.page.getByRole("button", { name: title, exact: true }).first();
   }
 
   async activateWorkspaceTab(title: string): Promise<void> {
@@ -331,10 +306,12 @@ export class ObjectFormPage extends BasePage {
   }
 
   async ensureWorkspaceTab(title: string, altTitle?: string): Promise<void> {
-    for (const candidate of [title, altTitle].filter((value): value is string => Boolean(value))) {
+    for (const candidate of [title, altTitle].filter((value): value is string =>
+      Boolean(value),
+    )) {
       const tab = await this.resolveWorkspaceTab(candidate);
       if (await tab.isVisible().catch(() => false)) {
-        await this.page.keyboard.press('Escape');
+        await this.page.keyboard.press("Escape");
         await tab.click();
         await this.wait(500);
         await this.waitForReady();
@@ -344,7 +321,7 @@ export class ObjectFormPage extends BasePage {
 
     const tab = await this.resolveWorkspaceTab(title);
     await expect(tab).toBeVisible({ timeout: 30000 });
-    await this.page.keyboard.press('Escape');
+    await this.page.keyboard.press("Escape");
     await tab.click();
     await this.wait(500);
     await this.waitForReady();
@@ -358,9 +335,9 @@ export class ObjectFormPage extends BasePage {
       }
 
       await tab.hover();
-      await tab.locator('svg').last().click({ force: true });
+      await tab.locator("svg").last().click({ force: true });
 
-      const confirmClose = this.page.getByRole('button', { name: 'Yes' });
+      const confirmClose = this.page.getByRole("button", { name: "Yes" });
       if (await confirmClose.isVisible({ timeout: 2000 }).catch(() => false)) {
         await confirmClose.click();
         await expect(confirmClose).toBeHidden({ timeout: 5000 });
@@ -369,10 +346,17 @@ export class ObjectFormPage extends BasePage {
       await this.wait(500);
 
       const byTestId = this.getWorkspaceTab(title);
-      const byRole = this.page.getByRole('button', { name: title, exact: true });
+      const byRole = this.page.getByRole("button", {
+        name: title,
+        exact: true,
+      });
       const stillVisible =
         (await byTestId.isVisible().catch(() => false)) ||
-        ((await byRole.count()) > 0 && (await byRole.first().isVisible().catch(() => false)));
+        ((await byRole.count()) > 0 &&
+          (await byRole
+            .first()
+            .isVisible()
+            .catch(() => false)));
       if (!stillVisible) {
         return;
       }
@@ -381,7 +365,7 @@ export class ObjectFormPage extends BasePage {
 
   /** Close every workspace tab except the one matching `keepTitle`. */
   async closeStaleWorkspaceTabs(keepTitle: string): Promise<void> {
-    const keepSlug = keepTitle.toLowerCase().replace(/\s+/g, '-');
+    const keepSlug = keepTitle.toLowerCase().replace(/\s+/g, "-");
 
     for (let attempt = 0; attempt < 30; attempt++) {
       const tabs = this.page.locator('[data-testid^="workspace-tab-"]');
@@ -394,7 +378,7 @@ export class ObjectFormPage extends BasePage {
 
       for (let i = 0; i < count; i++) {
         const tab = tabs.nth(i);
-        const testId = await tab.getAttribute('data-testid');
+        const testId = await tab.getAttribute("data-testid");
         if (testId === `workspace-tab-${keepSlug}`) {
           continue;
         }
@@ -403,10 +387,12 @@ export class ObjectFormPage extends BasePage {
         }
 
         await tab.hover();
-        await tab.locator('svg').last().click({ force: true });
+        await tab.locator("svg").last().click({ force: true });
 
-        const confirmClose = this.page.getByRole('button', { name: 'Yes' });
-        if (await confirmClose.isVisible({ timeout: 2000 }).catch(() => false)) {
+        const confirmClose = this.page.getByRole("button", { name: "Yes" });
+        if (
+          await confirmClose.isVisible({ timeout: 2000 }).catch(() => false)
+        ) {
           await confirmClose.click();
           await expect(confirmClose).toBeHidden({ timeout: 5000 });
         }
@@ -435,9 +421,9 @@ export class ObjectFormPage extends BasePage {
       }
 
       await tab.hover();
-      await tab.locator('svg').last().click({ force: true });
+      await tab.locator("svg").last().click({ force: true });
 
-      const confirmClose = this.page.getByRole('button', { name: 'Yes' });
+      const confirmClose = this.page.getByRole("button", { name: "Yes" });
       if (await confirmClose.isVisible({ timeout: 2000 }).catch(() => false)) {
         await confirmClose.click();
         await expect(confirmClose).toBeHidden({ timeout: 5000 });

@@ -79,8 +79,10 @@ cd frontend
 npm run dev               # dev server (API at localhost:8080/api)
 npm run lint              # ESLint
 npm run build             # typecheck + build
-npm run test:e2e          # Playwright
+npm run test:e2e          # forwards to top-level e2e/ package
 ```
+
+E2E lives in [`e2e/`](e2e/) — see [`e2e/README.md`](e2e/README.md). Each run boots an ephemeral API (random port + isolated SQLite).
 
 Components: `PascalCase`. Hooks/functions: `camelCase`. Colocate feature code under `src/`.
 
@@ -126,7 +128,9 @@ Components: `PascalCase`. Hooks/functions: `camelCase`. Colocate feature code un
 | `.cursor/rules/go-concurrency.mdc` | context, goroutines |
 | `.cursor/rules/go-testing.mdc` | table-driven tests |
 | `.cursor/rules/go-tooling.mdc` | fmt, golangci-lint |
+| `.cursor/rules/e2e-qa.mdc` | Strict Playwright/QA rules (`e2e/**`) |
 | `.cursor/skills/golang-development/SKILL.md` | Go development workflow skill |
+| `.cursor/skills/e2e-playwright/SKILL.md` | E2E QA / Playwright workflow skill |
 
 ## Further Reading
 

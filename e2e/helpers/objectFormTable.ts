@@ -146,15 +146,6 @@ export async function setupObjectFormDatabase(
   }
 }
 
-/** @deprecated Use setupObjectFormDatabase */
-export async function setupPostgresObjectFormDatabase(
-  page: Page,
-  connectionName: string,
-  databaseName: string
-): Promise<void> {
-  await setupObjectFormDatabase(page, 'postgresql', connectionName, databaseName);
-}
-
 export async function cleanupObjectFormTable(
   page: Page,
   connectionName: string,

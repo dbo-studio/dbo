@@ -12,7 +12,7 @@ export function getDbConfig(engine: DbEngine, name: string, sqlitePath?: string)
     case 'postgresql':
       return {
         name,
-        host: process.env.PGSQL_TEST_HOST ?? 'sample-pgsql',
+        host: process.env.PGSQL_TEST_HOST ?? '127.0.0.1',
         port: process.env.PGSQL_TEST_PORT ?? '5432',
         ...baseCredentials,
         type: 'PostgreSQL'
@@ -20,8 +20,8 @@ export function getDbConfig(engine: DbEngine, name: string, sqlitePath?: string)
     case 'mysql':
       return {
         name,
-        host: process.env.MYSQL_TEST_HOST ?? 'sample-mysql',
-        port: process.env.MYSQL_TEST_PORT ?? '3306',
+        host: process.env.MYSQL_TEST_HOST ?? '127.0.0.1',
+        port: process.env.MYSQL_TEST_PORT ?? '3307',
         database: 'default',
         username: process.env.MYSQL_TEST_USER ?? 'root',
         password: process.env.MYSQL_TEST_PASSWORD ?? 'secret',

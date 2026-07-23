@@ -1,7 +1,8 @@
-import { type Locator, type Page } from '@playwright/test';
-import { BasePage } from './BasePage';
+import { type Locator, type Page } from "@playwright/test";
+import { BasePage } from "./BasePage";
 
-const toTestIdSlug = (name: string): string => name.toLowerCase().replace(/\s+/g, '-');
+const toTestIdSlug = (name: string): string =>
+  name.toLowerCase().replace(/\s+/g, "-");
 
 /**
  * Page Object for the object tree (schema browser)
@@ -17,9 +18,9 @@ export class ObjectTreePage extends BasePage {
 
   async expandNode(name: string): Promise<void> {
     const node = this.getTreeNode(name);
-    await node.waitFor({ state: 'visible', timeout: 15000 });
+    await node.waitFor({ state: "visible", timeout: 15000 });
     await node.click();
-    await node.press('ArrowRight');
+    await node.press("ArrowRight");
     await this.waitForTreeLoad();
   }
 
@@ -31,8 +32,8 @@ export class ObjectTreePage extends BasePage {
 
   async openContextMenu(nodeName: string): Promise<void> {
     const node = this.getTreeNode(nodeName);
-    await node.waitFor({ state: 'visible', timeout: 15000 });
-    await node.click({ button: 'right' });
+    await node.waitFor({ state: "visible", timeout: 15000 });
+    await node.click({ button: "right" });
     await this.wait(300);
   }
 
@@ -48,14 +49,16 @@ export class ObjectTreePage extends BasePage {
   }
 
   async confirmDangerAction(): Promise<void> {
-    await this.page.getByRole('button', { name: 'Yes' }).click();
+    await this.page.getByRole("button", { name: "Delete" }).click();
     await this.wait(500);
   }
 
   async dropObject(nodeName: string, actionTitle: string): Promise<void> {
     const executePromise = this.page.waitForResponse(
-      (response) => response.url().includes('/fields/object') && !response.url().includes('/preview'),
-      { timeout: 60000 }
+      (response) =>
+        response.url().includes("/fields/object") &&
+        !response.url().includes("/preview"),
+      { timeout: 60000 },
     );
 
     await this.runTreeAction(nodeName, actionTitle);
@@ -67,7 +70,7 @@ export class ObjectTreePage extends BasePage {
   async waitForTreeLoad(): Promise<void> {
     await this.page
       .locator('[role="progressbar"]')
-      .waitFor({ state: 'hidden', timeout: 15000 })
+      .waitFor({ state: "hidden", timeout: 15000 })
       .catch(() => undefined);
     await this.wait(500);
   }
