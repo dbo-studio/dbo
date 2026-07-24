@@ -30,11 +30,6 @@ export class ObjectFormPage extends BasePage {
       .locator('[role="progressbar"]')
       .waitFor({ state: "hidden", timeout: 30000 })
       .catch(() => undefined);
-    await this.page
-      .locator(".monaco-editor")
-      .first()
-      .waitFor({ state: "visible", timeout: 5000 })
-      .catch(() => undefined);
   }
 
   getTab(tabId: string): Locator {

@@ -18,12 +18,12 @@ npm test
 
 ## Prerequisites
 
-| Service | Notes |
-|---------|--------|
-| Go toolchain | Builds/runs backend via `go run . serve` |
-| Frontend deps | `cd frontend && npm install` (Vite is started from there) |
-| Sample DBs | `docker compose -f docker-compose.dev.yml up -d sample-pgsql sample-mysql` |
-| Playwright browsers | `cd e2e && npx playwright install chromium` |
+| Service             | Notes                                                                      |
+| ------------------- | -------------------------------------------------------------------------- |
+| Go toolchain        | Builds/runs backend via `go run . serve`                                   |
+| Frontend deps       | `cd frontend && npm install` (Vite is started from there)                  |
+| Sample DBs          | `docker compose -f docker-compose.dev.yml up -d sample-pgsql sample-mysql` |
+| Playwright browsers | `cd e2e && npx playwright install chromium`                                |
 
 ```bash
 cp e2e/.env.example e2e/.env
@@ -50,20 +50,20 @@ HTML report: `e2e/playwright-report/` after a run.
 
 ## Feature matrix
 
-| Feature | Spec | Flow |
-|---------|------|------|
-| Harness smoke | `harness-smoke.spec.ts` | ephemeral API + FE reachable (no sample DB) |
-| Connections | `connections.spec.ts` | create / edit / refresh / context menu / schema via SQL |
-| Query CRUD | `query-crud.spec.ts` | SQL create/insert/update/select + multi-table JOIN |
-| Saved / history | `saved-history.spec.ts` | history, save, run, copy |
-| Settings / theme | `settings-theme.spec.ts` | theme persistence, panels, sidebar |
-| AI chat smoke | `ai-chat-stream.spec.ts` | open assistant panel |
-| Object Form smoke | `object-form-table.spec.ts` | create/edit table × PG/MySQL/SQLite |
-| Object Form PG lifecycle | `object-form-postgres-lifecycle.spec.ts` | DB → tables → FK → view → edit → drop |
-| Object Form PG edit | `object-form-postgres-edit-table.spec.ts` | deep column/FK edits |
-| Object Form PG schema | `object-form-postgres-schema-matview.spec.ts` | schema, matview, rename |
-| Object Form MySQL | `object-form-mysql-lifecycle.spec.ts` | full lifecycle |
-| Object Form SQLite | `object-form-sqlite-lifecycle.spec.ts` | full lifecycle |
+| Feature                  | Spec                                          | Flow                                                    |
+| ------------------------ | --------------------------------------------- | ------------------------------------------------------- |
+| Harness smoke            | `harness-smoke.spec.ts`                       | ephemeral API + FE reachable (no sample DB)             |
+| Connections              | `connections.spec.ts`                         | create / edit / refresh / context menu / schema via SQL |
+| Query CRUD               | `query-crud.spec.ts`                          | SQL create/insert/update/select + multi-table JOIN      |
+| Saved / history          | `saved-history.spec.ts`                       | history, save, run, copy                                |
+| Settings / theme         | `settings-theme.spec.ts`                      | theme persistence, panels, sidebar                      |
+| AI chat smoke            | `ai-chat-stream.spec.ts`                      | open assistant panel                                    |
+| Object Form smoke        | `object-form-table.spec.ts`                   | create/edit table × PG/MySQL/SQLite                     |
+| Object Form PG lifecycle | `object-form-postgres-lifecycle.spec.ts`      | DB → tables → FK → view → edit → drop                   |
+| Object Form PG edit      | `object-form-postgres-edit-table.spec.ts`     | deep column/FK edits                                    |
+| Object Form PG schema    | `object-form-postgres-schema-matview.spec.ts` | schema, matview, rename                                 |
+| Object Form MySQL        | `object-form-mysql-lifecycle.spec.ts`         | full lifecycle                                          |
+| Object Form SQLite       | `object-form-sqlite-lifecycle.spec.ts`        | full lifecycle                                          |
 
 ## Directory layout
 
@@ -88,12 +88,12 @@ e2e/
 
 ## Troubleshooting
 
-| Symptom | Likely cause |
-|---------|----------------|
-| `PLAYWRIGHT_API_URL is not set` | Ran `playwright test` directly; use `npm test` |
-| Connection refused to PG/MySQL | Sample containers not up, or wrong host/port in `.env` |
-| SQLite object-form fails | Backend cannot write `/tmp/dbo-e2e-*.db` |
-| Stale Monaco / backdrop errors | Workspace tabs left open — helpers call `closeAllWorkspaceTabs` |
-| View query empty in preview | `fillGeneralQueryField` must use Zustand store hook (DEV) |
+| Symptom                         | Likely cause                                                    |
+| ------------------------------- | --------------------------------------------------------------- |
+| `PLAYWRIGHT_API_URL is not set` | Ran `playwright test` directly; use `npm test`                  |
+| Connection refused to PG/MySQL  | Sample containers not up, or wrong host/port in `.env`          |
+| SQLite object-form fails        | Backend cannot write `/tmp/dbo-e2e-*.db`                        |
+| Stale Monaco / backdrop errors  | Workspace tabs left open — helpers call `closeAllWorkspaceTabs` |
+| View query empty in preview     | `fillGeneralQueryField` must use Zustand store hook (DEV)       |
 
 Restart is not required for Go changes when using `go run` per e2e start; each run compiles fresh.

@@ -20,6 +20,13 @@ export class ObjectTreePage extends BasePage {
     const node = this.getTreeNode(name);
     await node.waitFor({ state: "visible", timeout: 15000 });
     await node.click();
+
+    const expanded = await node.getAttribute("aria-expanded");
+    if (expanded === "true") {
+      await node.press("ArrowLeft");
+      await this.waitForTreeLoad();
+    }
+
     await node.press("ArrowRight");
     await this.waitForTreeLoad();
   }

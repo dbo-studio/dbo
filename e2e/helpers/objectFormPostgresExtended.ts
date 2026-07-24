@@ -103,6 +103,8 @@ export async function createViewInSchema(
   await objectForm.assertPreviewContains(viewName);
   await objectForm.confirmExecute();
 
+  await tree.waitForTreeLoad();
+  await tree.expandPath([connectionName, databaseName, schemaName]);
   await tree.expandNode('Views');
   await expect(tree.getTreeNode(viewName)).toBeVisible({ timeout: 15000 });
 }
@@ -132,6 +134,8 @@ export async function createMaterializedView(
   await objectForm.assertPreviewContains(matViewName);
   await objectForm.confirmExecute();
 
+  await tree.waitForTreeLoad();
+  await tree.expandPath([connectionName, databaseName, schemaName]);
   await tree.expandNode('Materialized Views');
   await expect(tree.getTreeNode(matViewName)).toBeVisible({ timeout: 15000 });
 }

@@ -23,7 +23,7 @@ export function getDbConfig(
         host: process.env.MYSQL_TEST_HOST ?? "127.0.0.1",
         port: process.env.MYSQL_TEST_PORT ?? "3307",
         database: "default",
-        username: process.env.MYSQL_TEST_USER ?? "default",
+        username: process.env.MYSQL_TEST_USER ?? "root",
         password: process.env.MYSQL_TEST_PASSWORD ?? "secret",
         type: "MySQL",
       };
