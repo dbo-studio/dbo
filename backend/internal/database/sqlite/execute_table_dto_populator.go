@@ -91,7 +91,7 @@ func (r *SQLiteRepository) populateTableParamsFromDDLString(tableParams *dto.SQL
 }
 
 func (r *SQLiteRepository) populateColumnParamsFromDDL(ctx context.Context, columnParams *dto.SQLiteTableColumnParams, tableDDL string, tableName string) {
-	if columnParams == nil || len(columnParams.Columns) > 0 {
+	if columnParams == nil {
 		return
 	}
 
@@ -111,7 +111,71 @@ func (r *SQLiteRepository) populateColumnParamsFromDDL(ctx context.Context, colu
 		return
 	}
 
-	columnParams.Columns = r.convertColumnsToDTO(columns)
+	existing := r.convertColumnsToDTO(columns)
+	if len(columnParams.Columns) == 0 {
+		columnParams.Columns = existing
+		return
+	}
+
+	// Frontend save payload is a delta (added/updated/deleted only). Merge onto DB columns
+	// so recreate DDL still includes unchanged columns.
+	columnParams.Columns = r.mergeColumnChanges(existing, columnParams.Columns)
+}
+
+func columnIdentity(col dto.SQLiteTableColumn) string {
+	if col.Old != nil && col.Old.Name != nil && *col.Old.Name != "" {
+		return *col.Old.Name
+	}
+	if col.New != nil && col.New.Name != nil {
+		return *col.New.Name
+	}
+	return ""
+}
+
+func (r *SQLiteRepository) mergeColumnChanges(existing, changes []dto.SQLiteTableColumn) []dto.SQLiteTableColumn {
+	byName := make(map[string]dto.SQLiteTableColumn, len(existing))
+	order := make([]string, 0, len(existing))
+	for _, col := range existing {
+		name := columnIdentity(col)
+		if name == "" {
+			continue
+		}
+		byName[name] = col
+		order = append(order, name)
+	}
+
+	for _, change := range changes {
+		if lo.FromPtr(change.Added) {
+			continue
+		}
+
+		name := columnIdentity(change)
+		if name == "" {
+			continue
+		}
+
+		if lo.FromPtr(change.Deleted) {
+			delete(byName, name)
+			continue
+		}
+
+		byName[name] = change
+	}
+
+	merged := make([]dto.SQLiteTableColumn, 0, len(byName)+len(changes))
+	for _, name := range order {
+		if col, ok := byName[name]; ok {
+			merged = append(merged, col)
+		}
+	}
+
+	for _, change := range changes {
+		if lo.FromPtr(change.Added) && !lo.FromPtr(change.Deleted) {
+			merged = append(merged, change)
+		}
+	}
+
+	return merged
 }
 
 func (r *SQLiteRepository) extractTableNameFromDDL(tableDDL string) string {

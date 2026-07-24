@@ -27,3 +27,20 @@ const (
 	CopyNameAction               TreeNodeActionName = "copyName"
 	RefreshAction                TreeNodeActionName = "refresh"
 )
+
+func NextActionAfterCreate(action TreeNodeActionName) TreeNodeActionName {
+	switch action {
+	case CreateDatabaseAction:
+		return EditDatabaseAction
+	case CreateSchemaAction:
+		return EditSchemaAction
+	case CreateTableAction:
+		return EditTableAction
+	case CreateViewAction:
+		return EditViewAction
+	case CreateMaterializedViewAction:
+		return EditMaterializedViewAction
+	default:
+		return ""
+	}
+}

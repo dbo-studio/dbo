@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test';
+import fs from 'node:fs';
 import {
   SQLITE_LIFECYCLE_FIELDS as F,
   SQLITE_LIFECYCLE_PREVIEW as P,
@@ -7,9 +8,23 @@ import {
 import { getDbConfig } from '../fixtures/dbConfigs';
 import { ConnectionPage, ObjectFormPage, ObjectTreePage } from '../pages';
 
+/** Backend rejects SQLite connections when the path does not exist yet. */
+export function ensureSqliteDbFile(dbPath: string): void {
+  if (!fs.existsSync(dbPath)) {
+    fs.writeFileSync(dbPath, '');
+  }
+}
+
+export function removeSqliteDbFile(dbPath: string): void {
+  if (fs.existsSync(dbPath)) {
+    fs.unlinkSync(dbPath);
+  }
+}
+
 export async function setupSqliteConnection(page: Page, connectionName: string, dbPath: string): Promise<ConnectionPage> {
   const connectionPage = new ConnectionPage(page);
 
+  ensureSqliteDbFile(dbPath);
   await connectionPage.goto();
   await connectionPage.waitForReady();
   await connectionPage.setupConnection(getDbConfig('sqlite', connectionName, dbPath));
@@ -145,7 +160,7 @@ export async function editUsersTableAddColumn(page: Page, tableName: string): Pr
 
   await tree.runTreeAction(tableName, 'Edit table');
   await objectForm.waitForReady();
-  await objectForm.ensureWorkspaceTab(tableName);
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
   await objectForm.waitForReady();
 
   await objectForm.selectTab(T.columns);
@@ -167,7 +182,7 @@ export async function editViewQuery(page: Page, viewName: string, postsTable: st
 
   await tree.runTreeAction(viewName, 'Edit view');
   await objectForm.waitForReady();
-  await objectForm.ensureWorkspaceTab(viewName);
+  await objectForm.ensureWorkspaceTab(viewName, 'Edit view');
   await objectForm.waitForReady();
   await objectForm.selectTab(T.view);
   await objectForm.wait(500);
@@ -185,6 +200,7 @@ export async function cleanupSqliteLifecycle(
   page: Page,
   names: {
     connectionName: string;
+    dbPath: string;
     usersTable: string;
     postsTable: string;
     viewName: string;
@@ -193,18 +209,22 @@ export async function cleanupSqliteLifecycle(
   const tree = new ObjectTreePage(page);
   const connectionPage = new ConnectionPage(page);
 
-  await tree.expandPath([names.connectionName]);
+  try {
+    await tree.expandPath([names.connectionName]);
 
-  await tree.dropObject(names.viewName, 'Drop view');
-  await expect(tree.getTreeNode(names.viewName)).toBeHidden({ timeout: 15000 });
+    await tree.dropObject(names.viewName, 'Drop view');
+    await expect(tree.getTreeNode(names.viewName)).toBeHidden({ timeout: 15000 });
 
-  await tree.dropObject(names.postsTable, 'Drop table');
-  await expect(tree.getTreeNode(names.postsTable)).toBeHidden({ timeout: 15000 });
+    await tree.dropObject(names.postsTable, 'Drop table');
+    await expect(tree.getTreeNode(names.postsTable)).toBeHidden({ timeout: 15000 });
 
-  await tree.dropObject(names.usersTable, 'Drop table');
-  await expect(tree.getTreeNode(names.usersTable)).toBeHidden({ timeout: 15000 });
+    await tree.dropObject(names.usersTable, 'Drop table');
+    await expect(tree.getTreeNode(names.usersTable)).toBeHidden({ timeout: 15000 });
 
-  await connectionPage.deleteConnection(names.connectionName);
+    await connectionPage.deleteConnection(names.connectionName);
+  } finally {
+    removeSqliteDbFile(names.dbPath);
+  }
 
   return connectionPage;
 }

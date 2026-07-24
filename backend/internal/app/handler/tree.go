@@ -82,13 +82,13 @@ func (h *TreeHandler) ExecuteHandler(c fiber.Ctx) error {
 		Params:       c.Body(),
 	}
 
-	err := h.treeService.ObjectExecute(c, req)
+	result, err := h.treeService.ObjectExecute(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder().Send(c)
+	return response.SuccessBuilder().WithData(result).Send(c)
 }
 
 func (h *TreeHandler) PreviewExecuteHandler(c fiber.Ctx) error {

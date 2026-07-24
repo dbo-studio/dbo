@@ -105,7 +105,7 @@ export async function createViewInSchema(
 
   await tree.waitForTreeLoad();
   await tree.expandPath([connectionName, databaseName, schemaName]);
-  await tree.expandNode('Views');
+  await tree.refreshExpandNode('Views');
   await expect(tree.getTreeNode(viewName)).toBeVisible({ timeout: 15000 });
 }
 
@@ -136,7 +136,7 @@ export async function createMaterializedView(
 
   await tree.waitForTreeLoad();
   await tree.expandPath([connectionName, databaseName, schemaName]);
-  await tree.expandNode('Materialized Views');
+  await tree.refreshExpandNode('Materialized Views');
   await expect(tree.getTreeNode(matViewName)).toBeVisible({ timeout: 15000 });
 }
 
@@ -183,21 +183,40 @@ export async function renameSchema(
   await expect(tree.getTreeNode(renamedSchemaName)).toBeVisible({ timeout: 15000 });
 }
 
-export async function editViewQuery(page: Page, viewName: string, tableName: string): Promise<void> {
+export async function editViewQuery(
+  page: Page,
+  connectionName: string,
+  databaseName: string,
+  schemaName: string,
+  viewName: string,
+  tableName: string
+): Promise<void> {
   const tree = new ObjectTreePage(page);
   const objectForm = new ObjectFormPage(page);
+
+  // After schema rename the tree reloads; re-expand so the view leaf is in the DOM.
+  await tree.expandPath([connectionName, databaseName, schemaName]);
+  await tree.expandNode('Views');
+  await expect(tree.getTreeNode(viewName)).toBeVisible({ timeout: 15000 });
 
   await tree.runTreeAction(viewName, 'Edit view');
   await objectForm.waitForReady();
   await objectForm.activateWorkspaceTab('Edit view');
   await objectForm.waitForReady();
 
-  await objectForm.fillGeneralQueryField(F.viewQuery, `SELECT COUNT(*) AS total FROM ${tableName}`);
+  await objectForm.fillGeneralQueryField(
+    F.viewQuery,
+    `SELECT COUNT(*) AS total FROM ${schemaName}.${tableName}`
+  );
 
   await objectForm.save();
   await objectForm.assertPreviewContains(P.replaceView);
+  await objectForm.assertPreviewContains(/CREATE VIEW/i);
   await objectForm.confirmExecute();
 
+  await tree.waitForTreeLoad();
+  await tree.expandPath([connectionName, databaseName, schemaName]);
+  await tree.expandNode('Views');
   await expect(tree.getTreeNode(viewName)).toBeVisible({ timeout: 15000 });
 }
 
@@ -399,21 +418,10 @@ export async function cleanupExtended(
   const tree = new ObjectTreePage(page);
   const connectionPage = new ConnectionPage(page);
 
-  await tree.expandPath([names.connectionName, names.databaseName, names.renamedSchemaName]);
-
-  await tree.dropObject(names.matViewName, 'Drop materialized view');
-  await expect(tree.getTreeNode(names.matViewName)).toBeHidden({ timeout: 15000 });
-
-  await tree.dropObject(names.viewName, 'Drop view');
-  await expect(tree.getTreeNode(names.viewName)).toBeHidden({ timeout: 15000 });
-
-  await tree.dropObject(names.tableName, 'Drop table');
-  await expect(tree.getTreeNode(names.tableName)).toBeHidden({ timeout: 15000 });
-
-  await tree.dropObject(names.renamedSchemaName, 'Drop schema');
-  await expect(tree.getTreeNode(names.renamedSchemaName)).toBeHidden({ timeout: 15000 });
-
-  await tree.expandNode(names.connectionName);
+  // Dropping the database removes schemas/tables/views/matviews in one step.
+  // Per-object tree drops are brittle after rename + reload (containers not expanded).
+  await tree.expandPath([names.connectionName]);
+  await expect(tree.getTreeNode(names.databaseName)).toBeVisible({ timeout: 15000 });
   await tree.dropObject(names.databaseName, 'Drop database');
   await expect(tree.getTreeNode(names.databaseName)).toBeHidden({ timeout: 15000 });
 

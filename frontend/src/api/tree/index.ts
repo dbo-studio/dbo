@@ -1,6 +1,7 @@
 import type {
   DynamicFieldRequestType,
   DynamicFieldResponse,
+  ExecuteActionResponseType,
   FormObjectResponseType,
   ObjectRequestType,
   PreviewExecuteResponseType,
@@ -50,15 +51,20 @@ export const getObject = async (params: ObjectRequestType): Promise<FormObjectRe
   ).data.data;
 };
 
-export const executeAction = async (params: SaveObjectRequestType): Promise<void> => {
-  await api.post(endpoints.executeAction(params.nodeId, params.action), params.data, {
-    params: {
-      connectionId: params.connectionId
-    },
-    data: {
-      ...params.data
-    }
-  });
+export const executeAction = async (params: SaveObjectRequestType): Promise<ExecuteActionResponseType> => {
+  return (
+    (
+      await api.post<{ data: ExecuteActionResponseType | null }>(
+        endpoints.executeAction(params.nodeId, params.action),
+        params.data,
+        {
+          params: {
+            connectionId: params.connectionId
+          }
+        }
+      )
+    ).data.data ?? {}
+  );
 };
 
 export const previewExecute = async (params: SaveObjectRequestType): Promise<PreviewExecuteResponseType> => {

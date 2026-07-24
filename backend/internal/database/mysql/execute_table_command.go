@@ -33,15 +33,19 @@ func (r *MySQLRepository) handleTableCommands(node contract.DBNode, tabID contra
 		}
 
 		params := dtoParams[tabID]
-		tableName = *params.Old.Name
-
-		if params.Old.Name != nil && params.New.Name != nil && *params.Old.Name != *params.New.Name {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE `%s`.`%s` RENAME TO `%s`", node.Database, *params.Old.Name, *params.New.Name))
-			params.Old.Name = params.New.Name
+		if params == nil || params.Old == nil || params.Old.Name == nil {
+			return queries, tableName, nil
 		}
 
-		if params.Old.Name != nil && params.New.Comment != nil && *params.New.Comment != "" {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE `%s`.`%s` COMMENT = '%s'", node.Database, *params.Old.Name, *params.New.Comment))
+		tableName = *params.Old.Name
+
+		if params.New != nil && params.New.Name != nil && *params.Old.Name != *params.New.Name {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE `%s`.`%s` RENAME TO `%s`", node.Database, *params.Old.Name, *params.New.Name))
+			tableName = *params.New.Name
+		}
+
+		if params.New != nil && params.New.Comment != nil && *params.New.Comment != "" {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE `%s`.`%s` COMMENT = '%s'", node.Database, tableName, *params.New.Comment))
 		}
 	}
 

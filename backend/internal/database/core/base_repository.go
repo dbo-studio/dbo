@@ -8,6 +8,7 @@ import (
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/cache"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"gorm.io/gorm"
 )
@@ -45,6 +46,14 @@ func (b *BaseRepository) DBForDatabase(ctx context.Context, database string) (*g
 	}
 
 	return b.cm.GetConnectionForDatabase(ctx, b.connection, database, true)
+}
+
+func (b *BaseRepository) CloseDatabase(ctx context.Context, database string) error {
+	if database == "" || b.cm == nil {
+		return nil
+	}
+
+	return b.cm.CloseDatabase(ctx, helper.CtxOwnerID(ctx), b.connection.ID, database)
 }
 
 func (b *BaseRepository) Connection() *model.Connection {

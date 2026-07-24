@@ -20,7 +20,7 @@ type ITreeService interface {
 	Tabs(ctx context.Context, req *dto.ObjectTabsRequest) ([]contract.FormTab, error)
 	ObjectDetail(ctx context.Context, req *dto.ObjectDetailRequest) (*contract.FormResponse, error)
 	GetDynamicFieldOptions(ctx context.Context, req *dto.DynamicFieldOptionsRequest) ([]contract.FormFieldOption, error)
-	ObjectExecute(ctx context.Context, req *dto.ObjectExecuteRequest) error
+	ObjectExecute(ctx context.Context, req *dto.ObjectExecuteRequest) (*contract.ExecuteResult, error)
 	ObjectPreviewExecute(ctx context.Context, req *dto.ObjectExecuteRequest) ([]string, error)
 }
 
@@ -109,27 +109,31 @@ func (i ITreeServiceImpl) ObjectDetail(ctx context.Context, req *dto.ObjectDetai
 	return data, nil
 }
 
-func (i ITreeServiceImpl) ObjectExecute(ctx context.Context, req *dto.ObjectExecuteRequest) error {
+func (i ITreeServiceImpl) ObjectExecute(ctx context.Context, req *dto.ObjectExecuteRequest) (*contract.ExecuteResult, error) {
 	connection, err := i.connectionRepo.Find(ctx, req.ConnectionID)
 	if err != nil {
-		return apperror.NotFound(apperror.ErrConnectionNotFound)
+		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
 	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	err = repo.Execute(ctx, req.NodeID, contract.TreeNodeActionName(req.Action), req.Params)
+	result, err := repo.Execute(ctx, req.NodeID, contract.TreeNodeActionName(req.Action), req.Params)
 	if err != nil {
-		return apperror.InternalServerError(err)
+		return nil, apperror.InternalServerError(err)
 	}
 
 	if err := i.cache.DeleteByPrefix(ctx, cache.ConnectionPrefix(uint(req.ConnectionID))); err != nil {
-		return apperror.InternalServerError(err)
+		return nil, apperror.InternalServerError(err)
 	}
 
-	return nil
+	if result == nil {
+		result = &contract.ExecuteResult{}
+	}
+
+	return result, nil
 }
 
 func (i ITreeServiceImpl) ObjectPreviewExecute(ctx context.Context, req *dto.ObjectExecuteRequest) ([]string, error) {

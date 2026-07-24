@@ -31,7 +31,12 @@ func (r *PostgresRepository) handleMaterializedViewCommands(node contract.DBNode
 	}
 
 	if action == contract.CreateMaterializedViewAction {
-		query := fmt.Sprintf("CREATE MATERIALIZED VIEW %s", *params.New.Name)
+		if params.New == nil || params.New.Name == nil {
+			return queries, nil
+		}
+
+		viewRef := qualifiedTableName(node.Schema, *params.New.Name)
+		query := fmt.Sprintf("CREATE MATERIALIZED VIEW %s", viewRef)
 
 		if params.New.Tablespace != nil {
 			query += fmt.Sprintf(" TABLESPACE %s", *params.New.Tablespace)
@@ -44,11 +49,11 @@ func (r *PostgresRepository) handleMaterializedViewCommands(node contract.DBNode
 		queries = append(queries, query)
 
 		if params.New.Owner != nil {
-			queries = append(queries, fmt.Sprintf(`ALTER MATERIALIZED VIEW %s OWNER TO %s`, *params.New.Name, *params.New.Owner))
+			queries = append(queries, fmt.Sprintf(`ALTER MATERIALIZED VIEW %s OWNER TO %s`, viewRef, *params.New.Owner))
 		}
 
 		if params.New.Comment != nil {
-			queries = append(queries, fmt.Sprintf("COMMENT ON MATERIALIZED VIEW %s IS '%s'", *params.New.Name, *params.New.Comment))
+			queries = append(queries, fmt.Sprintf("COMMENT ON MATERIALIZED VIEW %s IS '%s'", viewRef, *params.New.Comment))
 		}
 	}
 

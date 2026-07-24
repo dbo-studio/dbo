@@ -248,7 +248,7 @@ func (r *PostgresRepository) materializedViews(ctx context.Context, database *st
 	}
 
 	query := conn.WithContext(ctx).Table("pg_class AS c").
-		Select("c.relname as name, d.description as comment, t.spcname as tablespace, r.rolname as rolname, m.definition as query").
+		Select("c.relname as matviewname, d.description as comment, t.spcname as tablespace, r.rolname as rolname, m.definition as query").
 		Joins("JOIN pg_namespace AS n ON n.oid = c.relnamespace").
 		Joins("LEFT JOIN pg_description AS d ON d.objoid = c.oid AND d.objsubid = 0").
 		Joins("LEFT JOIN pg_tablespace AS t ON t.oid = c.reltablespace").

@@ -24,7 +24,7 @@ func (r *SQLiteRepository) handleTableCommands(ctx context.Context, node string,
 		return nil, "", err
 	}
 
-	r.initializeTableParams(paramsMap.tableParams, node)
+	paramsMap.tableParams = r.initializeTableParams(paramsMap.tableParams, node)
 
 	if action == contract.EditTableAction {
 		r.populateParamsFromDatabase(ctx, paramsMap, *paramsMap.tableParams.Old.Name)
@@ -83,25 +83,16 @@ func (r *SQLiteRepository) parseTableParams(params []byte) (*tableParamsMap, err
 	}, nil
 }
 
-func (r *SQLiteRepository) isTableRelatedAction(tabID map[contract.TreeTab]any, action contract.TreeNodeActionName) bool {
-	if action == contract.DropTableAction {
+func (r *SQLiteRepository) isTableRelatedAction(_ map[contract.TreeTab]any, action contract.TreeNodeActionName) bool {
+	switch action {
+	case contract.DropTableAction, contract.CreateTableAction, contract.EditTableAction:
 		return true
+	default:
+		return false
 	}
-
-	var treeTab contract.TreeTab
-	for key := range tabID {
-		treeTab = key
-		break
-	}
-
-	return treeTab == contract.GeneralTab ||
-		treeTab == contract.TableColumnsTab ||
-		treeTab == contract.TableForeignKeysTab ||
-		treeTab == contract.TableKeysTab ||
-		treeTab == contract.TableIndexesTab
 }
 
-func (r *SQLiteRepository) initializeTableParams(tableParams *dto.SQLiteTableParams, node string) {
+func (r *SQLiteRepository) initializeTableParams(tableParams *dto.SQLiteTableParams, node string) *dto.SQLiteTableParams {
 	if tableParams == nil {
 		tableParams = &dto.SQLiteTableParams{}
 	}
@@ -115,6 +106,8 @@ func (r *SQLiteRepository) initializeTableParams(tableParams *dto.SQLiteTablePar
 	if tableParams.Old.Name == nil {
 		tableParams.Old.Name = lo.ToPtr(node)
 	}
+
+	return tableParams
 }
 
 func (r *SQLiteRepository) populateParamsFromDatabase(ctx context.Context, paramsMap *tableParamsMap, tableName string) {

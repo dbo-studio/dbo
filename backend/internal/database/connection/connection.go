@@ -19,6 +19,7 @@ import (
 type IConnectionManager interface {
 	IsOpen(ctx context.Context, ownerID string, connectionID uint) bool
 	Close(ctx context.Context, ownerID string, connectionID uint) error
+	CloseDatabase(ctx context.Context, ownerID string, connectionID uint, databaseName string) error
 	ListOpen(ownerID string) []uint
 }
 
@@ -207,6 +208,23 @@ func (cm *ConnectionManager) Close(_ context.Context, ownerID string, connection
 
 	for key, c := range cm.connections {
 		if key.OwnerID == ownerID && key.ConnectionID == connectionID {
+			delete(cm.connections, key)
+			_ = cm.closeConn(c)
+		}
+	}
+	return nil
+}
+
+func (cm *ConnectionManager) CloseDatabase(_ context.Context, ownerID string, connectionID uint, databaseName string) error {
+	if databaseName == "" {
+		return nil
+	}
+
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+
+	for key, c := range cm.connections {
+		if key.OwnerID == ownerID && key.ConnectionID == connectionID && key.Database == databaseName {
 			delete(cm.connections, key)
 			_ = cm.closeConn(c)
 		}

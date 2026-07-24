@@ -85,7 +85,14 @@ test.describe("Object Form PostgreSQL schema and matview", () => {
         });
 
         await test.step("Edit view — change query", async () => {
-          await editViewQuery(page, names.viewName, names.tableName);
+          await editViewQuery(
+            page,
+            names.connectionName,
+            names.databaseName,
+            names.renamedSchemaName,
+            names.viewName,
+            names.tableName,
+          );
         });
 
         await test.step("Cleanup — drop all objects and connection", async () => {

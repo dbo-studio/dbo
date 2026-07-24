@@ -15,14 +15,30 @@ func (r *PostgresRepository) handleDatabaseCommands(node contract.DBNode, tabID 
 		return queries, nil
 	}
 
+	if action == contract.DropDatabaseAction {
+		if node.Database == "" {
+			return queries, nil
+		}
+
+		queries = append(queries, fmt.Sprintf("DROP DATABASE %s WITH (FORCE)", node.Database))
+		return queries, nil
+	}
+
 	dto, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.PostgresDatabaseParams](data)
 	if err != nil {
 		return nil, err
 	}
 
 	params := dto[tabID]
+	if params == nil {
+		return queries, nil
+	}
 
 	if action == contract.CreateDatabaseAction {
+		if params.New == nil || params.New.Name == nil {
+			return queries, nil
+		}
+
 		query := fmt.Sprintf("CREATE DATABASE %s", *params.New.Name)
 		if params.New.Owner != nil {
 			query += fmt.Sprintf(" WITH OWNER %s", *params.New.Owner)
@@ -42,30 +58,28 @@ func (r *PostgresRepository) handleDatabaseCommands(node contract.DBNode, tabID 
 	}
 
 	if action == contract.EditDatabaseAction {
-		if params.Old.Name != nil && params.New.Name != nil {
-			query := fmt.Sprintf("ALTER DATABASE %s RENAME TO %s", *params.Old.Name, *params.New.Name)
-			queries = append(queries, query)
-			params.Old.Name = params.New.Name
+		if params.Old == nil || params.New == nil || params.Old.Name == nil {
+			return queries, nil
 		}
 
-		if params.Old.Name != nil && params.New.Owner != nil {
-			query := fmt.Sprintf("ALTER DATABASE %s OWNER TO %s", *params.Old.Name, *params.New.Owner)
-			queries = append(queries, query)
+		dbName := *params.Old.Name
+
+		if params.New.Name != nil && *params.Old.Name != *params.New.Name {
+			queries = append(queries, fmt.Sprintf("ALTER DATABASE %s RENAME TO %s", dbName, *params.New.Name))
+			dbName = *params.New.Name
 		}
 
-		if params.Old.Name != nil && params.New.Tablespace != nil {
-			query := fmt.Sprintf("ALTER DATABASE %s SET TABLESPACE = %s", *params.Old.Name, *params.New.Tablespace)
-			queries = append(queries, query)
+		if params.New.Owner != nil && (params.Old.Owner == nil || *params.Old.Owner != *params.New.Owner) {
+			queries = append(queries, fmt.Sprintf("ALTER DATABASE %s OWNER TO %s", dbName, *params.New.Owner))
 		}
 
-		if params.Old.Name != nil && params.New.Comment != nil {
-			queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS %s", *params.Old.Name, *params.New.Comment))
+		if params.New.Tablespace != nil && (params.Old.Tablespace == nil || *params.Old.Tablespace != *params.New.Tablespace) {
+			queries = append(queries, fmt.Sprintf("ALTER DATABASE %s SET TABLESPACE = %s", dbName, *params.New.Tablespace))
 		}
-	}
 
-	if action == contract.DropDatabaseAction {
-		query := fmt.Sprintf("DROP DATABASE %s", node.Database)
-		queries = append(queries, query)
+		if params.New.Comment != nil && (params.Old.Comment == nil || *params.Old.Comment != *params.New.Comment) {
+			queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS '%s'", dbName, *params.New.Comment))
+		}
 	}
 
 	return queries, nil

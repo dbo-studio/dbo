@@ -11,7 +11,7 @@ import { FormValue } from '@/types/Tree';
 import { useMutation } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
-import { buildSavePayload, extractNodeIdAfterSave } from '../utils/buildSavePayload';
+import { buildSavePayload } from '../utils/buildSavePayload';
 
 type UseFormSaveParams = {
   tabs: ObjectTabType[];
@@ -126,25 +126,26 @@ export const useFormSave = ({
     const action = selectedTab.action ?? '';
 
     try {
-      await executeAction({
+      const result = await executeAction({
         nodeId: selectedTab.nodeId,
         action,
         connectionId: currentConnection.id,
         data: payload as Record<string, FormValue>
       });
 
-      const newNodeId = extractNodeIdAfterSave(payload, selectedTab.nodeId, action);
+      const newNodeId = result.nodeId;
       const objectTabStoreId = selectedTab.id;
 
       if (newNodeId) {
         clearTabsByPrefix(objectTabStoreId);
 
-        const nextAction = action === 'createTable' ? 'editTable' : action === 'createView' ? 'editView' : action;
+        const nextAction = result.nextAction || action;
+        const displayName = newNodeId.includes('.') ? (newNodeId.split('.').pop() ?? newNodeId) : newNodeId;
 
         updateSelectedTab({
           ...selectedTab,
           nodeId: newNodeId,
-          name: newNodeId,
+          name: displayName,
           action: nextAction
         });
 

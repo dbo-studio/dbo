@@ -104,7 +104,7 @@ func (r *PostgresRepository) handleEditColumn(node contract.DBNode, column dto.P
 		return queries
 	}
 
-	if column.Old.Name != nil && column.New.Name != nil {
+	if column.Old.Name != nil && column.New.Name != nil && *column.Old.Name != *column.New.Name {
 		queries = append(queries, fmt.Sprintf(`%s RENAME COLUMN "%s" TO "%s"`, alter, *column.Old.Name, *column.New.Name))
 		column.Old.Name = column.New.Name
 	}
@@ -113,7 +113,7 @@ func (r *PostgresRepository) handleEditColumn(node contract.DBNode, column dto.P
 		column.Old.Name = column.New.Name
 	}
 
-	if column.Old.DataType != nil && column.New.DataType != nil {
+	if column.Old.DataType != nil && column.New.DataType != nil && *column.Old.DataType != *column.New.DataType {
 		dataTypeQuery := fmt.Sprintf(`%s ALTER COLUMN "%s" TYPE %s USING "%s"::%s`,
 			alter, *column.Old.Name, *column.New.DataType, *column.Old.Name, *column.New.DataType)
 
@@ -128,7 +128,7 @@ func (r *PostgresRepository) handleEditColumn(node contract.DBNode, column dto.P
 		queries = append(queries, dataTypeQuery)
 	}
 
-	if column.Old.NotNull != nil && column.New.NotNull != nil {
+	if column.Old.NotNull != nil && column.New.NotNull != nil && *column.Old.NotNull != *column.New.NotNull {
 		if *column.New.NotNull {
 			queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" SET NOT NULL`,
 				alter, *column.Old.Name))
@@ -138,20 +138,23 @@ func (r *PostgresRepository) handleEditColumn(node contract.DBNode, column dto.P
 		}
 	}
 
-	if column.Old.Default != nil && column.New.Default != nil {
-		if *column.New.Default != "" {
+	oldDefault := lo.FromPtr(column.Old.Default)
+	newDefault := lo.FromPtr(column.New.Default)
+	if oldDefault != newDefault {
+		if newDefault != "" {
 			queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" SET DEFAULT %s`,
-				alter, *column.Old.Name, *column.New.Default))
+				alter, *column.Old.Name, newDefault))
 		} else {
 			queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" DROP DEFAULT`,
 				alter, *column.Old.Name))
 		}
 	}
 
-	if column.Old.Comment != nil && column.New.Comment != nil {
-		commentQuery := fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'",
-			node.Table, *column.Old.Name, *column.New.Comment)
-		queries = append(queries, commentQuery)
+	oldComment := lo.FromPtr(column.Old.Comment)
+	newComment := lo.FromPtr(column.New.Comment)
+	if oldComment != newComment {
+		queries = append(queries, fmt.Sprintf(`COMMENT ON COLUMN "%s"."%s"."%s" IS '%s'`,
+			node.Schema, node.Table, *column.Old.Name, newComment))
 	}
 
 	return queries

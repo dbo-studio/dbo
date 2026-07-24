@@ -104,20 +104,23 @@ func (r *MySQLRepository) handleEditColumn(node contract.DBNode, column dto.Mysq
 		}
 	}
 
-	if column.Old.Default != nil && column.New.Default != nil && *column.Old.Default != *column.New.Default {
-		if *column.New.Default != "" {
+	oldDefault := lo.FromPtr(column.Old.Default)
+	newDefault := lo.FromPtr(column.New.Default)
+	if oldDefault != newDefault {
+		if newDefault != "" {
 			queries = append(queries, fmt.Sprintf("%s ALTER COLUMN `%s` SET DEFAULT %s",
-				alter, *column.Old.Name, *column.New.Default))
+				alter, *column.Old.Name, newDefault))
 		} else {
 			queries = append(queries, fmt.Sprintf("%s ALTER COLUMN `%s` DROP DEFAULT",
 				alter, *column.Old.Name))
 		}
 	}
 
-	if column.Old.Comment != nil && column.New.Comment != nil && *column.Old.Comment != *column.New.Comment {
-		commentQuery := fmt.Sprintf("%s MODIFY COLUMN `%s` COMMENT '%s'",
-			alter, *column.Old.Name, *column.New.Comment)
-		queries = append(queries, commentQuery)
+	oldComment := lo.FromPtr(column.Old.Comment)
+	newComment := lo.FromPtr(column.New.Comment)
+	if oldComment != newComment {
+		queries = append(queries, fmt.Sprintf("%s MODIFY COLUMN `%s` COMMENT '%s'",
+			alter, *column.Old.Name, newComment))
 	}
 
 	return queries

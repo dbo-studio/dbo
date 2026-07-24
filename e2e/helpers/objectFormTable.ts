@@ -122,6 +122,11 @@ export async function setupConnectionForEngine(
 ): Promise<ConnectionPage> {
   const connectionPage = new ConnectionPage(page);
   const { getDbConfig } = await import('../fixtures/dbConfigs');
+  const { ensureSqliteDbFile } = await import('./objectFormSqliteLifecycle');
+
+  if (engine === 'sqlite' && sqlitePath) {
+    ensureSqliteDbFile(sqlitePath);
+  }
 
   await connectionPage.goto();
   await connectionPage.waitForReady();
@@ -173,6 +178,11 @@ export async function cleanupObjectFormTable(
   }
 
   await connectionPage.deleteConnection(connectionName);
+
+  if (options?.sqlitePath) {
+    const { removeSqliteDbFile } = await import('./objectFormSqliteLifecycle');
+    removeSqliteDbFile(options.sqlitePath);
+  }
 
   return connectionPage;
 }

@@ -98,6 +98,7 @@ export default function SQLite({
             {(field): JSX.Element => (
               <Box>
                 <FieldInput
+                  name='name'
                   value={field.state.value}
                   error={field.state.meta.errors.length > 0}
                   fullWidth={true}
@@ -118,6 +119,7 @@ export default function SQLite({
                   }}
                 >
                   <FieldInput
+                    name='path'
                     value={field.state.value}
                     error={field.state.meta.errors.length > 0}
                     label={locales.file}
@@ -139,6 +141,7 @@ export default function SQLite({
         </Button>
         <Stack spacing={1} direction={'row'}>
           <Button
+            data-testid='test-connection'
             loadingPosition='start'
             disabled={pingLoading}
             loading={pingLoading}
@@ -153,6 +156,7 @@ export default function SQLite({
             <span>{locales.test}</span>
           </Button>
           <Button
+            data-testid='create-connection'
             loadingPosition='start'
             disabled={submitLoading}
             loading={submitLoading}

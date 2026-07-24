@@ -1,4 +1,4 @@
-import { type Locator, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { BasePage } from "./BasePage";
 
 const toTestIdSlug = (name: string): string =>
@@ -21,13 +21,40 @@ export class ObjectTreePage extends BasePage {
     await node.waitFor({ state: "visible", timeout: 15000 });
     await node.click();
 
+    // Only expand when collapsed. Collapse-then-expand races React state:
+    // ArrowRight is ignored while the handler still sees isExpanded=true.
     const expanded = await node.getAttribute("aria-expanded");
     if (expanded === "true") {
+      return;
+    }
+
+    await node.press("ArrowRight");
+    await expect(node).toHaveAttribute("aria-expanded", "true", {
+      timeout: 15000,
+    });
+    await this.waitForTreeLoad();
+  }
+
+  /**
+   * Force-refresh children by waiting for collapse to commit before expanding.
+   */
+  async refreshExpandNode(name: string): Promise<void> {
+    const node = this.getTreeNode(name);
+    await node.waitFor({ state: "visible", timeout: 15000 });
+    await node.click();
+
+    if ((await node.getAttribute("aria-expanded")) === "true") {
       await node.press("ArrowLeft");
+      await expect(node).toHaveAttribute("aria-expanded", "false", {
+        timeout: 15000,
+      });
       await this.waitForTreeLoad();
     }
 
     await node.press("ArrowRight");
+    await expect(node).toHaveAttribute("aria-expanded", "true", {
+      timeout: 15000,
+    });
     await this.waitForTreeLoad();
   }
 

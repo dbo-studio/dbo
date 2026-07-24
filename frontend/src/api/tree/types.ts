@@ -61,6 +61,11 @@ export type PreviewExecuteResponseType = {
   queries: string[];
 };
 
+export type ExecuteActionResponseType = {
+  nodeId?: string;
+  nextAction?: string;
+};
+
 type SchemaFieldType = {
   id: string;
   name: string;

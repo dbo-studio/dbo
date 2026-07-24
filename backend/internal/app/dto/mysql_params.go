@@ -67,42 +67,6 @@ type MysqlViewParamsData struct {
 	CheckOption *string `json:"check_option"`
 }
 
-type MysqlMaterializedViewParams struct {
-	New *MysqlMaterializedViewData `json:"new"`
-	Old *MysqlMaterializedViewData `json:"old"`
-}
-
-type MysqlMaterializedViewData struct {
-	Name       *string `json:"name"`
-	Comment    *string `json:"comment"`
-	Tablespace *string `json:"tablespace"`
-	Owner      *string `json:"rolname"`
-	Query      *string `json:"query"`
-}
-
-type MysqlIndexParams struct {
-	Name           *string `json:"name"`
-	Comment        *string `json:"comment"`
-	Unique         *bool   `json:"unique"`
-	Columns        *string `json:"columns"`
-	Condition      *string `json:"condition"`
-	IncludeColumns *string `json:"include_columns"`
-	AccessMethod   *string `json:"access_method"`
-	Tablespace     *string `json:"tablespace"`
-}
-
-type MysqlSequenceParams struct {
-	Name       *string `json:"name"`
-	Comment    *string `json:"comment"`
-	Increment  *int64  `json:"increment"`
-	MinValue   *int64  `json:"min_value"`
-	MaxValue   *int64  `json:"max_value"`
-	StartValue *int64  `json:"start_value"`
-	Cache      *int64  `json:"cache"`
-	Cycle      *bool   `json:"cycle"`
-	OwnedBy    *string `json:"owned_by"`
-}
-
 type MysqlTableColumnParams struct {
 	Columns []MysqlTableColumn `json:"columns"`
 }

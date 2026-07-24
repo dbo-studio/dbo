@@ -82,16 +82,22 @@ func (r *PostgresRepository) PreviewExecute(ctx context.Context, nodeID string, 
 	return r.buildExecuteQueries(ctx, nodeID, action, params)
 }
 
-func (r *PostgresRepository) Execute(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) error {
+func (r *PostgresRepository) Execute(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) (*contract.ExecuteResult, error) {
 	node := r.base.ExtractNode(nodeID)
 	queries, err := r.buildExecuteQueries(ctx, nodeID, action, params)
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	if action == contract.DropDatabaseAction && node.Database != "" {
+		if err := r.base.CloseDatabase(ctx, node.Database); err != nil {
+			return nil, err
+		}
 	}
 
 	conn, err := r.executeConn(ctx, node, action)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	for _, query := range queries {
@@ -101,15 +107,15 @@ func (r *PostgresRepository) Execute(ctx context.Context, nodeID string, action 
 
 		query, err = url.PathUnescape(query)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		if err := conn.WithContext(ctx).Exec(query).Error; err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return databaseCore.ResolveExecuteIdentity(r.base.Connection().ConnectionType, nodeID, action, params), nil
 }
 
 func (r *PostgresRepository) executeConn(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*gorm.DB, error) {

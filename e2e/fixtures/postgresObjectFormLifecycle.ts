@@ -54,7 +54,7 @@ export const POSTGRES_LIFECYCLE_PREVIEW = {
   addUnique: /ADD CONSTRAINT.*UNIQUE/i,
   dropKey: /DROP CONSTRAINT/i,
   createView: /CREATE VIEW/i,
-  replaceView: /CREATE OR REPLACE VIEW/i,
+  replaceView: /DROP VIEW/i,
   createMaterializedView: /CREATE MATERIALIZED VIEW/i,
   dropMaterializedView: /DROP MATERIALIZED VIEW/i
 } as const;

@@ -55,27 +55,37 @@ func (r *PostgresRepository) handleTableCommands(node contract.DBNode, tabID con
 		}
 
 		params := dtoParams[tabID]
+		if params == nil || params.Old == nil || params.Old.Name == nil {
+			return queries, tableName, nil
+		}
+
 		tableName = *params.Old.Name
+		tableRef := qualifiedTableName(node.Schema, tableName)
 
-		if params.Old.Name != nil && params.New.Name != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE %s RENAME TO %s", *params.Old.Name, *params.New.Name))
-			params.Old.Name = params.New.Name
+		if params.New != nil && params.New.Name != nil && *params.Old.Name != *params.New.Name {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s RENAME TO %s", tableRef, *params.New.Name))
+			tableName = *params.New.Name
+			tableRef = qualifiedTableName(node.Schema, tableName)
 		}
 
-		if params.Old.Name != nil && params.New.Tablespace != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET TABLESPACE %s", *params.Old.Name, *params.New.Tablespace))
+		if params.New != nil && params.New.Tablespace != nil &&
+			(params.Old.Tablespace == nil || *params.Old.Tablespace != *params.New.Tablespace) {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET TABLESPACE %s", tableRef, *params.New.Tablespace))
 		}
 
-		if params.Old.Name != nil && params.New.Persistence != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET %s", *params.Old.Name, *params.New.Persistence))
+		if params.New != nil && params.New.Persistence != nil &&
+			(params.Old.Persistence == nil || *params.Old.Persistence != *params.New.Persistence) {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s SET %s", tableRef, *params.New.Persistence))
 		}
 
-		if params.Old.Name != nil && params.New.Owner != nil {
-			queries = append(queries, fmt.Sprintf("ALTER TABLE %s OWNER TO \"%s\"", *params.Old.Name, *params.New.Owner))
+		if params.New != nil && params.New.Owner != nil &&
+			(params.Old.Owner == nil || *params.Old.Owner != *params.New.Owner) {
+			queries = append(queries, fmt.Sprintf("ALTER TABLE %s OWNER TO \"%s\"", tableRef, *params.New.Owner))
 		}
 
-		if params.Old.Name != nil && params.New.Comment != nil {
-			queries = append(queries, fmt.Sprintf("COMMENT ON TABLE %s IS '%s'", *params.Old.Name, *params.New.Comment))
+		if params.New != nil && params.New.Comment != nil &&
+			(params.Old.Comment == nil || *params.Old.Comment != *params.New.Comment) {
+			queries = append(queries, fmt.Sprintf("COMMENT ON TABLE %s IS '%s'", tableRef, *params.New.Comment))
 		}
 	}
 

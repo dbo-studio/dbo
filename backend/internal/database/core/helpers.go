@@ -20,6 +20,64 @@ func (r *BaseRepository) ExtractNode(node string) databaseContract.DBNode {
 	}
 }
 
+// FormatNodeID builds a canonical tree node id for the given connection type.
+// Container suffixes (tableContainer, etc.) are never emitted as object names.
+func FormatNodeID(connectionType string, node databaseContract.DBNode) string {
+	switch connectionType {
+	case string(databaseContract.Mysql):
+		return formatMysqlNodeID(node)
+	case string(databaseContract.Postgresql):
+		return formatPostgresqlNodeID(node)
+	case string(databaseContract.Sqlite):
+		return formatSqliteNodeID(node)
+	default:
+		return ""
+	}
+}
+
+func isContainerSegment(segment string) bool {
+	switch databaseContract.TreeNodeType(segment) {
+	case databaseContract.TableContainerNodeType,
+		databaseContract.ViewContainerNodeType,
+		databaseContract.MaterializedViewContainerNodeType:
+		return true
+	default:
+		return false
+	}
+}
+
+func formatMysqlNodeID(node databaseContract.DBNode) string {
+	parts := make([]string, 0, 2)
+	if node.Database != "" {
+		parts = append(parts, node.Database)
+	}
+	if node.Table != "" && !isContainerSegment(node.Table) {
+		parts = append(parts, node.Table)
+	}
+	return strings.Join(parts, ".")
+}
+
+func formatPostgresqlNodeID(node databaseContract.DBNode) string {
+	parts := make([]string, 0, 3)
+	if node.Database != "" {
+		parts = append(parts, node.Database)
+	}
+	if node.Schema != "" && !isContainerSegment(node.Schema) {
+		parts = append(parts, node.Schema)
+	}
+	if node.Table != "" && !isContainerSegment(node.Table) {
+		parts = append(parts, node.Table)
+	}
+	return strings.Join(parts, ".")
+}
+
+func formatSqliteNodeID(node databaseContract.DBNode) string {
+	if node.Table == "" || isContainerSegment(node.Table) {
+		return ""
+	}
+	return node.Table
+}
+
 func (*BaseRepository) ColumnMappedFormat(dataType string) string {
 	normalized := strings.ToUpper(strings.TrimSpace(dataType))
 	if idx := strings.Index(normalized, "("); idx > -1 {

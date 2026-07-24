@@ -21,6 +21,9 @@ func (r *SQLiteRepository) filterActiveColumns(columns []dto.SQLiteTableColumn) 
 		if col.Added != nil && col.Deleted != nil && *col.Added && *col.Deleted {
 			return false
 		}
+		if lo.FromPtr(col.Deleted) && !lo.FromPtr(col.Added) {
+			return false
+		}
 		if col.Added == nil || *col.Added {
 			return true
 		}
