@@ -245,6 +245,15 @@ export class ConnectionPage extends BasePage {
       .click();
   }
 
+  async dismissNewConnectionModalIfOpen(): Promise<void> {
+    const heading = this.page.getByRole("heading", { name: "New connection" });
+    if (!(await heading.isVisible({ timeout: 2000 }).catch(() => false))) {
+      return;
+    }
+    await this.page.getByRole("button", { name: "Cancel" }).click();
+    await expect(heading).toBeHidden();
+  }
+
   async deleteConnection(name: string): Promise<void> {
     await this.openContextMenu(name);
     await this.clickContextMenuItem("Delete");
@@ -253,6 +262,12 @@ export class ConnectionPage extends BasePage {
     ).toBeVisible();
     await this.page.getByRole("button", { name: "Delete" }).click();
     await expect(this.getConnectionItem(name)).toBeHidden();
+
+    // Deleting the last connection auto-opens the New connection modal.
+    const remaining = this.page.locator('[data-testid^="connection-item-"]');
+    if ((await remaining.count()) === 0) {
+      await this.dismissNewConnectionModalIfOpen();
+    }
   }
 
   async editConnection(name: string): Promise<void> {

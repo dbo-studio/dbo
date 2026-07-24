@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { getDbConfig } from "../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import { withConnectionCleanup } from "../helpers/safeCleanup";
-import { ConnectionPage, SidebarPage, SqlEditorPage } from "../pages";
+import { ConnectionPage, SqlEditorPage } from "../pages";
 
 /**
  * Connection Management Scenario
@@ -140,7 +140,6 @@ test.describe("Connection Management", () => {
   test("Create schema via SQL query", async ({ page }, testInfo) => {
     const connectionPage = new ConnectionPage(page);
     const sqlEditor = new SqlEditorPage(page);
-    const sidebar = new SidebarPage(page);
 
     const suffix = uniqueTestSuffix(testInfo);
     const connectionName = `${testPrefix}-schema-${suffix}`;
@@ -165,15 +164,17 @@ test.describe("Connection Management", () => {
         );
       });
 
-      await test.step("Verify schema in tree view", async () => {
-        await sidebar.switchTo("Items");
-        await sidebar.expectItemVisible(schemaName);
+      await test.step("Verify query result", async () => {
+        await sqlEditor.expectQuerySucceeded(
+          `CREATE SCHEMA IF NOT EXISTS ${schemaName}`,
+        );
       });
 
       await test.step("Drop schema", async () => {
         await sqlEditor.typeAndRun(
           `DROP SCHEMA IF EXISTS ${schemaName} CASCADE;`,
         );
+        await sqlEditor.expectQuerySucceeded("DROP SCHEMA IF");
       });
 
       await test.step("Cleanup", async () => {

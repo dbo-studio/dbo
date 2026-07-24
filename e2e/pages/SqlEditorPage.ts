@@ -18,9 +18,7 @@ export class SqlEditorPage extends BasePage {
     this.editor = page.locator(".monaco-editor").first();
     this.openEditorButton = page.getByRole("button", { name: /open editor/i });
     this.saveButton = page.getByRole("button", { name: /save/i }).first();
-    this.runButton = page
-      .locator('[data-testid="run-query"], button:has-text("Run")')
-      .first();
+    this.runButton = page.getByRole("button", { name: "Run query" });
     this.formatButton = page.getByRole("button", { name: /beatify|format/i });
     this.minifyButton = page.getByRole("button", { name: /minify/i });
   }
@@ -50,19 +48,30 @@ export class SqlEditorPage extends BasePage {
   }
 
   async runQuery(): Promise<void> {
+    // Web shortcut is Alt+Enter (not Ctrl+Enter); click the toolbar button instead.
     const responsePromise = this.page.waitForResponse(
       (response) =>
-        response.url().includes("query") && response.status() === 200,
+        response.url().includes("/query/raw") &&
+        response.request().method() === "POST" &&
+        response.status() === 200,
       { timeout: 15000 },
     );
-    await this.pressKey("Control+Enter");
+    await expect(this.runButton).toBeEnabled({ timeout: 10000 });
+    await this.runButton.click();
     await responsePromise;
-    await this.wait(500);
   }
 
   async typeAndRun(sql: string): Promise<void> {
     await this.typeQuery(sql);
     await this.runQuery();
+  }
+
+  /** Assert the query results grid shows a successful statement run. */
+  async expectQuerySucceeded(querySnippet: string): Promise<void> {
+    const results = this.page.getByRole("table");
+    await expect(results).toBeVisible({ timeout: 15000 });
+    await expect(results.getByText(querySnippet, { exact: false })).toBeVisible();
+    await expect(results.getByText("OK", { exact: true })).toBeVisible();
   }
 
   async saveQuery(): Promise<void> {
