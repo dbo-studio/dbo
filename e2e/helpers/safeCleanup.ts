@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import { ConnectionPage } from '../pages';
 
 async function resetAppDbViaApi(): Promise<void> {
@@ -27,6 +27,16 @@ export async function safeDeleteConnection(page: Page, name: string | undefined)
     const connectionPage = new ConnectionPage(page);
     await connectionPage.goto();
     await connectionPage.waitForReady();
+    // Settings `showSettings.open` is persisted in localStorage, so reload can reopen
+    // the modal. MUI Modal uses role=presentation (not dialog) — dismiss via Escape.
+    const modal = page.locator('.MuiModal-root');
+    for (let i = 0; i < 3; i++) {
+      if (!(await modal.first().isVisible().catch(() => false))) {
+        break;
+      }
+      await page.keyboard.press('Escape');
+      await expect(modal).toHaveCount(0, { timeout: 2000 }).catch(() => undefined);
+    }
     if (await connectionPage.connectionExists(name)) {
       await connectionPage.deleteConnection(name);
     }

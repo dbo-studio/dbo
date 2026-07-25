@@ -12,7 +12,7 @@ import (
 type RawQueryTableResolver interface {
 	IsBaseTable(ctx context.Context, database, schema *string, table string) (bool, error)
 	LoadTableColumns(ctx context.Context, database, schema *string, table string) ([]dto.Column, error)
-	BuildNodeID(database, schema, table string) string
+	BuildNodeID(ctx context.Context, database, schema, table string) string
 }
 
 func EnrichRawQueryResponse(
@@ -83,7 +83,7 @@ func EnrichRawQueryResponse(
 	}
 
 	resp.Editable = true
-	resp.NodeID = resolver.BuildNodeID(database, schema, targetTable)
+	resp.NodeID = resolver.BuildNodeID(ctx, database, schema, targetTable)
 	resp.DrivingTable = lo.ToPtr(targetTable)
 	resp.Columns = enrichedColumns
 

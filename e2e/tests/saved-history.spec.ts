@@ -32,12 +32,13 @@ test.describe("Saved Queries & History", () => {
 
       await test.step("Open SQL editor and run query", async () => {
         await sqlEditor.open();
+        await sqlEditor.selectContext("default", "public");
         await sqlEditor.typeAndRun("SELECT current_timestamp AS test_time;");
       });
 
       await test.step("Verify query in History", async () => {
         await sidebar.switchTo("History");
-        await sidebar.expectItemVisible("SELECT current_timestamp");
+        await sidebar.expectItemVisible("SELECT current_timestamp AS test_time");
       });
 
       await test.step("Cleanup", async () => {
@@ -54,6 +55,8 @@ test.describe("Saved Queries & History", () => {
     const connectionName = `${testPrefix}-saved-${uniqueTestSuffix(testInfo)}`;
     const uniqueMarker = `E2E_${uniqueTestSuffix(testInfo)}`;
     const uniqueQuery = `SELECT '${uniqueMarker}' AS test_marker;`;
+    // Backend names unnamed saved queries from the first 20 chars of the SQL.
+    const savedQueryLabel = uniqueQuery.slice(0, 20);
     const config = getDbConfig("postgresql", connectionName);
 
     await withConnectionCleanup(page, connectionName, async () => {
@@ -75,12 +78,12 @@ test.describe("Saved Queries & History", () => {
 
       await test.step("Verify query in Saved Queries tab", async () => {
         await sidebar.switchTo("Queries");
-        await sidebar.expectItemVisible(uniqueMarker);
+        await sidebar.expectItemVisible(savedQueryLabel);
       });
 
       await test.step("Delete saved query", async () => {
-        await sidebar.deleteItemFromContextMenu(uniqueMarker);
-        await sidebar.expectItemHidden(uniqueMarker);
+        await sidebar.deleteItemFromContextMenu(savedQueryLabel);
+        await sidebar.expectItemHidden(savedQueryLabel);
       });
 
       await test.step("Cleanup", async () => {
@@ -97,6 +100,7 @@ test.describe("Saved Queries & History", () => {
     const connectionName = `${testPrefix}-run-${uniqueTestSuffix(testInfo)}`;
     const uniqueMarker = `RUN_TEST_${uniqueTestSuffix(testInfo)}`;
     const uniqueQuery = `SELECT '${uniqueMarker}' AS marker;`;
+    const savedQueryLabel = uniqueQuery.slice(0, 20);
     const config = getDbConfig("postgresql", connectionName);
 
     await withConnectionCleanup(page, connectionName, async () => {
@@ -115,13 +119,13 @@ test.describe("Saved Queries & History", () => {
 
       await test.step("Run saved query from context menu", async () => {
         await sidebar.switchTo("Queries");
-        await sidebar.runItemFromContextMenu(uniqueMarker);
+        await sidebar.runItemFromContextMenu(savedQueryLabel);
         await sqlEditor.expectEditorContains(uniqueMarker);
       });
 
       await test.step("Cleanup saved query", async () => {
         await sidebar.switchTo("Queries");
-        await sidebar.deleteItemFromContextMenu(uniqueMarker);
+        await sidebar.deleteItemFromContextMenu(savedQueryLabel);
       });
 
       await test.step("Cleanup connection", async () => {

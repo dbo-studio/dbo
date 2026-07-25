@@ -54,7 +54,7 @@ func (r *sqliteRawQueryResolver) LoadTableColumns(ctx context.Context, database,
 	return columnListToResponse(columns), nil
 }
 
-func (r *sqliteRawQueryResolver) BuildNodeID(database, schema, table string) string {
+func (r *sqliteRawQueryResolver) BuildNodeID(_ context.Context, database, schema, table string) string {
 	_ = database
 	_ = schema
 	return table

@@ -10,12 +10,15 @@ export class SidebarPage extends BasePage {
   readonly itemsTab: Locator;
   readonly queriesTab: Locator;
   readonly historyTab: Locator;
+  readonly panel: Locator;
 
   constructor(page: Page) {
     super(page);
     this.itemsTab = page.getByRole("tab", { name: "Items" });
     this.queriesTab = page.getByRole("tab", { name: "Queries" });
     this.historyTab = page.getByRole("tab", { name: "History" });
+    // Explorer content only — avoids matching the SQL editor / result grid.
+    this.panel = page.getByRole("tabpanel");
   }
 
   getTab(tabName: SidebarTab): Locator {
@@ -30,16 +33,45 @@ export class SidebarPage extends BasePage {
   }
 
   async switchTo(tabName: SidebarTab): Promise<void> {
-    await this.getTab(tabName).click();
-    await this.wait(500);
+    const tab = this.getTab(tabName);
+    const alreadySelected = (await tab.getAttribute("aria-selected")) === "true";
+
+    if (!alreadySelected) {
+      const waitForList =
+        tabName === "History"
+          ? this.page.waitForResponse(
+              (response) =>
+                response.url().includes("/histories") &&
+                response.request().method() === "GET" &&
+                response.status() === 200,
+              { timeout: 15000 },
+            )
+          : tabName === "Queries"
+            ? this.page.waitForResponse(
+                (response) =>
+                  response.url().includes("/saved") &&
+                  response.request().method() === "GET" &&
+                  response.status() === 200,
+                { timeout: 15000 },
+              )
+            : null;
+
+      await tab.click();
+      if (waitForList) {
+        await waitForList;
+      }
+    }
+
+    await expect(tab).toHaveAttribute("aria-selected", "true");
   }
 
-  async findItem(text: string): Locator {
-    return this.page.getByText(text).first();
+  item(text: string): Locator {
+    return this.panel.getByText(text).first();
   }
 
   async openItemContextMenu(text: string): Promise<void> {
-    const item = this.page.getByText(text).first();
+    const item = this.item(text);
+    await expect(item).toBeVisible({ timeout: 15000 });
     await item.click();
     await item.click({ button: "right" });
     await this.wait(300);
@@ -74,10 +106,10 @@ export class SidebarPage extends BasePage {
   }
 
   async expectItemVisible(text: string): Promise<void> {
-    await expect(this.page.getByText(text)).toBeVisible();
+    await expect(this.item(text)).toBeVisible({ timeout: 15000 });
   }
 
   async expectItemHidden(text: string): Promise<void> {
-    await expect(this.page.getByText(text)).toBeHidden();
+    await expect(this.panel.getByText(text)).toHaveCount(0);
   }
 }

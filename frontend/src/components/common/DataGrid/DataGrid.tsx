@@ -60,7 +60,7 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
           </DataGridLoadingOverlayStyled>
         )}
         <VirtualTableWrapper height={totalSize + HEADER_HEIGHT}>
-          <StyledTable width={totalTableWidth}>
+          <StyledTable data-testid='data-grid' width={totalTableWidth}>
             <colgroup>
               {tableColumns.map((column) => (
                 <StyledCol key={column.name} width={columnSizes[column.name]} />

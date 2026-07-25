@@ -11,25 +11,32 @@ export class DataGridPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.grid = page
-      .locator('[data-testid="data-grid"], .data-grid, table')
-      .first();
+    this.grid = page.getByTestId("data-grid");
     this.loadingIndicator = page
       .locator('[data-testid="loading"], .MuiCircularProgress-root')
       .first();
     this.saveButton = page.getByTestId("grid-save");
   }
 
-  async waitForData(): Promise<void> {
-    await this.wait(500);
+  async waitForData(expectedText?: string): Promise<void> {
+    await expect(this.grid).toBeVisible({ timeout: 15000 });
+    if (expectedText) {
+      await expect(this.grid.getByText(expectedText).first()).toBeVisible({
+        timeout: 15000,
+      });
+      return;
+    }
+    await expect(this.grid.locator("tbody tr").first()).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   async expectCellVisible(text: string): Promise<void> {
-    await expect(this.page.getByText(text)).toBeVisible();
+    await expect(this.grid.getByText(text).first()).toBeVisible();
   }
 
   async expectCellHidden(text: string): Promise<void> {
-    await expect(this.page.getByText(text)).toBeHidden();
+    await expect(this.grid.getByText(text)).toHaveCount(0);
   }
 
   async expectRowCount(count: number): Promise<void> {
@@ -38,9 +45,14 @@ export class DataGridPage extends BasePage {
   }
 
   async editCell(text: string, newValue: string): Promise<void> {
-    const cell = this.page.getByText(text, { exact: true }).first();
-    await cell.dblclick();
-    const input = this.page.locator("input").last();
+    // DataGrid uses a custom double-click (<200ms) on click handlers, not native dblclick.
+    // Do not assert on the cell text between clicks — entering edit mode replaces the span with an input.
+    const cell = this.grid.getByText(text, { exact: true }).first();
+    await expect(cell).toBeVisible({ timeout: 15000 });
+    await cell.click({ clickCount: 2, delay: 40 });
+
+    const input = this.grid.locator('input:not([type="checkbox"])').last();
+    await expect(input).toBeVisible({ timeout: 5000 });
     await input.fill(newValue);
     await input.press("Enter");
     await this.wait(300);
@@ -58,8 +70,11 @@ export class DataGridPage extends BasePage {
   }
 
   async expectCellNotEditable(text: string): Promise<void> {
-    const cell = this.page.getByText(text, { exact: true }).first();
-    await cell.dblclick();
-    await expect(this.page.locator("input").last()).toHaveCount(0);
+    const cell = this.grid.getByText(text, { exact: true }).first();
+    await expect(cell).toBeVisible({ timeout: 15000 });
+    await cell.click({ clickCount: 2, delay: 40 });
+    await expect(
+      this.grid.locator('input:not([type="checkbox"])'),
+    ).toHaveCount(0);
   }
 }

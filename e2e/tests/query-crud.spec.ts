@@ -34,6 +34,7 @@ test.describe("Query CRUD Operations", () => {
 
       await test.step("Open SQL editor", async () => {
         await sqlEditor.open();
+        await sqlEditor.selectContext("default", "public");
       });
 
       await test.step("Create test table", async () => {
@@ -63,7 +64,7 @@ test.describe("Query CRUD Operations", () => {
 
       await test.step("Select and verify data in grid", async () => {
         await sqlEditor.typeAndRun(`SELECT * FROM ${tableName} ORDER BY id;`);
-        await dataGrid.waitForData();
+        await dataGrid.waitForData("Jane Smith");
 
         await dataGrid.expectCellVisible("John Doe");
         await dataGrid.expectCellVisible("jane@example.com");
@@ -72,14 +73,14 @@ test.describe("Query CRUD Operations", () => {
 
       await test.step("Inline edit and save from result grid", async () => {
         await sqlEditor.typeAndRun(`SELECT * FROM ${tableName} ORDER BY id;`);
-        await dataGrid.waitForData();
+        await dataGrid.waitForData("Jane Smith");
         await dataGrid.editCell("Jane Smith", "Jane Inline");
         await dataGrid.saveChanges();
 
         await sqlEditor.typeAndRun(
           `SELECT * FROM ${tableName} WHERE email = 'jane@example.com';`,
         );
-        await dataGrid.waitForData();
+        await dataGrid.waitForData("Jane Inline");
         await dataGrid.expectCellVisible("Jane Inline");
       });
 
@@ -107,7 +108,7 @@ test.describe("Query CRUD Operations", () => {
 
         await dataGrid.expectCellHidden("Bob Wilson");
         await dataGrid.expectCellVisible("John Updated");
-        await dataGrid.expectCellVisible("Jane Smith");
+        await dataGrid.expectCellVisible("Jane Inline");
       });
 
       await test.step("Drop test table", async () => {
@@ -142,6 +143,7 @@ test.describe("Query CRUD Operations", () => {
 
       await test.step("Open SQL editor", async () => {
         await sqlEditor.open();
+        await sqlEditor.selectContext("default", "public");
       });
 
       await test.step("Create categories table", async () => {
@@ -185,7 +187,7 @@ test.describe("Query CRUD Operations", () => {
       await test.step("Query with JOIN", async () => {
         await sqlEditor.typeAndRun(
           `
-  SELECT p.name as product, c.name as category, p.price 
+  SELECT p.id, p.name as product, c.name as category, p.price 
   FROM ${table2} p 
   JOIN ${table1} c ON p.category_id = c.id 
   ORDER BY p.price DESC;
@@ -209,7 +211,7 @@ test.describe("Query CRUD Operations", () => {
 
         await sqlEditor.typeAndRun(
           `
-  SELECT p.name as product, c.name as category, p.price 
+  SELECT p.id, p.name as product, c.name as category, p.price 
   FROM ${table2} p 
   JOIN ${table1} c ON p.category_id = c.id 
   ORDER BY p.price DESC;

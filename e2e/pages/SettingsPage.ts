@@ -35,11 +35,12 @@ export class SettingsPage extends BasePage {
     this.generalMenuItem = page.getByText("General").first();
     this.appearanceMenuItem = page.getByText("Appearance").first();
     this.shortcutsMenuItem = page.getByText("Shortcuts").first();
-    this.aiMenuItem = page.getByText("AI").first();
+    this.aiMenuItem = page.locator("div").filter({ hasText: /^AI$/ }).first();
     this.aboutMenuItem = page.getByText("About").first();
 
-    this.lightTheme = page.getByText("Light");
-    this.darkTheme = page.getByText("Dark");
+    // Exact match — "GitHub Light" / "GitHub Dark" also appear in Appearance.
+    this.lightTheme = page.getByRole("img", { name: "light" });
+    this.darkTheme = page.getByRole("img", { name: "dark" });
 
     this.leftSidebarButton = page.getByRole("button", { name: "sideLeft" });
     this.rightSidebarButton = page.getByRole("button", { name: "sideRight" });
@@ -112,7 +113,8 @@ export class SettingsPage extends BasePage {
 
   // Assertions
   async expectPanelVisible(content: string): Promise<void> {
-    await expect(this.page.getByText(content)).toBeVisible();
+    // exact: true — Appearance also shows "GitHub Light" / "GitHub Dark"
+    await expect(this.page.getByText(content, { exact: true })).toBeVisible();
   }
 
   async expectModalClosed(): Promise<void> {

@@ -13,6 +13,7 @@ export function getDbConfig(
         name,
         host: process.env.PGSQL_TEST_HOST ?? "127.0.0.1",
         port: process.env.PGSQL_TEST_PORT ?? "5432",
+        database: "default",
         username: process.env.PGSQL_TEST_USER ?? "default",
         password: process.env.PGSQL_TEST_PASSWORD ?? "secret",
         type: "PostgreSQL",

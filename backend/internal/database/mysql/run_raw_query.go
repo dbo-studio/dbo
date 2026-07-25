@@ -7,6 +7,8 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
+	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/goccy/go-json"
 	"github.com/samber/lo"
 )
 
@@ -24,21 +26,26 @@ func (r *MySQLRepository) RunRawQuery(ctx context.Context, req *dto.RawQueryRequ
 }
 
 func (r *mysqlRawQueryResolver) IsBaseTable(ctx context.Context, database, schema *string, table string) (bool, error) {
-	tables, err := r.repo.ListTableNames(ctx, database, schema)
+	_ = schema
+
+	// Skip cache so tables created earlier in this session are visible.
+	tables, err := r.repo.tables(ctx, database, false)
 	if err != nil {
 		return false, err
 	}
 
-	if !slices.Contains(tables, table) {
+	tableNames := lo.Map(tables, func(t Table, _ int) string { return t.Name })
+	if !slices.Contains(tableNames, table) {
 		return false, nil
 	}
 
-	views, err := r.repo.ListViewNames(ctx, database, schema)
+	views, err := r.repo.views(ctx, database, false)
 	if err != nil {
 		return false, err
 	}
 
-	return !slices.Contains(views, table), nil
+	viewNames := lo.Map(views, func(v View, _ int) string { return v.Name })
+	return !slices.Contains(viewNames, table), nil
 }
 
 func (r *mysqlRawQueryResolver) LoadTableColumns(ctx context.Context, database, schema *string, table string) ([]dto.Column, error) {
@@ -50,7 +57,13 @@ func (r *mysqlRawQueryResolver) LoadTableColumns(ctx context.Context, database, 
 	return columnListToResponse(columns), nil
 }
 
-func (r *mysqlRawQueryResolver) BuildNodeID(database, schema, table string) string {
+func (r *mysqlRawQueryResolver) BuildNodeID(_ context.Context, database, schema, table string) string {
 	_ = schema
+	if database == "" {
+		options, err := helper.RawJSONToStruct[dto.MysqlCreateConnectionParams](json.RawMessage(r.repo.base.Connection().Options))
+		if err == nil {
+			database = lo.FromPtr(options.Database)
+		}
+	}
 	return fmt.Sprintf("%s.%s", database, table)
 }
