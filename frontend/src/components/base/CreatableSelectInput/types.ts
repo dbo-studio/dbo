@@ -10,4 +10,5 @@ export type CreatableSelectInputProps = {
   options: SelectInputOption[];
   onChange: (value: SelectInputOption | SelectInputOption[] | null) => void;
   isMulti?: boolean;
+  isLoading?: boolean;
 };

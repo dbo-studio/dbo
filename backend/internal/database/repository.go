@@ -26,3 +26,11 @@ func NewDatabaseRepository(ctx context.Context, connection *model.Connection, cm
 		return nil, fmt.Errorf("unsupported database type: %s", connection.ConnectionType)
 	}
 }
+
+func NewAIContextRepository(ctx context.Context, connection *model.Connection, cm *databaseConnection.ConnectionManager) (databaseContract.AIContextRepository, error) {
+	return NewDatabaseRepository(ctx, connection, cm)
+}
+
+func NewDBToolsRepository(ctx context.Context, connection *model.Connection, cm *databaseConnection.ConnectionManager) (databaseContract.DBToolsRepository, error) {
+	return NewDatabaseRepository(ctx, connection, cm)
+}

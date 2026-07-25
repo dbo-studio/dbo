@@ -18,7 +18,13 @@ export default function Leading(): JSX.Element {
   };
 
   return (
-    <Stack spacing={2} direction='row' justifyContent='flex-start'>
+    <Stack
+      spacing={2}
+      direction='row'
+      sx={{
+        justifyContent: 'flex-start'
+      }}
+    >
       <Tooltip title={locales.left_sidebar}>
         <IconButton aria-label='sideLeft' onClick={(): void => handelUpdateSidebar()}>
           <CustomIcon type={'sideLeft'} size={'m'} />

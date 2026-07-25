@@ -20,6 +20,7 @@ export default function DataGridContextMenu({
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const selectedRows = useDataStore((state) => state.selectedRows);
   const editedRows = useDataStore((state) => state.editedRows);
+  const columns = useDataStore((state) => state.columns ?? []);
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
   const updateRow = useDataStore((state) => state.updateRow);
   const updateUI = useSettingStore((state) => state.updateUI);
@@ -28,6 +29,12 @@ export default function DataGridContextMenu({
 
   const valueReplacer = (newValue: string | null | undefined): void => {
     if (!selectedTabId) return;
+
+    const selectedColumn = selectedRows[selectedRows.length - 1]?.selectedColumn;
+    const column = columns.find((item) => item.name === selectedColumn);
+    if (column?.editable === false) {
+      return;
+    }
 
     for (const row of selectedRows) {
       if (!row.row) continue;
@@ -38,7 +45,8 @@ export default function DataGridContextMenu({
         row.row,
         row.selectedColumn,
         row.row[row.selectedColumn],
-        newValue
+        newValue,
+        columns
       );
       updateEditedRows(newEditedRows).catch((error) => {
         console.error('Error updating edited rows:', error);

@@ -3,8 +3,10 @@ import { Box, styled } from '@mui/material';
 
 export const ResizableModalWrapperStyled = styled(Box)(({ theme }) => ({
   overflow: 'hidden',
-  minHeight: '400px',
-  minWidth: '400px',
+  minHeight: 'min(400px, 90dvh)',
+  minWidth: 'min(400px, calc(100vw - 32px))',
+  maxWidth: 'calc(100vw - 32px)',
+  maxHeight: '90dvh',
   borderRadius: variables.radius.medium,
   background: theme.palette.background.default,
   position: 'absolute',

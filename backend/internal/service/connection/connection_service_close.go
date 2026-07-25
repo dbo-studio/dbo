@@ -5,11 +5,12 @@ import (
 	"fmt"
 
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (s IConnectionServiceImpl) Close(ctx context.Context, connectionId int32) error {
-	connection, err := s.connectionRepo.Find(ctx, connectionId)
+func (s IConnectionServiceImpl) Close(ctx context.Context, connectionID int32) error {
+	connection, err := s.connectionRepo.Find(ctx, connectionID)
 	if err != nil {
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
@@ -35,7 +36,7 @@ func (s IConnectionServiceImpl) Close(ctx context.Context, connectionId int32) e
 		}
 	}
 
-	err = s.cache.DeleteByPrefix(ctx, fmt.Sprintf("c:%d", connection.ID))
+	err = s.cache.DeleteByPrefix(ctx, cache.ConnectionPrefix(connection.ID))
 	if err != nil {
 		return err
 	}

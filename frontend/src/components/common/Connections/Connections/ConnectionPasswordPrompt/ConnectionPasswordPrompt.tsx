@@ -7,11 +7,16 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { EventFor } from '@/types';
-import { Box, Button, Checkbox, FormControlLabel, Stack } from '@mui/material';
+import { Button, Checkbox, FormControlLabel, Stack } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import * as v from 'valibot';
+import {
+  ConnectionFormCheckboxRowStyled,
+  ConnectionFormContainerStyled,
+  ConnectionFormFooterStyled
+} from './ConnectionPasswordPrompt.styled';
 
 const formSchema = v.object({
   password: v.pipe(v.string(), v.minLength(1, 'Password is required')),
@@ -46,7 +51,7 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
   useEffect(() => {
     if (!show) return;
     clearCurrentConnection();
-  }, [show]);
+  }, [show, clearCurrentConnection]);
 
   const handleClose = (): void => {
     setPassword('');
@@ -97,7 +102,7 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
 
   return (
     <Modal open={show} title={locales.password} onClose={handleClose}>
-      <Box flex={1} display={'flex'} flexDirection={'column'}>
+      <ConnectionFormContainerStyled>
         <form onSubmit={(e) => void handleSubmit(e)}>
           <FieldInput
             name='password'
@@ -108,7 +113,7 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
           />
           <FormError mb={0} errors={validationErrors} />
 
-          <Box display={'flex'} alignItems={'center'} mb={1}>
+          <ConnectionFormCheckboxRowStyled>
             <FormControlLabel
               control={
                 <Checkbox
@@ -119,11 +124,10 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
               }
               label={locales.remember_password}
             />
-          </Box>
+          </ConnectionFormCheckboxRowStyled>
         </form>
-      </Box>
-
-      <Box display={'flex'} mt={2} justifyContent={'space-between'}>
+      </ConnectionFormContainerStyled>
+      <ConnectionFormFooterStyled>
         <Button size='small' onClick={handleClose}>
           {locales.cancel}
         </Button>
@@ -149,7 +153,7 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
             {locales.save}
           </Button>
         </Stack>
-      </Box>
+      </ConnectionFormFooterStyled>
     </Modal>
   );
 }

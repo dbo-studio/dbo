@@ -5,7 +5,7 @@ import type { RefObject } from 'react';
 
 export type TreeNodeProps = {
   node: TreeNodeType;
-  parentRefs?: React.RefObject<Map<string, HTMLDivElement>>;
+  parentRefsRef?: React.RefObject<Map<string, HTMLDivElement>>;
   nodeIndex?: number;
   level?: number;
   searchTerm?: string;

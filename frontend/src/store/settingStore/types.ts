@@ -16,6 +16,7 @@ export type SettingStore = {
 
 export type UISettings = {
   sidebar: SidebarType;
+  showConnectionsDrawer: boolean;
   showAddConnection: boolean;
   showEditConnection: number | boolean;
   showQuickLookEditor: boolean;
@@ -24,6 +25,7 @@ export type UISettings = {
   showSettings: {
     open: boolean;
     tab: number;
+    aiTab?: 'providers' | 'mcp';
   };
   titleBar: TitleBarType;
 };
@@ -66,4 +68,6 @@ export type SidebarType = {
   rightWidth: number;
   showLeft: boolean;
   leftWidth: number;
+  /** 0 = Assistant, 1 = Fields */
+  rightSidebarTab: number;
 };

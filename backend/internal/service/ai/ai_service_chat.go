@@ -5,12 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/samber/lo"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
 	"github.com/dbo-studio/dbo/internal/model"
-	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
@@ -25,12 +22,12 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		return nil, err
 	}
 
-	conn, err := s.connectionRepo.Find(ctx, req.ConnectionId)
+	conn, err := s.connectionRepo.Find(ctx, req.ConnectionID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, conn, s.cm)
+	repo, err := database.NewAIContextRepository(ctx, conn, s.cm)
 	if err != nil {
 		return nil, err
 	}
@@ -49,12 +46,7 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		Content: req.Message,
 	})
 
-	providerReq := &serviceAiProvider.ChatRequest{
-		Messages: chat.Messages,
-		Model:    dbProvider.Model,
-		Context:  contextStr,
-		Query:    lo.FromPtr(req.ContextOpts.Query),
-	}
+	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, true)
 
 	providerResp, providerResErr := provider.Chat(ctx, providerReq)
 
@@ -67,7 +59,7 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 	}
 
 	response := &dto.AiChatResponse{
-		ChatId: chat.ID,
+		ChatID: chat.ID,
 		Title:  chat.Title,
 	}
 

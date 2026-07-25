@@ -4,14 +4,20 @@ import "github.com/invopop/validation"
 
 type (
 	RawQueryRequest struct {
-		ConnectionId int32  `json:"connectionId"`
-		Query        string `json:"query"`
+		ConnectionID int32   `json:"connectionId"`
+		Query        string  `json:"query"`
+		Database     *string `json:"database"`
+		Schema       *string `json:"schema"`
 	}
 
 	RawQueryResponse struct {
-		Query   string           `json:"query"`
-		Data    []map[string]any `json:"data"`
-		Columns []Column         `json:"columns"`
+		Query          string           `json:"query"`
+		Data           []map[string]any `json:"data"`
+		Columns        []Column         `json:"columns"`
+		Editable       bool             `json:"editable"`
+		NodeID         string           `json:"nodeId"`
+		EditableReason *string          `json:"editableReason"`
+		DrivingTable   *string          `json:"drivingTable"`
 	}
 )
 
@@ -26,11 +32,13 @@ type Column struct {
 	Editable     bool    `json:"editable"`
 	IsActive     bool    `json:"isActive"`
 	IsPrimaryKey bool    `json:"isPrimaryKey"`
+	SourceTable  *string `json:"sourceTable"`
+	SourceColumn *string `json:"sourceColumn"`
 }
 
 func (req RawQueryRequest) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
 		validation.Field(&req.Query, validation.Required),
 	)
 }

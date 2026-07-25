@@ -14,6 +14,8 @@ export interface ColumnType {
   editable?: boolean;
   isActive: boolean;
   isPrimaryKey: boolean;
+  sourceTable?: string;
+  sourceColumn?: string;
   selected?: boolean;
 }
 

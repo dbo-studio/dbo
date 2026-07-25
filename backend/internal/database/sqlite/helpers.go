@@ -1,9 +1,8 @@
 package databaseSqlite
 
 import (
-	"github.com/samber/lo"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/samber/lo"
 )
 
 func columnListToResponse(columns []Column) []dto.Column {

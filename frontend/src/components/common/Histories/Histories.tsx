@@ -5,17 +5,22 @@ import { tools } from '@/core/utils';
 import { useContextMenu, useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import type { HistoryType } from '@/types/History';
-import { Box, Button, ClickAwayListener, IconButton, LinearProgress, Stack, useTheme } from '@mui/material';
+import { Box, Button, ClickAwayListener, IconButton, LinearProgress, Stack } from '@mui/material';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useRef, useState } from 'react';
 import DeleteHistoryIcon from './DeleteHistoryIcon';
 import HistoryContextMenu from './HistoryContextMenu/HistoryContextMenu';
+import {
+  HistoriesContainerStyled,
+  HistoriesListStyled,
+  HistoriesLoadMoreStyled,
+  HistoriesToolbarStyled
+} from './Histories.styled';
 import HistoryItem from './HistoryItem/HistoryItem';
 
 type HistoryResponse = HistoryType[];
 
 export default function Histories(): JSX.Element {
-  const theme = useTheme();
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<HistoryType | null>(null);
   const [search, setSearch] = useState('');
@@ -72,20 +77,24 @@ export default function Histories(): JSX.Element {
 
   return (
     <ClickAwayListener onClickAway={(): void => setSelected(null)}>
-      <Box mt={1} display={'flex'} flexDirection={'column'} flex={1} minHeight={0}>
+      <HistoriesContainerStyled>
         <Box>
-          <Stack spacing={1} direction={'row'} alignContent={'center'} justifyContent={'center'} alignItems={'center'}>
-            <Box flex={1}>
+          <HistoriesToolbarStyled spacing={1} direction={'row'}>
+            <Box
+              sx={{
+                flex: 1
+              }}
+            >
               <Search onChange={(name): void => setSearch(name)} />
             </Box>
             <DeleteHistoryIcon />
             <IconButton onClick={() => void handleRefresh()}>
               <CustomIcon size='s' type={'refresh'} />
             </IconButton>
-          </Stack>
+          </HistoriesToolbarStyled>
         </Box>
 
-        <Box mt={theme.spacing(1)} ref={listRef} flex={1} minHeight={0} overflow={'auto'}>
+        <HistoriesListStyled ref={listRef}>
           <Stack spacing={1}>
             {status === 'pending' ? (
               <LinearProgress data-testid='linear-progress' style={{ marginTop: '8px' }} />
@@ -103,7 +112,7 @@ export default function Histories(): JSX.Element {
           </Stack>
 
           {hasNextPage && (
-            <Box display='flex' justifyContent='center' mt={2} mb={2}>
+            <HistoriesLoadMoreStyled>
               <Button
                 loadingPosition='start'
                 disabled={isFetchingNextPage}
@@ -114,14 +123,14 @@ export default function Histories(): JSX.Element {
               >
                 <span>{locales.load_more}</span>
               </Button>
-            </Box>
+            </HistoriesLoadMoreStyled>
           )}
-        </Box>
+        </HistoriesListStyled>
 
         {selected && (
           <HistoryContextMenu history={selected} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
         )}
-      </Box>
+      </HistoriesContainerStyled>
     </ClickAwayListener>
   );
 }

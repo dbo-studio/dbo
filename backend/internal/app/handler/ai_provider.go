@@ -33,7 +33,7 @@ func (h AiProviderHandler) Providers(c fiber.Ctx) error {
 }
 
 func (h AiProviderHandler) Update(c fiber.Ctx) error {
-	queryId := fiber.Params[uint](c, "id")
+	queryID := fiber.Params[uint](c, "id")
 	req := new(dto.AiProviderUpdateRequest)
 
 	if err := c.Bind().Body(req); err != nil {
@@ -44,7 +44,7 @@ func (h AiProviderHandler) Update(c fiber.Ctx) error {
 		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
 	}
 
-	result, err := h.aiProviderService.Update(c, queryId, req)
+	result, err := h.aiProviderService.Update(c, queryID, req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)

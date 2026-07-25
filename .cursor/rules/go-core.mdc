@@ -1,0 +1,54 @@
+---
+description: Idiomatic Go — error handling, interfaces, context, packages, naming
+globs: backend/**/*.go
+alwaysApply: false
+---
+
+# Go Core Idioms
+
+Based on community best practices (Effective Go, Go Proverbs, golangci-lint revive rules).
+
+## Errors
+
+- Handle every error at the call site. Never `_ = fn()` unless documented as impossible.
+- Wrap with context: `fmt.Errorf("fetching user %d: %w", id, err)`.
+- No `panic()` in library/service code. No `log.Fatal` outside `main`.
+- In DBO: use `pkg/apperror` for HTTP-aware errors, not raw `errors.New` in handlers.
+
+```go
+// ❌ BAD
+result, _ := repo.Find(ctx, id)
+
+// ✅ GOOD
+result, err := repo.Find(ctx, id)
+if err != nil {
+    return nil, apperror.NotFound(apperror.ErrSavedQueryNotFound)
+}
+```
+
+## Interfaces
+
+- Accept interfaces, return concrete types.
+- Define small interfaces at the point of use (consumer-defined).
+- Use compile-time checks: `var _ IFooService = (*IFooServiceImpl)(nil)`.
+
+## Context
+
+- `context.Context` is always the first parameter for I/O-bound functions.
+- Never store context in structs; pass it through.
+
+## Packages & Naming
+
+- No `util`, `common`, or `helper` packages — group by feature/domain.
+- Short receiver names (`h` for handler, `r` for repo).
+- Use `any` instead of `interface{}`.
+- Prefer composition via named fields; embed only for interface forwarding (e.g. `sync.Mutex`).
+
+## Generics
+
+- Prefer generics with constraints over `interface{}` + type assertions.
+- Use `any` only for truly dynamic data (JSON decode, reflection).
+
+## Defer
+
+- Always check errors from `Close()` in defer when the function returns an error.

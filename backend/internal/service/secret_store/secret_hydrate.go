@@ -3,11 +3,10 @@ package secretStore
 import (
 	"context"
 
-	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
-
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 )
 
 // HydrateConnectionPassword injects the connection password into connection.Options when needed.

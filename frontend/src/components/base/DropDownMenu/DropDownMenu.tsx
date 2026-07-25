@@ -8,14 +8,14 @@ export default function DropDownMenu({ open, onClose, anchorRef, children }: Dro
     onClose();
   };
 
-  const prevOpen = useRef(open);
+  const prevOpenRef = useRef(open);
   useEffect(() => {
-    if (prevOpen.current === true && open === false) {
+    if (prevOpenRef.current === true && open === false) {
       anchorRef?.current?.focus();
     }
 
-    prevOpen.current = open;
-  }, [open]);
+    prevOpenRef.current = open;
+  }, [open, anchorRef]);
 
   return (
     <Popper

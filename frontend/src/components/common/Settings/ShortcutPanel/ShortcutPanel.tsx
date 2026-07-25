@@ -7,7 +7,15 @@ export default function ShortcutPanel(): JSX.Element {
   return (
     <Box>
       {Object.entries(shortcuts).map(([key, value]) => (
-        <Grid mt={1} key={key} container spacing={2} alignItems='center'>
+        <Grid
+          key={key}
+          container
+          spacing={2}
+          sx={{
+            mt: 1,
+            alignItems: 'center'
+          }}
+        >
           <Grid size={{ md: 8 }}>
             <Typography color={'textText'} variant='body2'>
               {value.label}

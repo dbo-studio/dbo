@@ -1,115 +1,115 @@
+import { useAiBridge } from '@/hooks/useAiBridge';
+import { useCurrentConnection } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
-import { useDataStore } from '@/store/dataStore/data.store';
-import type { FormFieldWithState, FormValue } from '@/types/Tree';
-import { Box, CircularProgress } from '@mui/material';
+import { useFormObjectStore } from '@/store/formObject/formObject.store';
+import { ObjectTabType } from '@/types';
+import { CircularProgress, Stack } from '@mui/material';
 import React, { useCallback } from 'react';
 import ArrayForm from './components/ArrayForm/ArrayForm';
-import SimpleForm from './components/SimpleForm/SimpleForm';
+import GeneralForm from './components/GeneralForm/GeneralForm';
+import QueryPreviewModal from './components/QueryPreviewModal/QueryPreviewModal';
 import FormStatusBar from './components/StatusBar/FormStatusBar';
 import FormTabs from './components/Tabs/FormTabs';
-import { useFormActions } from './hooks/useFormActions';
 import { useFormData } from './hooks/useFormData';
+import { useFormSave } from './hooks/useFormSave';
 import { useTabs } from './hooks/useTabs';
-import { ObjectFormStyled } from './ObjectForm.styled';
+import {
+  buildObjectDefinitionSummary,
+  parseObjectNodeId,
+  readObjectNameFromForm
+} from './utils/buildObjectDefinitionSummary';
+import { prefetchObjectFormTabs } from './utils/prefetchObjectFormTabs';
+import { ObjectFormContentStyled, ObjectFormLoadingStyled, ObjectFormStyled } from './ObjectForm.styled';
 
-export default function ObjectForm({ isDetail }: { isDetail: boolean }): React.JSX.Element {
+export default function ObjectForm(): React.JSX.Element {
   const { tabs, selectedTabId, isLoading: isLoadingTabs, handleTabChange } = useTabs();
-  const formDataState = useFormData(selectedTabId, isDetail);
-  const { handleSave, handleCancel, isLoading: isSaving } = useFormActions(selectedTabId);
-  const selectedTab = useSelectedTab();
-  const { updateFormData } = useDataStore();
+  const { isLoading, objectTabId } = useFormData(selectedTabId);
 
-  const handleFieldChange = useCallback(
-    (fieldId: string, value: FormValue): void => {
-      if (!selectedTab?.id || !selectedTabId || !formDataState) return;
+  const addRow = useFormObjectStore((state) => state.addRow);
+  const selectedTab = useSelectedTab<ObjectTabType>();
+  const currentConnection = useCurrentConnection();
+  const { prefillChat } = useAiBridge();
 
-      const storageKey = `${selectedTab.id}_${selectedTabId}`;
-      const currentFields = useDataStore.getState().formDataByTab[selectedTab.id]?.[storageKey] as
-        | FormFieldWithState[]
-        | undefined;
+  const formData = useFormObjectStore((state) => state.getFormData(objectTabId));
+  const showGeneralForm = (formData?.general.length ?? 0) > 0;
+  const showArrayForm = (formData?.schema.length ?? 0) > 0;
 
-      if (!currentFields) return;
+  const handleAiSuggest = useCallback(async (): Promise<void> => {
+    if (!selectedTab?.id || !currentConnection?.id) return;
 
-      const updatedFields = currentFields.map((field) => (field.id === fieldId ? { ...field, value } : field));
+    const formDataByTab = await prefetchObjectFormTabs(selectedTab, tabs, currentConnection.id);
+    const objectDefinition = buildObjectDefinitionSummary(formDataByTab, selectedTab.id, tabs, selectedTab.action);
 
-      updateFormData(selectedTab.id, storageKey, updatedFields);
-    },
-    [selectedTab?.id, selectedTabId, formDataState, updateFormData]
-  );
+    if (!objectDefinition.trim()) return;
 
-  const handleArrayDataChange = useCallback(
-    (data: Record<string, FormValue>[]): void => {
-      if (!selectedTab?.id || !selectedTabId || !formDataState) return;
+    const nodeContext = parseObjectNodeId(selectedTab.nodeId);
+    const objectName = nodeContext.objectName ?? readObjectNameFromForm(formDataByTab);
+    const isViewAction = selectedTab.action === 'createView' || selectedTab.action === 'editView';
+    const isCreateAction = selectedTab.action?.startsWith('create') ?? false;
 
-      const storageKey = `${selectedTab.id}_${selectedTabId}`;
-      const currentFields = useDataStore.getState().formDataByTab[selectedTab.id]?.[storageKey] as
-        | FormFieldWithState[]
-        | undefined;
-
-      if (!currentFields) return;
-
-      const updatedFields = currentFields.map((field) => ({
-        ...field,
-        value: data.map((row) => row[field.id] ?? null)
-      }));
-
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //@ts-ignore
-      updateFormData(selectedTab.id, storageKey, updatedFields);
-    },
-    [selectedTab?.id, selectedTabId, formDataState, updateFormData]
-  );
-
-  const handleAddRow = useCallback((): void => {
-    if (!selectedTab?.id || !selectedTabId || !formDataState) return;
-
-    const newRow: Record<string, FormValue> = {};
-    formDataState.schema.forEach((field) => {
-      newRow[field.id] = field.type === 'multi-select' ? [] : null;
+    prefillChat('Suggest improvements for this object definition.', true, {
+      database: nodeContext.database,
+      schema: nodeContext.schema,
+      tables: !isViewAction && objectName && !isCreateAction ? [objectName] : [],
+      views: isViewAction && objectName && !isCreateAction ? [objectName] : [],
+      objectDefinition,
+      queryResultSummary: undefined,
+      querySnippet: undefined,
+      selectedQuery: undefined
     });
+  }, [currentConnection?.id, prefillChat, selectedTab, tabs]);
 
-    const currentData = formDataState.data;
-    handleArrayDataChange([...currentData, newRow]);
-  }, [selectedTab?.id, selectedTabId, formDataState, handleArrayDataChange]);
-
-  const handleSaveClick = useCallback(async (): Promise<void> => {
-    if (!formDataState) return;
-    await handleSave(formDataState);
-  }, [formDataState, handleSave]);
-
-  const showTabs = tabs.length > 0;
-  const showLoading = isLoadingTabs || !formDataState;
-  const showContent = !showLoading && formDataState;
+  const { handleSave, handleCancel, handleConfirmExecute, handleClosePreview, isSaving, previewState } = useFormSave({
+    tabs: tabs as ObjectTabType[],
+    objectTabId
+  });
 
   return (
-    <ObjectFormStyled>
-      {showTabs && <FormTabs tabs={tabs} selectedTabId={selectedTabId} onTabChange={handleTabChange} />}
-
-      {showLoading && (
-        <Box display='flex' justifyContent='center' alignItems='center' flex={1} minHeight={200}>
-          <CircularProgress size={30} />
-        </Box>
+    <ObjectFormStyled
+      data-testid='object-form'
+      data-object-tab-id={objectTabId}
+      data-workspace-tab-id={selectedTab?.id ?? ''}
+    >
+      {!isLoading && tabs.length > 0 && (
+        <FormTabs tabs={tabs} selectedTabId={selectedTabId} onTabChange={handleTabChange} />
       )}
-
-      {showContent && (
-        <Box overflow={'hidden'} flexDirection={'column'} display={'flex'} padding={1} width={'100%'}>
-          <Box flex={1} overflow='auto' padding={1}>
-            {formDataState.isArray ? (
-              <ArrayForm schema={formDataState.schema} data={formDataState.data} onDataChange={handleArrayDataChange} />
-            ) : (
-              <SimpleForm schema={formDataState.schema} onFieldChange={handleFieldChange} />
-            )}
-          </Box>
+      {(isLoadingTabs || isLoading) && (
+        <ObjectFormLoadingStyled>
+          <CircularProgress size={30} />
+        </ObjectFormLoadingStyled>
+      )}
+      {!isLoadingTabs && !isLoading && (
+        <ObjectFormContentStyled>
+          {showGeneralForm && <GeneralForm objectTabId={objectTabId} />}
+          {showArrayForm && (
+            <Stack
+              direction={'column'}
+              sx={{
+                flex: 1,
+                overflow: 'auto'
+              }}
+            >
+              <ArrayForm objectTabId={objectTabId} />
+            </Stack>
+          )}
 
           <FormStatusBar
-            onSave={() => void handleSaveClick()}
+            onSave={() => void handleSave()}
             onCancel={() => void handleCancel()}
-            onAddRow={formDataState.isArray ? handleAddRow : undefined}
-            isArrayForm={formDataState.isArray}
+            onAddRow={showArrayForm ? () => addRow(objectTabId) : undefined}
+            onAiSuggest={() => void handleAiSuggest()}
+            isArrayForm={showArrayForm}
             disabled={isSaving}
           />
-        </Box>
+        </ObjectFormContentStyled>
       )}
+      <QueryPreviewModal
+        open={previewState.isOpen}
+        queries={previewState.queries}
+        isExecuting={previewState.isExecuting}
+        onCancel={handleClosePreview}
+        onConfirm={() => void handleConfirmExecute()}
+      />
     </ObjectFormStyled>
   );
 }

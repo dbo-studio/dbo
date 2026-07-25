@@ -5,7 +5,12 @@ import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Divider, FormControl, Slider, Typography } from '@mui/material';
 import { JSX } from 'react';
-import { EditorThemePreviewStyled } from './EditorTheme.styled';
+import {
+  EditorThemePreviewBoxStyled,
+  EditorThemePreviewStyled,
+  EditorThemePreviewTextStyled,
+  EditorThemeSliderStyled
+} from './EditorTheme.styled';
 
 const editorThemes = [
   { value: 'github-light', label: 'GitHub Light' },
@@ -18,7 +23,12 @@ export default function EditorTheme(): JSX.Element {
 
   return (
     <Box>
-      <Box mb={1} mt={3}>
+      <Box
+        sx={{
+          mb: 1,
+          mt: 3
+        }}
+      >
         <Typography variant='body1'>{locales.editor_theme}</Typography>
       </Box>
       <Divider />
@@ -36,8 +46,7 @@ export default function EditorTheme(): JSX.Element {
           <SyntaxHighlighter value={`SELECT * FROM users WHERE id = 1;`} />
         </EditorThemePreviewStyled>
       </FormControl>
-
-      <Box sx={{ mt: 4, px: 2, mb: 4 }}>
+      <EditorThemeSliderStyled>
         <Slider
           value={theme.editorFontSize}
           onChange={(_, value): void => updateTheme({ editorFontSize: value })}
@@ -47,21 +56,12 @@ export default function EditorTheme(): JSX.Element {
           marks
           valueLabelDisplay='on'
         />
-      </Box>
-      <Box
-        sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}
-      >
-        <Typography
-          variant='body2'
-          color='textText'
-          sx={{
-            fontSize: `${theme.editorFontSize}px`,
-            fontFamily: 'monospace'
-          }}
-        >
+      </EditorThemeSliderStyled>
+      <EditorThemePreviewBoxStyled>
+        <EditorThemePreviewTextStyled variant='body2' color='textText' fontSize={theme.editorFontSize}>
           Preview: SELECT * FROM users WHERE id = 1;
-        </Typography>
-      </Box>
+        </EditorThemePreviewTextStyled>
+      </EditorThemePreviewBoxStyled>
     </Box>
   );
 }

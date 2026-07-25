@@ -1,6 +1,7 @@
 package databaseMysql
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -65,4 +66,42 @@ func isNumericType(dataType string) bool {
 		}
 	}
 	return false
+}
+
+func baseMysqlDataType(dataType string) string {
+	normalized := strings.TrimSpace(dataType)
+	if idx := strings.Index(normalized, "("); idx != -1 {
+		normalized = normalized[:idx]
+	}
+
+	return strings.ToUpper(normalized)
+}
+
+func formatMysqlColumnType(dataType string, maxLength *string, numericScale *string) string {
+	if dataType == "" {
+		return dataType
+	}
+
+	baseType := baseMysqlDataType(dataType)
+
+	if isCharacterType(dataType) {
+		length := "255"
+		if maxLength != nil && *maxLength != "" {
+			length = *maxLength
+		} else if baseType == "CHAR" {
+			length = "1"
+		}
+
+		return fmt.Sprintf("%s(%s)", baseType, length)
+	}
+
+	if isNumericType(dataType) && maxLength != nil && *maxLength != "" {
+		if numericScale != nil && *numericScale != "" {
+			return fmt.Sprintf("%s(%s,%s)", baseType, *maxLength, *numericScale)
+		}
+
+		return fmt.Sprintf("%s(%s)", baseType, *maxLength)
+	}
+
+	return baseType
 }

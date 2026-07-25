@@ -17,8 +17,6 @@ formatters:
   enable:
     # format the code
     - gofmt
-    # format the block of imports
-    - gci
 
   settings:
     # format the code with Go standard library
@@ -28,19 +26,8 @@ formatters:
       simplify: true
       rewrite-rules:
         # replace `interface{}` with `any` in the code on format
-        - pattern: 'interface{}'
-          replacement: 'any'
-
-    # make sure imports are always in a deterministic order
-    # https://github.com/daixiang0/gci/
-    gci:  # define the section orders for imports
-      sections:
-        # Standard section: captures all standard packages.
-        - standard
-        # Default section: catchall that is not standard or custom
-        - default
-        # linters that related to local tool, so they should be separated
-        - localmodule
+        - pattern: "interface{}"
+          replacement: "any"
 
 linters:
   exclusions:
@@ -217,8 +204,8 @@ linters:
       #    correction: "whatever"
 
     exclude:
-        - '.+\.exports'
-        - '.+\.data'
+      - '.+\.exports'
+      - '.+\.data'
 output:
   # Order to use when sorting results.
   # Possible values: `file`, `linter`, and `severity`.

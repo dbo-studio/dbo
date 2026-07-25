@@ -8,7 +8,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *MySQLRepository) handleDatabaseCommands(node contract.DBNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
+func (r *MySQLRepository) handleDatabaseCommands(node contract.DBNode, tabID contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
 	if action != contract.CreateDatabaseAction && action != contract.EditDatabaseAction && action != contract.DropDatabaseAction {
@@ -20,7 +20,7 @@ func (r *MySQLRepository) handleDatabaseCommands(node contract.DBNode, tabId con
 		return nil, err
 	}
 
-	params := dto[tabId]
+	params := dto[tabID]
 
 	if action == contract.CreateDatabaseAction {
 		query := fmt.Sprintf("CREATE DATABASE `%s`", *params.New.Name)
@@ -31,14 +31,19 @@ func (r *MySQLRepository) handleDatabaseCommands(node contract.DBNode, tabId con
 	}
 
 	if action == contract.EditDatabaseAction {
-		if params.Old.Name != nil && params.New.Name != nil {
-			query := fmt.Sprintf("ALTER DATABASE `%s` RENAME TO `%s`", *params.Old.Name, *params.New.Name)
-			queries = append(queries, query)
-			params.Old.Name = params.New.Name
+		if params == nil || params.Old == nil || params.New == nil || params.Old.Name == nil {
+			return queries, nil
 		}
 
-		if params.Old.Name != nil && params.New.Comment != nil {
-			queries = append(queries, fmt.Sprintf("ALTER DATABASE `%s` COMMENT '%s'", *params.Old.Name, *params.New.Comment))
+		dbName := *params.Old.Name
+
+		if params.New.Name != nil && *params.Old.Name != *params.New.Name {
+			queries = append(queries, fmt.Sprintf("ALTER DATABASE `%s` RENAME TO `%s`", dbName, *params.New.Name))
+			dbName = *params.New.Name
+		}
+
+		if params.New.Comment != nil && (params.Old.Comment == nil || *params.Old.Comment != *params.New.Comment) {
+			queries = append(queries, fmt.Sprintf("ALTER DATABASE `%s` COMMENT '%s'", dbName, *params.New.Comment))
 		}
 	}
 

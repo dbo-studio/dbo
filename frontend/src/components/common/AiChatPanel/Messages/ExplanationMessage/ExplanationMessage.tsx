@@ -1,12 +1,15 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import TypewriterEffectText from '@/components/base/TypewriterEffectText/TypewriterEffectText';
 import { useAiStore } from '@/store/aiStore/ai.store';
-import { IconButton, Typography } from '@mui/material';
-import { Stack } from '@mui/system';
+import { IconButton, Tooltip, Typography } from '@mui/material';
+import locales from '@/locales';
 import type { ExplanationMessageProps } from '../../types';
-import { ExplanationMessageStyled } from './ExplanationMessage.styled';
+import { sanitizeAssistantContent } from '../../utils/assistantContent';
+import ChatMarkdown from '../ChatMarkdown/ChatMarkdown';
+import { ExplanationMessageStyled, UserMessageActionsStyled, UserMessageRowStyled } from './ExplanationMessage.styled';
 
 export default function ExplanationMessage({ message }: ExplanationMessageProps) {
+  const isUser = message.role === 'user';
+
   const handleEditButton = () => {
     const context = useAiStore.getState().context;
     const updateContext = useAiStore.getState().updateContext;
@@ -20,21 +23,41 @@ export default function ExplanationMessage({ message }: ExplanationMessageProps)
     toggleMessageEdit();
   };
 
-  return (
-    <ExplanationMessageStyled user={message.role === 'user' ? 'true' : 'false'}>
-      {message.role === 'assistant' && message.isNew ? (
-        <TypewriterEffectText text={message.content} speed={30} />
-      ) : (
-        <Stack direction={'row'} justifyContent={'space-between'}>
-          <Typography variant={'body2'} whiteSpace={'pre-wrap'} lineHeight={1.6}>
-            {message.content}
-          </Typography>
+  const displayContent = isUser
+    ? message.content
+    : sanitizeAssistantContent(message.content, locales.ai_tool_response_pending);
 
-          <IconButton onClick={handleEditButton}>
-            <CustomIcon size='xs' type='pen' />
-          </IconButton>
-        </Stack>
-      )}
-    </ExplanationMessageStyled>
+  if (!isUser && !displayContent.trim()) {
+    return null;
+  }
+
+  const content = (
+    <Typography
+      variant='body2'
+      component='div'
+      sx={{
+        whiteSpace: 'pre-wrap',
+        ...(isUser ? { lineHeight: 1.55 } : undefined)
+      }}
+    >
+      {isUser ? displayContent : <ChatMarkdown content={displayContent} />}
+    </Typography>
   );
+
+  if (isUser) {
+    return (
+      <UserMessageRowStyled>
+        <UserMessageActionsStyled className='user-message-actions'>
+          <Tooltip title={locales.edit}>
+            <IconButton size='small' onClick={handleEditButton}>
+              <CustomIcon size='xs' type='pen' />
+            </IconButton>
+          </Tooltip>
+        </UserMessageActionsStyled>
+        <ExplanationMessageStyled $isUser>{content}</ExplanationMessageStyled>
+      </UserMessageRowStyled>
+    );
+  }
+
+  return <ExplanationMessageStyled $isUser={false}>{content}</ExplanationMessageStyled>;
 }

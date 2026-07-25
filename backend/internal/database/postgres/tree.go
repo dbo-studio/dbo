@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/samber/lo"
-
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/samber/lo"
 )
 
 func (r *PostgresRepository) Tree(ctx context.Context, parentID string) (*contract.TreeNode, error) {
@@ -140,7 +139,7 @@ func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaNa
 	}
 	switch container {
 	case contract.TableContainerNodeType:
-		tables, err := r.tables(ctx, &schemaName, true)
+		tables, err := r.tables(ctx, &dbName, &schemaName, true)
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}
@@ -186,7 +185,7 @@ func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaNa
 			})
 		}
 	case contract.MaterializedViewContainerNodeType:
-		mvs, err := r.materializedViews(ctx, &schemaName, true)
+		mvs, err := r.materializedViews(ctx, &dbName, &schemaName, true)
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}

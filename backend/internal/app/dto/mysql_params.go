@@ -67,42 +67,6 @@ type MysqlViewParamsData struct {
 	CheckOption *string `json:"check_option"`
 }
 
-type MysqlMaterializedViewParams struct {
-	New *MysqlMaterializedViewData `json:"new"`
-	Old *MysqlMaterializedViewData `json:"old"`
-}
-
-type MysqlMaterializedViewData struct {
-	Name       *string `json:"name"`
-	Comment    *string `json:"comment"`
-	Tablespace *string `json:"tablespace"`
-	Owner      *string `json:"rolname"`
-	Query      *string `json:"query"`
-}
-
-type MysqlIndexParams struct {
-	Name           *string `json:"name"`
-	Comment        *string `json:"comment"`
-	Unique         *bool   `json:"unique"`
-	Columns        *string `json:"columns"`
-	Condition      *string `json:"condition"`
-	IncludeColumns *string `json:"include_columns"`
-	AccessMethod   *string `json:"access_method"`
-	Tablespace     *string `json:"tablespace"`
-}
-
-type MysqlSequenceParams struct {
-	Name       *string `json:"name"`
-	Comment    *string `json:"comment"`
-	Increment  *int64  `json:"increment"`
-	MinValue   *int64  `json:"min_value"`
-	MaxValue   *int64  `json:"max_value"`
-	StartValue *int64  `json:"start_value"`
-	Cache      *int64  `json:"cache"`
-	Cycle      *bool   `json:"cycle"`
-	OwnedBy    *string `json:"owned_by"`
-}
-
 type MysqlTableColumnParams struct {
 	Columns []MysqlTableColumn `json:"columns"`
 }
@@ -148,4 +112,39 @@ type MysqlTableForeignKeyData struct {
 	OnDelete          *string  `json:"delete_action"`
 	IsDeferrable      *bool    `json:"is_deferrable"`
 	InitiallyDeferred *bool    `json:"initially_deferred"`
+}
+
+type MysqlTableKeyParams struct {
+	Columns []MysqlTableKey `json:"columns"`
+}
+
+type MysqlTableKey struct {
+	New     *MysqlTableKeyData `json:"new"`
+	Old     *MysqlTableKeyData `json:"old"`
+	Added   *bool              `json:"added"`
+	Deleted *bool              `json:"deleted"`
+}
+
+type MysqlTableKeyData struct {
+	ConstraintName *string  `json:"constraint_name"`
+	Columns        []string `json:"ref_columns"`
+	ConstraintType *string  `json:"constraint_type"`
+}
+
+type MysqlTableIndexParams struct {
+	Columns []MysqlTableIndex `json:"columns"`
+}
+
+type MysqlTableIndex struct {
+	New     *MysqlTableIndexData `json:"new"`
+	Old     *MysqlTableIndexData `json:"old"`
+	Added   *bool                `json:"added"`
+	Deleted *bool                `json:"deleted"`
+}
+
+type MysqlTableIndexData struct {
+	IndexName *string  `json:"index_name"`
+	Columns   []string `json:"ref_columns"`
+	NonUnique *bool    `json:"non_unique"`
+	Collation *string  `json:"collation"`
 }

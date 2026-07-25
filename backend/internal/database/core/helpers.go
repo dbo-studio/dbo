@@ -4,11 +4,10 @@ import (
 	"strconv"
 	"strings"
 
-	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 )
 
-func (r *BaseRepository) ExtractNode(node string) contract.DBNode {
+func (r *BaseRepository) ExtractNode(node string) databaseContract.DBNode {
 	switch r.Connection().ConnectionType {
 	case string(databaseContract.Mysql):
 		return r.mysqlNode(node)
@@ -19,6 +18,64 @@ func (r *BaseRepository) ExtractNode(node string) contract.DBNode {
 	default:
 		return databaseContract.DBNode{}
 	}
+}
+
+// FormatNodeID builds a canonical tree node id for the given connection type.
+// Container suffixes (tableContainer, etc.) are never emitted as object names.
+func FormatNodeID(connectionType string, node databaseContract.DBNode) string {
+	switch connectionType {
+	case string(databaseContract.Mysql):
+		return formatMysqlNodeID(node)
+	case string(databaseContract.Postgresql):
+		return formatPostgresqlNodeID(node)
+	case string(databaseContract.Sqlite):
+		return formatSqliteNodeID(node)
+	default:
+		return ""
+	}
+}
+
+func isContainerSegment(segment string) bool {
+	switch databaseContract.TreeNodeType(segment) {
+	case databaseContract.TableContainerNodeType,
+		databaseContract.ViewContainerNodeType,
+		databaseContract.MaterializedViewContainerNodeType:
+		return true
+	default:
+		return false
+	}
+}
+
+func formatMysqlNodeID(node databaseContract.DBNode) string {
+	parts := make([]string, 0, 2)
+	if node.Database != "" {
+		parts = append(parts, node.Database)
+	}
+	if node.Table != "" && !isContainerSegment(node.Table) {
+		parts = append(parts, node.Table)
+	}
+	return strings.Join(parts, ".")
+}
+
+func formatPostgresqlNodeID(node databaseContract.DBNode) string {
+	parts := make([]string, 0, 3)
+	if node.Database != "" {
+		parts = append(parts, node.Database)
+	}
+	if node.Schema != "" && !isContainerSegment(node.Schema) {
+		parts = append(parts, node.Schema)
+	}
+	if node.Table != "" && !isContainerSegment(node.Table) {
+		parts = append(parts, node.Table)
+	}
+	return strings.Join(parts, ".")
+}
+
+func formatSqliteNodeID(node databaseContract.DBNode) string {
+	if node.Table == "" || isContainerSegment(node.Table) {
+		return ""
+	}
+	return node.Table
 }
 
 func (*BaseRepository) ColumnMappedFormat(dataType string) string {
@@ -83,8 +140,8 @@ func (*BaseRepository) SanitizeQueryResults(row map[string]any) map[string]any {
 	return sanitized
 }
 
-func (*BaseRepository) postgresqlNode(nodeId string) contract.DBNode {
-	parts := strings.Split(nodeId, ".")
+func (*BaseRepository) postgresqlNode(nodeID string) databaseContract.DBNode {
+	parts := strings.Split(nodeID, ".")
 
 	var database, schema, table string
 
@@ -97,15 +154,15 @@ func (*BaseRepository) postgresqlNode(nodeId string) contract.DBNode {
 		database, schema, table = parts[0], parts[1], parts[2]
 	}
 
-	return contract.DBNode{
+	return databaseContract.DBNode{
 		Database: database,
 		Schema:   schema,
 		Table:    table,
 	}
 }
 
-func (*BaseRepository) mysqlNode(nodeId string) contract.DBNode {
-	parts := strings.Split(nodeId, ".")
+func (*BaseRepository) mysqlNode(nodeID string) databaseContract.DBNode {
+	parts := strings.Split(nodeID, ".")
 
 	var database, table string
 
@@ -116,14 +173,14 @@ func (*BaseRepository) mysqlNode(nodeId string) contract.DBNode {
 		database, table = parts[0], parts[1]
 	}
 
-	return contract.DBNode{
+	return databaseContract.DBNode{
 		Database: database,
 		Table:    table,
 	}
 }
 
-func (*BaseRepository) sqliteNode(nodeId string) contract.DBNode {
-	return contract.DBNode{
-		Table: nodeId,
+func (*BaseRepository) sqliteNode(nodeID string) databaseContract.DBNode {
+	return databaseContract.DBNode{
+		Table: nodeID,
 	}
 }

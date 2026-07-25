@@ -12,7 +12,7 @@ export default function AddFilterButton({ columns }: AddFilterButtonProps): JSX.
     upsertFilters({
       index: tools.uuid(),
       column: columns[0].name,
-      operator: PgsqlFilterConditions[0],
+      operator: PgsqlFilterConditions[0].value,
       value: '',
       isActive: true,
       next: PgsqlFilterNext[0]

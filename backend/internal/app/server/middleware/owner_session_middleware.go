@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/gofiber/fiber/v3"
+	"time"
 
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/container"
@@ -9,9 +9,13 @@ import (
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/response"
+	"github.com/gofiber/fiber/v3"
 )
 
-const sessionCookieName = "dbo_sid"
+const (
+	sessionCookieName    = "dbo_sid"
+	sessionTouchInterval = 60 * time.Second
+)
 
 /*
 *
@@ -24,17 +28,21 @@ func OwnerSessionMiddleware(webSessionRepo repository.IWebSessionRepo) fiber.Han
 		if cfg != nil && cfg.App.Client == config.ClientDesktop {
 			ownerID := "desktop"
 			c.Locals(helper.CtxOwnerIDKey, ownerID)
+			c.SetContext(helper.CtxWithOwnerID(c.Context(), ownerID))
 			return c.Next()
 		}
 
 		oldSessionID := c.Cookies(sessionCookieName)
 
-		newSessionID, err := webSessionRepo.CreateOrUpdate(c.Context(), oldSessionID)
-		if err != nil {
-			return response.ErrorBuilder().FromError(apperror.InternalServerError(err)).Send(c)
-		}
+		var newSessionID string
+		var err error
 
 		if oldSessionID == "" {
+			newSessionID, err = webSessionRepo.Create(c.Context())
+			if err != nil {
+				return response.ErrorBuilder().FromError(apperror.InternalServerError(err)).Send(c)
+			}
+
 			c.Cookie(&fiber.Cookie{
 				Name:     sessionCookieName,
 				Value:    newSessionID,
@@ -43,9 +51,15 @@ func OwnerSessionMiddleware(webSessionRepo repository.IWebSessionRepo) fiber.Han
 				SameSite: "Lax",
 				Secure:   !helper.IsLocal(),
 			})
+		} else {
+			newSessionID = oldSessionID
+			if err := webSessionRepo.TouchLastSeenDebounced(c.Context(), oldSessionID, sessionTouchInterval); err != nil {
+				return response.ErrorBuilder().FromError(apperror.InternalServerError(err)).Send(c)
+			}
 		}
 
 		c.Locals(helper.CtxOwnerIDKey, newSessionID)
+		c.SetContext(helper.CtxWithOwnerID(c.Context(), newSessionID))
 
 		return c.Next()
 	}

@@ -8,7 +8,7 @@ export const KbdGroupStyled = styled(Box)(({ theme }) => ({
   gap: theme.spacing(0.25),
   '& > *:not(:last-child)::after': {
     marginLeft: theme.spacing(0.5),
-    color: theme.palette.text.secondary,
+    color: theme.palette.text.subdued,
     fontSize: '0.75rem',
     fontWeight: 400
   }

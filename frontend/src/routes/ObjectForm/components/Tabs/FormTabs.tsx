@@ -12,7 +12,7 @@ export default function FormTabs({ tabs, selectedTabId, onTabChange }: FormTabPr
         onChange={(_, newValue): void => onTabChange(newValue as string)}
       >
         {tabs.map((tab: ObjectTabType) => (
-          <Tab value={tab.id} key={tab.id} label={tab.name} />
+          <Tab value={tab.id} key={tab.id} label={tab.name} data-testid={`object-form-tab-${tab.id}`} />
         ))}
       </Tabs>
     </FormTabsStyled>

@@ -1,157 +1,28 @@
-import api from '@/api';
-import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import FieldInput from '@/components/base/FieldInput/FieldInput';
-import SelectInput from '@/components/base/SelectInput/SelectInput';
-import { SelectInputOption } from '@/components/base/SelectInput/types';
+import SidebarSectionTabs from '@/components/base/SidebarSectionTabs/SidebarSectionTabs';
 import locales from '@/locales';
-import { useAiStore } from '@/store/aiStore/ai.store';
-import type { AiProviderType } from '@/types';
-import { Box, Button, Chip, IconButton, Stack } from '@mui/material';
-import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import AiProvidersPanel from './AiProvidersPanel/AiProvidersPanel';
+import McpPanel from './McpPanel/McpPanel';
 
-export default function AiPanel() {
-  const providers = useAiStore((state) => state.providers);
-  const updateProvider = useAiStore((state) => state.updateProvider);
-  const [provider, setProvider] = useState<AiProviderType | undefined>(providers?.[0]);
-  const [newModel, setNewModel] = useState<string>('');
+type AiSettingsTab = 'providers' | 'mcp';
 
-  const [error, setError] = useState<{
-    url: string | undefined;
-    timeout: string | undefined;
-  }>({
-    url: undefined,
-    timeout: undefined
-  });
+type AiPanelProps = {
+  initialTab?: AiSettingsTab;
+};
 
-  const { mutateAsync: updateProviderMutation, isPending: pendingUpdateProvider } = useMutation({
-    mutationFn: async (provider: AiProviderType): Promise<AiProviderType> => {
-      setError({
-        url: undefined,
-        timeout: undefined
-      });
+const sectionTabs = [
+  { id: 'providers' as const, label: locales.ai_tab_providers },
+  { id: 'mcp' as const, label: locales.ai_tab_mcp }
+];
 
-      if (!provider?.url || provider?.url.length === 0) {
-        setError({ ...error, url: locales.url_required });
-        return provider;
-      }
-
-      const updatedProvider = await api.aiProvider.updateProvider(provider.id, {
-        apiKey: provider.apiKey,
-        url: provider.url,
-        timeout: provider.timeout,
-        models: provider.models
-      });
-      setNewModel('');
-      updateProvider(updatedProvider);
-      setProvider(updatedProvider);
-      toast.success(locales.changes_saved_successfully);
-      return updatedProvider;
-    }
-  });
-
-  const handleSubmit = () => {
-    updateProviderMutation(provider as AiProviderType).catch((e) => console.debug('🚀 ~ handleSubmit ~ error:', e));
-  };
-
-  const handleAddModel = () => {
-    setProvider({
-      ...provider,
-      models: [...(provider?.models ?? []), newModel]
-    } as AiProviderType);
-  };
-
-  const handleRemoveModel = (model: string) => {
-    setProvider({
-      ...provider,
-      models: provider?.models?.filter((m) => m !== model) ?? []
-    } as AiProviderType);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleAddModel();
-    }
-  };
+export default function AiPanel({ initialTab = 'providers' }: AiPanelProps) {
+  const [tab, setTab] = useState<AiSettingsTab>(initialTab);
 
   return (
-    <Box>
-      <Box display={'flex'} flexDirection={'column'} gap={2}>
-        <SelectInput
-          label={locales.provider}
-          value={provider?.type}
-          onChange={(e) => {
-            setProvider(providers?.find((p) => p.type === (e as SelectInputOption)?.value) ?? providers?.[0]);
-          }}
-          options={providers?.map((m) => ({ label: m.type, value: m.type })) ?? []}
-        />
+    <>
+      <SidebarSectionTabs value={tab} onChange={setTab} tabs={sectionTabs} aria-label={locales.ai_settings} />
 
-        <FieldInput
-          label={locales.api_key}
-          value={provider?.apiKey ?? ''}
-          onChange={(e) => setProvider({ ...provider, apiKey: e.target.value } as AiProviderType)}
-        />
-
-        <FieldInput
-          label={locales.url}
-          value={provider?.url}
-          onChange={(e) => setProvider({ ...provider, url: e.target.value } as AiProviderType)}
-          helpertext={error.url}
-          error={!!error.url}
-        />
-
-        <FieldInput
-          placeholder='30'
-          typelabel={`${locales.max} 1000`}
-          type='number'
-          label={locales.timeout}
-          value={provider?.timeout ?? ''}
-          onChange={(e) =>
-            setProvider({
-              ...provider,
-              timeout: Number.parseInt(e.target.value)
-            } as AiProviderType)
-          }
-        />
-
-        <Stack direction={'row'} alignItems={'center'} spacing={1}>
-          <Box flex={1}>
-            <FieldInput
-              label={locales.add_model}
-              onKeyDown={handleKeyDown}
-              onChange={(e) => setNewModel(e.target.value)}
-              value={newModel}
-            />
-          </Box>
-          <Box>
-            <IconButton onClick={handleAddModel}>
-              <CustomIcon type='plus' />
-            </IconButton>
-          </Box>
-        </Stack>
-
-        <Stack direction={'row'} spacing={1}>
-          {provider?.models.map((model) => (
-            <Chip key={model} label={model} onDelete={() => handleRemoveModel(model)} />
-          ))}
-        </Stack>
-
-        <Box display={'flex'} mt={2} justifyContent={'space-between'}>
-          <Button
-            fullWidth
-            loadingPosition='start'
-            disabled={pendingUpdateProvider}
-            loading={pendingUpdateProvider}
-            onClick={handleSubmit}
-            size='small'
-            variant='contained'
-          >
-            <span>{locales.save}</span>
-          </Button>
-        </Box>
-      </Box>
-    </Box>
+      {tab === 'providers' ? <AiProvidersPanel /> : <McpPanel />}
+    </>
   );
 }

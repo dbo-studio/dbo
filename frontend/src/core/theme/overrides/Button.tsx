@@ -27,6 +27,15 @@ export default function Button(theme: Theme): Components {
             height: 24,
             padding: '5px 16px',
             fontSize: theme.typography.caption.fontSize
+          },
+          '&.MuiButton-loading.MuiButton-loadingPositionCenter > *:not(.MuiButton-loadingWrapper)': {
+            visibility: 'hidden'
+          },
+          '&.MuiButton-loading.MuiButton-loadingPositionStart .MuiButton-startIcon': {
+            visibility: 'hidden'
+          },
+          '&.MuiButton-loading.MuiButton-loadingPositionEnd .MuiButton-endIcon': {
+            visibility: 'hidden'
           }
         }
       }

@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"gorm.io/gorm"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"gorm.io/gorm"
 )
 
 func (r *SQLiteRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error) {
@@ -16,11 +15,11 @@ func (r *SQLiteRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQuery
 		return nil, fmt.Errorf("nil request")
 	}
 
-	if req.NodeId == "" {
+	if req.NodeID == "" {
 		return nil, fmt.Errorf("invalid node: table missing")
 	}
 
-	queries := r.generateQueries(ctx, req, req.NodeId)
+	queries := r.generateQueries(ctx, req, req.NodeID)
 	if len(queries) == 0 {
 		return &dto.UpdateQueryResponse{
 			Query:        []string{},

@@ -8,7 +8,7 @@ import (
 
 type (
 	ImportRequest struct {
-		ConnectionId    int32                 `form:"connectionId"`
+		ConnectionID    int32                 `form:"connectionId"`
 		Table           string                `form:"table"`
 		Data            *multipart.FileHeader `form:"data"`
 		Format          string                `form:"format"`
@@ -18,14 +18,14 @@ type (
 	}
 
 	ImportResponse struct {
-		JobId int32 `json:"jobId"`
+		JobID int32 `json:"jobId"`
 	}
 )
 
 type (
 	ImportJob struct {
 		OwnerID         string
-		ConnectionId    int32
+		ConnectionID    int32
 		Table           string
 		Data            []byte
 		Format          string
@@ -37,7 +37,7 @@ type (
 
 func (req ImportRequest) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
 		validation.Field(&req.Table, validation.Required),
 		validation.Field(&req.Data, validation.Required),
 		validation.Field(&req.Format, validation.Required, validation.In("sql", "json", "csv")),

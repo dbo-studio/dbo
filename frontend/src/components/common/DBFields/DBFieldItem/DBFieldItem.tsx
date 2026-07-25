@@ -12,11 +12,11 @@ export function DBFieldItem({ row, column }: DBFieldItemProps): JSX.Element {
   const { handleRowChange } = useCellEditing(row, column.name, String(row[column.name]));
 
   const handleChange = (e: EventFor<'input', 'onChange'>): void => {
-    setValue(e.target.value as string | number);
+    setValue(e.target.value);
   };
 
   const handleBlur = (e: EventFor<'input', 'onBlur'>): void => {
-    setValue(e.target.value as string | number);
+    setValue(e.target.value);
     handleRowChange(e);
   };
 

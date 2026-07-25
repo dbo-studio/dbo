@@ -7,8 +7,8 @@ import (
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
-func (s IConnectionServiceImpl) Delete(ctx context.Context, connectionId int32) (*dto.ConnectionsResponse, error) {
-	connection, err := s.connectionRepo.Find(ctx, connectionId)
+func (s IConnectionServiceImpl) Delete(ctx context.Context, connectionID int32) (*dto.ConnectionsResponse, error) {
+	connection, err := s.connectionRepo.Find(ctx, connectionID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}

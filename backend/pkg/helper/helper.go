@@ -18,7 +18,7 @@ func FloatToString(str float64) string {
 	return strconv.FormatFloat(str, 'f', -1, 64)
 }
 
-func StructToJson(value any) string {
+func StructToJSON(value any) string {
 	j, err := json.Marshal(value)
 	if err != nil {
 		return ""
@@ -26,7 +26,7 @@ func StructToJson(value any) string {
 	return string(j)
 }
 
-func RawJsonToStruct[T any](value json.RawMessage) (T, error) {
+func RawJSONToStruct[T any](value json.RawMessage) (T, error) {
 	var v T
 	if value == nil {
 		return v, nil

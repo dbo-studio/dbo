@@ -1,13 +1,15 @@
-import { AppHeaderStyled } from '@/components/layout/AppHeader/AppHeader.styled.ts';
+import { AppHeaderGridStyled, AppHeaderStyled } from '@/components/layout/AppHeader/AppHeader.styled.ts';
+import { useLayoutMode } from '@/hooks';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Grid, type Theme, useMediaQuery } from '@mui/material';
+import { Grid } from '@mui/material';
 import type { JSX } from 'react';
 import Actions from './Actions/Actions.tsx';
 import ConnectionInfo from './ConnectionInfo/ConnectionInfo';
+import HeaderOverflowMenu from './HeaderOverflowMenu/HeaderOverflowMenu';
 import Leading from './Leading/Leading.tsx';
 
 export default function AppHeader(): JSX.Element {
-  const matches = useMediaQuery((theme: Theme) => theme.breakpoints.up('sm'));
+  const { useCompactHeader } = useLayoutMode();
   const titleBar = useSettingStore((state) => state.ui.titleBar);
 
   const onClick = () => {
@@ -19,20 +21,39 @@ export default function AppHeader(): JSX.Element {
       className={'app-header'}
       container
       spacing={0}
-      justifyContent={'space-between'}
       style={{
         paddingLeft: titleBar.paddingLeft,
         paddingTop: titleBar.paddingTop
       }}
       onMouseDown={onClick}
     >
-      <Grid size={{ md: 2 }} display={matches ? 'flex' : 'none'} justifyContent={'flex-start'}>
+      <AppHeaderGridStyled useCompactHeader={useCompactHeader} size='auto'>
+        <HeaderOverflowMenu />
+      </AppHeaderGridStyled>
+      <Grid
+        size={{ md: 2 }}
+        sx={{
+          display: useCompactHeader ? 'none' : 'flex',
+          justifyContent: 'flex-start'
+        }}
+      >
         <Leading />
       </Grid>
-      <Grid size={{ md: 8 }}>
-        <ConnectionInfo />
+      <Grid
+        size='grow'
+        sx={{
+          minWidth: 0
+        }}
+      >
+        <ConnectionInfo compact={useCompactHeader} />
       </Grid>
-      <Grid size={{ md: 2 }} display={matches ? 'flex' : 'none'} justifyContent={'flex-end'}>
+      <Grid
+        size={{ md: 2 }}
+        sx={{
+          display: useCompactHeader ? 'none' : 'flex',
+          justifyContent: 'flex-end'
+        }}
+      >
         <Actions />
       </Grid>
     </AppHeaderStyled>

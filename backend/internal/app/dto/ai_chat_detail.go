@@ -2,7 +2,7 @@ package dto
 
 type (
 	AiChatDetailRequest struct {
-		AiChatId uint
+		AiChatID uint
 		PaginationRequest
 	}
 

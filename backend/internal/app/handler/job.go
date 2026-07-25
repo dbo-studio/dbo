@@ -23,7 +23,7 @@ func NewJobHandler(jobService serviceJob.IJobService) *JobHandler {
 
 func (h JobHandler) Detail(c fiber.Ctx) error {
 	req := &dto.JobDetailRequest{
-		JobId: fiber.Params[int32](c, "id"),
+		JobID: fiber.Params[int32](c, "id"),
 	}
 
 	job, err := h.jobService.Detail(c, req)
@@ -37,7 +37,7 @@ func (h JobHandler) Detail(c fiber.Ctx) error {
 
 func (h JobHandler) Cancel(c fiber.Ctx) error {
 	req := &dto.JobDetailRequest{
-		JobId: fiber.Params[int32](c, "id"),
+		JobID: fiber.Params[int32](c, "id"),
 	}
 
 	err := h.jobService.Cancel(c, req)
@@ -51,7 +51,7 @@ func (h JobHandler) Cancel(c fiber.Ctx) error {
 
 func (h JobHandler) Result(c fiber.Ctx) error {
 	req := &dto.JobDetailRequest{
-		JobId: fiber.Params[int32](c, "id"),
+		JobID: fiber.Params[int32](c, "id"),
 	}
 
 	err := h.jobService.Result(c, req)

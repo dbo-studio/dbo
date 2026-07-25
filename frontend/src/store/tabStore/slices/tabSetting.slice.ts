@@ -1,6 +1,8 @@
 import { TabMode } from '@/core/enums';
 import { tools } from '@/core/utils';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { matchConnectionId } from '@/store/tabStore/connectionId';
+import { selectTabs } from '@/store/tabStore/tabs';
 import type { DataTabType, EditorTabType, ObjectTabType, TabType } from '@/types/Tab';
 import type { StateCreator } from 'zustand';
 import type { TabQuerySlice, TabSettingSlice, TabStore } from '../types';
@@ -9,20 +11,21 @@ const maxTabs = 15;
 
 export const createTabSettingSlice: StateCreator<
   TabStore & TabSettingSlice & TabQuerySlice,
-  [],
+  [['zustand/devtools', never]],
   [],
   TabSettingSlice
-> = (_set, get) => ({
+> = (set, get) => ({
   addDataTab: (table: string, id: string, editable?: boolean): DataTabType => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;
     if (!currentConnectionId) {
       throw new Error('No current connection id');
     }
 
-    const tabs = get().tabs as DataTabType[];
+    const tabs = selectTabs(get()) as DataTabType[];
 
     const findTab = tabs.find(
-      (t) => t.mode === TabMode.Data && t.table === table && t.connectionId === currentConnectionId
+      (tab) =>
+        tab.mode === TabMode.Data && tab.table === table && matchConnectionId(tab.connectionId, currentConnectionId)
     );
 
     if (findTab) {
@@ -61,11 +64,12 @@ export const createTabSettingSlice: StateCreator<
       throw new Error('No current connection id');
     }
 
-    const tabs = get().tabs as EditorTabType[];
-    const findTab = tabs.find((t) => t.mode === TabMode.Query && t.connectionId === currentConnectionId);
+    const tabs = selectTabs(get()) as EditorTabType[];
+    const findTab = tabs.find(
+      (tab) => tab.mode === TabMode.Query && matchConnectionId(tab.connectionId, currentConnectionId)
+    );
 
     if (findTab && get().getQuery() == '') {
-      findTab.mode = TabMode.Query;
       get().switchTab(findTab.id);
       return findTab;
     }
@@ -92,9 +96,10 @@ export const createTabSettingSlice: StateCreator<
       throw new Error('No current connection id');
     }
 
-    const tabs = get().tabs as ObjectTabType[];
+    const tabs = selectTabs(get()) as ObjectTabType[];
     const findTab = tabs.find(
-      (t: TabType) => t.mode === mode && t.nodeId === nodeId && t.connectionId === currentConnectionId
+      (tab: TabType) =>
+        tab.mode === mode && tab.nodeId === nodeId && matchConnectionId(tab.connectionId, currentConnectionId)
     );
 
     if (findTab) {
@@ -115,46 +120,56 @@ export const createTabSettingSlice: StateCreator<
     return get().handleAddNewTab(tabs, newTab) as ObjectTabType;
   },
   removeTab: (tabId: string): TabType | null | undefined => {
-    const tabIndex = get().tabs.findIndex((t: TabType) => t.id === tabId);
-    const newTabs = get().tabs.filter((t: TabType) => t.id !== tabId);
-
-    let newTab: TabType | null | undefined = null;
-
-    if (newTabs.length > tabIndex && get().selectedTabId === tabId) {
-      newTab = newTabs[tabIndex];
-    } else if (newTabs.length > 0 && get().selectedTabId === tabId) {
-      newTab = newTabs[newTabs.length - 1];
+    const tabs = selectTabs(get());
+    const tabIndex = tabs.findIndex((tab) => tab.id === tabId);
+    if (tabIndex === -1) {
+      return null;
     }
+
+    const newTabs = tabs.filter((tab) => tab.id !== tabId);
+    const wasSelected = get().selectedTabId === tabId;
 
     get().removeQuery(tabId);
 
-    if (newTab?.id === tabId) {
-      get().switchTab(newTab?.id ?? null);
+    let nextSelectedId = get().selectedTabId;
+    let nextTab: TabType | null = null;
+
+    if (wasSelected) {
+      if (newTabs.length === 0) {
+        nextSelectedId = undefined;
+      } else if (tabIndex < newTabs.length) {
+        nextTab = newTabs[tabIndex] ?? null;
+        nextSelectedId = nextTab?.id;
+      } else {
+        nextTab = newTabs[newTabs.length - 1] ?? null;
+        nextSelectedId = nextTab?.id;
+      }
     }
 
-    get().updateTabs(newTabs);
-    return newTabs.length === 0 ? undefined : newTab;
+    set({ tabs: newTabs, selectedTabId: nextSelectedId }, undefined, 'removeTab');
+
+    if (newTabs.length === 0) {
+      return undefined;
+    }
+
+    return wasSelected ? nextTab : null;
   },
   switchTab: (tabId: string | null): void => {
     if (!tabId) {
-      get().updateSelectedTab(undefined);
+      set({ selectedTabId: undefined }, undefined, 'switchTab');
+      return;
     }
 
-    const findTab = get()
-      .getTabs()
-      .find((t) => t.id === tabId);
-    if (findTab) {
-      get().updateSelectedTab(findTab);
+    if (selectTabs(get()).some((tab) => tab.id === tabId)) {
+      set({ selectedTabId: tabId }, undefined, 'switchTab');
     }
   },
 
-  handleAddNewTab: (tabs: TabType[], newTab: TabType): TabType => {
-    if (tabs.length < maxTabs) {
-      get().updateTabs([...tabs, newTab]);
-    } else {
-      get().updateTabs([...tabs.slice(1), newTab]);
-    }
-    get().switchTab(newTab.id);
+  handleAddNewTab: (_tabs: TabType[], newTab: TabType): TabType => {
+    const tabs = selectTabs(get());
+    const nextTabs = tabs.length < maxTabs ? [...tabs, newTab] : [...tabs.slice(1), newTab];
+
+    set({ tabs: nextTabs, selectedTabId: newTab.id }, undefined, 'handleAddNewTab');
 
     return newTab;
   }

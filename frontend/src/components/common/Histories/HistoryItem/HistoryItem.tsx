@@ -8,12 +8,10 @@ import { HistoryItemStyled } from './HistoryItem.styled';
 export default function HistoryItem({ history, selected, onClick, context }: HistoryItemProps): JSX.Element {
   const theme = useTheme();
   const addEditorTab = useTabStore((state) => state.addEditorTab);
-  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
   const handleRun = useCallback((): void => {
-    const tab = addEditorTab(history.query);
-    updateSelectedTab(tab);
-  }, [addEditorTab, history.query, updateSelectedTab]);
+    addEditorTab(history.query);
+  }, [addEditorTab, history.query]);
 
   return (
     <HistoryItemStyled
@@ -23,14 +21,20 @@ export default function HistoryItem({ history, selected, onClick, context }: His
         context(e);
       }}
     >
-      <Box flex={1} mr={theme.spacing(1)} onDoubleClick={handleRun} onClick={(): void => onClick()}>
+      <Box
+        onDoubleClick={handleRun}
+        onClick={(): void => onClick()}
+        sx={{
+          flex: 1,
+          mr: theme.spacing(1)
+        }}
+      >
         <Typography variant='body2'>{history.query.slice(0, 50)}</Typography>
 
         <Typography variant='caption' color='textSubdued'>
           {history.createdAt}
         </Typography>
       </Box>
-
       <IconButton
         onClick={(e) => {
           onClick();

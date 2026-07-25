@@ -6,15 +6,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/samber/lo"
-	"golang.org/x/sync/errgroup"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/samber/lo"
+	"golang.org/x/sync/errgroup"
 )
 
 func (r *PostgresRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {
-	node := r.base.ExtractNode(req.NodeId)
+	node := r.base.ExtractNode(req.NodeID)
 	query := r.runQueryGenerator(ctx, req, node)
 	queryResults := make([]map[string]any, 0)
 	columns := make([]Column, 0)
@@ -23,10 +22,15 @@ func (r *PostgresRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequ
 		return nil, errors.New("table or view not found")
 	}
 
+	conn, err := r.db(ctx, &node.Database)
+	if err != nil {
+		return nil, err
+	}
+
 	g, gctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		err := r.base.DB().WithContext(gctx).Raw(query).Find(&queryResults).Error
+		err := conn.WithContext(gctx).Raw(query).Find(&queryResults).Error
 		if err != nil {
 			return err
 		}
@@ -40,7 +44,7 @@ func (r *PostgresRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequ
 	})
 
 	g.Go(func() error {
-		result, err := r.columns(gctx, &node.Table, &node.Schema, req.Columns, true, true)
+		result, err := r.columns(gctx, &node.Database, &node.Table, &node.Schema, req.Columns, true, true)
 		if err != nil {
 			return err
 		}
@@ -59,41 +63,45 @@ func (r *PostgresRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequ
 	}, nil
 }
 
-func (r *PostgresRepository) runQueryGenerator(ctx context.Context, dto *dto.RunQueryRequest, node contract.DBNode) string {
+func (r *PostgresRepository) runQueryGenerator(ctx context.Context, req *dto.RunQueryRequest, node contract.DBNode) string {
 	var sb strings.Builder
 
-	if lo.FromPtrOr(dto.InlineQuery, "") != "" {
-		return fmt.Sprintf("SELECT * FROM `%s`.`%s` WHERE %s", node.Database, node.Table, *dto.InlineQuery)
+	if lo.FromPtrOr(req.InlineQuery, "") != "" {
+		return fmt.Sprintf(`SELECT * FROM "%s"."%s" WHERE %s`, node.Schema, node.Table, *req.InlineQuery)
 	}
 
 	// SELECT clause
 	selectColumns := "*"
-	if len(dto.Columns) > 0 {
-		selectColumns = strings.Join(dto.Columns, ", ")
+	if len(req.Columns) > 0 {
+		selectColumns = strings.Join(req.Columns, ", ")
 	}
 	_, _ = fmt.Fprintf(&sb, "SELECT %s FROM %q", selectColumns, node.Table)
 
 	// WHERE clause
-	if len(dto.Filters) > 0 {
+	if len(req.Filters) > 0 {
 		sb.WriteString(" WHERE ")
-		for i, filter := range dto.Filters {
-			_, _ = fmt.Fprintf(&sb, "%s %s '%s'", filter.Column, filter.Operator, filter.Value)
-			if i < len(dto.Filters)-1 {
+		for i, filter := range req.Filters {
+			columnExpr := filter.Column
+			if dto.FilterIsLikeOperator(filter.Operator) {
+				columnExpr = fmt.Sprintf("%s::text", filter.Column)
+			}
+			_, _ = fmt.Fprintf(&sb, "%s %s", columnExpr, dto.FilterPredicate(filter.Operator, filter.Value))
+			if i < len(req.Filters)-1 {
 				_, _ = fmt.Fprintf(&sb, " %s ", filter.Next)
 			}
 		}
 	}
 
 	// ORDER BY clause
-	if len(dto.Sorts) > 0 {
+	if len(req.Sorts) > 0 {
 		sb.WriteString(" ORDER BY ")
-		sortClauses := make([]string, len(dto.Sorts))
-		for i, sort := range dto.Sorts {
+		sortClauses := make([]string, len(req.Sorts))
+		for i, sort := range req.Sorts {
 			sortClauses[i] = fmt.Sprintf("%s %s", sort.Column, sort.Operator)
 		}
 		sb.WriteString(strings.Join(sortClauses, ", "))
 	} else {
-		keys, err := r.primaryKeys(ctx, &node.Table, true)
+		keys, err := r.primaryKeys(ctx, &node.Database, &node.Table, true)
 		if err == nil && len(keys) > 0 {
 			sb.WriteString(" ORDER BY ")
 			sb.WriteString(strings.Join(lo.Map(keys, func(key PrimaryKey, _ int) string {
@@ -104,13 +112,13 @@ func (r *PostgresRepository) runQueryGenerator(ctx context.Context, dto *dto.Run
 
 	// LIMIT and OFFSET
 	limit := 100
-	if dto.Limit != nil && lo.FromPtr(dto.Limit) > 0 {
-		limit = lo.FromPtr(dto.Limit)
+	if req.Limit != nil && lo.FromPtr(req.Limit) > 0 {
+		limit = lo.FromPtr(req.Limit)
 	}
 
 	offset := 0
-	if dto.Page != nil && lo.FromPtr(dto.Page) > 0 {
-		offset = (*dto.Page - 1) * limit
+	if req.Page != nil && lo.FromPtr(req.Page) > 0 {
+		offset = (*req.Page - 1) * limit
 	}
 
 	_, _ = fmt.Fprintf(&sb, " LIMIT %d OFFSET %d;", limit, offset)

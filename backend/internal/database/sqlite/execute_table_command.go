@@ -4,15 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/samber/lo"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/samber/lo"
 )
 
-func (r *SQLiteRepository) handleTableCommands(ctx context.Context, node string, tabId map[contract.TreeTab]any, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
-	if !r.isTableRelatedAction(tabId, action) {
+func (r *SQLiteRepository) handleTableCommands(ctx context.Context, node string, tabID map[contract.TreeTab]any, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
+	if !r.isTableRelatedAction(tabID, action) {
 		return []string{}, "", nil
 	}
 
@@ -25,7 +24,7 @@ func (r *SQLiteRepository) handleTableCommands(ctx context.Context, node string,
 		return nil, "", err
 	}
 
-	r.initializeTableParams(paramsMap.tableParams, node)
+	paramsMap.tableParams = r.initializeTableParams(paramsMap.tableParams, node)
 
 	if action == contract.EditTableAction {
 		r.populateParamsFromDatabase(ctx, paramsMap, *paramsMap.tableParams.Old.Name)
@@ -76,7 +75,7 @@ func (r *SQLiteRepository) parseTableParams(params []byte) (*tableParamsMap, err
 	}
 
 	return &tableParamsMap{
-		tableParams:      tableParamsDto[contract.TableTab],
+		tableParams:      tableParamsDto[contract.GeneralTab],
 		columnParams:     columnParamsDto[contract.TableColumnsTab],
 		foreignKeyParams: foreignKeyParamsDto[contract.TableForeignKeysTab],
 		keyParams:        keyParamsDto[contract.TableKeysTab],
@@ -84,25 +83,16 @@ func (r *SQLiteRepository) parseTableParams(params []byte) (*tableParamsMap, err
 	}, nil
 }
 
-func (r *SQLiteRepository) isTableRelatedAction(tabId map[contract.TreeTab]any, action contract.TreeNodeActionName) bool {
-	if action == contract.DropTableAction {
+func (r *SQLiteRepository) isTableRelatedAction(_ map[contract.TreeTab]any, action contract.TreeNodeActionName) bool {
+	switch action {
+	case contract.DropTableAction, contract.CreateTableAction, contract.EditTableAction:
 		return true
+	default:
+		return false
 	}
-
-	var treeTab contract.TreeTab
-	for key := range tabId {
-		treeTab = key
-		break
-	}
-
-	return treeTab == contract.TableTab ||
-		treeTab == contract.TableColumnsTab ||
-		treeTab == contract.TableForeignKeysTab ||
-		treeTab == contract.TableKeysTab ||
-		treeTab == contract.TableIndexesTab
 }
 
-func (r *SQLiteRepository) initializeTableParams(tableParams *dto.SQLiteTableParams, node string) {
+func (r *SQLiteRepository) initializeTableParams(tableParams *dto.SQLiteTableParams, node string) *dto.SQLiteTableParams {
 	if tableParams == nil {
 		tableParams = &dto.SQLiteTableParams{}
 	}
@@ -116,11 +106,23 @@ func (r *SQLiteRepository) initializeTableParams(tableParams *dto.SQLiteTablePar
 	if tableParams.Old.Name == nil {
 		tableParams.Old.Name = lo.ToPtr(node)
 	}
+
+	return tableParams
 }
 
 func (r *SQLiteRepository) populateParamsFromDatabase(ctx context.Context, paramsMap *tableParamsMap, tableName string) {
+	if paramsMap.columnParams == nil {
+		paramsMap.columnParams = &dto.SQLiteTableColumnParams{}
+	}
+	if paramsMap.foreignKeyParams == nil {
+		paramsMap.foreignKeyParams = &dto.SQLiteTableForeignKeyParams{}
+	}
+	if paramsMap.keyParams == nil {
+		paramsMap.keyParams = &dto.SQLiteTableKeyParams{}
+	}
+
 	tableDDL := r.populateTableParamsFromDDL(ctx, paramsMap.tableParams)
-	r.populateColumnParamsFromDDL(ctx, paramsMap.columnParams, tableDDL)
+	r.populateColumnParamsFromDDL(ctx, paramsMap.columnParams, tableDDL, tableName)
 	r.populateForeignKeyParamsFromDB(paramsMap.foreignKeyParams, tableName)
 	r.populateKeyParamsFromDB(ctx, paramsMap.keyParams, tableName)
 }
@@ -146,6 +148,10 @@ func (r *SQLiteRepository) buildEditTableQueries(paramsMap *tableParamsMap) ([]s
 	tmpTableName := r.getUniqueTmpTableName(newName)
 
 	columnDefs := r.buildAllColumnDefinitions(paramsMap)
+	if columnDefs == "" {
+		return nil, "", fmt.Errorf("table %s has no column definitions", oldName)
+	}
+
 	queries := r.buildTableRecreateQueries(tmpTableName, oldName, newName, paramsMap.tableParams.New, columnDefs, paramsMap)
 
 	if paramsMap.indexParams != nil && len(paramsMap.indexParams.Indexes) > 0 {

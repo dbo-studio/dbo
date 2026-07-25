@@ -9,6 +9,7 @@ import { Box, Button } from '@mui/material';
 import type { JSX } from 'react';
 import AddSortButton from './SortItem/AddSortButton/AddSortButton.tsx';
 import SortItem from './SortItem/SortItem.tsx';
+import { SortsApplyBoxStyled } from './Sorts.styled';
 
 export default function Sorts(): JSX.Element {
   const selectedTab = useSelectedTab<DataTabType>();
@@ -32,7 +33,12 @@ export default function Sorts(): JSX.Element {
   if (!selectedTab) return <></>;
 
   return (
-    <Box p={1} borderBottom={(theme): string => `1px solid ${theme.palette.divider}`}>
+    <Box
+      sx={{
+        p: 1,
+        borderBottom: (theme): string => `1px solid ${theme.palette.divider}`
+      }}
+    >
       {selectedTab?.sorts?.length === 0 ? (
         <AddSortButton columns={columns ?? []} />
       ) : (
@@ -40,9 +46,8 @@ export default function Sorts(): JSX.Element {
           return <SortItem key={tools.uuid()} columns={columns ?? []} sort={sort} />;
         })
       )}
-
       {(selectedTab?.sorts?.length ?? 0) > 0 && (
-        <Box display='flex' justifyContent='flex-start' mx={1} mt={1}>
+        <SortsApplyBoxStyled>
           <Button
             onClick={(): void => handleApplySorts()}
             size='small'
@@ -51,7 +56,7 @@ export default function Sorts(): JSX.Element {
           >
             {locales.apply}
           </Button>
-        </Box>
+        </SortsApplyBoxStyled>
       )}
     </Box>
   );

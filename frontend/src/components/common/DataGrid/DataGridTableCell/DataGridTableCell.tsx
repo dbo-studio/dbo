@@ -30,28 +30,32 @@ export const DataGridTableCell = memo(
 
       const searchLower = searchTerm.toLowerCase();
       const valueLower = placeholder.toLowerCase();
-      const parts: Array<{ text: string; isMatch: boolean }> = [];
+      const parts: Array<{ text: string; isMatch: boolean; start: number }> = [];
       let lastIndex = 0;
       let index = valueLower.indexOf(searchLower, lastIndex);
 
       while (index !== -1) {
         if (index > lastIndex) {
-          parts.push({ text: placeholder.substring(lastIndex, index), isMatch: false });
+          parts.push({ text: placeholder.substring(lastIndex, index), isMatch: false, start: lastIndex });
         }
-        parts.push({ text: placeholder.substring(index, index + searchTerm.length), isMatch: true });
+        parts.push({
+          text: placeholder.substring(index, index + searchTerm.length),
+          isMatch: true,
+          start: index
+        });
         lastIndex = index + searchTerm.length;
         index = valueLower.indexOf(searchLower, lastIndex);
       }
 
       if (lastIndex < placeholder.length) {
-        parts.push({ text: placeholder.substring(lastIndex), isMatch: false });
+        parts.push({ text: placeholder.substring(lastIndex), isMatch: false, start: lastIndex });
       }
 
       return (
         <span>
-          {parts.map((part, index) => (
+          {parts.map((part) => (
             <HighlightedTextMatch
-              key={`${rowIndex}-${columnId}-${index}-${part.text}`}
+              key={`${rowIndex}-${columnId}-${part.start}`}
               className={clsx({
                 'is-match': part.isMatch,
                 'is-current-match': part.isMatch && isCurrentMatch
@@ -71,7 +75,7 @@ export const DataGridTableCell = memo(
           inputRef.current?.select();
         });
       }
-    }, [isEditing, inputRef.current]);
+    }, [isEditing, inputRef]);
 
     const handleInputBlur = useCallback(
       (e: React.FocusEvent<HTMLInputElement>): void => {

@@ -1,8 +1,9 @@
 package syslog
 
 import (
-	"github.com/dbo-studio/dbo/pkg/logger"
 	"log"
+
+	"github.com/dbo-studio/dbo/pkg/logger"
 )
 
 type syslog struct{}

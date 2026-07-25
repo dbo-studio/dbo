@@ -43,7 +43,3 @@ func (r *MySQLRepository) Version(ctx context.Context) (string, error) {
 func (r *MySQLRepository) ImportData(ctx context.Context, job dto.ImportJob, rows [][]string, columns []string) (*contract.ImportResult, error) {
 	return r.base.ImportData(ctx, job, rows, columns)
 }
-
-func (r *MySQLRepository) RunRawQuery(ctx context.Context, dto *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
-	return r.base.RunRawQuery(ctx, dto)
-}

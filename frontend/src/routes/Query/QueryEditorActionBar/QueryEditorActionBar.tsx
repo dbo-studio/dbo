@@ -1,7 +1,12 @@
 import type { Theme } from '@mui/material';
-import { Grid, Stack, useMediaQuery } from '@mui/material';
-import { type JSX, useEffect, useState } from 'react';
+import { useMediaQuery } from '@mui/material';
+import type { JSX } from 'react';
 import type { QueryEditorActionBarProps } from '../types';
+import {
+  QueryEditorActionBarActionsBoxStyled,
+  QueryEditorActionBarBoxStyled,
+  QueryEditorActionBarStackStyled
+} from './QueryEditorActionBar.styled';
 import QueryEditorActions from './QueryEditorActions/QueryEditorActions';
 import QueryEditorLeading from './QueryEditorLeading/QueryEditorLeading';
 
@@ -10,37 +15,19 @@ export default function QueryEditorActionBar({
   schemas,
   onFormat,
   onRunQuery,
+  onAiExplain,
   loading
 }: QueryEditorActionBarProps): JSX.Element {
-  const [localDatabases, setLocalDatabases] = useState<string[]>([]);
-  const [localSchemas, setLocalSchemas] = useState<string[]>([]);
-  const matches = useMediaQuery((theme: Theme) => theme.breakpoints.up('sm'));
-
-  useEffect(() => {
-    if (localDatabases.length === 0) {
-      setLocalDatabases(databases);
-    }
-
-    if (localSchemas.length === 0) {
-      setLocalSchemas(schemas);
-    }
-  }, [databases, schemas]);
+  const isCompact = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'));
 
   return (
-    <Stack
-      borderBottom={(theme): string => `1px solid ${theme.palette.divider}`}
-      borderTop={(theme): string => `1px solid ${theme.palette.divider}`}
-      padding={1}
-      direction='row'
-      justifyContent='space-between'
-      alignItems='center'
-    >
-      <Grid size={{ md: 8 }} display='flex' justifyContent='flex-start'>
-        <QueryEditorLeading databases={localDatabases} schemas={localSchemas} />
-      </Grid>
-      <Grid size={{ md: 8 }} display={matches ? 'flex' : 'none'} justifyContent='flex-end'>
-        <QueryEditorActions loading={loading} onFormat={onFormat} onRunQuery={onRunQuery} />
-      </Grid>
-    </Stack>
+    <QueryEditorActionBarStackStyled direction={isCompact ? 'column' : 'row'} spacing={isCompact ? 1 : 0}>
+      <QueryEditorActionBarBoxStyled isCompact={isCompact}>
+        <QueryEditorLeading databases={databases} schemas={schemas} />
+      </QueryEditorActionBarBoxStyled>
+      <QueryEditorActionBarActionsBoxStyled isCompact={isCompact}>
+        <QueryEditorActions loading={loading} onFormat={onFormat} onRunQuery={onRunQuery} onAiExplain={onAiExplain} />
+      </QueryEditorActionBarActionsBoxStyled>
+    </QueryEditorActionBarStackStyled>
   );
 }

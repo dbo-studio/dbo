@@ -21,6 +21,7 @@ export type ChatItemProps = {
 export type ChatTextInputProps = {
   loading: boolean;
   onSend: () => void;
+  autocomplete?: AutoCompleteType;
 };
 
 export type ChatContextModalProps = {
@@ -57,6 +58,8 @@ export type MessagesProps = {
   messages: AiMessageType[];
   loading: boolean;
   onLoadMore?: () => void;
+  onSelectPrompt?: (prompt: string) => void;
+  onRetry?: () => void;
 };
 
 export type CodeMessageProps = {
@@ -67,5 +70,5 @@ export type ChatBoxProps = {
   onSend: () => void;
   onCancel: () => void;
   loading: boolean;
-  autocomplete: AutoCompleteType;
+  autocomplete?: AutoCompleteType;
 };

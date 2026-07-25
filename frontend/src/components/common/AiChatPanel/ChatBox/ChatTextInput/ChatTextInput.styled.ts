@@ -1,8 +1,9 @@
 import { styled, TextareaAutosize } from '@mui/material';
 
 export const ChatTextInputStyled = styled(TextareaAutosize)(({ theme }) => ({
-  fontSize: theme.typography.caption.fontSize,
-  backgroundColor: theme.palette.background.default,
+  fontSize: theme.typography.body2.fontSize,
+  lineHeight: 1.5,
+  backgroundColor: 'transparent',
   '&::placeholder': {
     color: theme.palette.text.disabled
   },
@@ -11,6 +12,8 @@ export const ChatTextInputStyled = styled(TextareaAutosize)(({ theme }) => ({
   border: 'none',
   outline: 'none',
   resize: 'none',
-  maxHeight: '300px',
-  color: theme.palette.text.text
+  maxHeight: '160px',
+  minHeight: '40px',
+  color: theme.palette.text.text,
+  padding: 0
 }));

@@ -3,12 +3,11 @@ package serviceConnection
 import (
 	"context"
 
-	"github.com/samber/lo"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/samber/lo"
 )
 
 func (s IConnectionServiceImpl) Ping(ctx context.Context, req *dto.PingConnectionRequest) error {
@@ -42,7 +41,6 @@ func (s IConnectionServiceImpl) Ping(ctx context.Context, req *dto.PingConnectio
 	if _, err = s.cm.GetConnection(ctx, connection, false); err != nil {
 		return err
 	}
-
 	if err := s.cm.Close(ctx, ownerID, connection.ID); err != nil {
 		return err
 	}

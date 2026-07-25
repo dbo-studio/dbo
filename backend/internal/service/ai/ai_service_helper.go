@@ -3,12 +3,11 @@ package serviceAi
 import (
 	"context"
 
-	"github.com/samber/lo"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/samber/lo"
 )
 
 func (s *AiServiceImpl) createProvider(ctx context.Context) (serviceAiProvider.IAiProvider, *model.AiProvider, error) {
@@ -26,8 +25,8 @@ func (s *AiServiceImpl) createProvider(ctx context.Context) (serviceAiProvider.I
 }
 
 func (s *AiServiceImpl) findChat(ctx context.Context, req *dto.AiChatRequest) (*model.AiChat, error) {
-	if req.ChatId != nil {
-		chat, err := s.aiChatRepo.Find(ctx, uint(lo.FromPtr(req.ChatId)), &dto.PaginationRequest{
+	if req.ChatID != nil {
+		chat, err := s.aiChatRepo.Find(ctx, uint(lo.FromPtr(req.ChatID)), &dto.PaginationRequest{
 			Page:  lo.ToPtr(1),
 			Count: lo.ToPtr(5),
 		})
@@ -44,7 +43,7 @@ func (s *AiServiceImpl) findChat(ctx context.Context, req *dto.AiChatRequest) (*
 
 	chat, err := s.aiChatRepo.Create(ctx, &dto.AiChatCreateRequest{
 		Title:        req.Message,
-		ConnectionId: req.ConnectionId,
+		ConnectionID: req.ConnectionID,
 	})
 
 	if err != nil {
@@ -56,7 +55,7 @@ func (s *AiServiceImpl) findChat(ctx context.Context, req *dto.AiChatRequest) (*
 
 func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat, userMessage string, aiMessage *serviceAiProvider.ChatResponse) error {
 	if err := s.aiChatRepo.AddMessage(ctx, &model.AiChatMessage{
-		ChatId:   chat.ID,
+		ChatID:   chat.ID,
 		Role:     model.AiChatMessageRoleUser,
 		Content:  userMessage,
 		Type:     model.AiChatMessageTypeExplanation,
@@ -72,7 +71,7 @@ func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat
 	if len(aiMessage.Contents) > 0 {
 		for _, content := range aiMessage.Contents {
 			if err := s.aiChatRepo.AddMessage(ctx, &model.AiChatMessage{
-				ChatId:   chat.ID,
+				ChatID:   chat.ID,
 				Role:     model.AiChatMessageRoleAssistant,
 				Content:  content.Content,
 				Type:     content.Type,
@@ -85,7 +84,7 @@ func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat
 	}
 
 	if err := s.aiChatRepo.AddMessage(ctx, &model.AiChatMessage{
-		ChatId:   chat.ID,
+		ChatID:   chat.ID,
 		Role:     model.AiChatMessageRoleAssistant,
 		Content:  aiMessage.Content,
 		Type:     aiMessage.Type,

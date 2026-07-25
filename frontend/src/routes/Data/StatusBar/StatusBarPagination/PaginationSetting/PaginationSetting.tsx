@@ -1,5 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
+import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
@@ -10,6 +11,7 @@ import { type JSX, useState } from 'react';
 import { PaginationSettingStyled } from './PaginationSetting.styled';
 
 export default function PaginationSetting(): JSX.Element {
+  const { isMobile } = useLayoutMode();
   const isDataFetching = useDataStore((state) => state.isDataFetching);
   const selectedTab = useSelectedTab<DataTabType>();
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
@@ -77,7 +79,7 @@ export default function PaginationSetting(): JSX.Element {
         <CustomIcon type='settings' size='s' />
       </IconButton>
 
-      <Popper id={id} open={open} anchorEl={anchorEl}>
+      <Popper id={id} open={open} anchorEl={anchorEl} placement={isMobile ? 'top-end' : 'bottom-end'}>
         <ClickAwayListener onClickAway={handleCloseClick}>
           <PaginationSettingStyled>
             <FieldInput

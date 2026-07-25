@@ -35,7 +35,7 @@ func NewWebDBStore(
 }
 
 func (s *WebDBStore) SetConnectionPassword(ctx context.Context, ownerID string, connectionID uint, password string, remember bool) error {
-	if _, err := s.webSessionRepo.CreateOrUpdate(ctx, ownerID); err != nil {
+	if err := s.webSessionRepo.EnsureSession(ctx, ownerID); err != nil {
 		return err
 	}
 
@@ -91,7 +91,7 @@ func (s *WebDBStore) GetConnectionPassword(ctx context.Context, ownerID string, 
 		}
 	}
 
-	if err := s.webSessionRepo.TouchLastSeen(ctx, ownerID, now); err != nil {
+	if err := s.webSessionRepo.TouchLastSeenDebounced(ctx, ownerID, 60*time.Second); err != nil {
 		return "", err
 	}
 

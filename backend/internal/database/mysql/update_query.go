@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/samber/lo"
-	"gorm.io/gorm"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/samber/lo"
+	"gorm.io/gorm"
 )
 
 func (r *MySQLRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error) {
@@ -18,7 +17,7 @@ func (r *MySQLRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryR
 		return nil, fmt.Errorf("nil request")
 	}
 
-	node := r.base.ExtractNode(req.NodeId)
+	node := r.base.ExtractNode(req.NodeID)
 	if node.Database == "" || node.Table == "" {
 		return nil, fmt.Errorf("invalid node: database or table missing")
 	}

@@ -1,8 +1,10 @@
 import type {
   DynamicFieldRequestType,
   DynamicFieldResponse,
+  ExecuteActionResponseType,
   FormObjectResponseType,
   ObjectRequestType,
+  PreviewExecuteResponseType,
   SaveObjectRequestType,
   TabRequestType,
   TabResponseType,
@@ -17,6 +19,7 @@ const endpoints = {
   getObject: (nodeId: string, action: string, tabId: string): string =>
     `/tree/${nodeId}/tabs/${action}/fields/${tabId}/object`,
   executeAction: (nodeId: string, action: string): string => `/tree/${nodeId}/tabs/${action}/fields/object`,
+  previewExecute: (nodeId: string, action: string): string => `/tree/${nodeId}/tabs/${action}/fields/object/preview`,
   getDynamicFieldOptions: (nodeId: string): string => `/tree/${nodeId}/dynamic`
 };
 
@@ -48,24 +51,47 @@ export const getObject = async (params: ObjectRequestType): Promise<FormObjectRe
   ).data.data;
 };
 
-export const executeAction = async (params: SaveObjectRequestType): Promise<void> => {
-  await api.post(endpoints.executeAction(params.nodeId, params.action), params.data, {
-    params: {
-      connectionId: params.connectionId
-    },
-    data: {
-      ...params.data
-    }
-  });
+export const executeAction = async (params: SaveObjectRequestType): Promise<ExecuteActionResponseType> => {
+  return (
+    (
+      await api.post<{ data: ExecuteActionResponseType | null }>(
+        endpoints.executeAction(params.nodeId, params.action),
+        params.data,
+        {
+          params: {
+            connectionId: params.connectionId
+          }
+        }
+      )
+    ).data.data ?? {}
+  );
 };
 
-export const getDynamicFieldOptions = async (params: DynamicFieldRequestType): Promise<DynamicFieldResponse> => {
+export const previewExecute = async (params: SaveObjectRequestType): Promise<PreviewExecuteResponseType> => {
+  return (
+    await api.post<{ data: PreviewExecuteResponseType }>(
+      endpoints.previewExecute(params.nodeId, params.action),
+      params.data,
+      {
+        params: {
+          connectionId: params.connectionId
+        }
+      }
+    )
+  ).data.data;
+};
+
+export const getDynamicFieldOptions = async (
+  params: DynamicFieldRequestType,
+  signal?: AbortSignal
+): Promise<DynamicFieldResponse> => {
   return (
     await api.get<{ data: DynamicFieldResponse }>(endpoints.getDynamicFieldOptions(params.nodeId), {
       params: {
         connectionId: params.connectionId,
         ...params.parameters
-      }
+      },
+      signal
     })
   ).data.data;
 };

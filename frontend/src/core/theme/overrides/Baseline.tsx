@@ -1,4 +1,5 @@
 import type { Components, Theme } from '@mui/material/styles';
+import { scrollbarStyles } from '../scrollbar';
 
 export default function Baseline(theme: Theme): Components {
   return {
@@ -9,26 +10,8 @@ export default function Baseline(theme: Theme): Components {
           right: 0,
           left: 0,
           top: 0,
-          bottom: 0
-        },
-        '::-webkit-scrollbar': {
-          webkitAppearance: 'none',
-          width: '7px',
-          height: '7px'
-        },
-
-        '::-webkit-scrollbar-track': {
-          background: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-          borderRadius: '6px'
-        },
-
-        '::-webkit-scrollbar-thumb': {
-          webkitBoxShadow: '0 0 1px rgba(255,255,255,.5)',
-          backgroundColor: '#6b6b6b',
-          borderRadius: '6px'
-        },
-        '::-webkit-scrollbar-thumb:hover': {
-          background: '#555'
+          bottom: 0,
+          ...scrollbarStyles(theme)
         }
       }
     }

@@ -3,15 +3,20 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useContextMenu, useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import type { SavedQueryType } from '@/types';
-import { Box, Button, ClickAwayListener, IconButton, LinearProgress, Stack, useTheme } from '@mui/material';
+import { Box, Button, ClickAwayListener, IconButton, LinearProgress, Stack } from '@mui/material';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useRef, useState } from 'react';
 import Search from '../../base/Search/Search';
 import SavedQueryContextMenu from './SavedQueryContextMenu/SavedQueryContextMenu';
+import {
+  SavedQueriesContainerStyled,
+  SavedQueriesListStyled,
+  SavedQueriesLoadMoreStyled,
+  SavedQueriesToolbarStyled
+} from './SavedQueries.styled';
 import SavedQueryItem from './SavedQueryItem/SavedQueryItem';
 
 export default function SavedQueries(): JSX.Element {
-  const theme = useTheme();
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<SavedQueryType | null>(null);
   const [isEditMode, setIsEditMode] = useState<SavedQueryType | null>(null);
@@ -70,19 +75,23 @@ export default function SavedQueries(): JSX.Element {
 
   return (
     <ClickAwayListener onClickAway={(): void => setSelected(null)}>
-      <Box mt={1} display={'flex'} flexDirection={'column'} minHeight={0}>
+      <SavedQueriesContainerStyled>
         <Box>
-          <Stack spacing={1} direction={'row'} alignContent={'center'} justifyContent={'center'} alignItems={'center'}>
-            <Box flex={1}>
+          <SavedQueriesToolbarStyled spacing={1} direction={'row'}>
+            <Box
+              sx={{
+                flex: 1
+              }}
+            >
               <Search onChange={(name): void => setSearch(name)} />
             </Box>
             <IconButton onClick={() => void handleRefresh()}>
               <CustomIcon size='s' type={'refresh'} />
             </IconButton>
-          </Stack>
+          </SavedQueriesToolbarStyled>
         </Box>
 
-        <Box mt={theme.spacing(1)} ref={listRef} flex={1} minHeight={0} overflow={'auto'}>
+        <SavedQueriesListStyled ref={listRef}>
           <Stack spacing={1}>
             {status === 'pending' ? (
               <LinearProgress style={{ marginTop: '8px' }} />
@@ -106,7 +115,7 @@ export default function SavedQueries(): JSX.Element {
             )}
           </Stack>
           {hasNextPage && (
-            <Box flex={1} display='flex' justifyContent='center' mt={2} mb={2}>
+            <SavedQueriesLoadMoreStyled>
               <Button
                 loadingPosition='start'
                 disabled={isFetchingNextPage}
@@ -117,9 +126,9 @@ export default function SavedQueries(): JSX.Element {
               >
                 <span>{locales.load_more}</span>
               </Button>
-            </Box>
+            </SavedQueriesLoadMoreStyled>
           )}
-        </Box>
+        </SavedQueriesListStyled>
         {selected && (
           <SavedQueryContextMenu
             onChange={handleRefresh}
@@ -131,7 +140,7 @@ export default function SavedQueries(): JSX.Element {
             }}
           />
         )}
-      </Box>
+      </SavedQueriesContainerStyled>
     </ClickAwayListener>
   );
 }

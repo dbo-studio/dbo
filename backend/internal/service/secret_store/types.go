@@ -8,8 +8,9 @@ import (
 )
 
 type webSessionProvider interface {
-	CreateOrUpdate(ctx context.Context, sessionID string) (string, error)
+	EnsureSession(ctx context.Context, sessionID string) error
 	TouchLastSeen(ctx context.Context, sessionID string, at time.Time) error
+	TouchLastSeenDebounced(ctx context.Context, sessionID string, interval time.Duration) error
 }
 
 type webConnectionSecretProvider interface {

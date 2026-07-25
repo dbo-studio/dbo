@@ -3,8 +3,6 @@ package secretStore
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/base64"
-	"fmt"
 	"time"
 
 	"github.com/dbo-studio/dbo/pkg/apperror"
@@ -45,16 +43,16 @@ func (s *WebCacheStore) SetConnectionPassword(ctx context.Context, ownerID strin
 	}
 
 	if remember {
-		return s.cache.Set(ctx, s.key(ownerID, connectionID), item, nil)
+		return s.cache.Set(ctx, cache.ConnectionSecretKey(ownerID, connectionID), item, nil)
 	}
 
 	ttl := s.ttl
-	return s.cache.Set(ctx, s.key(ownerID, connectionID), item, &ttl)
+	return s.cache.Set(ctx, cache.ConnectionSecretKey(ownerID, connectionID), item, &ttl)
 }
 
 func (s *WebCacheStore) GetConnectionPassword(ctx context.Context, ownerID string, connectionID uint) (string, error) {
 	var item *webCacheItem
-	if err := s.cache.Get(ctx, s.key(ownerID, connectionID), &item); err != nil {
+	if err := s.cache.Get(ctx, cache.ConnectionSecretKey(ownerID, connectionID), &item); err != nil {
 		return "", err
 	}
 
@@ -70,7 +68,7 @@ func (s *WebCacheStore) GetConnectionPassword(ctx context.Context, ownerID strin
 	// Sliding TTL for non-remember.
 	if !item.Remember {
 		ttl := s.ttl
-		if err := s.cache.Set(ctx, s.key(ownerID, connectionID), item, &ttl); err != nil {
+		if err := s.cache.Set(ctx, cache.ConnectionSecretKey(ownerID, connectionID), item, &ttl); err != nil {
 			return "", err
 		}
 	}
@@ -79,10 +77,5 @@ func (s *WebCacheStore) GetConnectionPassword(ctx context.Context, ownerID strin
 }
 
 func (s *WebCacheStore) DeleteConnectionPassword(ctx context.Context, ownerID string, connectionID uint) error {
-	return s.cache.Delete(ctx, s.key(ownerID, connectionID))
-}
-
-func (s *WebCacheStore) key(ownerID string, connectionID uint) string {
-	ownerSafe := base64.RawURLEncoding.EncodeToString([]byte(ownerID))
-	return fmt.Sprintf("sec:%s:conn:%d", ownerSafe, connectionID)
+	return s.cache.Delete(ctx, cache.ConnectionSecretKey(ownerID, connectionID))
 }

@@ -18,6 +18,7 @@ func (r *Server) routing() {
 	tree.Get("/:nodeId/tabs/:action/fields/:tabId/object", r.handlers.TreeHandler.ObjectDetail)
 	tree.Get("/:nodeId/dynamic", r.handlers.TreeHandler.GetDynamicFieldOptions)
 	tree.Post("/:nodeId/tabs/:action/fields/object", r.handlers.TreeHandler.ExecuteHandler)
+	tree.Post("/:nodeId/tabs/:action/fields/object/preview", r.handlers.TreeHandler.PreviewExecuteHandler)
 
 	query := api.Group("query")
 	query.Post("/run", r.handlers.QueryHandler.Run)
@@ -27,6 +28,7 @@ func (r *Server) routing() {
 
 	ai := api.Group("ai")
 	ai.Post("/chat", r.handlers.AI.Chat)
+	ai.Post("/chat/stream", r.handlers.AI.ChatStream)
 	ai.Post("/complete", r.handlers.AI.Complete)
 
 	aiProvider := ai.Group("providers")
@@ -38,6 +40,13 @@ func (r *Server) routing() {
 	aiChat.Post("/", r.handlers.AiChat.Create)
 	aiChat.Get("/:id", r.handlers.AiChat.Detail)
 	aiChat.Delete("/:id", r.handlers.AiChat.Delete)
+
+	mcp := api.Group("mcp")
+	mcp.Get("/status", r.handlers.Mcp.Status)
+	mcp.Post("/update", r.handlers.Mcp.Update)
+	mcp.Post("/regenerate-token", r.handlers.Mcp.RegenerateToken)
+	mcp.All("", r.handlers.Mcp.Proxy)
+	mcp.All("/*", r.handlers.Mcp.Proxy)
 
 	connection := api.Group("connections")
 	connection.Get("/", r.handlers.Connection.Connections)

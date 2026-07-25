@@ -8,7 +8,7 @@ import (
 
 func (r *SQLiteRepository) tableFields() []contract.FormField {
 	return []contract.FormField{
-		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "name", Name: "Table Name", Type: contract.FormFieldTypeText, Required: true},
 		{ID: "temporary", Name: "Is temporary", Type: contract.FormFieldTypeCheckBox},
 		{ID: "strict", Name: "Is strict", Type: contract.FormFieldTypeCheckBox},
 		{ID: "without_rowid", Name: "Without rowid", Type: contract.FormFieldTypeCheckBox},
@@ -23,7 +23,7 @@ func (r *SQLiteRepository) tableColumnFields() []contract.FormField {
 		{ID: "column_kind", Name: "Column Kind", Type: contract.FormFieldTypeSelect, Options: r.columnKindOptions()},
 		{ID: "dflt_value", Name: "Default", Type: contract.FormFieldTypeText},
 		{ID: "on_null_conflicts", Name: "On Null Conflicts", Type: contract.FormFieldTypeSelect, Options: r.onNullConflictsOptions()},
-		{ID: "collection_name", Name: "Collection Name", Options: r.collectionNameOptions()},
+		{ID: "collection_name", Name: "Collection Name", Type: contract.FormFieldTypeSelect, Options: r.collectionNameOptions()},
 	}
 }
 
@@ -40,7 +40,19 @@ func (r *SQLiteRepository) foreignKeyFields(ctx context.Context, node string) []
 		{ID: "constraint_name", Name: "Constraint Name", Type: contract.FormFieldTypeText, Required: true},
 		{ID: "target_table", Name: "Target Table", Type: contract.FormFieldTypeSelect, Options: r.tablesListOptions(ctx), Required: true},
 		{ID: "ref_columns", Name: "Source Columns", Type: contract.FormFieldTypeMultiSelect, Options: r.tableColumnsOptions(ctx, node), Required: true},
-		{ID: "target_columns", Name: "Target Columns", Type: contract.FormFieldTypeMultiSelect, Required: true},
+		{
+			ID:       "target_columns",
+			Name:     "Target Columns",
+			Type:     contract.FormFieldTypeMultiSelect,
+			Required: true,
+			DependsOn: &contract.FieldDependency{
+				FieldID: "target_table",
+				Parameters: map[string]string{
+					"field": "columns",
+					"table": "?",
+				},
+			},
+		},
 		{ID: "update_action", Name: "On Update", Type: contract.FormFieldTypeSelect, Options: []contract.FormFieldOption{
 			{Value: "NO ACTION", Label: "NO ACTION"},
 			{Value: "RESTRICT", Label: "RESTRICT"},

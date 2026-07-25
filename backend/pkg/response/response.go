@@ -1,12 +1,10 @@
 package response
 
 import (
-	"errors"
 	"net/http"
 
-	"github.com/gofiber/fiber/v3"
-
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/gofiber/fiber/v3"
 )
 
 type FailedResponse struct {
@@ -29,17 +27,17 @@ func ErrorBuilder() *FailedResponseBuilder {
 }
 
 func (b *FailedResponseBuilder) FromError(err error) *FailedResponseBuilder {
-	var appErr *apperror.AppError
-
-	if errors.As(err, &appErr) {
-		var ae *apperror.AppError
-		errors.As(err, &ae)
-		b.response.Code = ae.Code
-		b.response.Message = ae.Error()
+	if appErr := apperror.Resolve(err); appErr != nil {
+		b.response.Code = appErr.Code
+		b.response.Message = appErr.Error()
 		b.response.Data = appErr.Data
-	} else {
+		return b
+	}
+
+	if err != nil {
 		b.response.Message = err.Error()
 	}
+
 	return b
 }
 

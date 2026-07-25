@@ -5,7 +5,7 @@ import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { ObjectTabType } from '@/types';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export const useTabs = (): {
   tabs: TabResponseType;
@@ -16,7 +16,13 @@ export const useTabs = (): {
   const selectedTab = useSelectedTab<ObjectTabType>();
   const currentConnection = useCurrentConnection();
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
-  const [selectedTabId, setSelectedTabId] = useState<string | null>(selectedTab?.objectTabId ?? null);
+  const [userSelectedTabId, setUserSelectedTabId] = useState<string | null>(null);
+  const [prevObjectTabId, setPrevObjectTabId] = useState(selectedTab?.id);
+
+  if (selectedTab?.id !== prevObjectTabId) {
+    setPrevObjectTabId(selectedTab?.id);
+    setUserSelectedTabId(null);
+  }
 
   const { data: tabs, isLoading } = useQuery({
     queryKey: ['objectTabs', selectedTab?.id, currentConnection?.id, selectedTab?.action, selectedTab?.nodeId],
@@ -29,15 +35,33 @@ export const useTabs = (): {
     enabled: !!(selectedTab?.id && currentConnection?.id && selectedTab?.action)
   });
 
-  useEffect(() => {
-    if (!selectedTab || !tabs || tabs.length === 0) return;
+  const selectedTabId = useMemo(() => {
+    if (!tabs?.length) {
+      return userSelectedTabId ?? selectedTab?.objectTabId ?? null;
+    }
+
+    if (userSelectedTabId && tabs.some((tab) => tab.id === userSelectedTabId)) {
+      return userSelectedTabId;
+    }
 
     const savedTabId = selectedTab?.objectTabId;
     if (savedTabId && tabs.some((tab) => tab.id === savedTabId)) {
-      setSelectedTabId(savedTabId);
-    } else if (tabs[0]) {
-      const firstTabId = tabs[0].id;
-      setSelectedTabId(firstTabId);
+      return savedTabId;
+    }
+
+    return tabs[0]?.id ?? null;
+  }, [tabs, userSelectedTabId, selectedTab?.objectTabId]);
+
+  useEffect(() => {
+    if (!selectedTab || !tabs?.length) return;
+
+    const savedTabId = selectedTab.objectTabId;
+    if (savedTabId && tabs.some((tab) => tab.id === savedTabId)) {
+      return;
+    }
+
+    const firstTabId = tabs[0]?.id;
+    if (firstTabId && selectedTab.objectTabId !== firstTabId) {
       updateSelectedTab({
         ...selectedTab,
         objectTabId: firstTabId
@@ -48,7 +72,7 @@ export const useTabs = (): {
   const handleTabChange = (objectTabId: string): void => {
     if (!selectedTab) return;
 
-    setSelectedTabId(objectTabId);
+    setUserSelectedTabId(objectTabId);
     updateSelectedTab({
       ...selectedTab,
       objectTabId

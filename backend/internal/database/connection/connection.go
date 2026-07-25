@@ -6,19 +6,20 @@ import (
 	"sync"
 	"time"
 
-	"gorm.io/driver/sqlserver"
-	"gorm.io/gorm"
-
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
+	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger"
+	"gorm.io/driver/sqlserver"
+	"gorm.io/gorm"
 )
 
 type IConnectionManager interface {
 	IsOpen(ctx context.Context, ownerID string, connectionID uint) bool
 	Close(ctx context.Context, ownerID string, connectionID uint) error
+	CloseDatabase(ctx context.Context, ownerID string, connectionID uint, databaseName string) error
 	ListOpen(ownerID string) []uint
 }
 
@@ -30,6 +31,7 @@ type conn struct {
 type connKey struct {
 	OwnerID      string
 	ConnectionID uint
+	Database     string
 }
 
 type HistoryWriter interface {
@@ -101,7 +103,65 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 
 	db, err := gorm.Open(dialect, &gorm.Config{})
 	if err != nil {
-		return nil, err
+		return nil, apperror.DriverError(err)
+	}
+
+	RegisterHistoryHooks(db, cm.historyRepo, connection.ID)
+
+	sqlDB, _ := db.DB()
+	sqlDB.SetMaxOpenConns(10)
+	sqlDB.SetMaxIdleConns(5)
+	sqlDB.SetConnMaxLifetime(5 * time.Minute)
+
+	cm.connections[key] = &conn{
+		DB:       db,
+		LastUsed: time.Now(),
+	}
+	return db, nil
+}
+
+func (cm *ConnectionManager) GetConnectionForDatabase(ctx context.Context, connection *model.Connection, databaseName string, withHydration bool) (*gorm.DB, error) {
+	if connection.ConnectionType != string(databaseContract.Postgresql) || databaseName == "" {
+		return cm.GetConnection(ctx, connection, withHydration)
+	}
+
+	defaultDatabase := DefaultPostgresqlDatabase(connection)
+	if databaseName == defaultDatabase {
+		return cm.GetConnection(ctx, connection, withHydration)
+	}
+
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+
+	ownerID := helper.CtxOwnerID(ctx)
+	key := connKey{OwnerID: ownerID, ConnectionID: connection.ID, Database: databaseName}
+
+	if conn, exists := cm.connections[key]; exists {
+		db, err := conn.DB.DB()
+		if err == nil {
+			if err := db.PingContext(ctx); err == nil {
+				conn.LastUsed = time.Now()
+				return conn.DB, nil
+			}
+		}
+		delete(cm.connections, key)
+		_ = cm.closeConn(conn)
+	}
+
+	if cm.secrets != nil && withHydration {
+		if err := secretStore.HydrateConnectionPassword(ctx, cm.secrets, ownerID, connection); err != nil {
+			return nil, err
+		}
+	}
+
+	dialect := OpenPostgresqlConnectionForDatabase(connection, databaseName)
+	if dialect == nil {
+		return nil, fmt.Errorf("failed to open postgresql connection for database %q", databaseName)
+	}
+
+	db, err := gorm.Open(dialect, &gorm.Config{})
+	if err != nil {
+		return nil, apperror.DriverError(err)
 	}
 
 	RegisterHistoryHooks(db, cm.historyRepo, connection.ID)
@@ -142,17 +202,34 @@ func (cm *ConnectionManager) IsOpen(ctx context.Context, ownerID string, connect
 	return true
 }
 
-func (cm *ConnectionManager) Close(ctx context.Context, ownerID string, connectionID uint) error {
+func (cm *ConnectionManager) Close(_ context.Context, ownerID string, connectionID uint) error {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 
-	key := connKey{OwnerID: ownerID, ConnectionID: connectionID}
-	c, ok := cm.connections[key]
-	if !ok {
+	for key, c := range cm.connections {
+		if key.OwnerID == ownerID && key.ConnectionID == connectionID {
+			delete(cm.connections, key)
+			_ = cm.closeConn(c)
+		}
+	}
+	return nil
+}
+
+func (cm *ConnectionManager) CloseDatabase(_ context.Context, ownerID string, connectionID uint, databaseName string) error {
+	if databaseName == "" {
 		return nil
 	}
-	delete(cm.connections, key)
-	return cm.closeConn(c)
+
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+
+	for key, c := range cm.connections {
+		if key.OwnerID == ownerID && key.ConnectionID == connectionID && key.Database == databaseName {
+			delete(cm.connections, key)
+			_ = cm.closeConn(c)
+		}
+	}
+	return nil
 }
 
 func (cm *ConnectionManager) ListOpen(ownerID string) []uint {

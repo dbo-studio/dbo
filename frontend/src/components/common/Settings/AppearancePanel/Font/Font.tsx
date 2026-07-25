@@ -27,7 +27,12 @@ export default function Font(): JSX.Element {
 
   return (
     <Box>
-      <Box mb={1} mt={3}>
+      <Box
+        sx={{
+          mb: 1,
+          mt: 3
+        }}
+      >
         <Typography variant='body1'>{locales.application_font}</Typography>
       </Box>
       <Divider />

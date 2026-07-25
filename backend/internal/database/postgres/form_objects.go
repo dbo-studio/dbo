@@ -15,14 +15,12 @@ func (r *PostgresRepository) Objects(ctx context.Context, nodeID string, tabID c
 		return r.getDatabaseInfo(ctx, node)
 	case contract.SchemaTab:
 		return r.getSchemaInfo(ctx, node)
-	case contract.TableTab:
-		return r.getTableInfo(ctx, node, action)
 	case contract.TableColumnsTab:
-		return r.getTableColumns(ctx, node)
+		return r.getTableColumns(ctx, node, action)
 	case contract.TableForeignKeysTab:
-		return r.getTableForeignKeys(ctx, node)
+		return r.getTableForeignKeys(ctx, node, action)
 	case contract.TableKeysTab:
-		return r.getTableKeys(ctx, node)
+		return r.getTableKeys(ctx, node, action)
 	case contract.ViewTab:
 		return r.getViewInfo(ctx, node)
 	case contract.MaterializedViewTab:
@@ -53,7 +51,12 @@ func (r *PostgresRepository) getDatabaseInfo(ctx context.Context, node contract.
 		}
 	}
 
-	return r.base.BuildObjectFormResponseFromResults(result, fields)
+	row := map[string]any{}
+	if len(result) > 0 {
+		row = result[0]
+	}
+
+	return r.base.BuildGeneralFormResponse(fields, row)
 }
 
 func (r *PostgresRepository) getSchemaInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
@@ -74,110 +77,127 @@ func (r *PostgresRepository) getSchemaInfo(ctx context.Context, node contract.DB
 		}
 	}
 
-	return r.base.BuildObjectFormResponseFromResults(result, fields)
-}
-
-func (r *PostgresRepository) getTableInfo(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
-	fields := r.tableFields(ctx, action)
-
-	tables, err := r.tables(ctx, &node.Schema, true)
-	if err != nil {
-		return nil, err
+	row := map[string]any{}
+	if len(result) > 0 {
+		row = result[0]
 	}
 
+	return r.base.BuildGeneralFormResponse(fields, row)
+}
+
+func (r *PostgresRepository) getTableGeneralFields(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) ([]contract.GeneralField, error) {
+	fields := r.tableFields(ctx, action)
+	result := map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		tables, err := r.tables(ctx, &node.Database, &node.Schema, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, table := range tables {
+			if table.Name == node.Table {
+				result = map[string]any{
+					"relname":     table.Name,
+					"description": table.Description,
+					"persistence": table.Persistence,
+					"tablespace":  table.TableSpace,
+					"rolname":     table.Owner,
+				}
+				break
+			}
+		}
+	}
+
+	return r.base.BuildGeneralFormFieldsFromSchema(fields, result)
+}
+
+func (r *PostgresRepository) getTableColumns(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
+	fields := r.tableColumnFields()
 	result := []map[string]any{}
-	for _, table := range tables {
-		if table.Name == node.Table {
+
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		columns, err := r.columns(ctx, &node.Database, &node.Table, &node.Schema, []string{}, true, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, column := range columns {
 			result = append(result, map[string]any{
-				"relname":     table.Name,
-				"description": table.Description,
-				"persistence": table.Persistence,
-				"tablespace":  table.TableSpace,
-				"rolname":     table.Owner,
+				"column_name":              column.ColumnName,
+				"data_type":                column.DataType,
+				"not_null":                 column.IsNullable == "NO",
+				"primary":                  column.IsPrimaryKey,
+				"column_default":           column.ColumnDefault,
+				"comment":                  column.Comment,
+				"character_maximum_length": column.CharacterMaximumLength,
+				"numeric_scale":            column.NumericScale,
+				"is_identity":              column.IsIdentity,
+				"is_generated":             column.IsGenerated,
 			})
 		}
 	}
 
-	return r.base.BuildObjectFormResponseFromResults(result, fields)
-}
-
-func (r *PostgresRepository) getTableColumns(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
-	fields := r.tableColumnFields()
-	columns, err := r.columns(ctx, &node.Table, &node.Schema, []string{}, true, true)
+	tableInfo, err := r.getTableGeneralFields(ctx, node, action)
 	if err != nil {
 		return nil, err
 	}
 
-	result := []map[string]any{}
-	for _, column := range columns {
-		result = append(result, map[string]any{
-			"column_name":              column.ColumnName,
-			"data_type":                column.DataType,
-			"not_null":                 column.IsNullable == "NO",
-			"primary":                  column.IsPrimaryKey,
-			"column_default":           column.ColumnDefault,
-			"comment":                  column.Comment,
-			"character_maximum_length": column.CharacterMaximumLength,
-			"numeric_scale":            column.NumericScale,
-			"is_identity":              column.IsIdentity,
-			"is_generated":             column.IsGenerated,
-		})
-	}
-
-	return r.base.BuildFormResponseFromResults(result, fields)
+	return r.base.BuildHybridFormResponse(tableInfo, result, fields)
 }
 
-func (r *PostgresRepository) getTableForeignKeys(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
+func (r *PostgresRepository) getTableForeignKeys(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
 	fields := r.foreignKeyFields(ctx, node)
-	foreignKeys, err := r.foreignKeys(ctx, &node.Table, &node.Schema, true)
-	if err != nil {
-		return nil, err
-	}
-
 	result := []map[string]any{}
-	for _, foreignKey := range foreignKeys {
-		result = append(result, map[string]any{
-			"constraint_name":    foreignKey.ConstraintName,
-			"comment":            foreignKey.Comment,
-			"target_table":       foreignKey.TargetTable,
-			"ref_columns":        foreignKey.RefColumnsList,
-			"target_columns":     foreignKey.ColumnsList,
-			"update_action":      foreignKey.UpdateAction,
-			"delete_action":      foreignKey.DeleteAction,
-			"is_deferrable":      foreignKey.IsDeferrable,
-			"initially_deferred": foreignKey.InitiallyDeferred,
-		})
+
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		foreignKeys, err := r.foreignKeys(ctx, &node.Database, &node.Table, &node.Schema, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, foreignKey := range foreignKeys {
+			result = append(result, map[string]any{
+				"constraint_name":    foreignKey.ConstraintName,
+				"comment":            foreignKey.Comment,
+				"target_table":       foreignKey.TargetTable,
+				"ref_columns":        foreignKey.RefColumnsList,
+				"target_columns":     foreignKey.ColumnsList,
+				"update_action":      foreignKey.UpdateAction,
+				"delete_action":      foreignKey.DeleteAction,
+				"is_deferrable":      foreignKey.IsDeferrable,
+				"initially_deferred": foreignKey.InitiallyDeferred,
+			})
+		}
 	}
 
-	response, err := r.base.BuildFormResponseFromResults(result, fields)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return r.base.BuildArrayFormResponse(result, fields)
 }
 
-func (r *PostgresRepository) getTableKeys(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
+func (r *PostgresRepository) getTableKeys(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
 	fields := r.keyFields(ctx, node)
-	keys, err := r.tableKeys(ctx, &node.Table, &node.Schema, true)
-	if err != nil {
-		return nil, err
-	}
-
 	result := []map[string]any{}
-	for _, key := range keys {
-		result = append(result, map[string]any{
-			"name":               key.Name,
-			"comment":            key.Comment,
-			"primary":            key.Primary,
-			"deferrable":         key.Deferrable,
-			"initially_deferred": key.InitiallyDeferred,
-			"columns":            key.ColumnsList,
-			"exclude_operator":   key.ExcludeOperator,
-		})
+
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		keys, err := r.tableKeys(ctx, &node.Database, &node.Table, &node.Schema, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, key := range keys {
+			result = append(result, map[string]any{
+				"name":               key.Name,
+				"comment":            key.Comment,
+				"primary":            key.Primary,
+				"deferrable":         key.Deferrable,
+				"initially_deferred": key.InitiallyDeferred,
+				"columns":            key.ColumnsList,
+				"exclude_operator":   key.ExcludeOperator,
+			})
+		}
 	}
 
-	return r.base.BuildFormResponseFromResults(result, fields)
+	return r.base.BuildArrayFormResponse(result, fields)
 }
 
 func (r *PostgresRepository) getViewInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
@@ -199,12 +219,17 @@ func (r *PostgresRepository) getViewInfo(ctx context.Context, node contract.DBNo
 		}
 	}
 
-	return r.base.BuildObjectFormResponseFromResults(result, fields)
+	row := map[string]any{}
+	if len(result) > 0 {
+		row = result[0]
+	}
+
+	return r.base.BuildGeneralFormResponse(fields, row)
 }
 
 func (r *PostgresRepository) getMaterializedViewInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.materializedViewFields(ctx)
-	materializedViews, err := r.materializedViews(ctx, &node.Schema, true)
+	materializedViews, err := r.materializedViews(ctx, &node.Database, &node.Schema, true)
 	if err != nil {
 		return nil, err
 	}
@@ -222,5 +247,10 @@ func (r *PostgresRepository) getMaterializedViewInfo(ctx context.Context, node c
 		}
 	}
 
-	return r.base.BuildObjectFormResponseFromResults(result, fields)
+	row := map[string]any{}
+	if len(result) > 0 {
+		row = result[0]
+	}
+
+	return r.base.BuildGeneralFormResponse(fields, row)
 }

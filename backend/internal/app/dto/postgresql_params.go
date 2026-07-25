@@ -149,3 +149,24 @@ type PostgresTableForeignKeyData struct {
 	IsDeferrable      *bool    `json:"is_deferrable"`
 	InitiallyDeferred *bool    `json:"initially_deferred"`
 }
+
+type PostgresTableKeyParams struct {
+	Columns []PostgresTableKey `json:"columns"`
+}
+
+type PostgresTableKey struct {
+	New     *PostgresTableKeyData `json:"new"`
+	Old     *PostgresTableKeyData `json:"old"`
+	Added   *bool                 `json:"added"`
+	Deleted *bool                 `json:"deleted"`
+}
+
+type PostgresTableKeyData struct {
+	Name              *string  `json:"name"`
+	Comment           *string  `json:"comment"`
+	Primary           *bool    `json:"primary"`
+	Columns           []string `json:"columns"`
+	Deferrable        *bool    `json:"deferrable"`
+	InitiallyDeferred *bool    `json:"initially_deferred"`
+	ExcludeOperator   *string  `json:"exclude_operator"`
+}

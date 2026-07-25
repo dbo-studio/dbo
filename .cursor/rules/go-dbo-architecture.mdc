@@ -1,0 +1,64 @@
+---
+description: DBO backend architecture — handler/service/repository layers, apperror, database drivers
+globs: backend/**/*.go
+alwaysApply: false
+---
+
+# DBO Backend Architecture
+
+## Layer Responsibilities
+
+| Layer | Path | Does | Does NOT |
+|-------|------|------|----------|
+| Handler | `internal/app/handler/` | Bind, validate, respond | Business logic |
+| Service | `internal/service/<domain>/` | Business rules, DTO mapping | HTTP concerns |
+| Repository | `internal/repository/` | App DB (GORM/SQLite) | User DB access |
+| Database | `internal/database/<driver>/` | User DB operations | App metadata |
+
+## Handler Pattern
+
+```go
+func (h SavedQueryHandler) SavedQueries(c fiber.Ctx) error {
+    req := new(dto.SavedQueryListRequest)
+    if err := c.Bind().Query(req); err != nil {
+        return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+    }
+    if err := req.Validate(); err != nil {
+        return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+    }
+    items, err := h.savedQueryService.Index(c, req)
+    if err != nil {
+        h.logger.Error(err.Error())
+        return response.ErrorBuilder().FromError(err).Send(c)
+    }
+    return response.SuccessBuilder().WithData(items.Items).Send(c)
+}
+```
+
+## Service Pattern
+
+- Interface: `ISavedQueryService`; impl: `ISavedQueryServiceImpl`
+- Constructor: `NewSavedQueryService(repo) ISavedQueryService`
+- Mappers in `*_mapper.go` (unexported `createRes`, `indexRes`)
+- Map domain not-found to `apperror.NotFound(sentinel)`
+
+## Repository Pattern
+
+- `I{Name}Repo` interface in `repository.go`; impl in `*_repository.go`
+- Use `db.WithContext(ctx)` and GORM scopes (`pkg/db/scope.Paginate`)
+- Return `model.*` entities, not DTOs
+
+## User DB (Database Layer)
+
+- Factory: `database.NewDatabaseRepository(ctx, connection, cm)`
+- Contract: `internal/database/contract/contract.go`
+- Per-driver: embed `databaseCore.BaseRepository`, add `contracts_assertions.go`
+- One file per feature: `tree.go`, `run_query.go`, `form_schema.go`
+
+## New Endpoint Checklist
+
+1. DTO + `Validate()` → 2. Repo → 3. Service + mapper → 4. Handler → 5. Route → 6. Wire in `cmd/cmd.go`
+
+## DI
+
+Manual wiring in `cmd/cmd.go`. Singleton via `container.Instance()` for logger/config/DB. No wire/fx.

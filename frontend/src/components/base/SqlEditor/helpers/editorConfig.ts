@@ -9,7 +9,6 @@ export const editorConfig: editor.IStandaloneEditorConstructionOptions = {
   detectIndentation: false,
   folding: false,
   automaticLayout: true,
-  contextmenu: false,
   // Disable auto suggestion widget; require manual trigger (e.g., Ctrl+Space)
   quickSuggestions: false,
   suggestOnTriggerCharacters: false,

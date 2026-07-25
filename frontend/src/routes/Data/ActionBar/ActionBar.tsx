@@ -1,4 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { GridItem } from '@/components/base/Grid/Grid';
 import { ExportModal } from '@/components/common/ExportModal/ExportModal';
 import { ImportModal } from '@/components/common/ImportModal/ImportModal';
 import { useSelectedTab } from '@/hooks';
@@ -6,8 +7,9 @@ import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { DataTabType } from '@/types';
-import { Badge, Box, Grid, IconButton, Stack, Tooltip, useTheme } from '@mui/material';
+import { Badge, Box, IconButton, Tooltip } from '@mui/material';
 import { type JSX, useState } from 'react';
+import { ActionBarActionsGridItemStyled, ActionBarGridStyled } from './ActionBar.styled';
 import Filters from './Filters/Filters';
 import InlineQuery from './InlineQuery/InlineQuery';
 import QueryPreview from './QueryPreview/QueryPreview';
@@ -15,7 +17,6 @@ import Sorts from './Sorts/Sorts';
 import type { ActionBarProps } from './types';
 
 export default function ActionBar({ showColumns, setShowColumns }: ActionBarProps): JSX.Element {
-  const theme = useTheme();
   const selectedTab = useSelectedTab<DataTabType>();
 
   const sortCount = selectedTab?.sorts?.filter((sort) => sort.isActive).length ?? 0;
@@ -94,20 +95,21 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
 
   return (
     <Box>
-      <Stack
-        borderBottom={`1px solid ${theme.palette.divider}`}
-        borderTop={`1px solid ${theme.palette.divider}`}
-        padding=' 8px'
-        maxHeight={40}
-        direction='row'
-        alignItems='center'
+      <ActionBarGridStyled
+        templateColumns={{
+          xs: 'minmax(0, 1fr) max-content'
+        }}
       >
-        <Grid size={{ md: 8 }}>
+        <GridItem sx={{ minWidth: 0 }}>
           <InlineQuery />
-        </Grid>
-        <Grid size={{ md: 4 }} display='flex' justifyContent='flex-end'>
+        </GridItem>
+        <ActionBarActionsGridItemStyled>
           <Tooltip title={locales.filters}>
-            <IconButton className={show.showFilters ? 'active' : ''} onClick={(): void => handleToggle('filter')}>
+            <IconButton
+              aria-label={locales.filters}
+              className={show.showFilters ? 'active' : ''}
+              onClick={(): void => handleToggle('filter')}
+            >
               <Badge badgeContent={filterCount} color='secondary' variant='dot'>
                 <CustomIcon type='filter' size='s' />
               </Badge>
@@ -150,14 +152,15 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
 
           <Tooltip title={locales.query_preview}>
             <IconButton
+              aria-label={locales.query_preview}
               className={show.showQuery ? 'active' : 'toggle-code-preview'}
               onClick={(): void => handleToggle('query')}
             >
               <CustomIcon type='code' size='s' />
             </IconButton>
           </Tooltip>
-        </Grid>
-      </Stack>
+        </ActionBarActionsGridItemStyled>
+      </ActionBarGridStyled>
 
       <ExportModal
         onClose={() => setShowExport({ ...showExport, show: false })}

@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/samber/lo"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/samber/lo"
 )
 
 func (r *SQLiteRepository) buildAllColumnDefinitions(paramsMap *tableParamsMap) string {

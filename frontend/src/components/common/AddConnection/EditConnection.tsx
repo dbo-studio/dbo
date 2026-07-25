@@ -1,26 +1,33 @@
 import api from '@/api';
-import type { PingConnectionRequestType, UpdateConnectionRequestType } from '@/api/connection/types';
+import type { CreateConnectionRequestType, PingConnectionRequestType } from '@/api/connection/types';
 import Modal from '@/components/base/Modal/Modal';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
+import { useTreeStore } from '@/store/treeStore/tree.store';
 import type { ConnectionType } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { type JSX, useEffect, useState } from 'react';
+import { type JSX, useEffect } from 'react';
 import { toast } from 'sonner';
+import Mysql from './Mysql/Mysql';
 import PostgreSQL from './Postgresql/Postgresql';
 import SQLite from './SQLite/SQLite';
 
 export default function EditConnection(): JSX.Element {
   const queryClient = useQueryClient();
-  const [activeConnection, setActiveConnection] = useState<ConnectionType | undefined>(undefined);
   const connections = useConnectionStore((state) => state.connections);
+  const updateConnections = useConnectionStore((state) => state.updateConnections);
+  const resetTree = useTreeStore((state) => state.reset);
 
   const showEditConnection = useSettingStore((state) => state.ui.showEditConnection);
   const updateUI = useSettingStore((state) => state.updateUI);
 
+  const activeConnection = showEditConnection
+    ? connections?.find((connection) => connection.id === Number(showEditConnection))
+    : undefined;
+
   const { mutateAsync: updateConnectionMutation, isPending: updateConnectionPending } = useMutation({
-    mutationFn: (variables: { id: number; data: UpdateConnectionRequestType }): Promise<ConnectionType> =>
+    mutationFn: (variables: { id: number; data: CreateConnectionRequestType }): Promise<ConnectionType> =>
       api.connection.updateConnection(variables.id, variables.data)
   });
 
@@ -29,7 +36,6 @@ export default function EditConnection(): JSX.Element {
   });
 
   const handleClose = (): void => {
-    setActiveConnection(undefined);
     updateUI({ showEditConnection: false });
   };
 
@@ -50,13 +56,27 @@ export default function EditConnection(): JSX.Element {
     }
   };
 
-  const handleUpdateConnection = async (data: UpdateConnectionRequestType): Promise<void> => {
+  const handleUpdateConnection = async (data: CreateConnectionRequestType): Promise<void> => {
     if (updateConnectionPending || !activeConnection) {
       return;
     }
 
     try {
-      await updateConnectionMutation({ id: activeConnection.id, data });
+      const updatedConnection = await updateConnectionMutation({ id: activeConnection.id, data });
+      const currentConnections = useConnectionStore.getState().connections;
+
+      if (currentConnections) {
+        updateConnections(
+          currentConnections.map((connection) =>
+            connection.id === updatedConnection.id ? updatedConnection : connection
+          )
+        );
+      }
+
+      if (useConnectionStore.getState().currentConnectionId === activeConnection.id) {
+        resetTree();
+      }
+
       await queryClient.invalidateQueries({ queryKey: ['connections'] });
       toast.success(locales.connection_update_success);
       handleClose();
@@ -66,20 +86,26 @@ export default function EditConnection(): JSX.Element {
   };
 
   useEffect(() => {
-    if (showEditConnection) {
-      const connection = connections?.find((connection) => connection.id === Number(showEditConnection));
-      if (connection) {
-        setActiveConnection(connection);
-      } else {
-        updateUI({ showEditConnection: false });
-      }
+    if (showEditConnection && !activeConnection) {
+      updateUI({ showEditConnection: false });
     }
-  }, [showEditConnection]);
+  }, [activeConnection, showEditConnection, updateUI]);
 
   return (
     <Modal open={showEditConnection !== undefined && showEditConnection !== false} title={locales.edit_connection}>
       {activeConnection?.type === 'postgresql' && (
         <PostgreSQL
+          connection={activeConnection}
+          pingLoading={pingConnectionPending}
+          submitLoading={updateConnectionPending}
+          onClose={handleClose}
+          onPing={(data) => void handlePingConnection(data)}
+          onSubmit={(data) => void handleUpdateConnection(data)}
+        />
+      )}
+
+      {activeConnection?.type === 'mysql' && (
+        <Mysql
           connection={activeConnection}
           pingLoading={pingConnectionPending}
           submitLoading={updateConnectionPending}

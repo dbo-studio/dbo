@@ -3,17 +3,22 @@ package databaseMysql
 import (
 	"fmt"
 
-	"github.com/samber/lo"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/samber/lo"
 )
 
-func (r *MySQLRepository) handleTableColumnCommands(node contract.DBNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
+func (r *MySQLRepository) handleTableColumnCommands(node contract.DBNode, tabID contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
-	if tabId != contract.TableColumnsTab || node.Table == "" || (action != contract.CreateTableAction && action != contract.EditTableAction) {
+	node = resolveCreateTableNode(node, action, data)
+
+	if action == contract.CreateTableAction {
+		return queries, nil
+	}
+
+	if tabID != contract.TableColumnsTab || node.Table == "" || action != contract.EditTableAction {
 		return queries, nil
 	}
 
@@ -22,13 +27,7 @@ func (r *MySQLRepository) handleTableColumnCommands(node contract.DBNode, tabId 
 		return nil, err
 	}
 
-	params := paramsDto[tabId]
-
-	if action == contract.CreateTableAction {
-		for _, column := range params.Columns {
-			queries = append(queries, r.handleCreateColumn(node, column)...)
-		}
-	}
+	params := paramsDto[tabID]
 
 	if action == contract.EditTableAction {
 		for _, column := range params.Columns {
@@ -50,15 +49,7 @@ func (r *MySQLRepository) handleTableColumnCommands(node contract.DBNode, tabId 
 func (r *MySQLRepository) handleCreateColumn(node contract.DBNode, column dto.MysqlTableColumn) []string {
 	queries := []string{}
 
-	columnDef := fmt.Sprintf("ALTER TABLE `%s`.`%s` ADD COLUMN `%s` %s", node.Database, node.Table, *column.New.Name, *column.New.DataType)
-
-	if column.New.MaxLength != nil && *column.New.MaxLength != "" {
-		if isCharacterType(*column.New.DataType) {
-			columnDef = fmt.Sprintf("%s(%s)", columnDef, *column.New.MaxLength)
-		} else if isNumericType(*column.New.DataType) && column.New.NumericScale != nil {
-			columnDef = fmt.Sprintf("%s(%s,%s)", columnDef, *column.New.MaxLength, *column.New.NumericScale)
-		}
-	}
+	columnDef := fmt.Sprintf("ALTER TABLE `%s`.`%s` ADD COLUMN `%s` %s", node.Database, node.Table, *column.New.Name, formatMysqlColumnType(*column.New.DataType, column.New.MaxLength, column.New.NumericScale))
 
 	if lo.FromPtr(column.New.NotNull) {
 		columnDef += " NOT NULL"
@@ -98,15 +89,7 @@ func (r *MySQLRepository) handleEditColumn(node contract.DBNode, column dto.Mysq
 
 	if column.Old.DataType != nil && column.New.DataType != nil && *column.Old.DataType != *column.New.DataType {
 		dataTypeQuery := fmt.Sprintf("%s MODIFY COLUMN `%s` %s",
-			alter, *column.Old.Name, *column.New.DataType)
-
-		if column.New.MaxLength != nil {
-			if isCharacterType(*column.New.DataType) {
-				dataTypeQuery = fmt.Sprintf("%s(%s)", dataTypeQuery, *column.New.MaxLength)
-			} else if isNumericType(*column.New.DataType) && column.New.NumericScale != nil {
-				dataTypeQuery = fmt.Sprintf("%s(%s,%s)", dataTypeQuery, *column.New.MaxLength, *column.New.NumericScale)
-			}
-		}
+			alter, *column.Old.Name, formatMysqlColumnType(*column.New.DataType, column.New.MaxLength, column.New.NumericScale))
 
 		queries = append(queries, dataTypeQuery)
 	}
@@ -121,20 +104,23 @@ func (r *MySQLRepository) handleEditColumn(node contract.DBNode, column dto.Mysq
 		}
 	}
 
-	if column.Old.Default != nil && column.New.Default != nil && *column.Old.Default != *column.New.Default {
-		if *column.New.Default != "" {
+	oldDefault := lo.FromPtr(column.Old.Default)
+	newDefault := lo.FromPtr(column.New.Default)
+	if oldDefault != newDefault {
+		if newDefault != "" {
 			queries = append(queries, fmt.Sprintf("%s ALTER COLUMN `%s` SET DEFAULT %s",
-				alter, *column.Old.Name, *column.New.Default))
+				alter, *column.Old.Name, newDefault))
 		} else {
 			queries = append(queries, fmt.Sprintf("%s ALTER COLUMN `%s` DROP DEFAULT",
 				alter, *column.Old.Name))
 		}
 	}
 
-	if column.Old.Comment != nil && column.New.Comment != nil && *column.Old.Comment != *column.New.Comment {
-		commentQuery := fmt.Sprintf("%s MODIFY COLUMN `%s` COMMENT '%s'",
-			alter, *column.Old.Name, *column.New.Comment)
-		queries = append(queries, commentQuery)
+	oldComment := lo.FromPtr(column.Old.Comment)
+	newComment := lo.FromPtr(column.New.Comment)
+	if oldComment != newComment {
+		queries = append(queries, fmt.Sprintf("%s MODIFY COLUMN `%s` COMMENT '%s'",
+			alter, *column.Old.Name, newComment))
 	}
 
 	return queries

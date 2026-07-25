@@ -4,6 +4,12 @@ import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Typography, useTheme } from '@mui/material';
 import type { JSX } from 'react';
+import {
+  AboutPanelLinkRowStyled,
+  AboutPanelLinksStyled,
+  AboutPanelLogoStyled,
+  AboutPanelVersionStyled
+} from './AboutPanel.styled';
 
 export default function AboutPanel(): JSX.Element {
   const theme = useTheme();
@@ -11,17 +17,15 @@ export default function AboutPanel(): JSX.Element {
 
   return (
     <Box>
-      <Box mt={theme.spacing(2)} textAlign={'center'}>
+      <AboutPanelLogoStyled>
         <img src='/app-icon/icon-512.png' alt='logo' height={100} width={100} />
-      </Box>
-
-      <Box mt={theme.spacing(2)} textAlign={'center'}>
+      </AboutPanelLogoStyled>
+      <AboutPanelVersionStyled>
         <Typography variant='caption'>{locales.version}</Typography>
         <Typography variant='subtitle2'>{version}</Typography>
-      </Box>
-
-      <Box mt={theme.spacing(2)} display={'flex'} alignItems={'center'} flexDirection={'column'}>
-        <Box display={'flex'} flexDirection={'row'} alignItems={'center'}>
+      </AboutPanelVersionStyled>
+      <AboutPanelLinksStyled>
+        <AboutPanelLinkRowStyled>
           <a
             href={constants.releasesUrl}
             target='_blank'
@@ -36,8 +40,8 @@ export default function AboutPanel(): JSX.Element {
             </Typography>
             <CustomIcon type='externalLink' size='xs' />
           </a>
-        </Box>
-        <Box display={'flex'} flexDirection={'row'} alignItems={'center'}>
+        </AboutPanelLinkRowStyled>
+        <AboutPanelLinkRowStyled>
           <a
             href={constants.reportIssueUrl}
             target='_blank'
@@ -53,8 +57,8 @@ export default function AboutPanel(): JSX.Element {
             </Typography>
             <CustomIcon type='externalLink' size='xs' />
           </a>
-        </Box>
-      </Box>
+        </AboutPanelLinkRowStyled>
+      </AboutPanelLinksStyled>
     </Box>
   );
 }

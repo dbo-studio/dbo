@@ -4,26 +4,27 @@ import { codeToHtml } from 'shiki/bundle/web';
 import { SyntaxHighlighterStyled } from './SyntaxHighlighter.styled';
 import type { SyntaxHighlighterProps } from './types';
 
-export default function SyntaxHighlighter({ value }: SyntaxHighlighterProps): JSX.Element {
+export default function SyntaxHighlighter({ value, lang = 'sql' }: SyntaxHighlighterProps): JSX.Element {
   const [html, setHtml] = useState('');
   const theme = useSettingStore((state) => state.theme.editorTheme);
 
   useEffect(() => {
-    shikiWrapper(value, theme)
+    shikiWrapper(value, theme, lang)
       .then((_html) => setHtml(_html))
       .catch((e) => console.debug('🚀 ~ SyntaxHighlighter ~ e:', e));
-  }, [value, theme]);
+  }, [value, theme, lang]);
 
   return (
     <SyntaxHighlighterStyled>
+      {/* eslint-disable-next-line @eslint-react/dom-no-dangerously-set-innerhtml -- Shiki renders trusted syntax HTML */}
       <div dangerouslySetInnerHTML={{ __html: html }} />
     </SyntaxHighlighterStyled>
   );
 }
 
-const shikiWrapper = async (value: string, editorTheme: string): Promise<string> => {
+const shikiWrapper = async (value: string, editorTheme: string, lang: 'sql' | 'json'): Promise<string> => {
   return await codeToHtml(value, {
-    lang: 'sql',
+    lang,
     theme: editorTheme
   });
 };

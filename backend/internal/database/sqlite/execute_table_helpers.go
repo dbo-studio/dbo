@@ -5,9 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/samber/lo"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/samber/lo"
 )
 
 func (r *SQLiteRepository) getNewTableName(tableParams *dto.SQLiteTableParams, oldName string) string {
@@ -20,6 +19,9 @@ func (r *SQLiteRepository) getNewTableName(tableParams *dto.SQLiteTableParams, o
 func (r *SQLiteRepository) filterActiveColumns(columns []dto.SQLiteTableColumn) []dto.SQLiteTableColumn {
 	return lo.Filter(columns, func(col dto.SQLiteTableColumn, _ int) bool {
 		if col.Added != nil && col.Deleted != nil && *col.Added && *col.Deleted {
+			return false
+		}
+		if lo.FromPtr(col.Deleted) && !lo.FromPtr(col.Added) {
 			return false
 		}
 		if col.Added == nil || *col.Added {

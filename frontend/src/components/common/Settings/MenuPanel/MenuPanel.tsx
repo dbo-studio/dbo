@@ -12,16 +12,18 @@ export default function MenuPanel({ tabs, onChange, defaultTab }: MenuPanelProps
 
   const selectedTab = useMemo(() => {
     return tabs.find((obj) => obj.id === selectedTabId);
-  }, [selectedTabId]);
+  }, [selectedTabId, tabs]);
 
   useEffect(() => {
     tools
       .isTauri()
       .then((e) => e ?? setIsDesktop(e))
       .catch((e) => console.debug('🚀 ~ MenuPanel ~ e:', e));
+  }, []);
 
+  useEffect(() => {
     onChange(selectedTab);
-  }, [selectedTabId]);
+  }, [onChange, selectedTab]);
 
   return (
     <MenuPanelStyled>

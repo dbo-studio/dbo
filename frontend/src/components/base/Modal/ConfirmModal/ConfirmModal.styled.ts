@@ -3,5 +3,5 @@ import { styled } from '@mui/material';
 
 export const ConfirmModalStyled = styled(ModalWrapperStyled)(() => ({
   minHeight: '120px',
-  minWidth: '400px'
+  minWidth: 'min(400px, calc(100vw - 32px))'
 }));

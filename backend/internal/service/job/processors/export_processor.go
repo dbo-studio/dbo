@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/samber/lo"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/database"
@@ -21,6 +19,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/csv"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/samber/lo"
 )
 
 type ExportProcessor struct {
@@ -49,7 +48,7 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 	rawCtx := context.Background()
 
 	if job.Status == model.JobStatusCancelled {
-		return fmt.Errorf("job was cancelled")
+		return fmt.Errorf("job was canceled")
 	}
 
 	jobData, err := helper.ConvertToDTO[dto.ExportJob]([]byte(job.Data))
@@ -60,7 +59,7 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 	ownerID := jobData.OwnerID
 	ctx := helper.CtxWithOwnerID(rawCtx, ownerID)
 
-	connection, err := p.connectionRepo.Find(ctx, jobData.ConnectionId)
+	connection, err := p.connectionRepo.Find(ctx, jobData.ConnectionID)
 	if err != nil {
 		return err
 	}
@@ -91,7 +90,7 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 	}
 
 	result, err := repo.RunRawQuery(ctx, &dto.RawQueryRequest{
-		ConnectionId: int32(connection.ID),
+		ConnectionID: int32(connection.ID),
 		Query:        jobData.Query,
 	})
 
@@ -137,7 +136,7 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 	case "sql":
 		fileContent = generateSQLExportFromData(jobData.Table, result.Columns, result.Data)
 	case "json":
-		fileContent = generateJsonExport(result.Columns, result.Data)
+		fileContent = generateJSONExport(result.Columns, result.Data)
 	case "csv":
 		headers := lo.Map(result.Columns, func(col dto.Column, _ int) string { return col.Name })
 		fileContent = []byte(csv.Writer(headers, result.Data))
@@ -181,7 +180,7 @@ func generateSQLExportFromData(tableName string, columns []dto.Column, data []ma
 	sql.WriteString("-- Generated on: " + time.Now().Format("2006-01-02 15:04:05") + "\n\n")
 
 	if len(data) > 0 {
-		sql.WriteString(fmt.Sprintf("INSERT INTO %s (", tableName))
+		fmt.Fprintf(&sql, "INSERT INTO %s (", tableName)
 		for i, col := range columns {
 			sql.WriteString(col.Name)
 			if i < len(columns)-1 {
@@ -217,7 +216,7 @@ func generateSQLExportFromData(tableName string, columns []dto.Column, data []ma
 	return []byte(sql.String())
 }
 
-func generateJsonExport(columns []dto.Column, rows []map[string]any) []byte {
+func generateJSONExport(columns []dto.Column, rows []map[string]any) []byte {
 	jsonData := make([]map[string]any, len(rows))
 	for i, row := range rows {
 		jsonData[i] = make(map[string]any)
@@ -225,5 +224,5 @@ func generateJsonExport(columns []dto.Column, rows []map[string]any) []byte {
 			jsonData[i][col.Name] = row[col.Name]
 		}
 	}
-	return []byte(helper.StructToJson(jsonData))
+	return []byte(helper.StructToJSON(jsonData))
 }

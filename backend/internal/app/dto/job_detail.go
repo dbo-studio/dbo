@@ -2,7 +2,7 @@ package dto
 
 type (
 	JobDetailRequest struct {
-		JobId int32
+		JobID int32
 	}
 
 	JobDetailResponse struct {

@@ -59,7 +59,7 @@ export default function ChatHistory() {
         console.debug('🚀 ~ ChatHistory ~ err:', err);
       }
     },
-    [chats]
+    [addChat, chats, currentChat?.id, updateCurrentChat]
   );
 
   const handleDelete = useCallback(
@@ -87,7 +87,17 @@ export default function ChatHistory() {
         console.debug('🚀 ~ ChatHistory ~ err:', err);
       }
     },
-    [chats, data]
+    [
+      chats,
+      currentChat?.id,
+      currentConnectionId,
+      data?.length,
+      deleteChatMutation,
+      handleSelectChat,
+      queryClient,
+      updateChats,
+      updateCurrentChat
+    ]
   );
 
   return (

@@ -59,6 +59,7 @@ export type DataGridTableHeaderRowProps = {
   columns: ColumnType[];
   startResize: (columnId: string, event: React.MouseEvent | React.TouchEvent) => void;
   resizingColumnId: string | null;
+  editable?: boolean;
 };
 
 export type CellProps = {

@@ -215,7 +215,7 @@ func (r *PostgresRepository) tablespaceOptions(ctx context.Context) []contract.F
 }
 
 func (r *PostgresRepository) tablesListOptions(ctx context.Context, node contract.DBNode) []contract.FormFieldOption {
-	tables, err := r.tables(ctx, &node.Schema, true)
+	tables, err := r.tables(ctx, &node.Database, &node.Schema, true)
 	if err != nil {
 		return []contract.FormFieldOption{}
 	}
@@ -232,7 +232,7 @@ func (r *PostgresRepository) tablesListOptions(ctx context.Context, node contrac
 }
 
 func (r *PostgresRepository) tableColumnsOptions(ctx context.Context, node contract.DBNode) []contract.FormFieldOption {
-	columns, err := r.columns(ctx, &node.Table, &node.Schema, []string{}, true, true)
+	columns, err := r.columns(ctx, &node.Database, &node.Table, &node.Schema, []string{}, true, true)
 	if err != nil {
 		return []contract.FormFieldOption{}
 	}

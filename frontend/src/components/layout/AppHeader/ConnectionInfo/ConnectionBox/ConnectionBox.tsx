@@ -3,48 +3,52 @@ import type { ConnectionBoxStatus } from '@/components/layout/AppHeader/Connecti
 import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store.ts';
-import { Box, Typography } from '@mui/material';
-import { type JSX, useEffect, useState } from 'react';
-import { ConnectionBoxStyled } from './ConnectionBox.styled.ts';
+import { Typography } from '@mui/material';
+import { type JSX, useMemo } from 'react';
+import { ConnectionBoxContentStyled, ConnectionBoxStyled } from './ConnectionBox.styled.ts';
 
 export default function ConnectionBox(): JSX.Element {
   const loading = useConnectionStore((state) => state.loading);
-  const [info, setInfo] = useState('');
-  const [status, setStatus] = useState<ConnectionBoxStatus>('loading');
   const currentConnection = useCurrentConnection();
 
-  useEffect(() => {
+  const status = useMemo((): ConnectionBoxStatus => {
     if (loading === 'loading') {
-      setStatus('loading');
-      return;
+      return 'loading';
     }
 
     if (loading === 'error') {
-      setStatus('error');
-      setInfo(locales.connection_error);
-      return;
+      return 'error';
     }
 
     if (!currentConnection) {
-      setInfo(locales.no_active_connection);
-      setStatus('disable');
-      return;
+      return 'disable';
     }
 
-    setInfo(currentConnection.info);
-    setStatus('finished');
-  }, [currentConnection, loading]);
+    return 'finished';
+  }, [loading, currentConnection]);
+
+  const info = useMemo(() => {
+    if (loading === 'error') {
+      return locales.connection_error;
+    }
+
+    if (!currentConnection) {
+      return locales.no_active_connection;
+    }
+
+    return currentConnection.info;
+  }, [loading, currentConnection]);
 
   return (
     <ConnectionBoxStyled status={status}>
-      <Box display={'flex'} alignItems={'center'} flexDirection={'row'}>
-        <Typography variant='body2' component='h6'>
+      <ConnectionBoxContentStyled>
+        <Typography variant='body2' component='h6' noWrap>
           {loading === 'loading' && locales.connecting}
           {loading === 'finished' && info}
           {loading === 'error' && info}
         </Typography>
         {loading === 'loading' && <Loading />}
-      </Box>
+      </ConnectionBoxContentStyled>
     </ConnectionBoxStyled>
   );
 }

@@ -1,6 +1,6 @@
 import { SelectInputStyles } from '@/components/base/SelectInput/SelectInput.styled.ts';
 import { Box, Typography, useTheme } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import type { ActionMeta } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import type { SelectInputOption } from '../SelectInput/types';
@@ -15,15 +15,18 @@ export default function CreatableSelectInput({
   onChange,
   emptylabel,
   error,
-  isMulti
+  isMulti,
+  isLoading
 }: CreatableSelectInputProps): React.JSX.Element {
   const theme = useTheme();
 
-  const [localOptions, setLocalOptions] = useState(options);
+  const [createdOptions, setCreatedOptions] = useState<SelectInputOption[]>([]);
 
-  useEffect(() => {
-    setLocalOptions(options);
-  }, [options]);
+  const localOptions = useMemo(() => {
+    const optionValues = new Set(options.map((option) => option.value));
+    const uniqueCreated = createdOptions.filter((option) => !optionValues.has(option.value));
+    return [...options, ...uniqueCreated];
+  }, [options, createdOptions]);
 
   const handleChange = (selected: unknown, _actionMeta: ActionMeta<unknown>): void => {
     void _actionMeta;
@@ -35,7 +38,6 @@ export default function CreatableSelectInput({
 
     if (isMulti) {
       if (!Array.isArray(value)) {
-        console.debug('[CreatableSelectInput] Invalid format for multi-select: expected array, got', typeof value);
         return [];
       }
 
@@ -60,7 +62,7 @@ export default function CreatableSelectInput({
   const handleCreateOption = (inputValue: string): void => {
     const newOption = { value: inputValue.toLowerCase(), label: inputValue };
     const updatedOptions = [...localOptions, newOption];
-    setLocalOptions(updatedOptions);
+    setCreatedOptions((previous) => [...previous, newOption]);
 
     if (!isMulti) {
       handleChange(newOption, { action: 'create-option' } as ActionMeta<unknown>);
@@ -87,13 +89,20 @@ export default function CreatableSelectInput({
   };
 
   return (
-    <Box display={'flex'} flexDirection={'column'} className={'creatable'}>
+    <Box
+      className={'creatable'}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
       {label && (
         <Typography color={theme.palette.text.text} variant='caption'>
           {label}
         </Typography>
       )}
       <CreatableSelect
+        isLoading={isLoading}
         isMulti={isMulti}
         placeholder={options.length === 0 && emptylabel}
         components={{ IndicatorSeparator: null }}
@@ -106,9 +115,12 @@ export default function CreatableSelectInput({
         onCreateOption={handleCreateOption}
         isClearable={true}
       />
-
       {helpertext && (
-        <Typography color={theme.palette.error.main} variant='caption'>
+        <Typography
+          color={theme.palette.error.main}
+          variant='caption'
+          sx={{ marginBottom: (theme) => theme.spacing(1) }}
+        >
           {helpertext}
         </Typography>
       )}

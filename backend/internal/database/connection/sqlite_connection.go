@@ -18,7 +18,7 @@ type SQLiteCreateParams dto.SQLiteCreateConnectionParams
 type SQLiteUpdateParams dto.SQLiteUpdateConnectionParams
 
 func CreateSQLiteConnection(params json.RawMessage) (string, error) {
-	options, err := helper.RawJsonToStruct[SQLiteCreateParams](params)
+	options, err := helper.RawJSONToStruct[SQLiteCreateParams](params)
 	if err != nil {
 		return "", apperror.Validation(errors.New("invalid params"))
 	}
@@ -35,22 +35,22 @@ func CreateSQLiteConnection(params json.RawMessage) (string, error) {
 }
 
 func UpdateSQLiteConnection(oldParams json.RawMessage, newParams json.RawMessage) (string, error) {
-	oldOptions, err := helper.RawJsonToStruct[SQLiteUpdateParams](oldParams)
+	oldOptions, err := helper.RawJSONToStruct[SQLiteUpdateParams](oldParams)
 	if err != nil {
 		return "", apperror.Validation(errors.New("invalid params"))
 	}
 
-	newOptions, err := helper.RawJsonToStruct[SQLiteUpdateParams](newParams)
+	newOptions, err := helper.RawJSONToStruct[SQLiteUpdateParams](newParams)
 	if err != nil {
 		return "", apperror.Validation(errors.New("invalid params"))
 	}
 
 	newOptions.Path = helper.Optional(newOptions.Path, oldOptions.Path)
-	return helper.StructToJson(newOptions), nil
+	return helper.StructToJSON(newOptions), nil
 }
 
 func OpenSQLiteConnection(connection *model.Connection) gorm.Dialector {
-	options, err := helper.RawJsonToStruct[dto.SQLiteCreateConnectionParams](json.RawMessage(connection.Options))
+	options, err := helper.RawJSONToStruct[dto.SQLiteCreateConnectionParams](json.RawMessage(connection.Options))
 	if err != nil {
 		return nil
 	}

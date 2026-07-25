@@ -8,8 +8,8 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (s IConnectionServiceImpl) SetCredentials(ctx context.Context, connectionId int32, req *dto.ConnectionCredentialsRequest) error {
-	connection, err := s.connectionRepo.Find(ctx, connectionId)
+func (s IConnectionServiceImpl) SetCredentials(ctx context.Context, connectionID int32, req *dto.ConnectionCredentialsRequest) error {
+	connection, err := s.connectionRepo.Find(ctx, connectionID)
 	if err != nil {
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
 	}

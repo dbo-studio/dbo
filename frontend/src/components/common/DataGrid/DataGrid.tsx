@@ -1,7 +1,13 @@
 import { useContextMenu } from '@/hooks';
-import { Box, CircularProgress } from '@mui/material';
+import { CircularProgress } from '@mui/material';
 import { RefObject, useRef, type JSX } from 'react';
-import { StyledCol, StyledTable, TableContainer, VirtualTableWrapper } from './DataGrid.styled';
+import {
+  DataGridLoadingOverlayStyled,
+  StyledCol,
+  StyledTable,
+  TableContainer,
+  VirtualTableWrapper
+} from './DataGrid.styled';
 import DataGridContextMenu from './DataGridContextMenu/DataGridContextMenu';
 import DataGridTableBodyRows from './DataGridTableBodyRows/DataGridTableBodyRows';
 import DataGridTableHeaderRow from './DataGridTableHeaderRow/DataGridTableHeaderRow';
@@ -43,17 +49,18 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
     rowVirtualizer
   });
 
-  return loading ? (
-    <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flex={1}>
-      <CircularProgress size={30} />
-    </Box>
-  ) : (
+  return (
     <>
       <QuickViewDialog editable={editable} />
       <SearchDialog open={isSearchDialogOpen} onClose={() => setIsSearchDialogOpen(false)} search={search} />
-      <TableContainer ref={tableContainerRef}>
+      <TableContainer ref={tableContainerRef} sx={{ position: 'relative', flex: 1, minHeight: 0 }}>
+        {loading && (
+          <DataGridLoadingOverlayStyled>
+            <CircularProgress size={30} />
+          </DataGridLoadingOverlayStyled>
+        )}
         <VirtualTableWrapper height={totalSize + HEADER_HEIGHT}>
-          <StyledTable width={totalTableWidth}>
+          <StyledTable data-testid='data-grid' width={totalTableWidth}>
             <colgroup>
               {tableColumns.map((column) => (
                 <StyledCol key={column.name} width={columnSizes[column.name]} />
@@ -63,6 +70,7 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
               columns={tableColumns}
               startResize={startResize}
               resizingColumnId={resizingColumnId}
+              editable={editable}
             />
             <DataGridTableBodyRows
               editable={editable}

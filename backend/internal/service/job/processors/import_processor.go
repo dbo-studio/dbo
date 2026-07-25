@@ -7,9 +7,6 @@ import (
 	"strings"
 
 	"github.com/blastrain/vitess-sqlparser/sqlparser"
-	"github.com/goccy/go-json"
-	"github.com/samber/lo"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/database"
@@ -22,6 +19,8 @@ import (
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/csv"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/goccy/go-json"
+	"github.com/samber/lo"
 )
 
 type ImportProcessor struct {
@@ -63,7 +62,7 @@ func (p *ImportProcessor) Process(job *model.Job) error {
 		fileData = data.Data
 	}
 
-	connection, err := p.connectionRepo.Find(ctx, data.ConnectionId)
+	connection, err := p.connectionRepo.Find(ctx, data.ConnectionID)
 	if err != nil {
 		return err
 	}
@@ -89,7 +88,7 @@ func (p *ImportProcessor) Process(job *model.Job) error {
 	}
 
 	if job.Status == model.JobStatusCancelled {
-		return fmt.Errorf("job was cancelled")
+		return fmt.Errorf("job was canceled")
 	}
 
 	err = p.jobManager.UpdateJobProgress(job, 20, "Starting import process")
@@ -98,7 +97,7 @@ func (p *ImportProcessor) Process(job *model.Job) error {
 	}
 
 	if job.Status == model.JobStatusCancelled {
-		return fmt.Errorf("job was cancelled")
+		return fmt.Errorf("job was canceled")
 	}
 
 	return p.processLargeFile(ctx, job, repo, data, fileData)
@@ -106,7 +105,7 @@ func (p *ImportProcessor) Process(job *model.Job) error {
 
 func (p *ImportProcessor) processLargeFile(ctx context.Context, job *model.Job, dbRepo databaseContract.DatabaseRepository, data dto.ImportJob, fileData []byte) error {
 	if job.Status == model.JobStatusCancelled {
-		return fmt.Errorf("job was cancelled")
+		return fmt.Errorf("job was canceled")
 	}
 
 	err := p.jobManager.UpdateJobProgress(job, 30, "Parsing file")
@@ -114,8 +113,8 @@ func (p *ImportProcessor) processLargeFile(ctx context.Context, job *model.Job, 
 		return err
 	}
 
-	if job.Status == "cancelled" {
-		return fmt.Errorf("job was cancelled")
+	if job.Status == "canceled" {
+		return fmt.Errorf("job was canceled")
 	}
 
 	var rows [][]string
@@ -156,8 +155,8 @@ func (p *ImportProcessor) processLargeFile(ctx context.Context, job *model.Job, 
 			return err
 		}
 
-		if job.Status == "cancelled" {
-			return fmt.Errorf("job was cancelled")
+		if job.Status == "canceled" {
+			return fmt.Errorf("job was canceled")
 		}
 
 		chunkSuccess, chunkFailed, chunkErrors := p.processChunk(ctx, dbRepo, data, columnNames, chunk)

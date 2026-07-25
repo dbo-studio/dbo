@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/goccy/go-json"
-	"github.com/tidwall/sjson"
-
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/goccy/go-json"
+	"github.com/tidwall/sjson"
 )
 
 func connectionsToResponse(ctx context.Context, ownerID string, cm *databaseConnection.ConnectionManager, connections *[]model.Connection) *dto.ConnectionsResponse {

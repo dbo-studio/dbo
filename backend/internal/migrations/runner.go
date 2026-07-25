@@ -4,18 +4,18 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"io/fs"
 
 	"github.com/pressly/goose/v3"
 )
 
 func Up(ctx context.Context, db *sql.DB) error {
-	goose.SetDialect("sqlite3")
+	if err := goose.SetDialect("sqlite3"); err != nil {
+		return err
+	}
 	goose.SetBaseFS(FS)
 
-	sub, err := fs.Sub(FS, ".")
-	if err == nil {
-		goose.SetBaseFS(sub)
+	if err := repairGooseVersionTable(ctx, db); err != nil {
+		return err
 	}
 
 	if err := goose.UpContext(ctx, db, "."); err != nil {

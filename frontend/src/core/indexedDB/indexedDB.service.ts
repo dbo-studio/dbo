@@ -1,3 +1,4 @@
+import type { GridMetaType } from '@/api/query/types';
 import type { SelectedRow } from '@/store/dataStore/types';
 import type { ColumnType, EditedRow, RowType } from '@/types';
 import { type DBSchema, type IDBPDatabase, openDB } from 'idb';
@@ -17,6 +18,7 @@ interface TableDataDB extends DBSchema {
     value: {
       tabId: string;
       columns: ColumnType[];
+      gridMeta?: GridMetaType;
     };
   };
   editedRows: {
@@ -141,14 +143,34 @@ class IndexedDBService {
     return tabRows.sort((a, b) => a.rowIndex - b.rowIndex).map((item) => item.data);
   }
 
-  async saveColumns(tabId: string, columns: ColumnType[]): Promise<void> {
+  async saveColumns(tabId: string, columns: ColumnType[], gridMeta?: GridMetaType): Promise<void> {
     const db = await this.initDB();
     const tx = db.transaction('columns', 'readwrite');
+    const existing = await tx.store.get(tabId);
     await tx.store.put({
       tabId,
-      columns
+      columns,
+      gridMeta: gridMeta ?? existing?.gridMeta
     });
     await tx.done;
+  }
+
+  async saveGridMeta(tabId: string, gridMeta: GridMetaType): Promise<void> {
+    const db = await this.initDB();
+    const tx = db.transaction('columns', 'readwrite');
+    const existing = await tx.store.get(tabId);
+    await tx.store.put({
+      tabId,
+      columns: existing?.columns ?? [],
+      gridMeta
+    });
+    await tx.done;
+  }
+
+  async getGridMeta(tabId: string): Promise<GridMetaType | undefined> {
+    const db = await this.initDB();
+    const result = await db.transaction('columns').store.get(tabId);
+    return result?.gridMeta;
   }
 
   async getColumns(tabId: string): Promise<ColumnType[]> {

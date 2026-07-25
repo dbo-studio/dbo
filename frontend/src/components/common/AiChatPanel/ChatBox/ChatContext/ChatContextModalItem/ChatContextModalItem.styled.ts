@@ -10,6 +10,8 @@ export const ChatContextModalItemStyled = styled(Box)(({ theme }) => ({
   borderRadius: variables.radius.medium,
   padding: '0 4px',
   border: '1px solid transparent',
+  minWidth: 0,
+  overflow: 'hidden',
   ':hover': {
     border: `1px solid ${theme.palette.divider}`
   }

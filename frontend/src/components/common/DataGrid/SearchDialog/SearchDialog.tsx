@@ -1,11 +1,11 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import locales from '@/locales';
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
 import { Stack } from '@mui/system';
 import type { JSX } from 'react';
 import { useEffect, useRef } from 'react';
-import { SearchBarContainer } from '../DataGrid.styled';
+import { SearchBarContainer, SearchMatchCountStyled } from '../DataGrid.styled';
 import type { UseDataGridSearchReturn } from '../hooks/useDataGridSearch';
 
 export type SearchDialogProps = {
@@ -43,7 +43,14 @@ export default function SearchDialog({ open, onClose, search }: SearchDialogProp
 
   return (
     <SearchBarContainer>
-      <Stack direction='row' alignItems='center' spacing={1} alignContent='center'>
+      <Stack
+        direction='row'
+        spacing={1}
+        sx={{
+          alignItems: 'center',
+          alignContent: 'center'
+        }}
+      >
         <FieldInput
           margin='none'
           inputRef={inputRef}
@@ -54,10 +61,15 @@ export default function SearchDialog({ open, onClose, search }: SearchDialogProp
           onKeyDown={handleKeyDown}
         />
 
-        <Typography variant='caption' color='text.secondary' sx={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
+        <SearchMatchCountStyled variant='caption'>
           {search.matches.length > 0 ? `${search.currentMatchIndex + 1} / ${search.matches.length}` : '0/0'}
-        </Typography>
-        <Box display='flex' gap={0.5}>
+        </SearchMatchCountStyled>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 0.5
+          }}
+        >
           <IconButton
             size='small'
             onClick={search.previousMatch}
