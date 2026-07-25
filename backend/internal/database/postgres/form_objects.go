@@ -146,7 +146,7 @@ func (r *PostgresRepository) getTableColumns(ctx context.Context, node contract.
 	return r.base.BuildHybridFormResponse(tableInfo, result, fields)
 }
 
-func (r *PostgresRepository) getTableForeignKeys(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
+func (r *PostgresRepository) getTableForeignKeys(ctx context.Context, node contract.DBNode, _ contract.TreeNodeActionName) (*contract.FormResponse, error) {
 	fields := r.foreignKeyFields(ctx, node)
 	result := []map[string]any{}
 
@@ -174,7 +174,7 @@ func (r *PostgresRepository) getTableForeignKeys(ctx context.Context, node contr
 	return r.base.BuildArrayFormResponse(result, fields)
 }
 
-func (r *PostgresRepository) getTableKeys(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
+func (r *PostgresRepository) getTableKeys(ctx context.Context, node contract.DBNode, _ contract.TreeNodeActionName) (*contract.FormResponse, error) {
 	fields := r.keyFields(ctx, node)
 	result := []map[string]any{}
 

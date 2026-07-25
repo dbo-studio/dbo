@@ -203,9 +203,6 @@ linters:
       #  - typo: "whattever"
       #    correction: "whatever"
 
-    exclude:
-      - '.+\.exports'
-      - '.+\.data'
 output:
   # Order to use when sorting results.
   # Possible values: `file`, `linter`, and `severity`.

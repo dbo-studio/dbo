@@ -21,10 +21,6 @@ func hasToolCallLeak(content string) bool {
 	return strings.Contains(content, `"arguments"`) || strings.Contains(content, `"parameters"`)
 }
 
-func isToolCallLeakContent(content string) bool {
-	return hasToolCallLeak(content) && strings.TrimSpace(stripToolCallLeak(content)) == ""
-}
-
 func stripToolCallLeak(content string) string {
 	if !hasToolCallLeak(content) {
 		return content

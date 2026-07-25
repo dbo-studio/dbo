@@ -127,10 +127,7 @@ func (a *UpdatableQueryAnalysis) IsColumnFromDrivingTable(outputName string) boo
 	}
 
 	if a.hasDrivingTableStarSelect() {
-		if a.isExplicitJoinedTableColumn(outputName) {
-			return false
-		}
-		return true
+		return !a.isExplicitJoinedTableColumn(outputName)
 	}
 
 	for _, col := range a.SelectColumns {

@@ -72,18 +72,6 @@ func (r *SQLiteRepository) foreignKeyFields(ctx context.Context, node string) []
 	}
 }
 
-func (r *SQLiteRepository) indexOptions(ctx context.Context, node string) []contract.FormField {
-	return []contract.FormField{
-		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
-		{ID: "columns", Name: "Columns", Type: contract.FormFieldTypeMultiSelect, Options: r.tableColumnsOptions(ctx, node)},
-		{ID: "unique", Name: "Unique", Type: contract.FormFieldTypeCheckBox},
-		{ID: "order", Name: "Order", Type: contract.FormFieldTypeSelect, Options: []contract.FormFieldOption{
-			{Value: "ASC", Label: "ASC"},
-			{Value: "DESC", Label: "DESC"},
-		}},
-	}
-}
-
 func (r *SQLiteRepository) dataTypeOptions() []contract.FormFieldOption {
 	return []contract.FormFieldOption{
 		{Value: "INTEGER", Label: "INTEGER"},

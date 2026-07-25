@@ -58,9 +58,7 @@ export default function ThemeProvider({ children }: Props): JSX.Element {
   const selectedPalette = paletteMap[validatedThemeName] || dboPalette;
 
   const themeOptions: ThemeOptions = {
-    palette: withTypographyColorAliases(
-      selectedPalette(theme.isDark ? ThemeModeEnum.Dark : ThemeModeEnum.Light)
-    ) as ThemeOptions['palette'],
+    palette: withTypographyColorAliases(selectedPalette(theme.isDark ? ThemeModeEnum.Dark : ThemeModeEnum.Light)),
     direction: constants.direction as Direction,
     typography: {
       ...baseTypography,

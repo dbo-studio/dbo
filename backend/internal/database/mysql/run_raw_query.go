@@ -48,7 +48,7 @@ func (r *mysqlRawQueryResolver) IsBaseTable(ctx context.Context, database, schem
 	return !slices.Contains(viewNames, table), nil
 }
 
-func (r *mysqlRawQueryResolver) LoadTableColumns(ctx context.Context, database, schema *string, table string) ([]dto.Column, error) {
+func (r *mysqlRawQueryResolver) LoadTableColumns(ctx context.Context, database, _ *string, table string) ([]dto.Column, error) {
 	columns, err := r.repo.columns(ctx, database, lo.ToPtr(table), nil, true, true)
 	if err != nil {
 		return nil, err

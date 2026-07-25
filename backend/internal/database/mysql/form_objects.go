@@ -117,7 +117,7 @@ func (r *MySQLRepository) getTableColumns(ctx context.Context, node contract.DBN
 	return r.base.BuildHybridFormResponse(tableInfo, result, fields)
 }
 
-func (r *MySQLRepository) getTableForeignKeys(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
+func (r *MySQLRepository) getTableForeignKeys(ctx context.Context, node contract.DBNode, _ contract.TreeNodeActionName) (*contract.FormResponse, error) {
 	fields := r.foreignKeyFields(ctx, fmt.Sprintf("%s.%s", node.Database, node.Table))
 	result := []map[string]any{}
 
@@ -142,7 +142,7 @@ func (r *MySQLRepository) getTableForeignKeys(ctx context.Context, node contract
 	return r.base.BuildArrayFormResponse(result, fields)
 }
 
-func (r *MySQLRepository) getTableKeys(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
+func (r *MySQLRepository) getTableKeys(ctx context.Context, node contract.DBNode, _ contract.TreeNodeActionName) (*contract.FormResponse, error) {
 	fields := r.keyFields(ctx, fmt.Sprintf("%s.%s", node.Database, node.Table))
 	result := []map[string]any{}
 
@@ -168,7 +168,7 @@ func (r *MySQLRepository) getTableKeys(ctx context.Context, node contract.DBNode
 	return r.base.BuildArrayFormResponse(result, fields)
 }
 
-func (r *MySQLRepository) getTableIndexes(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
+func (r *MySQLRepository) getTableIndexes(ctx context.Context, node contract.DBNode, _ contract.TreeNodeActionName) (*contract.FormResponse, error) {
 	fields := r.indexOptions(ctx, fmt.Sprintf("%s.%s", node.Database, node.Table))
 	result := []map[string]any{}
 
