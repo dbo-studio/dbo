@@ -1,15 +1,46 @@
 import type { ColumnType, EditedRow, RowType } from '@/types';
 
+export const buildRowConditions = (row: RowType, columns: ColumnType[]): object => {
+  const pkColumns = columns.filter((column) => column.isPrimaryKey);
+  if (pkColumns.length === 0) {
+    return row;
+  }
+
+  const conditions: Record<string, unknown> = {};
+  for (const pkColumn of pkColumns) {
+    const physicalKey = pkColumn.sourceColumn ?? pkColumn.name;
+    conditions[physicalKey] = row[pkColumn.name];
+  }
+
+  return conditions;
+};
+
+export const mapRowValuesToPhysical = (values: RowType, columns: ColumnType[]): Record<string, unknown> => {
+  const mapped: Record<string, unknown> = {};
+
+  for (const [outputName, value] of Object.entries(values)) {
+    if (outputName === 'dbo_index') {
+      continue;
+    }
+
+    const column = columns.find((item) => item.name === outputName);
+    const physicalKey = column?.sourceColumn ?? outputName;
+    mapped[physicalKey] = value;
+  }
+
+  return mapped;
+};
+
 export const handleRowChangeLog = (
   editedRows: EditedRow[],
   oldRow: RowType,
   rowKey: string,
   oldValue: unknown,
-  newValue: unknown
+  newValue: unknown,
+  columns: ColumnType[]
 ): EditedRow[] => {
   const dboIndex = oldRow.dbo_index;
 
-  //check if edited value exists in editedRows just update this values
   const existingRowIndex = editedRows.findIndex((row) => row.dboIndex === dboIndex);
   const existingRow = existingRowIndex !== -1 ? editedRows[existingRowIndex] : null;
 
@@ -23,7 +54,7 @@ export const handleRowChangeLog = (
   oldObject[rowKey] = oldValue;
   newObject[rowKey] = newValue;
 
-  const conditions = oldRow?.id ? { id: oldRow.id } : oldRow;
+  const conditions = buildRowConditions(oldRow, columns);
 
   const updatedRow: EditedRow = {
     dboIndex,

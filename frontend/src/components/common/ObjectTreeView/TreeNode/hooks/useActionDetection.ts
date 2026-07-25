@@ -1,8 +1,10 @@
 import api from '@/api';
 import { TabMode } from '@/core/enums';
 import { useCurrentConnection } from '@/hooks';
+import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { TreeNodeType } from '@/types/Tree';
@@ -19,6 +21,8 @@ export const useActionDetection = (
   const queryClient = useQueryClient();
   const confirmModal = useConfirmModalStore();
   const currentConnection = useCurrentConnection();
+  const { useSidebarOverlay } = useLayoutMode();
+  const updateUI = useSettingStore((state) => state.updateUI);
 
   const addDataTab = useTabStore((state) => state.addDataTab);
   const addObjectTab = useTabStore((state) => state.addObjectTab);
@@ -27,15 +31,21 @@ export const useActionDetection = (
   const [, copy] = useCopyToClipboard();
 
   const { mutateAsync: executeActionMutation, isPending: pendingExecuteAction } = useMutation({
-    mutationFn: api.tree.executeAction,
-    onSuccess: async (_, variables): Promise<void> => {
-      const selectedTab = useTabStore.getState().selectedTab();
-      queryClient.invalidateQueries({
-        queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.action, variables.nodeId]
-      });
-      await reloadTree(false);
-    }
+    mutationFn: api.tree.executeAction
   });
+
+  const closeLeftSidebar = useCallback((): void => {
+    if (!useSidebarOverlay) {
+      return;
+    }
+
+    const sidebar = useSettingStore.getState().ui.sidebar;
+    if (!sidebar.showLeft) {
+      return;
+    }
+
+    updateUI({ sidebar: { ...sidebar, showLeft: false } });
+  }, [updateUI, useSidebarOverlay]);
 
   const actionDetection = useCallback(
     async (event: React.MouseEvent, node: TreeNodeType) => {
@@ -60,6 +70,7 @@ export const useActionDetection = (
               break;
             }
           }
+          closeLeftSidebar();
           break;
         }
         case 'action': {
@@ -68,30 +79,38 @@ export const useActionDetection = (
           confirmModal.danger(
             `Confirm ${node.action.title}`,
             `Are you sure you want to ${node.action.title} ${node.name}?`,
-            async () => {
-              if (pendingExecuteAction) {
-                return;
-              }
+            () => {
+              void (async () => {
+                if (pendingExecuteAction) {
+                  return;
+                }
 
-              try {
-                const selectedTab = useTabStore.getState().selectedTab();
-                await executeActionMutation({
-                  nodeId: node.id,
-                  action: node.action.name,
-                  connectionId: currentConnection.id,
-                  /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
-                  // @ts-ignore
-                  data: {
-                    [selectedTab?.id ?? '']: {
-                      [node.id]: {}
+                try {
+                  const selectedTab = useTabStore.getState().selectedTab();
+                  await executeActionMutation({
+                    nodeId: node.id,
+                    action: node.action.name,
+                    connectionId: currentConnection.id,
+                    /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+                    // @ts-ignore
+                    data: {
+                      [selectedTab?.id ?? '']: {
+                        [node.id]: {}
+                      }
                     }
-                  }
-                });
+                  });
 
-                toast.success(locales.action_executed_successfully);
-              } catch (error) {
-                console.debug('🚀 ~ actionDetection ~ error:', error);
-              }
+                  await queryClient.invalidateQueries({
+                    queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.action, node.id]
+                  });
+
+                  await reloadTree(false);
+
+                  toast.success(locales.action_executed_successfully);
+                } catch (error) {
+                  console.debug('🚀 ~ actionDetection ~ error:', error);
+                }
+              })();
             }
           );
           break;
@@ -114,7 +133,19 @@ export const useActionDetection = (
         }
       }
     },
-    [confirmModal, currentConnection?.id, expandNode, executeActionMutation, pendingExecuteAction, reloadTree]
+    [
+      expandNode,
+      addObjectTab,
+      addDataTab,
+      closeLeftSidebar,
+      currentConnection,
+      confirmModal,
+      pendingExecuteAction,
+      executeActionMutation,
+      queryClient,
+      reloadTree,
+      copy
+    ]
   );
 
   return { actionDetection };

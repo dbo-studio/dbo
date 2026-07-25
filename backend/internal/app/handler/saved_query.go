@@ -62,7 +62,7 @@ func (h SavedQueryHandler) Create(c fiber.Ctx) error {
 }
 
 func (h SavedQueryHandler) Update(c fiber.Ctx) error {
-	queryId := fiber.Params[int32](c, "id")
+	queryID := fiber.Params[int32](c, "id")
 	req := new(dto.UpdateSavedQueryRequest)
 
 	if err := c.Bind().Body(req); err != nil {
@@ -73,7 +73,7 @@ func (h SavedQueryHandler) Update(c fiber.Ctx) error {
 		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
 	}
 
-	result, err := h.savedQueryService.Update(c, queryId, req)
+	result, err := h.savedQueryService.Update(c, queryID, req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)
@@ -83,8 +83,8 @@ func (h SavedQueryHandler) Update(c fiber.Ctx) error {
 }
 
 func (h SavedQueryHandler) Delete(c fiber.Ctx) error {
-	queryId := fiber.Params[int32](c, "id")
-	data, err := h.savedQueryService.Delete(c, queryId)
+	queryID := fiber.Params[int32](c, "id")
+	data, err := h.savedQueryService.Delete(c, queryID)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)

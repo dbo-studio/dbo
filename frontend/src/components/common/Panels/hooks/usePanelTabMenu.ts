@@ -8,7 +8,7 @@ import { useRemoveTab } from './useRemoveTab';
 export const usePanelTabMenu = (tab: TabType): MenuType[] => {
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const getTabs = useTabStore((state) => state.getTabs);
-  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
+  const switchTab = useTabStore((state) => state.switchTab);
   const { handleRemoveTab } = useRemoveTab();
 
   const menu = useMemo<MenuType[]>(
@@ -17,7 +17,7 @@ export const usePanelTabMenu = (tab: TabType): MenuType[] => {
         name: locales.close,
         action: (): void => {
           if (!tab) return;
-          handleRemoveTab(tab.id);
+          handleRemoveTab(tab.id).catch((e) => console.log('🚀 ~ usePanelTabMenu ~ e:', e));
         },
         closeAfterAction: true
       },
@@ -25,7 +25,9 @@ export const usePanelTabMenu = (tab: TabType): MenuType[] => {
         name: locales.close_other_tabs,
         action: (): void => {
           for (const t of getTabs()) {
-            if (t.id !== selectedTabId) handleRemoveTab(t.id);
+            if (t.id !== selectedTabId) {
+              handleRemoveTab(t.id).catch((e) => console.log('🚀 ~ usePanelTabMenu ~ e:', e));
+            }
           }
         },
         closeAfterAction: true
@@ -34,14 +36,14 @@ export const usePanelTabMenu = (tab: TabType): MenuType[] => {
         name: locales.close_all,
         action: (): void => {
           for (const t of getTabs()) {
-            handleRemoveTab(t.id);
+            handleRemoveTab(t.id).catch((e) => console.log('🚀 ~ usePanelTabMenu ~ e:', e));
           }
-          updateSelectedTab(undefined);
+          switchTab(null);
         },
         closeAfterAction: true
       }
     ],
-    [tab, selectedTabId, getTabs, handleRemoveTab, updateSelectedTab]
+    [tab, selectedTabId, getTabs, handleRemoveTab, switchTab]
   );
 
   return menu;

@@ -80,13 +80,14 @@ const DataGridTableRow = memo(
       <StyledTableRow className={rowClassName}>
         {columns.map((column, columnIndex) => {
           const columnId = column.name;
+          const cellEditable = editable && column.editable !== false;
           const value =
             row[columnId] !== undefined &&
             (typeof row[columnId] === 'string' ||
               typeof row[columnId] === 'number' ||
               typeof row[columnId] === 'boolean' ||
               row[columnId] === null)
-              ? (row[columnId] as string | number | boolean | null)
+              ? row[columnId]
               : undefined;
 
           const isSearchMatch =
@@ -127,7 +128,7 @@ const DataGridTableRow = memo(
                 rowIndex={rowIndex}
                 columnId={columnId}
                 value={value}
-                editable={editable}
+                editable={cellEditable}
                 searchTerm={searchTerm}
                 isSearchMatch={isSearchMatch}
                 isCurrentMatch={isCurrentMatch}

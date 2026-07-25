@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/goccy/go-json"
-
 	"github.com/blastrain/vitess-sqlparser/sqlparser"
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/container"
@@ -17,9 +15,11 @@ import (
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/internal/service/job"
+	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/csv"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/goccy/go-json"
 	"github.com/samber/lo"
 )
 
@@ -28,14 +28,16 @@ type ImportProcessor struct {
 	cm             *databaseConnection.ConnectionManager
 	connectionRepo repository.IConnectionRepo
 	cache          cache.Cache
+	secrets        secretStore.ISecretStore
 }
 
-func NewImportProcessor(jobManager job.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo) *ImportProcessor {
+func NewImportProcessor(jobManager job.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, secrets secretStore.ISecretStore) *ImportProcessor {
 	return &ImportProcessor{
 		jobManager:     jobManager,
 		cm:             cm,
 		connectionRepo: connectionRepo,
 		cache:          container.Instance().Cache(),
+		secrets:        secrets,
 	}
 }
 
@@ -44,12 +46,14 @@ func (p *ImportProcessor) GetType() model.JobType {
 }
 
 func (p *ImportProcessor) Process(job *model.Job) error {
-	ctx := context.Background()
-
+	rawCtx := context.Background()
 	data, err := helper.ConvertToDTO[dto.ImportJob]([]byte(job.Data))
 	if err != nil {
 		return fmt.Errorf("could not convert job data to DTO: %v", err)
 	}
+
+	ownerID := data.OwnerID
+	ctx := helper.CtxWithOwnerID(rawCtx, ownerID)
 
 	var fileData []byte
 	if decoded, err := base64.StdEncoding.DecodeString(string(data.Data)); err == nil {
@@ -58,9 +62,19 @@ func (p *ImportProcessor) Process(job *model.Job) error {
 		fileData = data.Data
 	}
 
-	connection, err := p.connectionRepo.Find(ctx, data.ConnectionId)
+	connection, err := p.connectionRepo.Find(ctx, data.ConnectionID)
 	if err != nil {
 		return err
+	}
+
+	// Pin password in-memory for the whole job so reconnects don't depend on SecretStore TTL.
+	if connection.ConnectionType != "sqlite" {
+		pw, err := p.secrets.GetConnectionPassword(ctx, ownerID, connection.ID)
+		if err != nil {
+			return err
+		}
+
+		ctx = helper.CtxWithConnectionPassword(ctx, pw)
 	}
 
 	repo, err := database.NewDatabaseRepository(ctx, connection, p.cm)
@@ -74,7 +88,7 @@ func (p *ImportProcessor) Process(job *model.Job) error {
 	}
 
 	if job.Status == model.JobStatusCancelled {
-		return fmt.Errorf("job was cancelled")
+		return fmt.Errorf("job was canceled")
 	}
 
 	err = p.jobManager.UpdateJobProgress(job, 20, "Starting import process")
@@ -83,7 +97,7 @@ func (p *ImportProcessor) Process(job *model.Job) error {
 	}
 
 	if job.Status == model.JobStatusCancelled {
-		return fmt.Errorf("job was cancelled")
+		return fmt.Errorf("job was canceled")
 	}
 
 	return p.processLargeFile(ctx, job, repo, data, fileData)
@@ -91,7 +105,7 @@ func (p *ImportProcessor) Process(job *model.Job) error {
 
 func (p *ImportProcessor) processLargeFile(ctx context.Context, job *model.Job, dbRepo databaseContract.DatabaseRepository, data dto.ImportJob, fileData []byte) error {
 	if job.Status == model.JobStatusCancelled {
-		return fmt.Errorf("job was cancelled")
+		return fmt.Errorf("job was canceled")
 	}
 
 	err := p.jobManager.UpdateJobProgress(job, 30, "Parsing file")
@@ -99,8 +113,8 @@ func (p *ImportProcessor) processLargeFile(ctx context.Context, job *model.Job, 
 		return err
 	}
 
-	if job.Status == "cancelled" {
-		return fmt.Errorf("job was cancelled")
+	if job.Status == "canceled" {
+		return fmt.Errorf("job was canceled")
 	}
 
 	var rows [][]string
@@ -141,8 +155,8 @@ func (p *ImportProcessor) processLargeFile(ctx context.Context, job *model.Job, 
 			return err
 		}
 
-		if job.Status == "cancelled" {
-			return fmt.Errorf("job was cancelled")
+		if job.Status == "canceled" {
+			return fmt.Errorf("job was canceled")
 		}
 
 		chunkSuccess, chunkFailed, chunkErrors := p.processChunk(ctx, dbRepo, data, columnNames, chunk)
@@ -241,7 +255,7 @@ func parseJSONFile(fileData []byte) ([][]string, []string, error) {
 	var columns []string
 	var rows [][]string
 
-	var jsonData []map[string]interface{}
+	var jsonData []map[string]any
 	if err := json.Unmarshal(fileData, &jsonData); err != nil {
 		return nil, nil, fmt.Errorf("failed to parse JSON: %w", err)
 	}

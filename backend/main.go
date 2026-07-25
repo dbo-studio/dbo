@@ -12,7 +12,7 @@ func main() {
 		Use:                "app",
 		DisableAutoGenTag:  true,
 		DisableSuggestions: true,
-		Run: func(c *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			cmd.Execute()
 		},
 	}

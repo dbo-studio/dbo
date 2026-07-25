@@ -7,21 +7,25 @@ export type SettingStore = {
   general: GeneralSettings;
   setup: SetupSettings;
 
-  updateUI(ui: Partial<UISettings>): void;
-  updateTheme(theme: Partial<ThemeSettings>): void;
-  updateEditor(editor: Partial<EditorSettings>): void;
-  updateGeneral(general: Partial<GeneralSettings>): void;
+  updateUI: (ui: Partial<UISettings>) => void;
+  updateTheme: (theme: Partial<ThemeSettings>) => void;
+  updateEditor: (editor: Partial<EditorSettings>) => void;
+  updateGeneral: (general: Partial<GeneralSettings>) => void;
   completeSetup(): void;
 };
 
 export type UISettings = {
   sidebar: SidebarType;
+  showConnectionsDrawer: boolean;
   showAddConnection: boolean;
   showEditConnection: number | boolean;
   showQuickLookEditor: boolean;
+  showConnectionPasswordPrompt: boolean;
+  passwordPromptConnectionId?: number;
   showSettings: {
     open: boolean;
     tab: number;
+    aiTab?: 'providers' | 'mcp';
   };
   titleBar: TitleBarType;
 };
@@ -64,4 +68,6 @@ export type SidebarType = {
   rightWidth: number;
   showLeft: boolean;
   leftWidth: number;
+  /** 0 = Assistant, 1 = Fields */
+  rightSidebarTab: number;
 };

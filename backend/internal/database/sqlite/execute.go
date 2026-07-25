@@ -7,37 +7,46 @@ import (
 	"strings"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *SQLiteRepository) Execute(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) error {
+func (r *SQLiteRepository) buildExecuteQueries(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
 	type ExecuteParams map[contract.TreeTab]any
 	executeParams, err := helper.ConvertToDTO[ExecuteParams](params)
 	if err != nil {
-		return err
+		return nil, "", err
 	}
 
 	queries := []string{}
-	var tmpTableName string // For cleanup in case of error
 
-	for tabId := range executeParams {
-		viewQueries, err := r.handleViewCommands(nodeID, tabId, action, params)
+	for _, tabID := range databaseCore.SortedExecuteTabs(executeParams) {
+		viewQueries, err := r.handleViewCommands(nodeID, tabID, action, params)
 		if err != nil {
-			return err
+			return nil, "", err
 		}
-
-		tableQueries, tmpName, err := r.handleTableCommands(nodeID, executeParams, action, params)
-		if err != nil {
-			return err
-		}
-
-		// Store tmp table name for cleanup (only for EditTableAction)
-		if tmpName != "" {
-			tmpTableName = tmpName
-		}
-
 		queries = append(queries, viewQueries...)
-		queries = append(queries, tableQueries...)
+	}
+
+	// SQLite table DDL is atomic across all tabs — generate once, not per tab.
+	tableQueries, tmpTableName, err := r.handleTableCommands(ctx, nodeID, executeParams, action, params)
+	if err != nil {
+		return nil, "", err
+	}
+	queries = append(queries, tableQueries...)
+
+	return queries, tmpTableName, nil
+}
+
+func (r *SQLiteRepository) PreviewExecute(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, error) {
+	queries, _, err := r.buildExecuteQueries(ctx, nodeID, action, params)
+	return queries, err
+}
+
+func (r *SQLiteRepository) Execute(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) (*contract.ExecuteResult, error) {
+	queries, tmpTableName, err := r.buildExecuteQueries(ctx, nodeID, action, params)
+	if err != nil {
+		return nil, err
 	}
 
 	// Execute queries with cleanup on error
@@ -52,15 +61,15 @@ func (r *SQLiteRepository) Execute(ctx context.Context, nodeID string, action co
 			if tmpTableName != "" {
 				r.cleanupTmpTable(ctx, tmpTableName)
 			}
-			return err
+			return nil, err
 		}
 
-		if err := r.db.WithContext(ctx).Exec(query).Error; err != nil {
+		if err := r.base.DB().WithContext(ctx).Exec(query).Error; err != nil {
 			// Cleanup tmp table if it exists
 			if tmpTableName != "" {
 				r.cleanupTmpTable(ctx, tmpTableName)
 			}
-			return err
+			return nil, err
 		}
 
 		// After successful DROP of old table and RENAME, tmp table no longer exists
@@ -73,7 +82,7 @@ func (r *SQLiteRepository) Execute(ctx context.Context, nodeID string, action co
 		}
 	}
 
-	return nil
+	return databaseCore.ResolveExecuteIdentity(r.base.Connection().ConnectionType, nodeID, action, params), nil
 }
 
 // cleanupTmpTable drops the temporary table if it exists (for error recovery)
@@ -84,6 +93,6 @@ func (r *SQLiteRepository) cleanupTmpTable(ctx context.Context, tmpTableName str
 
 	// Use IF EXISTS to avoid errors if table doesn't exist
 	cleanupQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s", quoteIdent(tmpTableName))
-	_ = r.db.WithContext(ctx).Exec(cleanupQuery).Error
+	_ = r.base.DB().WithContext(ctx).Exec(cleanupQuery).Error
 	// Ignore error - this is cleanup, we don't want to mask the original error
 }

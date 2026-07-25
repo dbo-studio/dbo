@@ -6,10 +6,11 @@ import (
 
 type (
 	RunQueryRequest struct {
-		ConnectionId int32       `json:"connectionId"`
-		NodeId       string      `json:"nodeId"`
+		ConnectionID int32       `json:"connectionId"`
+		NodeID       string      `json:"nodeId"`
 		Limit        *int        `json:"limit"`
 		Page         *int        `json:"page"`
+		InlineQuery  *string     `json:"inlineQuery"`
 		Filters      []FilterDto `json:"filters"`
 		Sorts        []SortDto   `json:"sorts"`
 		Columns      []string
@@ -36,8 +37,8 @@ type SortDto struct {
 
 func (req RunQueryRequest) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
-		validation.Field(&req.NodeId, validation.Required, validation.Length(0, 120)),
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
+		validation.Field(&req.NodeID, validation.Required, validation.Length(0, 120)),
 		validation.Field(&req.Limit, validation.Min(1)),
 		validation.Field(&req.Page, validation.Min(1)),
 		validation.Field(&req.Filters),
@@ -46,12 +47,15 @@ func (req RunQueryRequest) Validate() error {
 }
 
 func (req FilterDto) Validate() error {
-	return validation.ValidateStruct(&req,
+	rules := []*validation.FieldRules{
 		validation.Field(&req.Column, validation.Required, validation.Length(0, 120)),
 		validation.Field(&req.Operator, validation.Required),
-		validation.Field(&req.Value, validation.Required),
 		validation.Field(&req.Next, validation.Required),
-	)
+	}
+	if FilterRequiresValue(req.Operator) {
+		rules = append(rules, validation.Field(&req.Value, validation.Required))
+	}
+	return validation.ValidateStruct(&req, rules...)
 }
 
 func (req SortDto) Validate() error {

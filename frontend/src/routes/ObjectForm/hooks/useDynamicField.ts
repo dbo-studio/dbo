@@ -1,194 +1,248 @@
 import api from '@/api';
-import type { DynamicFieldResponse } from '@/api/tree/types';
-import { useCurrentConnection } from '@/hooks';
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
-import { ObjectTabType } from '@/types';
-import type { FieldDependencyType, FormFieldOptionType, FormFieldType } from '@/types/Tree';
+import { useCurrentConnection, useSelectedTab } from '@/hooks';
+import { FieldDependencyType, FormFieldOptionType, FormFieldType, FormValue } from '@/types/Tree';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+type FormValues = Record<string, FormValue | FormValue[]>;
+type DynamicFieldStateKey = string;
+
+type UseDynamicFieldReturn = {
+  getDynamicFieldStateKey: (scopeId: string | number, fieldId: string) => DynamicFieldStateKey;
+
+  refreshDynamicField: (stateKey: DynamicFieldStateKey, field: FormFieldType, fields: FormFieldType[]) => Promise<void>;
+
+  getDynamicOptions: (id: DynamicFieldStateKey) => FormFieldOptionType[];
+
+  isLoadingDynamicField: (id: DynamicFieldStateKey) => boolean;
+};
+
 type DynamicFieldState = {
-  [fieldId: string]: {
+  [fieldId: DynamicFieldStateKey]: {
     options: FormFieldOptionType[];
     loading: boolean;
-    error?: string;
     cacheKey?: string;
   };
 };
 
-type FormValues = Record<string, string | number | boolean | string[] | null | undefined>;
+const EMPTY_OPTIONS: FormFieldOptionType[] = [];
 
-const buildCacheKey = (fieldId: string, dependsOn: FieldDependencyType, formValues: FormValues): string => {
-  const dependentValue = formValues[dependsOn.fieldId] ?? '';
-
-  const params = dependsOn.parameters
-    ? Object.keys(dependsOn.parameters)
-        .map((key) => {
-          const paramValue = dependsOn.parameters?.[key];
-          let resolvedValue = '';
-
-          if (paramValue === '?') {
-            // If value is "?", use the dependsOn.fieldId value from formValues
-            const val = formValues[dependsOn.fieldId];
-            resolvedValue = val !== undefined && val !== null ? String(val) : '';
-          } else if (typeof paramValue === 'string' && formValues[paramValue] !== undefined) {
-            // If paramValue is a field id reference
-            const val = formValues[paramValue];
-            resolvedValue = val !== undefined && val !== null ? String(val) : '';
-          } else {
-            // Otherwise use the paramValue as is
-            resolvedValue = paramValue !== undefined && paramValue !== null ? String(paramValue) : '';
-          }
-
-          return `${key}:${resolvedValue}`;
-        })
-        .join(',')
-    : '';
-
-  return `${fieldId}_${dependsOn.fieldId}_${dependentValue}_${params}`;
-};
-
-export const useDynamicField = (
-  fields: FormFieldType[],
-  formValues: FormValues
-): {
-  getDynamicOptions: (fieldId: string) => FormFieldOptionType[];
-  isLoadingDynamicField: (fieldId: string) => boolean;
-  refreshDynamicField: (fieldId: string, dependsOn: FieldDependencyType) => Promise<void>;
-} => {
-  const selectedTab = useSelectedTab<ObjectTabType>();
+export const useDynamicField = (objectTabId: string): UseDynamicFieldReturn => {
+  const selectedTab = useSelectedTab();
   const currentConnection = useCurrentConnection();
+
   const [dynamicState, setDynamicState] = useState<DynamicFieldState>({});
   const cacheKeysRef = useRef<Record<string, string>>({});
+  const optionsCacheRef = useRef<Record<string, FormFieldOptionType[]>>({});
+  const abortControllersRef = useRef<Record<string, AbortController>>({});
 
-  const fetchDynamicOptions = useCallback(
-    async (field: FormFieldType, dependsOn: FieldDependencyType): Promise<void> => {
-      if (!dependsOn?.fieldId || !currentConnection?.id || !selectedTab?.nodeId || !selectedTab?.objectTabId) {
+  const buildFormValues = useCallback(
+    (fields: FormFieldType[]) =>
+      fields.reduce((acc, f) => {
+        acc[f.id] = f.value;
+        return acc;
+      }, {} as FormValues),
+    []
+  );
+
+  const clearDynamicFieldState = useCallback((stateKey: DynamicFieldStateKey) => {
+    setDynamicState((prev) => ({
+      ...prev,
+      [stateKey]: { options: EMPTY_OPTIONS, loading: false, cacheKey: undefined }
+    }));
+    cacheKeysRef.current[stateKey] = '';
+
+    abortControllersRef.current[stateKey]?.abort();
+    delete abortControllersRef.current[stateKey];
+  }, []);
+
+  const refreshDynamicField = useCallback(
+    async (stateKey: DynamicFieldStateKey, field: FormFieldType, fields: FormFieldType[]) => {
+      const dependsOn = field.dependsOn;
+      if (!dependsOn) return;
+
+      if (!currentConnection?.id || !selectedTab?.nodeId || !objectTabId) return;
+
+      const formValues = buildFormValues(fields);
+      const dependentValue = formValues[dependsOn.fieldId];
+
+      if (!hasDependencyValue(dependentValue)) {
+        clearDynamicFieldState(stateKey);
         return;
       }
 
-      const dependentValue = formValues[dependsOn.fieldId];
-      if (dependentValue === undefined || dependentValue === null || dependentValue === '') {
+      const cacheKey = buildDynamicCacheKey(field, dependsOn, formValues);
+      const cachedOptions = optionsCacheRef.current[cacheKey];
+
+      if (cachedOptions) {
+        cacheKeysRef.current[stateKey] = cacheKey;
         setDynamicState((prev) => ({
           ...prev,
-          [field.id]: {
-            options: [],
+          [stateKey]: {
+            options: cachedOptions,
             loading: false,
-            cacheKey: undefined
+            cacheKey
           }
         }));
-        cacheKeysRef.current[field.id] = '';
         return;
       }
 
-      const cacheKey = buildCacheKey(field.id, dependsOn, formValues);
-      const previousCacheKey = cacheKeysRef.current[field.id];
+      if (cacheKeysRef.current[stateKey] === cacheKey) return;
 
-      if (previousCacheKey === cacheKey) {
-        return;
-      }
+      cacheKeysRef.current[stateKey] = cacheKey;
 
       setDynamicState((prev) => ({
         ...prev,
-        [field.id]: {
-          options: prev[field.id]?.options || [],
-          loading: true,
-          cacheKey
-        }
+        [stateKey]: { ...prev[stateKey], loading: true, cacheKey }
       }));
 
+      abortControllersRef.current[stateKey]?.abort();
+      const controller = new AbortController();
+      abortControllersRef.current[stateKey] = controller;
+
       try {
-        const parameters: Record<string, string | number | boolean | string[] | null | undefined> = {};
-
-        if (dependsOn.parameters) {
-          Object.keys(dependsOn.parameters).forEach((key) => {
-            const paramValue = dependsOn.parameters?.[key];
-
-            if (paramValue === '?') {
-              // If value is "?", use the dependsOn.fieldId value from formValues
-              const fieldValue = formValues[dependsOn.fieldId];
-              if (fieldValue !== undefined && fieldValue !== null && fieldValue !== '') {
-                parameters[key] = fieldValue;
-              }
-            } else if (typeof paramValue === 'string' && formValues[paramValue] !== undefined) {
-              // If paramValue is a field id reference, get its value from formValues
-              parameters[key] = formValues[paramValue];
-            } else {
-              // Otherwise use the paramValue as is (literal value like "columns")
-              parameters[key] = paramValue;
+        const response = await api.tree.getDynamicFieldOptions(
+          {
+            connectionId: currentConnection.id,
+            nodeId: selectedTab.nodeId,
+            parameters: {
+              ...buildRequestParameters(dependsOn, formValues)
             }
+          },
+          controller.signal
+        );
+
+        if (abortControllersRef.current[stateKey] === controller) {
+          optionsCacheRef.current[cacheKey] = response;
+          setDynamicState((prev) => {
+            return {
+              ...prev,
+              [stateKey]: {
+                options: response,
+                loading: false,
+                cacheKey
+              }
+            };
           });
         }
-
-        const response: DynamicFieldResponse = await api.tree.getDynamicFieldOptions({
-          connectionId: currentConnection.id,
-          nodeId: selectedTab.nodeId,
-          parameters: {
-            ...parameters
-          }
-        });
-
-        cacheKeysRef.current[field.id] = cacheKey;
-
-        setDynamicState((prev) => ({
-          ...prev,
-          [field.id]: {
-            options: response,
-            loading: false,
-            cacheKey
-          }
-        }));
       } catch (error) {
-        console.error('Error fetching dynamic options:', error);
+        if (error instanceof Error && error.name === 'CanceledError') {
+          return;
+        }
+        console.debug('🚀 ~ runRawQuery: ~ error:', error);
         setDynamicState((prev) => ({
           ...prev,
-          [field.id]: {
-            options: [],
+          [stateKey]: {
+            options: EMPTY_OPTIONS,
             loading: false,
-            error: 'Failed to load options',
             cacheKey
           }
         }));
+      } finally {
+        if (abortControllersRef.current[stateKey] === controller) {
+          delete abortControllersRef.current[stateKey];
+        }
       }
     },
-    [currentConnection?.id, selectedTab?.nodeId, selectedTab?.objectTabId, formValues]
+    [buildFormValues, clearDynamicFieldState, currentConnection?.id, selectedTab?.nodeId, objectTabId]
   );
 
   useEffect(() => {
-    const dependentFields = fields.filter((field) => field.dependsOn);
-
-    dependentFields.forEach((field) => {
-      if (!field.dependsOn) return;
-      fetchDynamicOptions(field, field.dependsOn);
-    });
-  }, [fields, formValues, fetchDynamicOptions]);
+    return () => {
+      Object.values(abortControllersRef.current).forEach((controller) => controller.abort());
+      abortControllersRef.current = {};
+    };
+  }, []);
 
   const getDynamicOptions = useCallback(
-    (fieldId: string): FormFieldOptionType[] => {
-      return dynamicState[fieldId]?.options || [];
+    (fieldId: DynamicFieldStateKey): FormFieldOptionType[] => {
+      return dynamicState[fieldId]?.options ?? EMPTY_OPTIONS;
     },
     [dynamicState]
   );
 
   const isLoadingDynamicField = useCallback(
-    (fieldId: string): boolean => {
-      return dynamicState[fieldId]?.loading || false;
+    (fieldId: DynamicFieldStateKey): boolean => {
+      return dynamicState[fieldId]?.loading ?? false;
     },
     [dynamicState]
   );
 
-  const refreshDynamicField = useCallback(
-    async (fieldId: string, dependsOn: FieldDependencyType): Promise<void> => {
-      const field = fields.find((f) => f.id === fieldId);
-      if (field && dependsOn) {
-        await fetchDynamicOptions(field, dependsOn);
-      }
-    },
-    [fields, fetchDynamicOptions]
-  );
-
   return {
+    getDynamicFieldStateKey,
+    refreshDynamicField,
     getDynamicOptions,
-    isLoadingDynamicField,
-    refreshDynamicField
+    isLoadingDynamicField
   };
+};
+
+const getDynamicFieldStateKey = (scopeId: string | number, fieldId: string): DynamicFieldStateKey => {
+  return `${scopeId}::${fieldId}`;
+};
+
+const hasDependencyValue = (value: FormValue | FormValue[] | undefined): boolean => {
+  if (value === undefined || value === null || value === '') {
+    return false;
+  }
+
+  if (Array.isArray(value)) {
+    return value.length > 0;
+  }
+
+  return true;
+};
+
+const resolveParameterValue = (
+  parameterValue: string,
+  dependsOn: FieldDependencyType,
+  formValues: FormValues
+): FormValue | FormValue[] | string => {
+  if (parameterValue === '?') {
+    return formValues[dependsOn.fieldId];
+  }
+
+  if (formValues[parameterValue] !== undefined) {
+    return formValues[parameterValue];
+  }
+
+  return parameterValue;
+};
+
+const buildRequestParameters = (
+  dependsOn: FieldDependencyType,
+  formValues: FormValues
+): Record<string, FormValue | FormValue[] | string> => {
+  if (!dependsOn.parameters) {
+    return {};
+  }
+
+  return Object.entries(dependsOn.parameters).reduce<Record<string, FormValue | FormValue[] | string>>(
+    (accumulator, [key, value]) => {
+      accumulator[key] = resolveParameterValue(value, dependsOn, formValues);
+      return accumulator;
+    },
+    {}
+  );
+};
+
+const stringifyCacheValue = (value: FormValue | FormValue[] | string): string => {
+  if (Array.isArray(value)) {
+    return value.join(',');
+  }
+
+  if (value === undefined || value === null) {
+    return '';
+  }
+
+  return String(value);
+};
+
+const buildDynamicCacheKey = (field: FormFieldType, dependsOn: FieldDependencyType, formValues: FormValues): string => {
+  const dependentValue = formValues[dependsOn.fieldId] ?? '';
+  const parameters = dependsOn.parameters
+    ? Object.entries(dependsOn.parameters)
+        .map(([key, value]) => `${key}:${stringifyCacheValue(resolveParameterValue(value, dependsOn, formValues))}`)
+        .join(',')
+    : '';
+
+  return `${field.id}__${dependsOn.fieldId}__${stringifyCacheValue(dependentValue)}__${parameters}`;
 };

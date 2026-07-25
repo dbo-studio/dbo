@@ -5,6 +5,8 @@ services:
     environment:
       APP_PORT: "9000"
       APP_ENV: "docker"
+      # Public URL when deployed on a server — see docker-compose.env.example
+      # APP_PUBLIC_URL: "https://dbo.example.com"
     volumes:
       - ./docker/dbo:/backend/data
     ports:

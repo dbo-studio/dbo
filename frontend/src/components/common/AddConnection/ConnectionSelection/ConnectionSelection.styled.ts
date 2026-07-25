@@ -1,6 +1,12 @@
 import { Box, styled } from '@mui/material';
 import { variables } from '@/core/theme/variables';
 
+export const ConnectionSelectionContainerStyled = styled(Box)(() => ({
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column'
+}));
+
 export const ConnectionWrapperStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
   gap: '10px',

@@ -11,6 +11,7 @@ type (
 		ID       int64  `json:"id"`
 		Name     string `json:"name"`
 		IsActive bool   `json:"isActive"`
+		IsOpen   bool   `json:"isOpen"`
 		Icon     string `json:"icon"`
 		Type     string `json:"type"`
 		Info     string `json:"info"`

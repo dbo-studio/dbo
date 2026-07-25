@@ -12,11 +12,26 @@ type UseJobPollingOptions = {
   pollingInterval?: number;
 };
 
+const TERMINAL_STATUSES = new Set(['completed', 'failed', 'cancelled']);
+
 export const useJobPolling = (jobId: string | null, options: UseJobPollingOptions = {}) => {
+  const [trackedJobId, setTrackedJobId] = useState(jobId);
   const [job, setJob] = useState<JobType | null>(null);
-  const [isPolling, setIsPolling] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const optionsRef = useRef(options);
+
+  if (jobId !== trackedJobId) {
+    setTrackedJobId(jobId);
+    setJob(null);
+    setError(null);
+  }
+
+  const pollingInterval = options.pollingInterval ?? 1000;
+
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [options]);
 
   const { mutateAsync: getJobMutation } = useMutation({
     mutationFn: api.job.detail
@@ -26,87 +41,70 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
     mutationFn: api.job.cancel
   });
 
+  const processJobData = useCallback((jobData: JobType): boolean => {
+    const currentOptions = optionsRef.current;
+
+    setJob(jobData);
+    setError(null);
+
+    currentOptions.onStatusChange?.(jobData.status, jobData.message);
+    currentOptions.onProgress?.(jobData.progress, jobData.message);
+
+    if (jobData.result) {
+      currentOptions.onResult?.(jobData.result);
+    }
+
+    if (jobData.error) {
+      currentOptions.onError?.(jobData.error);
+    }
+
+    if (TERMINAL_STATUSES.has(jobData.status)) {
+      currentOptions.onComplete?.(jobData);
+      return true;
+    }
+
+    return false;
+  }, []);
+
+  const fetchJob = useCallback(async (): Promise<boolean> => {
+    if (!jobId) return true;
+
+    try {
+      const jobData = await getJobMutation(jobId);
+      return processJobData(jobData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch job status');
+      console.error('Error fetching job status:', err);
+      return false;
+    }
+  }, [getJobMutation, jobId, processJobData]);
+
   useEffect(() => {
     if (!jobId) {
-      setJob(null);
-      setIsPolling(false);
       return;
     }
 
-    setIsPolling(true);
+    void fetchJob();
 
-    const initialFetch = async () => {
-      try {
-        const jobData = await getJobMutation(jobId);
-
-        setJob(jobData);
-        setError(null);
-
-        options.onStatusChange?.(jobData.status, jobData.message);
-        options.onProgress?.(jobData.progress, jobData.message);
-
-        if (jobData.result) {
-          options.onResult?.(jobData.result);
+    intervalRef.current = setInterval(() => {
+      void fetchJob().then((isTerminal) => {
+        if (isTerminal && intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
         }
-
-        if (jobData.error) {
-          options.onError?.(jobData.error);
-        }
-
-        if (jobData.status === 'completed' || jobData.status === 'failed' || jobData.status === 'cancelled') {
-          setIsPolling(false);
-          options.onComplete?.(jobData);
-          return;
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch job status');
-        console.error('Error fetching job status:', err);
-      }
-    };
-
-    initialFetch();
-
-    intervalRef.current = setInterval(async () => {
-      try {
-        const jobData = await getJobMutation(jobId);
-
-        setJob(jobData);
-        setError(null);
-
-        options.onStatusChange?.(jobData.status, jobData.message);
-        options.onProgress?.(jobData.progress, jobData.message);
-
-        if (jobData.result) {
-          options.onResult?.(jobData.result);
-        }
-
-        if (jobData.error) {
-          options.onError?.(jobData.error);
-        }
-
-        if (jobData.status === 'completed' || jobData.status === 'failed' || jobData.status === 'cancelled') {
-          setIsPolling(false);
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
-          options.onComplete?.(jobData);
-          return;
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch job status');
-        console.debug('🚀 ~ useJobPolling ~ err:', err);
-      }
-    }, options.pollingInterval || 1000);
+      });
+    }, pollingInterval);
 
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
-      setIsPolling(false);
     };
-  }, [jobId, options.pollingInterval || 1000]);
+  }, [fetchJob, jobId, pollingInterval]);
+
+  const effectiveJob = jobId ? job : null;
+  const isPolling = Boolean(jobId && (!effectiveJob || !TERMINAL_STATUSES.has(effectiveJob.status)));
 
   const cancelJob = useCallback(async () => {
     if (!jobId) return;
@@ -118,10 +116,10 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
     } catch (err) {
       console.debug('🚀 ~ useJobPolling ~ err:', err);
     }
-  }, [jobId]);
+  }, [cancelJobMutation, getJobMutation, jobId]);
 
   return {
-    job,
+    job: effectiveJob,
     isPolling,
     error,
     cancelJob

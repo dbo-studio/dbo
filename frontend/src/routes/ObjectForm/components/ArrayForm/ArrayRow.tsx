@@ -1,45 +1,48 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { FormFieldOptionType, FormFieldType, FormValue } from '@/types/Tree';
 import { IconButton, Stack, TableCell, TableRow } from '@mui/material';
-import React, { memo, useMemo } from 'react';
-import { useDynamicField } from '../../hooks/useDynamicField';
-import type { ArrayRowProps } from '../../types';
+import React, { memo } from 'react';
 import SimpleField from '../SimpleForm/SimpleField';
-import { FormValue } from '@/types/Tree';
 
-function ArrayRow({ schema, rowData, onFieldChange, onDelete }: ArrayRowProps): React.JSX.Element {
-  const fieldsWithValues = useMemo(() => {
-    return schema.map((field) => ({
-      ...field,
-      value: rowData[field.id] ?? null
-    }));
-  }, [schema, rowData]);
+type ArrayRowProps = {
+  rowIndex: number;
+  rows: FormFieldType[];
+  getDynamicFieldStateKey: (scopeId: string | number, fieldId: string) => string;
+  getDynamicOptions: (id: string) => FormFieldOptionType[];
+  isLoadingDynamicField: (id: string) => boolean;
+  onFieldChange: (field: FormFieldType, value: FormValue | FormValue[]) => void;
+  onDelete: () => void;
+};
 
-  const formValues = useMemo((): Record<string, FormValue> => {
-    const values: Record<string, FormValue> = {};
-    fieldsWithValues.forEach((field) => {
-      values[field.id] = field.value;
-    });
-    return values;
-  }, [fieldsWithValues]);
-
-  const { getDynamicOptions, isLoadingDynamicField } = useDynamicField(schema, formValues);
-
+function ArrayRow({
+  rowIndex,
+  rows,
+  getDynamicFieldStateKey,
+  getDynamicOptions,
+  isLoadingDynamicField,
+  onFieldChange,
+  onDelete
+}: ArrayRowProps): React.JSX.Element {
   return (
     <TableRow>
-      {fieldsWithValues.map((field) => (
-        <TableCell key={field.id} sx={{ minWidth: 180 }}>
-          <SimpleField
-            isArrayForm={true}
-            field={field}
-            onChange={(value): void => onFieldChange(field.id, value)}
-            dynamicOptions={field.dependsOn ? getDynamicOptions(field.id) : undefined}
-            isLoadingDynamic={field.dependsOn ? isLoadingDynamicField(field.id) : false}
-          />
-        </TableCell>
-      ))}
+      {rows.map((field) => {
+        const stateKey = getDynamicFieldStateKey(rowIndex, field.id);
+
+        return (
+          <TableCell key={field.id} sx={{ minWidth: 180 }} data-testid={`object-form-cell-${rowIndex}-${field.id}`}>
+            <SimpleField
+              isArrayForm={true}
+              field={field}
+              onChange={(value): void => onFieldChange(field, value)}
+              dynamicOptions={field.dependsOn ? getDynamicOptions(stateKey) : undefined}
+              isLoadingDynamic={field.dependsOn ? isLoadingDynamicField(stateKey) : false}
+            />
+          </TableCell>
+        );
+      })}
       <TableCell>
         <Stack direction='row' spacing={1}>
-          <IconButton size='small' onClick={onDelete}>
+          <IconButton size='small' onClick={onDelete} data-testid={`object-form-delete-row-${rowIndex}`}>
             <CustomIcon type='delete' />
           </IconButton>
         </Stack>

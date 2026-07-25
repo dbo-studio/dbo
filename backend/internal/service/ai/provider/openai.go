@@ -11,15 +11,15 @@ import (
 )
 
 func NewOpenAIProvider(ctx context.Context, provider *model.AiProvider) (IAiProvider, error) {
-	if provider.ApiKey == nil || *provider.ApiKey == "" || provider.Url == "" {
+	if provider.APIKey == nil || *provider.APIKey == "" || provider.URL == "" {
 		return nil, fmt.Errorf("openai api key and url are required")
 	}
 
 	return &BaseProvider{
 		context: ctx,
 		client: openai.NewClient(
-			option.WithAPIKey(*provider.ApiKey),
-			option.WithBaseURL(provider.Url),
+			option.WithAPIKey(*provider.APIKey),
+			option.WithBaseURL(provider.URL),
 			option.WithRequestTimeout(time.Duration(provider.Timeout)*time.Second),
 		),
 	}, nil

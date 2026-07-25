@@ -24,7 +24,7 @@ func (h IHistoryRepoImpl) Index(_ context.Context, req *dto.HistoryListRequest) 
 	var histories []model.History
 
 	result := h.db.Scopes(scope.Paginate(&req.PaginationRequest)).
-		Where("connection_id = ?", req.ConnectionId).
+		Where("connection_id = ?", req.ConnectionID).
 		Order("created_at desc").
 		Find(&histories)
 
@@ -46,6 +46,6 @@ func (h IHistoryRepoImpl) Create(_ context.Context, connectionID uint, query str
 	}).Error
 }
 
-func (I IHistoryRepoImpl) DeleteAll(ctx context.Context, connectionID uint) error {
-	return I.db.WithContext(ctx).Where("connection_id = ?", connectionID).Delete(&model.History{}).Error
+func (h IHistoryRepoImpl) DeleteAll(ctx context.Context, connectionID uint) error {
+	return h.db.WithContext(ctx).Where("connection_id = ?", connectionID).Delete(&model.History{}).Error
 }

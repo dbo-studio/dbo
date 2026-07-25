@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/pkg/cache"
 )
 
 func (cm *AiServiceImpl) getCompletionResponse(ctx context.Context, key string) (*dto.AiInlineCompleteResponse, bool) {
@@ -45,5 +46,5 @@ func (cm *AiServiceImpl) generateCompletionKey(req *dto.AiInlineCompleteRequest)
 	}
 
 	hash := sha1.Sum([]byte(keyBuilder))
-	return fmt.Sprintf("c:%d:ai_complete:%x", req.ConnectionId, hash)
+	return cache.AICompleteKey(uint(req.ConnectionID), fmt.Sprintf("%x", hash))
 }

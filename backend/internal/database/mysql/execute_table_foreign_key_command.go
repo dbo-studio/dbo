@@ -10,10 +10,10 @@ import (
 	"github.com/samber/lo"
 )
 
-func (r *MySQLRepository) handleForeignKeyCommands(node MySQLNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
+func (r *MySQLRepository) handleForeignKeyCommands(node contract.DBNode, tabID contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
-	if tabId != contract.TableForeignKeysTab || node.Table == "" || (action != contract.CreateTableAction && action != contract.EditTableAction) {
+	if tabID != contract.TableForeignKeysTab || node.Table == "" || (action != contract.CreateTableAction && action != contract.EditTableAction) {
 		return queries, nil
 	}
 
@@ -22,7 +22,7 @@ func (r *MySQLRepository) handleForeignKeyCommands(node MySQLNode, tabId contrac
 		return nil, err
 	}
 
-	params := paramsDto[tabId]
+	params := paramsDto[tabID]
 
 	if action == contract.CreateTableAction {
 		for _, column := range params.Columns {

@@ -10,7 +10,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func (r *SQLiteRepository) handleViewCommands(nodeID string, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
+func (r *SQLiteRepository) handleViewCommands(nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
 	if action != contract.CreateViewAction && action != contract.EditViewAction && action != contract.DropViewAction {
@@ -22,7 +22,7 @@ func (r *SQLiteRepository) handleViewCommands(nodeID string, tabId contract.Tree
 		return nil, err
 	}
 
-	params := dto[tabId]
+	params := dto[tabID]
 
 	if params.New != nil && params.New.Query != nil {
 		params.New.Query = formatQuery(params.New.Query)

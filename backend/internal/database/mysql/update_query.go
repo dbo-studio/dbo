@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 	"gorm.io/gorm"
@@ -16,7 +17,7 @@ func (r *MySQLRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryR
 		return nil, fmt.Errorf("nil request")
 	}
 
-	node := extractNode(req.NodeId)
+	node := r.base.ExtractNode(req.NodeID)
 	if node.Database == "" || node.Table == "" {
 		return nil, fmt.Errorf("invalid node: database or table missing")
 	}
@@ -30,7 +31,7 @@ func (r *MySQLRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryR
 	}
 
 	rowsAffected := 0
-	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	err := r.base.DB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, query := range queries {
 			result := tx.Exec(query)
 			if result.Error != nil {
@@ -51,7 +52,7 @@ func (r *MySQLRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryR
 	}, nil
 }
 
-func (r *MySQLRepository) generateQueries(ctx context.Context, req *dto.UpdateQueryRequest, node MySQLNode) []string {
+func (r *MySQLRepository) generateQueries(ctx context.Context, req *dto.UpdateQueryRequest, node contract.DBNode) []string {
 	var queries []string
 
 	queries = append(queries, r.generateUpdateQueries(ctx, req, node)...)
@@ -61,7 +62,7 @@ func (r *MySQLRepository) generateQueries(ctx context.Context, req *dto.UpdateQu
 	return queries
 }
 
-func (r *MySQLRepository) generateUpdateQueries(ctx context.Context, req *dto.UpdateQueryRequest, node MySQLNode) []string {
+func (r *MySQLRepository) generateUpdateQueries(ctx context.Context, req *dto.UpdateQueryRequest, node contract.DBNode) []string {
 	if req == nil || req.EditedItems == nil {
 		return nil
 	}
@@ -103,7 +104,7 @@ func (r *MySQLRepository) generateUpdateQueries(ctx context.Context, req *dto.Up
 	return queries
 }
 
-func (r *MySQLRepository) generateDeleteQueries(ctx context.Context, req *dto.UpdateQueryRequest, node MySQLNode) []string {
+func (r *MySQLRepository) generateDeleteQueries(ctx context.Context, req *dto.UpdateQueryRequest, node contract.DBNode) []string {
 	if req == nil || req.DeletedItems == nil {
 		return nil
 	}
@@ -143,7 +144,7 @@ func (r *MySQLRepository) generateDeleteQueries(ctx context.Context, req *dto.Up
 	return queries
 }
 
-func (r *MySQLRepository) generateInsertQueries(_ context.Context, req *dto.UpdateQueryRequest, node MySQLNode) []string {
+func (r *MySQLRepository) generateInsertQueries(_ context.Context, req *dto.UpdateQueryRequest, node contract.DBNode) []string {
 	if req == nil || req.AddedItems == nil {
 		return nil
 	}
@@ -184,7 +185,7 @@ func (r *MySQLRepository) generateInsertQueries(_ context.Context, req *dto.Upda
 	return queries
 }
 
-func buildSetClauses(values map[string]interface{}) []string {
+func buildSetClauses(values map[string]any) []string {
 	var setClauses []string
 
 	for key, value := range values {
@@ -201,8 +202,8 @@ func buildSetClauses(values map[string]interface{}) []string {
 	return setClauses
 }
 
-func (r *MySQLRepository) buildWhereClauses(_ context.Context, primaryKeys []string, conditions map[string]interface{}) []string {
-	conditionKeys := map[string]interface{}{}
+func (r *MySQLRepository) buildWhereClauses(_ context.Context, primaryKeys []string, conditions map[string]any) []string {
+	conditionKeys := map[string]any{}
 
 	if len(primaryKeys) > 0 {
 		for _, key := range primaryKeys {

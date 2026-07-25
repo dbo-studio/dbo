@@ -8,7 +8,7 @@ const endpoint = {
 };
 
 export const detail = async (jobId: string): Promise<JobDetailResponseType> => {
-  return (await api.get(endpoint.detail(jobId))).data.data as JobDetailResponseType;
+  return (await api.get<{ data: JobDetailResponseType }>(endpoint.detail(jobId))).data.data;
 };
 
 export const cancel = async (jobId: string): Promise<void> => {
@@ -16,7 +16,7 @@ export const cancel = async (jobId: string): Promise<void> => {
 };
 
 export const result = async (jobId: string): Promise<Blob> => {
-  const response = await api.get(endpoint.result(jobId), {
+  const response = await api.get<Blob>(endpoint.result(jobId), {
     responseType: 'blob'
   });
 

@@ -8,7 +8,6 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/cache"
-
 	"github.com/goccy/go-json"
 	"gorm.io/gorm"
 )
@@ -79,4 +78,16 @@ func (c *ISQLiteCacheImpl) Delete(ctx context.Context, key string) error {
 
 func (c *ISQLiteCacheImpl) DeleteByPrefix(ctx context.Context, prefix string) error {
 	return c.db.WithContext(ctx).Delete(&model.CacheItem{}, "key LIKE ?", fmt.Sprintf("%s%%", prefix)).Error
+}
+
+func (c *ISQLiteCacheImpl) GetByPrefix(ctx context.Context, prefix string) ([]cache.KeyValue, error) {
+	var items []model.CacheItem
+	if err := c.db.WithContext(ctx).Where("key LIKE ?", fmt.Sprintf("%s%%", prefix)).Find(&items).Error; err != nil {
+		return nil, err
+	}
+	out := make([]cache.KeyValue, 0, len(items))
+	for _, it := range items {
+		out = append(out, cache.KeyValue{Key: it.Key, Value: it.Value})
+	}
+	return out, nil
 }

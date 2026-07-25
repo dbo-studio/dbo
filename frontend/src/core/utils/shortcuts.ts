@@ -33,6 +33,12 @@ export const webShortcuts: { [key: string]: ShortcutType } = {
     command: tools.isMac() ? ['⌥', 'F'] : ['Alt', 'F'],
     monaco: [KeyMod.Alt | KeyCode.KeyF],
     shortcut: (event: KeyboardEvent) => event.altKey && event.code === 'KeyF'
+  },
+  openAssistant: {
+    label: locales.open_assistant,
+    command: tools.isMac() ? ['⌥', 'A'] : ['Alt', 'A'],
+    monaco: [KeyMod.Alt | KeyCode.KeyA],
+    shortcut: (event: KeyboardEvent) => event.altKey && event.code === 'KeyA'
   }
 };
 
@@ -66,6 +72,12 @@ export const desktopShortcuts: { [key: string]: ShortcutType } = {
     command: tools.isMac() ? ['⌘', 'F'] : ['Ctrl', 'F'],
     monaco: [KeyMod.CtrlCmd | KeyCode.KeyF],
     shortcut: (event: KeyboardEvent) => (event.ctrlKey || event.metaKey) && event.code === 'KeyF'
+  },
+  openAssistant: {
+    label: locales.open_assistant,
+    command: tools.isMac() ? ['⌘', '⇧', 'A'] : ['Ctrl', 'Shift', 'A'],
+    monaco: [KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyA],
+    shortcut: (event: KeyboardEvent) => (event.ctrlKey || event.metaKey) && event.shiftKey && event.code === 'KeyA'
   }
 };
 

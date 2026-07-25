@@ -6,7 +6,9 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/samber/lo"
 	"golang.org/x/sync/errgroup"
 )
@@ -17,10 +19,10 @@ type Database struct {
 
 func (r *MySQLRepository) databases(ctx context.Context, fromCache bool) ([]Database, error) {
 	databases := make([]Database, 0)
-	cacheKey := r.cacheKey("databases")
+	cacheKey := cache.MySQLQueryKey(r.base.Connection().ID, "databases")
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &databases)
+		err := r.base.Cache().Get(ctx, cacheKey, &databases)
 		if err != nil {
 			return nil, err
 		}
@@ -30,7 +32,7 @@ func (r *MySQLRepository) databases(ctx context.Context, fromCache bool) ([]Data
 		}
 	}
 
-	err := r.db.WithContext(ctx).Table("information_schema.SCHEMATA").
+	err := r.base.DB().WithContext(ctx).Table("information_schema.SCHEMATA").
 		Select("SCHEMA_NAME").
 		Where("SCHEMA_NAME NOT IN ('information_schema', 'mysql', 'performance_schema', 'sys')").
 		Order("SCHEMA_NAME").
@@ -56,10 +58,10 @@ type Table struct {
 
 func (r *MySQLRepository) tables(ctx context.Context, database *string, fromCache bool) ([]Table, error) {
 	tables := make([]Table, 0)
-	cacheKey := r.cacheKey("tables", lo.FromPtr(database))
+	cacheKey := cache.MySQLQueryKey(r.base.Connection().ID, "tables", lo.FromPtr(database))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &tables)
+		err := r.base.Cache().Get(ctx, cacheKey, &tables)
 		if err != nil {
 			return nil, err
 		}
@@ -69,17 +71,20 @@ func (r *MySQLRepository) tables(ctx context.Context, database *string, fromCach
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("information_schema.TABLES").
+	query := r.base.DB().WithContext(ctx).
+		Table("information_schema.TABLES AS t").
 		Select(`
-			TABLE_NAME,
-			TABLE_COMMENT,
-			ENGINE,
-			TABLE_TYPE,
-			ROW_FORMAT,
-			AUTO_INCREMENT
-		`).
-		Where("TABLE_TYPE = 'BASE TABLE'").
-		Where("TABLE_SCHEMA = ?", lo.FromPtr(database))
+		t.TABLE_NAME,
+		t.TABLE_COMMENT,
+		t.ENGINE,
+		t.TABLE_TYPE,
+		t.ROW_FORMAT,
+		t.AUTO_INCREMENT
+	`).Where("t.TABLE_TYPE = ?", "BASE TABLE")
+
+	if database != nil {
+		query = query.Where("t.TABLE_SCHEMA = ?", lo.FromPtr(database))
+	}
 
 	err := query.Order("TABLE_NAME").Find(&tables).Error
 	if err != nil {
@@ -99,10 +104,10 @@ type View struct {
 
 func (r *MySQLRepository) views(ctx context.Context, database *string, fromCache bool) ([]View, error) {
 	views := make([]View, 0)
-	cacheKey := r.cacheKey("views", lo.FromPtr(database))
+	cacheKey := cache.MySQLQueryKey(r.base.Connection().ID, "views", lo.FromPtr(database))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &views)
+		err := r.base.Cache().Get(ctx, cacheKey, &views)
 		if err != nil {
 			return nil, err
 		}
@@ -112,13 +117,12 @@ func (r *MySQLRepository) views(ctx context.Context, database *string, fromCache
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("information_schema.VIEWS").
+	query := r.base.DB().WithContext(ctx).
+		Table("information_schema.VIEWS").
 		Select(`
-			TABLE_NAME,
-			TABLE_COMMENT,
-			VIEW_DEFINITION
-		`).
-		Where("TABLE_SCHEMA = ?", lo.FromPtr(database))
+		TABLE_NAME,
+		VIEW_DEFINITION
+	`).Where("TABLE_SCHEMA = ?", lo.FromPtr(database))
 
 	err := query.Order("TABLE_NAME").Find(&views).Error
 	if err != nil {
@@ -132,10 +136,10 @@ func (r *MySQLRepository) views(ctx context.Context, database *string, fromCache
 
 func (r *MySQLRepository) columns(ctx context.Context, database *string, table *string, columnNames []string, editable bool, fromCache bool) ([]Column, error) {
 	columns := make([]Column, 0)
-	cacheKey := r.cacheKey("columns", lo.FromPtr(database), lo.FromPtr(table), strings.Join(columnNames, ","), strconv.FormatBool(editable))
+	cacheKey := cache.MySQLQueryKey(r.base.Connection().ID, "columns", lo.FromPtr(database), lo.FromPtr(table), strings.Join(columnNames, ","), strconv.FormatBool(editable))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &columns)
+		err := r.base.Cache().Get(ctx, cacheKey, &columns)
 		if err != nil {
 			return nil, err
 		}
@@ -145,7 +149,7 @@ func (r *MySQLRepository) columns(ctx context.Context, database *string, table *
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("information_schema.COLUMNS").
+	query := r.base.DB().WithContext(ctx).Table("information_schema.COLUMNS").
 		Select(`
 			ORDINAL_POSITION,
 			COLUMN_NAME,
@@ -199,14 +203,14 @@ func (r *MySQLRepository) columns(ctx context.Context, database *string, table *
 	}
 
 	for i, column := range columns {
-		columns[i].MappedType = columnMappedFormat(column.DataType)
+		columns[i].MappedType = r.base.ColumnMappedFormat(column.DataType)
 		columns[i].Editable = editable
 		columns[i].IsActive = true
 		if len(columnNames) > 0 {
 			columns[i].IsActive = slices.Contains(columnNames, column.ColumnName)
 		}
 
-		primary, pkFound := lo.Find(pkList, func(pk PrimaryKey) bool {
+		_, pkFound := lo.Find(pkList, func(pk PrimaryKey) bool {
 			return pk.ColumnName == column.ColumnName
 		})
 
@@ -215,7 +219,7 @@ func (r *MySQLRepository) columns(ctx context.Context, database *string, table *
 		})
 
 		if pkFound {
-			columns[i].PrimaryKey = &primary
+			columns[i].IsPrimaryKey = true
 		}
 
 		if fkFound {
@@ -234,10 +238,10 @@ type PrimaryKey struct {
 
 func (r *MySQLRepository) primaryKeys(ctx context.Context, database *string, table *string, fromCache bool) ([]PrimaryKey, error) {
 	primaryKeys := make([]PrimaryKey, 0)
-	cacheKey := r.cacheKey("primary_keys", lo.FromPtr(database), lo.FromPtr(table))
+	cacheKey := cache.MySQLQueryKey(r.base.Connection().ID, "primary_keys", lo.FromPtr(database), lo.FromPtr(table))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &primaryKeys)
+		err := r.base.Cache().Get(ctx, cacheKey, &primaryKeys)
 		if err != nil {
 			return nil, err
 		}
@@ -247,10 +251,16 @@ func (r *MySQLRepository) primaryKeys(ctx context.Context, database *string, tab
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("information_schema.TABLE_CONSTRAINTS AS tc").
+	query := r.base.DB().WithContext(ctx).
+		Table("information_schema.TABLE_CONSTRAINTS AS tc").
 		Select("kcu.COLUMN_NAME").
-		Joins("JOIN information_schema.KEY_COLUMN_USAGE AS kcu ON kcu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME AND kcu.TABLE_SCHEMA = tc.TABLE_SCHEMA").
-		Where("tc.CONSTRAINT_TYPE = 'PRIMARY KEY'").
+		Joins(`
+		JOIN information_schema.KEY_COLUMN_USAGE AS kcu 
+			ON kcu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+			AND kcu.TABLE_SCHEMA = tc.TABLE_SCHEMA
+			AND kcu.TABLE_NAME = tc.TABLE_NAME
+	`).
+		Where("tc.CONSTRAINT_TYPE = ?", "PRIMARY KEY").
 		Where("tc.TABLE_SCHEMA = ?", lo.FromPtr(database))
 
 	if table != nil {
@@ -259,8 +269,6 @@ func (r *MySQLRepository) primaryKeys(ctx context.Context, database *string, tab
 
 	err := query.Order("kcu.ORDINAL_POSITION").Find(&primaryKeys).Error
 	if err != nil {
-		// If context was canceled, return empty list instead of error
-		// This can happen when errgroup cancels context if another goroutine completes/fails
 		if errors.Is(err, context.Canceled) {
 			return []PrimaryKey{}, nil
 		}
@@ -286,10 +294,10 @@ type ForeignKey struct {
 
 func (r *MySQLRepository) foreignKeys(ctx context.Context, database *string, table *string, fromCache bool) ([]ForeignKey, error) {
 	foreignKeys := make([]ForeignKey, 0)
-	cacheKey := r.cacheKey("foreign_keys", lo.FromPtr(database), lo.FromPtr(table))
+	cacheKey := cache.MySQLQueryKey(r.base.Connection().ID, "foreign_keys", lo.FromPtr(database), lo.FromPtr(table))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &foreignKeys)
+		err := r.base.Cache().Get(ctx, cacheKey, &foreignKeys)
 		if err != nil {
 			return nil, err
 		}
@@ -299,7 +307,7 @@ func (r *MySQLRepository) foreignKeys(ctx context.Context, database *string, tab
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("information_schema.KEY_COLUMN_USAGE AS kcu").
+	query := r.base.DB().WithContext(ctx).Table("information_schema.KEY_COLUMN_USAGE AS kcu").
 		Select(`
 			kcu.CONSTRAINT_NAME,
 			kcu.COLUMN_NAME,
@@ -347,4 +355,14 @@ func (r *MySQLRepository) foreignKeys(ctx context.Context, database *string, tab
 	r.updateCache(ctx, cacheKey, result)
 
 	return result, nil
+}
+
+func (r *MySQLRepository) updateCache(_ context.Context, cacheKey string, value any) {
+	go func() {
+		bgCtx := context.Background()
+		err := r.base.Cache().Set(bgCtx, cacheKey, value, lo.ToPtr(time.Hour))
+		if err != nil {
+			r.base.Logger().Error(err)
+		}
+	}()
 }

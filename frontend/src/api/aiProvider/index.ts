@@ -8,12 +8,12 @@ const endpoint = {
 };
 
 export const getProviders = async (): Promise<AiProviderType[]> => {
-  return (await api.get(endpoint.list())).data.data as AiProviderType[];
+  return (await api.get<{ data: AiProviderType[] }>(endpoint.list())).data.data;
 };
 
 export const updateProvider = async (
   providerID: string | number,
   data: UpdateProviderRequestType
 ): Promise<AiProviderType> => {
-  return (await api.patch(endpoint.update(providerID), data)).data.data as AiProviderType;
+  return (await api.patch<{ data: AiProviderType }>(endpoint.update(providerID), data)).data.data;
 };

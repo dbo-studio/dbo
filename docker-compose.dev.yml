@@ -8,17 +8,14 @@ services:
       - ./backend:/back/
     environment:
       APP_PORT: "8080"
-      APP_ENV: "testing"
-      DB_TEST_CONNECTION: "pgsql"
-      DB_TEST_HOST: "sample-pgsql"
-      DB_TEST_PORT: "5432"
-      DB_TEST_DATABASE: "default"
-      DB_TEST_USERNAME: "default"
-      DB_TEST_PASSWORD: "secret"
+      APP_ENV: "docker"
+      # Public URL when accessed outside localhost — see docker-compose.dev.env.example
+      # APP_PUBLIC_URL: "https://dbo.example.com"
     ports:
       - "8080:8080"
     depends_on:
       - sample-pgsql
+      - sample-mysql
 
   frontend:
     container_name: dbo-studio-dev-frontend
@@ -38,6 +35,7 @@ services:
     depends_on:
       - backend
       - sample-pgsql
+      - sample-mysql
 
   sample-pgsql:
     container_name: dbo-studio-sample-pgsql
@@ -53,3 +51,16 @@ services:
       POSTGRES_DB: default
       POSTGRES_USER: default
       POSTGRES_PASSWORD: secret
+
+  sample-mysql:
+    container_name: dbo-studio-sample-mysql
+    image: mysql:8.4
+    ports:
+      - "${MYSQL_TEST_PORT-3307}:3306"
+    restart: always
+    platform: "linux/amd64"
+    environment:
+      MYSQL_DATABASE: default
+      MYSQL_USER: default
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret

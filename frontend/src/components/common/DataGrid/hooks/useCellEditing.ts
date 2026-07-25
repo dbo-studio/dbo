@@ -1,19 +1,20 @@
 import { handleRowChangeLog } from '@/core/utils';
 import { useDataStore } from '@/store/dataStore/data.store';
 import type { RowType } from '@/types';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import type { CellEditingReturn } from '../types';
 
 export const useCellEditing = (row: RowType, columnId: string, cellValue: string): CellEditingReturn => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const updateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
   const updateRow = useDataStore((state) => state.updateRow);
+  const columns = useDataStore((state) => state.columns ?? []);
 
   const handleRowChange = useCallback(
     (e: React.FocusEvent<HTMLInputElement>): void => {
       const store = useDataStore.getState();
       const editedRows = store.editedRows;
+      const activeColumns = store.columns ?? columns;
       const foundRow = store.rows?.find((r) => r.dbo_index === row.dbo_index);
 
       const newValue = e.target.value;
@@ -23,7 +24,7 @@ export const useCellEditing = (row: RowType, columnId: string, cellValue: string
           [columnId]: newValue
         };
 
-        const newEditedRows = handleRowChangeLog(editedRows, row, columnId, row[columnId], newValue);
+        const newEditedRows = handleRowChangeLog(editedRows, row, columnId, row[columnId], newValue, activeColumns);
 
         updateRow(newRow)
           .then(() => {
@@ -32,16 +33,8 @@ export const useCellEditing = (row: RowType, columnId: string, cellValue: string
           .catch(console.error);
       }
     },
-    [row, columnId, cellValue, updateEditedRows, updateRow]
+    [row, columnId, cellValue, columns, updateEditedRows, updateRow]
   );
-
-  useEffect((): (() => void) => {
-    return (): void => {
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current);
-      }
-    };
-  }, []);
 
   return {
     inputRef,

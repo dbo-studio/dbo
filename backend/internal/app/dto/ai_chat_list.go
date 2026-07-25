@@ -4,7 +4,7 @@ import "github.com/invopop/validation"
 
 type (
 	AiChatListRequest struct {
-		ConnectionId int32 `query:"connectionId"`
+		ConnectionID int32 `query:"connectionId"`
 		PaginationRequest
 	}
 
@@ -23,7 +23,7 @@ type (
 
 func (req AiChatListRequest) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
 		validation.Field(&req.Count, validation.Required, validation.Min(1), validation.Max(100)),
 		validation.Field(&req.Page, validation.Required, validation.Min(1), validation.Max(100)),
 	)

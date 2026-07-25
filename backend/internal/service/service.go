@@ -8,13 +8,15 @@ import (
 	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai_provider"
 	serviceConfig "github.com/dbo-studio/dbo/internal/service/config"
 	serviceConnection "github.com/dbo-studio/dbo/internal/service/connection"
+	"github.com/dbo-studio/dbo/internal/service/dbtools"
 	serviceHistory "github.com/dbo-studio/dbo/internal/service/history"
 	serviceImportExport "github.com/dbo-studio/dbo/internal/service/import_export"
 	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
 	"github.com/dbo-studio/dbo/internal/service/job/processors"
+	serviceMcp "github.com/dbo-studio/dbo/internal/service/mcp"
 	serviceQuery "github.com/dbo-studio/dbo/internal/service/query"
 	serviceSavedQuery "github.com/dbo-studio/dbo/internal/service/saved_query"
-
+	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	serviceTree "github.com/dbo-studio/dbo/internal/service/tree"
 )
 
@@ -31,19 +33,22 @@ type Service struct {
 	AiProviderService   serviceAiProvider.IAiProviderService
 	AiChatService       serviceAiChat.IAiChatService
 	ConfigService       serviceConfig.IConfigService
+	McpService          serviceMcp.IMcpService
 }
 
-func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionManager) *Service {
+func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionManager, ss secretStore.ISecretStore) *Service {
 	jobRepo := repository.NewJobRepo()
 	jobManager := serviceJob.NewJobManager(jobRepo)
 
-	jobManager.RegisterProcessor(processors.NewImportProcessor(jobManager, cm, repo.ConnectionRepo))
-	jobManager.RegisterProcessor(processors.NewExportProcessor(jobManager, cm, repo.ConnectionRepo))
+	jobManager.RegisterProcessor(processors.NewImportProcessor(jobManager, cm, repo.ConnectionRepo, ss))
+	jobManager.RegisterProcessor(processors.NewExportProcessor(jobManager, cm, repo.ConnectionRepo, ss))
 
 	aiProviderService := serviceAiProvider.NewAiProviderService(repo.AiProviderRepo)
+	toolRegistry := dbtools.NewRegistry(cm, repo.ConnectionRepo)
+	mcpService := serviceMcp.NewMcpService(repo.McpSettingsRepo, repo.ConnectionRepo, toolRegistry)
 
 	return &Service{
-		ConnectionService:   serviceConnection.NewConnectionService(repo.ConnectionRepo, cm),
+		ConnectionService:   serviceConnection.NewConnectionService(repo.ConnectionRepo, cm, ss),
 		HistoryService:      serviceHistory.NewHistoryService(repo.HistoryRepo),
 		SavedQueryService:   serviceSavedQuery.NewSavedQueryService(repo.SavedQueryRepo),
 		TreeService:         serviceTree.NewTreeService(repo.ConnectionRepo, cm),
@@ -51,9 +56,10 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		ImportExportService: serviceImportExport.NewImportExportService(jobManager),
 		JobService:          serviceJob.NewJobService(jobRepo),
 		JobManager:          jobManager,
-		AiService:           serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, cm),
+		AiService:           serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, cm, toolRegistry),
 		AiProviderService:   aiProviderService,
 		AiChatService:       serviceAiChat.NewAiChatService(repo.AiChatRepo),
-		ConfigService:       serviceConfig.NewConfigService(aiProviderService),
+		ConfigService:       serviceConfig.NewConfigService(repo.ConfigRepo, aiProviderService),
+		McpService:          mcpService,
 	}
 }

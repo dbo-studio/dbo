@@ -6,5 +6,5 @@ const (
 	Postgresql DatabaseEnum = "postgresql"
 	Mysql      DatabaseEnum = "mysql"
 	Sqlite     DatabaseEnum = "sqlite"
-	SqlServer  DatabaseEnum = "sqlserver"
+	SQLServer  DatabaseEnum = "sqlserver"
 )

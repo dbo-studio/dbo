@@ -6,6 +6,7 @@ import (
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/container"
+	"github.com/dbo-studio/dbo/internal/repository"
 	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai_provider"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/gofiber/fiber/v3"
@@ -20,13 +21,15 @@ type IConfigService interface {
 
 type IConfigServiceImpl struct {
 	cfg               *config.Config
+	configRepo        repository.IConfigRepo
 	aiProviderService serviceAiProvider.IAiProviderService
 	cache             cache.Cache
 }
 
-func NewConfigService(aiProviderService serviceAiProvider.IAiProviderService) IConfigService {
+func NewConfigService(configRepo repository.IConfigRepo, aiProviderService serviceAiProvider.IAiProviderService) IConfigService {
 	return &IConfigServiceImpl{
 		cfg:               container.Instance().Config(),
+		configRepo:        configRepo,
 		aiProviderService: aiProviderService,
 		cache:             container.Instance().Cache(),
 	}

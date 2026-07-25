@@ -5,15 +5,30 @@ export type ConnectionDetailRequestType = {
 export type CreateConnectionRequestType = {
   name: string;
   type: 'postgresql' | 'sqlite' | 'mysql';
-  isActive?: boolean;
+  options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
+  rememberPassword?: boolean;
+};
+
+export type PingConnectionRequestType = {
+  id?: number;
+  type: 'postgresql' | 'sqlite' | 'mysql';
   options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
 };
 
 export type UpdateConnectionRequestType = {
+  id?: string | number;
   name?: string;
   type?: 'postgresql' | 'sqlite' | 'mysql';
   isActive?: boolean;
+  isClose?: boolean;
+  rememberPassword?: boolean;
   options?: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
+};
+
+export type SetConnectionCredentialsRequestType = {
+  id: string | number;
+  password: string;
+  rememberPassword: boolean;
 };
 
 export type PostgresqlOptionsType = {
@@ -25,7 +40,14 @@ export type PostgresqlOptionsType = {
   uri?: string;
 };
 
-export type MysqlOptionsType = PostgresqlOptionsType;
+export type MysqlOptionsType = {
+  host?: string;
+  port?: number;
+  username?: string;
+  password?: string;
+  database?: string;
+  uri?: string;
+};
 
 export type SQLiteOptionsType = {
   file?: string;

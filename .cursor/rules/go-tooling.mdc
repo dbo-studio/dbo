@@ -1,0 +1,51 @@
+---
+description: Go tooling — gofmt, golangci-lint, air hot reload, pre-commit checks
+globs: backend/**/*.go
+alwaysApply: false
+---
+
+# Go Tooling (DBO)
+
+## Format
+
+```bash
+cd backend && go fmt ./...
+```
+
+- Tabs for indentation (Go default).
+- `gofmt -s` simplifies code; `interface{}` → `any` per `.golangci.yml`.
+
+## Lint
+
+```bash
+cd backend && golangci-lint run
+```
+
+Enabled linters: `errcheck`, `govet`, `staticcheck`, `unused`, `revive`, `misspell`, `thelper`, `mirror`, `fatcontext`, `loggercheck`.
+
+Key revive rules enforced: `context-as-argument`, `error-naming`, `error-return`, `receiver-naming`.
+
+## Pre-Commit (lefthook)
+
+`go fmt` runs automatically on backend changes via `lefthook.yml`.
+
+## Dev Loop
+
+```bash
+cd backend && air    # hot reload via .air.toml
+```
+
+## CI
+
+`.github/workflows/tests.yml` runs `go mod tidy` check and `golangci-lint-action` on `./backend`.
+
+## Before Every PR
+
+```bash
+cd backend
+go fmt ./...
+golangci-lint run
+go test ./...
+```
+
+Clean lint output is required — do not disable linters to pass.

@@ -9,8 +9,8 @@ import type { AddSortButtonProps } from '../../types.ts';
 export default function AddSortButton({ columns }: AddSortButtonProps): JSX.Element {
   const upsertSorts = useTabStore((state) => state.upsertSorts);
 
-  const handleAddNewSort = async (): Promise<void> => {
-    await upsertSorts({
+  const handleAddNewSort = (): void => {
+    upsertSorts({
       index: tools.uuid(),
       column: columns[0].name,
       operator: PgsqlSorts[0],

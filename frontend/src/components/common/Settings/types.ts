@@ -14,13 +14,14 @@ export type MenuPanelItemStyledProps = {
 
 export type MenuPanelProps = {
   tabs: MenuPanelTabType[];
-  onChange: (el: JSX.Element | undefined) => void;
-  defaultTabId?: number;
+  onChange: (tab: MenuPanelTabType | undefined) => void;
+  defaultTab?: MenuPanelTabType;
 };
 
 export type MenuPanelTabType = {
   id: number;
   name: string;
+  description?: string;
   onlyDesktop: boolean;
   icon: keyof typeof IconTypes;
   content: JSX.Element;

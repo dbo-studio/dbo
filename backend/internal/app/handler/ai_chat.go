@@ -45,7 +45,7 @@ func (h AiChatHandler) Chats(c fiber.Ctx) error {
 
 func (h AiChatHandler) Detail(c fiber.Ctx) error {
 	req := &dto.AiChatDetailRequest{
-		AiChatId: fiber.Params[uint](c, "id"),
+		AiChatID: fiber.Params[uint](c, "id"),
 		PaginationRequest: dto.PaginationRequest{
 			Page:  lo.ToPtr(fiber.Query(c, "page", 1)),
 			Count: lo.ToPtr(fiber.Query(c, "count", 10)),
@@ -81,8 +81,8 @@ func (h AiChatHandler) Create(c fiber.Ctx) error {
 }
 
 func (h AiChatHandler) Delete(c fiber.Ctx) error {
-	chatId := fiber.Params[uint](c, "id")
-	err := h.aiChatService.Delete(c, chatId)
+	chatID := fiber.Params[uint](c, "id")
+	err := h.aiChatService.Delete(c, chatID)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)

@@ -1,9 +1,11 @@
+'use no memo';
+
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Box } from '@mui/material';
 import type { JSX } from 'react';
-import { memo, useCallback, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { SortableItemProps } from '../types';
+import { SortableItemStyled } from './SortableItem.styled';
 
 function SortableItem({ id, children, className, onClick, disabled = false }: SortableItemProps): JSX.Element {
   const hasMovedRef = useRef<boolean>(false);
@@ -46,25 +48,19 @@ function SortableItem({ id, children, className, onClick, disabled = false }: So
   }
 
   return (
-    <Box
+    <SortableItemStyled
       ref={setNodeRef}
       style={style}
       className={className}
       onClick={handleClick}
-      sx={{
-        userSelect: 'none',
-        touchAction: 'none',
-        willChange: 'transform',
-        position: 'relative'
-      }}
       {...attributes}
       {...listeners}
     >
       {children}
-    </Box>
+    </SortableItemStyled>
   );
 }
 
 SortableItem.displayName = 'SortableItem';
 
-export default memo(SortableItem);
+export default SortableItem;

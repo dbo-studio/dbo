@@ -1,14 +1,22 @@
 import type { EventFor } from '@/types';
-import { Box } from '@mui/material';
-import { type JSX, useEffect, useRef, useState } from 'react';
+import { type JSX, useCallback, useEffect, useRef, useState } from 'react';
+import { ResizableYBoxStyled } from './ResizableYBox.styled';
 import ResizableToggle from './ResizableToggle';
 import type { ResizableBoxYProps } from './types';
 
-export default function ResizableYBox(props: ResizableBoxYProps): JSX.Element {
-  const [boxHeight, setBoxHeight] = useState(props.height);
+export default function ResizableYBox({
+  direction,
+  height,
+  maxHeight,
+  children,
+  onChange
+}: ResizableBoxYProps): JSX.Element {
+  const [boxHeight, setBoxHeight] = useState(height);
   const [isResizing, setIsResizing] = useState(false);
   const [initialY, setInitialY] = useState(0);
   const currentHeightRef = useRef(boxHeight);
+
+  currentHeightRef.current = boxHeight;
 
   const handleMouseDown = (event: EventFor<'div', 'onMouseDown'>): void => {
     event.preventDefault();
@@ -16,33 +24,36 @@ export default function ResizableYBox(props: ResizableBoxYProps): JSX.Element {
     setInitialY(event.clientY);
   };
 
-  const handleMouseUp = (): void => {
+  const handleMouseUp = useCallback((): void => {
     if (!isResizing) return;
-    if (props.onChange) {
+    if (onChange) {
       const finalHeight = currentHeightRef.current;
-      if (props.maxHeight && finalHeight > props.maxHeight) {
-        props.onChange(props.maxHeight);
+      if (maxHeight && finalHeight > maxHeight) {
+        onChange(maxHeight);
       } else {
-        props.onChange(finalHeight);
+        onChange(finalHeight);
       }
     }
     setIsResizing(false);
-  };
+  }, [isResizing, maxHeight, onChange]);
 
-  const handleMouseMove = (event: MouseEvent): void => {
-    if (!isResizing) return;
+  const handleMouseMove = useCallback(
+    (event: MouseEvent): void => {
+      if (!isResizing) return;
 
-    const newHeight =
-      props.direction === 'ttb'
-        ? Math.max(boxHeight + (event.clientY - initialY), 50)
-        : Math.max(boxHeight - (event.clientY - initialY), 50);
+      const newHeight =
+        direction === 'ttb'
+          ? Math.max(boxHeight + (event.clientY - initialY), 50)
+          : Math.max(boxHeight - (event.clientY - initialY), 50);
 
-    if (props.maxHeight && newHeight > props.maxHeight) return;
+      if (maxHeight && newHeight > maxHeight) return;
 
-    setBoxHeight(newHeight);
-    currentHeightRef.current = newHeight;
-    setInitialY(event.clientY);
-  };
+      setBoxHeight(newHeight);
+      currentHeightRef.current = newHeight;
+      setInitialY(event.clientY);
+    },
+    [boxHeight, direction, initialY, isResizing, maxHeight]
+  );
 
   useEffect(() => {
     if (isResizing) {
@@ -57,12 +68,12 @@ export default function ResizableYBox(props: ResizableBoxYProps): JSX.Element {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isResizing]);
+  }, [handleMouseMove, handleMouseUp, isResizing]);
 
   return (
-    <Box display={'flex'} position={'relative'} overflow={'hidden'} height={boxHeight}>
-      <ResizableToggle onMouseDown={handleMouseDown} direction={props.direction} />
-      {props.children}
-    </Box>
+    <ResizableYBoxStyled boxHeight={boxHeight}>
+      <ResizableToggle onMouseDown={handleMouseDown} direction={direction} />
+      {children}
+    </ResizableYBoxStyled>
   );
 }

@@ -4,7 +4,7 @@ export type AIChatPanelProps = {
   context?: string;
 };
 
-export type ChatProps = {
+export type ChatsProps = {
   chats: AiChatType[];
   currentChat: AiChatType | undefined;
   onChatChange: (chat: AiChatType) => void;
@@ -21,6 +21,7 @@ export type ChatItemProps = {
 export type ChatTextInputProps = {
   loading: boolean;
   onSend: () => void;
+  autocomplete?: AutoCompleteType;
 };
 
 export type ChatContextModalProps = {
@@ -56,7 +57,9 @@ export type ExplanationMessageProps = {
 export type MessagesProps = {
   messages: AiMessageType[];
   loading: boolean;
-  onLoadMore?: () => Promise<void>;
+  onLoadMore?: () => void;
+  onSelectPrompt?: (prompt: string) => void;
+  onRetry?: () => void;
 };
 
 export type CodeMessageProps = {
@@ -65,6 +68,7 @@ export type CodeMessageProps = {
 
 export type ChatBoxProps = {
   onSend: () => void;
+  onCancel: () => void;
   loading: boolean;
-  autocomplete: AutoCompleteType;
+  autocomplete?: AutoCompleteType;
 };

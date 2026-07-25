@@ -15,11 +15,15 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
             leftWidth: constants.defaultSidebarWidth,
             rightWidth: constants.defaultSidebarWidth,
             showLeft: true,
-            showRight: false
+            showRight: false,
+            rightSidebarTab: 0
           },
+          showConnectionsDrawer: false,
           showAddConnection: false,
           showEditConnection: false,
           showQuickLookEditor: false,
+          showConnectionPasswordPrompt: false,
+          passwordPromptConnectionId: undefined,
           showSettings: {
             open: false,
             tab: 0
@@ -38,7 +42,7 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           themeName: getDefaultTheme()
         },
         editor: {
-          enableEditorAi: false,
+          enableEditorAi: true,
           scrollToBottom: false
         },
         general: {

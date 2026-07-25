@@ -6,7 +6,7 @@ import (
 
 type (
 	ExportRequest struct {
-		ConnectionId int32  `json:"connectionId"`
+		ConnectionID int32  `json:"connectionId"`
 		Table        string `json:"table"`
 		Query        string `json:"query"`
 		Format       string `json:"format"`
@@ -15,13 +15,18 @@ type (
 	}
 
 	ExportResponse struct {
-		JobId int32 `json:"jobId"`
+		JobID int32 `json:"jobId"`
+	}
+
+	ExportJob struct {
+		OwnerID string `json:"ownerId"`
+		ExportRequest
 	}
 )
 
 func (req ExportRequest) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
 		validation.Field(&req.Table, validation.Required),
 		validation.Field(&req.Query, validation.Required),
 		validation.Field(&req.Format, validation.Required, validation.In("sql", "json", "csv")),

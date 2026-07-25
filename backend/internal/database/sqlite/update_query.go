@@ -15,11 +15,11 @@ func (r *SQLiteRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQuery
 		return nil, fmt.Errorf("nil request")
 	}
 
-	if req.NodeId == "" {
+	if req.NodeID == "" {
 		return nil, fmt.Errorf("invalid node: table missing")
 	}
 
-	queries := r.generateQueries(req, req.NodeId)
+	queries := r.generateQueries(ctx, req, req.NodeID)
 	if len(queries) == 0 {
 		return &dto.UpdateQueryResponse{
 			Query:        []string{},
@@ -28,7 +28,7 @@ func (r *SQLiteRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQuery
 	}
 
 	rowsAffected := 0
-	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	err := r.base.DB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, query := range queries {
 			result := tx.Exec(query)
 			if result.Error != nil {
@@ -49,24 +49,24 @@ func (r *SQLiteRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQuery
 	}, nil
 }
 
-func (r *SQLiteRepository) generateQueries(req *dto.UpdateQueryRequest, node string) []string {
+func (r *SQLiteRepository) generateQueries(ctx context.Context, req *dto.UpdateQueryRequest, node string) []string {
 	var queries []string
 
-	queries = append(queries, r.generateUpdateQueries(req, node)...)
+	queries = append(queries, r.generateUpdateQueries(ctx, req, node)...)
 	queries = append(queries, r.generateInsertQueries(req, node)...)
-	queries = append(queries, r.generateDeleteQueries(req, node)...)
+	queries = append(queries, r.generateDeleteQueries(ctx, req, node)...)
 
 	return queries
 }
 
-func (r *SQLiteRepository) generateUpdateQueries(req *dto.UpdateQueryRequest, node string) []string {
+func (r *SQLiteRepository) generateUpdateQueries(ctx context.Context, req *dto.UpdateQueryRequest, node string) []string {
 	if req == nil || req.EditedItems == nil {
 		return nil
 	}
 
 	var queries []string
 
-	keys, err := r.getPrimaryKeys(Table{node})
+	keys, err := r.getPrimaryKeys(ctx, Table{node})
 	if err != nil {
 		return nil
 	}
@@ -96,14 +96,14 @@ func (r *SQLiteRepository) generateUpdateQueries(req *dto.UpdateQueryRequest, no
 	return queries
 }
 
-func (r *SQLiteRepository) generateDeleteQueries(req *dto.UpdateQueryRequest, node string) []string {
+func (r *SQLiteRepository) generateDeleteQueries(ctx context.Context, req *dto.UpdateQueryRequest, node string) []string {
 	if req == nil || req.DeletedItems == nil {
 		return nil
 	}
 
 	var queries []string
 
-	keys, err := r.getPrimaryKeys(Table{node})
+	keys, err := r.getPrimaryKeys(ctx, Table{node})
 	if err != nil {
 		return nil
 	}
@@ -174,7 +174,7 @@ func (r *SQLiteRepository) generateInsertQueries(req *dto.UpdateQueryRequest, no
 	return queries
 }
 
-func buildSetClauses(values map[string]interface{}) []string {
+func buildSetClauses(values map[string]any) []string {
 	var setClauses []string
 
 	for key, value := range values {
@@ -191,8 +191,8 @@ func buildSetClauses(values map[string]interface{}) []string {
 	return setClauses
 }
 
-func (r *SQLiteRepository) buildWhereClauses(primaryKeys []string, conditions map[string]interface{}) []string {
-	conditionKeys := map[string]interface{}{}
+func (r *SQLiteRepository) buildWhereClauses(primaryKeys []string, conditions map[string]any) []string {
+	conditionKeys := map[string]any{}
 
 	if len(primaryKeys) > 0 {
 		for _, key := range primaryKeys {

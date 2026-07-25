@@ -9,6 +9,7 @@ export type IconProps = {
   width?: number;
   height?: number;
   className?: string;
+  color?: string;
 };
 
 export const IconTypes = {
@@ -73,5 +74,9 @@ export const IconTypes = {
   history: 'History',
   bot: 'Bot',
   mysql: 'mysql',
-  message: 'MessageSquare'
+  message: 'MessageSquare',
+  pause: 'Pause',
+  key: 'KeyRound',
+  undo: 'Undo2',
+  sparkles: 'Sparkles'
 };

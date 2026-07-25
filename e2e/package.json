@@ -1,0 +1,19 @@
+{
+  "name": "dbo-e2e",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "format": "prettier --write pages tests",
+    "test": "node scripts/run-e2e.mjs",
+    "test:ui": "node scripts/run-e2e.mjs --ui",
+    "test:object-form": "node scripts/run-e2e.mjs tests/object-form-table.spec.ts tests/object-form-postgres-lifecycle.spec.ts tests/object-form-postgres-edit-table.spec.ts tests/object-form-postgres-schema-matview.spec.ts tests/object-form-mysql-lifecycle.spec.ts tests/object-form-sqlite-lifecycle.spec.ts",
+    "test:codegen": "node scripts/run-e2e.mjs --codegen"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^24.10.0",
+    "dotenv": "^17.4.2",
+    "prettier": "^3.9.6",
+    "typescript": "^6.0.3"
+  }
+}

@@ -8,10 +8,18 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *PostgresRepository) handleSchemaCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
+func (r *PostgresRepository) handleSchemaCommands(node contract.DBNode, tabID contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
 	if action != contract.CreateSchemaAction && action != contract.EditSchemaAction && action != contract.DropSchemaAction {
+		return queries, nil
+	}
+
+	if action == contract.DropSchemaAction {
+		if node.Schema == "" {
+			return queries, nil
+		}
+		queries = append(queries, fmt.Sprintf("DROP SCHEMA %s CASCADE", node.Schema))
 		return queries, nil
 	}
 
@@ -20,9 +28,16 @@ func (r *PostgresRepository) handleSchemaCommands(node PGNode, tabId contract.Tr
 		return nil, err
 	}
 
-	params := dto[tabId]
+	params := dto[tabID]
+	if params == nil {
+		return queries, nil
+	}
 
 	if action == contract.CreateSchemaAction {
+		if params.New == nil || params.New.Name == nil {
+			return queries, nil
+		}
+
 		queries = append(queries, fmt.Sprintf("CREATE SCHEMA %s", *params.New.Name))
 
 		if params.New.Owner != nil {
@@ -35,23 +50,24 @@ func (r *PostgresRepository) handleSchemaCommands(node PGNode, tabId contract.Tr
 	}
 
 	if action == contract.EditSchemaAction {
-		if params.Old.Name != nil && params.New.Name != nil {
-			queries = append(queries, fmt.Sprintf("ALTER SCHEMA %s RENAME TO %s", *params.Old.Name, *params.New.Name))
-			params.Old.Name = params.New.Name
+		if params.Old == nil || params.New == nil || params.Old.Name == nil {
+			return queries, nil
 		}
 
-		if params.Old.Name != nil && params.New.Owner != nil {
-			queries = append(queries, fmt.Sprintf("ALTER SCHEMA %s OWNER TO %s", *params.Old.Name, *params.New.Owner))
+		schemaName := *params.Old.Name
+
+		if params.New.Name != nil && *params.Old.Name != *params.New.Name {
+			queries = append(queries, fmt.Sprintf("ALTER SCHEMA %s RENAME TO %s", schemaName, *params.New.Name))
+			schemaName = *params.New.Name
 		}
 
-		if params.Old.Name != nil && params.New.Comment != nil {
-			queries = append(queries, fmt.Sprintf("COMMENT ON SCHEMA %s IS %s", *params.Old.Name, *params.New.Comment))
+		if params.New.Owner != nil && (params.Old.Owner == nil || *params.Old.Owner != *params.New.Owner) {
+			queries = append(queries, fmt.Sprintf("ALTER SCHEMA %s OWNER TO %s", schemaName, *params.New.Owner))
 		}
-	}
 
-	if action == contract.DropSchemaAction {
-		query := fmt.Sprintf("DROP SCHEMA %s", node.Schema)
-		queries = append(queries, query)
+		if params.New.Comment != nil && (params.Old.Comment == nil || *params.Old.Comment != *params.New.Comment) {
+			queries = append(queries, fmt.Sprintf("COMMENT ON SCHEMA %s IS '%s'", schemaName, *params.New.Comment))
+		}
 	}
 
 	return queries, nil

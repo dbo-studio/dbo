@@ -17,7 +17,7 @@ func (r *SQLiteRepository) GetDynamicFieldOptions(ctx context.Context, req *cont
 			return nil, errors.New("table is required in parameters")
 		}
 
-		columns, err := r.getColumns(targetTable, []string{}, true)
+		columns, err := r.getColumns(ctx, targetTable, []string{}, true)
 		if err != nil {
 			return nil, err
 		}

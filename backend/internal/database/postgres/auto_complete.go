@@ -48,9 +48,9 @@ func (r *PostgresRepository) AutoComplete(ctx context.Context, data *dto.AutoCom
 	g.Go(func() error {
 		var err error
 		if data.Schema != nil {
-			tables, err = r.tables(gctx, data.Schema, true)
+			tables, err = r.tables(gctx, data.Database, data.Schema, true)
 		} else {
-			tables, err = r.tables(gctx, nil, true)
+			tables, err = r.tables(gctx, data.Database, nil, true)
 		}
 		return err
 	})
@@ -61,37 +61,35 @@ func (r *PostgresRepository) AutoComplete(ctx context.Context, data *dto.AutoCom
 
 	columns := make(map[string][]string)
 
-	if data.Schema != nil {
-		gColumns, gColumnsCtx := errgroup.WithContext(ctx)
-		var columnMap sync.Map
+	gColumns, gColumnsCtx := errgroup.WithContext(ctx)
+	var columnMap sync.Map
 
-		for _, table := range tables {
-			tableName := table.Name
-			gColumns.Go(func() error {
-				columnResult, err := r.columns(gColumnsCtx, &tableName, data.Schema, nil, false, true)
-				if err != nil {
-					return err
-				}
-				columnMap.Store(tableName, lo.Map(columnResult, func(x Column, _ int) string { return x.ColumnName }))
-				return nil
-			})
-		}
-
-		if err := gColumns.Wait(); err != nil {
-			return nil, err
-		}
-
-		columnMap.Range(func(key, value any) bool {
-			tableName, ok := key.(string)
-			if !ok {
-				return true
+	for _, table := range tables {
+		tableName := table.Name
+		gColumns.Go(func() error {
+			columnResult, err := r.columns(gColumnsCtx, data.Database, &tableName, data.Schema, nil, false, true)
+			if err != nil {
+				return err
 			}
-			if columnList, ok := value.([]string); ok {
-				columns[tableName] = columnList
-			}
-			return true
+			columnMap.Store(tableName, lo.Map(columnResult, func(x Column, _ int) string { return x.ColumnName }))
+			return nil
 		})
 	}
+
+	if err := gColumns.Wait(); err != nil {
+		return nil, err
+	}
+
+	columnMap.Range(func(key, value any) bool {
+		tableName, ok := key.(string)
+		if !ok {
+			return true
+		}
+		if columnList, ok := value.([]string); ok {
+			columns[tableName] = columnList
+		}
+		return true
+	})
 
 	return &dto.AutoCompleteResponse{
 		Databases: lo.Map(databases, func(x Database, _ int) string { return x.Name }),

@@ -1,12 +1,13 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import DropDownMenu from '@/components/base/DropDownMenu/DropDownMenu';
+import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import type { AiContextType } from '@/types';
-import { Box, Divider, IconButton, Stack } from '@mui/material';
+import { Box, Divider, IconButton } from '@mui/material';
 import { useRef, useState } from 'react';
 import { useToggle } from 'usehooks-ts';
 import type { ChatContextProps, ContextItemType } from '../../types';
-import { ChatContextStyled } from './ChatContext.styled';
+import { ChatContextStyled, ChatContextTagsStyled } from './ChatContext.styled';
 import ChatContextItem from './ChatContextItem/ChatContextModalItem';
 import ChatContextModalItem from './ChatContextModalItem/ChatContextModalItem';
 
@@ -48,14 +49,7 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
 
   return (
     <Box>
-      <Stack
-        direction={'row'}
-        alignItems={'center'}
-        justifyContent={'flex-start'}
-        flexWrap={'wrap'}
-        alignContent={'center'}
-        spacing={1}
-      >
+      <ChatContextTagsStyled direction={'row'} spacing={1}>
         <IconButton ref={anchorRef} onClick={toggleOpen}>
           <CustomIcon type='at' size='s' />
         </IconButton>
@@ -85,8 +79,25 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
         {context.views.map((item) => (
           <ChatContextItem type='views' key={item} name={item} onClick={() => handleContextChange(item, 'views')} />
         ))}
-      </Stack>
 
+        {context.querySnippet && (
+          <ChatContextItem
+            type='tables'
+            key='query-snippet'
+            name={`${locales.context_query}: ${context.querySnippet}`}
+            onClick={() => {}}
+          />
+        )}
+
+        {context.queryResultSummary && (
+          <ChatContextItem
+            type='tables'
+            key='query-result'
+            name={`${locales.context_result}: ${context.queryResultSummary}`}
+            onClick={() => {}}
+          />
+        )}
+      </ChatContextTagsStyled>
       <DropDownMenu open={isOpen} onClose={() => setOpen(false)} anchorRef={anchorRef}>
         <ChatContextStyled>
           {autocomplete?.databases.map((database) => (

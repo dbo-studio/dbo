@@ -3,38 +3,35 @@ import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Button } from '@mui/material';
 import { Stack } from '@mui/system';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Markdown from 'react-markdown';
-import { UpdateDialogStyled } from './UpdateDialog.styled';
+import { UpdateDialogContentStyled, UpdateDialogStyled } from './UpdateDialog.styled';
 
 export default function UpdateDialog() {
-  const [show, setShow] = useState(false);
   const release = useSettingStore((state) => state.general.release);
   const ignoredRelease = useSettingStore((state) => state.general.ignoredRelease);
   const updateGeneral = useSettingStore((state) => state.updateGeneral);
 
-  useEffect(() => {
-    if (release && release.name !== ignoredRelease) {
-      setShow(true);
-    }
-  }, [release, ignoredRelease]);
+  const isReleasePrompt = Boolean(release && release.name !== ignoredRelease);
+  const [dismissedReleaseName, setDismissedReleaseName] = useState<string | null>(null);
+  const show = isReleasePrompt && dismissedReleaseName !== release?.name;
 
   const handleOnClose = () => {
     if (release?.isMinimum) return;
-    setShow(false);
+    setDismissedReleaseName(release?.name ?? null);
   };
 
   const handleOnIgnore = () => {
     if (release === undefined) return;
 
     updateGeneral({ ignoredRelease: release.name });
-    setShow(false);
+    setDismissedReleaseName(release.name);
   };
 
   const handleOnUpdate = () => {
     if (release === undefined) return;
     window.open(release?.url, '_blank');
-    setShow(false);
+    setDismissedReleaseName(release.name);
   };
 
   if (!release) {
@@ -43,13 +40,17 @@ export default function UpdateDialog() {
 
   return (
     <Modal title={locales.new_version_available} open={show} onClose={() => {}}>
-      <Box flex={1} display={'flex'} flexDirection={'column'} overflow={'scroll'}>
+      <UpdateDialogContentStyled>
         <UpdateDialogStyled>
           <Markdown>{release.body}</Markdown>
         </UpdateDialogStyled>
-      </Box>
-
-      <Box display={'flex'} justifyContent={'space-between'}>
+      </UpdateDialogContentStyled>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between'
+        }}
+      >
         <Stack direction={'row'} spacing={1}>
           <Button disabled={release.isMinimum} onClick={handleOnClose} size='small' color='info' variant='outlined'>
             {locales.cancel}

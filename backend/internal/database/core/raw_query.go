@@ -1,0 +1,83 @@
+package databaseCore
+
+import (
+	"context"
+	"database/sql"
+	"log"
+	"strings"
+	"time"
+
+	"github.com/dbo-studio/dbo/internal/app/dto"
+)
+
+func (r *BaseRepository) RunRawQuery(ctx context.Context, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
+	startTime := time.Now()
+	result, err := runRawQuery(ctx, r, req)
+	endTime := time.Since(startTime)
+	if err != nil || !r.IsQuery(req.Query) {
+		return r.CommandResponseBuilder(result, endTime, err), nil
+	}
+
+	return result, nil
+}
+
+func runRawQuery(ctx context.Context, r *BaseRepository, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
+	queryResults := make([]map[string]any, 0)
+
+	rows, err := r.db.WithContext(ctx).Raw(req.Query).Rows()
+	if err != nil {
+		return &dto.RawQueryResponse{
+			Query: req.Query,
+			Data:  queryResults,
+		}, err
+	}
+
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}(rows)
+
+	columns, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+
+	columnTypes, err := rows.ColumnTypes()
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var data map[string]any
+		err := r.db.WithContext(ctx).ScanRows(rows, &data)
+		if err != nil {
+			return nil, err
+		}
+		queryResults = append(queryResults, data)
+	}
+
+	for i := range queryResults {
+		queryResults[i]["dbo_index"] = i
+		queryResults[i]["editable"] = false
+		queryResults[i] = r.SanitizeQueryResults(queryResults[i])
+	}
+
+	structures := make([]dto.Column, 0)
+
+	for i, column := range columns {
+		structures = append(structures, dto.Column{
+			Name:       column,
+			Type:       strings.ToLower(columnTypes[i].DatabaseTypeName()),
+			MappedType: r.ColumnMappedFormat(columnTypes[i].Name()),
+			IsActive:   true,
+		})
+	}
+
+	return &dto.RawQueryResponse{
+		Query:   req.Query,
+		Data:    queryResults,
+		Columns: structures,
+	}, nil
+}

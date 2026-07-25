@@ -1,4 +1,5 @@
 import { useTheme } from '@mui/material';
+import type { LucideIcon } from 'lucide-react';
 import { icons } from 'lucide-react';
 import type { JSX } from 'react';
 import { type IconProps, IconTypes } from './types';
@@ -22,7 +23,15 @@ const sizes = {
   }
 };
 
-export default function CustomIcon({ type, size = 's', width, height, onClick, className }: IconProps): JSX.Element {
+export default function CustomIcon({
+  type,
+  size = 's',
+  width,
+  height,
+  onClick,
+  className,
+  color
+}: IconProps): JSX.Element {
   const theme = useTheme();
 
   let w = sizes[size].width;
@@ -35,9 +44,8 @@ export default function CustomIcon({ type, size = 's', width, height, onClick, c
     h = height;
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error
-  const LucideIcon = icons[IconTypes[type]];
+  const iconName = IconTypes[type] as keyof typeof icons;
+  const LucideIcon: LucideIcon | undefined = icons[iconName];
   if (!LucideIcon) {
     return <img onClick={onClick} src={`/icons/${type}.svg`} alt={type} width={w} height={h} className={className} />;
   }
@@ -46,7 +54,7 @@ export default function CustomIcon({ type, size = 's', width, height, onClick, c
     <LucideIcon
       onClick={onClick}
       className={className}
-      style={{ color: theme.palette.text.text, display: 'inline-block' }}
+      style={{ color: color ? color : theme.palette.text.text, display: 'inline-block' }}
       strokeWidth={1.5}
       size={w}
     />

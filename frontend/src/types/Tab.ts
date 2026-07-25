@@ -30,6 +30,7 @@ type BaseTab = {
 export type DataTabType = BaseTab & {
   name: string;
   table?: string;
+  inlineQuery: string;
   pagination?: TabDataPagination;
   showQuery?: boolean;
   showColumns?: boolean;

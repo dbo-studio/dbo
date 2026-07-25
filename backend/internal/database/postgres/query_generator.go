@@ -2,12 +2,12 @@ package databasePostgres
 
 import (
 	"context"
-	"fmt"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/samber/lo"
 	"golang.org/x/sync/errgroup"
 )
@@ -22,10 +22,10 @@ type Database struct {
 
 func (r *PostgresRepository) databases(ctx context.Context, fromCache bool) ([]Database, error) {
 	databases := make([]Database, 0)
-	cacheKey := r.cacheKey("databases")
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "databases")
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &databases)
+		err := r.base.Cache().Get(ctx, cacheKey, &databases)
 		if err != nil {
 			return nil, err
 		}
@@ -35,7 +35,7 @@ func (r *PostgresRepository) databases(ctx context.Context, fromCache bool) ([]D
 		}
 	}
 
-	err := r.db.WithContext(ctx).Table("pg_database d").
+	err := r.base.DB().WithContext(ctx).Table("pg_database d").
 		Select(`
 			d.datname,
 			r.rolname,
@@ -46,7 +46,7 @@ func (r *PostgresRepository) databases(ctx context.Context, fromCache bool) ([]D
 		Joins("JOIN pg_roles r ON r.oid = d.datdba").
 		Joins("LEFT JOIN pg_shdescription des ON des.objoid = d.oid").
 		Joins("LEFT JOIN pg_tablespace t ON t.oid = d.dattablespace").
-		First(&databases).Error
+		Find(&databases).Error
 
 	if err != nil {
 		return nil, err
@@ -65,10 +65,10 @@ type Schema struct {
 
 func (r *PostgresRepository) schemas(ctx context.Context, database *string, fromCache bool) ([]Schema, error) {
 	schemas := make([]Schema, 0)
-	cacheKey := r.cacheKey("schemas", lo.FromPtr(database))
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "schemas", lo.FromPtr(database))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &schemas)
+		err := r.base.Cache().Get(ctx, cacheKey, &schemas)
 		if err != nil {
 			return nil, err
 		}
@@ -78,7 +78,12 @@ func (r *PostgresRepository) schemas(ctx context.Context, database *string, from
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("pg_namespace n").
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	query := conn.WithContext(ctx).Table("pg_namespace n").
 		Select(`
 		n.nspname AS nspname,
 		r.rolname AS rolname,
@@ -88,21 +93,9 @@ func (r *PostgresRepository) schemas(ctx context.Context, database *string, from
 		Joins("LEFT JOIN pg_description d ON d.objoid = n.oid AND d.classoid = 'pg_namespace'::regclass").
 		Where("n.nspname NOT IN ('pg_catalog', 'information_schema')")
 
-	err := query.
+	err = query.
 		Order("n.nspname").
 		Find(&schemas).Error
-
-	// query := r.db.WithContext(ctx).Select("schema_name").
-	// 	Table("information_schema.schemata").
-	// 	Where("schema_name NOT IN ('pg_catalog', 'information_schema')")
-
-	// if database != nil {
-	// 	query = query.Where("catalog_name = ?", lo.FromPtr(database))
-	// }
-
-	// err := query.
-	// 	Order("schema_name").
-	// 	Find(&schemas).Error
 
 	if err != nil {
 		return nil, err
@@ -121,12 +114,12 @@ type Table struct {
 	Owner       string  `gorm:"column:rolname"`
 }
 
-func (r *PostgresRepository) tables(ctx context.Context, schema *string, fromCache bool) ([]Table, error) {
+func (r *PostgresRepository) tables(ctx context.Context, database *string, schema *string, fromCache bool) ([]Table, error) {
 	tables := make([]Table, 0)
-	cacheKey := r.cacheKey("tables", lo.FromPtr(schema))
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "tables", lo.FromPtr(database), lo.FromPtr(schema))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &tables)
+		err := r.base.Cache().Get(ctx, cacheKey, &tables)
 		if err != nil {
 			return nil, err
 		}
@@ -136,7 +129,12 @@ func (r *PostgresRepository) tables(ctx context.Context, schema *string, fromCac
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("pg_class c").
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	query := conn.WithContext(ctx).Table("pg_class c").
 		Select(`
 		c.relname,
 		pd.description,
@@ -158,7 +156,7 @@ func (r *PostgresRepository) tables(ctx context.Context, schema *string, fromCac
 		query = query.Where("n.nspname = ?", lo.FromPtr(schema))
 	}
 
-	err := query.Order("c.relname").Find(&tables).Error
+	err = query.Order("c.relname").Find(&tables).Error
 	if err != nil {
 		return nil, err
 	}
@@ -177,10 +175,10 @@ type View struct {
 
 func (r *PostgresRepository) views(ctx context.Context, database *string, schema *string, fromCache bool) ([]View, error) {
 	views := make([]View, 0)
-	cacheKey := r.cacheKey("views", lo.FromPtr(database), lo.FromPtr(schema))
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "views", lo.FromPtr(database), lo.FromPtr(schema))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &views)
+		err := r.base.Cache().Get(ctx, cacheKey, &views)
 		if err != nil {
 			return nil, err
 		}
@@ -190,7 +188,12 @@ func (r *PostgresRepository) views(ctx context.Context, database *string, schema
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("pg_class c").
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	query := conn.WithContext(ctx).Table("pg_class c").
 		Select(`
 			c.relname as table_name,
 			d.description as comment,
@@ -206,7 +209,7 @@ func (r *PostgresRepository) views(ctx context.Context, database *string, schema
 		query = query.Where("n.nspname = ?", lo.FromPtr(schema))
 	}
 
-	err := query.Order("c.relname").Find(&views).Error
+	err = query.Order("c.relname").Find(&views).Error
 	if err != nil {
 		return nil, err
 	}
@@ -224,12 +227,12 @@ type MaterializedView struct {
 	Query      *string `gorm:"column:query"`
 }
 
-func (r *PostgresRepository) materializedViews(ctx context.Context, schema *string, fromCache bool) ([]MaterializedView, error) {
+func (r *PostgresRepository) materializedViews(ctx context.Context, database *string, schema *string, fromCache bool) ([]MaterializedView, error) {
 	mvs := make([]MaterializedView, 0)
-	cacheKey := r.cacheKey("materialized_views", lo.FromPtr(schema))
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "materialized_views", lo.FromPtr(database), lo.FromPtr(schema))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &mvs)
+		err := r.base.Cache().Get(ctx, cacheKey, &mvs)
 		if err != nil {
 			return nil, err
 		}
@@ -239,8 +242,13 @@ func (r *PostgresRepository) materializedViews(ctx context.Context, schema *stri
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("pg_class AS c").
-		Select("c.relname as name, d.description as comment, t.spcname as tablespace, r.rolname as rolname, m.definition as query").
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	query := conn.WithContext(ctx).Table("pg_class AS c").
+		Select("c.relname as matviewname, d.description as comment, t.spcname as tablespace, r.rolname as rolname, m.definition as query").
 		Joins("JOIN pg_namespace AS n ON n.oid = c.relnamespace").
 		Joins("LEFT JOIN pg_description AS d ON d.objoid = c.oid AND d.objsubid = 0").
 		Joins("LEFT JOIN pg_tablespace AS t ON t.oid = c.reltablespace").
@@ -252,7 +260,7 @@ func (r *PostgresRepository) materializedViews(ctx context.Context, schema *stri
 		query = query.Where("n.nspname = ?", lo.FromPtr(schema))
 	}
 
-	err := query.Order("c.relname").Find(&mvs).Error
+	err = query.Order("c.relname").Find(&mvs).Error
 	if err != nil {
 		return nil, err
 	}
@@ -268,25 +276,25 @@ type Column struct {
 	DataType               string  `gorm:"column:data_type"`
 	IsNullable             string  `gorm:"column:is_nullable"`
 	ColumnDefault          *string `gorm:"column:column_default"`
-	CharacterMaximumLength *int32  `gorm:"column:character_maximum_length"`
+	CharacterMaximumLength *int64  `gorm:"column:character_maximum_length"`
 	Comment                *string `gorm:"column:column_comment"`
 	NumericScale           *int32  `gorm:"column:numeric_scale"`
 	IsIdentity             bool    `gorm:"column:is_identity"`
 	IsGenerated            bool    `gorm:"column:is_generated"`
 
-	MappedType string      `gorm:"-"`
-	Editable   bool        `gorm:"-"`
-	IsActive   bool        `gorm:"-"`
-	PrimaryKey *PrimaryKey `gorm:"-"`
-	ForeignKey *ForeignKey `gorm:"-"`
+	MappedType   string      `gorm:"-"`
+	Editable     bool        `gorm:"-"`
+	IsActive     bool        `gorm:"-"`
+	IsPrimaryKey bool        `gorm:"-"`
+	ForeignKey   *ForeignKey `gorm:"-"`
 }
 
-func (r *PostgresRepository) columns(ctx context.Context, table *string, schema *string, columnNames []string, editable bool, fromCache bool) ([]Column, error) {
+func (r *PostgresRepository) columns(ctx context.Context, database *string, table *string, schema *string, columnNames []string, editable bool, fromCache bool) ([]Column, error) {
 	columns := make([]Column, 0)
-	cacheKey := r.cacheKey("columns", lo.FromPtr(table), lo.FromPtr(schema), strings.Join(columnNames, ","), strconv.FormatBool(editable))
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "columns", lo.FromPtr(database), lo.FromPtr(table), lo.FromPtr(schema), strings.Join(columnNames, ","), strconv.FormatBool(editable))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &columns)
+		err := r.base.Cache().Get(ctx, cacheKey, &columns)
 		if err != nil {
 			return nil, err
 		}
@@ -296,7 +304,12 @@ func (r *PostgresRepository) columns(ctx context.Context, table *string, schema 
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("pg_attribute AS a").
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	query := conn.WithContext(ctx).Table("pg_attribute AS a").
 		Select(`
 			a.attnum AS ordinal_position,
 			a.attname AS column_name,
@@ -343,7 +356,7 @@ func (r *PostgresRepository) columns(ctx context.Context, table *string, schema 
 	})
 
 	g.Go(func() error {
-		list, err := r.primaryKeys(gctx, table, fromCache)
+		list, err := r.primaryKeys(gctx, database, table, fromCache)
 		if err != nil {
 			return err
 		}
@@ -352,7 +365,7 @@ func (r *PostgresRepository) columns(ctx context.Context, table *string, schema 
 	})
 
 	g.Go(func() error {
-		list, err := r.foreignKeys(gctx, table, schema, fromCache)
+		list, err := r.foreignKeys(gctx, database, table, schema, fromCache)
 		if err != nil {
 			return err
 		}
@@ -365,14 +378,14 @@ func (r *PostgresRepository) columns(ctx context.Context, table *string, schema 
 	}
 
 	for i, column := range columns {
-		columns[i].MappedType = columnMappedFormat(column.DataType)
+		columns[i].MappedType = r.base.ColumnMappedFormat(column.DataType)
 		columns[i].Editable = editable
 		columns[i].IsActive = true
 		if len(columnNames) > 0 {
 			columns[i].IsActive = slices.Contains(columnNames, column.ColumnName)
 		}
 
-		primary, pkFound := lo.Find(pkList, func(pk PrimaryKey) bool {
+		_, pkFound := lo.Find(pkList, func(pk PrimaryKey) bool {
 			return pk.ColumnName == column.ColumnName
 		})
 
@@ -381,7 +394,7 @@ func (r *PostgresRepository) columns(ctx context.Context, table *string, schema 
 		})
 
 		if pkFound {
-			columns[i].PrimaryKey = &primary
+			columns[i].IsPrimaryKey = true
 		}
 
 		if fkFound {
@@ -400,10 +413,10 @@ type Template struct {
 
 func (r *PostgresRepository) templates(ctx context.Context, fromCache bool) ([]Template, error) {
 	templates := make([]Template, 0)
-	cacheKey := r.cacheKey("templates")
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "templates")
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &templates)
+		err := r.base.Cache().Get(ctx, cacheKey, &templates)
 		if err != nil {
 			return nil, err
 		}
@@ -413,7 +426,7 @@ func (r *PostgresRepository) templates(ctx context.Context, fromCache bool) ([]T
 		}
 	}
 
-	err := r.db.WithContext(ctx).Table("pg_database").
+	err := r.base.DB().WithContext(ctx).Table("pg_database").
 		Select("datname").
 		Where("datistemplate = true").
 		Order("datname").
@@ -432,12 +445,12 @@ type PrimaryKey struct {
 	ColumnName string `gorm:"column:column_name"`
 }
 
-func (r *PostgresRepository) primaryKeys(ctx context.Context, table *string, fromCache bool) ([]PrimaryKey, error) {
+func (r *PostgresRepository) primaryKeys(ctx context.Context, database *string, table *string, fromCache bool) ([]PrimaryKey, error) {
 	primaryKeys := make([]PrimaryKey, 0)
-	cacheKey := r.cacheKey("primary_keys", lo.FromPtr(table))
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "primary_keys", lo.FromPtr(database), lo.FromPtr(table))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &primaryKeys)
+		err := r.base.Cache().Get(ctx, cacheKey, &primaryKeys)
 		if err != nil {
 			return nil, err
 		}
@@ -447,7 +460,12 @@ func (r *PostgresRepository) primaryKeys(ctx context.Context, table *string, fro
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("information_schema.table_constraints AS tc").
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	query := conn.WithContext(ctx).Table("information_schema.table_constraints AS tc").
 		Select("kcu.column_name").
 		Joins("JOIN information_schema.key_column_usage AS kcu ON kcu.constraint_name = tc.constraint_name AND kcu.table_schema = tc.table_schema").
 		Where("tc.constraint_type = 'PRIMARY KEY'")
@@ -456,7 +474,7 @@ func (r *PostgresRepository) primaryKeys(ctx context.Context, table *string, fro
 		query = query.Where("tc.table_name = ?", lo.FromPtr(table))
 	}
 
-	err := query.Order("kcu.column_name").Find(&primaryKeys).Error
+	err = query.Order("kcu.column_name").Find(&primaryKeys).Error
 	if err != nil {
 		return nil, err
 	}
@@ -481,12 +499,12 @@ type ForeignKey struct {
 	RefColumnsList []string `gorm:"-"`
 }
 
-func (r *PostgresRepository) foreignKeys(ctx context.Context, table *string, schema *string, fromCache bool) ([]ForeignKey, error) {
+func (r *PostgresRepository) foreignKeys(ctx context.Context, database *string, table *string, schema *string, fromCache bool) ([]ForeignKey, error) {
 	foreignKeys := make([]ForeignKey, 0)
-	cacheKey := r.cacheKey("foreign_keys", lo.FromPtr(table), lo.FromPtr(schema))
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "foreign_keys", lo.FromPtr(database), lo.FromPtr(table), lo.FromPtr(schema))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &foreignKeys)
+		err := r.base.Cache().Get(ctx, cacheKey, &foreignKeys)
 		if err != nil {
 			return nil, err
 		}
@@ -496,7 +514,12 @@ func (r *PostgresRepository) foreignKeys(ctx context.Context, table *string, sch
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("pg_constraint c").
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	query := conn.WithContext(ctx).Table("pg_constraint c").
 		Select(`
 			c.conname as constraint_name,
 			array_to_string(array_agg(a.attname ORDER BY array_position(c.conkey, a.attnum)), ', ') as columns,
@@ -536,7 +559,7 @@ func (r *PostgresRepository) foreignKeys(ctx context.Context, table *string, sch
 		query = query.Where("n.nspname = ?", lo.FromPtr(schema))
 	}
 
-	err := query.
+	err = query.
 		Order("c.conname").
 		Group("c.conname, ct.relname, c.confupdtype, c.confdeltype, c.condeferrable, c.condeferred, d.description, c.conkey, c.confkey").
 		Find(&foreignKeys).Error
@@ -576,12 +599,12 @@ type TableKey struct {
 	ColumnsList []string `gorm:"-"`
 }
 
-func (r *PostgresRepository) tableKeys(ctx context.Context, table *string, schema *string, fromCache bool) ([]TableKey, error) {
+func (r *PostgresRepository) tableKeys(ctx context.Context, database *string, table *string, schema *string, fromCache bool) ([]TableKey, error) {
 	keys := make([]TableKey, 0)
-	cacheKey := r.cacheKey("keys", lo.FromPtr(table), lo.FromPtr(schema))
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "keys", lo.FromPtr(database), lo.FromPtr(table), lo.FromPtr(schema))
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &keys)
+		err := r.base.Cache().Get(ctx, cacheKey, &keys)
 		if err != nil {
 			return nil, err
 		}
@@ -591,7 +614,12 @@ func (r *PostgresRepository) tableKeys(ctx context.Context, table *string, schem
 		}
 	}
 
-	query := r.db.WithContext(ctx).Table("pg_constraint c").
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	query := conn.WithContext(ctx).Table("pg_constraint c").
 		Select(`
 			c.conname as name,
 			d.description as comment,
@@ -613,7 +641,7 @@ func (r *PostgresRepository) tableKeys(ctx context.Context, table *string, schem
 		query = query.Where("n.nspname = ?", lo.FromPtr(schema))
 	}
 
-	err := query.
+	err = query.
 		Group("c.conname, d.description, c.contype, c.condeferrable, c.condeferred, c.oid").
 		Find(&keys).Error
 
@@ -640,10 +668,10 @@ type Tablespace struct {
 
 func (r *PostgresRepository) tablespaces(ctx context.Context, fromCache bool) ([]Tablespace, error) {
 	tablespaces := make([]Tablespace, 0)
-	cacheKey := r.cacheKey("tablespaces")
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "tablespaces")
 
 	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &tablespaces)
+		err := r.base.Cache().Get(ctx, cacheKey, &tablespaces)
 		if err != nil {
 			return nil, err
 		}
@@ -653,7 +681,7 @@ func (r *PostgresRepository) tablespaces(ctx context.Context, fromCache bool) ([
 		}
 	}
 
-	err := r.db.WithContext(ctx).Table("pg_tablespace").
+	err := r.base.DB().WithContext(ctx).Table("pg_tablespace").
 		Select("spcname").
 		Order("spcname").
 		Find(&tablespaces).Error
@@ -667,17 +695,12 @@ func (r *PostgresRepository) tablespaces(ctx context.Context, fromCache bool) ([
 	return tablespaces, nil
 }
 
-func (r *PostgresRepository) cacheKey(args ...string) string {
-	return fmt.Sprintf("c:%d:query_generator:%s", r.connection.ID, strings.Join(args, "_"))
-}
-
-func (r *PostgresRepository) updateCache(ctx context.Context, cacheKey string, value any) {
-	// Use background context to avoid context cancellation issues in goroutine
+func (r *PostgresRepository) updateCache(_ context.Context, cacheKey string, value any) {
 	go func() {
 		bgCtx := context.Background()
-		err := r.cache.Set(bgCtx, cacheKey, value, lo.ToPtr(time.Hour))
+		err := r.base.Cache().Set(bgCtx, cacheKey, value, lo.ToPtr(time.Hour))
 		if err != nil {
-			r.logger.Error(err)
+			r.base.Logger().Error(err)
 		}
 	}()
 }

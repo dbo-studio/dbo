@@ -1,19 +1,22 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { GridItem } from '@/components/base/Grid/Grid';
 import { ExportModal } from '@/components/common/ExportModal/ExportModal';
 import { ImportModal } from '@/components/common/ImportModal/ImportModal';
 import { useSelectedTab } from '@/hooks';
+import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { DataTabType } from '@/types';
-import { Badge, Box, Grid, IconButton, Stack, useTheme } from '@mui/material';
+import { Badge, Box, IconButton, Tooltip } from '@mui/material';
 import { type JSX, useState } from 'react';
+import { ActionBarActionsGridItemStyled, ActionBarGridStyled } from './ActionBar.styled';
 import Filters from './Filters/Filters';
+import InlineQuery from './InlineQuery/InlineQuery';
 import QueryPreview from './QueryPreview/QueryPreview';
 import Sorts from './Sorts/Sorts';
 import type { ActionBarProps } from './types';
 
 export default function ActionBar({ showColumns, setShowColumns }: ActionBarProps): JSX.Element {
-  const theme = useTheme();
   const selectedTab = useSelectedTab<DataTabType>();
 
   const sortCount = selectedTab?.sorts?.filter((sort) => sort.isActive).length ?? 0;
@@ -92,55 +95,72 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
 
   return (
     <Box>
-      <Stack
-        borderBottom={`1px solid ${theme.palette.divider}`}
-        borderTop={`1px solid ${theme.palette.divider}`}
-        padding=' 8px'
-        maxHeight={40}
-        direction='row'
-        justifyContent='space-between'
-        alignItems='center'
+      <ActionBarGridStyled
+        templateColumns={{
+          xs: 'minmax(0, 1fr) max-content'
+        }}
       >
-        <Stack direction={'row'} spacing={1} display='flex' justifyContent='flex-start'>
-          <IconButton
-            className={showColumns ? 'active' : ''}
-            aria-label='grid'
-            onClick={(): void => handleToggle('column')}
-          >
-            <CustomIcon type='grid' size='s' />
-          </IconButton>
-          <IconButton className={show.showFilters ? 'active' : ''} onClick={(): void => handleToggle('filter')}>
-            <Badge badgeContent={filterCount} color='secondary' variant='dot'>
-              <CustomIcon type='filter' size='s' />
-            </Badge>
-          </IconButton>
-          <IconButton
-            className={show.showSorts ? 'active' : ''}
-            aria-label='sort'
-            onClick={(): void => handleToggle('sort')}
-          >
-            <Badge badgeContent={sortCount} color='secondary' variant='dot'>
-              <CustomIcon type='sort' size='s' />
-            </Badge>
-          </IconButton>
-        </Stack>
-        <Grid size={{ md: 8 }} display='flex' justifyContent='flex-end'>
-          <IconButton aria-label='export' onClick={handleShowExport}>
-            <CustomIcon type='export' size='s' />
-          </IconButton>
+        <GridItem sx={{ minWidth: 0 }}>
+          <InlineQuery />
+        </GridItem>
+        <ActionBarActionsGridItemStyled>
+          <Tooltip title={locales.filters}>
+            <IconButton
+              aria-label={locales.filters}
+              className={show.showFilters ? 'active' : ''}
+              onClick={(): void => handleToggle('filter')}
+            >
+              <Badge badgeContent={filterCount} color='secondary' variant='dot'>
+                <CustomIcon type='filter' size='s' />
+              </Badge>
+            </IconButton>
+          </Tooltip>
 
-          <IconButton aria-label='import' onClick={handleShowImport}>
-            <CustomIcon type='import' size='s' />
-          </IconButton>
+          <Tooltip title={locales.sorts}>
+            <IconButton
+              className={show.showSorts ? 'active' : ''}
+              aria-label='sort'
+              onClick={(): void => handleToggle('sort')}
+            >
+              <Badge badgeContent={sortCount} color='secondary' variant='dot'>
+                <CustomIcon type='sort' size='s' />
+              </Badge>
+            </IconButton>
+          </Tooltip>
 
-          <IconButton
-            className={show.showQuery ? 'active' : 'toggle-code-preview'}
-            onClick={(): void => handleToggle('query')}
-          >
-            <CustomIcon type='code' size='s' />
-          </IconButton>
-        </Grid>
-      </Stack>
+          <Tooltip title={locales.columns}>
+            <IconButton
+              className={showColumns ? 'active' : ''}
+              aria-label='grid'
+              onClick={(): void => handleToggle('column')}
+            >
+              <CustomIcon type='grid' size='s' />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title={locales.export}>
+            <IconButton aria-label='export' onClick={handleShowExport}>
+              <CustomIcon type='export' size='s' />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title={locales.import}>
+            <IconButton aria-label='import' onClick={handleShowImport}>
+              <CustomIcon type='import' size='s' />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title={locales.query_preview}>
+            <IconButton
+              aria-label={locales.query_preview}
+              className={show.showQuery ? 'active' : 'toggle-code-preview'}
+              onClick={(): void => handleToggle('query')}
+            >
+              <CustomIcon type='code' size='s' />
+            </IconButton>
+          </Tooltip>
+        </ActionBarActionsGridItemStyled>
+      </ActionBarGridStyled>
 
       <ExportModal
         onClose={() => setShowExport({ ...showExport, show: false })}

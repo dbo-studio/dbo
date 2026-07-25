@@ -9,7 +9,11 @@ export default function Tabs(theme: Theme): Components {
           display: 'flex',
           alignItems: 'center',
           padding: 0,
-          minHeight: '30px'
+          minHeight: '35px',
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          '&.MuiTabs-flat': {
+            minHeight: '35px'
+          }
         },
         indicator: {
           display: 'none'
@@ -25,46 +29,33 @@ export default function Tabs(theme: Theme): Components {
           borderRadius: variables.radius.small,
           color: theme.palette.text.subdued,
           border: '1px solid transparent',
-          '& .MuiTabs-indicator': {
-            display: 'none',
-            background: '#fff'
-          },
-          '& .MuiTabs-indicatorSpan': {
-            maxWidth: 40,
-            width: '100%',
-            backgroundColor: 'red'
-          },
           '&.Mui-selected': {
             border: `1px solid ${theme.palette.divider}`,
             color: theme.palette.text.primary,
             fontWeight: theme.typography.fontWeightMedium,
             backgroundColor: theme.palette.background.primary
           },
-
           svg: {
             marginRight: '8px'
           },
-
           '&.Mui-flat': {
             borderRadius: 0,
-            borderTop: 'unset',
-            svg: {
-              position: 'absolute',
-              right: 0,
-              opacity: 0,
-              transition: 'opacity 0.1s'
+            minHeight: 35,
+            height: 35,
+            borderTop: '2px solid transparent',
+            borderRight: `1px solid ${theme.palette.divider}`,
+            borderBottom: 'none',
+            borderLeft: 'none',
+            color: theme.palette.text.subdued,
+            '&.Mui-selected': {
+              border: 'none',
+              borderTop: `2px solid ${theme.palette.primary.main}`,
+              borderRight: `1px solid ${theme.palette.divider}`,
+              backgroundColor: theme.palette.background.default,
+              color: theme.palette.text.text
             },
-
-            '&:hover': {
-              svg: {
-                opacity: 1,
-                border: `1px solid ${theme.palette.divider}`,
-                borderRadius: variables.radius.small,
-                background: theme.palette.background.default,
-                '&:hover': {
-                  background: theme.palette.background.subdued
-                }
-              }
+            '&:last-of-type': {
+              borderRight: 'none'
             }
           },
           '&.grid-tab': {

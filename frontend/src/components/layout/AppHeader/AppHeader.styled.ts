@@ -10,5 +10,13 @@ export const AppHeaderStyled = styled(Grid)(({ theme }) => ({
   backdropFilter: 'blur(15px)',
   WebkitBackdropFilter: 'blur(15px)',
   position: 'relative',
-  zIndex: 101
+  zIndex: 101,
+  justifyContent: 'space-between'
+}));
+
+export const AppHeaderGridStyled = styled(Grid)(({ useCompactHeader }: { useCompactHeader: boolean }) => ({
+  display: useCompactHeader ? 'flex' : 'none',
+  justifyContent: 'flex-start',
+  alignItems: 'center',
+  flexShrink: 0
 }));

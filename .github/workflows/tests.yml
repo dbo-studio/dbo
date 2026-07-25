@@ -14,9 +14,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: 1.25
+          go-version: 1.26
           check-latest: true
           cache: true
+          cache-dependency-path: backend/go.sum
       - name: Verify go.mod is tidy
         working-directory: ./backend
         run: |
@@ -27,27 +28,19 @@ jobs:
           version: v2.4
           working-directory: ./backend
 
-  # front-quality:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: biomejs/setup-biome@v2
-  #       with:
-  #         version: latest
-  #     - name: Run Biome
-  #       run: biome ci frontend/src
-
-  # front-test:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version: 20
-          
-  #     - name: install frontend dependencies
-  #       working-directory: /frontend
-  #       run: npm install
-      
-  #     - name: run tests
-  #       working-directory: /frontend
-  #       run: npm run test
+  front-quality:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Check formatting
+        run: npm run format:check

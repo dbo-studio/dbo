@@ -3,6 +3,8 @@ package databaseContract
 type TreeTab string
 
 const (
+	GeneralTab TreeTab = "general"
+
 	DatabaseTab TreeTab = "database"
 
 	SchemaTab TreeTab = "schema"

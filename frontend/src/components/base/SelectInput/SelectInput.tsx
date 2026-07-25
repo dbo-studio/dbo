@@ -14,7 +14,8 @@ export default function SelectInput({
   emptylabel,
   disabled,
   error,
-  isMulti
+  isMulti,
+  style
 }: SelectInputProps): JSX.Element {
   const theme = useTheme();
 
@@ -28,7 +29,13 @@ export default function SelectInput({
   };
 
   return (
-    <Box display={'flex'} flexDirection={'column'}>
+    <Box
+      style={style}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
       {label && (
         <Typography color={theme.palette.text.text} variant='caption'>
           {label}
@@ -46,9 +53,12 @@ export default function SelectInput({
         styles={SelectInputStyles(theme, error, size)}
         menuPortalTarget={document.body}
       />
-
       {helpertext && (
-        <Typography color={theme.palette.error.main} variant='caption'>
+        <Typography
+          color={theme.palette.error.main}
+          variant='caption'
+          sx={{ marginBottom: (theme) => theme.spacing(1) }}
+        >
           {helpertext}
         </Typography>
       )}

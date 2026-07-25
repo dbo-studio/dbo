@@ -1,51 +1,11 @@
 package databaseMysql
 
 import (
-	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/samber/lo"
 )
-
-type MySQLNode struct {
-	Database string
-	Table    string
-}
-
-func extractNode(node string) MySQLNode {
-	parts := strings.Split(node, ".")
-
-	var database, table string
-
-	switch len(parts) {
-	case 1:
-		database = parts[0]
-	case 2:
-		database, table = parts[0], parts[1]
-	}
-
-	return MySQLNode{
-		Database: database,
-		Table:    table,
-	}
-}
-
-func (r *MySQLRepository) cacheKey(args ...string) string {
-	return fmt.Sprintf("c:%d:mysql:%s", r.connection.ID, strings.Join(args, "_"))
-}
-
-func (r *MySQLRepository) updateCache(_ context.Context, cacheKey string, value any) {
-	go func() {
-		bgCtx := context.Background()
-		err := r.cache.Set(bgCtx, cacheKey, value, lo.ToPtr(time.Hour))
-		if err != nil {
-			r.logger.Error(err)
-		}
-	}()
-}
 
 type Column struct {
 	OrdinalPosition        int32   `gorm:"column:ORDINAL_POSITION"`
@@ -53,39 +13,15 @@ type Column struct {
 	DataType               string  `gorm:"column:DATA_TYPE"`
 	IsNullable             string  `gorm:"column:IS_NULLABLE"`
 	ColumnDefault          *string `gorm:"column:COLUMN_DEFAULT"`
-	CharacterMaximumLength *int32  `gorm:"column:CHARACTER_MAXIMUM_LENGTH"`
+	CharacterMaximumLength *int64  `gorm:"column:CHARACTER_MAXIMUM_LENGTH"`
 	Comment                *string `gorm:"column:COLUMN_COMMENT"`
 	NumericScale           *int32  `gorm:"column:NUMERIC_SCALE"`
 
-	MappedType string      `gorm:"-"`
-	Editable   bool        `gorm:"-"`
-	IsActive   bool        `gorm:"-"`
-	PrimaryKey *PrimaryKey `gorm:"-"`
-	ForeignKey *ForeignKey `gorm:"-"`
-}
-
-func columnMappedFormat(dataType string) string {
-	normalized := strings.ToUpper(strings.TrimSpace(dataType))
-	if idx := strings.Index(normalized, "("); idx > -1 {
-		normalized = normalized[:idx]
-	}
-
-	switch normalized {
-	case "VARCHAR", "CHAR", "TEXT", "TINYTEXT", "MEDIUMTEXT", "LONGTEXT", "ENUM", "SET", "JSON":
-		return "string"
-	case "TINYINT", "SMALLINT", "MEDIUMINT", "INT", "INTEGER", "BIGINT", "BIT":
-		return "number"
-	case "FLOAT", "DOUBLE", "DECIMAL", "NUMERIC":
-		return "number"
-	case "DATE", "TIME", "DATETIME", "TIMESTAMP", "YEAR":
-		return "datetime"
-	case "BOOLEAN", "BOOL":
-		return "boolean"
-	case "BLOB", "TINYBLOB", "MEDIUMBLOB", "LONGBLOB", "BINARY", "VARBINARY":
-		return "blob"
-	default:
-		return "string"
-	}
+	MappedType   string      `gorm:"-"`
+	Editable     bool        `gorm:"-"`
+	IsActive     bool        `gorm:"-"`
+	IsPrimaryKey bool        `gorm:"-"`
+	ForeignKey   *ForeignKey `gorm:"-"`
 }
 
 func columnListToResponse(columns []Column) []dto.Column {
@@ -102,6 +38,7 @@ func columnListToResponse(columns []Column) []dto.Column {
 		col.Default = column.ColumnDefault
 		col.Comment = column.Comment
 		col.NotNull = column.IsNullable == "NO"
+		col.IsPrimaryKey = column.IsPrimaryKey
 
 		data = append(data, col)
 	}
@@ -129,4 +66,42 @@ func isNumericType(dataType string) bool {
 		}
 	}
 	return false
+}
+
+func baseMysqlDataType(dataType string) string {
+	normalized := strings.TrimSpace(dataType)
+	if idx := strings.Index(normalized, "("); idx != -1 {
+		normalized = normalized[:idx]
+	}
+
+	return strings.ToUpper(normalized)
+}
+
+func formatMysqlColumnType(dataType string, maxLength *string, numericScale *string) string {
+	if dataType == "" {
+		return dataType
+	}
+
+	baseType := baseMysqlDataType(dataType)
+
+	if isCharacterType(dataType) {
+		length := "255"
+		if maxLength != nil && *maxLength != "" {
+			length = *maxLength
+		} else if baseType == "CHAR" {
+			length = "1"
+		}
+
+		return fmt.Sprintf("%s(%s)", baseType, length)
+	}
+
+	if isNumericType(dataType) && maxLength != nil && *maxLength != "" {
+		if numericScale != nil && *numericScale != "" {
+			return fmt.Sprintf("%s(%s,%s)", baseType, *maxLength, *numericScale)
+		}
+
+		return fmt.Sprintf("%s(%s)", baseType, *maxLength)
+	}
+
+	return baseType
 }

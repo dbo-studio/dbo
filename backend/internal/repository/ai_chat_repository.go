@@ -23,8 +23,8 @@ func NewAiChatRepo() IAiChatRepo {
 func (r AiChatRepoImpl) List(ctx context.Context, req *dto.AiChatListRequest) ([]model.AiChat, error) {
 	var chats []model.AiChat
 
-	result := r.db.Scopes(scope.Paginate(&req.PaginationRequest)).
-		Where("connection_id = ?", req.ConnectionId).
+	result := r.db.WithContext(ctx).Scopes(scope.Paginate(&req.PaginationRequest)).
+		Where("connection_id = ?", req.ConnectionID).
 		Order("updated_at desc").
 		Find(&chats)
 
@@ -80,7 +80,7 @@ func (r AiChatRepoImpl) Create(ctx context.Context, dto *dto.AiChatCreateRequest
 
 	var chat = &model.AiChat{
 		Title:        title,
-		ConnectionID: uint(dto.ConnectionId),
+		ConnectionID: uint(dto.ConnectionID),
 	}
 
 	result := r.db.WithContext(ctx).Create(chat)

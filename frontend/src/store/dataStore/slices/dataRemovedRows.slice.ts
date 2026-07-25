@@ -17,13 +17,13 @@ export const createDataRemovedRowsSlice: StateCreator<
   DataRemovedRowsSlice
 > = (set, get) => ({
   removedRows: [],
-  updateRemovedRows: (removedRows: RowType[] | undefined): Promise<void> => {
+  updateRemovedRows: async (removedRows: RowType[] | undefined): Promise<void> => {
     const selectedTabId = useTabStore.getState().selectedTabId;
     if (!selectedTabId) return Promise.resolve();
 
     if (removedRows) {
       set({ removedRows }, undefined, 'updateRemovedRows');
-      debouncedSaveRemovedRows(selectedTabId, removedRows ?? []);
+      await debouncedSaveRemovedRows(selectedTabId, removedRows ?? []);
       return Promise.resolve();
     }
 
@@ -39,10 +39,9 @@ export const createDataRemovedRowsSlice: StateCreator<
 
     set({ removedRows: rows }, undefined, 'updateRemovedRows');
 
-    get().discardUnsavedRows(unsavedRows);
-    get().updateSelectedRows([], true);
+    await Promise.all([get().discardUnsavedRows(unsavedRows), debouncedSaveRemovedRows(selectedTabId, rows ?? [])]);
 
-    debouncedSaveRemovedRows(selectedTabId, rows ?? []);
+    get().updateSelectedRows([], true);
 
     return Promise.resolve();
   }

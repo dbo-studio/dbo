@@ -9,7 +9,6 @@ export const editorConfig: editor.IStandaloneEditorConstructionOptions = {
   detectIndentation: false,
   folding: false,
   automaticLayout: true,
-  contextmenu: false,
   // Disable auto suggestion widget; require manual trigger (e.g., Ctrl+Space)
   quickSuggestions: false,
   suggestOnTriggerCharacters: false,
@@ -31,7 +30,8 @@ export const editorConfig: editor.IStandaloneEditorConstructionOptions = {
   renderLineHighlight: 'none',
   codeLens: false,
   scrollbar: {
-    alwaysConsumeMouseWheel: false
+    alwaysConsumeMouseWheel: false,
+    verticalScrollbarSize: 0
   },
   fontSize: 14,
   fontWeight: 'bold',

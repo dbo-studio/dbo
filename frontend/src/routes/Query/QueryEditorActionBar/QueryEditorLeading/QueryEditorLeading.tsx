@@ -7,7 +7,7 @@ import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { EditorTabType } from '@/types';
 import { Stack, Switch, Tooltip, Typography } from '@mui/material';
-import { type JSX, useEffect, useState } from 'react';
+import { type JSX, useState } from 'react';
 import type { QueryEditorLeadingProps } from '../../types';
 
 export default function QueryEditorLeading({ databases, schemas }: QueryEditorLeadingProps): JSX.Element {
@@ -19,16 +19,35 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
 
   const [localSchema, setLocalSchema] = useState<string>((selectedTab?.schema as string) ?? '');
   const [localDatabase, setLocalDatabase] = useState<string>((selectedTab?.database as string) ?? '');
+  const [prevTabId, setPrevTabId] = useState(selectedTab?.id);
 
-  useEffect(() => {
+  if (selectedTab?.id !== prevTabId) {
+    setPrevTabId(selectedTab?.id);
+    setLocalSchema((selectedTab?.schema as string) ?? '');
+    setLocalDatabase((selectedTab?.database as string) ?? '');
+  }
+
+  const handleDatabaseChange = (database: string): void => {
+    setLocalDatabase(database);
     if (!selectedTab) return;
+    updateSelectedTab({ ...selectedTab, database, schema: localSchema });
+  };
 
-    updateSelectedTab({ ...selectedTab, database: localDatabase, schema: localSchema });
-  }, [localSchema, localDatabase]);
+  const handleSchemaChange = (schema: string): void => {
+    setLocalSchema(schema);
+    if (!selectedTab) return;
+    updateSelectedTab({ ...selectedTab, database: localDatabase, schema });
+  };
 
   return (
     <Stack spacing={2} direction={'row'}>
-      <Stack direction={'row'} spacing={1} alignItems={'center'}>
+      <Stack
+        direction={'row'}
+        spacing={1}
+        sx={{
+          alignItems: 'center'
+        }}
+      >
         <Typography variant='caption' color='textText'>
           {locales.database}:
         </Typography>
@@ -38,11 +57,16 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
           disabled={databases?.length === 0}
           size='small'
           options={databases.map((s) => ({ value: s, label: s }))}
-          onChange={(e): void => setLocalDatabase((e as SelectInputOption)?.value as string)}
+          onChange={(e): void => handleDatabaseChange((e as SelectInputOption)?.value as string)}
         />
       </Stack>
-
-      <Stack direction={'row'} spacing={1} alignItems={'center'}>
+      <Stack
+        direction={'row'}
+        spacing={1}
+        sx={{
+          alignItems: 'center'
+        }}
+      >
         <Typography color='textText' variant='caption'>
           {locales.schema}:
         </Typography>
@@ -52,13 +76,18 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
           disabled={schemas?.length === 0}
           size='small'
           options={schemas.map((s) => ({ value: s, label: s }))}
-          onChange={(e): void => setLocalSchema((e as SelectInputOption)?.value as string)}
+          onChange={(e): void => handleSchemaChange((e as SelectInputOption)?.value as string)}
         />
       </Stack>
-
-      <Stack direction={'row'} spacing={1} alignItems={'center'}>
+      <Stack
+        direction={'row'}
+        spacing={1}
+        sx={{
+          alignItems: 'center'
+        }}
+      >
         <CustomIcon type='bot' />
-        <Tooltip title={enableEditorAi ? locales.enable_ai : locales.disable_ai}>
+        <Tooltip title={enableEditorAi ? locales.disable_ai : locales.enable_ai}>
           <Switch
             size='small'
             checked={enableEditorAi}

@@ -4,40 +4,40 @@ import "github.com/invopop/validation"
 
 type (
 	TreeListRequest struct {
-		ConnectionId int32  `json:"connectionId"`
-		ParentId     string `json:"parentId"`
+		ConnectionID int32  `json:"connectionId"`
+		ParentID     string `json:"parentId"`
 		FromCache    *bool  `json:"fromCache"`
 	}
 
 	ObjectTabsRequest struct {
-		ConnectionId int32
-		NodeId       string
+		ConnectionID int32
+		NodeID       string
 		Action       string
 	}
 
 	ObjectDetailRequest struct {
-		ConnectionId int32
-		NodeId       string
+		ConnectionID int32
+		NodeID       string
 		Action       string
-		TabId        string
+		TabID        string
 	}
 
 	ObjectExecuteRequest struct {
-		ConnectionId int32
-		NodeId       string
+		ConnectionID int32
+		NodeID       string
 		Action       string
 		Params       []byte
 	}
 
 	DynamicFieldOptionsRequest struct {
-		ConnectionId int32             `json:"connectionId"`
-		NodeId       string            `json:"nodeId"`
+		ConnectionID int32             `json:"connectionId"`
+		NodeID       string            `json:"nodeId"`
 		Parameters   map[string]string `json:"parameters"`
 	}
 )
 
 func (req TreeListRequest) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
 	)
 }

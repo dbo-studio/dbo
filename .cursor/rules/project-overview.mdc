@@ -1,0 +1,37 @@
+---
+description: DBO Studio monorepo context — architecture, conventions, and where to look before coding
+alwaysApply: true
+---
+
+# DBO Studio — Project Context
+
+DBO is an open-source database GUI. Monorepo: `backend/` (Go/Fiber), `frontend/` (React/TS/Vite), `desktop/` (Tauri), `e2e/` (Playwright QA).
+
+## Read First
+
+- Root guide: `AGENTS.md`
+- Backend: `backend/AGENTS.md`
+- Frontend: `frontend/AGENTS.md`
+- E2E: `e2e/README.md` — when editing tests, follow `.cursor/rules/e2e-qa.mdc` and the `e2e-playwright` skill
+
+## Core Rules
+
+- Minimize diff scope; match existing patterns in the package you edit.
+- Backend flow: `handler → service → repository → database`.
+- Two DBs: app SQLite (GORM metadata) + user DBs via `ConnectionManager`.
+- Never commit secrets. Use Conventional Commits (`feat:`, `fix:`, `chore:`).
+- Before PR: `go fmt` + `golangci-lint run` (backend) or `npm run lint` (frontend).
+
+## Backend Package Naming
+
+Directories use `snake_case`; package names use camelCase with domain prefix:
+`serviceSavedQuery`, `databasePostgres`, `databaseConnection`.
+
+Use matching import aliases:
+```go
+serviceSavedQuery "github.com/dbo-studio/dbo/internal/service/saved_query"
+```
+
+## When Unsure
+
+Find a similar feature in the same layer and mirror its structure, naming, and error handling.

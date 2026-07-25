@@ -8,7 +8,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *PostgresRepository) handleMaterializedViewCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
+func (r *PostgresRepository) handleMaterializedViewCommands(node contract.DBNode, tabID contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
 	if action != contract.CreateMaterializedViewAction && action != contract.EditMaterializedViewAction && action != contract.DropMaterializedViewAction {
@@ -20,7 +20,7 @@ func (r *PostgresRepository) handleMaterializedViewCommands(node PGNode, tabId c
 		return nil, err
 	}
 
-	params := dto[tabId]
+	params := dto[tabID]
 
 	if params.New != nil && params.New.Query != nil {
 		params.New.Query = formatQuery(params.New.Query)
@@ -31,7 +31,12 @@ func (r *PostgresRepository) handleMaterializedViewCommands(node PGNode, tabId c
 	}
 
 	if action == contract.CreateMaterializedViewAction {
-		query := fmt.Sprintf("CREATE MATERIALIZED VIEW %s", *params.New.Name)
+		if params.New == nil || params.New.Name == nil {
+			return queries, nil
+		}
+
+		viewRef := qualifiedTableName(node.Schema, *params.New.Name)
+		query := fmt.Sprintf("CREATE MATERIALIZED VIEW %s", viewRef)
 
 		if params.New.Tablespace != nil {
 			query += fmt.Sprintf(" TABLESPACE %s", *params.New.Tablespace)
@@ -44,15 +49,15 @@ func (r *PostgresRepository) handleMaterializedViewCommands(node PGNode, tabId c
 		queries = append(queries, query)
 
 		if params.New.Owner != nil {
-			queries = append(queries, fmt.Sprintf(`ALTER MATERIALIZED VIEW %s OWNER TO %s`, *params.New.Name, *params.New.Owner))
+			queries = append(queries, fmt.Sprintf(`ALTER MATERIALIZED VIEW %s OWNER TO %s`, viewRef, *params.New.Owner))
 		}
 
 		if params.New.Comment != nil {
-			queries = append(queries, fmt.Sprintf("COMMENT ON MATERIALIZED VIEW %s IS '%s'", *params.New.Name, *params.New.Comment))
+			queries = append(queries, fmt.Sprintf("COMMENT ON MATERIALIZED VIEW %s IS '%s'", viewRef, *params.New.Comment))
 		}
 	}
 
-	if action == contract.DropViewAction {
+	if action == contract.DropMaterializedViewAction {
 		query := fmt.Sprintf(`DROP MATERIALIZED VIEW "%s"."%s"`, node.Schema, node.Table)
 		queries = append(queries, query)
 	}

@@ -10,7 +10,7 @@ RUN npm i -g typescript
 RUN npm i --force
 RUN npm run build
 
-FROM golang:1.25-alpine as backend
+FROM golang:1.26-alpine as backend
 
 ENV APP_PORT=${APP_PORT}
 ENV APP_ENV=docker

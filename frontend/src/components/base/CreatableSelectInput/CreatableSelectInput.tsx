@@ -1,6 +1,6 @@
 import { SelectInputStyles } from '@/components/base/SelectInput/SelectInput.styled.ts';
 import { Box, Typography, useTheme } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import type { ActionMeta } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import type { SelectInputOption } from '../SelectInput/types';
@@ -15,18 +15,20 @@ export default function CreatableSelectInput({
   onChange,
   emptylabel,
   error,
-  isMulti
+  isMulti,
+  isLoading
 }: CreatableSelectInputProps): React.JSX.Element {
   const theme = useTheme();
 
-  const [localOptions, setLocalOptions] = useState(options);
+  const [createdOptions, setCreatedOptions] = useState<SelectInputOption[]>([]);
 
-  useEffect(() => {
-    setLocalOptions(options);
-  }, [options]);
+  const localOptions = useMemo(() => {
+    const optionValues = new Set(options.map((option) => option.value));
+    const uniqueCreated = createdOptions.filter((option) => !optionValues.has(option.value));
+    return [...options, ...uniqueCreated];
+  }, [options, createdOptions]);
 
   const handleChange = (selected: unknown, _actionMeta: ActionMeta<unknown>): void => {
-    // actionMeta is required by react-select but we don't use it - eslint-disable-next-line is handled by prefix _
     void _actionMeta;
     onChange(selected as SelectInputOption | SelectInputOption[] | null);
   };
@@ -35,46 +37,38 @@ export default function CreatableSelectInput({
     if (value === null || value === undefined) return null;
 
     if (isMulti) {
-      // Multi-select must always be array (validated in useFormData)
       if (!Array.isArray(value)) {
-        console.error('[CreatableSelectInput] Invalid format for multi-select: expected array, got', typeof value);
         return [];
       }
-      // Map each value to its option, creating one if it doesn't exist (for newly created options)
-      return (value as string[]).map((val) => {
+
+      return value.map((val) => {
         const found = localOptions.find((option) => option.value === val);
         return found || { value: val, label: val };
       });
     }
 
-    // For single select, value should be string
     if (Array.isArray(value)) {
-      console.error('[CreatableSelectInput] Invalid format for single-select: expected string, got array');
+      console.debug('[CreatableSelectInput] Invalid format for single-select: expected string, got array');
       const firstValue = value.length > 0 ? value[0] : null;
       if (!firstValue) return null;
       const found = localOptions.find((option) => option.value === firstValue);
       return found || { value: firstValue, label: firstValue };
     }
     const found = localOptions.find((option) => option.value === value);
-    // If option not found in localOptions, create one (for newly created options)
-    return found || { value: value as string, label: value as string };
+
+    return found || { value: value, label: value };
   };
 
   const handleCreateOption = (inputValue: string): void => {
     const newOption = { value: inputValue.toLowerCase(), label: inputValue };
     const updatedOptions = [...localOptions, newOption];
-    setLocalOptions(updatedOptions);
+    setCreatedOptions((previous) => [...previous, newOption]);
 
-    // react-select automatically calls onChange after onCreateOption,
-    // but we need to ensure the new option is available in localOptions
-    // So we manually trigger onChange to ensure the value is set correctly
     if (!isMulti) {
-      // For single select, directly set the new option
       handleChange(newOption, { action: 'create-option' } as ActionMeta<unknown>);
       return;
     }
 
-    // Multi-select must always be array (validated in useFormData)
     if (!Array.isArray(value)) {
       console.error(
         '[CreatableSelectInput] Invalid format for multi-select in handleCreateOption: expected array, got',
@@ -84,9 +78,7 @@ export default function CreatableSelectInput({
       return;
     }
 
-    // Create new array with existing values and new option
-    // Use updatedOptions to get labels for existing values
-    const currentValueArray = value as string[];
+    const currentValueArray = value;
     const newValueArray = currentValueArray.map((val) => {
       const existingOption = updatedOptions.find((opt) => opt.value === val);
       return existingOption || { value: val, label: String(val) };
@@ -97,13 +89,20 @@ export default function CreatableSelectInput({
   };
 
   return (
-    <Box display={'flex'} flexDirection={'column'} className={'creatable'}>
+    <Box
+      className={'creatable'}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
       {label && (
         <Typography color={theme.palette.text.text} variant='caption'>
           {label}
         </Typography>
       )}
       <CreatableSelect
+        isLoading={isLoading}
         isMulti={isMulti}
         placeholder={options.length === 0 && emptylabel}
         components={{ IndicatorSeparator: null }}
@@ -116,9 +115,12 @@ export default function CreatableSelectInput({
         onCreateOption={handleCreateOption}
         isClearable={true}
       />
-
       {helpertext && (
-        <Typography color={theme.palette.error.main} variant='caption'>
+        <Typography
+          color={theme.palette.error.main}
+          variant='caption'
+          sx={{ marginBottom: (theme) => theme.spacing(1) }}
+        >
           {helpertext}
         </Typography>
       )}

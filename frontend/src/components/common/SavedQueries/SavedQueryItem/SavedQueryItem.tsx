@@ -19,8 +19,12 @@ export default function SavedQueryItem({
 }: SavedQueryItemProps): JSX.Element {
   const [name, setName] = useState(query.name);
 
-  const addEditorTab = useTabStore.getState().addEditorTab;
-  const updateSelectedTab = useTabStore.getState().updateSelectedTab;
+  const addEditorTab = useTabStore((state) => state.addEditorTab);
+
+  const handleRun = useCallback((): void => {
+    if (isEditMode) return;
+    addEditorTab(query.query);
+  }, [isEditMode, addEditorTab, query.query]);
 
   const { mutateAsync: updateSavedQueryMutation, isPending } = useMutation({
     mutationFn: api.savedQueries.updateSavedQuery
@@ -44,12 +48,6 @@ export default function SavedQueryItem({
     }
   }, [query, name, updateSavedQueryMutation, onChange, onEditMode, handleDiscardChanges]);
 
-  const handleRun = useCallback((): void => {
-    if (isEditMode) return;
-    const tab = addEditorTab(query.query);
-    updateSelectedTab(tab);
-  }, [isEditMode, addEditorTab, query.query, updateSelectedTab]);
-
   return (
     <SavedQueryItemStyled
       selected={selected}
@@ -58,7 +56,14 @@ export default function SavedQueryItem({
         onClick();
       }}
     >
-      <Box flex={1} mr={1} onDoubleClick={handleRun} onClick={(): void => onClick()}>
+      <Box
+        onDoubleClick={handleRun}
+        onClick={(): void => onClick()}
+        sx={{
+          flex: 1,
+          mr: 1
+        }}
+      >
         {isEditMode ? (
           <FieldInput
             size='small'
@@ -76,13 +81,16 @@ export default function SavedQueryItem({
           {query.createdAt}
         </Typography>
       </Box>
-
       {isEditMode ? (
         <>
           <IconButton onClick={handleDiscardChanges}>
             <CustomIcon type='close' size='xs' />
           </IconButton>
-          <IconButton loading={isPending} disabled={query.name === name || isPending} onClick={handleSaveChange}>
+          <IconButton
+            loading={isPending}
+            disabled={query.name === name || isPending}
+            onClick={() => void handleSaveChange()}
+          >
             <CustomIcon type='check' size='xs' />
           </IconButton>
         </>

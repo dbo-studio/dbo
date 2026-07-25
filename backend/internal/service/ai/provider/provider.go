@@ -4,18 +4,33 @@ import (
 	"context"
 
 	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/openai/openai-go/v2"
 )
 
 type IAiProvider interface {
 	Chat(ctx context.Context, req *ChatRequest) (*ChatResponse, error)
+	StreamChat(ctx context.Context, req *ChatRequest, cb StreamChatCallback) (*ChatResponse, error)
+	StreamChatWithTools(ctx context.Context, req *ChatRequest, cb StreamChatCallback) (*ChatResponse, []ToolCall, error)
 	Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error)
 }
 
 type ChatRequest struct {
-	Messages []model.AiChatMessage `json:"messages"`
-	Model    string                `json:"model"`
-	Context  string                `json:"context,omitempty"`
-	Query    string                `json:"query,omitempty"`
+	Messages           []model.AiChatMessage `json:"messages"`
+	Model              string                `json:"model"`
+	Context            string                `json:"context,omitempty"`
+	Query              string                `json:"query,omitempty"`
+	SelectedQuery      string                `json:"selectedQuery,omitempty"`
+	QueryResultSummary string                `json:"queryResultSummary,omitempty"`
+	ObjectDefinition   string                `json:"objectDefinition,omitempty"`
+	UseMarkdownPrompt  bool                  `json:"-"`
+	Tools              []openai.ChatCompletionToolUnionParam
+	ExtraMessages      []openai.ChatCompletionMessageParamUnion
+}
+
+type ToolCall struct {
+	ID        string
+	Name      string
+	Arguments string
 }
 
 type ChatResponse struct {

@@ -10,7 +10,6 @@ func (r *SQLiteRepository) GetFormTabs(_ context.Context, action contract.TreeNo
 	switch action {
 	case contract.CreateTableAction, contract.EditTableAction:
 		return []contract.FormTab{
-			{ID: contract.TableTab, Name: "Table"},
 			{ID: contract.TableColumnsTab, Name: "Columns"},
 			{ID: contract.TableKeysTab, Name: "Keys"},
 			{ID: contract.TableForeignKeysTab, Name: "Foreign Keys"},

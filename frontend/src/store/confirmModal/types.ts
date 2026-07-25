@@ -3,34 +3,39 @@ export type ConfirmModalStore = {
   mode: ConfirmModalModel;
   title?: string | undefined;
   description?: string | undefined;
+  confirmLabel?: string | undefined;
   onCancel?: () => void;
   onSuccess?: () => void;
   open: () => void;
   close: () => void;
   show: (
     mode: ConfirmModalModel,
-    title?: string | undefined,
-    description?: string | undefined,
+    title?: string,
+    description?: string,
     onSuccess?: () => void,
-    onCancel?: () => void
+    onCancel?: () => void,
+    confirmLabel?: string
   ) => void;
   success: (
-    title?: string | undefined,
-    description?: string | undefined,
+    title?: string,
+    description?: string,
     onSuccess?: () => void,
-    onCancel?: () => void
+    onCancel?: () => void,
+    confirmLabel?: string
   ) => void;
   danger: (
-    title?: string | undefined,
-    description?: string | undefined,
+    title?: string,
+    description?: string,
     onSuccess?: () => void,
-    onCancel?: () => void
+    onCancel?: () => void,
+    confirmLabel?: string
   ) => void;
   warning: (
-    title?: string | undefined,
-    description?: string | undefined,
+    title?: string,
+    description?: string,
     onSuccess?: () => void,
-    onCancel?: () => void
+    onCancel?: () => void,
+    confirmLabel?: string
   ) => void;
 };
 

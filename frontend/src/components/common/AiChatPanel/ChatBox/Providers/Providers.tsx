@@ -3,20 +3,14 @@ import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import type { AiProviderType } from '@/types';
-import { Stack } from '@mui/material';
+import { Box } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
 
 export default function Providers() {
-  const [provider, setProvider] = useState<AiProviderType | undefined>();
-
   const providers = useAiStore((state) => state.providers);
   const updateProvider = useAiStore((state) => state.updateProvider);
   const updateProviders = useAiStore((state) => state.updateProviders);
-
-  useEffect(() => {
-    setProvider(providers?.find((provider) => provider.isActive));
-  }, [providers]);
+  const provider = providers?.find((item) => item.isActive);
 
   const { mutateAsync: updateProviderMutation } = useMutation<
     AiProviderType,
@@ -27,13 +21,13 @@ export default function Providers() {
   });
 
   const handleProviderChange = async (option: SelectInputOption) => {
-    const selectedProvider = providers?.find((provider) => provider.id === Number(option.value));
+    const selectedProvider = providers?.find((item) => item.id === Number(option.value));
     if (!selectedProvider) return;
 
     try {
       const res = await updateProviderMutation({ providerId: selectedProvider.id, data: { isActive: true } });
-      const updatedProviders = providers?.map((provider) =>
-        provider.id === selectedProvider.id ? res : { ...provider, isActive: false }
+      const updatedProviders = providers?.map((item) =>
+        item.id === selectedProvider.id ? res : { ...item, isActive: false }
       );
 
       updateProviders(updatedProviders ?? []);
@@ -46,7 +40,7 @@ export default function Providers() {
     if (!provider) return;
 
     try {
-      const res = await updateProviderMutation({ providerId: provider.id, data: { model: option.value } });
+      const res = await updateProviderMutation({ providerId: provider.id, data: { model: option.value as string } });
       updateProvider(res);
     } catch (error) {
       console.debug('🚀 ~ handleModelChange ~ error:', error);
@@ -54,16 +48,27 @@ export default function Providers() {
   };
 
   return (
-    <Stack direction={'row'} spacing={1}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 0.5,
+        flex: 1,
+        minWidth: 0,
+        '& .MuiInputBase-root': {
+          maxWidth: '100%'
+        }
+      }}
+    >
       <SelectInput
         size='small'
         options={
-          providers?.map((provider) => ({
-            label: provider.type,
-            value: provider.id.toString()
+          providers?.map((item) => ({
+            label: item.type,
+            value: item.id.toString()
           })) ?? []
         }
-        onChange={handleProviderChange}
+        onChange={(value) => void handleProviderChange(value as SelectInputOption)}
         value={provider?.id.toString()}
       />
       <SelectInput
@@ -74,9 +79,9 @@ export default function Providers() {
             value: model
           })) ?? []
         }
-        onChange={handleModelChange}
+        onChange={(value) => void handleModelChange(value as SelectInputOption)}
         value={provider?.model}
       />
-    </Stack>
+    </Box>
   );
 }

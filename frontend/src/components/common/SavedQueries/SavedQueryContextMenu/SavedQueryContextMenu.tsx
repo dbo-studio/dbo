@@ -18,40 +18,34 @@ export default function SavedQueryContextMenu({
   onEditMode
 }: SavedQueryContextMenuProps): JSX.Element {
   const [, copy] = useCopyToClipboard();
-  const addEditorTab = useTabStore.getState().addEditorTab;
-  const updateSelectedTab = useTabStore.getState().updateSelectedTab;
+  const addEditorTab = useTabStore((state) => state.addEditorTab);
   const showModal = useConfirmModalStore((state) => state.danger);
 
   const { mutateAsync: deleteSavedQueryMutation } = useMutation({
-    mutationFn: api.savedQueries.deleteSavedQuery,
-    onSuccess: (): void => {
-      toast.success(locales.query_saved_successfully);
-      onChange();
-    }
+    mutationFn: api.savedQueries.deleteSavedQuery
   });
 
-  const handleDelete = async (): Promise<void> => {
-    showModal(locales.delete_action, locales.query_saved_delete_confirm, async () => {
-      try {
-        await deleteSavedQueryMutation(query.id);
-      } catch (error) {
-        console.debug('🚀 ~ handleDelete ~ error:', error);
-      }
+  const handleDelete = (): void => {
+    showModal(locales.delete_action, locales.query_saved_delete_confirm, () => {
+      void (async () => {
+        try {
+          await deleteSavedQueryMutation(query.id);
+          toast.success(locales.query_saved_successfully);
+          await onChange();
+        } catch (e) {
+          console.debug('🚀 ~ handleDelete ~ error:', e);
+        }
+      })();
     });
   };
 
-  const handleCopy = async (): Promise<void> => {
-    try {
-      await copy(query.query);
-      toast.success(locales.copied);
-    } catch (error) {
-      console.debug('🚀 ~ handleCopy ~ error:', error);
-    }
+  const handleCopy = (): void => {
+    copy(query.query).catch((e) => console.debug('🚀 ~ handleCopy ~ error:', e));
+    toast.success(locales.copied);
   };
 
   const handleRun = (): void => {
-    const tab = addEditorTab(query.query);
-    updateSelectedTab(tab);
+    addEditorTab(query.query);
   };
 
   const handleEditMode = (): void => {

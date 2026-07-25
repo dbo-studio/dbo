@@ -1,4 +1,4 @@
-import type { RunQueryResponseType } from '@/api/query/types';
+import type { GridMetaType, RunQueryResponseType } from '@/api/query/types';
 import type { EditedRow } from '@/types';
 import type { ColumnType, RowType } from '@/types/Data';
 import { FormFieldWithState } from '@/types/Tree';
@@ -16,7 +16,7 @@ export type DataRowSlice = {
 
 export type DataSelectedRowsSlice = {
   selectedRows: SelectedRow[];
-  updateSelectedRows: (rows: SelectedRow[], replace?: boolean) => Promise<void>;
+  updateSelectedRows: (rows: SelectedRow[], replace?: boolean) => void;
 };
 
 export type DataColumnSlice = {
@@ -40,18 +40,33 @@ export type DataUnsavedRowsSlice = {
   unSavedRows: RowType[];
   addUnsavedRows: (newRow?: RowType) => void;
   updateUnsavedRows: (unSavedRows: RowType[]) => Promise<void>;
-  discardUnsavedRows: (rows?: RowType[]) => void;
+  discardUnsavedRows: (rows?: RowType[]) => Promise<void>;
+};
+
+export type PendingEditorQueryRun = {
+  tabId: string;
+  query: string;
 };
 
 export type DataQuerySlice = {
   isDataFetching: boolean;
   reRunQuery: boolean;
   reRender: boolean;
+  lastQueryResult: string | undefined;
+  pendingEditorQueryRun?: PendingEditorQueryRun;
+  gridEditable: boolean;
+  updatableNodeId?: string;
+  editableReason?: string;
+  drivingTable?: string;
+  clearPendingEditorQueryRun: () => void;
   runQuery: (abortController?: AbortController) => Promise<RunQueryResponseType | undefined>;
   runRawQuery: (query?: string, abortController?: AbortController) => Promise<RunQueryResponseType | undefined>;
+  runQueryInEditor: (query: string) => void;
   toggleReRunQuery: () => void;
   toggleReRender: () => void;
   toggleDataFetching: (loading?: boolean) => void;
+  updateGridMeta: (meta: GridMetaType) => Promise<void>;
+  clearGridChanges: () => Promise<void>;
 };
 
 export type SelectedRow = {
@@ -66,3 +81,13 @@ export type DataFormDataSlice = {
   updateFormData: (tabId: string, objectTabId: string, data: FormFieldWithState[]) => void;
   resetFormData: (tabId: string, objectTabId: string) => void;
 };
+
+export type DataState = DataStore &
+  DataRowSlice &
+  DataSelectedRowsSlice &
+  DataEditedRowsSlice &
+  DataRemovedRowsSlice &
+  DataUnsavedRowsSlice &
+  DataColumnSlice &
+  DataQuerySlice &
+  DataFormDataSlice;

@@ -1,0 +1,86 @@
+import { test } from "@playwright/test";
+import { mysqlLifecycleNames } from "../fixtures/mysqlObjectFormLifecycle";
+import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
+import {
+  cleanupMysqlLifecycle,
+  createDatabase,
+  createPostsTable,
+  createUsersTable,
+  createView,
+  editUsersTableAddColumn,
+  editViewQuery,
+  setupMysqlConnection,
+} from "../helpers/objectFormMysqlLifecycle";
+import { withConnectionCleanup } from "../helpers/safeCleanup";
+
+test.describe("Object Form MySQL lifecycle", () => {
+  test("Full create → edit → drop lifecycle", async ({ page }, testInfo) => {
+    test.setTimeout(300_000);
+    const names = mysqlLifecycleNames(uniqueTestSuffix(testInfo));
+
+    await withConnectionCleanup(page, names.connectionName, async () => {
+      try {
+        await test.step("Connect to MySQL", async () => {
+          await setupMysqlConnection(page, names.connectionName);
+        });
+
+        await test.step("Create isolated database", async () => {
+          await createDatabase(page, names.connectionName, names.databaseName);
+        });
+
+        await test.step("Create users table with columns and primary key", async () => {
+          await createUsersTable(
+            page,
+            names.connectionName,
+            names.databaseName,
+            names.usersTable,
+          );
+        });
+
+        await test.step("Create posts table with foreign key and index", async () => {
+          await createPostsTable(
+            page,
+            names.connectionName,
+            names.databaseName,
+            names.postsTable,
+            names.usersTable,
+            { fkName: names.fkName, indexName: names.indexName },
+          );
+        });
+
+        await test.step("Create view", async () => {
+          await createView(
+            page,
+            names.connectionName,
+            names.databaseName,
+            names.viewName,
+            names.postsTable,
+            names.usersTable,
+          );
+        });
+
+        await test.step("Edit users table — add column", async () => {
+          await editUsersTableAddColumn(page, names.usersTable);
+        });
+
+        await test.step("Edit view — change query", async () => {
+          await editViewQuery(page, names.viewName, names.postsTable);
+        });
+
+        await test.step("Cleanup — drop all objects and connection", async () => {
+          await cleanupMysqlLifecycle(page, names);
+        });
+      } catch (err) {
+        try {
+          await cleanupMysqlLifecycle(page, names);
+        } catch (cleanupErr) {
+          console.warn(
+            "[e2e] mysql lifecycle cleanup after failure:",
+            cleanupErr,
+          );
+        }
+        throw err;
+      }
+    });
+  });
+});

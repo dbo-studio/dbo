@@ -1,10 +1,13 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { IconButton } from '@mui/material';
+import locales from '@/locales';
+import { IconButton, Tooltip } from '@mui/material';
 
 export default function AddChat({ onClick }: { onClick: () => void }) {
   return (
-    <IconButton size='small' onClick={onClick}>
-      <CustomIcon type='plus' />
-    </IconButton>
+    <Tooltip title={locales.new_chat}>
+      <IconButton size='small' onClick={onClick}>
+        <CustomIcon type='plus' />
+      </IconButton>
+    </Tooltip>
   );
 }

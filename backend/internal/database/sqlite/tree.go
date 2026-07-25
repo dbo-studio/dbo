@@ -17,10 +17,10 @@ func (r *SQLiteRepository) Tree(ctx context.Context, parentID string) (*contract
 	return buildContainer(ctx, r, contract.TreeNodeType(parentID))
 }
 
-func buildRoot(ctx context.Context, r *SQLiteRepository) (*contract.TreeNode, error) {
+func buildRoot(_ context.Context, r *SQLiteRepository) (*contract.TreeNode, error) {
 	root := &contract.TreeNode{
-		ID:          fmt.Sprintf("%d@database", r.connection.ID),
-		Name:        r.connection.Name,
+		ID:          fmt.Sprintf("%d@database", r.base.Connection().ID),
+		Name:        r.base.Connection().Name,
 		Icon:        lo.ToPtr("sqlite"),
 		Type:        contract.TableContainerNodeType,
 		HasChildren: true,
@@ -70,7 +70,7 @@ func buildContainer(ctx context.Context, r *SQLiteRepository, container contract
 	}
 	switch container {
 	case contract.TableContainerNodeType:
-		tables, err := r.getAllTableList()
+		tables, err := r.getAllTableList(ctx)
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}
@@ -82,7 +82,7 @@ func buildContainer(ctx context.Context, r *SQLiteRepository, container contract
 				Type: contract.TableNodeType,
 				Action: &contract.TreeNodeAction{
 					Type: contract.TreeNodeActionTypeTab,
-					Params: map[string]interface{}{
+					Params: map[string]any{
 						"path":     "data",
 						"table":    table.Name,
 						"editable": true,
@@ -93,7 +93,7 @@ func buildContainer(ctx context.Context, r *SQLiteRepository, container contract
 			})
 		}
 	case contract.ViewContainerNodeType:
-		viewList, err := r.getAllViewList()
+		viewList, err := r.getAllViewList(ctx)
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}
@@ -105,7 +105,7 @@ func buildContainer(ctx context.Context, r *SQLiteRepository, container contract
 				Icon: lo.ToPtr("sheet"),
 				Action: &contract.TreeNodeAction{
 					Type: contract.TreeNodeActionTypeTab,
-					Params: map[string]interface{}{
+					Params: map[string]any{
 						"path":     "data",
 						"table":    view.Name,
 						"editable": false,

@@ -28,7 +28,7 @@ func NewImportExportService(jobManager job.IJobManager) IImportExport {
 	}
 }
 
-func (s IImportExportImpl) Import(_ context.Context, req *dto.ImportRequest) (*dto.ImportResponse, error) {
+func (s IImportExportImpl) Import(ctx context.Context, req *dto.ImportRequest) (*dto.ImportResponse, error) {
 	file, err := req.Data.Open()
 	if err != nil {
 		return nil, apperror.BadRequest(err)
@@ -45,8 +45,9 @@ func (s IImportExportImpl) Import(_ context.Context, req *dto.ImportRequest) (*d
 		return nil, apperror.BadRequest(err)
 	}
 
-	jobData := helper.StructToJson(dto.ImportJob{
-		ConnectionId:    req.ConnectionId,
+	jobData := helper.StructToJSON(dto.ImportJob{
+		OwnerID:         helper.CtxOwnerID(ctx),
+		ConnectionID:    req.ConnectionID,
 		Table:           req.Table,
 		Data:            fileData,
 		Format:          req.Format,
@@ -61,21 +62,24 @@ func (s IImportExportImpl) Import(_ context.Context, req *dto.ImportRequest) (*d
 	}
 
 	return &dto.ImportResponse{
-		JobId: int32(j.ID),
+		JobID: int32(j.ID),
 	}, nil
 }
 
-func (s IImportExportImpl) Export(_ context.Context, req *dto.ExportRequest) (*dto.ExportResponse, error) {
+func (s IImportExportImpl) Export(ctx context.Context, req *dto.ExportRequest) (*dto.ExportResponse, error) {
 	if req.ChunkSize <= 0 {
 		req.ChunkSize = 1000
 	}
 
-	j, err := s.jobManager.CreateJob(model.JobTypeExport, helper.StructToJson(req))
+	j, err := s.jobManager.CreateJob(model.JobTypeExport, helper.StructToJSON(dto.ExportJob{
+		OwnerID:       helper.CtxOwnerID(ctx),
+		ExportRequest: *req,
+	}))
 	if err != nil {
 		return nil, err
 	}
 
 	return &dto.ExportResponse{
-		JobId: int32(j.ID),
+		JobID: int32(j.ID),
 	}, nil
 }

@@ -8,9 +8,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
 	"github.com/dbo-studio/dbo/internal/model"
-	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	"github.com/dbo-studio/dbo/pkg/apperror"
-	"github.com/samber/lo"
 )
 
 func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.AiChatResponse, error) {
@@ -24,14 +22,14 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		return nil, err
 	}
 
-	conn, err := s.connectionRepo.Find(ctx, req.ConnectionId)
+	conn, err := s.connectionRepo.Find(ctx, req.ConnectionID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, conn, s.cm)
+	repo, err := database.NewAIContextRepository(ctx, conn, s.cm)
 	if err != nil {
-		return nil, apperror.InternalServerError(err)
+		return nil, err
 	}
 
 	contextStr, err := repo.AiContext(ctx, req)
@@ -48,24 +46,20 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		Content: req.Message,
 	})
 
-	providerReq := &serviceAiProvider.ChatRequest{
-		Messages: chat.Messages,
-		Model:    dbProvider.Model,
-		Context:  contextStr,
-		Query:    lo.FromPtr(req.ContextOpts.Query),
-	}
+	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, true)
 
-	providerResp, err := provider.Chat(ctx, providerReq)
-	if err != nil {
-		return nil, err
-	}
+	providerResp, providerResErr := provider.Chat(ctx, providerReq)
 
 	if err := s.saveChatMessages(ctx, chat, req.Message, providerResp); err != nil {
 		s.logger.Error(fmt.Sprintf("Failed to save chat messages: %v", err))
 	}
 
+	if providerResErr != nil {
+		return nil, providerResErr
+	}
+
 	response := &dto.AiChatResponse{
-		ChatId: chat.ID,
+		ChatID: chat.ID,
 		Title:  chat.Title,
 	}
 

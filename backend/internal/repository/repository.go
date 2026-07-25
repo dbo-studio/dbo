@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -10,11 +11,12 @@ import (
 type IConnectionRepo interface {
 	Index(ctx context.Context) (*[]model.Connection, error)
 	Find(ctx context.Context, id int32) (*model.Connection, error)
+	FindByIDAndOwner(ctx context.Context, id int32, ownerID string) (*model.Connection, error)
 	Create(ctx context.Context, dto *dto.CreateConnectionRequest) (*model.Connection, error)
 	Delete(ctx context.Context, connection *model.Connection) error
 	Update(ctx context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) (*model.Connection, error)
 	UpdateVersion(ctx context.Context, connection *model.Connection, version string) (*model.Connection, error)
-	MakeAllConnectionsNotDefault(ctx context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) error
+	MakeAllConnectionsNotDefault(ctx context.Context, exceptedConnection *model.Connection) error
 }
 
 type ICacheRepo interface {
@@ -57,6 +59,25 @@ type IAiProviderRepo interface {
 	MakeAllProvidersNotActive(ctx context.Context, provider *model.AiProvider, req *dto.AiProviderUpdateRequest) error
 }
 
+type IConfigRepo interface {
+	TruncateAllTables(ctx context.Context) error
+}
+
+type IWebSessionRepo interface {
+	Create(ctx context.Context) (string, error)
+	CreateOrUpdate(ctx context.Context, sessionID string) (string, error)
+	EnsureSession(ctx context.Context, sessionID string) error
+	TouchLastSeen(ctx context.Context, sessionID string, at time.Time) error
+	TouchLastSeenDebounced(ctx context.Context, sessionID string, interval time.Duration) error
+}
+
+type IWebConnectionSecretRepo interface {
+	Upsert(ctx context.Context, secret *model.WebConnectionSecret) error
+	FindBySessionAndConnection(ctx context.Context, sessionID string, connectionID uint) (*model.WebConnectionSecret, error)
+	Delete(ctx context.Context, sessionID string, connectionID uint) error
+	UpdateExpiry(ctx context.Context, sessionID string, connectionID uint, expiresAt *time.Time, updatedAt time.Time) error
+}
+
 type IAiChatRepo interface {
 	List(ctx context.Context, req *dto.AiChatListRequest) ([]model.AiChat, error)
 	Find(ctx context.Context, id uint, pagination *dto.PaginationRequest) (*model.AiChat, error)
@@ -67,22 +88,30 @@ type IAiChatRepo interface {
 }
 
 type Repository struct {
-	ConnectionRepo IConnectionRepo
-	CacheRepo      ICacheRepo
-	HistoryRepo    IHistoryRepo
-	SavedQueryRepo ISavedQueryRepo
-	JobRepo        IJobRepo
-	AiChatRepo     IAiChatRepo
-	AiProviderRepo IAiProviderRepo
+	ConfigRepo              IConfigRepo
+	ConnectionRepo          IConnectionRepo
+	WebSessionRepo          IWebSessionRepo
+	WebConnectionSecretRepo IWebConnectionSecretRepo
+	CacheRepo               ICacheRepo
+	HistoryRepo             IHistoryRepo
+	SavedQueryRepo          ISavedQueryRepo
+	JobRepo                 IJobRepo
+	AiChatRepo              IAiChatRepo
+	AiProviderRepo          IAiProviderRepo
+	McpSettingsRepo         IMcpSettingsRepo
 }
 
 func NewRepository() *Repository {
 	return &Repository{
-		ConnectionRepo: NewConnectionRepo(),
-		HistoryRepo:    NewHistoryRepo(),
-		SavedQueryRepo: NewSavedQueryRepo(),
-		JobRepo:        NewJobRepo(),
-		AiChatRepo:     NewAiChatRepo(),
-		AiProviderRepo: NewAiProviderRepo(),
+		ConfigRepo:              NewConfigRepo(),
+		ConnectionRepo:          NewConnectionRepo(),
+		WebSessionRepo:          NewWebSessionRepo(),
+		WebConnectionSecretRepo: NewWebConnectionSecretRepo(),
+		HistoryRepo:             NewHistoryRepo(),
+		SavedQueryRepo:          NewSavedQueryRepo(),
+		JobRepo:                 NewJobRepo(),
+		AiChatRepo:              NewAiChatRepo(),
+		AiProviderRepo:          NewAiProviderRepo(),
+		McpSettingsRepo:         NewMcpSettingsRepo(),
 	}
 }

@@ -9,6 +9,7 @@ export type ConnectionStore = {
   updateLoading: (loading: LoadingType) => void;
   updateConnections: (connections: ConnectionType[]) => void;
   updateCurrentConnection: (connection: ConnectionType | undefined) => void;
+  clearCurrentConnection: () => void;
 };
 
 export type LoadingType = 'loading' | 'error' | 'finished';

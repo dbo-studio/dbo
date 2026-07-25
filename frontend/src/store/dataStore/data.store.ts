@@ -11,27 +11,9 @@ import { createDataRemovedRowsSlice } from './slices/dataRemovedRows.slice';
 import { createDataRowSlice } from './slices/dataRow.slice';
 import { createDataSelectedRowsSlice } from './slices/dataSelectedRows.slice';
 import { createDataUnsavedRowsSlice } from './slices/dataUnsavedRows.slice';
-import type {
-  DataColumnSlice,
-  DataEditedRowsSlice,
-  DataFormDataSlice,
-  DataQuerySlice,
-  DataRemovedRowsSlice,
-  DataRowSlice,
-  DataSelectedRowsSlice,
-  DataStore,
-  DataUnsavedRowsSlice
-} from './types';
+import type { DataState } from './types';
 
-type DataState = DataStore &
-  DataRowSlice &
-  DataSelectedRowsSlice &
-  DataEditedRowsSlice &
-  DataRemovedRowsSlice &
-  DataUnsavedRowsSlice &
-  DataColumnSlice &
-  DataQuerySlice &
-  DataFormDataSlice;
+export type { DataState };
 
 export const useDataStore: UseBoundStore<StoreApi<DataState>> = create<DataState>()(
   devtools(
@@ -45,23 +27,66 @@ export const useDataStore: UseBoundStore<StoreApi<DataState>> = create<DataState
 
         get().toggleDataFetching(true);
 
+        set(
+          {
+            gridEditable: false,
+            updatableNodeId: undefined,
+            editableReason: undefined,
+            drivingTable: undefined
+          },
+          undefined,
+          'clearGridMetaBeforeLoad'
+        );
+
+        await Promise.all([
+          get().updateRows([]),
+          get().updateColumns([]),
+          get().updateEditedRows([]),
+          get().updateRemovedRows([]),
+          get().updateUnsavedRows([])
+        ]);
+        get().updateSelectedRows([], true);
+
         try {
-          const dbRows = await indexedDBService.getRows(selectedTabId);
-          const dbColumns = await indexedDBService.getColumns(selectedTabId);
-          const dbEditedRows = await indexedDBService.getEditedRows(selectedTabId);
-          const dbRemovedRows = await indexedDBService.getRemovedRows(selectedTabId);
-          const dbUnsavedRows = await indexedDBService.getUnsavedRows(selectedTabId);
-          const dbSelectedRows = await indexedDBService.getSelectedRows(selectedTabId);
+          const [dbRows, dbColumns, dbEditedRows, dbRemovedRows, dbUnsavedRows, dbSelectedRows, dbGridMeta] =
+            await Promise.all([
+              indexedDBService.getRows(selectedTabId),
+              indexedDBService.getColumns(selectedTabId),
+              indexedDBService.getEditedRows(selectedTabId),
+              indexedDBService.getRemovedRows(selectedTabId),
+              indexedDBService.getUnsavedRows(selectedTabId),
+              indexedDBService.getSelectedRows(selectedTabId),
+              indexedDBService.getGridMeta(selectedTabId)
+            ]);
 
-          get().updateRows(dbRows);
-          get().updateColumns(dbColumns);
-          get().updateEditedRows(dbEditedRows);
-          get().updateRemovedRows(dbRemovedRows);
-          get().updateUnsavedRows(dbUnsavedRows);
-          get().updateSelectedRows(dbSelectedRows, true);
+          const hasStoredGrid = dbRows.length > 0 && dbColumns.length > 0;
 
-          if (dbRows.length > 0 && dbColumns.length > 0) {
-            get().toggleDataFetching(false);
+          if (hasStoredGrid) {
+            await Promise.all([
+              get().updateRows(dbRows),
+              get().updateColumns(dbColumns),
+              get().updateEditedRows(dbEditedRows),
+              get().updateRemovedRows(dbRemovedRows),
+              get().updateUnsavedRows(dbUnsavedRows)
+            ]);
+            get().updateSelectedRows(dbSelectedRows, true);
+          }
+
+          if (dbGridMeta) {
+            set(
+              {
+                gridEditable: dbGridMeta.gridEditable,
+                updatableNodeId: dbGridMeta.updatableNodeId,
+                editableReason: dbGridMeta.editableReason,
+                drivingTable: dbGridMeta.drivingTable
+              },
+              undefined,
+              'loadGridMeta'
+            );
+          }
+
+          get().toggleDataFetching(false);
+          if (hasStoredGrid) {
             return {
               rows: dbRows,
               columns: dbColumns.filter((column) => column.isActive)

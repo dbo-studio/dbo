@@ -10,7 +10,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func (r *MySQLRepository) handleViewCommands(node MySQLNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
+func (r *MySQLRepository) handleViewCommands(node contract.DBNode, tabID contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
 	if action != contract.CreateViewAction && action != contract.EditViewAction && action != contract.DropViewAction {
@@ -22,7 +22,7 @@ func (r *MySQLRepository) handleViewCommands(node MySQLNode, tabId contract.Tree
 		return nil, err
 	}
 
-	params := dto[tabId]
+	params := dto[tabID]
 
 	if params.New != nil && params.New.Query != nil {
 		params.New.Query = formatQuery(params.New.Query)
@@ -46,6 +46,22 @@ func (r *MySQLRepository) handleViewCommands(node MySQLNode, tabId contract.Tree
 
 		if params.New.Comment != nil {
 			queries = append(queries, fmt.Sprintf("ALTER VIEW `%s`.`%s` COMMENT = '%s'", node.Database, *params.New.Name, *params.New.Comment))
+		}
+	}
+
+	if action == contract.EditViewAction {
+		viewName := node.Table
+		if params.New.Name != nil {
+			viewName = *params.New.Name
+		}
+
+		if params.New.Query != nil {
+			query := fmt.Sprintf("CREATE OR REPLACE VIEW `%s`.`%s` AS %s", node.Database, viewName, *params.New.Query)
+			queries = append(queries, query)
+		}
+
+		if params.New.Comment != nil {
+			queries = append(queries, fmt.Sprintf("ALTER VIEW `%s`.`%s` COMMENT = '%s'", node.Database, viewName, *params.New.Comment))
 		}
 	}
 

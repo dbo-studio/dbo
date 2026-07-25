@@ -7,7 +7,7 @@ const STORAGE_KEY = 'dbo_tab_queries';
 const getStoredQueries = (): Record<string, string> => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : {};
+    return stored ? (JSON.parse(stored) as Record<string, string>) : {};
   } catch {
     return {};
   }
@@ -21,19 +21,23 @@ const setStoredQueries = (queries: Record<string, string>): void => {
   }
 };
 
-export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [], TabQuerySlice> = (_, get) => ({
+export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [], TabQuerySlice> = (_set, get) => ({
   getQuery: (tabId?: string): string => {
     const tab = tabId ?? get().selectedTabId;
     if (!tab) return '';
 
     const storedQueries = getStoredQueries();
     const storedQuery = storedQueries[tab];
+    if (!storedQuery) return '';
 
-    if (storedQuery && tools.isValidJSON(storedQuery)) {
-      return JSON.parse(storedQuery);
+    if (tools.isValidJSON(storedQuery)) {
+      const parsed: unknown = JSON.parse(storedQuery);
+      if (typeof parsed === 'string') {
+        return parsed;
+      }
     }
 
-    return storedQuery ?? '';
+    return storedQuery;
   },
   updateQuery: (query: string): void => {
     const tabId = get().selectedTabId;
