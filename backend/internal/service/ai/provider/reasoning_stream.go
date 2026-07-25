@@ -31,8 +31,8 @@ func newThinkTagParser() *thinkTagParser {
 }
 
 func suffixPrefixOverlap(text, prefix string) int {
-	max := min(len(text), len(prefix))
-	for size := max; size > 0; size-- {
+	limit := min(len(text), len(prefix))
+	for size := limit; size > 0; size-- {
 		if strings.HasPrefix(prefix, text[len(text)-size:]) {
 			return size
 		}

@@ -48,7 +48,7 @@ export default function Query(): JSX.Element {
   const pendingEditorQueryRun = useDataStore((state) => state.pendingEditorQueryRun);
   const clearPendingEditorQueryRun = useDataStore((state) => state.clearPendingEditorQueryRun);
 
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState(() => getQuery(selectedTab?.id));
   const [mobileView, setMobileView] = useState<QueryMobileView>('editor');
   const [prevTabId, setPrevTabId] = useState(selectedTab?.id);
 
@@ -88,14 +88,6 @@ export default function Query(): JSX.Element {
       console.debug('🚀 ~ loadData ~ error:', error);
     }
   }, [loadDataFromIndexedDB]);
-
-  useEffect(() => {
-    if (!selectedTab?.id) {
-      return;
-    }
-
-    setValue(getQuery(selectedTab.id));
-  }, [selectedTab?.id, getQuery]);
 
   useEffect(() => {
     if (!selectedTab?.id) {
