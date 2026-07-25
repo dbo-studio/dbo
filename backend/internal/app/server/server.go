@@ -2,6 +2,9 @@ package server
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/handler"
+	"github.com/dbo-studio/dbo/internal/app/server/middleware"
+	"github.com/dbo-studio/dbo/internal/repository"
+	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/compress"
@@ -22,24 +25,29 @@ type Handlers struct {
 	AI           *handler.AiHandler
 	AiProvider   *handler.AiProviderHandler
 	AiChat       *handler.AiChatHandler
+	Mcp          *handler.McpHandler
 }
 
 type Server struct {
-	app      *fiber.App
-	handlers Handlers
+	app            *fiber.App
+	handlers       Handlers
+	webSessionRepo repository.IWebSessionRepo
 }
 
-func New(logger logger.Logger, handlers Handlers) *Server {
+func New(
+	logger logger.Logger,
+	handlers Handlers,
+	webSessionRepo repository.IWebSessionRepo,
+) *Server {
 	return &Server{
 		app: fiber.New(fiber.Config{
-			ErrorHandler: func(ctx fiber.Ctx, err error) error {
+			ErrorHandler: func(_ fiber.Ctx, err error) error {
 				logger.Error(err)
-				return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-					"message": "Internal Server Error",
-				})
+				return apperror.InternalServerError(err)
 			},
 		}),
-		handlers: handlers,
+		handlers:       handlers,
+		webSessionRepo: webSessionRepo,
 	}
 }
 
@@ -50,8 +58,14 @@ func (r *Server) Start(isLocal bool, port string) error {
 		r.app.Use(recover.New(), compress.New())
 	}
 
-	r.app.Use(cors.New())
-	r.app.Use(skipClearRequestMiddleware)
+	r.app.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{},
+		AllowOriginsFunc: func(origin string) bool { return origin != "" },
+		AllowCredentials: true,
+	}))
+
+	r.app.Use(middleware.SkipClearRequestMiddleware)
+	r.app.Use(middleware.OwnerSessionMiddleware(r.webSessionRepo))
 
 	r.routing()
 	return r.app.Listen(":" + port)

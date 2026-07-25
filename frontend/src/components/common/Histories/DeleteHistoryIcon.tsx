@@ -13,23 +13,21 @@ export default function DeleteHistoryIcon(): JSX.Element {
   const showModal = useConfirmModalStore((state) => state.danger);
 
   const { mutateAsync: deleteHistoryMutation } = useMutation({
-    mutationFn: api.histories.deleteHistories,
-    onSuccess: (): void => {
-      queryClient.invalidateQueries({
-        queryKey: ['histories', currentConnection?.id]
-      });
-    }
+    mutationFn: api.histories.deleteHistories
   });
 
-  const handleOpenConfirm = async (): Promise<void> => {
+  const handleOpenConfirm = () => {
     showModal(locales.delete_action, locales.history_delete_confirm, () => {
-      handleDeleteAllHistories();
+      handleDeleteAllHistories().catch((e) => console.log('🚀 ~ handleOpenConfirm ~ e:', e));
     });
   };
 
   const handleDeleteAllHistories = async (): Promise<void> => {
     try {
       await deleteHistoryMutation(currentConnection?.id ?? 0);
+      await queryClient.invalidateQueries({
+        queryKey: ['histories', currentConnection?.id]
+      });
     } catch (err) {
       console.debug('🚀 ~ handleDeleteAllHistories ~ err:', err);
     }

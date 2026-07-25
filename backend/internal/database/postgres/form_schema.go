@@ -49,7 +49,7 @@ func (r *PostgresRepository) tableColumnFields() []contract.FormField {
 	}
 }
 
-func (r *PostgresRepository) foreignKeyFields(ctx context.Context, node PGNode) []contract.FormField {
+func (r *PostgresRepository) foreignKeyFields(ctx context.Context, node contract.DBNode) []contract.FormField {
 	return []contract.FormField{
 		{ID: "constraint_name", Name: "Constraint Name", Type: contract.FormFieldTypeText, Required: true},
 		{ID: "comment", Name: "Comment", Type: contract.FormFieldTypeText},
@@ -87,7 +87,7 @@ func (r *PostgresRepository) foreignKeyFields(ctx context.Context, node PGNode) 
 	}
 }
 
-func (r *PostgresRepository) keyFields(ctx context.Context, node PGNode) []contract.FormField {
+func (r *PostgresRepository) keyFields(ctx context.Context, node contract.DBNode) []contract.FormField {
 	return []contract.FormField{
 		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
 		{ID: "comment", Name: "Comment", Type: contract.FormFieldTypeText},
@@ -214,8 +214,8 @@ func (r *PostgresRepository) tablespaceOptions(ctx context.Context) []contract.F
 	return tablespacesOptions
 }
 
-func (r *PostgresRepository) tablesListOptions(ctx context.Context, node PGNode) []contract.FormFieldOption {
-	tables, err := r.tables(ctx, &node.Schema, true)
+func (r *PostgresRepository) tablesListOptions(ctx context.Context, node contract.DBNode) []contract.FormFieldOption {
+	tables, err := r.tables(ctx, &node.Database, &node.Schema, true)
 	if err != nil {
 		return []contract.FormFieldOption{}
 	}
@@ -231,8 +231,8 @@ func (r *PostgresRepository) tablesListOptions(ctx context.Context, node PGNode)
 	return tablesOptions
 }
 
-func (r *PostgresRepository) tableColumnsOptions(ctx context.Context, node PGNode) []contract.FormFieldOption {
-	columns, err := r.columns(ctx, &node.Table, &node.Schema, []string{}, true, true)
+func (r *PostgresRepository) tableColumnsOptions(ctx context.Context, node contract.DBNode) []contract.FormFieldOption {
+	columns, err := r.columns(ctx, &node.Database, &node.Table, &node.Schema, []string{}, true, true)
 	if err != nil {
 		return []contract.FormFieldOption{}
 	}

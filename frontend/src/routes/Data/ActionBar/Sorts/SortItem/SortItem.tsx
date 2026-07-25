@@ -8,6 +8,7 @@ import SelectInput from '@/components/base/SelectInput/SelectInput.tsx';
 import { SelectInputOption } from '@/components/base/SelectInput/types.ts';
 import locales from '@/locales';
 import type { SortItemProps } from '../types.ts';
+import { SortItemStyled } from './SortItem.styled';
 import AddSortButton from './AddSortButton/AddSortButton.tsx';
 import RemoveSortButton from './RemoveSortButton/RemoveSortButton.tsx';
 
@@ -21,7 +22,7 @@ export default function SortItem({ sort, columns }: SortItemProps): JSX.Element 
     isActive: sort.isActive
   });
 
-  const handleChange = async (type: 'column' | 'operator' | 'isActive', value: string | boolean): Promise<void> => {
+  const handleChange = (type: 'column' | 'operator' | 'isActive', value: string | boolean): void => {
     const newSort = {
       index: currentSort.index,
       column: type === 'column' ? (value as string) : currentSort.column,
@@ -30,16 +31,16 @@ export default function SortItem({ sort, columns }: SortItemProps): JSX.Element 
     };
 
     setCurrentSort(newSort);
-    await upsertSorts(newSort);
+    upsertSorts(newSort);
   };
 
   return (
-    <Box aria-label={'sort-item'} className='sort-item' display='flex' flexDirection='row' alignItems='center'>
+    <SortItemStyled aria-label={'sort-item'} className='sort-item'>
       <Box>
         <Checkbox
           size='small'
           checked={currentSort.isActive}
-          onChange={(e): Promise<void> => handleChange('isActive', e.target.checked)}
+          onChange={(e) => handleChange('isActive', e.target.checked)}
         />
       </Box>
       <Box>
@@ -48,22 +49,32 @@ export default function SortItem({ sort, columns }: SortItemProps): JSX.Element 
           value={currentSort.column}
           disabled={columns.length === 0}
           size='small'
-          options={columns.map((c) => ({ value: c.name as string, label: c.name }))}
-          onChange={(e): Promise<void> => handleChange('column', (e as unknown as SelectInputOption).value as string)}
+          options={columns.map((c) => ({ value: c.name, label: c.name }))}
+          onChange={(e) => handleChange('column', (e as unknown as SelectInputOption).value as string)}
         />
       </Box>
-      <Box mr={1} ml={1}>
+      <Box
+        sx={{
+          mr: 1,
+          ml: 1
+        }}
+      >
         <SelectInput
           value={currentSort.operator}
           size='small'
-          options={PgsqlSorts.map((c) => ({ value: c as string, label: c }))}
-          onChange={(e): Promise<void> => handleChange('operator', (e as unknown as SelectInputOption).value as string)}
+          options={PgsqlSorts.map((c) => ({ value: c, label: c }))}
+          onChange={(e) => handleChange('operator', (e as unknown as SelectInputOption).value as string)}
         />
       </Box>
-      <Box ml={1} mr={1}>
+      <Box
+        sx={{
+          ml: 1,
+          mr: 1
+        }}
+      >
         <RemoveSortButton sort={sort} />
         <AddSortButton columns={columns} />
       </Box>
-    </Box>
+    </SortItemStyled>
   );
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/internal/service/job"
+	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/csv"
 	"github.com/dbo-studio/dbo/pkg/helper"
@@ -26,14 +27,16 @@ type ExportProcessor struct {
 	cm             *databaseConnection.ConnectionManager
 	connectionRepo repository.IConnectionRepo
 	cache          cache.Cache
+	secrets        secretStore.ISecretStore
 }
 
-func NewExportProcessor(jobManager job.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo) *ExportProcessor {
+func NewExportProcessor(jobManager job.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, secrets secretStore.ISecretStore) *ExportProcessor {
 	return &ExportProcessor{
 		jobManager:     jobManager,
 		cm:             cm,
 		connectionRepo: connectionRepo,
 		cache:          container.Instance().Cache(),
+		secrets:        secrets,
 	}
 }
 
@@ -42,20 +45,33 @@ func (p *ExportProcessor) GetType() model.JobType {
 }
 
 func (p *ExportProcessor) Process(job *model.Job) error {
-	ctx := context.Background()
+	rawCtx := context.Background()
 
 	if job.Status == model.JobStatusCancelled {
-		return fmt.Errorf("job was cancelled")
+		return fmt.Errorf("job was canceled")
 	}
 
-	data, err := helper.ConvertToDTO[dto.ExportRequest]([]byte(job.Data))
+	jobData, err := helper.ConvertToDTO[dto.ExportJob]([]byte(job.Data))
 	if err != nil {
 		return err
 	}
 
-	connection, err := p.connectionRepo.Find(ctx, data.ConnectionId)
+	ownerID := jobData.OwnerID
+	ctx := helper.CtxWithOwnerID(rawCtx, ownerID)
+
+	connection, err := p.connectionRepo.Find(ctx, jobData.ConnectionID)
 	if err != nil {
 		return err
+	}
+
+	// Pin password in-memory for the whole job so reconnects don't depend on SecretStore TTL.
+	if connection.ConnectionType != "sqlite" {
+		pw, err := p.secrets.GetConnectionPassword(ctx, ownerID, connection.ID)
+		if err != nil {
+			return err
+		}
+
+		ctx = helper.CtxWithConnectionPassword(ctx, pw)
 	}
 
 	repo, err := database.NewDatabaseRepository(ctx, connection, p.cm)
@@ -74,8 +90,8 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 	}
 
 	result, err := repo.RunRawQuery(ctx, &dto.RawQueryRequest{
-		ConnectionId: int32(connection.ID),
-		Query:        data.Query,
+		ConnectionID: int32(connection.ID),
+		Query:        jobData.Query,
 	})
 
 	if err != nil {
@@ -83,7 +99,7 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 	}
 
 	if result == nil {
-		return fmt.Errorf("no result found for query %s", data.Query)
+		return fmt.Errorf("no result found for query %s", jobData.Query)
 	}
 
 	err = p.jobManager.UpdateJobProgress(job, 50, fmt.Sprintf("Found %d rows to export", len(result.Data)))
@@ -93,10 +109,10 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 
 	var filePath string
 	var fileName string
-	if data.SavePath != "" {
-		filePath = data.SavePath
-		fileName = filepath.Base(data.SavePath)
-		dir := filepath.Dir(data.SavePath)
+	if jobData.SavePath != "" {
+		filePath = jobData.SavePath
+		fileName = filepath.Base(jobData.SavePath)
+		dir := filepath.Dir(jobData.SavePath)
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			return fmt.Errorf("failed to create directory: %w", err)
 		}
@@ -106,7 +122,7 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 			return fmt.Errorf("failed to create export directory: %w", err)
 		}
 		timestamp := time.Now().Format("20060102_150405")
-		fileName = fmt.Sprintf("export_%s_%s.%s", data.Table, timestamp, data.Format)
+		fileName = fmt.Sprintf("export_%s_%s.%s", jobData.Table, timestamp, jobData.Format)
 		filePath = filepath.Join(exportDir, fileName)
 	}
 
@@ -116,16 +132,16 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 	}
 
 	var fileContent []byte
-	switch data.Format {
+	switch jobData.Format {
 	case "sql":
-		fileContent = generateSQLExportFromData(data.Table, result.Columns, result.Data)
+		fileContent = generateSQLExportFromData(jobData.Table, result.Columns, result.Data)
 	case "json":
-		fileContent = generateJsonExport(result.Columns, result.Data)
+		fileContent = generateJSONExport(result.Columns, result.Data)
 	case "csv":
 		headers := lo.Map(result.Columns, func(col dto.Column, _ int) string { return col.Name })
 		fileContent = []byte(csv.Writer(headers, result.Data))
 	default:
-		return fmt.Errorf("unsupported format: %s", data.Format)
+		return fmt.Errorf("unsupported format: %s", jobData.Format)
 	}
 
 	if err := os.WriteFile(filePath, fileContent, 0644); err != nil {
@@ -150,7 +166,7 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 		Columns:     len(result.Columns),
 		TotalChunks: 1,
 		ChunkSize:   len(result.Data),
-		Query:       data.Query,
+		Query:       jobData.Query,
 	}
 
 	return nil
@@ -164,7 +180,7 @@ func generateSQLExportFromData(tableName string, columns []dto.Column, data []ma
 	sql.WriteString("-- Generated on: " + time.Now().Format("2006-01-02 15:04:05") + "\n\n")
 
 	if len(data) > 0 {
-		sql.WriteString(fmt.Sprintf("INSERT INTO %s (", tableName))
+		fmt.Fprintf(&sql, "INSERT INTO %s (", tableName)
 		for i, col := range columns {
 			sql.WriteString(col.Name)
 			if i < len(columns)-1 {
@@ -200,7 +216,7 @@ func generateSQLExportFromData(tableName string, columns []dto.Column, data []ma
 	return []byte(sql.String())
 }
 
-func generateJsonExport(columns []dto.Column, rows []map[string]any) []byte {
+func generateJSONExport(columns []dto.Column, rows []map[string]any) []byte {
 	jsonData := make([]map[string]any, len(rows))
 	for i, row := range rows {
 		jsonData[i] = make(map[string]any)
@@ -208,5 +224,5 @@ func generateJsonExport(columns []dto.Column, rows []map[string]any) []byte {
 			jsonData[i][col.Name] = row[col.Name]
 		}
 	}
-	return []byte(helper.StructToJson(jsonData))
+	return []byte(helper.StructToJSON(jsonData))
 }

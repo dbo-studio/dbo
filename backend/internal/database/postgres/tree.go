@@ -30,8 +30,8 @@ func (r *PostgresRepository) Tree(ctx context.Context, parentID string) (*contra
 
 func buildRoot(ctx context.Context, r *PostgresRepository) (*contract.TreeNode, error) {
 	root := &contract.TreeNode{
-		ID:          fmt.Sprintf("%d@database", r.connection.ID),
-		Name:        r.connection.Name,
+		ID:          fmt.Sprintf("%d@database", r.base.Connection().ID),
+		Name:        r.base.Connection().Name,
 		Icon:        lo.ToPtr("postgresql"),
 		Type:        contract.DatabaseContainerNodeType,
 		HasChildren: true,
@@ -85,7 +85,7 @@ func buildDatabase(ctx context.Context, r *PostgresRepository, dbName string) (*
 	return dbNode, nil
 }
 
-func buildSchema(ctx context.Context, r *PostgresRepository, dbName, schemaName string) (*contract.TreeNode, error) {
+func buildSchema(_ context.Context, r *PostgresRepository, dbName, schemaName string) (*contract.TreeNode, error) {
 	schemaNode := &contract.TreeNode{
 		ID:          fmt.Sprintf("%s.%s", dbName, schemaName),
 		Name:        schemaName,
@@ -139,7 +139,7 @@ func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaNa
 	}
 	switch container {
 	case contract.TableContainerNodeType:
-		tables, err := r.tables(ctx, &schemaName, true)
+		tables, err := r.tables(ctx, &dbName, &schemaName, true)
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}
@@ -151,7 +151,7 @@ func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaNa
 				Type: contract.TableNodeType,
 				Action: &contract.TreeNodeAction{
 					Type: contract.TreeNodeActionTypeTab,
-					Params: map[string]interface{}{
+					Params: map[string]any{
 						"path":     "data",
 						"table":    table.Name,
 						"editable": true,
@@ -174,7 +174,7 @@ func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaNa
 				Icon: lo.ToPtr("sheet"),
 				Action: &contract.TreeNodeAction{
 					Type: contract.TreeNodeActionTypeTab,
-					Params: map[string]interface{}{
+					Params: map[string]any{
 						"path":     "data",
 						"table":    view.Name,
 						"editable": false,
@@ -185,7 +185,7 @@ func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaNa
 			})
 		}
 	case contract.MaterializedViewContainerNodeType:
-		mvs, err := r.materializedViews(ctx, &schemaName, true)
+		mvs, err := r.materializedViews(ctx, &dbName, &schemaName, true)
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}
@@ -196,7 +196,7 @@ func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaNa
 				Type: contract.MaterializedViewNodeType,
 				Action: &contract.TreeNodeAction{
 					Type: contract.TreeNodeActionTypeTab,
-					Params: map[string]interface{}{
+					Params: map[string]any{
 						"path":     "data",
 						"table":    mv.Name,
 						"editable": false,

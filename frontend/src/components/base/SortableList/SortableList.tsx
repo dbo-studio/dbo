@@ -1,9 +1,11 @@
+'use no memo';
+
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { restrictToHorizontalAxis, restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Box } from '@mui/material';
 import type { JSX } from 'react';
-import { memo, useCallback, useMemo } from 'react';
+import { Fragment, useCallback } from 'react';
+import { SortableListContainerStyled } from './SortableList.styled';
 import type { SortableListProps } from './types';
 
 function SortableList<T>({
@@ -18,7 +20,7 @@ function SortableList<T>({
   onDragEnd,
   onDragCancel
 }: SortableListProps<T>): JSX.Element {
-  const itemIds = useMemo(() => items.map((item) => getItemId(item)), [items, getItemId]);
+  const itemIds = items.map((item) => getItemId(item));
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -59,8 +61,6 @@ function SortableList<T>({
     onDragCancel?.();
   }, [onDragCancel]);
 
-  const renderedItems = useMemo(() => items.map((item, index) => renderItem(item, index)), [items, renderItem]);
-
   return (
     <DndContext
       sensors={sensors}
@@ -71,17 +71,11 @@ function SortableList<T>({
       modifiers={[modifier]}
     >
       <SortableContext items={itemIds} strategy={strategy}>
-        <Box
-          className={className}
-          sx={{
-            display: 'flex',
-            flexDirection: direction === 'horizontal' ? 'row' : 'column',
-            touchAction: direction === 'horizontal' ? 'pan-x' : 'pan-y',
-            contain: 'layout style'
-          }}
-        >
-          {renderedItems}
-        </Box>
+        <SortableListContainerStyled className={className} direction={direction}>
+          {items.map((item, index) => (
+            <Fragment key={getItemId(item)}>{renderItem(item, index)}</Fragment>
+          ))}
+        </SortableListContainerStyled>
       </SortableContext>
     </DndContext>
   );
@@ -89,4 +83,4 @@ function SortableList<T>({
 
 SortableList.displayName = 'SortableList';
 
-export default memo(SortableList) as typeof SortableList;
+export default SortableList;

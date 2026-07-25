@@ -11,7 +11,7 @@ type UseTreeNodeHandlersProps = {
   setIsLoading: (loading: boolean) => void;
   setIsFocused: (focused: boolean) => void;
   fetchChildren: (parentId: string) => Promise<TreeNodeType[]>;
-  parentRefs: React.RefObject<Map<string, HTMLDivElement>>;
+  parentRefsRef: React.RefObject<Map<string, HTMLDivElement>>;
   nodeRef: React.RefObject<HTMLDivElement>;
   nodeIndex: number;
   level: number;
@@ -34,7 +34,7 @@ export function useTreeNodeHandlers({
   setIsLoading,
   setIsFocused,
   fetchChildren,
-  parentRefs,
+  parentRefsRef,
   nodeRef,
   nodeIndex,
   level,
@@ -55,7 +55,7 @@ export function useTreeNodeHandlers({
           setChildren(newChildren);
           if (moveFocusToChild && newChildren?.length > 0) {
             setTimeout(() => {
-              const firstChild = parentRefs.current.get(newChildren[0].id);
+              const firstChild = parentRefsRef.current.get(newChildren[0].id);
               if (firstChild) {
                 firstChild.focus();
                 onFocusChange?.(newChildren[0].id);
@@ -68,14 +68,25 @@ export function useTreeNodeHandlers({
           setIsLoading(false);
         }
       } else if (moveFocusToChild && children?.length > 0) {
-        const firstChild = parentRefs.current.get(children[0].id);
+        const firstChild = parentRefsRef.current.get(children[0].id);
         if (firstChild) {
           firstChild.focus();
           onFocusChange?.(children[0].id);
         }
       }
     },
-    [isExpanded, children, fetchChildren, node.id, parentRefs, onFocusChange, setIsExpanded, setChildren, setIsLoading]
+    [
+      isExpanded,
+      children,
+      fetchChildren,
+      node.id,
+      node.hasChildren,
+      parentRefsRef,
+      onFocusChange,
+      setIsExpanded,
+      setChildren,
+      setIsLoading
+    ]
   );
 
   const focusNode = useCallback(
@@ -95,7 +106,7 @@ export function useTreeNodeHandlers({
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
       event.stopPropagation();
-      const nodeRefs = parentRefs.current;
+      const nodeRefs = parentRefsRef.current;
 
       const focusNodeById = (id: string): void => {
         const target = nodeRefs.get(id);
@@ -109,12 +120,13 @@ export function useTreeNodeHandlers({
         case 'Enter':
         case ' ':
           event.preventDefault();
-          expandNode(event, true).then();
+          expandNode(event, true).catch((e) => console.log('🚀 ~ useTreeNodeHandlers ~ e:', e));
           break;
 
         case 'ArrowRight':
           event.preventDefault();
-          if (node.hasChildren && !isExpanded) expandNode(event, true).then();
+          if (node.hasChildren && !isExpanded)
+            expandNode(event, true).catch((e) => console.log('🚀 ~ useTreeNodeHandlers ~ e:', e));
           else if (isExpanded && children?.length > 0) focusNodeById(children[0].id);
           break;
 
@@ -157,7 +169,7 @@ export function useTreeNodeHandlers({
           break;
       }
     },
-    [node.hasChildren, isExpanded, children, level, nodeIndex, parentRefs, expandNode, onFocusChange, setIsExpanded]
+    [node.hasChildren, isExpanded, children, level, nodeIndex, parentRefsRef, expandNode, onFocusChange, setIsExpanded]
   );
 
   return {

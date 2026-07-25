@@ -56,7 +56,7 @@ export const tools = {
   isNumber: (value: string): boolean => {
     return /^-?\d*\.?\d+(e[+-]?\d+)?$/i.test(value);
   },
-  fileDownload: async (blob: Blob, fileName: string): Promise<void> => {
+  fileDownload: (blob: Blob, fileName: string): void => {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -71,7 +71,7 @@ export const tools = {
   uuid: (): string => {
     return v7();
   },
-  isEmpty: (data: unknown): data is never | undefined | null => {
+  isEmpty: (data: unknown): undefined | null | boolean => {
     return (
       (!data && !isNumber(data)) ||
       (Array.isArray(data) && data.length === 0) ||

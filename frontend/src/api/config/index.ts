@@ -9,15 +9,15 @@ const endpoint = {
 };
 
 export const getConfig = async (): Promise<ConfigResponseType> => {
-  return (await api.get(endpoint.config())).data.data as ConfigResponseType;
+  return (await api.get<{ data: ConfigResponseType }>(endpoint.config())).data.data;
 };
 
 export const getCheckUpdate = async (): Promise<CheckUpdateResponseType> => {
-  return (await api.get(endpoint.checkUpdate())).data.data as CheckUpdateResponseType;
+  return (await api.get<{ data: CheckUpdateResponseType }>(endpoint.checkUpdate())).data.data;
 };
 
 export const getLogsPath = async (): Promise<Blob> => {
-  const response = await api.get(endpoint.logsPath(), {
+  const response = await api.get<Blob>(endpoint.logsPath(), {
     responseType: 'blob'
   });
 

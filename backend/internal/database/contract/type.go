@@ -1,6 +1,8 @@
 package databaseContract
 
-import "time"
+import (
+	"time"
+)
 
 type TreeNode struct {
 	ID          string           `json:"id"`
@@ -36,8 +38,17 @@ type FormTab struct {
 	Name string  `json:"name"`
 }
 
+type GeneralField struct {
+	ID       string                `json:"id"`
+	Name     string                `json:"name"`
+	Type     TreeFormFieldTypeEnum `json:"type"`
+	Required bool                  `json:"required"`
+	Value    any                   `json:"value,omitempty"`
+	Options  []FormFieldOption     `json:"options,omitempty"`
+}
+
 type FormResponse struct {
-	IsArray bool             `json:"isArray"`
+	General []GeneralField   `json:"general"`
 	Schema  []FormField      `json:"schema"`
 	Data    []map[string]any `json:"data"`
 }
@@ -66,12 +77,12 @@ type ImportOptions struct {
 }
 
 type ImportResult struct {
-	TotalRows   int                    `json:"totalRows"`
-	SuccessRows int                    `json:"successRows"`
-	FailedRows  int                    `json:"failedRows"`
-	Errors      []ImportError          `json:"errors"`
-	Duration    time.Duration          `json:"duration"`
-	Metadata    map[string]interface{} `json:"metadata"`
+	TotalRows   int            `json:"totalRows"`
+	SuccessRows int            `json:"successRows"`
+	FailedRows  int            `json:"failedRows"`
+	Errors      []ImportError  `json:"errors"`
+	Duration    time.Duration  `json:"duration"`
+	Metadata    map[string]any `json:"metadata"`
 }
 
 type ImportError struct {
@@ -102,4 +113,34 @@ type ExportProgress struct {
 	Message       string    `json:"message"`
 	Error         string    `json:"error"`
 	LastUpdated   time.Time `json:"lastUpdated"`
+}
+
+//----------------------------
+
+type DBNode struct {
+	Database string
+	Schema   string
+	Table    string
+}
+
+type AIContextOptions struct {
+	Database *string
+	Schema   *string
+	Tables   []string
+	Views    []string
+}
+
+type AIContextForeignKey struct {
+	TargetTable string
+	Columns     []string
+	RefColumns  []string
+	RefColumn   string
+}
+
+type AIContextColumn struct {
+	Name         string
+	MappedType   string
+	DataType     string
+	IsPrimaryKey bool
+	ForeignKey   *AIContextForeignKey
 }

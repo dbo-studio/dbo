@@ -6,6 +6,7 @@ import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Divider, Typography, useMediaQuery } from '@mui/material';
 import { type JSX, useEffect } from 'react';
 import ThemeItem from './ThemeItem/ThemeItem';
+import { ThemeSelectorStyled } from './Theme.styled';
 
 export default function Theme(): JSX.Element {
   const theme = useSettingStore((state) => state.theme);
@@ -16,7 +17,7 @@ export default function Theme(): JSX.Element {
     if (theme.isDark === undefined && prefersDarkMode) {
       updateTheme({ isDark: prefersDarkMode });
     }
-  }, []);
+  }, [theme.isDark, prefersDarkMode, updateTheme]);
 
   const handleToggle = (isDark: boolean): void => {
     updateTheme({
@@ -27,14 +28,18 @@ export default function Theme(): JSX.Element {
 
   return (
     <Box>
-      <Box mb={1} mt={3}>
+      <Box
+        sx={{
+          mb: 1
+        }}
+      >
         <Typography variant='body1'>{locales.application_theme}</Typography>
       </Box>
       <Divider />
-      <Box display={'flex'} mt={2} mb={4}>
+      <ThemeSelectorStyled>
         <ThemeItem selected={theme.isDark !== false} onClick={(): void => handleToggle(true)} isDark={true} />
         <ThemeItem selected={!theme.isDark} onClick={(): void => handleToggle(false)} isDark={false} />
-      </Box>
+      </ThemeSelectorStyled>
       <Box>
         <SelectInput
           value={theme.themeName}

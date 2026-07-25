@@ -89,6 +89,14 @@ func (r *MySQLRepository) ContextMenu(nodeType contract.TreeNodeType) []contract
 	case contract.ViewNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
+				Title: "Edit view",
+				Name:  contract.EditViewAction,
+				Type:  contract.TreeNodeActionTypeTab,
+				Params: map[string]any{
+					"path": "object-detail",
+				},
+			},
+			contract.TreeNodeAction{
 				Title: "Drop view",
 				Name:  contract.DropViewAction,
 				Type:  contract.TreeNodeActionTypeAction,

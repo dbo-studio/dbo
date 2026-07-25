@@ -5,23 +5,22 @@ import (
 	"fmt"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
-	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 func (r *MySQLRepository) Objects(ctx context.Context, nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
-	node := extractNode(nodeID)
+	node := r.base.ExtractNode(nodeID)
 
 	switch tabID {
 	case contract.DatabaseTab:
 		return r.getDatabaseInfo(ctx, node)
-	case contract.TableTab:
-		return r.getTableInfo(ctx, node, action)
 	case contract.TableColumnsTab:
-		return r.getTableColumns(ctx, node)
+		return r.getTableColumns(ctx, node, action)
 	case contract.TableForeignKeysTab:
-		return r.getTableForeignKeys(ctx, node)
+		return r.getTableForeignKeys(ctx, node, action)
 	case contract.TableKeysTab:
-		return r.getTableKeys(ctx, node)
+		return r.getTableKeys(ctx, node, action)
+	case contract.TableIndexesTab:
+		return r.getTableIndexes(ctx, node, action)
 	case contract.ViewTab:
 		return r.getViewInfo(ctx, node)
 	default:
@@ -29,7 +28,7 @@ func (r *MySQLRepository) Objects(ctx context.Context, nodeID string, tabID cont
 	}
 }
 
-func (r *MySQLRepository) getDatabaseInfo(ctx context.Context, node MySQLNode) (*contract.FormResponse, error) {
+func (r *MySQLRepository) getDatabaseInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.databaseFields(ctx)
 
 	databases, err := r.databases(ctx, true)
@@ -41,120 +40,177 @@ func (r *MySQLRepository) getDatabaseInfo(ctx context.Context, node MySQLNode) (
 	for _, database := range databases {
 		if database.Name == node.Database {
 			result = append(result, map[string]any{
-				"SCHEMA_NAME": database.Name,
+				"datname": database.Name,
 			})
 		}
 	}
 
-	return helper.BuildObjectFormResponseFromResults(result, fields)
+	row := map[string]any{}
+	if len(result) > 0 {
+		row = result[0]
+	}
+
+	return r.base.BuildGeneralFormResponse(fields, row)
 }
 
 func (r *MySQLRepository) databaseFields(_ context.Context) []contract.FormField {
 	return []contract.FormField{
-		{ID: "SCHEMA_NAME", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "datname", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
 	}
 }
 
-func (r *MySQLRepository) getTableInfo(ctx context.Context, node MySQLNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
+func (r *MySQLRepository) getTableGeneralFields(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) ([]contract.GeneralField, error) {
 	fields := r.tableFields(ctx, action)
+	result := map[string]any{}
 
-	tables, err := r.tables(ctx, &node.Database, true)
-	if err != nil {
-		return nil, err
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		tables, err := r.tables(ctx, &node.Database, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, table := range tables {
+			if table.Name == node.Table {
+				result = map[string]any{
+					"relname":     table.Name,
+					"description": table.Comment,
+					"ENGINE":      table.Engine,
+					"ROW_FORMAT":  table.RowFormat,
+				}
+				break
+			}
+		}
 	}
 
+	return r.base.BuildGeneralFormFieldsFromSchema(fields, result)
+}
+
+func (r *MySQLRepository) getTableColumns(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
+	fields := r.tableColumnFields()
 	result := []map[string]any{}
-	for _, table := range tables {
-		if table.Name == node.Table {
+
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		columns, err := r.columns(ctx, &node.Database, &node.Table, []string{}, true, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, column := range columns {
 			result = append(result, map[string]any{
-				"TABLE_NAME":    table.Name,
-				"TABLE_COMMENT": table.Comment,
-				"ENGINE":        table.Engine,
-				"ROW_FORMAT":    table.RowFormat,
+				"column_name":              column.ColumnName,
+				"data_type":                column.DataType,
+				"not_null":                 column.IsNullable == "NO",
+				"column_default":           column.ColumnDefault,
+				"comment":                  column.Comment,
+				"character_maximum_length": column.CharacterMaximumLength,
+				"numeric_scale":            column.NumericScale,
+				"is_identity":              false,
 			})
 		}
 	}
 
-	return helper.BuildObjectFormResponseFromResults(result, fields)
-}
-
-func (r *MySQLRepository) getTableColumns(ctx context.Context, node MySQLNode) (*contract.FormResponse, error) {
-	fields := r.tableColumnFields()
-	columns, err := r.columns(ctx, &node.Database, &node.Table, []string{}, true, true)
+	tableInfo, err := r.getTableGeneralFields(ctx, node, action)
 	if err != nil {
 		return nil, err
 	}
 
-	result := []map[string]any{}
-	for _, column := range columns {
-		result = append(result, map[string]any{
-			"COLUMN_NAME":              column.ColumnName,
-			"DATA_TYPE":                column.DataType,
-			"IS_NULLABLE":              column.IsNullable == "NO",
-			"COLUMN_DEFAULT":           column.ColumnDefault,
-			"COLUMN_COMMENT":           column.Comment,
-			"CHARACTER_MAXIMUM_LENGTH": column.CharacterMaximumLength,
-			"NUMERIC_SCALE":            column.NumericScale,
-			"AUTO_INCREMENT":           false,
-		})
-	}
-
-	return helper.BuildFormResponseFromResults(result, fields)
+	return r.base.BuildHybridFormResponse(tableInfo, result, fields)
 }
 
-func (r *MySQLRepository) getTableForeignKeys(ctx context.Context, node MySQLNode) (*contract.FormResponse, error) {
+func (r *MySQLRepository) getTableForeignKeys(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
 	fields := r.foreignKeyFields(ctx, fmt.Sprintf("%s.%s", node.Database, node.Table))
-	foreignKeys, err := r.foreignKeys(ctx, &node.Database, &node.Table, true)
-	if err != nil {
-		return nil, err
-	}
-
-	result := []map[string]any{}
-	for _, foreignKey := range foreignKeys {
-		result = append(result, map[string]any{
-			"CONSTRAINT_NAME":        foreignKey.ConstraintName,
-			"REFERENCED_TABLE_NAME":  foreignKey.TargetTable,
-			"COLUMN_NAME":            foreignKey.ColumnsList,
-			"REFERENCED_COLUMN_NAME": foreignKey.RefColumnsList,
-			"UPDATE_RULE":            foreignKey.UpdateAction,
-			"DELETE_RULE":            foreignKey.DeleteAction,
-		})
-	}
-
-	response, err := helper.BuildFormResponseFromResults(result, fields)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
-
-func (r *MySQLRepository) getTableKeys(ctx context.Context, node MySQLNode) (*contract.FormResponse, error) {
-	fields := r.keyFields(ctx, fmt.Sprintf("%s.%s", node.Database, node.Table))
-
-	primaryKeys, err := r.primaryKeys(ctx, &node.Database, &node.Table, true)
-	if err != nil {
-		return nil, err
-	}
-
 	result := []map[string]any{}
 
-	if len(primaryKeys) > 0 {
-		columns := make([]string, len(primaryKeys))
-		for i, pk := range primaryKeys {
-			columns[i] = pk.ColumnName
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		foreignKeys, err := r.foreignKeys(ctx, &node.Database, &node.Table, true)
+		if err != nil {
+			return nil, err
 		}
-		result = append(result, map[string]any{
-			"CONSTRAINT_NAME": "PRIMARY",
-			"CONSTRAINT_TYPE": "PRIMARY KEY",
-			"COLUMN_NAME":     columns,
-		})
+
+		for _, foreignKey := range foreignKeys {
+			result = append(result, map[string]any{
+				"constraint_name": foreignKey.ConstraintName,
+				"target_table":    foreignKey.TargetTable,
+				"ref_columns":     foreignKey.ColumnsList,
+				"target_columns":  foreignKey.RefColumnsList,
+				"update_action":   foreignKey.UpdateAction,
+				"delete_action":   foreignKey.DeleteAction,
+			})
+		}
 	}
 
-	return helper.BuildFormResponseFromResults(result, fields)
+	return r.base.BuildArrayFormResponse(result, fields)
 }
 
-func (r *MySQLRepository) getViewInfo(ctx context.Context, node MySQLNode) (*contract.FormResponse, error) {
+func (r *MySQLRepository) getTableKeys(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
+	fields := r.keyFields(ctx, fmt.Sprintf("%s.%s", node.Database, node.Table))
+	result := []map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		primaryKeys, err := r.primaryKeys(ctx, &node.Database, &node.Table, true)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(primaryKeys) > 0 {
+			columns := make([]string, len(primaryKeys))
+			for i, pk := range primaryKeys {
+				columns[i] = pk.ColumnName
+			}
+			result = append(result, map[string]any{
+				"constraint_name": "PRIMARY",
+				"constraint_type": "PRIMARY KEY",
+				"ref_columns":     columns,
+			})
+		}
+	}
+
+	return r.base.BuildArrayFormResponse(result, fields)
+}
+
+func (r *MySQLRepository) getTableIndexes(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
+	fields := r.indexOptions(ctx, fmt.Sprintf("%s.%s", node.Database, node.Table))
+	result := []map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		indexes, err := r.tableIndexes(ctx, node.Database, node.Table)
+		if err != nil {
+			return nil, err
+		}
+
+		indexMap := make(map[string]map[string]any)
+		indexOrder := make([]string, 0)
+
+		for _, index := range indexes {
+			if index.IndexName == "PRIMARY" {
+				continue
+			}
+
+			entry, exists := indexMap[index.IndexName]
+			if !exists {
+				entry = map[string]any{
+					"index_name":  index.IndexName,
+					"ref_columns": []string{},
+					"non_unique":  index.NonUnique == 1,
+					"collation":   index.Collation,
+				}
+				indexMap[index.IndexName] = entry
+				indexOrder = append(indexOrder, index.IndexName)
+			}
+
+			cols := entry["ref_columns"].([]string)
+			entry["ref_columns"] = append(cols, index.ColumnName)
+		}
+
+		for _, name := range indexOrder {
+			result = append(result, indexMap[name])
+		}
+	}
+
+	return r.base.BuildArrayFormResponse(result, fields)
+}
+
+func (r *MySQLRepository) getViewInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.viewFields()
 	views, err := r.views(ctx, &node.Database, true)
 	if err != nil {
@@ -169,12 +225,17 @@ func (r *MySQLRepository) getViewInfo(ctx context.Context, node MySQLNode) (*con
 				query = *view.Query
 			}
 			result = append(result, map[string]any{
-				"TABLE_NAME":      view.Name,
-				"TABLE_COMMENT":   view.Comment,
-				"VIEW_DEFINITION": query,
+				"name":    view.Name,
+				"comment": view.Comment,
+				"query":   query,
 			})
 		}
 	}
 
-	return helper.BuildObjectFormResponseFromResults(result, fields)
+	row := map[string]any{}
+	if len(result) > 0 {
+		row = result[0]
+	}
+
+	return r.base.BuildGeneralFormResponse(fields, row)
 }

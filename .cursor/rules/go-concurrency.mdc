@@ -1,0 +1,48 @@
+---
+description: Go concurrency — context propagation, goroutine ownership, channels, errgroup
+globs: backend/**/*.go
+alwaysApply: false
+---
+
+# Go Concurrency
+
+## Context
+
+- Pass `context.Context` as first arg; derive with timeout/cancel for bounded operations.
+- Check `ctx.Err()` in long loops and before expensive I/O.
+- DBO: `fiber.Ctx` implements `context.Context` — pass it to services.
+
+## Goroutines
+
+- Every goroutine needs an owner and a stop signal (context cancel or `done` channel).
+- No bare `go fn()` in library code without lifecycle management.
+- Prefer `golang.org/x/sync/errgroup` for fan-out with error propagation.
+
+```go
+// ❌ BAD — orphaned goroutine
+go processItems(items)
+
+// ✅ GOOD
+g, ctx := errgroup.WithContext(ctx)
+for _, item := range items {
+    g.Go(func() error {
+        return processItem(ctx, item)
+    })
+}
+return g.Wait()
+```
+
+## Channels
+
+- Declare direction: `chan<- T` (send), `<-chan T` (receive).
+- Close channels from the sender side only.
+- Prefer context cancellation over channel close for shutdown signals.
+
+## Shared State
+
+- Protect shared mutable state with `sync.Mutex` or channels, never unsynchronized access.
+- DBO `ConnectionManager` manages connection pool lifecycle with TTL cleanup — follow its pattern for new pools.
+
+## init()
+
+- Use `init()` only for registration (e.g. driver imports), never for business logic or DB calls.

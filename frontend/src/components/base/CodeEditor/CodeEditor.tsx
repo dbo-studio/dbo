@@ -1,12 +1,14 @@
 import type { CodeEditorProps } from '@/components/base/CodeEditor/types.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
-import MonacoEditor from '@monaco-editor/react';
-import { Box } from '@mui/material';
-import { type JSX, useCallback } from 'react';
+import { Editor, useMonaco } from '@monaco-editor/react';
+import { type JSX, useCallback, useEffect } from 'react';
+import { CodeEditorBoxStyled } from './CodeEditor.styled.ts';
 import { editorConfig } from './helpers/editorConfig.ts';
+import { setupLanguage } from './helpers/languageSetup.ts';
 
 export default function CodeEditor({ value, onChange, width, height }: CodeEditorProps): JSX.Element {
   const theme = useSettingStore((state) => state.theme);
+  const monaco = useMonaco();
 
   const handleEditorChange = useCallback(
     (value: string | undefined) => {
@@ -17,19 +19,17 @@ export default function CodeEditor({ value, onChange, width, height }: CodeEdito
     [onChange]
   );
 
+  useEffect(() => {
+    if (monaco) {
+      void (async () => {
+        await setupLanguage(monaco, theme.editorTheme);
+      })();
+    }
+  }, [monaco, theme.editorTheme]);
+
   return (
-    <Box
-      sx={{
-        width: width || '100%',
-        height: height || '100%',
-        '& .monaco-editor, .monaco-editor .margin': {
-          userSelect: 'text',
-          WebkitUserSelect: 'text',
-          MsUserSelect: 'text'
-        }
-      }}
-    >
-      <MonacoEditor
+    <CodeEditorBoxStyled width={width} height={height}>
+      <Editor
         height={height || '100%'}
         width={width || '100%'}
         language='json'
@@ -37,9 +37,10 @@ export default function CodeEditor({ value, onChange, width, height }: CodeEdito
         onChange={handleEditorChange}
         theme={theme.editorTheme}
         options={{
-          ...editorConfig
+          ...editorConfig,
+          fontSize: theme.editorFontSize
         }}
       />
-    </Box>
+    </CodeEditorBoxStyled>
   );
 }

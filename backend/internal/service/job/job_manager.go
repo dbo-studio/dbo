@@ -14,7 +14,7 @@ import (
 )
 
 type IJobManager interface {
-	RegisterProcessor(processor JobProcessor)
+	RegisterProcessor(processor Processor)
 	CreateJob(jobType model.JobType, data string) (*model.Job, error)
 	UpdateJobProgress(job *model.Job, progress int, message string) error
 	CancelAllJobs() error
@@ -22,7 +22,7 @@ type IJobManager interface {
 
 type IJobManagerImpl struct {
 	jobRepo      repository.IJobRepo
-	processors   map[model.JobType]JobProcessor
+	processors   map[model.JobType]Processor
 	workerCtx    context.Context
 	workerCancel context.CancelFunc
 	workerWg     sync.WaitGroup
@@ -35,7 +35,7 @@ func NewJobManager(jobRepo repository.IJobRepo) IJobManager {
 
 	jm := IJobManagerImpl{
 		jobRepo:      jobRepo,
-		processors:   make(map[model.JobType]JobProcessor),
+		processors:   make(map[model.JobType]Processor),
 		workerCtx:    ctx,
 		workerCancel: cancel,
 		logger:       container.Instance().Logger(),
@@ -47,7 +47,7 @@ func NewJobManager(jobRepo repository.IJobRepo) IJobManager {
 	return &jm
 }
 
-func (jm *IJobManagerImpl) RegisterProcessor(processor JobProcessor) {
+func (jm *IJobManagerImpl) RegisterProcessor(processor Processor) {
 	jm.mu.Lock()
 	defer jm.mu.Unlock()
 	jm.processors[processor.GetType()] = processor
@@ -94,8 +94,8 @@ func (jm *IJobManagerImpl) updateJobStatus(job *model.Job, status model.JobStatu
 	return jm.jobRepo.Update(context.Background(), job)
 }
 
-func (jm *IJobManagerImpl) updateJobError(job *model.Job, error string) error {
-	job.Error = error
+func (jm *IJobManagerImpl) updateJobError(job *model.Job, errMsg string) error {
+	job.Error = errMsg
 	job.Status = model.JobStatusFailed
 	now := time.Now()
 	job.CompletedAt = &now
@@ -173,7 +173,7 @@ func (jm *IJobManagerImpl) processPendingJobs() {
 
 		for _, rj := range runningJobs[1:] {
 			jobCopy := rj
-			_ = jm.updateJobStatus(&jobCopy, model.JobStatusCancelled, "Cancelled due to single-run policy")
+			_ = jm.updateJobStatus(&jobCopy, model.JobStatusCancelled, "Canceled due to single-run policy")
 		}
 	}
 
@@ -210,11 +210,11 @@ func (jm *IJobManagerImpl) CancelAllJobs() error {
 	}
 
 	for _, job := range runningJobs {
-		err := jm.updateJobStatus(&job, model.JobStatusCancelled, "Cancelled due to application shutdown")
+		err := jm.updateJobStatus(&job, model.JobStatusCancelled, "Canceled due to application shutdown")
 		if err != nil {
 			jm.logger.Error(fmt.Sprintf("Failed to cancel job %d: %v", job.ID, err))
 		} else {
-			jm.logger.Info(fmt.Sprintf("Cancelled job %d due to shutdown", job.ID))
+			jm.logger.Info(fmt.Sprintf("Canceled job %d due to shutdown", job.ID))
 		}
 	}
 
@@ -224,11 +224,11 @@ func (jm *IJobManagerImpl) CancelAllJobs() error {
 	}
 
 	for _, job := range pendingJobs {
-		err := jm.updateJobStatus(&job, model.JobStatusCancelled, "Cancelled due to application shutdown")
+		err := jm.updateJobStatus(&job, model.JobStatusCancelled, "Canceled due to application shutdown")
 		if err != nil {
 			jm.logger.Error(fmt.Sprintf("Failed to cancel pending job %d: %v", job.ID, err))
 		} else {
-			jm.logger.Info(fmt.Sprintf("Cancelled pending job %d due to shutdown", job.ID))
+			jm.logger.Info(fmt.Sprintf("Canceled pending job %d due to shutdown", job.ID))
 		}
 	}
 

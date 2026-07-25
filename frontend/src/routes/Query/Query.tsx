@@ -1,38 +1,68 @@
 import api from '@/api';
+import type { RunQueryResponseType } from '@/api/query/types';
+import EmptyState from '@/components/base/EmptyState/EmptyState';
 import ResizableYBox from '@/components/base/ResizableBox/ResizableYBox.tsx';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor.tsx';
-import DataGrid from '@/components/common/DataGrid/DataGrid';
+import { SqlEditorRef } from '@/components/base/SqlEditor/types';
 import { shortcuts } from '@/core/utils';
-import { useCurrentConnection, useShortcut, useWindowSize } from '@/hooks';
+import { useCurrentConnection, useLayoutMode, useShortcut, useWindowSize } from '@/hooks';
+import { useAiBridge } from '@/hooks/useAiBridge';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
+import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AutoCompleteType, ColumnType, EditorTabType, RowType } from '@/types';
-import { Box, type Theme } from '@mui/material';
+import { Tab, Tabs } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
-import { type JSX, useEffect, useState } from 'react';
+import type { JSX, SyntheticEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { QueryContainerStyled, QueryEditorBoxStyled } from './Query.styled';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
+import QueryResultGrid from './QueryResultGrid/QueryResultGrid';
+
+type QueryMobileView = 'editor' | 'results';
+
+const EMPTY_ROWS: RowType[] = [];
+const EMPTY_COLUMNS: ColumnType[] = [];
+
+const getActiveColumns = (columns: ColumnType[] | undefined): ColumnType[] =>
+  columns?.filter((column) => column.isActive !== false) ?? [];
 
 export default function Query(): JSX.Element {
   const selectedTab = useSelectedTab<EditorTabType>();
   const currentConnection = useCurrentConnection();
   const windowSize = useWindowSize();
-  const [tableData, setTableData] = useState({
-    rows: [] as RowType[],
-    columns: [] as ColumnType[]
+  const { isMobile } = useLayoutMode();
+  const sqlEditorRef = useRef<SqlEditorRef>(null);
+
+  const [tableData, setTableData] = useState<{ rows: RowType[]; columns: ColumnType[] }>({
+    rows: EMPTY_ROWS,
+    columns: EMPTY_COLUMNS
   });
 
   const getQuery = useTabStore((state) => state.getQuery);
   const updateQuery = useTabStore((state) => state.updateQuery);
   const runRawQuery = useDataStore((state) => state.runRawQuery);
   const loadDataFromIndexedDB = useDataStore((state) => state.loadDataFromIndexedDB);
-  const toggleDataFetching = useDataStore((state) => state.toggleDataFetching);
+  const pendingEditorQueryRun = useDataStore((state) => state.pendingEditorQueryRun);
+  const clearPendingEditorQueryRun = useDataStore((state) => state.clearPendingEditorQueryRun);
 
   const [value, setValue] = useState('');
-  const [showGrid, setShowGrid] = useState(false);
-  const isDataFetching = useDataStore((state) => state.isDataFetching);
+  const [mobileView, setMobileView] = useState<QueryMobileView>('editor');
+  const [prevTabId, setPrevTabId] = useState(selectedTab?.id);
 
-  useShortcut(shortcuts.runQuery, () => runRawQuery());
+  if (selectedTab?.id !== prevTabId) {
+    setPrevTabId(selectedTab?.id);
+    setValue(getQuery(selectedTab?.id));
+    setMobileView('editor');
+    setTableData({ rows: EMPTY_ROWS, columns: EMPTY_COLUMNS });
+  }
+
+  const isDataFetching = useDataStore((state) => state.isDataFetching);
+  const { askAboutSelection } = useAiBridge();
+
+  useShortcut(shortcuts.runQuery, () => void runQuery());
 
   const { data: autocomplete } = useQuery({
     queryKey: ['autocomplete', currentConnection?.id, selectedTab?.database, selectedTab?.schema],
@@ -45,85 +75,173 @@ export default function Query(): JSX.Element {
     enabled: !!currentConnection
   });
 
-  useEffect(() => {
-    handleChangeValue();
-    loadData();
-  }, [selectedTab?.id, autocomplete]);
-
-  const handleChangeValue = (): void => {
-    setValue(getQuery());
-  };
-
-  const handleUpdateState = (query: string): void => {
-    updateQuery(query);
-  };
-
-  const loadData = async (): Promise<void> => {
-    setTableData({
-      rows: [],
-      columns: []
-    });
-
-    toggleDataFetching(true);
+  const loadData = useCallback(async (): Promise<void> => {
     try {
       const result = await loadDataFromIndexedDB();
       if (result) {
-        setTableData(result);
+        setTableData({
+          rows: result.rows,
+          columns: result.columns
+        });
       }
     } catch (error) {
       console.debug('🚀 ~ loadData ~ error:', error);
     }
+  }, [loadDataFromIndexedDB]);
 
-    toggleDataFetching(false);
+  useEffect(() => {
+    if (!selectedTab?.id) {
+      return;
+    }
+
+    setValue(getQuery(selectedTab.id));
+  }, [selectedTab?.id, getQuery]);
+
+  useEffect(() => {
+    if (!selectedTab?.id) {
+      return;
+    }
+
+    const pending = useDataStore.getState().pendingEditorQueryRun;
+    if (pending?.tabId === selectedTab.id) {
+      return;
+    }
+
+    void loadData().catch((e) => console.log('🚀 ~ Query ~ e:', e));
+  }, [selectedTab?.id, loadData]);
+
+  const applyQueryResult = useCallback(
+    (res: RunQueryResponseType | undefined): void => {
+      const columns = getActiveColumns(res?.columns);
+      setTableData({
+        rows: res?.data ?? EMPTY_ROWS,
+        columns
+      });
+
+      if (columns.length > 0 && isMobile) {
+        setMobileView('results');
+      }
+    },
+    [isMobile]
+  );
+
+  const executeRawQuery = useCallback(
+    async (sql?: string): Promise<RunQueryResponseType | undefined> => {
+      const res = await runRawQuery(sql);
+      applyQueryResult(res);
+      return res;
+    },
+    [applyQueryResult, runRawQuery]
+  );
+
+  useEffect(() => {
+    if (!pendingEditorQueryRun || pendingEditorQueryRun.tabId !== selectedTab?.id) {
+      return;
+    }
+
+    const { query } = pendingEditorQueryRun;
+    clearPendingEditorQueryRun();
+
+    const runPending = async (): Promise<void> => {
+      setValue(query);
+      updateQuery(query);
+      const res = await executeRawQuery(query);
+      if (res) {
+        toast.success(locales.run_query);
+      }
+    };
+
+    void runPending();
+  }, [pendingEditorQueryRun, selectedTab?.id, clearPendingEditorQueryRun, executeRawQuery, updateQuery]);
+
+  const handleUpdateState = (query: string): void => {
+    setValue(query);
+    updateQuery(query);
   };
 
-  const runQuery = async (query?: string): Promise<void> => {
-    const res = await runRawQuery(query);
-    setTableData({
-      rows: res?.data ?? [],
-      columns: res?.columns.filter((column) => column.isActive) ?? []
-    });
+  const runQuery = async (): Promise<void> => {
+    const selectedQuery = sqlEditorRef.current?.getSelectedQuery();
+    await executeRawQuery(selectedQuery === '' ? undefined : selectedQuery);
   };
+
+  const handleAiExplain = (): void => {
+    const sql = sqlEditorRef.current?.getSelectedQuery()?.trim();
+    if (!sql) {
+      return;
+    }
+    askAboutSelection(sql, 'explain');
+  };
+
+  const handleMobileViewChange = (_: SyntheticEvent, nextView: QueryMobileView): void => {
+    setMobileView(nextView);
+  };
+
+  const displayRows = tableData.rows;
+  const displayColumns = useMemo(() => getActiveColumns(tableData.columns), [tableData.columns]);
+
+  const hasResults = displayColumns.length > 0;
+  const showMobileTabs = isMobile && hasResults;
+  const resultsPanelHeight = Math.max(Math.floor((windowSize.heightNumber ?? 600) / 2), 200);
 
   return (
     <>
       <QueryEditorActionBar
         loading={isDataFetching}
-        onRunQuery={runQuery}
+        onRunQuery={() => void runQuery()}
+        onAiExplain={handleAiExplain}
         databases={autocomplete?.databases ?? []}
         schemas={autocomplete?.schemas ?? []}
-        onFormat={(): void => handleChangeValue()}
+        onFormat={(): void => setValue(getQuery())}
       />
-      <Box display={'flex'} flexDirection={'column'} height={windowSize.height}>
-        <Box
-          display={'flex'}
-          minHeight={'0'}
-          flex={1}
-          borderBottom={(theme: Theme): string => `1px solid ${theme.palette.divider}`}
-        >
-          <SqlEditor
-            onRunQuery={runQuery}
-            onMount={(): void => setShowGrid(true)}
-            onChange={handleUpdateState}
-            autocomplete={
-              autocomplete ?? {
-                databases: [],
-                schemas: [],
-                tables: [],
-                columns: {},
-                views: []
+      {showMobileTabs && (
+        <Tabs className='MuiTabs-flat' value={mobileView} onChange={handleMobileViewChange} variant='fullWidth'>
+          <Tab className='Mui-flat' value='editor' label={locales.query_editor} />
+          <Tab className='Mui-flat' value='results' label={locales.query_results} />
+        </Tabs>
+      )}
+      <QueryContainerStyled height={isMobile ? '100%' : windowSize.height}>
+        {(!isMobile || mobileView === 'editor') && (
+          <QueryEditorBoxStyled>
+            <SqlEditor
+              ref={sqlEditorRef}
+              onRunQuery={() => void runQuery()}
+              onChange={handleUpdateState}
+              onAiSelection={(sql, action) => askAboutSelection(sql, action)}
+              autocomplete={
+                autocomplete ?? {
+                  databases: [],
+                  schemas: [],
+                  tables: [],
+                  columns: {},
+                  views: []
+                }
               }
-            }
-            value={value}
-          />
-        </Box>
-
-        {showGrid && tableData.columns.length > 0 && (
-          <ResizableYBox height={windowSize.heightNumber ? windowSize.heightNumber / 2 : 0} direction={'btt'}>
-            <DataGrid editable={false} rows={tableData.rows} columns={tableData.columns} loading={isDataFetching} />
-          </ResizableYBox>
+              value={value}
+            />
+          </QueryEditorBoxStyled>
         )}
-      </Box>
+
+        {hasResults ? (
+          isMobile ? (
+            mobileView === 'results' && (
+              <QueryResultGrid loading={isDataFetching} rows={displayRows} columns={displayColumns} />
+            )
+          ) : (
+            <ResizableYBox height={resultsPanelHeight} direction={'btt'}>
+              <QueryResultGrid loading={isDataFetching} rows={displayRows} columns={displayColumns} />
+            </ResizableYBox>
+          )
+        ) : (
+          !isDataFetching &&
+          !isMobile && (
+            <EmptyState
+              icon='sql'
+              title={locales.query_empty_results_title}
+              description={locales.query_empty_results_description}
+            />
+          )
+        )}
+      </QueryContainerStyled>
     </>
   );
 }

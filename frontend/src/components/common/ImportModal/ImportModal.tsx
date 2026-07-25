@@ -12,6 +12,7 @@ import { useState } from 'react';
 import * as v from 'valibot';
 import { JobProgressModal } from '../JobProgressModal/JobProgressModal';
 import ImportButton from './ImportButton/ImportButton';
+import { ImportModalContainerStyled, ImportModalFooterStyled } from './ImportModal.styled';
 import type { ImportModalProps } from './types';
 
 const formSchema = v.object({
@@ -54,7 +55,7 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
       onClose();
       form.reset();
 
-      useDataStore.getState().runQuery();
+      await useDataStore.getState().runQuery();
       useDataStore.getState().toggleReRunQuery();
     },
     defaultValues: {
@@ -88,8 +89,12 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
   return (
     <>
       <Modal open={show} title={locales.import_data} onClose={() => onClose()}>
-        <Box flex={1} display={'flex'} flexDirection={'column'}>
-          <Box flex={1}>
+        <ImportModalContainerStyled>
+          <Box
+            sx={{
+              flex: 1
+            }}
+          >
             <form.Field name='file'>
               {(field) => (
                 <Box>
@@ -122,7 +127,7 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
                     value={field.state.value}
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-ignore
-                    onChange={(value) => field.handleChange(value.value)}
+                    onChange={(value) => field.handleChange(value.value as string)}
                     label={locales.format}
                   />
                 </FormControl>
@@ -173,17 +178,16 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
               )}
             </form.Field>
           </Box>
-          <Box display={'flex'} mt={2} justifyContent={'space-between'}>
+          <ImportModalFooterStyled>
             <Button size='small' onClick={handleCloseModal}>
               {locales.cancel}
             </Button>
-            <Button onClick={() => form.handleSubmit()} variant='contained' size='small'>
+            <Button onClick={() => void form.handleSubmit()} variant='contained' size='small'>
               {locales.import}
             </Button>
-          </Box>
-        </Box>
+          </ImportModalFooterStyled>
+        </ImportModalContainerStyled>
       </Modal>
-
       <JobProgressModal
         open={showProgress}
         jobId={jobId}

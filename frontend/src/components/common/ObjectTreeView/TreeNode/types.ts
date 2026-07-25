@@ -5,7 +5,7 @@ import type { RefObject } from 'react';
 
 export type TreeNodeProps = {
   node: TreeNodeType;
-  parentRefs?: React.RefObject<Map<string, HTMLDivElement>>;
+  parentRefsRef?: React.RefObject<Map<string, HTMLDivElement>>;
   nodeIndex?: number;
   level?: number;
   searchTerm?: string;
@@ -28,7 +28,7 @@ export type NodeContentProps = {
   nodeIndex: number;
   focusNode: (event: React.MouseEvent) => void;
   actionDetection: (event: React.MouseEvent, node: TreeNodeType) => void;
-  expandNode: (event: React.MouseEvent | React.KeyboardEvent, moveFocusToChild: boolean) => void;
+  expandNode: (event: React.MouseEvent | React.KeyboardEvent, moveFocusToChild: boolean) => Promise<void>;
   handleContextMenu: (event: React.MouseEvent) => void;
   handleBlur: () => void;
   handleKeyDown: (event: React.KeyboardEvent) => void;

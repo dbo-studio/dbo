@@ -5,22 +5,25 @@ import type { MenuPanelProps } from '../types';
 import { MenuPanelStyled } from './MenuPanel.styled';
 import MenuPanelItem from './MenuPanelItem/MenuPanelItem';
 
-export default function MenuPanel({ tabs, onChange, defaultTabId }: MenuPanelProps): JSX.Element {
+export default function MenuPanel({ tabs, onChange, defaultTab }: MenuPanelProps): JSX.Element {
   const uuids = useUUID(tabs.length);
-  const [selectedTabId, setSelectedTabId] = useState(defaultTabId ?? tabs[0].id);
+  const [selectedTabId, setSelectedTabId] = useState(defaultTab?.id ?? tabs[0].id);
   const [isDesktop, setIsDesktop] = useState(false);
 
-  const selectedTabContent = useMemo(() => {
-    return tabs.find((obj) => obj.id === selectedTabId)?.content;
-  }, [selectedTabId]);
+  const selectedTab = useMemo(() => {
+    return tabs.find((obj) => obj.id === selectedTabId);
+  }, [selectedTabId, tabs]);
 
   useEffect(() => {
     tools
       .isTauri()
       .then((e) => e ?? setIsDesktop(e))
-      .catch();
-    onChange(selectedTabContent);
-  }, [selectedTabId]);
+      .catch((e) => console.debug('🚀 ~ MenuPanel ~ e:', e));
+  }, []);
+
+  useEffect(() => {
+    onChange(selectedTab);
+  }, [onChange, selectedTab]);
 
   return (
     <MenuPanelStyled>

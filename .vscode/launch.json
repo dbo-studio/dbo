@@ -12,7 +12,8 @@
             "program": "${workspaceFolder}/backend/",
             "env": {
                 "APP_PORT": "8080",
-                "APP_ENV": "docker"
+                "APP_ENV": "docker",
+                "APP_CLIENT": "web"
             }
         }
     ]

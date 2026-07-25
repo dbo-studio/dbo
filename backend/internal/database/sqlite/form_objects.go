@@ -5,13 +5,10 @@ import (
 	"fmt"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
-	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *SQLiteRepository) Objects(ctx context.Context, nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
+func (r *SQLiteRepository) Objects(ctx context.Context, nodeID string, tabID contract.TreeTab, _ contract.TreeNodeActionName) (*contract.FormResponse, error) {
 	switch tabID {
-	case contract.TableTab:
-		return r.getTableInfo(ctx, nodeID, action)
 	case contract.TableColumnsTab:
 		return r.getTableColumns(ctx, nodeID)
 	case contract.TableForeignKeysTab:
@@ -25,32 +22,32 @@ func (r *SQLiteRepository) Objects(ctx context.Context, nodeID string, tabID con
 	}
 }
 
-func (r *SQLiteRepository) getTableInfo(ctx context.Context, nodeID string, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
-	fields := r.tableFields(ctx, action)
+func (r *SQLiteRepository) getTableInfo(ctx context.Context, nodeID string) ([]contract.GeneralField, error) {
+	fields := r.tableFields()
 
-	tables, err := r.getAllTableList()
+	tables, err := r.getAllTableList(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	result := []map[string]any{}
+	result := map[string]any{}
 	for _, table := range tables {
 		if table.Name == nodeID {
-			result = append(result, map[string]any{
+			result = map[string]any{
 				"name":          table.Name,
 				"temporary":     false,
 				"strict":        false,
 				"without_rowid": false,
-			})
+			}
 		}
 	}
 
-	return helper.BuildObjectFormResponseFromResults(result, fields)
+	return r.base.BuildGeneralFormResult(result, fields)
 }
 
 func (r *SQLiteRepository) getTableColumns(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
 	fields := r.tableColumnFields()
-	columns, err := r.getColumns(nodeID, []string{}, true)
+	columns, err := r.getColumns(ctx, nodeID, []string{}, true)
 	if err != nil {
 		return nil, err
 	}
@@ -68,12 +65,17 @@ func (r *SQLiteRepository) getTableColumns(ctx context.Context, nodeID string) (
 		})
 	}
 
-	return helper.BuildFormResponseFromResults(result, fields)
+	tableInfo, err := r.getTableInfo(ctx, nodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.base.BuildHybridFormResponse(tableInfo, result, fields)
 }
 
 func (r *SQLiteRepository) getTableForeignKeys(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
 	fields := r.foreignKeyFields(ctx, nodeID)
-	foreignKeys, err := r.foreignKeys(ctx, nodeID, true)
+	foreignKeys, err := r.foreignKeys(ctx, nodeID)
 	if err != nil {
 		return nil, err
 	}
@@ -92,18 +94,13 @@ func (r *SQLiteRepository) getTableForeignKeys(ctx context.Context, nodeID strin
 		})
 	}
 
-	response, err := helper.BuildFormResponseFromResults(result, fields)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return r.base.BuildArrayFormResponse(result, fields)
 }
 
 func (r *SQLiteRepository) getTableKeys(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
 	fields := r.keyFields(ctx, nodeID)
 
-	columns, err := r.getColumns(nodeID, []string{}, true)
+	columns, err := r.getColumns(ctx, nodeID, []string{}, true)
 	if err != nil {
 		return nil, err
 	}
@@ -125,29 +122,30 @@ func (r *SQLiteRepository) getTableKeys(ctx context.Context, nodeID string) (*co
 		})
 	}
 
-	return helper.BuildFormResponseFromResults(result, fields)
+	return r.base.BuildArrayFormResponse(result, fields)
 }
 
 func (r *SQLiteRepository) getViewInfo(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
 	fields := r.viewFields()
-	views, err := r.views(ctx, true)
+	views, err := r.views(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	result := []map[string]any{}
+	row := map[string]any{}
 	for _, view := range views {
 		if view.Name == nodeID {
 			query := ""
 			if view.Query != nil {
 				query = *view.Query
 			}
-			result = append(result, map[string]any{
+			row = map[string]any{
 				"name":  view.Name,
 				"query": query,
-			})
+			}
+			break
 		}
 	}
 
-	return helper.BuildObjectFormResponseFromResults(result, fields)
+	return r.base.BuildGeneralFormResponse(fields, row)
 }

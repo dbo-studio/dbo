@@ -1,5 +1,5 @@
 import api from '@/api';
-import type { CreateConnectionRequestType } from '@/api/connection/types';
+import type { CreateConnectionRequestType, PingConnectionRequestType } from '@/api/connection/types';
 import Modal from '@/components/base/Modal/Modal';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
 import ConnectionSelection from './ConnectionSelection/ConnectionSelection';
+import Mysql from './Mysql/Mysql';
 import PostgreSQL from './Postgresql/Postgresql';
 import SQLite from './SQLite/SQLite';
 import type { SelectionConnectionType } from './types';
@@ -17,11 +18,11 @@ const connectionTypes: SelectionConnectionType[] = [
     logo: 'postgresql',
     component: PostgreSQL
   },
-  // {
-  //   name: 'MySQL',
-  //   logo: 'mysql',
-  //   component: Mysql
-  // },
+  {
+    name: 'MySQL',
+    logo: 'mysql',
+    component: Mysql
+  },
   {
     name: 'SQLite',
     logo: 'sqlite',
@@ -38,12 +39,7 @@ export default function AddConnection(): JSX.Element {
   const updateUI = useSettingStore((state) => state.updateUI);
 
   const { mutateAsync: createConnectionMutation, isPending: createConnectionPending } = useMutation({
-    mutationFn: api.connection.createConnection,
-    onSuccess: (): void => {
-      queryClient.invalidateQueries({
-        queryKey: ['connections']
-      });
-    }
+    mutationFn: api.connection.createConnection
   });
 
   const { mutateAsync: pingConnectionMutation, isPending: pingConnectionPending } = useMutation({
@@ -61,7 +57,7 @@ export default function AddConnection(): JSX.Element {
     setStep(1);
   };
 
-  const handlePingConnection = async (data: CreateConnectionRequestType): Promise<void> => {
+  const handlePingConnection = async (data: PingConnectionRequestType): Promise<void> => {
     if (pingConnectionPending) {
       return;
     }
@@ -81,6 +77,9 @@ export default function AddConnection(): JSX.Element {
 
     try {
       await createConnectionMutation(data);
+      await queryClient.invalidateQueries({
+        queryKey: ['connections']
+      });
       handleClose();
       toast.success(locales.connection_create_success);
     } catch (error) {
@@ -98,8 +97,8 @@ export default function AddConnection(): JSX.Element {
           pingLoading={pingConnectionPending}
           submitLoading={createConnectionPending}
           onClose={handleClose}
-          onPing={handlePingConnection}
-          onSubmit={handleCreateConnection}
+          onPing={(data) => void handlePingConnection(data)}
+          onSubmit={(data) => void handleCreateConnection(data)}
         />
       )}
     </Modal>

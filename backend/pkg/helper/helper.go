@@ -18,7 +18,7 @@ func FloatToString(str float64) string {
 	return strconv.FormatFloat(str, 'f', -1, 64)
 }
 
-func StructToJson(value interface{}) string {
+func StructToJSON(value any) string {
 	j, err := json.Marshal(value)
 	if err != nil {
 		return ""
@@ -26,7 +26,7 @@ func StructToJson(value interface{}) string {
 	return string(j)
 }
 
-func RawJsonToStruct[T any](value json.RawMessage) (T, error) {
+func RawJSONToStruct[T any](value json.RawMessage) (T, error) {
 	var v T
 	if value == nil {
 		return v, nil
@@ -36,7 +36,7 @@ func RawJsonToStruct[T any](value json.RawMessage) (T, error) {
 	return v, err
 }
 
-func FormatSQLValue(value interface{}) string {
+func FormatSQLValue(value any) string {
 	switch v := value.(type) {
 	case string:
 		if isAlreadyQuoted(v) {
@@ -67,18 +67,12 @@ func isAlreadyQuoted(s string) bool {
 	return s[0] == '\'' && s[len(s)-1] == '\''
 }
 
-func SanitizeQueryResults(row map[string]any) map[string]any {
-	sanitized := make(map[string]any)
-	for key, value := range row {
-		switch v := value.(type) {
-		case float64:
-			sanitized[key] = strconv.FormatFloat(v, 'f', -1, 64)
-		case []byte:
-			sanitized[key] = string(v)
-		default:
-			sanitized[key] = v
-		}
+func ConvertToDTO[T any](params []byte) (T, error) {
+	var dtoParams T
+	err := json.Unmarshal(params, &dtoParams)
+	if err != nil {
+		return dtoParams, fmt.Errorf("failed to unmarshal params: %v", err)
 	}
 
-	return sanitized
+	return dtoParams, nil
 }

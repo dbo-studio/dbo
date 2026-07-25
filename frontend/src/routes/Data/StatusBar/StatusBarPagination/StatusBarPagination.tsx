@@ -1,16 +1,18 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { TabMode } from '@/core/enums';
+import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
+import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { DataTabType, TabType } from '@/types';
-import { Box, IconButton, type Theme, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { IconButton, Tooltip } from '@mui/material';
 import type { JSX } from 'react';
 import PaginationSetting from './PaginationSetting/PaginationSetting';
+import { PageNumberStyled, StatusBarPaginationStyled } from './StatusBarPagination.styled';
 
 export default function StatusBarPagination(): JSX.Element {
-  const theme = useTheme();
-  const matches = useMediaQuery((theme: Theme) => theme.breakpoints.up('sm'));
+  const { isMobile } = useLayoutMode();
   const isDataFetching = useDataStore((state) => state.isDataFetching);
   const selectedTab = useSelectedTab<DataTabType>();
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
@@ -39,31 +41,29 @@ export default function StatusBarPagination(): JSX.Element {
   };
 
   return (
-    <Box
-      alignItems={'center'}
-      justifyContent={'flex-end'}
-      display={matches ? 'flex' : 'none'}
-      flexDirection={'row'}
-      width={208}
-    >
+    <StatusBarPaginationStyled mobile={isMobile}>
       {selectedTab?.mode && selectedTab?.mode === TabMode.Data && (
         <>
           <PaginationSetting />
-          <IconButton
-            style={{ marginLeft: theme.spacing(1) }}
-            disabled={selectedTab?.pagination?.page === 1}
-            onClick={(): void => handlePagination('prev')}
-          >
-            <CustomIcon type='chevronLeft' size='s' />
-          </IconButton>
-          <Typography color={'textText'} fontWeight={'bold'} textAlign={'center'} minWidth={54}>
+          <Tooltip title={locales.previous_page}>
+            <IconButton
+              aria-label={locales.previous_page}
+              disabled={selectedTab?.pagination?.page === 1}
+              onClick={(): void => handlePagination('prev')}
+            >
+              <CustomIcon type='chevronLeft' size='s' />
+            </IconButton>
+          </Tooltip>
+          <PageNumberStyled mobile={isMobile} color='textText'>
             {selectedTab?.pagination?.page ?? 1}
-          </Typography>
-          <IconButton onClick={(): void => handlePagination('next')}>
-            <CustomIcon type='chevronRight' size='s' />
-          </IconButton>
+          </PageNumberStyled>
+          <Tooltip title={locales.next_page}>
+            <IconButton aria-label={locales.next_page} onClick={(): void => handlePagination('next')}>
+              <CustomIcon type='chevronRight' size='s' />
+            </IconButton>
+          </Tooltip>
         </>
       )}
-    </Box>
+    </StatusBarPaginationStyled>
   );
 }

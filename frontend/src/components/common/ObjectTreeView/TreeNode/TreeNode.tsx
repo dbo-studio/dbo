@@ -6,14 +6,17 @@ import {
   HoverableTreeNodeContainerStyled
 } from '@/components/common/ObjectTreeView/TreeNode/TreeNode.styled';
 import type { TreeNodeProps } from '@/components/common/ObjectTreeView/TreeNode/types';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection.hook';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { TreeNodeType } from '@/types/Tree';
-import { Fragment, type JSX, useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, memo, type JSX, useCallback, useEffect, useRef, useState } from 'react';
+import { areTreeNodePropsEqual } from './areTreeNodePropsEqual';
 import { useActionDetection } from './hooks/useActionDetection';
+import { useIsTreeNodeExpanded } from './hooks/useIsTreeNodeExpanded';
 
-export default function TreeNode({
-  node: initialNode,
-  parentRefs = { current: new Map() },
+function TreeNode({
+  node,
+  parentRefsRef = { current: new Map() },
   nodeIndex = 0,
   level = 0,
   searchTerm = '',
@@ -22,45 +25,44 @@ export default function TreeNode({
   onFocusChange,
   onContextMenu
 }: TreeNodeProps): JSX.Element {
-  const [node, setNode] = useState<TreeNodeType>(initialNode);
   const [isLoading, setIsLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const nodeRef = useRef<HTMLDivElement | null>(null);
-  const { isNodeExpanded, expandNode, collapseNode, setNodeChildren } = useTreeStore();
+  const currentConnection = useCurrentConnection();
+  const connectionId = currentConnection?.id;
+  const isExpanded = useIsTreeNodeExpanded(node.id, connectionId);
 
-  const isExpanded = isNodeExpanded(node.id);
   const isSelected = node.id === selectedNodeId;
 
   useEffect(() => {
-    setNode(initialNode);
-  }, [initialNode]);
-
-  useEffect(() => {
+    const parentRefsMap = parentRefsRef.current;
     if (nodeRef.current) {
-      parentRefs.current.set(node.id, nodeRef.current);
+      parentRefsMap.set(node.id, nodeRef.current);
     }
     return (): void => {
-      parentRefs.current.delete(node.id);
+      parentRefsMap.delete(node.id);
     };
-  }, [node.id, parentRefs]);
+  }, [node.id, parentRefsRef]);
 
-  const handleSetChildren = (newChildren: TreeNodeType[]): void => {
-    const children = Array.isArray(newChildren) ? newChildren : [];
-    setNode((prev) => ({
-      ...prev,
-      children: Array.isArray(children) ? children : []
-    }));
+  const handleSetChildren = useCallback(
+    (newChildren: TreeNodeType[]): void => {
+      const children = Array.isArray(newChildren) ? newChildren : [];
+      useTreeStore.getState().setNodeChildren(node.id, children);
+    },
+    [node.id]
+  );
 
-    setNodeChildren(node.id, Array.isArray(children) ? children : []);
-  };
-
-  const handleIsExpanded = (expanded: boolean): void => {
-    if (expanded) {
-      expandNode(node.id);
-    } else {
-      collapseNode(node.id);
-    }
-  };
+  const handleIsExpanded = useCallback(
+    (expanded: boolean): void => {
+      const { expandNode, collapseNode } = useTreeStore.getState();
+      if (expanded) {
+        expandNode(node.id);
+      } else {
+        collapseNode(node.id);
+      }
+    },
+    [node.id]
+  );
 
   const {
     expandNode: handleExpandNode,
@@ -69,14 +71,14 @@ export default function TreeNode({
     handleKeyDown
   } = useTreeNodeHandlers({
     node,
-    children: node.children,
+    children: node.children ?? [],
     isExpanded,
     setIsExpanded: handleIsExpanded,
     setChildren: handleSetChildren,
     setIsLoading,
     setIsFocused,
     fetchChildren,
-    parentRefs,
+    parentRefsRef,
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     nodeRef,
@@ -93,27 +95,28 @@ export default function TreeNode({
       event.stopPropagation();
       onContextMenu(event, menu);
     },
-    [node, onContextMenu]
+    [menu, onContextMenu]
   );
 
   const matchesSearch = useCallback(
-    (node: TreeNodeType): boolean => {
+    (treeNode: TreeNodeType): boolean => {
       if (!searchTerm) return true;
 
       const searchLower = searchTerm.toLowerCase();
-      const nodeNameLower = node.name.toLowerCase();
+      const nodeNameLower = treeNode.name.toLowerCase();
 
       if (nodeNameLower.includes(searchLower)) return true;
 
-      return node.children.some((child) => matchesSearch(child));
+      return (treeNode.children ?? []).some((child) => matchesSearch(child));
     },
     [searchTerm]
   );
 
-  // If search term is present and node doesn't match, don't render
   if (searchTerm && !matchesSearch(node)) {
     return <Fragment />;
   }
+
+  const children = node.children ?? [];
 
   return (
     <HoverableTreeNodeContainerStyled>
@@ -128,20 +131,20 @@ export default function TreeNode({
         level={level}
         nodeIndex={nodeIndex}
         focusNode={focusNode}
-        actionDetection={actionDetection}
-        expandNode={handleExpandNode}
+        actionDetection={(event, treeNode) => void actionDetection(event, treeNode)}
+        expandNode={(event, moveFocusToChild) => handleExpandNode(event, moveFocusToChild)}
         handleContextMenu={handleContextMenu}
         handleBlur={handleBlur}
         handleKeyDown={handleKeyDown}
       />
-      {isExpanded && node.children.length > 0 && (
+      {isExpanded && children.length > 0 && (
         <ChildrenContainer>
-          {node.children.map((child, index) => (
+          {children.map((child, index) => (
             <TreeNode
               key={child.id}
               node={child}
               fetchChildren={fetchChildren}
-              parentRefs={parentRefs}
+              parentRefsRef={parentRefsRef}
               nodeIndex={index}
               level={level + 1}
               onFocusChange={onFocusChange}
@@ -155,3 +158,5 @@ export default function TreeNode({
     </HoverableTreeNodeContainerStyled>
   );
 }
+
+export default memo(TreeNode, areTreeNodePropsEqual);

@@ -7,9 +7,12 @@ import { FormTabsStyled } from './FormTabs.styled';
 export default function FormTabs({ tabs, selectedTabId, onTabChange }: FormTabProps): JSX.Element {
   return (
     <FormTabsStyled>
-      <Tabs value={selectedTabId ?? tabs[0]?.id ?? ''} onChange={(_, newValue): void => onTabChange(newValue)}>
+      <Tabs
+        value={selectedTabId ?? tabs[0]?.id ?? ''}
+        onChange={(_, newValue): void => onTabChange(newValue as string)}
+      >
         {tabs.map((tab: ObjectTabType) => (
-          <Tab value={tab.id} key={tab.id} label={tab.name} />
+          <Tab value={tab.id} key={tab.id} label={tab.name} data-testid={`object-form-tab-${tab.id}`} />
         ))}
       </Tabs>
     </FormTabsStyled>

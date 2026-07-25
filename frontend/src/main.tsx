@@ -21,6 +21,10 @@ import Home from './routes/index.tsx';
 
 loader.config({ monaco });
 
+if (import.meta.env.DEV) {
+  (window as unknown as { monaco: typeof monaco }).monaco = monaco;
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

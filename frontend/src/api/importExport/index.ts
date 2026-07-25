@@ -16,15 +16,15 @@ export const importData = async (request: ImportRequestType): Promise<JobRespons
   formData.append('skipErrors', request.skipErrors.toString());
   formData.append('maxErrors', request.maxErrors.toString());
 
-  const response = await api.post(endpoint.import(), formData, {
+  const response = await api.post<{ data: JobResponseType }>(endpoint.import(), formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
   });
 
-  return response.data.data as JobResponseType;
+  return response.data.data;
 };
 
 export const exportData = async (request: ExportRequestType): Promise<JobResponseType> => {
-  return (await api.post(endpoint.export(), request)).data.data as JobResponseType;
+  return (await api.post<{ data: JobResponseType }>(endpoint.export(), request)).data.data;
 };

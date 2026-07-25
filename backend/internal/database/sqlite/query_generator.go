@@ -14,13 +14,14 @@ type Table struct {
 	Name string `gorm:"column:tbl_name"`
 }
 
-func (r *SQLiteRepository) getAllTableList() ([]Table, error) {
+func (r *SQLiteRepository) getAllTableList(ctx context.Context) ([]Table, error) {
 	tables := make([]Table, 0)
-	err := r.db.Table("sqlite_master").
+	err := r.base.DB().WithContext(ctx).Table("sqlite_master").
 		Select("tbl_name").
 		Where("type = 'table'").
 		Order("tbl_name").
 		Scan(&tables).Error
+
 	return tables, err
 }
 
@@ -28,13 +29,14 @@ type ViewBasic struct {
 	Name string `gorm:"column:tbl_name"`
 }
 
-func (r *SQLiteRepository) getAllViewList() ([]ViewBasic, error) {
+func (r *SQLiteRepository) getAllViewList(ctx context.Context) ([]ViewBasic, error) {
 	views := make([]ViewBasic, 0)
-	err := r.db.Table("sqlite_master").
+	err := r.base.DB().WithContext(ctx).Table("sqlite_master").
 		Select("tbl_name").
 		Where("type = 'view'").
 		Order("tbl_name").
 		Scan(&views).Error
+
 	return views, err
 }
 
@@ -49,9 +51,9 @@ type Column struct {
 	IsActive      bool           `gorm:"-"`
 }
 
-func (r *SQLiteRepository) getColumns(table string, columnNames []string, editable bool) ([]Column, error) {
+func (r *SQLiteRepository) getColumns(ctx context.Context, table string, columnNames []string, editable bool) ([]Column, error) {
 	columns := make([]Column, 0)
-	err := r.db.Raw("PRAGMA table_info(" + table + ")").Scan(&columns).Error
+	err := r.base.DB().WithContext(ctx).Raw("PRAGMA table_info(" + table + ")").Scan(&columns).Error
 
 	if err != nil {
 		return nil, err
@@ -65,7 +67,7 @@ func (r *SQLiteRepository) getColumns(table string, columnNames []string, editab
 			columns[i].IsNullable = "0"
 		}
 
-		columns[i].MappedType = columnMappedFormat(column.DataType)
+		columns[i].MappedType = r.base.ColumnMappedFormat(column.DataType)
 		columns[i].Editable = editable
 		columns[i].IsActive = true
 		if len(columnNames) > 0 {
@@ -76,8 +78,8 @@ func (r *SQLiteRepository) getColumns(table string, columnNames []string, editab
 	return columns, err
 }
 
-func (r *SQLiteRepository) getPrimaryKeys(table Table) ([]string, error) {
-	columns, err := r.getColumns(table.Name, nil, false)
+func (r *SQLiteRepository) getPrimaryKeys(ctx context.Context, table Table) ([]string, error) {
+	columns, err := r.getColumns(ctx, table.Name, nil, false)
 	if err != nil {
 		return nil, err
 	}
@@ -87,10 +89,10 @@ func (r *SQLiteRepository) getPrimaryKeys(table Table) ([]string, error) {
 	return lo.Map(primaryKeys, func(x Column, _ int) string { return x.ColumnName }), nil
 }
 
-func (r *SQLiteRepository) getTableDDL(table string) (string, error) {
+func (r *SQLiteRepository) getTableDDL(ctx context.Context, table string) (string, error) {
 	var createSQL string
 
-	r.db.Table("sqlite_master").
+	r.base.DB().WithContext(ctx).Table("sqlite_master").
 		Select("sql").Where("type = 'table' AND name = ?", table).
 		Limit(1).
 		Scan(&createSQL)
@@ -107,22 +109,10 @@ type View struct {
 	Query *string `gorm:"column:sql"`
 }
 
-func (r *SQLiteRepository) views(ctx context.Context, fromCache bool) ([]View, error) {
+func (r *SQLiteRepository) views(ctx context.Context) ([]View, error) {
 	views := make([]View, 0)
-	cacheKey := r.cacheKey("views")
 
-	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &views)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(views) > 0 {
-			return views, nil
-		}
-	}
-
-	err := r.db.WithContext(ctx).Table("sqlite_master").
+	err := r.base.DB().WithContext(ctx).Table("sqlite_master").
 		Select("tbl_name, sql").
 		Where("type = 'view'").
 		Order("tbl_name").
@@ -131,8 +121,6 @@ func (r *SQLiteRepository) views(ctx context.Context, fromCache bool) ([]View, e
 	if err != nil {
 		return nil, err
 	}
-
-	r.updateCache(ctx, cacheKey, views)
 
 	return views, nil
 }
@@ -148,20 +136,8 @@ type ForeignKey struct {
 	InitiallyDeferred bool
 }
 
-func (r *SQLiteRepository) foreignKeys(ctx context.Context, table string, fromCache bool) ([]ForeignKey, error) {
+func (r *SQLiteRepository) foreignKeys(ctx context.Context, table string) ([]ForeignKey, error) {
 	foreignKeys := make([]ForeignKey, 0)
-	cacheKey := r.cacheKey("foreign_keys", table)
-
-	if fromCache {
-		err := r.cache.Get(ctx, cacheKey, &foreignKeys)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(foreignKeys) > 0 {
-			return foreignKeys, nil
-		}
-	}
 
 	type pragmaFK struct {
 		ID       int    `gorm:"column:id"`
@@ -175,7 +151,7 @@ func (r *SQLiteRepository) foreignKeys(ctx context.Context, table string, fromCa
 	}
 
 	var fkRows []pragmaFK
-	err := r.db.WithContext(ctx).Raw(fmt.Sprintf("PRAGMA foreign_key_list(%s)", quoteIdent(table))).Scan(&fkRows).Error
+	err := r.base.DB().WithContext(ctx).Raw(fmt.Sprintf("PRAGMA foreign_key_list(%s)", quoteIdent(table))).Scan(&fkRows).Error
 	if err != nil {
 		return nil, err
 	}
@@ -202,8 +178,6 @@ func (r *SQLiteRepository) foreignKeys(ctx context.Context, table string, fromCa
 	for _, fk := range fkMap {
 		foreignKeys = append(foreignKeys, *fk)
 	}
-
-	r.updateCache(ctx, cacheKey, foreignKeys)
 
 	return foreignKeys, nil
 }

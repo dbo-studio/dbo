@@ -2,171 +2,137 @@ package databaseSqlite
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
+	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	"github.com/samber/lo"
-	"golang.org/x/sync/errgroup"
 )
 
-func (r *SQLiteRepository) AiContext(ctx context.Context, req *dto.AiChatRequest) (string, error) {
-	var sb strings.Builder
+type ForeignKeyInfo struct {
+	ReferencedTable  string
+	ReferencedColumn string
+}
 
+/*
+this is a sample of the AI context
+Database: default
+
+Tables:
+1. data_src
+  - datasrc_id (PK, character)
+  - authors (character varying)
+  - title (character varying)
+  - year (integer)
+  - journal (text)
+  - vol_city (text)
+  - issue_state (text)
+  - start_page (text)
+  - end_page (text)
+
+2. datsrcln
+  - ndb_no (PK, FK → nut_data.nutr_no, character)
+  - nutr_no (PK, FK → nut_data.nutr_no, character)
+  - datasrc_id (PK, FK → data_src.datasrc_id, character)
+*/
+func (r *SQLiteRepository) AiContext(ctx context.Context, req *dto.AiChatRequest) (string, error) {
 	if req.ContextOpts == nil {
 		return "", nil
 	}
 
-	sb.WriteString("\nTables:\n")
-
-	if len(req.ContextOpts.Tables) == 0 {
-		tableList, err := r.getAllTableList()
+	tables := req.ContextOpts.Tables
+	if len(tables) == 0 && lo.FromPtr(req.ContextOpts.ObjectDefinition) == "" {
+		list, err := r.ListTableNames(ctx, nil, nil)
 		if err != nil {
 			return "", err
 		}
-		req.ContextOpts.Tables = lo.Map(tableList, func(table Table, _ int) string {
-			return table.Name
-		})
+		tables = list
 	}
 
-	if len(req.ContextOpts.Views) == 0 {
-		viewList, err := r.getAllViewList()
+	views := req.ContextOpts.Views
+	if len(views) == 0 && lo.FromPtr(req.ContextOpts.ObjectDefinition) == "" {
+		list, err := r.ListViewNames(ctx, nil, nil)
 		if err != nil {
 			return "", err
 		}
-		req.ContextOpts.Views = lo.Map(viewList, func(view ViewBasic, _ int) string {
-			return view.Name
-		})
+		views = list
 	}
 
-	tableSections := make([]string, len(req.ContextOpts.Tables))
-	gTables, _ := errgroup.WithContext(ctx)
-
-	for idx, table := range req.ContextOpts.Tables {
-		idx := idx
-		tableName := table
-
-		gTables.Go(func() error {
-			columns, err := r.getColumns(tableName, []string{}, false)
-			if err != nil {
-				return err
-			}
-
-			var sectionBuilder strings.Builder
-			sectionBuilder.WriteString(fmt.Sprintf("%d. %s\n", idx+1, tableName))
-
-			pkList := make([]string, 0)
-
-			for _, column := range columns {
-				sectionBuilder.WriteString("   - ")
-				sectionBuilder.WriteString(column.ColumnName)
-				sectionBuilder.WriteString(" (")
-				sectionBuilder.WriteString(columnContextDescriptor(column))
-				sectionBuilder.WriteString(")\n")
-
-				if column.IsPrimaryKey == "1" {
-					pkList = append(pkList, column.ColumnName)
-				}
-			}
-
-			if len(pkList) > 1 {
-				sectionBuilder.WriteString("   - PRIMARY KEY (")
-				sectionBuilder.WriteString(strings.Join(pkList, ", "))
-				sectionBuilder.WriteString(")\n")
-			}
-
-			sectionBuilder.WriteString("\n")
-			tableSections[idx] = sectionBuilder.String()
-			return nil
-		})
-	}
-
-	if err := gTables.Wait(); err != nil {
-		return "", err
-	}
-
-	for _, section := range tableSections {
-		sb.WriteString(section)
-	}
-
-	if len(req.ContextOpts.Views) > 0 {
-		sb.WriteString("\nViews:\n")
-
-		viewSections := make([]string, len(req.ContextOpts.Views))
-		gViews, _ := errgroup.WithContext(ctx)
-
-		for idx, view := range req.ContextOpts.Views {
-			idx := idx
-			viewName := view
-
-			gViews.Go(func() error {
-				columns, err := r.getColumns(viewName, []string{}, false)
-				if err != nil {
-					return err
-				}
-
-				var sectionBuilder strings.Builder
-				sectionBuilder.WriteString(fmt.Sprintf("%d. %s\n", idx+1, viewName))
-
-				for _, column := range columns {
-					sectionBuilder.WriteString("   - ")
-					sectionBuilder.WriteString(column.ColumnName)
-					sectionBuilder.WriteString(" (")
-					sectionBuilder.WriteString(column.MappedType)
-					sectionBuilder.WriteString(")\n")
-				}
-
-				sectionBuilder.WriteString("\n")
-				viewSections[idx] = sectionBuilder.String()
-				return nil
-			})
-		}
-
-		if err := gViews.Wait(); err != nil {
-			return "", err
-		}
-
-		for _, section := range viewSections {
-			sb.WriteString(section)
-		}
-	}
-
-	return sb.String(), nil
+	return databaseCore.BuildAIChatContext(ctx, databaseContract.AIContextOptions{
+		Database: req.ContextOpts.Database,
+		Schema:   req.ContextOpts.Schema,
+		Tables:   tables,
+		Views:    views,
+	}, sqliteAIContextProvider{repo: r})
 }
 
+/*
+this is a sample of the AI complete context
+Database: default
+Schema: public
+
+Tables:
+1. data_src
+  - datasrc_id (PK, character(6))
+  - authors (character varying(256))
+  - title (character varying)
+  - year (integer)
+  - journal (text)
+  - vol_city (text)
+  - issue_state (text)
+  - start_page (text)
+  - end_page (text)
+*/
 func (r *SQLiteRepository) AiCompleteContext(ctx context.Context, req *dto.AiInlineCompleteRequest) string {
-	var contextBuilder strings.Builder
-
-	if req.ContextOpts.Database != nil {
-		contextBuilder.WriteString("Database: " + *req.ContextOpts.Database)
-		contextBuilder.WriteString("\n")
+	sqlResult := r.base.ParseSQL(req.ContextOpts.Prompt)
+	database := sqlResult.Database
+	if database == nil {
+		database = req.ContextOpts.Database
+	}
+	schema := sqlResult.Schema
+	if schema == nil {
+		schema = req.ContextOpts.Schema
 	}
 
-	if req.ContextOpts.Prompt != "" {
-		contextBuilder.WriteString("Prompt: " + req.ContextOpts.Prompt)
-		contextBuilder.WriteString("\n")
+	result, err := databaseCore.BuildAICompleteContext(ctx, databaseContract.AIContextOptions{
+		Database: database,
+		Schema:   schema,
+		Tables:   sqlResult.Tables,
+		Views:    sqlResult.Views,
+	}, sqliteAIContextProvider{repo: r})
+	if err != nil {
+		return ""
 	}
-
-	return contextBuilder.String()
+	return result
 }
 
-func columnContextDescriptor(column Column) string {
-	descriptors := make([]string, 0, 2)
-
-	if column.IsPrimaryKey == "1" {
-		descriptors = append(descriptors, "PK")
-	}
-
-	descriptors = append(descriptors, columnTypeForContext(column))
-
-	return strings.Join(descriptors, ", ")
+type sqliteAIContextProvider struct {
+	repo *SQLiteRepository
 }
 
-func columnTypeForContext(column Column) string {
-	dataType := strings.TrimSpace(column.DataType)
-	if dataType != "" {
-		return dataType
+func (p sqliteAIContextProvider) TableColumns(ctx context.Context, table string, _ databaseContract.AIContextOptions) ([]databaseContract.AIContextColumn, error) {
+	columns, err := p.repo.getColumns(ctx, table, []string{}, false)
+	if err != nil {
+		return nil, err
 	}
+	return sqliteColumnsToContextColumns(columns), nil
+}
 
-	return column.MappedType
+func (p sqliteAIContextProvider) ViewColumns(ctx context.Context, view string, _ databaseContract.AIContextOptions) ([]databaseContract.AIContextColumn, error) {
+	columns, err := p.repo.getColumns(ctx, view, []string{}, false)
+	if err != nil {
+		return nil, err
+	}
+	return sqliteColumnsToContextColumns(columns), nil
+}
+
+func sqliteColumnsToContextColumns(columns []Column) []databaseContract.AIContextColumn {
+	return lo.Map(columns, func(column Column, _ int) databaseContract.AIContextColumn {
+		return databaseContract.AIContextColumn{
+			Name:         column.ColumnName,
+			MappedType:   column.MappedType,
+			DataType:     column.DataType,
+			IsPrimaryKey: column.IsPrimaryKey == "1",
+		}
+	})
 }

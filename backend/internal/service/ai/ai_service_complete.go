@@ -14,7 +14,7 @@ import (
 
 func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteRequest) (*dto.AiInlineCompleteResponse, error) {
 	chats, err := s.aiChatRepo.List(ctx, &dto.AiChatListRequest{
-		ConnectionId: req.ConnectionId,
+		ConnectionID: req.ConnectionID,
 		PaginationRequest: dto.PaginationRequest{
 			Page:  lo.ToPtr(1),
 			Count: lo.ToPtr(1),
@@ -39,14 +39,14 @@ func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteR
 		return cachedResponse, nil
 	}
 
-	conn, err := s.connectionRepo.Find(ctx, req.ConnectionId)
+	conn, err := s.connectionRepo.Find(ctx, req.ConnectionID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, conn, s.cm)
+	repo, err := database.NewAIContextRepository(ctx, conn, s.cm)
 	if err != nil {
-		return nil, apperror.InternalServerError(err)
+		return nil, err
 	}
 
 	contextStr := repo.AiCompleteContext(ctx, req)

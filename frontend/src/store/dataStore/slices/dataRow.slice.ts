@@ -19,9 +19,7 @@ export const createDataRowSlice: StateCreator<
     if (!selectedTabId) return;
 
     set({ rows }, undefined, 'updateRows');
-    debouncedSaveRows(selectedTabId, rows);
-
-    return Promise.resolve();
+    await debouncedSaveRows(selectedTabId, rows);
   },
   updateRow: async (row: RowType): Promise<void> => {
     const rows = get().rows;
@@ -32,8 +30,6 @@ export const createDataRowSlice: StateCreator<
     const newRows = rows.map((r) => (r.dbo_index === row.dbo_index ? row : r));
 
     set({ rows: newRows }, undefined, 'updateRow');
-    debouncedSaveRows(selectedTabId, newRows);
-
-    return Promise.resolve();
+    await debouncedSaveRows(selectedTabId, newRows);
   }
 });

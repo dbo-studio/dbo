@@ -29,7 +29,6 @@ export function useDataGridVirtualization({
   useEffect(() => {
     const element = tableContainerRef.current;
     if (!element) {
-      setOverScan(DEFAULT_OVERSCAN);
       return;
     }
 
@@ -45,10 +44,11 @@ export function useDataGridVirtualization({
       setOverScan(calculateOverScan());
     };
 
-    updateOverScan();
-
     if (typeof ResizeObserver === 'undefined') {
-      return;
+      window.addEventListener('resize', updateOverScan);
+      return () => {
+        window.removeEventListener('resize', updateOverScan);
+      };
     }
 
     const resizeObserver = new ResizeObserver(() => {

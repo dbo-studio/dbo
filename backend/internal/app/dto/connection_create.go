@@ -7,9 +7,10 @@ import (
 
 type (
 	CreateConnectionRequest struct {
-		Name    string          `json:"name"`
-		Type    string          `json:"type"`
-		Options json.RawMessage `json:"options"`
+		Name             string          `json:"name"`
+		Type             string          `json:"type"`
+		Options          json.RawMessage `json:"options"`
+		RememberPassword *bool           `json:"rememberPassword"`
 	}
 )
 

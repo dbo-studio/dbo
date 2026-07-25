@@ -6,25 +6,30 @@ import type { TabType } from '@/types';
 import { useCallback } from 'react';
 import { useRemoveTab as useRemoveTabHook } from './useRemoveTab.hook';
 
-export const useRemoveTab = (): { handleRemoveTab: (tabId: string) => void } => {
+type useRemoveTabReturn = {
+  handleRemoveTab: (tabId: string) => Promise<void>;
+};
+
+export const useRemoveTab = (): useRemoveTabReturn => {
   const [removeTab] = useRemoveTabHook();
-  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
   const confirmModal = useConfirmModalStore();
 
   const handleRemoveTab = useCallback(
     async (tabId: string): Promise<void> => {
       const selectedTab = useTabStore.getState().tabs.find((tab) => tab.id === tabId);
-      if (!selectedTab) return;
+      if (!selectedTab) {
+        return;
+      }
 
       if (await needConfirm(selectedTab)) {
         confirmModal.warning(undefined, 'Are you sure you want to close this tab?', () => {
-          remove(tabId);
+          removeTab(tabId);
         });
       } else {
-        remove(tabId);
+        removeTab(tabId);
       }
     },
-    [removeTab, updateSelectedTab]
+    [confirmModal, removeTab]
   );
 
   const needConfirm = async (tab: TabType): Promise<boolean> => {
@@ -48,18 +53,6 @@ export const useRemoveTab = (): { handleRemoveTab: (tabId: string) => void } => 
     }
 
     return false;
-  };
-
-  const remove = (tabId: string): void => {
-    const newTab = removeTab(tabId);
-    if (newTab === undefined) {
-      updateSelectedTab(undefined);
-      return;
-    }
-
-    if (newTab) {
-      updateSelectedTab(newTab);
-    }
   };
 
   return { handleRemoveTab };

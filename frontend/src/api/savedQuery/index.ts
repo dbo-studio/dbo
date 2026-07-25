@@ -11,18 +11,18 @@ const endpoint = {
 
 export const getSavedQueries = async (params: SavedQueryListRequestType): Promise<SavedQueryType[]> => {
   return (
-    await api.get(endpoint.getSavedQueries(), {
+    await api.get<{ data: SavedQueryType[] }>(endpoint.getSavedQueries(), {
       params
     })
-  ).data.data as SavedQueryType[];
+  ).data.data;
 };
 
 export const createSavedQuery = async (data: CreateSavedQueryType): Promise<SavedQueryType> => {
-  return (await api.post(endpoint.createSavedQuery(), data)).data.data as SavedQueryType;
+  return (await api.post<{ data: SavedQueryType }>(endpoint.createSavedQuery(), data)).data.data;
 };
 
 export const updateSavedQuery = async (data: UpdateSavedQueryType): Promise<SavedQueryType> => {
-  return (await api.patch(endpoint.updateSavedQuery(data.id), data)).data.data as SavedQueryType;
+  return (await api.patch<{ data: SavedQueryType }>(endpoint.updateSavedQuery(data.id), data)).data.data;
 };
 
 export const deleteSavedQuery = async (id: number): Promise<void> => {

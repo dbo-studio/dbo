@@ -4,12 +4,12 @@ import type { MenuType } from '@/components/base/ContextMenu/types';
 import Search from '@/components/base/Search/Search';
 import { useContextMenu, useCurrentConnection, useSelectedTab } from '@/hooks';
 import { useTreeStore } from '@/store/treeStore/tree.store';
+import { TreeNodeType } from '@/types/Tree';
 import { Box, LinearProgress } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
-import { type JSX, useEffect, useMemo, useRef, useState } from 'react';
+import { type JSX, useCallback, useEffect, useRef, useState } from 'react';
 import { TreeViewContainerStyled, TreeViewContentStyled } from './ObjectTreeView.styled';
 import TreeNode from './TreeNode/TreeNode';
-import { TreeNodeType } from '@/types/Tree';
 
 export default function ObjectTreeView(): JSX.Element {
   const currentConnection = useCurrentConnection();
@@ -18,17 +18,15 @@ export default function ObjectTreeView(): JSX.Element {
   const treeError = useTreeStore((state) => state.treeError);
   const [menu, setMenu] = useState<MenuType[]>([]);
 
-  const getTree = useTreeStore((state) => state.getTree);
   const addLoadedParentId = useTreeStore((state) => state.addLoadedParentId);
-  const toggleIsLoading = useTreeStore((state) => state.toggleIsLoading);
   const reloadTree = useTreeStore((state) => state.reloadTree);
 
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
-  const parentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const parentRefsRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
 
-  const tree = useMemo(() => getTree(), [getTree(), currentConnection?.id]);
+  const tree = useTreeStore((state) => (currentConnection?.id ? (state.tree[currentConnection.id] ?? null) : null));
 
   const { mutateAsync: getChildrenMutation } = useMutation({
     mutationFn: api.tree.getTree
@@ -36,52 +34,63 @@ export default function ObjectTreeView(): JSX.Element {
 
   useEffect(() => {
     if (!treeError && !tree && !isLoading && currentConnection?.id) {
-      reloadTree(true);
-    } else if (isLoading) {
-      toggleIsLoading(false);
+      reloadTree(true).catch((e) => console.log('🚀 ~ ObjectTreeView ~ e:', e));
     }
-  }, [currentConnection?.id, tree, treeError]);
+  }, [currentConnection?.id, tree, treeError, isLoading, reloadTree]);
 
-  const fetchChildren = async (parentId: string): Promise<TreeNodeType[]> => {
-    try {
-      addLoadedParentId(parentId);
+  const fetchChildren = useCallback(
+    async (parentId: string): Promise<TreeNodeType[]> => {
+      try {
+        addLoadedParentId(parentId);
 
-      const nodes = await getChildrenMutation({
-        parentId,
-        connectionId: currentConnection?.id || 0,
-        fromCache: true
-      });
-      return nodes?.children || [];
-    } catch (error) {
-      console.debug('🚀 ~ fetchChildren ~ error:', error);
-      return [];
-    }
-  };
+        const nodes = await getChildrenMutation({
+          parentId,
+          connectionId: currentConnection?.id || 0,
+          fromCache: true
+        });
+        return nodes?.children || [];
+      } catch (error) {
+        console.debug('🚀 ~ fetchChildren ~ error:', error);
+        return [];
+      }
+    },
+    [addLoadedParentId, currentConnection?.id, getChildrenMutation]
+  );
 
-  const onContextMenu = (event: React.MouseEvent, menu: MenuType[]): void => {
-    event.stopPropagation();
-    setMenu(menu);
-    handleContextMenu(event);
-  };
+  const onContextMenu = useCallback(
+    (event: React.MouseEvent, menu: MenuType[]): void => {
+      event.stopPropagation();
+      setMenu(menu);
+      handleContextMenu(event);
+    },
+    [handleContextMenu]
+  );
 
   return (
     <TreeViewContainerStyled>
-      <Box mt={1}>
+      <Box
+        sx={{
+          mt: 1
+        }}
+      >
         <Search onChange={(value: string): void => setSearchTerm(value)} />
       </Box>
-
       {isLoading && (
-        <Box px={1} py={0.5}>
+        <Box
+          sx={{
+            px: 1,
+            py: 0.5
+          }}
+        >
           <LinearProgress sx={{ height: 2 }} />
         </Box>
       )}
-
       <TreeViewContentStyled>
         {tree && (
           <TreeNode
             node={tree}
             fetchChildren={fetchChildren}
-            parentRefs={parentRefs}
+            parentRefsRef={parentRefsRef}
             nodeIndex={0}
             level={0}
             searchTerm={searchTerm}

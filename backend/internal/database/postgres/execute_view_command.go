@@ -10,7 +10,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func (r *PostgresRepository) handleViewCommands(node PGNode, tabId contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
+func (r *PostgresRepository) handleViewCommands(node contract.DBNode, tabID contract.TreeTab, action contract.TreeNodeActionName, data []byte) ([]string, error) {
 	queries := []string{}
 
 	if action != contract.CreateViewAction && action != contract.EditViewAction && action != contract.DropViewAction {
@@ -22,7 +22,7 @@ func (r *PostgresRepository) handleViewCommands(node PGNode, tabId contract.Tree
 		return nil, err
 	}
 
-	params := dto[tabId]
+	params := dto[tabID]
 
 	if params.New != nil && params.New.Query != nil {
 		params.New.Query = formatQuery(params.New.Query)
@@ -33,10 +33,12 @@ func (r *PostgresRepository) handleViewCommands(node PGNode, tabId contract.Tree
 	}
 
 	if action == contract.CreateViewAction {
-		query := ""
-		if params.New.Name != nil && params.New.Query != nil {
-			query = fmt.Sprintf("CREATE VIEW %s AS %s", *params.New.Name, *params.New.Query)
+		if params.New == nil || params.New.Name == nil || params.New.Query == nil {
+			return queries, nil
 		}
+
+		viewRef := qualifiedTableName(node.Schema, *params.New.Name)
+		query := fmt.Sprintf("CREATE VIEW %s AS %s", viewRef, *params.New.Query)
 
 		if params.New.CheckOption != nil {
 			query += fmt.Sprintf(" WITH %s CHECK OPTION", *params.New.CheckOption)
@@ -45,7 +47,29 @@ func (r *PostgresRepository) handleViewCommands(node PGNode, tabId contract.Tree
 		queries = append(queries, query)
 
 		if params.New.Comment != nil {
-			queries = append(queries, fmt.Sprintf("COMMENT ON VIEW %s IS '%s'", *params.New.Name, *params.New.Comment))
+			queries = append(queries, fmt.Sprintf("COMMENT ON VIEW %s IS '%s'", viewRef, *params.New.Comment))
+		}
+	}
+
+	if action == contract.EditViewAction {
+		if params == nil || params.Old == nil || params.Old.Name == nil {
+			return queries, nil
+		}
+
+		viewRef := qualifiedTableName(node.Schema, *params.Old.Name)
+
+		if params.New != nil && params.New.Query != nil {
+			queries = append(queries, fmt.Sprintf("DROP VIEW %s", viewRef))
+
+			createQuery := fmt.Sprintf("CREATE VIEW %s AS %s", viewRef, *params.New.Query)
+			if params.New.CheckOption != nil {
+				createQuery += fmt.Sprintf(" WITH %s CHECK OPTION", *params.New.CheckOption)
+			}
+			queries = append(queries, createQuery)
+		}
+
+		if params.New != nil && params.New.Comment != nil && (params.Old.Comment == nil || *params.Old.Comment != *params.New.Comment) {
+			queries = append(queries, fmt.Sprintf("COMMENT ON VIEW %s IS '%s'", viewRef, *params.New.Comment))
 		}
 	}
 

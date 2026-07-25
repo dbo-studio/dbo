@@ -8,13 +8,13 @@ import (
 	"github.com/samber/lo"
 )
 
-func (r *SQLiteRepository) populateTableParamsFromDDL(tableParams *dto.SQLiteTableParams) string {
+func (r *SQLiteRepository) populateTableParamsFromDDL(ctx context.Context, tableParams *dto.SQLiteTableParams) string {
 	if tableParams == nil || tableParams.Old == nil || tableParams.Old.Name == nil {
 		return ""
 	}
 
 	tableName := *tableParams.Old.Name
-	tableDDL, err := r.getTableDDL(tableName)
+	tableDDL, err := r.getTableDDL(ctx, tableName)
 	if err != nil {
 		r.setDefaultTableParams(tableParams)
 		return ""
@@ -90,22 +90,92 @@ func (r *SQLiteRepository) populateTableParamsFromDDLString(tableParams *dto.SQL
 	}
 }
 
-func (r *SQLiteRepository) populateColumnParamsFromDDL(columnParams *dto.SQLiteTableColumnParams, tableDDL string) {
-	if columnParams == nil || len(columnParams.Columns) > 0 || tableDDL == "" {
+func (r *SQLiteRepository) populateColumnParamsFromDDL(ctx context.Context, columnParams *dto.SQLiteTableColumnParams, tableDDL string, tableName string) {
+	if columnParams == nil {
 		return
 	}
 
-	tableName := r.extractTableNameFromDDL(tableDDL)
-	if tableName == "" {
+	resolvedTableName := tableName
+	if tableDDL != "" {
+		if name := r.extractTableNameFromDDL(tableDDL); name != "" {
+			resolvedTableName = name
+		}
+	}
+
+	if resolvedTableName == "" {
 		return
 	}
 
-	columns, err := r.getColumns(tableName, []string{}, false)
+	columns, err := r.getColumns(ctx, resolvedTableName, []string{}, false)
 	if err != nil {
 		return
 	}
 
-	columnParams.Columns = r.convertColumnsToDTO(columns)
+	existing := r.convertColumnsToDTO(columns)
+	if len(columnParams.Columns) == 0 {
+		columnParams.Columns = existing
+		return
+	}
+
+	// Frontend save payload is a delta (added/updated/deleted only). Merge onto DB columns
+	// so recreate DDL still includes unchanged columns.
+	columnParams.Columns = r.mergeColumnChanges(existing, columnParams.Columns)
+}
+
+func columnIdentity(col dto.SQLiteTableColumn) string {
+	if col.Old != nil && col.Old.Name != nil && *col.Old.Name != "" {
+		return *col.Old.Name
+	}
+	if col.New != nil && col.New.Name != nil {
+		return *col.New.Name
+	}
+	return ""
+}
+
+func (r *SQLiteRepository) mergeColumnChanges(existing, changes []dto.SQLiteTableColumn) []dto.SQLiteTableColumn {
+	byName := make(map[string]dto.SQLiteTableColumn, len(existing))
+	order := make([]string, 0, len(existing))
+	for _, col := range existing {
+		name := columnIdentity(col)
+		if name == "" {
+			continue
+		}
+		byName[name] = col
+		order = append(order, name)
+	}
+
+	for _, change := range changes {
+		if lo.FromPtr(change.Added) {
+			continue
+		}
+
+		name := columnIdentity(change)
+		if name == "" {
+			continue
+		}
+
+		if lo.FromPtr(change.Deleted) {
+			delete(byName, name)
+			continue
+		}
+
+		byName[name] = change
+	}
+
+	merged := make([]dto.SQLiteTableColumn, 0, len(byName)+len(changes))
+	for _, name := range order {
+		if col, ok := byName[name]; ok {
+			merged = append(merged, col)
+		}
+	}
+
+	for _, change := range changes {
+		if lo.FromPtr(change.Added) && !lo.FromPtr(change.Deleted) {
+			merged = append(merged, change)
+		}
+	}
+
+	return merged
 }
 
 func (r *SQLiteRepository) extractTableNameFromDDL(tableDDL string) string {
@@ -155,7 +225,7 @@ func (r *SQLiteRepository) populateForeignKeyParamsFromDB(foreignKeyParams *dto.
 	}
 
 	ctx := context.Background()
-	fks, err := r.foreignKeys(ctx, tableName, false)
+	fks, err := r.foreignKeys(ctx, tableName)
 	if err != nil || len(fks) == 0 {
 		return
 	}
@@ -187,12 +257,12 @@ func (r *SQLiteRepository) convertForeignKeysToDTO(fks []ForeignKey) []dto.SQLit
 	return result
 }
 
-func (r *SQLiteRepository) populateKeyParamsFromDB(keyParams *dto.SQLiteTableKeyParams, tableName string) {
+func (r *SQLiteRepository) populateKeyParamsFromDB(ctx context.Context, keyParams *dto.SQLiteTableKeyParams, tableName string) {
 	if keyParams == nil || len(keyParams.Keys) > 0 {
 		return
 	}
 
-	pkColumns, err := r.getPrimaryKeys(Table{Name: tableName})
+	pkColumns, err := r.getPrimaryKeys(ctx, Table{Name: tableName})
 	if err != nil || len(pkColumns) == 0 {
 		return
 	}

@@ -31,7 +31,7 @@ export const useSetupDesktop = (): boolean => {
   const reset = useTabStore((state) => state.reset);
 
   useEffect(() => {
-    const initializeDesktop = async (): Promise<void> => {
+    void (async (): Promise<void> => {
       try {
         const isTauri = await tools.isTauri();
         if (!isTauri) {
@@ -46,9 +46,7 @@ export const useSetupDesktop = (): boolean => {
         console.error('Error during desktop setup:', error);
         setLoaded(true);
       }
-    };
-
-    initializeDesktop();
+    })();
   }, [reset]);
 
   return loaded;
@@ -56,7 +54,7 @@ export const useSetupDesktop = (): boolean => {
 
 const setup = async (): Promise<void> => {
   disableDefaultContextMenu();
-  await setupTitleBar();
+  setupTitleBar();
   await setupBackend();
 };
 
@@ -73,12 +71,13 @@ const waitForBackendReady = async (baseUrl: string): Promise<void> => {
     try {
       await tempApi.get('/config');
       return;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       if (attempt < BACKEND_HEALTH_CHECK_CONFIG.maxAttempts) {
         await new Promise((resolve) => setTimeout(resolve, BACKEND_HEALTH_CHECK_CONFIG.intervalMs));
       } else {
-        throw new Error('Backend failed to start within the expected time');
+        const error = new Error('Backend failed to start within the expected time') as Error & { cause: unknown };
+        error.cause = err;
+        throw error;
       }
     }
   }
@@ -97,7 +96,7 @@ const setupBackend = async (): Promise<void> => {
 };
 
 const disableDefaultContextMenu = (): void => {
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     return;
   }
 
@@ -116,14 +115,14 @@ const disableDefaultContextMenu = (): void => {
   document.addEventListener('selectstart', preventSelectStart, { capture: true });
 };
 
-const createHeaderAreaClickHandler = async (): Promise<void> => {
+const createHeaderAreaClickHandler = (): void => {
   const window = getCurrentWebviewWindow();
-  await window.startDragging();
+  window.startDragging().catch((e) => console.log('🚀 ~ createHeaderAreaClickHandler ~ e:', e));
 };
 
-const setupTitleBar = async (): Promise<void> => {
+const setupTitleBar = (): void => {
   const updateUI = useSettingStore.getState().updateUI;
-  const currentPlatform = await platform();
+  const currentPlatform = platform();
 
   if (currentPlatform !== 'macos') {
     return;

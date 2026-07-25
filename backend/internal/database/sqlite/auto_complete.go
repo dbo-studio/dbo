@@ -9,14 +9,14 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func (r *SQLiteRepository) AutoComplete(ctx context.Context, req *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
+func (r *SQLiteRepository) AutoComplete(ctx context.Context, _ *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
 	g, _ := errgroup.WithContext(ctx)
 
 	var views []ViewBasic
 	var tables []Table
 
 	g.Go(func() error {
-		result, err := r.getAllViewList()
+		result, err := r.getAllViewList(ctx)
 		if err != nil {
 			return err
 		}
@@ -25,7 +25,7 @@ func (r *SQLiteRepository) AutoComplete(ctx context.Context, req *dto.AutoComple
 	})
 
 	g.Go(func() error {
-		result, err := r.getAllTableList()
+		result, err := r.getAllTableList(ctx)
 		if err != nil {
 			return err
 		}
@@ -46,7 +46,7 @@ func (r *SQLiteRepository) AutoComplete(ctx context.Context, req *dto.AutoComple
 		for _, table := range tables {
 			tableName := table.Name
 			gColumns.Go(func() error {
-				columnResult, err := r.getColumns(tableName, nil, false)
+				columnResult, err := r.getColumns(ctx, tableName, nil, false)
 				if err != nil {
 					return err
 				}

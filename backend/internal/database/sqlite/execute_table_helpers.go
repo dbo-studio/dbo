@@ -21,6 +21,9 @@ func (r *SQLiteRepository) filterActiveColumns(columns []dto.SQLiteTableColumn) 
 		if col.Added != nil && col.Deleted != nil && *col.Added && *col.Deleted {
 			return false
 		}
+		if lo.FromPtr(col.Deleted) && !lo.FromPtr(col.Added) {
+			return false
+		}
 		if col.Added == nil || *col.Added {
 			return true
 		}
@@ -134,7 +137,7 @@ func (r *SQLiteRepository) getUniqueTmpTableName(baseName string) string {
 
 func (r *SQLiteRepository) tableExists(tableName string) bool {
 	var count int64
-	r.db.Table("sqlite_master").
+	r.base.DB().Table("sqlite_master").
 		Where("type = 'table' AND name = ?", tableName).
 		Count(&count)
 	return count > 0

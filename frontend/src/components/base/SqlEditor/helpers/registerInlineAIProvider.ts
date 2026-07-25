@@ -5,51 +5,10 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import type * as Monaco from 'monaco-editor';
 import { DEBOUNCE_DELAYS, MIN_TEXT_LENGTH_FOR_AI } from './constants';
-
-type CompletionItemType = {
-  insertText: string;
-  range: {
-    startLineNumber: number;
-    startColumn: number;
-    endLineNumber: number;
-    endColumn: number;
-  };
-};
+import { createCompletionItem, getTextRange, sanitizeInlineCompletion } from './inlineCompletionUtils';
 
 let currentRequest: AbortController | null = null;
-let debounceTimer: NodeJS.Timeout | null = null;
-
-function createCompletionItem(text: string, position: Monaco.Position): CompletionItemType {
-  // For inline completions, range should start and end at the current cursor position
-  // Monaco will handle displaying the suggestion as "ghost text" after the cursor
-  return {
-    insertText: text,
-    range: {
-      startLineNumber: position.lineNumber,
-      startColumn: position.column,
-      endLineNumber: position.lineNumber,
-      endColumn: position.column
-    }
-  };
-}
-
-function getTextRange(model: Monaco.editor.ITextModel, position: Monaco.Position) {
-  const prefix = model.getValueInRange({
-    startLineNumber: 1,
-    startColumn: 1,
-    endLineNumber: position.lineNumber,
-    endColumn: position.column
-  });
-
-  const suffix = model.getValueInRange({
-    startLineNumber: position.lineNumber,
-    startColumn: position.column,
-    endLineNumber: model.getLineCount(),
-    endColumn: model.getLineMaxColumn(model.getLineCount())
-  });
-
-  return { prefix, suffix };
-}
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 function cleanupPreviousRequest() {
   if (currentRequest) {
@@ -90,123 +49,112 @@ export function registerInlineAIProvider(monaco: typeof Monaco, languageId: stri
         return { items: [] };
       }
 
-      const { prefix, suffix } = getTextRange(model, position);
-
-      if (prefix.trim().length < MIN_TEXT_LENGTH_FOR_AI) {
+      if (getTextRange(model, position).prefix.trim().length < MIN_TEXT_LENGTH_FOR_AI) {
         return { items: [] };
       }
 
-      // Cancel any previous request and clear debounce timer
       cleanupPreviousRequest();
 
-      // Capture initial position and model
       const initialPosition = position;
 
       return new Promise((resolve) => {
-        // Set up debounce timer for this request
-        const timerId = setTimeout(async () => {
-          // Check if this timer was cancelled by cleanupPreviousRequest
-          if (debounceTimer !== timerId) {
-            resolve({ items: [] });
-            return;
-          }
-
-          // Clear timer reference as we're about to make the request
-          debounceTimer = null;
-
-          if (token.isCancellationRequested) {
-            resolve({ items: [] });
-            return;
-          }
-
-          const currentPosition = model.getPositionAt(model.getOffsetAt(initialPosition));
-
-          if (model.isDisposed()) {
-            resolve({ items: [] });
-            return;
-          }
-
-          // Cancel previous request if exists
-          if (currentRequest) {
-            currentRequest.abort();
-          }
-
-          // Create new AbortController for this request
-          const abortController = new AbortController();
-          const abortSignal = abortController.signal;
-          currentRequest = abortController;
-
-          try {
-            const providers = useAiStore.getState().providers;
-            const activeProvider = providers?.find((p) => p.isActive);
-
-            if (!activeProvider) {
+        const timerId = setTimeout(() => {
+          void (async () => {
+            if (debounceTimer !== timerId) {
               resolve({ items: [] });
               return;
             }
 
-            const requestData: AICompleteRequest = {
-              connectionId: currentConnection()?.id ?? 0,
-              providerId: activeProvider.id,
-              model: activeProvider.model,
-              contextOpts: {
-                database: currentConnection()?.options?.database as string | undefined,
-                schema: currentConnection()?.options?.schema as string | undefined,
-                prompt: prefix,
-                suffix: suffix
+            debounceTimer = null;
+
+            if (token.isCancellationRequested) {
+              resolve({ items: [] });
+              return;
+            }
+
+            const currentPosition = model.getPositionAt(model.getOffsetAt(initialPosition));
+
+            if (model.isDisposed()) {
+              resolve({ items: [] });
+              return;
+            }
+
+            const { prefix, suffix } = getTextRange(model, currentPosition);
+
+            if (prefix.trim().length < MIN_TEXT_LENGTH_FOR_AI) {
+              resolve({ items: [] });
+              return;
+            }
+
+            if (currentRequest) {
+              currentRequest.abort();
+            }
+
+            const abortController = new AbortController();
+            const abortSignal = abortController.signal;
+            currentRequest = abortController;
+
+            try {
+              const providers = useAiStore.getState().providers;
+              const activeProvider = providers?.find((p) => p.isActive);
+
+              if (!activeProvider) {
+                resolve({ items: [] });
+                return;
               }
-            };
 
-            const completionText = await fetchCompletion(requestData, abortSignal);
+              const requestData: AICompleteRequest = {
+                connectionId: currentConnection()?.id ?? 0,
+                providerId: activeProvider.id,
+                model: activeProvider.model,
+                contextOpts: {
+                  database: currentConnection()?.options?.database as string | undefined,
+                  schema: currentConnection()?.options?.schema as string | undefined,
+                  prompt: prefix,
+                  suffix: suffix
+                }
+              };
 
-            if (abortSignal.aborted || token.isCancellationRequested) {
+              const rawCompletion = await fetchCompletion(requestData, abortSignal);
+
+              if (abortSignal.aborted || token.isCancellationRequested) {
+                resolve({ items: [] });
+                return;
+              }
+
+              const completionText = sanitizeInlineCompletion(prefix, suffix, rawCompletion);
+
+              if (!model.isDisposed() && completionText.trim()) {
+                const finalPosition = model.getPositionAt(
+                  Math.min(model.getOffsetAt(currentPosition), model.getValueLength())
+                );
+
+                resolve({
+                  items: [createCompletionItem(completionText, finalPosition)]
+                });
+              } else {
+                resolve({ items: [] });
+              }
+            } catch (err) {
+              if (
+                err instanceof Error &&
+                (err.name === 'CanceledError' || err.name === 'AbortError' || err.message.includes('canceled'))
+              ) {
+                resolve({ items: [] });
+                return;
+              }
+
+              console.debug('Inline AI provider error:', err);
+              useSettingStore.getState().updateEditor({ enableEditorAi: false });
               resolve({ items: [] });
-              return;
+            } finally {
+              if (currentRequest === abortController && !abortSignal.aborted) {
+                currentRequest = null;
+              }
             }
-
-            if (!model.isDisposed() && completionText.trim()) {
-              const finalPosition = model.getPositionAt(
-                Math.min(model.getOffsetAt(currentPosition), model.getValueLength())
-              );
-
-              const completionItem = createCompletionItem(completionText, finalPosition);
-              console.debug('Inline AI completion created:', {
-                textLength: completionText.length,
-                preview: completionText.substring(0, 50),
-                position: finalPosition,
-                range: completionItem.range
-              });
-              resolve({
-                items: [completionItem]
-              });
-            } else {
-              console.debug('Inline AI completion skipped:', {
-                modelDisposed: model.isDisposed(),
-                textEmpty: !completionText.trim()
-              });
-              resolve({ items: [] });
-            }
-          } catch (err) {
-            if (
-              err instanceof Error &&
-              (err.name === 'CanceledError' || err.name === 'AbortError' || err.message.includes('canceled'))
-            ) {
-              resolve({ items: [] });
-              return;
-            }
-
-            console.debug('Inline AI provider error:', err);
-            useSettingStore.getState().updateEditor({ enableEditorAi: false });
-            resolve({ items: [] });
-          } finally {
-            // Clear current request reference if this is still the active request and wasn't aborted
-            if (currentRequest === abortController && !abortSignal.aborted) {
-              currentRequest = null;
-            }
-          }
+          })();
         }, DEBOUNCE_DELAYS.inlineAIProvider);
 
-        // Store timer ID so we can check if it was cancelled
         debounceTimer = timerId;
       });
     },

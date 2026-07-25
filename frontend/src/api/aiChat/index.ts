@@ -11,22 +11,22 @@ const endpoint = {
 };
 
 export const getChats = async (params: AiChatRequestType): Promise<AiChatType[]> => {
-  return (await api.get(endpoint.list(), { params })).data.data as AiChatType[];
+  return (await api.get<{ data: AiChatType[] }>(endpoint.list(), { params })).data.data;
 };
 
 export const getChatDetail = async (params: AiChatDetailRequestType): Promise<AiChatType> => {
   return (
-    await api.get(endpoint.detail(params.id), {
+    await api.get<{ data: AiChatType }>(endpoint.detail(params.id), {
       params: {
         page: params.page,
         count: params.count
       }
     })
-  ).data.data as AiChatType;
+  ).data.data;
 };
 
 export const createChat = async (data: CreateChatRequestType): Promise<AiChatType> => {
-  return (await api.post(endpoint.create(), data)).data.data as AiChatType;
+  return (await api.post<{ data: AiChatType }>(endpoint.create(), data)).data.data;
 };
 
 export const deleteChat = async (id: string | number): Promise<void> => {

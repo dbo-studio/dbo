@@ -43,9 +43,9 @@ func (h *TreeHandler) TreeHandler(c fiber.Ctx) error {
 
 func (h *TreeHandler) Tabs(c fiber.Ctx) error {
 	req := &dto.ObjectTabsRequest{
-		ConnectionId: fiber.Query[int32](c, "connectionId"),
+		ConnectionID: fiber.Query[int32](c, "connectionId"),
 		Action:       fiber.Params[string](c, "action"),
-		NodeId:       fiber.Params[string](c, "nodeId"),
+		NodeID:       fiber.Params[string](c, "nodeId"),
 	}
 
 	result, err := h.treeService.Tabs(c, req)
@@ -59,9 +59,9 @@ func (h *TreeHandler) Tabs(c fiber.Ctx) error {
 
 func (h *TreeHandler) ObjectDetail(c fiber.Ctx) error {
 	req := &dto.ObjectDetailRequest{
-		ConnectionId: fiber.Query[int32](c, "connectionId"),
-		NodeId:       fiber.Params[string](c, "nodeId"),
-		TabId:        fiber.Params[string](c, "tabId"),
+		ConnectionID: fiber.Query[int32](c, "connectionId"),
+		NodeID:       fiber.Params[string](c, "nodeId"),
+		TabID:        fiber.Params[string](c, "tabId"),
 		Action:       fiber.Params[string](c, "action"),
 	}
 
@@ -76,25 +76,42 @@ func (h *TreeHandler) ObjectDetail(c fiber.Ctx) error {
 
 func (h *TreeHandler) ExecuteHandler(c fiber.Ctx) error {
 	req := &dto.ObjectExecuteRequest{
-		ConnectionId: fiber.Query[int32](c, "connectionId"),
-		NodeId:       fiber.Params[string](c, "nodeId"),
+		ConnectionID: fiber.Query[int32](c, "connectionId"),
+		NodeID:       fiber.Params[string](c, "nodeId"),
 		Action:       fiber.Params[string](c, "action"),
 		Params:       c.Body(),
 	}
 
-	err := h.treeService.ObjectExecute(c, req)
+	result, err := h.treeService.ObjectExecute(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder().Send(c)
+	return response.SuccessBuilder().WithData(result).Send(c)
+}
+
+func (h *TreeHandler) PreviewExecuteHandler(c fiber.Ctx) error {
+	req := &dto.ObjectExecuteRequest{
+		ConnectionID: fiber.Query[int32](c, "connectionId"),
+		NodeID:       fiber.Params[string](c, "nodeId"),
+		Action:       fiber.Params[string](c, "action"),
+		Params:       c.Body(),
+	}
+
+	queries, err := h.treeService.ObjectPreviewExecute(c, req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(map[string][]string{"queries": queries}).Send(c)
 }
 
 func (h *TreeHandler) GetDynamicFieldOptions(c fiber.Ctx) error {
 	req := &dto.DynamicFieldOptionsRequest{
-		ConnectionId: fiber.Query[int32](c, "connectionId"),
-		NodeId:       c.Params("nodeId"),
+		ConnectionID: fiber.Query[int32](c, "connectionId"),
+		NodeID:       c.Params("nodeId"),
 		Parameters:   c.Queries(),
 	}
 

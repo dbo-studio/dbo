@@ -1,5 +1,5 @@
 import type { ColumnType } from '@/types';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type UseColumnResizeProps = {
   columns: ColumnType[];
@@ -18,17 +18,17 @@ export function useColumnResize({
   defaultColumnWidth = 200,
   onColumnResize
 }: UseColumnResizeProps): UseColumnResizeReturn {
-  // Store column sizes in a state
-  const [columnSizes, setColumnSizes] = useState<Record<string, number>>(() => {
-    const initialSizes: Record<string, number> = {};
-    for (const column of columns) {
-      initialSizes[column.name] = defaultColumnWidth;
-    }
-    initialSizes.select = 30; // Fixed width for checkbox column
-    return initialSizes;
-  });
+  const [resizedColumnSizes, setResizedColumnSizes] = useState<Record<string, number>>({});
   const [isResizing, setIsResizing] = useState(false);
   const [resizingColumnId, setResizingColumnId] = useState<string | null>(null);
+
+  const columnSizes = useMemo(() => {
+    const sizes: Record<string, number> = { select: 30 };
+    for (const column of columns) {
+      sizes[column.name] = resizedColumnSizes[column.name] ?? defaultColumnWidth;
+    }
+    return sizes;
+  }, [columns, defaultColumnWidth, resizedColumnSizes]);
 
   // Refs for tracking resize state
   const startXRef = useRef<number>(0);
@@ -46,22 +46,6 @@ export function useColumnResize({
     columnSizesRef.current = columnSizes;
   }, [isResizing, resizingColumnId, columnSizes]);
 
-  // Initialize column sizes on mount or when columns change
-  useEffect(() => {
-    setColumnSizes((prevSizes) => {
-      const newSizes = { ...prevSizes };
-      for (const column of columns) {
-        if (!newSizes[column.name]) {
-          newSizes[column.name] = defaultColumnWidth;
-        }
-      }
-      if (!newSizes.select) {
-        newSizes.select = 30;
-      }
-      return newSizes;
-    });
-  }, [columns, defaultColumnWidth]);
-
   // Event handlers
   const handleMouseMove = useCallback((event: MouseEvent) => {
     if (!isResizingRef.current || !resizingColumnIdRef.current) return;
@@ -70,7 +54,7 @@ export function useColumnResize({
     const newWidth = startWidthRef.current + deltaX;
 
     // Only update the width of the column being resized
-    setColumnSizes((prev) => ({
+    setResizedColumnSizes((prev) => ({
       ...prev,
       [resizingColumnIdRef.current as string]: newWidth
     }));
@@ -83,7 +67,7 @@ export function useColumnResize({
     const newWidth = startWidthRef.current + deltaX;
 
     // Only update the width of the column being resized
-    setColumnSizes((prev) => ({
+    setResizedColumnSizes((prev) => ({
       ...prev,
       [resizingColumnIdRef.current as string]: newWidth
     }));
@@ -102,7 +86,7 @@ export function useColumnResize({
     document.removeEventListener('mouseup', handleMouseUp);
     document.removeEventListener('touchmove', handleTouchMove);
     document.removeEventListener('touchend', handleMouseUp);
-  }, [onColumnResize]);
+  }, [handleMouseMove, handleTouchMove, onColumnResize]);
 
   // Start resize handler
   const startResize = useCallback(

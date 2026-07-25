@@ -2,24 +2,39 @@ import CreatableSelectInput from '@/components/base/CreatableSelectInput/Creatab
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor';
-import { variables } from '@/core/theme/variables';
-import { Box, Checkbox, Typography } from '@mui/material';
-import React from 'react';
-import type { SimpleFieldProps } from '../../types';
+import { FormFieldOptionType, FormFieldType, FormValue } from '@/types/Tree';
+import { Box, Checkbox, Stack, Typography } from '@mui/material';
+import React, { useState } from 'react';
+import { SqlEditorContainerStyled } from './SimpleField.styled';
 
 export default function SimpleField({
   field,
   onChange,
   dynamicOptions,
-  isArrayForm
-}: SimpleFieldProps): React.JSX.Element {
+  isArrayForm,
+  isLoadingDynamic
+}: {
+  field: FormFieldType;
+  onChange: (value: FormValue | FormValue[]) => void;
+  dynamicOptions?: FormFieldOptionType[];
+  isLoadingDynamic?: boolean;
+  isArrayForm?: boolean;
+}): React.JSX.Element {
+  const [localValue, setLocalValue] = useState<FormValue | FormValue[]>(field.value);
+  const [prevFieldValue, setPrevFieldValue] = useState(field.value);
+
+  if (field.value !== prevFieldValue) {
+    setPrevFieldValue(field.value);
+    setLocalValue(field.value);
+  }
+
   const handleSelectChange = (value: SelectInputOption | SelectInputOption[] | null): void => {
     if (field.type === 'multi-select') {
       const multiValue = Array.isArray(value) ? value.map((item) => item.value) : [];
-      onChange(multiValue);
+      onChange(multiValue as FormValue[]);
     } else {
       const singleValue = value && !Array.isArray(value) ? value.value : '';
-      onChange(singleValue);
+      onChange(singleValue as FormValue);
     }
   };
 
@@ -28,24 +43,39 @@ export default function SimpleField({
   switch (field.type) {
     case 'text':
       return (
-        <FieldInput
-          size={isArrayForm ? 'small' : 'medium'}
-          value={(field.value as string) || ''}
-          onChange={(e): void => onChange(e.target.value)}
-          fullWidth
-          required={field.required}
-          margin={isArrayForm ? 'none' : undefined}
-          label={isArrayForm ? undefined : field.name}
-        />
+        <Stack
+          direction={'row'}
+          sx={{
+            alignItems: 'center',
+            width: isArrayForm ? undefined : '100%'
+          }}
+        >
+          <FieldInput
+            size={isArrayForm ? 'small' : 'medium'}
+            value={localValue || ''}
+            onChange={(e): void => setLocalValue(e.target.value)}
+            onBlur={(): void => onChange(localValue)}
+            fullWidth
+            required={field.required}
+            margin={'none'}
+            label={isArrayForm ? undefined : field.name}
+          />
+        </Stack>
       );
 
     case 'checkbox':
       return (
-        <Box display='flex' alignItems='center'>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center'
+          }}
+        >
           <Checkbox
-            size={isArrayForm ? 'small' : 'medium'}
-            checked={(field.value as boolean) || false}
-            onChange={(e): void => onChange(e.target.checked)}
+            size={'small'}
+            checked={(localValue as boolean) || false}
+            onChange={(e): void => setLocalValue(e.target.checked)}
+            onBlur={(): void => onChange(localValue)}
           />
           <Typography variant='caption' color='textText'>
             {field.name}
@@ -56,11 +86,12 @@ export default function SimpleField({
     case 'select':
     case 'multi-select':
       return (
-        <Box mb={1}>
+        <Box sx={{ width: isArrayForm ? undefined : '100%' }}>
           <CreatableSelectInput
+            isLoading={isLoadingDynamic}
             isMulti={field.type === 'multi-select'}
             label={isArrayForm ? undefined : field.name}
-            value={field.value as string | string[] | null}
+            value={localValue as string | string[] | null}
             size={isArrayForm ? 'small' : 'medium'}
             options={fieldOptions.map((opt) => ({
               value: opt.value,
@@ -73,23 +104,21 @@ export default function SimpleField({
 
     case 'query':
       return (
-        <Box>
+        <Box sx={{ width: isArrayForm ? undefined : '100%' }}>
           {!isArrayForm && (
             <Typography variant='caption' color='textText'>
               {field.name}
             </Typography>
           )}
-          <Box
-            display='flex'
-            width='100%'
-            minHeight={250}
-            border={1}
-            borderColor='divider'
-            borderRadius={variables.radius.medium}
-          >
+          <SqlEditorContainerStyled>
             <SqlEditor
-              value={(field.value as string) ?? ''}
-              onChange={(value): void => onChange(value)}
+              editorHeight={250}
+              value={(localValue as string) ?? ''}
+              onChange={(value): void => {
+                setLocalValue(value);
+                onChange(value);
+              }}
+              onBlur={(value): void => onChange(value)}
               autocomplete={{
                 databases: [],
                 views: [],
@@ -101,7 +130,7 @@ export default function SimpleField({
                 console.debug('Query executed:', query);
               }}
             />
-          </Box>
+          </SqlEditorContainerStyled>
         </Box>
       );
 

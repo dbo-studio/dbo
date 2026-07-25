@@ -31,7 +31,7 @@ func NewJobService(jr repository.IJobRepo) IJobService {
 }
 
 func (i IJobServiceImpl) Detail(ctx context.Context, req *dto.JobDetailRequest) (*dto.JobDetailResponse, error) {
-	job, err := i.jobRepo.Find(ctx, req.JobId)
+	job, err := i.jobRepo.Find(ctx, req.JobID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
@@ -48,7 +48,7 @@ func (i IJobServiceImpl) Detail(ctx context.Context, req *dto.JobDetailRequest) 
 }
 
 func (i IJobServiceImpl) Cancel(ctx context.Context, req *dto.JobDetailRequest) error {
-	job, err := i.jobRepo.Find(ctx, req.JobId)
+	job, err := i.jobRepo.Find(ctx, req.JobID)
 	if err != nil {
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
@@ -58,13 +58,13 @@ func (i IJobServiceImpl) Cancel(ctx context.Context, req *dto.JobDetailRequest) 
 	}
 
 	job.Status = model.JobStatusCancelled
-	job.Message = "Job cancelled by user"
+	job.Message = "Job canceled by user"
 
 	return i.jobRepo.Update(ctx, job)
 }
 
 func (i IJobServiceImpl) Result(c fiber.Ctx, req *dto.JobDetailRequest) error {
-	job, err := i.jobRepo.Find(c, req.JobId)
+	job, err := i.jobRepo.Find(c, req.JobID)
 	if err != nil {
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
 	}

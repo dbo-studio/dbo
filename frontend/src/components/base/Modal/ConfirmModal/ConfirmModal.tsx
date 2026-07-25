@@ -2,7 +2,7 @@ import { ConfirmModalStyled } from '@/components/base/Modal/ConfirmModal/Confirm
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store.ts';
 import { Box, Button, Typography, useTheme } from '@mui/material';
-import { type JSX, useEffect, useState } from 'react';
+import { type JSX, useMemo } from 'react';
 import { ModalStyled } from '../Modal.styled.ts';
 
 export default function ConfirmModal(): JSX.Element {
@@ -10,35 +10,37 @@ export default function ConfirmModal(): JSX.Element {
   const mode = useConfirmModalStore((state) => state.mode);
   const title = useConfirmModalStore((state) => state.title);
   const description = useConfirmModalStore((state) => state.description);
+  const confirmLabel = useConfirmModalStore((state) => state.confirmLabel);
   const onCancel = useConfirmModalStore((state) => state.onCancel);
   const onSuccess = useConfirmModalStore((state) => state.onSuccess);
   const close = useConfirmModalStore((state) => state.close);
 
-  const [style, setStyle] = useState({});
   const theme = useTheme();
 
-  useEffect(() => {
+  const style = useMemo(() => {
     if (mode === 'danger') {
-      setStyle({
+      return {
         background: theme.palette.background.danger,
         color: theme.palette.text.danger
-      });
+      };
     }
 
     if (mode === 'success') {
-      setStyle({
+      return {
         background: theme.palette.background.success,
         color: theme.palette.text.success
-      });
+      };
     }
 
     if (mode === 'warning') {
-      setStyle({
+      return {
         background: theme.palette.background.warning,
         color: theme.palette.text.warning
-      });
+      };
     }
-  }, [mode]);
+
+    return {};
+  }, [mode, theme]);
 
   const handleCancel = (): void => {
     onCancel?.();
@@ -50,24 +52,40 @@ export default function ConfirmModal(): JSX.Element {
     close();
   };
 
+  const resolvedConfirmLabel = confirmLabel ?? (mode === 'danger' ? locales.delete : locales.yes);
+
   return (
-    <ModalStyled open={isOpen}>
+    <ModalStyled open={isOpen} onClose={handleCancel}>
       <ConfirmModalStyled>
-        <Box flex={1} mb={theme.spacing(1)}>
-          <Box mb={theme.spacing(title ? 2 : 0)}>
+        <Box
+          sx={{
+            flex: 1,
+            mb: theme.spacing(1)
+          }}
+        >
+          <Box
+            sx={{
+              mb: theme.spacing(title ? 2 : 0)
+            }}
+          >
             {title && (
-              <Typography variant='h6' component='h2'>
+              <Typography color='textTitle' variant='h6' component='h2'>
                 {title}
               </Typography>
             )}
             {description && (
-              <Typography sx={{ mt: title ? 2 : 0 }} color={theme.palette.text.text}>
+              <Typography sx={{ mt: title ? 2 : 0, userSelect: 'text' }} color='textText'>
                 {description}
               </Typography>
             )}
           </Box>
         </Box>
-        <Box display={'flex'} justifyContent={'end'}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'end'
+          }}
+        >
           <Button
             variant='text'
             style={{
@@ -79,7 +97,7 @@ export default function ConfirmModal(): JSX.Element {
             {locales.cancel}
           </Button>
           <Button style={style} onClick={handleConfirm} size='small' variant='contained'>
-            {locales.yes}
+            {resolvedConfirmLabel}
           </Button>
         </Box>
       </ConfirmModalStyled>

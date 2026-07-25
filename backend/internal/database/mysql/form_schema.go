@@ -8,8 +8,8 @@ import (
 
 func (r *MySQLRepository) tableFields(_ context.Context, _ contract.TreeNodeActionName) []contract.FormField {
 	return []contract.FormField{
-		{ID: "TABLE_NAME", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
-		{ID: "TABLE_COMMENT", Name: "Comment", Type: contract.FormFieldTypeText},
+		{ID: "relname", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "description", Name: "Comment", Type: contract.FormFieldTypeText},
 		{ID: "ENGINE", Name: "Engine", Type: contract.FormFieldTypeSelect, Options: r.engineOptions()},
 		{ID: "ROW_FORMAT", Name: "Row Format", Type: contract.FormFieldTypeSelect, Options: r.rowFormatOptions()},
 	}
@@ -17,44 +17,44 @@ func (r *MySQLRepository) tableFields(_ context.Context, _ contract.TreeNodeActi
 
 func (r *MySQLRepository) tableColumnFields() []contract.FormField {
 	return []contract.FormField{
-		{ID: "COLUMN_NAME", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
-		{ID: "DATA_TYPE", Name: "Data Type", Type: contract.FormFieldTypeSelect, Options: r.dataTypeOptions(), Required: true},
-		{ID: "IS_NULLABLE", Name: "Not Null", Type: contract.FormFieldTypeCheckBox},
-		{ID: "COLUMN_DEFAULT", Name: "Default", Type: contract.FormFieldTypeText},
-		{ID: "COLUMN_COMMENT", Name: "Comment", Type: contract.FormFieldTypeText},
-		{ID: "CHARACTER_MAXIMUM_LENGTH", Name: "Max length", Type: contract.FormFieldTypeText},
-		{ID: "NUMERIC_SCALE", Name: "Numeric scale", Type: contract.FormFieldTypeText},
-		{ID: "AUTO_INCREMENT", Name: "Auto Increment", Type: contract.FormFieldTypeCheckBox},
+		{ID: "column_name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "data_type", Name: "Data Type", Type: contract.FormFieldTypeSelect, Options: r.dataTypeOptions(), Required: true},
+		{ID: "not_null", Name: "Not Null", Type: contract.FormFieldTypeCheckBox},
+		{ID: "column_default", Name: "Default", Type: contract.FormFieldTypeText},
+		{ID: "comment", Name: "Comment", Type: contract.FormFieldTypeText},
+		{ID: "character_maximum_length", Name: "Max length", Type: contract.FormFieldTypeText},
+		{ID: "numeric_scale", Name: "Numeric scale", Type: contract.FormFieldTypeText},
+		{ID: "is_identity", Name: "Auto Increment", Type: contract.FormFieldTypeCheckBox},
 	}
 }
 
 func (r *MySQLRepository) foreignKeyFields(ctx context.Context, nodeID string) []contract.FormField {
-	node := extractNode(nodeID)
+	node := r.base.ExtractNode(nodeID)
 	return []contract.FormField{
-		{ID: "CONSTRAINT_NAME", Name: "Constraint Name", Type: contract.FormFieldTypeText, Required: true},
-		{ID: "REFERENCED_TABLE_NAME", Name: "Target Table", Type: contract.FormFieldTypeSelect, Options: r.tablesListOptions(ctx, node.Database), Required: true},
-		{ID: "COLUMN_NAME", Name: "Source Columns", Type: contract.FormFieldTypeMultiSelect, Options: r.tableColumnsOptions(ctx, node.Database, node.Table), Required: true},
+		{ID: "constraint_name", Name: "Constraint Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "target_table", Name: "Target Table", Type: contract.FormFieldTypeSelect, Options: r.tablesListOptions(ctx, node.Database), Required: true},
+		{ID: "ref_columns", Name: "Source Columns", Type: contract.FormFieldTypeMultiSelect, Options: r.tableColumnsOptions(ctx, node.Database, node.Table), Required: true},
 		{
-			ID:       "REFERENCED_COLUMN_NAME",
+			ID:       "target_columns",
 			Name:     "Target Columns",
 			Type:     contract.FormFieldTypeMultiSelect,
 			Required: true,
 			DependsOn: &contract.FieldDependency{
-				FieldID: "REFERENCED_TABLE_NAME",
+				FieldID: "target_table",
 				Parameters: map[string]string{
 					"field": "columns",
 					"table": "?",
 				},
 			},
 		},
-		{ID: "UPDATE_RULE", Name: "On Update", Type: contract.FormFieldTypeSelect, Options: []contract.FormFieldOption{
+		{ID: "update_action", Name: "On Update", Type: contract.FormFieldTypeSelect, Options: []contract.FormFieldOption{
 			{Value: "NO ACTION", Label: "NO ACTION"},
 			{Value: "RESTRICT", Label: "RESTRICT"},
 			{Value: "CASCADE", Label: "CASCADE"},
 			{Value: "SET NULL", Label: "SET NULL"},
 			{Value: "SET DEFAULT", Label: "SET DEFAULT"},
 		}},
-		{ID: "DELETE_RULE", Name: "On Delete", Type: contract.FormFieldTypeSelect, Options: []contract.FormFieldOption{
+		{ID: "delete_action", Name: "On Delete", Type: contract.FormFieldTypeSelect, Options: []contract.FormFieldOption{
 			{Value: "NO ACTION", Label: "NO ACTION"},
 			{Value: "RESTRICT", Label: "RESTRICT"},
 			{Value: "CASCADE", Label: "CASCADE"},
@@ -65,11 +65,11 @@ func (r *MySQLRepository) foreignKeyFields(ctx context.Context, nodeID string) [
 }
 
 func (r *MySQLRepository) keyFields(ctx context.Context, nodeID string) []contract.FormField {
-	node := extractNode(nodeID)
+	node := r.base.ExtractNode(nodeID)
 	return []contract.FormField{
-		{ID: "CONSTRAINT_NAME", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
-		{ID: "COLUMN_NAME", Name: "Columns", Type: contract.FormFieldTypeMultiSelect, Options: r.tableColumnsOptions(ctx, node.Database, node.Table), Required: true},
-		{ID: "CONSTRAINT_TYPE", Name: "Type", Type: contract.FormFieldTypeSelect, Options: []contract.FormFieldOption{
+		{ID: "constraint_name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "ref_columns", Name: "Columns", Type: contract.FormFieldTypeMultiSelect, Options: r.tableColumnsOptions(ctx, node.Database, node.Table), Required: true},
+		{ID: "constraint_type", Name: "Type", Type: contract.FormFieldTypeSelect, Options: []contract.FormFieldOption{
 			{Value: "PRIMARY KEY", Label: "PRIMARY KEY"},
 			{Value: "UNIQUE", Label: "UNIQUE"},
 		}, Required: true},
@@ -77,12 +77,12 @@ func (r *MySQLRepository) keyFields(ctx context.Context, nodeID string) []contra
 }
 
 func (r *MySQLRepository) indexOptions(ctx context.Context, nodeID string) []contract.FormField {
-	node := extractNode(nodeID)
+	node := r.base.ExtractNode(nodeID)
 	return []contract.FormField{
-		{ID: "INDEX_NAME", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
-		{ID: "COLUMN_NAME", Name: "Columns", Type: contract.FormFieldTypeMultiSelect, Options: r.tableColumnsOptions(ctx, node.Database, node.Table), Required: true},
-		{ID: "NON_UNIQUE", Name: "Unique", Type: contract.FormFieldTypeCheckBox},
-		{ID: "COLLATION", Name: "Collation", Type: contract.FormFieldTypeSelect, Options: []contract.FormFieldOption{
+		{ID: "index_name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "ref_columns", Name: "Columns", Type: contract.FormFieldTypeMultiSelect, Options: r.tableColumnsOptions(ctx, node.Database, node.Table), Required: true},
+		{ID: "non_unique", Name: "Unique", Type: contract.FormFieldTypeCheckBox},
+		{ID: "collation", Name: "Collation", Type: contract.FormFieldTypeSelect, Options: []contract.FormFieldOption{
 			{Value: "A", Label: "ASC"},
 			{Value: "D", Label: "DESC"},
 		}},
@@ -91,9 +91,9 @@ func (r *MySQLRepository) indexOptions(ctx context.Context, nodeID string) []con
 
 func (r *MySQLRepository) viewFields() []contract.FormField {
 	return []contract.FormField{
-		{ID: "TABLE_NAME", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
-		{ID: "TABLE_COMMENT", Name: "Comment", Type: contract.FormFieldTypeText},
-		{ID: "VIEW_DEFINITION", Name: "Query", Type: contract.FormFieldTypeQuery, Required: true},
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "comment", Name: "Comment", Type: contract.FormFieldTypeText},
+		{ID: "query", Name: "Query", Type: contract.FormFieldTypeQuery, Required: true},
 	}
 }
 

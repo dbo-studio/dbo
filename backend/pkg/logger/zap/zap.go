@@ -9,10 +9,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/dbo-studio/dbo/pkg/logger"
-
 	"github.com/dbo-studio/dbo/config"
-
+	"github.com/dbo-studio/dbo/pkg/logger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -68,9 +66,9 @@ func (log *log) Error(msg any) {
 func (log *log) Fatal(msg any) {
 	l.Println(msg)
 	if err, ok := msg.(error); ok {
-		log.zap.Fatalw("error", err, "stack", getStackTrace())
+		log.zap.Fatalw("error", "error", err, "stack", getStackTrace())
 	} else {
-		log.zap.Fatalw("message", msg, "stack", getStackTrace())
+		log.zap.Fatalw("message", "message", msg, "stack", getStackTrace())
 	}
 }
 
@@ -101,11 +99,15 @@ func getStackTrace() string {
 }
 
 func getLogPath(cfg *config.Config) string {
+	if override := os.Getenv("APP_LOG_PATH"); override != "" {
+		return override
+	}
+
 	defaultPath := "data/logs"
 	var logPath string
 	appName := cfg.App.Name
 
-	if cfg.App.Env == "docker" {
+	if cfg.App.Env == config.EnvironmentDocker {
 		return defaultPath
 	}
 

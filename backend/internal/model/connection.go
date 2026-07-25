@@ -5,7 +5,8 @@ import (
 )
 
 type Connection struct {
-	ID             uint `gorm:"primaryKey,autoIncrement"`
+	ID             uint   `gorm:"primaryKey,autoIncrement"`
+	OwnerID        string `gorm:"index;default:'desktop'"`
 	Name           string
 	ConnectionType string
 	Options        string

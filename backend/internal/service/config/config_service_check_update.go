@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v3/client"
@@ -26,7 +27,7 @@ func (i IConfigServiceImpl) CheckUpdate(ctx context.Context) (*dto.ConfigCheckUp
 	cc := client.New()
 	cc.SetTimeout(10 * time.Second)
 
-	resp, err := cc.Get(i.cfg.App.ReleaseUrlApi)
+	resp, err := cc.Get(i.cfg.App.ReleaseURLAPI)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +40,7 @@ func (i IConfigServiceImpl) CheckUpdate(ctx context.Context) (*dto.ConfigCheckUp
 
 	response := &dto.ConfigCheckUpdateResponse{
 		Name:        releaseResponse.Data.Name,
-		Url:         i.cfg.App.ReleaseUrl,
+		URL:         i.cfg.App.ReleaseURL,
 		Body:        releaseResponse.Data.Body,
 		PublishedAt: releaseResponse.Data.PublishedAt,
 		IsMinimum:   releaseResponse.Data.IsMinimum,
@@ -51,12 +52,12 @@ func (i IConfigServiceImpl) CheckUpdate(ctx context.Context) (*dto.ConfigCheckUp
 	}
 
 	if isNewer {
-		err := i.cache.Set(ctx, "new_release_version", response, nil)
+		err := i.cache.Set(ctx, cache.NewReleaseVersionKey, response, nil)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		err := i.cache.Delete(ctx, "new_release_version")
+		err := i.cache.Delete(ctx, cache.NewReleaseVersionKey)
 		if err != nil {
 			return nil, err
 		}

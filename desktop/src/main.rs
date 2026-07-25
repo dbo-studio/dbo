@@ -94,6 +94,7 @@ fn setup_environment() {
     unsafe {
         env::set_var("APP_ENV", "production");
         env::set_var("APP_PORT", port.to_string());
+        env::set_var("APP_CLIENT", "desktop");
     }
 }
 

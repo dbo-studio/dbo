@@ -34,7 +34,7 @@ func (i IHistoryServiceImpl) Index(ctx context.Context, req *dto.HistoryListRequ
 	for _, h := range lo.FromPtr(histories) {
 		data = append(data, dto.HistoryListItem{
 			ID:           int64(h.ID),
-			ConnectionId: int32(h.ConnectionID),
+			ConnectionID: int32(h.ConnectionID),
 			Query:        h.Query,
 			CreatedAt:    h.CreatedAt.Format("2006-01-02 15:04:05"),
 		})
@@ -46,5 +46,5 @@ func (i IHistoryServiceImpl) Index(ctx context.Context, req *dto.HistoryListRequ
 }
 
 func (i IHistoryServiceImpl) DeleteAll(ctx context.Context, req *dto.DeleteHistoryRequest) error {
-	return i.historyRepo.DeleteAll(ctx, uint(req.ConnectionId))
+	return i.historyRepo.DeleteAll(ctx, uint(req.ConnectionID))
 }

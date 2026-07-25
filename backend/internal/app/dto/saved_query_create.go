@@ -4,7 +4,7 @@ import "github.com/invopop/validation"
 
 type (
 	CreateSavedQueryRequest struct {
-		ConnectionId int32   `json:"connectionId"`
+		ConnectionID int32   `json:"connectionId"`
 		Name         *string `json:"name"`
 		Query        string  `json:"query"`
 	}
@@ -16,7 +16,7 @@ type (
 
 func (req CreateSavedQueryRequest) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.ConnectionId, validation.Required, validation.Min(0)),
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
 		validation.Field(&req.Query, validation.Required),
 	)
 }

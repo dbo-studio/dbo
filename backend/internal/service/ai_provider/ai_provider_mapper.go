@@ -30,8 +30,8 @@ func aiProviderModelToDto(aiProvider *model.AiProvider) dto.AiProvider {
 	return dto.AiProvider{
 		ID:         aiProvider.ID,
 		Type:       string(aiProvider.Type),
-		Url:        aiProvider.Url,
-		ApiKey:     aiProvider.ApiKey,
+		URL:        aiProvider.URL,
+		APIKey:     aiProvider.APIKey,
 		Timeout:    aiProvider.Timeout,
 		Models:     aiProvider.Models,
 		Model:      aiProvider.Model,

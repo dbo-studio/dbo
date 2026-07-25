@@ -39,9 +39,12 @@ export const createDataEditedRowsSlice: StateCreator<
     }
 
     set({ editedRows: rowsToKeep }, undefined, 'updateEditedRows');
-    get().updateUnsavedRows(currentUnsavedRows);
 
-    debouncedSaveEditedAndUnsaved(selectedTabId, rowsToKeep, currentUnsavedRows);
+    await Promise.all([
+      get().updateUnsavedRows(currentUnsavedRows),
+      debouncedSaveEditedAndUnsaved(selectedTabId, rowsToKeep, currentUnsavedRows)
+    ]);
+
     return Promise.resolve();
   },
   restoreEditedRows: async (): Promise<void> => {
@@ -59,8 +62,8 @@ export const createDataEditedRowsSlice: StateCreator<
       }
     }
 
-    get().updateEditedRows([]);
-    get().updateRows(currentRows);
+    await get().updateEditedRows([]);
+    await get().updateRows(currentRows);
 
     return Promise.resolve();
   }

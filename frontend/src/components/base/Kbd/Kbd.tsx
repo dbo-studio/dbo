@@ -7,11 +7,18 @@ export default function Kbd({ commands }: KbdProps): JSX.Element {
   return (
     <KbdGroupStyled>
       {commands.map((command, index) => {
+        const key = commands.slice(0, index + 1).join('+');
         return (
-          <Fragment key={`${command}-${index}`}>
+          <Fragment key={key}>
             <KbdStyled>{command}</KbdStyled>
             {index < commands.length - 1 && (
-              <Typography px={0.5} color={'textSubdued'} variant='subtitle2'>
+              <Typography
+                color={'textSubdued'}
+                variant='subtitle2'
+                sx={{
+                  px: 0.5
+                }}
+              >
                 +
               </Typography>
             )}

@@ -1,0 +1,60 @@
+---
+description: Strict QA rules for DBO Playwright e2e — isolation, POM, cleanup, locators, DoD
+globs: e2e/**/*
+alwaysApply: false
+---
+
+# E2E QA Rules (DBO)
+
+Act like a QA engineer: document flows, keep tests isolated, never poison the developer's machine.
+
+## Isolation (non-negotiable)
+
+- Run only via `cd e2e && npm test` (or `npm run test:ui`). Never `npx playwright test` alone — `PLAYWRIGHT_API_URL` must come from `run-e2e`.
+- Never point tests at a daily backend on `:8080` or the user's Application Support SQLite.
+- `/config/reset` is allowed only against the ephemeral API started by the harness.
+- Sample PG/MySQL may be shared; always use `uniqueTestSuffix` for object names.
+
+## Spec design
+
+- One user-visible feature/flow per spec file; name it by scenario (`connections.spec.ts`).
+- Every meaningful action is a `test.step('…')` — steps are the QA script in the report.
+- Prefer independent tests; mega-lifecycles must still clean up on failure.
+- Update the feature matrix in `e2e/README.md` when adding/changing coverage.
+
+## Structure
+
+| Layer | Path | Holds |
+|-------|------|--------|
+| Spec | `tests/*.spec.ts` | Steps + assertions only |
+| POM | `pages/` | Locators + UI actions |
+| Helpers | `helpers/` | Multi-step flows + `safeCleanup` |
+| Fixtures | `fixtures/` | Configs, names, scenario tables |
+
+Do not put long flows in specs or locators in helpers.
+
+## Stability
+
+```ts
+// ❌ BAD
+await page.waitForTimeout(2000);
+expect(await el.isVisible()).toBe(true);
+await page.locator('.css-abc123').click();
+
+// ✅ GOOD
+await expect(page.getByRole('button', { name: 'Yes' })).toBeVisible();
+await page.getByTestId('add-connection').click();
+```
+
+- Prefer `getByRole` / `getByLabel` / `getByTestId`; avoid CSS/XPath unless no contract exists.
+- Use web-first `await expect(…).toBeVisible()` — never bare `isVisible()` checks.
+- Ban new fixed sleeps; wait on UI/network assertions.
+- Always wrap connection-creating tests with `withConnectionCleanup` (or equivalent `try/finally`).
+- Never “fix” flakes with retries/`waitForTimeout`; fix selectors, isolation, or product testids.
+
+## Definition of done
+
+- [ ] Affected `e2e/tests/<file>.spec.ts` passes via `npm test -- tests/<file>.spec.ts`
+- [ ] Feature matrix row updated if coverage changed
+- [ ] No secrets committed; `.env` stays local
+- [ ] For harness-only checks, prefer `harness-smoke.spec.ts` (no sample DB)

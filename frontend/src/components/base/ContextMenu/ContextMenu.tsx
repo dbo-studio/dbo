@@ -3,6 +3,7 @@ import { Box, Divider, Menu, MenuItem, Stack } from '@mui/material';
 import type { JSX } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import CustomIcon from '../CustomIcon/CustomIcon';
+import { ContextMenuItemStackStyled } from './ContextMenu.styled';
 import type { ContextMenuProps, MenuType } from './types';
 
 export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuProps): JSX.Element {
@@ -88,18 +89,19 @@ export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuP
         onClick={(): void => handleClick(m)}
         key={isNested ? `nested-${m.name}-${index}` : uuids[index]}
         onMouseEnter={(e): void => m.children && handleMouseEnter(e, m.children)}
+        data-testid={`context-menu-item-${m.name.toLowerCase().replace(/\s+/g, '-')}`}
         sx={{
           minHeight: '36px',
           position: 'relative'
         }}
       >
-        <Stack width={'100%'} alignItems={'center'} justifyContent={'space-between'} direction={'row'}>
+        <ContextMenuItemStackStyled direction={'row'}>
           {m.name}
           <Stack direction={'row'} spacing={1}>
             {m.children && <CustomIcon type='chevronRight' />}
             {m.icon && <CustomIcon type={m.icon} />}
           </Stack>
-        </Stack>
+        </ContextMenuItemStackStyled>
       </MenuItem>
     );
   };

@@ -5,6 +5,7 @@ export type RunQueryRequestType = {
   nodeId: string;
   limit: number;
   page: number;
+  inlineQuery?: string;
   columns: string[];
   filters: FilterType[];
   sorts: SortType[];
@@ -13,6 +14,15 @@ export type RunQueryRequestType = {
 export type RunRawQueryRequestType = {
   connectionId: number;
   query: string;
+  database?: string;
+  schema?: string;
+};
+
+export type GridMetaType = {
+  gridEditable: boolean;
+  updatableNodeId?: string;
+  editableReason?: string;
+  drivingTable?: string;
 };
 
 export type AutoCompleteRequestType = {
@@ -25,6 +35,10 @@ export type RunQueryResponseType = {
   query: string;
   data: RowType[];
   columns: ColumnType[];
+  editable?: boolean;
+  nodeId?: string;
+  editableReason?: string;
+  drivingTable?: string;
 };
 
 export type UpdateQueryRequestType = {

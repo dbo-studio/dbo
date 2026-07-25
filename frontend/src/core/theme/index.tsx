@@ -14,6 +14,7 @@ import {
   solarizedPalette,
   vscodePalette
 } from './palettes';
+import { baseTypography } from './typography';
 import { validateTheme } from './themeRegistry';
 
 const paletteMap: Record<string, (mode: ThemeModeEnum) => Record<string, unknown>> = {
@@ -24,6 +25,21 @@ const paletteMap: Record<string, (mode: ThemeModeEnum) => Record<string, unknown
   material: materialPalette,
   github: githubPalette,
   solarized: solarizedPalette
+};
+
+const withTypographyColorAliases = (palette: Record<string, unknown>): Record<string, unknown> => {
+  const text = palette.text as Record<string, string> | undefined;
+
+  if (!text) {
+    return palette;
+  }
+
+  return {
+    ...palette,
+    textTitle: text.title,
+    textText: text.text,
+    textSubdued: text.subdued
+  };
 };
 
 type Props = {
@@ -42,9 +58,12 @@ export default function ThemeProvider({ children }: Props): JSX.Element {
   const selectedPalette = paletteMap[validatedThemeName] || dboPalette;
 
   const themeOptions: ThemeOptions = {
-    palette: selectedPalette(theme.isDark ? ThemeModeEnum.Dark : ThemeModeEnum.Light),
+    palette: withTypographyColorAliases(
+      selectedPalette(theme.isDark ? ThemeModeEnum.Dark : ThemeModeEnum.Light)
+    ) as ThemeOptions['palette'],
     direction: constants.direction as Direction,
     typography: {
+      ...baseTypography,
       fontFamily: theme.appFont
     }
   };

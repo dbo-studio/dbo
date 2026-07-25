@@ -9,6 +9,7 @@ import { Box, Button } from '@mui/material';
 import type { JSX } from 'react';
 import AddFilterButton from './FilterItem/AddFilterButton/AddFilterButton.tsx';
 import FilterItem from './FilterItem/FilterItem.tsx';
+import { FiltersApplyBoxStyled } from './Filters.styled';
 
 export default function Filters(): JSX.Element {
   const selectedTab = useSelectedTab<DataTabType>();
@@ -31,7 +32,12 @@ export default function Filters(): JSX.Element {
   };
 
   return (
-    <Box p={1} borderBottom={(theme): string => `1px solid ${theme.palette.divider}`}>
+    <Box
+      sx={{
+        p: 1,
+        borderBottom: (theme): string => `1px solid ${theme.palette.divider}`
+      }}
+    >
       {selectedTab?.filters?.length === 0 ? (
         <AddFilterButton columns={columns ?? []} />
       ) : (
@@ -46,9 +52,8 @@ export default function Filters(): JSX.Element {
           );
         })
       )}
-
       {(selectedTab?.filters?.length ?? 0) > 0 && (
-        <Box display='flex' justifyContent='flex-start' mx={1} mt={1}>
+        <FiltersApplyBoxStyled>
           <Button
             onClick={(): void => handleApplyFilters()}
             size='small'
@@ -57,7 +62,7 @@ export default function Filters(): JSX.Element {
           >
             {locales.apply}
           </Button>
-        </Box>
+        </FiltersApplyBoxStyled>
       )}
     </Box>
   );

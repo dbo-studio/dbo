@@ -5,3 +5,5 @@ build
 node_modules
 frontend/.cursor
 *.DS_Store
+backend/.env
+.env

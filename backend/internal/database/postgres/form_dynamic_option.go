@@ -8,7 +8,7 @@ import (
 )
 
 func (r *PostgresRepository) GetDynamicFieldOptions(ctx context.Context, req *contract.DynamicFieldRequest) ([]contract.FormFieldOption, error) {
-	node := extractNode(req.NodeID)
+	node := r.base.ExtractNode(req.NodeID)
 	params := req.Parameters
 
 	switch params["field"] {
@@ -18,7 +18,7 @@ func (r *PostgresRepository) GetDynamicFieldOptions(ctx context.Context, req *co
 			return nil, errors.New("table is required in parameters")
 		}
 
-		columns, err := r.columns(ctx, &targetTable, &node.Schema, []string{}, true, true)
+		columns, err := r.columns(ctx, &node.Database, &targetTable, &node.Schema, []string{}, true, true)
 		if err != nil {
 			return nil, err
 		}

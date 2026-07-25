@@ -1,8 +1,8 @@
-import type { ChatProps } from '../types';
+import { ChatsProps } from '../types';
 import ChatItem from './ChatItem/ChatItem';
 import { ChatsStyled } from './Chats.styled';
 
-export default function Chats({ chats, currentChat, onChatChange, onChatDelete }: ChatProps) {
+export default function Chats({ currentChat, chats, onChatChange, onChatDelete }: ChatsProps) {
   return (
     <ChatsStyled>
       {chats?.map((chat) => (

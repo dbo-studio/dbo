@@ -1,21 +1,29 @@
+'use no memo';
+
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu.tsx';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
 import SortableItem from '@/components/base/SortableList/SortableItem/SortableItem';
-import { PanelTabItemStyled } from '@/components/common/Panels/PanelTabs/PanelTabItem/PanelTabItem.styled.ts';
+import {
+  PanelTabContentStyled,
+  PanelTabItemStyled,
+  PanelTabNameStyled
+} from '@/components/common/Panels/PanelTabs/PanelTabItem/PanelTabItem.styled.ts';
 import { shortcuts } from '@/core/utils';
 import { useContextMenu, useShortcut } from '@/hooks';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { TabType } from '@/types';
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, Tooltip } from '@mui/material';
 import type { JSX } from 'react';
-import { memo, useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { usePanelTabMenu } from '../../hooks/usePanelTabMenu';
 import { useRemoveTab } from '../../hooks/useRemoveTab';
 import { useSwitchTab } from '../../hooks/useSwitchTab';
 
-const PanelTabItem: React.FC<{ tab: TabType }> = memo(({ tab }: { tab: TabType }): JSX.Element => {
+const toTestIdSlug = (name: string): string => name.toLowerCase().replace(/\s+/g, '-');
+
+export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
   const selectedTabId = useTabStore((state) => state.selectedTabId);
-  const tabRefs = useRef<Record<string, HTMLElement>>({});
+  const tabRefsRef = useRef<Record<string, HTMLElement>>({});
 
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
   const { handleSwitchTab } = useSwitchTab();
@@ -31,17 +39,17 @@ const PanelTabItem: React.FC<{ tab: TabType }> = memo(({ tab }: { tab: TabType }
     (e: React.MouseEvent<HTMLButtonElement>): void => {
       e.stopPropagation();
       e.preventDefault();
-      handleRemoveTab(tab.id);
+      handleRemoveTab(tab.id).catch((e) => console.log('🚀 ~ PanelTabItem ~ e:', e));
     },
     [handleRemoveTab, tab.id]
   );
 
-  useShortcut(shortcuts.closeTab, () => handleRemoveTab(selectedTabId ?? ''));
+  useShortcut(shortcuts.closeTab, () => void handleRemoveTab(selectedTabId ?? ''));
 
   useEffect(() => {
     const tabId = selectedTabId;
-    if (tabId && tabRefs.current?.[tabId]) {
-      tabRefs.current[tabId].scrollIntoView({
+    if (tabId && tabRefsRef.current?.[tabId]) {
+      tabRefsRef.current[tabId].scrollIntoView({
         behavior: 'smooth',
         block: 'nearest',
         inline: 'center'
@@ -53,33 +61,22 @@ const PanelTabItem: React.FC<{ tab: TabType }> = memo(({ tab }: { tab: TabType }
     <Box
       onContextMenu={handleContextMenu}
       ref={(el: HTMLElement): void => {
-        tabRefs.current[tab.id] = el;
+        tabRefsRef.current[tab.id] = el;
       }}
     >
       <SortableItem id={tab.id} onClick={handleTabClick}>
-        <PanelTabItemStyled selected={selectedTabId === tab.id}>
-          <Box display={'flex'} overflow={'hidden'} flexGrow={1} justifyContent={'center'} alignItems={'center'}>
-            <Tooltip title={tab.name} placement={'bottom'} key={tab.id}>
-              <Typography
-                display={'inline-block'}
-                component={'span'}
-                overflow={'hidden'}
-                textOverflow={'ellipsis'}
-                maxWidth={'100px'}
-                variant='subtitle2'
-              >
+        <PanelTabItemStyled selected={selectedTabId === tab.id} data-testid={`workspace-tab-${toTestIdSlug(tab.name)}`}>
+          <PanelTabContentStyled>
+            <Tooltip title={tab.name} placement={'bottom'}>
+              <PanelTabNameStyled component={'span'} variant='subtitle2'>
                 {tab.name}
-              </Typography>
+              </PanelTabNameStyled>
             </Tooltip>
-          </Box>
+          </PanelTabContentStyled>
           <CustomIcon type='close' size='s' onClick={handleCloseClick} />
         </PanelTabItemStyled>
       </SortableItem>
       <ContextMenu menu={menu} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
     </Box>
   );
-});
-
-PanelTabItem.displayName = 'PanelTabItem';
-
-export default PanelTabItem;
+}
