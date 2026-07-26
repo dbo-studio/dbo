@@ -1,6 +1,7 @@
 import api from '@/api';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
+import { resumePasswordPromptForConnection, suppressPasswordPromptForConnection } from '@/core/api';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
@@ -29,6 +30,7 @@ export default function ConnectionItemContextMenu({
   const showWarningModal = useConfirmModalStore((state) => state.warning);
   const resetTabs = useTabStore((state) => state.reset);
   const clearCurrentConnection = useConnectionStore((state) => state.clearCurrentConnection);
+  const updateConnections = useConnectionStore((state) => state.updateConnections);
   const resetTree = useTreeStore((state) => state.reset);
 
   const handleOpenConfirm = (connection: ConnectionType): void => {
@@ -59,9 +61,20 @@ export default function ConnectionItemContextMenu({
   };
 
   const handleCloseConnection = async (connection: ConnectionType): Promise<boolean> => {
+    const { currentConnectionId, connections } = useConnectionStore.getState();
+    suppressPasswordPromptForConnection(connection.id);
+    updateUI({ showConnectionPasswordPrompt: false, passwordPromptConnectionId: undefined });
+
     try {
-      const currentConnectionId = useConnectionStore.getState().currentConnectionId;
       await api.connection.updateConnection(connection.id, { isActive: false, isClose: true });
+
+      // Update local state after the pool is closed so the connections list
+      // refetch cannot re-select this connection while it is still active on the server.
+      if (connections) {
+        updateConnections(
+          connections.map((c) => (c.id === connection.id ? { ...c, isActive: false, isOpen: false } : c))
+        );
+      }
 
       if (Number(currentConnectionId) === connection.id) {
         clearCurrentConnection();
@@ -78,6 +91,8 @@ export default function ConnectionItemContextMenu({
       console.debug('🚀 ~ closeConnectionMutation ~ error:', err);
       toast.error(locales.connection_close_failed);
       return false;
+    } finally {
+      resumePasswordPromptForConnection(connection.id);
     }
   };
 

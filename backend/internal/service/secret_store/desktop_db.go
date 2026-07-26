@@ -29,9 +29,5 @@ func (s *DesktopDBStore) DeleteConnectionPassword(ctx context.Context, ownerID s
 }
 
 func (s *DesktopDBStore) IsTemporaryConnectionPassword(ctx context.Context, ownerID string, connectionID uint) (bool, error) {
-	_, err := s.base.GetConnectionPassword(ctx, ownerID, connectionID)
-	if err != nil {
-		return false, err
-	}
-	return false, nil
+	return s.base.IsTemporaryConnectionPassword(ctx, ownerID, connectionID)
 }

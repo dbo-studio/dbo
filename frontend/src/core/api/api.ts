@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import { toast } from 'sonner';
 
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 
 type ApiErrorResponse = {
@@ -8,6 +9,16 @@ type ApiErrorResponse = {
   data?: {
     connectionId?: number;
   };
+};
+
+const suppressedPasswordPromptConnectionIds = new Set<number>();
+
+export const suppressPasswordPromptForConnection = (connectionId: number): void => {
+  suppressedPasswordPromptConnectionIds.add(connectionId);
+};
+
+export const resumePasswordPromptForConnection = (connectionId: number): void => {
+  suppressedPasswordPromptConnectionIds.delete(connectionId);
 };
 
 const api: AxiosInstance = axios.create({
@@ -47,8 +58,16 @@ const handleApiError = (error: AxiosError<ApiErrorResponse>): void => {
 
   if (status === 401 && message === 'password_required') {
     const connectionId = data?.data?.connectionId;
+    const currentConnectionId = useConnectionStore.getState().currentConnectionId;
 
-    if (connectionId != null) {
+    // Ignore stale password errors after the connection was intentionally closed
+    // (e.g. in-flight tree/query requests that complete after close-for-edit).
+    if (
+      connectionId != null &&
+      !suppressedPasswordPromptConnectionIds.has(Number(connectionId)) &&
+      currentConnectionId != null &&
+      Number(currentConnectionId) === Number(connectionId)
+    ) {
       useSettingStore.getState().updateUI({
         showConnectionPasswordPrompt: true,
         passwordPromptConnectionId: connectionId
