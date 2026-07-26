@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/samber/lo"
 	"golang.org/x/sync/errgroup"
 )
@@ -18,6 +19,11 @@ func (r *PostgresRepository) AutoComplete(ctx context.Context, data *dto.AutoCom
 	var tables []Table
 
 	g.Go(func() error {
+		if configured := databaseConnection.DefaultPostgresqlDatabase(r.base.Connection()); configured != "" {
+			databases = []Database{{Name: configured}}
+			return nil
+		}
+
 		result, err := r.databases(gctx, true)
 		if err != nil {
 			return err

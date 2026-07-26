@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/samber/lo"
@@ -38,23 +39,33 @@ func buildRoot(ctx context.Context, r *PostgresRepository) (*contract.TreeNode, 
 		ContextMenu: r.ContextMenu(contract.DatabaseContainerNodeType),
 		Children:    make([]contract.TreeNode, 0),
 	}
+
+	if configured := databaseConnection.DefaultPostgresqlDatabase(r.base.Connection()); configured != "" {
+		root.Children = append(root.Children, databaseTreeNode(r, configured))
+		return root, nil
+	}
+
 	databases, err := r.databases(ctx, true)
 	if err != nil {
 		return nil, apperror.DriverError(err)
 	}
 
 	for _, db := range databases {
-		root.Children = append(root.Children, contract.TreeNode{
-			ID:          db.Name,
-			Name:        db.Name,
-			Type:        contract.DatabaseNodeType,
-			HasChildren: true,
-			Icon:        lo.ToPtr("database"),
-			ContextMenu: r.ContextMenu(contract.DatabaseNodeType),
-			Children:    make([]contract.TreeNode, 0),
-		})
+		root.Children = append(root.Children, databaseTreeNode(r, db.Name))
 	}
 	return root, nil
+}
+
+func databaseTreeNode(r *PostgresRepository, name string) contract.TreeNode {
+	return contract.TreeNode{
+		ID:          name,
+		Name:        name,
+		Type:        contract.DatabaseNodeType,
+		HasChildren: true,
+		Icon:        lo.ToPtr("database"),
+		ContextMenu: r.ContextMenu(contract.DatabaseNodeType),
+		Children:    make([]contract.TreeNode, 0),
+	}
 }
 
 func buildDatabase(ctx context.Context, r *PostgresRepository, dbName string) (*contract.TreeNode, error) {
