@@ -11,7 +11,11 @@ export const AppHeaderStyled = styled(Grid)(({ theme }) => ({
   WebkitBackdropFilter: 'blur(15px)',
   position: 'relative',
   zIndex: 101,
-  justifyContent: 'space-between'
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  cursor: 'default',
+  userSelect: 'none',
+  WebkitUserSelect: 'none'
 }));
 
 export const AppHeaderGridStyled = styled(Grid)(({ useCompactHeader }: { useCompactHeader: boolean }) => ({

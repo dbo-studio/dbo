@@ -115,9 +115,19 @@ const disableDefaultContextMenu = (): void => {
   document.addEventListener('selectstart', preventSelectStart, { capture: true });
 };
 
-const createHeaderAreaClickHandler = (): void => {
+const createHeaderAreaClickHandler = (event: MouseEvent): void => {
+  if (event.button !== 0) {
+    return;
+  }
+
   const window = getCurrentWebviewWindow();
-  window.startDragging().catch((e) => console.log('🚀 ~ createHeaderAreaClickHandler ~ e:', e));
+  // Native macOS titlebar: double-click toggles zoom; single-click starts drag.
+  if (event.detail === 2) {
+    void window.toggleMaximize().catch((e) => console.debug('toggleMaximize failed', e));
+    return;
+  }
+
+  void window.startDragging().catch((e) => console.debug('startDragging failed', e));
 };
 
 const setupTitleBar = (): void => {

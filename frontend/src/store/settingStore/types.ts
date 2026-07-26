@@ -61,7 +61,7 @@ export type SetupSettings = {
 export type TitleBarType = {
   paddingLeft: number;
   paddingTop: number;
-  onHeaderAreaClick: () => void;
+  onHeaderAreaClick: (event: MouseEvent) => void;
 };
 
 export type SidebarType = {

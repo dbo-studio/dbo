@@ -1,4 +1,3 @@
-// Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::env;
@@ -12,21 +11,13 @@ use tauri_plugin_shell::ShellExt;
 #[cfg(target_os = "macos")]
 use tauri_plugin_decorum::WebviewWindowExt;
 
-// =============================================================================
-// Types
-// =============================================================================
-
 type SidecarChild = Arc<Mutex<Option<CommandChild>>>;
-
-// =============================================================================
-// Constants
-// =============================================================================
 
 const DEFAULT_PORT: u16 = 5124;
 
-// =============================================================================
-// Main
-// =============================================================================
+/// Vertically centers traffic lights in the ~56px app header (8 + 40 + 8).
+#[cfg(target_os = "macos")]
+const TRAFFIC_LIGHT_INSET: (f32, f32) = (12.0, 20.0);
 
 fn main() {
     let _ = fix_path_env::fix();
@@ -62,31 +53,44 @@ fn main() {
         });
 }
 
-// =============================================================================
-// Commands
-// =============================================================================
-
-#[tauri::command]
-fn get_backend_host() -> String {
-    let port = env::var("APP_PORT").unwrap_or_else(|_| DEFAULT_PORT.to_string());
-    format!("http://127.0.0.1:{}/api", port)
-}
-
-// =============================================================================
-// Setup Functions
-// =============================================================================
-
 #[cfg(target_os = "macos")]
 fn setup_macos_window(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    let main_window = app.get_webview_window("main").unwrap();
-    main_window.create_overlay_titlebar().unwrap();
-    main_window.set_traffic_lights_inset(12.0, 16.0).unwrap();
+    let main_window = app
+        .get_webview_window("main")
+        .ok_or("main window not found")?;
+    // Decorum owns overlay titlebar + fullscreen events the frontend listens for.
+    main_window.create_overlay_titlebar()?;
+    apply_traffic_light_inset(&main_window)?;
+
+    // Decorum resizes the AppKit titlebar container. On blur/focus AppKit relayouts
+    // that view and the buttons can clip out of sight unless we re-apply the inset.
+    let window_for_events = main_window.clone();
+    main_window.on_window_event(move |event| {
+        if let tauri::WindowEvent::Focused(_) = event {
+            let _ = apply_traffic_light_inset(&window_for_events);
+        }
+    });
+
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+fn apply_traffic_light_inset(
+    window: &tauri::WebviewWindow,
+) -> Result<(), Box<dyn std::error::Error>> {
+    window.set_traffic_lights_inset(TRAFFIC_LIGHT_INSET.0, TRAFFIC_LIGHT_INSET.1)?;
     Ok(())
 }
 
 #[cfg(not(target_os = "macos"))]
 fn setup_macos_window(_app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
+}
+
+#[tauri::command]
+fn get_backend_host() -> String {
+    let port = env::var("APP_PORT").unwrap_or_else(|_| DEFAULT_PORT.to_string());
+    format!("http://127.0.0.1:{}/api", port)
 }
 
 fn setup_environment() {
@@ -104,10 +108,6 @@ fn start_backend_server(app: &tauri::App) {
         run_sidecar(app_handle).await;
     });
 }
-
-// =============================================================================
-// Sidecar Management
-// =============================================================================
 
 async fn run_sidecar(app: AppHandle) {
     let sidecar_command = match app.shell().sidecar("dbo-bin") {
@@ -171,10 +171,6 @@ fn cleanup_sidecar(sidecar_child: &SidecarChild) {
         }
     }
 }
-
-// =============================================================================
-// Utility Functions
-// =============================================================================
 
 fn find_free_port() -> u16 {
     TcpListener::bind("127.0.0.1:0")
