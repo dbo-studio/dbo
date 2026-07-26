@@ -1,6 +1,14 @@
 import '@mui/material/styles';
 
 declare module '@mui/material/styles' {
+  interface Theme {
+    editorFontFamily: string;
+  }
+
+  interface ThemeOptions {
+    editorFontFamily?: string;
+  }
+
   interface Palette {
     textTitle: string;
     textText: string;

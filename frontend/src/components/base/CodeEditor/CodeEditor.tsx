@@ -1,4 +1,5 @@
 import type { CodeEditorProps } from '@/components/base/CodeEditor/types.ts';
+import { getEditorFontFamily } from '@/core/fonts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { Editor, useMonaco } from '@monaco-editor/react';
 import { type JSX, useCallback, useEffect } from 'react';
@@ -38,7 +39,8 @@ export default function CodeEditor({ value, onChange, width, height }: CodeEdito
         theme={theme.editorTheme}
         options={{
           ...editorConfig,
-          fontSize: theme.editorFontSize
+          fontSize: theme.editorFontSize,
+          fontFamily: getEditorFontFamily(theme.editorFont)
         }}
       />
     </CodeEditorBoxStyled>

@@ -33,6 +33,7 @@ export type UISettings = {
 export type ThemeSettings = {
   isDark: boolean | undefined;
   appFont: string;
+  editorFont: string;
   editorTheme: 'github-light' | 'github-dark';
   editorFontSize: number;
   themeName: string;

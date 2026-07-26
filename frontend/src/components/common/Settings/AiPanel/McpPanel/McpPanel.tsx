@@ -4,7 +4,18 @@ import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlighter';
 import locales from '@/locales';
-import { Alert, Box, Button, Chip, FormControlLabel, IconButton, Stack, Switch, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  FormControlLabel,
+  IconButton,
+  Stack,
+  Switch,
+  Typography,
+  type Theme
+} from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type ReactNode, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -28,17 +39,17 @@ function McpStatusRow({ label, children }: { label: string; children: ReactNode 
   );
 }
 
-const monoChipSx = {
+const monoChipSx = (theme: Theme) => ({
   maxWidth: '100%',
   height: 'auto',
   '& .MuiChip-label': {
-    fontFamily: "'JetBrains Mono', monospace",
+    fontFamily: theme.editorFontFamily,
     fontSize: 12,
     whiteSpace: 'normal',
     wordBreak: 'break-all',
     py: 0.5
   }
-} as const;
+});
 
 export default function McpPanel() {
   const queryClient = useQueryClient();

@@ -51,7 +51,24 @@ export default defineConfig({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 8000000,
-        navigateFallbackDenylist: [/^\/api/]
+        navigateFallbackDenylist: [/^\/api/],
+        globIgnores: ['**/fonts/**'],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }): boolean => /\/fonts\/.+\.woff2$/i.test(url.pathname),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'dbo-fonts',
+              expiration: {
+                maxEntries: 64,
+                maxAgeSeconds: 60 * 60 * 24 * 365
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          }
+        ]
       }
     })
   ],
