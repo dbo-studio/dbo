@@ -71,12 +71,9 @@ export default defineConfig({
     }
   },
   build: {
-    target:
-      process.env.TAURI_PLATFORM === 'windows' || process.env.TAURI_PLATFORM === 'linux' ? 'chrome105' : 'safari13',
-    // don't minify for debug builds
-    minify: process.env.NODE_ENV !== 'development' || !process.env.TAURI_DEBUG ? 'oxc' : false,
-    // produce sourcemaps for debug builds
-    sourcemap: !!process.env.TAURI_DEBUG,
+    target: process.env.TAURI_ENV_PLATFORM === 'windows' ? 'chrome105' : 'safari13',
+    minify: !process.env.TAURI_ENV_DEBUG ? 'oxc' : false,
+    sourcemap: !!process.env.TAURI_ENV_DEBUG,
     rolldownOptions: {
       output: {
         minify: {
