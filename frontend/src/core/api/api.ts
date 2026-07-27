@@ -11,14 +11,19 @@ type ApiErrorResponse = {
   };
 };
 
+/** Connection IDs whose password_required errors should be ignored (e.g. during/after close). */
 const suppressedPasswordPromptConnectionIds = new Set<number>();
 
 export const suppressPasswordPromptForConnection = (connectionId: number): void => {
-  suppressedPasswordPromptConnectionIds.add(connectionId);
+  suppressedPasswordPromptConnectionIds.add(Number(connectionId));
 };
 
 export const resumePasswordPromptForConnection = (connectionId: number): void => {
-  suppressedPasswordPromptConnectionIds.delete(connectionId);
+  suppressedPasswordPromptConnectionIds.delete(Number(connectionId));
+};
+
+export const isPasswordPromptSuppressedForConnection = (connectionId: number): boolean => {
+  return suppressedPasswordPromptConnectionIds.has(Number(connectionId));
 };
 
 const api: AxiosInstance = axios.create({
@@ -64,7 +69,7 @@ const handleApiError = (error: AxiosError<ApiErrorResponse>): void => {
     // (e.g. in-flight tree/query requests that complete after close-for-edit).
     if (
       connectionId != null &&
-      !suppressedPasswordPromptConnectionIds.has(Number(connectionId)) &&
+      !isPasswordPromptSuppressedForConnection(connectionId) &&
       currentConnectionId != null &&
       Number(currentConnectionId) === Number(connectionId)
     ) {
@@ -79,6 +84,11 @@ const handleApiError = (error: AxiosError<ApiErrorResponse>): void => {
 
   if (status === 400 || status === 500) {
     toast.error(message || 'Server error occurred. Please try again later.');
+  }
+
+  // Safe Mode 403s are handled by callers (confirm modal / toast with reason).
+  if (status === 403 && (message === 'safe_mode_blocked' || message === 'safe_mode_confirm_required')) {
+    return;
   }
 };
 
