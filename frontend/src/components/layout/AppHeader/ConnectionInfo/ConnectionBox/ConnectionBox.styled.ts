@@ -22,7 +22,7 @@ export const ConnectionBoxStyled = styled(Box)<ConnectionBoxStyledProps>(({ them
       (status === 'loading' && theme.palette.text.warning) ||
       (status === 'error' && theme.palette.text.danger) ||
       theme.palette.text.text,
-    fontFamily: "'JetBrains Mono', monospace",
+    fontFamily: theme.editorFontFamily,
     fontWeight: 'bold',
     fontSize: 12,
     flex: 1,

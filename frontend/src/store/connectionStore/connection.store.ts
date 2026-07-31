@@ -14,13 +14,11 @@ export const useConnectionStore: UseBoundStore<StoreApi<ConnectionState>> = crea
       currentConnection: (): ConnectionType | undefined => {
         const { connections, currentConnectionId } = get();
 
-        if (!connections || connections.length === 0) return undefined;
-
-        if (currentConnectionId) {
-          return connections.find((c) => c.id === Number(currentConnectionId));
+        if (!connections || connections.length === 0 || currentConnectionId == null) {
+          return undefined;
         }
 
-        return connections.find((c) => c.isActive);
+        return connections.find((c) => c.id === Number(currentConnectionId));
       },
       updateLoading: (loading: LoadingType): void => {
         set({ loading }, undefined, 'updateLoading');

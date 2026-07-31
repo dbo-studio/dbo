@@ -1,13 +1,5 @@
 import { globalStyles } from '@/core/theme/global.ts';
-import '@fontsource/jetbrains-mono/300.css';
-import '@fontsource/jetbrains-mono/400.css';
-import '@fontsource/jetbrains-mono/500.css';
-import '@fontsource/jetbrains-mono/600.css';
-import '@fontsource/jetbrains-mono/700.css';
-import '@fontsource/roboto/300.css';
-import '@fontsource/roboto/400.css';
-import '@fontsource/roboto/500.css';
-import '@fontsource/roboto/700.css';
+import { ensureDefaultFonts } from '@/core/fonts';
 
 import { loader } from '@monaco-editor/react';
 import { CssBaseline, GlobalStyles, type Interpolation, type Theme } from '@mui/material';
@@ -24,6 +16,8 @@ loader.config({ monaco });
 if (import.meta.env.DEV) {
   (window as unknown as { monaco: typeof monaco }).monaco = monaco;
 }
+
+void ensureDefaultFonts();
 
 const queryClient = new QueryClient({
   defaultOptions: {

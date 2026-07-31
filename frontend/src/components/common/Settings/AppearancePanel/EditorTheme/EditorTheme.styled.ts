@@ -16,9 +16,9 @@ export const EditorThemePreviewBoxStyled = styled(Box)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper
 }));
 
-export const EditorThemePreviewTextStyled = styled(Typography)<{ fontSize: number }>(({ fontSize }) => ({
+export const EditorThemePreviewTextStyled = styled(Typography)<{ fontSize: number }>(({ theme, fontSize }) => ({
   fontSize: `${fontSize}px`,
-  fontFamily: 'monospace'
+  fontFamily: theme.editorFontFamily
 }));
 
 export const EditorThemeSliderStyled = styled(Box)(({ theme }) => ({

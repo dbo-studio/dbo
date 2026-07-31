@@ -9,7 +9,7 @@
   "devDependencies": {
     "@babel/core": "^8.0.1",
     "@rolldown/plugin-babel": "^0.2.3",
-    "@tauri-apps/cli": "^2.9.6",
+    "@tauri-apps/cli": "^2.11.4",
     "@types/babel__core": "^7.20.5",
     "@vitejs/plugin-react": "^6.0.2",
     "babel-plugin-react-compiler": "^1.0.0",

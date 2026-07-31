@@ -33,6 +33,7 @@ export type UISettings = {
 export type ThemeSettings = {
   isDark: boolean | undefined;
   appFont: string;
+  editorFont: string;
   editorTheme: 'github-light' | 'github-dark';
   editorFontSize: number;
   themeName: string;
@@ -60,7 +61,7 @@ export type SetupSettings = {
 export type TitleBarType = {
   paddingLeft: number;
   paddingTop: number;
-  onHeaderAreaClick: () => void;
+  onHeaderAreaClick: (event: MouseEvent) => void;
 };
 
 export type SidebarType = {

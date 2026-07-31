@@ -1,4 +1,5 @@
 {
+  "$schema": "https://schema.tauri.app/config/2",
   "build": {
     "beforeBuildCommand": "npm --prefix frontend run build",
     "beforeDevCommand": "npm --prefix frontend run dev",
@@ -29,7 +30,13 @@
     "windows": {
       "certificateThumbprint": null,
       "digestAlgorithm": "sha256",
-      "timestampUrl": ""
+      "timestampUrl": "",
+      "nsis": {
+        "installerIcon": "icons/icon.ico",
+        "uninstallerIcon": "icons/icon.ico",
+        "headerImage": "icons/nsis-header.bmp",
+        "sidebarImage": "icons/nsis-sidebar.bmp"
+      }
     },
     "longDescription": "",
     "macOS": {
@@ -70,15 +77,13 @@
         "center": true,
         "minWidth": 1280,
         "minHeight": 700,
-        "x": 0,
-        "y": 0,
         "decorations": true,
         "hiddenTitle": true,
         "titleBarStyle": "Overlay"
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost http://127.0.0.1:* http://localhost:*; worker-src 'self' blob:"
     }
   }
 }
