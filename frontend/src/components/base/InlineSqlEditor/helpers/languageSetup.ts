@@ -7,23 +7,25 @@ import { completionService } from './inlineCompletionProvider';
 let setupPromise: Promise<void> | null = null;
 
 export const setupLanguage = async (monaco: typeof Monaco, theme: string) => {
-  if (setupPromise) return setupPromise;
+  if (!setupPromise) {
+    setupPromise = (async () => {
+      const highlighter = await createHighlighter({
+        themes: themes,
+        langs: ['sql']
+      });
 
-  setupPromise = (async () => {
-    const highlighter = await createHighlighter({
-      themes: themes,
-      langs: ['sql']
+      shikiToMonaco(highlighter, monaco);
+
+      monaco.languages.registerCompletionItemProvider('sql', {
+        triggerCharacters: [' ', '.', '"', "'", '`'],
+        provideCompletionItems: completionService
+      });
+    })().catch((error: unknown) => {
+      setupPromise = null;
+      throw error;
     });
+  }
 
-    shikiToMonaco(highlighter, monaco);
-
-    monaco.languages.registerCompletionItemProvider('sql', {
-      triggerCharacters: [' ', '.', '"', "'", '`'],
-      provideCompletionItems: completionService
-    });
-
-    monaco.editor.setTheme(theme);
-  })();
-
-  return setupPromise;
+  await setupPromise;
+  monaco.editor.setTheme(theme);
 };

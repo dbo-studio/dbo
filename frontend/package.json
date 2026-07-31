@@ -1,6 +1,6 @@
 {
   "name": "dbo",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "scripts": {
     "dev": "NODE_ENV=development VITE_PUBLIC_SERVER_URL=http://localhost:8080/api vite",
     "build": "tsc --noEmit -p tsconfig.app.json && vite build",
