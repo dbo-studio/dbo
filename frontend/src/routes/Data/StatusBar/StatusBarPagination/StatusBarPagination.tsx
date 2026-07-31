@@ -52,25 +52,29 @@ export default function StatusBarPagination(): JSX.Element {
     <StatusBarPaginationStyled mobile={isMobile}>
       <PaginationSetting />
       <Tooltip title={locales.previous_page}>
-        <IconButton
-          aria-label={locales.previous_page}
-          disabled={pagination.page === 1 || isDataFetching}
-          onClick={(): void => handlePagination('prev')}
-        >
-          <CustomIcon type='chevronLeft' size='s' />
-        </IconButton>
+        <span>
+          <IconButton
+            aria-label={locales.previous_page}
+            disabled={pagination.page === 1 || isDataFetching}
+            onClick={(): void => handlePagination('prev')}
+          >
+            <CustomIcon type='chevronLeft' size='s' />
+          </IconButton>
+        </span>
       </Tooltip>
       <PageNumberStyled mobile={isMobile} color='textText'>
         {pagination.page}
       </PageNumberStyled>
       <Tooltip title={locales.next_page}>
-        <IconButton
-          aria-label={locales.next_page}
-          disabled={nextDisabled}
-          onClick={(): void => handlePagination('next')}
-        >
-          <CustomIcon type='chevronRight' size='s' />
-        </IconButton>
+        <span>
+          <IconButton
+            aria-label={locales.next_page}
+            disabled={nextDisabled}
+            onClick={(): void => handlePagination('next')}
+          >
+            <CustomIcon type='chevronRight' size='s' />
+          </IconButton>
+        </span>
       </Tooltip>
     </StatusBarPaginationStyled>
   );

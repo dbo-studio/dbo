@@ -111,19 +111,23 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
             }}
           >
             <Tooltip title={locales.refresh}>
-              <IconButton
-                aria-label={'refresh'}
-                onClick={() => void handleRefresh()}
-                loading={loading === 'loading'}
-                disabled={loading === 'loading'}
-              >
-                <CustomIcon type={'refresh'} />
-              </IconButton>
+              <span>
+                <IconButton
+                  aria-label={'refresh'}
+                  onClick={() => void handleRefresh()}
+                  loading={loading === 'loading'}
+                  disabled={loading === 'loading'}
+                >
+                  <CustomIcon type={'refresh'} />
+                </IconButton>
+              </span>
             </Tooltip>
             <Tooltip title={locales.open_editor}>
-              <IconButton aria-label={'sql'} disabled={!currentConnection} onClick={handleAddEditorTab}>
-                <CustomIcon type={'sql'} size={'m'} />
-              </IconButton>
+              <span>
+                <IconButton aria-label={'sql'} disabled={!currentConnection} onClick={handleAddEditorTab}>
+                  <CustomIcon type={'sql'} size={'m'} />
+                </IconButton>
+              </span>
             </Tooltip>
           </Stack>
         </Grid>

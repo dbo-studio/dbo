@@ -193,54 +193,64 @@ export default function StatusBarActions(): JSX.Element {
       {canEditGrid && (
         <>
           <Tooltip title={locales.add_row}>
-            <IconButton aria-label={locales.add_row} disabled={editDisabled} onClick={() => void handleAddAction()}>
-              <CustomIcon type='plus' size='s' />
-            </IconButton>
+            <span>
+              <IconButton aria-label={locales.add_row} disabled={editDisabled} onClick={() => void handleAddAction()}>
+                <CustomIcon type='plus' size='s' />
+              </IconButton>
+            </span>
           </Tooltip>
 
           <Tooltip title={locales.remove_row}>
-            <IconButton
-              aria-label={locales.remove_row}
-              disabled={editDisabled}
-              onClick={() => void handleRemoveAction()}
-            >
-              <CustomIcon type='mines' size='s' />
-            </IconButton>
+            <span>
+              <IconButton
+                aria-label={locales.remove_row}
+                disabled={editDisabled}
+                onClick={() => void handleRemoveAction()}
+              >
+                <CustomIcon type='mines' size='s' />
+              </IconButton>
+            </span>
           </Tooltip>
 
           <Tooltip title={locales.save}>
-            <IconButton
-              aria-label={locales.save}
-              data-testid='grid-save'
-              disabled={editDisabled}
-              onClick={() => void handleSave()}
-            >
-              <CustomIcon type='check' size='s' />
-            </IconButton>
+            <span>
+              <IconButton
+                aria-label={locales.save}
+                data-testid='grid-save'
+                disabled={editDisabled}
+                onClick={() => void handleSave()}
+              >
+                <CustomIcon type='check' size='s' />
+              </IconButton>
+            </span>
           </Tooltip>
 
           <Tooltip title={locales.discard_changes}>
-            <IconButton
-              aria-label={locales.discard_changes}
-              disabled={editDisabled}
-              onClick={() => void handleDiscardChanges()}
-            >
-              <CustomIcon type='close' size='s' />
-            </IconButton>
+            <span>
+              <IconButton
+                aria-label={locales.discard_changes}
+                disabled={editDisabled}
+                onClick={() => void handleDiscardChanges()}
+              >
+                <CustomIcon type='close' size='s' />
+              </IconButton>
+            </span>
           </Tooltip>
         </>
       )}
 
       <Tooltip title={isDataFetching ? locales.stop_query : locales.refresh}>
-        <IconButton
-          aria-label={isDataFetching ? locales.stop_query : locales.refresh}
-          data-testid={isDataFetching ? 'stop-query' : 'refresh-query'}
-          color={isDataFetching ? 'error' : 'default'}
-          disabled={updateQueryPending}
-          onClick={handleRefreshOrStop}
-        >
-          <CustomIcon type={isDataFetching ? 'stop' : 'refresh'} size='s' />
-        </IconButton>
+        <span>
+          <IconButton
+            aria-label={isDataFetching ? locales.stop_query : locales.refresh}
+            data-testid={isDataFetching ? 'stop-query' : 'refresh-query'}
+            color={isDataFetching ? 'error' : 'default'}
+            disabled={updateQueryPending}
+            onClick={handleRefreshOrStop}
+          >
+            <CustomIcon type={isDataFetching ? 'stop' : 'refresh'} size='s' />
+          </IconButton>
+        </span>
       </Tooltip>
     </StatusBarActionsStackStyled>
   );

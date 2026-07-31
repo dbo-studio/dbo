@@ -80,17 +80,10 @@ export class ConnectionPage extends BasePage {
   }
 
   async waitForReady(): Promise<void> {
+    // Wait on UI readiness — not waitForResponse("connections"). That races with
+    // goto() (response often already finished) and burns the full 30s timeout.
     await this.page.waitForLoadState("domcontentloaded");
-    await this.page
-      .waitForResponse(
-        (response) =>
-          response.url().includes("connections") && response.status() === 200,
-        {
-          timeout: 30000,
-        },
-      )
-      .catch(() => undefined);
-    await this.wait(1000);
+    await expect(this.addConnectionButton).toBeVisible({ timeout: 15000 });
   }
 
   async openNewConnectionModal(): Promise<void> {
