@@ -4,6 +4,7 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { getDbConfig, getSslPostgresConfig } from "../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
+import { API_DB_TIMEOUT, apiRoute, pendingResponse } from "../helpers/network";
 import { withConnectionCleanup } from "../helpers/safeCleanup";
 import { ConnectionPage } from "../pages";
 
@@ -143,11 +144,10 @@ test.describe("Connection SSL", () => {
     });
 
     await test.step("Test connection fails", async () => {
-      const responsePromise = page.waitForResponse(
-        (response) =>
-          response.url().includes("connections/ping") &&
-          response.request().method() === "POST",
-        { timeout: 30000 },
+      const responsePromise = pendingResponse(
+        page,
+        apiRoute.connectionsPing,
+        API_DB_TIMEOUT,
       );
       await connectionPage.testConnectionButton.click();
       const response = await responsePromise;

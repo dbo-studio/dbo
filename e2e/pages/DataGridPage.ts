@@ -1,4 +1,5 @@
 import { expect, type Page, type Locator } from "@playwright/test";
+import { apiRoute, pendingResponse, waitForResponseDuring } from "../helpers/network";
 import { BasePage } from "./BasePage";
 
 /**
@@ -103,14 +104,11 @@ export class DataGridPage extends BasePage {
   }
 
   async saveChanges(): Promise<void> {
-    const responsePromise = this.page.waitForResponse(
-      (response) =>
-        response.url().includes("/query/update") && response.status() === 200,
-      { timeout: 15000 },
+    await waitForResponseDuring(
+      this.page,
+      apiRoute.queryUpdate,
+      () => this.clickSave(),
     );
-    await this.clickSave();
-    await responsePromise;
-    await this.wait(500);
   }
 
   async addRow(): Promise<void> {
@@ -132,17 +130,12 @@ export class DataGridPage extends BasePage {
   }
 
   async refreshQuery(): Promise<void> {
-    const responsePromise = this.page.waitForResponse(
-      (response) =>
-        response.url().includes("/query/raw") &&
-        response.request().method() === "POST" &&
-        response.status() === 200,
-      { timeout: 15000 },
-    );
     await expect(this.refreshButton).toBeVisible({ timeout: 10000 });
-    await this.refreshButton.click();
-    await responsePromise;
-    await this.wait(300);
+    await waitForResponseDuring(
+      this.page,
+      apiRoute.queryRaw,
+      () => this.refreshButton.click(),
+    );
   }
 
   async selectRowByCellText(text: string): Promise<void> {
@@ -157,30 +150,22 @@ export class DataGridPage extends BasePage {
     await expect(checkbox).toBeChecked();
   }
 
-  private async waitForRawQuery(): Promise<void> {
-    await this.page.waitForResponse(
-      (response) =>
-        response.url().includes("/query/raw") &&
-        response.request().method() === "POST" &&
-        response.status() === 200,
-      { timeout: 15000 },
-    );
+  private pendingRawQuery(): Promise<unknown> {
+    return pendingResponse(this.page, apiRoute.queryRaw);
   }
 
   async goToNextPage(): Promise<void> {
-    const responsePromise = this.waitForRawQuery();
+    const responsePromise = this.pendingRawQuery();
     await expect(this.nextPageButton).toBeEnabled({ timeout: 10000 });
     await this.nextPageButton.click();
     await responsePromise;
-    await this.wait(300);
   }
 
   async goToPreviousPage(): Promise<void> {
-    const responsePromise = this.waitForRawQuery();
+    const responsePromise = this.pendingRawQuery();
     await expect(this.previousPageButton).toBeEnabled({ timeout: 10000 });
     await this.previousPageButton.click();
     await responsePromise;
-    await this.wait(300);
   }
 
   async expectNextPageDisabled(): Promise<void> {
@@ -205,7 +190,7 @@ export class DataGridPage extends BasePage {
     await expect(limitInput).toBeVisible({ timeout: 5000 });
     await limitInput.fill(String(limit));
 
-    const responsePromise = this.waitForRawQuery();
+    const responsePromise = this.pendingRawQuery();
     const popper = this.page
       .locator(".MuiPopper-root")
       .filter({ has: limitInput });
@@ -213,7 +198,6 @@ export class DataGridPage extends BasePage {
     await expect(saveButton).toBeVisible({ timeout: 5000 });
     await saveButton.click();
     await responsePromise;
-    await this.wait(300);
   }
 
   async expectEditActionsVisible(visible: boolean): Promise<void> {

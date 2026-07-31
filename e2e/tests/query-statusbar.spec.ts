@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { getDbConfig } from "../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
+import { apiRoute, pendingResponse } from "../helpers/network";
 import { withConnectionCleanup } from "../helpers/safeCleanup";
 import { ConnectionPage, DataGridPage, SqlEditorPage } from "../pages";
 
@@ -120,13 +121,7 @@ INSERT INTO ${tableName} (name, email) VALUES
       });
 
       await test.step("Default page shows first page of 250", async () => {
-        const responsePromise = page.waitForResponse(
-          (response) =>
-            response.url().includes("/query/raw") &&
-            response.request().method() === "POST" &&
-            response.status() === 200,
-          { timeout: 15000 },
-        );
+        const responsePromise = pendingResponse(page, apiRoute.queryRaw);
         await sqlEditor.typeQuery(
           "SELECT generate_series(1, 250) AS n ORDER BY 1",
         );

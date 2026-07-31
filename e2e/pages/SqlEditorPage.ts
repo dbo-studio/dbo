@@ -1,4 +1,5 @@
 import { expect, type Page, type Locator } from "@playwright/test";
+import { apiRoute, waitForResponseDuring } from "../helpers/network";
 import { BasePage } from "./BasePage";
 
 /**
@@ -140,15 +141,11 @@ export class SqlEditorPage extends BasePage {
 
   async runQuery(): Promise<void> {
     // Web shortcut is Alt+Enter (not Ctrl+Enter); click the toolbar button instead.
-    const responsePromise = this.page.waitForResponse(
-      (response) =>
-        response.url().includes("/query/raw") &&
-        response.request().method() === "POST" &&
-        response.status() === 200,
-      { timeout: 15000 },
+    await waitForResponseDuring(
+      this.page,
+      apiRoute.queryRaw,
+      () => this.clickRun(),
     );
-    await this.clickRun();
-    await responsePromise;
   }
 
   /** Click Run without waiting for a successful response (Safe Mode gates / cancel). */
@@ -192,20 +189,15 @@ export class SqlEditorPage extends BasePage {
   }
 
   async saveQuery(): Promise<void> {
-    const responsePromise = this.page.waitForResponse(
-      (response) =>
-        response.url().includes("/saved") &&
-        response.request().method() === "POST" &&
-        response.status() === 200,
-      { timeout: 15000 },
-    );
     await expect(this.saveButton).toBeEnabled({ timeout: 10000 });
-    await this.saveButton.click();
-    await responsePromise;
+    await waitForResponseDuring(
+      this.page,
+      apiRoute.savedCreate,
+      () => this.saveButton.click(),
+    );
     await expect(this.page.getByText(/query saved successfully/i)).toBeVisible({
       timeout: 5000,
     });
-    await this.wait(500);
   }
 
   async getEditorContent(): Promise<string> {
