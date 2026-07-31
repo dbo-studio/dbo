@@ -72,7 +72,7 @@ export const IconTypes = {
   network: 'Network',
   send: 'Send',
   at: 'AtSign',
-  history: 'History',
+  history: 'RotateCcwClock',
   bot: 'Bot',
   mysql: 'mysql',
   message: 'MessageSquare',

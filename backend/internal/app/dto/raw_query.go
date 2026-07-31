@@ -9,6 +9,8 @@ type (
 		Database     *string `json:"database"`
 		Schema       *string `json:"schema"`
 		Confirmed    bool    `json:"confirmed"`
+		Limit        *int    `json:"limit"`
+		Page         *int    `json:"page"`
 	}
 
 	RawQueryResponse struct {
@@ -19,6 +21,9 @@ type (
 		NodeID         string           `json:"nodeId"`
 		EditableReason *string          `json:"editableReason"`
 		DrivingTable   *string          `json:"drivingTable"`
+		Paginated      bool             `json:"paginated"`
+		Limit          int              `json:"limit"`
+		Page           int              `json:"page"`
 	}
 )
 
@@ -41,5 +46,7 @@ func (req RawQueryRequest) Validate() error {
 	return validation.ValidateStruct(&req,
 		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
 		validation.Field(&req.Query, validation.Required),
+		validation.Field(&req.Limit, validation.Min(1), validation.Max(10000)),
+		validation.Field(&req.Page, validation.Min(1)),
 	)
 }

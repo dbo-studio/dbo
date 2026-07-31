@@ -46,6 +46,7 @@ export type EditorTabType = BaseTab & {
   name: string;
   database: string;
   schema: string;
+  pagination?: TabDataPagination;
 };
 
 export type ObjectTabType = BaseTab & {

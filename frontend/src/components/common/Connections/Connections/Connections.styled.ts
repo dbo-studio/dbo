@@ -35,7 +35,10 @@ export const ConnectionsStyled = styled(Box, {
     : {
         display: 'flex',
         flexDirection: 'column',
-        minWidth: '83px'
+        width: '83px',
+        minWidth: '83px',
+        maxWidth: '83px',
+        overflow: 'hidden'
       })
 }));
 

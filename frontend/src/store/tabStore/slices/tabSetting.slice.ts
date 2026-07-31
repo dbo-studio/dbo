@@ -81,7 +81,11 @@ export const createTabSettingSlice: StateCreator<
       nodeId: '',
       mode: TabMode.Query,
       database: '',
-      schema: ''
+      schema: '',
+      pagination: {
+        page: 1,
+        limit: 100
+      }
     };
 
     const addedTab = get().handleAddNewTab(tabs, newTab);

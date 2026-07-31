@@ -5,7 +5,7 @@ import ResizableYBox from '@/components/base/ResizableBox/ResizableYBox.tsx';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor.tsx';
 import { SqlEditorRef } from '@/components/base/SqlEditor/types';
 import { shortcuts } from '@/core/utils';
-import { useCurrentConnection, useLayoutMode, useShortcut, useWindowSize } from '@/hooks';
+import { useCurrentConnection, useLayoutMode, useShortcut } from '@/hooks';
 import { useAiBridge } from '@/hooks/useAiBridge';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
@@ -32,14 +32,8 @@ const getActiveColumns = (columns: ColumnType[] | undefined): ColumnType[] =>
 export default function Query(): JSX.Element {
   const selectedTab = useSelectedTab<EditorTabType>();
   const currentConnection = useCurrentConnection();
-  const windowSize = useWindowSize();
   const { isMobile } = useLayoutMode();
   const sqlEditorRef = useRef<SqlEditorRef>(null);
-
-  const [tableData, setTableData] = useState<{ rows: RowType[]; columns: ColumnType[] }>({
-    rows: EMPTY_ROWS,
-    columns: EMPTY_COLUMNS
-  });
 
   const getQuery = useTabStore((state) => state.getQuery);
   const updateQuery = useTabStore((state) => state.updateQuery);
@@ -47,6 +41,8 @@ export default function Query(): JSX.Element {
   const loadDataFromIndexedDB = useDataStore((state) => state.loadDataFromIndexedDB);
   const pendingEditorQueryRun = useDataStore((state) => state.pendingEditorQueryRun);
   const clearPendingEditorQueryRun = useDataStore((state) => state.clearPendingEditorQueryRun);
+  const rows = useDataStore((state) => state.rows ?? EMPTY_ROWS);
+  const allColumns = useDataStore((state) => state.columns ?? EMPTY_COLUMNS);
 
   const [value, setValue] = useState(() => getQuery(selectedTab?.id));
   const [mobileView, setMobileView] = useState<QueryMobileView>('editor');
@@ -56,13 +52,22 @@ export default function Query(): JSX.Element {
     setPrevTabId(selectedTab?.id);
     setValue(getQuery(selectedTab?.id));
     setMobileView('editor');
-    setTableData({ rows: EMPTY_ROWS, columns: EMPTY_COLUMNS });
   }
 
   const isDataFetching = useDataStore((state) => state.isDataFetching);
+  const cancelRunningQuery = useDataStore((state) => state.cancelRunningQuery);
   const { askAboutSelection } = useAiBridge();
 
-  useShortcut(shortcuts.runQuery, () => void runQuery());
+  useShortcut(shortcuts.runQuery, () => {
+    if (!isDataFetching) {
+      void runQuery();
+    }
+  });
+  useShortcut(shortcuts.cancelQuery, () => {
+    if (isDataFetching) {
+      cancelRunningQuery();
+    }
+  });
 
   const { data: autocomplete } = useQuery({
     queryKey: ['autocomplete', currentConnection?.id, selectedTab?.database, selectedTab?.schema],
@@ -77,13 +82,7 @@ export default function Query(): JSX.Element {
 
   const loadData = useCallback(async (): Promise<void> => {
     try {
-      const result = await loadDataFromIndexedDB();
-      if (result) {
-        setTableData({
-          rows: result.rows,
-          columns: result.columns
-        });
-      }
+      await loadDataFromIndexedDB();
     } catch (error) {
       console.debug('🚀 ~ loadData ~ error:', error);
     }
@@ -105,11 +104,6 @@ export default function Query(): JSX.Element {
   const applyQueryResult = useCallback(
     (res: RunQueryResponseType | undefined): void => {
       const columns = getActiveColumns(res?.columns);
-      setTableData({
-        rows: res?.data ?? EMPTY_ROWS,
-        columns
-      });
-
       if (columns.length > 0 && isMobile) {
         setMobileView('results');
       }
@@ -119,11 +113,21 @@ export default function Query(): JSX.Element {
 
   const executeRawQuery = useCallback(
     async (sql?: string): Promise<RunQueryResponseType | undefined> => {
+      if (selectedTab) {
+        const latestTab = useTabStore.getState().selectedTab<EditorTabType>();
+        const pagination = latestTab?.pagination ?? { page: 1, limit: 100 };
+        if (latestTab && pagination.page !== 1) {
+          useTabStore.getState().updateSelectedTab({
+            ...latestTab,
+            pagination: { ...pagination, page: 1 }
+          });
+        }
+      }
       const res = await runRawQuery(sql);
       applyQueryResult(res);
       return res;
     },
-    [applyQueryResult, runRawQuery]
+    [applyQueryResult, runRawQuery, selectedTab]
   );
 
   useEffect(() => {
@@ -168,12 +172,13 @@ export default function Query(): JSX.Element {
     setMobileView(nextView);
   };
 
-  const displayRows = tableData.rows;
-  const displayColumns = useMemo(() => getActiveColumns(tableData.columns), [tableData.columns]);
+  const displayRows = rows;
+  const displayColumns = useMemo(() => getActiveColumns(allColumns), [allColumns]);
 
   const hasResults = displayColumns.length > 0;
   const showMobileTabs = isMobile && hasResults;
-  const resultsPanelHeight = Math.max(Math.floor((windowSize.heightNumber ?? 600) / 2), 200);
+  // Initial results panel size; container is flex-sized so this must leave room for the editor.
+  const resultsPanelHeight = 320;
 
   return (
     <>
@@ -191,7 +196,7 @@ export default function Query(): JSX.Element {
           <Tab className='Mui-flat' value='results' label={locales.query_results} />
         </Tabs>
       )}
-      <QueryContainerStyled height={isMobile ? '100%' : windowSize.height}>
+      <QueryContainerStyled>
         {(!isMobile || mobileView === 'editor') && (
           <QueryEditorBoxStyled>
             <SqlEditor

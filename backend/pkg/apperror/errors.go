@@ -22,6 +22,7 @@ var (
 	ErrSafeModePasswordRequired    = errors.New("safe_mode_password_required")
 	ErrInvalidEncryptionKey        = errors.New("invalid encryption key")
 	ErrDecryptionFailed            = errors.New("decryption failed")
+	ErrQueryCanceled               = errors.New("query canceled")
 )
 
 type AppError struct {
@@ -193,5 +194,13 @@ func DriverError(err error) error {
 		Code:    http.StatusBadRequest,
 		Message: "driver_error",
 		Err:     err,
+	}
+}
+
+func QueryCanceled() error {
+	return &AppError{
+		Code:    http.StatusBadRequest,
+		Message: "query_canceled",
+		Err:     ErrQueryCanceled,
 	}
 }

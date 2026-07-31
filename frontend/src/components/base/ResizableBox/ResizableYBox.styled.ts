@@ -12,6 +12,14 @@ export const ResizableYBoxStyled = styled(Box, {
   position: 'relative',
   overflow: 'hidden',
   height: boxHeight,
+  maxHeight: '100%',
   minHeight: 0,
-  width: '100%'
+  flexShrink: 1,
+  width: '100%',
+  '& > *:last-child': {
+    flex: 1,
+    minHeight: 0,
+    height: '100%',
+    overflow: 'hidden'
+  }
 }));

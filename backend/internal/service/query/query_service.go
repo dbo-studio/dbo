@@ -77,12 +77,32 @@ func (i IQueryServiceImpl) Raw(ctx context.Context, req *dto.RawQueryRequest) (*
 		return nil, err
 	}
 
-	err = i.historyRepo.Create(ctx, connection.ID, req.Query)
+	originalQuery := req.Query
+	err = i.historyRepo.Create(ctx, connection.ID, originalQuery)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
 
-	return repo.RunRawQuery(ctx, req)
+	limit, page := sqlguard.ResolveLimitPage(req.Limit, req.Page)
+	applied := sqlguard.ApplyLimitOffset(originalQuery, limit, page)
+	execReq := *req
+	execReq.Query = applied.Query
+	execReq.Limit = &limit
+	execReq.Page = &page
+
+	resp, err := repo.RunRawQuery(ctx, &execReq)
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil {
+		return nil, nil
+	}
+
+	resp.Query = originalQuery
+	resp.Paginated = applied.Paginated
+	resp.Limit = limit
+	resp.Page = page
+	return resp, nil
 }
 
 func (i IQueryServiceImpl) Update(ctx context.Context, req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error) {

@@ -39,6 +39,12 @@ export const webShortcuts: { [key: string]: ShortcutType } = {
     command: tools.isMac() ? ['⌥', 'A'] : ['Alt', 'A'],
     monaco: [KeyMod.Alt | KeyCode.KeyA],
     shortcut: (event: KeyboardEvent) => event.altKey && event.code === 'KeyA'
+  },
+  cancelQuery: {
+    label: locales.stop_query,
+    command: ['Esc'],
+    monaco: [KeyCode.Escape],
+    shortcut: (event: KeyboardEvent) => event.code === 'Escape'
   }
 };
 
@@ -78,6 +84,12 @@ export const desktopShortcuts: { [key: string]: ShortcutType } = {
     command: tools.isMac() ? ['⌘', '⇧', 'A'] : ['Ctrl', 'Shift', 'A'],
     monaco: [KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyA],
     shortcut: (event: KeyboardEvent) => (event.ctrlKey || event.metaKey) && event.shiftKey && event.code === 'KeyA'
+  },
+  cancelQuery: {
+    label: locales.stop_query,
+    command: ['Esc'],
+    monaco: [KeyCode.Escape],
+    shortcut: (event: KeyboardEvent) => event.code === 'Escape'
   }
 };
 
