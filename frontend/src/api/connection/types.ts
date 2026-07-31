@@ -35,6 +35,13 @@ export type SetConnectionCredentialsRequestType = {
   rememberPassword: boolean;
 };
 
+export type ConnectionSSLOptionsType = {
+  mode?: string;
+  caCert?: string;
+  clientCert?: string;
+  clientKey?: string;
+};
+
 export type PostgresqlOptionsType = {
   host?: string;
   port?: number;
@@ -42,6 +49,7 @@ export type PostgresqlOptionsType = {
   password?: string;
   database?: string;
   uri?: string;
+  ssl?: ConnectionSSLOptionsType;
 };
 
 export type MysqlOptionsType = {
@@ -51,9 +59,11 @@ export type MysqlOptionsType = {
   password?: string;
   database?: string;
   uri?: string;
+  ssl?: ConnectionSSLOptionsType;
 };
 
 export type SQLiteOptionsType = {
+  path?: string;
   file?: string;
   isPing?: boolean;
 };
