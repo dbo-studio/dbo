@@ -1,11 +1,12 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
+import { TabMode } from '@/core/enums';
 import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { DataTabType, TabDataPagination, TabType } from '@/types';
+import type { DataTabType, EditorTabType, TabDataPagination, TabType } from '@/types';
 import { Button, ClickAwayListener, IconButton, Popper } from '@mui/material';
 import { type JSX, useState } from 'react';
 import { PaginationSettingStyled } from './PaginationSetting.styled';
@@ -13,12 +14,16 @@ import { PaginationSettingStyled } from './PaginationSetting.styled';
 export default function PaginationSetting(): JSX.Element {
   const { isMobile } = useLayoutMode();
   const isDataFetching = useDataStore((state) => state.isDataFetching);
-  const selectedTab = useSelectedTab<DataTabType>();
+  const selectedTab = useSelectedTab();
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
+  const runRawQuery = useDataStore((state) => state.runRawQuery);
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
+  const currentLimit =
+    (selectedTab as DataTabType | EditorTabType | undefined)?.pagination?.limit ?? 100;
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [limit, setLimit] = useState<number>(selectedTab?.pagination?.limit ?? 0);
+  const [limit, setLimit] = useState<number>(currentLimit);
   const [errors, setErrors] = useState<{
     limit: string | undefined;
   }>({
@@ -29,11 +34,12 @@ export default function PaginationSetting(): JSX.Element {
   const id = open ? 'PaginationSetting' : undefined;
 
   const handleOpenClick = (event: React.MouseEvent<HTMLElement>): void => {
+    setLimit(currentLimit);
     setAnchorEl(anchorEl ? null : event.currentTarget);
   };
 
   const handleCloseClick = (): void => {
-    setLimit(selectedTab?.pagination?.limit ?? 0);
+    setLimit(currentLimit);
     setErrors({
       limit: undefined
     });
@@ -45,23 +51,29 @@ export default function PaginationSetting(): JSX.Element {
       return;
     }
 
-    if (limit < 0) {
+    if (limit < 1) {
       setErrors({
         limit: locales.limit_should_greater_than_zero
       });
+      return;
     }
 
     const pagination: TabDataPagination = {
-      page: selectedTab?.pagination?.page ?? 1,
+      page: (selectedTab as DataTabType | EditorTabType).pagination?.page ?? 1,
       limit
     };
 
     updateSelectedTab({
-      ...(selectedTab ?? ({} as TabType)),
+      ...(selectedTab as TabType),
       pagination
-    });
+    } as TabType);
 
     setAnchorEl(null);
+
+    if (selectedTab.mode === TabMode.Query) {
+      void runRawQuery();
+      return;
+    }
 
     toggleReRunQuery();
   };

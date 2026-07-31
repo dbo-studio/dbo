@@ -4,6 +4,7 @@ import { ExportModal } from '@/components/common/ExportModal/ExportModal';
 import { shortcuts, tools } from '@/core/utils';
 import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Box, IconButton, Stack, Tooltip } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -28,6 +29,7 @@ export default function QueryEditorActions({
   const updateQuery = useTabStore((state) => state.updateQuery);
   const getQuery = useTabStore((state) => state.getQuery);
   const currentConnection = useCurrentConnection();
+  const cancelRunningQuery = useDataStore((state) => state.cancelRunningQuery);
 
   const { mutateAsync: createSavedQueryMutation } = useMutation({
     mutationFn: api.savedQueries.createSavedQuery
@@ -80,6 +82,14 @@ export default function QueryEditorActions({
     });
   };
 
+  const handleRunOrStop = (): void => {
+    if (loading) {
+      cancelRunningQuery();
+      return;
+    }
+    onRunQuery();
+  };
+
   return (
     <Stack spacing={2} direction={'row'}>
       <Tooltip title={locales.save}>
@@ -112,15 +122,20 @@ export default function QueryEditorActions({
           padding: '3px !important'
         }}
       >
-        <Tooltip title={shortcuts.runQuery.command.join('+')}>
+        <Tooltip
+          title={
+            loading
+              ? `${locales.stop_query} (${shortcuts.cancelQuery.command.join('+')})`
+              : shortcuts.runQuery.command.join('+')
+          }
+        >
           <IconButton
-            aria-label={locales.run_query}
-            disabled={loading}
-            loading={loading}
-            color='primary'
-            onClick={(): void => onRunQuery()}
+            aria-label={loading ? locales.stop_query : locales.run_query}
+            data-testid={loading ? 'stop-query' : 'run-query'}
+            color={loading ? 'error' : 'primary'}
+            onClick={handleRunOrStop}
           >
-            <CustomIcon type='play' />
+            <CustomIcon type={loading ? 'stop' : 'play'} />
           </IconButton>
         </Tooltip>
       </Box>

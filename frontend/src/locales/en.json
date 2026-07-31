@@ -219,6 +219,8 @@
   "retry": "Retry",
   "insert_into_editor": "Insert into editor",
   "run_query": "Run query",
+  "stop_query": "Stop query",
+  "query_cancelled": "Query cancelled",
   "error_occurred": "An error occurred",
   "ai_prompt_explain_query": "Explain this query",
   "ai_prompt_optimize_query": "Optimize this query",

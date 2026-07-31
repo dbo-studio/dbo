@@ -34,6 +34,7 @@ export default function StatusBarActions(): JSX.Element {
   const updateUnsavedRows = useDataStore((state) => state.updateUnsavedRows);
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
   const runRawQuery = useDataStore((state) => state.runRawQuery);
+  const cancelRunningQuery = useDataStore((state) => state.cancelRunningQuery);
 
   const { mutateAsync: updateQueryMutation, isPending: updateQueryPending } = useMutation({
     mutationFn: api.query.updateQuery
@@ -177,55 +178,68 @@ export default function StatusBarActions(): JSX.Element {
     toggleReRunQuery();
   };
 
-  if (!canEditGrid) {
-    return <></>;
-  }
+  const handleRefreshOrStop = (): void => {
+    if (isDataFetching) {
+      cancelRunningQuery();
+      return;
+    }
+    void handleRefresh();
+  };
 
-  const disabled = updateQueryPending || isDataFetching;
+  const editDisabled = updateQueryPending || isDataFetching;
 
   return (
     <StatusBarActionsStackStyled mobile={isMobile}>
-      <Tooltip title={locales.add_row}>
-        <IconButton aria-label={locales.add_row} disabled={disabled} onClick={() => void handleAddAction()}>
-          <CustomIcon type='plus' size='s' />
-        </IconButton>
-      </Tooltip>
+      {canEditGrid && (
+        <>
+          <Tooltip title={locales.add_row}>
+            <IconButton aria-label={locales.add_row} disabled={editDisabled} onClick={() => void handleAddAction()}>
+              <CustomIcon type='plus' size='s' />
+            </IconButton>
+          </Tooltip>
 
-      <Tooltip title={locales.remove_row}>
-        <IconButton aria-label={locales.remove_row} disabled={disabled} onClick={() => void handleRemoveAction()}>
-          <CustomIcon type='mines' size='s' />
-        </IconButton>
-      </Tooltip>
+          <Tooltip title={locales.remove_row}>
+            <IconButton
+              aria-label={locales.remove_row}
+              disabled={editDisabled}
+              onClick={() => void handleRemoveAction()}
+            >
+              <CustomIcon type='mines' size='s' />
+            </IconButton>
+          </Tooltip>
 
-      <Tooltip title={locales.save}>
+          <Tooltip title={locales.save}>
+            <IconButton
+              aria-label={locales.save}
+              data-testid='grid-save'
+              disabled={editDisabled}
+              onClick={() => void handleSave()}
+            >
+              <CustomIcon type='check' size='s' />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title={locales.discard_changes}>
+            <IconButton
+              aria-label={locales.discard_changes}
+              disabled={editDisabled}
+              onClick={() => void handleDiscardChanges()}
+            >
+              <CustomIcon type='close' size='s' />
+            </IconButton>
+          </Tooltip>
+        </>
+      )}
+
+      <Tooltip title={isDataFetching ? locales.stop_query : locales.refresh}>
         <IconButton
-          aria-label={locales.save}
-          data-testid='grid-save'
-          disabled={disabled}
-          onClick={() => void handleSave()}
+          aria-label={isDataFetching ? locales.stop_query : locales.refresh}
+          data-testid={isDataFetching ? 'stop-query' : 'refresh-query'}
+          color={isDataFetching ? 'error' : 'default'}
+          disabled={updateQueryPending}
+          onClick={handleRefreshOrStop}
         >
-          <CustomIcon type='check' size='s' />
-        </IconButton>
-      </Tooltip>
-
-      <Tooltip title={locales.discard_changes}>
-        <IconButton
-          aria-label={locales.discard_changes}
-          disabled={disabled}
-          onClick={() => void handleDiscardChanges()}
-        >
-          <CustomIcon type='close' size='s' />
-        </IconButton>
-      </Tooltip>
-
-      <Tooltip title={locales.refresh}>
-        <IconButton
-          aria-label={locales.refresh}
-          loading={isDataFetching}
-          disabled={disabled}
-          onClick={() => void handleRefresh()}
-        >
-          <CustomIcon type='refresh' size='s' />
+          <CustomIcon type={isDataFetching ? 'stop' : 'refresh'} size='s' />
         </IconButton>
       </Tooltip>
     </StatusBarActionsStackStyled>
