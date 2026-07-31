@@ -6,18 +6,20 @@ import { themes } from '../../SqlEditor/helpers/constants';
 let setupPromise: Promise<void> | null = null;
 
 export const setupLanguage = async (monaco: typeof Monaco, theme: string) => {
-  if (setupPromise) return setupPromise;
+  if (!setupPromise) {
+    setupPromise = (async () => {
+      const highlighter = await createHighlighter({
+        themes: themes,
+        langs: ['sql', 'json', 'html', 'yml', 'markdown']
+      });
 
-  setupPromise = (async () => {
-    const highlighter = await createHighlighter({
-      themes: themes,
-      langs: ['sql', 'json', 'html', 'yml', 'markdown']
+      shikiToMonaco(highlighter, monaco);
+    })().catch((error: unknown) => {
+      setupPromise = null;
+      throw error;
     });
+  }
 
-    shikiToMonaco(highlighter, monaco);
-
-    monaco.editor.setTheme(theme);
-  })();
-
-  return setupPromise;
+  await setupPromise;
+  monaco.editor.setTheme(theme);
 };
