@@ -25,10 +25,7 @@ const pickSelectableActiveConnection = (connections: ConnectionType[]): Connecti
   const passwordPromptConnectionId = useSettingStore.getState().ui.passwordPromptConnectionId;
 
   return connections.find(
-    (c) =>
-      c.isActive &&
-      !isPasswordPromptSuppressedForConnection(c.id) &&
-      c.id !== passwordPromptConnectionId
+    (c) => c.isActive && !isPasswordPromptSuppressedForConnection(c.id) && c.id !== passwordPromptConnectionId
   );
 };
 
