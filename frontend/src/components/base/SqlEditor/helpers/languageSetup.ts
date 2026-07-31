@@ -8,25 +8,27 @@ import { registerInlineAIProvider } from './registerInlineAIProvider';
 let setupPromise: Promise<void> | null = null;
 
 export const setupLanguage = async (monaco: typeof Monaco, theme: string) => {
-  if (setupPromise) return setupPromise;
+  if (!setupPromise) {
+    setupPromise = (async () => {
+      const highlighter = await createHighlighter({
+        themes: themes,
+        langs: ['sql', 'json', 'html', 'yml', 'markdown']
+      });
 
-  setupPromise = (async () => {
-    const highlighter = await createHighlighter({
-      themes: themes,
-      langs: ['sql', 'json', 'html', 'yml', 'markdown']
+      shikiToMonaco(highlighter, monaco);
+
+      monaco.languages.registerCompletionItemProvider('sql', {
+        triggerCharacters: [' ', '.', '"', "'", '`'],
+        provideCompletionItems: completionService
+      });
+
+      registerInlineAIProvider(monaco, 'sql');
+    })().catch((error: unknown) => {
+      setupPromise = null;
+      throw error;
     });
+  }
 
-    shikiToMonaco(highlighter, monaco);
-
-    monaco.languages.registerCompletionItemProvider('sql', {
-      triggerCharacters: [' ', '.', '"', "'", '`'],
-      provideCompletionItems: completionService
-    });
-
-    monaco.editor.setTheme(theme);
-
-    registerInlineAIProvider(monaco, 'sql');
-  })();
-
-  return setupPromise;
+  await setupPromise;
+  monaco.editor.setTheme(theme);
 };
