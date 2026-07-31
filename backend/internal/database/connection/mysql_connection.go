@@ -3,7 +3,9 @@ package databaseConnection
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -91,6 +93,23 @@ func OpenMysqlConnection(connection *model.Connection) gorm.Dialector {
 	return mysql.New(mysql.Config{
 		DSN: dsn,
 	})
+}
+
+func DefaultMysqlDatabase(connection *model.Connection) string {
+	options, err := helper.RawJSONToStruct[dto.MysqlCreateConnectionParams](json.RawMessage(connection.Options))
+	if err != nil {
+		return ""
+	}
+
+	if options.URI != nil && *options.URI != "" {
+		parsed, err := url.Parse(*options.URI)
+		if err != nil {
+			return ""
+		}
+		return strings.TrimPrefix(parsed.Path, "/")
+	}
+
+	return lo.FromPtr(options.Database)
 }
 
 func (req MysqlCreateParams) Validate() error {

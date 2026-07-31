@@ -1,8 +1,9 @@
+import { ensureDefaultFonts, ensureFont, getAppFontFamily, getEditorFontFamily } from '@/core/fonts';
 import { constants } from '@/core/constants';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { Direction } from '@mui/material';
 import { createTheme, ThemeProvider as MUIThemeProvider, type ThemeOptions } from '@mui/material/styles';
-import { type JSX } from 'react';
+import { type JSX, useEffect } from 'react';
 import { ThemeModeEnum } from '../enums';
 import componentsOverride from './overrides';
 import {
@@ -50,10 +51,26 @@ export default function ThemeProvider({ children }: Props): JSX.Element {
   const theme = useSettingStore((state) => state.theme);
   const updateTheme = useSettingStore((state) => state.updateTheme);
   const validatedThemeName = validateTheme(theme.themeName);
+  const appFontId = theme.appFont;
+  const editorFontId = theme.editorFont;
 
-  if (validatedThemeName !== theme.themeName) {
-    updateTheme({ themeName: validatedThemeName });
-  }
+  useEffect(() => {
+    void ensureDefaultFonts();
+  }, []);
+
+  useEffect(() => {
+    void ensureFont(appFontId);
+  }, [appFontId]);
+
+  useEffect(() => {
+    void ensureFont(editorFontId);
+  }, [editorFontId]);
+
+  useEffect(() => {
+    if (validatedThemeName !== theme.themeName) {
+      updateTheme({ themeName: validatedThemeName });
+    }
+  }, [theme.themeName, updateTheme, validatedThemeName]);
 
   const selectedPalette = paletteMap[validatedThemeName] || dboPalette;
 
@@ -62,12 +79,14 @@ export default function ThemeProvider({ children }: Props): JSX.Element {
     direction: constants.direction as Direction,
     typography: {
       ...baseTypography,
-      fontFamily: theme.appFont
-    }
+      fontFamily: getAppFontFamily(appFontId)
+    },
+    editorFontFamily: getEditorFontFamily(editorFontId)
   };
 
   const muiTheme = createTheme(themeOptions);
   muiTheme.components = componentsOverride(muiTheme);
+  muiTheme.editorFontFamily = getEditorFontFamily(editorFontId);
 
   return <MUIThemeProvider theme={muiTheme}>{children}</MUIThemeProvider>;
 }

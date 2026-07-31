@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import { toast } from 'sonner';
 
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 
 type ApiErrorResponse = {
@@ -8,6 +9,21 @@ type ApiErrorResponse = {
   data?: {
     connectionId?: number;
   };
+};
+
+/** Connection IDs whose password_required errors should be ignored (e.g. during/after close). */
+const suppressedPasswordPromptConnectionIds = new Set<number>();
+
+export const suppressPasswordPromptForConnection = (connectionId: number): void => {
+  suppressedPasswordPromptConnectionIds.add(Number(connectionId));
+};
+
+export const resumePasswordPromptForConnection = (connectionId: number): void => {
+  suppressedPasswordPromptConnectionIds.delete(Number(connectionId));
+};
+
+export const isPasswordPromptSuppressedForConnection = (connectionId: number): boolean => {
+  return suppressedPasswordPromptConnectionIds.has(Number(connectionId));
 };
 
 const api: AxiosInstance = axios.create({
@@ -47,8 +63,16 @@ const handleApiError = (error: AxiosError<ApiErrorResponse>): void => {
 
   if (status === 401 && message === 'password_required') {
     const connectionId = data?.data?.connectionId;
+    const currentConnectionId = useConnectionStore.getState().currentConnectionId;
 
-    if (connectionId != null) {
+    // Ignore stale password errors after the connection was intentionally closed
+    // (e.g. in-flight tree/query requests that complete after close-for-edit).
+    if (
+      connectionId != null &&
+      !isPasswordPromptSuppressedForConnection(connectionId) &&
+      currentConnectionId != null &&
+      Number(currentConnectionId) === Number(connectionId)
+    ) {
       useSettingStore.getState().updateUI({
         showConnectionPasswordPrompt: true,
         passwordPromptConnectionId: connectionId
@@ -60,6 +84,11 @@ const handleApiError = (error: AxiosError<ApiErrorResponse>): void => {
 
   if (status === 400 || status === 500) {
     toast.error(message || 'Server error occurred. Please try again later.');
+  }
+
+  // Safe Mode 403s are handled by callers (confirm modal / toast with reason).
+  if (status === 403 && (message === 'safe_mode_blocked' || message === 'safe_mode_confirm_required')) {
+    return;
   }
 };
 

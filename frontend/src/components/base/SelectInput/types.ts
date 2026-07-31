@@ -1,4 +1,5 @@
-import { OnChangeValue } from 'react-select';
+import { OnChangeValue, type FormatOptionLabelMeta, type MenuPlacement } from 'react-select';
+import type { ReactNode } from 'react';
 
 export type SelectInputProps = {
   disabled?: boolean;
@@ -12,6 +13,9 @@ export type SelectInputProps = {
   onChange: (value: OnChangeValue<SelectInputOption, boolean>) => void;
   isMulti?: boolean;
   style?: React.CSSProperties;
+  formatOptionLabel?: (option: SelectInputOption, meta: FormatOptionLabelMeta<SelectInputOption>) => ReactNode;
+  onMenuOpen?: () => void;
+  menuPlacement?: MenuPlacement;
 };
 
 export type SelectInputOption = {

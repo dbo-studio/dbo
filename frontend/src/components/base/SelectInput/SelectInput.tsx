@@ -15,7 +15,10 @@ export default function SelectInput({
   disabled,
   error,
   isMulti,
-  style
+  style,
+  formatOptionLabel,
+  onMenuOpen,
+  menuPlacement = 'auto'
 }: SelectInputProps): JSX.Element {
   const theme = useTheme();
 
@@ -48,8 +51,10 @@ export default function SelectInput({
         isDisabled={disabled || options.length === 0}
         value={getValue()}
         options={options}
-        menuPlacement={'auto'}
+        menuPlacement={menuPlacement}
         onChange={onChange}
+        onMenuOpen={onMenuOpen}
+        formatOptionLabel={formatOptionLabel}
         styles={SelectInputStyles(theme, error, size)}
         menuPortalTarget={document.body}
       />

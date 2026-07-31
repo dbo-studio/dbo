@@ -1,6 +1,7 @@
 import api from '@/api';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
+import { resumePasswordPromptForConnection, suppressPasswordPromptForConnection } from '@/core/api';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
@@ -29,6 +30,7 @@ export default function ConnectionItemContextMenu({
   const showWarningModal = useConfirmModalStore((state) => state.warning);
   const resetTabs = useTabStore((state) => state.reset);
   const clearCurrentConnection = useConnectionStore((state) => state.clearCurrentConnection);
+  const updateConnections = useConnectionStore((state) => state.updateConnections);
   const resetTree = useTreeStore((state) => state.reset);
 
   const handleOpenConfirm = (connection: ConnectionType): void => {
@@ -59,14 +61,27 @@ export default function ConnectionItemContextMenu({
   };
 
   const handleCloseConnection = async (connection: ConnectionType): Promise<boolean> => {
-    try {
-      const currentConnectionId = useConnectionStore.getState().currentConnectionId;
-      await api.connection.updateConnection(connection.id, { isActive: false, isClose: true });
+    const { currentConnectionId, connections } = useConnectionStore.getState();
+    suppressPasswordPromptForConnection(connection.id);
+    updateUI({ showConnectionPasswordPrompt: false, passwordPromptConnectionId: undefined });
 
-      if (Number(currentConnectionId) === connection.id) {
-        clearCurrentConnection();
-        resetTree();
-      }
+    // Tear down UI first so /tree and /autocomplete cannot reconnect after the
+    // temp password is wiped by the close API.
+    if (connections) {
+      updateConnections(
+        connections.map((c) => (c.id === connection.id ? { ...c, isActive: false, isOpen: false } : c))
+      );
+    }
+
+    if (Number(currentConnectionId) === connection.id) {
+      clearCurrentConnection();
+      resetTree();
+    }
+
+    await queryClient.cancelQueries({ queryKey: ['startup-autocomplete'] });
+
+    try {
+      await api.connection.updateConnection(connection.id, { isActive: false, isClose: true });
 
       await queryClient.invalidateQueries({
         queryKey: ['connections']
@@ -78,6 +93,11 @@ export default function ConnectionItemContextMenu({
       console.debug('🚀 ~ closeConnectionMutation ~ error:', err);
       toast.error(locales.connection_close_failed);
       return false;
+    } finally {
+      // Late in-flight /tree or /autocomplete 401s must not open the password modal.
+      window.setTimeout(() => {
+        resumePasswordPromptForConnection(connection.id);
+      }, 1500);
     }
   };
 

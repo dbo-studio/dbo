@@ -1,4 +1,5 @@
 import type { SqlEditorProps, SqlEditorRef } from '@/components/base/SqlEditor/types.ts';
+import { getEditorFontFamily } from '@/core/fonts';
 import { shortcuts } from '@/core/utils/shortcuts.ts';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
@@ -142,7 +143,8 @@ export default function SqlEditor({
         value={value}
         options={{
           ...editorConfig,
-          fontSize: theme.editorFontSize
+          fontSize: theme.editorFontSize,
+          fontFamily: getEditorFontFamily(theme.editorFont)
         }}
         onMount={handleEditorDidMount}
         onChange={handleEditorChange}

@@ -21,6 +21,7 @@ export default function Leading(): JSX.Element {
     <Stack
       spacing={2}
       direction='row'
+      onMouseDown={(event) => event.stopPropagation()}
       sx={{
         justifyContent: 'flex-start'
       }}

@@ -51,7 +51,24 @@ export default defineConfig({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 8000000,
-        navigateFallbackDenylist: [/^\/api/]
+        navigateFallbackDenylist: [/^\/api/],
+        globIgnores: ['**/fonts/**'],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }): boolean => /\/fonts\/.+\.woff2$/i.test(url.pathname),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'dbo-fonts',
+              expiration: {
+                maxEntries: 64,
+                maxAgeSeconds: 60 * 60 * 24 * 365
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          }
+        ]
       }
     })
   ],
@@ -71,12 +88,9 @@ export default defineConfig({
     }
   },
   build: {
-    target:
-      process.env.TAURI_PLATFORM === 'windows' || process.env.TAURI_PLATFORM === 'linux' ? 'chrome105' : 'safari13',
-    // don't minify for debug builds
-    minify: process.env.NODE_ENV !== 'development' || !process.env.TAURI_DEBUG ? 'oxc' : false,
-    // produce sourcemaps for debug builds
-    sourcemap: !!process.env.TAURI_DEBUG,
+    target: process.env.TAURI_ENV_PLATFORM === 'windows' ? 'chrome105' : 'safari13',
+    minify: !process.env.TAURI_ENV_DEBUG ? 'oxc' : false,
+    sourcemap: !!process.env.TAURI_ENV_DEBUG,
     rolldownOptions: {
       output: {
         minify: {

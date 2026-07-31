@@ -106,7 +106,7 @@ func (s *WebDBStore) IsTemporaryConnectionPassword(ctx context.Context, ownerID 
 	item, err := s.webConnectionSecretRepo.FindBySessionAndConnection(ctx, ownerID, connectionID)
 	if err != nil {
 		if errors.Is(err, apperror.ErrWebConnectionSecretNotFound) {
-			return false, apperror.Unauthorized(connectionID)
+			return false, nil
 		}
 		return false, err
 	}
