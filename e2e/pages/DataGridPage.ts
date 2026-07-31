@@ -176,9 +176,9 @@ export class DataGridPage extends BasePage {
     await expect(this.previousPageButton).toBeDisabled({ timeout: 10000 });
   }
 
-  /** Settings icon immediately before the Previous page control. */
+  /** Page-size settings control in the query/data status bar. */
   private get paginationSettingsButton(): Locator {
-    return this.previousPageButton.locator("xpath=preceding-sibling::button[1]");
+    return this.page.getByTestId("pagination-settings");
   }
 
   async setPageLimit(limit: number): Promise<void> {

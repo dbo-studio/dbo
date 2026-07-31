@@ -86,7 +86,12 @@ export default function PaginationSetting(): JSX.Element {
 
   return (
     <>
-      <IconButton aria-describedby={id} onClick={handleOpenClick}>
+      <IconButton
+        aria-label={locales.limit}
+        aria-describedby={id}
+        data-testid='pagination-settings'
+        onClick={handleOpenClick}
+      >
         <CustomIcon type='settings' size='s' />
       </IconButton>
 
