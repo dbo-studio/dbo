@@ -63,6 +63,8 @@ test.describe("Connection Management", () => {
 
         await test.step("Update connection name", async () => {
           await connectionPage.nameInput.fill(editedName);
+          // Edit form clears password; Test uses only what the user types (no secret reuse).
+          await connectionPage.passwordInput.fill(config.password);
           await connectionPage.testConnection();
           await connectionPage.submitConnection();
           await expect(

@@ -1,11 +1,12 @@
 import api from '@/api';
 import AddConnection from '@/components/common/AddConnection/AddConnection';
+import { isPasswordPromptSuppressedForConnection } from '@/core/api';
 import { tools } from '@/core/utils';
 import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { matchConnectionId } from '@/store/tabStore/connectionId';
-import { useTabStore, selectTabs } from '@/store/tabStore/tab.store';
+import { selectTabs, useTabStore } from '@/store/tabStore/tab.store';
 import type { ConnectionType } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useEffect, useState } from 'react';
@@ -20,11 +21,18 @@ type ConnectionsProps = {
   expanded?: boolean;
 };
 
+const pickSelectableActiveConnection = (connections: ConnectionType[]): ConnectionType | undefined => {
+  const passwordPromptConnectionId = useSettingStore.getState().ui.passwordPromptConnectionId;
+
+  return connections.find(
+    (c) => c.isActive && !isPasswordPromptSuppressedForConnection(c.id) && c.id !== passwordPromptConnectionId
+  );
+};
+
 export default function Connections({ expanded = false }: ConnectionsProps): JSX.Element {
   const [loadingConnectionId, setLoadingConnectionId] = useState<number | undefined>(undefined);
   const { showConnectionsRail } = useLayoutMode();
 
-  const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
   const queryClient = useQueryClient();
 
   const currentConnection = useConnectionStore((state) => state.currentConnection);
@@ -35,14 +43,14 @@ export default function Connections({ expanded = false }: ConnectionsProps): JSX
   const updateUI = useSettingStore((state) => state.updateUI);
 
   const { data: connections } = useQuery({
-    queryKey: ['connections', updateLoading, updateConnections, currentConnectionId, updateCurrentConnection],
+    queryKey: ['connections'],
     queryFn: async (): Promise<ConnectionType[]> => {
       updateLoading('loading');
       try {
         const connections = await api.connection.getConnectionList();
         updateConnections(connections);
         if (!useConnectionStore.getState().currentConnectionId) {
-          updateCurrentConnection(connections.find((c) => c.isActive));
+          updateCurrentConnection(pickSelectableActiveConnection(connections));
         }
         updateLoading('finished');
         return connections;
@@ -67,7 +75,7 @@ export default function Connections({ expanded = false }: ConnectionsProps): JSX
     }
 
     if (!useConnectionStore.getState().currentConnectionId) {
-      const active = connections.find((c) => c.isActive);
+      const active = pickSelectableActiveConnection(connections);
       if (active) {
         updateCurrentConnection(active);
       }

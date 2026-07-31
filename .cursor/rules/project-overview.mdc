@@ -19,7 +19,8 @@ DBO is an open-source database GUI. Monorepo: `backend/` (Go/Fiber), `frontend/`
 - Minimize diff scope; match existing patterns in the package you edit.
 - Backend flow: `handler → service → repository → database`.
 - Two DBs: app SQLite (GORM metadata) + user DBs via `ConnectionManager`.
-- Never commit secrets. Use Conventional Commits (`feat:`, `fix:`, `chore:`).
+- Never commit secrets. Use Conventional Commits (`feat:`, `fix:`, `chore:`) — see `.cursor/rules/git-commits.mdc`.
+- Commits must use the machine Git identity (`user.name` / `user.email`); never override author via `--author` or env vars.
 - Before PR: `go fmt` + `golangci-lint run` (backend) or `npm run lint` (frontend).
 
 ## Backend Package Naming

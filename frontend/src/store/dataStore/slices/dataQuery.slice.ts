@@ -2,6 +2,7 @@ import { runQuery, runRawQuery } from '@/api/query';
 import type { GridMetaType, RunQueryResponseType } from '@/api/query/types';
 import { filterOperatorRequiresValue } from '@/core/constants';
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
+import { resolveSafeModeGate } from '@/core/utils/safeModeGate';
 import { debouncedSaveToIndexedDB } from '@/core/utils/indexdbHelper';
 import { summarizeQueryResult } from '@/core/utils/queryResultSummary';
 import { useAiStore } from '@/store/aiStore/ai.store';
@@ -152,19 +153,34 @@ export const createDataQuerySlice: StateCreator<
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;
     if (!currentConnectionId || !selectedTabId) return;
 
+    const requestQuery = query ? query : useTabStore.getState().getQuery();
+
+    const execute = async (confirmed: boolean): Promise<RunQueryResponseType> =>
+      runRawQuery(
+        {
+          connectionId: Number(currentConnectionId),
+          query: requestQuery,
+          database: selectedTab?.database || undefined,
+          schema: selectedTab?.schema || undefined,
+          confirmed
+        },
+        abortController?.signal
+      );
+
     try {
       get().toggleDataFetching(true);
       await get().clearGridChanges();
 
-      const res = await runRawQuery(
-        {
-          connectionId: Number(currentConnectionId),
-          query: query ? query : useTabStore.getState().getQuery(),
-          database: selectedTab?.database || undefined,
-          schema: selectedTab?.schema || undefined
-        },
-        abortController?.signal
-      );
+      let res: RunQueryResponseType;
+      try {
+        res = await execute(false);
+      } catch (error) {
+        const shouldRetry = await resolveSafeModeGate(error);
+        if (!shouldRetry) {
+          return;
+        }
+        res = await execute(true);
+      }
 
       if (abortController?.signal.aborted) {
         return;

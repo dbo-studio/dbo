@@ -54,6 +54,7 @@ HTML report: `e2e/playwright-report/` after a run.
 | ------------------------ | --------------------------------------------- | ------------------------------------------------------- |
 | Harness smoke            | `harness-smoke.spec.ts`                       | ephemeral API + FE reachable (no sample DB)             |
 | Connections              | `connections.spec.ts`                         | create / edit / refresh / context menu / schema via SQL |
+| Safe Mode                | `safe-mode.spec.ts`                           | menu modes, confirm + password SQL gates                |
 | Query CRUD               | `query-crud.spec.ts`                          | SQL create/insert/update/select + multi-table JOIN      |
 | Saved / history          | `saved-history.spec.ts`                       | history, save, run, copy                                |
 | Settings / theme         | `settings-theme.spec.ts`                      | theme persistence, panels, sidebar                      |

@@ -7,6 +7,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
+	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/helper"
@@ -70,6 +71,11 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 		req.Options = json.RawMessage(options)
 	}
 
+	if req.SafeMode != nil {
+		normalizedMode := serviceSafemode.NormalizeMode(*req.SafeMode)
+		req.SafeMode = lo.ToPtr(string(normalizedMode))
+	}
+
 	updatedConnection, err := s.connectionRepo.Update(ctx, connection, req)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
@@ -94,6 +100,6 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 	}
 
 	return &dto.UpdateConnectionResponse{
-		Connection: connectionToResponse(ctx, ownerID, s.cm, updatedConnection),
+		Connection: connectionToResponse(ctx, ownerID, s.cm, s.unlockStore, updatedConnection),
 	}, nil
 }

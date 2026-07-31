@@ -9,6 +9,7 @@ type (
 		EditedItems  []EditedItem     `json:"edited"`
 		DeletedItems []map[string]any `json:"deleted"`
 		AddedItems   []map[string]any `json:"added"`
+		Confirmed    bool             `json:"confirmed"`
 	}
 
 	UpdateQueryResponse struct {

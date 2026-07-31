@@ -126,12 +126,26 @@ export const useFormSave = ({
     const action = selectedTab.action ?? '';
 
     try {
-      const result = await executeAction({
-        nodeId: selectedTab.nodeId,
-        action,
-        connectionId: currentConnection.id,
-        data: payload as Record<string, FormValue>
-      });
+      const run = async (confirmed?: boolean): Promise<Awaited<ReturnType<typeof executeAction>>> =>
+        executeAction({
+          nodeId: selectedTab.nodeId,
+          action,
+          connectionId: currentConnection.id,
+          data: payload as Record<string, FormValue>,
+          confirmed
+        });
+
+      let result: Awaited<ReturnType<typeof executeAction>>;
+      try {
+        result = await run();
+      } catch (error) {
+        const { resolveSafeModeGate } = await import('@/core/utils/safeModeGate');
+        const shouldRetry = await resolveSafeModeGate(error);
+        if (!shouldRetry) {
+          return;
+        }
+        result = await run(true);
+      }
 
       const newNodeId = result.nodeId;
       const objectTabStoreId = selectedTab.id;

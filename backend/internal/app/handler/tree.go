@@ -80,6 +80,7 @@ func (h *TreeHandler) ExecuteHandler(c fiber.Ctx) error {
 		NodeID:       fiber.Params[string](c, "nodeId"),
 		Action:       fiber.Params[string](c, "action"),
 		Params:       c.Body(),
+		Confirmed:    fiber.Query[bool](c, "confirmed"),
 	}
 
 	result, err := h.treeService.ObjectExecute(c, req)

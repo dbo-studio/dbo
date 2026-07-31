@@ -3,7 +3,7 @@ import type { ConnectionBoxStatus } from '@/components/layout/AppHeader/Connecti
 import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store.ts';
-import { Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import { type JSX, useMemo } from 'react';
 import { ConnectionBoxContentStyled, ConnectionBoxStyled } from './ConnectionBox.styled.ts';
 
@@ -42,12 +42,14 @@ export default function ConnectionBox(): JSX.Element {
   return (
     <ConnectionBoxStyled status={status}>
       <ConnectionBoxContentStyled>
-        <Typography variant='body2' component='h6' noWrap>
-          {loading === 'loading' && locales.connecting}
-          {loading === 'finished' && info}
-          {loading === 'error' && info}
-        </Typography>
-        {loading === 'loading' && <Loading />}
+        <Stack direction='row' spacing={1} alignItems='center' sx={{ minWidth: 0, width: '100%' }}>
+          <Typography variant='body2' component='h6' noWrap sx={{ flex: 1, minWidth: 0 }}>
+            {loading === 'loading' && locales.connecting}
+            {loading === 'finished' && info}
+            {loading === 'error' && info}
+          </Typography>
+          {loading === 'loading' && <Loading />}
+        </Stack>
       </ConnectionBoxContentStyled>
     </ConnectionBoxStyled>
   );

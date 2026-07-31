@@ -7,6 +7,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
+	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/goccy/go-json"
@@ -37,6 +38,9 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 	}
 
 	req.Options = strippedOptions
+
+	sm := serviceSafemode.ApplyCreateDefaults(req.SafeMode)
+	req.SafeMode = lo.ToPtr(string(sm))
 
 	connection, err := s.connectionRepo.Create(ctx, req)
 	if err != nil {

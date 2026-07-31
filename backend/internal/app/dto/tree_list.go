@@ -27,6 +27,7 @@ type (
 		NodeID       string
 		Action       string
 		Params       []byte
+		Confirmed    bool
 	}
 
 	DynamicFieldOptionsRequest struct {

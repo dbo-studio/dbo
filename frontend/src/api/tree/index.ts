@@ -59,7 +59,8 @@ export const executeAction = async (params: SaveObjectRequestType): Promise<Exec
         params.data,
         {
           params: {
-            connectionId: params.connectionId
+            connectionId: params.connectionId,
+            confirmed: params.confirmed ? true : undefined
           }
         }
       )

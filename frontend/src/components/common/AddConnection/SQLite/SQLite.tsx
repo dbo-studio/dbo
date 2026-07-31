@@ -13,11 +13,11 @@ import * as v from 'valibot';
 import { tools } from '@/core/utils';
 import type { ConnectionSettingsProps } from '../types';
 import {
+  ConnectionFormBodyStyled,
   ConnectionFormContainerStyled,
   ConnectionFormFooterStyled,
   SQLitePathRowStyled
 } from '../AddConnection.styled';
-
 const formSchema = v.object({
   isPing: v.boolean(),
   name: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
@@ -82,11 +82,7 @@ export default function SQLite({
 
   return (
     <ConnectionFormContainerStyled>
-      <Box
-        sx={{
-          flex: 1
-        }}
-      >
+      <ConnectionFormBodyStyled>
         <form
           onSubmit={(e): void => {
             e.preventDefault();
@@ -134,7 +130,7 @@ export default function SQLite({
             )}
           </form.Field>
         </form>
-      </Box>
+      </ConnectionFormBodyStyled>
       <ConnectionFormFooterStyled>
         <Button size='small' onClick={onClose}>
           {locales.cancel}

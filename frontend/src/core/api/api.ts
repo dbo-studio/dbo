@@ -14,11 +14,15 @@ type ApiErrorResponse = {
 const suppressedPasswordPromptConnectionIds = new Set<number>();
 
 export const suppressPasswordPromptForConnection = (connectionId: number): void => {
-  suppressedPasswordPromptConnectionIds.add(connectionId);
+  suppressedPasswordPromptConnectionIds.add(Number(connectionId));
 };
 
 export const resumePasswordPromptForConnection = (connectionId: number): void => {
-  suppressedPasswordPromptConnectionIds.delete(connectionId);
+  suppressedPasswordPromptConnectionIds.delete(Number(connectionId));
+};
+
+export const isPasswordPromptSuppressedForConnection = (connectionId: number): boolean => {
+  return suppressedPasswordPromptConnectionIds.has(Number(connectionId));
 };
 
 const api: AxiosInstance = axios.create({

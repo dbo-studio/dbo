@@ -3,6 +3,7 @@ import type { ConnectionType } from '@/types';
 import type {
   CreateConnectionRequestType,
   PingConnectionRequestType,
+  SafeModeUnlockResponseType,
   SetConnectionCredentialsRequestType,
   UpdateConnectionRequestType
 } from './types';
@@ -13,7 +14,9 @@ const endpoint = {
   updateConnection: (connectionID: string | number): string => `/connections/${connectionID}`,
   setCredentials: (connectionID: string | number): string => `/connections/${connectionID}/credentials`,
   deleteConnection: (connectionID: string | number): string => `/connections/${connectionID}`,
-  pingConnection: (): string => '/connections/ping'
+  pingConnection: (): string => '/connections/ping',
+  unlockSafeMode: (connectionID: string | number): string => `/connections/${connectionID}/safe-mode/unlock`,
+  lockSafeMode: (connectionID: string | number): string => `/connections/${connectionID}/safe-mode/lock`
 };
 
 export const getConnectionList = async (): Promise<ConnectionType[]> => {
@@ -41,4 +44,12 @@ export const deleteConnection = async (id: string | number): Promise<void> => {
 
 export const pingConnection = async (data: PingConnectionRequestType): Promise<void> => {
   return api.post(endpoint.pingConnection(), data);
+};
+
+export const unlockSafeMode = async (id: string | number, ttlMinutes = 10): Promise<SafeModeUnlockResponseType> => {
+  return (await api.post<{ data: SafeModeUnlockResponseType }>(endpoint.unlockSafeMode(id), { ttlMinutes })).data.data;
+};
+
+export const lockSafeMode = async (id: string | number): Promise<void> => {
+  await api.post(endpoint.lockSafeMode(id));
 };

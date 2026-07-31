@@ -11,34 +11,27 @@ import (
 )
 
 func (s IConnectionServiceImpl) Ping(ctx context.Context, req *dto.PingConnectionRequest) error {
+	ownerID := helper.CtxOwnerID(ctx)
+
+	if req.ID != nil {
+		if _, err := s.connectionRepo.Find(ctx, lo.FromPtr(req.ID)); err != nil {
+			return apperror.NotFound(apperror.ErrConnectionNotFound)
+		}
+	}
+
+	if _, err := s.createConnectionDto(&dto.CreateConnectionRequest{
+		Type:    req.Type,
+		Options: req.Options,
+	}); err != nil {
+		return apperror.DriverError(err)
+	}
+
 	connection := &model.Connection{
 		ConnectionType: req.Type,
 		Options:        string(req.Options),
 	}
 
-	ownerID := helper.CtxOwnerID(ctx)
-
-	if req.ID != nil {
-		cc, err := s.connectionRepo.Find(ctx, lo.FromPtr(req.ID))
-		if err != nil {
-			return err
-		}
-
-		connection = cc
-	}
-
-	_, err := s.createConnectionDto(&dto.CreateConnectionRequest{
-		Type:    req.Type,
-		Options: req.Options,
-	})
-
-	if err != nil {
-		return apperror.DriverError(err)
-	}
-
-	connection.Options = string(req.Options)
-
-	if _, err = s.cm.GetConnection(ctx, connection, false); err != nil {
+	if _, err := s.cm.GetConnection(ctx, connection, false); err != nil {
 		return err
 	}
 	if err := s.cm.Close(ctx, ownerID, connection.ID); err != nil {

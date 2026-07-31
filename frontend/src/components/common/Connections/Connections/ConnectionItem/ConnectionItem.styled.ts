@@ -8,12 +8,13 @@ export const ConnectionItemStyled = styled(Box)<ConnectionItemStyledProps>(({ th
   borderBottom: `1px solid ${theme.palette.divider}`,
   borderRight: `1px solid ${theme.palette.divider}`,
   padding: theme.spacing(2),
-  maxHeight: '82px',
+  maxHeight: '100px',
   minWidth: 0,
   overflow: 'hidden',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
+  gap: theme.spacing(0.5),
   ':hover': {
     background: theme.palette.background.paper
   },

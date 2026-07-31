@@ -8,6 +8,7 @@ type (
 		Query        string  `json:"query"`
 		Database     *string `json:"database"`
 		Schema       *string `json:"schema"`
+		Confirmed    bool    `json:"confirmed"`
 	}
 
 	RawQueryResponse struct {

@@ -15,5 +15,5 @@ func (s IConnectionServiceImpl) Index(ctx context.Context) (*dto.ConnectionsResp
 
 	ownerID := helper.CtxOwnerID(ctx)
 
-	return connectionsToResponse(ctx, ownerID, s.cm, connections), nil
+	return connectionsToResponse(ctx, ownerID, s.cm, s.unlockStore, connections), nil
 }

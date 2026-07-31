@@ -121,3 +121,32 @@ func (h ConnectionHandler) Create(c fiber.Ctx) error {
 
 	return response.SuccessBuilder().Send(c)
 }
+
+func (h ConnectionHandler) UnlockSafeMode(c fiber.Ctx) error {
+	connectionID := fiber.Params[int32](c, "id")
+	req := new(dto.SafeModeUnlockRequest)
+	if err := c.Bind().Body(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	result, err := h.connectionService.UnlockSafeMode(c, connectionID, req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(result).Send(c)
+}
+
+func (h ConnectionHandler) LockSafeMode(c fiber.Ctx) error {
+	connectionID := fiber.Params[int32](c, "id")
+	if err := h.connectionService.LockSafeMode(c, connectionID); err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().Send(c)
+}
