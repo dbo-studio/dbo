@@ -1,6 +1,13 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { BasePage } from "./BasePage";
 
+export interface ConnectionSslConfig {
+  mode: "disable" | "allow" | "prefer" | "require" | "verify-ca" | "verify-full";
+  caCert?: string;
+  clientCert?: string;
+  clientKey?: string;
+}
+
 export interface ConnectionConfig {
   name: string;
   host: string;
@@ -9,6 +16,7 @@ export interface ConnectionConfig {
   password: string;
   database?: string;
   type?: "PostgreSQL" | "MySQL" | "SQLite";
+  ssl?: ConnectionSslConfig;
 }
 
 /**
@@ -72,17 +80,10 @@ export class ConnectionPage extends BasePage {
   }
 
   async waitForReady(): Promise<void> {
+    // Wait on UI readiness — not waitForResponse("connections"). That races with
+    // goto() (response often already finished) and burns the full 30s timeout.
     await this.page.waitForLoadState("domcontentloaded");
-    await this.page
-      .waitForResponse(
-        (response) =>
-          response.url().includes("connections") && response.status() === 200,
-        {
-          timeout: 30000,
-        },
-      )
-      .catch(() => undefined);
-    await this.wait(1000);
+    await expect(this.addConnectionButton).toBeVisible({ timeout: 15000 });
   }
 
   async openNewConnectionModal(): Promise<void> {
@@ -127,6 +128,87 @@ export class ConnectionPage extends BasePage {
     if (config.database) {
       await this.page.locator('input[name="database"]').fill(config.database);
     }
+
+    if (config.ssl) {
+      await this.applySslConfig(config.ssl);
+    }
+  }
+
+  async openSslTab(): Promise<void> {
+    await this.page.getByTestId("connection-tab-ssl").click();
+    await expect(this.page.getByTestId("connection-ssl-fields")).toBeVisible();
+  }
+
+  async openGeneralTab(): Promise<void> {
+    await this.page.getByTestId("connection-tab-general").click();
+    await expect(this.nameInput).toBeVisible();
+  }
+
+  async setSslMode(
+    mode: NonNullable<ConnectionConfig["ssl"]>["mode"],
+  ): Promise<void> {
+    const labels: Record<NonNullable<ConnectionConfig["ssl"]>["mode"], string> =
+      {
+        disable: "Disable",
+        allow: "Allow",
+        prefer: "Prefer",
+        require: "Require",
+        "verify-ca": "Verify CA",
+        "verify-full": "Verify Full",
+      };
+
+    await this.openSslTab();
+    await this.page.locator(".ssl-mode__control").click();
+    await this.page.getByRole("option", { name: labels[mode], exact: true }).click();
+    await expect(this.page.locator(".ssl-mode__single-value")).toHaveText(
+      labels[mode],
+    );
+  }
+
+  async fillSslCaCert(pem: string): Promise<void> {
+    await this.openSslTab();
+    await this.page.getByTestId("ssl-textarea-sslCaCert").fill(pem);
+  }
+
+  async loadSslCaCertFile(filePath: string): Promise<void> {
+    await this.openSslTab();
+    await this.page
+      .getByTestId("ssl-file-input-sslCaCert")
+      .setInputFiles(filePath);
+    await expect(this.page.getByTestId("ssl-textarea-sslCaCert")).toContainText(
+      "BEGIN CERTIFICATE",
+    );
+  }
+
+  async applySslConfig(ssl: ConnectionSslConfig): Promise<void> {
+    await this.setSslMode(ssl.mode);
+    if (ssl.caCert) {
+      await this.fillSslCaCert(ssl.caCert);
+    }
+    if (ssl.clientCert) {
+      await this.page.getByTestId("ssl-textarea-sslClientCert").fill(ssl.clientCert);
+    }
+    if (ssl.clientKey) {
+      await this.page.getByTestId("ssl-textarea-sslClientKey").fill(ssl.clientKey);
+    }
+  }
+
+  async expectSslMode(
+    mode: NonNullable<ConnectionConfig["ssl"]>["mode"],
+  ): Promise<void> {
+    const labels: Record<NonNullable<ConnectionConfig["ssl"]>["mode"], string> =
+      {
+        disable: "Disable",
+        allow: "Allow",
+        prefer: "Prefer",
+        require: "Require",
+        "verify-ca": "Verify CA",
+        "verify-full": "Verify Full",
+      };
+    await this.openSslTab();
+    await expect(this.page.locator(".ssl-mode__single-value")).toHaveText(
+      labels[mode],
+    );
   }
 
   async selectConnectionType(type: string = "PostgreSQL"): Promise<void> {

@@ -31,7 +31,11 @@ func CreateMysqlConnection(params json.RawMessage) (string, error) {
 		return "", apperror.Validation(err)
 	}
 
-	return string(params), nil
+	if options.SSL != nil {
+		options.SSL.Mode = dto.NormalizeSSLMode(options.SSL.Mode)
+	}
+
+	return helper.StructToJSON(options), nil
 }
 
 func UpdateMysqlConnection(oldParams json.RawMessage, newParams json.RawMessage) (string, error) {
@@ -55,6 +59,7 @@ func UpdateMysqlConnection(oldParams json.RawMessage, newParams json.RawMessage)
 	newOptions.Port = helper.OptionalAndEmpty(newOptions.Port, oldOptions.Port)
 	newOptions.Database = helper.OptionalOrKeep(newOptions.Database, oldOptions.Database)
 	newOptions.URI = helper.OptionalOrKeep(newOptions.URI, oldOptions.URI)
+	newOptions.SSL = mergeSSLParams(newOptions.SSL, oldOptions.SSL)
 
 	return mysqlUpdateParamsToCreateJSON(newOptions), nil
 }
@@ -67,6 +72,7 @@ func mysqlUpdateParamsToCreateJSON(opts MysqlUpdateParams) string {
 		Password: opts.Password,
 		Database: opts.Database,
 		URI:      opts.URI,
+		SSL:      opts.SSL,
 	}
 
 	return helper.StructToJSON(params)
@@ -79,7 +85,20 @@ func OpenMysqlConnection(connection *model.Connection) gorm.Dialector {
 	}
 
 	if options.URI != nil && *options.URI != "" {
-		return mysql.Open(*options.URI)
+		uri := *options.URI
+		serverName := options.Host
+		if serverName == "" {
+			if parsed, parseErr := url.Parse(uri); parseErr == nil {
+				serverName = parsed.Hostname()
+			}
+		}
+		if !strings.Contains(uri, "tls=") {
+			uri, err = appendMysqlTLSQuery(uri, options.SSL, serverName)
+			if err != nil {
+				return nil
+			}
+		}
+		return mysql.Open(uri)
 	}
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
@@ -89,6 +108,11 @@ func OpenMysqlConnection(connection *model.Connection) gorm.Dialector {
 		strconv.Itoa(int(options.Port)),
 		lo.FromPtr(options.Database),
 	)
+
+	dsn, err = appendMysqlTLSQuery(dsn, options.SSL, options.Host)
+	if err != nil {
+		return nil
+	}
 
 	return mysql.New(mysql.Config{
 		DSN: dsn,
@@ -119,7 +143,8 @@ func (req MysqlCreateParams) Validate() error {
 		validation.Field(&req.Port, validation.When(lo.FromPtr(req.URI) == "", validation.Required), validation.Min(0)),
 		validation.Field(&req.Database, validation.Length(0, 120)),
 		validation.Field(&req.Password, validation.Length(0, 120)),
-		validation.Field(&req.URI, validation.Length(0, 120)),
+		validation.Field(&req.URI, validation.Length(0, 2048)),
+		validation.Field(&req.SSL),
 	)
 }
 
@@ -129,6 +154,7 @@ func (req MysqlUpdateParams) Validate() error {
 		validation.Field(&req.Username, validation.Length(0, 120)),
 		validation.Field(&req.Password, validation.Length(0, 120)),
 		validation.Field(&req.Port, validation.Min(0)),
-		validation.Field(&req.URI, validation.Length(0, 120)),
+		validation.Field(&req.URI, validation.Length(0, 2048)),
+		validation.Field(&req.SSL),
 	)
 }

@@ -3,15 +3,8 @@ import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlig
 import locales from '@/locales';
 import { Box, Button, CircularProgress } from '@mui/material';
 import React from 'react';
+import type { QueryPreviewModalProps } from '../../types';
 import { QueryPreviewActionsStyled, QueryPreviewContentStyled } from './QueryPreviewModal.styled';
-
-type QueryPreviewModalProps = {
-  open: boolean;
-  queries: string[];
-  isExecuting: boolean;
-  onCancel: () => void;
-  onConfirm: () => void;
-};
 
 export default function QueryPreviewModal({
   open,

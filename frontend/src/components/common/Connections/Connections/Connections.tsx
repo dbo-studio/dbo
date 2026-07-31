@@ -16,10 +16,7 @@ import ConnectionPasswordPromptModal from './ConnectionPasswordPrompt/Connection
 import { ConnectionsStyled } from './Connections.styled';
 import ConnectionsEmptyState from './ConnectionsEmptyState';
 import { EmptySpaceStyle } from './EmptySpace.styled';
-
-type ConnectionsProps = {
-  expanded?: boolean;
-};
+import type { ConnectionsProps } from '../types';
 
 const pickSelectableActiveConnection = (connections: ConnectionType[]): ConnectionType | undefined => {
   const passwordPromptConnectionId = useSettingStore.getState().ui.passwordPromptConnectionId;

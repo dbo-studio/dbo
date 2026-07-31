@@ -5,11 +5,8 @@ import { useAiStore } from '@/store/aiStore/ai.store';
 import { selectTabs, useTabStore } from '@/store/tabStore/tab.store';
 import { Button, Stack, Typography } from '@mui/material';
 import { useMemo } from 'react';
+import type { ChatEmptyStateProps } from '../../types';
 import { getChatPromptSuggestions } from '../../utils/chatPromptSuggestions';
-
-type ChatEmptyStateProps = {
-  onSelectPrompt: (prompt: string) => void;
-};
 
 export default function ChatEmptyState({ onSelectPrompt }: ChatEmptyStateProps) {
   const selectedTabId = useTabStore((state) => state.selectedTabId);

@@ -3,12 +3,7 @@ import locales from '@/locales';
 import { useState } from 'react';
 import AiProvidersPanel from './AiProvidersPanel/AiProvidersPanel';
 import McpPanel from './McpPanel/McpPanel';
-
-type AiSettingsTab = 'providers' | 'mcp';
-
-type AiPanelProps = {
-  initialTab?: AiSettingsTab;
-};
+import type { AiPanelProps, AiSettingsTab } from '../types';
 
 const sectionTabs = [
   { id: 'providers' as const, label: locales.ai_tab_providers },

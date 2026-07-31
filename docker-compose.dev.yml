@@ -52,6 +52,22 @@ services:
       POSTGRES_USER: default
       POSTGRES_PASSWORD: secret
 
+  sample-pgsql-ssl:
+    container_name: dbo-studio-sample-pgsql-ssl
+    image: postgres:16.1
+    ports:
+      - "${PGSQL_SSL_TEST_PORT-5433}:5432"
+    volumes:
+      - "./docker/pgsql-ssl/certs:/certs:ro"
+      - "./docker/pgsql-ssl/entrypoint.sh:/usr/local/bin/dbo-ssl-entrypoint.sh:ro"
+    entrypoint: ["/bin/bash", "/usr/local/bin/dbo-ssl-entrypoint.sh"]
+    restart: always
+    platform: "linux/amd64"
+    environment:
+      POSTGRES_DB: default
+      POSTGRES_USER: default
+      POSTGRES_PASSWORD: secret
+
   sample-mysql:
     container_name: dbo-studio-sample-mysql
     image: mysql:8.4

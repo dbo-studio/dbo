@@ -5,18 +5,12 @@ import { Box, Collapse, Stack, Typography } from '@mui/material';
 import { keyframes } from '@mui/material/styles';
 import { useState } from 'react';
 import { ThinkingMessageStyled } from './ThinkingMessage.styled';
+import type { ThinkingMessageProps } from '../../types';
 
 const pulse = keyframes`
   0%, 100% { opacity: 0.5; }
   50% { opacity: 1; }
 `;
-
-type ThinkingMessageProps = {
-  content: string;
-  durationMs?: number;
-  isLive?: boolean;
-  defaultCollapsed?: boolean;
-};
 
 export default function ThinkingMessage({
   content,

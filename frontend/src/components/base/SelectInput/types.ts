@@ -16,6 +16,8 @@ export type SelectInputProps = {
   formatOptionLabel?: (option: SelectInputOption, meta: FormatOptionLabelMeta<SelectInputOption>) => ReactNode;
   onMenuOpen?: () => void;
   menuPlacement?: MenuPlacement;
+  testId?: string;
+  classNamePrefix?: string;
 };
 
 export type SelectInputOption = {

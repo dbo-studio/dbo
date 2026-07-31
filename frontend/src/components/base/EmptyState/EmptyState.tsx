@@ -1,13 +1,7 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import type { IconTypes } from '@/components/base/CustomIcon/types';
 import { Box, Typography } from '@mui/material';
 import type { JSX } from 'react';
-
-type EmptyStateProps = {
-  icon?: keyof typeof IconTypes;
-  title: string;
-  description?: string;
-};
+import type { EmptyStateProps } from './types';
 
 export default function EmptyState({ icon, title, description }: EmptyStateProps): JSX.Element {
   return (

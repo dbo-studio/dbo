@@ -1,4 +1,4 @@
-import type { AutoCompleteType } from '@/types';
+import type { AutoCompleteType, ColumnType, RowType } from '@/types';
 
 export type QueryEditorLeadingProps = {
   databases: string[];
@@ -23,4 +23,10 @@ export type QueryEditorActionBarProps = {
 
 export type QueryEditorProps = {
   autocomplete: AutoCompleteType;
+};
+
+export type QueryResultGridProps = {
+  loading: boolean;
+  rows: RowType[];
+  columns: ColumnType[];
 };

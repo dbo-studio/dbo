@@ -15,18 +15,12 @@ import { useMutation } from '@tanstack/react-query';
 import { type JSX, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import * as v from 'valibot';
+import type { SafeModePasswordPromptProps } from './types';
 
 const formSchema = v.object({
   password: v.pipe(v.string(), v.minLength(1, 'Password is required')),
   rememberPassword: v.boolean()
 });
-
-type SafeModePasswordPromptProps = {
-  open: boolean;
-  connectionId?: number;
-  onCancel: () => void;
-  onPassword: (password: string) => Promise<void> | void;
-};
 
 export default function SafeModePasswordPrompt({
   open,

@@ -1,11 +1,5 @@
 import { SidebarDrawerStyled } from './SidebarDrawer.styled';
-
-type SidebarDrawerProps = {
-  open: boolean;
-  onClose: () => void;
-  anchor: 'left' | 'right';
-  children: React.ReactNode;
-};
+import type { SidebarDrawerProps } from './types';
 
 export default function SidebarDrawer({ open, onClose, anchor, children }: SidebarDrawerProps) {
   return (

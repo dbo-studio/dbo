@@ -31,7 +31,11 @@ func CreatePostgresqlConnection(params json.RawMessage) (string, error) {
 		return "", apperror.Validation(err)
 	}
 
-	return string(params), nil
+	if options.SSL != nil {
+		options.SSL.Mode = dto.NormalizeSSLMode(options.SSL.Mode)
+	}
+
+	return helper.StructToJSON(options), nil
 }
 
 func UpdatePostgresqlConnection(oldParams json.RawMessage, newParams json.RawMessage) (string, error) {
@@ -55,6 +59,7 @@ func UpdatePostgresqlConnection(oldParams json.RawMessage, newParams json.RawMes
 	newOptions.Port = helper.OptionalAndEmpty(newOptions.Port, oldOptions.Port)
 	newOptions.Database = helper.OptionalOrKeep(newOptions.Database, oldOptions.Database)
 	newOptions.URI = helper.OptionalOrKeep(newOptions.URI, oldOptions.URI)
+	newOptions.SSL = mergeSSLParams(newOptions.SSL, oldOptions.SSL)
 
 	return pgsqlUpdateParamsToCreateJSON(newOptions), nil
 }
@@ -67,6 +72,7 @@ func pgsqlUpdateParamsToCreateJSON(opts PgsqlUpdateParams) string {
 		Password: opts.Password,
 		Database: opts.Database,
 		URI:      opts.URI,
+		SSL:      opts.SSL,
 	}
 
 	return helper.StructToJSON(params)
@@ -108,6 +114,7 @@ func openPostgresqlConnection(connection *model.Connection, databaseName string)
 		if databaseName != "" {
 			uri = overridePostgresqlURIDatabase(uri, databaseName)
 		}
+		uri = appendPostgresqlURISSL(uri, options.SSL)
 		return postgres.Open(uri)
 	}
 
@@ -126,8 +133,10 @@ func openPostgresqlConnection(connection *model.Connection, databaseName string)
 	}
 
 	if options.Password != nil && len(lo.FromPtr(options.Password)) > 0 {
-		dsn += fmt.Sprintf("password=%s", lo.FromPtr(options.Password))
+		dsn += fmt.Sprintf("password=%s ", lo.FromPtr(options.Password))
 	}
+
+	dsn = appendPostgresqlSSLDSN(dsn, options.SSL)
 
 	return postgres.New(postgres.Config{
 		DSN: dsn,
@@ -145,11 +154,12 @@ func overridePostgresqlURIDatabase(uri, databaseName string) string {
 
 func (req PgsqlCreateParams) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.Host, validation.When(req.URI == nil && *req.URI == "", validation.Required), validation.Length(0, 120)),
-		validation.Field(&req.Username, validation.When(req.URI == nil && *req.URI == "", validation.Required), validation.Length(0, 120)),
+		validation.Field(&req.Host, validation.When(lo.FromPtr(req.URI) == "", validation.Required), validation.Length(0, 120)),
+		validation.Field(&req.Username, validation.When(lo.FromPtr(req.URI) == "", validation.Required), validation.Length(0, 120)),
 		validation.Field(&req.Password, validation.Length(0, 120)),
-		validation.Field(&req.Port, validation.When(req.URI == nil && *req.URI == "", validation.Required), validation.Min(0)),
-		validation.Field(&req.URI, validation.Length(0, 120)),
+		validation.Field(&req.Port, validation.When(lo.FromPtr(req.URI) == "", validation.Required), validation.Min(0)),
+		validation.Field(&req.URI, validation.Length(0, 2048)),
+		validation.Field(&req.SSL),
 	)
 }
 
@@ -159,6 +169,7 @@ func (req PgsqlUpdateParams) Validate() error {
 		validation.Field(&req.Username, validation.Length(0, 120)),
 		validation.Field(&req.Password, validation.Length(0, 120)),
 		validation.Field(&req.Port, validation.Min(0)),
-		validation.Field(&req.URI, validation.Length(0, 120)),
+		validation.Field(&req.URI, validation.Length(0, 2048)),
+		validation.Field(&req.SSL),
 	)
 }

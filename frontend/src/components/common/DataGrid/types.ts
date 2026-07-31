@@ -1,4 +1,5 @@
 import type { ColumnType, RowType } from '@/types';
+import type { UseDataGridSearchReturn } from './hooks/useDataGridSearch';
 
 export type DataGridProps = {
   rows: RowType[];
@@ -80,4 +81,10 @@ export type DataGridResizerProps = {
   columnId: string;
   isResizing: boolean;
   onResizeStart: (columnId: string, event: React.MouseEvent | React.TouchEvent) => void;
+};
+
+export type SearchDialogProps = {
+  open: boolean;
+  onClose: () => void;
+  search: UseDataGridSearchReturn;
 };
