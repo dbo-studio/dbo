@@ -1,4 +1,10 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import {
+  API_DB_TIMEOUT,
+  apiRoute,
+  pendingResponse,
+  waitForResponseDuring,
+} from "../helpers/network";
 import { BasePage } from "./BasePage";
 import { SqlEditorPage } from "./SqlEditorPage";
 
@@ -59,15 +65,11 @@ export class SafeModePage extends BasePage {
 
   async selectMode(mode: SafeModeValue): Promise<void> {
     await this.openMenu();
-    const updatePromise = this.page.waitForResponse(
-      (response) =>
-        response.url().includes("/connections/") &&
-        response.request().method() === "PATCH" &&
-        response.status() === 200,
-      { timeout: 15000 },
+    await waitForResponseDuring(
+      this.page,
+      apiRoute.connectionsUpdate,
+      () => this.option(mode).click(),
     );
-    await this.option(mode).click();
-    await updatePromise;
     await this.expectModeUpdated();
   }
 
@@ -76,12 +78,9 @@ export class SafeModePage extends BasePage {
    */
   async selectSilentWithPassword(password: string): Promise<void> {
     await this.openMenu();
-    const updatePromise = this.page.waitForResponse(
-      (response) =>
-        response.url().includes("/connections/") &&
-        response.request().method() === "PATCH" &&
-        response.status() === 200,
-      { timeout: 15000 },
+    const updatePromise = pendingResponse(
+      this.page,
+      apiRoute.connectionsUpdate,
     );
     await this.option("silent").click();
     await this.submitPassword(password);
@@ -96,15 +95,11 @@ export class SafeModePage extends BasePage {
 
   async confirmRunAnyway(): Promise<void> {
     await this.expectConfirmVisible();
-    const retryPromise = this.page.waitForResponse(
-      (response) =>
-        response.url().includes("/query/raw") &&
-        response.request().method() === "POST" &&
-        response.status() === 200,
-      { timeout: 15000 },
+    await waitForResponseDuring(
+      this.page,
+      apiRoute.queryRaw,
+      () => this.runAnywayButton.click(),
     );
-    await this.runAnywayButton.click();
-    await retryPromise;
     await expect(this.confirmTitle).toBeHidden({ timeout: 10000 });
   }
 
@@ -152,12 +147,10 @@ export class SafeModePage extends BasePage {
     const sqlEditor = new SqlEditorPage(this.page);
     await sqlEditor.typeQuery(sql);
 
-    const retryPromise = this.page.waitForResponse(
-      (response) =>
-        response.url().includes("/query/raw") &&
-        response.request().method() === "POST" &&
-        response.status() === 200,
-      { timeout: 30000 },
+    const retryPromise = pendingResponse(
+      this.page,
+      apiRoute.queryRaw,
+      API_DB_TIMEOUT,
     );
 
     await sqlEditor.clickRun();

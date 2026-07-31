@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { getDbConfig } from "../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
+import { apiRoute, pendingResponse } from "../helpers/network";
 import { withConnectionCleanup } from "../helpers/safeCleanup";
 import { ConnectionPage, SafeModePage, SqlEditorPage, DataGridPage } from "../pages";
 
@@ -231,12 +232,7 @@ INSERT INTO ${tableName} (name) VALUES ('before');
           await dataGrid.clickSave();
           await expect(safeMode.confirmTitle).toBeVisible({ timeout: 15000 });
 
-          const updatePromise = page.waitForResponse(
-            (response) =>
-              response.url().includes("/query/update") &&
-              response.status() === 200,
-            { timeout: 15000 },
-          );
+          const updatePromise = pendingResponse(page, apiRoute.queryUpdate);
           await safeMode.runAnywayButton.click();
           await updatePromise;
           await expect(safeMode.confirmTitle).toBeHidden({ timeout: 10000 });

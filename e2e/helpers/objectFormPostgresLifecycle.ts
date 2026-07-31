@@ -111,13 +111,8 @@ export async function createPostsTable(
   await objectForm.addRow();
   await objectForm.fillArrayCell(0, F.fkName, 'fk_posts_user');
 
-  const dynamicOptionsPromise = page.waitForResponse(
-    (response) => response.url().includes('/dynamic') && response.status() === 200,
-    { timeout: 15000 }
-  );
+  // Target-table change may load /dynamic column options; wait on UI when selecting columns.
   await objectForm.selectArrayCellOption(0, F.fkTargetTable, usersTable);
-  await dynamicOptionsPromise.catch(() => undefined);
-  await objectForm.wait(500);
 
   await objectForm.selectMultiSelectOptions(0, F.fkSourceColumns, ['user_id']);
   await objectForm.selectMultiSelectOptions(0, F.fkTargetColumns, ['id']);

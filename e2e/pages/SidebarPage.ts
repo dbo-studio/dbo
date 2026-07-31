@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { apiRoute, pendingResponse } from "../helpers/network";
 import { BasePage } from "./BasePage";
 
 export type SidebarTab = "Items" | "Queries" | "History";
@@ -39,21 +40,9 @@ export class SidebarPage extends BasePage {
     if (!alreadySelected) {
       const waitForList =
         tabName === "History"
-          ? this.page.waitForResponse(
-              (response) =>
-                response.url().includes("/histories") &&
-                response.request().method() === "GET" &&
-                response.status() === 200,
-              { timeout: 15000 },
-            )
+          ? pendingResponse(this.page, apiRoute.historiesList)
           : tabName === "Queries"
-            ? this.page.waitForResponse(
-                (response) =>
-                  response.url().includes("/saved") &&
-                  response.request().method() === "GET" &&
-                  response.status() === 200,
-                { timeout: 15000 },
-              )
+            ? pendingResponse(this.page, apiRoute.savedList)
             : null;
 
       await tab.click();

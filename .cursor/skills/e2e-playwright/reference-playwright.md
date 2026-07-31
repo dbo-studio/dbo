@@ -44,6 +44,31 @@ expect(await page.getByText('welcome').isVisible()).toBe(true);
 
 Soft assertions (`expect.soft`) only when collecting multiple independent checks in one step is intentional.
 
+## Network waits
+
+Prefer user-visible UI after an action. When you need status/body, use `helpers/network.ts`
+(`apiRoute.*` matchers + short timeouts):
+
+```ts
+import { apiRoute, waitForResponseDuring, API_DB_TIMEOUT } from '../helpers/network';
+
+// Default API_TIMEOUT is 5s — local API should answer well under that.
+await waitForResponseDuring(page, apiRoute.queryRaw, () => button.click());
+
+// DB round-trips (ping) can use API_DB_TIMEOUT (15s); DDL uses API_DDL_TIMEOUT (60s).
+await waitForResponseDuring(
+  page,
+  apiRoute.connectionsPing,
+  () => testBtn.click(),
+  API_DB_TIMEOUT,
+);
+```
+
+Never:
+
+- Start `waitForResponse` **after** the click that fires the request.
+- Soft-catch timeouts (`.catch(() => undefined)`).
+- Use broad `url.includes('connections')` matchers — use `apiRoute.*` instead.
 ## Isolation & hooks
 
 - Prefer setup inside the test or `beforeEach` that does not share mutable server state across files.

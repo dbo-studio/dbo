@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { API_DDL_TIMEOUT, apiRoute, waitForResponseDuring } from "../helpers/network";
 import { BasePage } from "./BasePage";
 
 /**
@@ -238,14 +239,12 @@ export class ObjectFormPage extends BasePage {
   }
 
   async save(): Promise<void> {
-    const previewPromise = this.page.waitForResponse(
-      (response) => response.url().includes("/fields/object/preview"),
-      {
-        timeout: 30000,
-      },
+    const response = await waitForResponseDuring(
+      this.page,
+      apiRoute.objectPreview,
+      () => this.saveButton.click(),
+      API_DDL_TIMEOUT,
     );
-    await this.saveButton.click();
-    const response = await previewPromise;
     expect(response.status()).toBe(200);
     await expect(this.previewModal).toBeVisible({ timeout: 10000 });
   }
@@ -255,14 +254,12 @@ export class ObjectFormPage extends BasePage {
   }
 
   async confirmExecute(): Promise<void> {
-    const executePromise = this.page.waitForResponse(
-      (response) =>
-        response.url().includes("/fields/object") &&
-        !response.url().includes("/preview"),
-      { timeout: 60000 },
+    const response = await waitForResponseDuring(
+      this.page,
+      apiRoute.objectExecute,
+      () => this.executeButton.click(),
+      API_DDL_TIMEOUT,
     );
-    await this.executeButton.click();
-    const response = await executePromise;
     if (response.status() !== 200) {
       const body = await response.text().catch(() => "");
       throw new Error(
