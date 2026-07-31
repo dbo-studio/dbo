@@ -42,7 +42,7 @@ export default function ConnectionBox(): JSX.Element {
   return (
     <ConnectionBoxStyled status={status}>
       <ConnectionBoxContentStyled>
-        <Stack direction='row' spacing={1} alignItems='center' sx={{ minWidth: 0, width: '100%' }}>
+        <Stack direction='row' spacing={1} sx={{ minWidth: 0, width: '100%', alignItems: 'center' }}>
           <Typography variant='body2' component='h6' noWrap sx={{ flex: 1, minWidth: 0 }}>
             {loading === 'loading' && locales.connecting}
             {loading === 'finished' && info}

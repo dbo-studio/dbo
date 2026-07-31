@@ -36,7 +36,7 @@ func upConnectionSafeMode(ctx context.Context, tx *sql.Tx) error {
 	return nil
 }
 
-func downConnectionSafeMode(ctx context.Context, tx *sql.Tx) error {
+func downConnectionSafeMode(_ context.Context, _ *sql.Tx) error {
 	// SQLite does not support dropping columns reliably across versions.
 	return nil
 }

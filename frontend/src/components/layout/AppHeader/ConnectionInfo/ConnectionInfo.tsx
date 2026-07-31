@@ -9,12 +9,12 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store.ts';
-import { Grid, IconButton, Stack, Tooltip, Box } from '@mui/material';
+import { Box, Grid, IconButton, Stack, Tooltip } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 import type { JSX } from 'react';
+import SafeModeMenu from '../SafeModeMenu/SafeModeMenu';
 import ConnectionBox from './ConnectionBox/ConnectionBox';
 import { ConnectionInfoStyled } from './ConnectionInfo.styled';
-import SafeModeMenu from '../SafeModeMenu/SafeModeMenu';
 
 type ConnectionInfoProps = {
   compact?: boolean;
@@ -97,7 +97,7 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
           minWidth: 0
         }}
       >
-        <Stack direction='row' alignItems='center' spacing={0.5} sx={{ minWidth: 0, width: '100%' }}>
+        <Stack direction='row' spacing={0.5} sx={{ minWidth: 0, width: '100%', alignItems: 'center' }}>
           {compact && <SafeModeMenu />}
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <ConnectionBox />

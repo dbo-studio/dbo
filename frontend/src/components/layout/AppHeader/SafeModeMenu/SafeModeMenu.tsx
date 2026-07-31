@@ -254,7 +254,7 @@ export default function SafeModeMenu(): JSX.Element {
                   slotProps={{
                     primary: {
                       variant: 'body2',
-                      fontWeight: selected ? 600 : 400
+                      sx: { fontWeight: selected ? 600 : 400 }
                     },
                     secondary: {
                       variant: 'caption',
