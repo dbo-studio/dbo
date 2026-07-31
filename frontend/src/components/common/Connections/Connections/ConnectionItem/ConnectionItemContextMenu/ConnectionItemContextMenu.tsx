@@ -65,21 +65,23 @@ export default function ConnectionItemContextMenu({
     suppressPasswordPromptForConnection(connection.id);
     updateUI({ showConnectionPasswordPrompt: false, passwordPromptConnectionId: undefined });
 
+    // Tear down UI first so /tree and /autocomplete cannot reconnect after the
+    // temp password is wiped by the close API.
+    if (connections) {
+      updateConnections(
+        connections.map((c) => (c.id === connection.id ? { ...c, isActive: false, isOpen: false } : c))
+      );
+    }
+
+    if (Number(currentConnectionId) === connection.id) {
+      clearCurrentConnection();
+      resetTree();
+    }
+
+    await queryClient.cancelQueries({ queryKey: ['startup-autocomplete'] });
+
     try {
       await api.connection.updateConnection(connection.id, { isActive: false, isClose: true });
-
-      // Update local state after the pool is closed so the connections list
-      // refetch cannot re-select this connection while it is still active on the server.
-      if (connections) {
-        updateConnections(
-          connections.map((c) => (c.id === connection.id ? { ...c, isActive: false, isOpen: false } : c))
-        );
-      }
-
-      if (Number(currentConnectionId) === connection.id) {
-        clearCurrentConnection();
-        resetTree();
-      }
 
       await queryClient.invalidateQueries({
         queryKey: ['connections']
@@ -92,7 +94,10 @@ export default function ConnectionItemContextMenu({
       toast.error(locales.connection_close_failed);
       return false;
     } finally {
-      resumePasswordPromptForConnection(connection.id);
+      // Late in-flight /tree or /autocomplete 401s must not open the password modal.
+      window.setTimeout(() => {
+        resumePasswordPromptForConnection(connection.id);
+      }, 1500);
     }
   };
 

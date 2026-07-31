@@ -22,7 +22,7 @@ func (s IConnectionServiceImpl) Close(ctx context.Context, connectionID int32) e
 		}
 	}
 
-	// Clear temporary secret on manual close.
+	// Clear temporary secret on manual close. Missing secret is not an error.
 	if s.secrets != nil {
 		temporary, err := s.secrets.IsTemporaryConnectionPassword(ctx, ownerID, connection.ID)
 		if err != nil {
@@ -36,10 +36,5 @@ func (s IConnectionServiceImpl) Close(ctx context.Context, connectionID int32) e
 		}
 	}
 
-	err = s.cache.DeleteByPrefix(ctx, cache.ConnectionPrefix(connection.ID))
-	if err != nil {
-		return err
-	}
-
-	return err
+	return s.cache.DeleteByPrefix(ctx, cache.ConnectionPrefix(connection.ID))
 }

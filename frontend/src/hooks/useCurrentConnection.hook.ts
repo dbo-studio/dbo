@@ -7,14 +7,10 @@ export const useCurrentConnection = (): ConnectionType | undefined => {
   const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
 
   return useMemo(() => {
-    if (!connections?.length) {
+    if (!connections?.length || currentConnectionId == null) {
       return undefined;
     }
 
-    if (currentConnectionId) {
-      return connections.find((c) => c.id === Number(currentConnectionId));
-    }
-
-    return connections.find((c) => c.isActive);
+    return connections.find((c) => c.id === Number(currentConnectionId));
   }, [connections, currentConnectionId]);
 };
