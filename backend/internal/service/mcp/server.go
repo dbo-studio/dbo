@@ -19,7 +19,7 @@ type NativeServer struct {
 
 func NewNativeServer(registry *dbtools.Registry) *NativeServer {
 	ns := &NativeServer{registry: registry}
-	ns.mcpServer = sdkmcp.NewServer(&sdkmcp.Implementation{Name: "dbo", Version: "1.1.0"}, nil)
+	ns.mcpServer = sdkmcp.NewServer(&sdkmcp.Implementation{Name: "dbo", Version: "1.0.1"}, nil)
 	ns.registerTools()
 	ns.streamHandler = sdkmcp.NewStreamableHTTPHandler(func(_ *http.Request) *sdkmcp.Server {
 		return ns.mcpServer
