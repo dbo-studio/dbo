@@ -10,8 +10,11 @@ import (
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/repository"
+	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/cache"
+	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/dbo-studio/dbo/pkg/sqlguard"
 	"github.com/samber/lo"
 )
 
@@ -30,13 +33,16 @@ type ITreeServiceImpl struct {
 	connectionRepo repository.IConnectionRepo
 	cm             *databaseConnection.ConnectionManager
 	cache          cache.Cache
+	unlockStore    *serviceSafemode.UnlockStore
 }
 
 func NewTreeService(cr repository.IConnectionRepo, cm *databaseConnection.ConnectionManager) *ITreeServiceImpl {
+	c := container.Instance().Cache()
 	return &ITreeServiceImpl{
 		connectionRepo: cr,
 		cm:             cm,
-		cache:          container.Instance().Cache(),
+		cache:          c,
+		unlockStore:    serviceSafemode.NewUnlockStore(c),
 	}
 }
 
@@ -113,6 +119,13 @@ func (i ITreeServiceImpl) ObjectExecute(ctx context.Context, req *dto.ObjectExec
 	connection, err := i.connectionRepo.Find(ctx, req.ConnectionID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	policy := serviceSafemode.FromConnection(connection)
+	policy = i.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), connection.ID, policy)
+	class := sqlguard.ClassifyAction(req.Action)
+	if err := serviceSafemode.Enforce(policy, class, req.Confirmed); err != nil {
+		return nil, err
 	}
 
 	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)

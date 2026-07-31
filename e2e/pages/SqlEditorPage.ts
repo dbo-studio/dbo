@@ -139,9 +139,14 @@ export class SqlEditorPage extends BasePage {
         response.status() === 200,
       { timeout: 15000 },
     );
+    await this.clickRun();
+    await responsePromise;
+  }
+
+  /** Click Run without waiting for a successful response (Safe Mode gates). */
+  async clickRun(): Promise<void> {
     await expect(this.runButton).toBeEnabled({ timeout: 10000 });
     await this.runButton.click();
-    await responsePromise;
   }
 
   async typeAndRun(sql: string): Promise<void> {

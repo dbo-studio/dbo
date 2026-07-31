@@ -8,6 +8,7 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import type { JSX } from 'react';
 import ConfirmModal from '../base/Modal/ConfirmModal/ConfirmModal.tsx';
 import UpdateDialog from '../common/UpdateDialog/UpdateDialog';
+import SafeModePasswordHost from '../common/SafeModePasswordPrompt/SafeModePasswordHost';
 import AppHeader from './AppHeader/AppHeader';
 import { LayoutBodyStyled, LayoutMainStyled, LayoutStyled } from './Layout.styled';
 import CenterContainer from './MainContainer/CenterContainer.tsx';
@@ -83,6 +84,7 @@ export default function Layout(): JSX.Element {
   return (
     <LayoutStyled>
       <ConfirmModal />
+      <SafeModePasswordHost />
       <UpdateDialog />
       <AppHeader />
       <LayoutBodyStyled>

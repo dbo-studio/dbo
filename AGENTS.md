@@ -54,7 +54,8 @@ Dependencies flow one direction only: `app → service → repository/database`.
 - **Minimize scope** — smallest correct change; no drive-by refactors.
 - **Follow existing conventions** — naming, file layout, error handling, response shapes.
 - **No secrets in source** — use env vars and secret store.
-- **Conventional Commits** — `feat:`, `fix:`, `chore:`, `refactor:`, `test:`.
+- **Conventional Commits** — `feat:`, `fix:`, `chore:`, `refactor:`, `test:`. See [`.cursor/rules/git-commits.mdc`](.cursor/rules/git-commits.mdc).
+- **Commit author** — always the machine Git identity (`user.name` / `user.email`). Never `--author` or `GIT_AUTHOR_*` overrides.
 - **Test before PR** — see per-area commands below.
 
 ## Backend Quick Reference

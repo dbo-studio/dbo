@@ -6,7 +6,7 @@ import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { matchConnectionId } from '@/store/tabStore/connectionId';
-import { useTabStore, selectTabs } from '@/store/tabStore/tab.store';
+import { selectTabs, useTabStore } from '@/store/tabStore/tab.store';
 import type { ConnectionType } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useEffect, useState } from 'react';

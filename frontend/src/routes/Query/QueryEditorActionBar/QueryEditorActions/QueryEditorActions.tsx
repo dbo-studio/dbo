@@ -5,7 +5,7 @@ import { shortcuts, tools } from '@/core/utils';
 import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { IconButton, Stack, Tooltip } from '@mui/material';
+import { Box, IconButton, Stack, Tooltip } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
@@ -107,17 +107,23 @@ export default function QueryEditorActions({
           <CustomIcon type='sparkles' />
         </IconButton>
       </Tooltip>
-      <Tooltip title={shortcuts.runQuery.command.join('+')}>
-        <IconButton
-          aria-label={locales.run_query}
-          disabled={loading}
-          loading={loading}
-          color='primary'
-          onClick={(): void => onRunQuery()}
-        >
-          <CustomIcon type='play' />
-        </IconButton>
-      </Tooltip>
+      <Box
+        sx={{
+          padding: '3px !important'
+        }}
+      >
+        <Tooltip title={shortcuts.runQuery.command.join('+')}>
+          <IconButton
+            aria-label={locales.run_query}
+            disabled={loading}
+            loading={loading}
+            color='primary'
+            onClick={(): void => onRunQuery()}
+          >
+            <CustomIcon type='play' />
+          </IconButton>
+        </Tooltip>
+      </Box>
 
       <ExportModal
         onClose={() => setShowExport({ ...showExport, show: false })}

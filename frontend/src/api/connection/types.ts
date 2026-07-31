@@ -1,3 +1,5 @@
+import type { ConnectionSafeMode } from '@/types';
+
 export type ConnectionDetailRequestType = {
   connectionId: string | number;
 };
@@ -7,6 +9,7 @@ export type CreateConnectionRequestType = {
   type: 'postgresql' | 'sqlite' | 'mysql';
   options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
   rememberPassword?: boolean;
+  safeMode?: ConnectionSafeMode;
 };
 
 export type PingConnectionRequestType = {
@@ -23,6 +26,7 @@ export type UpdateConnectionRequestType = {
   isClose?: boolean;
   rememberPassword?: boolean;
   options?: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
+  safeMode?: ConnectionSafeMode;
 };
 
 export type SetConnectionCredentialsRequestType = {
@@ -52,4 +56,8 @@ export type MysqlOptionsType = {
 export type SQLiteOptionsType = {
   file?: string;
   isPing?: boolean;
+};
+
+export type SafeModeUnlockResponseType = {
+  unlockedUntil: string;
 };

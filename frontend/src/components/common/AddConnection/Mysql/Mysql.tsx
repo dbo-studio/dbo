@@ -9,11 +9,11 @@ import * as v from 'valibot';
 
 import type { ConnectionSettingsProps } from '../types';
 import {
+  ConnectionFormBodyStyled,
   ConnectionFormCheckboxRowStyled,
   ConnectionFormContainerStyled,
   ConnectionFormFooterStyled
 } from '../AddConnection.styled';
-
 const formSchema = v.object({
   isPing: v.boolean(),
   rememberPassword: v.boolean(),
@@ -81,11 +81,7 @@ export default function Mysql({
 
   return (
     <ConnectionFormContainerStyled>
-      <Box
-        sx={{
-          flex: 1
-        }}
-      >
+      <ConnectionFormBodyStyled>
         <form
           onSubmit={(e): void => {
             e.preventDefault();
@@ -245,7 +241,7 @@ export default function Mysql({
             </form.Field>
           </Box>
         </form>
-      </Box>
+      </ConnectionFormBodyStyled>
       <ConnectionFormFooterStyled>
         <Button size='small' onClick={onClose}>
           {locales.cancel}

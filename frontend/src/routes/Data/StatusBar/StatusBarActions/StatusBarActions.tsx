@@ -3,6 +3,7 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { TabMode } from '@/core/enums';
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { buildRowConditions, createEmptyRow, mapRowValuesToPhysical } from '@/core/utils';
+import { resolveSafeModeGate } from '@/core/utils/safeModeGate';
 import { useCurrentConnection } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
@@ -79,16 +80,27 @@ export default function StatusBarActions(): JSX.Element {
       const mappedRemoved = removedRows.map((row) => buildRowConditions(row, columns) as RowType);
       const mappedAdded = unsavedRows.map((row) => mapRowValuesToPhysical(row, columns) as RowType);
 
-      const res = await updateQueryMutation({
+      const payload = {
         connectionId: currentConnection.id,
         nodeId,
         edited: mappedEdited,
         removed: mappedRemoved,
         added: mappedAdded
-      });
-      await handleRefresh();
+      };
 
-      toast.success(`${locales.changes_saved_successfully}. ${locales.row_affected}: ${res.rowAffected}`);
+      try {
+        const res = await updateQueryMutation(payload);
+        await handleRefresh();
+        toast.success(`${locales.changes_saved_successfully}. ${locales.row_affected}: ${res.rowAffected}`);
+      } catch (error) {
+        const shouldRetry = await resolveSafeModeGate(error);
+        if (!shouldRetry) {
+          return;
+        }
+        const res = await updateQueryMutation({ ...payload, confirmed: true });
+        await handleRefresh();
+        toast.success(`${locales.changes_saved_successfully}. ${locales.row_affected}: ${res.rowAffected}`);
+      }
     } catch (error) {
       console.debug('🚀 ~ handleSave ~ error:', error);
       toast.error(locales.save_failed);

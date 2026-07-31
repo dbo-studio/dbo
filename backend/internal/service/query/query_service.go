@@ -9,8 +9,11 @@ import (
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/repository"
+	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/cache"
+	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/dbo-studio/dbo/pkg/sqlguard"
 	"github.com/samber/lo"
 )
 
@@ -28,14 +31,17 @@ type IQueryServiceImpl struct {
 	connectionRepo repository.IConnectionRepo
 	cm             *databaseConnection.ConnectionManager
 	cache          cache.Cache
+	unlockStore    *serviceSafemode.UnlockStore
 }
 
 func NewQueryService(connectionRepo repository.IConnectionRepo, historyRepo repository.IHistoryRepo, cm *databaseConnection.ConnectionManager) IQueryService {
+	c := container.Instance().Cache()
 	return &IQueryServiceImpl{
 		historyRepo:    historyRepo,
 		connectionRepo: connectionRepo,
 		cm:             cm,
-		cache:          container.Instance().Cache(),
+		cache:          c,
+		unlockStore:    serviceSafemode.NewUnlockStore(c),
 	}
 }
 
@@ -59,6 +65,13 @@ func (i IQueryServiceImpl) Raw(ctx context.Context, req *dto.RawQueryRequest) (*
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
+	policy := serviceSafemode.FromConnection(connection)
+	policy = i.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), connection.ID, policy)
+	classification := sqlguard.ClassifySQL(req.Query)
+	if err := serviceSafemode.Enforce(policy, classification.Class, req.Confirmed); err != nil {
+		return nil, err
+	}
+
 	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {
 		return nil, err
@@ -76,6 +89,17 @@ func (i IQueryServiceImpl) Update(ctx context.Context, req *dto.UpdateQueryReque
 	connection, err := i.connectionRepo.Find(ctx, req.ConnectionID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	class := sqlguard.ClassWriteDML
+	if len(req.DeletedItems) > 0 {
+		class = sqlguard.ClassWriteDML
+	}
+
+	policy := serviceSafemode.FromConnection(connection)
+	policy = i.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), connection.ID, policy)
+	if err := serviceSafemode.Enforce(policy, class, req.Confirmed); err != nil {
+		return nil, err
 	}
 
 	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)

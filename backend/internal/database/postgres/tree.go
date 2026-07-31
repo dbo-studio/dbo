@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/samber/lo"
@@ -40,11 +39,8 @@ func buildRoot(ctx context.Context, r *PostgresRepository) (*contract.TreeNode, 
 		Children:    make([]contract.TreeNode, 0),
 	}
 
-	if configured := databaseConnection.DefaultPostgresqlDatabase(r.base.Connection()); configured != "" {
-		root.Children = append(root.Children, databaseTreeNode(r, configured))
-		return root, nil
-	}
-
+	// Always list all databases. Connection.Options.database is only the dial default;
+	// filtering the tree to that DB hid newly created databases (e.g. Create database).
 	databases, err := r.databases(ctx, true)
 	if err != nil {
 		return nil, apperror.DriverError(err)

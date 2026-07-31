@@ -16,6 +16,7 @@ export type RunRawQueryRequestType = {
   query: string;
   database?: string;
   schema?: string;
+  confirmed?: boolean;
 };
 
 export type GridMetaType = {
@@ -47,6 +48,7 @@ export type UpdateQueryRequestType = {
   edited: EditedRow[];
   removed: RowType[];
   added: RowType[];
+  confirmed?: boolean;
 };
 
 export type UpdateQueryResponseType = {

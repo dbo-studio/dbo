@@ -4,11 +4,12 @@ import { FormError } from '@/components/base/FormError/FormError';
 import locales from '@/locales';
 import { Box, Button, Checkbox, FormControlLabel, Stack } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
-import { type JSX } from 'react';
+import type { JSX } from 'react';
 import * as v from 'valibot';
 
 import type { ConnectionSettingsProps } from '../types';
 import {
+  ConnectionFormBodyStyled,
   ConnectionFormCheckboxRowStyled,
   ConnectionFormContainerStyled,
   ConnectionFormFooterStyled
@@ -95,11 +96,7 @@ export default function PostgreSQL({
 
   return (
     <ConnectionFormContainerStyled>
-      <Box
-        sx={{
-          flex: 1
-        }}
-      >
+      <ConnectionFormBodyStyled>
         <form
           onSubmit={(e): void => {
             e.preventDefault();
@@ -278,7 +275,7 @@ export default function PostgreSQL({
             </form.Field>
           </ConnectionFormCheckboxRowStyled>
         </form>
-      </Box>
+      </ConnectionFormBodyStyled>
       <ConnectionFormFooterStyled>
         <Button size='small' onClick={onClose}>
           {locales.cancel}

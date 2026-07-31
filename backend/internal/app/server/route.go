@@ -54,6 +54,8 @@ func (r *Server) routing() {
 	connection.Post("/ping", r.handlers.Connection.Ping)
 	connection.Patch("/:id", r.handlers.Connection.Update)
 	connection.Post("/:id/credentials", r.handlers.Connection.SetCredentials)
+	connection.Post("/:id/safe-mode/unlock", r.handlers.Connection.UnlockSafeMode)
+	connection.Post("/:id/safe-mode/lock", r.handlers.Connection.LockSafeMode)
 	connection.Delete("/:id", r.handlers.Connection.Delete)
 
 	saved := api.Group("saved")

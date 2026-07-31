@@ -20,6 +20,7 @@ export const IconTypes = {
   sideRight: 'PanelRight',
   connection: 'Cable',
   lock: 'Lock',
+  lockOpen: 'LockOpen',
   database: 'Database',
   refresh: 'RotateCcw',
   search: 'Search',

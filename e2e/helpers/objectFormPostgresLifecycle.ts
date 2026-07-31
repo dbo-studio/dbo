@@ -41,7 +41,7 @@ export async function createDatabase(page: Page, connectionName: string, databas
   await objectForm.assertPreviewContains(databaseName);
   await objectForm.confirmExecute();
 
-  await tree.expandNode(connectionName);
+  await tree.refreshExpandNode(connectionName);
   await expect(tree.getTreeNode(databaseName)).toBeVisible({ timeout: 15000 });
 }
 

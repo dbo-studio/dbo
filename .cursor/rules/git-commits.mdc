@@ -1,0 +1,46 @@
+---
+description: Conventional Commits format and author identity rules for DBO
+alwaysApply: true
+---
+
+# Git Commits
+
+## Format
+
+Use [Conventional Commits](https://www.conventionalcommits.org/):
+
+- `feat:` — new user-facing capability
+- `fix:` — bug fix
+- `chore:` — tooling, deps, non-product noise
+- `refactor:` — internal change with no behavior change
+- `test:` — tests only
+- `docs:` — documentation only
+
+Subject: imperative, concise (why over laundry list). Optional body for context.
+
+Examples:
+
+```text
+feat: add Safe Mode connection policies and API enforcement
+
+fix: restore password prompt after closing a connection
+```
+
+## Author identity (required)
+
+Commits **must** use the machine’s configured Git user:
+
+- `git config user.name`
+- `git config user.email`
+
+Do **not**:
+
+- run `git config` to change name/email
+- pass `--author`
+- set `GIT_AUTHOR_*` / `GIT_COMMITTER_*` overrides
+
+## Never commit
+
+- Secrets, credentials, `.env`
+- Debug binaries (`__debug_bin*`, local build artifacts)
+- Unrelated local IDE settings unless explicitly requested

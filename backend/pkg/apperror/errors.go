@@ -17,6 +17,9 @@ var (
 	ErrProviderNotConfigured       = errors.New("provider not configured")
 	ErrAiNoSelectedModel           = errors.New("select a model first")
 	ErrPasswordRequired            = errors.New("password_required")
+	ErrSafeModeBlocked             = errors.New("safe_mode_blocked")
+	ErrSafeModeConfirmRequired     = errors.New("safe_mode_confirm_required")
+	ErrSafeModePasswordRequired    = errors.New("safe_mode_password_required")
 	ErrInvalidEncryptionKey        = errors.New("invalid encryption key")
 	ErrDecryptionFailed            = errors.New("decryption failed")
 )
@@ -131,6 +134,33 @@ func Forbidden(err error) error {
 		Code:    http.StatusForbidden,
 		Message: "forbidden",
 		Err:     err,
+	}
+}
+
+func SafeModeBlocked(data map[string]any) error {
+	return &AppError{
+		Code:    http.StatusForbidden,
+		Message: "safe_mode_blocked",
+		Err:     ErrSafeModeBlocked,
+		Data:    data,
+	}
+}
+
+func SafeModeConfirmRequired(data map[string]any) error {
+	return &AppError{
+		Code:    http.StatusForbidden,
+		Message: "safe_mode_confirm_required",
+		Err:     ErrSafeModeConfirmRequired,
+		Data:    data,
+	}
+}
+
+func SafeModePasswordRequired(data map[string]any) error {
+	return &AppError{
+		Code:    http.StatusForbidden,
+		Message: "safe_mode_password_required",
+		Err:     ErrSafeModePasswordRequired,
+		Data:    data,
 	}
 }
 

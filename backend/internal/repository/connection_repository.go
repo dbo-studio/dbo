@@ -48,6 +48,7 @@ func (c IConnectionRepoImpl) Create(ctx context.Context, dto *dto.CreateConnecti
 		ConnectionType: dto.Type,
 		Options:        string(dto.Options),
 		IsActive:       true,
+		SafeMode:       model.SafeMode(lo.FromPtr(dto.SafeMode)),
 		CreatedAt:      nil,
 		UpdatedAt:      nil,
 	}
@@ -65,6 +66,9 @@ func (c IConnectionRepoImpl) Update(ctx context.Context, connection *model.Conne
 	connection.Name = helper.OptionalString(req.Name, connection.Name)
 	connection.IsActive = helper.OptionalBool(req.IsActive, connection.IsActive)
 	connection.Options = string(req.Options)
+	if req.SafeMode != nil {
+		connection.SafeMode = model.SafeMode(*req.SafeMode)
+	}
 
 	result := c.db.WithContext(ctx).Save(&connection)
 
