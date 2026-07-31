@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { ConnectionPage } from '../pages';
 
 async function resetAppDbViaApi(): Promise<void> {
@@ -10,6 +10,60 @@ async function resetAppDbViaApi(): Promise<void> {
     await fetch(`${baseUrl}/config/reset`, { method: 'POST' });
   } catch (err) {
     console.warn('[e2e] API config/reset failed:', err);
+  }
+}
+
+/** Close UI modal flags in persisted settings so reload does not reopen them. */
+async function clearPersistedUiModals(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    try {
+      const raw = localStorage.getItem('settings');
+      if (!raw) {
+        return;
+      }
+      const data = JSON.parse(raw) as {
+        state?: {
+          ui?: {
+            showSettings?: { open: boolean; tab: number };
+            showAddConnection?: boolean;
+            showEditConnection?: number | boolean;
+            showConnectionPasswordPrompt?: boolean;
+          };
+        };
+      };
+      const ui = data.state?.ui;
+      if (!ui) {
+        return;
+      }
+      ui.showSettings = { open: false, tab: 0 };
+      ui.showAddConnection = false;
+      ui.showEditConnection = false;
+      ui.showConnectionPasswordPrompt = false;
+      localStorage.setItem('settings', JSON.stringify(data));
+    } catch {
+      // ignore corrupt settings blobs
+    }
+  }).catch(() => undefined);
+}
+
+/**
+ * Best-effort dismiss of leftover MUI modals. Avoid expect()/waitFor() — timed-out
+ * Playwright waits still show red in the report even when the rejection is caught.
+ */
+async function dismissOpenModals(page: Page): Promise<void> {
+  const modal = page.locator('.MuiModal-root').first();
+  for (let i = 0; i < 3; i++) {
+    if (!(await modal.isVisible().catch(() => false))) {
+      return;
+    }
+    await page.keyboard.press('Escape');
+    const deadline = Date.now() + 1500;
+    while (Date.now() < deadline) {
+      if (!(await modal.isVisible().catch(() => false))) {
+        return;
+      }
+      await new Promise((r) => setTimeout(r, 100));
+    }
   }
 }
 
@@ -25,18 +79,11 @@ export async function safeDeleteConnection(page: Page, name: string | undefined)
       return;
     }
     const connectionPage = new ConnectionPage(page);
+    // Patch before navigation so zustand rehydrates with modals closed.
+    await clearPersistedUiModals(page);
     await connectionPage.goto();
     await connectionPage.waitForReady();
-    // Settings `showSettings.open` is persisted in localStorage, so reload can reopen
-    // the modal. MUI Modal uses role=presentation (not dialog) — dismiss via Escape.
-    const modal = page.locator('.MuiModal-root');
-    for (let i = 0; i < 3; i++) {
-      if (!(await modal.first().isVisible().catch(() => false))) {
-        break;
-      }
-      await page.keyboard.press('Escape');
-      await expect(modal).toHaveCount(0, { timeout: 2000 }).catch(() => undefined);
-    }
+    await dismissOpenModals(page);
     if (await connectionPage.connectionExists(name)) {
       await connectionPage.deleteConnection(name);
     }

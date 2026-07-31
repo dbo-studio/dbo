@@ -23,6 +23,7 @@ npm test
 | Go toolchain        | Builds/runs backend via `go run . serve`                                   |
 | Frontend deps       | `cd frontend && npm install` (Vite is started from there)                  |
 | Sample DBs          | `docker compose -f docker-compose.dev.yml up -d sample-pgsql sample-mysql` |
+| TLS sample (SSL e2e)| `docker compose -f docker-compose.dev.yml up -d sample-pgsql-ssl` (port 5433) |
 | Playwright browsers | `cd e2e && npx playwright install chromium`                                |
 
 ```bash
@@ -54,6 +55,7 @@ HTML report: `e2e/playwright-report/` after a run.
 | ------------------------ | --------------------------------------------- | ------------------------------------------------------- |
 | Harness smoke            | `harness-smoke.spec.ts`                       | ephemeral API + FE reachable (no sample DB)             |
 | Connections              | `connections.spec.ts`                         | create / edit / refresh / context menu / schema via SQL |
+| Connection SSL           | `connection-ssl.spec.ts`                      | SSL tab UI + Require on sample-pgsql-ssl + bad CA fail  |
 | Safe Mode                | `safe-mode.spec.ts`                           | menu modes, SQL gates + grid Save confirm               |
 | Query CRUD               | `query-crud.spec.ts`                          | SQL create/insert/update/select + multi-table JOIN      |
 | Query status bar         | `query-statusbar.spec.ts`                     | PG: discard/add/remove/refresh + page next/limit + gate |

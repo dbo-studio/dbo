@@ -1,5 +1,9 @@
 export { BasePage } from "./BasePage";
-export { ConnectionPage, type ConnectionConfig } from "./ConnectionPage";
+export {
+  ConnectionPage,
+  type ConnectionConfig,
+  type ConnectionSslConfig,
+} from "./ConnectionPage";
 export { SqlEditorPage } from "./SqlEditorPage";
 export { DataGridPage } from "./DataGridPage";
 export { SidebarPage, type SidebarTab } from "./SidebarPage";
