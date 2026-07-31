@@ -1,12 +1,7 @@
 import { Typography } from '@mui/material';
-import type { StandardSchemaV1Issue } from '@tanstack/react-form';
+import type { FormErrorProps } from './types';
 
-type Props = {
-  errors: (string | StandardSchemaV1Issue | null | undefined)[];
-  mb?: number;
-};
-
-export const FormError = ({ errors, mb }: Props) => {
+export const FormError = ({ errors, mb }: FormErrorProps) => {
   if (errors.length < 1) {
     return null;
   }

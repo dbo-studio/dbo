@@ -15,10 +15,7 @@ import type { JSX } from 'react';
 import SafeModeMenu from '../SafeModeMenu/SafeModeMenu';
 import ConnectionBox from './ConnectionBox/ConnectionBox';
 import { ConnectionInfoStyled } from './ConnectionInfo.styled';
-
-type ConnectionInfoProps = {
-  compact?: boolean;
-};
+import type { ConnectionInfoProps } from './types';
 
 export default function ConnectionInfo({ compact = false }: ConnectionInfoProps): JSX.Element {
   const queryClient = useQueryClient();

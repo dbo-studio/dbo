@@ -1,8 +1,4 @@
-import type {
-  MysqlOptionsType,
-  PostgresqlOptionsType,
-  SQLiteOptionsType
-} from '@/api/connection/types';
+import type { MysqlOptionsType, PostgresqlOptionsType, SQLiteOptionsType } from '@/api/connection/types';
 
 export type ConnectionSafeMode = 'silent' | 'alert' | 'alert_write' | 'safe' | 'safe_write';
 

@@ -12,14 +12,11 @@ import {
   StyledTableHead,
   StyledTableRow
 } from './ChatDataTable.styled';
+import type { ChatDataTableProps } from '../../types';
 
 const MAX_ROWS = 10;
 const MAX_COLUMNS = 12;
 const HIDDEN_COLUMNS = new Set(['dbo_index', 'editable']);
-
-type ChatDataTableProps = {
-  rows: Record<string, unknown>[];
-};
 
 const deriveColumns = (rows: Record<string, unknown>[]): string[] => {
   const seen = new Set<string>();

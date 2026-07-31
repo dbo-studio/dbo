@@ -4,22 +4,14 @@ import { Box, Button, Typography, useTheme } from '@mui/material';
 import { type ChangeEvent, type JSX, useId, useRef } from 'react';
 
 import { FieldInputInputStyled, FieldInputLabelRowStyled } from '@/components/base/FieldInput/FieldInput.styled';
-
-type SSLCertFieldProps = {
-  name: string;
-  label: string;
-  value: string;
-  placeholder: string;
-  hint: string;
-  onChange: (value: string) => void;
-};
+import type { SSLCertFieldProps } from './types';
 
 export default function SSLCertField({
   name,
   label,
   value,
+  testId,
   placeholder,
-  hint,
   onChange
 }: SSLCertFieldProps): JSX.Element {
   const theme = useTheme();
@@ -42,7 +34,7 @@ export default function SSLCertField({
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', mb: 1 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', mb: 1 }} data-testid={`ssl-cert-field-${name}`}>
       <FieldInputLabelRowStyled>
         <Typography color='textText' variant='caption'>
           {label}
@@ -51,6 +43,7 @@ export default function SSLCertField({
           size='small'
           variant='text'
           color='inherit'
+          data-testid={`ssl-load-file-${name}`}
           startIcon={<CustomIcon type='import' size='xs' />}
           onClick={(): void => fileInputRef.current?.click()}
           sx={{
@@ -71,6 +64,7 @@ export default function SSLCertField({
         type='file'
         accept='.pem,.crt,.cer,.key,.txt,text/plain'
         hidden
+        data-testid={`ssl-file-input-${name}`}
         onChange={(e): void => {
           void handleFileChange(e);
         }}
@@ -85,6 +79,9 @@ export default function SSLCertField({
         spellCheck={false}
         autoComplete='off'
         placeholder={placeholder}
+        slotProps={{
+          input: { 'data-testid': testId ?? `ssl-textarea-${name}` } as HTMLInputElement['dataset']
+        }}
         onChange={(e): void => onChange(e.target.value)}
         sx={{
           height: 'auto',

@@ -1,17 +1,9 @@
 import { Box, styled } from '@mui/material';
-import type { JSX, ReactNode } from 'react';
+import type { JSX } from 'react';
 import { useState } from 'react';
 
 import { ConnectionFormTabStyled, ConnectionFormTabsRootStyled } from './AddConnection.styled';
-
-export type ConnectionFormTabId = 'general' | 'ssl';
-
-type ConnectionFormTabsProps = {
-  general: ReactNode;
-  ssl: ReactNode;
-  generalLabel: string;
-  sslLabel: string;
-};
+import type { ConnectionFormTabId, ConnectionFormTabsProps } from './types';
 
 export default function ConnectionFormTabs({
   general,
@@ -27,6 +19,7 @@ export default function ConnectionFormTabs({
         <ConnectionFormTabStyled
           role='tab'
           tabIndex={0}
+          data-testid='connection-tab-general'
           selected={tab === 'general'}
           isLast={false}
           aria-selected={tab === 'general'}
@@ -43,6 +36,7 @@ export default function ConnectionFormTabs({
         <ConnectionFormTabStyled
           role='tab'
           tabIndex={0}
+          data-testid='connection-tab-ssl'
           selected={tab === 'ssl'}
           isLast
           aria-selected={tab === 'ssl'}
@@ -60,7 +54,9 @@ export default function ConnectionFormTabs({
       <ConnectionFormTabPanelStyled sx={{ display: tab === 'general' ? 'flex' : 'none' }}>
         {general}
       </ConnectionFormTabPanelStyled>
-      <ConnectionFormTabPanelStyled sx={{ display: tab === 'ssl' ? 'flex' : 'none' }}>{ssl}</ConnectionFormTabPanelStyled>
+      <ConnectionFormTabPanelStyled sx={{ display: tab === 'ssl' ? 'flex' : 'none' }}>
+        {ssl}
+      </ConnectionFormTabPanelStyled>
     </Box>
   );
 }

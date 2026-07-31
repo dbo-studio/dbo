@@ -9,6 +9,7 @@ import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
 import Histories from '../../common/Histories/Histories';
 import SavedQueries from '../../common/SavedQueries/SavedQueries';
 import { ExplorerContainerStyled } from './Container.styled';
+import type { ExplorerContainerProps } from './types';
 
 const tabs = [
   {
@@ -30,11 +31,6 @@ const sectionTabs = [
   { id: 1, label: locales.queries },
   { id: 2, label: locales.history }
 ] as const;
-
-type ExplorerContainerProps = {
-  overlay?: boolean;
-  fullPage?: boolean;
-};
 
 export default React.memo(function ExplorerContainer({
   overlay = false,

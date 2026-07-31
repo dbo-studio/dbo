@@ -1,11 +1,7 @@
 import locales from '@/locales';
 import { Button, Stack, Typography } from '@mui/material';
+import type { ChatErrorMessageProps } from '../../types';
 import { ChatErrorMessageStyled } from './ChatErrorMessage.styled';
-
-type ChatErrorMessageProps = {
-  message: string;
-  onRetry: () => void;
-};
 
 export default function ChatErrorMessage({ message, onRetry }: ChatErrorMessageProps) {
   return (

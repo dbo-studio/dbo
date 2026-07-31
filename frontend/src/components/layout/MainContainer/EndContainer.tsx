@@ -8,6 +8,7 @@ import { useSettingStore } from '@/store/settingStore/setting.store';
 import { type JSX, useMemo } from 'react';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
 import { EndContainerStyled } from './Container.styled';
+import type { EndContainerProps } from './types';
 
 const tabs = [
   {
@@ -24,11 +25,6 @@ const sectionTabs = [
   { id: 0, label: locales.assistant },
   { id: 1, label: locales.fields }
 ] as const;
-
-type EndContainerProps = {
-  overlay?: boolean;
-  fullPage?: boolean;
-};
 
 export default function EndContainer({ overlay = false, fullPage = false }: EndContainerProps): JSX.Element {
   const windowSize = useWindowSize();

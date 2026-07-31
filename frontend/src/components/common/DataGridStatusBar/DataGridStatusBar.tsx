@@ -4,10 +4,7 @@ import StatusBarActions from '@/routes/Data/StatusBar/StatusBarActions/StatusBar
 import StatusBarPagination from '@/routes/Data/StatusBar/StatusBarPagination/StatusBarPagination';
 import { Stack } from '@mui/material';
 import type { JSX } from 'react';
-
-type DataGridStatusBarProps = {
-  showPagination?: boolean;
-};
+import type { DataGridStatusBarProps } from './types';
 
 export default function DataGridStatusBar({ showPagination = false }: DataGridStatusBarProps): JSX.Element {
   const { isMobile } = useLayoutMode();

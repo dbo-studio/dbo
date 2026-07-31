@@ -18,7 +18,9 @@ export default function SelectInput({
   style,
   formatOptionLabel,
   onMenuOpen,
-  menuPlacement = 'auto'
+  menuPlacement = 'auto',
+  testId,
+  classNamePrefix
 }: SelectInputProps): JSX.Element {
   const theme = useTheme();
 
@@ -33,6 +35,7 @@ export default function SelectInput({
 
   return (
     <Box
+      data-testid={testId}
       style={style}
       sx={{
         display: 'flex',
@@ -55,6 +58,7 @@ export default function SelectInput({
         onChange={onChange}
         onMenuOpen={onMenuOpen}
         formatOptionLabel={formatOptionLabel}
+        classNamePrefix={classNamePrefix}
         styles={SelectInputStyles(theme, error, size)}
         menuPortalTarget={document.body}
       />

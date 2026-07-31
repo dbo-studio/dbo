@@ -1,34 +1,6 @@
-import { Box, type BoxProps, type SxProps, type Theme } from '@mui/material';
-import {
-  createContext,
-  type CSSProperties,
-  type JSX,
-  type ReactNode,
-  use,
-  useEffect,
-  useMemo,
-  useRef,
-  useState
-} from 'react';
-
-type Breakpoint = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-type ResponsiveValue<T> = T | Partial<Record<Breakpoint, T>>;
-
-type GridProps = BoxProps & {
-  children: ReactNode;
-  breakpointValues?: Partial<Record<Exclude<Breakpoint, 'xs'>, number>>;
-  columns?: ResponsiveValue<number>;
-  templateColumns?: ResponsiveValue<string>;
-  autoRows?: ResponsiveValue<string>;
-  autoFlow?: ResponsiveValue<CSSProperties['gridAutoFlow']>;
-};
-
-type GridItemProps = BoxProps & {
-  children: ReactNode;
-  span?: ResponsiveValue<number | 'auto' | 'full'>;
-  column?: ResponsiveValue<string>;
-  row?: ResponsiveValue<string>;
-};
+import { Box, type SxProps, type Theme } from '@mui/material';
+import { createContext, type JSX, use, useEffect, useMemo, useRef, useState } from 'react';
+import type { Breakpoint, GridItemProps, GridProps, ResponsiveValue } from './types';
 
 const DEFAULT_BREAKPOINTS: Record<Breakpoint, number> = {
   xs: 0,

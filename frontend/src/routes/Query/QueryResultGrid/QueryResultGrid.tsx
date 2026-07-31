@@ -2,14 +2,8 @@ import DataGrid from '@/components/common/DataGrid/DataGrid';
 import DataGridStatusBar from '@/components/common/DataGridStatusBar/DataGridStatusBar';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { Box } from '@mui/material';
-import type { ColumnType, RowType } from '@/types';
 import type { JSX } from 'react';
-
-type QueryResultGridProps = {
-  loading: boolean;
-  rows: RowType[];
-  columns: ColumnType[];
-};
+import type { QueryResultGridProps } from '../types';
 
 export default function QueryResultGrid({ loading, rows, columns }: QueryResultGridProps): JSX.Element {
   const gridEditable = useDataStore((state) => state.gridEditable);

@@ -24,12 +24,14 @@ export type ConnectionSSLFormValues = {
   sslClientKey: string;
 };
 
-export function sslFormDefaults(ssl?: {
-  mode?: string;
-  caCert?: string;
-  clientCert?: string;
-  clientKey?: string;
-} | null): ConnectionSSLFormValues {
+export function sslFormDefaults(
+  ssl?: {
+    mode?: string;
+    caCert?: string;
+    clientCert?: string;
+    clientKey?: string;
+  } | null
+): ConnectionSSLFormValues {
   return {
     sslMode: ssl?.mode || DEFAULT_SSL_MODE,
     sslCaCert: ssl?.caCert ?? '',

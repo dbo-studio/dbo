@@ -16,3 +16,7 @@ export type ConnectionContextMenuProps = {
   contextMenu: ContextMenuType;
   onClose: () => void;
 };
+
+export type ConnectionsProps = {
+  expanded?: boolean;
+};

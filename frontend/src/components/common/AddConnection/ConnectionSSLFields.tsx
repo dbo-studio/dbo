@@ -6,18 +6,7 @@ import type { JSX } from 'react';
 
 import SSLCertField from './SSLCertField';
 import { MYSQL_SSL_MODES, POSTGRES_SSL_MODES, showSSLCertFields } from './ssl';
-
-type ConnectionSSLFieldsProps = {
-  engine: 'postgresql' | 'mysql';
-  mode: string;
-  caCert: string;
-  clientCert: string;
-  clientKey: string;
-  onModeChange: (mode: string) => void;
-  onCaCertChange: (value: string) => void;
-  onClientCertChange: (value: string) => void;
-  onClientKeyChange: (value: string) => void;
-};
+import type { ConnectionSSLFieldsProps } from './types';
 
 export default function ConnectionSSLFields({
   engine,
@@ -47,11 +36,13 @@ export default function ConnectionSSLFields({
   const helpText = helpMap[mode] ?? locales.ssl_mode_help_prefer;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+    <Box data-testid='connection-ssl-fields' sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <Typography variant='caption' color='textText'>
         {locales.ssl_mode}
       </Typography>
       <SelectInput
+        testId='ssl-mode-select'
+        classNamePrefix='ssl-mode'
         value={mode}
         options={options}
         onChange={(option): void => {
@@ -61,7 +52,7 @@ export default function ConnectionSSLFields({
           }
         }}
       />
-      <Typography variant='caption' color='textSecondary' sx={{ mb: 1 }}>
+      <Typography variant='caption' color='textSecondary' sx={{ mb: 1 }} data-testid='ssl-mode-help'>
         {helpText}
       </Typography>
 
@@ -69,26 +60,26 @@ export default function ConnectionSSLFields({
         <>
           <SSLCertField
             name='sslCaCert'
+            testId='ssl-textarea-sslCaCert'
             label={locales.ssl_ca_cert}
             value={caCert}
             placeholder={locales.ssl_cert_placeholder}
-            hint={locales.ssl_cert_hint}
             onChange={onCaCertChange}
           />
           <SSLCertField
             name='sslClientCert'
+            testId='ssl-textarea-sslClientCert'
             label={locales.ssl_client_cert}
             value={clientCert}
             placeholder={locales.ssl_cert_placeholder}
-            hint={locales.ssl_cert_hint}
             onChange={onClientCertChange}
           />
           <SSLCertField
             name='sslClientKey'
+            testId='ssl-textarea-sslClientKey'
             label={locales.ssl_client_key}
             value={clientKey}
             placeholder={locales.ssl_key_placeholder}
-            hint={locales.ssl_key_hint}
             onChange={onClientKeyChange}
           />
         </>
