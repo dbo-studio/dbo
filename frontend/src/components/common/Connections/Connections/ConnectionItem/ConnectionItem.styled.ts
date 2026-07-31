@@ -9,7 +9,9 @@ export const ConnectionItemStyled = styled(Box)<ConnectionItemStyledProps>(({ th
   borderRight: `1px solid ${theme.palette.divider}`,
   padding: theme.spacing(2),
   maxHeight: '100px',
+  width: '100%',
   minWidth: 0,
+  maxWidth: '100%',
   overflow: 'hidden',
   display: 'flex',
   flexDirection: 'column',
@@ -27,6 +29,7 @@ export const ConnectionItemNameStyled = styled(Typography)<TypographyProps>(() =
   display: 'block',
   width: '100%',
   maxWidth: '100%',
+  minWidth: 0,
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap'

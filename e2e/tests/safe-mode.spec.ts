@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { getDbConfig } from "../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import { withConnectionCleanup } from "../helpers/safeCleanup";
-import { ConnectionPage, SafeModePage, SqlEditorPage } from "../pages";
+import { ConnectionPage, SafeModePage, SqlEditorPage, DataGridPage } from "../pages";
 
 /**
  * Safe Mode Scenario
@@ -168,6 +168,95 @@ test.describe("Safe Mode", () => {
             );
           } catch (err) {
             console.warn("[e2e] safe-mode password cleanup failed:", err);
+          }
+        });
+      }
+    });
+  });
+
+  test("Alert Mode 2 confirms grid Save from query results", async ({
+    page,
+  }, testInfo) => {
+    const connectionPage = new ConnectionPage(page);
+    const sqlEditor = new SqlEditorPage(page);
+    const dataGrid = new DataGridPage(page);
+    const safeMode = new SafeModePage(page);
+
+    const suffix = uniqueTestSuffix(testInfo);
+    const connectionName = `${testPrefix}-grid-${suffix}`;
+    const tableName = `e2e_safe_grid_${suffix}`;
+    const config = getDbConfig("postgresql", connectionName);
+
+    await withConnectionCleanup(page, connectionName, async () => {
+      try {
+        await connectionPage.goto();
+        await connectionPage.waitForReady();
+
+        await test.step("Setup connection, table, and Alert Mode 2", async () => {
+          await connectionPage.setupConnection(config);
+          await sqlEditor.open();
+          await sqlEditor.selectContext("default", "public");
+          await sqlEditor.typeAndRun(
+            `
+CREATE TABLE ${tableName} (id SERIAL PRIMARY KEY, name TEXT);
+INSERT INTO ${tableName} (name) VALUES ('before');
+            `.trim(),
+          );
+          await safeMode.selectMode("alert_write");
+        });
+
+        await test.step("SELECT loads editable grid without confirm", async () => {
+          await safeMode.runWithoutGate(
+            `SELECT * FROM ${tableName} ORDER BY id;`,
+          );
+          await dataGrid.waitForData("before");
+          await dataGrid.expectEditActionsVisible(true);
+        });
+
+        await test.step("Cancel grid Save leaves data unchanged", async () => {
+          await dataGrid.editCell("before", "cancelled");
+          await dataGrid.clickSave();
+          await safeMode.cancelConfirm();
+          await dataGrid.expectCellVisible("cancelled");
+
+          await safeMode.runWithoutGate(
+            `SELECT * FROM ${tableName} ORDER BY id;`,
+          );
+          await dataGrid.waitForData("before");
+          await dataGrid.expectCellHidden("cancelled");
+        });
+
+        await test.step("Confirm grid Save applies update", async () => {
+          await dataGrid.editCell("before", "after");
+          await dataGrid.clickSave();
+          await expect(safeMode.confirmTitle).toBeVisible({ timeout: 15000 });
+
+          const updatePromise = page.waitForResponse(
+            (response) =>
+              response.url().includes("/query/update") &&
+              response.status() === 200,
+            { timeout: 15000 },
+          );
+          await safeMode.runAnywayButton.click();
+          await updatePromise;
+          await expect(safeMode.confirmTitle).toBeHidden({ timeout: 10000 });
+
+          await safeMode.runWithoutGate(
+            `SELECT * FROM ${tableName} ORDER BY id;`,
+          );
+          await dataGrid.waitForData("after");
+          await dataGrid.expectCellHidden("before");
+        });
+      } finally {
+        await test.step("Cleanup table", async () => {
+          try {
+            await safeMode.selectSilentWithPassword(config.password);
+            await sqlEditor.open();
+            await safeMode.runWithoutGate(
+              `DROP TABLE IF EXISTS ${tableName}`,
+            );
+          } catch (err) {
+            console.warn("[e2e] safe-mode grid cleanup failed:", err);
           }
         });
       }

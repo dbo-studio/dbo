@@ -189,7 +189,10 @@ export const createDataQuerySlice: StateCreator<
         get().toggleDataFetching(false);
       }
     },
-    runRawQuery: async (query?: string, abortController?: AbortController): Promise<RunQueryResponseType | undefined> => {
+    runRawQuery: async (
+      query?: string,
+      abortController?: AbortController
+    ): Promise<RunQueryResponseType | undefined> => {
       const selectedTabId = useTabStore.getState().selectedTabId;
       const selectedTab = useTabStore.getState().selectedTab<EditorTabType>();
       const currentConnectionId = useConnectionStore.getState().currentConnectionId;

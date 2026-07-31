@@ -217,8 +217,14 @@ test.describe("Query CRUD Operations", () => {
   ORDER BY p.price DESC;
           `.trim(),
         );
-        await dataGrid.waitForData();
+        await dataGrid.waitForData("Laptop Pro");
         await dataGrid.expectCellNotEditable("Electronics");
+
+        // Partial-column JOIN: edit chrome is visible, but Add row is a no-op.
+        await dataGrid.expectEditActionsVisible(true);
+        await dataGrid.expectDataRowCount(3);
+        await dataGrid.addRow();
+        await dataGrid.expectDataRowCount(3);
       });
 
       await test.step("Cleanup tables", async () => {

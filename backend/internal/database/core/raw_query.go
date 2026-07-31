@@ -21,7 +21,7 @@ func (r *BaseRepository) RunRawQuery(ctx context.Context, req *dto.RawQueryReque
 
 	if err != nil {
 		if isContextCancelErr(ctx, err) {
-			return nil, apperror.QueryCancelled()
+			return nil, apperror.QueryCanceled()
 		}
 		return r.CommandResponseBuilder(result, endTime, err), nil
 	}

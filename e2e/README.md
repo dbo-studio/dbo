@@ -54,8 +54,12 @@ HTML report: `e2e/playwright-report/` after a run.
 | ------------------------ | --------------------------------------------- | ------------------------------------------------------- |
 | Harness smoke            | `harness-smoke.spec.ts`                       | ephemeral API + FE reachable (no sample DB)             |
 | Connections              | `connections.spec.ts`                         | create / edit / refresh / context menu / schema via SQL |
-| Safe Mode                | `safe-mode.spec.ts`                           | menu modes, confirm + password SQL gates                |
+| Safe Mode                | `safe-mode.spec.ts`                           | menu modes, SQL gates + grid Save confirm               |
 | Query CRUD               | `query-crud.spec.ts`                          | SQL create/insert/update/select + multi-table JOIN      |
+| Query status bar         | `query-statusbar.spec.ts`                     | PG: discard/add/remove/refresh + page next/limit + gate |
+| Query edit MySQL         | `query-edit-mysql.spec.ts`                    | smoke edit/discard/remove on result grid                |
+| Query edit SQLite        | `query-edit-sqlite.spec.ts`                   | smoke edit/discard/remove on result grid                |
+| Query guards             | `query-guards.spec.ts`                        | cancel Stop + raw SELECT page size / user LIMIT         |
 | Saved / history          | `saved-history.spec.ts`                       | history, save, run, copy                                |
 | Settings / theme         | `settings-theme.spec.ts`                      | theme persistence, panels, sidebar                      |
 | AI chat smoke            | `ai-chat-stream.spec.ts`                      | open assistant panel                                    |

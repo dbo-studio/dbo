@@ -23,8 +23,7 @@ export default function StatusBarPagination(): JSX.Element {
   const isQueryMode = selectedTab?.mode === TabMode.Query;
 
   const pagination = (selectedTab as DataTabType | EditorTabType | undefined)?.pagination ?? { page: 1, limit: 100 };
-  const nextDisabled =
-    isDataFetching || (isQueryMode && (rows?.length ?? 0) < pagination.limit);
+  const nextDisabled = isDataFetching || (isQueryMode && (rows?.length ?? 0) < pagination.limit);
 
   const handlePagination = (mode: 'prev' | 'next'): void => {
     if (!selectedTab || isDataFetching) {

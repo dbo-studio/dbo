@@ -23,6 +23,14 @@ export class SqlEditorPage extends BasePage {
     this.minifyButton = page.getByRole("button", { name: /minify/i });
   }
 
+  get stopButton(): Locator {
+    return this.page.getByTestId("stop-query");
+  }
+
+  get runQueryButton(): Locator {
+    return this.page.getByTestId("run-query");
+  }
+
   async open(): Promise<void> {
     if (await this.editor.isVisible().catch(() => false)) {
       return;
@@ -143,10 +151,28 @@ export class SqlEditorPage extends BasePage {
     await responsePromise;
   }
 
-  /** Click Run without waiting for a successful response (Safe Mode gates). */
+  /** Click Run without waiting for a successful response (Safe Mode gates / cancel). */
   async clickRun(): Promise<void> {
-    await expect(this.runButton).toBeEnabled({ timeout: 10000 });
-    await this.runButton.click();
+    const run = this.runQueryButton.or(this.runButton);
+    await expect(run).toBeVisible({ timeout: 10000 });
+    await run.click();
+  }
+
+  async stopQuery(): Promise<void> {
+    await expect(this.stopButton).toBeVisible({ timeout: 10000 });
+    await this.stopButton.click();
+  }
+
+  async expectQueryCancelled(): Promise<void> {
+    await expect(this.page.getByText(/query cancelled/i)).toBeVisible({
+      timeout: 10000,
+    });
+  }
+
+  async expectPaginationVisible(): Promise<void> {
+    await expect(
+      this.page.getByRole("button", { name: /next page|previous page/i }).first(),
+    ).toBeVisible({ timeout: 10000 });
   }
 
   async typeAndRun(sql: string): Promise<void> {

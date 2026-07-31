@@ -19,8 +19,7 @@ export default function PaginationSetting(): JSX.Element {
   const runRawQuery = useDataStore((state) => state.runRawQuery);
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
-  const currentLimit =
-    (selectedTab as DataTabType | EditorTabType | undefined)?.pagination?.limit ?? 100;
+  const currentLimit = (selectedTab as DataTabType | EditorTabType | undefined)?.pagination?.limit ?? 100;
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [limit, setLimit] = useState<number>(currentLimit);
