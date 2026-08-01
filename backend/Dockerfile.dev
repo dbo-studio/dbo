@@ -15,6 +15,6 @@ RUN go install github.com/air-verse/air@latest
 
 RUN go mod download
 
-EXPOSE ${APP_ENV}
+EXPOSE $APP_PORT
 
 CMD ["air", "-c", ".air.toml"]
