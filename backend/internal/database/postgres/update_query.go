@@ -74,7 +74,7 @@ func (r *PostgresRepository) generateUpdateQueries(ctx context.Context, req *dto
 
 	var queries []string
 
-	keys, err := r.primaryKeys(ctx, &node.Database, &node.Table, true)
+	keys, err := r.primaryKeys(ctx, &node.Database, &node.Table, &node.Schema, true)
 	if err != nil {
 		return nil
 	}
@@ -116,7 +116,7 @@ func (r *PostgresRepository) generateDeleteQueries(ctx context.Context, req *dto
 
 	var queries []string
 
-	keys, err := r.primaryKeys(ctx, &node.Database, &node.Table, true)
+	keys, err := r.primaryKeys(ctx, &node.Database, &node.Table, &node.Schema, true)
 	if err != nil {
 		return nil
 	}

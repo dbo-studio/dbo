@@ -90,21 +90,17 @@ func (r *PostgresRepository) getTableGeneralFields(ctx context.Context, node con
 	result := map[string]any{}
 
 	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
-		tables, err := r.tables(ctx, &node.Database, &node.Schema, true)
+		table, err := r.tableByName(ctx, &node.Database, &node.Schema, node.Table)
 		if err != nil {
 			return nil, err
 		}
-
-		for _, table := range tables {
-			if table.Name == node.Table {
-				result = map[string]any{
-					"relname":     table.Name,
-					"description": table.Description,
-					"persistence": table.Persistence,
-					"tablespace":  table.TableSpace,
-					"rolname":     table.Owner,
-				}
-				break
+		if table != nil {
+			result = map[string]any{
+				"relname":     table.Name,
+				"description": table.Description,
+				"persistence": table.Persistence,
+				"tablespace":  table.TableSpace,
+				"rolname":     table.Owner,
 			}
 		}
 	}

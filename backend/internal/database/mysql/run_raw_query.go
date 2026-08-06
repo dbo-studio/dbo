@@ -3,7 +3,6 @@ package databaseMysql
 import (
 	"context"
 	"fmt"
-	"slices"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
@@ -28,24 +27,19 @@ func (r *MySQLRepository) RunRawQuery(ctx context.Context, req *dto.RawQueryRequ
 func (r *mysqlRawQueryResolver) IsBaseTable(ctx context.Context, database, schema *string, table string) (bool, error) {
 	_ = schema
 
-	// Skip cache so tables created earlier in this session are visible.
-	tables, err := r.repo.tables(ctx, database, false)
+	dbName := lo.FromPtr(database)
+	var tableType string
+	err := r.repo.base.DB().WithContext(ctx).
+		Table("information_schema.TABLES").
+		Select("TABLE_TYPE").
+		Where("TABLE_SCHEMA = ? AND TABLE_NAME = ?", dbName, table).
+		Limit(1).
+		Scan(&tableType).Error
 	if err != nil {
 		return false, err
 	}
 
-	tableNames := lo.Map(tables, func(t Table, _ int) string { return t.Name })
-	if !slices.Contains(tableNames, table) {
-		return false, nil
-	}
-
-	views, err := r.repo.views(ctx, database, false)
-	if err != nil {
-		return false, err
-	}
-
-	viewNames := lo.Map(views, func(v View, _ int) string { return v.Name })
-	return !slices.Contains(viewNames, table), nil
+	return tableType == "BASE TABLE", nil
 }
 
 func (r *mysqlRawQueryResolver) LoadTableColumns(ctx context.Context, database, _ *string, table string) ([]dto.Column, error) {

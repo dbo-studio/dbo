@@ -35,7 +35,7 @@ type connKey struct {
 }
 
 type HistoryWriter interface {
-	Create(ctx context.Context, connectionID uint, query string) error
+	Create(ctx context.Context, connectionID uint, query string, isSystem bool) error
 }
 
 type ConnectionManager struct {
@@ -295,7 +295,7 @@ func RegisterHistoryHooks(db *gorm.DB, historyRepo HistoryWriter, connectionID u
 		}
 
 		//nolint
-		err := historyRepo.Create(db.Statement.Context, connectionID, db.Dialector.Explain(db.Statement.SQL.String(), db.Statement.Vars...))
+		err := historyRepo.Create(db.Statement.Context, connectionID, db.Dialector.Explain(db.Statement.SQL.String(), db.Statement.Vars...), true)
 		if err != nil {
 			db.Logger.Error(db.Statement.Context, "failed to save query history: %v", err)
 		}

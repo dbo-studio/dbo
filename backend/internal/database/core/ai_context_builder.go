@@ -108,6 +108,7 @@ func BuildAICompleteContext(ctx context.Context, opts databaseContract.AIContext
 func buildSections(ctx context.Context, names []string, fetchColumns func(ctx context.Context, name string) ([]databaseContract.AIContextColumn, error)) ([]string, error) {
 	sections := make([]string, len(names))
 	g, groupCtx := errgroup.WithContext(ctx)
+	g.SetLimit(6)
 
 	for idx, name := range names {
 		idx := idx
@@ -160,6 +161,7 @@ func buildSections(ctx context.Context, names []string, fetchColumns func(ctx co
 func buildViewSections(ctx context.Context, names []string, fetchColumns func(ctx context.Context, name string) ([]databaseContract.AIContextColumn, error)) ([]string, error) {
 	sections := make([]string, len(names))
 	g, groupCtx := errgroup.WithContext(ctx)
+	g.SetLimit(6)
 
 	for idx, name := range names {
 		idx := idx

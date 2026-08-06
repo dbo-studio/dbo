@@ -78,7 +78,7 @@ func (i IQueryServiceImpl) Raw(ctx context.Context, req *dto.RawQueryRequest) (*
 	}
 
 	originalQuery := req.Query
-	err = i.historyRepo.Create(ctx, connection.ID, originalQuery)
+	err = i.historyRepo.Create(ctx, connection.ID, originalQuery, false)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}

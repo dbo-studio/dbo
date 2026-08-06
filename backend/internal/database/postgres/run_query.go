@@ -101,7 +101,7 @@ func (r *PostgresRepository) runQueryGenerator(ctx context.Context, req *dto.Run
 		}
 		sb.WriteString(strings.Join(sortClauses, ", "))
 	} else {
-		keys, err := r.primaryKeys(ctx, &node.Database, &node.Table, true)
+		keys, err := r.primaryKeys(ctx, &node.Database, &node.Table, &node.Schema, true)
 		if err == nil && len(keys) > 0 {
 			sb.WriteString(" ORDER BY ")
 			sb.WriteString(strings.Join(lo.Map(keys, func(key PrimaryKey, _ int) string {

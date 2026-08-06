@@ -9,6 +9,8 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+const autocompleteConcurrency = 6
+
 func (r *SQLiteRepository) AutoComplete(ctx context.Context, _ *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
 	g, _ := errgroup.WithContext(ctx)
 
@@ -40,17 +42,18 @@ func (r *SQLiteRepository) AutoComplete(ctx context.Context, _ *dto.AutoComplete
 	columns := make(map[string][]string)
 
 	if len(tables) > 0 {
-		gColumns, _ := errgroup.WithContext(ctx)
+		gColumns, gColumnsCtx := errgroup.WithContext(ctx)
+		gColumns.SetLimit(autocompleteConcurrency)
 		var columnMap sync.Map
 
 		for _, table := range tables {
 			tableName := table.Name
 			gColumns.Go(func() error {
-				columnResult, err := r.getColumns(ctx, tableName, nil, false)
+				columnResult, err := r.columnsLite(gColumnsCtx, tableName)
 				if err != nil {
 					return err
 				}
-				columnMap.Store(tableName, lo.Map(columnResult, func(x Column, _ int) string { return x.ColumnName }))
+				columnMap.Store(tableName, columnResult)
 				return nil
 			})
 		}

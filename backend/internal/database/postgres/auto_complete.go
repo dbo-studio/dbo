@@ -10,6 +10,8 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+const autocompleteConcurrency = 6
+
 func (r *PostgresRepository) AutoComplete(ctx context.Context, data *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
 	g, gctx := errgroup.WithContext(ctx)
 
@@ -35,9 +37,9 @@ func (r *PostgresRepository) AutoComplete(ctx context.Context, data *dto.AutoCom
 	g.Go(func() error {
 		var err error
 		if data.Database != nil && data.Schema != nil {
-			views, err = r.views(gctx, data.Database, data.Schema, true)
+			views, err = r.viewsLite(gctx, data.Database, data.Schema, true)
 		} else {
-			views, err = r.views(gctx, nil, nil, true)
+			views, err = r.viewsLite(gctx, nil, nil, true)
 		}
 		return err
 	})
@@ -65,19 +67,50 @@ func (r *PostgresRepository) AutoComplete(ctx context.Context, data *dto.AutoCom
 		return nil, err
 	}
 
-	columns := make(map[string][]string)
+	columns, err := r.autoCompleteColumns(ctx, data, tables)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.AutoCompleteResponse{
+		Databases: lo.Map(databases, func(x Database, _ int) string { return x.Name }),
+		Views:     lo.Map(views, func(x View, _ int) string { return x.Name }),
+		Schemas:   lo.Map(schemas, func(x Schema, _ int) string { return x.Name }),
+		Tables:    lo.Map(tables, func(x Table, _ int) string { return x.Name }),
+		Columns:   columns,
+	}, nil
+}
+
+func (r *PostgresRepository) autoCompleteColumns(ctx context.Context, data *dto.AutoCompleteRequest, tables []Table) (map[string][]string, error) {
+	if len(tables) == 0 {
+		return map[string][]string{}, nil
+	}
+
+	batched, err := r.columnsLiteBatch(ctx, data.Database, data.Schema)
+	if err == nil && len(batched) > 0 {
+		out := make(map[string][]string, len(tables))
+		for _, table := range tables {
+			if cols, ok := batched[table.Name]; ok {
+				out[table.Name] = cols
+			} else {
+				out[table.Name] = []string{}
+			}
+		}
+		return out, nil
+	}
 
 	gColumns, gColumnsCtx := errgroup.WithContext(ctx)
+	gColumns.SetLimit(autocompleteConcurrency)
 	var columnMap sync.Map
 
 	for _, table := range tables {
 		tableName := table.Name
 		gColumns.Go(func() error {
-			columnResult, err := r.columns(gColumnsCtx, data.Database, &tableName, data.Schema, nil, false, true)
+			columnResult, err := r.columnsLite(gColumnsCtx, data.Database, &tableName, data.Schema, true)
 			if err != nil {
 				return err
 			}
-			columnMap.Store(tableName, lo.Map(columnResult, func(x Column, _ int) string { return x.ColumnName }))
+			columnMap.Store(tableName, columnResult)
 			return nil
 		})
 	}
@@ -86,6 +119,7 @@ func (r *PostgresRepository) AutoComplete(ctx context.Context, data *dto.AutoCom
 		return nil, err
 	}
 
+	columns := make(map[string][]string)
 	columnMap.Range(func(key, value any) bool {
 		tableName, ok := key.(string)
 		if !ok {
@@ -97,11 +131,5 @@ func (r *PostgresRepository) AutoComplete(ctx context.Context, data *dto.AutoCom
 		return true
 	})
 
-	return &dto.AutoCompleteResponse{
-		Databases: lo.Map(databases, func(x Database, _ int) string { return x.Name }),
-		Views:     lo.Map(views, func(x View, _ int) string { return x.Name }),
-		Schemas:   lo.Map(schemas, func(x Schema, _ int) string { return x.Name }),
-		Tables:    lo.Map(tables, func(x Table, _ int) string { return x.Name }),
-		Columns:   columns,
-	}, nil
+	return columns, nil
 }

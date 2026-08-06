@@ -19,6 +19,7 @@ func (r *SQLiteRepository) getAllTableList(ctx context.Context) ([]Table, error)
 	err := r.base.DB().WithContext(ctx).Table("sqlite_master").
 		Select("tbl_name").
 		Where("type = 'table'").
+		Where("name NOT LIKE 'sqlite_%'").
 		Order("tbl_name").
 		Scan(&tables).Error
 
@@ -76,6 +77,16 @@ func (r *SQLiteRepository) getColumns(ctx context.Context, table string, columnN
 	}
 
 	return columns, err
+}
+
+// columnsLite returns column names only from PRAGMA table_info.
+func (r *SQLiteRepository) columnsLite(ctx context.Context, table string) ([]string, error) {
+	columns, err := r.getColumns(ctx, table, nil, false)
+	if err != nil {
+		return nil, err
+	}
+
+	return lo.Map(columns, func(c Column, _ int) string { return c.ColumnName }), nil
 }
 
 func (r *SQLiteRepository) getPrimaryKeys(ctx context.Context, table Table) ([]string, error) {

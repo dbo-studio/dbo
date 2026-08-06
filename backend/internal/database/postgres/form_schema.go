@@ -232,16 +232,16 @@ func (r *PostgresRepository) tablesListOptions(ctx context.Context, node contrac
 }
 
 func (r *PostgresRepository) tableColumnsOptions(ctx context.Context, node contract.DBNode) []contract.FormFieldOption {
-	columns, err := r.columns(ctx, &node.Database, &node.Table, &node.Schema, []string{}, true, true)
+	names, err := r.columnsLite(ctx, &node.Database, &node.Table, &node.Schema, true)
 	if err != nil {
 		return []contract.FormFieldOption{}
 	}
 
-	columnsOptions := make([]contract.FormFieldOption, len(columns))
-	for i, column := range columns {
+	columnsOptions := make([]contract.FormFieldOption, len(names))
+	for i, name := range names {
 		columnsOptions[i] = contract.FormFieldOption{
-			Value: column.ColumnName,
-			Label: column.ColumnName,
+			Value: name,
+			Label: name,
 		}
 	}
 

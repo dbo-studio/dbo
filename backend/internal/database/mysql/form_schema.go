@@ -183,16 +183,16 @@ func (r *MySQLRepository) tablesListOptions(ctx context.Context, database string
 }
 
 func (r *MySQLRepository) tableColumnsOptions(ctx context.Context, database, table string) []contract.FormFieldOption {
-	columns, err := r.columns(ctx, &database, &table, []string{}, false, true)
+	names, err := r.columnsLite(ctx, &database, &table, true)
 	if err != nil {
 		return []contract.FormFieldOption{}
 	}
 
-	options := make([]contract.FormFieldOption, len(columns))
-	for i, column := range columns {
+	options := make([]contract.FormFieldOption, len(names))
+	for i, name := range names {
 		options[i] = contract.FormFieldOption{
-			Value: column.ColumnName,
-			Label: column.ColumnName,
+			Value: name,
+			Label: name,
 		}
 	}
 	return options
