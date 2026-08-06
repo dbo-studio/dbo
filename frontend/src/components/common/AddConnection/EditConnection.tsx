@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import Mysql from './Mysql/Mysql';
 import PostgreSQL from './Postgresql/Postgresql';
 import SQLite from './SQLite/SQLite';
+import { formatPingFailureMessage, formatPingSuccessMessage } from './pingDiagnostics';
 
 export default function EditConnection(): JSX.Element {
   const queryClient = useQueryClient();
@@ -45,14 +46,19 @@ export default function EditConnection(): JSX.Element {
     }
 
     try {
-      await pingConnectionMutation({
+      const diagnostics = await pingConnectionMutation({
         id: activeConnection?.id,
         type: data.type,
         options: data.options
       });
-      toast.success(locales.connection_test_success);
+      toast.success(locales.connection_test_success, {
+        description: formatPingSuccessMessage(diagnostics)
+      });
     } catch (error) {
-      console.debug('🚀 ~ handlePingConnection ~ error:', error);
+      const message = formatPingFailureMessage(error);
+      if (message) {
+        toast.error(message);
+      }
     }
   };
 

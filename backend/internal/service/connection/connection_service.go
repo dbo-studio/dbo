@@ -21,7 +21,7 @@ type IConnectionService interface {
 	Update(ctx context.Context, connectionID int32, req *dto.UpdateConnectionRequest) (*dto.UpdateConnectionResponse, error)
 	Delete(ctx context.Context, connectionID int32) (*dto.ConnectionsResponse, error)
 	Close(ctx context.Context, connectionID int32) error
-	Ping(ctx context.Context, req *dto.PingConnectionRequest) error
+	Ping(ctx context.Context, req *dto.PingConnectionRequest) (*dto.PingConnectionResponse, error)
 	SetCredentials(ctx context.Context, connectionID int32, req *dto.ConnectionCredentialsRequest) error
 	UnlockSafeMode(ctx context.Context, connectionID int32, req *dto.SafeModeUnlockRequest) (*dto.SafeModeUnlockResponse, error)
 	LockSafeMode(ctx context.Context, connectionID int32) error

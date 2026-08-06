@@ -5,7 +5,7 @@ import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { DataTabType, EditorTabType, TabType } from '@/types';
+import type { DataTabType, EditorTabType } from '@/types';
 import { IconButton, Tooltip } from '@mui/material';
 import type { JSX } from 'react';
 import PaginationSetting from './PaginationSetting/PaginationSetting';
@@ -36,9 +36,9 @@ export default function StatusBarPagination(): JSX.Element {
     };
 
     updateSelectedTab({
-      ...(selectedTab as TabType),
+      ...selectedTab,
       pagination: nextPagination
-    } as TabType);
+    });
 
     if (isQueryMode) {
       void runRawQuery();

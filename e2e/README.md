@@ -54,7 +54,7 @@ HTML report: `e2e/playwright-report/` after a run.
 | Feature                  | Spec                                          | Flow                                                    |
 | ------------------------ | --------------------------------------------- | ------------------------------------------------------- |
 | Harness smoke            | `harness-smoke.spec.ts`                       | ephemeral API + FE reachable (no sample DB)             |
-| Connections              | `connections.spec.ts`                         | create / edit / refresh / context menu / schema via SQL |
+| Connections              | `connections.spec.ts`                         | create / edit / refresh / context menu / schema via SQL / ping diagnostics |
 | Connection SSL           | `connection-ssl.spec.ts`                      | SSL tab UI + Require on sample-pgsql-ssl + bad CA fail  |
 | Safe Mode                | `safe-mode.spec.ts`                           | menu modes, SQL gates + grid Save confirm               |
 | Query CRUD               | `query-crud.spec.ts`                          | SQL create/insert/update/select + multi-table JOIN      |

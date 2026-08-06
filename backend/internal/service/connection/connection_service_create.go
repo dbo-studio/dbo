@@ -17,7 +17,7 @@ import (
 )
 
 func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConnectionRequest) error {
-	err := s.Ping(ctx, &dto.PingConnectionRequest{
+	_, err := s.Ping(ctx, &dto.PingConnectionRequest{
 		ID:      nil,
 		Type:    req.Type,
 		Options: req.Options,

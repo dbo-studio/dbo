@@ -3,6 +3,7 @@ import type { ConnectionType } from '@/types';
 import type {
   CreateConnectionRequestType,
   PingConnectionRequestType,
+  PingConnectionResponseType,
   SafeModeUnlockResponseType,
   SetConnectionCredentialsRequestType,
   UpdateConnectionRequestType
@@ -42,8 +43,8 @@ export const deleteConnection = async (id: string | number): Promise<void> => {
   await api.delete(endpoint.deleteConnection(id));
 };
 
-export const pingConnection = async (data: PingConnectionRequestType): Promise<void> => {
-  return api.post(endpoint.pingConnection(), data);
+export const pingConnection = async (data: PingConnectionRequestType): Promise<PingConnectionResponseType> => {
+  return (await api.post<{ data: PingConnectionResponseType }>(endpoint.pingConnection(), data)).data.data;
 };
 
 export const unlockSafeMode = async (id: string | number, ttlMinutes = 10): Promise<SafeModeUnlockResponseType> => {

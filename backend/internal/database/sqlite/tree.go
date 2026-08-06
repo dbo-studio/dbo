@@ -75,6 +75,9 @@ func buildContainer(ctx context.Context, r *SQLiteRepository, container contract
 			return nil, apperror.DriverError(err)
 		}
 		for _, table := range tables {
+			if isSQLiteSystemTable(table.Name) {
+				continue
+			}
 			containerNode.Children = append(containerNode.Children, contract.TreeNode{
 				ID:   table.Name,
 				Name: table.Name,

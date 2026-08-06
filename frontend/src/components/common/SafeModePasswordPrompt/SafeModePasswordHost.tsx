@@ -15,9 +15,7 @@ export default function SafeModePasswordHost(): JSX.Element {
       open={open}
       connectionId={connectionId ?? currentConnection?.id}
       onCancel={cancel}
-      onPassword={async (password): Promise<void> => {
-        submitPassword(password);
-      }}
+      onPassword={submitPassword}
     />
   );
 }

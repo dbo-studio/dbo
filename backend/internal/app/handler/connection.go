@@ -53,13 +53,13 @@ func (h ConnectionHandler) Ping(c fiber.Ctx) error {
 		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
 	}
 
-	err := h.connectionService.Ping(c, req)
+	data, err := h.connectionService.Ping(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder().Send(c)
+	return response.SuccessBuilder().WithData(data).Send(c)
 }
 
 func (h ConnectionHandler) Update(c fiber.Ctx) error {

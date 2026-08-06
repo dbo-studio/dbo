@@ -1,8 +1,24 @@
+import net from "node:net";
 import { expect, test } from "@playwright/test";
 import { getDbConfig } from "../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
+import { API_DB_TIMEOUT, apiRoute, pendingResponse } from "../helpers/network";
 import { withConnectionCleanup } from "../helpers/safeCleanup";
 import { ConnectionPage, SqlEditorPage } from "../pages";
+
+async function canReachHost(host: string, port: number, timeoutMs = 1500): Promise<boolean> {
+  return await new Promise((resolve) => {
+    const socket = net.connect({ host, port });
+    const done = (ok: boolean): void => {
+      socket.destroy();
+      resolve(ok);
+    };
+    socket.setTimeout(timeoutMs);
+    socket.on("connect", () => done(true));
+    socket.on("timeout", () => done(false));
+    socket.on("error", () => done(false));
+  });
+}
 
 /**
  * Connection Management Scenario
@@ -182,6 +198,100 @@ test.describe("Connection Management", () => {
       await test.step("Cleanup", async () => {
         await connectionPage.deleteConnection(connectionName);
       });
+    });
+  });
+
+  test("Ping success returns diagnostics payload", async ({ page }, testInfo) => {
+    const connectionPage = new ConnectionPage(page);
+    const connectionName = `${testPrefix}-diag-ok-${uniqueTestSuffix(testInfo)}`;
+    const config = getDbConfig("postgresql", connectionName);
+    const reachable = await canReachHost(config.host, Number(config.port));
+
+    test.skip(
+      !reachable,
+      `Sample Postgres not reachable at ${config.host}:${config.port}. Run: docker compose -f docker-compose.dev.yml up -d sample-pgsql`,
+    );
+
+    await connectionPage.goto();
+    await connectionPage.waitForReady();
+
+    await test.step("Open PostgreSQL form and fill connection details", async () => {
+      await connectionPage.openNewConnectionModal();
+      await connectionPage.selectConnectionType("PostgreSQL");
+      await connectionPage.fillConnectionForm(config);
+    });
+
+    await test.step("Test connection and verify diagnostics fields in response", async () => {
+      const responsePromise = pendingResponse(page, apiRoute.connectionsPing, API_DB_TIMEOUT);
+      await connectionPage.testConnectionButton.click();
+      const response = await responsePromise;
+
+      expect(response.status()).toBe(200);
+
+      const body = (await response.json()) as {
+        data?: {
+          latencyMs?: number;
+          serverVersion?: string;
+          sslNegotiated?: boolean;
+          sslMode?: string;
+        };
+      };
+
+      expect(body.data?.latencyMs).toBeDefined();
+      expect(typeof body.data?.latencyMs).toBe("number");
+      expect((body.data?.latencyMs ?? -1) >= 0).toBeTruthy();
+      expect(body.data?.serverVersion).toBeTruthy();
+    });
+
+    await test.step("Close form without creating a connection", async () => {
+      await page.getByRole("button", { name: "Cancel" }).click();
+      await expect(page.getByRole("heading", { name: "New connection" })).toBeHidden();
+    });
+  });
+
+  test("Ping failure returns actionable network category", async ({ page }, testInfo) => {
+    const connectionPage = new ConnectionPage(page);
+    const connectionName = `${testPrefix}-diag-fail-${uniqueTestSuffix(testInfo)}`;
+    const config = getDbConfig("postgresql", connectionName);
+
+    await connectionPage.goto();
+    await connectionPage.waitForReady();
+
+    await test.step("Open PostgreSQL form and use unreachable port", async () => {
+      await connectionPage.openNewConnectionModal();
+      await connectionPage.selectConnectionType("PostgreSQL");
+      await connectionPage.fillConnectionForm({
+        ...config,
+        port: "1",
+      });
+    });
+
+    await test.step("Test connection and verify actionable error category", async () => {
+      const responsePromise = pendingResponse(page, apiRoute.connectionsPing, API_DB_TIMEOUT);
+      await connectionPage.testConnectionButton.click();
+      const response = await responsePromise;
+
+      expect(response.status()).toBe(400);
+
+      const body = (await response.json()) as {
+        code?: number;
+        message?: string;
+        data?: {
+          category?: string;
+          suggestion?: string;
+          latencyMs?: number;
+        };
+      };
+
+      expect(body.code).toBe(400);
+      expect(body.data?.category).toBe("network");
+      expect(body.data?.suggestion).toContain("Check host, port");
+      expect(typeof body.data?.latencyMs).toBe("number");
+    });
+
+    await test.step("Close form", async () => {
+      await page.getByRole("button", { name: "Cancel" }).click();
+      await expect(page.getByRole("heading", { name: "New connection" })).toBeHidden();
     });
   });
 });
