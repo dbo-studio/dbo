@@ -18,6 +18,13 @@ export type PingConnectionRequestType = {
   options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
 };
 
+export type PingConnectionResponseType = {
+  latencyMs: number;
+  serverVersion?: string;
+  sslNegotiated?: boolean;
+  sslMode?: string;
+};
+
 export type UpdateConnectionRequestType = {
   id?: string | number;
   name?: string;

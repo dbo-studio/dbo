@@ -11,6 +11,7 @@ import { Button, Checkbox, FormControlLabel, Stack } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { formatPingFailureMessage, formatPingSuccessMessage } from '@/components/common/AddConnection/pingDiagnostics';
 import * as v from 'valibot';
 import {
   ConnectionFormCheckboxRowStyled,
@@ -85,7 +86,7 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
     e.stopPropagation();
 
     try {
-      const currentConnection = connections?.find((c) => (c.id = connectionId));
+      const currentConnection = connections?.find((c) => c.id === connectionId);
       if (!currentConnection) return;
 
       const options = {
@@ -93,10 +94,15 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
         password
       };
 
-      await pingConnectionMutation({ id: connectionId, type: currentConnection.type, options });
-      toast.success(locales.connection_test_success);
+      const diagnostics = await pingConnectionMutation({ id: connectionId, type: currentConnection.type, options });
+      toast.success(locales.connection_test_success, {
+        description: formatPingSuccessMessage(diagnostics)
+      });
     } catch (e) {
-      console.debug('🚀 ~ handlePing ~ e:', e);
+      const message = formatPingFailureMessage(e);
+      if (message) {
+        toast.error(message);
+      }
     }
   };
 

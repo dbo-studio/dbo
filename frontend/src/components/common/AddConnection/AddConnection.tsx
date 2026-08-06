@@ -10,6 +10,7 @@ import ConnectionSelection from './ConnectionSelection/ConnectionSelection';
 import Mysql from './Mysql/Mysql';
 import PostgreSQL from './Postgresql/Postgresql';
 import SQLite from './SQLite/SQLite';
+import { formatPingFailureMessage, formatPingSuccessMessage } from './pingDiagnostics';
 import type { SelectionConnectionType } from './types';
 
 const connectionTypes: SelectionConnectionType[] = [
@@ -63,10 +64,15 @@ export default function AddConnection(): JSX.Element {
     }
 
     try {
-      await pingConnectionMutation(data);
-      toast.success(locales.connection_test_success);
+      const diagnostics = await pingConnectionMutation(data);
+      toast.success(locales.connection_test_success, {
+        description: formatPingSuccessMessage(diagnostics)
+      });
     } catch (error) {
-      console.debug('🚀 ~ handlePingConnection ~ error:', error);
+      const message = formatPingFailureMessage(error);
+      if (message) {
+        toast.error(message);
+      }
     }
   };
 

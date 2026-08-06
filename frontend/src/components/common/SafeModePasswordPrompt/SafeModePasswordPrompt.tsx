@@ -12,7 +12,7 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { EventFor } from '@/types';
 import { Button, Checkbox, FormControlLabel, Stack } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
-import { type JSX, useEffect, useMemo, useState } from 'react';
+import { type JSX, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import * as v from 'valibot';
 import type { SafeModePasswordPromptProps } from './types';
@@ -44,13 +44,6 @@ export default function SafeModePasswordPrompt({
   const { mutateAsync: pingConnectionMutation, isPending: pingConnectionPending } = useMutation({
     mutationFn: api.connection.pingConnection
   });
-
-  useEffect(() => {
-    if (!open) {
-      setPassword('');
-      setRememberPassword(false);
-    }
-  }, [open]);
 
   const handleClose = (): void => {
     setPassword('');

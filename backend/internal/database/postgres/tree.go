@@ -79,6 +79,9 @@ func buildDatabase(ctx context.Context, r *PostgresRepository, dbName string) (*
 	}
 
 	for _, schema := range schemas {
+		if isPostgresSystemSchema(schema.Name) {
+			continue
+		}
 		dbNode.Children = append(dbNode.Children, contract.TreeNode{
 			ID:          fmt.Sprintf("%s.%s", dbName, schema.Name),
 			Name:        schema.Name,

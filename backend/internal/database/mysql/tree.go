@@ -45,6 +45,9 @@ func buildRoot(ctx context.Context, r *MySQLRepository) (*contract.TreeNode, err
 	}
 
 	for _, db := range databases {
+		if isMySQLSystemSchema(db.Name) {
+			continue
+		}
 		root.Children = append(root.Children, databaseTreeNode(r, db.Name))
 	}
 	return root, nil

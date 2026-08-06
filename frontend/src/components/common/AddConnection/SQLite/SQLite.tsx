@@ -1,4 +1,4 @@
-import type { CreateConnectionRequestType } from '@/api/connection/types';
+import type { CreateConnectionRequestType, SQLiteOptionsType } from '@/api/connection/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
@@ -33,6 +33,7 @@ export default function SQLite({
   submitLoading
 }: ConnectionSettingsProps): JSX.Element {
   const [isDesktop, setIsDesktop] = useState(false);
+  const options = connection?.options as SQLiteOptionsType | undefined;
 
   useEffect(() => {
     tools
@@ -63,7 +64,7 @@ export default function SQLite({
     defaultValues: {
       isPing: false,
       name: connection?.name ?? '',
-      path: connection?.options?.path ?? ''
+      path: options?.path ?? ''
     }
   });
 

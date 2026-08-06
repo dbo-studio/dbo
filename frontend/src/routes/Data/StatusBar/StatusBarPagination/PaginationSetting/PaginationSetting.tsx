@@ -6,7 +6,7 @@ import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { DataTabType, EditorTabType, TabDataPagination, TabType } from '@/types';
+import type { DataTabType, EditorTabType, TabDataPagination } from '@/types';
 import { Button, ClickAwayListener, IconButton, Popper } from '@mui/material';
 import { type JSX, useState } from 'react';
 import { PaginationSettingStyled } from './PaginationSetting.styled';
@@ -63,9 +63,9 @@ export default function PaginationSetting(): JSX.Element {
     };
 
     updateSelectedTab({
-      ...(selectedTab as TabType),
+      ...selectedTab,
       pagination
-    } as TabType);
+    });
 
     setAnchorEl(null);
 

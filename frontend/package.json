@@ -74,5 +74,8 @@
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "*"
+  },
+  "overrides": {
+    "zod-validation-error": "^4.0.2"
   }
 }

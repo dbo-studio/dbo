@@ -13,12 +13,18 @@ export type SafeModeErrorData = {
   unlocked?: boolean;
 };
 
+type SafeModeApiErrorBody = {
+  message?: string;
+  data?: SafeModeErrorData;
+};
+
 export function getSafeModeError(error: unknown): { message: string; data: SafeModeErrorData } | null {
   if (!axios.isAxiosError(error) || error.response?.status !== 403) {
     return null;
   }
 
-  const message = String(error.response.data?.message ?? '');
+  const body = error.response.data as SafeModeApiErrorBody | undefined;
+  const message = String(body?.message ?? '');
   if (
     message !== 'safe_mode_blocked' &&
     message !== 'safe_mode_confirm_required' &&
@@ -29,7 +35,7 @@ export function getSafeModeError(error: unknown): { message: string; data: SafeM
 
   return {
     message,
-    data: (error.response.data?.data ?? {}) as SafeModeErrorData
+    data: body?.data ?? {}
   };
 }
 
