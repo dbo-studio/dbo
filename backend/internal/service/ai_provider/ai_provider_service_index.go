@@ -77,6 +77,7 @@ func (i *IAiProviderServiceImpl) Index(ctx context.Context) (*dto.AiProviderList
 				IsActive:   config.IsActive,
 				LastUsedAt: time.Now(),
 			}
+
 			_, err := i.aiProviderRepo.CreateIfNotExists(ctx, provider)
 			if err != nil {
 				return nil, err

@@ -22,6 +22,7 @@ func escapeLikeValue(value string) string {
 	value = strings.ReplaceAll(value, `\`, `\\`)
 	value = strings.ReplaceAll(value, `%`, `\%`)
 	value = strings.ReplaceAll(value, `_`, `\_`)
+
 	return strings.ReplaceAll(value, "'", "''")
 }
 

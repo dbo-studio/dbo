@@ -16,6 +16,7 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/tidwall/gjson v1.19.0
 	github.com/tidwall/sjson v1.2.5
+	github.com/twpayne/go-geom v1.6.0
 	go.uber.org/zap v1.28.0
 	golang.org/x/sync v0.21.0
 	gorm.io/driver/mysql v1.6.0

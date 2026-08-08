@@ -9,6 +9,7 @@ import (
 
 func Reader(data string) (rows [][]string, headers []string, err error) {
 	reader := csv.NewReader(strings.NewReader(data))
+
 	allRows, err := reader.ReadAll()
 	if err != nil {
 		return nil, nil, err
@@ -29,10 +30,12 @@ func Writer(headers []string, rows []map[string]any) string {
 
 	for i, col := range headers {
 		content.WriteString(col)
+
 		if i < len(headers)-1 {
 			content.WriteString(",")
 		}
 	}
+
 	content.WriteString("\n")
 
 	for _, row := range rows {
@@ -45,6 +48,7 @@ func Writer(headers []string, rows []map[string]any) string {
 				if strings.Contains(strValue, ",") || strings.Contains(strValue, "\"") || strings.Contains(strValue, "\n") {
 					strValue = fmt.Sprintf("\"%s\"", strings.ReplaceAll(strValue, "\"", "\"\""))
 				}
+
 				content.WriteString(strValue)
 			}
 
@@ -60,6 +64,7 @@ func Writer(headers []string, rows []map[string]any) string {
 				content.WriteString(",")
 			}
 		}
+
 		content.WriteString("\n")
 	}
 

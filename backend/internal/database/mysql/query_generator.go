@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/samber/lo"
 	"golang.org/x/sync/errgroup"
@@ -19,6 +20,7 @@ type Database struct {
 
 func (r *MySQLRepository) databases(ctx context.Context, fromCache bool) ([]Database, error) {
 	var databases []Database
+
 	cacheKey := cache.MySQLQueryKey(r.base.Connection().ID, "databases")
 
 	if fromCache {
@@ -37,7 +39,6 @@ func (r *MySQLRepository) databases(ctx context.Context, fromCache bool) ([]Data
 		Where("SCHEMA_NAME NOT IN ('information_schema', 'mysql', 'performance_schema', 'sys')").
 		Order("SCHEMA_NAME").
 		Find(&databases).Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -58,6 +59,7 @@ type Table struct {
 
 func (r *MySQLRepository) tables(ctx context.Context, database *string, fromCache bool) ([]Table, error) {
 	var tables []Table
+
 	cacheKey := cache.MySQLQueryKey(r.base.Connection().ID, "tables", lo.FromPtr(database))
 
 	if fromCache {
@@ -106,6 +108,7 @@ type View struct {
 
 func (r *MySQLRepository) views(ctx context.Context, database *string, fromCache bool) ([]View, error) {
 	var views []View
+
 	cacheKey := cache.MySQLQueryKey(r.base.Connection().ID, "views", lo.FromPtr(database))
 
 	if fromCache {
@@ -138,6 +141,7 @@ func (r *MySQLRepository) views(ctx context.Context, database *string, fromCache
 
 func (r *MySQLRepository) columns(ctx context.Context, database *string, table *string, columnNames []string, editable bool, fromCache bool) ([]Column, error) {
 	var columns []Column
+
 	cacheKey := cache.MySQLQueryKey(r.base.Connection().ID, "columns", lo.FromPtr(database), lo.FromPtr(table), strings.Join(columnNames, ","), strconv.FormatBool(editable))
 
 	if fromCache {
@@ -156,6 +160,7 @@ func (r *MySQLRepository) columns(ctx context.Context, database *string, table *
 			ORDINAL_POSITION,
 			COLUMN_NAME,
 			DATA_TYPE,
+			COLUMN_TYPE,
 			IS_NULLABLE,
 			COLUMN_DEFAULT,
 			CHARACTER_MAXIMUM_LENGTH,
@@ -170,8 +175,11 @@ func (r *MySQLRepository) columns(ctx context.Context, database *string, table *
 
 	g, gctx := errgroup.WithContext(ctx)
 	g.SetLimit(6)
-	var pkList []PrimaryKey
-	var fkList []ForeignKey
+
+	var (
+		pkList []PrimaryKey
+		fkList []ForeignKey
+	)
 
 	g.Go(func() error {
 		err := query.WithContext(gctx).
@@ -180,6 +188,7 @@ func (r *MySQLRepository) columns(ctx context.Context, database *string, table *
 		if err != nil {
 			return err
 		}
+
 		return nil
 	})
 
@@ -188,7 +197,9 @@ func (r *MySQLRepository) columns(ctx context.Context, database *string, table *
 		if err != nil {
 			return err
 		}
+
 		pkList = list
+
 		return nil
 	})
 
@@ -197,7 +208,9 @@ func (r *MySQLRepository) columns(ctx context.Context, database *string, table *
 		if err != nil {
 			return err
 		}
+
 		fkList = list
+
 		return nil
 	})
 
@@ -208,9 +221,23 @@ func (r *MySQLRepository) columns(ctx context.Context, database *string, table *
 	for i, column := range columns {
 		columns[i].MappedType = r.base.ColumnMappedFormat(column.DataType)
 		columns[i].Editable = editable
+
 		columns[i].IsActive = true
 		if len(columnNames) > 0 {
 			columns[i].IsActive = slices.Contains(columnNames, column.ColumnName)
+		}
+
+		if enumValues := databaseCore.ParseMysqlEnumOrSetValues(column.ColumnType); len(enumValues) > 0 {
+			// SET is multi-value — keep as string (not a single-select enum).
+			if strings.HasPrefix(strings.ToLower(strings.TrimSpace(column.ColumnType)), "enum(") {
+				columns[i].MappedType = databaseCore.MappedTypeEnum
+				columns[i].EnumValues = enumValues
+			}
+		}
+
+		// MySQL BOOLEAN is an alias for TINYINT(1); treat it as boolean for the grid.
+		if isMysqlBooleanColumn(column.DataType, column.ColumnType) {
+			columns[i].MappedType = databaseCore.MappedTypeBoolean
 		}
 
 		_, pkFound := lo.Find(pkList, func(pk PrimaryKey) bool {
@@ -227,6 +254,7 @@ func (r *MySQLRepository) columns(ctx context.Context, database *string, table *
 
 		if fkFound {
 			columns[i].ForeignKey = &foreignKey
+			columns[i].IsForeignKey = true
 		}
 	}
 
@@ -237,6 +265,7 @@ func (r *MySQLRepository) columns(ctx context.Context, database *string, table *
 
 func (r *MySQLRepository) columnsLite(ctx context.Context, database *string, table *string, fromCache bool) ([]string, error) {
 	var names []string
+
 	cacheKey := cache.MySQLQueryKey(r.base.Connection().ID, "columns_lite", lo.FromPtr(database), lo.FromPtr(table))
 
 	if fromCache {
@@ -283,6 +312,7 @@ func (r *MySQLRepository) columnsLiteBatch(ctx context.Context, database *string
 	}
 
 	rows := make([]columnNameRow, 0)
+
 	err := r.base.DB().WithContext(ctx).Table("information_schema.COLUMNS").
 		Select("TABLE_NAME, COLUMN_NAME").
 		Where("TABLE_SCHEMA = ?", lo.FromPtr(database)).
@@ -306,6 +336,7 @@ type PrimaryKey struct {
 
 func (r *MySQLRepository) primaryKeys(ctx context.Context, database *string, table *string, fromCache bool) ([]PrimaryKey, error) {
 	var primaryKeys []PrimaryKey
+
 	cacheKey := cache.MySQLQueryKey(r.base.Connection().ID, "primary_keys", lo.FromPtr(database), lo.FromPtr(table))
 
 	if fromCache {
@@ -340,6 +371,7 @@ func (r *MySQLRepository) primaryKeys(ctx context.Context, database *string, tab
 		if errors.Is(err, context.Canceled) {
 			return []PrimaryKey{}, nil
 		}
+
 		return nil, err
 	}
 
@@ -362,6 +394,7 @@ type ForeignKey struct {
 
 func (r *MySQLRepository) foreignKeys(ctx context.Context, database *string, table *string, fromCache bool) ([]ForeignKey, error) {
 	var foreignKeys []ForeignKey
+
 	cacheKey := cache.MySQLQueryKey(r.base.Connection().ID, "foreign_keys", lo.FromPtr(database), lo.FromPtr(table))
 
 	if fromCache {
@@ -399,6 +432,7 @@ func (r *MySQLRepository) foreignKeys(ctx context.Context, database *string, tab
 		if errors.Is(err, context.Canceled) {
 			return []ForeignKey{}, nil
 		}
+
 		return nil, err
 	}
 
@@ -425,9 +459,10 @@ func (r *MySQLRepository) foreignKeys(ctx context.Context, database *string, tab
 	return result, nil
 }
 
-func (r *MySQLRepository) updateCache(_ context.Context, cacheKey string, value any) {
+func (r *MySQLRepository) updateCache(ctx context.Context, cacheKey string, value any) {
+	bgCtx := context.WithoutCancel(ctx)
+
 	go func() {
-		bgCtx := context.Background()
 		err := r.base.Cache().Set(bgCtx, cacheKey, value, lo.ToPtr(time.Hour))
 		if err != nil {
 			r.base.Logger().Error(err)

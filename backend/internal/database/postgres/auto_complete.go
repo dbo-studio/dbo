@@ -15,10 +15,12 @@ const autocompleteConcurrency = 6
 func (r *PostgresRepository) AutoComplete(ctx context.Context, data *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
 	g, gctx := errgroup.WithContext(ctx)
 
-	var databases []Database
-	var views []View
-	var schemas []Schema
-	var tables []Table
+	var (
+		databases []Database
+		views     []View
+		schemas   []Schema
+		tables    []Table
+	)
 
 	g.Go(func() error {
 		if configured := databaseConnection.DefaultPostgresqlDatabase(r.base.Connection()); configured != "" {
@@ -30,7 +32,9 @@ func (r *PostgresRepository) AutoComplete(ctx context.Context, data *dto.AutoCom
 		if err != nil {
 			return err
 		}
+
 		databases = result
+
 		return nil
 	})
 
@@ -41,6 +45,7 @@ func (r *PostgresRepository) AutoComplete(ctx context.Context, data *dto.AutoCom
 		} else {
 			views, err = r.viewsLite(gctx, nil, nil, true)
 		}
+
 		return err
 	})
 
@@ -49,7 +54,9 @@ func (r *PostgresRepository) AutoComplete(ctx context.Context, data *dto.AutoCom
 		if err != nil {
 			return err
 		}
+
 		schemas = result
+
 		return nil
 	})
 
@@ -60,6 +67,7 @@ func (r *PostgresRepository) AutoComplete(ctx context.Context, data *dto.AutoCom
 		} else {
 			tables, err = r.tables(gctx, data.Database, nil, true)
 		}
+
 		return err
 	})
 
@@ -96,21 +104,26 @@ func (r *PostgresRepository) autoCompleteColumns(ctx context.Context, data *dto.
 				out[table.Name] = []string{}
 			}
 		}
+
 		return out, nil
 	}
 
 	gColumns, gColumnsCtx := errgroup.WithContext(ctx)
 	gColumns.SetLimit(autocompleteConcurrency)
+
 	var columnMap sync.Map
 
 	for _, table := range tables {
 		tableName := table.Name
+
 		gColumns.Go(func() error {
 			columnResult, err := r.columnsLite(gColumnsCtx, data.Database, &tableName, data.Schema, true)
 			if err != nil {
 				return err
 			}
+
 			columnMap.Store(tableName, columnResult)
+
 			return nil
 		})
 	}
@@ -120,14 +133,17 @@ func (r *PostgresRepository) autoCompleteColumns(ctx context.Context, data *dto.
 	}
 
 	columns := make(map[string][]string)
+
 	columnMap.Range(func(key, value any) bool {
 		tableName, ok := key.(string)
 		if !ok {
 			return true
 		}
+
 		if columnList, ok := value.([]string); ok {
 			columns[tableName] = columnList
 		}
+
 		return true
 	})
 

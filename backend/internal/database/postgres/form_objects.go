@@ -39,6 +39,7 @@ func (r *PostgresRepository) getDatabaseInfo(ctx context.Context, node contract.
 	}
 
 	result := []map[string]any{}
+
 	for _, database := range databases {
 		if database.Name == node.Database {
 			result = append(result, map[string]any{
@@ -61,12 +62,14 @@ func (r *PostgresRepository) getDatabaseInfo(ctx context.Context, node contract.
 
 func (r *PostgresRepository) getSchemaInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.schemaFields()
+
 	schemas, err := r.schemas(ctx, &node.Database, true)
 	if err != nil {
 		return nil, err
 	}
 
 	result := []map[string]any{}
+
 	for _, schema := range schemas {
 		if schema.Name == node.Schema {
 			result = append(result, map[string]any{
@@ -94,6 +97,7 @@ func (r *PostgresRepository) getTableGeneralFields(ctx context.Context, node con
 		if err != nil {
 			return nil, err
 		}
+
 		if table != nil {
 			result = map[string]any{
 				"relname":     table.Name,
@@ -198,12 +202,14 @@ func (r *PostgresRepository) getTableKeys(ctx context.Context, node contract.DBN
 
 func (r *PostgresRepository) getViewInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.viewFields()
+
 	views, err := r.views(ctx, &node.Database, &node.Schema, true)
 	if err != nil {
 		return nil, err
 	}
 
 	result := []map[string]any{}
+
 	for _, view := range views {
 		if view.Name == node.Table {
 			result = append(result, map[string]any{
@@ -225,10 +231,12 @@ func (r *PostgresRepository) getViewInfo(ctx context.Context, node contract.DBNo
 
 func (r *PostgresRepository) getMaterializedViewInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.materializedViewFields(ctx)
+
 	materializedViews, err := r.materializedViews(ctx, &node.Database, &node.Schema, true)
 	if err != nil {
 		return nil, err
 	}
+
 	result := []map[string]any{}
 
 	for _, materializedView := range materializedViews {

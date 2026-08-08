@@ -38,6 +38,7 @@ type ITreeServiceImpl struct {
 
 func NewTreeService(cr repository.IConnectionRepo, cm *databaseConnection.ConnectionManager) *ITreeServiceImpl {
 	c := container.Instance().Cache()
+
 	return &ITreeServiceImpl{
 		connectionRepo: cr,
 		cm:             cm,
@@ -49,6 +50,7 @@ func NewTreeService(cr repository.IConnectionRepo, cm *databaseConnection.Connec
 func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (*contract.TreeNode, error) {
 	if lo.FromPtr(req.FromCache) {
 		var tree *contract.TreeNode
+
 		err := i.cache.Get(ctx, cache.TreeKey(uint(req.ConnectionID), req.ParentID), &tree)
 		if err == nil && tree != nil {
 			return tree, nil
@@ -112,6 +114,7 @@ func (i ITreeServiceImpl) ObjectDetail(ctx context.Context, req *dto.ObjectDetai
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
+
 	return data, nil
 }
 
@@ -123,6 +126,7 @@ func (i ITreeServiceImpl) ObjectExecute(ctx context.Context, req *dto.ObjectExec
 
 	policy := serviceSafemode.FromConnection(connection)
 	policy = i.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), connection.ID, policy)
+
 	class := sqlguard.ClassifyAction(req.Action)
 	if err := serviceSafemode.Enforce(policy, class, req.Confirmed); err != nil {
 		return nil, err
@@ -164,6 +168,7 @@ func (i ITreeServiceImpl) ObjectPreviewExecute(ctx context.Context, req *dto.Obj
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
+
 	return queries, nil
 }
 

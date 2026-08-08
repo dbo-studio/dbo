@@ -10,6 +10,7 @@ import (
 
 func (r *PostgresRepository) handleTableCommands(node contract.DBNode, tabID contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
 	queries := []string{}
+
 	var tableName string
 
 	if tabID != contract.GeneralTab && action != contract.DropTableAction {
@@ -26,6 +27,7 @@ func (r *PostgresRepository) handleTableCommands(node contract.DBNode, tabID con
 
 		tableName = *params.New.Name
 		tableRef := qualifiedTableName(node.Schema, tableName)
+
 		query := fmt.Sprintf("CREATE TABLE %s (", tableRef)
 		if params.New.Tablespace != nil {
 			query += fmt.Sprintf(") TABLESPACE %s", *params.New.Tablespace)

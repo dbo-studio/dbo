@@ -4,6 +4,7 @@ func OptionalString(value *string, defaultValue string) string {
 	if value != nil {
 		return *value
 	}
+
 	return defaultValue
 }
 
@@ -11,6 +12,7 @@ func OptionalBool(value *bool, defaultValue bool) bool {
 	if value != nil {
 		return *value
 	}
+
 	return defaultValue
 }
 
@@ -19,6 +21,7 @@ func Optional[T any](value *T, defaultValue *T) *T {
 	if value != nil {
 		return value
 	}
+
 	return defaultValue
 }
 
@@ -32,6 +35,7 @@ func OptionalAndEmpty[T any](value *T, defaultValue *T) *T {
 			return value
 		}
 	}
+
 	return defaultValue
 }
 
@@ -41,5 +45,6 @@ func OptionalOrKeep[T any](value *T, defaultValue *T) *T {
 	if value != nil {
 		return value
 	}
+
 	return defaultValue
 }

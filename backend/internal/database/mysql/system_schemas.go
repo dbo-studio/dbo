@@ -8,5 +8,6 @@ func isMySQLSystemSchema(schema string) bool {
 			return true
 		}
 	}
+
 	return false
 }

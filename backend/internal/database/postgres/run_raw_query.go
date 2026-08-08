@@ -30,6 +30,7 @@ func (r *postgresRawQueryResolver) IsBaseTable(ctx context.Context, database, sc
 	}
 
 	var relkind string
+
 	query := conn.WithContext(ctx).Raw(`
 		SELECT c.relkind
 		FROM pg_class c
@@ -71,6 +72,7 @@ func (r *postgresRawQueryResolver) BuildNodeID(ctx context.Context, database, sc
 	if database == "" {
 		database = databaseConnection.DefaultPostgresqlDatabase(r.repo.base.Connection())
 	}
+
 	if schema == "" {
 		if resolved, err := r.repo.tableSchema(ctx, stringPtrOrNil(database), table); err == nil && resolved != "" {
 			schema = resolved
@@ -78,6 +80,7 @@ func (r *postgresRawQueryResolver) BuildNodeID(ctx context.Context, database, sc
 			schema = "public"
 		}
 	}
+
 	return fmt.Sprintf("%s.%s.%s", database, schema, table)
 }
 
@@ -88,6 +91,7 @@ func (r *PostgresRepository) tableSchema(ctx context.Context, database *string, 
 	}
 
 	var schema string
+
 	err = conn.WithContext(ctx).Raw(`
 		SELECT n.nspname
 		FROM pg_class c
@@ -101,6 +105,7 @@ func (r *PostgresRepository) tableSchema(ctx context.Context, database *string, 
 	if err != nil {
 		return "", err
 	}
+
 	return schema, nil
 }
 
@@ -108,5 +113,6 @@ func stringPtrOrNil(value string) *string {
 	if value == "" {
 		return nil
 	}
+
 	return lo.ToPtr(value)
 }

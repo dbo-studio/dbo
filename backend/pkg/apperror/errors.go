@@ -114,6 +114,7 @@ func preferAppError(candidate, current *AppError) *AppError {
 	if candidateIsServer && !currentIsServer {
 		return current
 	}
+
 	if !candidateIsServer && currentIsServer {
 		return candidate
 	}

@@ -27,6 +27,7 @@ func (r *MySQLRepository) handleDatabaseCommands(node contract.DBNode, tabID con
 		if params.New.Comment != nil {
 			query += fmt.Sprintf(" COMMENT '%s'", *params.New.Comment)
 		}
+
 		queries = append(queries, query)
 	}
 

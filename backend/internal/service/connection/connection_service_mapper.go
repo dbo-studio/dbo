@@ -26,7 +26,9 @@ func connectionsToResponse(ctx context.Context, ownerID string, cm *databaseConn
 
 func connectionToResponse(ctx context.Context, ownerID string, cm *databaseConnection.ConnectionManager, unlock *serviceSafemode.UnlockStore, connection *model.Connection) dto.Connection {
 	options, _ := sjson.Set(connection.Options, "password", "")
+
 	var j map[string]any
+
 	_ = json.Unmarshal([]byte(options), &j)
 
 	isOpen := false
@@ -40,6 +42,7 @@ func connectionToResponse(ctx context.Context, ownerID string, cm *databaseConne
 	}
 
 	var unlockUntil *string
+
 	if policy.UnlockedUntil != nil {
 		formatted := policy.UnlockedUntil.UTC().Format(time.RFC3339)
 		unlockUntil = &formatted

@@ -29,6 +29,7 @@ func TestResolveLimitPage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			gotLimit, gotPage := ResolveLimitPage(tt.limit, tt.page)
 			if gotLimit != tt.wantLimit || gotPage != tt.wantPage {
 				t.Fatalf("ResolveLimitPage() = (%d,%d), want (%d,%d)", gotLimit, gotPage, tt.wantLimit, tt.wantPage)
@@ -110,13 +111,16 @@ func TestApplyLimitOffset(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			got := ApplyLimitOffset(tt.sql, tt.limit, tt.page)
 			if got.Paginated != tt.wantPaginated {
 				t.Fatalf("Paginated = %v, want %v (query=%q)", got.Paginated, tt.wantPaginated, got.Query)
 			}
+
 			if tt.wantUnchanged && got.Query != tt.sql {
 				t.Fatalf("query changed: got %q want %q", got.Query, tt.sql)
 			}
+
 			lower := strings.ToLower(got.Query)
 			for _, part := range tt.wantContains {
 				if !strings.Contains(lower, strings.ToLower(part)) {

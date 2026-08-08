@@ -40,6 +40,7 @@ func (s IConnectionServiceImpl) Ping(ctx context.Context, req *dto.PingConnectio
 
 	start := time.Now()
 	dbConn, err := s.cm.GetConnection(ctx, connection, false)
+
 	latency := time.Since(start).Milliseconds()
 	if err != nil {
 		return nil, pingDiagnosticError(req.Type, err, latency)
@@ -86,7 +87,9 @@ func pingSSLDiagnostics(ctx context.Context, req *dto.PingConnectionRequest, db 
 		type postgresSSLStatus struct {
 			SSL *bool `gorm:"column:ssl"`
 		}
+
 		var status postgresSSLStatus
+
 		err := db.WithContext(ctx).Raw("SELECT ssl FROM pg_stat_ssl WHERE pid = pg_backend_pid()").Scan(&status).Error
 		if err != nil || status.SSL == nil {
 			return nil, mode
@@ -103,13 +106,16 @@ func pingSSLDiagnostics(ctx context.Context, req *dto.PingConnectionRequest, db 
 			VariableName string `gorm:"column:Variable_name"`
 			Value        string `gorm:"column:Value"`
 		}
+
 		var status mysqlSSLStatus
+
 		err := db.WithContext(ctx).Raw("SHOW STATUS LIKE 'Ssl_cipher'").Scan(&status).Error
 		if err != nil {
 			return nil, mode
 		}
 
 		negotiated := strings.TrimSpace(status.Value) != ""
+
 		return lo.ToPtr(negotiated), mode
 	default:
 		return nil, nil
@@ -123,6 +129,7 @@ func sslModeFromPostgresOptions(raw json.RawMessage) *string {
 	}
 
 	mode := dto.NormalizeSSLMode(options.SSL.Mode)
+
 	return lo.ToPtr(mode)
 }
 
@@ -133,6 +140,7 @@ func sslModeFromMysqlOptions(raw json.RawMessage) *string {
 	}
 
 	mode := dto.NormalizeSSLMode(options.SSL.Mode)
+
 	return lo.ToPtr(mode)
 }
 

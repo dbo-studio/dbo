@@ -11,5 +11,6 @@ func isPostgresSystemSchema(schema string) bool {
 			return true
 		}
 	}
+
 	return strings.HasPrefix(schema, "pg_toast") || strings.HasPrefix(schema, "pg_temp")
 }

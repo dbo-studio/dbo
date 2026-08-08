@@ -36,6 +36,7 @@ type IQueryServiceImpl struct {
 
 func NewQueryService(connectionRepo repository.IConnectionRepo, historyRepo repository.IHistoryRepo, cm *databaseConnection.ConnectionManager) IQueryService {
 	c := container.Instance().Cache()
+
 	return &IQueryServiceImpl{
 		historyRepo:    historyRepo,
 		connectionRepo: connectionRepo,
@@ -67,6 +68,7 @@ func (i IQueryServiceImpl) Raw(ctx context.Context, req *dto.RawQueryRequest) (*
 
 	policy := serviceSafemode.FromConnection(connection)
 	policy = i.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), connection.ID, policy)
+
 	classification := sqlguard.ClassifySQL(req.Query)
 	if err := serviceSafemode.Enforce(policy, classification.Class, req.Confirmed); err != nil {
 		return nil, err
@@ -78,6 +80,7 @@ func (i IQueryServiceImpl) Raw(ctx context.Context, req *dto.RawQueryRequest) (*
 	}
 
 	originalQuery := req.Query
+
 	err = i.historyRepo.Create(ctx, connection.ID, originalQuery, false)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
@@ -94,6 +97,7 @@ func (i IQueryServiceImpl) Raw(ctx context.Context, req *dto.RawQueryRequest) (*
 	if err != nil {
 		return nil, err
 	}
+
 	if resp == nil {
 		return nil, nil
 	}
@@ -102,6 +106,7 @@ func (i IQueryServiceImpl) Raw(ctx context.Context, req *dto.RawQueryRequest) (*
 	resp.Paginated = applied.Paginated
 	resp.Limit = limit
 	resp.Page = page
+
 	return resp, nil
 }
 
@@ -117,6 +122,7 @@ func (i IQueryServiceImpl) Update(ctx context.Context, req *dto.UpdateQueryReque
 	}
 
 	policy := serviceSafemode.FromConnection(connection)
+
 	policy = i.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), connection.ID, policy)
 	if err := serviceSafemode.Enforce(policy, class, req.Confirmed); err != nil {
 		return nil, err
@@ -156,6 +162,7 @@ func (i IQueryServiceImpl) AutoComplete(ctx context.Context, req *dto.AutoComple
 	}
 
 	ttl := 60 * time.Minute
+
 	err = i.cache.Set(ctx, cache.AutoCompleteKey(uint(req.ConnectionID), lo.FromPtr(req.Database), lo.FromPtr(req.Schema)), autocomplete, &ttl)
 	if err != nil {
 		return nil, err
@@ -166,13 +173,13 @@ func (i IQueryServiceImpl) AutoComplete(ctx context.Context, req *dto.AutoComple
 
 func (i IQueryServiceImpl) findResultFromCache(ctx context.Context, req *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
 	var result *dto.AutoCompleteResponse
+
 	err := i.cache.ConditionalGet(
 		ctx,
 		cache.AutoCompleteKey(uint(req.ConnectionID), lo.FromPtr(req.Database), lo.FromPtr(req.Schema)),
 		&result,
 		true,
 	)
-
 	if err != nil {
 		return nil, err
 	}

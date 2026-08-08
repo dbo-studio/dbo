@@ -31,6 +31,7 @@ func (b *FailedResponseBuilder) FromError(err error) *FailedResponseBuilder {
 		b.response.Code = appErr.Code
 		b.response.Message = appErr.Error()
 		b.response.Data = appErr.Data
+
 		return b
 	}
 

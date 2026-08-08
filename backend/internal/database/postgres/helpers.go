@@ -6,6 +6,7 @@ import (
 
 func columnListToResponse(columns []Column) []dto.Column {
 	data := make([]dto.Column, 0)
+
 	for _, column := range columns {
 		var col dto.Column
 
@@ -19,6 +20,8 @@ func columnListToResponse(columns []Column) []dto.Column {
 		col.Comment = column.Comment
 		col.NotNull = column.IsNullable == "NO"
 		col.IsPrimaryKey = column.IsPrimaryKey
+		col.IsForeignKey = column.IsForeignKey
+		col.EnumValues = column.EnumValues
 
 		data = append(data, col)
 	}

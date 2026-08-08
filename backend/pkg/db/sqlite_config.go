@@ -28,5 +28,6 @@ func configureAppSQLite(db *gorm.DB) error {
 	}
 
 	_, err = sqlDB.Exec(fmt.Sprintf("PRAGMA busy_timeout=%d", appSQLiteBusyTimeoutMs))
+
 	return err
 }

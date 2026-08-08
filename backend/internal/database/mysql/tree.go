@@ -48,8 +48,10 @@ func buildRoot(ctx context.Context, r *MySQLRepository) (*contract.TreeNode, err
 		if isMySQLSystemSchema(db.Name) {
 			continue
 		}
+
 		root.Children = append(root.Children, databaseTreeNode(r, db.Name))
 	}
+
 	return root, nil
 }
 
@@ -122,6 +124,7 @@ func buildContainer(ctx context.Context, r *MySQLRepository, dbName string, cont
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}
+
 		for _, table := range tables {
 			containerNode.Children = append(containerNode.Children, contract.TreeNode{
 				ID:   fmt.Sprintf("%s.%s", dbName, table.Name),
@@ -145,6 +148,7 @@ func buildContainer(ctx context.Context, r *MySQLRepository, dbName string, cont
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}
+
 		for _, view := range views {
 			containerNode.Children = append(containerNode.Children, contract.TreeNode{
 				ID:   fmt.Sprintf("%s.%s", dbName, view.Name),
@@ -166,5 +170,6 @@ func buildContainer(ctx context.Context, r *MySQLRepository, dbName string, cont
 	default:
 		return nil, fmt.Errorf("unsupported container type: %s", container)
 	}
+
 	return containerNode, nil
 }

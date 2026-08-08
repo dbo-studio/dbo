@@ -14,28 +14,25 @@ import (
 )
 
 type BaseProvider struct {
-	client  openai.Client
-	context context.Context
+	client openai.Client
 }
 
-func NewBaseProvider(ctx context.Context, client openai.Client) IAiProvider {
+func NewBaseProvider(_ context.Context, client openai.Client) IAiProvider {
 	return &BaseProvider{
-		client:  client,
-		context: ctx,
+		client: client,
 	}
 }
 
-func (p *BaseProvider) Chat(_ context.Context, req *ChatRequest) (*ChatResponse, error) {
+func (p *BaseProvider) Chat(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
 	messages := p.buildChatCompletionMessages(req)
 
 	chatCompletion, err := p.client.Chat.Completions.New(
-		p.context,
+		ctx,
 		openai.ChatCompletionNewParams{
 			Messages: messages,
 			Model:    req.Model,
 		},
 	)
-
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -50,7 +47,7 @@ func (p *BaseProvider) StreamChat(ctx context.Context, req *ChatRequest, cb Stre
 	messages := p.buildChatCompletionMessages(req)
 
 	stream := p.client.Chat.Completions.NewStreaming(
-		p.context,
+		ctx,
 		openai.ChatCompletionNewParams{
 			Messages: messages,
 			Model:    req.Model,
@@ -62,6 +59,7 @@ func (p *BaseProvider) StreamChat(ctx context.Context, req *ChatRequest, cb Stre
 	}
 
 	var contentBuilder strings.Builder
+
 	answeringStarted := false
 	thinkingStart := time.Now()
 	reasoningState := newStreamReasoningState(
@@ -110,6 +108,7 @@ func (p *BaseProvider) StreamChat(ctx context.Context, req *ChatRequest, cb Stre
 
 			if !answeringStarted {
 				answeringStarted = true
+
 				if err := cb(StreamEvent{Type: "block_start", BlockType: "explanation"}); err != nil {
 					stream.Close()
 					return nil, err
@@ -117,6 +116,7 @@ func (p *BaseProvider) StreamChat(ctx context.Context, req *ChatRequest, cb Stre
 			}
 
 			contentBuilder.WriteString(answer)
+
 			if err := cb(StreamEvent{Type: "content_delta", Content: answer}); err != nil {
 				stream.Close()
 				return nil, err
@@ -191,14 +191,14 @@ func (p *BaseProvider) buildChatCompletionMessages(req *ChatRequest) []openai.Ch
 	return messages
 }
 
-func (p *BaseProvider) Complete(_ context.Context, req *CompletionRequest) (*CompletionResponse, error) {
+func (p *BaseProvider) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {
 	suffix := ""
 	if req.Suffix != nil {
 		suffix = *req.Suffix
 	}
 
 	chatCompletion, err := p.client.Chat.Completions.New(
-		p.context,
+		ctx,
 		openai.ChatCompletionNewParams{
 			Messages: []openai.ChatCompletionMessageParamUnion{
 				{
@@ -220,7 +220,6 @@ func (p *BaseProvider) Complete(_ context.Context, req *CompletionRequest) (*Com
 			Temperature: openai.Float(0.1),
 		},
 	)
-
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -278,6 +277,7 @@ func (p *BaseProvider) buildSystemPrompt(req *ChatRequest) string {
 	if req.UseMarkdownPrompt {
 		return p.buildStreamChatPrompt(req)
 	}
+
 	return p.buildChatPrompt(req)
 }
 
@@ -394,6 +394,7 @@ func (p *BaseProvider) parseMarkdownBlocks(content string) []model.AiChatMessage
 				Language: model.AiChatMessageLanguageText,
 			})
 		}
+
 		return blocks
 	}
 
@@ -414,6 +415,7 @@ func (p *BaseProvider) parseMarkdownBlocks(content string) []model.AiChatMessage
 		code := strings.TrimSpace(content[match[4]:match[5]])
 		msgType := model.AiChatMessageTypeExplanation
 		language := model.AiChatMessageLanguageText
+
 		if lang == "sql" || strings.EqualFold(lang, "sql") {
 			msgType = model.AiChatMessageTypeCode
 			language = model.AiChatMessageLanguageSQL

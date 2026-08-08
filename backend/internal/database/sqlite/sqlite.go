@@ -27,6 +27,7 @@ func NewSQLiteRepository(ctx context.Context, connection *model.Connection, cm *
 
 func (r *SQLiteRepository) Version(ctx context.Context) (string, error) {
 	var version string
+
 	result := r.base.DB().WithContext(ctx).Raw("SELECT sqlite_version()").Scan(&version)
 
 	return version, result.Error

@@ -29,13 +29,16 @@ func OwnerSessionMiddleware(webSessionRepo repository.IWebSessionRepo) fiber.Han
 			ownerID := "desktop"
 			c.Locals(helper.CtxOwnerIDKey, ownerID)
 			c.SetContext(helper.CtxWithOwnerID(c.Context(), ownerID))
+
 			return c.Next()
 		}
 
 		oldSessionID := c.Cookies(sessionCookieName)
 
-		var newSessionID string
-		var err error
+		var (
+			newSessionID string
+			err          error
+		)
 
 		if oldSessionID == "" {
 			newSessionID, err = webSessionRepo.Create(c.Context())

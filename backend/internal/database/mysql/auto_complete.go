@@ -15,9 +15,11 @@ const autocompleteConcurrency = 6
 func (r *MySQLRepository) AutoComplete(ctx context.Context, data *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
 	g, gctx := errgroup.WithContext(ctx)
 
-	var databases []Database
-	var views []View
-	var tables []Table
+	var (
+		databases []Database
+		views     []View
+		tables    []Table
+	)
 
 	g.Go(func() error {
 		if configured := databaseConnection.DefaultMysqlDatabase(r.base.Connection()); configured != "" {
@@ -29,7 +31,9 @@ func (r *MySQLRepository) AutoComplete(ctx context.Context, data *dto.AutoComple
 		if err != nil {
 			return err
 		}
+
 		databases = result
+
 		return nil
 	})
 
@@ -40,6 +44,7 @@ func (r *MySQLRepository) AutoComplete(ctx context.Context, data *dto.AutoComple
 		} else {
 			views, err = r.views(gctx, nil, true)
 		}
+
 		return err
 	})
 
@@ -50,6 +55,7 @@ func (r *MySQLRepository) AutoComplete(ctx context.Context, data *dto.AutoComple
 		} else {
 			tables, err = r.tables(gctx, nil, true)
 		}
+
 		return err
 	})
 
@@ -72,17 +78,21 @@ func (r *MySQLRepository) AutoComplete(ctx context.Context, data *dto.AutoComple
 		} else {
 			gColumns, gColumnsCtx := errgroup.WithContext(ctx)
 			gColumns.SetLimit(autocompleteConcurrency)
+
 			var columnMap sync.Map
 
 			for _, table := range tables {
 				tableName := table.Name
 				databaseName := lo.FromPtr(data.Database)
+
 				gColumns.Go(func() error {
 					columnResult, err := r.columnsLite(gColumnsCtx, &databaseName, &tableName, true)
 					if err != nil {
 						return err
 					}
+
 					columnMap.Store(tableName, columnResult)
+
 					return nil
 				})
 			}
@@ -96,9 +106,11 @@ func (r *MySQLRepository) AutoComplete(ctx context.Context, data *dto.AutoComple
 				if !ok {
 					return true
 				}
+
 				if columnList, ok := value.([]string); ok {
 					columns[tableName] = columnList
 				}
+
 				return true
 			})
 		}

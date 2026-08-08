@@ -33,7 +33,6 @@ func BuildAIChatContext(ctx context.Context, opts databaseContract.AIContextOpti
 	tableSections, err := buildSections(ctx, tables, func(ctx context.Context, name string) ([]databaseContract.AIContextColumn, error) {
 		return provider.TableColumns(ctx, name, opts)
 	})
-
 	if err != nil {
 		return "", err
 	}
@@ -44,12 +43,14 @@ func BuildAIChatContext(ctx context.Context, opts databaseContract.AIContextOpti
 
 	if len(views) > 0 {
 		sb.WriteString("\nViews:\n")
+
 		viewSections, err := buildViewSections(ctx, views, func(ctx context.Context, name string) ([]databaseContract.AIContextColumn, error) {
 			return provider.ViewColumns(ctx, name, opts)
 		})
 		if err != nil {
 			return "", err
 		}
+
 		for _, section := range viewSections {
 			sb.WriteString(section)
 		}
@@ -85,18 +86,21 @@ func BuildAICompleteContext(ctx context.Context, opts databaseContract.AIContext
 	if err != nil {
 		return "", err
 	}
+
 	for _, section := range tableSections {
 		sb.WriteString(section)
 	}
 
 	if len(opts.Views) > 0 {
 		sb.WriteString("\nViews:\n")
+
 		viewSections, err := buildViewSections(ctx, opts.Views, func(ctx context.Context, name string) ([]databaseContract.AIContextColumn, error) {
 			return provider.ViewColumns(ctx, name, opts)
 		})
 		if err != nil {
 			return "", err
 		}
+
 		for _, section := range viewSections {
 			sb.WriteString(section)
 		}
@@ -111,8 +115,6 @@ func buildSections(ctx context.Context, names []string, fetchColumns func(ctx co
 	g.SetLimit(6)
 
 	for idx, name := range names {
-		idx := idx
-		name := name
 		g.Go(func() error {
 			columns, err := fetchColumns(groupCtx, name)
 			if err != nil {
@@ -148,6 +150,7 @@ func buildSections(ctx context.Context, names []string, fetchColumns func(ctx co
 
 			sectionBuilder.WriteString("\n")
 			sections[idx] = sectionBuilder.String()
+
 			return nil
 		})
 	}
@@ -155,6 +158,7 @@ func buildSections(ctx context.Context, names []string, fetchColumns func(ctx co
 	if err := g.Wait(); err != nil {
 		return nil, err
 	}
+
 	return sections, nil
 }
 
@@ -164,8 +168,6 @@ func buildViewSections(ctx context.Context, names []string, fetchColumns func(ct
 	g.SetLimit(6)
 
 	for idx, name := range names {
-		idx := idx
-		name := name
 		g.Go(func() error {
 			columns, err := fetchColumns(groupCtx, name)
 			if err != nil {
@@ -174,6 +176,7 @@ func buildViewSections(ctx context.Context, names []string, fetchColumns func(ct
 
 			var sectionBuilder strings.Builder
 			fmt.Fprintf(&sectionBuilder, "%d. %s\n", idx+1, name)
+
 			for _, column := range columns {
 				sectionBuilder.WriteString("   - ")
 				sectionBuilder.WriteString(column.Name)
@@ -181,8 +184,10 @@ func buildViewSections(ctx context.Context, names []string, fetchColumns func(ct
 				sectionBuilder.WriteString(column.MappedType)
 				sectionBuilder.WriteString(")\n")
 			}
+
 			sectionBuilder.WriteString("\n")
 			sections[idx] = sectionBuilder.String()
+
 			return nil
 		})
 	}
@@ -190,6 +195,7 @@ func buildViewSections(ctx context.Context, names []string, fetchColumns func(ct
 	if err := g.Wait(); err != nil {
 		return nil, err
 	}
+
 	return sections, nil
 }
 
@@ -201,19 +207,23 @@ func columnContextDescriptor(column databaseContract.AIContextColumn) string {
 
 	if column.ForeignKey != nil {
 		fk := column.ForeignKey
+
 		refColumn := fk.RefColumn
 		if len(fk.RefColumns) > 0 {
 			refColumn = fk.RefColumns[0]
 		}
+
 		if len(fk.Columns) == len(fk.RefColumns) {
 			if idx := slices.Index(fk.Columns, column.Name); idx >= 0 {
 				refColumn = fk.RefColumns[idx]
 			}
 		}
+
 		descriptors = append(descriptors, fmt.Sprintf("FK → %s.%s", fk.TargetTable, refColumn))
 	}
 
 	descriptors = append(descriptors, columnTypeForContext(column))
+
 	return strings.Join(descriptors, ", ")
 }
 
@@ -222,6 +232,7 @@ func columnTypeForContext(column databaseContract.AIContextColumn) string {
 	if dataType != "" {
 		return dataType
 	}
+
 	return column.MappedType
 }
 
@@ -229,5 +240,6 @@ func valueFromPtr(value *string) string {
 	if value == nil {
 		return ""
 	}
+
 	return strings.TrimSpace(*value)
 }

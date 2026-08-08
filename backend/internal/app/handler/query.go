@@ -34,7 +34,6 @@ func (h QueryHandler) Run(c fiber.Ctx) error {
 	}
 
 	result, err := h.queryService.Run(c, req)
-
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)
@@ -55,7 +54,6 @@ func (h QueryHandler) Raw(c fiber.Ctx) error {
 	}
 
 	result, err := h.queryService.Raw(c, req)
-
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)
@@ -76,7 +74,6 @@ func (h QueryHandler) Update(c fiber.Ctx) error {
 	}
 
 	result, err := h.queryService.Update(c, req)
-
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)

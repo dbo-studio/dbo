@@ -57,6 +57,7 @@ func NewConnectionManager(historyRepo HistoryWriter, secrets secretStore.ISecret
 		safetyTTL:   6 * time.Hour,
 	}
 	go cm.cleanupInactiveConnections()
+
 	return cm
 }
 
@@ -75,6 +76,7 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 				return conn.DB, nil
 			}
 		}
+
 		delete(cm.connections, key)
 		_ = cm.closeConn(conn)
 	}
@@ -87,6 +89,7 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 	}
 
 	var dialect gorm.Dialector
+
 	switch connection.ConnectionType {
 	case string(databaseContract.Mysql):
 		dialect = OpenMysqlConnection(connection)
@@ -117,6 +120,7 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 		DB:       db,
 		LastUsed: time.Now(),
 	}
+
 	return db, nil
 }
 
@@ -144,6 +148,7 @@ func (cm *ConnectionManager) GetConnectionForDatabase(ctx context.Context, conne
 				return conn.DB, nil
 			}
 		}
+
 		delete(cm.connections, key)
 		_ = cm.closeConn(conn)
 	}
@@ -175,6 +180,7 @@ func (cm *ConnectionManager) GetConnectionForDatabase(ctx context.Context, conne
 		DB:       db,
 		LastUsed: time.Now(),
 	}
+
 	return db, nil
 }
 
@@ -183,6 +189,7 @@ func (cm *ConnectionManager) IsOpen(ctx context.Context, ownerID string, connect
 	defer cm.mu.Unlock()
 
 	key := connKey{OwnerID: ownerID, ConnectionID: connectionID}
+
 	c, ok := cm.connections[key]
 	if !ok {
 		return false
@@ -193,9 +200,11 @@ func (cm *ConnectionManager) IsOpen(ctx context.Context, ownerID string, connect
 		delete(cm.connections, key)
 		return false
 	}
+
 	if err := sqlDB.PingContext(ctx); err != nil {
 		delete(cm.connections, key)
 		_ = cm.closeConn(c)
+
 		return false
 	}
 
@@ -212,6 +221,7 @@ func (cm *ConnectionManager) Close(_ context.Context, ownerID string, connection
 			_ = cm.closeConn(c)
 		}
 	}
+
 	return nil
 }
 
@@ -229,6 +239,7 @@ func (cm *ConnectionManager) CloseDatabase(_ context.Context, ownerID string, co
 			_ = cm.closeConn(c)
 		}
 	}
+
 	return nil
 }
 
@@ -237,11 +248,13 @@ func (cm *ConnectionManager) ListOpen(ownerID string) []uint {
 	defer cm.mu.Unlock()
 
 	out := make([]uint, 0)
+
 	for k := range cm.connections {
 		if k.OwnerID == ownerID {
 			out = append(out, k.ConnectionID)
 		}
 	}
+
 	return out
 }
 
@@ -275,10 +288,12 @@ func (cm *ConnectionManager) closeConn(c *conn) error {
 	if c == nil || c.DB == nil {
 		return nil
 	}
+
 	db, err := c.DB.DB()
 	if err != nil {
-		return nil
+		return err
 	}
+
 	return db.Close()
 }
 

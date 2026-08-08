@@ -7,10 +7,13 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
+
+const sqlDriverMysql = "mysql"
 
 func (r *MySQLRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error) {
 	if req == nil {
@@ -22,7 +25,11 @@ func (r *MySQLRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryR
 		return nil, fmt.Errorf("invalid node: database or table missing")
 	}
 
-	queries := r.generateQueries(ctx, req, node)
+	queries, err := r.generateQueries(ctx, req, node)
+	if err != nil {
+		return nil, err
+	}
+
 	if len(queries) == 0 {
 		return &dto.UpdateQueryResponse{
 			Query:        []string{},
@@ -31,17 +38,19 @@ func (r *MySQLRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryR
 	}
 
 	rowsAffected := 0
-	err := r.base.DB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+
+	err = r.base.DB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, query := range queries {
 			result := tx.Exec(query)
 			if result.Error != nil {
 				return result.Error
 			}
+
 			rowsAffected += int(result.RowsAffected)
 		}
+
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -52,17 +61,42 @@ func (r *MySQLRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryR
 	}, nil
 }
 
-func (r *MySQLRepository) generateQueries(ctx context.Context, req *dto.UpdateQueryRequest, node contract.DBNode) []string {
+func (r *MySQLRepository) generateQueries(ctx context.Context, req *dto.UpdateQueryRequest, node contract.DBNode) ([]string, error) {
+	columnTypes, err := r.columnTypeMap(ctx, node)
+	if err != nil {
+		return nil, err
+	}
+
 	var queries []string
 
-	queries = append(queries, r.generateUpdateQueries(ctx, req, node)...)
-	queries = append(queries, r.generateInsertQueries(ctx, req, node)...)
+	queries = append(queries, r.generateUpdateQueries(ctx, req, node, columnTypes)...)
+
+	inserts, err := r.generateInsertQueries(ctx, req, node, columnTypes)
+	if err != nil {
+		return nil, err
+	}
+
+	queries = append(queries, inserts...)
 	queries = append(queries, r.generateDeleteQueries(ctx, req, node)...)
 
-	return queries
+	return queries, nil
 }
 
-func (r *MySQLRepository) generateUpdateQueries(ctx context.Context, req *dto.UpdateQueryRequest, node contract.DBNode) []string {
+func (r *MySQLRepository) columnTypeMap(ctx context.Context, node contract.DBNode) (map[string]string, error) {
+	columns, err := r.columns(ctx, &node.Database, &node.Table, []string{}, true, true)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make(map[string]string, len(columns))
+	for _, column := range columns {
+		out[column.ColumnName] = column.DataType
+	}
+
+	return out, nil
+}
+
+func (r *MySQLRepository) generateUpdateQueries(ctx context.Context, req *dto.UpdateQueryRequest, node contract.DBNode, columnTypes map[string]string) []string {
 	if req == nil || req.EditedItems == nil {
 		return nil
 	}
@@ -83,10 +117,14 @@ func (r *MySQLRepository) generateUpdateQueries(ctx context.Context, req *dto.Up
 			continue
 		}
 
-		setClauses := buildSetClauses(editedItem.Values)
+		setClauses, err := buildSetClauses(editedItem.Values, columnTypes)
+		if err != nil || len(setClauses) == 0 {
+			continue
+		}
+
 		whereClauses := r.buildWhereClauses(ctx, primaryKeys, editedItem.Conditions)
 
-		if len(setClauses) == 0 || len(whereClauses) == 0 {
+		if len(whereClauses) == 0 {
 			continue
 		}
 
@@ -144,9 +182,9 @@ func (r *MySQLRepository) generateDeleteQueries(ctx context.Context, req *dto.Up
 	return queries
 }
 
-func (r *MySQLRepository) generateInsertQueries(_ context.Context, req *dto.UpdateQueryRequest, node contract.DBNode) []string {
+func (r *MySQLRepository) generateInsertQueries(_ context.Context, req *dto.UpdateQueryRequest, node contract.DBNode, columnTypes map[string]string) ([]string, error) {
 	if req == nil || req.AddedItems == nil {
-		return nil
+		return nil, nil
 	}
 
 	var queries []string
@@ -159,12 +197,17 @@ func (r *MySQLRepository) generateInsertQueries(_ context.Context, req *dto.Upda
 		var columns, values []string
 
 		for key, value := range addedItem {
-			if value == "@DEFAULT" {
+			if key == "dbo_index" || value == "@DEFAULT" {
 				continue
 			}
 
+			formatted, err := formatColumnValue(key, value, columnTypes)
+			if err != nil {
+				return nil, err
+			}
+
 			columns = append(columns, fmt.Sprintf("`%s`", key))
-			values = append(values, helper.FormatSQLValue(value))
+			values = append(values, formatted)
 		}
 
 		if len(columns) == 0 {
@@ -182,24 +225,46 @@ func (r *MySQLRepository) generateInsertQueries(_ context.Context, req *dto.Upda
 		queries = append(queries, query)
 	}
 
-	return queries
+	return queries, nil
 }
 
-func buildSetClauses(values map[string]any) []string {
+func buildSetClauses(values map[string]any, columnTypes map[string]string) ([]string, error) {
 	var setClauses []string
 
 	for key, value := range values {
+		if key == "dbo_index" {
+			continue
+		}
+
 		switch value {
 		case nil:
 			setClauses = append(setClauses, fmt.Sprintf("`%s` = NULL", key))
 		case "@DEFAULT":
 			setClauses = append(setClauses, fmt.Sprintf("`%s` = DEFAULT", key))
 		default:
-			setClauses = append(setClauses, fmt.Sprintf("`%s` = %s", key, helper.FormatSQLValue(value)))
+			formatted, err := formatColumnValue(key, value, columnTypes)
+			if err != nil {
+				return nil, err
+			}
+
+			setClauses = append(setClauses, fmt.Sprintf("`%s` = %s", key, formatted))
 		}
 	}
 
-	return setClauses
+	return setClauses, nil
+}
+
+func formatColumnValue(columnName string, value any, columnTypes map[string]string) (string, error) {
+	dbType := ""
+	if columnTypes != nil {
+		dbType = columnTypes[columnName]
+	}
+
+	if s, ok := value.(string); ok && databaseCore.IsGeometryDBType(dbType) {
+		return databaseCore.FormatGeometrySQL(sqlDriverMysql, dbType, s)
+	}
+
+	return helper.FormatSQLValueForDriver(sqlDriverMysql, value)
 }
 
 func (r *MySQLRepository) buildWhereClauses(_ context.Context, primaryKeys []string, conditions map[string]any) []string {
@@ -218,11 +283,17 @@ func (r *MySQLRepository) buildWhereClauses(_ context.Context, primaryKeys []str
 	}
 
 	var whereClauses []string
+
 	for key, value := range conditionKeys {
 		if value == nil {
 			whereClauses = append(whereClauses, fmt.Sprintf("`%s` IS NULL", key))
 		} else {
-			whereClauses = append(whereClauses, fmt.Sprintf("`%s` = %s", key, helper.FormatSQLValue(value)))
+			formatted, err := helper.FormatSQLValueForDriver(sqlDriverMysql, value)
+			if err != nil {
+				continue
+			}
+
+			whereClauses = append(whereClauses, fmt.Sprintf("`%s` = %s", key, formatted))
 		}
 	}
 

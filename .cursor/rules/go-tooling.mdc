@@ -21,7 +21,7 @@ cd backend && go fmt ./...
 cd backend && golangci-lint run
 ```
 
-Enabled linters: `errcheck`, `govet`, `staticcheck`, `unused`, `revive`, `misspell`, `thelper`, `mirror`, `fatcontext`, `loggercheck`.
+Enabled linters: `errcheck`, `govet`, `staticcheck`, `unused`, `revive`, `misspell`, `thelper`, `mirror`, `fatcontext`, `loggercheck`, `wsl_v5`, `errorlint`, `nilerr`, `bodyclose`, `contextcheck`, `copyloopvar`.
 
 Key revive rules enforced: `context-as-argument`, `error-naming`, `error-return`, `receiver-naming`.
 

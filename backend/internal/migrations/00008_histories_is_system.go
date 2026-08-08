@@ -16,11 +16,13 @@ func upHistoriesIsSystem(ctx context.Context, tx *sql.Tx) error {
 	if err != nil {
 		return err
 	}
+
 	if has {
 		return nil
 	}
 
 	_, err = tx.ExecContext(ctx, "ALTER TABLE histories ADD COLUMN is_system INTEGER NOT NULL DEFAULT 0")
+
 	return err
 }
 

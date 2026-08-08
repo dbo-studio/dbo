@@ -31,6 +31,7 @@ func ServeCommand() *cobra.Command {
 			Execute()
 		},
 	}
+
 	return cmdServe
 }
 
@@ -44,6 +45,7 @@ func loadEnvFiles() {
 
 func Execute() {
 	loadEnvFiles()
+
 	cfg := config.New()
 	appContainer := container.Instance()
 	appContainer.SetConfig(cfg)

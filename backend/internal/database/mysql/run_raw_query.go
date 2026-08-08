@@ -28,7 +28,9 @@ func (r *mysqlRawQueryResolver) IsBaseTable(ctx context.Context, database, schem
 	_ = schema
 
 	dbName := lo.FromPtr(database)
+
 	var tableType string
+
 	err := r.repo.base.DB().WithContext(ctx).
 		Table("information_schema.TABLES").
 		Select("TABLE_TYPE").
@@ -53,11 +55,13 @@ func (r *mysqlRawQueryResolver) LoadTableColumns(ctx context.Context, database, 
 
 func (r *mysqlRawQueryResolver) BuildNodeID(_ context.Context, database, schema, table string) string {
 	_ = schema
+
 	if database == "" {
 		options, err := helper.RawJSONToStruct[dto.MysqlCreateConnectionParams](json.RawMessage(r.repo.base.Connection().Options))
 		if err == nil {
 			database = lo.FromPtr(options.Database)
 		}
 	}
+
 	return fmt.Sprintf("%s.%s", database, table)
 }

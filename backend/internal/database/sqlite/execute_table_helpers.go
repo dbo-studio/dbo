@@ -13,6 +13,7 @@ func (r *SQLiteRepository) getNewTableName(tableParams *dto.SQLiteTableParams, o
 	if tableParams.New != nil && tableParams.New.Name != nil && *tableParams.New.Name != "" {
 		return *tableParams.New.Name
 	}
+
 	return oldName
 }
 
@@ -21,12 +22,15 @@ func (r *SQLiteRepository) filterActiveColumns(columns []dto.SQLiteTableColumn) 
 		if col.Added != nil && col.Deleted != nil && *col.Added && *col.Deleted {
 			return false
 		}
+
 		if lo.FromPtr(col.Deleted) && !lo.FromPtr(col.Added) {
 			return false
 		}
+
 		if col.Added == nil || *col.Added {
 			return true
 		}
+
 		return col.New != nil
 	})
 }
@@ -36,9 +40,11 @@ func (r *SQLiteRepository) filterActiveForeignKeys(foreignKeys []dto.SQLiteTable
 		if fk.Added != nil && fk.Deleted != nil && *fk.Added && *fk.Deleted {
 			return false
 		}
+
 		if fk.Added == nil || *fk.Added {
 			return true
 		}
+
 		return fk.New != nil
 	})
 }
@@ -48,9 +54,11 @@ func (r *SQLiteRepository) filterActiveKeys(keys []dto.SQLiteTableKey) []dto.SQL
 		if key.Added != nil && key.Deleted != nil && *key.Added && *key.Deleted {
 			return false
 		}
+
 		if key.Added == nil || *key.Added {
 			return true
 		}
+
 		return key.New != nil
 	})
 }
@@ -75,6 +83,7 @@ func (r *SQLiteRepository) quoteColumnList(columns []string) string {
 	for i, col := range columns {
 		quoted[i] = quoteIdent(col)
 	}
+
 	return strings.Join(quoted, ", ")
 }
 
@@ -90,6 +99,7 @@ func (r *SQLiteRepository) getCommonColumns(columnParams *dto.SQLiteTableColumnP
 	}
 
 	commonColumns := make([]string, 0)
+
 	for _, col := range columnParams.Columns {
 		if r.isColumnAddedOrDeleted(col) {
 			continue
@@ -112,9 +122,11 @@ func (r *SQLiteRepository) getColumnName(col dto.SQLiteTableColumn) string {
 	if col.New != nil && col.New.Name != nil {
 		return *col.New.Name
 	}
+
 	if col.Old != nil && col.Old.Name != nil {
 		return *col.Old.Name
 	}
+
 	return ""
 }
 
@@ -140,6 +152,7 @@ func (r *SQLiteRepository) tableExists(tableName string) bool {
 	r.base.DB().Table("sqlite_master").
 		Where("type = 'table' AND name = ?", tableName).
 		Count(&count)
+
 	return count > 0
 }
 
@@ -147,5 +160,6 @@ func quoteIdent(name string) string {
 	if name == "" {
 		return name
 	}
+
 	return "\"" + strings.ReplaceAll(name, "\"", "") + "\""
 }

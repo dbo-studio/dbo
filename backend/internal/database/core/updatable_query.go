@@ -53,6 +53,7 @@ func AnalyzeUpdatableQuery(sqlText string, defaultDatabase, defaultSchema *strin
 	}
 
 	analysis.extractFromStatement(stmt, defaultDatabase, defaultSchema)
+
 	return analysis
 }
 
@@ -60,24 +61,31 @@ func (a *UpdatableQueryAnalysis) EditableReason() string {
 	if !a.IsSelect {
 		return "Only SELECT query results can be edited"
 	}
+
 	if a.HasUnion {
 		return "UNION queries cannot be edited inline"
 	}
+
 	if a.HasGroupBy {
 		return "GROUP BY queries cannot be edited inline"
 	}
+
 	if a.HasDistinct {
 		return "DISTINCT queries cannot be edited inline"
 	}
+
 	if a.HasAggregate {
 		return "Aggregate queries cannot be edited inline"
 	}
+
 	if len(a.Tables) == 0 {
 		return "Could not determine source table"
 	}
+
 	if a.HasJoin && a.DrivingTable == "" {
 		return "Could not determine driving table for JOIN query"
 	}
+
 	if !a.HasJoin && len(a.Tables) != 1 {
 		return "Multiple source tables are not supported"
 	}
@@ -95,9 +103,11 @@ func (a *UpdatableQueryAnalysis) TargetTable() string {
 	if a.HasJoin {
 		return a.DrivingTable
 	}
+
 	if len(a.Tables) == 1 {
 		return a.Tables[0].Name
 	}
+
 	return ""
 }
 
@@ -108,6 +118,7 @@ func (a *UpdatableQueryAnalysis) TargetSchema(defaultSchema *string) string {
 			return table.Schema
 		}
 	}
+
 	return lo.FromPtr(defaultSchema)
 }
 
@@ -118,6 +129,7 @@ func (a *UpdatableQueryAnalysis) TargetDatabase(defaultDatabase *string) string 
 			return table.Database
 		}
 	}
+
 	return lo.FromPtr(defaultDatabase)
 }
 
@@ -134,14 +146,18 @@ func (a *UpdatableQueryAnalysis) IsColumnFromDrivingTable(outputName string) boo
 		if col.OutputName != outputName {
 			continue
 		}
+
 		if col.IsComputed || col.IsAggregate || col.Ambiguous {
 			return false
 		}
+
 		if a.HasJoin {
 			return col.SourceTable == a.DrivingTable
 		}
+
 		return col.SourceTable == a.TargetTable()
 	}
+
 	return false
 }
 
@@ -170,9 +186,11 @@ func (a *UpdatableQueryAnalysis) isExplicitJoinedTableColumn(outputName string) 
 		if col.OutputName != outputName || col.IsStar {
 			continue
 		}
+
 		if col.IsComputed || col.IsAggregate || col.Ambiguous {
 			continue
 		}
+
 		return col.SourceTable != "" && col.SourceTable != a.DrivingTable
 	}
 
@@ -220,6 +238,7 @@ func extractTableRefs(from sqlparser.TableExprs, defaultDatabase, defaultSchema 
 
 	refs := make([]TableRef, 0)
 	collectTableRefs(from, &refs, defaultDatabase, defaultSchema)
+
 	return refs
 }
 
@@ -232,6 +251,7 @@ func collectTableRefs(from sqlparser.TableExprs, refs *[]TableRef, defaultDataba
 				if expr.As.String() != "" {
 					ref.Alias = expr.As.String()
 				}
+
 				*refs = append(*refs, ref)
 			}
 		case *sqlparser.JoinTableExpr:
@@ -261,6 +281,7 @@ func tableRefFromName(tableName sqlparser.TableName, defaultDatabase, defaultSch
 	if ref.Schema == "" {
 		ref.Schema = lo.FromPtr(defaultSchema)
 	}
+
 	if ref.Database == "" {
 		ref.Database = lo.FromPtr(defaultDatabase)
 	}
@@ -270,11 +291,13 @@ func tableRefFromName(tableName sqlparser.TableName, defaultDatabase, defaultSch
 
 func countJoins(from sqlparser.TableExprs) int {
 	count := 0
+
 	for _, tableExpr := range from {
 		if _, ok := tableExpr.(*sqlparser.JoinTableExpr); ok {
 			count++
 		}
 	}
+
 	return count
 }
 
@@ -286,6 +309,7 @@ func buildAliasMap(tables []TableRef) map[string]string {
 			aliasMap[strings.ToLower(table.Alias)] = table.Name
 		}
 	}
+
 	return aliasMap
 }
 
@@ -304,9 +328,11 @@ func extractSelectColumns(
 			if tableName == "" && !hasJoin && len(tables) == 1 {
 				tableName = tables[0].Name
 			}
+
 			if tableName == "" {
 				continue
 			}
+
 			columns = append(columns, SelectColumnRef{
 				OutputName:   "*",
 				SourceTable:  tableName,
@@ -340,6 +366,7 @@ func analyzeAliasedExpr(
 		if outputName == "" {
 			outputName = node.Name.String()
 		}
+
 		return []SelectColumnRef{{
 			OutputName:   outputName,
 			SourceTable:  sourceTable,
@@ -350,6 +377,7 @@ func analyzeAliasedExpr(
 		if outputName == "" {
 			outputName = node.Name.String()
 		}
+
 		return []SelectColumnRef{{
 			OutputName:  outputName,
 			IsAggregate: true,
@@ -359,6 +387,7 @@ func analyzeAliasedExpr(
 		if outputName == "" {
 			outputName = sqlparser.String(expr.Expr)
 		}
+
 		return []SelectColumnRef{{
 			OutputName: outputName,
 			IsComputed: true,
@@ -377,6 +406,7 @@ func resolveColumnTable(
 		if table, ok := aliasMap[strings.ToLower(qualifier)]; ok {
 			return table, false
 		}
+
 		return "", true
 	}
 

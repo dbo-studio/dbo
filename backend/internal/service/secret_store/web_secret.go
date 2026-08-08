@@ -26,6 +26,7 @@ func NewWebDBStore(
 	ttl time.Duration,
 ) *WebDBStore {
 	sum := sha256.Sum256([]byte(secret))
+
 	return &WebDBStore{
 		webSessionRepo:          webSessionRepo,
 		webConnectionSecretRepo: webConnectionSecretRepo,
@@ -45,7 +46,9 @@ func (s *WebDBStore) SetConnectionPassword(ctx context.Context, ownerID string, 
 	}
 
 	now := time.Now()
+
 	var expiresAt *time.Time
+
 	if !remember {
 		t := now.Add(s.ttl)
 		expiresAt = &t
@@ -69,6 +72,7 @@ func (s *WebDBStore) GetConnectionPassword(ctx context.Context, ownerID string, 
 		if errors.Is(err, apperror.ErrWebConnectionSecretNotFound) {
 			return "", apperror.Unauthorized(connectionID)
 		}
+
 		return "", err
 	}
 
@@ -108,6 +112,7 @@ func (s *WebDBStore) IsTemporaryConnectionPassword(ctx context.Context, ownerID 
 		if errors.Is(err, apperror.ErrWebConnectionSecretNotFound) {
 			return false, nil
 		}
+
 		return false, err
 	}
 

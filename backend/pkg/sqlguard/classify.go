@@ -66,6 +66,7 @@ func ClassifySQL(sql string) Classification {
 	}
 
 	parts := splitStatements(trimmed)
+
 	best := Classification{Class: ClassRead, Statements: parts}
 	for _, part := range parts {
 		class := classifySingle(part)
@@ -73,6 +74,7 @@ func ClassifySQL(sql string) Classification {
 			best.Class = class
 		}
 	}
+
 	return best
 }
 
@@ -84,6 +86,7 @@ func ClassifyAction(action string) Class {
 		if action == "dropIndex" || action == "dropSequence" {
 			return ClassDDL
 		}
+
 		return ClassCatastrophicDDL
 	case "createDatabase", "editDatabase", "createSchema", "editSchema",
 		"createTable", "editTable", "createView", "editView",
@@ -97,6 +100,7 @@ func ClassifyAction(action string) Class {
 
 func splitStatements(sql string) []string {
 	raw := statementSplitPattern.Split(sql, -1)
+
 	parts := make([]string, 0, len(raw))
 	for _, part := range raw {
 		part = strings.TrimSpace(part)
@@ -104,9 +108,11 @@ func splitStatements(sql string) []string {
 			parts = append(parts, part)
 		}
 	}
+
 	if len(parts) == 0 {
 		return []string{sql}
 	}
+
 	return parts
 }
 
@@ -138,17 +144,20 @@ func classifyParsed(stmt sqlparser.Statement, raw string) Class {
 		if s.Where == nil && !wherePattern.MatchString(raw) {
 			return ClassDangerousDML
 		}
+
 		return ClassWriteDML
 	case *sqlparser.Delete:
 		if s.Where == nil && !wherePattern.MatchString(raw) {
 			return ClassDangerousDML
 		}
+
 		return ClassWriteDML
 	case *sqlparser.DDL:
 		action := strings.ToLower(s.Action)
 		if action == "drop" || action == "truncate" {
 			return ClassCatastrophicDDL
 		}
+
 		return ClassDDL
 	default:
 		return classifyHeuristic(raw)
@@ -167,6 +176,7 @@ func classifyHeuristic(sql string) Class {
 		if !wherePattern.MatchString(sql) {
 			return ClassDangerousDML
 		}
+
 		return ClassWriteDML
 	case insertPattern.MatchString(sql):
 		return ClassWriteDML

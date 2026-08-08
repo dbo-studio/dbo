@@ -105,5 +105,6 @@ func (r *MySQLRepository) ContextMenu(nodeType contract.TreeNodeType) []contract
 	}
 
 	actions = append(actions, defaultActions...)
+
 	return actions
 }

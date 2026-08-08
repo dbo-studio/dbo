@@ -31,6 +31,7 @@ func (h McpHandler) Status(c fiber.Ctx) error {
 	if err != nil {
 		return response.ErrorBuilder().FromError(err).Send(c)
 	}
+
 	return response.SuccessBuilder().WithData(result).Send(c)
 }
 
@@ -60,6 +61,7 @@ func (h McpHandler) RegenerateToken(c fiber.Ctx) error {
 
 func (h McpHandler) Proxy(c fiber.Ctx) error {
 	token := serviceMcp.ExtractBearer(c.Get("Authorization"))
+
 	settings, ok := h.mcpService.AuthenticateToken(c, token)
 	if !ok {
 		return response.ErrorBuilder().FromError(apperror.Unauthorized(0)).Send(c)

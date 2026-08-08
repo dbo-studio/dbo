@@ -68,5 +68,6 @@ func (r AiProviderRepoImpl) MakeAllProvidersNotActive(ctx context.Context, provi
 		result := r.db.WithContext(ctx).Model(&model.AiProvider{}).Not("id", provider.ID).Update("is_active", false)
 		return result.Error
 	}
+
 	return nil
 }

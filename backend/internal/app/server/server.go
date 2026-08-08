@@ -68,6 +68,7 @@ func (r *Server) Start(isLocal bool, port string) error {
 	r.app.Use(middleware.OwnerSessionMiddleware(r.webSessionRepo))
 
 	r.routing()
+
 	return r.app.Listen(":" + port)
 }
 

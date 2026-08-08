@@ -29,6 +29,7 @@ func TestClassifySQL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			got := ClassifySQL(tt.sql)
 			if got.Class != tt.want {
 				t.Fatalf("ClassifySQL(%q) = %s, want %s", tt.sql, got.Class, tt.want)
@@ -55,6 +56,7 @@ func TestClassifyAction(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.action, func(t *testing.T) {
 			t.Parallel()
+
 			if got := ClassifyAction(tt.action); got != tt.want {
 				t.Fatalf("ClassifyAction(%q) = %s, want %s", tt.action, got, tt.want)
 			}

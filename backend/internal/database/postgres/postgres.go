@@ -28,6 +28,7 @@ func NewPostgresRepository(ctx context.Context, connection *model.Connection, cm
 
 func (r *PostgresRepository) Version(ctx context.Context) (string, error) {
 	var version string
+
 	result := r.base.DB().WithContext(ctx).Raw("SELECT version()").Scan(&version)
 	version = strings.Split(version, " ")[1]
 

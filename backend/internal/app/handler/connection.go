@@ -34,6 +34,7 @@ func (h ConnectionHandler) Connections(c fiber.Ctx) error {
 
 func (h ConnectionHandler) Delete(c fiber.Ctx) error {
 	connectionID := fiber.Params[int32](c, "id")
+
 	data, err := h.connectionService.Delete(c, connectionID)
 	if err != nil {
 		h.logger.Error(err.Error())
@@ -124,10 +125,12 @@ func (h ConnectionHandler) Create(c fiber.Ctx) error {
 
 func (h ConnectionHandler) UnlockSafeMode(c fiber.Ctx) error {
 	connectionID := fiber.Params[int32](c, "id")
+
 	req := new(dto.SafeModeUnlockRequest)
 	if err := c.Bind().Body(req); err != nil {
 		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}
+
 	if err := req.Validate(); err != nil {
 		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
 	}
