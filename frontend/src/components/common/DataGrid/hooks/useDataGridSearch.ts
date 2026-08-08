@@ -1,4 +1,5 @@
 import type { ColumnType, RowType } from '@/types';
+import { cellSearchText } from '@/core/utils/dataValue';
 import { useCallback, useMemo, useState } from 'react';
 
 export type SearchMatch = {
@@ -47,8 +48,8 @@ export function useDataGridSearch({ rows, columns }: UseDataGridSearchProps): Us
           return;
         }
 
-        const value = row[columnId] as string;
-        const valueString = value == null ? 'NULL' : String(value);
+        const value = row[columnId];
+        const valueString = cellSearchText(value, column);
         const valueLower = valueString.toLowerCase();
 
         if (valueLower.includes(searchLower)) {

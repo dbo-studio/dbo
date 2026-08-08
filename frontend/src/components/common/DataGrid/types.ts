@@ -12,7 +12,8 @@ export type DataGridTableCellProps = {
   row: RowType;
   rowIndex: number;
   columnId: string;
-  value: string | number | boolean | null | undefined;
+  column?: ColumnType;
+  value: unknown;
   editable: boolean;
   searchTerm?: string;
   isSearchMatch?: boolean;
@@ -35,7 +36,8 @@ export type DataGridTableRowProps = {
 
 export type CellEditingReturn = {
   inputRef: React.RefObject<HTMLInputElement | null>;
-  handleRowChange: (e: React.FocusEvent<HTMLInputElement>) => void;
+  handleRowChange: (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  commitValue: (newValue: unknown) => void;
 };
 
 export type CellSelectionReturn = {

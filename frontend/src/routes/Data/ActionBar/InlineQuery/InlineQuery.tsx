@@ -45,7 +45,7 @@ export default function InlineQuery() {
   );
 
   return (
-    <InlineQueryStackStyled direction='row'>
+    <InlineQueryStackStyled direction='row' data-testid='inline-query'>
       <Box
         sx={{
           flex: 1,
@@ -61,7 +61,12 @@ export default function InlineQuery() {
           onEnter={(q) => void handleRunQuery(q)}
         />
       </Box>
-      <SubmitButtonStyled variant='contained' onClick={() => void handleRunQuery()}>
+      <SubmitButtonStyled
+        variant='contained'
+        data-testid='inline-query-run'
+        aria-label='Run inline query'
+        onClick={() => void handleRunQuery()}
+      >
         <CustomIcon type='check' size='s' />
       </SubmitButtonStyled>
     </InlineQueryStackStyled>

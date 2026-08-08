@@ -306,12 +306,14 @@ const mapResponseIntoFormObject = (response: FormObjectResponseType): FormObject
 
   const mappedData: FormFieldType[][] = data.map((rowObj) =>
     schema.map((column) => {
-      const value = rowObj[column.id];
+      const rawValue = rowObj[column.id];
+      const emptyValue = column.type === 'checkbox' ? false : '';
+      const value = rawValue ?? emptyValue;
 
       return {
         ...column,
-        value: value ?? '',
-        originalValue: value ?? '',
+        value,
+        originalValue: value,
         added: false,
         deleted: false,
         updated: false

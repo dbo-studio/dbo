@@ -7,7 +7,7 @@ export default function ColumnItem({ column, onClick }: ColumnItemProps): JSX.El
   const theme = useTheme();
 
   return (
-    <ColumnItemStyled onClick={(): void => onClick(column)}>
+    <ColumnItemStyled data-testid={`column-visibility-${column.name}`} onClick={(): void => onClick(column)}>
       <Checkbox checked={column.isActive} style={{ padding: 0, marginRight: theme.spacing(1) }} size='small' />
       <Typography color={'textText'} variant='body2'>
         {column.name}

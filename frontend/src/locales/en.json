@@ -343,5 +343,21 @@
   "previous_page": "Previous page",
   "next_page": "Next page",
   "preview_failed": "Failed to preview changes",
-  "discard_failed": "Failed to discard changes"
+  "discard_failed": "Failed to discard changes",
+  "map_unavailable_offline": "Map unavailable offline — edit WKT below.",
+  "could_not_render_wkt": "Could not render this WKT on the map. Edit the text below.",
+  "enter_wkt_to_preview": "Enter WKT to preview on the map.",
+  "download": "Download",
+  "apply": "Apply",
+  "clear": "Clear",
+  "invalid_hex": "Invalid hex — use even-length hex digits (spaces allowed).",
+  "invalid_json": "Invalid JSON",
+  "binary_too_large_to_edit": "Binary too large to edit in Quick Look.",
+  "no_image_payload": "No image payload in this cell.",
+  "open_binary_for_hex": "Open a binary / BLOB cell to view or edit hex.",
+  "large_file_warning": "Large file ({{size}}). Apply may be slow.",
+  "file_not_image_warning": "File does not look like PNG/JPEG/GIF/WEBP — it will still be stored as binary.",
+  "could_not_read_file": "Could not read the selected file.",
+  "null_click_apply_to_clear": "NULL — click Apply to clear",
+  "invalid_geometry_wkt": "Invalid or unsupported WKT for this geometry column."
 }

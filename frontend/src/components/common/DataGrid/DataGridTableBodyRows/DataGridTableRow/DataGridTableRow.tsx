@@ -1,9 +1,10 @@
 import { useDataStore } from '@/store/dataStore/data.store';
-import { Checkbox } from '@mui/material';
+import { cellSearchText } from '@/core/utils/dataValue';
 import clsx from 'clsx';
 import { JSX, memo, useCallback, useMemo } from 'react';
 import { SelectTableCell, StyledTableRow, TableCell } from '../../DataGrid.styled';
 import { DataGridTableCell } from '../../DataGridTableCell/DataGridTableCell';
+import GridCheckbox from '../../GridCheckbox';
 import type { DataGridTableRowProps } from '../../types';
 
 const DataGridTableRow = memo(
@@ -22,8 +23,6 @@ const DataGridTableRow = memo(
   }: DataGridTableRowProps): JSX.Element {
     const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
 
-    // the row style is used to apply background color to the row based on the row index
-    // because the rows are virtualized, we need to apply the background color to the row based on the row index
     const hasHighlight: boolean = isRemoved || isUnsaved || isEdited || isSelected;
     const isStriped: boolean = !hasHighlight && rowIndex % 2 !== 0;
 
@@ -81,36 +80,16 @@ const DataGridTableRow = memo(
         {columns.map((column, columnIndex) => {
           const columnId = column.name;
           const cellEditable = editable && column.editable !== false;
-          const value =
-            row[columnId] !== undefined &&
-            (typeof row[columnId] === 'string' ||
-              typeof row[columnId] === 'number' ||
-              typeof row[columnId] === 'boolean' ||
-              row[columnId] === null)
-              ? row[columnId]
-              : undefined;
-
-          const isSearchMatch =
-            searchTerm && typeof value === 'string'
-              ? value.toLowerCase().includes(searchTerm.toLowerCase())
-              : searchTerm
-                ? String(value ?? '')
-                    .toLowerCase()
-                    .includes(searchTerm.toLowerCase())
-                : false;
+          const value = row[columnId];
+          const displayForSearch = cellSearchText(value, column);
+          const isSearchMatch = searchTerm ? displayForSearch.toLowerCase().includes(searchTerm.toLowerCase()) : false;
 
           const isCurrentMatch = currentMatch?.rowIndex === rowIndex && currentMatch?.columnIndex === columnIndex;
 
           if (columnId === 'select') {
             return (
               <SelectTableCell key={`cell-${rowIndex}-${columnId}`}>
-                <Checkbox
-                  sx={{ padding: 0 }}
-                  size={'small'}
-                  checked={isSelected}
-                  onChange={handleSelectCheckBox}
-                  onClick={(e: React.MouseEvent): void => e.stopPropagation()}
-                />
+                <GridCheckbox checked={isSelected} onChange={handleSelectCheckBox} aria-label='Select row' />
               </SelectTableCell>
             );
           }
@@ -127,6 +106,7 @@ const DataGridTableRow = memo(
                 row={row}
                 rowIndex={rowIndex}
                 columnId={columnId}
+                column={column}
                 value={value}
                 editable={cellEditable}
                 searchTerm={searchTerm}

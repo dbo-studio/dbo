@@ -7,7 +7,9 @@ export const QuickViewDialogContainerStyled = styled(Box)(() => ({
 }));
 
 export const QuickViewDialogEditorStyled = styled(Box)(() => ({
-  overflow: 'auto',
+  overflow: 'hidden',
   display: 'flex',
-  flex: 1
+  flex: 1,
+  minHeight: 0,
+  flexDirection: 'column'
 }));
