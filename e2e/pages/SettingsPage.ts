@@ -2,7 +2,11 @@ import { expect, type Page, type Locator } from "@playwright/test";
 import { BasePage } from "./BasePage";
 
 export type SettingsPanel =
-  "General" | "Appearance" | "Shortcuts" | "AI" | "About";
+  | "General"
+  | "Appearance"
+  | "Shortcuts"
+  | "AI"
+  | "About";
 
 /**
  * Page Object for Settings modal
@@ -11,18 +15,15 @@ export class SettingsPage extends BasePage {
   readonly settingsButton: Locator;
   readonly modal: Locator;
 
-  // Menu items
   readonly generalMenuItem: Locator;
   readonly appearanceMenuItem: Locator;
   readonly shortcutsMenuItem: Locator;
   readonly aiMenuItem: Locator;
   readonly aboutMenuItem: Locator;
 
-  // Theme options
   readonly lightTheme: Locator;
   readonly darkTheme: Locator;
 
-  // Sidebar toggles
   readonly leftSidebarButton: Locator;
   readonly rightSidebarButton: Locator;
 
@@ -38,7 +39,6 @@ export class SettingsPage extends BasePage {
     this.aiMenuItem = page.locator("div").filter({ hasText: /^AI$/ }).first();
     this.aboutMenuItem = page.getByText("About").first();
 
-    // Exact match — "GitHub Light" / "GitHub Dark" also appear in Appearance.
     this.lightTheme = page.getByRole("img", { name: "light" });
     this.darkTheme = page.getByRole("img", { name: "dark" });
 
@@ -47,13 +47,29 @@ export class SettingsPage extends BasePage {
   }
 
   async open(): Promise<void> {
+    const connectionPageHeading = this.page.getByRole("heading", {
+      name: "New connection",
+    });
+    if (await connectionPageHeading.isVisible().catch(() => false)) {
+      await this.page.getByRole("button", { name: "Cancel" }).click();
+      await expect(connectionPageHeading).toBeHidden({ timeout: 10000 });
+    }
     await this.settingsButton.click();
-    await this.wait(500);
+    await expect(this.page.getByText("General").first()).toBeVisible({
+      timeout: 10000,
+    });
   }
 
   async close(): Promise<void> {
     await this.pressKey("Escape");
-    await this.wait(300);
+    await expect(
+      this.page.getByRole("checkbox", { name: /Enable MCP server/i }),
+    )
+      .toBeHidden({ timeout: 10000 })
+      .catch(() => undefined);
+    await expect(this.page.getByText("Application theme", { exact: true }))
+      .toBeHidden({ timeout: 5000 })
+      .catch(() => undefined);
   }
 
   async navigateTo(panel: SettingsPanel): Promise<void> {
@@ -74,50 +90,59 @@ export class SettingsPage extends BasePage {
         await this.aboutMenuItem.click();
         break;
     }
-    await this.wait(300);
+  }
+
+  async openMcpTab(): Promise<void> {
+    const mcpTab = this.page.getByRole("tab", { name: "MCP" });
+    await expect(mcpTab).toBeVisible({ timeout: 10000 });
+    await mcpTab.click();
+    await expect(
+      this.page.getByRole("switch", { name: /Enable MCP server/i }),
+    ).toBeVisible({ timeout: 10000 });
+  }
+
+  async expectMcpPanelVisible(): Promise<void> {
+    await expect(
+      this.page.getByText(/Enabling MCP exposes database access/i),
+    ).toBeVisible({ timeout: 10000 });
+    await expect(
+      this.page.getByRole("switch", { name: /Enable MCP server/i }),
+    ).toBeVisible();
+    await expect(this.page.getByText("Status", { exact: true })).toBeVisible();
+    await expect(this.page.getByText("Proxy", { exact: true })).toBeVisible();
   }
 
   async selectLightTheme(): Promise<void> {
     await this.lightTheme.click();
-    await this.wait(500);
+    await expect(this.lightTheme).toBeVisible();
   }
 
   async selectDarkTheme(): Promise<void> {
     await this.darkTheme.click();
-    await this.wait(500);
+    await expect(this.darkTheme).toBeVisible();
   }
 
   async toggleLeftSidebar(): Promise<void> {
     await this.leftSidebarButton.click();
-    await this.wait(500);
   }
 
   async toggleRightSidebar(): Promise<void> {
     await this.rightSidebarButton.click();
-    await this.wait(500);
   }
 
-  async isLeftSidebarVisible(): Promise<boolean> {
-    return await this.page
-      .getByRole("tab", { name: "Items" })
-      .isVisible()
-      .catch(() => false);
+  leftSidebarTab(): Locator {
+    return this.page.getByRole("tab", { name: "Items" });
   }
 
-  async isRightSidebarVisible(): Promise<boolean> {
-    return await this.page
-      .getByRole("tab", { name: "Assistant" })
-      .isVisible()
-      .catch(() => false);
+  rightSidebarTab(): Locator {
+    return this.page.getByRole("tab", { name: "Assistant" });
   }
 
-  // Assertions
   async expectPanelVisible(content: string): Promise<void> {
-    // exact: true — Appearance also shows "GitHub Light" / "GitHub Dark"
     await expect(this.page.getByText(content, { exact: true })).toBeVisible();
   }
 
   async expectModalClosed(): Promise<void> {
-    await expect(this.page.getByText("Application theme")).toBeHidden();
+    await expect(this.modal).toBeHidden({ timeout: 10000 });
   }
 }

@@ -1,34 +1,35 @@
 import { test, type BrowserContext, type Page } from "@playwright/test";
-import { postgresLifecycleNames } from "../fixtures/postgresObjectFormLifecycle";
+import { mysqlLifecycleNames } from "../fixtures/mysqlObjectFormLifecycle";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import {
-  createDatabase,
-  createPostsTable,
-  createUsersTable,
-  editUsersTableAddColumn,
-  setupPostgresConnection,
-} from "../helpers/objectFormPostgresLifecycle";
-import {
-  cleanupPostgresEditTable,
+  cleanupMysqlEditTable,
   editTableAddUniqueKey,
   editTableChangeColumnType,
   editTableComment,
   editTableDropColumn,
   editTableDropForeignKey,
+  editTableDropIndex,
   editTableDropKey,
   editTableRename,
   editTableSetColumnComment,
   editTableSetDefault,
   editTableSetNotNull,
-} from "../helpers/objectFormPostgresExtended";
+} from "../helpers/objectFormMysqlEdit";
+import {
+  createDatabase,
+  createPostsTable,
+  createUsersTable,
+  editUsersTableAddColumn,
+  setupMysqlConnection,
+} from "../helpers/objectFormMysqlLifecycle";
 import { safeDeleteConnection } from "../helpers/safeCleanup";
 
-test.describe.configure({ mode: "serial" });
+test.describe.configure({ mode: "serial", timeout: 300_000 });
 
-test.describe("Object Form PostgreSQL edit table", () => {
+test.describe("Object Form MySQL edit table", () => {
   let context: BrowserContext;
   let page: Page;
-  let names: ReturnType<typeof postgresLifecycleNames>;
+  let names: ReturnType<typeof mysqlLifecycleNames>;
   let renamedUsersTable: string;
   let cleanedUp = false;
 
@@ -37,7 +38,7 @@ test.describe("Object Form PostgreSQL edit table", () => {
       baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3001",
     });
     page = await context.newPage();
-    names = postgresLifecycleNames(uniqueTestSuffix(testInfo));
+    names = mysqlLifecycleNames(uniqueTestSuffix(testInfo));
     renamedUsersTable = `${names.usersTable}_renamed`;
   });
 
@@ -45,11 +46,11 @@ test.describe("Object Form PostgreSQL edit table", () => {
     try {
       if (!cleanedUp && names && page && !page.isClosed()) {
         try {
-          await cleanupPostgresEditTable(page, names);
+          await cleanupMysqlEditTable(page, names);
           cleanedUp = true;
         } catch (cleanupErr) {
           console.warn(
-            "[e2e] postgres edit-table cleanup after failure:",
+            "[e2e] mysql edit-table cleanup after failure:",
             cleanupErr,
           );
           await safeDeleteConnection(page, names.connectionName);
@@ -61,7 +62,7 @@ test.describe("Object Form PostgreSQL edit table", () => {
   });
 
   test("Connect and create base tables", async () => {
-    await setupPostgresConnection(page, names.connectionName);
+    await setupMysqlConnection(page, names.connectionName);
     await createDatabase(page, names.connectionName, names.databaseName);
     await createUsersTable(
       page,
@@ -75,6 +76,7 @@ test.describe("Object Form PostgreSQL edit table", () => {
       names.databaseName,
       names.postsTable,
       names.usersTable,
+      { fkName: names.fkName, indexName: names.indexName },
     );
     await editUsersTableAddColumn(page, names.usersTable);
   });
@@ -100,6 +102,10 @@ test.describe("Object Form PostgreSQL edit table", () => {
     await editTableDropForeignKey(page, names.postsTable);
   });
 
+  test("Drop index on posts table", async () => {
+    await editTableDropIndex(page, names.postsTable, 0);
+  });
+
   test("Drop notes column on users table", async () => {
     await editTableDropColumn(page, names.usersTable, 2);
   });
@@ -113,12 +119,7 @@ test.describe("Object Form PostgreSQL edit table", () => {
   });
 
   test("Change email column type", async () => {
-    await editTableChangeColumnType(
-      page,
-      renamedUsersTable,
-      1,
-      "character varying",
-    );
+    await editTableChangeColumnType(page, renamedUsersTable, 1, "CHAR");
   });
 
   test("Add UNIQUE key on email column", async () => {
@@ -134,8 +135,8 @@ test.describe("Object Form PostgreSQL edit table", () => {
     await editTableDropKey(page, renamedUsersTable, 1);
   });
 
-  test("Cleanup — drop tables, database, and connection", async () => {
-    await cleanupPostgresEditTable(page, names);
+  test("Cleanup", async () => {
+    await cleanupMysqlEditTable(page, names);
     cleanedUp = true;
   });
 });

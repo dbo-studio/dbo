@@ -50,6 +50,12 @@ export async function createUsersTable(page: Page, connectionName: string, table
   await objectForm.selectArrayCellOption(0, F.columnType, 'INTEGER');
   await objectForm.fillArrayCell(0, F.columnName, 'id');
 
+  // email must exist at index 1 so later edit-table steps (NOT NULL / default / drop notes at 2) match PG/MySQL.
+  const emailRowIndex = await objectForm.addArrayRow(F.columnName);
+  await objectForm.fillArrayCell(emailRowIndex, F.columnName, 'email');
+  await objectForm.selectArrayCellOption(emailRowIndex, F.columnType, 'TEXT');
+  await objectForm.fillArrayCell(emailRowIndex, F.columnName, 'email');
+
   await objectForm.selectTab(T.keys);
   const keyRowIndex = await objectForm.addArrayRow(F.keyName);
   await objectForm.fillArrayCell(keyRowIndex, F.keyName, 'pk_users');

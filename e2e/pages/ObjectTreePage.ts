@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { API_DDL_TIMEOUT, apiRoute, pendingResponse } from "../helpers/network";
+import { API_DDL_TIMEOUT, apiRoute, waitForResponseDuring } from "../helpers/network";
 import { BasePage } from "./BasePage";
 
 const toTestIdSlug = (name: string): string =>
@@ -89,15 +89,13 @@ export class ObjectTreePage extends BasePage {
   }
 
   async dropObject(nodeName: string, actionTitle: string): Promise<void> {
-    const executePromise = pendingResponse(
+    await this.runTreeAction(nodeName, actionTitle);
+    await waitForResponseDuring(
       this.page,
       apiRoute.objectExecute,
+      () => this.confirmDangerAction(),
       API_DDL_TIMEOUT,
     );
-
-    await this.runTreeAction(nodeName, actionTitle);
-    await this.confirmDangerAction();
-    await executePromise;
     await this.waitForTreeLoad();
   }
 

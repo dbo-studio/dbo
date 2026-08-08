@@ -1,34 +1,31 @@
 import { test, type BrowserContext, type Page } from "@playwright/test";
-import { postgresLifecycleNames } from "../fixtures/postgresObjectFormLifecycle";
+import { sqliteLifecycleNames } from "../fixtures/sqliteObjectFormLifecycle";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import {
-  createDatabase,
-  createPostsTable,
-  createUsersTable,
-  editUsersTableAddColumn,
-  setupPostgresConnection,
-} from "../helpers/objectFormPostgresLifecycle";
-import {
-  cleanupPostgresEditTable,
+  cleanupSqliteEditTable,
   editTableAddUniqueKey,
-  editTableChangeColumnType,
-  editTableComment,
   editTableDropColumn,
   editTableDropForeignKey,
   editTableDropKey,
   editTableRename,
-  editTableSetColumnComment,
   editTableSetDefault,
   editTableSetNotNull,
-} from "../helpers/objectFormPostgresExtended";
+} from "../helpers/objectFormSqliteEdit";
+import {
+  createPostsTable,
+  createUsersTable,
+  editUsersTableAddColumn,
+  removeSqliteDbFile,
+  setupSqliteConnection,
+} from "../helpers/objectFormSqliteLifecycle";
 import { safeDeleteConnection } from "../helpers/safeCleanup";
 
-test.describe.configure({ mode: "serial" });
+test.describe.configure({ mode: "serial", timeout: 180_000 });
 
-test.describe("Object Form PostgreSQL edit table", () => {
+test.describe("Object Form SQLite edit table", () => {
   let context: BrowserContext;
   let page: Page;
-  let names: ReturnType<typeof postgresLifecycleNames>;
+  let names: ReturnType<typeof sqliteLifecycleNames>;
   let renamedUsersTable: string;
   let cleanedUp = false;
 
@@ -37,7 +34,7 @@ test.describe("Object Form PostgreSQL edit table", () => {
       baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3001",
     });
     page = await context.newPage();
-    names = postgresLifecycleNames(uniqueTestSuffix(testInfo));
+    names = sqliteLifecycleNames(uniqueTestSuffix(testInfo));
     renamedUsersTable = `${names.usersTable}_renamed`;
   });
 
@@ -45,14 +42,15 @@ test.describe("Object Form PostgreSQL edit table", () => {
     try {
       if (!cleanedUp && names && page && !page.isClosed()) {
         try {
-          await cleanupPostgresEditTable(page, names);
+          await cleanupSqliteEditTable(page, names);
           cleanedUp = true;
         } catch (cleanupErr) {
           console.warn(
-            "[e2e] postgres edit-table cleanup after failure:",
+            "[e2e] sqlite edit-table cleanup after failure:",
             cleanupErr,
           );
           await safeDeleteConnection(page, names.connectionName);
+          removeSqliteDbFile(names.dbPath);
         }
       }
     } finally {
@@ -61,20 +59,14 @@ test.describe("Object Form PostgreSQL edit table", () => {
   });
 
   test("Connect and create base tables", async () => {
-    await setupPostgresConnection(page, names.connectionName);
-    await createDatabase(page, names.connectionName, names.databaseName);
-    await createUsersTable(
-      page,
-      names.connectionName,
-      names.databaseName,
-      names.usersTable,
-    );
+    await setupSqliteConnection(page, names.connectionName, names.dbPath);
+    await createUsersTable(page, names.connectionName, names.usersTable);
     await createPostsTable(
       page,
       names.connectionName,
-      names.databaseName,
       names.postsTable,
       names.usersTable,
+      names.fkName,
     );
     await editUsersTableAddColumn(page, names.usersTable);
   });
@@ -87,15 +79,6 @@ test.describe("Object Form PostgreSQL edit table", () => {
     await editTableSetDefault(page, names.usersTable, 1, "'unknown'");
   });
 
-  test("Set comment on email column", async () => {
-    await editTableSetColumnComment(
-      page,
-      names.usersTable,
-      1,
-      "user email address",
-    );
-  });
-
   test("Drop foreign key on posts table", async () => {
     await editTableDropForeignKey(page, names.postsTable);
   });
@@ -106,19 +89,6 @@ test.describe("Object Form PostgreSQL edit table", () => {
 
   test("Rename users table", async () => {
     await editTableRename(page, names.usersTable, renamedUsersTable);
-  });
-
-  test("Set comment on users table", async () => {
-    await editTableComment(page, renamedUsersTable, "application users");
-  });
-
-  test("Change email column type", async () => {
-    await editTableChangeColumnType(
-      page,
-      renamedUsersTable,
-      1,
-      "character varying",
-    );
   });
 
   test("Add UNIQUE key on email column", async () => {
@@ -134,8 +104,8 @@ test.describe("Object Form PostgreSQL edit table", () => {
     await editTableDropKey(page, renamedUsersTable, 1);
   });
 
-  test("Cleanup — drop tables, database, and connection", async () => {
-    await cleanupPostgresEditTable(page, names);
+  test("Cleanup", async () => {
+    await cleanupSqliteEditTable(page, names);
     cleanedUp = true;
   });
 });

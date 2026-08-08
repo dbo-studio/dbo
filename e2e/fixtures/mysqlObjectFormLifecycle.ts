@@ -1,8 +1,12 @@
 export const MYSQL_LIFECYCLE_FIELDS = {
   databaseName: 'datname',
   tableName: 'relname',
+  tableComment: 'description',
   columnName: 'column_name',
   columnType: 'data_type',
+  columnNotNull: 'not_null',
+  columnDefault: 'column_default',
+  columnComment: 'comment',
   keyName: 'constraint_name',
   keyColumns: 'ref_columns',
   keyType: 'constraint_type',
@@ -32,8 +36,19 @@ export const MYSQL_LIFECYCLE_PREVIEW = {
   primaryKey: /PRIMARY KEY/i,
   foreignKey: /FOREIGN KEY/i,
   createIndex: /CREATE INDEX/i,
+  dropIndex: /DROP INDEX/i,
   createView: /CREATE VIEW/i,
-  replaceView: /CREATE OR REPLACE VIEW/i
+  replaceView: /CREATE OR REPLACE VIEW/i,
+  setNotNull: /NOT NULL/i,
+  setDefault: /SET DEFAULT|DEFAULT/i,
+  commentOnColumn: /COMMENT/i,
+  dropColumn: /DROP COLUMN/i,
+  dropForeignKey: /DROP FOREIGN KEY/i,
+  renameTable: /RENAME TO/i,
+  commentOnTable: /COMMENT\s*=/i,
+  modifyColumn: /MODIFY COLUMN/i,
+  addUnique: /ADD CONSTRAINT.*UNIQUE|UNIQUE\s*\(/i,
+  dropKey: /DROP INDEX|DROP PRIMARY KEY/i
 } as const;
 
 export function mysqlLifecycleNames(suffix: string): {

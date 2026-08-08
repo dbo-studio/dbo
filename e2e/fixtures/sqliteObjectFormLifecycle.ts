@@ -2,6 +2,8 @@ export const SQLITE_LIFECYCLE_FIELDS = {
   tableName: 'name',
   columnName: 'name',
   columnType: 'type',
+  columnNotNull: 'not_null',
+  columnDefault: 'dflt_value',
   keyName: 'name',
   keyColumns: 'columns',
   keyType: 'type',
@@ -26,7 +28,14 @@ export const SQLITE_LIFECYCLE_PREVIEW = {
   primaryKey: /PRIMARY KEY/i,
   foreignKey: /FOREIGN KEY|REFERENCES/i,
   createView: /CREATE VIEW/i,
-  recreateView: /DROP VIEW|CREATE VIEW/i
+  recreateView: /DROP VIEW|CREATE VIEW/i,
+  dropColumn: /CREATE TABLE|DROP/i,
+  dropForeignKey: /CREATE TABLE/i,
+  renameTable: /RENAME TO|CREATE TABLE/i,
+  setNotNull: /NOT NULL|CREATE TABLE/i,
+  setDefault: /DEFAULT|CREATE TABLE/i,
+  addUnique: /UNIQUE|CREATE TABLE/i,
+  dropKey: /CREATE TABLE|DROP/i
 } as const;
 
 export function sqliteLifecycleNames(suffix: string): {

@@ -234,7 +234,9 @@ export class ObjectFormPage extends BasePage {
   }
 
   async deleteArrayRow(rowIndex: number): Promise<void> {
-    await this.page.getByTestId(`object-form-delete-row-${rowIndex}`).click();
+    const deleteBtn = this.page.getByTestId(`object-form-delete-row-${rowIndex}`);
+    await expect(deleteBtn).toBeVisible({ timeout: 15000 });
+    await deleteBtn.click();
     await this.wait(300);
   }
 
