@@ -22,6 +22,7 @@ func (r *MySQLRepository) AiContext(ctx context.Context, req *dto.AiChatRequest)
 		if err != nil {
 			return "", err
 		}
+
 		tables = list
 		if len(tables) > maxAIContextObjects {
 			tables = tables[:maxAIContextObjects]
@@ -34,6 +35,7 @@ func (r *MySQLRepository) AiContext(ctx context.Context, req *dto.AiChatRequest)
 		if err != nil {
 			return "", err
 		}
+
 		views = list
 		if len(views) > maxAIContextObjects {
 			views = views[:maxAIContextObjects]
@@ -49,6 +51,7 @@ func (r *MySQLRepository) AiContext(ctx context.Context, req *dto.AiChatRequest)
 
 func (r *MySQLRepository) AiCompleteContext(ctx context.Context, req *dto.AiInlineCompleteRequest) string {
 	sqlResult := r.base.ParseSQL(req.ContextOpts.Prompt)
+
 	database := sqlResult.Database
 	if database == nil {
 		database = req.ContextOpts.Database
@@ -63,6 +66,7 @@ func (r *MySQLRepository) AiCompleteContext(ctx context.Context, req *dto.AiInli
 	if err != nil {
 		return ""
 	}
+
 	return result
 }
 
@@ -72,19 +76,23 @@ type mysqlAIContextProvider struct {
 
 func (p mysqlAIContextProvider) TableColumns(ctx context.Context, table string, opts databaseContract.AIContextOptions) ([]databaseContract.AIContextColumn, error) {
 	database := lo.FromPtr(opts.Database)
+
 	columns, err := p.repo.columns(ctx, &database, &table, []string{}, false, true)
 	if err != nil {
 		return nil, err
 	}
+
 	return mysqlColumnsToContextColumns(columns), nil
 }
 
 func (p mysqlAIContextProvider) ViewColumns(ctx context.Context, view string, opts databaseContract.AIContextOptions) ([]databaseContract.AIContextColumn, error) {
 	database := lo.FromPtr(opts.Database)
+
 	columns, err := p.repo.columns(ctx, &database, &view, []string{}, false, true)
 	if err != nil {
 		return nil, err
 	}
+
 	return mysqlColumnsToContextColumns(columns), nil
 }
 

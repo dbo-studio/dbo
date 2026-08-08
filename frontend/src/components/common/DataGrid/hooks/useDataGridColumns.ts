@@ -23,7 +23,7 @@ export function useDataGridColumns({ columns, columnSizes }: UseDataGridColumnsP
         length: '1',
         comment: '',
         default: '',
-        mappedType: ''
+        mappedType: 'unknown'
       },
       ...columns
     ];

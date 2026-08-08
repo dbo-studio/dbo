@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { test, type BrowserContext, type Page } from "@playwright/test";
 import { mysqlLifecycleNames } from "../fixtures/mysqlObjectFormLifecycle";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import {
@@ -11,76 +11,92 @@ import {
   editViewQuery,
   setupMysqlConnection,
 } from "../helpers/objectFormMysqlLifecycle";
-import { withConnectionCleanup } from "../helpers/safeCleanup";
+import { safeDeleteConnection } from "../helpers/safeCleanup";
+
+test.describe.configure({ mode: "serial" });
 
 test.describe("Object Form MySQL lifecycle", () => {
-  test("Full create → edit → drop lifecycle", async ({ page }, testInfo) => {
-    test.setTimeout(300_000);
-    const names = mysqlLifecycleNames(uniqueTestSuffix(testInfo));
+  let context: BrowserContext;
+  let page: Page;
+  let names: ReturnType<typeof mysqlLifecycleNames>;
+  let cleanedUp = false;
 
-    await withConnectionCleanup(page, names.connectionName, async () => {
-      try {
-        await test.step("Connect to MySQL", async () => {
-          await setupMysqlConnection(page, names.connectionName);
-        });
+  test.beforeAll(async ({ browser }, testInfo) => {
+    context = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3001",
+    });
+    page = await context.newPage();
+    names = mysqlLifecycleNames(uniqueTestSuffix(testInfo));
+  });
 
-        await test.step("Create isolated database", async () => {
-          await createDatabase(page, names.connectionName, names.databaseName);
-        });
-
-        await test.step("Create users table with columns and primary key", async () => {
-          await createUsersTable(
-            page,
-            names.connectionName,
-            names.databaseName,
-            names.usersTable,
-          );
-        });
-
-        await test.step("Create posts table with foreign key and index", async () => {
-          await createPostsTable(
-            page,
-            names.connectionName,
-            names.databaseName,
-            names.postsTable,
-            names.usersTable,
-            { fkName: names.fkName, indexName: names.indexName },
-          );
-        });
-
-        await test.step("Create view", async () => {
-          await createView(
-            page,
-            names.connectionName,
-            names.databaseName,
-            names.viewName,
-            names.postsTable,
-            names.usersTable,
-          );
-        });
-
-        await test.step("Edit users table — add column", async () => {
-          await editUsersTableAddColumn(page, names.usersTable);
-        });
-
-        await test.step("Edit view — change query", async () => {
-          await editViewQuery(page, names.viewName, names.postsTable);
-        });
-
-        await test.step("Cleanup — drop all objects and connection", async () => {
-          await cleanupMysqlLifecycle(page, names);
-        });
-      } catch (err) {
+  test.afterAll(async () => {
+    try {
+      if (!cleanedUp && names && page && !page.isClosed()) {
         try {
           await cleanupMysqlLifecycle(page, names);
+          cleanedUp = true;
         } catch (cleanupErr) {
           console.warn(
             "[e2e] mysql lifecycle cleanup after failure:",
             cleanupErr,
           );
+          await safeDeleteConnection(page, names.connectionName);
         }
-        throw err;
       }
-    });
+    } finally {
+      await context?.close().catch(() => undefined);
+    }
+  });
+
+  test("Connect to MySQL", async () => {
+    await setupMysqlConnection(page, names.connectionName);
+  });
+
+  test("Create isolated database", async () => {
+    await createDatabase(page, names.connectionName, names.databaseName);
+  });
+
+  test("Create users table with columns and primary key", async () => {
+    await createUsersTable(
+      page,
+      names.connectionName,
+      names.databaseName,
+      names.usersTable,
+    );
+  });
+
+  test("Create posts table with foreign key and index", async () => {
+    await createPostsTable(
+      page,
+      names.connectionName,
+      names.databaseName,
+      names.postsTable,
+      names.usersTable,
+      { fkName: names.fkName, indexName: names.indexName },
+    );
+  });
+
+  test("Create view", async () => {
+    await createView(
+      page,
+      names.connectionName,
+      names.databaseName,
+      names.viewName,
+      names.postsTable,
+      names.usersTable,
+    );
+  });
+
+  test("Edit users table — add column", async () => {
+    await editUsersTableAddColumn(page, names.usersTable);
+  });
+
+  test("Edit view — change query", async () => {
+    await editViewQuery(page, names.viewName, names.postsTable);
+  });
+
+  test("Drop objects and connection", async () => {
+    await cleanupMysqlLifecycle(page, names);
+    cleanedUp = true;
   });
 });

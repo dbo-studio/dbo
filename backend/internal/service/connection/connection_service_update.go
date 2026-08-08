@@ -41,6 +41,7 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
+
 	req.Options = strippedOptions
 
 	if password != "" {
@@ -51,6 +52,7 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 	}
 
 	var options string
+
 	switch connection.ConnectionType {
 	case string(databaseContract.Postgresql):
 		options, err = databaseConnection.UpdatePostgresqlConnection(json.RawMessage(connection.Options), req.Options)

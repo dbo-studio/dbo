@@ -1,6 +1,18 @@
 import clsx from 'clsx';
 import { JSX, memo, useCallback, useEffect, useMemo } from 'react';
-import { CellContainer, CellContent, CellInput, HighlightedTextMatch } from '../DataGrid.styled';
+import DateTimePicker from '@/components/base/DateTimePicker/DateTimePicker';
+import { nextBooleanCellValue, parseBooleanCellValue } from '@/core/utils/dataGrid';
+import { formatCellDisplayValue, isComplexMappedType, valueToEditorString } from '@/core/utils/dataValue';
+import {
+  CellContainer,
+  CellContent,
+  CellInput,
+  CellNullStyled,
+  CellNumberStyled,
+  CellSelect,
+  HighlightedTextMatch
+} from '../DataGrid.styled';
+import GridCheckbox from '../GridCheckbox';
 import { useCellEditing } from '../hooks/useCellEditing';
 import { useCellSelection } from '../hooks/useCellSelection';
 import type { DataGridTableCellProps } from '../types';
@@ -10,36 +22,44 @@ export const DataGridTableCell = memo(
     row,
     rowIndex,
     columnId,
+    column,
     value,
     editable,
     searchTerm,
     isSearchMatch,
     isCurrentMatch
   }: DataGridTableCellProps): JSX.Element {
-    const placeholder = String(value === null || value === undefined ? 'NULL' : value);
-    const cellValue = String(value == null || value === undefined ? '' : value);
+    const mappedType = column?.mappedType ?? 'string';
+    const isNull = value === null || value === undefined;
+    const isComplex =
+      isComplexMappedType(mappedType) ||
+      (typeof value === 'object' && value !== null && !Array.isArray(value) && '__dbo' in value);
+    const displayValue = formatCellDisplayValue(value, column);
+    const editorString = valueToEditorString(value);
 
-    const { inputRef, handleRowChange } = useCellEditing(row, columnId, cellValue);
-
+    const { inputRef, handleRowChange, commitValue } = useCellEditing(row, columnId);
     const { handleClick, isEditing, setIsEditing } = useCellSelection(row, rowIndex, columnId, editable);
 
     const highlightedContent = useMemo(() => {
       if (!searchTerm || !isSearchMatch) {
-        return <span>{placeholder}</span>;
+        if (isNull) {
+          return <CellNullStyled>NULL</CellNullStyled>;
+        }
+        return <span>{displayValue}</span>;
       }
 
       const searchLower = searchTerm.toLowerCase();
-      const valueLower = placeholder.toLowerCase();
+      const valueLower = displayValue.toLowerCase();
       const parts: Array<{ text: string; isMatch: boolean; start: number }> = [];
       let lastIndex = 0;
       let index = valueLower.indexOf(searchLower, lastIndex);
 
       while (index !== -1) {
         if (index > lastIndex) {
-          parts.push({ text: placeholder.substring(lastIndex, index), isMatch: false, start: lastIndex });
+          parts.push({ text: displayValue.substring(lastIndex, index), isMatch: false, start: lastIndex });
         }
         parts.push({
-          text: placeholder.substring(index, index + searchTerm.length),
+          text: displayValue.substring(index, index + searchTerm.length),
           isMatch: true,
           start: index
         });
@@ -47,8 +67,8 @@ export const DataGridTableCell = memo(
         index = valueLower.indexOf(searchLower, lastIndex);
       }
 
-      if (lastIndex < placeholder.length) {
-        parts.push({ text: placeholder.substring(lastIndex), isMatch: false, start: lastIndex });
+      if (lastIndex < displayValue.length) {
+        parts.push({ text: displayValue.substring(lastIndex), isMatch: false, start: lastIndex });
       }
 
       return (
@@ -66,7 +86,7 @@ export const DataGridTableCell = memo(
           ))}
         </span>
       );
-    }, [searchTerm, placeholder, isSearchMatch, isCurrentMatch, rowIndex, columnId]);
+    }, [searchTerm, displayValue, isSearchMatch, isCurrentMatch, rowIndex, columnId, isNull]);
 
     useEffect(() => {
       if (isEditing && inputRef.current) {
@@ -78,39 +98,120 @@ export const DataGridTableCell = memo(
     }, [isEditing, inputRef]);
 
     const handleInputBlur = useCallback(
-      (e: React.FocusEvent<HTMLInputElement>): void => {
+      (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>): void => {
         setIsEditing(false);
+        if (mappedType === 'number') {
+          const trimmed = e.target.value.trim();
+          if (trimmed === '') {
+            commitValue(null);
+            return;
+          }
+          commitValue(trimmed);
+          return;
+        }
+        if (mappedType === 'boolean') {
+          return;
+        }
         handleRowChange(e);
       },
-      [setIsEditing, handleRowChange]
+      [setIsEditing, handleRowChange, mappedType, commitValue]
     );
 
     const cellClassName = useMemo(
       () =>
         clsx({
-          'is-current-match': isCurrentMatch
+          'is-current-match': isCurrentMatch,
+          'is-number': mappedType === 'number',
+          'is-null': isNull
         }),
-      [isCurrentMatch]
+      [isCurrentMatch, mappedType, isNull]
     );
 
-    if (isEditing && editable) {
+    if (mappedType === 'boolean' && editable) {
+      const boolState = parseBooleanCellValue(value);
+      return (
+        <CellContainer onClick={handleClick} className={cellClassName} data-testid='grid-cell-boolean'>
+          <GridCheckbox
+            checked={boolState === true}
+            indeterminate={boolState === null}
+            aria-label={columnId}
+            aria-checked={boolState === null ? 'mixed' : boolState === true}
+            onChange={(): void => {
+              commitValue(nextBooleanCellValue(value));
+            }}
+          />
+        </CellContainer>
+      );
+    }
+
+    if (isEditing && editable && !isComplex) {
+      if (mappedType === 'enum' && column?.enumValues && column.enumValues.length > 0) {
+        return (
+          <CellSelect
+            autoFocus
+            defaultValue={editorString}
+            onBlur={handleInputBlur}
+            onChange={(e): void => {
+              commitValue(e.target.value === '' ? null : e.target.value);
+              setIsEditing(false);
+            }}
+            data-testid='grid-cell-enum'
+          >
+            {!column.notNull && <option value=''>NULL</option>}
+            {column.enumValues.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </CellSelect>
+        );
+      }
+
+      if (mappedType === 'date' || mappedType === 'time' || mappedType === 'datetime') {
+        return (
+          <DateTimePicker
+            variant='cell'
+            mode={mappedType}
+            value={value}
+            inputRef={inputRef}
+            onCommit={(next): void => {
+              commitValue(next);
+            }}
+            onCancelEdit={(): void => {
+              setIsEditing(false);
+            }}
+          />
+        );
+      }
+
+      // JSON and plain strings share the text editor path.
       return (
         <CellInput
           ref={inputRef}
-          defaultValue={cellValue}
+          type={mappedType === 'number' ? 'number' : 'text'}
+          defaultValue={editorString}
           onBlur={handleInputBlur}
           onKeyDown={(e): void => {
             if (e.key === 'Enter' || e.key === 'Escape') {
               e.currentTarget.blur();
             }
           }}
+          style={mappedType === 'number' ? { textAlign: 'right' } : undefined}
+          data-testid={mappedType === 'json' ? 'grid-cell-json' : undefined}
         />
       );
     }
 
+    const content =
+      mappedType === 'number' && !isNull ? (
+        <CellNumberStyled>{highlightedContent}</CellNumberStyled>
+      ) : (
+        highlightedContent
+      );
+
     return (
-      <CellContainer onClick={(e: React.MouseEvent): void => handleClick(e)} className={cellClassName}>
-        <CellContent>{highlightedContent}</CellContent>
+      <CellContainer onClick={handleClick} className={cellClassName} data-testid='grid-cell'>
+        <CellContent title={isComplex ? displayValue : editorString}>{content}</CellContent>
       </CellContainer>
     );
   },
@@ -119,6 +220,11 @@ export const DataGridTableCell = memo(
       prevProps.value === nextProps.value &&
       prevProps.rowIndex === nextProps.rowIndex &&
       prevProps.columnId === nextProps.columnId &&
+      prevProps.column?.mappedType === nextProps.column?.mappedType &&
+      prevProps.column?.editable === nextProps.column?.editable &&
+      prevProps.column?.notNull === nextProps.column?.notNull &&
+      prevProps.column?.enumValues === nextProps.column?.enumValues &&
+      prevProps.editable === nextProps.editable &&
       prevProps.searchTerm === nextProps.searchTerm &&
       prevProps.isSearchMatch === nextProps.isSearchMatch &&
       prevProps.isCurrentMatch === nextProps.isCurrentMatch

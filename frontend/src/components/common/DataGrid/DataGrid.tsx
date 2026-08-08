@@ -1,8 +1,9 @@
-import { useContextMenu } from '@/hooks';
 import { CircularProgress } from '@mui/material';
 import { RefObject, useRef, type JSX } from 'react';
+import { useContextMenu } from '@/hooks';
 import {
   DataGridLoadingOverlayStyled,
+  DataGridRootStyled,
   StyledCol,
   StyledTable,
   TableContainer,
@@ -50,7 +51,7 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
   });
 
   return (
-    <>
+    <DataGridRootStyled>
       <QuickViewDialog editable={editable} />
       <SearchDialog open={isSearchDialogOpen} onClose={() => setIsSearchDialogOpen(false)} search={search} />
       <TableContainer ref={tableContainerRef} sx={{ position: 'relative', flex: 1, minHeight: 0 }}>
@@ -87,6 +88,6 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
         </VirtualTableWrapper>
       </TableContainer>
       <DataGridContextMenu contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
-    </>
+    </DataGridRootStyled>
   );
 }

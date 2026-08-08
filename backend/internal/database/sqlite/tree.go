@@ -74,10 +74,12 @@ func buildContainer(ctx context.Context, r *SQLiteRepository, container contract
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}
+
 		for _, table := range tables {
 			if isSQLiteSystemTable(table.Name) {
 				continue
 			}
+
 			containerNode.Children = append(containerNode.Children, contract.TreeNode{
 				ID:   table.Name,
 				Name: table.Name,
@@ -100,6 +102,7 @@ func buildContainer(ctx context.Context, r *SQLiteRepository, container contract
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}
+
 		for _, view := range viewList {
 			containerNode.Children = append(containerNode.Children, contract.TreeNode{
 				ID:   view.Name,
@@ -121,5 +124,6 @@ func buildContainer(ctx context.Context, r *SQLiteRepository, container contract
 	default:
 		return nil, fmt.Errorf("unsupported container type: %s", container)
 	}
+
 	return containerNode, nil
 }

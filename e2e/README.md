@@ -51,26 +51,39 @@ HTML report: `e2e/playwright-report/` after a run.
 
 ## Feature matrix
 
+Prefer **one assertable scenario per `test()`**. Mega-files are split into small named tests (serial only for Object Form lifecycles / edit-table chains).
+
 | Feature                  | Spec                                          | Flow                                                    |
 | ------------------------ | --------------------------------------------- | ------------------------------------------------------- |
 | Harness smoke            | `harness-smoke.spec.ts`                       | ephemeral API + FE reachable (no sample DB)             |
 | Connections              | `connections.spec.ts`                         | create / edit / refresh / context menu / schema via SQL / ping diagnostics |
 | Connection SSL           | `connection-ssl.spec.ts`                      | SSL tab UI + Require on sample-pgsql-ssl + bad CA fail  |
+| Connections MySQL/SQLite | `connections-mysql-sqlite-smoke.spec.ts`      | create connection + seed + open Data table (smoke)      |
 | Safe Mode                | `safe-mode.spec.ts`                           | menu modes, SQL gates + grid Save confirm               |
-| Query CRUD               | `query-crud.spec.ts`                          | SQL create/insert/update/select + multi-table JOIN      |
+| Query CRUD               | `query-crud.spec.ts`                          | split: select / inline edit / discard+remove / SQL update+delete / JOIN |
+| Query CRUD MySQL         | `query-crud-mysql.spec.ts`                    | same split + JOIN                                       |
+| Query CRUD SQLite        | `query-crud-sqlite.spec.ts`                   | same split + JOIN                                       |
+| Query format             | `query-format.spec.ts`                        | Beatify / format messy SQL                              |
 | Query status bar         | `query-statusbar.spec.ts`                     | PG: discard/add/remove/refresh + page next/limit + gate |
-| Query edit MySQL         | `query-edit-mysql.spec.ts`                    | smoke edit/discard/remove on result grid                |
-| Query edit SQLite        | `query-edit-sqlite.spec.ts`                   | smoke edit/discard/remove on result grid                |
+| Data browser             | `data-browser.spec.ts`                        | open / filter / sort / pagination / Columns / Inline Query / Query Preview |
+| Import / Export          | `import-export.spec.ts`                       | split: export CSV/JSON/SQL, filtered, import formats, round-trip, continue-on-error |
+| Data grid typed cells    | `data-grid-typed-cells.spec.ts`               | MySQL+PG: split per editor/cue/Quick Look               |
 | Query guards             | `query-guards.spec.ts`                        | cancel Stop + raw SELECT page size / user LIMIT         |
 | Saved / history          | `saved-history.spec.ts`                       | history, save, run, copy                                |
 | Settings / theme         | `settings-theme.spec.ts`                      | theme persistence, panels, sidebar                      |
-| AI chat smoke            | `ai-chat-stream.spec.ts`                      | open assistant panel                                    |
-| Object Form smoke        | `object-form-table.spec.ts`                   | create/edit table × PG/MySQL/SQLite                     |
-| Object Form PG lifecycle | `object-form-postgres-lifecycle.spec.ts`      | DB → tables → FK → view → edit → drop                   |
-| Object Form PG edit      | `object-form-postgres-edit-table.spec.ts`     | deep column/FK edits                                    |
-| Object Form PG schema    | `object-form-postgres-schema-matview.spec.ts` | schema, matview, rename                                 |
-| Object Form MySQL        | `object-form-mysql-lifecycle.spec.ts`         | full lifecycle                                          |
-| Object Form SQLite       | `object-form-sqlite-lifecycle.spec.ts`        | full lifecycle                                          |
+| Workspace dirty tab      | `workspace-dirty-tab.spec.ts`                 | dirty Cancel / Yes / clean close                        |
+| AI chat panel            | `ai-chat-panel.spec.ts`                       | Assistant panel + composer (no LLM)                     |
+| MCP panel                | `mcp-panel.spec.ts`                           | Settings AI → MCP controls + enable toggle (no LLM)     |
+| Object Form PG lifecycle | `object-form-postgres-lifecycle.spec.ts`      | serial: connect → DB → tables → FK → view → edit → drop |
+| Object Form PG edit      | `object-form-postgres-edit-table.spec.ts`     | serial deep column/FK/key edits                         |
+| Object Form PG schema    | `object-form-postgres-schema-matview.spec.ts` | serial schema, matview, rename, drop schema             |
+| Object Form MySQL        | `object-form-mysql-lifecycle.spec.ts`         | serial: connect → DB → tables → FK → view → edit → drop |
+| Object Form MySQL edit   | `object-form-mysql-edit-table.spec.ts`        | serial deep column/FK/key/index edits                   |
+| Object Form SQLite       | `object-form-sqlite-lifecycle.spec.ts`        | serial: connect → tables → FK → view → edit → drop      |
+| Object Form SQLite edit  | `object-form-sqlite-edit-table.spec.ts`       | serial deep column/FK/key edits                         |
+
+**Accepted out of automated e2e:** AI send/stream with real providers; Tauri/desktop native dialogs (manual release checklist).
+
 
 ## Directory layout
 
@@ -89,7 +102,7 @@ e2e/
 
 - `POST /api/config/reset` runs in `global.setup` against the **ephemeral** API only.
 - Specs use `uniqueTestSuffix` and `withConnectionCleanup` so failed tests still remove connection rows.
-- Object Form lifecycle specs also attempt full object cleanup on failure.
+- Object Form lifecycle specs use `test.describe.configure({ mode: "serial" })` so each phase is a trackable test; `afterAll` still attempts full object cleanup on failure.
 - PG/MySQL still use shared `sample-*` containers with unique object names (dedicated e2e DB compose is a follow-up).
 - MySQL publish in `docker-compose.dev.yml` is `3307:3307`; if host MySQL e2e cannot connect, map `3307:3306` instead.
 

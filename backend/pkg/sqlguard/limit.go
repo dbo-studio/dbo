@@ -29,9 +29,11 @@ func ResolveLimitPage(limit, page *int) (int, int) {
 	if limit != nil && *limit > 0 {
 		resolvedLimit = *limit
 	}
+
 	if page != nil && *page > 0 {
 		resolvedPage = *page
 	}
+
 	if resolvedLimit > MaxQueryLimit {
 		resolvedLimit = MaxQueryLimit
 	}
@@ -69,6 +71,7 @@ func ApplyLimitOffset(sql string, limit, page int) LimitApplyResult {
 	if limit < 1 {
 		limit = DefaultQueryLimit
 	}
+
 	if page < 1 {
 		page = 1
 	}

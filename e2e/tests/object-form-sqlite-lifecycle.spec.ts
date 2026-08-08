@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { test, type BrowserContext, type Page } from "@playwright/test";
 import { sqliteLifecycleNames } from "../fixtures/sqliteObjectFormLifecycle";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import {
@@ -10,65 +10,80 @@ import {
   editViewQuery,
   setupSqliteConnection,
 } from "../helpers/objectFormSqliteLifecycle";
-import { withConnectionCleanup } from "../helpers/safeCleanup";
+import { safeDeleteConnection } from "../helpers/safeCleanup";
+
+test.describe.configure({ mode: "serial" });
 
 test.describe("Object Form SQLite lifecycle", () => {
-  test("Full create → edit → drop lifecycle", async ({ page }, testInfo) => {
-    test.setTimeout(180_000);
-    const suffix = uniqueTestSuffix(testInfo);
-    const names = sqliteLifecycleNames(suffix);
+  let context: BrowserContext;
+  let page: Page;
+  let names: ReturnType<typeof sqliteLifecycleNames>;
+  let cleanedUp = false;
 
-    await withConnectionCleanup(page, names.connectionName, async () => {
-      try {
-        await test.step("Connect to SQLite", async () => {
-          await setupSqliteConnection(page, names.connectionName, names.dbPath);
-        });
+  test.beforeAll(async ({ browser }, testInfo) => {
+    context = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3001",
+    });
+    page = await context.newPage();
+    names = sqliteLifecycleNames(uniqueTestSuffix(testInfo));
+  });
 
-        await test.step("Create users table with columns and primary key", async () => {
-          await createUsersTable(page, names.connectionName, names.usersTable);
-        });
-
-        await test.step("Create posts table with foreign key", async () => {
-          await createPostsTable(
-            page,
-            names.connectionName,
-            names.postsTable,
-            names.usersTable,
-            names.fkName,
-          );
-        });
-
-        await test.step("Create view", async () => {
-          await createView(
-            page,
-            names.connectionName,
-            names.viewName,
-            names.postsTable,
-          );
-        });
-
-        await test.step("Edit users table — add column", async () => {
-          await editUsersTableAddColumn(page, names.usersTable);
-        });
-
-        await test.step("Edit view — change query", async () => {
-          await editViewQuery(page, names.viewName, names.postsTable);
-        });
-
-        await test.step("Cleanup — drop all objects and connection", async () => {
-          await cleanupSqliteLifecycle(page, names);
-        });
-      } catch (err) {
+  test.afterAll(async () => {
+    try {
+      if (!cleanedUp && names && page && !page.isClosed()) {
         try {
           await cleanupSqliteLifecycle(page, names);
+          cleanedUp = true;
         } catch (cleanupErr) {
           console.warn(
             "[e2e] sqlite lifecycle cleanup after failure:",
             cleanupErr,
           );
+          await safeDeleteConnection(page, names.connectionName);
         }
-        throw err;
       }
-    });
+    } finally {
+      await context?.close().catch(() => undefined);
+    }
+  });
+
+  test("Connect to SQLite", async () => {
+    await setupSqliteConnection(page, names.connectionName, names.dbPath);
+  });
+
+  test("Create users table with columns and primary key", async () => {
+    await createUsersTable(page, names.connectionName, names.usersTable);
+  });
+
+  test("Create posts table with foreign key", async () => {
+    await createPostsTable(
+      page,
+      names.connectionName,
+      names.postsTable,
+      names.usersTable,
+      names.fkName,
+    );
+  });
+
+  test("Create view", async () => {
+    await createView(
+      page,
+      names.connectionName,
+      names.viewName,
+      names.postsTable,
+    );
+  });
+
+  test("Edit users table — add column", async () => {
+    await editUsersTableAddColumn(page, names.usersTable);
+  });
+
+  test("Edit view — change query", async () => {
+    await editViewQuery(page, names.viewName, names.postsTable);
+  });
+
+  test("Drop objects and connection", async () => {
+    await cleanupSqliteLifecycle(page, names);
+    cleanedUp = true;
   });
 });

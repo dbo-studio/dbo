@@ -26,10 +26,12 @@ func EnrichRawQueryResponse(
 	}
 
 	analysis := AnalyzeUpdatableQuery(req.Query, req.Database, req.Schema)
+
 	reason := analysis.EditableReason()
 	if reason != "" {
 		resp.Editable = false
 		resp.EditableReason = lo.ToPtr(reason)
+
 		return resp, nil
 	}
 
@@ -37,6 +39,7 @@ func EnrichRawQueryResponse(
 	if targetTable == "" {
 		resp.Editable = false
 		resp.EditableReason = lo.ToPtr("Could not determine source table")
+
 		return resp, nil
 	}
 
@@ -49,11 +52,15 @@ func EnrichRawQueryResponse(
 	if err != nil {
 		resp.Editable = false
 		resp.EditableReason = lo.ToPtr("Could not resolve table metadata")
-		return resp, nil
+
+		// Soft-fail: still return query results, just disable inline editing.
+		return resp, nil //nolint:nilerr
 	}
+
 	if !isTable {
 		resp.Editable = false
 		resp.EditableReason = lo.ToPtr("Query results from views cannot be edited inline")
+
 		return resp, nil
 	}
 
@@ -61,7 +68,9 @@ func EnrichRawQueryResponse(
 	if err != nil {
 		resp.Editable = false
 		resp.EditableReason = lo.ToPtr("Could not load table columns for inline editing")
-		return resp, nil
+
+		// Soft-fail: still return query results, just disable inline editing.
+		return resp, nil //nolint:nilerr
 	}
 
 	resultColumnNames := lo.Map(resp.Columns, func(col dto.Column, _ int) string {
@@ -79,6 +88,7 @@ func EnrichRawQueryResponse(
 		resp.Editable = false
 		resp.EditableReason = lo.ToPtr(editableReason)
 		resp.Columns = enrichedColumns
+
 		return resp, nil
 	}
 
@@ -98,6 +108,7 @@ func mergeRawQueryColumns(
 ) ([]dto.Column, bool, string) {
 	tableColumnByName := make(map[string]dto.Column, len(tableColumns))
 	pkColumns := make([]dto.Column, 0)
+
 	for _, column := range tableColumns {
 		tableColumnByName[strings.ToLower(column.Name)] = column
 		if column.IsPrimaryKey {
@@ -114,6 +125,7 @@ func mergeRawQueryColumns(
 		pkPresent = len(pkColumns) > 0
 	} else {
 		pkPresent = true
+
 		for _, pk := range pkColumns {
 			found := slices.Contains(resultColumnNames, pk.Name)
 			if !found {
@@ -124,6 +136,7 @@ func mergeRawQueryColumns(
 					}
 				}
 			}
+
 			if !found {
 				pkPresent = false
 				break
@@ -134,11 +147,13 @@ func mergeRawQueryColumns(
 	if len(pkColumns) == 0 {
 		return enrichResultColumns(resultColumns, tableColumnByName, analysis, false), false, "Result set must include primary key columns"
 	}
+
 	if !pkPresent {
 		return enrichResultColumns(resultColumns, tableColumnByName, analysis, false), false, "Result set must include primary key columns"
 	}
 
 	merged := enrichResultColumns(resultColumns, tableColumnByName, analysis, true)
+
 	return merged, true, ""
 }
 
@@ -164,9 +179,13 @@ func enrichResultColumns(
 			column.Comment = tableColumn.Comment
 			column.MappedType = tableColumn.MappedType
 			column.IsPrimaryKey = tableColumn.IsPrimaryKey
+			column.IsForeignKey = tableColumn.IsForeignKey
+
+			column.EnumValues = tableColumn.EnumValues
 			if sourceColumnName != "" {
 				column.SourceColumn = lo.ToPtr(sourceColumnName)
 			}
+
 			column.SourceTable = lo.ToPtr(analysis.TargetTable())
 		}
 
@@ -190,9 +209,11 @@ func resolveSourceColumnName(outputName string, analysis UpdatableQueryAnalysis)
 			return selectCol.SourceColumn
 		}
 	}
+
 	if !analysis.HasJoin && len(analysis.Tables) == 1 {
 		return outputName
 	}
+
 	return ""
 }
 
@@ -200,6 +221,7 @@ func stringPtr(value string) *string {
 	if value == "" {
 		return nil
 	}
+
 	return lo.ToPtr(value)
 }
 
@@ -215,11 +237,13 @@ func isRawQueryCommandResponse(resp *dto.RawQueryResponse) bool {
 
 	_, hasQuery := columnNames["Query"]
 	_, hasMessage := columnNames["Message"]
+
 	_, hasDuration := columnNames["Duration"]
 	if !hasQuery || !hasMessage || !hasDuration {
 		return false
 	}
 
 	_, hasDataMessage := resp.Data[0]["Message"]
+
 	return hasDataMessage
 }

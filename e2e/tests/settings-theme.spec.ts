@@ -149,33 +149,43 @@ test.describe("Settings & Theme", () => {
       });
 
       await test.step("Toggle left sidebar", async () => {
-        const wasVisible = await settingsPage.isLeftSidebarVisible();
+        const itemsTab = settingsPage.leftSidebarTab();
+        const wasVisible = await itemsTab.isVisible().catch(() => false);
 
         await settingsPage.toggleLeftSidebar();
 
         if (wasVisible) {
-          expect(await settingsPage.isLeftSidebarVisible()).toBe(false);
+          await expect(itemsTab).toBeHidden({ timeout: 10000 });
         } else {
-          expect(await settingsPage.isLeftSidebarVisible()).toBe(true);
+          await expect(itemsTab).toBeVisible({ timeout: 10000 });
         }
 
-        // Toggle back
         await settingsPage.toggleLeftSidebar();
+        if (wasVisible) {
+          await expect(itemsTab).toBeVisible({ timeout: 10000 });
+        } else {
+          await expect(itemsTab).toBeHidden({ timeout: 10000 });
+        }
       });
 
       await test.step("Toggle right sidebar", async () => {
-        const wasVisible = await settingsPage.isRightSidebarVisible();
+        const assistantTab = settingsPage.rightSidebarTab();
+        const wasVisible = await assistantTab.isVisible().catch(() => false);
 
         await settingsPage.toggleRightSidebar();
 
         if (wasVisible) {
-          expect(await settingsPage.isRightSidebarVisible()).toBe(false);
+          await expect(assistantTab).toBeHidden({ timeout: 10000 });
         } else {
-          expect(await settingsPage.isRightSidebarVisible()).toBe(true);
+          await expect(assistantTab).toBeVisible({ timeout: 10000 });
         }
 
-        // Toggle back
         await settingsPage.toggleRightSidebar();
+        if (wasVisible) {
+          await expect(assistantTab).toBeVisible({ timeout: 10000 });
+        } else {
+          await expect(assistantTab).toBeHidden({ timeout: 10000 });
+        }
       });
 
       await test.step("Cleanup", async () => {

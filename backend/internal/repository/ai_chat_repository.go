@@ -37,6 +37,7 @@ func (r AiChatRepoImpl) List(ctx context.Context, req *dto.AiChatListRequest) ([
 
 func (r AiChatRepoImpl) Find(ctx context.Context, id uint, pagination *dto.PaginationRequest) (*model.AiChat, error) {
 	var chat model.AiChat
+
 	err := r.db.WithContext(ctx).First(&chat, id).Error
 	if err != nil {
 		return nil, err
@@ -52,7 +53,6 @@ func (r AiChatRepoImpl) Find(ctx context.Context, id uint, pagination *dto.Pagin
 	err = db.Where("chat_id = ?", id).
 		Order("created_at desc").
 		Find(&messages).Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,6 @@ func (r AiChatRepoImpl) Create(ctx context.Context, dto *dto.AiChatCreateRequest
 		Where("id IN (SELECT ai_chats.id FROM ai_chats LEFT JOIN ai_chat_messages ON ai_chats.id = ai_chat_messages.chat_id GROUP BY ai_chats.id HAVING COUNT(ai_chat_messages.id) = 0)").
 		Where("created_at < ?", time.Now().Add(-time.Hour*24)).
 		Delete(&model.AiChat{}).Error
-
 	if err != nil {
 		return nil, err
 	}

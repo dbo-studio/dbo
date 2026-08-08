@@ -16,10 +16,13 @@ func upDropConnectionEnv(ctx context.Context, tx *sql.Tx) error {
 	if err != nil {
 		return err
 	}
+
 	if !has {
 		return nil
 	}
+
 	_, err = tx.ExecContext(ctx, "ALTER TABLE connections DROP COLUMN env")
+
 	return err
 }
 
@@ -28,9 +31,12 @@ func downDropConnectionEnv(ctx context.Context, tx *sql.Tx) error {
 	if err != nil {
 		return err
 	}
+
 	if has {
 		return nil
 	}
+
 	_, err = tx.ExecContext(ctx, "ALTER TABLE connections ADD COLUMN env TEXT NOT NULL DEFAULT ''")
+
 	return err
 }

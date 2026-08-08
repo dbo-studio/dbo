@@ -28,11 +28,13 @@ func (*BaseRepository) BuildArrayFormResponse(results []map[string]any, fields [
 	data := make([]map[string]any, len(results))
 	for i, result := range results {
 		rowData := make(map[string]any)
+
 		for _, field := range fields {
 			if val, exists := result[field.ID]; exists {
 				rowData[field.ID] = val
 			}
 		}
+
 		data[i] = rowData
 	}
 
@@ -50,6 +52,7 @@ func (*BaseRepository) BuildHybridFormResponse(general []contract.GeneralField, 
 	}
 
 	arrayResponse.General = general
+
 	return arrayResponse, nil
 }
 

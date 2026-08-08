@@ -36,26 +36,27 @@ export default function DataGridContextMenu({
       return;
     }
 
+    let nextEditedRows = editedRows;
     for (const row of selectedRows) {
       if (!row.row) continue;
       const newRow = { ...row.row };
 
-      const newEditedRows = handleRowChangeLog(
-        editedRows,
+      nextEditedRows = handleRowChangeLog(
+        nextEditedRows,
         row.row,
         row.selectedColumn,
         row.row[row.selectedColumn],
         newValue,
         columns
       );
-      updateEditedRows(newEditedRows).catch((error) => {
-        console.error('Error updating edited rows:', error);
-      });
       newRow[row.selectedColumn] = newValue;
       updateRow(newRow).catch((error) => {
         console.error('Error updating row:', error);
       });
     }
+    updateEditedRows(nextEditedRows).catch((error) => {
+      console.error('Error updating edited rows:', error);
+    });
   };
 
   const menu: MenuType[] = [

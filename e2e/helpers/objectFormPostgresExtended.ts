@@ -404,6 +404,42 @@ export async function editTableDropKey(page: Page, tableName: string, keyRowInde
   await objectForm.confirmExecute();
 }
 
+export async function dropSchemaViaTree(
+  page: Page,
+  connectionName: string,
+  databaseName: string,
+  schemaName: string
+): Promise<void> {
+  const tree = new ObjectTreePage(page);
+  await tree.expandPath([connectionName, databaseName]);
+  await tree.dropObject(schemaName, 'Drop schema');
+  await expect(tree.getTreeNode(schemaName)).toBeHidden({ timeout: 15000 });
+}
+
+export async function cleanupPostgresEditTable(
+  page: Page,
+  names: {
+    connectionName: string;
+    databaseName: string;
+    usersTable: string;
+    postsTable: string;
+  }
+): Promise<ConnectionPage> {
+  const tree = new ObjectTreePage(page);
+  const connectionPage = new ConnectionPage(page);
+  const renamedUsersTable = `${names.usersTable}_renamed`;
+
+  await tree.expandPath([names.connectionName, names.databaseName, 'public']);
+  await tree.dropObject(names.postsTable, 'Drop table').catch(() => undefined);
+  await tree.dropObject(renamedUsersTable, 'Drop table').catch(() => undefined);
+  await tree.dropObject(names.usersTable, 'Drop table').catch(() => undefined);
+  await tree.expandNode(names.connectionName);
+  await tree.dropObject(names.databaseName, 'Drop database').catch(() => undefined);
+  await connectionPage.deleteConnection(names.connectionName);
+
+  return connectionPage;
+}
+
 export async function cleanupExtended(
   page: Page,
   names: {

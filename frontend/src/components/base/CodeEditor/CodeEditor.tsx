@@ -7,7 +7,14 @@ import { CodeEditorBoxStyled } from './CodeEditor.styled.ts';
 import { editorConfig } from './helpers/editorConfig.ts';
 import { setupLanguage } from './helpers/languageSetup.ts';
 
-export default function CodeEditor({ value, onChange, width, height }: CodeEditorProps): JSX.Element {
+export default function CodeEditor({
+  value,
+  onChange,
+  width,
+  height,
+  language = 'json',
+  editable = true
+}: CodeEditorProps): JSX.Element {
   const theme = useSettingStore((state) => state.theme);
   const monaco = useMonaco();
 
@@ -33,12 +40,13 @@ export default function CodeEditor({ value, onChange, width, height }: CodeEdito
       <Editor
         height={height || '100%'}
         width={width || '100%'}
-        language='json'
+        language={language}
         value={value}
         onChange={handleEditorChange}
         theme={theme.editorTheme}
         options={{
           ...editorConfig,
+          readOnly: !editable,
           fontSize: theme.editorFontSize,
           fontFamily: getEditorFontFamily(theme.editorFont)
         }}

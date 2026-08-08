@@ -33,6 +33,7 @@ func (i IConfigServiceImpl) CheckUpdate(ctx context.Context) (*dto.ConfigCheckUp
 	}
 
 	var releaseResponse ReleaseResponse
+
 	err = json.Unmarshal(resp.Body(), &releaseResponse)
 	if err != nil {
 		return nil, err

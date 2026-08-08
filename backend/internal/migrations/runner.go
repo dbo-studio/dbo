@@ -12,6 +12,7 @@ func Up(ctx context.Context, db *sql.DB) error {
 	if err := goose.SetDialect("sqlite3"); err != nil {
 		return err
 	}
+
 	goose.SetBaseFS(FS)
 
 	if err := repairGooseVersionTable(ctx, db); err != nil {
@@ -22,7 +23,9 @@ func Up(ctx context.Context, db *sql.DB) error {
 		if errors.Is(err, goose.ErrNoNextVersion) {
 			return nil
 		}
+
 		return err
 	}
+
 	return nil
 }

@@ -10,6 +10,7 @@ import (
 
 func (r *MySQLRepository) handleTableCommands(node contract.DBNode, tabID contract.TreeTab, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
 	queries := []string{}
+
 	var tableName string
 
 	if tabID != contract.GeneralTab && action != contract.DropTableAction {
@@ -23,6 +24,7 @@ func (r *MySQLRepository) handleTableCommands(node contract.DBNode, tabID contra
 		}
 
 		tableName = name
+
 		queries = append(queries, query)
 	}
 

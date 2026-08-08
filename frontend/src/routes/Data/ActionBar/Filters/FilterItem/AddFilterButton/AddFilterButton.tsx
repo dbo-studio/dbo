@@ -9,6 +9,9 @@ export default function AddFilterButton({ columns }: AddFilterButtonProps): JSX.
   const upsertFilters = useTabStore((state) => state.upsertFilters);
 
   const handleAddNewFilter = (): void => {
+    if (!columns.length) {
+      return;
+    }
     upsertFilters({
       index: tools.uuid(),
       column: columns[0].name,

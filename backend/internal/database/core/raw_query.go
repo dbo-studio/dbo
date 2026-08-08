@@ -23,6 +23,7 @@ func (r *BaseRepository) RunRawQuery(ctx context.Context, req *dto.RawQueryReque
 		if isContextCancelErr(ctx, err) {
 			return nil, apperror.QueryCanceled()
 		}
+
 		return r.CommandResponseBuilder(result, endTime, err), nil
 	}
 
@@ -37,12 +38,15 @@ func isContextCancelErr(ctx context.Context, err error) bool {
 	if err == nil {
 		return false
 	}
+
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 		return true
 	}
+
 	if ctx.Err() != nil {
 		return true
 	}
+
 	return false
 }
 
@@ -84,10 +88,12 @@ func runRawQuery(ctx context.Context, r *BaseRepository, req *dto.RawQueryReques
 		}
 
 		var data map[string]any
+
 		err := r.db.WithContext(ctx).ScanRows(rows, &data)
 		if err != nil {
 			return nil, err
 		}
+
 		queryResults = append(queryResults, data)
 
 		if len(queryResults) >= limit {
@@ -99,21 +105,30 @@ func runRawQuery(ctx context.Context, r *BaseRepository, req *dto.RawQueryReques
 		return nil, err
 	}
 
+	structures := make([]dto.Column, 0, len(columns))
+	columnMappedTypes := make(map[string]string, len(columns))
+
+	for i, column := range columns {
+		dbType := columnTypes[i].DatabaseTypeName()
+
+		mappedType := r.ColumnMappedFormat(dbType)
+		if length, ok := columnTypes[i].Length(); ok && strings.EqualFold(dbType, "TINYINT") && length == 1 {
+			mappedType = MappedTypeBoolean
+		}
+
+		columnMappedTypes[column] = mappedType
+		structures = append(structures, dto.Column{
+			Name:       column,
+			Type:       strings.ToLower(dbType),
+			MappedType: mappedType,
+			IsActive:   true,
+		})
+	}
+
 	for i := range queryResults {
 		queryResults[i]["dbo_index"] = i
 		queryResults[i]["editable"] = false
-		queryResults[i] = r.SanitizeQueryResults(queryResults[i])
-	}
-
-	structures := make([]dto.Column, 0)
-
-	for i, column := range columns {
-		structures = append(structures, dto.Column{
-			Name:       column,
-			Type:       strings.ToLower(columnTypes[i].DatabaseTypeName()),
-			MappedType: r.ColumnMappedFormat(columnTypes[i].Name()),
-			IsActive:   true,
-		})
+		queryResults[i] = SanitizeQueryResultsWithTypes(queryResults[i], columnMappedTypes)
 	}
 
 	page := 1

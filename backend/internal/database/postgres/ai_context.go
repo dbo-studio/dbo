@@ -49,6 +49,7 @@ func (r *PostgresRepository) AiContext(ctx context.Context, req *dto.AiChatReque
 		if err != nil {
 			return "", err
 		}
+
 		tables = lo.Map(list, func(table Table, _ int) string {
 			return table.Name
 		})
@@ -63,6 +64,7 @@ func (r *PostgresRepository) AiContext(ctx context.Context, req *dto.AiChatReque
 		if err != nil {
 			return "", err
 		}
+
 		views = lo.Map(list, func(view View, _ int) string {
 			return view.Name
 		})
@@ -98,10 +100,12 @@ Tables:
 */
 func (r *PostgresRepository) AiCompleteContext(ctx context.Context, req *dto.AiInlineCompleteRequest) string {
 	sqlResult := r.base.ParseSQL(req.ContextOpts.Prompt)
+
 	database := sqlResult.Database
 	if database == nil {
 		database = req.ContextOpts.Database
 	}
+
 	schema := sqlResult.Schema
 	if schema == nil {
 		schema = req.ContextOpts.Schema
@@ -116,6 +120,7 @@ func (r *PostgresRepository) AiCompleteContext(ctx context.Context, req *dto.AiI
 	if err != nil {
 		return ""
 	}
+
 	return result
 }
 
@@ -128,6 +133,7 @@ func (p postgresAIContextProvider) TableColumns(ctx context.Context, table strin
 	if err != nil {
 		return nil, err
 	}
+
 	return postgresColumnsToContextColumns(columns), nil
 }
 
@@ -136,6 +142,7 @@ func (p postgresAIContextProvider) ViewColumns(ctx context.Context, view string,
 	if err != nil {
 		return nil, err
 	}
+
 	return postgresColumnsToContextColumns(columns), nil
 }
 

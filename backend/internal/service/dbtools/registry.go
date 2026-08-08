@@ -37,6 +37,7 @@ func (r *Registry) ToolNames(includeMCPExtras bool) []string {
 	if includeMCPExtras {
 		names = append(names, "list_connections")
 	}
+
 	return names
 }
 
@@ -62,10 +63,12 @@ func (r *Registry) repoFor(ctx context.Context, connectionID int32) (databaseCon
 	if err != nil {
 		return nil, fmt.Errorf("connection not found: %w", err)
 	}
+
 	repo, err := database.NewDBToolsRepository(ctx, conn, r.cm)
 	if err != nil {
 		return nil, err
 	}
+
 	return repo, nil
 }
 
@@ -73,6 +76,7 @@ func (r *Registry) resolveDatabase(args map[string]any, toolCtx ToolContext) *st
 	if v, ok := args["database"].(string); ok && v != "" {
 		return &v
 	}
+
 	return toolCtx.Database
 }
 
@@ -80,6 +84,7 @@ func (r *Registry) resolveSchema(args map[string]any, toolCtx ToolContext) *stri
 	if v, ok := args["schema"].(string); ok && v != "" {
 		return &v
 	}
+
 	return toolCtx.Schema
 }
 
@@ -88,12 +93,15 @@ func (r *Registry) listTables(ctx context.Context, args map[string]any, toolCtx 
 	if err != nil {
 		return "", err
 	}
+
 	database := r.resolveDatabase(args, toolCtx)
 	schema := r.resolveSchema(args, toolCtx)
+
 	names, err := repo.ListTableNames(ctx, database, schema)
 	if err != nil {
 		return "", err
 	}
+
 	return formatStringList(names), nil
 }
 
@@ -102,12 +110,15 @@ func (r *Registry) listViews(ctx context.Context, args map[string]any, toolCtx T
 	if err != nil {
 		return "", err
 	}
+
 	database := r.resolveDatabase(args, toolCtx)
 	schema := r.resolveSchema(args, toolCtx)
+
 	names, err := repo.ListViewNames(ctx, database, schema)
 	if err != nil {
 		return "", err
 	}
+
 	return formatStringList(names), nil
 }
 
@@ -116,17 +127,21 @@ func (r *Registry) describeTable(ctx context.Context, args map[string]any, toolC
 	if strings.TrimSpace(table) == "" {
 		return "", fmt.Errorf("table is required")
 	}
+
 	repo, err := r.repoFor(ctx, toolCtx.ConnectionID)
 	if err != nil {
 		return "", err
 	}
+
 	database := r.resolveDatabase(args, toolCtx)
 	schema := r.resolveSchema(args, toolCtx)
+
 	return repo.DescribeTable(ctx, table, database, schema)
 }
 
 func (r *Registry) executeSQL(ctx context.Context, args map[string]any, toolCtx ToolContext) (string, error) {
 	sqlText, _ := args["sql"].(string)
+
 	safeSQL, err := GuardReadOnlySQL(sqlText)
 	if err != nil {
 		return "", err
@@ -149,6 +164,7 @@ func (r *Registry) executeSQL(ctx context.Context, args map[string]any, toolCtx 
 	}
 
 	resp.Data = TruncateQueryResult(resp.Data)
+
 	raw, err := json.MarshalIndent(map[string]any{
 		"query":   resp.Query,
 		"columns": resp.Columns,
@@ -158,6 +174,7 @@ func (r *Registry) executeSQL(ctx context.Context, args map[string]any, toolCtx 
 	if err != nil {
 		return "", err
 	}
+
 	return string(raw), nil
 }
 
@@ -166,6 +183,7 @@ func (r *Registry) listConnections(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	if connections == nil {
 		return "[]", nil
 	}
@@ -181,16 +199,19 @@ func (r *Registry) listConnections(ctx context.Context) (string, error) {
 		if !c.IsActive {
 			continue
 		}
+
 		list = append(list, connInfo{
 			ID:   c.ID,
 			Name: c.Name,
 			Type: c.ConnectionType,
 		})
 	}
+
 	raw, err := json.MarshalIndent(list, "", "  ")
 	if err != nil {
 		return "", err
 	}
+
 	return string(raw), nil
 }
 
@@ -207,13 +228,16 @@ func (r *Registry) ResolveConnectionID(ctx context.Context, args map[string]any,
 			return int32(id), nil
 		}
 	}
+
 	if defaultConnID != nil {
 		return int32(*defaultConnID), nil
 	}
+
 	connections, err := r.connectionRepo.Index(ctx)
 	if err != nil {
 		return 0, err
 	}
+
 	if connections != nil {
 		for _, c := range *connections {
 			if c.IsActive {
@@ -221,6 +245,7 @@ func (r *Registry) ResolveConnectionID(ctx context.Context, args map[string]any,
 			}
 		}
 	}
+
 	return 0, fmt.Errorf("no active connection found")
 }
 
@@ -228,16 +253,22 @@ func formatStringList(items []string) string {
 	if len(items) == 0 {
 		return "[]"
 	}
+
 	var b strings.Builder
 	b.WriteString("[\n")
+
 	for i, item := range items {
 		fmt.Fprintf(&b, "  %q", item)
+
 		if i < len(items)-1 {
 			b.WriteString(",")
 		}
+
 		b.WriteString("\n")
 	}
+
 	b.WriteString("]")
+
 	return b.String()
 }
 

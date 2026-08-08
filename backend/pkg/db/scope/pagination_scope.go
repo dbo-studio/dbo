@@ -32,6 +32,7 @@ func Paginate(dto *dto.PaginationRequest) func(db *gorm.DB) *gorm.DB {
 		}
 
 		offset := (page - 1) * count
+
 		return db.Offset(offset).Limit(count)
 	}
 }

@@ -13,7 +13,9 @@ import (
 
 func (r *BaseRepository) ImportData(ctx context.Context, job dto.ImportJob, rows [][]string, columns []string) (*contract.ImportResult, error) {
 	startTime := time.Now()
+
 	var errors []contract.ImportError
+
 	successRows := 0
 	failedRows := 0
 
@@ -30,9 +32,9 @@ func (r *BaseRepository) ImportData(ctx context.Context, job dto.ImportJob, rows
 			strings.Join(row, ", "))
 
 		err := r.db.WithContext(ctx).Exec(insertQuery).Error
-
 		if err != nil {
 			failedRows++
+
 			errors = append(errors, contract.ImportError{
 				Row:     i,
 				Message: err.Error(),

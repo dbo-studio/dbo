@@ -24,12 +24,14 @@ func NewNativeServer(registry *dbtools.Registry) *NativeServer {
 	ns.streamHandler = sdkmcp.NewStreamableHTTPHandler(func(_ *http.Request) *sdkmcp.Server {
 		return ns.mcpServer
 	}, nil)
+
 	return ns
 }
 
 func (ns *NativeServer) SetDefaultConnectionID(id *uint) {
 	ns.mu.Lock()
 	defer ns.mu.Unlock()
+
 	ns.defaultConnID = id
 }
 
@@ -73,6 +75,7 @@ func (ns *NativeServer) registerTools() {
 		if in.Schema != nil {
 			args["schema"] = *in.Schema
 		}
+
 		return ns.runTool(ctx, in.ConnectionID, in.Schema, "describe_table", args)
 	})
 
@@ -88,11 +91,13 @@ func registerTool[T any](ns *NativeServer, name, description string, _ T, handle
 	}, func(ctx context.Context, _ *sdkmcp.CallToolRequest, input T) (*sdkmcp.CallToolResult, any, error) {
 		result, err := handler(ctx, input)
 		if err != nil {
+			//nolint:nilerr // MCP protocol: surface the error in the tool result, not as a transport error.
 			return &sdkmcp.CallToolResult{
 				Content: []sdkmcp.Content{&sdkmcp.TextContent{Text: err.Error()}},
 				IsError: true,
 			}, nil, nil
 		}
+
 		return &sdkmcp.CallToolResult{
 			Content: []sdkmcp.Content{&sdkmcp.TextContent{Text: result}},
 		}, nil, nil
@@ -103,6 +108,7 @@ func (ns *NativeServer) runTool(ctx context.Context, connID *float64, schema *st
 	if connID != nil {
 		args["connection_id"] = *connID
 	}
+
 	ns.mu.RLock()
 	defaultID := ns.defaultConnID
 	ns.mu.RUnlock()
@@ -116,6 +122,7 @@ func (ns *NativeServer) runTool(ctx context.Context, connID *float64, schema *st
 	if schema != nil {
 		toolCtx.Schema = schema
 	}
+
 	return ns.registry.Execute(ctx, toolName, args, toolCtx)
 }
 
@@ -123,5 +130,6 @@ func ptrStr(s *string) any {
 	if s == nil {
 		return nil
 	}
+
 	return *s
 }

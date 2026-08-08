@@ -97,6 +97,7 @@ func DefaultPostgresqlDatabase(connection *model.Connection) string {
 		if err != nil {
 			return ""
 		}
+
 		return strings.TrimPrefix(parsed.Path, "/")
 	}
 
@@ -114,7 +115,9 @@ func openPostgresqlConnection(connection *model.Connection, databaseName string)
 		if databaseName != "" {
 			uri = overridePostgresqlURIDatabase(uri, databaseName)
 		}
+
 		uri = appendPostgresqlURISSL(uri, options.SSL)
+
 		return postgres.Open(uri)
 	}
 
@@ -128,6 +131,7 @@ func openPostgresqlConnection(connection *model.Connection, databaseName string)
 	if databaseName != "" {
 		dbName = databaseName
 	}
+
 	if dbName != "" {
 		dsn += fmt.Sprintf("dbname=%s ", dbName)
 	}
@@ -148,7 +152,9 @@ func overridePostgresqlURIDatabase(uri, databaseName string) string {
 	if err != nil {
 		return uri
 	}
+
 	parsed.Path = "/" + databaseName
+
 	return parsed.String()
 }
 

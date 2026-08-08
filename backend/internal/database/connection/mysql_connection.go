@@ -86,18 +86,21 @@ func OpenMysqlConnection(connection *model.Connection) gorm.Dialector {
 
 	if options.URI != nil && *options.URI != "" {
 		uri := *options.URI
+
 		serverName := options.Host
 		if serverName == "" {
 			if parsed, parseErr := url.Parse(uri); parseErr == nil {
 				serverName = parsed.Hostname()
 			}
 		}
+
 		if !strings.Contains(uri, "tls=") {
 			uri, err = appendMysqlTLSQuery(uri, options.SSL, serverName)
 			if err != nil {
 				return nil
 			}
 		}
+
 		return mysql.Open(uri)
 	}
 
@@ -130,6 +133,7 @@ func DefaultMysqlDatabase(connection *model.Connection) string {
 		if err != nil {
 			return ""
 		}
+
 		return strings.TrimPrefix(parsed.Path, "/")
 	}
 

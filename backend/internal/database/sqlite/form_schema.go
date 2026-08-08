@@ -116,13 +116,13 @@ func (r *SQLiteRepository) tableColumnsOptions(ctx context.Context, node string)
 	}
 
 	var results []columnResult
+
 	err := r.base.DB().WithContext(ctx).Raw(`
 		SELECT name as value, name as name 
 		FROM pragma_table_info(?) 
 		WHERE name IS NOT NULL 
 		ORDER BY cid
 	`, node).Scan(&results).Error
-
 	if err != nil {
 		return []contract.FormFieldOption{}
 	}
@@ -134,6 +134,7 @@ func (r *SQLiteRepository) tableColumnsOptions(ctx context.Context, node string)
 			Label: result.Name,
 		}
 	}
+
 	return columns
 }
 
@@ -144,6 +145,7 @@ func (r *SQLiteRepository) tablesListOptions(ctx context.Context) []contract.For
 	}
 
 	var results []tableResult
+
 	err := r.base.DB().WithContext(ctx).Raw(`
 		SELECT name as value, name as name 
 		FROM sqlite_master 

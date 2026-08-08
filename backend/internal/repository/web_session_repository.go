@@ -43,6 +43,7 @@ func (r *webSessionRepoImpl) Create(ctx context.Context) (string, error) {
 	}
 
 	r.recordTouch(sessionID, now)
+
 	return sessionID, nil
 }
 
@@ -61,12 +62,12 @@ func (r *webSessionRepoImpl) CreateOrUpdate(ctx context.Context, sessionID strin
 		CreatedAt:  now,
 		LastSeenAt: now,
 	}).Error
-
 	if err != nil {
 		return "", err
 	}
 
 	r.recordTouch(sessionID, now)
+
 	return sessionID, nil
 }
 
@@ -86,6 +87,7 @@ func (r *webSessionRepoImpl) EnsureSession(ctx context.Context, sessionID string
 	}
 
 	r.recordTouch(sessionID, now)
+
 	return nil
 }
 
@@ -99,6 +101,7 @@ func (r *webSessionRepoImpl) TouchLastSeen(ctx context.Context, sessionID string
 	}
 
 	r.recordTouch(sessionID, at)
+
 	return nil
 }
 
@@ -119,6 +122,7 @@ func (r *webSessionRepoImpl) shouldSkipTouch(sessionID string, interval time.Dur
 	defer r.touchMu.Unlock()
 
 	lastTouch, ok := r.lastTouchByID[sessionID]
+
 	return ok && time.Since(lastTouch) < interval
 }
 
@@ -131,9 +135,11 @@ func (r *webSessionRepoImpl) recordTouch(sessionID string, at time.Time) {
 
 func generateSessionID() string {
 	var b [32]byte
+
 	_, err := rand.Read(b[:])
 	if err != nil {
 		return base64.RawURLEncoding.EncodeToString([]byte("fallback_session_id"))
 	}
+
 	return base64.RawURLEncoding.EncodeToString(b[:])
 }

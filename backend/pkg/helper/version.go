@@ -45,6 +45,7 @@ func (v *Version) Compare(other *Version) int {
 		if v.Major < other.Major {
 			return -1
 		}
+
 		return 1
 	}
 
@@ -52,6 +53,7 @@ func (v *Version) Compare(other *Version) int {
 		if v.Minor < other.Minor {
 			return -1
 		}
+
 		return 1
 	}
 
@@ -59,6 +61,7 @@ func (v *Version) Compare(other *Version) int {
 		if v.Patch < other.Patch {
 			return -1
 		}
+
 		return 1
 	}
 

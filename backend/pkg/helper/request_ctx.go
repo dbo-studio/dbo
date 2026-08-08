@@ -14,9 +14,11 @@ func CtxOwnerID(ctx context.Context) string {
 	if v == nil {
 		return "desktop"
 	}
+
 	if s, ok := v.(string); ok {
 		return s
 	}
+
 	return "desktop"
 }
 
@@ -33,9 +35,11 @@ func CtxConnectionPassword(ctx context.Context) (string, bool) {
 	if v == nil {
 		return "", false
 	}
+
 	s, ok := v.(string)
 	if !ok || s == "" {
 		return "", false
 	}
+
 	return s, true
 }

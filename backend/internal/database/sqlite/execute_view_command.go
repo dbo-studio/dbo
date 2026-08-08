@@ -37,6 +37,7 @@ func (r *SQLiteRepository) handleViewCommands(nodeID string, tabID contract.Tree
 		if params.New.Name != nil && params.New.Query != nil {
 			query = fmt.Sprintf("CREATE VIEW %s AS %s", *params.New.Name, *params.New.Query)
 		}
+
 		queries = append(queries, query)
 	}
 
@@ -63,5 +64,6 @@ func (r *SQLiteRepository) handleViewCommands(nodeID string, tabID contract.Tree
 func formatQuery(query *string) *string {
 	formattedQuery := lo.FromPtr(query)
 	formattedQuery = strings.ReplaceAll(formattedQuery, ";", "")
+
 	return &formattedQuery
 }

@@ -22,7 +22,6 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 		Type:    req.Type,
 		Options: req.Options,
 	})
-
 	if err != nil {
 		return err
 	}
@@ -49,6 +48,7 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 
 	if password != "" {
 		ownerID := helper.CtxOwnerID(ctx)
+
 		remember := lo.FromPtrOr(req.RememberPassword, false)
 		if err := s.secrets.SetConnectionPassword(ctx, ownerID, connection.ID, password, remember); err != nil {
 			return apperror.InternalServerError(err)
@@ -61,7 +61,6 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 	}
 
 	version, err := repo.Version(ctx)
-
 	if err != nil {
 		return apperror.InternalServerError(err)
 	}
@@ -74,8 +73,10 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 }
 
 func (s IConnectionServiceImpl) createConnectionDto(req *dto.CreateConnectionRequest) (*dto.CreateConnectionRequest, error) {
-	var options string
-	var err error
+	var (
+		options string
+		err     error
+	)
 
 	switch req.Type {
 	case string(databaseContract.Postgresql):

@@ -7,6 +7,7 @@ import (
 
 func columnListToResponse(columns []Column) []dto.Column {
 	data := make([]dto.Column, 0)
+
 	for _, column := range columns {
 		var col dto.Column
 

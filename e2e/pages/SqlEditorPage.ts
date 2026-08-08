@@ -33,12 +33,17 @@ export class SqlEditorPage extends BasePage {
   }
 
   async open(): Promise<void> {
-    if (await this.editor.isVisible().catch(() => false)) {
+    const run = this.runQueryButton.or(this.runButton);
+    const alreadyOpen =
+      (await run.isVisible().catch(() => false)) &&
+      (await this.editor.isVisible().catch(() => false));
+    if (alreadyOpen) {
       return;
     }
 
-    await this.page.getByRole("button", { name: "sql" }).click();
+    await this.page.getByRole("button", { name: "sql", exact: true }).click();
     await expect(this.editor).toBeVisible({ timeout: 15000 });
+    await expect(run).toBeVisible({ timeout: 15000 });
     await this.wait(500);
   }
 
@@ -152,7 +157,12 @@ export class SqlEditorPage extends BasePage {
   async clickRun(): Promise<void> {
     const run = this.runQueryButton.or(this.runButton);
     await expect(run).toBeVisible({ timeout: 10000 });
-    await run.click();
+    // Prefer the visible match — `.or()` can resolve to a detached/hidden node.
+    if (await this.runQueryButton.isVisible().catch(() => false)) {
+      await this.runQueryButton.click();
+      return;
+    }
+    await this.runButton.click();
   }
 
   async stopQuery(): Promise<void> {
@@ -202,6 +212,31 @@ export class SqlEditorPage extends BasePage {
 
   async getEditorContent(): Promise<string> {
     return (await this.editor.textContent()) || "";
+  }
+
+  async getMonacoValue(): Promise<string> {
+    return this.page.evaluate(() => {
+      const monacoApi = (
+        window as unknown as {
+          monaco?: {
+            editor: {
+              getEditors?: () => Array<{ getValue: () => string }>;
+              getModels?: () => Array<{ getValue: () => string }>;
+            };
+          };
+        }
+      ).monaco;
+      const editor = monacoApi?.editor?.getEditors?.()?.[0];
+      if (editor) {
+        return editor.getValue();
+      }
+      return monacoApi?.editor?.getModels?.()?.[0]?.getValue() ?? "";
+    });
+  }
+
+  async formatSql(): Promise<void> {
+    await expect(this.formatButton).toBeVisible({ timeout: 10000 });
+    await this.formatButton.click();
   }
 
   async expectEditorContains(text: string): Promise<void> {

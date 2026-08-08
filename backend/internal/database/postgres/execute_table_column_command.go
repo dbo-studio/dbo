@@ -128,7 +128,8 @@ func (r *PostgresRepository) handleEditColumn(node contract.DBNode, column dto.P
 		queries = append(queries, dataTypeQuery)
 	}
 
-	if column.Old.NotNull != nil && column.New.NotNull != nil && *column.Old.NotNull != *column.New.NotNull {
+	oldNotNull := lo.FromPtr(column.Old.NotNull)
+	if column.New.NotNull != nil && oldNotNull != *column.New.NotNull {
 		if *column.New.NotNull {
 			queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" SET NOT NULL`,
 				alter, *column.Old.Name))
@@ -139,6 +140,7 @@ func (r *PostgresRepository) handleEditColumn(node contract.DBNode, column dto.P
 	}
 
 	oldDefault := lo.FromPtr(column.Old.Default)
+
 	newDefault := lo.FromPtr(column.New.Default)
 	if oldDefault != newDefault {
 		if newDefault != "" {
@@ -151,6 +153,7 @@ func (r *PostgresRepository) handleEditColumn(node contract.DBNode, column dto.P
 	}
 
 	oldComment := lo.FromPtr(column.Old.Comment)
+
 	newComment := lo.FromPtr(column.New.Comment)
 	if oldComment != newComment {
 		queries = append(queries, fmt.Sprintf(`COMMENT ON COLUMN "%s"."%s"."%s" IS '%s'`,
@@ -176,5 +179,6 @@ func resolveCreateTableNode(node contract.DBNode, action contract.TreeNodeAction
 	}
 
 	node.Table = *params.New.Name
+
 	return node
 }

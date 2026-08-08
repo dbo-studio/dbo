@@ -79,5 +79,7 @@ export const IconTypes = {
   pause: 'Pause',
   key: 'KeyRound',
   undo: 'Undo2',
-  sparkles: 'Sparkles'
+  sparkles: 'Sparkles',
+  calendar: 'Calendar',
+  clock: 'Clock'
 };

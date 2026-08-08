@@ -103,13 +103,15 @@ export function registerInlineAIProvider(monaco: typeof Monaco, languageId: stri
                 return;
               }
 
+              const options = currentConnection()?.options;
               const requestData: AICompleteRequest = {
                 connectionId: currentConnection()?.id ?? 0,
                 providerId: activeProvider.id,
                 model: activeProvider.model,
                 contextOpts: {
-                  database: currentConnection()?.options?.database as string | undefined,
-                  schema: currentConnection()?.options?.schema as string | undefined,
+                  database: options && 'database' in options ? options.database : undefined,
+                  // Connection options do not carry schema; callers rely on SQL context / prompt.
+                  schema: undefined,
                   prompt: prefix,
                   suffix: suffix
                 }

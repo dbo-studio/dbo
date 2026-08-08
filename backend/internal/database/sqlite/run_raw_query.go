@@ -25,6 +25,7 @@ func (r *sqliteRawQueryResolver) IsBaseTable(ctx context.Context, database, sche
 	_ = schema
 
 	var typ string
+
 	err := r.repo.base.DB().WithContext(ctx).
 		Table("sqlite_master").
 		Select("type").
@@ -54,5 +55,6 @@ func (r *sqliteRawQueryResolver) LoadTableColumns(ctx context.Context, database,
 func (r *sqliteRawQueryResolver) BuildNodeID(_ context.Context, database, schema, table string) string {
 	_ = database
 	_ = schema
+
 	return table
 }

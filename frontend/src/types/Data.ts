@@ -1,3 +1,23 @@
+export type MappedType =
+  | 'string'
+  | 'boolean'
+  | 'number'
+  | 'date'
+  | 'time'
+  | 'datetime'
+  | 'enum'
+  | 'json'
+  | 'uuid'
+  | 'binary'
+  | 'geometry'
+  | 'unknown';
+
+export type BinaryCellValue = {
+  __dbo: 'binary';
+  length: number;
+  base64?: string;
+};
+
 export type RowType = {
   dbo_index: number;
   [key: string]: unknown;
@@ -10,10 +30,12 @@ export interface ColumnType {
   length: string;
   default: string;
   comment: string;
-  mappedType: string;
+  mappedType: MappedType;
   editable?: boolean;
   isActive: boolean;
   isPrimaryKey: boolean;
+  isForeignKey?: boolean;
+  enumValues?: string[];
   sourceTable?: string;
   sourceColumn?: string;
   selected?: boolean;

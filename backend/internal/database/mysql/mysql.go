@@ -28,6 +28,7 @@ func NewMySQLRepository(ctx context.Context, connection *model.Connection, cm *d
 
 func (r *MySQLRepository) Version(ctx context.Context) (string, error) {
 	var version string
+
 	result := r.base.DB().WithContext(ctx).Raw("SELECT VERSION()").Scan(&version)
 	if result.Error != nil {
 		return "", result.Error
@@ -37,6 +38,7 @@ func (r *MySQLRepository) Version(ctx context.Context) (string, error) {
 	if len(parts) > 0 {
 		version = parts[0]
 	}
+
 	return version, nil
 }
 

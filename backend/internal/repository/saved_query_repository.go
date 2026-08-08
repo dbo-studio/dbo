@@ -38,6 +38,7 @@ func (I ISavedQueryRepoImpl) Index(ctx context.Context, req *dto.SavedQueryListR
 
 func (I ISavedQueryRepoImpl) Find(ctx context.Context, id int32) (*model.SavedQuery, error) {
 	var query model.SavedQuery
+
 	result := I.db.WithContext(ctx).Where("id = ?", id).First(&query)
 
 	return &query, result.Error
@@ -45,6 +46,7 @@ func (I ISavedQueryRepoImpl) Find(ctx context.Context, id int32) (*model.SavedQu
 
 func (I ISavedQueryRepoImpl) Create(ctx context.Context, dto *dto.CreateSavedQueryRequest) (*model.SavedQuery, error) {
 	var query model.SavedQuery
+
 	if dto.Name == nil {
 		if len(dto.Query) > 20 {
 			query.Name = dto.Query[0:20]
@@ -58,6 +60,7 @@ func (I ISavedQueryRepoImpl) Create(ctx context.Context, dto *dto.CreateSavedQue
 	query.ConnectionID = uint(dto.ConnectionID)
 	query.Query = dto.Query
 	result := I.db.WithContext(ctx).Save(&query)
+
 	return &query, result.Error
 }
 
@@ -74,5 +77,6 @@ func (I ISavedQueryRepoImpl) Update(ctx context.Context, query *model.SavedQuery
 
 	query.Query = req.Query
 	result := I.db.WithContext(ctx).Save(&query)
+
 	return query, result.Error
 }

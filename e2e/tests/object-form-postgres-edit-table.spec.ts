@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { test, type BrowserContext, type Page } from "@playwright/test";
 import { postgresLifecycleNames } from "../fixtures/postgresObjectFormLifecycle";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import {
@@ -9,6 +9,7 @@ import {
   setupPostgresConnection,
 } from "../helpers/objectFormPostgresLifecycle";
 import {
+  cleanupPostgresEditTable,
   editTableAddUniqueKey,
   editTableChangeColumnType,
   editTableComment,
@@ -20,130 +21,121 @@ import {
   editTableSetDefault,
   editTableSetNotNull,
 } from "../helpers/objectFormPostgresExtended";
-import { withConnectionCleanup } from "../helpers/safeCleanup";
-import { ConnectionPage, ObjectTreePage } from "../pages";
+import { safeDeleteConnection } from "../helpers/safeCleanup";
+
+test.describe.configure({ mode: "serial" });
 
 test.describe("Object Form PostgreSQL edit table", () => {
-  test("Column and foreign key edits", async ({ page }, testInfo) => {
-    const names = postgresLifecycleNames(uniqueTestSuffix(testInfo));
-    const renamedUsersTable = `${names.usersTable}_renamed`;
+  let context: BrowserContext;
+  let page: Page;
+  let names: ReturnType<typeof postgresLifecycleNames>;
+  let renamedUsersTable: string;
+  let cleanedUp = false;
 
-    const dropCreated = async () => {
-      const tree = new ObjectTreePage(page);
-      const connectionPage = new ConnectionPage(page);
-      try {
-        await tree.expandPath([
-          names.connectionName,
-          names.databaseName,
-          "public",
-        ]);
-        await tree
-          .dropObject(names.postsTable, "Drop table")
-          .catch(() => undefined);
-        await tree
-          .dropObject(renamedUsersTable, "Drop table")
-          .catch(() => undefined);
-        await tree
-          .dropObject(names.usersTable, "Drop table")
-          .catch(() => undefined);
-        await tree.expandNode(names.connectionName);
-        await tree
-          .dropObject(names.databaseName, "Drop database")
-          .catch(() => undefined);
-        if (await connectionPage.connectionExists(names.connectionName)) {
-          await connectionPage.deleteConnection(names.connectionName);
-        }
-      } catch (cleanupErr) {
-        console.warn(
-          "[e2e] postgres edit-table cleanup after failure:",
-          cleanupErr,
-        );
-      }
-    };
-
-    await withConnectionCleanup(page, names.connectionName, async () => {
-      try {
-        await test.step("Connect and create base tables", async () => {
-          await setupPostgresConnection(page, names.connectionName);
-          await createDatabase(page, names.connectionName, names.databaseName);
-          await createUsersTable(
-            page,
-            names.connectionName,
-            names.databaseName,
-            names.usersTable,
-          );
-          await createPostsTable(
-            page,
-            names.connectionName,
-            names.databaseName,
-            names.postsTable,
-            names.usersTable,
-          );
-          await editUsersTableAddColumn(page, names.usersTable);
-        });
-
-        await test.step("Set NOT NULL on email column", async () => {
-          await editTableSetNotNull(page, names.usersTable, 1);
-        });
-
-        await test.step("Set default on email column", async () => {
-          await editTableSetDefault(page, names.usersTable, 1, "'unknown'");
-        });
-
-        await test.step("Set comment on email column", async () => {
-          await editTableSetColumnComment(
-            page,
-            names.usersTable,
-            1,
-            "user email address",
-          );
-        });
-
-        await test.step("Drop foreign key on posts table", async () => {
-          await editTableDropForeignKey(page, names.postsTable);
-        });
-
-        await test.step("Drop notes column on users table", async () => {
-          await editTableDropColumn(page, names.usersTable, 2);
-        });
-
-        await test.step("Rename users table", async () => {
-          await editTableRename(page, names.usersTable, renamedUsersTable);
-        });
-
-        await test.step("Set comment on users table", async () => {
-          await editTableComment(page, renamedUsersTable, "application users");
-        });
-
-        await test.step("Change email column type", async () => {
-          await editTableChangeColumnType(
-            page,
-            renamedUsersTable,
-            1,
-            "character varying",
-          );
-        });
-
-        await test.step("Add UNIQUE key on email column", async () => {
-          await editTableAddUniqueKey(
-            page,
-            renamedUsersTable,
-            "uniq_users_email",
-            ["email"],
-          );
-        });
-
-        await test.step("Drop UNIQUE key on email column", async () => {
-          await editTableDropKey(page, renamedUsersTable, 1);
-        });
-
-        await test.step("Cleanup — drop tables, database, and connection", async () => {
-          await dropCreated();
-        });
-      } catch (err) {
-        await dropCreated();
-        throw err;
-      }
+  test.beforeAll(async ({ browser }, testInfo) => {
+    context = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3001",
     });
+    page = await context.newPage();
+    names = postgresLifecycleNames(uniqueTestSuffix(testInfo));
+    renamedUsersTable = `${names.usersTable}_renamed`;
+  });
+
+  test.afterAll(async () => {
+    try {
+      if (!cleanedUp && names && page && !page.isClosed()) {
+        try {
+          await cleanupPostgresEditTable(page, names);
+          cleanedUp = true;
+        } catch (cleanupErr) {
+          console.warn(
+            "[e2e] postgres edit-table cleanup after failure:",
+            cleanupErr,
+          );
+          await safeDeleteConnection(page, names.connectionName);
+        }
+      }
+    } finally {
+      await context?.close().catch(() => undefined);
+    }
+  });
+
+  test("Connect and create base tables", async () => {
+    await setupPostgresConnection(page, names.connectionName);
+    await createDatabase(page, names.connectionName, names.databaseName);
+    await createUsersTable(
+      page,
+      names.connectionName,
+      names.databaseName,
+      names.usersTable,
+    );
+    await createPostsTable(
+      page,
+      names.connectionName,
+      names.databaseName,
+      names.postsTable,
+      names.usersTable,
+    );
+    await editUsersTableAddColumn(page, names.usersTable);
+  });
+
+  test("Set NOT NULL on email column", async () => {
+    await editTableSetNotNull(page, names.usersTable, 1);
+  });
+
+  test("Set default on email column", async () => {
+    await editTableSetDefault(page, names.usersTable, 1, "'unknown'");
+  });
+
+  test("Set comment on email column", async () => {
+    await editTableSetColumnComment(
+      page,
+      names.usersTable,
+      1,
+      "user email address",
+    );
+  });
+
+  test("Drop foreign key on posts table", async () => {
+    await editTableDropForeignKey(page, names.postsTable);
+  });
+
+  test("Drop notes column on users table", async () => {
+    await editTableDropColumn(page, names.usersTable, 2);
+  });
+
+  test("Rename users table", async () => {
+    await editTableRename(page, names.usersTable, renamedUsersTable);
+  });
+
+  test("Set comment on users table", async () => {
+    await editTableComment(page, renamedUsersTable, "application users");
+  });
+
+  test("Change email column type", async () => {
+    await editTableChangeColumnType(
+      page,
+      renamedUsersTable,
+      1,
+      "character varying",
+    );
+  });
+
+  test("Add UNIQUE key on email column", async () => {
+    await editTableAddUniqueKey(
+      page,
+      renamedUsersTable,
+      "uniq_users_email",
+      ["email"],
+    );
+  });
+
+  test("Drop UNIQUE key on email column", async () => {
+    await editTableDropKey(page, renamedUsersTable, 1);
+  });
+
+  test("Cleanup — drop tables, database, and connection", async () => {
+    await cleanupPostgresEditTable(page, names);
+    cleanedUp = true;
   });
 });

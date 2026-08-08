@@ -30,6 +30,7 @@ func FromConnection(c *model.Connection) Policy {
 	if c == nil {
 		return Policy{Mode: model.SafeModeSilent}
 	}
+
 	return Policy{
 		Mode: NormalizeMode(string(c.SafeMode)),
 	}
@@ -58,6 +59,7 @@ func ApplyCreateDefaults(mode *string) model.SafeMode {
 	if mode != nil {
 		return NormalizeMode(*mode)
 	}
+
 	return model.SafeModeSilent
 }
 
@@ -87,38 +89,48 @@ func Enforce(policy Policy, class sqlguard.Class, confirmed bool) error {
 		if confirmed {
 			return nil
 		}
+
 		data["reason"] = "Safe Mode requires confirmation before running this query"
 		data["requiresConfirm"] = true
+
 		return apperror.SafeModeConfirmRequired(data)
 
 	case model.SafeModeAlertWrite:
 		if IsReadClass(class) {
 			return nil
 		}
+
 		if confirmed {
 			return nil
 		}
+
 		data["reason"] = confirmReason(class)
 		data["requiresConfirm"] = true
+
 		return apperror.SafeModeConfirmRequired(data)
 
 	case model.SafeModeSafe:
 		if confirmed {
 			return nil
 		}
+
 		data["reason"] = "Safe Mode requires your database password before running this query"
 		data["requiresPassword"] = true
+
 		return apperror.SafeModePasswordRequired(data)
 
 	case model.SafeModeSafeWrite:
 		if IsReadClass(class) {
 			return nil
 		}
+
 		if confirmed {
 			return nil
 		}
+
 		data["reason"] = "Safe Mode requires your database password before running this query"
 		data["requiresPassword"] = true
+
 		return apperror.SafeModePasswordRequired(data)
 
 	default:
@@ -162,17 +174,22 @@ func (s *UnlockStore) Unlock(ctx context.Context, ownerID string, connectionID u
 	if s == nil || s.cache == nil {
 		return time.Time{}, apperror.InternalServerError(fmt.Errorf("unlock store unavailable"))
 	}
+
 	if ttl < MinUnlockTTL {
 		ttl = DefaultUnlockTTL
 	}
+
 	if ttl > MaxUnlockTTL {
 		ttl = MaxUnlockTTL
 	}
+
 	until := time.Now().UTC().Add(ttl)
+
 	rec := unlockRecord{Until: until}
 	if err := s.cache.Set(ctx, UnlockKey(ownerID, connectionID), rec, &ttl); err != nil {
 		return time.Time{}, err
 	}
+
 	return until, nil
 }
 
@@ -180,6 +197,7 @@ func (s *UnlockStore) Clear(ctx context.Context, ownerID string, connectionID ui
 	if s == nil || s.cache == nil {
 		return nil
 	}
+
 	return s.cache.Delete(ctx, UnlockKey(ownerID, connectionID))
 }
 
@@ -187,14 +205,18 @@ func (s *UnlockStore) IsUnlocked(ctx context.Context, ownerID string, connection
 	if s == nil || s.cache == nil {
 		return false, nil
 	}
+
 	var rec unlockRecord
 	if err := s.cache.Get(ctx, UnlockKey(ownerID, connectionID), &rec); err != nil {
 		return false, nil
 	}
+
 	if rec.Until.IsZero() || time.Now().UTC().After(rec.Until) {
 		return false, nil
 	}
+
 	until := rec.Until
+
 	return true, &until
 }
 
@@ -202,5 +224,6 @@ func (s *UnlockStore) WithUnlock(ctx context.Context, ownerID string, connection
 	unlocked, until := s.IsUnlocked(ctx, ownerID, connectionID)
 	policy.Unlocked = unlocked
 	policy.UnlockedUntil = until
+
 	return policy
 }

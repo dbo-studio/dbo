@@ -73,9 +73,12 @@ export default function SimpleField({
         >
           <Checkbox
             size={'small'}
-            checked={(localValue as boolean) || false}
-            onChange={(e): void => setLocalValue(e.target.checked)}
-            onBlur={(): void => onChange(localValue)}
+            checked={Boolean(localValue)}
+            onChange={(e): void => {
+              const checked = e.target.checked;
+              setLocalValue(checked);
+              onChange(checked);
+            }}
           />
           <Typography variant='caption' color='textText'>
             {field.name}

@@ -194,6 +194,7 @@ func (r *PostgresRepository) templateOptions(ctx context.Context) []contract.For
 	for _, template := range templates {
 		options = append(options, contract.FormFieldOption{Value: template.Name, Label: template.Name})
 	}
+
 	return options
 }
 

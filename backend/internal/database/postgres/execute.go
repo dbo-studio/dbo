@@ -12,7 +12,9 @@ import (
 
 func (r *PostgresRepository) buildExecuteQueries(_ context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, error) {
 	node := r.base.ExtractNode(nodeID)
+
 	type ExecuteParams map[contract.TreeTab]any
+
 	executeParams, err := helper.ConvertToDTO[ExecuteParams](params)
 	if err != nil {
 		return nil, err
@@ -84,6 +86,7 @@ func (r *PostgresRepository) PreviewExecute(ctx context.Context, nodeID string, 
 
 func (r *PostgresRepository) Execute(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) (*contract.ExecuteResult, error) {
 	node := r.base.ExtractNode(nodeID)
+
 	queries, err := r.buildExecuteQueries(ctx, nodeID, action, params)
 	if err != nil {
 		return nil, err

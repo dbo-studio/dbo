@@ -54,8 +54,8 @@ type Column struct {
 
 func (r *SQLiteRepository) getColumns(ctx context.Context, table string, columnNames []string, editable bool) ([]Column, error) {
 	columns := make([]Column, 0)
-	err := r.base.DB().WithContext(ctx).Raw("PRAGMA table_info(" + table + ")").Scan(&columns).Error
 
+	err := r.base.DB().WithContext(ctx).Raw("PRAGMA table_info(" + table + ")").Scan(&columns).Error
 	if err != nil {
 		return nil, err
 	}
@@ -70,6 +70,7 @@ func (r *SQLiteRepository) getColumns(ctx context.Context, table string, columnN
 
 		columns[i].MappedType = r.base.ColumnMappedFormat(column.DataType)
 		columns[i].Editable = editable
+
 		columns[i].IsActive = true
 		if len(columnNames) > 0 {
 			columns[i].IsActive = slices.Contains(columnNames, column.ColumnName)
@@ -128,7 +129,6 @@ func (r *SQLiteRepository) views(ctx context.Context) ([]View, error) {
 		Where("type = 'view'").
 		Order("tbl_name").
 		Find(&views).Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -162,6 +162,7 @@ func (r *SQLiteRepository) foreignKeys(ctx context.Context, table string) ([]For
 	}
 
 	var fkRows []pragmaFK
+
 	err := r.base.DB().WithContext(ctx).Raw(fmt.Sprintf("PRAGMA foreign_key_list(%s)", quoteIdent(table))).Scan(&fkRows).Error
 	if err != nil {
 		return nil, err

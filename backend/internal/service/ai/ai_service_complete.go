@@ -20,7 +20,6 @@ func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteR
 			Count: lo.ToPtr(1),
 		},
 	})
-
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}

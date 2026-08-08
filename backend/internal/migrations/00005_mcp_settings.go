@@ -31,6 +31,7 @@ func upMcpSettings(ctx context.Context, tx *sql.Tx) error {
 	_, err = tx.ExecContext(ctx, `
 		CREATE UNIQUE INDEX IF NOT EXISTS idx_mcp_settings_owner ON mcp_settings(owner_id)
 	`)
+
 	return err
 }
 
@@ -38,6 +39,8 @@ func downMcpSettings(ctx context.Context, tx *sql.Tx) error {
 	if _, err := tx.ExecContext(ctx, `DROP INDEX IF EXISTS idx_mcp_settings_owner`); err != nil {
 		return err
 	}
+
 	_, err := tx.ExecContext(ctx, `DROP TABLE IF EXISTS mcp_settings`)
+
 	return err
 }

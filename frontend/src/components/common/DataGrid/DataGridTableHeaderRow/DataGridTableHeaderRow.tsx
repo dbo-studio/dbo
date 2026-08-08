@@ -5,11 +5,18 @@ import { useSelectedTab } from '@/hooks';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { DataTabType, TabType } from '@/types';
-import { Checkbox, Stack, Typography, useTheme } from '@mui/material';
+import { Stack, Typography, useTheme } from '@mui/material';
 import type { JSX } from 'react';
 import { useCallback, useMemo } from 'react';
-import { SelectTableHeader, SortableTableHeader, StyledTableHead, StyledTableRow } from '../DataGrid.styled';
+import {
+  HeaderBadgeStyled,
+  SelectTableHeader,
+  SortableTableHeader,
+  StyledTableHead,
+  StyledTableRow
+} from '../DataGrid.styled';
 import DataGridResizer from '../DataGridResizer/DataGridResizer';
+import GridCheckbox from '../GridCheckbox';
 import type { DataGridTableHeaderRowProps } from '../types';
 import { HeaderColumnContentStyled, HeaderColumnTypeStyled } from './DataGridTableHeaderRow.styled';
 
@@ -113,12 +120,7 @@ export default function DataGridTableHeaderRow({
           if (column.name === 'select') {
             return (
               <SelectTableHeader key='select'>
-                <Checkbox
-                  sx={{ p: 0 }}
-                  size='small'
-                  onChange={(e) => handleSelectAll(e.target.checked)}
-                  onClick={(e) => e.stopPropagation()}
-                />
+                <GridCheckbox onChange={(e) => handleSelectAll(e.target.checked)} aria-label='Select all rows' />
               </SelectTableHeader>
             );
           }
@@ -139,6 +141,7 @@ export default function DataGridTableHeaderRow({
                   <Typography variant='body2'>{column.name}</Typography>
                   <HeaderColumnTypeStyled>({column.type})</HeaderColumnTypeStyled>
                   {column.isPrimaryKey && <CustomIcon type={'key'} size='xs' color={theme.palette.text.placeholder} />}
+                  {column.isForeignKey && <HeaderBadgeStyled title='Foreign key'>FK</HeaderBadgeStyled>}
                   {editable && column.editable === false && (
                     <CustomIcon type='lock' size='xs' color={theme.palette.text.placeholder} />
                   )}

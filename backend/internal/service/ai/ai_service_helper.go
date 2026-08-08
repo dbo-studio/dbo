@@ -45,7 +45,6 @@ func (s *AiServiceImpl) findChat(ctx context.Context, req *dto.AiChatRequest) (*
 		Title:        req.Message,
 		ConnectionID: req.ConnectionID,
 	})
-
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -80,6 +79,7 @@ func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat
 				return err
 			}
 		}
+
 		return nil
 	}
 

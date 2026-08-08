@@ -77,6 +77,7 @@ func appSecretKeyPath(cfg *config.Config) (string, error) {
 	if cfg.App.Env == config.EnvironmentDocker {
 		return "data/app_secret.key", nil
 	}
+
 	if cfg.App.Env == config.EnvironmentTesting {
 		return "data/testing_app_secret.key", nil
 	}
@@ -87,12 +88,14 @@ func appSecretKeyPath(cfg *config.Config) (string, error) {
 	}
 
 	appName := cfg.App.Name
+
 	switch runtime.GOOS {
 	case "windows":
 		appData := os.Getenv("APPDATA")
 		if appData == "" {
 			return "data/app_secret.key", nil
 		}
+
 		return filepath.Join(appData, appName, "storage", "app_secret.key"), nil
 	case "darwin":
 		return filepath.Join(homeDir, "Library", "Application Support", appName, "storage", "app_secret.key"), nil

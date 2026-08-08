@@ -84,6 +84,7 @@ func (h SavedQueryHandler) Update(c fiber.Ctx) error {
 
 func (h SavedQueryHandler) Delete(c fiber.Ctx) error {
 	queryID := fiber.Params[int32](c, "id")
+
 	data, err := h.savedQueryService.Delete(c, queryID)
 	if err != nil {
 		h.logger.Error(err.Error())

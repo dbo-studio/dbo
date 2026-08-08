@@ -47,9 +47,10 @@ func (p *ImportProcessor) GetType() model.JobType {
 
 func (p *ImportProcessor) Process(job *model.Job) error {
 	rawCtx := context.Background()
+
 	data, err := helper.ConvertToDTO[dto.ImportJob]([]byte(job.Data))
 	if err != nil {
-		return fmt.Errorf("could not convert job data to DTO: %v", err)
+		return fmt.Errorf("could not convert job data to DTO: %w", err)
 	}
 
 	ownerID := data.OwnerID
@@ -117,8 +118,10 @@ func (p *ImportProcessor) processLargeFile(ctx context.Context, job *model.Job, 
 		return fmt.Errorf("job was canceled")
 	}
 
-	var rows [][]string
-	var columnNames []string
+	var (
+		rows        [][]string
+		columnNames []string
+	)
 
 	switch data.Format {
 	case "csv":
@@ -145,11 +148,14 @@ func (p *ImportProcessor) processLargeFile(ctx context.Context, job *model.Job, 
 		return err
 	}
 
-	var successRows, failedRows int
-	var errors []databaseContract.ImportError
+	var (
+		successRows, failedRows int
+		errors                  []databaseContract.ImportError
+	)
 
 	for i, chunk := range chunks {
 		progress := 40 + (i * 50 / totalChunks) // Progress from 40% to 90%
+
 		err = p.jobManager.UpdateJobProgress(job, progress, fmt.Sprintf("Processing chunk %d/%d (%d rows)", i+1, totalChunks, len(chunk)))
 		if err != nil {
 			return err
@@ -162,6 +168,7 @@ func (p *ImportProcessor) processLargeFile(ctx context.Context, job *model.Job, 
 		chunkSuccess, chunkFailed, chunkErrors := p.processChunk(ctx, dbRepo, data, columnNames, chunk)
 		successRows += chunkSuccess
 		failedRows += chunkFailed
+
 		errors = append(errors, chunkErrors...)
 
 		if !data.ContinueOnError && len(chunkErrors) > 0 {
@@ -191,13 +198,16 @@ func (p *ImportProcessor) processLargeFile(ctx context.Context, job *model.Job, 
 }
 
 func (p *ImportProcessor) processChunk(ctx context.Context, dbRepo databaseContract.DatabaseRepository, options dto.ImportJob, columnNames []string, rows [][]string) (int, int, []databaseContract.ImportError) {
-	var successRows, failedRows int
-	var errors []databaseContract.ImportError
+	var (
+		successRows, failedRows int
+		errors                  []databaseContract.ImportError
+	)
 
 	importResult, err := dbRepo.ImportData(ctx, options, rows, columnNames)
 	if err != nil {
 		for i, row := range rows {
 			failedRows++
+
 			errors = append(errors, databaseContract.ImportError{
 				Row:     i,
 				Message: err.Error(),
@@ -240,11 +250,13 @@ func parseSQLFile(fileData []byte) ([][]string, []string, error) {
 	}
 
 	var rows [][]string
+
 	for _, rowTuple := range insertStmt.Rows.(sqlparser.Values) {
 		var row []string
 		for _, expr := range rowTuple {
 			row = append(row, sqlparser.String(expr))
 		}
+
 		rows = append(rows, row)
 	}
 
@@ -252,8 +264,10 @@ func parseSQLFile(fileData []byte) ([][]string, []string, error) {
 }
 
 func parseJSONFile(fileData []byte) ([][]string, []string, error) {
-	var columns []string
-	var rows [][]string
+	var (
+		columns []string
+		rows    [][]string
+	)
 
 	var jsonData []map[string]any
 	if err := json.Unmarshal(fileData, &jsonData); err != nil {
@@ -270,10 +284,12 @@ func parseJSONFile(fileData []byte) ([][]string, []string, error) {
 
 	for _, row := range jsonData {
 		var rowData []string
+
 		for _, colName := range columns {
 			value := row[colName]
 			rowData = append(rowData, helper.FormatSQLValue(value))
 		}
+
 		rows = append(rows, rowData)
 	}
 

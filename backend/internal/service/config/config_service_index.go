@@ -29,6 +29,7 @@ func (i IConfigServiceImpl) Index(ctx context.Context) (*dto.ConfigListResponse,
 	}
 
 	var newReleaseVersion *dto.ConfigCheckUpdateResponse
+
 	err = i.cache.Get(ctx, cache.NewReleaseVersionKey, &newReleaseVersion)
 	if err != nil {
 		return nil, err

@@ -139,13 +139,13 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
           </Tooltip>
 
           <Tooltip title={locales.export}>
-            <IconButton aria-label='export' onClick={handleShowExport}>
+            <IconButton data-testid='export-button' aria-label='export' onClick={handleShowExport}>
               <CustomIcon type='export' size='s' />
             </IconButton>
           </Tooltip>
 
           <Tooltip title={locales.import}>
-            <IconButton aria-label='import' onClick={handleShowImport}>
+            <IconButton data-testid='import-button' aria-label='import' onClick={handleShowImport}>
               <CustomIcon type='import' size='s' />
             </IconButton>
           </Tooltip>

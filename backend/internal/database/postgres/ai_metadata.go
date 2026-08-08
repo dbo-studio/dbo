@@ -12,6 +12,7 @@ func (r *PostgresRepository) ListTableNames(ctx context.Context, database, schem
 	if err != nil {
 		return nil, err
 	}
+
 	return lo.Map(tableList, func(table Table, _ int) string {
 		return table.Name
 	}), nil
@@ -22,6 +23,7 @@ func (r *PostgresRepository) ListViewNames(ctx context.Context, database, schema
 	if err != nil {
 		return nil, err
 	}
+
 	return lo.Map(viewList, func(view View, _ int) string {
 		return view.Name
 	}), nil

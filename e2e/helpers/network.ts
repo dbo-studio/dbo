@@ -54,10 +54,35 @@ export const apiRoute = {
     method: 'POST',
     status: 200
   },
+  queryRun: {
+    path: /^\/api\/query\/run\/?$/,
+    method: 'POST',
+    status: 200
+  },
+  /** Data browser (`/run`) or SQL editor (`/raw`) fetch. */
+  queryFetch: {
+    path: /^\/api\/query\/(raw|run)\/?$/,
+    method: 'POST',
+    status: 200
+  },
   queryUpdate: {
     path: /^\/api\/query\/update\/?$/,
     method: 'POST',
     status: 200
+  },
+  exportStart: {
+    path: /^\/api\/export\/?$/,
+    method: 'POST',
+    status: 200
+  },
+  importStart: {
+    path: /^\/api\/import\/?$/,
+    method: 'POST',
+    status: 200
+  },
+  jobDetail: {
+    path: /^\/api\/jobs\/\d+\/?$/,
+    method: 'GET'
   },
   savedList: {
     path: /^\/api\/saved\/?$/,

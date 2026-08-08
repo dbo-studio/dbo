@@ -26,5 +26,4 @@ func (i IConfigServiceImpl) Logs(ctx fiber.Ctx) error {
 	ctx.Set("Content-Type", "application/octet-stream")
 
 	return ctx.Send(fileContent)
-
 }

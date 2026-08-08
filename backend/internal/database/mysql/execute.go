@@ -12,7 +12,9 @@ import (
 
 func (r *MySQLRepository) buildExecuteQueries(_ context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, error) {
 	node := resolveCreateTableNode(r.base.ExtractNode(nodeID), action, params)
+
 	type ExecuteParams map[contract.TreeTab]any
+
 	executeParams, err := helper.ConvertToDTO[ExecuteParams](params)
 	if err != nil {
 		return nil, err
@@ -129,14 +131,17 @@ func runQueries(queries []string, exec func(string) error) error {
 		if query == "" {
 			continue
 		}
+
 		query, err := url.PathUnescape(query)
 		if err != nil {
 			return err
 		}
+
 		if err := exec(query); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 

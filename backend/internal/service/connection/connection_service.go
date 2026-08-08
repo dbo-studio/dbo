@@ -41,6 +41,7 @@ func NewConnectionService(
 	secrets secretStore.ISecretStore,
 ) IConnectionService {
 	c := container.Instance().Cache()
+
 	return &IConnectionServiceImpl{
 		connectionRepo: connectionRepo,
 		cm:             cm,
@@ -76,8 +77,10 @@ func (s IConnectionServiceImpl) LockSafeMode(ctx context.Context, connectionID i
 	if err != nil {
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
+
 	if err := s.unlockStore.Clear(ctx, helper.CtxOwnerID(ctx), connection.ID); err != nil {
 		return apperror.InternalServerError(err)
 	}
+
 	return nil
 }

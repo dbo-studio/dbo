@@ -241,10 +241,12 @@ func (r *SQLiteRepository) buildSingleKeyDefinition(key dto.SQLiteTableKey) stri
 
 func (r *SQLiteRepository) buildCreateIndexesQueries(tableName string, indexes []dto.SQLiteIndex) []string {
 	queries := make([]string, 0)
+
 	for _, idx := range indexes {
 		if idx.New == nil {
 			continue
 		}
+
 		if idx.Added != nil && !lo.FromPtr(idx.Added) {
 			continue
 		}
@@ -253,6 +255,7 @@ func (r *SQLiteRepository) buildCreateIndexesQueries(tableName string, indexes [
 			queries = append(queries, query)
 		}
 	}
+
 	return queries
 }
 
@@ -283,6 +286,7 @@ func (r *SQLiteRepository) buildCreateIndexQuery(tableName string, idx dto.SQLit
 
 func (r *SQLiteRepository) buildEditIndexesQueries(tableName string, indexes []dto.SQLiteIndex) []string {
 	queries := make([]string, 0)
+
 	for _, idx := range indexes {
 		if idx.Deleted != nil && *idx.Deleted && idx.Old != nil && idx.Old.Name != nil {
 			queries = append(queries, fmt.Sprintf("DROP INDEX IF EXISTS %s", quoteIdent(*idx.Old.Name)))
@@ -293,6 +297,7 @@ func (r *SQLiteRepository) buildEditIndexesQueries(tableName string, indexes []d
 			if query := r.buildCreateIndexQuery(tableName, idx); query != "" {
 				queries = append(queries, query)
 			}
+
 			continue
 		}
 
@@ -303,5 +308,6 @@ func (r *SQLiteRepository) buildEditIndexesQueries(tableName string, indexes []d
 			}
 		}
 	}
+
 	return queries
 }

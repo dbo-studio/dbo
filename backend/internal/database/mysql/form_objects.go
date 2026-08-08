@@ -37,6 +37,7 @@ func (r *MySQLRepository) getDatabaseInfo(ctx context.Context, node contract.DBN
 	}
 
 	result := []map[string]any{}
+
 	for _, database := range databases {
 		if database.Name == node.Database {
 			result = append(result, map[string]any{
@@ -77,6 +78,7 @@ func (r *MySQLRepository) getTableGeneralFields(ctx context.Context, node contra
 					"ENGINE":      table.Engine,
 					"ROW_FORMAT":  table.RowFormat,
 				}
+
 				break
 			}
 		}
@@ -157,6 +159,7 @@ func (r *MySQLRepository) getTableKeys(ctx context.Context, node contract.DBNode
 			for i, pk := range primaryKeys {
 				columns[i] = pk.ColumnName
 			}
+
 			result = append(result, map[string]any{
 				"constraint_name": "PRIMARY",
 				"constraint_type": "PRIMARY KEY",
@@ -212,18 +215,21 @@ func (r *MySQLRepository) getTableIndexes(ctx context.Context, node contract.DBN
 
 func (r *MySQLRepository) getViewInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.viewFields()
+
 	views, err := r.views(ctx, &node.Database, true)
 	if err != nil {
 		return nil, err
 	}
 
 	result := []map[string]any{}
+
 	for _, view := range views {
 		if view.Name == node.Table {
 			query := ""
 			if view.Query != nil {
 				query = *view.Query
 			}
+
 			result = append(result, map[string]any{
 				"name":    view.Name,
 				"comment": view.Comment,

@@ -23,6 +23,7 @@ func NewConnectionRepo() IConnectionRepo {
 
 func (c IConnectionRepoImpl) Index(ctx context.Context) (*[]model.Connection, error) {
 	var connections []model.Connection
+
 	ownerID := helper.CtxOwnerID(ctx)
 	result := c.db.WithContext(ctx).Where("owner_id = ?", ownerID).Find(&connections)
 
@@ -36,6 +37,7 @@ func (c IConnectionRepoImpl) Find(ctx context.Context, id int32) (*model.Connect
 
 func (c IConnectionRepoImpl) FindByIDAndOwner(ctx context.Context, id int32, ownerID string) (*model.Connection, error) {
 	var connection model.Connection
+
 	result := c.db.WithContext(ctx).Where("id = ? AND owner_id = ?", id, ownerID).First(&connection)
 
 	return &connection, result.Error
@@ -54,6 +56,7 @@ func (c IConnectionRepoImpl) Create(ctx context.Context, dto *dto.CreateConnecti
 	}
 
 	result := c.db.WithContext(ctx).Save(connection)
+
 	return connection, result.Error
 }
 
@@ -65,6 +68,7 @@ func (c IConnectionRepoImpl) Delete(ctx context.Context, connection *model.Conne
 func (c IConnectionRepoImpl) Update(ctx context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) (*model.Connection, error) {
 	connection.Name = helper.OptionalString(req.Name, connection.Name)
 	connection.IsActive = helper.OptionalBool(req.IsActive, connection.IsActive)
+
 	connection.Options = string(req.Options)
 	if req.SafeMode != nil {
 		connection.SafeMode = model.SafeMode(*req.SafeMode)
