@@ -140,7 +140,7 @@ export const handleRowChangeLog = (
   const existingRow = existingRowIndex !== -1 ? editedRows[existingRowIndex] : null;
 
   const oldObject: RowType = existingRow ? { ...existingRow.old } : { dbo_index: dboIndex };
-  const newObject: RowType = existingRow ? { ...existingRow.new } : ({ dbo_index: dboIndex } as RowType);
+  const newObject: RowType = existingRow ? { ...existingRow.new } : { dbo_index: dboIndex };
 
   // Keep the first original value for this field; only update the new value.
   if (!(rowKey in oldObject)) {

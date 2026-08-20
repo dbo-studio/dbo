@@ -180,6 +180,10 @@ func enrichResultColumns(
 			column.MappedType = tableColumn.MappedType
 			column.IsPrimaryKey = tableColumn.IsPrimaryKey
 			column.IsForeignKey = tableColumn.IsForeignKey
+			column.ReferencedSchema = tableColumn.ReferencedSchema
+			column.ReferencedTable = tableColumn.ReferencedTable
+			column.ReferencedColumns = append([]string(nil), tableColumn.ReferencedColumns...)
+			column.LocalColumns = append([]string(nil), tableColumn.LocalColumns...)
 
 			column.EnumValues = tableColumn.EnumValues
 			if sourceColumnName != "" {

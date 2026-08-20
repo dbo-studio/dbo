@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { JSX, memo, useCallback, useEffect, useMemo } from 'react';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import DateTimePicker from '@/components/base/DateTimePicker/DateTimePicker';
 import { nextBooleanCellValue, parseBooleanCellValue } from '@/core/utils/dataGrid';
 import { formatCellDisplayValue, isComplexMappedType, valueToEditorString } from '@/core/utils/dataValue';
@@ -10,9 +11,13 @@ import {
   CellNullStyled,
   CellNumberStyled,
   CellSelect,
+  FkCellView,
+  FkLookupButton,
   HighlightedTextMatch
 } from '../DataGrid.styled';
+import { FkCellEditor } from '../FkCellEditor/FkCellEditor';
 import GridCheckbox from '../GridCheckbox';
+import { isForeignKeyPickerColumn } from '../hooks/fkColumn';
 import { useCellEditing } from '../hooks/useCellEditing';
 import { useCellSelection } from '../hooks/useCellSelection';
 import type { DataGridTableCellProps } from '../types';
@@ -36,9 +41,17 @@ export const DataGridTableCell = memo(
       (typeof value === 'object' && value !== null && !Array.isArray(value) && '__dbo' in value);
     const displayValue = formatCellDisplayValue(value, column);
     const editorString = valueToEditorString(value);
+    const isFkPicker = isForeignKeyPickerColumn(column);
 
-    const { inputRef, handleRowChange, commitValue } = useCellEditing(row, columnId);
+    const { inputRef, handleRowChange, commitValue, commitFields } = useCellEditing(row, columnId);
     const { handleClick, isEditing, setIsEditing } = useCellSelection(row, rowIndex, columnId, editable);
+
+    const handleCellClick = useCallback(
+      (event: React.MouseEvent): void => {
+        handleClick(event);
+      },
+      [handleClick]
+    );
 
     const highlightedContent = useMemo(() => {
       if (!searchTerm || !isSearchMatch) {
@@ -89,13 +102,13 @@ export const DataGridTableCell = memo(
     }, [searchTerm, displayValue, isSearchMatch, isCurrentMatch, rowIndex, columnId, isNull]);
 
     useEffect(() => {
-      if (isEditing && inputRef.current) {
+      if (isEditing && inputRef.current && !isFkPicker) {
         requestAnimationFrame(() => {
           inputRef.current?.focus();
           inputRef.current?.select();
         });
       }
-    }, [isEditing, inputRef]);
+    }, [isEditing, inputRef, isFkPicker]);
 
     const handleInputBlur = useCallback(
       (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>): void => {
@@ -117,6 +130,18 @@ export const DataGridTableCell = memo(
       [setIsEditing, handleRowChange, mappedType, commitValue]
     );
 
+    const openFkLookup = useCallback(
+      (event: React.MouseEvent): void => {
+        event.stopPropagation();
+        event.preventDefault();
+        if (!editable) {
+          return;
+        }
+        setIsEditing(true);
+      },
+      [editable, setIsEditing]
+    );
+
     const cellClassName = useMemo(
       () =>
         clsx({
@@ -130,7 +155,7 @@ export const DataGridTableCell = memo(
     if (mappedType === 'boolean' && editable) {
       const boolState = parseBooleanCellValue(value);
       return (
-        <CellContainer onClick={handleClick} className={cellClassName} data-testid='grid-cell-boolean'>
+        <CellContainer onClick={handleCellClick} className={cellClassName} data-testid='grid-cell-boolean'>
           <GridCheckbox
             checked={boolState === true}
             indeterminate={boolState === null}
@@ -145,6 +170,24 @@ export const DataGridTableCell = memo(
     }
 
     if (isEditing && editable && !isComplex) {
+      if (isFkPicker && column) {
+        return (
+          <CellContainer className={cellClassName}>
+            <FkCellEditor
+              column={column}
+              value={value}
+              onCommitFields={(updates): void => {
+                commitFields(updates);
+                setIsEditing(false);
+              }}
+              onCancel={(): void => {
+                setIsEditing(false);
+              }}
+            />
+          </CellContainer>
+        );
+      }
+
       if (mappedType === 'enum' && column?.enumValues && column.enumValues.length > 0) {
         return (
           <CellSelect
@@ -184,7 +227,6 @@ export const DataGridTableCell = memo(
         );
       }
 
-      // JSON and plain strings share the text editor path.
       return (
         <CellInput
           ref={inputRef}
@@ -209,8 +251,32 @@ export const DataGridTableCell = memo(
         highlightedContent
       );
 
+    if (isFkPicker && editable) {
+      return (
+        <CellContainer onClick={handleCellClick} className={cellClassName} data-testid='grid-cell'>
+          <FkCellView>
+            <CellContent title={editorString} style={{ flex: 1 }}>
+              {content}
+            </CellContent>
+            <FkLookupButton
+              type='button'
+              title='Look up foreign key'
+              aria-label='Look up foreign key'
+              data-testid='grid-fk-lookup-button'
+              onClick={openFkLookup}
+              onMouseDown={(event): void => {
+                event.stopPropagation();
+              }}
+            >
+              <CustomIcon type='search' size='xs' />
+            </FkLookupButton>
+          </FkCellView>
+        </CellContainer>
+      );
+    }
+
     return (
-      <CellContainer onClick={handleClick} className={cellClassName} data-testid='grid-cell'>
+      <CellContainer onClick={handleCellClick} className={cellClassName} data-testid='grid-cell'>
         <CellContent title={isComplex ? displayValue : editorString}>{content}</CellContent>
       </CellContainer>
     );
@@ -224,6 +290,11 @@ export const DataGridTableCell = memo(
       prevProps.column?.editable === nextProps.column?.editable &&
       prevProps.column?.notNull === nextProps.column?.notNull &&
       prevProps.column?.enumValues === nextProps.column?.enumValues &&
+      prevProps.column?.isForeignKey === nextProps.column?.isForeignKey &&
+      prevProps.column?.referencedSchema === nextProps.column?.referencedSchema &&
+      prevProps.column?.referencedTable === nextProps.column?.referencedTable &&
+      prevProps.column?.referencedColumns === nextProps.column?.referencedColumns &&
+      prevProps.column?.localColumns === nextProps.column?.localColumns &&
       prevProps.editable === nextProps.editable &&
       prevProps.searchTerm === nextProps.searchTerm &&
       prevProps.isSearchMatch === nextProps.isSearchMatch &&

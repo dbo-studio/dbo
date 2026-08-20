@@ -116,6 +116,10 @@ func (h *TreeHandler) GetDynamicFieldOptions(c fiber.Ctx) error {
 		Parameters:   c.Queries(),
 	}
 
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
 	result, err := h.treeService.GetDynamicFieldOptions(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())

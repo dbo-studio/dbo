@@ -35,6 +35,10 @@ export interface ColumnType {
   isActive: boolean;
   isPrimaryKey: boolean;
   isForeignKey?: boolean;
+  referencedSchema?: string;
+  referencedTable?: string;
+  referencedColumns?: string[];
+  localColumns?: string[];
   enumValues?: string[];
   sourceTable?: string;
   sourceColumn?: string;

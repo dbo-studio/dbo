@@ -44,7 +44,7 @@ export type ObjectTabType = {
 // };
 
 export type FormFieldOptionType = {
-  value: string | number;
+  value: string | number | Record<string, string>;
   label: string;
 };
 

@@ -17,15 +17,22 @@ func columnListToResponse(columns []Column) []dto.Column {
 		col.Editable = column.Editable
 		col.IsActive = column.IsActive
 		col.IsPrimaryKey = column.IsPrimaryKey == "1"
+		col.IsForeignKey = column.IsForeignKey
 
-		if column.IsNullable == "0" {
-			col.NotNull = false
-		} else {
-			col.NotNull = true
-		}
+		// After getColumns, IsNullable uses is_nullable semantics: "0" = NOT NULL.
+		col.NotNull = column.IsNullable == "0"
 
 		if column.ColumnDefault.Valid {
 			col.Default = lo.ToPtr(column.ColumnDefault.String)
+		}
+
+		if column.ForeignKey != nil {
+			if column.ForeignKey.TargetTable != "" {
+				col.ReferencedTable = lo.ToPtr(column.ForeignKey.TargetTable)
+			}
+
+			col.ReferencedColumns = append([]string(nil), column.ForeignKey.RefColumns...)
+			col.LocalColumns = append([]string(nil), column.ForeignKey.Columns...)
 		}
 
 		data = append(data, col)

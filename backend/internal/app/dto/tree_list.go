@@ -42,3 +42,10 @@ func (req TreeListRequest) Validate() error {
 		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
 	)
 }
+
+func (req DynamicFieldOptionsRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
+		validation.Field(&req.NodeID, validation.Required),
+	)
+}

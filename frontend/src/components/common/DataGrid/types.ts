@@ -38,6 +38,7 @@ export type CellEditingReturn = {
   inputRef: React.RefObject<HTMLInputElement | null>;
   handleRowChange: (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => void;
   commitValue: (newValue: unknown) => void;
+  commitFields: (updates: Record<string, unknown>) => void;
 };
 
 export type CellSelectionReturn = {

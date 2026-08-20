@@ -64,7 +64,13 @@ export function DBFieldItem({ row, column }: DBFieldItemProps): JSX.Element {
           select
           size='small'
           fullWidth
-          value={cellValue == null ? '' : String(cellValue)}
+          value={
+            cellValue == null
+              ? ''
+              : typeof cellValue === 'string' || typeof cellValue === 'number' || typeof cellValue === 'boolean'
+                ? String(cellValue)
+                : ''
+          }
           onChange={(e): void => {
             const next = e.target.value === '' ? null : e.target.value;
             setValue(next ?? '');

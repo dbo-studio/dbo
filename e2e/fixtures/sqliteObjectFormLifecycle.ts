@@ -30,7 +30,9 @@ export const SQLITE_LIFECYCLE_PREVIEW = {
   createView: /CREATE VIEW/i,
   recreateView: /DROP VIEW|CREATE VIEW/i,
   dropColumn: /CREATE TABLE|DROP/i,
-  dropForeignKey: /CREATE TABLE/i,
+  // SQLite recreates the table; preview must keep real columns + copy data (not FK/PK-only DDL).
+  dropForeignKey: /CREATE TABLE[\s\S]*"user_id"[\s\S]*INSERT INTO/i,
+  addForeignKey: /CREATE TABLE[\s\S]*"user_id"[\s\S]*FOREIGN KEY[\s\S]*INSERT INTO/i,
   renameTable: /RENAME TO|CREATE TABLE/i,
   setNotNull: /NOT NULL|CREATE TABLE/i,
   setDefault: /DEFAULT|CREATE TABLE/i,

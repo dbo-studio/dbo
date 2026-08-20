@@ -10,6 +10,7 @@ export const ConnectionsStyled = styled(Box, {
 })<ConnectionsStyledProps>(({ theme, expanded, expandedLayout = 'grid' }) => ({
   height: '100%',
   background: theme.palette.background.subdued,
+  borderRight: `1px solid ${theme.palette.divider}`,
   ...(expanded
     ? expandedLayout === 'grid'
       ? {

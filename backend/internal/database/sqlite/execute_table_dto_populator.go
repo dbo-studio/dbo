@@ -114,6 +114,10 @@ func (r *SQLiteRepository) populateColumnParamsFromDDL(ctx context.Context, colu
 	}
 
 	columns, err := r.getColumns(ctx, resolvedTableName, []string{}, false)
+	if (err != nil || len(columns) == 0) && tableName != "" && tableName != resolvedTableName {
+		columns, err = r.getColumns(ctx, tableName, []string{}, false)
+	}
+
 	if err != nil {
 		return
 	}
@@ -190,19 +194,28 @@ func (r *SQLiteRepository) mergeColumnChanges(existing, changes []dto.SQLiteTabl
 }
 
 func (r *SQLiteRepository) extractTableNameFromDDL(tableDDL string) string {
-	ddlUpper := strings.ToUpper(strings.TrimSpace(tableDDL))
+	trimmed := strings.TrimSpace(tableDDL)
 
-	openParen := strings.Index(ddlUpper, "(")
+	openParen := strings.Index(trimmed, "(")
 	if openParen <= 0 {
 		return ""
 	}
 
-	tablePart := strings.TrimSpace(ddlUpper[:openParen])
-	tablePart = strings.TrimPrefix(tablePart, "CREATE TEMPORARY TABLE")
-	tablePart = strings.TrimPrefix(tablePart, "CREATE TABLE")
-	tablePart = strings.TrimSpace(tablePart)
+	// Parse against the original DDL so the returned name keeps its stored casing.
+	// Uppercasing first then quoting breaks PRAGMA table_info("NAME") lookups in SQLite.
+	tablePart := strings.TrimSpace(trimmed[:openParen])
+	upper := strings.ToUpper(tablePart)
 
-	return strings.Trim(tablePart, "\"")
+	switch {
+	case strings.HasPrefix(upper, "CREATE TEMPORARY TABLE"):
+		tablePart = strings.TrimSpace(tablePart[len("CREATE TEMPORARY TABLE"):])
+	case strings.HasPrefix(upper, "CREATE TABLE"):
+		tablePart = strings.TrimSpace(tablePart[len("CREATE TABLE"):])
+	default:
+		return ""
+	}
+
+	return strings.Trim(tablePart, "\"'`[]")
 }
 
 func (r *SQLiteRepository) convertColumnsToDTO(columns []Column) []dto.SQLiteTableColumn {
