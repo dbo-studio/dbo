@@ -277,7 +277,6 @@ func formatColumnValue(columnName string, value any, columnTypes map[string]stri
 	return helper.FormatSQLValueForDriver(sqlDriverMysql, value)
 }
 
-// formatMysqlBooleanSQL maps grid boolean payloads (bool or "true"/"false"/0/1) to 0/1 literals.
 func formatMysqlBooleanSQL(value any) (string, error) {
 	if value == nil {
 		return "NULL", nil
