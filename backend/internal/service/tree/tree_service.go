@@ -2,6 +2,10 @@ package serviceTree
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -9,6 +13,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
 	"github.com/dbo-studio/dbo/pkg/apperror"
@@ -178,6 +183,27 @@ func (i ITreeServiceImpl) GetDynamicFieldOptions(ctx context.Context, req *dto.D
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
+	field := req.Parameters["field"]
+	if field == "" {
+		return nil, apperror.BadRequest(errors.New("field is required in parameters"))
+	}
+
+	if field != "columns" && field != "fk_values" {
+		return nil, apperror.BadRequest(fmt.Errorf("unsupported dynamic field %q", field))
+	}
+
+	if field == "fk_values" {
+		if strings.TrimSpace(req.Parameters["table"]) == "" {
+			return nil, apperror.BadRequest(errors.New("table is required in parameters"))
+		}
+
+		if len(databaseCore.ParseFkKeyColumns(req.Parameters)) == 0 {
+			return nil, apperror.BadRequest(errors.New("keyColumn is required in parameters"))
+		}
+
+		req.Parameters["limit"] = strconv.Itoa(databaseCore.ParseFkLookupLimit(req.Parameters["limit"]))
+	}
+
 	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {
 		return nil, err
@@ -190,8 +216,24 @@ func (i ITreeServiceImpl) GetDynamicFieldOptions(ctx context.Context, req *dto.D
 
 	options, err := repo.GetDynamicFieldOptions(ctx, dynamicReq)
 	if err != nil {
+		if isFkLookupBadRequest(err) {
+			return nil, apperror.BadRequest(err)
+		}
+
 		return nil, apperror.InternalServerError(err)
 	}
 
 	return options, nil
+}
+
+func isFkLookupBadRequest(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	msg := err.Error()
+
+	return strings.Contains(msg, "required") ||
+		strings.Contains(msg, "not found") ||
+		strings.Contains(msg, "unsupported dynamic field")
 }

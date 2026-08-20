@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/samber/lo"
 )
 
 type Column struct {
@@ -45,6 +46,15 @@ func columnListToResponse(columns []Column) []dto.Column {
 		col.IsPrimaryKey = column.IsPrimaryKey
 		col.IsForeignKey = column.IsForeignKey
 		col.EnumValues = column.EnumValues
+
+		if column.ForeignKey != nil {
+			if column.ForeignKey.TargetTable != "" {
+				col.ReferencedTable = lo.ToPtr(column.ForeignKey.TargetTable)
+			}
+
+			col.ReferencedColumns = append([]string(nil), column.ForeignKey.RefColumnsList...)
+			col.LocalColumns = append([]string(nil), column.ForeignKey.ColumnsList...)
+		}
 
 		data = append(data, col)
 	}

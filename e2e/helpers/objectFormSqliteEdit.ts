@@ -57,6 +57,26 @@ export async function editTableDropForeignKey(
   await objectForm.confirmExecute();
 }
 
+export async function editTableAddForeignKey(
+  page: Page,
+  tableName: string,
+  usersTable: string,
+  fkName: string,
+): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.foreignKeys);
+  const existingRows = await page.getByTestId(/^object-form-delete-row-/).count();
+  await objectForm.addRow();
+  const fkRowIndex = existingRows;
+  await objectForm.fillArrayCell(fkRowIndex, F.fkName, fkName);
+  await objectForm.selectArrayCellOption(fkRowIndex, F.fkTargetTable, usersTable);
+  await objectForm.selectMultiSelectOptions(fkRowIndex, F.fkSourceColumns, ["user_id"]);
+  await objectForm.selectMultiSelectOptions(fkRowIndex, F.fkTargetColumns, ["id"]);
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.addForeignKey);
+  await objectForm.confirmExecute();
+}
+
 export async function editTableDropColumn(
   page: Page,
   tableName: string,

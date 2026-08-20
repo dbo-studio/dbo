@@ -50,12 +50,19 @@ type Column struct {
 	MappedType    string         `gorm:"-"`
 	Editable      bool           `gorm:"-"`
 	IsActive      bool           `gorm:"-"`
+	IsForeignKey  bool           `gorm:"-"`
+	ForeignKey    *ForeignKey    `gorm:"-"`
 }
 
 func (r *SQLiteRepository) getColumns(ctx context.Context, table string, columnNames []string, editable bool) ([]Column, error) {
 	columns := make([]Column, 0)
 
-	err := r.base.DB().WithContext(ctx).Raw("PRAGMA table_info(" + table + ")").Scan(&columns).Error
+	err := r.base.DB().WithContext(ctx).Raw("PRAGMA table_info(" + quoteIdent(table) + ")").Scan(&columns).Error
+	if err != nil {
+		return nil, err
+	}
+
+	fkList, err := r.foreignKeys(ctx, table)
 	if err != nil {
 		return nil, err
 	}
@@ -75,9 +82,18 @@ func (r *SQLiteRepository) getColumns(ctx context.Context, table string, columnN
 		if len(columnNames) > 0 {
 			columns[i].IsActive = slices.Contains(columnNames, column.ColumnName)
 		}
+
+		foreignKey, fkFound := lo.Find(fkList, func(fk ForeignKey) bool {
+			return slices.Contains(fk.Columns, column.ColumnName)
+		})
+		if fkFound {
+			fk := foreignKey
+			columns[i].ForeignKey = &fk
+			columns[i].IsForeignKey = true
+		}
 	}
 
-	return columns, err
+	return columns, nil
 }
 
 // columnsLite returns column names only from PRAGMA table_info.

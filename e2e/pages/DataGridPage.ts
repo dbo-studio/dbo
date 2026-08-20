@@ -207,6 +207,90 @@ export class DataGridPage extends BasePage {
     await expect(this.saveButton).toBeEnabled({ timeout: 5000 });
   }
 
+  async expectForeignKeyBadge(tooltip?: string | RegExp): Promise<void> {
+    const badge = this.grid.locator("thead").getByText("FK", { exact: true }).first();
+    await expect(badge).toBeVisible({ timeout: 15000 });
+    if (tooltip) {
+      await expect(badge).toHaveAttribute("title", tooltip);
+    }
+  }
+
+  async openFkLookupInRow(rowText: string): Promise<Locator> {
+    const row = this.grid.locator("tbody tr").filter({ hasText: rowText }).first();
+    await expect(row).toBeVisible({ timeout: 15000 });
+    const button = row.getByTestId("grid-fk-lookup-button").first();
+    await expect(button).toBeVisible({ timeout: 5000 });
+    await button.click();
+    const editor = this.grid.getByTestId("grid-cell-fk");
+    await expect(editor).toBeVisible({ timeout: 5000 });
+    return editor;
+  }
+
+  async pickFkOption(
+    rowText: string,
+    _currentFkValue: string,
+    optionLabel: string | RegExp,
+  ): Promise<void> {
+    const editor = await this.openFkLookupInRow(rowText);
+    const input = editor.locator("input").first();
+    await expect(input).toBeVisible({ timeout: 5000 });
+    const search =
+      typeof optionLabel === "string"
+        ? optionLabel.replace(/^.*·\s*/, "").slice(0, 6)
+        : "Books";
+    await input.fill(search);
+    const option = this.page.getByRole("option", { name: optionLabel }).first();
+    await expect(option).toBeVisible({ timeout: 10000 });
+    await option.click();
+    await expect(this.saveButton).toBeEnabled({ timeout: 5000 });
+  }
+
+  async pasteFkRawKey(
+    rowText: string,
+    _currentFkValue: string,
+    rawKey: string,
+  ): Promise<void> {
+    const editor = await this.openFkLookupInRow(rowText);
+    const input = editor.locator("input").first();
+    await expect(input).toBeVisible({ timeout: 5000 });
+    await input.fill(rawKey);
+    const createOption = this.page.getByRole("option", {
+      name: new RegExp(`Use ["']${rawKey}["']`, "i"),
+    });
+    if (await createOption.isVisible().catch(() => false)) {
+      await createOption.click();
+    } else {
+      await input.press("Enter");
+    }
+    await expect(this.saveButton).toBeEnabled({ timeout: 5000 });
+  }
+
+  async expectFkMenuHasNoNullOption(rowText: string): Promise<void> {
+    const editor = await this.openFkLookupInRow(rowText);
+    await expect(editor).toBeVisible({ timeout: 5000 });
+    const nullOption = this.page.getByRole("option", { name: /^NULL$/i });
+    await expect(nullOption).toHaveCount(0);
+    await this.page.keyboard.press("Escape");
+  }
+
+  async pickCompositeFkOption(
+    rowText: string,
+    optionLabel: string | RegExp,
+  ): Promise<void> {
+    const editor = await this.openFkLookupInRow(rowText);
+    const input = editor.locator("input").first();
+    await expect(input).toBeVisible({ timeout: 5000 });
+    const search =
+      typeof optionLabel === "string"
+        ? optionLabel.replace(/^.*·\s*/, "").slice(0, 6)
+        : "Beta";
+    await input.fill(search);
+    const option = this.page.getByRole("option", { name: optionLabel }).first();
+    await expect(option).toBeVisible({ timeout: 10000 });
+    await option.click();
+    await expect(this.saveButton).toBeEnabled({ timeout: 5000 });
+  }
+
   async editDateTimeCell(currentSnippet: RegExp | string, nextValue: string): Promise<void> {
     const cell =
       typeof currentSnippet === "string"

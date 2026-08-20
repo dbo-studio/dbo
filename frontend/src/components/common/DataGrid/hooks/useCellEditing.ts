@@ -3,6 +3,7 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import type { RowType } from '@/types';
 import { useCallback, useRef } from 'react';
 import type { CellEditingReturn } from '../types';
+import { coerceFkCellValue } from './fkColumn';
 
 export const useCellEditing = (row: RowType, columnId: string): CellEditingReturn => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -10,37 +11,49 @@ export const useCellEditing = (row: RowType, columnId: string): CellEditingRetur
   const updateRow = useDataStore((state) => state.updateRow);
   const columns = useDataStore((state) => state.columns ?? []);
 
-  const commitValue = useCallback(
-    (newValue: unknown): void => {
+  const commitFields = useCallback(
+    (updates: Record<string, unknown>): void => {
       const store = useDataStore.getState();
-      const editedRows = store.editedRows;
       const activeColumns = store.columns ?? columns;
       const foundRow = store.rows?.find((r) => r.dbo_index === row.dbo_index);
-      const previousValue = row[columnId];
+      const baseRow = foundRow ?? row;
 
-      if (Object.is(newValue, previousValue)) {
-        return;
+      let nextEdited = store.editedRows;
+      const newRow: RowType = { ...baseRow };
+      let changed = false;
+
+      for (const [field, rawValue] of Object.entries(updates)) {
+        const column = activeColumns.find((item) => item.name === field);
+        const nextValue = coerceFkCellValue(rawValue, column?.mappedType);
+        const previousValue = baseRow[field];
+
+        if (Object.is(nextValue, previousValue) || valuesSemanticallyEqual(previousValue, nextValue)) {
+          continue;
+        }
+
+        changed = true;
+        newRow[field] = nextValue;
+        nextEdited = handleRowChangeLog(nextEdited, baseRow, field, previousValue, nextValue, activeColumns);
       }
 
-      // Avoid false dirty state when input strings match numeric/boolean cell values.
-      if (valuesSemanticallyEqual(previousValue, newValue)) {
+      if (!changed) {
         return;
       }
-
-      const newRow = {
-        ...(foundRow ?? row),
-        [columnId]: newValue
-      };
-
-      const newEditedRows = handleRowChangeLog(editedRows, row, columnId, previousValue, newValue, activeColumns);
 
       updateRow(newRow)
         .then(() => {
-          updateEditedRows(newEditedRows).catch(console.error);
+          updateEditedRows(nextEdited).catch(console.error);
         })
         .catch(console.error);
     },
-    [row, columnId, columns, updateEditedRows, updateRow]
+    [row, columns, updateEditedRows, updateRow]
+  );
+
+  const commitValue = useCallback(
+    (newValue: unknown): void => {
+      commitFields({ [columnId]: newValue });
+    },
+    [columnId, commitFields]
   );
 
   const handleRowChange = useCallback(
@@ -53,6 +66,7 @@ export const useCellEditing = (row: RowType, columnId: string): CellEditingRetur
   return {
     inputRef,
     handleRowChange,
-    commitValue
+    commitValue,
+    commitFields
   };
 };

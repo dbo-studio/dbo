@@ -3,6 +3,7 @@ import { sqliteLifecycleNames } from "../fixtures/sqliteObjectFormLifecycle";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import {
   cleanupSqliteEditTable,
+  editTableAddForeignKey,
   editTableAddUniqueKey,
   editTableDropColumn,
   editTableDropForeignKey,
@@ -81,6 +82,15 @@ test.describe("Object Form SQLite edit table", () => {
 
   test("Drop foreign key on posts table", async () => {
     await editTableDropForeignKey(page, names.postsTable);
+  });
+
+  test("Add foreign key on posts table", async () => {
+    await editTableAddForeignKey(
+      page,
+      names.postsTable,
+      names.usersTable,
+      `${names.fkName}_readd`,
+    );
   });
 
   test("Drop notes column on users table", async () => {

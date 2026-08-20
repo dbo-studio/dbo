@@ -403,6 +403,34 @@ export const HeaderBadgeStyled = styled('span')(({ theme }) => ({
   letterSpacing: 0.2
 }));
 
+export const FkLookupButton = styled('button')(({ theme }) => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexShrink: 0,
+  width: 18,
+  height: 18,
+  marginLeft: 4,
+  padding: 0,
+  border: `1px solid ${theme.palette.divider}`,
+  borderRadius: 2,
+  background: theme.palette.background.paper,
+  color: theme.palette.text.subdued,
+  cursor: 'pointer',
+  '&:hover': {
+    color: theme.palette.text.text,
+    borderColor: theme.palette.text.subdued
+  }
+}));
+
+export const FkCellView = styled('div')(() => ({
+  display: 'flex',
+  alignItems: 'center',
+  width: '100%',
+  minWidth: 0,
+  height: '22px'
+}));
+
 export const DataGridRootStyled = styled(Box)(() => ({
   display: 'flex',
   flexDirection: 'column',

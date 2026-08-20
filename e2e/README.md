@@ -4,6 +4,8 @@ Isolated Playwright suite for DBO Studio. Each `npm test` run boots an **ephemer
 
 **Agents:** follow [`.cursor/rules/e2e-qa.mdc`](../.cursor/rules/e2e-qa.mdc) and the [`e2e-playwright`](../.cursor/skills/e2e-playwright/SKILL.md) skill when writing or fixing tests.
 
+**Per-engine completeness + speed:** see [`docs/e2e-per-engine-implementation.md`](../docs/e2e-per-engine-implementation.md). Gaps: [`docs/e2e-coverage-gap-report.md`](../docs/e2e-coverage-gap-report.md).
+
 ## Architecture
 
 ```
@@ -39,9 +41,11 @@ cd e2e
 
 npm test                          # headless, fail-fast, list reporter
 npm run test:ui                   # Playwright UI mode
-npm run test:object-form          # Object Form suite only
+npm test -- tests/object-form-sqlite-edit-table.spec.ts   # one file (prefer per-engine when projects exist)
 npm test -- tests/connections.spec.ts
 ```
+
+Object Form is **not** a separate aggregate script. It is deep coverage **inside** each engine suite (`test:pg` / `test:mysql` / `test:sqlite` once those projects exist). Do not reintroduce `test:object-form` that concatenates all engines into one serial job.
 
 From `frontend/`: `npm run test:e2e` forwards to this package.
 
@@ -68,6 +72,7 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Data browser             | `data-browser.spec.ts`                        | open / filter / sort / pagination / Columns / Inline Query / Query Preview |
 | Import / Export          | `import-export.spec.ts`                       | split: export CSV/JSON/SQL, filtered, import formats, round-trip, continue-on-error |
 | Data grid typed cells    | `data-grid-typed-cells.spec.ts`               | MySQL+PG: split per editor/cue/Quick Look               |
+| Data grid FK autocomplete| `data-grid-fk-autocomplete.spec.ts`           | PG+MySQL+SQLite single-col pick/paste; SQLite composite fill; NOT NULL hides NULL |
 | Query guards             | `query-guards.spec.ts`                        | cancel Stop + raw SELECT page size / user LIMIT         |
 | Saved / history          | `saved-history.spec.ts`                       | history, save, run, copy                                |
 | Settings / theme         | `settings-theme.spec.ts`                      | theme persistence, panels, sidebar                      |
@@ -80,7 +85,7 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Object Form MySQL        | `object-form-mysql-lifecycle.spec.ts`         | serial: connect → DB → tables → FK → view → edit → drop |
 | Object Form MySQL edit   | `object-form-mysql-edit-table.spec.ts`        | serial deep column/FK/key/index edits                   |
 | Object Form SQLite       | `object-form-sqlite-lifecycle.spec.ts`        | serial: connect → tables → FK → view → edit → drop      |
-| Object Form SQLite edit  | `object-form-sqlite-edit-table.spec.ts`       | serial deep column/FK/key edits                         |
+| Object Form SQLite edit  | `object-form-sqlite-edit-table.spec.ts`       | serial deep column/FK drop+re-add/key edits             |
 
 **Accepted out of automated e2e:** AI send/stream with real providers; Tauri/desktop native dialogs (manual release checklist).
 

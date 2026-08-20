@@ -791,6 +791,7 @@ func (r *PostgresRepository) primaryKeys(ctx context.Context, database *string, 
 type ForeignKey struct {
 	ConstraintName    string  `gorm:"column:constraint_name"`
 	Columns           string  `gorm:"column:columns"`
+	TargetSchema      string  `gorm:"column:target_schema"`
 	TargetTable       string  `gorm:"column:target_table"`
 	RefColumns        string  `gorm:"column:ref_columns"`
 	UpdateAction      string  `gorm:"column:update_action"`
@@ -828,6 +829,7 @@ func (r *PostgresRepository) foreignKeys(ctx context.Context, database *string, 
 		Select(`
 			c.conname as constraint_name,
 			array_to_string(array_agg(a.attname ORDER BY array_position(c.conkey, a.attnum)), ', ') as columns,
+			nt.nspname as target_schema,
 			ct.relname as target_table,
 			array_to_string(array_agg(af.attname ORDER BY array_position(c.confkey, af.attnum)), ', ') as ref_columns,
 			CASE c.confupdtype
@@ -851,6 +853,7 @@ func (r *PostgresRepository) foreignKeys(ctx context.Context, database *string, 
 		Joins("JOIN pg_class t ON t.oid = c.conrelid").
 		Joins("JOIN pg_class ct ON ct.oid = c.confrelid").
 		Joins("JOIN pg_namespace n ON n.oid = t.relnamespace").
+		Joins("JOIN pg_namespace nt ON nt.oid = ct.relnamespace").
 		Joins("JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)").
 		Joins("JOIN pg_attribute af ON af.attrelid = c.confrelid AND af.attnum = ANY(c.confkey)").
 		Joins("LEFT JOIN pg_description d ON d.objoid = c.oid").
@@ -866,7 +869,7 @@ func (r *PostgresRepository) foreignKeys(ctx context.Context, database *string, 
 
 	err = query.
 		Order("c.conname").
-		Group("c.conname, ct.relname, c.confupdtype, c.confdeltype, c.condeferrable, c.condeferred, d.description, c.conkey, c.confkey").
+		Group("c.conname, nt.nspname, ct.relname, c.confupdtype, c.confdeltype, c.condeferrable, c.condeferred, d.description, c.conkey, c.confkey").
 		Find(&foreignKeys).Error
 	if err != nil {
 		return nil, err

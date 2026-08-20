@@ -6,7 +6,6 @@
     "format": "prettier --write pages tests",
     "test": "node scripts/run-e2e.mjs",
     "test:ui": "node scripts/run-e2e.mjs --ui",
-    "test:object-form": "node scripts/run-e2e.mjs tests/object-form-table.spec.ts tests/object-form-postgres-lifecycle.spec.ts tests/object-form-postgres-edit-table.spec.ts tests/object-form-postgres-schema-matview.spec.ts tests/object-form-mysql-lifecycle.spec.ts tests/object-form-mysql-edit-table.spec.ts tests/object-form-sqlite-lifecycle.spec.ts tests/object-form-sqlite-edit-table.spec.ts",
     "test:codegen": "node scripts/run-e2e.mjs --codegen"
   },
   "devDependencies": {
