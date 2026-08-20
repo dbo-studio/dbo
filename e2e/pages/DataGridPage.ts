@@ -402,16 +402,21 @@ export class DataGridPage extends BasePage {
     return this.page.getByRole("menuitem", { name });
   }
 
+  /** Includes disabled items (Playwright role queries can skip disabled menuitems). */
+  contextMenuItemByTestId(slug: string): Locator {
+    return this.page.getByTestId(`context-menu-item-${slug}`);
+  }
+
   async expectContextMenuItems(names: Array<string | RegExp>): Promise<void> {
     for (const name of names) {
       await expect(this.contextMenuItem(name)).toBeVisible({ timeout: 5000 });
     }
   }
 
-  async expectContextMenuItemDisabled(name: string | RegExp): Promise<void> {
-    const item = this.contextMenuItem(name);
+  async expectContextMenuItemDisabledByTestId(slug: string): Promise<void> {
+    const item = this.contextMenuItemByTestId(slug);
     await expect(item).toBeVisible({ timeout: 5000 });
-    await expect(item).toBeDisabled();
+    await expect(item).toHaveAttribute("aria-disabled", "true", { timeout: 5000 });
   }
 
   async clickContextMenuItem(name: string | RegExp): Promise<void> {
@@ -427,7 +432,7 @@ export class DataGridPage extends BasePage {
   ): Promise<void> {
     const parentItem = this.contextMenuItem(parent);
     await expect(parentItem).toBeVisible({ timeout: 5000 });
-    await parentItem.hover();
+    await parentItem.click();
     const childItem = this.contextMenuItem(child);
     await expect(childItem).toBeVisible({ timeout: 5000 });
     await childItem.click();
@@ -443,7 +448,7 @@ export class DataGridPage extends BasePage {
   }
 
   async expectCopiedToast(): Promise<void> {
-    await expect(this.page.getByText(/copied successfully/i)).toBeVisible({
+    await expect(this.page.getByText(/copied successfully/i).first()).toBeVisible({
       timeout: 5000,
     });
   }

@@ -1,7 +1,7 @@
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
 import { useDataGridRowActions } from '@/components/common/DataGrid/hooks/useDataGridRowActions';
-import { PgsqlFilterNext, PgsqlSorts } from '@/core/constants';
+import { PgsqlFilterConditions, PgsqlFilterNext, PgsqlSorts } from '@/core/constants';
 import { constants } from '@/core/constants/appDetails';
 import { handleRowChangeLog, tools } from '@/core/utils';
 import { useCurrentConnection, useSelectedTab } from '@/hooks';
@@ -15,6 +15,8 @@ import { toast } from 'sonner';
 import { useCopyToClipboard } from 'usehooks-ts';
 import { cellValueForFilter, serializeRowForClipboard } from './clipboard';
 import type { DataGridContextTarget } from './types';
+
+const filterOperator = (value: string): string => PgsqlFilterConditions.find((c) => c.value === value)?.value ?? value;
 
 type Props = {
   contextMenu: ContextMenuType;
@@ -45,7 +47,6 @@ export default function DataGridContextMenu({ contextMenu, onClose, target }: Pr
   const isDataFetching = useDataStore((state) => state.isDataFetching);
 
   const updateUI = useSettingStore((state) => state.updateUI);
-  const upsertFilters = useTabStore((state) => state.upsertFilters);
   const updateSorts = useTabStore((state) => state.updateSorts);
   const updateTabColumns = useTabStore((state) => state.updateColumns);
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
@@ -126,18 +127,31 @@ export default function DataGridContextMenu({ contextMenu, onClose, target }: Pr
   };
 
   const applyFilter = (operator: string, value: string): void => {
-    if (!focusedColumnName) return;
+    if (!focusedColumnName || !selectedTab) return;
 
     const filter: FilterType = {
       index: tools.uuid(),
       column: focusedColumnName,
-      operator,
+      operator: filterOperator(operator),
       value,
       isActive: true,
       next: PgsqlFilterNext[0]
     };
-    upsertFilters(filter);
-    resetPaginationIfNeeded();
+
+    const pagination =
+      (selectedTab.pagination?.page ?? 0) > 1
+        ? { ...(selectedTab.pagination ?? { page: 1, limit: 100 }), page: 1 }
+        : selectedTab.pagination;
+
+    // Replace filters (parity with sort) and open ActionBar Filters panel.
+    updateSelectedTab({
+      ...selectedTab,
+      filters: [filter],
+      showFilters: true,
+      showSorts: false,
+      showQuery: false,
+      pagination
+    });
     toggleReRunQuery();
   };
 
@@ -338,17 +352,22 @@ export default function DataGridContextMenu({ contextMenu, onClose, target }: Pr
           {
             name: locales.filter_equals,
             closeBeforeAction: true,
-            action: (): void => applyFilter('=', cellValueForFilter(cellValue))
+            action: (): void => applyFilter(filterOperator('='), cellValueForFilter(cellValue))
           },
           {
             name: locales.filter_not_equals,
             closeBeforeAction: true,
-            action: (): void => applyFilter('!=', cellValueForFilter(cellValue))
+            action: (): void => applyFilter(filterOperator('!='), cellValueForFilter(cellValue))
           },
           {
             name: locales.filter_is_null,
             closeBeforeAction: true,
-            action: (): void => applyFilter('IS NULL', '')
+            action: (): void => applyFilter(filterOperator('IS NULL'), '')
+          },
+          {
+            name: locales.filter_is_not_null,
+            closeBeforeAction: true,
+            action: (): void => applyFilter(filterOperator('IS NOT NULL'), '')
           }
         ]
       },

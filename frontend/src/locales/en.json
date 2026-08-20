@@ -371,6 +371,7 @@
   "filter_equals": "Filter = value",
   "filter_not_equals": "Filter ≠ value",
   "filter_is_null": "Filter IS NULL",
+  "filter_is_not_null": "Filter IS NOT NULL",
   "sort_asc": "Sort ascending",
   "sort_desc": "Sort descending",
   "hide_column": "Hide column",

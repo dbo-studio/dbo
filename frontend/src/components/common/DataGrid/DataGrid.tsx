@@ -1,6 +1,5 @@
 import { CircularProgress } from '@mui/material';
 import { RefObject, useCallback, useRef, useState, type JSX } from 'react';
-import { useContextMenu } from '@/hooks';
 import {
   DataGridLoadingOverlayStyled,
   DataGridRootStyled,
@@ -25,10 +24,15 @@ import type { DataGridProps } from './types';
 
 const HEADER_HEIGHT = 40;
 
+type GridContextMenuState = {
+  mouseX: number;
+  mouseY: number;
+  target: DataGridContextTarget;
+};
+
 export default function DataGrid({ rows, columns, loading, editable = true }: DataGridProps): JSX.Element {
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
-  const [contextTarget, setContextTarget] = useState<DataGridContextTarget | null>(null);
+  const [contextMenu, setContextMenu] = useState<GridContextMenuState | null>(null);
 
   useHandleScroll(tableContainerRef as RefObject<HTMLDivElement>);
 
@@ -52,18 +56,19 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
     rowVirtualizer
   });
 
-  const openContextMenu = useCallback(
-    (event: React.MouseEvent, target: DataGridContextTarget): void => {
-      setContextTarget(target);
-      handleContextMenu(event);
-    },
-    [handleContextMenu]
-  );
+  const openContextMenu = useCallback((event: React.MouseEvent, target: DataGridContextTarget): void => {
+    event.preventDefault();
+    event.stopPropagation();
+    setContextMenu({
+      mouseX: event.clientX + 2,
+      mouseY: event.clientY - 6,
+      target
+    });
+  }, []);
 
   const closeContextMenu = useCallback((): void => {
-    handleCloseContextMenu();
-    setContextTarget(null);
-  }, [handleCloseContextMenu]);
+    setContextMenu(null);
+  }, []);
 
   const handleEmptyContextMenu = useCallback(
     (event: React.MouseEvent): void => {
@@ -129,7 +134,11 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
           </StyledTable>
         </VirtualTableWrapper>
       </TableContainer>
-      <DataGridContextMenu contextMenu={contextMenuPosition} onClose={closeContextMenu} target={contextTarget} />
+      <DataGridContextMenu
+        contextMenu={contextMenu ? { mouseX: contextMenu.mouseX, mouseY: contextMenu.mouseY } : null}
+        onClose={closeContextMenu}
+        target={contextMenu?.target ?? null}
+      />
     </DataGridRootStyled>
   );
 }

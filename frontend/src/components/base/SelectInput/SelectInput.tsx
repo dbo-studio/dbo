@@ -25,7 +25,7 @@ export default function SelectInput({
   const theme = useTheme();
 
   const getValue = (): SelectInputOption | SelectInputOption[] | null => {
-    if (!value) return null;
+    if (value === undefined || value === null || value === '') return null;
 
     if (isMulti) {
       return options.filter((option) => value.includes(option.value as string));

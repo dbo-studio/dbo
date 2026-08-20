@@ -1,7 +1,7 @@
 import { useUUID } from '@/hooks';
 import { Box, Divider, Menu, MenuItem, Stack, Tooltip } from '@mui/material';
 import type { JSX } from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import CustomIcon from '../CustomIcon/CustomIcon';
 import { ContextMenuItemStackStyled } from './ContextMenu.styled';
 import type { ContextMenuProps, MenuType } from './types';
@@ -13,18 +13,26 @@ export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuP
     mouseY: number;
     menuItems: MenuType[];
   } | null>(null);
+  const [prevContextMenu, setPrevContextMenu] = useState(contextMenu);
+
+  if (contextMenu !== prevContextMenu) {
+    setPrevContextMenu(contextMenu);
+    if (contextMenu === null) {
+      setNestedMenu(null);
+    }
+  }
 
   const parentPaperRef = useRef<HTMLDivElement>(null);
   const nestedPaperRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (contextMenu === null) {
-      setNestedMenu(null);
+  const handleClick = (m: MenuType, event?: React.MouseEvent): void => {
+    if (m.separator) {
+      return;
     }
-  }, [contextMenu]);
-
-  const handleClick = (m: MenuType): void => {
-    if (m.children || m.separator) {
+    if (m.children) {
+      if (event) {
+        handleParentItemMouseEnter(event, m);
+      }
       return;
     }
     if (m.closeBeforeAction) {
@@ -37,38 +45,6 @@ export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuP
       onClose();
     }
   };
-
-  const isMouseInElement = useCallback((event: MouseEvent, el: HTMLElement | null): boolean => {
-    if (!el) return false;
-    const rect = el.getBoundingClientRect();
-    return (
-      event.clientX >= rect.left &&
-      event.clientX <= rect.right &&
-      event.clientY >= rect.top &&
-      event.clientY <= rect.bottom
-    );
-  }, []);
-
-  const handleMouseMove = useCallback(
-    (event: MouseEvent): void => {
-      if (!nestedMenu) return;
-
-      const inParent = isMouseInElement(event, parentPaperRef.current);
-      const inNested = isMouseInElement(event, nestedPaperRef.current);
-      if (!inParent && !inNested) {
-        setNestedMenu(null);
-      }
-    },
-    [nestedMenu, isMouseInElement]
-  );
-
-  useEffect(() => {
-    if (!nestedMenu) return;
-    document.addEventListener('mousemove', handleMouseMove);
-    return (): void => {
-      document.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, [nestedMenu, handleMouseMove]);
 
   const handleParentItemMouseEnter = (event: React.MouseEvent, m: MenuType): void => {
     if (m.children) {
@@ -97,7 +73,7 @@ export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuP
     const menuItem = (
       <MenuItem
         disabled={m.disabled}
-        onClick={(): void => handleClick(m)}
+        onClick={(e): void => handleClick(m, e)}
         onMouseEnter={isNested ? undefined : (e): void => handleParentItemMouseEnter(e, m)}
         data-testid={`context-menu-item-${m.name.toLowerCase().replace(/\s+/g, '-')}`}
         sx={{
@@ -164,8 +140,7 @@ export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuP
             },
             paper: {
               ref: nestedPaperRef,
-              sx: { pointerEvents: 'auto' },
-              onMouseLeave: (): void => setNestedMenu(null)
+              sx: { pointerEvents: 'auto' }
             }
           }}
         >

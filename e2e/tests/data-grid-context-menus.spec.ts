@@ -203,6 +203,9 @@ test.describe("Data grid context menus", () => {
           await seed.dataGrid.expectCellVisible("Charlie");
           await seed.dataGrid.expectCellHidden("Alpha");
           await seed.dataGrid.expectCellHidden("Hotel");
+          await expect(seed.dataBrowser.filterItem.first()).toBeVisible({
+            timeout: 5000,
+          });
         });
 
         await test.step("Clear then Filter ≠ Alpha", async () => {
@@ -225,7 +228,7 @@ test.describe("Data grid context menus", () => {
           await expect(seed.dataGrid.contextMenuItem(/open fields/i)).toBeVisible({
             timeout: 5000,
           });
-          await seed.dataGrid.clickContextSubmenuItem(/^filter$/i, /filter is null/i);
+          await seed.dataGrid.clickContextSubmenuItem(/^filter$/i, /^filter is null$/i);
           await seed.dataGrid.waitForData("Alpha");
           await seed.dataGrid.expectCellVisible("Alpha");
           await seed.dataGrid.expectCellHidden("Bravo");
@@ -301,25 +304,23 @@ test.describe("Data grid context menus", () => {
 
         await test.step("Enable Safe Mode 2", async () => {
           await safeMode.selectMode("safe_write");
+          // Close any leftover Safe Mode menu so grid clicks stay actionable.
+          await page.keyboard.press("Escape");
         });
 
         await test.step("Destructive cell items are disabled", async () => {
           await seed.dataGrid.openCellContextMenu("Alpha");
-          await seed.dataGrid.expectContextMenuItemDisabled(/duplicate row/i);
-          await seed.dataGrid.expectContextMenuItemDisabled(/delete row/i);
-          await seed.dataGrid.expectContextMenuItemDisabled(/set null/i);
-          await seed.dataGrid.expectContextMenuItemDisabled(/add row/i);
-        });
-
-        await test.step("Restore Silent for cleanup", async () => {
+          await seed.dataGrid.expectContextMenuItemDisabledByTestId("duplicate-row");
+          await seed.dataGrid.expectContextMenuItemDisabledByTestId("delete-row");
+          await seed.dataGrid.expectContextMenuItemDisabledByTestId("set-null");
+          await seed.dataGrid.expectContextMenuItemDisabledByTestId("add-row");
           await seed.dataGrid.closeContextMenu();
-          await safeMode.selectSilentWithPassword(config.password!);
         });
       } finally {
         try {
           await safeMode.selectSilentWithPassword(config.password!);
         } catch {
-          /* best-effort */
+          /* best-effort restore for shared sample DB connection policies */
         }
         await dropDataBrowserTable(page, connectionName, tableName);
       }

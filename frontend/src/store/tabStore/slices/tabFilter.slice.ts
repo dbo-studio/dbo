@@ -7,9 +7,13 @@ export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [
     const tab = get().selectedTab<DataTabType>();
     if (!tab) return;
 
-    const findFilter = tab.filters?.find((f: FilterType) => f.index === filter.index);
+    if (!tab.filters) {
+      tab.filters = [];
+    }
+
+    const findFilter = tab.filters.find((f: FilterType) => f.index === filter.index);
     if (!findFilter) {
-      tab.filters?.push(filter);
+      tab.filters.push(filter);
     } else {
       findFilter.column = filter.column;
       findFilter.value = filter.value;
@@ -24,7 +28,14 @@ export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [
     const tab = get().selectedTab<DataTabType>();
     if (!tab) return;
 
-    tab.filters = tab?.filters?.filter((f: FilterType) => f.index !== filter.index);
+    tab.filters = (tab.filters ?? []).filter((f: FilterType) => f.index !== filter.index);
+    get().updateSelectedTab(tab);
+  },
+  updateFilters: (filters: FilterType[]): void => {
+    const tab = get().selectedTab<DataTabType>();
+    if (!tab) return;
+
+    tab.filters = filters;
     get().updateSelectedTab(tab);
   }
 });

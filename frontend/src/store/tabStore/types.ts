@@ -15,6 +15,7 @@ export type TabStore = {
 export type TabFilterSlice = {
   upsertFilters: (filter: FilterType) => void;
   removeFilter: (filter: FilterType) => void;
+  updateFilters: (filters: FilterType[]) => void;
 };
 
 export type TabSortSlice = {
