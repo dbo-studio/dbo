@@ -45,6 +45,19 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 	req.Options = strippedOptions
 
 	if password != "" {
+		optionsForPing, setErr := sjson.SetBytes(req.Options, "password", password)
+		if setErr != nil {
+			return nil, apperror.InternalServerError(setErr)
+		}
+
+		if _, err := s.Ping(ctx, &dto.PingConnectionRequest{
+			ID:      lo.ToPtr(connectionID),
+			Type:    connection.ConnectionType,
+			Options: optionsForPing,
+		}); err != nil {
+			return nil, err
+		}
+
 		remember := req.RememberPassword != nil && *req.RememberPassword
 		if err := s.secrets.SetConnectionPassword(ctx, ownerID, connection.ID, password, remember); err != nil {
 			return nil, apperror.InternalServerError(err)

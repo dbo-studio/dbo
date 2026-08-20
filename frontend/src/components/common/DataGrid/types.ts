@@ -24,7 +24,7 @@ export type DataGridTableRowProps = {
   row: RowType;
   rowIndex: number;
   columns: ColumnType[];
-  context: (e: React.MouseEvent) => void;
+  context: (e: React.MouseEvent, columnName: string) => void;
   isEdited: boolean;
   isUnsaved: boolean;
   isSelected: boolean;
@@ -54,7 +54,7 @@ export interface RowSelectionReturn {
 export type DataGridTableBodyRowsProps = {
   rows: RowType[];
   columns: ColumnType[];
-  context: (event: React.MouseEvent) => void;
+  context: (event: React.MouseEvent, columnName: string) => void;
   editable: boolean;
   searchTerm?: string;
   currentMatch?: { rowIndex: number; columnIndex: number } | null;
@@ -64,6 +64,7 @@ export type DataGridTableHeaderRowProps = {
   startResize: (columnId: string, event: React.MouseEvent | React.TouchEvent) => void;
   resizingColumnId: string | null;
   editable?: boolean;
+  onHeaderContextMenu?: (event: React.MouseEvent, columnName: string) => void;
 };
 
 export type CellProps = {

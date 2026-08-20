@@ -90,6 +90,12 @@ func (r *MySQLRepository) columnTypeMap(ctx context.Context, node contract.DBNod
 
 	out := make(map[string]string, len(columns))
 	for _, column := range columns {
+		// Prefer COLUMN_TYPE so TINYINT(1) boolean detection keeps the display width.
+		if column.ColumnType != "" {
+			out[column.ColumnName] = column.ColumnType
+			continue
+		}
+
 		out[column.ColumnName] = column.DataType
 	}
 
@@ -260,11 +266,74 @@ func formatColumnValue(columnName string, value any, columnTypes map[string]stri
 		dbType = columnTypes[columnName]
 	}
 
+	if isMysqlBooleanColumn(dbType, dbType) {
+		return formatMysqlBooleanSQL(value)
+	}
+
 	if s, ok := value.(string); ok && databaseCore.IsGeometryDBType(dbType) {
 		return databaseCore.FormatGeometrySQL(sqlDriverMysql, dbType, s)
 	}
 
 	return helper.FormatSQLValueForDriver(sqlDriverMysql, value)
+}
+
+// formatMysqlBooleanSQL maps grid boolean payloads (bool or "true"/"false"/0/1) to 0/1 literals.
+func formatMysqlBooleanSQL(value any) (string, error) {
+	if value == nil {
+		return "NULL", nil
+	}
+
+	switch v := value.(type) {
+	case bool:
+		if v {
+			return "1", nil
+		}
+
+		return "0", nil
+	case string:
+		switch strings.TrimSpace(strings.ToLower(v)) {
+		case "true", "t", "1", "yes", "y", "on":
+			return "1", nil
+		case "false", "f", "0", "no", "n", "off":
+			return "0", nil
+		default:
+			return "", fmt.Errorf("invalid boolean value %q", v)
+		}
+	case int:
+		return mysqlBoolDigit(v != 0), nil
+	case int8:
+		return mysqlBoolDigit(v != 0), nil
+	case int16:
+		return mysqlBoolDigit(v != 0), nil
+	case int32:
+		return mysqlBoolDigit(v != 0), nil
+	case int64:
+		return mysqlBoolDigit(v != 0), nil
+	case uint:
+		return mysqlBoolDigit(v != 0), nil
+	case uint8:
+		return mysqlBoolDigit(v != 0), nil
+	case uint16:
+		return mysqlBoolDigit(v != 0), nil
+	case uint32:
+		return mysqlBoolDigit(v != 0), nil
+	case uint64:
+		return mysqlBoolDigit(v != 0), nil
+	case float32:
+		return mysqlBoolDigit(v != 0), nil
+	case float64:
+		return mysqlBoolDigit(v != 0), nil
+	default:
+		return "", fmt.Errorf("unsupported boolean value type %T", value)
+	}
+}
+
+func mysqlBoolDigit(on bool) string {
+	if on {
+		return "1"
+	}
+
+	return "0"
 }
 
 func (r *MySQLRepository) buildWhereClauses(_ context.Context, primaryKeys []string, conditions map[string]any) []string {

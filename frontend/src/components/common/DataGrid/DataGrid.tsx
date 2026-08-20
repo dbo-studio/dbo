@@ -1,5 +1,5 @@
 import { CircularProgress } from '@mui/material';
-import { RefObject, useRef, type JSX } from 'react';
+import { RefObject, useCallback, useRef, useState, type JSX } from 'react';
 import { useContextMenu } from '@/hooks';
 import {
   DataGridLoadingOverlayStyled,
@@ -10,6 +10,7 @@ import {
   VirtualTableWrapper
 } from './DataGrid.styled';
 import DataGridContextMenu from './DataGridContextMenu/DataGridContextMenu';
+import type { DataGridContextTarget } from './DataGridContextMenu/types';
 import DataGridTableBodyRows from './DataGridTableBodyRows/DataGridTableBodyRows';
 import DataGridTableHeaderRow from './DataGridTableHeaderRow/DataGridTableHeaderRow';
 import { useColumnResize } from './hooks/useColumnResize';
@@ -27,6 +28,7 @@ const HEADER_HEIGHT = 40;
 export default function DataGrid({ rows, columns, loading, editable = true }: DataGridProps): JSX.Element {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
+  const [contextTarget, setContextTarget] = useState<DataGridContextTarget | null>(null);
 
   useHandleScroll(tableContainerRef as RefObject<HTMLDivElement>);
 
@@ -50,11 +52,50 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
     rowVirtualizer
   });
 
+  const openContextMenu = useCallback(
+    (event: React.MouseEvent, target: DataGridContextTarget): void => {
+      setContextTarget(target);
+      handleContextMenu(event);
+    },
+    [handleContextMenu]
+  );
+
+  const closeContextMenu = useCallback((): void => {
+    handleCloseContextMenu();
+    setContextTarget(null);
+  }, [handleCloseContextMenu]);
+
+  const handleEmptyContextMenu = useCallback(
+    (event: React.MouseEvent): void => {
+      openContextMenu(event, { type: 'empty' });
+    },
+    [openContextMenu]
+  );
+
+  const handleCellContextMenu = useCallback(
+    (event: React.MouseEvent, columnName: string): void => {
+      openContextMenu(event, { type: 'cell', columnName });
+    },
+    [openContextMenu]
+  );
+
+  const handleHeaderContextMenu = useCallback(
+    (event: React.MouseEvent, columnName: string): void => {
+      openContextMenu(event, { type: 'header', columnName });
+    },
+    [openContextMenu]
+  );
+
   return (
     <DataGridRootStyled>
       <QuickViewDialog editable={editable} />
       <SearchDialog open={isSearchDialogOpen} onClose={() => setIsSearchDialogOpen(false)} search={search} />
-      <TableContainer ref={tableContainerRef} sx={{ position: 'relative', flex: 1, minHeight: 0 }}>
+      <TableContainer
+        ref={tableContainerRef}
+        sx={{ position: 'relative', flex: 1, minHeight: 0 }}
+        onContextMenu={handleEmptyContextMenu}
+        data-testid='data-grid-container'
+      >
         {loading && (
           <DataGridLoadingOverlayStyled>
             <CircularProgress size={30} />
@@ -72,12 +113,13 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
               startResize={startResize}
               resizingColumnId={resizingColumnId}
               editable={editable}
+              onHeaderContextMenu={handleHeaderContextMenu}
             />
             <DataGridTableBodyRows
               editable={editable}
               rows={rows}
               columns={tableColumns}
-              context={handleContextMenu}
+              context={handleCellContextMenu}
               virtualRows={virtualRows}
               paddingTop={paddingTop}
               paddingBottom={paddingBottom}
@@ -87,7 +129,7 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
           </StyledTable>
         </VirtualTableWrapper>
       </TableContainer>
-      <DataGridContextMenu contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
+      <DataGridContextMenu contextMenu={contextMenuPosition} onClose={closeContextMenu} target={contextTarget} />
     </DataGridRootStyled>
   );
 }

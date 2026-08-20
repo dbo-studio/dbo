@@ -354,6 +354,125 @@ export class DataGridPage extends BasePage {
     await expect(this.quickLookTitle()).toBeVisible({ timeout: 5000 });
   }
 
+  /** Right-click empty area of the grid container (not a cell). */
+  async openEmptyAreaContextMenu(): Promise<void> {
+    const container = this.page.getByTestId("data-grid-container");
+    await expect(container).toBeVisible({ timeout: 15000 });
+    const box = await container.boundingBox();
+    if (!box) {
+      throw new Error("data-grid-container has no bounding box");
+    }
+    // Dispatch on the container itself so cell/header handlers never run.
+    await container.evaluate(
+      (el, pos) => {
+        el.dispatchEvent(
+          new MouseEvent("contextmenu", {
+            bubbles: true,
+            cancelable: true,
+            clientX: pos.x,
+            clientY: pos.y,
+            button: 2,
+          }),
+        );
+      },
+      { x: box.x + 24, y: box.y + box.height - 12 },
+    );
+  }
+
+  async openCellContextMenu(cellText: string): Promise<void> {
+    const cell = this.grid.getByText(cellText, { exact: true }).first();
+    await expect(cell).toBeVisible({ timeout: 15000 });
+    await cell.click({ delay: 40 });
+    await cell.click({ button: "right" });
+    await expect(this.contextMenuItem(/open fields/i)).toBeVisible({
+      timeout: 5000,
+    });
+  }
+
+  async openHeaderContextMenu(columnName: string): Promise<void> {
+    const header = this.grid.locator("thead").getByText(columnName, { exact: true }).first();
+    await expect(header).toBeVisible({ timeout: 15000 });
+    await header.click({ button: "right" });
+    await expect(this.contextMenuItem(/hide column/i)).toBeVisible({
+      timeout: 5000,
+    });
+  }
+
+  contextMenuItem(name: string | RegExp): Locator {
+    return this.page.getByRole("menuitem", { name });
+  }
+
+  async expectContextMenuItems(names: Array<string | RegExp>): Promise<void> {
+    for (const name of names) {
+      await expect(this.contextMenuItem(name)).toBeVisible({ timeout: 5000 });
+    }
+  }
+
+  async expectContextMenuItemDisabled(name: string | RegExp): Promise<void> {
+    const item = this.contextMenuItem(name);
+    await expect(item).toBeVisible({ timeout: 5000 });
+    await expect(item).toBeDisabled();
+  }
+
+  async clickContextMenuItem(name: string | RegExp): Promise<void> {
+    const item = this.contextMenuItem(name);
+    await expect(item).toBeVisible({ timeout: 5000 });
+    await item.click();
+  }
+
+  /** Open a nested submenu (Copy / Filter) then click a child item. */
+  async clickContextSubmenuItem(
+    parent: string | RegExp,
+    child: string | RegExp,
+  ): Promise<void> {
+    const parentItem = this.contextMenuItem(parent);
+    await expect(parentItem).toBeVisible({ timeout: 5000 });
+    await parentItem.hover();
+    const childItem = this.contextMenuItem(child);
+    await expect(childItem).toBeVisible({ timeout: 5000 });
+    await childItem.click();
+  }
+
+  async closeContextMenu(): Promise<void> {
+    const menus = this.page.getByRole("menu");
+    if ((await menus.count()) === 0) {
+      return;
+    }
+    await this.page.keyboard.press("Escape");
+    await expect(menus).toHaveCount(0, { timeout: 5000 });
+  }
+
+  async expectCopiedToast(): Promise<void> {
+    await expect(this.page.getByText(/copied successfully/i)).toBeVisible({
+      timeout: 5000,
+    });
+  }
+
+  async readClipboard(): Promise<string> {
+    return this.page.evaluate(() => navigator.clipboard.readText());
+  }
+
+  async expectUnsavedRowCount(count: number): Promise<void> {
+    await expect(this.grid.locator("tbody tr.unsaved-highlight")).toHaveCount(count, {
+      timeout: 10000,
+    });
+  }
+
+  async expectRemovedRowVisible(): Promise<void> {
+    await expect(this.grid.locator("tbody tr.removed-highlight").first()).toBeVisible({
+      timeout: 10000,
+    });
+  }
+
+  async expectHeaderColumnVisible(columnName: string, visible: boolean): Promise<void> {
+    const header = this.grid.locator("thead").getByText(columnName, { exact: true });
+    if (visible) {
+      await expect(header.first()).toBeVisible({ timeout: 10000 });
+      return;
+    }
+    await expect(header).toHaveCount(0, { timeout: 10000 });
+  }
+
   quickLookTitle(): Locator {
     return this.page.getByRole("heading", { name: /quick look editor/i });
   }
