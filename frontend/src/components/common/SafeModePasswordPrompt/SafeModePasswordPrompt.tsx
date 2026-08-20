@@ -7,6 +7,7 @@ import {
   ConnectionFormContainerStyled,
   ConnectionFormFooterStyled
 } from '@/components/common/Connections/Connections/ConnectionPasswordPrompt/ConnectionPasswordPrompt.styled';
+import { formatPingFailureMessage } from '@/components/common/AddConnection/pingDiagnostics';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { EventFor } from '@/types';
@@ -51,6 +52,23 @@ export default function SafeModePasswordPrompt({
     onCancel();
   };
 
+  const pingWithPassword = async (): Promise<boolean> => {
+    const currentConnection = connections?.find((c) => c.id === connectionId);
+    if (!currentConnection || !connectionId) {
+      return false;
+    }
+
+    await pingConnectionMutation({
+      id: connectionId,
+      type: currentConnection.type,
+      options: {
+        ...currentConnection.options,
+        password
+      }
+    });
+    return true;
+  };
+
   const handleSubmit = async (e: EventFor<'form', 'onSubmit'> | EventFor<'button', 'onClick'>): Promise<void> => {
     if (!connectionId) return;
 
@@ -58,13 +76,18 @@ export default function SafeModePasswordPrompt({
     e.stopPropagation();
     try {
       if (rememberPassword) {
+        await pingWithPassword();
         await setPasswordMutation({ id: connectionId, password, rememberPassword });
       }
       await onPassword(password);
       setPassword('');
       setRememberPassword(false);
     } catch (error) {
-      console.debug('🚀 ~ SafeModePasswordPrompt ~ handleSubmit:', error);
+      const message = formatPingFailureMessage(error);
+      if (message) {
+        toast.error(message);
+        return;
+      }
       toast.error(locales.safe_mode_password_invalid);
     }
   };
@@ -76,20 +99,14 @@ export default function SafeModePasswordPrompt({
     e.stopPropagation();
 
     try {
-      const currentConnection = connections?.find((c) => c.id === connectionId);
-      if (!currentConnection) return;
-
-      await pingConnectionMutation({
-        id: connectionId,
-        type: currentConnection.type,
-        options: {
-          ...currentConnection.options,
-          password
-        }
-      });
+      const ok = await pingWithPassword();
+      if (!ok) return;
       toast.success(locales.connection_test_success);
     } catch (error) {
-      console.debug('🚀 ~ SafeModePasswordPrompt ~ handlePing:', error);
+      const message = formatPingFailureMessage(error);
+      if (message) {
+        toast.error(message);
+      }
     }
   };
 
@@ -130,7 +147,7 @@ export default function SafeModePasswordPrompt({
             loadingPosition='start'
             loading={pingConnectionPending}
             onClick={(e) => void handlePing(e)}
-            disabled={pingConnectionPending || validationErrors.length > 0 || !connectionId}
+            disabled={pingConnectionPending || isPending || validationErrors.length > 0 || !connectionId}
             size='small'
             variant='contained'
             color='secondary'
@@ -140,7 +157,9 @@ export default function SafeModePasswordPrompt({
           <Button
             size='small'
             variant='contained'
-            disabled={isPending || validationErrors.length > 0 || !connectionId}
+            loading={isPending || pingConnectionPending}
+            loadingPosition='start'
+            disabled={isPending || pingConnectionPending || validationErrors.length > 0 || !connectionId}
             onClick={(e) => void handleSubmit(e)}
           >
             {locales.save}

@@ -5,6 +5,8 @@ export interface MenuType {
   action?: () => void;
   icon?: keyof typeof IconTypes;
   disabled?: boolean;
+  disabledReason?: string;
+  destructive?: boolean;
   closeBeforeAction?: boolean;
   closeAfterAction?: boolean;
   children?: MenuType[];

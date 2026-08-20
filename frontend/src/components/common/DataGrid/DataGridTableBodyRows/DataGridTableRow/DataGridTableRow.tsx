@@ -98,7 +98,8 @@ const DataGridTableRow = memo(
             <TableCell
               key={`cell-${rowIndex}-${columnId}`}
               onContextMenu={(e): void => {
-                context(e);
+                e.stopPropagation();
+                context(e, columnId);
                 handleSelect(columnId);
               }}
             >

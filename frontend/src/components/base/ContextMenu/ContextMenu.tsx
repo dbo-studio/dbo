@@ -1,7 +1,7 @@
 import { useUUID } from '@/hooks';
-import { Box, Divider, Menu, MenuItem, Stack } from '@mui/material';
+import { Box, Divider, Menu, MenuItem, Stack, Tooltip } from '@mui/material';
 import type { JSX } from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import CustomIcon from '../CustomIcon/CustomIcon';
 import { ContextMenuItemStackStyled } from './ContextMenu.styled';
 import type { ContextMenuProps, MenuType } from './types';
@@ -13,12 +13,26 @@ export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuP
     mouseY: number;
     menuItems: MenuType[];
   } | null>(null);
+  const [prevContextMenu, setPrevContextMenu] = useState(contextMenu);
 
-  const parentMenuRef = useRef<HTMLDivElement>(null);
-  const nestedMenuRef = useRef<HTMLDivElement>(null);
+  if (contextMenu !== prevContextMenu) {
+    setPrevContextMenu(contextMenu);
+    if (contextMenu === null) {
+      setNestedMenu(null);
+    }
+  }
 
-  const handleClick = (m: MenuType): void => {
-    if (m.children || m.separator) {
+  const parentPaperRef = useRef<HTMLDivElement>(null);
+  const nestedPaperRef = useRef<HTMLDivElement>(null);
+
+  const handleClick = (m: MenuType, event?: React.MouseEvent): void => {
+    if (m.separator) {
+      return;
+    }
+    if (m.children) {
+      if (event) {
+        handleParentItemMouseEnter(event, m);
+      }
       return;
     }
     if (m.closeBeforeAction) {
@@ -32,45 +46,17 @@ export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuP
     }
   };
 
-  const isMouseInMenu = useCallback((event: MouseEvent, menuRef: React.RefObject<HTMLDivElement | null>): boolean => {
-    if (!menuRef.current) return false;
-    const rect = menuRef.current.getBoundingClientRect();
-    return (
-      event.clientX >= rect.left &&
-      event.clientX <= rect.right &&
-      event.clientY >= rect.top &&
-      event.clientY <= rect.bottom
-    );
-  }, []);
-
-  const handleMouseMove = useCallback(
-    (event: MouseEvent): void => {
-      if (!nestedMenu) return;
-
-      const isInNested = isMouseInMenu(event, nestedMenuRef);
-      if (!isInNested) {
-        setNestedMenu(null);
-      }
-    },
-    [nestedMenu, isMouseInMenu]
-  );
-
-  useEffect(() => {
-    if (nestedMenu) {
-      document.addEventListener('mousemove', handleMouseMove);
+  const handleParentItemMouseEnter = (event: React.MouseEvent, m: MenuType): void => {
+    if (m.children) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      setNestedMenu({
+        mouseX: rect.right,
+        mouseY: rect.top,
+        menuItems: m.children
+      });
+      return;
     }
-    return (): void => {
-      document.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, [nestedMenu, handleMouseMove]);
-
-  const handleMouseEnter = (event: React.MouseEvent, menuItems: MenuType[]): void => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    setNestedMenu({
-      mouseX: rect.right,
-      mouseY: rect.top,
-      menuItems
-    });
+    setNestedMenu(null);
   };
 
   const renderMenuItem = (m: MenuType, index: number, isNested = false): JSX.Element => {
@@ -83,16 +69,17 @@ export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuP
       );
     }
 
-    return (
+    const itemKey = isNested ? `nested-${m.name}-${index}` : uuids[index];
+    const menuItem = (
       <MenuItem
         disabled={m.disabled}
-        onClick={(): void => handleClick(m)}
-        key={isNested ? `nested-${m.name}-${index}` : uuids[index]}
-        onMouseEnter={(e): void => m.children && handleMouseEnter(e, m.children)}
+        onClick={(e): void => handleClick(m, e)}
+        onMouseEnter={isNested ? undefined : (e): void => handleParentItemMouseEnter(e, m)}
         data-testid={`context-menu-item-${m.name.toLowerCase().replace(/\s+/g, '-')}`}
         sx={{
           minHeight: '36px',
-          position: 'relative'
+          position: 'relative',
+          color: m.destructive ? 'error.main' : undefined
         }}
       >
         <ContextMenuItemStackStyled direction={'row'}>
@@ -104,12 +91,21 @@ export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuP
         </ContextMenuItemStackStyled>
       </MenuItem>
     );
+
+    if (m.disabled && m.disabledReason) {
+      return (
+        <Tooltip key={itemKey} title={m.disabledReason} placement='right'>
+          <span style={{ display: 'block' }}>{menuItem}</span>
+        </Tooltip>
+      );
+    }
+
+    return <span key={itemKey}>{menuItem}</span>;
   };
 
   return (
     <Box sx={{ position: 'relative' }}>
       <Menu
-        ref={parentMenuRef}
         autoFocus={false}
         disableAutoFocus={true}
         disableAutoFocusItem={true}
@@ -117,21 +113,36 @@ export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuP
         onClose={onClose}
         anchorReference='anchorPosition'
         anchorPosition={contextMenu !== null ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
+        slotProps={{
+          paper: {
+            ref: parentPaperRef
+          }
+        }}
       >
         {menu.map((m, index) => renderMenuItem(m, index))}
       </Menu>
 
       {nestedMenu && (
         <Menu
-          ref={nestedMenuRef}
           autoFocus={false}
           disableAutoFocus={true}
           disableAutoFocusItem={true}
+          disableEnforceFocus={true}
+          disableRestoreFocus={true}
           open={nestedMenu !== null}
           onClose={(): void => setNestedMenu(null)}
           anchorReference='anchorPosition'
           anchorPosition={nestedMenu !== null ? { top: nestedMenu.mouseY, left: nestedMenu.mouseX } : undefined}
-          onMouseLeave={(): void => setNestedMenu(null)}
+          hideBackdrop
+          slotProps={{
+            root: {
+              sx: { pointerEvents: 'none' }
+            },
+            paper: {
+              ref: nestedPaperRef,
+              sx: { pointerEvents: 'auto' }
+            }
+          }}
         >
           {nestedMenu.menuItems.map((m, index) => renderMenuItem(m, index, true))}
         </Menu>

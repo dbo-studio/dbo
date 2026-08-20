@@ -26,7 +26,11 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] }
+      use: {
+        ...devices['Desktop Chrome'],
+        // Prefer system Google Chrome when PW_CHANNEL=chrome (local debugging).
+        ...(process.env.PW_CHANNEL ? { channel: process.env.PW_CHANNEL } : {})
+      }
     }
   ]
 });

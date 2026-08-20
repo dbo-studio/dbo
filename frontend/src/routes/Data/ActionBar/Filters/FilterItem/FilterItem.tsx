@@ -24,6 +24,26 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
     next: filter.next,
     isActive: filter.isActive
   });
+  const [prevFilter, setPrevFilter] = useState(filter);
+
+  if (
+    filter.index !== prevFilter.index ||
+    filter.column !== prevFilter.column ||
+    filter.operator !== prevFilter.operator ||
+    filter.value !== prevFilter.value ||
+    filter.next !== prevFilter.next ||
+    filter.isActive !== prevFilter.isActive
+  ) {
+    setPrevFilter(filter);
+    setCurrentFilter({
+      index: filter.index,
+      column: filter.column,
+      operator: filter.operator,
+      value: filter.value,
+      next: filter.next,
+      isActive: filter.isActive
+    });
+  }
 
   const requiresValue = filterOperatorRequiresValue(currentFilter.operator);
 

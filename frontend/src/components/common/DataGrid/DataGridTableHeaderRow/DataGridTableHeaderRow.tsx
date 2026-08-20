@@ -35,7 +35,8 @@ export default function DataGridTableHeaderRow({
   columns,
   startResize,
   resizingColumnId,
-  editable = false
+  editable = false,
+  onHeaderContextMenu
 }: DataGridTableHeaderRowProps): JSX.Element {
   const selectedTab = useSelectedTab<DataTabType>();
   const theme = useTheme();
@@ -140,7 +141,15 @@ export default function DataGridTableHeaderRow({
           const sortIcon = getSortIcon(columnSort?.operator);
 
           return (
-            <SortableTableHeader key={column.name} onClick={(e) => handleColumnSort(column.name, e)}>
+            <SortableTableHeader
+              key={column.name}
+              onClick={(e) => handleColumnSort(column.name, e)}
+              onContextMenu={(e): void => {
+                e.preventDefault();
+                e.stopPropagation();
+                onHeaderContextMenu?.(e, column.name);
+              }}
+            >
               <HeaderColumnContentStyled>
                 <Stack
                   spacing={1}

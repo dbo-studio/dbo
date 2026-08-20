@@ -69,7 +69,17 @@ func FormatSQLValueForDriver(driver string, value any) (string, error) {
 	case float32, float64:
 		return strconv.FormatFloat(reflect.ValueOf(v).Float(), 'f', -1, 64), nil
 	case bool:
-		return fmt.Sprintf("%t", v), nil
+		// MySQL/SQLite store booleans as 0/1; Postgres accepts true/false literals.
+		switch NormalizeSQLDriver(driver) {
+		case "mysql", "sqlite", "sqlite3":
+			if v {
+				return "1", nil
+			}
+
+			return "0", nil
+		default:
+			return fmt.Sprintf("%t", v), nil
+		}
 	case map[string]any:
 		if isBinaryCellMap(v) {
 			return formatBinarySQL(driver, v)

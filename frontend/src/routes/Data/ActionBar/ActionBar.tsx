@@ -18,9 +18,14 @@ import type { ActionBarProps } from './types';
 
 export default function ActionBar({ showColumns, setShowColumns }: ActionBarProps): JSX.Element {
   const selectedTab = useSelectedTab<DataTabType>();
+  const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
   const sortCount = selectedTab?.sorts?.filter((sort) => sort.isActive).length ?? 0;
   const filterCount = selectedTab?.filters?.filter((filter) => filter.isActive).length ?? 0;
+
+  const showFilters = selectedTab?.showFilters ?? false;
+  const showSorts = selectedTab?.showSorts ?? false;
+  const showQuery = selectedTab?.showQuery ?? false;
 
   const [showExport, setShowExport] = useState({
     show: false,
@@ -58,32 +63,31 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
     });
   };
 
-  const [show, setShow] = useState({
-    showFilters: false,
-    showSorts: false,
-    showQuery: false
-  });
-
   const handleToggle = (type: 'filter' | 'query' | 'sort' | 'column'): void => {
+    if (!selectedTab) return;
+
     switch (type) {
       case 'filter':
-        setShow({
-          showFilters: !show.showFilters,
+        updateSelectedTab({
+          ...selectedTab,
+          showFilters: !showFilters,
           showSorts: false,
           showQuery: false
         });
         break;
       case 'query':
-        setShow({
+        updateSelectedTab({
+          ...selectedTab,
           showFilters: false,
           showSorts: false,
-          showQuery: !show.showQuery
+          showQuery: !showQuery
         });
         break;
       case 'sort':
-        setShow({
+        updateSelectedTab({
+          ...selectedTab,
           showFilters: false,
-          showSorts: !show.showSorts,
+          showSorts: !showSorts,
           showQuery: false
         });
         break;
@@ -107,7 +111,7 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
           <Tooltip title={locales.filters}>
             <IconButton
               aria-label={locales.filters}
-              className={show.showFilters ? 'active' : ''}
+              className={showFilters ? 'active' : ''}
               onClick={(): void => handleToggle('filter')}
             >
               <Badge badgeContent={filterCount} color='secondary' variant='dot'>
@@ -118,7 +122,7 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
 
           <Tooltip title={locales.sorts}>
             <IconButton
-              className={show.showSorts ? 'active' : ''}
+              className={showSorts ? 'active' : ''}
               aria-label='sort'
               onClick={(): void => handleToggle('sort')}
             >
@@ -153,7 +157,7 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
           <Tooltip title={locales.query_preview}>
             <IconButton
               aria-label={locales.query_preview}
-              className={show.showQuery ? 'active' : 'toggle-code-preview'}
+              className={showQuery ? 'active' : 'toggle-code-preview'}
               onClick={(): void => handleToggle('query')}
             >
               <CustomIcon type='code' size='s' />
@@ -176,9 +180,9 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
         table={showImport.table}
       />
 
-      {show.showFilters && <Filters />}
-      {show.showSorts && <Sorts />}
-      {show.showQuery && <QueryPreview />}
+      {showFilters && <Filters />}
+      {showSorts && <Sorts />}
+      {showQuery && <QueryPreview />}
     </Box>
   );
 }
