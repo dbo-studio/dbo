@@ -245,6 +245,7 @@
   "chat_history": "Chat history",
   "thought_for": "Thought for",
   "retry": "Retry",
+  "starting_engine": "Starting engine…",
   "insert_into_editor": "Insert into editor",
   "run_query": "Run query",
   "stop_query": "Stop query",

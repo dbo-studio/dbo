@@ -6,10 +6,16 @@ import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { useSetupDesktop } from './useSetupDesktop.hook';
+import { useSetupDesktop, type DesktopBootState } from './useSetupDesktop.hook';
 
-export const useStartup = (): boolean => {
-  const done = useSetupDesktop();
+export type StartupState = {
+  ready: boolean;
+  boot: DesktopBootState;
+};
+
+export const useStartup = (): StartupState => {
+  const boot = useSetupDesktop();
+  const done = boot.ready;
   const debug = useSettingStore((state) => state.general.debug);
   const updateProviders = useAiStore((state) => state.updateProviders);
   const updateContext = useAiStore((state) => state.updateContext);
@@ -74,5 +80,8 @@ export const useStartup = (): boolean => {
     }
   }, [debug]);
 
-  return done && !isLoadingConfig;
+  return {
+    ready: done && !isLoadingConfig,
+    boot
+  };
 };

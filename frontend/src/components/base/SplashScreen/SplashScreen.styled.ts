@@ -15,5 +15,5 @@ export const SplashScreenContentStyled = styled(Box)({
   flexDirection: 'column',
   justifyContent: 'center',
   alignItems: 'center',
-  gap: 4
+  gap: 16
 });

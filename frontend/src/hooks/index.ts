@@ -1,6 +1,7 @@
 export * from './useConnectionTabs.hook';
 export * from './useContextMenu.hook';
 export * from './useCurrentConnection.hook';
+export * from './useDesktopMenu.hook';
 export * from './useEditorSessionContext';
 export * from './useJobPolling.hook';
 export * from './useLayoutMode.hook';
