@@ -146,7 +146,6 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
             handleChange('value', e.target.value);
           }}
           onKeyDown={handleKeyDown}
-          slotProps={{ input: { 'data-testid': 'filter-value-input' } }}
         />
       </Box>
       <Box>

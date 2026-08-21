@@ -1,6 +1,6 @@
 import type { SqlEditorProps, SqlEditorRef } from '@/components/base/SqlEditor/types.ts';
 import { getEditorFontFamily } from '@/core/fonts';
-import { shortcuts } from '@/core/utils/shortcuts.ts';
+import { shortcuts, tools } from '@/core/utils';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
@@ -37,11 +37,24 @@ export default function SqlEditor({
     editorRef.current = editorInstance;
 
     editorInstance.addAction({
-      id: shortcuts.runQuery.command.join('+'),
-      keybindings: shortcuts.runQuery.monaco,
+      id: shortcuts.runQuery.id,
+      keybindings: shortcuts.runQuery.monaco ?? [],
       run: (): void => onRunQuery(editorInstance.getValue()),
       label: shortcuts.runQuery.label
     });
+
+    if (shortcuts.formatSql.monaco) {
+      editorInstance.addAction({
+        id: shortcuts.formatSql.id,
+        keybindings: shortcuts.formatSql.monaco,
+        run: (): void => {
+          const formatted = tools.formatSql(editorInstance.getValue(), 'postgresql');
+          editorInstance.setValue(formatted);
+          onChange?.(formatted);
+        },
+        label: shortcuts.formatSql.label
+      });
+    }
 
     if (onAiSelection) {
       const registerAiAction = (id: string, label: string, action: 'explain' | 'optimize' | 'fix') => {

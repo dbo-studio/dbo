@@ -9,9 +9,13 @@ export type ContextMenuType = {
   mouseY: number;
 } | null;
 
+export type ShortcutGroup = 'editor' | 'tabs' | 'grid' | 'app';
+
 export type ShortcutType = {
+  id: string;
+  group: ShortcutGroup;
   label: string;
-  monaco: number[];
+  monaco?: number[];
   command: string[]; // Array of key names for Kbd component
   shortcut: (event: KeyboardEvent) => boolean;
 };

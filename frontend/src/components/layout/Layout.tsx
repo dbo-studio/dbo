@@ -39,6 +39,10 @@ export default function Layout(): JSX.Element {
     openAssistant(0);
   });
 
+  useShortcut(shortcuts.openShortcuts, () => {
+    updateUI({ showSettings: { open: true, tab: 2 } });
+  });
+
   const closeLeftSidebar = (): void => {
     updateUI({ sidebar: { ...sidebar, showLeft: false } });
   };

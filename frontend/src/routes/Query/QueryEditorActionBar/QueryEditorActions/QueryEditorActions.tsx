@@ -2,7 +2,7 @@ import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { ExportModal } from '@/components/common/ExportModal/ExportModal';
 import { shortcuts, tools } from '@/core/utils';
-import { useCurrentConnection } from '@/hooks';
+import { useCurrentConnection, useShortcut } from '@/hooks';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -39,6 +39,8 @@ export default function QueryEditorActions({
     updateQuery(tools.formatSql(getQuery(), 'postgresql'));
     onFormat();
   };
+
+  useShortcut(shortcuts.formatSql, handleFormatSql);
 
   const handleMinifySql = (): void => {
     const minified = tools.minifySql(getQuery());
@@ -107,7 +109,7 @@ export default function QueryEditorActions({
           <CustomIcon type='pickaxe' />
         </IconButton>
       </Tooltip>
-      <Tooltip title={locales.beatify}>
+      <Tooltip title={`${locales.beatify} (${shortcuts.formatSql.command.join('+')})`}>
         <IconButton aria-label={locales.beatify} color='default' onClick={handleFormatSql}>
           <CustomIcon type='wand_sparkles' />
         </IconButton>
