@@ -56,7 +56,7 @@ Dependencies flow one direction only: `app → service → repository/database`.
 - **No secrets in source** — use env vars and secret store.
 - **Conventional Commits** — `feat:`, `fix:`, `chore:`, `refactor:`, `test:`. See [`.cursor/rules/git-commits.mdc`](.cursor/rules/git-commits.mdc).
 - **Commit author** — always the machine Git identity (`user.name` / `user.email`). Never `--author` or `GIT_AUTHOR_*` overrides.
-- **Test before PR** — see per-area commands below.
+- **Test via e2e** — do **not** add new unit/integration tests under `frontend/` or `backend/`. Cover behavior with Playwright in [`e2e/`](e2e/). Lint/fmt still required before PR.
 
 ## Backend Quick Reference
 
@@ -65,7 +65,6 @@ cd backend
 go run .                  # run locally
 go fmt ./...              # format
 golangci-lint run         # lint
-go test ./...             # test
 air                       # hot reload
 ```
 
@@ -83,7 +82,7 @@ npm run build             # typecheck + build
 npm run test:e2e          # forwards to top-level e2e/ package
 ```
 
-E2E lives in [`e2e/`](e2e/) — see [`e2e/README.md`](e2e/README.md). Each run boots an ephemeral API (random port + isolated SQLite).
+Automated tests live only in [`e2e/`](e2e/) — see [`e2e/README.md`](e2e/README.md). Do not add Vitest/Jest/`*_test.go` for new features; each e2e run boots an ephemeral API (random port + isolated SQLite).
 
 Components: `PascalCase`. Hooks/functions: `camelCase`. Colocate feature code under `src/`.
 
@@ -95,6 +94,7 @@ Components: `PascalCase`. Hooks/functions: `camelCase`. Colocate feature code un
 4. Handler in `internal/app/handler/`
 5. Route in `internal/app/server/route.go`
 6. Wire in `cmd/cmd.go` if new handler/service
+7. Cover user-visible behavior in `e2e/` when applicable
 
 ## Adding a New Database Driver Feature
 
@@ -102,7 +102,7 @@ Components: `PascalCase`. Hooks/functions: `camelCase`. Colocate feature code un
 2. Add method to `internal/database/contract/contract.go` if new capability
 3. Add `contracts_assertions.go` compile-time checks
 4. Register in `internal/database/repository.go` if new driver
-5. Test SQL generation with table-driven unit tests (no DB required when possible)
+5. Cover via Playwright e2e (no new `*_test.go` for the feature)
 
 ## Error & Response Conventions
 
@@ -115,7 +115,7 @@ Components: `PascalCase`. Hooks/functions: `camelCase`. Colocate feature code un
 - [ ] Change is scoped and follows existing patterns
 - [ ] `go fmt` / `npm run lint` passes
 - [ ] `golangci-lint run` passes (backend)
-- [ ] Tests added or updated where behavior changed
+- [ ] E2E added/updated for user-visible behavior (no new frontend/backend unit tests)
 - [ ] No secrets or credentials committed
 - [ ] API/behavior changes documented in PR description
 
@@ -127,7 +127,7 @@ Components: `PascalCase`. Hooks/functions: `camelCase`. Colocate feature code un
 | `.cursor/rules/go-core.mdc` | Go idioms (errors, interfaces, packages) |
 | `.cursor/rules/go-dbo-architecture.mdc` | DBO backend layers & patterns |
 | `.cursor/rules/go-concurrency.mdc` | context, goroutines |
-| `.cursor/rules/go-testing.mdc` | table-driven tests |
+| `.cursor/rules/go-testing.mdc` | No new FE/BE unit tests — e2e only |
 | `.cursor/rules/go-tooling.mdc` | fmt, golangci-lint |
 | `.cursor/rules/e2e-qa.mdc` | Strict Playwright/QA rules (`e2e/**`) |
 | `.cursor/skills/golang-development/SKILL.md` | Go development workflow skill |

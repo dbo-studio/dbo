@@ -239,7 +239,7 @@ export class DataBrowserPage extends BasePage {
   /** Remove all filter rows (re-runs query when an active filter is removed). */
   async clearFilters(): Promise<void> {
     await this.openFiltersPanel();
-    while ((await this.filterItem.count()) > 0) {
+    for (let i = 0; i < 20 && (await this.filterItem.count()) > 0; i += 1) {
       const removeBtn = this.filterItem.first().locator(".remove-filter-btn");
       await waitForResponseDuring(
         this.page,
@@ -248,6 +248,7 @@ export class DataBrowserPage extends BasePage {
         API_DB_TIMEOUT,
       );
     }
+    await expect(this.filterItem).toHaveCount(0, { timeout: 10000 });
   }
 
   async addSort(column: string, direction: "ASC" | "DESC"): Promise<void> {

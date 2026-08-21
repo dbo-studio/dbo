@@ -27,6 +27,7 @@ export const useActionDetection = (
   const addDataTab = useTabStore((state) => state.addDataTab);
   const addObjectTab = useTabStore((state) => state.addObjectTab);
   const reloadTree = useTreeStore((state) => state.reloadTree);
+  const setFocusedNodeId = useTreeStore((state) => state.setFocusedNodeId);
 
   const [, copy] = useCopyToClipboard();
 
@@ -56,6 +57,7 @@ export const useActionDetection = (
 
       switch (node.action.type) {
         case 'tab': {
+          setFocusedNodeId(node.id);
           switch (node.action.params.path) {
             case 'object': {
               addObjectTab(node.action.title, node.id, node.action.name, TabMode.Object);
@@ -144,7 +146,8 @@ export const useActionDetection = (
       executeActionMutation,
       queryClient,
       reloadTree,
-      copy
+      copy,
+      setFocusedNodeId
     ]
   );
 

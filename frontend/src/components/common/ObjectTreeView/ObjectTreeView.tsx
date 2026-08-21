@@ -25,6 +25,7 @@ export default function ObjectTreeView(): JSX.Element {
 
   const parentRefsRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
+  const setFocusedNodeId = useTreeStore((state) => state.setFocusedNodeId);
 
   const tree = useTreeStore((state) => (currentConnection?.id ? (state.tree[currentConnection.id] ?? null) : null));
 
@@ -96,6 +97,7 @@ export default function ObjectTreeView(): JSX.Element {
             searchTerm={searchTerm}
             onContextMenu={onContextMenu}
             selectedNodeId={selectedTab?.nodeId}
+            onFocusChange={setFocusedNodeId}
           />
         )}
 

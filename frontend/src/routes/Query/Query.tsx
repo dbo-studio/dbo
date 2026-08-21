@@ -7,7 +7,9 @@ import { SqlEditorRef } from '@/components/base/SqlEditor/types';
 import { shortcuts } from '@/core/utils';
 import { useCurrentConnection, useLayoutMode, useShortcut } from '@/hooks';
 import { useAiBridge } from '@/hooks/useAiBridge';
+import { useEditorSessionContext } from '@/hooks/useEditorSessionContext';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
+import { useSyncEditorContext } from '@/hooks/useSyncEditorContext';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -32,6 +34,7 @@ const getActiveColumns = (columns: ColumnType[] | undefined): ColumnType[] =>
 export default function Query(): JSX.Element {
   const selectedTab = useSelectedTab<EditorTabType>();
   const currentConnection = useCurrentConnection();
+  const { database: sessionDatabase, schema: sessionSchema } = useEditorSessionContext();
   const { isMobile } = useLayoutMode();
   const sqlEditorRef = useRef<SqlEditorRef>(null);
 
@@ -70,15 +73,21 @@ export default function Query(): JSX.Element {
   });
 
   const { data: autocomplete } = useQuery({
-    queryKey: ['autocomplete', currentConnection?.id, selectedTab?.database, selectedTab?.schema],
+    queryKey: ['autocomplete', currentConnection?.id, sessionDatabase, sessionSchema],
     queryFn: async (): Promise<AutoCompleteType> =>
       api.query.autoComplete({
         connectionId: currentConnection?.id ?? 0,
-        database: selectedTab?.database === '' ? undefined : selectedTab?.database,
-        schema: selectedTab?.schema === '' ? undefined : selectedTab?.schema
+        database: sessionDatabase,
+        schema: sessionSchema
       }),
     enabled: !!currentConnection
   });
+
+  useSyncEditorContext(
+    autocomplete
+      ? { databases: autocomplete.databases ?? [], schemas: autocomplete.schemas ?? [] }
+      : undefined
+  );
 
   const loadData = useCallback(async (): Promise<void> => {
     try {

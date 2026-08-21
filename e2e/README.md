@@ -69,8 +69,9 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Query CRUD SQLite        | `query-crud-sqlite.spec.ts`                   | same split + JOIN                                       |
 | Query format             | `query-format.spec.ts`                        | Beatify / format messy SQL                              |
 | Query status bar         | `query-statusbar.spec.ts`                     | PG: discard/add/remove/refresh + page next/limit + gate |
+| SQL editor context       | `editor-context.spec.ts`                      | PG/MySQL/SQLite: select visibility + autofill           |
 | Data browser             | `data-browser.spec.ts`                        | open / filter / sort / pagination / Columns / Inline Query / Query Preview |
-| Data grid context menus  | `data-grid-context-menus.spec.ts`             | empty Add/Refresh; copy matrix; set/dup/delete; filter; sort/hide; Safe Mode disables |
+| Data grid context menus  | `data-grid-context-menus.spec.ts`             | empty Add/Refresh; copy matrix; set/dup/delete; filter =/≠/NULL; sort/hide; Safe Mode |
 | Import / Export          | `import-export.spec.ts`                       | split: export CSV/JSON/SQL, filtered, import formats, round-trip, continue-on-error |
 | Data grid typed cells    | `data-grid-typed-cells.spec.ts`               | MySQL+PG: split per editor/cue/Quick Look               |
 | Data grid FK autocomplete| `data-grid-fk-autocomplete.spec.ts`           | PG+MySQL+SQLite single-col pick/paste; SQLite composite fill; NOT NULL hides NULL |

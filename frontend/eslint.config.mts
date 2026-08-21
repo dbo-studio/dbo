@@ -1,11 +1,11 @@
 import eslintReact from '@eslint-react/eslint-plugin';
 import js from '@eslint/js';
 import pluginQuery from '@tanstack/eslint-plugin-query';
+import reactHooks from 'eslint-plugin-react-hooks';
 import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
 const tsconfigRootDir = path.dirname(fileURLToPath(import.meta.url));

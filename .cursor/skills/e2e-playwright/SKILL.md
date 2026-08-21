@@ -96,6 +96,7 @@ await withConnectionCleanup(page, names.connectionName, async () => {
 - Add `waitForTimeout` or raise retries to hide flakes
 - Put business flow logic in specs or selectors in fixtures
 - Parallelize (`workers>1`) until per-worker DB isolation exists
+- Add unit/integration tests under `frontend/` or `backend/` — e2e is the only new automated coverage
 
 ## Playwright essentials
 

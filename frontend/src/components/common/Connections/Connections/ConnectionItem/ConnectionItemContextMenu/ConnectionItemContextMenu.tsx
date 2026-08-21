@@ -32,6 +32,8 @@ export default function ConnectionItemContextMenu({
   const clearCurrentConnection = useConnectionStore((state) => state.clearCurrentConnection);
   const updateConnections = useConnectionStore((state) => state.updateConnections);
   const resetTree = useTreeStore((state) => state.reset);
+  const clearFocusedNodeIdForConnection = useTreeStore((state) => state.clearFocusedNodeIdForConnection);
+  const clearEditorContextForConnection = useSettingStore((state) => state.clearEditorContextForConnection);
 
   const handleOpenConfirm = (connection: ConnectionType): void => {
     showModal(locales.delete_action, locales.connection_delete_confirm, () => {
@@ -45,6 +47,11 @@ export default function ConnectionItemContextMenu({
     });
   };
 
+  const clearConnectionLocalState = (connectionId: string | number): void => {
+    clearFocusedNodeIdForConnection(connectionId);
+    clearEditorContextForConnection(connectionId);
+  };
+
   const handleDeleteConnection = async (connection: ConnectionType): Promise<void> => {
     try {
       await deleteConnectionMutation(connection.id);
@@ -52,6 +59,7 @@ export default function ConnectionItemContextMenu({
         queryKey: ['connections']
       });
 
+      clearConnectionLocalState(connection.id);
       resetTabs();
       toast.success(locales.connection_delete_success);
       return;
@@ -72,6 +80,8 @@ export default function ConnectionItemContextMenu({
         connections.map((c) => (c.id === connection.id ? { ...c, isActive: false, isOpen: false } : c))
       );
     }
+
+    clearConnectionLocalState(connection.id);
 
     if (Number(currentConnectionId) === connection.id) {
       clearCurrentConnection();
