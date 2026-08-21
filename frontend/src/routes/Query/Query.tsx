@@ -84,9 +84,7 @@ export default function Query(): JSX.Element {
   });
 
   useSyncEditorContext(
-    autocomplete
-      ? { databases: autocomplete.databases ?? [], schemas: autocomplete.schemas ?? [] }
-      : undefined
+    autocomplete ? { databases: autocomplete.databases ?? [], schemas: autocomplete.schemas ?? [] } : undefined
   );
 
   const loadData = useCallback(async (): Promise<void> => {
