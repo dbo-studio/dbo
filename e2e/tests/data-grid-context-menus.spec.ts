@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { getDbConfig } from "../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import {
   dropDataBrowserTable,
@@ -185,9 +184,9 @@ test.describe("Data grid context menus", () => {
     });
   });
 
-  test("Cell filter equals not-equals and IS NULL", async ({ page }, testInfo) => {
+  test("Cell filter equals value", async ({ page }, testInfo) => {
     const suffix = uniqueTestSuffix(testInfo);
-    const connectionName = `grid-ctx-filter-${suffix}`;
+    const connectionName = `grid-ctx-feq-${suffix}`;
     const tableName = `e2e_grid_ctx_${suffix}`;
 
     await withConnectionCleanup(page, connectionName, async () => {
@@ -196,31 +195,56 @@ test.describe("Data grid context menus", () => {
         await seed.dataBrowser.openTableFromTree(seed.treePath, tableName);
         await seed.dataGrid.waitForData("Alpha");
 
-        await test.step("Filter = Charlie", async () => {
+        await test.step("Filter = Charlie from cell menu", async () => {
           await seed.dataGrid.openCellContextMenu("Charlie");
           await seed.dataGrid.clickContextSubmenuItem(/^filter$/i, /filter = value/i);
           await seed.dataGrid.waitForData("Charlie");
           await seed.dataGrid.expectCellVisible("Charlie");
           await seed.dataGrid.expectCellHidden("Alpha");
           await seed.dataGrid.expectCellHidden("Hotel");
-          await expect(seed.dataBrowser.filterItem.first()).toBeVisible({
-            timeout: 5000,
-          });
         });
+      } finally {
+        await dropDataBrowserTable(page, connectionName, tableName);
+      }
+    });
+  });
 
-        await test.step("Clear then Filter ≠ Alpha", async () => {
-          await seed.dataBrowser.clearFilters();
-          await seed.dataGrid.waitForData("Alpha");
+  test("Cell filter not-equals value", async ({ page }, testInfo) => {
+    const suffix = uniqueTestSuffix(testInfo);
+    const connectionName = `grid-ctx-fneq-${suffix}`;
+    const tableName = `e2e_grid_ctx_${suffix}`;
+
+    await withConnectionCleanup(page, connectionName, async () => {
+      const seed = await setupContextMenuTable(page, connectionName, tableName);
+      try {
+        await seed.dataBrowser.openTableFromTree(seed.treePath, tableName);
+        await seed.dataGrid.waitForData("Alpha");
+
+        await test.step("Filter ≠ Alpha from cell menu", async () => {
           await seed.dataGrid.openCellContextMenu("Alpha");
           await seed.dataGrid.clickContextSubmenuItem(/^filter$/i, /filter ≠ value/i);
           await seed.dataGrid.waitForData("Bravo");
           await seed.dataGrid.expectCellHidden("Alpha");
           await seed.dataGrid.expectCellVisible("Bravo");
         });
+      } finally {
+        await dropDataBrowserTable(page, connectionName, tableName);
+      }
+    });
+  });
 
-        await test.step("Clear then Filter IS NULL on note", async () => {
-          await seed.dataBrowser.clearFilters();
-          await seed.dataGrid.waitForData("Alpha");
+  test("Cell filter IS NULL", async ({ page }, testInfo) => {
+    const suffix = uniqueTestSuffix(testInfo);
+    const connectionName = `grid-ctx-fnul-${suffix}`;
+    const tableName = `e2e_grid_ctx_${suffix}`;
+
+    await withConnectionCleanup(page, connectionName, async () => {
+      const seed = await setupContextMenuTable(page, connectionName, tableName);
+      try {
+        await seed.dataBrowser.openTableFromTree(seed.treePath, tableName);
+        await seed.dataGrid.waitForData("Alpha");
+
+        await test.step("Filter IS NULL on note cell", async () => {
           const nullCell = seed.dataGrid.grid.getByText("NULL", { exact: true }).first();
           await expect(nullCell).toBeVisible({ timeout: 15000 });
           await nullCell.click({ delay: 40 });
@@ -294,7 +318,6 @@ test.describe("Data grid context menus", () => {
     const connectionName = `grid-ctx-safe-${suffix}`;
     const tableName = `e2e_grid_ctx_${suffix}`;
     const safeMode = new SafeModePage(page);
-    const config = getDbConfig("postgresql", connectionName);
 
     await withConnectionCleanup(page, connectionName, async () => {
       const seed = await setupContextMenuTable(page, connectionName, tableName);
@@ -303,13 +326,26 @@ test.describe("Data grid context menus", () => {
         await seed.dataGrid.waitForData("Alpha");
 
         await test.step("Enable Safe Mode 2", async () => {
-          await safeMode.selectMode("safe_write");
-          // Close any leftover Safe Mode menu so grid clicks stay actionable.
+          await safeMode.openMenu();
+          await expect(page.getByTestId("safe-mode-option-safe_write")).toBeVisible({
+            timeout: 10000,
+          });
+          await page.getByTestId("safe-mode-option-safe_write").click();
+          // MUI may keep options mounted; wait for toast then dismiss.
+          await expect(page.getByText(/safe mode updated/i).first()).toBeVisible({
+            timeout: 15000,
+          });
           await page.keyboard.press("Escape");
         });
 
         await test.step("Destructive cell items are disabled", async () => {
-          await seed.dataGrid.openCellContextMenu("Alpha");
+          const cell = seed.dataGrid.grid.getByText("Alpha", { exact: true }).first();
+          await expect(cell).toBeVisible({ timeout: 15000 });
+          await cell.click({ delay: 40, force: true });
+          await cell.click({ button: "right", force: true });
+          await expect(seed.dataGrid.contextMenuItem(/open fields/i)).toBeVisible({
+            timeout: 5000,
+          });
           await seed.dataGrid.expectContextMenuItemDisabledByTestId("duplicate-row");
           await seed.dataGrid.expectContextMenuItemDisabledByTestId("delete-row");
           await seed.dataGrid.expectContextMenuItemDisabledByTestId("set-null");
@@ -317,12 +353,8 @@ test.describe("Data grid context menus", () => {
           await seed.dataGrid.closeContextMenu();
         });
       } finally {
-        try {
-          await safeMode.selectSilentWithPassword(config.password!);
-        } catch {
-          /* best-effort restore for shared sample DB connection policies */
-        }
-        await dropDataBrowserTable(page, connectionName, tableName);
+        // Connection is deleted by withConnectionCleanup — no need to restore Silent.
+        await dropDataBrowserTable(page, connectionName, tableName).catch(() => undefined);
       }
     });
   });

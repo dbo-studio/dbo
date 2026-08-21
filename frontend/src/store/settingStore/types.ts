@@ -1,16 +1,21 @@
 import type { CheckUpdateResponseType } from '@/api/config/types';
 
+export type EditorContextByConnection = Record<string, { database: string; schema: string }>;
+
 export type SettingStore = {
   ui: UISettings;
   theme: ThemeSettings;
   editor: EditorSettings;
   general: GeneralSettings;
   setup: SetupSettings;
+  editorContextByConnection: EditorContextByConnection;
 
   updateUI: (ui: Partial<UISettings>) => void;
   updateTheme: (theme: Partial<ThemeSettings>) => void;
   updateEditor: (editor: Partial<EditorSettings>) => void;
   updateGeneral: (general: Partial<GeneralSettings>) => void;
+  setEditorContextForConnection: (connectionId: string | number, context: { database: string; schema: string }) => void;
+  clearEditorContextForConnection: (connectionId: string | number) => void;
   completeSetup(): void;
 };
 

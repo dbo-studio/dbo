@@ -49,17 +49,76 @@ export class SqlEditorPage extends BasePage {
 
   /** Select database/schema context used for raw-query metadata and inline edits. */
   async selectContext(database: string, schema?: string): Promise<void> {
-    await this.selectLabeledOption("database", database);
+    const databaseSelect = this.page.getByTestId("editor-context-database");
+    await expect(databaseSelect).toBeVisible({ timeout: 15000 });
+    await this.pickSelectOption(databaseSelect, database);
+
     if (schema !== undefined) {
-      await this.selectLabeledOption("schema", schema);
+      const schemaSelect = this.page.getByTestId("editor-context-schema");
+      await expect(schemaSelect).toBeVisible({ timeout: 15000 });
+      await this.pickSelectOption(schemaSelect, schema);
     }
   }
 
-  private async selectLabeledOption(label: string, value: string): Promise<void> {
-    const caption = this.page.getByText(new RegExp(`^${label}:$`, "i"));
-    await expect(caption).toBeVisible({ timeout: 15000 });
+  async expectContextVisibility(opts: {
+    database: boolean;
+    schema: boolean;
+  }): Promise<void> {
+    const databaseSelect = this.page.getByTestId("editor-context-database");
+    const schemaSelect = this.page.getByTestId("editor-context-schema");
 
-    const selectRoot = caption.locator("xpath=following-sibling::*[1]");
+    if (opts.database) {
+      await expect(databaseSelect).toBeVisible({ timeout: 15000 });
+    } else {
+      await expect(databaseSelect).toHaveCount(0);
+    }
+
+    if (opts.schema) {
+      await expect(schemaSelect).toBeVisible({ timeout: 15000 });
+    } else {
+      await expect(schemaSelect).toHaveCount(0);
+    }
+  }
+
+  async expectSelectedContext(database?: string, schema?: string): Promise<void> {
+    if (database !== undefined) {
+      const databaseSelect = this.page.getByTestId("editor-context-database");
+      await expect(databaseSelect).toBeVisible({ timeout: 15000 });
+      await expect(databaseSelect).toContainText(database, { timeout: 15000 });
+    }
+    if (schema !== undefined) {
+      const schemaSelect = this.page.getByTestId("editor-context-schema");
+      await expect(schemaSelect).toBeVisible({ timeout: 15000 });
+      await expect(schemaSelect).toContainText(schema, { timeout: 15000 });
+    }
+  }
+
+  /** Pick a schema option other than `exclude` (for lock / autofill assertions). */
+  async selectAlternateSchema(exclude: string): Promise<string> {
+    const schemaSelect = this.page.getByTestId("editor-context-schema");
+    await expect(schemaSelect).toBeVisible({ timeout: 15000 });
+    const input = schemaSelect.locator("input").first();
+    await expect(input).toBeEnabled({ timeout: 15000 });
+    await input.click();
+
+    const options = this.page.getByRole("option");
+    await expect(options.first()).toBeVisible({ timeout: 10000 });
+    const labels = await options.allTextContents();
+    const alternate = labels.map((l) => l.trim()).find((l) => l.length > 0 && l !== exclude);
+    if (!alternate) {
+      throw new Error(`No alternate schema found besides "${exclude}" (options: ${labels.join(", ")})`);
+    }
+
+    await this.page.getByRole("option", { name: alternate, exact: true }).click();
+    await this.wait(300);
+    await this.expectSelectedContext(undefined, alternate);
+    return alternate;
+  }
+
+  private async pickSelectOption(
+    selectRoot: Locator,
+    value: string,
+  ): Promise<void> {
     const input = selectRoot.locator("input").first();
     await expect(input).toBeEnabled({ timeout: 15000 });
     await input.click();

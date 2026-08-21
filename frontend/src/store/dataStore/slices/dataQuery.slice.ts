@@ -8,6 +8,8 @@ import { summarizeQueryResult } from '@/core/utils/queryResultSummary';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useSettingStore } from '@/store/settingStore/setting.store';
+import { getEditorSessionContext } from '@/hooks/useEditorSessionContext';
 import { DataTabType, EditorTabType } from '@/types';
 import type { StateCreator } from 'zustand';
 import { toast } from 'sonner';
@@ -201,19 +203,21 @@ export const createDataQuerySlice: StateCreator<
       const requestQuery = query ? query : useTabStore.getState().getQuery();
       const controller = attachAbortController(abortController);
 
-      const execute = async (confirmed: boolean): Promise<RunQueryResponseType> =>
-        runRawQuery(
+      const execute = async (confirmed: boolean): Promise<RunQueryResponseType> => {
+        const session = getEditorSessionContext();
+        return runRawQuery(
           {
             connectionId: Number(currentConnectionId),
             query: requestQuery,
-            database: selectedTab?.database || undefined,
-            schema: selectedTab?.schema || undefined,
+            database: session.database,
+            schema: session.schema,
             confirmed,
             limit: selectedTab?.pagination?.limit ?? 100,
             page: selectedTab?.pagination?.page ?? 1
           },
           controller.signal
         );
+      };
 
       try {
         get().toggleDataFetching(true);
@@ -270,6 +274,13 @@ export const createDataQuerySlice: StateCreator<
           ...useAiStore.getState().context,
           queryResultSummary: summary
         });
+
+        if (selectedTab) {
+          useSettingStore.getState().setEditorContextForConnection(currentConnectionId, {
+            database: selectedTab.database ?? '',
+            schema: selectedTab.schema ?? ''
+          });
+        }
 
         return res;
       } catch (error) {

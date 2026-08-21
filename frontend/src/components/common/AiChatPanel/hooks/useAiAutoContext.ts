@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { TabMode } from '@/core/enums';
+import { getEditorSessionContext } from '@/hooks/useEditorSessionContext';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { selectTabs, useTabStore } from '@/store/tabStore/tab.store';
-import type { DataTabType, EditorTabType } from '@/types/Tab';
+import type { DataTabType } from '@/types/Tab';
 
 const QUERY_DEBOUNCE_MS = 500;
 
@@ -31,9 +32,9 @@ export const useAiAutoContext = (): void => {
     const nextContext = { ...context };
 
     if (selectedTab.mode === TabMode.Query) {
-      const editorTab = selectedTab as EditorTabType;
-      nextContext.database = editorTab.database || context.database;
-      nextContext.schema = editorTab.schema || context.schema;
+      const session = getEditorSessionContext();
+      nextContext.database = session.database || context.database;
+      nextContext.schema = session.schema || context.schema;
 
       const query = useTabStore.getState().getQuery(selectedTab.id);
       if (queryDebounceRef.current) {

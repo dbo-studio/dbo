@@ -8,6 +8,8 @@ alwaysApply: false
 
 Act like a QA engineer: document flows, keep tests isolated, never poison the developer's machine.
 
+**DBO testing policy:** Playwright e2e is the only place for new automated tests. Do not add unit/integration suites under `frontend/` or `backend/` — see `.cursor/rules/go-testing.mdc`.
+
 ## Isolation (non-negotiable)
 
 - Run only via `cd e2e && npm test` (or `npm run test:ui`). Never `npx playwright test` alone — `PLAYWRIGHT_API_URL` must come from `run-e2e`.

@@ -7,3 +7,4 @@ frontend/.cursor
 *.DS_Store
 backend/.env
 .env
+docs/prd/*

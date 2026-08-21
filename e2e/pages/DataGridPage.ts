@@ -444,6 +444,9 @@ export class DataGridPage extends BasePage {
       return;
     }
     await this.page.keyboard.press("Escape");
+    if ((await menus.count()) > 0) {
+      await this.page.keyboard.press("Escape");
+    }
     await expect(menus).toHaveCount(0, { timeout: 5000 });
   }
 

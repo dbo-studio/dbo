@@ -22,6 +22,7 @@ DBO is an open-source database GUI. Monorepo: `backend/` (Go/Fiber), `frontend/`
 - Never commit secrets. Use Conventional Commits (`feat:`, `fix:`, `chore:`) — see `.cursor/rules/git-commits.mdc`.
 - Commits must use the machine Git identity (`user.name` / `user.email`); never override author via `--author` or env vars.
 - Before PR: `go fmt` + `golangci-lint run` (backend) or `npm run lint` (frontend).
+- **Testing: e2e only** — do not add new unit tests in `frontend/` or `backend/`. Cover behavior in `e2e/` (Playwright). See `.cursor/rules/go-testing.mdc` and `.cursor/rules/e2e-qa.mdc`.
 
 ## Backend Package Naming
 
