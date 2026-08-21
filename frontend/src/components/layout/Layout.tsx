@@ -2,6 +2,7 @@ import { TabMode } from '@/core/enums';
 import { shortcuts } from '@/core/utils';
 import { useCurrentConnection, useResponsiveSidebar, useShortcut } from '@/hooks';
 import { useAiBridge } from '@/hooks/useAiBridge';
+import { useDesktopMenu } from '@/hooks/useDesktopMenu.hook';
 import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -27,6 +28,7 @@ export default function Layout(): JSX.Element {
   const { openAssistant, prefillChat } = useAiBridge();
 
   useResponsiveSidebar();
+  useDesktopMenu();
 
   useShortcut(shortcuts.openAssistant, () => {
     const selectedTab = useTabStore.getState().selectedTab();

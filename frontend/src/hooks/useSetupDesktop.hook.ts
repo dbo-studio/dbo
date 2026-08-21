@@ -7,7 +7,7 @@ import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { platform } from '@tauri-apps/plugin-os';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const BACKEND_HEALTH_CHECK_CONFIG = {
   maxAttempts: 60,
@@ -26,30 +26,106 @@ const TITLE_BAR_CONFIG = {
   }
 } as const;
 
-export const useSetupDesktop = (): boolean => {
-  const [loaded, setLoaded] = useState(false);
+export type DesktopBootState = {
+  ready: boolean;
+  status: 'idle' | 'starting' | 'error';
+  errorMessage: string | null;
+  retry: () => void;
+};
+
+export const useSetupDesktop = (): DesktopBootState => {
+  const [ready, setReady] = useState(false);
+  const [status, setStatus] = useState<DesktopBootState['status']>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const reset = useTabStore((state) => state.reset);
+  const retryTokenRef = useRef(0);
+  const cancelledRef = useRef(false);
 
-  useEffect(() => {
-    void (async (): Promise<void> => {
-      try {
-        const isTauri = await tools.isTauri();
-        if (!isTauri) {
-          setLoaded(true);
-          return;
-        }
+  const runSetup = useCallback(async (): Promise<void> => {
+    const token = ++retryTokenRef.current;
+    cancelledRef.current = false;
 
-        reset();
-        await setup();
-        setLoaded(true);
-      } catch (error) {
-        console.error('Error during desktop setup:', error);
-        setLoaded(true);
+    try {
+      const isTauri = await tools.isTauri();
+      if (!isTauri) {
+        setReady(true);
+        setStatus('idle');
+        setErrorMessage(null);
+        return;
       }
-    })();
+
+      setReady(false);
+      setStatus('starting');
+      setErrorMessage(null);
+      reset();
+      await setup();
+
+      if (token !== retryTokenRef.current || cancelledRef.current) {
+        return;
+      }
+
+      setReady(true);
+      setStatus('idle');
+    } catch (error) {
+      if (token !== retryTokenRef.current || cancelledRef.current) {
+        return;
+      }
+
+      console.error('Error during desktop setup:', error);
+      const message = error instanceof Error ? error.message : 'Backend failed to start within the expected time';
+      setErrorMessage(message);
+      setStatus('error');
+      setReady(false);
+    }
   }, [reset]);
 
-  return loaded;
+  useEffect(() => {
+    void runSetup();
+
+    return () => {
+      cancelledRef.current = true;
+    };
+  }, [runSetup]);
+
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+
+    void (async () => {
+      if (!(await tools.isTauri())) {
+        return;
+      }
+
+      unlisten = await streams.sidecar.onFailed((reason) => {
+        setErrorMessage(reason || 'Sidecar terminated unexpectedly');
+        setStatus('error');
+        setReady(false);
+      });
+    })();
+
+    return () => {
+      unlisten?.();
+    };
+  }, []);
+
+  const retry = useCallback((): void => {
+    void (async () => {
+      try {
+        if (await tools.isTauri()) {
+          await commands.restartBackend();
+        }
+      } catch (error) {
+        console.error('Failed to restart backend:', error);
+      }
+      void runSetup();
+    })();
+  }, [runSetup]);
+
+  return {
+    ready,
+    status,
+    errorMessage,
+    retry
+  };
 };
 
 const setup = async (): Promise<void> => {
@@ -75,7 +151,9 @@ const waitForBackendReady = async (baseUrl: string): Promise<void> => {
       if (attempt < BACKEND_HEALTH_CHECK_CONFIG.maxAttempts) {
         await new Promise((resolve) => setTimeout(resolve, BACKEND_HEALTH_CHECK_CONFIG.intervalMs));
       } else {
-        const error = new Error('Backend failed to start within the expected time') as Error & { cause: unknown };
+        const error = new Error('Backend failed to start within the expected time') as Error & {
+          cause: unknown;
+        };
         error.cause = err;
         throw error;
       }
