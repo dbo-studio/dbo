@@ -145,4 +145,36 @@ export class SettingsPage extends BasePage {
   async expectModalClosed(): Promise<void> {
     await expect(this.modal).toBeHidden({ timeout: 10000 });
   }
+
+  shortcutsSearchInput(): Locator {
+    return this.page.getByPlaceholder("Search shortcuts");
+  }
+
+  async expectShortcutsCheatsheet(): Promise<void> {
+    await expect(this.shortcutsSearchInput()).toBeVisible({ timeout: 10000 });
+    await expect(this.page.getByText("Editor", { exact: true })).toBeVisible();
+    await expect(this.page.getByText("Tabs", { exact: true })).toBeVisible();
+    await expect(this.page.getByText("Data grid", { exact: true })).toBeVisible();
+    await expect(this.page.getByText("App", { exact: true })).toBeVisible();
+    await expect(this.page.getByText("Run", { exact: true })).toBeVisible();
+    await expect(this.page.getByText("Save", { exact: true })).toBeVisible();
+    await expect(this.page.getByText("Refresh", { exact: true })).toBeVisible();
+    await expect(this.page.getByText("Add row", { exact: true })).toBeVisible();
+    await expect(this.page.getByText("Format", { exact: true })).toBeVisible();
+    await expect(
+      this.page.getByText("Keyboard shortcuts", { exact: true }),
+    ).toBeVisible();
+  }
+
+  async filterShortcuts(query: string): Promise<void> {
+    const input = this.shortcutsSearchInput();
+    await expect(input).toBeVisible({ timeout: 10000 });
+    await input.fill(query);
+  }
+
+  /** Web default: Alt+/ opens Settings on the Shortcuts tab. */
+  async openShortcutsViaKeyboard(): Promise<void> {
+    await this.page.keyboard.press("Alt+/");
+    await expect(this.shortcutsSearchInput()).toBeVisible({ timeout: 10000 });
+  }
 }

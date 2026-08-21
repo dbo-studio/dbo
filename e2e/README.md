@@ -78,6 +78,7 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Query guards             | `query-guards.spec.ts`                        | cancel Stop + raw SELECT page size / user LIMIT         |
 | Saved / history          | `saved-history.spec.ts`                       | history, save, run, copy                                |
 | Settings / theme         | `settings-theme.spec.ts`                      | theme persistence, panels, sidebar                      |
+| Keyboard shortcuts       | `keyboard-shortcuts.spec.ts`                  | cheatsheet groups/filter, Alt+/ open, grid Save/Refresh tooltips |
 | Workspace dirty tab      | `workspace-dirty-tab.spec.ts`                 | dirty Cancel / Yes / clean close                        |
 | AI chat panel            | `ai-chat-panel.spec.ts`                       | Assistant panel + composer (no LLM)                     |
 | MCP panel                | `mcp-panel.spec.ts`                           | Settings AI → MCP controls + enable toggle (no LLM)     |
