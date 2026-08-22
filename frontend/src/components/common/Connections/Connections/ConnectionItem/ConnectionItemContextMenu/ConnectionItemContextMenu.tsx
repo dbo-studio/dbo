@@ -141,11 +141,25 @@ export default function ConnectionItemContextMenu({
     });
   };
 
+  const handleDuplicateConnection = (target: ConnectionType | undefined): void => {
+    if (!target) {
+      return;
+    }
+
+    updateUI({ showAddConnection: true, duplicateConnectionId: target.id });
+  };
+
   const menu: MenuType[] = [
     {
       name: locales.edit,
       icon: 'settings',
       action: (): void => handleEditConnection(connection),
+      closeBeforeAction: true
+    },
+    {
+      name: locales.duplicate,
+      icon: 'copy',
+      action: (): void => handleDuplicateConnection(connection),
       closeBeforeAction: true
     },
     {

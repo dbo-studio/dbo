@@ -70,6 +70,8 @@ export const IconTypes = {
   postgresql: 'postgresql',
   sqlite: 'sqlite',
   network: 'Network',
+  layout: 'LayoutGrid',
+  fit: 'Maximize2',
   send: 'Send',
   at: 'AtSign',
   history: 'RotateCcwClock',

@@ -26,6 +26,7 @@ type Handlers struct {
 	AiProvider   *handler.AiProviderHandler
 	AiChat       *handler.AiChatHandler
 	Mcp          *handler.McpHandler
+	Schema       *handler.SchemaHandler
 }
 
 type Server struct {

@@ -1,6 +1,9 @@
 import type { MenuType } from '@/components/base/ContextMenu/types';
+import { diagramScopeFromTreeNode } from '@/core/diagram/scopeFromTree';
 import { useAiBridge } from '@/hooks/useAiBridge';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection.hook';
 import locales from '@/locales';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import { TreeNodeType } from '@/types/Tree';
 
 function tableAiMenu(tableName: string, prefillChat: ReturnType<typeof useAiBridge>['prefillChat']): MenuType {
@@ -50,6 +53,8 @@ export function useTreeNodeMenu(
   menu: MenuType[];
 } {
   const { prefillChat } = useAiBridge();
+  const currentConnection = useCurrentConnection();
+  const addDiagramTab = useTabStore((state) => state.addDiagramTab);
 
   const menu: MenuType[] =
     node?.contextMenu?.map((action) => ({
@@ -61,6 +66,17 @@ export function useTreeNodeMenu(
         }),
       closeAfterAction: true
     })) || [];
+
+  const scope = diagramScopeFromTreeNode(node, currentConnection?.type);
+  if (scope) {
+    menu.push({
+      name: locales.open_diagram,
+      action: () => {
+        addDiagramTab(scope);
+      },
+      closeAfterAction: true
+    });
+  }
 
   if (node.type === 'table') {
     menu.push(tableAiMenu(node.name, prefillChat));

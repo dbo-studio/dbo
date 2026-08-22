@@ -95,6 +95,98 @@ test.describe("Connection Management", () => {
     });
   });
 
+  test("Duplicate connection prefills create form", async ({ page }, testInfo) => {
+    const connectionPage = new ConnectionPage(page);
+    const suffix = uniqueTestSuffix(testInfo);
+    const connectionName = `${testPrefix}-dup-src-${suffix}`;
+    const duplicatedName = `${testPrefix}-dup-new-${suffix}`;
+    const config = getDbConfig("postgresql", connectionName);
+
+    await withConnectionCleanup(page, duplicatedName, async () => {
+      await withConnectionCleanup(page, connectionName, async () => {
+        await connectionPage.goto();
+        await connectionPage.waitForReady();
+
+        await test.step("Create source connection", async () => {
+          await connectionPage.createConnection(config);
+        });
+
+        await test.step("Open duplicate form from context menu", async () => {
+          await connectionPage.duplicateConnection(connectionName);
+          await expect(connectionPage.nameInput).toHaveValue(connectionName);
+          await expect(connectionPage.hostInput).toHaveValue(config.host);
+          await expect(connectionPage.portInput).toHaveValue(config.port);
+          await expect(connectionPage.usernameInput).toHaveValue(config.username);
+        });
+
+        await test.step("Create duplicated connection with new name", async () => {
+          await connectionPage.nameInput.fill(duplicatedName);
+          await connectionPage.passwordInput.fill(config.password);
+          await connectionPage.submitConnection();
+          await expect(
+            connectionPage.getConnectionItem(duplicatedName),
+          ).toBeVisible();
+        });
+
+        await test.step("Cleanup", async () => {
+          await connectionPage.deleteConnection(duplicatedName);
+          await connectionPage.deleteConnection(connectionName);
+        });
+      });
+    });
+  });
+
+  test("Reorder connections by vertical drag", async ({ page }, testInfo) => {
+    const connectionPage = new ConnectionPage(page);
+    const suffix = uniqueTestSuffix(testInfo);
+    const firstName = `${testPrefix}-sort-a-${suffix}`;
+    const secondName = `${testPrefix}-sort-b-${suffix}`;
+    const firstConfig = getDbConfig("postgresql", firstName);
+    const secondConfig = getDbConfig("postgresql", secondName);
+
+    await withConnectionCleanup(page, secondName, async () => {
+      await withConnectionCleanup(page, firstName, async () => {
+        await connectionPage.goto();
+        await connectionPage.waitForReady();
+
+        await test.step("Create two connections", async () => {
+          await connectionPage.createConnection(firstConfig);
+          await connectionPage.createConnection(secondConfig);
+        });
+
+        await test.step("Drag second connection above the first", async () => {
+          const before = connectionPage.getConnectionItems();
+          await expect(before).toHaveCount(2);
+          await expect(before.nth(0)).toHaveAttribute(
+            "data-testid",
+            `connection-item-${firstName}`,
+          );
+          await expect(before.nth(1)).toHaveAttribute(
+            "data-testid",
+            `connection-item-${secondName}`,
+          );
+
+          await connectionPage.reorderConnection(secondName, firstName);
+
+          const after = connectionPage.getConnectionItems();
+          await expect(after.nth(0)).toHaveAttribute(
+            "data-testid",
+            `connection-item-${secondName}`,
+          );
+          await expect(after.nth(1)).toHaveAttribute(
+            "data-testid",
+            `connection-item-${firstName}`,
+          );
+        });
+
+        await test.step("Cleanup", async () => {
+          await connectionPage.deleteConnection(secondName);
+          await connectionPage.deleteConnection(firstName);
+        });
+      });
+    });
+  });
+
   test("Refresh connection", async ({ page }, testInfo) => {
     const connectionPage = new ConnectionPage(page);
     const connectionName = `${testPrefix}-refresh-${uniqueTestSuffix(testInfo)}`;
@@ -138,6 +230,9 @@ test.describe("Connection Management", () => {
         const menu = page.getByRole("menu");
         await expect(
           menu.getByRole("menuitem", { name: "Edit" }),
+        ).toBeVisible();
+        await expect(
+          menu.getByRole("menuitem", { name: "Duplicate" }),
         ).toBeVisible();
         await expect(
           menu.getByRole("menuitem", { name: "Delete" }),

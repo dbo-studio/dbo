@@ -5,6 +5,7 @@ import { ImportModal } from '@/components/common/ImportModal/ImportModal';
 import { useSelectedTab } from '@/hooks';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { DataTabType } from '@/types';
 import { Badge, Box, IconButton, Tooltip } from '@mui/material';
@@ -19,9 +20,11 @@ import type { ActionBarProps } from './types';
 export default function ActionBar({ showColumns, setShowColumns }: ActionBarProps): JSX.Element {
   const selectedTab = useSelectedTab<DataTabType>();
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
+  const columns = useDataStore((state) => state.columns);
 
   const sortCount = selectedTab?.sorts?.filter((sort) => sort.isActive).length ?? 0;
   const filterCount = selectedTab?.filters?.filter((filter) => filter.isActive).length ?? 0;
+  const hiddenColumnCount = columns?.filter((column) => !column.isActive).length ?? 0;
 
   const showFilters = selectedTab?.showFilters ?? false;
   const showSorts = selectedTab?.showSorts ?? false;
@@ -138,7 +141,9 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
               aria-label='grid'
               onClick={(): void => handleToggle('column')}
             >
-              <CustomIcon type='grid' size='s' />
+              <Badge badgeContent={hiddenColumnCount} color='secondary' variant='dot'>
+                <CustomIcon type='grid' size='s' />
+              </Badge>
             </IconButton>
           </Tooltip>
 

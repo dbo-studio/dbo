@@ -215,9 +215,12 @@ export class DataGridPage extends BasePage {
     }
   }
 
-  async openFkLookupInRow(rowText: string): Promise<Locator> {
+  async openFkLookupInRow(rowText: string, fkCellText: string): Promise<Locator> {
     const row = this.grid.locator("tbody tr").filter({ hasText: rowText }).first();
     await expect(row).toBeVisible({ timeout: 15000 });
+    const cell = row.getByTestId("grid-cell").filter({ hasText: fkCellText }).first();
+    await expect(cell).toBeVisible({ timeout: 5000 });
+    await cell.click({ clickCount: 2, delay: 40 });
     const button = row.getByTestId("grid-fk-lookup-button").first();
     await expect(button).toBeVisible({ timeout: 5000 });
     await button.click();
@@ -228,10 +231,10 @@ export class DataGridPage extends BasePage {
 
   async pickFkOption(
     rowText: string,
-    _currentFkValue: string,
+    currentFkValue: string,
     optionLabel: string | RegExp,
   ): Promise<void> {
-    const editor = await this.openFkLookupInRow(rowText);
+    const editor = await this.openFkLookupInRow(rowText, currentFkValue);
     const input = editor.locator("input").first();
     await expect(input).toBeVisible({ timeout: 5000 });
     const search =
@@ -247,10 +250,10 @@ export class DataGridPage extends BasePage {
 
   async pasteFkRawKey(
     rowText: string,
-    _currentFkValue: string,
+    currentFkValue: string,
     rawKey: string,
   ): Promise<void> {
-    const editor = await this.openFkLookupInRow(rowText);
+    const editor = await this.openFkLookupInRow(rowText, currentFkValue);
     const input = editor.locator("input").first();
     await expect(input).toBeVisible({ timeout: 5000 });
     await input.fill(rawKey);
@@ -265,8 +268,8 @@ export class DataGridPage extends BasePage {
     await expect(this.saveButton).toBeEnabled({ timeout: 5000 });
   }
 
-  async expectFkMenuHasNoNullOption(rowText: string): Promise<void> {
-    const editor = await this.openFkLookupInRow(rowText);
+  async expectFkMenuHasNoNullOption(rowText: string, fkCellText: string): Promise<void> {
+    const editor = await this.openFkLookupInRow(rowText, fkCellText);
     await expect(editor).toBeVisible({ timeout: 5000 });
     const nullOption = this.page.getByRole("option", { name: /^NULL$/i });
     await expect(nullOption).toHaveCount(0);
@@ -276,8 +279,9 @@ export class DataGridPage extends BasePage {
   async pickCompositeFkOption(
     rowText: string,
     optionLabel: string | RegExp,
+    fkCellText = "1",
   ): Promise<void> {
-    const editor = await this.openFkLookupInRow(rowText);
+    const editor = await this.openFkLookupInRow(rowText, fkCellText);
     const input = editor.locator("input").first();
     await expect(input).toBeVisible({ timeout: 5000 });
     const search =

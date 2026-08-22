@@ -18,7 +18,7 @@ export type FilterType = {
   isActive: boolean;
 };
 
-export type TabType = DataTabType | EditorTabType | ObjectTabType;
+export type TabType = DataTabType | EditorTabType | ObjectTabType | DiagramTabType;
 
 type BaseTab = {
   id: string;
@@ -56,6 +56,13 @@ export type EditorTabType = BaseTab & {
 export type ObjectTabType = BaseTab & {
   name: string;
   objectTabId: string | null;
+};
+
+export type DiagramTabType = BaseTab & {
+  name: string;
+  database: string;
+  schema: string;
+  focusTable?: string;
 };
 
 export type EditedRow = {

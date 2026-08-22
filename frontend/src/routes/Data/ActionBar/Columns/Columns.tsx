@@ -1,4 +1,3 @@
-import { tools } from '@/core/utils';
 import { useWindowSize } from '@/hooks/useWindowSize.hook';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -20,11 +19,10 @@ export default function Columns(): JSX.Element {
   const handleCheckToggle = async (column: ColumnType): Promise<void> => {
     if (isDataFetching) return;
 
-    column.isActive = !column.isActive;
     const newColumns =
       columns?.map((c: ColumnType) => {
         if (c.name === column.name) {
-          return column;
+          return { ...c, isActive: !c.isActive };
         }
         return c;
       }) ?? [];
@@ -38,7 +36,7 @@ export default function Columns(): JSX.Element {
   return (
     <ColumnsContainerStyled height={windowSize.height}>
       {columns?.map((c: ColumnType) => (
-        <ColumnItem onClick={() => void handleCheckToggle(c)} key={tools.uuid()} column={c} />
+        <ColumnItem onClick={() => void handleCheckToggle(c)} key={c.name} column={c} />
       ))}
     </ColumnsContainerStyled>
   );

@@ -17,7 +17,10 @@ export default function ConnectionsEmptyState(): JSX.Element {
       <Typography variant='body2' color='textText' sx={{ textAlign: 'center' }}>
         {locales.connections_empty_hint}
       </Typography>
-      <Button variant='contained' onClick={(): void => updateUI({ showAddConnection: true })}>
+      <Button
+        variant='contained'
+        onClick={(): void => updateUI({ showAddConnection: true, duplicateConnectionId: undefined })}
+      >
         {locales.new_connection}
       </Button>
     </EmptyConnectionsStyled>

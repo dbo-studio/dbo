@@ -29,7 +29,7 @@ export const useDesktopMenu = (): void => {
       unlisten = await streams.menu.onAction((id) => {
         switch (id) {
           case 'newConnection':
-            updateUI({ showAddConnection: true });
+            updateUI({ showAddConnection: true, duplicateConnectionId: undefined });
             break;
           case 'newTab':
             addEditorTab();

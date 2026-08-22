@@ -60,7 +60,7 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Feature                  | Spec                                          | Flow                                                    |
 | ------------------------ | --------------------------------------------- | ------------------------------------------------------- |
 | Harness smoke            | `harness-smoke.spec.ts`                       | ephemeral API + FE reachable (no sample DB)             |
-| Connections              | `connections.spec.ts`                         | create / edit / refresh / context menu / schema via SQL / ping diagnostics |
+| Connections              | `connections.spec.ts`                         | create / edit / duplicate / reorder / refresh / context menu / schema via SQL / ping diagnostics |
 | Connection SSL           | `connection-ssl.spec.ts`                      | SSL tab UI + Require on sample-pgsql-ssl + bad CA fail  |
 | Connections MySQL/SQLite | `connections-mysql-sqlite-smoke.spec.ts`      | create connection + seed + open Data table (smoke)      |
 | Safe Mode                | `safe-mode.spec.ts`                           | menu modes, SQL gates + grid Save confirm               |
@@ -89,6 +89,7 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Object Form MySQL edit   | `object-form-mysql-edit-table.spec.ts`        | serial deep column/FK/key/index edits                   |
 | Object Form SQLite       | `object-form-sqlite-lifecycle.spec.ts`        | serial: connect → tables → FK → view → edit → drop      |
 | Object Form SQLite edit  | `object-form-sqlite-edit-table.spec.ts`       | serial deep column/FK drop+re-add/key edits             |
+| Database diagram (ERD)   | `database-diagram.spec.ts`                    | PG/MySQL/SQLite: open ERD, FK edges, related highlight, PNG export |
 
 **Accepted out of automated e2e:** AI send/stream with real providers; Tauri/desktop native dialogs (manual release checklist).
 

@@ -16,6 +16,7 @@ import (
 	serviceMcp "github.com/dbo-studio/dbo/internal/service/mcp"
 	serviceQuery "github.com/dbo-studio/dbo/internal/service/query"
 	serviceSavedQuery "github.com/dbo-studio/dbo/internal/service/saved_query"
+	serviceSchema "github.com/dbo-studio/dbo/internal/service/schema"
 	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	serviceTree "github.com/dbo-studio/dbo/internal/service/tree"
 )
@@ -34,6 +35,7 @@ type Service struct {
 	AiChatService       serviceAiChat.IAiChatService
 	ConfigService       serviceConfig.IConfigService
 	McpService          serviceMcp.IMcpService
+	SchemaService       serviceSchema.ISchemaService
 }
 
 func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionManager, ss secretStore.ISecretStore) *Service {
@@ -61,5 +63,6 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		AiChatService:       serviceAiChat.NewAiChatService(repo.AiChatRepo),
 		ConfigService:       serviceConfig.NewConfigService(repo.ConfigRepo, aiProviderService),
 		McpService:          mcpService,
+		SchemaService:       serviceSchema.NewSchemaService(repo.ConnectionRepo, cm),
 	}
 }

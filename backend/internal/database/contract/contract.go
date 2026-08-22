@@ -10,6 +10,7 @@ type DatabaseRepository interface {
 	QueryRepository
 	AIContextRepository
 	AIMetadataRepository
+	DiagramRepository
 }
 
 type QueryRepository interface {

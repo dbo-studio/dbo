@@ -46,7 +46,7 @@ async function runFkAutocompleteFlow(
       });
 
       await test.step("NOT NULL FK has no NULL option", async () => {
-        await seed.dataGrid.expectFkMenuHasNoNullOption("Laptop");
+        await seed.dataGrid.expectFkMenuHasNoNullOption("Laptop", "1");
       });
 
       await test.step("Pick FK value via autocomplete and save", async () => {

@@ -13,3 +13,4 @@ export { ObjectFormPage } from "./ObjectFormPage";
 export { ObjectTreePage } from "./ObjectTreePage";
 export { SafeModePage, type SafeModeValue } from "./SafeModePage";
 export { WorkspacePage } from "./WorkspacePage";
+export { DiagramPage } from "./DiagramPage";

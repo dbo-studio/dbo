@@ -21,6 +21,7 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           },
           showConnectionsDrawer: false,
           showAddConnection: false,
+          duplicateConnectionId: undefined,
           showEditConnection: false,
           showQuickLookEditor: false,
           showConnectionPasswordPrompt: false,

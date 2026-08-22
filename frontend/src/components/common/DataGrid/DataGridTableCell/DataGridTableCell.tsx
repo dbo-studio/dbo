@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { JSX, memo, useCallback, useEffect, useMemo } from 'react';
+import { JSX, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import DateTimePicker from '@/components/base/DateTimePicker/DateTimePicker';
 import { nextBooleanCellValue, parseBooleanCellValue } from '@/core/utils/dataGrid';
@@ -42,6 +42,8 @@ export const DataGridTableCell = memo(
     const displayValue = formatCellDisplayValue(value, column);
     const editorString = valueToEditorString(value);
     const isFkPicker = isForeignKeyPickerColumn(column);
+    const [fkLookupOpen, setFkLookupOpen] = useState(false);
+    const skipFkInputBlurRef = useRef(false);
 
     const { inputRef, handleRowChange, commitValue, commitFields } = useCellEditing(row, columnId);
     const { handleClick, isEditing, setIsEditing } = useCellSelection(row, rowIndex, columnId, editable);
@@ -102,17 +104,28 @@ export const DataGridTableCell = memo(
     }, [searchTerm, displayValue, isSearchMatch, isCurrentMatch, rowIndex, columnId, isNull]);
 
     useEffect(() => {
-      if (isEditing && inputRef.current && !isFkPicker) {
+      if (!isEditing) {
+        setFkLookupOpen(false);
+      }
+    }, [isEditing]);
+
+    useEffect(() => {
+      if (isEditing && inputRef.current && !(isFkPicker && fkLookupOpen)) {
         requestAnimationFrame(() => {
           inputRef.current?.focus();
           inputRef.current?.select();
         });
       }
-    }, [isEditing, inputRef, isFkPicker]);
+    }, [isEditing, inputRef, isFkPicker, fkLookupOpen]);
 
     const handleInputBlur = useCallback(
       (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>): void => {
+        if (skipFkInputBlurRef.current) {
+          skipFkInputBlurRef.current = false;
+          return;
+        }
         setIsEditing(false);
+        setFkLookupOpen(false);
         if (mappedType === 'number') {
           const trimmed = e.target.value.trim();
           if (trimmed === '') {
@@ -137,6 +150,8 @@ export const DataGridTableCell = memo(
         if (!editable) {
           return;
         }
+        skipFkInputBlurRef.current = true;
+        setFkLookupOpen(true);
         setIsEditing(true);
       },
       [editable, setIsEditing]
@@ -170,7 +185,7 @@ export const DataGridTableCell = memo(
     }
 
     if (isEditing && editable && !isComplex) {
-      if (isFkPicker && column) {
+      if (isFkPicker && column && fkLookupOpen) {
         return (
           <CellContainer className={cellClassName}>
             <FkCellEditor
@@ -178,12 +193,48 @@ export const DataGridTableCell = memo(
               value={value}
               onCommitFields={(updates): void => {
                 commitFields(updates);
+                setFkLookupOpen(false);
                 setIsEditing(false);
               }}
               onCancel={(): void => {
+                setFkLookupOpen(false);
                 setIsEditing(false);
               }}
             />
+          </CellContainer>
+        );
+      }
+
+      if (isFkPicker) {
+        return (
+          <CellContainer className={cellClassName} data-testid='grid-cell'>
+            <FkCellView>
+              <CellInput
+                ref={inputRef}
+                type={mappedType === 'number' ? 'number' : 'text'}
+                defaultValue={editorString}
+                onBlur={handleInputBlur}
+                onKeyDown={(e): void => {
+                  if (e.key === 'Enter' || e.key === 'Escape') {
+                    e.currentTarget.blur();
+                  }
+                }}
+                style={{ flex: 1, minWidth: 0, ...(mappedType === 'number' ? { textAlign: 'right' } : {}) }}
+              />
+              <FkLookupButton
+                type='button'
+                title='Look up foreign key'
+                aria-label='Look up foreign key'
+                data-testid='grid-fk-lookup-button'
+                onClick={openFkLookup}
+                onMouseDown={(event): void => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }}
+              >
+                <CustomIcon type='search' size='xs' />
+              </FkLookupButton>
+            </FkCellView>
           </CellContainer>
         );
       }
@@ -250,30 +301,6 @@ export const DataGridTableCell = memo(
       ) : (
         highlightedContent
       );
-
-    if (isFkPicker && editable) {
-      return (
-        <CellContainer onClick={handleCellClick} className={cellClassName} data-testid='grid-cell'>
-          <FkCellView>
-            <CellContent title={editorString} style={{ flex: 1 }}>
-              {content}
-            </CellContent>
-            <FkLookupButton
-              type='button'
-              title='Look up foreign key'
-              aria-label='Look up foreign key'
-              data-testid='grid-fk-lookup-button'
-              onClick={openFkLookup}
-              onMouseDown={(event): void => {
-                event.stopPropagation();
-              }}
-            >
-              <CustomIcon type='search' size='xs' />
-            </FkLookupButton>
-          </FkCellView>
-        </CellContainer>
-      );
-    }
 
     return (
       <CellContainer onClick={handleCellClick} className={cellClassName} data-testid='grid-cell'>

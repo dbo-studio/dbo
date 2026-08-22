@@ -39,6 +39,7 @@
   "connection_edit_confirm": "Editing will close the active connection. Do you want to continue?",
   "database_delete_confirm": "Are your sure delete database?",
   "edit": "Edit",
+  "duplicate": "Duplicate",
   "rename": "Rename",
   "delete": "Delete",
   "select_database": "Select database",
@@ -384,5 +385,17 @@
   "hide_column": "Hide column",
   "grid_menu_read_only": "Grid is read-only",
   "grid_menu_safe_mode": "Disabled by Safe Mode",
-  "grid_menu_column_not_editable": "Column is not editable"
+  "grid_menu_column_not_editable": "Column is not editable",
+  "open_diagram": "Open diagram",
+  "diagram_auto_layout": "Auto layout",
+  "diagram_fit": "Fit view",
+  "diagram_export": "Export",
+  "diagram_export_png": "Export PNG",
+  "diagram_export_svg": "Export SVG",
+  "diagram_empty_title": "No tables to diagram",
+  "diagram_empty_description": "This schema has no tables yet.",
+  "diagram_no_columns": "No columns",
+  "diagram_pk": "PK",
+  "diagram_fk": "FK",
+  "diagram_tab": "Diagram"
 }

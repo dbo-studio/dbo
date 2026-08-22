@@ -54,3 +54,15 @@ export const EmptyConnectionsStyled = styled(Box)(() => ({
   minHeight: 240,
   width: '100%'
 }));
+
+export const ConnectionsListStyled = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'expanded'
+})<{ expanded?: boolean }>(({ expanded }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  minHeight: 0,
+  minWidth: 0,
+  width: '100%',
+  overflow: 'auto',
+  ...(expanded ? { flex: 1 } : { flexShrink: 0 })
+}));

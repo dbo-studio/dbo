@@ -12,6 +12,9 @@ func (r *Server) routing() {
 	api.Get("/config/logs", r.handlers.Config.Logs)
 	api.Post("/config/reset", r.handlers.Config.ResetFactory)
 
+	schema := api.Group("schema")
+	schema.Get("/diagram", r.handlers.Schema.Diagram)
+
 	tree := api.Group("tree")
 	tree.Get("/", r.handlers.TreeHandler.TreeHandler)
 	tree.Get("/:nodeId/tabs/:action", r.handlers.TreeHandler.Tabs)

@@ -350,6 +350,27 @@ export class ConnectionPage extends BasePage {
     await expect(this.nameInput).toBeVisible({ timeout: 15000 });
   }
 
+  async duplicateConnection(name: string): Promise<void> {
+    await this.openContextMenu(name);
+    await this.clickContextMenuItem("Duplicate");
+    await expect(
+      this.page.getByRole("heading", { name: "New connection" }),
+    ).toBeVisible();
+    await expect(this.nameInput).toBeVisible({ timeout: 15000 });
+  }
+
+  async reorderConnection(sourceName: string, targetName: string): Promise<void> {
+    const source = this.getConnectionItem(sourceName);
+    const target = this.getConnectionItem(targetName);
+    await expect(source).toBeVisible();
+    await expect(target).toBeVisible();
+    await source.dragTo(target);
+  }
+
+  getConnectionItems(): Locator {
+    return this.page.locator('[data-testid^="connection-item-"]');
+  }
+
   async refreshConnection(name: string): Promise<void> {
     await this.openContextMenu(name);
     await waitForResponseDuring(

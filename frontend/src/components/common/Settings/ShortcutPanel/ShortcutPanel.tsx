@@ -1,8 +1,9 @@
 import Kbd from '@/components/base/Kbd/Kbd';
+import Search from '@/components/base/Search/Search';
 import { SHORTCUT_GROUP_ORDER, shortcuts } from '@/core/utils/shortcuts';
 import locales from '@/locales';
 import type { ShortcutGroup, ShortcutType } from '@/types';
-import { Box, Grid, TextField, Typography } from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 import { type JSX, useMemo, useState } from 'react';
 
 const GROUP_LABELS: Record<ShortcutGroup, string> = {
@@ -33,15 +34,9 @@ export default function ShortcutPanel(): JSX.Element {
 
   return (
     <Box>
-      <TextField
-        size='small'
-        fullWidth
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder={locales.search_shortcuts}
-        aria-label={locales.search_shortcuts}
-        sx={{ mb: 2 }}
-      />
+      <Box sx={{ mb: 2, width: { xs: '100%', sm: '50%' } }}>
+        <Search onChange={setQuery} placeholder={locales.search_shortcuts} />
+      </Box>
 
       {grouped.map((section) => (
         <Box key={section.group} sx={{ mb: 2 }}>

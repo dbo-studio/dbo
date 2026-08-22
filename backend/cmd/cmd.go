@@ -92,6 +92,7 @@ func Execute() {
 		AiProvider:   handler.NewAiProviderHandler(ss.AiProviderService),
 		AiChat:       handler.NewAiChatHandler(ss.AiChatService),
 		Mcp:          handler.NewMcpHandler(ss.McpService),
+		Schema:       handler.NewSchemaHandler(ss.SchemaService),
 	}, rr.WebSessionRepo)
 
 	if err := restServer.Start(helper.IsLocal(), cfg.App.ResolvedPort()); err != nil {

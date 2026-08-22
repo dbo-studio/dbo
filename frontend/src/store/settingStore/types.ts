@@ -23,6 +23,7 @@ export type UISettings = {
   sidebar: SidebarType;
   showConnectionsDrawer: boolean;
   showAddConnection: boolean;
+  duplicateConnectionId?: number;
   showEditConnection: number | boolean;
   showQuickLookEditor: boolean;
   showConnectionPasswordPrompt: boolean;

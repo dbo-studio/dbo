@@ -75,8 +75,10 @@ export default function SafeModePasswordPrompt({
     e.preventDefault();
     e.stopPropagation();
     try {
+      const ok = await pingWithPassword();
+      if (!ok) return;
+
       if (rememberPassword) {
-        await pingWithPassword();
         await setPasswordMutation({ id: connectionId, password, rememberPassword });
       }
       await onPassword(password);

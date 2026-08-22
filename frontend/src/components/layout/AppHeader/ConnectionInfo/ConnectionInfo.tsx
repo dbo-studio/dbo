@@ -78,7 +78,7 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
               <IconButton
                 aria-label={locales.connections}
                 data-testid='add-connection'
-                onClick={(): void => updateUI({ showAddConnection: true })}
+                onClick={(): void => updateUI({ showAddConnection: true, duplicateConnectionId: undefined })}
               >
                 <CustomIcon type={'connection'} size={'m'} />
               </IconButton>

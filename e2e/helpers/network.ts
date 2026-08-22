@@ -1,4 +1,4 @@
-import type { Page, Response } from '@playwright/test';
+import type { Page, Response } from "@playwright/test";
 
 /** Local ephemeral API is usually &lt;1s — fail fast on miss. */
 export const API_TIMEOUT = 5_000;
@@ -21,90 +21,95 @@ export type ApiMatch = {
 export const apiRoute = {
   connectionsList: {
     path: /^\/api\/connections\/?$/,
-    method: 'GET',
-    status: 200
+    method: "GET",
+    status: 200,
   },
   connectionsCreate: {
     path: /^\/api\/connections\/?$/,
-    method: 'POST',
-    status: 200
+    method: "POST",
+    status: 200,
   },
   connectionsUpdate: {
     path: /^\/api\/connections\/\d+\/?$/,
-    method: 'PATCH',
-    status: 200
+    method: "PATCH",
+    status: 200,
   },
   /** Create (POST /) or update (PATCH /:id) — not ping/credentials. */
   connectionsSave: {
     path: /^\/api\/connections(?:\/\d+)?\/?$/,
-    method: ['POST', 'PATCH'],
-    status: 200
+    method: ["POST", "PATCH"],
+    status: 200,
   },
   connectionsPing: {
     path: /^\/api\/connections\/ping\/?$/,
-    method: 'POST'
+    method: "POST",
   },
   connectionCredentials: {
     path: /^\/api\/connections\/\d+\/credentials\/?$/,
-    method: 'POST',
-    status: 200
+    method: "POST",
+    status: 200,
   },
   queryRaw: {
     path: /^\/api\/query\/raw\/?$/,
-    method: 'POST',
-    status: 200
+    method: "POST",
+    status: 200,
   },
   queryRun: {
     path: /^\/api\/query\/run\/?$/,
-    method: 'POST',
-    status: 200
+    method: "POST",
+    status: 200,
   },
   /** Data browser (`/run`) or SQL editor (`/raw`) fetch. */
   queryFetch: {
     path: /^\/api\/query\/(raw|run)\/?$/,
-    method: 'POST',
-    status: 200
+    method: "POST",
+    status: 200,
   },
   queryUpdate: {
     path: /^\/api\/query\/update\/?$/,
-    method: 'POST',
-    status: 200
+    method: "POST",
+    status: 200,
   },
   exportStart: {
     path: /^\/api\/export\/?$/,
-    method: 'POST',
-    status: 200
+    method: "POST",
+    status: 200,
   },
   importStart: {
     path: /^\/api\/import\/?$/,
-    method: 'POST',
-    status: 200
+    method: "POST",
+    status: 200,
   },
   jobDetail: {
     path: /^\/api\/jobs\/\d+\/?$/,
-    method: 'GET'
+    method: "GET",
   },
   savedList: {
     path: /^\/api\/saved\/?$/,
-    method: 'GET',
-    status: 200
+    method: "GET",
+    status: 200,
   },
   savedCreate: {
     path: /^\/api\/saved\/?$/,
-    method: 'POST',
-    status: 200
+    method: "POST",
+    status: 200,
   },
   historiesList: {
     path: /^\/api\/histories\/?$/,
-    method: 'GET',
-    status: 200
+    method: "GET",
+    status: 200,
   },
   objectPreview: {
-    path: /\/api\/tree\/[^/]+\/tabs\/[^/]+\/fields\/object\/preview\/?$/
+    path: /\/api\/tree\/[^/]+\/tabs\/[^/]+\/fields\/object\/preview\/?$/,
   },
   objectExecute: {
-    path: /\/api\/tree\/[^/]+\/tabs\/[^/]+\/fields\/object\/?$/
-  }
+    path: /\/api\/tree\/[^/]+\/tabs\/[^/]+\/fields\/object\/?$/,
+  },
+  schemaDiagram: {
+    path: /^\/api\/schema\/diagram\/?$/,
+    method: "GET",
+    status: 200,
+  },
 } as const satisfies Record<string, ApiMatch>;
 
 function pathnameOf(url: string): string {
@@ -139,10 +144,10 @@ export function matchApiResponse(response: Response, match: ApiMatch): boolean {
 export function pendingResponse(
   page: Page,
   match: ApiMatch,
-  timeout: number = API_TIMEOUT
+  timeout: number = API_TIMEOUT,
 ): Promise<Response> {
   return page.waitForResponse((response) => matchApiResponse(response, match), {
-    timeout
+    timeout,
   });
 }
 
@@ -155,7 +160,7 @@ export async function waitForResponseDuring(
   page: Page,
   match: ApiMatch,
   action: () => Promise<void>,
-  timeout: number = API_TIMEOUT
+  timeout: number = API_TIMEOUT,
 ): Promise<Response> {
   const pending = pendingResponse(page, match, timeout);
   await action();

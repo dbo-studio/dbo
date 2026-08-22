@@ -9,6 +9,7 @@ import * as job from './job';
 import * as mcp from './mcp';
 import * as query from './query';
 import * as savedQueries from './savedQuery';
+import * as schema from './schema';
 import * as tree from './tree';
 
 const api = {
@@ -23,7 +24,8 @@ const api = {
   ai,
   aiProvider,
   aiChat,
-  mcp
+  mcp,
+  schema
 };
 
 export default api;

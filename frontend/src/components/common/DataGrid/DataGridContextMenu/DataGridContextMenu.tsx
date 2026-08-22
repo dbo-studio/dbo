@@ -176,7 +176,7 @@ export default function DataGridContextMenu({ contextMenu, onClose, target }: Pr
 
     const newColumns = columns.map((c) => (c.name === focusedColumnName ? { ...c, isActive: false } : c));
     await updateColumns(newColumns);
-    updateTabColumns(newColumns.filter((c) => c.isActive !== false).map((c) => c.name));
+    updateTabColumns(newColumns.filter((c) => c.isActive).map((c) => c.name));
     toggleReRunQuery();
   };
 
@@ -252,16 +252,16 @@ export default function DataGridContextMenu({ contextMenu, onClose, target }: Pr
 
     menu = [
       {
-        name: locales.open_fields,
-        closeBeforeAction: true,
-        action: openFields
-      },
-      {
         name: locales.quick_look_editor,
         closeBeforeAction: true,
         action: (): void => {
           updateUI({ showQuickLookEditor: true });
         }
+      },
+      {
+        name: locales.open_fields,
+        closeBeforeAction: true,
+        action: openFields
       },
       { name: 'separator', separator: true },
       {
