@@ -19,6 +19,13 @@ func (r *BaseRepository) ImportData(ctx context.Context, job dto.ImportJob, rows
 	successRows := 0
 	failedRows := 0
 
+	quotedTable := r.quoteIdent(job.Table)
+	quotedColumns := make([]string, len(columns))
+	for i, col := range columns {
+		quotedColumns[i] = r.quoteIdent(col)
+	}
+	columnList := strings.Join(quotedColumns, ", ")
+
 	for _, row := range rows {
 		for i, value := range row {
 			row[i] = helper.FormatSQLValue(value)
@@ -26,9 +33,9 @@ func (r *BaseRepository) ImportData(ctx context.Context, job dto.ImportJob, rows
 	}
 
 	for i, row := range rows {
-		insertQuery := fmt.Sprintf(`INSERT INTO "%s" (%s) VALUES (%s)`,
-			job.Table,
-			strings.Join(columns, ", "),
+		insertQuery := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
+			quotedTable,
+			columnList,
 			strings.Join(row, ", "))
 
 		err := r.db.WithContext(ctx).Exec(insertQuery).Error
@@ -64,4 +71,15 @@ func (r *BaseRepository) ImportData(ctx context.Context, job dto.ImportJob, rows
 			"tableName": job.Table,
 		},
 	}, nil
+}
+
+func (r *BaseRepository) quoteIdent(name string) string {
+	switch r.Connection().ConnectionType {
+	case string(contract.Mysql):
+		return QuoteMySQLIdent(name)
+	case string(contract.Sqlite):
+		return QuoteSQLiteIdent(name)
+	default:
+		return QuotePGIdent(name)
+	}
 }

@@ -105,7 +105,7 @@ func (r *SQLiteRepository) buildSingleColumnDefinition(col dto.SQLiteTableColumn
 	dataType := lo.FromPtr(col.New.DataType)
 	def := fmt.Sprintf("%s %s", name, dataType)
 
-	if col.New.ColumnKind != nil && lo.FromPtr(col.New.ColumnKind) == "generated" {
+	if isGeneratedColumnKind(col.New.ColumnKind) {
 		return r.buildGeneratedColumnDefinition(def, col.New)
 	}
 
@@ -135,13 +135,29 @@ func (r *SQLiteRepository) buildGeneratedColumnDefinition(baseDef string, colDat
 		def += fmt.Sprintf(" (%s)", *colData.Default)
 	}
 
-	if colData.CollectionName != nil && *colData.CollectionName == "stored" {
+	if isStoredGeneratedColumn(colData) {
 		def += " STORED"
 	} else {
 		def += " VIRTUAL"
 	}
 
 	return def
+}
+
+func isGeneratedColumnKind(kind *string) bool {
+	switch strings.ToUpper(lo.FromPtr(kind)) {
+	case "GENERATED", "GENERATED_VIRTUAL", "GENERATED_STORED":
+		return true
+	default:
+		return false
+	}
+}
+
+func isStoredGeneratedColumn(colData *dto.SQLiteTableColumnData) bool {
+	if strings.EqualFold(lo.FromPtr(colData.ColumnKind), "GENERATED_STORED") {
+		return true
+	}
+	return colData.CollectionName != nil && *colData.CollectionName == "stored"
 }
 
 func (r *SQLiteRepository) buildForeignKeyDefinitions(foreignKeys []dto.SQLiteTableForeignKey) string {

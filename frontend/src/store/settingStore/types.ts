@@ -75,6 +75,6 @@ export type SidebarType = {
   rightWidth: number;
   showLeft: boolean;
   leftWidth: number;
-  /** 0 = Assistant, 1 = Fields */
+  /** 0 = Assistant, 1 = Fields (data) or Source (diagram) */
   rightSidebarTab: number;
 };

@@ -130,6 +130,7 @@ Components: `PascalCase`. Hooks/functions: `camelCase`. Colocate feature code un
 | `.cursor/rules/go-testing.mdc` | No new FE/BE unit tests — e2e only |
 | `.cursor/rules/go-tooling.mdc` | fmt, golangci-lint |
 | `.cursor/rules/e2e-qa.mdc` | Strict Playwright/QA rules (`e2e/**`) |
+| `.cursor/rules/e2e-host-os.mdc` | Run Playwright on the host OS, never in the Cursor sandbox |
 | `.cursor/skills/golang-development/SKILL.md` | Go development workflow skill |
 | `.cursor/skills/e2e-playwright/SKILL.md` | E2E QA / Playwright workflow skill |
 

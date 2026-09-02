@@ -54,17 +54,7 @@ func ApplyLimitOffset(sql string, limit, page int) LimitApplyResult {
 
 	stmtSQL := strings.TrimRight(strings.TrimSpace(parts[0]), ";")
 
-	stmt, err := sqlparser.Parse(stmtSQL)
-	if err != nil {
-		return LimitApplyResult{Query: sql}
-	}
-
-	selectStmt, ok := stmt.(*sqlparser.Select)
-	if !ok {
-		return LimitApplyResult{Query: sql}
-	}
-
-	if selectStmt.Limit != nil || rawLimitPattern.MatchString(stmtSQL) {
+	if !canInjectLimit(stmtSQL) {
 		return LimitApplyResult{Query: sql}
 	}
 
@@ -83,4 +73,106 @@ func ApplyLimitOffset(sql string, limit, page int) LimitApplyResult {
 		Query:     rewritten,
 		Paginated: true,
 	}
+}
+
+func canInjectLimit(sql string) bool {
+	if rawLimitPattern.MatchString(sql) {
+		return false
+	}
+
+	stmt, err := sqlparser.Parse(sql)
+	if err != nil {
+		return isWithSelect(sql)
+	}
+
+	selectStmt, ok := stmt.(*sqlparser.Select)
+	if !ok {
+		return false
+	}
+
+	return selectStmt.Limit == nil
+}
+
+// vitess-sqlparser does not accept WITH. Walk top-level tokens so we still
+// page CTE SELECTs and leave WITH ... INSERT/UPDATE/DELETE alone.
+func isWithSelect(sql string) bool {
+	trimmed := strings.TrimSpace(sql)
+	if len(trimmed) < 4 || !strings.EqualFold(trimmed[:4], "with") {
+		return false
+	}
+
+	depth := 0
+	for i := 0; i < len(trimmed); {
+		c := trimmed[i]
+		switch c {
+		case '\'', '"', '`':
+			i = skipQuoted(trimmed, i)
+			continue
+		case '(':
+			depth++
+		case ')':
+			if depth > 0 {
+				depth--
+			}
+		default:
+			if depth == 0 && isIdentStart(c) {
+				word, next := readWord(trimmed, i)
+				switch strings.ToLower(word) {
+				case "select":
+					return true
+				case "insert", "update", "delete":
+					return false
+				}
+
+				i = next
+				continue
+			}
+		}
+
+		i++
+	}
+
+	return false
+}
+
+func skipQuoted(s string, i int) int {
+	q := s[i]
+	i++
+
+	for i < len(s) {
+		if s[i] != q {
+			i++
+			continue
+		}
+
+		if i+1 < len(s) && s[i+1] == q {
+			i += 2
+			continue
+		}
+
+		return i + 1
+	}
+
+	return i
+}
+
+func isIdentStart(c byte) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
+}
+
+func readWord(s string, i int) (string, int) {
+	start := i
+	i++
+
+	for i < len(s) {
+		c := s[i]
+		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' {
+			i++
+			continue
+		}
+
+		break
+	}
+
+	return s[start:i], i
 }

@@ -12,11 +12,32 @@ import (
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/sqlguard"
 	"github.com/samber/lo"
+	"gorm.io/gorm"
 )
 
 func (r *BaseRepository) RunRawQuery(ctx context.Context, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
+	db := r.db
+	database := strings.TrimSpace(lo.FromPtr(req.Database))
+
+	if database != "" {
+		scoped, err := r.DBForDatabase(ctx, database)
+		if err != nil {
+			if isContextCancelErr(ctx, err) {
+				return nil, apperror.QueryCanceled()
+			}
+
+			return r.CommandResponseBuilder(&dto.RawQueryResponse{Query: req.Query}, 0, err), nil
+		}
+
+		db = scoped
+	}
+
+	return r.RunRawQueryOn(ctx, db, req)
+}
+
+func (r *BaseRepository) RunRawQueryOn(ctx context.Context, db *gorm.DB, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
 	startTime := time.Now()
-	result, err := runRawQuery(ctx, r, req)
+	result, err := runRawQuery(ctx, r, db, req)
 	endTime := time.Since(startTime)
 
 	if err != nil {
@@ -50,12 +71,12 @@ func isContextCancelErr(ctx context.Context, err error) bool {
 	return false
 }
 
-func runRawQuery(ctx context.Context, r *BaseRepository, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
+func runRawQuery(ctx context.Context, r *BaseRepository, db *gorm.DB, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
 	queryResults := make([]map[string]any, 0)
 
 	limit, _ := sqlguard.ResolveLimitPage(req.Limit, req.Page)
 
-	rows, err := r.db.WithContext(ctx).Raw(req.Query).Rows()
+	rows, err := db.WithContext(ctx).Raw(req.Query).Rows()
 	if err != nil {
 		return &dto.RawQueryResponse{
 			Query: req.Query,
@@ -89,7 +110,7 @@ func runRawQuery(ctx context.Context, r *BaseRepository, req *dto.RawQueryReques
 
 		var data map[string]any
 
-		err := r.db.WithContext(ctx).ScanRows(rows, &data)
+		err := db.WithContext(ctx).ScanRows(rows, &data)
 		if err != nil {
 			return nil, err
 		}

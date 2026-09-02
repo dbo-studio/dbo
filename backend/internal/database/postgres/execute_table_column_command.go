@@ -70,18 +70,21 @@ func (r *PostgresRepository) handleCreateColumn(node contract.DBNode, column dto
 		columnDef += " PRIMARY KEY"
 	}
 
-	if column.New.Default != nil {
+	isIdentity := lo.FromPtr(column.New.IsIdentity)
+	isGenerated := lo.FromPtr(column.New.IsGenerated)
+
+	// Generated / identity columns use the default field as the expression (or IDENTITY clause),
+	// not a plain DEFAULT — emitting both produces invalid SQL.
+	if !isGenerated && !isIdentity && column.New.Default != nil {
 		columnDef += fmt.Sprintf(" DEFAULT %s", *column.New.Default)
 	}
 
-	if lo.FromPtr(column.New.IsIdentity) {
+	if isIdentity {
 		columnDef += " GENERATED ALWAYS AS IDENTITY"
 	}
 
-	if lo.FromPtr(column.New.IsGenerated) {
-		if column.New.Default != nil {
-			columnDef += fmt.Sprintf(" GENERATED ALWAYS AS (%s) STORED", *column.New.Default)
-		}
+	if isGenerated && column.New.Default != nil && *column.New.Default != "" {
+		columnDef += fmt.Sprintf(" GENERATED ALWAYS AS (%s) STORED", *column.New.Default)
 	}
 
 	queries = append(queries, columnDef)

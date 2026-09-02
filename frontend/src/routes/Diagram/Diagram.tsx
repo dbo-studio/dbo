@@ -1,6 +1,7 @@
 'use no memo';
 
 import EmptyState from '@/components/base/EmptyState/EmptyState';
+import { openDiagramSourceSidebar } from '@/core/diagram/openDiagramSource';
 import { useCurrentConnection, useSelectedTab } from '@/hooks';
 import locales from '@/locales';
 import type { DiagramTabType } from '@/types/Tab';
@@ -80,6 +81,7 @@ function DiagramCanvas(): JSX.Element {
         onSearch={setSearchInput}
         onAutoLayout={autoLayout}
         onFit={fit}
+        onOpenSource={openDiagramSourceSidebar}
         onExportPng={(): void => {
           void exportImage('png');
         }}

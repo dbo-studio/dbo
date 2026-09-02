@@ -65,14 +65,12 @@ func connectionToResponse(ctx context.Context, ownerID string, cm *databaseConne
 
 func connectionInfo(connection *model.Connection) string {
 	switch connection.ConnectionType {
-	case "postgresql":
-		return fmt.Sprintf("%s | %s %s :  SQL Query", connection.Name, connection.ConnectionType, *connection.Version)
-	case "mysql":
-		return "mysql"
-	case "sqlite":
-		return fmt.Sprintf("%s | %s %s :  SQL Query", connection.Name, connection.ConnectionType, *connection.Version)
-	case "sqlserver":
-		return "sqlserver"
+	case "postgresql", "mysql", "sqlite", "sqlserver":
+		version := ""
+		if connection.Version != nil {
+			version = *connection.Version
+		}
+		return fmt.Sprintf("%s | %s %s :  SQL Query", connection.Name, connection.ConnectionType, version)
 	default:
 		return "unknown"
 	}

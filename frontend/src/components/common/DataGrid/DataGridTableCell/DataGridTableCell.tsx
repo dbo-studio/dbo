@@ -42,6 +42,7 @@ export const DataGridTableCell = memo(
     const displayValue = formatCellDisplayValue(value, column);
     const editorString = valueToEditorString(value);
     const isFkPicker = isForeignKeyPickerColumn(column);
+    const cellTestId = isFkPicker ? 'grid-cell-fk-value' : 'grid-cell';
     const [fkLookupOpen, setFkLookupOpen] = useState(false);
     const skipFkInputBlurRef = useRef(false);
 
@@ -207,7 +208,7 @@ export const DataGridTableCell = memo(
 
       if (isFkPicker) {
         return (
-          <CellContainer className={cellClassName} data-testid='grid-cell'>
+          <CellContainer className={cellClassName} data-testid={cellTestId}>
             <FkCellView>
               <CellInput
                 ref={inputRef}
@@ -303,7 +304,7 @@ export const DataGridTableCell = memo(
       );
 
     return (
-      <CellContainer onClick={handleCellClick} className={cellClassName} data-testid='grid-cell'>
+      <CellContainer onClick={handleCellClick} className={cellClassName} data-testid={cellTestId}>
         <CellContent title={isComplex ? displayValue : editorString}>{content}</CellContent>
       </CellContainer>
     );

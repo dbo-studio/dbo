@@ -9,6 +9,7 @@ type Props = {
   onSearch: (value: string) => void;
   onAutoLayout: () => void;
   onFit: () => void;
+  onOpenSource: () => void;
   onExportPng: () => void;
   onExportSvg: () => void;
 };
@@ -18,6 +19,7 @@ export default function DiagramToolbar({
   onSearch,
   onAutoLayout,
   onFit,
+  onOpenSource,
   onExportPng,
   onExportSvg
 }: Props): JSX.Element {
@@ -65,6 +67,11 @@ export default function DiagramToolbar({
       <Tooltip title={locales.diagram_fit}>
         <IconButton size='small' onClick={onFit} data-testid='diagram-fit'>
           <CustomIcon type='fit' />
+        </IconButton>
+      </Tooltip>
+      <Tooltip title={locales.diagram_open_source}>
+        <IconButton size='small' onClick={onOpenSource} data-testid='diagram-open-source'>
+          <CustomIcon type='code' />
         </IconButton>
       </Tooltip>
       <ToolbarSpacerStyled />

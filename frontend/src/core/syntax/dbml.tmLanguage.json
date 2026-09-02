@@ -1,0 +1,190 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "dbml",
+  "scopeName": "source.dbml",
+  "fileTypes": [
+    "dbml"
+  ],
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#funcexpr"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#colors"
+    },
+    {
+      "include": "#attributes-list"
+    },
+    {
+      "include": "#alias-keyword"
+    },
+    {
+      "include": "#declaration-keyword-with-name"
+    },
+    {
+      "include": "#declaration-keywords"
+    },
+    {
+      "include": "#builtin-types"
+    },
+    {
+      "include": "#relationship-ops"
+    },
+    {
+      "include": "#punctuation"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.dbml",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.dbml",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.triple.dbml",
+          "begin": "'''",
+          "end": "'''"
+        },
+        {
+          "name": "string.quoted.single.dbml",
+          "begin": "'",
+          "end": "'|$"
+        },
+        {
+          "name": "string.quoted.double.dbml",
+          "begin": "\"",
+          "end": "\"|$"
+        }
+      ]
+    },
+    "funcexpr": {
+      "name": "string.interpolated.dbml",
+      "begin": "`",
+      "end": "`"
+    },
+    "numbers": {
+      "name": "constant.numeric.dbml",
+      "match": "\\b-?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?\\b"
+    },
+    "colors": {
+      "name": "constant.other.color.dbml",
+      "match": "#[0-9a-fA-F]{3,8}\\b"
+    },
+    "declaration-keywords": {
+      "name": "keyword.control.declaration.dbml",
+      "match": "\\b(Table|TablePartial|Enum|Ref|Note|Project|TableGroup|indexes|records)\\b"
+    },
+    "declaration-keyword-with-name": {
+      "match": "\\b(Ref)\\s+([A-Za-z_][A-Za-z0-9_]*)\\b",
+      "captures": {
+        "1": {
+          "name": "keyword.control.declaration.dbml"
+        },
+        "2": {
+          "name": "entity.name.ref.dbml"
+        }
+      }
+    },
+    "alias-keyword": {
+      "match": "\\b(as)\\s+([A-Za-z_][A-Za-z0-9_]*)\\b",
+      "captures": {
+        "1": {
+          "name": "keyword.control.alias.dbml"
+        },
+        "2": {
+          "name": "entity.name.alias.dbml"
+        }
+      }
+    },
+    "builtin-types": {
+      "name": "support.type.builtin.dbml",
+      "match": "\\b(int|integer|bigint|smallint|tinyint|decimal|numeric|float|double|real|boolean|bool|char|varchar|text|mediumtext|longtext|binary|varbinary|blob|bytea|date|time|datetime|timestamp|timestamptz|json|jsonb|uuid)\\b"
+    },
+    "relationship-ops": {
+      "name": "keyword.operator.relationship.dbml",
+      "match": "<>|>|<|(?<![\\w])-(?![\\w])"
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.accessor.dbml",
+          "match": "\\."
+        },
+        {
+          "name": "punctuation.separator.comma.dbml",
+          "match": ","
+        },
+        {
+          "name": "punctuation.separator.colon.dbml",
+          "match": ":"
+        },
+        {
+          "name": "punctuation.terminator.dbml",
+          "match": ";"
+        }
+      ]
+    },
+    "attributes-list": {
+      "name": "meta.attribute-list.dbml",
+      "begin": "\\[",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.section.brackets.begin.dbml"
+        }
+      },
+      "end": "\\]",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.section.brackets.end.dbml"
+        }
+      },
+      "patterns": [
+        {
+          "match": "\\b(primary\\s+key|not\\s+null|pk|unique|null|increment|default|note|ref|headercolor|delete|update)\\b",
+          "name": "variable.parameter.attribute.dbml"
+        },
+        {
+          "include": "#strings"
+        },
+        {
+          "include": "#funcexpr"
+        },
+        {
+          "include": "#numbers"
+        },
+        {
+          "include": "#colors"
+        },
+        {
+          "include": "#relationship-ops"
+        },
+        {
+          "include": "#punctuation"
+        },
+        {
+          "match": "\\b([A-Za-z_][A-Za-z0-9_]*)\\b",
+          "name": "variable.other.dbml"
+        }
+      ]
+    }
+  }
+}
