@@ -14,6 +14,8 @@ export const MYSQL_LIFECYCLE_FIELDS = {
   fkSourceColumns: 'ref_columns',
   fkTargetTable: 'target_table',
   fkTargetColumns: 'target_columns',
+  fkOnUpdate: 'update_action',
+  fkOnDelete: 'delete_action',
   indexName: 'index_name',
   indexColumns: 'ref_columns',
   viewName: 'name',
@@ -44,6 +46,9 @@ export const MYSQL_LIFECYCLE_PREVIEW = {
   commentOnColumn: /COMMENT/i,
   dropColumn: /DROP COLUMN/i,
   dropForeignKey: /DROP FOREIGN KEY/i,
+  addForeignKey: /ADD CONSTRAINT[\s\S]*FOREIGN KEY[\s\S]*ON UPDATE CASCADE[\s\S]*ON DELETE CASCADE|ADD FOREIGN KEY[\s\S]*ON UPDATE CASCADE[\s\S]*ON DELETE CASCADE/i,
+  // MySQL edits FK by DROP + ADD (rename / recreate with new actions).
+  editForeignKey: /DROP FOREIGN KEY[\s\S]*ADD CONSTRAINT[\s\S]*FOREIGN KEY|DROP FOREIGN KEY[\s\S]*ADD FOREIGN KEY/i,
   renameTable: /RENAME TO/i,
   commentOnTable: /COMMENT\s*=/i,
   modifyColumn: /MODIFY COLUMN/i,

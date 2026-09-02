@@ -71,6 +71,7 @@ export class SafeModePage extends BasePage {
       () => this.option(mode).click(),
     );
     await this.expectModeUpdated();
+    await expect(this.option(mode)).toHaveCount(0, { timeout: 10000 });
   }
 
   /**

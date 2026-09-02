@@ -44,6 +44,24 @@ export async function editTableSetDefault(
   await objectForm.confirmExecute();
 }
 
+export async function editTableChangeColumnType(
+  page: Page,
+  tableName: string,
+  columnRowIndex: number,
+  dataType: string,
+): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.columns);
+  await objectForm.selectArrayCellOption(
+    columnRowIndex,
+    F.columnType,
+    dataType,
+  );
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.alterColumnType);
+  await objectForm.confirmExecute();
+}
+
 export async function editTableDropForeignKey(
   page: Page,
   tableName: string,
@@ -72,8 +90,58 @@ export async function editTableAddForeignKey(
   await objectForm.selectArrayCellOption(fkRowIndex, F.fkTargetTable, usersTable);
   await objectForm.selectMultiSelectOptions(fkRowIndex, F.fkSourceColumns, ["user_id"]);
   await objectForm.selectMultiSelectOptions(fkRowIndex, F.fkTargetColumns, ["id"]);
+  await objectForm.selectArrayCellOption(fkRowIndex, F.fkOnUpdate, "CASCADE");
+  await objectForm.selectArrayCellOption(fkRowIndex, F.fkOnDelete, "CASCADE");
   await objectForm.save();
   await objectForm.assertPreviewContains(P.addForeignKey);
+  await objectForm.confirmExecute();
+}
+
+export async function editTableEditForeignKey(
+  page: Page,
+  tableName: string,
+  opts: {
+    fkRowIndex?: number;
+    newFkName: string;
+    onUpdate?: string;
+    onDelete?: string;
+    deferrable?: boolean;
+  },
+): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  const fkRowIndex = opts.fkRowIndex ?? 0;
+  await objectForm.selectTab(T.foreignKeys);
+  await objectForm.fillArrayCell(fkRowIndex, F.fkName, opts.newFkName);
+  if (opts.onUpdate) {
+    await objectForm.selectArrayCellOption(
+      fkRowIndex,
+      F.fkOnUpdate,
+      opts.onUpdate,
+    );
+  }
+  if (opts.onDelete) {
+    await objectForm.selectArrayCellOption(
+      fkRowIndex,
+      F.fkOnDelete,
+      opts.onDelete,
+    );
+  }
+  if (opts.deferrable !== undefined) {
+    await objectForm.toggleArrayCheckbox(
+      fkRowIndex,
+      F.fkDeferrable,
+      opts.deferrable,
+    );
+  }
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.editForeignKey);
+  await objectForm.assertPreviewContains(opts.newFkName);
+  if (opts.onDelete) {
+    await objectForm.assertPreviewContains(opts.onDelete);
+  }
+  if (opts.deferrable) {
+    await objectForm.assertPreviewContains(P.deferrableForeignKey);
+  }
   await objectForm.confirmExecute();
 }
 

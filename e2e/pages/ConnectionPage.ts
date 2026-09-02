@@ -67,6 +67,14 @@ export class ConnectionPage extends BasePage {
     return this.page.getByRole("heading", { name: new RegExp(name, "i") });
   }
 
+  async expectConnectionActive(name: string): Promise<void> {
+    await expect(this.getConnectionItem(name)).toBeVisible();
+    await this.waitForConnectionActive();
+    await expect(
+      this.page.getByRole("heading", { name: /^No active connection$/i }),
+    ).toHaveCount(0);
+  }
+
   async connectionExists(name: string): Promise<boolean> {
     return await this.getConnectionItem(name)
       .isVisible()
@@ -253,7 +261,7 @@ export class ConnectionPage extends BasePage {
   }
 
   async waitForConnectionActive(): Promise<void> {
-    await expect(this.page.getByRole("button", { name: "sql" })).toBeEnabled({
+    await expect(this.page.getByRole("button", { name: "sql", exact: true })).toBeEnabled({
       timeout: 30000,
     });
     await expect(this.page.getByRole("treeitem").first()).toBeVisible({
@@ -364,7 +372,24 @@ export class ConnectionPage extends BasePage {
     const target = this.getConnectionItem(targetName);
     await expect(source).toBeVisible();
     await expect(target).toBeVisible();
-    await source.dragTo(target);
+
+    const sourceBox = await source.boundingBox();
+    const targetBox = await target.boundingBox();
+    if (!sourceBox || !targetBox) {
+      throw new Error("connection items have no bounding box");
+    }
+
+    const startX = sourceBox.x + sourceBox.width / 2;
+    const startY = sourceBox.y + sourceBox.height / 2;
+    const endX = targetBox.x + targetBox.width / 2;
+    const endY = targetBox.y + targetBox.height / 2;
+
+    await this.page.mouse.move(startX, startY);
+    await this.page.mouse.down();
+    // PointerSensor activationDistance is 8px; a single dragTo jump does not activate.
+    await this.page.mouse.move(startX, startY + 16, { steps: 4 });
+    await this.page.mouse.move(endX, endY, { steps: 12 });
+    await this.page.mouse.up();
   }
 
   getConnectionItems(): Locator {

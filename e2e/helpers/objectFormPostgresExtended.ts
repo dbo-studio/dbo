@@ -294,6 +294,70 @@ export async function editTableDropForeignKey(page: Page, tableName: string, fkR
   await objectForm.confirmExecute();
 }
 
+export async function editTableAddForeignKey(
+  page: Page,
+  tableName: string,
+  usersTable: string,
+  fkName: string
+): Promise<void> {
+  const tree = new ObjectTreePage(page);
+  const objectForm = new ObjectFormPage(page);
+
+  await tree.runTreeAction(tableName, 'Edit table');
+  await objectForm.waitForReady();
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
+  await objectForm.waitForReady();
+  await objectForm.selectTab(T.foreignKeys);
+  const existingRows = await page.getByTestId(/^object-form-delete-row-/).count();
+  await objectForm.addRow();
+  const fkRowIndex = existingRows;
+  await objectForm.fillArrayCell(fkRowIndex, F.fkName, fkName);
+  await objectForm.selectArrayCellOption(fkRowIndex, F.fkTargetTable, usersTable);
+  await objectForm.selectMultiSelectOptions(fkRowIndex, F.fkSourceColumns, ['user_id']);
+  await objectForm.selectMultiSelectOptions(fkRowIndex, F.fkTargetColumns, ['id']);
+  await objectForm.selectArrayCellOption(fkRowIndex, F.fkOnUpdate, 'CASCADE');
+  await objectForm.selectArrayCellOption(fkRowIndex, F.fkOnDelete, 'CASCADE');
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.addForeignKey);
+  await objectForm.assertPreviewContains(usersTable);
+  await objectForm.confirmExecute();
+}
+
+export async function editTableEditForeignKey(
+  page: Page,
+  tableName: string,
+  opts: {
+    fkRowIndex?: number;
+    newFkName: string;
+    onUpdate?: string;
+    onDelete?: string;
+  }
+): Promise<void> {
+  const tree = new ObjectTreePage(page);
+  const objectForm = new ObjectFormPage(page);
+  const fkRowIndex = opts.fkRowIndex ?? 0;
+
+  await tree.runTreeAction(tableName, 'Edit table');
+  await objectForm.waitForReady();
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
+  await objectForm.waitForReady();
+  await objectForm.selectTab(T.foreignKeys);
+  await objectForm.fillArrayCell(fkRowIndex, F.fkName, opts.newFkName);
+  // PostgreSQL supports RENAME CONSTRAINT; ON UPDATE/DELETE changes require DROP+ADD (not covered here).
+  if (opts.onUpdate) {
+    await objectForm.selectArrayCellOption(fkRowIndex, F.fkOnUpdate, opts.onUpdate);
+  }
+  if (opts.onDelete) {
+    await objectForm.selectArrayCellOption(fkRowIndex, F.fkOnDelete, opts.onDelete);
+  }
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.editForeignKey);
+  await objectForm.assertPreviewContains(opts.newFkName);
+  await objectForm.confirmExecute();
+}
+
 export async function editTableDropColumn(page: Page, tableName: string, columnRowIndex: number): Promise<void> {
   const tree = new ObjectTreePage(page);
   const objectForm = new ObjectFormPage(page);

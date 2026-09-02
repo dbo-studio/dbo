@@ -218,8 +218,13 @@ export class DataGridPage extends BasePage {
   async openFkLookupInRow(rowText: string, fkCellText: string): Promise<Locator> {
     const row = this.grid.locator("tbody tr").filter({ hasText: rowText }).first();
     await expect(row).toBeVisible({ timeout: 15000 });
-    const cell = row.getByTestId("grid-cell").filter({ hasText: fkCellText }).first();
+    // PK id and FK columns often share the same display value (e.g. both "1").
+    const cell = row
+      .getByTestId("grid-cell-fk-value")
+      .filter({ has: this.page.getByText(fkCellText, { exact: true }) })
+      .first();
     await expect(cell).toBeVisible({ timeout: 5000 });
+    await cell.scrollIntoViewIfNeeded();
     await cell.click({ clickCount: 2, delay: 40 });
     const button = row.getByTestId("grid-fk-lookup-button").first();
     await expect(button).toBeVisible({ timeout: 5000 });
@@ -443,15 +448,16 @@ export class DataGridPage extends BasePage {
   }
 
   async closeContextMenu(): Promise<void> {
-    const menus = this.page.getByRole("menu");
-    if ((await menus.count()) === 0) {
+    const item = this.page.getByTestId(/^context-menu-item-/).first();
+    if (!(await item.isVisible().catch(() => false))) {
       return;
     }
-    await this.page.keyboard.press("Escape");
-    if ((await menus.count()) > 0) {
+    // MUI Menu backdrop is often opacity:0, so isVisible() is false — still click it.
+    await this.page.locator(".MuiBackdrop-root").last().click({ force: true }).catch(() => undefined);
+    if (await item.isVisible().catch(() => false)) {
       await this.page.keyboard.press("Escape");
     }
-    await expect(menus).toHaveCount(0, { timeout: 5000 });
+    await expect(item).toBeHidden({ timeout: 5000 });
   }
 
   async expectCopiedToast(): Promise<void> {

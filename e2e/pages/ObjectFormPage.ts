@@ -178,6 +178,21 @@ export class ObjectFormPage extends BasePage {
     }
   }
 
+  async toggleGeneralCheckbox(
+    fieldId: string,
+    checked = true,
+  ): Promise<void> {
+    const field = this.getGeneralField(fieldId);
+    const checkbox = field.locator('input[type="checkbox"]');
+    await expect(checkbox).toBeVisible({ timeout: 30000 });
+    const isChecked = await checkbox.isChecked();
+
+    if (isChecked !== checked) {
+      await checkbox.click();
+      await this.wait(200);
+    }
+  }
+
   async fillGeneralQueryField(fieldId: string, sql: string): Promise<void> {
     await this.fillQueryFieldViaStore(fieldId, sql);
   }

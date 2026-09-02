@@ -61,4 +61,24 @@ export class DiagramPage extends BasePage {
     await this.page.getByTestId("diagram-export").click();
     await this.page.getByTestId("diagram-export-png").click();
   }
+
+  get sourceTab(): Locator {
+    return this.page.getByRole("tab", { name: /^source$/i });
+  }
+
+  get sourcePanel(): Locator {
+    return this.page.getByTestId("diagram-source");
+  }
+
+  get sourceDbml(): Locator {
+    return this.page.getByTestId("diagram-source-dbml");
+  }
+
+  async openSourcePanel(): Promise<void> {
+    await this.page.getByTestId("diagram-open-source").click();
+    await expect(this.sourceTab).toBeVisible({ timeout: 15000 });
+    await expect(this.sourceTab).toHaveAttribute("aria-selected", "true");
+    await expect(this.sourcePanel).toBeVisible({ timeout: 15000 });
+    await expect(this.sourceDbml).toBeVisible({ timeout: 15000 });
+  }
 }

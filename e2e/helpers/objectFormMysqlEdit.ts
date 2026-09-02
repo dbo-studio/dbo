@@ -70,6 +70,70 @@ export async function editTableDropForeignKey(
   await objectForm.confirmExecute();
 }
 
+export async function editTableAddForeignKey(
+  page: Page,
+  tableName: string,
+  usersTable: string,
+  fkName: string,
+): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.foreignKeys);
+  const existingRows = await page.getByTestId(/^object-form-delete-row-/).count();
+  await objectForm.addRow();
+  const fkRowIndex = existingRows;
+  await objectForm.fillArrayCell(fkRowIndex, F.fkName, fkName);
+  await objectForm.selectArrayCellOption(fkRowIndex, F.fkTargetTable, usersTable);
+  await objectForm.selectMultiSelectOptions(fkRowIndex, F.fkSourceColumns, [
+    "user_id",
+  ]);
+  await objectForm.selectMultiSelectOptions(fkRowIndex, F.fkTargetColumns, [
+    "id",
+  ]);
+  await objectForm.selectArrayCellOption(fkRowIndex, F.fkOnUpdate, "CASCADE");
+  await objectForm.selectArrayCellOption(fkRowIndex, F.fkOnDelete, "CASCADE");
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.addForeignKey);
+  await objectForm.assertPreviewContains(usersTable);
+  await objectForm.confirmExecute();
+}
+
+export async function editTableEditForeignKey(
+  page: Page,
+  tableName: string,
+  opts: {
+    fkRowIndex?: number;
+    newFkName: string;
+    onUpdate?: string;
+    onDelete?: string;
+  },
+): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  const fkRowIndex = opts.fkRowIndex ?? 0;
+  await objectForm.selectTab(T.foreignKeys);
+  await objectForm.fillArrayCell(fkRowIndex, F.fkName, opts.newFkName);
+  if (opts.onUpdate) {
+    await objectForm.selectArrayCellOption(
+      fkRowIndex,
+      F.fkOnUpdate,
+      opts.onUpdate,
+    );
+  }
+  if (opts.onDelete) {
+    await objectForm.selectArrayCellOption(
+      fkRowIndex,
+      F.fkOnDelete,
+      opts.onDelete,
+    );
+  }
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.editForeignKey);
+  await objectForm.assertPreviewContains(opts.newFkName);
+  if (opts.onDelete) {
+    await objectForm.assertPreviewContains(opts.onDelete);
+  }
+  await objectForm.confirmExecute();
+}
+
 export async function editTableDropColumn(
   page: Page,
   tableName: string,
@@ -171,6 +235,25 @@ export async function editTableDropIndex(
   await objectForm.deleteArrayRow(indexRowIndex);
   await objectForm.save();
   await objectForm.assertPreviewContains(P.dropIndex);
+  await objectForm.confirmExecute();
+}
+
+export async function editTableAddIndex(
+  page: Page,
+  tableName: string,
+  indexName: string,
+  columns: string[],
+): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.indexes);
+  const existingRows = await page.getByTestId(/^object-form-delete-row-/).count();
+  await objectForm.addRow();
+  const rowIndex = existingRows;
+  await objectForm.fillArrayCell(rowIndex, F.indexName, indexName);
+  await objectForm.selectMultiSelectOptions(rowIndex, F.indexColumns, columns);
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.createIndex);
+  await objectForm.assertPreviewContains(indexName);
   await objectForm.confirmExecute();
 }
 

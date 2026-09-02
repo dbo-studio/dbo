@@ -2,7 +2,11 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import type { Page } from "@playwright/test";
-import { getDbConfig } from "../fixtures/dbConfigs";
+import { type DbEngine, getDbConfig } from "../fixtures/dbConfigs";
+import {
+  ensureSqliteDbFile,
+  removeSqliteDbFile,
+} from "./objectFormSqliteLifecycle";
 import {
   ConnectionPage,
   DataBrowserPage,
@@ -56,10 +60,24 @@ export function createImportExportTmpDir(suffix: string): ImportExportTmpDir {
   };
 }
 
+/** @deprecated Prefer treePathForEngine */
 export function treePath(
   connectionName: string,
 ): readonly [string, string, string] {
   return [connectionName, "default", "public"] as const;
+}
+
+export function treePathForEngine(
+  engine: DbEngine,
+  connectionName: string,
+): string[] {
+  if (engine === "postgresql") {
+    return [connectionName, "default", "public"];
+  }
+  if (engine === "mysql") {
+    return [connectionName, "default"];
+  }
+  return [connectionName];
 }
 
 function buildSetupSql(names: ImportExportSetupNames): string {
@@ -104,27 +122,47 @@ export interface ImportExportPages {
   sqlEditor: SqlEditorPage;
   dataBrowser: DataBrowserPage;
   dataGrid: DataGridPage;
+  sqliteDbPath?: string;
 }
 
-export async function setupPostgresImportExport(
+export async function setupImportExport(
   page: Page,
   names: ImportExportSetupNames,
+  engine: DbEngine = "postgresql",
 ): Promise<ImportExportPages> {
   const connectionPage = new ConnectionPage(page);
   const sqlEditor = new SqlEditorPage(page);
   const dataBrowser = new DataBrowserPage(page);
   const dataGrid = new DataGridPage(page);
 
+  let sqliteDbPath: string | undefined;
+  if (engine === "sqlite") {
+    sqliteDbPath = `/tmp/dbo-e2e-ie-${names.connectionName}.db`;
+    ensureSqliteDbFile(sqliteDbPath);
+  }
+
   await connectionPage.goto();
   await connectionPage.waitForReady();
   await connectionPage.setupConnection(
-    getDbConfig("postgresql", names.connectionName),
+    getDbConfig(engine, names.connectionName, sqliteDbPath),
   );
   await sqlEditor.open();
-  await sqlEditor.selectContext("default", "public");
+  if (engine === "postgresql") {
+    await sqlEditor.selectContext("default", "public");
+  } else if (engine === "mysql") {
+    await sqlEditor.selectContext("default");
+  }
   await sqlEditor.typeAndRun(buildSetupSql(names));
 
-  return { connectionPage, sqlEditor, dataBrowser, dataGrid };
+  return { connectionPage, sqlEditor, dataBrowser, dataGrid, sqliteDbPath };
+}
+
+/** @deprecated Prefer setupImportExport(..., 'postgresql') */
+export async function setupPostgresImportExport(
+  page: Page,
+  names: ImportExportSetupNames,
+): Promise<ImportExportPages> {
+  return setupImportExport(page, names, "postgresql");
 }
 
 export async function dropTables(
@@ -138,4 +176,10 @@ export async function dropTables(
   await sqlEditor.typeAndRun(
     tableNames.map((table) => `DROP TABLE IF EXISTS ${table};`).join("\n"),
   );
+}
+
+export function cleanupImportExportSqlite(pages: ImportExportPages): void {
+  if (pages.sqliteDbPath) {
+    removeSqliteDbFile(pages.sqliteDbPath);
+  }
 }
