@@ -25,7 +25,7 @@ export default function ConnectionItem({
   }, [contextMenuPosition, onClick]);
 
   return (
-    <Box onContextMenu={handleContextMenu} width='100%'>
+    <Box onContextMenu={handleContextMenu} sx={{ width: '100%' }}>
       <SortableItem id={String(connection.id)} onClick={handleClick}>
         <ConnectionItemStyled data-testid={`connection-item-${connection.name}`} selected={selected}>
           <CustomIcon type={connection.isOpen ? 'databaseZap' : 'database'} size='m' />
