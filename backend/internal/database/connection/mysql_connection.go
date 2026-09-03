@@ -6,11 +6,13 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	sqlmysql "github.com/go-sql-driver/mysql"
 	"github.com/goccy/go-json"
 	"github.com/invopop/validation"
 	"github.com/samber/lo"
@@ -104,18 +106,28 @@ func OpenMysqlConnection(connection *model.Connection) gorm.Dialector {
 		return mysql.Open(uri)
 	}
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
-		options.Username,
-		lo.FromPtr(options.Password),
-		options.Host,
-		strconv.Itoa(int(options.Port)),
-		lo.FromPtr(options.Database),
-	)
+	// Build via go-sql-driver Config + FormatDSN so a password containing
+	// spaces, quotes or @ cannot inject or corrupt other DSN keys.
+	cfg := sqlmysql.Config{
+		User:                 options.Username,
+		Passwd:               lo.FromPtr(options.Password),
+		Net:                  "tcp",
+		Addr:                 fmt.Sprintf("%s:%s", options.Host, strconv.Itoa(int(options.Port))),
+		DBName:               lo.FromPtr(options.Database),
+		ParseTime:            true,
+		Loc:                  time.Local,
+		AllowNativePasswords: true,
+		Params:               map[string]string{"charset": "utf8"},
+	}
 
-	dsn, err = appendMysqlTLSQuery(dsn, options.SSL, options.Host)
-	if err != nil {
+	dsn := cfg.FormatDSN()
+
+	dsnWithTLS, tlsErr := appendMysqlTLSQuery(dsn, options.SSL, options.Host)
+	if tlsErr != nil {
 		return nil
 	}
+
+	dsn = dsnWithTLS
 
 	return mysql.New(mysql.Config{
 		DSN: dsn,

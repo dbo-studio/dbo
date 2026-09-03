@@ -2,8 +2,10 @@ package serviceConfig
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/pkg/cache"
 )
 
@@ -14,9 +16,13 @@ func (i IConfigServiceImpl) Index(ctx context.Context) (*dto.ConfigListResponse,
 	}
 
 	go func() {
-		_, err := i.CheckUpdate(ctx)
-		if err != nil {
-			return
+		// Detach from the request context: Index returns long before the
+		// update check finishes, and canceling with it would abort the
+		// cache write mid-flight.
+		ctx := context.WithoutCancel(ctx)
+
+		if _, err := i.CheckUpdate(ctx); err != nil {
+			container.Instance().Logger().Error(fmt.Errorf("background update check failed: %w", err))
 		}
 	}()
 

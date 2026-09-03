@@ -44,10 +44,8 @@ func (p *ExportProcessor) GetType() model.JobType {
 	return model.JobTypeExport
 }
 
-func (p *ExportProcessor) Process(job *model.Job) error {
-	rawCtx := context.Background()
-
-	if job.Status == model.JobStatusCancelled {
+func (p *ExportProcessor) Process(ctx context.Context, job *model.Job) error {
+	if ctx.Err() != nil || job.Status == model.JobStatusCancelled {
 		return fmt.Errorf("job was canceled")
 	}
 
@@ -57,7 +55,7 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 	}
 
 	ownerID := jobData.OwnerID
-	ctx := helper.CtxWithOwnerID(rawCtx, ownerID)
+	ctx = helper.CtxWithOwnerID(ctx, ownerID)
 
 	connection, err := p.connectionRepo.Find(ctx, jobData.ConnectionID)
 	if err != nil {
@@ -79,12 +77,12 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 		return err
 	}
 
-	err = p.jobManager.UpdateJobProgress(job, 10, "Connected to database")
+	err = p.jobManager.UpdateJobProgress(ctx, job, 10, "Connected to database")
 	if err != nil {
 		return err
 	}
 
-	err = p.jobManager.UpdateJobProgress(job, 20, "Executing query")
+	err = p.jobManager.UpdateJobProgress(ctx, job, 20, "Executing query")
 	if err != nil {
 		return err
 	}
@@ -101,7 +99,7 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 		return fmt.Errorf("no result found for query %s", jobData.Query)
 	}
 
-	err = p.jobManager.UpdateJobProgress(job, 50, fmt.Sprintf("Found %d rows to export", len(result.Data)))
+	err = p.jobManager.UpdateJobProgress(ctx, job, 50, fmt.Sprintf("Found %d rows to export", len(result.Data)))
 	if err != nil {
 		return fmt.Errorf("failed to update progress: %w", err)
 	}
@@ -136,7 +134,7 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 		filePath = filepath.Join(exportDir, fileName)
 	}
 
-	err = p.jobManager.UpdateJobProgress(job, 70, "Creating export file")
+	err = p.jobManager.UpdateJobProgress(ctx, job, 70, "Creating export file")
 	if err != nil {
 		return err
 	}
@@ -155,6 +153,10 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 		return fmt.Errorf("unsupported format: %s", jobData.Format)
 	}
 
+	if ctx.Err() != nil {
+		return fmt.Errorf("job was canceled")
+	}
+
 	if err := os.WriteFile(filePath, fileContent, 0644); err != nil {
 		return fmt.Errorf("failed to write export file: %w", err)
 	}
@@ -164,7 +166,7 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 		return fmt.Errorf("failed to get file info: %w", err)
 	}
 
-	err = p.jobManager.UpdateJobProgress(job, 100, "Export completed successfully")
+	err = p.jobManager.UpdateJobProgress(ctx, job, 100, "Export completed successfully")
 	if err != nil {
 		return fmt.Errorf("failed to update progress: %w", err)
 	}

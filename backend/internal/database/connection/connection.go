@@ -61,27 +61,58 @@ func NewConnectionManager(historyRepo HistoryWriter, secrets secretStore.ISecret
 	return cm
 }
 
-func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *model.Connection, withHydration bool) (*gorm.DB, error) {
-	cm.mu.Lock()
-	defer cm.mu.Unlock()
+// pingCached pings an existing entry outside the manager mutex: a slow or
+// hung database host must not block every other connection operation.
+// Returns true if the entry is still healthy.
+func (cm *ConnectionManager) pingCached(ctx context.Context, entry *conn) bool {
+	sqlDB, err := entry.DB.DB()
+	if err != nil {
+		return false
+	}
 
+	if err := sqlDB.PingContext(ctx); err != nil {
+		return false
+	}
+
+	cm.mu.Lock()
+	entry.LastUsed = time.Now()
+	cm.mu.Unlock()
+
+	return true
+}
+
+// dropIfCurrent removes a dead entry from the map only if it is still the one
+// we probed, so a concurrent reconnect is never deleted by mistake.
+func (cm *ConnectionManager) dropIfCurrent(key connKey, entry *conn) {
+	cm.mu.Lock()
+	if cur, ok := cm.connections[key]; ok && cur == entry {
+		delete(cm.connections, key)
+		cm.mu.Unlock()
+		_ = cm.closeConn(entry)
+
+		return
+	}
+	cm.mu.Unlock()
+}
+
+func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *model.Connection, withHydration bool) (*gorm.DB, error) {
 	ownerID := helper.CtxOwnerID(ctx)
 	key := connKey{OwnerID: ownerID, ConnectionID: connection.ID}
 
-	if conn, exists := cm.connections[key]; exists {
-		db, err := conn.DB.DB()
-		if err == nil {
-			if err := db.PingContext(ctx); err == nil {
-				conn.LastUsed = time.Now()
-				return conn.DB, nil
-			}
-		}
+	cm.mu.Lock()
+	entry, exists := cm.connections[key]
+	cm.mu.Unlock()
 
-		delete(cm.connections, key)
-		_ = cm.closeConn(conn)
+	if exists && cm.pingCached(ctx, entry) {
+		return entry.DB, nil
 	}
 
-	// Ensure connection has password when needed.
+	if exists {
+		cm.dropIfCurrent(key, entry)
+	}
+
+	// Hydration and the actual connect happen without holding cm.mu — a hung
+	// host must not serialize every other connection operation.
 	if cm.secrets != nil && withHydration {
 		if err := secretStore.HydrateConnectionPassword(ctx, cm.secrets, ownerID, connection); err != nil {
 			return nil, err
@@ -109,19 +140,44 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 		return nil, apperror.DriverError(err)
 	}
 
+	if err := configureConnPool(db); err != nil {
+		_ = cm.closeConn(&conn{DB: db})
+
+		return nil, apperror.DriverError(err)
+	}
+
 	RegisterHistoryHooks(db, cm.historyRepo, connection.ID)
 
-	sqlDB, _ := db.DB()
-	sqlDB.SetMaxOpenConns(10)
-	sqlDB.SetMaxIdleConns(5)
-	sqlDB.SetConnMaxLifetime(5 * time.Minute)
+	cm.mu.Lock()
+	// Another request may have connected concurrently; keep the existing
+	// entry and discard ours.
+	if existing, ok := cm.connections[key]; ok {
+		cm.mu.Unlock()
+		_ = cm.closeConn(&conn{DB: db})
+
+		return existing.DB, nil
+	}
 
 	cm.connections[key] = &conn{
 		DB:       db,
 		LastUsed: time.Now(),
 	}
+	cm.mu.Unlock()
 
 	return db, nil
+}
+
+func configureConnPool(db *gorm.DB) error {
+	sqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+
+	sqlDB.SetMaxOpenConns(10)
+	sqlDB.SetMaxIdleConns(5)
+	sqlDB.SetConnMaxLifetime(5 * time.Minute)
+
+	return nil
 }
 
 func (cm *ConnectionManager) GetConnectionForDatabase(ctx context.Context, connection *model.Connection, databaseName string, withHydration bool) (*gorm.DB, error) {
@@ -134,23 +190,19 @@ func (cm *ConnectionManager) GetConnectionForDatabase(ctx context.Context, conne
 		return cm.GetConnection(ctx, connection, withHydration)
 	}
 
-	cm.mu.Lock()
-	defer cm.mu.Unlock()
-
 	ownerID := helper.CtxOwnerID(ctx)
 	key := connKey{OwnerID: ownerID, ConnectionID: connection.ID, Database: databaseName}
 
-	if conn, exists := cm.connections[key]; exists {
-		db, err := conn.DB.DB()
-		if err == nil {
-			if err := db.PingContext(ctx); err == nil {
-				conn.LastUsed = time.Now()
-				return conn.DB, nil
-			}
-		}
+	cm.mu.Lock()
+	entry, exists := cm.connections[key]
+	cm.mu.Unlock()
 
-		delete(cm.connections, key)
-		_ = cm.closeConn(conn)
+	if exists && cm.pingCached(ctx, entry) {
+		return entry.DB, nil
+	}
+
+	if exists {
+		cm.dropIfCurrent(key, entry)
 	}
 
 	if cm.secrets != nil && withHydration {
@@ -169,41 +221,44 @@ func (cm *ConnectionManager) GetConnectionForDatabase(ctx context.Context, conne
 		return nil, apperror.DriverError(err)
 	}
 
+	if err := configureConnPool(db); err != nil {
+		_ = cm.closeConn(&conn{DB: db})
+
+		return nil, apperror.DriverError(err)
+	}
+
 	RegisterHistoryHooks(db, cm.historyRepo, connection.ID)
 
-	sqlDB, _ := db.DB()
-	sqlDB.SetMaxOpenConns(10)
-	sqlDB.SetMaxIdleConns(5)
-	sqlDB.SetConnMaxLifetime(5 * time.Minute)
+	cm.mu.Lock()
+	if existing, ok := cm.connections[key]; ok {
+		cm.mu.Unlock()
+		_ = cm.closeConn(&conn{DB: db})
+
+		return existing.DB, nil
+	}
 
 	cm.connections[key] = &conn{
 		DB:       db,
 		LastUsed: time.Now(),
 	}
+	cm.mu.Unlock()
 
 	return db, nil
 }
 
 func (cm *ConnectionManager) IsOpen(ctx context.Context, ownerID string, connectionID uint) bool {
-	cm.mu.Lock()
-	defer cm.mu.Unlock()
-
 	key := connKey{OwnerID: ownerID, ConnectionID: connectionID}
 
-	c, ok := cm.connections[key]
+	cm.mu.Lock()
+	entry, ok := cm.connections[key]
+	cm.mu.Unlock()
+
 	if !ok {
 		return false
 	}
 
-	sqlDB, err := c.DB.DB()
-	if err != nil {
-		delete(cm.connections, key)
-		return false
-	}
-
-	if err := sqlDB.PingContext(ctx); err != nil {
-		delete(cm.connections, key)
-		_ = cm.closeConn(c)
+	if !cm.pingCached(ctx, entry) {
+		cm.dropIfCurrent(key, entry)
 
 		return false
 	}
@@ -263,24 +318,38 @@ func (cm *ConnectionManager) cleanupInactiveConnections() {
 	defer ticker.Stop()
 
 	for range ticker.C {
+		// Collect stale entries under the lock, close their pools outside of
+		// it — Close() can block on sockets held by a hung host.
 		cm.mu.Lock()
+		stale := make([]*conn, 0, len(cm.connections))
+
 		for key, conn := range cm.connections {
 			if time.Since(conn.LastUsed) <= cm.safetyTTL {
 				continue
 			}
 
-			db, err := conn.DB.DB()
-			if err == nil {
-				if db.Stats().InUse > 0 {
-					conn.LastUsed = time.Now()
-					continue
-				}
+			hasActiveSessions := func() bool {
+				db, err := conn.DB.DB()
+
+				return err == nil && db.Stats().InUse > 0
+			}
+
+			if hasActiveSessions() {
+				conn.LastUsed = time.Now()
+				continue
 			}
 
 			delete(cm.connections, key)
-			_ = cm.closeConn(conn)
+
+			stale = append(stale, conn)
 		}
 		cm.mu.Unlock()
+
+		for _, c := range stale {
+			if err := cm.closeConn(c); err != nil {
+				cm.logger.Error(fmt.Errorf("failed to close inactive connection: %w", err))
+			}
+		}
 	}
 }
 

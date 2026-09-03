@@ -3,7 +3,6 @@ package serviceAiProvider
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/openai/openai-go/v2"
@@ -18,7 +17,7 @@ func NewOllamaProvider(_ context.Context, provider *model.AiProvider) (IAiProvid
 	return &BaseProvider{
 		client: openai.NewClient(
 			option.WithBaseURL(provider.URL),
-			option.WithRequestTimeout(time.Duration(provider.Timeout)*time.Second),
+			option.WithRequestTimeout(requestTimeout(provider.Timeout)),
 		),
 	}, nil
 }

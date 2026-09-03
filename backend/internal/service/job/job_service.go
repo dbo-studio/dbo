@@ -22,12 +22,14 @@ type IJobService interface {
 }
 
 type IJobServiceImpl struct {
-	jobRepo repository.IJobRepo
+	jobRepo    repository.IJobRepo
+	jobManager IJobManager
 }
 
-func NewJobService(jr repository.IJobRepo) IJobService {
+func NewJobService(jr repository.IJobRepo, jm IJobManager) IJobService {
 	return &IJobServiceImpl{
-		jobRepo: jr,
+		jobRepo:    jr,
+		jobManager: jm,
 	}
 }
 
@@ -61,7 +63,15 @@ func (i IJobServiceImpl) Cancel(ctx context.Context, req *dto.JobDetailRequest) 
 	job.Status = model.JobStatusCancelled
 	job.Message = "Job canceled by user"
 
-	return i.jobRepo.Update(ctx, job)
+	if err := i.jobRepo.Update(ctx, job); err != nil {
+		return err
+	}
+
+	// Abort the running processor; the manager skips terminal status writes
+	// when the job was canceled concurrently.
+	i.jobManager.CancelRunning(uint(req.JobID))
+
+	return nil
 }
 
 func (i IJobServiceImpl) Result(c fiber.Ctx, req *dto.JobDetailRequest) error {

@@ -46,6 +46,14 @@ type IJobRepo interface {
 	Find(ctx context.Context, id int32) (*model.Job, error)
 	FindByOwner(ctx context.Context, id int32, ownerID string) (*model.Job, error)
 	Update(ctx context.Context, job *model.Job) error
+	// ClaimNextPending atomically flips the oldest pending job to running and
+	// returns it; gorm.ErrRecordNotFound means there was nothing to claim or
+	// the row was claimed concurrently.
+	ClaimNextPending(ctx context.Context) (*model.Job, error)
+	// UpdateFields writes only the given columns by ID so a stale in-memory
+	// copy can never overwrite a concurrent status change (e.g. a cancel).
+	UpdateFields(ctx context.Context, id uint, fields map[string]any) error
+	UpdateProgress(ctx context.Context, id uint, progress int, message string) error
 	GetPendingJobs(ctx context.Context) ([]model.Job, error)
 	GetRunningJobs(ctx context.Context) ([]model.Job, error)
 	DeleteOldJobs(ctx context.Context, days int) error

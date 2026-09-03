@@ -8,8 +8,13 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
-	"github.com/dbo-studio/dbo/pkg/helper"
+	"gorm.io/gorm"
 )
+
+// importChunkSize bounds each transaction: rows are inserted with bound
+// parameters inside a chunk transaction, so an interrupted import never
+// leaves a partially written chunk behind.
+const importChunkSize = 500
 
 func (r *BaseRepository) ImportData(ctx context.Context, job dto.ImportJob, rows [][]string, columns []string) (*contract.ImportResult, error) {
 	startTime := time.Now()
@@ -27,39 +32,61 @@ func (r *BaseRepository) ImportData(ctx context.Context, job dto.ImportJob, rows
 	}
 
 	columnList := strings.Join(quotedColumns, ", ")
+	placeholders := strings.TrimSuffix(strings.Repeat("?, ", len(columns)), ", ")
+	insertQuery := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", quotedTable, columnList, placeholders)
 
-	for _, row := range rows {
+	insertRow := func(execer *gorm.DB, row []string) error {
+		args := make([]any, len(row))
 		for i, value := range row {
-			row[i] = helper.FormatSQLValue(value)
+			args[i] = importValueToArg(value)
 		}
+
+		return execer.Exec(insertQuery, args...).Error
 	}
 
-	for i, row := range rows {
-		insertQuery := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
-			quotedTable,
-			columnList,
-			strings.Join(row, ", "))
+	for chunkStart := 0; chunkStart < len(rows); chunkStart += importChunkSize {
+		chunkEnd := min(chunkStart+importChunkSize, len(rows))
 
-		err := r.db.WithContext(ctx).Exec(insertQuery).Error
-		if err != nil {
-			failedRows++
+		if job.ContinueOnError {
+			// Tolerant mode: execute row by row so one bad row doesn't abort
+			// the chunk, collecting errors as before.
+			for i := chunkStart; i < chunkEnd; i++ {
+				if err := insertRow(r.db.WithContext(ctx), rows[i]); err != nil {
+					failedRows++
 
-			errors = append(errors, contract.ImportError{
-				Row:     i,
-				Message: err.Error(),
-				Value:   strings.Join(row, ", "),
-			})
+					errors = append(errors, contract.ImportError{
+						Row:     i,
+						Message: err.Error(),
+						Value:   strings.Join(rows[i], ", "),
+					})
 
-			if !job.ContinueOnError {
-				return nil, fmt.Errorf("import failed at row %d: %w", i, err)
+					if job.MaxErrors > 0 && len(errors) >= job.MaxErrors {
+						return nil, fmt.Errorf("maximum errors reached (%d)", job.MaxErrors)
+					}
+				} else {
+					successRows++
+				}
 			}
 
-			if job.MaxErrors > 0 && len(errors) >= job.MaxErrors {
-				return nil, fmt.Errorf("maximum errors reached (%d)", job.MaxErrors)
-			}
-		} else {
-			successRows++
+			continue
 		}
+
+		// Strict mode: the whole chunk is atomic — any failure rolls the
+		// chunk back and stops the import.
+		err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+			for i := chunkStart; i < chunkEnd; i++ {
+				if err := insertRow(tx, rows[i]); err != nil {
+					return fmt.Errorf("import failed at row %d: %w", i, err)
+				}
+			}
+
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		successRows += chunkEnd - chunkStart
 	}
 
 	return &contract.ImportResult{
@@ -73,6 +100,20 @@ func (r *BaseRepository) ImportData(ctx context.Context, job dto.ImportJob, rows
 			"tableName": job.Table,
 		},
 	}, nil
+}
+
+// importValueToArg converts a SQL-literal-shaped cell ("NULL", 'quoted', or a
+// bare token) into a bind argument, replacing string interpolation entirely.
+func importValueToArg(value string) any {
+	if value == "NULL" {
+		return nil
+	}
+
+	if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+		return strings.ReplaceAll(value[1:len(value)-1], "''", "'")
+	}
+
+	return value
 }
 
 func (r *BaseRepository) quoteIdent(name string) string {

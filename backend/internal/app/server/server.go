@@ -1,15 +1,16 @@
 package server
 
 import (
+	"context"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/handler"
 	"github.com/dbo-studio/dbo/internal/app/server/middleware"
 	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/repository"
-	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/compress"
@@ -48,9 +49,20 @@ func New(
 ) *Server {
 	return &Server{
 		app: fiber.New(fiber.Config{
-			ErrorHandler: func(_ fiber.Ctx, err error) error {
+			// Cap request lifetimes so a stalled client or DB host cannot hold
+			// resources (including the ConnectionManager) indefinitely.
+			ReadTimeout:  30 * time.Second,
+			WriteTimeout: 60 * time.Second,
+			IdleTimeout:  120 * time.Second,
+			ErrorHandler: func(c fiber.Ctx, err error) error {
 				logger.Error(err)
-				return apperror.InternalServerError(err)
+
+				// Always send a JSON body — returning the error object here
+				// would produce an empty response.
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+					"code":    fiber.StatusInternalServerError,
+					"message": "Internal server error",
+				})
 			},
 		}),
 		handlers:       handlers,
@@ -58,13 +70,17 @@ func New(
 	}
 }
 
-func (r *Server) Start(isLocal bool, port string) error {
+func (r *Server) Start(gracefulCtx context.Context, isLocal bool, port string) error {
 	cfg := container.Instance().Config()
+
+	// Recover middleware must run in every environment: without it a panic in
+	// a handler (or processor goroutine) kills the whole process on desktop.
+	r.app.Use(recover.New())
 
 	if isLocal {
 		r.app.Use(fiberLogger.New())
 	} else {
-		r.app.Use(recover.New(), compress.New())
+		r.app.Use(compress.New())
 	}
 
 	r.app.Use(cors.New(cors.Config{
@@ -81,7 +97,12 @@ func (r *Server) Start(isLocal bool, port string) error {
 
 	r.routing()
 
-	return r.app.Listen(":" + port)
+	return r.app.Listen(":"+port, fiber.ListenConfig{
+		// GracefulContext makes Listen drain in-flight requests when the
+		// context is canceled (SIGINT/SIGTERM) instead of dying mid-request.
+		GracefulContext: gracefulCtx,
+		ShutdownTimeout: 15 * time.Second,
+	})
 }
 
 func (r *Server) Shutdown() error {

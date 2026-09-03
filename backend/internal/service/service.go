@@ -41,8 +41,7 @@ type Service struct {
 }
 
 func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionManager, ss secretStore.ISecretStore) *Service {
-	jobRepo := repository.NewJobRepo()
-	jobManager := serviceJob.NewJobManager(jobRepo)
+	jobManager := serviceJob.NewJobManager(repo.JobRepo)
 
 	jobManager.RegisterProcessor(processors.NewImportProcessor(jobManager, cm, repo.ConnectionRepo, ss))
 	jobManager.RegisterProcessor(processors.NewExportProcessor(jobManager, cm, repo.ConnectionRepo, ss))
@@ -59,7 +58,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		TreeService:             serviceTree.NewTreeService(repo.ConnectionRepo, cm),
 		QueryService:            serviceQuery.NewQueryService(repo.ConnectionRepo, repo.HistoryRepo, cm),
 		ImportExportService:     serviceImportExport.NewImportExportService(jobManager),
-		JobService:              serviceJob.NewJobService(jobRepo),
+		JobService:              serviceJob.NewJobService(repo.JobRepo, jobManager),
 		JobManager:              jobManager,
 		AiService:               serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, cm, toolRegistry),
 		AiProviderService:       aiProviderService,

@@ -43,7 +43,18 @@ type AppError struct {
 	Data    map[string]any
 }
 
+// Equals reports whether the sentinel expectedErr appears anywhere in err's
+// chain (unwrapping AppError wrappers). String comparison is only the last
+// resort for legacy callers.
 func Equals(err error, expectedErr error) bool {
+	if err == nil || expectedErr == nil {
+		return false
+	}
+
+	if errors.Is(err, expectedErr) {
+		return true
+	}
+
 	return strings.EqualFold(err.Error(), expectedErr.Error())
 }
 

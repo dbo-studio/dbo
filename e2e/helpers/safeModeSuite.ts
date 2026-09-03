@@ -626,9 +626,9 @@ INSERT INTO ${tableName} (name) VALUES ('before');
                   response.status() === 403,
               );
 
-              await dataBrowser
-                .addFilter("name", "=", "gated")
-                .catch(() => undefined);
+              // Trigger a grid run directly — the injected inlineQuery turns
+              // it into a write, and helpers like addFilter expect a 200.
+              await page.getByTestId("inline-query-run").click();
 
               const blockedResponse = await blocked;
               expect(intercepted).toBe(true);

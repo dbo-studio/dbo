@@ -5,6 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/handler"
@@ -79,8 +82,7 @@ func Execute() {
 		appLogger.Error(err)
 	}
 
-	restServer := server.New(appLogger, server.Handlers{
-		Config:       handler.NewConfigHandler(ss.ConfigService),
+	restServer := server.New(appLogger, server.Handlers{Config: handler.NewConfigHandler(ss.ConfigService),
 		Connection:   handler.NewConnectionHandler(ss.ConnectionService),
 		SavedQuery:   handler.NewSavedQueryHandler(ss.SavedQueryService),
 		History:      handler.NewHistoryHandler(ss.HistoryService),
@@ -96,7 +98,22 @@ func Execute() {
 		SafeMode:     handler.NewSafeModeHandler(ss.SafeModePasswordService),
 	}, rr.WebSessionRepo)
 
-	if err := restServer.Start(helper.IsLocal(), cfg.App.ResolvedPort()); err != nil {
+	gracefulCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	// SIGINT/SIGTERM: stop the job system (abort processors, wait, mark jobs
+	// canceled) while Listen drains in-flight HTTP requests gracefully.
+	go func() {
+		<-gracefulCtx.Done()
+
+		appLogger.Info("shutting down: stopping jobs and draining requests")
+
+		if err := ss.JobManager.Shutdown(); err != nil {
+			appLogger.Error(err)
+		}
+	}()
+
+	if err := restServer.Start(gracefulCtx, helper.IsLocal(), cfg.App.ResolvedPort()); err != nil {
 		msg := fmt.Sprintf("error happen while serving: %v", err)
 		appLogger.Error(errors.New(msg))
 		log.Println(msg)
