@@ -27,6 +27,7 @@ type Handlers struct {
 	AiChat       *handler.AiChatHandler
 	Mcp          *handler.McpHandler
 	Schema       *handler.SchemaHandler
+	SafeMode     *handler.SafeModeHandler
 }
 
 type Server struct {

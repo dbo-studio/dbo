@@ -8,6 +8,7 @@ import * as importExport from './importExport';
 import * as job from './job';
 import * as mcp from './mcp';
 import * as query from './query';
+import * as safeMode from './safeMode';
 import * as savedQueries from './savedQuery';
 import * as schema from './schema';
 import * as tree from './tree';
@@ -25,7 +26,8 @@ const api = {
   aiProvider,
   aiChat,
   mcp,
-  schema
+  schema,
+  safeMode
 };
 
 export default api;

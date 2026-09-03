@@ -29,6 +29,9 @@ tauri-plugin-shell = "2"
 tauri-plugin-decorum = "1.1.1"
 tauri-plugin-opener = "2"
 
+[target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "android", target_os = "windows"))'.dependencies]
+tauri-plugin-biometry = "0.3.0-rc.3"
+
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.
 # If you use cargo directly instead of tauri's cli you can use this feature flag to switch between tauri's `dev` and `build` modes.

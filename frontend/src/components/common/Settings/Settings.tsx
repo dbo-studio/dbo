@@ -2,6 +2,7 @@ import Modal from '@/components/base/Modal/Modal';
 import GeneralPanel from '@/components/common/Settings/GeneralPanel/GeneralPanel';
 import { useLayoutMode } from '@/hooks';
 import locales from '@/locales';
+import { useSafeModePasswordStore } from '@/store/safeModePassword/safeModePassword.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Divider, Grid, Tab, Tabs, Typography, useTheme } from '@mui/material';
 import { type JSX, useState } from 'react';
@@ -9,6 +10,7 @@ import AboutPanel from './AboutPanel/AboutPanel';
 import AiPanel from './AiPanel/AiPanel';
 import AppearancePanel from './AppearancePanel/AppearancePanel';
 import MenuPanel from './MenuPanel/MenuPanel';
+import SecurityPanel from './SecurityPanel/SecurityPanel';
 import { SettingsContentGridStyled, SettingsContentStyled } from './Setting.styled';
 import ShortcutPanel from './ShortcutPanel/ShortcutPanel';
 import type { MenuPanelTabType, SettingsProps } from './types';
@@ -46,6 +48,14 @@ const tabs: MenuPanelTabType[] = [
   },
   {
     id: 4,
+    name: locales.security,
+    description: locales.security_description,
+    onlyDesktop: false,
+    icon: 'lock',
+    content: <SecurityPanel />
+  },
+  {
+    id: 5,
     name: locales.about,
     onlyDesktop: false,
     icon: 'about',
@@ -59,6 +69,7 @@ export default function Settings({ open }: SettingsProps): JSX.Element {
   const { isMobile } = useLayoutMode();
   const showSettings = useSettingStore((state) => state.ui.showSettings);
   const updateUI = useSettingStore((state) => state.updateUI);
+  const passwordPromptOpen = useSafeModePasswordStore((state) => state.open);
   const defaultMenuTab = tabs.find((tab) => tab.id === showSettings.tab) ?? tabs[0];
   const [prevSync, setPrevSync] = useState({ open, tab: showSettings.tab });
 
@@ -74,7 +85,7 @@ export default function Settings({ open }: SettingsProps): JSX.Element {
   }
 
   return (
-    <Modal open={open} padding='0px' onClose={handleOnClose}>
+    <Modal open={open} padding='0px' onClose={handleOnClose} disableEnforceFocus={passwordPromptOpen}>
       <SettingsContentGridStyled container spacing={0} isMobile={isMobile}>
         <Grid
           size={{ md: 3 }}

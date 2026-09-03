@@ -1,4 +1,5 @@
 import { expect, type Page, type Locator } from "@playwright/test";
+import { apiRoute, pendingResponse } from "../helpers/network";
 import { BasePage } from "./BasePage";
 
 export type SettingsPanel =
@@ -6,6 +7,7 @@ export type SettingsPanel =
   | "Appearance"
   | "Shortcuts"
   | "AI"
+  | "Security"
   | "About";
 
 /**
@@ -19,6 +21,7 @@ export class SettingsPage extends BasePage {
   readonly appearanceMenuItem: Locator;
   readonly shortcutsMenuItem: Locator;
   readonly aiMenuItem: Locator;
+  readonly securityMenuItem: Locator;
   readonly aboutMenuItem: Locator;
 
   readonly lightTheme: Locator;
@@ -37,6 +40,7 @@ export class SettingsPage extends BasePage {
     this.appearanceMenuItem = page.getByText("Appearance").first();
     this.shortcutsMenuItem = page.getByText("Shortcuts").first();
     this.aiMenuItem = page.locator("div").filter({ hasText: /^AI$/ }).first();
+    this.securityMenuItem = page.getByText("Security").first();
     this.aboutMenuItem = page.getByText("About").first();
 
     this.lightTheme = page.getByRole("img", { name: "light" });
@@ -85,6 +89,9 @@ export class SettingsPage extends BasePage {
         break;
       case "AI":
         await this.aiMenuItem.click();
+        break;
+      case "Security":
+        await this.securityMenuItem.click();
         break;
       case "About":
         await this.aboutMenuItem.click();
@@ -136,6 +143,61 @@ export class SettingsPage extends BasePage {
 
   rightSidebarTab(): Locator {
     return this.page.getByRole("tab", { name: "Assistant" });
+  }
+
+  async setSafeModePassword(password: string): Promise<void> {
+    await this.navigateTo("Security");
+    const setButton = this.page.getByTestId("safe-mode-settings-set-password");
+    await expect(setButton).toBeVisible({ timeout: 10000 });
+    await setButton.click();
+
+    const prompt = this.page.getByTestId("safe-mode-password-prompt");
+    await expect(prompt).toBeVisible({ timeout: 10000 });
+    await this.page.locator('input[name="password"]').fill(password);
+    await this.page.locator('input[name="confirm"]').fill(password);
+
+    const setPromise = pendingResponse(this.page, {
+      ...apiRoute.safeModePassword,
+      method: "POST",
+      status: 200,
+    });
+    await this.page.getByTestId("safe-mode-password-save").click();
+    await setPromise;
+    await expect(prompt).toHaveCount(0, { timeout: 15000 });
+    await expect(this.page.getByTestId("safe-mode-settings-status")).toHaveText(
+      "Configured",
+      { timeout: 10000 },
+    );
+  }
+
+  async changeSafeModePassword(
+    currentPassword: string,
+    nextPassword: string,
+  ): Promise<void> {
+    await this.navigateTo("Security");
+    const changeButton = this.page.getByTestId(
+      "safe-mode-settings-change-password",
+    );
+    await expect(changeButton).toBeVisible({ timeout: 10000 });
+    await changeButton.click();
+
+    const prompt = this.page.getByTestId("safe-mode-password-prompt");
+    await expect(prompt).toBeVisible({ timeout: 10000 });
+    await this.page.locator('input[name="currentPassword"]').fill(currentPassword);
+    await this.page.locator('input[name="password"]').fill(nextPassword);
+    await this.page.locator('input[name="confirm"]').fill(nextPassword);
+
+    const changePromise = pendingResponse(this.page, {
+      ...apiRoute.safeModePassword,
+      method: "PATCH",
+      status: 200,
+    });
+    await this.page.getByTestId("safe-mode-password-save").click();
+    await changePromise;
+    await expect(prompt).toHaveCount(0, { timeout: 15000 });
+    await expect(
+      this.page.getByText("Safe Mode password updated").first(),
+    ).toBeVisible({ timeout: 10000 });
   }
 
   async expectPanelVisible(content: string): Promise<void> {

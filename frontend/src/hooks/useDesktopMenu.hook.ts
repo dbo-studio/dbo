@@ -48,7 +48,7 @@ export const useDesktopMenu = (): void => {
             updateUI({ showSettings: { open: true, tab: 2 } });
             break;
           case 'openAbout':
-            updateUI({ showSettings: { open: true, tab: 4 } });
+            updateUI({ showSettings: { open: true, tab: 5 } });
             break;
           case 'checkUpdates':
             updateUI({ showSettings: { open: true, tab: 0 } });

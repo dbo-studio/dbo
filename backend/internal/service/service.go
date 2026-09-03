@@ -15,6 +15,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/service/job/processors"
 	serviceMcp "github.com/dbo-studio/dbo/internal/service/mcp"
 	serviceQuery "github.com/dbo-studio/dbo/internal/service/query"
+	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
 	serviceSavedQuery "github.com/dbo-studio/dbo/internal/service/saved_query"
 	serviceSchema "github.com/dbo-studio/dbo/internal/service/schema"
 	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
@@ -22,20 +23,21 @@ import (
 )
 
 type Service struct {
-	ConnectionService   serviceConnection.IConnectionService
-	HistoryService      serviceHistory.IHistoryService
-	SavedQueryService   serviceSavedQuery.ISavedQueryService
-	TreeService         serviceTree.ITreeService
-	QueryService        serviceQuery.IQueryService
-	ImportExportService serviceImportExport.IImportExport
-	JobService          serviceJob.IJobService
-	JobManager          serviceJob.IJobManager
-	AiService           serviceAI.IAiService
-	AiProviderService   serviceAiProvider.IAiProviderService
-	AiChatService       serviceAiChat.IAiChatService
-	ConfigService       serviceConfig.IConfigService
-	McpService          serviceMcp.IMcpService
-	SchemaService       serviceSchema.ISchemaService
+	ConnectionService       serviceConnection.IConnectionService
+	HistoryService          serviceHistory.IHistoryService
+	SavedQueryService       serviceSavedQuery.ISavedQueryService
+	TreeService             serviceTree.ITreeService
+	QueryService            serviceQuery.IQueryService
+	ImportExportService     serviceImportExport.IImportExport
+	JobService              serviceJob.IJobService
+	JobManager              serviceJob.IJobManager
+	AiService               serviceAI.IAiService
+	AiProviderService       serviceAiProvider.IAiProviderService
+	AiChatService           serviceAiChat.IAiChatService
+	ConfigService           serviceConfig.IConfigService
+	McpService              serviceMcp.IMcpService
+	SchemaService           serviceSchema.ISchemaService
+	SafeModePasswordService serviceSafemode.ISafeModePasswordService
 }
 
 func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionManager, ss secretStore.ISecretStore) *Service {
@@ -48,21 +50,23 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 	aiProviderService := serviceAiProvider.NewAiProviderService(repo.AiProviderRepo)
 	toolRegistry := dbtools.NewRegistry(cm, repo.ConnectionRepo)
 	mcpService := serviceMcp.NewMcpService(repo.McpSettingsRepo, repo.ConnectionRepo, toolRegistry)
+	safeModePasswordService := serviceSafemode.NewPasswordService(repo.SafeModePasswordRepo)
 
 	return &Service{
-		ConnectionService:   serviceConnection.NewConnectionService(repo.ConnectionRepo, cm, ss),
-		HistoryService:      serviceHistory.NewHistoryService(repo.HistoryRepo),
-		SavedQueryService:   serviceSavedQuery.NewSavedQueryService(repo.SavedQueryRepo),
-		TreeService:         serviceTree.NewTreeService(repo.ConnectionRepo, cm),
-		QueryService:        serviceQuery.NewQueryService(repo.ConnectionRepo, repo.HistoryRepo, cm),
-		ImportExportService: serviceImportExport.NewImportExportService(jobManager),
-		JobService:          serviceJob.NewJobService(jobRepo),
-		JobManager:          jobManager,
-		AiService:           serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, cm, toolRegistry),
-		AiProviderService:   aiProviderService,
-		AiChatService:       serviceAiChat.NewAiChatService(repo.AiChatRepo),
-		ConfigService:       serviceConfig.NewConfigService(repo.ConfigRepo, aiProviderService),
-		McpService:          mcpService,
-		SchemaService:       serviceSchema.NewSchemaService(repo.ConnectionRepo, cm),
+		ConnectionService:       serviceConnection.NewConnectionService(repo.ConnectionRepo, cm, ss, safeModePasswordService),
+		HistoryService:          serviceHistory.NewHistoryService(repo.HistoryRepo),
+		SavedQueryService:       serviceSavedQuery.NewSavedQueryService(repo.SavedQueryRepo),
+		TreeService:             serviceTree.NewTreeService(repo.ConnectionRepo, cm),
+		QueryService:            serviceQuery.NewQueryService(repo.ConnectionRepo, repo.HistoryRepo, cm),
+		ImportExportService:     serviceImportExport.NewImportExportService(jobManager),
+		JobService:              serviceJob.NewJobService(jobRepo),
+		JobManager:              jobManager,
+		AiService:               serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, cm, toolRegistry),
+		AiProviderService:       aiProviderService,
+		AiChatService:           serviceAiChat.NewAiChatService(repo.AiChatRepo),
+		ConfigService:           serviceConfig.NewConfigService(repo.ConfigRepo, aiProviderService),
+		McpService:              mcpService,
+		SchemaService:           serviceSchema.NewSchemaService(repo.ConnectionRepo, cm),
+		SafeModePasswordService: safeModePasswordService,
 	}
 }

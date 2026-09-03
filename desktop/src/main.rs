@@ -37,7 +37,7 @@ fn main() {
     let sidecar_child_for_cleanup = sidecar_child.clone();
     let sidecar_stopping_for_cleanup = sidecar_stopping.clone();
 
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -50,7 +50,14 @@ fn main() {
         .plugin(tauri_plugin_decorum::init())
         .manage(sidecar_child.clone())
         .manage(sidecar_stopping.clone())
-        .invoke_handler(tauri::generate_handler![get_backend_host, restart_backend])
+        .invoke_handler(tauri::generate_handler![get_backend_host, restart_backend]);
+
+    #[cfg(any(target_os = "macos", target_os = "ios", target_os = "android", target_os = "windows"))]
+    {
+        builder = builder.plugin(tauri_plugin_biometry::init());
+    }
+
+    builder
         .setup(|app| {
             setup_macos_window(app)?;
             menu::setup_menu(app)?;

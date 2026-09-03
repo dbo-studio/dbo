@@ -67,7 +67,7 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | ------------------------ | --------------------------------------------- | ------------------------------------------------------- |
 | Harness smoke            | `shared/harness-smoke.spec.ts`                | ephemeral API + FE reachable (no sample DB)             |
 | Connections              | `shared\|mysql\|sqlite/connections.spec.ts`   | create/edit/dup/reorder/refresh/menu/ping via shared suite |
-| Safe Mode                | `shared\|mysql\|sqlite/safe-mode.spec.ts`     | menu + gates on PG/MySQL; SQLite: menu disabled           |
+| Safe Mode                | `shared\|mysql\|sqlite/safe-mode.spec.ts`     | menu + app password setup/gates; each write re-prompts |
 | Query status bar         | `pg\|mysql\|sqlite/query-statusbar.spec.ts`   | discard/add/remove/refresh + pagination + edit gate ×3  |
 | Query guards             | `pg\|mysql\|sqlite/query-guards.spec.ts`      | cancel Stop + raw SELECT page size / user LIMIT ×3      |
 | Data grid context menus  | `pg\|mysql\|sqlite/data-grid-context-menus.spec.ts` | empty/cell/header/Safe Mode menus ×3              |
@@ -83,7 +83,7 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Data grid typed cells    | `shared/data-grid-typed-cells.spec.ts`        | MySQL+PG; SQLite n/a (no typed editors yet)             |
 | Data grid FK autocomplete| `shared/data-grid-fk-autocomplete.spec.ts`    | PG+MySQL+SQLite single-col pick/paste; SQLite composite fill; NOT NULL hides NULL |
 | Saved / history          | `shared/saved-history.spec.ts`                | history, save, run, copy                                |
-| Settings / theme         | `shared/settings-theme.spec.ts`               | theme persistence, panels, sidebar                      |
+| Settings / theme         | `shared/settings-theme.spec.ts`               | theme persistence, panels, sidebar, Security password   |
 | Keyboard shortcuts       | `shared/keyboard-shortcuts.spec.ts`           | cheatsheet groups/filter, Alt+/ open, grid Save/Refresh tooltips |
 | Workspace dirty tab      | `shared/workspace-dirty-tab.spec.ts`          | dirty Cancel / Yes / clean close                        |
 | AI chat panel            | `shared/ai-chat-panel.spec.ts`                | Assistant panel + composer (no LLM)                     |

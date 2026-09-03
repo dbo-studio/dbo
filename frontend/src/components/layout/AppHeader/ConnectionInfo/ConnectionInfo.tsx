@@ -1,5 +1,4 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import Settings from '@/components/common/Settings/Settings';
 import { TabMode } from '@/core/enums';
 import { shortcuts } from '@/core/utils';
 import { useCurrentConnection, useShortcut } from '@/hooks';
@@ -22,7 +21,6 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
   const currentConnection = useCurrentConnection();
   const loading = useConnectionStore((state) => state.loading);
 
-  const showSettings = useSettingStore((state) => state.ui.showSettings);
   const updateUI = useSettingStore((state) => state.updateUI);
 
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
@@ -64,7 +62,6 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
 
   return (
     <ConnectionInfoStyled direction={'row'}>
-      <Settings open={showSettings.open} />
       {!compact && (
         <Grid size={{ md: 3 }}>
           <Stack

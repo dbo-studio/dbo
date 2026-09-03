@@ -87,7 +87,13 @@ const handleApiError = (error: AxiosError<ApiErrorResponse>): void => {
   }
 
   // Safe Mode 403s are handled by callers (confirm modal / toast with reason).
-  if (status === 403 && (message === 'safe_mode_blocked' || message === 'safe_mode_confirm_required')) {
+  if (
+    status === 403 &&
+    (message === 'safe_mode_blocked' ||
+      message === 'safe_mode_confirm_required' ||
+      message === 'safe_mode_password_required' ||
+      message === 'safe_mode_password_invalid')
+  ) {
     return;
   }
 };

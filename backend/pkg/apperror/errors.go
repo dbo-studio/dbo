@@ -20,6 +20,10 @@ var (
 	ErrSafeModeBlocked             = errors.New("safe_mode_blocked")
 	ErrSafeModeConfirmRequired     = errors.New("safe_mode_confirm_required")
 	ErrSafeModePasswordRequired    = errors.New("safe_mode_password_required")
+	ErrSafeModePasswordInvalid     = errors.New("safe_mode_password_invalid")
+	ErrSafeModePasswordNotFound    = errors.New("safe_mode_password_not_configured")
+	ErrSafeModePasswordAlreadySet  = errors.New("safe_mode_password_already_set")
+	ErrSafeModePasswordMismatch    = errors.New("safe_mode_password_mismatch")
 	ErrInvalidEncryptionKey        = errors.New("invalid encryption key")
 	ErrDecryptionFailed            = errors.New("decryption failed")
 	ErrQueryCanceled               = errors.New("query canceled")
@@ -163,6 +167,14 @@ func SafeModePasswordRequired(data map[string]any) error {
 		Message: "safe_mode_password_required",
 		Err:     ErrSafeModePasswordRequired,
 		Data:    data,
+	}
+}
+
+func SafeModePasswordInvalid() error {
+	return &AppError{
+		Code:    http.StatusForbidden,
+		Message: "safe_mode_password_invalid",
+		Err:     ErrSafeModePasswordInvalid,
 	}
 }
 

@@ -16,37 +16,25 @@ const (
 	DefaultUnlockTTL = 10 * time.Minute
 	MaxUnlockTTL     = 60 * time.Minute
 	MinUnlockTTL     = 1 * time.Minute
+	GateUnlockTTL    = 30 * time.Second
 )
 
-// Policy is the effective connection safety policy.
 type Policy struct {
 	Mode          model.SafeMode
 	Unlocked      bool
 	UnlockedUntil *time.Time
 }
 
-// FromConnection builds a policy from a connection model (without unlock state).
 func FromConnection(c *model.Connection) Policy {
 	if c == nil {
 		return Policy{Mode: model.SafeModeSilent}
 	}
 
 	return Policy{
-		Mode: CoerceForEngine(NormalizeMode(string(c.SafeMode)), c.ConnectionType),
+		Mode: NormalizeMode(string(c.SafeMode)),
 	}
 }
 
-// CoerceForEngine drops modes that do not apply to a driver.
-// SQLite is a local file with no password — Safe Mode is not available.
-func CoerceForEngine(mode model.SafeMode, connectionType string) model.SafeMode {
-	if strings.EqualFold(connectionType, "sqlite") {
-		return model.SafeModeSilent
-	}
-
-	return mode
-}
-
-// NormalizeMode returns a canonical Safe Mode value.
 func NormalizeMode(mode string) model.SafeMode {
 	switch strings.ToLower(strings.TrimSpace(mode)) {
 	case string(model.SafeModeSilent), "off", "none", "":
@@ -64,7 +52,6 @@ func NormalizeMode(mode string) model.SafeMode {
 	}
 }
 
-// ApplyCreateDefaults fills Safe Mode defaults.
 func ApplyCreateDefaults(mode *string) model.SafeMode {
 	if mode != nil {
 		return NormalizeMode(*mode)
@@ -73,13 +60,10 @@ func ApplyCreateDefaults(mode *string) model.SafeMode {
 	return model.SafeModeSilent
 }
 
-// IsReadClass reports whether the statement is allowed without prompts in write-scoped modes.
 func IsReadClass(class sqlguard.Class) bool {
 	return class == sqlguard.ClassRead
 }
 
-// Enforce evaluates policy against a statement class.
-// confirmed=true satisfies ConfirmRequired / PasswordRequired for this request.
 func Enforce(policy Policy, class sqlguard.Class, confirmed bool) error {
 	data := map[string]any{
 		"class":    string(class),
@@ -120,11 +104,7 @@ func Enforce(policy Policy, class sqlguard.Class, confirmed bool) error {
 		return apperror.SafeModeConfirmRequired(data)
 
 	case model.SafeModeSafe:
-		if confirmed {
-			return nil
-		}
-
-		data["reason"] = "Safe Mode requires your database password before running this query"
+		data["reason"] = "Safe Mode requires your password before running this query"
 		data["requiresPassword"] = true
 
 		return apperror.SafeModePasswordRequired(data)
@@ -134,11 +114,7 @@ func Enforce(policy Policy, class sqlguard.Class, confirmed bool) error {
 			return nil
 		}
 
-		if confirmed {
-			return nil
-		}
-
-		data["reason"] = "Safe Mode requires your database password before running this query"
+		data["reason"] = "Safe Mode requires your password before running this query"
 		data["requiresPassword"] = true
 
 		return apperror.SafeModePasswordRequired(data)
@@ -163,7 +139,6 @@ func confirmReason(class sqlguard.Class) string {
 	}
 }
 
-// UnlockStore manages time-boxed Safe Mode unlocks.
 type UnlockStore struct {
 	cache cache.Cache
 }
@@ -173,7 +148,8 @@ func NewUnlockStore(c cache.Cache) *UnlockStore {
 }
 
 type unlockRecord struct {
-	Until time.Time `json:"until"`
+	Until   time.Time `json:"until"`
+	OneShot bool      `json:"oneShot,omitempty"`
 }
 
 func UnlockKey(ownerID string, connectionID uint) string {
@@ -193,14 +169,43 @@ func (s *UnlockStore) Unlock(ctx context.Context, ownerID string, connectionID u
 		ttl = MaxUnlockTTL
 	}
 
+	return s.setUnlock(ctx, ownerID, connectionID, ttl, false)
+}
+
+func (s *UnlockStore) UnlockGate(ctx context.Context, ownerID string, connectionID uint) (time.Time, error) {
+	if s == nil || s.cache == nil {
+		return time.Time{}, apperror.InternalServerError(fmt.Errorf("unlock store unavailable"))
+	}
+
+	return s.setUnlock(ctx, ownerID, connectionID, GateUnlockTTL, true)
+}
+
+func (s *UnlockStore) setUnlock(ctx context.Context, ownerID string, connectionID uint, ttl time.Duration, oneShot bool) (time.Time, error) {
 	until := time.Now().UTC().Add(ttl)
 
-	rec := unlockRecord{Until: until}
+	rec := unlockRecord{Until: until, OneShot: oneShot}
 	if err := s.cache.Set(ctx, UnlockKey(ownerID, connectionID), rec, &ttl); err != nil {
 		return time.Time{}, err
 	}
 
 	return until, nil
+}
+
+func (s *UnlockStore) ConsumeGate(ctx context.Context, ownerID string, connectionID uint, used bool) {
+	if !used || s == nil || s.cache == nil {
+		return
+	}
+
+	var rec unlockRecord
+	if err := s.cache.Get(ctx, UnlockKey(ownerID, connectionID), &rec); err != nil {
+		return
+	}
+
+	if !rec.OneShot {
+		return
+	}
+
+	_ = s.Clear(ctx, ownerID, connectionID)
 }
 
 func (s *UnlockStore) Clear(ctx context.Context, ownerID string, connectionID uint) error {

@@ -47,8 +47,13 @@ export const pingConnection = async (data: PingConnectionRequestType): Promise<P
   return (await api.post<{ data: PingConnectionResponseType }>(endpoint.pingConnection(), data)).data.data;
 };
 
-export const unlockSafeMode = async (id: string | number, ttlMinutes = 10): Promise<SafeModeUnlockResponseType> => {
-  return (await api.post<{ data: SafeModeUnlockResponseType }>(endpoint.unlockSafeMode(id), { ttlMinutes })).data.data;
+export const unlockSafeMode = async (
+  id: string | number,
+  password: string,
+  ttlMinutes = 10
+): Promise<SafeModeUnlockResponseType> => {
+  return (await api.post<{ data: SafeModeUnlockResponseType }>(endpoint.unlockSafeMode(id), { password, ttlMinutes }))
+    .data.data;
 };
 
 export const lockSafeMode = async (id: string | number): Promise<void> => {

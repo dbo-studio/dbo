@@ -74,6 +74,8 @@ func (i IQueryServiceImpl) Raw(ctx context.Context, req *dto.RawQueryRequest) (*
 		return nil, err
 	}
 
+	i.unlockStore.ConsumeGate(ctx, helper.CtxOwnerID(ctx), connection.ID, policy.Unlocked)
+
 	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {
 		return nil, err
@@ -127,6 +129,8 @@ func (i IQueryServiceImpl) Update(ctx context.Context, req *dto.UpdateQueryReque
 	if err := serviceSafemode.Enforce(policy, class, req.Confirmed); err != nil {
 		return nil, err
 	}
+
+	i.unlockStore.ConsumeGate(ctx, helper.CtxOwnerID(ctx), connection.ID, policy.Unlocked)
 
 	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {

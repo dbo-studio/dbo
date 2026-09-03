@@ -78,6 +78,11 @@ type IWebConnectionSecretRepo interface {
 	UpdateExpiry(ctx context.Context, sessionID string, connectionID uint, expiresAt *time.Time, updatedAt time.Time) error
 }
 
+type ISafeModePasswordRepo interface {
+	FindByOwner(ctx context.Context, ownerID string) (*model.SafeModePassword, error)
+	Upsert(ctx context.Context, item *model.SafeModePassword) error
+}
+
 type IAiChatRepo interface {
 	List(ctx context.Context, req *dto.AiChatListRequest) ([]model.AiChat, error)
 	Find(ctx context.Context, id uint, pagination *dto.PaginationRequest) (*model.AiChat, error)
@@ -99,6 +104,7 @@ type Repository struct {
 	AiChatRepo              IAiChatRepo
 	AiProviderRepo          IAiProviderRepo
 	McpSettingsRepo         IMcpSettingsRepo
+	SafeModePasswordRepo    ISafeModePasswordRepo
 }
 
 func NewRepository() *Repository {
@@ -113,5 +119,6 @@ func NewRepository() *Repository {
 		AiChatRepo:              NewAiChatRepo(),
 		AiProviderRepo:          NewAiProviderRepo(),
 		McpSettingsRepo:         NewMcpSettingsRepo(),
+		SafeModePasswordRepo:    NewSafeModePasswordRepo(),
 	}
 }

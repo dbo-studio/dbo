@@ -7,6 +7,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/dbo-studio/dbo/internal/model"
 	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/cache"
@@ -87,11 +88,13 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 	}
 
 	if req.SafeMode != nil {
-		normalizedMode := serviceSafemode.CoerceForEngine(
-			serviceSafemode.NormalizeMode(*req.SafeMode),
-			connection.ConnectionType,
-		)
+		normalizedMode := serviceSafemode.NormalizeMode(*req.SafeMode)
 		req.SafeMode = lo.ToPtr(string(normalizedMode))
+
+		currentMode := serviceSafemode.NormalizeMode(string(connection.SafeMode))
+		if err := s.enforceSafeModeChange(ctx, currentMode, normalizedMode, lo.FromPtr(req.SafeModePassword)); err != nil {
+			return nil, err
+		}
 	}
 
 	updatedConnection, err := s.connectionRepo.Update(ctx, connection, req)
@@ -120,4 +123,39 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 	return &dto.UpdateConnectionResponse{
 		Connection: connectionToResponse(ctx, ownerID, s.cm, s.unlockStore, updatedConnection),
 	}, nil
+}
+
+func (s IConnectionServiceImpl) enforceSafeModeChange(
+	ctx context.Context,
+	currentMode model.SafeMode,
+	nextMode model.SafeMode,
+	password string,
+) error {
+	if currentMode == nextMode {
+		return nil
+	}
+
+	if nextMode != model.SafeModeSilent {
+		configured, err := s.safeModePassword.Configured(ctx)
+		if err != nil {
+			return apperror.InternalServerError(err)
+		}
+
+		if !configured {
+			return apperror.BadRequest(apperror.ErrSafeModePasswordNotFound)
+		}
+
+		return nil
+	}
+
+	configured, err := s.safeModePassword.Configured(ctx)
+	if err != nil {
+		return apperror.InternalServerError(err)
+	}
+
+	if !configured {
+		return nil
+	}
+
+	return s.safeModePassword.Check(ctx, password)
 }

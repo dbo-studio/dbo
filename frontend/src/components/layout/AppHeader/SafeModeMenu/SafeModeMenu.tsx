@@ -1,10 +1,11 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { storeSafeModePassword } from '@/core/tauri/biometry';
 import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSafeModePasswordStore } from '@/store/safeModePassword/safeModePassword.store';
-import type { ConnectionSafeMode, ConnectionType } from '@/types';
+import type { ConnectionSafeMode } from '@/types';
 import {
   Box,
   CircularProgress,
@@ -17,7 +18,7 @@ import {
   Tooltip,
   useTheme
 } from '@mui/material';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, type MouseEvent, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -93,17 +94,6 @@ function normalizeMode(mode?: string): ConnectionSafeMode {
   }
 }
 
-async function verifyConnectionPassword(connection: ConnectionType, password: string): Promise<void> {
-  await api.connection.pingConnection({
-    id: connection.id,
-    type: connection.type,
-    options: {
-      ...connection.options,
-      password
-    }
-  });
-}
-
 export default function SafeModeMenu(): JSX.Element {
   const theme = useTheme();
   const queryClient = useQueryClient();
@@ -112,17 +102,21 @@ export default function SafeModeMenu(): JSX.Element {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(anchorEl);
 
+  const { data: passwordStatus } = useQuery({
+    queryKey: ['safe-mode-password'],
+    queryFn: api.safeMode.getStatus
+  });
+
   const { mutateAsync: updateConnection, isPending } = useMutation({
-    mutationFn: (safeMode: ConnectionSafeMode) => {
+    mutationFn: (payload: { safeMode: ConnectionSafeMode; safeModePassword?: string }) => {
       if (!currentConnection) {
         return Promise.reject(new Error('no connection'));
       }
-      return api.connection.updateConnection(currentConnection.id, { safeMode });
+      return api.connection.updateConnection(currentConnection.id, payload);
     }
   });
 
   const currentMode = normalizeMode(currentConnection?.safeMode);
-  const isSqlite = currentConnection?.type === 'sqlite';
   const options = MODE_OPTIONS({
     silent: theme.palette.text.secondary,
     alert: theme.palette.warning.main,
@@ -141,9 +135,9 @@ export default function SafeModeMenu(): JSX.Element {
     setAnchorEl(null);
   };
 
-  const applyMode = async (safeMode: ConnectionSafeMode): Promise<void> => {
+  const applyMode = async (safeMode: ConnectionSafeMode, safeModePassword?: string): Promise<void> => {
     if (!currentConnection) return;
-    const updated = await updateConnection(safeMode);
+    const updated = await updateConnection({ safeMode, safeModePassword });
     const connections = useConnectionStore.getState().connections;
     if (connections) {
       updateConnections(connections.map((connection) => (connection.id === updated.id ? updated : connection)));
@@ -159,23 +153,49 @@ export default function SafeModeMenu(): JSX.Element {
       return;
     }
 
-    // Turning Safe Mode off requires database password (TablePlus behavior).
     if (safeMode === 'silent' && currentMode !== 'silent') {
       handleClose();
       const result = await useSafeModePasswordStore.getState().request({
-        connectionId: currentConnection.id
+        connectionId: currentConnection.id,
+        mode: 'unlock'
       });
       if (!result?.password) {
         return;
       }
       try {
-        await verifyConnectionPassword(currentConnection, result.password);
-        await applyMode(safeMode);
+        await applyMode(safeMode, result.password);
+        void storeSafeModePassword(result.password);
       } catch (error) {
         console.debug('🚀 ~ SafeModeMenu ~ handleSelect silent:', error);
         toast.error(locales.safe_mode_password_invalid);
       }
       return;
+    }
+
+    if (!passwordStatus?.configured) {
+      handleClose();
+      const status = await queryClient.fetchQuery({
+        queryKey: ['safe-mode-password'],
+        queryFn: api.safeMode.getStatus
+      });
+      if (!status.configured) {
+        const result = await useSafeModePasswordStore.getState().request({
+          mode: 'setup'
+        });
+        if (!result?.password) {
+          return;
+        }
+        try {
+          await api.safeMode.setPassword(result.password, result.confirm ?? result.password);
+          await queryClient.invalidateQueries({ queryKey: ['safe-mode-password'] });
+          void storeSafeModePassword(result.password);
+          await applyMode(safeMode);
+        } catch (error) {
+          console.debug('🚀 ~ SafeModeMenu ~ handleSelect setup:', error);
+          toast.error(locales.safe_mode_update_failed);
+        }
+        return;
+      }
     }
 
     try {
@@ -193,7 +213,7 @@ export default function SafeModeMenu(): JSX.Element {
           <IconButton
             aria-label={locales.safe_mode}
             data-testid='safe-mode-menu'
-            disabled={!currentConnection || isPending || isSqlite}
+            disabled={!currentConnection || isPending}
             onClick={handleOpen}
             onMouseDown={(event) => event.stopPropagation()}
           >

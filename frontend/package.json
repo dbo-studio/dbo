@@ -12,6 +12,7 @@
     "types": "tsc --noEmit -p tsconfig.app.json"
   },
   "dependencies": {
+    "@choochmeque/tauri-plugin-biometry-api": "^0.3.0-rc.3",
     "@dagrejs/dagre": "^3.1.1",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/modifiers": "^9.0.0",
@@ -38,7 +39,7 @@
     "idb": "^8.0.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.21.0",
-    "monaco-editor": "^0.55.1",
+    "monaco-editor": "^0.56.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-markdown": "^10.1.0",
@@ -72,7 +73,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.6.0",
     "jiti": "^2.7.0",
-    "prettier": "3.8.4",
+    "prettier": "3.9.6",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.61.1",
     "vite": "^8.0.16",

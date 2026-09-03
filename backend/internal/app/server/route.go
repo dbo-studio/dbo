@@ -51,6 +51,12 @@ func (r *Server) routing() {
 	mcp.All("", r.handlers.Mcp.Proxy)
 	mcp.All("/*", r.handlers.Mcp.Proxy)
 
+	safeMode := api.Group("safe-mode")
+	safeMode.Get("/password", r.handlers.SafeMode.Status)
+	safeMode.Post("/password", r.handlers.SafeMode.SetPassword)
+	safeMode.Patch("/password", r.handlers.SafeMode.ChangePassword)
+	safeMode.Post("/verify", r.handlers.SafeMode.Verify)
+
 	connection := api.Group("connections")
 	connection.Get("/", r.handlers.Connection.Connections)
 	connection.Post("/", r.handlers.Connection.Create)

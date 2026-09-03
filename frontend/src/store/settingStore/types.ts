@@ -54,6 +54,7 @@ export type GeneralSettings = {
   debug: boolean;
   enableErrorReporting: boolean;
   enableAnalytics: boolean;
+  enableSafeModeBiometrics: boolean;
   ignoredRelease: string;
   logsPath: string;
   version: string;

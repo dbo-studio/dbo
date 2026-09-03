@@ -2,14 +2,7 @@ import { getEngineCapabilities } from './engineCapabilities';
 import { parseObjectNodeId } from './parseObjectNodeId';
 
 export type EditorContextSource =
-  | 'manual'
-  | 'connection'
-  | 'tree'
-  | 'sibling-tab'
-  | 'catalog'
-  | 'engine-default'
-  | 'last-used'
-  | 'none';
+  'manual' | 'connection' | 'tree' | 'sibling-tab' | 'catalog' | 'engine-default' | 'last-used' | 'none';
 
 export type EditorContextValues = {
   database: string;

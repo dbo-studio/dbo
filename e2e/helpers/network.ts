@@ -115,6 +115,15 @@ export const apiRoute = {
     method: "GET",
     status: 200,
   },
+  safeModePassword: {
+    path: /^\/api\/safe-mode\/password\/?$/,
+    method: ["GET", "POST", "PATCH"],
+  },
+  safeModeVerify: {
+    path: /^\/api\/safe-mode\/verify\/?$/,
+    method: "POST",
+    status: 200,
+  },
 } as const satisfies Record<string, ApiMatch>;
 
 function pathnameOf(url: string): string {

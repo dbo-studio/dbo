@@ -137,6 +137,8 @@ func (i ITreeServiceImpl) ObjectExecute(ctx context.Context, req *dto.ObjectExec
 		return nil, err
 	}
 
+	i.unlockStore.ConsumeGate(ctx, helper.CtxOwnerID(ctx), connection.ID, policy.Unlocked)
+
 	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {
 		return nil, err

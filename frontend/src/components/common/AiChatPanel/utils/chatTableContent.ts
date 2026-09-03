@@ -1,6 +1,5 @@
 export type ChatContentSegment =
-  | { type: 'markdown'; content: string }
-  | { type: 'table'; rows: Record<string, unknown>[] };
+  { type: 'markdown'; content: string } | { type: 'table'; rows: Record<string, unknown>[] };
 
 type TableMatch = {
   start: number;

@@ -38,7 +38,7 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 
 	req.Options = strippedOptions
 
-	sm := serviceSafemode.CoerceForEngine(serviceSafemode.ApplyCreateDefaults(req.SafeMode), req.Type)
+	sm := serviceSafemode.ApplyCreateDefaults(req.SafeMode)
 	req.SafeMode = lo.ToPtr(string(sm))
 
 	connection, err := s.connectionRepo.Create(ctx, req)

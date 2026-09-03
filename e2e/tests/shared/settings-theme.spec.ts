@@ -1,8 +1,12 @@
 import { expect, test } from "@playwright/test";
 import { getDbConfig } from "../../fixtures/dbConfigs";
+import {
+  SAFE_MODE_PASSWORD,
+  SAFE_MODE_PASSWORD_CHANGED,
+} from "../../fixtures/safeMode";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import { withConnectionCleanup } from "../../helpers/safeCleanup";
-import { ConnectionPage, SettingsPage } from "../../pages";
+import { ConnectionPage, SafeModePage, SettingsPage } from "../../pages";
 
 /**
  * Settings & Theme Scenario
@@ -117,6 +121,14 @@ test.describe("Settings & Theme", () => {
         ).toBeVisible();
       });
 
+      await test.step("Check Security panel", async () => {
+        await settingsPage.navigateTo("Security");
+        await settingsPage.expectPanelVisible("Safe Mode password");
+        await expect(
+          page.getByTestId("safe-mode-settings-set-password"),
+        ).toBeVisible();
+      });
+
       await test.step("Check About panel", async () => {
         await settingsPage.navigateTo("About");
         await settingsPage.expectPanelVisible("Version");
@@ -186,6 +198,48 @@ test.describe("Settings & Theme", () => {
         } else {
           await expect(assistantTab).toBeHidden({ timeout: 10000 });
         }
+      });
+
+      await test.step("Cleanup", async () => {
+        await connectionPage.deleteConnection(connectionName);
+      });
+    });
+  });
+
+  test("Set and change Safe Mode password from Security settings", async ({
+    page,
+  }, testInfo) => {
+    const connectionPage = new ConnectionPage(page);
+    const settingsPage = new SettingsPage(page);
+    const safeMode = new SafeModePage(page);
+
+    const connectionName = `${testPrefix}-secpw-${uniqueTestSuffix(testInfo)}`;
+    const config = getDbConfig("postgresql", connectionName);
+
+    await withConnectionCleanup(page, connectionName, async () => {
+      await connectionPage.goto();
+      await connectionPage.waitForReady();
+
+      await test.step("Setup connection", async () => {
+        await connectionPage.setupConnection(config);
+      });
+
+      await test.step("Set Safe Mode password in Settings", async () => {
+        await settingsPage.open();
+        await settingsPage.setSafeModePassword(SAFE_MODE_PASSWORD);
+      });
+
+      await test.step("Change Safe Mode password", async () => {
+        await settingsPage.changeSafeModePassword(
+          SAFE_MODE_PASSWORD,
+          SAFE_MODE_PASSWORD_CHANGED,
+        );
+        await settingsPage.close();
+      });
+
+      await test.step("New password unlocks Silent Mode", async () => {
+        await safeMode.selectMode("safe");
+        await safeMode.selectSilentWithPassword(SAFE_MODE_PASSWORD_CHANGED);
       });
 
       await test.step("Cleanup", async () => {

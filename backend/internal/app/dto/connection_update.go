@@ -13,6 +13,7 @@ type (
 		RememberPassword *bool           `json:"rememberPassword,omitempty"`
 		Options          json.RawMessage `json:"options"`
 		SafeMode         *string         `json:"safeMode"`
+		SafeModePassword *string         `json:"safeModePassword,omitempty"`
 	}
 
 	UpdateConnectionResponse struct {

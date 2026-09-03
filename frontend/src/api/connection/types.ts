@@ -34,6 +34,7 @@ export type UpdateConnectionRequestType = {
   rememberPassword?: boolean;
   options?: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
   safeMode?: ConnectionSafeMode;
+  safeModePassword?: string;
 };
 
 export type SetConnectionCredentialsRequestType = {

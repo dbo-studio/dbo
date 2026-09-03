@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { SAFE_MODE_PASSWORD } from "../fixtures/safeMode";
 import {
   API_DB_TIMEOUT,
   apiRoute,
@@ -23,8 +24,10 @@ export class SafeModePage extends BasePage {
   readonly confirmTitle: Locator;
   readonly runAnywayButton: Locator;
   readonly cancelButton: Locator;
-  readonly passwordHeading: Locator;
+  readonly passwordPrompt: Locator;
+  readonly setupTitle: Locator;
   readonly passwordInput: Locator;
+  readonly confirmInput: Locator;
   readonly passwordSaveButton: Locator;
 
   constructor(page: Page) {
@@ -35,12 +38,13 @@ export class SafeModePage extends BasePage {
     });
     this.runAnywayButton = page.getByRole("button", { name: "Run anyway" });
     this.cancelButton = page.getByRole("button", { name: "Cancel" });
-    this.passwordHeading = page.getByRole("heading", {
-      name: "Password",
-      exact: true,
+    this.passwordPrompt = page.getByTestId("safe-mode-password-prompt");
+    this.setupTitle = page.getByRole("heading", {
+      name: "Set Safe Mode password",
     });
     this.passwordInput = page.locator('input[name="password"]');
-    this.passwordSaveButton = page.getByRole("button", { name: "Save" });
+    this.confirmInput = page.locator('input[name="confirm"]');
+    this.passwordSaveButton = page.getByTestId("safe-mode-password-save");
   }
 
   option(mode: SafeModeValue): Locator {
@@ -63,13 +67,30 @@ export class SafeModePage extends BasePage {
     });
   }
 
+  private async submitSetupPassword(password: string): Promise<void> {
+    await expect(this.setupTitle).toBeVisible({ timeout: 15000 });
+    await this.passwordInput.fill(password);
+    await this.confirmInput.fill(password);
+    const setPromise = pendingResponse(this.page, apiRoute.safeModePassword);
+    await this.passwordSaveButton.click();
+    await setPromise;
+    await expect(this.passwordPrompt).toHaveCount(0, { timeout: 15000 });
+  }
+
   async selectMode(mode: SafeModeValue): Promise<void> {
     await this.openMenu();
-    await waitForResponseDuring(
-      this.page,
-      apiRoute.connectionsUpdate,
-      () => this.option(mode).click(),
-    );
+    const updatePromise = pendingResponse(this.page, apiRoute.connectionsUpdate);
+    await this.option(mode).click();
+
+    const outcome = await Promise.race([
+      updatePromise.then(() => "updated" as const),
+      this.setupTitle.waitFor({ state: "visible", timeout: 15000 }).then(() => "setup" as const),
+    ]);
+    if (outcome === "setup") {
+      await this.submitSetupPassword(SAFE_MODE_PASSWORD);
+      await updatePromise;
+    }
+
     await this.expectModeUpdated();
     await expect(this.option(mode)).toHaveCount(0, { timeout: 10000 });
   }
@@ -116,7 +137,7 @@ export class SafeModePage extends BasePage {
   }
 
   async expectPasswordPromptVisible(): Promise<void> {
-    await expect(this.passwordHeading).toBeVisible({ timeout: 15000 });
+    await expect(this.passwordPrompt).toBeVisible({ timeout: 15000 });
     await expect(this.passwordInput).toBeVisible();
   }
 
@@ -124,7 +145,7 @@ export class SafeModePage extends BasePage {
     await this.expectPasswordPromptVisible();
     await this.passwordInput.fill(password);
     await this.passwordSaveButton.click();
-    await expect(this.passwordHeading).toBeHidden({ timeout: 15000 });
+    await expect(this.passwordPrompt).toHaveCount(0, { timeout: 15000 });
   }
 
   /**

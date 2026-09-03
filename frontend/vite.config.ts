@@ -1,8 +1,12 @@
+import { createRequire } from 'node:module';
+
 import babel from '@rolldown/plugin-babel';
 import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 
 import { defineConfig, loadEnv } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+
+const require = createRequire(import.meta.url);
 
 const host = process.env.TAURI_DEV_HOST;
 
@@ -79,7 +83,11 @@ export default defineConfig(({ mode }) => {
     ],
     envPrefix: ['VITE_', 'TAURI_ENV_*'],
     resolve: {
-      tsconfigPaths: true
+      tsconfigPaths: true,
+      alias: {
+        'monaco-editor/editor/editor.worker': require.resolve('monaco-editor/editor/editor.worker.js'),
+        'monaco-editor/language/json/json.worker': require.resolve('monaco-editor/language/json/json.worker.js')
+      }
     },
     server: {
       strictPort: true,

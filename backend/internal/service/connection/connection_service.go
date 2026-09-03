@@ -28,26 +28,29 @@ type IConnectionService interface {
 }
 
 type IConnectionServiceImpl struct {
-	connectionRepo repository.IConnectionRepo
-	cm             *databaseConnection.ConnectionManager
-	cache          cache.Cache
-	secrets        secretStore.ISecretStore
-	unlockStore    *serviceSafemode.UnlockStore
+	connectionRepo   repository.IConnectionRepo
+	cm               *databaseConnection.ConnectionManager
+	cache            cache.Cache
+	secrets          secretStore.ISecretStore
+	unlockStore      *serviceSafemode.UnlockStore
+	safeModePassword serviceSafemode.ISafeModePasswordService
 }
 
 func NewConnectionService(
 	connectionRepo repository.IConnectionRepo,
 	cm *databaseConnection.ConnectionManager,
 	secrets secretStore.ISecretStore,
+	safeModePassword serviceSafemode.ISafeModePasswordService,
 ) IConnectionService {
 	c := container.Instance().Cache()
 
 	return &IConnectionServiceImpl{
-		connectionRepo: connectionRepo,
-		cm:             cm,
-		cache:          c,
-		secrets:        secrets,
-		unlockStore:    serviceSafemode.NewUnlockStore(c),
+		connectionRepo:   connectionRepo,
+		cm:               cm,
+		cache:            c,
+		secrets:          secrets,
+		unlockStore:      serviceSafemode.NewUnlockStore(c),
+		safeModePassword: safeModePassword,
 	}
 }
 
@@ -55,6 +58,15 @@ func (s IConnectionServiceImpl) UnlockSafeMode(ctx context.Context, connectionID
 	connection, err := s.connectionRepo.Find(ctx, connectionID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	password := ""
+	if req != nil {
+		password = req.Password
+	}
+
+	if err := s.safeModePassword.Check(ctx, password); err != nil {
+		return nil, err
 	}
 
 	ttl := serviceSafemode.DefaultUnlockTTL

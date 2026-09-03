@@ -6,6 +6,8 @@ export type ModalProps = {
   children: React.ReactNode;
   padding?: string;
   onClose?: () => void;
+  disableEnforceFocus?: boolean;
+  zIndex?: number;
 };
 
 export type ResizableModalProps = ModalProps & {
