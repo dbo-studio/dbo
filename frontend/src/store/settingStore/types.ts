@@ -1,16 +1,21 @@
 import type { CheckUpdateResponseType } from '@/api/config/types';
 
+export type EditorContextByConnection = Record<string, { database: string; schema: string }>;
+
 export type SettingStore = {
   ui: UISettings;
   theme: ThemeSettings;
   editor: EditorSettings;
   general: GeneralSettings;
   setup: SetupSettings;
+  editorContextByConnection: EditorContextByConnection;
 
   updateUI: (ui: Partial<UISettings>) => void;
   updateTheme: (theme: Partial<ThemeSettings>) => void;
   updateEditor: (editor: Partial<EditorSettings>) => void;
   updateGeneral: (general: Partial<GeneralSettings>) => void;
+  setEditorContextForConnection: (connectionId: string | number, context: { database: string; schema: string }) => void;
+  clearEditorContextForConnection: (connectionId: string | number) => void;
   completeSetup(): void;
 };
 
@@ -18,6 +23,7 @@ export type UISettings = {
   sidebar: SidebarType;
   showConnectionsDrawer: boolean;
   showAddConnection: boolean;
+  duplicateConnectionId?: number;
   showEditConnection: number | boolean;
   showQuickLookEditor: boolean;
   showConnectionPasswordPrompt: boolean;
@@ -48,6 +54,7 @@ export type GeneralSettings = {
   debug: boolean;
   enableErrorReporting: boolean;
   enableAnalytics: boolean;
+  enableSafeModeBiometrics: boolean;
   ignoredRelease: string;
   logsPath: string;
   version: string;
@@ -69,6 +76,6 @@ export type SidebarType = {
   rightWidth: number;
   showLeft: boolean;
   leftWidth: number;
-  /** 0 = Assistant, 1 = Fields */
+  /** 0 = Assistant, 1 = Fields (data) or Source (diagram) */
   rightSidebarTab: number;
 };

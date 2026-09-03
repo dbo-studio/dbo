@@ -4,7 +4,8 @@ import type { InputBaseProps } from '@mui/material';
 export const FieldInputLabelRowStyled = styled(Box)({
   display: 'flex',
   flexDirection: 'row',
-  justifyContent: 'space-between'
+  justifyContent: 'space-between',
+  marginBottom: '4px'
 });
 
 type FieldInputInputStyledProps = {

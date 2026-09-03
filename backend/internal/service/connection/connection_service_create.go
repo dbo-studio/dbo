@@ -7,6 +7,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
+	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/goccy/go-json"
@@ -16,12 +17,11 @@ import (
 )
 
 func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConnectionRequest) error {
-	err := s.Ping(ctx, &dto.PingConnectionRequest{
+	_, err := s.Ping(ctx, &dto.PingConnectionRequest{
 		ID:      nil,
 		Type:    req.Type,
 		Options: req.Options,
 	})
-
 	if err != nil {
 		return err
 	}
@@ -38,6 +38,9 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 
 	req.Options = strippedOptions
 
+	sm := serviceSafemode.ApplyCreateDefaults(req.SafeMode)
+	req.SafeMode = lo.ToPtr(string(sm))
+
 	connection, err := s.connectionRepo.Create(ctx, req)
 	if err != nil {
 		return apperror.InternalServerError(err)
@@ -45,6 +48,7 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 
 	if password != "" {
 		ownerID := helper.CtxOwnerID(ctx)
+
 		remember := lo.FromPtrOr(req.RememberPassword, false)
 		if err := s.secrets.SetConnectionPassword(ctx, ownerID, connection.ID, password, remember); err != nil {
 			return apperror.InternalServerError(err)
@@ -57,7 +61,6 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 	}
 
 	version, err := repo.Version(ctx)
-
 	if err != nil {
 		return apperror.InternalServerError(err)
 	}
@@ -70,8 +73,10 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 }
 
 func (s IConnectionServiceImpl) createConnectionDto(req *dto.CreateConnectionRequest) (*dto.CreateConnectionRequest, error) {
-	var options string
-	var err error
+	var (
+		options string
+		err     error
+	)
 
 	switch req.Type {
 	case string(databaseContract.Postgresql):

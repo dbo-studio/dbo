@@ -58,7 +58,9 @@ export type DataQuerySlice = {
   updatableNodeId?: string;
   editableReason?: string;
   drivingTable?: string;
+  queryPaginated: boolean;
   clearPendingEditorQueryRun: () => void;
+  cancelRunningQuery: (options?: { silent?: boolean }) => void;
   runQuery: (abortController?: AbortController) => Promise<RunQueryResponseType | undefined>;
   runRawQuery: (query?: string, abortController?: AbortController) => Promise<RunQueryResponseType | undefined>;
   runQueryInEditor: (query: string) => void;

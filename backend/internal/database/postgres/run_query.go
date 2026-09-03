@@ -8,6 +8,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	"github.com/samber/lo"
 	"golang.org/x/sync/errgroup"
 )
@@ -35,9 +36,8 @@ func (r *PostgresRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequ
 			return err
 		}
 
-		for i, row := range queryResults {
+		for i := range queryResults {
 			queryResults[i]["dbo_index"] = i
-			queryResults[i] = r.base.SanitizeQueryResults(row)
 		}
 
 		return nil
@@ -48,12 +48,23 @@ func (r *PostgresRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequ
 		if err != nil {
 			return err
 		}
+
 		columns = result
+
 		return nil
 	})
 
 	if err := g.Wait(); err != nil {
 		return nil, err
+	}
+
+	columnMappedTypes := make(map[string]string, len(columns))
+	for _, column := range columns {
+		columnMappedTypes[column.ColumnName] = column.MappedType
+	}
+
+	for i, row := range queryResults {
+		queryResults[i] = databaseCore.SanitizeQueryResultsWithTypes(row, columnMappedTypes)
 	}
 
 	return &dto.RunQueryResponse{
@@ -75,16 +86,19 @@ func (r *PostgresRepository) runQueryGenerator(ctx context.Context, req *dto.Run
 	if len(req.Columns) > 0 {
 		selectColumns = strings.Join(req.Columns, ", ")
 	}
+
 	_, _ = fmt.Fprintf(&sb, "SELECT %s FROM %q", selectColumns, node.Table)
 
 	// WHERE clause
 	if len(req.Filters) > 0 {
 		sb.WriteString(" WHERE ")
+
 		for i, filter := range req.Filters {
 			columnExpr := filter.Column
 			if dto.FilterIsLikeOperator(filter.Operator) {
 				columnExpr = fmt.Sprintf("%s::text", filter.Column)
 			}
+
 			_, _ = fmt.Fprintf(&sb, "%s %s", columnExpr, dto.FilterPredicate(filter.Operator, filter.Value))
 			if i < len(req.Filters)-1 {
 				_, _ = fmt.Fprintf(&sb, " %s ", filter.Next)
@@ -95,13 +109,15 @@ func (r *PostgresRepository) runQueryGenerator(ctx context.Context, req *dto.Run
 	// ORDER BY clause
 	if len(req.Sorts) > 0 {
 		sb.WriteString(" ORDER BY ")
+
 		sortClauses := make([]string, len(req.Sorts))
 		for i, sort := range req.Sorts {
 			sortClauses[i] = fmt.Sprintf("%s %s", sort.Column, sort.Operator)
 		}
+
 		sb.WriteString(strings.Join(sortClauses, ", "))
 	} else {
-		keys, err := r.primaryKeys(ctx, &node.Database, &node.Table, true)
+		keys, err := r.primaryKeys(ctx, &node.Database, &node.Table, &node.Schema, true)
 		if err == nil && len(keys) > 0 {
 			sb.WriteString(" ORDER BY ")
 			sb.WriteString(strings.Join(lo.Map(keys, func(key PrimaryKey, _ int) string {

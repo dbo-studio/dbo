@@ -31,6 +31,7 @@ func ServeCommand() *cobra.Command {
 			Execute()
 		},
 	}
+
 	return cmdServe
 }
 
@@ -44,6 +45,7 @@ func loadEnvFiles() {
 
 func Execute() {
 	loadEnvFiles()
+
 	cfg := config.New()
 	appContainer := container.Instance()
 	appContainer.SetConfig(cfg)
@@ -90,6 +92,8 @@ func Execute() {
 		AiProvider:   handler.NewAiProviderHandler(ss.AiProviderService),
 		AiChat:       handler.NewAiChatHandler(ss.AiChatService),
 		Mcp:          handler.NewMcpHandler(ss.McpService),
+		Schema:       handler.NewSchemaHandler(ss.SchemaService),
+		SafeMode:     handler.NewSafeModeHandler(ss.SafeModePasswordService),
 	}, rr.WebSessionRepo)
 
 	if err := restServer.Start(helper.IsLocal(), cfg.App.ResolvedPort()); err != nil {

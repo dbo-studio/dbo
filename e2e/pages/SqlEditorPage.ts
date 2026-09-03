@@ -1,4 +1,5 @@
 import { expect, type Page, type Locator } from "@playwright/test";
+import { API_DB_TIMEOUT, apiRoute, waitForResponseDuring } from "../helpers/network";
 import { BasePage } from "./BasePage";
 
 /**
@@ -17,43 +18,113 @@ export class SqlEditorPage extends BasePage {
 
     this.editor = page.locator(".monaco-editor").first();
     this.openEditorButton = page.getByRole("button", { name: /open editor/i });
-    this.saveButton = page.getByRole("button", { name: /save/i }).first();
+    this.saveButton = page.getByRole("button", { name: "Save", exact: true });
     this.runButton = page.getByRole("button", { name: "Run query" });
-    this.formatButton = page.getByRole("button", { name: /beatify|format/i });
+    this.formatButton = page.getByRole("button", { name: "Beatify", exact: true });
     this.minifyButton = page.getByRole("button", { name: /minify/i });
   }
 
+  get stopButton(): Locator {
+    return this.page.getByTestId("stop-query");
+  }
+
+  get runQueryButton(): Locator {
+    return this.page.getByTestId("run-query");
+  }
+
   async open(): Promise<void> {
-    if (await this.editor.isVisible().catch(() => false)) {
+    const run = this.runQueryButton.or(this.runButton);
+    const alreadyOpen =
+      (await run.isVisible().catch(() => false)) &&
+      (await this.editor.isVisible().catch(() => false));
+    if (alreadyOpen) {
       return;
     }
 
-    await this.page.getByRole("button", { name: "sql" }).click();
+    await this.page.getByRole("button", { name: "sql", exact: true }).click();
     await expect(this.editor).toBeVisible({ timeout: 15000 });
+    await expect(run).toBeVisible({ timeout: 15000 });
     await this.wait(500);
   }
 
   /** Select database/schema context used for raw-query metadata and inline edits. */
   async selectContext(database: string, schema?: string): Promise<void> {
-    await this.selectLabeledOption("database", database);
+    const databaseSelect = this.page.getByTestId("editor-context-database");
+    await expect(databaseSelect).toBeVisible({ timeout: 15000 });
+    const selectedDatabase = (await databaseSelect.innerText()).trim();
+    if (!selectedDatabase.includes(database)) {
+      await this.pickSelectOption(databaseSelect, database);
+    }
+
     if (schema !== undefined) {
-      await this.selectLabeledOption("schema", schema);
+      const schemaSelect = this.page.getByTestId("editor-context-schema");
+      await expect(schemaSelect).toBeVisible({ timeout: 15000 });
+      await this.pickSelectOption(schemaSelect, schema);
     }
   }
 
-  private async selectLabeledOption(label: string, value: string): Promise<void> {
-    const caption = this.page.getByText(new RegExp(`^${label}:$`, "i"));
-    await expect(caption).toBeVisible({ timeout: 15000 });
+  async expectContextVisibility(opts: {
+    database: boolean;
+    schema: boolean;
+  }): Promise<void> {
+    const databaseSelect = this.page.getByTestId("editor-context-database");
+    const schemaSelect = this.page.getByTestId("editor-context-schema");
 
-    const selectRoot = caption.locator("xpath=following-sibling::*[1]");
+    if (opts.database) {
+      await expect(databaseSelect).toBeVisible({ timeout: 15000 });
+    } else {
+      await expect(databaseSelect).toHaveCount(0);
+    }
+
+    if (opts.schema) {
+      await expect(schemaSelect).toBeVisible({ timeout: 15000 });
+    } else {
+      await expect(schemaSelect).toHaveCount(0);
+    }
+  }
+
+  async expectSelectedContext(database?: string, schema?: string): Promise<void> {
+    if (database !== undefined) {
+      const databaseSelect = this.page.getByTestId("editor-context-database");
+      await expect(databaseSelect).toBeVisible({ timeout: 15000 });
+      await expect(databaseSelect).toContainText(database, { timeout: 15000 });
+    }
+    if (schema !== undefined) {
+      const schemaSelect = this.page.getByTestId("editor-context-schema");
+      await expect(schemaSelect).toBeVisible({ timeout: 15000 });
+      await expect(schemaSelect).toContainText(schema, { timeout: 15000 });
+    }
+  }
+
+  /** Header Refresh: reload tree + editor schema/database catalog. */
+  async refreshCatalog(): Promise<void> {
+    const refresh = this.page.getByRole("button", { name: "refresh", exact: true });
+    await expect(refresh).toBeEnabled({ timeout: 10000 });
+    await waitForResponseDuring(
+      this.page,
+      apiRoute.queryAutocomplete,
+      () => refresh.click(),
+      API_DB_TIMEOUT,
+    );
+  }
+
+  private async pickSelectOption(
+    selectRoot: Locator,
+    value: string,
+  ): Promise<void> {
     const input = selectRoot.locator("input").first();
     await expect(input).toBeEnabled({ timeout: 15000 });
-    await input.click();
 
-    const option = this.page.getByRole("option", { name: value, exact: true });
-    await expect(option).toBeVisible({ timeout: 10000 });
-    await option.click();
-    await this.wait(300);
+    await expect(async () => {
+      await input.click();
+      const option = this.page.getByRole("option", { name: value, exact: true });
+      await expect(option).toBeVisible({ timeout: 3000 });
+      await option.click();
+      await expect(this.page.getByRole("option")).toHaveCount(0, { timeout: 3000 });
+      await expect(selectRoot.getByText(value, { exact: true })).toBeVisible({
+        timeout: 2000,
+      });
+    }).toPass({ timeout: 15000 });
   }
 
   async focus(): Promise<void> {
@@ -132,16 +203,40 @@ export class SqlEditorPage extends BasePage {
 
   async runQuery(): Promise<void> {
     // Web shortcut is Alt+Enter (not Ctrl+Enter); click the toolbar button instead.
-    const responsePromise = this.page.waitForResponse(
-      (response) =>
-        response.url().includes("/query/raw") &&
-        response.request().method() === "POST" &&
-        response.status() === 200,
-      { timeout: 15000 },
+    await waitForResponseDuring(
+      this.page,
+      apiRoute.queryRaw,
+      () => this.clickRun(),
     );
-    await expect(this.runButton).toBeEnabled({ timeout: 10000 });
+  }
+
+  /** Click Run without waiting for a successful response (Safe Mode gates / cancel). */
+  async clickRun(): Promise<void> {
+    const run = this.runQueryButton.or(this.runButton);
+    await expect(run).toBeVisible({ timeout: 10000 });
+    // Prefer the visible match — `.or()` can resolve to a detached/hidden node.
+    if (await this.runQueryButton.isVisible().catch(() => false)) {
+      await this.runQueryButton.click();
+      return;
+    }
     await this.runButton.click();
-    await responsePromise;
+  }
+
+  async stopQuery(): Promise<void> {
+    await expect(this.stopButton).toBeVisible({ timeout: 10000 });
+    await this.stopButton.click();
+  }
+
+  async expectQueryCancelled(): Promise<void> {
+    await expect(this.page.getByText(/query cancelled/i)).toBeVisible({
+      timeout: 10000,
+    });
+  }
+
+  async expectPaginationVisible(): Promise<void> {
+    await expect(
+      this.page.getByRole("button", { name: /next page|previous page/i }).first(),
+    ).toBeVisible({ timeout: 10000 });
   }
 
   async typeAndRun(sql: string): Promise<void> {
@@ -161,24 +256,44 @@ export class SqlEditorPage extends BasePage {
   }
 
   async saveQuery(): Promise<void> {
-    const responsePromise = this.page.waitForResponse(
-      (response) =>
-        response.url().includes("/saved") &&
-        response.request().method() === "POST" &&
-        response.status() === 200,
-      { timeout: 15000 },
-    );
     await expect(this.saveButton).toBeEnabled({ timeout: 10000 });
-    await this.saveButton.click();
-    await responsePromise;
+    await waitForResponseDuring(
+      this.page,
+      apiRoute.savedCreate,
+      () => this.saveButton.click(),
+    );
     await expect(this.page.getByText(/query saved successfully/i)).toBeVisible({
       timeout: 5000,
     });
-    await this.wait(500);
   }
 
   async getEditorContent(): Promise<string> {
     return (await this.editor.textContent()) || "";
+  }
+
+  async getMonacoValue(): Promise<string> {
+    return this.page.evaluate(() => {
+      const monacoApi = (
+        window as unknown as {
+          monaco?: {
+            editor: {
+              getEditors?: () => Array<{ getValue: () => string }>;
+              getModels?: () => Array<{ getValue: () => string }>;
+            };
+          };
+        }
+      ).monaco;
+      const editor = monacoApi?.editor?.getEditors?.()?.[0];
+      if (editor) {
+        return editor.getValue();
+      }
+      return monacoApi?.editor?.getModels?.()?.[0]?.getValue() ?? "";
+    });
+  }
+
+  async formatSql(): Promise<void> {
+    await expect(this.formatButton).toBeVisible({ timeout: 10000 });
+    await this.formatButton.click();
   }
 
   async expectEditorContains(text: string): Promise<void> {

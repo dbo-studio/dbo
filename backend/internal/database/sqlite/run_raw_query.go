@@ -2,7 +2,6 @@ package databaseSqlite
 
 import (
 	"context"
-	"slices"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
@@ -25,21 +24,20 @@ func (r *sqliteRawQueryResolver) IsBaseTable(ctx context.Context, database, sche
 	_ = database
 	_ = schema
 
-	tables, err := r.repo.ListTableNames(ctx, nil, nil)
+	var typ string
+
+	err := r.repo.base.DB().WithContext(ctx).
+		Table("sqlite_master").
+		Select("type").
+		Where("name = ? AND type IN ('table', 'view')", table).
+		Where("name NOT LIKE 'sqlite_%'").
+		Limit(1).
+		Scan(&typ).Error
 	if err != nil {
 		return false, err
 	}
 
-	if !slices.Contains(tables, table) {
-		return false, nil
-	}
-
-	views, err := r.repo.ListViewNames(ctx, nil, nil)
-	if err != nil {
-		return false, err
-	}
-
-	return !slices.Contains(views, table), nil
+	return typ == "table", nil
 }
 
 func (r *sqliteRawQueryResolver) LoadTableColumns(ctx context.Context, database, schema *string, table string) ([]dto.Column, error) {
@@ -57,5 +55,6 @@ func (r *sqliteRawQueryResolver) LoadTableColumns(ctx context.Context, database,
 func (r *sqliteRawQueryResolver) BuildNodeID(_ context.Context, database, schema, table string) string {
 	_ = database
 	_ = schema
+
 	return table
 }

@@ -19,7 +19,9 @@ func (r *PostgresRepository) handleSchemaCommands(node contract.DBNode, tabID co
 		if node.Schema == "" {
 			return queries, nil
 		}
+
 		queries = append(queries, fmt.Sprintf("DROP SCHEMA %s CASCADE", node.Schema))
+
 		return queries, nil
 	}
 

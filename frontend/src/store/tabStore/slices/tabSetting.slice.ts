@@ -1,9 +1,14 @@
+import { connectionDatabase, resolveEditorContext } from '@/core/db';
 import { TabMode } from '@/core/enums';
 import { tools } from '@/core/utils';
+import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import { matchConnectionId } from '@/store/tabStore/connectionId';
+import { siblingObjectNodeIds } from '@/store/tabStore/siblingObjectNodeIds';
 import { selectTabs } from '@/store/tabStore/tabs';
-import type { DataTabType, EditorTabType, ObjectTabType, TabType } from '@/types/Tab';
+import { useTreeStore } from '@/store/treeStore/tree.store';
+import type { DataTabType, DiagramTabType, EditorTabType, ObjectTabType, TabType } from '@/types/Tab';
 import type { StateCreator } from 'zustand';
 import type { TabQuerySlice, TabSettingSlice, TabStore } from '../types';
 
@@ -69,10 +74,46 @@ export const createTabSettingSlice: StateCreator<
       (tab) => tab.mode === TabMode.Query && matchConnectionId(tab.connectionId, currentConnectionId)
     );
 
-    if (findTab && get().getQuery() == '') {
+    const connection = useConnectionStore.getState().currentConnection();
+    const lastUsed = useSettingStore.getState().editorContextByConnection[String(currentConnectionId)];
+    const resolveFresh = () =>
+      resolveEditorContext({
+        engine: connection?.type,
+        current: { database: '', schema: '' },
+        connectionDatabase: connectionDatabase(connection),
+        focusedNodeId: useTreeStore.getState().getFocusedNodeId(),
+        siblingNodeIds: siblingObjectNodeIds(selectTabs(get()), currentConnectionId),
+        lastUsed
+      });
+
+    if (findTab && get().getQuery() === '') {
       get().switchTab(findTab.id);
-      return findTab;
+
+      if (findTab.contextLocked) {
+        return findTab;
+      }
+
+      const resolved = resolveFresh();
+      if (
+        resolved.database === (findTab.database ?? '') &&
+        resolved.schema === (findTab.schema ?? '') &&
+        resolved.source === (findTab.contextSource ?? 'none')
+      ) {
+        return findTab;
+      }
+
+      const updated: EditorTabType = {
+        ...findTab,
+        database: resolved.database,
+        schema: resolved.schema,
+        contextSource: resolved.source,
+        contextLocked: false
+      };
+      get().updateSelectedTab(updated);
+      return updated;
     }
+
+    const resolved = resolveFresh();
 
     const newTab: EditorTabType = {
       id: tools.uuid(),
@@ -80,8 +121,14 @@ export const createTabSettingSlice: StateCreator<
       connectionId: currentConnectionId,
       nodeId: '',
       mode: TabMode.Query,
-      database: '',
-      schema: ''
+      database: resolved.database,
+      schema: resolved.schema,
+      contextLocked: false,
+      contextSource: resolved.source,
+      pagination: {
+        page: 1,
+        limit: 100
+      }
     };
 
     const addedTab = get().handleAddNewTab(tabs, newTab);
@@ -89,6 +136,41 @@ export const createTabSettingSlice: StateCreator<
       get().updateQuery(query);
     }
     return addedTab as EditorTabType;
+  },
+  addDiagramTab: (args: { database: string; schema: string; focusTable?: string }): DiagramTabType => {
+    const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+    if (!currentConnectionId) {
+      throw new Error('No current connection id');
+    }
+
+    const focusTable = args.focusTable;
+    const tabs = selectTabs(get()) as DiagramTabType[];
+    const findTab = tabs.find(
+      (tab) =>
+        tab.mode === TabMode.Diagram &&
+        tab.database === args.database &&
+        tab.schema === args.schema &&
+        (tab.focusTable ?? '') === (focusTable ?? '') &&
+        matchConnectionId(tab.connectionId, currentConnectionId)
+    );
+
+    if (findTab) {
+      get().switchTab(findTab.id);
+      return findTab;
+    }
+
+    const newTab: DiagramTabType = {
+      id: tools.uuid(),
+      connectionId: currentConnectionId,
+      nodeId: '',
+      name: focusTable || args.schema || args.database || locales.diagram_tab,
+      mode: TabMode.Diagram,
+      database: args.database,
+      schema: args.schema,
+      focusTable
+    };
+
+    return get().handleAddNewTab(tabs, newTab) as DiagramTabType;
   },
   addObjectTab: (title: string, nodeId: string, action: string, mode: TabMode): ObjectTabType => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;

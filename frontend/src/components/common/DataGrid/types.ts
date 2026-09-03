@@ -1,4 +1,5 @@
 import type { ColumnType, RowType } from '@/types';
+import type { UseDataGridSearchReturn } from './hooks/useDataGridSearch';
 
 export type DataGridProps = {
   rows: RowType[];
@@ -11,7 +12,8 @@ export type DataGridTableCellProps = {
   row: RowType;
   rowIndex: number;
   columnId: string;
-  value: string | number | boolean | null | undefined;
+  column?: ColumnType;
+  value: unknown;
   editable: boolean;
   searchTerm?: string;
   isSearchMatch?: boolean;
@@ -22,7 +24,7 @@ export type DataGridTableRowProps = {
   row: RowType;
   rowIndex: number;
   columns: ColumnType[];
-  context: (e: React.MouseEvent) => void;
+  context: (e: React.MouseEvent, columnName: string) => void;
   isEdited: boolean;
   isUnsaved: boolean;
   isSelected: boolean;
@@ -34,7 +36,9 @@ export type DataGridTableRowProps = {
 
 export type CellEditingReturn = {
   inputRef: React.RefObject<HTMLInputElement | null>;
-  handleRowChange: (e: React.FocusEvent<HTMLInputElement>) => void;
+  handleRowChange: (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  commitValue: (newValue: unknown) => void;
+  commitFields: (updates: Record<string, unknown>) => void;
 };
 
 export type CellSelectionReturn = {
@@ -50,7 +54,7 @@ export interface RowSelectionReturn {
 export type DataGridTableBodyRowsProps = {
   rows: RowType[];
   columns: ColumnType[];
-  context: (event: React.MouseEvent) => void;
+  context: (event: React.MouseEvent, columnName: string) => void;
   editable: boolean;
   searchTerm?: string;
   currentMatch?: { rowIndex: number; columnIndex: number } | null;
@@ -60,6 +64,7 @@ export type DataGridTableHeaderRowProps = {
   startResize: (columnId: string, event: React.MouseEvent | React.TouchEvent) => void;
   resizingColumnId: string | null;
   editable?: boolean;
+  onHeaderContextMenu?: (event: React.MouseEvent, columnName: string) => void;
 };
 
 export type CellProps = {
@@ -80,4 +85,10 @@ export type DataGridResizerProps = {
   columnId: string;
   isResizing: boolean;
   onResizeStart: (columnId: string, event: React.MouseEvent | React.TouchEvent) => void;
+};
+
+export type SearchDialogProps = {
+  open: boolean;
+  onClose: () => void;
+  search: UseDataGridSearchReturn;
 };

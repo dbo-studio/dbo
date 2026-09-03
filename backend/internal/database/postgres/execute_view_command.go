@@ -65,6 +65,7 @@ func (r *PostgresRepository) handleViewCommands(node contract.DBNode, tabID cont
 			if params.New.CheckOption != nil {
 				createQuery += fmt.Sprintf(" WITH %s CHECK OPTION", *params.New.CheckOption)
 			}
+
 			queries = append(queries, createQuery)
 		}
 
@@ -84,5 +85,6 @@ func (r *PostgresRepository) handleViewCommands(node contract.DBNode, tabID cont
 func formatQuery(query *string) *string {
 	formattedQuery := lo.FromPtr(query)
 	formattedQuery = strings.ReplaceAll(formattedQuery, ";", "")
+
 	return &formattedQuery
 }

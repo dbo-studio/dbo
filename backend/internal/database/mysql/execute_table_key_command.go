@@ -43,6 +43,7 @@ func (r *MySQLRepository) handleTableKeyCommands(node contract.DBNode, tabID con
 			if query != "" {
 				queries = append(queries, query)
 			}
+
 			continue
 		}
 

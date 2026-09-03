@@ -26,6 +26,8 @@ type Handlers struct {
 	AiProvider   *handler.AiProviderHandler
 	AiChat       *handler.AiChatHandler
 	Mcp          *handler.McpHandler
+	Schema       *handler.SchemaHandler
+	SafeMode     *handler.SafeModeHandler
 }
 
 type Server struct {
@@ -68,6 +70,7 @@ func (r *Server) Start(isLocal bool, port string) error {
 	r.app.Use(middleware.OwnerSessionMiddleware(r.webSessionRepo))
 
 	r.routing()
+
 	return r.app.Listen(":" + port)
 }
 

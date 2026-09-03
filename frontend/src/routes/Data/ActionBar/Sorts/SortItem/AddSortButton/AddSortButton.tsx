@@ -10,9 +10,11 @@ export default function AddSortButton({ columns }: AddSortButtonProps): JSX.Elem
   const upsertSorts = useTabStore((state) => state.upsertSorts);
 
   const handleAddNewSort = (): void => {
+    const column = columns[0];
+    if (!column) return;
     upsertSorts({
       index: tools.uuid(),
-      column: columns[0].name,
+      column: column.name,
       operator: PgsqlSorts[0],
       isActive: true
     });

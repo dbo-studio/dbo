@@ -41,5 +41,6 @@ func TruncateQueryResult(data []map[string]any) []map[string]any {
 	if len(data) <= maxSQLRows {
 		return data
 	}
+
 	return data[:maxSQLRows]
 }

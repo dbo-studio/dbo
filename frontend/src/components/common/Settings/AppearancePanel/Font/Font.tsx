@@ -80,7 +80,7 @@ export default function Font(): JSX.Element {
           disabled={loadingApp}
           formatOptionLabel={fontOptionLabel}
           onMenuOpen={(): void => {
-            prefetchFonts(APP_FONT_OPTIONS.map((option) => option.value as string));
+            prefetchFonts(APP_FONT_OPTIONS.map((option) => option.value));
           }}
           onChange={(value): void => {
             void handleChangeAppFont((value as SelectInputOption)?.value as string);
@@ -113,7 +113,7 @@ export default function Font(): JSX.Element {
           disabled={loadingEditor}
           formatOptionLabel={fontOptionLabel}
           onMenuOpen={(): void => {
-            prefetchFonts(EDITOR_FONT_OPTIONS.map((option) => option.value as string));
+            prefetchFonts(EDITOR_FONT_OPTIONS.map((option) => option.value));
           }}
           onChange={(value): void => {
             void handleChangeEditorFont((value as SelectInputOption)?.value as string);

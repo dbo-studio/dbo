@@ -50,6 +50,12 @@ export async function createUsersTable(page: Page, connectionName: string, table
   await objectForm.selectArrayCellOption(0, F.columnType, 'INTEGER');
   await objectForm.fillArrayCell(0, F.columnName, 'id');
 
+  // email must exist at index 1 so later edit-table steps (NOT NULL / default / drop notes at 2) match PG/MySQL.
+  const emailRowIndex = await objectForm.addArrayRow(F.columnName);
+  await objectForm.fillArrayCell(emailRowIndex, F.columnName, 'email');
+  await objectForm.selectArrayCellOption(emailRowIndex, F.columnType, 'TEXT');
+  await objectForm.fillArrayCell(emailRowIndex, F.columnName, 'email');
+
   await objectForm.selectTab(T.keys);
   const keyRowIndex = await objectForm.addArrayRow(F.keyName);
   await objectForm.fillArrayCell(keyRowIndex, F.keyName, 'pk_users');
@@ -106,13 +112,8 @@ export async function createPostsTable(
   const fkRowIndex = await objectForm.addArrayRow(F.fkName);
   await objectForm.fillArrayCell(fkRowIndex, F.fkName, fkName);
 
-  const dynamicOptionsPromise = page.waitForResponse(
-    (response) => response.url().includes('/dynamic') && response.status() === 200,
-    { timeout: 15000 }
-  );
+  // Target-table change may load /dynamic column options; wait on UI when selecting columns.
   await objectForm.selectArrayCellOption(fkRowIndex, F.fkTargetTable, usersTable);
-  await dynamicOptionsPromise.catch(() => undefined);
-  await objectForm.wait(500);
 
   await objectForm.selectMultiSelectOptions(fkRowIndex, F.fkSourceColumns, ['user_id']);
   await objectForm.selectMultiSelectOptions(fkRowIndex, F.fkTargetColumns, ['id']);
@@ -173,6 +174,51 @@ export async function editUsersTableAddColumn(page: Page, tableName: string): Pr
   await objectForm.assertPreviewContains(P.addColumn);
   await objectForm.confirmExecute();
 
+  await expect(tree.getTreeNode(tableName)).toBeVisible({ timeout: 15000 });
+}
+
+/**
+ * Create a STRICT + WITHOUT ROWID table (requires PRIMARY KEY).
+ * Covers General-tab options that are SQLite-only in the Object Form.
+ */
+export async function createStrictWithoutRowidTable(
+  page: Page,
+  connectionName: string,
+  tableName: string
+): Promise<void> {
+  const tree = new ObjectTreePage(page);
+  const objectForm = new ObjectFormPage(page);
+
+  await tree.expandPath([connectionName]);
+  await tree.runTreeAction('Tables', 'Create table');
+  await objectForm.waitForReady();
+  await objectForm.activateWorkspaceTab('Create table');
+  await objectForm.waitForReady();
+
+  await objectForm.fillGeneralField(F.tableName, tableName);
+  await objectForm.toggleGeneralCheckbox(F.tableStrict, true);
+  await objectForm.toggleGeneralCheckbox(F.tableWithoutRowid, true);
+
+  await objectForm.selectTab(T.columns);
+  await objectForm.addRow();
+  await objectForm.fillArrayCell(0, F.columnName, 'id');
+  await objectForm.selectArrayCellOption(0, F.columnType, 'INTEGER');
+  await objectForm.addRow();
+  await objectForm.fillArrayCell(1, F.columnName, 'label');
+  await objectForm.selectArrayCellOption(1, F.columnType, 'TEXT');
+
+  await objectForm.selectTab(T.keys);
+  const keyRowIndex = await objectForm.addArrayRow(F.keyName);
+  await objectForm.fillArrayCell(keyRowIndex, F.keyName, 'pk_strict');
+  await objectForm.selectMultiSelectOptions(keyRowIndex, F.keyColumns, ['id']);
+  await objectForm.selectArrayCellOption(keyRowIndex, F.keyType, 'PRIMARY KEY');
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.createStrictWithoutRowid);
+  await objectForm.assertPreviewContains(tableName);
+  await objectForm.confirmExecute();
+
+  await tree.expandNode('Tables');
   await expect(tree.getTreeNode(tableName)).toBeVisible({ timeout: 15000 });
 }
 

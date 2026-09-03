@@ -1,6 +1,6 @@
-import CodeEditor from '@/components/base/CodeEditor/CodeEditor';
 import ResizableModal from '@/components/base/Modal/ResizableModal/ResizableModal.tsx';
 import type { QuickViewDialogProps } from '@/components/common/DataGrid/QuickViewDialog/types';
+import { DataValueEditor } from '@/components/common/DataGrid/DataValuePanel/DataValuePanel';
 import { handleRowChangeLog } from '@/core/utils';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
@@ -9,13 +9,8 @@ import { useSettingStore } from '@/store/settingStore/setting.store';
 import { type JSX, useMemo, useState } from 'react';
 import { QuickViewDialogContainerStyled, QuickViewDialogEditorStyled } from './QuickViewDialog.styled';
 
-const getRowValue = (row: SelectedRow): string | undefined => {
-  if (!row || !row.selectedColumn) return undefined;
-  return row.row[row.selectedColumn] as string | undefined;
-};
-
 export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX.Element {
-  const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
+  const [dimensions, setDimensions] = useState({ width: 480, height: 420 });
 
   const selectedRows = useDataStore((state) => state.selectedRows);
   const editedRows = useDataStore((state) => state.editedRows);
@@ -39,58 +34,45 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
     return row;
   }, [showQuickLookEditor, selectedRows]);
 
-  const sourceValue = activeRow ? getRowValue(activeRow) : undefined;
-  const activeRowKey = activeRow ? `${activeRow.index}-${activeRow.selectedColumn}` : '';
-  const [valueSourceKey, setValueSourceKey] = useState(activeRowKey);
-  const [value, setValue] = useState<string | undefined>(sourceValue);
+  const column = columns.find((item) => item.name === activeRow?.selectedColumn);
+  const sourceValue = activeRow?.selectedColumn ? activeRow.row[activeRow.selectedColumn] : undefined;
+  const cellEditable = Boolean(editable) && column?.editable !== false;
 
-  if (activeRowKey !== valueSourceKey) {
-    setValueSourceKey(activeRowKey);
-    setValue(sourceValue);
-  }
-
-  const handleClose = async (): Promise<void> => {
-    if (!activeRow) {
-      updateUI({ showQuickLookEditor: false });
-      return;
-    }
-
-    const rowValue = getRowValue(activeRow);
-    if (rowValue === undefined || value === rowValue || !editable) {
-      updateUI({ showQuickLookEditor: false });
-      return;
-    }
-
-    const newEditedRows = handleRowChangeLog(
-      editedRows,
-      activeRow.row,
-      activeRow.selectedColumn,
-      rowValue,
-      value,
-      columns
-    );
-
-    await updateEditedRows(newEditedRows);
-    const newRow = { ...activeRow.row };
-    newRow[activeRow.selectedColumn] = value;
-    await updateRow(newRow);
+  const handleClose = (): void => {
     updateUI({ showQuickLookEditor: false });
   };
 
   return (
     <ResizableModal
-      onClose={() => void handleClose()}
+      onClose={handleClose}
       open={showQuickLookEditor}
       title={`${locales.quick_look_editor} : ${activeRow?.selectedColumn ?? ''}`}
       onResize={(width: number, height: number): void => setDimensions({ width, height })}
     >
       <QuickViewDialogContainerStyled>
         <QuickViewDialogEditorStyled>
-          <CodeEditor
-            width={dimensions.width}
-            value={value?.toString() ?? ''}
-            onChange={(v: string): void => setValue(v)}
-          />
+          {activeRow?.selectedColumn && (
+            <DataValueEditor
+              value={sourceValue}
+              column={column}
+              editable={cellEditable}
+              width={dimensions.width}
+              height={dimensions.height}
+              onApply={(next): void => {
+                const newEditedRows = handleRowChangeLog(
+                  editedRows,
+                  activeRow.row,
+                  activeRow.selectedColumn,
+                  sourceValue,
+                  next,
+                  columns
+                );
+                void updateEditedRows(newEditedRows);
+                void updateRow({ ...activeRow.row, [activeRow.selectedColumn]: next });
+                handleClose();
+              }}
+            />
+          )}
         </QuickViewDialogEditorStyled>
       </QuickViewDialogContainerStyled>
     </ResizableModal>

@@ -15,10 +15,12 @@ async function main() {
     `[e2e] stack ready baseURL=${stack.baseURL} apiURL=${stack.apiURL} dataDir=${stack.dataDir}\n`
   );
 
+  const isUi = playwrightArgs.some((arg) => arg === '--ui' || arg.startsWith('--ui-'));
   const env = {
     ...process.env,
     PLAYWRIGHT_BASE_URL: stack.baseURL,
-    PLAYWRIGHT_API_URL: stack.apiURL
+    PLAYWRIGHT_API_URL: stack.apiURL,
+    ...(isUi ? { E2E_UI_MODE: '1' } : {})
   };
 
   let exitCode = 1;

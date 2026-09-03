@@ -5,7 +5,7 @@ import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { DataTabType, TabType } from '@/types';
+import type { DataTabType, EditorTabType } from '@/types';
 import { IconButton, Tooltip } from '@mui/material';
 import type { JSX } from 'react';
 import PaginationSetting from './PaginationSetting/PaginationSetting';
@@ -14,56 +14,68 @@ import { PageNumberStyled, StatusBarPaginationStyled } from './StatusBarPaginati
 export default function StatusBarPagination(): JSX.Element {
   const { isMobile } = useLayoutMode();
   const isDataFetching = useDataStore((state) => state.isDataFetching);
-  const selectedTab = useSelectedTab<DataTabType>();
+  const rows = useDataStore((state) => state.rows);
+  const selectedTab = useSelectedTab();
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
+  const runRawQuery = useDataStore((state) => state.runRawQuery);
+
+  const isQueryMode = selectedTab?.mode === TabMode.Query;
+
+  const pagination = (selectedTab as DataTabType | EditorTabType | undefined)?.pagination ?? { page: 1, limit: 100 };
+  const nextDisabled = isDataFetching || (isQueryMode && (rows?.length ?? 0) < pagination.limit);
 
   const handlePagination = (mode: 'prev' | 'next'): void => {
     if (!selectedTab || isDataFetching) {
       return;
     }
-    const pagination = selectedTab?.pagination ?? { page: 1, limit: 100 };
 
-    if (mode === 'prev') {
-      pagination.page = pagination.page - 1;
-    }
-
-    if (mode === 'next') {
-      pagination.page = pagination.page + 1;
-    }
+    const nextPagination = {
+      page: mode === 'prev' ? Math.max(1, pagination.page - 1) : pagination.page + 1,
+      limit: pagination.limit
+    };
 
     updateSelectedTab({
-      ...(selectedTab ?? ({} as TabType)),
-      pagination
+      ...selectedTab,
+      pagination: nextPagination
     });
+
+    if (isQueryMode) {
+      void runRawQuery();
+      return;
+    }
 
     toggleReRunQuery();
   };
 
   return (
     <StatusBarPaginationStyled mobile={isMobile}>
-      {selectedTab?.mode && selectedTab?.mode === TabMode.Data && (
-        <>
-          <PaginationSetting />
-          <Tooltip title={locales.previous_page}>
-            <IconButton
-              aria-label={locales.previous_page}
-              disabled={selectedTab?.pagination?.page === 1}
-              onClick={(): void => handlePagination('prev')}
-            >
-              <CustomIcon type='chevronLeft' size='s' />
-            </IconButton>
-          </Tooltip>
-          <PageNumberStyled mobile={isMobile} color='textText'>
-            {selectedTab?.pagination?.page ?? 1}
-          </PageNumberStyled>
-          <Tooltip title={locales.next_page}>
-            <IconButton aria-label={locales.next_page} onClick={(): void => handlePagination('next')}>
-              <CustomIcon type='chevronRight' size='s' />
-            </IconButton>
-          </Tooltip>
-        </>
-      )}
+      <PaginationSetting />
+      <Tooltip title={locales.previous_page}>
+        <span>
+          <IconButton
+            aria-label={locales.previous_page}
+            disabled={pagination.page === 1 || isDataFetching}
+            onClick={(): void => handlePagination('prev')}
+          >
+            <CustomIcon type='chevronLeft' size='s' />
+          </IconButton>
+        </span>
+      </Tooltip>
+      <PageNumberStyled mobile={isMobile} color='textText'>
+        {pagination.page}
+      </PageNumberStyled>
+      <Tooltip title={locales.next_page}>
+        <span>
+          <IconButton
+            aria-label={locales.next_page}
+            disabled={nextDisabled}
+            onClick={(): void => handlePagination('next')}
+          >
+            <CustomIcon type='chevronRight' size='s' />
+          </IconButton>
+        </span>
+      </Tooltip>
     </StatusBarPaginationStyled>
   );
 }

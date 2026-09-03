@@ -36,6 +36,7 @@ func New(cfg *config.Config) logger.Logger {
 	f, err := os.OpenFile(logFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o666)
 	fmt.Println("log path: " + logFilePath)
 	cfg.App.LogPath = logFilePath
+
 	if err != nil {
 		l.Fatalln(err)
 	}
@@ -56,6 +57,7 @@ func New(cfg *config.Config) logger.Logger {
 
 func (log *log) Error(msg any) {
 	l.Println(msg)
+
 	if err, ok := msg.(error); ok {
 		log.zap.Errorw("error", "error", err, "stack", getStackTrace())
 	} else {
@@ -65,6 +67,7 @@ func (log *log) Error(msg any) {
 
 func (log *log) Fatal(msg any) {
 	l.Println(msg)
+
 	if err, ok := msg.(error); ok {
 		log.zap.Fatalw("error", "error", err, "stack", getStackTrace())
 	} else {
@@ -84,17 +87,21 @@ func (log *log) Info(msg any) {
 
 func getStackTrace() string {
 	var pcs [32]uintptr
+
 	n := runtime.Callers(3, pcs[:])
 	frames := runtime.CallersFrames(pcs[:n])
 
 	var stack string
+
 	for {
 		frame, more := frames.Next()
 		stack += fmt.Sprintf("\n\t%s:%d", frame.File, frame.Line)
+
 		if !more {
 			break
 		}
 	}
+
 	return stack
 }
 
@@ -104,7 +111,9 @@ func getLogPath(cfg *config.Config) string {
 	}
 
 	defaultPath := "data/logs"
+
 	var logPath string
+
 	appName := cfg.App.Name
 
 	if cfg.App.Env == config.EnvironmentDocker {
@@ -120,10 +129,13 @@ func getLogPath(cfg *config.Config) string {
 	switch runtime.GOOS {
 	case "windows":
 		appData := os.Getenv("APPDATA")
+
 		l.Println("APPDATA environment variable not set")
+
 		if appData == "" {
 			return defaultPath
 		}
+
 		logPath = filepath.Join(appData, appName, "logs")
 	case "darwin":
 		logPath = filepath.Join(homeDir, "Library", "Application Support", appName, "logs")

@@ -15,6 +15,7 @@ func sanitizeCompletion(prefix, suffix, completion string) string {
 		if idx := strings.Index(completion, suffix); idx >= 0 {
 			completion = completion[:idx]
 		}
+
 		completion = trimSuffixOverlap(completion, suffix)
 	}
 
@@ -31,6 +32,7 @@ func stripCodeFences(text string) string {
 	text = strings.TrimPrefix(text, "```SQL")
 	text = strings.TrimPrefix(text, "```")
 	text = strings.TrimSuffix(text, "```")
+
 	return strings.TrimSpace(text)
 }
 
@@ -41,6 +43,7 @@ func trimPrefixOverlap(prefix, completion string) string {
 			return completion[i:]
 		}
 	}
+
 	return completion
 }
 
@@ -52,5 +55,6 @@ func trimSuffixOverlap(completion, suffix string) string {
 			return completion[:len(completion)-i]
 		}
 	}
+
 	return completion
 }

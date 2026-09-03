@@ -34,6 +34,7 @@ func (h ConnectionHandler) Connections(c fiber.Ctx) error {
 
 func (h ConnectionHandler) Delete(c fiber.Ctx) error {
 	connectionID := fiber.Params[int32](c, "id")
+
 	data, err := h.connectionService.Delete(c, connectionID)
 	if err != nil {
 		h.logger.Error(err.Error())
@@ -53,13 +54,13 @@ func (h ConnectionHandler) Ping(c fiber.Ctx) error {
 		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
 	}
 
-	err := h.connectionService.Ping(c, req)
+	data, err := h.connectionService.Ping(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return response.SuccessBuilder().Send(c)
+	return response.SuccessBuilder().WithData(data).Send(c)
 }
 
 func (h ConnectionHandler) Update(c fiber.Ctx) error {
@@ -115,6 +116,37 @@ func (h ConnectionHandler) Create(c fiber.Ctx) error {
 	}
 
 	if err := h.connectionService.Create(c, req); err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().Send(c)
+}
+
+func (h ConnectionHandler) UnlockSafeMode(c fiber.Ctx) error {
+	connectionID := fiber.Params[int32](c, "id")
+
+	req := new(dto.SafeModeUnlockRequest)
+	if err := c.Bind().Body(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	result, err := h.connectionService.UnlockSafeMode(c, connectionID, req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(result).Send(c)
+}
+
+func (h ConnectionHandler) LockSafeMode(c fiber.Ctx) error {
+	connectionID := fiber.Params[int32](c, "id")
+	if err := h.connectionService.LockSafeMode(c, connectionID); err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)
 	}

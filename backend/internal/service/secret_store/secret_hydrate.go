@@ -31,7 +31,9 @@ func HydrateConnectionPassword(ctx context.Context, store ISecretStore, ownerID 
 		if err != nil {
 			return err
 		}
+
 		connection.Options = options
+
 		return nil
 	}
 
@@ -46,5 +48,6 @@ func HydrateConnectionPassword(ctx context.Context, store ISecretStore, ownerID 
 	}
 
 	connection.Options = options
+
 	return nil
 }

@@ -1,59 +1,33 @@
 ---
-description: Go testing — table-driven tests, t.Parallel, t.Helper, SQL builder unit tests
-globs: backend/**/*_test.go
+description: Testing policy — no new frontend/backend unit tests; cover behavior with Playwright e2e only
+globs: backend/**/*_test.go,frontend/**/*.{test,spec}.*
 alwaysApply: false
 ---
 
-# Go Testing (DBO)
+# Testing Policy (DBO)
 
-## Structure
+## Rule
 
-- Colocate `*_test.go` next to implementation.
-- Use table-driven tests with `t.Run` subtests.
-- Call `t.Parallel()` at test and subtest level.
-- Name tests: `Test<FunctionOrBehavior>`.
+**Do not add new unit/integration tests under `frontend/` or `backend/`.**
 
-```go
-func TestOverridePostgresqlURIDatabase(t *testing.T) {
-    t.Parallel()
-    tests := []struct {
-        name, uri, database, want string
-    }{
-        {name: "replaces db name", uri: "postgres://u:p@h/old", database: "new", want: "postgres://u:p@h/new"},
-    }
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            t.Parallel()
-            got := overridePostgresqlURIDatabase(tt.uri, tt.database)
-            if got != tt.want {
-                t.Errorf("got %q, want %q", got, tt.want)
-            }
-        })
-    }
-}
-```
+All product behavior coverage goes through Playwright in [`e2e/`](../../e2e/):
 
-## Database Driver Tests
+- Specs: `e2e/tests/*.spec.ts`
+- Follow [`.cursor/rules/e2e-qa.mdc`](e2e-qa.mdc) and the `e2e-playwright` skill
+- Run: `cd e2e && npm test -- tests/<affected>.spec.ts`
 
-- Test SQL/command generation without a live DB when possible.
-- Construct repo struct directly, assert generated query strings.
+## Do not create
 
-## Helpers
+- `frontend/**/*.test.ts`, `*.spec.ts`, Vitest/Jest/node:test suites
+- New `backend/**/*_test.go` files
+- `npm run test:unit` / ad-hoc unit runners in `frontend/package.json`
 
-- Mark helpers with `t.Helper()`.
-- Use `t.Fatalf` for setup failures, `t.Errorf` for assertion failures.
+## Existing `*_test.go`
 
-## Commands
+A few legacy Go tests may remain. Do not expand them for new features. Prefer an e2e scenario instead. Only touch an existing `*_test.go` if a change you made breaks `go test` on that file and a minimal fix is required.
 
-```bash
-cd backend
-go test ./...
-go test ./internal/database/... -run TestName
-go test ./... -cover
-```
+## Before PR
 
-## What to Test
-
-- Pure functions, parsers, URI builders, SQL generators — always.
-- Service logic — when behavior is non-trivial.
-- Handlers — only for complex binding/validation edge cases.
+- Frontend: `npm run lint` (+ e2e for UI behavior)
+- Backend: `go fmt ./...` + `golangci-lint run` (+ e2e for API/UI flows)
+- Behavior change → update or add `e2e/tests/<feature>.spec.ts` and the matrix in `e2e/README.md`

@@ -10,6 +10,7 @@ export const ConnectionsStyled = styled(Box, {
 })<ConnectionsStyledProps>(({ theme, expanded, expandedLayout = 'grid' }) => ({
   height: '100%',
   background: theme.palette.background.subdued,
+  borderRight: `1px solid ${theme.palette.divider}`,
   ...(expanded
     ? expandedLayout === 'grid'
       ? {
@@ -35,7 +36,10 @@ export const ConnectionsStyled = styled(Box, {
     : {
         display: 'flex',
         flexDirection: 'column',
-        minWidth: '83px'
+        width: '83px',
+        minWidth: '83px',
+        maxWidth: '83px',
+        overflow: 'hidden'
       })
 }));
 
@@ -49,4 +53,16 @@ export const EmptyConnectionsStyled = styled(Box)(() => ({
   p: 3,
   minHeight: 240,
   width: '100%'
+}));
+
+export const ConnectionsListStyled = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'expanded'
+})<{ expanded?: boolean }>(({ expanded }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  minHeight: 0,
+  minWidth: 0,
+  width: '100%',
+  overflow: 'auto',
+  ...(expanded ? { flex: 1 } : { flexShrink: 0 })
 }));

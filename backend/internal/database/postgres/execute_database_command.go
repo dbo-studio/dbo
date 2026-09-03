@@ -21,6 +21,7 @@ func (r *PostgresRepository) handleDatabaseCommands(node contract.DBNode, tabID 
 		}
 
 		queries = append(queries, fmt.Sprintf("DROP DATABASE %s WITH (FORCE)", node.Database))
+
 		return queries, nil
 	}
 
@@ -43,9 +44,11 @@ func (r *PostgresRepository) handleDatabaseCommands(node contract.DBNode, tabID 
 		if params.New.Owner != nil {
 			query += fmt.Sprintf(" WITH OWNER %s", *params.New.Owner)
 		}
+
 		if params.New.Template != nil {
 			query += fmt.Sprintf(" TEMPLATE %s", *params.New.Template)
 		}
+
 		if params.New.Tablespace != nil {
 			query += fmt.Sprintf(" TABLESPACE %s", *params.New.Tablespace)
 		}

@@ -22,6 +22,7 @@ func buildMysqlCreateTableQuery(node contract.DBNode, params []byte) (string, st
 	}
 
 	tableName := *general.New.Name
+
 	columnParams, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.MysqlTableColumnParams](params)
 	if err != nil {
 		return "", "", err
@@ -30,6 +31,7 @@ func buildMysqlCreateTableQuery(node contract.DBNode, params []byte) (string, st
 	keyParams, _ := helper.ConvertToDTO[map[contract.TreeTab]*dto.MysqlTableKeyParams](params)
 
 	columnDefs := make([]string, 0)
+
 	if columnParams != nil && columnParams[contract.TableColumnsTab] != nil {
 		for _, column := range columnParams[contract.TableColumnsTab].Columns {
 			if column.New == nil || column.New.Name == nil || column.New.DataType == nil {
@@ -59,6 +61,7 @@ func buildMysqlCreateTableQuery(node contract.DBNode, params []byte) (string, st
 				if constraintName == "" {
 					constraintName = "uniq_key"
 				}
+
 				columnDefs = append(columnDefs, fmt.Sprintf("CONSTRAINT `%s` UNIQUE (`%s`)", constraintName, cols))
 			}
 		}

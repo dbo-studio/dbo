@@ -21,6 +21,7 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           },
           showConnectionsDrawer: false,
           showAddConnection: false,
+          duplicateConnectionId: undefined,
           showEditConnection: false,
           showQuickLookEditor: false,
           showConnectionPasswordPrompt: false,
@@ -51,6 +52,7 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           debug: false,
           enableErrorReporting: false,
           enableAnalytics: true,
+          enableSafeModeBiometrics: false,
           ignoredRelease: '',
           logsPath: '',
           version: '',
@@ -59,6 +61,7 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
         setup: {
           hasCompletedSetup: false
         },
+        editorContextByConnection: {},
         updateUI: (ui: Partial<UISettings>): void => {
           const oldUI = get().ui;
           const newUI = { ...oldUI, ...ui };
@@ -78,6 +81,26 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           const oldGeneral = get().general;
           const newGeneral = { ...oldGeneral, ...general };
           set({ general: newGeneral }, undefined, 'updateGeneral');
+        },
+        setEditorContextForConnection: (
+          connectionId: string | number,
+          context: { database: string; schema: string }
+        ): void => {
+          set(
+            {
+              editorContextByConnection: {
+                ...get().editorContextByConnection,
+                [String(connectionId)]: context
+              }
+            },
+            undefined,
+            'setEditorContextForConnection'
+          );
+        },
+        clearEditorContextForConnection: (connectionId: string | number): void => {
+          const next = { ...get().editorContextByConnection };
+          delete next[String(connectionId)];
+          set({ editorContextByConnection: next }, undefined, 'clearEditorContextForConnection');
         },
         completeSetup: (): void => {
           set({ setup: { hasCompletedSetup: true } }, undefined, 'completeSetup');

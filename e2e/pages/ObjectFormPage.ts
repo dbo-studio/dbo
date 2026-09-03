@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { API_DDL_TIMEOUT, apiRoute, waitForResponseDuring } from "../helpers/network";
 import { BasePage } from "./BasePage";
 
 /**
@@ -177,6 +178,21 @@ export class ObjectFormPage extends BasePage {
     }
   }
 
+  async toggleGeneralCheckbox(
+    fieldId: string,
+    checked = true,
+  ): Promise<void> {
+    const field = this.getGeneralField(fieldId);
+    const checkbox = field.locator('input[type="checkbox"]');
+    await expect(checkbox).toBeVisible({ timeout: 30000 });
+    const isChecked = await checkbox.isChecked();
+
+    if (isChecked !== checked) {
+      await checkbox.click();
+      await this.wait(200);
+    }
+  }
+
   async fillGeneralQueryField(fieldId: string, sql: string): Promise<void> {
     await this.fillQueryFieldViaStore(fieldId, sql);
   }
@@ -233,19 +249,19 @@ export class ObjectFormPage extends BasePage {
   }
 
   async deleteArrayRow(rowIndex: number): Promise<void> {
-    await this.page.getByTestId(`object-form-delete-row-${rowIndex}`).click();
+    const deleteBtn = this.page.getByTestId(`object-form-delete-row-${rowIndex}`);
+    await expect(deleteBtn).toBeVisible({ timeout: 15000 });
+    await deleteBtn.click();
     await this.wait(300);
   }
 
   async save(): Promise<void> {
-    const previewPromise = this.page.waitForResponse(
-      (response) => response.url().includes("/fields/object/preview"),
-      {
-        timeout: 30000,
-      },
+    const response = await waitForResponseDuring(
+      this.page,
+      apiRoute.objectPreview,
+      () => this.saveButton.click(),
+      API_DDL_TIMEOUT,
     );
-    await this.saveButton.click();
-    const response = await previewPromise;
     expect(response.status()).toBe(200);
     await expect(this.previewModal).toBeVisible({ timeout: 10000 });
   }
@@ -255,14 +271,12 @@ export class ObjectFormPage extends BasePage {
   }
 
   async confirmExecute(): Promise<void> {
-    const executePromise = this.page.waitForResponse(
-      (response) =>
-        response.url().includes("/fields/object") &&
-        !response.url().includes("/preview"),
-      { timeout: 60000 },
+    const response = await waitForResponseDuring(
+      this.page,
+      apiRoute.objectExecute,
+      () => this.executeButton.click(),
+      API_DDL_TIMEOUT,
     );
-    await this.executeButton.click();
-    const response = await executePromise;
     if (response.status() !== 200) {
       const body = await response.text().catch(() => "");
       throw new Error(
@@ -404,6 +418,13 @@ export class ObjectFormPage extends BasePage {
   }
 
   async closeAllWorkspaceTabs(): Promise<void> {
+    if (await this.previewModal.isVisible().catch(() => false)) {
+      await this.previewCancelButton.click().catch(() => undefined);
+      await expect(this.previewModal).toBeHidden({ timeout: 5000 }).catch(
+        () => undefined,
+      );
+    }
+
     for (let attempt = 0; attempt < 30; attempt++) {
       const tabs = this.page.locator('[data-testid^="workspace-tab-"]');
       if ((await tabs.count()) === 0) {

@@ -10,13 +10,12 @@ import (
 	"github.com/openai/openai-go/v2/option"
 )
 
-func NewGeminiProvider(ctx context.Context, provider *model.AiProvider) (IAiProvider, error) {
+func NewGeminiProvider(_ context.Context, provider *model.AiProvider) (IAiProvider, error) {
 	if provider.APIKey == nil || *provider.APIKey == "" || provider.URL == "" {
 		return nil, fmt.Errorf("gemini api key and url are required")
 	}
 
 	return &BaseProvider{
-		context: ctx,
 		client: openai.NewClient(
 			option.WithAPIKey(*provider.APIKey),
 			option.WithBaseURL(provider.URL),

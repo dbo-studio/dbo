@@ -20,6 +20,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 		if err != nil {
 			return err
 		}
+
 		return emit(data)
 	}
 
@@ -88,9 +89,11 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 		if marshalErr != nil {
 			return marshalErr
 		}
+
 		if emitErr := emit(errPayload); emitErr != nil {
 			return emitErr
 		}
+
 		return providerErr
 	}
 

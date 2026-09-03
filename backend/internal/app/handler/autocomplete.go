@@ -19,7 +19,6 @@ func (h QueryHandler) Autocomplete(c fiber.Ctx) error {
 	}
 
 	result, err := h.queryService.AutoComplete(c, req)
-
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)

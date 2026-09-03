@@ -36,13 +36,17 @@ func (r JobRepository) Update(ctx context.Context, job *model.Job) error {
 
 func (r JobRepository) GetPendingJobs(ctx context.Context) ([]model.Job, error) {
 	var jobs []model.Job
+
 	err := r.db.WithContext(ctx).Where("status = ?", model.JobStatusPending).Order("created_at ASC").Find(&jobs).Error
+
 	return jobs, err
 }
 
 func (r JobRepository) GetRunningJobs(ctx context.Context) ([]model.Job, error) {
 	var jobs []model.Job
+
 	err := r.db.WithContext(ctx).Where("status = ?", model.JobStatusRunning).Find(&jobs).Error
+
 	return jobs, err
 }
 

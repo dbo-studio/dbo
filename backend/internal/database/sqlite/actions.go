@@ -79,5 +79,6 @@ func (r *SQLiteRepository) ContextMenu(nodeType contract.TreeNodeType) []contrac
 	}
 
 	actions = append(actions, defaultActions...)
+
 	return actions
 }

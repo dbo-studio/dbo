@@ -93,7 +93,6 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 		ConnectionID: int32(connection.ID),
 		Query:        jobData.Query,
 	})
-
 	if err != nil {
 		return err
 	}
@@ -107,11 +106,15 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 		return fmt.Errorf("failed to update progress: %w", err)
 	}
 
-	var filePath string
-	var fileName string
+	var (
+		filePath string
+		fileName string
+	)
+
 	if jobData.SavePath != "" {
 		filePath = jobData.SavePath
 		fileName = filepath.Base(jobData.SavePath)
+
 		dir := filepath.Dir(jobData.SavePath)
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			return fmt.Errorf("failed to create directory: %w", err)
@@ -121,6 +124,7 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 		if err := os.MkdirAll(exportDir, 0755); err != nil {
 			return fmt.Errorf("failed to create export directory: %w", err)
 		}
+
 		timestamp := time.Now().Format("20060102_150405")
 		fileName = fmt.Sprintf("export_%s_%s.%s", jobData.Table, timestamp, jobData.Format)
 		filePath = filepath.Join(exportDir, fileName)
@@ -132,6 +136,7 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 	}
 
 	var fileContent []byte
+
 	switch jobData.Format {
 	case "sql":
 		fileContent = generateSQLExportFromData(jobData.Table, result.Columns, result.Data)
@@ -181,16 +186,20 @@ func generateSQLExportFromData(tableName string, columns []dto.Column, data []ma
 
 	if len(data) > 0 {
 		fmt.Fprintf(&sql, "INSERT INTO %s (", tableName)
+
 		for i, col := range columns {
 			sql.WriteString(col.Name)
+
 			if i < len(columns)-1 {
 				sql.WriteString(", ")
 			}
 		}
+
 		sql.WriteString(") VALUES\n")
 
 		for i, row := range data {
 			sql.WriteString("(")
+
 			for j, col := range columns {
 				value := row[col.Name]
 
@@ -204,7 +213,9 @@ func generateSQLExportFromData(tableName string, columns []dto.Column, data []ma
 					sql.WriteString(", ")
 				}
 			}
+
 			sql.WriteString(")")
+
 			if i < len(data)-1 {
 				sql.WriteString(",\n")
 			} else {
@@ -224,5 +235,6 @@ func generateJSONExport(columns []dto.Column, rows []map[string]any) []byte {
 			jsonData[i][col.Name] = row[col.Name]
 		}
 	}
+
 	return []byte(helper.StructToJSON(jsonData))
 }

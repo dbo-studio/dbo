@@ -72,3 +72,42 @@ export type ChatBoxProps = {
   loading: boolean;
   autocomplete?: AutoCompleteType;
 };
+
+export type StreamingPreviewProps = {
+  content: string;
+  statusLabel?: string;
+  blockType?: string;
+  isStreaming?: boolean;
+};
+
+export type ChatErrorMessageProps = {
+  message: string;
+  onRetry: () => void;
+};
+
+export type ChatEmptyStateProps = {
+  onSelectPrompt: (prompt: string) => void;
+};
+
+export type ThinkingMessageProps = {
+  content: string;
+  durationMs?: number;
+  isLive?: boolean;
+  defaultCollapsed?: boolean;
+};
+
+export type ChatMarkdownProps = {
+  content: string;
+  isStreaming?: boolean;
+  showCursor?: boolean;
+};
+
+export type ChatDataTableProps = {
+  rows: Record<string, unknown>[];
+};
+
+export type StreamingMarkdownProps = {
+  content: string;
+  isStreaming?: boolean;
+  showCursor?: boolean;
+};

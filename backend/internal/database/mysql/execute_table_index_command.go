@@ -37,6 +37,7 @@ func (r *MySQLRepository) handleTableIndexCommands(node contract.DBNode, tabID c
 			if query != "" {
 				queries = append(queries, query)
 			}
+
 			continue
 		}
 

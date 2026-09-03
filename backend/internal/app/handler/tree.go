@@ -80,6 +80,7 @@ func (h *TreeHandler) ExecuteHandler(c fiber.Ctx) error {
 		NodeID:       fiber.Params[string](c, "nodeId"),
 		Action:       fiber.Params[string](c, "action"),
 		Params:       c.Body(),
+		Confirmed:    fiber.Query[bool](c, "confirmed"),
 	}
 
 	result, err := h.treeService.ObjectExecute(c, req)
@@ -113,6 +114,10 @@ func (h *TreeHandler) GetDynamicFieldOptions(c fiber.Ctx) error {
 		ConnectionID: fiber.Query[int32](c, "connectionId"),
 		NodeID:       c.Params("nodeId"),
 		Parameters:   c.Queries(),
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
 	}
 
 	result, err := h.treeService.GetDynamicFieldOptions(c, req)

@@ -17,6 +17,7 @@ export const ModalWrapperStyled = styled(Box)<{ padding?: string }>(({ theme, pa
   padding: padding ?? theme.spacing(2),
   display: 'flex',
   flexDirection: 'column',
+  overflow: 'hidden',
   ':focus-visible': {
     outline: 'unset'
   }

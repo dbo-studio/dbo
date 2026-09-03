@@ -19,6 +19,7 @@ func (r *SQLiteRepository) getAllTableList(ctx context.Context) ([]Table, error)
 	err := r.base.DB().WithContext(ctx).Table("sqlite_master").
 		Select("tbl_name").
 		Where("type = 'table'").
+		Where("name NOT LIKE 'sqlite_%'").
 		Order("tbl_name").
 		Scan(&tables).Error
 
@@ -49,12 +50,19 @@ type Column struct {
 	MappedType    string         `gorm:"-"`
 	Editable      bool           `gorm:"-"`
 	IsActive      bool           `gorm:"-"`
+	IsForeignKey  bool           `gorm:"-"`
+	ForeignKey    *ForeignKey    `gorm:"-"`
 }
 
 func (r *SQLiteRepository) getColumns(ctx context.Context, table string, columnNames []string, editable bool) ([]Column, error) {
 	columns := make([]Column, 0)
-	err := r.base.DB().WithContext(ctx).Raw("PRAGMA table_info(" + table + ")").Scan(&columns).Error
 
+	err := r.base.DB().WithContext(ctx).Raw("PRAGMA table_info(" + quoteIdent(table) + ")").Scan(&columns).Error
+	if err != nil {
+		return nil, err
+	}
+
+	fkList, err := r.foreignKeys(ctx, table)
 	if err != nil {
 		return nil, err
 	}
@@ -69,13 +77,33 @@ func (r *SQLiteRepository) getColumns(ctx context.Context, table string, columnN
 
 		columns[i].MappedType = r.base.ColumnMappedFormat(column.DataType)
 		columns[i].Editable = editable
+
 		columns[i].IsActive = true
 		if len(columnNames) > 0 {
 			columns[i].IsActive = slices.Contains(columnNames, column.ColumnName)
 		}
+
+		foreignKey, fkFound := lo.Find(fkList, func(fk ForeignKey) bool {
+			return slices.Contains(fk.Columns, column.ColumnName)
+		})
+		if fkFound {
+			fk := foreignKey
+			columns[i].ForeignKey = &fk
+			columns[i].IsForeignKey = true
+		}
 	}
 
-	return columns, err
+	return columns, nil
+}
+
+// columnsLite returns column names only from PRAGMA table_info.
+func (r *SQLiteRepository) columnsLite(ctx context.Context, table string) ([]string, error) {
+	columns, err := r.getColumns(ctx, table, nil, false)
+	if err != nil {
+		return nil, err
+	}
+
+	return lo.Map(columns, func(c Column, _ int) string { return c.ColumnName }), nil
 }
 
 func (r *SQLiteRepository) getPrimaryKeys(ctx context.Context, table Table) ([]string, error) {
@@ -117,7 +145,6 @@ func (r *SQLiteRepository) views(ctx context.Context) ([]View, error) {
 		Where("type = 'view'").
 		Order("tbl_name").
 		Find(&views).Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -151,6 +178,7 @@ func (r *SQLiteRepository) foreignKeys(ctx context.Context, table string) ([]For
 	}
 
 	var fkRows []pragmaFK
+
 	err := r.base.DB().WithContext(ctx).Raw(fmt.Sprintf("PRAGMA foreign_key_list(%s)", quoteIdent(table))).Scan(&fkRows).Error
 	if err != nil {
 		return nil, err

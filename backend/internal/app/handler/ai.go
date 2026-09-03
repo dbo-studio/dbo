@@ -66,14 +66,17 @@ func (h AiHandler) ChatStream(c fiber.Ctx) error {
 			if _, err := w.Write(data); err != nil {
 				return err
 			}
+
 			if _, err := w.WriteString("\n"); err != nil {
 				return err
 			}
+
 			return w.Flush()
 		}
 
 		if err := h.aiService.ChatStream(streamCtx, reqCopy, emit); err != nil {
 			h.logger.Error(err.Error())
+
 			errPayload, marshalErr := json.Marshal(map[string]string{
 				"type":    "error",
 				"message": err.Error(),

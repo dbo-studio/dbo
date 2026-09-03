@@ -32,12 +32,13 @@ func (c *ISQLiteCacheImpl) ConditionalGet(ctx context.Context, key string, resul
 
 func (c *ISQLiteCacheImpl) Get(ctx context.Context, key string, result any) error {
 	var item model.CacheItem
-	err := c.db.WithContext(ctx).First(&item, "key = ?", key).Error
 
+	err := c.db.WithContext(ctx).First(&item, "key = ?", key).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil
 		}
+
 		return err
 	}
 
@@ -46,6 +47,7 @@ func (c *ISQLiteCacheImpl) Get(ctx context.Context, key string, result any) erro
 		if err != nil {
 			return err
 		}
+
 		return nil
 	}
 
@@ -85,9 +87,11 @@ func (c *ISQLiteCacheImpl) GetByPrefix(ctx context.Context, prefix string) ([]ca
 	if err := c.db.WithContext(ctx).Where("key LIKE ?", fmt.Sprintf("%s%%", prefix)).Find(&items).Error; err != nil {
 		return nil, err
 	}
+
 	out := make([]cache.KeyValue, 0, len(items))
 	for _, it := range items {
 		out = append(out, cache.KeyValue{Key: it.Key, Value: it.Value})
 	}
+
 	return out, nil
 }

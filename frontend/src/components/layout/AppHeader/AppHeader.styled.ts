@@ -18,7 +18,9 @@ export const AppHeaderStyled = styled(Grid)(({ theme }) => ({
   WebkitUserSelect: 'none'
 }));
 
-export const AppHeaderGridStyled = styled(Grid)(({ useCompactHeader }: { useCompactHeader: boolean }) => ({
+export const AppHeaderGridStyled = styled(Grid, {
+  shouldForwardProp: (prop) => prop !== 'useCompactHeader'
+})<{ useCompactHeader: boolean }>(({ useCompactHeader }) => ({
   display: useCompactHeader ? 'flex' : 'none',
   justifyContent: 'flex-start',
   alignItems: 'center',

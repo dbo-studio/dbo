@@ -27,6 +27,7 @@ type (
 		NodeID       string
 		Action       string
 		Params       []byte
+		Confirmed    bool
 	}
 
 	DynamicFieldOptionsRequest struct {
@@ -39,5 +40,12 @@ type (
 func (req TreeListRequest) Validate() error {
 	return validation.ValidateStruct(&req,
 		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
+	)
+}
+
+func (req DynamicFieldOptionsRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
+		validation.Field(&req.NodeID, validation.Required),
 	)
 }

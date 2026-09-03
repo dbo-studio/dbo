@@ -10,12 +10,16 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+const autocompleteConcurrency = 6
+
 func (r *MySQLRepository) AutoComplete(ctx context.Context, data *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
 	g, gctx := errgroup.WithContext(ctx)
 
-	var databases []Database
-	var views []View
-	var tables []Table
+	var (
+		databases []Database
+		views     []View
+		tables    []Table
+	)
 
 	g.Go(func() error {
 		if configured := databaseConnection.DefaultMysqlDatabase(r.base.Connection()); configured != "" {
@@ -27,7 +31,9 @@ func (r *MySQLRepository) AutoComplete(ctx context.Context, data *dto.AutoComple
 		if err != nil {
 			return err
 		}
+
 		databases = result
+
 		return nil
 	})
 
@@ -38,6 +44,7 @@ func (r *MySQLRepository) AutoComplete(ctx context.Context, data *dto.AutoComple
 		} else {
 			views, err = r.views(gctx, nil, true)
 		}
+
 		return err
 	})
 
@@ -48,6 +55,7 @@ func (r *MySQLRepository) AutoComplete(ctx context.Context, data *dto.AutoComple
 		} else {
 			tables, err = r.tables(gctx, nil, true)
 		}
+
 		return err
 	})
 
@@ -57,37 +65,55 @@ func (r *MySQLRepository) AutoComplete(ctx context.Context, data *dto.AutoComple
 
 	columns := make(map[string][]string)
 
-	if data.Database != nil {
-		gColumns, gColumnsCtx := errgroup.WithContext(ctx)
-		var columnMap sync.Map
-
-		for _, table := range tables {
-			tableName := table.Name
-			databaseName := lo.FromPtr(data.Database)
-			gColumns.Go(func() error {
-				columnResult, err := r.columns(gColumnsCtx, &databaseName, &tableName, nil, false, true)
-				if err != nil {
-					return err
+	if data.Database != nil && len(tables) > 0 {
+		batched, err := r.columnsLiteBatch(ctx, data.Database)
+		if err == nil && len(batched) > 0 {
+			for _, table := range tables {
+				if cols, ok := batched[table.Name]; ok {
+					columns[table.Name] = cols
+				} else {
+					columns[table.Name] = []string{}
 				}
-				columnMap.Store(tableName, lo.Map(columnResult, func(x Column, _ int) string { return x.ColumnName }))
-				return nil
+			}
+		} else {
+			gColumns, gColumnsCtx := errgroup.WithContext(ctx)
+			gColumns.SetLimit(autocompleteConcurrency)
+
+			var columnMap sync.Map
+
+			for _, table := range tables {
+				tableName := table.Name
+				databaseName := lo.FromPtr(data.Database)
+
+				gColumns.Go(func() error {
+					columnResult, err := r.columnsLite(gColumnsCtx, &databaseName, &tableName, true)
+					if err != nil {
+						return err
+					}
+
+					columnMap.Store(tableName, columnResult)
+
+					return nil
+				})
+			}
+
+			if err := gColumns.Wait(); err != nil {
+				return nil, err
+			}
+
+			columnMap.Range(func(key, value any) bool {
+				tableName, ok := key.(string)
+				if !ok {
+					return true
+				}
+
+				if columnList, ok := value.([]string); ok {
+					columns[tableName] = columnList
+				}
+
+				return true
 			})
 		}
-
-		if err := gColumns.Wait(); err != nil {
-			return nil, err
-		}
-
-		columnMap.Range(func(key, value any) bool {
-			tableName, ok := key.(string)
-			if !ok {
-				return true
-			}
-			if columnList, ok := value.([]string); ok {
-				columns[tableName] = columnList
-			}
-			return true
-		})
 	}
 
 	return &dto.AutoCompleteResponse{

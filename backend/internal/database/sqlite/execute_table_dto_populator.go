@@ -14,6 +14,7 @@ func (r *SQLiteRepository) populateTableParamsFromDDL(ctx context.Context, table
 	}
 
 	tableName := *tableParams.Old.Name
+
 	tableDDL, err := r.getTableDDL(ctx, tableName)
 	if err != nil {
 		r.setDefaultTableParams(tableParams)
@@ -22,6 +23,7 @@ func (r *SQLiteRepository) populateTableParamsFromDDL(ctx context.Context, table
 
 	ddlUpper := strings.ToUpper(strings.TrimSpace(tableDDL))
 	r.populateTableParamsFromDDLString(tableParams, ddlUpper)
+
 	return tableDDL
 }
 
@@ -33,18 +35,22 @@ func (r *SQLiteRepository) setDefaultTableParams(tableParams *dto.SQLiteTablePar
 			Strict:       lo.ToPtr(false),
 			WithoutRowid: lo.ToPtr(false),
 		}
+
 		return
 	}
 
 	if tableParams.New.Name == nil {
 		tableParams.New.Name = tableParams.Old.Name
 	}
+
 	if tableParams.New.Temporary == nil {
 		tableParams.New.Temporary = lo.ToPtr(false)
 	}
+
 	if tableParams.New.Strict == nil {
 		tableParams.New.Strict = lo.ToPtr(false)
 	}
+
 	if tableParams.New.WithoutRowid == nil {
 		tableParams.New.WithoutRowid = lo.ToPtr(false)
 	}
@@ -96,6 +102,7 @@ func (r *SQLiteRepository) populateColumnParamsFromDDL(ctx context.Context, colu
 	}
 
 	resolvedTableName := tableName
+
 	if tableDDL != "" {
 		if name := r.extractTableNameFromDDL(tableDDL); name != "" {
 			resolvedTableName = name
@@ -107,6 +114,10 @@ func (r *SQLiteRepository) populateColumnParamsFromDDL(ctx context.Context, colu
 	}
 
 	columns, err := r.getColumns(ctx, resolvedTableName, []string{}, false)
+	if (err != nil || len(columns) == 0) && tableName != "" && tableName != resolvedTableName {
+		columns, err = r.getColumns(ctx, tableName, []string{}, false)
+	}
+
 	if err != nil {
 		return
 	}
@@ -126,20 +137,24 @@ func columnIdentity(col dto.SQLiteTableColumn) string {
 	if col.Old != nil && col.Old.Name != nil && *col.Old.Name != "" {
 		return *col.Old.Name
 	}
+
 	if col.New != nil && col.New.Name != nil {
 		return *col.New.Name
 	}
+
 	return ""
 }
 
 func (r *SQLiteRepository) mergeColumnChanges(existing, changes []dto.SQLiteTableColumn) []dto.SQLiteTableColumn {
 	byName := make(map[string]dto.SQLiteTableColumn, len(existing))
+
 	order := make([]string, 0, len(existing))
 	for _, col := range existing {
 		name := columnIdentity(col)
 		if name == "" {
 			continue
 		}
+
 		byName[name] = col
 		order = append(order, name)
 	}
@@ -179,24 +194,35 @@ func (r *SQLiteRepository) mergeColumnChanges(existing, changes []dto.SQLiteTabl
 }
 
 func (r *SQLiteRepository) extractTableNameFromDDL(tableDDL string) string {
-	ddlUpper := strings.ToUpper(strings.TrimSpace(tableDDL))
-	openParen := strings.Index(ddlUpper, "(")
+	trimmed := strings.TrimSpace(tableDDL)
+
+	openParen := strings.Index(trimmed, "(")
 	if openParen <= 0 {
 		return ""
 	}
 
-	tablePart := strings.TrimSpace(ddlUpper[:openParen])
-	tablePart = strings.TrimPrefix(tablePart, "CREATE TEMPORARY TABLE")
-	tablePart = strings.TrimPrefix(tablePart, "CREATE TABLE")
-	tablePart = strings.TrimSpace(tablePart)
+	// Parse against the original DDL so the returned name keeps its stored casing.
+	// Uppercasing first then quoting breaks PRAGMA table_info("NAME") lookups in SQLite.
+	tablePart := strings.TrimSpace(trimmed[:openParen])
+	upper := strings.ToUpper(tablePart)
 
-	return strings.Trim(tablePart, "\"")
+	switch {
+	case strings.HasPrefix(upper, "CREATE TEMPORARY TABLE"):
+		tablePart = strings.TrimSpace(tablePart[len("CREATE TEMPORARY TABLE"):])
+	case strings.HasPrefix(upper, "CREATE TABLE"):
+		tablePart = strings.TrimSpace(tablePart[len("CREATE TABLE"):])
+	default:
+		return ""
+	}
+
+	return strings.Trim(tablePart, "\"'`[]")
 }
 
 func (r *SQLiteRepository) convertColumnsToDTO(columns []Column) []dto.SQLiteTableColumn {
 	result := make([]dto.SQLiteTableColumn, len(columns))
 	for i, col := range columns {
 		notNull := col.IsNullable == "0"
+
 		defaultVal := ""
 		if col.ColumnDefault.Valid {
 			defaultVal = col.ColumnDefault.String
@@ -216,15 +242,15 @@ func (r *SQLiteRepository) convertColumnsToDTO(columns []Column) []dto.SQLiteTab
 			Deleted: lo.ToPtr(false),
 		}
 	}
+
 	return result
 }
 
-func (r *SQLiteRepository) populateForeignKeyParamsFromDB(foreignKeyParams *dto.SQLiteTableForeignKeyParams, tableName string) {
+func (r *SQLiteRepository) populateForeignKeyParamsFromDB(ctx context.Context, foreignKeyParams *dto.SQLiteTableForeignKeyParams, tableName string) {
 	if foreignKeyParams == nil || len(foreignKeyParams.Columns) > 0 {
 		return
 	}
 
-	ctx := context.Background()
 	fks, err := r.foreignKeys(ctx, tableName)
 	if err != nil || len(fks) == 0 {
 		return
@@ -254,6 +280,7 @@ func (r *SQLiteRepository) convertForeignKeysToDTO(fks []ForeignKey) []dto.SQLit
 			Deleted: lo.ToPtr(false),
 		}
 	}
+
 	return result
 }
 

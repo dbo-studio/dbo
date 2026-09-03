@@ -1,5 +1,6 @@
 import api from '@/api';
 import type { AICompleteRequest } from '@/api/ai/types';
+import { getEditorSessionContext } from '@/hooks/useEditorSessionContext';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -103,13 +104,14 @@ export function registerInlineAIProvider(monaco: typeof Monaco, languageId: stri
                 return;
               }
 
+              const session = getEditorSessionContext();
               const requestData: AICompleteRequest = {
                 connectionId: currentConnection()?.id ?? 0,
                 providerId: activeProvider.id,
                 model: activeProvider.model,
                 contextOpts: {
-                  database: currentConnection()?.options?.database as string | undefined,
-                  schema: currentConnection()?.options?.schema as string | undefined,
+                  database: session.database,
+                  schema: session.schema,
                   prompt: prefix,
                   suffix: suffix
                 }

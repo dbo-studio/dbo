@@ -10,9 +10,92 @@
   <title>DBO Studio</title>
   <script defer src="/scripts/umami.js" data-host-url="https://umami.dbo-studio.com"
     data-website-id="24d35fbb-4a75-4371-b24c-14c10cf434eb"></script>
+  <style>
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+    }
+
+    #root {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Shown until React SplashScreen mounts. Colors match dbo palette defaults. */
+    #boot-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      background: #fff;
+      transition: opacity 0.25s ease;
+    }
+
+    html.boot-dark,
+    html.boot-dark body,
+    html.boot-dark #boot-splash {
+      background: #1a1c1e;
+    }
+
+    #boot-splash img {
+      width: 120px;
+      height: 120px;
+      display: block;
+    }
+
+    #boot-splash .boot-spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid rgba(33, 184, 240, 0.25);
+      border-top-color: #21b8f0;
+      border-radius: 50%;
+      animation: boot-spin 0.8s linear infinite;
+    }
+
+    html.boot-dark #boot-splash .boot-spinner {
+      border-color: rgba(33, 184, 240, 0.2);
+      border-top-color: #21b8f0;
+    }
+
+    @keyframes boot-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    #boot-splash.is-hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
+  <script>
+    // Match app theme from zustand persist (`settings`), not OS color-scheme.
+    (function () {
+      try {
+        var raw = localStorage.getItem('settings');
+        if (!raw) return;
+        var parsed = JSON.parse(raw);
+        var isDark = parsed && parsed.state && parsed.state.theme && parsed.state.theme.isDark;
+        if (isDark === true) {
+          document.documentElement.classList.add('boot-dark');
+        }
+      } catch (_) {}
+    })();
+  </script>
 </head>
 
 <body>
+  <div id="boot-splash" aria-hidden="true">
+    <img src="/app-icon/icon-512.png" alt="DBO" width="120" height="120" />
+    <div class="boot-spinner"></div>
+  </div>
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>

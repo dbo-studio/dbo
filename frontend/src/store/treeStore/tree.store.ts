@@ -19,6 +19,7 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
         tree: {},
         expandedNodes: {},
         loadedParentIds: {},
+        focusedNodeId: {},
         isLoading: false,
         treeError: undefined,
 
@@ -114,6 +115,38 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
           if (!currentConnection) return false;
 
           return get().expandedNodes[currentConnection]?.includes(nodeId) || false;
+        },
+
+        setFocusedNodeId: (nodeId: string | undefined): void => {
+          const currentConnection = getCurrentConnectionId();
+          if (!currentConnection) return;
+
+          set(
+            {
+              focusedNodeId: {
+                ...get().focusedNodeId,
+                [currentConnection]: nodeId
+              }
+            },
+            undefined,
+            'setFocusedNodeId'
+          );
+        },
+
+        getFocusedNodeId: (): string | undefined => {
+          const currentConnection = getCurrentConnectionId();
+          if (!currentConnection) return undefined;
+
+          return get().focusedNodeId[currentConnection];
+        },
+
+        clearFocusedNodeIdForConnection: (connectionId: string | number): void => {
+          const key = String(connectionId);
+          if (!(key in get().focusedNodeId)) return;
+
+          const next = { ...get().focusedNodeId };
+          delete next[key];
+          set({ focusedNodeId: next }, undefined, 'clearFocusedNodeIdForConnection');
         },
 
         addLoadedParentId: (parentId: string): void => {
@@ -222,6 +255,7 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
               tree: {},
               expandedNodes: {},
               loadedParentIds: {},
+              focusedNodeId: {},
               isLoading: false,
               treeError: undefined
             },
@@ -234,7 +268,8 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
         name: 'tree',
         partialize: (state) => ({
           expandedNodes: state.expandedNodes,
-          loadedParentIds: state.loadedParentIds
+          loadedParentIds: state.loadedParentIds,
+          focusedNodeId: state.focusedNodeId
         })
       }
     ),

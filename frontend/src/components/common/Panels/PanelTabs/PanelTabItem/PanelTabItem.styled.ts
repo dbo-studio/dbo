@@ -14,7 +14,9 @@ export const PanelTabNameStyled = styled(Typography)<TypographyProps>(() => ({
   display: 'inline-block',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
-  maxWidth: '100px'
+  whiteSpace: 'nowrap',
+  maxWidth: '140px',
+  lineHeight: 1.2
 }));
 
 export const PanelTabItemStyled = styled(Box)<PanelTabItemStyledProps>(({ theme, selected }) => ({

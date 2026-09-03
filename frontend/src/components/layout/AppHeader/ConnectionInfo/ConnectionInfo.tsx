@@ -1,5 +1,4 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import Settings from '@/components/common/Settings/Settings';
 import { TabMode } from '@/core/enums';
 import { shortcuts } from '@/core/utils';
 import { useCurrentConnection, useShortcut } from '@/hooks';
@@ -9,22 +8,19 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store.ts';
-import { Grid, IconButton, Stack, Tooltip } from '@mui/material';
+import { Box, Grid, IconButton, Stack, Tooltip } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 import type { JSX } from 'react';
+import SafeModeMenu from '../SafeModeMenu/SafeModeMenu';
 import ConnectionBox from './ConnectionBox/ConnectionBox';
 import { ConnectionInfoStyled } from './ConnectionInfo.styled';
-
-type ConnectionInfoProps = {
-  compact?: boolean;
-};
+import type { ConnectionInfoProps } from './types';
 
 export default function ConnectionInfo({ compact = false }: ConnectionInfoProps): JSX.Element {
   const queryClient = useQueryClient();
   const currentConnection = useCurrentConnection();
   const loading = useConnectionStore((state) => state.loading);
 
-  const showSettings = useSettingStore((state) => state.ui.showSettings);
   const updateUI = useSettingStore((state) => state.updateUI);
 
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
@@ -50,6 +46,7 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
     }
 
     await reloadTree(false);
+    await queryClient.invalidateQueries({ queryKey: ['autocomplete'] });
 
     if (!selectedTab) return;
 
@@ -65,7 +62,6 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
 
   return (
     <ConnectionInfoStyled direction={'row'}>
-      <Settings open={showSettings.open} />
       {!compact && (
         <Grid size={{ md: 3 }}>
           <Stack
@@ -75,11 +71,12 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
               justifyContent: 'flex-end'
             }}
           >
+            <SafeModeMenu />
             <Tooltip title={locales.connections}>
               <IconButton
                 aria-label={locales.connections}
                 data-testid='add-connection'
-                onClick={(): void => updateUI({ showAddConnection: true })}
+                onClick={(): void => updateUI({ showAddConnection: true, duplicateConnectionId: undefined })}
               >
                 <CustomIcon type={'connection'} size={'m'} />
               </IconButton>
@@ -95,7 +92,12 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
           minWidth: 0
         }}
       >
-        <ConnectionBox />
+        <Stack direction='row' spacing={0.5} sx={{ minWidth: 0, width: '100%', alignItems: 'center' }}>
+          {compact && <SafeModeMenu />}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <ConnectionBox />
+          </Box>
+        </Stack>
       </Grid>
       {!compact && (
         <Grid size={{ md: 3 }}>
@@ -107,19 +109,23 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
             }}
           >
             <Tooltip title={locales.refresh}>
-              <IconButton
-                aria-label={'refresh'}
-                onClick={() => void handleRefresh()}
-                loading={loading === 'loading'}
-                disabled={loading === 'loading'}
-              >
-                <CustomIcon type={'refresh'} />
-              </IconButton>
+              <span>
+                <IconButton
+                  aria-label={'refresh'}
+                  onClick={() => void handleRefresh()}
+                  loading={loading === 'loading'}
+                  disabled={loading === 'loading'}
+                >
+                  <CustomIcon type={'refresh'} />
+                </IconButton>
+              </span>
             </Tooltip>
             <Tooltip title={locales.open_editor}>
-              <IconButton aria-label={'sql'} disabled={!currentConnection} onClick={handleAddEditorTab}>
-                <CustomIcon type={'sql'} size={'m'} />
-              </IconButton>
+              <span>
+                <IconButton aria-label={'sql'} disabled={!currentConnection} onClick={handleAddEditorTab}>
+                  <CustomIcon type={'sql'} size={'m'} />
+                </IconButton>
+              </span>
             </Tooltip>
           </Stack>
         </Grid>

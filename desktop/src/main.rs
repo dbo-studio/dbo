@@ -1,10 +1,13 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod menu;
+
 use std::env;
 use std::net::TcpListener;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
-use tauri::{AppHandle, Manager, RunEvent};
+use tauri::{AppHandle, Emitter, Manager, RunEvent, State};
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
 
@@ -12,20 +15,29 @@ use tauri_plugin_shell::ShellExt;
 use tauri_plugin_decorum::WebviewWindowExt;
 
 type SidecarChild = Arc<Mutex<Option<CommandChild>>>;
+type SidecarStopping = Arc<AtomicBool>;
 
 const DEFAULT_PORT: u16 = 5124;
+pub const SIDECAR_FAILED_EVENT: &str = "sidecar://failed";
 
 /// Vertically centers traffic lights in the ~56px app header (8 + 40 + 8).
 #[cfg(target_os = "macos")]
 const TRAFFIC_LIGHT_INSET: (f32, f32) = (12.0, 20.0);
 
+#[derive(Clone, serde::Serialize)]
+struct SidecarFailedPayload {
+    reason: String,
+}
+
 fn main() {
     let _ = fix_path_env::fix();
 
     let sidecar_child: SidecarChild = Arc::new(Mutex::new(None));
+    let sidecar_stopping: SidecarStopping = Arc::new(AtomicBool::new(false));
     let sidecar_child_for_cleanup = sidecar_child.clone();
+    let sidecar_stopping_for_cleanup = sidecar_stopping.clone();
 
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -37,18 +49,27 @@ fn main() {
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_decorum::init())
         .manage(sidecar_child.clone())
-        .invoke_handler(tauri::generate_handler![get_backend_host])
+        .manage(sidecar_stopping.clone())
+        .invoke_handler(tauri::generate_handler![get_backend_host, restart_backend]);
+
+    #[cfg(any(target_os = "macos", target_os = "ios", target_os = "android", target_os = "windows"))]
+    {
+        builder = builder.plugin(tauri_plugin_biometry::init());
+    }
+
+    builder
         .setup(|app| {
             setup_macos_window(app)?;
+            menu::setup_menu(app)?;
             setup_environment();
-            start_backend_server(app);
+            start_backend_server(app.handle());
             Ok(())
         })
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(move |_, event| {
             if let RunEvent::Exit = event {
-                cleanup_sidecar(&sidecar_child_for_cleanup);
+                cleanup_sidecar(&sidecar_child_for_cleanup, &sidecar_stopping_for_cleanup);
             }
         });
 }
@@ -93,6 +114,17 @@ fn get_backend_host() -> String {
     format!("http://127.0.0.1:{}/api", port)
 }
 
+#[tauri::command]
+fn restart_backend(
+    app: AppHandle,
+    sidecar: State<'_, SidecarChild>,
+    stopping: State<'_, SidecarStopping>,
+) -> Result<(), String> {
+    cleanup_sidecar(&sidecar, &stopping);
+    start_backend_server(&app);
+    Ok(())
+}
+
 fn setup_environment() {
     let port = find_free_port();
     unsafe {
@@ -102,18 +134,29 @@ fn setup_environment() {
     }
 }
 
-fn start_backend_server(app: &tauri::App) {
-    let app_handle = app.handle().clone();
+fn start_backend_server(app: &AppHandle) {
+    let app_handle = app.clone();
     tauri::async_runtime::spawn(async move {
         run_sidecar(app_handle).await;
     });
+}
+
+fn emit_sidecar_failed(app: &AppHandle, reason: impl Into<String>) {
+    let _ = app.emit(
+        SIDECAR_FAILED_EVENT,
+        SidecarFailedPayload {
+            reason: reason.into(),
+        },
+    );
 }
 
 async fn run_sidecar(app: AppHandle) {
     let sidecar_command = match app.shell().sidecar("dbo-bin") {
         Ok(cmd) => cmd,
         Err(e) => {
-            eprintln!("Failed to create sidecar command: {}", e);
+            let reason = format!("Failed to create sidecar command: {e}");
+            eprintln!("{reason}");
+            emit_sidecar_failed(&app, reason);
             return;
         }
     };
@@ -121,18 +164,20 @@ async fn run_sidecar(app: AppHandle) {
     let (mut rx, child) = match sidecar_command.spawn() {
         Ok(result) => result,
         Err(e) => {
-            eprintln!("Failed to spawn sidecar process: {}", e);
+            let reason = format!("Failed to spawn sidecar process: {e}");
+            eprintln!("{reason}");
+            emit_sidecar_failed(&app, reason);
             return;
         }
     };
 
-    // Store child in app state for cleanup on exit
     let sidecar_state = app.state::<SidecarChild>();
     if let Ok(mut child_opt) = sidecar_state.lock() {
         *child_opt = Some(child);
     }
 
     let sidecar_state_for_events = sidecar_state.inner().clone();
+    let stopping = app.state::<SidecarStopping>().inner().clone();
 
     tauri::async_runtime::spawn(async move {
         while let Some(event) = rx.recv().await {
@@ -144,14 +189,24 @@ async fn run_sidecar(app: AppHandle) {
                     eprintln!("Sidecar error: {}", String::from_utf8_lossy(&data));
                 }
                 CommandEvent::Terminated(status) => {
-                    eprintln!("Sidecar terminated unexpectedly: {:?}", status);
                     if let Ok(mut child_opt) = sidecar_state_for_events.lock() {
                         child_opt.take();
+                    }
+                    let intentional = stopping.swap(false, Ordering::SeqCst);
+                    if !intentional {
+                        let reason = format!("Sidecar terminated unexpectedly: {status:?}");
+                        eprintln!("{reason}");
+                        emit_sidecar_failed(&app, reason);
                     }
                     break;
                 }
                 CommandEvent::Error(error) => {
-                    eprintln!("Sidecar error event: {}", error);
+                    if stopping.load(Ordering::SeqCst) {
+                        continue;
+                    }
+                    let reason = format!("Sidecar error event: {error}");
+                    eprintln!("{reason}");
+                    emit_sidecar_failed(&app, reason);
                 }
                 _ => {}
             }
@@ -159,15 +214,21 @@ async fn run_sidecar(app: AppHandle) {
     });
 }
 
-fn cleanup_sidecar(sidecar_child: &SidecarChild) {
-    println!("Application exiting, cleaning up sidecar...");
+fn cleanup_sidecar(sidecar_child: &SidecarChild, stopping: &SidecarStopping) {
+    println!("Cleaning up sidecar...");
+    stopping.store(true, Ordering::SeqCst);
 
     if let Ok(mut child_opt) = sidecar_child.lock() {
         if let Some(child) = child_opt.take() {
             match child.kill() {
                 Ok(_) => println!("Sidecar process terminated successfully"),
-                Err(e) => eprintln!("Failed to terminate sidecar: {}", e),
+                Err(e) => {
+                    eprintln!("Failed to terminate sidecar: {e}");
+                    stopping.store(false, Ordering::SeqCst);
+                }
             }
+        } else {
+            stopping.store(false, Ordering::SeqCst);
         }
     }
 }

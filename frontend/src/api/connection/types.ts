@@ -1,3 +1,5 @@
+import type { ConnectionSafeMode } from '@/types';
+
 export type ConnectionDetailRequestType = {
   connectionId: string | number;
 };
@@ -7,12 +9,20 @@ export type CreateConnectionRequestType = {
   type: 'postgresql' | 'sqlite' | 'mysql';
   options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
   rememberPassword?: boolean;
+  safeMode?: ConnectionSafeMode;
 };
 
 export type PingConnectionRequestType = {
   id?: number;
   type: 'postgresql' | 'sqlite' | 'mysql';
   options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
+};
+
+export type PingConnectionResponseType = {
+  latencyMs: number;
+  serverVersion?: string;
+  sslNegotiated?: boolean;
+  sslMode?: string;
 };
 
 export type UpdateConnectionRequestType = {
@@ -23,12 +33,21 @@ export type UpdateConnectionRequestType = {
   isClose?: boolean;
   rememberPassword?: boolean;
   options?: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
+  safeMode?: ConnectionSafeMode;
+  safeModePassword?: string;
 };
 
 export type SetConnectionCredentialsRequestType = {
   id: string | number;
   password: string;
   rememberPassword: boolean;
+};
+
+export type ConnectionSSLOptionsType = {
+  mode?: string;
+  caCert?: string;
+  clientCert?: string;
+  clientKey?: string;
 };
 
 export type PostgresqlOptionsType = {
@@ -38,6 +57,7 @@ export type PostgresqlOptionsType = {
   password?: string;
   database?: string;
   uri?: string;
+  ssl?: ConnectionSSLOptionsType;
 };
 
 export type MysqlOptionsType = {
@@ -47,9 +67,15 @@ export type MysqlOptionsType = {
   password?: string;
   database?: string;
   uri?: string;
+  ssl?: ConnectionSSLOptionsType;
 };
 
 export type SQLiteOptionsType = {
+  path?: string;
   file?: string;
   isPing?: boolean;
+};
+
+export type SafeModeUnlockResponseType = {
+  unlockedUntil: string;
 };

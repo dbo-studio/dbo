@@ -14,6 +14,7 @@ type TableIndex struct {
 
 func (r *MySQLRepository) tableIndexes(ctx context.Context, database, table string) ([]TableIndex, error) {
 	var results []TableIndex
+
 	err := r.base.DB().WithContext(ctx).Raw(`
 		SELECT INDEX_NAME, COLUMN_NAME, NON_UNIQUE, COLLATION, SEQ_IN_INDEX
 		FROM information_schema.STATISTICS
@@ -23,5 +24,6 @@ func (r *MySQLRepository) tableIndexes(ctx context.Context, database, table stri
 	if err != nil {
 		return nil, err
 	}
+
 	return results, nil
 }

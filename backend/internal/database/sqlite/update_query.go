@@ -6,9 +6,12 @@ import (
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"gorm.io/gorm"
 )
+
+const sqlDriverSqlite = "sqlite"
 
 func (r *SQLiteRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error) {
 	if req == nil {
@@ -19,7 +22,11 @@ func (r *SQLiteRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQuery
 		return nil, fmt.Errorf("invalid node: table missing")
 	}
 
-	queries := r.generateQueries(ctx, req, req.NodeID)
+	queries, err := r.generateQueries(ctx, req, req.NodeID)
+	if err != nil {
+		return nil, err
+	}
+
 	if len(queries) == 0 {
 		return &dto.UpdateQueryResponse{
 			Query:        []string{},
@@ -28,17 +35,19 @@ func (r *SQLiteRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQuery
 	}
 
 	rowsAffected := 0
-	err := r.base.DB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+
+	err = r.base.DB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, query := range queries {
 			result := tx.Exec(query)
 			if result.Error != nil {
 				return result.Error
 			}
+
 			rowsAffected += int(result.RowsAffected)
 		}
+
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -49,17 +58,42 @@ func (r *SQLiteRepository) UpdateQuery(ctx context.Context, req *dto.UpdateQuery
 	}, nil
 }
 
-func (r *SQLiteRepository) generateQueries(ctx context.Context, req *dto.UpdateQueryRequest, node string) []string {
+func (r *SQLiteRepository) generateQueries(ctx context.Context, req *dto.UpdateQueryRequest, node string) ([]string, error) {
+	columnTypes, err := r.columnTypeMap(ctx, node)
+	if err != nil {
+		return nil, err
+	}
+
 	var queries []string
 
-	queries = append(queries, r.generateUpdateQueries(ctx, req, node)...)
-	queries = append(queries, r.generateInsertQueries(req, node)...)
+	queries = append(queries, r.generateUpdateQueries(ctx, req, node, columnTypes)...)
+
+	inserts, err := r.generateInsertQueries(req, node, columnTypes)
+	if err != nil {
+		return nil, err
+	}
+
+	queries = append(queries, inserts...)
 	queries = append(queries, r.generateDeleteQueries(ctx, req, node)...)
 
-	return queries
+	return queries, nil
 }
 
-func (r *SQLiteRepository) generateUpdateQueries(ctx context.Context, req *dto.UpdateQueryRequest, node string) []string {
+func (r *SQLiteRepository) columnTypeMap(ctx context.Context, node string) (map[string]string, error) {
+	columns, err := r.getColumns(ctx, node, []string{}, true)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make(map[string]string, len(columns))
+	for _, column := range columns {
+		out[column.ColumnName] = column.DataType
+	}
+
+	return out, nil
+}
+
+func (r *SQLiteRepository) generateUpdateQueries(ctx context.Context, req *dto.UpdateQueryRequest, node string, columnTypes map[string]string) []string {
 	if req == nil || req.EditedItems == nil {
 		return nil
 	}
@@ -76,10 +110,14 @@ func (r *SQLiteRepository) generateUpdateQueries(ctx context.Context, req *dto.U
 			continue
 		}
 
-		setClauses := buildSetClauses(editedItem.Values)
+		setClauses, err := buildSetClauses(editedItem.Values, columnTypes)
+		if err != nil || len(setClauses) == 0 {
+			continue
+		}
+
 		whereClauses := r.buildWhereClauses(keys, editedItem.Conditions)
 
-		if len(setClauses) == 0 || len(whereClauses) == 0 {
+		if len(whereClauses) == 0 {
 			continue
 		}
 
@@ -130,9 +168,9 @@ func (r *SQLiteRepository) generateDeleteQueries(ctx context.Context, req *dto.U
 	return queries
 }
 
-func (r *SQLiteRepository) generateInsertQueries(req *dto.UpdateQueryRequest, node string) []string {
+func (r *SQLiteRepository) generateInsertQueries(req *dto.UpdateQueryRequest, node string, columnTypes map[string]string) ([]string, error) {
 	if req == nil || req.AddedItems == nil {
-		return nil
+		return nil, nil
 	}
 
 	var queries []string
@@ -145,7 +183,7 @@ func (r *SQLiteRepository) generateInsertQueries(req *dto.UpdateQueryRequest, no
 		var columns, values []string
 
 		for key, value := range addedItem {
-			if value == "@DEFAULT" {
+			if key == "dbo_index" || value == "@DEFAULT" {
 				continue
 			}
 
@@ -153,7 +191,12 @@ func (r *SQLiteRepository) generateInsertQueries(req *dto.UpdateQueryRequest, no
 			if value == nil {
 				values = append(values, "NULL")
 			} else {
-				values = append(values, helper.FormatSQLValue(value))
+				formatted, err := formatColumnValue(key, value, columnTypes)
+				if err != nil {
+					return nil, err
+				}
+
+				values = append(values, formatted)
 			}
 		}
 
@@ -171,24 +214,46 @@ func (r *SQLiteRepository) generateInsertQueries(req *dto.UpdateQueryRequest, no
 		queries = append(queries, query)
 	}
 
-	return queries
+	return queries, nil
 }
 
-func buildSetClauses(values map[string]any) []string {
+func buildSetClauses(values map[string]any, columnTypes map[string]string) ([]string, error) {
 	var setClauses []string
 
 	for key, value := range values {
+		if key == "dbo_index" {
+			continue
+		}
+
 		switch value {
 		case nil:
 			setClauses = append(setClauses, fmt.Sprintf(`"%s" = NULL`, key))
 		case "@DEFAULT":
 			setClauses = append(setClauses, fmt.Sprintf(`"%s" = DEFAULT`, key))
 		default:
-			setClauses = append(setClauses, fmt.Sprintf(`"%s" = %s`, key, helper.FormatSQLValue(value)))
+			formatted, err := formatColumnValue(key, value, columnTypes)
+			if err != nil {
+				return nil, err
+			}
+
+			setClauses = append(setClauses, fmt.Sprintf(`"%s" = %s`, key, formatted))
 		}
 	}
 
-	return setClauses
+	return setClauses, nil
+}
+
+func formatColumnValue(columnName string, value any, columnTypes map[string]string) (string, error) {
+	dbType := ""
+	if columnTypes != nil {
+		dbType = columnTypes[columnName]
+	}
+
+	if s, ok := value.(string); ok && databaseCore.IsGeometryDBType(dbType) {
+		return databaseCore.FormatGeometrySQL(sqlDriverSqlite, dbType, s)
+	}
+
+	return helper.FormatSQLValueForDriver(sqlDriverSqlite, value)
 }
 
 func (r *SQLiteRepository) buildWhereClauses(primaryKeys []string, conditions map[string]any) []string {
@@ -207,11 +272,17 @@ func (r *SQLiteRepository) buildWhereClauses(primaryKeys []string, conditions ma
 	}
 
 	var whereClauses []string
+
 	for key, value := range conditionKeys {
 		if value == nil {
 			whereClauses = append(whereClauses, fmt.Sprintf(`"%s" IS NULL`, key))
 		} else {
-			whereClauses = append(whereClauses, fmt.Sprintf(`"%s" = %s`, key, helper.FormatSQLValue(value)))
+			formatted, err := helper.FormatSQLValueForDriver(sqlDriverSqlite, value)
+			if err != nil {
+				continue
+			}
+
+			whereClauses = append(whereClauses, fmt.Sprintf(`"%s" = %s`, key, formatted))
 		}
 	}
 

@@ -1,5 +1,5 @@
-import { listen } from '@tauri-apps/api/event';
-import { ServerEvent } from './types';
+import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+import { ServerEvent, type MenuActionPayload, type SidecarFailedPayload } from './types';
 
 export const streams = {
   window: {
@@ -9,6 +9,20 @@ export const streams = {
 
     willExitFullScreen: (callback: () => void) => {
       void listen(ServerEvent.WindowWillExitFullScreen, () => callback());
+    }
+  },
+  menu: {
+    onAction: async (callback: (id: string) => void): Promise<UnlistenFn> => {
+      return listen<MenuActionPayload>(ServerEvent.MenuAction, (event) => {
+        callback(event.payload.id);
+      });
+    }
+  },
+  sidecar: {
+    onFailed: async (callback: (reason: string) => void): Promise<UnlistenFn> => {
+      return listen<SidecarFailedPayload>(ServerEvent.SidecarFailed, (event) => {
+        callback(event.payload.reason);
+      });
     }
   }
 };

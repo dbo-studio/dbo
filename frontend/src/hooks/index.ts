@@ -1,6 +1,8 @@
 export * from './useConnectionTabs.hook';
 export * from './useContextMenu.hook';
 export * from './useCurrentConnection.hook';
+export * from './useDesktopMenu.hook';
+export * from './useEditorSessionContext';
 export * from './useJobPolling.hook';
 export * from './useLayoutMode.hook';
 export * from './useResponsiveSidebar.hook';
@@ -8,6 +10,7 @@ export * from './useSelectedTab.hook';
 export * from './useSetupDesktop.hook';
 export * from './useShortcut.hook';
 export * from './useStartup.hook';
+export * from './useSyncEditorContext';
 export * from './useUUID.hook';
 export * from './useWindowSize.hook';
 export * from './useAiBridge';

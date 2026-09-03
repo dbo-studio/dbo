@@ -1,5 +1,13 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { API_DB_TIMEOUT, apiRoute, waitForResponseDuring } from "../helpers/network";
 import { BasePage } from "./BasePage";
+
+export interface ConnectionSslConfig {
+  mode: "disable" | "allow" | "prefer" | "require" | "verify-ca" | "verify-full";
+  caCert?: string;
+  clientCert?: string;
+  clientKey?: string;
+}
 
 export interface ConnectionConfig {
   name: string;
@@ -9,6 +17,7 @@ export interface ConnectionConfig {
   password: string;
   database?: string;
   type?: "PostgreSQL" | "MySQL" | "SQLite";
+  ssl?: ConnectionSslConfig;
 }
 
 /**
@@ -58,6 +67,14 @@ export class ConnectionPage extends BasePage {
     return this.page.getByRole("heading", { name: new RegExp(name, "i") });
   }
 
+  async expectConnectionActive(name: string): Promise<void> {
+    await expect(this.getConnectionItem(name)).toBeVisible();
+    await this.waitForConnectionActive();
+    await expect(
+      this.page.getByRole("heading", { name: /^No active connection$/i }),
+    ).toHaveCount(0);
+  }
+
   async connectionExists(name: string): Promise<boolean> {
     return await this.getConnectionItem(name)
       .isVisible()
@@ -72,17 +89,10 @@ export class ConnectionPage extends BasePage {
   }
 
   async waitForReady(): Promise<void> {
+    // Wait on UI readiness — not waitForResponse("connections"). That races with
+    // goto() (response often already finished) and burns the full 30s timeout.
     await this.page.waitForLoadState("domcontentloaded");
-    await this.page
-      .waitForResponse(
-        (response) =>
-          response.url().includes("connections") && response.status() === 200,
-        {
-          timeout: 30000,
-        },
-      )
-      .catch(() => undefined);
-    await this.wait(1000);
+    await expect(this.addConnectionButton).toBeVisible({ timeout: 15000 });
   }
 
   async openNewConnectionModal(): Promise<void> {
@@ -127,6 +137,87 @@ export class ConnectionPage extends BasePage {
     if (config.database) {
       await this.page.locator('input[name="database"]').fill(config.database);
     }
+
+    if (config.ssl) {
+      await this.applySslConfig(config.ssl);
+    }
+  }
+
+  async openSslTab(): Promise<void> {
+    await this.page.getByTestId("connection-tab-ssl").click();
+    await expect(this.page.getByTestId("connection-ssl-fields")).toBeVisible();
+  }
+
+  async openGeneralTab(): Promise<void> {
+    await this.page.getByTestId("connection-tab-general").click();
+    await expect(this.nameInput).toBeVisible();
+  }
+
+  async setSslMode(
+    mode: NonNullable<ConnectionConfig["ssl"]>["mode"],
+  ): Promise<void> {
+    const labels: Record<NonNullable<ConnectionConfig["ssl"]>["mode"], string> =
+      {
+        disable: "Disable",
+        allow: "Allow",
+        prefer: "Prefer",
+        require: "Require",
+        "verify-ca": "Verify CA",
+        "verify-full": "Verify Full",
+      };
+
+    await this.openSslTab();
+    await this.page.locator(".ssl-mode__control").click();
+    await this.page.getByRole("option", { name: labels[mode], exact: true }).click();
+    await expect(this.page.locator(".ssl-mode__single-value")).toHaveText(
+      labels[mode],
+    );
+  }
+
+  async fillSslCaCert(pem: string): Promise<void> {
+    await this.openSslTab();
+    await this.page.getByTestId("ssl-textarea-sslCaCert").fill(pem);
+  }
+
+  async loadSslCaCertFile(filePath: string): Promise<void> {
+    await this.openSslTab();
+    await this.page
+      .getByTestId("ssl-file-input-sslCaCert")
+      .setInputFiles(filePath);
+    await expect(this.page.getByTestId("ssl-textarea-sslCaCert")).toContainText(
+      "BEGIN CERTIFICATE",
+    );
+  }
+
+  async applySslConfig(ssl: ConnectionSslConfig): Promise<void> {
+    await this.setSslMode(ssl.mode);
+    if (ssl.caCert) {
+      await this.fillSslCaCert(ssl.caCert);
+    }
+    if (ssl.clientCert) {
+      await this.page.getByTestId("ssl-textarea-sslClientCert").fill(ssl.clientCert);
+    }
+    if (ssl.clientKey) {
+      await this.page.getByTestId("ssl-textarea-sslClientKey").fill(ssl.clientKey);
+    }
+  }
+
+  async expectSslMode(
+    mode: NonNullable<ConnectionConfig["ssl"]>["mode"],
+  ): Promise<void> {
+    const labels: Record<NonNullable<ConnectionConfig["ssl"]>["mode"], string> =
+      {
+        disable: "Disable",
+        allow: "Allow",
+        prefer: "Prefer",
+        require: "Require",
+        "verify-ca": "Verify CA",
+        "verify-full": "Verify Full",
+      };
+    await this.openSslTab();
+    await expect(this.page.locator(".ssl-mode__single-value")).toHaveText(
+      labels[mode],
+    );
   }
 
   async selectConnectionType(type: string = "PostgreSQL"): Promise<void> {
@@ -136,32 +227,24 @@ export class ConnectionPage extends BasePage {
   }
 
   async testConnection(): Promise<void> {
-    const responsePromise = this.page.waitForResponse(
-      (response) =>
-        response.url().includes("connections/ping") &&
-        response.request().method() === "POST",
-      { timeout: 30000 },
+    const response = await waitForResponseDuring(
+      this.page,
+      apiRoute.connectionsPing,
+      () => this.testConnectionButton.click(),
+      API_DB_TIMEOUT,
     );
-    await this.testConnectionButton.click();
-    const response = await responsePromise;
     expect(response.status()).toBe(200);
   }
 
   async submitConnection(): Promise<void> {
-    const responsePromise = this.page.waitForResponse(
-      (response) =>
-        response.url().includes("/connections") &&
-        !response.url().includes("/ping") &&
-        ["POST", "PATCH"].includes(response.request().method()) &&
-        response.status() === 200,
-      { timeout: 30000 },
+    await waitForResponseDuring(
+      this.page,
+      apiRoute.connectionsSave,
+      () => this.createConnectionButton.click(),
     );
-    await this.createConnectionButton.click();
-    await responsePromise;
     await expect(
       this.page.getByRole("heading", { name: /^(New|Edit) connection$/ }),
-    ).toBeHidden();
-    await this.wait(1000);
+    ).toBeHidden({ timeout: 10_000 });
   }
 
   async createConnection(config: ConnectionConfig): Promise<void> {
@@ -178,7 +261,7 @@ export class ConnectionPage extends BasePage {
   }
 
   async waitForConnectionActive(): Promise<void> {
-    await expect(this.page.getByRole("button", { name: "sql" })).toBeEnabled({
+    await expect(this.page.getByRole("button", { name: "sql", exact: true })).toBeEnabled({
       timeout: 30000,
     });
     await expect(this.page.getByRole("treeitem").first()).toBeVisible({
@@ -197,26 +280,18 @@ export class ConnectionPage extends BasePage {
 
     await this.passwordInput.fill(password);
 
-    const savePromise = this.page.waitForResponse(
-      (response) =>
-        response.url().includes("credentials") && response.status() === 200,
-      { timeout: 15000 },
+    await waitForResponseDuring(
+      this.page,
+      apiRoute.connectionCredentials,
+      () => this.page.getByRole("button", { name: "Save" }).click(),
     );
-    await this.page.getByRole("button", { name: "Save" }).click();
-    await savePromise;
-    await this.wait(1000);
+    await expect(heading).toBeHidden({ timeout: 10_000 });
   }
 
   async activateConnection(name: string, password = "secret"): Promise<void> {
-    const responsePromise = this.page.waitForResponse(
-      (response) =>
-        response.url().includes("connections") &&
-        ["PUT", "PATCH"].includes(response.request().method()) &&
-        response.status() === 200,
-      { timeout: 15000 },
-    );
+    // Do not soft-wait for PUT/PATCH — already-active connections may not hit the
+    // API, and a caught timeout still burns ~15s in the report.
     await this.getConnectionItem(name).click();
-    await responsePromise.catch(() => undefined);
     await this.handlePasswordPrompt(password);
     await this.waitForConnectionActive();
   }
@@ -283,15 +358,51 @@ export class ConnectionPage extends BasePage {
     await expect(this.nameInput).toBeVisible({ timeout: 15000 });
   }
 
+  async duplicateConnection(name: string): Promise<void> {
+    await this.openContextMenu(name);
+    await this.clickContextMenuItem("Duplicate");
+    await expect(
+      this.page.getByRole("heading", { name: "New connection" }),
+    ).toBeVisible();
+    await expect(this.nameInput).toBeVisible({ timeout: 15000 });
+  }
+
+  async reorderConnection(sourceName: string, targetName: string): Promise<void> {
+    const source = this.getConnectionItem(sourceName);
+    const target = this.getConnectionItem(targetName);
+    await expect(source).toBeVisible();
+    await expect(target).toBeVisible();
+
+    const sourceBox = await source.boundingBox();
+    const targetBox = await target.boundingBox();
+    if (!sourceBox || !targetBox) {
+      throw new Error("connection items have no bounding box");
+    }
+
+    const startX = sourceBox.x + sourceBox.width / 2;
+    const startY = sourceBox.y + sourceBox.height / 2;
+    const endX = targetBox.x + targetBox.width / 2;
+    const endY = targetBox.y + targetBox.height / 2;
+
+    await this.page.mouse.move(startX, startY);
+    await this.page.mouse.down();
+    // PointerSensor activationDistance is 8px; a single dragTo jump does not activate.
+    await this.page.mouse.move(startX, startY + 16, { steps: 4 });
+    await this.page.mouse.move(endX, endY, { steps: 12 });
+    await this.page.mouse.up();
+  }
+
+  getConnectionItems(): Locator {
+    return this.page.locator('[data-testid^="connection-item-"]');
+  }
+
   async refreshConnection(name: string): Promise<void> {
     await this.openContextMenu(name);
-    const responsePromise = this.page.waitForResponse(
-      (response) =>
-        response.url().includes("connections") && response.status() === 200,
-      { timeout: 10000 },
+    await waitForResponseDuring(
+      this.page,
+      apiRoute.connectionsList,
+      () => this.clickContextMenuItem("Refresh"),
     );
-    await this.clickContextMenuItem("Refresh");
-    await responsePromise;
   }
 
   async closeContextMenu(): Promise<void> {

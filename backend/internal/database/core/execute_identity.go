@@ -25,6 +25,7 @@ func ResolveExecuteIdentity(
 	}
 
 	node := parseNodeID(connectionType, nodeID)
+
 	switch action {
 	case databaseContract.CreateDatabaseAction, databaseContract.EditDatabaseAction:
 		return newExecuteResult(newName, action)
@@ -45,6 +46,7 @@ func newExecuteResult(nodeID string, action databaseContract.TreeNodeActionName)
 	if nodeID == "" {
 		return &databaseContract.ExecuteResult{}
 	}
+
 	return &databaseContract.ExecuteResult{
 		NodeID:     nodeID,
 		NextAction: databaseContract.NextActionAfterCreate(action),
@@ -71,6 +73,7 @@ func objectNames(action databaseContract.TreeNodeActionName, params []byte) (old
 		if db == nil {
 			return "", ""
 		}
+
 		return ptrName(db.Old), ptrName(db.New)
 
 	case databaseContract.CreateSchemaAction, databaseContract.EditSchemaAction:
@@ -78,17 +81,20 @@ func objectNames(action databaseContract.TreeNodeActionName, params []byte) (old
 		if s == nil {
 			return "", ""
 		}
+
 		return ptrName(s.Old), ptrName(s.New)
 
 	case databaseContract.CreateTableAction, databaseContract.EditTableAction:
 		if t := decodeTab[dto.PostgresTableParams](params, databaseContract.GeneralTab); t != nil {
 			oldName, newName = ptrName(t.Old), ptrName(t.New)
 		}
+
 		if oldName == "" && newName == "" {
 			if t := decodeTab[dto.SQLiteTableParams](params, databaseContract.GeneralTab); t != nil {
 				return ptrName(t.Old), ptrName(t.New)
 			}
 		}
+
 		return oldName, newName
 
 	case databaseContract.CreateViewAction, databaseContract.EditViewAction:
@@ -96,6 +102,7 @@ func objectNames(action databaseContract.TreeNodeActionName, params []byte) (old
 		if v == nil {
 			return "", ""
 		}
+
 		return ptrName(v.Old), ptrName(v.New)
 
 	case databaseContract.CreateMaterializedViewAction, databaseContract.EditMaterializedViewAction:
@@ -103,6 +110,7 @@ func objectNames(action databaseContract.TreeNodeActionName, params []byte) (old
 		if m == nil {
 			return "", ""
 		}
+
 		return ptrName(m.Old), ptrName(m.New)
 
 	default:
@@ -115,11 +123,13 @@ func decodeTab[T any](params []byte, tabs ...databaseContract.TreeTab) *T {
 	if err != nil {
 		return nil
 	}
+
 	for _, tab := range tabs {
 		if parsed[tab] != nil {
 			return parsed[tab]
 		}
 	}
+
 	return nil
 }
 
@@ -151,5 +161,6 @@ func ptrName(data any) string {
 			return *v.Name
 		}
 	}
+
 	return ""
 }

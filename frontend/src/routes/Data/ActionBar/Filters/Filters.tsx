@@ -1,5 +1,4 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { tools } from '@/core/utils/tools.ts';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook.ts';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
@@ -31,6 +30,8 @@ export default function Filters(): JSX.Element {
     toggleReRunQuery();
   };
 
+  const filterCount = selectedTab?.filters?.length ?? 0;
+
   return (
     <Box
       sx={{
@@ -38,21 +39,21 @@ export default function Filters(): JSX.Element {
         borderBottom: (theme): string => `1px solid ${theme.palette.divider}`
       }}
     >
-      {selectedTab?.filters?.length === 0 ? (
+      {filterCount === 0 ? (
         <AddFilterButton columns={columns ?? []} />
       ) : (
         selectedTab?.filters?.map((filter: FilterType) => {
           return (
             <FilterItem
               apply={(): void => handleApplyFilters()}
-              key={tools.uuid()}
+              key={filter.index}
               columns={columns ?? []}
               filter={filter}
             />
           );
         })
       )}
-      {(selectedTab?.filters?.length ?? 0) > 0 && (
+      {filterCount > 0 && (
         <FiltersApplyBoxStyled>
           <Button
             onClick={(): void => handleApplyFilters()}

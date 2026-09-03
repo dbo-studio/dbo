@@ -76,5 +76,6 @@ func (r *MySQLRepository) handleViewCommands(node contract.DBNode, tabID contrac
 func formatQuery(query *string) *string {
 	formattedQuery := lo.FromPtr(query)
 	formattedQuery = strings.ReplaceAll(formattedQuery, ";", "")
+
 	return &formattedQuery
 }

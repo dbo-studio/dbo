@@ -7,6 +7,7 @@ import (
 
 func SkipClearRequestMiddleware(c fiber.Ctx) error {
 	body := c.Body()
+
 	var data map[string]any
 
 	if err := json.Unmarshal(body, &data); err != nil {
@@ -14,6 +15,7 @@ func SkipClearRequestMiddleware(c fiber.Ctx) error {
 	}
 
 	modifiedBody := removeDboIndex(data)
+
 	output, err := json.Marshal(modifiedBody)
 	if err == nil {
 		c.Request().SetBody(output)

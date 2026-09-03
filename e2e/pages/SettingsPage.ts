@@ -1,8 +1,14 @@
 import { expect, type Page, type Locator } from "@playwright/test";
+import { apiRoute, pendingResponse } from "../helpers/network";
 import { BasePage } from "./BasePage";
 
 export type SettingsPanel =
-  "General" | "Appearance" | "Shortcuts" | "AI" | "About";
+  | "General"
+  | "Appearance"
+  | "Shortcuts"
+  | "AI"
+  | "Security"
+  | "About";
 
 /**
  * Page Object for Settings modal
@@ -11,34 +17,32 @@ export class SettingsPage extends BasePage {
   readonly settingsButton: Locator;
   readonly modal: Locator;
 
-  // Menu items
   readonly generalMenuItem: Locator;
   readonly appearanceMenuItem: Locator;
   readonly shortcutsMenuItem: Locator;
   readonly aiMenuItem: Locator;
+  readonly securityMenuItem: Locator;
   readonly aboutMenuItem: Locator;
 
-  // Theme options
   readonly lightTheme: Locator;
   readonly darkTheme: Locator;
 
-  // Sidebar toggles
   readonly leftSidebarButton: Locator;
   readonly rightSidebarButton: Locator;
 
   constructor(page: Page) {
     super(page);
 
-    this.settingsButton = page.getByRole("button", { name: "settings" });
+    this.settingsButton = page.getByRole("button", { name: "settings", exact: true });
     this.modal = page.locator('[role="dialog"]');
 
     this.generalMenuItem = page.getByText("General").first();
     this.appearanceMenuItem = page.getByText("Appearance").first();
     this.shortcutsMenuItem = page.getByText("Shortcuts").first();
     this.aiMenuItem = page.locator("div").filter({ hasText: /^AI$/ }).first();
+    this.securityMenuItem = page.getByText("Security").first();
     this.aboutMenuItem = page.getByText("About").first();
 
-    // Exact match — "GitHub Light" / "GitHub Dark" also appear in Appearance.
     this.lightTheme = page.getByRole("img", { name: "light" });
     this.darkTheme = page.getByRole("img", { name: "dark" });
 
@@ -47,13 +51,29 @@ export class SettingsPage extends BasePage {
   }
 
   async open(): Promise<void> {
+    const connectionPageHeading = this.page.getByRole("heading", {
+      name: "New connection",
+    });
+    if (await connectionPageHeading.isVisible().catch(() => false)) {
+      await this.page.getByRole("button", { name: "Cancel" }).click();
+      await expect(connectionPageHeading).toBeHidden({ timeout: 10000 });
+    }
     await this.settingsButton.click();
-    await this.wait(500);
+    await expect(this.page.getByText("General").first()).toBeVisible({
+      timeout: 10000,
+    });
   }
 
   async close(): Promise<void> {
     await this.pressKey("Escape");
-    await this.wait(300);
+    await expect(
+      this.page.getByRole("checkbox", { name: /Enable MCP server/i }),
+    )
+      .toBeHidden({ timeout: 10000 })
+      .catch(() => undefined);
+    await expect(this.page.getByText("Application theme", { exact: true }))
+      .toBeHidden({ timeout: 5000 })
+      .catch(() => undefined);
   }
 
   async navigateTo(panel: SettingsPanel): Promise<void> {
@@ -70,54 +90,153 @@ export class SettingsPage extends BasePage {
       case "AI":
         await this.aiMenuItem.click();
         break;
+      case "Security":
+        await this.securityMenuItem.click();
+        break;
       case "About":
         await this.aboutMenuItem.click();
         break;
     }
-    await this.wait(300);
+  }
+
+  async openMcpTab(): Promise<void> {
+    const mcpTab = this.page.getByRole("tab", { name: "MCP" });
+    await expect(mcpTab).toBeVisible({ timeout: 10000 });
+    await mcpTab.click();
+    await expect(
+      this.page.getByRole("switch", { name: /Enable MCP server/i }),
+    ).toBeVisible({ timeout: 10000 });
+  }
+
+  async expectMcpPanelVisible(): Promise<void> {
+    await expect(
+      this.page.getByText(/Enabling MCP exposes database access/i),
+    ).toBeVisible({ timeout: 10000 });
+    await expect(
+      this.page.getByRole("switch", { name: /Enable MCP server/i }),
+    ).toBeVisible();
+    await expect(this.page.getByText("Status", { exact: true })).toBeVisible();
+    await expect(this.page.getByText("Proxy", { exact: true })).toBeVisible();
   }
 
   async selectLightTheme(): Promise<void> {
     await this.lightTheme.click();
-    await this.wait(500);
+    await expect(this.lightTheme).toBeVisible();
   }
 
   async selectDarkTheme(): Promise<void> {
     await this.darkTheme.click();
-    await this.wait(500);
+    await expect(this.darkTheme).toBeVisible();
   }
 
   async toggleLeftSidebar(): Promise<void> {
     await this.leftSidebarButton.click();
-    await this.wait(500);
   }
 
   async toggleRightSidebar(): Promise<void> {
     await this.rightSidebarButton.click();
-    await this.wait(500);
   }
 
-  async isLeftSidebarVisible(): Promise<boolean> {
-    return await this.page
-      .getByRole("tab", { name: "Items" })
-      .isVisible()
-      .catch(() => false);
+  leftSidebarTab(): Locator {
+    return this.page.getByRole("tab", { name: "Items" });
   }
 
-  async isRightSidebarVisible(): Promise<boolean> {
-    return await this.page
-      .getByRole("tab", { name: "Assistant" })
-      .isVisible()
-      .catch(() => false);
+  rightSidebarTab(): Locator {
+    return this.page.getByRole("tab", { name: "Assistant" });
   }
 
-  // Assertions
+  async setSafeModePassword(password: string): Promise<void> {
+    await this.navigateTo("Security");
+    const setButton = this.page.getByTestId("safe-mode-settings-set-password");
+    await expect(setButton).toBeVisible({ timeout: 10000 });
+    await setButton.click();
+
+    const prompt = this.page.getByTestId("safe-mode-password-prompt");
+    await expect(prompt).toBeVisible({ timeout: 10000 });
+    await this.page.locator('input[name="password"]').fill(password);
+    await this.page.locator('input[name="confirm"]').fill(password);
+
+    const setPromise = pendingResponse(this.page, {
+      ...apiRoute.safeModePassword,
+      method: "POST",
+      status: 200,
+    });
+    await this.page.getByTestId("safe-mode-password-save").click();
+    await setPromise;
+    await expect(prompt).toHaveCount(0, { timeout: 15000 });
+    await expect(this.page.getByTestId("safe-mode-settings-status")).toHaveText(
+      "Configured",
+      { timeout: 10000 },
+    );
+  }
+
+  async changeSafeModePassword(
+    currentPassword: string,
+    nextPassword: string,
+  ): Promise<void> {
+    await this.navigateTo("Security");
+    const changeButton = this.page.getByTestId(
+      "safe-mode-settings-change-password",
+    );
+    await expect(changeButton).toBeVisible({ timeout: 10000 });
+    await changeButton.click();
+
+    const prompt = this.page.getByTestId("safe-mode-password-prompt");
+    await expect(prompt).toBeVisible({ timeout: 10000 });
+    await this.page.locator('input[name="currentPassword"]').fill(currentPassword);
+    await this.page.locator('input[name="password"]').fill(nextPassword);
+    await this.page.locator('input[name="confirm"]').fill(nextPassword);
+
+    const changePromise = pendingResponse(this.page, {
+      ...apiRoute.safeModePassword,
+      method: "PATCH",
+      status: 200,
+    });
+    await this.page.getByTestId("safe-mode-password-save").click();
+    await changePromise;
+    await expect(prompt).toHaveCount(0, { timeout: 15000 });
+    await expect(
+      this.page.getByText("Safe Mode password updated").first(),
+    ).toBeVisible({ timeout: 10000 });
+  }
+
   async expectPanelVisible(content: string): Promise<void> {
-    // exact: true — Appearance also shows "GitHub Light" / "GitHub Dark"
     await expect(this.page.getByText(content, { exact: true })).toBeVisible();
   }
 
   async expectModalClosed(): Promise<void> {
-    await expect(this.page.getByText("Application theme")).toBeHidden();
+    await expect(this.modal).toBeHidden({ timeout: 10000 });
+  }
+
+  shortcutsSearchInput(): Locator {
+    return this.page.getByPlaceholder("Search shortcuts");
+  }
+
+  async expectShortcutsCheatsheet(): Promise<void> {
+    await expect(this.shortcutsSearchInput()).toBeVisible({ timeout: 10000 });
+    await expect(this.page.getByText("Editor", { exact: true })).toBeVisible();
+    await expect(this.page.getByText("Tabs", { exact: true })).toBeVisible();
+    await expect(this.page.getByText("Data grid", { exact: true })).toBeVisible();
+    await expect(this.page.getByText("App", { exact: true })).toBeVisible();
+    await expect(this.page.getByText("Run", { exact: true })).toBeVisible();
+    await expect(this.page.getByText("Save", { exact: true })).toBeVisible();
+    await expect(this.page.getByText("Refresh", { exact: true })).toBeVisible();
+    await expect(this.page.getByText("Add row", { exact: true })).toBeVisible();
+    await expect(this.page.getByText("Format", { exact: true })).toBeVisible();
+    await expect(
+      this.page.getByText("Keyboard shortcuts", { exact: true }),
+    ).toBeVisible();
+  }
+
+  async filterShortcuts(query: string): Promise<void> {
+    const input = this.shortcutsSearchInput();
+    await expect(input).toBeVisible({ timeout: 10000 });
+    await input.fill(query);
+  }
+
+  /** Web default: Alt+/ opens Settings on the Shortcuts tab. */
+  async openShortcutsViaKeyboard(): Promise<void> {
+    await this.page.keyboard.press("Alt+/");
+    await expect(this.shortcutsSearchInput()).toBeVisible({ timeout: 10000 });
   }
 }

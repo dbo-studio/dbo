@@ -39,3 +39,19 @@ export function getDbConfig(
       };
   }
 }
+
+/** TLS-required Postgres (sample-pgsql-ssl). Defaults to port 5433. */
+export function getSslPostgresConfig(name: string): ConnectionConfig {
+  return {
+    name,
+    host: process.env.PGSQL_SSL_TEST_HOST ?? "127.0.0.1",
+    port: process.env.PGSQL_SSL_TEST_PORT ?? "5433",
+    database: "default",
+    username: process.env.PGSQL_SSL_TEST_USER ?? "default",
+    password: process.env.PGSQL_SSL_TEST_PASSWORD ?? "secret",
+    type: "PostgreSQL",
+    ssl: {
+      mode: "require",
+    },
+  };
+}

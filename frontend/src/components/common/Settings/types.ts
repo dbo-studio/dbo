@@ -41,3 +41,9 @@ export type SettingsProps = {
   open: boolean;
   tab?: number;
 };
+
+export type AiSettingsTab = 'providers' | 'mcp';
+
+export type AiPanelProps = {
+  initialTab?: AiSettingsTab;
+};

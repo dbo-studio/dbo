@@ -55,6 +55,7 @@ func (req FilterDto) Validate() error {
 	if FilterRequiresValue(req.Operator) {
 		rules = append(rules, validation.Field(&req.Value, validation.Required))
 	}
+
 	return validation.ValidateStruct(&req, rules...)
 }
 

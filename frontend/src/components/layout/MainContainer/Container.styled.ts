@@ -39,7 +39,11 @@ export const EndContainerStyled = styled(Box, {
 export const StartContainerStyled = styled(Box)(({ theme }) => ({
   ...containerBaseStyles,
   borderLeft: `1px solid ${theme.palette.divider}`,
-  overflow: 'auto',
+  width: '83px',
+  minWidth: '83px',
+  maxWidth: '83px',
+  overflowX: 'hidden',
+  overflowY: 'auto',
   flexShrink: 0
 }));
 

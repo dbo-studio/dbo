@@ -24,6 +24,26 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
     next: filter.next,
     isActive: filter.isActive
   });
+  const [prevFilter, setPrevFilter] = useState(filter);
+
+  if (
+    filter.index !== prevFilter.index ||
+    filter.column !== prevFilter.column ||
+    filter.operator !== prevFilter.operator ||
+    filter.value !== prevFilter.value ||
+    filter.next !== prevFilter.next ||
+    filter.isActive !== prevFilter.isActive
+  ) {
+    setPrevFilter(filter);
+    setCurrentFilter({
+      index: filter.index,
+      column: filter.column,
+      operator: filter.operator,
+      value: filter.value,
+      next: filter.next,
+      isActive: filter.isActive
+    });
+  }
 
   const requiresValue = filterOperatorRequiresValue(currentFilter.operator);
 
@@ -50,9 +70,15 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
     [currentFilter]
   );
 
+  const commitValue = (raw: string): FilterType => {
+    const next = handleChange('value', raw);
+    upsertFilters(next);
+    return next;
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
     if (e.key === 'Enter') {
-      upsertFilters(currentFilter);
+      commitValue(e.currentTarget.value);
       apply();
     }
   };
@@ -70,6 +96,7 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
       </Box>
       <Box>
         <SelectInput
+          classNamePrefix='filter-select'
           emptylabel={locales.no_column_found}
           value={currentFilter.column}
           disabled={columns.length === 0}
@@ -87,6 +114,7 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
         }}
       >
         <SelectInput
+          classNamePrefix='filter-select'
           value={currentFilter.operator}
           size='small'
           style={{
@@ -99,6 +127,7 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
         />
       </Box>
       <Box
+        data-testid='filter-value'
         sx={{
           flex: 1,
           mr: 1
@@ -110,13 +139,18 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
           size='small'
           disabled={!requiresValue}
           value={requiresValue ? currentFilter.value : ''}
-          onBlur={(): void => upsertFilters(currentFilter)}
-          onChange={(e: EventFor<'input', 'onChange'>): FilterType => handleChange('value', e.target.value)}
+          onBlur={(e: EventFor<'input', 'onBlur'>): void => {
+            commitValue(e.target.value);
+          }}
+          onChange={(e: EventFor<'input', 'onChange'>): void => {
+            handleChange('value', e.target.value);
+          }}
           onKeyDown={handleKeyDown}
         />
       </Box>
       <Box>
         <SelectInput
+          classNamePrefix='filter-select'
           value={currentFilter.next}
           size='small'
           options={PgsqlFilterNext.map((c) => ({ value: c, label: c }))}

@@ -55,6 +55,7 @@ func (m *SQLLite) Close() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
 	err = sqlDB.Close()
 	if err != nil {
 		m.logger.Fatal(err)
@@ -66,11 +67,14 @@ func getDBPath(cfg *config.Config, logger logger.Logger) string {
 		if err := os.MkdirAll(filepath.Dir(override), 0700); err != nil {
 			logger.Info(err.Error())
 		}
+
 		return override
 	}
 
 	defaultPath := "data/" + cfg.App.DatabaseName
+
 	var dbPath string
+
 	dbName := cfg.App.DatabaseName
 	appName := cfg.App.Name
 
@@ -91,10 +95,13 @@ func getDBPath(cfg *config.Config, logger logger.Logger) string {
 	switch runtime.GOOS {
 	case "windows":
 		appData := os.Getenv("APPDATA")
+
 		logger.Info("APPDATA environment variable not set")
+
 		if appData == "" {
 			return defaultPath
 		}
+
 		dbPath = filepath.Join(appData, appName, "storage", dbName)
 	case "darwin":
 		dbPath = filepath.Join(homeDir, "Library", "Application Support", appName, "storage", dbName)
