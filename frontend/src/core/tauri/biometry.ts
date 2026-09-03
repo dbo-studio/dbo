@@ -70,7 +70,9 @@ export async function persistSafeModePassword(password: string, options?: { prom
           allowDeviceCredential: true
         });
       } catch (authError) {
-        throw new Error(pluginErrorMessage(authError), { cause: authError });
+        const error = new Error(pluginErrorMessage(authError)) as Error & { cause: unknown };
+        error.cause = authError;
+        throw error;
       }
     }
     sessionPassword = password;
