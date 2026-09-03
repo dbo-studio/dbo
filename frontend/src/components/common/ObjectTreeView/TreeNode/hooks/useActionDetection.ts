@@ -121,8 +121,7 @@ export const useActionDetection = (
         case 'action': {
           if (!currentConnection) return;
 
-          const needsGenericConfirm =
-            !currentConnection.safeMode || currentConnection.safeMode === 'silent';
+          const needsGenericConfirm = !currentConnection.safeMode || currentConnection.safeMode === 'silent';
 
           if (needsGenericConfirm) {
             confirmModal.danger(

@@ -105,10 +105,7 @@ export const useConnectionStore: UseBoundStore<StoreApi<ConnectionState>> = crea
 
           set({ connections, currentConnectionId: currentConnection.id }, undefined, 'updateCurrentConnection');
         },
-        patchConnectionSafeModeUnlock: (
-          connectionId: number,
-          unlock: { unlocked: boolean; until?: string }
-        ): void => {
+        patchConnectionSafeModeUnlock: (connectionId: number, unlock: { unlocked: boolean; until?: string }): void => {
           const connections = get().connections;
           if (!connections) {
             return;
