@@ -25,7 +25,6 @@ export class SafeModePage extends BasePage {
   readonly runAnywayButton: Locator;
   readonly cancelButton: Locator;
   readonly passwordPrompt: Locator;
-  readonly setupTitle: Locator;
   readonly passwordInput: Locator;
   readonly confirmInput: Locator;
   readonly passwordSaveButton: Locator;
@@ -39,9 +38,6 @@ export class SafeModePage extends BasePage {
     this.runAnywayButton = page.getByRole("button", { name: "Run anyway" });
     this.cancelButton = page.getByRole("button", { name: "Cancel" });
     this.passwordPrompt = page.getByTestId("safe-mode-password-prompt");
-    this.setupTitle = page.getByRole("heading", {
-      name: "Set Safe Mode password",
-    });
     this.passwordInput = page.locator('input[name="password"]');
     this.confirmInput = page.locator('input[name="confirm"]');
     this.passwordSaveButton = page.getByTestId("safe-mode-password-save");
@@ -68,7 +64,7 @@ export class SafeModePage extends BasePage {
   }
 
   private async submitSetupPassword(password: string): Promise<void> {
-    await expect(this.setupTitle).toBeVisible({ timeout: 15000 });
+    await expect(this.passwordPrompt).toBeVisible({ timeout: 15000 });
     await this.passwordInput.fill(password);
     await this.confirmInput.fill(password);
     const setPromise = pendingResponse(this.page, apiRoute.safeModePassword);
@@ -79,15 +75,27 @@ export class SafeModePage extends BasePage {
 
   async selectMode(mode: SafeModeValue): Promise<void> {
     await this.openMenu();
-    const updatePromise = pendingResponse(this.page, apiRoute.connectionsUpdate);
+    const updatePromise = pendingResponse(
+      this.page,
+      apiRoute.connectionsUpdate,
+      API_DB_TIMEOUT,
+    );
     await this.option(mode).click();
 
+    // First enable can prompt for setup (confirm field) or unlock (password only).
+    // Match the prompt testid — the heading is "Safe Mode" for unlock, not setup.
     const outcome = await Promise.race([
       updatePromise.then(() => "updated" as const),
-      this.setupTitle.waitFor({ state: "visible", timeout: 15000 }).then(() => "setup" as const),
+      this.passwordPrompt
+        .waitFor({ state: "visible", timeout: API_DB_TIMEOUT })
+        .then(() => "prompt" as const),
     ]);
-    if (outcome === "setup") {
-      await this.submitSetupPassword(SAFE_MODE_PASSWORD);
+    if (outcome === "prompt") {
+      if (await this.confirmInput.isVisible().catch(() => false)) {
+        await this.submitSetupPassword(SAFE_MODE_PASSWORD);
+      } else {
+        await this.submitPassword(SAFE_MODE_PASSWORD);
+      }
       await updatePromise;
     }
 

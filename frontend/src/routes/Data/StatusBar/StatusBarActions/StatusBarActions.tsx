@@ -4,7 +4,7 @@ import { useDataGridRowActions } from '@/components/common/DataGrid/hooks/useDat
 import { TabMode } from '@/core/enums';
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { buildRowConditions, mapRowValuesToPhysical, shortcuts } from '@/core/utils';
-import { resolveSafeModeGate } from '@/core/utils/safeModeGate';
+import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import { useCurrentConnection, useShortcut } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
@@ -71,19 +71,13 @@ export default function StatusBarActions(): JSX.Element {
         added: mappedAdded
       };
 
-      try {
-        const res = await updateQueryMutation(payload);
-        await refresh();
-        toast.success(`${locales.changes_saved_successfully}. ${locales.row_affected}: ${res.rowAffected}`);
-      } catch (error) {
-        const shouldRetry = await resolveSafeModeGate(error);
-        if (!shouldRetry) {
-          return;
-        }
-        const res = await updateQueryMutation({ ...payload, confirmed: true });
-        await refresh();
-        toast.success(`${locales.changes_saved_successfully}. ${locales.row_affected}: ${res.rowAffected}`);
+      const res = await withSafeModeRetry((confirmed) => updateQueryMutation({ ...payload, confirmed }));
+      if (res === undefined) {
+        return;
       }
+
+      await refresh();
+      toast.success(`${locales.changes_saved_successfully}. ${locales.row_affected}: ${res.rowAffected}`);
     } catch (error) {
       console.debug('🚀 ~ handleSave ~ error:', error);
       toast.error(locales.save_failed);

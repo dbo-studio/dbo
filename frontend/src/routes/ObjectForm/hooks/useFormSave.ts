@@ -1,4 +1,5 @@
 import api from '@/api';
+import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import { useCurrentConnection } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
@@ -126,25 +127,17 @@ export const useFormSave = ({
     const action = selectedTab.action ?? '';
 
     try {
-      const run = async (confirmed?: boolean): Promise<Awaited<ReturnType<typeof executeAction>>> =>
+      const result = await withSafeModeRetry((confirmed) =>
         executeAction({
           nodeId: selectedTab.nodeId,
           action,
           connectionId: currentConnection.id,
           data: payload as Record<string, FormValue>,
           confirmed
-        });
-
-      let result: Awaited<ReturnType<typeof executeAction>>;
-      try {
-        result = await run();
-      } catch (error) {
-        const { resolveSafeModeGate } = await import('@/core/utils/safeModeGate');
-        const shouldRetry = await resolveSafeModeGate(error);
-        if (!shouldRetry) {
-          return;
-        }
-        result = await run(true);
+        })
+      );
+      if (result === undefined) {
+        return;
       }
 
       const newNodeId = result.nodeId;

@@ -20,6 +20,16 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       babel({ presets: [reactCompilerPreset()] }),
+      ...(process.env.TAURI_ENV_PLATFORM
+        ? [
+            {
+              name: 'tauri-css-no-crossorigin',
+              transformIndexHtml(html: string): string {
+                return html.replaceAll('<link rel="stylesheet" crossorigin', '<link rel="stylesheet"');
+              }
+            }
+          ]
+        : []),
       VitePWA({
         injectRegister: 'auto',
         registerType: 'autoUpdate',

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { DbEngine } from "../fixtures/dbConfigs";
+import { SAFE_MODE_PASSWORD } from "../fixtures/safeMode";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import {
   cleanupDataBrowserSeed,
@@ -356,7 +357,11 @@ export function defineDataGridContextMenuTests(engine: DbEngine): void {
           await seed.dataGrid.closeContextMenu();
         });
       } finally {
-        // Connection is deleted by withConnectionCleanup — no need to restore Silent.
+        try {
+          await safeMode.selectSilentWithPassword(SAFE_MODE_PASSWORD);
+        } catch (err) {
+          console.warn("[e2e] restore Silent before drop failed:", err);
+        }
         await dropDataBrowserTable(page, connectionName, tableName, engine).catch(
           () => undefined,
         );

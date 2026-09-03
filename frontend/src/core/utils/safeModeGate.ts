@@ -36,7 +36,11 @@ export async function resolveSafeModeGate(error: unknown): Promise<boolean> {
     }
 
     try {
-      await api.safeMode.verify(result.password, connection.id);
+      const verifyResult = await api.safeMode.verify(result.password, connection.id);
+      useConnectionStore.getState().patchConnectionSafeModeUnlock(connection.id, {
+        unlocked: true,
+        until: verifyResult.unlockedUntil
+      });
       void storeSafeModePassword(result.password);
       return true;
     } catch {
@@ -51,4 +55,17 @@ export async function resolveSafeModeGate(error: unknown): Promise<boolean> {
   }
 
   throw error;
+}
+
+/** Use for raw/update/tree execute — do not call those APIs directly without it. */
+export async function withSafeModeRetry<T>(run: (confirmed?: boolean) => Promise<T>): Promise<T | undefined> {
+  try {
+    return await run(false);
+  } catch (error) {
+    const shouldRetry = await resolveSafeModeGate(error);
+    if (!shouldRetry) {
+      return undefined;
+    }
+    return await run(true);
+  }
 }

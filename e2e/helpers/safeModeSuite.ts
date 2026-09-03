@@ -2,7 +2,8 @@ import { expect, test } from "@playwright/test";
 import { type DbEngine, getDbConfig } from "../fixtures/dbConfigs";
 import { SAFE_MODE_PASSWORD } from "../fixtures/safeMode";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
-import { apiRoute, pendingResponse } from "./network";
+import { dataBrowserTreePath } from "./dataBrowser";
+import { API_DDL_TIMEOUT, apiRoute, pendingResponse } from "./network";
 import {
   ensureSqliteDbFile,
   removeSqliteDbFile,
@@ -11,6 +12,7 @@ import { withConnectionCleanup } from "./safeCleanup";
 import {
   ConnectionPage,
   DataGridPage,
+  ObjectTreePage,
   SafeModePage,
   SqlEditorPage,
 } from "../pages";
@@ -40,6 +42,17 @@ function engineLabel(engine: DbEngine): string {
   if (engine === "mysql") return "MySQL";
   if (engine === "sqlite") return "SQLite";
   return "PostgreSQL";
+}
+
+async function revealTable(
+  tree: ObjectTreePage,
+  engine: DbEngine,
+  connectionName: string,
+  tableName: string,
+): Promise<void> {
+  await tree.expandPath(dataBrowserTreePath(engine, connectionName));
+  await tree.refreshExpandNode("Tables");
+  await expect(tree.getTreeNode(tableName)).toBeVisible({ timeout: 15000 });
 }
 
 function connectionSetup(engine: DbEngine, connectionName: string) {
@@ -405,6 +418,128 @@ INSERT INTO ${tableName} (name) VALUES ('before');
                 );
               } catch (err) {
                 console.warn("[e2e] safe-mode grid reauth cleanup failed:", err);
+              }
+            });
+          }
+        });
+      } finally {
+        cleanupFile();
+      }
+    });
+
+    test("Alert Mode 2 confirms tree Drop table", async ({ page }, testInfo) => {
+      const connectionPage = new ConnectionPage(page);
+      const sqlEditor = new SqlEditorPage(page);
+      const tree = new ObjectTreePage(page);
+      const safeMode = new SafeModePage(page);
+
+      const suffix = uniqueTestSuffix(testInfo);
+      const connectionName = `${testPrefix}-tree-${suffix}`;
+      const tableName = `e2e_safe_tree_${suffix}`;
+      const { config, cleanupFile } = connectionSetup(engine, connectionName);
+
+      try {
+        await withConnectionCleanup(page, connectionName, async () => {
+          try {
+            await connectionPage.goto();
+            await connectionPage.waitForReady();
+
+            await test.step("Setup connection, table, and Alert Mode 2", async () => {
+              await connectionPage.setupConnection(config);
+              await sqlEditor.open();
+              await selectEditorContext(sqlEditor, engine);
+              await sqlEditor.typeAndRun(createTableSql(engine, tableName));
+              await safeMode.selectMode("alert_write");
+            });
+
+            await test.step("Drop table from tree requires Safe Mode confirm", async () => {
+              await revealTable(tree, engine, connectionName, tableName);
+
+              const retryPromise = pendingResponse(
+                page,
+                { ...apiRoute.objectExecute, method: "POST", status: 200 },
+                API_DDL_TIMEOUT,
+              );
+              await tree.runTreeAction(tableName, "Drop table");
+              await expect(safeMode.confirmTitle).toBeVisible({ timeout: 15000 });
+              await safeMode.runAnywayButton.click();
+              await retryPromise;
+              await expect(safeMode.confirmTitle).toBeHidden({ timeout: 10000 });
+              await expect(tree.getTreeNode(tableName)).toHaveCount(0, {
+                timeout: 15000,
+              });
+            });
+          } finally {
+            await test.step("Cleanup table", async () => {
+              try {
+                await safeMode.selectSilentWithPassword(SAFE_MODE_PASSWORD);
+                await sqlEditor.open();
+                await safeMode.runWithoutGate(
+                  `DROP TABLE IF EXISTS ${tableName}`,
+                );
+              } catch (err) {
+                console.warn("[e2e] safe-mode tree alert cleanup failed:", err);
+              }
+            });
+          }
+        });
+      } finally {
+        cleanupFile();
+      }
+    });
+
+    test("Safe Mode 2 requires password for tree Drop table", async ({
+      page,
+    }, testInfo) => {
+      const connectionPage = new ConnectionPage(page);
+      const sqlEditor = new SqlEditorPage(page);
+      const tree = new ObjectTreePage(page);
+      const safeMode = new SafeModePage(page);
+
+      const suffix = uniqueTestSuffix(testInfo);
+      const connectionName = `${testPrefix}-t2-${suffix}`;
+      const tableName = `e2e_safe_t2_${suffix}`;
+      const { config, cleanupFile } = connectionSetup(engine, connectionName);
+
+      try {
+        await withConnectionCleanup(page, connectionName, async () => {
+          try {
+            await connectionPage.goto();
+            await connectionPage.waitForReady();
+
+            await test.step("Setup connection, table, and Safe Mode 2", async () => {
+              await connectionPage.setupConnection(config);
+              await sqlEditor.open();
+              await selectEditorContext(sqlEditor, engine);
+              await sqlEditor.typeAndRun(createTableSql(engine, tableName));
+              await safeMode.selectMode("safe_write");
+            });
+
+            await test.step("Drop table from tree requires password", async () => {
+              await revealTable(tree, engine, connectionName, tableName);
+
+              const retryPromise = pendingResponse(
+                page,
+                { ...apiRoute.objectExecute, method: "POST", status: 200 },
+                API_DDL_TIMEOUT,
+              );
+              await tree.runTreeAction(tableName, "Drop table");
+              await safeMode.submitPassword(SAFE_MODE_PASSWORD);
+              await retryPromise;
+              await expect(tree.getTreeNode(tableName)).toHaveCount(0, {
+                timeout: 15000,
+              });
+            });
+          } finally {
+            await test.step("Cleanup table", async () => {
+              try {
+                await safeMode.selectSilentWithPassword(SAFE_MODE_PASSWORD);
+                await sqlEditor.open();
+                await safeMode.runWithoutGate(
+                  `DROP TABLE IF EXISTS ${tableName}`,
+                );
+              } catch (err) {
+                console.warn("[e2e] safe-mode tree password cleanup failed:", err);
               }
             });
           }
