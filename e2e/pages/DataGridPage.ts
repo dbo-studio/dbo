@@ -452,11 +452,13 @@ export class DataGridPage extends BasePage {
     if (!(await item.isVisible().catch(() => false))) {
       return;
     }
-    // MUI Menu backdrop is often opacity:0, so isVisible() is false — still click it.
-    await this.page.locator(".MuiBackdrop-root").last().click({ force: true }).catch(() => undefined);
-    if (await item.isVisible().catch(() => false)) {
-      await this.page.keyboard.press("Escape");
-    }
+    // Backdrop is opacity:0 (Playwright treats it as hidden). Click a corner so
+    // the hit does not land on the menu paper / Filter submenu at viewport center.
+    await this.page.locator(".MuiBackdrop-root").last().click({
+      force: true,
+      position: { x: 1, y: 1 },
+      timeout: 5000,
+    });
     await expect(item).toBeHidden({ timeout: 5000 });
   }
 

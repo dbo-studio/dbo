@@ -1,5 +1,6 @@
 import api from '@/api';
 import { TabMode } from '@/core/enums';
+import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import { useCurrentConnection } from '@/hooks';
 import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
 import locales from '@/locales';
@@ -48,6 +49,48 @@ export const useActionDetection = (
     updateUI({ sidebar: { ...sidebar, showLeft: false } });
   }, [updateUI, useSidebarOverlay]);
 
+  const runTreeAction = useCallback(
+    async (node: TreeNodeType): Promise<void> => {
+      if (!currentConnection || pendingExecuteAction) {
+        return;
+      }
+
+      try {
+        const selectedTab = useTabStore.getState().selectedTab();
+        const result = await withSafeModeRetry((confirmed) =>
+          executeActionMutation({
+            nodeId: node.id,
+            action: node.action.name,
+            connectionId: currentConnection.id,
+            confirmed,
+            /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+            // @ts-ignore
+            data: {
+              [selectedTab?.id ?? '']: {
+                [node.id]: {}
+              }
+            }
+          })
+        );
+        if (result === undefined) {
+          return;
+        }
+
+        await queryClient.invalidateQueries({
+          queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.action, node.id]
+        });
+
+        await reloadTree(false);
+
+        toast.success(locales.action_executed_successfully);
+      } catch (error) {
+        console.debug('🚀 ~ actionDetection ~ error:', error);
+        toast.error(locales.action_failed);
+      }
+    },
+    [currentConnection, pendingExecuteAction, executeActionMutation, queryClient, reloadTree]
+  );
+
   const actionDetection = useCallback(
     async (event: React.MouseEvent, node: TreeNodeType) => {
       if (!node.action) {
@@ -78,43 +121,20 @@ export const useActionDetection = (
         case 'action': {
           if (!currentConnection) return;
 
-          confirmModal.danger(
-            `Confirm ${node.action.title}`,
-            `Are you sure you want to ${node.action.title} ${node.name}?`,
-            () => {
-              void (async () => {
-                if (pendingExecuteAction) {
-                  return;
-                }
+          const needsGenericConfirm =
+            !currentConnection.safeMode || currentConnection.safeMode === 'silent';
 
-                try {
-                  const selectedTab = useTabStore.getState().selectedTab();
-                  await executeActionMutation({
-                    nodeId: node.id,
-                    action: node.action.name,
-                    connectionId: currentConnection.id,
-                    /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
-                    // @ts-ignore
-                    data: {
-                      [selectedTab?.id ?? '']: {
-                        [node.id]: {}
-                      }
-                    }
-                  });
-
-                  await queryClient.invalidateQueries({
-                    queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.action, node.id]
-                  });
-
-                  await reloadTree(false);
-
-                  toast.success(locales.action_executed_successfully);
-                } catch (error) {
-                  console.debug('🚀 ~ actionDetection ~ error:', error);
-                }
-              })();
-            }
-          );
+          if (needsGenericConfirm) {
+            confirmModal.danger(
+              `Confirm ${node.action.title}`,
+              `Are you sure you want to ${node.action.title} ${node.name}?`,
+              () => {
+                void runTreeAction(node);
+              }
+            );
+          } else {
+            void runTreeAction(node);
+          }
           break;
         }
         case 'command': {
@@ -142,9 +162,7 @@ export const useActionDetection = (
       closeLeftSidebar,
       currentConnection,
       confirmModal,
-      pendingExecuteAction,
-      executeActionMutation,
-      queryClient,
+      runTreeAction,
       reloadTree,
       copy,
       setFocusedNodeId

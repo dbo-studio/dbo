@@ -11,6 +11,10 @@ export type ConnectionStore = {
   updateConnections: (connections: ConnectionType[]) => void;
   reorderConnections: (activeId: string, overId: string) => void;
   updateCurrentConnection: (connection: ConnectionType | undefined) => void;
+  patchConnectionSafeModeUnlock: (
+    connectionId: number,
+    unlock: { unlocked: boolean; until?: string }
+  ) => void;
   clearCurrentConnection: () => void;
 };
 

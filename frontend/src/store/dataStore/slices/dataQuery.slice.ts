@@ -2,7 +2,8 @@ import { runQuery, runRawQuery } from '@/api/query';
 import type { GridMetaType, RunQueryResponseType } from '@/api/query/types';
 import { filterOperatorRequiresValue } from '@/core/constants';
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
-import { resolveSafeModeGate } from '@/core/utils/safeModeGate';
+import { withSafeModeRetry } from '@/core/utils/safeModeGate';
+import { getSafeModeError } from '@/core/utils/safeMode';
 import { debouncedSaveToIndexedDB } from '@/core/utils/indexdbHelper';
 import { summarizeQueryResult } from '@/core/utils/queryResultSummary';
 import locales from '@/locales';
@@ -223,18 +224,9 @@ export const createDataQuerySlice: StateCreator<
         get().toggleDataFetching(true);
         await get().clearGridChanges();
 
-        let res: RunQueryResponseType;
-        try {
-          res = await execute(false);
-        } catch (error) {
-          if (isCanceledError(error) || controller.signal.aborted) {
-            return;
-          }
-          const shouldRetry = await resolveSafeModeGate(error);
-          if (!shouldRetry) {
-            return;
-          }
-          res = await execute(true);
+        const res = await withSafeModeRetry((confirmed) => execute(!!confirmed));
+        if (res === undefined) {
+          return;
         }
 
         if (controller.signal.aborted) {
@@ -284,10 +276,13 @@ export const createDataQuerySlice: StateCreator<
 
         return res;
       } catch (error) {
-        if (isCanceledError(error)) {
+        if (isCanceledError(error) || controller.signal.aborted) {
           return;
         }
         console.debug('🚀 ~ runRawQuery: ~ error:', error);
+        if (!getSafeModeError(error)) {
+          toast.error(locales.query_failed);
+        }
       } finally {
         clearAbortController(controller);
         get().toggleDataFetching(false);
