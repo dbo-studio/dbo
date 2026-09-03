@@ -2,6 +2,7 @@ package serviceAiProvider
 
 import (
 	"context"
+	"net/url"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/repository"
@@ -37,6 +38,19 @@ func (i *IAiProviderServiceImpl) Find(ctx context.Context, id uint) (*dto.AiProv
 }
 
 func (i *IAiProviderServiceImpl) Update(ctx context.Context, id uint, dto *dto.AiProviderUpdateRequest) (*dto.AiProviderDetailResponse, error) {
+	if dto.URL != nil && *dto.URL != "" {
+		u, err := url.Parse(*dto.URL)
+		if err != nil || (u.Scheme != "http" && u.Scheme != "https") {
+			return nil, apperror.BadRequest(apperror.ErrInvalidProviderURL)
+		}
+	}
+
+	// The client echoes back the masked key from the list response; treat it
+	// as "keep the stored key".
+	if dto.APIKey != nil && isMaskedAPIKey(*dto.APIKey) {
+		dto.APIKey = nil
+	}
+
 	aiProvider, err := i.aiProviderRepo.Find(ctx, id)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrAiProviderNotFound)

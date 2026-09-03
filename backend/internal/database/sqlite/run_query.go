@@ -73,25 +73,31 @@ func (r *SQLiteRepository) runQueryGenerator(ctx context.Context, req *dto.RunQu
 	var sb strings.Builder
 
 	if lo.FromPtrOr(req.InlineQuery, "") != "" {
-		return fmt.Sprintf("SELECT * FROM %q WHERE %s", node.Table, *req.InlineQuery)
+		return fmt.Sprintf("SELECT * FROM %s WHERE %s", databaseCore.QuoteSQLiteIdent(node.Table), *req.InlineQuery)
 	}
 
 	// SELECT clause
 	selectColumns := "*"
+
 	if len(req.Columns) > 0 {
-		selectColumns = strings.Join(req.Columns, ", ")
+		quoted := make([]string, len(req.Columns))
+		for i, col := range req.Columns {
+			quoted[i] = databaseCore.QuoteSQLiteIdent(col)
+		}
+
+		selectColumns = strings.Join(quoted, ", ")
 	}
 
-	_, _ = fmt.Fprintf(&sb, "SELECT %s FROM %q", selectColumns, node.Table)
+	_, _ = fmt.Fprintf(&sb, "SELECT %s FROM %s", selectColumns, databaseCore.QuoteSQLiteIdent(node.Table))
 
 	// WHERE clause
 	if len(req.Filters) > 0 {
 		sb.WriteString(" WHERE ")
 
 		for i, filter := range req.Filters {
-			columnExpr := filter.Column
+			columnExpr := databaseCore.QuoteSQLiteIdent(filter.Column)
 			if dto.FilterIsLikeOperator(filter.Operator) {
-				columnExpr = fmt.Sprintf("CAST(%s AS TEXT)", filter.Column)
+				columnExpr = fmt.Sprintf("CAST(%s AS TEXT)", columnExpr)
 			}
 
 			_, _ = fmt.Fprintf(&sb, "%s %s", columnExpr, dto.FilterPredicate(filter.Operator, filter.Value))
@@ -107,7 +113,7 @@ func (r *SQLiteRepository) runQueryGenerator(ctx context.Context, req *dto.RunQu
 
 		sortClauses := make([]string, len(req.Sorts))
 		for i, sort := range req.Sorts {
-			sortClauses[i] = fmt.Sprintf("%s %s", sort.Column, sort.Operator)
+			sortClauses[i] = fmt.Sprintf("%s %s", databaseCore.QuoteSQLiteIdent(sort.Column), sort.Operator)
 		}
 
 		sb.WriteString(strings.Join(sortClauses, ", "))

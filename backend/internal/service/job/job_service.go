@@ -11,6 +11,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -31,9 +32,9 @@ func NewJobService(jr repository.IJobRepo) IJobService {
 }
 
 func (i IJobServiceImpl) Detail(ctx context.Context, req *dto.JobDetailRequest) (*dto.JobDetailResponse, error) {
-	job, err := i.jobRepo.Find(ctx, req.JobID)
+	job, err := i.jobRepo.FindByOwner(ctx, req.JobID, helper.CtxOwnerID(ctx))
 	if err != nil {
-		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+		return nil, apperror.NotFound(apperror.ErrJobNotFound)
 	}
 
 	return &dto.JobDetailResponse{
@@ -48,9 +49,9 @@ func (i IJobServiceImpl) Detail(ctx context.Context, req *dto.JobDetailRequest) 
 }
 
 func (i IJobServiceImpl) Cancel(ctx context.Context, req *dto.JobDetailRequest) error {
-	job, err := i.jobRepo.Find(ctx, req.JobID)
+	job, err := i.jobRepo.FindByOwner(ctx, req.JobID, helper.CtxOwnerID(ctx))
 	if err != nil {
-		return apperror.NotFound(apperror.ErrConnectionNotFound)
+		return apperror.NotFound(apperror.ErrJobNotFound)
 	}
 
 	if job.Status == model.JobStatusCompleted || job.Status == model.JobStatusFailed {
@@ -64,9 +65,9 @@ func (i IJobServiceImpl) Cancel(ctx context.Context, req *dto.JobDetailRequest) 
 }
 
 func (i IJobServiceImpl) Result(c fiber.Ctx, req *dto.JobDetailRequest) error {
-	job, err := i.jobRepo.Find(c, req.JobID)
+	job, err := i.jobRepo.FindByOwner(c, req.JobID, helper.CtxOwnerID(c))
 	if err != nil {
-		return apperror.NotFound(apperror.ErrConnectionNotFound)
+		return apperror.NotFound(apperror.ErrJobNotFound)
 	}
 
 	if job.Status != model.JobStatusCompleted {

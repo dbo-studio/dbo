@@ -1,8 +1,13 @@
 package server
 
 import (
+	"net/url"
+	"strings"
+
+	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/handler"
 	"github.com/dbo-studio/dbo/internal/app/server/middleware"
+	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -54,6 +59,8 @@ func New(
 }
 
 func (r *Server) Start(isLocal bool, port string) error {
+	cfg := container.Instance().Config()
+
 	if isLocal {
 		r.app.Use(fiberLogger.New())
 	} else {
@@ -61,8 +68,11 @@ func (r *Server) Start(isLocal bool, port string) error {
 	}
 
 	r.app.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{},
-		AllowOriginsFunc: func(origin string) bool { return origin != "" },
+		AllowOrigins: []string{},
+		// Only localhost origins (frontend dev server) plus explicitly configured
+		// APP_ALLOWED_ORIGINS may make credentialed cross-origin requests.
+		// The embedded web UI is served same-origin and needs no CORS.
+		AllowOriginsFunc: allowOriginFunc(cfg),
 		AllowCredentials: true,
 	}))
 
@@ -76,4 +86,37 @@ func (r *Server) Start(isLocal bool, port string) error {
 
 func (r *Server) Shutdown() error {
 	return r.app.Shutdown()
+}
+
+// allowOriginFunc permits only loopback origins (frontend dev server) and the
+// origins explicitly whitelisted via APP_ALLOWED_ORIGINS. Everything else — in
+// particular arbitrary remote sites — must not be able to send credentialed
+// requests to the API.
+func allowOriginFunc(cfg *config.Config) func(string) bool {
+	allowed := make(map[string]struct{}, len(cfg.App.AllowedOrigins))
+	for _, origin := range cfg.App.AllowedOrigins {
+		allowed[strings.TrimRight(origin, "/")] = struct{}{}
+	}
+
+	return func(origin string) bool {
+		if origin == "" {
+			return false
+		}
+
+		if _, ok := allowed[strings.TrimRight(origin, "/")]; ok {
+			return true
+		}
+
+		u, err := url.Parse(origin)
+		if err != nil {
+			return false
+		}
+
+		switch u.Hostname() {
+		case "localhost", "127.0.0.1", "::1":
+			return true
+		default:
+			return false
+		}
+	}
 }

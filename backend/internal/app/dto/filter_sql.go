@@ -5,6 +5,30 @@ import (
 	"strings"
 )
 
+// allowedFilterOperators is an allow-list: the operator string is interpolated
+// into SQL, so anything outside this set must be rejected.
+var allowedFilterOperators = map[string]struct{}{
+	"=":             {},
+	"!=":            {},
+	"<>":            {},
+	"<":             {},
+	"<=":            {},
+	">":             {},
+	">=":            {},
+	"IS NULL":       {},
+	"IS NOT NULL":   {},
+	"LIKE_CONTAINS": {},
+	"LIKE_STARTS":   {},
+	"LIKE_ENDS":     {},
+}
+
+// FilterOperatorAllowed reports whether the operator may be interpolated into SQL.
+func FilterOperatorAllowed(operator string) bool {
+	_, ok := allowedFilterOperators[operator]
+
+	return ok
+}
+
 func FilterRequiresValue(operator string) bool {
 	return operator != "IS NULL" && operator != "IS NOT NULL"
 }

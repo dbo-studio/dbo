@@ -47,6 +47,17 @@ func (r *webSessionRepoImpl) Create(ctx context.Context) (string, error) {
 	return sessionID, nil
 }
 
+func (r *webSessionRepoImpl) Get(ctx context.Context, sessionID string) (*model.WebSession, error) {
+	var session model.WebSession
+
+	err := r.db.WithContext(ctx).Where("id = ?", sessionID).First(&session).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &session, nil
+}
+
 func (r *webSessionRepoImpl) CreateOrUpdate(ctx context.Context, sessionID string) (string, error) {
 	if sessionID == "" {
 		return r.Create(ctx)

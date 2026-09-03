@@ -1,6 +1,8 @@
 package serviceAiProvider
 
 import (
+	"strings"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 )
@@ -31,11 +33,30 @@ func aiProviderModelToDto(aiProvider *model.AiProvider) dto.AiProvider {
 		ID:         aiProvider.ID,
 		Type:       string(aiProvider.Type),
 		URL:        aiProvider.URL,
-		APIKey:     aiProvider.APIKey,
+		APIKey:     maskAPIKey(aiProvider.APIKey),
 		Timeout:    aiProvider.Timeout,
 		Models:     aiProvider.Models,
 		Model:      aiProvider.Model,
 		IsActive:   aiProvider.IsActive,
 		LastUsedAt: aiProvider.LastUsedAt.Format("2006-01-02 15:04:05"),
 	}
+}
+
+// maskAPIKey hides the stored key: the API never returns provider secrets to
+// the client. The mask is sent back verbatim on update to keep the key intact.
+func maskAPIKey(key *string) *string {
+	if key == nil || *key == "" {
+		return nil
+	}
+
+	value := "****"
+	if len(*key) > 4 {
+		value = "****" + (*key)[len(*key)-4:]
+	}
+
+	return &value
+}
+
+func isMaskedAPIKey(key string) bool {
+	return strings.HasPrefix(key, "****")
 }

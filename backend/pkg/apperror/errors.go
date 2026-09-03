@@ -13,6 +13,7 @@ var (
 	ErrAiProviderNotFound          = errors.New("ai provider not found")
 	ErrJobCannotCancel             = errors.New("job cannot cancel")
 	ErrJobNotCompleted             = errors.New("job not completed")
+	ErrJobNotFound                 = errors.New("job not found")
 	ErrAiChatNotFound              = errors.New("ai chat not found")
 	ErrProviderNotConfigured       = errors.New("provider not configured")
 	ErrAiNoSelectedModel           = errors.New("select a model first")
@@ -27,6 +28,12 @@ var (
 	ErrInvalidEncryptionKey        = errors.New("invalid encryption key")
 	ErrDecryptionFailed            = errors.New("decryption failed")
 	ErrQueryCanceled               = errors.New("query canceled")
+	ErrUnauthenticated             = errors.New("authentication required")
+	ErrAuthNotEnabled              = errors.New("authentication is not enabled")
+	ErrInvalidSavePath             = errors.New("invalid save path")
+	ErrExportQueryNotRead          = errors.New("export query must be a read-only statement")
+	ErrImportFileTooLarge          = errors.New("import file is too large")
+	ErrInvalidProviderURL          = errors.New("provider URL must use http or https")
 )
 
 type AppError struct {
@@ -215,5 +222,15 @@ func QueryCanceled() error {
 		Code:    http.StatusBadRequest,
 		Message: "query_canceled",
 		Err:     ErrQueryCanceled,
+	}
+}
+
+// Unauthenticated is returned when a request has no valid session and the
+// deployment requires authentication (APP_AUTH_TOKEN set).
+func Unauthenticated() error {
+	return &AppError{
+		Code:    http.StatusUnauthorized,
+		Message: "unauthenticated",
+		Err:     ErrUnauthenticated,
 	}
 }

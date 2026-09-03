@@ -15,7 +15,7 @@ import (
 
 type IJobManager interface {
 	RegisterProcessor(processor Processor)
-	CreateJob(jobType model.JobType, data string) (*model.Job, error)
+	CreateJob(jobType model.JobType, ownerID string, data string) (*model.Job, error)
 	UpdateJobProgress(job *model.Job, progress int, message string) error
 	CancelAllJobs() error
 }
@@ -54,10 +54,11 @@ func (jm *IJobManagerImpl) RegisterProcessor(processor Processor) {
 	jm.processors[processor.GetType()] = processor
 }
 
-func (jm *IJobManagerImpl) CreateJob(jobType model.JobType, data string) (*model.Job, error) {
+func (jm *IJobManagerImpl) CreateJob(jobType model.JobType, ownerID string, data string) (*model.Job, error) {
 	job := &model.Job{
 		Type:     jobType,
 		Status:   model.JobStatusPending,
+		OwnerID:  ownerID,
 		Progress: 0,
 		Message:  "Job created",
 		Data:     data,

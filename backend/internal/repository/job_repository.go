@@ -30,6 +30,14 @@ func (r JobRepository) Find(ctx context.Context, id int32) (*model.Job, error) {
 	return &job, result.Error
 }
 
+func (r JobRepository) FindByOwner(ctx context.Context, id int32, ownerID string) (*model.Job, error) {
+	var job model.Job
+
+	result := r.db.WithContext(ctx).Where("id = ? AND owner_id = ?", id, ownerID).First(&job)
+
+	return &job, result.Error
+}
+
 func (r JobRepository) Update(ctx context.Context, job *model.Job) error {
 	return r.db.WithContext(ctx).Save(job).Error
 }

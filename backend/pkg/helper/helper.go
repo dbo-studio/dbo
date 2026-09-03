@@ -55,7 +55,7 @@ func FormatSQLValueForDriver(driver string, value any) (string, error) {
 	case nil:
 		return "NULL", nil
 	case string:
-		if isAlreadyQuoted(v) {
+		if isSafelyPreQuoted(v) {
 			return v, nil
 		}
 
@@ -162,12 +162,16 @@ func NormalizeSQLDriver(driver string) string {
 	}
 }
 
-func isAlreadyQuoted(s string) bool {
-	if len(s) < 2 {
+// isSafelyPreQuoted reports whether the value is a single-quoted SQL literal
+// that can be passed through verbatim. Anything containing a quote character
+// inside is escaped like a plain string instead — a pass-through of arbitrary
+// quoted content would be a SQL-injection vector.
+func isSafelyPreQuoted(s string) bool {
+	if len(s) < 2 || s[0] != '\'' || s[len(s)-1] != '\'' {
 		return false
 	}
 
-	return s[0] == '\'' && s[len(s)-1] == '\''
+	return !strings.Contains(s[1:len(s)-1], "'")
 }
 
 func ConvertToDTO[T any](params []byte) (T, error) {

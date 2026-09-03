@@ -2,6 +2,8 @@ package serviceQuery
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -51,6 +53,24 @@ func (i IQueryServiceImpl) Run(ctx context.Context, req *dto.RunQueryRequest) (*
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
+
+	// The composed grid query is built by the repo layer and is read-only by
+	// construction once filters/sorts are validated; the only free-form input
+	// is InlineQuery. Classify a probe carrying it so Safe Mode still gates
+	// the run path (same contract as Raw).
+	probe := "SELECT 1"
+	if inline := strings.TrimSpace(lo.FromPtr(req.InlineQuery)); inline != "" {
+		probe = fmt.Sprintf("SELECT * FROM t WHERE %s", inline)
+	}
+
+	policy := serviceSafemode.FromConnection(connection)
+	policy = i.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), connection.ID, policy)
+
+	if err := serviceSafemode.Enforce(policy, sqlguard.ClassifySQL(probe).Class, false); err != nil {
+		return nil, err
+	}
+
+	i.unlockStore.ConsumeGate(ctx, helper.CtxOwnerID(ctx), connection.ID, policy.Unlocked)
 
 	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {

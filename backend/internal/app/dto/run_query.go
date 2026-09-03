@@ -1,6 +1,8 @@
 package dto
 
 import (
+	"errors"
+
 	"github.com/invopop/validation"
 )
 
@@ -43,14 +45,21 @@ func (req RunQueryRequest) Validate() error {
 		validation.Field(&req.Page, validation.Min(1)),
 		validation.Field(&req.Filters),
 		validation.Field(&req.Sorts),
+		validation.Field(&req.Columns, validation.Each(validation.Length(0, 120))),
 	)
 }
 
 func (req FilterDto) Validate() error {
 	rules := []*validation.FieldRules{
 		validation.Field(&req.Column, validation.Required, validation.Length(0, 120)),
-		validation.Field(&req.Operator, validation.Required),
-		validation.Field(&req.Next, validation.Required),
+		validation.Field(&req.Operator, validation.Required, validation.By(func(value any) error {
+			if !FilterOperatorAllowed(value.(string)) {
+				return errors.New("operator is not allowed")
+			}
+
+			return nil
+		})),
+		validation.Field(&req.Next, validation.Required, validation.In("AND", "OR")),
 	}
 	if FilterRequiresValue(req.Operator) {
 		rules = append(rules, validation.Field(&req.Value, validation.Required))
@@ -61,7 +70,7 @@ func (req FilterDto) Validate() error {
 
 func (req SortDto) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.Column, validation.Required),
-		validation.Field(&req.Operator, validation.Required),
+		validation.Field(&req.Column, validation.Required, validation.Length(0, 120)),
+		validation.Field(&req.Operator, validation.Required, validation.In("ASC", "DESC")),
 	)
 }

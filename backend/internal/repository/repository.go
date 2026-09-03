@@ -44,6 +44,7 @@ type ISavedQueryRepo interface {
 type IJobRepo interface {
 	Create(ctx context.Context, job *model.Job) error
 	Find(ctx context.Context, id int32) (*model.Job, error)
+	FindByOwner(ctx context.Context, id int32, ownerID string) (*model.Job, error)
 	Update(ctx context.Context, job *model.Job) error
 	GetPendingJobs(ctx context.Context) ([]model.Job, error)
 	GetRunningJobs(ctx context.Context) ([]model.Job, error)
@@ -65,6 +66,7 @@ type IConfigRepo interface {
 
 type IWebSessionRepo interface {
 	Create(ctx context.Context) (string, error)
+	Get(ctx context.Context, sessionID string) (*model.WebSession, error)
 	CreateOrUpdate(ctx context.Context, sessionID string) (string, error)
 	EnsureSession(ctx context.Context, sessionID string) error
 	TouchLastSeen(ctx context.Context, sessionID string, at time.Time) error

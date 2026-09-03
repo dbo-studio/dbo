@@ -73,23 +73,31 @@ func (r *MySQLRepository) runQueryGenerator(ctx context.Context, req *dto.RunQue
 	var sb strings.Builder
 
 	if lo.FromPtrOr(req.InlineQuery, "") != "" {
-		return fmt.Sprintf("SELECT * FROM `%s`.`%s` WHERE %s", node.Database, node.Table, *req.InlineQuery)
+		return fmt.Sprintf("SELECT * FROM %s.%s WHERE %s",
+			databaseCore.QuoteMySQLIdent(node.Database), databaseCore.QuoteMySQLIdent(node.Table), *req.InlineQuery)
 	}
 
 	selectColumns := "*"
+
 	if len(req.Columns) > 0 {
-		selectColumns = strings.Join(req.Columns, ", ")
+		quoted := make([]string, len(req.Columns))
+		for i, col := range req.Columns {
+			quoted[i] = databaseCore.QuoteMySQLIdent(col)
+		}
+
+		selectColumns = strings.Join(quoted, ", ")
 	}
 
-	_, _ = fmt.Fprintf(&sb, "SELECT %s FROM `%s`.`%s`", selectColumns, node.Database, node.Table)
+	_, _ = fmt.Fprintf(&sb, "SELECT %s FROM %s.%s", selectColumns,
+		databaseCore.QuoteMySQLIdent(node.Database), databaseCore.QuoteMySQLIdent(node.Table))
 
 	if len(req.Filters) > 0 {
 		sb.WriteString(" WHERE ")
 
 		for i, filter := range req.Filters {
-			columnExpr := fmt.Sprintf("`%s`", filter.Column)
+			columnExpr := databaseCore.QuoteMySQLIdent(filter.Column)
 			if dto.FilterIsLikeOperator(filter.Operator) {
-				columnExpr = fmt.Sprintf("CAST(`%s` AS CHAR)", filter.Column)
+				columnExpr = fmt.Sprintf("CAST(%s AS CHAR)", columnExpr)
 			}
 
 			_, _ = fmt.Fprintf(&sb, "%s %s", columnExpr, dto.FilterPredicate(filter.Operator, filter.Value))
@@ -104,7 +112,7 @@ func (r *MySQLRepository) runQueryGenerator(ctx context.Context, req *dto.RunQue
 
 		sortClauses := make([]string, len(req.Sorts))
 		for i, sort := range req.Sorts {
-			sortClauses[i] = fmt.Sprintf("`%s` %s", sort.Column, sort.Operator)
+			sortClauses[i] = fmt.Sprintf("%s %s", databaseCore.QuoteMySQLIdent(sort.Column), sort.Operator)
 		}
 
 		sb.WriteString(strings.Join(sortClauses, ", "))
@@ -113,7 +121,7 @@ func (r *MySQLRepository) runQueryGenerator(ctx context.Context, req *dto.RunQue
 		if err == nil && len(keys) > 0 {
 			sb.WriteString(" ORDER BY ")
 			sb.WriteString(strings.Join(lo.Map(keys, func(key PrimaryKey, _ int) string {
-				return fmt.Sprintf("`%s`", key.ColumnName)
+				return databaseCore.QuoteMySQLIdent(key.ColumnName)
 			}), ", "))
 		}
 	}

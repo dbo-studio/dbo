@@ -112,6 +112,12 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 	)
 
 	if jobData.SavePath != "" {
+		for _, part := range strings.Split(filepath.ToSlash(jobData.SavePath), "/") {
+			if part == ".." {
+				return fmt.Errorf("invalid save path")
+			}
+		}
+
 		filePath = jobData.SavePath
 		fileName = filepath.Base(jobData.SavePath)
 

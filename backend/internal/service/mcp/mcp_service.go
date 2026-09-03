@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"fmt"
 	"net/http"
@@ -32,7 +33,6 @@ type McpServiceImpl struct {
 	settingsRepo repository.IMcpSettingsRepo
 	nativeServer *NativeServer
 	logger       logger.Logger
-	plainToken   string
 }
 
 func NewMcpService(
@@ -68,8 +68,6 @@ func (s *McpServiceImpl) Update(ctx context.Context, req *dto.McpUpdateRequest) 
 			return nil, err
 		}
 
-		s.plainToken = token
-
 		settings.Enabled = true
 
 		settings.TokenHash = &hash
@@ -90,7 +88,7 @@ func (s *McpServiceImpl) Update(ctx context.Context, req *dto.McpUpdateRequest) 
 
 	settings.Enabled = false
 	settings.TokenHash = nil
-	s.plainToken = ""
+
 	s.nativeServer.SetDefaultConnectionID(nil)
 
 	if _, err := s.settingsRepo.Upsert(ctx, settings); err != nil {
@@ -117,8 +115,6 @@ func (s *McpServiceImpl) RegenerateToken(ctx context.Context) (*dto.McpRegenerat
 		return nil, err
 	}
 
-	s.plainToken = token
-
 	settings.TokenHash = &hash
 	if _, err := s.settingsRepo.Upsert(ctx, settings); err != nil {
 		return nil, err
@@ -139,7 +135,7 @@ func (s *McpServiceImpl) AuthenticateToken(ctx context.Context, token string) (*
 		return nil, false
 	}
 
-	if *settings.TokenHash != hash {
+	if subtle.ConstantTimeCompare([]byte(*settings.TokenHash), []byte(hash)) != 1 {
 		return nil, false
 	}
 
