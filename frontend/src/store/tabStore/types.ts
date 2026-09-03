@@ -1,5 +1,5 @@
 import type { TabMode } from '@/core/enums';
-import type { FilterType, SortType, TabType } from '@/types/Tab';
+import type { DiagramTabType, FilterType, SortType, TabType } from '@/types/Tab';
 
 export type TabStore = {
   tabs: TabType[];
@@ -15,6 +15,7 @@ export type TabStore = {
 export type TabFilterSlice = {
   upsertFilters: (filter: FilterType) => void;
   removeFilter: (filter: FilterType) => void;
+  updateFilters: (filters: FilterType[]) => void;
 };
 
 export type TabSortSlice = {
@@ -27,6 +28,7 @@ export type TabSettingSlice = {
   addDataTab: (table: string, id: string, editable?: boolean) => TabType;
   addObjectTab: (title: string, nodeId: string, action: string, mode: TabMode) => TabType;
   addEditorTab: (query?: string) => TabType;
+  addDiagramTab: (args: { database: string; schema: string; focusTable?: string }) => DiagramTabType;
   removeTab: (tabId: string) => TabType | null | undefined;
   switchTab: (tabId: string | null) => void;
   handleAddNewTab: (tabs: TabType[], newTab: TabType) => TabType;

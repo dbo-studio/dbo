@@ -21,7 +21,7 @@ cd backend && go fmt ./...
 cd backend && golangci-lint run
 ```
 
-Enabled linters: `errcheck`, `govet`, `staticcheck`, `unused`, `revive`, `misspell`, `thelper`, `mirror`, `fatcontext`, `loggercheck`.
+Enabled linters: `errcheck`, `govet`, `staticcheck`, `unused`, `revive`, `misspell`, `thelper`, `mirror`, `fatcontext`, `loggercheck`, `wsl_v5`, `errorlint`, `nilerr`, `bodyclose`, `contextcheck`, `copyloopvar`.
 
 Key revive rules enforced: `context-as-argument`, `error-naming`, `error-return`, `receiver-naming`.
 
@@ -45,7 +45,8 @@ cd backend && air    # hot reload via .air.toml
 cd backend
 go fmt ./...
 golangci-lint run
-go test ./...
 ```
+
+Cover user-visible behavior in `e2e/` — do not add new `*_test.go`. See `go-testing.mdc`.
 
 Clean lint output is required — do not disable linters to pass.

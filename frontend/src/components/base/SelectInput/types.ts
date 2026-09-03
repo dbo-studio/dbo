@@ -1,6 +1,13 @@
 import { OnChangeValue, type FormatOptionLabelMeta, type MenuPlacement } from 'react-select';
 import type { ReactNode } from 'react';
 
+export type SelectInputOption = {
+  [x: string]: unknown;
+  value: unknown;
+  label: string;
+  fkValues?: Record<string, string>;
+};
+
 export type SelectInputProps = {
   disabled?: boolean;
   label?: string;
@@ -16,10 +23,6 @@ export type SelectInputProps = {
   formatOptionLabel?: (option: SelectInputOption, meta: FormatOptionLabelMeta<SelectInputOption>) => ReactNode;
   onMenuOpen?: () => void;
   menuPlacement?: MenuPlacement;
-};
-
-export type SelectInputOption = {
-  [x: string]: unknown;
-  value: unknown;
-  label: string;
+  testId?: string;
+  classNamePrefix?: string;
 };

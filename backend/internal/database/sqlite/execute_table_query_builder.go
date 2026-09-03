@@ -70,12 +70,17 @@ func (r *SQLiteRepository) buildCreateTableQuery(tableName string, params *dto.S
 		parts = append(parts, fmt.Sprintf("(%s)", columnDefs))
 	}
 
+	var tableOptions []string
 	if params.WithoutRowid != nil && *params.WithoutRowid {
-		parts = append(parts, "WITHOUT ROWID")
+		tableOptions = append(tableOptions, "WITHOUT ROWID")
 	}
 
 	if params.Strict != nil && *params.Strict {
-		parts = append(parts, "STRICT")
+		tableOptions = append(tableOptions, "STRICT")
+	}
+
+	if len(tableOptions) > 0 {
+		parts = append(parts, strings.Join(tableOptions, ", "))
 	}
 
 	return strings.Join(parts, " ")
@@ -105,7 +110,7 @@ func (r *SQLiteRepository) buildSingleColumnDefinition(col dto.SQLiteTableColumn
 	dataType := lo.FromPtr(col.New.DataType)
 	def := fmt.Sprintf("%s %s", name, dataType)
 
-	if col.New.ColumnKind != nil && lo.FromPtr(col.New.ColumnKind) == "generated" {
+	if isGeneratedColumnKind(col.New.ColumnKind) {
 		return r.buildGeneratedColumnDefinition(def, col.New)
 	}
 
@@ -135,13 +140,30 @@ func (r *SQLiteRepository) buildGeneratedColumnDefinition(baseDef string, colDat
 		def += fmt.Sprintf(" (%s)", *colData.Default)
 	}
 
-	if colData.CollectionName != nil && *colData.CollectionName == "stored" {
+	if isStoredGeneratedColumn(colData) {
 		def += " STORED"
 	} else {
 		def += " VIRTUAL"
 	}
 
 	return def
+}
+
+func isGeneratedColumnKind(kind *string) bool {
+	switch strings.ToUpper(lo.FromPtr(kind)) {
+	case "GENERATED", "GENERATED_VIRTUAL", "GENERATED_STORED":
+		return true
+	default:
+		return false
+	}
+}
+
+func isStoredGeneratedColumn(colData *dto.SQLiteTableColumnData) bool {
+	if strings.EqualFold(lo.FromPtr(colData.ColumnKind), "GENERATED_STORED") {
+		return true
+	}
+
+	return colData.CollectionName != nil && *colData.CollectionName == "stored"
 }
 
 func (r *SQLiteRepository) buildForeignKeyDefinitions(foreignKeys []dto.SQLiteTableForeignKey) string {
@@ -241,10 +263,12 @@ func (r *SQLiteRepository) buildSingleKeyDefinition(key dto.SQLiteTableKey) stri
 
 func (r *SQLiteRepository) buildCreateIndexesQueries(tableName string, indexes []dto.SQLiteIndex) []string {
 	queries := make([]string, 0)
+
 	for _, idx := range indexes {
 		if idx.New == nil {
 			continue
 		}
+
 		if idx.Added != nil && !lo.FromPtr(idx.Added) {
 			continue
 		}
@@ -253,6 +277,7 @@ func (r *SQLiteRepository) buildCreateIndexesQueries(tableName string, indexes [
 			queries = append(queries, query)
 		}
 	}
+
 	return queries
 }
 
@@ -283,6 +308,7 @@ func (r *SQLiteRepository) buildCreateIndexQuery(tableName string, idx dto.SQLit
 
 func (r *SQLiteRepository) buildEditIndexesQueries(tableName string, indexes []dto.SQLiteIndex) []string {
 	queries := make([]string, 0)
+
 	for _, idx := range indexes {
 		if idx.Deleted != nil && *idx.Deleted && idx.Old != nil && idx.Old.Name != nil {
 			queries = append(queries, fmt.Sprintf("DROP INDEX IF EXISTS %s", quoteIdent(*idx.Old.Name)))
@@ -293,6 +319,7 @@ func (r *SQLiteRepository) buildEditIndexesQueries(tableName string, indexes []d
 			if query := r.buildCreateIndexQuery(tableName, idx); query != "" {
 				queries = append(queries, query)
 			}
+
 			continue
 		}
 
@@ -303,5 +330,6 @@ func (r *SQLiteRepository) buildEditIndexesQueries(tableName string, indexes []d
 			}
 		}
 	}
+
 	return queries
 }

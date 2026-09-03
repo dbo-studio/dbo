@@ -7,9 +7,13 @@ export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], T
     const tab = get().selectedTab<DataTabType>();
     if (!tab) return;
 
-    const findSort = tab.sorts?.find((s: SortType) => s.index === sort.index);
+    if (!tab.sorts) {
+      tab.sorts = [];
+    }
+
+    const findSort = tab.sorts.find((s: SortType) => s.index === sort.index);
     if (!findSort) {
-      tab.sorts?.push(sort);
+      tab.sorts.push(sort);
     } else {
       findSort.column = sort.column;
       findSort.operator = sort.operator;
@@ -22,7 +26,7 @@ export const createTabSortSlice: StateCreator<TabStore & TabSortSlice, [], [], T
     const tab = get().selectedTab<DataTabType>();
     if (!tab) return;
 
-    tab.sorts = tab.sorts?.filter((s: SortType) => s.index !== sort.index);
+    tab.sorts = (tab.sorts ?? []).filter((s: SortType) => s.index !== sort.index);
     get().updateSelectedTab(tab);
   },
   updateSorts: (sorts: SortType[]): void => {

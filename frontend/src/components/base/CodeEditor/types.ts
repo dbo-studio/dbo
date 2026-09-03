@@ -3,4 +3,6 @@ export type CodeEditorProps = {
   onChange: (value: string) => void;
   width?: number;
   height?: number;
+  language?: string;
+  editable?: boolean;
 };

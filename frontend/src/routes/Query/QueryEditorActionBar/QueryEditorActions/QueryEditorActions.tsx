@@ -2,10 +2,11 @@ import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { ExportModal } from '@/components/common/ExportModal/ExportModal';
 import { shortcuts, tools } from '@/core/utils';
-import { useCurrentConnection } from '@/hooks';
+import { useCurrentConnection, useShortcut } from '@/hooks';
 import locales from '@/locales';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { IconButton, Stack, Tooltip } from '@mui/material';
+import { Box, IconButton, Stack, Tooltip } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
@@ -28,6 +29,7 @@ export default function QueryEditorActions({
   const updateQuery = useTabStore((state) => state.updateQuery);
   const getQuery = useTabStore((state) => state.getQuery);
   const currentConnection = useCurrentConnection();
+  const cancelRunningQuery = useDataStore((state) => state.cancelRunningQuery);
 
   const { mutateAsync: createSavedQueryMutation } = useMutation({
     mutationFn: api.savedQueries.createSavedQuery
@@ -37,6 +39,8 @@ export default function QueryEditorActions({
     updateQuery(tools.formatSql(getQuery(), 'postgresql'));
     onFormat();
   };
+
+  useShortcut(shortcuts.formatSql, handleFormatSql);
 
   const handleMinifySql = (): void => {
     const minified = tools.minifySql(getQuery());
@@ -80,6 +84,14 @@ export default function QueryEditorActions({
     });
   };
 
+  const handleRunOrStop = (): void => {
+    if (loading) {
+      cancelRunningQuery();
+      return;
+    }
+    onRunQuery();
+  };
+
   return (
     <Stack spacing={2} direction={'row'}>
       <Tooltip title={locales.save}>
@@ -97,7 +109,7 @@ export default function QueryEditorActions({
           <CustomIcon type='pickaxe' />
         </IconButton>
       </Tooltip>
-      <Tooltip title={locales.beatify}>
+      <Tooltip title={`${locales.beatify} (${shortcuts.formatSql.command.join('+')})`}>
         <IconButton aria-label={locales.beatify} color='default' onClick={handleFormatSql}>
           <CustomIcon type='wand_sparkles' />
         </IconButton>
@@ -107,17 +119,28 @@ export default function QueryEditorActions({
           <CustomIcon type='sparkles' />
         </IconButton>
       </Tooltip>
-      <Tooltip title={shortcuts.runQuery.command.join('+')}>
-        <IconButton
-          aria-label={locales.run_query}
-          disabled={loading}
-          loading={loading}
-          color='primary'
-          onClick={(): void => onRunQuery()}
+      <Box
+        sx={{
+          padding: '3px !important'
+        }}
+      >
+        <Tooltip
+          title={
+            loading
+              ? `${locales.stop_query} (${shortcuts.cancelQuery.command.join('+')})`
+              : shortcuts.runQuery.command.join('+')
+          }
         >
-          <CustomIcon type='play' />
-        </IconButton>
-      </Tooltip>
+          <IconButton
+            aria-label={loading ? locales.stop_query : locales.run_query}
+            data-testid={loading ? 'stop-query' : 'run-query'}
+            color={loading ? 'error' : 'primary'}
+            onClick={handleRunOrStop}
+          >
+            <CustomIcon type={loading ? 'stop' : 'play'} />
+          </IconButton>
+        </Tooltip>
+      </Box>
 
       <ExportModal
         onClose={() => setShowExport({ ...showExport, show: false })}

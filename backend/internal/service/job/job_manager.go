@@ -50,6 +50,7 @@ func NewJobManager(jobRepo repository.IJobRepo) IJobManager {
 func (jm *IJobManagerImpl) RegisterProcessor(processor Processor) {
 	jm.mu.Lock()
 	defer jm.mu.Unlock()
+
 	jm.processors[processor.GetType()] = processor
 }
 
@@ -68,12 +69,14 @@ func (jm *IJobManagerImpl) CreateJob(jobType model.JobType, data string) (*model
 	}
 
 	jm.logger.Info(fmt.Sprintf("Created job %d of type %s", job.ID, jobType))
+
 	return job, nil
 }
 
 func (jm *IJobManagerImpl) UpdateJobProgress(job *model.Job, progress int, message string) error {
 	job.Progress = progress
 	job.Message = message
+
 	return jm.jobRepo.Update(context.Background(), job)
 }
 
@@ -99,6 +102,7 @@ func (jm *IJobManagerImpl) updateJobError(job *model.Job, errMsg string) error {
 	job.Status = model.JobStatusFailed
 	now := time.Now()
 	job.CompletedAt = &now
+
 	return jm.jobRepo.Update(context.Background(), job)
 }
 
@@ -122,6 +126,7 @@ func (jm *IJobManagerImpl) processJob(job *model.Job) error {
 		if updateErr != nil {
 			jm.logger.Error(fmt.Sprintf("Failed to update job error: %v", updateErr))
 		}
+
 		return fmt.Errorf("job processing failed: %w", err)
 	}
 
@@ -135,6 +140,7 @@ func (jm *IJobManagerImpl) processJob(job *model.Job) error {
 
 func (jm *IJobManagerImpl) worker() {
 	defer jm.workerWg.Done()
+
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
@@ -163,11 +169,13 @@ func (jm *IJobManagerImpl) processPendingJobs() {
 			} else {
 				ti = *runningJobs[i].CreatedAt
 			}
+
 			if runningJobs[j].StartedAt != nil {
 				tj = *runningJobs[j].StartedAt
 			} else {
 				tj = *runningJobs[j].CreatedAt
 			}
+
 			return ti.After(tj)
 		})
 
@@ -182,6 +190,7 @@ func (jm *IJobManagerImpl) processPendingJobs() {
 		jm.logger.Error(fmt.Sprintf("Failed to re-check running jobs: %v", err))
 		return
 	}
+
 	if len(runningJobs) >= 1 {
 		return
 	}
@@ -191,6 +200,7 @@ func (jm *IJobManagerImpl) processPendingJobs() {
 		jm.logger.Error(fmt.Sprintf("Failed to get pending jobs: %v", err))
 		return
 	}
+
 	if len(jobs) == 0 {
 		return
 	}

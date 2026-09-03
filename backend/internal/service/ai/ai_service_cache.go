@@ -12,6 +12,7 @@ import (
 
 func (cm *AiServiceImpl) getCompletionResponse(ctx context.Context, key string) (*dto.AiInlineCompleteResponse, bool) {
 	var response *dto.AiInlineCompleteResponse
+
 	err := cm.cache.Get(ctx, key, &response)
 	if err != nil {
 		return nil, false
@@ -36,6 +37,7 @@ func (cm *AiServiceImpl) generateCompletionKey(req *dto.AiInlineCompleteRequest)
 	if req.ContextOpts.Database != nil {
 		keyBuilder += fmt.Sprintf("db:%s|", *req.ContextOpts.Database)
 	}
+
 	if req.ContextOpts.Schema != nil {
 		keyBuilder += fmt.Sprintf("schema:%s|", *req.ContextOpts.Schema)
 	}
@@ -46,5 +48,6 @@ func (cm *AiServiceImpl) generateCompletionKey(req *dto.AiInlineCompleteRequest)
 	}
 
 	hash := sha1.Sum([]byte(keyBuilder))
+
 	return cache.AICompleteKey(uint(req.ConnectionID), fmt.Sprintf("%x", hash))
 }

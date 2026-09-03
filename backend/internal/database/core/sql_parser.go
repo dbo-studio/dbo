@@ -35,6 +35,7 @@ func (r *BaseRepository) ParseSQL(sqlText string) *SQLParseResult {
 	}
 
 	result.extractFromStatement(stmt)
+
 	return result
 }
 

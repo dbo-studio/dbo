@@ -70,6 +70,12 @@ More engines are on the roadmap.
 
 Download the latest build for macOS, Windows, or Linux from the [Releases](https://github.com/dbo-studio/dbo/releases) page, or visit [dbo-studio.com](https://dbo-studio.com).
 
+> **Note (macOS):** If macOS blocks the app (quarantine / “damaged” / cannot be opened), run:
+>
+> ```bash
+> xattr -dr com.apple.quarantine /Applications/DBO.app
+> ```
+
 ### Docker
 
 ```bash

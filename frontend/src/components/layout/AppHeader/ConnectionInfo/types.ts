@@ -3,3 +3,7 @@ export type ConnectionBoxStyledProps = {
 };
 
 export type ConnectionBoxStatus = 'error' | 'finished' | 'loading' | 'disable';
+
+export type ConnectionInfoProps = {
+  compact?: boolean;
+};

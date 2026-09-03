@@ -1,4 +1,5 @@
 import type { TabMode } from '@/core/enums';
+import type { EditorContextSource } from '@/core/db';
 import type { RowType } from './Data';
 
 export type SortType = {
@@ -17,7 +18,7 @@ export type FilterType = {
   isActive: boolean;
 };
 
-export type TabType = DataTabType | EditorTabType | ObjectTabType;
+export type TabType = DataTabType | EditorTabType | ObjectTabType | DiagramTabType;
 
 type BaseTab = {
   id: string;
@@ -46,11 +47,22 @@ export type EditorTabType = BaseTab & {
   name: string;
   database: string;
   schema: string;
+  /** When true, autofill must not overwrite database/schema. */
+  contextLocked?: boolean;
+  contextSource?: EditorContextSource;
+  pagination?: TabDataPagination;
 };
 
 export type ObjectTabType = BaseTab & {
   name: string;
   objectTabId: string | null;
+};
+
+export type DiagramTabType = BaseTab & {
+  name: string;
+  database: string;
+  schema: string;
+  focusTable?: string;
 };
 
 export type EditedRow = {

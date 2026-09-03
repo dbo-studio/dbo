@@ -1,6 +1,8 @@
 import DataGrid from '@/components/common/DataGrid/DataGrid';
 import EmptyState from '@/components/base/EmptyState/EmptyState';
 import { useSelectedTab } from '@/hooks';
+import { useShortcut } from '@/hooks';
+import { shortcuts } from '@/core/utils';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -26,6 +28,7 @@ export default function Data(): JSX.Element {
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const reRunQuery = useDataStore((state) => state.reRunQuery);
   const isDataFetching = useDataStore((state) => state.isDataFetching);
+  const cancelRunningQuery = useDataStore((state) => state.cancelRunningQuery);
 
   const rows = useDataStore((state) => state.rows ?? EMPTY_ROWS);
   const allColumns = useDataStore((state) => state.columns ?? EMPTY_COLUMNS);
@@ -36,16 +39,18 @@ export default function Data(): JSX.Element {
   const runQuery = useDataStore((state) => state.runQuery);
 
   const previousReRunQueryRef = useRef<boolean>(reRunQuery);
-  const currentAbortControllerRef = useRef<AbortController | null>(null);
+
+  useShortcut(shortcuts.cancelQuery, () => {
+    if (isDataFetching) {
+      cancelRunningQuery();
+    }
+  });
 
   const loadData = useCallback(async (): Promise<void> => {
     try {
       const result = await loadDataFromIndexedDB();
       if (!result) {
-        const abortController = new AbortController();
-        currentAbortControllerRef.current = abortController;
-
-        await runQuery(abortController);
+        await runQuery();
       }
     } catch (error) {
       console.debug('🚀 ~ loadData ~ error:', error);
@@ -53,35 +58,25 @@ export default function Data(): JSX.Element {
   }, [loadDataFromIndexedDB, runQuery]);
 
   const handleReRunQuery = useCallback(async (): Promise<void> => {
-    const abortController = new AbortController();
-    currentAbortControllerRef.current = abortController;
-
-    await runQuery(abortController);
+    await runQuery();
   }, [runQuery]);
-
-  const cancelCurrentQuery = useCallback(() => {
-    if (currentAbortControllerRef.current) {
-      currentAbortControllerRef.current.abort();
-      currentAbortControllerRef.current = null;
-    }
-  }, []);
 
   useEffect(() => {
     if (!isMounted || !selectedTabId) {
       return;
     }
 
-    cancelCurrentQuery();
+    cancelRunningQuery({ silent: true });
     loadData().catch((e) => console.debug('🚀 ~ Data ~ e:', e));
-  }, [selectedTabId, isMounted, loadData, cancelCurrentQuery]);
+  }, [selectedTabId, isMounted, loadData, cancelRunningQuery]);
 
   useEffect(() => {
     if (previousReRunQueryRef.current !== reRunQuery) {
-      cancelCurrentQuery();
+      cancelRunningQuery({ silent: true });
       handleReRunQuery().catch(() => undefined);
       previousReRunQueryRef.current = reRunQuery;
     }
-  }, [reRunQuery, handleReRunQuery, cancelCurrentQuery]);
+  }, [reRunQuery, handleReRunQuery, cancelRunningQuery]);
 
   const isGridLoading = !isMounted || !selectedTabId || isDataFetching;
 

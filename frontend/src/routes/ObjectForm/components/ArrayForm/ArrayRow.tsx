@@ -1,18 +1,8 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { FormFieldOptionType, FormFieldType, FormValue } from '@/types/Tree';
 import { IconButton, Stack, TableCell, TableRow } from '@mui/material';
 import React, { memo } from 'react';
+import type { ArrayRowProps } from '../../types';
 import SimpleField from '../SimpleForm/SimpleField';
-
-type ArrayRowProps = {
-  rowIndex: number;
-  rows: FormFieldType[];
-  getDynamicFieldStateKey: (scopeId: string | number, fieldId: string) => string;
-  getDynamicOptions: (id: string) => FormFieldOptionType[];
-  isLoadingDynamicField: (id: string) => boolean;
-  onFieldChange: (field: FormFieldType, value: FormValue | FormValue[]) => void;
-  onDelete: () => void;
-};
 
 function ArrayRow({
   rowIndex,

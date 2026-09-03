@@ -87,11 +87,14 @@ export default function HeaderOverflowMenu(): JSX.Element {
     }
 
     await useTreeStore.getState().reloadTree(false);
+    await queryClient.invalidateQueries({ queryKey: ['autocomplete'] });
 
     if (selectedTab?.mode === TabMode.Query) {
       await useDataStore.getState().runRawQuery();
     } else if (selectedTab?.mode === TabMode.Data) {
       useDataStore.getState().toggleReRunQuery();
+    } else if (selectedTab?.mode === TabMode.Diagram) {
+      await queryClient.invalidateQueries({ queryKey: ['schema-diagram'] });
     }
 
     handleClose();
@@ -112,7 +115,7 @@ export default function HeaderOverflowMenu(): JSX.Element {
   };
 
   const openAddConnection = (): void => {
-    updateUI({ showAddConnection: true });
+    updateUI({ showAddConnection: true, duplicateConnectionId: undefined });
     handleClose();
   };
 

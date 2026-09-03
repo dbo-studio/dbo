@@ -2,14 +2,8 @@ import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlig
 import { Typography } from '@mui/material';
 import StreamingMarkdown from '../StreamingMarkdown/StreamingMarkdown';
 import { isToolCallLeakContent, sanitizeAssistantContent } from '../../utils/assistantContent';
+import type { StreamingPreviewProps } from '../../types';
 import { StreamingCursorStyled, StreamingPreviewStyled } from './StreamingPreview.styled';
-
-type StreamingPreviewProps = {
-  content: string;
-  statusLabel?: string;
-  blockType?: string;
-  isStreaming?: boolean;
-};
 
 export default function StreamingPreview({
   content,

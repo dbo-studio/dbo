@@ -17,8 +17,16 @@ var (
 	ErrProviderNotConfigured       = errors.New("provider not configured")
 	ErrAiNoSelectedModel           = errors.New("select a model first")
 	ErrPasswordRequired            = errors.New("password_required")
+	ErrSafeModeBlocked             = errors.New("safe_mode_blocked")
+	ErrSafeModeConfirmRequired     = errors.New("safe_mode_confirm_required")
+	ErrSafeModePasswordRequired    = errors.New("safe_mode_password_required")
+	ErrSafeModePasswordInvalid     = errors.New("safe_mode_password_invalid")
+	ErrSafeModePasswordNotFound    = errors.New("safe_mode_password_not_configured")
+	ErrSafeModePasswordAlreadySet  = errors.New("safe_mode_password_already_set")
+	ErrSafeModePasswordMismatch    = errors.New("safe_mode_password_mismatch")
 	ErrInvalidEncryptionKey        = errors.New("invalid encryption key")
 	ErrDecryptionFailed            = errors.New("decryption failed")
+	ErrQueryCanceled               = errors.New("query canceled")
 )
 
 type AppError struct {
@@ -110,6 +118,7 @@ func preferAppError(candidate, current *AppError) *AppError {
 	if candidateIsServer && !currentIsServer {
 		return current
 	}
+
 	if !candidateIsServer && currentIsServer {
 		return candidate
 	}
@@ -131,6 +140,41 @@ func Forbidden(err error) error {
 		Code:    http.StatusForbidden,
 		Message: "forbidden",
 		Err:     err,
+	}
+}
+
+func SafeModeBlocked(data map[string]any) error {
+	return &AppError{
+		Code:    http.StatusForbidden,
+		Message: "safe_mode_blocked",
+		Err:     ErrSafeModeBlocked,
+		Data:    data,
+	}
+}
+
+func SafeModeConfirmRequired(data map[string]any) error {
+	return &AppError{
+		Code:    http.StatusForbidden,
+		Message: "safe_mode_confirm_required",
+		Err:     ErrSafeModeConfirmRequired,
+		Data:    data,
+	}
+}
+
+func SafeModePasswordRequired(data map[string]any) error {
+	return &AppError{
+		Code:    http.StatusForbidden,
+		Message: "safe_mode_password_required",
+		Err:     ErrSafeModePasswordRequired,
+		Data:    data,
+	}
+}
+
+func SafeModePasswordInvalid() error {
+	return &AppError{
+		Code:    http.StatusForbidden,
+		Message: "safe_mode_password_invalid",
+		Err:     ErrSafeModePasswordInvalid,
 	}
 }
 
@@ -163,5 +207,13 @@ func DriverError(err error) error {
 		Code:    http.StatusBadRequest,
 		Message: "driver_error",
 		Err:     err,
+	}
+}
+
+func QueryCanceled() error {
+	return &AppError{
+		Code:    http.StatusBadRequest,
+		Message: "query_canceled",
+		Err:     ErrQueryCanceled,
 	}
 }

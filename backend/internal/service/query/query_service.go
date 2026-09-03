@@ -9,8 +9,11 @@ import (
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/repository"
+	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/cache"
+	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/dbo-studio/dbo/pkg/sqlguard"
 	"github.com/samber/lo"
 )
 
@@ -28,14 +31,18 @@ type IQueryServiceImpl struct {
 	connectionRepo repository.IConnectionRepo
 	cm             *databaseConnection.ConnectionManager
 	cache          cache.Cache
+	unlockStore    *serviceSafemode.UnlockStore
 }
 
 func NewQueryService(connectionRepo repository.IConnectionRepo, historyRepo repository.IHistoryRepo, cm *databaseConnection.ConnectionManager) IQueryService {
+	c := container.Instance().Cache()
+
 	return &IQueryServiceImpl{
 		historyRepo:    historyRepo,
 		connectionRepo: connectionRepo,
 		cm:             cm,
-		cache:          container.Instance().Cache(),
+		cache:          c,
+		unlockStore:    serviceSafemode.NewUnlockStore(c),
 	}
 }
 
@@ -59,17 +66,50 @@ func (i IQueryServiceImpl) Raw(ctx context.Context, req *dto.RawQueryRequest) (*
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
+	policy := serviceSafemode.FromConnection(connection)
+	policy = i.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), connection.ID, policy)
+
+	classification := sqlguard.ClassifySQL(req.Query)
+	if err := serviceSafemode.Enforce(policy, classification.Class, req.Confirmed); err != nil {
+		return nil, err
+	}
+
+	i.unlockStore.ConsumeGate(ctx, helper.CtxOwnerID(ctx), connection.ID, policy.Unlocked)
+
 	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {
 		return nil, err
 	}
 
-	err = i.historyRepo.Create(ctx, connection.ID, req.Query)
+	originalQuery := req.Query
+
+	err = i.historyRepo.Create(ctx, connection.ID, originalQuery, false)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
 
-	return repo.RunRawQuery(ctx, req)
+	limit, page := sqlguard.ResolveLimitPage(req.Limit, req.Page)
+	applied := sqlguard.ApplyLimitOffset(originalQuery, limit, page)
+	execReq := *req
+	execReq.Query = applied.Query
+	execReq.Limit = &limit
+	execReq.Page = &page
+
+	resp, err := repo.RunRawQuery(ctx, &execReq)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp == nil {
+		return nil, nil
+	}
+
+	resp.Query = originalQuery
+	resp.Paginated = applied.Paginated
+	resp.Limit = limit
+	resp.Page = page
+
+	return resp, nil
 }
 
 func (i IQueryServiceImpl) Update(ctx context.Context, req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error) {
@@ -77,6 +117,20 @@ func (i IQueryServiceImpl) Update(ctx context.Context, req *dto.UpdateQueryReque
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
+
+	class := sqlguard.ClassWriteDML
+	if len(req.DeletedItems) > 0 {
+		class = sqlguard.ClassWriteDML
+	}
+
+	policy := serviceSafemode.FromConnection(connection)
+
+	policy = i.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), connection.ID, policy)
+	if err := serviceSafemode.Enforce(policy, class, req.Confirmed); err != nil {
+		return nil, err
+	}
+
+	i.unlockStore.ConsumeGate(ctx, helper.CtxOwnerID(ctx), connection.ID, policy.Unlocked)
 
 	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {
@@ -112,6 +166,7 @@ func (i IQueryServiceImpl) AutoComplete(ctx context.Context, req *dto.AutoComple
 	}
 
 	ttl := 60 * time.Minute
+
 	err = i.cache.Set(ctx, cache.AutoCompleteKey(uint(req.ConnectionID), lo.FromPtr(req.Database), lo.FromPtr(req.Schema)), autocomplete, &ttl)
 	if err != nil {
 		return nil, err
@@ -122,13 +177,13 @@ func (i IQueryServiceImpl) AutoComplete(ctx context.Context, req *dto.AutoComple
 
 func (i IQueryServiceImpl) findResultFromCache(ctx context.Context, req *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
 	var result *dto.AutoCompleteResponse
+
 	err := i.cache.ConditionalGet(
 		ctx,
 		cache.AutoCompleteKey(uint(req.ConnectionID), lo.FromPtr(req.Database), lo.FromPtr(req.Schema)),
 		&result,
 		true,
 	)
-
 	if err != nil {
 		return nil, err
 	}

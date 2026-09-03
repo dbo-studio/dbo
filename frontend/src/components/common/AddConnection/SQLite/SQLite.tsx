@@ -1,4 +1,4 @@
-import type { CreateConnectionRequestType } from '@/api/connection/types';
+import type { CreateConnectionRequestType, SQLiteOptionsType } from '@/api/connection/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
@@ -13,11 +13,11 @@ import * as v from 'valibot';
 import { tools } from '@/core/utils';
 import type { ConnectionSettingsProps } from '../types';
 import {
+  ConnectionFormBodyStyled,
   ConnectionFormContainerStyled,
   ConnectionFormFooterStyled,
   SQLitePathRowStyled
 } from '../AddConnection.styled';
-
 const formSchema = v.object({
   isPing: v.boolean(),
   name: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
@@ -33,6 +33,7 @@ export default function SQLite({
   submitLoading
 }: ConnectionSettingsProps): JSX.Element {
   const [isDesktop, setIsDesktop] = useState(false);
+  const options = connection?.options as SQLiteOptionsType | undefined;
 
   useEffect(() => {
     tools
@@ -63,7 +64,7 @@ export default function SQLite({
     defaultValues: {
       isPing: false,
       name: connection?.name ?? '',
-      path: connection?.options?.path ?? ''
+      path: options?.path ?? ''
     }
   });
 
@@ -82,11 +83,7 @@ export default function SQLite({
 
   return (
     <ConnectionFormContainerStyled>
-      <Box
-        sx={{
-          flex: 1
-        }}
-      >
+      <ConnectionFormBodyStyled>
         <form
           onSubmit={(e): void => {
             e.preventDefault();
@@ -134,7 +131,7 @@ export default function SQLite({
             )}
           </form.Field>
         </form>
-      </Box>
+      </ConnectionFormBodyStyled>
       <ConnectionFormFooterStyled>
         <Button size='small' onClick={onClose}>
           {locales.cancel}

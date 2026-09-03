@@ -1,6 +1,6 @@
 {
   "name": "dbo",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "scripts": {
     "dev": "NODE_ENV=development VITE_PUBLIC_SERVER_URL=http://localhost:8080/api vite",
     "build": "tsc --noEmit -p tsconfig.app.json && vite build",
@@ -8,9 +8,12 @@
     "lint:fix": "eslint src --fix",
     "preview": "vite preview",
     "format": "prettier --write src",
-    "format:check": "prettier --check src"
+    "format:check": "prettier --check src",
+    "types": "tsc --noEmit -p tsconfig.app.json"
   },
   "dependencies": {
+    "@choochmeque/tauri-plugin-biometry-api": "^0.3.0-rc.3",
+    "@dagrejs/dagre": "^3.1.1",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
@@ -28,12 +31,15 @@
     "@tauri-apps/plugin-dialog": "^2.7.1",
     "@tauri-apps/plugin-opener": "^2.5.4",
     "@tauri-apps/plugin-os": "^2.3.2",
+    "@xyflow/react": "^12.11.3",
     "axios": "^1.18.0",
     "clsx": "^2.1.1",
     "deep-object-diff": "^1.1.9",
+    "html-to-image": "^1.11.13",
     "idb": "^8.0.0",
+    "leaflet": "^1.9.4",
     "lucide-react": "^1.21.0",
-    "monaco-editor": "^0.55.1",
+    "monaco-editor": "^0.56.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-markdown": "^10.1.0",
@@ -54,6 +60,7 @@
     "@shikijs/monaco": "^4.2.0",
     "@tanstack/eslint-plugin-query": "^5.101.0",
     "@types/babel__core": "^7.20.5",
+    "@types/leaflet": "^1.9.22",
     "@types/node": "^24.10.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.2",
@@ -66,7 +73,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.6.0",
     "jiti": "^2.7.0",
-    "prettier": "3.8.4",
+    "prettier": "3.9.6",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.61.1",
     "vite": "^8.0.16",
@@ -74,5 +81,8 @@
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "*"
+  },
+  "overrides": {
+    "zod-validation-error": "^4.0.2"
   }
 }

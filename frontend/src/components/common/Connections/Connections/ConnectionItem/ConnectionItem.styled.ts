@@ -8,12 +8,15 @@ export const ConnectionItemStyled = styled(Box)<ConnectionItemStyledProps>(({ th
   borderBottom: `1px solid ${theme.palette.divider}`,
   borderRight: `1px solid ${theme.palette.divider}`,
   padding: theme.spacing(2),
-  maxHeight: '82px',
+  maxHeight: '100px',
+  width: '100%',
   minWidth: 0,
+  maxWidth: '100%',
   overflow: 'hidden',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
+  gap: theme.spacing(0.5),
   ':hover': {
     background: theme.palette.background.paper
   },
@@ -26,6 +29,7 @@ export const ConnectionItemNameStyled = styled(Typography)<TypographyProps>(() =
   display: 'block',
   width: '100%',
   maxWidth: '100%',
+  minWidth: 0,
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap'

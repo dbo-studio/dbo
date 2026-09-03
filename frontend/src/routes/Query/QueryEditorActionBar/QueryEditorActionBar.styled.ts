@@ -5,7 +5,8 @@ export const QueryEditorActionBarStackStyled = styled(Stack)(({ theme }) => ({
   borderTop: `1px solid ${theme.palette.divider}`,
   padding: theme.spacing(1),
   justifyContent: 'space-between',
-  alignItems: 'center'
+  alignItems: 'center',
+  flexShrink: 0
 }));
 
 export const QueryEditorActionBarBoxStyled = styled(Box)(({ isCompact }: { isCompact: boolean }) => ({

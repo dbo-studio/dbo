@@ -156,5 +156,6 @@ func (r *PostgresRepository) ContextMenu(nodeType contract.TreeNodeType) []contr
 	}
 
 	actions = append(actions, defaultActions...)
+
 	return actions
 }

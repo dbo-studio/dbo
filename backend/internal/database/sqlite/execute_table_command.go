@@ -114,16 +114,18 @@ func (r *SQLiteRepository) populateParamsFromDatabase(ctx context.Context, param
 	if paramsMap.columnParams == nil {
 		paramsMap.columnParams = &dto.SQLiteTableColumnParams{}
 	}
+
 	if paramsMap.foreignKeyParams == nil {
 		paramsMap.foreignKeyParams = &dto.SQLiteTableForeignKeyParams{}
 	}
+
 	if paramsMap.keyParams == nil {
 		paramsMap.keyParams = &dto.SQLiteTableKeyParams{}
 	}
 
 	tableDDL := r.populateTableParamsFromDDL(ctx, paramsMap.tableParams)
 	r.populateColumnParamsFromDDL(ctx, paramsMap.columnParams, tableDDL, tableName)
-	r.populateForeignKeyParamsFromDB(paramsMap.foreignKeyParams, tableName)
+	r.populateForeignKeyParamsFromDB(ctx, paramsMap.foreignKeyParams, tableName)
 	r.populateKeyParamsFromDB(ctx, paramsMap.keyParams, tableName)
 }
 

@@ -23,9 +23,9 @@
 - Keep files focused; prefer small reusable components and hooks over large monoliths.
 
 ## Testing Guidelines
-- Primary automated UI tests are E2E with Playwright in `../e2e/`.
-- Place tests under `e2e/tests/` with clear scenario-based names (example: `connections.spec.ts`).
-- Add or update E2E tests for user-visible behavior changes.
+- **E2E only** — do not add Vitest/Jest/`node:test` (or any unit/component tests) under `frontend/`.
+- Cover user-visible behavior in Playwright: `../e2e/tests/` with scenario-based names (example: `connections.spec.ts`).
+- Add or update E2E tests when UI/behavior changes; update the feature matrix in `../e2e/README.md`.
 - Before submitting, run at least `cd e2e && npm test -- tests/<affected>.spec.ts`.
 - Follow `.cursor/rules/e2e-qa.mdc` and the `e2e-playwright` skill when writing or fixing e2e.
 - See [`../e2e/README.md`](../e2e/README.md) for isolation and run details.

@@ -28,6 +28,7 @@ func upMigrateConnectionPasswordsToSecrets(ctx context.Context, tx *sql.Tx) erro
 	if err != nil {
 		return err
 	}
+
 	aesKey := sha256.Sum256([]byte(secret))
 
 	hasOwnerID, err := sqliteHasColumn(ctx, tx, "connections", "owner_id")
@@ -41,9 +42,11 @@ func upMigrateConnectionPasswordsToSecrets(ctx context.Context, tx *sql.Tx) erro
 	} else {
 		rows, err = tx.QueryContext(ctx, "SELECT id, '' AS owner_id, options FROM connections")
 	}
+
 	if err != nil {
 		return err
 	}
+
 	defer rows.Close()
 
 	for rows.Next() {
@@ -57,6 +60,7 @@ func upMigrateConnectionPasswordsToSecrets(ctx context.Context, tx *sql.Tx) erro
 		}
 
 		opts := options.String
+
 		password := gjson.Get(opts, "password").String()
 		if password == "" {
 			continue
@@ -74,6 +78,7 @@ func upMigrateConnectionPasswordsToSecrets(ctx context.Context, tx *sql.Tx) erro
 		if err != nil {
 			return err
 		}
+
 		if _, err := tx.ExecContext(
 			ctx,
 			`INSERT INTO web_connection_secrets (session_id, connection_id, ciphertext, remember, expires_at, updated_at)
@@ -107,6 +112,7 @@ func execSQL(ctx context.Context, tx *sql.Tx, query string, args ...any) error {
 	if _, err := tx.ExecContext(ctx, query, args...); err != nil {
 		return err
 	}
+
 	return nil
 }
 

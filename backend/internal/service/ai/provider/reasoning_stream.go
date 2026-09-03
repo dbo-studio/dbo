@@ -63,6 +63,7 @@ func (p *thinkTagParser) Process(delta string) (thinking, content string) {
 			thinking += text[:closeIdx]
 			text = text[closeIdx+len(thinkTagClose):]
 			p.inThinking = false
+
 			continue
 		}
 
@@ -133,6 +134,7 @@ func (s *streamReasoningState) endThinkingIfNeeded() error {
 	}
 
 	s.thinkingStarted = false
+
 	return nil
 }
 
@@ -162,6 +164,7 @@ func (s *streamReasoningState) finish() error {
 		if err := s.emitThinking(s.thinkParser.partial); err != nil {
 			return err
 		}
+
 		s.thinkParser.partial = ""
 	}
 

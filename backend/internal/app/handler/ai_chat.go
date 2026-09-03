@@ -82,6 +82,7 @@ func (h AiChatHandler) Create(c fiber.Ctx) error {
 
 func (h AiChatHandler) Delete(c fiber.Ctx) error {
 	chatID := fiber.Params[uint](c, "id")
+
 	err := h.aiChatService.Delete(c, chatID)
 	if err != nil {
 		h.logger.Error(err.Error())

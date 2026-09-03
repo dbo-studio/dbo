@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS histories (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   connection_id INTEGER NOT NULL,
   query TEXT,
+  is_system INTEGER NOT NULL DEFAULT 0,
   created_at DATETIME,
   FOREIGN KEY(connection_id) REFERENCES connections(id) ON DELETE CASCADE
 );

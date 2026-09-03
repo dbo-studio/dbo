@@ -46,6 +46,7 @@ func UpdateSQLiteConnection(oldParams json.RawMessage, newParams json.RawMessage
 	}
 
 	newOptions.Path = helper.Optional(newOptions.Path, oldOptions.Path)
+
 	return helper.StructToJSON(newOptions), nil
 }
 

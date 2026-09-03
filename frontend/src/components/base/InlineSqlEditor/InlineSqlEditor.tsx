@@ -1,5 +1,4 @@
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
-import { ColumnType } from '@/types';
 import Editor, { useMonaco, type OnMount } from '@monaco-editor/react';
 import { Box, CircularProgress } from '@mui/material';
 import { KeyCode } from 'monaco-editor';
@@ -8,15 +7,7 @@ import { setConditionContext } from './helpers/dbMetaProvider';
 import { inlineEditorConfig } from './helpers/editorConfig';
 import { setupLanguage } from './helpers/languageSetup';
 import { InlineSqlEditorStyled } from './InlineSqlEditor.styled';
-
-type ConditionSqlEditorProps = {
-  columns: ColumnType[];
-  placeholder: string;
-  value: string;
-  onChange?: (value: string) => void;
-  onBlur?: (value: string) => void;
-  onEnter?: (value: string) => void;
-};
+import type { ConditionSqlEditorProps } from './types';
 
 export default function InlineSqlEditor({
   columns,

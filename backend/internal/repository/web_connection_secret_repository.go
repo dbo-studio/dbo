@@ -31,6 +31,7 @@ func (r *webConnectionSecretRepoImpl) Upsert(ctx context.Context, secret *model.
 
 func (r *webConnectionSecretRepoImpl) FindBySessionAndConnection(ctx context.Context, sessionID string, connectionID uint) (*model.WebConnectionSecret, error) {
 	var item model.WebConnectionSecret
+
 	err := r.db.WithContext(ctx).
 		Where("session_id = ? AND connection_id = ?", sessionID, connectionID).
 		First(&item).Error
@@ -38,8 +39,10 @@ func (r *webConnectionSecretRepoImpl) FindBySessionAndConnection(ctx context.Con
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperror.ErrWebConnectionSecretNotFound
 		}
+
 		return nil, err
 	}
+
 	return &item, nil
 }
 

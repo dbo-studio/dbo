@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/samber/lo"
@@ -38,19 +37,21 @@ func buildRoot(ctx context.Context, r *MySQLRepository) (*contract.TreeNode, err
 		Children:    make([]contract.TreeNode, 0),
 	}
 
-	if configured := databaseConnection.DefaultMysqlDatabase(r.base.Connection()); configured != "" {
-		root.Children = append(root.Children, databaseTreeNode(r, configured))
-		return root, nil
-	}
-
+	// Always list all databases. Connection.Options.database is only the dial default;
+	// filtering the tree to that DB hid newly created databases (e.g. Create database).
 	databases, err := r.databases(ctx, true)
 	if err != nil {
 		return nil, apperror.DriverError(err)
 	}
 
 	for _, db := range databases {
+		if isMySQLSystemSchema(db.Name) {
+			continue
+		}
+
 		root.Children = append(root.Children, databaseTreeNode(r, db.Name))
 	}
+
 	return root, nil
 }
 
@@ -123,6 +124,7 @@ func buildContainer(ctx context.Context, r *MySQLRepository, dbName string, cont
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}
+
 		for _, table := range tables {
 			containerNode.Children = append(containerNode.Children, contract.TreeNode{
 				ID:   fmt.Sprintf("%s.%s", dbName, table.Name),
@@ -146,6 +148,7 @@ func buildContainer(ctx context.Context, r *MySQLRepository, dbName string, cont
 		if err != nil {
 			return nil, apperror.DriverError(err)
 		}
+
 		for _, view := range views {
 			containerNode.Children = append(containerNode.Children, contract.TreeNode{
 				ID:   fmt.Sprintf("%s.%s", dbName, view.Name),
@@ -167,5 +170,6 @@ func buildContainer(ctx context.Context, r *MySQLRepository, dbName string, cont
 	default:
 		return nil, fmt.Errorf("unsupported container type: %s", container)
 	}
+
 	return containerNode, nil
 }

@@ -1,59 +1,38 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { useDataGridRowActions } from '@/components/common/DataGrid/hooks/useDataGridRowActions';
 import { TabMode } from '@/core/enums';
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
-import { buildRowConditions, createEmptyRow, mapRowValuesToPhysical } from '@/core/utils';
-import { useCurrentConnection } from '@/hooks';
+import { buildRowConditions, mapRowValuesToPhysical, shortcuts } from '@/core/utils';
+import { resolveSafeModeGate } from '@/core/utils/safeModeGate';
+import { useCurrentConnection, useShortcut } from '@/hooks';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
-import { useSettingStore } from '@/store/settingStore/setting.store';
-import type { DataTabType, EditedRow, RowType } from '@/types';
+import type { EditedRow, RowType } from '@/types';
 import { IconButton, Tooltip } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
-import type { JSX } from 'react';
+import { useCallback, type JSX } from 'react';
 import { toast } from 'sonner';
 import { StatusBarActionsStackStyled } from './StatusBarActions.styled';
 
+const chordLabel = (label: string, command: string[]): string => `${label} (${command.join('+')})`;
+
 export default function StatusBarActions(): JSX.Element {
   const { isMobile } = useLayoutMode();
-  const isDataFetching = useDataStore((state) => state.isDataFetching);
   const selectedTab = useSelectedTab();
   const currentConnection = useCurrentConnection();
-  const gridEditable = useDataStore((state) => state.gridEditable);
   const updatableNodeId = useDataStore((state) => state.updatableNodeId);
 
-  const updateEditor = useSettingStore((state) => state.updateEditor);
-  const addUnsavedRows = useDataStore((state) => state.addUnsavedRows);
-  const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
-  const updateRows = useDataStore((state) => state.updateRows);
-  const updateRemovedRows = useDataStore((state) => state.updateRemovedRows);
-  const restoreEditedRows = useDataStore((state) => state.restoreEditedRows);
-  const updateUnsavedRows = useDataStore((state) => state.updateUnsavedRows);
-  const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
-  const runRawQuery = useDataStore((state) => state.runRawQuery);
+  const { canEditGrid, isDataFetching, addRow, removeSelectedRows, discardChanges, refresh, refreshOrStop } =
+    useDataGridRowActions();
 
   const { mutateAsync: updateQueryMutation, isPending: updateQueryPending } = useMutation({
     mutationFn: api.query.updateQuery
   });
 
-  const canEditGrid =
-    selectedTab?.mode === TabMode.Data
-      ? (selectedTab as DataTabType).editable
-      : selectedTab?.mode === TabMode.Query && gridEditable && !!updatableNodeId;
-
-  const resolveNodeId = (): string | undefined => {
-    if (selectedTab?.mode === TabMode.Data) {
-      return selectedTab.nodeId;
-    }
-    if (selectedTab?.mode === TabMode.Query) {
-      return updatableNodeId;
-    }
-    return undefined;
-  };
-
-  const handleSave = async (): Promise<void> => {
+  const handleSave = useCallback(async (): Promise<void> => {
     const [removedRows, unsavedRows, columns] = await Promise.all([
       indexedDBService.getRemovedRows(selectedTab?.id ?? ''),
       indexedDBService.getUnsavedRows(selectedTab?.id ?? ''),
@@ -61,7 +40,12 @@ export default function StatusBarActions(): JSX.Element {
     ]);
 
     const editedRows = await indexedDBService.getEditedRows(selectedTab?.id ?? '');
-    const nodeId = resolveNodeId();
+    const nodeId =
+      selectedTab?.mode === TabMode.Data
+        ? selectedTab.nodeId
+        : selectedTab?.mode === TabMode.Query
+          ? updatableNodeId
+          : undefined;
 
     if (!canEditGrid || !selectedTab || !currentConnection || !nodeId) {
       return;
@@ -79,142 +63,120 @@ export default function StatusBarActions(): JSX.Element {
       const mappedRemoved = removedRows.map((row) => buildRowConditions(row, columns) as RowType);
       const mappedAdded = unsavedRows.map((row) => mapRowValuesToPhysical(row, columns) as RowType);
 
-      const res = await updateQueryMutation({
+      const payload = {
         connectionId: currentConnection.id,
         nodeId,
         edited: mappedEdited,
         removed: mappedRemoved,
         added: mappedAdded
-      });
-      await handleRefresh();
+      };
 
-      toast.success(`${locales.changes_saved_successfully}. ${locales.row_affected}: ${res.rowAffected}`);
+      try {
+        const res = await updateQueryMutation(payload);
+        await refresh();
+        toast.success(`${locales.changes_saved_successfully}. ${locales.row_affected}: ${res.rowAffected}`);
+      } catch (error) {
+        const shouldRetry = await resolveSafeModeGate(error);
+        if (!shouldRetry) {
+          return;
+        }
+        const res = await updateQueryMutation({ ...payload, confirmed: true });
+        await refresh();
+        toast.success(`${locales.changes_saved_successfully}. ${locales.row_affected}: ${res.rowAffected}`);
+      }
     } catch (error) {
       console.debug('🚀 ~ handleSave ~ error:', error);
       toast.error(locales.save_failed);
     }
-  };
+  }, [canEditGrid, selectedTab, currentConnection, updateQueryMutation, refresh, updatableNodeId]);
 
-  const handleAddAction = async (): Promise<void> => {
-    if (!canEditGrid || !selectedTab) {
-      return;
+  const editDisabled = updateQueryPending || isDataFetching;
+
+  useShortcut(shortcuts.saveGrid, () => {
+    if (canEditGrid && !editDisabled) {
+      void handleSave();
     }
-
-    const columns = await indexedDBService.getColumns(selectedTab.id);
-    const rows = await indexedDBService.getRows(selectedTab.id);
-    const activeColumns = (columns ?? []).filter((column) => column.isActive !== false);
-    const canInsertRows =
-      selectedTab.mode !== TabMode.Query || activeColumns.every((column) => column.editable !== false);
-
-    if (!canInsertRows) {
-      return;
+  });
+  useShortcut(shortcuts.addRow, () => {
+    if (canEditGrid && !editDisabled) {
+      void addRow();
     }
-
-    const emptyRow = createEmptyRow(activeColumns);
-    emptyRow.dbo_index = rows.length === 0 ? 0 : rows[rows.length - 1].dbo_index + 1;
-
-    rows.push(emptyRow);
-
-    await updateRows(rows);
-    addUnsavedRows(emptyRow);
-
-    updateEditor({ scrollToBottom: true });
-  };
-
-  const handleRemoveAction = async (): Promise<void> => {
-    if (!canEditGrid) {
-      return;
+  });
+  useShortcut(shortcuts.discardChanges, () => {
+    if (canEditGrid && !editDisabled) {
+      void discardChanges();
     }
-
-    await updateRemovedRows(undefined);
-  };
-
-  const handleDiscardChanges = async (): Promise<void> => {
-    if (!canEditGrid || !selectedTab) {
-      return;
-    }
-
-    const rows = await indexedDBService.getRows(selectedTab.id);
-    const unsavedRows = await indexedDBService.getUnsavedRows(selectedTab.id);
-
-    await updateUnsavedRows([]);
-
-    if (unsavedRows.length > 0) {
-      const unsavedIndexes = new Set(unsavedRows.map((row) => row.dbo_index));
-      const updatedRows = rows && rows.length > 0 ? rows.filter((row) => !unsavedIndexes.has(row.dbo_index)) : [];
-      await updateRows(updatedRows);
-    }
-
-    await Promise.all([updateRemovedRows([]), restoreEditedRows()]);
-
-    updateSelectedRows([], true);
-  };
-
-  const handleRefresh = async (): Promise<void> => {
-    if (!selectedTab) {
-      return;
-    }
-
-    if (selectedTab.mode === TabMode.Query) {
-      await handleDiscardChanges();
-      await runRawQuery();
-      return;
-    }
-
-    await handleDiscardChanges();
-    toggleReRunQuery();
-  };
-
-  if (!canEditGrid) {
-    return <></>;
-  }
-
-  const disabled = updateQueryPending || isDataFetching;
+  });
 
   return (
     <StatusBarActionsStackStyled mobile={isMobile}>
-      <Tooltip title={locales.add_row}>
-        <IconButton aria-label={locales.add_row} disabled={disabled} onClick={() => void handleAddAction()}>
-          <CustomIcon type='plus' size='s' />
-        </IconButton>
-      </Tooltip>
+      {canEditGrid && (
+        <>
+          <Tooltip title={chordLabel(locales.add_row, shortcuts.addRow.command)}>
+            <span>
+              <IconButton aria-label={locales.add_row} disabled={editDisabled} onClick={() => void addRow()}>
+                <CustomIcon type='plus' size='s' />
+              </IconButton>
+            </span>
+          </Tooltip>
 
-      <Tooltip title={locales.remove_row}>
-        <IconButton aria-label={locales.remove_row} disabled={disabled} onClick={() => void handleRemoveAction()}>
-          <CustomIcon type='mines' size='s' />
-        </IconButton>
-      </Tooltip>
+          <Tooltip title={locales.remove_row}>
+            <span>
+              <IconButton
+                aria-label={locales.remove_row}
+                disabled={editDisabled}
+                onClick={() => void removeSelectedRows()}
+              >
+                <CustomIcon type='mines' size='s' />
+              </IconButton>
+            </span>
+          </Tooltip>
 
-      <Tooltip title={locales.save}>
-        <IconButton
-          aria-label={locales.save}
-          data-testid='grid-save'
-          disabled={disabled}
-          onClick={() => void handleSave()}
-        >
-          <CustomIcon type='check' size='s' />
-        </IconButton>
-      </Tooltip>
+          <Tooltip title={chordLabel(locales.save, shortcuts.saveGrid.command)}>
+            <span>
+              <IconButton
+                aria-label={locales.save}
+                data-testid='grid-save'
+                disabled={editDisabled}
+                onClick={() => void handleSave()}
+              >
+                <CustomIcon type='check' size='s' />
+              </IconButton>
+            </span>
+          </Tooltip>
 
-      <Tooltip title={locales.discard_changes}>
-        <IconButton
-          aria-label={locales.discard_changes}
-          disabled={disabled}
-          onClick={() => void handleDiscardChanges()}
-        >
-          <CustomIcon type='close' size='s' />
-        </IconButton>
-      </Tooltip>
+          <Tooltip title={chordLabel(locales.discard_changes, shortcuts.discardChanges.command)}>
+            <span>
+              <IconButton
+                aria-label={locales.discard_changes}
+                disabled={editDisabled}
+                onClick={() => void discardChanges()}
+              >
+                <CustomIcon type='close' size='s' />
+              </IconButton>
+            </span>
+          </Tooltip>
+        </>
+      )}
 
-      <Tooltip title={locales.refresh}>
-        <IconButton
-          aria-label={locales.refresh}
-          loading={isDataFetching}
-          disabled={disabled}
-          onClick={() => void handleRefresh()}
-        >
-          <CustomIcon type='refresh' size='s' />
-        </IconButton>
+      <Tooltip
+        title={
+          isDataFetching
+            ? chordLabel(locales.stop_query, shortcuts.cancelQuery.command)
+            : chordLabel(locales.refresh, shortcuts.reloadTab.command)
+        }
+      >
+        <span>
+          <IconButton
+            aria-label={isDataFetching ? locales.stop_query : locales.refresh}
+            data-testid={isDataFetching ? 'stop-query' : 'refresh-query'}
+            color={isDataFetching ? 'error' : 'default'}
+            disabled={updateQueryPending}
+            onClick={refreshOrStop}
+          >
+            <CustomIcon type={isDataFetching ? 'stop' : 'refresh'} size='s' />
+          </IconButton>
+        </span>
       </Tooltip>
     </StatusBarActionsStackStyled>
   );

@@ -294,6 +294,70 @@ export async function editTableDropForeignKey(page: Page, tableName: string, fkR
   await objectForm.confirmExecute();
 }
 
+export async function editTableAddForeignKey(
+  page: Page,
+  tableName: string,
+  usersTable: string,
+  fkName: string
+): Promise<void> {
+  const tree = new ObjectTreePage(page);
+  const objectForm = new ObjectFormPage(page);
+
+  await tree.runTreeAction(tableName, 'Edit table');
+  await objectForm.waitForReady();
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
+  await objectForm.waitForReady();
+  await objectForm.selectTab(T.foreignKeys);
+  const existingRows = await page.getByTestId(/^object-form-delete-row-/).count();
+  await objectForm.addRow();
+  const fkRowIndex = existingRows;
+  await objectForm.fillArrayCell(fkRowIndex, F.fkName, fkName);
+  await objectForm.selectArrayCellOption(fkRowIndex, F.fkTargetTable, usersTable);
+  await objectForm.selectMultiSelectOptions(fkRowIndex, F.fkSourceColumns, ['user_id']);
+  await objectForm.selectMultiSelectOptions(fkRowIndex, F.fkTargetColumns, ['id']);
+  await objectForm.selectArrayCellOption(fkRowIndex, F.fkOnUpdate, 'CASCADE');
+  await objectForm.selectArrayCellOption(fkRowIndex, F.fkOnDelete, 'CASCADE');
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.addForeignKey);
+  await objectForm.assertPreviewContains(usersTable);
+  await objectForm.confirmExecute();
+}
+
+export async function editTableEditForeignKey(
+  page: Page,
+  tableName: string,
+  opts: {
+    fkRowIndex?: number;
+    newFkName: string;
+    onUpdate?: string;
+    onDelete?: string;
+  }
+): Promise<void> {
+  const tree = new ObjectTreePage(page);
+  const objectForm = new ObjectFormPage(page);
+  const fkRowIndex = opts.fkRowIndex ?? 0;
+
+  await tree.runTreeAction(tableName, 'Edit table');
+  await objectForm.waitForReady();
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
+  await objectForm.waitForReady();
+  await objectForm.selectTab(T.foreignKeys);
+  await objectForm.fillArrayCell(fkRowIndex, F.fkName, opts.newFkName);
+  // PostgreSQL supports RENAME CONSTRAINT; ON UPDATE/DELETE changes require DROP+ADD (not covered here).
+  if (opts.onUpdate) {
+    await objectForm.selectArrayCellOption(fkRowIndex, F.fkOnUpdate, opts.onUpdate);
+  }
+  if (opts.onDelete) {
+    await objectForm.selectArrayCellOption(fkRowIndex, F.fkOnDelete, opts.onDelete);
+  }
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.editForeignKey);
+  await objectForm.assertPreviewContains(opts.newFkName);
+  await objectForm.confirmExecute();
+}
+
 export async function editTableDropColumn(page: Page, tableName: string, columnRowIndex: number): Promise<void> {
   const tree = new ObjectTreePage(page);
   const objectForm = new ObjectFormPage(page);
@@ -402,6 +466,42 @@ export async function editTableDropKey(page: Page, tableName: string, keyRowInde
   await objectForm.save();
   await objectForm.assertPreviewContains(P.dropKey);
   await objectForm.confirmExecute();
+}
+
+export async function dropSchemaViaTree(
+  page: Page,
+  connectionName: string,
+  databaseName: string,
+  schemaName: string
+): Promise<void> {
+  const tree = new ObjectTreePage(page);
+  await tree.expandPath([connectionName, databaseName]);
+  await tree.dropObject(schemaName, 'Drop schema');
+  await expect(tree.getTreeNode(schemaName)).toBeHidden({ timeout: 15000 });
+}
+
+export async function cleanupPostgresEditTable(
+  page: Page,
+  names: {
+    connectionName: string;
+    databaseName: string;
+    usersTable: string;
+    postsTable: string;
+  }
+): Promise<ConnectionPage> {
+  const tree = new ObjectTreePage(page);
+  const connectionPage = new ConnectionPage(page);
+  const renamedUsersTable = `${names.usersTable}_renamed`;
+
+  await tree.expandPath([names.connectionName, names.databaseName, 'public']);
+  await tree.dropObject(names.postsTable, 'Drop table').catch(() => undefined);
+  await tree.dropObject(renamedUsersTable, 'Drop table').catch(() => undefined);
+  await tree.dropObject(names.usersTable, 'Drop table').catch(() => undefined);
+  await tree.expandNode(names.connectionName);
+  await tree.dropObject(names.databaseName, 'Drop database').catch(() => undefined);
+  await connectionPage.deleteConnection(names.connectionName);
+
+  return connectionPage;
 }
 
 export async function cleanupExtended(

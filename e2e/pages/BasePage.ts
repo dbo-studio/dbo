@@ -1,7 +1,9 @@
 import { type Page } from "@playwright/test";
 
 /**
- * Base Page Object - contains common functionality for all pages
+ * Base Page Object - contains common functionality for all pages.
+ * For API waits paired with a click, use `waitForResponseDuring` / `pendingResponse`
+ * from `helpers/network.ts` — never start `waitForResponse` after the action.
  */
 export abstract class BasePage {
   readonly page: Page;
@@ -15,21 +17,7 @@ export abstract class BasePage {
   }
 
   async waitForReady(): Promise<void> {
-    // await this.page.waitForLoadState('networkidle');
-    await this.page.waitForTimeout(2000);
-  }
-
-  async waitForResponse(
-    urlPattern: string,
-    timeout: number = 10000,
-  ): Promise<void> {
-    await this.page.waitForResponse(
-      (response) =>
-        response.url().includes(urlPattern) && response.status() === 200,
-      {
-        timeout,
-      },
-    );
+    await this.page.waitForLoadState("domcontentloaded");
   }
 
   async pressKey(key: string): Promise<void> {

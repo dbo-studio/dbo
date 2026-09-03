@@ -24,6 +24,7 @@ type WebCacheStore struct {
 func NewWebCacheStore(c cache.Cache, secret string, ttl time.Duration) *WebCacheStore {
 	// Derive a fixed 32-byte key from secret to avoid key-size issues.
 	sum := sha256.Sum256([]byte(secret))
+
 	return &WebCacheStore{
 		cache:  c,
 		aesKey: sum[:],
@@ -47,6 +48,7 @@ func (s *WebCacheStore) SetConnectionPassword(ctx context.Context, ownerID strin
 	}
 
 	ttl := s.ttl
+
 	return s.cache.Set(ctx, cache.ConnectionSecretKey(ownerID, connectionID), item, &ttl)
 }
 

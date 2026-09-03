@@ -4,7 +4,12 @@ import { Box, InputAdornment, InputBase } from '@mui/material';
 import { type JSX, useState } from 'react';
 import CustomIcon from '../CustomIcon/CustomIcon';
 
-export default function Search({ onChange }: { onChange: (value: string) => void }): JSX.Element {
+type SearchProps = {
+  onChange: (value: string) => void;
+  placeholder?: string;
+};
+
+export default function Search({ onChange, placeholder }: SearchProps): JSX.Element {
   const [value, setValue] = useState('');
 
   const onChangeHandler = (e: EventFor<'input', 'onChange'>): void => {
@@ -24,7 +29,7 @@ export default function Search({ onChange }: { onChange: (value: string) => void
         value={value}
         onChange={onChangeHandler}
         fullWidth={true}
-        placeholder={locales.search}
+        placeholder={placeholder ?? locales.search}
         startAdornment={
           <InputAdornment position='start'>
             <CustomIcon type='search' size='xs' />

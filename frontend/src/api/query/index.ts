@@ -53,5 +53,10 @@ export const updateQuery = async (data: UpdateQueryRequestType): Promise<UpdateQ
     });
   }
 
-  return (await api.post<{ data: UpdateQueryResponseType }>(endpoint.updateQuery(), formattedData)).data.data;
+  return (
+    await api.post<{ data: UpdateQueryResponseType }>(endpoint.updateQuery(), {
+      ...formattedData,
+      confirmed: data.confirmed
+    })
+  ).data.data;
 };

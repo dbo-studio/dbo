@@ -368848,3 +368848,85 @@ COMMIT;
 --
 
 ANALYZE;
+
+--
+-- DBO Studio demo: product table (all Data Grid mapped types)
+--
+
+SET client_encoding = 'UTF8';
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'product_status') THEN
+    CREATE TYPE product_status AS ENUM ('draft', 'published', 'archived');
+  END IF;
+END$$;
+
+DROP TABLE IF EXISTS product CASCADE;
+
+CREATE TABLE product (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name            VARCHAR(120) NOT NULL,
+  is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+  price           NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  stock           INTEGER NOT NULL DEFAULT 0,
+  released_on     DATE,
+  opens_at        TIME,
+  updated_at      TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
+  status          product_status NOT NULL DEFAULT 'draft',
+  meta            JSONB,
+  blob_data       BYTEA,
+  image_data      BYTEA,
+  location        POINT
+);
+
+INSERT INTO product (
+  id, name, is_active, price, stock, released_on, opens_at, updated_at, status, meta, blob_data, image_data, location
+) VALUES
+(
+  '11111111-1111-4111-8111-111111111111',
+  'Aurora Keyboard',
+  TRUE,
+  129.99,
+  42,
+  '2024-03-15',
+  '09:30:00',
+  '2024-06-01 14:22:10',
+  'published',
+  '{"sku":"KB-AURORA","tags":["mech","rgb"],"attrs":{"switches":"brown"}}'::jsonb,
+  decode('0001ffdead', 'hex'),
+  decode('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000a49444154789c63000100000500010d0a2db40000000049454e44ae426082', 'hex'),
+  POINT(-122.4194, 37.7749)
+),
+(
+  '22222222-2222-4222-8222-222222222222',
+  'Nimbus Mouse',
+  FALSE,
+  59.50,
+  0,
+  '2023-11-02',
+  '18:00:00',
+  '2025-01-10 08:00:00',
+  'draft',
+  '{"sku":"MS-NIMBUS","tags":["wireless"]}'::jsonb,
+  NULL,
+  NULL,
+  POINT(2.3522, 48.8566)
+),
+(
+  '33333333-3333-4333-8333-333333333333',
+  'Orbit Hub',
+  TRUE,
+  249.00,
+  7,
+  '2025-01-20',
+  NULL,
+  '2025-02-01 12:00:00',
+  'archived',
+  NULL,
+  decode('ff00ff00', 'hex'),
+  NULL,
+  NULL
+);
+
+COMMENT ON TABLE product IS 'DBO Studio demo: all Data Grid mapped types with sample rows';

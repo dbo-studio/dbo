@@ -106,7 +106,41 @@ linters:
     # Reports uses of functions with replacement inside the testing package.
     - usetesting
 
+    # Add or remove empty lines between statement groups.
+    - wsl_v5
+
+    # Find code that can cause problems with Go 1.13+ error wrapping.
+    - errorlint
+
+    # Find code that returns nil even if it checks that the error is not nil.
+    - nilerr
+
+    # Checks whether HTTP response body is closed successfully.
+    - bodyclose
+
+    # Check whether the function uses a non-inherited context.
+    - contextcheck
+
+    # Detects places where loop variables are copied.
+    - copyloopvar
+
   settings:
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 2
+      case-max-lines: 0
+      cuddle-max-statements: 1
+
+    errorlint:
+      errorf: true
+      errorf-multi: true
+      asserts: true
+      comparison: true
+
+    copyloopvar:
+      check-alias: false
+
     revive:
       rules:
         # these are the default revive rules

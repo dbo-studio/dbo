@@ -57,6 +57,23 @@
     "dialog:default",
     "dialog:allow-open",
     "dialog:allow-save",
-    "os:default"
+    "os:default",
+    "biometry:default",
+    {
+      "identifier": "biometry:allow-has-data",
+      "allow": [{ "domain": "com.dbostudio.dev" }]
+    },
+    {
+      "identifier": "biometry:allow-get-data",
+      "allow": [{ "domain": "com.dbostudio.dev" }]
+    },
+    {
+      "identifier": "biometry:allow-set-data",
+      "allow": [{ "domain": "com.dbostudio.dev" }]
+    },
+    {
+      "identifier": "biometry:allow-remove-data",
+      "allow": [{ "domain": "com.dbostudio.dev" }]
+    }
   ]
 }

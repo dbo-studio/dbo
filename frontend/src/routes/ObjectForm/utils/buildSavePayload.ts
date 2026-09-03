@@ -11,8 +11,18 @@ type ColumnChange = {
   deleted?: boolean;
 };
 
-const toPayloadValue = (value: FormValue | FormValue[] | undefined): FormValue => {
+const toPayloadValue = (value: FormValue | FormValue[] | undefined, fieldType?: FormFieldType['type']): FormValue => {
+  if (fieldType === 'checkbox') {
+    if (value === undefined || value === null || value === '') return null;
+    return Boolean(value);
+  }
+
   if (value === undefined || value === null || value === '') return null;
+
+  if (typeof value === 'number') {
+    return String(value);
+  }
+
   if (Array.isArray(value)) {
     const result: string[] = [];
     for (const item of value) {
@@ -22,6 +32,7 @@ const toPayloadValue = (value: FormValue | FormValue[] | undefined): FormValue =
     }
     return result;
   }
+
   return value ?? null;
 };
 
@@ -29,7 +40,7 @@ const rowToRecord = (row: FormFieldType[], useOriginal = false): Record<string, 
   const record: Record<string, FormValue> = {};
 
   for (const cell of row) {
-    record[cell.id] = toPayloadValue(useOriginal ? cell.originalValue : cell.value);
+    record[cell.id] = toPayloadValue(useOriginal ? cell.originalValue : cell.value, cell.type);
   }
 
   return record;
@@ -47,7 +58,7 @@ const buildGeneralRecord = (general: GeneralFieldType[], useOriginal = false): R
   const record: Record<string, FormValue> = {};
 
   for (const field of general) {
-    record[field.id] = toPayloadValue(useOriginal ? field.originalValue : field.value);
+    record[field.id] = toPayloadValue(useOriginal ? field.originalValue : field.value, field.type);
   }
 
   return record;

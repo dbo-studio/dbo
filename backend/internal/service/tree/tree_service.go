@@ -2,6 +2,10 @@ package serviceTree
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -9,9 +13,13 @@ import (
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	"github.com/dbo-studio/dbo/internal/repository"
+	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/cache"
+	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/dbo-studio/dbo/pkg/sqlguard"
 	"github.com/samber/lo"
 )
 
@@ -30,19 +38,24 @@ type ITreeServiceImpl struct {
 	connectionRepo repository.IConnectionRepo
 	cm             *databaseConnection.ConnectionManager
 	cache          cache.Cache
+	unlockStore    *serviceSafemode.UnlockStore
 }
 
 func NewTreeService(cr repository.IConnectionRepo, cm *databaseConnection.ConnectionManager) *ITreeServiceImpl {
+	c := container.Instance().Cache()
+
 	return &ITreeServiceImpl{
 		connectionRepo: cr,
 		cm:             cm,
-		cache:          container.Instance().Cache(),
+		cache:          c,
+		unlockStore:    serviceSafemode.NewUnlockStore(c),
 	}
 }
 
 func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (*contract.TreeNode, error) {
 	if lo.FromPtr(req.FromCache) {
 		var tree *contract.TreeNode
+
 		err := i.cache.Get(ctx, cache.TreeKey(uint(req.ConnectionID), req.ParentID), &tree)
 		if err == nil && tree != nil {
 			return tree, nil
@@ -106,6 +119,7 @@ func (i ITreeServiceImpl) ObjectDetail(ctx context.Context, req *dto.ObjectDetai
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
+
 	return data, nil
 }
 
@@ -114,6 +128,16 @@ func (i ITreeServiceImpl) ObjectExecute(ctx context.Context, req *dto.ObjectExec
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
+
+	policy := serviceSafemode.FromConnection(connection)
+	policy = i.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), connection.ID, policy)
+
+	class := sqlguard.ClassifyAction(req.Action)
+	if err := serviceSafemode.Enforce(policy, class, req.Confirmed); err != nil {
+		return nil, err
+	}
+
+	i.unlockStore.ConsumeGate(ctx, helper.CtxOwnerID(ctx), connection.ID, policy.Unlocked)
 
 	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {
@@ -151,6 +175,7 @@ func (i ITreeServiceImpl) ObjectPreviewExecute(ctx context.Context, req *dto.Obj
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
+
 	return queries, nil
 }
 
@@ -158,6 +183,27 @@ func (i ITreeServiceImpl) GetDynamicFieldOptions(ctx context.Context, req *dto.D
 	connection, err := i.connectionRepo.Find(ctx, req.ConnectionID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	field := req.Parameters["field"]
+	if field == "" {
+		return nil, apperror.BadRequest(errors.New("field is required in parameters"))
+	}
+
+	if field != "columns" && field != "fk_values" {
+		return nil, apperror.BadRequest(fmt.Errorf("unsupported dynamic field %q", field))
+	}
+
+	if field == "fk_values" {
+		if strings.TrimSpace(req.Parameters["table"]) == "" {
+			return nil, apperror.BadRequest(errors.New("table is required in parameters"))
+		}
+
+		if len(databaseCore.ParseFkKeyColumns(req.Parameters)) == 0 {
+			return nil, apperror.BadRequest(errors.New("keyColumn is required in parameters"))
+		}
+
+		req.Parameters["limit"] = strconv.Itoa(databaseCore.ParseFkLookupLimit(req.Parameters["limit"]))
 	}
 
 	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
@@ -172,8 +218,24 @@ func (i ITreeServiceImpl) GetDynamicFieldOptions(ctx context.Context, req *dto.D
 
 	options, err := repo.GetDynamicFieldOptions(ctx, dynamicReq)
 	if err != nil {
+		if isFkLookupBadRequest(err) {
+			return nil, apperror.BadRequest(err)
+		}
+
 		return nil, apperror.InternalServerError(err)
 	}
 
 	return options, nil
+}
+
+func isFkLookupBadRequest(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	msg := err.Error()
+
+	return strings.Contains(msg, "required") ||
+		strings.Contains(msg, "not found") ||
+		strings.Contains(msg, "unsupported dynamic field")
 }

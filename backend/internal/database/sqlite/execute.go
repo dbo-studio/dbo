@@ -13,6 +13,7 @@ import (
 
 func (r *SQLiteRepository) buildExecuteQueries(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
 	type ExecuteParams map[contract.TreeTab]any
+
 	executeParams, err := helper.ConvertToDTO[ExecuteParams](params)
 	if err != nil {
 		return nil, "", err
@@ -25,6 +26,7 @@ func (r *SQLiteRepository) buildExecuteQueries(ctx context.Context, nodeID strin
 		if err != nil {
 			return nil, "", err
 		}
+
 		queries = append(queries, viewQueries...)
 	}
 
@@ -33,6 +35,7 @@ func (r *SQLiteRepository) buildExecuteQueries(ctx context.Context, nodeID strin
 	if err != nil {
 		return nil, "", err
 	}
+
 	queries = append(queries, tableQueries...)
 
 	return queries, tmpTableName, nil
@@ -61,6 +64,7 @@ func (r *SQLiteRepository) Execute(ctx context.Context, nodeID string, action co
 			if tmpTableName != "" {
 				r.cleanupTmpTable(ctx, tmpTableName)
 			}
+
 			return nil, err
 		}
 
@@ -69,6 +73,7 @@ func (r *SQLiteRepository) Execute(ctx context.Context, nodeID string, action co
 			if tmpTableName != "" {
 				r.cleanupTmpTable(ctx, tmpTableName)
 			}
+
 			return nil, err
 		}
 

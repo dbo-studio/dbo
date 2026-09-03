@@ -41,10 +41,10 @@ go run .                  # run locally
 go build -o dbo .         # compile binary
 go fmt ./...              # format
 golangci-lint run         # lint (.golangci.yml)
-go test ./...             # all tests
-go test ./... -cover      # with coverage
 air                       # hot reload (.air.toml)
 ```
+
+Behavior coverage: Playwright in `../e2e/` (do not add new `*_test.go`).
 
 ## Package Naming Convention
 
@@ -127,16 +127,11 @@ func (r *CreateSavedQueryRequest) Validate() error {
 
 ## Testing
 
-- Colocate `*_test.go` next to source
-- Table-driven tests with `t.Run` subtests
-- `t.Parallel()` at test and subtest level
-- Database driver tests: assert SQL generation without live DB when possible
-- Helpers: `t.Helper()` for setup functions
+**Do not add new `*_test.go` files.** Product behavior is covered by Playwright in [`../e2e/`](../e2e/) — see [`.cursor/rules/e2e-qa.mdc`](../.cursor/rules/e2e-qa.mdc) and [`.cursor/rules/go-testing.mdc`](../.cursor/rules/go-testing.mdc).
 
-```bash
-go test ./internal/database/... -run TestName
-```
+Before PR: `go fmt ./...` + `golangci-lint run`, plus e2e for user-visible API/UI flows.
 
+Legacy `*_test.go` may exist; do not expand them for new features.
 ## DI & Wiring
 
 Manual constructor injection in `cmd/cmd.go`:
@@ -161,7 +156,7 @@ Singleton: `container.Instance()` for logger, config, cache, app DB. No wire/fx.
 1. Add to `internal/database/contract/contract.go`
 2. Implement in each driver package (`postgres/`, `mysql/`, `sqlite/`)
 3. Update `contracts_assertions.go`
-4. Table-driven unit test for SQL/command generation
+4. Cover user-visible behavior in `e2e/` (no new unit tests)
 
 ## API Response Shape
 
@@ -178,9 +173,9 @@ Routes: `/api/...` (see `internal/app/server/route.go`).
 ## Commit & PR
 
 - Conventional Commits: `feat:`, `fix:`, `chore:`, `refactor:`, `test:`
-- Before PR: `go fmt ./...` + `golangci-lint run` + `go test ./...`
+- Before PR: `go fmt ./...` + `golangci-lint run` (+ e2e for behavior)
 - Never commit secrets or real credentials
-
+- Do not add new `*_test.go` for features — use `e2e/`
 ## Security
 
 - Passwords via `secret_store` — never log or return raw credentials

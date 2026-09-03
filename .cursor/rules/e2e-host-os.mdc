@@ -1,0 +1,32 @@
+---
+description: Always run Playwright e2e on the host OS — never in the Cursor sandbox
+alwaysApply: true
+---
+
+# Playwright: host OS only
+
+Playwright e2e **must** run on the real machine, not the Cursor command sandbox.
+
+The harness starts `go run`, Vite, Chromium, and talks to Docker sample DBs on `127.0.0.1`. Sandbox (and `full_network` alone) blocks browser launch, port bind, and Docker.
+
+## How to run
+
+When using the Shell tool for any of:
+
+- `cd e2e && npm test …`
+- `npm run test:pg` / `test:mysql` / `test:sqlite` / `test:ui`
+- `npx playwright install …`
+- `docker compose -f docker-compose.dev.yml …` (sample DBs for e2e)
+- `npx playwright show-trace …`
+
+pass **`required_permissions: ["all"]`** on the **first** invocation. Do not try sandbox first and retry.
+
+```
+# ❌ BAD — default sandbox (or full_network only)
+cd e2e && npm test -- tests/shared/harness-smoke.spec.ts
+
+# ✅ GOOD — Shell tool with required_permissions: ["all"]
+cd e2e && npm test -- tests/shared/harness-smoke.spec.ts
+```
+
+Still use `cd e2e && npm test` (via `run-e2e`). Never `npx playwright test` alone.

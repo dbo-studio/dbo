@@ -74,6 +74,7 @@ func (r *MySQLRepository) handleForeignKeyCommands(node contract.DBNode, tabID c
 				}
 
 				queries = append(queries, columnDef)
+
 				continue
 			}
 

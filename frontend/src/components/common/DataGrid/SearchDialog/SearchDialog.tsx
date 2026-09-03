@@ -6,13 +6,7 @@ import { Stack } from '@mui/system';
 import type { JSX } from 'react';
 import { useEffect, useRef } from 'react';
 import { SearchBarContainer, SearchMatchCountStyled } from '../DataGrid.styled';
-import type { UseDataGridSearchReturn } from '../hooks/useDataGridSearch';
-
-export type SearchDialogProps = {
-  open: boolean;
-  onClose: () => void;
-  search: UseDataGridSearchReturn;
-};
+import type { SearchDialogProps } from '../types';
 
 export default function SearchDialog({ open, onClose, search }: SearchDialogProps): JSX.Element {
   const inputRef = useRef<HTMLInputElement>(null);

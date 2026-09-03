@@ -55,6 +55,7 @@ export type SaveObjectRequestType = {
   nodeId: string;
   action: string;
   data: Record<string, FormValue>;
+  confirmed?: boolean;
 };
 
 export type PreviewExecuteResponseType = {

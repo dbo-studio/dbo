@@ -52,6 +52,7 @@ func (s *McpServiceImpl) Status(ctx context.Context) (*dto.McpStatusResponse, er
 	if err != nil {
 		return nil, err
 	}
+
 	return s.buildStatus(settings), nil
 }
 
@@ -66,9 +67,11 @@ func (s *McpServiceImpl) Update(ctx context.Context, req *dto.McpUpdateRequest) 
 		if err != nil {
 			return nil, err
 		}
+
 		s.plainToken = token
 
 		settings.Enabled = true
+
 		settings.TokenHash = &hash
 		if req.DefaultConnectionID != nil {
 			settings.DefaultConnectionID = req.DefaultConnectionID
@@ -81,6 +84,7 @@ func (s *McpServiceImpl) Update(ctx context.Context, req *dto.McpUpdateRequest) 
 		}
 
 		status := s.buildStatus(settings)
+
 		return &dto.McpUpdateResponse{Token: token, McpStatusResponse: *status}, nil
 	}
 
@@ -88,11 +92,13 @@ func (s *McpServiceImpl) Update(ctx context.Context, req *dto.McpUpdateRequest) 
 	settings.TokenHash = nil
 	s.plainToken = ""
 	s.nativeServer.SetDefaultConnectionID(nil)
+
 	if _, err := s.settingsRepo.Upsert(ctx, settings); err != nil {
 		return nil, err
 	}
 
 	status := s.buildStatus(settings)
+
 	return &dto.McpUpdateResponse{McpStatusResponse: *status}, nil
 }
 
@@ -101,18 +107,23 @@ func (s *McpServiceImpl) RegenerateToken(ctx context.Context) (*dto.McpRegenerat
 	if err != nil {
 		return nil, err
 	}
+
 	if !settings.Enabled {
 		return nil, fmt.Errorf("mcp is not enabled")
 	}
+
 	token, hash, err := generateToken()
 	if err != nil {
 		return nil, err
 	}
+
 	s.plainToken = token
+
 	settings.TokenHash = &hash
 	if _, err := s.settingsRepo.Upsert(ctx, settings); err != nil {
 		return nil, err
 	}
+
 	return &dto.McpRegenerateTokenResponse{Token: token}, nil
 }
 
@@ -122,6 +133,7 @@ func (s *McpServiceImpl) AuthenticateToken(ctx context.Context, token string) (*
 	}
 
 	hash := hashToken(token)
+
 	settings, err := s.settingsRepo.FindByTokenHash(ctx, hash)
 	if err != nil || settings == nil || !settings.Enabled || settings.TokenHash == nil {
 		return nil, false
@@ -150,13 +162,16 @@ func (s *McpServiceImpl) IsEnabled(ctx context.Context) bool {
 
 func (s *McpServiceImpl) buildStatus(settings *model.McpSettings) *dto.McpStatusResponse {
 	masked := ""
+
 	if settings.TokenHash != nil {
 		hash := *settings.TokenHash
 		if len(hash) >= 4 {
 			masked = "****" + hash[len(hash)-4:]
 		}
 	}
+
 	cfg := container.Instance().Config().App
+
 	return &dto.McpStatusResponse{
 		Enabled:             settings.Enabled,
 		Running:             settings.Enabled,
@@ -173,7 +188,9 @@ func generateToken() (string, string, error) {
 	if _, err := rand.Read(buf); err != nil {
 		return "", "", err
 	}
+
 	token := hex.EncodeToString(buf)
+
 	return token, hashToken(token), nil
 }
 
@@ -186,9 +203,11 @@ func ExtractBearer(authHeader string) string {
 	if authHeader == "" {
 		return ""
 	}
+
 	parts := strings.SplitN(authHeader, " ", 2)
 	if len(parts) != 2 || !strings.EqualFold(parts[0], "bearer") {
 		return ""
 	}
+
 	return strings.TrimSpace(parts[1])
 }

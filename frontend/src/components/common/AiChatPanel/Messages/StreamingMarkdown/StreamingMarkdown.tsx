@@ -1,10 +1,5 @@
 import ChatMarkdown from '../ChatMarkdown/ChatMarkdown';
-
-type StreamingMarkdownProps = {
-  content: string;
-  isStreaming?: boolean;
-  showCursor?: boolean;
-};
+import type { StreamingMarkdownProps } from '../../types';
 
 export default function StreamingMarkdown({
   content,

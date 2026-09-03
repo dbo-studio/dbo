@@ -4,20 +4,39 @@ import { tools } from '@/core/utils';
 import { useSelectedTab } from '@/hooks';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { DataTabType, TabType } from '@/types';
-import { Checkbox, Stack, Typography, useTheme } from '@mui/material';
+import type { ColumnType, DataTabType, TabType } from '@/types';
+import { Stack, Typography, useTheme } from '@mui/material';
 import type { JSX } from 'react';
 import { useCallback, useMemo } from 'react';
-import { SelectTableHeader, SortableTableHeader, StyledTableHead, StyledTableRow } from '../DataGrid.styled';
+import {
+  HeaderBadgeStyled,
+  SelectTableHeader,
+  SortableTableHeader,
+  StyledTableHead,
+  StyledTableRow
+} from '../DataGrid.styled';
 import DataGridResizer from '../DataGridResizer/DataGridResizer';
+import GridCheckbox from '../GridCheckbox';
 import type { DataGridTableHeaderRowProps } from '../types';
 import { HeaderColumnContentStyled, HeaderColumnTypeStyled } from './DataGridTableHeaderRow.styled';
+
+function formatForeignKeyTooltip(column: ColumnType): string {
+  const table = column.referencedTable;
+  if (!table) {
+    return 'Foreign key';
+  }
+
+  const schemaPrefix = column.referencedSchema ? `${column.referencedSchema}.` : '';
+  const cols = column.referencedColumns?.length ? `(${column.referencedColumns.join(', ')})` : '';
+  return `${schemaPrefix}${table}${cols}`;
+}
 
 export default function DataGridTableHeaderRow({
   columns,
   startResize,
   resizingColumnId,
-  editable = false
+  editable = false,
+  onHeaderContextMenu
 }: DataGridTableHeaderRowProps): JSX.Element {
   const selectedTab = useSelectedTab<DataTabType>();
   const theme = useTheme();
@@ -113,12 +132,7 @@ export default function DataGridTableHeaderRow({
           if (column.name === 'select') {
             return (
               <SelectTableHeader key='select'>
-                <Checkbox
-                  sx={{ p: 0 }}
-                  size='small'
-                  onChange={(e) => handleSelectAll(e.target.checked)}
-                  onClick={(e) => e.stopPropagation()}
-                />
+                <GridCheckbox onChange={(e) => handleSelectAll(e.target.checked)} aria-label='Select all rows' />
               </SelectTableHeader>
             );
           }
@@ -127,7 +141,15 @@ export default function DataGridTableHeaderRow({
           const sortIcon = getSortIcon(columnSort?.operator);
 
           return (
-            <SortableTableHeader key={column.name} onClick={(e) => handleColumnSort(column.name, e)}>
+            <SortableTableHeader
+              key={column.name}
+              onClick={(e) => handleColumnSort(column.name, e)}
+              onContextMenu={(e): void => {
+                e.preventDefault();
+                e.stopPropagation();
+                onHeaderContextMenu?.(e, column.name);
+              }}
+            >
               <HeaderColumnContentStyled>
                 <Stack
                   spacing={1}
@@ -139,6 +161,9 @@ export default function DataGridTableHeaderRow({
                   <Typography variant='body2'>{column.name}</Typography>
                   <HeaderColumnTypeStyled>({column.type})</HeaderColumnTypeStyled>
                   {column.isPrimaryKey && <CustomIcon type={'key'} size='xs' color={theme.palette.text.placeholder} />}
+                  {column.isForeignKey && (
+                    <HeaderBadgeStyled title={formatForeignKeyTooltip(column)}>FK</HeaderBadgeStyled>
+                  )}
                   {editable && column.editable === false && (
                     <CustomIcon type='lock' size='xs' color={theme.palette.text.placeholder} />
                   )}

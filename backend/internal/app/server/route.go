@@ -12,6 +12,9 @@ func (r *Server) routing() {
 	api.Get("/config/logs", r.handlers.Config.Logs)
 	api.Post("/config/reset", r.handlers.Config.ResetFactory)
 
+	schema := api.Group("schema")
+	schema.Get("/diagram", r.handlers.Schema.Diagram)
+
 	tree := api.Group("tree")
 	tree.Get("/", r.handlers.TreeHandler.TreeHandler)
 	tree.Get("/:nodeId/tabs/:action", r.handlers.TreeHandler.Tabs)
@@ -48,12 +51,20 @@ func (r *Server) routing() {
 	mcp.All("", r.handlers.Mcp.Proxy)
 	mcp.All("/*", r.handlers.Mcp.Proxy)
 
+	safeMode := api.Group("safe-mode")
+	safeMode.Get("/password", r.handlers.SafeMode.Status)
+	safeMode.Post("/password", r.handlers.SafeMode.SetPassword)
+	safeMode.Patch("/password", r.handlers.SafeMode.ChangePassword)
+	safeMode.Post("/verify", r.handlers.SafeMode.Verify)
+
 	connection := api.Group("connections")
 	connection.Get("/", r.handlers.Connection.Connections)
 	connection.Post("/", r.handlers.Connection.Create)
 	connection.Post("/ping", r.handlers.Connection.Ping)
 	connection.Patch("/:id", r.handlers.Connection.Update)
 	connection.Post("/:id/credentials", r.handlers.Connection.SetCredentials)
+	connection.Post("/:id/safe-mode/unlock", r.handlers.Connection.UnlockSafeMode)
+	connection.Post("/:id/safe-mode/lock", r.handlers.Connection.LockSafeMode)
 	connection.Delete("/:id", r.handlers.Connection.Delete)
 
 	saved := api.Group("saved")
@@ -73,5 +84,4 @@ func (r *Server) routing() {
 	job.Get("/:id", r.handlers.Job.Detail)
 	job.Delete("/:id", r.handlers.Job.Cancel)
 	job.Get("/:id/result", r.handlers.Job.Result)
-
 }

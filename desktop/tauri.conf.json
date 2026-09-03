@@ -4,7 +4,7 @@
     "beforeBuildCommand": "npm --prefix frontend run build",
     "beforeDevCommand": "npm --prefix frontend run dev",
     "frontendDist": "../frontend/dist",
-    "devUrl": "http://localhost:3000"
+    "devUrl": "http://localhost:3001"
   },
   "bundle": {
     "active": true,
@@ -40,7 +40,7 @@
     },
     "longDescription": "",
     "macOS": {
-      "entitlements": null,
+      "entitlements": "entitlements.plist",
       "exceptionDomain": "",
       "frameworks": [],
       "providerShortName": null,
@@ -57,7 +57,7 @@
   },
   "productName": "DBO",
   "mainBinaryName": "DBO",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "identifier": "com.dbostudio.dev",
   "plugins": {
     "updater": {

@@ -15,9 +15,11 @@ func hasToolCallLeak(content string) bool {
 	if strings.TrimSpace(content) == "" {
 		return false
 	}
+
 	if !toolLeakPattern.MatchString(content) {
 		return false
 	}
+
 	return strings.Contains(content, `"arguments"`) || strings.Contains(content, `"parameters"`)
 }
 
@@ -28,5 +30,6 @@ func stripToolCallLeak(content string) string {
 
 	stripped := toolCallJSONPattern.ReplaceAllString(content, "")
 	stripped = multiNewlinePattern.ReplaceAllString(stripped, "\n\n")
+
 	return strings.TrimSpace(stripped)
 }

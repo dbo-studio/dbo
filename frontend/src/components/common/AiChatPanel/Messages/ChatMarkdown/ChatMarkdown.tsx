@@ -6,12 +6,7 @@ import { messageMarkdownSx } from '../messageMarkdownSx';
 import { splitStreamingMarkdown } from '../splitStreamingMarkdown';
 import { StreamingCursorStyled } from '../StreamingPreview/StreamingPreview.styled';
 import { splitChatContent, type ChatContentSegment } from '../../utils/chatTableContent';
-
-type ChatMarkdownProps = {
-  content: string;
-  isStreaming?: boolean;
-  showCursor?: boolean;
-};
+import type { ChatMarkdownProps } from '../../types';
 
 const getSegmentKey = (segment: ChatContentSegment): string => {
   if (segment.type === 'table') {

@@ -20,6 +20,7 @@ export const IconTypes = {
   sideRight: 'PanelRight',
   connection: 'Cable',
   lock: 'Lock',
+  lockOpen: 'LockOpen',
   database: 'Database',
   refresh: 'RotateCcw',
   search: 'Search',
@@ -69,14 +70,18 @@ export const IconTypes = {
   postgresql: 'postgresql',
   sqlite: 'sqlite',
   network: 'Network',
+  layout: 'LayoutGrid',
+  fit: 'Maximize2',
   send: 'Send',
   at: 'AtSign',
-  history: 'History',
+  history: 'RotateCcwClock',
   bot: 'Bot',
   mysql: 'mysql',
   message: 'MessageSquare',
   pause: 'Pause',
   key: 'KeyRound',
   undo: 'Undo2',
-  sparkles: 'Sparkles'
+  sparkles: 'Sparkles',
+  calendar: 'Calendar',
+  clock: 'Clock'
 };

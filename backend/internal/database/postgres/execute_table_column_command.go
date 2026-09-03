@@ -70,18 +70,21 @@ func (r *PostgresRepository) handleCreateColumn(node contract.DBNode, column dto
 		columnDef += " PRIMARY KEY"
 	}
 
-	if column.New.Default != nil {
+	isIdentity := lo.FromPtr(column.New.IsIdentity)
+	isGenerated := lo.FromPtr(column.New.IsGenerated)
+
+	// Generated / identity columns use the default field as the expression (or IDENTITY clause),
+	// not a plain DEFAULT — emitting both produces invalid SQL.
+	if !isGenerated && !isIdentity && column.New.Default != nil {
 		columnDef += fmt.Sprintf(" DEFAULT %s", *column.New.Default)
 	}
 
-	if lo.FromPtr(column.New.IsIdentity) {
+	if isIdentity {
 		columnDef += " GENERATED ALWAYS AS IDENTITY"
 	}
 
-	if lo.FromPtr(column.New.IsGenerated) {
-		if column.New.Default != nil {
-			columnDef += fmt.Sprintf(" GENERATED ALWAYS AS (%s) STORED", *column.New.Default)
-		}
+	if isGenerated && column.New.Default != nil && *column.New.Default != "" {
+		columnDef += fmt.Sprintf(" GENERATED ALWAYS AS (%s) STORED", *column.New.Default)
 	}
 
 	queries = append(queries, columnDef)
@@ -128,7 +131,8 @@ func (r *PostgresRepository) handleEditColumn(node contract.DBNode, column dto.P
 		queries = append(queries, dataTypeQuery)
 	}
 
-	if column.Old.NotNull != nil && column.New.NotNull != nil && *column.Old.NotNull != *column.New.NotNull {
+	oldNotNull := lo.FromPtr(column.Old.NotNull)
+	if column.New.NotNull != nil && oldNotNull != *column.New.NotNull {
 		if *column.New.NotNull {
 			queries = append(queries, fmt.Sprintf(`%s ALTER COLUMN "%s" SET NOT NULL`,
 				alter, *column.Old.Name))
@@ -139,6 +143,7 @@ func (r *PostgresRepository) handleEditColumn(node contract.DBNode, column dto.P
 	}
 
 	oldDefault := lo.FromPtr(column.Old.Default)
+
 	newDefault := lo.FromPtr(column.New.Default)
 	if oldDefault != newDefault {
 		if newDefault != "" {
@@ -151,6 +156,7 @@ func (r *PostgresRepository) handleEditColumn(node contract.DBNode, column dto.P
 	}
 
 	oldComment := lo.FromPtr(column.Old.Comment)
+
 	newComment := lo.FromPtr(column.New.Comment)
 	if oldComment != newComment {
 		queries = append(queries, fmt.Sprintf(`COMMENT ON COLUMN "%s"."%s"."%s" IS '%s'`,
@@ -176,5 +182,6 @@ func resolveCreateTableNode(node contract.DBNode, action contract.TreeNodeAction
 	}
 
 	node.Table = *params.New.Name
+
 	return node
 }

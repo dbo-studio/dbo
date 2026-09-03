@@ -29,13 +29,16 @@ func OwnerSessionMiddleware(webSessionRepo repository.IWebSessionRepo) fiber.Han
 			ownerID := "desktop"
 			c.Locals(helper.CtxOwnerIDKey, ownerID)
 			c.SetContext(helper.CtxWithOwnerID(c.Context(), ownerID))
+
 			return c.Next()
 		}
 
 		oldSessionID := c.Cookies(sessionCookieName)
 
-		var newSessionID string
-		var err error
+		var (
+			newSessionID string
+			err          error
+		)
 
 		if oldSessionID == "" {
 			newSessionID, err = webSessionRepo.Create(c.Context())
@@ -43,13 +46,16 @@ func OwnerSessionMiddleware(webSessionRepo repository.IWebSessionRepo) fiber.Han
 				return response.ErrorBuilder().FromError(apperror.InternalServerError(err)).Send(c)
 			}
 
+			// Secure must match the actual request scheme. Browsers (especially Safari)
+			// reject Secure cookies on http://localhost, which creates a new owner
+			// session per request and makes POST /connections appear to "return empty".
 			c.Cookie(&fiber.Cookie{
 				Name:     sessionCookieName,
 				Value:    newSessionID,
 				Path:     "/",
 				HTTPOnly: true,
 				SameSite: "Lax",
-				Secure:   !helper.IsLocal(),
+				Secure:   c.Protocol() == "https",
 			})
 		} else {
 			newSessionID = oldSessionID

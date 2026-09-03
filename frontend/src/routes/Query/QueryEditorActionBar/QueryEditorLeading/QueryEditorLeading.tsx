@@ -1,6 +1,8 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
+import { getEngineCapabilities } from '@/core/db';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection.hook';
 import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -13,72 +15,101 @@ import type { QueryEditorLeadingProps } from '../../types';
 export default function QueryEditorLeading({ databases, schemas }: QueryEditorLeadingProps): JSX.Element {
   const selectedTab = useSelectedTab<EditorTabType>();
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
+  const currentConnection = useCurrentConnection();
+  const capabilities = getEngineCapabilities(currentConnection?.type);
 
   const enableEditorAi = useSettingStore((state) => state.editor.enableEditorAi);
   const updateEditor = useSettingStore((state) => state.updateEditor);
 
-  const [localSchema, setLocalSchema] = useState<string>((selectedTab?.schema as string) ?? '');
-  const [localDatabase, setLocalDatabase] = useState<string>((selectedTab?.database as string) ?? '');
+  const [localSchema, setLocalSchema] = useState<string>(selectedTab?.schema ?? '');
+  const [localDatabase, setLocalDatabase] = useState<string>(selectedTab?.database ?? '');
   const [prevTabId, setPrevTabId] = useState(selectedTab?.id);
 
   if (selectedTab?.id !== prevTabId) {
     setPrevTabId(selectedTab?.id);
-    setLocalSchema((selectedTab?.schema as string) ?? '');
-    setLocalDatabase((selectedTab?.database as string) ?? '');
+    setLocalSchema(selectedTab?.schema ?? '');
+    setLocalDatabase(selectedTab?.database ?? '');
+  }
+
+  // Keep local selects aligned when autofill updates the tab
+  if (selectedTab && selectedTab.database !== localDatabase && selectedTab.id === prevTabId) {
+    setLocalDatabase(selectedTab.database ?? '');
+  }
+  if (selectedTab && selectedTab.schema !== localSchema && selectedTab.id === prevTabId) {
+    setLocalSchema(selectedTab.schema ?? '');
   }
 
   const handleDatabaseChange = (database: string): void => {
     setLocalDatabase(database);
+    setLocalSchema('');
     if (!selectedTab) return;
-    updateSelectedTab({ ...selectedTab, database, schema: localSchema });
+    updateSelectedTab({
+      ...selectedTab,
+      database,
+      schema: '',
+      contextLocked: true,
+      contextSource: 'manual'
+    });
   };
 
   const handleSchemaChange = (schema: string): void => {
     setLocalSchema(schema);
     if (!selectedTab) return;
-    updateSelectedTab({ ...selectedTab, database: localDatabase, schema });
+    updateSelectedTab({
+      ...selectedTab,
+      database: localDatabase,
+      schema,
+      contextLocked: true,
+      contextSource: 'manual'
+    });
   };
 
   return (
     <Stack spacing={2} direction={'row'}>
-      <Stack
-        direction={'row'}
-        spacing={1}
-        sx={{
-          alignItems: 'center'
-        }}
-      >
-        <Typography variant='caption' color='textText'>
-          {locales.database}:
-        </Typography>
-        <SelectInput
-          emptylabel={locales.database}
-          value={localDatabase}
-          disabled={databases?.length === 0}
-          size='small'
-          options={databases.map((s) => ({ value: s, label: s }))}
-          onChange={(e): void => handleDatabaseChange((e as SelectInputOption)?.value as string)}
-        />
-      </Stack>
-      <Stack
-        direction={'row'}
-        spacing={1}
-        sx={{
-          alignItems: 'center'
-        }}
-      >
-        <Typography color='textText' variant='caption'>
-          {locales.schema}:
-        </Typography>
-        <SelectInput
-          emptylabel={locales.schema}
-          value={localSchema}
-          disabled={schemas?.length === 0}
-          size='small'
-          options={schemas.map((s) => ({ value: s, label: s }))}
-          onChange={(e): void => handleSchemaChange((e as SelectInputOption)?.value as string)}
-        />
-      </Stack>
+      {capabilities.hasDatabase && (
+        <Stack
+          direction={'row'}
+          spacing={1}
+          sx={{
+            alignItems: 'center'
+          }}
+        >
+          <Typography variant='caption' color='textText'>
+            {locales.database}:
+          </Typography>
+          <SelectInput
+            emptylabel={locales.database}
+            value={localDatabase}
+            disabled={databases?.length === 0}
+            size='small'
+            options={databases.map((s) => ({ value: s, label: s }))}
+            onChange={(e): void => handleDatabaseChange((e as SelectInputOption)?.value as string)}
+            testId='editor-context-database'
+          />
+        </Stack>
+      )}
+      {capabilities.hasSchema && (
+        <Stack
+          direction={'row'}
+          spacing={1}
+          sx={{
+            alignItems: 'center'
+          }}
+        >
+          <Typography color='textText' variant='caption'>
+            {locales.schema}:
+          </Typography>
+          <SelectInput
+            emptylabel={locales.schema}
+            value={localSchema}
+            disabled={schemas?.length === 0}
+            size='small'
+            options={schemas.map((s) => ({ value: s, label: s }))}
+            onChange={(e): void => handleSchemaChange((e as SelectInputOption)?.value as string)}
+            testId='editor-context-schema'
+          />
+        </Stack>
+      )}
       <Stack
         direction={'row'}
         spacing={1}

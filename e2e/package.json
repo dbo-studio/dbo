@@ -5,8 +5,13 @@
   "scripts": {
     "format": "prettier --write pages tests",
     "test": "node scripts/run-e2e.mjs",
+    "test:pg": "node scripts/run-e2e.mjs --project=postgres",
+    "test:mysql": "node scripts/run-e2e.mjs --project=mysql",
+    "test:sqlite": "node scripts/run-e2e.mjs --project=sqlite",
     "test:ui": "node scripts/run-e2e.mjs --ui",
-    "test:object-form": "node scripts/run-e2e.mjs tests/object-form-table.spec.ts tests/object-form-postgres-lifecycle.spec.ts tests/object-form-postgres-edit-table.spec.ts tests/object-form-postgres-schema-matview.spec.ts tests/object-form-mysql-lifecycle.spec.ts tests/object-form-sqlite-lifecycle.spec.ts",
+    "test:ui:pg": "node scripts/run-e2e.mjs --ui --project=postgres",
+    "test:ui:mysql": "node scripts/run-e2e.mjs --ui --project=mysql",
+    "test:ui:sqlite": "node scripts/run-e2e.mjs --ui --project=sqlite",
     "test:codegen": "node scripts/run-e2e.mjs --codegen"
   },
   "devDependencies": {

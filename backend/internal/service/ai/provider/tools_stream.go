@@ -25,12 +25,13 @@ func (p *BaseProvider) StreamChatWithTools(
 		params.Tools = req.Tools
 	}
 
-	stream := p.client.Chat.Completions.NewStreaming(p.context, params)
+	stream := p.client.Chat.Completions.NewStreaming(ctx, params)
 	if stream.Err() != nil {
 		return nil, nil, apperror.InternalServerError(stream.Err())
 	}
 
 	var contentBuilder strings.Builder
+
 	answeringStarted := false
 	accumulator := openai.ChatCompletionAccumulator{}
 	thinkingStart := time.Now()
@@ -83,6 +84,7 @@ func (p *BaseProvider) StreamChatWithTools(
 
 			if !answeringStarted {
 				answeringStarted = true
+
 				if err := cb(StreamEvent{Type: "block_start", BlockType: "explanation"}); err != nil {
 					stream.Close()
 					return nil, nil, err
@@ -90,6 +92,7 @@ func (p *BaseProvider) StreamChatWithTools(
 			}
 
 			contentBuilder.WriteString(leaked)
+
 			if err := cb(StreamEvent{Type: "content_delta", Content: leaked}); err != nil {
 				stream.Close()
 				return nil, nil, err
@@ -98,6 +101,7 @@ func (p *BaseProvider) StreamChatWithTools(
 	}
 
 	stream.Close()
+
 	if stream.Err() != nil {
 		return nil, nil, apperror.InternalServerError(stream.Err())
 	}
@@ -117,12 +121,14 @@ func (p *BaseProvider) StreamChatWithTools(
 			if tc.Function.Name == "" {
 				continue
 			}
+
 			toolCalls = append(toolCalls, ToolCall{
 				ID:        tc.ID,
 				Name:      tc.Function.Name,
 				Arguments: tc.Function.Arguments,
 			})
 		}
+
 		return &ChatResponse{
 			Role:     model.AiChatMessageRoleAssistant,
 			Content:  "",
@@ -148,5 +154,6 @@ func (p *BaseProvider) StreamChatWithTools(
 	}
 
 	resp, err := p.convertToStructuredResponse(fullContent, model.AiChatMessageRoleAssistant)
+
 	return resp, nil, err
 }

@@ -53,7 +53,7 @@ type SQLiteTableForeignKey struct {
 }
 
 type SQLiteTableForeignKeyData struct {
-	ConstraintName    *string  `json:"name"`
+	ConstraintName    *string  `json:"constraint_name"`
 	SourceColumns     []string `json:"ref_columns"`
 	TargetTable       *string  `json:"target_table"`
 	TargetColumns     []string `json:"target_columns"`

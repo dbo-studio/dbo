@@ -9,6 +9,8 @@ import (
 	"github.com/samber/lo"
 )
 
+const maxAIContextObjects = 25
+
 type ForeignKeyInfo struct {
 	ReferencedTable  string
 	ReferencedColumn string
@@ -46,7 +48,11 @@ func (r *SQLiteRepository) AiContext(ctx context.Context, req *dto.AiChatRequest
 		if err != nil {
 			return "", err
 		}
+
 		tables = list
+		if len(tables) > maxAIContextObjects {
+			tables = tables[:maxAIContextObjects]
+		}
 	}
 
 	views := req.ContextOpts.Views
@@ -55,7 +61,11 @@ func (r *SQLiteRepository) AiContext(ctx context.Context, req *dto.AiChatRequest
 		if err != nil {
 			return "", err
 		}
+
 		views = list
+		if len(views) > maxAIContextObjects {
+			views = views[:maxAIContextObjects]
+		}
 	}
 
 	return databaseCore.BuildAIChatContext(ctx, databaseContract.AIContextOptions{
@@ -85,10 +95,12 @@ Tables:
 */
 func (r *SQLiteRepository) AiCompleteContext(ctx context.Context, req *dto.AiInlineCompleteRequest) string {
 	sqlResult := r.base.ParseSQL(req.ContextOpts.Prompt)
+
 	database := sqlResult.Database
 	if database == nil {
 		database = req.ContextOpts.Database
 	}
+
 	schema := sqlResult.Schema
 	if schema == nil {
 		schema = req.ContextOpts.Schema
@@ -103,6 +115,7 @@ func (r *SQLiteRepository) AiCompleteContext(ctx context.Context, req *dto.AiInl
 	if err != nil {
 		return ""
 	}
+
 	return result
 }
 
@@ -115,6 +128,7 @@ func (p sqliteAIContextProvider) TableColumns(ctx context.Context, table string,
 	if err != nil {
 		return nil, err
 	}
+
 	return sqliteColumnsToContextColumns(columns), nil
 }
 
@@ -123,6 +137,7 @@ func (p sqliteAIContextProvider) ViewColumns(ctx context.Context, view string, _
 	if err != nil {
 		return nil, err
 	}
+
 	return sqliteColumnsToContextColumns(columns), nil
 }
 

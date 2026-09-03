@@ -1,21 +1,23 @@
 package dto
 
 type PostgresqlCreateConnectionParams struct {
-	Database *string `json:"database"`
-	Host     string  `json:"host"`
-	Port     int32   `json:"port"`
-	Username string  `json:"username"`
-	Password *string `json:"password"`
-	URI      *string `json:"uri"`
+	Database *string              `json:"database"`
+	Host     string               `json:"host"`
+	Port     int32                `json:"port"`
+	Username string               `json:"username"`
+	Password *string              `json:"password"`
+	URI      *string              `json:"uri"`
+	SSL      *ConnectionSSLParams `json:"ssl,omitempty"`
 }
 
 type PostgresqlUpdateConnectionParams struct {
-	Host     *string `json:"host"`
-	Username *string `json:"username"`
-	Password *string `json:"password"`
-	Port     *int32  `json:"port"`
-	Database *string `json:"database"`
-	URI      *string `json:"uri"`
+	Host     *string              `json:"host"`
+	Username *string              `json:"username"`
+	Password *string              `json:"password"`
+	Port     *int32               `json:"port"`
+	Database *string              `json:"database"`
+	URI      *string              `json:"uri"`
+	SSL      *ConnectionSSLParams `json:"ssl,omitempty"`
 }
 
 type PostgresDatabaseParams struct {

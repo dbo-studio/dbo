@@ -31,6 +31,7 @@ func (r *SQLiteRepository) getTableInfo(ctx context.Context, nodeID string) ([]c
 	}
 
 	result := map[string]any{}
+
 	for _, table := range tables {
 		if table.Name == nodeID {
 			result = map[string]any{
@@ -47,6 +48,7 @@ func (r *SQLiteRepository) getTableInfo(ctx context.Context, nodeID string) ([]c
 
 func (r *SQLiteRepository) getTableColumns(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
 	fields := r.tableColumnFields()
+
 	columns, err := r.getColumns(ctx, nodeID, []string{}, true)
 	if err != nil {
 		return nil, err
@@ -75,6 +77,7 @@ func (r *SQLiteRepository) getTableColumns(ctx context.Context, nodeID string) (
 
 func (r *SQLiteRepository) getTableForeignKeys(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
 	fields := r.foreignKeyFields(ctx, nodeID)
+
 	foreignKeys, err := r.foreignKeys(ctx, nodeID)
 	if err != nil {
 		return nil, err
@@ -108,6 +111,7 @@ func (r *SQLiteRepository) getTableKeys(ctx context.Context, nodeID string) (*co
 	result := []map[string]any{}
 
 	pkColumns := []string{}
+
 	for _, column := range columns {
 		if column.IsPrimaryKey == "1" {
 			pkColumns = append(pkColumns, column.ColumnName)
@@ -127,22 +131,26 @@ func (r *SQLiteRepository) getTableKeys(ctx context.Context, nodeID string) (*co
 
 func (r *SQLiteRepository) getViewInfo(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
 	fields := r.viewFields()
+
 	views, err := r.views(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	row := map[string]any{}
+
 	for _, view := range views {
 		if view.Name == nodeID {
 			query := ""
 			if view.Query != nil {
 				query = *view.Query
 			}
+
 			row = map[string]any{
 				"name":  view.Name,
 				"query": query,
 			}
+
 			break
 		}
 	}

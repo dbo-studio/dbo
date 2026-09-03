@@ -3,11 +3,24 @@ import type { JSX } from 'react';
 import { ModalStyled, ModalWrapperStyled } from './Modal.styled';
 import type { ModalProps } from './types';
 
-export default function Modal({ open, title, children, padding, onClose }: ModalProps): JSX.Element {
+export default function Modal({
+  open,
+  title,
+  children,
+  padding,
+  onClose,
+  disableEnforceFocus,
+  zIndex
+}: ModalProps): JSX.Element {
   const theme = useTheme();
 
   return (
-    <ModalStyled open={open} onClose={onClose ?? undefined}>
+    <ModalStyled
+      open={open}
+      onClose={onClose ?? undefined}
+      disableEnforceFocus={disableEnforceFocus}
+      sx={zIndex ? { zIndex } : undefined}
+    >
       <ModalWrapperStyled padding={padding}>
         {title && (
           <Box

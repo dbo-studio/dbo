@@ -22,5 +22,6 @@ func resolveCreateTableNode(node contract.DBNode, action contract.TreeNodeAction
 	}
 
 	node.Table = *params.New.Name
+
 	return node
 }
