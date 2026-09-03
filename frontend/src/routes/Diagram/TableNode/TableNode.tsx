@@ -34,11 +34,7 @@ export type TableNodeData = {
 export type TableFlowNode = Node<TableNodeData, 'table'>;
 
 function KeyBadge({ label, color }: { label: string; color: string }): JSX.Element {
-  return (
-    <KeyBadgeStyled component='span' badgeColor={color}>
-      {label}
-    </KeyBadgeStyled>
-  );
+  return <KeyBadgeStyled badgeColor={color}>{label}</KeyBadgeStyled>;
 }
 
 function TableNodeComponent({ data, selected }: NodeProps<TableFlowNode>): JSX.Element {

@@ -165,6 +165,7 @@ export const ColumnTypeStyled = styled(Typography)(({ theme }) => ({
 export const KeyBadgeStyled = styled(Box, {
   shouldForwardProp: (prop): boolean => prop !== 'badgeColor'
 })<KeyBadgeProps>(({ badgeColor }) => ({
+  display: 'inline-flex',
   fontSize: 9,
   fontWeight: 700,
   letterSpacing: 0.4,
