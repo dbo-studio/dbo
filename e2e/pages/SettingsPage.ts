@@ -30,7 +30,7 @@ export class SettingsPage extends BasePage {
   constructor(page: Page) {
     super(page);
 
-    this.settingsButton = page.getByRole("button", { name: "settings" });
+    this.settingsButton = page.getByRole("button", { name: "settings", exact: true });
     this.modal = page.locator('[role="dialog"]');
 
     this.generalMenuItem = page.getByText("General").first();

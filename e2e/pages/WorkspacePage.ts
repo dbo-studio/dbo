@@ -53,4 +53,20 @@ export class WorkspacePage extends BasePage {
     await expect(this.dirtyConfirmMessage).toBeHidden({ timeout: 2000 });
     await expect(this.getTab(title)).toBeHidden({ timeout: 10000 });
   }
+
+  /** Close the first workspace tab, confirming the dirty dialog when it appears. */
+  async closeFirstTab(): Promise<void> {
+    const tab = this.page.locator('[data-testid^="workspace-tab-"]').first();
+    await expect(tab).toBeVisible({ timeout: 15000 });
+    await tab.hover();
+    await tab.locator("svg").last().click({ force: true });
+    const confirm = this.dirtyConfirmMessage;
+    await confirm.waitFor({ state: "visible", timeout: 2000 }).then(
+      async () => {
+        await this.confirmYes.click();
+      },
+      () => undefined,
+    );
+    await expect(tab).toBeHidden({ timeout: 10000 });
+  }
 }

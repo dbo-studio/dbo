@@ -1,5 +1,5 @@
 import { expect, type Page, type Locator } from "@playwright/test";
-import { apiRoute, waitForResponseDuring } from "../helpers/network";
+import { API_DB_TIMEOUT, apiRoute, waitForResponseDuring } from "../helpers/network";
 import { BasePage } from "./BasePage";
 
 /**
@@ -18,9 +18,9 @@ export class SqlEditorPage extends BasePage {
 
     this.editor = page.locator(".monaco-editor").first();
     this.openEditorButton = page.getByRole("button", { name: /open editor/i });
-    this.saveButton = page.getByRole("button", { name: /save/i }).first();
+    this.saveButton = page.getByRole("button", { name: "Save", exact: true });
     this.runButton = page.getByRole("button", { name: "Run query" });
-    this.formatButton = page.getByRole("button", { name: /beatify|format/i });
+    this.formatButton = page.getByRole("button", { name: "Beatify", exact: true });
     this.minifyButton = page.getByRole("button", { name: /minify/i });
   }
 
@@ -51,7 +51,10 @@ export class SqlEditorPage extends BasePage {
   async selectContext(database: string, schema?: string): Promise<void> {
     const databaseSelect = this.page.getByTestId("editor-context-database");
     await expect(databaseSelect).toBeVisible({ timeout: 15000 });
-    await this.pickSelectOption(databaseSelect, database);
+    const selectedDatabase = (await databaseSelect.innerText()).trim();
+    if (!selectedDatabase.includes(database)) {
+      await this.pickSelectOption(databaseSelect, database);
+    }
 
     if (schema !== undefined) {
       const schemaSelect = this.page.getByTestId("editor-context-schema");
@@ -93,26 +96,16 @@ export class SqlEditorPage extends BasePage {
     }
   }
 
-  /** Pick a schema option other than `exclude` (for lock / autofill assertions). */
-  async selectAlternateSchema(exclude: string): Promise<string> {
-    const schemaSelect = this.page.getByTestId("editor-context-schema");
-    await expect(schemaSelect).toBeVisible({ timeout: 15000 });
-    const input = schemaSelect.locator("input").first();
-    await expect(input).toBeEnabled({ timeout: 15000 });
-    await input.click();
-
-    const options = this.page.getByRole("option");
-    await expect(options.first()).toBeVisible({ timeout: 10000 });
-    const labels = await options.allTextContents();
-    const alternate = labels.map((l) => l.trim()).find((l) => l.length > 0 && l !== exclude);
-    if (!alternate) {
-      throw new Error(`No alternate schema found besides "${exclude}" (options: ${labels.join(", ")})`);
-    }
-
-    await this.page.getByRole("option", { name: alternate, exact: true }).click();
-    await this.wait(300);
-    await this.expectSelectedContext(undefined, alternate);
-    return alternate;
+  /** Header Refresh: reload tree + editor schema/database catalog. */
+  async refreshCatalog(): Promise<void> {
+    const refresh = this.page.getByRole("button", { name: "refresh", exact: true });
+    await expect(refresh).toBeEnabled({ timeout: 10000 });
+    await waitForResponseDuring(
+      this.page,
+      apiRoute.queryAutocomplete,
+      () => refresh.click(),
+      API_DB_TIMEOUT,
+    );
   }
 
   private async pickSelectOption(
@@ -121,12 +114,17 @@ export class SqlEditorPage extends BasePage {
   ): Promise<void> {
     const input = selectRoot.locator("input").first();
     await expect(input).toBeEnabled({ timeout: 15000 });
-    await input.click();
 
-    const option = this.page.getByRole("option", { name: value, exact: true });
-    await expect(option).toBeVisible({ timeout: 10000 });
-    await option.click();
-    await this.wait(300);
+    await expect(async () => {
+      await input.click();
+      const option = this.page.getByRole("option", { name: value, exact: true });
+      await expect(option).toBeVisible({ timeout: 3000 });
+      await option.click();
+      await expect(this.page.getByRole("option")).toHaveCount(0, { timeout: 3000 });
+      await expect(selectRoot.getByText(value, { exact: true })).toBeVisible({
+        timeout: 2000,
+      });
+    }).toPass({ timeout: 15000 });
   }
 
   async focus(): Promise<void> {

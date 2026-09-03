@@ -418,6 +418,13 @@ export class ObjectFormPage extends BasePage {
   }
 
   async closeAllWorkspaceTabs(): Promise<void> {
+    if (await this.previewModal.isVisible().catch(() => false)) {
+      await this.previewCancelButton.click().catch(() => undefined);
+      await expect(this.previewModal).toBeHidden({ timeout: 5000 }).catch(
+        () => undefined,
+      );
+    }
+
     for (let attempt = 0; attempt < 30; attempt++) {
       const tabs = this.page.locator('[data-testid^="workspace-tab-"]');
       if ((await tabs.count()) === 0) {

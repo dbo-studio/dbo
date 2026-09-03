@@ -78,6 +78,11 @@ export class SafeModePage extends BasePage {
    * Switch to Silent Mode when a password prompt is required.
    */
   async selectSilentWithPassword(password: string): Promise<void> {
+    if (!password) {
+      await this.selectMode("silent");
+      return;
+    }
+
     await this.openMenu();
     const updatePromise = pendingResponse(
       this.page,

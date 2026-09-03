@@ -170,11 +170,74 @@ export class DataBrowserPage extends BasePage {
     await expect(inline).toBeVisible({ timeout: 10000 });
     const editor = inline.locator(".monaco-editor").first();
     await expect(editor).toBeVisible({ timeout: 10000 });
-    await editor.click();
-    const selectAll = process.platform === "darwin" ? "Meta+A" : "Control+A";
-    await this.page.keyboard.press(selectAll);
-    await this.page.keyboard.press("Backspace");
-    await this.page.keyboard.type(condition, { delay: 20 });
+
+    // Prefer Monaco API — keyboard.type races with SQL autocomplete and drops characters.
+    const applied = await this.page.evaluate((value) => {
+      const monacoApi = (
+        window as unknown as {
+          monaco?: {
+            editor: {
+              getEditors?: () => Array<{
+                setValue: (v: string) => void;
+                getValue: () => string;
+                getContainerDomNode?: () => HTMLElement;
+                getDomNode?: () => HTMLElement | null;
+              }>;
+            };
+          };
+        }
+      ).monaco;
+
+      const root = document.querySelector("[data-testid='inline-query']");
+      const editors = monacoApi?.editor?.getEditors?.() ?? [];
+      const match = editors.find((item) => {
+        const node = item.getContainerDomNode?.() ?? item.getDomNode?.();
+        return Boolean(root && node && root.contains(node));
+      });
+      const target = match ?? editors[0];
+      if (!target) {
+        return false;
+      }
+      target.setValue(value);
+      return target.getValue() === value;
+    }, condition);
+
+    if (!applied) {
+      await editor.click();
+      const selectAll = process.platform === "darwin" ? "Meta+A" : "Control+A";
+      await this.page.keyboard.press(selectAll);
+      await this.page.keyboard.press("Backspace");
+      await this.page.keyboard.insertText(condition);
+    }
+
+    await expect
+      .poll(
+        async () =>
+          this.page.evaluate(() => {
+            const monacoApi = (
+              window as unknown as {
+                monaco?: {
+                  editor: {
+                    getEditors?: () => Array<{
+                      getValue: () => string;
+                      getContainerDomNode?: () => HTMLElement;
+                      getDomNode?: () => HTMLElement | null;
+                    }>;
+                  };
+                };
+              }
+            ).monaco;
+            const root = document.querySelector("[data-testid='inline-query']");
+            const editors = monacoApi?.editor?.getEditors?.() ?? [];
+            const match = editors.find((item) => {
+              const node = item.getContainerDomNode?.() ?? item.getDomNode?.();
+              return Boolean(root && node && root.contains(node));
+            });
+            return (match ?? editors[0])?.getValue() ?? "";
+          }),
+        { timeout: 10000 },
+      )
+      .toBe(condition);
 
     await waitForResponseDuring(
       this.page,

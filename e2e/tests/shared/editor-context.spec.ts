@@ -6,7 +6,7 @@ import {
   removeSqliteDbFile,
 } from "../../helpers/objectFormSqliteLifecycle";
 import { withConnectionCleanup } from "../../helpers/safeCleanup";
-import { ConnectionPage, SqlEditorPage } from "../../pages";
+import { ConnectionPage, SqlEditorPage, WorkspacePage } from "../../pages";
 
 /**
  * Engine-aware SQL editor database/schema context autofill and visibility.
@@ -22,6 +22,7 @@ test.describe("SQL editor context", () => {
     await withConnectionCleanup(page, connectionName, async () => {
       const connectionPage = new ConnectionPage(page);
       const sqlEditor = new SqlEditorPage(page);
+      const workspace = new WorkspacePage(page);
 
       await connectionPage.goto();
       await connectionPage.waitForReady();
@@ -33,23 +34,43 @@ test.describe("SQL editor context", () => {
         ).toBeVisible();
       });
 
-      await test.step("Open editor and assert context", async () => {
-        await sqlEditor.open();
-        await sqlEditor.expectContextVisibility({
-          database: true,
-          schema: true,
+      const schemaName = `e2e_ctx_${suffix}`;
+
+      try {
+        await test.step("Open editor and assert context", async () => {
+          await sqlEditor.open();
+          await sqlEditor.expectContextVisibility({
+            database: true,
+            schema: true,
+          });
+          await sqlEditor.expectSelectedContext("default", "public");
         });
-        await sqlEditor.expectSelectedContext("default", "public");
-      });
 
-      await test.step("Manual schema change stays locked against autofill", async () => {
-        const lockedSchema = await sqlEditor.selectAlternateSchema("public");
+        await test.step("Create a second schema", async () => {
+          await sqlEditor.typeAndRun(
+            `CREATE SCHEMA IF NOT EXISTS ${schemaName}`,
+          );
+          await sqlEditor.refreshCatalog();
+        });
 
-        // Opening editor again reuses the empty Query tab; locked context must win.
-        await page.getByRole("button", { name: "sql", exact: true }).click();
-        await expect(sqlEditor.editor).toBeVisible({ timeout: 15000 });
-        await sqlEditor.expectSelectedContext("default", lockedSchema);
-      });
+        await test.step("Manual schema change stays locked against autofill", async () => {
+          // CREATE SCHEMA dirties the Query tab; Open Editor only reuses an empty tab.
+          await workspace.closeFirstTab();
+          await sqlEditor.open();
+          await sqlEditor.expectSelectedContext("default", "public");
+          await sqlEditor.selectContext("default", schemaName);
+          await sqlEditor.expectSelectedContext("default", schemaName);
+
+          await page.getByRole("button", { name: "sql", exact: true }).click();
+          await expect(sqlEditor.editor).toBeVisible({ timeout: 15000 });
+          await sqlEditor.expectSelectedContext("default", schemaName);
+        });
+      } finally {
+        await sqlEditor.open();
+        await sqlEditor.typeAndRun(
+          `DROP SCHEMA IF EXISTS ${schemaName} CASCADE`,
+        );
+      }
     });
   });
 

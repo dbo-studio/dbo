@@ -2,10 +2,6 @@ import { expect, test } from "@playwright/test";
 import { type DbEngine, getDbConfig } from "../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import { apiRoute, pendingResponse } from "./network";
-import {
-  ensureSqliteDbFile,
-  removeSqliteDbFile,
-} from "./objectFormSqliteLifecycle";
 import { withConnectionCleanup } from "./safeCleanup";
 import {
   ConnectionPage,
@@ -15,13 +11,10 @@ import {
 } from "../pages";
 
 function createTableSql(engine: DbEngine, tableName: string): string {
-  if (engine === "postgresql") {
-    return `CREATE TABLE ${tableName} (id SERIAL PRIMARY KEY, name TEXT)`;
-  }
   if (engine === "mysql") {
     return `CREATE TABLE ${tableName} (id INT AUTO_INCREMENT PRIMARY KEY, name TEXT)`;
   }
-  return `CREATE TABLE ${tableName} (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)`;
+  return `CREATE TABLE ${tableName} (id SERIAL PRIMARY KEY, name TEXT)`;
 }
 
 async function selectEditorContext(
@@ -36,15 +29,11 @@ async function selectEditorContext(
 }
 
 /**
- * Same Safe Mode depth for every shipped engine.
+ * Safe Mode coverage for engines that support it (PostgreSQL, MySQL).
+ * SQLite has no Safe Mode — see sqlite/safe-mode.spec.ts.
  */
 export function defineSafeModeTests(engine: DbEngine): void {
-  const label =
-    engine === "postgresql"
-      ? "PostgreSQL"
-      : engine === "mysql"
-        ? "MySQL"
-        : "SQLite";
+  const label = engine === "mysql" ? "MySQL" : "PostgreSQL";
   const testPrefix = `safe-mode-${engine === "postgresql" ? "pg" : engine}`;
 
   test.describe(`Safe Mode ${label}`, () => {
@@ -55,34 +44,25 @@ export function defineSafeModeTests(engine: DbEngine): void {
       const safeMode = new SafeModePage(page);
       const suffix = uniqueTestSuffix(testInfo);
       const connectionName = `${testPrefix}-menu-${suffix}`;
-      const sqlitePath =
-        engine === "sqlite"
-          ? `/tmp/dbo-e2e-safe-menu-${suffix}.db`
-          : undefined;
-      if (sqlitePath) ensureSqliteDbFile(sqlitePath);
-      const config = getDbConfig(engine, connectionName, sqlitePath);
+      const config = getDbConfig(engine, connectionName);
 
       await withConnectionCleanup(page, connectionName, async () => {
-        try {
-          await connectionPage.goto();
-          await connectionPage.waitForReady();
+        await connectionPage.goto();
+        await connectionPage.waitForReady();
 
-          await test.step("Create and activate connection", async () => {
-            await connectionPage.setupConnection(config);
-          });
+        await test.step("Create and activate connection", async () => {
+          await connectionPage.setupConnection(config);
+        });
 
-          await test.step("Open Safe Mode menu", async () => {
-            await safeMode.openMenu();
-            await expect(safeMode.option("silent")).toBeVisible();
-            await expect(safeMode.option("alert")).toBeVisible();
-            await expect(safeMode.option("alert_write")).toBeVisible();
-            await expect(safeMode.option("safe")).toBeVisible();
-            await expect(safeMode.option("safe_write")).toBeVisible();
-            await safeMode.expectOptionSelected("silent");
-          });
-        } finally {
-          if (sqlitePath) removeSqliteDbFile(sqlitePath);
-        }
+        await test.step("Open Safe Mode menu", async () => {
+          await safeMode.openMenu();
+          await expect(safeMode.option("silent")).toBeVisible();
+          await expect(safeMode.option("alert")).toBeVisible();
+          await expect(safeMode.option("alert_write")).toBeVisible();
+          await expect(safeMode.option("safe")).toBeVisible();
+          await expect(safeMode.option("safe_write")).toBeVisible();
+          await safeMode.expectOptionSelected("silent");
+        });
       });
     });
 
@@ -96,12 +76,7 @@ export function defineSafeModeTests(engine: DbEngine): void {
       const suffix = uniqueTestSuffix(testInfo);
       const connectionName = `${testPrefix}-alert-${suffix}`;
       const tableName = `e2e_safe_alert_${suffix}`;
-      const sqlitePath =
-        engine === "sqlite"
-          ? `/tmp/dbo-e2e-safe-alert-${suffix}.db`
-          : undefined;
-      if (sqlitePath) ensureSqliteDbFile(sqlitePath);
-      const config = getDbConfig(engine, connectionName, sqlitePath);
+      const config = getDbConfig(engine, connectionName);
       const gatePassword = config.password;
 
       await withConnectionCleanup(page, connectionName, async () => {
@@ -156,7 +131,6 @@ export function defineSafeModeTests(engine: DbEngine): void {
               console.warn("[e2e] safe-mode alert cleanup failed:", err);
             }
           });
-          if (sqlitePath) removeSqliteDbFile(sqlitePath);
         }
       });
     });
@@ -164,7 +138,6 @@ export function defineSafeModeTests(engine: DbEngine): void {
     test("Safe Mode 2 requires password for writes", async ({
       page,
     }, testInfo) => {
-      // SQLite connections have no password — password gate still prompts; use a stand-in.
       const connectionPage = new ConnectionPage(page);
       const sqlEditor = new SqlEditorPage(page);
       const safeMode = new SafeModePage(page);
@@ -172,12 +145,7 @@ export function defineSafeModeTests(engine: DbEngine): void {
       const suffix = uniqueTestSuffix(testInfo);
       const connectionName = `${testPrefix}-pass-${suffix}`;
       const tableName = `e2e_safe_pass_${suffix}`;
-      const sqlitePath =
-        engine === "sqlite"
-          ? `/tmp/dbo-e2e-safe-pass-${suffix}.db`
-          : undefined;
-      if (sqlitePath) ensureSqliteDbFile(sqlitePath);
-      const config = getDbConfig(engine, connectionName, sqlitePath);
+      const config = getDbConfig(engine, connectionName);
       const gatePassword = config.password;
 
       await withConnectionCleanup(page, connectionName, async () => {
@@ -232,7 +200,6 @@ export function defineSafeModeTests(engine: DbEngine): void {
               console.warn("[e2e] safe-mode password cleanup failed:", err);
             }
           });
-          if (sqlitePath) removeSqliteDbFile(sqlitePath);
         }
       });
     });
@@ -248,12 +215,7 @@ export function defineSafeModeTests(engine: DbEngine): void {
       const suffix = uniqueTestSuffix(testInfo);
       const connectionName = `${testPrefix}-grid-${suffix}`;
       const tableName = `e2e_safe_grid_${suffix}`;
-      const sqlitePath =
-        engine === "sqlite"
-          ? `/tmp/dbo-e2e-safe-grid-${suffix}.db`
-          : undefined;
-      if (sqlitePath) ensureSqliteDbFile(sqlitePath);
-      const config = getDbConfig(engine, connectionName, sqlitePath);
+      const config = getDbConfig(engine, connectionName);
       const gatePassword = config.password;
 
       await withConnectionCleanup(page, connectionName, async () => {
@@ -323,7 +285,6 @@ INSERT INTO ${tableName} (name) VALUES ('before');
               console.warn("[e2e] safe-mode grid cleanup failed:", err);
             }
           });
-          if (sqlitePath) removeSqliteDbFile(sqlitePath);
         }
       });
     });

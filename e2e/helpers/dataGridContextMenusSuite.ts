@@ -331,6 +331,7 @@ export function defineDataGridContextMenuTests(engine: DbEngine): void {
   });
 
   test("Safe Mode disables destructive menu items", async ({ page }, testInfo) => {
+    test.skip(engine === "sqlite", "Safe Mode is not available on SQLite");
     const suffix = uniqueTestSuffix(testInfo);
     const connectionName = `grid-ctx-safe-${suffix}`;
     const tableName = `e2e_grid_ctx_${suffix}`;

@@ -54,6 +54,11 @@ export const apiRoute = {
     method: "POST",
     status: 200,
   },
+  queryAutocomplete: {
+    path: /^\/api\/query\/autocomplete\/?$/,
+    method: "GET",
+    status: 200,
+  },
   queryRun: {
     path: /^\/api\/query\/run\/?$/,
     method: "POST",
