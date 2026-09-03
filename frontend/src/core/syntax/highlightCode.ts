@@ -20,11 +20,7 @@ const getHighlighter = (): Promise<Highlighter> => {
   return highlighterPromise;
 };
 
-export const highlightCode = async (
-  value: string,
-  lang: SyntaxHighlighterLang,
-  theme: string
-): Promise<string> => {
+export const highlightCode = async (value: string, lang: SyntaxHighlighterLang, theme: string): Promise<string> => {
   const highlighter = await getHighlighter();
   return highlighter.codeToHtml(value, { lang, theme });
 };

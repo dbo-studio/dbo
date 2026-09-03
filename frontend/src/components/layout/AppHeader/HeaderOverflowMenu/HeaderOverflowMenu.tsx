@@ -87,6 +87,7 @@ export default function HeaderOverflowMenu(): JSX.Element {
     }
 
     await useTreeStore.getState().reloadTree(false);
+    await queryClient.invalidateQueries({ queryKey: ['autocomplete'] });
 
     if (selectedTab?.mode === TabMode.Query) {
       await useDataStore.getState().runRawQuery();

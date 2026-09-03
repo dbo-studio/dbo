@@ -87,7 +87,10 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 	}
 
 	if req.SafeMode != nil {
-		normalizedMode := serviceSafemode.NormalizeMode(*req.SafeMode)
+		normalizedMode := serviceSafemode.CoerceForEngine(
+			serviceSafemode.NormalizeMode(*req.SafeMode),
+			connection.ConnectionType,
+		)
 		req.SafeMode = lo.ToPtr(string(normalizedMode))
 	}
 

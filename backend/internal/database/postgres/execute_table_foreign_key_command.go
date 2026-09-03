@@ -77,9 +77,11 @@ func (r *PostgresRepository) handleForeignKeyCommands(node contract.DBNode, tabI
 				if column.Old != nil && column.Old.ConstraintName != nil {
 					name = column.Old.ConstraintName
 				}
+
 				if name != nil {
 					queries = append(queries, fmt.Sprintf("%s DROP CONSTRAINT %s", alter, *name))
 				}
+
 				continue
 			}
 
@@ -87,6 +89,7 @@ func (r *PostgresRepository) handleForeignKeyCommands(node contract.DBNode, tabI
 				if query := postgresAddForeignKeySQL(alter, column.New); query != "" {
 					queries = append(queries, query)
 				}
+
 				continue
 			}
 
@@ -105,6 +108,7 @@ func (r *PostgresRepository) handleForeignKeyCommands(node contract.DBNode, tabI
 				if query := postgresAddForeignKeySQL(alter, column.New); query != "" {
 					queries = append(queries, query)
 				}
+
 				continue
 			}
 
@@ -172,24 +176,24 @@ func postgresAddForeignKeySQL(alter string, fk *dto.PostgresTableForeignKeyData)
 	return columnDef
 }
 
-func postgresForeignKeyNeedsRecreate(old, new *dto.PostgresTableForeignKeyData) bool {
-	if new.SourceColumns != nil && !stringSlicesEqual(new.SourceColumns, old.SourceColumns) {
+func postgresForeignKeyNeedsRecreate(oldFK, newFK *dto.PostgresTableForeignKeyData) bool {
+	if newFK.SourceColumns != nil && !stringSlicesEqual(newFK.SourceColumns, oldFK.SourceColumns) {
 		return true
 	}
 
-	if new.TargetColumns != nil && !stringSlicesEqual(new.TargetColumns, old.TargetColumns) {
+	if newFK.TargetColumns != nil && !stringSlicesEqual(newFK.TargetColumns, oldFK.TargetColumns) {
 		return true
 	}
 
-	if ptrStringChanged(old.TargetTable, new.TargetTable) {
+	if ptrStringChanged(oldFK.TargetTable, newFK.TargetTable) {
 		return true
 	}
 
-	if ptrStringChanged(old.OnUpdate, new.OnUpdate) {
+	if ptrStringChanged(oldFK.OnUpdate, newFK.OnUpdate) {
 		return true
 	}
 
-	if ptrStringChanged(old.OnDelete, new.OnDelete) {
+	if ptrStringChanged(oldFK.OnDelete, newFK.OnDelete) {
 		return true
 	}
 

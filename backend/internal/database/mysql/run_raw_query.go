@@ -83,7 +83,7 @@ func (r *MySQLRepository) sessionForDatabase(ctx context.Context, database strin
 		Context: ctx,
 	})
 	session.Statement.ConnPool = conn
-	session.Config.ConnPool = conn
+	session.ConnPool = conn
 
 	return session, cleanup, nil
 }

@@ -57,7 +57,7 @@ func connectionToResponse(ctx context.Context, ownerID string, cm *databaseConne
 		Type:                connection.ConnectionType,
 		Info:                connectionInfo(connection),
 		Options:             j,
-		SafeMode:            string(connection.SafeMode),
+		SafeMode:            string(policy.Mode),
 		SafeModeUnlocked:    policy.Unlocked,
 		SafeModeUnlockUntil: unlockUntil,
 	}
@@ -70,6 +70,7 @@ func connectionInfo(connection *model.Connection) string {
 		if connection.Version != nil {
 			version = *connection.Version
 		}
+
 		return fmt.Sprintf("%s | %s %s :  SQL Query", connection.Name, connection.ConnectionType, version)
 	default:
 		return "unknown"

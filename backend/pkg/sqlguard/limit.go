@@ -102,6 +102,7 @@ func isWithSelect(sql string) bool {
 	}
 
 	depth := 0
+
 	for i := 0; i < len(trimmed); {
 		c := trimmed[i]
 		switch c {
@@ -125,6 +126,7 @@ func isWithSelect(sql string) bool {
 				}
 
 				i = next
+
 				continue
 			}
 		}

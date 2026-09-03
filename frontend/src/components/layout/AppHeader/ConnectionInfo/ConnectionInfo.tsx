@@ -48,6 +48,7 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
     }
 
     await reloadTree(false);
+    await queryClient.invalidateQueries({ queryKey: ['autocomplete'] });
 
     if (!selectedTab) return;
 

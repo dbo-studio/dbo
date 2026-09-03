@@ -105,12 +105,6 @@ export const DataGridTableCell = memo(
     }, [searchTerm, displayValue, isSearchMatch, isCurrentMatch, rowIndex, columnId, isNull]);
 
     useEffect(() => {
-      if (!isEditing) {
-        setFkLookupOpen(false);
-      }
-    }, [isEditing]);
-
-    useEffect(() => {
       if (isEditing && inputRef.current && !(isFkPicker && fkLookupOpen)) {
         requestAnimationFrame(() => {
           inputRef.current?.focus();

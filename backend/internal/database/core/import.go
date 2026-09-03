@@ -20,10 +20,12 @@ func (r *BaseRepository) ImportData(ctx context.Context, job dto.ImportJob, rows
 	failedRows := 0
 
 	quotedTable := r.quoteIdent(job.Table)
+
 	quotedColumns := make([]string, len(columns))
 	for i, col := range columns {
 		quotedColumns[i] = r.quoteIdent(col)
 	}
+
 	columnList := strings.Join(quotedColumns, ", ")
 
 	for _, row := range rows {

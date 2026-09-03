@@ -70,12 +70,17 @@ func (r *SQLiteRepository) buildCreateTableQuery(tableName string, params *dto.S
 		parts = append(parts, fmt.Sprintf("(%s)", columnDefs))
 	}
 
+	var tableOptions []string
 	if params.WithoutRowid != nil && *params.WithoutRowid {
-		parts = append(parts, "WITHOUT ROWID")
+		tableOptions = append(tableOptions, "WITHOUT ROWID")
 	}
 
 	if params.Strict != nil && *params.Strict {
-		parts = append(parts, "STRICT")
+		tableOptions = append(tableOptions, "STRICT")
+	}
+
+	if len(tableOptions) > 0 {
+		parts = append(parts, strings.Join(tableOptions, ", "))
 	}
 
 	return strings.Join(parts, " ")
@@ -157,6 +162,7 @@ func isStoredGeneratedColumn(colData *dto.SQLiteTableColumnData) bool {
 	if strings.EqualFold(lo.FromPtr(colData.ColumnKind), "GENERATED_STORED") {
 		return true
 	}
+
 	return colData.CollectionName != nil && *colData.CollectionName == "stored"
 }
 

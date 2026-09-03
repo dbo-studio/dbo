@@ -2,9 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "dbml",
   "scopeName": "source.dbml",
-  "fileTypes": [
-    "dbml"
-  ],
+  "fileTypes": ["dbml"],
   "patterns": [
     {
       "include": "#comments"

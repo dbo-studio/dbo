@@ -56,9 +56,7 @@ export default function AddConnection(): JSX.Element {
     return connections.find((connection) => connection.id === duplicateConnectionId);
   }, [connections, duplicateConnectionId]);
 
-  const connectionType = sourceConnection
-    ? connectionTypeByEngine[sourceConnection.type]
-    : selectedType;
+  const connectionType = sourceConnection ? connectionTypeByEngine[sourceConnection.type] : selectedType;
   const activeStep = sourceConnection ? 1 : step;
 
   const { mutateAsync: createConnectionMutation, isPending: createConnectionPending } = useMutation({

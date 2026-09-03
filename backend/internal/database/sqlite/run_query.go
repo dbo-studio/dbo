@@ -73,7 +73,7 @@ func (r *SQLiteRepository) runQueryGenerator(ctx context.Context, req *dto.RunQu
 	var sb strings.Builder
 
 	if lo.FromPtrOr(req.InlineQuery, "") != "" {
-		return fmt.Sprintf("SELECT * FROM `%s` WHERE %s", node, *req.InlineQuery)
+		return fmt.Sprintf("SELECT * FROM %q WHERE %s", node.Table, *req.InlineQuery)
 	}
 
 	// SELECT clause

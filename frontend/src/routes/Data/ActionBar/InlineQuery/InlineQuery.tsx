@@ -6,7 +6,7 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { DataTabType } from '@/types';
 import { Box } from '@mui/material';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { InlineQueryStackStyled, SubmitButtonStyled } from './InlineQuery.styled';
 
 export default function InlineQuery() {
@@ -15,10 +15,12 @@ export default function InlineQuery() {
   const tabInlineQuery = selectedTab?.inlineQuery ?? '';
   const [value, setValue] = useState(tabInlineQuery);
   const [prevTabId, setPrevTabId] = useState(selectedTab?.id);
+  const latestQueryRef = useRef(tabInlineQuery);
 
   if (selectedTab?.id !== prevTabId) {
     setPrevTabId(selectedTab?.id);
     setValue(tabInlineQuery);
+    latestQueryRef.current = tabInlineQuery;
   }
 
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
@@ -56,7 +58,10 @@ export default function InlineQuery() {
           columns={columns ?? []}
           placeholder={locales.inline_query_placeholder}
           value={value}
-          onChange={(v) => setValue(v)}
+          onChange={(v) => {
+            latestQueryRef.current = v;
+            setValue(v);
+          }}
           onBlur={handleUpdateQuery}
           onEnter={(q) => void handleRunQuery(q)}
         />
@@ -65,7 +70,7 @@ export default function InlineQuery() {
         variant='contained'
         data-testid='inline-query-run'
         aria-label='Run inline query'
-        onClick={() => void handleRunQuery()}
+        onClick={() => void handleRunQuery(latestQueryRef.current)}
       >
         <CustomIcon type='check' size='s' />
       </SubmitButtonStyled>

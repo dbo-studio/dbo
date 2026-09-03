@@ -118,7 +118,9 @@ function TableNodeComponent({ data, selected }: NodeProps<TableFlowNode>): JSX.E
               </ColumnNameStyled>
 
               <ColumnMetaStyled>
-                {column.isPrimaryKey ? <KeyBadge label={locales.diagram_pk} color={theme.palette.warning.main} /> : null}
+                {column.isPrimaryKey ? (
+                  <KeyBadge label={locales.diagram_pk} color={theme.palette.warning.main} />
+                ) : null}
                 {column.isForeignKey ? <KeyBadge label={locales.diagram_fk} color={fkColor} /> : null}
                 <ColumnTypeStyled className='nodrag nopan' variant='caption' noWrap title={column.dataType}>
                   {column.dataType}

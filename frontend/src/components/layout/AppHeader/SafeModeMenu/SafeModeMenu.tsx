@@ -122,6 +122,7 @@ export default function SafeModeMenu(): JSX.Element {
   });
 
   const currentMode = normalizeMode(currentConnection?.safeMode);
+  const isSqlite = currentConnection?.type === 'sqlite';
   const options = MODE_OPTIONS({
     silent: theme.palette.text.secondary,
     alert: theme.palette.warning.main,
@@ -192,7 +193,7 @@ export default function SafeModeMenu(): JSX.Element {
           <IconButton
             aria-label={locales.safe_mode}
             data-testid='safe-mode-menu'
-            disabled={!currentConnection || isPending}
+            disabled={!currentConnection || isPending || isSqlite}
             onClick={handleOpen}
             onMouseDown={(event) => event.stopPropagation()}
           >

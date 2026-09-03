@@ -53,9 +53,7 @@ export const AccentBarStyled = styled(Box, {
   shouldForwardProp: (prop): boolean => prop !== 'accent' && prop !== 'highlighted'
 })<AccentBarProps>(({ theme, accent, highlighted }) => ({
   height: 3,
-  backgroundColor: highlighted
-    ? accent
-    : alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.45 : 0.55)
+  backgroundColor: highlighted ? accent : alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.45 : 0.55)
 }));
 
 export const HeaderStyled = styled(Box)(({ theme }) => ({

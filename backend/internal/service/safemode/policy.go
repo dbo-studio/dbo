@@ -32,8 +32,18 @@ func FromConnection(c *model.Connection) Policy {
 	}
 
 	return Policy{
-		Mode: NormalizeMode(string(c.SafeMode)),
+		Mode: CoerceForEngine(NormalizeMode(string(c.SafeMode)), c.ConnectionType),
 	}
+}
+
+// CoerceForEngine drops modes that do not apply to a driver.
+// SQLite is a local file with no password — Safe Mode is not available.
+func CoerceForEngine(mode model.SafeMode, connectionType string) model.SafeMode {
+	if strings.EqualFold(connectionType, "sqlite") {
+		return model.SafeModeSilent
+	}
+
+	return mode
 }
 
 // NormalizeMode returns a canonical Safe Mode value.

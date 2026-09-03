@@ -30,7 +30,7 @@ func (s IConnectionServiceImpl) Ping(ctx context.Context, req *dto.PingConnectio
 		Type:    req.Type,
 		Options: req.Options,
 	}); err != nil {
-		return nil, apperror.DriverError(err)
+		return nil, pingDiagnosticError(req.Type, err, 0)
 	}
 
 	connection := &model.Connection{
@@ -168,6 +168,10 @@ func classifyConnectionFailure(err error) (string, string) {
 
 	msg := strings.ToLower(err.Error())
 	switch {
+	case strings.Contains(msg, "file not found"),
+		strings.Contains(msg, "no such file"),
+		strings.Contains(msg, "unable to open database"):
+		return "path", "Check that the SQLite file exists and is readable."
 	case strings.Contains(msg, "password authentication failed"),
 		strings.Contains(msg, "access denied"),
 		strings.Contains(msg, "authentication failed"),
