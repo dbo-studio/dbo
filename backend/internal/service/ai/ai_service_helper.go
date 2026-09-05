@@ -5,12 +5,12 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
-	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
+	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/samber/lo"
 )
 
-func (s *AiServiceImpl) createProvider(ctx context.Context) (serviceAiProvider.IAiProvider, *model.AiProvider, error) {
+func (s *AiServiceImpl) createProvider(ctx context.Context) (aiProvider.IAiProvider, *model.AiProvider, error) {
 	dbProvider, err := s.aiProviderRepo.FindActive(ctx)
 	if err != nil {
 		return nil, nil, apperror.NotFound(apperror.ErrAiProviderNotFound)
@@ -52,7 +52,7 @@ func (s *AiServiceImpl) findChat(ctx context.Context, req *dto.AiChatRequest) (*
 	return chat, nil
 }
 
-func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat, userMessage string, aiMessage *serviceAiProvider.ChatResponse) error {
+func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat, userMessage string, aiMessage *aiProvider.ChatResponse) error {
 	if err := s.aiChatRepo.AddMessage(ctx, &model.AiChatMessage{
 		ChatID:   chat.ID,
 		Role:     model.AiChatMessageRoleUser,

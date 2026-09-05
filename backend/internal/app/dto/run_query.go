@@ -1,76 +1,12 @@
 package dto
 
-import (
-	"errors"
+import "github.com/dbo-studio/dbo/internal/database/contract"
 
-	"github.com/invopop/validation"
-)
-
+// Query-flow types live in the database contract; these aliases keep the
+// HTTP layer's naming stable without the contract depending on app DTOs.
 type (
-	RunQueryRequest struct {
-		ConnectionID int32       `json:"connectionId"`
-		NodeID       string      `json:"nodeId"`
-		Limit        *int        `json:"limit"`
-		Page         *int        `json:"page"`
-		InlineQuery  *string     `json:"inlineQuery"`
-		Filters      []FilterDto `json:"filters"`
-		Sorts        []SortDto   `json:"sorts"`
-		Columns      []string
-	}
-
-	RunQueryResponse struct {
-		Query   string           `json:"query"`
-		Data    []map[string]any `json:"data"`
-		Columns []Column         `json:"columns"`
-	}
+	RunQueryRequest  = databaseContract.RunQueryRequest
+	RunQueryResponse = databaseContract.RunQueryResponse
+	FilterDto        = databaseContract.FilterDto
+	SortDto          = databaseContract.SortDto
 )
-
-type FilterDto struct {
-	Column   string `json:"column"`
-	Operator string `json:"operator"`
-	Value    string `json:"value"`
-	Next     string `json:"next"`
-}
-
-type SortDto struct {
-	Column   string `json:"column"`
-	Operator string `json:"operator"`
-}
-
-func (req RunQueryRequest) Validate() error {
-	return validation.ValidateStruct(&req,
-		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
-		validation.Field(&req.NodeID, validation.Required, validation.Length(0, 120)),
-		validation.Field(&req.Limit, validation.Min(1)),
-		validation.Field(&req.Page, validation.Min(1)),
-		validation.Field(&req.Filters),
-		validation.Field(&req.Sorts),
-		validation.Field(&req.Columns, validation.Each(validation.Length(0, 120))),
-	)
-}
-
-func (req FilterDto) Validate() error {
-	rules := []*validation.FieldRules{
-		validation.Field(&req.Column, validation.Required, validation.Length(0, 120)),
-		validation.Field(&req.Operator, validation.Required, validation.By(func(value any) error {
-			if !FilterOperatorAllowed(value.(string)) {
-				return errors.New("operator is not allowed")
-			}
-
-			return nil
-		})),
-		validation.Field(&req.Next, validation.Required, validation.In("AND", "OR")),
-	}
-	if FilterRequiresValue(req.Operator) {
-		rules = append(rules, validation.Field(&req.Value, validation.Required))
-	}
-
-	return validation.ValidateStruct(&req, rules...)
-}
-
-func (req SortDto) Validate() error {
-	return validation.ValidateStruct(&req,
-		validation.Field(&req.Column, validation.Required, validation.Length(0, 120)),
-		validation.Field(&req.Operator, validation.Required, validation.In("ASC", "DESC")),
-	)
-}

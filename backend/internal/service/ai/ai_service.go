@@ -4,11 +4,10 @@ import (
 	"context"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/repository"
-	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
-	"github.com/dbo-studio/dbo/internal/service/dbtools"
+	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
+	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/logger"
 )
@@ -24,9 +23,9 @@ type AiServiceImpl struct {
 	aiProviderRepo  repository.IAiProviderRepo
 	aiChatRepo      repository.IAiChatRepo
 	cm              *databaseConnection.ConnectionManager
-	toolRegistry    *dbtools.Registry
+	toolRegistry    *serviceDbtools.Registry
 	logger          logger.Logger
-	providerFactory *serviceAiProvider.ProviderFactory
+	providerFactory *aiProvider.ProviderFactory
 	cache           cache.Cache
 }
 
@@ -35,7 +34,9 @@ func NewAiService(
 	aiProviderRepo repository.IAiProviderRepo,
 	aiChatRepo repository.IAiChatRepo,
 	cm *databaseConnection.ConnectionManager,
-	toolRegistry *dbtools.Registry,
+	toolRegistry *serviceDbtools.Registry,
+	appLogger logger.Logger,
+	appCache cache.Cache,
 ) IAiService {
 	return &AiServiceImpl{
 		connectionRepo:  connectionRepo,
@@ -43,8 +44,8 @@ func NewAiService(
 		aiChatRepo:      aiChatRepo,
 		cm:              cm,
 		toolRegistry:    toolRegistry,
-		logger:          container.Instance().Logger(),
-		cache:           container.Instance().Cache(),
-		providerFactory: serviceAiProvider.NewProviderFactory(),
+		logger:          appLogger,
+		cache:           appCache,
+		providerFactory: aiProvider.NewProviderFactory(),
 	}
 }

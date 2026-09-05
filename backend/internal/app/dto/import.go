@@ -3,6 +3,7 @@ package dto
 import (
 	"mime/multipart"
 
+	"github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/invopop/validation"
 )
 
@@ -23,16 +24,7 @@ type (
 )
 
 type (
-	ImportJob struct {
-		OwnerID         string
-		ConnectionID    int32
-		Table           string
-		Data            []byte
-		Format          string
-		ContinueOnError bool
-		SkipErrors      bool
-		MaxErrors       int
-	}
+	ImportJob = databaseContract.ImportJob
 )
 
 func (req ImportRequest) Validate() error {

@@ -70,12 +70,6 @@ type DynamicFieldRequest struct {
 	Parameters map[string]string `json:"parameters"`
 }
 
-type ImportOptions struct {
-	ContinueOnError bool `json:"continueOnError"`
-	SkipErrors      bool `json:"skipErrors"`
-	MaxErrors       int  `json:"maxErrors"`
-}
-
 type ImportResult struct {
 	TotalRows   int            `json:"totalRows"`
 	SuccessRows int            `json:"successRows"`
@@ -90,29 +84,6 @@ type ImportError struct {
 	Column  string `json:"column"`
 	Message string `json:"message"`
 	Value   string `json:"value"`
-}
-
-type ExportResult struct {
-	ExportID  string    `json:"exportId"`
-	Query     string    `json:"query"`
-	Format    string    `json:"format"`
-	TotalRows int       `json:"totalRows"`
-	ChunkSize int       `json:"chunkSize"`
-	CreatedAt time.Time `json:"createdAt"`
-	Status    string    `json:"status"`
-}
-
-type ExportProgress struct {
-	ExportID      string    `json:"exportId"`
-	Status        string    `json:"status"`
-	Progress      int       `json:"progress"`
-	ProcessedRows int       `json:"processedRows"`
-	TotalRows     int       `json:"totalRows"`
-	CurrentChunk  int       `json:"currentChunk"`
-	TotalChunks   int       `json:"totalChunks"`
-	Message       string    `json:"message"`
-	Error         string    `json:"error"`
-	LastUpdated   time.Time `json:"lastUpdated"`
 }
 
 //----------------------------

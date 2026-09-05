@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/repository"
@@ -36,8 +35,8 @@ type IQueryServiceImpl struct {
 	unlockStore    *serviceSafemode.UnlockStore
 }
 
-func NewQueryService(connectionRepo repository.IConnectionRepo, historyRepo repository.IHistoryRepo, cm *databaseConnection.ConnectionManager) IQueryService {
-	c := container.Instance().Cache()
+func NewQueryService(connectionRepo repository.IConnectionRepo, historyRepo repository.IHistoryRepo, cm *databaseConnection.ConnectionManager, appCache cache.Cache) IQueryService {
+	c := appCache
 
 	return &IQueryServiceImpl{
 		historyRepo:    historyRepo,

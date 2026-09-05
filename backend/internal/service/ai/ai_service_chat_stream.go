@@ -8,14 +8,14 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
 	"github.com/dbo-studio/dbo/internal/model"
-	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
-	"github.com/dbo-studio/dbo/internal/service/dbtools"
+	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
+	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/goccy/go-json"
 )
 
 func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, emit func([]byte) error) error {
-	emitEvent := func(event serviceAiProvider.StreamEvent) error {
+	emitEvent := func(event aiProvider.StreamEvent) error {
 		data, err := json.Marshal(event)
 		if err != nil {
 			return err
@@ -44,7 +44,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 		return err
 	}
 
-	if err := emitEvent(serviceAiProvider.StreamEvent{
+	if err := emitEvent(aiProvider.StreamEvent{
 		Type:  "status",
 		Label: "Building schema context...",
 	}); err != nil {
@@ -66,9 +66,9 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 	})
 
 	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, true)
-	providerReq.Tools = dbtools.ChatTools()
+	providerReq.Tools = serviceDbtools.ChatTools()
 
-	if err := emitEvent(serviceAiProvider.StreamEvent{
+	if err := emitEvent(aiProvider.StreamEvent{
 		Type:  "status",
 		Label: "Thinking...",
 	}); err != nil {

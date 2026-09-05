@@ -2,7 +2,6 @@ package handler
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai_provider"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -15,9 +14,9 @@ type AiProviderHandler struct {
 	aiProviderService serviceAiProvider.IAiProviderService
 }
 
-func NewAiProviderHandler(aiProviderService serviceAiProvider.IAiProviderService) *AiProviderHandler {
+func NewAiProviderHandler(logger logger.Logger, aiProviderService serviceAiProvider.IAiProviderService) *AiProviderHandler {
 	return &AiProviderHandler{
-		logger:            container.Instance().Logger(),
+		logger:            logger,
 		aiProviderService: aiProviderService,
 	}
 }

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/dbo-studio/dbo/config"
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
@@ -37,9 +36,8 @@ This middleware resolves the owner ID for the request.
     exchanging the auth token (POST /api/config/auth) are accepted; everything else
     gets 401.
 */
-func OwnerSessionMiddleware(webSessionRepo repository.IWebSessionRepo) fiber.Handler {
+func OwnerSessionMiddleware(cfg *config.Config, webSessionRepo repository.IWebSessionRepo) fiber.Handler {
 	return func(c fiber.Ctx) error {
-		cfg := container.Instance().Config()
 		if cfg != nil && cfg.App.Client == config.ClientDesktop {
 			setOwner(c, "desktop")
 

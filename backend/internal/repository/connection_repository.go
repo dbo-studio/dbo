@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
@@ -15,9 +14,9 @@ type IConnectionRepoImpl struct {
 	db *gorm.DB
 }
 
-func NewConnectionRepo() IConnectionRepo {
+func NewConnectionRepo(db *gorm.DB) IConnectionRepo {
 	return &IConnectionRepoImpl{
-		db: container.Instance().DB(),
+		db: db,
 	}
 }
 

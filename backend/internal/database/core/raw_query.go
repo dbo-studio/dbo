@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log"
+	"fmt"
 	"strings"
 	"time"
 
@@ -87,9 +87,8 @@ func runRawQuery(ctx context.Context, r *BaseRepository, db *gorm.DB, req *dto.R
 	}
 
 	defer func(rows *sql.Rows) {
-		err := rows.Close()
-		if err != nil {
-			log.Printf("Error closing rows: %v", err)
+		if err := rows.Close(); err != nil {
+			r.Logger().Error(fmt.Errorf("failed to close rows: %w", err))
 		}
 	}(rows)
 

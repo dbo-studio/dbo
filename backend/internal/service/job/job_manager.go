@@ -1,4 +1,4 @@
-package job
+package serviceJob
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/helper"
@@ -38,7 +37,7 @@ type IJobManagerImpl struct {
 	logger       logger.Logger
 }
 
-func NewJobManager(jobRepo repository.IJobRepo) IJobManager {
+func NewJobManager(jobRepo repository.IJobRepo, appLogger logger.Logger) IJobManager {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	jm := IJobManagerImpl{
@@ -47,7 +46,7 @@ func NewJobManager(jobRepo repository.IJobRepo) IJobManager {
 		cancels:      make(map[uint]context.CancelFunc),
 		workerCtx:    ctx,
 		workerCancel: cancel,
-		logger:       container.Instance().Logger(),
+		logger:       appLogger,
 	}
 
 	jm.workerWg.Add(1)

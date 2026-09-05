@@ -17,7 +17,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/migrations"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/internal/service"
-	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
+	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/cache/sqlite"
 	"github.com/dbo-studio/dbo/pkg/db"
 	"github.com/dbo-studio/dbo/pkg/helper"
@@ -72,30 +72,34 @@ func Execute() {
 	cache := sqlite.NewSQLiteCache(appDB)
 	appContainer.SetCache(cache)
 
-	rr := repository.NewRepository()
-	secretStore := secretStore.NewSecretStore(cfg, rr.WebSessionRepo, rr.WebConnectionSecretRepo, appLogger)
+	rr := repository.NewRepository(appDB)
+	secretStore := serviceSecretStore.NewSecretStore(cfg, rr.WebSessionRepo, rr.WebConnectionSecretRepo, appLogger)
 	cm := databaseConnection.NewConnectionManager(rr.HistoryRepo, secretStore, appLogger)
-	ss := service.NewService(rr, cm, secretStore)
+	ss := service.NewService(rr, cm, secretStore, service.Deps{
+		Logger: appLogger,
+		Cache:  cache,
+		Config: cfg,
+	})
 
 	err = ss.JobManager.CancelAllJobs()
 	if err != nil {
 		appLogger.Error(err)
 	}
 
-	restServer := server.New(appLogger, server.Handlers{Config: handler.NewConfigHandler(ss.ConfigService),
-		Connection:   handler.NewConnectionHandler(ss.ConnectionService),
-		SavedQuery:   handler.NewSavedQueryHandler(ss.SavedQueryService),
-		History:      handler.NewHistoryHandler(ss.HistoryService),
-		TreeHandler:  handler.NewTreeHandler(ss.TreeService),
-		QueryHandler: handler.NewQueryHandler(ss.QueryService),
-		ImportExport: handler.NewImportExportHandler(ss.ImportExportService),
-		Job:          handler.NewJobHandler(ss.JobService),
-		AI:           handler.NewAiHandler(ss.AiService),
-		AiProvider:   handler.NewAiProviderHandler(ss.AiProviderService),
-		AiChat:       handler.NewAiChatHandler(ss.AiChatService),
-		Mcp:          handler.NewMcpHandler(ss.McpService),
-		Schema:       handler.NewSchemaHandler(ss.SchemaService),
-		SafeMode:     handler.NewSafeModeHandler(ss.SafeModePasswordService),
+	restServer := server.New(appLogger, cfg, server.Handlers{Config: handler.NewConfigHandler(appLogger, ss.ConfigService),
+		Connection:   handler.NewConnectionHandler(appLogger, ss.ConnectionService),
+		SavedQuery:   handler.NewSavedQueryHandler(appLogger, ss.SavedQueryService),
+		History:      handler.NewHistoryHandler(appLogger, ss.HistoryService),
+		TreeHandler:  handler.NewTreeHandler(appLogger, ss.TreeService),
+		QueryHandler: handler.NewQueryHandler(appLogger, ss.QueryService),
+		ImportExport: handler.NewImportExportHandler(appLogger, ss.ImportExportService),
+		Job:          handler.NewJobHandler(appLogger, ss.JobService),
+		AI:           handler.NewAiHandler(appLogger, ss.AiService),
+		AiProvider:   handler.NewAiProviderHandler(appLogger, ss.AiProviderService),
+		AiChat:       handler.NewAiChatHandler(appLogger, ss.AiChatService),
+		Mcp:          handler.NewMcpHandler(appLogger, ss.McpService),
+		Schema:       handler.NewSchemaHandler(appLogger, ss.SchemaService),
+		SafeMode:     handler.NewSafeModeHandler(appLogger, ss.SafeModePasswordService),
 	}, rr.WebSessionRepo)
 
 	gracefulCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

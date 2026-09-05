@@ -8,10 +8,11 @@ import (
 
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
-	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 )
@@ -38,16 +39,23 @@ type HistoryWriter interface {
 	Create(ctx context.Context, connectionID uint, query string, isSystem bool) error
 }
 
+// PasswordHydrator resolves stored connection passwords. Declared here (not
+// imported from the service layer) so the database stack never depends
+// upward; the secret store satisfies it implicitly.
+type PasswordHydrator interface {
+	GetConnectionPassword(ctx context.Context, ownerID string, connectionID uint) (string, error)
+}
+
 type ConnectionManager struct {
 	connections map[connKey]*conn
 	mu          sync.Mutex
 	logger      logger.Logger
 	historyRepo HistoryWriter
-	secrets     secretStore.ISecretStore
+	secrets     PasswordHydrator
 	safetyTTL   time.Duration
 }
 
-func NewConnectionManager(historyRepo HistoryWriter, secrets secretStore.ISecretStore, appLogger logger.Logger) *ConnectionManager {
+func NewConnectionManager(historyRepo HistoryWriter, secrets PasswordHydrator, appLogger logger.Logger) *ConnectionManager {
 	cm := &ConnectionManager{
 		connections: make(map[connKey]*conn),
 		mu:          sync.Mutex{},
@@ -114,7 +122,7 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 	// Hydration and the actual connect happen without holding cm.mu — a hung
 	// host must not serialize every other connection operation.
 	if cm.secrets != nil && withHydration {
-		if err := secretStore.HydrateConnectionPassword(ctx, cm.secrets, ownerID, connection); err != nil {
+		if err := hydrateConnectionPassword(ctx, cm.secrets, ownerID, connection); err != nil {
 			return nil, err
 		}
 	}
@@ -206,7 +214,7 @@ func (cm *ConnectionManager) GetConnectionForDatabase(ctx context.Context, conne
 	}
 
 	if cm.secrets != nil && withHydration {
-		if err := secretStore.HydrateConnectionPassword(ctx, cm.secrets, ownerID, connection); err != nil {
+		if err := hydrateConnectionPassword(ctx, cm.secrets, ownerID, connection); err != nil {
 			return nil, err
 		}
 	}
@@ -351,6 +359,41 @@ func (cm *ConnectionManager) cleanupInactiveConnections() {
 			}
 		}
 	}
+}
+
+// hydrateConnectionPassword injects the connection password into
+// connection.Options when needed: SQLite needs none, an existing password
+// wins, a context-provided password comes next, then the secret store.
+func hydrateConnectionPassword(ctx context.Context, store PasswordHydrator, ownerID string, connection *model.Connection) error {
+	if connection == nil || connection.ConnectionType == "sqlite" {
+		return nil
+	}
+
+	if connection.Options != "" && gjson.Get(connection.Options, "password").String() != "" {
+		return nil
+	}
+
+	if p, ok := helper.CtxConnectionPassword(ctx); ok {
+		return setConnectionPassword(connection, p)
+	}
+
+	password, err := store.GetConnectionPassword(ctx, ownerID, connection.ID)
+	if err != nil {
+		return err
+	}
+
+	return setConnectionPassword(connection, password)
+}
+
+func setConnectionPassword(connection *model.Connection, password string) error {
+	options, err := sjson.Set(connection.Options, "password", password)
+	if err != nil {
+		return err
+	}
+
+	connection.Options = options
+
+	return nil
 }
 
 func (cm *ConnectionManager) closeConn(c *conn) error {

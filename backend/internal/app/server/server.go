@@ -9,7 +9,6 @@ import (
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/handler"
 	"github.com/dbo-studio/dbo/internal/app/server/middleware"
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/gofiber/fiber/v3"
@@ -38,12 +37,14 @@ type Handlers struct {
 
 type Server struct {
 	app            *fiber.App
+	cfg            *config.Config
 	handlers       Handlers
 	webSessionRepo repository.IWebSessionRepo
 }
 
 func New(
 	logger logger.Logger,
+	cfg *config.Config,
 	handlers Handlers,
 	webSessionRepo repository.IWebSessionRepo,
 ) *Server {
@@ -65,14 +66,13 @@ func New(
 				})
 			},
 		}),
+		cfg:            cfg,
 		handlers:       handlers,
 		webSessionRepo: webSessionRepo,
 	}
 }
 
 func (r *Server) Start(gracefulCtx context.Context, isLocal bool, port string) error {
-	cfg := container.Instance().Config()
-
 	// Recover middleware must run in every environment: without it a panic in
 	// a handler (or processor goroutine) kills the whole process on desktop.
 	r.app.Use(recover.New())
@@ -88,12 +88,11 @@ func (r *Server) Start(gracefulCtx context.Context, isLocal bool, port string) e
 		// Only localhost origins (frontend dev server) plus explicitly configured
 		// APP_ALLOWED_ORIGINS may make credentialed cross-origin requests.
 		// The embedded web UI is served same-origin and needs no CORS.
-		AllowOriginsFunc: allowOriginFunc(cfg),
+		AllowOriginsFunc: allowOriginFunc(r.cfg),
 		AllowCredentials: true,
 	}))
 
-	r.app.Use(middleware.SkipClearRequestMiddleware)
-	r.app.Use(middleware.OwnerSessionMiddleware(r.webSessionRepo))
+	r.app.Use(middleware.OwnerSessionMiddleware(r.cfg, r.webSessionRepo))
 
 	r.routing()
 

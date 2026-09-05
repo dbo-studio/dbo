@@ -1,4 +1,4 @@
-package serviceAiProvider
+package aiProvider
 
 import (
 	"strings"

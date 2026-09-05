@@ -1,11 +1,15 @@
 package server
 
-import "github.com/gofiber/fiber/v3/middleware/static"
+import (
+	"github.com/gofiber/fiber/v3/middleware/static"
+
+	"github.com/dbo-studio/dbo/internal/app/server/middleware"
+)
 
 func (r *Server) routing() {
-	r.app.Get("/*", static.New("out"))
-
 	api := r.app.Group("/api")
+
+	clearBody := middleware.SkipClearRequestBody()
 
 	api.Get("/config", r.handlers.Config.Config)
 	api.Get("/config/check-update", r.handlers.Config.CheckUpdate)
@@ -20,13 +24,13 @@ func (r *Server) routing() {
 	tree.Get("/:nodeId/tabs/:action", r.handlers.TreeHandler.Tabs)
 	tree.Get("/:nodeId/tabs/:action/fields/:tabId/object", r.handlers.TreeHandler.ObjectDetail)
 	tree.Get("/:nodeId/dynamic", r.handlers.TreeHandler.GetDynamicFieldOptions)
-	tree.Post("/:nodeId/tabs/:action/fields/object", r.handlers.TreeHandler.ExecuteHandler)
-	tree.Post("/:nodeId/tabs/:action/fields/object/preview", r.handlers.TreeHandler.PreviewExecuteHandler)
+	tree.Post("/:nodeId/tabs/:action/fields/object", clearBody, r.handlers.TreeHandler.ExecuteHandler)
+	tree.Post("/:nodeId/tabs/:action/fields/object/preview", clearBody, r.handlers.TreeHandler.PreviewExecuteHandler)
 
 	query := api.Group("query")
-	query.Post("/run", r.handlers.QueryHandler.Run)
-	query.Post("/raw", r.handlers.QueryHandler.Raw)
-	query.Post("/update", r.handlers.QueryHandler.Update)
+	query.Post("/run", clearBody, r.handlers.QueryHandler.Run)
+	query.Post("/raw", clearBody, r.handlers.QueryHandler.Raw)
+	query.Post("/update", clearBody, r.handlers.QueryHandler.Update)
 	query.Get("/autocomplete", r.handlers.QueryHandler.Autocomplete)
 
 	ai := api.Group("ai")
@@ -48,7 +52,9 @@ func (r *Server) routing() {
 	mcp.Get("/status", r.handlers.Mcp.Status)
 	mcp.Post("/update", r.handlers.Mcp.Update)
 	mcp.Post("/regenerate-token", r.handlers.Mcp.RegenerateToken)
-	mcp.All("", r.handlers.Mcp.Proxy)
+	// The catch-all proxy must stay registered after every concrete mcp
+	// route; MCP clients authenticate with their own bearer token.
+	mcp.All("/", r.handlers.Mcp.Proxy)
 	mcp.All("/*", r.handlers.Mcp.Proxy)
 
 	safeMode := api.Group("safe-mode")
@@ -84,4 +90,8 @@ func (r *Server) routing() {
 	job.Get("/:id", r.handlers.Job.Detail)
 	job.Delete("/:id", r.handlers.Job.Cancel)
 	job.Get("/:id/result", r.handlers.Job.Result)
+
+	// The SPA catch-all is registered last so it can never shadow an API
+	// route regardless of registration order.
+	r.app.Get("/*", static.New("out"))
 }

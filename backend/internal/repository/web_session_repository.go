@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/model"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -22,9 +21,9 @@ type webSessionRepoImpl struct {
 	lastTouchByID map[string]time.Time
 }
 
-func NewWebSessionRepo() IWebSessionRepo {
+func NewWebSessionRepo(db *gorm.DB) IWebSessionRepo {
 	return &webSessionRepoImpl{
-		db:            container.Instance().DB(),
+		db:            db,
 		lastTouchByID: make(map[string]time.Time),
 	}
 }

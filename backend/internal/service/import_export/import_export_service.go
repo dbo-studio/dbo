@@ -1,18 +1,19 @@
-package import_export
+package serviceImportExport
 
 import (
+	"github.com/dbo-studio/dbo/pkg/logger"
+
 	"context"
+	"fmt"
 	"io"
-	"log"
 	"mime/multipart"
 	"path/filepath"
 	"strings"
 
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/model"
-	"github.com/dbo-studio/dbo/internal/service/job"
+	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/sqlguard"
@@ -24,12 +25,16 @@ type IImportExport interface {
 }
 
 type IImportExportImpl struct {
-	jobManager job.IJobManager
+	jobManager serviceJob.IJobManager
+	cfg        *config.Config
+	logger     logger.Logger
 }
 
-func NewImportExportService(jobManager job.IJobManager) IImportExport {
+func NewImportExportService(jobManager serviceJob.IJobManager, cfg *config.Config, appLogger logger.Logger) IImportExport {
 	return IImportExportImpl{
 		jobManager: jobManager,
+		cfg:        cfg,
+		logger:     appLogger,
 	}
 }
 
@@ -39,9 +44,8 @@ func (s IImportExportImpl) Import(ctx context.Context, req *dto.ImportRequest) (
 		return nil, apperror.BadRequest(err)
 	}
 	defer func(file multipart.File) {
-		err := file.Close()
-		if err != nil {
-			log.Printf("Error closing file: %v", err)
+		if err := file.Close(); err != nil {
+			s.logger.Error(fmt.Errorf("failed to close upload: %w", err))
 		}
 	}(file)
 
@@ -86,7 +90,7 @@ func (s IImportExportImpl) Export(ctx context.Context, req *dto.ExportRequest) (
 
 	// SavePath is only honored for desktop builds, where it comes from the
 	// native save dialog. Web clients must never control an absolute path.
-	cfg := container.Instance().Config()
+	cfg := s.cfg
 	if cfg == nil || cfg.App.Client != config.ClientDesktop {
 		req.SavePath = ""
 	} else if err := validateSavePath(req.SavePath); err != nil {

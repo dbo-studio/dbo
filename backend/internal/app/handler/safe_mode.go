@@ -2,7 +2,6 @@ package handler
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -15,9 +14,9 @@ type SafeModeHandler struct {
 	service serviceSafemode.ISafeModePasswordService
 }
 
-func NewSafeModeHandler(service serviceSafemode.ISafeModePasswordService) *SafeModeHandler {
+func NewSafeModeHandler(logger logger.Logger, service serviceSafemode.ISafeModePasswordService) *SafeModeHandler {
 	return &SafeModeHandler{
-		logger:  container.Instance().Logger(),
+		logger:  logger,
 		service: service,
 	}
 }

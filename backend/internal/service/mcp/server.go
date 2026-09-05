@@ -1,23 +1,23 @@
-package serviceMcp
+package serviceMCP
 
 import (
 	"context"
 	"net/http"
 	"sync"
 
-	"github.com/dbo-studio/dbo/internal/service/dbtools"
+	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 type NativeServer struct {
-	registry      *dbtools.Registry
+	registry      *serviceDbtools.Registry
 	mu            sync.RWMutex
 	defaultConnID *uint
 	mcpServer     *sdkmcp.Server
 	streamHandler http.Handler
 }
 
-func NewNativeServer(registry *dbtools.Registry) *NativeServer {
+func NewNativeServer(registry *serviceDbtools.Registry) *NativeServer {
 	ns := &NativeServer{registry: registry}
 	ns.mcpServer = sdkmcp.NewServer(&sdkmcp.Implementation{Name: "dbo", Version: "1.1.0"}, nil)
 	ns.registerTools()
@@ -59,7 +59,7 @@ func (ns *NativeServer) registerTools() {
 	}
 
 	registerTool(ns, "list_connections", "List saved DBO connections (id, name, type). Call this first when multiple databases are configured.", emptyArgs{}, func(ctx context.Context, _ emptyArgs) (string, error) {
-		return ns.registry.Execute(ctx, "list_connections", map[string]any{}, dbtools.ToolContext{})
+		return ns.registry.Execute(ctx, "list_connections", map[string]any{}, serviceDbtools.ToolContext{})
 	})
 
 	registerTool(ns, "list_tables", "List table names in a DBO connection. Uses the default active connection when connection_id is omitted.", schemaArgs{}, func(ctx context.Context, in schemaArgs) (string, error) {
@@ -118,7 +118,7 @@ func (ns *NativeServer) runTool(ctx context.Context, connID *float64, schema *st
 		return "", err
 	}
 
-	toolCtx := dbtools.ToolContext{ConnectionID: resolved}
+	toolCtx := serviceDbtools.ToolContext{ConnectionID: resolved}
 	if schema != nil {
 		toolCtx.Schema = schema
 	}

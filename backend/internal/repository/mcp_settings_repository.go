@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/model"
 	"gorm.io/gorm"
 )
@@ -19,8 +18,8 @@ type McpSettingsRepo struct {
 	db *gorm.DB
 }
 
-func NewMcpSettingsRepo() IMcpSettingsRepo {
-	return &McpSettingsRepo{db: container.Instance().DB()}
+func NewMcpSettingsRepo(db *gorm.DB) IMcpSettingsRepo {
+	return &McpSettingsRepo{db: db}
 }
 
 func (r *McpSettingsRepo) FindByOwner(ctx context.Context, ownerID string) (*model.McpSettings, error) {

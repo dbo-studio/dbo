@@ -1,4 +1,4 @@
-package safemode
+package serviceSafemode
 
 import (
 	"context"

@@ -20,9 +20,9 @@ type AiProviderRepoImpl struct {
 	db *gorm.DB
 }
 
-func NewAiProviderRepo() IAiProviderRepo {
+func NewAiProviderRepo(db *gorm.DB) IAiProviderRepo {
 	return &AiProviderRepoImpl{
-		db: container.Instance().DB(),
+		db: db,
 	}
 }
 

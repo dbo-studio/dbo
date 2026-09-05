@@ -5,29 +5,29 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-func SkipClearRequestMiddleware(c fiber.Ctx) error {
-	body := c.Body()
+// SkipClearRequestBody strips the grid's internal dbo_index/dboIndex keys
+// from JSON bodies. It is route-scoped to the endpoints that receive grid
+// payloads — a global body rewrite would tax every request.
+func SkipClearRequestBody() fiber.Handler {
+	return func(c fiber.Ctx) error {
+		var data map[string]any
 
-	var data map[string]any
+		if err := json.Unmarshal(c.Body(), &data); err != nil {
+			return c.Next()
+		}
 
-	if err := json.Unmarshal(body, &data); err != nil {
+		if output, err := json.Marshal(removeDboIndex(data)); err == nil {
+			c.Request().SetBody(output)
+		}
+
 		return c.Next()
 	}
-
-	modifiedBody := removeDboIndex(data)
-
-	output, err := json.Marshal(modifiedBody)
-	if err == nil {
-		c.Request().SetBody(output)
-	}
-
-	return c.Next()
 }
 
 func removeDboIndex(data map[string]any) map[string]any {
 	for _, value := range data {
 		if nestedMap, ok := value.(map[string]any); ok {
-			// Recursively remove `dbo_index` from nested map
+			// Recursively remove `dbo_index` from nested maps
 			removeDboIndex(nestedMap)
 		} else if nestedArray, ok := value.([]any); ok {
 			// If the value is a slice, iterate through each element

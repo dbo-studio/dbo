@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dbo-studio/dbo/internal/container"
 	"gorm.io/gorm"
 )
 
@@ -12,9 +11,9 @@ type IConfigRepoImpl struct {
 	db *gorm.DB
 }
 
-func NewConfigRepo() IConfigRepo {
+func NewConfigRepo(db *gorm.DB) IConfigRepo {
 	return &IConfigRepoImpl{
-		db: container.Instance().DB(),
+		db: db,
 	}
 }
 

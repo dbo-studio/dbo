@@ -20,8 +20,6 @@ func NewDatabaseRepository(ctx context.Context, connection *model.Connection, cm
 		return databasePostgres.NewPostgresRepository(ctx, connection, cm)
 	case string(databaseContract.Sqlite):
 		return databaseSqlite.NewSQLiteRepository(ctx, connection, cm)
-	//case "sqlserver":
-	//	return databaseSqlserver.NewSQLServerRepository(connection, cm)
 	default:
 		return nil, fmt.Errorf("unsupported database type: %s", connection.ConnectionType)
 	}

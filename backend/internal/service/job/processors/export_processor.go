@@ -9,13 +9,12 @@ import (
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
-	"github.com/dbo-studio/dbo/internal/service/job"
-	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
+	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
+	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/csv"
 	"github.com/dbo-studio/dbo/pkg/helper"
@@ -23,19 +22,19 @@ import (
 )
 
 type ExportProcessor struct {
-	jobManager     job.IJobManager
+	jobManager     serviceJob.IJobManager
 	cm             *databaseConnection.ConnectionManager
 	connectionRepo repository.IConnectionRepo
 	cache          cache.Cache
-	secrets        secretStore.ISecretStore
+	secrets        serviceSecretStore.ISecretStore
 }
 
-func NewExportProcessor(jobManager job.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, secrets secretStore.ISecretStore) *ExportProcessor {
+func NewExportProcessor(jobManager serviceJob.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, secrets serviceSecretStore.ISecretStore, appCache cache.Cache) *ExportProcessor {
 	return &ExportProcessor{
 		jobManager:     jobManager,
 		cm:             cm,
 		connectionRepo: connectionRepo,
-		cache:          container.Instance().Cache(),
+		cache:          appCache,
 		secrets:        secrets,
 	}
 }

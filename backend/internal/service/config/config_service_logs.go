@@ -1,29 +1,29 @@
 package serviceConfig
 
 import (
+	"context"
 	"errors"
 	"os"
-	"strings"
+	"path/filepath"
 
 	"github.com/dbo-studio/dbo/pkg/apperror"
-	"github.com/gofiber/fiber/v3"
+	"github.com/dbo-studio/dbo/pkg/response"
 )
 
-func (i IConfigServiceImpl) Logs(ctx fiber.Ctx) error {
+func (i IConfigServiceImpl) Logs(_ context.Context) (*response.FileDownload, error) {
 	filePath := i.cfg.App.LogPath
 	if filePath == "" {
-		return apperror.BadRequest(errors.New("file path not found"))
+		return nil, apperror.BadRequest(errors.New("file path not found"))
 	}
 
 	fileContent, err := os.ReadFile(filePath)
 	if err != nil {
-		return apperror.BadRequest(errors.New("failed to read file"))
+		return nil, apperror.BadRequest(errors.New("failed to read file"))
 	}
 
-	filename := filePath[strings.LastIndex(filePath, "/")+1:]
-
-	ctx.Set("Content-Disposition", "attachment; filename="+filename)
-	ctx.Set("Content-Type", "application/octet-stream")
-
-	return ctx.Send(fileContent)
+	return &response.FileDownload{
+		FileName:    filepath.Base(filePath),
+		ContentType: response.ContentTypeByExtension(filePath),
+		Content:     fileContent,
+	}, nil
 }

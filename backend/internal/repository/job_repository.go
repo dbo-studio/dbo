@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/model"
 	"gorm.io/gorm"
 )
@@ -13,9 +12,9 @@ type JobRepository struct {
 	db *gorm.DB
 }
 
-func NewJobRepo() IJobRepo {
+func NewJobRepo(db *gorm.DB) IJobRepo {
 	return &JobRepository{
-		db: container.Instance().DB(),
+		db: db,
 	}
 }
 

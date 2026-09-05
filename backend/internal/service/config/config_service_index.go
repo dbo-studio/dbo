@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/pkg/cache"
 )
 
@@ -22,7 +21,7 @@ func (i IConfigServiceImpl) Index(ctx context.Context) (*dto.ConfigListResponse,
 		ctx := context.WithoutCancel(ctx)
 
 		if _, err := i.CheckUpdate(ctx); err != nil {
-			container.Instance().Logger().Error(fmt.Errorf("background update check failed: %w", err))
+			i.logger.Error(fmt.Errorf("background update check failed: %w", err))
 		}
 	}()
 

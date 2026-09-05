@@ -1,6 +1,8 @@
-package serviceMcp
+package serviceMCP
 
 import (
+	"github.com/dbo-studio/dbo/config"
+
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
@@ -11,10 +13,9 @@ import (
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
-	"github.com/dbo-studio/dbo/internal/service/dbtools"
+	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger"
 )
@@ -33,17 +34,21 @@ type McpServiceImpl struct {
 	settingsRepo repository.IMcpSettingsRepo
 	nativeServer *NativeServer
 	logger       logger.Logger
+	cfg          *config.Config
 }
 
 func NewMcpService(
 	settingsRepo repository.IMcpSettingsRepo,
 	_ repository.IConnectionRepo,
-	toolRegistry *dbtools.Registry,
+	toolRegistry *serviceDbtools.Registry,
+	appLogger logger.Logger,
+	cfg *config.Config,
 ) IMcpService {
 	return &McpServiceImpl{
 		settingsRepo: settingsRepo,
 		nativeServer: NewNativeServer(toolRegistry),
-		logger:       container.Instance().Logger(),
+		logger:       appLogger,
+		cfg:          cfg,
 	}
 }
 
@@ -166,7 +171,7 @@ func (s *McpServiceImpl) buildStatus(settings *model.McpSettings) *dto.McpStatus
 		}
 	}
 
-	cfg := container.Instance().Config().App
+	cfg := s.cfg.App
 
 	return &dto.McpStatusResponse{
 		Enabled:             settings.Enabled,

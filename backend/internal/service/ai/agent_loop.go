@@ -5,8 +5,8 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
-	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
-	"github.com/dbo-studio/dbo/internal/service/dbtools"
+	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
+	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
 	"github.com/goccy/go-json"
 	"github.com/openai/openai-go/v2"
 )
@@ -15,22 +15,22 @@ const maxAgentToolRounds = 5
 
 func (s *AiServiceImpl) runAgentLoop(
 	ctx context.Context,
-	provider serviceAiProvider.IAiProvider,
-	providerReq *serviceAiProvider.ChatRequest,
+	provider aiProvider.IAiProvider,
+	providerReq *aiProvider.ChatRequest,
 	req *dto.AiChatRequest,
-	emitEvent func(serviceAiProvider.StreamEvent) error,
-) (*serviceAiProvider.ChatResponse, error) {
+	emitEvent func(aiProvider.StreamEvent) error,
+) (*aiProvider.ChatResponse, error) {
 	if s.toolRegistry == nil || len(providerReq.Tools) == 0 {
 		return provider.StreamChat(ctx, providerReq, emitEvent)
 	}
 
-	toolCtx := dbtools.ToolContext{ConnectionID: req.ConnectionID}
+	toolCtx := serviceDbtools.ToolContext{ConnectionID: req.ConnectionID}
 	if req.ContextOpts != nil {
 		toolCtx.Schema = req.ContextOpts.Schema
 		toolCtx.Database = req.ContextOpts.Database
 	}
 
-	var finalResp *serviceAiProvider.ChatResponse
+	var finalResp *aiProvider.ChatResponse
 
 	for round := 0; round < maxAgentToolRounds; round++ {
 		resp, toolCalls, err := provider.StreamChatWithTools(ctx, providerReq, emitEvent)
@@ -64,7 +64,7 @@ func (s *AiServiceImpl) runAgentLoop(
 		})
 
 		for _, call := range toolCalls {
-			if err := emitEvent(serviceAiProvider.StreamEvent{Type: "tool_start", Label: call.Name}); err != nil {
+			if err := emitEvent(aiProvider.StreamEvent{Type: "tool_start", Label: call.Name}); err != nil {
 				return nil, err
 			}
 
@@ -75,14 +75,14 @@ func (s *AiServiceImpl) runAgentLoop(
 
 			result, execErr := s.toolRegistry.Execute(ctx, call.Name, args, toolCtx)
 			if execErr != nil {
-				_ = emitEvent(serviceAiProvider.StreamEvent{
+				_ = emitEvent(aiProvider.StreamEvent{
 					Type:    "tool_error",
 					Label:   call.Name,
 					Content: execErr.Error(),
 				})
 				result = execErr.Error()
 			} else {
-				_ = emitEvent(serviceAiProvider.StreamEvent{
+				_ = emitEvent(aiProvider.StreamEvent{
 					Type:    "tool_result",
 					Label:   call.Name,
 					Content: result,
@@ -100,7 +100,7 @@ func (s *AiServiceImpl) runAgentLoop(
 	}
 
 	if finalResp == nil {
-		return &serviceAiProvider.ChatResponse{
+		return &aiProvider.ChatResponse{
 			Role:     model.AiChatMessageRoleAssistant,
 			Content:  "",
 			Type:     model.AiChatMessageTypeExplanation,

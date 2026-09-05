@@ -1,7 +1,6 @@
 package db
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -24,7 +23,6 @@ type SQLLite struct {
 
 func New(cfg *config.Config, logger logger.Logger) *SQLLite {
 	path := getDBPath(cfg, logger)
-	fmt.Println("db path: " + path)
 
 	db, err := gorm.Open(sqlite.Open(appSQLiteDSN(path)), &gorm.Config{
 		Logger:                                   l.Default.LogMode(l.Silent),

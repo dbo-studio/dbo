@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/dbo-studio/dbo/config"
-	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
+	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/cryptoutil"
 	"github.com/pressly/goose/v3"
 	"github.com/tidwall/gjson"
@@ -24,7 +24,7 @@ func upMigrateConnectionPasswordsToSecrets(ctx context.Context, tx *sql.Tx) erro
 		return nil
 	}
 
-	secret, err := secretStore.LoadOrCreateAppSecretKey(cfg)
+	secret, err := serviceSecretStore.LoadOrCreateAppSecretKey(cfg)
 	if err != nil {
 		return err
 	}

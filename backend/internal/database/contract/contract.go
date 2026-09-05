@@ -1,10 +1,6 @@
 package databaseContract
 
-import (
-	"context"
-
-	"github.com/dbo-studio/dbo/internal/app/dto"
-)
+import "context"
 
 type DatabaseRepository interface {
 	QueryRepository
@@ -15,22 +11,22 @@ type DatabaseRepository interface {
 
 type QueryRepository interface {
 	Version(ctx context.Context) (string, error)
-	RunQuery(ctx context.Context, dto *dto.RunQueryRequest) (*dto.RunQueryResponse, error)
-	UpdateQuery(ctx context.Context, dto *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error)
-	RunRawQuery(ctx context.Context, dto *dto.RawQueryRequest) (*dto.RawQueryResponse, error)
+	RunQuery(ctx context.Context, dto *RunQueryRequest) (*RunQueryResponse, error)
+	UpdateQuery(ctx context.Context, dto *UpdateQueryRequest) (*UpdateQueryResponse, error)
+	RunRawQuery(ctx context.Context, dto *RawQueryRequest) (*RawQueryResponse, error)
 	Tree(ctx context.Context, parentID string) (*TreeNode, error)
 	GetFormTabs(ctx context.Context, action TreeNodeActionName) []FormTab
 	Objects(ctx context.Context, nodeID string, tabID TreeTab, action TreeNodeActionName) (*FormResponse, error)
 	GetDynamicFieldOptions(ctx context.Context, req *DynamicFieldRequest) ([]FormFieldOption, error)
 	Execute(ctx context.Context, nodeID string, action TreeNodeActionName, params []byte) (*ExecuteResult, error)
 	PreviewExecute(ctx context.Context, nodeID string, action TreeNodeActionName, params []byte) ([]string, error)
-	AutoComplete(ctx context.Context, dto *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error)
-	ImportData(ctx context.Context, job dto.ImportJob, rows [][]string, columns []string) (*ImportResult, error)
+	AutoComplete(ctx context.Context, dto *AutoCompleteRequest) (*AutoCompleteResponse, error)
+	ImportData(ctx context.Context, job ImportJob, rows [][]string, columns []string) (*ImportResult, error)
 }
 
 type AIContextRepository interface {
-	AiContext(ctx context.Context, dto *dto.AiChatRequest) (string, error)
-	AiCompleteContext(ctx context.Context, dto *dto.AiInlineCompleteRequest) string
+	AiContext(ctx context.Context, dto *AiChatRequest) (string, error)
+	AiCompleteContext(ctx context.Context, dto *AiInlineCompleteRequest) string
 }
 
 type AIMetadataRepository interface {
@@ -40,7 +36,7 @@ type AIMetadataRepository interface {
 }
 
 type RawQueryRepository interface {
-	RunRawQuery(ctx context.Context, dto *dto.RawQueryRequest) (*dto.RawQueryResponse, error)
+	RunRawQuery(ctx context.Context, dto *RawQueryRequest) (*RawQueryResponse, error)
 }
 
 type DBToolsRepository interface {

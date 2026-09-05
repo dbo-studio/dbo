@@ -6,7 +6,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/repository"
-	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
+	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
@@ -18,13 +18,13 @@ type IAiProviderService interface {
 
 type IAiProviderServiceImpl struct {
 	aiProviderRepo  repository.IAiProviderRepo
-	providerFactory *serviceAiProvider.ProviderFactory
+	providerFactory *aiProvider.ProviderFactory
 }
 
 func NewAiProviderService(aiProviderRepo repository.IAiProviderRepo) IAiProviderService {
 	return &IAiProviderServiceImpl{
 		aiProviderRepo:  aiProviderRepo,
-		providerFactory: serviceAiProvider.NewProviderFactory(),
+		providerFactory: aiProvider.NewProviderFactory(),
 	}
 }
 

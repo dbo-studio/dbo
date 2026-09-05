@@ -20,55 +20,6 @@ type MysqlUpdateConnectionParams struct {
 	SSL      *ConnectionSSLParams `json:"ssl,omitempty"`
 }
 
-type MysqlDatabaseParams struct {
-	New *MysqlDatabaseParamsData `json:"new"`
-	Old *MysqlDatabaseParamsData `json:"old"`
-}
-
-type MysqlDatabaseParamsData struct {
-	Name       *string `json:"datname"`
-	Owner      *string `json:"rolname"`
-	Template   *string `json:"template"`
-	Tablespace *string `json:"tablespace"`
-	Comment    *string `json:"description"`
-}
-
-type MysqlSchemaParams struct {
-	New *MysqlSchemaParamsData `json:"new"`
-	Old *MysqlSchemaParamsData `json:"old"`
-}
-
-type MysqlSchemaParamsData struct {
-	Name    *string `json:"nspname"`
-	Owner   *string `json:"rolname"`
-	Comment *string `json:"description"`
-}
-
-type MysqlTableParams struct {
-	New *MysqlTableParamsData `json:"new"`
-	Old *MysqlTableParamsData `json:"old"`
-}
-
-type MysqlTableParamsData struct {
-	Name        *string `json:"relname"`
-	Comment     *string `json:"description"`
-	Persistence *string `json:"persistence"`
-	Tablespace  *string `json:"tablespace"`
-	Owner       *string `json:"rolname"`
-}
-
-type MysqlViewParams struct {
-	New *MysqlViewParamsData `json:"new"`
-	Old *MysqlViewParamsData `json:"old"`
-}
-
-type MysqlViewParamsData struct {
-	Name        *string `json:"name"`
-	Query       *string `json:"query"`
-	Comment     *string `json:"comment"`
-	CheckOption *string `json:"check_option"`
-}
-
 type MysqlTableColumnParams struct {
 	Columns []MysqlTableColumn `json:"columns"`
 }

@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 )
@@ -17,14 +19,6 @@ type IConnectionRepo interface {
 	Update(ctx context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) (*model.Connection, error)
 	UpdateVersion(ctx context.Context, connection *model.Connection, version string) (*model.Connection, error)
 	MakeAllConnectionsNotDefault(ctx context.Context, exceptedConnection *model.Connection) error
-}
-
-type ICacheRepo interface {
-	GetDatabaseVersion(ctx context.Context, connectionID uint, fromCache bool) (string, error)
-	GetConnectionDatabases(ctx context.Context, connectionID uint, fromCache bool) ([]string, error)
-	GetConnectionSchemas(ctx context.Context, connectionID uint, databaseName string, fromCache bool) ([]string, error)
-	GeDatabaseTables(ctx context.Context, connectionID uint, schemaName string, fromCache bool) ([]string, error)
-	FlushCache(ctx context.Context) error
 }
 
 type IHistoryRepo interface {
@@ -107,7 +101,6 @@ type Repository struct {
 	ConnectionRepo          IConnectionRepo
 	WebSessionRepo          IWebSessionRepo
 	WebConnectionSecretRepo IWebConnectionSecretRepo
-	CacheRepo               ICacheRepo
 	HistoryRepo             IHistoryRepo
 	SavedQueryRepo          ISavedQueryRepo
 	JobRepo                 IJobRepo
@@ -117,18 +110,18 @@ type Repository struct {
 	SafeModePasswordRepo    ISafeModePasswordRepo
 }
 
-func NewRepository() *Repository {
+func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{
-		ConfigRepo:              NewConfigRepo(),
-		ConnectionRepo:          NewConnectionRepo(),
-		WebSessionRepo:          NewWebSessionRepo(),
-		WebConnectionSecretRepo: NewWebConnectionSecretRepo(),
-		HistoryRepo:             NewHistoryRepo(),
-		SavedQueryRepo:          NewSavedQueryRepo(),
-		JobRepo:                 NewJobRepo(),
-		AiChatRepo:              NewAiChatRepo(),
-		AiProviderRepo:          NewAiProviderRepo(),
-		McpSettingsRepo:         NewMcpSettingsRepo(),
-		SafeModePasswordRepo:    NewSafeModePasswordRepo(),
+		ConfigRepo:              NewConfigRepo(db),
+		ConnectionRepo:          NewConnectionRepo(db),
+		WebSessionRepo:          NewWebSessionRepo(db),
+		WebConnectionSecretRepo: NewWebConnectionSecretRepo(db),
+		HistoryRepo:             NewHistoryRepo(db),
+		SavedQueryRepo:          NewSavedQueryRepo(db),
+		JobRepo:                 NewJobRepo(db),
+		AiChatRepo:              NewAiChatRepo(db),
+		AiProviderRepo:          NewAiProviderRepo(db),
+		McpSettingsRepo:         NewMcpSettingsRepo(db),
+		SafeModePasswordRepo:    NewSafeModePasswordRepo(db),
 	}
 }

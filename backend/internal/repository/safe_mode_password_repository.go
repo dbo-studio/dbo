@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"gorm.io/gorm"
@@ -15,9 +14,9 @@ type safeModePasswordRepoImpl struct {
 	db *gorm.DB
 }
 
-func NewSafeModePasswordRepo() ISafeModePasswordRepo {
+func NewSafeModePasswordRepo(db *gorm.DB) ISafeModePasswordRepo {
 	return &safeModePasswordRepoImpl{
-		db: container.Instance().DB(),
+		db: db,
 	}
 }
 

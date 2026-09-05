@@ -4,8 +4,7 @@ import (
 	"net/http"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
-	serviceMcp "github.com/dbo-studio/dbo/internal/service/mcp"
+	serviceMCP "github.com/dbo-studio/dbo/internal/service/mcp"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -16,12 +15,12 @@ import (
 
 type McpHandler struct {
 	logger     logger.Logger
-	mcpService serviceMcp.IMcpService
+	mcpService serviceMCP.IMcpService
 }
 
-func NewMcpHandler(mcp serviceMcp.IMcpService) *McpHandler {
+func NewMcpHandler(logger logger.Logger, mcp serviceMCP.IMcpService) *McpHandler {
 	return &McpHandler{
-		logger:     container.Instance().Logger(),
+		logger:     logger,
 		mcpService: mcp,
 	}
 }
@@ -60,7 +59,7 @@ func (h McpHandler) RegenerateToken(c fiber.Ctx) error {
 }
 
 func (h McpHandler) Proxy(c fiber.Ctx) error {
-	token := serviceMcp.ExtractBearer(c.Get("Authorization"))
+	token := serviceMCP.ExtractBearer(c.Get("Authorization"))
 
 	settings, ok := h.mcpService.AuthenticateToken(c, token)
 	if !ok {

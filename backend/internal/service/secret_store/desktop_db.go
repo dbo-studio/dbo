@@ -1,4 +1,4 @@
-package secretStore
+package serviceSecretStore
 
 import "context"
 
