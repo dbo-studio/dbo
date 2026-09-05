@@ -3,13 +3,13 @@ import { Box } from '@mui/system';
 
 export const UpdateDialogContentStyled = styled(Box)(() => ({
   flex: 1,
+  minHeight: 0,
   display: 'flex',
   flexDirection: 'column',
-  overflow: 'scroll'
+  overflowY: 'auto'
 }));
 
 export const UpdateDialogStyled = styled(Box)(({ theme }) => ({
-  flex: 1,
   minHeight: 80,
   maxWidth: 600,
   '& *': {
