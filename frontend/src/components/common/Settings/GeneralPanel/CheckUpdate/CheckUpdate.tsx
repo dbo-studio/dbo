@@ -4,7 +4,7 @@ import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Button, Typography } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
-import { openPath } from '@tauri-apps/plugin-opener';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { useState } from 'react';
 import { GeneralPanelSettingRowStyled } from '../GeneralPanel.styled';
 
@@ -34,7 +34,7 @@ export function CheckUpdate() {
 
   const handleUpdate = async () => {
     if (await tools.isTauri()) {
-      await openPath(general.release?.url ?? '');
+      await openUrl(general.release?.url ?? '');
     } else {
       window.open(general.release?.url, '_blank');
     }

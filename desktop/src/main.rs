@@ -7,7 +7,10 @@ use std::net::TcpListener;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
-use tauri::{AppHandle, Emitter, Manager, RunEvent, State};
+#[cfg(windows)]
+use std::time::Duration;
+
+use tauri::{AppHandle, Emitter, Manager, RunEvent, State, WindowEvent};
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
 
@@ -63,13 +66,17 @@ fn main() {
             menu::setup_menu(app)?;
             setup_environment();
             start_backend_server(app.handle());
+            setup_sidecar_cleanup_on_close(app)?;
             Ok(())
         })
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(move |_, event| {
-            if let RunEvent::Exit = event {
-                cleanup_sidecar(&sidecar_child_for_cleanup, &sidecar_stopping_for_cleanup);
+            match event {
+                RunEvent::ExitRequested { .. } | RunEvent::Exit => {
+                    cleanup_sidecar(&sidecar_child_for_cleanup, &sidecar_stopping_for_cleanup);
+                }
+                _ => {}
             }
         });
 }
@@ -105,6 +112,22 @@ fn apply_traffic_light_inset(
 
 #[cfg(not(target_os = "macos"))]
 fn setup_macos_window(_app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    Ok(())
+}
+
+fn setup_sidecar_cleanup_on_close(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    let Some(main_window) = app.get_webview_window("main") else {
+        return Ok(());
+    };
+
+    let sidecar = app.state::<SidecarChild>().inner().clone();
+    let stopping = app.state::<SidecarStopping>().inner().clone();
+    main_window.on_window_event(move |event| {
+        if matches!(event, WindowEvent::CloseRequested { .. }) {
+            cleanup_sidecar(&sidecar, &stopping);
+        }
+    });
+
     Ok(())
 }
 
@@ -215,13 +238,21 @@ async fn run_sidecar(app: AppHandle) {
 }
 
 fn cleanup_sidecar(sidecar_child: &SidecarChild, stopping: &SidecarStopping) {
+    if stopping.load(Ordering::SeqCst) {
+        wait_for_sidecar_exit(sidecar_child);
+        return;
+    }
+
     println!("Cleaning up sidecar...");
     stopping.store(true, Ordering::SeqCst);
 
     if let Ok(mut child_opt) = sidecar_child.lock() {
         if let Some(child) = child_opt.take() {
             match child.kill() {
-                Ok(_) => println!("Sidecar process terminated successfully"),
+                Ok(_) => {
+                    println!("Sidecar process terminated successfully");
+                    wait_for_sidecar_exit(sidecar_child);
+                }
                 Err(e) => {
                     eprintln!("Failed to terminate sidecar: {e}");
                     stopping.store(false, Ordering::SeqCst);
@@ -232,6 +263,23 @@ fn cleanup_sidecar(sidecar_child: &SidecarChild, stopping: &SidecarStopping) {
         }
     }
 }
+
+#[cfg(windows)]
+fn wait_for_sidecar_exit(sidecar_child: &SidecarChild) {
+    for _ in 0..40 {
+        let gone = sidecar_child
+            .lock()
+            .map(|guard| guard.is_none())
+            .unwrap_or(true);
+        if gone {
+            return;
+        }
+        std::thread::sleep(Duration::from_millis(50));
+    }
+}
+
+#[cfg(not(windows))]
+fn wait_for_sidecar_exit(_sidecar_child: &SidecarChild) {}
 
 fn find_free_port() -> u16 {
     TcpListener::bind("127.0.0.1:0")
