@@ -48,6 +48,7 @@ export default function UpdateDialog() {
       <Box
         sx={{
           display: 'flex',
+          flexShrink: 0,
           justifyContent: 'space-between'
         }}
       >
