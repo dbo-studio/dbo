@@ -33,7 +33,7 @@ func New() *Config {
 			Client:         Client(os.Getenv("APP_CLIENT")),
 			PublicURL:      os.Getenv("APP_PUBLIC_URL"),
 			MCPURLOverride: os.Getenv("APP_MCP_PUBLIC_URL"),
-			Version:        "v1.1.0",
+			Version:        "v1.1.1",
 			DatabaseName:   "dbo.db",
 			ReleaseURLAPI:  "https://dbo-studio.com/api/config",
 			ReleaseURL:     "https://dbo-studio.com/releases",

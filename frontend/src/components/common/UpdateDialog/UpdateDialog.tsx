@@ -1,8 +1,10 @@
 import Modal from '@/components/base/Modal/Modal';
+import { tools } from '@/core/utils';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Button } from '@mui/material';
 import { Stack } from '@mui/system';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { useState } from 'react';
 import Markdown from 'react-markdown';
 import { UpdateDialogContentStyled, UpdateDialogStyled } from './UpdateDialog.styled';
@@ -28,9 +30,13 @@ export default function UpdateDialog() {
     setDismissedReleaseName(release.name);
   };
 
-  const handleOnUpdate = () => {
+  const handleOnUpdate = async () => {
     if (release === undefined) return;
-    window.open(release?.url, '_blank');
+    if (await tools.isTauri()) {
+      await openUrl(release.url);
+    } else {
+      window.open(release.url, '_blank');
+    }
     setDismissedReleaseName(release.name);
   };
 
@@ -61,7 +67,7 @@ export default function UpdateDialog() {
           </Button>
         </Stack>
 
-        <Button size='small' color='primary' variant='contained' onClick={handleOnUpdate}>
+        <Button size='small' color='primary' variant='contained' onClick={() => void handleOnUpdate()}>
           {locales.update}
         </Button>
       </Box>
