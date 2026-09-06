@@ -7,10 +7,7 @@ use std::net::TcpListener;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
-#[cfg(windows)]
-use std::time::Duration;
-
-use tauri::{AppHandle, Emitter, Manager, RunEvent, State, WindowEvent};
+use tauri::{AppHandle, Emitter, Manager, RunEvent, State};
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
 
@@ -19,6 +16,7 @@ use tauri_plugin_decorum::WebviewWindowExt;
 
 type SidecarChild = Arc<Mutex<Option<CommandChild>>>;
 type SidecarStopping = Arc<AtomicBool>;
+type SidecarEventsHandle = Arc<Mutex<Option<tauri::async_runtime::JoinHandle<()>>>>;
 
 const DEFAULT_PORT: u16 = 5124;
 pub const SIDECAR_FAILED_EVENT: &str = "sidecar://failed";
@@ -37,8 +35,10 @@ fn main() {
 
     let sidecar_child: SidecarChild = Arc::new(Mutex::new(None));
     let sidecar_stopping: SidecarStopping = Arc::new(AtomicBool::new(false));
+    let sidecar_events: SidecarEventsHandle = Arc::new(Mutex::new(None));
     let sidecar_child_for_cleanup = sidecar_child.clone();
     let sidecar_stopping_for_cleanup = sidecar_stopping.clone();
+    let sidecar_events_for_cleanup = sidecar_events.clone();
 
     let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
@@ -53,6 +53,7 @@ fn main() {
         .plugin(tauri_plugin_decorum::init())
         .manage(sidecar_child.clone())
         .manage(sidecar_stopping.clone())
+        .manage(sidecar_events.clone())
         .invoke_handler(tauri::generate_handler![get_backend_host, restart_backend]);
 
     #[cfg(any(target_os = "macos", target_os = "ios", target_os = "android", target_os = "windows"))]
@@ -66,17 +67,17 @@ fn main() {
             menu::setup_menu(app)?;
             setup_environment();
             start_backend_server(app.handle());
-            setup_sidecar_cleanup_on_close(app)?;
             Ok(())
         })
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(move |_, event| {
-            match event {
-                RunEvent::ExitRequested { .. } | RunEvent::Exit => {
-                    cleanup_sidecar(&sidecar_child_for_cleanup, &sidecar_stopping_for_cleanup);
-                }
-                _ => {}
+            if matches!(event, RunEvent::ExitRequested { .. } | RunEvent::Exit) {
+                cleanup_sidecar(
+                    &sidecar_child_for_cleanup,
+                    &sidecar_stopping_for_cleanup,
+                    &sidecar_events_for_cleanup,
+                );
             }
         });
 }
@@ -115,22 +116,6 @@ fn setup_macos_window(_app: &tauri::App) -> Result<(), Box<dyn std::error::Error
     Ok(())
 }
 
-fn setup_sidecar_cleanup_on_close(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    let Some(main_window) = app.get_webview_window("main") else {
-        return Ok(());
-    };
-
-    let sidecar = app.state::<SidecarChild>().inner().clone();
-    let stopping = app.state::<SidecarStopping>().inner().clone();
-    main_window.on_window_event(move |event| {
-        if matches!(event, WindowEvent::CloseRequested { .. }) {
-            cleanup_sidecar(&sidecar, &stopping);
-        }
-    });
-
-    Ok(())
-}
-
 #[tauri::command]
 fn get_backend_host() -> String {
     let port = env::var("APP_PORT").unwrap_or_else(|_| DEFAULT_PORT.to_string());
@@ -142,8 +127,9 @@ fn restart_backend(
     app: AppHandle,
     sidecar: State<'_, SidecarChild>,
     stopping: State<'_, SidecarStopping>,
+    events: State<'_, SidecarEventsHandle>,
 ) -> Result<(), String> {
-    cleanup_sidecar(&sidecar, &stopping);
+    cleanup_sidecar(&sidecar, &stopping, &events);
     start_backend_server(&app);
     Ok(())
 }
@@ -201,8 +187,9 @@ async fn run_sidecar(app: AppHandle) {
 
     let sidecar_state_for_events = sidecar_state.inner().clone();
     let stopping = app.state::<SidecarStopping>().inner().clone();
+    let events_handle = app.state::<SidecarEventsHandle>().inner().clone();
 
-    tauri::async_runtime::spawn(async move {
+    let event_task = tauri::async_runtime::spawn(async move {
         while let Some(event) = rx.recv().await {
             match event {
                 CommandEvent::Stdout(data) => {
@@ -235,51 +222,55 @@ async fn run_sidecar(app: AppHandle) {
             }
         }
     });
+
+    if let Ok(mut handle_opt) = events_handle.lock() {
+        *handle_opt = Some(event_task);
+    }
 }
 
-fn cleanup_sidecar(sidecar_child: &SidecarChild, stopping: &SidecarStopping) {
-    if stopping.load(Ordering::SeqCst) {
-        wait_for_sidecar_exit(sidecar_child);
+fn cleanup_sidecar(
+    sidecar_child: &SidecarChild,
+    stopping: &SidecarStopping,
+    events_handle: &SidecarEventsHandle,
+) {
+    if stopping.swap(true, Ordering::SeqCst) {
         return;
     }
 
     println!("Cleaning up sidecar...");
-    stopping.store(true, Ordering::SeqCst);
+
+    if let Ok(mut handle_opt) = events_handle.lock() {
+        if let Some(handle) = handle_opt.take() {
+            handle.abort();
+        }
+    }
 
     if let Ok(mut child_opt) = sidecar_child.lock() {
         if let Some(child) = child_opt.take() {
-            match child.kill() {
-                Ok(_) => {
-                    println!("Sidecar process terminated successfully");
-                    wait_for_sidecar_exit(sidecar_child);
-                }
-                Err(e) => {
-                    eprintln!("Failed to terminate sidecar: {e}");
-                    stopping.store(false, Ordering::SeqCst);
-                }
+            if let Err(e) = child.kill() {
+                eprintln!("Failed to terminate sidecar: {e}");
+            } else {
+                println!("Sidecar process terminated successfully");
             }
-        } else {
-            stopping.store(false, Ordering::SeqCst);
         }
     }
+
+    #[cfg(windows)]
+    force_kill_sidecar_process();
 }
 
 #[cfg(windows)]
-fn wait_for_sidecar_exit(sidecar_child: &SidecarChild) {
-    for _ in 0..40 {
-        let gone = sidecar_child
-            .lock()
-            .map(|guard| guard.is_none())
-            .unwrap_or(true);
-        if gone {
-            return;
-        }
-        std::thread::sleep(Duration::from_millis(50));
-    }
-}
+fn force_kill_sidecar_process() {
+    use std::os::windows::process::CommandExt;
+    use std::process::Command;
 
-#[cfg(not(windows))]
-fn wait_for_sidecar_exit(_sidecar_child: &SidecarChild) {}
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
+
+    let _ = Command::new("taskkill")
+        .args(["/F", "/IM", "dbo-bin.exe"])
+        .creation_flags(CREATE_NO_WINDOW)
+        .output();
+}
 
 fn find_free_port() -> u16 {
     TcpListener::bind("127.0.0.1:0")

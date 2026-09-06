@@ -63,6 +63,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Get Version from File
+        run: |
+          VERSION=$(cat docs/scripts/VERSION || echo "0.0.0")
+          echo "PACKAGE_VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Install Dependencies (Ubuntu Only)
         if: matrix.platform == 'ubuntu-24.04'
         run: |
@@ -83,6 +88,10 @@ jobs:
       - name: Build Frontend with Version
         run: npm run build
         working-directory: ./frontend
+        env:
+          TAURI_ENV_PLATFORM: ${{ matrix.platform == 'windows-latest' && 'windows' || matrix.platform == 'ubuntu-24.04' && 'linux' || 'darwin' }}
+          TAURI_ENV_ARCH: ${{ matrix.platform == 'macos-latest' && 'aarch64' || 'x86_64' }}
+          TAURI_ENV_DEBUG: false
 
       - uses: actions/setup-go@v5
         with:
