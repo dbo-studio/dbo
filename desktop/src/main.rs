@@ -225,7 +225,7 @@ async fn run_sidecar(app: AppHandle) {
 
     if let Ok(mut handle_opt) = events_handle.lock() {
         *handle_opt = Some(event_task);
-    }
+    };
 }
 
 fn cleanup_sidecar(
