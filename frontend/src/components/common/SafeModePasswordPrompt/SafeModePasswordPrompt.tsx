@@ -4,7 +4,7 @@ import Modal from '@/components/base/Modal/Modal';
 import {
   ConnectionFormContainerStyled,
   ConnectionFormFooterStyled
-} from '@/components/common/Connections/Connections/ConnectionPasswordPrompt/ConnectionPasswordPrompt.styled';
+} from '@/components/common/Connections/ConnectionPasswordPrompt/ConnectionPasswordPrompt.styled';
 import { loadSafeModePassword, safeModeBiometricsAvailable } from '@/core/tauri/biometry';
 import locales from '@/locales';
 import { EventFor } from '@/types';

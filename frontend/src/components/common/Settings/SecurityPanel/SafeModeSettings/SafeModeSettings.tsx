@@ -62,8 +62,7 @@ export function SafeModeSettings(): JSX.Element {
       await queryClient.invalidateQueries({ queryKey: ['safe-mode-password'] });
       toast.success(locales.safe_mode_password_saved);
       void storeSafeModePassword(result.password);
-    } catch (error) {
-      console.debug('🚀 ~ SafeModeSettings ~ handleSetPassword:', error);
+    } catch {
       toast.error(locales.safe_mode_update_failed);
     }
   };
@@ -82,8 +81,7 @@ export function SafeModeSettings(): JSX.Element {
       });
       toast.success(locales.safe_mode_password_changed);
       void storeSafeModePassword(result.password);
-    } catch (error) {
-      console.debug('🚀 ~ SafeModeSettings ~ handleChangePassword:', error);
+    } catch {
       toast.error(locales.safe_mode_password_invalid);
     }
   };
@@ -109,8 +107,7 @@ export function SafeModeSettings(): JSX.Element {
         });
         await queryClient.invalidateQueries({ queryKey: ['safe-mode-password'] });
         password = result.password;
-      } catch (error) {
-        console.debug('🚀 ~ SafeModeSettings ~ handleBiometrics setup:', error);
+      } catch {
         toast.error(locales.safe_mode_update_failed);
         return;
       }
@@ -135,7 +132,6 @@ export function SafeModeSettings(): JSX.Element {
       updateGeneral({ enableSafeModeBiometrics: true });
       toast.success(locales.safe_mode_biometrics_enabled);
     } catch (error) {
-      console.debug('🚀 ~ SafeModeSettings ~ handleBiometrics persist:', error);
       toast.error(error instanceof Error ? error.message : locales.safe_mode_biometrics_failed);
     }
   };

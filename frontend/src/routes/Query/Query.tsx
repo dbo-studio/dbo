@@ -8,7 +8,7 @@ import { shortcuts } from '@/core/utils';
 import { useCurrentConnection, useLayoutMode, useShortcut } from '@/hooks';
 import { useAiBridge } from '@/hooks/useAiBridge';
 import { useEditorSessionContext } from '@/hooks/useEditorSessionContext';
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useSyncEditorContext } from '@/hooks/useSyncEditorContext';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
@@ -90,8 +90,8 @@ export default function Query(): JSX.Element {
   const loadData = useCallback(async (): Promise<void> => {
     try {
       await loadDataFromIndexedDB();
-    } catch (error) {
-      console.debug('🚀 ~ loadData ~ error:', error);
+    } catch {
+      /* ignored */
     }
   }, [loadDataFromIndexedDB]);
 
@@ -105,7 +105,7 @@ export default function Query(): JSX.Element {
       return;
     }
 
-    void loadData().catch((e) => console.log('🚀 ~ Query ~ e:', e));
+    void loadData().catch(() => undefined);
   }, [selectedTab?.id, loadData]);
 
   const applyQueryResult = useCallback(

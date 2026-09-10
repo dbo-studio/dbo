@@ -53,7 +53,7 @@ export default function AiProvidersPanel() {
   });
 
   const handleSubmit = () => {
-    updateProviderMutation(provider as AiProviderType).catch((e) => console.debug('🚀 ~ handleSubmit ~ error:', e));
+    updateProviderMutation(provider as AiProviderType).catch(() => undefined);
   };
 
   const handleAddModel = () => {

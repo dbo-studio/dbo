@@ -31,8 +31,8 @@ export default function Providers() {
       );
 
       updateProviders(updatedProviders ?? []);
-    } catch (error) {
-      console.debug('🚀 ~ handleProviderChange ~ error:', error);
+    } catch {
+      /* ignored */
     }
   };
 
@@ -42,8 +42,8 @@ export default function Providers() {
     try {
       const res = await updateProviderMutation({ providerId: provider.id, data: { model: option.value as string } });
       updateProvider(res);
-    } catch (error) {
-      console.debug('🚀 ~ handleModelChange ~ error:', error);
+    } catch {
+      /* ignored */
     }
   };
 

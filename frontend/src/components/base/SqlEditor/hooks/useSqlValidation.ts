@@ -26,8 +26,8 @@ export function useSqlValidation(editor: Monaco.editor.IStandaloneCodeEditor | n
         const errors = validateSql(value);
         const markers = errorsToMarkers(errors);
         monaco.editor.setModelMarkers(model, 'sql-validator', markers);
-      } catch (error) {
-        console.debug('🚀 ~ useSqlValidation ~ error:', error);
+      } catch {
+        /* ignored */
       }
     }, DEBOUNCE_DELAYS.sqlValidation);
 

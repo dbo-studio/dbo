@@ -48,10 +48,11 @@ func (r *BaseRepository) ImportData(ctx context.Context, job dto.ImportJob, rows
 		chunkEnd := min(chunkStart+importChunkSize, len(rows))
 
 		if job.ContinueOnError {
-			// Tolerant mode: execute row by row so one bad row doesn't abort
-			// the chunk, collecting errors as before.
 			for i := chunkStart; i < chunkEnd; i++ {
-				if err := insertRow(r.db.WithContext(ctx), rows[i]); err != nil {
+				err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+					return insertRow(tx, rows[i])
+				})
+				if err != nil {
 					failedRows++
 
 					errors = append(errors, contract.ImportError{

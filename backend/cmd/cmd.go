@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"log"
@@ -24,6 +25,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/logger/zap"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 func ServeCommand() *cobra.Command {
@@ -72,14 +74,24 @@ func Execute() {
 	cache := sqlite.NewSQLiteCache(appDB)
 	appContainer.SetCache(cache)
 
-	rr := repository.NewRepository(appDB)
+	aiCipherKey, err := serviceSecretStore.DeriveAICipherKey(cfg)
+	if err != nil {
+		appLogger.Fatal(err)
+	}
+
+	rr := repository.NewRepository(appDB, aiCipherKey)
 	secretStore := serviceSecretStore.NewSecretStore(cfg, rr.WebSessionRepo, rr.WebConnectionSecretRepo, appLogger)
-	cm := databaseConnection.NewConnectionManager(rr.HistoryRepo, secretStore, appLogger)
+	cm := databaseConnection.NewConnectionManager(rr.HistoryRepo, secretStore, appLogger, cache)
 	ss := service.NewService(rr, cm, secretStore, service.Deps{
 		Logger: appLogger,
 		Cache:  cache,
 		Config: cfg,
 	})
+
+	if token := strings.TrimSpace(cfg.App.AuthToken); token != "" {
+		sum := sha256.Sum256([]byte(token))
+		appLogger.Info(fmt.Sprintf("APP_AUTH_TOKEN configured (sha256=%x…)", sum[:4]))
+	}
 
 	err = ss.JobManager.CancelAllJobs()
 	if err != nil {

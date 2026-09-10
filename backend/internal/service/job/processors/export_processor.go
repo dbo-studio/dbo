@@ -109,10 +109,8 @@ func (p *ExportProcessor) Process(ctx context.Context, job *model.Job) error {
 	)
 
 	if jobData.SavePath != "" {
-		for _, part := range strings.Split(filepath.ToSlash(jobData.SavePath), "/") {
-			if part == ".." {
-				return fmt.Errorf("invalid save path")
-			}
+		if err := helper.ValidateExportSavePath(jobData.SavePath, true); err != nil {
+			return fmt.Errorf("invalid save path: %w", err)
 		}
 
 		filePath = jobData.SavePath
@@ -123,7 +121,7 @@ func (p *ExportProcessor) Process(ctx context.Context, job *model.Job) error {
 			return fmt.Errorf("failed to create directory: %w", err)
 		}
 	} else {
-		exportDir := "exports"
+		exportDir := helper.ExportDir
 		if err := os.MkdirAll(exportDir, 0755); err != nil {
 			return fmt.Errorf("failed to create export directory: %w", err)
 		}

@@ -1,12 +1,10 @@
 import { useTreeNodeHandlers } from '@/components/common/ObjectTreeView/TreeNode/hooks/useTreeNodeHandlers';
 import { useTreeNodeMenu } from '@/components/common/ObjectTreeView/TreeNode/hooks/useTreeNodeMenu';
 import { NodeContent } from '@/components/common/ObjectTreeView/TreeNode/NodeContent/NodeContent';
-import {
-  ChildrenContainer,
-  HoverableTreeNodeContainerStyled
-} from '@/components/common/ObjectTreeView/TreeNode/TreeNode.styled';
+import { HoverableTreeNodeContainerStyled } from '@/components/common/ObjectTreeView/TreeNode/TreeNode.styled';
+import TreeChildren from '@/components/common/ObjectTreeView/TreeNode/VirtualizedTreeChildren';
 import type { TreeNodeProps } from '@/components/common/ObjectTreeView/TreeNode/types';
-import { useCurrentConnection } from '@/hooks/useCurrentConnection.hook';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { TreeNodeType } from '@/types/Tree';
 import { Fragment, memo, type JSX, useCallback, useEffect, useRef, useState } from 'react';
@@ -17,6 +15,7 @@ import { useIsTreeNodeExpanded } from './hooks/useIsTreeNodeExpanded';
 function TreeNode({
   node,
   parentRefsRef = { current: new Map() },
+  scrollContainerRef,
   nodeIndex = 0,
   level = 0,
   searchTerm = '',
@@ -137,23 +136,18 @@ function TreeNode({
         handleBlur={handleBlur}
         handleKeyDown={handleKeyDown}
       />
-      {isExpanded && children.length > 0 && (
-        <ChildrenContainer>
-          {children.map((child, index) => (
-            <TreeNode
-              key={child.id}
-              node={child}
-              fetchChildren={fetchChildren}
-              parentRefsRef={parentRefsRef}
-              nodeIndex={index}
-              level={level + 1}
-              onFocusChange={onFocusChange}
-              searchTerm={searchTerm}
-              onContextMenu={onContextMenu}
-              selectedNodeId={selectedNodeId}
-            />
-          ))}
-        </ChildrenContainer>
+      {isExpanded && children.length > 0 && scrollContainerRef && (
+        <TreeChildren
+          childNodes={children}
+          scrollContainerRef={scrollContainerRef}
+          fetchChildren={fetchChildren}
+          parentRefsRef={parentRefsRef}
+          level={level}
+          searchTerm={searchTerm}
+          onFocusChange={onFocusChange}
+          onContextMenu={onContextMenu}
+          selectedNodeId={selectedNodeId}
+        />
       )}
     </HoverableTreeNodeContainerStyled>
   );

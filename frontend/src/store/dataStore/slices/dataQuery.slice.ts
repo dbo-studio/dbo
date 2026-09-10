@@ -4,7 +4,7 @@ import { filterOperatorRequiresValue } from '@/core/constants';
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import { getSafeModeError } from '@/core/utils/safeMode';
-import { debouncedSaveToIndexedDB } from '@/core/utils/indexdbHelper';
+import { debouncedSaveToIndexedDB } from '@/core/utils/indexedDbHelper';
 import { summarizeQueryResult } from '@/core/utils/queryResultSummary';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
@@ -163,9 +163,7 @@ export const createDataQuerySlice: StateCreator<
           get().updateRows(res.data),
           get().updateColumns(res.columns),
           debouncedSaveToIndexedDB(tab.id, res.data, res.columns)
-        ]).catch((e) => {
-          console.debug('🚀 ~ createDataQuerySlice ~ e:', e);
-        });
+        ]).catch(() => undefined);
 
         const summary = summarizeQueryResult(res);
         set(
@@ -186,7 +184,6 @@ export const createDataQuerySlice: StateCreator<
         if (isCanceledError(error)) {
           return;
         }
-        console.debug('🚀 ~ runQuery: ~ error:', error);
       } finally {
         clearAbortController(controller);
         get().toggleDataFetching(false);
@@ -279,7 +276,6 @@ export const createDataQuerySlice: StateCreator<
         if (isCanceledError(error) || controller.signal.aborted) {
           return;
         }
-        console.debug('🚀 ~ runRawQuery: ~ error:', error);
         if (!getSafeModeError(error)) {
           toast.error(locales.query_failed);
         }

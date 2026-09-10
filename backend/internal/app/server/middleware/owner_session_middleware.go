@@ -1,7 +1,9 @@
 package middleware
 
 import (
+	"crypto/sha256"
 	"crypto/subtle"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -13,6 +15,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/response"
 	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v3"
+	"gorm.io/gorm"
 )
 
 const (
@@ -26,16 +29,6 @@ type authExchangeRequest struct {
 	Token string `json:"token"`
 }
 
-/*
-*
-This middleware resolves the owner ID for the request.
-
-  - Desktop mode: the owner is always "desktop".
-  - Web mode (local): visitors without a valid session cookie get a fresh session.
-  - Web mode with APP_AUTH_TOKEN set (server deployments): only sessions created by
-    exchanging the auth token (POST /api/config/auth) are accepted; everything else
-    gets 401.
-*/
 func OwnerSessionMiddleware(cfg *config.Config, webSessionRepo repository.IWebSessionRepo) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		if cfg != nil && cfg.App.Client == config.ClientDesktop {
@@ -44,8 +37,6 @@ func OwnerSessionMiddleware(cfg *config.Config, webSessionRepo repository.IWebSe
 			return c.Next()
 		}
 
-		// The MCP proxy authenticates with its own bearer token and re-scopes
-		// the owner itself; session handling would insert junk session rows.
 		if isBearerRequest(c) {
 			return c.Next()
 		}
@@ -61,7 +52,8 @@ func OwnerSessionMiddleware(cfg *config.Config, webSessionRepo repository.IWebSe
 
 		sessionID := c.Cookies(sessionCookieName)
 		if sessionID != "" {
-			if _, err := webSessionRepo.Get(c.Context(), sessionID); err == nil {
+			_, err := webSessionRepo.Get(c.Context(), sessionID)
+			if err == nil {
 				if err := webSessionRepo.TouchLastSeenDebounced(c.Context(), sessionID, sessionTouchInterval); err != nil {
 					return response.ErrorBuilder().FromError(apperror.InternalServerError(err)).Send(c)
 				}
@@ -69,6 +61,10 @@ func OwnerSessionMiddleware(cfg *config.Config, webSessionRepo repository.IWebSe
 				setOwner(c, sessionID)
 
 				return c.Next()
+			}
+
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return response.ErrorBuilder().FromError(apperror.InternalServerError(err)).Send(c)
 			}
 		}
 
@@ -81,9 +77,6 @@ func OwnerSessionMiddleware(cfg *config.Config, webSessionRepo repository.IWebSe
 			return response.ErrorBuilder().FromError(apperror.InternalServerError(err)).Send(c)
 		}
 
-		// Secure must match the actual request scheme. Browsers (especially Safari)
-		// reject Secure cookies on http://localhost, which creates a new owner
-		// session per request and makes POST /connections appear to "return empty".
 		c.Cookie(&fiber.Cookie{
 			Name:     sessionCookieName,
 			Value:    newSessionID,
@@ -99,9 +92,6 @@ func OwnerSessionMiddleware(cfg *config.Config, webSessionRepo repository.IWebSe
 	}
 }
 
-// handleAuthExchange swaps the deployment auth token for a session cookie.
-// The token is never persisted; the plain session ID is returned only to the
-// caller that presented the token.
 func handleAuthExchange(c fiber.Ctx, webSessionRepo repository.IWebSessionRepo, authToken string) error {
 	if authToken == "" {
 		return response.ErrorBuilder().FromError(apperror.NotFound(apperror.ErrAuthNotEnabled)).Send(c)
@@ -112,7 +102,7 @@ func handleAuthExchange(c fiber.Ctx, webSessionRepo repository.IWebSessionRepo, 
 		return response.ErrorBuilder().FromError(apperror.BadRequest(apperror.ErrUnauthenticated)).Send(c)
 	}
 
-	if subtle.ConstantTimeCompare([]byte(req.Token), []byte(authToken)) != 1 {
+	if !authTokensEqual(req.Token, authToken) {
 		return response.ErrorBuilder().FromError(apperror.Unauthenticated()).Send(c)
 	}
 
@@ -133,6 +123,13 @@ func handleAuthExchange(c fiber.Ctx, webSessionRepo repository.IWebSessionRepo, 
 	setOwner(c, sessionID)
 
 	return response.SuccessBuilder().Send(c)
+}
+
+func authTokensEqual(provided, expected string) bool {
+	h1 := sha256.Sum256([]byte(provided))
+	h2 := sha256.Sum256([]byte(expected))
+
+	return subtle.ConstantTimeCompare(h1[:], h2[:]) == 1
 }
 
 func setOwner(c fiber.Ctx, ownerID string) {

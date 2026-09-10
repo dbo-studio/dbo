@@ -108,8 +108,8 @@ export default function AddConnection(): JSX.Element {
       });
       handleClose();
       toast.success(locales.connection_create_success);
-    } catch (error) {
-      console.debug('🚀 ~ handleCreateConnection ~ error:', error);
+    } catch {
+      /* ignored */
     }
   };
 

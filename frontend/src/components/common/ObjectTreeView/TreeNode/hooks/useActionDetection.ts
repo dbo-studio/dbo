@@ -2,7 +2,7 @@ import api from '@/api';
 import { TabMode } from '@/core/enums';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import { useCurrentConnection } from '@/hooks';
-import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -20,7 +20,7 @@ export const useActionDetection = (
   actionDetection: (event: React.MouseEvent, node: TreeNodeType) => Promise<void>;
 } => {
   const queryClient = useQueryClient();
-  const confirmModal = useConfirmModalStore();
+  const confirmDanger = useConfirmModalStore((state) => state.danger);
   const currentConnection = useCurrentConnection();
   const { useSidebarOverlay } = useLayoutMode();
   const updateUI = useSettingStore((state) => state.updateUI);
@@ -83,8 +83,7 @@ export const useActionDetection = (
         await reloadTree(false);
 
         toast.success(locales.action_executed_successfully);
-      } catch (error) {
-        console.debug('🚀 ~ actionDetection ~ error:', error);
+      } catch {
         toast.error(locales.action_failed);
       }
     },
@@ -124,7 +123,7 @@ export const useActionDetection = (
           const needsGenericConfirm = !currentConnection.safeMode || currentConnection.safeMode === 'silent';
 
           if (needsGenericConfirm) {
-            confirmModal.danger(
+            confirmDanger(
               `Confirm ${node.action.title}`,
               `Are you sure you want to ${node.action.title} ${node.name}?`,
               () => {
@@ -141,8 +140,8 @@ export const useActionDetection = (
             try {
               await copy(node.name);
               toast.success(locales.copied);
-            } catch (error) {
-              console.debug('🚀 ~ handleCopy ~ error:', error);
+            } catch {
+              // clipboard unavailable
             }
           }
 
@@ -160,7 +159,7 @@ export const useActionDetection = (
       addDataTab,
       closeLeftSidebar,
       currentConnection,
-      confirmModal,
+      confirmDanger,
       runTreeAction,
       reloadTree,
       copy,

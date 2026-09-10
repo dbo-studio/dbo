@@ -1,4 +1,4 @@
-import { debouncedSaveEditedAndUnsaved } from '@/core/utils/indexdbHelper';
+import { debouncedSaveEditedAndUnsaved } from '@/core/utils/indexedDbHelper';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { EditedRow } from '@/types';
 import type { StateCreator } from 'zustand';

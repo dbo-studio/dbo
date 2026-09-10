@@ -3,7 +3,6 @@ package databaseMysql
 import (
 	"context"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	"github.com/samber/lo"
@@ -11,14 +10,14 @@ import (
 
 const maxAIContextObjects = 25
 
-func (r *MySQLRepository) AiContext(ctx context.Context, req *dto.AiChatRequest) (string, error) {
-	if req.ContextOpts == nil {
+func (r *MySQLRepository) AiContext(ctx context.Context, req *databaseContract.AIContextInput) (string, error) {
+	if req == nil {
 		return "", nil
 	}
 
-	tables := req.ContextOpts.Tables
-	if len(tables) == 0 && lo.FromPtr(req.ContextOpts.ObjectDefinition) == "" {
-		list, err := r.ListTableNames(ctx, req.ContextOpts.Database, nil)
+	tables := req.Tables
+	if len(tables) == 0 && lo.FromPtr(req.ObjectDefinition) == "" {
+		list, err := r.ListTableNames(ctx, req.Database, nil)
 		if err != nil {
 			return "", err
 		}
@@ -29,9 +28,9 @@ func (r *MySQLRepository) AiContext(ctx context.Context, req *dto.AiChatRequest)
 		}
 	}
 
-	views := req.ContextOpts.Views
-	if len(views) == 0 && lo.FromPtr(req.ContextOpts.ObjectDefinition) == "" {
-		list, err := r.ListViewNames(ctx, req.ContextOpts.Database, nil)
+	views := req.Views
+	if len(views) == 0 && lo.FromPtr(req.ObjectDefinition) == "" {
+		list, err := r.ListViewNames(ctx, req.Database, nil)
 		if err != nil {
 			return "", err
 		}
@@ -43,18 +42,22 @@ func (r *MySQLRepository) AiContext(ctx context.Context, req *dto.AiChatRequest)
 	}
 
 	return databaseCore.BuildAIChatContext(ctx, databaseContract.AIContextOptions{
-		Database: req.ContextOpts.Database,
+		Database: req.Database,
 		Tables:   tables,
 		Views:    views,
 	}, mysqlAIContextProvider{repo: r})
 }
 
-func (r *MySQLRepository) AiCompleteContext(ctx context.Context, req *dto.AiInlineCompleteRequest) string {
-	sqlResult := r.base.ParseSQL(req.ContextOpts.Prompt)
+func (r *MySQLRepository) AiCompleteContext(ctx context.Context, req *databaseContract.AICompleteInput) string {
+	if req == nil {
+		return ""
+	}
+
+	sqlResult := r.base.ParseSQL(req.Prompt)
 
 	database := sqlResult.Database
 	if database == nil {
-		database = req.ContextOpts.Database
+		database = req.Database
 	}
 
 	result, err := databaseCore.BuildAICompleteContext(ctx, databaseContract.AIContextOptions{

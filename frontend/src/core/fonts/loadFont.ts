@@ -82,14 +82,8 @@ export function ensureArabicFallback(): Promise<void> {
 
 export function ensureDefaultFonts(): Promise<void> {
   return Promise.all([
-    ensureFont(DEFAULT_APP_FONT_ID).catch((error: unknown) => {
-      console.warn('[fonts] failed to load default app font', error);
-    }),
-    ensureFont(DEFAULT_EDITOR_FONT_ID).catch((error: unknown) => {
-      console.warn('[fonts] failed to load default editor font', error);
-    }),
-    ensureArabicFallback().catch((error: unknown) => {
-      console.warn('[fonts] failed to load Arabic fallback', error);
-    })
+    ensureFont(DEFAULT_APP_FONT_ID).catch(() => undefined),
+    ensureFont(DEFAULT_EDITOR_FONT_ID).catch(() => undefined),
+    ensureArabicFallback().catch(() => undefined)
   ]).then(() => undefined);
 }

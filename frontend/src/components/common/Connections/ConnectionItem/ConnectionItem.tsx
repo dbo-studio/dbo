@@ -5,8 +5,8 @@ import { useContextMenu } from '@/hooks';
 import { Box, CircularProgress, Tooltip } from '@mui/material';
 import type { JSX } from 'react';
 import { useCallback } from 'react';
-import CustomIcon from '../../../../base/CustomIcon/CustomIcon';
-import type { ConnectionItemProps } from '../../types';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import type { ConnectionItemProps } from '../types';
 import { ConnectionItemNameStyled, ConnectionItemStyled } from './ConnectionItem.styled';
 import ConnectionItemContextMenu from './ConnectionItemContextMenu/ConnectionItemContextMenu';
 

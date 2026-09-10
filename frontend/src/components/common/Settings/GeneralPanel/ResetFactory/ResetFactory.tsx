@@ -19,7 +19,7 @@ export function ResetFactory() {
           localStorage.clear();
           window.location.reload();
         })
-        .catch((e) => console.debug('🚀 ~ handleOpenConfirm ~ e:', e));
+        .catch(() => undefined);
     });
   };
 

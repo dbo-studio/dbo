@@ -25,8 +25,8 @@ type QueryRepository interface {
 }
 
 type AIContextRepository interface {
-	AiContext(ctx context.Context, dto *AiChatRequest) (string, error)
-	AiCompleteContext(ctx context.Context, dto *AiInlineCompleteRequest) string
+	AiContext(ctx context.Context, input *AIContextInput) (string, error)
+	AiCompleteContext(ctx context.Context, input *AICompleteInput) string
 }
 
 type AIMetadataRepository interface {

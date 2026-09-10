@@ -129,40 +129,6 @@ type (
 		SkipErrors      bool
 		MaxErrors       int
 	}
-
-	AiChatRequest struct {
-		ConnectionID int32             `json:"connectionId"`
-		Message      string            `json:"message"`
-		ChatID       *int32            `json:"chatId"`
-		ContextOpts  *AiContextOptions `json:"contextOpts"`
-	}
-
-	AiInlineCompleteRequest struct {
-		ConnectionID int32                          `json:"connectionId"`
-		ContextOpts  AiInlineCompleteContextOptions `json:"contextOpts"`
-	}
-
-	AiInlineCompleteContextOptions struct {
-		Database *string `json:"database"`
-		Schema   *string `json:"schema"`
-		Prompt   string  `json:"prompt"`
-		Suffix   *string `json:"suffix"`
-	}
-
-	AiInlineCompleteResponse struct {
-		Completion string `json:"completion"`
-	}
-
-	AiContextOptions struct {
-		Query              *string  `json:"query"`
-		SelectedQuery      *string  `json:"selectedQuery"`
-		Database           *string  `json:"database"`
-		Schema             *string  `json:"schema"`
-		Tables             []string `json:"tables"`
-		Views              []string `json:"views"`
-		QueryResultSummary *string  `json:"queryResultSummary"`
-		ObjectDefinition   *string  `json:"objectDefinition"`
-	}
 )
 
 func (req RunQueryRequest) Validate() error {
@@ -228,20 +194,6 @@ func (req EditedItem) Validate() error {
 }
 
 func (req AutoCompleteRequest) Validate() error {
-	return validation.ValidateStruct(&req,
-		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
-	)
-}
-
-func (req AiChatRequest) Validate() error {
-	return validation.ValidateStruct(&req,
-		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
-		validation.Field(&req.Message, validation.Required, validation.Length(0, 10000)),
-		validation.Field(&req.ChatID, validation.Min(0)),
-	)
-}
-
-func (req AiInlineCompleteRequest) Validate() error {
 	return validation.ValidateStruct(&req,
 		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
 	)

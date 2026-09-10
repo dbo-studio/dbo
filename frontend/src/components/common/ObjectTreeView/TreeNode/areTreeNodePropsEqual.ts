@@ -7,6 +7,7 @@ export const areTreeNodePropsEqual = (prev: TreeNodeProps, next: TreeNodeProps):
   prev.level === next.level &&
   prev.nodeIndex === next.nodeIndex &&
   prev.parentRefsRef === next.parentRefsRef &&
+  prev.scrollContainerRef === next.scrollContainerRef &&
   prev.fetchChildren === next.fetchChildren &&
   prev.onContextMenu === next.onContextMenu &&
   prev.onFocusChange === next.onFocusChange;

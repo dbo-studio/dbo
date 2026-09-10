@@ -165,8 +165,7 @@ export default function SafeModeMenu(): JSX.Element {
       try {
         await applyMode(safeMode, result.password);
         void storeSafeModePassword(result.password);
-      } catch (error) {
-        console.debug('🚀 ~ SafeModeMenu ~ handleSelect silent:', error);
+      } catch {
         toast.error(locales.safe_mode_password_invalid);
       }
       return;
@@ -190,8 +189,7 @@ export default function SafeModeMenu(): JSX.Element {
           await queryClient.invalidateQueries({ queryKey: ['safe-mode-password'] });
           void storeSafeModePassword(result.password);
           await applyMode(safeMode);
-        } catch (error) {
-          console.debug('🚀 ~ SafeModeMenu ~ handleSelect setup:', error);
+        } catch {
           toast.error(locales.safe_mode_update_failed);
         }
         return;
@@ -200,8 +198,7 @@ export default function SafeModeMenu(): JSX.Element {
 
     try {
       await applyMode(safeMode);
-    } catch (error) {
-      console.debug('🚀 ~ SafeModeMenu ~ handleSelect:', error);
+    } catch {
       toast.error(locales.safe_mode_update_failed);
     }
   };

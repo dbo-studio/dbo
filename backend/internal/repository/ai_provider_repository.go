@@ -2,14 +2,11 @@ package repository
 
 import (
 	"context"
-	"crypto/sha256"
+	"errors"
 	"strings"
-	"sync"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/model"
-	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/cryptoutil"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
@@ -17,12 +14,14 @@ import (
 )
 
 type AiProviderRepoImpl struct {
-	db *gorm.DB
+	db        *gorm.DB
+	cipherKey []byte
 }
 
-func NewAiProviderRepo(db *gorm.DB) IAiProviderRepo {
+func NewAiProviderRepo(db *gorm.DB, cipherKey []byte) IAiProviderRepo {
 	return &AiProviderRepoImpl{
-		db: db,
+		db:        db,
+		cipherKey: cipherKey,
 	}
 }
 
@@ -35,7 +34,7 @@ func (r AiProviderRepoImpl) Index(ctx context.Context) ([]model.AiProvider, erro
 	}
 
 	for i := range items {
-		items[i].APIKey = decryptAIKey(aiProviderCipherKey(), items[i].APIKey)
+		items[i].APIKey = decryptAIKey(r.cipherKey, items[i].APIKey)
 	}
 
 	return items, nil
@@ -47,7 +46,7 @@ func (r AiProviderRepoImpl) Find(ctx context.Context, id uint) (*model.AiProvide
 		return nil, err
 	}
 
-	item.APIKey = decryptAIKey(aiProviderCipherKey(), item.APIKey)
+	item.APIKey = decryptAIKey(r.cipherKey, item.APIKey)
 
 	return &item, nil
 }
@@ -58,7 +57,7 @@ func (r AiProviderRepoImpl) FindActive(ctx context.Context) (*model.AiProvider, 
 		return nil, err
 	}
 
-	item.APIKey = decryptAIKey(aiProviderCipherKey(), item.APIKey)
+	item.APIKey = decryptAIKey(r.cipherKey, item.APIKey)
 
 	return &item, nil
 }
@@ -68,7 +67,12 @@ func (r AiProviderRepoImpl) CreateIfNotExists(ctx context.Context, provider *mod
 	result := r.db.WithContext(ctx).Where("type = ?", provider.Type).First(existingProvider)
 
 	if result.Error != nil {
-		provider.APIKey = encryptAIKey(aiProviderCipherKey(), provider.APIKey)
+		encrypted, err := encryptAIKey(r.cipherKey, provider.APIKey)
+		if err != nil {
+			return nil, err
+		}
+
+		provider.APIKey = encrypted
 		result = r.db.WithContext(ctx).Create(provider)
 	}
 
@@ -77,7 +81,13 @@ func (r AiProviderRepoImpl) CreateIfNotExists(ctx context.Context, provider *mod
 
 func (r AiProviderRepoImpl) Update(ctx context.Context, provider *model.AiProvider, dto *dto.AiProviderUpdateRequest) (*model.AiProvider, error) {
 	provider.URL = lo.FromPtr(helper.Optional(dto.URL, lo.ToPtr(provider.URL)))
-	provider.APIKey = encryptAIKey(aiProviderCipherKey(), helper.Optional(dto.APIKey, provider.APIKey))
+
+	encrypted, err := encryptAIKey(r.cipherKey, helper.Optional(dto.APIKey, provider.APIKey))
+	if err != nil {
+		return nil, err
+	}
+
+	provider.APIKey = encrypted
 	provider.Timeout = lo.FromPtr(helper.Optional(dto.Timeout, lo.ToPtr(provider.Timeout)))
 	provider.IsActive = lo.FromPtr(helper.Optional(dto.IsActive, lo.ToPtr(provider.IsActive)))
 	provider.Model = lo.FromPtr(helper.Optional(dto.Model, lo.ToPtr(provider.Model)))
@@ -105,43 +115,25 @@ func (r AiProviderRepoImpl) MakeAllProvidersNotActive(ctx context.Context, provi
 // re-encrypted on their next save.
 const aiKeyCipherPrefix = "enc:v1:"
 
-var (
-	aiKeyOnce sync.Once
-	aiKey     []byte
-)
+var errAIKeyEncryption = errors.New("failed to encrypt AI provider API key")
 
-func aiProviderCipherKey() []byte {
-	aiKeyOnce.Do(func() {
-		cfg := container.Instance().Config()
-		if cfg == nil {
-			return
-		}
+func encryptAIKey(key []byte, plain *string) (*string, error) {
+	if plain == nil || *plain == "" || strings.HasPrefix(*plain, aiKeyCipherPrefix) {
+		return plain, nil
+	}
 
-		secret, err := secretStore.LoadOrCreateAppSecretKey(cfg)
-		if err != nil {
-			return
-		}
-
-		sum := sha256.Sum256([]byte(secret))
-		aiKey = sum[:]
-	})
-
-	return aiKey
-}
-
-func encryptAIKey(key []byte, plain *string) *string {
-	if key == nil || plain == nil || *plain == "" || strings.HasPrefix(*plain, aiKeyCipherPrefix) {
-		return plain
+	if len(key) == 0 {
+		return nil, errAIKeyEncryption
 	}
 
 	ciphertext, err := cryptoutil.EncryptAESGCM(key, []byte(*plain))
 	if err != nil {
-		return plain
+		return nil, errAIKeyEncryption
 	}
 
 	out := aiKeyCipherPrefix + ciphertext
 
-	return &out
+	return &out, nil
 }
 
 func decryptAIKey(key []byte, stored *string) *string {

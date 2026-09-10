@@ -55,8 +55,8 @@ export default function ChatHistory() {
           count: 10
         });
         updateCurrentChat(detail);
-      } catch (err) {
-        console.debug('🚀 ~ ChatHistory ~ err:', err);
+      } catch {
+        /* ignored */
       }
     },
     [addChat, chats, currentChat?.id, updateCurrentChat]
@@ -83,8 +83,8 @@ export default function ChatHistory() {
         if (data?.length === 1) {
           setOpen(false);
         }
-      } catch (err) {
-        console.debug('🚀 ~ ChatHistory ~ err:', err);
+      } catch {
+        /* ignored */
       }
     },
     [

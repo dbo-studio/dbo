@@ -120,13 +120,12 @@ export function useTreeNodeHandlers({
         case 'Enter':
         case ' ':
           event.preventDefault();
-          expandNode(event, true).catch((e) => console.log('🚀 ~ useTreeNodeHandlers ~ e:', e));
+          expandNode(event, true).catch(() => undefined);
           break;
 
         case 'ArrowRight':
           event.preventDefault();
-          if (node.hasChildren && !isExpanded)
-            expandNode(event, true).catch((e) => console.log('🚀 ~ useTreeNodeHandlers ~ e:', e));
+          if (node.hasChildren && !isExpanded) expandNode(event, true).catch(() => undefined);
           else if (isExpanded && children?.length > 0) focusNodeById(children[0].id);
           break;
 

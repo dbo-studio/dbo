@@ -1,6 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
 import { NodeLabel } from '@/components/common/ObjectTreeView/TreeNode/NodeContent/NodeContent.styled';
-import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
 import CircularProgress from '@mui/material/CircularProgress';
 import type { JSX } from 'react';
 import { LoadingIndicator, NodeContent as NodeContentStyled, NodeName } from '../TreeNode.styled';

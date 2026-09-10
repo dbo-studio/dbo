@@ -41,3 +41,38 @@
 - Do not commit secrets; use environment variables for runtime config.
 - Validate API URL assumptions when running locally (`VITE_PUBLIC_SERVER_URL`).
 - Review dependency updates carefully for frontend/runtime impact.
+
+## Architecture & layering
+
+Import direction (enforced by ESLint `no-restricted-imports`):
+
+| Layer | Path | May import |
+|-------|------|------------|
+| `base` | `src/components/base/` | `core`, `hooks`, `api`, MUI — **not** `common` |
+| `common` | `src/components/common/` | `base`, `core`, `hooks`, `store`, `api` |
+| `layout` | `src/components/layout/` | `base`, `common`, `hooks`, `store`, `api` |
+| `routes` | `src/routes/` | `base`, `common`, `hooks`, `store`, `api`, `core` — **not** other `routes` or `layout` internals |
+| `store` | `src/store/` | `core`, `api`, other stores sparingly |
+
+New UI: primitives → `base/`; product composites → `common/`; page wiring → `routes/` only.
+
+### Zustand persist rules
+
+| Store | Persisted fields | Notes |
+|-------|------------------|-------|
+| `tabStore` | `tabs`, `selectedTabId` | Query text lives in IndexedDB (`tabQueries`), not localStorage |
+| `settingStore` | `theme`, `editor`, `general`, `setup`, `editorContextByConnection`, `ui.sidebar` only | Ephemeral modal flags and `titleBar` (holds a function) are excluded |
+| `treeStore` | partial tree UI state | Use `partialize`; see store for fields |
+
+Tab SQL: `indexedDBService` hydrates from legacy `localStorage` key `dbo_tab_queries` once, then writes IndexedDB and deletes the key.
+
+### Size budget
+
+- Split large `*.styled.ts` by region (see `DataGridTable.styled.ts` / `DataGridControls.styled.ts`).
+- Prefer `*.styled.ts` over long repeated `sx` blocks (~15+ lines or reused twice).
+- Stores > ~200 lines: compose Zustand slices (`formObject`, `dataStore`, `aiStore` pattern).
+
+### Dead code
+
+Run `npm run knip` (warn-only) periodically; delete confirmed unused exports before they accumulate.
+

@@ -29,10 +29,14 @@ func NewWebSessionRepo(db *gorm.DB) IWebSessionRepo {
 }
 
 func (r *webSessionRepoImpl) Create(ctx context.Context) (string, error) {
-	sessionID := generateSessionID()
+	sessionID, err := generateSessionID()
+	if err != nil {
+		return "", err
+	}
+
 	now := time.Now()
 
-	err := r.db.WithContext(ctx).Create(model.WebSession{
+	err = r.db.WithContext(ctx).Create(model.WebSession{
 		ID:         sessionID,
 		CreatedAt:  now,
 		LastSeenAt: now,
@@ -143,13 +147,13 @@ func (r *webSessionRepoImpl) recordTouch(sessionID string, at time.Time) {
 	r.lastTouchByID[sessionID] = at
 }
 
-func generateSessionID() string {
+func generateSessionID() (string, error) {
 	var b [32]byte
 
 	_, err := rand.Read(b[:])
 	if err != nil {
-		return base64.RawURLEncoding.EncodeToString([]byte("fallback_session_id"))
+		return "", err
 	}
 
-	return base64.RawURLEncoding.EncodeToString(b[:])
+	return base64.RawURLEncoding.EncodeToString(b[:]), nil
 }

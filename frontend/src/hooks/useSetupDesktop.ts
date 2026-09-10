@@ -201,11 +201,11 @@ const createHeaderAreaClickHandler = (event: MouseEvent): void => {
   const window = getCurrentWebviewWindow();
   // Native macOS titlebar: double-click toggles zoom; single-click starts drag.
   if (event.detail === 2) {
-    void window.toggleMaximize().catch((e) => console.debug('toggleMaximize failed', e));
+    void window.toggleMaximize().catch(() => undefined);
     return;
   }
 
-  void window.startDragging().catch((e) => console.debug('startDragging failed', e));
+  void window.startDragging().catch(() => undefined);
 };
 
 const setupTitleBar = (): void => {

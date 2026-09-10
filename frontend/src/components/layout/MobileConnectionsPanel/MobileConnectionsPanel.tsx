@@ -1,4 +1,4 @@
-import Connections from '@/components/common/Connections/Connections/Connections';
+import Connections from '@/components/common/Connections/Connections';
 import type { JSX } from 'react';
 import { MobileConnectionsStyled } from './MobileConnections.styled';
 

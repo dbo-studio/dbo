@@ -9,6 +9,7 @@ import (
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/tidwall/gjson"
@@ -50,16 +51,18 @@ type ConnectionManager struct {
 	connections map[connKey]*conn
 	mu          sync.Mutex
 	logger      logger.Logger
+	cache       cache.Cache
 	historyRepo HistoryWriter
 	secrets     PasswordHydrator
 	safetyTTL   time.Duration
 }
 
-func NewConnectionManager(historyRepo HistoryWriter, secrets PasswordHydrator, appLogger logger.Logger) *ConnectionManager {
+func NewConnectionManager(historyRepo HistoryWriter, secrets PasswordHydrator, appLogger logger.Logger, appCache cache.Cache) *ConnectionManager {
 	cm := &ConnectionManager{
 		connections: make(map[connKey]*conn),
 		mu:          sync.Mutex{},
 		logger:      appLogger,
+		cache:       appCache,
 		historyRepo: historyRepo,
 		secrets:     secrets,
 		safetyTTL:   6 * time.Hour,
@@ -67,6 +70,14 @@ func NewConnectionManager(historyRepo HistoryWriter, secrets PasswordHydrator, a
 	go cm.cleanupInactiveConnections()
 
 	return cm
+}
+
+func (cm *ConnectionManager) Cache() cache.Cache {
+	return cm.cache
+}
+
+func (cm *ConnectionManager) Logger() logger.Logger {
+	return cm.logger
 }
 
 // pingCached pings an existing entry outside the manager mutex: a slow or
@@ -276,13 +287,21 @@ func (cm *ConnectionManager) IsOpen(ctx context.Context, ownerID string, connect
 
 func (cm *ConnectionManager) Close(_ context.Context, ownerID string, connectionID uint) error {
 	cm.mu.Lock()
-	defer cm.mu.Unlock()
+
+	toClose := make([]*conn, 0)
 
 	for key, c := range cm.connections {
 		if key.OwnerID == ownerID && key.ConnectionID == connectionID {
 			delete(cm.connections, key)
-			_ = cm.closeConn(c)
+
+			toClose = append(toClose, c)
 		}
+	}
+
+	cm.mu.Unlock()
+
+	for _, c := range toClose {
+		_ = cm.closeConn(c)
 	}
 
 	return nil
@@ -294,13 +313,21 @@ func (cm *ConnectionManager) CloseDatabase(_ context.Context, ownerID string, co
 	}
 
 	cm.mu.Lock()
-	defer cm.mu.Unlock()
+
+	toClose := make([]*conn, 0)
 
 	for key, c := range cm.connections {
 		if key.OwnerID == ownerID && key.ConnectionID == connectionID && key.Database == databaseName {
 			delete(cm.connections, key)
-			_ = cm.closeConn(c)
+
+			toClose = append(toClose, c)
 		}
+	}
+
+	cm.mu.Unlock()
+
+	for _, c := range toClose {
+		_ = cm.closeConn(c)
 	}
 
 	return nil

@@ -30,14 +30,11 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
     tools
       .isTauri()
       .then((tauriResult) => setIsTauri(tauriResult))
-      .catch((e) => {
-        console.debug('🚀 ~ ExportModal ~ e:', e);
-      });
+      .catch(() => undefined);
   }, []);
 
   const handleSelectFile = async () => {
     if (!save) {
-      console.debug('Tauri dialog not available');
       return;
     }
 
@@ -78,8 +75,8 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
       setJobId(response?.jobId);
       setShowProgress(true);
       onClose();
-    } catch (error) {
-      console.debug('🚀 ~ handleExport ~ error:', error);
+    } catch {
+      /* ignored */
     }
   };
 

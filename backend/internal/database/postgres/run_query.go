@@ -77,11 +77,6 @@ func (r *PostgresRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequ
 func (r *PostgresRepository) runQueryGenerator(ctx context.Context, req *dto.RunQueryRequest, node contract.DBNode) string {
 	var sb strings.Builder
 
-	if lo.FromPtrOr(req.InlineQuery, "") != "" {
-		return fmt.Sprintf("SELECT * FROM %s.%s WHERE %s",
-			databaseCore.QuotePGIdent(node.Schema), databaseCore.QuotePGIdent(node.Table), *req.InlineQuery)
-	}
-
 	// SELECT clause
 	selectColumns := "*"
 
@@ -128,7 +123,7 @@ func (r *PostgresRepository) runQueryGenerator(ctx context.Context, req *dto.Run
 		if err == nil && len(keys) > 0 {
 			sb.WriteString(" ORDER BY ")
 			sb.WriteString(strings.Join(lo.Map(keys, func(key PrimaryKey, _ int) string {
-				return key.ColumnName
+				return databaseCore.QuotePGIdent(key.ColumnName)
 			}), ", "))
 		}
 	}

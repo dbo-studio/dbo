@@ -101,6 +101,24 @@ type AIContextOptions struct {
 	Views    []string
 }
 
+type AIContextInput struct {
+	Database           *string
+	Schema             *string
+	Tables             []string
+	Views              []string
+	Query              *string
+	SelectedQuery      *string
+	ObjectDefinition   *string
+	QueryResultSummary *string
+}
+
+type AICompleteInput struct {
+	Database *string
+	Schema   *string
+	Prompt   string
+	Suffix   *string
+}
+
 type AIContextForeignKey struct {
 	TargetTable string
 	Columns     []string

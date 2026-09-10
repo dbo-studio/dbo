@@ -1,11 +1,11 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import Search from '@/components/base/Search/Search';
-import { tools } from '@/core/utils';
 import { useContextMenu, useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import type { HistoryType } from '@/types/History';
-import { Box, Button, ClickAwayListener, IconButton, LinearProgress, Stack } from '@mui/material';
+import VirtualList from '@/components/base/VirtualList/VirtualList';
+import { Box, Button, ClickAwayListener, IconButton, LinearProgress } from '@mui/material';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useRef, useState } from 'react';
 import DeleteHistoryIcon from './DeleteHistoryIcon';
@@ -95,21 +95,24 @@ export default function Histories(): JSX.Element {
         </Box>
 
         <HistoriesListStyled ref={listRef}>
-          <Stack spacing={1}>
-            {status === 'pending' ? (
-              <LinearProgress data-testid='linear-progress' style={{ marginTop: '8px' }} />
-            ) : (
-              filteredHistories.map((query) => (
+          {status === 'pending' ? (
+            <LinearProgress data-testid='linear-progress' style={{ marginTop: '8px' }} />
+          ) : (
+            <VirtualList
+              items={filteredHistories}
+              estimateSize={36}
+              scrollElementRef={listRef}
+              getItemKey={(query) => String(query.id)}
+              renderItem={(query) => (
                 <HistoryItem
                   context={handleContextMenu}
                   onClick={(): void => setSelected(query)}
-                  key={tools.uuid()}
                   history={query}
                   selected={selected?.id === query.id}
                 />
-              ))
-            )}
-          </Stack>
+              )}
+            />
+          )}
 
           {hasNextPage && (
             <HistoriesLoadMoreStyled>

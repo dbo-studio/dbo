@@ -51,7 +51,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 		return err
 	}
 
-	contextStr, err := repo.AiContext(ctx, req)
+	contextStr, err := repo.AiContext(ctx, toAIContextInput(req))
 	if err != nil {
 		return apperror.InternalServerError(err)
 	}

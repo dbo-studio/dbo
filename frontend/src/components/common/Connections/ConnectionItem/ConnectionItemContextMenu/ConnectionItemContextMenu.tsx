@@ -12,7 +12,7 @@ import type { ConnectionType } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { JSX } from 'react';
 import { toast } from 'sonner';
-import type { ConnectionContextMenuProps } from '../../../types';
+import type { ConnectionContextMenuProps } from '../../types';
 
 export default function ConnectionItemContextMenu({
   connection,
@@ -37,7 +37,7 @@ export default function ConnectionItemContextMenu({
 
   const handleOpenConfirm = (connection: ConnectionType): void => {
     showModal(locales.delete_action, locales.connection_delete_confirm, () => {
-      handleDeleteConnection(connection).catch((e) => console.log('🚀 ~ handleOpenConfirm ~ e:', e));
+      handleDeleteConnection(connection).catch(() => undefined);
     });
   };
 
@@ -63,8 +63,8 @@ export default function ConnectionItemContextMenu({
       resetTabs();
       toast.success(locales.connection_delete_success);
       return;
-    } catch (err) {
-      console.debug('🚀 ~ deleteConnectionMutation ~ error:', err);
+    } catch {
+      /* ignored */
     }
   };
 
@@ -99,8 +99,7 @@ export default function ConnectionItemContextMenu({
 
       toast.success(locales.connection_closed_success);
       return true;
-    } catch (err) {
-      console.debug('🚀 ~ closeConnectionMutation ~ error:', err);
+    } catch {
       toast.error(locales.connection_close_failed);
       return false;
     } finally {

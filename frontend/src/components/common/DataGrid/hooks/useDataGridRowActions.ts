@@ -1,7 +1,7 @@
 import { TabMode } from '@/core/enums';
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { createEmptyRow } from '@/core/utils';
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { DataTabType, RowType } from '@/types';

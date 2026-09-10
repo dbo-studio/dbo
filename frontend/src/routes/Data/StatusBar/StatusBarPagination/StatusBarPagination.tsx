@@ -1,7 +1,7 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { TabMode } from '@/core/enums';
-import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';

@@ -3,7 +3,7 @@
 import SortableList from '@/components/base/SortableList/SortableList';
 import PanelTabItem from '@/components/common/Panels/PanelTabs/PanelTabItem/PanelTabItem.tsx';
 import { PanelTabsStyled } from '@/components/common/Panels/PanelTabs/PanelTabs.styled.ts';
-import { useConnectionTabs } from '@/hooks/useConnectionTabs.hook';
+import { useConnectionTabs } from '@/hooks/useConnectionTabs';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { TabType } from '@/types';
 import type { JSX } from 'react';

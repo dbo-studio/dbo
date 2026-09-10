@@ -4,32 +4,24 @@ import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { TabType } from '@/types';
 import { useCallback } from 'react';
-import { useRemoveTab as useRemoveTabHook } from './useRemoveTab.hook';
 
 type useRemoveTabReturn = {
   handleRemoveTab: (tabId: string) => Promise<void>;
 };
 
 export const useRemoveTab = (): useRemoveTabReturn => {
-  const [removeTab] = useRemoveTabHook();
-  const confirmModal = useConfirmModalStore();
+  const removeTab = useTabStore((state) => state.removeTab);
+  const warning = useConfirmModalStore((state) => state.warning);
 
-  const handleRemoveTab = useCallback(
-    async (tabId: string): Promise<void> => {
-      const selectedTab = useTabStore.getState().tabs.find((tab) => tab.id === tabId);
-      if (!selectedTab) {
-        return;
-      }
+  const performRemove = useCallback(
+    (tabId: string): TabType | null | undefined => {
+      indexedDBService.clearTabData(tabId).catch((error: unknown) => {
+        console.error('Error clearing IndexedDB data for tab:', tabId, error);
+      });
 
-      if (await needConfirm(selectedTab)) {
-        confirmModal.warning(undefined, 'Are you sure you want to close this tab?', () => {
-          removeTab(tabId);
-        });
-      } else {
-        removeTab(tabId);
-      }
+      return removeTab(tabId);
     },
-    [confirmModal, removeTab]
+    [removeTab]
   );
 
   const needConfirm = async (tab: TabType): Promise<boolean> => {
@@ -54,6 +46,24 @@ export const useRemoveTab = (): useRemoveTabReturn => {
 
     return false;
   };
+
+  const handleRemoveTab = useCallback(
+    async (tabId: string): Promise<void> => {
+      const selectedTab = useTabStore.getState().tabs.find((tab) => tab.id === tabId);
+      if (!selectedTab) {
+        return;
+      }
+
+      if (await needConfirm(selectedTab)) {
+        warning(undefined, 'Are you sure you want to close this tab?', () => {
+          performRemove(tabId);
+        });
+      } else {
+        performRemove(tabId);
+      }
+    },
+    [performRemove, warning]
+  );
 
   return { handleRemoveTab };
 };

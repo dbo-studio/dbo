@@ -72,10 +72,6 @@ func (r *SQLiteRepository) RunQuery(ctx context.Context, req *dto.RunQueryReques
 func (r *SQLiteRepository) runQueryGenerator(ctx context.Context, req *dto.RunQueryRequest, node contract.DBNode) string {
 	var sb strings.Builder
 
-	if lo.FromPtrOr(req.InlineQuery, "") != "" {
-		return fmt.Sprintf("SELECT * FROM %s WHERE %s", databaseCore.QuoteSQLiteIdent(node.Table), *req.InlineQuery)
-	}
-
 	// SELECT clause
 	selectColumns := "*"
 
@@ -121,7 +117,13 @@ func (r *SQLiteRepository) runQueryGenerator(ctx context.Context, req *dto.RunQu
 		keys, err := r.getPrimaryKeys(ctx, Table{node.Table})
 		if err == nil && len(keys) > 0 {
 			sb.WriteString(" ORDER BY ")
-			sb.WriteString(strings.Join(keys, ", "))
+
+			quoted := make([]string, len(keys))
+			for i, key := range keys {
+				quoted[i] = databaseCore.QuoteSQLiteIdent(key)
+			}
+
+			sb.WriteString(strings.Join(quoted, ", "))
 		}
 	}
 

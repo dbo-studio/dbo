@@ -52,8 +52,8 @@ export default function Data(): JSX.Element {
       if (!result) {
         await runQuery();
       }
-    } catch (error) {
-      console.debug('🚀 ~ loadData ~ error:', error);
+    } catch {
+      /* ignored */
     }
   }, [loadDataFromIndexedDB, runQuery]);
 
@@ -67,7 +67,7 @@ export default function Data(): JSX.Element {
     }
 
     cancelRunningQuery({ silent: true });
-    loadData().catch((e) => console.debug('🚀 ~ Data ~ e:', e));
+    loadData().catch(() => undefined);
   }, [selectedTabId, isMounted, loadData, cancelRunningQuery]);
 
   useEffect(() => {

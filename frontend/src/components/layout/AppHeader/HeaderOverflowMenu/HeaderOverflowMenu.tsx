@@ -1,7 +1,7 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { constants } from '@/core/constants';
 import { TabMode } from '@/core/enums';
-import { useCurrentConnection } from '@/hooks/useCurrentConnection.hook';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';

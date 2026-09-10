@@ -6,7 +6,7 @@ import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { useSetupDesktop, type DesktopBootState } from './useSetupDesktop.hook';
+import { useSetupDesktop, type DesktopBootState } from './useSetupDesktop';
 
 export type StartupState = {
   ready: boolean;
@@ -61,9 +61,8 @@ export const useStartup = (): StartupState => {
 
   useEffect(() => {
     resetTree();
-    indexedDBService.clearAllTableData().catch((err: unknown) => {
-      console.debug('🚀 ~ useEffect ~ err:', err);
-    });
+    void indexedDBService.hydrateTabQueries();
+    indexedDBService.clearAllTableData().catch(() => undefined);
   }, [resetTree]);
 
   useEffect(() => {
@@ -76,7 +75,7 @@ export const useStartup = (): StartupState => {
             // Ignore error
           }
         })
-        .catch((e) => console.debug('🚀 ~ useStartup ~ e:', e));
+        .catch(() => undefined);
     }
   }, [debug]);
 

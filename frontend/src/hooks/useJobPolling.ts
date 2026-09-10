@@ -113,8 +113,8 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
       await cancelJobMutation(jobId);
       const jobData = await getJobMutation(jobId);
       setJob(jobData);
-    } catch (err) {
-      console.debug('🚀 ~ useJobPolling ~ err:', err);
+    } catch {
+      /* ignored */
     }
   }, [cancelJobMutation, getJobMutation, jobId]);
 

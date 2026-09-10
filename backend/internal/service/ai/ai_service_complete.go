@@ -48,7 +48,7 @@ func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteR
 		return nil, err
 	}
 
-	contextStr := repo.AiCompleteContext(ctx, req)
+	contextStr := repo.AiCompleteContext(ctx, toAICompleteInput(req))
 
 	providerReq := &aiProvider.CompletionRequest{
 		Prompt:  req.ContextOpts.Prompt,

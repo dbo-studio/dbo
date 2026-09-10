@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"net/url"
 	"strings"
 	"time"
@@ -50,16 +51,22 @@ func New(
 ) *Server {
 	return &Server{
 		app: fiber.New(fiber.Config{
-			// Cap request lifetimes so a stalled client or DB host cannot hold
-			// resources (including the ConnectionManager) indefinitely.
-			ReadTimeout:  30 * time.Second,
-			WriteTimeout: 60 * time.Second,
+			ReadTimeout: 30 * time.Second,
+			// WriteTimeout disabled: AI streams and large query responses can
+			// exceed a fixed cap without indicating a stalled client.
+			WriteTimeout: 0,
 			IdleTimeout:  120 * time.Second,
 			ErrorHandler: func(c fiber.Ctx, err error) error {
 				logger.Error(err)
 
-				// Always send a JSON body — returning the error object here
-				// would produce an empty response.
+				var fiberErr *fiber.Error
+				if errors.As(err, &fiberErr) {
+					return c.Status(fiberErr.Code).JSON(fiber.Map{
+						"code":    fiberErr.Code,
+						"message": fiberErr.Message,
+					})
+				}
+
 				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 					"code":    fiber.StatusInternalServerError,
 					"message": "Internal server error",
@@ -84,10 +91,7 @@ func (r *Server) Start(gracefulCtx context.Context, isLocal bool, port string) e
 	}
 
 	r.app.Use(cors.New(cors.Config{
-		AllowOrigins: []string{},
-		// Only localhost origins (frontend dev server) plus explicitly configured
-		// APP_ALLOWED_ORIGINS may make credentialed cross-origin requests.
-		// The embedded web UI is served same-origin and needs no CORS.
+		AllowOrigins:     []string{},
 		AllowOriginsFunc: allowOriginFunc(r.cfg),
 		AllowCredentials: true,
 	}))
@@ -97,8 +101,6 @@ func (r *Server) Start(gracefulCtx context.Context, isLocal bool, port string) e
 	r.routing()
 
 	return r.app.Listen(":"+port, fiber.ListenConfig{
-		// GracefulContext makes Listen drain in-flight requests when the
-		// context is canceled (SIGINT/SIGTERM) instead of dying mid-request.
 		GracefulContext: gracefulCtx,
 		ShutdownTimeout: 15 * time.Second,
 	})
@@ -108,15 +110,13 @@ func (r *Server) Shutdown() error {
 	return r.app.Shutdown()
 }
 
-// allowOriginFunc permits only loopback origins (frontend dev server) and the
-// origins explicitly whitelisted via APP_ALLOWED_ORIGINS. Everything else — in
-// particular arbitrary remote sites — must not be able to send credentialed
-// requests to the API.
 func allowOriginFunc(cfg *config.Config) func(string) bool {
 	allowed := make(map[string]struct{}, len(cfg.App.AllowedOrigins))
 	for _, origin := range cfg.App.AllowedOrigins {
 		allowed[strings.TrimRight(origin, "/")] = struct{}{}
 	}
+
+	serverWeb := cfg != nil && strings.TrimSpace(cfg.App.AuthToken) != ""
 
 	return func(origin string) bool {
 		if origin == "" {
@@ -125,6 +125,10 @@ func allowOriginFunc(cfg *config.Config) func(string) bool {
 
 		if _, ok := allowed[strings.TrimRight(origin, "/")]; ok {
 			return true
+		}
+
+		if serverWeb {
+			return false
 		}
 
 		u, err := url.Parse(origin)

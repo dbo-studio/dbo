@@ -31,6 +31,8 @@ var (
 	ErrUnauthenticated             = errors.New("authentication required")
 	ErrAuthNotEnabled              = errors.New("authentication is not enabled")
 	ErrInvalidSavePath             = errors.New("invalid save path")
+	ErrInvalidInlineQuery          = errors.New("invalid inline query")
+	ErrWeakAuthToken               = errors.New("APP_AUTH_TOKEN must be at least 32 characters")
 	ErrExportQueryNotRead          = errors.New("export query must be a read-only statement")
 	ErrImportFileTooLarge          = errors.New("import file is too large")
 	ErrInvalidProviderURL          = errors.New("provider URL must use http or https")

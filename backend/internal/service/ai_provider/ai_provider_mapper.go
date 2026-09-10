@@ -50,9 +50,6 @@ func maskAPIKey(key *string) *string {
 	}
 
 	value := "****"
-	if len(*key) > 4 {
-		value = "****" + (*key)[len(*key)-4:]
-	}
 
 	return &value
 }

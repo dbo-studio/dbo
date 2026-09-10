@@ -3,6 +3,7 @@ package sqlguard
 import (
 	"regexp"
 	"strings"
+	"unicode"
 
 	"github.com/blastrain/vitess-sqlparser/sqlparser"
 )
@@ -29,7 +30,7 @@ var (
 	deletePattern       = regexp.MustCompile(`(?i)^\s*delete\b`)
 	selectPattern       = regexp.MustCompile(`(?i)^\s*(with\b[\s\S]+)?select\b`)
 	explainPattern      = regexp.MustCompile(`(?i)^\s*(explain|show|pragma|describe|desc)\b`)
-	writableCTEPattern  = regexp.MustCompile(`(?i)^\s*with\b[\s\S]*\b(delete|insert|update|drop|truncate|alter|create)\b`)
+	writableCTEPattern  = regexp.MustCompile(`(?i)\bwith\b[\s\S]*?\bas\s*\([\s\S]*?\b(delete|insert|update|drop|truncate|alter|create)\b`)
 	catastrophicPattern = regexp.MustCompile(`(?i)\b(drop|truncate)\b`)
 )
 
@@ -117,6 +118,7 @@ func splitStatements(sql string) []string {
 	var (
 		inSingle, inDouble, inBacktick bool
 		inLineComment, inBlockComment  bool
+		dollarTag                      string
 	)
 
 	runes := []rune(sql)
@@ -124,6 +126,19 @@ func splitStatements(sql string) []string {
 		ch := runes[i]
 
 		switch {
+		case dollarTag != "":
+			sb.WriteRune(ch)
+
+			if ch == '$' && i+len(dollarTag)+1 <= len(runes) {
+				candidate := string(runes[i : i+len(dollarTag)+1])
+				if candidate == dollarTag+"$" {
+					sb.WriteString(dollarTag[1:])
+
+					i += len(dollarTag)
+					dollarTag = ""
+				}
+			}
+
 		case inLineComment:
 			sb.WriteRune(ch)
 
@@ -199,6 +214,16 @@ func splitStatements(sql string) []string {
 
 			sb.WriteRune(ch)
 
+		case ch == '$':
+			if tag, ok := readDollarQuoteTag(runes, i); ok {
+				dollarTag = tag
+				sb.WriteString(tag)
+
+				i += len(tag) - 1
+			} else {
+				sb.WriteRune(ch)
+			}
+
 		case ch == ';':
 			flush()
 
@@ -216,6 +241,23 @@ func splitStatements(sql string) []string {
 	return parts
 }
 
+func readDollarQuoteTag(runes []rune, start int) (string, bool) {
+	if start+1 >= len(runes) || runes[start] != '$' {
+		return "", false
+	}
+
+	end := start + 1
+	for end < len(runes) && (runes[end] == '_' || unicode.IsLetter(runes[end]) || unicode.IsDigit(runes[end])) {
+		end++
+	}
+
+	if end >= len(runes) || runes[end] != '$' {
+		return "", false
+	}
+
+	return string(runes[start : end+1]), true
+}
+
 func classifySingle(sql string) Class {
 	trimmed := strings.TrimSpace(sql)
 	if trimmed == "" {
@@ -228,7 +270,7 @@ func classifySingle(sql string) Class {
 
 	// Writable CTEs (WITH x AS (DELETE ... RETURNING ...) SELECT ...) parse as
 	// plain selects but mutate data; classify them by their mutating body.
-	if writableCTEPattern.MatchString(trimmed) {
+	if hasWritableCTE(trimmed) {
 		if catastrophicPattern.MatchString(trimmed) {
 			return ClassCatastrophicDDL
 		}
@@ -293,4 +335,8 @@ func classifyHeuristic(sql string) Class {
 	default:
 		return ClassUnknown
 	}
+}
+
+func hasWritableCTE(sql string) bool {
+	return writableCTEPattern.MatchString(sql)
 }

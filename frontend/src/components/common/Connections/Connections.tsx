@@ -4,7 +4,7 @@ import api from '@/api';
 import SortableList from '@/components/base/SortableList/SortableList';
 import AddConnection from '@/components/common/AddConnection/AddConnection';
 import { isPasswordPromptSuppressedForConnection } from '@/core/api';
-import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { matchConnectionId } from '@/store/tabStore/connectionId';
@@ -12,13 +12,13 @@ import { selectTabs, useTabStore } from '@/store/tabStore/tab.store';
 import type { ConnectionType } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useCallback, useEffect, useState } from 'react';
-import EditConnection from '../../AddConnection/EditConnection';
+import EditConnection from '../AddConnection/EditConnection';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import ConnectionPasswordPromptModal from './ConnectionPasswordPrompt/ConnectionPasswordPrompt';
 import { ConnectionsListStyled, ConnectionsStyled } from './Connections.styled';
 import ConnectionsEmptyState from './ConnectionsEmptyState';
 import { EmptySpaceStyle } from './EmptySpace.styled';
-import type { ConnectionsProps } from '../types';
+import type { ConnectionsProps } from './types';
 
 const pickSelectableActiveConnection = (connections: ConnectionType[]): ConnectionType | undefined => {
   const passwordPromptConnectionId = useSettingStore.getState().ui.passwordPromptConnectionId;
@@ -111,9 +111,8 @@ export default function Connections({ expanded = false }: ConnectionsProps): JSX
         const selectedTabId = useTabStore.getState().selectedTabId;
         const activeTab = connectionTabs.find((tab) => tab.id === selectedTabId) ?? connectionTabs[0];
         switchTab(activeTab?.id ?? null);
-      } catch (error) {
+      } catch {
         updateLoading('error');
-        console.debug('🚀 ~ handleChangeCurrentConnection ~ error:', error);
       }
     },
     [queryClient, switchTab, updateConnectionMutation, updateCurrentConnection, updateLoading]

@@ -72,11 +72,6 @@ func (r *MySQLRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequest
 func (r *MySQLRepository) runQueryGenerator(ctx context.Context, req *dto.RunQueryRequest, node contract.DBNode) string {
 	var sb strings.Builder
 
-	if lo.FromPtrOr(req.InlineQuery, "") != "" {
-		return fmt.Sprintf("SELECT * FROM %s.%s WHERE %s",
-			databaseCore.QuoteMySQLIdent(node.Database), databaseCore.QuoteMySQLIdent(node.Table), *req.InlineQuery)
-	}
-
 	selectColumns := "*"
 
 	if len(req.Columns) > 0 {

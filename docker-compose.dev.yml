@@ -9,7 +9,7 @@ services:
     environment:
       APP_PORT: "8080"
       APP_ENV: "docker"
-      # Public URL when accessed outside localhost — see docker-compose.dev.env.example
+      # Public URL when accessed outside localhost — see docs/deployment/configuration.md
       # APP_PUBLIC_URL: "https://dbo.example.com"
     ports:
       - "8080:8080"

@@ -1,8 +1,11 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strings"
+
+	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
 type App struct {
@@ -47,6 +50,10 @@ func New() *Config {
 			ReleaseURLAPI:  "https://dbo-studio.com/api/config",
 			ReleaseURL:     "https://dbo-studio.com/releases",
 		},
+	}
+
+	if token := strings.TrimSpace(config.App.AuthToken); token != "" && len(token) < 32 {
+		panic(fmt.Errorf("%w", apperror.ErrWeakAuthToken))
 	}
 
 	return config

@@ -88,25 +88,24 @@ func (jm *IJobManagerImpl) UpdateJobProgress(ctx context.Context, job *model.Job
 	return jm.jobRepo.UpdateProgress(ctx, job.ID, progress, message)
 }
 
-func (jm *IJobManagerImpl) updateJobStatus(ctx context.Context, job *model.Job, status model.JobStatus, message string) error {
-	fields := map[string]any{
-		"status":  status,
-		"message": message,
-	}
+func (jm *IJobManagerImpl) markJobCompleted(ctx context.Context, jobID uint, message string) error {
+	now := time.Now()
 
-	if status == model.JobStatusRunning && job.StartedAt == nil {
-		now := time.Now()
-		job.StartedAt = &now
-		fields["started_at"] = &now
-	}
+	return jm.jobRepo.UpdateFieldsIfRunning(ctx, jobID, map[string]any{
+		"status":       model.JobStatusCompleted,
+		"message":      message,
+		"completed_at": &now,
+	})
+}
 
-	if status == model.JobStatusCompleted || status == model.JobStatusFailed || status == model.JobStatusCancelled {
-		now := time.Now()
-		job.CompletedAt = &now
-		fields["completed_at"] = &now
-	}
+func (jm *IJobManagerImpl) markJobCancelled(ctx context.Context, jobID uint, message string) error {
+	now := time.Now()
 
-	return jm.jobRepo.UpdateFields(ctx, job.ID, fields)
+	return jm.jobRepo.UpdateFieldsIfActive(ctx, jobID, map[string]any{
+		"status":       model.JobStatusCancelled,
+		"message":      message,
+		"completed_at": &now,
+	})
 }
 
 func (jm *IJobManagerImpl) updateJobError(ctx context.Context, job *model.Job, errMsg string) error {
@@ -115,7 +114,7 @@ func (jm *IJobManagerImpl) updateJobError(ctx context.Context, job *model.Job, e
 	job.Status = model.JobStatusFailed
 	job.CompletedAt = &now
 
-	return jm.jobRepo.UpdateFields(ctx, job.ID, map[string]any{
+	return jm.jobRepo.UpdateFieldsIfRunning(ctx, job.ID, map[string]any{
 		"error":        errMsg,
 		"status":       model.JobStatusFailed,
 		"completed_at": &now,
@@ -182,12 +181,12 @@ func (jm *IJobManagerImpl) processJob(job *model.Job) error {
 	// pre-marshaled because gorm's map updates bypass the field serializer.
 	fields := map[string]any{"result": helper.StructToJSON(job.Result)}
 
-	err = jm.jobRepo.UpdateFields(jobCtx, job.ID, fields)
+	err = jm.jobRepo.UpdateFieldsIfRunning(jobCtx, job.ID, fields)
 	if err != nil {
 		return fmt.Errorf("failed to save job result: %w", err)
 	}
 
-	err = jm.updateJobStatus(jobCtx, job, model.JobStatusCompleted, "Job completed successfully")
+	err = jm.markJobCompleted(jobCtx, job.ID, "Job completed successfully")
 	if err != nil {
 		return fmt.Errorf("failed to update job status: %w", err)
 	}
@@ -237,8 +236,7 @@ func (jm *IJobManagerImpl) processPendingJobs() {
 		})
 
 		for _, rj := range runningJobs[1:] {
-			jobCopy := rj
-			_ = jm.updateJobStatus(jm.workerCtx, &jobCopy, model.JobStatusCancelled, "Canceled due to single-run policy")
+			_ = jm.markJobCancelled(jm.workerCtx, rj.ID, "Canceled due to single-run policy")
 			jm.CancelRunning(rj.ID)
 		}
 	}
@@ -315,13 +313,15 @@ func (jm *IJobManagerImpl) Shutdown() error {
 }
 
 func (jm *IJobManagerImpl) CancelAllJobs() error {
-	runningJobs, err := jm.jobRepo.GetRunningJobs(jm.workerCtx)
+	bgCtx := context.WithoutCancel(jm.workerCtx)
+
+	runningJobs, err := jm.jobRepo.GetRunningJobs(bgCtx)
 	if err != nil {
 		return fmt.Errorf("failed to get running jobs: %w", err)
 	}
 
 	for _, job := range runningJobs {
-		err := jm.updateJobStatus(jm.workerCtx, &job, model.JobStatusCancelled, "Canceled due to application shutdown")
+		err := jm.markJobCancelled(bgCtx, job.ID, "Canceled due to application shutdown")
 		if err != nil {
 			jm.logger.Error(fmt.Sprintf("Failed to cancel job %d: %v", job.ID, err))
 		} else {
@@ -329,13 +329,13 @@ func (jm *IJobManagerImpl) CancelAllJobs() error {
 		}
 	}
 
-	pendingJobs, err := jm.jobRepo.GetPendingJobs(jm.workerCtx)
+	pendingJobs, err := jm.jobRepo.GetPendingJobs(bgCtx)
 	if err != nil {
 		return fmt.Errorf("failed to get pending jobs: %w", err)
 	}
 
 	for _, job := range pendingJobs {
-		err := jm.updateJobStatus(jm.workerCtx, &job, model.JobStatusCancelled, "Canceled due to application shutdown")
+		err := jm.markJobCancelled(bgCtx, job.ID, "Canceled due to application shutdown")
 		if err != nil {
 			jm.logger.Error(fmt.Sprintf("Failed to cancel pending job %d: %v", job.ID, err))
 		} else {

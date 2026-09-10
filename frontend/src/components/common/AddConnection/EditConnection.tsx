@@ -86,8 +86,8 @@ export default function EditConnection(): JSX.Element {
       await queryClient.invalidateQueries({ queryKey: ['connections'] });
       toast.success(locales.connection_update_success);
       handleClose();
-    } catch (error) {
-      console.debug('🚀 ~ handleUpdateConnection ~ error:', error);
+    } catch {
+      /* ignored */
     }
   };
 

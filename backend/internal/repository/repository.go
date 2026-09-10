@@ -47,6 +47,8 @@ type IJobRepo interface {
 	// UpdateFields writes only the given columns by ID so a stale in-memory
 	// copy can never overwrite a concurrent status change (e.g. a cancel).
 	UpdateFields(ctx context.Context, id uint, fields map[string]any) error
+	UpdateFieldsIfRunning(ctx context.Context, id uint, fields map[string]any) error
+	UpdateFieldsIfActive(ctx context.Context, id uint, fields map[string]any) error
 	UpdateProgress(ctx context.Context, id uint, progress int, message string) error
 	GetPendingJobs(ctx context.Context) ([]model.Job, error)
 	GetRunningJobs(ctx context.Context) ([]model.Job, error)
@@ -110,7 +112,7 @@ type Repository struct {
 	SafeModePasswordRepo    ISafeModePasswordRepo
 }
 
-func NewRepository(db *gorm.DB) *Repository {
+func NewRepository(db *gorm.DB, aiCipherKey []byte) *Repository {
 	return &Repository{
 		ConfigRepo:              NewConfigRepo(db),
 		ConnectionRepo:          NewConnectionRepo(db),
@@ -120,7 +122,7 @@ func NewRepository(db *gorm.DB) *Repository {
 		SavedQueryRepo:          NewSavedQueryRepo(db),
 		JobRepo:                 NewJobRepo(db),
 		AiChatRepo:              NewAiChatRepo(db),
-		AiProviderRepo:          NewAiProviderRepo(db),
+		AiProviderRepo:          NewAiProviderRepo(db, aiCipherKey),
 		McpSettingsRepo:         NewMcpSettingsRepo(db),
 		SafeModePasswordRepo:    NewSafeModePasswordRepo(db),
 	}

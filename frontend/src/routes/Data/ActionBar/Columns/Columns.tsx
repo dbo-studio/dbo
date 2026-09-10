@@ -1,4 +1,4 @@
-import { useWindowSize } from '@/hooks/useWindowSize.hook';
+import { useWindowSize } from '@/hooks/useWindowSize';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { ColumnType } from '@/types/Data';

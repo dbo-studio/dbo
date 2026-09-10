@@ -11,7 +11,7 @@ export default function SyntaxHighlighter({ value, lang = 'sql' }: SyntaxHighlig
   useEffect(() => {
     highlightCode(value, lang, theme)
       .then((_html) => setHtml(_html))
-      .catch((e) => console.debug('🚀 ~ SyntaxHighlighter ~ e:', e));
+      .catch(() => undefined);
   }, [value, theme, lang]);
 
   return (

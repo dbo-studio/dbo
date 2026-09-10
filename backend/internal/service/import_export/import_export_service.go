@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
-	"path/filepath"
-	"strings"
 
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -92,9 +90,11 @@ func (s IImportExportImpl) Export(ctx context.Context, req *dto.ExportRequest) (
 	// native save dialog. Web clients must never control an absolute path.
 	cfg := s.cfg
 	if cfg == nil || cfg.App.Client != config.ClientDesktop {
-		req.SavePath = ""
-	} else if err := validateSavePath(req.SavePath); err != nil {
-		return nil, err
+		if req.SavePath != "" {
+			return nil, apperror.BadRequest(apperror.ErrInvalidSavePath)
+		}
+	} else if err := helper.ValidateExportSavePath(req.SavePath, true); err != nil {
+		return nil, apperror.BadRequest(apperror.ErrInvalidSavePath)
 	}
 
 	// Exports are read-only by definition; never hand a write statement to the
@@ -114,18 +114,4 @@ func (s IImportExportImpl) Export(ctx context.Context, req *dto.ExportRequest) (
 	return &dto.ExportResponse{
 		JobID: int32(j.ID),
 	}, nil
-}
-
-func validateSavePath(savePath string) error {
-	if savePath == "" {
-		return nil
-	}
-
-	for _, part := range strings.Split(filepath.ToSlash(savePath), "/") {
-		if part == ".." {
-			return apperror.BadRequest(apperror.ErrInvalidSavePath)
-		}
-	}
-
-	return nil
 }

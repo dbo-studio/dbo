@@ -7,7 +7,7 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { AiChatType, AutoCompleteType } from '@/types';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useAiStream } from './useAiStream';
 
 type useAiChatReturnType = {
@@ -58,6 +58,8 @@ const buildContextOpts = (): AiContextOptsType => {
 export const useAiChat = (): useAiChatReturnType => {
   const [page, setPage] = useState(1);
   const [isFallbackPending, setIsFallbackPending] = useState(false);
+  const fallbackAbortRef = useRef<AbortController | null>(null);
+  const fallbackGenerationRef = useRef(0);
 
   const connectionId = useConnectionStore((state) => state.currentConnectionId);
 
@@ -94,8 +96,8 @@ export const useAiChat = (): useAiChatReturnType => {
 
       addChat(chat);
       await handleChatChange(chat);
-    } catch (error) {
-      console.debug('🚀 ~ handleCreateChat ~ error:', error);
+    } catch {
+      // create chat failed silently
     }
   };
 
@@ -132,6 +134,9 @@ export const useAiChat = (): useAiChatReturnType => {
 
   const handleCancel = useCallback(() => {
     cancelStream();
+    fallbackAbortRef.current?.abort();
+    fallbackAbortRef.current = null;
+    fallbackGenerationRef.current += 1;
     setIsFallbackPending(false);
   }, [cancelStream]);
 
@@ -186,10 +191,18 @@ export const useAiChat = (): useAiChatReturnType => {
         // fall through to non-stream fallback
       }
 
+      const generation = fallbackGenerationRef.current;
+      fallbackAbortRef.current?.abort();
+      const controller = new AbortController();
+      fallbackAbortRef.current = controller;
+
       try {
         setIsFallbackPending(true);
-        const controller = new AbortController();
         const chat = await api.ai.chat(request, controller.signal);
+        if (generation !== fallbackGenerationRef.current) {
+          return;
+        }
+
         const updatedChat = addMessage(
           currentChat,
           chat.messages.map((m) => ({ ...m, isNew: true }))
@@ -199,11 +212,21 @@ export const useAiChat = (): useAiChatReturnType => {
         }
         resetStreaming();
       } catch (error) {
+        if (generation !== fallbackGenerationRef.current) {
+          return;
+        }
+
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return;
+        }
+
         const message = error instanceof Error ? error.message : 'Request failed';
         useAiStore.getState().updateStreaming({ error: message });
-        console.debug('🚀 ~ executeChat ~ error:', error);
       } finally {
-        setIsFallbackPending(false);
+        if (generation === fallbackGenerationRef.current) {
+          fallbackAbortRef.current = null;
+          setIsFallbackPending(false);
+        }
       }
     },
     [addMessage, connectionId, resetStreaming, sendStream, updateCurrentChat]

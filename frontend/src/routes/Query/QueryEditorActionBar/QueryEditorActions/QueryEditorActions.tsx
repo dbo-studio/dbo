@@ -65,8 +65,7 @@ export default function QueryEditorActions({
       });
 
       toast.success(locales.query_saved_successfully);
-    } catch (error) {
-      console.debug('🚀 ~ saveQuery ~ error:', error);
+    } catch {
       toast.error(locales.save_failed);
     }
   };

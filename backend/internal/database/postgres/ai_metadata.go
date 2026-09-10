@@ -3,7 +3,7 @@ package databasePostgres
 import (
 	"context"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
+	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/samber/lo"
 )
 
@@ -30,11 +30,9 @@ func (r *PostgresRepository) ListViewNames(ctx context.Context, database, schema
 }
 
 func (r *PostgresRepository) DescribeTable(ctx context.Context, table string, database, schema *string) (string, error) {
-	return r.AiContext(ctx, &dto.AiChatRequest{
-		ContextOpts: &dto.AiContextOptions{
-			Database: database,
-			Schema:   schema,
-			Tables:   []string{table},
-		},
+	return r.AiContext(ctx, &databaseContract.AIContextInput{
+		Database: database,
+		Schema:   schema,
+		Tables:   []string{table},
 	})
 }

@@ -1,7 +1,7 @@
 import type { MenuType } from '@/components/base/ContextMenu/types';
 import { diagramScopeFromTreeNode } from '@/core/diagram/scopeFromTree';
 import { useAiBridge } from '@/hooks/useAiBridge';
-import { useCurrentConnection } from '@/hooks/useCurrentConnection.hook';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { TreeNodeType } from '@/types/Tree';

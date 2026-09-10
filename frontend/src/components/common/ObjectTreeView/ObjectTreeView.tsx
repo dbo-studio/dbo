@@ -24,6 +24,7 @@ export default function ObjectTreeView(): JSX.Element {
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
   const parentRefsRef = useRef<Map<string, HTMLDivElement>>(new Map());
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const setFocusedNodeId = useTreeStore((state) => state.setFocusedNodeId);
 
@@ -35,7 +36,7 @@ export default function ObjectTreeView(): JSX.Element {
 
   useEffect(() => {
     if (!treeError && !tree && !isLoading && currentConnection?.id) {
-      reloadTree(true).catch((e) => console.log('🚀 ~ ObjectTreeView ~ e:', e));
+      reloadTree(true).catch(() => undefined);
     }
   }, [currentConnection?.id, tree, treeError, isLoading, reloadTree]);
 
@@ -50,8 +51,7 @@ export default function ObjectTreeView(): JSX.Element {
           fromCache: true
         });
         return nodes?.children || [];
-      } catch (error) {
-        console.debug('🚀 ~ fetchChildren ~ error:', error);
+      } catch {
         return [];
       }
     },
@@ -86,12 +86,13 @@ export default function ObjectTreeView(): JSX.Element {
           <LinearProgress sx={{ height: 2 }} />
         </Box>
       )}
-      <TreeViewContentStyled>
+      <TreeViewContentStyled ref={scrollContainerRef}>
         {tree && (
           <TreeNode
             node={tree}
             fetchChildren={fetchChildren}
             parentRefsRef={parentRefsRef}
+            scrollContainerRef={scrollContainerRef}
             nodeIndex={0}
             level={0}
             searchTerm={searchTerm}

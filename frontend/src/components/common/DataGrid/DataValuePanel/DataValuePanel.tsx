@@ -14,12 +14,20 @@ import {
 import { parseWkt } from '@/core/utils/wkt';
 import locales from '@/locales';
 import type { BinaryCellValue, ColumnType } from '@/types';
-import { Box, Button, Typography } from '@mui/material';
+import { Button, Typography } from '@mui/material';
 import { type DragEvent, type JSX, useCallback, useMemo, useRef, useState } from 'react';
 import {
   DataValuePanelBodyStyled,
+  DataValuePanelBrowseLinkStyled,
+  DataValuePanelCaptionStyled,
   DataValuePanelFooterActionsStyled,
   DataValuePanelFooterStyled,
+  DataValuePanelGeometryColumnStyled,
+  DataValuePanelGeometryMapStyled,
+  DataValuePanelHexPreviewStyled,
+  DataValuePanelImageColumnStyled,
+  DataValuePanelModeColumnStyled,
+  DataValuePanelRootStyled,
   ImageDropzoneHintStyled,
   ImageDropzonePreviewStyled,
   ImageDropzoneStyled,
@@ -205,10 +213,10 @@ export function DataValueEditor({
   const showTextFooter = showApply && onApply && editable && canEdit && mode !== 'image';
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+    <DataValuePanelRootStyled>
       <DataValuePanelBodyStyled data-testid={`value-panel-body-${mode}`}>
         {mode === 'hex' && (
-          <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+          <DataValuePanelModeColumnStyled>
             {missingBase64 || hexView.truncated ? (
               <Typography variant='body2' color='text.secondary' sx={{ p: 1 }}>
                 {locales.binary_too_large_to_edit}
@@ -224,20 +232,20 @@ export function DataValueEditor({
                   language='text'
                 />
               ) : (
-                <Box sx={{ p: 1, overflow: 'auto', flex: 1, fontFamily: 'monospace', fontSize: 12 }}>
+                <DataValuePanelHexPreviewStyled>
                   <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{hexView.hex || '(empty)'}</pre>
-                </Box>
+                </DataValuePanelHexPreviewStyled>
               )
             ) : (
               <Typography variant='body2' color='text.secondary' sx={{ p: 1 }}>
                 {locales.open_binary_for_hex}
               </Typography>
             )}
-          </Box>
+          </DataValuePanelModeColumnStyled>
         )}
 
         {mode === 'image' && (
-          <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+          <DataValuePanelImageColumnStyled>
             <ImageDropzoneStyled
               drag={isDragOver}
               clickable={editable}
@@ -267,9 +275,7 @@ export function DataValueEditor({
                     {editable ? (
                       <>
                         {locales.drag_and_drop_file}{' '}
-                        <Box component='span' sx={{ color: 'primary.main' }}>
-                          {locales.browse}
-                        </Box>
+                        <DataValuePanelBrowseLinkStyled>{locales.browse}</DataValuePanelBrowseLinkStyled>
                       </>
                     ) : (
                       locales.no_image_payload
@@ -299,14 +305,14 @@ export function DataValueEditor({
                 />
               )}
             </ImageDropzoneStyled>
-          </Box>
+          </DataValuePanelImageColumnStyled>
         )}
 
         {mode === 'geometry' && (
-          <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1, p: 1 }}>
-            <Box sx={{ flex: 1, minHeight: 160 }}>
+          <DataValuePanelGeometryColumnStyled>
+            <DataValuePanelGeometryMapStyled>
               <GeometryMap wkt={draft} height='100%' />
-            </Box>
+            </DataValuePanelGeometryMapStyled>
             <CodeEditor
               width={width}
               height={Math.min(140, Math.max(editorHeight * 0.35, 100))}
@@ -318,7 +324,7 @@ export function DataValueEditor({
               editable={canEditGeometry}
               language='text'
             />
-          </Box>
+          </DataValuePanelGeometryColumnStyled>
         )}
 
         {(mode === 'text' || mode === 'json') && (
@@ -334,29 +340,29 @@ export function DataValueEditor({
       </DataValuePanelBodyStyled>
 
       {jsonError && (
-        <Typography variant='caption' color='error' sx={{ px: 1, pb: 0.5 }}>
+        <DataValuePanelCaptionStyled variant='caption' color='error'>
           {jsonError}
-        </Typography>
+        </DataValuePanelCaptionStyled>
       )}
       {hexError && (
-        <Typography variant='caption' color='error' sx={{ px: 1, pb: 0.5 }}>
+        <DataValuePanelCaptionStyled variant='caption' color='error'>
           {hexError}
-        </Typography>
+        </DataValuePanelCaptionStyled>
       )}
       {geometryError && (
-        <Typography variant='caption' color='error' sx={{ px: 1, pb: 0.5 }}>
+        <DataValuePanelCaptionStyled variant='caption' color='error'>
           {geometryError}
-        </Typography>
+        </DataValuePanelCaptionStyled>
       )}
       {imageError && (
-        <Typography variant='caption' color='error' sx={{ px: 1, pb: 0.5 }}>
+        <DataValuePanelCaptionStyled variant='caption' color='error'>
           {imageError}
-        </Typography>
+        </DataValuePanelCaptionStyled>
       )}
       {imageWarning && (
-        <Typography variant='caption' color='warning.main' sx={{ px: 1, pb: 0.5 }}>
+        <DataValuePanelCaptionStyled variant='caption' color='warning.main'>
           {imageWarning}
-        </Typography>
+        </DataValuePanelCaptionStyled>
       )}
 
       {showImageFooter && (
@@ -410,7 +416,7 @@ export function DataValueEditor({
           </Button>
         </DataValuePanelFooterStyled>
       )}
-    </Box>
+    </DataValuePanelRootStyled>
   );
 }
 

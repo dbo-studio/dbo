@@ -57,17 +57,28 @@ interface TableDataDB extends DBSchema {
     };
     indexes: { 'by-tab': string };
   };
+  tabQueries: {
+    key: string; // tabId
+    value: {
+      tabId: string;
+      query: string;
+    };
+  };
 }
+
+const TAB_QUERIES_STORAGE_KEY = 'dbo_tab_queries';
 
 class IndexedDBService {
   private dbPromise: Promise<IDBPDatabase<TableDataDB>> | null = null;
   private readonly DB_NAME = 'table-data-db';
-  private readonly DB_VERSION = 1;
+  private readonly DB_VERSION = 2;
+  private tabQueryCache: Record<string, string> = {};
+  private tabQueriesHydrated = false;
+  private tabQueriesHydrating: Promise<void> | null = null;
 
   constructor() {
-    this.initDB().catch((e) => {
-      console.debug('🚀 ~ IndexedDBService ~ constructor ~ e:', e);
-    });
+    this.initDB().catch(() => undefined);
+    void this.hydrateTabQueries();
   }
 
   private initDB(): Promise<IDBPDatabase<TableDataDB>> {
@@ -102,6 +113,10 @@ class IndexedDBService {
           if (!db.objectStoreNames.contains('selectedRows')) {
             const selectedRowsStore = db.createObjectStore('selectedRows', { keyPath: 'key' });
             selectedRowsStore.createIndex('by-tab', 'tabId');
+          }
+
+          if (!db.objectStoreNames.contains('tabQueries')) {
+            db.createObjectStore('tabQueries', { keyPath: 'tabId' });
           }
         }
       });
@@ -381,6 +396,91 @@ class IndexedDBService {
         await tx.done;
       })
     );
+  }
+
+  private migrateLocalStorageTabQueries(): boolean {
+    try {
+      const stored = localStorage.getItem(TAB_QUERIES_STORAGE_KEY);
+      if (!stored) {
+        return false;
+      }
+
+      const parsed = JSON.parse(stored) as Record<string, string>;
+      for (const [tabId, query] of Object.entries(parsed)) {
+        this.tabQueryCache[tabId] = query;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to migrate tab queries from localStorage:', error);
+      return false;
+    }
+  }
+
+  private async persistMigratedTabQueries(queries: Record<string, string>): Promise<void> {
+    await Promise.all(Object.entries(queries).map(([tabId, query]) => this.saveTabQuery(tabId, query)));
+    localStorage.removeItem(TAB_QUERIES_STORAGE_KEY);
+  }
+
+  async hydrateTabQueries(): Promise<void> {
+    if (this.tabQueriesHydrated) {
+      return;
+    }
+
+    if (!this.tabQueriesHydrating) {
+      this.tabQueriesHydrating = (async (): Promise<void> => {
+        const migrated = this.migrateLocalStorageTabQueries();
+
+        if (migrated) {
+          await this.persistMigratedTabQueries({ ...this.tabQueryCache });
+        } else {
+          const db = await this.initDB();
+          const entries = await db.getAll('tabQueries');
+          for (const entry of entries) {
+            this.tabQueryCache[entry.tabId] = entry.query;
+          }
+        }
+
+        this.tabQueriesHydrated = true;
+      })();
+    }
+
+    await this.tabQueriesHydrating;
+  }
+
+  getTabQuery(tabId: string): string {
+    if (!this.tabQueriesHydrated) {
+      this.migrateLocalStorageTabQueries();
+    }
+
+    return this.tabQueryCache[tabId] ?? '';
+  }
+
+  async saveTabQuery(tabId: string, query: string): Promise<void> {
+    this.tabQueryCache[tabId] = query;
+
+    const db = await this.initDB();
+    const tx = db.transaction('tabQueries', 'readwrite');
+    await tx.store.put({ tabId, query });
+    await tx.done;
+  }
+
+  async removeTabQuery(tabId: string): Promise<void> {
+    delete this.tabQueryCache[tabId];
+
+    const db = await this.initDB();
+    const tx = db.transaction('tabQueries', 'readwrite');
+    await tx.store.delete(tabId);
+    await tx.done;
+  }
+
+  async clearTabQueries(): Promise<void> {
+    this.tabQueryCache = {};
+
+    const db = await this.initDB();
+    const tx = db.transaction('tabQueries', 'readwrite');
+    await tx.store.clear();
+    await tx.done;
   }
 }
 

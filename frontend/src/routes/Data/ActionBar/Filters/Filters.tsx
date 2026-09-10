@@ -1,5 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook.ts';
+import { useSelectedTab } from '@/hooks/useSelectedTab.ts';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
@@ -19,11 +19,9 @@ export default function Filters(): JSX.Element {
 
   const handleApplyFilters = (): void => {
     if (selectedTab?.pagination?.page ?? 0 > 1) {
-      const pagination = selectedTab?.pagination ?? { page: 1, limit: 100 };
-      pagination.page = 1;
       updateSelectedTab({
         ...(selectedTab ?? ({} as TabType)),
-        pagination
+        pagination: { ...(selectedTab?.pagination ?? { page: 1, limit: 100 }), page: 1 }
       });
     }
 

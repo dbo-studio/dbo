@@ -12,7 +12,7 @@ export default function RemoveSortButton({ sort }: RemoveSortButtonProps): JSX.E
   const handleRemoveSort = (): void => {
     removeSort(sort);
     if (sort.isActive) {
-      runQuery().catch((e) => console.debug('🚀 ~ handleRemoveSort ~ e:', e));
+      runQuery().catch(() => undefined);
     }
   };
 

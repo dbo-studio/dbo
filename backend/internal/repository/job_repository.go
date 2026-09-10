@@ -111,6 +111,18 @@ func (r JobRepository) UpdateFields(ctx context.Context, id uint, fields map[str
 		Updates(fields).Error
 }
 
+func (r JobRepository) UpdateFieldsIfRunning(ctx context.Context, id uint, fields map[string]any) error {
+	return r.db.WithContext(ctx).Model(&model.Job{}).
+		Where("id = ? AND status = ?", id, model.JobStatusRunning).
+		Updates(fields).Error
+}
+
+func (r JobRepository) UpdateFieldsIfActive(ctx context.Context, id uint, fields map[string]any) error {
+	return r.db.WithContext(ctx).Model(&model.Job{}).
+		Where("id = ? AND status IN ?", id, []model.JobStatus{model.JobStatusPending, model.JobStatusRunning}).
+		Updates(fields).Error
+}
+
 func (r JobRepository) UpdateProgress(ctx context.Context, id uint, progress int, message string) error {
 	return r.db.WithContext(ctx).Model(&model.Job{}).
 		Where("id = ?", id).

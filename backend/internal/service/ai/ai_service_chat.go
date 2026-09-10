@@ -32,7 +32,7 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		return nil, err
 	}
 
-	contextStr, err := repo.AiContext(ctx, req)
+	contextStr, err := repo.AiContext(ctx, toAIContextInput(req))
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -59,10 +60,12 @@ func (i IJobServiceImpl) Cancel(ctx context.Context, req *dto.JobDetailRequest) 
 		return apperror.BadRequest(apperror.ErrJobCannotCancel)
 	}
 
-	job.Status = model.JobStatusCancelled
-	job.Message = "Job canceled by user"
-
-	if err := i.jobRepo.Update(ctx, job); err != nil {
+	now := time.Now()
+	if err := i.jobRepo.UpdateFieldsIfActive(ctx, job.ID, map[string]any{
+		"status":       model.JobStatusCancelled,
+		"message":      "Job canceled by user",
+		"completed_at": &now,
+	}); err != nil {
 		return err
 	}
 
@@ -90,6 +93,10 @@ func (i IJobServiceImpl) Result(ctx context.Context, req *dto.JobDetailRequest) 
 	filePath := job.Result.FilePath
 	if filePath == "" {
 		return nil, apperror.BadRequest(errors.New("file path not found"))
+	}
+
+	if !helper.IsReadableExportResultPath(filePath) {
+		return nil, apperror.BadRequest(apperror.ErrInvalidSavePath)
 	}
 
 	fileName := job.Result.FileName
