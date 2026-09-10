@@ -53,10 +53,10 @@ fn normalize_menu_action(id: &str) -> Option<&str> {
 }
 
 fn build_menu<R: Runtime, M: Manager<R>>(manager: &M) -> tauri::Result<Menu<R>> {
-    let mut builder = MenuBuilder::new(manager);
+    let builder = MenuBuilder::new(manager);
 
     #[cfg(target_os = "macos")]
-    {
+    let builder = {
         let app_menu = SubmenuBuilder::new(manager, "DBO")
             .about(Some(AboutMetadata {
                 name: Some("DBO".into()),
@@ -71,8 +71,8 @@ fn build_menu<R: Runtime, M: Manager<R>>(manager: &M) -> tauri::Result<Menu<R>> 
             .separator()
             .quit()
             .build()?;
-        builder = builder.item(&app_menu);
-    }
+        builder.item(&app_menu)
+    };
 
     let file_menu = {
         #[allow(unused_mut)]
