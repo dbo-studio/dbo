@@ -3,7 +3,12 @@ import { type DbEngine, getDbConfig } from "../fixtures/dbConfigs";
 import { SAFE_MODE_PASSWORD } from "../fixtures/safeMode";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import { dataBrowserTreePath } from "./dataBrowser";
-import { API_DDL_TIMEOUT, apiRoute, pendingResponse } from "./network";
+import {
+  API_DB_TIMEOUT,
+  API_DDL_TIMEOUT,
+  apiRoute,
+  pendingResponse,
+} from "./network";
 import {
   ensureSqliteDbFile,
   removeSqliteDbFile,
