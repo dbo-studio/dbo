@@ -1,7 +1,7 @@
 import api from '@/api';
 import Modal from '@/components/base/Modal/Modal';
 import { tools } from '@/core/utils/tools';
-import { useJobPolling } from '@/hooks/useJobPolling.hook';
+import { useJobPolling } from '@/hooks/useJobPolling';
 import locales from '@/locales';
 import { ErrorType, ImportResultType } from '@/types/Job';
 import { Box, Button, LinearProgress, List, ListItem, ListItemText, Typography } from '@mui/material';
@@ -33,8 +33,7 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
       const blob = await jobResultMutation(jobId);
       const fileName = job?.result?.fileName || 'export';
       tools.fileDownload(blob, fileName);
-    } catch (error) {
-      console.debug('🚀 ~ handleDownload ~ error:', error);
+    } catch {
       toast.error(locales.download_failed);
     }
   };
@@ -54,7 +53,7 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
         return locales.export_completed_successfully;
       case 'failed':
         return `${locales.job_failed}: ${job.error}`;
-      case 'cancelled':
+      case 'canceled':
         return locales.job_cancelled;
       default:
         return job.message || `${locales.processing}...`;
@@ -127,7 +126,7 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
                 </Box>
               )}
 
-            {(job.status === 'completed' || job.status === 'failed' || job.status === 'cancelled') && (
+            {(job.status === 'completed' || job.status === 'failed' || job.status === 'canceled') && (
               <Box sx={{ mt: 2 }}>
                 <Button variant='outlined' onClick={onClose} fullWidth>
                   {locales.close}

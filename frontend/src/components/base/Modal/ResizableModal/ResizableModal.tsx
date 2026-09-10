@@ -1,7 +1,7 @@
 import {
   ResizableModalWrapperStyled,
   ResizeHandle
-} from '@/components/base/Modal/ResizableModal/ ResizableModal.styled.ts';
+} from '@/components/base/Modal/ResizableModal/ResizableModal.styled.ts';
 import { Box, Divider, Typography, useTheme } from '@mui/material';
 import { type JSX, useEffect, useRef, useState } from 'react';
 import { ModalStyled } from '../Modal.styled.ts';

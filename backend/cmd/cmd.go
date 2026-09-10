@@ -2,9 +2,13 @@ package cmd
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/handler"
@@ -14,13 +18,14 @@ import (
 	"github.com/dbo-studio/dbo/internal/migrations"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/internal/service"
-	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
+	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/cache/sqlite"
 	"github.com/dbo-studio/dbo/pkg/db"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger/zap"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 func ServeCommand() *cobra.Command {
@@ -69,34 +74,62 @@ func Execute() {
 	cache := sqlite.NewSQLiteCache(appDB)
 	appContainer.SetCache(cache)
 
-	rr := repository.NewRepository()
-	secretStore := secretStore.NewSecretStore(cfg, rr.WebSessionRepo, rr.WebConnectionSecretRepo, appLogger)
-	cm := databaseConnection.NewConnectionManager(rr.HistoryRepo, secretStore, appLogger)
-	ss := service.NewService(rr, cm, secretStore)
+	aiCipherKey, err := serviceSecretStore.DeriveAICipherKey(cfg)
+	if err != nil {
+		appLogger.Fatal(err)
+	}
+
+	rr := repository.NewRepository(appDB, aiCipherKey)
+	secretStore := serviceSecretStore.NewSecretStore(cfg, rr.WebSessionRepo, rr.WebConnectionSecretRepo, appLogger)
+	cm := databaseConnection.NewConnectionManager(rr.HistoryRepo, secretStore, appLogger, cache)
+	ss := service.NewService(rr, cm, secretStore, service.Deps{
+		Logger: appLogger,
+		Cache:  cache,
+		Config: cfg,
+	})
+
+	if token := strings.TrimSpace(cfg.App.AuthToken); token != "" {
+		sum := sha256.Sum256([]byte(token))
+		appLogger.Info(fmt.Sprintf("APP_AUTH_TOKEN configured (sha256=%x…)", sum[:4]))
+	}
 
 	err = ss.JobManager.CancelAllJobs()
 	if err != nil {
 		appLogger.Error(err)
 	}
 
-	restServer := server.New(appLogger, server.Handlers{
-		Config:       handler.NewConfigHandler(ss.ConfigService),
-		Connection:   handler.NewConnectionHandler(ss.ConnectionService),
-		SavedQuery:   handler.NewSavedQueryHandler(ss.SavedQueryService),
-		History:      handler.NewHistoryHandler(ss.HistoryService),
-		TreeHandler:  handler.NewTreeHandler(ss.TreeService),
-		QueryHandler: handler.NewQueryHandler(ss.QueryService),
-		ImportExport: handler.NewImportExportHandler(ss.ImportExportService),
-		Job:          handler.NewJobHandler(ss.JobService),
-		AI:           handler.NewAiHandler(ss.AiService),
-		AiProvider:   handler.NewAiProviderHandler(ss.AiProviderService),
-		AiChat:       handler.NewAiChatHandler(ss.AiChatService),
-		Mcp:          handler.NewMcpHandler(ss.McpService),
-		Schema:       handler.NewSchemaHandler(ss.SchemaService),
-		SafeMode:     handler.NewSafeModeHandler(ss.SafeModePasswordService),
+	restServer := server.New(appLogger, cfg, server.Handlers{Config: handler.NewConfigHandler(appLogger, ss.ConfigService),
+		Connection:   handler.NewConnectionHandler(appLogger, ss.ConnectionService),
+		SavedQuery:   handler.NewSavedQueryHandler(appLogger, ss.SavedQueryService),
+		History:      handler.NewHistoryHandler(appLogger, ss.HistoryService),
+		TreeHandler:  handler.NewTreeHandler(appLogger, ss.TreeService),
+		QueryHandler: handler.NewQueryHandler(appLogger, ss.QueryService),
+		ImportExport: handler.NewImportExportHandler(appLogger, ss.ImportExportService),
+		Job:          handler.NewJobHandler(appLogger, ss.JobService),
+		AI:           handler.NewAiHandler(appLogger, ss.AiService),
+		AiProvider:   handler.NewAiProviderHandler(appLogger, ss.AiProviderService),
+		AiChat:       handler.NewAiChatHandler(appLogger, ss.AiChatService),
+		Mcp:          handler.NewMcpHandler(appLogger, ss.McpService),
+		Schema:       handler.NewSchemaHandler(appLogger, ss.SchemaService),
+		SafeMode:     handler.NewSafeModeHandler(appLogger, ss.SafeModePasswordService),
 	}, rr.WebSessionRepo)
 
-	if err := restServer.Start(helper.IsLocal(), cfg.App.ResolvedPort()); err != nil {
+	gracefulCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	// SIGINT/SIGTERM: stop the job system (abort processors, wait, mark jobs
+	// canceled) while Listen drains in-flight HTTP requests gracefully.
+	go func() {
+		<-gracefulCtx.Done()
+
+		appLogger.Info("shutting down: stopping jobs and draining requests")
+
+		if err := ss.JobManager.Shutdown(); err != nil {
+			appLogger.Error(err)
+		}
+	}()
+
+	if err := restServer.Start(gracefulCtx, helper.IsLocal(), cfg.App.ResolvedPort()); err != nil {
 		msg := fmt.Sprintf("error happen while serving: %v", err)
 		appLogger.Error(errors.New(msg))
 		log.Println(msg)

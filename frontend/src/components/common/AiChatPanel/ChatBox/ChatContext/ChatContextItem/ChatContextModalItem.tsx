@@ -4,7 +4,7 @@ import { type JSX, RefObject, useRef } from 'react';
 import { useHover } from 'usehooks-ts';
 import type { ChatContextItemProps } from '../../../types';
 import { ChatContextItemNameStyled } from '../ChatContext.styled';
-import { ChatContextItemStyled } from './ChatContextModalItem.styled';
+import { ChatContextItemStyled } from './ChatContextItem.styled';
 
 export default function ChatContextItem({ name, type, onClick }: ChatContextItemProps): JSX.Element {
   const hoverRef = useRef<HTMLElement | null>(null);

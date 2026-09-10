@@ -3,7 +3,6 @@ package databaseCore
 import (
 	"context"
 
-	"github.com/dbo-studio/dbo/internal/container"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -21,7 +20,7 @@ type BaseRepository struct {
 	logger     logger.Logger
 }
 
-func NewBaseRepository(ctx context.Context, connection *model.Connection, cm *databaseConnection.ConnectionManager) (*BaseRepository, error) {
+func NewBaseRepository(ctx context.Context, connection *model.Connection, cm *databaseConnection.ConnectionManager, appCache cache.Cache, appLogger logger.Logger) (*BaseRepository, error) {
 	db, err := cm.GetConnection(ctx, connection, true)
 	if err != nil {
 		return nil, err
@@ -31,8 +30,8 @@ func NewBaseRepository(ctx context.Context, connection *model.Connection, cm *da
 		db:         db,
 		connection: connection,
 		cm:         cm,
-		cache:      container.Instance().Cache(),
-		logger:     container.Instance().Logger(),
+		cache:      appCache,
+		logger:     appLogger,
 	}, nil
 }
 
@@ -41,7 +40,7 @@ func (b *BaseRepository) DB() *gorm.DB {
 }
 
 func (b *BaseRepository) DBForDatabase(ctx context.Context, database string) (*gorm.DB, error) {
-	if database == "" || b.connection.ConnectionType != string(databaseContract.Postgresql) {
+	if database == "" || !databaseContract.IsPostgresFamily(b.connection.ConnectionType) {
 		return b.db, nil
 	}
 

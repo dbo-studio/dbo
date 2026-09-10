@@ -54,10 +54,10 @@ export const useDesktopMenu = (): void => {
             updateUI({ showSettings: { open: true, tab: 0 } });
             break;
           case 'refreshTree':
-            void reloadTree(false).catch((e) => console.debug('menu refreshTree failed', e));
+            void reloadTree(false).catch(() => undefined);
             break;
           case 'openDocumentation':
-            void openUrl(constants.docsUrl).catch((e) => console.debug('openDocumentation failed', e));
+            void openUrl(constants.docsUrl).catch(() => undefined);
             break;
           default:
             break;

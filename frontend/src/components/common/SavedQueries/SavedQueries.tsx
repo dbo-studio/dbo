@@ -3,7 +3,8 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useContextMenu, useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import type { SavedQueryType } from '@/types';
-import { Box, Button, ClickAwayListener, IconButton, LinearProgress, Stack } from '@mui/material';
+import VirtualList from '@/components/base/VirtualList/VirtualList';
+import { Box, Button, ClickAwayListener, IconButton, LinearProgress } from '@mui/material';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useRef, useState } from 'react';
 import Search from '../../base/Search/Search';
@@ -92,28 +93,31 @@ export default function SavedQueries(): JSX.Element {
         </Box>
 
         <SavedQueriesListStyled ref={listRef}>
-          <Stack spacing={1}>
-            {status === 'pending' ? (
-              <LinearProgress style={{ marginTop: '8px' }} />
-            ) : (
-              filteredSavedQueries.map((query) => (
+          {status === 'pending' ? (
+            <LinearProgress style={{ marginTop: '8px' }} />
+          ) : (
+            <VirtualList
+              items={filteredSavedQueries}
+              estimateSize={32}
+              scrollElementRef={listRef}
+              getItemKey={(query) => String(query.id)}
+              renderItem={(query) => (
                 <SavedQueryItem
                   context={handleContextMenu}
                   onChange={() => void handleRefresh()}
                   onClick={(): void => setSelected(query)}
-                  key={query.id}
                   query={query}
                   selected={selected?.id === query.id}
                   isEditMode={isEditMode?.id === query.id}
-                  onEditMode={(isEditMode): void => {
+                  onEditMode={(edit): void => {
                     if (query === selected) {
-                      setIsEditMode(isEditMode ? query : null);
+                      setIsEditMode(edit ? query : null);
                     }
                   }}
                 />
-              ))
-            )}
-          </Stack>
+              )}
+            />
+          )}
           {hasNextPage && (
             <SavedQueriesLoadMoreStyled>
               <Button

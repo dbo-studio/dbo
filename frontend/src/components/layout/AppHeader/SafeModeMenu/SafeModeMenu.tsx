@@ -123,8 +123,8 @@ export default function SafeModeMenu(): JSX.Element {
     safe: theme.palette.error.main
   });
   const activeOption = options.find((option) => option.value === currentMode) ?? options[0];
-  const isUnlocked = currentMode === 'silent' || Boolean(currentConnection?.safeModeUnlocked);
-  const iconColor = isUnlocked ? undefined : activeOption.color;
+  const isSilent = currentMode === 'silent';
+  const iconColor = isSilent ? undefined : activeOption.color;
 
   const handleOpen = (event: MouseEvent<HTMLButtonElement>): void => {
     event.stopPropagation();
@@ -165,8 +165,7 @@ export default function SafeModeMenu(): JSX.Element {
       try {
         await applyMode(safeMode, result.password);
         void storeSafeModePassword(result.password);
-      } catch (error) {
-        console.debug('🚀 ~ SafeModeMenu ~ handleSelect silent:', error);
+      } catch {
         toast.error(locales.safe_mode_password_invalid);
       }
       return;
@@ -190,8 +189,7 @@ export default function SafeModeMenu(): JSX.Element {
           await queryClient.invalidateQueries({ queryKey: ['safe-mode-password'] });
           void storeSafeModePassword(result.password);
           await applyMode(safeMode);
-        } catch (error) {
-          console.debug('🚀 ~ SafeModeMenu ~ handleSelect setup:', error);
+        } catch {
           toast.error(locales.safe_mode_update_failed);
         }
         return;
@@ -200,8 +198,7 @@ export default function SafeModeMenu(): JSX.Element {
 
     try {
       await applyMode(safeMode);
-    } catch (error) {
-      console.debug('🚀 ~ SafeModeMenu ~ handleSelect:', error);
+    } catch {
       toast.error(locales.safe_mode_update_failed);
     }
   };
@@ -213,6 +210,7 @@ export default function SafeModeMenu(): JSX.Element {
           <IconButton
             aria-label={locales.safe_mode}
             data-testid='safe-mode-menu'
+            data-icon={isSilent ? 'lock-open' : 'lock'}
             disabled={!currentConnection || isPending}
             onClick={handleOpen}
             onMouseDown={(event) => event.stopPropagation()}
@@ -220,7 +218,7 @@ export default function SafeModeMenu(): JSX.Element {
             {isPending ? (
               <CircularProgress size={18} />
             ) : (
-              <CustomIcon type={isUnlocked ? 'lockOpen' : 'lock'} size='m' color={iconColor} />
+              <CustomIcon type={isSilent ? 'lockOpen' : 'lock'} size='m' color={iconColor} />
             )}
           </IconButton>
         </span>

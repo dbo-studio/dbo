@@ -28,8 +28,8 @@ export default function SSLCertField({
     try {
       const content = await file.text();
       onChange(content.trim());
-    } catch (error) {
-      console.debug('🚀 ~ SSLCertField ~ handleFileChange ~ error:', error);
+    } catch {
+      /* ignored */
     }
   };
 

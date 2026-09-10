@@ -8,17 +8,15 @@ type (
 		ContextOpts  AiInlineCompleteContextOptions `json:"contextOpts"`
 	}
 
-	AiInlineCompleteResponse struct {
-		Completion string `json:"completion"`
-	}
-)
-
-type (
 	AiInlineCompleteContextOptions struct {
 		Database *string `json:"database"`
 		Schema   *string `json:"schema"`
 		Prompt   string  `json:"prompt"`
 		Suffix   *string `json:"suffix"`
+	}
+
+	AiInlineCompleteResponse struct {
+		Completion string `json:"completion"`
 	}
 )
 

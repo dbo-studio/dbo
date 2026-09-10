@@ -1,24 +1,17 @@
 import { tools } from '@/core/utils';
+import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import type { StateCreator } from 'zustand';
 import type { TabQuerySlice, TabStore } from '../types';
 
-const STORAGE_KEY = 'dbo_tab_queries';
-
-const getStoredQueries = (): Record<string, string> => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? (JSON.parse(stored) as Record<string, string>) : {};
-  } catch {
-    return {};
+const parseStoredQuery = (storedQuery: string): string => {
+  if (tools.isValidJSON(storedQuery)) {
+    const parsed: unknown = JSON.parse(storedQuery);
+    if (typeof parsed === 'string') {
+      return parsed;
+    }
   }
-};
 
-const setStoredQueries = (queries: Record<string, string>): void => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(queries));
-  } catch (error) {
-    console.error('Failed to store queries:', error);
-  }
+  return storedQuery;
 };
 
 export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [], TabQuerySlice> = (_set, get) => ({
@@ -26,33 +19,21 @@ export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [],
     const tab = tabId ?? get().selectedTabId;
     if (!tab) return '';
 
-    const storedQueries = getStoredQueries();
-    const storedQuery = storedQueries[tab];
+    const storedQuery = indexedDBService.getTabQuery(tab);
     if (!storedQuery) return '';
 
-    if (tools.isValidJSON(storedQuery)) {
-      const parsed: unknown = JSON.parse(storedQuery);
-      if (typeof parsed === 'string') {
-        return parsed;
-      }
-    }
-
-    return storedQuery;
+    return parseStoredQuery(storedQuery);
   },
   updateQuery: (query: string): void => {
     const tabId = get().selectedTabId;
     if (!tabId) return;
 
-    const storedQueries = getStoredQueries();
-    storedQueries[tabId] = query;
-    setStoredQueries(storedQueries);
+    void indexedDBService.saveTabQuery(tabId, query);
   },
   removeQuery: (tabId: string): void => {
-    const storedQueries = getStoredQueries();
-    delete storedQueries[tabId];
-    setStoredQueries(storedQueries);
+    void indexedDBService.removeTabQuery(tabId);
   },
   clearStoredQueries: (): void => {
-    localStorage.removeItem(STORAGE_KEY);
+    void indexedDBService.clearTabQueries();
   }
 });

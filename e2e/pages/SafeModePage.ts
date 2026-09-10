@@ -57,6 +57,14 @@ export class SafeModePage extends BasePage {
     await expect(this.option(mode)).toHaveClass(/Mui-selected/);
   }
 
+  async expectIconLocked(): Promise<void> {
+    await expect(this.menuButton).toHaveAttribute("data-icon", "lock");
+  }
+
+  async expectIconOpen(): Promise<void> {
+    await expect(this.menuButton).toHaveAttribute("data-icon", "lock-open");
+  }
+
   private async expectModeUpdated(): Promise<void> {
     await expect(this.page.getByText("Safe Mode updated").first()).toBeVisible({
       timeout: 10000,

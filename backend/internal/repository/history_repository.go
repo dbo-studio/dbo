@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/db/scope"
 	"gorm.io/gorm"
@@ -14,9 +13,9 @@ type IHistoryRepoImpl struct {
 	db *gorm.DB
 }
 
-func NewHistoryRepo() IHistoryRepo {
+func NewHistoryRepo(db *gorm.DB) IHistoryRepo {
 	return &IHistoryRepoImpl{
-		db: container.Instance().DB(),
+		db: db,
 	}
 }
 

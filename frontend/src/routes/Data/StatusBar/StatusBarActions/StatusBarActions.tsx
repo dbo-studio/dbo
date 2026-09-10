@@ -6,8 +6,8 @@ import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { buildRowConditions, mapRowValuesToPhysical, shortcuts } from '@/core/utils';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import { useCurrentConnection, useShortcut } from '@/hooks';
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
-import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import type { EditedRow, RowType } from '@/types';
@@ -78,8 +78,7 @@ export default function StatusBarActions(): JSX.Element {
 
       await refresh();
       toast.success(`${locales.changes_saved_successfully}. ${locales.row_affected}: ${res.rowAffected}`);
-    } catch (error) {
-      console.debug('🚀 ~ handleSave ~ error:', error);
+    } catch {
       toast.error(locales.save_failed);
     }
   }, [canEditGrid, selectedTab, currentConnection, updateQueryMutation, refresh, updatableNodeId]);

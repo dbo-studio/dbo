@@ -3,6 +3,7 @@ package sqlguard
 import (
 	"regexp"
 	"strings"
+	"unicode"
 
 	"github.com/blastrain/vitess-sqlparser/sqlparser"
 )
@@ -19,17 +20,18 @@ const (
 )
 
 var (
-	statementSplitPattern = regexp.MustCompile(`;\s*`)
-	wherePattern          = regexp.MustCompile(`(?i)\bwhere\b`)
-	dropPattern           = regexp.MustCompile(`(?i)^\s*drop\b`)
-	truncatePattern       = regexp.MustCompile(`(?i)^\s*truncate\b`)
-	alterPattern          = regexp.MustCompile(`(?i)^\s*alter\b`)
-	createPattern         = regexp.MustCompile(`(?i)^\s*create\b`)
-	insertPattern         = regexp.MustCompile(`(?i)^\s*insert\b`)
-	updatePattern         = regexp.MustCompile(`(?i)^\s*update\b`)
-	deletePattern         = regexp.MustCompile(`(?i)^\s*delete\b`)
-	selectPattern         = regexp.MustCompile(`(?i)^\s*(with\b[\s\S]+)?select\b`)
-	explainPattern        = regexp.MustCompile(`(?i)^\s*(explain|show|pragma|describe|desc)\b`)
+	wherePattern        = regexp.MustCompile(`(?i)\bwhere\b`)
+	dropPattern         = regexp.MustCompile(`(?i)^\s*drop\b`)
+	truncatePattern     = regexp.MustCompile(`(?i)^\s*truncate\b`)
+	alterPattern        = regexp.MustCompile(`(?i)^\s*alter\b`)
+	createPattern       = regexp.MustCompile(`(?i)^\s*create\b`)
+	insertPattern       = regexp.MustCompile(`(?i)^\s*insert\b`)
+	updatePattern       = regexp.MustCompile(`(?i)^\s*update\b`)
+	deletePattern       = regexp.MustCompile(`(?i)^\s*delete\b`)
+	selectPattern       = regexp.MustCompile(`(?i)^\s*(with\b[\s\S]+)?select\b`)
+	explainPattern      = regexp.MustCompile(`(?i)^\s*(explain|show|pragma|describe|desc)\b`)
+	writableCTEPattern  = regexp.MustCompile(`(?i)\bwith\b[\s\S]*?\bas\s*\([\s\S]*?\b(delete|insert|update|drop|truncate|alter|create)\b`)
+	catastrophicPattern = regexp.MustCompile(`(?i)\b(drop|truncate)\b`)
 )
 
 // Classification is the result of classifying one or more statements.
@@ -98,22 +100,162 @@ func ClassifyAction(action string) Class {
 	}
 }
 
+// splitStatements splits a SQL batch on statement boundaries. Semicolons inside
+// string literals, quoted identifiers, and comments are not boundaries.
 func splitStatements(sql string) []string {
-	raw := statementSplitPattern.Split(sql, -1)
+	parts := make([]string, 0, 4)
 
-	parts := make([]string, 0, len(raw))
-	for _, part := range raw {
-		part = strings.TrimSpace(part)
-		if part != "" {
+	var sb strings.Builder
+
+	flush := func() {
+		if part := strings.TrimSpace(sb.String()); part != "" {
 			parts = append(parts, part)
 		}
+
+		sb.Reset()
 	}
+
+	var (
+		inSingle, inDouble, inBacktick bool
+		inLineComment, inBlockComment  bool
+		dollarTag                      string
+	)
+
+	runes := []rune(sql)
+	for i := 0; i < len(runes); i++ {
+		ch := runes[i]
+
+		switch {
+		case dollarTag != "":
+			sb.WriteRune(ch)
+
+			if ch == '$' && i+len(dollarTag)+1 <= len(runes) {
+				candidate := string(runes[i : i+len(dollarTag)+1])
+				if candidate == dollarTag+"$" {
+					sb.WriteString(dollarTag[1:])
+
+					i += len(dollarTag)
+					dollarTag = ""
+				}
+			}
+
+		case inLineComment:
+			sb.WriteRune(ch)
+
+			if ch == '\n' {
+				inLineComment = false
+			}
+
+		case inBlockComment:
+			sb.WriteRune(ch)
+
+			if ch == '*' && i+1 < len(runes) && runes[i+1] == '/' {
+				sb.WriteRune('/')
+
+				i++
+				inBlockComment = false
+			}
+
+		case inSingle:
+			sb.WriteRune(ch)
+
+			if ch == '\'' {
+				if i+1 < len(runes) && runes[i+1] == '\'' {
+					sb.WriteRune('\'')
+
+					i++
+				} else {
+					inSingle = false
+				}
+			}
+
+		case inDouble:
+			sb.WriteRune(ch)
+
+			if ch == '"' {
+				if i+1 < len(runes) && runes[i+1] == '"' {
+					sb.WriteRune('"')
+
+					i++
+				} else {
+					inDouble = false
+				}
+			}
+
+		case inBacktick:
+			sb.WriteRune(ch)
+
+			if ch == '`' {
+				inBacktick = false
+			}
+
+		case ch == '-' && i+1 < len(runes) && runes[i+1] == '-':
+			inLineComment = true
+
+			sb.WriteRune(ch)
+
+		case ch == '/' && i+1 < len(runes) && runes[i+1] == '*':
+			inBlockComment = true
+
+			sb.WriteRune(ch)
+
+		case ch == '\'':
+			inSingle = true
+
+			sb.WriteRune(ch)
+
+		case ch == '"':
+			inDouble = true
+
+			sb.WriteRune(ch)
+
+		case ch == '`':
+			inBacktick = true
+
+			sb.WriteRune(ch)
+
+		case ch == '$':
+			if tag, ok := readDollarQuoteTag(runes, i); ok {
+				dollarTag = tag
+				sb.WriteString(tag)
+
+				i += len(tag) - 1
+			} else {
+				sb.WriteRune(ch)
+			}
+
+		case ch == ';':
+			flush()
+
+		default:
+			sb.WriteRune(ch)
+		}
+	}
+
+	flush()
 
 	if len(parts) == 0 {
 		return []string{sql}
 	}
 
 	return parts
+}
+
+func readDollarQuoteTag(runes []rune, start int) (string, bool) {
+	if start+1 >= len(runes) || runes[start] != '$' {
+		return "", false
+	}
+
+	end := start + 1
+	for end < len(runes) && (runes[end] == '_' || unicode.IsLetter(runes[end]) || unicode.IsDigit(runes[end])) {
+		end++
+	}
+
+	if end >= len(runes) || runes[end] != '$' {
+		return "", false
+	}
+
+	return string(runes[start : end+1]), true
 }
 
 func classifySingle(sql string) Class {
@@ -124,6 +266,16 @@ func classifySingle(sql string) Class {
 
 	if dropPattern.MatchString(trimmed) || truncatePattern.MatchString(trimmed) {
 		return ClassCatastrophicDDL
+	}
+
+	// Writable CTEs (WITH x AS (DELETE ... RETURNING ...) SELECT ...) parse as
+	// plain selects but mutate data; classify them by their mutating body.
+	if hasWritableCTE(trimmed) {
+		if catastrophicPattern.MatchString(trimmed) {
+			return ClassCatastrophicDDL
+		}
+
+		return ClassWriteDML
 	}
 
 	stmt, err := sqlparser.Parse(trimmed)
@@ -183,4 +335,8 @@ func classifyHeuristic(sql string) Class {
 	default:
 		return ClassUnknown
 	}
+}
+
+func hasWritableCTE(sql string) bool {
+	return writableCTEPattern.MatchString(sql)
 }

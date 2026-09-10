@@ -2,12 +2,13 @@ package serviceQuery
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
+	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
 	"github.com/dbo-studio/dbo/pkg/apperror"
@@ -34,8 +35,8 @@ type IQueryServiceImpl struct {
 	unlockStore    *serviceSafemode.UnlockStore
 }
 
-func NewQueryService(connectionRepo repository.IConnectionRepo, historyRepo repository.IHistoryRepo, cm *databaseConnection.ConnectionManager) IQueryService {
-	c := container.Instance().Cache()
+func NewQueryService(connectionRepo repository.IConnectionRepo, historyRepo repository.IHistoryRepo, cm *databaseConnection.ConnectionManager, appCache cache.Cache) IQueryService {
+	c := appCache
 
 	return &IQueryServiceImpl{
 		historyRepo:    historyRepo,
@@ -51,6 +52,29 @@ func (i IQueryServiceImpl) Run(ctx context.Context, req *dto.RunQueryRequest) (*
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
+
+	if inline := strings.TrimSpace(lo.FromPtr(req.InlineQuery)); inline != "" {
+		filter, err := databaseContract.ParseInlineQueryPredicate(inline)
+		if err != nil {
+			return nil, apperror.BadRequest(apperror.ErrInvalidInlineQuery)
+		}
+
+		if err := filter.Validate(); err != nil {
+			return nil, apperror.Validation(err)
+		}
+
+		req.Filters = append([]dto.FilterDto{filter}, req.Filters...)
+		req.InlineQuery = nil
+	}
+
+	policy := serviceSafemode.FromConnection(connection)
+	policy = i.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), connection.ID, policy)
+
+	if err := serviceSafemode.Enforce(policy, sqlguard.ClassRead, req.Confirmed); err != nil {
+		return nil, err
+	}
+
+	i.unlockStore.ConsumeGate(ctx, helper.CtxOwnerID(ctx), connection.ID, policy.Unlocked)
 
 	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {

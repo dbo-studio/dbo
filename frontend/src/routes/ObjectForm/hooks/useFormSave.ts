@@ -1,7 +1,7 @@
 import api from '@/api';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import { useCurrentConnection } from '@/hooks';
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import locales from '@/locales';
 import { useFormObjectStore } from '@/store/formObject/formObject.store';
 import { FormObjectData } from '@/store/formObject/types';
@@ -37,7 +37,7 @@ export const useFormSave = ({
 } => {
   const currentConnection = useCurrentConnection();
   const selectedTab = useSelectedTab<ObjectTabType>();
-  const { reloadTree } = useTreeStore();
+  const reloadTree = useTreeStore((state) => state.reloadTree);
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
   const getFormData = useFormObjectStore((state) => state.getFormData);
   const setFormObject = useFormObjectStore((state) => state.setFormObject);

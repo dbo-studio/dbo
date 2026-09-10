@@ -18,7 +18,7 @@ export default function DeleteHistoryIcon(): JSX.Element {
 
   const handleOpenConfirm = () => {
     showModal(locales.delete_action, locales.history_delete_confirm, () => {
-      handleDeleteAllHistories().catch((e) => console.log('🚀 ~ handleOpenConfirm ~ e:', e));
+      handleDeleteAllHistories().catch(() => undefined);
     });
   };
 
@@ -28,8 +28,8 @@ export default function DeleteHistoryIcon(): JSX.Element {
       await queryClient.invalidateQueries({
         queryKey: ['histories', currentConnection?.id]
       });
-    } catch (err) {
-      console.debug('🚀 ~ handleDeleteAllHistories ~ err:', err);
+    } catch {
+      /* ignored */
     }
   };
 

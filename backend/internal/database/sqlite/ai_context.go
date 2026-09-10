@@ -3,7 +3,6 @@ package databaseSqlite
 import (
 	"context"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	"github.com/samber/lo"
@@ -16,34 +15,13 @@ type ForeignKeyInfo struct {
 	ReferencedColumn string
 }
 
-/*
-this is a sample of the AI context
-Database: default
-
-Tables:
-1. data_src
-  - datasrc_id (PK, character)
-  - authors (character varying)
-  - title (character varying)
-  - year (integer)
-  - journal (text)
-  - vol_city (text)
-  - issue_state (text)
-  - start_page (text)
-  - end_page (text)
-
-2. datsrcln
-  - ndb_no (PK, FK → nut_data.nutr_no, character)
-  - nutr_no (PK, FK → nut_data.nutr_no, character)
-  - datasrc_id (PK, FK → data_src.datasrc_id, character)
-*/
-func (r *SQLiteRepository) AiContext(ctx context.Context, req *dto.AiChatRequest) (string, error) {
-	if req.ContextOpts == nil {
+func (r *SQLiteRepository) AiContext(ctx context.Context, req *databaseContract.AIContextInput) (string, error) {
+	if req == nil {
 		return "", nil
 	}
 
-	tables := req.ContextOpts.Tables
-	if len(tables) == 0 && lo.FromPtr(req.ContextOpts.ObjectDefinition) == "" {
+	tables := req.Tables
+	if len(tables) == 0 && lo.FromPtr(req.ObjectDefinition) == "" {
 		list, err := r.ListTableNames(ctx, nil, nil)
 		if err != nil {
 			return "", err
@@ -55,8 +33,8 @@ func (r *SQLiteRepository) AiContext(ctx context.Context, req *dto.AiChatRequest
 		}
 	}
 
-	views := req.ContextOpts.Views
-	if len(views) == 0 && lo.FromPtr(req.ContextOpts.ObjectDefinition) == "" {
+	views := req.Views
+	if len(views) == 0 && lo.FromPtr(req.ObjectDefinition) == "" {
 		list, err := r.ListViewNames(ctx, nil, nil)
 		if err != nil {
 			return "", err
@@ -69,41 +47,28 @@ func (r *SQLiteRepository) AiContext(ctx context.Context, req *dto.AiChatRequest
 	}
 
 	return databaseCore.BuildAIChatContext(ctx, databaseContract.AIContextOptions{
-		Database: req.ContextOpts.Database,
-		Schema:   req.ContextOpts.Schema,
+		Database: req.Database,
+		Schema:   req.Schema,
 		Tables:   tables,
 		Views:    views,
 	}, sqliteAIContextProvider{repo: r})
 }
 
-/*
-this is a sample of the AI complete context
-Database: default
-Schema: public
+func (r *SQLiteRepository) AiCompleteContext(ctx context.Context, req *databaseContract.AICompleteInput) string {
+	if req == nil {
+		return ""
+	}
 
-Tables:
-1. data_src
-  - datasrc_id (PK, character(6))
-  - authors (character varying(256))
-  - title (character varying)
-  - year (integer)
-  - journal (text)
-  - vol_city (text)
-  - issue_state (text)
-  - start_page (text)
-  - end_page (text)
-*/
-func (r *SQLiteRepository) AiCompleteContext(ctx context.Context, req *dto.AiInlineCompleteRequest) string {
-	sqlResult := r.base.ParseSQL(req.ContextOpts.Prompt)
+	sqlResult := r.base.ParseSQL(req.Prompt)
 
 	database := sqlResult.Database
 	if database == nil {
-		database = req.ContextOpts.Database
+		database = req.Database
 	}
 
 	schema := sqlResult.Schema
 	if schema == nil {
-		schema = req.ContextOpts.Schema
+		schema = req.Schema
 	}
 
 	result, err := databaseCore.BuildAICompleteContext(ctx, databaseContract.AIContextOptions{

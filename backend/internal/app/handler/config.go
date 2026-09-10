@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"github.com/dbo-studio/dbo/internal/container"
 	serviceConfig "github.com/dbo-studio/dbo/internal/service/config"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/dbo-studio/dbo/pkg/response"
@@ -13,9 +12,9 @@ type ConfigHandler struct {
 	configService serviceConfig.IConfigService
 }
 
-func NewConfigHandler(configService serviceConfig.IConfigService) *ConfigHandler {
+func NewConfigHandler(logger logger.Logger, configService serviceConfig.IConfigService) *ConfigHandler {
 	return &ConfigHandler{
-		logger:        container.Instance().Logger(),
+		logger:        logger,
 		configService: configService,
 	}
 }
@@ -41,13 +40,13 @@ func (h ConfigHandler) CheckUpdate(c fiber.Ctx) error {
 }
 
 func (h ConfigHandler) Logs(c fiber.Ctx) error {
-	err := h.configService.Logs(c)
+	file, err := h.configService.Logs(c)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return nil
+	return file.Send(c)
 }
 
 func (h ConfigHandler) ResetFactory(c fiber.Ctx) error {

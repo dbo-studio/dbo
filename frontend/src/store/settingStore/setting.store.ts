@@ -106,7 +106,33 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           set({ setup: { hasCompletedSetup: true } }, undefined, 'completeSetup');
         }
       }),
-      { name: 'settings' }
+      {
+        name: 'settings',
+        partialize: (state) => ({
+          theme: state.theme,
+          editor: state.editor,
+          general: state.general,
+          setup: state.setup,
+          editorContextByConnection: state.editorContextByConnection,
+          ui: {
+            sidebar: state.ui.sidebar
+          }
+        }),
+        merge: (persistedState, currentState) => {
+          const persisted = persistedState as Partial<SettingState> | undefined;
+          return {
+            ...currentState,
+            ...persisted,
+            ui: {
+              ...currentState.ui,
+              sidebar: {
+                ...currentState.ui.sidebar,
+                ...persisted?.ui?.sidebar
+              }
+            }
+          };
+        }
+      }
     ),
     { name: 'settings' }
   )

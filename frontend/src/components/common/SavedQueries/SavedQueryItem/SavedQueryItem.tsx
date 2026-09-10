@@ -42,8 +42,7 @@ export default function SavedQueryItem({
 
       onChange();
       onEditMode(false);
-    } catch (error) {
-      console.debug('🚀 ~ handleSaveChange ~ error:', error);
+    } catch {
       handleDiscardChanges();
     }
   }, [query, name, updateSavedQueryMutation, onChange, onEditMode, handleDiscardChanges]);

@@ -1,4 +1,4 @@
-package aichat
+package serviceAiChat
 
 import (
 	"context"

@@ -9,6 +9,7 @@ export type RunQueryRequestType = {
   columns: string[];
   filters: FilterType[];
   sorts: SortType[];
+  confirmed?: boolean;
 };
 
 export type RunRawQueryRequestType = {

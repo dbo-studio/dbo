@@ -48,7 +48,6 @@ export default function CreatableSelectInput({
     }
 
     if (Array.isArray(value)) {
-      console.debug('[CreatableSelectInput] Invalid format for single-select: expected string, got array');
       const firstValue = value.length > 0 ? value[0] : null;
       if (!firstValue) return null;
       const found = localOptions.find((option) => option.value === firstValue);

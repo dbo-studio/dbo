@@ -6,6 +6,7 @@ import type { RefObject } from 'react';
 export type TreeNodeProps = {
   node: TreeNodeType;
   parentRefsRef?: React.RefObject<Map<string, HTMLDivElement>>;
+  scrollContainerRef?: RefObject<HTMLDivElement | null>;
   nodeIndex?: number;
   level?: number;
   searchTerm?: string;

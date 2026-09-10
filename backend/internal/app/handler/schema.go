@@ -2,7 +2,6 @@ package handler
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	serviceSchema "github.com/dbo-studio/dbo/internal/service/schema"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -15,9 +14,9 @@ type SchemaHandler struct {
 	schemaService serviceSchema.ISchemaService
 }
 
-func NewSchemaHandler(schemaService serviceSchema.ISchemaService) *SchemaHandler {
+func NewSchemaHandler(logger logger.Logger, schemaService serviceSchema.ISchemaService) *SchemaHandler {
 	return &SchemaHandler{
-		logger:        container.Instance().Logger(),
+		logger:        logger,
 		schemaService: schemaService,
 	}
 }

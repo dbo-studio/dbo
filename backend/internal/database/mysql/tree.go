@@ -30,7 +30,7 @@ func buildRoot(ctx context.Context, r *MySQLRepository) (*contract.TreeNode, err
 	root := &contract.TreeNode{
 		ID:          fmt.Sprintf("%d@database", r.base.Connection().ID),
 		Name:        r.base.Connection().Name,
-		Icon:        lo.ToPtr("mysql"),
+		Icon:        lo.ToPtr(contract.TreeIcon(r.base.Connection().ConnectionType)),
 		Type:        contract.DatabaseContainerNodeType,
 		HasChildren: true,
 		ContextMenu: r.ContextMenu(contract.DatabaseContainerNodeType),

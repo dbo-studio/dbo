@@ -1,7 +1,7 @@
 import { connectionDatabase, resolveEditorContext } from '@/core/db';
 import { TabMode } from '@/core/enums';
-import { useCurrentConnection } from '@/hooks/useCurrentConnection.hook';
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { siblingObjectNodeIds } from '@/store/tabStore/siblingObjectNodeIds';
 import { selectTabs, useTabStore } from '@/store/tabStore/tab.store';

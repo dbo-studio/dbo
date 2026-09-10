@@ -45,7 +45,7 @@ func MySQLQueryKey(connectionID uint, parts ...string) string {
 }
 
 func PostgresQueryCachePrefix(connectionID uint) string {
-	return fmt.Sprintf("c:%d:posgresql:query_generator:", connectionID)
+	return fmt.Sprintf("c:%d:postgresql:query_generator:", connectionID)
 }
 
 func PostgresQueryKey(connectionID uint, parts ...string) string {
@@ -54,10 +54,6 @@ func PostgresQueryKey(connectionID uint, parts ...string) string {
 
 func ConnectionSecretKey(ownerID string, connectionID uint) string {
 	return fmt.Sprintf("sec:%s:conn:%d", encodeOwnerID(ownerID), connectionID)
-}
-
-func ConnectionSecretPrefix(ownerID string) string {
-	return fmt.Sprintf("sec:%s:", encodeOwnerID(ownerID))
 }
 
 func encodeOwnerID(ownerID string) string {

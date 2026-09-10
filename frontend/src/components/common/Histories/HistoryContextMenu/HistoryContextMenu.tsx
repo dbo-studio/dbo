@@ -13,7 +13,7 @@ export default function HistoryContextMenu({ history, contextMenu, onClose }: Hi
   const addEditorTab = useTabStore((state) => state.addEditorTab);
 
   const handleCopy = (): void => {
-    copy(history.query).catch((e) => console.debug('🚀 ~ handleCopy ~ error:', e));
+    copy(history.query).catch(() => undefined);
     toast.success(locales.copied);
   };
 

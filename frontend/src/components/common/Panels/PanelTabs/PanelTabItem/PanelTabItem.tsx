@@ -39,7 +39,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
     (e: React.MouseEvent<HTMLButtonElement>): void => {
       e.stopPropagation();
       e.preventDefault();
-      handleRemoveTab(tab.id).catch((e) => console.log('🚀 ~ PanelTabItem ~ e:', e));
+      handleRemoveTab(tab.id).catch(() => undefined);
     },
     [handleRemoveTab, tab.id]
   );

@@ -1,5 +1,5 @@
 import { Box, Typography, useTheme, type Theme } from '@mui/material';
-import Markdown from 'react-markdown';
+import AppMarkdown from '@/components/base/AppMarkdown/AppMarkdown';
 import type { JSX } from 'react';
 import ChatDataTable from '../ChatDataTable/ChatDataTable';
 import { messageMarkdownSx } from '../messageMarkdownSx';
@@ -33,7 +33,7 @@ const renderSegments = (text: string, theme: Theme): JSX.Element[] => {
 
     return (
       <Typography key={key} component='div' variant='body2' sx={messageMarkdownSx(theme)}>
-        <Markdown>{segment.content}</Markdown>
+        <AppMarkdown>{segment.content}</AppMarkdown>
       </Typography>
     );
   });

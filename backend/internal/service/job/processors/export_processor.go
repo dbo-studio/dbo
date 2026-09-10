@@ -9,13 +9,12 @@ import (
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
-	"github.com/dbo-studio/dbo/internal/service/job"
-	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
+	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
+	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/csv"
 	"github.com/dbo-studio/dbo/pkg/helper"
@@ -23,19 +22,19 @@ import (
 )
 
 type ExportProcessor struct {
-	jobManager     job.IJobManager
+	jobManager     serviceJob.IJobManager
 	cm             *databaseConnection.ConnectionManager
 	connectionRepo repository.IConnectionRepo
 	cache          cache.Cache
-	secrets        secretStore.ISecretStore
+	secrets        serviceSecretStore.ISecretStore
 }
 
-func NewExportProcessor(jobManager job.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, secrets secretStore.ISecretStore) *ExportProcessor {
+func NewExportProcessor(jobManager serviceJob.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, secrets serviceSecretStore.ISecretStore, appCache cache.Cache) *ExportProcessor {
 	return &ExportProcessor{
 		jobManager:     jobManager,
 		cm:             cm,
 		connectionRepo: connectionRepo,
-		cache:          container.Instance().Cache(),
+		cache:          appCache,
 		secrets:        secrets,
 	}
 }
@@ -44,10 +43,8 @@ func (p *ExportProcessor) GetType() model.JobType {
 	return model.JobTypeExport
 }
 
-func (p *ExportProcessor) Process(job *model.Job) error {
-	rawCtx := context.Background()
-
-	if job.Status == model.JobStatusCancelled {
+func (p *ExportProcessor) Process(ctx context.Context, job *model.Job) error {
+	if ctx.Err() != nil || job.Status == model.JobStatusCancelled {
 		return fmt.Errorf("job was canceled")
 	}
 
@@ -57,7 +54,7 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 	}
 
 	ownerID := jobData.OwnerID
-	ctx := helper.CtxWithOwnerID(rawCtx, ownerID)
+	ctx = helper.CtxWithOwnerID(ctx, ownerID)
 
 	connection, err := p.connectionRepo.Find(ctx, jobData.ConnectionID)
 	if err != nil {
@@ -79,12 +76,12 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 		return err
 	}
 
-	err = p.jobManager.UpdateJobProgress(job, 10, "Connected to database")
+	err = p.jobManager.UpdateJobProgress(ctx, job, 10, "Connected to database")
 	if err != nil {
 		return err
 	}
 
-	err = p.jobManager.UpdateJobProgress(job, 20, "Executing query")
+	err = p.jobManager.UpdateJobProgress(ctx, job, 20, "Executing query")
 	if err != nil {
 		return err
 	}
@@ -101,7 +98,13 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 		return fmt.Errorf("no result found for query %s", jobData.Query)
 	}
 
-	err = p.jobManager.UpdateJobProgress(job, 50, fmt.Sprintf("Found %d rows to export", len(result.Data)))
+	// RunRawQuery surfaces SELECT failures as a CommandResponseBuilder row
+	// (err == nil) for the SQL editor grid — export must still fail the job.
+	if msg := rawQueryFailureMessage(result); msg != "" {
+		return fmt.Errorf("%s", msg)
+	}
+
+	err = p.jobManager.UpdateJobProgress(ctx, job, 50, fmt.Sprintf("Found %d rows to export", len(result.Data)))
 	if err != nil {
 		return fmt.Errorf("failed to update progress: %w", err)
 	}
@@ -112,6 +115,10 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 	)
 
 	if jobData.SavePath != "" {
+		if err := helper.ValidateExportSavePath(jobData.SavePath, true); err != nil {
+			return fmt.Errorf("invalid save path: %w", err)
+		}
+
 		filePath = jobData.SavePath
 		fileName = filepath.Base(jobData.SavePath)
 
@@ -120,7 +127,7 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 			return fmt.Errorf("failed to create directory: %w", err)
 		}
 	} else {
-		exportDir := "exports"
+		exportDir := helper.ExportDir
 		if err := os.MkdirAll(exportDir, 0755); err != nil {
 			return fmt.Errorf("failed to create export directory: %w", err)
 		}
@@ -130,7 +137,7 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 		filePath = filepath.Join(exportDir, fileName)
 	}
 
-	err = p.jobManager.UpdateJobProgress(job, 70, "Creating export file")
+	err = p.jobManager.UpdateJobProgress(ctx, job, 70, "Creating export file")
 	if err != nil {
 		return err
 	}
@@ -149,6 +156,10 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 		return fmt.Errorf("unsupported format: %s", jobData.Format)
 	}
 
+	if ctx.Err() != nil {
+		return fmt.Errorf("job was canceled")
+	}
+
 	if err := os.WriteFile(filePath, fileContent, 0644); err != nil {
 		return fmt.Errorf("failed to write export file: %w", err)
 	}
@@ -158,7 +169,7 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 		return fmt.Errorf("failed to get file info: %w", err)
 	}
 
-	err = p.jobManager.UpdateJobProgress(job, 100, "Export completed successfully")
+	err = p.jobManager.UpdateJobProgress(ctx, job, 100, "Export completed successfully")
 	if err != nil {
 		return fmt.Errorf("failed to update progress: %w", err)
 	}
@@ -175,6 +186,25 @@ func (p *ExportProcessor) Process(job *model.Job) error {
 	}
 
 	return nil
+}
+
+// rawQueryFailureMessage detects SQL-editor error envelopes produced by
+// CommandResponseBuilder (Query/Message/Duration) when a SELECT fails.
+func rawQueryFailureMessage(result *dto.RawQueryResponse) string {
+	if result == nil || len(result.Columns) != 3 || len(result.Data) != 1 {
+		return ""
+	}
+
+	if result.Columns[0].Name != "Query" || result.Columns[1].Name != "Message" || result.Columns[2].Name != "Duration" {
+		return ""
+	}
+
+	msg, _ := result.Data[0]["Message"].(string)
+	if msg == "" || msg == "OK" {
+		return ""
+	}
+
+	return msg
 }
 
 func generateSQLExportFromData(tableName string, columns []dto.Column, data []map[string]any) []byte {

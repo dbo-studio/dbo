@@ -1,11 +1,16 @@
 import { useUUID } from '@/hooks';
 import locales from '@/locales';
-import { Box, Button } from '@mui/material';
+import { Button } from '@mui/material';
 import { type JSX, useState } from 'react';
 import Search from '../../../base/Search/Search';
 import type { ConnectionSelectionProps, SelectionConnectionType } from '../types';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
-import { ConnectionSelectionContainerStyled, ConnectionWrapperStyled } from './ConnectionSelection.styled';
+import {
+  ConnectionSelectionBodyStyled,
+  ConnectionSelectionContainerStyled,
+  ConnectionSelectionFooterStyled,
+  ConnectionWrapperStyled
+} from './ConnectionSelection.styled';
 
 export default function ConnectionSelection({ connections, onSubmit, onClose }: ConnectionSelectionProps): JSX.Element {
   const uuids = useUUID(connections.length);
@@ -22,7 +27,7 @@ export default function ConnectionSelection({ connections, onSubmit, onClose }: 
   };
 
   const handleConnectionType = (c: SelectionConnectionType): void => {
-    const newConnection = connectionType?.name === c.name ? undefined : c;
+    const newConnection = connectionType?.type === c.type ? undefined : c;
     setConnectionType(newConnection);
   };
 
@@ -32,30 +37,20 @@ export default function ConnectionSelection({ connections, onSubmit, onClose }: 
 
   return (
     <ConnectionSelectionContainerStyled>
-      <Box
-        sx={{
-          flex: 1,
-          mt: 1
-        }}
-      >
+      <ConnectionSelectionBodyStyled>
         <Search onChange={handleSearch} />
         <ConnectionWrapperStyled>
           {visibleConnections.map((c, index: number) => (
             <ConnectionItem
-              selected={connectionType?.name === c.name}
+              selected={connectionType?.type === c.type}
               onClick={handleConnectionType}
               key={uuids[index]}
               connection={c}
             />
           ))}
         </ConnectionWrapperStyled>
-      </Box>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between'
-        }}
-      >
+      </ConnectionSelectionBodyStyled>
+      <ConnectionSelectionFooterStyled>
         <Button size='small' onClick={onClose}>
           {locales.cancel}
         </Button>
@@ -68,7 +63,7 @@ export default function ConnectionSelection({ connections, onSubmit, onClose }: 
         >
           {locales.create}
         </Button>
-      </Box>
+      </ConnectionSelectionFooterStyled>
     </ConnectionSelectionContainerStyled>
   );
 }

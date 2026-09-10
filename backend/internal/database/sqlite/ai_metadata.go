@@ -3,7 +3,7 @@ package databaseSqlite
 import (
 	"context"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
+	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/samber/lo"
 )
 
@@ -36,9 +36,7 @@ func (r *SQLiteRepository) ListViewNames(ctx context.Context, database, schema *
 func (r *SQLiteRepository) DescribeTable(ctx context.Context, table string, database, schema *string) (string, error) {
 	_, _ = database, schema
 
-	return r.AiContext(ctx, &dto.AiChatRequest{
-		ContextOpts: &dto.AiContextOptions{
-			Tables: []string{table},
-		},
+	return r.AiContext(ctx, &databaseContract.AIContextInput{
+		Tables: []string{table},
 	})
 }

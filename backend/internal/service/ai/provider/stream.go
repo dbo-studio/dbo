@@ -1,4 +1,4 @@
-package serviceAiProvider
+package aiProvider
 
 // StreamEvent represents a single event emitted during a streaming chat response.
 type StreamEvent struct {

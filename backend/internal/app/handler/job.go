@@ -2,7 +2,6 @@ package handler
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/dbo-studio/dbo/pkg/response"
@@ -14,9 +13,9 @@ type JobHandler struct {
 	jobService serviceJob.IJobService
 }
 
-func NewJobHandler(jobService serviceJob.IJobService) *JobHandler {
+func NewJobHandler(logger logger.Logger, jobService serviceJob.IJobService) *JobHandler {
 	return &JobHandler{
-		logger:     container.Instance().Logger(),
+		logger:     logger,
 		jobService: jobService,
 	}
 }
@@ -54,11 +53,11 @@ func (h JobHandler) Result(c fiber.Ctx) error {
 		JobID: fiber.Params[int32](c, "id"),
 	}
 
-	err := h.jobService.Result(c, req)
+	file, err := h.jobService.Result(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 
-	return nil
+	return file.Send(c)
 }

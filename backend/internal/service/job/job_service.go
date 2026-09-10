@@ -1,39 +1,42 @@
-package job
+package serviceJob
 
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/apperror"
-	"github.com/gofiber/fiber/v3"
+	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/dbo-studio/dbo/pkg/response"
 )
 
 type IJobService interface {
 	Detail(ctx context.Context, req *dto.JobDetailRequest) (*dto.JobDetailResponse, error)
 	Cancel(ctx context.Context, req *dto.JobDetailRequest) error
-	Result(ctx fiber.Ctx, req *dto.JobDetailRequest) error
+	Result(ctx context.Context, req *dto.JobDetailRequest) (*response.FileDownload, error)
 }
 
 type IJobServiceImpl struct {
-	jobRepo repository.IJobRepo
+	jobRepo    repository.IJobRepo
+	jobManager IJobManager
 }
 
-func NewJobService(jr repository.IJobRepo) IJobService {
+func NewJobService(jr repository.IJobRepo, jm IJobManager) IJobService {
 	return &IJobServiceImpl{
-		jobRepo: jr,
+		jobRepo:    jr,
+		jobManager: jm,
 	}
 }
 
 func (i IJobServiceImpl) Detail(ctx context.Context, req *dto.JobDetailRequest) (*dto.JobDetailResponse, error) {
-	job, err := i.jobRepo.Find(ctx, req.JobID)
+	job, err := i.jobRepo.FindByOwner(ctx, req.JobID, helper.CtxOwnerID(ctx))
 	if err != nil {
-		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+		return nil, apperror.NotFound(apperror.ErrJobNotFound)
 	}
 
 	return &dto.JobDetailResponse{
@@ -48,38 +51,52 @@ func (i IJobServiceImpl) Detail(ctx context.Context, req *dto.JobDetailRequest) 
 }
 
 func (i IJobServiceImpl) Cancel(ctx context.Context, req *dto.JobDetailRequest) error {
-	job, err := i.jobRepo.Find(ctx, req.JobID)
+	job, err := i.jobRepo.FindByOwner(ctx, req.JobID, helper.CtxOwnerID(ctx))
 	if err != nil {
-		return apperror.NotFound(apperror.ErrConnectionNotFound)
+		return apperror.NotFound(apperror.ErrJobNotFound)
 	}
 
 	if job.Status == model.JobStatusCompleted || job.Status == model.JobStatusFailed {
 		return apperror.BadRequest(apperror.ErrJobCannotCancel)
 	}
 
-	job.Status = model.JobStatusCancelled
-	job.Message = "Job canceled by user"
+	now := time.Now()
+	if err := i.jobRepo.UpdateFieldsIfActive(ctx, job.ID, map[string]any{
+		"status":       model.JobStatusCancelled,
+		"message":      "Job canceled by user",
+		"completed_at": &now,
+	}); err != nil {
+		return err
+	}
 
-	return i.jobRepo.Update(ctx, job)
+	// Abort the running processor; the manager skips terminal status writes
+	// when the job was canceled concurrently.
+	i.jobManager.CancelRunning(uint(req.JobID))
+
+	return nil
 }
 
-func (i IJobServiceImpl) Result(c fiber.Ctx, req *dto.JobDetailRequest) error {
-	job, err := i.jobRepo.Find(c, req.JobID)
+func (i IJobServiceImpl) Result(ctx context.Context, req *dto.JobDetailRequest) (*response.FileDownload, error) {
+	job, err := i.jobRepo.FindByOwner(ctx, req.JobID, helper.CtxOwnerID(ctx))
 	if err != nil {
-		return apperror.NotFound(apperror.ErrConnectionNotFound)
+		return nil, apperror.NotFound(apperror.ErrJobNotFound)
 	}
 
 	if job.Status != model.JobStatusCompleted {
-		return apperror.BadRequest(apperror.ErrJobNotCompleted)
+		return nil, apperror.BadRequest(apperror.ErrJobNotCompleted)
 	}
 
 	if job.Type != model.JobTypeExport {
-		return apperror.BadRequest(fmt.Errorf("this job has not result"))
+		return nil, apperror.BadRequest(errors.New("this job has no result"))
 	}
 
 	filePath := job.Result.FilePath
 	if filePath == "" {
-		return apperror.BadRequest(errors.New("file path not found"))
+		return nil, apperror.BadRequest(errors.New("file path not found"))
+	}
+
+	if !helper.IsReadableExportResultPath(filePath) {
+		return nil, apperror.BadRequest(apperror.ErrInvalidSavePath)
 	}
 
 	fileName := job.Result.FileName
@@ -89,21 +106,23 @@ func (i IJobServiceImpl) Result(c fiber.Ctx, req *dto.JobDetailRequest) error {
 
 	fileContent, err := os.ReadFile(filePath)
 	if err != nil {
-		return apperror.BadRequest(errors.New("failed to read file"))
+		return nil, apperror.BadRequest(errors.New("failed to read file"))
 	}
 
-	c.Set("Content-Disposition", "attachment; filename="+fileName)
+	contentType := "application/octet-stream"
 
 	switch {
 	case strings.HasSuffix(fileName, ".sql"):
-		c.Set("Content-Type", "application/sql")
+		contentType = "application/sql"
 	case strings.HasSuffix(fileName, ".json"):
-		c.Set("Content-Type", "application/json")
+		contentType = "application/json"
 	case strings.HasSuffix(fileName, ".csv"):
-		c.Set("Content-Type", "text/csv")
-	default:
-		c.Set("Content-Type", "application/octet-stream")
+		contentType = "text/csv"
 	}
 
-	return c.Send(fileContent)
+	return &response.FileDownload{
+		FileName:    fileName,
+		ContentType: contentType,
+		Content:     fileContent,
+	}, nil
 }

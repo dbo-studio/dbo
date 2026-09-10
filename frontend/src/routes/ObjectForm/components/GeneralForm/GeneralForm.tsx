@@ -1,5 +1,5 @@
 import locales from '@/locales';
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useFormObjectStore } from '@/store/formObject/formObject.store';
 import { ObjectTabType } from '@/types';
 import { FormFieldType } from '@/types/Tree';

@@ -3,7 +3,7 @@ package databaseMysql
 import (
 	"context"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
+	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/samber/lo"
 )
 
@@ -36,12 +36,12 @@ func (r *MySQLRepository) ListViewNames(ctx context.Context, database, schema *s
 func (r *MySQLRepository) DescribeTable(ctx context.Context, table string, database, schema *string) (string, error) {
 	_ = schema
 
-	opts := &dto.AiContextOptions{
+	input := &databaseContract.AIContextInput{
 		Tables: []string{table},
 	}
 	if database != nil {
-		opts.Database = database
+		input.Database = database
 	}
 
-	return r.AiContext(ctx, &dto.AiChatRequest{ContextOpts: opts})
+	return r.AiContext(ctx, input)
 }

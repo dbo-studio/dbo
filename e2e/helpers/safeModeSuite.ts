@@ -3,7 +3,12 @@ import { type DbEngine, getDbConfig } from "../fixtures/dbConfigs";
 import { SAFE_MODE_PASSWORD } from "../fixtures/safeMode";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import { dataBrowserTreePath } from "./dataBrowser";
-import { API_DDL_TIMEOUT, apiRoute, pendingResponse } from "./network";
+import {
+  API_DB_TIMEOUT,
+  API_DDL_TIMEOUT,
+  apiRoute,
+  pendingResponse,
+} from "./network";
 import {
   ensureSqliteDbFile,
   removeSqliteDbFile,
@@ -11,6 +16,7 @@ import {
 import { withConnectionCleanup } from "./safeCleanup";
 import {
   ConnectionPage,
+  DataBrowserPage,
   DataGridPage,
   ObjectTreePage,
   SafeModePage,
@@ -94,6 +100,7 @@ export function defineSafeModeTests(engine: DbEngine): void {
           });
 
           await test.step("Open Safe Mode menu", async () => {
+            await safeMode.expectIconOpen();
             await safeMode.openMenu();
             await expect(safeMode.option("silent")).toBeVisible();
             await expect(safeMode.option("alert")).toBeVisible();
@@ -211,6 +218,7 @@ export function defineSafeModeTests(engine: DbEngine): void {
 
             await test.step("Enable Safe Mode 2", async () => {
               await safeMode.selectMode("safe_write");
+              await safeMode.expectIconLocked();
             });
 
             await test.step("SELECT runs without password", async () => {
@@ -226,6 +234,7 @@ export function defineSafeModeTests(engine: DbEngine): void {
                 SAFE_MODE_PASSWORD,
               );
               await sqlEditor.expectQuerySucceeded(`INSERT INTO ${tableName}`);
+              await safeMode.expectIconLocked();
             });
 
             await test.step("Second INSERT still requires password", async () => {
@@ -238,6 +247,7 @@ export function defineSafeModeTests(engine: DbEngine): void {
 
             await test.step("Switching to Silent requires password", async () => {
               await safeMode.selectSilentWithPassword(SAFE_MODE_PASSWORD);
+              await safeMode.expectIconOpen();
               await safeMode.openMenu();
               await safeMode.expectOptionSelected("silent");
               await page.keyboard.press("Escape");
@@ -251,6 +261,75 @@ export function defineSafeModeTests(engine: DbEngine): void {
                 );
               } catch (err) {
                 console.warn("[e2e] safe-mode password cleanup failed:", err);
+              }
+            });
+          }
+        });
+      } finally {
+        cleanupFile();
+      }
+    });
+
+    test("Safe Mode 1 requires password when opening a table", async ({
+      page,
+    }, testInfo) => {
+      const connectionPage = new ConnectionPage(page);
+      const sqlEditor = new SqlEditorPage(page);
+      const dataGrid = new DataGridPage(page);
+      const tree = new ObjectTreePage(page);
+      const safeMode = new SafeModePage(page);
+
+      const suffix = uniqueTestSuffix(testInfo);
+      const connectionName = `${testPrefix}-s1-${suffix}`;
+      const tableName = `e2e_safe_s1_${suffix}`;
+      const { config, cleanupFile } = connectionSetup(engine, connectionName);
+
+      try {
+        await withConnectionCleanup(page, connectionName, async () => {
+          try {
+            await connectionPage.goto();
+            await connectionPage.waitForReady();
+
+            await test.step("Setup connection and table while Silent", async () => {
+              await connectionPage.setupConnection(config);
+              await sqlEditor.open();
+              await selectEditorContext(sqlEditor, engine);
+              await sqlEditor.typeAndRun(createTableSql(engine, tableName));
+              await sqlEditor.typeAndRun(
+                `INSERT INTO ${tableName} (name) VALUES ('gated')`,
+              );
+            });
+
+            await test.step("Enable Safe Mode 1", async () => {
+              await safeMode.selectMode("safe");
+            });
+
+            await test.step("Opening the table prompts for password", async () => {
+              await revealTable(tree, engine, connectionName, tableName);
+
+              const retryPromise = pendingResponse(
+                page,
+                apiRoute.queryRun,
+                API_DB_TIMEOUT,
+              );
+              await tree.getTreeNode(tableName).dblclick();
+              await safeMode.submitPassword(SAFE_MODE_PASSWORD);
+              await retryPromise;
+              await dataGrid.waitForData("gated");
+            });
+          } finally {
+            await test.step("Cleanup table", async () => {
+              try {
+                await safeMode.selectSilentWithPassword(SAFE_MODE_PASSWORD);
+                await sqlEditor.open();
+                await safeMode.runWithoutGate(
+                  `DROP TABLE IF EXISTS ${tableName}`,
+                );
+              } catch (err) {
+                console.warn(
+                  "[e2e] safe-mode table open password cleanup failed:",
+                  err,
+                );
               }
             });
           }
@@ -316,12 +395,16 @@ INSERT INTO ${tableName} (name) VALUES ('before');
             await test.step("Confirm grid Save applies update", async () => {
               await dataGrid.editCell("before", "after");
               await dataGrid.clickSave();
-              await expect(safeMode.confirmTitle).toBeVisible({ timeout: 15000 });
+              await expect(safeMode.confirmTitle).toBeVisible({
+                timeout: 15000,
+              });
 
               const updatePromise = pendingResponse(page, apiRoute.queryUpdate);
               await safeMode.runAnywayButton.click();
               await updatePromise;
-              await expect(safeMode.confirmTitle).toBeHidden({ timeout: 10000 });
+              await expect(safeMode.confirmTitle).toBeHidden({
+                timeout: 10000,
+              });
 
               await safeMode.runWithoutGate(
                 `SELECT * FROM ${tableName} ORDER BY id;`,
@@ -417,7 +500,10 @@ INSERT INTO ${tableName} (name) VALUES ('before');
                   `DROP TABLE IF EXISTS ${tableName}`,
                 );
               } catch (err) {
-                console.warn("[e2e] safe-mode grid reauth cleanup failed:", err);
+                console.warn(
+                  "[e2e] safe-mode grid reauth cleanup failed:",
+                  err,
+                );
               }
             });
           }
@@ -427,7 +513,9 @@ INSERT INTO ${tableName} (name) VALUES ('before');
       }
     });
 
-    test("Alert Mode 2 confirms tree Drop table", async ({ page }, testInfo) => {
+    test("Alert Mode 2 confirms tree Drop table", async ({
+      page,
+    }, testInfo) => {
       const connectionPage = new ConnectionPage(page);
       const sqlEditor = new SqlEditorPage(page);
       const tree = new ObjectTreePage(page);
@@ -461,10 +549,14 @@ INSERT INTO ${tableName} (name) VALUES ('before');
                 API_DDL_TIMEOUT,
               );
               await tree.runTreeAction(tableName, "Drop table");
-              await expect(safeMode.confirmTitle).toBeVisible({ timeout: 15000 });
+              await expect(safeMode.confirmTitle).toBeVisible({
+                timeout: 15000,
+              });
               await safeMode.runAnywayButton.click();
               await retryPromise;
-              await expect(safeMode.confirmTitle).toBeHidden({ timeout: 10000 });
+              await expect(safeMode.confirmTitle).toBeHidden({
+                timeout: 10000,
+              });
               await expect(tree.getTreeNode(tableName)).toHaveCount(0, {
                 timeout: 15000,
               });
@@ -539,7 +631,135 @@ INSERT INTO ${tableName} (name) VALUES ('before');
                   `DROP TABLE IF EXISTS ${tableName}`,
                 );
               } catch (err) {
-                console.warn("[e2e] safe-mode tree password cleanup failed:", err);
+                console.warn(
+                  "[e2e] safe-mode tree password cleanup failed:",
+                  err,
+                );
+              }
+            });
+          }
+        });
+      } finally {
+        cleanupFile();
+      }
+    });
+
+    test("Inline query rejects SQL injection and export rejects writes", async ({
+      page,
+    }, testInfo) => {
+      const connectionPage = new ConnectionPage(page);
+      const sqlEditor = new SqlEditorPage(page);
+      const dataBrowser = new DataBrowserPage(page);
+      const dataGrid = new DataGridPage(page);
+      const safeMode = new SafeModePage(page);
+
+      const suffix = uniqueTestSuffix(testInfo);
+      const connectionName = `${testPrefix}-grid-${suffix}`;
+      const tableName = `e2e_safe_grid_${suffix}`;
+      const { config, cleanupFile } = connectionSetup(engine, connectionName);
+
+      try {
+        await withConnectionCleanup(page, connectionName, async () => {
+          try {
+            await connectionPage.goto();
+            await connectionPage.waitForReady();
+
+            await test.step("Setup connection and table while Silent", async () => {
+              await connectionPage.setupConnection(config);
+              await sqlEditor.open();
+              await selectEditorContext(sqlEditor, engine);
+              await sqlEditor.typeAndRun(createTableSql(engine, tableName));
+              await sqlEditor.typeAndRun(
+                `INSERT INTO ${tableName} (name) VALUES ('gated')`,
+              );
+            });
+
+            await test.step("Enable Safe Mode 2 and open the grid", async () => {
+              await safeMode.selectMode("safe_write");
+              await dataBrowser.openTableFromTree(
+                dataBrowserTreePath(engine, connectionName),
+                tableName,
+              );
+              await dataGrid.waitForData("gated");
+            });
+
+            await test.step("SQL injection via inline query is rejected", async () => {
+              // inlineQuery is a predicate, not raw SQL — smuggled writes must
+              // fail parse (400), not reach Safe Mode or the database.
+              let intercepted = false;
+              await page.route(/\/api\/query\/run/, async (route) => {
+                intercepted = true;
+                const request = route.request();
+                const payload = request.postDataJSON() as Record<
+                  string,
+                  unknown
+                >;
+                payload.inlineQuery = `1=1; DROP TABLE ${tableName}`;
+                await route.continue({ postData: JSON.stringify(payload) });
+              });
+
+              try {
+                const blocked = pendingResponse(
+                  page,
+                  { ...apiRoute.queryRun, status: 400 },
+                  API_DB_TIMEOUT,
+                );
+                await page.getByTestId("inline-query-run").click();
+
+                const blockedResponse = await blocked;
+                expect(intercepted).toBe(true);
+                expect(blockedResponse.status()).toBe(400);
+
+                const body = (await blockedResponse.json()) as {
+                  message?: string;
+                };
+                expect(body.message).toBe("invalid inline query");
+              } finally {
+                await page.unroute(/\/api\/query\/run/);
+              }
+            });
+
+            await test.step("Table survives the blocked statement", async () => {
+              await dataBrowser.runInlineQuery("name = 'gated'");
+              await dataGrid.waitForData("gated");
+            });
+
+            await test.step("Export API rejects write queries", async () => {
+              const listResponse = await page.request.get("/api/connections");
+              const listBody = (await listResponse.json()) as {
+                data: Array<{ id: number; name: string }>;
+              };
+              const connection = listBody.data.find(
+                (item) => item.name === connectionName,
+              );
+              expect(connection).toBeDefined();
+
+              const exportResponse = await page.request.post("/api/export", {
+                data: {
+                  connectionId: connection?.id,
+                  table: tableName,
+                  query: `DELETE FROM ${tableName}`,
+                  format: "csv",
+                },
+              });
+              expect(exportResponse.status()).toBe(400);
+
+              const exportBody = (await exportResponse.json()) as {
+                message?: string;
+              };
+              expect(exportBody.message).toContain("read-only");
+            });
+
+            await test.step("Switch back to Silent", async () => {
+              await safeMode.selectSilentWithPassword(SAFE_MODE_PASSWORD);
+            });
+          } finally {
+            await test.step("Cleanup table", async () => {
+              try {
+                await sqlEditor.open();
+                await sqlEditor.typeAndRun(`DROP TABLE IF EXISTS ${tableName}`);
+              } catch (err) {
+                console.warn("[e2e] safe-mode grid cleanup failed:", err);
               }
             });
           }

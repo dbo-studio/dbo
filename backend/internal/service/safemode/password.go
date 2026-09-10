@@ -1,16 +1,20 @@
-package safemode
+package serviceSafemode
 
 import (
+	"github.com/dbo-studio/dbo/config"
+
+	"github.com/dbo-studio/dbo/pkg/cache"
+	"github.com/dbo-studio/dbo/pkg/logger"
+
 	"context"
 	"crypto/sha256"
 	"errors"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
-	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
+	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/cryptoutil"
 	"github.com/dbo-studio/dbo/pkg/helper"
@@ -34,20 +38,17 @@ type ISafeModePasswordServiceImpl struct {
 	aesKey      []byte
 }
 
-func NewPasswordService(repo repository.ISafeModePasswordRepo) ISafeModePasswordService {
-	cfg := container.Instance().Config()
-
-	secret, err := secretStore.LoadOrCreateAppSecretKey(cfg)
+func NewPasswordService(repo repository.ISafeModePasswordRepo, cfg *config.Config, appLogger logger.Logger, appCache cache.Cache) ISafeModePasswordService {
+	secret, err := serviceSecretStore.LoadOrCreateAppSecretKey(cfg)
 	if err != nil {
-		container.Instance().Logger().Fatal(err)
+		appLogger.Fatal(err)
 	}
 
 	sum := sha256.Sum256([]byte(secret))
-	cache := container.Instance().Cache()
 
 	return &ISafeModePasswordServiceImpl{
 		repo:        repo,
-		unlockStore: NewUnlockStore(cache),
+		unlockStore: NewUnlockStore(appCache),
 		aesKey:      sum[:],
 	}
 }

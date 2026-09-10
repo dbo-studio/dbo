@@ -1,4 +1,5 @@
 import type { ConnectionSafeMode } from '@/types';
+import type { ConnectionEngine } from '@/core/db/connectionAliases';
 
 export type ConnectionDetailRequestType = {
   connectionId: string | number;
@@ -6,7 +7,7 @@ export type ConnectionDetailRequestType = {
 
 export type CreateConnectionRequestType = {
   name: string;
-  type: 'postgresql' | 'sqlite' | 'mysql';
+  type: ConnectionEngine;
   options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
   rememberPassword?: boolean;
   safeMode?: ConnectionSafeMode;
@@ -14,7 +15,7 @@ export type CreateConnectionRequestType = {
 
 export type PingConnectionRequestType = {
   id?: number;
-  type: 'postgresql' | 'sqlite' | 'mysql';
+  type: ConnectionEngine;
   options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
 };
 
@@ -28,7 +29,7 @@ export type PingConnectionResponseType = {
 export type UpdateConnectionRequestType = {
   id?: string | number;
   name?: string;
-  type?: 'postgresql' | 'sqlite' | 'mysql';
+  type?: ConnectionEngine;
   isActive?: boolean;
   isClose?: boolean;
   rememberPassword?: boolean;

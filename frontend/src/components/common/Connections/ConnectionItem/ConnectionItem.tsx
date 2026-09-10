@@ -5,8 +5,10 @@ import { useContextMenu } from '@/hooks';
 import { Box, CircularProgress, Tooltip } from '@mui/material';
 import type { JSX } from 'react';
 import { useCallback } from 'react';
-import CustomIcon from '../../../../base/CustomIcon/CustomIcon';
-import type { ConnectionItemProps } from '../../types';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import type { IconTypes } from '@/components/base/CustomIcon/types';
+import { getConnectionAlias } from '@/core/db/connectionAliases';
+import type { ConnectionItemProps } from '../types';
 import { ConnectionItemNameStyled, ConnectionItemStyled } from './ConnectionItem.styled';
 import ConnectionItemContextMenu from './ConnectionItemContextMenu/ConnectionItemContextMenu';
 
@@ -24,11 +26,15 @@ export default function ConnectionItem({
     }
   }, [contextMenuPosition, onClick]);
 
+  const engineIcon = (getConnectionAlias(connection.type)?.logo ??
+    connection.icon ??
+    connection.type) as keyof typeof IconTypes;
+
   return (
     <Box onContextMenu={handleContextMenu} sx={{ width: '100%' }}>
       <SortableItem id={String(connection.id)} onClick={handleClick}>
         <ConnectionItemStyled data-testid={`connection-item-${connection.name}`} selected={selected}>
-          <CustomIcon type={connection.isOpen ? 'databaseZap' : 'database'} size='m' />
+          <CustomIcon type={engineIcon} size='m' />
           {loading ? (
             <Box>
               <CircularProgress size={15} color='primary' />

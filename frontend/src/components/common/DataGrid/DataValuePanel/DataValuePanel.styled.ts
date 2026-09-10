@@ -1,5 +1,5 @@
 import { variables } from '@/core/theme/variables';
-import { Box, styled } from '@mui/material';
+import { Box, styled, Typography } from '@mui/material';
 
 export const DataValuePanelBodyStyled = styled(Box)(() => ({
   flex: 1,
@@ -87,4 +87,57 @@ export const DataValuePanelFooterActionsStyled = styled(Box)(({ theme }) => ({
   alignItems: 'center',
   gap: theme.spacing(1),
   marginLeft: 'auto'
+}));
+
+export const DataValuePanelRootStyled = styled(Box)(() => ({
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100%',
+  minHeight: 0
+}));
+
+export const DataValuePanelModeColumnStyled = styled(Box)(() => ({
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100%',
+  minHeight: 0
+}));
+
+export const DataValuePanelImageColumnStyled = styled(Box)(() => ({
+  flex: 1,
+  minHeight: 0,
+  display: 'flex',
+  flexDirection: 'column'
+}));
+
+export const DataValuePanelGeometryColumnStyled = styled(Box)(({ theme }) => ({
+  flex: 1,
+  minHeight: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(1),
+  padding: theme.spacing(1)
+}));
+
+export const DataValuePanelGeometryMapStyled = styled(Box)(() => ({
+  flex: 1,
+  minHeight: 160
+}));
+
+export const DataValuePanelHexPreviewStyled = styled(Box)(() => ({
+  padding: 8,
+  overflow: 'auto',
+  flex: 1,
+  fontFamily: 'monospace',
+  fontSize: 12
+}));
+
+export const DataValuePanelCaptionStyled = styled(Typography)(() => ({
+  paddingLeft: 8,
+  paddingRight: 8,
+  paddingBottom: 4
+}));
+
+export const DataValuePanelBrowseLinkStyled = styled('span')(({ theme }) => ({
+  color: theme.palette.primary.main
 }));

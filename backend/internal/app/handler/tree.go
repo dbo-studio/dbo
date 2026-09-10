@@ -2,7 +2,6 @@ package handler
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	serviceTree "github.com/dbo-studio/dbo/internal/service/tree"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -15,9 +14,9 @@ type TreeHandler struct {
 	treeService serviceTree.ITreeService
 }
 
-func NewTreeHandler(treeService serviceTree.ITreeService) *TreeHandler {
+func NewTreeHandler(logger logger.Logger, treeService serviceTree.ITreeService) *TreeHandler {
 	return &TreeHandler{
-		logger:      container.Instance().Logger(),
+		logger:      logger,
 		treeService: treeService,
 	}
 }

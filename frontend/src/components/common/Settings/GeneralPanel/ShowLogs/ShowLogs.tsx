@@ -16,8 +16,8 @@ export function ShowLogs() {
       try {
         const blob = await api.config.getLogsPath();
         tools.fileDownload(blob, 'logs.txt');
-      } catch (error) {
-        console.debug('🚀 ~ handleOpenLogs ~ error:', error);
+      } catch {
+        /* ignored */
       }
     }
   };

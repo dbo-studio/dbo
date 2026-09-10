@@ -4,7 +4,7 @@ import { filterOperatorRequiresValue } from '@/core/constants';
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import { getSafeModeError } from '@/core/utils/safeMode';
-import { debouncedSaveToIndexedDB } from '@/core/utils/indexdbHelper';
+import { debouncedSaveToIndexedDB } from '@/core/utils/indexedDbHelper';
 import { summarizeQueryResult } from '@/core/utils/queryResultSummary';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
@@ -124,15 +124,8 @@ export const createDataQuerySlice: StateCreator<
       const sorts = tab.sorts ?? [];
       const controller = attachAbortController(abortController);
 
-      try {
-        get().toggleDataFetching(true);
-        await get().clearGridChanges();
-        await get().updateGridMeta({
-          gridEditable: tab.editable,
-          updatableNodeId: tab.nodeId
-        });
-
-        const res = await runQuery(
+      const execute = async (confirmed: boolean): Promise<RunQueryResponseType> => {
+        return runQuery(
           {
             connectionId: Number(tab.connectionId),
             nodeId: tab.nodeId,
@@ -148,10 +141,25 @@ export const createDataQuerySlice: StateCreator<
                 f.isActive &&
                 (filterOperatorRequiresValue(f.operator) ? f.value.toString().length > 0 : true)
             ),
-            sorts: sorts.filter((f) => f.column.length > 0 && f.operator.length > 0 && f.isActive)
+            sorts: sorts.filter((f) => f.column.length > 0 && f.operator.length > 0 && f.isActive),
+            confirmed
           },
           controller.signal
         );
+      };
+
+      try {
+        get().toggleDataFetching(true);
+        await get().clearGridChanges();
+        await get().updateGridMeta({
+          gridEditable: tab.editable,
+          updatableNodeId: tab.nodeId
+        });
+
+        const res = await withSafeModeRetry((confirmed) => execute(!!confirmed));
+        if (res === undefined) {
+          return;
+        }
 
         if (controller.signal.aborted) {
           return;
@@ -159,13 +167,11 @@ export const createDataQuerySlice: StateCreator<
 
         useTabStore.getState().updateQuery(res.query);
 
-        Promise.all([
+        await Promise.all([
           get().updateRows(res.data),
           get().updateColumns(res.columns),
           debouncedSaveToIndexedDB(tab.id, res.data, res.columns)
-        ]).catch((e) => {
-          console.debug('🚀 ~ createDataQuerySlice ~ e:', e);
-        });
+        ]);
 
         const summary = summarizeQueryResult(res);
         set(
@@ -183,10 +189,12 @@ export const createDataQuerySlice: StateCreator<
 
         return res;
       } catch (error) {
-        if (isCanceledError(error)) {
+        if (isCanceledError(error) || controller.signal.aborted) {
           return;
         }
-        console.debug('🚀 ~ runQuery: ~ error:', error);
+        if (!getSafeModeError(error)) {
+          toast.error(locales.query_failed);
+        }
       } finally {
         clearAbortController(controller);
         get().toggleDataFetching(false);
@@ -279,7 +287,6 @@ export const createDataQuerySlice: StateCreator<
         if (isCanceledError(error) || controller.signal.aborted) {
           return;
         }
-        console.debug('🚀 ~ runRawQuery: ~ error:', error);
         if (!getSafeModeError(error)) {
           toast.error(locales.query_failed);
         }

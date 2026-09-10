@@ -51,7 +51,7 @@ func (c *ISQLiteCacheImpl) Get(ctx context.Context, key string, result any) erro
 		return nil
 	}
 
-	return json.Unmarshal([]byte(item.Value), &result)
+	return json.Unmarshal([]byte(item.Value), result)
 }
 
 func (c *ISQLiteCacheImpl) Set(ctx context.Context, key string, value any, ttl *time.Duration) error {

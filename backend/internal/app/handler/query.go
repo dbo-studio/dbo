@@ -2,7 +2,6 @@ package handler
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	serviceQuery "github.com/dbo-studio/dbo/internal/service/query"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -15,9 +14,9 @@ type QueryHandler struct {
 	queryService serviceQuery.IQueryService
 }
 
-func NewQueryHandler(queryService serviceQuery.IQueryService) *QueryHandler {
+func NewQueryHandler(logger logger.Logger, queryService serviceQuery.IQueryService) *QueryHandler {
 	return &QueryHandler{
-		logger:       container.Instance().Logger(),
+		logger:       logger,
 		queryService: queryService,
 	}
 }

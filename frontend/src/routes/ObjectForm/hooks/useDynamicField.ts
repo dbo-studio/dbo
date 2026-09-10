@@ -128,7 +128,6 @@ export const useDynamicField = (objectTabId: string): UseDynamicFieldReturn => {
         if (error instanceof Error && error.name === 'CanceledError') {
           return;
         }
-        console.debug('🚀 ~ runRawQuery: ~ error:', error);
         setDynamicState((prev) => ({
           ...prev,
           [stateKey]: {

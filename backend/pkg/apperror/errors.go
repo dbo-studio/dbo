@@ -13,6 +13,7 @@ var (
 	ErrAiProviderNotFound          = errors.New("ai provider not found")
 	ErrJobCannotCancel             = errors.New("job cannot cancel")
 	ErrJobNotCompleted             = errors.New("job not completed")
+	ErrJobNotFound                 = errors.New("job not found")
 	ErrAiChatNotFound              = errors.New("ai chat not found")
 	ErrProviderNotConfigured       = errors.New("provider not configured")
 	ErrAiNoSelectedModel           = errors.New("select a model first")
@@ -27,6 +28,14 @@ var (
 	ErrInvalidEncryptionKey        = errors.New("invalid encryption key")
 	ErrDecryptionFailed            = errors.New("decryption failed")
 	ErrQueryCanceled               = errors.New("query canceled")
+	ErrUnauthenticated             = errors.New("authentication required")
+	ErrAuthNotEnabled              = errors.New("authentication is not enabled")
+	ErrInvalidSavePath             = errors.New("invalid save path")
+	ErrInvalidInlineQuery          = errors.New("invalid inline query")
+	ErrWeakAuthToken               = errors.New("APP_AUTH_TOKEN must be at least 32 characters")
+	ErrExportQueryNotRead          = errors.New("export query must be a read-only statement")
+	ErrImportFileTooLarge          = errors.New("import file is too large")
+	ErrInvalidProviderURL          = errors.New("provider URL must use http or https")
 )
 
 type AppError struct {
@@ -36,7 +45,18 @@ type AppError struct {
 	Data    map[string]any
 }
 
+// Equals reports whether the sentinel expectedErr appears anywhere in err's
+// chain (unwrapping AppError wrappers). String comparison is only the last
+// resort for legacy callers.
 func Equals(err error, expectedErr error) bool {
+	if err == nil || expectedErr == nil {
+		return false
+	}
+
+	if errors.Is(err, expectedErr) {
+		return true
+	}
+
 	return strings.EqualFold(err.Error(), expectedErr.Error())
 }
 
@@ -215,5 +235,15 @@ func QueryCanceled() error {
 		Code:    http.StatusBadRequest,
 		Message: "query_canceled",
 		Err:     ErrQueryCanceled,
+	}
+}
+
+// Unauthenticated is returned when a request has no valid session and the
+// deployment requires authentication (APP_AUTH_TOKEN set).
+func Unauthenticated() error {
+	return &AppError{
+		Code:    http.StatusUnauthorized,
+		Message: "unauthenticated",
+		Err:     ErrUnauthenticated,
 	}
 }

@@ -6,7 +6,7 @@ import { Box, Button } from '@mui/material';
 import { Stack } from '@mui/system';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { useState } from 'react';
-import Markdown from 'react-markdown';
+import AppMarkdown from '@/components/base/AppMarkdown/AppMarkdown';
 import { UpdateDialogContentStyled, UpdateDialogStyled } from './UpdateDialog.styled';
 
 export default function UpdateDialog() {
@@ -48,7 +48,7 @@ export default function UpdateDialog() {
     <Modal title={locales.new_version_available} open={show} onClose={() => {}}>
       <UpdateDialogContentStyled>
         <UpdateDialogStyled>
-          <Markdown>{release.body}</Markdown>
+          <AppMarkdown>{release.body}</AppMarkdown>
         </UpdateDialogStyled>
       </UpdateDialogContentStyled>
       <Box

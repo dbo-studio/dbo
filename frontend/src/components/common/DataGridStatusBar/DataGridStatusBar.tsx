@@ -1,4 +1,4 @@
-import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { StatusBarStyled } from '@/routes/Data/StatusBar/StatusBar.styled';
 import StatusBarActions from '@/routes/Data/StatusBar/StatusBarActions/StatusBarActions';
 import StatusBarPagination from '@/routes/Data/StatusBar/StatusBarPagination/StatusBarPagination';

@@ -1,10 +1,9 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { tools } from '@/core/utils/tools.ts';
 import { useSelectedTab } from '@/hooks';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
-import type { DataTabType, SortType, TabType } from '@/types';
+import type { DataTabType, SortType } from '@/types';
 import { Box, Button } from '@mui/material';
 import type { JSX } from 'react';
 import AddSortButton from './SortItem/AddSortButton/AddSortButton.tsx';
@@ -18,12 +17,11 @@ export default function Sorts(): JSX.Element {
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
 
   const handleApplySorts = (): void => {
-    if (selectedTab?.pagination?.page ?? 0 > 1) {
-      const pagination = selectedTab?.pagination ?? { page: 1, limit: 100 };
-      pagination.page = 1;
+    const tab = useTabStore.getState().selectedTab<DataTabType>();
+    if (tab && (tab.pagination?.page ?? 0) > 1) {
       updateSelectedTab({
-        ...(selectedTab ?? ({} as TabType)),
-        pagination
+        ...tab,
+        pagination: { ...(tab.pagination ?? { page: 1, limit: 100 }), page: 1 }
       });
     }
 
@@ -32,6 +30,8 @@ export default function Sorts(): JSX.Element {
 
   if (!selectedTab) return <></>;
 
+  const sortCount = selectedTab.sorts?.length ?? 0;
+
   return (
     <Box
       sx={{
@@ -39,14 +39,14 @@ export default function Sorts(): JSX.Element {
         borderBottom: (theme): string => `1px solid ${theme.palette.divider}`
       }}
     >
-      {selectedTab?.sorts?.length === 0 ? (
+      {sortCount === 0 ? (
         <AddSortButton columns={columns ?? []} />
       ) : (
-        selectedTab?.sorts?.map((sort: SortType) => {
-          return <SortItem key={tools.uuid()} columns={columns ?? []} sort={sort} />;
+        selectedTab.sorts?.map((sort: SortType) => {
+          return <SortItem key={sort.index} columns={columns ?? []} sort={sort} />;
         })
       )}
-      {(selectedTab?.sorts?.length ?? 0) > 0 && (
+      {sortCount > 0 && (
         <SortsApplyBoxStyled>
           <Button
             onClick={(): void => handleApplySorts()}

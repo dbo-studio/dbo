@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 )
@@ -17,14 +19,6 @@ type IConnectionRepo interface {
 	Update(ctx context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) (*model.Connection, error)
 	UpdateVersion(ctx context.Context, connection *model.Connection, version string) (*model.Connection, error)
 	MakeAllConnectionsNotDefault(ctx context.Context, exceptedConnection *model.Connection) error
-}
-
-type ICacheRepo interface {
-	GetDatabaseVersion(ctx context.Context, connectionID uint, fromCache bool) (string, error)
-	GetConnectionDatabases(ctx context.Context, connectionID uint, fromCache bool) ([]string, error)
-	GetConnectionSchemas(ctx context.Context, connectionID uint, databaseName string, fromCache bool) ([]string, error)
-	GeDatabaseTables(ctx context.Context, connectionID uint, schemaName string, fromCache bool) ([]string, error)
-	FlushCache(ctx context.Context) error
 }
 
 type IHistoryRepo interface {
@@ -44,7 +38,18 @@ type ISavedQueryRepo interface {
 type IJobRepo interface {
 	Create(ctx context.Context, job *model.Job) error
 	Find(ctx context.Context, id int32) (*model.Job, error)
+	FindByOwner(ctx context.Context, id int32, ownerID string) (*model.Job, error)
 	Update(ctx context.Context, job *model.Job) error
+	// ClaimNextPending atomically flips the oldest pending job to running and
+	// returns it; gorm.ErrRecordNotFound means there was nothing to claim or
+	// the row was claimed concurrently.
+	ClaimNextPending(ctx context.Context) (*model.Job, error)
+	// UpdateFields writes only the given columns by ID so a stale in-memory
+	// copy can never overwrite a concurrent status change (e.g. a cancel).
+	UpdateFields(ctx context.Context, id uint, fields map[string]any) error
+	UpdateFieldsIfRunning(ctx context.Context, id uint, fields map[string]any) error
+	UpdateFieldsIfActive(ctx context.Context, id uint, fields map[string]any) error
+	UpdateProgress(ctx context.Context, id uint, progress int, message string) error
 	GetPendingJobs(ctx context.Context) ([]model.Job, error)
 	GetRunningJobs(ctx context.Context) ([]model.Job, error)
 	DeleteOldJobs(ctx context.Context, days int) error
@@ -65,6 +70,7 @@ type IConfigRepo interface {
 
 type IWebSessionRepo interface {
 	Create(ctx context.Context) (string, error)
+	Get(ctx context.Context, sessionID string) (*model.WebSession, error)
 	CreateOrUpdate(ctx context.Context, sessionID string) (string, error)
 	EnsureSession(ctx context.Context, sessionID string) error
 	TouchLastSeen(ctx context.Context, sessionID string, at time.Time) error
@@ -97,7 +103,6 @@ type Repository struct {
 	ConnectionRepo          IConnectionRepo
 	WebSessionRepo          IWebSessionRepo
 	WebConnectionSecretRepo IWebConnectionSecretRepo
-	CacheRepo               ICacheRepo
 	HistoryRepo             IHistoryRepo
 	SavedQueryRepo          ISavedQueryRepo
 	JobRepo                 IJobRepo
@@ -107,18 +112,18 @@ type Repository struct {
 	SafeModePasswordRepo    ISafeModePasswordRepo
 }
 
-func NewRepository() *Repository {
+func NewRepository(db *gorm.DB, aiCipherKey []byte) *Repository {
 	return &Repository{
-		ConfigRepo:              NewConfigRepo(),
-		ConnectionRepo:          NewConnectionRepo(),
-		WebSessionRepo:          NewWebSessionRepo(),
-		WebConnectionSecretRepo: NewWebConnectionSecretRepo(),
-		HistoryRepo:             NewHistoryRepo(),
-		SavedQueryRepo:          NewSavedQueryRepo(),
-		JobRepo:                 NewJobRepo(),
-		AiChatRepo:              NewAiChatRepo(),
-		AiProviderRepo:          NewAiProviderRepo(),
-		McpSettingsRepo:         NewMcpSettingsRepo(),
-		SafeModePasswordRepo:    NewSafeModePasswordRepo(),
+		ConfigRepo:              NewConfigRepo(db),
+		ConnectionRepo:          NewConnectionRepo(db),
+		WebSessionRepo:          NewWebSessionRepo(db),
+		WebConnectionSecretRepo: NewWebConnectionSecretRepo(db),
+		HistoryRepo:             NewHistoryRepo(db),
+		SavedQueryRepo:          NewSavedQueryRepo(db),
+		JobRepo:                 NewJobRepo(db),
+		AiChatRepo:              NewAiChatRepo(db),
+		AiProviderRepo:          NewAiProviderRepo(db, aiCipherKey),
+		McpSettingsRepo:         NewMcpSettingsRepo(db),
+		SafeModePasswordRepo:    NewSafeModePasswordRepo(db),
 	}
 }

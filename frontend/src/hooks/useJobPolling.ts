@@ -12,7 +12,7 @@ type UseJobPollingOptions = {
   pollingInterval?: number;
 };
 
-const TERMINAL_STATUSES = new Set(['completed', 'failed', 'cancelled']);
+const TERMINAL_STATUSES = new Set(['completed', 'failed', 'canceled']);
 
 export const useJobPolling = (jobId: string | null, options: UseJobPollingOptions = {}) => {
   const [trackedJobId, setTrackedJobId] = useState(jobId);
@@ -113,8 +113,8 @@ export const useJobPolling = (jobId: string | null, options: UseJobPollingOption
       await cancelJobMutation(jobId);
       const jobData = await getJobMutation(jobId);
       setJob(jobData);
-    } catch (err) {
-      console.debug('🚀 ~ useJobPolling ~ err:', err);
+    } catch {
+      /* ignored */
     }
   }, [cancelJobMutation, getJobMutation, jobId]);
 

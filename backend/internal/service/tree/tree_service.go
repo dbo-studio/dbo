@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
@@ -41,8 +40,8 @@ type ITreeServiceImpl struct {
 	unlockStore    *serviceSafemode.UnlockStore
 }
 
-func NewTreeService(cr repository.IConnectionRepo, cm *databaseConnection.ConnectionManager) *ITreeServiceImpl {
-	c := container.Instance().Cache()
+func NewTreeService(cr repository.IConnectionRepo, cm *databaseConnection.ConnectionManager, appCache cache.Cache) *ITreeServiceImpl {
+	c := appCache
 
 	return &ITreeServiceImpl{
 		connectionRepo: cr,

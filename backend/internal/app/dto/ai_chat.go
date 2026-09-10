@@ -10,14 +10,6 @@ type (
 		ContextOpts  *AiContextOptions `json:"contextOpts"`
 	}
 
-	AiChatResponse struct {
-		ChatID   uint        `json:"chatId"`
-		Title    string      `json:"title"`
-		Messages []AiMessage `json:"messages"`
-	}
-)
-
-type (
 	AiContextOptions struct {
 		Query              *string  `json:"query"`
 		SelectedQuery      *string  `json:"selectedQuery"`
@@ -29,6 +21,14 @@ type (
 		ObjectDefinition   *string  `json:"objectDefinition"`
 	}
 
+	AiChatResponse struct {
+		ChatID   uint        `json:"chatId"`
+		Title    string      `json:"title"`
+		Messages []AiMessage `json:"messages"`
+	}
+)
+
+type (
 	AiMessage struct {
 		Role      string `json:"role"`
 		Content   string `json:"content"`

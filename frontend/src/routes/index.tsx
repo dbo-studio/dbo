@@ -1,6 +1,6 @@
 import SplashScreen from '@/components/base/SplashScreen/SplashScreen';
 import Layout from '@/components/layout/Layout.tsx';
-import { useStartup } from '@/hooks/useStartup.hook';
+import { useStartup } from '@/hooks/useStartup';
 import locales from '@/locales';
 import { type JSX, useEffect } from 'react';
 

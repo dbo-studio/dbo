@@ -1,5 +1,5 @@
 import { Box, styled, Typography, type TypographyProps } from '@mui/material';
-import type { ConnectionItemStyledProps } from '../../types';
+import type { ConnectionItemStyledProps } from '../types';
 
 export const ConnectionItemStyled = styled(Box)<ConnectionItemStyledProps>(({ theme, selected }) => ({
   cursor: 'pointer',
@@ -19,6 +19,9 @@ export const ConnectionItemStyled = styled(Box)<ConnectionItemStyledProps>(({ th
   gap: theme.spacing(0.5),
   ':hover': {
     background: theme.palette.background.paper
+  },
+  '& img': {
+    objectFit: 'contain'
   },
   p: {
     color: selected ? theme.palette.text.primary : theme.palette.text.text

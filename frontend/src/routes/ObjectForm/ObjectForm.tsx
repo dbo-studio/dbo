@@ -1,6 +1,6 @@
 import { useAiBridge } from '@/hooks/useAiBridge';
 import { useCurrentConnection } from '@/hooks';
-import { useSelectedTab } from '@/hooks/useSelectedTab.hook';
+import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useFormObjectStore } from '@/store/formObject/formObject.store';
 import { ObjectTabType } from '@/types';
 import { CircularProgress, Stack } from '@mui/material';

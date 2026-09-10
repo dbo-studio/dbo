@@ -1,43 +1,47 @@
 import api from '@/api';
 import type { CreateConnectionRequestType, PingConnectionRequestType } from '@/api/connection/types';
 import Modal from '@/components/base/Modal/Modal';
+import { CONNECTION_ALIASES, type ConnectionAliasDef } from '@/core/db/connectionAliases';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { ConnectionType } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { type JSX, useMemo, useState } from 'react';
+import { type JSX, useMemo, useState, type ComponentType } from 'react';
 import { toast } from 'sonner';
 import ConnectionSelection from './ConnectionSelection/ConnectionSelection';
 import Mysql from './Mysql/Mysql';
 import PostgreSQL from './Postgresql/Postgresql';
 import SQLite from './SQLite/SQLite';
 import { formatPingFailureMessage, formatPingSuccessMessage } from './pingDiagnostics';
-import type { SelectionConnectionType } from './types';
+import type { ConnectionSettingsProps, SelectionConnectionType } from './types';
+import type { IconTypes } from '@/components/base/CustomIcon/types';
 
-const connectionTypes: SelectionConnectionType[] = [
-  {
-    name: 'PostgreSQL',
-    logo: 'postgresql',
-    component: PostgreSQL
-  },
-  {
-    name: 'MySQL',
-    logo: 'mysql',
-    component: Mysql
-  },
-  {
-    name: 'SQLite',
-    logo: 'sqlite',
-    component: SQLite
+function formForAlias(alias: ConnectionAliasDef): ComponentType<ConnectionSettingsProps> {
+  if (alias.driver === 'sqlite') {
+    return SQLite;
   }
-];
+  if (alias.driver === 'mysql') {
+    const Form = (props: ConnectionSettingsProps): JSX.Element => <Mysql {...props} engine={alias.type} />;
+    Form.displayName = `MysqlAlias(${alias.type})`;
+    return Form;
+  }
+  const Form = (props: ConnectionSettingsProps): JSX.Element => <PostgreSQL {...props} engine={alias.type} />;
+  Form.displayName = `PostgresAlias(${alias.type})`;
+  return Form;
+}
 
-const connectionTypeByEngine: Record<ConnectionType['type'], SelectionConnectionType> = {
-  postgresql: connectionTypes[0],
-  mysql: connectionTypes[1],
-  sqlite: connectionTypes[2]
-};
+const connectionTypes: SelectionConnectionType[] = CONNECTION_ALIASES.map((alias) => ({
+  name: alias.name,
+  logo: alias.logo as keyof typeof IconTypes,
+  type: alias.type,
+  component: formForAlias(alias)
+}));
+
+const connectionTypeByEngine = Object.fromEntries(connectionTypes.map((c) => [c.type, c])) as Record<
+  ConnectionType['type'],
+  SelectionConnectionType
+>;
 
 export default function AddConnection(): JSX.Element {
   const queryClient = useQueryClient();
@@ -108,8 +112,8 @@ export default function AddConnection(): JSX.Element {
       });
       handleClose();
       toast.success(locales.connection_create_success);
-    } catch (error) {
-      console.debug('🚀 ~ handleCreateConnection ~ error:', error);
+    } catch {
+      /* ignored */
     }
   };
 
@@ -122,6 +126,7 @@ export default function AddConnection(): JSX.Element {
         <connectionType.component
           key={sourceConnection ? `duplicate-${sourceConnection.id}` : 'new-connection'}
           connection={sourceConnection}
+          engine={connectionType.type}
           pingLoading={pingConnectionPending}
           submitLoading={createConnectionPending}
           onClose={handleClose}

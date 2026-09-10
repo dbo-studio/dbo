@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/db/scope"
 	"gorm.io/gorm"
@@ -14,9 +13,9 @@ import (
 
 type AiChatRepoImpl struct{ db *gorm.DB }
 
-func NewAiChatRepo() IAiChatRepo {
+func NewAiChatRepo(db *gorm.DB) IAiChatRepo {
 	return &AiChatRepoImpl{
-		db: container.Instance().DB(),
+		db: db,
 	}
 }
 

@@ -27,8 +27,8 @@ export function CheckUpdate() {
       } else {
         setButtonText(locales.you_are_up_to_date);
       }
-    } catch (error) {
-      console.debug('🚀 ~ handleCheckUpdate ~ error:', error);
+    } catch {
+      /* ignored */
     }
   };
 

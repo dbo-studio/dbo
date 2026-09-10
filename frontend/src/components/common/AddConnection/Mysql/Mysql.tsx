@@ -39,6 +39,7 @@ const formSchema = v.object({
 
 export default function Mysql({
   connection,
+  engine = 'mysql',
   onClose,
   onPing,
   onSubmit,
@@ -48,6 +49,7 @@ export default function Mysql({
   const [useUri, setUseUri] = useState(Boolean((connection?.options as MysqlOptionsType | undefined)?.uri));
   const options = connection?.options as MysqlOptionsType | undefined;
   const sslDefaults = sslFormDefaults(options?.ssl);
+  const connectionType = connection?.type ?? engine;
 
   const form = useForm({
     validators: {
@@ -56,7 +58,7 @@ export default function Mysql({
     onSubmit: ({ value }): void => {
       const data = {
         name: value.name,
-        type: 'mysql',
+        type: connectionType,
         rememberPassword: value.rememberPassword,
         options: {
           host: value.host,

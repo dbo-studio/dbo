@@ -208,8 +208,9 @@ export class DataGridPage extends BasePage {
   }
 
   async expectForeignKeyBadge(tooltip?: string | RegExp): Promise<void> {
-    const badge = this.grid.locator("thead").getByText("FK", { exact: true }).first();
+    const badge = this.grid.getByTestId("grid-fk-badge").first();
     await expect(badge).toBeVisible({ timeout: 15000 });
+    await badge.scrollIntoViewIfNeeded();
     if (tooltip) {
       await expect(badge).toHaveAttribute("title", tooltip);
     }

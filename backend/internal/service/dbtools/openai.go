@@ -1,4 +1,4 @@
-package dbtools
+package serviceDbtools
 
 import (
 	"github.com/openai/openai-go/v2"

@@ -17,7 +17,7 @@ export const usePanelTabMenu = (tab: TabType): MenuType[] => {
         name: locales.close,
         action: (): void => {
           if (!tab) return;
-          handleRemoveTab(tab.id).catch((e) => console.log('🚀 ~ usePanelTabMenu ~ e:', e));
+          handleRemoveTab(tab.id).catch(() => undefined);
         },
         closeAfterAction: true
       },
@@ -26,7 +26,7 @@ export const usePanelTabMenu = (tab: TabType): MenuType[] => {
         action: (): void => {
           for (const t of getTabs()) {
             if (t.id !== selectedTabId) {
-              handleRemoveTab(t.id).catch((e) => console.log('🚀 ~ usePanelTabMenu ~ e:', e));
+              handleRemoveTab(t.id).catch(() => undefined);
             }
           }
         },
@@ -36,7 +36,7 @@ export const usePanelTabMenu = (tab: TabType): MenuType[] => {
         name: locales.close_all,
         action: (): void => {
           for (const t of getTabs()) {
-            handleRemoveTab(t.id).catch((e) => console.log('🚀 ~ usePanelTabMenu ~ e:', e));
+            handleRemoveTab(t.id).catch(() => undefined);
           }
           switchTab(null);
         },

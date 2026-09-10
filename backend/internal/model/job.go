@@ -28,6 +28,7 @@ type Job struct {
 	ID          uint      `gorm:"primaryKey,autoIncrement"`
 	Type        JobType   `gorm:"not null"`
 	Status      JobStatus `gorm:"not null;default:'pending'"`
+	OwnerID     string    `gorm:"not null;default:'';index"`
 	Progress    int       `gorm:"default:0"`
 	Message     string
 	Error       string

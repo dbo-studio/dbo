@@ -13,7 +13,7 @@ export default function ChatBox({ autocomplete, loading, onSend, onCancel }: Cha
       <ComposerFooterStyled>
         <Providers />
         {loading ? (
-          <SendButtonStyled onClick={onCancel} variant='contained' color='primary'>
+          <SendButtonStyled onClick={onCancel} variant='contained' color='primary' data-testid='ai-chat-cancel'>
             <CustomIcon type='pause' size='xs' />
           </SendButtonStyled>
         ) : (

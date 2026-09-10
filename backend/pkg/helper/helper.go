@@ -55,10 +55,6 @@ func FormatSQLValueForDriver(driver string, value any) (string, error) {
 	case nil:
 		return "NULL", nil
 	case string:
-		if isAlreadyQuoted(v) {
-			return v, nil
-		}
-
 		escaped := strings.ReplaceAll(v, "'", "''")
 
 		return fmt.Sprintf("'%s'", escaped), nil
@@ -160,14 +156,6 @@ func NormalizeSQLDriver(driver string) string {
 	default:
 		return d
 	}
-}
-
-func isAlreadyQuoted(s string) bool {
-	if len(s) < 2 {
-		return false
-	}
-
-	return s[0] == '\'' && s[len(s)-1] == '\''
 }
 
 func ConvertToDTO[T any](params []byte) (T, error) {

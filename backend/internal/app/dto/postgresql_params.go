@@ -82,29 +82,6 @@ type PostgresMaterializedViewData struct {
 	Query      *string `json:"query"`
 }
 
-type PostgresIndexParams struct {
-	Name           *string `json:"name"`
-	Comment        *string `json:"comment"`
-	Unique         *bool   `json:"unique"`
-	Columns        *string `json:"columns"`
-	Condition      *string `json:"condition"`
-	IncludeColumns *string `json:"include_columns"`
-	AccessMethod   *string `json:"access_method"`
-	Tablespace     *string `json:"tablespace"`
-}
-
-type PostgresSequenceParams struct {
-	Name       *string `json:"name"`
-	Comment    *string `json:"comment"`
-	Increment  *int64  `json:"increment"`
-	MinValue   *int64  `json:"min_value"`
-	MaxValue   *int64  `json:"max_value"`
-	StartValue *int64  `json:"start_value"`
-	Cache      *int64  `json:"cache"`
-	Cycle      *bool   `json:"cycle"`
-	OwnedBy    *string `json:"owned_by"`
-}
-
 type PostgresTableColumnParams struct {
 	Columns []PostgresTableColumn `json:"columns"`
 }

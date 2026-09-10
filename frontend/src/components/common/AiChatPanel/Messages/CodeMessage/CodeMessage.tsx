@@ -20,8 +20,8 @@ export default function CodeMessage({ message }: CodeMessageProps) {
     try {
       await copy(message.content);
       toast.success(locales.copied);
-    } catch (error) {
-      console.debug('🚀 ~ handleCopy ~ error:', error);
+    } catch {
+      /* ignored */
     }
   };
 
@@ -38,8 +38,7 @@ export default function CodeMessage({ message }: CodeMessageProps) {
   const handleRun = (): void => {
     try {
       useDataStore.getState().runQueryInEditor(message.content);
-    } catch (error) {
-      console.debug('🚀 ~ handleRun ~ error:', error);
+    } catch {
       toast.error(locales.error_occurred);
     }
   };

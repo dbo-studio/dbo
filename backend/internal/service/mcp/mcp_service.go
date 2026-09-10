@@ -1,19 +1,21 @@
-package serviceMcp
+package serviceMCP
 
 import (
+	"github.com/dbo-studio/dbo/config"
+
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
-	"github.com/dbo-studio/dbo/internal/service/dbtools"
+	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger"
 )
@@ -32,18 +34,21 @@ type McpServiceImpl struct {
 	settingsRepo repository.IMcpSettingsRepo
 	nativeServer *NativeServer
 	logger       logger.Logger
-	plainToken   string
+	cfg          *config.Config
 }
 
 func NewMcpService(
 	settingsRepo repository.IMcpSettingsRepo,
 	_ repository.IConnectionRepo,
-	toolRegistry *dbtools.Registry,
+	toolRegistry *serviceDbtools.Registry,
+	appLogger logger.Logger,
+	cfg *config.Config,
 ) IMcpService {
 	return &McpServiceImpl{
 		settingsRepo: settingsRepo,
 		nativeServer: NewNativeServer(toolRegistry),
-		logger:       container.Instance().Logger(),
+		logger:       appLogger,
+		cfg:          cfg,
 	}
 }
 
@@ -68,8 +73,6 @@ func (s *McpServiceImpl) Update(ctx context.Context, req *dto.McpUpdateRequest) 
 			return nil, err
 		}
 
-		s.plainToken = token
-
 		settings.Enabled = true
 
 		settings.TokenHash = &hash
@@ -90,7 +93,7 @@ func (s *McpServiceImpl) Update(ctx context.Context, req *dto.McpUpdateRequest) 
 
 	settings.Enabled = false
 	settings.TokenHash = nil
-	s.plainToken = ""
+
 	s.nativeServer.SetDefaultConnectionID(nil)
 
 	if _, err := s.settingsRepo.Upsert(ctx, settings); err != nil {
@@ -117,8 +120,6 @@ func (s *McpServiceImpl) RegenerateToken(ctx context.Context) (*dto.McpRegenerat
 		return nil, err
 	}
 
-	s.plainToken = token
-
 	settings.TokenHash = &hash
 	if _, err := s.settingsRepo.Upsert(ctx, settings); err != nil {
 		return nil, err
@@ -139,7 +140,7 @@ func (s *McpServiceImpl) AuthenticateToken(ctx context.Context, token string) (*
 		return nil, false
 	}
 
-	if *settings.TokenHash != hash {
+	if subtle.ConstantTimeCompare([]byte(*settings.TokenHash), []byte(hash)) != 1 {
 		return nil, false
 	}
 
@@ -170,7 +171,7 @@ func (s *McpServiceImpl) buildStatus(settings *model.McpSettings) *dto.McpStatus
 		}
 	}
 
-	cfg := container.Instance().Config().App
+	cfg := s.cfg.App
 
 	return &dto.McpStatusResponse{
 		Enabled:             settings.Enabled,

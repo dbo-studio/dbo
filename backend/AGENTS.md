@@ -137,10 +137,10 @@ Legacy `*_test.go` may exist; do not expand them for new features.
 Manual constructor injection in `cmd/cmd.go`:
 
 ```
-repository.NewRepository() → service.NewService() → handlers → server.New()
+repository.NewRepository(db, aiCipherKey) → service.NewService(..., Deps{Logger, Cache, Config}) → handlers → server.New()
 ```
 
-Singleton: `container.Instance()` for logger, config, cache, app DB. No wire/fx.
+`container.Instance()` is **composition-root only** (`cmd/cmd.go`): logger, config, cache, app DB. Libraries receive deps via constructors; driver cache/logger flow through `ConnectionManager` into `database.NewDatabaseRepository`.
 
 ## New Endpoint Checklist
 

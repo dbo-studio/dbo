@@ -3,7 +3,6 @@ package databasePostgres
 import (
 	"context"
 
-	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	"github.com/samber/lo"
@@ -38,14 +37,14 @@ Tables:
   - nutr_no (PK, FK → nut_data.nutr_no, character)
   - datasrc_id (PK, FK → data_src.datasrc_id, character)
 */
-func (r *PostgresRepository) AiContext(ctx context.Context, req *dto.AiChatRequest) (string, error) {
-	if req.ContextOpts == nil {
+func (r *PostgresRepository) AiContext(ctx context.Context, req *databaseContract.AIContextInput) (string, error) {
+	if req == nil {
 		return "", nil
 	}
 
-	tables := req.ContextOpts.Tables
-	if len(tables) == 0 && lo.FromPtr(req.ContextOpts.ObjectDefinition) == "" {
-		list, err := r.tables(ctx, req.ContextOpts.Database, req.ContextOpts.Schema, true)
+	tables := req.Tables
+	if len(tables) == 0 && lo.FromPtr(req.ObjectDefinition) == "" {
+		list, err := r.tables(ctx, req.Database, req.Schema, true)
 		if err != nil {
 			return "", err
 		}
@@ -58,9 +57,9 @@ func (r *PostgresRepository) AiContext(ctx context.Context, req *dto.AiChatReque
 		}
 	}
 
-	views := req.ContextOpts.Views
-	if len(views) == 0 && lo.FromPtr(req.ContextOpts.ObjectDefinition) == "" {
-		list, err := r.views(ctx, req.ContextOpts.Database, req.ContextOpts.Schema, true)
+	views := req.Views
+	if len(views) == 0 && lo.FromPtr(req.ObjectDefinition) == "" {
+		list, err := r.views(ctx, req.Database, req.Schema, true)
 		if err != nil {
 			return "", err
 		}
@@ -74,8 +73,8 @@ func (r *PostgresRepository) AiContext(ctx context.Context, req *dto.AiChatReque
 	}
 
 	return databaseCore.BuildAIChatContext(ctx, databaseContract.AIContextOptions{
-		Database: req.ContextOpts.Database,
-		Schema:   req.ContextOpts.Schema,
+		Database: req.Database,
+		Schema:   req.Schema,
 		Tables:   tables,
 		Views:    views,
 	}, postgresAIContextProvider{repo: r})
@@ -98,17 +97,21 @@ Tables:
   - start_page (text)
   - end_page (text)
 */
-func (r *PostgresRepository) AiCompleteContext(ctx context.Context, req *dto.AiInlineCompleteRequest) string {
-	sqlResult := r.base.ParseSQL(req.ContextOpts.Prompt)
+func (r *PostgresRepository) AiCompleteContext(ctx context.Context, req *databaseContract.AICompleteInput) string {
+	if req == nil {
+		return ""
+	}
+
+	sqlResult := r.base.ParseSQL(req.Prompt)
 
 	database := sqlResult.Database
 	if database == nil {
-		database = req.ContextOpts.Database
+		database = req.Database
 	}
 
 	schema := sqlResult.Schema
 	if schema == nil {
-		schema = req.ContextOpts.Schema
+		schema = req.Schema
 	}
 
 	result, err := databaseCore.BuildAICompleteContext(ctx, databaseContract.AIContextOptions{

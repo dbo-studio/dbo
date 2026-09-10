@@ -122,9 +122,9 @@ func openPostgresqlConnection(connection *model.Connection, databaseName string)
 	}
 
 	dsn := fmt.Sprintf("host=%s port=%s user=%s ",
-		options.Host,
+		quoteDSNValue(options.Host),
 		strconv.Itoa(int(options.Port)),
-		options.Username,
+		quoteDSNValue(options.Username),
 	)
 
 	dbName := lo.FromPtr(options.Database)
@@ -133,11 +133,11 @@ func openPostgresqlConnection(connection *model.Connection, databaseName string)
 	}
 
 	if dbName != "" {
-		dsn += fmt.Sprintf("dbname=%s ", dbName)
+		dsn += fmt.Sprintf("dbname=%s ", quoteDSNValue(dbName))
 	}
 
 	if options.Password != nil && len(lo.FromPtr(options.Password)) > 0 {
-		dsn += fmt.Sprintf("password=%s ", lo.FromPtr(options.Password))
+		dsn += fmt.Sprintf("password=%s ", quoteDSNValue(lo.FromPtr(options.Password)))
 	}
 
 	dsn = appendPostgresqlSSLDSN(dsn, options.SSL)
@@ -145,6 +145,20 @@ func openPostgresqlConnection(connection *model.Connection, databaseName string)
 	return postgres.New(postgres.Config{
 		DSN: dsn,
 	})
+}
+
+// quoteDSNValue quotes a libpq keyword/value DSN value when it contains
+// whitespace or special characters; an unquoted password with spaces or a
+// single quote would otherwise be reparsed into different DSN keys.
+func quoteDSNValue(value string) string {
+	if value == "" || !strings.ContainsAny(value, " '\\") {
+		return value
+	}
+
+	escaped := strings.ReplaceAll(value, `\`, `\\`)
+	escaped = strings.ReplaceAll(escaped, `'`, `\'`)
+
+	return "'" + escaped + "'"
 }
 
 func overridePostgresqlURIDatabase(uri, databaseName string) string {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
-	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
+	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/samber/lo"
 )
@@ -48,9 +48,9 @@ func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteR
 		return nil, err
 	}
 
-	contextStr := repo.AiCompleteContext(ctx, req)
+	contextStr := repo.AiCompleteContext(ctx, toAICompleteInput(req))
 
-	providerReq := &serviceAiProvider.CompletionRequest{
+	providerReq := &aiProvider.CompletionRequest{
 		Prompt:  req.ContextOpts.Prompt,
 		Suffix:  req.ContextOpts.Suffix,
 		Model:   dbProvider.Model,

@@ -34,12 +34,11 @@ func New(cfg *config.Config) logger.Logger {
 	logFilePath := filepath.Join(path, logFileName)
 
 	f, err := os.OpenFile(logFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o666)
-	fmt.Println("log path: " + logFilePath)
-	cfg.App.LogPath = logFilePath
-
 	if err != nil {
 		l.Fatalln(err)
 	}
+
+	cfg.App.LogPath = logFilePath
 
 	ws := zapcore.AddSync(f)
 
@@ -48,7 +47,10 @@ func New(cfg *config.Config) logger.Logger {
 	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
 	encoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
 	enc := zapcore.NewJSONEncoder(encoderConfig)
-	core := zapcore.NewCore(enc, ws, zapcore.ErrorLevel)
+
+	// The file sink records everything at Info and above; Info/Warn are part
+	// of the operation trail (job lifecycle, shutdown) and must reach it.
+	core := zapcore.NewCore(enc, ws, zapcore.InfoLevel)
 
 	z := zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
 
@@ -56,8 +58,6 @@ func New(cfg *config.Config) logger.Logger {
 }
 
 func (log *log) Error(msg any) {
-	l.Println(msg)
-
 	if err, ok := msg.(error); ok {
 		log.zap.Errorw("error", "error", err, "stack", getStackTrace())
 	} else {
@@ -66,8 +66,6 @@ func (log *log) Error(msg any) {
 }
 
 func (log *log) Fatal(msg any) {
-	l.Println(msg)
-
 	if err, ok := msg.(error); ok {
 		log.zap.Fatalw("error", "error", err, "stack", getStackTrace())
 	} else {
@@ -76,12 +74,10 @@ func (log *log) Fatal(msg any) {
 }
 
 func (log *log) Warn(msg any) {
-	l.Println(msg)
 	log.zap.Warn(msg)
 }
 
 func (log *log) Info(msg any) {
-	l.Println(msg)
 	log.zap.Info(msg)
 }
 
@@ -122,16 +118,12 @@ func getLogPath(cfg *config.Config) string {
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		l.Println(err.Error())
 		return defaultPath
 	}
 
 	switch runtime.GOOS {
 	case "windows":
 		appData := os.Getenv("APPDATA")
-
-		l.Println("APPDATA environment variable not set")
-
 		if appData == "" {
 			return defaultPath
 		}
@@ -142,7 +134,6 @@ func getLogPath(cfg *config.Config) string {
 	case "linux":
 		logPath = filepath.Join(homeDir, "."+appName, "logs")
 	default:
-		l.Println("unsupported platform")
 		return defaultPath
 	}
 

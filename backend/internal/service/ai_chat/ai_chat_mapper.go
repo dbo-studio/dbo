@@ -1,4 +1,4 @@
-package aichat
+package serviceAiChat
 
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"

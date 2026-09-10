@@ -1,4 +1,4 @@
-import { useLayoutMode } from '@/hooks/useLayoutMode.hook';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useEffect } from 'react';
 

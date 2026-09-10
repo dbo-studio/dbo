@@ -29,7 +29,7 @@ func Writer(headers []string, rows []map[string]any) string {
 	var content strings.Builder
 
 	for i, col := range headers {
-		content.WriteString(col)
+		content.WriteString(csvEscapeCell(col))
 
 		if i < len(headers)-1 {
 			content.WriteString(",")
@@ -42,22 +42,12 @@ func Writer(headers []string, rows []map[string]any) string {
 		for i := range headers {
 			value := row[headers[i]]
 
-			if value != "" && value != nil {
-				// Escape quotes in CSV
-				strValue := fmt.Sprintf("%v", value)
-				if strings.Contains(strValue, ",") || strings.Contains(strValue, "\"") || strings.Contains(strValue, "\n") {
-					strValue = fmt.Sprintf("\"%s\"", strings.ReplaceAll(strValue, "\"", "\"\""))
-				}
-
-				content.WriteString(strValue)
-			}
-
-			if value == "" {
-				content.WriteString("")
-			}
-
-			if value == nil {
+			switch v := value.(type) {
+			case nil:
 				content.WriteString("NULL")
+			default:
+				strValue := fmt.Sprintf("%v", v)
+				content.WriteString(csvEscapeCell(strValue))
 			}
 
 			if i < len(headers)-1 {
@@ -69,4 +59,32 @@ func Writer(headers []string, rows []map[string]any) string {
 	}
 
 	return content.String()
+}
+
+// csvEscapeCell quotes the cell when needed and neutralizes spreadsheet
+// formula injection: values starting with =, +, -, @, tab or CR would be
+// interpreted as formulas by Excel/LibreOffice when the export is opened.
+func csvEscapeCell(value string) string {
+	if value == "" {
+		return ""
+	}
+
+	if needsFormulaGuard(value) {
+		value = "'" + value
+	}
+
+	if strings.ContainsAny(value, ",\"\n\r") {
+		return fmt.Sprintf("\"%s\"", strings.ReplaceAll(value, "\"", "\"\""))
+	}
+
+	return value
+}
+
+func needsFormulaGuard(value string) bool {
+	switch value[0] {
+	case '=', '+', '-', '@', '\t', '\r':
+		return true
+	default:
+		return false
+	}
 }

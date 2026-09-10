@@ -14,8 +14,8 @@ type SQLiteRepository struct {
 	base *databaseCore.BaseRepository
 }
 
-func NewSQLiteRepository(ctx context.Context, connection *model.Connection, cm *databaseConnection.ConnectionManager) (contract.DatabaseRepository, error) {
-	base, err := databaseCore.NewBaseRepository(ctx, connection, cm)
+func NewSQLiteRepository(ctx context.Context, connection *model.Connection, cm *databaseConnection.ConnectionManager, deps databaseCore.DriverDeps) (contract.DatabaseRepository, error) {
+	base, err := databaseCore.NewBaseRepository(ctx, connection, cm, deps.Cache, deps.Logger)
 	if err != nil {
 		return nil, err
 	}

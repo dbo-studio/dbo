@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/db/scope"
 	"github.com/dbo-studio/dbo/pkg/helper"
@@ -15,9 +14,9 @@ type ISavedQueryRepoImpl struct {
 	db *gorm.DB
 }
 
-func NewSavedQueryRepo() ISavedQueryRepo {
+func NewSavedQueryRepo(db *gorm.DB) ISavedQueryRepo {
 	return &ISavedQueryRepoImpl{
-		db: container.Instance().DB(),
+		db: db,
 	}
 }
 

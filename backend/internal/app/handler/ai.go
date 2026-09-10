@@ -4,7 +4,6 @@ import (
 	"bufio"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	serviceAI "github.com/dbo-studio/dbo/internal/service/ai"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -18,9 +17,9 @@ type AiHandler struct {
 	aiService serviceAI.IAiService
 }
 
-func NewAiHandler(ai serviceAI.IAiService) *AiHandler {
+func NewAiHandler(logger logger.Logger, ai serviceAI.IAiService) *AiHandler {
 	return &AiHandler{
-		logger:    container.Instance().Logger(),
+		logger:    logger,
 		aiService: ai,
 	}
 }

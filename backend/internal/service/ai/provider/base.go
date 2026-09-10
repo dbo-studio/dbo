@@ -1,4 +1,4 @@
-package serviceAiProvider
+package aiProvider
 
 import (
 	"context"
@@ -503,4 +503,14 @@ func (p *BaseProvider) convertToStructuredResponse(content string, role model.Ai
 		Language: contents[0].Language,
 		Contents: contents,
 	}, nil
+}
+
+// requestTimeout clamps the user-configured provider timeout: a zero or
+// negative value would otherwise disable the request timeout entirely.
+func requestTimeout(seconds int) time.Duration {
+	if seconds <= 0 {
+		return 30 * time.Second
+	}
+
+	return time.Duration(seconds) * time.Second
 }

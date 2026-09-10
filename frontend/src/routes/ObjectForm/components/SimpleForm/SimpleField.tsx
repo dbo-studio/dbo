@@ -129,9 +129,7 @@ export default function SimpleField({
                 tables: [],
                 columns: {}
               }}
-              onRunQuery={(query): void => {
-                console.debug('Query executed:', query);
-              }}
+              onRunQuery={(): void => undefined}
             />
           </SqlEditorContainerStyled>
         </Box>

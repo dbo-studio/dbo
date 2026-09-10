@@ -5,11 +5,10 @@ import (
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
-	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
+	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/helper"
@@ -31,7 +30,7 @@ type IConnectionServiceImpl struct {
 	connectionRepo   repository.IConnectionRepo
 	cm               *databaseConnection.ConnectionManager
 	cache            cache.Cache
-	secrets          secretStore.ISecretStore
+	secrets          serviceSecretStore.ISecretStore
 	unlockStore      *serviceSafemode.UnlockStore
 	safeModePassword serviceSafemode.ISafeModePasswordService
 }
@@ -39,10 +38,11 @@ type IConnectionServiceImpl struct {
 func NewConnectionService(
 	connectionRepo repository.IConnectionRepo,
 	cm *databaseConnection.ConnectionManager,
-	secrets secretStore.ISecretStore,
+	secrets serviceSecretStore.ISecretStore,
 	safeModePassword serviceSafemode.ISafeModePasswordService,
+	appCache cache.Cache,
 ) IConnectionService {
-	c := container.Instance().Cache()
+	c := appCache
 
 	return &IConnectionServiceImpl{
 		connectionRepo:   connectionRepo,

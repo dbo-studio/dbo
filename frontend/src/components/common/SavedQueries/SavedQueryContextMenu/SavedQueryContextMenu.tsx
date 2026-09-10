@@ -32,15 +32,15 @@ export default function SavedQueryContextMenu({
           await deleteSavedQueryMutation(query.id);
           toast.success(locales.query_saved_successfully);
           await onChange();
-        } catch (e) {
-          console.debug('🚀 ~ handleDelete ~ error:', e);
+        } catch {
+          /* ignored */
         }
       })();
     });
   };
 
   const handleCopy = (): void => {
-    copy(query.query).catch((e) => console.debug('🚀 ~ handleCopy ~ error:', e));
+    copy(query.query).catch(() => undefined);
     toast.success(locales.copied);
   };
 

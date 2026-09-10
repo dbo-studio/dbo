@@ -66,8 +66,10 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Feature                  | Spec                                          | Flow                                                    |
 | ------------------------ | --------------------------------------------- | ------------------------------------------------------- |
 | Harness smoke            | `shared/harness-smoke.spec.ts`                | ephemeral API + FE reachable (no sample DB)             |
+| Crash screen             | `shared/crash-screen.spec.ts`                 | render crash UI; Reload clears local persist, keeps connections |
 | Connections              | `shared\|mysql\|sqlite/connections.spec.ts`   | create/edit/dup/reorder/refresh/menu/ping via shared suite |
-| Safe Mode                | `shared\|mysql\|sqlite/safe-mode.spec.ts`     | menu + app password setup/gates; SQL/grid/tree writes re-prompt |
+| MariaDB alias            | `mysql/mariadb-alias.spec.ts`                 | type=mariadb against MySQL sample: create + tree           |
+| Safe Mode                | `shared\|mysql\|sqlite/safe-mode.spec.ts`     | menu + app password setup/gates; SQL/grid/tree writes re-prompt; header lock stays on until Silent |
 | Query status bar         | `pg\|mysql\|sqlite/query-statusbar.spec.ts`   | discard/add/remove/refresh + pagination + edit gate ×3  |
 | Query guards             | `pg\|mysql\|sqlite/query-guards.spec.ts`      | cancel Stop + raw SELECT page size / user LIMIT ×3      |
 | Data grid context menus  | `pg\|mysql\|sqlite/data-grid-context-menus.spec.ts` | empty/cell/header/Safe Mode menus ×3              |
@@ -78,6 +80,8 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | SQL editor context       | `shared/editor-context.spec.ts`               | PG/MySQL/SQLite: select visibility + autofill           |
 | Data browser             | `pg\|mysql\|sqlite/data-browser.spec.ts`      | filter/sort/page/columns/inline/preview via shared suite |
 | Import / Export          | `pg\|mysql\|sqlite/import-export.spec.ts`     | CSV/JSON/SQL export+import, round-trip, continue-on-error |
+| Export SavePath          | `shared/export-savepath.spec.ts`                | web export API rejects `..` and absolute savePath → 400 |
+| Job cancel / failure     | `shared/job-cancel.spec.ts`                   | cancel running export → `canceled`; bad query → `failed` + error |
 | Object Form multi-col FK | `*/object-form-multi-column-fk.spec.ts`       | Add composite FK on edit ×3 |
 | Connection SSL           | `pg/connection-ssl.spec.ts`                   | SSL tab UI + Require on sample-pgsql-ssl + bad CA fail  |
 | Data grid typed cells    | `shared/data-grid-typed-cells.spec.ts`        | MySQL+PG; SQLite n/a (no typed editors yet)             |
@@ -87,6 +91,8 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Keyboard shortcuts       | `shared/keyboard-shortcuts.spec.ts`           | cheatsheet groups/filter, Alt+/ open, grid Save/Refresh tooltips |
 | Workspace dirty tab      | `shared/workspace-dirty-tab.spec.ts`          | dirty Cancel / Yes / clean close                        |
 | AI chat panel            | `shared/ai-chat-panel.spec.ts`                | Assistant panel + composer (no LLM)                     |
+| AI chat cancel           | `shared/ai-chat-cancel.spec.ts`               | Abort in-flight stream/fallback via cancel control        |
+| Tab query migration      | `shared/tab-query-persistence-migration.spec.ts` | localStorage `dbo_tab_queries` → editor + key removed |
 | MCP panel                | `shared/mcp-panel.spec.ts`                    | Settings AI → MCP controls + enable toggle (no LLM)     |
 | Object Form PG lifecycle | `pg/object-form-postgres-lifecycle.spec.ts`   | serial: connect → DB → tables → FK → view → edit → drop |
 | Object Form PG edit      | `pg/object-form-postgres-edit-table.spec.ts`  | serial deep column/FK drop+re-add+rename / key edits    |

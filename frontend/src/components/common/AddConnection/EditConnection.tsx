@@ -1,6 +1,7 @@
 import api from '@/api';
 import type { CreateConnectionRequestType, PingConnectionRequestType } from '@/api/connection/types';
 import Modal from '@/components/base/Modal/Modal';
+import { isMysqlDriver, isPostgresDriver } from '@/core/db/connectionAliases';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -86,8 +87,8 @@ export default function EditConnection(): JSX.Element {
       await queryClient.invalidateQueries({ queryKey: ['connections'] });
       toast.success(locales.connection_update_success);
       handleClose();
-    } catch (error) {
-      console.debug('🚀 ~ handleUpdateConnection ~ error:', error);
+    } catch {
+      /* ignored */
     }
   };
 
@@ -97,40 +98,23 @@ export default function EditConnection(): JSX.Element {
     }
   }, [activeConnection, showEditConnection, updateUI]);
 
+  const formProps = activeConnection
+    ? {
+        connection: activeConnection,
+        engine: activeConnection.type,
+        pingLoading: pingConnectionPending,
+        submitLoading: updateConnectionPending,
+        onClose: handleClose,
+        onPing: (data: CreateConnectionRequestType): void => void handlePingConnection(data),
+        onSubmit: (data: CreateConnectionRequestType): void => void handleUpdateConnection(data)
+      }
+    : undefined;
+
   return (
     <Modal open={showEditConnection !== undefined && showEditConnection !== false} title={locales.edit_connection}>
-      {activeConnection?.type === 'postgresql' && (
-        <PostgreSQL
-          connection={activeConnection}
-          pingLoading={pingConnectionPending}
-          submitLoading={updateConnectionPending}
-          onClose={handleClose}
-          onPing={(data) => void handlePingConnection(data)}
-          onSubmit={(data) => void handleUpdateConnection(data)}
-        />
-      )}
-
-      {activeConnection?.type === 'mysql' && (
-        <Mysql
-          connection={activeConnection}
-          pingLoading={pingConnectionPending}
-          submitLoading={updateConnectionPending}
-          onClose={handleClose}
-          onPing={(data) => void handlePingConnection(data)}
-          onSubmit={(data) => void handleUpdateConnection(data)}
-        />
-      )}
-
-      {activeConnection?.type === 'sqlite' && (
-        <SQLite
-          connection={activeConnection}
-          pingLoading={pingConnectionPending}
-          submitLoading={updateConnectionPending}
-          onClose={handleClose}
-          onPing={(data) => void handlePingConnection(data)}
-          onSubmit={(data) => void handleUpdateConnection(data)}
-        />
-      )}
+      {formProps && isPostgresDriver(activeConnection?.type) && <PostgreSQL {...formProps} />}
+      {formProps && isMysqlDriver(activeConnection?.type) && <Mysql {...formProps} />}
+      {formProps && activeConnection?.type === 'sqlite' && <SQLite {...formProps} />}
     </Modal>
   );
 }

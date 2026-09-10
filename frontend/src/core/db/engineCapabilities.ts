@@ -1,3 +1,5 @@
+import { connectionDriver } from './connectionAliases';
+
 export type DbEngine = 'postgresql' | 'mysql' | 'sqlite';
 
 export type EngineCapabilities = {
@@ -13,8 +15,9 @@ const ENGINE_CAPABILITIES: Record<DbEngine, EngineCapabilities> = {
 };
 
 export const getEngineCapabilities = (engine: string | undefined): EngineCapabilities => {
-  if (engine === 'postgresql' || engine === 'mysql' || engine === 'sqlite') {
-    return ENGINE_CAPABILITIES[engine];
+  const driver = connectionDriver(engine);
+  if (driver === 'postgresql' || driver === 'mysql' || driver === 'sqlite') {
+    return ENGINE_CAPABILITIES[driver];
   }
 
   return { hasDatabase: false, hasSchema: false };

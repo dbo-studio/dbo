@@ -39,7 +39,7 @@ export default function SQLite({
     tools
       .isTauri()
       .then((result) => setIsDesktop(result))
-      .catch((e) => console.log('🚀 ~ SQLite ~ e:', e));
+      .catch(() => undefined);
   }, []);
 
   const form = useForm({

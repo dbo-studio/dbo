@@ -35,9 +35,9 @@ func (b *FailedResponseBuilder) FromError(err error) *FailedResponseBuilder {
 		return b
 	}
 
-	if err != nil {
-		b.response.Message = err.Error()
-	}
+	// A raw error has no mapped status; never leak its internals to clients.
+	b.response.Code = http.StatusInternalServerError
+	b.response.Message = "Internal server error"
 
 	return b
 }

@@ -1,8 +1,9 @@
-package secretStore
+package serviceSecretStore
 
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"os"
 	"path/filepath"
@@ -104,4 +105,16 @@ func appSecretKeyPath(cfg *config.Config) (string, error) {
 	default:
 		return "data/app_secret.key", nil
 	}
+}
+
+// DeriveAICipherKey returns the AES key used to encrypt AI provider API keys.
+func DeriveAICipherKey(cfg *config.Config) ([]byte, error) {
+	secret, err := LoadOrCreateAppSecretKey(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	sum := sha256.Sum256([]byte(secret))
+
+	return sum[:], nil
 }

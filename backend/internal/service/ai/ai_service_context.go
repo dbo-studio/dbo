@@ -3,7 +3,7 @@ package serviceAi
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
-	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
+	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	"github.com/samber/lo"
 )
 
@@ -13,8 +13,8 @@ func buildProviderChatRequest(
 	contextStr string,
 	req *dto.AiChatRequest,
 	useMarkdown bool,
-) *serviceAiProvider.ChatRequest {
-	providerReq := &serviceAiProvider.ChatRequest{
+) *aiProvider.ChatRequest {
+	providerReq := &aiProvider.ChatRequest{
 		Messages:          chat.Messages,
 		Model:             modelName,
 		Context:           contextStr,

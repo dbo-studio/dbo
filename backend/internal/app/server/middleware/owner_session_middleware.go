@@ -1,72 +1,143 @@
 package middleware
 
 import (
+	"crypto/sha256"
+	"crypto/subtle"
+	"errors"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/dbo-studio/dbo/config"
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/response"
+	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v3"
+	"gorm.io/gorm"
 )
 
 const (
 	sessionCookieName    = "dbo_sid"
 	sessionTouchInterval = 60 * time.Second
+	authExchangePath     = "/api/config/auth"
+	mcpProxyPrefix       = "/api/mcp"
 )
 
-/*
-*
-This middleware is used to set the owner ID in the request context.
-If the owner ID is not set, it will return a 401 error.
-*/
-func OwnerSessionMiddleware(webSessionRepo repository.IWebSessionRepo) fiber.Handler {
+type authExchangeRequest struct {
+	Token string `json:"token"`
+}
+
+func OwnerSessionMiddleware(cfg *config.Config, webSessionRepo repository.IWebSessionRepo) fiber.Handler {
 	return func(c fiber.Ctx) error {
-		cfg := container.Instance().Config()
 		if cfg != nil && cfg.App.Client == config.ClientDesktop {
-			ownerID := "desktop"
-			c.Locals(helper.CtxOwnerIDKey, ownerID)
-			c.SetContext(helper.CtxWithOwnerID(c.Context(), ownerID))
+			setOwner(c, "desktop")
 
 			return c.Next()
 		}
 
-		oldSessionID := c.Cookies(sessionCookieName)
+		if isBearerRequest(c) {
+			return c.Next()
+		}
 
-		var (
-			newSessionID string
-			err          error
-		)
+		authToken := ""
+		if cfg != nil {
+			authToken = strings.TrimSpace(cfg.App.AuthToken)
+		}
 
-		if oldSessionID == "" {
-			newSessionID, err = webSessionRepo.Create(c.Context())
-			if err != nil {
-				return response.ErrorBuilder().FromError(apperror.InternalServerError(err)).Send(c)
+		if c.Method() == http.MethodPost && c.Path() == authExchangePath {
+			return handleAuthExchange(c, webSessionRepo, authToken)
+		}
+
+		sessionID := c.Cookies(sessionCookieName)
+		if sessionID != "" {
+			_, err := webSessionRepo.Get(c.Context(), sessionID)
+			if err == nil {
+				if err := webSessionRepo.TouchLastSeenDebounced(c.Context(), sessionID, sessionTouchInterval); err != nil {
+					return response.ErrorBuilder().FromError(apperror.InternalServerError(err)).Send(c)
+				}
+
+				setOwner(c, sessionID)
+
+				return c.Next()
 			}
 
-			// Secure must match the actual request scheme. Browsers (especially Safari)
-			// reject Secure cookies on http://localhost, which creates a new owner
-			// session per request and makes POST /connections appear to "return empty".
-			c.Cookie(&fiber.Cookie{
-				Name:     sessionCookieName,
-				Value:    newSessionID,
-				Path:     "/",
-				HTTPOnly: true,
-				SameSite: "Lax",
-				Secure:   c.Protocol() == "https",
-			})
-		} else {
-			newSessionID = oldSessionID
-			if err := webSessionRepo.TouchLastSeenDebounced(c.Context(), oldSessionID, sessionTouchInterval); err != nil {
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 				return response.ErrorBuilder().FromError(apperror.InternalServerError(err)).Send(c)
 			}
 		}
 
-		c.Locals(helper.CtxOwnerIDKey, newSessionID)
-		c.SetContext(helper.CtxWithOwnerID(c.Context(), newSessionID))
+		if authToken != "" {
+			return response.ErrorBuilder().FromError(apperror.Unauthenticated()).Send(c)
+		}
+
+		newSessionID, err := webSessionRepo.Create(c.Context())
+		if err != nil {
+			return response.ErrorBuilder().FromError(apperror.InternalServerError(err)).Send(c)
+		}
+
+		c.Cookie(&fiber.Cookie{
+			Name:     sessionCookieName,
+			Value:    newSessionID,
+			Path:     "/",
+			HTTPOnly: true,
+			SameSite: "Lax",
+			Secure:   c.Protocol() == "https",
+		})
+
+		setOwner(c, newSessionID)
 
 		return c.Next()
 	}
+}
+
+func handleAuthExchange(c fiber.Ctx, webSessionRepo repository.IWebSessionRepo, authToken string) error {
+	if authToken == "" {
+		return response.ErrorBuilder().FromError(apperror.NotFound(apperror.ErrAuthNotEnabled)).Send(c)
+	}
+
+	var req authExchangeRequest
+	if err := json.Unmarshal(c.Body(), &req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(apperror.ErrUnauthenticated)).Send(c)
+	}
+
+	if !authTokensEqual(req.Token, authToken) {
+		return response.ErrorBuilder().FromError(apperror.Unauthenticated()).Send(c)
+	}
+
+	sessionID, err := webSessionRepo.Create(c.Context())
+	if err != nil {
+		return response.ErrorBuilder().FromError(apperror.InternalServerError(err)).Send(c)
+	}
+
+	c.Cookie(&fiber.Cookie{
+		Name:     sessionCookieName,
+		Value:    sessionID,
+		Path:     "/",
+		HTTPOnly: true,
+		SameSite: "Lax",
+		Secure:   c.Protocol() == "https",
+	})
+
+	setOwner(c, sessionID)
+
+	return response.SuccessBuilder().Send(c)
+}
+
+func authTokensEqual(provided, expected string) bool {
+	h1 := sha256.Sum256([]byte(provided))
+	h2 := sha256.Sum256([]byte(expected))
+
+	return subtle.ConstantTimeCompare(h1[:], h2[:]) == 1
+}
+
+func setOwner(c fiber.Ctx, ownerID string) {
+	c.Locals(helper.CtxOwnerIDKey, ownerID)
+	c.SetContext(helper.CtxWithOwnerID(c.Context(), ownerID))
+}
+
+func isBearerRequest(c fiber.Ctx) bool {
+	return strings.HasPrefix(c.Path(), mcpProxyPrefix) &&
+		strings.HasPrefix(c.Get("Authorization"), "Bearer ")
 }

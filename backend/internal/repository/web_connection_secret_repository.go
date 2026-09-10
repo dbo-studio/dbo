@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"gorm.io/gorm"
@@ -16,9 +15,9 @@ type webConnectionSecretRepoImpl struct {
 	db *gorm.DB
 }
 
-func NewWebConnectionSecretRepo() IWebConnectionSecretRepo {
+func NewWebConnectionSecretRepo(db *gorm.DB) IWebConnectionSecretRepo {
 	return &webConnectionSecretRepoImpl{
-		db: container.Instance().DB(),
+		db: db,
 	}
 }
 

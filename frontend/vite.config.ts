@@ -29,67 +29,68 @@ export default defineConfig(({ mode }) => {
               }
             }
           ]
-        : []),
-      VitePWA({
-        injectRegister: 'auto',
-        registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'app-icon/apple-touch-icon-180x180.png'],
-        manifest: {
-          name: 'DBO Studio',
-          short_name: 'DBO',
-          description: 'Modern and easy to use SQL client',
-          theme_color: '#0077CC',
-          background_color: '#ffffff',
-          display: 'standalone',
-          orientation: 'any',
-          scope: '/',
-          start_url: '/',
-          icons: [
-            {
-              src: '/app-icon/pwa-64x64.png',
-              sizes: '64x64',
-              type: 'image/png'
-            },
-            {
-              src: '/app-icon/pwa-192x192.png',
-              sizes: '192x192',
-              type: 'image/png'
-            },
-            {
-              src: '/app-icon/pwa-512x512.png',
-              sizes: '512x512',
-              type: 'image/png'
-            },
-            {
-              src: '/app-icon/maskable-icon-512x512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'maskable'
-            }
-          ]
-        },
-        workbox: {
-          maximumFileSizeToCacheInBytes: 8000000,
-          navigateFallbackDenylist: [/^\/api/],
-          globIgnores: ['**/fonts/**'],
-          runtimeCaching: [
-            {
-              urlPattern: ({ url }): boolean => /\/fonts\/.+\.woff2$/i.test(url.pathname),
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'dbo-fonts',
-                expiration: {
-                  maxEntries: 64,
-                  maxAgeSeconds: 60 * 60 * 24 * 365
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                }
+        : [
+            VitePWA({
+              injectRegister: 'auto',
+              registerType: 'autoUpdate',
+              includeAssets: ['favicon.ico', 'app-icon/apple-touch-icon-180x180.png'],
+              manifest: {
+                name: 'DBO Studio',
+                short_name: 'DBO',
+                description: 'Modern and easy to use SQL client',
+                theme_color: '#0077CC',
+                background_color: '#ffffff',
+                display: 'standalone',
+                orientation: 'any',
+                scope: '/',
+                start_url: '/',
+                icons: [
+                  {
+                    src: '/app-icon/pwa-64x64.png',
+                    sizes: '64x64',
+                    type: 'image/png'
+                  },
+                  {
+                    src: '/app-icon/pwa-192x192.png',
+                    sizes: '192x192',
+                    type: 'image/png'
+                  },
+                  {
+                    src: '/app-icon/pwa-512x512.png',
+                    sizes: '512x512',
+                    type: 'image/png'
+                  },
+                  {
+                    src: '/app-icon/maskable-icon-512x512.png',
+                    sizes: '512x512',
+                    type: 'image/png',
+                    purpose: 'maskable'
+                  }
+                ]
+              },
+              workbox: {
+                maximumFileSizeToCacheInBytes: 8000000,
+                navigateFallbackDenylist: [/^\/api/],
+                globIgnores: ['**/fonts/**'],
+                runtimeCaching: [
+                  {
+                    urlPattern: ({ url }): boolean => /\/fonts\/.+\.woff2$/i.test(url.pathname),
+                    handler: 'CacheFirst',
+                    options: {
+                      cacheName: 'dbo-fonts',
+                      expiration: {
+                        maxEntries: 64,
+                        maxAgeSeconds: 60 * 60 * 24 * 365
+                      },
+                      cacheableResponse: {
+                        statuses: [0, 200]
+                      }
+                    }
+                  }
+                ]
               }
-            }
-          ]
-        }
-      })
+            })
+          ]),
     ],
     envPrefix: ['VITE_', 'TAURI_ENV_*'],
     resolve: {

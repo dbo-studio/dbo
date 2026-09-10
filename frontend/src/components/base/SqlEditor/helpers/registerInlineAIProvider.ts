@@ -146,7 +146,6 @@ export function registerInlineAIProvider(monaco: typeof Monaco, languageId: stri
                 return;
               }
 
-              console.debug('Inline AI provider error:', err);
               useSettingStore.getState().updateEditor({ enableEditorAi: false });
               resolve({ items: [] });
             } finally {

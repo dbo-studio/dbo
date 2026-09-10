@@ -45,8 +45,8 @@ export default function DiagramSource(): JSX.Element {
     try {
       await copy(dbml);
       toast.success(locales.copied);
-    } catch (error) {
-      console.debug('🚀 ~ handleCopy ~ error:', error);
+    } catch {
+      /* ignored */
     }
   };
 

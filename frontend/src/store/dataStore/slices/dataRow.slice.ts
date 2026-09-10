@@ -1,4 +1,4 @@
-import { debouncedSaveRows } from '@/core/utils/indexdbHelper';
+import { debouncedSaveRows } from '@/core/utils/indexedDbHelper';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { RowType } from '@/types';
 import type { StateCreator } from 'zustand';

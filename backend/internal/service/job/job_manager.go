@@ -1,28 +1,35 @@
-package job
+package serviceJob
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"sync"
 	"time"
 
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger"
+	"gorm.io/gorm"
 )
 
 type IJobManager interface {
 	RegisterProcessor(processor Processor)
-	CreateJob(jobType model.JobType, data string) (*model.Job, error)
-	UpdateJobProgress(job *model.Job, progress int, message string) error
+	CreateJob(jobType model.JobType, ownerID string, data string) (*model.Job, error)
+	UpdateJobProgress(ctx context.Context, job *model.Job, progress int, message string) error
+	CancelRunning(jobID uint)
+	Shutdown() error
 	CancelAllJobs() error
 }
 
 type IJobManagerImpl struct {
-	jobRepo      repository.IJobRepo
-	processors   map[model.JobType]Processor
+	jobRepo    repository.IJobRepo
+	processors map[model.JobType]Processor
+	// cancels maps a running job ID to the context cancel that stops its
+	// processor; guarded by mu.
+	cancels      map[uint]context.CancelFunc
 	workerCtx    context.Context
 	workerCancel context.CancelFunc
 	workerWg     sync.WaitGroup
@@ -30,15 +37,16 @@ type IJobManagerImpl struct {
 	logger       logger.Logger
 }
 
-func NewJobManager(jobRepo repository.IJobRepo) IJobManager {
+func NewJobManager(jobRepo repository.IJobRepo, appLogger logger.Logger) IJobManager {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	jm := IJobManagerImpl{
 		jobRepo:      jobRepo,
 		processors:   make(map[model.JobType]Processor),
+		cancels:      make(map[uint]context.CancelFunc),
 		workerCtx:    ctx,
 		workerCancel: cancel,
-		logger:       container.Instance().Logger(),
+		logger:       appLogger,
 	}
 
 	jm.workerWg.Add(1)
@@ -54,16 +62,17 @@ func (jm *IJobManagerImpl) RegisterProcessor(processor Processor) {
 	jm.processors[processor.GetType()] = processor
 }
 
-func (jm *IJobManagerImpl) CreateJob(jobType model.JobType, data string) (*model.Job, error) {
+func (jm *IJobManagerImpl) CreateJob(jobType model.JobType, ownerID string, data string) (*model.Job, error) {
 	job := &model.Job{
 		Type:     jobType,
 		Status:   model.JobStatusPending,
+		OwnerID:  ownerID,
 		Progress: 0,
 		Message:  "Job created",
 		Data:     data,
 	}
 
-	err := jm.jobRepo.Create(context.Background(), job)
+	err := jm.jobRepo.Create(jm.workerCtx, job)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create job: %w", err)
 	}
@@ -73,37 +82,55 @@ func (jm *IJobManagerImpl) CreateJob(jobType model.JobType, data string) (*model
 	return job, nil
 }
 
-func (jm *IJobManagerImpl) UpdateJobProgress(job *model.Job, progress int, message string) error {
-	job.Progress = progress
-	job.Message = message
-
-	return jm.jobRepo.Update(context.Background(), job)
+func (jm *IJobManagerImpl) UpdateJobProgress(ctx context.Context, job *model.Job, progress int, message string) error {
+	// Column-scoped update: a progress tick from a stale in-memory copy must
+	// never overwrite a status change (e.g. a concurrent user cancel).
+	return jm.jobRepo.UpdateProgress(ctx, job.ID, progress, message)
 }
 
-func (jm *IJobManagerImpl) updateJobStatus(job *model.Job, status model.JobStatus, message string) error {
-	job.Status = status
-	job.Message = message
+func (jm *IJobManagerImpl) markJobCompleted(ctx context.Context, jobID uint, message string) error {
+	now := time.Now()
 
-	if status == model.JobStatusRunning && job.StartedAt == nil {
-		now := time.Now()
-		job.StartedAt = &now
-	}
-
-	if status == model.JobStatusCompleted || status == model.JobStatusFailed || status == model.JobStatusCancelled {
-		now := time.Now()
-		job.CompletedAt = &now
-	}
-
-	return jm.jobRepo.Update(context.Background(), job)
+	return jm.jobRepo.UpdateFieldsIfRunning(ctx, jobID, map[string]any{
+		"status":       model.JobStatusCompleted,
+		"message":      message,
+		"completed_at": &now,
+	})
 }
 
-func (jm *IJobManagerImpl) updateJobError(job *model.Job, errMsg string) error {
+func (jm *IJobManagerImpl) markJobCancelled(ctx context.Context, jobID uint, message string) error {
+	now := time.Now()
+
+	return jm.jobRepo.UpdateFieldsIfActive(ctx, jobID, map[string]any{
+		"status":       model.JobStatusCancelled,
+		"message":      message,
+		"completed_at": &now,
+	})
+}
+
+func (jm *IJobManagerImpl) updateJobError(ctx context.Context, job *model.Job, errMsg string) error {
+	now := time.Now()
 	job.Error = errMsg
 	job.Status = model.JobStatusFailed
-	now := time.Now()
 	job.CompletedAt = &now
 
-	return jm.jobRepo.Update(context.Background(), job)
+	return jm.jobRepo.UpdateFieldsIfRunning(ctx, job.ID, map[string]any{
+		"error":        errMsg,
+		"status":       model.JobStatusFailed,
+		"completed_at": &now,
+	})
+}
+
+// isCancelled reports whether the job was canceled concurrently (either via
+// the job context or directly in the DB).
+func (jm *IJobManagerImpl) isCancelled(ctx context.Context, jobID uint) bool {
+	if ctx.Err() != nil {
+		return true
+	}
+
+	fresh, err := jm.jobRepo.Find(ctx, int32(jobID))
+
+	return err == nil && fresh.Status == model.JobStatusCancelled
 }
 
 func (jm *IJobManagerImpl) processJob(job *model.Job) error {
@@ -115,14 +142,28 @@ func (jm *IJobManagerImpl) processJob(job *model.Job) error {
 		return fmt.Errorf("no processor found for job type: %s", job.Type)
 	}
 
-	err := jm.updateJobStatus(job, model.JobStatusRunning, "Job started")
-	if err != nil {
-		return fmt.Errorf("failed to update job status: %w", err)
-	}
+	// The job is already running (ClaimNextPending flipped it atomically);
+	// derive a cancellable context so user cancels reach the processor.
+	jobCtx, cancel := context.WithCancel(jm.workerCtx)
 
-	err = processor.Process(job)
+	jm.mu.Lock()
+	jm.cancels[job.ID] = cancel
+	jm.mu.Unlock()
+
+	defer func() {
+		jm.mu.Lock()
+		delete(jm.cancels, job.ID)
+		jm.mu.Unlock()
+		cancel()
+	}()
+
+	err := processor.Process(jobCtx, job)
 	if err != nil {
-		updateErr := jm.updateJobError(job, err.Error())
+		if jm.isCancelled(jobCtx, job.ID) {
+			return nil
+		}
+
+		updateErr := jm.updateJobError(jobCtx, job, err.Error())
 		if updateErr != nil {
 			jm.logger.Error(fmt.Sprintf("Failed to update job error: %v", updateErr))
 		}
@@ -130,7 +171,22 @@ func (jm *IJobManagerImpl) processJob(job *model.Job) error {
 		return fmt.Errorf("job processing failed: %w", err)
 	}
 
-	err = jm.updateJobStatus(job, model.JobStatusCompleted, "Job completed successfully")
+	// A cancel landing while the processor ran wins over the terminal write.
+	if jm.isCancelled(jobCtx, job.ID) {
+		return nil
+	}
+
+	// Persist the processor's result payload alongside the terminal status:
+	// column-scoped status updates never touch the result column. The JSON is
+	// pre-marshaled because gorm's map updates bypass the field serializer.
+	fields := map[string]any{"result": helper.StructToJSON(job.Result)}
+
+	err = jm.jobRepo.UpdateFieldsIfRunning(jobCtx, job.ID, fields)
+	if err != nil {
+		return fmt.Errorf("failed to save job result: %w", err)
+	}
+
+	err = jm.markJobCompleted(jobCtx, job.ID, "Job completed successfully")
 	if err != nil {
 		return fmt.Errorf("failed to update job status: %w", err)
 	}
@@ -155,7 +211,7 @@ func (jm *IJobManagerImpl) worker() {
 }
 
 func (jm *IJobManagerImpl) processPendingJobs() {
-	runningJobs, err := jm.jobRepo.GetRunningJobs(context.Background())
+	runningJobs, err := jm.jobRepo.GetRunningJobs(jm.workerCtx)
 	if err != nil {
 		jm.logger.Error(fmt.Sprintf("Failed to get running jobs: %v", err))
 		return
@@ -180,12 +236,12 @@ func (jm *IJobManagerImpl) processPendingJobs() {
 		})
 
 		for _, rj := range runningJobs[1:] {
-			jobCopy := rj
-			_ = jm.updateJobStatus(&jobCopy, model.JobStatusCancelled, "Canceled due to single-run policy")
+			_ = jm.markJobCancelled(jm.workerCtx, rj.ID, "Canceled due to single-run policy")
+			jm.CancelRunning(rj.ID)
 		}
 	}
 
-	runningJobs, err = jm.jobRepo.GetRunningJobs(context.Background())
+	runningJobs, err = jm.jobRepo.GetRunningJobs(jm.workerCtx)
 	if err != nil {
 		jm.logger.Error(fmt.Sprintf("Failed to re-check running jobs: %v", err))
 		return
@@ -195,32 +251,77 @@ func (jm *IJobManagerImpl) processPendingJobs() {
 		return
 	}
 
-	jobs, err := jm.jobRepo.GetPendingJobs(context.Background())
+	job, err := jm.jobRepo.ClaimNextPending(jm.workerCtx)
 	if err != nil {
-		jm.logger.Error(fmt.Sprintf("Failed to get pending jobs: %v", err))
-		return
-	}
-
-	if len(jobs) == 0 {
-		return
-	}
-
-	j := jobs[0]
-	go func(j model.Job) {
-		if err := jm.processJob(&j); err != nil {
-			jm.logger.Error(fmt.Sprintf("Failed to process job %d: %v", j.ID, err))
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			jm.logger.Error(fmt.Sprintf("Failed to claim pending job: %v", err))
 		}
-	}(j)
+
+		return
+	}
+
+	jm.workerWg.Add(1)
+
+	go func() {
+		defer jm.workerWg.Done()
+		defer func() {
+			if r := recover(); r != nil {
+				jm.logger.Error(fmt.Sprintf("Panic processing job %d: %v", job.ID, r))
+				_ = jm.updateJobError(jm.workerCtx, job, fmt.Sprintf("internal error: %v", r))
+			}
+		}()
+
+		if err := jm.processJob(job); err != nil {
+			jm.logger.Error(fmt.Sprintf("Failed to process job %d: %v", job.ID, err))
+		}
+	}()
+}
+
+// CancelRunning aborts the processor of a running job via its context. The
+// DB status is managed by the caller (JobService.Cancel).
+func (jm *IJobManagerImpl) CancelRunning(jobID uint) {
+	jm.mu.RLock()
+	cancel, ok := jm.cancels[jobID]
+	jm.mu.RUnlock()
+
+	if ok {
+		cancel()
+	}
+}
+
+// Shutdown stops the worker loop, aborts all running processors and waits for
+// them to finish, then flips any remaining running/pending jobs to canceled.
+func (jm *IJobManagerImpl) Shutdown() error {
+	jm.workerCancel()
+
+	jm.mu.RLock()
+	cancels := make([]context.CancelFunc, 0, len(jm.cancels))
+
+	for _, cancel := range jm.cancels {
+		cancels = append(cancels, cancel)
+	}
+
+	jm.mu.RUnlock()
+
+	for _, cancel := range cancels {
+		cancel()
+	}
+
+	jm.workerWg.Wait()
+
+	return jm.CancelAllJobs()
 }
 
 func (jm *IJobManagerImpl) CancelAllJobs() error {
-	runningJobs, err := jm.jobRepo.GetRunningJobs(context.Background())
+	bgCtx := context.WithoutCancel(jm.workerCtx)
+
+	runningJobs, err := jm.jobRepo.GetRunningJobs(bgCtx)
 	if err != nil {
 		return fmt.Errorf("failed to get running jobs: %w", err)
 	}
 
 	for _, job := range runningJobs {
-		err := jm.updateJobStatus(&job, model.JobStatusCancelled, "Canceled due to application shutdown")
+		err := jm.markJobCancelled(bgCtx, job.ID, "Canceled due to application shutdown")
 		if err != nil {
 			jm.logger.Error(fmt.Sprintf("Failed to cancel job %d: %v", job.ID, err))
 		} else {
@@ -228,13 +329,13 @@ func (jm *IJobManagerImpl) CancelAllJobs() error {
 		}
 	}
 
-	pendingJobs, err := jm.jobRepo.GetPendingJobs(context.Background())
+	pendingJobs, err := jm.jobRepo.GetPendingJobs(bgCtx)
 	if err != nil {
 		return fmt.Errorf("failed to get pending jobs: %w", err)
 	}
 
 	for _, job := range pendingJobs {
-		err := jm.updateJobStatus(&job, model.JobStatusCancelled, "Canceled due to application shutdown")
+		err := jm.markJobCancelled(bgCtx, job.ID, "Canceled due to application shutdown")
 		if err != nil {
 			jm.logger.Error(fmt.Sprintf("Failed to cancel pending job %d: %v", job.ID, err))
 		} else {

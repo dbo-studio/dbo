@@ -8,14 +8,13 @@ import (
 
 	"github.com/blastrain/vitess-sqlparser/sqlparser"
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/container"
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
-	"github.com/dbo-studio/dbo/internal/service/job"
-	secretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
+	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
+	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/csv"
 	"github.com/dbo-studio/dbo/pkg/helper"
@@ -24,19 +23,19 @@ import (
 )
 
 type ImportProcessor struct {
-	jobManager     job.IJobManager
+	jobManager     serviceJob.IJobManager
 	cm             *databaseConnection.ConnectionManager
 	connectionRepo repository.IConnectionRepo
 	cache          cache.Cache
-	secrets        secretStore.ISecretStore
+	secrets        serviceSecretStore.ISecretStore
 }
 
-func NewImportProcessor(jobManager job.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, secrets secretStore.ISecretStore) *ImportProcessor {
+func NewImportProcessor(jobManager serviceJob.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, secrets serviceSecretStore.ISecretStore, appCache cache.Cache) *ImportProcessor {
 	return &ImportProcessor{
 		jobManager:     jobManager,
 		cm:             cm,
 		connectionRepo: connectionRepo,
-		cache:          container.Instance().Cache(),
+		cache:          appCache,
 		secrets:        secrets,
 	}
 }
@@ -45,8 +44,10 @@ func (p *ImportProcessor) GetType() model.JobType {
 	return model.JobTypeImport
 }
 
-func (p *ImportProcessor) Process(job *model.Job) error {
-	rawCtx := context.Background()
+func (p *ImportProcessor) Process(ctx context.Context, job *model.Job) error {
+	if ctx.Err() != nil {
+		return fmt.Errorf("job was canceled")
+	}
 
 	data, err := helper.ConvertToDTO[dto.ImportJob]([]byte(job.Data))
 	if err != nil {
@@ -54,7 +55,7 @@ func (p *ImportProcessor) Process(job *model.Job) error {
 	}
 
 	ownerID := data.OwnerID
-	ctx := helper.CtxWithOwnerID(rawCtx, ownerID)
+	ctx = helper.CtxWithOwnerID(ctx, ownerID)
 
 	var fileData []byte
 	if decoded, err := base64.StdEncoding.DecodeString(string(data.Data)); err == nil {
@@ -83,39 +84,31 @@ func (p *ImportProcessor) Process(job *model.Job) error {
 		return err
 	}
 
-	err = p.jobManager.UpdateJobProgress(job, 10, "Connected to database")
+	err = p.jobManager.UpdateJobProgress(ctx, job, 10, "Connected to database")
 	if err != nil {
 		return err
 	}
 
-	if job.Status == model.JobStatusCancelled {
+	if ctx.Err() != nil {
 		return fmt.Errorf("job was canceled")
 	}
 
-	err = p.jobManager.UpdateJobProgress(job, 20, "Starting import process")
+	err = p.jobManager.UpdateJobProgress(ctx, job, 20, "Starting import process")
 	if err != nil {
 		return err
-	}
-
-	if job.Status == model.JobStatusCancelled {
-		return fmt.Errorf("job was canceled")
 	}
 
 	return p.processLargeFile(ctx, job, repo, data, fileData)
 }
 
 func (p *ImportProcessor) processLargeFile(ctx context.Context, job *model.Job, dbRepo databaseContract.DatabaseRepository, data dto.ImportJob, fileData []byte) error {
-	if job.Status == model.JobStatusCancelled {
+	if ctx.Err() != nil {
 		return fmt.Errorf("job was canceled")
 	}
 
-	err := p.jobManager.UpdateJobProgress(job, 30, "Parsing file")
+	err := p.jobManager.UpdateJobProgress(ctx, job, 30, "Parsing file")
 	if err != nil {
 		return err
-	}
-
-	if job.Status == "canceled" {
-		return fmt.Errorf("job was canceled")
 	}
 
 	var (
@@ -143,7 +136,7 @@ func (p *ImportProcessor) processLargeFile(ctx context.Context, job *model.Job, 
 	chunks := lo.Chunk(rows, chunkSize)
 	totalChunks := len(chunks)
 
-	err = p.jobManager.UpdateJobProgress(job, 40, fmt.Sprintf("Starting chunked import - %d rows in %d chunks", totalRows, totalChunks))
+	err = p.jobManager.UpdateJobProgress(ctx, job, 40, fmt.Sprintf("Starting chunked import - %d rows in %d chunks", totalRows, totalChunks))
 	if err != nil {
 		return err
 	}
@@ -156,12 +149,12 @@ func (p *ImportProcessor) processLargeFile(ctx context.Context, job *model.Job, 
 	for i, chunk := range chunks {
 		progress := 40 + (i * 50 / totalChunks) // Progress from 40% to 90%
 
-		err = p.jobManager.UpdateJobProgress(job, progress, fmt.Sprintf("Processing chunk %d/%d (%d rows)", i+1, totalChunks, len(chunk)))
+		err = p.jobManager.UpdateJobProgress(ctx, job, progress, fmt.Sprintf("Processing chunk %d/%d (%d rows)", i+1, totalChunks, len(chunk)))
 		if err != nil {
 			return err
 		}
 
-		if job.Status == "canceled" {
+		if ctx.Err() != nil {
 			return fmt.Errorf("job was canceled")
 		}
 
@@ -180,7 +173,7 @@ func (p *ImportProcessor) processLargeFile(ctx context.Context, job *model.Job, 
 		}
 	}
 
-	err = p.jobManager.UpdateJobProgress(job, 100, "Import completed successfully")
+	err = p.jobManager.UpdateJobProgress(ctx, job, 100, "Import completed successfully")
 	if err != nil {
 		return err
 	}
