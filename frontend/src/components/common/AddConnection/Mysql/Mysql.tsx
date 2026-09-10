@@ -4,7 +4,8 @@ import { FormError } from '@/components/base/FormError/FormError';
 import locales from '@/locales';
 import { Box, Button, Checkbox, FormControlLabel, Stack } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
-import { type JSX, useState } from 'react';
+import type { JSX } from 'react';
+import { toast } from 'sonner';
 import * as v from 'valibot';
 
 import {
@@ -15,27 +16,48 @@ import {
 } from '../AddConnection.styled';
 import ConnectionFormTabs from '../ConnectionFormTabs';
 import ConnectionSSLFields from '../ConnectionSSLFields';
+import { buildConnectionUri, parseConnectionUri } from '../connectionUri';
+import { applyParsedConnectionUri } from '../connectionUriForm';
 import { sslFormDefaults, sslOptionsFromForm } from '../ssl';
 import type { ConnectionSettingsProps } from '../types';
 
-const formSchema = v.object({
-  isPing: v.boolean(),
-  rememberPassword: v.boolean(),
-  name: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
-  host: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
-  port: v.pipe(
-    v.string(),
-    v.check((input) => !Number.isNaN(Number.parseInt(input, 10)), 'Expected number, received a string')
-  ),
-  username: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
-  password: v.string(),
-  database: v.string(),
-  uri: v.string(),
-  sslMode: v.string(),
-  sslCaCert: v.string(),
-  sslClientCert: v.string(),
-  sslClientKey: v.string()
-});
+const formSchema = v.union([
+  v.object({
+    useUri: v.literal(true),
+    isPing: v.boolean(),
+    rememberPassword: v.boolean(),
+    name: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
+    host: v.string(),
+    port: v.string(),
+    username: v.string(),
+    password: v.string(),
+    database: v.string(),
+    uri: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
+    sslMode: v.string(),
+    sslCaCert: v.string(),
+    sslClientCert: v.string(),
+    sslClientKey: v.string()
+  }),
+  v.object({
+    useUri: v.literal(false),
+    isPing: v.boolean(),
+    rememberPassword: v.boolean(),
+    name: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
+    host: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
+    port: v.pipe(
+      v.string(),
+      v.check((input) => !Number.isNaN(Number.parseInt(input, 10)), 'Expected number, received a string')
+    ),
+    username: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
+    password: v.string(),
+    database: v.string(),
+    uri: v.string(),
+    sslMode: v.string(),
+    sslCaCert: v.string(),
+    sslClientCert: v.string(),
+    sslClientKey: v.string()
+  })
+]);
 
 export default function Mysql({
   connection,
@@ -46,10 +68,10 @@ export default function Mysql({
   pingLoading,
   submitLoading
 }: ConnectionSettingsProps): JSX.Element {
-  const [useUri, setUseUri] = useState(Boolean((connection?.options as MysqlOptionsType | undefined)?.uri));
   const options = connection?.options as MysqlOptionsType | undefined;
   const sslDefaults = sslFormDefaults(options?.ssl);
   const connectionType = connection?.type ?? engine;
+  const parsedUri = options?.uri ? parseConnectionUri(options.uri, 'mysql') : null;
 
   const form = useForm({
     validators: {
@@ -62,11 +84,11 @@ export default function Mysql({
         rememberPassword: value.rememberPassword,
         options: {
           host: value.host,
-          port: Number(value.port),
+          port: Number(value.port || 0),
           username: value.username,
           password: value.password,
           database: value.database,
-          uri: value.uri,
+          uri: value.useUri ? value.uri : '',
           ssl: sslOptionsFromForm(value)
         }
       } as CreateConnectionRequestType;
@@ -80,18 +102,74 @@ export default function Mysql({
       form.reset();
     },
     defaultValues: {
+      useUri: Boolean(options?.uri),
       isPing: false,
       rememberPassword: false,
       name: connection?.name ?? '',
-      host: options?.host ?? '',
-      port: options?.port?.toString() ?? '',
-      username: options?.username ?? '',
+      host: options?.host || parsedUri?.host || '',
+      port: options?.port?.toString() || parsedUri?.port || '',
+      username: options?.username || parsedUri?.username || '',
       password: '',
-      database: options?.database ?? '',
-      uri: options?.uri ?? '',
-      ...sslDefaults
+      database: options?.database || parsedUri?.database || '',
+      uri: parsedUri?.redactedUri ?? options?.uri ?? '',
+      ...sslDefaults,
+      sslMode: options?.ssl?.mode || parsedUri?.sslMode || sslDefaults.sslMode
     }
   });
+
+  const syncFromUri = (raw: string, opts?: { redact?: boolean; warn?: boolean }): boolean => {
+    const parsed = parseConnectionUri(raw, 'mysql');
+    if (!parsed) {
+      return false;
+    }
+
+    applyParsedConnectionUri(form, parsed);
+    if (opts?.redact) {
+      form.setFieldValue('uri', parsed.redactedUri);
+    }
+
+    if (opts?.warn && parsed.lossy) {
+      toast.warning(locales.uri_sync_lossy);
+    }
+
+    return true;
+  };
+
+  const copyRedactedUri = async (): Promise<void> => {
+    const values = form.state.values;
+    const uri =
+      values.uri ||
+      buildConnectionUri(
+        {
+          host: values.host,
+          port: values.port,
+          username: values.username,
+          password: values.password,
+          database: values.database,
+          sslMode: values.sslMode
+        },
+        'mysql',
+        { redact: true }
+      );
+    const parsed = parseConnectionUri(uri, 'mysql');
+    const redacted =
+      parsed?.redactedUri ??
+      buildConnectionUri(
+        {
+          host: values.host,
+          port: values.port,
+          username: values.username,
+          password: '',
+          database: values.database,
+          sslMode: values.sslMode
+        },
+        'mysql',
+        { redact: true }
+      );
+
+    await navigator.clipboard.writeText(redacted);
+    toast.success(locales.uri_copied);
+  };
 
   return (
     <ConnectionFormContainerStyled>
@@ -123,93 +201,198 @@ export default function Mysql({
                     </Box>
                   )}
                 </form.Field>
-                <Stack direction='row' spacing={2}>
-                  <form.Field name='host'>
-                    {(field): JSX.Element => (
-                      <Box>
-                        <FieldInput
-                          name='host'
-                          placeholder='localhost'
-                          disabled={useUri}
-                          value={field.state.value}
-                          error={field.state.meta.errors.length > 0}
-                          label={locales.host}
-                          onChange={(e): void => field.handleChange(e.target.value)}
-                        />
-                        <FormError mb={1} errors={field.state.meta.errors} />
-                      </Box>
-                    )}
-                  </form.Field>
-
-                  <form.Field name='port'>
-                    {(field): JSX.Element => (
-                      <Box>
-                        <FieldInput
-                          name='port'
-                          disabled={useUri}
-                          placeholder={'3306'}
-                          value={field.state.value}
-                          error={field.state.meta.errors.length > 0}
-                          label={locales.port}
-                          type='number'
-                          onChange={(e): void => field.handleChange(e.target.value)}
-                        />
-                        <FormError mb={1} errors={field.state.meta.errors} />
-                      </Box>
-                    )}
-                  </form.Field>
-                </Stack>
-                <Stack direction='row' spacing={2}>
-                  <form.Field name='username'>
-                    {(field): JSX.Element => (
-                      <Box>
-                        <FieldInput
-                          mb={1}
-                          name='username'
-                          disabled={useUri}
-                          value={field.state.value}
-                          error={field.state.meta.errors.length > 0}
-                          label={locales.username}
-                          onChange={(e): void => field.handleChange(e.target.value)}
-                        />
-                        <FormError mb={1} errors={field.state.meta.errors} />
-                      </Box>
-                    )}
-                  </form.Field>
-
-                  <form.Field name='password'>
-                    {(field): JSX.Element => (
-                      <Box>
-                        <FieldInput
-                          name='password'
-                          disabled={useUri}
-                          value={field.state.value}
-                          error={field.state.meta.errors.length > 0}
-                          label={locales.password}
-                          onChange={(e): void => field.handleChange(e.target.value)}
-                        />
-                        <FormError mb={1} errors={field.state.meta.errors} />
-                      </Box>
-                    )}
-                  </form.Field>
-                </Stack>
-
-                <form.Field name='database'>
-                  {(field): JSX.Element => (
+                <form.Subscribe selector={(state) => state.values.useUri}>
+                  {(useUri): JSX.Element => (
                     <>
-                      <FieldInput
-                        name='database'
-                        disabled={useUri}
-                        value={field.state.value}
-                        error={field.state.meta.errors.length > 0}
-                        label={locales.database}
-                        fullWidth={true}
-                        onChange={(e): void => field.handleChange(e.target.value)}
-                      />
-                      <FormError mb={1} errors={field.state.meta.errors} />
+                      <Stack direction='row' spacing={2}>
+                        <form.Field name='host'>
+                          {(field): JSX.Element => (
+                            <Box>
+                              <FieldInput
+                                name='host'
+                                placeholder='localhost'
+                                disabled={useUri}
+                                value={field.state.value}
+                                error={field.state.meta.errors.length > 0}
+                                label={locales.host}
+                                onChange={(e): void => field.handleChange(e.target.value)}
+                              />
+                              <FormError mb={1} errors={field.state.meta.errors} />
+                            </Box>
+                          )}
+                        </form.Field>
+
+                        <form.Field name='port'>
+                          {(field): JSX.Element => (
+                            <Box>
+                              <FieldInput
+                                name='port'
+                                disabled={useUri}
+                                placeholder={'3306'}
+                                value={field.state.value}
+                                error={field.state.meta.errors.length > 0}
+                                label={locales.port}
+                                type='number'
+                                onChange={(e): void => field.handleChange(e.target.value)}
+                              />
+                              <FormError mb={1} errors={field.state.meta.errors} />
+                            </Box>
+                          )}
+                        </form.Field>
+                      </Stack>
+                      <Stack direction='row' spacing={2}>
+                        <form.Field name='username'>
+                          {(field): JSX.Element => (
+                            <Box>
+                              <FieldInput
+                                mb={1}
+                                name='username'
+                                disabled={useUri}
+                                value={field.state.value}
+                                error={field.state.meta.errors.length > 0}
+                                label={locales.username}
+                                onChange={(e): void => field.handleChange(e.target.value)}
+                              />
+                              <FormError mb={1} errors={field.state.meta.errors} />
+                            </Box>
+                          )}
+                        </form.Field>
+
+                        <form.Field name='password'>
+                          {(field): JSX.Element => (
+                            <Box>
+                              <FieldInput
+                                name='password'
+                                value={field.state.value}
+                                error={field.state.meta.errors.length > 0}
+                                label={locales.password}
+                                onChange={(e): void => field.handleChange(e.target.value)}
+                              />
+                              <FormError mb={1} errors={field.state.meta.errors} />
+                            </Box>
+                          )}
+                        </form.Field>
+                      </Stack>
+
+                      <form.Field name='database'>
+                        {(field): JSX.Element => (
+                          <>
+                            <FieldInput
+                              name='database'
+                              disabled={useUri}
+                              value={field.state.value}
+                              error={field.state.meta.errors.length > 0}
+                              label={locales.database}
+                              fullWidth={true}
+                              onChange={(e): void => field.handleChange(e.target.value)}
+                            />
+                            <FormError mb={1} errors={field.state.meta.errors} />
+                          </>
+                        )}
+                      </form.Field>
                     </>
                   )}
-                </form.Field>
+                </form.Subscribe>
+
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}
+                >
+                  <ConnectionFormCheckboxRowStyled>
+                    <form.Field name='useUri'>
+                      {(field): JSX.Element => (
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={field.state.value}
+                              size={'small'}
+                              onChange={(e): void => {
+                                const next = e.target.checked;
+                                const values = form.state.values;
+                                if (next) {
+                                  if (values.uri.trim()) {
+                                    if (!syncFromUri(values.uri, { redact: true, warn: true })) {
+                                      toast.error(locales.uri_invalid);
+                                    }
+                                  } else {
+                                    form.setFieldValue(
+                                      'uri',
+                                      buildConnectionUri(
+                                        {
+                                          host: values.host,
+                                          port: values.port,
+                                          username: values.username,
+                                          password: values.password,
+                                          database: values.database,
+                                          sslMode: values.sslMode
+                                        },
+                                        'mysql',
+                                        { redact: true }
+                                      )
+                                    );
+                                  }
+                                } else if (values.uri.trim()) {
+                                  syncFromUri(values.uri, { redact: true, warn: true });
+                                }
+
+                                field.handleChange(next);
+                              }}
+                            />
+                          }
+                          label={locales.use_uri}
+                        />
+                      )}
+                    </form.Field>
+                    <Button
+                      data-testid='copy-connection-uri'
+                      size='small'
+                      onClick={(): void => {
+                        void copyRedactedUri();
+                      }}
+                    >
+                      {locales.copy_uri}
+                    </Button>
+                  </ConnectionFormCheckboxRowStyled>
+
+                  <form.Field name='uri'>
+                    {(field): JSX.Element => (
+                      <form.Subscribe selector={(state) => state.values.useUri}>
+                        {(useUri): JSX.Element => (
+                          <>
+                            <FieldInput
+                              name='uri'
+                              value={field.state.value}
+                              error={field.state.meta.errors.length > 0}
+                              label={locales.uri}
+                              onChange={(e): void => {
+                                const value = e.target.value;
+                                field.handleChange(value);
+                                const parsed = parseConnectionUri(value, 'mysql');
+                                if (parsed) {
+                                  applyParsedConnectionUri(form, parsed);
+                                }
+                              }}
+                              onBlur={(): void => {
+                                if (!field.state.value.trim()) {
+                                  return;
+                                }
+
+                                if (!syncFromUri(field.state.value, { redact: true, warn: true })) {
+                                  toast.error(locales.uri_invalid);
+                                }
+                              }}
+                              disabled={!useUri}
+                              placeholder='mysql://username:password@hostname:port/dbname'
+                            />
+                            <FormError mb={1} errors={field.state.meta.errors} />
+                          </>
+                        )}
+                      </form.Subscribe>
+                    )}
+                  </form.Field>
+                </Box>
 
                 <ConnectionFormCheckboxRowStyled>
                   <form.Field name='rememberPassword'>
@@ -227,38 +410,6 @@ export default function Mysql({
                     )}
                   </form.Field>
                 </ConnectionFormCheckboxRowStyled>
-
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column'
-                  }}
-                >
-                  <ConnectionFormCheckboxRowStyled>
-                    <FormControlLabel
-                      control={
-                        <Checkbox checked={useUri} size={'small'} onChange={(e): void => setUseUri(e.target.checked)} />
-                      }
-                      label={locales.use_uri}
-                    />
-                  </ConnectionFormCheckboxRowStyled>
-
-                  <form.Field name='uri'>
-                    {(field): JSX.Element => (
-                      <>
-                        <FieldInput
-                          name='uri'
-                          value={field.state.value}
-                          error={field.state.meta.errors.length > 0}
-                          label={locales.uri}
-                          onChange={(e): void => field.handleChange(e.target.value)}
-                          disabled={!useUri}
-                        />
-                        <FormError mb={1} errors={field.state.meta.errors} />
-                      </>
-                    )}
-                  </form.Field>
-                </Box>
               </>
             }
             ssl={

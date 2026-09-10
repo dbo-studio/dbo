@@ -11,6 +11,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/model"
 	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
 	"github.com/goccy/go-json"
+	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
 
@@ -27,6 +28,11 @@ func connectionsToResponse(ctx context.Context, ownerID string, cm *databaseConn
 
 func connectionToResponse(ctx context.Context, ownerID string, cm *databaseConnection.ConnectionManager, unlock *serviceSafemode.UnlockStore, connection *model.Connection) dto.Connection {
 	options, _ := sjson.Set(connection.Options, "password", "")
+	if uri := gjson.Get(options, "uri").String(); uri != "" {
+		if cleaned, _, stripErr := databaseConnection.StripURIPassword(uri); stripErr == nil && cleaned != uri {
+			options, _ = sjson.Set(options, "uri", cleaned)
+		}
+	}
 
 	var j map[string]any
 
