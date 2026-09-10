@@ -20,6 +20,9 @@ export const ConnectionItemStyled = styled(Box)<ConnectionItemStyledProps>(({ th
   ':hover': {
     background: theme.palette.background.paper
   },
+  '& img': {
+    objectFit: 'contain'
+  },
   p: {
     color: selected ? theme.palette.text.primary : theme.palette.text.text
   }

@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 export type SelectionConnectionType = {
   name: string;
   logo: keyof typeof IconTypes;
+  type: string;
   component: React.ComponentType<ConnectionSettingsProps>;
 };
 
@@ -27,6 +28,8 @@ export type ConnectionSelectionProps = {
 
 export type ConnectionSettingsProps = {
   connection?: ConnectionType;
+  /** Stored connection type / branding alias. */
+  engine?: string;
   pingLoading: boolean;
   submitLoading: boolean;
   onSubmit: (data: CreateConnectionRequestType) => void;

@@ -1,5 +1,4 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { tools } from '@/core/utils/tools.ts';
 import { useSelectedTab } from '@/hooks';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
@@ -30,6 +29,8 @@ export default function Sorts(): JSX.Element {
 
   if (!selectedTab) return <></>;
 
+  const sortCount = selectedTab.sorts?.length ?? 0;
+
   return (
     <Box
       sx={{
@@ -37,14 +38,14 @@ export default function Sorts(): JSX.Element {
         borderBottom: (theme): string => `1px solid ${theme.palette.divider}`
       }}
     >
-      {selectedTab?.sorts?.length === 0 ? (
+      {sortCount === 0 ? (
         <AddSortButton columns={columns ?? []} />
       ) : (
-        selectedTab?.sorts?.map((sort: SortType) => {
-          return <SortItem key={tools.uuid()} columns={columns ?? []} sort={sort} />;
+        selectedTab.sorts?.map((sort: SortType) => {
+          return <SortItem key={sort.index} columns={columns ?? []} sort={sort} />;
         })
       )}
-      {(selectedTab?.sorts?.length ?? 0) > 0 && (
+      {sortCount > 0 && (
         <SortsApplyBoxStyled>
           <Button
             onClick={(): void => handleApplySorts()}

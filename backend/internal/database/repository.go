@@ -16,12 +16,12 @@ import (
 func NewDatabaseRepository(ctx context.Context, connection *model.Connection, cm *databaseConnection.ConnectionManager) (databaseContract.DatabaseRepository, error) {
 	deps := databaseCore.DriverDeps{Cache: cm.Cache(), Logger: cm.Logger()}
 
-	switch connection.ConnectionType {
-	case string(databaseContract.Mysql):
+	switch {
+	case databaseContract.IsMysqlFamily(connection.ConnectionType):
 		return databaseMysql.NewMySQLRepository(ctx, connection, cm, deps)
-	case string(databaseContract.Postgresql):
+	case databaseContract.IsPostgresFamily(connection.ConnectionType):
 		return databasePostgres.NewPostgresRepository(ctx, connection, cm, deps)
-	case string(databaseContract.Sqlite):
+	case connection.ConnectionType == string(databaseContract.Sqlite):
 		return databaseSqlite.NewSQLiteRepository(ctx, connection, cm, deps)
 	default:
 		return nil, fmt.Errorf("unsupported database type: %s", connection.ConnectionType)

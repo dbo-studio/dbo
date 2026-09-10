@@ -32,7 +32,7 @@ func buildRoot(ctx context.Context, r *PostgresRepository) (*contract.TreeNode, 
 	root := &contract.TreeNode{
 		ID:          fmt.Sprintf("%d@database", r.base.Connection().ID),
 		Name:        r.base.Connection().Name,
-		Icon:        lo.ToPtr("postgresql"),
+		Icon:        lo.ToPtr(contract.TreeIcon(r.base.Connection().ConnectionType)),
 		Type:        contract.DatabaseContainerNodeType,
 		HasChildren: true,
 		ContextMenu: r.ContextMenu(contract.DatabaseContainerNodeType),

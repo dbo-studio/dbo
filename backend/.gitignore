@@ -5,3 +5,4 @@ bin
 dbo
 data
 exports
+__debug_*

@@ -68,6 +68,7 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Harness smoke            | `shared/harness-smoke.spec.ts`                | ephemeral API + FE reachable (no sample DB)             |
 | Crash screen             | `shared/crash-screen.spec.ts`                 | render crash UI; Reload clears local persist, keeps connections |
 | Connections              | `shared\|mysql\|sqlite/connections.spec.ts`   | create/edit/dup/reorder/refresh/menu/ping via shared suite |
+| MariaDB alias            | `mysql/mariadb-alias.spec.ts`                 | type=mariadb against MySQL sample: create + tree           |
 | Safe Mode                | `shared\|mysql\|sqlite/safe-mode.spec.ts`     | menu + app password setup/gates; SQL/grid/tree writes re-prompt; header lock stays on until Silent |
 | Query status bar         | `pg\|mysql\|sqlite/query-statusbar.spec.ts`   | discard/add/remove/refresh + pagination + edit gate ×3  |
 | Query guards             | `pg\|mysql\|sqlite/query-guards.spec.ts`      | cancel Stop + raw SELECT page size / user LIMIT ×3      |

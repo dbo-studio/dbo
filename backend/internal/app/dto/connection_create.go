@@ -18,7 +18,7 @@ type (
 func (ccr CreateConnectionRequest) Validate() error {
 	return validation.ValidateStruct(&ccr,
 		validation.Field(&ccr.Name, validation.Required, validation.Length(0, 50)),
-		validation.Field(&ccr.Type, validation.Required, validation.In("postgresql", "mysql", "sqlite", "sqlserver")),
+		validation.Field(&ccr.Type, validation.Required, validation.In(connectionTypeValues()...)),
 		validation.Field(&ccr.SafeMode, validation.In(
 			"silent", "alert", "alert_write", "safe", "safe_write",
 			"off", "full", "read_only", "disallow_drop", "",

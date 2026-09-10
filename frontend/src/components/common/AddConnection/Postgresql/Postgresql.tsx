@@ -58,6 +58,7 @@ const formSchema = v.union([
 
 export default function PostgreSQL({
   connection,
+  engine = 'postgresql',
   onClose,
   onPing,
   onSubmit,
@@ -66,6 +67,7 @@ export default function PostgreSQL({
 }: ConnectionSettingsProps): JSX.Element {
   const options = connection?.options as PostgresqlOptionsType | undefined;
   const sslDefaults = sslFormDefaults(options?.ssl);
+  const connectionType = connection?.type ?? engine;
 
   const form = useForm({
     validators: {
@@ -74,7 +76,7 @@ export default function PostgreSQL({
     onSubmit: ({ value }): void => {
       const data = {
         name: value.name,
-        type: 'postgresql',
+        type: connectionType,
         rememberPassword: value.rememberPassword,
         options: {
           host: value.host,

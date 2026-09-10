@@ -67,12 +67,12 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 
 	var options string
 
-	switch connection.ConnectionType {
-	case string(databaseContract.Postgresql):
+	switch {
+	case databaseContract.IsPostgresFamily(connection.ConnectionType):
 		options, err = databaseConnection.UpdatePostgresqlConnection(json.RawMessage(connection.Options), req.Options)
-	case string(databaseContract.Sqlite):
+	case connection.ConnectionType == string(databaseContract.Sqlite):
 		options, err = databaseConnection.UpdateSQLiteConnection(json.RawMessage(connection.Options), req.Options)
-	case string(databaseContract.Mysql):
+	case databaseContract.IsMysqlFamily(connection.ConnectionType):
 		options, err = databaseConnection.UpdateMysqlConnection(json.RawMessage(connection.Options), req.Options)
 	}
 

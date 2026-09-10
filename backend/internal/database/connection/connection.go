@@ -140,14 +140,14 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 
 	var dialect gorm.Dialector
 
-	switch connection.ConnectionType {
-	case string(databaseContract.Mysql):
+	switch {
+	case databaseContract.IsMysqlFamily(connection.ConnectionType):
 		dialect = OpenMysqlConnection(connection)
-	case string(databaseContract.Postgresql):
+	case databaseContract.IsPostgresFamily(connection.ConnectionType):
 		dialect = OpenPostgresqlConnection(connection)
-	case string(databaseContract.Sqlite):
+	case connection.ConnectionType == string(databaseContract.Sqlite):
 		dialect = OpenSQLiteConnection(connection)
-	case "sqlserver":
+	case connection.ConnectionType == "sqlserver":
 		dialect = sqlserver.Open(connection.Name)
 	default:
 		cm.logger.Error(fmt.Errorf("unsupported database type: %s", connection.ConnectionType))
@@ -200,7 +200,7 @@ func configureConnPool(db *gorm.DB) error {
 }
 
 func (cm *ConnectionManager) GetConnectionForDatabase(ctx context.Context, connection *model.Connection, databaseName string, withHydration bool) (*gorm.DB, error) {
-	if connection.ConnectionType != string(databaseContract.Postgresql) || databaseName == "" {
+	if !databaseContract.IsPostgresFamily(connection.ConnectionType) || databaseName == "" {
 		return cm.GetConnection(ctx, connection, withHydration)
 	}
 

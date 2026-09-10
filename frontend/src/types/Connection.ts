@@ -1,4 +1,5 @@
 import type { MysqlOptionsType, PostgresqlOptionsType, SQLiteOptionsType } from '@/api/connection/types';
+import type { ConnectionEngine } from '@/core/db/connectionAliases';
 
 export type ConnectionSafeMode = 'silent' | 'alert' | 'alert_write' | 'safe' | 'safe_write';
 
@@ -7,7 +8,7 @@ export type ConnectionOptionsType = PostgresqlOptionsType | MysqlOptionsType | S
 export interface ConnectionType {
   id: number;
   name: string;
-  type: 'postgresql' | 'sqlite' | 'mysql';
+  type: ConnectionEngine;
   isActive: boolean;
   isOpen: boolean;
   info: string;

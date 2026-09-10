@@ -44,10 +44,12 @@ export default function CustomIcon({
     h = height;
   }
 
-  const iconName = IconTypes[type] as keyof typeof icons;
-  const LucideIcon: LucideIcon | undefined = icons[iconName];
+  const mapped = IconTypes[type];
+  const lucideName = (mapped ?? type) as keyof typeof icons;
+  const LucideIcon: LucideIcon | undefined = icons[lucideName];
   if (!LucideIcon) {
-    return <img onClick={onClick} src={`/icons/${type}.svg`} alt={type} width={w} height={h} className={className} />;
+    const asset = mapped ?? type;
+    return <img onClick={onClick} src={`/icons/${asset}.svg`} alt={type} width={w} height={h} className={className} />;
   }
 
   return (

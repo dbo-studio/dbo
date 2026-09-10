@@ -7,35 +7,26 @@ export const createTabFilterSlice: StateCreator<TabStore & TabFilterSlice, [], [
     const tab = get().selectedTab<DataTabType>();
     if (!tab) return;
 
-    if (!tab.filters) {
-      tab.filters = [];
-    }
+    const filters = tab.filters ?? [];
+    const existing = filters.findIndex((f: FilterType) => f.index === filter.index);
+    const nextFilters =
+      existing === -1 ? [...filters, filter] : filters.map((f, i) => (i === existing ? { ...f, ...filter } : f));
 
-    const findFilter = tab.filters.find((f: FilterType) => f.index === filter.index);
-    if (!findFilter) {
-      tab.filters.push(filter);
-    } else {
-      findFilter.column = filter.column;
-      findFilter.value = filter.value;
-      findFilter.operator = filter.operator;
-      findFilter.next = filter.next;
-      findFilter.isActive = filter.isActive;
-    }
-
-    get().updateSelectedTab(tab);
+    get().updateSelectedTab({ ...tab, filters: nextFilters });
   },
   removeFilter: (filter: FilterType): void => {
     const tab = get().selectedTab<DataTabType>();
     if (!tab) return;
 
-    tab.filters = (tab.filters ?? []).filter((f: FilterType) => f.index !== filter.index);
-    get().updateSelectedTab(tab);
+    get().updateSelectedTab({
+      ...tab,
+      filters: (tab.filters ?? []).filter((f: FilterType) => f.index !== filter.index)
+    });
   },
   updateFilters: (filters: FilterType[]): void => {
     const tab = get().selectedTab<DataTabType>();
     if (!tab) return;
 
-    tab.filters = filters;
-    get().updateSelectedTab(tab);
+    get().updateSelectedTab({ ...tab, filters });
   }
 });

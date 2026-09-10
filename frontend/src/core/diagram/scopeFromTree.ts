@@ -1,3 +1,4 @@
+import { isPostgresDriver } from '@/core/db/connectionAliases';
 import { parseObjectNodeId } from '@/core/db/parseObjectNodeId';
 import type { TreeNodeType } from '@/types/Tree';
 
@@ -28,7 +29,7 @@ export const diagramScopeFromTreeNode = (node: TreeNodeType, engine: string | un
   if (node.type === 'database') {
     return {
       database: node.name,
-      schema: engine === 'postgresql' ? 'public' : ''
+      schema: isPostgresDriver(engine) ? 'public' : ''
     };
   }
 

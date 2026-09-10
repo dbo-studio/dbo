@@ -78,12 +78,12 @@ func (s IConnectionServiceImpl) createConnectionDto(req *dto.CreateConnectionReq
 		err     error
 	)
 
-	switch req.Type {
-	case string(databaseContract.Postgresql):
+	switch {
+	case databaseContract.IsPostgresFamily(req.Type):
 		options, err = databaseConnection.CreatePostgresqlConnection(req.Options)
-	case string(databaseContract.Sqlite):
+	case req.Type == string(databaseContract.Sqlite):
 		options, err = databaseConnection.CreateSQLiteConnection(req.Options)
-	case string(databaseContract.Mysql):
+	case databaseContract.IsMysqlFamily(req.Type):
 		options, err = databaseConnection.CreateMysqlConnection(req.Options)
 	}
 

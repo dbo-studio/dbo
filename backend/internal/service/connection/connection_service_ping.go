@@ -9,6 +9,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
+	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
@@ -77,8 +78,8 @@ func pingSSLDiagnostics(ctx context.Context, req *dto.PingConnectionRequest, db 
 		return nil, nil
 	}
 
-	switch req.Type {
-	case "postgresql":
+	switch {
+	case databaseContract.IsPostgresFamily(req.Type):
 		mode := sslModeFromPostgresOptions(req.Options)
 		if db == nil {
 			return nil, mode
@@ -96,7 +97,7 @@ func pingSSLDiagnostics(ctx context.Context, req *dto.PingConnectionRequest, db 
 		}
 
 		return status.SSL, mode
-	case "mysql":
+	case databaseContract.IsMysqlFamily(req.Type):
 		mode := sslModeFromMysqlOptions(req.Options)
 		if db == nil {
 			return nil, mode

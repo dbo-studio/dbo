@@ -7,6 +7,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
+	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
 	"github.com/goccy/go-json"
@@ -64,8 +65,11 @@ func connectionToResponse(ctx context.Context, ownerID string, cm *databaseConne
 }
 
 func connectionInfo(connection *model.Connection) string {
-	switch connection.ConnectionType {
-	case "postgresql", "mysql", "sqlite", "sqlserver":
+	switch {
+	case databaseContract.IsPostgresFamily(connection.ConnectionType),
+		databaseContract.IsMysqlFamily(connection.ConnectionType),
+		connection.ConnectionType == "sqlite",
+		connection.ConnectionType == "sqlserver":
 		version := ""
 		if connection.Version != nil {
 			version = *connection.Version

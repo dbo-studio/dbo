@@ -54,15 +54,16 @@
 
 ## Supported databases
 
-| Database   | Status    |
-| ---------- | --------- |
-| PostgreSQL | Supported |
-| SQLite     | Supported |
-| MySQL      | Supported |
-| MariaDB    | Planned   |
-| SQL Server | Planned   |
-
-More engines are on the roadmap.
+| Database                                             | Status    |
+| ---------------------------------------------------- | --------- |
+| PostgreSQL                                           | Supported |
+| Supabase, Neon, AlloyDB, TimescaleDB                 | Supported |
+| Amazon RDS / Aurora / Cloud SQL / Azure (PostgreSQL) | Supported |
+| MySQL                                                | Supported |
+| MariaDB, Percona, HeatWave                           | Supported |
+| Amazon RDS / Aurora / Cloud SQL / Azure (MySQL)      | Supported |
+| SQLite                                               | Supported |
+| SQL Server                                           | Planned   |
 
 ## Quick start
 

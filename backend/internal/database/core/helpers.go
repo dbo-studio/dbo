@@ -10,12 +10,12 @@ import (
 )
 
 func (r *BaseRepository) ExtractNode(node string) databaseContract.DBNode {
-	switch r.Connection().ConnectionType {
-	case string(databaseContract.Mysql):
+	switch {
+	case databaseContract.IsMysqlFamily(r.Connection().ConnectionType):
 		return r.mysqlNode(node)
-	case string(databaseContract.Postgresql):
+	case databaseContract.IsPostgresFamily(r.Connection().ConnectionType):
 		return r.postgresqlNode(node)
-	case string(databaseContract.Sqlite):
+	case r.Connection().ConnectionType == string(databaseContract.Sqlite):
 		return r.sqliteNode(node)
 	default:
 		return databaseContract.DBNode{}
@@ -25,12 +25,12 @@ func (r *BaseRepository) ExtractNode(node string) databaseContract.DBNode {
 // FormatNodeID builds a canonical tree node id for the given connection type.
 // Container suffixes (tableContainer, etc.) are never emitted as object names.
 func FormatNodeID(connectionType string, node databaseContract.DBNode) string {
-	switch connectionType {
-	case string(databaseContract.Mysql):
+	switch {
+	case databaseContract.IsMysqlFamily(connectionType):
 		return formatMysqlNodeID(node)
-	case string(databaseContract.Postgresql):
+	case databaseContract.IsPostgresFamily(connectionType):
 		return formatPostgresqlNodeID(node)
-	case string(databaseContract.Sqlite):
+	case connectionType == string(databaseContract.Sqlite):
 		return formatSqliteNodeID(node)
 	default:
 		return ""

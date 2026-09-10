@@ -16,7 +16,7 @@ export interface ConnectionConfig {
   username: string;
   password: string;
   database?: string;
-  type?: "PostgreSQL" | "MySQL" | "SQLite";
+  type?: "PostgreSQL" | "MySQL" | "MariaDB" | "SQLite";
   ssl?: ConnectionSslConfig;
 }
 

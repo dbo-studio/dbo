@@ -40,7 +40,7 @@ func (b *BaseRepository) DB() *gorm.DB {
 }
 
 func (b *BaseRepository) DBForDatabase(ctx context.Context, database string) (*gorm.DB, error) {
-	if database == "" || b.connection.ConnectionType != string(databaseContract.Postgresql) {
+	if database == "" || !databaseContract.IsPostgresFamily(b.connection.ConnectionType) {
 		return b.db, nil
 	}
 

@@ -22,6 +22,6 @@ type (
 
 func (ccr PingConnectionRequest) Validate() error {
 	return validation.ValidateStruct(&ccr,
-		validation.Field(&ccr.Type, validation.Required, validation.In("postgresql", "mysql", "sqlite", "sqlserver")),
+		validation.Field(&ccr.Type, validation.Required, validation.In(connectionTypeValues()...)),
 	)
 }
