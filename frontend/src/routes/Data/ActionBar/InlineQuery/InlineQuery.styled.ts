@@ -9,7 +9,7 @@ export const InlineQueryStackStyled = styled(Stack)(() => ({
 export const SubmitButtonStyled = styled(Button)(({ theme }) => ({
   width: '24px',
   height: '24px',
-  padding: '5px',
+  padding: '4px',
   minWidth: 'unset',
   marginLeft: theme.spacing(1),
   borderRadius: 100,

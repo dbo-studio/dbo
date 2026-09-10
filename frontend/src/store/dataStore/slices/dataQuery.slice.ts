@@ -124,15 +124,8 @@ export const createDataQuerySlice: StateCreator<
       const sorts = tab.sorts ?? [];
       const controller = attachAbortController(abortController);
 
-      try {
-        get().toggleDataFetching(true);
-        await get().clearGridChanges();
-        await get().updateGridMeta({
-          gridEditable: tab.editable,
-          updatableNodeId: tab.nodeId
-        });
-
-        const res = await runQuery(
+      const execute = async (confirmed: boolean): Promise<RunQueryResponseType> => {
+        return runQuery(
           {
             connectionId: Number(tab.connectionId),
             nodeId: tab.nodeId,
@@ -148,10 +141,25 @@ export const createDataQuerySlice: StateCreator<
                 f.isActive &&
                 (filterOperatorRequiresValue(f.operator) ? f.value.toString().length > 0 : true)
             ),
-            sorts: sorts.filter((f) => f.column.length > 0 && f.operator.length > 0 && f.isActive)
+            sorts: sorts.filter((f) => f.column.length > 0 && f.operator.length > 0 && f.isActive),
+            confirmed
           },
           controller.signal
         );
+      };
+
+      try {
+        get().toggleDataFetching(true);
+        await get().clearGridChanges();
+        await get().updateGridMeta({
+          gridEditable: tab.editable,
+          updatableNodeId: tab.nodeId
+        });
+
+        const res = await withSafeModeRetry((confirmed) => execute(!!confirmed));
+        if (res === undefined) {
+          return;
+        }
 
         if (controller.signal.aborted) {
           return;
@@ -181,8 +189,11 @@ export const createDataQuerySlice: StateCreator<
 
         return res;
       } catch (error) {
-        if (isCanceledError(error)) {
+        if (isCanceledError(error) || controller.signal.aborted) {
           return;
+        }
+        if (!getSafeModeError(error)) {
+          toast.error(locales.query_failed);
         }
       } finally {
         clearAbortController(controller);

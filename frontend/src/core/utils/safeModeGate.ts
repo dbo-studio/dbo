@@ -57,7 +57,7 @@ export async function resolveSafeModeGate(error: unknown): Promise<boolean> {
   throw error;
 }
 
-/** Use for raw/update/tree execute — do not call those APIs directly without it. */
+/** Use for grid/raw/update/tree execute — do not call those APIs directly without it. */
 export async function withSafeModeRetry<T>(run: (confirmed?: boolean) => Promise<T>): Promise<T | undefined> {
   try {
     return await run(false);

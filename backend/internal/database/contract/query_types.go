@@ -21,6 +21,7 @@ type (
 		Filters      []FilterDto `json:"filters"`
 		Sorts        []SortDto   `json:"sorts"`
 		Columns      []string
+		Confirmed    bool `json:"confirmed"`
 	}
 
 	RunQueryResponse struct {

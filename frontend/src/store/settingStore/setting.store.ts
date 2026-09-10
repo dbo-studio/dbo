@@ -117,7 +117,21 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           ui: {
             sidebar: state.ui.sidebar
           }
-        })
+        }),
+        merge: (persistedState, currentState) => {
+          const persisted = persistedState as Partial<SettingState> | undefined;
+          return {
+            ...currentState,
+            ...persisted,
+            ui: {
+              ...currentState.ui,
+              sidebar: {
+                ...currentState.ui.sidebar,
+                ...persisted?.ui?.sidebar
+              }
+            }
+          };
+        }
       }
     ),
     { name: 'settings' }

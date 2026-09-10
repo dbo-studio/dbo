@@ -24,9 +24,11 @@ export default function Button(theme: Theme): Components {
             borderBottom: 'none !important'
           },
           '&.MuiButton-sizeSmall': {
-            height: 24,
-            padding: '5px 16px',
-            fontSize: theme.typography.caption.fontSize
+            minHeight: 24,
+            height: 'auto',
+            padding: '2px 8px',
+            fontSize: theme.typography.caption.fontSize,
+            lineHeight: theme.typography.caption.lineHeight
           },
           '&.MuiButton-loading.MuiButton-loadingPositionCenter > *:not(.MuiButton-loadingWrapper)': {
             visibility: 'hidden'

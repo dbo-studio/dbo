@@ -95,6 +95,7 @@ export function defineSafeModeTests(engine: DbEngine): void {
           });
 
           await test.step("Open Safe Mode menu", async () => {
+            await safeMode.expectIconOpen();
             await safeMode.openMenu();
             await expect(safeMode.option("silent")).toBeVisible();
             await expect(safeMode.option("alert")).toBeVisible();
@@ -212,6 +213,7 @@ export function defineSafeModeTests(engine: DbEngine): void {
 
             await test.step("Enable Safe Mode 2", async () => {
               await safeMode.selectMode("safe_write");
+              await safeMode.expectIconLocked();
             });
 
             await test.step("SELECT runs without password", async () => {
@@ -227,6 +229,7 @@ export function defineSafeModeTests(engine: DbEngine): void {
                 SAFE_MODE_PASSWORD,
               );
               await sqlEditor.expectQuerySucceeded(`INSERT INTO ${tableName}`);
+              await safeMode.expectIconLocked();
             });
 
             await test.step("Second INSERT still requires password", async () => {
@@ -239,6 +242,7 @@ export function defineSafeModeTests(engine: DbEngine): void {
 
             await test.step("Switching to Silent requires password", async () => {
               await safeMode.selectSilentWithPassword(SAFE_MODE_PASSWORD);
+              await safeMode.expectIconOpen();
               await safeMode.openMenu();
               await safeMode.expectOptionSelected("silent");
               await page.keyboard.press("Escape");
@@ -252,6 +256,75 @@ export function defineSafeModeTests(engine: DbEngine): void {
                 );
               } catch (err) {
                 console.warn("[e2e] safe-mode password cleanup failed:", err);
+              }
+            });
+          }
+        });
+      } finally {
+        cleanupFile();
+      }
+    });
+
+    test("Safe Mode 1 requires password when opening a table", async ({
+      page,
+    }, testInfo) => {
+      const connectionPage = new ConnectionPage(page);
+      const sqlEditor = new SqlEditorPage(page);
+      const dataGrid = new DataGridPage(page);
+      const tree = new ObjectTreePage(page);
+      const safeMode = new SafeModePage(page);
+
+      const suffix = uniqueTestSuffix(testInfo);
+      const connectionName = `${testPrefix}-s1-${suffix}`;
+      const tableName = `e2e_safe_s1_${suffix}`;
+      const { config, cleanupFile } = connectionSetup(engine, connectionName);
+
+      try {
+        await withConnectionCleanup(page, connectionName, async () => {
+          try {
+            await connectionPage.goto();
+            await connectionPage.waitForReady();
+
+            await test.step("Setup connection and table while Silent", async () => {
+              await connectionPage.setupConnection(config);
+              await sqlEditor.open();
+              await selectEditorContext(sqlEditor, engine);
+              await sqlEditor.typeAndRun(createTableSql(engine, tableName));
+              await sqlEditor.typeAndRun(
+                `INSERT INTO ${tableName} (name) VALUES ('gated')`,
+              );
+            });
+
+            await test.step("Enable Safe Mode 1", async () => {
+              await safeMode.selectMode("safe");
+            });
+
+            await test.step("Opening the table prompts for password", async () => {
+              await revealTable(tree, engine, connectionName, tableName);
+
+              const retryPromise = pendingResponse(
+                page,
+                apiRoute.queryRun,
+                API_DB_TIMEOUT,
+              );
+              await tree.getTreeNode(tableName).dblclick();
+              await safeMode.submitPassword(SAFE_MODE_PASSWORD);
+              await retryPromise;
+              await dataGrid.waitForData("gated");
+            });
+          } finally {
+            await test.step("Cleanup table", async () => {
+              try {
+                await safeMode.selectSilentWithPassword(SAFE_MODE_PASSWORD);
+                await sqlEditor.open();
+                await safeMode.runWithoutGate(
+                  `DROP TABLE IF EXISTS ${tableName}`,
+                );
+              } catch (err) {
+                console.warn(
+                  "[e2e] safe-mode table open password cleanup failed:",
+                  err,
+                );
               }
             });
           }

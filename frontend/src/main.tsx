@@ -8,6 +8,7 @@ import * as monaco from 'monaco-editor';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { Toaster } from 'sonner';
+import { DevCrashProbe, ErrorBoundary } from './components/common/ErrorBoundary/ErrorBoundary';
 import ThemeProvider from './core/theme/index.tsx';
 import Home from './routes/index.tsx';
 
@@ -31,13 +32,16 @@ const queryClient = new QueryClient({
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ThemeProvider>
-      <GlobalStyles styles={(theme: Theme): Interpolation<Theme> => globalStyles(theme)} />
-      <CssBaseline />
-      <QueryClientProvider client={queryClient}>
-        <Home />
-      </QueryClientProvider>
-      <Toaster position='bottom-center' duration={5000} richColors closeButton={true} />
-    </ThemeProvider>
+    <ErrorBoundary>
+      {import.meta.env.DEV && <DevCrashProbe />}
+      <ThemeProvider>
+        <GlobalStyles styles={(theme: Theme): Interpolation<Theme> => globalStyles(theme)} />
+        <CssBaseline />
+        <QueryClientProvider client={queryClient}>
+          <Home />
+        </QueryClientProvider>
+        <Toaster position='bottom-center' duration={5000} richColors closeButton={true} />
+      </ThemeProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );

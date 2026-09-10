@@ -70,7 +70,7 @@ func (i IQueryServiceImpl) Run(ctx context.Context, req *dto.RunQueryRequest) (*
 	policy := serviceSafemode.FromConnection(connection)
 	policy = i.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), connection.ID, policy)
 
-	if err := serviceSafemode.Enforce(policy, sqlguard.ClassRead, false); err != nil {
+	if err := serviceSafemode.Enforce(policy, sqlguard.ClassRead, req.Confirmed); err != nil {
 		return nil, err
 	}
 
