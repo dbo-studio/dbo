@@ -39,6 +39,9 @@ export class ConnectionPage extends BasePage {
   readonly portInput: Locator;
   readonly usernameInput: Locator;
   readonly passwordInput: Locator;
+  readonly uriInput: Locator;
+  readonly useUriCheckbox: Locator;
+  readonly copyUriButton: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -57,6 +60,9 @@ export class ConnectionPage extends BasePage {
     this.portInput = page.locator('input[name="port"]');
     this.usernameInput = page.locator('input[name="username"]');
     this.passwordInput = page.locator('input[name="password"]');
+    this.uriInput = page.locator('input[name="uri"]');
+    this.useUriCheckbox = page.getByRole("checkbox", { name: "Use URI" });
+    this.copyUriButton = page.getByTestId("copy-connection-uri");
   }
 
   getConnectionItem(name: string): Locator {
@@ -200,6 +206,37 @@ export class ConnectionPage extends BasePage {
     if (ssl.clientKey) {
       await this.page.getByTestId("ssl-textarea-sslClientKey").fill(ssl.clientKey);
     }
+  }
+
+  async enableUriMode(): Promise<void> {
+    if (await this.useUriCheckbox.isChecked()) {
+      return;
+    }
+    await this.useUriCheckbox.check();
+    await expect(this.uriInput).toBeEnabled();
+  }
+
+  async fillConnectionUri(uri: string): Promise<void> {
+    await this.enableUriMode();
+    await this.uriInput.fill(uri);
+    await this.uriInput.blur();
+  }
+
+  async createConnectionFromUri(
+    name: string,
+    uri: string,
+    type: ConnectionConfig["type"] = "PostgreSQL",
+  ): Promise<void> {
+    await this.openNewConnectionModal();
+    await this.selectConnectionType(type || "PostgreSQL");
+    await this.nameInput.fill(name);
+    await this.fillConnectionUri(uri);
+    await this.page.getByRole("checkbox", { name: "Remember password" }).check();
+    await this.testConnection();
+    await this.submitConnection();
+    await expect(this.getConnectionItem(name)).toBeVisible({
+      timeout: 30000,
+    });
   }
 
   async expectSslMode(

@@ -5,6 +5,7 @@ import locales from '@/locales';
 import { Box, Button, Checkbox, FormControlLabel, Stack } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
+import { toast } from 'sonner';
 import * as v from 'valibot';
 
 import {
@@ -15,6 +16,8 @@ import {
 } from '../AddConnection.styled';
 import ConnectionFormTabs from '../ConnectionFormTabs';
 import ConnectionSSLFields from '../ConnectionSSLFields';
+import { buildConnectionUri, parseConnectionUri } from '../connectionUri';
+import { applyParsedConnectionUri } from '../connectionUriForm';
 import { sslFormDefaults, sslOptionsFromForm } from '../ssl';
 import type { ConnectionSettingsProps } from '../types';
 
@@ -68,6 +71,7 @@ export default function PostgreSQL({
   const options = connection?.options as PostgresqlOptionsType | undefined;
   const sslDefaults = sslFormDefaults(options?.ssl);
   const connectionType = connection?.type ?? engine;
+  const parsedUri = options?.uri ? parseConnectionUri(options.uri, 'postgresql') : null;
 
   const form = useForm({
     validators: {
@@ -83,8 +87,8 @@ export default function PostgreSQL({
           username: value.username,
           password: value.password,
           database: value.database,
-          uri: value.uri,
-          port: Number(value.port),
+          uri: value.useUri ? value.uri : '',
+          port: Number(value.port || 0),
           ssl: sslOptionsFromForm(value)
         }
       } as CreateConnectionRequestType;
@@ -102,15 +106,70 @@ export default function PostgreSQL({
       isPing: false,
       rememberPassword: false,
       name: connection?.name ?? '',
-      host: options?.host ?? '',
-      port: options?.port?.toString() ?? '',
-      username: options?.username ?? '',
+      host: options?.host || parsedUri?.host || '',
+      port: options?.port?.toString() || parsedUri?.port || '',
+      username: options?.username || parsedUri?.username || '',
       password: '',
-      database: options?.database ?? '',
-      uri: options?.uri ?? '',
-      ...sslDefaults
+      database: options?.database || parsedUri?.database || '',
+      uri: parsedUri?.redactedUri ?? options?.uri ?? '',
+      ...sslDefaults,
+      sslMode: options?.ssl?.mode || parsedUri?.sslMode || sslDefaults.sslMode
     }
   });
+
+  const syncFromUri = (raw: string, opts?: { redact?: boolean; warn?: boolean }): boolean => {
+    const parsed = parseConnectionUri(raw, 'postgresql');
+    if (!parsed) {
+      return false;
+    }
+
+    applyParsedConnectionUri(form, parsed);
+    if (opts?.redact) {
+      form.setFieldValue('uri', parsed.redactedUri);
+    }
+
+    if (opts?.warn && parsed.lossy) {
+      toast.warning(locales.uri_sync_lossy);
+    }
+
+    return true;
+  };
+
+  const copyRedactedUri = async (): Promise<void> => {
+    const values = form.state.values;
+    const uri =
+      values.uri ||
+      buildConnectionUri(
+        {
+          host: values.host,
+          port: values.port,
+          username: values.username,
+          password: values.password,
+          database: values.database,
+          sslMode: values.sslMode
+        },
+        'postgresql',
+        { redact: true }
+      );
+    const parsed = parseConnectionUri(uri, 'postgresql');
+    const redacted =
+      parsed?.redactedUri ??
+      buildConnectionUri(
+        {
+          host: values.host,
+          port: values.port,
+          username: values.username,
+          password: '',
+          database: values.database,
+          sslMode: values.sslMode
+        },
+        'postgresql',
+        { redact: true }
+      );
+
+    await navigator.clipboard.writeText(redacted);
+    toast.success(locales.uri_copied);
+  };
 
   return (
     <ConnectionFormContainerStyled>
@@ -204,7 +263,6 @@ export default function PostgreSQL({
                             <Box>
                               <FieldInput
                                 name='password'
-                                disabled={useUri}
                                 value={field.state.value}
                                 error={field.state.meta.errors.length > 0}
                                 label={locales.password}
@@ -250,13 +308,52 @@ export default function PostgreSQL({
                             <Checkbox
                               checked={field.state.value}
                               size={'small'}
-                              onChange={(e): void => field.handleChange(e.target.checked)}
+                              onChange={(e): void => {
+                                const next = e.target.checked;
+                                const values = form.state.values;
+                                if (next) {
+                                  if (values.uri.trim()) {
+                                    if (!syncFromUri(values.uri, { redact: true, warn: true })) {
+                                      toast.error(locales.uri_invalid);
+                                    }
+                                  } else {
+                                    form.setFieldValue(
+                                      'uri',
+                                      buildConnectionUri(
+                                        {
+                                          host: values.host,
+                                          port: values.port,
+                                          username: values.username,
+                                          password: values.password,
+                                          database: values.database,
+                                          sslMode: values.sslMode
+                                        },
+                                        'postgresql',
+                                        { redact: true }
+                                      )
+                                    );
+                                  }
+                                } else if (values.uri.trim()) {
+                                  syncFromUri(values.uri, { redact: true, warn: true });
+                                }
+
+                                field.handleChange(next);
+                              }}
                             />
                           }
                           label={locales.use_uri}
                         />
                       )}
                     </form.Field>
+                    <Button
+                      data-testid='copy-connection-uri'
+                      size='small'
+                      onClick={(): void => {
+                        void copyRedactedUri();
+                      }}
+                    >
+                      {locales.copy_uri}
+                    </Button>
                   </ConnectionFormCheckboxRowStyled>
 
                   <form.Subscribe selector={(state) => state.values.useUri}>
@@ -269,7 +366,23 @@ export default function PostgreSQL({
                               value={field.state.value}
                               error={field.state.meta.errors.length > 0}
                               label={locales.uri}
-                              onChange={(e): void => field.handleChange(e.target.value)}
+                              onChange={(e): void => {
+                                const value = e.target.value;
+                                field.handleChange(value);
+                                const parsed = parseConnectionUri(value, 'postgresql');
+                                if (parsed) {
+                                  applyParsedConnectionUri(form, parsed);
+                                }
+                              }}
+                              onBlur={(): void => {
+                                if (!field.state.value.trim()) {
+                                  return;
+                                }
+
+                                if (!syncFromUri(field.state.value, { redact: true, warn: true })) {
+                                  toast.error(locales.uri_invalid);
+                                }
+                              }}
                               disabled={!useUri}
                               placeholder='postgres://username:password@hostname:port/dbname'
                             />

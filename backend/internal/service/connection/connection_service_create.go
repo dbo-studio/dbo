@@ -102,14 +102,39 @@ func extractPasswordAndStrip(options json.RawMessage) (string, json.RawMessage, 
 	}
 
 	password := gjson.GetBytes(options, "password").String()
-	if password == "" {
-		return "", options, nil
+	out := options
+
+	if password != "" {
+		stripped, err := sjson.DeleteBytes(out, "password")
+		if err != nil {
+			return "", options, err
+		}
+
+		out = stripped
 	}
 
-	stripped, err := sjson.DeleteBytes(options, "password")
+	uri := gjson.GetBytes(out, "uri").String()
+	if uri == "" {
+		return password, out, nil
+	}
+
+	cleaned, uriPassword, err := databaseConnection.StripURIPassword(uri)
 	if err != nil {
 		return "", options, err
 	}
 
-	return password, stripped, nil
+	if uriPassword != "" && password == "" {
+		password = uriPassword
+	}
+
+	if cleaned != uri {
+		updated, setErr := sjson.SetBytes(out, "uri", cleaned)
+		if setErr != nil {
+			return "", options, setErr
+		}
+
+		out = updated
+	}
+
+	return password, out, nil
 }

@@ -86,6 +86,7 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Job cancel / failure     | `shared/job-cancel.spec.ts`                   | cancel running export → `canceled`; bad query → `failed` + error |
 | Object Form multi-col FK | `*/object-form-multi-column-fk.spec.ts`       | Add composite FK on edit ×3 |
 | Connection SSL           | `pg/connection-ssl.spec.ts`                   | SSL tab UI + Require on sample-pgsql-ssl + bad CA fail  |
+| Connection URI import    | `pg/connection-uri.spec.ts`                   | Paste URI → fields/SSL; save strips password; connect   |
 | Data grid typed cells    | `shared/data-grid-typed-cells.spec.ts`        | MySQL+PG; SQLite n/a (no typed editors yet)             |
 | Data grid FK autocomplete| `shared/data-grid-fk-autocomplete.spec.ts`    | PG+MySQL+SQLite single-col pick/paste; SQLite composite fill; NOT NULL hides NULL |
 | Saved / history          | `shared/saved-history.spec.ts`                | history, save, run, copy                                |

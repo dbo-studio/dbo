@@ -14,6 +14,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/goccy/go-json"
 	"github.com/samber/lo"
+	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
 
@@ -80,12 +81,20 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 		return nil, err
 	}
 
-	// Ensure password is never persisted in Connection.Options.
+	// Ensure password is never persisted in Connection.Options (field or URI).
 	if stripped, stripErr := sjson.Delete(options, "password"); stripErr == nil {
-		req.Options = json.RawMessage(stripped)
-	} else {
-		req.Options = json.RawMessage(options)
+		options = stripped
 	}
+
+	if uri := gjson.Get(options, "uri").String(); uri != "" {
+		if cleaned, _, uriErr := databaseConnection.StripURIPassword(uri); uriErr == nil && cleaned != uri {
+			if rewritten, setErr := sjson.Set(options, "uri", cleaned); setErr == nil {
+				options = rewritten
+			}
+		}
+	}
+
+	req.Options = json.RawMessage(options)
 
 	if req.SafeMode != nil {
 		normalizedMode := serviceSafemode.NormalizeMode(*req.SafeMode)
