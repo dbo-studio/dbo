@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import { toast } from 'sonner';
 
+import { useAuthStore } from '@/store/authStore/auth.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 
@@ -79,6 +80,19 @@ const handleApiError = (error: AxiosError<ApiErrorResponse>): void => {
       });
     }
 
+    return;
+  }
+
+  if (status === 401 && message === 'unauthenticated') {
+    const mode = useAuthStore.getState().mode;
+    if (mode === 'local') {
+      useAuthStore.getState().clear();
+    }
+    return;
+  }
+
+  if (status === 403 && message === 'must_change_password') {
+    useAuthStore.getState().setGate('change_password');
     return;
   }
 

@@ -1,6 +1,7 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { constants } from '@/core/constants';
 import { TabMode } from '@/core/enums';
+import { openSettings } from '@/core/settings/openSettings';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
@@ -58,19 +59,13 @@ export default function HeaderOverflowMenu(): JSX.Element {
     handleClose();
   };
 
-  const openSettings = (): void => {
-    updateUI({ showSettings: { open: true, tab: 0 } });
+  const openSettingsMenu = (): void => {
+    openSettings({ section: 0 });
     handleClose();
   };
 
   const openMcpSettings = (): void => {
-    updateUI({
-      showSettings: {
-        open: true,
-        tab: AI_SETTINGS_TAB,
-        aiTab: 'mcp'
-      }
-    });
+    openSettings({ section: AI_SETTINGS_TAB, aiTab: 'mcp' });
     handleClose();
   };
 
@@ -161,7 +156,7 @@ export default function HeaderOverflowMenu(): JSX.Element {
           </ListItemIcon>
           <ListItemText>{locales.right_sidebar}</ListItemText>
         </MenuItem>
-        <MenuItem onClick={openSettings}>
+        <MenuItem onClick={openSettingsMenu}>
           <ListItemIcon>
             {release ? (
               <Badge variant='dot' color='warning'>

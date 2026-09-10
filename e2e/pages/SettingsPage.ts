@@ -11,11 +11,12 @@ export type SettingsPanel =
   | "About";
 
 /**
- * Page Object for Settings modal
+ * Page Object for Settings workspace tab
  */
 export class SettingsPage extends BasePage {
   readonly settingsButton: Locator;
-  readonly modal: Locator;
+  readonly panel: Locator;
+  readonly workspaceTab: Locator;
 
   readonly generalMenuItem: Locator;
   readonly appearanceMenuItem: Locator;
@@ -34,7 +35,8 @@ export class SettingsPage extends BasePage {
     super(page);
 
     this.settingsButton = page.getByRole("button", { name: "settings", exact: true });
-    this.modal = page.locator('[role="dialog"]');
+    this.panel = page.getByTestId("settings-panel");
+    this.workspaceTab = page.getByTestId("workspace-tab-settings");
 
     this.generalMenuItem = page.getByText("General").first();
     this.appearanceMenuItem = page.getByText("Appearance").first();
@@ -59,21 +61,17 @@ export class SettingsPage extends BasePage {
       await expect(connectionPageHeading).toBeHidden({ timeout: 10000 });
     }
     await this.settingsButton.click();
+    await expect(this.panel).toBeVisible({ timeout: 10000 });
     await expect(this.page.getByText("General").first()).toBeVisible({
       timeout: 10000,
     });
   }
 
   async close(): Promise<void> {
-    await this.pressKey("Escape");
-    await expect(
-      this.page.getByRole("checkbox", { name: /Enable MCP server/i }),
-    )
-      .toBeHidden({ timeout: 10000 })
-      .catch(() => undefined);
-    await expect(this.page.getByText("Application theme", { exact: true }))
-      .toBeHidden({ timeout: 5000 })
-      .catch(() => undefined);
+    await expect(this.workspaceTab).toBeVisible({ timeout: 10000 });
+    // Lucide close icon inside the Settings workspace tab
+    await this.workspaceTab.locator("svg").last().click();
+    await expect(this.panel).toBeHidden({ timeout: 10000 });
   }
 
   async navigateTo(panel: SettingsPanel): Promise<void> {
@@ -204,8 +202,34 @@ export class SettingsPage extends BasePage {
     await expect(this.page.getByText(content, { exact: true })).toBeVisible();
   }
 
+  async expectSettingsClosed(): Promise<void> {
+    await expect(this.panel).toBeHidden({ timeout: 10000 });
+  }
+
+  /** @deprecated use expectSettingsClosed */
   async expectModalClosed(): Promise<void> {
-    await expect(this.modal).toBeHidden({ timeout: 10000 });
+    await this.expectSettingsClosed();
+  }
+
+  settingsSearchInput(): Locator {
+    return this.page.getByTestId("settings-search");
+  }
+
+  async filterSettings(query: string): Promise<void> {
+    const input = this.settingsSearchInput();
+    await expect(input).toBeVisible({ timeout: 10000 });
+    await input.fill(query);
+  }
+
+  async openSearchResult(label: string): Promise<void> {
+    const option = this.page.getByRole("option", { name: label }).first();
+    await expect(option).toBeVisible({ timeout: 10000 });
+    await option.click();
+  }
+
+  async searchAndOpen(query: string, resultLabel: string): Promise<void> {
+    await this.filterSettings(query);
+    await this.openSearchResult(resultLabel);
   }
 
   shortcutsSearchInput(): Locator {

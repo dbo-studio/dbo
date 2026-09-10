@@ -1,6 +1,8 @@
+import * as adminUsers from './adminUsers';
 import * as ai from './ai';
 import * as aiChat from './aiChat';
 import * as aiProvider from './aiProvider';
+import * as auth from './auth';
 import * as config from './config';
 import * as connection from './connection';
 import * as histories from './history';
@@ -14,6 +16,8 @@ import * as schema from './schema';
 import * as tree from './tree';
 
 const api = {
+  auth,
+  adminUsers,
   config,
   connection,
   query,

@@ -1,22 +1,30 @@
-import { variables } from '@/core/theme/variables';
-import { Box, styled } from '@mui/material';
+import { alpha, Box, styled } from '@mui/material';
 import type { MenuPanelItemStyledProps } from '../../types';
 
 export const MenuPanelItemStyled = styled(Box)<MenuPanelItemStyledProps>(({ theme, selected }) => ({
   display: 'flex',
   flexDirection: 'row',
   alignItems: 'center',
-  padding: `${theme.spacing(1 / 2)} ${theme.spacing(1)}`,
+  gap: theme.spacing(1.5),
+  padding: `${theme.spacing(0.75)} ${theme.spacing(1)}`,
+  marginBottom: theme.spacing(0.25),
   cursor: 'pointer',
-  marginBottom: `${theme.spacing(1 / 2)}`,
-  borderBottom: `1px solid ${theme.palette.divider}`,
-  border: `1px solid ${selected ? theme.palette.divider : 'transparent'}`,
-  borderRadius: variables.radius.medium,
-  background: selected ? theme.palette.background.default : theme.palette.background.paper,
+  borderRadius: 4,
+  borderLeft: `3px solid ${selected ? theme.palette.primary.main : 'transparent'}`,
+  background: selected ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+  color: selected ? theme.palette.text.primary : theme.palette.text.text,
+  '&:hover': {
+    background: selected ? alpha(theme.palette.primary.main, 0.14) : alpha(theme.palette.action.hover, 0.6)
+  },
+  '&:focus-visible': {
+    outline: `2px solid ${theme.palette.primary.main}`,
+    outlineOffset: 1
+  },
   h6: {
-    color: selected ? theme.palette.text.primary : theme.palette.text.text
+    color: 'inherit'
   },
   svg: {
-    color: selected ? theme.palette.text.primary : theme.palette.text.text
+    color: 'inherit',
+    flexShrink: 0
   }
 }));

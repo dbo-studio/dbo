@@ -32,10 +32,17 @@ var (
 	ErrAuthNotEnabled              = errors.New("authentication is not enabled")
 	ErrInvalidSavePath             = errors.New("invalid save path")
 	ErrInvalidInlineQuery          = errors.New("invalid inline query")
-	ErrWeakAuthToken               = errors.New("APP_AUTH_TOKEN must be at least 32 characters")
 	ErrExportQueryNotRead          = errors.New("export query must be a read-only statement")
 	ErrImportFileTooLarge          = errors.New("import file is too large")
 	ErrInvalidProviderURL          = errors.New("provider URL must use http or https")
+	ErrUserNotFound                = errors.New("user not found")
+	ErrUserDisabled                = errors.New("user is disabled")
+	ErrInvalidCredentials          = errors.New("invalid email or password")
+	ErrMustChangePassword          = errors.New("must_change_password")
+	ErrAdminRequired               = errors.New("admin role required")
+	ErrCannotDisableSelf           = errors.New("cannot disable your own account")
+	ErrCannotDemoteLastAdmin       = errors.New("cannot demote the last admin")
+	ErrUserEmailTaken              = errors.New("email already in use")
 )
 
 type AppError struct {
@@ -239,11 +246,21 @@ func QueryCanceled() error {
 }
 
 // Unauthenticated is returned when a request has no valid session and the
-// deployment requires authentication (APP_AUTH_TOKEN set).
+// deployment requires authentication.
 func Unauthenticated() error {
 	return &AppError{
 		Code:    http.StatusUnauthorized,
 		Message: "unauthenticated",
 		Err:     ErrUnauthenticated,
+	}
+}
+
+// MustChangePassword is returned when the session is valid but the user must
+// change their password before accessing data APIs.
+func MustChangePassword() error {
+	return &AppError{
+		Code:    http.StatusForbidden,
+		Message: "must_change_password",
+		Err:     ErrMustChangePassword,
 	}
 }

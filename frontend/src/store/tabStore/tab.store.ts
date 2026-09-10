@@ -2,14 +2,13 @@ import type { TabType } from '@/types';
 import { create, type StoreApi, type UseBoundStore } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { useConnectionStore } from '../connectionStore/connection.store';
-import { matchConnectionId } from './connectionId';
 import { createTabColumnSlice } from './slices/tabColumn.slice';
 import { createTabFilterSlice } from './slices/tabFilter.slice';
 import { createTabQuerySlice } from './slices/tabQuery.slice';
 import { createTabSettingSlice } from './slices/tabSetting.slice';
 import { createTabSortSlice } from './slices/tabSort.slice';
 import type { TabDataSlice, TabFilterSlice, TabQuerySlice, TabSettingSlice, TabSortSlice, TabStore } from './types';
-import { coerceTabs, selectTabs } from './tabs';
+import { coerceTabs, selectTabs, selectVisibleTabs } from './tabs';
 
 type TabPersistedState = Pick<TabStore, 'tabs' | 'selectedTabId'>;
 
@@ -20,7 +19,7 @@ const initialize: { tabs: TabType[]; selectedTabId: string | undefined } = {
   selectedTabId: undefined
 };
 
-export { selectTabs } from './tabs';
+export { selectTabs, selectVisibleTabs } from './tabs';
 
 export const useTabStore: UseBoundStore<StoreApi<TabState>> = create<TabState>()(
   devtools(
@@ -32,33 +31,22 @@ export const useTabStore: UseBoundStore<StoreApi<TabState>> = create<TabState>()
         },
         getTabs: (): TabType[] => {
           const currentConnectionId = useConnectionStore.getState().currentConnectionId;
-          if (!currentConnectionId) {
-            return [];
-          }
-
-          return selectTabs(get()).filter((tab) => matchConnectionId(tab.connectionId, currentConnectionId));
+          return selectVisibleTabs(selectTabs(get()), currentConnectionId);
         },
         selectedTab: <T extends TabType>(): T | undefined => {
-          const currentConnectionId = useConnectionStore.getState().currentConnectionId;
-          if (!currentConnectionId) {
-            return undefined;
-          }
-
-          const connectionTabs = selectTabs(get()).filter((tab) =>
-            matchConnectionId(tab.connectionId, currentConnectionId)
-          );
-          if (connectionTabs.length === 0) {
+          const visible = get().getTabs();
+          if (visible.length === 0) {
             return undefined;
           }
 
           if (get().selectedTabId) {
-            const activeTab = connectionTabs.find((tab) => tab.id === get().selectedTabId);
+            const activeTab = visible.find((tab) => tab.id === get().selectedTabId);
             if (activeTab) {
               return activeTab as T;
             }
           }
 
-          return connectionTabs[0] as T;
+          return visible[0] as T;
         },
         updateTabs: (newTabs: TabType[]): void => {
           set({ tabs: newTabs }, undefined, 'updateTabs');
@@ -70,11 +58,7 @@ export const useTabStore: UseBoundStore<StoreApi<TabState>> = create<TabState>()
           }
 
           const tabs = selectTabs(get()).map((tab: TabType) => {
-            if (
-              tab.id === newSelectedTab.id &&
-              tab.mode === newSelectedTab.mode &&
-              matchConnectionId(tab.connectionId, newSelectedTab.connectionId)
-            ) {
+            if (tab.id === newSelectedTab.id) {
               return newSelectedTab;
             }
             return tab;
@@ -83,16 +67,9 @@ export const useTabStore: UseBoundStore<StoreApi<TabState>> = create<TabState>()
           set({ tabs, selectedTabId: newSelectedTab.id }, undefined, 'updateSelectedTab');
         },
         reorderTabs: (activeId: string, overId: string): void => {
-          const currentConnectionId = useConnectionStore.getState().currentConnectionId;
-          if (!currentConnectionId) return;
-
           const tabs = selectTabs(get());
-          const activeIndex = tabs.findIndex(
-            (tab) => tab.id === activeId && matchConnectionId(tab.connectionId, currentConnectionId)
-          );
-          const overIndex = tabs.findIndex(
-            (tab) => tab.id === overId && matchConnectionId(tab.connectionId, currentConnectionId)
-          );
+          const activeIndex = tabs.findIndex((tab) => tab.id === activeId);
+          const overIndex = tabs.findIndex((tab) => tab.id === overId);
 
           if (activeIndex === -1 || overIndex === -1 || activeIndex === overIndex) return;
 

@@ -6,11 +6,18 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { matchConnectionId } from '@/store/tabStore/connectionId';
 import { siblingObjectNodeIds } from '@/store/tabStore/siblingObjectNodeIds';
-import { selectTabs } from '@/store/tabStore/tabs';
+import { selectTabs, selectVisibleTabs, SETTINGS_CONNECTION_ID } from '@/store/tabStore/tabs';
 import { useTreeStore } from '@/store/treeStore/tree.store';
-import type { DataTabType, DiagramTabType, EditorTabType, ObjectTabType, TabType } from '@/types/Tab';
+import type {
+  DataTabType,
+  DiagramTabType,
+  EditorTabType,
+  ObjectTabType,
+  SettingsTabType,
+  TabType
+} from '@/types/Tab';
 import type { StateCreator } from 'zustand';
-import type { TabQuerySlice, TabSettingSlice, TabStore } from '../types';
+import type { AddSettingsTabOptions, TabQuerySlice, TabSettingSlice, TabStore } from '../types';
 
 const maxTabs = 15;
 
@@ -201,6 +208,38 @@ export const createTabSettingSlice: StateCreator<
 
     return get().handleAddNewTab(tabs, newTab) as ObjectTabType;
   },
+  addSettingsTab: (options?: AddSettingsTabOptions): SettingsTabType => {
+    const tabs = selectTabs(get());
+    const section = options?.section ?? 0;
+    const existing = tabs.find((tab): tab is SettingsTabType => tab.mode === TabMode.Settings);
+
+    if (existing) {
+      const updated: SettingsTabType = {
+        ...existing,
+        section,
+        aiTab: options?.aiTab ?? existing.aiTab,
+        query: options?.query,
+        highlightId: options?.highlightId
+      };
+      const nextTabs = tabs.map((tab) => (tab.id === existing.id ? updated : tab));
+      set({ tabs: nextTabs, selectedTabId: updated.id }, undefined, 'addSettingsTab');
+      return updated;
+    }
+
+    const newTab: SettingsTabType = {
+      id: tools.uuid(),
+      name: locales.settings,
+      connectionId: SETTINGS_CONNECTION_ID,
+      nodeId: '',
+      mode: TabMode.Settings,
+      section,
+      aiTab: options?.aiTab,
+      query: options?.query,
+      highlightId: options?.highlightId
+    };
+
+    return get().handleAddNewTab(tabs, newTab) as SettingsTabType;
+  },
   removeTab: (tabId: string): TabType | null | undefined => {
     const tabs = selectTabs(get());
     const tabIndex = tabs.findIndex((tab) => tab.id === tabId);
@@ -217,13 +256,27 @@ export const createTabSettingSlice: StateCreator<
     let nextTab: TabType | null = null;
 
     if (wasSelected) {
-      if (newTabs.length === 0) {
+      const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+      const visible = selectVisibleTabs(newTabs, currentConnectionId);
+      if (visible.length === 0) {
         nextSelectedId = undefined;
-      } else if (tabIndex < newTabs.length) {
-        nextTab = newTabs[tabIndex] ?? null;
-        nextSelectedId = nextTab?.id;
       } else {
-        nextTab = newTabs[newTabs.length - 1] ?? null;
+        // Prefer a connection tab at the same visual index when possible.
+        const removedWasSettings = tabs[tabIndex]?.mode === TabMode.Settings;
+        if (removedWasSettings) {
+          nextTab = visible[visible.length - 1] ?? null;
+        } else {
+          const connectionVisible = visible.filter((tab) => tab.mode !== TabMode.Settings);
+          const connectionIndex = tabs
+            .filter((tab) => tab.mode !== TabMode.Settings)
+            .findIndex((tab) => tab.id === tabId);
+          nextTab =
+            (connectionIndex >= 0 && connectionIndex < connectionVisible.length
+              ? connectionVisible[connectionIndex]
+              : connectionVisible[connectionVisible.length - 1]) ??
+            visible[0] ??
+            null;
+        }
         nextSelectedId = nextTab?.id;
       }
     }
@@ -249,9 +302,17 @@ export const createTabSettingSlice: StateCreator<
 
   handleAddNewTab: (_tabs: TabType[], newTab: TabType): TabType => {
     const tabs = selectTabs(get());
-    const nextTabs = tabs.length < maxTabs ? [...tabs, newTab] : [...tabs.slice(1), newTab];
 
-    set({ tabs: nextTabs, selectedTabId: newTab.id }, undefined, 'handleAddNewTab');
+    if (newTab.mode === TabMode.Settings) {
+      set({ tabs: [...tabs, newTab], selectedTabId: newTab.id }, undefined, 'handleAddNewTab');
+      return newTab;
+    }
+
+    const settingsTabs = tabs.filter((tab) => tab.mode === TabMode.Settings);
+    const otherTabs = tabs.filter((tab) => tab.mode !== TabMode.Settings);
+    const nextOthers = otherTabs.length < maxTabs ? [...otherTabs, newTab] : [...otherTabs.slice(1), newTab];
+
+    set({ tabs: [...nextOthers, ...settingsTabs], selectedTabId: newTab.id }, undefined, 'handleAddNewTab');
 
     return newTab;
   }

@@ -4,9 +4,11 @@ import (
 	"github.com/dbo-studio/dbo/config"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/repository"
+	serviceAdminUsers "github.com/dbo-studio/dbo/internal/service/admin_users"
 	serviceAI "github.com/dbo-studio/dbo/internal/service/ai"
 	serviceAiChat "github.com/dbo-studio/dbo/internal/service/ai_chat"
 	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai_provider"
+	serviceAuth "github.com/dbo-studio/dbo/internal/service/auth"
 	serviceConfig "github.com/dbo-studio/dbo/internal/service/config"
 	serviceConnection "github.com/dbo-studio/dbo/internal/service/connection"
 	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
@@ -41,6 +43,8 @@ type Service struct {
 	McpService              serviceMCP.IMcpService
 	SchemaService           serviceSchema.ISchemaService
 	SafeModePasswordService serviceSafemode.ISafeModePasswordService
+	AuthService             serviceAuth.IAuthService
+	AdminUsersService       serviceAdminUsers.IAdminUsersService
 }
 
 // Deps carries the process-wide dependencies services used to fetch from the
@@ -61,6 +65,8 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 	toolRegistry := serviceDbtools.NewRegistry(cm, repo.ConnectionRepo)
 	mcpService := serviceMCP.NewMcpService(repo.McpSettingsRepo, repo.ConnectionRepo, toolRegistry, deps.Logger, deps.Config)
 	safeModePasswordService := serviceSafemode.NewPasswordService(repo.SafeModePasswordRepo, deps.Config, deps.Logger, deps.Cache)
+	authService := serviceAuth.NewAuthService(repo.UserRepo, repo.WebSessionRepo, deps.Config, deps.Logger)
+	adminUsersService := serviceAdminUsers.NewAdminUsersService(repo.UserRepo, repo.WebSessionRepo)
 
 	return &Service{
 		ConnectionService:       serviceConnection.NewConnectionService(repo.ConnectionRepo, cm, ss, safeModePasswordService, deps.Cache),
@@ -74,9 +80,11 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		AiService:               serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, cm, toolRegistry, deps.Logger, deps.Cache),
 		AiProviderService:       aiProviderService,
 		AiChatService:           serviceAiChat.NewAiChatService(repo.AiChatRepo),
-		ConfigService:           serviceConfig.NewConfigService(repo.ConfigRepo, aiProviderService, deps.Config, deps.Cache, deps.Logger),
+		ConfigService:           serviceConfig.NewConfigService(repo.ConfigRepo, aiProviderService, authService, deps.Config, deps.Cache, deps.Logger),
 		McpService:              mcpService,
 		SchemaService:           serviceSchema.NewSchemaService(repo.ConnectionRepo, cm),
 		SafeModePasswordService: safeModePasswordService,
+		AuthService:             authService,
+		AdminUsersService:       adminUsersService,
 	}
 }

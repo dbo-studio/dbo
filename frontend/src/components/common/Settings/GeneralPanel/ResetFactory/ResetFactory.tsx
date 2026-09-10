@@ -1,9 +1,9 @@
 import api from '@/api';
+import { SettingRow } from '@/components/common/Settings/SettingRow/SettingRow';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
-import { Box, Button, Divider, Typography } from '@mui/material';
+import { Button } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
-import { GeneralPanelSettingRowStyled } from '../GeneralPanel.styled';
 
 export function ResetFactory() {
   const showModal = useConfirmModalStore((state) => state.danger);
@@ -24,26 +24,15 @@ export function ResetFactory() {
   };
 
   return (
-    <Box
-      sx={{
-        mt: 1
-      }}
-    >
-      <GeneralPanelSettingRowStyled>
-        <Box>
-          <Typography color={'textText'} variant={'subtitle2'}>
-            {locales.reset_factory}
-          </Typography>
-          <Typography color={'textText'} variant={'caption'}>
-            {locales.reset_factory_description}
-          </Typography>
-        </Box>
-
-        <Button variant={'outlined'} size={'small'} color={'error'} onClick={handleOpenConfirm} loading={isPending}>
+    <SettingRow
+      id='general.reset'
+      label={locales.reset_factory}
+      description={locales.reset_factory_description}
+      control={
+        <Button variant='outlined' size='small' color='error' onClick={handleOpenConfirm} loading={isPending}>
           {locales.delete}
         </Button>
-      </GeneralPanelSettingRowStyled>
-      <Divider />
-    </Box>
+      }
+    />
   );
 }

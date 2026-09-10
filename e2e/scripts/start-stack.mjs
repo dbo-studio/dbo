@@ -124,6 +124,7 @@ export async function startStack() {
 
   const apiURL = `http://127.0.0.1:${apiPort}/api`;
   const baseURL = `http://127.0.0.1:${fePort}`;
+  const localAuth = process.env.E2E_LOCAL_AUTH === '1';
 
   const backendEnv = {
     ...process.env,
@@ -132,7 +133,18 @@ export async function startStack() {
     APP_CLIENT: 'web',
     APP_DATABASE_PATH: dbPath,
     APP_SECRET_KEY_PATH: secretPath,
-    APP_LOG_PATH: logPath
+    APP_LOG_PATH: logPath,
+    // Prevent backend/.env APP_ADMIN_* from enabling local auth (or failing Bootstrap
+    // on a non-policy password) during normal e2e runs. godotenv does not override these.
+    APP_ADMIN_EMAIL: '',
+    APP_ADMIN_PASSWORD: '',
+    ...(localAuth
+      ? {
+          APP_ADMIN_EMAIL: process.env.E2E_ADMIN_EMAIL ?? 'admin@example.com',
+          APP_ADMIN_PASSWORD: process.env.E2E_ADMIN_PASSWORD ?? 'bootstrap1',
+          APP_ALLOWED_ORIGINS: baseURL
+        }
+      : {})
   };
 
   const backend = spawnLogged('go', ['run', '.', 'serve'], {
@@ -141,7 +153,7 @@ export async function startStack() {
     detached: process.platform !== 'win32'
   });
 
-  await waitForUrl(`${apiURL}/config`);
+  await waitForUrl(`http://127.0.0.1:${apiPort}/healthz`);
 
   const frontendEnv = {
     ...process.env,
@@ -169,6 +181,13 @@ export async function startStack() {
     `E2E_DATA_DIR=${dataDir}`,
     `E2E_API_PORT=${apiPort}`,
     `E2E_FE_PORT=${fePort}`,
+    ...(localAuth
+      ? [
+          `E2E_LOCAL_AUTH=1`,
+          `E2E_ADMIN_EMAIL=${backendEnv.APP_ADMIN_EMAIL}`,
+          `E2E_ADMIN_PASSWORD=${backendEnv.APP_ADMIN_PASSWORD}`
+        ]
+      : []),
     ''
   ].join('\n');
   fs.writeFileSync(RUN_ENV_PATH, runEnv);

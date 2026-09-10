@@ -1,4 +1,5 @@
 import api from '@/api';
+import { SettingRow } from '@/components/common/Settings/SettingRow/SettingRow';
 import {
   deviceBiometricsAvailable,
   persistSafeModePassword,
@@ -8,11 +9,10 @@ import {
 import locales from '@/locales';
 import { useSafeModePasswordStore } from '@/store/safeModePassword/safeModePassword.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Box, Button, Divider, Switch, Typography } from '@mui/material';
+import { Box, Button, Switch, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { GeneralPanelSettingRowStyled } from '../../GeneralPanel/GeneralPanel.styled';
 
 export function SafeModeSettings(): JSX.Element {
   const queryClient = useQueryClient();
@@ -138,62 +138,55 @@ export function SafeModeSettings(): JSX.Element {
 
   return (
     <Box>
-      <GeneralPanelSettingRowStyled>
-        <Box>
-          <Typography color='textTitle' variant='subtitle2'>
-            {locales.safe_mode_password_label}
-          </Typography>
-          <Typography
-            data-testid={configured ? 'safe-mode-settings-status' : undefined}
-            color='textText'
-            variant='caption'
-          >
-            {configured ? locales.safe_mode_password_configured : locales.safe_mode_password_setup_desc}
-          </Typography>
-        </Box>
-        {configured ? (
-          <Button
-            data-testid='safe-mode-settings-change-password'
-            variant='outlined'
-            size='small'
-            loading={isChangingPassword}
-            onClick={() => void handleChangePassword()}
-          >
-            {locales.safe_mode_password_change}
-          </Button>
-        ) : (
-          <Button
-            data-testid='safe-mode-settings-set-password'
-            variant='outlined'
-            size='small'
-            loading={isSettingPassword}
-            onClick={() => void handleSetPassword()}
-          >
-            {locales.safe_mode_password_set}
-          </Button>
-        )}
-      </GeneralPanelSettingRowStyled>
-      <Divider />
+      <SettingRow
+        id='security.safe_mode'
+        label={locales.safe_mode_password_label}
+        description={
+          configured ? (
+            <Typography data-testid='safe-mode-settings-status' color='textText' variant='caption' component='span'>
+              {locales.safe_mode_password_configured}
+            </Typography>
+          ) : (
+            locales.safe_mode_password_setup_desc
+          )
+        }
+        control={
+          configured ? (
+            <Button
+              data-testid='safe-mode-settings-change-password'
+              variant='outlined'
+              size='small'
+              loading={isChangingPassword}
+              onClick={() => void handleChangePassword()}
+            >
+              {locales.safe_mode_password_change}
+            </Button>
+          ) : (
+            <Button
+              data-testid='safe-mode-settings-set-password'
+              variant='outlined'
+              size='small'
+              loading={isSettingPassword}
+              onClick={() => void handleSetPassword()}
+            >
+              {locales.safe_mode_password_set}
+            </Button>
+          )
+        }
+      />
       {showBiometrics && (
-        <>
-          <GeneralPanelSettingRowStyled sx={{ mt: 1 }}>
-            <Box>
-              <Typography color='textTitle' variant='subtitle2'>
-                {locales.safe_mode_use_biometrics}
-              </Typography>
-              <Typography color='textText' variant='caption'>
-                {locales.safe_mode_biometrics_desc}
-              </Typography>
-            </Box>
+        <SettingRow
+          label={locales.safe_mode_use_biometrics}
+          description={locales.safe_mode_biometrics_desc}
+          control={
             <Switch
               checked={Boolean(enableBiometrics)}
               onChange={(_, checked) => void handleBiometrics(checked)}
               slotProps={{ input: { 'aria-label': locales.safe_mode_use_biometrics } }}
               data-testid='safe-mode-settings-biometrics'
             />
-          </GeneralPanelSettingRowStyled>
-          <Divider />
-        </>
+          }
+        />
       )}
     </Box>
   );
