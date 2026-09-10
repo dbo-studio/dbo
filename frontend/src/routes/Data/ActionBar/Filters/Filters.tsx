@@ -3,7 +3,7 @@ import { useSelectedTab } from '@/hooks/useSelectedTab.ts';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
-import type { DataTabType, FilterType, TabType } from '@/types/Tab';
+import type { DataTabType, FilterType } from '@/types/Tab';
 import { Box, Button } from '@mui/material';
 import type { JSX } from 'react';
 import AddFilterButton from './FilterItem/AddFilterButton/AddFilterButton.tsx';
@@ -18,10 +18,12 @@ export default function Filters(): JSX.Element {
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
 
   const handleApplyFilters = (): void => {
-    if (selectedTab?.pagination?.page ?? 0 > 1) {
+    // Read fresh tab — removeFilter runs before apply(); a render closure would restore stale filters.
+    const tab = useTabStore.getState().selectedTab<DataTabType>();
+    if (tab && (tab.pagination?.page ?? 0) > 1) {
       updateSelectedTab({
-        ...(selectedTab ?? ({} as TabType)),
-        pagination: { ...(selectedTab?.pagination ?? { page: 1, limit: 100 }), page: 1 }
+        ...tab,
+        pagination: { ...(tab.pagination ?? { page: 1, limit: 100 }), page: 1 }
       });
     }
 
