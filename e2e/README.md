@@ -81,7 +81,7 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Data browser             | `pg\|mysql\|sqlite/data-browser.spec.ts`      | filter/sort/page/columns/inline/preview via shared suite |
 | Import / Export          | `pg\|mysql\|sqlite/import-export.spec.ts`     | CSV/JSON/SQL export+import, round-trip, continue-on-error |
 | Export SavePath          | `shared/export-savepath.spec.ts`                | web export API rejects `..` and absolute savePath → 400 |
-| Job cancel / failure     | `shared/job-cancel.spec.ts`                   | cancel running export → `cancelled`; bad query → `failed` + error |
+| Job cancel / failure     | `shared/job-cancel.spec.ts`                   | cancel running export → `canceled`; bad query → `failed` + error |
 | Object Form multi-col FK | `*/object-form-multi-column-fk.spec.ts`       | Add composite FK on edit ×3 |
 | Connection SSL           | `pg/connection-ssl.spec.ts`                   | SSL tab UI + Require on sample-pgsql-ssl + bad CA fail  |
 | Data grid typed cells    | `shared/data-grid-typed-cells.spec.ts`        | MySQL+PG; SQLite n/a (no typed editors yet)             |

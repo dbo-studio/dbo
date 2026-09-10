@@ -187,7 +187,11 @@ export const useAiChat = (): useAiChatReturnType => {
         if (useAiStore.getState().streaming.error) {
           return;
         }
-      } catch {
+      } catch (error) {
+        // User cancel must not start the HTTP fallback (that re-shows the cancel button).
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
         // fall through to non-stream fallback
       }
 

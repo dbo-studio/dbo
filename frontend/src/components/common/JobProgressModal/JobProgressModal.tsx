@@ -53,7 +53,7 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
         return locales.export_completed_successfully;
       case 'failed':
         return `${locales.job_failed}: ${job.error}`;
-      case 'cancelled':
+      case 'canceled':
         return locales.job_cancelled;
       default:
         return job.message || `${locales.processing}...`;
@@ -126,7 +126,7 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
                 </Box>
               )}
 
-            {(job.status === 'completed' || job.status === 'failed' || job.status === 'cancelled') && (
+            {(job.status === 'completed' || job.status === 'failed' || job.status === 'canceled') && (
               <Box sx={{ mt: 2 }}>
                 <Button variant='outlined' onClick={onClose} fullWidth>
                   {locales.close}

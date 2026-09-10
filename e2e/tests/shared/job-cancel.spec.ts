@@ -10,6 +10,7 @@ async function waitForJobStatus(
   timeoutMs = 60_000,
 ): Promise<Record<string, unknown>> {
   const deadline = Date.now() + timeoutMs;
+  let lastStatus = "";
 
   while (Date.now() < deadline) {
     const response = await page.request.get(`/api/jobs/${jobId}`);
@@ -18,14 +19,17 @@ async function waitForJobStatus(
     const body = (await response.json()) as {
       data?: { status?: string; error?: string };
     };
-    if (body.data?.status === status) {
-      return body.data;
+    lastStatus = body.data?.status ?? "";
+    if (lastStatus === status) {
+      return body.data as Record<string, unknown>;
     }
 
     await page.waitForTimeout(500);
   }
 
-  throw new Error(`job ${jobId} did not reach status ${status}`);
+  throw new Error(
+    `job ${jobId} did not reach status ${status} (last: ${lastStatus || "unknown"})`,
+  );
 }
 
 test.describe("Job cancel and failure visibility", () => {
@@ -72,8 +76,8 @@ test.describe("Job cancel and failure visibility", () => {
         const cancelResponse = await page.request.delete(`/api/jobs/${jobId}`);
         expect(cancelResponse.ok()).toBeTruthy();
 
-        const detail = await waitForJobStatus(page, jobId!, "cancelled");
-        expect(detail.status).toBe("cancelled");
+        const detail = await waitForJobStatus(page, jobId!, "canceled");
+        expect(detail.status).toBe("canceled");
       });
 
       await test.step("Failed export exposes error message", async () => {

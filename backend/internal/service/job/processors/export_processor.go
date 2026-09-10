@@ -98,6 +98,12 @@ func (p *ExportProcessor) Process(ctx context.Context, job *model.Job) error {
 		return fmt.Errorf("no result found for query %s", jobData.Query)
 	}
 
+	// RunRawQuery surfaces SELECT failures as a CommandResponseBuilder row
+	// (err == nil) for the SQL editor grid — export must still fail the job.
+	if msg := rawQueryFailureMessage(result); msg != "" {
+		return fmt.Errorf("%s", msg)
+	}
+
 	err = p.jobManager.UpdateJobProgress(ctx, job, 50, fmt.Sprintf("Found %d rows to export", len(result.Data)))
 	if err != nil {
 		return fmt.Errorf("failed to update progress: %w", err)
@@ -180,6 +186,25 @@ func (p *ExportProcessor) Process(ctx context.Context, job *model.Job) error {
 	}
 
 	return nil
+}
+
+// rawQueryFailureMessage detects SQL-editor error envelopes produced by
+// CommandResponseBuilder (Query/Message/Duration) when a SELECT fails.
+func rawQueryFailureMessage(result *dto.RawQueryResponse) string {
+	if result == nil || len(result.Columns) != 3 || len(result.Data) != 1 {
+		return ""
+	}
+
+	if result.Columns[0].Name != "Query" || result.Columns[1].Name != "Message" || result.Columns[2].Name != "Duration" {
+		return ""
+	}
+
+	msg, _ := result.Data[0]["Message"].(string)
+	if msg == "" || msg == "OK" {
+		return ""
+	}
+
+	return msg
 }
 
 func generateSQLExportFromData(tableName string, columns []dto.Column, data []map[string]any) []byte {

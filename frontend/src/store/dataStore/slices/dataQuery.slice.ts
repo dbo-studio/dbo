@@ -167,11 +167,11 @@ export const createDataQuerySlice: StateCreator<
 
         useTabStore.getState().updateQuery(res.query);
 
-        Promise.all([
+        await Promise.all([
           get().updateRows(res.data),
           get().updateColumns(res.columns),
           debouncedSaveToIndexedDB(tab.id, res.data, res.columns)
-        ]).catch(() => undefined);
+        ]);
 
         const summary = summarizeQueryResult(res);
         set(

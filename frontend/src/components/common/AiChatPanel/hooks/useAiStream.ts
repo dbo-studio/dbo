@@ -120,9 +120,15 @@ export const useAiStream = (): UseAiStreamReturn => {
           },
           controller.signal
         );
+        // streamChat may resolve quietly after abort (reader path) — still treat as cancel.
+        if (controller.signal.aborted) {
+          throw new DOMException('Aborted', 'AbortError');
+        }
       } catch (error) {
         if (controller.signal.aborted) {
-          return null;
+          throw error instanceof Error && error.name === 'AbortError'
+            ? error
+            : new DOMException('Aborted', 'AbortError');
         }
         const message = error instanceof Error ? error.message : 'Stream failed';
         updateStreaming({ error: message });

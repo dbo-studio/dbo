@@ -12,7 +12,7 @@ type UseJobPollingOptions = {
   pollingInterval?: number;
 };
 
-const TERMINAL_STATUSES = new Set(['completed', 'failed', 'cancelled']);
+const TERMINAL_STATUSES = new Set(['completed', 'failed', 'canceled']);
 
 export const useJobPolling = (jobId: string | null, options: UseJobPollingOptions = {}) => {
   const [trackedJobId, setTrackedJobId] = useState(jobId);

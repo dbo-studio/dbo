@@ -644,7 +644,7 @@ INSERT INTO ${tableName} (name) VALUES ('before');
       }
     });
 
-    test("Grid run is gated by Safe Mode and export rejects writes", async ({
+    test("Inline query rejects SQL injection and export rejects writes", async ({
       page,
     }, testInfo) => {
       const connectionPage = new ConnectionPage(page);
@@ -683,9 +683,9 @@ INSERT INTO ${tableName} (name) VALUES ('before');
               await dataGrid.waitForData("gated");
             });
 
-            await test.step("Write inline query via grid is rejected", async () => {
-              // Rewrite the next grid query/run to carry a write payload in
-              // inlineQuery — the backend must refuse it (password gate).
+            await test.step("SQL injection via inline query is rejected", async () => {
+              // inlineQuery is a predicate, not raw SQL — smuggled writes must
+              // fail parse (400), not reach Safe Mode or the database.
               let intercepted = false;
               await page.route(/\/api\/query\/run/, async (route) => {
                 intercepted = true;
@@ -698,26 +698,25 @@ INSERT INTO ${tableName} (name) VALUES ('before');
                 await route.continue({ postData: JSON.stringify(payload) });
               });
 
-              const blocked = page.waitForResponse(
-                (response) =>
-                  /\/api\/query\/run/.test(response.url()) &&
-                  response.status() === 403,
-              );
+              try {
+                const blocked = pendingResponse(
+                  page,
+                  { ...apiRoute.queryRun, status: 400 },
+                  API_DB_TIMEOUT,
+                );
+                await page.getByTestId("inline-query-run").click();
 
-              // Trigger a grid run directly — the injected inlineQuery turns
-              // it into a write, and helpers like addFilter expect a 200.
-              await page.getByTestId("inline-query-run").click();
+                const blockedResponse = await blocked;
+                expect(intercepted).toBe(true);
+                expect(blockedResponse.status()).toBe(400);
 
-              const blockedResponse = await blocked;
-              expect(intercepted).toBe(true);
-              expect(blockedResponse.status()).toBe(403);
-
-              const body = (await blockedResponse.json()) as {
-                message?: string;
-              };
-              expect(body.message).toBe("safe_mode_password_required");
-
-              await page.unroute(/\/api\/query\/run/);
+                const body = (await blockedResponse.json()) as {
+                  message?: string;
+                };
+                expect(body.message).toBe("invalid inline query");
+              } finally {
+                await page.unroute(/\/api\/query\/run/);
+              }
             });
 
             await test.step("Table survives the blocked statement", async () => {
