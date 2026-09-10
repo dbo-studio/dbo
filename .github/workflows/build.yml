@@ -23,11 +23,13 @@ jobs:
         id: get-version
         run: |
           VERSION=$(cat docs/scripts/VERSION || echo "0.0.0")
-          echo "PACKAGE_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         id: create-release
         uses: actions/github-script@v6
+        env:
+          PACKAGE_VERSION: ${{ steps.get-version.outputs.version }}
         with:
           script: |
             const version = process.env.PACKAGE_VERSION;
@@ -60,13 +62,10 @@ jobs:
             args: ""
 
     runs-on: ${{ matrix.platform }}
+    env:
+      PACKAGE_VERSION: ${{ needs.create-release.outputs.package_version }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Get Version from File
-        run: |
-          VERSION=$(cat docs/scripts/VERSION || echo "0.0.0")
-          echo "PACKAGE_VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Install Dependencies (Ubuntu Only)
         if: matrix.platform == 'ubuntu-24.04'
