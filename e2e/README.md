@@ -6,7 +6,7 @@ Isolated Playwright suite for DBO Studio. Each `npm test` run boots an **ephemer
 
 **Per-engine completeness + speed:** see [`docs/e2e-per-engine-implementation.md`](../docs/e2e-per-engine-implementation.md). Gaps: [`docs/e2e-coverage-gap-report.md`](../docs/e2e-coverage-gap-report.md).
 
-CI runs three parallel jobs (`e2e-postgres` / `e2e-mysql` / `e2e-sqlite`) via `.github/workflows/tests.yml`.
+CI runs three parallel jobs (`e2e-postgres` / `e2e-mysql` / `e2e-sqlite`) via `.github/workflows/tests.yml`, plus **`e2e-auth`** (`npm run test:auth`, no sample DB).
 
 ## Architecture
 
@@ -41,6 +41,7 @@ cd e2e && npm install
 ```bash
 cd e2e
 
+npm run test:auth                 # local auth M1 (E2E_LOCAL_AUTH=1; no sample DB)
 npm test                          # all projects (postgres + mysql + sqlite)
 npm run test:pg                   # tests/shared + tests/pg
 npm run test:mysql                # tests/mysql
@@ -66,6 +67,7 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Feature                  | Spec                                          | Flow                                                    |
 | ------------------------ | --------------------------------------------- | ------------------------------------------------------- |
 | Harness smoke            | `shared/harness-smoke.spec.ts`                | ephemeral API + FE reachable (no sample DB)             |
+| Auth Gateway local (M1)  | `shared/auth-local.spec.ts`                   | `npm run test:auth` / `E2E_LOCAL_AUTH=1`: login, must_change gate, member, logout, MCP mgmt, disable revoke |
 | Crash screen             | `shared/crash-screen.spec.ts`                 | render crash UI; Reload clears local persist, keeps connections |
 | Connections              | `shared\|mysql\|sqlite/connections.spec.ts`   | create/edit/dup/reorder/refresh/menu/ping via shared suite |
 | MariaDB alias            | `mysql/mariadb-alias.spec.ts`                 | type=mariadb against MySQL sample: create + tree           |
@@ -87,7 +89,8 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Data grid typed cells    | `shared/data-grid-typed-cells.spec.ts`        | MySQL+PG; SQLite n/a (no typed editors yet)             |
 | Data grid FK autocomplete| `shared/data-grid-fk-autocomplete.spec.ts`    | PG+MySQL+SQLite single-col pick/paste; SQLite composite fill; NOT NULL hides NULL |
 | Saved / history          | `shared/saved-history.spec.ts`                | history, save, run, copy                                |
-| Settings / theme         | `shared/settings-theme.spec.ts`               | theme persistence, panels, sidebar, Security password   |
+| Settings / theme         | `shared/settings-theme.spec.ts`               | theme persistence, settings tab, search, Security password   |
+
 | Keyboard shortcuts       | `shared/keyboard-shortcuts.spec.ts`           | cheatsheet groups/filter, Alt+/ open, grid Save/Refresh tooltips |
 | Workspace dirty tab      | `shared/workspace-dirty-tab.spec.ts`          | dirty Cancel / Yes / clean close                        |
 | AI chat panel            | `shared/ai-chat-panel.spec.ts`                | Assistant panel + composer (no LLM)                     |

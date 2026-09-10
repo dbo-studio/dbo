@@ -10,6 +10,7 @@ export {
   getAppFontFamily,
   getEditorFontFamily,
   getFontEntry,
+  MENLO_APP_FONT,
   PRECACHE_FONT_IDS,
   SYSTEM_UI_FONT
 } from './registry';

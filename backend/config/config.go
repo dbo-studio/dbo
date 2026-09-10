@@ -1,11 +1,8 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"strings"
-
-	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
 type App struct {
@@ -20,11 +17,13 @@ type App struct {
 	ReleaseURLAPI  string
 	ReleaseURL     string
 	LogPath        string
-	// AuthToken enables authenticated web mode: when set, API access requires a
-	// session established by exchanging this token (POST /api/config/auth).
-	AuthToken string
+	// AdminEmail / AdminPassword bootstrap the first local admin when no users exist.
+	AdminEmail    string
+	AdminPassword string
+	// AuthMode is resolved after DB bootstrap (none | local).
+	AuthMode AuthMode
 	// AllowedOrigins is a comma-separated list of extra origins allowed to make
-	// credentialed cross-origin requests (localhost is always allowed).
+	// credentialed cross-origin requests (localhost is always allowed when AuthMode is none).
 	AllowedOrigins []string
 }
 
@@ -43,7 +42,9 @@ func New() *Config {
 			Client:         Client(os.Getenv("APP_CLIENT")),
 			PublicURL:      os.Getenv("APP_PUBLIC_URL"),
 			MCPURLOverride: os.Getenv("APP_MCP_PUBLIC_URL"),
-			AuthToken:      os.Getenv("APP_AUTH_TOKEN"),
+			AdminEmail:     strings.TrimSpace(os.Getenv("APP_ADMIN_EMAIL")),
+			AdminPassword:  os.Getenv("APP_ADMIN_PASSWORD"),
+			AuthMode:       AuthModeNone,
 			AllowedOrigins: parseAllowedOrigins(os.Getenv("APP_ALLOWED_ORIGINS")),
 			Version:        "v1.1.2",
 			DatabaseName:   "dbo.db",
@@ -52,11 +53,28 @@ func New() *Config {
 		},
 	}
 
-	if token := strings.TrimSpace(config.App.AuthToken); token != "" && len(token) < 32 {
-		panic(fmt.Errorf("%w", apperror.ErrWeakAuthToken))
+	return config
+}
+
+// ResolveAuthMode picks web auth mode: local if users exist or admin env is set; else none.
+func ResolveAuthMode(hasUsers bool, cfg *Config) AuthMode {
+	if cfg == nil || cfg.App.Client == ClientDesktop {
+		return AuthModeNone
 	}
 
-	return config
+	adminEmail := strings.TrimSpace(cfg.App.AdminEmail)
+	adminPassword := cfg.App.AdminPassword
+
+	if hasUsers || (adminEmail != "" && adminPassword != "") {
+		return AuthModeLocal
+	}
+
+	return AuthModeNone
+}
+
+// AuthRequiresSession reports whether unauthenticated API access is blocked.
+func (a App) AuthRequiresSession() bool {
+	return a.AuthMode == AuthModeLocal
 }
 
 func parseAllowedOrigins(raw string) []string {

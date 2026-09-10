@@ -3,13 +3,25 @@ package server
 import (
 	"github.com/gofiber/fiber/v3/middleware/static"
 
+	"github.com/dbo-studio/dbo/internal/app/handler"
 	"github.com/dbo-studio/dbo/internal/app/server/middleware"
 )
 
 func (r *Server) routing() {
+	r.app.Get("/healthz", handler.Healthz)
+
 	api := r.app.Group("/api")
 
 	clearBody := middleware.SkipClearRequestBody()
+
+	api.Get("/auth/status", r.handlers.Auth.Status)
+	api.Post("/auth/login", r.handlers.Auth.Login)
+	api.Post("/auth/password", r.handlers.Auth.ChangePassword)
+	api.Post("/auth/logout", r.handlers.Auth.Logout)
+
+	api.Get("/admin/users", r.handlers.AdminUsers.List)
+	api.Post("/admin/users", r.handlers.AdminUsers.Create)
+	api.Patch("/admin/users/:id", r.handlers.AdminUsers.Update)
 
 	api.Get("/config", r.handlers.Config.Config)
 	api.Get("/config/check-update", r.handlers.Config.CheckUpdate)

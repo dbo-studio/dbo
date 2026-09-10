@@ -70,11 +70,23 @@ type IConfigRepo interface {
 
 type IWebSessionRepo interface {
 	Create(ctx context.Context) (string, error)
+	CreateWithParams(ctx context.Context, params CreateSessionParams) (string, error)
 	Get(ctx context.Context, sessionID string) (*model.WebSession, error)
-	CreateOrUpdate(ctx context.Context, sessionID string) (string, error)
+	Delete(ctx context.Context, sessionID string) error
+	DeleteByUserID(ctx context.Context, userID string) error
 	EnsureSession(ctx context.Context, sessionID string) error
 	TouchLastSeen(ctx context.Context, sessionID string, at time.Time) error
 	TouchLastSeenDebounced(ctx context.Context, sessionID string, interval time.Duration) error
+}
+
+type IUserRepo interface {
+	Count(ctx context.Context) (int64, error)
+	FindByID(ctx context.Context, id string) (*model.User, error)
+	FindByEmail(ctx context.Context, email string) (*model.User, error)
+	List(ctx context.Context) ([]model.User, error)
+	Create(ctx context.Context, user *model.User) error
+	Update(ctx context.Context, user *model.User) error
+	ReassignOwners(ctx context.Context, toOwnerID string) error
 }
 
 type IWebConnectionSecretRepo interface {
@@ -103,6 +115,7 @@ type Repository struct {
 	ConnectionRepo          IConnectionRepo
 	WebSessionRepo          IWebSessionRepo
 	WebConnectionSecretRepo IWebConnectionSecretRepo
+	UserRepo                IUserRepo
 	HistoryRepo             IHistoryRepo
 	SavedQueryRepo          ISavedQueryRepo
 	JobRepo                 IJobRepo
@@ -118,6 +131,7 @@ func NewRepository(db *gorm.DB, aiCipherKey []byte) *Repository {
 		ConnectionRepo:          NewConnectionRepo(db),
 		WebSessionRepo:          NewWebSessionRepo(db),
 		WebConnectionSecretRepo: NewWebConnectionSecretRepo(db),
+		UserRepo:                NewUserRepo(db),
 		HistoryRepo:             NewHistoryRepo(db),
 		SavedQueryRepo:          NewSavedQueryRepo(db),
 		JobRepo:                 NewJobRepo(db),

@@ -1,15 +1,15 @@
 package serviceConfig
 
 import (
-	"github.com/dbo-studio/dbo/pkg/logger"
-
 	"context"
 
 	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai_provider"
+	serviceAuth "github.com/dbo-studio/dbo/internal/service/auth"
 	"github.com/dbo-studio/dbo/pkg/cache"
+	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/dbo-studio/dbo/pkg/response"
 )
 
@@ -24,15 +24,24 @@ type IConfigServiceImpl struct {
 	cfg               *config.Config
 	configRepo        repository.IConfigRepo
 	aiProviderService serviceAiProvider.IAiProviderService
+	authService       serviceAuth.IAuthService
 	cache             cache.Cache
 	logger            logger.Logger
 }
 
-func NewConfigService(configRepo repository.IConfigRepo, aiProviderService serviceAiProvider.IAiProviderService, cfg *config.Config, appCache cache.Cache, appLogger logger.Logger) IConfigService {
+func NewConfigService(
+	configRepo repository.IConfigRepo,
+	aiProviderService serviceAiProvider.IAiProviderService,
+	authService serviceAuth.IAuthService,
+	cfg *config.Config,
+	appCache cache.Cache,
+	appLogger logger.Logger,
+) IConfigService {
 	return &IConfigServiceImpl{
 		cfg:               cfg,
 		configRepo:        configRepo,
 		aiProviderService: aiProviderService,
+		authService:       authService,
 		cache:             appCache,
 		logger:            appLogger,
 	}

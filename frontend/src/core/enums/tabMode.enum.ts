@@ -3,5 +3,6 @@ export enum TabMode {
   Query = 'query',
   Object = 'object',
   ObjectDetail = 'object-detail',
-  Diagram = 'diagram'
+  Diagram = 'diagram',
+  Settings = 'settings'
 }

@@ -1,4 +1,5 @@
 import type { IconTypes } from '@/components/base/CustomIcon/types';
+import type { SettingsNavGroup } from '@/core/settings/registry';
 import type { JSX } from 'react';
 
 export type MenuPanelItemProps = {
@@ -24,6 +25,8 @@ export type MenuPanelTabType = {
   description?: string;
   onlyDesktop: boolean;
   icon: keyof typeof IconTypes;
+  keywords?: string[];
+  group?: SettingsNavGroup;
   content: JSX.Element;
 };
 
@@ -35,11 +38,6 @@ export type ThemeItemProps = {
   isDark: boolean;
   selected: boolean;
   onClick: () => void;
-};
-
-export type SettingsProps = {
-  open: boolean;
-  tab?: number;
 };
 
 export type AiSettingsTab = 'providers' | 'mcp';

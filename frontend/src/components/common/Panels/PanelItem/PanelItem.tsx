@@ -1,5 +1,6 @@
 'use no memo';
 
+import Settings from '@/components/common/Settings/Settings';
 import { TabMode } from '@/core/enums';
 import { useSelectedTab } from '@/hooks';
 import Data from '@/routes/Data/Data';
@@ -20,7 +21,8 @@ export default function PanelItem(): JSX.Element {
           (selectedTab.mode === TabMode.Query && <Query />) ||
           (selectedTab.mode === TabMode.Object && <ObjectForm />) ||
           (selectedTab.mode === TabMode.ObjectDetail && <ObjectForm />) ||
-          (selectedTab.mode === TabMode.Diagram && <Diagram />)
+          (selectedTab.mode === TabMode.Diagram && <Diagram />) ||
+          (selectedTab.mode === TabMode.Settings && <Settings />)
         : null}
     </PanelItemStyled>
   );

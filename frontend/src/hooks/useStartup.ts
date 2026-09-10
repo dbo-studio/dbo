@@ -1,11 +1,13 @@
 import api from '@/api';
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
+import { tools } from '@/core/utils';
+import { useAuthStore } from '@/store/authStore/auth.store';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSetupDesktop, type DesktopBootState } from './useSetupDesktop';
 
 export type StartupState = {
@@ -21,8 +23,48 @@ export const useStartup = (): StartupState => {
   const updateContext = useAiStore((state) => state.updateContext);
   const updateGeneral = useSettingStore((state) => state.updateGeneral);
   const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
+  const applyStatus = useAuthStore((state) => state.applyStatus);
+  const gate = useAuthStore((state) => state.gate);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [desktopResolved, setDesktopResolved] = useState(false);
 
   const resetTree = useTreeStore((state) => state.reset);
+
+  useEffect(() => {
+    tools
+      .isTauri()
+      .then((v) => {
+        setIsDesktop(Boolean(v));
+        setDesktopResolved(true);
+      })
+      .catch(() => {
+        setIsDesktop(false);
+        setDesktopResolved(true);
+      });
+  }, []);
+
+  const { isLoading: isLoadingAuth, isFetched: authFetched } = useQuery({
+    queryKey: ['auth-status', isDesktop],
+    queryFn: async () => {
+      if (isDesktop) {
+        applyStatus({
+          mode: 'none',
+          authenticated: true,
+          mustChangePassword: false
+        });
+        return null;
+      }
+
+      const status = await api.auth.getStatus();
+      applyStatus(status);
+      return status;
+    },
+    enabled: done && desktopResolved,
+    retry: false,
+    staleTime: 30 * 1000
+  });
+
+  const authReady = isDesktop || (authFetched && gate === 'ready');
 
   useQuery({
     queryKey: ['startup-autocomplete', currentConnectionId, updateContext],
@@ -39,7 +81,7 @@ export const useStartup = (): StartupState => {
       });
       return autocomplete;
     },
-    enabled: done && !!currentConnectionId,
+    enabled: done && authReady && !!currentConnectionId,
     staleTime: 5 * 60 * 1000
   });
 
@@ -56,7 +98,7 @@ export const useStartup = (): StartupState => {
 
       return config;
     },
-    enabled: done
+    enabled: done && authReady
   });
 
   useEffect(() => {
@@ -80,7 +122,7 @@ export const useStartup = (): StartupState => {
   }, [debug]);
 
   return {
-    ready: done && !isLoadingConfig,
+    ready: done && !isLoadingAuth && authReady && !isLoadingConfig,
     boot
   };
 };

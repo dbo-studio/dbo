@@ -6,16 +6,21 @@ import { MenuPanelItemStyled } from './MenuPanelItem.styled';
 
 export default function MenuPanelItem({ name, icon, selected, onClick }: MenuPanelItemProps): JSX.Element {
   return (
-    <MenuPanelItemStyled selected={selected} onClick={(): void => onClick()}>
-      <CustomIcon type={icon} />
-      <Typography
-        variant='subtitle2'
-        sx={{
-          margin: '0 0 0 16px'
-        }}
-      >
-        {name}
-      </Typography>
+    <MenuPanelItemStyled
+      selected={selected}
+      onClick={(): void => onClick()}
+      role='button'
+      tabIndex={0}
+      aria-current={selected ? 'page' : undefined}
+      onKeyDown={(e): void => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+    >
+      <CustomIcon type={icon} size='s' />
+      <Typography variant='subtitle2'>{name}</Typography>
     </MenuPanelItemStyled>
   );
 }

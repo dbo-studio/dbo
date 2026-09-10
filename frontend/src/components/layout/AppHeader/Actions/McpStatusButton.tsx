@@ -1,8 +1,8 @@
 import api from '@/api';
 import type { McpStatus } from '@/api/mcp';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { openSettings } from '@/core/settings/openSettings';
 import locales from '@/locales';
-import { useSettingStore } from '@/store/settingStore/setting.store';
 import { IconButton, Tooltip, useTheme } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import type { JSX } from 'react';
@@ -30,7 +30,6 @@ function getMcpStatusTooltip(status: McpStatus | undefined): string {
 
 export default function McpStatusButton(): JSX.Element {
   const theme = useTheme();
-  const updateUI = useSettingStore((state) => state.updateUI);
 
   const { data: status } = useQuery({
     queryKey: ['mcp-status'],
@@ -44,19 +43,12 @@ export default function McpStatusButton(): JSX.Element {
     warning: theme.palette.warning.main
   });
 
-  const openAiSettings = (): void => {
-    updateUI({
-      showSettings: {
-        open: true,
-        tab: AI_SETTINGS_TAB,
-        aiTab: 'mcp'
-      }
-    });
-  };
-
   return (
     <Tooltip title={getMcpStatusTooltip(status)}>
-      <IconButton aria-label='mcp-status' onClick={openAiSettings}>
+      <IconButton
+        aria-label='mcp-status'
+        onClick={(): void => openSettings({ section: AI_SETTINGS_TAB, aiTab: 'mcp' })}
+      >
         <CustomIcon type='network' size='m' color={iconColor} />
       </IconButton>
     </Tooltip>

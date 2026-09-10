@@ -5,5 +5,13 @@ import (
 )
 
 func (i IConfigServiceImpl) ResetFactory(ctx context.Context) error {
-	return i.configRepo.TruncateAllTables(ctx)
+	if err := i.configRepo.TruncateAllTables(ctx); err != nil {
+		return err
+	}
+
+	if i.authService == nil {
+		return nil
+	}
+
+	return i.authService.Bootstrap(ctx)
 }

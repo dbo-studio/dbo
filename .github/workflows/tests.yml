@@ -44,3 +44,33 @@ jobs:
         run: npm ci
       - name: Check formatting
         run: npm run format:check
+
+  e2e-auth:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.27
+          check-latest: true
+          cache: true
+          cache-dependency-path: backend/go.sum
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            e2e/package-lock.json
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+      - name: Install e2e dependencies
+        working-directory: ./e2e
+        run: npm ci
+      - name: Install Playwright Chromium
+        working-directory: ./e2e
+        run: npx playwright install --with-deps chromium
+      - name: Auth Gateway e2e
+        working-directory: ./e2e
+        run: npm run test:auth

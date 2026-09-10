@@ -8,6 +8,7 @@ import {
   PanelTabItemStyled,
   PanelTabNameStyled
 } from '@/components/common/Panels/PanelTabs/PanelTabItem/PanelTabItem.styled.ts';
+import { TabMode } from '@/core/enums';
 import { shortcuts } from '@/core/utils';
 import { useContextMenu, useShortcut } from '@/hooks';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
@@ -24,6 +25,7 @@ const toTestIdSlug = (name: string): string => name.toLowerCase().replace(/\s+/g
 export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const tabRefsRef = useRef<Record<string, HTMLElement>>({});
+  const isSettings = tab.mode === TabMode.Settings;
 
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
   const { handleSwitchTab } = useSwitchTab();
@@ -65,8 +67,13 @@ export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
       }}
     >
       <SortableItem id={tab.id} onClick={handleTabClick}>
-        <PanelTabItemStyled selected={selectedTabId === tab.id} data-testid={`workspace-tab-${toTestIdSlug(tab.name)}`}>
+        <PanelTabItemStyled
+          selected={selectedTabId === tab.id}
+          compact={isSettings}
+          data-testid={`workspace-tab-${toTestIdSlug(tab.name)}`}
+        >
           <PanelTabContentStyled>
+            {isSettings ? <CustomIcon type='settings' size='xs' /> : null}
             <Tooltip title={tab.name} placement={'bottom'}>
               <PanelTabNameStyled component={'span'} variant='subtitle2'>
                 {tab.name}

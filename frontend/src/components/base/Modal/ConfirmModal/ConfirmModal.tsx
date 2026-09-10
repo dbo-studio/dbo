@@ -92,11 +92,12 @@ export default function ConfirmModal(): JSX.Element {
               marginRight: theme.spacing(2)
             }}
             size='small'
+            autoFocus={mode === 'danger'}
             onClick={handleCancel}
           >
             {locales.cancel}
           </Button>
-          <Button style={style} onClick={handleConfirm} size='small' variant='contained'>
+          <Button style={style} onClick={handleConfirm} size='small' variant='contained' autoFocus={mode !== 'danger'}>
             {resolvedConfirmLabel}
           </Button>
         </Box>
