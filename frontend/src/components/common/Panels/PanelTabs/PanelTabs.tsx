@@ -20,8 +20,8 @@ export default function PanelTabs(): JSX.Element {
     [reorderTabs]
   );
 
-  const renderTabItem = useCallback((tab: TabType): JSX.Element => {
-    return <PanelTabItem tab={tab} />;
+  const renderTabItem = useCallback((tab: TabType, _index: number, meta: { overlay: boolean }): JSX.Element => {
+    return <PanelTabItem tab={tab} overlay={meta.overlay} />;
   }, []);
 
   const getTabId = useCallback((tab: TabType): string => tab.id, []);
@@ -29,7 +29,6 @@ export default function PanelTabs(): JSX.Element {
   return (
     <PanelTabsStyled>
       <SortableList
-        key={tabList.map((tab) => tab.id).join('|')}
         items={tabList}
         onReorder={handleReorder}
         renderItem={renderTabItem}

@@ -2,6 +2,12 @@ import type { PanelTabItemStyledProps } from '@/components/common/Panels/types.t
 import { variables } from '@/core/theme/variables.ts';
 import { Box, styled, Typography, type TypographyProps } from '@mui/material';
 
+export const PanelTabIconStyled = styled('span')({
+  display: 'inline-flex',
+  flexShrink: 0,
+  alignItems: 'center'
+});
+
 export const PanelTabContentStyled = styled(Box)(() => ({
   display: 'flex',
   overflow: 'hidden',
@@ -35,9 +41,8 @@ export const PanelTabItemStyled = styled(Box, {
   background: theme.palette.background.default,
   display: 'flex',
   userSelect: 'none',
-  touchAction: 'pan-x',
-  willChange: 'transform',
-  cursor: 'default',
+  touchAction: 'none',
+  cursor: 'pointer',
   span: {
     color: selected ? theme.palette.text.primary : theme.palette.text.subdued,
     fontWeight: selected ? theme.typography.fontWeightBold : theme.typography.fontWeightRegular
@@ -45,6 +50,7 @@ export const PanelTabItemStyled = styled(Box, {
 
   '> svg:last-of-type': {
     opacity: 0,
+    cursor: 'pointer',
     transition: 'opacity 0.1s'
   },
 

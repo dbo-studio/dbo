@@ -68,14 +68,22 @@ export const useTabStore: UseBoundStore<StoreApi<TabState>> = create<TabState>()
         },
         reorderTabs: (activeId: string, overId: string): void => {
           const tabs = selectTabs(get());
-          const activeIndex = tabs.findIndex((tab) => tab.id === activeId);
-          const overIndex = tabs.findIndex((tab) => tab.id === overId);
+          const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+          const visible = selectVisibleTabs(tabs, currentConnectionId);
+          const activeIndex = visible.findIndex((tab) => tab.id === activeId);
+          const overIndex = visible.findIndex((tab) => tab.id === overId);
 
-          if (activeIndex === -1 || overIndex === -1 || activeIndex === overIndex) return;
+          if (activeIndex === -1 || overIndex === -1 || activeIndex === overIndex) {
+            return;
+          }
 
-          const newTabs = [...tabs];
-          const [removed] = newTabs.splice(activeIndex, 1);
-          newTabs.splice(overIndex, 0, removed);
+          const nextVisible = [...visible];
+          const [removed] = nextVisible.splice(activeIndex, 1);
+          nextVisible.splice(overIndex, 0, removed);
+
+          const visibleIds = new Set(visible.map((tab) => tab.id));
+          let i = 0;
+          const newTabs = tabs.map((tab) => (visibleIds.has(tab.id) ? nextVisible[i++] : tab));
 
           set({ tabs: newTabs }, undefined, 'reorderTabs');
         },
@@ -87,6 +95,7 @@ export const useTabStore: UseBoundStore<StoreApi<TabState>> = create<TabState>()
       }),
       {
         name: 'tabs',
+        skipHydration: true,
         partialize: (state): TabPersistedState => ({
           tabs: selectTabs(state),
           selectedTabId: state.selectedTabId

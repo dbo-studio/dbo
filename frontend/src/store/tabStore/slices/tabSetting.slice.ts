@@ -8,14 +8,7 @@ import { matchConnectionId } from '@/store/tabStore/connectionId';
 import { siblingObjectNodeIds } from '@/store/tabStore/siblingObjectNodeIds';
 import { selectTabs, selectVisibleTabs, SETTINGS_CONNECTION_ID } from '@/store/tabStore/tabs';
 import { useTreeStore } from '@/store/treeStore/tree.store';
-import type {
-  DataTabType,
-  DiagramTabType,
-  EditorTabType,
-  ObjectTabType,
-  SettingsTabType,
-  TabType
-} from '@/types/Tab';
+import type { DataTabType, DiagramTabType, EditorTabType, ObjectTabType, SettingsTabType, TabType } from '@/types/Tab';
 import type { StateCreator } from 'zustand';
 import type { AddSettingsTabOptions, TabQuerySlice, TabSettingSlice, TabStore } from '../types';
 
@@ -308,11 +301,11 @@ export const createTabSettingSlice: StateCreator<
       return newTab;
     }
 
-    const settingsTabs = tabs.filter((tab) => tab.mode === TabMode.Settings);
     const otherTabs = tabs.filter((tab) => tab.mode !== TabMode.Settings);
-    const nextOthers = otherTabs.length < maxTabs ? [...otherTabs, newTab] : [...otherTabs.slice(1), newTab];
+    const nextTabs =
+      otherTabs.length < maxTabs ? [...tabs, newTab] : [...tabs.filter((tab) => tab.id !== otherTabs[0].id), newTab];
 
-    set({ tabs: [...nextOthers, ...settingsTabs], selectedTabId: newTab.id }, undefined, 'handleAddNewTab');
+    set({ tabs: nextTabs, selectedTabId: newTab.id }, undefined, 'handleAddNewTab');
 
     return newTab;
   }

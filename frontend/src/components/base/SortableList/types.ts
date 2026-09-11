@@ -3,10 +3,14 @@ import type { ReactNode } from 'react';
 
 export type SortableDirection = 'horizontal' | 'vertical';
 
+export type SortableRenderMeta = {
+  overlay: boolean;
+};
+
 export type SortableListProps<T> = {
   items: T[];
   onReorder: (activeId: string, overId: string) => void;
-  renderItem: (item: T, index: number) => ReactNode;
+  renderItem: (item: T, index: number, meta: SortableRenderMeta) => ReactNode;
   getItemId: (item: T) => string;
   direction?: SortableDirection;
   activationDistance?: number;
@@ -22,4 +26,5 @@ export type SortableItemProps = {
   className?: string;
   onClick?: (e: React.MouseEvent) => void;
   disabled?: boolean;
+  direction: SortableDirection;
 };

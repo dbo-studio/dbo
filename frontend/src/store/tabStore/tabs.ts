@@ -30,13 +30,11 @@ export const selectTabs = (state: { tabs: unknown }): TabType[] => coerceTabs(st
 
 /** Connection-scoped tabs plus the Settings singleton (if any), even with no connection. */
 export const selectVisibleTabs = (tabs: TabType[], currentConnectionId: string | number | undefined): TabType[] => {
-  const settingsTabs = tabs.filter((tab) => tab.mode === TabMode.Settings);
   if (!currentConnectionId) {
-    return settingsTabs;
+    return tabs.filter((tab) => tab.mode === TabMode.Settings);
   }
 
-  const connectionTabs = tabs.filter(
-    (tab) => tab.mode !== TabMode.Settings && matchConnectionId(tab.connectionId, currentConnectionId)
+  return tabs.filter(
+    (tab) => tab.mode === TabMode.Settings || matchConnectionId(tab.connectionId, currentConnectionId)
   );
-  return [...connectionTabs, ...settingsTabs];
 };

@@ -2,9 +2,10 @@
 
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu.tsx';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon.tsx';
-import SortableItem from '@/components/base/SortableList/SortableItem/SortableItem';
+import type { IconTypes } from '@/components/base/CustomIcon/types';
 import {
   PanelTabContentStyled,
+  PanelTabIconStyled,
   PanelTabItemStyled,
   PanelTabNameStyled
 } from '@/components/common/Panels/PanelTabs/PanelTabItem/PanelTabItem.styled.ts';
@@ -13,7 +14,7 @@ import { shortcuts } from '@/core/utils';
 import { useContextMenu, useShortcut } from '@/hooks';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { TabType } from '@/types';
-import { Box, Tooltip } from '@mui/material';
+import { Tooltip } from '@mui/material';
 import type { JSX } from 'react';
 import { useCallback, useEffect, useRef } from 'react';
 import { usePanelTabMenu } from '../../hooks/usePanelTabMenu';
@@ -22,10 +23,20 @@ import { useSwitchTab } from '../../hooks/useSwitchTab';
 
 const toTestIdSlug = (name: string): string => name.toLowerCase().replace(/\s+/g, '-');
 
-export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
+const TAB_MODE_ICON: Record<TabMode, keyof typeof IconTypes> = {
+  [TabMode.Data]: 'sheet',
+  [TabMode.Query]: 'sql',
+  [TabMode.Object]: 'pen',
+  [TabMode.ObjectDetail]: 'pen',
+  [TabMode.Diagram]: 'layout',
+  [TabMode.Settings]: 'settings'
+};
+
+export default function PanelTabItem({ tab, overlay = false }: { tab: TabType; overlay?: boolean }): JSX.Element {
   const selectedTabId = useTabStore((state) => state.selectedTabId);
-  const tabRefsRef = useRef<Record<string, HTMLElement>>({});
+  const tabRef = useRef<HTMLDivElement | null>(null);
   const isSettings = tab.mode === TabMode.Settings;
+  const selected = selectedTabId === tab.id;
 
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
   const { handleSwitchTab } = useSwitchTab();
@@ -38,7 +49,7 @@ export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
   }, [handleSwitchTab, tab.id]);
 
   const handleCloseClick = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>): void => {
+    (e: React.MouseEvent): void => {
       e.stopPropagation();
       e.preventDefault();
       handleRemoveTab(tab.id).catch(() => undefined);
@@ -46,44 +57,48 @@ export default function PanelTabItem({ tab }: { tab: TabType }): JSX.Element {
     [handleRemoveTab, tab.id]
   );
 
-  useShortcut(shortcuts.closeTab, () => void handleRemoveTab(selectedTabId ?? ''));
+  useShortcut(shortcuts.closeTab, () => {
+    if (overlay || !selected) {
+      return;
+    }
+    void handleRemoveTab(selectedTabId ?? '');
+  });
 
   useEffect(() => {
-    const tabId = selectedTabId;
-    if (tabId && tabRefsRef.current?.[tabId]) {
-      tabRefsRef.current[tabId].scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center'
-      });
+    if (overlay || !selected) {
+      return;
     }
-  }, [selectedTabId]);
+    tabRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'center'
+    });
+  }, [overlay, selected]);
 
   return (
-    <Box
-      onContextMenu={handleContextMenu}
-      ref={(el: HTMLElement): void => {
-        tabRefsRef.current[tab.id] = el;
-      }}
-    >
-      <SortableItem id={tab.id} onClick={handleTabClick}>
-        <PanelTabItemStyled
-          selected={selectedTabId === tab.id}
-          compact={isSettings}
-          data-testid={`workspace-tab-${toTestIdSlug(tab.name)}`}
-        >
-          <PanelTabContentStyled>
-            {isSettings ? <CustomIcon type='settings' size='xs' /> : null}
-            <Tooltip title={tab.name} placement={'bottom'}>
-              <PanelTabNameStyled component={'span'} variant='subtitle2'>
-                {tab.name}
-              </PanelTabNameStyled>
-            </Tooltip>
-          </PanelTabContentStyled>
-          <CustomIcon type='close' size='s' onClick={handleCloseClick} />
-        </PanelTabItemStyled>
-      </SortableItem>
-      <ContextMenu menu={menu} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
-    </Box>
+    <>
+      <PanelTabItemStyled
+        ref={tabRef}
+        selected={selected}
+        compact={isSettings}
+        data-testid={`workspace-tab-${toTestIdSlug(tab.name)}`}
+        data-tab-id={tab.id}
+        onContextMenu={overlay ? undefined : handleContextMenu}
+        onClick={overlay ? undefined : handleTabClick}
+      >
+        <PanelTabContentStyled>
+          <PanelTabIconStyled data-testid={`workspace-tab-icon-${tab.mode}`}>
+            <CustomIcon type={TAB_MODE_ICON[tab.mode]} size='xs' color='currentColor' />
+          </PanelTabIconStyled>
+          <Tooltip title={tab.name} placement={'bottom'}>
+            <PanelTabNameStyled component={'span'} variant='subtitle2'>
+              {tab.name}
+            </PanelTabNameStyled>
+          </Tooltip>
+        </PanelTabContentStyled>
+        <CustomIcon type='close' size='s' onClick={overlay ? undefined : handleCloseClick} />
+      </PanelTabItemStyled>
+      {!overlay && <ContextMenu menu={menu} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />}
+    </>
   );
 }
