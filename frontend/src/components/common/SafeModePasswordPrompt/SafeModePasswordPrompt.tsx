@@ -96,67 +96,70 @@ export default function SafeModePasswordPrompt({
 
   return (
     <Modal open={open} title={title} onClose={handleClose} zIndex={2000}>
-      <ConnectionFormContainerStyled data-testid='safe-mode-password-prompt'>
-        <form onSubmit={(e) => void handleSubmit(e)}>
-          {isChange && (
-            <FieldInput
-              name='currentPassword'
-              type='password'
-              value={currentPassword}
-              label={locales.safe_mode_password_current}
-              error={validationErrors.length > 0}
-              onChange={(e): void => setCurrentPassword(e.target.value)}
-            />
-          )}
+      <ConnectionFormContainerStyled
+        component='form'
+        data-testid='safe-mode-password-prompt'
+        onSubmit={(e) => void handleSubmit(e)}
+      >
+        {isChange && (
           <FieldInput
-            name='password'
+            name='currentPassword'
             type='password'
-            value={password}
-            label={isChange ? locales.safe_mode_password_new : locales.password}
+            value={currentPassword}
+            label={locales.safe_mode_password_current}
             error={validationErrors.length > 0}
-            onChange={(e): void => setPassword(e.target.value)}
+            onChange={(e): void => setCurrentPassword(e.target.value)}
           />
-          {needsConfirm && (
-            <FieldInput
-              name='confirm'
-              type='password'
-              value={confirm}
-              label={locales.safe_mode_password_confirm}
-              error={validationErrors.length > 0}
-              onChange={(e): void => setConfirm(e.target.value)}
-            />
-          )}
-          <FormError mb={0} errors={validationErrors} />
-        </form>
-      </ConnectionFormContainerStyled>
-      <ConnectionFormFooterStyled>
-        <Button size='small' onClick={handleClose}>
-          {locales.cancel}
-        </Button>
-        <Stack spacing={1} direction={'row'}>
-          {biometricsAvailable && (
-            <Button
-              data-testid='safe-mode-biometrics'
-              size='small'
-              variant='outlined'
-              loading={biometricsPending}
-              loadingPosition='start'
-              onClick={() => void handleBiometrics()}
-            >
-              {locales.safe_mode_use_biometrics}
-            </Button>
-          )}
-          <Button
-            data-testid='safe-mode-password-save'
-            size='small'
-            variant='contained'
-            disabled={validationErrors.length > 0}
-            onClick={(e) => void handleSubmit(e)}
-          >
-            {locales.save}
+        )}
+        <FieldInput
+          name='password'
+          type='password'
+          value={password}
+          label={isChange ? locales.safe_mode_password_new : locales.password}
+          error={validationErrors.length > 0}
+          onChange={(e): void => setPassword(e.target.value)}
+        />
+        {needsConfirm && (
+          <FieldInput
+            name='confirm'
+            type='password'
+            value={confirm}
+            label={locales.safe_mode_password_confirm}
+            error={validationErrors.length > 0}
+            onChange={(e): void => setConfirm(e.target.value)}
+          />
+        )}
+        <FormError mb={0} errors={validationErrors} />
+        <ConnectionFormFooterStyled>
+          <Button type='button' size='small' onClick={handleClose}>
+            {locales.cancel}
           </Button>
-        </Stack>
-      </ConnectionFormFooterStyled>
+          <Stack spacing={1} direction={'row'}>
+            {biometricsAvailable && (
+              <Button
+                type='button'
+                data-testid='safe-mode-biometrics'
+                size='small'
+                variant='outlined'
+                loading={biometricsPending}
+                loadingPosition='start'
+                onClick={() => void handleBiometrics()}
+              >
+                {locales.safe_mode_use_biometrics}
+              </Button>
+            )}
+            <Button
+              type='submit'
+              data-testid='safe-mode-password-save'
+              size='small'
+              variant='contained'
+              disabled={validationErrors.length > 0}
+            >
+              {locales.save}
+            </Button>
+          </Stack>
+        </ConnectionFormFooterStyled>
+      </ConnectionFormContainerStyled>
     </Modal>
   );
 }

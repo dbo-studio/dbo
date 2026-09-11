@@ -89,7 +89,14 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
   return (
     <>
       <Modal open={show} title={locales.import_data} onClose={() => onClose()}>
-        <ImportModalContainerStyled>
+        <ImportModalContainerStyled
+          component='form'
+          onSubmit={(e): void => {
+            e.preventDefault();
+            e.stopPropagation();
+            void form.handleSubmit();
+          }}
+        >
           <Box
             sx={{
               flex: 1
@@ -179,10 +186,10 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
             </form.Field>
           </Box>
           <ImportModalFooterStyled>
-            <Button size='small' onClick={handleCloseModal}>
+            <Button type='button' size='small' onClick={handleCloseModal}>
               {locales.cancel}
             </Button>
-            <Button onClick={() => void form.handleSubmit()} variant='contained' size='small'>
+            <Button type='submit' variant='contained' size='small'>
               {locales.import}
             </Button>
           </ImportModalFooterStyled>

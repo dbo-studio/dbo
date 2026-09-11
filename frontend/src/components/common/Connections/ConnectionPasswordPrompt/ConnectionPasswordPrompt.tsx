@@ -77,10 +77,10 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
   };
 
   const handleSubmit = async (e: EventFor<'form', 'onSubmit'> | EventFor<'button', 'onClick'>) => {
-    if (!connectionId) return;
-
     e.preventDefault();
     e.stopPropagation();
+    if (!connectionId) return;
+
     try {
       await pingWithPassword();
       await setPasswordMutation({ id: connectionId, password, rememberPassword });
@@ -122,60 +122,64 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
 
   return (
     <Modal open={show} title={locales.password} onClose={handleClose}>
-      <ConnectionFormContainerStyled>
-        <form onSubmit={(e) => void handleSubmit(e)}>
-          <FieldInput
-            name='password'
-            value={password}
-            label={locales.password}
-            error={validationErrors.length > 0}
-            onChange={(e): void => setPassword(e.target.value)}
-          />
-          <FormError mb={0} errors={validationErrors} />
+      <ConnectionFormContainerStyled
+        component='form'
+        onSubmit={(e): void => {
+          void handleSubmit(e);
+        }}
+      >
+        <FieldInput
+          name='password'
+          value={password}
+          label={locales.password}
+          error={validationErrors.length > 0}
+          onChange={(e): void => setPassword(e.target.value)}
+        />
+        <FormError mb={0} errors={validationErrors} />
 
-          <ConnectionFormCheckboxRowStyled>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={rememberPassword}
-                  size={'small'}
-                  onChange={(e): void => setRememberPassword(e.target.checked)}
-                />
-              }
-              label={locales.remember_password}
-            />
-          </ConnectionFormCheckboxRowStyled>
-        </form>
+        <ConnectionFormCheckboxRowStyled>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={rememberPassword}
+                size={'small'}
+                onChange={(e): void => setRememberPassword(e.target.checked)}
+              />
+            }
+            label={locales.remember_password}
+          />
+        </ConnectionFormCheckboxRowStyled>
+        <ConnectionFormFooterStyled>
+          <Button type='button' size='small' onClick={handleClose}>
+            {locales.cancel}
+          </Button>
+          <Stack spacing={1} direction={'row'}>
+            <Button
+              type='button'
+              data-testid='test-connection'
+              loadingPosition='start'
+              loading={pingConnectionPending}
+              onClick={(e) => void handlePing(e)}
+              disabled={pingConnectionPending || isPending || validationErrors.length > 0 || !connectionId}
+              size='small'
+              variant='contained'
+              color='secondary'
+            >
+              {locales.test}
+            </Button>
+            <Button
+              type='submit'
+              size='small'
+              variant='contained'
+              loading={isPending || pingConnectionPending}
+              loadingPosition='start'
+              disabled={isPending || pingConnectionPending || validationErrors.length > 0 || !connectionId}
+            >
+              {locales.save}
+            </Button>
+          </Stack>
+        </ConnectionFormFooterStyled>
       </ConnectionFormContainerStyled>
-      <ConnectionFormFooterStyled>
-        <Button size='small' onClick={handleClose}>
-          {locales.cancel}
-        </Button>
-        <Stack spacing={1} direction={'row'}>
-          <Button
-            data-testid='test-connection'
-            loadingPosition='start'
-            loading={pingConnectionPending}
-            onClick={(e) => void handlePing(e)}
-            disabled={pingConnectionPending || isPending || validationErrors.length > 0 || !connectionId}
-            size='small'
-            variant='contained'
-            color='secondary'
-          >
-            {locales.test}
-          </Button>
-          <Button
-            size='small'
-            variant='contained'
-            loading={isPending || pingConnectionPending}
-            loadingPosition='start'
-            disabled={isPending || pingConnectionPending || validationErrors.length > 0 || !connectionId}
-            onClick={(e) => void handleSubmit(e)}
-          >
-            {locales.save}
-          </Button>
-        </Stack>
-      </ConnectionFormFooterStyled>
     </Modal>
   );
 }

@@ -3,10 +3,12 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import { SelectInputOption } from '@/components/base/SelectInput/types';
+import { aiStatusLabel, getAiStatus } from '@/core/ai/aiStatus';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
+import { useAuthStore } from '@/store/authStore/auth.store';
 import type { AiProviderType } from '@/types';
-import { Box, Button, Chip, IconButton, Stack } from '@mui/material';
+import { Box, Button, Chip, IconButton, Stack, Typography } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -14,8 +16,10 @@ import { AiPanelFooterStyled, AiPanelFormStyled } from './AiProviders.styled';
 
 export default function AiProvidersPanel() {
   const providers = useAiStore((state) => state.providers);
-  const updateProvider = useAiStore((state) => state.updateProvider);
+  const updateProviders = useAiStore((state) => state.updateProviders);
+  const canEdit = useAuthStore((s) => s.mode !== 'local' || s.user?.role === 'admin');
   const [provider, setProvider] = useState<AiProviderType | undefined>(providers?.[0]);
+  const status = getAiStatus(providers);
   const [newModel, setNewModel] = useState<string>('');
 
   const [error, setError] = useState<{
@@ -42,10 +46,16 @@ export default function AiProvidersPanel() {
         apiKey: provider.apiKey,
         url: provider.url,
         timeout: provider.timeout,
-        models: provider.models
+        models: provider.models,
+        isActive: true,
+        model: provider.model || provider.models[0]
       });
       setNewModel('');
-      updateProvider(updatedProvider);
+      updateProviders(
+        (useAiStore.getState().providers ?? []).map((item) =>
+          item.id === updatedProvider.id ? updatedProvider : { ...item, isActive: false }
+        )
+      );
       setProvider(updatedProvider);
       toast.success(locales.changes_saved_successfully);
       return updatedProvider;
@@ -78,10 +88,18 @@ export default function AiProvidersPanel() {
   };
 
   return (
-    <AiPanelFormStyled>
+    <AiPanelFormStyled
+      component='form'
+      onSubmit={(e): void => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleSubmit();
+      }}
+    >
       <SelectInput
         label={locales.provider}
         value={provider?.type}
+        disabled={!canEdit}
         onChange={(e) => {
           setProvider(providers?.find((p) => p.type === (e as SelectInputOption)?.value) ?? providers?.[0]);
         }}
@@ -91,12 +109,14 @@ export default function AiProvidersPanel() {
       <FieldInput
         label={locales.api_key}
         value={provider?.apiKey ?? ''}
+        disabled={!canEdit}
         onChange={(e) => setProvider({ ...provider, apiKey: e.target.value } as AiProviderType)}
       />
 
       <FieldInput
         label={locales.url}
         value={provider?.url}
+        disabled={!canEdit}
         onChange={(e) => setProvider({ ...provider, url: e.target.value } as AiProviderType)}
         helpertext={error.url}
         error={!!error.url}
@@ -108,6 +128,7 @@ export default function AiProvidersPanel() {
         type='number'
         label={locales.timeout}
         value={provider?.timeout ?? ''}
+        disabled={!canEdit}
         onChange={(e) =>
           setProvider({
             ...provider,
@@ -116,41 +137,71 @@ export default function AiProvidersPanel() {
         }
       />
 
-      <Stack direction={'row'} spacing={1} sx={{ alignItems: 'center' }}>
-        <Box sx={{ flex: 1 }}>
-          <FieldInput
-            label={locales.add_model}
-            onKeyDown={handleKeyDown}
-            onChange={(e) => setNewModel(e.target.value)}
-            value={newModel}
-          />
-        </Box>
-        <Box>
-          <IconButton onClick={handleAddModel}>
-            <CustomIcon type='plus' />
-          </IconButton>
-        </Box>
-      </Stack>
+      {canEdit ? (
+        <Stack direction={'row'} spacing={1} sx={{ alignItems: 'center' }}>
+          <Box sx={{ flex: 1 }}>
+            <FieldInput
+              label={locales.add_model}
+              onKeyDown={handleKeyDown}
+              onChange={(e) => setNewModel(e.target.value)}
+              value={newModel}
+            />
+          </Box>
+          <Box>
+            <IconButton type='button' onClick={handleAddModel}>
+              <CustomIcon type='plus' />
+            </IconButton>
+          </Box>
+        </Stack>
+      ) : null}
 
       <Stack direction={'row'} spacing={1} sx={{ flexWrap: 'wrap' }}>
         {provider?.models.map((model) => (
-          <Chip key={model} label={model} onDelete={() => handleRemoveModel(model)} />
+          <Chip key={model} label={model} onDelete={canEdit ? () => handleRemoveModel(model) : undefined} />
         ))}
       </Stack>
 
-      <AiPanelFooterStyled>
-        <Button
-          fullWidth
-          loadingPosition='start'
-          disabled={pendingUpdateProvider}
-          loading={pendingUpdateProvider}
-          onClick={handleSubmit}
-          size='small'
-          variant='contained'
-        >
-          <span>{locales.save}</span>
-        </Button>
-      </AiPanelFooterStyled>
+      <SelectInput
+        label={locales.model}
+        value={provider?.model || provider?.models[0]}
+        disabled={!canEdit}
+        options={provider?.models.map((model) => ({ label: model, value: model })) ?? []}
+        onChange={(e) =>
+          setProvider({
+            ...provider,
+            model: (e as SelectInputOption)?.value as string
+          } as AiProviderType)
+        }
+      />
+
+      <Chip
+        size='small'
+        color={status.ready ? 'success' : 'warning'}
+        label={aiStatusLabel(status)}
+        data-testid='ai-status-badge'
+      />
+
+      {!canEdit ? (
+        <Typography variant='caption' color='text.secondary'>
+          {locales.ai_providers_admin_only}
+        </Typography>
+      ) : null}
+
+      {canEdit ? (
+        <AiPanelFooterStyled>
+          <Button
+            type='submit'
+            fullWidth
+            loadingPosition='start'
+            disabled={pendingUpdateProvider}
+            loading={pendingUpdateProvider}
+            size='small'
+            variant='contained'
+          >
+            <span>{locales.save}</span>
+          </Button>
+        </AiPanelFooterStyled>
+      ) : null}
     </AiPanelFormStyled>
   );
 }

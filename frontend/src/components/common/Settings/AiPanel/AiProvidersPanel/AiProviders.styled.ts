@@ -5,7 +5,7 @@ export const AiPanelFormStyled = styled(Box)(({ theme }) => ({
   flexDirection: 'column',
   gap: theme.spacing(2),
   paddingTop: theme.spacing(2)
-}));
+})) as typeof Box;
 
 export const AiPanelFooterStyled = styled(Box)(({ theme }) => ({
   display: 'flex',

@@ -67,7 +67,11 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Feature                  | Spec                                          | Flow                                                    |
 | ------------------------ | --------------------------------------------- | ------------------------------------------------------- |
 | Harness smoke            | `shared/harness-smoke.spec.ts`                | ephemeral API + FE reachable (no sample DB)             |
-| Auth Gateway local (M1)  | `shared/auth-local.spec.ts`                   | `npm run test:auth` / `E2E_LOCAL_AUTH=1`: login, must_change gate, member, logout, MCP mgmt, disable revoke |
+| Auth Gateway local (M1)  | `shared/auth-local.spec.ts`                   | `npm run test:auth` / `E2E_LOCAL_AUTH=1`: login, must_change gate (no current password), member, logout, MCP mgmt, disable revoke |
+| Security account password | `shared/auth-security-settings.spec.ts`      | `npm run test:auth`: change login password from Settings → Security |
+| TOTP 2FA                 | `shared/auth-totp.spec.ts`                    | `npm run test:auth`: enable TOTP, login with OTP, admin disable 2FA |
+| Administration users     | `shared/auth-admin-users.spec.ts`             | `npm run test:auth`: users table, create member, reset password dialog (Enter submit), disable, share connections |
+| Shared connections       | `shared/auth-shared-connections.spec.ts`      | `npm run test:auth`: two users share catalog (sqlite); password vault modes when sample Postgres is reachable; per-user saved/history/chats + instance-admin APIs; theme persist scoped by user |
 | Crash screen             | `shared/crash-screen.spec.ts`                 | render crash UI; Reload clears local persist, keeps connections |
 | Connections              | `shared\|mysql\|sqlite/connections.spec.ts`   | create/edit/dup/reorder/refresh/menu/ping via shared suite |
 | MariaDB alias            | `mysql/mariadb-alias.spec.ts`                 | type=mariadb against MySQL sample: create + tree           |
@@ -90,11 +94,13 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Data grid typed cells    | `shared/data-grid-typed-cells.spec.ts`        | MySQL+PG; SQLite n/a (no typed editors yet)             |
 | Data grid FK autocomplete| `shared/data-grid-fk-autocomplete.spec.ts`    | PG+MySQL+SQLite single-col pick/paste; SQLite composite fill; NOT NULL hides NULL |
 | Saved / history          | `shared/saved-history.spec.ts`                | history, save, run, copy                                |
-| Settings / theme         | `shared/settings-theme.spec.ts`               | theme persistence, settings tab, search, Security password   |
+| Settings / theme         | `shared/settings-theme.spec.ts`               | theme persistence, settings tab + mode icon, search, Security password   |
 
 | Keyboard shortcuts       | `shared/keyboard-shortcuts.spec.ts`           | cheatsheet groups/filter, Alt+/ open, grid Save/Refresh tooltips |
 | Workspace dirty tab      | `shared/workspace-dirty-tab.spec.ts`          | dirty Cancel / Yes / clean close                        |
-| AI chat panel            | `shared/ai-chat-panel.spec.ts`                | Assistant panel + composer (no LLM)                     |
+| Workspace tab reorder    | `shared/workspace-tab-reorder.spec.ts`        | drag query tabs; drag Settings before query tab         |
+| AI chat panel            | `shared/ai-chat-panel.spec.ts`                | In-place setup then composer (no LLM)                   |
+| AI in-place setup        | `shared/ai-setup.spec.ts`                     | Query AI switch opens setup popover; save makes ready   |
 | AI chat cancel           | `shared/ai-chat-cancel.spec.ts`               | Abort in-flight stream/fallback via cancel control        |
 | Tab query migration      | `shared/tab-query-persistence-migration.spec.ts` | localStorage `dbo_tab_queries` → editor + key removed |
 | MCP panel                | `shared/mcp-panel.spec.ts`                    | Settings AI → MCP controls + enable toggle (no LLM)     |

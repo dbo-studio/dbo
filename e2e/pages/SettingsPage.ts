@@ -8,7 +8,8 @@ export type SettingsPanel =
   | "Shortcuts"
   | "AI"
   | "Security"
-  | "About";
+  | "About"
+  | "Administration";
 
 /**
  * Page Object for Settings workspace tab
@@ -24,6 +25,7 @@ export class SettingsPage extends BasePage {
   readonly aiMenuItem: Locator;
   readonly securityMenuItem: Locator;
   readonly aboutMenuItem: Locator;
+  readonly administrationMenuItem: Locator;
 
   readonly lightTheme: Locator;
   readonly darkTheme: Locator;
@@ -34,7 +36,10 @@ export class SettingsPage extends BasePage {
   constructor(page: Page) {
     super(page);
 
-    this.settingsButton = page.getByRole("button", { name: "settings", exact: true });
+    this.settingsButton = page.getByRole("button", {
+      name: "settings",
+      exact: true,
+    });
     this.panel = page.getByTestId("settings-panel");
     this.workspaceTab = page.getByTestId("workspace-tab-settings");
 
@@ -44,6 +49,9 @@ export class SettingsPage extends BasePage {
     this.aiMenuItem = page.locator("div").filter({ hasText: /^AI$/ }).first();
     this.securityMenuItem = page.getByText("Security").first();
     this.aboutMenuItem = page.getByText("About").first();
+    this.administrationMenuItem = this.panel.getByRole("button", {
+      name: "Administration",
+    });
 
     this.lightTheme = page.getByRole("img", { name: "light" });
     this.darkTheme = page.getByRole("img", { name: "dark" });
@@ -94,7 +102,94 @@ export class SettingsPage extends BasePage {
       case "About":
         await this.aboutMenuItem.click();
         break;
+      case "Administration":
+        await this.administrationMenuItem.click();
+        break;
     }
+  }
+
+  async expectAdminUsersTable(): Promise<void> {
+    await expect(this.page.getByTestId("admin-users-table")).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(
+      this.page.getByRole("columnheader", { name: "Email" }),
+    ).toBeVisible();
+    await expect(
+      this.page.getByRole("columnheader", { name: "Role" }),
+    ).toBeVisible();
+    await expect(
+      this.page.getByRole("columnheader", { name: "Status" }),
+    ).toBeVisible();
+  }
+
+  adminUserRow(email: string): Locator {
+    return this.page.getByTestId(`admin-user-row-${email}`);
+  }
+
+  async openAdminUserMenu(email: string): Promise<void> {
+    await this.page.getByTestId(`admin-user-menu-${email}`).click();
+  }
+
+  async disableAdminUser(email: string): Promise<void> {
+    await this.openAdminUserMenu(email);
+    await this.page.getByTestId(`admin-user-disable-${email}`).click();
+  }
+
+  async resetAdminUserPassword(email: string): Promise<void> {
+    await this.openAdminUserMenu(email);
+    await this.page.getByTestId(`admin-user-reset-password-${email}`).click();
+  }
+
+  async openAdminShareConnections(email: string): Promise<void> {
+    await this.openAdminUserMenu(email);
+    await this.page
+      .getByTestId(`admin-user-share-connections-${email}`)
+      .click();
+    await expect(
+      this.page.getByTestId("admin-share-connections-modal"),
+    ).toBeVisible();
+  }
+
+  async changeAccountPassword(
+    currentPassword: string,
+    nextPassword: string,
+  ): Promise<void> {
+    await this.page.getByTestId("account-password-change").click();
+    await this.page
+      .getByTestId("account-current-password")
+      .fill(currentPassword);
+    await this.page.getByTestId("account-new-password").fill(nextPassword);
+    await this.page.getByTestId("account-confirm-password").fill(nextPassword);
+    await this.page.getByTestId("account-password-submit").click();
+  }
+
+  async setupTotpAndEnable(code: string): Promise<void> {
+    await this.page.getByTestId("auth-totp-setup").click();
+    await expect(this.page.getByTestId("auth-totp-secret")).toBeVisible({
+      timeout: 10000,
+    });
+    await this.page.getByTestId("auth-totp-enable-code").fill(code);
+    await this.page.getByTestId("auth-totp-enable-submit").click();
+  }
+
+  async submitAdminResetPassword(password: string): Promise<void> {
+    const input = this.page.getByTestId("admin-reset-password-input");
+    await expect(
+      this.page.getByTestId("admin-reset-password-modal"),
+    ).toBeVisible();
+    await input.fill(password);
+    await input.press("Enter");
+    await expect(
+      this.page.getByTestId("admin-reset-password-modal"),
+    ).toHaveCount(0, { timeout: 10000 });
+  }
+
+  async createAdminUser(email: string, password: string): Promise<void> {
+    await this.page.getByTestId("admin-create-email").fill(email);
+    await this.page.getByTestId("admin-create-password").fill(password);
+    await this.page.getByTestId("admin-create-submit").click();
+    await expect(this.adminUserRow(email)).toBeVisible({ timeout: 10000 });
   }
 
   async openMcpTab(): Promise<void> {
@@ -115,6 +210,17 @@ export class SettingsPage extends BasePage {
     ).toBeVisible();
     await expect(this.page.getByText("Status", { exact: true })).toBeVisible();
     await expect(this.page.getByText("Proxy", { exact: true })).toBeVisible();
+  }
+
+  async logout(): Promise<void> {
+    if (!(await this.panel.isVisible().catch(() => false))) {
+      await this.open();
+    }
+    await this.navigateTo("General");
+    await this.page.getByRole("button", { name: "Log out" }).click();
+    await expect(this.page.getByTestId("auth-submit")).toBeVisible({
+      timeout: 30000,
+    });
   }
 
   async selectLightTheme(): Promise<void> {
@@ -141,6 +247,10 @@ export class SettingsPage extends BasePage {
 
   rightSidebarTab(): Locator {
     return this.page.getByRole("tab", { name: "Assistant" });
+  }
+
+  aiSetupForm(): Locator {
+    return this.page.getByTestId("ai-setup-form");
   }
 
   async setSafeModePassword(password: string): Promise<void> {
@@ -181,7 +291,9 @@ export class SettingsPage extends BasePage {
 
     const prompt = this.page.getByTestId("safe-mode-password-prompt");
     await expect(prompt).toBeVisible({ timeout: 10000 });
-    await this.page.locator('input[name="currentPassword"]').fill(currentPassword);
+    await this.page
+      .locator('input[name="currentPassword"]')
+      .fill(currentPassword);
     await this.page.locator('input[name="password"]').fill(nextPassword);
     await this.page.locator('input[name="confirm"]').fill(nextPassword);
 
@@ -240,7 +352,9 @@ export class SettingsPage extends BasePage {
     await expect(this.shortcutsSearchInput()).toBeVisible({ timeout: 10000 });
     await expect(this.page.getByText("Editor", { exact: true })).toBeVisible();
     await expect(this.page.getByText("Tabs", { exact: true })).toBeVisible();
-    await expect(this.page.getByText("Data grid", { exact: true })).toBeVisible();
+    await expect(
+      this.page.getByText("Data grid", { exact: true }),
+    ).toBeVisible();
     await expect(this.page.getByText("App", { exact: true })).toBeVisible();
     await expect(this.page.getByText("Run", { exact: true })).toBeVisible();
     await expect(this.page.getByText("Save", { exact: true })).toBeVisible();

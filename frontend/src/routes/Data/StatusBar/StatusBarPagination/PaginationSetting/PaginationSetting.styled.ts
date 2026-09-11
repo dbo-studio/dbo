@@ -6,4 +6,4 @@ export const PaginationSettingStyled = styled(Box)(({ theme }) => ({
   borderRadius: variables.radius.medium,
   border: `1px solid ${theme.palette.divider}`,
   padding: theme.spacing(1)
-}));
+})) as typeof Box;

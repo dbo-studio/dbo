@@ -82,62 +82,63 @@ export default function SQLite({
   };
 
   return (
-    <ConnectionFormContainerStyled>
+    <ConnectionFormContainerStyled
+      component='form'
+      onSubmit={(e): void => {
+        e.preventDefault();
+        e.stopPropagation();
+        form.state.values.isPing = false;
+        void form.handleSubmit().then();
+      }}
+    >
       <ConnectionFormBodyStyled>
-        <form
-          onSubmit={(e): void => {
-            e.preventDefault();
-            e.stopPropagation();
-            void form.handleSubmit().then();
-          }}
-        >
-          <form.Field name='name'>
-            {(field): JSX.Element => (
-              <Box>
+        <form.Field name='name'>
+          {(field): JSX.Element => (
+            <Box>
+              <FieldInput
+                name='name'
+                value={field.state.value}
+                error={field.state.meta.errors.length > 0}
+                fullWidth={true}
+                label={locales.name}
+                onChange={(e): void => field.handleChange(e.target.value)}
+              />
+              <FormError mb={1} errors={field.state.meta.errors} />
+            </Box>
+          )}
+        </form.Field>
+
+        <form.Field name='path'>
+          {(field): JSX.Element => (
+            <SQLitePathRowStyled>
+              <Box
+                sx={{
+                  flex: 1
+                }}
+              >
                 <FieldInput
-                  name='name'
+                  name='path'
                   value={field.state.value}
                   error={field.state.meta.errors.length > 0}
-                  fullWidth={true}
-                  label={locales.name}
+                  label={locales.file}
                   onChange={(e): void => field.handleChange(e.target.value)}
+                  endAdornment={
+                    isDesktop && <CustomIcon type='ellipsisVertical' onClick={() => void handleFileSelect()} />
+                  }
                 />
-                <FormError mb={1} errors={field.state.meta.errors} />
               </Box>
-            )}
-          </form.Field>
-
-          <form.Field name='path'>
-            {(field): JSX.Element => (
-              <SQLitePathRowStyled>
-                <Box
-                  sx={{
-                    flex: 1
-                  }}
-                >
-                  <FieldInput
-                    name='path'
-                    value={field.state.value}
-                    error={field.state.meta.errors.length > 0}
-                    label={locales.file}
-                    onChange={(e): void => field.handleChange(e.target.value)}
-                    endAdornment={
-                      isDesktop && <CustomIcon type='ellipsisVertical' onClick={() => void handleFileSelect()} />
-                    }
-                  />
-                </Box>
-                <FormError mb={1} errors={field.state.meta.errors} />
-              </SQLitePathRowStyled>
-            )}
-          </form.Field>
-        </form>
+              <FormError mb={1} errors={field.state.meta.errors} />
+            </SQLitePathRowStyled>
+          )}
+        </form.Field>
       </ConnectionFormBodyStyled>
       <ConnectionFormFooterStyled>
-        <Button size='small' onClick={onClose}>
+        <Button type='button' size='small' onClick={onClose}>
           {locales.cancel}
         </Button>
         <Stack spacing={1} direction={'row'}>
           <Button
+            type='button'
             data-testid='test-connection'
             loadingPosition='start'
             disabled={pingLoading}
@@ -153,14 +154,11 @@ export default function SQLite({
             <span>{locales.test}</span>
           </Button>
           <Button
+            type='submit'
             data-testid='create-connection'
             loadingPosition='start'
             disabled={submitLoading}
             loading={submitLoading}
-            onClick={(): void => {
-              form.state.values.isPing = false;
-              void form.handleSubmit().then();
-            }}
             size='small'
             variant='contained'
           >

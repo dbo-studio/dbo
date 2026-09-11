@@ -36,6 +36,10 @@ export default function SavedQueryItem({
   }, [onEditMode, onChange]);
 
   const handleSaveChange = useCallback(async (): Promise<void> => {
+    if (query.name === name || isPending) {
+      return;
+    }
+
     try {
       const newQuery = { ...query, name };
       await updateSavedQueryMutation(newQuery);
@@ -45,7 +49,7 @@ export default function SavedQueryItem({
     } catch {
       handleDiscardChanges();
     }
-  }, [query, name, updateSavedQueryMutation, onChange, onEditMode, handleDiscardChanges]);
+  }, [query, name, isPending, updateSavedQueryMutation, onChange, onEditMode, handleDiscardChanges]);
 
   return (
     <SavedQueryItemStyled
@@ -55,53 +59,72 @@ export default function SavedQueryItem({
         onClick();
       }}
     >
-      <Box
-        onDoubleClick={handleRun}
-        onClick={(): void => onClick()}
-        sx={{
-          flex: 1,
-          mr: 1
-        }}
-      >
-        {isEditMode ? (
-          <FieldInput
-            size='small'
-            fullWidth={true}
-            type='text'
-            value={name}
-            onChange={(e): void => setName(e.target.value)}
-            margin='none'
-          />
-        ) : (
-          <Typography variant='body2'>{query.name}</Typography>
-        )}
-
-        <Typography variant='caption' color='textSubdued'>
-          {query.createdAt}
-        </Typography>
-      </Box>
       {isEditMode ? (
-        <>
-          <IconButton onClick={handleDiscardChanges}>
-            <CustomIcon type='close' size='xs' />
-          </IconButton>
-          <IconButton
-            loading={isPending}
-            disabled={query.name === name || isPending}
-            onClick={() => void handleSaveChange()}
-          >
-            <CustomIcon type='check' size='xs' />
-          </IconButton>
-        </>
-      ) : (
-        <IconButton
-          onClick={(e) => {
-            context(e);
-            onClick();
+        <Box
+          component='form'
+          onSubmit={(e): void => {
+            e.preventDefault();
+            e.stopPropagation();
+            void handleSaveChange();
+          }}
+          sx={{
+            display: 'flex',
+            flex: 1,
+            alignItems: 'center',
+            minWidth: 0
           }}
         >
-          <CustomIcon type='ellipsisVertical' size='s' />
-        </IconButton>
+          <Box
+            sx={{
+              flex: 1,
+              mr: 1,
+              minWidth: 0
+            }}
+          >
+            <FieldInput
+              size='small'
+              fullWidth={true}
+              type='text'
+              value={name}
+              onChange={(e): void => setName(e.target.value)}
+              margin='none'
+            />
+            <Typography variant='caption' color='textSubdued'>
+              {query.createdAt}
+            </Typography>
+          </Box>
+          <IconButton type='button' onClick={handleDiscardChanges}>
+            <CustomIcon type='close' size='xs' />
+          </IconButton>
+          <IconButton type='submit' loading={isPending} disabled={query.name === name || isPending}>
+            <CustomIcon type='check' size='xs' />
+          </IconButton>
+        </Box>
+      ) : (
+        <>
+          <Box
+            onDoubleClick={handleRun}
+            onClick={(): void => onClick()}
+            sx={{
+              flex: 1,
+              mr: 1
+            }}
+          >
+            <Typography variant='body2'>{query.name}</Typography>
+            <Typography variant='caption' color='textSubdued'>
+              {query.createdAt}
+            </Typography>
+          </Box>
+          <IconButton
+            type='button'
+            onClick={(e) => {
+              context(e);
+              onClick();
+            }}
+          >
+            <CustomIcon type='ellipsisVertical' size='s' />
+          </IconButton>
+        </>
       )}
     </SavedQueryItemStyled>
   );
