@@ -78,12 +78,13 @@ func Execute() {
 	}
 
 	rr := repository.NewRepository(appDB, aiCipherKey)
-	secretStore := serviceSecretStore.NewSecretStore(cfg, rr.WebSessionRepo, rr.WebConnectionSecretRepo, appLogger)
+	secretStore := serviceSecretStore.NewSecretStore(cfg, rr.WebSessionRepo, rr.WebConnectionSecretRepo, rr.ConnectionSharedSecretRepo, appLogger)
 	cm := databaseConnection.NewConnectionManager(rr.HistoryRepo, secretStore, appLogger, cache)
 	ss := service.NewService(rr, cm, secretStore, service.Deps{
-		Logger: appLogger,
-		Cache:  cache,
-		Config: cfg,
+		Logger:    appLogger,
+		Cache:     cache,
+		Config:    cfg,
+		CipherKey: aiCipherKey,
 	})
 
 	if err := ss.AuthService.Bootstrap(context.Background()); err != nil {

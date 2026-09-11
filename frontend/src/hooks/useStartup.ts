@@ -1,5 +1,6 @@
 import api from '@/api';
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
+import { applyUserWorkspaceScope } from '@/core/storage/applyUserWorkspace';
 import { tools } from '@/core/utils';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import { useAiStore } from '@/store/aiStore/ai.store';
@@ -52,11 +53,13 @@ export const useStartup = (): StartupState => {
           authenticated: true,
           mustChangePassword: false
         });
+        await applyUserWorkspaceScope(undefined);
         return null;
       }
 
       const status = await api.auth.getStatus();
       applyStatus(status);
+      await applyUserWorkspaceScope(status.authenticated ? status.user?.id : undefined);
       return status;
     },
     enabled: done && desktopResolved,

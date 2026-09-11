@@ -1,7 +1,9 @@
 import type { ParsedConnectionUri } from './connectionUri';
 
+type UriFormField = 'host' | 'port' | 'username' | 'database' | 'sslMode' | 'password';
+
 type UriFormSetter = {
-  setFieldValue: (name: string, value: unknown) => void;
+  setFieldValue: (name: UriFormField, value: string) => void;
 };
 
 /** Apply parsed URI fields into a connection form. Does not rewrite the uri field. */

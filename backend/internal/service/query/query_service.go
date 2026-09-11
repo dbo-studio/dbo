@@ -191,7 +191,7 @@ func (i IQueryServiceImpl) AutoComplete(ctx context.Context, req *dto.AutoComple
 
 	ttl := 60 * time.Minute
 
-	err = i.cache.Set(ctx, cache.AutoCompleteKey(uint(req.ConnectionID), lo.FromPtr(req.Database), lo.FromPtr(req.Schema)), autocomplete, &ttl)
+	err = i.cache.Set(ctx, cache.AutoCompleteKey(helper.CtxOwnerID(ctx), uint(req.ConnectionID), lo.FromPtr(req.Database), lo.FromPtr(req.Schema)), autocomplete, &ttl)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +204,7 @@ func (i IQueryServiceImpl) findResultFromCache(ctx context.Context, req *dto.Aut
 
 	err := i.cache.ConditionalGet(
 		ctx,
-		cache.AutoCompleteKey(uint(req.ConnectionID), lo.FromPtr(req.Database), lo.FromPtr(req.Schema)),
+		cache.AutoCompleteKey(helper.CtxOwnerID(ctx), uint(req.ConnectionID), lo.FromPtr(req.Database), lo.FromPtr(req.Schema)),
 		&result,
 		true,
 	)

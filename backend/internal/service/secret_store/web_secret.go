@@ -15,6 +15,7 @@ import (
 type WebDBStore struct {
 	webSessionRepo          webSessionProvider
 	webConnectionSecretRepo webConnectionSecretProvider
+	sharedSecretRepo        connectionSharedSecretProvider
 	aesKey                  []byte
 	ttl                     time.Duration
 }
@@ -22,6 +23,7 @@ type WebDBStore struct {
 func NewWebDBStore(
 	webSessionRepo webSessionProvider,
 	webConnectionSecretRepo webConnectionSecretProvider,
+	sharedSecretRepo connectionSharedSecretProvider,
 	secret string,
 	ttl time.Duration,
 ) *WebDBStore {
@@ -30,6 +32,7 @@ func NewWebDBStore(
 	return &WebDBStore{
 		webSessionRepo:          webSessionRepo,
 		webConnectionSecretRepo: webConnectionSecretRepo,
+		sharedSecretRepo:        sharedSecretRepo,
 		aesKey:                  sum[:],
 		ttl:                     ttl,
 	}
@@ -117,4 +120,90 @@ func (s *WebDBStore) IsTemporaryConnectionPassword(ctx context.Context, ownerID 
 	}
 
 	return !item.Remember, nil
+}
+
+func (s *WebDBStore) DeleteAllConnectionPasswords(ctx context.Context, connectionID uint) error {
+	return s.webConnectionSecretRepo.DeleteByConnection(ctx, connectionID)
+}
+
+func (s *WebDBStore) GetSharedConnectionPassword(ctx context.Context, connectionID uint) (string, error) {
+	if s.sharedSecretRepo == nil {
+		return "", apperror.Unauthorized(connectionID)
+	}
+
+	item, err := s.sharedSecretRepo.Find(ctx, connectionID)
+	if err != nil {
+		if errors.Is(err, apperror.ErrConnectionSharedSecretNotFound) {
+			return "", apperror.Unauthorized(connectionID)
+		}
+
+		return "", err
+	}
+
+	plaintext, err := cryptoutil.DecryptAESGCM(s.aesKey, item.Ciphertext)
+	if err != nil {
+		return "", err
+	}
+
+	return string(plaintext), nil
+}
+
+func (s *WebDBStore) SetSharedConnectionPassword(ctx context.Context, connectionID uint, password string) error {
+	if s.sharedSecretRepo == nil {
+		return apperror.BadRequest(apperror.ErrSharingUnavailable)
+	}
+
+	enc, err := cryptoutil.EncryptAESGCM(s.aesKey, []byte(password))
+	if err != nil {
+		return err
+	}
+
+	return s.sharedSecretRepo.Upsert(ctx, &model.ConnectionSharedSecret{
+		ConnectionID: connectionID,
+		Ciphertext:   enc,
+		UpdatedAt:    time.Now(),
+	})
+}
+
+func (s *WebDBStore) DeleteSharedConnectionPassword(ctx context.Context, connectionID uint) error {
+	if s.sharedSecretRepo == nil {
+		return nil
+	}
+
+	return s.sharedSecretRepo.Delete(ctx, connectionID)
+}
+
+func (s *WebDBStore) HasSharedConnectionPassword(ctx context.Context, connectionID uint) (bool, error) {
+	if s.sharedSecretRepo == nil {
+		return false, nil
+	}
+
+	_, err := s.sharedSecretRepo.Find(ctx, connectionID)
+	if err != nil {
+		if errors.Is(err, apperror.ErrConnectionSharedSecretNotFound) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (s *WebDBStore) SharedPasswordConnectionIDs(ctx context.Context, ids []uint) (map[uint]struct{}, error) {
+	out := make(map[uint]struct{}, len(ids))
+	if s.sharedSecretRepo == nil || len(ids) == 0 {
+		return out, nil
+	}
+
+	found, err := s.sharedSecretRepo.ListConnectionIDs(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, id := range found {
+		out[id] = struct{}{}
+	}
+
+	return out, nil
 }

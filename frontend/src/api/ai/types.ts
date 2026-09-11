@@ -27,8 +27,6 @@ export type AiChatResponse = {
 
 export type AICompleteRequest = {
   connectionId: number;
-  providerId: number;
-  model: string;
   contextOpts: AiCompleteContextOptsType;
 };
 

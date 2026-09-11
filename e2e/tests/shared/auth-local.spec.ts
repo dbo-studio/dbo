@@ -62,7 +62,7 @@ test.describe("Auth Gateway local (M1)", () => {
       });
       expect(blocked.status()).toBe(403);
 
-      await auth.changePassword(bootstrapPassword, adminPassword);
+      await auth.changePasswordForced(adminPassword);
       await auth.expectAppReady();
     });
 
@@ -108,7 +108,7 @@ test.describe("Auth Gateway local (M1)", () => {
     await test.step("member can log in and change password", async () => {
       await auth.login(memberEmail, memberTemp);
       await auth.expectChangePasswordVisible();
-      await auth.changePassword(memberTemp, memberPassword);
+      await auth.changePasswordForced(memberPassword);
       await auth.expectAppReady();
 
       const cookies = await page.context().cookies();

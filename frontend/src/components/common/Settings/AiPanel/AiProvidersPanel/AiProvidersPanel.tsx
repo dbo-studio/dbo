@@ -4,11 +4,12 @@ import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import { SelectInputOption } from '@/components/base/SelectInput/types';
 import { aiStatusLabel, getAiStatus } from '@/core/ai/aiStatus';
+import { canManageAiSettings } from '@/core/auth/permissions';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import type { AiProviderType } from '@/types';
-import { Box, Button, Chip, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Button, Chip, IconButton, Stack } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -17,7 +18,9 @@ import { AiPanelFooterStyled, AiPanelFormStyled } from './AiProviders.styled';
 export default function AiProvidersPanel() {
   const providers = useAiStore((state) => state.providers);
   const updateProviders = useAiStore((state) => state.updateProviders);
-  const canEdit = useAuthStore((s) => s.mode !== 'local' || s.user?.role === 'admin');
+  const mode = useAuthStore((s) => s.mode);
+  const user = useAuthStore((s) => s.user);
+  const canEdit = canManageAiSettings(mode, user);
   const [provider, setProvider] = useState<AiProviderType | undefined>(providers?.[0]);
   const status = getAiStatus(providers);
   const [newModel, setNewModel] = useState<string>('');
@@ -181,11 +184,6 @@ export default function AiProvidersPanel() {
         data-testid='ai-status-badge'
       />
 
-      {!canEdit ? (
-        <Typography variant='caption' color='text.secondary'>
-          {locales.ai_providers_admin_only}
-        </Typography>
-      ) : null}
 
       {canEdit ? (
         <AiPanelFooterStyled>

@@ -266,6 +266,7 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
       }),
       {
         name: 'tree',
+        skipHydration: true,
         partialize: (state) => ({
           expandedNodes: state.expandedNodes,
           loadedParentIds: state.loadedParentIds,

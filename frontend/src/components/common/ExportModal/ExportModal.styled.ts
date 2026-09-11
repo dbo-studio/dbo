@@ -3,7 +3,8 @@ import { Box, styled } from '@mui/material';
 export const ExportModalContainerStyled = styled(Box)(() => ({
   display: 'flex',
   flexDirection: 'column',
-  flex: 1
+  flex: 1,
+  minHeight: 0
 })) as typeof Box;
 
 export const ExportModalPathRowStyled = styled(Box)(({ theme }) => ({
@@ -15,5 +16,6 @@ export const ExportModalPathRowStyled = styled(Box)(({ theme }) => ({
 export const ExportModalFooterStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
   marginTop: theme.spacing(2),
-  justifyContent: 'space-between'
+  justifyContent: 'space-between',
+  flexShrink: 0
 }));

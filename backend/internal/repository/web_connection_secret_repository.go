@@ -51,6 +51,12 @@ func (r *webConnectionSecretRepoImpl) Delete(ctx context.Context, sessionID stri
 		Delete(&model.WebConnectionSecret{}).Error
 }
 
+func (r *webConnectionSecretRepoImpl) DeleteByConnection(ctx context.Context, connectionID uint) error {
+	return r.db.WithContext(ctx).
+		Where("connection_id = ?", connectionID).
+		Delete(&model.WebConnectionSecret{}).Error
+}
+
 func (r *webConnectionSecretRepoImpl) UpdateExpiry(ctx context.Context, sessionID string, connectionID uint, expiresAt *time.Time, updatedAt time.Time) error {
 	return r.db.WithContext(ctx).
 		Model(&model.WebConnectionSecret{}).

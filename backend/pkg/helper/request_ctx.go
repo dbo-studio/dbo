@@ -1,6 +1,10 @@
 package helper
 
-import "context"
+import (
+	"context"
+
+	"github.com/dbo-studio/dbo/pkg/apperror"
+)
 
 type ctxKey string
 
@@ -79,6 +83,20 @@ func CtxUserRole(ctx context.Context) string {
 
 func CtxWithUserRole(ctx context.Context, role string) context.Context {
 	return context.WithValue(ctx, CtxUserRoleKey, role)
+}
+
+// RequireInstanceAdmin allows the call when there is no user principal (desktop
+// / anonymous). Logged-in web users must be admins.
+func RequireInstanceAdmin(ctx context.Context) error {
+	if CtxUserID(ctx) == "" {
+		return nil
+	}
+
+	if CtxUserRole(ctx) != "admin" {
+		return apperror.Forbidden(apperror.ErrAdminRequired)
+	}
+
+	return nil
 }
 
 func CtxMustChangePassword(ctx context.Context) bool {

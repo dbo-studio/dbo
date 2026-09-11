@@ -12,7 +12,7 @@ import { useState } from 'react';
 import * as v from 'valibot';
 import { JobProgressModal } from '../JobProgressModal/JobProgressModal';
 import ImportButton from './ImportButton/ImportButton';
-import { ImportModalContainerStyled, ImportModalFooterStyled } from './ImportModal.styled';
+import { ImportModalBodyStyled, ImportModalContainerStyled, ImportModalFooterStyled } from './ImportModal.styled';
 import type { ImportModalProps } from './types';
 
 const formSchema = v.object({
@@ -97,11 +97,7 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
             void form.handleSubmit();
           }}
         >
-          <Box
-            sx={{
-              flex: 1
-            }}
-          >
+          <ImportModalBodyStyled>
             <form.Field name='file'>
               {(field) => (
                 <Box>
@@ -184,7 +180,7 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
                 </>
               )}
             </form.Field>
-          </Box>
+          </ImportModalBodyStyled>
           <ImportModalFooterStyled>
             <Button type='button' size='small' onClick={handleCloseModal}>
               {locales.cancel}

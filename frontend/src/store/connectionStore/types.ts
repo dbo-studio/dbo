@@ -13,6 +13,7 @@ export type ConnectionStore = {
   updateCurrentConnection: (connection: ConnectionType | undefined) => void;
   patchConnectionSafeModeUnlock: (connectionId: number, unlock: { unlocked: boolean; until?: string }) => void;
   clearCurrentConnection: () => void;
+  reset: () => void;
 };
 
 export type LoadingType = 'loading' | 'error' | 'finished';

@@ -1,4 +1,5 @@
 import type { GridMetaType } from '@/api/query/types';
+import { tableDataDbName } from '@/core/storage/userScope';
 import type { SelectedRow } from '@/store/dataStore/types';
 import type { ColumnType, EditedRow, RowType } from '@/types';
 import { type DBSchema, type IDBPDatabase, openDB } from 'idb';
@@ -70,7 +71,7 @@ const TAB_QUERIES_STORAGE_KEY = 'dbo_tab_queries';
 
 class IndexedDBService {
   private dbPromise: Promise<IDBPDatabase<TableDataDB>> | null = null;
-  private readonly DB_NAME = 'table-data-db';
+  private dbName = tableDataDbName();
   private readonly DB_VERSION = 2;
   private tabQueryCache: Record<string, string> = {};
   private tabQueriesHydrated = false;
@@ -81,9 +82,29 @@ class IndexedDBService {
     void this.hydrateTabQueries();
   }
 
+  async setScope(userId?: string): Promise<void> {
+    const nextName = tableDataDbName(userId);
+    if (this.dbName === nextName) {
+      return;
+    }
+
+    if (this.dbPromise) {
+      const db = await this.dbPromise.catch(() => undefined);
+      db?.close();
+    }
+
+    this.dbName = nextName;
+    this.dbPromise = null;
+    this.tabQueryCache = {};
+    this.tabQueriesHydrated = false;
+    this.tabQueriesHydrating = null;
+    await this.initDB();
+    await this.hydrateTabQueries();
+  }
+
   private initDB(): Promise<IDBPDatabase<TableDataDB>> {
     if (!this.dbPromise) {
-      this.dbPromise = openDB<TableDataDB>(this.DB_NAME, this.DB_VERSION, {
+      this.dbPromise = openDB<TableDataDB>(this.dbName, this.DB_VERSION, {
         upgrade(db): void {
           // Create stores with indexes
           if (!db.objectStoreNames.contains('rows')) {
@@ -429,7 +450,7 @@ class IndexedDBService {
 
     if (!this.tabQueriesHydrating) {
       this.tabQueriesHydrating = (async (): Promise<void> => {
-        const migrated = this.migrateLocalStorageTabQueries();
+        const migrated = this.dbName === tableDataDbName() && this.migrateLocalStorageTabQueries();
 
         if (migrated) {
           await this.persistMigratedTabQueries({ ...this.tabQueryCache });

@@ -3,6 +3,8 @@ import type { ConnectionEngine } from '@/core/db/connectionAliases';
 
 export type ConnectionSafeMode = 'silent' | 'alert' | 'alert_write' | 'safe' | 'safe_write';
 
+export type ConnectionAccess = 'owner' | 'viewer' | 'editor';
+
 export type ConnectionOptionsType = PostgresqlOptionsType | MysqlOptionsType | SQLiteOptionsType;
 
 export interface ConnectionType {
@@ -17,4 +19,7 @@ export interface ConnectionType {
   safeMode?: ConnectionSafeMode;
   safeModeUnlocked?: boolean;
   safeModeUnlockUntil?: string;
+  access?: ConnectionAccess;
+  shared?: boolean;
+  passwordShared?: boolean;
 }

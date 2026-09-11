@@ -3,6 +3,7 @@ import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
 import AuthShell from '@/components/common/Auth/AuthShell/AuthShell';
 import { AuthShellSubmitStyled } from '@/components/common/Auth/AuthShell/AuthShell.styled';
+import { applyUserWorkspaceScope } from '@/core/storage/applyUserWorkspace';
 import locales from '@/locales';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import { Box } from '@mui/material';
@@ -19,6 +20,7 @@ const loginSchema = v.object({
 
 export default function AuthGateScreen(): JSX.Element {
   const applyStatus = useAuthStore((s) => s.applyStatus);
+  const setTotpChallenge = useAuthStore((s) => s.setTotpChallenge);
   const queryClient = useQueryClient();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -37,9 +39,15 @@ export default function AuthGateScreen(): JSX.Element {
     onSubmit: async ({ value }): Promise<void> => {
       setSubmitError(null);
       try {
-        await mutateAsync(value);
+        const result = await mutateAsync(value);
+        if (result?.totpRequired && result.challengeToken) {
+          setTotpChallenge(result.challengeToken);
+          return;
+        }
+
         const status = await api.auth.getStatus();
         applyStatus(status);
+        await applyUserWorkspaceScope(status.authenticated ? status.user?.id : undefined);
         await queryClient.invalidateQueries();
       } catch {
         setSubmitError(locales.auth_login_failed);

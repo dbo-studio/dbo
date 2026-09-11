@@ -55,7 +55,7 @@ func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (*
 	if lo.FromPtr(req.FromCache) {
 		var tree *contract.TreeNode
 
-		err := i.cache.Get(ctx, cache.TreeKey(uint(req.ConnectionID), req.ParentID), &tree)
+		err := i.cache.Get(ctx, cache.TreeKey(helper.CtxOwnerID(ctx), uint(req.ConnectionID), req.ParentID), &tree)
 		if err == nil && tree != nil {
 			return tree, nil
 		}
@@ -81,7 +81,7 @@ func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (*
 		return nil, apperror.InternalServerError(err)
 	}
 
-	err = i.cache.Set(ctx, cache.TreeKey(uint(req.ConnectionID), req.ParentID), tree, lo.ToPtr(time.Minute*30))
+	err = i.cache.Set(ctx, cache.TreeKey(helper.CtxOwnerID(ctx), uint(req.ConnectionID), req.ParentID), tree, lo.ToPtr(time.Minute*30))
 	if err != nil {
 		return nil, err
 	}

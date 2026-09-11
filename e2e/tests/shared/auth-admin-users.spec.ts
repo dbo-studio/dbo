@@ -33,8 +33,13 @@ test.describe("Administration users", () => {
       await settings.open();
       await settings.navigateTo("Administration");
       await settings.expectAdminUsersTable();
+      await expect(page.getByTestId("admin-create-permissions")).toBeVisible();
+      await expect(page.getByText("No connection shares yet.")).toBeVisible();
       const adminRow = settings.adminUserRow(adminEmail);
       await expect(adminRow).toBeVisible();
+      await expect(page.getByTestId(`admin-user-totp-${adminEmail}`)).toHaveText(
+        "Off",
+      );
       await settings.openAdminUserMenu(adminEmail);
       await expect(
         page.getByTestId(`admin-user-disable-${adminEmail}`),
@@ -47,6 +52,9 @@ test.describe("Administration users", () => {
       const row = settings.adminUserRow(memberEmail);
       await expect(row.getByText("Active", { exact: true })).toBeVisible();
       await expect(row.getByText("Must change password")).toBeVisible();
+      await expect(page.getByTestId(`admin-user-totp-${memberEmail}`)).toHaveText(
+        "Off",
+      );
     });
 
     await test.step("reset password from the row dialog", async () => {

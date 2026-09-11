@@ -3,7 +3,7 @@ import { alpha, Box, styled } from '@mui/material';
 export const SettingRowStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'row',
-  alignItems: 'center',
+  alignItems: 'flex-start',
   justifyContent: 'space-between',
   gap: theme.spacing(1.5),
   paddingTop: theme.spacing(1),

@@ -35,14 +35,28 @@ When auth mode is `local`:
 - Bootstrap env is ignored after users exist.
 - Passwords hashed with bcrypt; never logged.
 
-### Roles
+### Roles and permissions
 
-- `admin` \| `member` only. Administration → Users is admin-only.
+- `admin` \| `member` roles. Administration → Users is admin-only.
+- Per-user permissions (toggle in Administration): **Create connection**, **AI settings**, **MCP settings**. Admins implicitly have all permissions.
+- AI provider configuration is **per user** (`owner_id` on `ai_providers`). MCP settings are also stored per user (`mcp_settings.owner_id`).
 - SQL ACL is **not** in DBO (DB GRANT + Safe Mode).
+
+### Two-factor authentication (TOTP)
+
+Users can enable TOTP in Settings → Security (authenticator apps such as Google Authenticator). Sign-in becomes a two-step flow: password, then 6-digit code. Admins can disable 2FA for a user from Administration → Users.
+
+### Connection sharing
+
+Only **admins** can grant or revoke catalog shares (Administration → Users → Share connections). The connection context menu no longer exposes sharing.
+
+Saved queries, query history, and AI chats are **per user**, even on a shared connection. Members without the matching permission cannot create connections, configure AI/MCP, download server logs, or factory-reset the app database.
+
+Browser UI state (theme, tabs, tree, connection order) is stored in `localStorage` keys scoped by user id (`dbo:{userId}:…`). It is not synced to the server.
 
 ### Explicit non-goals (M1)
 
-OIDC, proxy headers, 2FA, CSRF tokens, LDAP, shared auth token mode, desktop-as-remote-client.
+OIDC, proxy headers, CSRF tokens, LDAP, shared auth token mode, desktop-as-remote-client.
 
 ## Safe Mode
 
@@ -61,6 +75,18 @@ Connection passwords and similar credentials are encrypted at rest:
 - Passwords are never returned in API responses or logs
 
 AI provider API keys are encrypted when a cipher key is available; failed encryption rejects the update rather than storing plaintext.
+
+## Shared connections (web / local auth)
+
+Team deploys can share **connection catalog** metadata (host, port, database, SSL, name) with other DBO users. Catalog roles `viewer` and `editor` control who can use vs edit the card and ACL — they are **not** SQL read-only and they do not replace database `GRANT`.
+
+- Default: each user supplies their own DB password (prompt + optional remember under that user).
+- Opt-in: the owner may also share the remembered DB password (vault). Anyone entitled then uses that database identity until they set a personal override.
+- Shared passwords are encrypted with the same `app_secret.key`. Anyone who can read the volume and the key can decrypt that vault — treat password sharing as a blast-radius choice, not a substitute for DB roles or TLS.
+- APIs never return password plaintext or ciphertext. Personal secrets are not readable by other users, including connection editors.
+- Desktop (`APP_CLIENT=desktop`) does not share connections.
+
+See [shared-connections PRD](../prd/shared-connections.md).
 
 ## MCP tokens
 
@@ -93,6 +119,7 @@ MCP access uses hashed tokens in the app database. Token comparison uses constan
 - [ ] Persistent volume backed up (`dbo.db`, `app_secret.key`)
 - [ ] Safe Mode enabled if operators share the instance
 - [ ] Firewall restricts database connections to known hosts
+- [ ] Shared-password vault off unless the squad truly needs one DB identity
 
 ## Reporting issues
 

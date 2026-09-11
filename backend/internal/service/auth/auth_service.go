@@ -39,9 +39,15 @@ func init() {
 type IAuthService interface {
 	Bootstrap(ctx context.Context) error
 	Status(ctx context.Context) (*dto.AuthStatusResponse, error)
-	Login(ctx context.Context, req *dto.AuthLoginRequest) (sessionID string, err error)
+	Login(ctx context.Context, req *dto.AuthLoginRequest) (*LoginResult, error)
+	LoginTotp(ctx context.Context, req *dto.AuthLoginTotpRequest) (sessionID string, err error)
 	ChangePassword(ctx context.Context, req *dto.AuthChangePasswordRequest) (sessionID string, err error)
 	Logout(ctx context.Context, sessionID string) error
+	Directory(ctx context.Context) ([]dto.UserDirectoryItem, error)
+	TotpStatus(ctx context.Context) (*dto.AuthTotpStatusResponse, error)
+	TotpSetup(ctx context.Context) (*dto.AuthTotpSetupResponse, error)
+	TotpEnable(ctx context.Context, req *dto.AuthTotpEnableRequest) error
+	TotpDisable(ctx context.Context, req *dto.AuthTotpDisableRequest) error
 	LoadSessionUser(ctx context.Context, session *model.WebSession) (*model.User, error)
 	SessionExpired(session *model.WebSession, now time.Time) bool
 }
@@ -49,23 +55,29 @@ type IAuthService interface {
 var _ IAuthService = (*IAuthServiceImpl)(nil)
 
 type IAuthServiceImpl struct {
-	users    repository.IUserRepo
-	sessions repository.IWebSessionRepo
-	cfg      *config.Config
-	logger   logger.Logger
+	users          repository.IUserRepo
+	sessions       repository.IWebSessionRepo
+	totpChallenges repository.ITotpLoginChallengeRepo
+	cipherKey      []byte
+	cfg            *config.Config
+	logger         logger.Logger
 }
 
 func NewAuthService(
 	users repository.IUserRepo,
 	sessions repository.IWebSessionRepo,
+	totpChallenges repository.ITotpLoginChallengeRepo,
+	cipherKey []byte,
 	cfg *config.Config,
 	appLogger logger.Logger,
 ) IAuthService {
 	return &IAuthServiceImpl{
-		users:    users,
-		sessions: sessions,
-		cfg:      cfg,
-		logger:   appLogger,
+		users:          users,
+		sessions:       sessions,
+		totpChallenges: totpChallenges,
+		cipherKey:      cipherKey,
+		cfg:            cfg,
+		logger:         appLogger,
 	}
 }
 
@@ -104,14 +116,18 @@ func (s *IAuthServiceImpl) Bootstrap(ctx context.Context) error {
 		}
 
 		now := time.Now().UTC()
+		adminPerms := model.DefaultAdminPermissions()
 		user := &model.User{
-			ID:                 id,
-			Email:              strings.ToLower(email),
-			PasswordHash:       string(hash),
-			Role:               model.UserRoleAdmin,
-			MustChangePassword: true,
-			CreatedAt:          now,
-			UpdatedAt:          now,
+			ID:                   id,
+			Email:                strings.ToLower(email),
+			PasswordHash:         string(hash),
+			Role:                 model.UserRoleAdmin,
+			PermCreateConnection: adminPerms.CreateConnection,
+			PermAiSettings:       adminPerms.AiSettings,
+			PermMcpSettings:      adminPerms.McpSettings,
+			MustChangePassword:   true,
+			CreatedAt:            now,
+			UpdatedAt:            now,
 		}
 
 		if err := s.users.Create(ctx, user); err != nil {
@@ -164,12 +180,16 @@ func (s *IAuthServiceImpl) Status(ctx context.Context) (*dto.AuthStatusResponse,
 			return nil, apperror.InternalServerError(err)
 		}
 
+		perms := user.EffectivePermissions()
 		res.Authenticated = true
 		res.MustChangePassword = user.MustChangePassword
+		res.TotpEnabled = user.TotpEnabled()
+		res.Permissions = &perms
 		res.User = &dto.AuthUserIdentity{
-			ID:    user.ID,
-			Email: user.Email,
-			Role:  string(user.Role),
+			ID:          user.ID,
+			Email:       user.Email,
+			Role:        string(user.Role),
+			Permissions: &perms,
 		}
 
 		return res, nil
@@ -183,9 +203,9 @@ func (s *IAuthServiceImpl) Status(ctx context.Context) (*dto.AuthStatusResponse,
 	return res, nil
 }
 
-func (s *IAuthServiceImpl) Login(ctx context.Context, req *dto.AuthLoginRequest) (string, error) {
+func (s *IAuthServiceImpl) Login(ctx context.Context, req *dto.AuthLoginRequest) (*LoginResult, error) {
 	if s.cfg == nil || s.cfg.App.AuthMode != config.AuthModeLocal {
-		return "", apperror.BadRequest(apperror.ErrAuthNotEnabled)
+		return nil, apperror.BadRequest(apperror.ErrAuthNotEnabled)
 	}
 
 	user, err := s.users.FindByEmail(ctx, strings.ToLower(strings.TrimSpace(req.Email)))
@@ -193,7 +213,7 @@ func (s *IAuthServiceImpl) Login(ctx context.Context, req *dto.AuthLoginRequest)
 
 	if err != nil {
 		if !errors.Is(err, apperror.ErrUserNotFound) {
-			return "", apperror.InternalServerError(err)
+			return nil, apperror.InternalServerError(err)
 		}
 
 		user = nil
@@ -203,15 +223,29 @@ func (s *IAuthServiceImpl) Login(ctx context.Context, req *dto.AuthLoginRequest)
 
 	match := bcrypt.CompareHashAndPassword(hash, []byte(req.Password)) == nil
 	if user == nil || user.IsDisabled() || !match {
-		return "", apperror.Unauthenticated()
+		return nil, apperror.Unauthenticated()
+	}
+
+	if user.TotpEnabled() {
+		token, err := s.createTotpChallenge(ctx, user.ID)
+		if err != nil {
+			return nil, apperror.InternalServerError(err)
+		}
+
+		return &LoginResult{TotpRequired: true, ChallengeToken: token}, nil
 	}
 
 	uid := user.ID
 
-	return s.sessions.CreateWithParams(ctx, repository.CreateSessionParams{
+	sessionID, err := s.sessions.CreateWithParams(ctx, repository.CreateSessionParams{
 		UserID:            &uid,
 		AbsoluteExpiresAt: time.Now().UTC().Add(SessionAbsoluteTTL),
 	})
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	return &LoginResult{SessionID: sessionID}, nil
 }
 
 func (s *IAuthServiceImpl) ChangePassword(ctx context.Context, req *dto.AuthChangePasswordRequest) (string, error) {
@@ -229,8 +263,20 @@ func (s *IAuthServiceImpl) ChangePassword(ctx context.Context, req *dto.AuthChan
 		return "", apperror.InternalServerError(err)
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.CurrentPassword)); err != nil {
-		return "", apperror.BadRequest(apperror.ErrInvalidCredentials)
+	if user.MustChangePassword {
+		if req.CurrentPassword != "" {
+			if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.CurrentPassword)); err != nil {
+				return "", apperror.BadRequest(apperror.ErrInvalidCredentials)
+			}
+		}
+	} else {
+		if req.CurrentPassword == "" {
+			return "", apperror.BadRequest(apperror.ErrInvalidCredentials)
+		}
+
+		if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.CurrentPassword)); err != nil {
+			return "", apperror.BadRequest(apperror.ErrInvalidCredentials)
+		}
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -272,6 +318,35 @@ func (s *IAuthServiceImpl) Logout(ctx context.Context, sessionID string) error {
 	}
 
 	return nil
+}
+
+func (s *IAuthServiceImpl) Directory(ctx context.Context) ([]dto.UserDirectoryItem, error) {
+	if err := helper.RequireInstanceAdmin(ctx); err != nil {
+		return nil, err
+	}
+
+	if helper.CtxUserID(ctx) == "" {
+		return []dto.UserDirectoryItem{}, nil
+	}
+
+	users, err := s.users.List(ctx)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	items := make([]dto.UserDirectoryItem, 0, len(users))
+	for i := range users {
+		if users[i].IsDisabled() {
+			continue
+		}
+
+		items = append(items, dto.UserDirectoryItem{
+			ID:    users[i].ID,
+			Email: users[i].Email,
+		})
+	}
+
+	return items, nil
 }
 
 func (s *IAuthServiceImpl) LoadSessionUser(ctx context.Context, session *model.WebSession) (*model.User, error) {

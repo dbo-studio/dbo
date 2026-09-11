@@ -4,7 +4,8 @@ import { FormError } from '@/components/base/FormError/FormError';
 import AuthShell from '@/components/common/Auth/AuthShell/AuthShell';
 import { AuthShellSubmitStyled } from '@/components/common/Auth/AuthShell/AuthShell.styled';
 import PasswordStrengthMeter from '@/components/common/Auth/PasswordStrengthMeter/PasswordStrengthMeter';
-import { authChangePasswordSchema } from '@/core/auth/passwordSchema';
+import { authForcedChangePasswordSchema } from '@/core/auth/passwordSchema';
+import { applyUserWorkspaceScope } from '@/core/storage/applyUserWorkspace';
 import locales from '@/locales';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import { Box } from '@mui/material';
@@ -19,16 +20,15 @@ export default function ChangePasswordGateScreen(): JSX.Element {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const { mutateAsync, isPending } = useMutation({
-    mutationFn: (value: { currentPassword: string; password: string; confirm: string }) =>
-      api.auth.changePassword(value.currentPassword, value.password, value.confirm)
+    mutationFn: (value: { password: string; confirm: string }) =>
+      api.auth.changePassword('', value.password, value.confirm)
   });
 
   const form = useForm({
     validators: {
-      onSubmit: authChangePasswordSchema
+      onSubmit: authForcedChangePasswordSchema
     },
     defaultValues: {
-      currentPassword: '',
       password: '',
       confirm: ''
     },
@@ -38,6 +38,7 @@ export default function ChangePasswordGateScreen(): JSX.Element {
         await mutateAsync(value);
         const status = await api.auth.getStatus();
         applyStatus(status);
+        await applyUserWorkspaceScope(status.authenticated ? status.user?.id : undefined);
         await queryClient.invalidateQueries();
         toast.success(locales.auth_password_changed);
       } catch {
@@ -58,25 +59,6 @@ export default function ChangePasswordGateScreen(): JSX.Element {
         }}
         sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
       >
-        <form.Field name='currentPassword'>
-          {(field): JSX.Element => (
-            <Box>
-              <FieldInput
-                name='currentPassword'
-                type='password'
-                label={locales.auth_current_password}
-                value={field.state.value}
-                error={field.state.meta.errors.length > 0}
-                autoFocus
-                fullWidth
-                onChange={(e): void => field.handleChange(e.target.value)}
-                inputProps={{ 'data-testid': 'auth-current-password' }}
-              />
-              <FormError mb={0} errors={field.state.meta.errors} />
-            </Box>
-          )}
-        </form.Field>
-
         <form.Field name='password'>
           {(field): JSX.Element => (
             <Box>
@@ -86,6 +68,7 @@ export default function ChangePasswordGateScreen(): JSX.Element {
                 label={locales.auth_new_password}
                 value={field.state.value}
                 error={field.state.meta.errors.length > 0}
+                autoFocus
                 fullWidth
                 onChange={(e): void => field.handleChange(e.target.value)}
                 inputProps={{ 'data-testid': 'auth-new-password' }}

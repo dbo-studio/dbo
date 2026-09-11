@@ -165,7 +165,11 @@ func tryBindCookieSession(
 }
 
 func isUnauthOnlyPath(method, path string) bool {
-	return path == "/api/auth/login" && method == http.MethodPost
+	if method != http.MethodPost {
+		return false
+	}
+
+	return path == "/api/auth/login" || path == "/api/auth/login/totp"
 }
 
 func isMustChangeAllowed(method, path string) bool {
@@ -214,6 +218,7 @@ func setUser(c fiber.Ctx, user *model.User) {
 	ctx := helper.CtxWithUserID(c.Context(), user.ID)
 	ctx = helper.CtxWithUserRole(ctx, string(user.Role))
 	ctx = helper.CtxWithMustChangePassword(ctx, user.MustChangePassword)
+	ctx = helper.CtxWithPermissions(ctx, user.EffectivePermissions())
 	c.SetContext(ctx)
 }
 

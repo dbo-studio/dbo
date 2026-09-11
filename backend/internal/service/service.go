@@ -50,9 +50,10 @@ type Service struct {
 // Deps carries the process-wide dependencies services used to fetch from the
 // global container themselves.
 type Deps struct {
-	Logger logger.Logger
-	Cache  cache.Cache
-	Config *config.Config
+	Logger    logger.Logger
+	Cache     cache.Cache
+	Config    *config.Config
+	CipherKey []byte
 }
 
 func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionManager, ss serviceSecretStore.ISecretStore, deps Deps) *Service {
@@ -65,13 +66,20 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 	toolRegistry := serviceDbtools.NewRegistry(cm, repo.ConnectionRepo)
 	mcpService := serviceMCP.NewMcpService(repo.McpSettingsRepo, repo.ConnectionRepo, toolRegistry, deps.Logger, deps.Config)
 	safeModePasswordService := serviceSafemode.NewPasswordService(repo.SafeModePasswordRepo, deps.Config, deps.Logger, deps.Cache)
-	authService := serviceAuth.NewAuthService(repo.UserRepo, repo.WebSessionRepo, deps.Config, deps.Logger)
+	authService := serviceAuth.NewAuthService(
+		repo.UserRepo,
+		repo.WebSessionRepo,
+		repo.TotpLoginChallengeRepo,
+		deps.CipherKey,
+		deps.Config,
+		deps.Logger,
+	)
 	adminUsersService := serviceAdminUsers.NewAdminUsersService(repo.UserRepo, repo.WebSessionRepo)
 
 	return &Service{
-		ConnectionService:       serviceConnection.NewConnectionService(repo.ConnectionRepo, cm, ss, safeModePasswordService, deps.Cache),
-		HistoryService:          serviceHistory.NewHistoryService(repo.HistoryRepo),
-		SavedQueryService:       serviceSavedQuery.NewSavedQueryService(repo.SavedQueryRepo),
+		ConnectionService:       serviceConnection.NewConnectionService(repo.ConnectionRepo, repo.ConnectionShareRepo, repo.UserRepo, cm, ss, safeModePasswordService, deps.Cache, deps.Logger),
+		HistoryService:          serviceHistory.NewHistoryService(repo.HistoryRepo, repo.ConnectionRepo),
+		SavedQueryService:       serviceSavedQuery.NewSavedQueryService(repo.SavedQueryRepo, repo.ConnectionRepo),
 		TreeService:             serviceTree.NewTreeService(repo.ConnectionRepo, cm, deps.Cache),
 		QueryService:            serviceQuery.NewQueryService(repo.ConnectionRepo, repo.HistoryRepo, cm, deps.Cache),
 		ImportExportService:     serviceImportExport.NewImportExportService(jobManager, deps.Config, deps.Logger),
@@ -79,7 +87,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		JobManager:              jobManager,
 		AiService:               serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, cm, toolRegistry, deps.Logger, deps.Cache),
 		AiProviderService:       aiProviderService,
-		AiChatService:           serviceAiChat.NewAiChatService(repo.AiChatRepo),
+		AiChatService:           serviceAiChat.NewAiChatService(repo.AiChatRepo, repo.ConnectionRepo),
 		ConfigService:           serviceConfig.NewConfigService(repo.ConfigRepo, aiProviderService, authService, deps.Config, deps.Cache, deps.Logger),
 		McpService:              mcpService,
 		SchemaService:           serviceSchema.NewSchemaService(repo.ConnectionRepo, cm),

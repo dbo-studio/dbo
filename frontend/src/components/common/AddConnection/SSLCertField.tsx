@@ -87,7 +87,7 @@ export default function SSLCertField({
           height: 'auto',
           minHeight: 96,
           alignItems: 'flex-start',
-          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+          fontFamily: 'ui-monospace, SFMono-Regular, Monaco, Consolas, monospace',
           fontSize: theme.typography.caption.fontSize,
           lineHeight: 1.5,
           paddingTop: theme.spacing(1),

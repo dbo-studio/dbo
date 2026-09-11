@@ -8,6 +8,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/pkg/cache"
+	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 func (cm *AiServiceImpl) getCompletionResponse(ctx context.Context, key string) (*dto.AiInlineCompleteResponse, bool) {
@@ -29,7 +30,7 @@ func (cm *AiServiceImpl) setCompletionResponse(ctx context.Context, key string, 
 	return cm.cache.Set(ctx, key, response, &ttl)
 }
 
-func (cm *AiServiceImpl) generateCompletionKey(req *dto.AiInlineCompleteRequest) string {
+func (cm *AiServiceImpl) generateCompletionKey(ctx context.Context, req *dto.AiInlineCompleteRequest) string {
 	var keyBuilder string
 
 	keyBuilder += ""
@@ -49,5 +50,5 @@ func (cm *AiServiceImpl) generateCompletionKey(req *dto.AiInlineCompleteRequest)
 
 	hash := sha1.Sum([]byte(keyBuilder))
 
-	return cache.AICompleteKey(uint(req.ConnectionID), fmt.Sprintf("%x", hash))
+	return cache.AICompleteKey(helper.CtxOwnerID(ctx), uint(req.ConnectionID), fmt.Sprintf("%x", hash))
 }

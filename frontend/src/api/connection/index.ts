@@ -1,6 +1,8 @@
 import { api } from '@/core/api';
 import type { ConnectionType } from '@/types';
 import type {
+  AdminConnectionShareType,
+  ConnectionSharesType,
   CreateConnectionRequestType,
   PingConnectionRequestType,
   PingConnectionResponseType,
@@ -17,7 +19,12 @@ const endpoint = {
   deleteConnection: (connectionID: string | number): string => `/connections/${connectionID}`,
   pingConnection: (): string => '/connections/ping',
   unlockSafeMode: (connectionID: string | number): string => `/connections/${connectionID}/safe-mode/unlock`,
-  lockSafeMode: (connectionID: string | number): string => `/connections/${connectionID}/safe-mode/lock`
+  lockSafeMode: (connectionID: string | number): string => `/connections/${connectionID}/safe-mode/lock`,
+  shares: (connectionID: string | number): string => `/connections/${connectionID}/shares`,
+  shareUser: (connectionID: string | number, userID: string): string => `/connections/${connectionID}/shares/${userID}`,
+  leaveShare: (connectionID: string | number): string => `/connections/${connectionID}/leave`,
+  passwordShare: (connectionID: string | number): string => `/connections/${connectionID}/password-share`,
+  adminShares: (): string => '/admin/shares'
 };
 
 export const getConnectionList = async (): Promise<ConnectionType[]> => {
@@ -58,4 +65,39 @@ export const unlockSafeMode = async (
 
 export const lockSafeMode = async (id: string | number): Promise<void> => {
   await api.post(endpoint.lockSafeMode(id));
+};
+
+export const listShares = async (id: string | number): Promise<ConnectionSharesType> => {
+  return (await api.get<{ data: ConnectionSharesType }>(endpoint.shares(id))).data.data;
+};
+
+export const createShare = async (
+  id: string | number,
+  payload: { userId: string; role: string; passwordShared?: boolean }
+): Promise<ConnectionSharesType> => {
+  return (await api.post<{ data: ConnectionSharesType }>(endpoint.shares(id), payload)).data.data;
+};
+
+export const updateShare = async (
+  id: string | number,
+  userId: string,
+  payload: { role: string }
+): Promise<ConnectionSharesType> => {
+  return (await api.patch<{ data: ConnectionSharesType }>(endpoint.shareUser(id, userId), payload)).data.data;
+};
+
+export const deleteShare = async (id: string | number, userId: string): Promise<ConnectionSharesType> => {
+  return (await api.delete<{ data: ConnectionSharesType }>(endpoint.shareUser(id, userId))).data.data;
+};
+
+export const leaveShare = async (id: string | number): Promise<void> => {
+  await api.post(endpoint.leaveShare(id));
+};
+
+export const updatePasswordShare = async (id: string | number, enabled: boolean): Promise<ConnectionSharesType> => {
+  return (await api.patch<{ data: ConnectionSharesType }>(endpoint.passwordShare(id), { enabled })).data.data;
+};
+
+export const listAdminShares = async (): Promise<AdminConnectionShareType[]> => {
+  return (await api.get<{ data: AdminConnectionShareType[] }>(endpoint.adminShares())).data.data;
 };

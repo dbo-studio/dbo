@@ -80,14 +80,19 @@ func (s *IAdminUsersServiceImpl) Create(ctx context.Context, req *dto.AdminCreat
 	}
 
 	now := time.Now().UTC()
+	role := model.UserRole(req.Role)
+	perms := resolveCreatePermissions(role, req.Permissions)
 	user := &model.User{
-		ID:                 id,
-		Email:              email,
-		PasswordHash:       string(hash),
-		Role:               model.UserRole(req.Role),
-		MustChangePassword: true,
-		CreatedAt:          now,
-		UpdatedAt:          now,
+		ID:                   id,
+		Email:                email,
+		PasswordHash:         string(hash),
+		Role:                 role,
+		PermCreateConnection: perms.CreateConnection,
+		PermAiSettings:       perms.AiSettings,
+		PermMcpSettings:      perms.McpSettings,
+		MustChangePassword:   true,
+		CreatedAt:            now,
+		UpdatedAt:            now,
 	}
 
 	if err := s.users.Create(ctx, user); err != nil {
@@ -144,6 +149,14 @@ func (s *IAdminUsersServiceImpl) Update(ctx context.Context, id string, req *dto
 		}
 
 		user.Role = newRole
+		if newRole == model.UserRoleAdmin {
+			adminPerms := model.DefaultAdminPermissions()
+			model.ApplyPermissions(user, &adminPerms)
+		}
+	}
+
+	if req.Permissions != nil && user.Role != model.UserRoleAdmin {
+		model.ApplyPermissions(user, req.Permissions)
 	}
 
 	if req.Password != nil {
@@ -155,6 +168,11 @@ func (s *IAdminUsersServiceImpl) Update(ctx context.Context, id string, req *dto
 		user.PasswordHash = string(hash)
 		user.MustChangePassword = true
 		revokeSessions = true
+	}
+
+	if req.TotpDisabled != nil && *req.TotpDisabled {
+		user.TotpSecretCiphertext = nil
+		user.TotpEnabledAt = nil
 	}
 
 	if err := s.users.Update(ctx, user); err != nil {
@@ -189,12 +207,26 @@ func (s *IAdminUsersServiceImpl) countAdmins(ctx context.Context) (int, error) {
 	return n, nil
 }
 
+func resolveCreatePermissions(role model.UserRole, requested *dto.UserPermissions) dto.UserPermissions {
+	if role == model.UserRoleAdmin {
+		return model.DefaultAdminPermissions()
+	}
+
+	if requested != nil {
+		return *requested
+	}
+
+	return model.DefaultMemberPermissions()
+}
+
 func toListItem(u *model.User) dto.AdminUserListItem {
 	item := dto.AdminUserListItem{
 		ID:                 u.ID,
 		Email:              u.Email,
 		Role:               string(u.Role),
+		Permissions:        u.EffectivePermissions(),
 		MustChangePassword: u.MustChangePassword,
+		TotpEnabled:        u.TotpEnabled(),
 		CreatedAt:          u.CreatedAt.UTC().Format(time.RFC3339),
 	}
 

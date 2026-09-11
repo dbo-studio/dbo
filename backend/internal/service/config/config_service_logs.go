@@ -7,10 +7,15 @@ import (
 	"path/filepath"
 
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/response"
 )
 
-func (i IConfigServiceImpl) Logs(_ context.Context) (*response.FileDownload, error) {
+func (i IConfigServiceImpl) Logs(ctx context.Context) (*response.FileDownload, error) {
+	if err := helper.RequireInstanceAdmin(ctx); err != nil {
+		return nil, err
+	}
+
 	if !i.cfg.App.AuthRequiresSession() {
 		return nil, apperror.NotFound(errors.New("logs not available"))
 	}

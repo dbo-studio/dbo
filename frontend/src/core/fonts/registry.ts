@@ -60,14 +60,6 @@ export const SYSTEM_UI_FONT: FontEntry = {
   stack: `system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", ${ARABIC_FALLBACK}, sans-serif`
 };
 
-/** VS Code macOS editor stack — system fonts, no bundled faces. */
-export const MENLO_APP_FONT: FontEntry = {
-  id: 'menlo',
-  label: 'Menlo',
-  cssFamily: 'Menlo',
-  stack: `Menlo, Monaco, "Courier New", ${ARABIC_FALLBACK}, monospace`
-};
-
 export const ARABIC_FALLBACK_FONT: FontEntry = {
   id: 'noto-sans-arabic',
   label: 'Noto Sans Arabic',
@@ -79,7 +71,6 @@ export const ARABIC_FALLBACK_FONT: FontEntry = {
 
 /** Curated core UI fonts — keep this list intentional and small. */
 export const APP_FONTS: FontEntry[] = [
-  MENLO_APP_FONT,
   SYSTEM_UI_FONT,
   appFont('roboto', 'Roboto', 'Roboto'),
   appFont('inter', 'Inter', 'Inter'),
@@ -107,10 +98,10 @@ export const EDITOR_FONTS: FontEntry[] = [
   editorFont('commit-mono', 'Commit Mono', 'Commit Mono', 'static')
 ];
 
-export const DEFAULT_APP_FONT_ID = 'menlo';
+export const DEFAULT_APP_FONT_ID = 'system-ui';
 export const DEFAULT_EDITOR_FONT_ID = 'jetbrains-mono';
 
-/** Font folders that should be precached for offline defaults (system fonts like Menlo have no faces). */
+/** Font folders that should be precached for offline defaults (system-ui has no bundled faces). */
 export const PRECACHE_FONT_IDS = [DEFAULT_EDITOR_FONT_ID, ARABIC_FALLBACK_FONT.id] as const;
 
 const allById = new Map<string, FontEntry>(
@@ -122,7 +113,8 @@ export function getFontEntry(id: string): FontEntry | undefined {
 }
 
 export function getAppFontFamily(id: string): string {
-  return getFontEntry(id)?.stack ?? getFontEntry(DEFAULT_APP_FONT_ID)!.stack;
+  const resolved = id === 'menlo' ? DEFAULT_APP_FONT_ID : id;
+  return getFontEntry(resolved)?.stack ?? getFontEntry(DEFAULT_APP_FONT_ID)!.stack;
 }
 
 export function getEditorFontFamily(id: string): string {

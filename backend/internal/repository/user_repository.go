@@ -98,6 +98,15 @@ func (r *userRepoImpl) ReassignOwners(ctx context.Context, toOwnerID string) err
 			return err
 		}
 
+		for _, table := range []string{"saved_queries", "histories", "ai_chats", "ai_providers"} {
+			if err := tx.Exec(
+				`UPDATE `+table+` SET owner_id = ? WHERE owner_id != '' AND owner_id != 'desktop' AND owner_id != ?`,
+				toOwnerID, toOwnerID,
+			).Error; err != nil {
+				return err
+			}
+		}
+
 		// Safe Mode password rows use owner_id as PK; delete orphans (cannot merge easily).
 		if err := tx.Exec(
 			`DELETE FROM safe_mode_passwords WHERE owner_id != 'desktop' AND owner_id != ?`,

@@ -46,7 +46,7 @@ export class SettingsPage extends BasePage {
     this.generalMenuItem = page.getByText("General").first();
     this.appearanceMenuItem = page.getByText("Appearance").first();
     this.shortcutsMenuItem = page.getByText("Shortcuts").first();
-    this.aiMenuItem = page.locator("div").filter({ hasText: /^AI$/ }).first();
+    this.aiMenuItem = this.panel.getByRole("button", { name: "AI", exact: true });
     this.securityMenuItem = page.getByText("Security").first();
     this.aboutMenuItem = page.getByText("About").first();
     this.administrationMenuItem = this.panel.getByRole("button", {
@@ -108,6 +108,11 @@ export class SettingsPage extends BasePage {
     }
   }
 
+  async expectMemberSettingsScope(): Promise<void> {
+    await expect(this.aiMenuItem).toBeVisible({ timeout: 10000 });
+    await expect(this.administrationMenuItem).toHaveCount(0);
+  }
+
   async expectAdminUsersTable(): Promise<void> {
     await expect(this.page.getByTestId("admin-users-table")).toBeVisible({
       timeout: 10000,
@@ -121,6 +126,36 @@ export class SettingsPage extends BasePage {
     await expect(
       this.page.getByRole("columnheader", { name: "Status" }),
     ).toBeVisible();
+    await expect(
+      this.page.getByRole("columnheader", { name: "2FA" }),
+    ).toBeVisible();
+    const table = this.page.getByTestId("admin-users-table");
+    await expect(
+      table.getByRole("columnheader", { name: "Conn." }),
+    ).toBeVisible();
+    await expect(table.getByRole("columnheader", { name: "AI" })).toBeVisible();
+    await expect(
+      table.getByRole("columnheader", { name: "MCP" }),
+    ).toBeVisible();
+  }
+
+  async expectAdminSharesTable(): Promise<void> {
+    await expect(this.page.getByTestId("admin-shares-table")).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(
+      this.page.getByRole("columnheader", { name: "Connection" }),
+    ).toBeVisible();
+    await expect(
+      this.page.getByRole("columnheader", { name: "User" }),
+    ).toBeVisible();
+    await expect(
+      this.page.getByRole("columnheader", { name: "Catalog role" }),
+    ).toBeVisible();
+  }
+
+  adminShareRow(connectionName: string, email: string): Locator {
+    return this.page.getByTestId(`admin-share-row-${connectionName}-${email}`);
   }
 
   adminUserRow(email: string): Locator {
@@ -166,6 +201,9 @@ export class SettingsPage extends BasePage {
 
   async setupTotpAndEnable(code: string): Promise<void> {
     await this.page.getByTestId("auth-totp-setup").click();
+    await expect(this.page.getByTestId("auth-totp-qr")).toBeVisible({
+      timeout: 10000,
+    });
     await expect(this.page.getByTestId("auth-totp-secret")).toBeVisible({
       timeout: 10000,
     });

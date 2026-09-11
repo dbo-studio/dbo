@@ -1,5 +1,6 @@
 import api from '@/api';
 import type { AICompleteRequest } from '@/api/ai/types';
+import { getAiStatus } from '@/core/ai/aiStatus';
 import { getEditorSessionContext } from '@/hooks/useEditorSessionContext';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
@@ -8,19 +9,51 @@ import type * as Monaco from 'monaco-editor';
 import { DEBOUNCE_DELAYS, MIN_TEXT_LENGTH_FOR_AI } from './constants';
 import { createCompletionItem, getTextRange, sanitizeInlineCompletion } from './inlineCompletionUtils';
 
-let currentRequest: AbortController | null = null;
-let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+type InlineCompletionResult = Monaco.languages.InlineCompletions;
 
-function cleanupPreviousRequest() {
-  if (currentRequest) {
-    currentRequest.abort();
-    currentRequest = null;
+type InlineAiSession = {
+  generation: number;
+  debounceTimer: ReturnType<typeof setTimeout> | null;
+  abortController: AbortController | null;
+  pendingResolve: ((result: InlineCompletionResult) => void) | null;
+};
+
+const emptyResult: InlineCompletionResult = { items: [] };
+
+let inlineAiSession: InlineAiSession = {
+  generation: 0,
+  debounceTimer: null,
+  abortController: null,
+  pendingResolve: null
+};
+
+function resolvePending(result: InlineCompletionResult) {
+  const resolve = inlineAiSession.pendingResolve;
+  inlineAiSession.pendingResolve = null;
+  resolve?.(result);
+}
+
+function cancelInlineAiSession() {
+  inlineAiSession.generation += 1;
+
+  if (inlineAiSession.debounceTimer !== null) {
+    clearTimeout(inlineAiSession.debounceTimer);
+    inlineAiSession.debounceTimer = null;
   }
 
-  if (debounceTimer) {
-    clearTimeout(debounceTimer);
-    debounceTimer = null;
+  if (inlineAiSession.abortController) {
+    inlineAiSession.abortController.abort();
+    inlineAiSession.abortController = null;
   }
+
+  resolvePending(emptyResult);
+}
+
+function isAbortError(err: unknown): boolean {
+  return (
+    err instanceof Error &&
+    (err.name === 'CanceledError' || err.name === 'AbortError' || err.message.includes('canceled'))
+  );
 }
 
 async function fetchCompletion(requestData: AICompleteRequest, signal?: AbortSignal): Promise<string> {
@@ -36,79 +69,85 @@ export function registerInlineAIProvider(monaco: typeof Monaco, languageId: stri
       _context: Monaco.languages.InlineCompletionContext,
       token: Monaco.CancellationToken
     ) => {
-      if (!useSettingStore.getState().editor.enableEditorAi) {
-        return { items: [] };
+      if (!useSettingStore.getState().editor.enableEditorAi || !getAiStatus(useAiStore.getState().providers).ready) {
+        return emptyResult;
       }
 
       if (token.isCancellationRequested) {
-        return { items: [] };
+        return emptyResult;
       }
 
       const currentConnection = useConnectionStore.getState().currentConnection;
 
       if (!currentConnection()?.id) {
-        return { items: [] };
+        return emptyResult;
       }
 
       if (getTextRange(model, position).prefix.trim().length < MIN_TEXT_LENGTH_FOR_AI) {
-        return { items: [] };
+        return emptyResult;
       }
 
-      cleanupPreviousRequest();
+      cancelInlineAiSession();
 
       const initialPosition = position;
 
-      return new Promise((resolve) => {
-        const timerId = setTimeout(() => {
+      return new Promise<InlineCompletionResult>((resolve) => {
+        const generation = inlineAiSession.generation;
+        inlineAiSession.pendingResolve = resolve;
+
+        const cancelSubscription = token.onCancellationRequested(() => {
+          if (inlineAiSession.generation === generation) {
+            cancelInlineAiSession();
+          }
+        });
+
+        const finish = (result: InlineCompletionResult) => {
+          cancelSubscription.dispose();
+          if (inlineAiSession.pendingResolve === resolve) {
+            resolvePending(result);
+          }
+        };
+
+        inlineAiSession.debounceTimer = setTimeout(() => {
+          inlineAiSession.debounceTimer = null;
+
+          if (inlineAiSession.generation !== generation) {
+            return;
+          }
+
           void (async () => {
-            if (debounceTimer !== timerId) {
-              resolve({ items: [] });
-              return;
-            }
-
-            debounceTimer = null;
-
-            if (token.isCancellationRequested) {
-              resolve({ items: [] });
+            if (token.isCancellationRequested || inlineAiSession.generation !== generation) {
+              finish(emptyResult);
               return;
             }
 
             const currentPosition = model.getPositionAt(model.getOffsetAt(initialPosition));
 
             if (model.isDisposed()) {
-              resolve({ items: [] });
+              finish(emptyResult);
               return;
             }
 
             const { prefix, suffix } = getTextRange(model, currentPosition);
 
             if (prefix.trim().length < MIN_TEXT_LENGTH_FOR_AI) {
-              resolve({ items: [] });
+              finish(emptyResult);
               return;
-            }
-
-            if (currentRequest) {
-              currentRequest.abort();
             }
 
             const abortController = new AbortController();
             const abortSignal = abortController.signal;
-            currentRequest = abortController;
+            inlineAiSession.abortController = abortController;
 
             try {
-              const providers = useAiStore.getState().providers;
-              const activeProvider = providers?.find((p) => p.isActive);
-
-              if (!activeProvider) {
-                resolve({ items: [] });
+              if (!getAiStatus(useAiStore.getState().providers).ready) {
+                finish(emptyResult);
                 return;
               }
 
               const session = getEditorSessionContext();
               const requestData: AICompleteRequest = {
                 connectionId: currentConnection()?.id ?? 0,
-                providerId: activeProvider.id,
-                model: activeProvider.model,
                 contextOpts: {
                   database: session.database,
                   schema: session.schema,
@@ -119,8 +158,12 @@ export function registerInlineAIProvider(monaco: typeof Monaco, languageId: stri
 
               const rawCompletion = await fetchCompletion(requestData, abortSignal);
 
-              if (abortSignal.aborted || token.isCancellationRequested) {
-                resolve({ items: [] });
+              if (
+                abortSignal.aborted ||
+                token.isCancellationRequested ||
+                inlineAiSession.generation !== generation
+              ) {
+                finish(emptyResult);
                 return;
               }
 
@@ -131,36 +174,30 @@ export function registerInlineAIProvider(monaco: typeof Monaco, languageId: stri
                   Math.min(model.getOffsetAt(currentPosition), model.getValueLength())
                 );
 
-                resolve({
+                finish({
                   items: [createCompletionItem(completionText, finalPosition)]
                 });
               } else {
-                resolve({ items: [] });
+                finish(emptyResult);
               }
             } catch (err) {
-              if (
-                err instanceof Error &&
-                (err.name === 'CanceledError' || err.name === 'AbortError' || err.message.includes('canceled'))
-              ) {
-                resolve({ items: [] });
+              if (isAbortError(err)) {
+                finish(emptyResult);
                 return;
               }
 
-              useSettingStore.getState().updateEditor({ enableEditorAi: false });
-              resolve({ items: [] });
+              finish(emptyResult);
             } finally {
-              if (currentRequest === abortController && !abortSignal.aborted) {
-                currentRequest = null;
+              if (inlineAiSession.abortController === abortController) {
+                inlineAiSession.abortController = null;
               }
             }
           })();
         }, DEBOUNCE_DELAYS.inlineAIProvider);
-
-        debounceTimer = timerId;
       });
     },
     disposeInlineCompletions: () => {
-      cleanupPreviousRequest();
+      cancelInlineAiSession();
     }
   });
 }

@@ -16,32 +16,41 @@ async function resetAppDbViaApi(): Promise<void> {
 /** Close UI modal flags in persisted settings so reload does not reopen them. */
 async function clearPersistedUiModals(page: Page): Promise<void> {
   await page.evaluate(() => {
-    try {
-      const raw = localStorage.getItem('settings');
-      if (!raw) {
-        return;
-      }
-      const data = JSON.parse(raw) as {
-        state?: {
-          ui?: {
-            showSettings?: { open: boolean; tab: number };
-            showAddConnection?: boolean;
-            showEditConnection?: number | boolean;
-            showConnectionPasswordPrompt?: boolean;
+    const patch = (key: string): void => {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) {
+          return;
+        }
+        const data = JSON.parse(raw) as {
+          state?: {
+            ui?: {
+              showSettings?: { open: boolean; tab: number };
+              showAddConnection?: boolean;
+              showEditConnection?: number | boolean;
+              showConnectionPasswordPrompt?: boolean;
+            };
           };
         };
-      };
-      const ui = data.state?.ui;
-      if (!ui) {
-        return;
+        const ui = data.state?.ui;
+        if (!ui) {
+          return;
+        }
+        ui.showSettings = { open: false, tab: 0 };
+        ui.showAddConnection = false;
+        ui.showEditConnection = false;
+        ui.showConnectionPasswordPrompt = false;
+        localStorage.setItem(key, JSON.stringify(data));
+      } catch {
+        // ignore corrupt settings blobs
       }
-      ui.showSettings = { open: false, tab: 0 };
-      ui.showAddConnection = false;
-      ui.showEditConnection = false;
-      ui.showConnectionPasswordPrompt = false;
-      localStorage.setItem('settings', JSON.stringify(data));
-    } catch {
-      // ignore corrupt settings blobs
+    };
+
+    patch('settings');
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith('dbo:') && key.endsWith(':settings')) {
+        patch(key);
+      }
     }
   }).catch(() => undefined);
 }

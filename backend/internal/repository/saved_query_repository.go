@@ -24,7 +24,7 @@ func (I ISavedQueryRepoImpl) Index(ctx context.Context, req *dto.SavedQueryListR
 	var items []model.SavedQuery
 
 	result := I.db.WithContext(ctx).Scopes(scope.Paginate(&req.PaginationRequest)).
-		Where("connection_id = ?", req.ConnectionID).
+		Where("connection_id = ? AND owner_id = ?", req.ConnectionID, helper.CtxOwnerID(ctx)).
 		Order("created_at desc").
 		Find(&items)
 
@@ -38,7 +38,9 @@ func (I ISavedQueryRepoImpl) Index(ctx context.Context, req *dto.SavedQueryListR
 func (I ISavedQueryRepoImpl) Find(ctx context.Context, id int32) (*model.SavedQuery, error) {
 	var query model.SavedQuery
 
-	result := I.db.WithContext(ctx).Where("id = ?", id).First(&query)
+	result := I.db.WithContext(ctx).
+		Where("id = ? AND owner_id = ?", id, helper.CtxOwnerID(ctx)).
+		First(&query)
 
 	return &query, result.Error
 }
@@ -56,6 +58,7 @@ func (I ISavedQueryRepoImpl) Create(ctx context.Context, dto *dto.CreateSavedQue
 		query.Name = *dto.Name
 	}
 
+	query.OwnerID = helper.CtxOwnerID(ctx)
 	query.ConnectionID = uint(dto.ConnectionID)
 	query.Query = dto.Query
 	result := I.db.WithContext(ctx).Save(&query)

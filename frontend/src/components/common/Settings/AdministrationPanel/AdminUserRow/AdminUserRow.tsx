@@ -1,4 +1,5 @@
 import type { AdminUserType } from '@/api/adminUsers/types';
+import type { UserPermissions } from '@/api/auth/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
@@ -12,6 +13,7 @@ import { Button, Chip, IconButton, Menu, MenuItem, Stack, TableCell, TableRow, T
 import { type JSX, type MouseEvent, useState } from 'react';
 import * as v from 'valibot';
 import AdminShareConnectionsModal from '../AdminShareConnectionsModal/AdminShareConnectionsModal';
+import AdminUserPermissionCells from '../AdminUserPermissions/AdminUserPermissionCells';
 import {
   AdministrationModalContainerStyled,
   AdministrationModalContentStyled,
@@ -29,12 +31,19 @@ export type AdminUserRowProps = {
   pending: boolean;
   onUpdate: (
     id: string,
-    payload: { role?: string; disabled?: boolean; password?: string; totpDisabled?: boolean }
+    payload: {
+      role?: string;
+      permissions?: UserPermissions;
+      disabled?: boolean;
+      password?: string;
+      totpDisabled?: boolean;
+    }
   ) => Promise<void>;
 };
 
 export default function AdminUserRow({ user, selfId, pending, onUpdate }: AdminUserRowProps): JSX.Element {
   const disabled = Boolean(user.disabledAt);
+  const isAdmin = user.role === 'admin';
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [resetOpen, setResetOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
@@ -99,6 +108,17 @@ export default function AdminUserRow({ user, selfId, pending, onUpdate }: AdminU
           }}
         />
       </TableCell>
+      <AdminUserPermissionCells
+        value={user.permissions}
+        disabled={pending || isAdmin}
+        testIdPrefix={`admin-user-perm-${user.email}`}
+        onChange={(next): void => {
+          if (isAdmin) {
+            return;
+          }
+          void onUpdate(user.id, { permissions: next });
+        }}
+      />
       <TableCell sx={{ width: 160 }}>
         <Stack spacing={0.25} sx={{ alignItems: 'flex-start' }}>
           <Chip
@@ -112,12 +132,16 @@ export default function AdminUserRow({ user, selfId, pending, onUpdate }: AdminU
               {locales.admin_must_change}
             </Typography>
           ) : null}
-          {user.totpEnabled ? (
-            <Typography variant='caption' color='info.main'>
-              {locales.auth_totp_enabled_badge}
-            </Typography>
-          ) : null}
         </Stack>
+      </TableCell>
+      <TableCell sx={{ width: 88 }}>
+        <Chip
+          size='small'
+          variant='outlined'
+          color={user.totpEnabled ? 'info' : 'default'}
+          label={user.totpEnabled ? locales.admin_on : locales.admin_off}
+          data-testid={`admin-user-totp-${user.email}`}
+        />
       </TableCell>
       <TableCell align='right' sx={{ width: 48, px: 0.5 }}>
         <IconButton

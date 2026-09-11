@@ -24,19 +24,51 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
+	access := s.resolveAccess(ctx, connection)
 	ownerID := helper.CtxOwnerID(ctx)
 
 	optionsProvided := len(req.Options) > 0
+	metadataEdit := optionsProvided || req.Name != nil || req.SafeMode != nil
 
-	// Preserve existing options when the request doesn't include them (e.g. toggling active connection).
-	if !optionsProvided {
-		req.Options = json.RawMessage(connection.Options)
+	if metadataEdit && !access.canEdit() {
+		return nil, apperror.Forbidden(apperror.ErrConnectionEditForbidden)
 	}
 
 	if lo.FromPtrOr(req.IsClose, false) {
 		if err := s.Close(ctx, connectionID); err != nil {
 			return nil, err
 		}
+	}
+
+	if !metadataEdit {
+		if access.isOwner() && req.IsActive != nil {
+			req.Options = json.RawMessage(connection.Options)
+
+			updatedConnection, err := s.connectionRepo.Update(ctx, connection, req)
+			if err != nil {
+				return nil, apperror.InternalServerError(err)
+			}
+
+			if lo.FromPtrOr(req.IsActive, false) {
+				if err := s.connectionRepo.MakeAllConnectionsNotDefault(ctx, connection); err != nil {
+					return nil, apperror.InternalServerError(err)
+				}
+			}
+
+			return &dto.UpdateConnectionResponse{
+				Connection: s.toConnectionResponse(ctx, updatedConnection),
+			}, nil
+		}
+
+		return &dto.UpdateConnectionResponse{
+			Connection: s.toConnectionResponse(ctx, connection),
+		}, nil
+	}
+
+	oldUsername := gjson.Get(connection.Options, "username").String()
+
+	if !optionsProvided {
+		req.Options = json.RawMessage(connection.Options)
 	}
 
 	password, strippedOptions, err := extractPasswordAndStrip(req.Options)
@@ -63,6 +95,14 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 		remember := req.RememberPassword != nil && *req.RememberPassword
 		if err := s.secrets.SetConnectionPassword(ctx, ownerID, connection.ID, password, remember); err != nil {
 			return nil, apperror.InternalServerError(err)
+		}
+
+		if remember && access.isOwner() {
+			if has, err := s.secrets.HasSharedConnectionPassword(ctx, connection.ID); err == nil && has {
+				if err := s.secrets.SetSharedConnectionPassword(ctx, connection.ID, password); err != nil {
+					return nil, apperror.InternalServerError(err)
+				}
+			}
 		}
 	}
 
@@ -111,11 +151,16 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 		return nil, apperror.InternalServerError(err)
 	}
 
+	newUsername := gjson.Get(string(req.Options), "username").String()
+	if optionsProvided && oldUsername != "" && newUsername != "" && oldUsername != newUsername {
+		if err := s.secrets.DeleteSharedConnectionPassword(ctx, connection.ID); err != nil {
+			return nil, apperror.InternalServerError(err)
+		}
+	}
+
 	if optionsProvided {
-		if s.cm != nil {
-			if err := s.cm.Close(ctx, ownerID, connection.ID); err != nil {
-				return nil, apperror.InternalServerError(fmt.Errorf("failed to refresh connection pool: %w", err))
-			}
+		if err := s.closePoolsForConnection(ctx, connection); err != nil {
+			return nil, apperror.InternalServerError(fmt.Errorf("failed to refresh connection pool: %w", err))
 		}
 
 		if err := s.cache.DeleteByPrefix(ctx, cache.ConnectionPrefix(connection.ID)); err != nil {
@@ -123,14 +168,14 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 		}
 	}
 
-	if lo.FromPtrOr(req.IsActive, false) {
+	if lo.FromPtrOr(req.IsActive, false) && access.isOwner() {
 		if err := s.connectionRepo.MakeAllConnectionsNotDefault(ctx, connection); err != nil {
 			return nil, apperror.InternalServerError(err)
 		}
 	}
 
 	return &dto.UpdateConnectionResponse{
-		Connection: connectionToResponse(ctx, ownerID, s.cm, s.unlockStore, updatedConnection),
+		Connection: s.toConnectionResponse(ctx, updatedConnection),
 	}, nil
 }
 

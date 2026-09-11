@@ -1,4 +1,6 @@
+import type { UserPermissions } from '@/api/auth/types';
 import type { IconTypes } from '@/components/base/CustomIcon/types';
+import { fullPermissions } from '@/core/auth/permissions';
 import locales from '@/locales';
 
 export type SettingsNavGroup = 'prefs' | 'workspace';
@@ -19,6 +21,8 @@ export type SettingsEntryDef = {
   sectionId: number;
   label: string;
   keywords: string[];
+  /** Hide when local-auth members search settings (desktop still shows these). */
+  instanceAdminOnly?: boolean;
 };
 
 export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
@@ -34,7 +38,7 @@ export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
     name: locales.appearance,
     description: locales.appearance_description,
     icon: 'theme',
-    keywords: ['appearance', 'theme', 'font', 'dark', 'light', 'editor', 'menlo', 'color'],
+    keywords: ['appearance', 'theme', 'font', 'dark', 'light', 'editor', 'system', 'color'],
     group: 'prefs'
   },
   {
@@ -72,7 +76,7 @@ export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
     name: locales.administration,
     description: locales.administration_description,
     icon: 'user',
-    keywords: ['administration', 'admin', 'users', 'members', 'invite'],
+    keywords: ['administration', 'admin', 'users', 'members', 'invite', 'share', 'catalog'],
     group: 'workspace',
     adminOnly: true
   }
@@ -107,13 +111,15 @@ export const SETTINGS_ENTRIES: SettingsEntryDef[] = [
     id: 'general.logs',
     sectionId: 0,
     label: locales.show_logs,
-    keywords: ['logs', 'log']
+    keywords: ['logs', 'log'],
+    instanceAdminOnly: true
   },
   {
     id: 'general.reset',
     sectionId: 0,
     label: locales.reset_factory,
-    keywords: ['reset', 'factory', 'clear']
+    keywords: ['reset', 'factory', 'clear'],
+    instanceAdminOnly: true
   },
   {
     id: 'appearance.theme',
@@ -125,7 +131,7 @@ export const SETTINGS_ENTRIES: SettingsEntryDef[] = [
     id: 'appearance.font',
     sectionId: 1,
     label: locales.application_font,
-    keywords: ['font', 'menlo', 'typeface']
+    keywords: ['font', 'system', 'typeface']
   },
   {
     id: 'appearance.editor',
@@ -152,6 +158,18 @@ export const SETTINGS_ENTRIES: SettingsEntryDef[] = [
     keywords: ['mcp', 'server', 'proxy']
   },
   {
+    id: 'security.account_password',
+    sectionId: 4,
+    label: locales.auth_account_password_label,
+    keywords: ['account', 'login', 'password', 'security', 'auth']
+  },
+  {
+    id: 'security.totp',
+    sectionId: 4,
+    label: locales.auth_totp_label,
+    keywords: ['2fa', 'totp', 'authenticator', 'otp', 'security']
+  },
+  {
     id: 'security.safe_mode',
     sectionId: 4,
     label: locales.safe_mode_password_label,
@@ -168,30 +186,55 @@ export const SETTINGS_ENTRIES: SettingsEntryDef[] = [
     sectionId: 6,
     label: locales.administration,
     keywords: ['users', 'admin', 'members']
+  },
+  {
+    id: 'admin.shares',
+    sectionId: 6,
+    label: locales.admin_shares,
+    keywords: ['share', 'catalog', 'connections', 'members']
   }
 ];
 
-export function getVisibleSections(isAdmin: boolean): SettingsSectionDef[] {
-  return SETTINGS_SECTIONS.filter((section) => !section.adminOnly || isAdmin);
+export function getVisibleSections(isAdmin: boolean, permissions: UserPermissions = fullPermissions): SettingsSectionDef[] {
+  return SETTINGS_SECTIONS.filter((section) => {
+    if (section.adminOnly && !isAdmin) {
+      return false;
+    }
+    if (section.id === 3 && !permissions.aiSettings && !permissions.mcpSettings) {
+      return false;
+    }
+    return true;
+  });
 }
 
 export function searchSettingsEntries(
   query: string,
-  isAdmin: boolean
+  isAdmin: boolean,
+  permissions: UserPermissions = fullPermissions
 ): Array<SettingsEntryDef & { sectionName: string }> {
   const normalized = query.trim().toLowerCase();
   if (!normalized) {
     return [];
   }
 
-  const visibleSectionIds = new Set(getVisibleSections(isAdmin).map((s) => s.id));
+  const visibleSectionIds = new Set(getVisibleSections(isAdmin, permissions).map((s) => s.id));
   const sectionNameById = new Map(SETTINGS_SECTIONS.map((s) => [s.id, s.name]));
 
   return SETTINGS_ENTRIES.filter((entry) => {
     if (!visibleSectionIds.has(entry.sectionId)) {
       return false;
     }
-    const haystack = `${entry.label} ${entry.keywords.join(' ')} ${sectionNameById.get(entry.sectionId) ?? ''}`.toLowerCase();
+    if (entry.id === 'ai.providers' && !permissions.aiSettings) {
+      return false;
+    }
+    if (entry.id === 'ai.mcp' && !permissions.mcpSettings) {
+      return false;
+    }
+    if (entry.instanceAdminOnly && !isAdmin) {
+      return false;
+    }
+    const haystack =
+      `${entry.label} ${entry.keywords.join(' ')} ${sectionNameById.get(entry.sectionId) ?? ''}`.toLowerCase();
     return haystack.includes(normalized);
   }).map((entry) => ({
     ...entry,

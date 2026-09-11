@@ -1,48 +1,66 @@
 package apperror
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strings"
 )
 
 var (
-	ErrConnectionNotFound          = errors.New("connection not found")
-	ErrWebConnectionSecretNotFound = errors.New("web connection secret not found")
-	ErrSavedQueryNotFound          = errors.New("query not found")
-	ErrAiProviderNotFound          = errors.New("ai provider not found")
-	ErrJobCannotCancel             = errors.New("job cannot cancel")
-	ErrJobNotCompleted             = errors.New("job not completed")
-	ErrJobNotFound                 = errors.New("job not found")
-	ErrAiChatNotFound              = errors.New("ai chat not found")
-	ErrProviderNotConfigured       = errors.New("provider not configured")
-	ErrAiNoSelectedModel           = errors.New("select a model first")
-	ErrPasswordRequired            = errors.New("password_required")
-	ErrSafeModeBlocked             = errors.New("safe_mode_blocked")
-	ErrSafeModeConfirmRequired     = errors.New("safe_mode_confirm_required")
-	ErrSafeModePasswordRequired    = errors.New("safe_mode_password_required")
-	ErrSafeModePasswordInvalid     = errors.New("safe_mode_password_invalid")
-	ErrSafeModePasswordNotFound    = errors.New("safe_mode_password_not_configured")
-	ErrSafeModePasswordAlreadySet  = errors.New("safe_mode_password_already_set")
-	ErrSafeModePasswordMismatch    = errors.New("safe_mode_password_mismatch")
-	ErrInvalidEncryptionKey        = errors.New("invalid encryption key")
-	ErrDecryptionFailed            = errors.New("decryption failed")
-	ErrQueryCanceled               = errors.New("query canceled")
-	ErrUnauthenticated             = errors.New("authentication required")
-	ErrAuthNotEnabled              = errors.New("authentication is not enabled")
-	ErrInvalidSavePath             = errors.New("invalid save path")
-	ErrInvalidInlineQuery          = errors.New("invalid inline query")
-	ErrExportQueryNotRead          = errors.New("export query must be a read-only statement")
-	ErrImportFileTooLarge          = errors.New("import file is too large")
-	ErrInvalidProviderURL          = errors.New("provider URL must use http or https")
-	ErrUserNotFound                = errors.New("user not found")
-	ErrUserDisabled                = errors.New("user is disabled")
-	ErrInvalidCredentials          = errors.New("invalid email or password")
-	ErrMustChangePassword          = errors.New("must_change_password")
-	ErrAdminRequired               = errors.New("admin role required")
-	ErrCannotDisableSelf           = errors.New("cannot disable your own account")
-	ErrCannotDemoteLastAdmin       = errors.New("cannot demote the last admin")
-	ErrUserEmailTaken              = errors.New("email already in use")
+	ErrConnectionNotFound             = errors.New("connection not found")
+	ErrWebConnectionSecretNotFound    = errors.New("web connection secret not found")
+	ErrSavedQueryNotFound             = errors.New("query not found")
+	ErrAiProviderNotFound             = errors.New("ai provider not found")
+	ErrJobCannotCancel                = errors.New("job cannot cancel")
+	ErrJobNotCompleted                = errors.New("job not completed")
+	ErrJobNotFound                    = errors.New("job not found")
+	ErrAiChatNotFound                 = errors.New("ai chat not found")
+	ErrProviderNotConfigured          = errors.New("provider not configured")
+	ErrAiNoSelectedModel              = errors.New("select a model first")
+	ErrAiNotConfigured                = errors.New("ai is not configured")
+	ErrAiMissingKey                   = errors.New("ai api key is required")
+	ErrAiMissingURL                   = errors.New("ai provider url is required")
+	ErrAiMissingModel                 = errors.New("ai model is required")
+	ErrPasswordRequired               = errors.New("password_required")
+	ErrSafeModeBlocked                = errors.New("safe_mode_blocked")
+	ErrSafeModeConfirmRequired        = errors.New("safe_mode_confirm_required")
+	ErrSafeModePasswordRequired       = errors.New("safe_mode_password_required")
+	ErrSafeModePasswordInvalid        = errors.New("safe_mode_password_invalid")
+	ErrSafeModePasswordNotFound       = errors.New("safe_mode_password_not_configured")
+	ErrSafeModePasswordAlreadySet     = errors.New("safe_mode_password_already_set")
+	ErrSafeModePasswordMismatch       = errors.New("safe_mode_password_mismatch")
+	ErrInvalidEncryptionKey           = errors.New("invalid encryption key")
+	ErrDecryptionFailed               = errors.New("decryption failed")
+	ErrQueryCanceled                  = errors.New("query canceled")
+	ErrUnauthenticated                = errors.New("authentication required")
+	ErrAuthNotEnabled                 = errors.New("authentication is not enabled")
+	ErrInvalidSavePath                = errors.New("invalid save path")
+	ErrInvalidInlineQuery             = errors.New("invalid inline query")
+	ErrExportQueryNotRead             = errors.New("export query must be a read-only statement")
+	ErrImportFileTooLarge             = errors.New("import file is too large")
+	ErrInvalidProviderURL             = errors.New("provider URL must use http or https")
+	ErrUserNotFound                   = errors.New("user not found")
+	ErrUserDisabled                   = errors.New("user is disabled")
+	ErrInvalidCredentials             = errors.New("invalid email or password")
+	ErrInvalidTotpCode                = errors.New("invalid authentication code")
+	ErrTotpChallengeNotFound          = errors.New("authentication challenge expired")
+	ErrTotpAlreadyEnabled             = errors.New("two-factor authentication is already enabled")
+	ErrTotpNotEnabled                 = errors.New("two-factor authentication is not enabled")
+	ErrMustChangePassword             = errors.New("must_change_password")
+	ErrAdminRequired                  = errors.New("admin role required")
+	ErrPermissionDenied               = errors.New("permission denied")
+	ErrCannotDisableSelf              = errors.New("cannot disable your own account")
+	ErrCannotDemoteLastAdmin          = errors.New("cannot demote the last admin")
+	ErrUserEmailTaken                 = errors.New("email already in use")
+	ErrConnectionShareNotFound        = errors.New("connection share not found")
+	ErrConnectionSharedSecretNotFound = errors.New("connection shared secret not found")
+	ErrConnectionEditForbidden        = errors.New("not allowed to edit this connection")
+	ErrConnectionDeleteForbidden      = errors.New("not allowed to delete this connection")
+	ErrConnectionShareForbidden       = errors.New("not allowed to manage shares for this connection")
+	ErrCannotShareWithOwner           = errors.New("cannot share a connection with its owner")
+	ErrSharingUnavailable             = errors.New("connection sharing is not available")
+	ErrSharedPasswordNotRemembered    = errors.New("remember the database password before sharing it")
 )
 
 type AppError struct {
@@ -243,6 +261,10 @@ func QueryCanceled() error {
 		Message: "query_canceled",
 		Err:     ErrQueryCanceled,
 	}
+}
+
+func IsCanceled(err error) bool {
+	return Equals(err, ErrQueryCanceled) || errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)
 }
 
 // Unauthenticated is returned when a request has no valid session and the

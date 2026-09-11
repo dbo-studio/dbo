@@ -5,7 +5,7 @@
   "scripts": {
     "format": "prettier --write pages tests",
     "test": "node scripts/run-e2e.mjs",
-    "test:auth": "E2E_LOCAL_AUTH=1 node scripts/run-e2e.mjs tests/shared/auth-local.spec.ts",
+    "test:auth": "E2E_LOCAL_AUTH=1 node scripts/run-e2e.mjs tests/shared/auth-local.spec.ts tests/shared/auth-shared-connections.spec.ts tests/shared/auth-admin-users.spec.ts tests/shared/auth-security-settings.spec.ts tests/shared/auth-totp.spec.ts",
     "test:pg": "node scripts/run-e2e.mjs --project=postgres",
     "test:mysql": "node scripts/run-e2e.mjs --project=mysql",
     "test:sqlite": "node scripts/run-e2e.mjs --project=sqlite",
@@ -19,6 +19,7 @@
     "@playwright/test": "^1.55.0",
     "@types/node": "^24.10.0",
     "dotenv": "^17.4.2",
+    "otplib": "^12.0.1",
     "prettier": "^3.9.6",
     "typescript": "^6.0.3"
   }

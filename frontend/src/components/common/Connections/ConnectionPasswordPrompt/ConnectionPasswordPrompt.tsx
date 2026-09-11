@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { formatPingFailureMessage, formatPingSuccessMessage } from '@/components/common/AddConnection/pingDiagnostics';
 import * as v from 'valibot';
 import {
+  ConnectionFormBodyStyled,
   ConnectionFormCheckboxRowStyled,
   ConnectionFormContainerStyled,
   ConnectionFormFooterStyled
@@ -128,27 +129,29 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
           void handleSubmit(e);
         }}
       >
-        <FieldInput
-          name='password'
-          value={password}
-          label={locales.password}
-          error={validationErrors.length > 0}
-          onChange={(e): void => setPassword(e.target.value)}
-        />
-        <FormError mb={0} errors={validationErrors} />
-
-        <ConnectionFormCheckboxRowStyled>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={rememberPassword}
-                size={'small'}
-                onChange={(e): void => setRememberPassword(e.target.checked)}
-              />
-            }
-            label={locales.remember_password}
+        <ConnectionFormBodyStyled>
+          <FieldInput
+            name='password'
+            value={password}
+            label={locales.password}
+            error={validationErrors.length > 0}
+            onChange={(e): void => setPassword(e.target.value)}
           />
-        </ConnectionFormCheckboxRowStyled>
+          <FormError mb={0} errors={validationErrors} />
+
+          <ConnectionFormCheckboxRowStyled>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={rememberPassword}
+                  size={'small'}
+                  onChange={(e): void => setRememberPassword(e.target.checked)}
+                />
+              }
+              label={locales.remember_password}
+            />
+          </ConnectionFormCheckboxRowStyled>
+        </ConnectionFormBodyStyled>
         <ConnectionFormFooterStyled>
           <Button type='button' size='small' onClick={handleClose}>
             {locales.cancel}

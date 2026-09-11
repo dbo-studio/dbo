@@ -30,12 +30,30 @@ export const authChangePasswordSchema = v.pipe(
   )
 );
 
+const userPermissionsSchema = v.object({
+  createConnection: v.boolean(),
+  aiSettings: v.boolean(),
+  mcpSettings: v.boolean()
+});
+
 export const adminCreateUserSchema = v.object({
   email: v.pipe(v.string(), v.email('Valid email is required')),
   password: authPasswordSchema,
-  role: v.pipe(v.string(), v.picklist(['admin', 'member']))
+  role: v.pipe(v.string(), v.picklist(['admin', 'member'])),
+  permissions: userPermissionsSchema
 });
 
 export const adminResetPasswordSchema = v.object({
   password: authPasswordSchema
 });
+
+export const authForcedChangePasswordSchema = v.pipe(
+  v.object({
+    password: authPasswordSchema,
+    confirm: authPasswordSchema
+  }),
+  v.forward(
+    v.partialCheck([['password'], ['confirm']], (input) => input.password === input.confirm, 'Passwords must match'),
+    ['confirm']
+  )
+);

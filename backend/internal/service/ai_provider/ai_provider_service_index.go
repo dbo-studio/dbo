@@ -23,7 +23,7 @@ var configs = []AiProviderConfig{
 		URL:      "https://api.openai.com/v1",
 		Models:   []string{"gpt-5", "gpt-4o"},
 		Model:    "gpt-5",
-		IsActive: true,
+		IsActive: false,
 		Timeout:  30,
 	},
 	{

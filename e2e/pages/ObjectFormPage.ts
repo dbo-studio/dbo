@@ -324,6 +324,11 @@ export class ObjectFormPage extends BasePage {
         await tab.click();
         await this.wait(500);
         await this.waitForReady();
+        await expect(
+          this.page
+            .getByTestId("workspace-tab-icon-object")
+            .or(this.page.getByTestId("workspace-tab-icon-object-detail")),
+        ).toBeVisible();
         return;
       }
     }
@@ -334,6 +339,11 @@ export class ObjectFormPage extends BasePage {
     await tab.click();
     await this.wait(500);
     await this.waitForReady();
+    await expect(
+      this.page
+        .getByTestId("workspace-tab-icon-object")
+        .or(this.page.getByTestId("workspace-tab-icon-object-detail")),
+    ).toBeVisible();
   }
 
   async closeWorkspaceTab(title: string): Promise<void> {

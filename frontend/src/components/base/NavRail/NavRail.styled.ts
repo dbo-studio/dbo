@@ -1,7 +1,36 @@
 import { alpha, Box, styled } from '@mui/material';
-import type { MenuPanelItemStyledProps } from '../../types';
 
-export const MenuPanelItemStyled = styled(Box)<MenuPanelItemStyledProps>(({ theme, selected }) => ({
+export const NavRailStyled = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'hideOnMobile'
+})<{ hideOnMobile?: boolean }>(({ theme, hideOnMobile }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  width: 240,
+  minWidth: 240,
+  maxWidth: 240,
+  height: '100%',
+  minHeight: 0,
+  background: theme.palette.background.subdued,
+  borderRight: `1px solid ${theme.palette.divider}`,
+  ...(hideOnMobile
+    ? {
+        [theme.breakpoints.down('md')]: {
+          display: 'none'
+        }
+      }
+    : {})
+}));
+
+export const NavRailListStyled = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(1),
+  overflow: 'auto',
+  flex: 1,
+  minHeight: 0
+}));
+
+export const NavRailItemStyled = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'selected'
+})<{ selected?: boolean }>(({ theme, selected }) => ({
   display: 'flex',
   flexDirection: 'row',
   alignItems: 'center',
@@ -13,6 +42,7 @@ export const MenuPanelItemStyled = styled(Box)<MenuPanelItemStyledProps>(({ them
   borderLeft: `3px solid ${selected ? theme.palette.primary.main : 'transparent'}`,
   background: selected ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
   color: selected ? theme.palette.text.primary : theme.palette.text.text,
+  textTransform: 'none',
   '&:hover': {
     background: selected ? alpha(theme.palette.primary.main, 0.14) : alpha(theme.palette.action.hover, 0.6)
   },

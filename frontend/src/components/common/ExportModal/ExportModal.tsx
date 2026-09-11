@@ -97,7 +97,8 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
         >
           <Box
             sx={{
-              flex: 1
+              flex: 1,
+              minHeight: 0
             }}
           >
             <SelectInput

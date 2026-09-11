@@ -152,3 +152,108 @@ func (h ConnectionHandler) LockSafeMode(c fiber.Ctx) error {
 
 	return response.SuccessBuilder().Send(c)
 }
+
+func (h ConnectionHandler) ListShares(c fiber.Ctx) error {
+	connectionID := fiber.Params[int32](c, "id")
+
+	data, err := h.connectionService.ListShares(c, connectionID)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(data).Send(c)
+}
+
+func (h ConnectionHandler) CreateShare(c fiber.Ctx) error {
+	connectionID := fiber.Params[int32](c, "id")
+	req := new(dto.CreateConnectionShareRequest)
+
+	if err := c.Bind().Body(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	data, err := h.connectionService.CreateShare(c, connectionID, req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(data).Send(c)
+}
+
+func (h ConnectionHandler) UpdateShare(c fiber.Ctx) error {
+	connectionID := fiber.Params[int32](c, "id")
+	userID := c.Params("userId")
+	req := new(dto.UpdateConnectionShareRequest)
+
+	if err := c.Bind().Body(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	data, err := h.connectionService.UpdateShare(c, connectionID, userID, req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(data).Send(c)
+}
+
+func (h ConnectionHandler) DeleteShare(c fiber.Ctx) error {
+	connectionID := fiber.Params[int32](c, "id")
+	userID := c.Params("userId")
+
+	data, err := h.connectionService.DeleteShare(c, connectionID, userID)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(data).Send(c)
+}
+
+func (h ConnectionHandler) LeaveShare(c fiber.Ctx) error {
+	connectionID := fiber.Params[int32](c, "id")
+	if err := h.connectionService.LeaveShare(c, connectionID); err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().Send(c)
+}
+
+func (h ConnectionHandler) UpdatePasswordShare(c fiber.Ctx) error {
+	connectionID := fiber.Params[int32](c, "id")
+	req := new(dto.UpdatePasswordShareRequest)
+
+	if err := c.Bind().Body(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	data, err := h.connectionService.UpdatePasswordShare(c, connectionID, req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(data).Send(c)
+}
+
+func (h ConnectionHandler) AdminListShares(c fiber.Ctx) error {
+	data, err := h.connectionService.AdminListShares(c)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(data).Send(c)
+}

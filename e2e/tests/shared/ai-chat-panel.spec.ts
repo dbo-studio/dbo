@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { getDbConfig } from "../../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
+import { clearActiveAiProfile, saveAiSetup } from "../../helpers/aiSetup";
 import { withConnectionCleanup } from "../../helpers/safeCleanup";
 import { ConnectionPage, SettingsPage } from "../../pages";
 
@@ -8,7 +9,7 @@ import { ConnectionPage, SettingsPage } from "../../pages";
  * AI Assistant panel smoke (no provider / no stream).
  */
 test.describe("AI Chat panel", () => {
-  test("opens assistant panel and shows composer", async ({
+  test("shows in-place setup until a provider is saved", async ({
     page,
   }, testInfo) => {
     const connectionPage = new ConnectionPage(page);
@@ -17,6 +18,7 @@ test.describe("AI Chat panel", () => {
     const config = getDbConfig("postgresql", connectionName);
 
     await withConnectionCleanup(page, connectionName, async () => {
+      await clearActiveAiProfile(page);
       await connectionPage.goto();
       await connectionPage.waitForReady();
 
@@ -33,7 +35,15 @@ test.describe("AI Chat panel", () => {
         });
       });
 
-      await test.step("Composer is visible", async () => {
+      await test.step("In-place setup is visible before a profile exists", async () => {
+        await expect(settingsPage.aiSetupForm()).toBeVisible({
+          timeout: 10000,
+        });
+        await expect(page.getByPlaceholder(/ask anything/i)).toHaveCount(0);
+      });
+
+      await test.step("Save provider and show composer", async () => {
+        await saveAiSetup(page, "sk-e2e-fake-key");
         await expect(page.getByPlaceholder(/ask anything/i)).toBeVisible({
           timeout: 10000,
         });

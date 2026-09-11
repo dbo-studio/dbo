@@ -19,5 +19,8 @@ type (
 		SafeMode            string  `json:"safeMode"`
 		SafeModeUnlocked    bool    `json:"safeModeUnlocked"`
 		SafeModeUnlockUntil *string `json:"safeModeUnlockUntil,omitempty"`
+		Access              string  `json:"access"`
+		Shared              bool    `json:"shared"`
+		PasswordShared      bool    `json:"passwordShared"`
 	}
 )

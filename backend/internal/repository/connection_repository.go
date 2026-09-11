@@ -24,14 +24,48 @@ func (c IConnectionRepoImpl) Index(ctx context.Context) (*[]model.Connection, er
 	var connections []model.Connection
 
 	ownerID := helper.CtxOwnerID(ctx)
-	result := c.db.WithContext(ctx).Where("owner_id = ?", ownerID).Find(&connections)
+	result := c.db.WithContext(ctx).
+		Where("owner_id = ? OR id IN (SELECT connection_id FROM connection_shares WHERE user_id = ?)", ownerID, ownerID).
+		Order("id ASC").
+		Find(&connections)
 
 	return &connections, result.Error
 }
 
 func (c IConnectionRepoImpl) Find(ctx context.Context, id int32) (*model.Connection, error) {
+	connection, err := c.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if connectionAccessible(ctx, c.db, connection) {
+		return connection, nil
+	}
+
+	return nil, gorm.ErrRecordNotFound
+}
+
+func (c IConnectionRepoImpl) FindByID(ctx context.Context, id int32) (*model.Connection, error) {
+	var connection model.Connection
+
+	result := c.db.WithContext(ctx).Where("id = ?", id).First(&connection)
+
+	return &connection, result.Error
+}
+
+func connectionAccessible(ctx context.Context, db *gorm.DB, connection *model.Connection) bool {
 	ownerID := helper.CtxOwnerID(ctx)
-	return c.FindByIDAndOwner(ctx, id, ownerID)
+	if connection.OwnerID == ownerID {
+		return true
+	}
+
+	var n int64
+
+	err := db.WithContext(ctx).Model(&model.ConnectionShare{}).
+		Where("connection_id = ? AND user_id = ?", connection.ID, ownerID).
+		Count(&n).Error
+
+	return err == nil && n > 0
 }
 
 func (c IConnectionRepoImpl) FindByIDAndOwner(ctx context.Context, id int32, ownerID string) (*model.Connection, error) {

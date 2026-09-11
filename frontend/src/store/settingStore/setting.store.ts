@@ -104,6 +104,7 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
       }),
       {
         name: 'settings',
+        skipHydration: true,
         partialize: (state) => ({
           theme: state.theme,
           editor: state.editor,

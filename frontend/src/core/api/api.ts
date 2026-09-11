@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import { toast } from 'sonner';
 
+import { applyUserWorkspaceScope } from '@/core/storage/applyUserWorkspace';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -87,6 +88,7 @@ const handleApiError = (error: AxiosError<ApiErrorResponse>): void => {
     const mode = useAuthStore.getState().mode;
     if (mode === 'local') {
       useAuthStore.getState().clear();
+      void applyUserWorkspaceScope(undefined);
     }
     return;
   }

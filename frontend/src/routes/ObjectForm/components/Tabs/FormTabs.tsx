@@ -1,20 +1,49 @@
+import NavRail, { NavRailItem, NavRailList } from '@/components/base/NavRail/NavRail';
+import locales from '@/locales';
 import type { ObjectTabType } from '@/types/Tree';
-import { Tab, Tabs } from '@mui/material';
-import type { JSX } from 'react';
+import { type JSX, type KeyboardEvent, useRef } from 'react';
 import type { FormTabProps } from '../../types';
-import { FormTabsStyled } from './FormTabs.styled';
 
 export default function FormTabs({ tabs, selectedTabId, onTabChange }: FormTabProps): JSX.Element {
+  const itemRef = useRef<Record<string, HTMLDivElement | null>>({});
+  const activeId = selectedTabId ?? tabs[0]?.id ?? '';
+
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>, index: number): void {
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') {
+      return;
+    }
+
+    event.preventDefault();
+    const direction = event.key === 'ArrowDown' ? 1 : -1;
+    const nextIndex = (index + direction + tabs.length) % tabs.length;
+    const nextId = tabs[nextIndex].id;
+    onTabChange(nextId);
+    itemRef.current[nextId]?.focus();
+  }
+
   return (
-    <FormTabsStyled>
-      <Tabs
-        value={selectedTabId ?? tabs[0]?.id ?? ''}
-        onChange={(_, newValue): void => onTabChange(newValue as string)}
-      >
-        {tabs.map((tab: ObjectTabType) => (
-          <Tab value={tab.id} key={tab.id} label={tab.name} data-testid={`object-form-tab-${tab.id}`} />
-        ))}
-      </Tabs>
-    </FormTabsStyled>
+    <NavRail role='tablist' aria-label={locales.object_form_sections}>
+      <NavRailList>
+        {tabs.map((tab: ObjectTabType, index) => {
+          const selected = activeId === tab.id;
+
+          return (
+            <NavRailItem
+              key={tab.id}
+              ref={(el): void => {
+                itemRef.current[tab.id] = el;
+              }}
+              label={tab.name}
+              selected={selected}
+              role='tab'
+              tabIndex={selected ? 0 : -1}
+              testId={`object-form-tab-${tab.id}`}
+              onClick={(): void => onTabChange(tab.id)}
+              onKeyDown={(event): void => handleKeyDown(event, index)}
+            />
+          );
+        })}
+      </NavRailList>
+    </NavRail>
   );
 }

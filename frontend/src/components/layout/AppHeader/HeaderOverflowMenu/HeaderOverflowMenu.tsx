@@ -1,9 +1,11 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { constants } from '@/core/constants';
 import { TabMode } from '@/core/enums';
+import { canCreateConnection, canManageMcpSettings } from '@/core/auth/permissions';
 import { openSettings } from '@/core/settings/openSettings';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import locales from '@/locales';
+import { useAuthStore } from '@/store/authStore/auth.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -23,6 +25,10 @@ export default function HeaderOverflowMenu(): JSX.Element {
   const open = Boolean(anchorEl);
   const release = useSettingStore((state) => state.general.release);
   const updateUI = useSettingStore((state) => state.updateUI);
+  const mode = useAuthStore((s) => s.mode);
+  const user = useAuthStore((s) => s.user);
+  const canAddConnection = canCreateConnection(mode, user);
+  const canManageMcp = canManageMcpSettings(mode, user);
 
   const handleOpen = (event: MouseEvent<HTMLButtonElement>): void => {
     event.stopPropagation();
@@ -138,12 +144,14 @@ export default function HeaderOverflowMenu(): JSX.Element {
           </ListItemIcon>
           <ListItemText>{locales.connections}</ListItemText>
         </MenuItem>
-        <MenuItem onClick={openAddConnection}>
-          <ListItemIcon>
-            <CustomIcon type='plus' size='s' />
-          </ListItemIcon>
-          <ListItemText>{locales.new_connection}</ListItemText>
-        </MenuItem>
+        {canAddConnection ? (
+          <MenuItem onClick={openAddConnection}>
+            <ListItemIcon>
+              <CustomIcon type='plus' size='s' />
+            </ListItemIcon>
+            <ListItemText>{locales.new_connection}</ListItemText>
+          </MenuItem>
+        ) : null}
         <MenuItem onClick={toggleLeftSidebar} disabled={!currentConnection}>
           <ListItemIcon>
             <CustomIcon type='sideLeft' size='s' />
@@ -168,12 +176,14 @@ export default function HeaderOverflowMenu(): JSX.Element {
           </ListItemIcon>
           <ListItemText>{release ? locales.new_version_available : locales.settings}</ListItemText>
         </MenuItem>
-        <MenuItem onClick={openMcpSettings}>
-          <ListItemIcon>
-            <CustomIcon type='network' size='s' />
-          </ListItemIcon>
-          <ListItemText>{locales.mcp_settings}</ListItemText>
-        </MenuItem>
+        {canManageMcp ? (
+          <MenuItem onClick={openMcpSettings}>
+            <ListItemIcon>
+              <CustomIcon type='network' size='s' />
+            </ListItemIcon>
+            <ListItemText>{locales.mcp_settings}</ListItemText>
+          </MenuItem>
+        ) : null}
       </Menu>
     </>
   );

@@ -15,10 +15,15 @@ import (
 	"github.com/tidwall/sjson"
 )
 
-func connectionsToResponse(ctx context.Context, ownerID string, cm *databaseConnection.ConnectionManager, unlock *serviceSafemode.UnlockStore, connections *[]model.Connection) *dto.ConnectionsResponse {
+type connectionView struct {
+	access         string
+	passwordShared bool
+}
+
+func connectionsToResponse(ctx context.Context, ownerID string, cm *databaseConnection.ConnectionManager, unlock *serviceSafemode.UnlockStore, connections *[]model.Connection, views map[uint]connectionView) *dto.ConnectionsResponse {
 	data := make([]dto.Connection, 0)
 	for _, c := range *connections {
-		data = append(data, connectionToResponse(ctx, ownerID, cm, unlock, &c))
+		data = append(data, connectionToResponse(ctx, ownerID, cm, unlock, &c, views[c.ID]))
 	}
 
 	return &dto.ConnectionsResponse{
@@ -26,7 +31,7 @@ func connectionsToResponse(ctx context.Context, ownerID string, cm *databaseConn
 	}
 }
 
-func connectionToResponse(ctx context.Context, ownerID string, cm *databaseConnection.ConnectionManager, unlock *serviceSafemode.UnlockStore, connection *model.Connection) dto.Connection {
+func connectionToResponse(ctx context.Context, ownerID string, cm *databaseConnection.ConnectionManager, unlock *serviceSafemode.UnlockStore, connection *model.Connection, view connectionView) dto.Connection {
 	options, _ := sjson.Set(connection.Options, "password", "")
 	if uri := gjson.Get(options, "uri").String(); uri != "" {
 		if cleaned, _, stripErr := databaseConnection.StripURIPassword(uri); stripErr == nil && cleaned != uri {
@@ -55,6 +60,15 @@ func connectionToResponse(ctx context.Context, ownerID string, cm *databaseConne
 		unlockUntil = &formatted
 	}
 
+	access := view.access
+	if access == "" {
+		if connection.OwnerID == ownerID {
+			access = "owner"
+		} else {
+			access = model.ConnectionShareViewer
+		}
+	}
+
 	return dto.Connection{
 		ID:                  int64(connection.ID),
 		Name:                connection.Name,
@@ -67,6 +81,9 @@ func connectionToResponse(ctx context.Context, ownerID string, cm *databaseConne
 		SafeMode:            string(policy.Mode),
 		SafeModeUnlocked:    policy.Unlocked,
 		SafeModeUnlockUntil: unlockUntil,
+		Access:              access,
+		Shared:              access != "owner",
+		PasswordShared:      view.passwordShared,
 	}
 }
 

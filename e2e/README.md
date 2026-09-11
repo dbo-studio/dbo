@@ -70,8 +70,8 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Auth Gateway local (M1)  | `shared/auth-local.spec.ts`                   | `npm run test:auth` / `E2E_LOCAL_AUTH=1`: login, must_change gate (no current password), member, logout, MCP mgmt, disable revoke |
 | Security account password | `shared/auth-security-settings.spec.ts`      | `npm run test:auth`: change login password from Settings → Security |
 | TOTP 2FA                 | `shared/auth-totp.spec.ts`                    | `npm run test:auth`: enable TOTP, login with OTP, admin disable 2FA |
-| Administration users     | `shared/auth-admin-users.spec.ts`             | `npm run test:auth`: users table, create member, reset password dialog (Enter submit), disable, share connections |
-| Shared connections       | `shared/auth-shared-connections.spec.ts`      | `npm run test:auth`: two users share catalog (sqlite); password vault modes when sample Postgres is reachable; per-user saved/history/chats + instance-admin APIs; theme persist scoped by user |
+| Administration users     | `shared/auth-admin-users.spec.ts`             | `npm run test:auth`: users table + permissions toggles, 2FA column, create member, reset password dialog (Enter submit), disable, share connections |
+| Shared connections       | `shared/auth-shared-connections.spec.ts`      | `npm run test:auth`: two users share catalog (sqlite) + admin shares table; member sees AI settings but not Administration; per-user AI providers; password vault modes when sample Postgres is reachable; per-user saved/history/chats + instance-admin APIs; theme persist scoped by user |
 | Crash screen             | `shared/crash-screen.spec.ts`                 | render crash UI; Reload clears local persist, keeps connections |
 | Connections              | `shared\|mysql\|sqlite/connections.spec.ts`   | create/edit/dup/reorder/refresh/menu/ping via shared suite |
 | MariaDB alias            | `mysql/mariadb-alias.spec.ts`                 | type=mariadb against MySQL sample: create + tree           |

@@ -10,13 +10,16 @@ type AuthStatusResponse struct {
 	Mode               string            `json:"mode"`
 	Authenticated      bool              `json:"authenticated"`
 	MustChangePassword bool              `json:"mustChangePassword"`
+	TotpEnabled        bool              `json:"totpEnabled"`
+	Permissions        *UserPermissions  `json:"permissions,omitempty"`
 	User               *AuthUserIdentity `json:"user,omitempty"`
 }
 
 type AuthUserIdentity struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
-	Role  string `json:"role"`
+	ID          string           `json:"id"`
+	Email       string           `json:"email"`
+	Role        string           `json:"role"`
+	Permissions *UserPermissions `json:"permissions,omitempty"`
 }
 
 type AuthLoginRequest struct {
@@ -39,7 +42,7 @@ type AuthChangePasswordRequest struct {
 
 func (r AuthChangePasswordRequest) Validate() error {
 	err := validation.ValidateStruct(&r,
-		validation.Field(&r.CurrentPassword, validation.Required, validation.Length(1, passwordpolicy.MaxLen)),
+		validation.Field(&r.CurrentPassword, validation.Length(0, passwordpolicy.MaxLen)),
 		validation.Field(&r.Password, validation.Required, passwordpolicy.Rule()),
 		validation.Field(&r.Confirm, validation.Required, passwordpolicy.Rule()),
 	)
@@ -51,7 +54,7 @@ func (r AuthChangePasswordRequest) Validate() error {
 		return validation.NewError("validation_password_mismatch", "password and confirm must match")
 	}
 
-	if r.Password == r.CurrentPassword {
+	if r.CurrentPassword != "" && r.Password == r.CurrentPassword {
 		return validation.NewError("validation_password_unchanged", "new password must differ from current")
 	}
 
@@ -59,18 +62,21 @@ func (r AuthChangePasswordRequest) Validate() error {
 }
 
 type AdminUserListItem struct {
-	ID                 string  `json:"id"`
-	Email              string  `json:"email"`
-	Role               string  `json:"role"`
-	MustChangePassword bool    `json:"mustChangePassword"`
-	DisabledAt         *string `json:"disabledAt,omitempty"`
-	CreatedAt          string  `json:"createdAt"`
+	ID                 string          `json:"id"`
+	Email              string          `json:"email"`
+	Role               string          `json:"role"`
+	Permissions        UserPermissions `json:"permissions"`
+	MustChangePassword bool            `json:"mustChangePassword"`
+	TotpEnabled        bool            `json:"totpEnabled"`
+	DisabledAt         *string         `json:"disabledAt,omitempty"`
+	CreatedAt          string          `json:"createdAt"`
 }
 
 type AdminCreateUserRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Role     string `json:"role"`
+	Email       string           `json:"email"`
+	Password    string           `json:"password"`
+	Role        string           `json:"role"`
+	Permissions *UserPermissions `json:"permissions"`
 }
 
 func (r AdminCreateUserRequest) Validate() error {
@@ -82,13 +88,15 @@ func (r AdminCreateUserRequest) Validate() error {
 }
 
 type AdminUpdateUserRequest struct {
-	Role     *string `json:"role"`
-	Disabled *bool   `json:"disabled"`
-	Password *string `json:"password"`
+	Role         *string          `json:"role"`
+	Permissions  *UserPermissions `json:"permissions"`
+	Disabled     *bool            `json:"disabled"`
+	Password     *string          `json:"password"`
+	TotpDisabled *bool            `json:"totpDisabled"`
 }
 
 func (r AdminUpdateUserRequest) Validate() error {
-	if r.Role == nil && r.Disabled == nil && r.Password == nil {
+	if r.Role == nil && r.Permissions == nil && r.Disabled == nil && r.Password == nil && r.TotpDisabled == nil {
 		return validation.NewError("validation_empty", "at least one field is required")
 	}
 

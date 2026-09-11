@@ -14,21 +14,6 @@ export const SettingsRootStyled = styled('div')(({ theme }) => ({
   }
 }));
 
-export const SettingsRailStyled = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  flexDirection: 'column',
-  width: 240,
-  minWidth: 240,
-  maxWidth: 240,
-  height: '100%',
-  minHeight: 0,
-  background: theme.palette.background.subdued,
-  borderRight: `1px solid ${theme.palette.divider}`,
-  [theme.breakpoints.down('md')]: {
-    display: 'none'
-  }
-}));
-
 export const SettingsRailSearchStyled = styled(Box)(({ theme }) => ({
   position: 'sticky',
   top: 0,

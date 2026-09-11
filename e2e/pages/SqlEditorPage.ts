@@ -38,12 +38,16 @@ export class SqlEditorPage extends BasePage {
       (await run.isVisible().catch(() => false)) &&
       (await this.editor.isVisible().catch(() => false));
     if (alreadyOpen) {
+      await expect(this.page.getByTestId("workspace-tab-icon-query")).toBeVisible();
       return;
     }
 
     await this.page.getByRole("button", { name: "sql", exact: true }).click();
     await expect(this.editor).toBeVisible({ timeout: 15000 });
     await expect(run).toBeVisible({ timeout: 15000 });
+    await expect(this.page.getByTestId("workspace-tab-icon-query")).toBeVisible({
+      timeout: 15000,
+    });
     await this.wait(500);
   }
 
@@ -298,6 +302,22 @@ export class SqlEditorPage extends BasePage {
 
   async expectEditorContains(text: string): Promise<void> {
     await expect(this.editor).toContainText(text);
+  }
+
+  get aiSwitch(): Locator {
+    return this.page.getByTestId("query-ai-switch").getByRole("switch");
+  }
+
+  async openAiSetup(): Promise<void> {
+    await expect(this.aiSwitch).toBeVisible({ timeout: 10000 });
+    await this.aiSwitch.click();
+    await expect(this.page.getByTestId("ai-setup-form")).toBeVisible({
+      timeout: 10000,
+    });
+  }
+
+  async expectAiEnabled(): Promise<void> {
+    await expect(this.aiSwitch).toBeChecked({ timeout: 10000 });
   }
 }
 

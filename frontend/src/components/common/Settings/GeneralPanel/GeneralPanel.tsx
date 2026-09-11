@@ -1,3 +1,5 @@
+import { isInstanceAdmin } from '@/core/auth/permissions';
+import { useAuthStore } from '@/store/authStore/auth.store';
 import { Box } from '@mui/material';
 import type { JSX } from 'react';
 import { SettingGroup } from '../SettingRow/SettingRow';
@@ -9,6 +11,10 @@ import { ResetFactory } from './ResetFactory/ResetFactory';
 import { ShowLogs } from './ShowLogs/ShowLogs';
 
 export default function GeneralPanel(): JSX.Element {
+  const mode = useAuthStore((s) => s.mode);
+  const user = useAuthStore((s) => s.user);
+  const showInstanceAdminTools = isInstanceAdmin(mode, user);
+
   return (
     <Box>
       <SettingGroup>
@@ -16,8 +22,8 @@ export default function GeneralPanel(): JSX.Element {
         <CheckUpdate />
         <Analytics />
         <DebugMode />
-        <ShowLogs />
-        <ResetFactory />
+        {showInstanceAdminTools ? <ShowLogs /> : null}
+        {showInstanceAdminTools ? <ResetFactory /> : null}
       </SettingGroup>
     </Box>
   );

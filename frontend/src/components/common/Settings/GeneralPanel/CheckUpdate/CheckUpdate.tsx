@@ -44,9 +44,7 @@ export function CheckUpdate() {
     <SettingRow
       id='general.updates'
       label={
-        general.release
-          ? `${locales.new_version_available} : ${general.release?.name}`
-          : locales.check_for_updates
+        general.release ? `${locales.new_version_available} : ${general.release?.name}` : locales.check_for_updates
       }
       control={
         !general.release ? (

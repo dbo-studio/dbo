@@ -138,7 +138,7 @@ export const ColumnNameStyled = styled(Typography, {
 })<ColumnNameProps>(({ theme, primary }) => ({
   flex: 1,
   minWidth: 0,
-  fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Monaco, Consolas, monospace",
   fontSize: 11.5,
   fontWeight: primary ? 600 : 400,
   color: theme.palette.text.text,

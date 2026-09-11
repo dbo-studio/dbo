@@ -12,28 +12,36 @@ func ConnectionPrefix(connectionID uint) string {
 	return fmt.Sprintf("c:%d", connectionID)
 }
 
-func TreeCachePrefix(connectionID uint) string {
-	return fmt.Sprintf("c:%d:tree:", connectionID)
+func TreeCachePrefix(ownerID string, connectionID uint) string {
+	return fmt.Sprintf("%sc:%d:tree:", ownerPrefix(ownerID), connectionID)
 }
 
-func TreeKey(connectionID uint, parentID string) string {
-	return fmt.Sprintf("%s%s", TreeCachePrefix(connectionID), parentID)
+func TreeKey(ownerID string, connectionID uint, parentID string) string {
+	return fmt.Sprintf("%s%s", TreeCachePrefix(ownerID, connectionID), parentID)
 }
 
-func AutoCompleteCachePrefix(connectionID uint) string {
-	return fmt.Sprintf("c:%d:auto_complete:", connectionID)
+func AutoCompleteCachePrefix(ownerID string, connectionID uint) string {
+	return fmt.Sprintf("%sc:%d:auto_complete:", ownerPrefix(ownerID), connectionID)
 }
 
-func AutoCompleteKey(connectionID uint, database, schema string) string {
-	return fmt.Sprintf("%sdatabase_%s_schema_%s", AutoCompleteCachePrefix(connectionID), database, schema)
+func AutoCompleteKey(ownerID string, connectionID uint, database, schema string) string {
+	return fmt.Sprintf("%sdatabase_%s_schema_%s", AutoCompleteCachePrefix(ownerID, connectionID), database, schema)
 }
 
-func AICompleteCachePrefix(connectionID uint) string {
-	return fmt.Sprintf("c:%d:ai_complete:", connectionID)
+func AICompleteCachePrefix(ownerID string, connectionID uint) string {
+	return fmt.Sprintf("%sc:%d:ai_complete:", ownerPrefix(ownerID), connectionID)
 }
 
-func AICompleteKey(connectionID uint, hashHex string) string {
-	return fmt.Sprintf("%s%s", AICompleteCachePrefix(connectionID), hashHex)
+func AICompleteKey(ownerID string, connectionID uint, hashHex string) string {
+	return fmt.Sprintf("%s%s", AICompleteCachePrefix(ownerID, connectionID), hashHex)
+}
+
+func ownerPrefix(ownerID string) string {
+	if ownerID == "" {
+		ownerID = "desktop"
+	}
+
+	return "o:" + encodeOwnerID(ownerID) + ":"
 }
 
 func MySQLQueryCachePrefix(connectionID uint) string {

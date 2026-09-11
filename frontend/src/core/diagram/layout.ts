@@ -1,3 +1,4 @@
+import { getActiveUserId } from '@/core/storage/userScope';
 import dagre from '@dagrejs/dagre';
 import type { Edge, Node } from '@xyflow/react';
 
@@ -56,8 +57,14 @@ export const layoutTableNodes = (nodes: Node[], edges: Edge[], existing: Record<
   });
 };
 
-export const layoutStorageKey = (connectionId: string | number, database: string, schema: string): string =>
-  `dbo.diagram.layout:${connectionId}:${database}:${schema}`;
+export const layoutStorageKey = (connectionId: string | number, database: string, schema: string): string => {
+  const userId = getActiveUserId();
+  if (userId) {
+    return `dbo.diagram.layout:${userId}:${connectionId}:${database}:${schema}`;
+  }
+
+  return `dbo.diagram.layout:${connectionId}:${database}:${schema}`;
+};
 
 export const loadLayout = (key: string): Record<string, DiagramPosition> => {
   try {

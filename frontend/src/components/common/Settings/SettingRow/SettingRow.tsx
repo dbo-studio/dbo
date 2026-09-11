@@ -27,7 +27,7 @@ export function SettingRow({ id, label, description, control, highlighted }: Set
           )
         ) : null}
       </Box>
-      <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>{control}</Box>
+      <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'flex-start', pt: 0.25 }}>{control}</Box>
     </SettingRowStyled>
   );
 }

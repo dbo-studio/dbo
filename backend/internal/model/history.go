@@ -5,7 +5,8 @@ import (
 )
 
 type History struct {
-	ID           uint `gorm:"primaryKey,autoIncrement"`
+	ID           uint   `gorm:"primaryKey,autoIncrement"`
+	OwnerID      string `gorm:"index;default:''"`
 	ConnectionID uint
 	Query        string     `gorm:"type:text"`
 	IsSystem     bool       `gorm:"not null;default:false"`

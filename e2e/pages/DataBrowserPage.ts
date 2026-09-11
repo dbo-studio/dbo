@@ -72,6 +72,7 @@ export class DataBrowserPage extends BasePage {
     // Already open — select tab only. Re-dblclick would not fire queryFetch.
     if (await existingTab.isVisible().catch(() => false)) {
       await existingTab.click();
+      await expect(this.page.getByTestId("workspace-tab-icon-data")).toBeVisible();
       await expect(this.page.getByTestId("data-grid")).toBeVisible({
         timeout: 15000,
       });
@@ -92,6 +93,7 @@ export class DataBrowserPage extends BasePage {
     await queryPromise;
 
     await expect(existingTab).toBeVisible({ timeout: 15000 });
+    await expect(this.page.getByTestId("workspace-tab-icon-data")).toBeVisible();
     await expect(this.page.getByTestId("data-grid")).toBeVisible({
       timeout: 15000,
     });

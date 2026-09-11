@@ -1,9 +1,9 @@
+import { NavRailItem, NavRailList } from '@/components/base/NavRail/NavRail';
 import type { SettingsNavGroup } from '@/core/settings/registry';
 import locales from '@/locales';
 import { type JSX, useEffect, useMemo } from 'react';
 import type { MenuPanelProps, MenuPanelTabType } from '../types';
-import { MenuPanelGroupLabelStyled, MenuPanelStyled } from './MenuPanel.styled';
-import MenuPanelItem from './MenuPanelItem/MenuPanelItem';
+import { MenuPanelGroupLabelStyled } from './MenuPanel.styled';
 
 const GROUP_ORDER: SettingsNavGroup[] = ['prefs', 'workspace'];
 
@@ -32,24 +32,24 @@ export default function MenuPanel({ tabs, onChange, defaultTab }: MenuPanelProps
 
   function renderItem(tab: MenuPanelTabType): JSX.Element {
     return (
-      <MenuPanelItem
+      <NavRailItem
         key={tab.id}
         selected={selectedTabId === tab.id}
         onClick={(): void => onChange(tab)}
-        name={tab.name}
+        label={tab.name}
         icon={tab.icon}
       />
     );
   }
 
   return (
-    <MenuPanelStyled>
+    <NavRailList>
       {grouped.map((section) => (
         <div key={section.group}>
           <MenuPanelGroupLabelStyled>{GROUP_LABEL[section.group]}</MenuPanelGroupLabelStyled>
           {section.items.map(renderItem)}
         </div>
       ))}
-    </MenuPanelStyled>
+    </NavRailList>
   );
 }

@@ -17,6 +17,10 @@ import (
 )
 
 func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConnectionRequest) error {
+	if err := helper.RequirePermission(ctx, helper.PermCreateConnection); err != nil {
+		return err
+	}
+
 	_, err := s.Ping(ctx, &dto.PingConnectionRequest{
 		ID:      nil,
 		Type:    req.Type,

@@ -17,5 +17,13 @@ type webConnectionSecretProvider interface {
 	Upsert(ctx context.Context, secret *model.WebConnectionSecret) error
 	FindBySessionAndConnection(ctx context.Context, sessionID string, connectionID uint) (*model.WebConnectionSecret, error)
 	Delete(ctx context.Context, sessionID string, connectionID uint) error
+	DeleteByConnection(ctx context.Context, connectionID uint) error
 	UpdateExpiry(ctx context.Context, sessionID string, connectionID uint, expiresAt *time.Time, updatedAt time.Time) error
+}
+
+type connectionSharedSecretProvider interface {
+	Find(ctx context.Context, connectionID uint) (*model.ConnectionSharedSecret, error)
+	Upsert(ctx context.Context, secret *model.ConnectionSharedSecret) error
+	Delete(ctx context.Context, connectionID uint) error
+	ListConnectionIDs(ctx context.Context, ids []uint) ([]uint, error)
 }

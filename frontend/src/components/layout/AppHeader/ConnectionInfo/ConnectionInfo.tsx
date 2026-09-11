@@ -1,8 +1,10 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { canCreateConnection } from '@/core/auth/permissions';
 import { TabMode } from '@/core/enums';
 import { shortcuts } from '@/core/utils';
 import { useCurrentConnection, useShortcut } from '@/hooks';
 import locales from '@/locales';
+import { useAuthStore } from '@/store/authStore/auth.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -22,6 +24,9 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
   const loading = useConnectionStore((state) => state.loading);
 
   const updateUI = useSettingStore((state) => state.updateUI);
+  const mode = useAuthStore((s) => s.mode);
+  const user = useAuthStore((s) => s.user);
+  const canAddConnection = canCreateConnection(mode, user);
 
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
   const runRawQuery = useDataStore((state) => state.runRawQuery);
@@ -76,7 +81,13 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
               <IconButton
                 aria-label={locales.connections}
                 data-testid='add-connection'
-                onClick={(): void => updateUI({ showAddConnection: true, duplicateConnectionId: undefined })}
+                onClick={(): void => {
+                  if (canAddConnection) {
+                    updateUI({ showAddConnection: true, duplicateConnectionId: undefined });
+                    return;
+                  }
+                  updateUI({ showConnectionsDrawer: true });
+                }}
               >
                 <CustomIcon type={'connection'} size={'m'} />
               </IconButton>

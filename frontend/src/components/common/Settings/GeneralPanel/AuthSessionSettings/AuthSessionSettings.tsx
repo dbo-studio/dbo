@@ -1,5 +1,6 @@
 import api from '@/api';
 import { SettingRow } from '@/components/common/Settings/SettingRow/SettingRow';
+import { applyUserWorkspaceScope } from '@/core/storage/applyUserWorkspace';
 import locales from '@/locales';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import { Button } from '@mui/material';
@@ -15,9 +16,10 @@ export function AuthSessionSettings(): JSX.Element | null {
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: api.auth.logout,
-    onSuccess: () => {
+    onSuccess: async () => {
       clear();
       queryClient.clear();
+      await applyUserWorkspaceScope(undefined);
     }
   });
 

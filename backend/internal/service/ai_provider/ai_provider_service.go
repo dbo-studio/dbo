@@ -5,9 +5,11 @@ import (
 	"net/url"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 type IAiProviderService interface {
@@ -38,6 +40,10 @@ func (i *IAiProviderServiceImpl) Find(ctx context.Context, id uint) (*dto.AiProv
 }
 
 func (i *IAiProviderServiceImpl) Update(ctx context.Context, id uint, dto *dto.AiProviderUpdateRequest) (*dto.AiProviderDetailResponse, error) {
+	if err := helper.RequirePermission(ctx, helper.PermAiSettings); err != nil {
+		return nil, err
+	}
+
 	if dto.URL != nil && *dto.URL != "" {
 		u, err := url.Parse(*dto.URL)
 		if err != nil || (u.Scheme != "http" && u.Scheme != "https") {
@@ -56,6 +62,8 @@ func (i *IAiProviderServiceImpl) Update(ctx context.Context, id uint, dto *dto.A
 		return nil, apperror.NotFound(apperror.ErrAiProviderNotFound)
 	}
 
+	applyDefaultModel(aiProvider, dto)
+
 	aiProvider, err = i.aiProviderRepo.Update(ctx, aiProvider, dto)
 	if err != nil {
 		return nil, err
@@ -67,4 +75,28 @@ func (i *IAiProviderServiceImpl) Update(ctx context.Context, id uint, dto *dto.A
 	}
 
 	return aiProviderDetailModelToResponse(aiProvider), nil
+}
+
+func applyDefaultModel(provider *model.AiProvider, req *dto.AiProviderUpdateRequest) {
+	models := provider.Models
+	if req.Models != nil {
+		models = *req.Models
+	}
+
+	if len(models) == 0 {
+		return
+	}
+
+	modelName := provider.Model
+	if req.Model != nil {
+		modelName = *req.Model
+	}
+
+	for _, item := range models {
+		if item == modelName {
+			return
+		}
+	}
+
+	req.Model = &models[0]
 }

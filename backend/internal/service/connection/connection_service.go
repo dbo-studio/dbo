@@ -12,6 +12,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/dbo-studio/dbo/pkg/logger"
 )
 
 type IConnectionService interface {
@@ -24,33 +25,51 @@ type IConnectionService interface {
 	SetCredentials(ctx context.Context, connectionID int32, req *dto.ConnectionCredentialsRequest) error
 	UnlockSafeMode(ctx context.Context, connectionID int32, req *dto.SafeModeUnlockRequest) (*dto.SafeModeUnlockResponse, error)
 	LockSafeMode(ctx context.Context, connectionID int32) error
+	ListShares(ctx context.Context, connectionID int32) (*dto.ConnectionSharesResponse, error)
+	CreateShare(ctx context.Context, connectionID int32, req *dto.CreateConnectionShareRequest) (*dto.ConnectionSharesResponse, error)
+	UpdateShare(ctx context.Context, connectionID int32, userID string, req *dto.UpdateConnectionShareRequest) (*dto.ConnectionSharesResponse, error)
+	DeleteShare(ctx context.Context, connectionID int32, userID string) (*dto.ConnectionSharesResponse, error)
+	LeaveShare(ctx context.Context, connectionID int32) error
+	UpdatePasswordShare(ctx context.Context, connectionID int32, req *dto.UpdatePasswordShareRequest) (*dto.ConnectionSharesResponse, error)
+	AdminListShares(ctx context.Context) ([]dto.AdminConnectionShare, error)
 }
+
+var _ IConnectionService = (*IConnectionServiceImpl)(nil)
 
 type IConnectionServiceImpl struct {
 	connectionRepo   repository.IConnectionRepo
+	shareRepo        repository.IConnectionShareRepo
+	userRepo         repository.IUserRepo
 	cm               *databaseConnection.ConnectionManager
 	cache            cache.Cache
 	secrets          serviceSecretStore.ISecretStore
 	unlockStore      *serviceSafemode.UnlockStore
 	safeModePassword serviceSafemode.ISafeModePasswordService
+	logger           logger.Logger
 }
 
 func NewConnectionService(
 	connectionRepo repository.IConnectionRepo,
+	shareRepo repository.IConnectionShareRepo,
+	userRepo repository.IUserRepo,
 	cm *databaseConnection.ConnectionManager,
 	secrets serviceSecretStore.ISecretStore,
 	safeModePassword serviceSafemode.ISafeModePasswordService,
 	appCache cache.Cache,
+	appLogger logger.Logger,
 ) IConnectionService {
 	c := appCache
 
 	return &IConnectionServiceImpl{
 		connectionRepo:   connectionRepo,
+		shareRepo:        shareRepo,
+		userRepo:         userRepo,
 		cm:               cm,
 		cache:            c,
 		secrets:          secrets,
 		unlockStore:      serviceSafemode.NewUnlockStore(c),
 		safeModePassword: safeModePassword,
+		logger:           appLogger,
 	}
 }
 

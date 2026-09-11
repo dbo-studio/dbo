@@ -9,31 +9,23 @@ import (
 	"github.com/dbo-studio/dbo/internal/database"
 	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	"github.com/dbo-studio/dbo/pkg/apperror"
-	"github.com/samber/lo"
 )
 
 func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteRequest) (*dto.AiInlineCompleteResponse, error) {
-	chats, err := s.aiChatRepo.List(ctx, &dto.AiChatListRequest{
-		ConnectionID: req.ConnectionID,
-		PaginationRequest: dto.PaginationRequest{
-			Page:  lo.ToPtr(1),
-			Count: lo.ToPtr(1),
-		},
-	})
-	if err != nil {
-		return nil, apperror.InternalServerError(err)
-	}
-
-	if len(chats) == 0 {
-		return nil, apperror.BadRequest(apperror.ErrAiNoSelectedModel)
+	if err := ctx.Err(); err != nil {
+		return nil, apperror.QueryCanceled()
 	}
 
 	provider, dbProvider, err := s.createProvider(ctx)
 	if err != nil {
-		return nil, apperror.InternalServerError(err)
+		return nil, err
 	}
 
-	cacheKey := s.generateCompletionKey(req)
+	if err := ctx.Err(); err != nil {
+		return nil, apperror.QueryCanceled()
+	}
+
+	cacheKey := s.generateCompletionKey(ctx, req)
 	if cachedResponse, found := s.getCompletionResponse(ctx, cacheKey); found {
 		return cachedResponse, nil
 	}
@@ -48,7 +40,15 @@ func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteR
 		return nil, err
 	}
 
+	if err := ctx.Err(); err != nil {
+		return nil, apperror.QueryCanceled()
+	}
+
 	contextStr := repo.AiCompleteContext(ctx, toAICompleteInput(req))
+
+	if err := ctx.Err(); err != nil {
+		return nil, apperror.QueryCanceled()
+	}
 
 	providerReq := &aiProvider.CompletionRequest{
 		Prompt:  req.ContextOpts.Prompt,
@@ -59,7 +59,12 @@ func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteR
 
 	providerResp, err := provider.Complete(ctx, providerReq)
 	if err != nil {
+		if isRequestCanceled(ctx, err) {
+			return nil, apperror.QueryCanceled()
+		}
+
 		s.logger.Error(fmt.Sprintf("AI Complete error: %v", err))
+
 		return nil, err
 	}
 

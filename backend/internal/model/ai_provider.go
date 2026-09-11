@@ -4,6 +4,7 @@ import "time"
 
 type AiProvider struct {
 	ID                     uint           `gorm:"primaryKey,autoIncrement"`
+	OwnerID                string         `gorm:"column:owner_id;index;not null;default:desktop"`
 	Type                   AIProviderType `gorm:"size:64;not null"`
 	URL                    string         `gorm:"size:255"`
 	APIKey                 *string        `gorm:"size:2048"`

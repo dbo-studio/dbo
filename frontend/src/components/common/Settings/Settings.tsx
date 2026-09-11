@@ -1,5 +1,8 @@
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import NavRail from '@/components/base/NavRail/NavRail';
 import GeneralPanel from '@/components/common/Settings/GeneralPanel/GeneralPanel';
 import { TabMode } from '@/core/enums';
+import { resolvePermissions } from '@/core/auth/permissions';
 import { getVisibleSections, searchSettingsEntries } from '@/core/settings/registry';
 import { useLayoutMode, useSelectedTab } from '@/hooks';
 import locales from '@/locales';
@@ -26,7 +29,6 @@ import {
   SettingsContentInnerStyled,
   SettingsContentPaneStyled,
   SettingsRailSearchStyled,
-  SettingsRailStyled,
   SettingsResultItemStyled,
   SettingsResultListStyled,
   SettingsRootStyled,
@@ -34,7 +36,6 @@ import {
 } from './Setting.styled';
 import ShortcutPanel from './ShortcutPanel/ShortcutPanel';
 import type { MenuPanelTabType } from './types';
-import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 
 const SECTION_CONTENT: Record<number, JSX.Element> = {
   0: <GeneralPanel />,
@@ -68,7 +69,10 @@ function highlightTarget(highlightId: string): void {
 
 export default function Settings(): JSX.Element {
   const { isMobile } = useLayoutMode();
-  const isAdmin = useAuthStore((s) => s.user?.role === 'admin');
+  const mode = useAuthStore((s) => s.mode);
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = user?.role === 'admin';
+  const permissions = useMemo(() => resolvePermissions(mode, user), [mode, user]);
   const selectedTab = useSelectedTab();
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -76,7 +80,7 @@ export default function Settings(): JSX.Element {
 
   const settingsTab = selectedTab?.mode === TabMode.Settings ? (selectedTab as SettingsTabType) : undefined;
 
-  const sections = useMemo(() => getVisibleSections(isAdmin), [isAdmin]);
+  const sections = useMemo(() => getVisibleSections(isAdmin, permissions), [isAdmin, permissions]);
 
   const menuTabs: MenuPanelTabType[] = useMemo(
     () =>
@@ -103,7 +107,10 @@ export default function Settings(): JSX.Element {
   const normalizedQuery = searchQuery.trim().toLowerCase();
   const appliedExternalQueryRef = useRef<string | undefined>(settingsTab?.query);
 
-  const searchResults = useMemo(() => searchSettingsEntries(normalizedQuery, isAdmin), [normalizedQuery, isAdmin]);
+  const searchResults = useMemo(
+    () => searchSettingsEntries(normalizedQuery, isAdmin, permissions),
+    [normalizedQuery, isAdmin, permissions]
+  );
 
   const sectionId = settingsTab?.section ?? 0;
   const activeTab = menuTabs.find((tab) => tab.id === sectionId) ?? menuTabs[0];
@@ -228,7 +235,7 @@ export default function Settings(): JSX.Element {
 
   return (
     <SettingsRootStyled data-testid='settings-panel'>
-      <SettingsRailStyled>
+      <NavRail hideOnMobile>
         <SettingsRailSearchStyled>
           <SettingsSearchInputStyled
             inputRef={searchInputRef}
@@ -287,7 +294,7 @@ export default function Settings(): JSX.Element {
             )}
           </Box>
         )}
-      </SettingsRailStyled>
+      </NavRail>
 
       <SettingsContentPaneStyled>
         <SettingsContentInnerStyled>

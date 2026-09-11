@@ -2,6 +2,7 @@ import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
 import Modal from '@/components/base/Modal/Modal';
 import {
+  ConnectionFormBodyStyled,
   ConnectionFormContainerStyled,
   ConnectionFormFooterStyled
 } from '@/components/common/Connections/ConnectionPasswordPrompt/ConnectionPasswordPrompt.styled';
@@ -101,35 +102,37 @@ export default function SafeModePasswordPrompt({
         data-testid='safe-mode-password-prompt'
         onSubmit={(e) => void handleSubmit(e)}
       >
-        {isChange && (
+        <ConnectionFormBodyStyled>
+          {isChange && (
+            <FieldInput
+              name='currentPassword'
+              type='password'
+              value={currentPassword}
+              label={locales.safe_mode_password_current}
+              error={validationErrors.length > 0}
+              onChange={(e): void => setCurrentPassword(e.target.value)}
+            />
+          )}
           <FieldInput
-            name='currentPassword'
+            name='password'
             type='password'
-            value={currentPassword}
-            label={locales.safe_mode_password_current}
+            value={password}
+            label={isChange ? locales.safe_mode_password_new : locales.password}
             error={validationErrors.length > 0}
-            onChange={(e): void => setCurrentPassword(e.target.value)}
+            onChange={(e): void => setPassword(e.target.value)}
           />
-        )}
-        <FieldInput
-          name='password'
-          type='password'
-          value={password}
-          label={isChange ? locales.safe_mode_password_new : locales.password}
-          error={validationErrors.length > 0}
-          onChange={(e): void => setPassword(e.target.value)}
-        />
-        {needsConfirm && (
-          <FieldInput
-            name='confirm'
-            type='password'
-            value={confirm}
-            label={locales.safe_mode_password_confirm}
-            error={validationErrors.length > 0}
-            onChange={(e): void => setConfirm(e.target.value)}
-          />
-        )}
-        <FormError mb={0} errors={validationErrors} />
+          {needsConfirm && (
+            <FieldInput
+              name='confirm'
+              type='password'
+              value={confirm}
+              label={locales.safe_mode_password_confirm}
+              error={validationErrors.length > 0}
+              onChange={(e): void => setConfirm(e.target.value)}
+            />
+          )}
+          <FormError mb={0} errors={validationErrors} />
+        </ConnectionFormBodyStyled>
         <ConnectionFormFooterStyled>
           <Button type='button' size='small' onClick={handleClose}>
             {locales.cancel}
