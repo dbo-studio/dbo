@@ -162,10 +162,7 @@ export default function DataGridTableHeaderRow({
                   <HeaderColumnTypeStyled>({column.type})</HeaderColumnTypeStyled>
                   {column.isPrimaryKey && <CustomIcon type={'key'} size='xs' color={theme.palette.text.placeholder} />}
                   {column.isForeignKey && (
-                    <HeaderBadgeStyled
-                      data-testid='grid-fk-badge'
-                      title={formatForeignKeyTooltip(column)}
-                    >
+                    <HeaderBadgeStyled data-testid='grid-fk-badge' title={formatForeignKeyTooltip(column)}>
                       FK
                     </HeaderBadgeStyled>
                   )}
