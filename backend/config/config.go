@@ -45,7 +45,7 @@ func New() *Config {
 			MCPURLOverride: os.Getenv("APP_MCP_PUBLIC_URL"),
 			AuthToken:      os.Getenv("APP_AUTH_TOKEN"),
 			AllowedOrigins: parseAllowedOrigins(os.Getenv("APP_ALLOWED_ORIGINS")),
-			Version:        "v1.1.2",
+			Version:        "v1.1.3",
 			DatabaseName:   "dbo.db",
 			ReleaseURLAPI:  "https://dbo-studio.com/api/config",
 			ReleaseURL:     "https://dbo-studio.com/releases",
