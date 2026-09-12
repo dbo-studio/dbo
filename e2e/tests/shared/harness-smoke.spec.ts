@@ -19,4 +19,16 @@ test.describe("E2E harness", () => {
       timeout: 30000,
     });
   });
+
+  test("API allows Tauri Windows webview origin", async ({ request }) => {
+    const apiUrl = process.env.PLAYWRIGHT_API_URL;
+    expect(apiUrl, "PLAYWRIGHT_API_URL must be set by run-e2e").toBeTruthy();
+
+    const origin = "http://tauri.localhost";
+    const res = await request.get(`${apiUrl}/config`, {
+      headers: { Origin: origin },
+    });
+    expect(res.ok()).toBeTruthy();
+    expect(res.headers()["access-control-allow-origin"]).toBe(origin);
+  });
 });

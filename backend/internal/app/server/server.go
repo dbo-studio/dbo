@@ -137,7 +137,7 @@ func allowOriginFunc(cfg *config.Config) func(string) bool {
 		}
 
 		switch u.Hostname() {
-		case "localhost", "127.0.0.1", "::1":
+		case "localhost", "127.0.0.1", "::1", "tauri.localhost":
 			return true
 		default:
 			return false

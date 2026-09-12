@@ -65,7 +65,7 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 
 | Feature                  | Spec                                          | Flow                                                    |
 | ------------------------ | --------------------------------------------- | ------------------------------------------------------- |
-| Harness smoke            | `shared/harness-smoke.spec.ts`                | ephemeral API + FE reachable (no sample DB)             |
+| Harness smoke            | `shared/harness-smoke.spec.ts`                | ephemeral API + FE reachable; CORS allows Tauri Windows origin |
 | Crash screen             | `shared/crash-screen.spec.ts`                 | render crash UI; Reload clears local persist, keeps connections |
 | Connections              | `shared\|mysql\|sqlite/connections.spec.ts`   | create/edit/dup/reorder/refresh/menu/ping via shared suite |
 | MariaDB alias            | `mysql/mariadb-alias.spec.ts`                 | type=mariadb against MySQL sample: create + tree           |
