@@ -66,7 +66,7 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 
 | Feature                  | Spec                                          | Flow                                                    |
 | ------------------------ | --------------------------------------------- | ------------------------------------------------------- |
-| Harness smoke            | `shared/harness-smoke.spec.ts`                | ephemeral API + FE reachable (no sample DB)             |
+| Harness smoke            | `shared/harness-smoke.spec.ts`                | ephemeral API + FE reachable (no sample DB); CORS allows Tauri Windows origin |
 | Auth Gateway local (M1)  | `shared/auth-local.spec.ts`                   | `npm run test:auth` / `E2E_LOCAL_AUTH=1`: login, must_change gate (no current password), member, logout, MCP mgmt, disable revoke |
 | Security account password | `shared/auth-security-settings.spec.ts`      | `npm run test:auth`: change login password from Settings → Security |
 | TOTP 2FA                 | `shared/auth-totp.spec.ts`                    | `npm run test:auth`: enable TOTP, login with OTP, admin disable 2FA |

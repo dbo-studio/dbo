@@ -46,7 +46,7 @@ func New() *Config {
 			AdminPassword:  os.Getenv("APP_ADMIN_PASSWORD"),
 			AuthMode:       AuthModeNone,
 			AllowedOrigins: parseAllowedOrigins(os.Getenv("APP_ALLOWED_ORIGINS")),
-			Version:        "v1.1.2",
+			Version:        "v1.1.3",
 			DatabaseName:   "dbo.db",
 			ReleaseURLAPI:  "https://dbo-studio.com/api/config",
 			ReleaseURL:     "https://dbo-studio.com/releases",
