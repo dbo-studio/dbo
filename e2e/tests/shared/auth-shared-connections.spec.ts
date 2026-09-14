@@ -64,37 +64,7 @@ async function listConnections(
 
 async function loginAdmin(page: Page, adminPassword: string): Promise<void> {
   const auth = new AuthPage(page);
-  const adminEmail = process.env.E2E_ADMIN_EMAIL ?? "admin@example.com";
-  const bootstrapPassword = process.env.E2E_ADMIN_PASSWORD ?? "bootstrap1";
-
-  await page.goto("/");
-  if (
-    await page
-      .getByTestId("add-connection")
-      .isVisible()
-      .catch(() => false)
-  ) {
-    return;
-  }
-
-  await auth.expectLoginVisible();
-  await auth.login(adminEmail, bootstrapPassword);
-
-  const changeSubmit = page.getByTestId("auth-change-password-submit");
-  const appReady = page.getByTestId("add-connection");
-  try {
-    await expect(changeSubmit.or(appReady)).toBeVisible({ timeout: 15000 });
-  } catch {
-    await auth.login(adminEmail, adminPassword);
-    await auth.expectAppReady();
-    return;
-  }
-
-  if (await changeSubmit.isVisible().catch(() => false)) {
-    await auth.changePasswordForced(adminPassword);
-  }
-
-  await auth.expectAppReady();
+  await auth.loginAdmin(adminPassword);
 }
 
 /**

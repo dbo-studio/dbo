@@ -69,7 +69,7 @@ export default function AdminUserPermissionCells({
               size='small'
               checked={value[perm.key]}
               disabled={disabled}
-              inputProps={{ 'aria-label': perm.title }}
+              slotProps={{ input: { 'aria-label': perm.title } }}
               data-testid={`${testIdPrefix}-${perm.testIdSuffix}`}
               onChange={(_, checked): void => onChange({ ...value, [perm.key]: checked })}
             />

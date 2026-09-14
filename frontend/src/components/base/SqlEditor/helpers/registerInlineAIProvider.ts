@@ -20,7 +20,7 @@ type InlineAiSession = {
 
 const emptyResult: InlineCompletionResult = { items: [] };
 
-let inlineAiSession: InlineAiSession = {
+const inlineAiSession: InlineAiSession = {
   generation: 0,
   debounceTimer: null,
   abortController: null,
@@ -158,11 +158,7 @@ export function registerInlineAIProvider(monaco: typeof Monaco, languageId: stri
 
               const rawCompletion = await fetchCompletion(requestData, abortSignal);
 
-              if (
-                abortSignal.aborted ||
-                token.isCancellationRequested ||
-                inlineAiSession.generation !== generation
-              ) {
+              if (abortSignal.aborted || token.isCancellationRequested || inlineAiSession.generation !== generation) {
                 finish(emptyResult);
                 return;
               }

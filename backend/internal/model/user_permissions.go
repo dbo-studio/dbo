@@ -1,45 +1,45 @@
 package model
 
-import "github.com/dbo-studio/dbo/internal/app/dto"
+type UserPermissionFlags struct {
+	CreateConnection bool
+	AiSettings       bool
+	McpSettings      bool
+}
 
-func (u *User) EffectivePermissions() dto.UserPermissions {
+func (u *User) PermissionFlags() UserPermissionFlags {
 	if u == nil || u.Role == UserRoleAdmin {
-		return dto.UserPermissions{
-			CreateConnection: true,
-			AiSettings:       true,
-			McpSettings:      true,
-		}
+		return DefaultAdminPermissionFlags()
 	}
 
-	return dto.UserPermissions{
+	return UserPermissionFlags{
 		CreateConnection: u.PermCreateConnection,
 		AiSettings:       u.PermAiSettings,
 		McpSettings:      u.PermMcpSettings,
 	}
 }
 
-func DefaultMemberPermissions() dto.UserPermissions {
-	return dto.UserPermissions{
+func DefaultMemberPermissionFlags() UserPermissionFlags {
+	return UserPermissionFlags{
 		CreateConnection: false,
 		AiSettings:       true,
 		McpSettings:      false,
 	}
 }
 
-func DefaultAdminPermissions() dto.UserPermissions {
-	return dto.UserPermissions{
+func DefaultAdminPermissionFlags() UserPermissionFlags {
+	return UserPermissionFlags{
 		CreateConnection: true,
 		AiSettings:       true,
 		McpSettings:      true,
 	}
 }
 
-func ApplyPermissions(u *User, perms *dto.UserPermissions) {
-	if u == nil || perms == nil {
+func ApplyPermissionFlags(u *User, flags UserPermissionFlags) {
+	if u == nil {
 		return
 	}
 
-	u.PermCreateConnection = perms.CreateConnection
-	u.PermAiSettings = perms.AiSettings
-	u.PermMcpSettings = perms.McpSettings
+	u.PermCreateConnection = flags.CreateConnection
+	u.PermAiSettings = flags.AiSettings
+	u.PermMcpSettings = flags.McpSettings
 }

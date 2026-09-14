@@ -29,6 +29,7 @@ func (r *Server) routing() {
 	api.Post("/admin/users", r.handlers.AdminUsers.Create)
 	api.Patch("/admin/users/:id", r.handlers.AdminUsers.Update)
 	api.Get("/admin/shares", r.handlers.Connection.AdminListShares)
+	api.Get("/admin/connections", r.handlers.Connection.AdminListConnections)
 
 	api.Get("/config", r.handlers.Config.Config)
 	api.Get("/config/check-update", r.handlers.Config.CheckUpdate)

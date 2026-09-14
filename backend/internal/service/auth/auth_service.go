@@ -116,7 +116,7 @@ func (s *IAuthServiceImpl) Bootstrap(ctx context.Context) error {
 		}
 
 		now := time.Now().UTC()
-		adminPerms := model.DefaultAdminPermissions()
+		adminPerms := model.DefaultAdminPermissionFlags()
 		user := &model.User{
 			ID:                   id,
 			Email:                strings.ToLower(email),
@@ -180,7 +180,7 @@ func (s *IAuthServiceImpl) Status(ctx context.Context) (*dto.AuthStatusResponse,
 			return nil, apperror.InternalServerError(err)
 		}
 
-		perms := user.EffectivePermissions()
+		perms := permissionsDTO(user.PermissionFlags())
 		res.Authenticated = true
 		res.MustChangePassword = user.MustChangePassword
 		res.TotpEnabled = user.TotpEnabled()
@@ -291,8 +291,8 @@ func (s *IAuthServiceImpl) ChangePassword(ctx context.Context, req *dto.AuthChan
 		return "", apperror.InternalServerError(err)
 	}
 
-	if old := helper.CtxSessionID(ctx); old != "" {
-		_ = s.sessions.Delete(ctx, old)
+	if err := s.sessions.DeleteByUserID(ctx, user.ID); err != nil {
+		return "", apperror.InternalServerError(err)
 	}
 
 	uid := user.ID
@@ -380,4 +380,12 @@ func (s *IAuthServiceImpl) SessionExpired(session *model.WebSession, now time.Ti
 	}
 
 	return false
+}
+
+func permissionsDTO(flags model.UserPermissionFlags) dto.UserPermissions {
+	return dto.UserPermissions{
+		CreateConnection: flags.CreateConnection,
+		AiSettings:       flags.AiSettings,
+		McpSettings:      flags.McpSettings,
+	}
 }

@@ -2,6 +2,7 @@ import api from '@/api';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
 import { resumePasswordPromptForConnection, suppressPasswordPromptForConnection } from '@/core/api';
+import { canCreateConnection } from '@/core/auth/permissions';
 import locales from '@/locales';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
@@ -31,11 +32,14 @@ export default function ConnectionItemContextMenu({
     mutationFn: api.connection.leaveShare
   });
 
-  const isAdmin = useAuthStore((s) => s.user?.role === 'admin');
+  const mode = useAuthStore((s) => s.mode);
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = user?.role === 'admin';
   const access = connection.access ?? 'owner';
   const canEdit = access === 'owner' || access === 'editor';
   const canDelete = access === 'owner' || isAdmin;
   const canLeave = connection.shared === true && access !== 'owner';
+  const canDuplicate = canCreateConnection(mode, user);
 
   const showModal = useConfirmModalStore((state) => state.danger);
   const showWarningModal = useConfirmModalStore((state) => state.warning);
@@ -188,12 +192,16 @@ export default function ConnectionItemContextMenu({
           }
         ]
       : []),
-    {
-      name: locales.duplicate,
-      icon: 'copy',
-      action: (): void => handleDuplicateConnection(connection),
-      closeBeforeAction: true
-    },
+    ...(canDuplicate
+      ? [
+          {
+            name: locales.duplicate,
+            icon: 'copy' as const,
+            action: (): void => handleDuplicateConnection(connection),
+            closeBeforeAction: true
+          }
+        ]
+      : []),
     {
       name: locales.close_connection,
       icon: 'close',

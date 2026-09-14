@@ -184,7 +184,6 @@ export default function AiProvidersPanel() {
         data-testid='ai-status-badge'
       />
 
-
       {canEdit ? (
         <AiPanelFooterStyled>
           <Button

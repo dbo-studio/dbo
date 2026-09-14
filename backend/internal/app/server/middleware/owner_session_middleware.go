@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dbo-studio/dbo/config"
+	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceAuth "github.com/dbo-studio/dbo/internal/service/auth"
@@ -212,13 +213,22 @@ func setSessionID(c fiber.Ctx, sessionID string) {
 }
 
 func setUser(c fiber.Ctx, user *model.User) {
+	flags := user.PermissionFlags()
+	perms := dto.UserPermissions{
+		CreateConnection: flags.CreateConnection,
+		AiSettings:       flags.AiSettings,
+		McpSettings:      flags.McpSettings,
+	}
+	// Fiber Ctx.Value reads Locals (UserValue), not SetContext — put auth
+	// fields on Locals so services that receive fiber.Ctx see them.
 	c.Locals(helper.CtxUserIDKey, user.ID)
 	c.Locals(helper.CtxUserRoleKey, string(user.Role))
 	c.Locals(helper.CtxMustChangePasswordKey, user.MustChangePassword)
+	c.Locals(helper.CtxPermissionsKey, perms)
 	ctx := helper.CtxWithUserID(c.Context(), user.ID)
 	ctx = helper.CtxWithUserRole(ctx, string(user.Role))
 	ctx = helper.CtxWithMustChangePassword(ctx, user.MustChangePassword)
-	ctx = helper.CtxWithPermissions(ctx, user.EffectivePermissions())
+	ctx = helper.CtxWithPermissions(ctx, perms)
 	c.SetContext(ctx)
 }
 

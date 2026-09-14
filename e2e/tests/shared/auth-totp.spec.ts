@@ -53,6 +53,11 @@ test.describe("TOTP two-factor authentication", () => {
       await expect(page.getByTestId("auth-totp-submit")).toBeVisible({
         timeout: 10000,
       });
+      await page.getByTestId("auth-totp-code").fill("000000");
+      await page.getByTestId("auth-totp-submit").click();
+      await expect(page.getByTestId("auth-totp-submit")).toBeVisible({
+        timeout: 10000,
+      });
       const code = authenticator.generate(totpSecret);
       await page.getByTestId("auth-totp-code").fill(code);
       await page.getByTestId("auth-totp-submit").click();

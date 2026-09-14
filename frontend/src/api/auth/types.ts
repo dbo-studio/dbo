@@ -11,11 +11,6 @@ export type AuthUserIdentity = {
   permissions?: UserPermissions;
 };
 
-export type AuthDirectoryUser = {
-  id: string;
-  email: string;
-};
-
 export type AuthStatusType = {
   mode: string;
   authenticated: boolean;

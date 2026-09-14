@@ -81,9 +81,9 @@ func (s *WebDBStore) GetConnectionPassword(ctx context.Context, ownerID string, 
 
 	now := time.Now()
 	if item.ExpiresAt != nil && now.After(*item.ExpiresAt) {
-		if err := s.webConnectionSecretRepo.Delete(ctx, ownerID, connectionID); err != nil {
-			return "", apperror.Unauthorized(connectionID)
-		}
+		_ = s.webConnectionSecretRepo.Delete(ctx, ownerID, connectionID)
+
+		return "", apperror.Unauthorized(connectionID)
 	}
 
 	plaintext, err := cryptoutil.DecryptAESGCM(s.aesKey, item.Ciphertext)

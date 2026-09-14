@@ -32,6 +32,7 @@ type IConnectionService interface {
 	LeaveShare(ctx context.Context, connectionID int32) error
 	UpdatePasswordShare(ctx context.Context, connectionID int32, req *dto.UpdatePasswordShareRequest) (*dto.ConnectionSharesResponse, error)
 	AdminListShares(ctx context.Context) ([]dto.AdminConnectionShare, error)
+	AdminListConnections(ctx context.Context) ([]dto.AdminConnectionCatalogItem, error)
 }
 
 var _ IConnectionService = (*IConnectionServiceImpl)(nil)

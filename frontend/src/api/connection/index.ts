@@ -1,6 +1,7 @@
 import { api } from '@/core/api';
 import type { ConnectionType } from '@/types';
 import type {
+  AdminConnectionCatalogItemType,
   AdminConnectionShareType,
   ConnectionSharesType,
   CreateConnectionRequestType,
@@ -24,7 +25,8 @@ const endpoint = {
   shareUser: (connectionID: string | number, userID: string): string => `/connections/${connectionID}/shares/${userID}`,
   leaveShare: (connectionID: string | number): string => `/connections/${connectionID}/leave`,
   passwordShare: (connectionID: string | number): string => `/connections/${connectionID}/password-share`,
-  adminShares: (): string => '/admin/shares'
+  adminShares: (): string => '/admin/shares',
+  adminConnections: (): string => '/admin/connections'
 };
 
 export const getConnectionList = async (): Promise<ConnectionType[]> => {
@@ -67,10 +69,6 @@ export const lockSafeMode = async (id: string | number): Promise<void> => {
   await api.post(endpoint.lockSafeMode(id));
 };
 
-export const listShares = async (id: string | number): Promise<ConnectionSharesType> => {
-  return (await api.get<{ data: ConnectionSharesType }>(endpoint.shares(id))).data.data;
-};
-
 export const createShare = async (
   id: string | number,
   payload: { userId: string; role: string; passwordShared?: boolean }
@@ -100,4 +98,8 @@ export const updatePasswordShare = async (id: string | number, enabled: boolean)
 
 export const listAdminShares = async (): Promise<AdminConnectionShareType[]> => {
   return (await api.get<{ data: AdminConnectionShareType[] }>(endpoint.adminShares())).data.data;
+};
+
+export const listAdminConnections = async (): Promise<AdminConnectionCatalogItemType[]> => {
+  return (await api.get<{ data: AdminConnectionCatalogItemType[] }>(endpoint.adminConnections())).data.data;
 };

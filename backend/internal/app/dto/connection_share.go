@@ -4,11 +4,6 @@ import (
 	validation "github.com/invopop/validation"
 )
 
-type UserDirectoryItem struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
-}
-
 type ConnectionShareMember struct {
 	UserID    string `json:"userId"`
 	Email     string `json:"email"`
@@ -45,7 +40,13 @@ func (r UpdateConnectionShareRequest) Validate() error {
 }
 
 type UpdatePasswordShareRequest struct {
-	Enabled bool `json:"enabled"`
+	Enabled *bool `json:"enabled"`
+}
+
+func (r UpdatePasswordShareRequest) Validate() error {
+	return validation.ValidateStruct(&r,
+		validation.Field(&r.Enabled, validation.Required),
+	)
 }
 
 type AdminConnectionShare struct {
@@ -55,4 +56,12 @@ type AdminConnectionShare struct {
 	OwnerEmail     string                  `json:"ownerEmail"`
 	PasswordShared bool                    `json:"passwordShared"`
 	Members        []ConnectionShareMember `json:"members"`
+}
+
+type AdminConnectionCatalogItem struct {
+	ID         int64  `json:"id"`
+	Name       string `json:"name"`
+	Type       string `json:"type"`
+	OwnerID    string `json:"ownerId"`
+	OwnerEmail string `json:"ownerEmail"`
 }

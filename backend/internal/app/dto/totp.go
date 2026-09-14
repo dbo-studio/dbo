@@ -5,11 +5,6 @@ import (
 	validation "github.com/invopop/validation"
 )
 
-type AuthLoginResponse struct {
-	TotpRequired   bool   `json:"totpRequired,omitempty"`
-	ChallengeToken string `json:"challengeToken,omitempty"`
-}
-
 type AuthTotpStatusResponse struct {
 	Enabled bool `json:"enabled"`
 }

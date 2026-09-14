@@ -14,12 +14,12 @@ type IConnectionRepo interface {
 	Index(ctx context.Context) (*[]model.Connection, error)
 	Find(ctx context.Context, id int32) (*model.Connection, error)
 	FindByID(ctx context.Context, id int32) (*model.Connection, error)
-	FindByIDAndOwner(ctx context.Context, id int32, ownerID string) (*model.Connection, error)
 	Create(ctx context.Context, dto *dto.CreateConnectionRequest) (*model.Connection, error)
 	Delete(ctx context.Context, connection *model.Connection) error
 	Update(ctx context.Context, connection *model.Connection, req *dto.UpdateConnectionRequest) (*model.Connection, error)
 	UpdateVersion(ctx context.Context, connection *model.Connection, version string) (*model.Connection, error)
 	MakeAllConnectionsNotDefault(ctx context.Context, exceptedConnection *model.Connection) error
+	ListAll(ctx context.Context) ([]model.Connection, error)
 }
 
 type IConnectionShareRepo interface {

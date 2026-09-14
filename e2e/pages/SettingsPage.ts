@@ -131,26 +131,29 @@ export class SettingsPage extends BasePage {
     ).toBeVisible();
     const table = this.page.getByTestId("admin-users-table");
     await expect(
-      table.getByRole("columnheader", { name: "Conn." }),
+      table.getByRole("columnheader", { name: "Create connection" }),
     ).toBeVisible();
-    await expect(table.getByRole("columnheader", { name: "AI" })).toBeVisible();
     await expect(
-      table.getByRole("columnheader", { name: "MCP" }),
+      table.getByRole("columnheader", { name: "AI settings" }),
+    ).toBeVisible();
+    await expect(
+      table.getByRole("columnheader", { name: "MCP settings" }),
     ).toBeVisible();
   }
 
   async expectAdminSharesTable(): Promise<void> {
-    await expect(this.page.getByTestId("admin-shares-table")).toBeVisible({
+    const table = this.page.getByTestId("admin-shares-table");
+    await expect(table).toBeVisible({
       timeout: 10000,
     });
     await expect(
-      this.page.getByRole("columnheader", { name: "Connection" }),
+      table.getByRole("columnheader", { name: "Connection" }),
     ).toBeVisible();
     await expect(
-      this.page.getByRole("columnheader", { name: "User" }),
+      table.getByRole("columnheader", { name: "User" }),
     ).toBeVisible();
     await expect(
-      this.page.getByRole("columnheader", { name: "Catalog role" }),
+      table.getByRole("columnheader", { name: "Catalog role" }),
     ).toBeVisible();
   }
 

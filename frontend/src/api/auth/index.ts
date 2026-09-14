@@ -1,11 +1,5 @@
 import { api } from '@/core/api';
-import type {
-  AuthDirectoryUser,
-  AuthLoginResponse,
-  AuthStatusType,
-  AuthTotpSetupResponse,
-  AuthTotpStatusType
-} from './types';
+import type { AuthLoginResponse, AuthStatusType, AuthTotpSetupResponse, AuthTotpStatusType } from './types';
 
 const endpoint = {
   status: (): string => '/auth/status',
@@ -13,7 +7,6 @@ const endpoint = {
   loginTotp: (): string => '/auth/login/totp',
   password: (): string => '/auth/password',
   logout: (): string => '/auth/logout',
-  users: (): string => '/users',
   totpStatus: (): string => '/auth/totp/status',
   totpSetup: (): string => '/auth/totp/setup',
   totpEnable: (): string => '/auth/totp/enable',
@@ -39,10 +32,6 @@ export const changePassword = async (currentPassword: string, password: string, 
 
 export const logout = async (): Promise<void> => {
   await api.post(endpoint.logout());
-};
-
-export const listDirectoryUsers = async (): Promise<AuthDirectoryUser[]> => {
-  return (await api.get<{ data: AuthDirectoryUser[] }>(endpoint.users())).data.data;
 };
 
 export const getTotpStatus = async (): Promise<AuthTotpStatusType> => {

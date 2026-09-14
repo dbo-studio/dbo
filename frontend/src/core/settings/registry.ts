@@ -195,7 +195,10 @@ export const SETTINGS_ENTRIES: SettingsEntryDef[] = [
   }
 ];
 
-export function getVisibleSections(isAdmin: boolean, permissions: UserPermissions = fullPermissions): SettingsSectionDef[] {
+export function getVisibleSections(
+  isAdmin: boolean,
+  permissions: UserPermissions = fullPermissions
+): SettingsSectionDef[] {
   return SETTINGS_SECTIONS.filter((section) => {
     if (section.adminOnly && !isAdmin) {
       return false;

@@ -239,6 +239,10 @@ func (h ConnectionHandler) UpdatePasswordShare(c fiber.Ctx) error {
 		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}
 
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
 	data, err := h.connectionService.UpdatePasswordShare(c, connectionID, req)
 	if err != nil {
 		h.logger.Error(err.Error())
@@ -250,6 +254,16 @@ func (h ConnectionHandler) UpdatePasswordShare(c fiber.Ctx) error {
 
 func (h ConnectionHandler) AdminListShares(c fiber.Ctx) error {
 	data, err := h.connectionService.AdminListShares(c)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(data).Send(c)
+}
+
+func (h ConnectionHandler) AdminListConnections(c fiber.Ctx) error {
+	data, err := h.connectionService.AdminListConnections(c)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)

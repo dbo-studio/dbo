@@ -5,9 +5,3 @@ export const defaultMemberPermissions: UserPermissions = {
   aiSettings: true,
   mcpSettings: false
 };
-
-export const defaultAdminPermissions: UserPermissions = {
-  createConnection: true,
-  aiSettings: true,
-  mcpSettings: true
-};

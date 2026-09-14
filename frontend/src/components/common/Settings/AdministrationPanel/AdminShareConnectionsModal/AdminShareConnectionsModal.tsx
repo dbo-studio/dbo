@@ -1,5 +1,5 @@
 import api from '@/api';
-import type { AdminConnectionShareType } from '@/api/connection/types';
+import type { AdminConnectionCatalogItemType, AdminConnectionShareType } from '@/api/connection/types';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import Modal from '@/components/base/Modal/Modal';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
@@ -29,6 +29,19 @@ const roleOptions: SelectInputOption[] = [
   { label: locales.share_role_editor, value: 'editor' }
 ];
 
+function catalogToConnection(item: AdminConnectionCatalogItemType): ConnectionType {
+  return {
+    id: item.id,
+    name: item.name,
+    type: item.type,
+    icon: item.type,
+    info: item.ownerEmail,
+    isActive: false,
+    isOpen: false,
+    options: {}
+  };
+}
+
 export type AdminShareConnectionsModalProps = {
   open: boolean;
   userId: string;
@@ -48,9 +61,9 @@ export default function AdminShareConnectionsModal({
   const [passwordShared, setPasswordShared] = useState(false);
   const [search, setSearch] = useState('');
 
-  const { data: connections = [], isLoading: connectionsLoading } = useQuery({
-    queryKey: ['connections'],
-    queryFn: api.connection.getConnectionList,
+  const { data: catalog = [], isLoading: connectionsLoading } = useQuery({
+    queryKey: ['admin-connections'],
+    queryFn: api.connection.listAdminConnections,
     enabled: open
   });
 
@@ -61,6 +74,8 @@ export default function AdminShareConnectionsModal({
   });
 
   const isLoading = connectionsLoading || sharesLoading;
+
+  const connections = useMemo(() => catalog.map(catalogToConnection), [catalog]);
 
   const passwordSharedByConnection = useMemo(() => {
     const map = new Map<number, boolean>();
@@ -109,6 +124,7 @@ export default function AdminShareConnectionsModal({
 
   const invalidate = async (): Promise<void> => {
     await queryClient.invalidateQueries({ queryKey: ['admin-shares'] });
+    await queryClient.invalidateQueries({ queryKey: ['admin-connections'] });
     await queryClient.invalidateQueries({ queryKey: ['connections'] });
   };
 

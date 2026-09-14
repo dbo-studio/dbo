@@ -43,5 +43,14 @@ test.describe("Security settings account password", () => {
       );
       await auth.expectAppReady();
     });
+
+    await test.step("restore shared-stack admin password", async () => {
+      await settings.open();
+      await settings.navigateTo("Security");
+      await settings.changeAccountPassword(nextPassword, currentPassword);
+      await expect(page.getByText("Password updated.").first()).toBeVisible({
+        timeout: 10000,
+      });
+    });
   });
 });

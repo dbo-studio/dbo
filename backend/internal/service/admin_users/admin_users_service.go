@@ -150,13 +150,12 @@ func (s *IAdminUsersServiceImpl) Update(ctx context.Context, id string, req *dto
 
 		user.Role = newRole
 		if newRole == model.UserRoleAdmin {
-			adminPerms := model.DefaultAdminPermissions()
-			model.ApplyPermissions(user, &adminPerms)
+			model.ApplyPermissionFlags(user, model.DefaultAdminPermissionFlags())
 		}
 	}
 
 	if req.Permissions != nil && user.Role != model.UserRoleAdmin {
-		model.ApplyPermissions(user, req.Permissions)
+		model.ApplyPermissionFlags(user, permissionFlagsFromDTO(*req.Permissions))
 	}
 
 	if req.Password != nil {
@@ -207,16 +206,32 @@ func (s *IAdminUsersServiceImpl) countAdmins(ctx context.Context) (int, error) {
 	return n, nil
 }
 
-func resolveCreatePermissions(role model.UserRole, requested *dto.UserPermissions) dto.UserPermissions {
+func resolveCreatePermissions(role model.UserRole, requested *dto.UserPermissions) model.UserPermissionFlags {
 	if role == model.UserRoleAdmin {
-		return model.DefaultAdminPermissions()
+		return model.DefaultAdminPermissionFlags()
 	}
 
 	if requested != nil {
-		return *requested
+		return permissionFlagsFromDTO(*requested)
 	}
 
-	return model.DefaultMemberPermissions()
+	return model.DefaultMemberPermissionFlags()
+}
+
+func permissionFlagsFromDTO(perms dto.UserPermissions) model.UserPermissionFlags {
+	return model.UserPermissionFlags{
+		CreateConnection: perms.CreateConnection,
+		AiSettings:       perms.AiSettings,
+		McpSettings:      perms.McpSettings,
+	}
+}
+
+func permissionsDTO(flags model.UserPermissionFlags) dto.UserPermissions {
+	return dto.UserPermissions{
+		CreateConnection: flags.CreateConnection,
+		AiSettings:       flags.AiSettings,
+		McpSettings:      flags.McpSettings,
+	}
 }
 
 func toListItem(u *model.User) dto.AdminUserListItem {
@@ -224,7 +239,7 @@ func toListItem(u *model.User) dto.AdminUserListItem {
 		ID:                 u.ID,
 		Email:              u.Email,
 		Role:               string(u.Role),
-		Permissions:        u.EffectivePermissions(),
+		Permissions:        permissionsDTO(u.PermissionFlags()),
 		MustChangePassword: u.MustChangePassword,
 		TotpEnabled:        u.TotpEnabled(),
 		CreatedAt:          u.CreatedAt.UTC().Format(time.RFC3339),

@@ -13,14 +13,12 @@ const (
 	PermMcpSettings      = "mcp_settings"
 )
 
-type ctxKeyPermissions struct{}
-
 func CtxWithPermissions(ctx context.Context, perms dto.UserPermissions) context.Context {
-	return context.WithValue(ctx, ctxKeyPermissions{}, perms)
+	return context.WithValue(ctx, CtxPermissionsKey, perms)
 }
 
 func CtxPermissions(ctx context.Context) (dto.UserPermissions, bool) {
-	v := ctx.Value(ctxKeyPermissions{})
+	v := ctx.Value(CtxPermissionsKey)
 	if v == nil {
 		return dto.UserPermissions{}, false
 	}

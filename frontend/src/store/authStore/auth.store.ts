@@ -14,7 +14,7 @@ type AuthStore = {
   clear: () => void;
 };
 
-export const useAuthStore: UseBoundStore<StoreApi<AuthStore>> = create<AuthStore>((set) => ({
+export const useAuthStore: UseBoundStore<StoreApi<AuthStore>> = create<AuthStore>((set, get) => ({
   gate: 'loading',
   mode: 'none',
   user: undefined,
@@ -32,6 +32,15 @@ export const useAuthStore: UseBoundStore<StoreApi<AuthStore>> = create<AuthStore
     }
 
     if (!status.authenticated) {
+      const { gate, totpChallengeToken } = get();
+      if (gate === 'totp' && totpChallengeToken) {
+        set({
+          mode: status.mode,
+          user: undefined
+        });
+        return;
+      }
+
       set({
         gate: 'login',
         mode: status.mode,

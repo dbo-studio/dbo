@@ -53,6 +53,14 @@ func (c IConnectionRepoImpl) FindByID(ctx context.Context, id int32) (*model.Con
 	return &connection, result.Error
 }
 
+func (c IConnectionRepoImpl) ListAll(ctx context.Context) ([]model.Connection, error) {
+	var connections []model.Connection
+
+	result := c.db.WithContext(ctx).Order("id ASC").Find(&connections)
+
+	return connections, result.Error
+}
+
 func connectionAccessible(ctx context.Context, db *gorm.DB, connection *model.Connection) bool {
 	ownerID := helper.CtxOwnerID(ctx)
 	if connection.OwnerID == ownerID {
@@ -66,14 +74,6 @@ func connectionAccessible(ctx context.Context, db *gorm.DB, connection *model.Co
 		Count(&n).Error
 
 	return err == nil && n > 0
-}
-
-func (c IConnectionRepoImpl) FindByIDAndOwner(ctx context.Context, id int32, ownerID string) (*model.Connection, error) {
-	var connection model.Connection
-
-	result := c.db.WithContext(ctx).Where("id = ? AND owner_id = ?", id, ownerID).First(&connection)
-
-	return &connection, result.Error
 }
 
 func (c IConnectionRepoImpl) Create(ctx context.Context, dto *dto.CreateConnectionRequest) (*model.Connection, error) {

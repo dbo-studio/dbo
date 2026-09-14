@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
@@ -18,8 +19,9 @@ import (
 )
 
 const (
-	totpChallengeTTL = 5 * time.Minute
-	totpIssuer       = "DBO Studio"
+	totpChallengeTTL      = 5 * time.Minute
+	totpIssuer            = "DBO Studio"
+	totpChallengeMaxFails = 5
 )
 
 type LoginResult struct {
@@ -127,6 +129,10 @@ func (s *IAuthServiceImpl) TotpDisable(ctx context.Context, req *dto.AuthTotpDis
 }
 
 func (s *IAuthServiceImpl) LoginTotp(ctx context.Context, req *dto.AuthLoginTotpRequest) (string, error) {
+	if s.cfg == nil || s.cfg.App.AuthMode != config.AuthModeLocal {
+		return "", apperror.BadRequest(apperror.ErrAuthNotEnabled)
+	}
+
 	_ = s.totpChallenges.DeleteExpired(ctx, time.Now().UTC())
 
 	challenge, err := s.totpChallenges.Find(ctx, req.ChallengeToken)
@@ -154,6 +160,21 @@ func (s *IAuthServiceImpl) LoginTotp(ctx context.Context, req *dto.AuthLoginTotp
 	}
 
 	if err := s.validateTotpCode(user, req.Code); err != nil {
+		attempts, incErr := s.totpChallenges.IncrementAttempts(ctx, challenge.ID)
+		if incErr != nil {
+			if errors.Is(incErr, apperror.ErrTotpChallengeNotFound) {
+				return "", apperror.BadRequest(apperror.ErrTotpChallengeNotFound)
+			}
+
+			return "", apperror.InternalServerError(incErr)
+		}
+
+		if attempts >= totpChallengeMaxFails {
+			_ = s.totpChallenges.Delete(ctx, challenge.ID)
+
+			return "", apperror.BadRequest(apperror.ErrTotpChallengeNotFound)
+		}
+
 		return "", err
 	}
 
@@ -169,6 +190,7 @@ func (s *IAuthServiceImpl) LoginTotp(ctx context.Context, req *dto.AuthLoginTotp
 
 func (s *IAuthServiceImpl) createTotpChallenge(ctx context.Context, userID string) (string, error) {
 	_ = s.totpChallenges.DeleteExpired(ctx, time.Now().UTC())
+	_ = s.totpChallenges.DeleteByUserID(ctx, userID)
 
 	id, err := repository.GenerateID()
 	if err != nil {
@@ -179,6 +201,7 @@ func (s *IAuthServiceImpl) createTotpChallenge(ctx context.Context, userID strin
 	challenge := &model.TotpLoginChallenge{
 		ID:        id,
 		UserID:    userID,
+		Attempts:  0,
 		ExpiresAt: now.Add(totpChallengeTTL),
 		CreatedAt: now,
 	}

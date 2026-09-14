@@ -15,6 +15,7 @@ const (
 	CtxUserRoleKey           ctxKey = "dbo.user_role"
 	CtxMustChangePasswordKey ctxKey = "dbo.must_change_password"
 	CtxConnectionPasswordKey ctxKey = "dbo.connection_password"
+	CtxPermissionsKey        ctxKey = "dbo.permissions"
 )
 
 func CtxOwnerID(ctx context.Context) string {

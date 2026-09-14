@@ -6,7 +6,7 @@ import { AuthShellSubmitStyled } from '@/components/common/Auth/AuthShell/AuthSh
 import { applyUserWorkspaceScope } from '@/core/storage/applyUserWorkspace';
 import locales from '@/locales';
 import { useAuthStore } from '@/store/authStore/auth.store';
-import { Box } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
@@ -20,6 +20,7 @@ const totpSchema = v.object({
 export default function TotpGateScreen(): JSX.Element {
   const applyStatus = useAuthStore((s) => s.applyStatus);
   const challengeToken = useAuthStore((s) => s.totpChallengeToken);
+  const clearAuth = useAuthStore((s) => s.clear);
   const queryClient = useQueryClient();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -98,6 +99,10 @@ export default function TotpGateScreen(): JSX.Element {
             </AuthShellSubmitStyled>
           )}
         </form.Subscribe>
+
+        <Button type='button' variant='text' fullWidth data-testid='auth-totp-back' onClick={(): void => clearAuth()}>
+          {locales.auth_totp_back_to_sign_in}
+        </Button>
       </Box>
     </AuthShell>
   );

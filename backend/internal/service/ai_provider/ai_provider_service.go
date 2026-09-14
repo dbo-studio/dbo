@@ -33,7 +33,7 @@ func NewAiProviderService(aiProviderRepo repository.IAiProviderRepo) IAiProvider
 func (i *IAiProviderServiceImpl) Find(ctx context.Context, id uint) (*dto.AiProviderDetailResponse, error) {
 	aiProvider, err := i.aiProviderRepo.Find(ctx, id)
 	if err != nil {
-		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+		return nil, apperror.NotFound(apperror.ErrAiProviderNotFound)
 	}
 
 	return aiProviderDetailModelToResponse(aiProvider), nil

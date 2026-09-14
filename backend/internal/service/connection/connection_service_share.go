@@ -126,7 +126,7 @@ func (s IConnectionServiceImpl) UpdatePasswordShare(ctx context.Context, connect
 		return nil, err
 	}
 
-	if req.Enabled {
+	if lo.FromPtr(req.Enabled) {
 		if err := s.enablePasswordShare(ctx, connection); err != nil {
 			return nil, err
 		}
@@ -141,7 +141,7 @@ func (s IConnectionServiceImpl) UpdatePasswordShare(ctx context.Context, connect
 	}
 
 	s.audit(fmt.Sprintf("connection_share password_shared=%v connection=%d actor=%s",
-		req.Enabled, connection.ID, helper.CtxUserID(ctx)))
+		lo.FromPtr(req.Enabled), connection.ID, helper.CtxUserID(ctx)))
 
 	return s.sharesResponse(ctx, connection)
 }
@@ -182,6 +182,33 @@ func (s IConnectionServiceImpl) AdminListShares(ctx context.Context) ([]dto.Admi
 			OwnerEmail:     emails[connection.OwnerID],
 			PasswordShared: passwordShared,
 			Members:        toShareMembers(members, emails),
+		})
+	}
+
+	return out, nil
+}
+
+func (s IConnectionServiceImpl) AdminListConnections(ctx context.Context) ([]dto.AdminConnectionCatalogItem, error) {
+	if helper.CtxUserRole(ctx) != string(model.UserRoleAdmin) {
+		return nil, apperror.Forbidden(apperror.ErrAdminRequired)
+	}
+
+	connections, err := s.connectionRepo.ListAll(ctx)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	emails := s.userEmailMap(ctx)
+	out := make([]dto.AdminConnectionCatalogItem, 0, len(connections))
+
+	for i := range connections {
+		c := connections[i]
+		out = append(out, dto.AdminConnectionCatalogItem{
+			ID:         int64(c.ID),
+			Name:       c.Name,
+			Type:       c.ConnectionType,
+			OwnerID:    c.OwnerID,
+			OwnerEmail: emails[c.OwnerID],
 		})
 	}
 

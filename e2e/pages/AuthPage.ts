@@ -48,6 +48,11 @@ export class AuthPage {
   async loginAdmin(adminPassword = "AdminPass1!"): Promise<void> {
     const adminEmail = process.env.E2E_ADMIN_EMAIL ?? "admin@example.com";
     const bootstrapPassword = process.env.E2E_ADMIN_PASSWORD ?? "bootstrap1";
+    const candidates = [
+      bootstrapPassword,
+      adminPassword,
+      "AdminPass2!",
+    ].filter((password, index, all) => all.indexOf(password) === index);
 
     await this.page.goto("/");
     if (
@@ -60,20 +65,30 @@ export class AuthPage {
     }
 
     await this.expectLoginVisible();
-    await this.login(adminEmail, bootstrapPassword);
 
-    const changeSubmit = this.page.getByTestId("auth-change-password-submit");
-    const appReady = this.page.getByTestId("add-connection");
-    try {
-      await expect(changeSubmit.or(appReady)).toBeVisible({ timeout: 15000 });
-    } catch {
-      await this.login(adminEmail, adminPassword);
+    for (const password of candidates) {
+      await this.page.getByTestId("auth-email").fill(adminEmail);
+      await this.page.getByTestId("auth-password").fill(password);
+      const submit = this.page.getByTestId("auth-submit");
+      await expect(submit).toBeEnabled({ timeout: 10000 });
+      await submit.click({ noWaitAfter: true });
+
+      const changeSubmit = this.page.getByTestId("auth-change-password-submit");
+      const appReady = this.page.getByTestId("add-connection");
+
+      try {
+        await expect(changeSubmit.or(appReady)).toBeVisible({ timeout: 15000 });
+      } catch {
+        await expect(submit).toBeEnabled({ timeout: 10000 }).catch(() => undefined);
+        continue;
+      }
+
+      if (await changeSubmit.isVisible().catch(() => false)) {
+        await this.changePasswordForced(adminPassword);
+      }
+
       await this.expectAppReady();
       return;
-    }
-
-    if (await changeSubmit.isVisible().catch(() => false)) {
-      await this.changePasswordForced(adminPassword);
     }
 
     await this.expectAppReady();

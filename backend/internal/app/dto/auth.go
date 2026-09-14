@@ -15,11 +15,21 @@ type AuthStatusResponse struct {
 	User               *AuthUserIdentity `json:"user,omitempty"`
 }
 
+type AuthLoginResponse struct {
+	TotpRequired   bool   `json:"totpRequired,omitempty"`
+	ChallengeToken string `json:"challengeToken,omitempty"`
+}
+
 type AuthUserIdentity struct {
 	ID          string           `json:"id"`
 	Email       string           `json:"email"`
 	Role        string           `json:"role"`
 	Permissions *UserPermissions `json:"permissions,omitempty"`
+}
+
+type UserDirectoryItem struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
 }
 
 type AuthLoginRequest struct {

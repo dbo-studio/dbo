@@ -101,3 +101,11 @@ export type AdminConnectionShareType = {
   passwordShared: boolean;
   members: ConnectionShareMemberType[];
 };
+
+export type AdminConnectionCatalogItemType = {
+  id: number;
+  name: string;
+  type: ConnectionEngine;
+  ownerId: string;
+  ownerEmail: string;
+};

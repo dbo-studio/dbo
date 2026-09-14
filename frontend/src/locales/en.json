@@ -490,6 +490,7 @@
   "auth_totp_code": "Authentication code",
   "auth_totp_title": "Two-factor authentication",
   "auth_totp_login_hint": "Enter the 6-digit code from your authenticator app.",
+  "auth_totp_back_to_sign_in": "Back to sign in",
   "auth_logout": "Log out",
   "administration": "Administration",
   "administration_description": "Manage users, permissions, and connection shares for this DBO instance.",
