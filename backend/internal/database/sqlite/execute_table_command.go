@@ -3,9 +3,12 @@ package databaseSqlite
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	quote "github.com/dbo-studio/dbo/internal/database/ddl/quote"
+	ddlSqlite "github.com/dbo-studio/dbo/internal/database/ddl/sqlite"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 )
@@ -16,7 +19,7 @@ func (r *SQLiteRepository) handleTableCommands(ctx context.Context, node string,
 	}
 
 	if action == contract.DropTableAction {
-		return []string{fmt.Sprintf("DROP TABLE %s", node)}, "", nil
+		return []string{fmt.Sprintf("DROP TABLE %s", quoteIdent(node))}, "", nil
 	}
 
 	paramsMap, err := r.parseTableParams(params)
@@ -26,15 +29,37 @@ func (r *SQLiteRepository) handleTableCommands(ctx context.Context, node string,
 
 	paramsMap.tableParams = r.initializeTableParams(paramsMap.tableParams, node)
 
+	// Populate the current schema state before building the planner input —
+	// population replaces the params map entries.
 	if action == contract.EditTableAction {
 		r.populateParamsFromDatabase(ctx, paramsMap, *paramsMap.tableParams.Old.Name)
 	}
 
+	input := ddlSqlite.TableInput{
+		TableParams:      paramsMap.tableParams,
+		ColumnParams:     paramsMap.columnParams,
+		ForeignKeyParams: paramsMap.foreignKeyParams,
+		KeyParams:        paramsMap.keyParams,
+		IndexParams:      paramsMap.indexParams,
+	}
+
 	switch action {
 	case contract.CreateTableAction:
-		return r.buildCreateTableQueries(paramsMap), "", nil
+		return ddlSqlite.BuildCreatePlan(input).SQLs(), "", nil
 	case contract.EditTableAction:
-		return r.buildEditTableQueries(paramsMap)
+		tmpBaseName := *paramsMap.tableParams.Old.Name
+		if paramsMap.tableParams.New != nil && paramsMap.tableParams.New.Name != nil && *paramsMap.tableParams.New.Name != "" {
+			tmpBaseName = *paramsMap.tableParams.New.Name
+		}
+
+		tmpTableName := r.getUniqueTmpTableName(tmpBaseName)
+
+		plan, err := ddlSqlite.BuildEditPlan(input, tmpTableName)
+		if err != nil {
+			return nil, "", err
+		}
+
+		return plan.SQLs(), tmpTableName, nil
 	default:
 		return []string{}, "", nil
 	}
@@ -129,36 +154,32 @@ func (r *SQLiteRepository) populateParamsFromDatabase(ctx context.Context, param
 	r.populateKeyParamsFromDB(ctx, paramsMap.keyParams, tableName)
 }
 
-func (r *SQLiteRepository) buildCreateTableQueries(paramsMap *tableParamsMap) []string {
-	queries := []string{}
-	tableName := lo.FromPtr(paramsMap.tableParams.New.Name)
+func (r *SQLiteRepository) getUniqueTmpTableName(baseName string) string {
+	baseTmpName := "__tmp_" + baseName
 
-	columnDefs := r.buildAllColumnDefinitions(paramsMap)
-	createQuery := r.buildCreateTableQuery(quoteIdent(tableName), paramsMap.tableParams.New, columnDefs)
-	queries = append(queries, createQuery)
-
-	if paramsMap.indexParams != nil && len(paramsMap.indexParams.Indexes) > 0 {
-		queries = append(queries, r.buildCreateIndexesQueries(tableName, paramsMap.indexParams.Indexes)...)
+	if !r.tableExists(baseTmpName) {
+		return baseTmpName
 	}
 
-	return queries
+	for i := 1; i < 1000; i++ {
+		candidateName := fmt.Sprintf("%s_%d", baseTmpName, i)
+		if !r.tableExists(candidateName) {
+			return candidateName
+		}
+	}
+
+	return fmt.Sprintf("%s_%d", baseTmpName, time.Now().Unix())
 }
 
-func (r *SQLiteRepository) buildEditTableQueries(paramsMap *tableParamsMap) ([]string, string, error) {
-	oldName := *paramsMap.tableParams.Old.Name
-	newName := r.getNewTableName(paramsMap.tableParams, oldName)
-	tmpTableName := r.getUniqueTmpTableName(newName)
+func (r *SQLiteRepository) tableExists(tableName string) bool {
+	var count int64
+	r.base.DB().Table("sqlite_master").
+		Where("type = 'table' AND name = ?", tableName).
+		Count(&count)
 
-	columnDefs := r.buildAllColumnDefinitions(paramsMap)
-	if columnDefs == "" {
-		return nil, "", fmt.Errorf("table %s has no column definitions", oldName)
-	}
+	return count > 0
+}
 
-	queries := r.buildTableRecreateQueries(tmpTableName, oldName, newName, paramsMap.tableParams.New, columnDefs, paramsMap)
-
-	if paramsMap.indexParams != nil && len(paramsMap.indexParams.Indexes) > 0 {
-		queries = append(queries, r.buildEditIndexesQueries(newName, paramsMap.indexParams.Indexes)...)
-	}
-
-	return queries, tmpTableName, nil
+func quoteIdent(name string) string {
+	return quote.SqliteIdent(name)
 }

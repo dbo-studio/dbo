@@ -6,12 +6,14 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
+// resolveCreateTableNode sets the table name for a create-table action
+// started on the table container node, where node.Table is not yet a name.
 func resolveCreateTableNode(node contract.DBNode, action contract.TreeNodeActionName, data []byte) contract.DBNode {
 	if action != contract.CreateTableAction || node.Table != string(contract.TableContainerNodeType) {
 		return node
 	}
 
-	tableParams, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.PostgresTableParams](data)
+	tableParams, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.MysqlTableParams](data)
 	if err != nil {
 		return node
 	}

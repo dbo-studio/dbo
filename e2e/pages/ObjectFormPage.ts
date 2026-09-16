@@ -315,6 +315,13 @@ export class ObjectFormPage extends BasePage {
   }
 
   async ensureWorkspaceTab(title: string, altTitle?: string): Promise<void> {
+    // Several object-form tabs may be open at once; assert on the first
+    // visible object-form icon to avoid strict-mode violations.
+    const objectFormIcon = this.page
+      .getByTestId("workspace-tab-icon-object")
+      .or(this.page.getByTestId("workspace-tab-icon-object-detail"))
+      .first();
+
     for (const candidate of [title, altTitle].filter((value): value is string =>
       Boolean(value),
     )) {
@@ -324,11 +331,7 @@ export class ObjectFormPage extends BasePage {
         await tab.click();
         await this.wait(500);
         await this.waitForReady();
-        await expect(
-          this.page
-            .getByTestId("workspace-tab-icon-object")
-            .or(this.page.getByTestId("workspace-tab-icon-object-detail")),
-        ).toBeVisible();
+        await expect(objectFormIcon).toBeVisible();
         return;
       }
     }
@@ -339,11 +342,7 @@ export class ObjectFormPage extends BasePage {
     await tab.click();
     await this.wait(500);
     await this.waitForReady();
-    await expect(
-      this.page
-        .getByTestId("workspace-tab-icon-object")
-        .or(this.page.getByTestId("workspace-tab-icon-object-detail")),
-    ).toBeVisible();
+    await expect(objectFormIcon).toBeVisible();
   }
 
   async closeWorkspaceTab(title: string): Promise<void> {

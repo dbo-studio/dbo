@@ -5,6 +5,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	quote "github.com/dbo-studio/dbo/internal/database/ddl/quote"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
@@ -35,7 +36,7 @@ func (r *PostgresRepository) handleMaterializedViewCommands(node contract.DBNode
 			return queries, nil
 		}
 
-		viewRef := qualifiedTableName(node.Schema, *params.New.Name)
+		viewRef := quote.PostgresQualifiedTable(node.Schema, *params.New.Name)
 		query := fmt.Sprintf("CREATE MATERIALIZED VIEW %s", viewRef)
 
 		if params.New.Tablespace != nil {

@@ -1,6 +1,9 @@
 package databaseSqlite
 
-import databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
+import (
+	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/dbo-studio/dbo/internal/database/ddl"
+)
 
 // Compile-time assertions to guarantee SQLiteRepository satisfies
 // all required repository contracts after refactors.
@@ -9,4 +12,5 @@ var (
 	_ databaseContract.AIContextRepository  = (*SQLiteRepository)(nil)
 	_ databaseContract.AIMetadataRepository = (*SQLiteRepository)(nil)
 	_ databaseContract.DBToolsRepository    = (*SQLiteRepository)(nil)
+	_ ddl.TablePlanBuilder                  = (*SQLiteRepository)(nil)
 )

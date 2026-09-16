@@ -73,7 +73,7 @@ export async function createUsersTable(
 
   await objectForm.save();
   await objectForm.assertPreviewContains(P.createTable);
-  await objectForm.assertPreviewContains(/PRIMARY KEY/i);
+  await objectForm.assertPreviewContains(P.createTableComposed);
   await objectForm.confirmExecute();
 
   await tree.expandNode('Tables');
@@ -119,6 +119,7 @@ export async function createPostsTable(
 
   await objectForm.save();
   await objectForm.assertPreviewContains(P.createTable);
+  await objectForm.assertPreviewContains(/CREATE TABLE[\s\S]*"user_id"/i);
   await objectForm.assertPreviewContains(P.foreignKey);
   await objectForm.confirmExecute();
 

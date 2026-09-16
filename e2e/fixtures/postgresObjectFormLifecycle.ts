@@ -43,6 +43,8 @@ export const POSTGRES_LIFECYCLE_PREVIEW = {
   createSchema: /CREATE SCHEMA/i,
   alterSchema: /ALTER SCHEMA/i,
   createTable: /CREATE TABLE/i,
+  // Composed CREATE: columns are inline in the CREATE TABLE (no empty shell + ALTERs).
+  createTableComposed: /CREATE TABLE[\s\S]*"email"[\s\S]*PRIMARY KEY/i,
   addColumn: /ADD COLUMN/i,
   foreignKey: /FOREIGN KEY|REFERENCES/i,
   dropConstraint: /DROP CONSTRAINT/i,

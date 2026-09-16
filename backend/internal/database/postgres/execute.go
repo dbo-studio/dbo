@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (r *PostgresRepository) buildExecuteQueries(_ context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, error) {
+func (r *PostgresRepository) buildExecuteQueries(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, error) {
 	node := r.base.ExtractNode(nodeID)
 
 	type ExecuteParams map[contract.TreeTab]any
@@ -18,6 +18,17 @@ func (r *PostgresRepository) buildExecuteQueries(_ context.Context, nodeID strin
 	executeParams, err := helper.ConvertToDTO[ExecuteParams](params)
 	if err != nil {
 		return nil, err
+	}
+
+	// Table create/edit flows are planned through the shared DDL planner so
+	// preview and execute always emit the identical statement list.
+	if action == contract.CreateTableAction || action == contract.EditTableAction {
+		plan, _, err := r.BuildTablePlan(ctx, nodeID, action, params)
+		if err != nil {
+			return nil, err
+		}
+
+		return plan.SQLs(), nil
 	}
 
 	queries := []string{}
@@ -52,29 +63,11 @@ func (r *PostgresRepository) buildExecuteQueries(_ context.Context, nodeID strin
 			node.Table = t
 		}
 
-		tableColumnQueries, err := r.handleTableColumnCommands(node, tabID, action, params)
-		if err != nil {
-			return nil, err
-		}
-
-		tableForeignKeyQueries, err := r.handleForeignKeyCommands(node, tabID, action, params)
-		if err != nil {
-			return nil, err
-		}
-
-		tableKeyQueries, err := r.handleTableKeyCommands(node, tabID, action, params)
-		if err != nil {
-			return nil, err
-		}
-
 		queries = append(queries, dbQueries...)
 		queries = append(queries, viewQueries...)
 		queries = append(queries, materializedViewQueries...)
 		queries = append(queries, schemaQueries...)
 		queries = append(queries, tableQueries...)
-		queries = append(queries, tableColumnQueries...)
-		queries = append(queries, tableForeignKeyQueries...)
-		queries = append(queries, tableKeyQueries...)
 	}
 
 	return queries, nil

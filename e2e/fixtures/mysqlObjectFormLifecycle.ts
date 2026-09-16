@@ -51,7 +51,9 @@ export const MYSQL_LIFECYCLE_PREVIEW = {
   editForeignKey: /DROP FOREIGN KEY[\s\S]*ADD CONSTRAINT[\s\S]*FOREIGN KEY|DROP FOREIGN KEY[\s\S]*ADD FOREIGN KEY/i,
   renameTable: /RENAME TO/i,
   commentOnTable: /COMMENT\s*=/i,
-  modifyColumn: /MODIFY COLUMN/i,
+  modifyColumn: /CHANGE COLUMN/i,
+  // Composed CREATE: columns + PK are inline in the CREATE TABLE (no empty shell).
+  createTableComposed: /CREATE TABLE[\s\S]*PRIMARY KEY/i,
   addUnique: /ADD CONSTRAINT.*UNIQUE|UNIQUE\s*\(/i,
   dropKey: /DROP INDEX|DROP PRIMARY KEY/i
 } as const;

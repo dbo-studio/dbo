@@ -10,7 +10,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
-func (r *MySQLRepository) buildExecuteQueries(_ context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, error) {
+func (r *MySQLRepository) buildExecuteQueries(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, error) {
 	node := resolveCreateTableNode(r.base.ExtractNode(nodeID), action, params)
 
 	type ExecuteParams map[contract.TreeTab]any
@@ -18,6 +18,17 @@ func (r *MySQLRepository) buildExecuteQueries(_ context.Context, nodeID string, 
 	executeParams, err := helper.ConvertToDTO[ExecuteParams](params)
 	if err != nil {
 		return nil, err
+	}
+
+	// Table create/edit flows are planned through the shared DDL planner so
+	// preview and execute always emit the identical statement list.
+	if action == contract.CreateTableAction || action == contract.EditTableAction {
+		plan, _, err := r.BuildTablePlan(ctx, nodeID, action, params)
+		if err != nil {
+			return nil, err
+		}
+
+		return plan.SQLs(), nil
 	}
 
 	queries := []string{}
@@ -42,33 +53,9 @@ func (r *MySQLRepository) buildExecuteQueries(_ context.Context, nodeID string, 
 			node.Table = t
 		}
 
-		tableColumnQueries, err := r.handleTableColumnCommands(node, tabID, action, params)
-		if err != nil {
-			return nil, err
-		}
-
-		tableForeignKeyQueries, err := r.handleForeignKeyCommands(node, tabID, action, params)
-		if err != nil {
-			return nil, err
-		}
-
-		tableKeyQueries, err := r.handleTableKeyCommands(node, tabID, action, params)
-		if err != nil {
-			return nil, err
-		}
-
-		tableIndexQueries, err := r.handleTableIndexCommands(node, tabID, action, params)
-		if err != nil {
-			return nil, err
-		}
-
 		queries = append(queries, dbQueries...)
 		queries = append(queries, viewQueries...)
 		queries = append(queries, tableQueries...)
-		queries = append(queries, tableColumnQueries...)
-		queries = append(queries, tableForeignKeyQueries...)
-		queries = append(queries, tableKeyQueries...)
-		queries = append(queries, tableIndexQueries...)
 	}
 
 	return queries, nil

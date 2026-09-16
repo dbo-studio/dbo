@@ -86,6 +86,7 @@ export async function createUsersTable(
 
   await objectForm.save();
   await objectForm.assertPreviewContains(P.createTable);
+  await objectForm.assertPreviewContains(P.createTableComposed);
   await objectForm.assertPreviewContains("id");
   await objectForm.assertPreviewContains(P.primaryKey);
   await objectForm.confirmExecute();
@@ -152,6 +153,7 @@ export async function createPostsTable(
 
   await objectForm.save();
   await objectForm.assertPreviewContains(P.createTable);
+  await objectForm.assertPreviewContains(P.createTableComposed);
   await objectForm.assertPreviewContains(P.primaryKey);
   await objectForm.confirmExecute();
 
