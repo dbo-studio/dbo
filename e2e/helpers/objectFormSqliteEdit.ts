@@ -62,6 +62,20 @@ export async function editTableChangeColumnType(
   await objectForm.confirmExecute();
 }
 
+export async function editTableRenameColumn(
+  page: Page,
+  tableName: string,
+  columnRowIndex: number,
+  newName: string,
+): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.columns);
+  await objectForm.fillArrayCell(columnRowIndex, F.columnName, newName);
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.renameColumnCopy);
+  await objectForm.confirmExecute();
+}
+
 export async function editTableDropForeignKey(
   page: Page,
   tableName: string,

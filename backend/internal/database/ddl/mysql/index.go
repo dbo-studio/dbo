@@ -10,8 +10,6 @@ import (
 	"github.com/samber/lo"
 )
 
-// indexStatements builds the indexes phase; edits that change the
-// definition are handled as drop + recreate by the caller's diffing.
 func indexStatements(database, tableName string, rows []dto.MysqlTableIndex, action contract.TreeNodeActionName) []ddl.Statement {
 	var statements []ddl.Statement
 
@@ -33,10 +31,45 @@ func indexStatements(database, tableName string, rows []dto.MysqlTableIndex, act
 				SQL:   dropIndexStatement(database, tableName, *index.Old.IndexName),
 				Phase: ddl.PhaseIndexes,
 			})
+
+			continue
+		}
+
+		if index.Old != nil && indexDefinitionChanged(index.Old, index.New) {
+			if index.Old.IndexName != nil {
+				statements = append(statements, ddl.Statement{
+					SQL:   dropIndexStatement(database, tableName, *index.Old.IndexName),
+					Phase: ddl.PhaseIndexes,
+				})
+			}
+
+			if query := createIndexStatement(database, tableName, index.New); query != "" {
+				statements = append(statements, ddl.Statement{SQL: query, Phase: ddl.PhaseIndexes})
+			}
 		}
 	}
 
 	return statements
+}
+
+func indexDefinitionChanged(oldIndex, newIndex *dto.MysqlTableIndexData) bool {
+	if oldIndex == nil || newIndex == nil {
+		return true
+	}
+
+	if lo.FromPtr(oldIndex.IndexName) != lo.FromPtr(newIndex.IndexName) {
+		return true
+	}
+
+	if lo.FromPtr(oldIndex.NonUnique) != lo.FromPtr(newIndex.NonUnique) {
+		return true
+	}
+
+	if lo.FromPtr(oldIndex.Collation) != lo.FromPtr(newIndex.Collation) {
+		return true
+	}
+
+	return !ddl.StringSlicesEqual(oldIndex.Columns, newIndex.Columns)
 }
 
 func createIndexStatement(database, table string, index *dto.MysqlTableIndexData) string {
@@ -49,18 +82,21 @@ func createIndexStatement(database, table string, index *dto.MysqlTableIndexData
 		unique = "UNIQUE "
 	}
 
-	collation := "A"
-	if index.Collation != nil && *index.Collation != "" {
-		collation = *index.Collation
+	order := "ASC"
+
+	if index.Collation != nil {
+		if parsed := ddl.IndexOrder(*index.Collation); parsed != "" {
+			order = parsed
+		} else if *index.Collation == "D" {
+			order = "DESC"
+		} else if *index.Collation == "A" {
+			order = "ASC"
+		}
 	}
 
 	colParts := make([]string, len(index.Columns))
 	for i, col := range index.Columns {
-		if collation == "D" {
-			colParts[i] = quote.MysqlIdent(col) + " DESC"
-		} else {
-			colParts[i] = quote.MysqlIdent(col) + " ASC"
-		}
+		colParts[i] = quote.MysqlIdent(col) + " " + order
 	}
 
 	return "CREATE " + unique + "INDEX " + quote.MysqlIdent(*index.IndexName) +

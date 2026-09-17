@@ -105,9 +105,17 @@ func recreateTableStatements(tmpTableName, oldName, newName string, tableParams 
 		Phase: ddl.PhaseTable,
 	}}
 
-	if commonColumns := commonColumns(columnRows(input)); len(commonColumns) > 0 {
+	if cols := commonColumns(columnRows(input)); len(cols) > 0 {
+		dest := make([]string, len(cols))
+
+		src := make([]string, len(cols))
+		for i, col := range cols {
+			dest[i] = col.dest
+			src[i] = col.src
+		}
+
 		plan = append(plan, ddl.Statement{
-			SQL:   fmt.Sprintf("INSERT INTO %s (%s) SELECT %s FROM %s", quote.SqliteIdent(tmpTableName), strings.Join(commonColumns, ", "), strings.Join(commonColumns, ", "), quote.SqliteIdent(oldName)),
+			SQL:   fmt.Sprintf("INSERT INTO %s (%s) SELECT %s FROM %s", quote.SqliteIdent(tmpTableName), strings.Join(dest, ", "), strings.Join(src, ", "), quote.SqliteIdent(oldName)),
 			Phase: ddl.PhaseTable,
 		})
 	}

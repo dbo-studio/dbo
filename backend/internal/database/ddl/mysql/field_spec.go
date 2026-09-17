@@ -3,22 +3,25 @@ package ddlMysql
 import (
 	"fmt"
 	"strings"
+
+	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/database/ddl"
+	quote "github.com/dbo-studio/dbo/internal/database/ddl/quote"
+	"github.com/samber/lo"
 )
 
-// FormatColumnType renders a MySQL column type with length/scale where the
-// type family supports them.
-func FormatColumnType(dataType string, maxLength *string, numericScale *string) string {
+func formatColumnType(dataType string, maxLength *string, numericScale *string) string {
 	if dataType == "" {
 		return dataType
 	}
 
 	baseType := baseDataType(dataType)
 
-	if isCharacterType(dataType) {
+	if isMysqlCharacterType(dataType) {
 		// CHAR/VARCHAR require a length; TEXT family types must not include one.
 		if baseType == "CHAR" || baseType == "VARCHAR" {
 			length := "255"
-			if maxLength != nil && *maxLength != "" {
+			if maxLength != nil && ddl.DigitsOnly(*maxLength) {
 				length = *maxLength
 			} else if baseType == "CHAR" {
 				length = "1"
@@ -30,8 +33,8 @@ func FormatColumnType(dataType string, maxLength *string, numericScale *string) 
 		return baseType
 	}
 
-	if isNumericType(dataType) && maxLength != nil && *maxLength != "" {
-		if numericScale != nil && *numericScale != "" {
+	if isMysqlNumericType(dataType) && maxLength != nil && ddl.DigitsOnly(*maxLength) {
+		if numericScale != nil && ddl.DigitsOnly(*numericScale) {
 			return fmt.Sprintf("%s(%s,%s)", baseType, *maxLength, *numericScale)
 		}
 
@@ -41,26 +44,14 @@ func FormatColumnType(dataType string, maxLength *string, numericScale *string) 
 	return baseType
 }
 
-// FormatDefault ensures DEFAULT literals are valid SQL.
-// Values reloaded from INFORMATION_SCHEMA are unquoted (e.g. unknown),
-// while form input may already include quotes (e.g. 'unknown').
-func FormatDefault(defaultVal string) string {
+func formatDefault(defaultVal string) string {
 	trimmed := strings.TrimSpace(defaultVal)
 	if trimmed == "" {
 		return trimmed
 	}
 
 	upper := strings.ToUpper(trimmed)
-	if upper == "NULL" ||
-		strings.HasPrefix(upper, "CURRENT_TIMESTAMP") ||
-		strings.HasPrefix(upper, "CURRENT_DATE") ||
-		strings.HasPrefix(upper, "CURRENT_TIME") {
-		return trimmed
-	}
-
-	if (strings.HasPrefix(trimmed, "'") && strings.HasSuffix(trimmed, "'")) ||
-		(strings.HasPrefix(trimmed, "\"") && strings.HasSuffix(trimmed, "\"")) ||
-		(strings.HasPrefix(trimmed, "(") && strings.HasSuffix(trimmed, ")")) {
+	if upper == "NULL" || isCurrentDateTimeKeyword(upper) {
 		return trimmed
 	}
 
@@ -68,10 +59,27 @@ func FormatDefault(defaultVal string) string {
 		return trimmed
 	}
 
-	return "'" + strings.ReplaceAll(trimmed, "'", "''") + "'"
+	return quote.MysqlLiteral(trimmed)
 }
 
-func isCharacterType(dataType string) bool {
+func isCurrentDateTimeKeyword(upper string) bool {
+	for _, prefix := range []string{"CURRENT_TIMESTAMP", "CURRENT_DATE", "CURRENT_TIME"} {
+		if upper == prefix {
+			return true
+		}
+
+		if strings.HasPrefix(upper, prefix+"(") && strings.HasSuffix(upper, ")") {
+			inner := strings.TrimSuffix(strings.TrimPrefix(upper, prefix+"("), ")")
+			if ddl.DigitsOnly(inner) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func isMysqlCharacterType(dataType string) bool {
 	characterTypes := []string{"char", "varchar", "text", "tinytext", "mediumtext", "longtext"}
 
 	normalized := strings.ToLower(dataType)
@@ -84,7 +92,7 @@ func isCharacterType(dataType string) bool {
 	return false
 }
 
-func isNumericType(dataType string) bool {
+func isMysqlNumericType(dataType string) bool {
 	numericTypes := []string{"int", "integer", "tinyint", "smallint", "mediumint", "bigint", "float", "double", "decimal", "numeric"}
 
 	normalized := strings.ToLower(dataType)
@@ -133,4 +141,56 @@ func isNumericLiteral(value string) bool {
 	}
 
 	return true
+}
+
+func inlineColumnDefinition(column *dto.MysqlTableColumnData) string {
+	def := quote.MysqlIdent(*column.Name) + " " + formatColumnType(*column.DataType, column.MaxLength, column.NumericScale)
+
+	if lo.FromPtr(column.NotNull) {
+		def += " NOT NULL"
+	}
+
+	if lo.FromPtr(column.IsIdentity) {
+		def += " AUTO_INCREMENT"
+	}
+
+	if column.Default != nil && *column.Default != "" {
+		def += " DEFAULT " + formatDefault(*column.Default)
+	}
+
+	if column.Comment != nil && *column.Comment != "" {
+		def += " COMMENT " + quote.MysqlLiteral(*column.Comment)
+	}
+
+	return def
+}
+
+func mysqlEngine(value string) string {
+	switch strings.ToUpper(strings.TrimSpace(value)) {
+	case "INNODB":
+		return "InnoDB"
+	case "MYISAM":
+		return "MyISAM"
+	case "MEMORY", "CSV", "ARCHIVE", "BLACKHOLE", "FEDERATED", "MERGE", "NDBCLUSTER":
+		return strings.ToUpper(strings.TrimSpace(value))
+	default:
+		return ""
+	}
+}
+
+func mysqlRowFormat(value string) string {
+	switch strings.ToUpper(strings.TrimSpace(value)) {
+	case "DEFAULT", "DYNAMIC", "FIXED", "COMPRESSED", "REDUNDANT", "COMPACT":
+		return strings.ToUpper(strings.TrimSpace(value))
+	default:
+		return ""
+	}
+}
+
+func uniqueConstraintName(columns []string) string {
+	if len(columns) == 0 {
+		return "uniq_"
+	}
+
+	return "uniq_" + strings.Join(columns, "_")
 }

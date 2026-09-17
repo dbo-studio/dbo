@@ -8,8 +8,6 @@ import (
 	"github.com/dbo-studio/dbo/internal/database/ddl"
 )
 
-// TableInput carries the parsed Object Form payload for a table
-// create/edit action, plus the engine context the planner needs.
 type TableInput struct {
 	Schema string
 	// NodeTable is the table name resolved from the tree node; used when
@@ -23,8 +21,6 @@ type TableInput struct {
 	ForeignKeys *dto.PostgresTableForeignKeyParams
 }
 
-// BuildTablePlan assembles the deterministic phase-ordered statement list
-// shared by PreviewExecute and Execute.
 func BuildTablePlan(input TableInput) (ddl.Plan, string, error) {
 	switch input.Action {
 	case contract.CreateTableAction:

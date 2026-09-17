@@ -193,6 +193,39 @@ export async function editTableChangeColumnType(
   await objectForm.confirmExecute();
 }
 
+export async function editTableChangeColumnLength(
+  page: Page,
+  tableName: string,
+  columnRowIndex: number,
+  length: string,
+): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.columns);
+  await objectForm.fillArrayCell(
+    columnRowIndex,
+    F.columnMaxLength,
+    length,
+  );
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.changeColumnLength);
+  await objectForm.confirmExecute();
+}
+
+export async function editTableRenameIndex(
+  page: Page,
+  tableName: string,
+  indexRowIndex: number,
+  newIndexName: string,
+): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.indexes);
+  await objectForm.fillArrayCell(indexRowIndex, F.indexName, newIndexName);
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.recreateIndex);
+  await objectForm.assertPreviewContains(newIndexName);
+  await objectForm.confirmExecute();
+}
+
 export async function editTableAddUniqueKey(
   page: Page,
   tableName: string,

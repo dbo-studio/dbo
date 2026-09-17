@@ -3,6 +3,7 @@ package databaseMysql
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 )
@@ -106,7 +107,7 @@ func (r *MySQLRepository) getTableColumns(ctx context.Context, node contract.DBN
 				"comment":                  column.Comment,
 				"character_maximum_length": column.CharacterMaximumLength,
 				"numeric_scale":            column.NumericScale,
-				"is_identity":              false,
+				"is_identity":              strings.Contains(strings.ToLower(column.Extra), "auto_increment"),
 			})
 		}
 	}

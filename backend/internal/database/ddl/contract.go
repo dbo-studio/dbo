@@ -43,13 +43,3 @@ func (p Plan) SQLs() []string {
 type TablePlanBuilder interface {
 	BuildTablePlan(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) (Plan, string, error)
 }
-
-// TableNameFromGeneral resolves the table name for a create-table action
-// started on the table container node, where node.Table is not yet a name.
-func TableNameFromGeneral(newName *string, fallback string) string {
-	if newName != nil && *newName != "" {
-		return *newName
-	}
-
-	return fallback
-}

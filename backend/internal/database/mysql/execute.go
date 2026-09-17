@@ -3,7 +3,6 @@ package databaseMysql
 import (
 	"context"
 	"fmt"
-	"net/url"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
@@ -11,7 +10,7 @@ import (
 )
 
 func (r *MySQLRepository) buildExecuteQueries(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, error) {
-	node := resolveCreateTableNode(r.base.ExtractNode(nodeID), action, params)
+	node := r.base.ExtractNode(nodeID)
 
 	type ExecuteParams map[contract.TreeTab]any
 
@@ -117,11 +116,6 @@ func runQueries(queries []string, exec func(string) error) error {
 	for _, query := range queries {
 		if query == "" {
 			continue
-		}
-
-		query, err := url.PathUnescape(query)
-		if err != nil {
-			return err
 		}
 
 		if err := exec(query); err != nil {

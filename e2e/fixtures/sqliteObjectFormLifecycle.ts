@@ -48,6 +48,8 @@ export const SQLITE_LIFECYCLE_PREVIEW = {
   setNotNull: /CREATE TABLE[\s\S]*"email"[\s\S]*NOT NULL[\s\S]*INSERT INTO/i,
   setDefault: /CREATE TABLE[\s\S]*"email"[\s\S]*DEFAULT[\s\S]*INSERT INTO/i,
   alterColumnType: /CREATE TABLE[\s\S]*"email"[\s\S]*BLOB[\s\S]*INSERT INTO/i,
+  renameColumnCopy:
+    /INSERT INTO[\s\S]*\("email_addr"\)[\s\S]*SELECT[\s\S]*"email"[\s\S]*FROM/i,
   addUnique: /CREATE TABLE[\s\S]*"email"[\s\S]*UNIQUE[\s\S]*INSERT INTO|CREATE TABLE[\s\S]*UNIQUE[\s\S]*"email"[\s\S]*INSERT INTO/i,
   dropKey: /CREATE TABLE[\s\S]*"email"[\s\S]*INSERT INTO/i
 } as const;

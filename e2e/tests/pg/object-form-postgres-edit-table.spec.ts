@@ -13,6 +13,7 @@ import {
   editTableAddForeignKey,
   editTableAddUniqueKey,
   editTableChangeColumnType,
+  editTableChangeColumnLength,
   editTableComment,
   editTableDropColumn,
   editTableDropForeignKey,
@@ -136,6 +137,10 @@ test.describe("Object Form PostgreSQL edit table", () => {
       1,
       "character varying",
     );
+  });
+
+  test("Change email column max length", async () => {
+    await editTableChangeColumnLength(page, renamedUsersTable, 1, "128");
   });
 
   test("Add UNIQUE key on email column", async () => {

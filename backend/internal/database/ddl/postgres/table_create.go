@@ -1,7 +1,7 @@
 package ddlPostgres
 
 import (
-	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -14,7 +14,7 @@ import (
 func buildCreateTablePlan(input TableInput) (ddl.Plan, string, error) {
 	general := input.General
 	if general == nil || general.New == nil || general.New.Name == nil || *general.New.Name == "" {
-		return nil, "", errors.New("missing table name")
+		return nil, "", fmt.Errorf("missing table name")
 	}
 
 	tableName := *general.New.Name
@@ -23,6 +23,10 @@ func buildCreateTablePlan(input TableInput) (ddl.Plan, string, error) {
 	createColumns := lo.Filter(columnRows(input), func(col dto.PostgresTableColumn, _ int) bool {
 		return col.New != nil && col.New.Name != nil && col.New.DataType != nil
 	})
+
+	if len(createColumns) == 0 {
+		return nil, "", fmt.Errorf("missing column definitions")
+	}
 
 	var tableConstraints []string
 
@@ -45,19 +49,21 @@ func buildCreateTablePlan(input TableInput) (ddl.Plan, string, error) {
 
 	allDefs := append(columnDefs, tableConstraints...)
 
-	createQuery := "CREATE TABLE " + tableRef + " (" + strings.Join(allDefs, ", ") + ")"
+	createPrefix := "CREATE TABLE "
+
+	switch ddl.PostgresPersistence(lo.FromPtr(general.New.Persistence)) {
+	case "TEMPORARY":
+		createPrefix = "CREATE TEMPORARY TABLE "
+	case "UNLOGGED":
+		createPrefix = "CREATE UNLOGGED TABLE "
+	}
+
+	createQuery := createPrefix + tableRef + " (" + strings.Join(allDefs, ", ") + ")"
 	if general.New.Tablespace != nil && *general.New.Tablespace != "" {
 		createQuery += " TABLESPACE " + quote.PostgresIdent(*general.New.Tablespace)
 	}
 
 	plan := ddl.Plan{{SQL: createQuery, Phase: ddl.PhaseTable}}
-
-	if general.New.Persistence != nil && *general.New.Persistence != "" {
-		plan = append(plan, ddl.Statement{
-			SQL:   "ALTER TABLE " + tableRef + " SET " + *general.New.Persistence,
-			Phase: ddl.PhaseTable,
-		})
-	}
 
 	if general.New.Owner != nil && *general.New.Owner != "" {
 		plan = append(plan, ddl.Statement{
@@ -87,47 +93,4 @@ func buildCreateTablePlan(input TableInput) (ddl.Plan, string, error) {
 	plan = append(plan, foreignKeyStatements(input.Schema, tableName, foreignKeyRows(input), contract.CreateTableAction)...)
 
 	return plan, tableName, nil
-}
-
-// inlineKeyConstraints composes named PRIMARY KEY / UNIQUE / EXCLUDE
-// constraints from the keys tab for the inline part of CREATE TABLE.
-func inlineKeyConstraints(keys []dto.PostgresTableKey) ([]string, bool) {
-	var constraints []string
-
-	hasPrimaryKey := false
-
-	for _, key := range keys {
-		if key.New == nil || len(key.New.Columns) == 0 || key.New.Name == nil || *key.New.Name == "" {
-			continue
-		}
-
-		cols := quoteJoinColumns(key.New.Columns)
-		name := quote.PostgresIdent(*key.New.Name)
-
-		var constraint string
-
-		switch {
-		case lo.FromPtr(key.New.Primary):
-			constraint = "CONSTRAINT " + name + " PRIMARY KEY (" + cols + ")"
-			hasPrimaryKey = true
-		case key.New.ExcludeOperator != nil && *key.New.ExcludeOperator != "":
-			constraint = "CONSTRAINT " + name + " EXCLUDE USING " + *key.New.ExcludeOperator + " (" + cols + ")"
-		default:
-			constraint = "CONSTRAINT " + name + " UNIQUE (" + cols + ")"
-		}
-
-		constraint = appendKeyDeferrableClauses(constraint, key.New)
-		constraints = append(constraints, constraint)
-	}
-
-	return constraints, hasPrimaryKey
-}
-
-func quoteJoinColumns(columns []string) string {
-	quoted := make([]string, len(columns))
-	for i, col := range columns {
-		quoted[i] = quote.PostgresIdent(col)
-	}
-
-	return strings.Join(quoted, ", ")
 }

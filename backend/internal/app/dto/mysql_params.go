@@ -28,8 +28,10 @@ type MysqlTableParams struct {
 }
 
 type MysqlTableParamsData struct {
-	Name    *string `json:"relname"`
-	Comment *string `json:"description"`
+	Name      *string `json:"relname"`
+	Comment   *string `json:"description"`
+	Engine    *string `json:"ENGINE"`
+	RowFormat *string `json:"ROW_FORMAT"`
 }
 
 type MysqlTableColumnParams struct {

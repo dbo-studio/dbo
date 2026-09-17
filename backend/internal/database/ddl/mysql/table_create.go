@@ -1,7 +1,7 @@
 package ddlMysql
 
 import (
-	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -11,13 +11,10 @@ import (
 	"github.com/samber/lo"
 )
 
-// buildCreateTablePlan composes a single CREATE TABLE with all columns and
-// PK/UNIQUE constraints inline; indexes and foreign keys follow as
-// separate statements (deterministic, InnoDB-safe ordering).
 func buildCreateTablePlan(input TableInput) (ddl.Plan, string, error) {
 	general := input.General
 	if general == nil || general.New == nil || general.New.Name == nil || *general.New.Name == "" {
-		return nil, "", errors.New("missing table name")
+		return nil, "", fmt.Errorf("missing table name")
 	}
 
 	tableName := *general.New.Name
@@ -26,6 +23,10 @@ func buildCreateTablePlan(input TableInput) (ddl.Plan, string, error) {
 	createColumns := lo.Filter(columnRows(input), func(col dto.MysqlTableColumn, _ int) bool {
 		return col.New != nil && col.New.Name != nil && col.New.DataType != nil
 	})
+
+	if len(createColumns) == 0 {
+		return nil, "", fmt.Errorf("missing column definitions")
+	}
 
 	columnDefs := lo.Map(createColumns, func(col dto.MysqlTableColumn, _ int) string {
 		return inlineColumnDefinition(col.New)
@@ -49,6 +50,15 @@ func buildCreateTablePlan(input TableInput) (ddl.Plan, string, error) {
 	allDefs := append(columnDefs, tableConstraints...)
 
 	createQuery := "CREATE TABLE " + tableRef + " (" + strings.Join(allDefs, ", ") + ")"
+
+	if engine := mysqlEngine(lo.FromPtr(general.New.Engine)); engine != "" {
+		createQuery += " ENGINE=" + engine
+	}
+
+	if rowFormat := mysqlRowFormat(lo.FromPtr(general.New.RowFormat)); rowFormat != "" {
+		createQuery += " ROW_FORMAT=" + rowFormat
+	}
+
 	if general.New.Comment != nil && *general.New.Comment != "" {
 		createQuery += " COMMENT=" + quote.MysqlLiteral(*general.New.Comment)
 	}
@@ -58,55 +68,4 @@ func buildCreateTablePlan(input TableInput) (ddl.Plan, string, error) {
 	plan = append(plan, foreignKeyStatements(input.Database, tableName, foreignKeyRows(input), contract.CreateTableAction)...)
 
 	return plan, tableName, nil
-}
-
-// inlineColumnDefinition is the shared field_spec used by CREATE and
-// ALTER column statements.
-func inlineColumnDefinition(column *dto.MysqlTableColumnData) string {
-	def := quote.MysqlIdent(*column.Name) + " " + FormatColumnType(*column.DataType, column.MaxLength, column.NumericScale)
-
-	if lo.FromPtr(column.NotNull) {
-		def += " NOT NULL"
-	}
-
-	if column.Default != nil && *column.Default != "" {
-		def += " DEFAULT " + FormatDefault(*column.Default)
-	}
-
-	if column.Comment != nil && *column.Comment != "" {
-		def += " COMMENT " + quote.MysqlLiteral(*column.Comment)
-	}
-
-	return def
-}
-
-func inlineKeyConstraints(keys []dto.MysqlTableKey) ([]string, bool) {
-	var constraints []string
-
-	hasPrimaryKey := false
-
-	for _, key := range keys {
-		if key.New == nil || len(key.New.Columns) == 0 || key.New.ConstraintType == nil {
-			continue
-		}
-
-		constraintType := strings.ToUpper(*key.New.ConstraintType)
-		cols := quoteJoinColumns(key.New.Columns)
-
-		switch constraintType {
-		case "PRIMARY KEY", "PRIMARY":
-			constraints = append(constraints, "PRIMARY KEY ("+cols+")")
-			hasPrimaryKey = true
-		case "UNIQUE":
-			constraintName := lo.FromPtr(key.New.ConstraintName)
-			if constraintName == "" {
-				constraintName = "uniq_key"
-			}
-
-			constraints = append(constraints,
-				"CONSTRAINT "+quote.MysqlIdent(constraintName)+" UNIQUE ("+cols+")")
-		}
-	}
-
-	return constraints, hasPrimaryKey
 }

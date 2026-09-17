@@ -72,11 +72,13 @@ export async function createUsersTable(
   await objectForm.waitForReady();
 
   await objectForm.fillGeneralField(F.tableName, tableName);
+  await objectForm.selectGeneralOption(F.tableEngine, "InnoDB");
 
   await objectForm.selectTab(T.columns);
   await objectForm.addRow();
   await objectForm.fillArrayCell(0, F.columnName, "id");
   await objectForm.selectArrayCellOption(0, F.columnType, "INT");
+  await objectForm.toggleArrayCheckbox(0, F.columnIdentity, true);
 
   await objectForm.selectTab(T.keys);
   const keyRowIndex = await objectForm.addArrayRow(F.keyName);
@@ -87,6 +89,8 @@ export async function createUsersTable(
   await objectForm.save();
   await objectForm.assertPreviewContains(P.createTable);
   await objectForm.assertPreviewContains(P.createTableComposed);
+  await objectForm.assertPreviewContains(P.createTableEngine);
+  await objectForm.assertPreviewContains(P.autoIncrement);
   await objectForm.assertPreviewContains("id");
   await objectForm.assertPreviewContains(P.primaryKey);
   await objectForm.confirmExecute();

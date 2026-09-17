@@ -12,9 +12,12 @@ func MysqlIdent(name string) string {
 	return "`" + strings.ReplaceAll(name, "`", "``") + "`"
 }
 
-// MysqlLiteral quotes a string literal per MySQL rules.
+// MysqlLiteral quotes a string literal per MySQL rules (backslash then quotes).
 func MysqlLiteral(value string) string {
-	return "'" + strings.ReplaceAll(value, "'", "''") + "'"
+	escaped := strings.ReplaceAll(value, `\`, `\\`)
+	escaped = strings.ReplaceAll(escaped, `'`, `''`)
+
+	return "'" + escaped + "'"
 }
 
 // MysqlQualifiedTable quotes a database-qualified table reference.

@@ -165,7 +165,8 @@ func (r *MySQLRepository) columns(ctx context.Context, database *string, table *
 			COLUMN_DEFAULT,
 			CHARACTER_MAXIMUM_LENGTH,
 			COLUMN_COMMENT,
-			NUMERIC_SCALE
+			NUMERIC_SCALE,
+			EXTRA
 		`).
 		Where("TABLE_SCHEMA = ?", lo.FromPtr(database))
 

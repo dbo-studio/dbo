@@ -2,16 +2,12 @@ package ddlMysql
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/database/ddl"
-	quote "github.com/dbo-studio/dbo/internal/database/ddl/quote"
 )
 
-// TableInput carries the parsed Object Form payload for a MySQL table
-// create/edit action, plus the engine context the planner needs.
 type TableInput struct {
 	Database string
 	// NodeTable is the table name resolved from the tree node; used when
@@ -26,8 +22,6 @@ type TableInput struct {
 	ForeignKeys *dto.MysqlTableForeignKeyParams
 }
 
-// BuildTablePlan assembles the deterministic phase-ordered statement list
-// shared by PreviewExecute and Execute.
 func BuildTablePlan(input TableInput) (ddl.Plan, string, error) {
 	switch input.Action {
 	case contract.CreateTableAction:
@@ -69,13 +63,4 @@ func foreignKeyRows(input TableInput) []dto.MysqlTableForeignKey {
 	}
 
 	return input.ForeignKeys.Columns
-}
-
-func quoteJoinColumns(columns []string) string {
-	quoted := make([]string, len(columns))
-	for i, col := range columns {
-		quoted[i] = quote.MysqlIdent(col)
-	}
-
-	return strings.Join(quoted, ", ")
 }

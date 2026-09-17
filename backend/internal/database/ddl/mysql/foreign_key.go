@@ -8,8 +8,6 @@ import (
 	"github.com/samber/lo"
 )
 
-// foreignKeyStatements builds the foreign keys phase; material changes
-// drop + rebuild the constraint.
 func foreignKeyStatements(database, tableName string, rows []dto.MysqlTableForeignKey, action contract.TreeNodeActionName) []ddl.Statement {
 	tableRef := quote.MysqlQualifiedTable(database, tableName)
 	alter := "ALTER TABLE " + tableRef
@@ -68,16 +66,16 @@ func addForeignKeyStatement(alter string, fk *dto.MysqlTableForeignKeyData) stri
 	}
 
 	query := alter + " ADD CONSTRAINT " + quote.MysqlIdent(*fk.ConstraintName) +
-		" FOREIGN KEY (" + quoteJoinColumns(fk.SourceColumns) + ")" +
+		" FOREIGN KEY (" + ddl.JoinQuoted(fk.SourceColumns, quote.MysqlIdent) + ")" +
 		" REFERENCES " + quote.MysqlIdent(*fk.TargetTable) +
-		" (" + quoteJoinColumns(fk.TargetColumns) + ")"
+		" (" + ddl.JoinQuoted(fk.TargetColumns, quote.MysqlIdent) + ")"
 
-	if fk.OnUpdate != nil && *fk.OnUpdate != "" {
-		query += " ON UPDATE " + *fk.OnUpdate
+	if action := ddl.ReferentialAction(lo.FromPtr(fk.OnUpdate)); action != "" {
+		query += " ON UPDATE " + action
 	}
 
-	if fk.OnDelete != nil && *fk.OnDelete != "" {
-		query += " ON DELETE " + *fk.OnDelete
+	if action := ddl.ReferentialAction(lo.FromPtr(fk.OnDelete)); action != "" {
+		query += " ON DELETE " + action
 	}
 
 	return query
@@ -88,51 +86,25 @@ func foreignKeyChanged(oldFK, newFK *dto.MysqlTableForeignKeyData) bool {
 		return true
 	}
 
-	if newFK.SourceColumns != nil && !stringSlicesEqual(newFK.SourceColumns, oldFK.SourceColumns) {
+	if newFK.SourceColumns != nil && !ddl.StringSlicesEqual(newFK.SourceColumns, oldFK.SourceColumns) {
 		return true
 	}
 
-	if newFK.TargetColumns != nil && !stringSlicesEqual(newFK.TargetColumns, oldFK.TargetColumns) {
+	if newFK.TargetColumns != nil && !ddl.StringSlicesEqual(newFK.TargetColumns, oldFK.TargetColumns) {
 		return true
 	}
 
-	if ptrStringChanged(oldFK.TargetTable, newFK.TargetTable) {
+	if ddl.PtrStringChanged(oldFK.TargetTable, newFK.TargetTable) {
 		return true
 	}
 
-	if ptrStringChanged(oldFK.OnUpdate, newFK.OnUpdate) {
+	if ddl.PtrStringChanged(oldFK.OnUpdate, newFK.OnUpdate) {
 		return true
 	}
 
-	if ptrStringChanged(oldFK.OnDelete, newFK.OnDelete) {
+	if ddl.PtrStringChanged(oldFK.OnDelete, newFK.OnDelete) {
 		return true
 	}
 
 	return false
-}
-
-func ptrStringChanged(oldVal, newVal *string) bool {
-	if newVal == nil {
-		return false
-	}
-
-	if oldVal == nil {
-		return true
-	}
-
-	return *oldVal != *newVal
-}
-
-func stringSlicesEqual(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-
-	return true
 }

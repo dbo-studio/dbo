@@ -105,12 +105,12 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Tab query migration      | `shared/tab-query-persistence-migration.spec.ts` | localStorage `dbo_tab_queries` → editor + key removed |
 | MCP panel                | `shared/mcp-panel.spec.ts`                    | Settings AI → MCP controls + enable toggle (no LLM)     |
 | Object Form PG lifecycle | `pg/object-form-postgres-lifecycle.spec.ts`   | serial: connect → DB → tables → FK → view → edit → drop |
-| Object Form PG edit      | `pg/object-form-postgres-edit-table.spec.ts`  | serial deep column/FK drop+re-add+rename / key edits    |
+| Object Form PG edit      | `pg/object-form-postgres-edit-table.spec.ts`  | serial deep column/FK drop+re-add+rename / varchar length / key edits    |
 | Object Form PG schema    | `pg/object-form-postgres-schema-matview.spec.ts` | serial schema, matview, rename, drop schema          |
 | Object Form MySQL        | `mysql/object-form-mysql-lifecycle.spec.ts`   | serial: connect → DB → tables → FK → view → edit → drop |
-| Object Form MySQL edit   | `mysql/object-form-mysql-edit-table.spec.ts`  | serial FK rename+actions / index drop+re-add / keys     |
+| Object Form MySQL edit   | `mysql/object-form-mysql-edit-table.spec.ts`  | serial ENGINE/AI, CHANGE length, index drop+recreate / keys     |
 | Object Form SQLite       | `sqlite/object-form-sqlite-lifecycle.spec.ts` | serial: connect → tables → FK → view → edit → drop      |
-| Object Form SQLite edit  | `sqlite/object-form-sqlite-edit-table.spec.ts`| serial FK edit (SET NULL+DEFERRABLE) / column / keys    |
+| Object Form SQLite edit  | `sqlite/object-form-sqlite-edit-table.spec.ts`| serial FK edit / column rename copy / keys    |
 | Object Form SQLite STRICT | `sqlite/object-form-sqlite-table-options.spec.ts` | STRICT + WITHOUT ROWID create                        |
 | Object Form generated col | `pg|sqlite/object-form-generated-column.spec.ts` | Add generated column on edit (STORED / VIRTUAL)     |
 | Database diagram (ERD)   | `shared/database-diagram.spec.ts`             | PG/MySQL/SQLite: open ERD, FK edges, related highlight, PNG export, Source DBML |

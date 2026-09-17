@@ -17,6 +17,7 @@ type Column struct {
 	CharacterMaximumLength *int64  `gorm:"column:CHARACTER_MAXIMUM_LENGTH"`
 	Comment                *string `gorm:"column:COLUMN_COMMENT"`
 	NumericScale           *int32  `gorm:"column:NUMERIC_SCALE"`
+	Extra                  string  `gorm:"column:EXTRA"`
 
 	MappedType   string      `gorm:"-"`
 	Editable     bool        `gorm:"-"`

@@ -78,8 +78,8 @@ func createIndexStatement(tableName string, idx dto.SQLiteIndex) string {
 	}
 
 	order := ""
-	if idx.New.Order != nil && *idx.New.Order != "" {
-		order = " " + *idx.New.Order
+	if parsed := ddl.IndexOrder(lo.FromPtr(idx.New.Order)); parsed != "" {
+		order = " " + parsed
 	}
 
 	cols := make([]string, len(idx.New.Columns))

@@ -7,6 +7,7 @@ import {
   editTableAddIndex,
   editTableAddUniqueKey,
   editTableChangeColumnType,
+  editTableChangeColumnLength,
   editTableComment,
   editTableDropColumn,
   editTableDropForeignKey,
@@ -14,6 +15,7 @@ import {
   editTableDropKey,
   editTableEditForeignKey,
   editTableRename,
+  editTableRenameIndex,
   editTableSetColumnComment,
   editTableSetDefault,
   editTableSetNotNull,
@@ -89,7 +91,7 @@ test.describe("Object Form MySQL edit table", () => {
   });
 
   test("Set default on email column", async () => {
-    await editTableSetDefault(page, names.usersTable, 1, "'unknown'");
+    await editTableSetDefault(page, names.usersTable, 1, "unknown");
   });
 
   test("Set comment on email column", async () => {
@@ -137,6 +139,15 @@ test.describe("Object Form MySQL edit table", () => {
     );
   });
 
+  test("Rename index on posts table (drop + recreate)", async () => {
+    await editTableRenameIndex(
+      page,
+      names.postsTable,
+      0,
+      `${names.indexName}_renamed`,
+    );
+  });
+
   test("Drop notes column on users table", async () => {
     await editTableDropColumn(page, names.usersTable, 2);
   });
@@ -151,6 +162,10 @@ test.describe("Object Form MySQL edit table", () => {
 
   test("Change email column type", async () => {
     await editTableChangeColumnType(page, renamedUsersTable, 1, "CHAR");
+  });
+
+  test("Change email column max length", async () => {
+    await editTableChangeColumnLength(page, renamedUsersTable, 1, "12");
   });
 
   test("Add UNIQUE key on email column", async () => {

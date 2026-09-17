@@ -1,12 +1,13 @@
 package ddlPostgres
 
 import (
+	"fmt"
+
 	"github.com/dbo-studio/dbo/internal/database/ddl"
 	quote "github.com/dbo-studio/dbo/internal/database/ddl/quote"
+	"github.com/samber/lo"
 )
 
-// buildEditTablePlan assembles the edit flow in deterministic phases:
-// 1) table metadata alters, 2) columns, 3) keys, 4) foreign keys.
 func buildEditTablePlan(input TableInput) (ddl.Plan, string, error) {
 	general := input.General
 
@@ -16,7 +17,7 @@ func buildEditTablePlan(input TableInput) (ddl.Plan, string, error) {
 	}
 
 	if tableName == "" {
-		return nil, "", nil
+		return nil, "", fmt.Errorf("missing table name")
 	}
 
 	tableRef := quote.PostgresQualifiedTable(input.Schema, tableName)
@@ -39,8 +40,15 @@ func buildEditTablePlan(input TableInput) (ddl.Plan, string, error) {
 			addTable("ALTER TABLE " + tableRef + " SET TABLESPACE " + quote.PostgresIdent(*general.New.Tablespace))
 		}
 
-		if general.New.Persistence != nil && (old == nil || old.Persistence == nil || *old.Persistence != *general.New.Persistence) {
-			addTable("ALTER TABLE " + tableRef + " SET " + *general.New.Persistence)
+		if persistence := ddl.PostgresPersistence(lo.FromPtr(general.New.Persistence)); persistence == "LOGGED" || persistence == "UNLOGGED" {
+			oldPersistence := ""
+			if old != nil {
+				oldPersistence = ddl.PostgresPersistence(lo.FromPtr(old.Persistence))
+			}
+
+			if oldPersistence != persistence {
+				addTable("ALTER TABLE " + tableRef + " SET " + persistence)
+			}
 		}
 
 		if general.New.Owner != nil && (old == nil || old.Owner == nil || *old.Owner != *general.New.Owner) {

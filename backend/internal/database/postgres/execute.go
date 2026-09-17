@@ -2,7 +2,6 @@ package databasePostgres
 
 import (
 	"context"
-	"net/url"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
@@ -99,11 +98,6 @@ func (r *PostgresRepository) Execute(ctx context.Context, nodeID string, action 
 	for _, query := range queries {
 		if query == "" {
 			continue
-		}
-
-		query, err = url.PathUnescape(query)
-		if err != nil {
-			return nil, err
 		}
 
 		if err := conn.WithContext(ctx).Exec(query).Error; err != nil {

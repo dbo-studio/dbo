@@ -149,8 +149,10 @@ func (*BaseRepository) ColumnMappedFormat(dataType string) string {
 
 func IsCharacterType(dataType string) bool {
 	characterTypes := []string{"char", "character", "varchar", "character varying", "text"}
+
+	normalized := strings.ToLower(strings.TrimSpace(dataType))
 	for _, t := range characterTypes {
-		if dataType == t {
+		if normalized == t {
 			return true
 		}
 	}
@@ -164,8 +166,10 @@ func (BaseRepository) IsCharacterType(dataType string) bool {
 
 func IsNumericType(dataType string) bool {
 	numericTypes := []string{"numeric", "decimal"}
+
+	normalized := strings.ToLower(strings.TrimSpace(dataType))
 	for _, t := range numericTypes {
-		if dataType == t {
+		if normalized == t {
 			return true
 		}
 	}
