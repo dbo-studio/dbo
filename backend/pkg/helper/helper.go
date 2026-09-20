@@ -26,6 +26,7 @@ func IntToStringPtr[T int32 | int64](value *T) *string {
 	}
 
 	str := strconv.FormatInt(int64(*value), 10)
+
 	return &str
 }
 
