@@ -41,15 +41,22 @@ func columnDefinition(col *dto.PostgresTableColumnData) string {
 
 func columnTypeSpec(col *dto.PostgresTableColumnData) string {
 	dataType := *col.DataType
-	if col.MaxLength == nil {
-		return dataType
+
+	length := ""
+	if col.MaxLength != nil && ddl.DigitsOnly(*col.MaxLength) {
+		length = *col.MaxLength
+	}
+
+	scale := ""
+	if col.NumericScale != nil && ddl.DigitsOnly(*col.NumericScale) {
+		scale = *col.NumericScale
 	}
 
 	switch {
-	case databaseCore.IsCharacterType(dataType):
-		return fmt.Sprintf("%s(%d)", dataType, *col.MaxLength)
-	case databaseCore.IsNumericType(dataType) && col.NumericScale != nil:
-		return fmt.Sprintf("%s(%d,%d)", dataType, *col.MaxLength, *col.NumericScale)
+	case databaseCore.IsCharacterType(dataType) && length != "":
+		return fmt.Sprintf("%s(%s)", dataType, length)
+	case databaseCore.IsNumericType(dataType) && length != "" && scale != "":
+		return fmt.Sprintf("%s(%s,%s)", dataType, length, scale)
 	default:
 		return dataType
 	}

@@ -66,6 +66,11 @@ func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (*
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
+	err = i.cache.DeleteByPrefix(ctx, cache.OwnerConnectionPrefix(helper.CtxOwnerID(ctx), connection.ID))
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
 	err = i.cache.DeleteByPrefix(ctx, cache.ConnectionPrefix(connection.ID))
 	if err != nil {
 		return nil, apperror.InternalServerError(err)

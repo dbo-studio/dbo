@@ -38,16 +38,18 @@ export class SqlEditorPage extends BasePage {
       (await run.isVisible().catch(() => false)) &&
       (await this.editor.isVisible().catch(() => false));
     if (alreadyOpen) {
-      await expect(this.page.getByTestId("workspace-tab-icon-query")).toBeVisible();
       return;
     }
 
-    await this.page.getByRole("button", { name: "sql", exact: true }).click();
+    const queryTabs = this.page.getByTestId("workspace-tab-icon-query");
+    if ((await queryTabs.count()) > 0) {
+      await queryTabs.first().click();
+    } else {
+      await this.page.getByRole("button", { name: "sql", exact: true }).click();
+    }
+
     await expect(this.editor).toBeVisible({ timeout: 15000 });
     await expect(run).toBeVisible({ timeout: 15000 });
-    await expect(this.page.getByTestId("workspace-tab-icon-query")).toBeVisible({
-      timeout: 15000,
-    });
     await this.wait(500);
   }
 

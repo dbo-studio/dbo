@@ -70,6 +70,7 @@ export default function ObjectTreeView(): JSX.Element {
   return (
     <TreeViewContainerStyled>
       <Box
+        data-testid='tree-search'
         sx={{
           mt: 1
         }}

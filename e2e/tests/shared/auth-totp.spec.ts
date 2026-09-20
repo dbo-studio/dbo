@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { authenticator } from "otplib";
+import { generateSync } from "otplib";
 import { AuthPage } from "../../pages/AuthPage";
 import { SettingsPage } from "../../pages/SettingsPage";
 
@@ -37,7 +37,7 @@ test.describe("TOTP two-factor authentication", () => {
       await expect(secretEl).toBeVisible({ timeout: 10000 });
       totpSecret = (await secretEl.textContent())?.trim() ?? "";
       expect(totpSecret.length).toBeGreaterThan(10);
-      const code = authenticator.generate(totpSecret);
+      const code = generateSync({ secret: totpSecret });
       await page.getByTestId("auth-totp-enable-code").fill(code);
       await page.getByTestId("auth-totp-enable-submit").click();
       await expect(page.getByText("Two-factor authentication enabled.").first()).toBeVisible({
@@ -58,7 +58,7 @@ test.describe("TOTP two-factor authentication", () => {
       await expect(page.getByTestId("auth-totp-submit")).toBeVisible({
         timeout: 10000,
       });
-      const code = authenticator.generate(totpSecret);
+      const code = generateSync({ secret: totpSecret });
       await page.getByTestId("auth-totp-code").fill(code);
       await page.getByTestId("auth-totp-submit").click();
       await auth.expectAppReady();

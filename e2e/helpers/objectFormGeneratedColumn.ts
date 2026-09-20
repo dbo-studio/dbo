@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { test, type Page } from "@playwright/test";
 import { type DbEngine, getDbConfig } from "../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import {
@@ -83,9 +83,9 @@ export function defineGeneratedColumnTests(engine: DbEngine): void {
 
           await tree.expandPath(path);
           await tree.refreshExpandNode("Tables");
-          await expect(tree.getTreeNode(tableName)).toBeVisible({
-            timeout: 15000,
-          });
+          // Virtualized tree mounts only the rendered window; expectNodeVisible
+          // filters the tree so the node mounts even when it sorts beyond it.
+          await tree.expectNodeVisible(tableName);
 
           const objectForm = await openEditTable(page, tableName);
           await objectForm.selectTab(T.columns);
@@ -137,9 +137,7 @@ export function defineGeneratedColumnTests(engine: DbEngine): void {
           }
 
           await objectForm.confirmExecute();
-          await expect(tree.getTreeNode(tableName)).toBeVisible({
-            timeout: 15000,
-          });
+          await tree.expectNodeVisible(tableName);
 
           await sqlEditor.open();
           await sqlEditor.typeAndRun(`DROP TABLE IF EXISTS ${tableName};`);

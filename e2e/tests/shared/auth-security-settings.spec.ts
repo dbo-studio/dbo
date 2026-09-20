@@ -17,7 +17,7 @@ test.describe("Security settings account password", () => {
   test("user changes login password from Security panel", async ({ page }) => {
     const auth = new AuthPage(page);
     const settings = new SettingsPage(page);
-    const currentPassword = "AdminPass1!";
+    const currentPassword = process.env.E2E_ADMIN_PASSWORD;
     const nextPassword = "AdminPass2!";
 
     await test.step("sign in as admin", async () => {

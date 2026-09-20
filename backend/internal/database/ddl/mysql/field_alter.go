@@ -164,7 +164,8 @@ func columnChanged(oldData, newData *dto.MysqlTableColumnData) bool {
 		return true
 	}
 
-	if oldData.NotNull != nil && newData.NotNull != nil && *oldData.NotNull != *newData.NotNull {
+	// FE may send null for untouched/unchecked checkboxes (same as false).
+	if lo.FromPtr(oldData.NotNull) != lo.FromPtr(newData.NotNull) {
 		return true
 	}
 

@@ -12,6 +12,10 @@ func ConnectionPrefix(connectionID uint) string {
 	return fmt.Sprintf("c:%d", connectionID)
 }
 
+func OwnerConnectionPrefix(ownerID string, connectionID uint) string {
+	return fmt.Sprintf("%sc:%d:", ownerPrefix(ownerID), connectionID)
+}
+
 func TreeCachePrefix(ownerID string, connectionID uint) string {
 	return fmt.Sprintf("%sc:%d:tree:", ownerPrefix(ownerID), connectionID)
 }

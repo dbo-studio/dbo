@@ -65,10 +65,9 @@ export const useActionDetection = (
             confirmed,
             /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
             // @ts-ignore
+            // Drop table (and other tree actions) only emit SQL for the general tab.
             data: {
-              [selectedTab?.id ?? '']: {
-                [node.id]: {}
-              }
+              general: {}
             }
           })
         );
