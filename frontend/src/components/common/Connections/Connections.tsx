@@ -6,7 +6,6 @@ import AddConnection from '@/components/common/AddConnection/AddConnection';
 import { isPasswordPromptSuppressedForConnection } from '@/core/api';
 import { canCreateConnection } from '@/core/auth/permissions';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
-import locales from '@/locales';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -19,7 +18,6 @@ import EditConnection from '../AddConnection/EditConnection';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import ConnectionPasswordPromptModal from './ConnectionPasswordPrompt/ConnectionPasswordPrompt';
 import { ConnectionsListStyled, ConnectionsStyled } from './Connections.styled';
-import { ConnectionGroupHeadingStyled } from './Connections.share.styled';
 import ConnectionsEmptyState from './ConnectionsEmptyState';
 import { EmptySpaceStyle } from './EmptySpace.styled';
 import type { ConnectionsProps } from './types';
@@ -154,19 +152,6 @@ export default function Connections({ expanded = false }: ConnectionsProps): JSX
   const getConnectionId = useCallback((c: ConnectionType): string => String(c.id), []);
 
   const hasConnections = Boolean(connections && connections.length > 0);
-  const personal = connections?.filter((c) => !c.shared) ?? [];
-  const shared = connections?.filter((c) => c.shared) ?? [];
-  const showGroups = shared.length > 0;
-  const personalKey = personal
-    .map((c) => c.id)
-    .slice()
-    .sort((a, b) => a - b)
-    .join('|');
-  const sharedKey = shared
-    .map((c) => c.id)
-    .slice()
-    .sort((a, b) => a - b)
-    .join('|');
 
   return (
     <ConnectionsStyled expanded={expanded} expandedLayout='column'>
@@ -179,38 +164,14 @@ export default function Connections({ expanded = false }: ConnectionsProps): JSX
         <>
           {hasConnections && connections && (
             <ConnectionsListStyled expanded={expanded}>
-              {showGroups && (
-                <ConnectionGroupHeadingStyled data-testid='connections-group-personal' variant='caption'>
-                  {locales.connections_personal}
-                </ConnectionGroupHeadingStyled>
-              )}
-              {(showGroups ? personal : connections).length > 0 && (
-                <SortableList
-                  key={showGroups ? `personal-${personalKey}` : personalKey || sharedKey}
-                  items={showGroups ? personal : connections}
-                  onReorder={handleReorder}
-                  renderItem={renderConnectionItem}
-                  getItemId={getConnectionId}
-                  direction='vertical'
-                  activationDistance={8}
-                />
-              )}
-              {showGroups && (
-                <>
-                  <ConnectionGroupHeadingStyled data-testid='connections-group-shared' variant='caption'>
-                    {locales.connections_shared}
-                  </ConnectionGroupHeadingStyled>
-                  <SortableList
-                    key={`shared-${sharedKey}`}
-                    items={shared}
-                    onReorder={handleReorder}
-                    renderItem={renderConnectionItem}
-                    getItemId={getConnectionId}
-                    direction='vertical'
-                    activationDistance={8}
-                  />
-                </>
-              )}
+              <SortableList
+                items={connections}
+                onReorder={handleReorder}
+                renderItem={renderConnectionItem}
+                getItemId={getConnectionId}
+                direction='vertical'
+                activationDistance={8}
+              />
             </ConnectionsListStyled>
           )}
           {!expanded && <EmptySpaceStyle />}

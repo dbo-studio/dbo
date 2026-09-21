@@ -161,7 +161,7 @@ test.describe("Shared connections (local auth)", () => {
       const memberAuth = new AuthPage(memberPage);
 
       try {
-        await test.step("member sees shared card and cannot PATCH metadata", async () => {
+        await test.step("member sees shared connection in the list and cannot PATCH metadata", async () => {
           await memberPage.goto("/");
           await memberAuth.login(memberEmail, memberTemp);
           await memberAuth.expectChangePasswordVisible();
@@ -169,8 +169,11 @@ test.describe("Shared connections (local auth)", () => {
           await memberAuth.expectAppReady();
 
           await expect(
+            memberPage.getByTestId("connections-group-personal"),
+          ).toHaveCount(0);
+          await expect(
             memberPage.getByTestId("connections-group-shared"),
-          ).toBeVisible();
+          ).toHaveCount(0);
           await expect(
             memberPage.getByTestId(`connection-item-${connectionName}`),
           ).toBeVisible();

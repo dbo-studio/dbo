@@ -562,7 +562,6 @@
   "share_revoked": "Access revoked.",
   "share_left": "You left the connection.",
   "share_no_users": "No other users to share with.",
-  "connections_personal": "Personal",
   "connections_shared": "Shared",
   "admin_shares": "Shared connections",
   "admin_shares_empty": "No connection shares yet.",

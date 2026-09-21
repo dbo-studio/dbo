@@ -1,12 +1,4 @@
-import { Box, styled, Typography } from '@mui/material';
-
-export const ConnectionGroupHeadingStyled = styled(Typography)(({ theme }) => ({
-  padding: theme.spacing(1, 1, 0.5),
-  color: theme.palette.text.text,
-  textTransform: 'uppercase',
-  letterSpacing: '0.04em',
-  flexShrink: 0
-}));
+import { Box, styled } from '@mui/material';
 
 export const ShareMemberListStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
