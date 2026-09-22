@@ -54,7 +54,7 @@ export type SaveObjectRequestType = {
   connectionId: number;
   nodeId: string;
   action: string;
-  data: Record<string, FormValue>;
+  data: Record<string, unknown>;
   confirmed?: boolean;
 };
 

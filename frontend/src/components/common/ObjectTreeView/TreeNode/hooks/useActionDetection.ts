@@ -63,8 +63,6 @@ export const useActionDetection = (
             action: node.action.name,
             connectionId: currentConnection.id,
             confirmed,
-            /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
-            // @ts-ignore
             // Drop table (and other tree actions) only emit SQL for the general tab.
             data: {
               general: {}

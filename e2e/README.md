@@ -84,7 +84,7 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Query CRUD SQLite        | `sqlite/query-crud-sqlite.spec.ts`            | same split + JOIN                                       |
 | Query format             | `shared/query-format.spec.ts`                 | Beatify / format messy SQL                              |
 | SQL editor context       | `shared/editor-context.spec.ts`               | PG/MySQL/SQLite: select visibility + autofill           |
-| Data browser             | `pg\|mysql\|sqlite/data-browser.spec.ts`      | filter/sort/page/columns/inline/preview via shared suite |
+| Data browser             | `pg\|mysql\|sqlite/data-browser.spec.ts`      | filter/sort/page/columns/inline/preview + Ctrl+A stays in preview |
 | Import / Export          | `pg\|mysql\|sqlite/import-export.spec.ts`     | CSV/JSON/SQL export+import, round-trip, continue-on-error |
 | Export SavePath          | `shared/export-savepath.spec.ts`                | web export API rejects `..` and absolute savePath → 400 |
 | Job cancel / failure     | `shared/job-cancel.spec.ts`                   | cancel running export → `canceled`; bad query → `failed` + error |

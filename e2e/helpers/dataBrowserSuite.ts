@@ -161,6 +161,12 @@ export function defineDataBrowserTests(engine: DbEngine): void {
           await expect(previewOpenEditor).toBeEnabled({ timeout: 15000 });
         });
 
+        await test.step("Select all stays inside query preview", async () => {
+          await seed.dataBrowser.expectQueryPreviewSelectAllStaysInside(
+            seed.connectionName,
+          );
+        });
+
         await test.step("Open editor from preview", async () => {
           await page.locator('[aria-label="Open editor"]').last().click();
           await expect(

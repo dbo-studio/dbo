@@ -270,6 +270,22 @@ export class ObjectFormPage extends BasePage {
     await expect(this.previewModal).toContainText(text, { timeout: 30000 });
   }
 
+  async expectPreviewSelectAllStaysInside(excludedText: string): Promise<void> {
+    await expect(this.previewModal).toBeVisible();
+
+    const selectAll = process.platform === "darwin" ? "Meta+A" : "Control+A";
+    await this.page.keyboard.press(selectAll);
+
+    const selected = await this.page.evaluate(
+      () => window.getSelection()?.toString() ?? "",
+    );
+    expect(selected, "preview select-all should include SQL").not.toEqual("");
+    expect(
+      selected,
+      "preview select-all should stay inside the query",
+    ).not.toContain(excludedText);
+  }
+
   async confirmExecute(): Promise<void> {
     const response = await waitForResponseDuring(
       this.page,

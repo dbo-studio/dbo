@@ -2,6 +2,7 @@ import {
   ResizableModalWrapperStyled,
   ResizeHandle
 } from '@/components/base/Modal/ResizableModal/ResizableModal.styled.ts';
+import { useScopedSelectAll } from '@/hooks';
 import { Box, Divider, Typography, useTheme } from '@mui/material';
 import { type JSX, useEffect, useRef, useState } from 'react';
 import { ModalStyled } from '../Modal.styled.ts';
@@ -11,6 +12,8 @@ const DEFAULT_DIMENSIONS = { width: 400, height: 400 };
 
 export default function ResizableModal({ open, title, children, onClose, onResize }: ResizableModalProps): JSX.Element {
   const theme = useTheme();
+  const containerRef = useRef<HTMLDivElement>(null);
+  useScopedSelectAll(containerRef, open);
   const [dimensions, setDimensions] = useState(DEFAULT_DIMENSIONS);
   const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
   const [isResizing, setIsResizing] = useState(false);
@@ -70,6 +73,7 @@ export default function ResizableModal({ open, title, children, onClose, onResiz
   return (
     <ModalStyled open={open} onClose={(): void => onClose?.()}>
       <ResizableModalWrapperStyled
+        ref={containerRef}
         style={{
           width: dimensions.width,
           height: dimensions.height
@@ -77,8 +81,10 @@ export default function ResizableModal({ open, title, children, onClose, onResiz
       >
         {title && (
           <Box
+            data-select-all-skip
             sx={{
-              mb: theme.spacing(1)
+              mb: theme.spacing(1),
+              userSelect: 'none'
             }}
           >
             <Typography color={'textTitle'} variant='h6'>

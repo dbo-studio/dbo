@@ -38,6 +38,10 @@ export class DataBrowserPage extends BasePage {
     return this.page.getByRole("button", { name: "Query preview" });
   }
 
+  get queryPreview(): Locator {
+    return this.page.getByTestId("query-preview");
+  }
+
   get inlineQueryRunButton(): Locator {
     return this.page.getByTestId("inline-query-run");
   }
@@ -261,6 +265,27 @@ export class DataBrowserPage extends BasePage {
     await expect(
       this.page.getByRole("button", { name: "Open editor" }),
     ).toBeVisible({ timeout: 10000 });
+  }
+
+  async expectQueryPreviewSelectAllStaysInside(
+    excludedText: string,
+  ): Promise<void> {
+    await expect(this.queryPreview).toBeVisible({ timeout: 10000 });
+    await expect(this.queryPreview).toContainText(/select/i, { timeout: 15000 });
+
+    const selectAll = process.platform === "darwin" ? "Meta+A" : "Control+A";
+    await this.page.keyboard.press(selectAll);
+
+    const selected = await this.page.evaluate(
+      () => window.getSelection()?.toString() ?? "",
+    );
+    expect(selected, "query preview select-all should include SQL").toMatch(
+      /select/i,
+    );
+    expect(
+      selected,
+      "query preview select-all should stay inside the preview",
+    ).not.toContain(excludedText);
   }
 
   async openQueryPreviewInEditor(): Promise<void> {
