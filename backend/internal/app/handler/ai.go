@@ -99,7 +99,10 @@ func (h AiHandler) Complete(c fiber.Ctx) error {
 
 	result, err := h.aiService.Complete(c, req)
 	if err != nil {
-		h.logger.Error(err.Error())
+		if !apperror.IsCanceled(err) {
+			h.logger.Error(err.Error())
+		}
+
 		return response.ErrorBuilder().FromError(err).Send(c)
 	}
 

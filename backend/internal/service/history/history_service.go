@@ -15,16 +15,30 @@ type IHistoryService interface {
 }
 
 type IHistoryServiceImpl struct {
-	historyRepo repository.IHistoryRepo
+	historyRepo    repository.IHistoryRepo
+	connectionRepo repository.IConnectionRepo
 }
 
-func NewHistoryService(hr repository.IHistoryRepo) IHistoryService {
+func NewHistoryService(hr repository.IHistoryRepo, connectionRepo repository.IConnectionRepo) IHistoryService {
 	return &IHistoryServiceImpl{
-		historyRepo: hr,
+		historyRepo:    hr,
+		connectionRepo: connectionRepo,
 	}
 }
 
+func (i IHistoryServiceImpl) requireConnection(ctx context.Context, connectionID int32) error {
+	if _, err := i.connectionRepo.Find(ctx, connectionID); err != nil {
+		return apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	return nil
+}
+
 func (i IHistoryServiceImpl) Index(ctx context.Context, req *dto.HistoryListRequest) (*dto.HistoryListResponse, error) {
+	if err := i.requireConnection(ctx, req.ConnectionID); err != nil {
+		return nil, err
+	}
+
 	histories, err := i.historyRepo.Index(ctx, req)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
@@ -46,5 +60,9 @@ func (i IHistoryServiceImpl) Index(ctx context.Context, req *dto.HistoryListRequ
 }
 
 func (i IHistoryServiceImpl) DeleteAll(ctx context.Context, req *dto.DeleteHistoryRequest) error {
+	if err := i.requireConnection(ctx, req.ConnectionID); err != nil {
+		return err
+	}
+
 	return i.historyRepo.DeleteAll(ctx, uint(req.ConnectionID))
 }

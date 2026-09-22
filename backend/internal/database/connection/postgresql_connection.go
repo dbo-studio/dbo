@@ -112,6 +112,19 @@ func openPostgresqlConnection(connection *model.Connection, databaseName string)
 
 	if options.URI != nil && *options.URI != "" {
 		uri := *options.URI
+
+		cleaned, uriPassword, stripErr := StripURIPassword(uri)
+		if stripErr == nil {
+			uri = cleaned
+		}
+
+		password := lo.FromPtr(options.Password)
+		if password == "" {
+			password = uriPassword
+		}
+
+		uri = InjectURIPassword(uri, password)
+
 		if databaseName != "" {
 			uri = overridePostgresqlURIDatabase(uri, databaseName)
 		}

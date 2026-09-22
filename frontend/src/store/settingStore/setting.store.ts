@@ -26,10 +26,6 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           showQuickLookEditor: false,
           showConnectionPasswordPrompt: false,
           passwordPromptConnectionId: undefined,
-          showSettings: {
-            open: false,
-            tab: 0
-          },
           titleBar: {
             paddingLeft: 16,
             paddingTop: 8,
@@ -108,6 +104,7 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
       }),
       {
         name: 'settings',
+        skipHydration: true,
         partialize: (state) => ({
           theme: state.theme,
           editor: state.editor,

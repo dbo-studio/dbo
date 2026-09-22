@@ -124,6 +124,11 @@ export const apiRoute = {
     method: "POST",
     status: 200,
   },
+  aiProvidersUpdate: {
+    path: /^\/api\/ai\/providers\/\d+\/?$/,
+    method: "PATCH",
+    status: 200,
+  },
 } as const satisfies Record<string, ApiMatch>;
 
 function pathnameOf(url: string): string {

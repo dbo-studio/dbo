@@ -11,6 +11,7 @@ import {
   editTableDropKey,
   editTableEditForeignKey,
   editTableRename,
+  editTableRenameColumn,
   editTableSetDefault,
   editTableSetNotNull,
 } from "../../helpers/objectFormSqliteEdit";
@@ -127,6 +128,10 @@ test.describe("Object Form SQLite edit table", () => {
 
   test("Drop UNIQUE key on email column", async () => {
     await editTableDropKey(page, renamedUsersTable, 1);
+  });
+
+  test("Rename email column and copy from old name", async () => {
+    await editTableRenameColumn(page, renamedUsersTable, 1, "email_addr");
   });
 
   test("Cleanup", async () => {

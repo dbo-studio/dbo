@@ -3,11 +3,11 @@ package databaseSqlite
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"strings"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
+	quote "github.com/dbo-studio/dbo/internal/database/ddl/quote"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
@@ -30,7 +30,15 @@ func (r *SQLiteRepository) buildExecuteQueries(ctx context.Context, nodeID strin
 		queries = append(queries, viewQueries...)
 	}
 
-	// SQLite table DDL is atomic across all tabs — generate once, not per tab.
+	if action == contract.CreateTableAction || action == contract.EditTableAction {
+		plan, tmpTableName, err := r.BuildTablePlan(ctx, nodeID, action, params)
+		if err != nil {
+			return nil, "", err
+		}
+
+		return append(queries, plan.SQLs()...), tmpTableName, nil
+	}
+
 	tableQueries, tmpTableName, err := r.handleTableCommands(ctx, nodeID, executeParams, action, params)
 	if err != nil {
 		return nil, "", err
@@ -52,24 +60,12 @@ func (r *SQLiteRepository) Execute(ctx context.Context, nodeID string, action co
 		return nil, err
 	}
 
-	// Execute queries with cleanup on error
 	for i, query := range queries {
 		if query == "" {
 			continue
 		}
 
-		query, err = url.PathUnescape(query)
-		if err != nil {
-			// Cleanup tmp table if it exists
-			if tmpTableName != "" {
-				r.cleanupTmpTable(ctx, tmpTableName)
-			}
-
-			return nil, err
-		}
-
 		if err := r.base.DB().WithContext(ctx).Exec(query).Error; err != nil {
-			// Cleanup tmp table if it exists
 			if tmpTableName != "" {
 				r.cleanupTmpTable(ctx, tmpTableName)
 			}
@@ -77,12 +73,9 @@ func (r *SQLiteRepository) Execute(ctx context.Context, nodeID string, action co
 			return nil, err
 		}
 
-		// After successful DROP of old table and RENAME, tmp table no longer exists
-		// So we can clear tmpTableName to avoid unnecessary cleanup
 		if tmpTableName != "" && i < len(queries)-1 {
-			// Check if this query is the RENAME query
 			if strings.Contains(strings.ToUpper(query), "ALTER TABLE") && strings.Contains(strings.ToUpper(query), "RENAME TO") {
-				tmpTableName = "" // Tmp table has been renamed, no cleanup needed
+				tmpTableName = ""
 			}
 		}
 	}
@@ -90,14 +83,11 @@ func (r *SQLiteRepository) Execute(ctx context.Context, nodeID string, action co
 	return databaseCore.ResolveExecuteIdentity(r.base.Connection().ConnectionType, nodeID, action, params), nil
 }
 
-// cleanupTmpTable drops the temporary table if it exists (for error recovery)
 func (r *SQLiteRepository) cleanupTmpTable(ctx context.Context, tmpTableName string) {
 	if tmpTableName == "" {
 		return
 	}
 
-	// Use IF EXISTS to avoid errors if table doesn't exist
-	cleanupQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s", quoteIdent(tmpTableName))
+	cleanupQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s", quote.SqliteIdent(tmpTableName))
 	_ = r.base.DB().WithContext(ctx).Exec(cleanupQuery).Error
-	// Ignore error - this is cleanup, we don't want to mask the original error
 }

@@ -6,7 +6,7 @@ Isolated Playwright suite for DBO Studio. Each `npm test` run boots an **ephemer
 
 **Per-engine completeness + speed:** see [`docs/e2e-per-engine-implementation.md`](../docs/e2e-per-engine-implementation.md). Gaps: [`docs/e2e-coverage-gap-report.md`](../docs/e2e-coverage-gap-report.md).
 
-CI runs three parallel jobs (`e2e-postgres` / `e2e-mysql` / `e2e-sqlite`) via `.github/workflows/tests.yml`.
+CI runs three parallel jobs (`e2e-postgres` / `e2e-mysql` / `e2e-sqlite`) via `.github/workflows/tests.yml`, plus **`e2e-auth`** (`npm run test:auth`, no sample DB).
 
 ## Architecture
 
@@ -41,6 +41,7 @@ cd e2e && npm install
 ```bash
 cd e2e
 
+npm run test:auth                 # local auth M1 (E2E_LOCAL_AUTH=1; no sample DB)
 npm test                          # all projects (postgres + mysql + sqlite)
 npm run test:pg                   # tests/shared + tests/pg
 npm run test:mysql                # tests/mysql
@@ -65,7 +66,12 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 
 | Feature                  | Spec                                          | Flow                                                    |
 | ------------------------ | --------------------------------------------- | ------------------------------------------------------- |
-| Harness smoke            | `shared/harness-smoke.spec.ts`                | ephemeral API + FE reachable; CORS allows Tauri Windows origin |
+| Harness smoke            | `shared/harness-smoke.spec.ts`                | ephemeral API + FE reachable (no sample DB); CORS allows Tauri Windows origin |
+| Auth Gateway local (M1)  | `shared/auth-local.spec.ts`                   | `npm run test:auth` / `E2E_LOCAL_AUTH=1`: login, must_change gate (no current password), member, logout, MCP mgmt, disable revoke |
+| Security account password | `shared/auth-security-settings.spec.ts`      | `npm run test:auth`: change login password from Settings → Security |
+| TOTP 2FA                 | `shared/auth-totp.spec.ts`                    | `npm run test:auth`: enable TOTP, login with OTP, admin disable 2FA |
+| Administration users     | `shared/auth-admin-users.spec.ts`             | `npm run test:auth`: users table + permissions toggles, 2FA column, create member, reset password dialog (Enter submit), disable, share connections |
+| Shared connections       | `shared/auth-shared-connections.spec.ts`      | `npm run test:auth`: two users share catalog (sqlite) + admin shares table; member sees the connection in the same list (no Personal/Shared groups); member sees AI settings but not Administration; per-user AI providers; password vault modes when sample Postgres is reachable; per-user saved/history/chats + instance-admin APIs; theme persist scoped by user |
 | Crash screen             | `shared/crash-screen.spec.ts`                 | render crash UI; Reload clears local persist, keeps connections |
 | Connections              | `shared\|mysql\|sqlite/connections.spec.ts`   | create/edit/dup/reorder/refresh/menu/ping via shared suite |
 | MariaDB alias            | `mysql/mariadb-alias.spec.ts`                 | type=mariadb against MySQL sample: create + tree           |
@@ -78,29 +84,33 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Query CRUD SQLite        | `sqlite/query-crud-sqlite.spec.ts`            | same split + JOIN                                       |
 | Query format             | `shared/query-format.spec.ts`                 | Beatify / format messy SQL                              |
 | SQL editor context       | `shared/editor-context.spec.ts`               | PG/MySQL/SQLite: select visibility + autofill           |
-| Data browser             | `pg\|mysql\|sqlite/data-browser.spec.ts`      | filter/sort/page/columns/inline/preview via shared suite |
+| Data browser             | `pg\|mysql\|sqlite/data-browser.spec.ts`      | filter/sort/page/columns/inline/preview + Ctrl+A stays in preview |
 | Import / Export          | `pg\|mysql\|sqlite/import-export.spec.ts`     | CSV/JSON/SQL export+import, round-trip, continue-on-error |
 | Export SavePath          | `shared/export-savepath.spec.ts`                | web export API rejects `..` and absolute savePath → 400 |
 | Job cancel / failure     | `shared/job-cancel.spec.ts`                   | cancel running export → `canceled`; bad query → `failed` + error |
 | Object Form multi-col FK | `*/object-form-multi-column-fk.spec.ts`       | Add composite FK on edit ×3 |
 | Connection SSL           | `pg/connection-ssl.spec.ts`                   | SSL tab UI + Require on sample-pgsql-ssl + bad CA fail  |
+| Connection URI import    | `pg/connection-uri.spec.ts`                   | Paste URI → fields/SSL; save strips password; connect   |
 | Data grid typed cells    | `shared/data-grid-typed-cells.spec.ts`        | MySQL+PG; SQLite n/a (no typed editors yet)             |
 | Data grid FK autocomplete| `shared/data-grid-fk-autocomplete.spec.ts`    | PG+MySQL+SQLite single-col pick/paste; SQLite composite fill; NOT NULL hides NULL |
 | Saved / history          | `shared/saved-history.spec.ts`                | history, save, run, copy                                |
-| Settings / theme         | `shared/settings-theme.spec.ts`               | theme persistence, panels, sidebar, Security password   |
+| Settings / theme         | `shared/settings-theme.spec.ts`               | theme persistence, settings tab + mode icon, search, Security password   |
+
 | Keyboard shortcuts       | `shared/keyboard-shortcuts.spec.ts`           | cheatsheet groups/filter, Alt+/ open, grid Save/Refresh tooltips |
 | Workspace dirty tab      | `shared/workspace-dirty-tab.spec.ts`          | dirty Cancel / Yes / clean close                        |
-| AI chat panel            | `shared/ai-chat-panel.spec.ts`                | Assistant panel + composer (no LLM)                     |
+| Workspace tab reorder    | `shared/workspace-tab-reorder.spec.ts`        | drag query tabs; drag Settings before query tab         |
+| AI chat panel            | `shared/ai-chat-panel.spec.ts`                | In-place setup then composer (no LLM)                   |
+| AI in-place setup        | `shared/ai-setup.spec.ts`                     | Query AI switch opens setup popover; save makes ready   |
 | AI chat cancel           | `shared/ai-chat-cancel.spec.ts`               | Abort in-flight stream/fallback via cancel control        |
 | Tab query migration      | `shared/tab-query-persistence-migration.spec.ts` | localStorage `dbo_tab_queries` → editor + key removed |
 | MCP panel                | `shared/mcp-panel.spec.ts`                    | Settings AI → MCP controls + enable toggle (no LLM)     |
 | Object Form PG lifecycle | `pg/object-form-postgres-lifecycle.spec.ts`   | serial: connect → DB → tables → FK → view → edit → drop |
-| Object Form PG edit      | `pg/object-form-postgres-edit-table.spec.ts`  | serial deep column/FK drop+re-add+rename / key edits    |
+| Object Form PG edit      | `pg/object-form-postgres-edit-table.spec.ts`  | serial deep column/FK drop+re-add+rename / varchar length / key edits    |
 | Object Form PG schema    | `pg/object-form-postgres-schema-matview.spec.ts` | serial schema, matview, rename, drop schema          |
 | Object Form MySQL        | `mysql/object-form-mysql-lifecycle.spec.ts`   | serial: connect → DB → tables → FK → view → edit → drop |
-| Object Form MySQL edit   | `mysql/object-form-mysql-edit-table.spec.ts`  | serial FK rename+actions / index drop+re-add / keys     |
+| Object Form MySQL edit   | `mysql/object-form-mysql-edit-table.spec.ts`  | serial ENGINE/AI, CHANGE length, index drop+recreate / keys     |
 | Object Form SQLite       | `sqlite/object-form-sqlite-lifecycle.spec.ts` | serial: connect → tables → FK → view → edit → drop      |
-| Object Form SQLite edit  | `sqlite/object-form-sqlite-edit-table.spec.ts`| serial FK edit (SET NULL+DEFERRABLE) / column / keys    |
+| Object Form SQLite edit  | `sqlite/object-form-sqlite-edit-table.spec.ts`| serial FK edit / column rename copy / keys    |
 | Object Form SQLite STRICT | `sqlite/object-form-sqlite-table-options.spec.ts` | STRICT + WITHOUT ROWID create                        |
 | Object Form generated col | `pg|sqlite/object-form-generated-column.spec.ts` | Add generated column on edit (STORED / VIRTUAL)     |
 | Database diagram (ERD)   | `shared/database-diagram.spec.ts`             | PG/MySQL/SQLite: open ERD, FK edges, related highlight, PNG export, Source DBML |

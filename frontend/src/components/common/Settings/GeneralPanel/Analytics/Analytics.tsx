@@ -1,8 +1,8 @@
+import { SettingRow } from '@/components/common/Settings/SettingRow/SettingRow';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Box, Divider, Switch, Typography } from '@mui/material';
+import { Switch } from '@mui/material';
 import { useEffect } from 'react';
-import { GeneralPanelSettingRowStyled } from '../GeneralPanel.styled';
 
 export function Analytics() {
   const enableAnalytics = useSettingStore((state) => state.general.enableAnalytics);
@@ -22,24 +22,11 @@ export function Analytics() {
   };
 
   return (
-    <Box
-      sx={{
-        mt: 1
-      }}
-    >
-      <GeneralPanelSettingRowStyled>
-        <Box>
-          <Typography color={'textTitle'} variant={'subtitle2'}>
-            {locales.analytics}
-          </Typography>
-          <Typography color={'textText'} variant={'caption'}>
-            {locales.enable_analytics}
-          </Typography>
-        </Box>
-
-        <Switch checked={enableAnalytics} onChange={handleChangeAnalytics} />
-      </GeneralPanelSettingRowStyled>
-      <Divider />
-    </Box>
+    <SettingRow
+      id='general.analytics'
+      label={locales.analytics}
+      description={locales.enable_analytics}
+      control={<Switch checked={enableAnalytics} onChange={handleChangeAnalytics} />}
+    />
   );
 }

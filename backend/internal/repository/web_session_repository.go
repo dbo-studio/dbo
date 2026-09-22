@@ -12,7 +12,16 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-const defaultSessionTouchInterval = 60 * time.Second
+const (
+	defaultSessionTouchInterval = 60 * time.Second
+	// AbsoluteSessionTTL is the max lifetime of a web session from creation.
+	AbsoluteSessionTTL = 7 * 24 * time.Hour
+)
+
+type CreateSessionParams struct {
+	UserID            *string
+	AbsoluteExpiresAt time.Time
+}
 
 type webSessionRepoImpl struct {
 	db *gorm.DB
@@ -29,17 +38,30 @@ func NewWebSessionRepo(db *gorm.DB) IWebSessionRepo {
 }
 
 func (r *webSessionRepoImpl) Create(ctx context.Context) (string, error) {
+	return r.CreateWithParams(ctx, CreateSessionParams{
+		AbsoluteExpiresAt: time.Now().UTC().Add(AbsoluteSessionTTL),
+	})
+}
+
+func (r *webSessionRepoImpl) CreateWithParams(ctx context.Context, params CreateSessionParams) (string, error) {
 	sessionID, err := generateSessionID()
 	if err != nil {
 		return "", err
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
+	abs := params.AbsoluteExpiresAt
+
+	if abs.IsZero() {
+		abs = now.Add(AbsoluteSessionTTL)
+	}
 
 	err = r.db.WithContext(ctx).Create(model.WebSession{
-		ID:         sessionID,
-		CreatedAt:  now,
-		LastSeenAt: now,
+		ID:                sessionID,
+		UserID:            params.UserID,
+		CreatedAt:         now,
+		LastSeenAt:        now,
+		AbsoluteExpiresAt: &abs,
 	}).Error
 	if err != nil {
 		return "", err
@@ -61,40 +83,49 @@ func (r *webSessionRepoImpl) Get(ctx context.Context, sessionID string) (*model.
 	return &session, nil
 }
 
-func (r *webSessionRepoImpl) CreateOrUpdate(ctx context.Context, sessionID string) (string, error) {
-	if sessionID == "" {
-		return r.Create(ctx)
-	}
-
-	now := time.Now()
-
-	err := r.db.WithContext(ctx).Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "id"}},
-		DoUpdates: clause.Assignments(map[string]any{"last_seen_at": now}),
-	}).Create(model.WebSession{
-		ID:         sessionID,
-		CreatedAt:  now,
-		LastSeenAt: now,
-	}).Error
+func (r *webSessionRepoImpl) Delete(ctx context.Context, sessionID string) error {
+	err := r.db.WithContext(ctx).Where("id = ?", sessionID).Delete(&model.WebSession{}).Error
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	r.recordTouch(sessionID, now)
+	r.touchMu.Lock()
+	delete(r.lastTouchByID, sessionID)
+	r.touchMu.Unlock()
 
-	return sessionID, nil
+	return nil
+}
+
+func (r *webSessionRepoImpl) DeleteByUserID(ctx context.Context, userID string) error {
+	if userID == "" {
+		return nil
+	}
+
+	err := r.db.WithContext(ctx).Where("user_id = ?", userID).Delete(&model.WebSession{}).Error
+	if err != nil {
+		return err
+	}
+
+	// Touch cache keys are session IDs; wipe all to avoid stale debounce after bulk delete.
+	r.touchMu.Lock()
+	r.lastTouchByID = make(map[string]time.Time)
+	r.touchMu.Unlock()
+
+	return nil
 }
 
 func (r *webSessionRepoImpl) EnsureSession(ctx context.Context, sessionID string) error {
-	now := time.Now()
+	now := time.Now().UTC()
+	abs := now.Add(AbsoluteSessionTTL)
 
 	err := r.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
 		DoNothing: true,
 	}).Create(model.WebSession{
-		ID:         sessionID,
-		CreatedAt:  now,
-		LastSeenAt: now,
+		ID:                sessionID,
+		CreatedAt:         now,
+		LastSeenAt:        now,
+		AbsoluteExpiresAt: &abs,
 	}).Error
 	if err != nil {
 		return err
@@ -128,7 +159,7 @@ func (r *webSessionRepoImpl) TouchLastSeenDebounced(ctx context.Context, session
 		return nil
 	}
 
-	return r.TouchLastSeen(ctx, sessionID, time.Now())
+	return r.TouchLastSeen(ctx, sessionID, time.Now().UTC())
 }
 
 func (r *webSessionRepoImpl) shouldSkipTouch(sessionID string, interval time.Duration) bool {
@@ -156,4 +187,9 @@ func generateSessionID() (string, error) {
 	}
 
 	return base64.RawURLEncoding.EncodeToString(b[:]), nil
+}
+
+// GenerateID returns a random URL-safe id (users, etc.).
+func GenerateID() (string, error) {
+	return generateSessionID()
 }

@@ -9,6 +9,7 @@ export type ConnectionItemProps = {
   selected?: boolean;
   loading: boolean;
   onClick: () => void;
+  overlay?: boolean;
 };
 
 export type ConnectionContextMenuProps = {

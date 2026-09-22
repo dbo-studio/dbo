@@ -129,10 +129,23 @@ export const useConnectionStore: UseBoundStore<StoreApi<ConnectionState>> = crea
         },
         clearCurrentConnection: (): void => {
           set({ currentConnectionId: undefined }, undefined, 'clearCurrentConnection');
+        },
+        reset: (): void => {
+          set(
+            {
+              loading: 'finished',
+              connections: undefined,
+              currentConnectionId: undefined,
+              connectionOrder: []
+            },
+            undefined,
+            'reset'
+          );
         }
       }),
       {
         name: 'connections',
+        skipHydration: true,
         partialize: (state): ConnectionPersistedState => ({
           connectionOrder: state.connectionOrder
         }),

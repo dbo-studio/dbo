@@ -46,13 +46,17 @@ func NewMcpService(
 ) IMcpService {
 	return &McpServiceImpl{
 		settingsRepo: settingsRepo,
-		nativeServer: NewNativeServer(toolRegistry),
+		nativeServer: NewNativeServer(toolRegistry, settingsRepo),
 		logger:       appLogger,
 		cfg:          cfg,
 	}
 }
 
 func (s *McpServiceImpl) Status(ctx context.Context) (*dto.McpStatusResponse, error) {
+	if err := helper.RequirePermission(ctx, helper.PermMcpSettings); err != nil {
+		return nil, err
+	}
+
 	settings, err := s.settingsRepo.FindByOwner(ctx, helper.CtxOwnerID(ctx))
 	if err != nil {
 		return nil, err
@@ -62,6 +66,10 @@ func (s *McpServiceImpl) Status(ctx context.Context) (*dto.McpStatusResponse, er
 }
 
 func (s *McpServiceImpl) Update(ctx context.Context, req *dto.McpUpdateRequest) (*dto.McpUpdateResponse, error) {
+	if err := helper.RequirePermission(ctx, helper.PermMcpSettings); err != nil {
+		return nil, err
+	}
+
 	settings, err := s.settingsRepo.FindByOwner(ctx, helper.CtxOwnerID(ctx))
 	if err != nil {
 		return nil, err
@@ -80,8 +88,6 @@ func (s *McpServiceImpl) Update(ctx context.Context, req *dto.McpUpdateRequest) 
 			settings.DefaultConnectionID = req.DefaultConnectionID
 		}
 
-		s.nativeServer.SetDefaultConnectionID(settings.DefaultConnectionID)
-
 		if _, err := s.settingsRepo.Upsert(ctx, settings); err != nil {
 			return nil, err
 		}
@@ -94,8 +100,6 @@ func (s *McpServiceImpl) Update(ctx context.Context, req *dto.McpUpdateRequest) 
 	settings.Enabled = false
 	settings.TokenHash = nil
 
-	s.nativeServer.SetDefaultConnectionID(nil)
-
 	if _, err := s.settingsRepo.Upsert(ctx, settings); err != nil {
 		return nil, err
 	}
@@ -106,6 +110,10 @@ func (s *McpServiceImpl) Update(ctx context.Context, req *dto.McpUpdateRequest) 
 }
 
 func (s *McpServiceImpl) RegenerateToken(ctx context.Context) (*dto.McpRegenerateTokenResponse, error) {
+	if err := helper.RequirePermission(ctx, helper.PermMcpSettings); err != nil {
+		return nil, err
+	}
+
 	settings, err := s.settingsRepo.FindByOwner(ctx, helper.CtxOwnerID(ctx))
 	if err != nil {
 		return nil, err

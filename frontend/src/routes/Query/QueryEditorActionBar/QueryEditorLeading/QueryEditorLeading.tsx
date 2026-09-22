@@ -1,15 +1,18 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
+import AiSetupPopover from '@/components/common/AiSetupPopover/AiSetupPopover';
+import { getAiStatus } from '@/core/ai/aiStatus';
 import { getEngineCapabilities } from '@/core/db';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import { useSelectedTab } from '@/hooks/useSelectedTab';
 import locales from '@/locales';
+import { useAiStore } from '@/store/aiStore/ai.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { EditorTabType } from '@/types';
 import { Stack, Switch, Tooltip, Typography } from '@mui/material';
-import { type JSX, useState } from 'react';
+import { type ChangeEvent, type JSX, useState } from 'react';
 import type { QueryEditorLeadingProps } from '../../types';
 
 export default function QueryEditorLeading({ databases, schemas }: QueryEditorLeadingProps): JSX.Element {
@@ -20,7 +23,11 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
 
   const enableEditorAi = useSettingStore((state) => state.editor.enableEditorAi);
   const updateEditor = useSettingStore((state) => state.updateEditor);
+  const providers = useAiStore((state) => state.providers);
+  const aiReady = getAiStatus(providers).ready;
+  const aiEnabled = enableEditorAi && aiReady;
 
+  const [setupAnchor, setSetupAnchor] = useState<HTMLElement | null>(null);
   const [localSchema, setLocalSchema] = useState<string>(selectedTab?.schema ?? '');
   const [localDatabase, setLocalDatabase] = useState<string>(selectedTab?.database ?? '');
   const [prevTabId, setPrevTabId] = useState(selectedTab?.id);
@@ -50,6 +57,15 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
       contextLocked: true,
       contextSource: 'manual'
     });
+  };
+
+  const handleAiToggle = (event: ChangeEvent<HTMLInputElement>): void => {
+    if (!aiReady) {
+      setSetupAnchor(event.currentTarget);
+      return;
+    }
+
+    updateEditor({ enableEditorAi: !enableEditorAi });
   };
 
   const handleSchemaChange = (schema: string): void => {
@@ -118,13 +134,17 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
         }}
       >
         <CustomIcon type='bot' />
-        <Tooltip title={enableEditorAi ? locales.disable_ai : locales.enable_ai}>
-          <Switch
-            size='small'
-            checked={enableEditorAi}
-            onChange={() => updateEditor({ enableEditorAi: !enableEditorAi })}
-          />
+        <Tooltip title={aiEnabled ? locales.disable_ai : locales.enable_ai}>
+          <span data-testid='query-ai-switch'>
+            <Switch size='small' checked={aiEnabled} onChange={handleAiToggle} />
+          </span>
         </Tooltip>
+        <AiSetupPopover
+          open={Boolean(setupAnchor)}
+          anchorEl={setupAnchor}
+          onClose={() => setSetupAnchor(null)}
+          onReady={() => updateEditor({ enableEditorAi: true })}
+        />
       </Stack>
     </Stack>
   );

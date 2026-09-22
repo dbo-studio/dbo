@@ -89,6 +89,18 @@ func OpenMysqlConnection(connection *model.Connection) gorm.Dialector {
 	if options.URI != nil && *options.URI != "" {
 		uri := *options.URI
 
+		cleaned, uriPassword, stripErr := StripURIPassword(uri)
+		if stripErr == nil {
+			uri = cleaned
+		}
+
+		password := lo.FromPtr(options.Password)
+		if password == "" {
+			password = uriPassword
+		}
+
+		uri = InjectURIPassword(uri, password)
+
 		serverName := options.Host
 		if serverName == "" {
 			if parsed, parseErr := url.Parse(uri); parseErr == nil {

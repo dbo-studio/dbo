@@ -1,7 +1,11 @@
+import AuthGateScreen from '@/components/common/Auth/AuthGateScreen/AuthGateScreen';
+import ChangePasswordGateScreen from '@/components/common/Auth/ChangePasswordGateScreen/ChangePasswordGateScreen';
+import TotpGateScreen from '@/components/common/Auth/TotpGateScreen/TotpGateScreen';
 import SplashScreen from '@/components/base/SplashScreen/SplashScreen';
 import Layout from '@/components/layout/Layout.tsx';
 import { useStartup } from '@/hooks/useStartup';
 import locales from '@/locales';
+import { useAuthStore } from '@/store/authStore/auth.store';
 import { type JSX, useEffect } from 'react';
 
 const dismissBootSplash = (): void => {
@@ -15,14 +19,27 @@ const dismissBootSplash = (): void => {
 
 export default function Home(): JSX.Element | null {
   const { ready, boot } = useStartup();
+  const gate = useAuthStore((s) => s.gate);
 
   useEffect(() => {
-    if (ready) {
+    if (gate !== 'loading' || ready) {
       dismissBootSplash();
     }
-  }, [ready]);
+  }, [ready, gate]);
 
-  if (!ready) {
+  if (gate === 'login') {
+    return <AuthGateScreen />;
+  }
+
+  if (gate === 'change_password') {
+    return <ChangePasswordGateScreen />;
+  }
+
+  if (gate === 'totp') {
+    return <TotpGateScreen />;
+  }
+
+  if (!ready || gate === 'loading') {
     return (
       <SplashScreen
         message={locales.starting_engine}

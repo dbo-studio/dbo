@@ -63,6 +63,10 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
   };
 
   const handleExport = async () => {
+    if (isTauri && !savePath.trim()) {
+      return;
+    }
+
     try {
       const response = await exportDataMutation({
         connectionId,
@@ -83,10 +87,18 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
   return (
     <>
       <Modal open={show} title={locales.export_options} onClose={() => onClose()}>
-        <ExportModalContainerStyled>
+        <ExportModalContainerStyled
+          component='form'
+          onSubmit={(e): void => {
+            e.preventDefault();
+            e.stopPropagation();
+            void handleExport();
+          }}
+        >
           <Box
             sx={{
-              flex: 1
+              flex: 1,
+              minHeight: 0
             }}
           >
             <SelectInput
@@ -118,16 +130,11 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
             )}
           </Box>
           <ExportModalFooterStyled>
-            <Button size='small' onClick={() => onClose()}>
+            <Button type='button' size='small' onClick={() => onClose()}>
               {locales.cancel}
             </Button>
 
-            <Button
-              onClick={() => void handleExport()}
-              size='small'
-              variant='contained'
-              disabled={isTauri && !savePath.trim()}
-            >
+            <Button type='submit' size='small' variant='contained' disabled={isTauri && !savePath.trim()}>
               <span>{locales.export}</span>
             </Button>
           </ExportModalFooterStyled>

@@ -67,6 +67,7 @@ export async function createUsersTable(page: Page, connectionName: string, table
   await objectForm.save();
   await objectForm.assertPreviewContains(P.createTable);
   await objectForm.assertPreviewContains(P.primaryKey);
+  await objectForm.expectPreviewSelectAllStaysInside('Query preview');
   await objectForm.confirmExecute();
 
   await tree.expandNode('Tables');

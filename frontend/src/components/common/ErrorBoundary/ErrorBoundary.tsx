@@ -1,16 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import CrashScreen from './CrashScreen';
 
-/** Matches `indexedDB.service` DB_NAME. Do not import that module here — it opens IDB on load. */
-const TABLE_DATA_DB_NAME = 'table-data-db';
-
-type ErrorBoundaryProps = {
-  children: ReactNode;
-};
-
-type ErrorBoundaryState = {
-  hasError: boolean;
-};
+const TABLE_DATA_DB_PREFIX = 'table-data-db';
 
 const clearPersistedFrontend = (): void => {
   try {
@@ -20,10 +11,30 @@ const clearPersistedFrontend = (): void => {
   }
 
   try {
-    indexedDB.deleteDatabase(TABLE_DATA_DB_NAME);
+    indexedDB.deleteDatabase(TABLE_DATA_DB_PREFIX);
   } catch {
     // ignore; reload still recovers localStorage persist
   }
+
+  try {
+    void indexedDB.databases?.()?.then((dbs) => {
+      for (const db of dbs) {
+        if (db.name?.startsWith(`${TABLE_DATA_DB_PREFIX}:`)) {
+          indexedDB.deleteDatabase(db.name);
+        }
+      }
+    });
+  } catch {
+    // ignore
+  }
+};
+
+type ErrorBoundaryProps = {
+  children: ReactNode;
+};
+
+type ErrorBoundaryState = {
+  hasError: boolean;
 };
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {

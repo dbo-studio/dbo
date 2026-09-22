@@ -427,6 +427,27 @@ export async function editTableChangeColumnType(
   await objectForm.confirmExecute();
 }
 
+export async function editTableChangeColumnLength(
+  page: Page,
+  tableName: string,
+  columnRowIndex: number,
+  length: string
+): Promise<void> {
+  const tree = new ObjectTreePage(page);
+  const objectForm = new ObjectFormPage(page);
+
+  await tree.runTreeAction(tableName, 'Edit table');
+  await objectForm.waitForReady();
+  await objectForm.ensureWorkspaceTab(tableName, 'Edit table');
+  await objectForm.waitForReady();
+  await objectForm.selectTab(T.columns);
+  await objectForm.fillArrayCell(columnRowIndex, F.columnMaxLength, length);
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.alterColumnLength);
+  await objectForm.confirmExecute();
+}
+
 export async function editTableAddUniqueKey(
   page: Page,
   tableName: string,

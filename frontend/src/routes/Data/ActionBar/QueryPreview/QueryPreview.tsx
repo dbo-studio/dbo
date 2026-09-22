@@ -1,15 +1,18 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlighter';
+import { useScopedSelectAll } from '@/hooks';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { IconButton, Tooltip } from '@mui/material';
-import type { JSX } from 'react';
+import { type JSX, useRef } from 'react';
 import { QueryPreviewEditButtonStyled, QueryPreviewStyled } from './QueryPreview.styled';
 
 export default function QueryPreview(): JSX.Element {
   const getQuery = useTabStore((state) => state.getQuery);
   const addEditorTab = useTabStore((state) => state.addEditorTab);
   const query = getQuery();
+  const containerRef = useRef<HTMLDivElement>(null);
+  useScopedSelectAll(containerRef, true);
 
   const handleOpenInEditor = (): void => {
     if (!query.trim()) {
@@ -20,7 +23,7 @@ export default function QueryPreview(): JSX.Element {
   };
 
   return (
-    <QueryPreviewStyled>
+    <QueryPreviewStyled ref={containerRef} data-testid='query-preview'>
       <SyntaxHighlighter value={query} />
       <QueryPreviewEditButtonStyled>
         <Tooltip title={locales.open_editor}>

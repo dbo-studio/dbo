@@ -80,3 +80,32 @@ export type SQLiteOptionsType = {
 export type SafeModeUnlockResponseType = {
   unlockedUntil: string;
 };
+
+export type ConnectionShareMemberType = {
+  userId: string;
+  email: string;
+  role: string;
+  createdAt: string;
+};
+
+export type ConnectionSharesType = {
+  passwordShared: boolean;
+  members: ConnectionShareMemberType[];
+};
+
+export type AdminConnectionShareType = {
+  connectionId: number;
+  connectionName: string;
+  ownerId: string;
+  ownerEmail: string;
+  passwordShared: boolean;
+  members: ConnectionShareMemberType[];
+};
+
+export type AdminConnectionCatalogItemType = {
+  id: number;
+  name: string;
+  type: ConnectionEngine;
+  ownerId: string;
+  ownerEmail: string;
+};

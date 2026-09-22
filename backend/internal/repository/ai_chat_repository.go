@@ -8,6 +8,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/db/scope"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"gorm.io/gorm"
 )
 
@@ -23,7 +24,7 @@ func (r AiChatRepoImpl) List(ctx context.Context, req *dto.AiChatListRequest) ([
 	var chats []model.AiChat
 
 	result := r.db.WithContext(ctx).Scopes(scope.Paginate(&req.PaginationRequest)).
-		Where("connection_id = ?", req.ConnectionID).
+		Where("connection_id = ? AND owner_id = ?", req.ConnectionID, helper.CtxOwnerID(ctx)).
 		Order("updated_at desc").
 		Find(&chats)
 
@@ -37,7 +38,9 @@ func (r AiChatRepoImpl) List(ctx context.Context, req *dto.AiChatListRequest) ([
 func (r AiChatRepoImpl) Find(ctx context.Context, id uint, pagination *dto.PaginationRequest) (*model.AiChat, error) {
 	var chat model.AiChat
 
-	err := r.db.WithContext(ctx).First(&chat, id).Error
+	err := r.db.WithContext(ctx).
+		Where("id = ? AND owner_id = ?", id, helper.CtxOwnerID(ctx)).
+		First(&chat).Error
 	if err != nil {
 		return nil, err
 	}
@@ -71,12 +74,14 @@ func (r AiChatRepoImpl) Create(ctx context.Context, dto *dto.AiChatCreateRequest
 	err := r.db.WithContext(ctx).
 		Where("id IN (SELECT ai_chats.id FROM ai_chats LEFT JOIN ai_chat_messages ON ai_chats.id = ai_chat_messages.chat_id GROUP BY ai_chats.id HAVING COUNT(ai_chat_messages.id) = 0)").
 		Where("created_at < ?", time.Now().Add(-time.Hour*24)).
+		Where("owner_id = ?", helper.CtxOwnerID(ctx)).
 		Delete(&model.AiChat{}).Error
 	if err != nil {
 		return nil, err
 	}
 
 	var chat = &model.AiChat{
+		OwnerID:      helper.CtxOwnerID(ctx),
 		Title:        title,
 		ConnectionID: uint(dto.ConnectionID),
 	}

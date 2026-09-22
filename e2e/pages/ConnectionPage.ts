@@ -1,9 +1,14 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { API_DB_TIMEOUT, apiRoute, waitForResponseDuring } from "../helpers/network";
+import {
+  API_DB_TIMEOUT,
+  apiRoute,
+  waitForResponseDuring,
+} from "../helpers/network";
 import { BasePage } from "./BasePage";
 
 export interface ConnectionSslConfig {
-  mode: "disable" | "allow" | "prefer" | "require" | "verify-ca" | "verify-full";
+  mode:
+    "disable" | "allow" | "prefer" | "require" | "verify-ca" | "verify-full";
   caCert?: string;
   clientCert?: string;
   clientKey?: string;
@@ -39,6 +44,9 @@ export class ConnectionPage extends BasePage {
   readonly portInput: Locator;
   readonly usernameInput: Locator;
   readonly passwordInput: Locator;
+  readonly uriInput: Locator;
+  readonly useUriCheckbox: Locator;
+  readonly copyUriButton: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -57,6 +65,9 @@ export class ConnectionPage extends BasePage {
     this.portInput = page.locator('input[name="port"]');
     this.usernameInput = page.locator('input[name="username"]');
     this.passwordInput = page.locator('input[name="password"]');
+    this.uriInput = page.locator('input[name="uri"]');
+    this.useUriCheckbox = page.getByRole("checkbox", { name: "Use URI" });
+    this.copyUriButton = page.getByTestId("copy-connection-uri");
   }
 
   getConnectionItem(name: string): Locator {
@@ -168,7 +179,9 @@ export class ConnectionPage extends BasePage {
 
     await this.openSslTab();
     await this.page.locator(".ssl-mode__control").click();
-    await this.page.getByRole("option", { name: labels[mode], exact: true }).click();
+    await this.page
+      .getByRole("option", { name: labels[mode], exact: true })
+      .click();
     await expect(this.page.locator(".ssl-mode__single-value")).toHaveText(
       labels[mode],
     );
@@ -195,11 +208,48 @@ export class ConnectionPage extends BasePage {
       await this.fillSslCaCert(ssl.caCert);
     }
     if (ssl.clientCert) {
-      await this.page.getByTestId("ssl-textarea-sslClientCert").fill(ssl.clientCert);
+      await this.page
+        .getByTestId("ssl-textarea-sslClientCert")
+        .fill(ssl.clientCert);
     }
     if (ssl.clientKey) {
-      await this.page.getByTestId("ssl-textarea-sslClientKey").fill(ssl.clientKey);
+      await this.page
+        .getByTestId("ssl-textarea-sslClientKey")
+        .fill(ssl.clientKey);
     }
+  }
+
+  async enableUriMode(): Promise<void> {
+    if (await this.useUriCheckbox.isChecked()) {
+      return;
+    }
+    await this.useUriCheckbox.check();
+    await expect(this.uriInput).toBeEnabled();
+  }
+
+  async fillConnectionUri(uri: string): Promise<void> {
+    await this.enableUriMode();
+    await this.uriInput.fill(uri);
+    await this.uriInput.blur();
+  }
+
+  async createConnectionFromUri(
+    name: string,
+    uri: string,
+    type: ConnectionConfig["type"] = "PostgreSQL",
+  ): Promise<void> {
+    await this.openNewConnectionModal();
+    await this.selectConnectionType(type || "PostgreSQL");
+    await this.nameInput.fill(name);
+    await this.fillConnectionUri(uri);
+    await this.page
+      .getByRole("checkbox", { name: "Remember password" })
+      .check();
+    await this.testConnection();
+    await this.submitConnection();
+    await expect(this.getConnectionItem(name)).toBeVisible({
+      timeout: 30000,
+    });
   }
 
   async expectSslMode(
@@ -237,10 +287,8 @@ export class ConnectionPage extends BasePage {
   }
 
   async submitConnection(): Promise<void> {
-    await waitForResponseDuring(
-      this.page,
-      apiRoute.connectionsSave,
-      () => this.createConnectionButton.click(),
+    await waitForResponseDuring(this.page, apiRoute.connectionsSave, () =>
+      this.createConnectionButton.click(),
     );
     await expect(
       this.page.getByRole("heading", { name: /^(New|Edit) connection$/ }),
@@ -261,7 +309,9 @@ export class ConnectionPage extends BasePage {
   }
 
   async waitForConnectionActive(): Promise<void> {
-    await expect(this.page.getByRole("button", { name: "sql", exact: true })).toBeEnabled({
+    await expect(
+      this.page.getByRole("button", { name: "sql", exact: true }),
+    ).toBeEnabled({
       timeout: 30000,
     });
     await expect(this.page.getByRole("treeitem").first()).toBeVisible({
@@ -280,10 +330,8 @@ export class ConnectionPage extends BasePage {
 
     await this.passwordInput.fill(password);
 
-    await waitForResponseDuring(
-      this.page,
-      apiRoute.connectionCredentials,
-      () => this.page.getByRole("button", { name: "Save" }).click(),
+    await waitForResponseDuring(this.page, apiRoute.connectionCredentials, () =>
+      this.page.getByRole("button", { name: "Save" }).click(),
     );
     await expect(heading).toBeHidden({ timeout: 10_000 });
   }
@@ -367,7 +415,10 @@ export class ConnectionPage extends BasePage {
     await expect(this.nameInput).toBeVisible({ timeout: 15000 });
   }
 
-  async reorderConnection(sourceName: string, targetName: string): Promise<void> {
+  async reorderConnection(
+    sourceName: string,
+    targetName: string,
+  ): Promise<void> {
     const source = this.getConnectionItem(sourceName);
     const target = this.getConnectionItem(targetName);
     await expect(source).toBeVisible();
@@ -398,10 +449,8 @@ export class ConnectionPage extends BasePage {
 
   async refreshConnection(name: string): Promise<void> {
     await this.openContextMenu(name);
-    await waitForResponseDuring(
-      this.page,
-      apiRoute.connectionsList,
-      () => this.clickContextMenuItem("Refresh"),
+    await waitForResponseDuring(this.page, apiRoute.connectionsList, () =>
+      this.clickContextMenuItem("Refresh"),
     );
   }
 

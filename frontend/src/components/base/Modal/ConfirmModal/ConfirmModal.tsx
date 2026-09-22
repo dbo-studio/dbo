@@ -1,8 +1,9 @@
 import { ConfirmModalStyled } from '@/components/base/Modal/ConfirmModal/ConfirmModal.styled.ts';
+import { useScopedSelectAll } from '@/hooks';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store.ts';
 import { Box, Button, Typography, useTheme } from '@mui/material';
-import { type JSX, useMemo } from 'react';
+import { type JSX, useMemo, useRef } from 'react';
 import { ModalStyled } from '../Modal.styled.ts';
 
 export default function ConfirmModal(): JSX.Element {
@@ -16,6 +17,8 @@ export default function ConfirmModal(): JSX.Element {
   const close = useConfirmModalStore((state) => state.close);
 
   const theme = useTheme();
+  const containerRef = useRef<HTMLDivElement>(null);
+  useScopedSelectAll(containerRef, isOpen);
 
   const style = useMemo(() => {
     if (mode === 'danger') {
@@ -56,7 +59,7 @@ export default function ConfirmModal(): JSX.Element {
 
   return (
     <ModalStyled open={isOpen} onClose={handleCancel}>
-      <ConfirmModalStyled>
+      <ConfirmModalStyled ref={containerRef}>
         <Box
           sx={{
             flex: 1,
@@ -69,12 +72,18 @@ export default function ConfirmModal(): JSX.Element {
             }}
           >
             {title && (
-              <Typography color='textTitle' variant='h6' component='h2'>
+              <Typography
+                data-select-all-skip
+                color='textTitle'
+                variant='h6'
+                component='h2'
+                sx={{ userSelect: 'none' }}
+              >
                 {title}
               </Typography>
             )}
             {description && (
-              <Typography sx={{ mt: title ? 2 : 0, userSelect: 'text' }} color='textText'>
+              <Typography data-select-all-root sx={{ mt: title ? 2 : 0, userSelect: 'text' }} color='textText'>
                 {description}
               </Typography>
             )}
@@ -92,11 +101,12 @@ export default function ConfirmModal(): JSX.Element {
               marginRight: theme.spacing(2)
             }}
             size='small'
+            autoFocus={mode === 'danger'}
             onClick={handleCancel}
           >
             {locales.cancel}
           </Button>
-          <Button style={style} onClick={handleConfirm} size='small' variant='contained'>
+          <Button style={style} onClick={handleConfirm} size='small' variant='contained' autoFocus={mode !== 'danger'}>
             {resolvedConfirmLabel}
           </Button>
         </Box>

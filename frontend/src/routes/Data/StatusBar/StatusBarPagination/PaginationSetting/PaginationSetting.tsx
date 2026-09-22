@@ -97,7 +97,14 @@ export default function PaginationSetting(): JSX.Element {
 
       <Popper id={id} open={open} anchorEl={anchorEl} placement={isMobile ? 'top-end' : 'bottom-end'}>
         <ClickAwayListener onClickAway={handleCloseClick}>
-          <PaginationSettingStyled>
+          <PaginationSettingStyled
+            component='form'
+            onSubmit={(e): void => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleUpdateState();
+            }}
+          >
             <FieldInput
               error={!!errors.limit}
               helpertext={errors.limit}
@@ -107,7 +114,7 @@ export default function PaginationSetting(): JSX.Element {
               placeholder={locales.limit}
               label={locales.limit}
             />
-            <Button variant='contained' onClick={handleUpdateState} size='small' fullWidth>
+            <Button type='submit' variant='contained' size='small' fullWidth>
               {locales.save}
             </Button>
           </PaginationSettingStyled>

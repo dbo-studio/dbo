@@ -20,6 +20,20 @@ type MysqlUpdateConnectionParams struct {
 	SSL      *ConnectionSSLParams `json:"ssl,omitempty"`
 }
 
+// MysqlTableParams is the general-tab payload for MySQL table create/edit.
+// The wire field IDs match the shared Object Form general tab (relname/description).
+type MysqlTableParams struct {
+	New *MysqlTableParamsData `json:"new"`
+	Old *MysqlTableParamsData `json:"old"`
+}
+
+type MysqlTableParamsData struct {
+	Name      *string `json:"relname"`
+	Comment   *string `json:"description"`
+	Engine    *string `json:"ENGINE"`
+	RowFormat *string `json:"ROW_FORMAT"`
+}
+
 type MysqlTableColumnParams struct {
 	Columns []MysqlTableColumn `json:"columns"`
 }

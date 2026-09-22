@@ -8,7 +8,6 @@ import {
   ConnectionPage,
   DataBrowserPage,
   DataGridPage,
-  ObjectTreePage,
   SqlEditorPage,
 } from "../pages";
 
@@ -143,11 +142,16 @@ export async function dropDataBrowserTable(
   tableName: string,
   engine: DbEngine = "postgresql",
 ): Promise<void> {
-  const tree = new ObjectTreePage(page);
-  const path = dataBrowserTreePath(engine, connectionName);
-  await tree.expandPath(path).catch(() => undefined);
-  await tree.refreshExpandNode("Tables").catch(() => undefined);
-  await tree.dropObject(tableName, "Drop table").catch(() => undefined);
+  const sqlEditor = new SqlEditorPage(page);
+  await sqlEditor.open().catch(() => undefined);
+  if (engine === "postgresql") {
+    await sqlEditor.selectContext("default", "public").catch(() => undefined);
+  } else if (engine === "mysql") {
+    await sqlEditor.selectContext("default").catch(() => undefined);
+  }
+  await sqlEditor
+    .typeAndRun(`DROP TABLE IF EXISTS ${tableName};`)
+    .catch(() => undefined);
 }
 
 export async function cleanupDataBrowserSeed(seed: DataBrowserSeed): Promise<void> {

@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"log"
@@ -25,7 +24,6 @@ import (
 	"github.com/dbo-studio/dbo/pkg/logger/zap"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
-	"strings"
 )
 
 func ServeCommand() *cobra.Command {
@@ -80,17 +78,17 @@ func Execute() {
 	}
 
 	rr := repository.NewRepository(appDB, aiCipherKey)
-	secretStore := serviceSecretStore.NewSecretStore(cfg, rr.WebSessionRepo, rr.WebConnectionSecretRepo, appLogger)
+	secretStore := serviceSecretStore.NewSecretStore(cfg, rr.WebSessionRepo, rr.WebConnectionSecretRepo, rr.ConnectionSharedSecretRepo, appLogger)
 	cm := databaseConnection.NewConnectionManager(rr.HistoryRepo, secretStore, appLogger, cache)
 	ss := service.NewService(rr, cm, secretStore, service.Deps{
-		Logger: appLogger,
-		Cache:  cache,
-		Config: cfg,
+		Logger:    appLogger,
+		Cache:     cache,
+		Config:    cfg,
+		CipherKey: aiCipherKey,
 	})
 
-	if token := strings.TrimSpace(cfg.App.AuthToken); token != "" {
-		sum := sha256.Sum256([]byte(token))
-		appLogger.Info(fmt.Sprintf("APP_AUTH_TOKEN configured (sha256=%x…)", sum[:4]))
+	if err := ss.AuthService.Bootstrap(context.Background()); err != nil {
+		appLogger.Fatal(err)
 	}
 
 	err = ss.JobManager.CancelAllJobs()
@@ -112,7 +110,9 @@ func Execute() {
 		Mcp:          handler.NewMcpHandler(appLogger, ss.McpService),
 		Schema:       handler.NewSchemaHandler(appLogger, ss.SchemaService),
 		SafeMode:     handler.NewSafeModeHandler(appLogger, ss.SafeModePasswordService),
-	}, rr.WebSessionRepo)
+		Auth:         handler.NewAuthHandler(appLogger, ss.AuthService, cfg),
+		AdminUsers:   handler.NewAdminUsersHandler(appLogger, ss.AdminUsersService),
+	}, rr.WebSessionRepo, ss.AuthService)
 
 	gracefulCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()

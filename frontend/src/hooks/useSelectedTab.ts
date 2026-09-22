@@ -1,8 +1,7 @@
 'use no memo';
 
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { matchConnectionId } from '@/store/tabStore/connectionId';
-import { selectTabs, useTabStore } from '@/store/tabStore/tab.store';
+import { selectTabs, selectVisibleTabs, useTabStore } from '@/store/tabStore/tab.store';
 import type { TabType } from '@/types';
 import { useEffect, useMemo } from 'react';
 
@@ -13,23 +12,19 @@ export const useSelectedTab = <T extends TabType>(): T | undefined => {
   const switchTab = useTabStore((state) => state.switchTab);
 
   const selectedTab = useMemo((): T | undefined => {
-    if (!currentConnectionId) {
-      return undefined;
-    }
-
-    const connectionTabs = tabs.filter((tab) => matchConnectionId(tab.connectionId, currentConnectionId));
-    if (connectionTabs.length === 0) {
+    const visible = selectVisibleTabs(tabs, currentConnectionId);
+    if (visible.length === 0) {
       return undefined;
     }
 
     if (selectedTabId) {
-      const activeTab = connectionTabs.find((tab) => tab.id === selectedTabId);
+      const activeTab = visible.find((tab) => tab.id === selectedTabId);
       if (activeTab) {
         return activeTab as T;
       }
     }
 
-    return connectionTabs[0] as T;
+    return visible[0] as T;
   }, [tabs, selectedTabId, currentConnectionId]);
 
   useEffect(() => {

@@ -21,7 +21,7 @@ export const KbdStyled = styled(Box)(({ theme }) => ({
   padding: theme.spacing(0.25, 0.5),
   fontSize: theme.typography.body2.fontSize,
   fontWeight: 500,
-  fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace',
+  fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", monospace',
   lineHeight: 1,
   color: theme.palette.text.title,
   backgroundColor: theme.palette.background.default,

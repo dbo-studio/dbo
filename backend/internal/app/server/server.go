@@ -11,6 +11,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/handler"
 	"github.com/dbo-studio/dbo/internal/app/server/middleware"
 	"github.com/dbo-studio/dbo/internal/repository"
+	serviceAuth "github.com/dbo-studio/dbo/internal/service/auth"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/compress"
@@ -34,6 +35,8 @@ type Handlers struct {
 	Mcp          *handler.McpHandler
 	Schema       *handler.SchemaHandler
 	SafeMode     *handler.SafeModeHandler
+	Auth         *handler.AuthHandler
+	AdminUsers   *handler.AdminUsersHandler
 }
 
 type Server struct {
@@ -41,6 +44,7 @@ type Server struct {
 	cfg            *config.Config
 	handlers       Handlers
 	webSessionRepo repository.IWebSessionRepo
+	authService    serviceAuth.IAuthService
 }
 
 func New(
@@ -48,6 +52,7 @@ func New(
 	cfg *config.Config,
 	handlers Handlers,
 	webSessionRepo repository.IWebSessionRepo,
+	authService serviceAuth.IAuthService,
 ) *Server {
 	return &Server{
 		app: fiber.New(fiber.Config{
@@ -76,6 +81,7 @@ func New(
 		cfg:            cfg,
 		handlers:       handlers,
 		webSessionRepo: webSessionRepo,
+		authService:    authService,
 	}
 }
 
@@ -96,7 +102,7 @@ func (r *Server) Start(gracefulCtx context.Context, isLocal bool, port string) e
 		AllowCredentials: true,
 	}))
 
-	r.app.Use(middleware.OwnerSessionMiddleware(r.cfg, r.webSessionRepo))
+	r.app.Use(middleware.OwnerSessionMiddleware(r.cfg, r.webSessionRepo, r.authService))
 
 	r.routing()
 
@@ -116,7 +122,7 @@ func allowOriginFunc(cfg *config.Config) func(string) bool {
 		allowed[strings.TrimRight(origin, "/")] = struct{}{}
 	}
 
-	serverWeb := cfg != nil && strings.TrimSpace(cfg.App.AuthToken) != ""
+	serverWeb := cfg != nil && cfg.App.AuthRequiresSession()
 
 	return func(origin string) bool {
 		if origin == "" {

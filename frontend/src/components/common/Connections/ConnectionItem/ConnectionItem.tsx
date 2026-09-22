@@ -1,6 +1,5 @@
 'use no memo';
 
-import SortableItem from '@/components/base/SortableList/SortableItem/SortableItem';
 import { useContextMenu } from '@/hooks';
 import { Box, CircularProgress, Tooltip } from '@mui/material';
 import type { JSX } from 'react';
@@ -16,7 +15,8 @@ export default function ConnectionItem({
   connection,
   selected = false,
   onClick,
-  loading
+  loading,
+  overlay = false
 }: ConnectionItemProps): JSX.Element {
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
@@ -31,28 +31,33 @@ export default function ConnectionItem({
     connection.type) as keyof typeof IconTypes;
 
   return (
-    <Box onContextMenu={handleContextMenu} sx={{ width: '100%' }}>
-      <SortableItem id={String(connection.id)} onClick={handleClick}>
-        <ConnectionItemStyled data-testid={`connection-item-${connection.name}`} selected={selected}>
-          <CustomIcon type={engineIcon} size='m' />
-          {loading ? (
-            <Box>
-              <CircularProgress size={15} color='primary' />
-            </Box>
-          ) : (
-            <Tooltip title={connection.name} enterDelay={500}>
-              <ConnectionItemNameStyled component='p' variant='caption'>
-                {connection.name}
-              </ConnectionItemNameStyled>
-            </Tooltip>
-          )}
-        </ConnectionItemStyled>
-      </SortableItem>
-      <ConnectionItemContextMenu
-        connection={connection}
-        contextMenu={contextMenuPosition}
-        onClose={handleCloseContextMenu}
-      />
-    </Box>
+    <>
+      <ConnectionItemStyled
+        data-testid={`connection-item-${connection.name}`}
+        selected={selected}
+        onContextMenu={overlay ? undefined : handleContextMenu}
+        onClick={overlay ? undefined : handleClick}
+      >
+        <CustomIcon type={engineIcon} size='m' />
+        {loading ? (
+          <Box>
+            <CircularProgress size={15} color='primary' />
+          </Box>
+        ) : (
+          <Tooltip title={connection.name} enterDelay={500}>
+            <ConnectionItemNameStyled component='p' variant='caption'>
+              {connection.name}
+            </ConnectionItemNameStyled>
+          </Tooltip>
+        )}
+      </ConnectionItemStyled>
+      {!overlay && (
+        <ConnectionItemContextMenu
+          connection={connection}
+          contextMenu={contextMenuPosition}
+          onClose={handleCloseContextMenu}
+        />
+      )}
+    </>
   );
 }

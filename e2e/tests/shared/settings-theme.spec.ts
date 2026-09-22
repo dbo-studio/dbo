@@ -95,6 +95,12 @@ test.describe("Settings & Theme", () => {
         await settingsPage.open();
       });
 
+      await test.step("Search opens a setting from flat results", async () => {
+        await settingsPage.searchAndOpen("debug", "Debug mode");
+        await settingsPage.expectPanelVisible("Debug mode");
+        await expect(page.getByTestId("settings-search")).toHaveValue("");
+      });
+
       await test.step("Check General panel", async () => {
         await settingsPage.navigateTo("General");
         await settingsPage.expectPanelVisible("Debug mode");

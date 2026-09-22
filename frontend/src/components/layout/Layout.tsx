@@ -1,4 +1,5 @@
 import { TabMode } from '@/core/enums';
+import { openSettings } from '@/core/settings/openSettings';
 import { shortcuts } from '@/core/utils';
 import { useCurrentConnection, useResponsiveSidebar, useShortcut } from '@/hooks';
 import { useAiBridge } from '@/hooks/useAiBridge';
@@ -8,7 +9,6 @@ import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { JSX } from 'react';
 import ConfirmModal from '../base/Modal/ConfirmModal/ConfirmModal.tsx';
-import Settings from '../common/Settings/Settings';
 import UpdateDialog from '../common/UpdateDialog/UpdateDialog';
 import SafeModePasswordHost from '../common/SafeModePasswordPrompt/SafeModePasswordHost';
 import AppHeader from './AppHeader/AppHeader';
@@ -23,7 +23,6 @@ import SidebarDrawer from './SidebarDrawer/SidebarDrawer';
 export default function Layout(): JSX.Element {
   const { useSidebarOverlay, showConnectionsRail, isMobile } = useLayoutMode();
   const sidebar = useSettingStore((state) => state.ui.sidebar);
-  const showSettings = useSettingStore((state) => state.ui.showSettings);
   const showConnectionsDrawer = useSettingStore((state) => state.ui.showConnectionsDrawer);
   const updateUI = useSettingStore((state) => state.updateUI);
   const currentConnection = useCurrentConnection();
@@ -44,7 +43,7 @@ export default function Layout(): JSX.Element {
   });
 
   useShortcut(shortcuts.openShortcuts, () => {
-    updateUI({ showSettings: { open: true, tab: 2 } });
+    openSettings({ section: 2 });
   });
 
   const closeLeftSidebar = (): void => {
@@ -94,7 +93,6 @@ export default function Layout(): JSX.Element {
       <ConfirmModal />
       <SafeModePasswordHost />
       <UpdateDialog />
-      <Settings open={showSettings.open} />
       <AppHeader />
       <LayoutBodyStyled>
         {showConnectionsRail && <StartContainer />}

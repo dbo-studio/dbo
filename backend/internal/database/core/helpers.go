@@ -147,10 +147,12 @@ func (*BaseRepository) ColumnMappedFormat(dataType string) string {
 	}
 }
 
-func (*BaseRepository) IsCharacterType(dataType string) bool {
+func IsCharacterType(dataType string) bool {
 	characterTypes := []string{"char", "character", "varchar", "character varying", "text"}
+
+	normalized := strings.ToLower(strings.TrimSpace(dataType))
 	for _, t := range characterTypes {
-		if dataType == t {
+		if normalized == t {
 			return true
 		}
 	}
@@ -158,15 +160,25 @@ func (*BaseRepository) IsCharacterType(dataType string) bool {
 	return false
 }
 
-func (*BaseRepository) IsNumericType(dataType string) bool {
+func (BaseRepository) IsCharacterType(dataType string) bool {
+	return IsCharacterType(dataType)
+}
+
+func IsNumericType(dataType string) bool {
 	numericTypes := []string{"numeric", "decimal"}
+
+	normalized := strings.ToLower(strings.TrimSpace(dataType))
 	for _, t := range numericTypes {
-		if dataType == t {
+		if normalized == t {
 			return true
 		}
 	}
 
 	return false
+}
+
+func (BaseRepository) IsNumericType(dataType string) bool {
+	return IsNumericType(dataType)
 }
 
 func (*BaseRepository) SanitizeQueryResults(row map[string]any) map[string]any {

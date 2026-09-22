@@ -54,6 +54,34 @@ export class WorkspacePage extends BasePage {
     await expect(this.getTab(title)).toBeHidden({ timeout: 10000 });
   }
 
+  getTabs(): Locator {
+    return this.page.locator("[data-tab-id]");
+  }
+
+  async reorderTab(sourceId: string, targetId: string): Promise<void> {
+    const source = this.page.locator(`[data-tab-id="${sourceId}"]`);
+    const target = this.page.locator(`[data-tab-id="${targetId}"]`);
+    await expect(source).toBeVisible();
+    await expect(target).toBeVisible();
+
+    const sourceBox = await source.boundingBox();
+    const targetBox = await target.boundingBox();
+    if (!sourceBox || !targetBox) {
+      throw new Error("workspace tabs have no bounding box");
+    }
+
+    const startX = sourceBox.x + sourceBox.width / 2;
+    const startY = sourceBox.y + sourceBox.height / 2;
+    const endX = targetBox.x + targetBox.width / 2;
+    const endY = targetBox.y + targetBox.height / 2;
+
+    await this.page.mouse.move(startX, startY);
+    await this.page.mouse.down();
+    await this.page.mouse.move(startX + 16, startY, { steps: 4 });
+    await this.page.mouse.move(endX, endY, { steps: 12 });
+    await this.page.mouse.up();
+  }
+
   /** Close the first workspace tab, confirming the dirty dialog when it appears. */
   async closeFirstTab(): Promise<void> {
     const tab = this.page.locator('[data-testid^="workspace-tab-"]').first();

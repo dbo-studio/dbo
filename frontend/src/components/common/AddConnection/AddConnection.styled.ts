@@ -7,7 +7,7 @@ export const ConnectionFormContainerStyled = styled(Box)(() => ({
   minHeight: 0,
   minWidth: 'min(480px, calc(100vw - 64px))',
   overflow: 'hidden'
-}));
+})) as typeof Box;
 
 export const ConnectionFormBodyStyled = styled(Box)(({ theme }) => ({
   flex: 1,

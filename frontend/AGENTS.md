@@ -60,11 +60,14 @@ New UI: primitives → `base/`; product composites → `common/`; page wiring �
 
 | Store | Persisted fields | Notes |
 |-------|------------------|-------|
-| `tabStore` | `tabs`, `selectedTabId` | Query text lives in IndexedDB (`tabQueries`), not localStorage |
-| `settingStore` | `theme`, `editor`, `general`, `setup`, `editorContextByConnection`, `ui.sidebar` only | Ephemeral modal flags and `titleBar` (holds a function) are excluded |
-| `treeStore` | partial tree UI state | Use `partialize`; see store for fields |
+| `tabStore` | `tabs`, `selectedTabId` | Query text lives in IndexedDB (`tabQueries`), not localStorage. Persist key is `tabs` (desktop) or `dbo:{userId}:tabs` (web local auth). |
+| `settingStore` | `theme`, `editor`, `general`, `setup`, `editorContextByConnection`, `ui.sidebar` only | Same key pattern: `settings` / `dbo:{userId}:settings`. Skip hydration until `applyUserWorkspaceScope`. |
+| `treeStore` | partial tree UI state | Use `partialize`; see store for fields. Key: `tree` / `dbo:{userId}:tree`. |
+| `connectionStore` | `connectionOrder` | Key: `connections` / `dbo:{userId}:connections`. |
 
-Tab SQL: `indexedDBService` hydrates from legacy `localStorage` key `dbo_tab_queries` once, then writes IndexedDB and deletes the key.
+On web login/logout/401, `applyUserWorkspaceScope` switches persist names, IndexedDB (`table-data-db` vs `table-data-db:{userId}`), and diagram layout keys. Unscoped keys migrate once to the first logged-in user.
+
+Tab SQL: `indexedDBService` hydrates from legacy `localStorage` key `dbo_tab_queries` once (unscoped DB only), then writes IndexedDB and deletes the key.
 
 ### Size budget
 

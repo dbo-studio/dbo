@@ -2,6 +2,7 @@ import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
 import Modal from '@/components/base/Modal/Modal';
 import {
+  ConnectionFormBodyStyled,
   ConnectionFormContainerStyled,
   ConnectionFormFooterStyled
 } from '@/components/common/Connections/ConnectionPasswordPrompt/ConnectionPasswordPrompt.styled';
@@ -96,8 +97,12 @@ export default function SafeModePasswordPrompt({
 
   return (
     <Modal open={open} title={title} onClose={handleClose} zIndex={2000}>
-      <ConnectionFormContainerStyled data-testid='safe-mode-password-prompt'>
-        <form onSubmit={(e) => void handleSubmit(e)}>
+      <ConnectionFormContainerStyled
+        component='form'
+        data-testid='safe-mode-password-prompt'
+        onSubmit={(e) => void handleSubmit(e)}
+      >
+        <ConnectionFormBodyStyled>
           {isChange && (
             <FieldInput
               name='currentPassword'
@@ -127,36 +132,37 @@ export default function SafeModePasswordPrompt({
             />
           )}
           <FormError mb={0} errors={validationErrors} />
-        </form>
-      </ConnectionFormContainerStyled>
-      <ConnectionFormFooterStyled>
-        <Button size='small' onClick={handleClose}>
-          {locales.cancel}
-        </Button>
-        <Stack spacing={1} direction={'row'}>
-          {biometricsAvailable && (
-            <Button
-              data-testid='safe-mode-biometrics'
-              size='small'
-              variant='outlined'
-              loading={biometricsPending}
-              loadingPosition='start'
-              onClick={() => void handleBiometrics()}
-            >
-              {locales.safe_mode_use_biometrics}
-            </Button>
-          )}
-          <Button
-            data-testid='safe-mode-password-save'
-            size='small'
-            variant='contained'
-            disabled={validationErrors.length > 0}
-            onClick={(e) => void handleSubmit(e)}
-          >
-            {locales.save}
+        </ConnectionFormBodyStyled>
+        <ConnectionFormFooterStyled>
+          <Button type='button' size='small' onClick={handleClose}>
+            {locales.cancel}
           </Button>
-        </Stack>
-      </ConnectionFormFooterStyled>
+          <Stack spacing={1} direction={'row'}>
+            {biometricsAvailable && (
+              <Button
+                type='button'
+                data-testid='safe-mode-biometrics'
+                size='small'
+                variant='outlined'
+                loading={biometricsPending}
+                loadingPosition='start'
+                onClick={() => void handleBiometrics()}
+              >
+                {locales.safe_mode_use_biometrics}
+              </Button>
+            )}
+            <Button
+              type='submit'
+              data-testid='safe-mode-password-save'
+              size='small'
+              variant='contained'
+              disabled={validationErrors.length > 0}
+            >
+              {locales.save}
+            </Button>
+          </Stack>
+        </ConnectionFormFooterStyled>
+      </ConnectionFormContainerStyled>
     </Modal>
   );
 }

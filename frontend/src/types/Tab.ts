@@ -18,7 +18,7 @@ export type FilterType = {
   isActive: boolean;
 };
 
-export type TabType = DataTabType | EditorTabType | ObjectTabType | DiagramTabType;
+export type TabType = DataTabType | EditorTabType | ObjectTabType | DiagramTabType | SettingsTabType;
 
 type BaseTab = {
   id: string;
@@ -63,6 +63,15 @@ export type DiagramTabType = BaseTab & {
   database: string;
   schema: string;
   focusTable?: string;
+};
+
+export type SettingsTabType = BaseTab & {
+  name: string;
+  mode: TabMode.Settings;
+  section: number;
+  aiTab?: 'providers' | 'mcp';
+  query?: string;
+  highlightId?: string;
 };
 
 export type EditedRow = {

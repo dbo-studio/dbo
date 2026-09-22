@@ -25,10 +25,17 @@ func NewAiProviderRepo(db *gorm.DB, cipherKey []byte) IAiProviderRepo {
 	}
 }
 
+func (r AiProviderRepoImpl) ownerScope(ctx context.Context) string {
+	return helper.CtxOwnerID(ctx)
+}
+
 func (r AiProviderRepoImpl) Index(ctx context.Context) ([]model.AiProvider, error) {
 	var items []model.AiProvider
 
-	err := r.db.WithContext(ctx).Order("id").Find(&items).Error
+	err := r.db.WithContext(ctx).
+		Where("owner_id = ?", r.ownerScope(ctx)).
+		Order("id").
+		Find(&items).Error
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +49,9 @@ func (r AiProviderRepoImpl) Index(ctx context.Context) ([]model.AiProvider, erro
 
 func (r AiProviderRepoImpl) Find(ctx context.Context, id uint) (*model.AiProvider, error) {
 	var item model.AiProvider
-	if err := r.db.WithContext(ctx).First(&item, id).Error; err != nil {
+	if err := r.db.WithContext(ctx).
+		Where("id = ? AND owner_id = ?", id, r.ownerScope(ctx)).
+		First(&item).Error; err != nil {
 		return nil, err
 	}
 
@@ -53,7 +62,9 @@ func (r AiProviderRepoImpl) Find(ctx context.Context, id uint) (*model.AiProvide
 
 func (r AiProviderRepoImpl) FindActive(ctx context.Context) (*model.AiProvider, error) {
 	var item model.AiProvider
-	if err := r.db.WithContext(ctx).Where("is_active = ?", true).First(&item).Error; err != nil {
+	if err := r.db.WithContext(ctx).
+		Where("is_active = ? AND owner_id = ?", true, r.ownerScope(ctx)).
+		First(&item).Error; err != nil {
 		return nil, err
 	}
 
@@ -63,8 +74,13 @@ func (r AiProviderRepoImpl) FindActive(ctx context.Context) (*model.AiProvider, 
 }
 
 func (r AiProviderRepoImpl) CreateIfNotExists(ctx context.Context, provider *model.AiProvider) (*model.AiProvider, error) {
+	ownerID := r.ownerScope(ctx)
+	provider.OwnerID = ownerID
+
 	existingProvider := &model.AiProvider{}
-	result := r.db.WithContext(ctx).Where("type = ?", provider.Type).First(existingProvider)
+	result := r.db.WithContext(ctx).
+		Where("type = ? AND owner_id = ?", provider.Type, ownerID).
+		First(existingProvider)
 
 	if result.Error != nil {
 		encrypted, err := encryptAIKey(r.cipherKey, provider.APIKey)
@@ -96,14 +112,21 @@ func (r AiProviderRepoImpl) Update(ctx context.Context, provider *model.AiProvid
 		provider.Models = lo.FromPtr(dto.Models)
 	}
 
-	result := r.db.WithContext(ctx).Save(provider)
+	result := r.db.WithContext(ctx).
+		Where("owner_id = ?", r.ownerScope(ctx)).
+		Save(provider)
 
 	return provider, result.Error
 }
 
 func (r AiProviderRepoImpl) MakeAllProvidersNotActive(ctx context.Context, provider *model.AiProvider, req *dto.AiProviderUpdateRequest) error {
 	if req.IsActive != nil && *req.IsActive {
-		result := r.db.WithContext(ctx).Model(&model.AiProvider{}).Not("id", provider.ID).Update("is_active", false)
+		result := r.db.WithContext(ctx).
+			Model(&model.AiProvider{}).
+			Where("owner_id = ?", r.ownerScope(ctx)).
+			Not("id", provider.ID).
+			Update("is_active", false)
+
 		return result.Error
 	}
 

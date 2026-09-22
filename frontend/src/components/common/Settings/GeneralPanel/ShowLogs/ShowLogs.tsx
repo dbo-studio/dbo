@@ -1,10 +1,10 @@
 import api from '@/api';
+import { SettingRow } from '@/components/common/Settings/SettingRow/SettingRow';
 import { tools } from '@/core/utils';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Box, Button, Divider, Typography } from '@mui/material';
+import { Button } from '@mui/material';
 import { openPath } from '@tauri-apps/plugin-opener';
-import { GeneralPanelSettingRowStyled } from '../GeneralPanel.styled';
 
 export function ShowLogs() {
   const general = useSettingStore((state) => state.general);
@@ -23,26 +23,15 @@ export function ShowLogs() {
   };
 
   return (
-    <Box
-      sx={{
-        mt: 1
-      }}
-    >
-      <GeneralPanelSettingRowStyled>
-        <Box>
-          <Typography color={'textText'} variant={'subtitle2'}>
-            {locales.show_logs}
-          </Typography>
-          <Typography sx={{ userSelect: 'text' }} color={'textText'} variant={'caption'}>
-            {general.logsPath}
-          </Typography>
-        </Box>
-
-        <Button variant={'outlined'} size={'small'} onClick={() => void handleOpenLogs()}>
+    <SettingRow
+      id='general.logs'
+      label={locales.show_logs}
+      description={general.logsPath}
+      control={
+        <Button variant='outlined' size='small' onClick={() => void handleOpenLogs()}>
           {locales.open}
         </Button>
-      </GeneralPanelSettingRowStyled>
-      <Divider />
-    </Box>
+      }
+    />
   );
 }

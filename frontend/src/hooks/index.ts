@@ -6,6 +6,7 @@ export * from './useEditorSessionContext';
 export * from './useJobPolling';
 export * from './useLayoutMode';
 export * from './useResponsiveSidebar';
+export * from './useScopedSelectAll';
 export * from './useSelectedTab';
 export * from './useSetupDesktop';
 export * from './useShortcut';

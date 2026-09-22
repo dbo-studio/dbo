@@ -1,5 +1,6 @@
 import api from '@/api';
 import { AiChatRequest, AiContextOptsType } from '@/api/ai/types';
+import { getAiStatus } from '@/core/ai/aiStatus';
 import { TabMode } from '@/core/enums';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
@@ -241,7 +242,7 @@ export const useAiChat = (): useAiChatReturnType => {
     const context = useAiStore.getState().context;
     const message = (messageOverride ?? context.input).trim();
 
-    if (!message || chatPending) return;
+    if (!message || chatPending || !getAiStatus(useAiStore.getState().providers).ready) return;
 
     if (!currentChat) {
       await handleCreateChat();

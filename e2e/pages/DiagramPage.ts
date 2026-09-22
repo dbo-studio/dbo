@@ -43,6 +43,9 @@ export class DiagramPage extends BasePage {
     );
     await expect(this.panel).toBeVisible({ timeout: 15000 });
     await expect(this.canvas).toBeVisible({ timeout: 15000 });
+    await expect(
+      this.page.getByTestId("workspace-tab-icon-diagram"),
+    ).toBeVisible();
   }
 
   async expectTableVisible(tableName: string): Promise<void> {

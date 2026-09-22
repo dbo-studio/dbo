@@ -1,5 +1,5 @@
 import type { TabMode } from '@/core/enums';
-import type { DiagramTabType, FilterType, SortType, TabType } from '@/types/Tab';
+import type { DiagramTabType, FilterType, SettingsTabType, SortType, TabType } from '@/types/Tab';
 
 export type TabStore = {
   tabs: TabType[];
@@ -24,11 +24,19 @@ export type TabSortSlice = {
   updateSorts: (sorts: SortType[]) => void;
 };
 
+export type AddSettingsTabOptions = {
+  section?: number;
+  aiTab?: 'providers' | 'mcp';
+  query?: string;
+  highlightId?: string;
+};
+
 export type TabSettingSlice = {
   addDataTab: (table: string, id: string, editable?: boolean) => TabType;
   addObjectTab: (title: string, nodeId: string, action: string, mode: TabMode) => TabType;
   addEditorTab: (query?: string) => TabType;
   addDiagramTab: (args: { database: string; schema: string; focusTable?: string }) => DiagramTabType;
+  addSettingsTab: (options?: AddSettingsTabOptions) => SettingsTabType;
   removeTab: (tabId: string) => TabType | null | undefined;
   switchTab: (tabId: string | null) => void;
   handleAddNewTab: (tabs: TabType[], newTab: TabType) => TabType;

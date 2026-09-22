@@ -1,5 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { constants } from '@/core/constants';
+import { openSettings } from '@/core/settings/openSettings';
 import locales from '@/locales/index.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { Badge, IconButton, Stack, Tooltip } from '@mui/material';
@@ -19,10 +20,6 @@ export default function Actions(): JSX.Element {
     }
   };
 
-  const openSettings = (): void => {
-    useSettingStore.getState().updateUI({ showSettings: { open: true, tab: 0 } });
-  };
-
   return (
     <Stack
       direction='row'
@@ -34,7 +31,7 @@ export default function Actions(): JSX.Element {
       <McpStatusButton />
       {release ? (
         <Tooltip title={locales.new_version_available}>
-          <IconButton aria-label='settings' onClick={openSettings}>
+          <IconButton aria-label='settings' onClick={(): void => openSettings({ section: 0 })}>
             <Badge variant='dot' color='warning'>
               <CustomIcon type={'settings'} size={'m'} />
             </Badge>
@@ -42,7 +39,7 @@ export default function Actions(): JSX.Element {
         </Tooltip>
       ) : (
         <Tooltip title={locales.settings}>
-          <IconButton aria-label='settings' onClick={openSettings}>
+          <IconButton aria-label='settings' onClick={(): void => openSettings({ section: 0 })}>
             <CustomIcon type={'settings'} size={'m'} />
           </IconButton>
         </Tooltip>

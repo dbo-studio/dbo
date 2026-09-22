@@ -19,13 +19,20 @@ type ISecretStore interface {
 	SetConnectionPassword(ctx context.Context, ownerID string, connectionID uint, password string, remember bool) error
 	GetConnectionPassword(ctx context.Context, ownerID string, connectionID uint) (string, error)
 	DeleteConnectionPassword(ctx context.Context, ownerID string, connectionID uint) error
+	DeleteAllConnectionPasswords(ctx context.Context, connectionID uint) error
 	IsTemporaryConnectionPassword(ctx context.Context, ownerID string, connectionID uint) (bool, error)
+	GetSharedConnectionPassword(ctx context.Context, connectionID uint) (string, error)
+	SetSharedConnectionPassword(ctx context.Context, connectionID uint, password string) error
+	DeleteSharedConnectionPassword(ctx context.Context, connectionID uint) error
+	HasSharedConnectionPassword(ctx context.Context, connectionID uint) (bool, error)
+	SharedPasswordConnectionIDs(ctx context.Context, ids []uint) (map[uint]struct{}, error)
 }
 
 func NewSecretStore(
 	cfg *config.Config,
 	webSessionRepo webSessionProvider,
 	webConnectionSecretRepo webConnectionSecretProvider,
+	sharedSecretRepo connectionSharedSecretProvider,
 	appLogger logger.Logger,
 ) ISecretStore {
 	secret, err := LoadOrCreateAppSecretKey(cfg)
@@ -34,10 +41,10 @@ func NewSecretStore(
 	}
 
 	if cfg.App.Client == config.ClientDesktop {
-		return NewDesktopDBStore(webSessionRepo, webConnectionSecretRepo, secret)
+		return NewDesktopDBStore(webSessionRepo, webConnectionSecretRepo, sharedSecretRepo, secret)
 	}
 
-	return NewWebDBStore(webSessionRepo, webConnectionSecretRepo, secret, 30*time.Minute)
+	return NewWebDBStore(webSessionRepo, webConnectionSecretRepo, sharedSecretRepo, secret, 30*time.Minute)
 }
 
 func LoadOrCreateAppSecretKey(cfg *config.Config) (string, error) {

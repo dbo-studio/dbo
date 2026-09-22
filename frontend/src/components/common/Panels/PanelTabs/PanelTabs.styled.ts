@@ -1,6 +1,6 @@
 import { Box, styled } from '@mui/material';
 
-export const PanelTabsStyled = styled(Box)(() => ({
+export const PanelTabsStyled = styled(Box)({
   display: 'flex',
   overflowX: 'auto',
   overflowY: 'hidden',
@@ -10,4 +10,4 @@ export const PanelTabsStyled = styled(Box)(() => ({
   '&::-webkit-scrollbar': {
     display: 'none'
   }
-})) as typeof Box;
+}) as typeof Box;

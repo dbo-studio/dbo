@@ -1,8 +1,10 @@
 import api from '@/api';
 import type { McpStatus } from '@/api/mcp';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { canManageMcpSettings } from '@/core/auth/permissions';
+import { openSettings } from '@/core/settings/openSettings';
 import locales from '@/locales';
-import { useSettingStore } from '@/store/settingStore/setting.store';
+import { useAuthStore } from '@/store/authStore/auth.store';
 import { IconButton, Tooltip, useTheme } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import type { JSX } from 'react';
@@ -28,15 +30,22 @@ function getMcpStatusTooltip(status: McpStatus | undefined): string {
   return status.healthy ? locales.mcp_header_on : locales.mcp_header_unhealthy;
 }
 
-export default function McpStatusButton(): JSX.Element {
+export default function McpStatusButton(): JSX.Element | null {
   const theme = useTheme();
-  const updateUI = useSettingStore((state) => state.updateUI);
+  const mode = useAuthStore((s) => s.mode);
+  const user = useAuthStore((s) => s.user);
+  const canManageMcp = canManageMcpSettings(mode, user);
 
   const { data: status } = useQuery({
     queryKey: ['mcp-status'],
     queryFn: api.mcp.getStatus,
-    refetchOnWindowFocus: true
+    refetchOnWindowFocus: true,
+    enabled: canManageMcp
   });
+
+  if (!canManageMcp) {
+    return null;
+  }
 
   const iconColor = getMcpStatusColor(status, {
     disabled: theme.palette.text.disabled,
@@ -44,19 +53,12 @@ export default function McpStatusButton(): JSX.Element {
     warning: theme.palette.warning.main
   });
 
-  const openAiSettings = (): void => {
-    updateUI({
-      showSettings: {
-        open: true,
-        tab: AI_SETTINGS_TAB,
-        aiTab: 'mcp'
-      }
-    });
-  };
-
   return (
     <Tooltip title={getMcpStatusTooltip(status)}>
-      <IconButton aria-label='mcp-status' onClick={openAiSettings}>
+      <IconButton
+        aria-label='mcp-status'
+        onClick={(): void => openSettings({ section: AI_SETTINGS_TAB, aiTab: 'mcp' })}
+      >
         <CustomIcon type='network' size='m' color={iconColor} />
       </IconButton>
     </Tooltip>

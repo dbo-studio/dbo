@@ -2,7 +2,9 @@ import api from '@/api';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
 import { resumePasswordPromptForConnection, suppressPasswordPromptForConnection } from '@/core/api';
+import { canCreateConnection } from '@/core/auth/permissions';
 import locales from '@/locales';
+import { useAuthStore } from '@/store/authStore/auth.store';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -25,6 +27,19 @@ export default function ConnectionItemContextMenu({
   const { mutateAsync: deleteConnectionMutation } = useMutation({
     mutationFn: api.connection.deleteConnection
   });
+
+  const { mutateAsync: leaveShareMutation } = useMutation({
+    mutationFn: api.connection.leaveShare
+  });
+
+  const mode = useAuthStore((s) => s.mode);
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = user?.role === 'admin';
+  const access = connection.access ?? 'owner';
+  const canEdit = access === 'owner' || access === 'editor';
+  const canDelete = access === 'owner' || isAdmin;
+  const canLeave = connection.shared === true && access !== 'owner';
+  const canDuplicate = canCreateConnection(mode, user);
 
   const showModal = useConfirmModalStore((state) => state.danger);
   const showWarningModal = useConfirmModalStore((state) => state.warning);
@@ -148,31 +163,71 @@ export default function ConnectionItemContextMenu({
     updateUI({ showAddConnection: true, duplicateConnectionId: target.id });
   };
 
+  const handleLeaveConnection = (target: ConnectionType): void => {
+    showWarningModal(locales.share_leave, locales.share_leave_confirm, () => {
+      void (async (): Promise<void> => {
+        try {
+          await leaveShareMutation(target.id);
+          await queryClient.invalidateQueries({ queryKey: ['connections'] });
+          if (Number(useConnectionStore.getState().currentConnectionId) === target.id) {
+            clearCurrentConnection();
+            resetTree();
+          }
+          toast.success(locales.share_left);
+        } catch {
+          toast.error(locales.share_failed);
+        }
+      })();
+    });
+  };
+
   const menu: MenuType[] = [
-    {
-      name: locales.edit,
-      icon: 'settings',
-      action: (): void => handleEditConnection(connection),
-      closeBeforeAction: true
-    },
-    {
-      name: locales.duplicate,
-      icon: 'copy',
-      action: (): void => handleDuplicateConnection(connection),
-      closeBeforeAction: true
-    },
+    ...(canEdit
+      ? [
+          {
+            name: locales.edit,
+            icon: 'settings' as const,
+            action: (): void => handleEditConnection(connection),
+            closeBeforeAction: true
+          }
+        ]
+      : []),
+    ...(canDuplicate
+      ? [
+          {
+            name: locales.duplicate,
+            icon: 'copy' as const,
+            action: (): void => handleDuplicateConnection(connection),
+            closeBeforeAction: true
+          }
+        ]
+      : []),
     {
       name: locales.close_connection,
       icon: 'close',
       action: () => void handleCloseConnection(connection),
       closeBeforeAction: true
     },
-    {
-      name: locales.delete,
-      icon: 'delete',
-      action: () => void handleOpenConfirm(connection),
-      closeBeforeAction: true
-    },
+    ...(canDelete
+      ? [
+          {
+            name: locales.delete,
+            icon: 'delete' as const,
+            action: () => void handleOpenConfirm(connection),
+            closeBeforeAction: true
+          }
+        ]
+      : []),
+    ...(canLeave
+      ? [
+          {
+            name: locales.share_leave,
+            icon: 'close' as const,
+            action: (): void => handleLeaveConnection(connection),
+            closeBeforeAction: true
+          }
+        ]
+      : []),
     {
       name: locales.refresh,
       icon: 'refresh',

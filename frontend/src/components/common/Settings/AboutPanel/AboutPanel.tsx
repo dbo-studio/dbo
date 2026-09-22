@@ -16,7 +16,7 @@ export default function AboutPanel(): JSX.Element {
   const version = useSettingStore((state) => state.general.version);
 
   return (
-    <Box>
+    <Box data-settings-id='about.version'>
       <AboutPanelLogoStyled>
         <img src='/app-icon/icon-512.png' alt='logo' height={100} width={100} />
       </AboutPanelLogoStyled>

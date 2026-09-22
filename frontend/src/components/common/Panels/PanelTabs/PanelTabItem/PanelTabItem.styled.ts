@@ -2,12 +2,19 @@ import type { PanelTabItemStyledProps } from '@/components/common/Panels/types.t
 import { variables } from '@/core/theme/variables.ts';
 import { Box, styled, Typography, type TypographyProps } from '@mui/material';
 
+export const PanelTabIconStyled = styled('span')({
+  display: 'inline-flex',
+  flexShrink: 0,
+  alignItems: 'center'
+});
+
 export const PanelTabContentStyled = styled(Box)(() => ({
   display: 'flex',
   overflow: 'hidden',
   flexGrow: 1,
   justifyContent: 'center',
-  alignItems: 'center'
+  alignItems: 'center',
+  gap: 6
 }));
 
 export const PanelTabNameStyled = styled(Typography)<TypographyProps>(() => ({
@@ -19,28 +26,31 @@ export const PanelTabNameStyled = styled(Typography)<TypographyProps>(() => ({
   lineHeight: 1.2
 }));
 
-export const PanelTabItemStyled = styled(Box)<PanelTabItemStyledProps>(({ theme, selected }) => ({
+export const PanelTabItemStyled = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'compact' && prop !== 'selected'
+})<PanelTabItemStyledProps>(({ theme, selected, compact }) => ({
   position: 'relative',
   height: 35,
   borderRight: `1px solid ${theme.palette.divider}`,
-  padding: `${theme.spacing(1)} ${theme.spacing(2)}`,
+  padding: `${theme.spacing(1)} ${theme.spacing(compact ? 1.25 : 2)}`,
   flex: '0 1 auto',
-  width: '250px',
-  minWidth: '120px',
-  maxWidth: '250px',
+  width: compact ? '160px' : '250px',
+  minWidth: compact ? '120px' : '120px',
+  maxWidth: compact ? '160px' : '250px',
   flexDirection: 'row',
   background: theme.palette.background.default,
   display: 'flex',
   userSelect: 'none',
-  touchAction: 'pan-x',
-  willChange: 'transform',
-  cursor: 'default',
+  touchAction: 'none',
+  cursor: 'pointer',
   span: {
-    color: selected ? theme.palette.text.primary : theme.palette.text.subdued
+    color: selected ? theme.palette.text.primary : theme.palette.text.subdued,
+    fontWeight: selected ? theme.typography.fontWeightBold : theme.typography.fontWeightRegular
   },
 
-  svg: {
+  '> svg:last-of-type': {
     opacity: 0,
+    cursor: 'pointer',
     transition: 'opacity 0.1s'
   },
 
@@ -49,7 +59,7 @@ export const PanelTabItemStyled = styled(Box)<PanelTabItemStyledProps>(({ theme,
       color: selected ? theme.palette.text.primary : theme.palette.text.text
     },
 
-    svg: {
+    '> svg:last-of-type': {
       opacity: 1,
       borderRadius: variables.radius.small,
       background: theme.palette.background.default,

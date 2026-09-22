@@ -116,6 +116,9 @@ function TreeNode({
   }
 
   const children = node.children ?? [];
+  const nodeNameMatches = Boolean(searchTerm) && node.name.toLowerCase().includes(searchTerm.toLowerCase());
+  // Name match keeps folders (Tables/Views). Unmatched ancestors only keep the matching path.
+  const visibleChildren = searchTerm && !nodeNameMatches ? children.filter((child) => matchesSearch(child)) : children;
 
   return (
     <HoverableTreeNodeContainerStyled>
@@ -136,9 +139,9 @@ function TreeNode({
         handleBlur={handleBlur}
         handleKeyDown={handleKeyDown}
       />
-      {isExpanded && children.length > 0 && scrollContainerRef && (
+      {isExpanded && visibleChildren.length > 0 && scrollContainerRef && (
         <TreeChildren
-          childNodes={children}
+          childNodes={visibleChildren}
           scrollContainerRef={scrollContainerRef}
           fetchChildren={fetchChildren}
           parentRefsRef={parentRefsRef}

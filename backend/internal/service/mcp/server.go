@@ -3,36 +3,29 @@ package serviceMCP
 import (
 	"context"
 	"net/http"
-	"sync"
 
+	"github.com/dbo-studio/dbo/internal/repository"
 	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 type NativeServer struct {
 	registry      *serviceDbtools.Registry
-	mu            sync.RWMutex
-	defaultConnID *uint
+	settingsRepo  repository.IMcpSettingsRepo
 	mcpServer     *sdkmcp.Server
 	streamHandler http.Handler
 }
 
-func NewNativeServer(registry *serviceDbtools.Registry) *NativeServer {
-	ns := &NativeServer{registry: registry}
-	ns.mcpServer = sdkmcp.NewServer(&sdkmcp.Implementation{Name: "dbo", Version: "1.1.3"}, nil)
+func NewNativeServer(registry *serviceDbtools.Registry, settingsRepo repository.IMcpSettingsRepo) *NativeServer {
+	ns := &NativeServer{registry: registry, settingsRepo: settingsRepo}
+	ns.mcpServer = sdkmcp.NewServer(&sdkmcp.Implementation{Name: "dbo", Version: "1.2.0"}, nil)
 	ns.registerTools()
 	ns.streamHandler = sdkmcp.NewStreamableHTTPHandler(func(_ *http.Request) *sdkmcp.Server {
 		return ns.mcpServer
 	}, nil)
 
 	return ns
-}
-
-func (ns *NativeServer) SetDefaultConnectionID(id *uint) {
-	ns.mu.Lock()
-	defer ns.mu.Unlock()
-
-	ns.defaultConnID = id
 }
 
 func (ns *NativeServer) HTTPHandler() http.Handler {
@@ -109,9 +102,13 @@ func (ns *NativeServer) runTool(ctx context.Context, connID *float64, schema *st
 		args["connection_id"] = *connID
 	}
 
-	ns.mu.RLock()
-	defaultID := ns.defaultConnID
-	ns.mu.RUnlock()
+	var defaultID *uint
+
+	if ns.settingsRepo != nil {
+		if settings, err := ns.settingsRepo.FindByOwner(ctx, helper.CtxOwnerID(ctx)); err == nil {
+			defaultID = settings.DefaultConnectionID
+		}
+	}
 
 	resolved, err := ns.registry.ResolveConnectionID(ctx, args, defaultID)
 	if err != nil {

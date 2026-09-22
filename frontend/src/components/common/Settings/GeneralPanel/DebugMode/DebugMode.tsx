@@ -1,7 +1,7 @@
+import { SettingRow } from '@/components/common/Settings/SettingRow/SettingRow';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Box, Divider, Switch, Typography } from '@mui/material';
-import { GeneralPanelSettingRowStyled } from '../GeneralPanel.styled';
+import { Switch } from '@mui/material';
 
 export function DebugMode() {
   const debug = useSettingStore((state) => state.general.debug);
@@ -12,24 +12,11 @@ export function DebugMode() {
   };
 
   return (
-    <Box
-      sx={{
-        mt: 1
-      }}
-    >
-      <GeneralPanelSettingRowStyled>
-        <Box>
-          <Typography color={'textTitle'} variant={'subtitle2'}>
-            {locales.debug_mode}
-          </Typography>
-          <Typography color={'textText'} variant={'caption'}>
-            {locales.enable_debug_console}
-          </Typography>
-        </Box>
-
-        <Switch checked={debug} onChange={handleChangeDebugMode} />
-      </GeneralPanelSettingRowStyled>
-      <Divider />
-    </Box>
+    <SettingRow
+      id='general.debug'
+      label={locales.debug_mode}
+      description={locales.enable_debug_console}
+      control={<Switch checked={debug} onChange={handleChangeDebugMode} />}
+    />
   );
 }

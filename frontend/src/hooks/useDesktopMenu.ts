@@ -1,5 +1,6 @@
 import { useRemoveTab } from '@/components/common/Panels/hooks/useRemoveTab';
 import { constants } from '@/core/constants';
+import { openSettings } from '@/core/settings/openSettings';
 import { streams } from '@/core/tauri';
 import { tools } from '@/core/utils';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -42,16 +43,16 @@ export const useDesktopMenu = (): void => {
             break;
           }
           case 'openSettings':
-            updateUI({ showSettings: { open: true, tab: 0 } });
+            openSettings({ section: 0 });
             break;
           case 'openShortcuts':
-            updateUI({ showSettings: { open: true, tab: 2 } });
+            openSettings({ section: 2 });
             break;
           case 'openAbout':
-            updateUI({ showSettings: { open: true, tab: 5 } });
+            openSettings({ section: 5 });
             break;
           case 'checkUpdates':
-            updateUI({ showSettings: { open: true, tab: 0 } });
+            openSettings({ section: 0 });
             break;
           case 'refreshTree':
             void reloadTree(false).catch(() => undefined);

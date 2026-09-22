@@ -28,11 +28,6 @@ export type UISettings = {
   showQuickLookEditor: boolean;
   showConnectionPasswordPrompt: boolean;
   passwordPromptConnectionId?: number;
-  showSettings: {
-    open: boolean;
-    tab: number;
-    aiTab?: 'providers' | 'mcp';
-  };
   titleBar: TitleBarType;
 };
 

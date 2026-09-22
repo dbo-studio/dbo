@@ -2,6 +2,7 @@ package serviceAi
 
 import (
 	"context"
+	"errors"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -11,17 +12,62 @@ import (
 )
 
 func (s *AiServiceImpl) createProvider(ctx context.Context) (aiProvider.IAiProvider, *model.AiProvider, error) {
-	dbProvider, err := s.aiProviderRepo.FindActive(ctx)
+	dbProvider, err := s.resolveActiveProvider(ctx)
 	if err != nil {
-		return nil, nil, apperror.NotFound(apperror.ErrAiProviderNotFound)
+		return nil, nil, err
 	}
 
-	aiProvider, err := s.providerFactory.CreateProvider(ctx, dbProvider)
+	client, err := s.providerFactory.CreateProvider(ctx, dbProvider)
 	if err != nil {
+		if readyErr := providerReadinessError(dbProvider); readyErr != nil {
+			return nil, nil, readyErr
+		}
+
 		return nil, nil, apperror.BadRequest(apperror.ErrProviderNotConfigured)
 	}
 
-	return aiProvider, dbProvider, nil
+	return client, dbProvider, nil
+}
+
+func (s *AiServiceImpl) resolveActiveProvider(ctx context.Context) (*model.AiProvider, error) {
+	dbProvider, err := s.aiProviderRepo.FindActive(ctx)
+	if err != nil {
+		return nil, apperror.BadRequest(apperror.ErrAiNotConfigured)
+	}
+
+	if err := providerReadinessError(dbProvider); err != nil {
+		return nil, err
+	}
+
+	return dbProvider, nil
+}
+
+func providerReadinessError(provider *model.AiProvider) error {
+	if provider.URL == "" {
+		return apperror.BadRequest(apperror.ErrAiMissingURL)
+	}
+
+	if provider.Model == "" {
+		return apperror.BadRequest(apperror.ErrAiMissingModel)
+	}
+
+	if provider.Type != model.AIProviderTypeOllama && (provider.APIKey == nil || *provider.APIKey == "") {
+		return apperror.BadRequest(apperror.ErrAiMissingKey)
+	}
+
+	return nil
+}
+
+func isRequestCanceled(ctx context.Context, err error) bool {
+	if ctx.Err() != nil {
+		return true
+	}
+
+	if err == nil {
+		return false
+	}
+
+	return errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)
 }
 
 func (s *AiServiceImpl) findChat(ctx context.Context, req *dto.AiChatRequest) (*model.AiChat, error) {

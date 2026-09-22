@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { getDbConfig } from '../../fixtures/dbConfigs';
 import { uniqueTestSuffix } from '../../fixtures/uniqueSuffix';
+import { clearActiveAiProfile, saveAiSetup } from '../../helpers/aiSetup';
 import { withConnectionCleanup } from '../../helpers/safeCleanup';
 import { ConnectionPage, SettingsPage } from '../../pages';
 
@@ -30,6 +31,7 @@ test.describe('AI chat cancel', () => {
         });
       });
 
+      await clearActiveAiProfile(page);
       await connectionPage.goto();
       await connectionPage.waitForReady();
 
@@ -37,10 +39,12 @@ test.describe('AI chat cancel', () => {
         await connectionPage.setupConnection(config);
       });
 
-      await test.step('Open assistant composer', async () => {
+      await test.step('Open assistant and complete in-place setup', async () => {
         if (!(await settingsPage.rightSidebarTab().isVisible().catch(() => false))) {
           await settingsPage.toggleRightSidebar();
         }
+        await expect(settingsPage.aiSetupForm()).toBeVisible({ timeout: 15000 });
+        await saveAiSetup(page, 'sk-e2e-fake-key');
         await expect(page.getByPlaceholder(/ask anything/i)).toBeVisible({ timeout: 15000 });
       });
 

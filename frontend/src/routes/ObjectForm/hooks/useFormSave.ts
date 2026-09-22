@@ -8,7 +8,6 @@ import { FormObjectData } from '@/store/formObject/types';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { ObjectTabType } from '@/types';
-import { FormValue } from '@/types/Tree';
 import { useMutation } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
@@ -106,7 +105,7 @@ export const useFormSave = ({
         nodeId: selectedTab.nodeId,
         action: selectedTab.action ?? '',
         connectionId: currentConnection.id,
-        data: payload as Record<string, FormValue>
+        data: payload
       });
 
       setPreviewState({
@@ -132,7 +131,7 @@ export const useFormSave = ({
           nodeId: selectedTab.nodeId,
           action,
           connectionId: currentConnection.id,
-          data: payload as Record<string, FormValue>,
+          data: payload,
           confirmed
         })
       );

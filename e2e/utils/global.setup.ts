@@ -8,6 +8,11 @@ async function globalSetup(_config: FullConfig) {
     );
   }
 
+  // Fresh temp SQLite already; /config/reset is gated when local auth is on.
+  if (process.env.E2E_LOCAL_AUTH === '1') {
+    return;
+  }
+
   const res = await fetch(`${baseUrl}/config/reset`, { method: 'POST' });
   if (!res.ok) {
     throw new Error(`Failed to reset e2e app DB: ${res.status} ${res.statusText}`);

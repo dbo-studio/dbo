@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -39,7 +40,16 @@ func HydrateConnectionPassword(ctx context.Context, store ISecretStore, ownerID 
 
 	password, err := store.GetConnectionPassword(ctx, ownerID, connection.ID)
 	if err != nil {
-		return err
+		if !apperror.Equals(err, apperror.ErrPasswordRequired) {
+			return err
+		}
+
+		shared, sharedErr := store.GetSharedConnectionPassword(ctx, connection.ID)
+		if sharedErr != nil {
+			return err
+		}
+
+		password = shared
 	}
 
 	options, err := sjson.Set(connection.Options, "password", password)

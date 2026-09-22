@@ -6,6 +6,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	quote "github.com/dbo-studio/dbo/internal/database/ddl/quote"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 )
@@ -37,7 +38,7 @@ func (r *PostgresRepository) handleViewCommands(node contract.DBNode, tabID cont
 			return queries, nil
 		}
 
-		viewRef := qualifiedTableName(node.Schema, *params.New.Name)
+		viewRef := quote.PostgresQualifiedTable(node.Schema, *params.New.Name)
 		query := fmt.Sprintf("CREATE VIEW %s AS %s", viewRef, *params.New.Query)
 
 		if params.New.CheckOption != nil {
@@ -56,7 +57,7 @@ func (r *PostgresRepository) handleViewCommands(node contract.DBNode, tabID cont
 			return queries, nil
 		}
 
-		viewRef := qualifiedTableName(node.Schema, *params.Old.Name)
+		viewRef := quote.PostgresQualifiedTable(node.Schema, *params.Old.Name)
 
 		if params.New != nil && params.New.Query != nil {
 			queries = append(queries, fmt.Sprintf("DROP VIEW %s", viewRef))

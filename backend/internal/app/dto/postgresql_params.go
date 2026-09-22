@@ -100,8 +100,8 @@ type PostgresTableColumnData struct {
 	Primary      *bool   `json:"primary"`
 	Default      *string `json:"column_default"`
 	Comment      *string `json:"comment"`
-	MaxLength    *int    `json:"character_maximum_length"`
-	NumericScale *int    `json:"numeric_scale"`
+	MaxLength    *string `json:"character_maximum_length"`
+	NumericScale *string `json:"numeric_scale"`
 	IsIdentity   *bool   `json:"is_identity"`
 	IsGenerated  *bool   `json:"is_generated"`
 }

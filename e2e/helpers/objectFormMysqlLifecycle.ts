@@ -53,7 +53,7 @@ export async function createDatabase(
   await objectForm.confirmExecute();
 
   await tree.refreshExpandNode(connectionName);
-  await expect(tree.getTreeNode(databaseName)).toBeVisible({ timeout: 15000 });
+  await tree.expectNodeVisible(databaseName);
 }
 
 export async function createUsersTable(
@@ -72,11 +72,13 @@ export async function createUsersTable(
   await objectForm.waitForReady();
 
   await objectForm.fillGeneralField(F.tableName, tableName);
+  await objectForm.selectGeneralOption(F.tableEngine, "InnoDB");
 
   await objectForm.selectTab(T.columns);
   await objectForm.addRow();
   await objectForm.fillArrayCell(0, F.columnName, "id");
   await objectForm.selectArrayCellOption(0, F.columnType, "INT");
+  await objectForm.toggleArrayCheckbox(0, F.columnIdentity, true);
 
   await objectForm.selectTab(T.keys);
   const keyRowIndex = await objectForm.addArrayRow(F.keyName);
@@ -86,12 +88,15 @@ export async function createUsersTable(
 
   await objectForm.save();
   await objectForm.assertPreviewContains(P.createTable);
+  await objectForm.assertPreviewContains(P.createTableComposed);
+  await objectForm.assertPreviewContains(P.createTableEngine);
+  await objectForm.assertPreviewContains(P.autoIncrement);
   await objectForm.assertPreviewContains("id");
   await objectForm.assertPreviewContains(P.primaryKey);
   await objectForm.confirmExecute();
 
   await tree.expandNode("Tables");
-  await expect(tree.getTreeNode(tableName)).toBeVisible({ timeout: 15000 });
+  await tree.expectNodeVisible(tableName);
 
   await tree.runTreeAction(tableName, "Edit table");
   await objectForm.waitForReady();
@@ -111,7 +116,7 @@ export async function createUsersTable(
   await objectForm.confirmExecute();
 
   await tree.expandNode("Tables");
-  await expect(tree.getTreeNode(tableName)).toBeVisible({ timeout: 15000 });
+  await tree.expectNodeVisible(tableName);
 }
 
 export async function createPostsTable(
@@ -152,11 +157,12 @@ export async function createPostsTable(
 
   await objectForm.save();
   await objectForm.assertPreviewContains(P.createTable);
+  await objectForm.assertPreviewContains(P.createTableComposed);
   await objectForm.assertPreviewContains(P.primaryKey);
   await objectForm.confirmExecute();
 
   await tree.expandNode("Tables");
-  await expect(tree.getTreeNode(tableName)).toBeVisible({ timeout: 15000 });
+  await tree.expectNodeVisible(tableName);
 
   await tree.runTreeAction(tableName, "Edit table");
   await objectForm.waitForReady();
@@ -215,7 +221,7 @@ export async function createPostsTable(
   await objectForm.confirmExecute();
 
   await tree.expandNode("Tables");
-  await expect(tree.getTreeNode(tableName)).toBeVisible({ timeout: 15000 });
+  await tree.expectNodeVisible(tableName);
 }
 
 export async function createView(
@@ -250,7 +256,7 @@ export async function createView(
   await objectForm.confirmExecute();
 
   await tree.expandNode("Views");
-  await expect(tree.getTreeNode(viewName)).toBeVisible({ timeout: 15000 });
+  await tree.expectNodeVisible(viewName);
 }
 
 export async function editUsersTableAddColumn(
@@ -275,7 +281,7 @@ export async function editUsersTableAddColumn(
   await objectForm.assertPreviewContains(P.addColumn);
   await objectForm.confirmExecute();
 
-  await expect(tree.getTreeNode(tableName)).toBeVisible({ timeout: 15000 });
+  await tree.expectNodeVisible(tableName);
 }
 
 export async function editViewQuery(
@@ -302,7 +308,7 @@ export async function editViewQuery(
   await objectForm.assertPreviewContains(P.replaceView);
   await objectForm.confirmExecute();
 
-  await expect(tree.getTreeNode(viewName)).toBeVisible({ timeout: 15000 });
+  await tree.expectNodeVisible(viewName);
 }
 
 export async function cleanupMysqlLifecycle(
@@ -317,8 +323,11 @@ export async function cleanupMysqlLifecycle(
   options?: { dropDatabase?: boolean },
 ): Promise<ConnectionPage> {
   const tree = new ObjectTreePage(page);
+  const objectForm = new ObjectFormPage(page);
   const connectionPage = new ConnectionPage(page);
 
+  await objectForm.closeAllWorkspaceTabs();
+  await tree.clearTreeFilter();
   await tree.expandPath([names.connectionName, names.databaseName]);
 
   await tree.dropObject(names.viewName, "Drop view");

@@ -20,6 +20,16 @@ func FloatToString(str float64) string {
 	return strconv.FormatFloat(str, 'f', -1, 64)
 }
 
+func IntToStringPtr[T int32 | int64](value *T) *string {
+	if value == nil {
+		return nil
+	}
+
+	str := strconv.FormatInt(int64(*value), 10)
+
+	return &str
+}
+
 func StructToJSON(value any) string {
 	j, err := json.Marshal(value)
 	if err != nil {

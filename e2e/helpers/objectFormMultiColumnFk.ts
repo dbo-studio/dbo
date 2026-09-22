@@ -165,6 +165,7 @@ export function defineMultiColumnFkTests(engine: DbEngine): void {
           await objectForm.assertPreviewContains(parentTable);
           await objectForm.confirmExecute();
 
+          await tree.filterTree(childTable);
           await expect(tree.getTreeNode(childTable)).toBeVisible({
             timeout: 15000,
           });

@@ -58,7 +58,9 @@ async function revealTable(
 ): Promise<void> {
   await tree.expandPath(dataBrowserTreePath(engine, connectionName));
   await tree.refreshExpandNode("Tables");
-  await expect(tree.getTreeNode(tableName)).toBeVisible({ timeout: 15000 });
+  // Virtualized tree mounts only the rendered window; expectNodeVisible filters
+  // the tree so the node mounts even when it sorts beyond the window.
+  await tree.expectNodeVisible(tableName);
 }
 
 function connectionSetup(engine: DbEngine, connectionName: string) {

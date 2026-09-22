@@ -1,7 +1,13 @@
 import {
+  ConnectionFormBodyStyled,
   ConnectionFormCheckboxRowStyled,
   ConnectionFormContainerStyled,
   ConnectionFormFooterStyled
 } from '@/components/common/AddConnection/AddConnection.styled';
 
-export { ConnectionFormCheckboxRowStyled, ConnectionFormContainerStyled, ConnectionFormFooterStyled };
+export {
+  ConnectionFormBodyStyled,
+  ConnectionFormCheckboxRowStyled,
+  ConnectionFormContainerStyled,
+  ConnectionFormFooterStyled
+};

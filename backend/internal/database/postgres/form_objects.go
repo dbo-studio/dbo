@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 func (r *PostgresRepository) Objects(ctx context.Context, nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
@@ -130,8 +131,8 @@ func (r *PostgresRepository) getTableColumns(ctx context.Context, node contract.
 				"primary":                  column.IsPrimaryKey,
 				"column_default":           column.ColumnDefault,
 				"comment":                  column.Comment,
-				"character_maximum_length": column.CharacterMaximumLength,
-				"numeric_scale":            column.NumericScale,
+				"character_maximum_length": helper.IntToStringPtr(column.CharacterMaximumLength),
+				"numeric_scale":            helper.IntToStringPtr(column.NumericScale),
 				"is_identity":              column.IsIdentity,
 				"is_generated":             column.IsGenerated,
 			})

@@ -17,9 +17,42 @@ export class ObjectTreePage extends BasePage {
     return this.page.getByTestId(`tree-node-${toTestIdSlug(name)}`);
   }
 
-  async expandNode(name: string): Promise<void> {
+  treeSearchInput(): Locator {
+    return this.page.getByTestId("tree-search").locator("input");
+  }
+
+  /** Filter the object tree so virtualized folders still render the target node. */
+  async filterTree(term: string): Promise<void> {
+    const input = this.treeSearchInput();
+    await expect(input).toBeVisible({ timeout: 10000 });
+    await input.fill(term);
+  }
+
+  async clearTreeFilter(): Promise<void> {
+    const input = this.treeSearchInput();
+    if (!(await input.isVisible().catch(() => false))) {
+      return;
+    }
+    if ((await input.inputValue()) !== "") {
+      await input.fill("");
+    }
+  }
+
+  /**
+   * Wait for a tree node to mount. Filters only when the node is not already in the DOM
+   * so leftover search from a previous unique name cannot hide the next node.
+   */
+  async expectNodeVisible(name: string, timeout = 15000): Promise<Locator> {
     const node = this.getTreeNode(name);
-    await node.waitFor({ state: "visible", timeout: 15000 });
+    if (!(await node.isVisible().catch(() => false))) {
+      await this.filterTree(name);
+    }
+    await expect(node).toBeVisible({ timeout });
+    return node;
+  }
+
+  async expandNode(name: string): Promise<void> {
+    const node = await this.expectNodeVisible(name);
     await node.click();
 
     // Only expand when collapsed. Collapse-then-expand races React state:
@@ -40,8 +73,7 @@ export class ObjectTreePage extends BasePage {
    * Force-refresh children by waiting for collapse to commit before expanding.
    */
   async refreshExpandNode(name: string): Promise<void> {
-    const node = this.getTreeNode(name);
-    await node.waitFor({ state: "visible", timeout: 15000 });
+    const node = await this.expectNodeVisible(name);
     await node.click();
 
     if ((await node.getAttribute("aria-expanded")) === "true") {
@@ -66,8 +98,7 @@ export class ObjectTreePage extends BasePage {
   }
 
   async openContextMenu(nodeName: string): Promise<void> {
-    const node = this.getTreeNode(nodeName);
-    await node.waitFor({ state: "visible", timeout: 15000 });
+    const node = await this.expectNodeVisible(nodeName);
     await node.click({ button: "right" });
     await this.wait(300);
   }
