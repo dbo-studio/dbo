@@ -11,6 +11,10 @@ import (
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/repository"
+	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
+	"github.com/dbo-studio/dbo/pkg/cache"
+	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/dbo-studio/dbo/pkg/sqlguard"
 	"github.com/goccy/go-json"
 )
 
@@ -23,22 +27,15 @@ type ToolContext struct {
 type Registry struct {
 	cm             *databaseConnection.ConnectionManager
 	connectionRepo repository.IConnectionRepo
+	unlockStore    *serviceSafemode.UnlockStore
 }
 
-func NewRegistry(cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo) *Registry {
+func NewRegistry(cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, appCache cache.Cache) *Registry {
 	return &Registry{
 		cm:             cm,
 		connectionRepo: connectionRepo,
+		unlockStore:    serviceSafemode.NewUnlockStore(appCache),
 	}
-}
-
-func (r *Registry) ToolNames(includeMCPExtras bool) []string {
-	names := []string{"list_tables", "list_views", "describe_table", "execute_sql"}
-	if includeMCPExtras {
-		names = append(names, "list_connections")
-	}
-
-	return names
 }
 
 func (r *Registry) Execute(ctx context.Context, toolName string, args map[string]any, toolCtx ToolContext) (string, error) {
@@ -147,7 +144,19 @@ func (r *Registry) executeSQL(ctx context.Context, args map[string]any, toolCtx 
 		return "", err
 	}
 
-	repo, err := r.repoFor(ctx, toolCtx.ConnectionID)
+	conn, err := r.connectionRepo.Find(ctx, toolCtx.ConnectionID)
+	if err != nil {
+		return "", fmt.Errorf("connection not found: %w", err)
+	}
+
+	// Tools never confirm on the user's behalf: under Safe Mode "safe" even
+	// reads need the user to unlock the connection first.
+	policy := r.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), conn.ID, serviceSafemode.FromConnection(conn))
+	if err := serviceSafemode.Enforce(policy, sqlguard.ClassRead, false); err != nil {
+		return "", fmt.Errorf("blocked by Safe Mode on this connection: unlock it (lock icon in the header) to let the assistant run queries")
+	}
+
+	repo, err := database.NewDBToolsRepository(ctx, conn, r.cm)
 	if err != nil {
 		return "", err
 	}
@@ -158,6 +167,8 @@ func (r *Registry) executeSQL(ctx context.Context, args map[string]any, toolCtx 
 	resp, err := repo.RunRawQuery(queryCtx, &dto.RawQueryRequest{
 		ConnectionID: toolCtx.ConnectionID,
 		Query:        safeSQL,
+		Database:     toolCtx.Database,
+		Schema:       toolCtx.Schema,
 	})
 	if err != nil {
 		return "", err

@@ -3,15 +3,25 @@ import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlig
 import locales from '@/locales';
 import { Box, Button, CircularProgress } from '@mui/material';
 import React from 'react';
-import type { QueryPreviewModalProps } from '../../types';
 import { QueryPreviewActionsStyled, QueryPreviewContentStyled } from './QueryPreviewModal.styled';
+
+export type QueryPreviewModalProps = {
+  open: boolean;
+  queries: string[];
+  isExecuting: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+  /** Prefix for data-testid values, e.g. `object-form` → `object-form-preview-modal`. */
+  testIdPrefix?: string;
+};
 
 export default function QueryPreviewModal({
   open,
   queries,
   isExecuting,
   onCancel,
-  onConfirm
+  onConfirm,
+  testIdPrefix = 'object-form'
 }: QueryPreviewModalProps): React.JSX.Element {
   const formattedQueries = queries
     .filter((query) => query.trim() !== '')
@@ -20,7 +30,7 @@ export default function QueryPreviewModal({
 
   return (
     <Modal open={open} title={locales.query_preview} onClose={onCancel}>
-      <QueryPreviewContentStyled data-testid='object-form-preview-modal'>
+      <QueryPreviewContentStyled data-testid={`${testIdPrefix}-preview-modal`}>
         <Box sx={{ flex: 1 }}>
           <SyntaxHighlighter value={formattedQueries} />
         </Box>
@@ -30,7 +40,7 @@ export default function QueryPreviewModal({
             size='small'
             disabled={isExecuting}
             onClick={onCancel}
-            data-testid='object-form-preview-cancel'
+            data-testid={`${testIdPrefix}-preview-cancel`}
           >
             {locales.cancel}
           </Button>
@@ -39,7 +49,7 @@ export default function QueryPreviewModal({
             size='small'
             disabled={isExecuting || queries.length === 0}
             onClick={onConfirm}
-            data-testid='object-form-execute'
+            data-testid={`${testIdPrefix}-execute`}
             startIcon={isExecuting ? <CircularProgress size={14} color='inherit' /> : undefined}
           >
             {locales.object_form_execute_queries}

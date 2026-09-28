@@ -31,11 +31,18 @@ type Args = {
   activeNodeId: string | null;
   search: string;
   edgeStroke: string;
+  statusStroke: StatusStroke;
   exportBg: string;
 };
 
-const flowEdgesFromGraph = (viewGraph: ViewGraph, shownNodeIds: Set<string>, edgeStroke: string): Edge[] => {
-  const stroke = edgeStroke || DEFAULT_EDGE_STROKE;
+type StatusStroke = Record<'added' | 'changed' | 'removed', string>;
+
+const flowEdgesFromGraph = (
+  viewGraph: ViewGraph,
+  shownNodeIds: Set<string>,
+  edgeStroke: string,
+  statusStroke: StatusStroke
+): Edge[] => {
   const result: Edge[] = [];
 
   for (const edge of viewGraph.edges) {
@@ -43,6 +50,8 @@ const flowEdgesFromGraph = (viewGraph: ViewGraph, shownNodeIds: Set<string>, edg
       continue;
     }
 
+    const pending = edge.status !== 'unchanged';
+    const stroke = edge.status !== 'unchanged' ? statusStroke[edge.status] : edgeStroke || DEFAULT_EDGE_STROKE;
     const pairCount = Math.max(edge.sourceColumns.length, edge.targetColumns.length, 1);
     for (let index = 0; index < pairCount; index += 1) {
       result.push({
@@ -51,7 +60,8 @@ const flowEdgesFromGraph = (viewGraph: ViewGraph, shownNodeIds: Set<string>, edg
         target: edge.target,
         sourceHandle: edge.sourceColumns[index] ?? edge.sourceColumns[0],
         targetHandle: edge.targetColumns[index] ?? edge.targetColumns[0],
-        style: { stroke }
+        style: pending ? { stroke, strokeDasharray: '6 4', strokeWidth: 1.5 } : { stroke },
+        data: { status: edge.status }
       });
     }
   }
@@ -69,6 +79,7 @@ export function useDiagramFlow({
   activeNodeId,
   search,
   edgeStroke,
+  statusStroke,
   exportBg
 }: Args): {
   nodes: TableFlowNode[];
@@ -109,18 +120,23 @@ export function useDiagramFlow({
         }
       }));
 
-    const layoutEdges = flowEdgesFromGraph(viewGraph, shownNodeIds, edgeStroke);
+    const layoutEdges = flowEdgesFromGraph(viewGraph, shownNodeIds, edgeStroke, statusStroke);
     return layoutTableNodes(nextNodes, layoutEdges, positionsRef.current) as TableFlowNode[];
-  }, [edgeStroke, shownNodeIds, viewGraph]);
+  }, [edgeStroke, shownNodeIds, statusStroke, viewGraph]);
 
   const baseEdges = useMemo(
-    (): Edge[] => flowEdgesFromGraph(viewGraph, shownNodeIds, edgeStroke),
-    [edgeStroke, shownNodeIds, viewGraph]
+    (): Edge[] => flowEdgesFromGraph(viewGraph, shownNodeIds, edgeStroke, statusStroke),
+    [edgeStroke, shownNodeIds, statusStroke, viewGraph]
   );
 
+  // Includes statuses and column/edge counts so a pending changeset (or its
+  // removal after apply/reject) re-renders even when node ids are unchanged.
   const graphSignature = useMemo(
-    () => `${[...shownNodeIds].sort().join('|')}::${viewGraph.nodes.map((node) => node.id).join('|')}`,
-    [shownNodeIds, viewGraph.nodes]
+    () =>
+      `${[...shownNodeIds].sort().join('|')}::${viewGraph.nodes
+        .map((node) => `${node.id}:${node.status}:${node.columns.map((column) => column.status[0]).join('')}`)
+        .join('|')}::${viewGraph.edges.map((edge) => `${edge.id}:${edge.status}`).join('|')}`,
+    [shownNodeIds, viewGraph.edges, viewGraph.nodes]
   );
 
   const [nodes, setNodes] = useState<TableFlowNode[]>([]);

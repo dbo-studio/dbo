@@ -32,7 +32,7 @@ function buildMentionOptions(autocomplete: AutoCompleteType | undefined, query: 
     .map((item) => item.label);
 }
 
-export default function ChatTextInput({ loading, onSend, autocomplete }: ChatTextInputProps) {
+export default function ChatTextInput({ loading, onSend, onCancel, autocomplete }: ChatTextInputProps) {
   const context = useAiStore((state) => state.context);
   const updateContext = useAiStore((state) => state.updateContext);
   const messageEdit = useAiStore((state) => state.messageEdit);
@@ -40,6 +40,7 @@ export default function ChatTextInput({ loading, onSend, autocomplete }: ChatTex
   const [input, setInput] = useState(() => context.input);
   const [mention, setMention] = useState<MentionState | null>(null);
   const [cursorPos, setCursorPos] = useState(0);
+  const [activeOption, setActiveOption] = useState(0);
   const [prevMessageEdit, setPrevMessageEdit] = useState(messageEdit);
 
   if (messageEdit !== prevMessageEdit) {
@@ -59,6 +60,7 @@ export default function ChatTextInput({ loading, onSend, autocomplete }: ChatTex
     setCursorPos(e.target.selectionStart ?? 0);
     updateContext({ ...context, input: e.target.value });
     setMention(getMentionState(e.target.value, e.target.selectionStart ?? 0));
+    setActiveOption(0);
   };
 
   const applyMention = (name: string) => {
@@ -73,10 +75,35 @@ export default function ChatTextInput({ loading, onSend, autocomplete }: ChatTex
     setMention(null);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (mention && mentionOptions.length > 0 && e.key === 'Tab') {
+  const mentionOpen = mention !== null && mentionOptions.length > 0;
+  const selectedOption = Math.min(activeOption, mentionOptions.length - 1);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (mentionOpen) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const step = e.key === 'ArrowDown' ? 1 : -1;
+        setActiveOption((selectedOption + step + mentionOptions.length) % mentionOptions.length);
+        return;
+      }
+      if (e.key === 'Tab' || (e.key === 'Enter' && !e.shiftKey)) {
+        e.preventDefault();
+        applyMention(mentionOptions[selectedOption]);
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setMention(null);
+        return;
+      }
+    }
+    if (e.key === 'Escape') {
       e.preventDefault();
-      applyMention(mentionOptions[0]);
+      if (loading) {
+        onCancel();
+      } else {
+        e.currentTarget.blur();
+      }
       return;
     }
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -87,11 +114,11 @@ export default function ChatTextInput({ loading, onSend, autocomplete }: ChatTex
 
   return (
     <Box sx={{ flex: 1, overflowY: 'scroll', position: 'relative' }}>
-      {mention && mentionOptions.length > 0 && (
+      {mentionOpen && (
         <Paper sx={{ position: 'absolute', bottom: '100%', left: 0, right: 0, zIndex: 10, mb: 0.5 }}>
           <List dense>
-            {mentionOptions.map((option) => (
-              <ListItemButton key={option} onClick={() => applyMention(option)}>
+            {mentionOptions.map((option, index) => (
+              <ListItemButton key={option} selected={index === selectedOption} onClick={() => applyMention(option)}>
                 @{option}
               </ListItemButton>
             ))}
@@ -99,7 +126,8 @@ export default function ChatTextInput({ loading, onSend, autocomplete }: ChatTex
         </Paper>
       )}
       <ChatTextInputStyled
-        disabled={loading}
+        data-testid='ai-chat-input'
+        readOnly={loading}
         placeholder={locales.ask_anything}
         value={input}
         onChange={handleChange}

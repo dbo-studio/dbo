@@ -2,7 +2,7 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { CircularProgress, IconButton, Tooltip, Typography } from '@mui/material';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MessagesProps } from '../types';
 import ChatEmptyState from './ChatEmptyState/ChatEmptyState';
 import ChatErrorMessage from './ChatErrorMessage/ChatErrorMessage';
@@ -11,11 +11,28 @@ import ExplanationMessage from './ExplanationMessage/ExplanationMessage';
 import { MessageGroupStyled, MessagesListStyled, MessagesStyled, ScrollToBottomButtonStyled } from './Messages.styled';
 import StreamingPreview from './StreamingPreview/StreamingPreview';
 import ThinkingMessage from './ThinkingMessage/ThinkingMessage';
-import ToolStepsMessage from './ToolStepsMessage/ToolStepsMessage';
+import { groupLiveItems, toRenderBlocks } from '../utils/agentTrace';
+import AgentItemCard from './AgentCards/AgentItemCard';
+import ToolCallGroup from './AgentCards/ToolCallGroup';
+import TurnActions from './TurnActions/TurnActions';
 
-export default function Messages({ messages, loading, onLoadMore, onSelectPrompt, onRetry }: MessagesProps) {
+export default function Messages({
+  messages,
+  loading,
+  onLoadMore,
+  onSelectPrompt,
+  onRetry,
+  onRegenerate
+}: MessagesProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const streaming = useAiStore((state) => state.streaming);
+  const agentItems = useAiStore((state) => state.agentItems);
+  const blocks = useMemo(() => toRenderBlocks(messages), [messages]);
+  const liveBlocks = useMemo(() => groupLiveItems(agentItems), [agentItems]);
+  const lastTurn = useMemo(() => {
+    const lastUserIndex = messages.map((message) => message.role).lastIndexOf('user');
+    return messages.slice(lastUserIndex + 1);
+  }, [messages]);
   const isNearBottomRef = useRef(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
 
@@ -66,6 +83,7 @@ export default function Messages({ messages, loading, onLoadMore, onSelectPrompt
     streaming.thinkingContent,
     streaming.previewContent,
     streaming.statusLabel,
+    agentItems,
     autoScrollToBottom
   ]);
 
@@ -94,25 +112,38 @@ export default function Messages({ messages, loading, onLoadMore, onSelectPrompt
         </Typography>
       )}
 
-      {showEmpty && onSelectPrompt && <ChatEmptyState onSelectPrompt={onSelectPrompt} />}
+      {showEmpty && <ChatEmptyState onSelectPrompt={onSelectPrompt} />}
 
       <MessagesListStyled>
-        {messages.map((message) => (
-          <MessageGroupStyled key={`${message.role}-${message.createdAt}-${message.content.slice(0, 48)}`}>
-            {message.thinking?.content && (
-              <ThinkingMessage
-                content={message.thinking.content}
-                durationMs={message.thinking.durationMs}
-                defaultCollapsed
-              />
-            )}
-            {message.type === 'code' ? <CodeMessage message={message} /> : <ExplanationMessage message={message} />}
-          </MessageGroupStyled>
-        ))}
+        {blocks.map((block) => {
+          if (block.kind === 'message') {
+            const { message } = block;
+            return (
+              <MessageGroupStyled key={block.key}>
+                {message.thinking?.content && (
+                  <ThinkingMessage
+                    content={message.thinking.content}
+                    durationMs={message.thinking.durationMs}
+                    defaultCollapsed
+                  />
+                )}
+                {message.type === 'code' ? <CodeMessage message={message} /> : <ExplanationMessage message={message} />}
+              </MessageGroupStyled>
+            );
+          }
+
+          return (
+            <MessageGroupStyled key={block.key}>
+              {block.thinking?.content && (
+                <ThinkingMessage content={block.thinking.content} durationMs={block.thinking.durationMs} defaultCollapsed />
+              )}
+              {block.kind === 'tools' ? <ToolCallGroup items={block.items} /> : <AgentItemCard item={block.item} />}
+            </MessageGroupStyled>
+          );
+        })}
 
         {streaming.status === 'streaming' && (
           <MessageGroupStyled>
-            <ToolStepsMessage />
             {(streaming.thinkingContent || streaming.statusLabel || !streaming.previewContent) && (
               <ThinkingMessage
                 content={streaming.thinkingContent || streaming.statusLabel || ''}
@@ -120,10 +151,22 @@ export default function Messages({ messages, loading, onLoadMore, onSelectPrompt
               />
             )}
 
+            {liveBlocks.map((block) =>
+              block.kind === 'tools' ? (
+                <ToolCallGroup key={block.key} items={block.items} live />
+              ) : (
+                <AgentItemCard key={block.key} item={block.item} />
+              )
+            )}
+
             {(streaming.phase === 'answering' || streaming.previewContent) && (
               <StreamingPreview content={streaming.previewContent} blockType={streaming.activeBlockType} isStreaming />
             )}
           </MessageGroupStyled>
+        )}
+
+        {!loading && streaming.status !== 'streaming' && !streaming.error && lastTurn.length > 0 && (
+          <TurnActions turn={lastTurn} onRegenerate={onRegenerate} />
         )}
 
         {loading && streaming.status !== 'streaming' && (

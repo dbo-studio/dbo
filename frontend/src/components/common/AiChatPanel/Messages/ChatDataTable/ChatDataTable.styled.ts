@@ -68,6 +68,15 @@ export const ChatCellContent = styled(CellContent)(() => ({
   padding: '0 10px'
 }));
 
+export const ChatDataTableToolbar = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(0.5),
+  padding: `${theme.spacing(0.25)} ${theme.spacing(0.75)}`,
+  backgroundColor: theme.palette.background.default,
+  borderTop: `1px solid ${theme.palette.divider}`
+}));
+
 export const ChatDataTableFooter = styled(Typography)(({ theme }) => ({
   display: 'block',
   padding: `${theme.spacing(0.75)} ${theme.spacing(1.25)}`,

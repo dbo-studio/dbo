@@ -9,6 +9,8 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import { AiChatType, AutoCompleteType } from '@/types';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
+import { agentItemToMessage } from '../utils/agentTrace';
+import { resolveAiChatMode } from './useAiChatMode';
 import { useAiStream } from './useAiStream';
 
 type useAiChatReturnType = {
@@ -21,6 +23,8 @@ type useAiChatReturnType = {
   handleRetry: () => Promise<void>;
   handleChatChange: (chat: AiChatType) => Promise<void>;
   handleChatDelete: (chat: AiChatType) => Promise<void>;
+  handleChatRename: (chat: AiChatType, title: string) => Promise<void>;
+  handleRegenerate: () => Promise<void>;
 };
 
 const buildContextOpts = (): AiContextOptsType => {
@@ -148,7 +152,18 @@ export const useAiChat = (): useAiChatReturnType => {
         connectionId: Number(connectionId),
         chatId: Number(currentChat.id),
         message,
+        mode: resolveAiChatMode(),
         contextOpts
+      };
+
+      // Stopped or failed turns keep their cards: running tools become
+      // "cancelled" and pending diagram proposals stay reviewable.
+      const keepPartialTurn = (): void => {
+        const items = useAiStore.getState().agentItems;
+        if (items.length > 0) {
+          addMessage(useAiStore.getState().currentChat ?? currentChat, items.map(agentItemToMessage));
+        }
+        useAiStore.getState().clearAgentItems();
       };
 
       const thinkingSnapshot = {
@@ -181,16 +196,24 @@ export const useAiChat = (): useAiChatReturnType => {
           if (doneEvent.title !== currentChat.title) {
             updateCurrentChat({ ...updatedChat, title: doneEvent.title });
           }
+          useAiStore.getState().clearAgentItems();
           resetStreaming();
           return;
         }
 
         if (useAiStore.getState().streaming.error) {
+          keepPartialTurn();
           return;
         }
       } catch (error) {
         // User cancel must not start the HTTP fallback (that re-shows the cancel button).
         if (error instanceof Error && error.name === 'AbortError') {
+          keepPartialTurn();
+          return;
+        }
+        // A turn that already ran tools must not be replayed by the tool-less fallback.
+        if (useAiStore.getState().agentItems.length > 0) {
+          keepPartialTurn();
           return;
         }
         // fall through to non-stream fallback
@@ -294,7 +317,31 @@ export const useAiChat = (): useAiChatReturnType => {
     [handleChatChange, updateChats, updateCurrentChat]
   );
 
+  const handleChatRename = useCallback(
+    async (chat: AiChatType, title: string) => {
+      await api.aiChat.updateChat(chat.id, { title });
+      const state = useAiStore.getState();
+      updateChats(state.chats.map((item) => (item.id === chat.id ? { ...item, title } : item)));
+      if (state.currentChat?.id === chat.id) {
+        updateCurrentChat({ ...state.currentChat, title });
+      }
+    },
+    [updateChats, updateCurrentChat]
+  );
+
+  /** Re-runs the last user prompt (same mode resolution) and appends the new answer. */
+  const handleRegenerate = async (): Promise<void> => {
+    const currentChat = useAiStore.getState().currentChat;
+    const lastUser = [...(currentChat?.messages ?? [])].reverse().find((message) => message.role === 'user');
+    if (!currentChat || !lastUser || chatPending) return;
+
+    resetStreaming();
+    await executeChat(lastUser.content, currentChat);
+  };
+
   return {
+    handleChatRename,
+    handleRegenerate,
     autocomplete,
     chatPending,
     handleCancel,

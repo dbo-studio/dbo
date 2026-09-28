@@ -95,6 +95,13 @@ export const webShortcuts: { [key: string]: ShortcutType } = {
     monaco: [KeyMod.Alt | KeyCode.KeyA],
     shortcut: (event: KeyboardEvent) => event.altKey && event.code === 'KeyA'
   },
+  focusAssistant: {
+    id: 'focusAssistant',
+    group: 'app',
+    label: locales.focus_assistant,
+    command: [modKey(), 'L'],
+    shortcut: (event: KeyboardEvent) => isMod(event) && !event.shiftKey && !event.altKey && event.code === 'KeyL'
+  },
   openShortcuts: {
     id: 'openShortcuts',
     group: 'app',
@@ -189,6 +196,13 @@ export const desktopShortcuts: { [key: string]: ShortcutType } = {
     command: [modKey(), shiftKey(), 'A'],
     monaco: [KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyA],
     shortcut: (event: KeyboardEvent) => isMod(event) && event.shiftKey && event.code === 'KeyA'
+  },
+  focusAssistant: {
+    id: 'focusAssistant',
+    group: 'app',
+    label: locales.focus_assistant,
+    command: [modKey(), 'L'],
+    shortcut: (event: KeyboardEvent) => isMod(event) && !event.shiftKey && !event.altKey && event.code === 'KeyL'
   },
   openShortcuts: {
     id: 'openShortcuts',

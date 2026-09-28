@@ -1,3 +1,4 @@
+import { TabMode } from '@/core/enums';
 import { runQuery, runRawQuery } from '@/api/query';
 import type { GridMetaType, RunQueryResponseType } from '@/api/query/types';
 import { filterOperatorRequiresValue } from '@/core/constants';
@@ -84,7 +85,13 @@ export const createDataQuerySlice: StateCreator<
     },
     runQueryInEditor: (query: string): void => {
       const tab = useTabStore.getState().addEditorTab(query);
-      set({ pendingEditorQueryRun: { tabId: tab.id, query } }, undefined, 'runQueryInEditor');
+      set({ pendingEditorQueryRun: { tabId: tab.id, query, run: true } }, undefined, 'runQueryInEditor');
+    },
+    insertQueryInEditor: (query: string): void => {
+      const tabStore = useTabStore.getState();
+      const selected = tabStore.selectedTab();
+      const tab = selected?.mode === TabMode.Query ? selected : tabStore.addEditorTab(query);
+      set({ pendingEditorQueryRun: { tabId: tab.id, query, run: false } }, undefined, 'insertQueryInEditor');
     },
     toggleReRunQuery(): void {
       set({ reRunQuery: !get().reRunQuery }, undefined, 'toggleReRunQuery');

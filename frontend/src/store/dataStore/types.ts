@@ -46,6 +46,8 @@ export type DataUnsavedRowsSlice = {
 export type PendingEditorQueryRun = {
   tabId: string;
   query: string;
+  /** false = only put the SQL into the editor (Insert), don't execute it. */
+  run: boolean;
 };
 
 export type DataQuerySlice = {
@@ -64,6 +66,8 @@ export type DataQuerySlice = {
   runQuery: (abortController?: AbortController) => Promise<RunQueryResponseType | undefined>;
   runRawQuery: (query?: string, abortController?: AbortController) => Promise<RunQueryResponseType | undefined>;
   runQueryInEditor: (query: string) => void;
+  /** Puts SQL into the active Query tab (or a new one) and syncs the open editor. */
+  insertQueryInEditor: (query: string) => void;
   toggleReRunQuery: () => void;
   toggleReRender: () => void;
   toggleDataFetching: (loading?: boolean) => void;

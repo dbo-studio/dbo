@@ -25,10 +25,3 @@ export type ArrayRowProps = {
   onDelete: () => void;
 };
 
-export type QueryPreviewModalProps = {
-  open: boolean;
-  queries: string[];
-  isExecuting: boolean;
-  onCancel: () => void;
-  onConfirm: () => void;
-};

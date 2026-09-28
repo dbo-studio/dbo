@@ -2,7 +2,17 @@ import { streamChat } from '@/api/ai/streamChat';
 import type { AiStreamEvent } from '@/api/ai/streamTypes';
 import type { AiChatRequest } from '@/api/ai/types';
 import { useAiStore } from '@/store/aiStore/ai.store';
+import { useDiagramChangesetStore } from '@/store/diagramChangesetStore/diagramChangeset.store';
 import { useCallback, useRef } from 'react';
+
+/** Older backends send no tool call id; fall back to the running card with that tool name. */
+const runningToolId = (id: string | undefined, name: string): string => {
+  if (id) return id;
+  const running = useAiStore
+    .getState()
+    .agentItems.find((item) => item.kind === 'tool' && item.trace.name === name && item.trace.status === 'running');
+  return running?.kind === 'tool' ? running.trace.id : '';
+};
 
 type UseAiStreamReturn = {
   isStreaming: boolean;
@@ -17,9 +27,9 @@ export const useAiStream = (): UseAiStreamReturn => {
   const setStreamingStatus = useAiStore((state) => state.setStreamingStatus);
   const updateStreaming = useAiStore((state) => state.updateStreaming);
   const setLastRequest = useAiStore((state) => state.setLastRequest);
-  const appendToolStep = useAiStore((state) => state.appendToolStep);
-  const updateToolStep = useAiStore((state) => state.updateToolStep);
-  const clearToolSteps = useAiStore((state) => state.clearToolSteps);
+  const appendAgentItem = useAiStore((state) => state.appendAgentItem);
+  const updateToolTrace = useAiStore((state) => state.updateToolTrace);
+  const clearAgentItems = useAiStore((state) => state.clearAgentItems);
 
   const cancelStream = useCallback(() => {
     if (abortControllerRef.current) {
@@ -35,7 +45,7 @@ export const useAiStream = (): UseAiStreamReturn => {
       abortControllerRef.current = controller;
 
       resetStreaming();
-      clearToolSteps();
+      clearAgentItems();
       setStreamingStatus('streaming');
       setLastRequest(request);
 
@@ -78,25 +88,37 @@ export const useAiStream = (): UseAiStreamReturn => {
             });
             break;
           case 'tool_start':
-            appendToolStep({
-              id: `${event.label}-${Date.now()}`,
-              name: event.label,
-              status: 'running'
+            appendAgentItem({
+              kind: 'tool',
+              trace: {
+                id: event.id ?? `${event.label}-${Date.now()}`,
+                name: event.label,
+                args: event.content,
+                status: 'running'
+              }
             });
             break;
           case 'tool_result':
-            updateToolStep(
-              useAiStore.getState().toolSteps.find((s) => s.name === event.label && s.status === 'running')?.id ??
-                `${event.label}-done`,
-              { status: 'done', result: event.content }
-            );
+            updateToolTrace(runningToolId(event.id, event.label), {
+              status: 'done',
+              result: event.content,
+              durationMs: event.durationMs
+            });
             break;
           case 'tool_error':
-            updateToolStep(
-              useAiStore.getState().toolSteps.find((s) => s.name === event.label && s.status === 'running')?.id ??
-                `${event.label}-error`,
-              { status: 'error', error: event.content }
-            );
+            updateToolTrace(runningToolId(event.id, event.label), {
+              status: event.data?.code === 'blocked' ? 'blocked' : 'error',
+              error: event.content,
+              durationMs: event.durationMs
+            });
+            break;
+          case 'diagram_diff':
+            appendAgentItem({ kind: 'diagram_diff', diff: event.data });
+            // Show the proposal on the matching diagram while the turn streams.
+            useDiagramChangesetStore.getState().stage(event.data);
+            break;
+          case 'permission_request':
+            appendAgentItem({ kind: 'permission', request: event.data });
             break;
           case 'error':
             updateStreaming({ error: event.message });
@@ -141,13 +163,13 @@ export const useAiStream = (): UseAiStreamReturn => {
       return doneEvent;
     },
     [
-      appendToolStep,
-      clearToolSteps,
+      appendAgentItem,
+      clearAgentItems,
       resetStreaming,
       setLastRequest,
       setStreamingStatus,
       updateStreaming,
-      updateToolStep
+      updateToolTrace
     ]
   );
 

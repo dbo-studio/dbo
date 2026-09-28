@@ -1,7 +1,6 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import DropDownMenu from '@/components/base/DropDownMenu/DropDownMenu';
-import { tools } from '@/core/utils';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { AiChatType } from '@/types';
@@ -112,7 +111,7 @@ export default function ChatHistory() {
         <ChatHistoryStyled>
           {data?.map((item) => (
             <ChatHistoryItem
-              key={tools.uuid()}
+              key={item.id}
               item={item}
               onClick={() => void handleSelectChat(item)}
               onDelete={() => void handleDelete(item)}

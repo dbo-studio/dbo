@@ -50,7 +50,7 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 
 	providerResp, providerResErr := provider.Chat(ctx, providerReq)
 
-	if err := s.saveChatMessages(ctx, chat, req.Message, providerResp); err != nil {
+	if err := s.saveChatMessages(ctx, chat, req.Message, nil, providerResp); err != nil {
 		s.logger.Error(fmt.Sprintf("Failed to save chat messages: %v", err))
 	}
 

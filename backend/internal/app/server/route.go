@@ -38,6 +38,8 @@ func (r *Server) routing() {
 
 	schema := api.Group("schema")
 	schema.Get("/diagram", r.handlers.Schema.Diagram)
+	schema.Post("/changes/preview", r.handlers.Schema.PreviewChange)
+	schema.Post("/changes/apply", r.handlers.Schema.ApplyChange)
 
 	tree := api.Group("tree")
 	tree.Get("/", r.handlers.TreeHandler.TreeHandler)
@@ -66,6 +68,7 @@ func (r *Server) routing() {
 	aiChat.Get("/", r.handlers.AiChat.Chats)
 	aiChat.Post("/", r.handlers.AiChat.Create)
 	aiChat.Get("/:id", r.handlers.AiChat.Detail)
+	aiChat.Patch("/:id", r.handlers.AiChat.Update)
 	aiChat.Delete("/:id", r.handlers.AiChat.Delete)
 
 	mcp := api.Group("mcp")

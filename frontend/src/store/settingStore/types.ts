@@ -1,3 +1,4 @@
+import type { AiChatMode } from '@/types';
 import type { CheckUpdateResponseType } from '@/api/config/types';
 
 export type EditorContextByConnection = Record<string, { database: string; schema: string }>;
@@ -43,6 +44,8 @@ export type ThemeSettings = {
 export type EditorSettings = {
   enableEditorAi: boolean;
   scrollToBottom: boolean;
+  aiChatMode?: AiChatMode;
+  aiWhatsNewSeen?: boolean;
 };
 
 export type GeneralSettings = {

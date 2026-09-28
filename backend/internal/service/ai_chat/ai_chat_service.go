@@ -6,12 +6,14 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/samber/lo"
 )
 
 type IAiChatService interface {
 	Index(ctx context.Context, req *dto.AiChatListRequest) (*dto.AiChatListResponse, error)
 	Detail(ctx context.Context, dto *dto.AiChatDetailRequest) (*dto.AiChatDetailResponse, error)
 	Create(ctx context.Context, chat *dto.AiChatCreateRequest) (*dto.AiChatDetailResponse, error)
+	Update(ctx context.Context, chatID uint, req *dto.AiChatUpdateRequest) (*dto.AiChatDetailResponse, error)
 	Delete(ctx context.Context, chatID uint) error
 }
 
@@ -69,6 +71,26 @@ func (s IAiChatServiceImpl) Create(ctx context.Context, req *dto.AiChatCreateReq
 	chat, err := s.aiChatRepo.Create(ctx, req)
 	if err != nil {
 		return nil, err
+	}
+
+	return aiChatDetailToResponse(chat), nil
+}
+
+func (s IAiChatServiceImpl) Update(ctx context.Context, chatID uint, req *dto.AiChatUpdateRequest) (*dto.AiChatDetailResponse, error) {
+	chat, err := s.aiChatRepo.Find(ctx, chatID, &dto.PaginationRequest{Page: lo.ToPtr(1), Count: lo.ToPtr(1)})
+	if err != nil {
+		return nil, apperror.NotFound(apperror.ErrAiChatNotFound)
+	}
+
+	if err := s.requireConnection(ctx, int32(chat.ConnectionID)); err != nil {
+		return nil, apperror.NotFound(apperror.ErrAiChatNotFound)
+	}
+
+	chat.Title = req.Title
+	chat.Messages = nil
+
+	if err := s.aiChatRepo.Update(ctx, chat); err != nil {
+		return nil, apperror.InternalServerError(err)
 	}
 
 	return aiChatDetailToResponse(chat), nil

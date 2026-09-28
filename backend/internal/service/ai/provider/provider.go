@@ -23,6 +23,7 @@ type ChatRequest struct {
 	QueryResultSummary string                `json:"queryResultSummary,omitempty"`
 	ObjectDefinition   string                `json:"objectDefinition,omitempty"`
 	UseMarkdownPrompt  bool                  `json:"-"`
+	ModeInstructions   string                `json:"-"`
 	Tools              []openai.ChatCompletionToolUnionParam
 	ExtraMessages      []openai.ChatCompletionMessageParamUnion
 }

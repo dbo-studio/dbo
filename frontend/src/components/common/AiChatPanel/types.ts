@@ -9,6 +9,7 @@ export type ChatsProps = {
   currentChat: AiChatType | undefined;
   onChatChange: (chat: AiChatType) => void;
   onChatDelete: (chat: AiChatType) => void;
+  onChatRename: (chat: AiChatType, title: string) => void;
 };
 
 export type ChatItemProps = {
@@ -16,11 +17,13 @@ export type ChatItemProps = {
   selected: boolean;
   onClick: () => void;
   onDelete: () => void;
+  onRename: (title: string) => void;
 };
 
 export type ChatTextInputProps = {
   loading: boolean;
   onSend: () => void;
+  onCancel: () => void;
   autocomplete?: AutoCompleteType;
 };
 
@@ -60,6 +63,7 @@ export type MessagesProps = {
   onLoadMore?: () => void;
   onSelectPrompt?: (prompt: string) => void;
   onRetry?: () => void;
+  onRegenerate?: () => void;
 };
 
 export type CodeMessageProps = {
@@ -86,7 +90,7 @@ export type ChatErrorMessageProps = {
 };
 
 export type ChatEmptyStateProps = {
-  onSelectPrompt: (prompt: string) => void;
+  onSelectPrompt?: (prompt: string) => void;
 };
 
 export type ThinkingMessageProps = {
@@ -104,6 +108,8 @@ export type ChatMarkdownProps = {
 
 export type ChatDataTableProps = {
   rows: Record<string, unknown>[];
+  /** Source SELECT; enables "Open in Data Grid" (runs it in a query tab). */
+  query?: string;
 };
 
 export type StreamingMarkdownProps = {
