@@ -36,6 +36,7 @@ test.describe("AI Chat panel", () => {
       });
 
       await test.step("In-place setup is visible before a profile exists", async () => {
+        await page.getByTestId("ai-empty-quick-setup").click();
         await expect(settingsPage.aiSetupForm()).toBeVisible({
           timeout: 10000,
         });

@@ -85,7 +85,12 @@ function NoProviderState(): JSX.Element {
           {locales.ai_open_ai_settings}
         </Button>
         {canEdit && (
-          <Button size='small' variant='outlined' onClick={(e) => setSetupAnchor(e.currentTarget)}>
+          <Button
+            size='small'
+            variant='outlined'
+            onClick={(e) => setSetupAnchor(e.currentTarget)}
+            data-testid='ai-empty-quick-setup'
+          >
             {locales.ai_quick_setup}
           </Button>
         )}
