@@ -17,5 +17,17 @@ export const ThemeItemStyled = styled(Box)<ThemeItemStyledProps>(({ theme, selec
     borderRadius: variables.radius.medium,
     width: 150,
     height: 93
+  },
+  // Phones: two previews share the row instead of overflowing it.
+  [theme.breakpoints.down('sm')]: {
+    flex: '1 1 0',
+    minWidth: 0,
+    marginRight: 0,
+    padding: theme.spacing(1),
+    img: {
+      width: '100%',
+      height: 'auto',
+      aspectRatio: '150 / 93'
+    }
   }
 }));
