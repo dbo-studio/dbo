@@ -37,7 +37,13 @@ export default function ModeBar(): JSX.Element {
             size='small'
             variant='outlined'
             data-testid='ai-safe-mode-badge'
-            icon={<CustomIcon type='lock' size='xs' color={guarded ? theme.palette.error.main : theme.palette.warning.main} />}
+            icon={
+              <CustomIcon
+                type='lock'
+                size='xs'
+                color={guarded ? theme.palette.error.main : theme.palette.warning.main}
+              />
+            }
             label={locales[`safe_mode_${safeMode}`]}
             color={guarded ? 'error' : 'warning'}
             sx={{ height: 22, fontSize: '0.6875rem' }}

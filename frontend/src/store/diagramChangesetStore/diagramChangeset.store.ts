@@ -15,22 +15,21 @@ type DiagramChangesetState = {
   discard: (changesetId: string) => void;
 };
 
-export const useDiagramChangesetStore: UseBoundStore<StoreApi<DiagramChangesetState>> =
-  create<DiagramChangesetState>()(
-    devtools(
-      (set, get) => ({
-        changesets: {},
-        stage: (diff) => {
-          const key = changesetKey(diff.connectionId, diff.database, diff.schema);
-          set({ changesets: { ...get().changesets, [key]: diff } }, undefined, 'stage');
-        },
-        discard: (changesetId) => {
-          const changesets = Object.fromEntries(
-            Object.entries(get().changesets).filter(([, diff]) => diff.changesetId !== changesetId)
-          );
-          set({ changesets }, undefined, 'discard');
-        }
-      }),
-      { name: 'diagramChangeset' }
-    )
-  );
+export const useDiagramChangesetStore: UseBoundStore<StoreApi<DiagramChangesetState>> = create<DiagramChangesetState>()(
+  devtools(
+    (set, get) => ({
+      changesets: {},
+      stage: (diff) => {
+        const key = changesetKey(diff.connectionId, diff.database, diff.schema);
+        set({ changesets: { ...get().changesets, [key]: diff } }, undefined, 'stage');
+      },
+      discard: (changesetId) => {
+        const changesets = Object.fromEntries(
+          Object.entries(get().changesets).filter(([, diff]) => diff.changesetId !== changesetId)
+        );
+        set({ changesets }, undefined, 'discard');
+      }
+    }),
+    { name: 'diagramChangeset' }
+  )
+);

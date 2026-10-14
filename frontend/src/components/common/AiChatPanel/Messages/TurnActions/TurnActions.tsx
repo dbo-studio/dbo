@@ -18,7 +18,9 @@ export default function TurnActions({
   const [, copy] = useCopyToClipboard();
   const text = turn
     .filter((message) => !isTraceMessage(message))
-    .map((message) => (message.type === 'code' ? `\`\`\`${message.language}\n${message.content}\n\`\`\`` : message.content))
+    .map((message) =>
+      message.type === 'code' ? `\`\`\`${message.language}\n${message.content}\n\`\`\`` : message.content
+    )
     .join('\n\n');
 
   return (

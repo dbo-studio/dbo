@@ -68,9 +68,7 @@ export default function Providers(): JSX.Element {
           onClick={(event) => setAnchorEl(event.currentTarget)}
           data-testid='ai-model-picker'
         >
-          <span className='model-label'>
-            {active ? `${active.type} · ${active.model}` : locales.ai_select_model}
-          </span>
+          <span className='model-label'>{active ? `${active.type} · ${active.model}` : locales.ai_select_model}</span>
           <CustomIcon type='chevronDown' size='xs' />
         </ModelButtonStyled>
       </Tooltip>

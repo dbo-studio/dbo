@@ -125,9 +125,7 @@ export default function ChatDataTable({ rows, query }: ChatDataTableProps): JSX.
           <IconButton
             size='small'
             data-testid='ai-table-copy-csv'
-            onClick={() =>
-              void copy(toCsv(allColumns, rows)).then((ok) => ok && toast.success(locales.copied))
-            }
+            onClick={() => void copy(toCsv(allColumns, rows)).then((ok) => ok && toast.success(locales.copied))}
           >
             <CustomIcon type='copy' size='xs' />
           </IconButton>

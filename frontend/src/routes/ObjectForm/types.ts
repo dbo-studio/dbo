@@ -24,4 +24,3 @@ export type ArrayRowProps = {
   onFieldChange: (field: FormFieldType, value: FormValue | FormValue[]) => void;
   onDelete: () => void;
 };
-

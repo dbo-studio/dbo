@@ -63,7 +63,13 @@ export default function DiagramDiffCard({ diff }: { diff: AiDiagramDiff }): JSX.
           </Button>
           {pending && (
             <>
-              <Button size='small' variant='text' color='inherit' onClick={review.reject} data-testid='ai-diagram-reject'>
+              <Button
+                size='small'
+                variant='text'
+                color='inherit'
+                onClick={review.reject}
+                data-testid='ai-diagram-reject'
+              >
                 {locales.ai_reject}
               </Button>
               <Button

@@ -36,15 +36,18 @@ export const traceMessageToItem = (message: AiMessageType): AiAgentItem | undefi
  * marked cancelled.
  */
 export const agentItemToMessage = (item: AiAgentItem): AiMessageType => {
-  const base = { role: 'assistant' as const, createdAt: new Date().toISOString(), language: 'json' as const, isNew: true };
+  const base = {
+    role: 'assistant' as const,
+    createdAt: new Date().toISOString(),
+    language: 'json' as const,
+    isNew: true
+  };
   switch (item.kind) {
     case 'tool':
       return {
         ...base,
         type: 'tool',
-        content: JSON.stringify(
-          item.trace.status === 'running' ? { ...item.trace, status: 'cancelled' } : item.trace
-        )
+        content: JSON.stringify(item.trace.status === 'running' ? { ...item.trace, status: 'cancelled' } : item.trace)
       };
     case 'diagram_diff':
       return { ...base, type: 'diagram_diff', content: JSON.stringify(item.diff) };
@@ -90,7 +93,8 @@ export const toRenderBlocks = (messages: AiMessageType[]): RenderBlock[] => {
   return blocks;
 };
 
-export type LiveBlock = { kind: 'tools'; items: AiAgentItem[]; key: string } | { kind: 'card'; item: AiAgentItem; key: string };
+export type LiveBlock =
+  { kind: 'tools'; items: AiAgentItem[]; key: string } | { kind: 'card'; item: AiAgentItem; key: string };
 
 /** Same grouping as toRenderBlocks for the cards of the turn being streamed. */
 export const groupLiveItems = (items: AiAgentItem[]): LiveBlock[] => {

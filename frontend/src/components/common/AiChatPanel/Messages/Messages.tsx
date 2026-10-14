@@ -135,7 +135,11 @@ export default function Messages({
           return (
             <MessageGroupStyled key={block.key}>
               {block.thinking?.content && (
-                <ThinkingMessage content={block.thinking.content} durationMs={block.thinking.durationMs} defaultCollapsed />
+                <ThinkingMessage
+                  content={block.thinking.content}
+                  durationMs={block.thinking.durationMs}
+                  defaultCollapsed
+                />
               )}
               {block.kind === 'tools' ? <ToolCallGroup items={block.items} /> : <AgentItemCard item={block.item} />}
             </MessageGroupStyled>

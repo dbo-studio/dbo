@@ -73,7 +73,11 @@ export default function AiChatPanel() {
       </HeaderContainerStyled>
       {connectionId && <ModeBar />}
       {!connectionId ? (
-        <Stack spacing={1.5} sx={{ flex: 1, alignItems: 'center', justifyContent: 'center', textAlign: 'center', px: 2 }} data-testid='ai-no-connection'>
+        <Stack
+          spacing={1.5}
+          sx={{ flex: 1, alignItems: 'center', justifyContent: 'center', textAlign: 'center', px: 2 }}
+          data-testid='ai-no-connection'
+        >
           <CustomIcon type='connection' size='m' />
           <Typography variant='subtitle2'>{locales.ai_no_connection_title}</Typography>
           <Typography variant='caption' color='textSubdued' sx={{ maxWidth: 260 }}>
@@ -84,14 +88,14 @@ export default function AiChatPanel() {
           </Button>
         </Stack>
       ) : (
-      <Messages
-        loading={chatPending}
-        messages={currentChat?.messages ?? []}
-        onLoadMore={() => void handleLoadMore()}
-        onSelectPrompt={(prompt) => void handleSend(prompt)}
-        onRetry={() => void handleRetry()}
-        onRegenerate={() => void handleRegenerate()}
-      />
+        <Messages
+          loading={chatPending}
+          messages={currentChat?.messages ?? []}
+          onLoadMore={() => void handleLoadMore()}
+          onSelectPrompt={(prompt) => void handleSend(prompt)}
+          onRetry={() => void handleRetry()}
+          onRegenerate={() => void handleRegenerate()}
+        />
       )}
       {connectionId && (
         <ComposerContainerStyled>
