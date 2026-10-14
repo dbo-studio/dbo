@@ -16,3 +16,7 @@ export * from './useUUID';
 export * from './useWindowSize';
 export * from './useAiBridge';
 export * from './useChangesetReview';
+export * from './useDataTabLoader';
+export * from './useDesktopIntentBridge';
+export * from './useHardwareBack';
+export * from './useTreeLevel';

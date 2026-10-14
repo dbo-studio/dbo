@@ -106,5 +106,7 @@ export const IconTypes = {
   undo: 'Undo2',
   sparkles: 'Sparkles',
   calendar: 'Calendar',
-  clock: 'Clock'
+  clock: 'Clock',
+  bookmark: 'Bookmark',
+  layoutList: 'LayoutList'
 };
