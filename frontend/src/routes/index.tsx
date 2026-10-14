@@ -3,6 +3,8 @@ import ChangePasswordGateScreen from '@/components/common/Auth/ChangePasswordGat
 import TotpGateScreen from '@/components/common/Auth/TotpGateScreen/TotpGateScreen';
 import SplashScreen from '@/components/base/SplashScreen/SplashScreen';
 import Layout from '@/components/layout/Layout.tsx';
+import MobileShell from '@/components/layout/MobileShell/MobileShell';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { useStartup } from '@/hooks/useStartup';
 import locales from '@/locales';
 import { useAuthStore } from '@/store/authStore/auth.store';
@@ -20,6 +22,8 @@ const dismissBootSplash = (): void => {
 export default function Home(): JSX.Element | null {
   const { ready, boot } = useStartup();
   const gate = useAuthStore((s) => s.gate);
+  // Phones get the dedicated mobile shell; tablets keep the desktop layout with overlay sidebars.
+  const { isMobile } = useLayoutMode();
 
   useEffect(() => {
     if (gate !== 'loading' || ready) {
@@ -49,5 +53,5 @@ export default function Home(): JSX.Element | null {
     );
   }
 
-  return <Layout />;
+  return isMobile ? <MobileShell /> : <Layout />;
 }

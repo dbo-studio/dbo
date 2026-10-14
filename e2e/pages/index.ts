@@ -15,3 +15,4 @@ export { SafeModePage, type SafeModeValue } from "./SafeModePage";
 export { WorkspacePage } from "./WorkspacePage";
 export { DiagramPage } from "./DiagramPage";
 export { CrashPage } from "./CrashPage";
+export { MobileShellPage, type MobileTab } from "./MobileShellPage";

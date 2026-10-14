@@ -12,7 +12,7 @@ const GROUP_LABEL: Record<SettingsNavGroup, string> = {
   workspace: locales.settings_nav_workspace
 };
 
-export default function MenuPanel({ tabs, onChange, defaultTab }: MenuPanelProps): JSX.Element {
+export default function MenuPanel({ tabs, onChange, defaultTab, onItemClick }: MenuPanelProps): JSX.Element {
   const selectedTabId = defaultTab?.id ?? tabs[0]?.id ?? 0;
 
   const selectedTab = useMemo(() => {
@@ -35,7 +35,10 @@ export default function MenuPanel({ tabs, onChange, defaultTab }: MenuPanelProps
       <NavRailItem
         key={tab.id}
         selected={selectedTabId === tab.id}
-        onClick={(): void => onChange(tab)}
+        onClick={(): void => {
+          onChange(tab);
+          onItemClick?.(tab);
+        }}
         label={tab.name}
         icon={tab.icon}
       />

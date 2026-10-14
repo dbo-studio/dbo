@@ -8,9 +8,7 @@ import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { JSX } from 'react';
-import ConfirmModal from '../base/Modal/ConfirmModal/ConfirmModal.tsx';
-import UpdateDialog from '../common/UpdateDialog/UpdateDialog';
-import SafeModePasswordHost from '../common/SafeModePasswordPrompt/SafeModePasswordHost';
+import AppHosts from './AppHosts';
 import AppHeader from './AppHeader/AppHeader';
 import { LayoutBodyStyled, LayoutMainStyled, LayoutStyled } from './Layout.styled';
 import CenterContainer from './MainContainer/CenterContainer.tsx';
@@ -90,9 +88,7 @@ export default function Layout(): JSX.Element {
 
   return (
     <LayoutStyled>
-      <ConfirmModal />
-      <SafeModePasswordHost />
-      <UpdateDialog />
+      <AppHosts />
       <AppHeader />
       <LayoutBodyStyled>
         {showConnectionsRail && <StartContainer />}

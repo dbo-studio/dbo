@@ -1,6 +1,9 @@
 {
   "name": "dbo",
   "scripts": {
+    "dev": "concurrently --kill-others --names backend,frontend \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && go run .",
+    "dev:frontend": "npm --prefix frontend run dev",
     "lefthook": "lefthook",
     "tauri": "tauri"
   },
@@ -13,6 +16,7 @@
     "@types/babel__core": "^7.20.5",
     "@vitejs/plugin-react": "^6.0.2",
     "babel-plugin-react-compiler": "^1.0.0",
+    "concurrently": "^10.0.6",
     "lefthook": "^2.0.13"
   }
 }

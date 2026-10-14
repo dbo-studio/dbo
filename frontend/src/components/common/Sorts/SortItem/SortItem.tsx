@@ -1,0 +1,84 @@
+import { PgsqlSorts } from '@/core/constants';
+import { useTabStore } from '@/store/tabStore/tab.store.ts';
+import type { SortType } from '@/types/Tab.ts';
+import { Box, Checkbox } from '@mui/material';
+import { type JSX, useState } from 'react';
+
+import SelectInput from '@/components/base/SelectInput/SelectInput.tsx';
+import { SelectInputOption } from '@/components/base/SelectInput/types.ts';
+import locales from '@/locales';
+import type { SortItemProps } from '../types.ts';
+import { SortItemStyled } from './SortItem.styled';
+import AddSortButton from './AddSortButton/AddSortButton.tsx';
+import RemoveSortButton from './RemoveSortButton/RemoveSortButton.tsx';
+
+export default function SortItem({ sort, columns }: SortItemProps): JSX.Element {
+  const upsertSorts = useTabStore((state) => state.upsertSorts);
+
+  const [currentSort, setCurrentSort] = useState<SortType>({
+    index: sort.index,
+    column: sort.column,
+    operator: sort.operator,
+    isActive: sort.isActive
+  });
+
+  const handleChange = (type: 'column' | 'operator' | 'isActive', value: string | boolean): void => {
+    const newSort = {
+      index: currentSort.index,
+      column: type === 'column' ? (value as string) : currentSort.column,
+      operator: type === 'operator' ? (value as string) : currentSort.operator,
+      isActive: type === 'isActive' ? (value as boolean) : currentSort.isActive
+    };
+
+    setCurrentSort(newSort);
+    upsertSorts(newSort);
+  };
+
+  return (
+    <SortItemStyled aria-label={'sort-item'} className='sort-item'>
+      <Box className='sort-active'>
+        <Checkbox
+          size='small'
+          checked={currentSort.isActive}
+          onChange={(e) => handleChange('isActive', e.target.checked)}
+        />
+      </Box>
+      <Box className='sort-column'>
+        <SelectInput
+          classNamePrefix='sort-select'
+          emptylabel={locales.no_column_found}
+          value={currentSort.column}
+          disabled={columns.length === 0}
+          size='small'
+          options={columns.map((c) => ({ value: c.name, label: c.name }))}
+          onChange={(e) => handleChange('column', (e as unknown as SelectInputOption).value as string)}
+        />
+      </Box>
+      <Box
+        className='sort-direction'
+        sx={{
+          mr: 1,
+          ml: 1
+        }}
+      >
+        <SelectInput
+          classNamePrefix='sort-select'
+          value={currentSort.operator}
+          size='small'
+          options={PgsqlSorts.map((c) => ({ value: c, label: c }))}
+          onChange={(e) => handleChange('operator', (e as unknown as SelectInputOption).value as string)}
+        />
+      </Box>
+      <Box
+        className='sort-actions'
+        sx={{
+          ml: 1,
+          mr: 1
+        }}
+      >
+        <RemoveSortButton sort={sort} />
+        <AddSortButton columns={columns} />
+      </Box>
+    </SortItemStyled>
+  );
+}
