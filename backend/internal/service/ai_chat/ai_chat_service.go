@@ -118,9 +118,11 @@ var reviewKeys = map[model.AiChatMessageType]string{
 	model.AiChatMessageTypePermission:  "requestId",
 }
 
-// Review stores the user's decision inside the matching card message. A card
-// that already has a decision is left untouched, so a replayed request cannot
-// flip an applied/confirmed card back.
+// Review stores the user's decision inside the matching card message. It is
+// the claim that makes a confirm single-use: a card that already has a
+// decision answers 409, and the swap is conditional on the stored content so
+// concurrent confirms cannot both succeed. Only a "confirmed" claim can be
+// released with "pending".
 func (s IAiChatServiceImpl) Review(ctx context.Context, chatID uint, req *dto.AiChatReviewRequest) error {
 	chat, err := s.aiChatRepo.Find(ctx, chatID, nil)
 	if err != nil {
@@ -144,20 +146,29 @@ func (s IAiChatServiceImpl) Review(ctx context.Context, chatID uint, req *dto.Ai
 			continue
 		}
 
-		if _, decided := payload["decision"]; decided {
-			return apperror.Conflict(errors.New("this card was already reviewed"))
-		}
+		current, decided := payload["decision"]
 
-		payload["decision"] = req.Decision
+		switch {
+		case req.Decision == dto.AiReviewPending && current == dto.AiReviewConfirmed:
+			delete(payload, "decision")
+		case req.Decision == dto.AiReviewPending, decided:
+			return apperror.Conflict(errors.New("this card was already reviewed"))
+		default:
+			payload["decision"] = req.Decision
+		}
 
 		raw, err := json.Marshal(payload)
 		if err != nil {
 			return apperror.InternalServerError(err)
 		}
 
-		message.Content = string(raw)
-		if err := s.aiChatRepo.UpdateMessage(ctx, message); err != nil {
+		swapped, err := s.aiChatRepo.UpdateMessageContent(ctx, message.ID, message.Content, string(raw))
+		if err != nil {
 			return apperror.InternalServerError(err)
+		}
+
+		if !swapped {
+			return apperror.Conflict(errors.New("this card was already reviewed"))
 		}
 
 		return nil
