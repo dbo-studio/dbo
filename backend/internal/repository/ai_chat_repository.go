@@ -25,7 +25,7 @@ func (r AiChatRepoImpl) List(ctx context.Context, req *dto.AiChatListRequest) ([
 
 	result := r.db.WithContext(ctx).Scopes(scope.Paginate(&req.PaginationRequest)).
 		Where("connection_id = ? AND owner_id = ?", req.ConnectionID, helper.CtxOwnerID(ctx)).
-		Order("updated_at desc").
+		Order("pinned desc, updated_at desc").
 		Find(&chats)
 
 	if result.Error != nil {

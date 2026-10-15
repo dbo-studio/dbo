@@ -3,7 +3,9 @@ import type { SchemaOp } from '@/core/diagram/types';
 export type AiChatType = {
   id: number;
   title: string;
+  pinned?: boolean;
   createdAt: string;
+  updatedAt?: string;
   messages: AiMessageType[];
 };
 

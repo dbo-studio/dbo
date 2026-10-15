@@ -7,6 +7,7 @@ type AiChat struct {
 	OwnerID      string          `gorm:"index;default:''"`
 	ConnectionID uint            `gorm:"not null"`
 	Title        string          `gorm:"not null"`
+	Pinned       bool            `gorm:"not null;default:false"`
 	Messages     []AiChatMessage `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE"`
 	CreatedAt    *time.Time      `gorm:"autoCreateTime"`
 	UpdatedAt    *time.Time      `gorm:"autoUpdateTime"`

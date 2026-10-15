@@ -4,15 +4,20 @@ import DropDownMenu from '@/components/base/DropDownMenu/DropDownMenu';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { AiChatType } from '@/types';
-import { Box, IconButton, Tooltip } from '@mui/material';
+import { Box, IconButton, InputBase, Tooltip, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { ChatHistoryStyled } from './ChatHistory.styled';
 import ChatHistoryItem from './ChatHistoryItem/ChatHistoryItem';
 import locales from '@/locales';
+import { tools } from '@/core/utils/tools';
+import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
+import { chatFileName, chatToMarkdown } from '../utils/chatExport';
 
 export default function ChatHistory() {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const confirmDanger = useConfirmModalStore((state) => state.danger);
   const anchorRef = useRef<HTMLButtonElement>(null);
 
   const queryClient = useQueryClient();
@@ -61,7 +66,7 @@ export default function ChatHistory() {
     [addChat, chats, currentChat?.id, updateCurrentChat]
   );
 
-  const handleDelete = useCallback(
+  const deleteChat = useCallback(
     async (chat: AiChatType) => {
       try {
         await deleteChatMutation(chat.id);
@@ -99,6 +104,46 @@ export default function ChatHistory() {
     ]
   );
 
+  const handleDelete = useCallback(
+    (chat: AiChatType): void => {
+      confirmDanger(locales.ai_history_delete, locales.ai_history_delete_confirm, () => void deleteChat(chat));
+    },
+    [confirmDanger, deleteChat]
+  );
+
+  const handleTogglePin = useCallback(
+    async (chat: AiChatType) => {
+      try {
+        await api.aiChat.updateChat(chat.id, { pinned: !chat.pinned });
+        await queryClient.invalidateQueries({ queryKey: ['aiChatHistory', currentConnectionId] });
+      } catch {
+        /* ignored */
+      }
+    },
+    [currentConnectionId, queryClient]
+  );
+
+  const handleExport = useCallback(async (chat: AiChatType) => {
+    try {
+      const messages: AiChatType['messages'] = [];
+      const count = 100;
+      for (let page = 1; ; page++) {
+        const detail = await api.aiChat.getChatDetail({ id: chat.id, page, count });
+        messages.unshift(...detail.messages);
+        if (detail.messages.length < count) break;
+      }
+      const full = { ...chat, messages };
+      tools.fileDownload(new Blob([chatToMarkdown(full)], { type: 'text/markdown' }), chatFileName(full));
+    } catch {
+      /* ignored */
+    }
+  }, []);
+
+  const visible = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return (data ?? []).filter((item) => !term || item.title.toLowerCase().includes(term));
+  }, [data, search]);
+
   return (
     <Box>
       <Tooltip title={locales.chat_history}>
@@ -109,12 +154,28 @@ export default function ChatHistory() {
 
       <DropDownMenu open={open} onClose={() => setOpen(false)} anchorRef={anchorRef}>
         <ChatHistoryStyled>
-          {data?.map((item) => (
+          <InputBase
+            autoFocus
+            fullWidth
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder={locales.ai_history_search}
+            inputProps={{ 'aria-label': locales.ai_history_search, 'data-testid': 'ai-history-search' }}
+            sx={{ fontSize: '0.75rem', px: 0.5, mb: 0.5, borderBottom: 1, borderColor: 'divider' }}
+          />
+          {visible.length === 0 && (
+            <Typography variant='caption' color='textSubdued' sx={{ p: 1 }} data-testid='ai-history-empty'>
+              {data?.length ? locales.ai_history_no_results : locales.ai_history_empty}
+            </Typography>
+          )}
+          {visible.map((item) => (
             <ChatHistoryItem
               key={item.id}
               item={item}
               onClick={() => void handleSelectChat(item)}
-              onDelete={() => void handleDelete(item)}
+              onDelete={() => handleDelete(item)}
+              onTogglePin={() => void handleTogglePin(item)}
+              onExport={() => void handleExport(item)}
             />
           ))}
         </ChatHistoryStyled>

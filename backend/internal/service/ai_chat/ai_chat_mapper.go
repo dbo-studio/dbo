@@ -12,7 +12,9 @@ func aiChatToResponse(chats *[]model.AiChat) *dto.AiChatListResponse {
 		result[i] = dto.AiChatItem{
 			ID:        chat.ID,
 			Title:     chat.Title,
+			Pinned:    chat.Pinned,
 			CreatedAt: chat.CreatedAt.Format("2006-01-02 15:04:05"),
+			UpdatedAt: lo.FromPtr(chat.UpdatedAt).Format("2006-01-02 15:04:05"),
 		}
 	}
 
@@ -36,6 +38,7 @@ func aiChatDetailToResponse(chat *model.AiChat) *dto.AiChatDetailResponse {
 	return &dto.AiChatDetailResponse{
 		ID:        chat.ID,
 		Title:     chat.Title,
+		Pinned:    chat.Pinned,
 		CreatedAt: chat.CreatedAt.Format("2006-01-02 15:04:05"),
 		Messages:  messages,
 	}

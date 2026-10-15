@@ -86,7 +86,14 @@ func (s IAiChatServiceImpl) Update(ctx context.Context, chatID uint, req *dto.Ai
 		return nil, apperror.NotFound(apperror.ErrAiChatNotFound)
 	}
 
-	chat.Title = req.Title
+	if req.Title != nil {
+		chat.Title = *req.Title
+	}
+
+	if req.Pinned != nil {
+		chat.Pinned = *req.Pinned
+	}
+
 	chat.Messages = nil
 
 	if err := s.aiChatRepo.Update(ctx, chat); err != nil {
