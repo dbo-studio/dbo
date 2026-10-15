@@ -11,7 +11,7 @@ export default function ScreenEmptyState({ icon, message, actionLabel, onAction 
         <EmptyState icon={icon} title={message} />
       </ScreenEmptyStateContentStyled>
       {actionLabel && onAction && (
-        <Button variant='contained' onClick={onAction}>
+        <Button variant='contained' size='small' onClick={onAction}>
           {actionLabel}
         </Button>
       )}
