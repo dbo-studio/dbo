@@ -36,6 +36,7 @@ export default function ChatTextInput({ loading, onSend, onCancel, autocomplete 
   const context = useAiStore((state) => state.context);
   const updateContext = useAiStore((state) => state.updateContext);
   const messageEdit = useAiStore((state) => state.messageEdit);
+  const currentChat = useAiStore((state) => state.currentChat);
 
   const [input, setInput] = useState(() => context.input);
   const [mention, setMention] = useState<MentionState | null>(null);
@@ -96,6 +97,22 @@ export default function ChatTextInput({ loading, onSend, onCancel, autocomplete 
         setMention(null);
         return;
       }
+    }
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'Backspace') {
+      e.preventDefault();
+      setInput('');
+      updateContext({ ...context, input: '' });
+      return;
+    }
+    if (e.key === 'ArrowUp' && input === '' && !loading && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      const userMessages = currentChat?.messages.filter((message) => message.role === 'user') ?? [];
+      const lastUser = userMessages[userMessages.length - 1];
+      if (lastUser) {
+        e.preventDefault();
+        setInput(lastUser.content);
+        updateContext({ ...context, input: lastUser.content });
+      }
+      return;
     }
     if (e.key === 'Escape') {
       e.preventDefault();

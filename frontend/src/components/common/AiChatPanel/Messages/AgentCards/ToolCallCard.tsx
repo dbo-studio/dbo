@@ -2,8 +2,11 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import type { IconTypes } from '@/components/base/CustomIcon/types';
 import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlighter';
 import locales from '@/locales';
+import { useAiStore } from '@/store/aiStore/ai.store';
+import { useDataStore } from '@/store/dataStore/data.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AiToolTrace } from '@/types';
-import { Box, Collapse, Typography } from '@mui/material';
+import { Box, Button, Collapse, Typography } from '@mui/material';
 import { type JSX, useState } from 'react';
 import ChatDataTable from '../ChatDataTable/ChatDataTable';
 import { AgentCardBodyStyled, AgentCardHeaderStyled, RawTextStyled, ToolRowStyled } from './AgentCards.styled';
@@ -52,6 +55,14 @@ export default function ToolCallCard({ trace }: { trace: AiToolTrace }): JSX.Ele
   const args = parseArgs(trace.args);
   const sqlArg = typeof args.sql === 'string' ? args.sql : undefined;
   const sqlResult = parseSqlResult(trace);
+  const describedTable = trace.name === 'describe_table' && typeof args.table === 'string' ? args.table : undefined;
+
+  const showTableInDiagram = (table: string): void => {
+    const context = useAiStore.getState().context;
+    useTabStore
+      .getState()
+      .addDiagramTab({ database: context.database ?? '', schema: context.schema ?? '', focusTable: table });
+  };
 
   return (
     <ToolRowStyled data-testid='ai-tool-card' data-tool={trace.name} data-status={trace.status}>
@@ -82,6 +93,28 @@ export default function ToolCallCard({ trace }: { trace: AiToolTrace }): JSX.Ele
             <Typography variant='caption' color='textSubdued'>
               {locales.ai_tool_sql_limits}
             </Typography>
+          )}
+          {trace.name === 'execute_sql' && sqlArg && (
+            <Button
+              size='small'
+              variant='text'
+              sx={{ alignSelf: 'flex-start' }}
+              data-testid='ai-tool-link'
+              onClick={() => useDataStore.getState().runQueryInEditor(sqlArg)}
+            >
+              {locales.ai_jump_to_data}
+            </Button>
+          )}
+          {describedTable && (
+            <Button
+              size='small'
+              variant='text'
+              sx={{ alignSelf: 'flex-start' }}
+              data-testid='ai-tool-link'
+              onClick={() => showTableInDiagram(describedTable)}
+            >
+              {locales.ai_open_table_in_diagram}
+            </Button>
           )}
           {trace.error && (
             <Typography variant='caption' color='error' sx={{ whiteSpace: 'pre-wrap' }}>

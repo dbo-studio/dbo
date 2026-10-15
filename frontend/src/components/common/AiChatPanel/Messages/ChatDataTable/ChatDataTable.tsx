@@ -1,8 +1,10 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import locales from '@/locales';
+import api from '@/api';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
-import { IconButton, Tooltip, Typography } from '@mui/material';
-import type { JSX } from 'react';
+import { CircularProgress, IconButton, Tooltip, Typography } from '@mui/material';
+import { useState, type JSX } from 'react';
 import { toast } from 'sonner';
 import { useCopyToClipboard } from 'usehooks-ts';
 import {
@@ -62,12 +64,33 @@ const toCsv = (columns: string[], rows: Record<string, unknown>[]): string =>
 
 const columnWidth = (column: string): number => Math.min(220, Math.max(104, column.length * 8 + 40));
 
-export default function ChatDataTable({ rows, query }: ChatDataTableProps): JSX.Element | null {
+export default function ChatDataTable({ rows: initialRows, query }: ChatDataTableProps): JSX.Element | null {
   const [, copy] = useCopyToClipboard();
+  const [rerun, setRerun] = useState<{ rows: Record<string, unknown>[]; types: Record<string, string> }>();
+  const [isRerunning, setIsRerunning] = useState(false);
+  const rows = rerun?.rows ?? initialRows;
 
   if (rows.length === 0) {
     return null;
   }
+
+  const handleRerun = async (): Promise<void> => {
+    const connectionId = useConnectionStore.getState().currentConnectionId;
+    if (!query || !connectionId) return;
+
+    setIsRerunning(true);
+    try {
+      const res = await api.query.runRawQuery({ connectionId, query });
+      setRerun({
+        rows: res.data,
+        types: Object.fromEntries(res.columns.map((column) => [column.name, column.type]))
+      });
+    } catch {
+      toast.error(locales.error_occurred);
+    } finally {
+      setIsRerunning(false);
+    }
+  };
 
   const allColumns = deriveColumns(rows);
   const columns = allColumns.slice(0, MAX_COLUMNS);
@@ -87,7 +110,7 @@ export default function ChatDataTable({ rows, query }: ChatDataTableProps): JSX.
           <StyledTableHead>
             <StyledTableRow>
               {columns.map((column) => (
-                <ChatTableHeader key={column} title={column}>
+                <ChatTableHeader key={column} title={rerun?.types[column] ? `${column} (${rerun.types[column]})` : column}>
                   {column}
                 </ChatTableHeader>
               ))}
@@ -130,6 +153,29 @@ export default function ChatDataTable({ rows, query }: ChatDataTableProps): JSX.
             <CustomIcon type='copy' size='xs' />
           </IconButton>
         </Tooltip>
+        <Tooltip title={locales.ai_copy_json}>
+          <IconButton
+            size='small'
+            data-testid='ai-table-copy-json'
+            onClick={() => void copy(JSON.stringify(rows, null, 2)).then((ok) => ok && toast.success(locales.copied))}
+          >
+            <CustomIcon type='code' size='xs' />
+          </IconButton>
+        </Tooltip>
+        {query && (
+          <Tooltip title={locales.ai_rerun}>
+            <span>
+              <IconButton
+                size='small'
+                data-testid='ai-table-rerun'
+                disabled={isRerunning}
+                onClick={() => void handleRerun()}
+              >
+                {isRerunning ? <CircularProgress size={12} /> : <CustomIcon type='refresh' size='xs' />}
+              </IconButton>
+            </span>
+          </Tooltip>
+        )}
         {query && (
           <Tooltip title={locales.ai_open_in_grid}>
             <IconButton
