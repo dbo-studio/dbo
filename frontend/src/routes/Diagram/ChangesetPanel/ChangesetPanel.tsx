@@ -1,6 +1,6 @@
 import QueryPreviewModal from '@/components/common/QueryPreviewModal/QueryPreviewModal';
 import { summarizeChangeset } from '@/core/diagram/changesetSummary';
-import { useChangesetReview } from '@/core/diagram/useChangesetReview';
+import { useChangesetReview } from '@/hooks';
 import locales from '@/locales';
 import type { AiDiagramDiff } from '@/types';
 import { Button, CircularProgress, Stack, Typography } from '@mui/material';

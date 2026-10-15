@@ -1,6 +1,8 @@
 package dto
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"regexp"
@@ -12,6 +14,8 @@ import (
 // Schema change ops are proposed by the AI agent (propose_schema_change) and
 // only reach the database through the preview/apply endpoints after the user
 // accepts them.
+const maxIdentifierLen = 63
+
 const (
 	SchemaChangeCreateTable   = "create_table"
 	SchemaChangeAddColumn     = "add_column"
@@ -21,6 +25,11 @@ const (
 var (
 	schemaChangeTypePattern     = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_ ]*(\(\s*\d+\s*(,\s*\d+\s*)?\))?(\[\])?$`)
 	schemaChangeOnDeleteOptions = []any{"", "NO ACTION", "CASCADE", "SET NULL", "RESTRICT"}
+	schemaChangeIdentifier      = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_$]*$`)
+	// Literals (number, quoted string without embedded quotes, NULL, booleans)
+	// and the bare CURRENT_* / now() keywords. Anything else could smuggle SQL
+	// into the generated DDL.
+	schemaChangeDefaultPattern = regexp.MustCompile(`(?i)^(-?\d+(\.\d+)?|'[^']*'|null|true|false|current_timestamp|current_date|current_time|now\(\))$`)
 )
 
 type (
@@ -65,12 +74,12 @@ func (req SchemaChangeRequest) Validate() error {
 
 func (c SchemaChangeColumn) Validate() error {
 	return validation.ValidateStruct(&c,
-		validation.Field(&c.Name, validation.Required, validation.Length(1, 128)),
+		validation.Field(&c.Name, validation.Required, validation.Length(1, 63), validation.Match(schemaChangeIdentifier)),
 		validation.Field(&c.Type, validation.Required, validation.Length(1, 64), validation.Match(schemaChangeTypePattern)),
 		validation.Field(&c.Default, validation.By(func(value any) error {
 			def, _ := value.(*string)
-			if def != nil && strings.ContainsAny(*def, ";") {
-				return errors.New("must be a single expression")
+			if def != nil && !schemaChangeDefaultPattern.MatchString(strings.TrimSpace(*def)) {
+				return errors.New("must be a literal, NULL, or CURRENT_TIMESTAMP/CURRENT_DATE/CURRENT_TIME/now()")
 			}
 
 			return nil
@@ -81,7 +90,10 @@ func (c SchemaChangeColumn) Validate() error {
 func (op SchemaChangeOp) Validate() error {
 	err := validation.ValidateStruct(&op,
 		validation.Field(&op.Op, validation.Required, validation.In(SchemaChangeCreateTable, SchemaChangeAddColumn, SchemaChangeAddForeignKey)),
-		validation.Field(&op.Table, validation.Required, validation.Length(1, 128)),
+		validation.Field(&op.Table, validation.Required, validation.Length(1, 63), validation.Match(schemaChangeIdentifier)),
+		validation.Field(&op.RefTable, validation.Match(schemaChangeIdentifier)),
+		validation.Field(&op.FkColumns, validation.Each(validation.Match(schemaChangeIdentifier))),
+		validation.Field(&op.RefColumns, validation.Each(validation.Match(schemaChangeIdentifier))),
 		validation.Field(&op.OnDelete, validation.In(schemaChangeOnDeleteOptions...)),
 	)
 	if err != nil {
@@ -118,6 +130,15 @@ func (op SchemaChangeOp) Validate() error {
 
 // ForeignKeyName is the deterministic constraint name used for agent-proposed
 // foreign keys, so the diagram edge id and the applied constraint agree.
+// The name includes the referenced table and is capped at 63 characters
+// (Postgres limit) with a hash suffix so truncation stays unique.
 func (op SchemaChangeOp) ForeignKeyName() string {
-	return fmt.Sprintf("fk_%s_%s", op.Table, strings.Join(op.FkColumns, "_"))
+	name := fmt.Sprintf("fk_%s_%s_%s", op.Table, strings.Join(op.FkColumns, "_"), op.RefTable)
+	if len(name) <= maxIdentifierLen {
+		return name
+	}
+
+	sum := sha1.Sum([]byte(name))
+
+	return name[:maxIdentifierLen-9] + "_" + hex.EncodeToString(sum[:4])
 }

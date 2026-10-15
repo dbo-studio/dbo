@@ -63,6 +63,8 @@ export type AiDiagramDiff = {
   schema?: string;
   ops: SchemaChangeOp[];
   diagramOps: SchemaOp[];
+  /** Set by the server once the user has reviewed the proposal. */
+  decision?: 'applied' | 'rejected';
 };
 
 export type AiPermissionRequest = {
@@ -72,6 +74,8 @@ export type AiPermissionRequest = {
   schema?: string;
   sql: string;
   class: string;
+  /** Set by the server once the user has confirmed or rejected the request. */
+  decision?: 'confirmed' | 'rejected';
 };
 
 export type AiAgentItem =

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -120,6 +121,14 @@ func (s *AiServiceImpl) runAgentLoop(
 
 		if round == maxRounds-1 {
 			finalResp = resp
+			if resp == nil || strings.TrimSpace(resp.Content) == "" {
+				finalResp = &aiProvider.ChatResponse{
+					Role:     model.AiChatMessageRoleAssistant,
+					Content:  fmt.Sprintf("I reached the limit of %d tool rounds before finishing. Ask me to continue, or narrow the request.", maxRounds),
+					Type:     model.AiChatMessageTypeExplanation,
+					Language: model.AiChatMessageLanguageText,
+				}
+			}
 		}
 	}
 

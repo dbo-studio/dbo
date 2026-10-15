@@ -3,8 +3,8 @@ import locales from '@/locales';
 import type { AiAgentItem } from '@/types';
 import { CircularProgress, Collapse, Typography } from '@mui/material';
 import { type JSX, useState } from 'react';
-import { AgentCardHeaderStyled, AgentCardStyled } from './AgentCards.styled';
-import ToolCallCard from './ToolCallCard';
+import { AgentCardHeaderStyled, AgentCardStyled } from '../AgentCards.styled';
+import ToolCallCard from '../ToolCallCard/ToolCallCard';
 
 /** "Used N tools" accordion (Cursor pattern); open while the turn is live. */
 export default function ToolCallGroup({ items, live = false }: { items: AiAgentItem[]; live?: boolean }): JSX.Element {

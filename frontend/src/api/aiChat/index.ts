@@ -7,6 +7,7 @@ const endpoint = {
   detail: (chatID: string | number): string => `/ai/chats/${chatID}`,
   create: (): string => '/ai/chats',
   update: (chatID: string | number): string => `/ai/chats/${chatID}`,
+  review: (chatID: string | number): string => `/ai/chats/${chatID}/review`,
   delete: (chatID: string | number): string => `/ai/chats/${chatID}`
 };
 
@@ -31,6 +32,11 @@ export const createChat = async (data: CreateChatRequestType): Promise<AiChatTyp
 
 export const updateChat = async (id: string | number, data: { title: string }): Promise<AiChatType> => {
   return (await api.patch<{ data: AiChatType }>(endpoint.update(id), data)).data.data;
+};
+
+/** Persists the user's decision on a diagram_diff / permission card. */
+export const reviewCard = async (chatId: string | number, data: { id: string; decision: string }): Promise<void> => {
+  await api.post(endpoint.review(chatId), data);
 };
 
 export const deleteChat = async (id: string | number): Promise<void> => {

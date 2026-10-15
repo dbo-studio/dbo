@@ -1,14 +1,14 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import QueryPreviewModal from '@/components/common/QueryPreviewModal/QueryPreviewModal';
 import { summarizeChangeset } from '@/core/diagram/changesetSummary';
-import { useChangesetReview } from '@/core/diagram/useChangesetReview';
+import { useChangesetReview } from '@/hooks';
 import locales from '@/locales';
 import { useDiagramChangesetStore } from '@/store/diagramChangesetStore/diagramChangeset.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AiDiagramDiff } from '@/types';
 import { Box, Button, Chip, CircularProgress, Stack, Typography, useTheme } from '@mui/material';
 import type { JSX } from 'react';
-import { AgentCardBodyStyled, AgentCardStyled, CardActionsStyled } from './AgentCards.styled';
+import { AgentCardBodyStyled, AgentCardStyled, CardActionsStyled } from '../AgentCards.styled';
 
 /** Chat embed for an agent schema proposal: summary, Open in Diagram, Accept/Reject. */
 export default function DiagramDiffCard({ diff }: { diff: AiDiagramDiff }): JSX.Element {

@@ -1,7 +1,7 @@
 import type { AiAgentItem } from '@/types';
 import type { JSX } from 'react';
-import DiagramDiffCard from './DiagramDiffCard';
-import PermissionCard from './PermissionCard';
+import DiagramDiffCard from '../DiagramDiffCard/DiagramDiffCard';
+import PermissionCard from '../PermissionCard/PermissionCard';
 
 export default function AgentItemCard({ item }: { item: AiAgentItem }): JSX.Element | null {
   switch (item.kind) {

@@ -12,8 +12,8 @@ import { MessageGroupStyled, MessagesListStyled, MessagesStyled, ScrollToBottomB
 import StreamingPreview from './StreamingPreview/StreamingPreview';
 import ThinkingMessage from './ThinkingMessage/ThinkingMessage';
 import { groupLiveItems, toRenderBlocks } from '../utils/agentTrace';
-import AgentItemCard from './AgentCards/AgentItemCard';
-import ToolCallGroup from './AgentCards/ToolCallGroup';
+import AgentItemCard from './AgentItemCard/AgentItemCard';
+import ToolCallGroup from './ToolCallGroup/ToolCallGroup';
 import TurnActions from './TurnActions/TurnActions';
 
 export default function Messages({

@@ -107,3 +107,7 @@ func (r AiChatRepoImpl) AddMessage(ctx context.Context, m *model.AiChatMessage) 
 
 	return r.db.WithContext(ctx).Create(m).Error
 }
+
+func (r AiChatRepoImpl) UpdateMessage(ctx context.Context, m *model.AiChatMessage) error {
+	return r.db.WithContext(ctx).Model(m).Update("content", m.Content).Error
+}

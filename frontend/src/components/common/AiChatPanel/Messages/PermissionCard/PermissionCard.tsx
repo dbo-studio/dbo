@@ -1,6 +1,7 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlighter';
 import api from '@/api';
+import { recordReview } from '@/core/ai/recordReview';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
@@ -10,7 +11,7 @@ import type { AiPermissionRequest } from '@/types';
 import { Button, Chip, CircularProgress, Stack, Typography, useTheme } from '@mui/material';
 import { type JSX, useState } from 'react';
 import ChatDataTable from '../ChatDataTable/ChatDataTable';
-import { AgentCardBodyStyled, AgentCardStyled, CardActionsStyled } from './AgentCards.styled';
+import { AgentCardBodyStyled, AgentCardStyled, CardActionsStyled } from '../AgentCards.styled';
 
 /**
  * Confirm-before-write card for an agent execute_write request. The statement
@@ -18,7 +19,7 @@ import { AgentCardBodyStyled, AgentCardStyled, CardActionsStyled } from './Agent
  */
 export default function PermissionCard({ request }: { request: AiPermissionRequest }): JSX.Element {
   const theme = useTheme();
-  const decision = useAiStore((state) => state.reviews[request.requestId]);
+  const decision = useAiStore((state) => state.reviews[request.requestId]) ?? request.decision;
   const [running, setRunning] = useState(false);
   const [rows, setRows] = useState<Record<string, unknown>[]>();
 
@@ -36,7 +37,7 @@ export default function PermissionCard({ request }: { request: AiPermissionReque
       );
       if (!result) return;
 
-      useAiStore.getState().setReview(request.requestId, 'confirmed');
+      recordReview(request.requestId, 'confirmed');
       setRows(result.data);
       if (request.class === 'ddl') {
         await useTreeStore.getState().reloadTree(false);
@@ -82,7 +83,7 @@ export default function PermissionCard({ request }: { request: AiPermissionReque
               size='small'
               variant='text'
               color='inherit'
-              onClick={() => useAiStore.getState().setReview(request.requestId, 'rejected')}
+              onClick={() => recordReview(request.requestId, 'rejected')}
               data-testid='ai-permission-reject'
             >
               {locales.ai_reject}

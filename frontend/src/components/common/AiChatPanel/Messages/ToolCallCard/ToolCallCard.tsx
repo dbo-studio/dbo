@@ -6,8 +6,8 @@ import type { AiToolTrace } from '@/types';
 import { Box, Collapse, Typography } from '@mui/material';
 import { type JSX, useState } from 'react';
 import ChatDataTable from '../ChatDataTable/ChatDataTable';
-import { AgentCardBodyStyled, AgentCardHeaderStyled, RawTextStyled, ToolRowStyled } from './AgentCards.styled';
-import ToolStatusPill from './ToolStatusPill';
+import { AgentCardBodyStyled, AgentCardHeaderStyled, RawTextStyled, ToolRowStyled } from '../AgentCards.styled';
+import ToolStatusPill from '../ToolStatusPill/ToolStatusPill';
 
 const TOOL_ICONS: Record<string, keyof typeof IconTypes> = {
   list_tables: 'grid',

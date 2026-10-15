@@ -1,4 +1,5 @@
 import api from '@/api';
+import { recordReview } from '@/core/ai/recordReview';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
@@ -28,7 +29,7 @@ type ChangesetReview = {
  */
 export const useChangesetReview = (diff: AiDiagramDiff): ChangesetReview => {
   const queryClient = useQueryClient();
-  const decision = useAiStore((state) => state.reviews[diff.changesetId]);
+  const decision = useAiStore((state) => state.reviews[diff.changesetId]) ?? diff.decision;
   const [previewQueries, setPreviewQueries] = useState<string[]>();
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
@@ -55,7 +56,7 @@ export const useChangesetReview = (diff: AiDiagramDiff): ChangesetReview => {
       const applied = await withSafeModeRetry((confirmed) => api.schema.applyChange({ ...request, confirmed }));
       if (!applied) return;
 
-      useAiStore.getState().setReview(diff.changesetId, 'applied');
+      recordReview(diff.changesetId, 'applied');
       useDiagramChangesetStore.getState().discard(diff.changesetId);
       setPreviewQueries(undefined);
       toast.success(locales.ai_changeset_applied);
@@ -72,7 +73,7 @@ export const useChangesetReview = (diff: AiDiagramDiff): ChangesetReview => {
   };
 
   const reject = useCallback((): void => {
-    useAiStore.getState().setReview(diff.changesetId, 'rejected');
+    recordReview(diff.changesetId, 'rejected');
     useDiagramChangesetStore.getState().discard(diff.changesetId);
   }, [diff.changesetId]);
 

@@ -95,7 +95,8 @@ func (s *ISchemaServiceImpl) ApplyChange(ctx context.Context, req *dto.SchemaCha
 
 	for i, step := range steps {
 		if _, err := repo.Execute(ctx, step.nodeID, step.action, step.params); err != nil {
-			return apperror.InternalServerError(fmt.Errorf("step %d of %d (%s %s): %w", i+1, len(steps), step.action, step.nodeID, err))
+			// DDL is not transactional across drivers: report what already ran.
+			return apperror.InternalServerError(fmt.Errorf("step %d of %d (%s %s) failed; %d earlier step(s) were already applied: %w", i+1, len(steps), step.action, step.nodeID, i, err))
 		}
 	}
 
