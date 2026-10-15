@@ -15,6 +15,7 @@ func (r *Server) routing() {
 	clearBody := middleware.SkipClearRequestBody()
 
 	api.Get("/auth/status", r.handlers.Auth.Status)
+	api.Post("/auth/setup", r.handlers.Auth.Setup)
 	api.Post("/auth/login", r.handlers.Auth.Login)
 	api.Post("/auth/login/totp", r.handlers.Auth.LoginTotp)
 	api.Post("/auth/password", r.handlers.Auth.ChangePassword)

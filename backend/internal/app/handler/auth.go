@@ -68,6 +68,27 @@ func (h AuthHandler) Login(c fiber.Ctx) error {
 	return response.SuccessBuilder().Send(c)
 }
 
+func (h AuthHandler) Setup(c fiber.Ctx) error {
+	req := new(dto.AuthSetupRequest)
+	if err := c.Bind().Body(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	sessionID, err := h.service.Setup(c, req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	middleware.SetSessionCookie(c, sessionID, h.publicURL())
+
+	return response.SuccessBuilder().Send(c)
+}
+
 func (h AuthHandler) LoginTotp(c fiber.Ctx) error {
 	req := new(dto.AuthLoginTotpRequest)
 	if err := c.Bind().Body(req); err != nil {

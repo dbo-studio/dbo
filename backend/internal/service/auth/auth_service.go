@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dbo-studio/dbo/config"
@@ -13,7 +14,6 @@ import (
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger"
-	"github.com/dbo-studio/dbo/pkg/passwordpolicy"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -38,6 +38,7 @@ func init() {
 
 type IAuthService interface {
 	Bootstrap(ctx context.Context) error
+	Setup(ctx context.Context, req *dto.AuthSetupRequest) (sessionID string, err error)
 	Status(ctx context.Context) (*dto.AuthStatusResponse, error)
 	Login(ctx context.Context, req *dto.AuthLoginRequest) (*LoginResult, error)
 	LoginTotp(ctx context.Context, req *dto.AuthLoginTotpRequest) (sessionID string, err error)
@@ -61,6 +62,8 @@ type IAuthServiceImpl struct {
 	cipherKey      []byte
 	cfg            *config.Config
 	logger         logger.Logger
+	// setupMu makes the first-admin check and insert atomic.
+	setupMu sync.Mutex
 }
 
 func NewAuthService(
@@ -86,8 +89,10 @@ func (s *IAuthServiceImpl) Bootstrap(ctx context.Context) error {
 		return nil
 	}
 
+	s.cfg.App.Auth.SharedOwnerID = ""
+
 	if s.cfg.App.Client == config.ClientDesktop {
-		s.cfg.App.AuthMode = config.AuthModeNone
+		s.cfg.App.Auth.Mode = config.AuthModeNone
 
 		return nil
 	}
@@ -97,54 +102,41 @@ func (s *IAuthServiceImpl) Bootstrap(ctx context.Context) error {
 		return err
 	}
 
-	email := strings.TrimSpace(s.cfg.App.AdminEmail)
-	password := s.cfg.App.AdminPassword
+	mode, legacy, err := config.ResolveAuthMode(count > 0, s.cfg)
+	if err != nil {
+		return err
+	}
 
-	if count == 0 && email != "" && password != "" {
-		if err := passwordpolicy.ValidateNew(password); err != nil {
-			return apperror.BadRequest(err)
-		}
+	email := strings.TrimSpace(s.cfg.App.Auth.AdminEmail)
+	password := s.cfg.App.Auth.AdminPassword
 
-		hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-		if err != nil {
-			return err
-		}
-
-		id, err := repository.GenerateID()
-		if err != nil {
-			return err
-		}
-
-		now := time.Now().UTC()
-		adminPerms := model.DefaultAdminPermissionFlags()
-		user := &model.User{
-			ID:                   id,
-			Email:                strings.ToLower(email),
-			PasswordHash:         string(hash),
-			Role:                 model.UserRoleAdmin,
-			PermCreateConnection: adminPerms.CreateConnection,
-			PermAiSettings:       adminPerms.AiSettings,
-			PermMcpSettings:      adminPerms.McpSettings,
-			MustChangePassword:   true,
-			CreatedAt:            now,
-			UpdatedAt:            now,
-		}
-
-		if err := s.users.Create(ctx, user); err != nil {
-			return err
-		}
-
-		if err := s.users.ReassignOwners(ctx, user.ID); err != nil {
+	if mode == config.AuthModeLocal && count == 0 && email != "" && password != "" {
+		if _, err := s.createFirstAdmin(ctx, email, password, true); err != nil {
 			return err
 		}
 
 		s.logger.Info("bootstrapped local admin user from APP_ADMIN_EMAIL")
-
-		count = 1
 	}
 
-	s.cfg.App.AuthMode = config.ResolveAuthMode(count > 0, s.cfg)
-	s.logger.Info("auth mode: " + string(s.cfg.App.AuthMode))
+	if mode == config.AuthModeNone && count > 0 {
+		admin, err := s.users.FindFirstAdmin(ctx)
+		switch {
+		case err == nil:
+			s.cfg.App.Auth.SharedOwnerID = admin.ID
+			s.logger.Warn("login is off (APP_AUTH_MODE=none): every browser acts as " + admin.Email)
+		case errors.Is(err, apperror.ErrUserNotFound):
+			s.logger.Warn("login is off (APP_AUTH_MODE=none) and no active admin exists: each browser gets its own empty workspace")
+		default:
+			return err
+		}
+	}
+
+	if legacy {
+		s.logger.Warn("APP_AUTH_MODE is not set; login stays on because an admin exists. Set APP_AUTH_MODE=local to keep it, or none to turn it off")
+	}
+
+	s.cfg.App.Auth.Mode = mode
+	s.logger.Info("auth mode: " + string(s.cfg.App.Auth.Mode))
 
 	return nil
 }
@@ -152,7 +144,7 @@ func (s *IAuthServiceImpl) Bootstrap(ctx context.Context) error {
 func (s *IAuthServiceImpl) Status(ctx context.Context) (*dto.AuthStatusResponse, error) {
 	mode := config.AuthModeNone
 	if s.cfg != nil {
-		mode = s.cfg.App.AuthMode
+		mode = s.cfg.App.Auth.Mode
 		if s.cfg.App.Client == config.ClientDesktop {
 			mode = config.AuthModeNone
 		}
@@ -161,6 +153,15 @@ func (s *IAuthServiceImpl) Status(ctx context.Context) (*dto.AuthStatusResponse,
 	res := &dto.AuthStatusResponse{
 		Mode:          string(mode),
 		Authenticated: false,
+	}
+
+	if mode == config.AuthModeLocal && s.cfg.App.Client != config.ClientDesktop {
+		count, err := s.users.Count(ctx)
+		if err != nil {
+			return nil, apperror.InternalServerError(err)
+		}
+
+		res.SetupRequired = count == 0
 	}
 
 	if s.cfg != nil && s.cfg.App.Client == config.ClientDesktop {
@@ -204,7 +205,7 @@ func (s *IAuthServiceImpl) Status(ctx context.Context) (*dto.AuthStatusResponse,
 }
 
 func (s *IAuthServiceImpl) Login(ctx context.Context, req *dto.AuthLoginRequest) (*LoginResult, error) {
-	if s.cfg == nil || s.cfg.App.AuthMode != config.AuthModeLocal {
+	if s.cfg == nil || s.cfg.App.Auth.Mode != config.AuthModeLocal {
 		return nil, apperror.BadRequest(apperror.ErrAuthNotEnabled)
 	}
 
