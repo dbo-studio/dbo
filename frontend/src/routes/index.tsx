@@ -7,7 +7,9 @@ import MobileShell from '@/components/layout/MobileShell/MobileShell';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { useStartup } from '@/hooks/useStartup';
 import locales from '@/locales';
+import { withMobileDensity } from '@/core/theme/mobileDensity';
 import { useAuthStore } from '@/store/authStore/auth.store';
+import { ThemeProvider } from '@mui/material';
 import { type JSX, useEffect } from 'react';
 
 const dismissBootSplash = (): void => {
@@ -23,7 +25,7 @@ export default function Home(): JSX.Element | null {
   const { ready, boot } = useStartup();
   const gate = useAuthStore((s) => s.gate);
   // Phones get the dedicated mobile shell; tablets keep the desktop layout with overlay sidebars.
-  const { isMobile } = useLayoutMode();
+  const { isMobile, isTablet, isTouch } = useLayoutMode();
 
   useEffect(() => {
     if (gate !== 'loading' || ready) {
@@ -53,5 +55,16 @@ export default function Home(): JSX.Element | null {
     );
   }
 
-  return isMobile ? <MobileShell /> : <Layout />;
+  if (isMobile) {
+    return <MobileShell />;
+  }
+
+  // Touch tablets keep the desktop layout but get the 44px hit targets of the phone shell.
+  return isTablet && isTouch ? (
+    <ThemeProvider theme={withMobileDensity}>
+      <Layout />
+    </ThemeProvider>
+  ) : (
+    <Layout />
+  );
 }
