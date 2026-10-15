@@ -97,6 +97,10 @@ export class MobileShellPage extends BasePage {
     await expect(this.tab("query")).toHaveAttribute("aria-current", "page");
   }
 
+  sqlKey(token: string): Locator {
+    return this.page.getByTestId("sql-key-bar").getByRole("button", { name: token, exact: true });
+  }
+
   async openEditor(): Promise<void> {
     await this.moreActionsButton.click();
     await this.bottomSheet.getByRole("button", { name: "Open editor" }).click();

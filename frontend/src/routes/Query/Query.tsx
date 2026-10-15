@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { QueryContainerStyled, QueryEditorBoxStyled } from './Query.styled';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
 import QueryResultGrid from './QueryResultGrid/QueryResultGrid';
+import SqlKeyBar from './SqlKeyBar/SqlKeyBar';
 
 type QueryMobileView = 'editor' | 'results';
 
@@ -225,6 +226,7 @@ export default function Query(): JSX.Element {
             />
           </QueryEditorBoxStyled>
         )}
+        {isMobile && mobileView === 'editor' && <SqlKeyBar editorRef={sqlEditorRef} />}
 
         {hasResults ? (
           isMobile ? (

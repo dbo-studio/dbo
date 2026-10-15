@@ -39,6 +39,9 @@ test.describe("Mobile shell SQLite", () => {
 
         await test.step("Run a query in a new editor and see results", async () => {
           await mobile.openEditor();
+          await editor.focus();
+          await mobile.sqlKey("SELECT").click();
+          await expect(editor.editor).toContainText("SELECT");
           await editor.typeQuery(`SELECT name FROM ${tableName} WHERE name = 'Alpha mobile'`);
           await editor.runQuery();
           await expect(page.getByText("Alpha mobile").first()).toBeVisible({ timeout: 15000 });
