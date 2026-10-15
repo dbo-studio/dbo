@@ -127,7 +127,7 @@ type IAiChatRepo interface {
 	Create(ctx context.Context, dto *dto.AiChatCreateRequest) (*model.AiChat, error)
 	Delete(ctx context.Context, chat *model.AiChat) error
 	AddMessage(ctx context.Context, m *model.AiChatMessage) error
-	UpdateMessage(ctx context.Context, m *model.AiChatMessage) error
+	UpdateMessageContent(ctx context.Context, id uint, oldContent, newContent string) (bool, error)
 }
 
 type Repository struct {

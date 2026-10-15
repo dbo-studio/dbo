@@ -108,6 +108,12 @@ func (r AiChatRepoImpl) AddMessage(ctx context.Context, m *model.AiChatMessage) 
 	return r.db.WithContext(ctx).Create(m).Error
 }
 
-func (r AiChatRepoImpl) UpdateMessage(ctx context.Context, m *model.AiChatMessage) error {
-	return r.db.WithContext(ctx).Model(m).Update("content", m.Content).Error
+// UpdateMessageContent swaps the content only if it still equals oldContent,
+// so two concurrent writers cannot both win. It reports whether a row changed.
+func (r AiChatRepoImpl) UpdateMessageContent(ctx context.Context, id uint, oldContent, newContent string) (bool, error) {
+	result := r.db.WithContext(ctx).Model(&model.AiChatMessage{}).
+		Where("id = ? AND content = ?", id, oldContent).
+		Update("content", newContent)
+
+	return result.RowsAffected == 1, result.Error
 }

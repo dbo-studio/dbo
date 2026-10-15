@@ -614,6 +614,7 @@
   "ai_op_add_foreign_key": "New foreign key",
   "ai_permission_title": "Agent wants to run a write",
   "ai_permission_confirm": "Confirm & run",
+  "ai_permission_already_reviewed": "This request was already reviewed. Reload the chat to see its state.",
   "ai_permission_executed": "Statement executed.",
   "ai_permission_rejected": "You rejected this statement. It did not run.",
   "ai_edit_in_editor": "Edit in editor",

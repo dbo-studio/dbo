@@ -18,6 +18,9 @@ const (
 	AiReviewApplied   = "applied"
 	AiReviewRejected  = "rejected"
 	AiReviewConfirmed = "confirmed"
+	// AiReviewPending releases a "confirmed" claim whose write did not run
+	// (failed or cancelled), so the card can be confirmed again.
+	AiReviewPending = "pending"
 )
 
 type (
@@ -33,6 +36,6 @@ type (
 func (req AiChatReviewRequest) Validate() error {
 	return validation.ValidateStruct(&req,
 		validation.Field(&req.ID, validation.Required, validation.Length(1, 64)),
-		validation.Field(&req.Decision, validation.Required, validation.In(AiReviewApplied, AiReviewRejected, AiReviewConfirmed)),
+		validation.Field(&req.Decision, validation.Required, validation.In(AiReviewApplied, AiReviewRejected, AiReviewConfirmed, AiReviewPending)),
 	)
 }

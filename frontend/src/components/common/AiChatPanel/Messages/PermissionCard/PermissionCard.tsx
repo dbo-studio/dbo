@@ -1,7 +1,7 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlighter';
 import api from '@/api';
-import { recordReview } from '@/core/ai/recordReview';
+import { claimReview, recordReview, releaseReview } from '@/core/ai/recordReview';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
@@ -10,6 +10,7 @@ import { useTreeStore } from '@/store/treeStore/tree.store';
 import type { AiPermissionRequest } from '@/types';
 import { Button, Chip, CircularProgress, Stack, Typography, useTheme } from '@mui/material';
 import { type JSX, useState } from 'react';
+import { toast } from 'sonner';
 import ChatDataTable from '../ChatDataTable/ChatDataTable';
 import { AgentCardBodyStyled, AgentCardStyled, CardActionsStyled } from '../AgentCards.styled';
 
@@ -25,7 +26,15 @@ export default function PermissionCard({ request }: { request: AiPermissionReque
 
   const confirm = async (): Promise<void> => {
     setRunning(true);
+    let claimed = false;
+    let ran = false;
     try {
+      if (!(await claimReview(request.requestId))) {
+        toast.error(locales.ai_permission_already_reviewed);
+        return;
+      }
+
+      claimed = true;
       const result = await withSafeModeRetry((confirmed) =>
         api.query.runRawQuery({
           connectionId: request.connectionId,
@@ -37,12 +46,14 @@ export default function PermissionCard({ request }: { request: AiPermissionReque
       );
       if (!result) return;
 
-      recordReview(request.requestId, 'confirmed');
+      ran = true;
+      useAiStore.getState().setReview(request.requestId, 'confirmed');
       setRows(result.data);
       if (request.class === 'ddl') {
         await useTreeStore.getState().reloadTree(false);
       }
     } finally {
+      if (claimed && !ran) releaseReview(request.requestId);
       setRunning(false);
     }
   };
