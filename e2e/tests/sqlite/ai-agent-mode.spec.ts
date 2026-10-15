@@ -285,7 +285,7 @@ test.describe("AI Agent Mode", () => {
           name: "execute_sql",
           args: JSON.stringify({ sql: select }),
           status: "done",
-          result: JSON.stringify({ query: `${select} LIMIT 100`, rows: [{ id: 1, name: "alpha" }], count: 1 }),
+          result: JSON.stringify({ query: `${select} LIMIT 100`, columns: [{ name: "name" }, { name: "id" }], rows: [{ id: 1, name: "alpha" }], count: 1 }),
           durationMs: 3,
         };
         await route.fulfill({
@@ -331,6 +331,8 @@ test.describe("AI Agent Mode", () => {
           await page.getByTestId("ai-tool-group").getByText(/Used 1 tool/).click();
           await page.getByTestId("ai-tool-card").getByText("execute_sql").click();
           await expect(page.getByTestId("ai-table-row-count")).toHaveText("1 rows");
+          // Columns follow the result order the server sent, not alphabetical key order.
+          await expect(page.getByTestId("ai-tool-card").getByRole("columnheader")).toHaveText(["name", "id"]);
 
           const raw = page.waitForResponse(
             (response) =>

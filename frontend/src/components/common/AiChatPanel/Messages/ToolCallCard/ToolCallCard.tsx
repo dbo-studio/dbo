@@ -21,7 +21,12 @@ const TOOL_ICONS: Record<string, keyof typeof IconTypes> = {
   execute_write: 'pen'
 };
 
-type SqlResult = { query: string; rows: Record<string, unknown>[]; count: number };
+type SqlResult = {
+  query: string;
+  columns?: { name: string }[];
+  rows: Record<string, unknown>[];
+  count: number;
+};
 
 const parseArgs = (args: string | undefined): Record<string, unknown> => {
   try {
@@ -123,7 +128,11 @@ export default function ToolCallCard({ trace }: { trace: AiToolTrace }): JSX.Ele
           )}
           {sqlResult ? (
             sqlResult.rows.length > 0 ? (
-              <ChatDataTable rows={sqlResult.rows} query={sqlArg ?? sqlResult.query} />
+              <ChatDataTable
+                rows={sqlResult.rows}
+                columns={sqlResult.columns?.map((column) => column.name)}
+                query={sqlArg ?? sqlResult.query}
+              />
             ) : (
               <Typography variant='caption' color='textSubdued'>
                 {locales.ai_tool_no_rows}
