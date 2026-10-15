@@ -6,20 +6,22 @@ import {
   setupDataBrowserTable,
 } from "../../helpers/dataBrowser";
 import { withConnectionCleanup } from "../../helpers/safeCleanup";
-import { MobileShellPage } from "../../pages";
+import { MobileShellPage, SqlEditorPage } from "../../pages";
 
 test.describe("Mobile shell SQLite", () => {
-  test("Browse to a table and edit a row as cards", async ({ page }, testInfo) => {
+  test("Browse to a table, edit a row as cards and run a query", async ({ page }, testInfo) => {
     const suffix = uniqueTestSuffix(testInfo);
     const connectionName = `mobile-shell-${suffix}`;
     const tableName = `e2e_mobile_${suffix}`;
     const mobile = new MobileShellPage(page);
+    const editor = new SqlEditorPage(page);
 
     await withConnectionCleanup(page, connectionName, async () => {
       const seed = await setupDataBrowserTable(page, connectionName, tableName, "sqlite");
       try {
         await test.step("Switch to phone viewport", async () => {
           await mobile.switchToMobile();
+          await expect(mobile.desktopOnlyControls).toHaveCount(0);
         });
 
         await test.step("Open table through connect and explore tabs", async () => {
@@ -33,6 +35,14 @@ test.describe("Mobile shell SQLite", () => {
           await mobile.saveButton.click();
           await expect(mobile.rowCard("Alpha mobile")).toBeVisible({ timeout: 15000 });
           await expect(page.getByText("unsaved changes")).toBeHidden();
+        });
+
+        await test.step("Run a query in a new editor and see results", async () => {
+          await mobile.openEditor();
+          await editor.typeQuery(`SELECT name FROM ${tableName} WHERE name = 'Alpha mobile'`);
+          await editor.runQuery();
+          await expect(page.getByText("Alpha mobile").first()).toBeVisible({ timeout: 15000 });
+          await expect(mobile.desktopOnlyControls).toHaveCount(0);
         });
       } finally {
         // Cleanup helpers drive the desktop UI.

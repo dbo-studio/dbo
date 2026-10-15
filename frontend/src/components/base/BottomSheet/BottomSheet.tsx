@@ -36,7 +36,7 @@ export default function BottomSheet({
           {actions}
         </BottomSheetHeaderStyled>
       )}
-      <BottomSheetContentStyled>{children}</BottomSheetContentStyled>
+      <BottomSheetContentStyled data-testid='bottom-sheet'>{children}</BottomSheetContentStyled>
     </BottomSheetStyled>
   );
 }

@@ -26,6 +26,22 @@ export class MobileShellPage extends BasePage {
     return this.page.getByRole("button", { name: "Save" });
   }
 
+  get bottomSheet(): Locator {
+    return this.page.getByTestId("bottom-sheet");
+  }
+
+  get moreActionsButton(): Locator {
+    return this.page.getByRole("button", { name: "More actions" });
+  }
+
+  /** Controls that only make sense on desktop and must not render inside the phone shell. */
+  get desktopOnlyControls(): Locator {
+    return this.page
+      .getByRole("button", { name: "sideLeft" })
+      .or(this.page.getByRole("button", { name: "sideRight" }))
+      .or(this.page.locator('[data-testid^="workspace-tab-"]'));
+  }
+
   get connectionSwitcher(): Locator {
     return this.page.getByTestId("mobile-connection-switcher");
   }
@@ -78,6 +94,12 @@ export class MobileShellPage extends BasePage {
     await this.openTab("explore");
     await this.node("Tables").click();
     await this.node(tableName).click();
+    await expect(this.tab("query")).toHaveAttribute("aria-current", "page");
+  }
+
+  async openEditor(): Promise<void> {
+    await this.moreActionsButton.click();
+    await this.bottomSheet.getByRole("button", { name: "Open editor" }).click();
     await expect(this.tab("query")).toHaveAttribute("aria-current", "page");
   }
 
