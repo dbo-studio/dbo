@@ -2,10 +2,12 @@ import { useEffect } from 'react';
 import { useAiStore } from '@/store/aiStore/ai.store';
 
 /** Reopening a chat from history brings back the database / schema / table chips it was using. */
-export const useRestoreChatContext = (): void => {
+export const useRestoreChatContext = (active = true): void => {
   const chatId = useAiStore((state) => state.currentChat?.id);
 
   useEffect(() => {
+    if (!active) return;
+
     const { currentChat, context, updateContext } = useAiStore.getState();
     const saved = currentChat?.context;
     if (!saved) return;
@@ -17,5 +19,5 @@ export const useRestoreChatContext = (): void => {
       tables: saved.tables ?? [],
       views: saved.views ?? []
     });
-  }, [chatId]);
+  }, [active, chatId]);
 };
