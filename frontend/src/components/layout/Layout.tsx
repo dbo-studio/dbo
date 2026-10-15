@@ -9,6 +9,7 @@ import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { JSX } from 'react';
 import ConfirmModal from '../base/Modal/ConfirmModal/ConfirmModal.tsx';
+import AiChatProvider from '../common/AiChatPanel/AiChatProvider/AiChatProvider';
 import UpdateDialog from '../common/UpdateDialog/UpdateDialog';
 import SafeModePasswordHost from '../common/SafeModePasswordPrompt/SafeModePasswordHost';
 import AppHeader from './AppHeader/AppHeader';
@@ -68,6 +69,7 @@ export default function Layout(): JSX.Element {
 
   const showExplorer = Boolean(currentConnection && sidebar.showLeft);
   const showAssistant = Boolean(currentConnection && sidebar.showRight);
+  const assistantVisible = showAssistant && Number(sidebar.rightSidebarTab ?? 0) === 0;
 
   const renderMain = (): JSX.Element => {
     if (useSidebarOverlay) {
@@ -97,15 +99,17 @@ export default function Layout(): JSX.Element {
   };
 
   return (
-    <LayoutStyled>
-      <ConfirmModal />
-      <SafeModePasswordHost />
-      <UpdateDialog />
-      <AppHeader />
-      <LayoutBodyStyled>
-        {showConnectionsRail && <StartContainer />}
-        <LayoutMainStyled>{renderMain()}</LayoutMainStyled>
-      </LayoutBodyStyled>
-    </LayoutStyled>
+    <AiChatProvider active={assistantVisible}>
+      <LayoutStyled>
+        <ConfirmModal />
+        <SafeModePasswordHost />
+        <UpdateDialog />
+        <AppHeader />
+        <LayoutBodyStyled>
+          {showConnectionsRail && <StartContainer />}
+          <LayoutMainStyled>{renderMain()}</LayoutMainStyled>
+        </LayoutBodyStyled>
+      </LayoutStyled>
+    </AiChatProvider>
   );
 }

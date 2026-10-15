@@ -282,6 +282,23 @@ export class SettingsPage extends BasePage {
     await this.rightSidebarButton.click();
   }
 
+  /**
+   * Opens the right sidebar unless it is already open. Layout settings load
+   * after first paint, so give a persisted open sidebar time to appear before
+   * toggling; otherwise the toggle would close it.
+   */
+  async openRightSidebar(): Promise<void> {
+    const tab = this.rightSidebarTab();
+    const alreadyOpen = await tab.waitFor({ state: "visible", timeout: 3000 }).then(
+      () => true,
+      () => false,
+    );
+    if (!alreadyOpen) {
+      await this.toggleRightSidebar();
+    }
+    await expect(tab).toBeVisible({ timeout: 15000 });
+  }
+
   leftSidebarTab(): Locator {
     return this.page.getByRole("tab", { name: "Items" });
   }

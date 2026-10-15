@@ -133,9 +133,7 @@ function agentTurn(connectionId: number, usersTable: string, postsTable: string)
 
 async function openAssistant(page: Page): Promise<void> {
   const settingsPage = new SettingsPage(page);
-  if (!(await settingsPage.rightSidebarTab().isVisible().catch(() => false))) {
-    await settingsPage.toggleRightSidebar();
-  }
+  await settingsPage.openRightSidebar();
   await page.getByTestId("ai-empty-quick-setup").click();
   await expect(settingsPage.aiSetupForm()).toBeVisible({ timeout: 15000 });
   await saveAiSetup(page, "sk-e2e-fake-key");
@@ -365,6 +363,24 @@ test.describe("AI Agent Mode", () => {
           await composer.press("Enter");
           await expect(page.getByTestId("ai-chat-cancel")).toBeVisible({ timeout: 15000 });
           await composer.press("Escape");
+          await expect(page.getByTestId("ai-chat-cancel")).toHaveCount(0, { timeout: 10000 });
+        });
+
+        await test.step("A turn survives closing the panel and Stop still aborts it", async () => {
+          const settingsPage = new SettingsPage(page);
+          const aborted = page.waitForEvent("requestfailed", (request) =>
+            new URL(request.url()).pathname.endsWith("/api/ai/chat/stream"),
+          );
+          await composer.fill("hang");
+          await composer.press("Enter");
+          await expect(page.getByTestId("ai-chat-cancel")).toBeVisible({ timeout: 15000 });
+
+          await settingsPage.toggleRightSidebar();
+          await expect(composer).toHaveCount(0);
+          await settingsPage.toggleRightSidebar();
+
+          await page.getByTestId("ai-chat-cancel").click();
+          await aborted;
           await expect(page.getByTestId("ai-chat-cancel")).toHaveCount(0, { timeout: 10000 });
         });
 
