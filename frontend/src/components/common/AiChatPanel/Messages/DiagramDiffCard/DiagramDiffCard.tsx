@@ -9,6 +9,7 @@ import type { AiDiagramDiff } from '@/types';
 import { Box, Button, Chip, CircularProgress, Stack, Typography, useTheme } from '@mui/material';
 import type { JSX } from 'react';
 import { AgentCardBodyStyled, AgentCardStyled, CardActionsStyled } from '../AgentCards.styled';
+import DiagramThumbnail from '../DiagramThumbnail/DiagramThumbnail';
 
 /** Chat embed for an agent schema proposal: summary, Open in Diagram, Accept/Reject. */
 export default function DiagramDiffCard({ diff }: { diff: AiDiagramDiff }): JSX.Element {
@@ -47,6 +48,7 @@ export default function DiagramDiffCard({ diff }: { diff: AiDiagramDiff }): JSX.
         />
       </Stack>
       <AgentCardBodyStyled>
+        <DiagramThumbnail ops={diff.diagramOps} />
         <Box component='ul' sx={{ m: 0, pl: 2 }}>
           {lines.map((line) => (
             <Typography component='li' variant='caption' key={`${line.label}-${line.detail}`}>

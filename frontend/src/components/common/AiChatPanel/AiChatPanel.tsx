@@ -3,7 +3,7 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Button, Stack, Typography } from '@mui/material';
+import { Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { useEffect } from 'react';
 import AddChat from './AddChat/AddChat';
 import { AiChatPanelContainerStyled, ComposerContainerStyled, HeaderContainerStyled } from './AiChatPanel.styled';
@@ -11,12 +11,14 @@ import ChatBox from './ChatBox/ChatBox';
 import ChatHistory from './ChatHistory/ChatHistory';
 import Chats from './Chats/Chats';
 import { useAiAutoContext } from './hooks/useAiAutoContext';
+import { useRestoreChatContext } from './hooks/useRestoreChatContext';
 import { useAiChat } from './hooks/useAiChat';
 import Messages from './Messages/Messages';
 import ModeBar from './ModeBar/ModeBar';
 
 export default function AiChatPanel() {
   useAiAutoContext();
+  useRestoreChatContext();
 
   const {
     autocomplete,
@@ -39,6 +41,8 @@ export default function AiChatPanel() {
   const updateContext = useAiStore((state) => state.updateContext);
   const connectionId = useConnectionStore((state) => state.currentConnectionId);
   const updateUI = useSettingStore((state) => state.updateUI);
+  const updateEditor = useSettingStore((state) => state.updateEditor);
+  const density = useSettingStore((state) => state.editor.aiChatDensity ?? 'comfortable');
 
   useEffect(() => {
     if (!bridgeRequest) return;
@@ -70,6 +74,15 @@ export default function AiChatPanel() {
         />
         <AddChat onClick={() => void handleCreateChat()} />
         <ChatHistory />
+        <Tooltip title={density === 'compact' ? locales.ai_density_compact : locales.ai_density_comfortable}>
+          <IconButton
+            onClick={() => updateEditor({ aiChatDensity: density === 'compact' ? 'comfortable' : 'compact' })}
+            data-testid='ai-density-toggle'
+            data-density={density}
+          >
+            <CustomIcon type='density' />
+          </IconButton>
+        </Tooltip>
       </HeaderContainerStyled>
       {connectionId && <ModeBar />}
       {!connectionId ? (

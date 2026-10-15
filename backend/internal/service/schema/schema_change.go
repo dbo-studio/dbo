@@ -90,7 +90,8 @@ func (s *ISchemaServiceImpl) ApplyChange(ctx context.Context, req *dto.SchemaCha
 	}
 
 	defer func() {
-		_ = s.cache.DeleteByPrefix(context.WithoutCancel(ctx), cache.ConnectionPrefix(connection.ID))
+		// Cache keys are owner-scoped (tree, autocomplete); the bare connection prefix matches none of them.
+		_ = s.cache.DeleteByPrefix(context.WithoutCancel(ctx), cache.OwnerConnectionPrefix(helper.CtxOwnerID(ctx), connection.ID))
 	}()
 
 	for i, step := range steps {

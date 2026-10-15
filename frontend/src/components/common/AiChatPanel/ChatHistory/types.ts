@@ -4,4 +4,6 @@ export type ChatHistoryItemProps = {
   item: AiChatType;
   onClick: () => void;
   onDelete: () => void;
+  onTogglePin: () => void;
+  onExport: () => void;
 };

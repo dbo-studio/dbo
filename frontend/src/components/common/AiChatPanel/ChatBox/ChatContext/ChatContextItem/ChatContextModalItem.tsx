@@ -11,7 +11,7 @@ export default function ChatContextItem({ name, type, onClick }: ChatContextItem
   const isHover = useHover(hoverRef as RefObject<HTMLElement>);
 
   return (
-    <ChatContextItemStyled ref={hoverRef}>
+    <ChatContextItemStyled ref={hoverRef} data-testid='ai-context-chip' data-chip={name}>
       <Stack
         direction={'row'}
         spacing={1}
@@ -22,7 +22,9 @@ export default function ChatContextItem({ name, type, onClick }: ChatContextItem
         }}
       >
         {isHover ? (
-          <CustomIcon type='close' size='xs' onClick={onClick} />
+          <span data-testid='ai-context-chip-remove' style={{ display: 'inline-flex' }} onClick={onClick}>
+            <CustomIcon type='close' size='xs' />
+          </span>
         ) : (
           <CustomIcon type={type === 'database' ? 'database' : 'sheet'} size='xs' />
         )}

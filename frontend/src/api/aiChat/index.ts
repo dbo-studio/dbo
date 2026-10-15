@@ -30,7 +30,10 @@ export const createChat = async (data: CreateChatRequestType): Promise<AiChatTyp
   return (await api.post<{ data: AiChatType }>(endpoint.create(), data)).data.data;
 };
 
-export const updateChat = async (id: string | number, data: { title: string }): Promise<AiChatType> => {
+export const updateChat = async (
+  id: string | number,
+  data: { title?: string; pinned?: boolean }
+): Promise<AiChatType> => {
   return (await api.patch<{ data: AiChatType }>(endpoint.update(id), data)).data.data;
 };
 

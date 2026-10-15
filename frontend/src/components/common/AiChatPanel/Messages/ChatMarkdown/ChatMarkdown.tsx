@@ -6,7 +6,22 @@ import { messageMarkdownSx } from '../messageMarkdownSx';
 import { splitStreamingMarkdown } from '../splitStreamingMarkdown';
 import { StreamingCursorStyled } from '../StreamingPreview/StreamingPreview.styled';
 import { splitChatContent, type ChatContentSegment } from '../../utils/chatTableContent';
+import type { AiMessageType } from '@/types';
 import type { ChatMarkdownProps } from '../../types';
+import CodeMessage from '../CodeMessage/CodeMessage';
+
+/** Fenced code in markdown gets the same actions (insert / open tab / run / copy) as code blocks. */
+const renderCodeBlock = (code: string, language: string): JSX.Element => (
+  <CodeMessage
+    message={{
+      role: 'assistant',
+      type: 'code',
+      content: code,
+      language: language as AiMessageType['language'],
+      createdAt: ''
+    }}
+  />
+);
 
 const getSegmentKey = (segment: ChatContentSegment): string => {
   if (segment.type === 'table') {
@@ -33,7 +48,7 @@ const renderSegments = (text: string, theme: Theme): JSX.Element[] => {
 
     return (
       <Typography key={key} component='div' variant='body2' sx={messageMarkdownSx(theme)}>
-        <AppMarkdown>{segment.content}</AppMarkdown>
+        <AppMarkdown renderCodeBlock={renderCodeBlock}>{segment.content}</AppMarkdown>
       </Typography>
     );
   });

@@ -56,6 +56,8 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 		return apperror.InternalServerError(err)
 	}
 
+	s.saveChatContext(ctx, chat.ID, req.ContextOpts)
+
 	if err := s.updateChatTitle(ctx, chat, req.Message); err != nil {
 		return err
 	}
