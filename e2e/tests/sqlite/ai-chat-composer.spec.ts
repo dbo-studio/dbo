@@ -24,9 +24,7 @@ const done = (messages: unknown[]): Event => ({ type: "done", chatId: 0, title: 
 
 async function openAssistant(page: Page): Promise<void> {
   const settingsPage = new SettingsPage(page);
-  if (!(await settingsPage.rightSidebarTab().isVisible().catch(() => false))) {
-    await settingsPage.toggleRightSidebar();
-  }
+  await settingsPage.openRightSidebar();
   await page.getByTestId("ai-empty-quick-setup").click();
   await expect(settingsPage.aiSetupForm()).toBeVisible({ timeout: 15000 });
   await saveAiSetup(page, "sk-e2e-fake-key");

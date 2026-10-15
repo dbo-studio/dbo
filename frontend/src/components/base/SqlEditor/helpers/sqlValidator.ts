@@ -9,15 +9,10 @@ export type SqlValidationError = {
   length: number;
 };
 
-/**
- * Basic SQL syntax validation
- * This is a simple validator - for production, consider using a proper SQL parser
- */
 export function validateSql(text: string): SqlValidationError[] {
   const errors: SqlValidationError[] = [];
   const lines = text.split('\n');
 
-  // Remove comments for validation
   const normalizedText = text
     .replace(/--.*$/gm, '')
     .replace(/\/\*[\s\S]*?\*\//g, '')
@@ -27,7 +22,6 @@ export function validateSql(text: string): SqlValidationError[] {
     return errors;
   }
 
-  // Check for unmatched quotes
   let singleQuoteCount = 0;
   let doubleQuoteCount = 0;
   let backtickCount = 0;
@@ -36,7 +30,6 @@ export function validateSql(text: string): SqlValidationError[] {
     const char = normalizedText[i];
     const prevChar = i > 0 ? normalizedText[i - 1] : '';
 
-    // Skip escaped quotes
     if (prevChar === '\\') {
       continue;
     }
@@ -50,7 +43,6 @@ export function validateSql(text: string): SqlValidationError[] {
     }
   }
 
-  // Check for unmatched parentheses
   let parenCount = 0;
   let bracketCount = 0;
 
@@ -62,7 +54,6 @@ export function validateSql(text: string): SqlValidationError[] {
     if (char === ']') bracketCount--;
   }
 
-  // Report errors
   if (singleQuoteCount % 2 !== 0) {
     const lastQuoteIndex = normalizedText.lastIndexOf("'");
     const line = text.substring(0, lastQuoteIndex).split('\n').length;
@@ -124,16 +115,13 @@ export function validateSql(text: string): SqlValidationError[] {
     });
   }
 
-  // Check for common SQL syntax errors
   const upperText = normalizedText.toUpperCase();
 
-  // Check for SELECT without FROM (in some cases)
   if (upperText.includes('SELECT') && !upperText.includes('FROM') && !upperText.match(/SELECT\s+[\w\s,()]+FROM/)) {
     const selectIndex = upperText.indexOf('SELECT');
     const line = normalizedText.substring(0, selectIndex).split('\n').length;
     const column = lines[line - 1]?.indexOf('SELECT') ?? 0;
 
-    // Only warn if there's actual content after SELECT
     if (normalizedText.substring(selectIndex + 6).trim().length > 0) {
       errors.push({
         message: 'SELECT statement missing FROM clause',
@@ -145,7 +133,6 @@ export function validateSql(text: string): SqlValidationError[] {
     }
   }
 
-  // Check for common keyword misuse
   const keywordPatterns = [
     { pattern: /\bFROM\s+FROM\b/i, message: 'Duplicate FROM keyword', severity: 'error' as const },
     { pattern: /\bWHERE\s+WHERE\b/i, message: 'Duplicate WHERE keyword', severity: 'error' as const },
@@ -170,9 +157,6 @@ export function validateSql(text: string): SqlValidationError[] {
   return errors;
 }
 
-/**
- * Convert validation errors to Monaco markers
- */
 export function errorsToMarkers(errors: SqlValidationError[]): Monaco.editor.IMarkerData[] {
   return errors.map((error) => ({
     message: error.message,

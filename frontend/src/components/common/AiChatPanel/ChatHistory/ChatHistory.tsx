@@ -6,15 +6,16 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { AiChatType } from '@/types';
 import { Box, IconButton, InputBase, Tooltip, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { ChatHistoryStyled } from './ChatHistory.styled';
+import { type JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ChatHistoryListStyled, ChatHistoryStyled } from './ChatHistory.styled';
 import ChatHistoryItem from './ChatHistoryItem/ChatHistoryItem';
 import locales from '@/locales';
 import { tools } from '@/core/utils/tools';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { chatFileName, chatToMarkdown } from '../utils/chatExport';
+import type { ChatHistoryProps } from './types';
 
-export default function ChatHistory() {
+export default function ChatHistory({ variant = 'menu' }: ChatHistoryProps): JSX.Element {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const confirmDanger = useConfirmModalStore((state) => state.danger);
@@ -36,8 +37,15 @@ export default function ChatHistory() {
         page: 1,
         count: 50
       }),
-    enabled: !!currentConnectionId && open
+    enabled: !!currentConnectionId && (open || variant === 'list')
   });
+
+  // The list stays mounted, so refresh it when a chat is created, switched or renamed.
+  const currentChatKey = `${currentChat?.id ?? ''}:${currentChat?.title ?? ''}`;
+  useEffect(() => {
+    if (variant !== 'list' || !currentConnectionId) return;
+    void queryClient.invalidateQueries({ queryKey: ['aiChatHistory', currentConnectionId] });
+  }, [variant, currentChatKey, currentConnectionId, queryClient]);
 
   const { mutateAsync: deleteChatMutation } = useMutation({
     mutationFn: api.aiChat.deleteChat
@@ -144,6 +152,40 @@ export default function ChatHistory() {
     return (data ?? []).filter((item) => !term || item.title.toLowerCase().includes(term));
   }, [data, search]);
 
+  const content = (
+    <>
+      <InputBase
+        autoFocus={variant === 'menu'}
+        fullWidth
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+        placeholder={locales.ai_history_search}
+        inputProps={{ 'aria-label': locales.ai_history_search, 'data-testid': 'ai-history-search' }}
+        sx={{ fontSize: '0.75rem', px: 0.5, mb: 0.5, borderBottom: 1, borderColor: 'divider' }}
+      />
+      {visible.length === 0 && (
+        <Typography variant='caption' color='textSubdued' sx={{ p: 1 }} data-testid='ai-history-empty'>
+          {data?.length ? locales.ai_history_no_results : locales.ai_history_empty}
+        </Typography>
+      )}
+      {visible.map((item) => (
+        <ChatHistoryItem
+          key={item.id}
+          item={item}
+          selected={variant === 'list' && item.id === currentChat?.id}
+          onClick={() => void handleSelectChat(item)}
+          onDelete={() => handleDelete(item)}
+          onTogglePin={() => void handleTogglePin(item)}
+          onExport={() => void handleExport(item)}
+        />
+      ))}
+    </>
+  );
+
+  if (variant === 'list') {
+    return <ChatHistoryListStyled data-testid='ai-workspace-sessions'>{content}</ChatHistoryListStyled>;
+  }
+
   return (
     <Box>
       <Tooltip title={locales.chat_history}>
@@ -153,32 +195,7 @@ export default function ChatHistory() {
       </Tooltip>
 
       <DropDownMenu open={open} onClose={() => setOpen(false)} anchorRef={anchorRef}>
-        <ChatHistoryStyled>
-          <InputBase
-            autoFocus
-            fullWidth
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder={locales.ai_history_search}
-            inputProps={{ 'aria-label': locales.ai_history_search, 'data-testid': 'ai-history-search' }}
-            sx={{ fontSize: '0.75rem', px: 0.5, mb: 0.5, borderBottom: 1, borderColor: 'divider' }}
-          />
-          {visible.length === 0 && (
-            <Typography variant='caption' color='textSubdued' sx={{ p: 1 }} data-testid='ai-history-empty'>
-              {data?.length ? locales.ai_history_no_results : locales.ai_history_empty}
-            </Typography>
-          )}
-          {visible.map((item) => (
-            <ChatHistoryItem
-              key={item.id}
-              item={item}
-              onClick={() => void handleSelectChat(item)}
-              onDelete={() => handleDelete(item)}
-              onTogglePin={() => void handleTogglePin(item)}
-              onExport={() => void handleExport(item)}
-            />
-          ))}
-        </ChatHistoryStyled>
+        <ChatHistoryStyled>{content}</ChatHistoryStyled>
       </DropDownMenu>
     </Box>
   );

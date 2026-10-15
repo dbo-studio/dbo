@@ -170,6 +170,41 @@ test.describe("AI Agent Mode policy (server side)", () => {
             await scalar(page, connectionId, `SELECT COUNT(*) AS v FROM sqlite_master WHERE name = '${newTable}'`),
           ).toBe(0);
         });
+
+        await test.step("A chat cannot run against another connection", async () => {
+          const otherPath = `${dbPath}.other`;
+          ensureSqliteDbFile(otherPath);
+          const created = await page.request.post("/api/connections", {
+            data: { name: `${connectionName}-other`, type: "sqlite", options: { path: otherPath } },
+          });
+          expect(created.ok()).toBeTruthy();
+          const otherId = await connectionIdByName(page, `${connectionName}-other`);
+
+          try {
+            const chatRes = await page.request.post("/api/ai/chats", { data: { connectionId, title: "scoped" } });
+            const chatId = ((await chatRes.json()) as { data: { id: number } }).data.id;
+
+            const send = async (targetId: number): Promise<string[]> => {
+              const response = await page.request.post("/api/ai/chat/stream", {
+                data: { connectionId: targetId, chatId, message: "hi", mode: "ask" },
+              });
+              expect(response.status()).toBe(200);
+              return types(
+                (await response.text())
+                  .split("\n")
+                  .filter((line) => line.trim() !== "")
+                  .map((line) => JSON.parse(line) as StreamEvent),
+              );
+            };
+
+            expect(await send(connectionId)).toContain("done");
+            const rejected = await send(otherId);
+            expect(rejected).toContain("error");
+            expect(rejected).not.toContain("done");
+          } finally {
+            await page.request.delete(`/api/connections/${otherId}`);
+          }
+        });
       });
     } finally {
       await llm.stop();

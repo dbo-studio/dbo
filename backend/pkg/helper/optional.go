@@ -16,7 +16,6 @@ func OptionalBool(value *bool, defaultValue bool) bool {
 	return defaultValue
 }
 
-// Optional  don't judge me for this function name :))))
 func Optional[T any](value *T, defaultValue *T) *T {
 	if value != nil {
 		return value

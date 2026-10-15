@@ -92,6 +92,7 @@ export const IconTypes = {
   network: 'Network',
   layout: 'LayoutGrid',
   fit: 'Maximize2',
+  expand: 'Maximize2',
   send: 'Send',
   at: 'AtSign',
   history: 'RotateCcwClock',

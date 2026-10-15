@@ -60,7 +60,8 @@ const buildContextOpts = (): AiContextOptsType => {
   return contextOpts;
 };
 
-export const useAiChat = (): useAiChatReturnType => {
+/** @param active autocomplete for the composer is only fetched while an AI surface is visible. */
+export const useAiChat = (active = true): useAiChatReturnType => {
   const [page, setPage] = useState(1);
   const [isFallbackPending, setIsFallbackPending] = useState(false);
   const fallbackAbortRef = useRef<AbortController | null>(null);
@@ -83,7 +84,7 @@ export const useAiChat = (): useAiChatReturnType => {
       api.query.autoComplete({
         connectionId: Number(connectionId)
       }),
-    enabled: !!connectionId
+    enabled: !!connectionId && active
   });
 
   const { mutateAsync: createChatMutation } = useMutation({
@@ -102,7 +103,7 @@ export const useAiChat = (): useAiChatReturnType => {
       addChat(chat);
       await handleChatChange(chat);
     } catch {
-      // create chat failed silently
+      /* ignored */
     }
   };
 
@@ -112,6 +113,7 @@ export const useAiChat = (): useAiChatReturnType => {
       if (chat.id === currentChat?.id) return;
 
       resetStreaming();
+      setPage(1);
 
       const detail = await api.aiChat.getChatDetail({
         id: chat.id,
@@ -216,7 +218,6 @@ export const useAiChat = (): useAiChatReturnType => {
           keepPartialTurn();
           return;
         }
-        // fall through to non-stream fallback
       }
 
       const generation = fallbackGenerationRef.current;

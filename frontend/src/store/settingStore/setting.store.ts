@@ -20,6 +20,7 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
             rightSidebarTab: 0
           },
           showConnectionsDrawer: false,
+          agentWorkspaceOpen: false,
           showAddConnection: false,
           duplicateConnectionId: undefined,
           showEditConnection: false,

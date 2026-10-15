@@ -61,7 +61,6 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
             const currentExpandedNodes = state.expandedNodes[currentConnection] || [];
             const currentLoadedParents = state.loadedParentIds[currentConnection] || [];
 
-            // Function to recursively find all child node IDs
             const getAllChildIds = (node: TreeNodeType): string[] => {
               let childIds: string[] = [];
               if (node.children?.length) {
@@ -73,11 +72,9 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
               return childIds;
             };
 
-            // Get the tree to find all children of the collapsed node
             const tree = state.tree[currentConnection];
             if (!tree) return state;
 
-            // Find the node being collapsed
             const findNode = (node: TreeNodeType): TreeNodeType | null => {
               if (node.id === nodeId) return node;
               for (const child of node.children || []) {
@@ -90,7 +87,6 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
             const nodeToCollapse = findNode(tree);
             if (!nodeToCollapse) return state;
 
-            // Get all child IDs to remove
             const childIdsToRemove = getAllChildIds(nodeToCollapse);
 
             return {

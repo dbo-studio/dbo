@@ -7,7 +7,7 @@ import type { DataTabType } from '@/types/Tab';
 
 const QUERY_DEBOUNCE_MS = 500;
 
-export const useAiAutoContext = (): void => {
+export const useAiAutoContext = (active = true): void => {
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const tabs = useTabStore(selectTabs);
   const updateContext = useAiStore((state) => state.updateContext);
@@ -23,6 +23,8 @@ export const useAiAutoContext = (): void => {
   );
 
   useEffect(() => {
+    if (!active) return;
+
     const selectedTab = useTabStore.getState().selectedTab();
     const context = useAiStore.getState().context;
 
@@ -65,5 +67,5 @@ export const useAiAutoContext = (): void => {
         clearTimeout(queryDebounceRef.current);
       }
     };
-  }, [selectedTabId, tabs, syncQuerySnippet, updateContext]);
+  }, [active, selectedTabId, tabs, syncQuerySnippet, updateContext]);
 };

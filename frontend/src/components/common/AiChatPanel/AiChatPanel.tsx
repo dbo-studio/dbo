@@ -1,25 +1,21 @@
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { shortcuts } from '@/core/utils';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
-import { useEffect } from 'react';
 import AddChat from './AddChat/AddChat';
 import { AiChatPanelContainerStyled, ComposerContainerStyled, HeaderContainerStyled } from './AiChatPanel.styled';
 import ChatBox from './ChatBox/ChatBox';
 import ChatHistory from './ChatHistory/ChatHistory';
 import Chats from './Chats/Chats';
-import { useAiAutoContext } from './hooks/useAiAutoContext';
-import { useRestoreChatContext } from './hooks/useRestoreChatContext';
-import { useAiChat } from './hooks/useAiChat';
+import { useAiChatController } from './hooks/useAiChatController';
 import Messages from './Messages/Messages';
 import ModeBar from './ModeBar/ModeBar';
 
 export default function AiChatPanel() {
-  useAiAutoContext();
-  useRestoreChatContext();
-
   const {
     autocomplete,
     chatPending,
@@ -32,35 +28,15 @@ export default function AiChatPanel() {
     handleRegenerate,
     handleChatDelete,
     handleChatRename
-  } = useAiChat();
+  } = useAiChatController();
 
   const currentChat = useAiStore((state) => state.currentChat);
   const chats = useAiStore((state) => state.chats);
-  const bridgeRequest = useAiStore((state) => state.bridgeRequest);
-  const setBridgeRequest = useAiStore((state) => state.setBridgeRequest);
-  const updateContext = useAiStore((state) => state.updateContext);
   const connectionId = useConnectionStore((state) => state.currentConnectionId);
   const updateUI = useSettingStore((state) => state.updateUI);
   const updateEditor = useSettingStore((state) => state.updateEditor);
   const density = useSettingStore((state) => state.editor.aiChatDensity ?? 'comfortable');
-
-  useEffect(() => {
-    if (!bridgeRequest) return;
-
-    const { message, autoSend, contextPatch } = bridgeRequest;
-    setBridgeRequest(null);
-
-    if (contextPatch) {
-      updateContext({ ...useAiStore.getState().context, ...contextPatch });
-    }
-    if (message) {
-      const nextContext = { ...useAiStore.getState().context, input: message };
-      updateContext(nextContext);
-      if (autoSend) {
-        void handleSend(message);
-      }
-    }
-  }, [bridgeRequest, handleSend, setBridgeRequest, updateContext]);
+  const { useSidebarOverlay } = useLayoutMode();
 
   return (
     <AiChatPanelContainerStyled>
@@ -83,6 +59,13 @@ export default function AiChatPanel() {
             <CustomIcon type='density' />
           </IconButton>
         </Tooltip>
+        {connectionId && !useSidebarOverlay && (
+          <Tooltip title={`${locales.ai_expand_to_agent} (${shortcuts.toggleAgentWorkspace.command.join('+')})`}>
+            <IconButton onClick={() => updateUI({ agentWorkspaceOpen: true })} data-testid='ai-expand-to-agent'>
+              <CustomIcon type='expand' />
+            </IconButton>
+          </Tooltip>
+        )}
       </HeaderContainerStyled>
       {connectionId && <ModeBar />}
       {!connectionId ? (

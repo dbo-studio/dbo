@@ -1,4 +1,5 @@
 import AddConnection from '@/components/common/AddConnection/AddConnection';
+import AiChatProvider from '@/components/common/AiChatPanel/AiChatProvider/AiChatProvider';
 import EditConnection from '@/components/common/AddConnection/EditConnection';
 import ConnectionPasswordPromptModal from '@/components/common/Connections/ConnectionPasswordPrompt/ConnectionPasswordPrompt';
 import { useConnectionsList } from '@/components/common/Connections/useConnectionsList';
@@ -48,27 +49,29 @@ export default function MobileShell(): JSX.Element {
 
   return (
     <ThemeProvider theme={withMobileDensity}>
-      <MobileShellStyled data-testid='mobile-shell'>
-        <AppHosts />
-        <AddConnection />
-        <EditConnection />
-        <ConnectionPasswordPromptModal />
-        <ConnectionsSheet />
-        <MobileHeader />
-        {currentConnection ? (
-          <>
-            {/* Every tab stays mounted so editor text, scroll and chat state survive tab switches. */}
-            {tabs.map((tab) => (
-              <TabPaneStyled key={tab} active={tab === activeTab} hidden={tab !== activeTab}>
-                <ScreenStack tab={tab} root={rootScreens[tab]} screens={pushedScreens} />
-              </TabPaneStyled>
-            ))}
-            <TabBar />
-          </>
-        ) : (
-          <NoConnectionScreen />
-        )}
-      </MobileShellStyled>
+      <AiChatProvider active={activeTab === 'ai'}>
+        <MobileShellStyled data-testid='mobile-shell'>
+          <AppHosts />
+          <AddConnection />
+          <EditConnection />
+          <ConnectionPasswordPromptModal />
+          <ConnectionsSheet />
+          <MobileHeader />
+          {currentConnection ? (
+            <>
+              {/* Every tab stays mounted so editor text, scroll and chat state survive tab switches. */}
+              {tabs.map((tab) => (
+                <TabPaneStyled key={tab} active={tab === activeTab} hidden={tab !== activeTab}>
+                  <ScreenStack tab={tab} root={rootScreens[tab]} screens={pushedScreens} />
+                </TabPaneStyled>
+              ))}
+              <TabBar />
+            </>
+          ) : (
+            <NoConnectionScreen />
+          )}
+        </MobileShellStyled>
+      </AiChatProvider>
     </ThemeProvider>
   );
 }

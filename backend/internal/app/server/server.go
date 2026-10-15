@@ -56,11 +56,10 @@ func New(
 ) *Server {
 	return &Server{
 		app: fiber.New(fiber.Config{
-			ReadTimeout: 30 * time.Second,
-			// WriteTimeout disabled: AI streams and large query responses can
-			// exceed a fixed cap without indicating a stalled client.
-			WriteTimeout: 0,
-			IdleTimeout:  120 * time.Second,
+			ReadBufferSize: 32 * 1024,
+			ReadTimeout:    30 * time.Second,
+			WriteTimeout:   0,
+			IdleTimeout:    120 * time.Second,
 			ErrorHandler: func(c fiber.Ctx, err error) error {
 				logger.Error(err)
 

@@ -1,12 +1,11 @@
 import api from '@/api';
 import { isPasswordPromptSuppressedForConnection } from '@/core/api';
+import { useSwitchConnection } from '@/hooks/useSwitchConnection';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { matchConnectionId } from '@/store/tabStore/connectionId';
-import { selectTabs, useTabStore } from '@/store/tabStore/tab.store';
 import type { ConnectionType } from '@/types';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect } from 'react';
 
 const pickSelectableActiveConnection = (connections: ConnectionType[]): ConnectionType | undefined => {
   const passwordPromptConnectionId = useSettingStore.getState().ui.passwordPromptConnectionId;
@@ -30,7 +29,6 @@ type ConnectionsList = {
  * (activating it on the server and restoring that connection's last tab).
  */
 export const useConnectionsList = (): ConnectionsList => {
-  const [loadingConnectionId, setLoadingConnectionId] = useState<number | undefined>(undefined);
   const queryClient = useQueryClient();
 
   const connections = useConnectionStore((state) => state.connections);
@@ -39,7 +37,7 @@ export const useConnectionsList = (): ConnectionsList => {
   const updateCurrentConnection = useConnectionStore((state) => state.updateCurrentConnection);
   const updateConnections = useConnectionStore((state) => state.updateConnections);
   const reorderConnections = useConnectionStore((state) => state.reorderConnections);
-  const switchTab = useTabStore((state) => state.switchTab);
+  const { switchConnection, isSwitching, switchingId } = useSwitchConnection();
 
   useQuery({
     queryKey: ['connections'],
@@ -60,14 +58,6 @@ export const useConnectionsList = (): ConnectionsList => {
     }
   });
 
-  const { mutateAsync: updateConnectionMutation, isPending: pendingUpdateConnection } = useMutation({
-    mutationFn: (id: number): Promise<ConnectionType> => api.connection.updateConnection(id, { isActive: true }),
-    onMutate: (id: number): void => {
-      setLoadingConnectionId(id);
-      updateLoading('loading');
-    }
-  });
-
   useEffect(() => {
     if (!connections?.length) {
       return;
@@ -80,31 +70,6 @@ export const useConnectionsList = (): ConnectionsList => {
       }
     }
   }, [connections, updateCurrentConnection]);
-
-  const selectConnection = useCallback(
-    async (c: ConnectionType): Promise<void> => {
-      const tabs = selectTabs(useTabStore.getState());
-      const store = useConnectionStore.getState();
-      if (c.id === store.currentConnection()?.id || store.loading === 'loading') {
-        return;
-      }
-      try {
-        await updateConnectionMutation(c.id);
-        updateLoading('finished');
-        updateCurrentConnection(c);
-        await queryClient.invalidateQueries({
-          queryKey: ['connections']
-        });
-        const connectionTabs = tabs.filter((tab) => matchConnectionId(tab.connectionId, c.id));
-        const selectedTabId = useTabStore.getState().selectedTabId;
-        const activeTab = connectionTabs.find((tab) => tab.id === selectedTabId) ?? connectionTabs[0];
-        switchTab(activeTab?.id ?? null);
-      } catch {
-        updateLoading('error');
-      }
-    },
-    [queryClient, switchTab, updateConnectionMutation, updateCurrentConnection, updateLoading]
-  );
 
   const reorder = useCallback(
     (activeId: string, overId: string): void => {
@@ -120,8 +85,8 @@ export const useConnectionsList = (): ConnectionsList => {
   return {
     connections,
     currentConnectionId: currentConnection()?.id,
-    activatingConnectionId: pendingUpdateConnection ? loadingConnectionId : undefined,
-    selectConnection,
+    activatingConnectionId: isSwitching ? switchingId : undefined,
+    selectConnection: switchConnection,
     reorder
   };
 };
