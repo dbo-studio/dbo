@@ -124,6 +124,7 @@ type IAiChatRepo interface {
 	List(ctx context.Context, req *dto.AiChatListRequest) ([]model.AiChat, error)
 	Find(ctx context.Context, id uint, pagination *dto.PaginationRequest) (*model.AiChat, error)
 	Update(ctx context.Context, chat *model.AiChat) error
+	UpdateContext(ctx context.Context, chatID uint, contextJSON string) error
 	Create(ctx context.Context, dto *dto.AiChatCreateRequest) (*model.AiChat, error)
 	Delete(ctx context.Context, chat *model.AiChat) error
 	AddMessage(ctx context.Context, m *model.AiChatMessage) error

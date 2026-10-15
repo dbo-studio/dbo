@@ -11,7 +11,6 @@ export const useAiAutoContext = (): void => {
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const tabs = useTabStore(selectTabs);
   const updateContext = useAiStore((state) => state.updateContext);
-  const manualOverrideRef = useRef(false);
   const queryDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const syncQuerySnippet = useCallback(
@@ -45,7 +44,7 @@ export const useAiAutoContext = (): void => {
 
     if (selectedTab.mode === TabMode.Data) {
       const dataTab = selectedTab as DataTabType;
-      if (dataTab.table && !manualOverrideRef.current) {
+      if (dataTab.table && useAiStore.getState().autoContext) {
         const hasTable = context.tables.includes(dataTab.table);
         if (!hasTable) {
           nextContext.tables = [...context.tables, dataTab.table];
@@ -67,17 +66,4 @@ export const useAiAutoContext = (): void => {
       }
     };
   }, [selectedTabId, tabs, syncQuerySnippet, updateContext]);
-
-  useEffect(() => {
-    const unsubscribe = useAiStore.subscribe((state, prev) => {
-      if (
-        state.context.tables !== prev.context.tables ||
-        state.context.database !== prev.context.database ||
-        state.context.schema !== prev.context.schema
-      ) {
-        manualOverrideRef.current = true;
-      }
-    });
-    return unsubscribe;
-  }, []);
 };

@@ -25,7 +25,7 @@ func (r AiChatRepoImpl) List(ctx context.Context, req *dto.AiChatListRequest) ([
 
 	result := r.db.WithContext(ctx).Scopes(scope.Paginate(&req.PaginationRequest)).
 		Where("connection_id = ? AND owner_id = ?", req.ConnectionID, helper.CtxOwnerID(ctx)).
-		Order("updated_at desc").
+		Order("pinned desc, updated_at desc").
 		Find(&chats)
 
 	if result.Error != nil {
@@ -94,6 +94,12 @@ func (r AiChatRepoImpl) Create(ctx context.Context, dto *dto.AiChatCreateRequest
 
 func (r AiChatRepoImpl) Update(ctx context.Context, chat *model.AiChat) error {
 	return r.db.WithContext(ctx).Save(chat).Error
+}
+
+// UpdateContext stores the chat context without touching updated_at, so history order is unchanged.
+func (r AiChatRepoImpl) UpdateContext(ctx context.Context, chatID uint, contextJSON string) error {
+	return r.db.WithContext(ctx).Model(&model.AiChat{}).Where("id = ?", chatID).
+		UpdateColumn("context_json", contextJSON).Error
 }
 
 func (r AiChatRepoImpl) Delete(ctx context.Context, chat *model.AiChat) error {

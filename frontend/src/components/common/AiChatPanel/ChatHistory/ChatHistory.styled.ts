@@ -2,8 +2,8 @@ import { variables } from '@/core/theme/variables';
 import { Stack, styled } from '@mui/material';
 
 export const ChatHistoryStyled = styled(Stack)(({ theme }) => ({
-  width: '200px',
-  height: '200px',
+  width: '280px',
+  maxHeight: '340px',
   padding: theme.spacing(1),
   border: `1px solid ${theme.palette.divider}`,
   borderRadius: variables.radius.medium,
@@ -14,15 +14,21 @@ export const ChatHistoryStyled = styled(Stack)(({ theme }) => ({
 }));
 
 export const ChatHistoryItemStyled = styled(Stack)(({ theme }) => ({
-  marginBottom: theme.spacing(1),
+  marginBottom: theme.spacing(0.5),
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
   cursor: 'pointer',
   borderRadius: variables.radius.medium,
-  padding: '0 4px',
+  padding: '2px 4px',
   border: '1px solid transparent',
   ':hover': {
     border: `1px solid ${theme.palette.divider}`
+  },
+  '.history-actions': {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(0.5),
+    flexShrink: 0
   }
 }));

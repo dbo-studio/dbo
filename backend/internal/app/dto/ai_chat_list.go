@@ -17,7 +17,9 @@ type (
 	AiChatItem struct {
 		ID        uint   `json:"id"`
 		Title     string `json:"title"`
+		Pinned    bool   `json:"pinned"`
 		CreatedAt string `json:"createdAt"`
+		UpdatedAt string `json:"updatedAt"`
 	}
 )
 

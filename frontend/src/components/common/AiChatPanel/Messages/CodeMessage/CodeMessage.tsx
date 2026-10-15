@@ -4,7 +4,7 @@ import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { IconButton, Tooltip } from '@mui/material';
+import { IconButton, Tooltip, Typography } from '@mui/material';
 import { Box } from '@mui/system';
 import { toast } from 'sonner';
 import { useCopyToClipboard } from 'usehooks-ts';
@@ -44,8 +44,11 @@ export default function CodeMessage({ message }: CodeMessageProps) {
   return (
     <CodeMessageStyled>
       <CodeMessageHeaderStyled isdark={isDark?.toString() ?? 'false'}>
-        <Box sx={{ ml: 1, display: 'flex' }}>
+        <Box sx={{ ml: 1, display: 'flex', alignItems: 'center', gap: 0.75 }}>
           <CustomIcon type='code' />
+          <Typography variant='caption' color='textSubdued' data-testid='ai-code-language'>
+            {message.language}
+          </Typography>
         </Box>
         <Box>
           <Tooltip title={locales.insert_into_editor}>

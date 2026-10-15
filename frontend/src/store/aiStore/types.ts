@@ -57,6 +57,9 @@ export type AiChatSlice = {
 export type AiContextSlice = {
   context: AiContextType;
   messageEdit: boolean;
+  /** When true the context chips follow the active explorer/editor tab; false = pinned. */
+  autoContext: boolean;
+  setAutoContext: (value: boolean) => void;
   toggleMessageEdit: () => void;
   updateContext: (context: AiContextType) => void;
 };

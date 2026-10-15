@@ -8,6 +8,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/model"
 	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/goccy/go-json"
 	"github.com/samber/lo"
 )
 
@@ -184,4 +185,24 @@ func (s *AiServiceImpl) updateChatTitle(ctx context.Context, chat *model.AiChat,
 	}
 
 	return nil
+}
+
+// saveChatContext remembers the explorer context so reopening the chat restores its chips.
+// Only names are stored; queries and results stay out of the app DB. Failures are non-fatal.
+func (s *AiServiceImpl) saveChatContext(ctx context.Context, chatID uint, opts *dto.AiContextOptions) {
+	if opts == nil {
+		return
+	}
+
+	raw, err := json.Marshal(dto.AiContextOptions{
+		Database: opts.Database,
+		Schema:   opts.Schema,
+		Tables:   opts.Tables,
+		Views:    opts.Views,
+	})
+	if err != nil {
+		return
+	}
+
+	_ = s.aiChatRepo.UpdateContext(ctx, chatID, string(raw))
 }

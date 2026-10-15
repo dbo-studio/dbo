@@ -102,6 +102,20 @@ export const webShortcuts: { [key: string]: ShortcutType } = {
     command: [modKey(), 'L'],
     shortcut: (event: KeyboardEvent) => isMod(event) && !event.shiftKey && !event.altKey && event.code === 'KeyL'
   },
+  clearComposer: {
+    id: 'clearComposer',
+    group: 'app',
+    label: locales.clear_composer,
+    command: [modKey(), shiftKey(), '⌫'],
+    shortcut: (event: KeyboardEvent) => isMod(event) && event.shiftKey && event.code === 'Backspace'
+  },
+  editLastMessage: {
+    id: 'editLastMessage',
+    group: 'app',
+    label: locales.edit_last_message,
+    command: ['↑'],
+    shortcut: (event: KeyboardEvent) => !isMod(event) && !event.shiftKey && !event.altKey && event.code === 'ArrowUp'
+  },
   openShortcuts: {
     id: 'openShortcuts',
     group: 'app',
@@ -203,6 +217,20 @@ export const desktopShortcuts: { [key: string]: ShortcutType } = {
     label: locales.focus_assistant,
     command: [modKey(), 'L'],
     shortcut: (event: KeyboardEvent) => isMod(event) && !event.shiftKey && !event.altKey && event.code === 'KeyL'
+  },
+  clearComposer: {
+    id: 'clearComposer',
+    group: 'app',
+    label: locales.clear_composer,
+    command: [modKey(), shiftKey(), '⌫'],
+    shortcut: (event: KeyboardEvent) => isMod(event) && event.shiftKey && event.code === 'Backspace'
+  },
+  editLastMessage: {
+    id: 'editLastMessage',
+    group: 'app',
+    label: locales.edit_last_message,
+    command: ['↑'],
+    shortcut: (event: KeyboardEvent) => !isMod(event) && !event.shiftKey && !event.altKey && event.code === 'ArrowUp'
   },
   openShortcuts: {
     id: 'openShortcuts',
