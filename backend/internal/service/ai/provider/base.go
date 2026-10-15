@@ -324,6 +324,11 @@ func (p *BaseProvider) buildStreamChatPrompt(req *ChatRequest) string {
 	sb.WriteString("- Only ask the user to paste SQL when no Selected SQL, Current Query, or SQL code block is available. Do not invent SQL.\n")
 	sb.WriteString("- When showing sample query rows in explanations, prefer markdown tables over raw JSON arrays.\n\n")
 
+	if req.ModeInstructions != "" {
+		sb.WriteString(req.ModeInstructions)
+		sb.WriteString("\n")
+	}
+
 	p.appendQueryContext(&sb, req)
 
 	sb.WriteString("\nSchema:\n")

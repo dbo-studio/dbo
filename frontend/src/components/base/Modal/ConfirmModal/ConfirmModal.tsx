@@ -72,7 +72,13 @@ export default function ConfirmModal(): JSX.Element {
             }}
           >
             {title && (
-              <Typography data-select-all-skip color='textTitle' variant='h6' component='h2' sx={{ userSelect: 'none' }}>
+              <Typography
+                data-select-all-skip
+                color='textTitle'
+                variant='h6'
+                component='h2'
+                sx={{ userSelect: 'none' }}
+              >
                 {title}
               </Typography>
             )}

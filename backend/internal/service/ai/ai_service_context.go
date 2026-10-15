@@ -15,7 +15,7 @@ func buildProviderChatRequest(
 	useMarkdown bool,
 ) *aiProvider.ChatRequest {
 	providerReq := &aiProvider.ChatRequest{
-		Messages:          chat.Messages,
+		Messages:          conversationHistory(chat.Messages),
 		Model:             modelName,
 		Context:           contextStr,
 		UseMarkdownPrompt: useMarkdown,

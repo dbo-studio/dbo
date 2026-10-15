@@ -1,6 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlighter';
-import { TabMode } from '@/core/enums';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -26,13 +25,12 @@ export default function CodeMessage({ message }: CodeMessageProps) {
   };
 
   const handleInsert = (): void => {
-    const selectedTab = useTabStore.getState().selectedTab();
-    if (selectedTab?.mode === TabMode.Query) {
-      useTabStore.getState().updateQuery(message.content);
-    } else {
-      useTabStore.getState().addEditorTab(message.content);
-    }
+    useDataStore.getState().insertQueryInEditor(message.content);
     toast.success(locales.insert_into_editor);
+  };
+
+  const handleOpenNewTab = (): void => {
+    useTabStore.getState().addEditorTab(message.content);
   };
 
   const handleRun = (): void => {
@@ -53,6 +51,11 @@ export default function CodeMessage({ message }: CodeMessageProps) {
           <Tooltip title={locales.insert_into_editor}>
             <IconButton onClick={handleInsert}>
               <CustomIcon type='pen' />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={locales.ai_open_new_query_tab}>
+            <IconButton onClick={handleOpenNewTab} data-testid='ai-code-open-tab'>
+              <CustomIcon type='plus' />
             </IconButton>
           </Tooltip>
           <Tooltip title={locales.run_query}>

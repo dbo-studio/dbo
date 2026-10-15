@@ -54,6 +54,7 @@ func (r AiChatRepoImpl) Find(ctx context.Context, id uint, pagination *dto.Pagin
 
 	err = db.Where("chat_id = ?", id).
 		Order("created_at desc").
+		Order("id desc").
 		Find(&messages).Error
 	if err != nil {
 		return nil, err

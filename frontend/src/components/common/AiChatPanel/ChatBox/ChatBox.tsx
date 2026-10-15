@@ -1,6 +1,8 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import AiSetupPopover from '@/components/common/AiSetupPopover/AiSetupPopover';
 import { getAiStatus } from '@/core/ai/aiStatus';
+import { openSettings } from '@/core/settings/openSettings';
+import locales from '@/locales';
+import { Button } from '@mui/material';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import type { ChatBoxProps } from '../types';
 import { ChatBoxStyled, ComposerFooterStyled, SendButtonStyled } from './ChatBox.styled';
@@ -12,10 +14,17 @@ export default function ChatBox({ autocomplete, loading, onSend, onCancel }: Cha
   const providers = useAiStore((state) => state.providers);
   const aiReady = getAiStatus(providers).ready;
 
+  // Full onboarding lives in ChatEmptyState; keep a compact entry point for non-empty chats.
   if (!aiReady) {
     return (
-      <ChatBoxStyled>
-        <AiSetupPopover open />
+      <ChatBoxStyled sx={{ alignItems: 'center' }}>
+        <Button
+          size='small'
+          onClick={() => openSettings({ section: 3, aiTab: 'providers', highlightId: 'ai.providers' })}
+          data-testid='ai-composer-setup'
+        >
+          {locales.ai_setup_title}
+        </Button>
       </ChatBoxStyled>
     );
   }
@@ -23,7 +32,7 @@ export default function ChatBox({ autocomplete, loading, onSend, onCancel }: Cha
   return (
     <ChatBoxStyled>
       {autocomplete && <ChatContext autocomplete={autocomplete} />}
-      <ChatTextInput loading={loading} onSend={onSend} autocomplete={autocomplete} />
+      <ChatTextInput loading={loading} onSend={onSend} onCancel={onCancel} autocomplete={autocomplete} />
       <ComposerFooterStyled>
         <Providers />
         {loading ? (

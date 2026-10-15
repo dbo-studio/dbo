@@ -1,8 +1,14 @@
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import locales from '@/locales';
+import { useDataStore } from '@/store/dataStore/data.store';
+import { IconButton, Tooltip, Typography } from '@mui/material';
 import type { JSX } from 'react';
+import { toast } from 'sonner';
+import { useCopyToClipboard } from 'usehooks-ts';
 import {
   ChatCellContent,
   ChatDataTableFooter,
+  ChatDataTableToolbar,
   ChatDataTableScroll,
   ChatDataTableWrapper,
   ChatTableCell,
@@ -47,9 +53,18 @@ const formatCellValue = (value: unknown): string => {
   return JSON.stringify(value);
 };
 
+const csvCell = (value: string): string => (/[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value);
+
+const toCsv = (columns: string[], rows: Record<string, unknown>[]): string =>
+  [columns, ...rows.map((row) => columns.map((column) => formatCellValue(row[column])))]
+    .map((cells) => cells.map(csvCell).join(','))
+    .join('\n');
+
 const columnWidth = (column: string): number => Math.min(220, Math.max(104, column.length * 8 + 40));
 
-export default function ChatDataTable({ rows }: ChatDataTableProps): JSX.Element | null {
+export default function ChatDataTable({ rows, query }: ChatDataTableProps): JSX.Element | null {
+  const [, copy] = useCopyToClipboard();
+
   if (rows.length === 0) {
     return null;
   }
@@ -102,6 +117,31 @@ export default function ChatDataTable({ rows }: ChatDataTableProps): JSX.Element
         </StyledTable>
       </ChatDataTableScroll>
       {truncated && <ChatDataTableFooter variant='caption'>{locales.chat_table_truncated}</ChatDataTableFooter>}
+      <ChatDataTableToolbar>
+        <Typography variant='caption' color='textSubdued' sx={{ flex: 1 }} data-testid='ai-table-row-count'>
+          {locales.ai_table_rows.replace('{n}', String(rows.length))}
+        </Typography>
+        <Tooltip title={locales.ai_copy_csv}>
+          <IconButton
+            size='small'
+            data-testid='ai-table-copy-csv'
+            onClick={() => void copy(toCsv(allColumns, rows)).then((ok) => ok && toast.success(locales.copied))}
+          >
+            <CustomIcon type='copy' size='xs' />
+          </IconButton>
+        </Tooltip>
+        {query && (
+          <Tooltip title={locales.ai_open_in_grid}>
+            <IconButton
+              size='small'
+              data-testid='ai-table-open-grid'
+              onClick={() => useDataStore.getState().runQueryInEditor(query)}
+            >
+              <CustomIcon type='externalLink' size='xs' />
+            </IconButton>
+          </Tooltip>
+        )}
+      </ChatDataTableToolbar>
     </ChatDataTableWrapper>
   );
 }

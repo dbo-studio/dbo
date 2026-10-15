@@ -31,7 +31,17 @@ type AiChatMessageType string
 const (
 	AiChatMessageTypeCode        AiChatMessageType = "code"
 	AiChatMessageTypeExplanation AiChatMessageType = "explanation"
+	// Agent traces: JSON payloads rendered as cards, never sent back to the model as history.
+	AiChatMessageTypeTool        AiChatMessageType = "tool"
+	AiChatMessageTypeDiagramDiff AiChatMessageType = "diagram_diff"
+	AiChatMessageTypePermission  AiChatMessageType = "permission"
 )
+
+// IsConversational reports whether the message is part of the model-visible
+// conversation (as opposed to an agent trace card).
+func (t AiChatMessageType) IsConversational() bool {
+	return t == "" || t == AiChatMessageTypeCode || t == AiChatMessageTypeExplanation
+}
 
 type AiChatMessageLanguage string
 

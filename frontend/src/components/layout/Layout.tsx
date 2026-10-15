@@ -42,6 +42,14 @@ export default function Layout(): JSX.Element {
     openAssistant(0);
   });
 
+  useShortcut(shortcuts.focusAssistant, () => {
+    openAssistant(0);
+    // The panel may mount on this frame; focus once it is in the DOM.
+    window.requestAnimationFrame(() => {
+      document.querySelector<HTMLTextAreaElement>('[data-testid="ai-chat-input"]')?.focus();
+    });
+  });
+
   useShortcut(shortcuts.openShortcuts, () => {
     openSettings({ section: 2 });
   });

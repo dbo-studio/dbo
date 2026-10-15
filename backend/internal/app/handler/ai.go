@@ -2,6 +2,9 @@ package handler
 
 import (
 	"bufio"
+	"context"
+	"sync"
+	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	serviceAI "github.com/dbo-studio/dbo/internal/service/ai"
@@ -61,19 +64,59 @@ func (h AiHandler) ChatStream(c fiber.Ctx) error {
 	reqCopy := req
 
 	return c.SendStreamWriter(func(w *bufio.Writer) {
+		// fasthttp does not cancel the request context when the client goes
+		// away, so a failed write is our disconnect signal: cancel the run so
+		// provider calls and tools stop instead of finishing in the background.
+		ctx, cancel := context.WithCancel(streamCtx)
+		defer cancel()
+
+		var mu sync.Mutex
+
 		emit := func(data []byte) error {
-			if _, err := w.Write(data); err != nil {
-				return err
+			mu.Lock()
+			defer mu.Unlock()
+
+			if ctx.Err() != nil {
+				return ctx.Err()
 			}
 
-			if _, err := w.WriteString("\n"); err != nil {
-				return err
+			_, err := w.Write(data)
+			if err == nil {
+				_, err = w.WriteString("\n")
 			}
 
-			return w.Flush()
+			if err == nil {
+				err = w.Flush()
+			}
+
+			if err != nil {
+				cancel()
+			}
+
+			return err
 		}
 
-		if err := h.aiService.ChatStream(streamCtx, reqCopy, emit); err != nil {
+		// Heartbeat so a disconnect is noticed during long tool calls or before
+		// the provider sends its first token.
+		go func() {
+			ticker := time.NewTicker(streamPingInterval)
+			defer ticker.Stop()
+
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-ticker.C:
+					_ = emit([]byte(`{"type":"ping"}`))
+				}
+			}
+		}()
+
+		if err := h.aiService.ChatStream(ctx, reqCopy, emit); err != nil {
+			if ctx.Err() != nil {
+				return
+			}
+
 			h.logger.Error(err.Error())
 
 			errPayload, marshalErr := json.Marshal(map[string]string{
@@ -86,6 +129,8 @@ func (h AiHandler) ChatStream(c fiber.Ctx) error {
 		}
 	})
 }
+
+const streamPingInterval = time.Second
 
 func (h AiHandler) Complete(c fiber.Ctx) error {
 	req := new(dto.AiInlineCompleteRequest)

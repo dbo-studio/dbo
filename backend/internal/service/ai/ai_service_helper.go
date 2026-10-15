@@ -74,7 +74,7 @@ func (s *AiServiceImpl) findChat(ctx context.Context, req *dto.AiChatRequest) (*
 	if req.ChatID != nil {
 		chat, err := s.aiChatRepo.Find(ctx, uint(lo.FromPtr(req.ChatID)), &dto.PaginationRequest{
 			Page:  lo.ToPtr(1),
-			Count: lo.ToPtr(5),
+			Count: lo.ToPtr(historyFetchCount),
 		})
 		if err != nil {
 			return nil, apperror.NotFound(apperror.ErrAiChatNotFound)
@@ -98,7 +98,28 @@ func (s *AiServiceImpl) findChat(ctx context.Context, req *dto.AiChatRequest) (*
 	return chat, nil
 }
 
-func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat, userMessage string, aiMessage *aiProvider.ChatResponse) error {
+// historyFetchCount loads enough recent rows to still find historyTurnCount
+// conversational messages when agent trace rows are interleaved.
+const (
+	historyFetchCount = 20
+	historyTurnCount  = 5
+)
+
+// conversationHistory drops agent trace rows (tool/diagram/permission cards)
+// and keeps the most recent conversational messages for the model.
+func conversationHistory(messages []model.AiChatMessage) []model.AiChatMessage {
+	history := lo.Filter(messages, func(m model.AiChatMessage, _ int) bool {
+		return m.Type.IsConversational()
+	})
+
+	if len(history) > historyTurnCount {
+		history = history[len(history)-historyTurnCount:]
+	}
+
+	return history
+}
+
+func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat, userMessage string, traces []model.AiChatMessage, aiMessage *aiProvider.ChatResponse) error {
 	if err := s.aiChatRepo.AddMessage(ctx, &model.AiChatMessage{
 		ChatID:   chat.ID,
 		Role:     model.AiChatMessageRoleUser,
@@ -107,6 +128,13 @@ func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat
 		Language: model.AiChatMessageLanguageText,
 	}); err != nil {
 		return err
+	}
+
+	for i := range traces {
+		traces[i].ChatID = chat.ID
+		if err := s.aiChatRepo.AddMessage(ctx, &traces[i]); err != nil {
+			return err
+		}
 	}
 
 	if aiMessage == nil {

@@ -1,21 +1,56 @@
 import type { StateCreator } from 'zustand';
-import type { AiToolSlice } from '../types';
+import type { AiReviewDecision, AiToolSlice } from '../types';
+
+const REVIEWS_STORAGE_KEY = 'dbo:ai-reviews';
+const MAX_STORED_REVIEWS = 200;
+
+const loadReviews = (): Record<string, AiReviewDecision> => {
+  try {
+    const raw = localStorage.getItem(REVIEWS_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, AiReviewDecision>) : {};
+  } catch {
+    return {};
+  }
+};
+
+const saveReviews = (reviews: Record<string, AiReviewDecision>): void => {
+  try {
+    const entries = Object.entries(reviews).slice(-MAX_STORED_REVIEWS);
+    localStorage.setItem(REVIEWS_STORAGE_KEY, JSON.stringify(Object.fromEntries(entries)));
+  } catch {
+    /* storage unavailable: decisions stay in memory */
+  }
+};
 
 export const createAiToolSlice: StateCreator<AiToolSlice, [['zustand/devtools', never]], [], AiToolSlice> = (set) => ({
-  toolSteps: [],
-  appendToolStep: (step) => {
-    set((state) => ({ toolSteps: [...state.toolSteps, step] }), undefined, 'appendToolStep');
+  agentItems: [],
+  appendAgentItem: (item) => {
+    set((state) => ({ agentItems: [...state.agentItems, item] }), undefined, 'appendAgentItem');
   },
-  updateToolStep: (id, partial) => {
+  updateToolTrace: (id, partial) => {
     set(
       (state) => ({
-        toolSteps: state.toolSteps.map((s) => (s.id === id ? { ...s, ...partial } : s))
+        agentItems: state.agentItems.map((item) =>
+          item.kind === 'tool' && item.trace.id === id ? { ...item, trace: { ...item.trace, ...partial } } : item
+        )
       }),
       undefined,
-      'updateToolStep'
+      'updateToolTrace'
     );
   },
-  clearToolSteps: () => {
-    set({ toolSteps: [] }, undefined, 'clearToolSteps');
+  clearAgentItems: () => {
+    set({ agentItems: [] }, undefined, 'clearAgentItems');
+  },
+  reviews: loadReviews(),
+  setReview: (id, decision) => {
+    set(
+      (state) => {
+        const reviews = { ...state.reviews, [id]: decision };
+        saveReviews(reviews);
+        return { reviews };
+      },
+      undefined,
+      'setReview'
+    );
   }
 });

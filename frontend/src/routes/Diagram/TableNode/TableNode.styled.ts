@@ -17,6 +17,8 @@ type AccentBarProps = AccentProps & {
 type ColumnRowProps = {
   removed: boolean;
   striped: boolean;
+  /** Pending agent change: added (green) or changed (amber) column. */
+  pendingColor?: string;
 };
 
 type ColumnNameProps = {
@@ -111,8 +113,8 @@ export const EmptyColumnsStyled = styled(Typography)(({ theme }) => ({
 }));
 
 export const ColumnRowStyled = styled(Box, {
-  shouldForwardProp: (prop): boolean => prop !== 'removed' && prop !== 'striped'
-})<ColumnRowProps>(({ theme, removed, striped }) => ({
+  shouldForwardProp: (prop): boolean => prop !== 'removed' && prop !== 'striped' && prop !== 'pendingColor'
+})<ColumnRowProps>(({ theme, removed, striped, pendingColor }) => ({
   position: 'relative',
   display: 'flex',
   alignItems: 'center',
@@ -121,9 +123,12 @@ export const ColumnRowStyled = styled(Box, {
   minHeight: 26,
   opacity: removed ? 0.45 : 1,
   textDecoration: removed ? 'line-through' : 'none',
-  backgroundColor: striped
-    ? alpha(theme.palette.text.primary, theme.palette.mode === 'dark' ? 0.03 : 0.02)
-    : 'transparent'
+  backgroundColor: pendingColor
+    ? alpha(pendingColor, 0.12)
+    : striped
+      ? alpha(theme.palette.text.primary, theme.palette.mode === 'dark' ? 0.03 : 0.02)
+      : 'transparent',
+  boxShadow: pendingColor ? `inset 2px 0 0 ${pendingColor}` : 'none'
 }));
 
 export const ColumnKeyIconStyled = styled(Box)({

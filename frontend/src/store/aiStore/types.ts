@@ -1,15 +1,15 @@
-import type { AiChatType, AiBridgeRequest, AiContextType, AiMessageType, AiProviderType } from '@/types';
+import type {
+  AiAgentItem,
+  AiBridgeRequest,
+  AiChatType,
+  AiContextType,
+  AiMessageType,
+  AiProviderType,
+  AiToolTrace
+} from '@/types';
 import type { AiChatRequest } from '@/api/ai/types';
 
 export type AiStreamingPhase = 'context' | 'thinking' | 'answering';
-
-export type ToolStep = {
-  id: string;
-  name: string;
-  status: 'running' | 'done' | 'error';
-  result?: string;
-  error?: string;
-};
 
 export type AiStreamingState = {
   status: 'idle' | 'streaming';
@@ -22,7 +22,6 @@ export type AiStreamingState = {
   activeBlockType?: 'explanation' | 'code';
   error?: string;
   lastRequest?: AiChatRequest;
-  toolSteps?: ToolStep[];
 };
 
 export type AiStreamingSlice = {
@@ -67,9 +66,15 @@ export type AiBridgeSlice = {
   setBridgeRequest: (request: AiBridgeRequest | null) => void;
 };
 
+/** Outcome of a diagram changeset or permission card, keyed by changesetId / requestId. */
+export type AiReviewDecision = 'applied' | 'rejected' | 'confirmed';
+
 export type AiToolSlice = {
-  toolSteps: ToolStep[];
-  appendToolStep: (step: ToolStep) => void;
-  updateToolStep: (id: string, partial: Partial<ToolStep>) => void;
-  clearToolSteps: () => void;
+  /** Live tool/diagram/permission cards of the turn being streamed. */
+  agentItems: AiAgentItem[];
+  appendAgentItem: (item: AiAgentItem) => void;
+  updateToolTrace: (id: string, partial: Partial<AiToolTrace>) => void;
+  clearAgentItems: () => void;
+  reviews: Record<string, AiReviewDecision>;
+  setReview: (id: string, decision: AiReviewDecision) => void;
 };

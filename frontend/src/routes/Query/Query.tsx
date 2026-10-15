@@ -142,12 +142,13 @@ export default function Query(): JSX.Element {
       return;
     }
 
-    const { query } = pendingEditorQueryRun;
+    const { query, run } = pendingEditorQueryRun;
     clearPendingEditorQueryRun();
 
     const runPending = async (): Promise<void> => {
       setValue(query);
       updateQuery(query);
+      if (!run) return;
       const res = await executeRawQuery(query);
       if (res) {
         toast.success(locales.run_query);

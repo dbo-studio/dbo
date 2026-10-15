@@ -8,11 +8,15 @@ import (
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/repository"
+	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/dbo-studio/dbo/pkg/cache"
 )
 
 type ISchemaService interface {
 	Diagram(ctx context.Context, req *dto.DiagramRequest) (*contract.DiagramGraph, error)
+	PreviewChange(ctx context.Context, req *dto.SchemaChangeRequest) ([]string, error)
+	ApplyChange(ctx context.Context, req *dto.SchemaChangeRequest) error
 }
 
 var _ ISchemaService = (*ISchemaServiceImpl)(nil)
@@ -20,12 +24,16 @@ var _ ISchemaService = (*ISchemaServiceImpl)(nil)
 type ISchemaServiceImpl struct {
 	connectionRepo repository.IConnectionRepo
 	cm             *databaseConnection.ConnectionManager
+	cache          cache.Cache
+	unlockStore    *serviceSafemode.UnlockStore
 }
 
-func NewSchemaService(cr repository.IConnectionRepo, cm *databaseConnection.ConnectionManager) ISchemaService {
+func NewSchemaService(cr repository.IConnectionRepo, cm *databaseConnection.ConnectionManager, appCache cache.Cache) ISchemaService {
 	return &ISchemaServiceImpl{
 		connectionRepo: cr,
 		cm:             cm,
+		cache:          appCache,
+		unlockStore:    serviceSafemode.NewUnlockStore(appCache),
 	}
 }
 

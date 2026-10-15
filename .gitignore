@@ -8,3 +8,4 @@ frontend/.cursor
 backend/.env
 .env
 docs/prd/*
+graphify-out

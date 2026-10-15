@@ -66,7 +66,8 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 	})
 
 	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, true)
-	providerReq.Tools = serviceDbtools.ChatTools()
+	providerReq.Tools = serviceDbtools.ChatTools(req.AgentMode())
+	providerReq.ModeInstructions = modeInstructions(req)
 
 	if err := emitEvent(aiProvider.StreamEvent{
 		Type:  "status",
@@ -75,31 +76,31 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 		return err
 	}
 
-	providerResp, providerErr := s.runAgentLoop(ctx, provider, providerReq, req, emitEvent)
+	providerResp, traces, providerErr := s.runAgentLoop(ctx, provider, providerReq, req, emitEvent)
 
-	if saveErr := s.saveChatMessages(ctx, chat, req.Message, providerResp); saveErr != nil {
+	// Persist even when the user stopped the turn so the tool cards and any
+	// pending diagram proposal survive a reload.
+	if saveErr := s.saveChatMessages(context.WithoutCancel(ctx), chat, req.Message, traces, providerResp); saveErr != nil {
 		s.logger.Error(fmt.Sprintf("Failed to save chat messages: %v", saveErr))
 	}
 
 	if providerErr != nil {
-		errPayload, marshalErr := json.Marshal(map[string]string{
-			"type":    "error",
-			"message": providerErr.Error(),
-		})
-		if marshalErr != nil {
-			return marshalErr
-		}
-
-		if emitErr := emit(errPayload); emitErr != nil {
-			return emitErr
-		}
-
 		return providerErr
 	}
 
 	response := &dto.AiChatResponse{
 		ChatID: chat.ID,
 		Title:  chat.Title,
+	}
+
+	for _, trace := range traces {
+		response.Messages = append(response.Messages, dto.AiMessage{
+			Role:      string(trace.Role),
+			Content:   trace.Content,
+			Type:      string(trace.Type),
+			Language:  string(trace.Language),
+			CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+		})
 	}
 
 	if len(providerResp.Contents) == 0 {

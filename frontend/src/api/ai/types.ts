@@ -1,4 +1,4 @@
-import type { AiMessageType } from '@/types';
+import type { AiChatMode, AiMessageType } from '@/types';
 
 export type AiContextOptsType = {
   query?: string;
@@ -17,6 +17,7 @@ export type AiChatRequest = {
   chatId?: number;
   model?: string;
   message: string;
+  mode?: AiChatMode;
   contextOpts?: AiContextOptsType;
 };
 export type AiChatResponse = {
