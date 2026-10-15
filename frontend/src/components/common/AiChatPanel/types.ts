@@ -108,6 +108,8 @@ export type ChatMarkdownProps = {
 
 export type ChatDataTableProps = {
   rows: Record<string, unknown>[];
+  /** Column names in result order; rows are objects, so without it the order is not the SELECT's. */
+  columns?: string[];
   /** Source SELECT; enables "Open in Data Grid" (runs it in a query tab). */
   query?: string;
 };

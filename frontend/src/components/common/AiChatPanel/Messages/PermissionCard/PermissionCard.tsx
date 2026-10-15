@@ -23,6 +23,7 @@ export default function PermissionCard({ request }: { request: AiPermissionReque
   const decision = useAiStore((state) => state.reviews[request.requestId]) ?? request.decision;
   const [running, setRunning] = useState(false);
   const [rows, setRows] = useState<Record<string, unknown>[]>();
+  const [columns, setColumns] = useState<string[]>();
 
   const confirm = async (): Promise<void> => {
     setRunning(true);
@@ -49,6 +50,7 @@ export default function PermissionCard({ request }: { request: AiPermissionReque
       ran = true;
       useAiStore.getState().setReview(request.requestId, 'confirmed');
       setRows(result.data);
+      setColumns(result.columns.map((column) => column.name));
       if (request.class === 'ddl') {
         await useTreeStore.getState().reloadTree(false);
       }
@@ -77,7 +79,7 @@ export default function PermissionCard({ request }: { request: AiPermissionReque
         <SyntaxHighlighter value={request.sql} />
         {decision === 'confirmed' &&
           (rows && rows.length > 0 ? (
-            <ChatDataTable rows={rows} />
+            <ChatDataTable rows={rows} columns={columns} />
           ) : (
             <Typography variant='caption' color='success.main'>
               {locales.ai_permission_executed}

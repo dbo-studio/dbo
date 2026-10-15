@@ -26,7 +26,11 @@ const MAX_ROWS = 10;
 const MAX_COLUMNS = 12;
 const HIDDEN_COLUMNS = new Set(['dbo_index', 'editable']);
 
-const deriveColumns = (rows: Record<string, unknown>[]): string[] => {
+const deriveColumns = (rows: Record<string, unknown>[], ordered?: string[]): string[] => {
+  if (ordered?.length) {
+    return ordered.filter((column) => !HIDDEN_COLUMNS.has(column));
+  }
+
   const seen = new Set<string>();
   const columns: string[] = [];
 
@@ -62,11 +66,28 @@ const toCsv = (columns: string[], rows: Record<string, unknown>[]): string =>
     .map((cells) => cells.map(csvCell).join(','))
     .join('\n');
 
-const columnWidth = (column: string): number => Math.min(220, Math.max(104, column.length * 8 + 40));
+const MIN_COLUMN_WIDTH = 64;
+const MAX_COLUMN_WIDTH = 220;
+const CHAR_WIDTH = 7.5;
+const CELL_PADDING = 28;
 
-export default function ChatDataTable({ rows: initialRows, query }: ChatDataTableProps): JSX.Element | null {
+/** Fits the header and the widest visible value, so small results fit the panel without sideways scrolling. */
+const columnWidth = (column: string, rows: Record<string, unknown>[]): number => {
+  const longest = rows.reduce((max, row) => Math.max(max, formatCellValue(row[column]).length), column.length);
+  return Math.min(MAX_COLUMN_WIDTH, Math.max(MIN_COLUMN_WIDTH, Math.ceil(longest * CHAR_WIDTH + CELL_PADDING)));
+};
+
+export default function ChatDataTable({
+  rows: initialRows,
+  columns: initialColumns,
+  query
+}: ChatDataTableProps): JSX.Element | null {
   const [, copy] = useCopyToClipboard();
-  const [rerun, setRerun] = useState<{ rows: Record<string, unknown>[]; types: Record<string, string> }>();
+  const [rerun, setRerun] = useState<{
+    rows: Record<string, unknown>[];
+    columns: string[];
+    types: Record<string, string>;
+  }>();
   const [isRerunning, setIsRerunning] = useState(false);
   const rows = rerun?.rows ?? initialRows;
 
@@ -83,6 +104,7 @@ export default function ChatDataTable({ rows: initialRows, query }: ChatDataTabl
       const res = await api.query.runRawQuery({ connectionId, query });
       setRerun({
         rows: res.data,
+        columns: res.columns.map((column) => column.name),
         types: Object.fromEntries(res.columns.map((column) => [column.name, column.type]))
       });
     } catch {
@@ -92,19 +114,20 @@ export default function ChatDataTable({ rows: initialRows, query }: ChatDataTabl
     }
   };
 
-  const allColumns = deriveColumns(rows);
+  const allColumns = deriveColumns(rows, rerun?.columns ?? initialColumns);
   const columns = allColumns.slice(0, MAX_COLUMNS);
   const displayRows = rows.slice(0, MAX_ROWS);
   const truncated = rows.length > MAX_ROWS || allColumns.length > MAX_COLUMNS;
-  const tableWidth = columns.reduce((total, column) => total + columnWidth(column), 0);
+  const widths = columns.map((column) => columnWidth(column, displayRows));
+  const tableWidth = widths.reduce((total, width) => total + width, 0);
 
   return (
     <ChatDataTableWrapper>
       <ChatDataTableScroll>
         <StyledTable width={tableWidth}>
           <colgroup>
-            {columns.map((column) => (
-              <StyledCol key={column} width={columnWidth(column)} />
+            {columns.map((column, index) => (
+              <StyledCol key={column} width={widths[index]} />
             ))}
           </colgroup>
           <StyledTableHead>
