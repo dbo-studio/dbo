@@ -35,7 +35,7 @@ export default function RowField({ column, value, editable, onChange }: RowField
         <Select
           id={inputId}
           fullWidth
-          size='small'
+          sx={{ minHeight: 40 }}
           value={value ?? ''}
           disabled={readOnly}
           onChange={(event): void => onChange(String(event.target.value))}

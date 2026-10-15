@@ -7,6 +7,11 @@ export const ModeBarStyled = styled(Box)(({ theme }) => ({
   gap: theme.spacing(1),
   padding: `${theme.spacing(0.75)} 0`,
   flexShrink: 0,
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(0, 1.5, 1),
+    '& .MuiToggleButtonGroup-root': { flex: 1 },
+    '& .MuiToggleButton-root': { flex: 1 }
+  },
   '& .MuiToggleButton-root': {
     padding: `${theme.spacing(0.125)} ${theme.spacing(1.25)}`,
     fontSize: '0.75rem',

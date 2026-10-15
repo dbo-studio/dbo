@@ -20,9 +20,11 @@ export const RowFieldMetaStyled = styled('span')({
 export const RowFieldInputStyled = styled(InputBase, {
   shouldForwardProp: (prop) => prop !== 'muted'
 })<RowFieldInputStyledProps>(({ theme, muted }) => ({
-  padding: theme.spacing(1, 1.5),
-  borderRadius: variables.radius.large,
-  backgroundColor: theme.palette.action.hover,
+  // Keeps the design-system field (1px divider border, 5px radius, default background) and only lets it grow with multiline text.
+  height: 'auto',
+  minHeight: 40,
+  padding: theme.spacing(0.75, 1.25),
+  borderRadius: variables.radius.medium,
   opacity: muted ? 0.6 : 1,
   '& .MuiInputBase-input': {
     border: 'none',

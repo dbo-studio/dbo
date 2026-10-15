@@ -16,7 +16,10 @@ export const HeaderContainerStyled = styled(Box)(({ theme }) => ({
   paddingTop: theme.spacing(1),
   paddingBottom: theme.spacing(1),
   borderBottom: `1px solid ${theme.palette.divider}`,
-  flexShrink: 0
+  flexShrink: 0,
+  [theme.breakpoints.down('sm')]: {
+    paddingInline: theme.spacing(1.5)
+  }
 }));
 
 export const ComposerContainerStyled = styled(Box)(({ theme }) => ({

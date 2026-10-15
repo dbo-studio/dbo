@@ -36,7 +36,7 @@ export default function AiChatPanel() {
   const updateUI = useSettingStore((state) => state.updateUI);
   const updateEditor = useSettingStore((state) => state.updateEditor);
   const density = useSettingStore((state) => state.editor.aiChatDensity ?? 'comfortable');
-  const { useSidebarOverlay } = useLayoutMode();
+  const { useSidebarOverlay, isMobile } = useLayoutMode();
 
   return (
     <AiChatPanelContainerStyled>
@@ -67,7 +67,7 @@ export default function AiChatPanel() {
           </Tooltip>
         )}
       </HeaderContainerStyled>
-      {connectionId && <ModeBar />}
+      {connectionId && !isMobile && <ModeBar />}
       {!connectionId ? (
         <Stack
           spacing={1.5}
@@ -95,6 +95,8 @@ export default function AiChatPanel() {
       )}
       {connectionId && (
         <ComposerContainerStyled>
+          {/* Phones: the mode switch sits right above the input it affects, not under the header. */}
+          {isMobile && <ModeBar />}
           <ChatBox
             loading={chatPending}
             autocomplete={autocomplete}

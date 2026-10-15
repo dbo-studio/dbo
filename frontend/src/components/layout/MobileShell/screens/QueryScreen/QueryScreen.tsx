@@ -44,7 +44,7 @@ export default function QueryScreen(): JSX.Element {
         title={tabTitle(selectedTab) || locales.mobile_tab_query}
         actions={
           <>
-            <IconButton aria-label={locales.open_editor} onClick={(): void => void addEditorTab()}>
+            <IconButton aria-label={locales.open_editor} onClick={(): void => void addEditorTab(undefined, { forceNew: true })}>
               <CustomIcon type='plus' size='m' />
             </IconButton>
             <IconButton aria-label={locales.mobile_open_tabs} onClick={(): void => setSwitcherOpen(true)}>

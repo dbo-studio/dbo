@@ -26,6 +26,16 @@ export class MobileShellPage extends BasePage {
     return this.page.getByRole("button", { name: "Save" });
   }
 
+  /** The + in the query screen header. */
+  get newEditorButton(): Locator {
+    return this.page.getByRole("button", { name: "Open editor", exact: true });
+  }
+
+  /** Open-tabs badge in the query screen header. */
+  get tabCount(): Locator {
+    return this.page.locator(".MuiBadge-badge");
+  }
+
   get treeList(): Locator {
     return this.page.getByTestId("mobile-tree-list");
   }

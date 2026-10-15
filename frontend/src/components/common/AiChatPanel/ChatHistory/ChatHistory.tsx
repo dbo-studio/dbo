@@ -1,6 +1,8 @@
 import api from '@/api';
+import BottomSheet from '@/components/base/BottomSheet/BottomSheet';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import DropDownMenu from '@/components/base/DropDownMenu/DropDownMenu';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { AiChatType } from '@/types';
@@ -16,6 +18,7 @@ import { chatFileName, chatToMarkdown } from '../utils/chatExport';
 import type { ChatHistoryProps } from './types';
 
 export default function ChatHistory({ variant = 'menu' }: ChatHistoryProps): JSX.Element {
+  const { isMobile } = useLayoutMode();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const confirmDanger = useConfirmModalStore((state) => state.danger);
@@ -155,13 +158,14 @@ export default function ChatHistory({ variant = 'menu' }: ChatHistoryProps): JSX
   const content = (
     <>
       <InputBase
-        autoFocus={variant === 'menu'}
+        // Phones open a bottom sheet; focusing straight away would raise the keyboard over it.
+        autoFocus={variant === 'menu' && !isMobile}
         fullWidth
         value={search}
         onChange={(event) => setSearch(event.target.value)}
         placeholder={locales.ai_history_search}
         inputProps={{ 'aria-label': locales.ai_history_search, 'data-testid': 'ai-history-search' }}
-        sx={{ fontSize: '0.75rem', px: 0.5, mb: 0.5, borderBottom: 1, borderColor: 'divider' }}
+        sx={{ fontSize: '0.75rem', px: 1, mb: 0.5, height: 32, ...(isMobile ? { mb: 1 } : { borderBottom: 1, borderColor: 'divider' }) }}
       />
       {visible.length === 0 && (
         <Typography variant='caption' color='textSubdued' sx={{ p: 1 }} data-testid='ai-history-empty'>
@@ -194,9 +198,15 @@ export default function ChatHistory({ variant = 'menu' }: ChatHistoryProps): JSX
         </IconButton>
       </Tooltip>
 
-      <DropDownMenu open={open} onClose={() => setOpen(false)} anchorRef={anchorRef}>
-        <ChatHistoryStyled>{content}</ChatHistoryStyled>
-      </DropDownMenu>
+      {isMobile ? (
+        <BottomSheet open={open} onClose={() => setOpen(false)} title={locales.chat_history}>
+          {content}
+        </BottomSheet>
+      ) : (
+        <DropDownMenu open={open} onClose={() => setOpen(false)} anchorRef={anchorRef}>
+          <ChatHistoryStyled>{content}</ChatHistoryStyled>
+        </DropDownMenu>
+      )}
     </Box>
   );
 }

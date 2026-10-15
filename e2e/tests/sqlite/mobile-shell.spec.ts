@@ -55,6 +55,14 @@ test.describe("Mobile shell SQLite", () => {
           await expect(page.getByText("Alpha mobile").first()).toBeVisible({ timeout: 15000 });
           await expect(mobile.desktopOnlyControls).toHaveCount(0);
         });
+
+        await test.step("Plus opens another editor even when the current one is empty", async () => {
+          const before = Number(await mobile.tabCount.innerText());
+          await mobile.newEditorButton.click();
+          await expect(mobile.tabCount).toHaveText(String(before + 1));
+          await mobile.newEditorButton.click();
+          await expect(mobile.tabCount).toHaveText(String(before + 2));
+        });
       } finally {
         // Cleanup helpers drive the desktop UI.
         await mobile.switchToDesktop().catch(() => undefined);

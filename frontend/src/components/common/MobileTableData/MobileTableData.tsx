@@ -10,7 +10,7 @@ import locales from '@/locales';
 import StatusBarPagination from '@/routes/Data/StatusBar/StatusBarPagination/StatusBarPagination';
 import { useDataStore } from '@/store/dataStore/data.store';
 import type { ColumnType, DataTabType, RowType } from '@/types';
-import { Badge, Button, CircularProgress, IconButton, LinearProgress, Typography } from '@mui/material';
+import { Badge, Button, CircularProgress, IconButton, LinearProgress, Typography, useTheme } from '@mui/material';
 import { type JSX, useMemo, useState } from 'react';
 import Columns from '../Columns/Columns';
 import DataGrid from '../DataGrid/DataGrid';
@@ -37,6 +37,7 @@ const EMPTY_ROWS: RowType[] = [];
 const EMPTY_COLUMNS: ColumnType[] = [];
 
 export default function MobileTableData(): JSX.Element {
+  const theme = useTheme();
   const selectedTab = useSelectedTab<DataTabType>();
   const tabs = useConnectionTabs();
   const loading = useDataTabLoader();
@@ -168,7 +169,7 @@ export default function MobileTableData(): JSX.Element {
           aria-label={locales.add_row}
           onClick={(): void => void handleAddRow()}
         >
-          <CustomIcon type='plus' size='m' />
+          <CustomIcon type='plus' size='m' color={theme.palette.primary.contrastText} />
         </MobileTableDataFabStyled>
       )}
 

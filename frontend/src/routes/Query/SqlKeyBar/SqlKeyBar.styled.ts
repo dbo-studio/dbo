@@ -1,26 +1,42 @@
-import { ButtonBase, Box, styled } from '@mui/material';
+import { variables } from '@/core/theme/variables';
+import { Box, ButtonBase, styled } from '@mui/material';
 
 export const SqlKeyBarStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
-  gap: theme.spacing(0.5),
-  padding: theme.spacing(0.5, 1),
+  alignItems: 'center',
+  gap: theme.spacing(0.75),
+  padding: theme.spacing(0.75, 1),
   overflowX: 'auto',
   flexShrink: 0,
+  scrollbarWidth: 'none',
+  '&::-webkit-scrollbar': { display: 'none' },
   borderBottom: `1px solid ${theme.palette.divider}`,
-  backgroundColor: theme.palette.background.paper
+  backgroundColor: theme.palette.background.subdued
 }));
 
-export const SqlKeyStyled = styled(ButtonBase)(({ theme }) => ({
-  minWidth: 44,
-  minHeight: 36,
-  padding: theme.spacing(0, 1.25),
+export const SqlKeyStyled = styled(ButtonBase, {
+  shouldForwardProp: (prop) => prop !== 'keyword'
+})<{ keyword?: boolean }>(({ theme, keyword }) => ({
+  minWidth: 34,
+  height: 34,
+  padding: theme.spacing(0, keyword ? 1.25 : 0.75),
   border: `1px solid ${theme.palette.divider}`,
-  borderRadius: 5,
+  borderRadius: variables.radius.medium,
+  backgroundColor: theme.palette.background.default,
+  color: theme.palette.text.text,
   fontFamily: 'var(--editor-font, monospace)',
-  fontSize: 13,
-  color: theme.palette.text.primary,
+  fontSize: keyword ? 11 : 15,
+  fontWeight: keyword ? 600 : 400,
+  letterSpacing: keyword ? '0.04em' : undefined,
   flexShrink: 0,
   '&:active': {
     backgroundColor: theme.palette.action.selected
   }
+}));
+
+export const SqlKeyDividerStyled = styled(Box)(({ theme }) => ({
+  width: 1,
+  height: 18,
+  flexShrink: 0,
+  backgroundColor: theme.palette.divider
 }));

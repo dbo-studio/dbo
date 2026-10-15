@@ -63,7 +63,7 @@ export const createTabSettingSlice: StateCreator<
     return get().handleAddNewTab(tabs, newTab) as DataTabType;
   },
 
-  addEditorTab: (query?: string): EditorTabType => {
+  addEditorTab: (query?: string, options?: { forceNew?: boolean }): EditorTabType => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;
     if (!currentConnectionId) {
       throw new Error('No current connection id');
@@ -86,7 +86,8 @@ export const createTabSettingSlice: StateCreator<
         lastUsed
       });
 
-    if (findTab && get().getQuery() === '') {
+    // An empty editor is reused unless the caller explicitly wants another one (phone shell's + button).
+    if (findTab && !options?.forceNew && get().getQuery() === '') {
       get().switchTab(findTab.id);
 
       if (findTab.contextLocked) {
