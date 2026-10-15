@@ -125,6 +125,28 @@ test.describe("AI chat panel refresh", () => {
         await openAssistant(page);
         expect(Math.abs((await panelWidth(page)) - resized)).toBeLessThan(4);
       });
+
+      await test.step("Jump to latest appears when scrolled up and returns to the end", async () => {
+        const jump = page.getByTestId("ai-jump-to-latest");
+        const composerAfterReload = page.getByPlaceholder(/ask anything/i);
+        await expect(jump).toHaveCount(0);
+
+        for (let turn = 0; turn < 14; turn += 1) {
+          await composerAfterReload.fill(`turn ${turn}`);
+          await composerAfterReload.press("Enter");
+          await expect(page.getByTestId("ai-chat-cancel")).toHaveCount(0, { timeout: 15000 });
+        }
+
+        await page.getByTestId("ai-message").first().evaluate((el) => {
+          let node: HTMLElement | null = el as HTMLElement;
+          while (node && node.scrollHeight <= node.clientHeight + 2) node = node.parentElement;
+          if (node) node.scrollTop = 0;
+        });
+        await expect(jump).toBeVisible();
+
+        await jump.click();
+        await expect(jump).toHaveCount(0);
+      });
     });
   });
 });

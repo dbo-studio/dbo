@@ -2,7 +2,7 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { CircularProgress, IconButton, Tooltip, Typography } from '@mui/material';
+import { Chip, CircularProgress, Typography } from '@mui/material';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MessagesProps } from '../types';
 import ChatEmptyState from './ChatEmptyState/ChatEmptyState';
@@ -195,23 +195,23 @@ export default function Messages({
 
       {showScrollButton && messages.length > 0 && (
         <ScrollToBottomButtonStyled>
-          <Tooltip title={locales.scroll_to_bottom}>
-            <IconButton
-              size='small'
-              onClick={() => scrollToBottom()}
-              sx={{
-                backgroundColor: 'background.paper',
-                border: 1,
-                borderColor: 'divider',
-                boxShadow: 1,
-                '&:hover': {
-                  backgroundColor: 'background.paper'
-                }
-              }}
-            >
-              <CustomIcon type='arrowDown' size='xs' />
-            </IconButton>
-          </Tooltip>
+          <Chip
+            clickable
+            size='small'
+            icon={<CustomIcon type='arrowDown' size='xs' />}
+            label={locales.ai_jump_to_latest}
+            onClick={() => scrollToBottom()}
+            data-testid='ai-jump-to-latest'
+            sx={{
+              backgroundColor: 'background.paper',
+              border: 1,
+              borderColor: 'divider',
+              boxShadow: 2,
+              '&:hover': {
+                backgroundColor: 'background.paper'
+              }
+            }}
+          />
         </ScrollToBottomButtonStyled>
       )}
     </MessagesStyled>
