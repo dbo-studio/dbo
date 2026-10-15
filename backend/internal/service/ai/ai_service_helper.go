@@ -81,6 +81,11 @@ func (s *AiServiceImpl) findChat(ctx context.Context, req *dto.AiChatRequest) (*
 			return nil, apperror.NotFound(apperror.ErrAiChatNotFound)
 		}
 
+		// A chat belongs to one connection; its history and tools must not run against another.
+		if chat.ConnectionID != uint(req.ConnectionID) {
+			return nil, apperror.NotFound(apperror.ErrAiChatNotFound)
+		}
+
 		if err := s.aiChatRepo.Update(ctx, chat); err != nil {
 			return nil, apperror.InternalServerError(err)
 		}
