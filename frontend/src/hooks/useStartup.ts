@@ -117,7 +117,7 @@ export const useStartup = (): StartupState => {
           try {
             eruda.default.init();
           } catch {
-            // Ignore error
+            /* ignored */
           }
         })
         .catch(() => undefined);

@@ -23,12 +23,6 @@ export type TabRequestType = {
 
 export type TabResponseType = ObjectTabType[];
 
-// export type FormObjectResponseType = {
-//   isArray: boolean;
-//   schema: FormFieldType[];
-//   data: Record<string, FormValue>[];
-// };
-
 export type FormObjectResponseType = {
   general: GeneralFieldType[];
   schema: SchemaFieldType[];

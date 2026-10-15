@@ -39,7 +39,6 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
     }
 
     try {
-      // Generate default filename based on current date and time
       const now = new Date();
       const timestamp = now.toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '_');
       const defaultFileName = `export_${table}_${timestamp}.${format}`;

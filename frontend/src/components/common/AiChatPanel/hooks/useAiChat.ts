@@ -103,7 +103,7 @@ export const useAiChat = (active = true): useAiChatReturnType => {
       addChat(chat);
       await handleChatChange(chat);
     } catch {
-      // create chat failed silently
+      /* ignored */
     }
   };
 
@@ -218,7 +218,6 @@ export const useAiChat = (active = true): useAiChatReturnType => {
           keepPartialTurn();
           return;
         }
-        // fall through to non-stream fallback
       }
 
       const generation = fallbackGenerationRef.current;

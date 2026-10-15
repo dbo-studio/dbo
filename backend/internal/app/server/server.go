@@ -56,15 +56,10 @@ func New(
 ) *Server {
 	return &Server{
 		app: fiber.New(fiber.Config{
-			// Fiber's 4 KB default rejects requests with 431 when the browser
-			// sends cookies set by other apps on the same host (common on
-			// localhost and shared intranet hosts).
 			ReadBufferSize: 32 * 1024,
 			ReadTimeout:    30 * time.Second,
-			// WriteTimeout disabled: AI streams and large query responses can
-			// exceed a fixed cap without indicating a stalled client.
-			WriteTimeout: 0,
-			IdleTimeout:  120 * time.Second,
+			WriteTimeout:   0,
+			IdleTimeout:    120 * time.Second,
 			ErrorHandler: func(c fiber.Ctx, err error) error {
 				logger.Error(err)
 

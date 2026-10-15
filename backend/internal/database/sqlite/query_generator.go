@@ -69,7 +69,6 @@ func (r *SQLiteRepository) getColumns(ctx context.Context, table string, columnN
 	}
 
 	for i, column := range columns {
-		//convert not_null to is_nullable
 		if column.IsNullable == "0" {
 			columns[i].IsNullable = "1"
 		} else {

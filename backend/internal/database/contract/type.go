@@ -86,8 +86,6 @@ type ImportError struct {
 	Value   string `json:"value"`
 }
 
-//----------------------------
-
 type DBNode struct {
 	Database string
 	Schema   string

@@ -15,7 +15,6 @@ export const createDataUnsavedRowsSlice: StateCreator<
   addUnsavedRows: (newRow?: RowType): void => {
     let unSavedRows = get().unSavedRows;
     if (!newRow) {
-      // create an empty row
       const rows = get().rows ?? [];
       const columns = get().columns ?? [];
       const filteredRow = createEmptyRow(columns);
@@ -24,7 +23,6 @@ export const createDataUnsavedRowsSlice: StateCreator<
       get()
         .updateRows(newRows)
         .catch(() => undefined);
-      //save empty row to unSavedRows
       unSavedRows = [...unSavedRows, filteredRow];
     } else {
       const findValueIndex = unSavedRows.findIndex((x) => x.dbo_index === newRow.dbo_index);

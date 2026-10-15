@@ -30,7 +30,6 @@ export default function Menu(theme: Theme): Components {
             backgroundColor: theme.palette.background.paper
           },
           '&:focus-visible': {
-            // backgroundColor: 'transparent'
             backgroundColor: theme.palette.background.paper
           }
         }

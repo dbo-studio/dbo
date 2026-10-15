@@ -13,7 +13,6 @@ export type SqlContext = {
 };
 
 const SQL_FUNCTIONS = [
-  // Aggregate functions
   { label: 'COUNT', detail: 'COUNT(column)', insertText: 'COUNT($0)', kind: 1 as const },
   { label: 'SUM', detail: 'SUM(column)', insertText: 'SUM($0)', kind: 1 as const },
   { label: 'AVG', detail: 'AVG(column)', insertText: 'AVG($0)', kind: 1 as const },
@@ -22,7 +21,6 @@ const SQL_FUNCTIONS = [
   { label: 'STRING_AGG', detail: 'STRING_AGG(column, separator)', insertText: 'STRING_AGG($0, $1)', kind: 1 as const },
   { label: 'ARRAY_AGG', detail: 'ARRAY_AGG(column)', insertText: 'ARRAY_AGG($0)', kind: 1 as const },
 
-  // String functions
   { label: 'CONCAT', detail: 'CONCAT(str1, str2, ...)', insertText: 'CONCAT($0)', kind: 1 as const },
   {
     label: 'SUBSTRING',
@@ -36,7 +34,6 @@ const SQL_FUNCTIONS = [
   { label: 'LENGTH', detail: 'LENGTH(string)', insertText: 'LENGTH($0)', kind: 1 as const },
   { label: 'REPLACE', detail: 'REPLACE(str, old, new)', insertText: 'REPLACE($0, $1, $2)', kind: 1 as const },
 
-  // Date functions
   { label: 'NOW', detail: 'NOW()', insertText: 'NOW()', kind: 1 as const },
   { label: 'CURRENT_DATE', detail: 'CURRENT_DATE', insertText: 'CURRENT_DATE', kind: 1 as const },
   { label: 'CURRENT_TIME', detail: 'CURRENT_TIME', insertText: 'CURRENT_TIME', kind: 1 as const },
@@ -45,19 +42,16 @@ const SQL_FUNCTIONS = [
   { label: 'DATE_PART', detail: 'DATE_PART(field, date)', insertText: 'DATE_PART($0, $1)', kind: 1 as const },
   { label: 'TO_DATE', detail: 'TO_DATE(string, format)', insertText: 'TO_DATE($0, $1)', kind: 1 as const },
 
-  // Numeric functions
   { label: 'ROUND', detail: 'ROUND(number, decimals)', insertText: 'ROUND($0, $1)', kind: 1 as const },
   { label: 'CEIL', detail: 'CEIL(number)', insertText: 'CEIL($0)', kind: 1 as const },
   { label: 'FLOOR', detail: 'FLOOR(number)', insertText: 'FLOOR($0)', kind: 1 as const },
   { label: 'ABS', detail: 'ABS(number)', insertText: 'ABS($0)', kind: 1 as const },
   { label: 'MOD', detail: 'MOD(dividend, divisor)', insertText: 'MOD($0, $1)', kind: 1 as const },
 
-  // Type conversion
   { label: 'CAST', detail: 'CAST(value AS type)', insertText: 'CAST($0 AS $1)', kind: 1 as const },
   { label: 'COALESCE', detail: 'COALESCE(value1, value2, ...)', insertText: 'COALESCE($0, $1)', kind: 1 as const },
   { label: 'NULLIF', detail: 'NULLIF(value1, value2)', insertText: 'NULLIF($0, $1)', kind: 1 as const },
 
-  // PostgreSQL specific
   {
     label: 'ARRAY_LENGTH',
     detail: 'ARRAY_LENGTH(array, dimension)',
@@ -92,14 +86,12 @@ export function parseSqlContext(model: Monaco.editor.ITextModel, position: Monac
     aliases: new Map()
   };
 
-  // Normalize text for parsing (remove comments, normalize whitespace)
   const normalizedText = textUntilPosition
-    .replace(/--.*$/gm, '') // Remove single-line comments
-    .replace(/\/\*[\s\S]*?\*\//g, '') // Remove multi-line comments
-    .replace(/\s+/g, ' ') // Normalize whitespace
+    .replace(/--.*$/gm, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\s+/g, ' ')
     .trim();
 
-  // Detect current clause (case-insensitive)
   const upperText = normalizedText.toUpperCase();
 
   const lastSelectIndex = upperText.lastIndexOf('SELECT');
@@ -138,7 +130,6 @@ export function parseSqlContext(model: Monaco.editor.ITextModel, position: Monac
     context.isInOrderBy = context.currentClause === 'ORDER BY';
   }
 
-  // Extract tables and aliases from FROM and JOIN clauses
   const fromJoinRegex = /(?:FROM|JOIN)\s+([a-zA-Z0-9_]+)(?:\s+AS\s+|\s+)([a-zA-Z0-9_]+)?/gi;
   let match;
 
@@ -154,15 +145,6 @@ export function parseSqlContext(model: Monaco.editor.ITextModel, position: Monac
       context.aliases.set(alias.toLowerCase(), tableName);
     }
     context.aliases.set(tableName.toLowerCase(), tableName);
-  }
-
-  // Also handle table.column and alias.column patterns
-  const tableColumnRegex = /\b([a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)\b/g;
-  while ((match = tableColumnRegex.exec(normalizedText)) !== null) {
-    const possibleTable = match[1].toLowerCase();
-    if (context.aliases.has(possibleTable) || context.tables.includes(possibleTable)) {
-      // This is already recognized as a table/alias
-    }
   }
 
   return context;

@@ -340,20 +340,17 @@ func (p *BaseProvider) buildStreamChatPrompt(req *ChatRequest) string {
 func (p *BaseProvider) buildChatPrompt(req *ChatRequest) string {
 	var sb strings.Builder
 
-	// restrictions
 	sb.WriteString("You are an SQL and code assistant. ")
 	sb.WriteString("You must ONLY answer programming-related or SQL-related questions. ")
 	sb.WriteString("If the user asks anything outside these domains, respond with: ")
 	sb.WriteString("\"❌ This question is outside my supported domain.\" \n\n")
 
-	// rules for using the schema
 	sb.WriteString("- Only use the schema provided below.\n")
 	sb.WriteString("- If the user asks something that requires a column not listed in the schema, respond with:\n")
 	sb.WriteString("\"⚠️ No column in schema can be used to answer this request.\"\n")
 	sb.WriteString("- Do not invent columns or tables.\n")
 	sb.WriteString("- Never reveal or explain the schema or context directly to the user.\n\n")
 
-	// structured output format
 	sb.WriteString("When generating a response, ALWAYS return a valid JSON object with this structure:\n\n")
 	sb.WriteString("{\n")
 	sb.WriteString("  \"contents\": [\n")
@@ -365,7 +362,6 @@ func (p *BaseProvider) buildChatPrompt(req *ChatRequest) string {
 	sb.WriteString("  ]\n")
 	sb.WriteString("}\n\n")
 
-	// main rules
 	sb.WriteString("Rules:\n")
 	sb.WriteString("1. You can include multiple content blocks in one response.\n")
 	sb.WriteString("2. For SQL or code, use `\"type\": \"code\"` and specify the `\"language\"`.\n")
@@ -377,7 +373,6 @@ func (p *BaseProvider) buildChatPrompt(req *ChatRequest) string {
 	sb.WriteString("8. Explanations should be short and clear; code should be valid and executable.\n\n")
 	sb.WriteString("9. ❗ You must ALWAYS return JSON. If the user says goodbye or anything irrelevant, still respond with a valid JSON object.\n\n")
 
-	// real schema
 	sb.WriteString("Schema:\n")
 	sb.WriteString(req.Context)
 	p.appendQueryContext(&sb, req)

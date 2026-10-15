@@ -77,7 +77,6 @@ func (r *PostgresRepository) RunQuery(ctx context.Context, req *dto.RunQueryRequ
 func (r *PostgresRepository) runQueryGenerator(ctx context.Context, req *dto.RunQueryRequest, node contract.DBNode) string {
 	var sb strings.Builder
 
-	// SELECT clause
 	selectColumns := "*"
 
 	if len(req.Columns) > 0 {
@@ -91,7 +90,6 @@ func (r *PostgresRepository) runQueryGenerator(ctx context.Context, req *dto.Run
 
 	_, _ = fmt.Fprintf(&sb, "SELECT %s FROM %s", selectColumns, databaseCore.QuotePGIdent(node.Table))
 
-	// WHERE clause
 	if len(req.Filters) > 0 {
 		sb.WriteString(" WHERE ")
 
@@ -108,7 +106,6 @@ func (r *PostgresRepository) runQueryGenerator(ctx context.Context, req *dto.Run
 		}
 	}
 
-	// ORDER BY clause
 	if len(req.Sorts) > 0 {
 		sb.WriteString(" ORDER BY ")
 
@@ -128,7 +125,6 @@ func (r *PostgresRepository) runQueryGenerator(ctx context.Context, req *dto.Run
 		}
 	}
 
-	// LIMIT and OFFSET
 	limit := 100
 	if req.Limit != nil && lo.FromPtr(req.Limit) > 0 {
 		limit = lo.FromPtr(req.Limit)
