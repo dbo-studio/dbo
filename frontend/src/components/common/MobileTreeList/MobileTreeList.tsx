@@ -25,7 +25,10 @@ const noExpand = async (): Promise<void> => {};
 export default function MobileTreeList({ nodeId, onDrill }: MobileTreeListProps): JSX.Element {
   const { node, loading, error } = useTreeLevel(nodeId);
   const reloadTree = useTreeStore((state) => state.reloadTree);
-  const { bind, pull, progress } = usePullToRefresh((): void => void reloadTree(false).catch(() => undefined), !loading);
+  const { bind, pull, progress } = usePullToRefresh(
+    (): void => void reloadTree(false).catch(() => undefined),
+    !loading
+  );
   const { actionDetection } = useActionDetection(noExpand);
   const [search, setSearch] = useState('');
   const [actionsFor, setActionsFor] = useState<TreeNodeType | undefined>(undefined);

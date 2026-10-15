@@ -53,7 +53,13 @@ export const ChatHistoryItemStyled = styled(Stack)(({ theme }) => ({
     ':hover': { border: 'none', borderBottom: `1px solid ${theme.palette.divider}` },
     ':last-child': { borderBottom: 'none' },
     // 44px hit area around each tiny action icon.
-    '& .history-actions > span': { display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 44 }
+    '& .history-actions > span': {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 36,
+      height: 44
+    }
   },
   '.history-actions': {
     display: 'flex',

@@ -52,11 +52,7 @@ export default function MobileTableData(): JSX.Element {
   const [editingIndex, setEditingIndex] = useState<number | undefined>(undefined);
   const [sheet, setSheet] = useState<'filters' | 'tabs' | undefined>(undefined);
   // The grid view scrolls internally, so only the card list is pull-to-refresh.
-  const {
-    bind: pullBind,
-    pull,
-    progress
-  } = usePullToRefresh(refreshOrStop, view === 'cards' && !isDataFetching);
+  const { bind: pullBind, pull, progress } = usePullToRefresh(refreshOrStop, view === 'cards' && !isDataFetching);
 
   const pendingCount = editedRowsSet.size + removedRowsSet.size + unsavedRowsSet.size;
   const filterCount =
@@ -143,11 +139,14 @@ export default function MobileTableData(): JSX.Element {
             <Button onClick={(): void => void discardChanges()} disabled={saving}>
               {locales.discard_changes}
             </Button>
-            <Button variant='contained' onClick={(): void => {
+            <Button
+              variant='contained'
+              onClick={(): void => {
                 void haptics.impact();
                 void save();
               }}
-              loading={saving}>
+              loading={saving}
+            >
               {locales.save}
             </Button>
           </>

@@ -44,7 +44,13 @@ export default function RowEditSheet({ row, columns, editable, onClose }: RowEdi
       title={locales.mobile_row_title}
       actions={
         editable ? (
-          <Button size='small' variant='contained' disabled={!hasChanges} onClick={handleApply} sx={{ minHeight: 32, px: 2 }}>
+          <Button
+            size='small'
+            variant='contained'
+            disabled={!hasChanges}
+            onClick={handleApply}
+            sx={{ minHeight: 32, px: 2 }}
+          >
             {locales.mobile_apply}
           </Button>
         ) : undefined

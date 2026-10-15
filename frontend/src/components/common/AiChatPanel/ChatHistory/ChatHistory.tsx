@@ -177,7 +177,13 @@ export default function ChatHistory({ variant = 'menu' }: ChatHistoryProps): JSX
         onChange={(event) => setSearch(event.target.value)}
         placeholder={locales.ai_history_search}
         inputProps={{ 'aria-label': locales.ai_history_search, 'data-testid': 'ai-history-search' }}
-        sx={{ fontSize: '0.75rem', px: 1, mb: 0.5, height: 32, ...(isMobile ? { mb: 1 } : { borderBottom: 1, borderColor: 'divider' }) }}
+        sx={{
+          fontSize: '0.75rem',
+          px: 1,
+          mb: 0.5,
+          height: 32,
+          ...(isMobile ? { mb: 1 } : { borderBottom: 1, borderColor: 'divider' })
+        }}
       />
       {visible.length === 0 && (
         <Typography variant='caption' color='textSubdued' sx={{ p: 1 }} data-testid='ai-history-empty'>
