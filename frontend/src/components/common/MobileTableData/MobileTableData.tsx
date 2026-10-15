@@ -1,6 +1,7 @@
 import BottomSheet from '@/components/base/BottomSheet/BottomSheet';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import EmptyState from '@/components/base/EmptyState/EmptyState';
+import { haptics } from '@/core/tauri/haptics';
 import ListSkeleton from '@/components/base/ListSkeleton/ListSkeleton';
 import PullIndicator from '@/components/base/PullIndicator/PullIndicator';
 import ScreenHeader from '@/components/base/ScreenHeader/ScreenHeader';
@@ -141,7 +142,11 @@ export default function MobileTableData(): JSX.Element {
             <Button onClick={(): void => void discardChanges()} disabled={saving}>
               {locales.discard_changes}
             </Button>
-            <Button variant='contained' onClick={(): void => void save()} loading={saving}>
+            <Button variant='contained' onClick={(): void => {
+                void haptics.impact();
+                void save();
+              }}
+              loading={saving}>
               {locales.save}
             </Button>
           </>

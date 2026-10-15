@@ -1,3 +1,4 @@
+import { haptics } from '@/core/tauri/haptics';
 import type { JSX, MouseEvent } from 'react';
 import CustomIcon from '../CustomIcon/CustomIcon';
 import {
@@ -23,6 +24,7 @@ export default function ListRow({
 }: ListRowProps): JSX.Element {
   const handleContextMenu = (event: MouseEvent): void => {
     event.preventDefault();
+    void haptics.selection();
     onLongPress?.();
   };
 

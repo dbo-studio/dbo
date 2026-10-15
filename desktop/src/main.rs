@@ -61,6 +61,11 @@ fn main() {
         builder = builder.plugin(tauri_plugin_biometry::init());
     }
 
+    #[cfg(any(target_os = "ios", target_os = "android"))]
+    {
+        builder = builder.plugin(tauri_plugin_haptics::init());
+    }
+
     builder
         .setup(|app| {
             setup_macos_window(app)?;
