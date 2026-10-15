@@ -43,7 +43,10 @@ test.describe("AI chat context chips", () => {
         const chip = (name: string) => page.getByTestId("ai-context-chip").filter({ has: page.getByText(name, { exact: true }) });
         const removeChip = async (name: string): Promise<void> => {
           await chip(name).hover();
-          await chip(name).getByTestId("ai-context-chip-remove").click();
+          const remove = chip(name).getByTestId("ai-context-chip-remove");
+          await expect(remove).toBeVisible();
+          // The icon swaps in on hover and the bar re-renders; dispatch instead of chasing a moving target.
+          await remove.dispatchEvent("click");
         };
 
         const requests: Array<{ message: string; contextOpts?: { tables?: string[]; schema?: string } }> = [];

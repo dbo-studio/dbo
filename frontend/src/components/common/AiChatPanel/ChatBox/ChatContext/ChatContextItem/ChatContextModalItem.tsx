@@ -22,8 +22,8 @@ export default function ChatContextItem({ name, type, onClick }: ChatContextItem
         }}
       >
         {isHover ? (
-          <span data-testid='ai-context-chip-remove' style={{ display: 'inline-flex' }}>
-            <CustomIcon type='close' size='xs' onClick={onClick} />
+          <span data-testid='ai-context-chip-remove' style={{ display: 'inline-flex' }} onClick={onClick}>
+            <CustomIcon type='close' size='xs' />
           </span>
         ) : (
           <CustomIcon type={type === 'database' ? 'database' : 'sheet'} size='xs' />
