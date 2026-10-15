@@ -13,6 +13,13 @@ export const ChatHistoryStyled = styled(Stack)(({ theme }) => ({
   overflow: 'auto'
 }));
 
+export const ChatHistoryListStyled = styled(Stack)(({ theme }) => ({
+  flex: 1,
+  minHeight: 0,
+  padding: theme.spacing(1),
+  overflow: 'auto'
+}));
+
 export const ChatHistoryItemStyled = styled(Stack)(({ theme }) => ({
   marginBottom: theme.spacing(0.5),
   display: 'flex',
@@ -24,6 +31,9 @@ export const ChatHistoryItemStyled = styled(Stack)(({ theme }) => ({
   border: '1px solid transparent',
   ':hover': {
     border: `1px solid ${theme.palette.divider}`
+  },
+  '&.is-selected': {
+    backgroundColor: theme.palette.action.selected
   },
   '.history-actions': {
     display: 'flex',

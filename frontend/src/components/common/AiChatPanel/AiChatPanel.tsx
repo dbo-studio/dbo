@@ -1,6 +1,8 @@
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { shortcuts } from '@/core/utils';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
@@ -34,6 +36,7 @@ export default function AiChatPanel() {
   const updateUI = useSettingStore((state) => state.updateUI);
   const updateEditor = useSettingStore((state) => state.updateEditor);
   const density = useSettingStore((state) => state.editor.aiChatDensity ?? 'comfortable');
+  const { useSidebarOverlay } = useLayoutMode();
 
   return (
     <AiChatPanelContainerStyled>
@@ -56,6 +59,13 @@ export default function AiChatPanel() {
             <CustomIcon type='density' />
           </IconButton>
         </Tooltip>
+        {connectionId && !useSidebarOverlay && (
+          <Tooltip title={`${locales.ai_expand_to_agent} (${shortcuts.toggleAgentWorkspace.command.join('+')})`}>
+            <IconButton onClick={() => updateUI({ agentWorkspaceOpen: true })} data-testid='ai-expand-to-agent'>
+              <CustomIcon type='expand' />
+            </IconButton>
+          </Tooltip>
+        )}
       </HeaderContainerStyled>
       {connectionId && <ModeBar />}
       {!connectionId ? (
