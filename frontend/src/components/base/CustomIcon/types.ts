@@ -96,6 +96,7 @@ export const IconTypes = {
   at: 'AtSign',
   history: 'RotateCcwClock',
   pin: 'Pin',
+  density: 'Rows3',
   pinOff: 'PinOff',
   download: 'Download',
   bot: 'Bot',

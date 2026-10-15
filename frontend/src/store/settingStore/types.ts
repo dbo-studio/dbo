@@ -46,6 +46,7 @@ export type EditorSettings = {
   scrollToBottom: boolean;
   aiChatMode?: AiChatMode;
   aiWhatsNewSeen?: boolean;
+  aiChatDensity?: 'comfortable' | 'compact';
 };
 
 export type GeneralSettings = {

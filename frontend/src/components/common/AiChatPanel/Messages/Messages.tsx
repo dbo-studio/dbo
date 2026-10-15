@@ -1,6 +1,7 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import { CircularProgress, IconButton, Tooltip, Typography } from '@mui/material';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MessagesProps } from '../types';
@@ -12,6 +13,7 @@ import { MessageGroupStyled, MessagesListStyled, MessagesStyled, ScrollToBottomB
 import StreamingPreview from './StreamingPreview/StreamingPreview';
 import ThinkingMessage from './ThinkingMessage/ThinkingMessage';
 import { groupLiveItems, toRenderBlocks } from '../utils/agentTrace';
+import { formatMessageTime } from '../utils/messageTime';
 import AgentItemCard from './AgentCards/AgentItemCard';
 import ToolCallGroup from './AgentCards/ToolCallGroup';
 import TurnActions from './TurnActions/TurnActions';
@@ -26,6 +28,7 @@ export default function Messages({
 }: MessagesProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const streaming = useAiStore((state) => state.streaming);
+  const density = useSettingStore((state) => state.editor.aiChatDensity ?? 'comfortable');
   const agentItems = useAiStore((state) => state.agentItems);
   const blocks = useMemo(() => toRenderBlocks(messages), [messages]);
   const liveBlocks = useMemo(() => groupLiveItems(agentItems), [agentItems]);
@@ -91,7 +94,12 @@ export default function Messages({
   const showLoadMore = messages.filter((message) => !message.isNew).length > 10;
 
   return (
-    <MessagesStyled ref={messagesContainerRef} onScroll={handleScroll}>
+    <MessagesStyled
+      ref={messagesContainerRef}
+      onScroll={handleScroll}
+      compact={density === 'compact'}
+      data-density={density}
+    >
       {showLoadMore && onLoadMore && (
         <Typography
           component='button'
@@ -119,7 +127,7 @@ export default function Messages({
           if (block.kind === 'message') {
             const { message } = block;
             return (
-              <MessageGroupStyled key={block.key}>
+              <MessageGroupStyled key={block.key} title={formatMessageTime(message.createdAt)} data-testid='ai-message'>
                 {message.thinking?.content && (
                   <ThinkingMessage
                     content={message.thinking.content}

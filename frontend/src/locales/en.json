@@ -637,6 +637,8 @@
   "ai_context_budget_desc": "Rough estimate of the context sent with your next message",
   "ai_mention_query": "Active editor query",
   "ai_mention_selection": "Selected SQL",
+  "ai_density_comfortable": "Switch to compact density",
+  "ai_density_compact": "Switch to comfortable density",
   "ai_copy_error": "Copy error",
   "ai_copy_json": "Copy JSON",
   "ai_rerun": "Rerun query",
