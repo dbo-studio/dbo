@@ -24,6 +24,14 @@ test.describe("Mobile shell SQLite", () => {
           await expect(mobile.desktopOnlyControls).toHaveCount(0);
         });
 
+        await test.step("Pull down on the explorer to reload the tree", async () => {
+          await mobile.selectConnection(connectionName);
+          await mobile.openTab("explore");
+          const reload = page.waitForRequest((req) => req.url().includes("/api/tree"));
+          await mobile.pullDown(mobile.treeList);
+          await reload;
+        });
+
         await test.step("Open table through connect and explore tabs", async () => {
           await mobile.openTable(connectionName, tableName);
           await expect(mobile.rowCard("Alpha")).toBeVisible({ timeout: 15000 });

@@ -1,8 +1,10 @@
 import BottomSheet from '@/components/base/BottomSheet/BottomSheet';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import EmptyState from '@/components/base/EmptyState/EmptyState';
+import ListSkeleton from '@/components/base/ListSkeleton/ListSkeleton';
+import PullIndicator from '@/components/base/PullIndicator/PullIndicator';
 import ScreenHeader from '@/components/base/ScreenHeader/ScreenHeader';
-import { useConnectionTabs, useDataTabLoader, useSelectedTab } from '@/hooks';
+import { useConnectionTabs, useDataTabLoader, usePullToRefresh, useSelectedTab } from '@/hooks';
 import locales from '@/locales';
 import StatusBarPagination from '@/routes/Data/StatusBar/StatusBarPagination/StatusBarPagination';
 import { useDataStore } from '@/store/dataStore/data.store';
@@ -20,7 +22,6 @@ import TabSwitcherSheet from '../TabSwitcherSheet/TabSwitcherSheet';
 import {
   MobileTableDataBodyStyled,
   MobileTableDataCardsStyled,
-  MobileTableDataCenterStyled,
   MobileTableDataFabStyled,
   MobileTableDataFooterStyled,
   MobileTableDataPaginationStyled,
@@ -48,6 +49,12 @@ export default function MobileTableData(): JSX.Element {
   const [view, setView] = useState<MobileTableDataView>('cards');
   const [editingIndex, setEditingIndex] = useState<number | undefined>(undefined);
   const [sheet, setSheet] = useState<'filters' | 'tabs' | undefined>(undefined);
+  // The grid view scrolls internally, so only the card list is pull-to-refresh.
+  const {
+    bind: pullBind,
+    pull,
+    progress
+  } = usePullToRefresh(refreshOrStop, view === 'cards' && !isDataFetching);
 
   const pendingCount = editedRowsSet.size + removedRowsSet.size + unsavedRowsSet.size;
   const filterCount =
@@ -67,9 +74,7 @@ export default function MobileTableData(): JSX.Element {
   const renderBody = (): JSX.Element => {
     if (columns.length === 0) {
       return loading ? (
-        <MobileTableDataCenterStyled>
-          <CircularProgress size={28} />
-        </MobileTableDataCenterStyled>
+        <ListSkeleton />
       ) : (
         <EmptyState icon='grid' title={locales.data_empty_title} description={locales.data_empty_description} />
       );
@@ -122,7 +127,10 @@ export default function MobileTableData(): JSX.Element {
       />
       {loading && <LinearProgress />}
 
-      <MobileTableDataBodyStyled>{renderBody()}</MobileTableDataBodyStyled>
+      <MobileTableDataBodyStyled {...pullBind}>
+        <PullIndicator pull={pull} progress={progress} />
+        {renderBody()}
+      </MobileTableDataBodyStyled>
 
       <MobileTableDataFooterStyled>
         {pendingCount > 0 ? (

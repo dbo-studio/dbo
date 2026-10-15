@@ -26,6 +26,10 @@ export class MobileShellPage extends BasePage {
     return this.page.getByRole("button", { name: "Save" });
   }
 
+  get treeList(): Locator {
+    return this.page.getByTestId("mobile-tree-list");
+  }
+
   get bottomSheet(): Locator {
     return this.page.getByTestId("bottom-sheet");
   }
@@ -99,6 +103,29 @@ export class MobileShellPage extends BasePage {
 
   sqlKey(token: string): Locator {
     return this.page.getByTestId("sql-key-bar").getByRole("button", { name: token, exact: true });
+  }
+
+  /** Synthesizes a touch drag down on a scroll container (Playwright has no swipe API). */
+  async pullDown(target: Locator, distance = 200): Promise<void> {
+    await target.evaluate(async (el, dy) => {
+      const touch = (y: number): Touch =>
+        new Touch({ identifier: 1, target: el, clientX: 100, clientY: y });
+      const fire = (type: string, y: number): void => {
+        el.dispatchEvent(
+          new TouchEvent(type, {
+            bubbles: true,
+            cancelable: true,
+            touches: type === "touchend" ? [] : [touch(y)],
+            changedTouches: [touch(y)],
+          }),
+        );
+      };
+      fire("touchstart", 100);
+      fire("touchmove", 100 + dy / 2);
+      fire("touchmove", 100 + dy);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      fire("touchend", 100 + dy);
+    }, distance);
   }
 
   async openEditor(): Promise<void> {

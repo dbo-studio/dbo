@@ -1,9 +1,12 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import type { IconTypes } from '@/components/base/CustomIcon/types';
 import ListRow from '@/components/base/ListRow/ListRow';
+import ListSkeleton from '@/components/base/ListSkeleton/ListSkeleton';
+import PullIndicator from '@/components/base/PullIndicator/PullIndicator';
 import Search from '@/components/base/Search/Search';
-import { useTreeLevel } from '@/hooks';
+import { usePullToRefresh, useTreeLevel } from '@/hooks';
 import locales from '@/locales';
+import { useTreeStore } from '@/store/treeStore/tree.store';
 import type { TreeNodeType } from '@/types/Tree';
 import { IconButton, LinearProgress, Typography } from '@mui/material';
 import { type JSX, type MouseEvent, useState } from 'react';
@@ -21,6 +24,8 @@ const noExpand = async (): Promise<void> => {};
 
 export default function MobileTreeList({ nodeId, onDrill }: MobileTreeListProps): JSX.Element {
   const { node, loading, error } = useTreeLevel(nodeId);
+  const reloadTree = useTreeStore((state) => state.reloadTree);
+  const { bind, pull, progress } = usePullToRefresh((): void => void reloadTree(false).catch(() => undefined), !loading);
   const { actionDetection } = useActionDetection(noExpand);
   const [search, setSearch] = useState('');
   const [actionsFor, setActionsFor] = useState<TreeNodeType | undefined>(undefined);
@@ -44,7 +49,8 @@ export default function MobileTreeList({ nodeId, onDrill }: MobileTreeListProps)
   };
 
   return (
-    <MobileTreeListStyled>
+    <MobileTreeListStyled {...bind} data-testid='mobile-tree-list'>
+      <PullIndicator pull={pull} progress={progress} />
       {actionsFor && (
         <NodeActionSheet
           node={actionsFor}
@@ -57,7 +63,7 @@ export default function MobileTreeList({ nodeId, onDrill }: MobileTreeListProps)
           <Search onChange={setSearch} />
         </MobileTreeListSearchStyled>
       )}
-      {loading && <LinearProgress />}
+      {loading && (children.length === 0 ? <ListSkeleton /> : <LinearProgress />)}
       {error && !loading && children.length === 0 && (
         <MobileTreeListMessageStyled>
           <Typography color='error'>{locales.mobile_load_failed}</Typography>
