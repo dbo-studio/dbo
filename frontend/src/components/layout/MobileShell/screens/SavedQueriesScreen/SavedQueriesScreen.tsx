@@ -3,7 +3,7 @@ import SavedQueries from '@/components/common/SavedQueries/SavedQueries';
 import locales from '@/locales';
 import { useMobileNavStore } from '@/store/mobileNavStore/mobileNav.store';
 import type { JSX } from 'react';
-import { ScreenBodyStyled } from '../../MobileShell.styled';
+import { ScreenContentStyled } from '../../MobileShell.styled';
 
 export default function SavedQueriesScreen(): JSX.Element {
   const pop = useMobileNavStore((state) => state.pop);
@@ -11,9 +11,9 @@ export default function SavedQueriesScreen(): JSX.Element {
   return (
     <>
       <ScreenHeader title={locales.queries} onBack={(): void => void pop()} />
-      <ScreenBodyStyled>
+      <ScreenContentStyled>
         <SavedQueries />
-      </ScreenBodyStyled>
+      </ScreenContentStyled>
     </>
   );
 }

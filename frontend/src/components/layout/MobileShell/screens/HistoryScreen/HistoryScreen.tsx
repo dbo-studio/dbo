@@ -3,7 +3,7 @@ import Histories from '@/components/common/Histories/Histories';
 import locales from '@/locales';
 import { useMobileNavStore } from '@/store/mobileNavStore/mobileNav.store';
 import type { JSX } from 'react';
-import { ScreenBodyStyled } from '../../MobileShell.styled';
+import { ScreenContentStyled } from '../../MobileShell.styled';
 
 export default function HistoryScreen(): JSX.Element {
   const pop = useMobileNavStore((state) => state.pop);
@@ -11,9 +11,9 @@ export default function HistoryScreen(): JSX.Element {
   return (
     <>
       <ScreenHeader title={locales.history} onBack={(): void => void pop()} />
-      <ScreenBodyStyled>
+      <ScreenContentStyled>
         <Histories />
-      </ScreenBodyStyled>
+      </ScreenContentStyled>
     </>
   );
 }

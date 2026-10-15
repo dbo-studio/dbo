@@ -42,18 +42,18 @@ export default function ChatHistoryItem({
       </Box>
       <Box className='history-actions'>
         <Tooltip title={item.pinned ? locales.ai_history_unpin : locales.ai_history_pin}>
-          <span data-testid='ai-history-pin'>
-            <CustomIcon type={item.pinned ? 'pinOff' : 'pin'} size='xs' onClick={stop(onTogglePin)} />
+          <span data-testid='ai-history-pin' onClick={stop(onTogglePin)}>
+            <CustomIcon type={item.pinned ? 'pinOff' : 'pin'} size='xs' />
           </span>
         </Tooltip>
         <Tooltip title={locales.ai_history_export}>
-          <span data-testid='ai-history-export'>
-            <CustomIcon type='download' size='xs' onClick={stop(onExport)} />
+          <span data-testid='ai-history-export' onClick={stop(onExport)}>
+            <CustomIcon type='download' size='xs' />
           </span>
         </Tooltip>
         <Tooltip title={locales.ai_history_delete}>
-          <span data-testid='ai-history-delete'>
-            <CustomIcon type='close' size='xs' onClick={stop(onDelete)} />
+          <span data-testid='ai-history-delete' onClick={stop(onDelete)}>
+            <CustomIcon type='close' size='xs' />
           </span>
         </Tooltip>
       </Box>

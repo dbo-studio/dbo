@@ -27,3 +27,12 @@ export const ScreenBodyStyled = styled(Box)({
   display: 'flex',
   flexDirection: 'column'
 });
+
+/** Body for screens that host sidebar-style lists (queries, history): those bring no side padding of their own. */
+export const ScreenContentStyled = styled(ScreenBodyStyled)(({ theme }) => ({
+  padding: theme.spacing(0, 1.5),
+  // The "Load more" button is a full-width call to action in the sidebar; keep it compact on phones.
+  '& .MuiButton-contained': {
+    minHeight: 32
+  }
+}));

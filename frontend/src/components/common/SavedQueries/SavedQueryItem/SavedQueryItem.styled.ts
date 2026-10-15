@@ -11,5 +11,9 @@ export const SavedQueryItemStyled = styled(Box)<SavedQueryItemStyledProps>(({ th
   alignItems: 'center',
   borderRadius: variables.radius.medium,
   background: theme.palette.background.default,
-  color: selected ? theme.palette.text.primary : theme.palette.text.text
+  color: selected ? theme.palette.text.primary : theme.palette.text.text,
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(1, 1.25),
+    minHeight: 44
+  }
 }));

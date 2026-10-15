@@ -63,6 +63,14 @@ test.describe("Mobile shell SQLite", () => {
           await mobile.newEditorButton.click();
           await expect(mobile.tabCount).toHaveText(String(before + 2));
         });
+
+        await test.step("Settings opened from the query tab has a way back", async () => {
+          const before = Number(await mobile.tabCount.innerText());
+          await mobile.openSettings();
+          await mobile.backButton.click();
+          await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeHidden();
+          await expect(mobile.tabCount).toHaveText(String(before));
+        });
       } finally {
         // Cleanup helpers drive the desktop UI.
         await mobile.switchToDesktop().catch(() => undefined);

@@ -18,6 +18,7 @@ export default function QueryScreen(): JSX.Element {
   const tabs = useConnectionTabs();
   const selectedTab = useSelectedTab();
   const addEditorTab = useTabStore((state) => state.addEditorTab);
+  const removeTab = useTabStore((state) => state.removeTab);
   const [switcherOpen, setSwitcherOpen] = useState(false);
 
   if (tabs.length === 0) {
@@ -38,10 +39,14 @@ export default function QueryScreen(): JSX.Element {
     return <MobileTableData />;
   }
 
+  // Settings opens as a workspace tab on desktop; on phones it needs a way out that lands on the previous tab.
+  const settingsTab = selectedTab?.mode === TabMode.Settings ? selectedTab : undefined;
+
   return (
     <>
       <ScreenHeader
         title={tabTitle(selectedTab) || locales.mobile_tab_query}
+        onBack={settingsTab ? (): void => void removeTab(settingsTab.id) : undefined}
         actions={
           <>
             <IconButton aria-label={locales.open_editor} onClick={(): void => void addEditorTab(undefined, { forceNew: true })}>

@@ -138,6 +138,16 @@ export class MobileShellPage extends BasePage {
     }, distance);
   }
 
+  async openSettings(): Promise<void> {
+    await this.moreActionsButton.click();
+    await this.bottomSheet.getByRole("button", { name: "Settings" }).click();
+    await expect(this.page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
+  }
+
+  get backButton(): Locator {
+    return this.page.getByRole("button", { name: "Back", exact: true }).first();
+  }
+
   async openEditor(): Promise<void> {
     await this.moreActionsButton.click();
     await this.bottomSheet.getByRole("button", { name: "Open editor" }).click();

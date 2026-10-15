@@ -9,7 +9,7 @@ import { AiChatType } from '@/types';
 import { Box, IconButton, InputBase, Tooltip, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChatHistoryListStyled, ChatHistoryStyled } from './ChatHistory.styled';
+import { ChatHistoryGroupStyled, ChatHistoryListStyled, ChatHistoryStyled } from './ChatHistory.styled';
 import ChatHistoryItem from './ChatHistoryItem/ChatHistoryItem';
 import locales from '@/locales';
 import { tools } from '@/core/utils/tools';
@@ -155,6 +155,18 @@ export default function ChatHistory({ variant = 'menu' }: ChatHistoryProps): JSX
     return (data ?? []).filter((item) => !term || item.title.toLowerCase().includes(term));
   }, [data, search]);
 
+  const items = visible.map((item) => (
+    <ChatHistoryItem
+      key={item.id}
+      item={item}
+      selected={variant === 'list' && item.id === currentChat?.id}
+      onClick={() => void handleSelectChat(item)}
+      onDelete={() => handleDelete(item)}
+      onTogglePin={() => void handleTogglePin(item)}
+      onExport={() => void handleExport(item)}
+    />
+  ));
+
   const content = (
     <>
       <InputBase
@@ -172,17 +184,7 @@ export default function ChatHistory({ variant = 'menu' }: ChatHistoryProps): JSX
           {data?.length ? locales.ai_history_no_results : locales.ai_history_empty}
         </Typography>
       )}
-      {visible.map((item) => (
-        <ChatHistoryItem
-          key={item.id}
-          item={item}
-          selected={variant === 'list' && item.id === currentChat?.id}
-          onClick={() => void handleSelectChat(item)}
-          onDelete={() => handleDelete(item)}
-          onTogglePin={() => void handleTogglePin(item)}
-          onExport={() => void handleExport(item)}
-        />
-      ))}
+      {isMobile && visible.length > 0 ? <ChatHistoryGroupStyled>{items}</ChatHistoryGroupStyled> : items}
     </>
   );
 
