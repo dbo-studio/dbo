@@ -27,9 +27,7 @@ test.describe("AI Chat panel", () => {
       });
 
       await test.step("Ensure right sidebar visible", async () => {
-        if (!(await settingsPage.rightSidebarTab().isVisible().catch(() => false))) {
-          await settingsPage.toggleRightSidebar();
-        }
+        await settingsPage.openRightSidebar();
         await expect(settingsPage.rightSidebarTab()).toBeVisible({
           timeout: 15000,
         });

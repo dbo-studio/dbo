@@ -42,9 +42,7 @@ async function configureProvider(page: Page): Promise<void> {
 
 async function openAssistant(page: Page): Promise<void> {
   const settingsPage = new SettingsPage(page);
-  if (!(await settingsPage.rightSidebarTab().isVisible().catch(() => false))) {
-    await settingsPage.toggleRightSidebar();
-  }
+  await settingsPage.openRightSidebar();
   await expect(settingsPage.rightSidebarTab()).toBeVisible({ timeout: 15000 });
 }
 
