@@ -96,6 +96,12 @@ func (r AiChatRepoImpl) Update(ctx context.Context, chat *model.AiChat) error {
 	return r.db.WithContext(ctx).Save(chat).Error
 }
 
+// UpdateContext stores the chat context without touching updated_at, so history order is unchanged.
+func (r AiChatRepoImpl) UpdateContext(ctx context.Context, chatID uint, contextJSON string) error {
+	return r.db.WithContext(ctx).Model(&model.AiChat{}).Where("id = ?", chatID).
+		UpdateColumn("context_json", contextJSON).Error
+}
+
 func (r AiChatRepoImpl) Delete(ctx context.Context, chat *model.AiChat) error {
 	return r.db.WithContext(ctx).Delete(chat).Error
 }

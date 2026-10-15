@@ -1,9 +1,12 @@
 import locales from '@/locales';
+import { TabMode } from '@/core/enums';
 import { useAiStore } from '@/store/aiStore/ai.store';
+import { useTabStore } from '@/store/tabStore/tab.store';
+import { editor } from 'monaco-editor';
 import { Box, List, ListItemButton, Paper } from '@mui/material';
 import { useMemo, useState } from 'react';
 import type { ChatTextInputProps } from '../../types';
-import type { AutoCompleteType } from '@/types';
+import type { AiContextType, AutoCompleteType } from '@/types';
 import { ChatTextInputStyled } from './ChatTextInput.styled';
 
 type MentionState = {
@@ -20,16 +23,46 @@ function getMentionState(value: string, cursor: number): MentionState | null {
   return { start: atIndex, query: fragment.toLowerCase() };
 }
 
-function buildMentionOptions(autocomplete: AutoCompleteType | undefined, query: string): string[] {
-  if (!autocomplete) return [];
-  const items = [
-    ...autocomplete.tables.map((t) => ({ label: t, type: 'table' as const })),
-    ...autocomplete.views.map((v) => ({ label: v, type: 'view' as const }))
-  ];
-  return items
-    .filter((item) => item.label.toLowerCase().includes(query))
-    .slice(0, 8)
-    .map((item) => item.label);
+type MentionOption = {
+  label: string;
+  kind: 'table' | 'view' | 'schema' | 'query' | 'selection';
+  /** Text applied to the context for query / selection mentions. */
+  text?: string;
+};
+
+function getEditorSelection(): string {
+  for (const instance of editor.getEditors()) {
+    const selection = instance.getSelection();
+    const model = instance.getModel();
+    if (selection && !selection.isEmpty() && model) {
+      return model.getValueInRange(selection);
+    }
+  }
+
+  return '';
+}
+
+function getActiveQuery(): string {
+  const tab = useTabStore.getState().selectedTab();
+  return tab?.mode === TabMode.Query ? useTabStore.getState().getQuery(tab.id).trim() : '';
+}
+
+function buildMentionOptions(autocomplete: AutoCompleteType | undefined, query: string): MentionOption[] {
+  const special: MentionOption[] = [];
+  const activeQuery = getActiveQuery();
+  if (activeQuery) special.push({ label: 'query', kind: 'query', text: activeQuery });
+  const selection = getEditorSelection().trim();
+  if (selection) special.push({ label: 'selection', kind: 'selection', text: selection });
+
+  const objects: MentionOption[] = autocomplete
+    ? [
+        ...autocomplete.schemas.map((label) => ({ label, kind: 'schema' as const })),
+        ...autocomplete.tables.map((label) => ({ label, kind: 'table' as const })),
+        ...autocomplete.views.map((label) => ({ label, kind: 'view' as const }))
+      ]
+    : [];
+
+  return [...special, ...objects].filter((item) => item.label.toLowerCase().includes(query)).slice(0, 10);
 }
 
 export default function ChatTextInput({ loading, onSend, onCancel, autocomplete }: ChatTextInputProps) {
@@ -64,15 +97,33 @@ export default function ChatTextInput({ loading, onSend, onCancel, autocomplete 
     setActiveOption(0);
   };
 
-  const applyMention = (name: string) => {
+  const applyMention = (option: MentionOption) => {
     if (!mention) return;
     const before = input.slice(0, mention.start);
     const after = input.slice(cursorPos);
-    const next = `${before}@${name} ${after}`;
+    const next = `${before}@${option.label} ${after}`;
     setInput(next);
-    updateContext({ ...context, input: next });
-    const tables = context.tables.includes(name) ? context.tables : [...context.tables, name];
-    updateContext({ ...useAiStore.getState().context, input: next, tables });
+
+    const current = useAiStore.getState().context;
+    const patch: Partial<AiContextType> = { input: next };
+    switch (option.kind) {
+      case 'table':
+        patch.tables = current.tables.includes(option.label) ? current.tables : [...current.tables, option.label];
+        break;
+      case 'view':
+        patch.views = current.views.includes(option.label) ? current.views : [...current.views, option.label];
+        break;
+      case 'schema':
+        patch.schema = option.label;
+        break;
+      case 'query':
+        patch.querySnippet = option.text;
+        break;
+      case 'selection':
+        patch.selectedQuery = option.text;
+        break;
+    }
+    updateContext({ ...current, ...patch });
     setMention(null);
   };
 
@@ -135,8 +186,14 @@ export default function ChatTextInput({ loading, onSend, onCancel, autocomplete 
         <Paper sx={{ position: 'absolute', bottom: '100%', left: 0, right: 0, zIndex: 10, mb: 0.5 }}>
           <List dense>
             {mentionOptions.map((option, index) => (
-              <ListItemButton key={option} selected={index === selectedOption} onClick={() => applyMention(option)}>
-                @{option}
+              <ListItemButton
+                key={`${option.kind}-${option.label}`}
+                selected={index === selectedOption}
+                onClick={() => applyMention(option)}
+                data-testid='ai-mention-option'
+                data-kind={option.kind}
+              >
+                @{option.label}
               </ListItemButton>
             ))}
           </List>

@@ -11,12 +11,14 @@ import ChatBox from './ChatBox/ChatBox';
 import ChatHistory from './ChatHistory/ChatHistory';
 import Chats from './Chats/Chats';
 import { useAiAutoContext } from './hooks/useAiAutoContext';
+import { useRestoreChatContext } from './hooks/useRestoreChatContext';
 import { useAiChat } from './hooks/useAiChat';
 import Messages from './Messages/Messages';
 import ModeBar from './ModeBar/ModeBar';
 
 export default function AiChatPanel() {
   useAiAutoContext();
+  useRestoreChatContext();
 
   const {
     autocomplete,

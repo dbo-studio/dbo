@@ -3,6 +3,7 @@ package serviceAiChat
 import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/goccy/go-json"
 	"github.com/samber/lo"
 )
 
@@ -39,7 +40,22 @@ func aiChatDetailToResponse(chat *model.AiChat) *dto.AiChatDetailResponse {
 		ID:        chat.ID,
 		Title:     chat.Title,
 		Pinned:    chat.Pinned,
+		Context:   storedContext(chat.ContextJSON),
 		CreatedAt: chat.CreatedAt.Format("2006-01-02 15:04:05"),
 		Messages:  messages,
 	}
+}
+
+// storedContext returns the explorer context saved with the chat, if any.
+func storedContext(raw string) *dto.AiContextOptions {
+	if raw == "" {
+		return nil
+	}
+
+	var ctxOpts dto.AiContextOptions
+	if err := json.Unmarshal([]byte(raw), &ctxOpts); err != nil {
+		return nil
+	}
+
+	return &ctxOpts
 }

@@ -3,13 +3,14 @@ import DropDownMenu from '@/components/base/DropDownMenu/DropDownMenu';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import type { AiContextType } from '@/types';
-import { Box, Divider, IconButton } from '@mui/material';
+import { Box, Chip, Divider, IconButton, Tooltip, Typography } from '@mui/material';
 import { useRef, useState } from 'react';
 import { useToggle } from 'usehooks-ts';
 import type { ChatContextProps, ContextItemType } from '../../types';
 import { ChatContextStyled, ChatContextTagsStyled } from './ChatContext.styled';
 import ChatContextItem from './ChatContextItem/ChatContextModalItem';
 import ChatContextModalItem from './ChatContextModalItem/ChatContextModalItem';
+import { contextWindowOf, estimateContextTokens, formatTokens } from '../../utils/contextBudget';
 
 export default function ChatContext({ autocomplete }: ChatContextProps) {
   const anchorRef = useRef<HTMLButtonElement>(null);
@@ -17,6 +18,12 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
 
   const context = useAiStore((state) => state.context);
   const updateContext = useAiStore((state) => state.updateContext);
+  const autoContext = useAiStore((state) => state.autoContext);
+  const setAutoContext = useAiStore((state) => state.setAutoContext);
+  const activeProvider = useAiStore((state) => state.providers?.find((item) => item.isActive));
+
+  const used = estimateContextTokens(context);
+  const limit = contextWindowOf(activeProvider);
 
   const [localContext, setLocalContext] = useState<AiContextType>({
     input: '',
@@ -54,6 +61,19 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
           <CustomIcon type='at' size='s' />
         </IconButton>
 
+        <Tooltip title={autoContext ? locales.ai_context_following_desc : locales.ai_context_pinned_desc}>
+          <Chip
+            size='small'
+            variant={autoContext ? 'outlined' : 'filled'}
+            icon={<CustomIcon type={autoContext ? 'refresh' : 'pin'} size='xs' />}
+            label={autoContext ? locales.ai_context_following : locales.ai_context_pinned}
+            onClick={() => setAutoContext(!autoContext)}
+            data-testid='ai-context-follow'
+            data-following={autoContext}
+            sx={{ height: 20, fontSize: '0.6875rem' }}
+          />
+        </Tooltip>
+
         {context.database !== undefined && context.database !== '' && (
           <ChatContextItem
             type='database'
@@ -80,6 +100,15 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
           <ChatContextItem type='views' key={item} name={item} onClick={() => handleContextChange(item, 'views')} />
         ))}
 
+        {context.selectedQuery && (
+          <ChatContextItem
+            type='tables'
+            key='selection'
+            name={`${locales.ai_context_selection}: ${context.selectedQuery.replace(/\s+/g, ' ').slice(0, 60)}`}
+            onClick={() => updateContext({ ...context, selectedQuery: undefined })}
+          />
+        )}
+
         {context.querySnippet && (
           <ChatContextItem
             type='tables'
@@ -97,6 +126,16 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
             onClick={() => {}}
           />
         )}
+        <Tooltip title={locales.ai_context_budget_desc}>
+          <Typography
+            variant='caption'
+            color={used / limit > 0.8 ? 'warning.main' : 'textSubdued'}
+            sx={{ ml: 'auto', whiteSpace: 'nowrap' }}
+            data-testid='ai-context-budget'
+          >
+            {locales.ai_context_budget.replace('{used}', formatTokens(used)).replace('{limit}', formatTokens(limit))}
+          </Typography>
+        </Tooltip>
       </ChatContextTagsStyled>
       <DropDownMenu open={isOpen} onClose={() => setOpen(false)} anchorRef={anchorRef}>
         <ChatContextStyled>

@@ -4,6 +4,8 @@ export type AiChatType = {
   id: number;
   title: string;
   pinned?: boolean;
+  /** Explorer context saved with the chat; restored as chips when the chat is reopened. */
+  context?: { database?: string; schema?: string; tables?: string[]; views?: string[] };
   createdAt: string;
   updatedAt?: string;
   messages: AiMessageType[];
