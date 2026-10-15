@@ -12,6 +12,7 @@ export const withMobileDensity = (outer: Theme): Theme =>
     components: {
       MuiButton: { styleOverrides: { root: { minHeight: TOUCH_TARGET } } },
       MuiIconButton: { styleOverrides: { root: { minWidth: TOUCH_TARGET, minHeight: TOUCH_TARGET } } },
+      MuiToggleButton: { styleOverrides: { root: { minHeight: TOUCH_TARGET } } },
       MuiListItemButton: { styleOverrides: { root: { minHeight: TOUCH_TARGET + 4 } } },
       MuiInputBase: { styleOverrides: { input: { fontSize: 16 } } }
     }

@@ -27,6 +27,9 @@ export const AgentCardHeaderStyled = styled(Box)(({ theme }) => ({
   padding: `${theme.spacing(0.5)} ${theme.spacing(1)}`,
   cursor: 'pointer',
   userSelect: 'none',
+  '@media (pointer: coarse)': {
+    minHeight: 44
+  },
   '&:hover': {
     backgroundColor: theme.palette.action.hover
   }
