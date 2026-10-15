@@ -26,6 +26,7 @@ const formSchema = v.object({
 
 export default function SQLite({
   connection,
+  submitLabel,
   onClose,
   onPing,
   onSubmit,
@@ -162,7 +163,7 @@ export default function SQLite({
             size='small'
             variant='contained'
           >
-            <span>{connection ? locales.update : locales.create}</span>
+            <span>{submitLabel ?? (connection ? locales.update : locales.create)}</span>
           </Button>
         </Stack>
       </ConnectionFormFooterStyled>

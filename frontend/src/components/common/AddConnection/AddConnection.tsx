@@ -127,6 +127,7 @@ export default function AddConnection(): JSX.Element {
           key={sourceConnection ? `duplicate-${sourceConnection.id}` : 'new-connection'}
           connection={sourceConnection}
           engine={connectionType.type}
+          submitLabel={sourceConnection ? locales.save : undefined}
           pingLoading={pingConnectionPending}
           submitLoading={createConnectionPending}
           onClose={handleClose}

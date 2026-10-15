@@ -179,6 +179,9 @@ func classifyConnectionFailure(err error) (string, string) {
 		strings.Contains(msg, "invalid credentials"),
 		strings.Contains(msg, "using password: yes"):
 		return "authentication", "Check username/password and any password prompt settings."
+	case strings.Contains(msg, "3d000"),
+		strings.Contains(msg, "database") && strings.Contains(msg, "does not exist"):
+		return "database", "Database does not exist. Set the Database field to an existing database."
 	case strings.Contains(msg, "timeout"),
 		strings.Contains(msg, "i/o timeout"),
 		strings.Contains(msg, "connection refused"),

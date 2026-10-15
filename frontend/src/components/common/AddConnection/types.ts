@@ -30,6 +30,8 @@ export type ConnectionSettingsProps = {
   connection?: ConnectionType;
   /** Stored connection type / branding alias. */
   engine?: string;
+  /** Overrides the submit button text (default: Update when editing, Create otherwise). */
+  submitLabel?: string;
   pingLoading: boolean;
   submitLoading: boolean;
   onSubmit: (data: CreateConnectionRequestType) => void;

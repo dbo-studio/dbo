@@ -61,6 +61,7 @@ const formSchema = v.union([
 
 export default function Mysql({
   connection,
+  submitLabel,
   engine = 'mysql',
   onClose,
   onPing,
@@ -469,7 +470,7 @@ export default function Mysql({
             size='small'
             variant='contained'
           >
-            {connection ? locales.update : locales.create}
+            {submitLabel ?? (connection ? locales.update : locales.create)}
           </Button>
         </Stack>
       </ConnectionFormFooterStyled>

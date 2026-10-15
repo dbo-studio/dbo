@@ -61,6 +61,7 @@ const formSchema = v.union([
 
 export default function PostgreSQL({
   connection,
+  submitLabel,
   engine = 'postgresql',
   onClose,
   onPing,
@@ -467,7 +468,7 @@ export default function PostgreSQL({
             size='small'
             variant='contained'
           >
-            {connection ? locales.update : locales.create}
+            {submitLabel ?? (connection ? locales.update : locales.create)}
           </Button>
         </Stack>
       </ConnectionFormFooterStyled>
