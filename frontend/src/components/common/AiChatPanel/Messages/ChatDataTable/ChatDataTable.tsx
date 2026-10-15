@@ -101,7 +101,7 @@ export default function ChatDataTable({
 
     setIsRerunning(true);
     try {
-      const res = await api.query.runRawQuery({ connectionId, query });
+      const res = await api.query.runRawQuery({ connectionId: Number(connectionId), query });
       setRerun({
         rows: res.data,
         columns: res.columns.map((column) => column.name),
