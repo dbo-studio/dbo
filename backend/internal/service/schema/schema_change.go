@@ -94,6 +94,18 @@ func (s *ISchemaServiceImpl) ApplyChange(ctx context.Context, req *dto.SchemaCha
 		_ = s.cache.DeleteByPrefix(context.WithoutCancel(ctx), cache.OwnerConnectionPrefix(helper.CtxOwnerID(ctx), connection.ID))
 	}()
 
+	if atomic, ok := repo.(contract.AtomicExecutor); ok {
+		executeSteps := lo.Map(steps, func(step changeStep, _ int) contract.ExecuteStep {
+			return contract.ExecuteStep{NodeID: step.nodeID, Action: step.action, Params: step.params}
+		})
+
+		if err := atomic.ExecuteAtomic(ctx, executeSteps); err != nil {
+			return apperror.InternalServerError(fmt.Errorf("schema change rolled back, nothing was applied: %w", err))
+		}
+
+		return nil
+	}
+
 	for i, step := range steps {
 		if _, err := repo.Execute(ctx, step.nodeID, step.action, step.params); err != nil {
 			// DDL is not transactional across drivers: report what already ran.

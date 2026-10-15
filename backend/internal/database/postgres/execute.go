@@ -2,6 +2,7 @@ package databasePostgres
 
 import (
 	"context"
+	"fmt"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
@@ -115,4 +116,48 @@ func (r *PostgresRepository) executeConn(ctx context.Context, node contract.DBNo
 	default:
 		return r.db(ctx, &node.Database)
 	}
+}
+
+// ExecuteAtomic runs every step in a single transaction on the steps' shared
+// database. All queries are planned up front, as PreviewExecute does.
+func (r *PostgresRepository) ExecuteAtomic(ctx context.Context, steps []contract.ExecuteStep) error {
+	if len(steps) == 0 {
+		return nil
+	}
+
+	database := r.base.ExtractNode(steps[0].NodeID).Database
+
+	var queries []string
+
+	for _, step := range steps {
+		if r.base.ExtractNode(step.NodeID).Database != database {
+			return fmt.Errorf("atomic execute needs every step on one database")
+		}
+
+		stepQueries, err := r.buildExecuteQueries(ctx, step.NodeID, step.Action, step.Params)
+		if err != nil {
+			return err
+		}
+
+		queries = append(queries, stepQueries...)
+	}
+
+	conn, err := r.db(ctx, &database)
+	if err != nil {
+		return err
+	}
+
+	return conn.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, query := range queries {
+			if query == "" {
+				continue
+			}
+
+			if err := tx.Exec(query).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }
