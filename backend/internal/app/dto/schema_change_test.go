@@ -10,14 +10,12 @@ func TestSchemaChangeColumnDefault(t *testing.T) {
 	bad := []string{"1; DROP TABLE x", "1 -- c", "(SELECT 1)", "pg_sleep(10)", "'a' || 'b'"}
 
 	for _, d := range ok {
-		d := d
 		if err := (SchemaChangeColumn{Name: "c", Type: "int", Default: &d}).Validate(); err != nil {
 			t.Errorf("default %q should pass: %v", d, err)
 		}
 	}
 
 	for _, d := range bad {
-		d := d
 		if err := (SchemaChangeColumn{Name: "c", Type: "int", Default: &d}).Validate(); err == nil {
 			t.Errorf("default %q should fail", d)
 		}

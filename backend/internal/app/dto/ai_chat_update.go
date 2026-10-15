@@ -28,7 +28,7 @@ const (
 	AiReviewRejected  = "rejected"
 	AiReviewConfirmed = "confirmed"
 	// AiReviewPending releases a "confirmed" claim whose write did not run
-	// (failed or cancelled), so the card can be confirmed again.
+	// (failed or canceled), so the card can be confirmed again.
 	AiReviewPending = "pending"
 )
 
