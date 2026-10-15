@@ -102,6 +102,13 @@ export const webShortcuts: { [key: string]: ShortcutType } = {
     command: [modKey(), 'L'],
     shortcut: (event: KeyboardEvent) => isMod(event) && !event.shiftKey && !event.altKey && event.code === 'KeyL'
   },
+  toggleAgentWorkspace: {
+    id: 'toggleAgentWorkspace',
+    group: 'app',
+    label: locales.toggle_agent_workspace,
+    command: [altKey(), shiftKey(), 'E'],
+    shortcut: (event: KeyboardEvent) => event.altKey && event.shiftKey && !isMod(event) && event.code === 'KeyE'
+  },
   clearComposer: {
     id: 'clearComposer',
     group: 'app',
@@ -217,6 +224,13 @@ export const desktopShortcuts: { [key: string]: ShortcutType } = {
     label: locales.focus_assistant,
     command: [modKey(), 'L'],
     shortcut: (event: KeyboardEvent) => isMod(event) && !event.shiftKey && !event.altKey && event.code === 'KeyL'
+  },
+  toggleAgentWorkspace: {
+    id: 'toggleAgentWorkspace',
+    group: 'app',
+    label: locales.toggle_agent_workspace,
+    command: [modKey(), shiftKey(), 'E'],
+    shortcut: (event: KeyboardEvent) => isMod(event) && event.shiftKey && !event.altKey && event.code === 'KeyE'
   },
   clearComposer: {
     id: 'clearComposer',

@@ -13,9 +13,22 @@ const stop =
     handler();
   };
 
-export default function ChatHistoryItem({ item, onClick, onDelete, onTogglePin, onExport }: ChatHistoryItemProps) {
+export default function ChatHistoryItem({
+  item,
+  onClick,
+  onDelete,
+  onTogglePin,
+  onExport,
+  selected = false
+}: ChatHistoryItemProps) {
   return (
-    <ChatHistoryItemStyled direction='row' onClick={onClick} data-testid='ai-history-item'>
+    <ChatHistoryItemStyled
+      direction='row'
+      onClick={onClick}
+      className={selected ? 'is-selected' : undefined}
+      data-testid='ai-history-item'
+      data-selected={selected}
+    >
       <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
         <CustomIcon type={item.pinned ? 'pin' : 'message'} size='xs' />
         <Box sx={{ ml: 1, minWidth: 0 }}>

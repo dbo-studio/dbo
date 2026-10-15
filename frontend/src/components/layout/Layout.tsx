@@ -7,8 +7,9 @@ import { useDesktopMenu } from '@/hooks/useDesktopMenu';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { JSX } from 'react';
+import { type JSX, useEffect } from 'react';
 import ConfirmModal from '../base/Modal/ConfirmModal/ConfirmModal.tsx';
+import AgentWorkspace from '../common/AgentWorkspace/AgentWorkspace';
 import AiChatProvider from '../common/AiChatPanel/AiChatProvider/AiChatProvider';
 import UpdateDialog from '../common/UpdateDialog/UpdateDialog';
 import SafeModePasswordHost from '../common/SafeModePasswordPrompt/SafeModePasswordHost';
@@ -25,6 +26,7 @@ export default function Layout(): JSX.Element {
   const { useSidebarOverlay, showConnectionsRail, isMobile } = useLayoutMode();
   const sidebar = useSettingStore((state) => state.ui.sidebar);
   const showConnectionsDrawer = useSettingStore((state) => state.ui.showConnectionsDrawer);
+  const agentWorkspaceOpen = useSettingStore((state) => state.ui.agentWorkspaceOpen);
   const updateUI = useSettingStore((state) => state.updateUI);
   const currentConnection = useCurrentConnection();
   const { openAssistant, prefillChat } = useAiBridge();
@@ -44,11 +46,30 @@ export default function Layout(): JSX.Element {
   });
 
   useShortcut(shortcuts.focusAssistant, () => {
-    openAssistant(0);
+    if (!useSettingStore.getState().ui.agentWorkspaceOpen) {
+      openAssistant(0);
+    }
     // The panel may mount on this frame; focus once it is in the DOM.
     window.requestAnimationFrame(() => {
       document.querySelector<HTMLTextAreaElement>('[data-testid="ai-chat-input"]')?.focus();
     });
+  });
+
+  // The workspace needs a connection and the desktop layout: in the overlay
+  // layout the panels are modal drawers that would trap focus behind it.
+  const canOpenWorkspace = Boolean(currentConnection) && !useSidebarOverlay;
+  const workspaceOpen = agentWorkspaceOpen && canOpenWorkspace;
+
+  useEffect(() => {
+    if (agentWorkspaceOpen && !canOpenWorkspace) {
+      updateUI({ agentWorkspaceOpen: false });
+    }
+  }, [agentWorkspaceOpen, canOpenWorkspace, updateUI]);
+
+  useShortcut(shortcuts.toggleAgentWorkspace, () => {
+    if (canOpenWorkspace) {
+      updateUI({ agentWorkspaceOpen: !useSettingStore.getState().ui.agentWorkspaceOpen });
+    }
   });
 
   useShortcut(shortcuts.openShortcuts, () => {
@@ -99,8 +120,8 @@ export default function Layout(): JSX.Element {
   };
 
   return (
-    <AiChatProvider active={assistantVisible}>
-      <LayoutStyled>
+    <AiChatProvider active={assistantVisible || workspaceOpen}>
+      <LayoutStyled inert={workspaceOpen}>
         <ConfirmModal />
         <SafeModePasswordHost />
         <UpdateDialog />
@@ -110,6 +131,7 @@ export default function Layout(): JSX.Element {
           <LayoutMainStyled>{renderMain()}</LayoutMainStyled>
         </LayoutBodyStyled>
       </LayoutStyled>
+      {workspaceOpen && <AgentWorkspace />}
     </AiChatProvider>
   );
 }

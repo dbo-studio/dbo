@@ -6,14 +6,13 @@ import AddConnection from '@/components/common/AddConnection/AddConnection';
 import { isPasswordPromptSuppressedForConnection } from '@/core/api';
 import { canCreateConnection } from '@/core/auth/permissions';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
+import { useSwitchConnection } from '@/hooks/useSwitchConnection';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { matchConnectionId } from '@/store/tabStore/connectionId';
-import { selectTabs, useTabStore } from '@/store/tabStore/tab.store';
 import type { ConnectionType } from '@/types';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { type JSX, useCallback, useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { type JSX, useCallback, useEffect } from 'react';
 import EditConnection from '../AddConnection/EditConnection';
 import ConnectionItem from './ConnectionItem/ConnectionItem';
 import ConnectionPasswordPromptModal from './ConnectionPasswordPrompt/ConnectionPasswordPrompt';
@@ -31,7 +30,6 @@ const pickSelectableActiveConnection = (connections: ConnectionType[]): Connecti
 };
 
 export default function Connections({ expanded = false }: ConnectionsProps): JSX.Element {
-  const [loadingConnectionId, setLoadingConnectionId] = useState<number | undefined>(undefined);
   const { showConnectionsRail } = useLayoutMode();
 
   const queryClient = useQueryClient();
@@ -42,7 +40,6 @@ export default function Connections({ expanded = false }: ConnectionsProps): JSX
   const updateCurrentConnection = useConnectionStore((state) => state.updateCurrentConnection);
   const updateConnections = useConnectionStore((state) => state.updateConnections);
   const reorderConnections = useConnectionStore((state) => state.reorderConnections);
-  const switchTab = useTabStore((state) => state.switchTab);
   const updateUI = useSettingStore((state) => state.updateUI);
   const mode = useAuthStore((s) => s.mode);
   const user = useAuthStore((s) => s.user);
@@ -67,13 +64,11 @@ export default function Connections({ expanded = false }: ConnectionsProps): JSX
     }
   });
 
-  const { mutateAsync: updateConnectionMutation, isPending: pendingUpdateConnection } = useMutation({
-    mutationFn: (id: number): Promise<ConnectionType> => api.connection.updateConnection(id, { isActive: true }),
-    onMutate: (id: number): void => {
-      setLoadingConnectionId(id);
-      updateLoading('loading');
-    }
-  });
+  const {
+    switchConnection: handleChangeCurrentConnection,
+    isSwitching: pendingUpdateConnection,
+    switchingId: loadingConnectionId
+  } = useSwitchConnection();
 
   useEffect(() => {
     if (!connections?.length) {
@@ -97,31 +92,6 @@ export default function Connections({ expanded = false }: ConnectionsProps): JSX
       updateUI({ showAddConnection: true, duplicateConnectionId: undefined });
     }
   }, [canAddConnection, connections, showConnectionsRail, updateUI]);
-
-  const handleChangeCurrentConnection = useCallback(
-    async (c: ConnectionType): Promise<void> => {
-      const tabs = selectTabs(useTabStore.getState());
-      const store = useConnectionStore.getState();
-      if (c.id === store.currentConnection()?.id || store.loading === 'loading') {
-        return;
-      }
-      try {
-        await updateConnectionMutation(c.id);
-        updateLoading('finished');
-        updateCurrentConnection(c);
-        await queryClient.invalidateQueries({
-          queryKey: ['connections']
-        });
-        const connectionTabs = tabs.filter((tab) => matchConnectionId(tab.connectionId, c.id));
-        const selectedTabId = useTabStore.getState().selectedTabId;
-        const activeTab = connectionTabs.find((tab) => tab.id === selectedTabId) ?? connectionTabs[0];
-        switchTab(activeTab?.id ?? null);
-      } catch {
-        updateLoading('error');
-      }
-    },
-    [queryClient, switchTab, updateConnectionMutation, updateCurrentConnection, updateLoading]
-  );
 
   const handleReorder = useCallback(
     (activeId: string, overId: string): void => {

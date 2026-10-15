@@ -23,6 +23,8 @@ export type SettingStore = {
 export type UISettings = {
   sidebar: SidebarType;
   showConnectionsDrawer: boolean;
+  /** Full-window agent workspace over the main app; never persisted. */
+  agentWorkspaceOpen: boolean;
   showAddConnection: boolean;
   duplicateConnectionId?: number;
   showEditConnection: number | boolean;

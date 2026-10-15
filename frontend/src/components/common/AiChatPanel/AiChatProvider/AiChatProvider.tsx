@@ -1,5 +1,6 @@
 import { useAiStore } from '@/store/aiStore/ai.store';
-import { type JSX, type ReactNode, useEffect } from 'react';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { type JSX, type ReactNode, useEffect, useRef } from 'react';
 import { useAiAutoContext } from '../hooks/useAiAutoContext';
 import { useAiChat } from '../hooks/useAiChat';
 import { AiChatControllerContext } from '../hooks/useAiChatController';
@@ -24,7 +25,21 @@ export default function AiChatProvider({ active, children }: AiChatProviderProps
   const bridgeRequest = useAiStore((state) => state.bridgeRequest);
   const setBridgeRequest = useAiStore((state) => state.setBridgeRequest);
   const updateContext = useAiStore((state) => state.updateContext);
-  const { handleSend } = controller;
+  const { handleSend, handleCancel } = controller;
+
+  // A chat belongs to one connection: on switch, stop its turn and close it so
+  // the next message cannot land in another connection's chat.
+  const connectionId = useConnectionStore((state) => state.currentConnectionId);
+  const previousConnectionIdRef = useRef(connectionId);
+  useEffect(() => {
+    if (previousConnectionIdRef.current === connectionId) return;
+    previousConnectionIdRef.current = connectionId;
+
+    handleCancel();
+    const { updateChats, updateCurrentChat } = useAiStore.getState();
+    updateChats([]);
+    updateCurrentChat(undefined);
+  }, [connectionId, handleCancel]);
 
   useEffect(() => {
     if (!active || !bridgeRequest) return;
