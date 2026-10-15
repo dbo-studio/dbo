@@ -357,7 +357,7 @@
   "ai_select_model": "Select model",
   "ai_whats_new_title": "What's new",
   "ai_whats_new_body": "Agent Mode can run read-only tools against your database. Safe Mode keeps writes behind your confirmation.",
-  "scroll_to_bottom": "Scroll to bottom",
+  "ai_jump_to_latest": "Jump to latest",
   "data_empty_title": "No data to display",
   "data_empty_description": "Open a table from the explorer to view its rows.",
   "query_empty_results_title": "No results yet",
