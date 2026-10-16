@@ -113,12 +113,14 @@ func (s *IAuthServiceImpl) Bootstrap(ctx context.Context) error {
 	password := s.cfg.App.Auth.AdminPassword
 
 	seeded := false
+
 	if mode == config.AuthModeLocal && count == 0 && email != "" && password != "" {
 		if _, err := s.createFirstAdmin(ctx, email, password, true); err != nil {
 			return err
 		}
 
 		seeded = true
+
 		s.logger.Info("bootstrapped local admin user from APP_ADMIN_EMAIL")
 	}
 

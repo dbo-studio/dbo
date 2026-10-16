@@ -61,6 +61,7 @@ func OwnerSessionMiddleware(
 
 		publicURL := ""
 		sharedOwnerID := ""
+
 		if cfg != nil {
 			publicURL = cfg.App.PublicURL
 			sharedOwnerID = cfg.App.Auth.SharedOwnerID
@@ -141,11 +142,14 @@ func tryBindCookieSession(
 	}
 
 	// Login off: a session left over from login-on must not act as its user.
-	var user *model.User
-	var userErr error
+	var (
+		user    *model.User
+		userErr error
+	)
 	if mode == config.AuthModeLocal {
 		user, userErr = authService.LoadSessionUser(c.Context(), session)
 	}
+
 	if userErr != nil {
 		if errors.Is(userErr, apperror.ErrUserDisabled) || errors.Is(userErr, apperror.ErrUserNotFound) {
 			_ = webSessionRepo.Delete(c.Context(), sessionID)

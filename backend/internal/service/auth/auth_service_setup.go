@@ -115,6 +115,7 @@ func (s *IAuthServiceImpl) resetSetupToken(needed bool) error {
 	defer s.setupMu.Unlock()
 
 	s.setupToken = ""
+
 	if !needed {
 		return nil
 	}
