@@ -50,10 +50,13 @@ type AuthSetupRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	Confirm  string `json:"confirm"`
+	// Token is the one-time setup token printed in the server log.
+	Token string `json:"token"`
 }
 
 func (r AuthSetupRequest) Validate() error {
 	err := validation.ValidateStruct(&r,
+		validation.Field(&r.Token, validation.Required, validation.Length(1, 128)),
 		validation.Field(&r.Email, validation.Required, is.EmailFormat),
 		validation.Field(&r.Password, validation.Required, passwordpolicy.Rule()),
 		validation.Field(&r.Confirm, validation.Required),

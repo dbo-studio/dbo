@@ -520,6 +520,8 @@
   "auth_change_password_hint": "Choose a new password before you can use connections and data tools.",
   "auth_setup_title": "Create admin account",
   "auth_setup_hint": "No account exists yet. The account you create here becomes the admin and owns everything already saved on this server.",
+  "auth_setup_token": "Setup token",
+  "auth_setup_token_hint": "Printed in the server log when DBO Studio starts.",
   "auth_setup_submit": "Create account",
   "auth_setup_saving": "Creating…",
   "auth_setup_failed": "Could not create the account.",

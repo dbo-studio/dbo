@@ -30,7 +30,7 @@ When auth mode is `local`:
 
 ### First admin
 
-- With `APP_AUTH_MODE=local` and no user, the UI shows a one-time setup screen. The first visitor becomes admin, so finish setup before the port is reachable by others, or seed the admin instead.
+- With `APP_AUTH_MODE=local` and no user, the UI shows a one-time setup screen. It needs a random token that the server prints at startup (stderr and log), so only someone with access to the server output can create the admin. The token is compared in constant time and cleared once used.
 - `APP_ADMIN_EMAIL` + `APP_ADMIN_PASSWORD` seed the first admin at startup; that password must change before data APIs.
 - Passwords must be 8–40 characters and include a letter and a number.
 - Seed env is ignored after users exist.

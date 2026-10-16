@@ -62,8 +62,10 @@ type IAuthServiceImpl struct {
 	cipherKey      []byte
 	cfg            *config.Config
 	logger         logger.Logger
-	// setupMu makes the first-admin check and insert atomic.
+	// setupMu guards setupToken and makes the first-admin check and insert atomic.
 	setupMu sync.Mutex
+	// setupToken must accompany POST /auth/setup; printed at startup, cleared once used.
+	setupToken string
 }
 
 func NewAuthService(
@@ -110,12 +112,18 @@ func (s *IAuthServiceImpl) Bootstrap(ctx context.Context) error {
 	email := strings.TrimSpace(s.cfg.App.Auth.AdminEmail)
 	password := s.cfg.App.Auth.AdminPassword
 
+	seeded := false
 	if mode == config.AuthModeLocal && count == 0 && email != "" && password != "" {
 		if _, err := s.createFirstAdmin(ctx, email, password, true); err != nil {
 			return err
 		}
 
+		seeded = true
 		s.logger.Info("bootstrapped local admin user from APP_ADMIN_EMAIL")
+	}
+
+	if err := s.resetSetupToken(mode == config.AuthModeLocal && count == 0 && !seeded); err != nil {
+		return err
 	}
 
 	if mode == config.AuthModeNone && count > 0 {

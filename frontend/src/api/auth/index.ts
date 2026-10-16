@@ -18,8 +18,8 @@ export const getStatus = async (): Promise<AuthStatusType> => {
   return (await api.get<{ data: AuthStatusType }>(endpoint.status())).data.data;
 };
 
-export const setup = async (email: string, password: string, confirm: string): Promise<void> => {
-  await api.post(endpoint.setup(), { email, password, confirm });
+export const setup = async (token: string, email: string, password: string, confirm: string): Promise<void> => {
+  await api.post(endpoint.setup(), { token, email, password, confirm });
 };
 
 export const login = async (email: string, password: string): Promise<AuthLoginResponse | undefined> => {

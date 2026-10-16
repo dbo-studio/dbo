@@ -49,6 +49,7 @@ export const adminResetPasswordSchema = v.object({
 
 export const authSetupSchema = v.pipe(
   v.object({
+    token: v.pipe(v.string(), v.trim(), v.minLength(1, 'Setup token is required')),
     email: v.pipe(v.string(), v.email('Valid email is required')),
     password: authPasswordSchema,
     confirm: authPasswordSchema

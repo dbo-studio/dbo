@@ -1,41 +1,56 @@
-import { spawn } from 'node:child_process';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { startStack, E2E_ROOT } from './start-stack.mjs';
+import { spawn } from "node:child_process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { startStack, E2E_ROOT } from "./start-stack.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function main() {
   const args = process.argv.slice(2);
-  const isCodegen = args.includes('--codegen');
-  const playwrightArgs = args.filter((a) => a !== '--codegen');
+  const isCodegen = args.includes("--codegen");
+  const playwrightArgs = args.filter((a) => a !== "--codegen");
 
   const stack = await startStack();
   process.stderr.write(
-    `[e2e] stack ready baseURL=${stack.baseURL} apiURL=${stack.apiURL} dataDir=${stack.dataDir}\n`
+    `[e2e] stack ready baseURL=${stack.baseURL} apiURL=${stack.apiURL} dataDir=${stack.dataDir}\n`,
   );
 
-  const isUi = playwrightArgs.some((arg) => arg === '--ui' || arg.startsWith('--ui-'));
+  const isUi = playwrightArgs.some(
+    (arg) => arg === "--ui" || arg.startsWith("--ui-"),
+  );
   const env = {
     ...process.env,
     PLAYWRIGHT_BASE_URL: stack.baseURL,
     PLAYWRIGHT_API_URL: stack.apiURL,
-    ...(isUi ? { E2E_UI_MODE: '1' } : {})
+    // App data of the ephemeral backend (app DB, logs), for specs that read the log.
+    E2E_DATA_DIR: stack.dataDir,
+    ...(isUi ? { E2E_UI_MODE: "1" } : {}),
   };
 
   let exitCode = 1;
   try {
     if (isCodegen) {
       exitCode = await run(
-        'npx',
-        ['playwright', 'codegen', stack.baseURL, ...playwrightArgs.filter((a) => a !== '--ui')],
-        env
+        "npx",
+        [
+          "playwright",
+          "codegen",
+          stack.baseURL,
+          ...playwrightArgs.filter((a) => a !== "--ui"),
+        ],
+        env,
       );
     } else {
       exitCode = await run(
-        'npx',
-        ['playwright', 'test', '--config', path.join(E2E_ROOT, 'playwright.config.ts'), ...playwrightArgs],
-        env
+        "npx",
+        [
+          "playwright",
+          "test",
+          "--config",
+          path.join(E2E_ROOT, "playwright.config.ts"),
+          ...playwrightArgs,
+        ],
+        env,
       );
     }
   } finally {
@@ -56,11 +71,11 @@ function run(command, args, env) {
     const child = spawn(command, args, {
       cwd: E2E_ROOT,
       env,
-      stdio: 'inherit',
-      shell: process.platform === 'win32'
+      stdio: "inherit",
+      shell: process.platform === "win32",
     });
-    child.on('exit', (code) => resolve(code ?? 1));
-    child.on('error', () => resolve(1));
+    child.on("exit", (code) => resolve(code ?? 1));
+    child.on("error", () => resolve(1));
   });
 }
 

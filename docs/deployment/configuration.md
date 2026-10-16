@@ -49,7 +49,7 @@ Read by `backend/config/config.go` and path helpers in `pkg/db`, `pkg/logger`, `
 ### Enable local auth
 
 1. Set `APP_AUTH_MODE=local` and restart.
-2. Open the UI. With no user yet it shows **Create admin account**: the first visitor becomes the admin and owns all data saved so far. `POST /api/auth/setup` refuses once any user exists.
+2. The server prints a one-time setup link to stderr and the log: `no admin account yet: open <url>/?setup=<token> ...`. Open it (or open the UI and paste the token). The **Create admin account** screen creates the admin, who owns all data saved so far. `POST /api/auth/setup` needs the token and refuses once any user exists. A restart issues a new token.
 3. Create members under Settings → Administration → Users.
 
 To skip the setup screen, also set `APP_ADMIN_EMAIL` + `APP_ADMIN_PASSWORD`: the admin is created at startup with `must_change_password`. These are ignored after users exist.

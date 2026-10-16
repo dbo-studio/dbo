@@ -1,9 +1,23 @@
+import fs from "node:fs";
+import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { AuthPage } from "../../pages/AuthPage";
 
+/** The backend prints the one-time setup token in its log at startup. */
+function readSetupToken(): string {
+  const logDir = path.join(process.env.E2E_DATA_DIR!, "logs");
+  const text = fs
+    .readdirSync(logDir)
+    .map((file) => fs.readFileSync(path.join(logDir, file), "utf8"))
+    .join("\n");
+  const match = text.match(/setup token ([0-9a-f]{32})/);
+  if (!match) throw new Error(`No setup token in ${logDir}`);
+  return match[1];
+}
+
 /**
  * First-run setup: login is on (APP_AUTH_MODE=local) and no account exists, so
- * the first visitor creates the admin from the browser.
+ * the admin is created from the browser with the token printed in the server log.
  * Run: npm run test:auth-setup
  */
 test.describe("Auth first-run setup", () => {
@@ -22,6 +36,7 @@ test.describe("Auth first-run setup", () => {
     const email = "owner@example.com";
     const password = "OwnerPass1!";
     const auth = new AuthPage(page);
+    const token = readSetupToken();
 
     await test.step("status asks for setup and data APIs stay closed", async () => {
       const status = await request.get(`${apiUrl}/auth/status`);
@@ -38,16 +53,24 @@ test.describe("Auth first-run setup", () => {
 
     await test.step("mismatched passwords are rejected", async () => {
       const res = await request.post(`${apiUrl}/auth/setup`, {
-        data: { email, password, confirm: "Different1!" },
+        data: { token, email, password, confirm: "Different1!" },
       });
       expect(res.status()).toBe(422);
     });
 
-    await test.step("setup screen creates the admin and opens the app", async () => {
-      await page.goto("/");
+    await test.step("a wrong setup token is refused", async () => {
+      const res = await request.post(`${apiUrl}/auth/setup`, {
+        data: { token: "0".repeat(32), email, password, confirm: password },
+      });
+      expect(res.status()).toBe(403);
+    });
+
+    await test.step("the log link fills the token; setup creates the admin", async () => {
+      await page.goto(`/?setup=${token}`);
       await expect(page.getByTestId("auth-setup-submit")).toBeVisible({
         timeout: 30000,
       });
+      await expect(page.getByTestId("auth-setup-token")).toHaveValue(token);
       await page.getByTestId("auth-setup-email").fill(email);
       await page.getByTestId("auth-setup-password").fill(password);
       await page.getByTestId("auth-setup-confirm").fill(password);
@@ -58,7 +81,10 @@ test.describe("Auth first-run setup", () => {
 
       const status = await page.request.get("/api/auth/status");
       const body = (await status.json()) as {
-        data: { setupRequired: boolean; user?: { email: string; role: string } };
+        data: {
+          setupRequired: boolean;
+          user?: { email: string; role: string };
+        };
       };
       expect(body.data.setupRequired).toBe(false);
       expect(body.data.user).toMatchObject({ email, role: "admin" });
@@ -66,7 +92,12 @@ test.describe("Auth first-run setup", () => {
 
     await test.step("setup cannot run twice", async () => {
       const res = await request.post(`${apiUrl}/auth/setup`, {
-        data: { email: "intruder@example.com", password, confirm: password },
+        data: {
+          token,
+          email: "intruder@example.com",
+          password,
+          confirm: password,
+        },
       });
       expect(res.status()).toBe(403);
     });

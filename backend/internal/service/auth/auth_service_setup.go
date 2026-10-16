@@ -2,6 +2,11 @@ package serviceAuth
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/subtle"
+	"encoding/hex"
+	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -15,7 +20,9 @@ import (
 )
 
 // Setup creates the first admin from the browser when login is on and no user
-// exists yet, then signs that browser in. It refuses once any user exists.
+// exists yet, then signs that browser in. It needs the setup token printed at
+// startup, so only someone with server access can claim the instance, and it
+// refuses once any user exists.
 func (s *IAuthServiceImpl) Setup(ctx context.Context, req *dto.AuthSetupRequest) (string, error) {
 	if s.cfg == nil || s.cfg.App.Auth.Mode != config.AuthModeLocal {
 		return "", apperror.BadRequest(apperror.ErrAuthNotEnabled)
@@ -29,8 +36,12 @@ func (s *IAuthServiceImpl) Setup(ctx context.Context, req *dto.AuthSetupRequest)
 		return "", apperror.InternalServerError(err)
 	}
 
-	if count > 0 {
+	if count > 0 || s.setupToken == "" {
 		return "", apperror.Forbidden(apperror.ErrAuthSetupDone)
+	}
+
+	if subtle.ConstantTimeCompare([]byte(strings.TrimSpace(req.Token)), []byte(s.setupToken)) != 1 {
+		return "", apperror.Forbidden(apperror.ErrAuthSetupTokenInvalid)
 	}
 
 	user, err := s.createFirstAdmin(ctx, req.Email, req.Password, false)
@@ -38,6 +49,7 @@ func (s *IAuthServiceImpl) Setup(ctx context.Context, req *dto.AuthSetupRequest)
 		return "", err
 	}
 
+	s.setupToken = ""
 	s.logger.Info("created first admin from the setup screen")
 
 	uid := user.ID
@@ -94,4 +106,32 @@ func (s *IAuthServiceImpl) createFirstAdmin(ctx context.Context, email, password
 	}
 
 	return user, nil
+}
+
+// resetSetupToken issues a new setup token when the setup screen is needed and
+// prints it where the operator sees it: the log file and stderr (docker logs).
+func (s *IAuthServiceImpl) resetSetupToken(needed bool) error {
+	s.setupMu.Lock()
+	defer s.setupMu.Unlock()
+
+	s.setupToken = ""
+	if !needed {
+		return nil
+	}
+
+	raw := make([]byte, 16)
+	if _, err := rand.Read(raw); err != nil {
+		return err
+	}
+
+	s.setupToken = hex.EncodeToString(raw)
+
+	msg := fmt.Sprintf(
+		"no admin account yet: open %s/?setup=%s to create one (setup token %s)",
+		strings.TrimSuffix(strings.TrimSuffix(s.cfg.App.APIPublicURL(), "/api"), "/"), s.setupToken, s.setupToken,
+	)
+	s.logger.Warn(msg)
+	_, _ = fmt.Fprintln(os.Stderr, msg)
+
+	return nil
 }
