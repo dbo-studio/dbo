@@ -25,7 +25,10 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
-          version: v2.13
+          version: v2.13.2
+          # Build the linter with the runner's Go: prebuilt binaries use an older
+          # Go patch and cannot read newer stdlib export data.
+          install-mode: goinstall
           working-directory: ./backend
 
   front-quality:
