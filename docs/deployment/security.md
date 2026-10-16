@@ -8,7 +8,7 @@ DBO Studio security behavior depends heavily on **deployment mode**. Treat local
 | ---------- | ---------- | --------------------------- |
 | Desktop / local dev (`none`) | User at the keyboard owns the machine; anonymous auto-session | Low locally — **do not** expose on a network |
 | Web `local` | Per-user principals; HttpOnly `dbo_session`; connection ownership = user id | Medium on LAN; use TLS on the public internet |
-| Public server | Untrusted clients | **High without `local` auth** — bootstrap an admin and terminate TLS |
+| Public server | Untrusted clients | **High without `local` auth** — set `APP_AUTH_MODE=local` and terminate TLS |
 
 Without local auth (`none`), the API issues an owner session to any client that can reach the port. That is intentional for local development but **must not** be exposed on the public internet.
 
@@ -28,12 +28,17 @@ When auth mode is `local`:
 - Idle TTL 24h; absolute TTL 7d; logout deletes the server row; login/password change rotates the session.
 - Database errors during session lookup return 500 — they do not silently mint a new owner.
 
-### Bootstrap
+### First admin
 
-- `APP_ADMIN_EMAIL` + `APP_ADMIN_PASSWORD` create the first admin once; password must change before data APIs.
-- Bootstrap password must be 8–40 characters and include a letter and a number.
-- Bootstrap env is ignored after users exist.
+- With `APP_AUTH_MODE=local` and no user, the UI shows a one-time setup screen. It needs a random token that the server prints at startup (stderr and log), so only someone with access to the server output can create the admin. The token is compared in constant time and cleared once used.
+- `APP_ADMIN_EMAIL` + `APP_ADMIN_PASSWORD` seed the first admin at startup; that password must change before data APIs.
+- Passwords must be 8–40 characters and include a letter and a number.
+- Seed env is ignored after users exist.
 - Passwords hashed with bcrypt; never logged.
+
+### Turning login off
+
+`APP_AUTH_MODE=none` with existing users makes every client act as the oldest active admin, including its remembered connection passwords. Only do this on a host no one else can reach.
 
 ### Roles and permissions
 
@@ -113,7 +118,7 @@ MCP access uses hashed tokens in the app database. Token comparison uses constan
 ## Hardening checklist (public deployment)
 
 - [ ] TLS termination at reverse proxy
-- [ ] Auth mode `local` (bootstrap admin via `APP_ADMIN_EMAIL` / `APP_ADMIN_PASSWORD`)
+- [ ] `APP_AUTH_MODE=local`, first admin created before the port is public
 - [ ] `APP_PUBLIC_URL` matches public origin
 - [ ] `APP_ALLOWED_ORIGINS` lists only trusted frontends
 - [ ] Persistent volume backed up (`dbo.db`, `app_secret.key`)

@@ -17,11 +17,13 @@ test.describe("Security settings account password", () => {
   test("user changes login password from Security panel", async ({ page }) => {
     const auth = new AuthPage(page);
     const settings = new SettingsPage(page);
-    const currentPassword = process.env.E2E_ADMIN_PASSWORD;
-    const nextPassword = "AdminPass2!";
+    let currentPassword = "";
+    let nextPassword = "";
 
     await test.step("sign in as admin", async () => {
-      await auth.loginAdmin(currentPassword);
+      currentPassword = await auth.loginAdmin();
+      nextPassword =
+        currentPassword === "AdminPass2!" ? "AdminPass3!" : "AdminPass2!";
     });
 
     await test.step("change password in Security settings", async () => {

@@ -1,4 +1,5 @@
 import AuthGateScreen from '@/components/common/Auth/AuthGateScreen/AuthGateScreen';
+import SetupGateScreen from '@/components/common/Auth/SetupGateScreen/SetupGateScreen';
 import ChangePasswordGateScreen from '@/components/common/Auth/ChangePasswordGateScreen/ChangePasswordGateScreen';
 import TotpGateScreen from '@/components/common/Auth/TotpGateScreen/TotpGateScreen';
 import SplashScreen from '@/components/base/SplashScreen/SplashScreen';
@@ -32,6 +33,10 @@ export default function Home(): JSX.Element | null {
       dismissBootSplash();
     }
   }, [ready, gate]);
+
+  if (gate === 'setup') {
+    return <SetupGateScreen />;
+  }
 
   if (gate === 'login') {
     return <AuthGateScreen />;

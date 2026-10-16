@@ -9,7 +9,7 @@ async function globalSetup(_config: FullConfig) {
   }
 
   // Fresh temp SQLite already; /config/reset is gated when local auth is on.
-  if (process.env.E2E_LOCAL_AUTH === '1') {
+  if (process.env.E2E_LOCAL_AUTH === '1' || process.env.E2E_LOCAL_AUTH === 'setup') {
     return;
   }
 

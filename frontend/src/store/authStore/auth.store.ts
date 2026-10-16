@@ -1,7 +1,7 @@
 import type { AuthStatusType, AuthUserIdentity } from '@/api/auth/types';
 import { create, type StoreApi, type UseBoundStore } from 'zustand';
 
-type AuthGate = 'loading' | 'login' | 'totp' | 'change_password' | 'ready';
+type AuthGate = 'loading' | 'setup' | 'login' | 'totp' | 'change_password' | 'ready';
 
 type AuthStore = {
   gate: AuthGate;
@@ -26,6 +26,16 @@ export const useAuthStore: UseBoundStore<StoreApi<AuthStore>> = create<AuthStore
         gate: 'ready',
         mode: status.mode,
         user: status.user,
+        totpChallengeToken: undefined
+      });
+      return;
+    }
+
+    if (status.setupRequired) {
+      set({
+        gate: 'setup',
+        mode: status.mode,
+        user: undefined,
         totpChallengeToken: undefined
       });
       return;

@@ -101,6 +101,7 @@ type IUserRepo interface {
 	Count(ctx context.Context) (int64, error)
 	FindByID(ctx context.Context, id string) (*model.User, error)
 	FindByEmail(ctx context.Context, email string) (*model.User, error)
+	FindFirstAdmin(ctx context.Context) (*model.User, error)
 	List(ctx context.Context) ([]model.User, error)
 	Create(ctx context.Context, user *model.User) error
 	Update(ctx context.Context, user *model.User) error
