@@ -7,10 +7,10 @@ export const ThemeItemStyled = styled(Box)<ThemeItemStyledProps>(({ theme, selec
   padding: '8px 16px',
   marginRight: '16px',
   border: '1px solid transparent',
-  borderColor: selected ? theme.palette.text.primary : 'transparent',
+  borderColor: selected ? theme.palette.primary.main : 'transparent',
   cursor: 'pointer',
   ':hover': {
-    borderColor: selected ? theme.palette.text.primary : theme.palette.divider,
+    borderColor: selected ? theme.palette.primary.main : theme.palette.divider,
     transition: 'border-color 0.2s ease-in-out'
   },
   img: {

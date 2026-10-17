@@ -1,4 +1,5 @@
 import { Box, Button, styled } from '@mui/material';
+import { variables } from '@/core/theme/variables';
 
 export const ProvidersStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -15,7 +16,7 @@ export const ModelButtonStyled = styled(Button)(({ theme }) => ({
   padding: theme.spacing(0, 0.75),
   textTransform: 'none',
   fontWeight: 400,
-  fontSize: '0.75rem',
+  fontSize: variables.fontSize.sm,
   color: theme.palette.text.secondary,
   gap: theme.spacing(0.5),
   '& .model-label': {

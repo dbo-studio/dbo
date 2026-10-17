@@ -1,4 +1,5 @@
 import { ButtonBase, styled } from '@mui/material';
+import { variables } from '@/core/theme/variables';
 
 export const TabBarStyled = styled('nav')(({ theme }) => ({
   display: 'flex',
@@ -17,7 +18,7 @@ export const TabBarButtonStyled = styled(ButtonBase)(({ theme }) => ({
   gap: 3,
   borderTop: '2px solid transparent',
   marginTop: -1,
-  fontSize: 10,
+  fontSize: variables.fontSize.xxs,
   letterSpacing: '0.04em',
   textTransform: 'uppercase',
   color: theme.palette.text.subdued,
@@ -27,7 +28,7 @@ export const TabBarButtonStyled = styled(ButtonBase)(({ theme }) => ({
     color: theme.palette.text.text,
     fontWeight: theme.typography.fontWeightMedium,
     svg: {
-      color: theme.palette.primary.main
+      color: theme.palette.text.link
     }
   }
 }));

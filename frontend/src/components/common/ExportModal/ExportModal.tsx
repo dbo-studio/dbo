@@ -2,6 +2,7 @@ import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import Modal from '@/components/base/Modal/Modal';
+import ModalFooter from '@/components/base/Modal/ModalFooter/ModalFooter';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import { SelectInputOption } from '@/components/base/SelectInput/types';
 import { tools } from '@/core/utils';
@@ -12,7 +13,7 @@ import { save } from '@tauri-apps/plugin-dialog';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { JobProgressModal } from '../JobProgressModal/JobProgressModal';
-import { ExportModalContainerStyled, ExportModalFooterStyled, ExportModalPathRowStyled } from './ExportModal.styled';
+import { ExportModalContainerStyled, ExportModalPathRowStyled } from './ExportModal.styled';
 import type { ExportModalProps } from './types';
 
 export function ExportModal({ show, connectionId, query, table, onClose }: ExportModalProps) {
@@ -128,7 +129,7 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
               </ExportModalPathRowStyled>
             )}
           </Box>
-          <ExportModalFooterStyled>
+          <ModalFooter>
             <Button type='button' size='small' onClick={() => onClose()}>
               {locales.cancel}
             </Button>
@@ -136,7 +137,7 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
             <Button type='submit' size='small' variant='contained' disabled={isTauri && !savePath.trim()}>
               <span>{locales.export}</span>
             </Button>
-          </ExportModalFooterStyled>
+          </ModalFooter>
         </ExportModalContainerStyled>
       </Modal>
       <JobProgressModal

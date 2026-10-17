@@ -10,6 +10,7 @@ import { Box, Button, Chip, CircularProgress, Stack, Typography, useTheme } from
 import type { JSX } from 'react';
 import { AgentCardBodyStyled, AgentCardStyled, CardActionsStyled } from '../AgentCards.styled';
 import DiagramThumbnail from '../DiagramThumbnail/DiagramThumbnail';
+import { variables } from '@/core/theme/variables';
 
 /** Chat embed for an agent schema proposal: summary, Open in Diagram, Accept/Reject. */
 export default function DiagramDiffCard({ diff }: { diff: AiDiagramDiff }): JSX.Element {
@@ -44,7 +45,7 @@ export default function DiagramDiffCard({ diff }: { diff: AiDiagramDiff }): JSX.
           variant='outlined'
           color={review.decision === 'applied' ? 'success' : pending ? 'warning' : 'default'}
           label={review.decision ? locales[`ai_review_${review.decision}`] : locales.ai_review_pending}
-          sx={{ height: 18, fontSize: '0.6875rem' }}
+          sx={{ height: 18, fontSize: variables.fontSize.xs }}
         />
       </Stack>
       <AgentCardBodyStyled>

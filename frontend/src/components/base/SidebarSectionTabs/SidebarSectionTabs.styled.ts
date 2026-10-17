@@ -29,8 +29,6 @@ export const SidebarSectionTabStyled = styled(Box, {
   color: selected ? theme.palette.text.text : theme.palette.text.subdued,
   fontSize: theme.typography.caption.fontSize,
   fontWeight: selected ? theme.typography.fontWeightMedium : theme.typography.fontWeightRegular,
-  letterSpacing: '0.04em',
-  textTransform: 'uppercase',
   padding: `0 ${theme.spacing(1)}`,
   cursor: 'pointer',
   userSelect: 'none',

@@ -30,6 +30,7 @@ const paletteMap: Record<string, (mode: ThemeModeEnum) => Record<string, unknown
 
 const withTypographyColorAliases = (palette: Record<string, unknown>): Record<string, unknown> => {
   const text = palette.text as Record<string, string> | undefined;
+  const primary = palette.primary as { main: string } | undefined;
 
   if (!text) {
     return palette;
@@ -37,6 +38,8 @@ const withTypographyColorAliases = (palette: Record<string, unknown>): Record<st
 
   return {
     ...palette,
+    // `link` is the text-safe brand color; palettes that don't define one fall back to primary.
+    text: { ...text, link: text.link ?? primary?.main },
     textTitle: text.title,
     textText: text.text,
     textSubdued: text.subdued
@@ -74,8 +77,10 @@ export default function ThemeProvider({ children }: Props): JSX.Element {
 
   const selectedPalette = paletteMap[validatedThemeName] || dboPalette;
 
+  const mode = theme.isDark ? ThemeModeEnum.Dark : ThemeModeEnum.Light;
+
   const themeOptions: ThemeOptions = {
-    palette: withTypographyColorAliases(selectedPalette(theme.isDark ? ThemeModeEnum.Dark : ThemeModeEnum.Light)),
+    palette: { ...withTypographyColorAliases(selectedPalette(mode)), mode },
     direction: constants.direction as Direction,
     typography: {
       ...baseTypography,

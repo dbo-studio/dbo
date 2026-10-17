@@ -42,7 +42,7 @@ export const NavRailItemStyled = styled(Box, {
   borderRadius: 4,
   borderLeft: `3px solid ${selected ? theme.palette.primary.main : 'transparent'}`,
   background: selected ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
-  color: selected ? theme.palette.text.primary : theme.palette.text.text,
+  color: selected ? theme.palette.text.link : theme.palette.text.text,
   textTransform: 'none',
   '&:hover': {
     background: selected ? alpha(theme.palette.primary.main, 0.14) : alpha(theme.palette.action.hover, 0.6)

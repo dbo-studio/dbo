@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import { Box, styled } from '@mui/material';
 
 export const NoConnectionScreenStyled = styled(Box)(({ theme }) => ({
@@ -26,7 +27,7 @@ export const NoConnectionLogoStyled = styled('img')({
 
 export const NoConnectionTitleStyled = styled('h2')(({ theme }) => ({
   margin: 0,
-  fontSize: 18,
+  fontSize: variables.fontSize.xxl,
   fontWeight: theme.typography.fontWeightBold,
   color: theme.palette.text.title
 }));
@@ -34,7 +35,7 @@ export const NoConnectionTitleStyled = styled('h2')(({ theme }) => ({
 export const NoConnectionTextStyled = styled('p')(({ theme }) => ({
   margin: 0,
   maxWidth: 300,
-  fontSize: 13,
+  fontSize: variables.fontSize.md,
   lineHeight: 1.5,
   color: theme.palette.text.subdued
 }));
@@ -42,7 +43,7 @@ export const NoConnectionTextStyled = styled('p')(({ theme }) => ({
 // Same small uppercase label as the desktop sidebar section headers.
 export const NoConnectionSectionLabelStyled = styled('div')(({ theme }) => ({
   padding: theme.spacing(0, 2, 0.75),
-  fontSize: 11,
+  fontSize: variables.fontSize.xs,
   letterSpacing: '0.04em',
   textTransform: 'uppercase',
   color: theme.palette.text.subdued
@@ -72,6 +73,17 @@ export const NoConnectionEngineStyled = styled(Box)(({ theme }) => ({
   border: `1px solid ${theme.palette.divider}`,
   borderRadius: 5,
   backgroundColor: theme.palette.background.default,
-  fontSize: 11,
+  fontSize: variables.fontSize.xs,
   color: theme.palette.text.text
+}));
+
+// Engine logos are drawn for light backgrounds; keep the same light chip as the desktop connection picker.
+export const NoConnectionEngineLogoStyled = styled(Box)(({ theme }) => ({
+  width: 36,
+  height: 36,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: variables.radius.small,
+  backgroundColor: theme.palette.grey[200]
 }));

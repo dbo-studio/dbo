@@ -31,7 +31,7 @@ export default function Tabs(theme: Theme): Components {
           border: '1px solid transparent',
           '&.Mui-selected': {
             border: `1px solid ${theme.palette.divider}`,
-            color: theme.palette.text.primary,
+            color: theme.palette.text.link,
             fontWeight: theme.typography.fontWeightMedium,
             backgroundColor: theme.palette.background.primary
           },
@@ -67,7 +67,7 @@ export default function Tabs(theme: Theme): Components {
               borderRight: `1px solid ${theme.palette.divider}`,
               borderLeft: 'unset',
               span: {
-                color: theme.palette.text.primary
+                color: theme.palette.text.link
               }
             }
           }

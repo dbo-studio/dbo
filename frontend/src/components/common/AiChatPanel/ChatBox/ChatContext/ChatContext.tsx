@@ -11,6 +11,7 @@ import { ChatContextStyled, ChatContextTagsStyled } from './ChatContext.styled';
 import ChatContextItem from './ChatContextItem/ChatContextModalItem';
 import ChatContextModalItem from './ChatContextModalItem/ChatContextModalItem';
 import { contextWindowOf, estimateContextTokens, formatTokens } from '../../utils/contextBudget';
+import { variables } from '@/core/theme/variables';
 
 export default function ChatContext({ autocomplete }: ChatContextProps) {
   const anchorRef = useRef<HTMLButtonElement>(null);
@@ -70,7 +71,7 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
             onClick={() => setAutoContext(!autoContext)}
             data-testid='ai-context-follow'
             data-following={autoContext}
-            sx={{ height: 20, fontSize: '0.6875rem' }}
+            sx={{ height: 20, fontSize: variables.fontSize.xs }}
           />
         </Tooltip>
 

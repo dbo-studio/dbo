@@ -15,6 +15,6 @@ export const SubmitButtonStyled = styled(Button)(({ theme }) => ({
   borderRadius: 100,
   boxShadow: 'none',
   '& svg': {
-    color: (theme.palette.mode === 'light' ? '#fff' : theme.palette.text.subdued) + ' !important'
+    color: `${theme.palette.primary.contrastText} !important`
   }
 }));

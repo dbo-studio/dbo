@@ -8,6 +8,7 @@ import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Button } from '@mui/material';
 import type { JSX } from 'react';
 import {
+  NoConnectionEngineLogoStyled,
   NoConnectionEngineStyled,
   NoConnectionEnginesStyled,
   NoConnectionHeroStyled,
@@ -46,7 +47,9 @@ export default function NoConnectionScreen(): JSX.Element {
           <NoConnectionEnginesStyled>
             {ENGINES.map((engine) => (
               <NoConnectionEngineStyled key={engine.logo}>
-                <CustomIcon type={engine.logo} size='m' />
+                <NoConnectionEngineLogoStyled>
+                  <CustomIcon type={engine.logo} size='m' />
+                </NoConnectionEngineLogoStyled>
                 {engine.name}
               </NoConnectionEngineStyled>
             ))}

@@ -55,7 +55,7 @@ export const ToolRowStyled = styled(Box)(({ theme }) => ({
 
 export const RawTextStyled = styled('pre')(({ theme }) => ({
   fontFamily: 'var(--editor-font, monospace)',
-  fontSize: '0.75rem',
+  fontSize: variables.fontSize.sm,
   whiteSpace: 'pre-wrap',
   wordBreak: 'break-word',
   padding: theme.spacing(0.75),

@@ -6,6 +6,7 @@ import { Chip, ToggleButton, ToggleButtonGroup, Tooltip, useTheme } from '@mui/m
 import type { JSX } from 'react';
 import { useAiChatMode } from '../hooks/useAiChatMode';
 import { ModeBarStyled } from './ModeBar.styled';
+import { variables } from '@/core/theme/variables';
 
 /** Ask/Agent switch plus the connection's Safe Mode badge, always visible above the thread. */
 export default function ModeBar(): JSX.Element {
@@ -46,7 +47,7 @@ export default function ModeBar(): JSX.Element {
             }
             label={locales[`safe_mode_${safeMode}`]}
             color={guarded ? 'error' : 'warning'}
-            sx={{ height: 22, fontSize: '0.6875rem' }}
+            sx={{ height: 22, fontSize: variables.fontSize.xs }}
           />
         </Tooltip>
       )}

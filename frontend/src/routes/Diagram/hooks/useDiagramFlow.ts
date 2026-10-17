@@ -19,8 +19,6 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { TableFlowNode } from '../TableNode/TableNode';
 
-const DEFAULT_EDGE_STROKE = 'var(--xy-edge-stroke, #b1b1b7)';
-
 type Args = {
   connectionId: string | number | undefined;
   database: string;
@@ -51,7 +49,7 @@ const flowEdgesFromGraph = (
     }
 
     const pending = edge.status !== 'unchanged';
-    const stroke = edge.status !== 'unchanged' ? statusStroke[edge.status] : edgeStroke || DEFAULT_EDGE_STROKE;
+    const stroke = edge.status !== 'unchanged' ? statusStroke[edge.status] : edgeStroke;
     const pairCount = Math.max(edge.sourceColumns.length, edge.targetColumns.length, 1);
     for (let index = 0; index < pairCount; index += 1) {
       result.push({

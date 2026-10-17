@@ -3,7 +3,7 @@ import { Box, Typography } from '@mui/material';
 import type { JSX } from 'react';
 import type { EmptyStateProps } from './types';
 
-export default function EmptyState({ icon, title, description }: EmptyStateProps): JSX.Element {
+export default function EmptyState({ icon, title, description, action }: EmptyStateProps): JSX.Element {
   return (
     <Box
       sx={{
@@ -27,6 +27,7 @@ export default function EmptyState({ icon, title, description }: EmptyStateProps
           {description}
         </Typography>
       )}
+      {action && <Box sx={{ mt: 1 }}>{action}</Box>}
     </Box>
   );
 }

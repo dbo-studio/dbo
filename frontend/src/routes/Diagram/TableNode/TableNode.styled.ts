@@ -88,7 +88,7 @@ export const HeaderTextStyled = styled(Box)({
 });
 
 export const TableNameStyled = styled(Typography)(({ theme }) => ({
-  fontSize: 13,
+  fontSize: variables.fontSize.md,
   fontWeight: 600,
   lineHeight: 1.25,
   color: theme.palette.textTitle
@@ -96,7 +96,7 @@ export const TableNameStyled = styled(Typography)(({ theme }) => ({
 
 export const SchemaNameStyled = styled(Typography)(({ theme }) => ({
   display: 'block',
-  fontSize: 10,
+  fontSize: variables.fontSize.xxs,
   lineHeight: 1.2,
   color: theme.palette.textSubdued
 }));
@@ -144,7 +144,7 @@ export const ColumnNameStyled = styled(Typography, {
   flex: 1,
   minWidth: 0,
   fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Monaco, Consolas, monospace",
-  fontSize: 11.5,
+  fontSize: variables.fontSize.xs,
   fontWeight: primary ? 600 : 400,
   color: theme.palette.text.text,
   userSelect: 'text',
@@ -161,7 +161,7 @@ export const ColumnMetaStyled = styled(Box)(({ theme }) => ({
 
 export const ColumnTypeStyled = styled(Typography)(({ theme }) => ({
   maxWidth: 72,
-  fontSize: 10.5,
+  fontSize: variables.fontSize.xxs,
   color: theme.palette.textSubdued,
   userSelect: 'text',
   cursor: 'text'
@@ -171,7 +171,7 @@ export const KeyBadgeStyled = styled(Box, {
   shouldForwardProp: (prop): boolean => prop !== 'badgeColor'
 })<KeyBadgeProps>(({ badgeColor }) => ({
   display: 'inline-flex',
-  fontSize: 9,
+  fontSize: variables.fontSize.xxs,
   fontWeight: 700,
   letterSpacing: 0.4,
   lineHeight: 1,

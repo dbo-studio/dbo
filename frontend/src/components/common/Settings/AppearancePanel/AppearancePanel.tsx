@@ -6,6 +6,7 @@ import type { JSX } from 'react';
 import EditorTheme from './EditorTheme/EditorTheme';
 import Font from './Font/Font';
 import Theme from './Theme/Theme';
+import { variables } from '@/core/theme/variables';
 
 const PreviewCardStyled = styled(Box)(({ theme }) => ({
   border: `1px solid ${theme.palette.divider}`,
@@ -26,7 +27,7 @@ const PreviewChromeStyled = styled(Box)(({ theme }) => ({
 
 const PreviewEditorStyled = styled(Box)(({ theme }) => ({
   padding: theme.spacing(1.5),
-  fontSize: 13,
+  fontSize: variables.fontSize.md,
   lineHeight: 1.5,
   background: alpha(theme.palette.background.default, 0.6)
 }));

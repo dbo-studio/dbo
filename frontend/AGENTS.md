@@ -69,6 +69,15 @@ On web login/logout/401, `applyUserWorkspaceScope` switches persist names, Index
 
 Tab SQL: `indexedDBService` hydrates from legacy `localStorage` key `dbo_tab_queries` once (unscoped DB only), then writes IndexedDB and deletes the key.
 
+### Design system
+
+- Look and feel lives in `src/core/theme` (palette, typography, overrides, `mobileDensity.ts`). Screens consume it; they do not restyle it.
+- Colors: `theme.palette.*` / `alpha()` only. Selected or active emphasis is `primary.main`; body text is `text.primary`, muted is `text.secondary`, pink is `text.accent`.
+- Text: sentence case everywhere (the theme sets `button.textTransform: 'none'`). Use typography variants, not literal `fontSize`.
+- Buttons: contained = primary action, outlined = secondary, text = tertiary (e.g. Cancel). Destructive actions use `color='error'`. Heights come from `size` (small 24, medium 32, large 40); phone density lifts them for touch.
+- Dialogs: base `Modal` + `ModalFooter` (right-aligned actions; `spread` when a left action shares the row). Empty screens: base `EmptyState` with an `action`.
+- ESLint errors on hex/rgb/hsl literals and literal `fontSize` outside `core/theme`. Type sizes come from `variables.fontSize` (xxs…xxxl) when no typography variant fits.
+
 ### Size budget
 
 - Split large `*.styled.ts` by region (see `DataGridTable.styled.ts` / `DataGridControls.styled.ts`).

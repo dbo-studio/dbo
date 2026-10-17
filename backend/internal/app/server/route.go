@@ -44,6 +44,7 @@ func (r *Server) routing() {
 
 	tree := api.Group("tree")
 	tree.Get("/", r.handlers.TreeHandler.TreeHandler)
+	tree.Get("/search", r.handlers.TreeHandler.Search)
 	tree.Get("/:nodeId/tabs/:action", r.handlers.TreeHandler.Tabs)
 	tree.Get("/:nodeId/tabs/:action/fields/:tabId/object", r.handlers.TreeHandler.ObjectDetail)
 	tree.Get("/:nodeId/dynamic", r.handlers.TreeHandler.GetDynamicFieldOptions)

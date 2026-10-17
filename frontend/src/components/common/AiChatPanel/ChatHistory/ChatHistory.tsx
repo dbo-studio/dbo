@@ -16,6 +16,7 @@ import { tools } from '@/core/utils/tools';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { chatFileName, chatToMarkdown } from '../utils/chatExport';
 import type { ChatHistoryProps } from './types';
+import { variables } from '@/core/theme/variables';
 
 export default function ChatHistory({ variant = 'menu' }: ChatHistoryProps): JSX.Element {
   const { isMobile } = useLayoutMode();
@@ -178,7 +179,7 @@ export default function ChatHistory({ variant = 'menu' }: ChatHistoryProps): JSX
         placeholder={locales.ai_history_search}
         inputProps={{ 'aria-label': locales.ai_history_search, 'data-testid': 'ai-history-search' }}
         sx={{
-          fontSize: '0.75rem',
+          fontSize: variables.fontSize.sm,
           px: 1,
           mb: 0.5,
           height: 32,

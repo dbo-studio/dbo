@@ -24,7 +24,7 @@ export const ConnectionBoxStyled = styled(Box)<ConnectionBoxStyledProps>(({ them
       theme.palette.text.text,
     fontFamily: theme.editorFontFamily,
     fontWeight: 'bold',
-    fontSize: 12,
+    fontSize: variables.fontSize.sm,
     flex: 1,
     minWidth: 0,
     overflow: 'hidden',

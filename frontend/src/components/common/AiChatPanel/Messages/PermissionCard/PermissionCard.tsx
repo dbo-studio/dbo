@@ -13,6 +13,7 @@ import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
 import ChatDataTable from '../ChatDataTable/ChatDataTable';
 import { AgentCardBodyStyled, AgentCardStyled, CardActionsStyled } from '../AgentCards.styled';
+import { variables } from '@/core/theme/variables';
 
 /**
  * Confirm-before-write card for an agent execute_write request. The statement
@@ -73,7 +74,12 @@ export default function PermissionCard({ request }: { request: AiPermissionReque
         <Typography variant='caption' sx={{ fontWeight: 600, flex: 1 }}>
           {locales.ai_permission_title}
         </Typography>
-        <Chip size='small' variant='outlined' label={request.class} sx={{ height: 18, fontSize: '0.6875rem' }} />
+        <Chip
+          size='small'
+          variant='outlined'
+          label={request.class}
+          sx={{ height: 18, fontSize: variables.fontSize.xs }}
+        />
       </Stack>
       <AgentCardBodyStyled>
         <SyntaxHighlighter value={request.sql} />

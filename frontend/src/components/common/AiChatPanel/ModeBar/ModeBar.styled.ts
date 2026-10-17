@@ -1,4 +1,5 @@
 import { Box, styled } from '@mui/material';
+import { variables } from '@/core/theme/variables';
 
 export const ModeBarStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -14,7 +15,7 @@ export const ModeBarStyled = styled(Box)(({ theme }) => ({
   },
   '& .MuiToggleButton-root': {
     padding: `${theme.spacing(0.125)} ${theme.spacing(1.25)}`,
-    fontSize: '0.75rem',
+    fontSize: variables.fontSize.sm,
     textTransform: 'none',
     lineHeight: 1.6
   }

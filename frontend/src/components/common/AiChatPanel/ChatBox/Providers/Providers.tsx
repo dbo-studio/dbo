@@ -10,8 +10,9 @@ import { useMutation } from '@tanstack/react-query';
 import { useState, type JSX } from 'react';
 import { useAiChatMode } from '../../hooks/useAiChatMode';
 import { ModelButtonStyled, ProvidersStyled } from './Providers.styled';
+import { variables } from '@/core/theme/variables';
 
-const badgeSx = { height: 18, fontSize: '0.625rem', '& .MuiChip-label': { px: 0.75 } };
+const badgeSx = { height: 18, fontSize: variables.fontSize.xxs, '& .MuiChip-label': { px: 0.75 } };
 
 function CapabilityBadge({ provider, model }: { provider: AiProviderType; model: string }): JSX.Element | null {
   const caps = getModelCapabilities(provider.type, model);
@@ -92,7 +93,7 @@ export default function Providers(): JSX.Element {
         slotProps={{ paper: { sx: { maxHeight: 360, minWidth: 240 } } }}
       >
         {selectable.flatMap((provider) => [
-          <ListSubheader key={`h-${provider.id}`} sx={{ lineHeight: '28px', fontSize: '0.6875rem' }}>
+          <ListSubheader key={`h-${provider.id}`} sx={{ lineHeight: '28px', fontSize: variables.fontSize.xs }}>
             {provider.type}
           </ListSubheader>,
           ...provider.models.map((model) => (

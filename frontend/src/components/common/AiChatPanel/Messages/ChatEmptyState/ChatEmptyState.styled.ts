@@ -19,7 +19,7 @@ export const StarterCardStyled = styled(ButtonBase)(({ theme }) => ({
   borderRadius: variables.radius.medium,
   backgroundColor: theme.palette.background.paper,
   color: theme.palette.text.primary,
-  fontSize: '0.75rem',
+  fontSize: variables.fontSize.sm,
   lineHeight: 1.45,
   transition: theme.transitions.create(['border-color', 'background-color'], { duration: 150 }),
   '& svg': { flexShrink: 0, marginTop: 2, opacity: 0.8 },

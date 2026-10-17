@@ -22,6 +22,7 @@ import {
 } from '../../utils/chatPromptSuggestions';
 import { StarterCardStyled, StarterGridStyled } from './ChatEmptyState.styled';
 import EmptyIllustration from './EmptyIllustration';
+import { variables } from '@/core/theme/variables';
 
 function EmptyLayout({ children }: { children: ReactNode }): JSX.Element {
   return (
@@ -112,9 +113,9 @@ function WhatsNewTip(): JSX.Element | null {
       icon={<CustomIcon type='wand_sparkles' size='xs' />}
       onClose={() => updateEditor({ aiWhatsNewSeen: true })}
       data-testid='ai-whats-new'
-      sx={{ width: '100%', py: 0, fontSize: '0.75rem' }}
+      sx={{ width: '100%', py: 0, fontSize: variables.fontSize.sm }}
     >
-      <AlertTitle sx={{ fontSize: '0.75rem', mb: 0.25 }}>{locales.ai_whats_new_title}</AlertTitle>
+      <AlertTitle sx={{ fontSize: variables.fontSize.sm, mb: 0.25 }}>{locales.ai_whats_new_title}</AlertTitle>
       {locales.ai_whats_new_body}
     </Alert>
   );

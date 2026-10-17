@@ -2,6 +2,10 @@ import type { ThemeOptions } from '@mui/material/styles';
 
 export const baseTypography: NonNullable<ThemeOptions['typography']> = {
   fontSize: 13,
+  // Sentence case for Button, Tab and ToggleButton (MUI defaults to uppercase).
+  button: {
+    textTransform: 'none'
+  },
   h6: {
     fontSize: '1rem',
     fontWeight: 600,

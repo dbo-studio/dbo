@@ -5,6 +5,7 @@ import type { MouseEvent } from 'react';
 import { relativeTime } from '../../utils/relativeTime';
 import { ChatHistoryItemStyled } from '../ChatHistory.styled';
 import { ChatHistoryItemProps } from '../types';
+import { variables } from '@/core/theme/variables';
 
 const stop =
   (handler: () => void) =>
@@ -35,7 +36,11 @@ export default function ChatHistoryItem({
           <Typography color={'textText'} variant='caption' noWrap sx={{ display: 'block' }}>
             {item.title}
           </Typography>
-          <Typography color={'textSubdued'} variant='caption' sx={{ display: 'block', fontSize: '0.625rem' }}>
+          <Typography
+            color={'textSubdued'}
+            variant='caption'
+            sx={{ display: 'block', fontSize: variables.fontSize.xxs }}
+          >
             {relativeTime(item.updatedAt ?? item.createdAt)}
           </Typography>
         </Box>

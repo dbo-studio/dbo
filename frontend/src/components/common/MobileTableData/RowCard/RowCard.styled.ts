@@ -31,7 +31,7 @@ export const RowCardHeaderStyled = styled(Box)(({ theme }) => ({
 
 export const RowCardKeyStyled = styled('span')(({ theme }) => ({
   fontFamily: theme.editorFontFamily,
-  fontSize: 13,
+  fontSize: variables.fontSize.md,
   fontWeight: theme.typography.fontWeightBold,
   color: theme.palette.text.title,
   overflow: 'hidden',
@@ -61,7 +61,7 @@ export const RowCardValueStyled = styled('span')(({ theme }) => ({
   flex: 1,
   minWidth: 0,
   fontFamily: theme.editorFontFamily,
-  fontSize: 12,
+  fontSize: variables.fontSize.sm,
   color: theme.palette.text.text,
   overflow: 'hidden',
   textOverflow: 'ellipsis',
@@ -80,7 +80,7 @@ export const RowCardBadgeStyled = styled('span', {
   flexShrink: 0,
   padding: '0 6px',
   borderRadius: variables.radius.small,
-  fontSize: 10,
+  fontSize: variables.fontSize.xxs,
   lineHeight: '18px',
   letterSpacing: '0.04em',
   textTransform: 'uppercase',

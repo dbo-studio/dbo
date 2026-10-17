@@ -1,4 +1,5 @@
 import { Box, Fab, styled } from '@mui/material';
+import { variables } from '@/core/theme/variables';
 
 export const MobileTableDataStyled = styled(Box)(({ theme }) => ({
   flex: 1,
@@ -58,7 +59,7 @@ export const MobileTableDataFabStyled = styled(Fab)(({ theme }) => ({
 // Same small uppercase label as the desktop sidebar section headers.
 export const MobileTableDataSectionTitleStyled = styled(Box)(({ theme }) => ({
   margin: theme.spacing(2, 0, 1),
-  fontSize: 11,
+  fontSize: variables.fontSize.xs,
   letterSpacing: '0.04em',
   textTransform: 'uppercase',
   color: theme.palette.text.subdued

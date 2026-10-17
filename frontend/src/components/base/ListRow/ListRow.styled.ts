@@ -1,4 +1,5 @@
 import { alpha, Box, ButtonBase, styled } from '@mui/material';
+import { variables } from '@/core/theme/variables';
 
 // Mirrors the desktop NavRail item: tinted background plus a primary bar on the leading edge when selected.
 export const ListRowStyled = styled(ButtonBase)(({ theme }) => ({
@@ -20,7 +21,7 @@ export const ListRowStyled = styled(ButtonBase)(({ theme }) => ({
   '&[aria-selected="true"]': {
     borderLeftColor: theme.palette.primary.main,
     backgroundColor: alpha(theme.palette.primary.main, 0.1),
-    color: theme.palette.text.primary
+    color: theme.palette.text.link
   }
 }));
 
@@ -36,7 +37,7 @@ export const ListRowBodyStyled = styled(Box)({
 
 export const ListRowTitleStyled = styled('span')(({ theme }) => ({
   display: 'block',
-  fontSize: 14,
+  fontSize: variables.fontSize.lg,
   lineHeight: '20px',
   color: 'inherit',
   overflow: 'hidden',

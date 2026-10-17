@@ -1,5 +1,5 @@
 import { variables } from '@/core/theme/variables';
-import { Box, Button, styled } from '@mui/material';
+import { alpha, Box, Button, styled } from '@mui/material';
 
 export const ChatBoxStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -11,7 +11,7 @@ export const ChatBoxStyled = styled(Box)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
   width: '100%',
   maxHeight: '280px',
-  boxShadow: theme.palette.mode === 'light' ? '0 1px 3px rgba(0,0,0,0.04)' : 'none'
+  boxShadow: theme.palette.mode === 'light' ? `0 1px 3px ${alpha(theme.palette.common.black, 0.04)}` : 'none'
 }));
 
 export const SendButtonStyled = styled(Button)(({ theme }) => ({

@@ -3,6 +3,7 @@ import { InputBase, Tooltip, Typography } from '@mui/material';
 import { type KeyboardEvent, type MouseEvent, useState } from 'react';
 import type { ChatItemProps } from '../../types';
 import { ChatItemIconStyled, ChatItemStyled } from './ChatItem.styled';
+import { variables } from '@/core/theme/variables';
 
 export default function ChatItem({ chat, selected, onClick, onDelete, onRename }: ChatItemProps) {
   const [draft, setDraft] = useState<string>();
@@ -40,7 +41,7 @@ export default function ChatItem({ chat, selected, onClick, onDelete, onRename }
           onKeyDown={handleKeyDown}
           onClick={(e) => e.stopPropagation()}
           inputProps={{ maxLength: 255, 'aria-label': locales.ai_rename_chat, 'data-testid': 'ai-chat-rename-input' }}
-          sx={{ fontSize: '0.75rem', p: 0 }}
+          sx={{ fontSize: variables.fontSize.sm, p: 0 }}
         />
       ) : (
         <Tooltip title={`${chat.title} · ${locales.ai_rename_chat}: double-click`} enterDelay={500}>

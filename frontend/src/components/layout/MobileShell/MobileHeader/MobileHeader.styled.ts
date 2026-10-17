@@ -1,5 +1,6 @@
 import { Box, ButtonBase, styled } from '@mui/material';
 import type { ConnectionStatusStyledProps } from '../types';
+import { variables } from '@/core/theme/variables';
 
 export const MobileHeaderStyled = styled('header')(({ theme }) => ({
   display: 'flex',
@@ -61,7 +62,7 @@ export const ConnectionNameStyled = styled('span')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(0.5),
-  fontSize: 15,
+  fontSize: variables.fontSize.lg,
   lineHeight: '20px',
   fontWeight: theme.typography.fontWeightBold,
   color: theme.palette.text.title,
@@ -79,7 +80,7 @@ export const ConnectionNameStyled = styled('span')(({ theme }) => ({
 
 export const ConnectionMetaStyled = styled('span')(({ theme }) => ({
   fontFamily: theme.editorFontFamily,
-  fontSize: 11,
+  fontSize: variables.fontSize.xs,
   lineHeight: '14px',
   color: theme.palette.text.subdued,
   overflow: 'hidden',

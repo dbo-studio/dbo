@@ -46,41 +46,51 @@ function tableAiMenu(tableName: string, prefillChat: ReturnType<typeof useAiBrid
   };
 }
 
+/** Builds a node's context menu on demand, so one hook instance serves every row of the tree. */
+export function useTreeNodeMenuBuilder(
+  actionDetection: (event: React.MouseEvent, node: TreeNodeType) => Promise<void>
+): (node: TreeNodeType) => MenuType[] {
+  const { prefillChat } = useAiBridge();
+  const currentConnection = useCurrentConnection();
+  const addDiagramTab = useTabStore((state) => state.addDiagramTab);
+
+  return (node: TreeNodeType): MenuType[] => {
+    const menu: MenuType[] =
+      node?.contextMenu?.map((action) => ({
+        name: action.title,
+        action: (): Promise<void> =>
+          actionDetection({ stopPropagation: () => {} } as React.MouseEvent, {
+            ...node,
+            action
+          }),
+        closeAfterAction: true
+      })) || [];
+
+    const scope = diagramScopeFromTreeNode(node, currentConnection?.type);
+    if (scope) {
+      menu.push({
+        name: locales.open_diagram,
+        action: () => {
+          addDiagramTab(scope);
+        },
+        closeAfterAction: true
+      });
+    }
+
+    if (node.type === 'table') {
+      menu.push(tableAiMenu(node.name, prefillChat));
+    }
+
+    return menu;
+  };
+}
+
 export function useTreeNodeMenu(
   node: TreeNodeType,
   actionDetection: (event: React.MouseEvent, node: TreeNodeType) => Promise<void>
 ): {
   menu: MenuType[];
 } {
-  const { prefillChat } = useAiBridge();
-  const currentConnection = useCurrentConnection();
-  const addDiagramTab = useTabStore((state) => state.addDiagramTab);
-
-  const menu: MenuType[] =
-    node?.contextMenu?.map((action) => ({
-      name: action.title,
-      action: (): Promise<void> =>
-        actionDetection({ stopPropagation: () => {} } as React.MouseEvent, {
-          ...node,
-          action
-        }),
-      closeAfterAction: true
-    })) || [];
-
-  const scope = diagramScopeFromTreeNode(node, currentConnection?.type);
-  if (scope) {
-    menu.push({
-      name: locales.open_diagram,
-      action: () => {
-        addDiagramTab(scope);
-      },
-      closeAfterAction: true
-    });
-  }
-
-  if (node.type === 'table') {
-    menu.push(tableAiMenu(node.name, prefillChat));
-  }
-
-  return { menu };
+  const buildMenu = useTreeNodeMenuBuilder(actionDetection);
+  return { menu: buildMenu(node) };
 }
