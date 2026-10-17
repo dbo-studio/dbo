@@ -34,7 +34,8 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
     show: false,
     connectionId: 0,
     query: '',
-    table: ''
+    table: '',
+    nodeId: ''
   });
   const [showImport, setShowImport] = useState({
     show: false,
@@ -51,7 +52,8 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
       show: true,
       connectionId: currentConnectionId as number,
       query: query,
-      table: table
+      table: table,
+      nodeId: useTabStore.getState().selectedTab<DataTabType>()?.nodeId ?? ''
     });
   };
 
@@ -177,6 +179,7 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
         connectionId={showExport.connectionId}
         query={showExport.query}
         table={showExport.table}
+        nodeId={showExport.nodeId}
       />
       <ImportModal
         onClose={() => setShowImport({ ...showImport, show: false })}
