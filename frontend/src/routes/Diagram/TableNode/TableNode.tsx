@@ -96,8 +96,16 @@ function TableNodeComponent({ data, selected }: NodeProps<TableFlowNode>): JSX.E
             <ColumnRowStyled
               key={column.name}
               data-testid={`diagram-col-${data.name}-${column.name}`}
+              data-status={column.status}
               removed={column.status === 'removed'}
               striped={index % 2 === 1}
+              pendingColor={
+                data.status !== 'added' && column.status === 'added'
+                  ? theme.palette.success.main
+                  : column.status === 'changed'
+                    ? theme.palette.warning.main
+                    : undefined
+              }
             >
               <Handle type='target' position={Position.Left} id={column.name} style={handleStyle} />
 

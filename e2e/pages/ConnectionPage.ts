@@ -25,11 +25,7 @@ export interface ConnectionConfig {
   ssl?: ConnectionSslConfig;
 }
 
-/**
- * Page Object for Connection management
- */
 export class ConnectionPage extends BasePage {
-  // Locators
   readonly newConnectionModal: Locator;
   readonly editConnectionModal: Locator;
   readonly connectionTypeSelector: (type: string) => Locator;
@@ -38,7 +34,6 @@ export class ConnectionPage extends BasePage {
   readonly createConnectionButton: Locator;
   readonly addConnectionButton: Locator;
 
-  // Form fields
   readonly nameInput: Locator;
   readonly hostInput: Locator;
   readonly portInput: Locator;

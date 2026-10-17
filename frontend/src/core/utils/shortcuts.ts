@@ -95,6 +95,34 @@ export const webShortcuts: { [key: string]: ShortcutType } = {
     monaco: [KeyMod.Alt | KeyCode.KeyA],
     shortcut: (event: KeyboardEvent) => event.altKey && event.code === 'KeyA'
   },
+  focusAssistant: {
+    id: 'focusAssistant',
+    group: 'app',
+    label: locales.focus_assistant,
+    command: [modKey(), 'L'],
+    shortcut: (event: KeyboardEvent) => isMod(event) && !event.shiftKey && !event.altKey && event.code === 'KeyL'
+  },
+  toggleAgentWorkspace: {
+    id: 'toggleAgentWorkspace',
+    group: 'app',
+    label: locales.toggle_agent_workspace,
+    command: [altKey(), shiftKey(), 'E'],
+    shortcut: (event: KeyboardEvent) => event.altKey && event.shiftKey && !isMod(event) && event.code === 'KeyE'
+  },
+  clearComposer: {
+    id: 'clearComposer',
+    group: 'app',
+    label: locales.clear_composer,
+    command: [modKey(), shiftKey(), '⌫'],
+    shortcut: (event: KeyboardEvent) => isMod(event) && event.shiftKey && event.code === 'Backspace'
+  },
+  editLastMessage: {
+    id: 'editLastMessage',
+    group: 'app',
+    label: locales.edit_last_message,
+    command: ['↑'],
+    shortcut: (event: KeyboardEvent) => !isMod(event) && !event.shiftKey && !event.altKey && event.code === 'ArrowUp'
+  },
   openShortcuts: {
     id: 'openShortcuts',
     group: 'app',
@@ -189,6 +217,34 @@ export const desktopShortcuts: { [key: string]: ShortcutType } = {
     command: [modKey(), shiftKey(), 'A'],
     monaco: [KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyA],
     shortcut: (event: KeyboardEvent) => isMod(event) && event.shiftKey && event.code === 'KeyA'
+  },
+  focusAssistant: {
+    id: 'focusAssistant',
+    group: 'app',
+    label: locales.focus_assistant,
+    command: [modKey(), 'L'],
+    shortcut: (event: KeyboardEvent) => isMod(event) && !event.shiftKey && !event.altKey && event.code === 'KeyL'
+  },
+  toggleAgentWorkspace: {
+    id: 'toggleAgentWorkspace',
+    group: 'app',
+    label: locales.toggle_agent_workspace,
+    command: [modKey(), shiftKey(), 'E'],
+    shortcut: (event: KeyboardEvent) => isMod(event) && event.shiftKey && !event.altKey && event.code === 'KeyE'
+  },
+  clearComposer: {
+    id: 'clearComposer',
+    group: 'app',
+    label: locales.clear_composer,
+    command: [modKey(), shiftKey(), '⌫'],
+    shortcut: (event: KeyboardEvent) => isMod(event) && event.shiftKey && event.code === 'Backspace'
+  },
+  editLastMessage: {
+    id: 'editLastMessage',
+    group: 'app',
+    label: locales.edit_last_message,
+    command: ['↑'],
+    shortcut: (event: KeyboardEvent) => !isMod(event) && !event.shiftKey && !event.altKey && event.code === 'ArrowUp'
   },
   openShortcuts: {
     id: 'openShortcuts',

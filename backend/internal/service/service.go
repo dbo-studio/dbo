@@ -63,7 +63,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 	jobManager.RegisterProcessor(processors.NewExportProcessor(jobManager, cm, repo.ConnectionRepo, ss, deps.Cache))
 
 	aiProviderService := serviceAiProvider.NewAiProviderService(repo.AiProviderRepo)
-	toolRegistry := serviceDbtools.NewRegistry(cm, repo.ConnectionRepo)
+	toolRegistry := serviceDbtools.NewRegistry(cm, repo.ConnectionRepo, deps.Cache)
 	mcpService := serviceMCP.NewMcpService(repo.McpSettingsRepo, repo.ConnectionRepo, toolRegistry, deps.Logger, deps.Config)
 	safeModePasswordService := serviceSafemode.NewPasswordService(repo.SafeModePasswordRepo, deps.Config, deps.Logger, deps.Cache)
 	authService := serviceAuth.NewAuthService(
@@ -87,10 +87,10 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		JobManager:              jobManager,
 		AiService:               serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, cm, toolRegistry, deps.Logger, deps.Cache),
 		AiProviderService:       aiProviderService,
-		AiChatService:           serviceAiChat.NewAiChatService(repo.AiChatRepo, repo.ConnectionRepo),
+		AiChatService:           serviceAiChat.NewAiChatService(repo.AiChatRepo, repo.ConnectionRepo, deps.Config),
 		ConfigService:           serviceConfig.NewConfigService(repo.ConfigRepo, aiProviderService, authService, deps.Config, deps.Cache, deps.Logger),
 		McpService:              mcpService,
-		SchemaService:           serviceSchema.NewSchemaService(repo.ConnectionRepo, cm),
+		SchemaService:           serviceSchema.NewSchemaService(repo.ConnectionRepo, cm, deps.Cache),
 		SafeModePasswordService: safeModePasswordService,
 		AuthService:             authService,
 		AdminUsersService:       adminUsersService,

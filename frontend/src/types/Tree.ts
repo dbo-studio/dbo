@@ -26,23 +26,6 @@ export type ObjectTabType = {
   name: string;
 };
 
-// export type FormFieldType = {
-//   id: string;
-//   name: string;
-//   type: FormFieldTypesType;
-//   required: boolean;
-//   options?: FormFieldOptionType[];
-//   dependsOn?: FieldDependencyType;
-// };
-
-// export type FormFieldWithState = FormFieldType & {
-//   value?: FormValue;
-//   originalValue?: FormValue;
-//   added?: boolean;
-//   deleted?: boolean;
-//   updated?: boolean;
-// };
-
 export type FormFieldOptionType = {
   value: string | number | Record<string, string>;
   label: string;
@@ -52,8 +35,6 @@ export type FieldDependencyType = {
   fieldId: string;
   parameters?: Record<string, string>;
 };
-
-//////////////////////
 
 export type GeneralFieldType = {
   id: string;

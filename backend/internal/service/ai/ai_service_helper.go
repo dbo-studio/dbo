@@ -3,16 +3,19 @@ package serviceAi
 import (
 	"context"
 	"errors"
+	"slices"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/goccy/go-json"
 	"github.com/samber/lo"
 )
 
-func (s *AiServiceImpl) createProvider(ctx context.Context) (aiProvider.IAiProvider, *model.AiProvider, error) {
-	dbProvider, err := s.resolveActiveProvider(ctx)
+// createProvider uses the active provider, or the provider/model named by req when it overrides them.
+func (s *AiServiceImpl) createProvider(ctx context.Context, req *dto.AiChatRequest) (aiProvider.IAiProvider, *model.AiProvider, error) {
+	dbProvider, err := s.resolveProvider(ctx, req)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -27,6 +30,44 @@ func (s *AiServiceImpl) createProvider(ctx context.Context) (aiProvider.IAiProvi
 	}
 
 	return client, dbProvider, nil
+}
+
+func (s *AiServiceImpl) resolveProvider(ctx context.Context, req *dto.AiChatRequest) (*model.AiProvider, error) {
+	if req == nil || (req.ProviderID == nil && req.Model == "") {
+		return s.resolveActiveProvider(ctx)
+	}
+
+	var (
+		dbProvider *model.AiProvider
+		err        error
+	)
+
+	if req.ProviderID != nil {
+		dbProvider, err = s.aiProviderRepo.Find(ctx, *req.ProviderID)
+	} else {
+		dbProvider, err = s.aiProviderRepo.FindActive(ctx)
+	}
+
+	if err != nil {
+		return nil, apperror.BadRequest(apperror.ErrAiNotConfigured)
+	}
+
+	if req.Model != "" && req.Model != dbProvider.Model {
+		if !slices.Contains(dbProvider.Models, req.Model) {
+			return nil, apperror.BadRequest(apperror.ErrAiMissingModel)
+		}
+
+		// Work on a copy: the override must never leak into the stored provider.
+		override := *dbProvider
+		override.Model = req.Model
+		dbProvider = &override
+	}
+
+	if err := providerReadinessError(dbProvider); err != nil {
+		return nil, err
+	}
+
+	return dbProvider, nil
 }
 
 func (s *AiServiceImpl) resolveActiveProvider(ctx context.Context) (*model.AiProvider, error) {
@@ -74,9 +115,14 @@ func (s *AiServiceImpl) findChat(ctx context.Context, req *dto.AiChatRequest) (*
 	if req.ChatID != nil {
 		chat, err := s.aiChatRepo.Find(ctx, uint(lo.FromPtr(req.ChatID)), &dto.PaginationRequest{
 			Page:  lo.ToPtr(1),
-			Count: lo.ToPtr(5),
+			Count: lo.ToPtr(historyFetchCount),
 		})
 		if err != nil {
+			return nil, apperror.NotFound(apperror.ErrAiChatNotFound)
+		}
+
+		// A chat belongs to one connection; its history and tools must not run against another.
+		if chat.ConnectionID != uint(req.ConnectionID) {
 			return nil, apperror.NotFound(apperror.ErrAiChatNotFound)
 		}
 
@@ -98,7 +144,28 @@ func (s *AiServiceImpl) findChat(ctx context.Context, req *dto.AiChatRequest) (*
 	return chat, nil
 }
 
-func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat, userMessage string, aiMessage *aiProvider.ChatResponse) error {
+// historyFetchCount loads enough recent rows to still find historyTurnCount
+// conversational messages when agent trace rows are interleaved.
+const (
+	historyFetchCount = 20
+	historyTurnCount  = 5
+)
+
+// conversationHistory drops agent trace rows (tool/diagram/permission cards)
+// and keeps the most recent conversational messages for the model.
+func conversationHistory(messages []model.AiChatMessage) []model.AiChatMessage {
+	history := lo.Filter(messages, func(m model.AiChatMessage, _ int) bool {
+		return m.Type.IsConversational()
+	})
+
+	if len(history) > historyTurnCount {
+		history = history[len(history)-historyTurnCount:]
+	}
+
+	return history
+}
+
+func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat, userMessage string, traces []model.AiChatMessage, aiMessage *aiProvider.ChatResponse, modelName string) error {
 	if err := s.aiChatRepo.AddMessage(ctx, &model.AiChatMessage{
 		ChatID:   chat.ID,
 		Role:     model.AiChatMessageRoleUser,
@@ -107,6 +174,15 @@ func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat
 		Language: model.AiChatMessageLanguageText,
 	}); err != nil {
 		return err
+	}
+
+	for i := range traces {
+		traces[i].ChatID = chat.ID
+		traces[i].Model = modelName
+
+		if err := s.aiChatRepo.AddMessage(ctx, &traces[i]); err != nil {
+			return err
+		}
 	}
 
 	if aiMessage == nil {
@@ -121,6 +197,7 @@ func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat
 				Content:  content.Content,
 				Type:     content.Type,
 				Language: content.Language,
+				Model:    modelName,
 			}); err != nil {
 				return err
 			}
@@ -135,6 +212,7 @@ func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat
 		Content:  aiMessage.Content,
 		Type:     aiMessage.Type,
 		Language: aiMessage.Language,
+		Model:    modelName,
 	}); err != nil {
 		return err
 	}
@@ -156,4 +234,24 @@ func (s *AiServiceImpl) updateChatTitle(ctx context.Context, chat *model.AiChat,
 	}
 
 	return nil
+}
+
+// saveChatContext remembers the explorer context so reopening the chat restores its chips.
+// Only names are stored; queries and results stay out of the app DB. Failures are non-fatal.
+func (s *AiServiceImpl) saveChatContext(ctx context.Context, chatID uint, opts *dto.AiContextOptions) {
+	if opts == nil {
+		return
+	}
+
+	raw, err := json.Marshal(dto.AiContextOptions{
+		Database: opts.Database,
+		Schema:   opts.Schema,
+		Tables:   opts.Tables,
+		Views:    opts.Views,
+	})
+	if err != nil {
+		return
+	}
+
+	_ = s.aiChatRepo.UpdateContext(ctx, chatID, string(raw))
 }

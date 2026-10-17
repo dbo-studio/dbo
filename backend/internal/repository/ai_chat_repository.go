@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -11,6 +12,8 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"gorm.io/gorm"
 )
+
+var likeEscaper = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
 
 type AiChatRepoImpl struct{ db *gorm.DB }
 
@@ -23,10 +26,18 @@ func NewAiChatRepo(db *gorm.DB) IAiChatRepo {
 func (r AiChatRepoImpl) List(ctx context.Context, req *dto.AiChatListRequest) ([]model.AiChat, error) {
 	var chats []model.AiChat
 
-	result := r.db.WithContext(ctx).Scopes(scope.Paginate(&req.PaginationRequest)).
-		Where("connection_id = ? AND owner_id = ?", req.ConnectionID, helper.CtxOwnerID(ctx)).
-		Order("updated_at desc").
-		Find(&chats)
+	query := r.db.WithContext(ctx).Scopes(scope.Paginate(&req.PaginationRequest)).
+		Where("connection_id = ? AND owner_id = ?", req.ConnectionID, helper.CtxOwnerID(ctx))
+
+	if term := strings.TrimSpace(req.Search); term != "" {
+		like := "%" + likeEscaper.Replace(term) + "%"
+		query = query.Where(
+			"(title LIKE ? ESCAPE '\\' OR id IN (SELECT chat_id FROM ai_chat_messages WHERE role IN (?, ?) AND content LIKE ? ESCAPE '\\'))",
+			like, model.AiChatMessageRoleUser, model.AiChatMessageRoleAssistant, like,
+		)
+	}
+
+	result := query.Order("pinned desc, updated_at desc").Find(&chats)
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -54,6 +65,7 @@ func (r AiChatRepoImpl) Find(ctx context.Context, id uint, pagination *dto.Pagin
 
 	err = db.Where("chat_id = ?", id).
 		Order("created_at desc").
+		Order("id desc").
 		Find(&messages).Error
 	if err != nil {
 		return nil, err
@@ -95,6 +107,12 @@ func (r AiChatRepoImpl) Update(ctx context.Context, chat *model.AiChat) error {
 	return r.db.WithContext(ctx).Save(chat).Error
 }
 
+// UpdateContext stores the chat context without touching updated_at, so history order is unchanged.
+func (r AiChatRepoImpl) UpdateContext(ctx context.Context, chatID uint, contextJSON string) error {
+	return r.db.WithContext(ctx).Model(&model.AiChat{}).Where("id = ?", chatID).
+		UpdateColumn("context_json", contextJSON).Error
+}
+
 func (r AiChatRepoImpl) Delete(ctx context.Context, chat *model.AiChat) error {
 	return r.db.WithContext(ctx).Delete(chat).Error
 }
@@ -105,4 +123,14 @@ func (r AiChatRepoImpl) AddMessage(ctx context.Context, m *model.AiChatMessage) 
 	}
 
 	return r.db.WithContext(ctx).Create(m).Error
+}
+
+// UpdateMessageContent swaps the content only if it still equals oldContent,
+// so two concurrent writers cannot both win. It reports whether a row changed.
+func (r AiChatRepoImpl) UpdateMessageContent(ctx context.Context, id uint, oldContent, newContent string) (bool, error) {
+	result := r.db.WithContext(ctx).Model(&model.AiChatMessage{}).
+		Where("id = ? AND content = ?", id, oldContent).
+		Update("content", newContent)
+
+	return result.RowsAffected == 1, result.Error
 }

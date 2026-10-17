@@ -21,3 +21,13 @@ export type ConnectionContextMenuProps = {
 export type ConnectionsProps = {
   expanded?: boolean;
 };
+
+export type MobileConnectionListProps = {
+  /** Called after the user picks the connection that is already current. */
+  onOpenCurrent: () => void;
+};
+
+export type ConnectionActionSheetProps = {
+  connection: ConnectionType;
+  onClose: () => void;
+};

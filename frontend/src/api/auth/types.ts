@@ -15,6 +15,7 @@ export type AuthStatusType = {
   mode: string;
   authenticated: boolean;
   mustChangePassword: boolean;
+  setupRequired?: boolean;
   totpEnabled?: boolean;
   permissions?: UserPermissions;
   user?: AuthUserIdentity;

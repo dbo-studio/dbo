@@ -21,7 +21,7 @@ export const ResizableModalWrapperStyled = styled(Box)(({ theme }) => ({
   }
 })) as typeof Box;
 
-export const ResizeHandle = styled('div')({
+export const ResizeHandle = styled('div')(({ theme }) => ({
   position: 'absolute',
   bottom: 0,
   right: 0,
@@ -37,6 +37,6 @@ export const ResizeHandle = styled('div')({
     height: '0',
     borderStyle: 'solid',
     borderWidth: '0 0 12px 12px',
-    borderColor: 'transparent transparent #666 transparent'
+    borderColor: `transparent transparent ${theme.palette.text.subdued} transparent`
   }
-});
+}));

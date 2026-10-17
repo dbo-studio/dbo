@@ -31,6 +31,10 @@ function providerGap(provider: AiProviderType): AiStatusReason {
   return 'none';
 }
 
+export function isProviderReady(provider: AiProviderType): boolean {
+  return providerGap(provider) === 'none';
+}
+
 export function getAiStatus(providers: AiProviderType[] | undefined): AiStatus {
   const provider = providers?.find((item) => item.isActive);
   if (!provider) {

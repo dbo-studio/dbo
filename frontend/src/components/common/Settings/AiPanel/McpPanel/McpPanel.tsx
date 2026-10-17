@@ -27,6 +27,7 @@ import {
   McpStatusRowStyled,
   McpStatusValueStyled
 } from './McpPanel.styled';
+import { variables } from '@/core/theme/variables';
 
 function McpStatusRow({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -44,7 +45,7 @@ const monoChipSx = (theme: Theme) => ({
   height: 'auto',
   '& .MuiChip-label': {
     fontFamily: theme.editorFontFamily,
-    fontSize: 12,
+    fontSize: variables.fontSize.sm,
     whiteSpace: 'normal',
     wordBreak: 'break-all',
     py: 0.5

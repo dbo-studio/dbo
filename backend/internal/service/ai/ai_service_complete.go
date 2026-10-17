@@ -16,7 +16,7 @@ func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteR
 		return nil, apperror.QueryCanceled()
 	}
 
-	provider, dbProvider, err := s.createProvider(ctx)
+	provider, dbProvider, err := s.createProvider(ctx, nil)
 	if err != nil {
 		return nil, err
 	}

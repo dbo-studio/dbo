@@ -16,7 +16,7 @@ export type SortableListProps<T> = {
   activationDistance?: number;
   className?: string;
   onDragStart?: () => void;
-  onDragEnd?: (event: DragEndEvent) => void;
+  onDragEnd?: (event: DragEndEvent) => boolean | void;
   onDragCancel?: () => void;
 };
 

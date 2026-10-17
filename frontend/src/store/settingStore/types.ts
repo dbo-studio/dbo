@@ -1,3 +1,4 @@
+import type { AiChatMode } from '@/types';
 import type { CheckUpdateResponseType } from '@/api/config/types';
 
 export type EditorContextByConnection = Record<string, { database: string; schema: string }>;
@@ -22,6 +23,8 @@ export type SettingStore = {
 export type UISettings = {
   sidebar: SidebarType;
   showConnectionsDrawer: boolean;
+  /** Full-window agent workspace over the main app; never persisted. */
+  agentWorkspaceOpen: boolean;
   showAddConnection: boolean;
   duplicateConnectionId?: number;
   showEditConnection: number | boolean;
@@ -43,6 +46,9 @@ export type ThemeSettings = {
 export type EditorSettings = {
   enableEditorAi: boolean;
   scrollToBottom: boolean;
+  aiChatMode?: AiChatMode;
+  aiWhatsNewSeen?: boolean;
+  aiChatDensity?: 'comfortable' | 'compact';
 };
 
 export type GeneralSettings = {

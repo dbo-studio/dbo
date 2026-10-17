@@ -12,10 +12,3 @@ export const ExportModalPathRowStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center'
 }));
-
-export const ExportModalFooterStyled = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  marginTop: theme.spacing(2),
-  justifyContent: 'space-between',
-  flexShrink: 0
-}));

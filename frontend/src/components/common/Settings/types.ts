@@ -6,6 +6,8 @@ export type MenuPanelProps = {
   tabs: MenuPanelTabType[];
   onChange: (tab: MenuPanelTabType | undefined) => void;
   defaultTab?: MenuPanelTabType;
+  /** Fired only for a user pick (onChange also fires on mount to sync the selection). */
+  onItemClick?: (tab: MenuPanelTabType) => void;
 };
 
 export type MenuPanelTabType = {

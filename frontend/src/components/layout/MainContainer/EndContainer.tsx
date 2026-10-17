@@ -20,6 +20,7 @@ export default function EndContainer({ overlay = false, fullPage = false }: EndC
   const selectedTab = useSelectedTab();
   const selectedTabId = sidebar.rightSidebarTab ?? 0;
   const isDiagram = selectedTab?.mode === TabMode.Diagram;
+  const workspaceOpen = useSettingStore((state) => state.ui.agentWorkspaceOpen);
 
   const sectionTabs = useMemo(
     () => [
@@ -31,11 +32,12 @@ export default function EndContainer({ overlay = false, fullPage = false }: EndC
 
   const selectedTabContent = useMemo(() => {
     if (Number(selectedTabId) === 0) {
-      return <AiChatPanel />;
+      // The agent workspace drives the same chat while it is open.
+      return workspaceOpen ? null : <AiChatPanel />;
     }
 
     return isDiagram ? <DiagramSource /> : <DBFields />;
-  }, [selectedTabId, isDiagram]);
+  }, [selectedTabId, isDiagram, workspaceOpen]);
 
   const maxWidth = isCompact && windowSize.widthNumber ? getSidebarMaxWidth(windowSize.widthNumber) : 500;
 

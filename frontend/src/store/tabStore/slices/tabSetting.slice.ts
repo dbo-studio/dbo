@@ -6,7 +6,14 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { matchConnectionId } from '@/store/tabStore/connectionId';
 import { siblingObjectNodeIds } from '@/store/tabStore/siblingObjectNodeIds';
-import { selectTabs, selectVisibleTabs, SETTINGS_CONNECTION_ID } from '@/store/tabStore/tabs';
+import {
+  selectionPatch,
+  selectPaneTabs,
+  selectTabs,
+  selectVisibleTabs,
+  SETTINGS_CONNECTION_ID,
+  tabPane
+} from '@/store/tabStore/tabs';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import type { DataTabType, DiagramTabType, EditorTabType, ObjectTabType, SettingsTabType, TabType } from '@/types/Tab';
 import type { StateCreator } from 'zustand';
@@ -63,7 +70,7 @@ export const createTabSettingSlice: StateCreator<
     return get().handleAddNewTab(tabs, newTab) as DataTabType;
   },
 
-  addEditorTab: (query?: string): EditorTabType => {
+  addEditorTab: (query?: string, options?: { forceNew?: boolean }): EditorTabType => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;
     if (!currentConnectionId) {
       throw new Error('No current connection id');
@@ -86,7 +93,8 @@ export const createTabSettingSlice: StateCreator<
         lastUsed
       });
 
-    if (findTab && get().getQuery() === '') {
+    // An empty editor is reused unless the caller explicitly wants another one (phone shell's + button).
+    if (findTab && !options?.forceNew && get().getQuery() === '') {
       get().switchTab(findTab.id);
 
       if (findTab.contextLocked) {
@@ -215,7 +223,11 @@ export const createTabSettingSlice: StateCreator<
         highlightId: options?.highlightId
       };
       const nextTabs = tabs.map((tab) => (tab.id === existing.id ? updated : tab));
-      set({ tabs: nextTabs, selectedTabId: updated.id }, undefined, 'addSettingsTab');
+      set(
+        { tabs: nextTabs, ...selectionPatch(nextTabs, get().selectedByPane, updated.id) },
+        undefined,
+        'addSettingsTab'
+      );
       return updated;
     }
 
@@ -240,6 +252,7 @@ export const createTabSettingSlice: StateCreator<
       return null;
     }
 
+    const removed = tabs[tabIndex];
     const newTabs = tabs.filter((tab) => tab.id !== tabId);
     const wasSelected = get().selectedTabId === tabId;
 
@@ -250,18 +263,23 @@ export const createTabSettingSlice: StateCreator<
 
     if (wasSelected) {
       const currentConnectionId = useConnectionStore.getState().currentConnectionId;
-      const visible = selectVisibleTabs(newTabs, currentConnectionId);
+      const allVisible = selectVisibleTabs(newTabs, currentConnectionId);
+      // Stay in the removed tab's pane; fall back to the other pane when it empties.
+      const paneVisible = selectPaneTabs(newTabs, currentConnectionId, tabPane(removed));
+      const visible = paneVisible.length > 0 ? paneVisible : allVisible;
       if (visible.length === 0) {
         nextSelectedId = undefined;
       } else {
         // Prefer a connection tab at the same visual index when possible.
-        const removedWasSettings = tabs[tabIndex]?.mode === TabMode.Settings;
+        const removedWasSettings = removed?.mode === TabMode.Settings;
         if (removedWasSettings) {
           nextTab = visible[visible.length - 1] ?? null;
         } else {
           const connectionVisible = visible.filter((tab) => tab.mode !== TabMode.Settings);
           const connectionIndex = tabs
-            .filter((tab) => tab.mode !== TabMode.Settings)
+            .filter(
+              (tab) => tab.mode !== TabMode.Settings && (tab.id === tabId || visible.some((v) => v.id === tab.id))
+            )
             .findIndex((tab) => tab.id === tabId);
           nextTab =
             (connectionIndex >= 0 && connectionIndex < connectionVisible.length
@@ -274,7 +292,10 @@ export const createTabSettingSlice: StateCreator<
       }
     }
 
-    set({ tabs: newTabs, selectedTabId: nextSelectedId }, undefined, 'removeTab');
+    const selection = wasSelected
+      ? selectionPatch(newTabs, get().selectedByPane, nextSelectedId)
+      : { selectedTabId: nextSelectedId };
+    set({ tabs: newTabs, ...selection }, undefined, 'removeTab');
 
     if (newTabs.length === 0) {
       return undefined;
@@ -288,16 +309,24 @@ export const createTabSettingSlice: StateCreator<
       return;
     }
 
-    if (selectTabs(get()).some((tab) => tab.id === tabId)) {
-      set({ selectedTabId: tabId }, undefined, 'switchTab');
+    const tabs = selectTabs(get());
+    if (tabs.some((tab) => tab.id === tabId)) {
+      set(selectionPatch(tabs, get().selectedByPane, tabId), undefined, 'switchTab');
     }
   },
 
-  handleAddNewTab: (_tabs: TabType[], newTab: TabType): TabType => {
+  handleAddNewTab: (_tabs: TabType[], addedTab: TabType): TabType => {
     const tabs = selectTabs(get());
+    const newTab: TabType =
+      get().focusedPane === 1 && addedTab.mode !== TabMode.Settings ? { ...addedTab, pane: 1 } : addedTab;
 
     if (newTab.mode === TabMode.Settings) {
-      set({ tabs: [...tabs, newTab], selectedTabId: newTab.id }, undefined, 'handleAddNewTab');
+      const nextTabs = [...tabs, newTab];
+      set(
+        { tabs: nextTabs, ...selectionPatch(nextTabs, get().selectedByPane, newTab.id) },
+        undefined,
+        'handleAddNewTab'
+      );
       return newTab;
     }
 
@@ -305,7 +334,7 @@ export const createTabSettingSlice: StateCreator<
     const nextTabs =
       otherTabs.length < maxTabs ? [...tabs, newTab] : [...tabs.filter((tab) => tab.id !== otherTabs[0].id), newTab];
 
-    set({ tabs: nextTabs, selectedTabId: newTab.id }, undefined, 'handleAddNewTab');
+    set({ tabs: nextTabs, ...selectionPatch(nextTabs, get().selectedByPane, newTab.id) }, undefined, 'handleAddNewTab');
 
     return newTab;
   }

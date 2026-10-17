@@ -7,6 +7,8 @@ const endpoint = {
   detail: (chatID: string | number): string => `/ai/chats/${chatID}`,
   create: (): string => '/ai/chats',
   update: (chatID: string | number): string => `/ai/chats/${chatID}`,
+  feedback: (chatID: string | number): string => `/ai/chats/${chatID}/feedback`,
+  review: (chatID: string | number): string => `/ai/chats/${chatID}/review`,
   delete: (chatID: string | number): string => `/ai/chats/${chatID}`
 };
 
@@ -27,6 +29,26 @@ export const getChatDetail = async (params: AiChatDetailRequestType): Promise<Ai
 
 export const createChat = async (data: CreateChatRequestType): Promise<AiChatType> => {
   return (await api.post<{ data: AiChatType }>(endpoint.create(), data)).data.data;
+};
+
+export const updateChat = async (
+  id: string | number,
+  data: { title?: string; pinned?: boolean }
+): Promise<AiChatType> => {
+  return (await api.patch<{ data: AiChatType }>(endpoint.update(id), data)).data.data;
+};
+
+/** Persists the user's decision on a diagram_diff / permission card. */
+export const reviewCard = async (chatId: string | number, data: { id: string; decision: string }): Promise<void> => {
+  await api.post(endpoint.review(chatId), data);
+};
+
+/** Sends a rating of the newest answer, with its question and answer, to the DBO team. Nothing is kept locally. */
+export const sendFeedback = async (
+  chatId: string | number,
+  data: { rating: 'up' | 'down'; comment?: string }
+): Promise<void> => {
+  await api.post(endpoint.feedback(chatId), data);
 };
 
 export const deleteChat = async (id: string | number): Promise<void> => {

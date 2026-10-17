@@ -40,6 +40,25 @@ func (h *TreeHandler) TreeHandler(c fiber.Ctx) error {
 	return response.SuccessBuilder().WithData(result).Send(c)
 }
 
+func (h *TreeHandler) Search(c fiber.Ctx) error {
+	req := new(dto.TreeSearchRequest)
+	if err := c.Bind().Query(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	result, err := h.treeService.Search(c, req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(result).Send(c)
+}
+
 func (h *TreeHandler) Tabs(c fiber.Ctx) error {
 	req := &dto.ObjectTabsRequest{
 		ConnectionID: fiber.Query[int32](c, "connectionId"),

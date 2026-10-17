@@ -51,6 +51,28 @@ export default defineConfig([
     }
   },
   {
+    // Design-system guardrail: colors and type sizes come from the theme (palette, typography variants), not literals.
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/core/theme/**', 'src/**/editorConfig.ts'], // Monaco takes numeric px font sizes
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'Literal[value=/#[0-9a-fA-F]{3,8}\\b|\\brgba?\\(|\\bhsla?\\(/]',
+          message: 'Use a theme palette token (theme.palette.*, alpha()) instead of a hardcoded color.'
+        },
+        {
+          selector: 'TemplateElement[value.raw=/#[0-9a-fA-F]{3,8}\\b|\\brgba?\\(|\\bhsla?\\(/]',
+          message: 'Use a theme palette token (theme.palette.*, alpha()) instead of a hardcoded color.'
+        },
+        {
+          selector: "Property[key.name='fontSize'][value.type='Literal'][value.raw=/^['\"]?[\\d.]+(px|rem)?['\"]?$/]",
+          message: 'Use a typography variant or theme.typography.* instead of a literal fontSize.'
+        }
+      ]
+    }
+  },
+  {
     files: ['src/components/base/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [

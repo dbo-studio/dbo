@@ -1,0 +1,71 @@
+package dto
+
+import (
+	"errors"
+
+	"github.com/invopop/validation"
+)
+
+type (
+	AiChatUpdateRequest struct {
+		Title  *string `json:"title"`
+		Pinned *bool   `json:"pinned"`
+	}
+)
+
+func (req AiChatUpdateRequest) Validate() error {
+	if req.Title == nil && req.Pinned == nil {
+		return errors.New("title or pinned is required")
+	}
+
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.Title, validation.NilOrNotEmpty, validation.Length(1, 255)),
+	)
+}
+
+const (
+	AiFeedbackUp   = "up"
+	AiFeedbackDown = "down"
+)
+
+type (
+	// AiChatFeedbackRequest is the user's decision to send a rating of the
+	// newest answer, with the question and answer, to the DBO team.
+	AiChatFeedbackRequest struct {
+		Rating  string `json:"rating"`
+		Comment string `json:"comment"`
+	}
+)
+
+func (req AiChatFeedbackRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.Rating, validation.Required, validation.In(AiFeedbackUp, AiFeedbackDown)),
+		validation.Field(&req.Comment, validation.Length(0, 2000)),
+	)
+}
+
+const (
+	AiReviewApplied   = "applied"
+	AiReviewRejected  = "rejected"
+	AiReviewConfirmed = "confirmed"
+	// AiReviewPending releases a "confirmed" claim whose write did not run
+	// (failed or canceled), so the card can be confirmed again.
+	AiReviewPending = "pending"
+)
+
+type (
+	// AiChatReviewRequest records the user's decision on a diagram_diff
+	// (changesetId) or permission (requestId) card so it survives reloads and
+	// other devices.
+	AiChatReviewRequest struct {
+		ID       string `json:"id"`
+		Decision string `json:"decision"`
+	}
+)
+
+func (req AiChatReviewRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ID, validation.Required, validation.Length(1, 64)),
+		validation.Field(&req.Decision, validation.Required, validation.In(AiReviewApplied, AiReviewRejected, AiReviewConfirmed, AiReviewPending)),
+	)
+}

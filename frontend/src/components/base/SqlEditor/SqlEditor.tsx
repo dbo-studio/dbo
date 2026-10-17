@@ -113,6 +113,14 @@ export default function SqlEditor({
         return editor.getModel()?.getValueInRange(selection);
       }
       return editor.getValue();
+    },
+    insertText: (text: string): void => {
+      const editor = editorRef.current;
+      const selection = editor?.getSelection();
+      if (!editor || !selection) return;
+
+      editor.executeEdits('sql-key-bar', [{ range: selection, text, forceMoveMarkers: true }]);
+      editor.focus();
     }
   }));
 

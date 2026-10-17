@@ -3,11 +3,13 @@ package aiProvider
 // StreamEvent represents a single event emitted during a streaming chat response.
 type StreamEvent struct {
 	Type       string `json:"type"`
+	ID         string `json:"id,omitempty"`
 	Label      string `json:"label,omitempty"`
 	Content    string `json:"content,omitempty"`
 	DurationMs int64  `json:"durationMs,omitempty"`
 	BlockType  string `json:"blockType,omitempty"`
 	Language   string `json:"language,omitempty"`
+	Data       any    `json:"data,omitempty"`
 }
 
 // StreamChatCallback is invoked for each streaming event during a chat completion.

@@ -12,7 +12,7 @@ import (
 )
 
 func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.AiChatResponse, error) {
-	provider, dbProvider, err := s.createProvider(ctx)
+	provider, dbProvider, err := s.createProvider(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 
 	providerResp, providerResErr := provider.Chat(ctx, providerReq)
 
-	if err := s.saveChatMessages(ctx, chat, req.Message, providerResp); err != nil {
+	if err := s.saveChatMessages(ctx, chat, req.Message, nil, providerResp, dbProvider.Model); err != nil {
 		s.logger.Error(fmt.Sprintf("Failed to save chat messages: %v", err))
 	}
 
@@ -70,6 +70,7 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 			Type:      string(providerResp.Type),
 			Language:  string(providerResp.Language),
 			CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+			Model:     dbProvider.Model,
 		})
 	}
 
@@ -80,6 +81,7 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 			Type:      string(content.Type),
 			Language:  string(content.Language),
 			CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+			Model:     dbProvider.Model,
 		})
 	}
 

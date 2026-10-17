@@ -35,6 +35,8 @@ var (
 	ErrQueryCanceled                  = errors.New("query canceled")
 	ErrUnauthenticated                = errors.New("authentication required")
 	ErrAuthNotEnabled                 = errors.New("authentication is not enabled")
+	ErrAuthSetupDone                  = errors.New("an admin account already exists")
+	ErrAuthSetupTokenInvalid          = errors.New("setup token is not valid")
 	ErrInvalidSavePath                = errors.New("invalid save path")
 	ErrInvalidInlineQuery             = errors.New("invalid inline query")
 	ErrExportQueryNotRead             = errors.New("export query must be a read-only statement")

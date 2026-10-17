@@ -48,7 +48,7 @@ export const messageMarkdownSx = (theme: Theme) => ({
     color: theme.palette.text.subdued
   },
   '& a': {
-    color: theme.palette.primary.main,
+    color: theme.palette.text.link,
     textDecoration: 'none',
     '&:hover': {
       textDecoration: 'underline'

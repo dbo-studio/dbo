@@ -53,61 +53,22 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
           );
         },
 
+        // Collapsing only hides the node: descendants keep their expanded state (restored on re-expand, like VS Code)
+        // and stay registered for reload, so a tree refresh never silently drops already-opened folders.
         collapseNode: (nodeId: string): void => {
           const currentConnection = getCurrentConnectionId();
           if (!currentConnection) return;
 
-          set((state) => {
-            const currentExpandedNodes = state.expandedNodes[currentConnection] || [];
-            const currentLoadedParents = state.loadedParentIds[currentConnection] || [];
-
-            // Function to recursively find all child node IDs
-            const getAllChildIds = (node: TreeNodeType): string[] => {
-              let childIds: string[] = [];
-              if (node.children?.length) {
-                for (const child of node.children) {
-                  childIds.push(child.id);
-                  childIds = [...childIds, ...getAllChildIds(child)];
-                }
-              }
-              return childIds;
-            };
-
-            // Get the tree to find all children of the collapsed node
-            const tree = state.tree[currentConnection];
-            if (!tree) return state;
-
-            // Find the node being collapsed
-            const findNode = (node: TreeNodeType): TreeNodeType | null => {
-              if (node.id === nodeId) return node;
-              for (const child of node.children || []) {
-                const found = findNode(child);
-                if (found) return found;
-              }
-              return null;
-            };
-
-            const nodeToCollapse = findNode(tree);
-            if (!nodeToCollapse) return state;
-
-            // Get all child IDs to remove
-            const childIdsToRemove = getAllChildIds(nodeToCollapse);
-
-            return {
+          set(
+            (state) => ({
               expandedNodes: {
                 ...state.expandedNodes,
-                [currentConnection]: currentExpandedNodes.filter(
-                  (id) => id !== nodeId && !childIdsToRemove.includes(id)
-                )
-              },
-              loadedParentIds: {
-                ...state.loadedParentIds,
-                [currentConnection]: currentLoadedParents.filter(
-                  (id) => id !== nodeId && !childIdsToRemove.includes(id)
-                )
+                [currentConnection]: (state.expandedNodes[currentConnection] || []).filter((id) => id !== nodeId)
               }
-            };
-          });
+            }),
+            undefined,
+            'collapseNode'
+          );
         },
 
         isNodeExpanded: (nodeId: string): boolean => {
@@ -153,12 +114,17 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
           const currentConnection = getCurrentConnectionId();
           if (!currentConnection) return;
 
-          set((state) => ({
-            loadedParentIds: {
-              ...state.loadedParentIds,
-              [currentConnection]: [...(state.loadedParentIds[currentConnection] || []), parentId]
-            }
-          }));
+          set((state) => {
+            const loaded = state.loadedParentIds[currentConnection] || [];
+            if (loaded.includes(parentId)) return state;
+
+            return {
+              loadedParentIds: {
+                ...state.loadedParentIds,
+                [currentConnection]: [...loaded, parentId]
+              }
+            };
+          });
         },
 
         getLoadedParentIds: (): string[] => {

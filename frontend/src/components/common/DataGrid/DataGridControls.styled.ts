@@ -17,7 +17,7 @@ export const SearchBarContainer = styled('div')(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
   border: `1px solid ${theme.palette.divider}`,
   borderRadius: variables.radius.medium,
-  boxShadow: theme.palette.mode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.15)',
+  boxShadow: `0 2px 8px ${alpha(theme.palette.common.black, theme.palette.mode === 'dark' ? 0.3 : 0.15)}`,
   padding: theme.spacing(0.5, 1),
   minWidth: theme.spacing(30),
   maxWidth: theme.spacing(40)
@@ -53,7 +53,7 @@ export const DataGridLoadingOverlayStyled = styled(Box)(({ theme }) => ({
 
 export const SearchMatchCountStyled = styled(Typography)(({ theme }) => ({
   color: theme.palette.text.subdued,
-  fontSize: '12px',
+  fontSize: variables.fontSize.sm,
   whiteSpace: 'nowrap'
 }));
 
@@ -143,7 +143,7 @@ export const GridCheckboxInput = styled('input')(({ theme }) => {
 });
 
 export const HeaderBadgeStyled = styled('span')(({ theme }) => ({
-  fontSize: 9,
+  fontSize: variables.fontSize.xxs,
   lineHeight: 1,
   padding: '1px 3px',
   borderRadius: 2,

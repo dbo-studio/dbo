@@ -14,6 +14,10 @@ export const createAiContextSlice: StateCreator<AiContextSlice, [['zustand/devto
     views: []
   },
   messageEdit: false,
+  autoContext: true,
+  setAutoContext: (autoContext: boolean) => {
+    set({ autoContext }, undefined, 'setAutoContext');
+  },
   updateContext: (context: AiContextType) => {
     set({ context }, undefined, 'updateContext');
   },

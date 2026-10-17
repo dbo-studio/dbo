@@ -15,7 +15,7 @@ import { parseWkt } from '@/core/utils/wkt';
 import locales from '@/locales';
 import type { BinaryCellValue, ColumnType } from '@/types';
 import { Button, Typography } from '@mui/material';
-import { type DragEvent, type JSX, useCallback, useMemo, useRef, useState } from 'react';
+import { type DragEvent, type JSX, lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import {
   DataValuePanelBodyStyled,
   DataValuePanelBrowseLinkStyled,
@@ -33,7 +33,9 @@ import {
   ImageDropzoneStyled,
   VisuallyHiddenInputStyled
 } from './DataValuePanel.styled';
-import GeometryMap from './GeometryMap';
+
+// Leaflet is only needed once a geometry value is opened.
+const GeometryMap = lazy(() => import('./GeometryMap'));
 
 export type ValuePanelMode = 'text' | 'json' | 'hex' | 'image' | 'geometry';
 
@@ -311,7 +313,9 @@ export function DataValueEditor({
         {mode === 'geometry' && (
           <DataValuePanelGeometryColumnStyled>
             <DataValuePanelGeometryMapStyled>
-              <GeometryMap wkt={draft} height='100%' />
+              <Suspense fallback={null}>
+                <GeometryMap wkt={draft} height='100%' />
+              </Suspense>
             </DataValuePanelGeometryMapStyled>
             <CodeEditor
               width={width}

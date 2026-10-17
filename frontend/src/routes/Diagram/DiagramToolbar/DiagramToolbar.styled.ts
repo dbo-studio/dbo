@@ -1,4 +1,5 @@
 import { Box, InputBase, styled } from '@mui/material';
+import { variables } from '@/core/theme/variables';
 
 export const DiagramToolbarStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -13,7 +14,7 @@ export const DiagramToolbarStyled = styled(Box)(({ theme }) => ({
 export const DiagramSearchStyled = styled(InputBase)({
   flex: 1,
   maxWidth: 240,
-  fontSize: 13
+  fontSize: variables.fontSize.md
 });
 
 export const ToolbarSpacerStyled = styled(Box)({

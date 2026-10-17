@@ -1,21 +1,67 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
-import { CircularProgress, IconButton, Tooltip, Typography } from '@mui/material';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSettingStore } from '@/store/settingStore/setting.store';
+import { Chip, CircularProgress, Typography } from '@mui/material';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { AiMessageType } from '@/types';
 import { MessagesProps } from '../types';
 import ChatEmptyState from './ChatEmptyState/ChatEmptyState';
 import ChatErrorMessage from './ChatErrorMessage/ChatErrorMessage';
 import CodeMessage from './CodeMessage/CodeMessage';
+import { DiffBaselineContext } from './DiffBaselineContext';
 import ExplanationMessage from './ExplanationMessage/ExplanationMessage';
 import { MessageGroupStyled, MessagesListStyled, MessagesStyled, ScrollToBottomButtonStyled } from './Messages.styled';
 import StreamingPreview from './StreamingPreview/StreamingPreview';
 import ThinkingMessage from './ThinkingMessage/ThinkingMessage';
-import ToolStepsMessage from './ToolStepsMessage/ToolStepsMessage';
+import { groupLiveItems, toRenderBlocks } from '../utils/agentTrace';
+import { formatMessageTime } from '../utils/messageTime';
+import AgentItemCard from './AgentItemCard/AgentItemCard';
+import ToolCallGroup from './ToolCallGroup/ToolCallGroup';
+import TurnActions from './TurnActions/TurnActions';
 
-export default function Messages({ messages, loading, onLoadMore, onSelectPrompt, onRetry }: MessagesProps) {
+export default function Messages({
+  messages,
+  loading,
+  onLoadMore,
+  onSelectPrompt,
+  onRetry,
+  onRegenerate,
+  onCompare,
+  onFeedback
+}: MessagesProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const streaming = useAiStore((state) => state.streaming);
+  const density = useSettingStore((state) => state.editor.aiChatDensity ?? 'comfortable');
+  const agentItems = useAiStore((state) => state.agentItems);
+  const selectedQuery = useAiStore((state) => state.context.selectedQuery);
+  const blocks = useMemo(() => toRenderBlocks(messages), [messages]);
+  const liveBlocks = useMemo(() => groupLiveItems(agentItems), [agentItems]);
+  const lastTurn = useMemo(() => {
+    const lastUserIndex = messages.map((message) => message.role).lastIndexOf('user');
+    return messages.slice(lastUserIndex + 1);
+  }, [messages]);
+  const lastPrompt = useMemo(
+    () => [...messages].reverse().find((message) => message.role === 'user')?.content ?? '',
+    [messages]
+  );
+  // Earlier SQL answer in the chat; it is the diff baseline when nothing was selected, and after a reload.
+  const previousSql = useMemo(() => {
+    const result = new Map<AiMessageType, string>();
+    let previous: string | undefined;
+    for (const message of messages) {
+      if (message.role !== 'assistant' || message.type !== 'code' || message.language !== 'sql') continue;
+      if (previous !== undefined) result.set(message, previous);
+      previous = message.content;
+    }
+    return result;
+  }, [messages]);
+  // Only label answers once a chat holds more than one model; a single-model chat needs no chip.
+  const showModelLabel = useMemo(
+    () =>
+      new Set(messages.filter((message) => message.role === 'assistant' && message.model).map((m) => m.model)).size > 1,
+    [messages]
+  );
   const isNearBottomRef = useRef(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
 
@@ -66,6 +112,7 @@ export default function Messages({ messages, loading, onLoadMore, onSelectPrompt
     streaming.thinkingContent,
     streaming.previewContent,
     streaming.statusLabel,
+    agentItems,
     autoScrollToBottom
   ]);
 
@@ -73,7 +120,12 @@ export default function Messages({ messages, loading, onLoadMore, onSelectPrompt
   const showLoadMore = messages.filter((message) => !message.isNew).length > 10;
 
   return (
-    <MessagesStyled ref={messagesContainerRef} onScroll={handleScroll}>
+    <MessagesStyled
+      ref={messagesContainerRef}
+      onScroll={handleScroll}
+      compact={density === 'compact'}
+      data-density={density}
+    >
       {showLoadMore && onLoadMore && (
         <Typography
           component='button'
@@ -94,25 +146,55 @@ export default function Messages({ messages, loading, onLoadMore, onSelectPrompt
         </Typography>
       )}
 
-      {showEmpty && onSelectPrompt && <ChatEmptyState onSelectPrompt={onSelectPrompt} />}
+      {showEmpty && <ChatEmptyState onSelectPrompt={onSelectPrompt} />}
 
       <MessagesListStyled>
-        {messages.map((message) => (
-          <MessageGroupStyled key={`${message.role}-${message.createdAt}-${message.content.slice(0, 48)}`}>
-            {message.thinking?.content && (
-              <ThinkingMessage
-                content={message.thinking.content}
-                durationMs={message.thinking.durationMs}
-                defaultCollapsed
-              />
-            )}
-            {message.type === 'code' ? <CodeMessage message={message} /> : <ExplanationMessage message={message} />}
-          </MessageGroupStyled>
-        ))}
+        {blocks.map((block) => {
+          if (block.kind === 'message') {
+            const { message } = block;
+            const inLastTurn = message.role === 'assistant' && lastTurn.includes(message);
+            const baseline = (inLastTurn ? selectedQuery : undefined) ?? previousSql.get(message);
+            return (
+              <MessageGroupStyled key={block.key} title={formatMessageTime(message.createdAt)} data-testid='ai-message'>
+                {message.thinking?.content && (
+                  <ThinkingMessage
+                    content={message.thinking.content}
+                    durationMs={message.thinking.durationMs}
+                    defaultCollapsed
+                  />
+                )}
+                {showModelLabel && message.role === 'assistant' && message.model && (
+                  <Typography variant='caption' color='textSubdued' data-testid='ai-message-model'>
+                    {message.model}
+                  </Typography>
+                )}
+                <DiffBaselineContext value={baseline}>
+                  {message.type === 'code' ? (
+                    <CodeMessage message={message} />
+                  ) : (
+                    <ExplanationMessage message={message} />
+                  )}
+                </DiffBaselineContext>
+              </MessageGroupStyled>
+            );
+          }
+
+          return (
+            <MessageGroupStyled key={block.key}>
+              {block.thinking?.content && (
+                <ThinkingMessage
+                  content={block.thinking.content}
+                  durationMs={block.thinking.durationMs}
+                  defaultCollapsed
+                />
+              )}
+              {block.kind === 'tools' ? <ToolCallGroup items={block.items} /> : <AgentItemCard item={block.item} />}
+            </MessageGroupStyled>
+          );
+        })}
 
         {streaming.status === 'streaming' && (
           <MessageGroupStyled>
-            <ToolStepsMessage />
             {(streaming.thinkingContent || streaming.statusLabel || !streaming.previewContent) && (
               <ThinkingMessage
                 content={streaming.thinkingContent || streaming.statusLabel || ''}
@@ -120,10 +202,28 @@ export default function Messages({ messages, loading, onLoadMore, onSelectPrompt
               />
             )}
 
+            {liveBlocks.map((block) =>
+              block.kind === 'tools' ? (
+                <ToolCallGroup key={block.key} items={block.items} live />
+              ) : (
+                <AgentItemCard key={block.key} item={block.item} />
+              )
+            )}
+
             {(streaming.phase === 'answering' || streaming.previewContent) && (
               <StreamingPreview content={streaming.previewContent} blockType={streaming.activeBlockType} isStreaming />
             )}
           </MessageGroupStyled>
+        )}
+
+        {!loading && streaming.status !== 'streaming' && !streaming.error && lastTurn.length > 0 && (
+          <TurnActions
+            turn={lastTurn}
+            prompt={lastPrompt}
+            onRegenerate={onRegenerate}
+            onCompare={onCompare}
+            onFeedback={onFeedback}
+          />
         )}
 
         {loading && streaming.status !== 'streaming' && (
@@ -140,23 +240,23 @@ export default function Messages({ messages, loading, onLoadMore, onSelectPrompt
 
       {showScrollButton && messages.length > 0 && (
         <ScrollToBottomButtonStyled>
-          <Tooltip title={locales.scroll_to_bottom}>
-            <IconButton
-              size='small'
-              onClick={() => scrollToBottom()}
-              sx={{
-                backgroundColor: 'background.paper',
-                border: 1,
-                borderColor: 'divider',
-                boxShadow: 1,
-                '&:hover': {
-                  backgroundColor: 'background.paper'
-                }
-              }}
-            >
-              <CustomIcon type='arrowDown' size='xs' />
-            </IconButton>
-          </Tooltip>
+          <Chip
+            clickable
+            size='small'
+            icon={<CustomIcon type='arrowDown' size='xs' />}
+            label={locales.ai_jump_to_latest}
+            onClick={() => scrollToBottom()}
+            data-testid='ai-jump-to-latest'
+            sx={{
+              backgroundColor: 'background.paper',
+              border: 1,
+              borderColor: 'divider',
+              boxShadow: 2,
+              '&:hover': {
+                backgroundColor: 'background.paper'
+              }
+            }}
+          />
         </ScrollToBottomButtonStyled>
       )}
     </MessagesStyled>

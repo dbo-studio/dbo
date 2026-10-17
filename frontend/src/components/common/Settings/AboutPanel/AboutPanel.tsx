@@ -32,7 +32,7 @@ export default function AboutPanel(): JSX.Element {
             rel='noreferrer'
             style={{
               textDecoration: 'none',
-              color: theme.palette.text.primary
+              color: theme.palette.text.link
             }}
           >
             <Typography style={{ marginRight: theme.spacing(1) }} variant='caption'>
@@ -49,7 +49,7 @@ export default function AboutPanel(): JSX.Element {
             style={{
               textDecoration: 'none',
               marginRight: theme.spacing(1),
-              color: theme.palette.text.primary
+              color: theme.palette.text.link
             }}
           >
             <Typography style={{ marginRight: theme.spacing(1) }} variant='caption'>

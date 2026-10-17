@@ -9,6 +9,7 @@ export type ChatsProps = {
   currentChat: AiChatType | undefined;
   onChatChange: (chat: AiChatType) => void;
   onChatDelete: (chat: AiChatType) => void;
+  onChatRename: (chat: AiChatType, title: string) => void;
 };
 
 export type ChatItemProps = {
@@ -16,11 +17,13 @@ export type ChatItemProps = {
   selected: boolean;
   onClick: () => void;
   onDelete: () => void;
+  onRename: (title: string) => void;
 };
 
 export type ChatTextInputProps = {
   loading: boolean;
   onSend: () => void;
+  onCancel: () => void;
   autocomplete?: AutoCompleteType;
 };
 
@@ -60,6 +63,9 @@ export type MessagesProps = {
   onLoadMore?: () => void;
   onSelectPrompt?: (prompt: string) => void;
   onRetry?: () => void;
+  onRegenerate?: () => void;
+  onCompare?: (providerId: number, model: string) => void;
+  onFeedback?: (rating: 'up' | 'down', comment: string) => Promise<void>;
 };
 
 export type CodeMessageProps = {
@@ -86,7 +92,7 @@ export type ChatErrorMessageProps = {
 };
 
 export type ChatEmptyStateProps = {
-  onSelectPrompt: (prompt: string) => void;
+  onSelectPrompt?: (prompt: string) => void;
 };
 
 export type ThinkingMessageProps = {
@@ -104,6 +110,10 @@ export type ChatMarkdownProps = {
 
 export type ChatDataTableProps = {
   rows: Record<string, unknown>[];
+  /** Column names in result order; rows are objects, so without it the order is not the SELECT's. */
+  columns?: string[];
+  /** Source SELECT; enables "Open in Data Grid" (runs it in a query tab). */
+  query?: string;
 };
 
 export type StreamingMarkdownProps = {

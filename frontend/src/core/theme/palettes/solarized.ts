@@ -1,7 +1,6 @@
 import type { ThemeModeEnum } from '@/core/enums';
 import { alpha } from '@mui/material';
 
-// Solarized color scheme
 const SOLARIZED_BASE = {
   base03: '#002b36', // darkest blue
   base02: '#073642', // dark blue

@@ -129,7 +129,7 @@ export const DataValuePanelHexPreviewStyled = styled(Box)(() => ({
   overflow: 'auto',
   flex: 1,
   fontFamily: 'monospace',
-  fontSize: 12
+  fontSize: variables.fontSize.sm
 }));
 
 export const DataValuePanelCaptionStyled = styled(Typography)(() => ({
@@ -139,5 +139,5 @@ export const DataValuePanelCaptionStyled = styled(Typography)(() => ({
 }));
 
 export const DataValuePanelBrowseLinkStyled = styled('span')(({ theme }) => ({
-  color: theme.palette.primary.main
+  color: theme.palette.text.link
 }));

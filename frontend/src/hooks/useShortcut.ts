@@ -1,3 +1,4 @@
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { ShortcutType } from '@/types';
 import { useEffect } from 'react';
 
@@ -14,6 +15,9 @@ const isEditableTarget = (target: EventTarget | null): boolean => {
   return target.isContentEditable;
 };
 
+/** Shortcuts that still work over the agent workspace; the rest would act on the hidden app behind it. */
+const WORKSPACE_SHORTCUTS = new Set(['toggleAgentWorkspace', 'focusAssistant', 'openShortcuts']);
+
 const hasChordModifier = (event: KeyboardEvent): boolean => {
   return event.altKey || event.ctrlKey || event.metaKey;
 };
@@ -22,6 +26,10 @@ export const useShortcut = (shortcut: ShortcutType, callback: () => void): void 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (!shortcut.shortcut(event)) {
+        return;
+      }
+
+      if (useSettingStore.getState().ui.agentWorkspaceOpen && !WORKSPACE_SHORTCUTS.has(shortcut.id)) {
         return;
       }
 

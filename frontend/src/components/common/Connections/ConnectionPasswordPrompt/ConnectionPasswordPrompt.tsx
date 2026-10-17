@@ -1,3 +1,4 @@
+import ModalFooter from '@/components/base/Modal/ModalFooter/ModalFooter';
 import api from '@/api';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
@@ -16,8 +17,7 @@ import * as v from 'valibot';
 import {
   ConnectionFormBodyStyled,
   ConnectionFormCheckboxRowStyled,
-  ConnectionFormContainerStyled,
-  ConnectionFormFooterStyled
+  ConnectionFormContainerStyled
 } from './ConnectionPasswordPrompt.styled';
 
 const formSchema = v.object({
@@ -152,23 +152,22 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
             />
           </ConnectionFormCheckboxRowStyled>
         </ConnectionFormBodyStyled>
-        <ConnectionFormFooterStyled>
-          <Button type='button' size='small' onClick={handleClose}>
-            {locales.cancel}
+        <ModalFooter spread>
+          <Button
+            type='button'
+            data-testid='test-connection'
+            loadingPosition='start'
+            loading={pingConnectionPending}
+            onClick={(e) => void handlePing(e)}
+            disabled={pingConnectionPending || isPending || validationErrors.length > 0 || !connectionId}
+            size='small'
+            variant='outlined'
+          >
+            {locales.test}
           </Button>
           <Stack spacing={1} direction={'row'}>
-            <Button
-              type='button'
-              data-testid='test-connection'
-              loadingPosition='start'
-              loading={pingConnectionPending}
-              onClick={(e) => void handlePing(e)}
-              disabled={pingConnectionPending || isPending || validationErrors.length > 0 || !connectionId}
-              size='small'
-              variant='contained'
-              color='secondary'
-            >
-              {locales.test}
+            <Button type='button' size='small' onClick={handleClose}>
+              {locales.cancel}
             </Button>
             <Button
               type='submit'
@@ -181,7 +180,7 @@ export default function ConnectionPasswordPromptModal(): JSX.Element {
               {locales.save}
             </Button>
           </Stack>
-        </ConnectionFormFooterStyled>
+        </ModalFooter>
       </ConnectionFormContainerStyled>
     </Modal>
   );

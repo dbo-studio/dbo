@@ -17,6 +17,7 @@ import {
   TotpSetupSecretRowStyled
 } from './TotpSettings.styled';
 import { TotpSetupQr } from './TotpSetupQr';
+import { variables } from '@/core/theme/variables';
 
 type TotpSetupPanelProps = {
   variant?: 'panel' | 'modal';
@@ -93,7 +94,7 @@ export function TotpSetupPanel({
               flex: 1,
               minWidth: 0,
               fontFamily: 'ui-monospace, monospace',
-              fontSize: '0.8125rem',
+              fontSize: variables.fontSize.md,
               letterSpacing: '0.04em',
               wordBreak: 'break-all'
             }}

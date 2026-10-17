@@ -6,11 +6,14 @@ export const HistoryItemStyled = styled(Box)<HistoryItemStyledProps>(({ theme, s
   padding: `${theme.spacing(1)}`,
   cursor: 'pointer',
   border: `1px solid ${theme.palette.divider}`,
-  // border: `1px solid ${selected ? theme.palette.divider : 'transparent'}`,
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
   borderRadius: variables.radius.medium,
   background: theme.palette.background.default,
-  color: selected ? theme.palette.text.primary : theme.palette.text.text
+  color: selected ? theme.palette.text.link : theme.palette.text.text,
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(1, 1.25),
+    minHeight: 44
+  }
 }));

@@ -19,13 +19,6 @@ export const ConnectionFormBodyStyled = styled(Box)(({ theme }) => ({
   flexDirection: 'column'
 }));
 
-export const ConnectionFormFooterStyled = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  marginTop: theme.spacing(2),
-  justifyContent: 'space-between',
-  flexShrink: 0
-}));
-
 export const ConnectionFormCheckboxRowStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
@@ -61,8 +54,6 @@ export const ConnectionFormTabStyled = styled(Box, {
   color: selected ? theme.palette.text.text : theme.palette.text.subdued,
   fontSize: theme.typography.caption.fontSize,
   fontWeight: selected ? theme.typography.fontWeightMedium : theme.typography.fontWeightRegular,
-  letterSpacing: '0.04em',
-  textTransform: 'uppercase',
   padding: `0 ${theme.spacing(1)}`,
   cursor: 'pointer',
   userSelect: 'none',

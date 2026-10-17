@@ -63,15 +63,6 @@ export const ShareModalToolbarActionsStyled = styled(Box)(({ theme }) => ({
   gap: theme.spacing(1)
 }));
 
-export const ShareModalFooterStyled = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'flex-end',
-  gap: theme.spacing(1.5),
-  flexShrink: 0,
-  marginTop: theme.spacing(2)
-}));
-
 export const ShareModalExistingActionsStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',

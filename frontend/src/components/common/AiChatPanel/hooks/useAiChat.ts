@@ -9,6 +9,8 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import { AiChatType, AutoCompleteType } from '@/types';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
+import { agentItemToMessage, isTraceMessage } from '../utils/agentTrace';
+import { resolveAiChatMode } from './useAiChatMode';
 import { useAiStream } from './useAiStream';
 
 type useAiChatReturnType = {
@@ -21,7 +23,14 @@ type useAiChatReturnType = {
   handleRetry: () => Promise<void>;
   handleChatChange: (chat: AiChatType) => Promise<void>;
   handleChatDelete: (chat: AiChatType) => Promise<void>;
+  handleChatRename: (chat: AiChatType, title: string) => Promise<void>;
+  handleRegenerate: () => Promise<void>;
+  handleCompare: (providerId: number, model: string) => Promise<void>;
+  handleFeedback: (rating: 'up' | 'down', comment: string) => Promise<void>;
 };
+
+/** Per-turn provider/model override used to compare answers; always runs in Ask mode so it cannot write. */
+type ModelOverride = { providerId: number; model: string };
 
 const buildContextOpts = (): AiContextOptsType => {
   const selectedTab = useTabStore.getState().selectedTab();
@@ -37,7 +46,7 @@ const buildContextOpts = (): AiContextOptsType => {
   if (context.selectedQuery) {
     contextOpts.selectedQuery = context.selectedQuery;
     contextOpts.query = context.selectedQuery;
-  } else if (selectedTab?.mode === TabMode.Query) {
+  } else if (selectedTab?.mode === TabMode.Query && context.querySnippet !== '') {
     contextOpts.query = useTabStore.getState().getQuery(selectedTab?.id);
   }
 
@@ -56,7 +65,8 @@ const buildContextOpts = (): AiContextOptsType => {
   return contextOpts;
 };
 
-export const useAiChat = (): useAiChatReturnType => {
+/** @param active autocomplete for the composer is only fetched while an AI surface is visible. */
+export const useAiChat = (active = true): useAiChatReturnType => {
   const [page, setPage] = useState(1);
   const [isFallbackPending, setIsFallbackPending] = useState(false);
   const fallbackAbortRef = useRef<AbortController | null>(null);
@@ -79,7 +89,7 @@ export const useAiChat = (): useAiChatReturnType => {
       api.query.autoComplete({
         connectionId: Number(connectionId)
       }),
-    enabled: !!connectionId
+    enabled: !!connectionId && active
   });
 
   const { mutateAsync: createChatMutation } = useMutation({
@@ -98,7 +108,7 @@ export const useAiChat = (): useAiChatReturnType => {
       addChat(chat);
       await handleChatChange(chat);
     } catch {
-      // create chat failed silently
+      /* ignored */
     }
   };
 
@@ -108,6 +118,7 @@ export const useAiChat = (): useAiChatReturnType => {
       if (chat.id === currentChat?.id) return;
 
       resetStreaming();
+      setPage(1);
 
       const detail = await api.aiChat.getChatDetail({
         id: chat.id,
@@ -142,13 +153,25 @@ export const useAiChat = (): useAiChatReturnType => {
   }, [cancelStream]);
 
   const executeChat = useCallback(
-    async (message: string, currentChat: AiChatType): Promise<void> => {
+    async (message: string, currentChat: AiChatType, override?: ModelOverride): Promise<void> => {
       const contextOpts = buildContextOpts();
       const request: AiChatRequest = {
         connectionId: Number(connectionId),
         chatId: Number(currentChat.id),
         message,
+        mode: override ? 'ask' : resolveAiChatMode(),
+        ...override,
         contextOpts
+      };
+
+      // Stopped or failed turns keep their cards: running tools become
+      // "cancelled" and pending diagram proposals stay reviewable.
+      const keepPartialTurn = (): void => {
+        const items = useAiStore.getState().agentItems;
+        if (items.length > 0) {
+          addMessage(useAiStore.getState().currentChat ?? currentChat, items.map(agentItemToMessage));
+        }
+        useAiStore.getState().clearAgentItems();
       };
 
       const thinkingSnapshot = {
@@ -181,19 +204,26 @@ export const useAiChat = (): useAiChatReturnType => {
           if (doneEvent.title !== currentChat.title) {
             updateCurrentChat({ ...updatedChat, title: doneEvent.title });
           }
+          useAiStore.getState().clearAgentItems();
           resetStreaming();
           return;
         }
 
         if (useAiStore.getState().streaming.error) {
+          keepPartialTurn();
           return;
         }
       } catch (error) {
         // User cancel must not start the HTTP fallback (that re-shows the cancel button).
         if (error instanceof Error && error.name === 'AbortError') {
+          keepPartialTurn();
           return;
         }
-        // fall through to non-stream fallback
+        // A turn that already ran tools must not be replayed by the tool-less fallback.
+        if (useAiStore.getState().agentItems.length > 0) {
+          keepPartialTurn();
+          return;
+        }
       }
 
       const generation = fallbackGenerationRef.current;
@@ -274,7 +304,9 @@ export const useAiChat = (): useAiChatReturnType => {
     if (!lastRequest || !currentChat) return;
 
     resetStreaming();
-    await executeChat(lastRequest.message, currentChat);
+    // A failed compare must retry on the model it was asked of, not the active one.
+    const { providerId, model } = lastRequest;
+    await executeChat(lastRequest.message, currentChat, providerId && model ? { providerId, model } : undefined);
   };
 
   const handleChatDelete = useCallback(
@@ -294,7 +326,61 @@ export const useAiChat = (): useAiChatReturnType => {
     [handleChatChange, updateChats, updateCurrentChat]
   );
 
+  const handleChatRename = useCallback(
+    async (chat: AiChatType, title: string) => {
+      await api.aiChat.updateChat(chat.id, { title });
+      const state = useAiStore.getState();
+      updateChats(state.chats.map((item) => (item.id === chat.id ? { ...item, title } : item)));
+      if (state.currentChat?.id === chat.id) {
+        updateCurrentChat({ ...state.currentChat, title });
+      }
+    },
+    [updateChats, updateCurrentChat]
+  );
+
+  /** Re-runs the last user prompt (same mode resolution) and appends the new answer. */
+  const handleRegenerate = async (): Promise<void> => {
+    const currentChat = useAiStore.getState().currentChat;
+    const lastUser = [...(currentChat?.messages ?? [])].reverse().find((message) => message.role === 'user');
+    if (!currentChat || !lastUser || chatPending) return;
+
+    resetStreaming();
+    await executeChat(lastUser.content, currentChat);
+  };
+
+  /** Re-runs the last user prompt on another model and appends its answer next to the first. */
+  const handleCompare = async (providerId: number, model: string): Promise<void> => {
+    const currentChat = useAiStore.getState().currentChat;
+    const lastUser = [...(currentChat?.messages ?? [])].reverse().find((message) => message.role === 'user');
+    if (!currentChat || !lastUser || chatPending) return;
+
+    resetStreaming();
+    await executeChat(lastUser.content, currentChat, { providerId, model });
+  };
+
+  /** Sends a rating of the newest answer to the DBO team and marks it as sent for this session only. */
+  const handleFeedback = async (rating: 'up' | 'down', comment: string): Promise<void> => {
+    const currentChat = useAiStore.getState().currentChat;
+    if (!currentChat) return;
+
+    const answers = currentChat.messages
+      .map((message, position) => ({ message, position }))
+      .filter(({ message }) => message.role === 'assistant' && !isTraceMessage(message));
+    const index = answers[answers.length - 1]?.position ?? -1;
+    if (index < 0) return;
+
+    await api.aiChat.sendFeedback(currentChat.id, { rating, comment: comment.trim() || undefined });
+
+    const messages = [...currentChat.messages];
+    messages[index] = { ...messages[index], feedback: rating };
+    updateCurrentChat({ ...currentChat, messages });
+  };
+
   return {
+    handleFeedback,
+    handleChatRename,
+    handleRegenerate,
+    handleCompare,
     autocomplete,
     chatPending,
     handleCancel,

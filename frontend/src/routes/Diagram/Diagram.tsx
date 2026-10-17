@@ -7,7 +7,8 @@ import locales from '@/locales';
 import type { DiagramTabType } from '@/types/Tab';
 import { CircularProgress, useTheme } from '@mui/material';
 import { Background, ReactFlow, ReactFlowProvider, type Node } from '@xyflow/react';
-import { type JSX, useEffect, useState } from 'react';
+import { type JSX, useEffect, useMemo, useState } from 'react';
+import ChangesetPanel from './ChangesetPanel/ChangesetPanel';
 import { DiagramCanvasStyled, DiagramLoadingStyled, DiagramPanelStyled } from './Diagram.styled';
 import DiagramControls from './DiagramControls';
 import DiagramToolbar from './DiagramToolbar/DiagramToolbar';
@@ -48,7 +49,7 @@ function DiagramCanvas(): JSX.Element {
   const schema = selectedTab?.schema ?? '';
   const focusTable = selectedTab?.focusTable;
 
-  const { viewGraph, isLoading, activeNodeId, highlightedIds, shownNodeIds } = useDiagramGraph({
+  const { viewGraph, isLoading, activeNodeId, highlightedIds, shownNodeIds, changeset } = useDiagramGraph({
     connectionId,
     database,
     schema,
@@ -56,6 +57,15 @@ function DiagramCanvas(): JSX.Element {
     enabled: Boolean(connectionId && selectedTab),
     selectedNodeId
   });
+
+  const statusStroke = useMemo(
+    () => ({
+      added: theme.palette.success.main,
+      changed: theme.palette.warning.main,
+      removed: theme.palette.error.main
+    }),
+    [theme.palette.error.main, theme.palette.success.main, theme.palette.warning.main]
+  );
 
   const { nodes, edges, onNodesChange, onEdgesChange, autoLayout, fit, exportImage } = useDiagramFlow({
     connectionId,
@@ -67,6 +77,7 @@ function DiagramCanvas(): JSX.Element {
     activeNodeId,
     search,
     edgeStroke: theme.palette.text.disabled,
+    statusStroke,
     exportBg: theme.palette.background.default
   });
 
@@ -119,6 +130,7 @@ function DiagramCanvas(): JSX.Element {
           >
             <Background gap={16} color={theme.palette.divider} />
             <DiagramControls />
+            {changeset && <ChangesetPanel key={changeset.changesetId} diff={changeset} />}
           </ReactFlow>
         )}
       </DiagramCanvasStyled>

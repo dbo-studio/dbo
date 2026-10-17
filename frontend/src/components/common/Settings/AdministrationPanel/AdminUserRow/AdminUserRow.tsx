@@ -4,6 +4,7 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
 import Modal from '@/components/base/Modal/Modal';
+import ModalFooter from '@/components/base/Modal/ModalFooter/ModalFooter';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import PasswordStrengthMeter from '@/components/common/Auth/PasswordStrengthMeter/PasswordStrengthMeter';
@@ -14,11 +15,7 @@ import { type JSX, type MouseEvent, useState } from 'react';
 import * as v from 'valibot';
 import AdminShareConnectionsModal from '../AdminShareConnectionsModal/AdminShareConnectionsModal';
 import AdminUserPermissionCells from '../AdminUserPermissions/AdminUserPermissionCells';
-import {
-  AdministrationModalContainerStyled,
-  AdministrationModalContentStyled,
-  AdministrationModalFooterStyled
-} from './AdminUserRow.styled';
+import { AdministrationModalContainerStyled, AdministrationModalContentStyled } from './AdminUserRow.styled';
 
 export const adminRoleOptions: SelectInputOption[] = [
   { label: locales.admin_role_member, value: 'member' },
@@ -226,7 +223,7 @@ export default function AdminUserRow({ user, selfId, pending, onUpdate }: AdminU
               <PasswordStrengthMeter password={resetPassword} />
               {resetError ? <FormError mb={0} errors={[resetError]} /> : null}
             </AdministrationModalContentStyled>
-            <AdministrationModalFooterStyled>
+            <ModalFooter>
               <Button type='button' size='small' onClick={closeReset}>
                 {locales.cancel}
               </Button>
@@ -239,7 +236,7 @@ export default function AdminUserRow({ user, selfId, pending, onUpdate }: AdminU
               >
                 {locales.admin_reset_password}
               </Button>
-            </AdministrationModalFooterStyled>
+            </ModalFooter>
           </AdministrationModalContainerStyled>
         </Modal>
         <AdminShareConnectionsModal

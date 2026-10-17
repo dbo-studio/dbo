@@ -46,7 +46,10 @@ export class SettingsPage extends BasePage {
     this.generalMenuItem = page.getByText("General").first();
     this.appearanceMenuItem = page.getByText("Appearance").first();
     this.shortcutsMenuItem = page.getByText("Shortcuts").first();
-    this.aiMenuItem = this.panel.getByRole("button", { name: "AI", exact: true });
+    this.aiMenuItem = this.panel.getByRole("button", {
+      name: "AI",
+      exact: true,
+    });
     this.securityMenuItem = page.getByText("Security").first();
     this.aboutMenuItem = page.getByText("About").first();
     this.administrationMenuItem = this.panel.getByRole("button", {
@@ -199,7 +202,15 @@ export class SettingsPage extends BasePage {
       .fill(currentPassword);
     await this.page.getByTestId("account-new-password").fill(nextPassword);
     await this.page.getByTestId("account-confirm-password").fill(nextPassword);
+    // Wait for the request itself: the "Password updated." toast from an earlier
+    // change can still be on screen, and the response rotates the session cookie.
+    const changed = this.page.waitForResponse(
+      (res) =>
+        res.url().endsWith("/api/auth/password") &&
+        res.request().method() === "POST",
+    );
     await this.page.getByTestId("account-password-submit").click();
+    await changed;
   }
 
   async setupTotpAndEnable(code: string): Promise<void> {
@@ -280,6 +291,25 @@ export class SettingsPage extends BasePage {
 
   async toggleRightSidebar(): Promise<void> {
     await this.rightSidebarButton.click();
+  }
+
+  /**
+   * Opens the right sidebar unless it is already open. Layout settings load
+   * after first paint, so give a persisted open sidebar time to appear before
+   * toggling; otherwise the toggle would close it.
+   */
+  async openRightSidebar(): Promise<void> {
+    const tab = this.rightSidebarTab();
+    const alreadyOpen = await tab
+      .waitFor({ state: "visible", timeout: 3000 })
+      .then(
+        () => true,
+        () => false,
+      );
+    if (!alreadyOpen) {
+      await this.toggleRightSidebar();
+    }
+    await expect(tab).toBeVisible({ timeout: 15000 });
   }
 
   leftSidebarTab(): Locator {

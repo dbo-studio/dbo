@@ -9,7 +9,9 @@ export const QueryEditorActionBarStackStyled = styled(Stack)(({ theme }) => ({
   flexShrink: 0
 }));
 
-export const QueryEditorActionBarBoxStyled = styled(Box)(({ isCompact }: { isCompact: boolean }) => ({
+export const QueryEditorActionBarBoxStyled = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'isCompact'
+})(({ isCompact }: { isCompact: boolean }) => ({
   display: 'flex',
   justifyContent: 'flex-start',
   minWidth: 0,
@@ -17,7 +19,9 @@ export const QueryEditorActionBarBoxStyled = styled(Box)(({ isCompact }: { isCom
   flex: isCompact ? undefined : 1
 }));
 
-export const QueryEditorActionBarActionsBoxStyled = styled(Box)(({ isCompact }: { isCompact: boolean }) => ({
+export const QueryEditorActionBarActionsBoxStyled = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'isCompact'
+})(({ isCompact }: { isCompact: boolean }) => ({
   display: 'flex',
   justifyContent: 'flex-end',
   overflowX: 'auto',

@@ -15,6 +15,7 @@ func (r *Server) routing() {
 	clearBody := middleware.SkipClearRequestBody()
 
 	api.Get("/auth/status", r.handlers.Auth.Status)
+	api.Post("/auth/setup", r.handlers.Auth.Setup)
 	api.Post("/auth/login", r.handlers.Auth.Login)
 	api.Post("/auth/login/totp", r.handlers.Auth.LoginTotp)
 	api.Post("/auth/password", r.handlers.Auth.ChangePassword)
@@ -38,9 +39,12 @@ func (r *Server) routing() {
 
 	schema := api.Group("schema")
 	schema.Get("/diagram", r.handlers.Schema.Diagram)
+	schema.Post("/changes/preview", r.handlers.Schema.PreviewChange)
+	schema.Post("/changes/apply", r.handlers.Schema.ApplyChange)
 
 	tree := api.Group("tree")
 	tree.Get("/", r.handlers.TreeHandler.TreeHandler)
+	tree.Get("/search", r.handlers.TreeHandler.Search)
 	tree.Get("/:nodeId/tabs/:action", r.handlers.TreeHandler.Tabs)
 	tree.Get("/:nodeId/tabs/:action/fields/:tabId/object", r.handlers.TreeHandler.ObjectDetail)
 	tree.Get("/:nodeId/dynamic", r.handlers.TreeHandler.GetDynamicFieldOptions)
@@ -66,6 +70,9 @@ func (r *Server) routing() {
 	aiChat.Get("/", r.handlers.AiChat.Chats)
 	aiChat.Post("/", r.handlers.AiChat.Create)
 	aiChat.Get("/:id", r.handlers.AiChat.Detail)
+	aiChat.Patch("/:id", r.handlers.AiChat.Update)
+	aiChat.Post("/:id/review", r.handlers.AiChat.Review)
+	aiChat.Post("/:id/feedback", r.handlers.AiChat.Feedback)
 	aiChat.Delete("/:id", r.handlers.AiChat.Delete)
 
 	mcp := api.Group("mcp")

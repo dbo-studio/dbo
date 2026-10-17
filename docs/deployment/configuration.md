@@ -8,21 +8,24 @@ Optional starter files (`backend/.env.example`, `frontend/.env.example`, `e2e/.e
 
 | Mode | `APP_ENV` | `APP_CLIENT` | Auth | Typical use |
 | ---- | --------- | ------------ | ---- | ----------- |
-| Local web | `local` | `web` (default) | `none` — auto session unless users / admin env exist | `go run .` + Vite dev |
+| Local web | `local` | `web` (default) | `none` | `go run .` + Vite dev |
 | Desktop | `local` | `desktop` | None — `owner_id` stays `"desktop"` | Tauri app |
 | Docker | `docker` | unset / `web` | `none` or `local` (see below) | Single container |
 | Server web | `docker` or `local` | `web` | **`local` required** | Reverse-proxy deployment |
 
-Auth mode is resolved after DB bootstrap (`none` \| `local`). Desktop never shows login.
+`APP_AUTH_MODE` picks the auth mode (`none` \| `local`). Desktop never shows login.
 
 When `APP_CLIENT=web`:
 
-| Mode | When | Behavior |
-| ---- | ---- | -------- |
-| `none` | No admin env and no users | Auto-mint anonymous session (dev/loopback) |
-| `local` | Users exist **or** both `APP_ADMIN_*` set | Email/password login; `dbo_session` cookie |
+| `APP_AUTH_MODE` | Behavior |
+| --------------- | -------- |
+| `none` | No login. With no users, each browser gets its own anonymous workspace. With users, every browser acts as the first active admin and sees that admin's data |
+| `local` | Email/password login; `dbo_session` cookie. With no user yet, the UI shows a one-time **Create admin account** screen |
+| unset | Legacy: `local` if users exist or both `APP_ADMIN_*` are set, else `none`. Logs a warning when it falls back to `local` |
 
-Do not expose `none` on a network. For public/server web, bootstrap an admin so mode is `local`.
+Any other value stops the server at startup.
+
+Do not expose `none` on a network. For public/server web, set `APP_AUTH_MODE=local`.
 
 ## Backend (`APP_*`)
 
@@ -35,8 +38,9 @@ Read by `backend/config/config.go` and path helpers in `pkg/db`, `pkg/logger`, `
 | `APP_CLIENT` | No | — | `desktop` or `web` — desktop skips web login |
 | `APP_PUBLIC_URL` | No | `http://127.0.0.1:<port>` | Public origin for MCP/API URLs (no trailing slash) |
 | `APP_MCP_PUBLIC_URL` | No | `<APP_PUBLIC_URL>/api/mcp` | Override MCP endpoint URL |
-| `APP_ADMIN_EMAIL` | No | — | Bootstrap first admin (with password) when no users exist → **local** mode |
-| `APP_ADMIN_PASSWORD` | No | — | Bootstrap password (8–40 chars, letter + number). Forced change on first login |
+| `APP_AUTH_MODE` | No | — | `none` or `local`. See [Deployment modes](#deployment-modes) |
+| `APP_ADMIN_EMAIL` | No | — | Seeds the first admin (with password) when `local` and no user exists |
+| `APP_ADMIN_PASSWORD` | No | — | Seed password (8–40 chars, letter + number). Forced change on first login |
 | `APP_ALLOWED_ORIGINS` | No | — | Comma-separated CORS allowlist. **Required** when auth mode is `local` |
 | `APP_DATABASE_PATH` | No | OS-specific or `data/dbo.db` | App metadata SQLite file |
 | `APP_LOG_PATH` | No | OS-specific | Log directory override |
@@ -44,13 +48,17 @@ Read by `backend/config/config.go` and path helpers in `pkg/db`, `pkg/logger`, `
 
 ### Enable local auth
 
-1. Set `APP_ADMIN_EMAIL` + `APP_ADMIN_PASSWORD`, restart → admin created with `must_change_password`.
-2. Open UI → sign in → change password.
+1. Set `APP_AUTH_MODE=local` and restart.
+2. The server prints a one-time setup link to stderr and the log: `no admin account yet: open <url>/?setup=<token> ...`. Open it (or open the UI and paste the token). The **Create admin account** screen creates the admin, who owns all data saved so far. `POST /api/auth/setup` needs the token and refuses once any user exists. A restart issues a new token.
 3. Create members under Settings → Administration → Users.
 
-Factory reset (`POST /api/config/reset`) clears app tables (including users and sessions) and re-runs auth bootstrap: if `APP_ADMIN_*` is set, a new admin is created and mode becomes `local` again; otherwise mode is `none`.
+To skip the setup screen, also set `APP_ADMIN_EMAIL` + `APP_ADMIN_PASSWORD`: the admin is created at startup with `must_change_password`. These are ignored after users exist.
 
-Bootstrap env is ignored after users exist.
+### Disable local auth
+
+Set `APP_AUTH_MODE=none` and restart. Users, sessions, and their data stay in the app DB. Every browser acts as the oldest active admin (logged as a warning), so that admin's connections, chats, and saved queries stay visible. Other users' data is hidden until login is back. Set `APP_AUTH_MODE=local` again to restore login unchanged.
+
+Factory reset (`POST /api/config/reset`) clears app tables (including users and sessions) and re-runs auth bootstrap with the same rules.
 
 ### Storage paths by environment
 
@@ -90,16 +98,16 @@ Single service `dbo` — image `ghcr.io/dbo-studio/dbo/dbo:latest`.
 | `APP_ENV` | `docker` | Set in compose `environment` |
 | `APP_PUBLIC_URL` | unset | Set for public/MCP URLs behind a proxy |
 | `APP_MCP_PUBLIC_URL` | unset | Optional MCP URL override |
-| `APP_ADMIN_EMAIL` | unset | Bootstrap first admin when no users exist |
-| `APP_ADMIN_PASSWORD` | unset | Bootstrap password (see policy above) |
+| `APP_AUTH_MODE` | unset | `local` to require login |
+| `APP_ADMIN_EMAIL` | unset | Optional first admin when no users exist |
+| `APP_ADMIN_PASSWORD` | unset | Seed password (see policy above) |
 | `APP_ALLOWED_ORIGINS` | unset | Comma-separated trusted origins (required in `local` mode) |
 
 Example override at deploy time:
 
 ```bash
 APP_PUBLIC_URL=https://dbo.example.com \
-APP_ADMIN_EMAIL=admin@example.com \
-APP_ADMIN_PASSWORD='ChangeMe1' \
+APP_AUTH_MODE=local \
 APP_ALLOWED_ORIGINS=https://dbo.example.com \
 docker compose up -d
 ```
@@ -147,8 +155,9 @@ docker compose -f docker-compose.dev.yml up -d sample-pgsql sample-mysql
 | `APP_ENV` | `docker` | Data paths under container workdir |
 | `APP_PUBLIC_URL` | unset | Uncomment in compose when testing MCP/API from outside localhost |
 | `APP_MCP_PUBLIC_URL` | unset | Optional MCP URL override |
-| `APP_ADMIN_EMAIL` | unset | Optional local-auth bootstrap |
-| `APP_ADMIN_PASSWORD` | unset | Optional local-auth bootstrap |
+| `APP_AUTH_MODE` | unset | `local` to require login |
+| `APP_ADMIN_EMAIL` | unset | Optional first admin |
+| `APP_ADMIN_PASSWORD` | unset | Optional first admin password |
 | `APP_ALLOWED_ORIGINS` | unset | Required when mode is `local` (e.g. `http://localhost:3000`) |
 
 Host mapping: `8080:8080`.

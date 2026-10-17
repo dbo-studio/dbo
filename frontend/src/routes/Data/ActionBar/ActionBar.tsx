@@ -11,10 +11,10 @@ import { DataTabType } from '@/types';
 import { Badge, Box, IconButton, Tooltip } from '@mui/material';
 import { type JSX, useState } from 'react';
 import { ActionBarActionsGridItemStyled, ActionBarGridStyled } from './ActionBar.styled';
-import Filters from './Filters/Filters';
+import Filters from '@/components/common/Filters/Filters';
 import InlineQuery from './InlineQuery/InlineQuery';
 import QueryPreview from './QueryPreview/QueryPreview';
-import Sorts from './Sorts/Sorts';
+import Sorts from '@/components/common/Sorts/Sorts';
 import type { ActionBarProps } from './types';
 
 export default function ActionBar({ showColumns, setShowColumns }: ActionBarProps): JSX.Element {

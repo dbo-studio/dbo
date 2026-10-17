@@ -3,12 +3,14 @@ package model
 import "time"
 
 type AiChatMessage struct {
-	ID        uint              `gorm:"primaryKey,autoIncrement"`
-	ChatID    uint              `gorm:"index;not null"`
-	Role      AiChatMessageRole `gorm:"size:32;not null"`
-	Content   string            `gorm:"type:text;not null"`
-	Type      AiChatMessageType
-	Language  AiChatMessageLanguage
+	ID       uint              `gorm:"primaryKey,autoIncrement"`
+	ChatID   uint              `gorm:"index;not null"`
+	Role     AiChatMessageRole `gorm:"size:32;not null"`
+	Content  string            `gorm:"type:text;not null"`
+	Type     AiChatMessageType
+	Language AiChatMessageLanguage
+	// Model is the LLM that wrote an assistant message; empty for user messages and older rows.
+	Model     string     `gorm:"size:128;not null;default:''"`
 	CreatedAt *time.Time `gorm:"autoCreateTime"`
 }
 
@@ -31,7 +33,17 @@ type AiChatMessageType string
 const (
 	AiChatMessageTypeCode        AiChatMessageType = "code"
 	AiChatMessageTypeExplanation AiChatMessageType = "explanation"
+	// Agent traces: JSON payloads rendered as cards, never sent back to the model as history.
+	AiChatMessageTypeTool        AiChatMessageType = "tool"
+	AiChatMessageTypeDiagramDiff AiChatMessageType = "diagram_diff"
+	AiChatMessageTypePermission  AiChatMessageType = "permission"
 )
+
+// IsConversational reports whether the message is part of the model-visible
+// conversation (as opposed to an agent trace card).
+func (t AiChatMessageType) IsConversational() bool {
+	return t == "" || t == AiChatMessageTypeCode || t == AiChatMessageTypeExplanation
+}
 
 type AiChatMessageLanguage string
 

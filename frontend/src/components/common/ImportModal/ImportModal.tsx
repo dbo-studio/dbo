@@ -2,6 +2,7 @@ import api from '@/api';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
 import Modal from '@/components/base/Modal/Modal';
+import ModalFooter from '@/components/base/Modal/ModalFooter/ModalFooter';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
@@ -12,7 +13,7 @@ import { useState } from 'react';
 import * as v from 'valibot';
 import { JobProgressModal } from '../JobProgressModal/JobProgressModal';
 import ImportButton from './ImportButton/ImportButton';
-import { ImportModalBodyStyled, ImportModalContainerStyled, ImportModalFooterStyled } from './ImportModal.styled';
+import { ImportModalBodyStyled, ImportModalContainerStyled } from './ImportModal.styled';
 import type { ImportModalProps } from './types';
 
 const formSchema = v.object({
@@ -181,14 +182,14 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
               )}
             </form.Field>
           </ImportModalBodyStyled>
-          <ImportModalFooterStyled>
+          <ModalFooter>
             <Button type='button' size='small' onClick={handleCloseModal}>
               {locales.cancel}
             </Button>
             <Button type='submit' variant='contained' size='small'>
               {locales.import}
             </Button>
-          </ImportModalFooterStyled>
+          </ModalFooter>
         </ImportModalContainerStyled>
       </Modal>
       <JobProgressModal

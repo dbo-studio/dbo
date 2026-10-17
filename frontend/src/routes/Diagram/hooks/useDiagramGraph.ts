@@ -1,6 +1,8 @@
 import { applyOps, neighborIds } from '@/core/diagram/applyOps';
 import { EMPTY_DIAGRAM_GRAPH, type ViewGraph } from '@/core/diagram/types';
 import { useSchemaDiagramQuery } from '@/core/diagram/useSchemaDiagramQuery';
+import { changesetKey, useDiagramChangesetStore } from '@/store/diagramChangesetStore/diagramChangeset.store';
+import type { AiDiagramDiff } from '@/types';
 import { useMemo } from 'react';
 
 type Args = {
@@ -18,6 +20,7 @@ export function useDiagramGraph({ connectionId, database, schema, focusTable, en
   activeNodeId: string | null;
   highlightedIds: Set<string>;
   shownNodeIds: Set<string>;
+  changeset: AiDiagramDiff | undefined;
 } {
   const { data, isLoading } = useSchemaDiagramQuery({
     connectionId,
@@ -27,7 +30,15 @@ export function useDiagramGraph({ connectionId, database, schema, focusTable, en
     enabled
   });
 
-  const viewGraph = useMemo(() => applyOps(data ?? EMPTY_DIAGRAM_GRAPH, []), [data]);
+  const changeset = useDiagramChangesetStore((state) =>
+    connectionId === undefined ? undefined : state.changesets[changesetKey(connectionId, database, schema)]
+  );
+
+  // Pending agent proposals overlay the live schema until accepted or rejected.
+  const viewGraph = useMemo(
+    () => applyOps(data ?? EMPTY_DIAGRAM_GRAPH, changeset?.diagramOps ?? []),
+    [changeset, data]
+  );
 
   // Backend expands focusTable by one FK hop; show everything returned.
   const shownNodeIds = useMemo(() => new Set(viewGraph.nodes.map((node) => node.id)), [viewGraph.nodes]);
@@ -47,6 +58,7 @@ export function useDiagramGraph({ connectionId, database, schema, focusTable, en
     isLoading,
     activeNodeId,
     highlightedIds,
-    shownNodeIds
+    shownNodeIds,
+    changeset
   };
 }

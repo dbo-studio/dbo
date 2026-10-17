@@ -56,21 +56,16 @@ export const completionService = (
     );
   }
 
-  // Context-aware suggestions
   if (context.isInFrom || context.isInJoin) {
-    // After FROM or JOIN, suggest tables and views
     suggestions.push(...getDataBasesAndSchemas(languageId).map((item) => ({ ...item, range })));
     suggestions.push(...getTables(languageId).map((item) => ({ ...item, range })));
     suggestions.push(...getViews(languageId).map((item) => ({ ...item, range })));
   } else if (tableForColumns) {
-    // If we're typing table.column, show columns for that table
     suggestions.push(...getColumns(languageId, tableForColumns).map((item) => ({ ...item, range })));
   } else if (context.isInSelect || context.isInWhere || context.isInGroupBy || context.isInOrderBy) {
-    // In SELECT, WHERE, GROUP BY, or ORDER BY - suggest columns from all tables in query
     const allTables = getAllTableNames(model, position);
 
     if (allTables.length > 0) {
-      // Multi-table column suggestions
       for (const tableName of allTables) {
         const columns = getColumns(languageId, tableName);
         suggestions.push(
@@ -84,12 +79,10 @@ export const completionService = (
         );
       }
     } else {
-      // No tables found yet, suggest tables/views
       suggestions.push(...getTables(languageId).map((item) => ({ ...item, range })));
       suggestions.push(...getViews(languageId).map((item) => ({ ...item, range })));
     }
   } else {
-    // Default: suggest tables and views
     suggestions.push(...getTables(languageId).map((item) => ({ ...item, range })));
     suggestions.push(...getViews(languageId).map((item) => ({ ...item, range })));
   }

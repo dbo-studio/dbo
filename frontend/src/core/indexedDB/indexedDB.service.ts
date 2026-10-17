@@ -106,7 +106,6 @@ class IndexedDBService {
     if (!this.dbPromise) {
       this.dbPromise = openDB<TableDataDB>(this.dbName, this.DB_VERSION, {
         upgrade(db): void {
-          // Create stores with indexes
           if (!db.objectStoreNames.contains('rows')) {
             const rowsStore = db.createObjectStore('rows', { keyPath: 'key' });
             rowsStore.createIndex('by-tab', 'tabId');

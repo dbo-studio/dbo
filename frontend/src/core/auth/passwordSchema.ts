@@ -47,6 +47,19 @@ export const adminResetPasswordSchema = v.object({
   password: authPasswordSchema
 });
 
+export const authSetupSchema = v.pipe(
+  v.object({
+    token: v.pipe(v.string(), v.trim(), v.minLength(1, 'Setup token is required')),
+    email: v.pipe(v.string(), v.email('Valid email is required')),
+    password: authPasswordSchema,
+    confirm: authPasswordSchema
+  }),
+  v.forward(
+    v.partialCheck([['password'], ['confirm']], (input) => input.password === input.confirm, 'Passwords must match'),
+    ['confirm']
+  )
+);
+
 export const authForcedChangePasswordSchema = v.pipe(
   v.object({
     password: authPasswordSchema,

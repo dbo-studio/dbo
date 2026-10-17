@@ -9,6 +9,7 @@ import (
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	quote "github.com/dbo-studio/dbo/internal/database/ddl/quote"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"gorm.io/gorm"
 )
 
 func (r *SQLiteRepository) buildExecuteQueries(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
@@ -90,4 +91,33 @@ func (r *SQLiteRepository) cleanupTmpTable(ctx context.Context, tmpTableName str
 
 	cleanupQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s", quote.SqliteIdent(tmpTableName))
 	_ = r.base.DB().WithContext(ctx).Exec(cleanupQuery).Error
+}
+
+// ExecuteAtomic runs every step in a single transaction. All queries are
+// planned up front, as PreviewExecute does.
+func (r *SQLiteRepository) ExecuteAtomic(ctx context.Context, steps []contract.ExecuteStep) error {
+	var queries []string
+
+	for _, step := range steps {
+		stepQueries, _, err := r.buildExecuteQueries(ctx, step.NodeID, step.Action, step.Params)
+		if err != nil {
+			return err
+		}
+
+		queries = append(queries, stepQueries...)
+	}
+
+	return r.base.DB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, query := range queries {
+			if query == "" {
+				continue
+			}
+
+			if err := tx.Exec(query).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }

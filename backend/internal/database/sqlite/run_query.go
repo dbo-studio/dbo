@@ -72,7 +72,6 @@ func (r *SQLiteRepository) RunQuery(ctx context.Context, req *dto.RunQueryReques
 func (r *SQLiteRepository) runQueryGenerator(ctx context.Context, req *dto.RunQueryRequest, node contract.DBNode) string {
 	var sb strings.Builder
 
-	// SELECT clause
 	selectColumns := "*"
 
 	if len(req.Columns) > 0 {
@@ -86,7 +85,6 @@ func (r *SQLiteRepository) runQueryGenerator(ctx context.Context, req *dto.RunQu
 
 	_, _ = fmt.Fprintf(&sb, "SELECT %s FROM %s", selectColumns, databaseCore.QuoteSQLiteIdent(node.Table))
 
-	// WHERE clause
 	if len(req.Filters) > 0 {
 		sb.WriteString(" WHERE ")
 
@@ -103,7 +101,6 @@ func (r *SQLiteRepository) runQueryGenerator(ctx context.Context, req *dto.RunQu
 		}
 	}
 
-	// ORDER BY clause
 	if len(req.Sorts) > 0 {
 		sb.WriteString(" ORDER BY ")
 
@@ -127,7 +124,6 @@ func (r *SQLiteRepository) runQueryGenerator(ctx context.Context, req *dto.RunQu
 		}
 	}
 
-	// LIMIT and OFFSET
 	limit := 100
 	if req.Limit != nil && lo.FromPtr(req.Limit) > 0 {
 		limit = lo.FromPtr(req.Limit)

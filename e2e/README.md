@@ -99,6 +99,7 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Keyboard shortcuts       | `shared/keyboard-shortcuts.spec.ts`           | cheatsheet groups/filter, Alt+/ open, grid Save/Refresh tooltips |
 | Workspace dirty tab      | `shared/workspace-dirty-tab.spec.ts`          | dirty Cancel / Yes / clean close                        |
 | Workspace tab reorder    | `shared/workspace-tab-reorder.spec.ts`        | drag query tabs; drag Settings before query tab         |
+| Workspace split view     | `shared/split-view.spec.ts`                   | split right / move back / reload persistence            |
 | AI chat panel            | `shared/ai-chat-panel.spec.ts`                | In-place setup then composer (no LLM)                   |
 | AI in-place setup        | `shared/ai-setup.spec.ts`                     | Query AI switch opens setup popover; save makes ready   |
 | AI chat cancel           | `shared/ai-chat-cancel.spec.ts`               | Abort in-flight stream/fallback via cancel control        |

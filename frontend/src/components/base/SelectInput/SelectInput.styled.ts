@@ -57,7 +57,6 @@ export const SelectInputStyles = (
     color: theme.palette.text.text,
     fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize
   }),
-  // Updated multi-value components
   multiValue: (base): CSSObjectWithLabel => ({
     ...base,
     flexShrink: 0,

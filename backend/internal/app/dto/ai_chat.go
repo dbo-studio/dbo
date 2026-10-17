@@ -8,6 +8,10 @@ type (
 		Message      string            `json:"message"`
 		ChatID       *int32            `json:"chatId"`
 		ContextOpts  *AiContextOptions `json:"contextOpts"`
+		Mode         string            `json:"mode"`
+		// ProviderID and Model override the active provider for this turn only (compare with another model).
+		ProviderID *uint  `json:"providerId"`
+		Model      string `json:"model"`
 	}
 
 	AiContextOptions struct {
@@ -35,6 +39,7 @@ type (
 		Type      string `json:"type"`
 		Language  string `json:"language"`
 		CreatedAt string `json:"createdAt"`
+		Model     string `json:"model,omitempty"`
 	}
 )
 
@@ -43,5 +48,17 @@ func (req AiChatRequest) Validate() error {
 		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
 		validation.Field(&req.Message, validation.Required, validation.Length(0, 10000)),
 		validation.Field(&req.ChatID, validation.Min(0)),
+		validation.Field(&req.Mode, validation.In(AiChatModeAsk, AiChatModeAgent)),
 	)
+}
+
+const (
+	AiChatModeAsk   = "ask"
+	AiChatModeAgent = "agent"
+)
+
+// AgentMode reports whether the request runs with write/propose tools. Empty or
+// unknown modes fall back to Ask so older clients never gain write tools.
+func (req AiChatRequest) AgentMode() bool {
+	return req.Mode == AiChatModeAgent
 }

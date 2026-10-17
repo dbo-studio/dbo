@@ -92,9 +92,14 @@ export const IconTypes = {
   network: 'Network',
   layout: 'LayoutGrid',
   fit: 'Maximize2',
+  expand: 'Maximize2',
   send: 'Send',
   at: 'AtSign',
   history: 'RotateCcwClock',
+  pin: 'Pin',
+  density: 'Rows3',
+  pinOff: 'PinOff',
+  download: 'Download',
   bot: 'Bot',
   message: 'MessageSquare',
   pause: 'Pause',
@@ -102,5 +107,10 @@ export const IconTypes = {
   undo: 'Undo2',
   sparkles: 'Sparkles',
   calendar: 'Calendar',
-  clock: 'Clock'
+  clock: 'Clock',
+  bookmark: 'Bookmark',
+  layoutList: 'LayoutList',
+  compare: 'GitCompare',
+  thumbUp: 'ThumbsUp',
+  thumbDown: 'ThumbsDown'
 };
