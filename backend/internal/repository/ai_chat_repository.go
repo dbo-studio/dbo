@@ -134,3 +134,23 @@ func (r AiChatRepoImpl) UpdateMessageContent(ctx context.Context, id uint, oldCo
 
 	return result.RowsAffected == 1, result.Error
 }
+
+// SetLastAnswerFeedback rates the newest conversational assistant message of
+// the chat. It reports whether such a message exists.
+func (r AiChatRepoImpl) SetLastAnswerFeedback(ctx context.Context, chatID uint, feedback string) (bool, error) {
+	var last model.AiChatMessage
+
+	err := r.db.WithContext(ctx).
+		Where("chat_id = ? AND role = ? AND (type IS NULL OR type IN (?, ?, ?))",
+			chatID, model.AiChatMessageRoleAssistant, "", model.AiChatMessageTypeCode, model.AiChatMessageTypeExplanation).
+		Order("id desc").
+		Limit(1).
+		Find(&last).Error
+	if err != nil || last.ID == 0 {
+		return false, err
+	}
+
+	return true, r.db.WithContext(ctx).Model(&model.AiChatMessage{}).
+		Where("id = ?", last.ID).
+		Update("feedback", feedback).Error
+}

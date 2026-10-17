@@ -71,6 +71,7 @@ func (r *Server) routing() {
 	aiChat.Get("/:id", r.handlers.AiChat.Detail)
 	aiChat.Patch("/:id", r.handlers.AiChat.Update)
 	aiChat.Post("/:id/review", r.handlers.AiChat.Review)
+	aiChat.Post("/:id/feedback", r.handlers.AiChat.Feedback)
 	aiChat.Delete("/:id", r.handlers.AiChat.Delete)
 
 	mcp := api.Group("mcp")

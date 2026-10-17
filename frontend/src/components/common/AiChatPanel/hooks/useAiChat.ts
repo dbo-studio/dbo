@@ -9,7 +9,7 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import { AiChatType, AutoCompleteType } from '@/types';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
-import { agentItemToMessage } from '../utils/agentTrace';
+import { agentItemToMessage, isTraceMessage } from '../utils/agentTrace';
 import { resolveAiChatMode } from './useAiChatMode';
 import { useAiStream } from './useAiStream';
 
@@ -26,6 +26,7 @@ type useAiChatReturnType = {
   handleChatRename: (chat: AiChatType, title: string) => Promise<void>;
   handleRegenerate: () => Promise<void>;
   handleCompare: (providerId: number, model: string) => Promise<void>;
+  handleFeedback: (rating: 'up' | 'down' | 'none') => Promise<void>;
 };
 
 /** Per-turn provider/model override used to compare answers; always runs in Ask mode so it cannot write. */
@@ -355,7 +356,26 @@ export const useAiChat = (active = true): useAiChatReturnType => {
     await executeChat(lastUser.content, currentChat, { providerId, model });
   };
 
+  /** Rates the newest assistant answer and mirrors the rating into the open chat. */
+  const handleFeedback = async (rating: 'up' | 'down' | 'none'): Promise<void> => {
+    const currentChat = useAiStore.getState().currentChat;
+    if (!currentChat) return;
+
+    const answers = currentChat.messages
+      .map((message, position) => ({ message, position }))
+      .filter(({ message }) => message.role === 'assistant' && !isTraceMessage(message));
+    const index = answers[answers.length - 1]?.position ?? -1;
+    if (index < 0) return;
+
+    await api.aiChat.rateAnswer(currentChat.id, rating);
+
+    const messages = [...currentChat.messages];
+    messages[index] = { ...messages[index], feedback: rating === 'none' ? undefined : rating };
+    updateCurrentChat({ ...currentChat, messages });
+  };
+
   return {
+    handleFeedback,
     handleChatRename,
     handleRegenerate,
     handleCompare,

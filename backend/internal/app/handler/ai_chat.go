@@ -127,3 +127,21 @@ func (h AiChatHandler) Review(c fiber.Ctx) error {
 
 	return response.SuccessBuilder().Send(c)
 }
+
+func (h AiChatHandler) Feedback(c fiber.Ctx) error {
+	req := new(dto.AiChatFeedbackRequest)
+	if err := c.Bind().Body(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	if err := h.aiChatService.Feedback(c, fiber.Params[uint](c, "id"), req); err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().Send(c)
+}

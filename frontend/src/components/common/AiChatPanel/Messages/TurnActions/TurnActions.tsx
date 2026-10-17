@@ -13,11 +13,13 @@ import { isTraceMessage } from '../../utils/agentTrace';
 export default function TurnActions({
   turn,
   onRegenerate,
-  onCompare
+  onCompare,
+  onFeedback
 }: {
   turn: AiMessageType[];
   onRegenerate?: () => void;
   onCompare?: (providerId: number, model: string) => void;
+  onFeedback?: (rating: 'up' | 'down' | 'none') => void;
 }): JSX.Element {
   const [, copy] = useCopyToClipboard();
   const providers = useAiStore((state) => state.providers);
@@ -30,6 +32,11 @@ export default function TurnActions({
     .filter(isProviderReady)
     .map((provider) => ({ provider, models: provider.models.filter((model) => model !== currentModel) }))
     .filter((option) => option.models.length > 0);
+  const rating = [...turn]
+    .reverse()
+    .find((message) => message.role === 'assistant' && !isTraceMessage(message))?.feedback;
+  // Clicking the active rating clears it.
+  const rate = (next: 'up' | 'down'): void => onFeedback?.(rating === next ? 'none' : next);
   const text = turn
     .filter((message) => !isTraceMessage(message))
     .map((message) =>
@@ -50,6 +57,32 @@ export default function TurnActions({
             <CustomIcon type='refresh' size='xs' />
           </IconButton>
         </Tooltip>
+      )}
+      {onFeedback && (
+        <>
+          <Tooltip title={locales.ai_feedback_good}>
+            <IconButton
+              size='small'
+              color={rating === 'up' ? 'primary' : 'default'}
+              aria-pressed={rating === 'up'}
+              onClick={() => rate('up')}
+              data-testid='ai-feedback-up'
+            >
+              <CustomIcon type='thumbUp' size='xs' />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={locales.ai_feedback_bad}>
+            <IconButton
+              size='small'
+              color={rating === 'down' ? 'primary' : 'default'}
+              aria-pressed={rating === 'down'}
+              onClick={() => rate('down')}
+              data-testid='ai-feedback-down'
+            >
+              <CustomIcon type='thumbDown' size='xs' />
+            </IconButton>
+          </Tooltip>
+        </>
       )}
       {onCompare && options.length > 0 && (
         <>

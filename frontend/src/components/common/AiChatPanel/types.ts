@@ -65,6 +65,7 @@ export type MessagesProps = {
   onRetry?: () => void;
   onRegenerate?: () => void;
   onCompare?: (providerId: number, model: string) => void;
+  onFeedback?: (rating: 'up' | 'down' | 'none') => void;
 };
 
 export type CodeMessageProps = {

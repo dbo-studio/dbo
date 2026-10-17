@@ -110,5 +110,7 @@ export const IconTypes = {
   clock: 'Clock',
   bookmark: 'Bookmark',
   layoutList: 'LayoutList',
-  compare: 'GitCompare'
+  compare: 'GitCompare',
+  thumbUp: 'ThumbsUp',
+  thumbDown: 'ThumbsDown'
 };

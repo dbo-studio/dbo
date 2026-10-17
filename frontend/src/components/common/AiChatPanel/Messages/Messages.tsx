@@ -26,7 +26,8 @@ export default function Messages({
   onSelectPrompt,
   onRetry,
   onRegenerate,
-  onCompare
+  onCompare,
+  onFeedback
 }: MessagesProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const streaming = useAiStore((state) => state.streaming);
@@ -199,7 +200,7 @@ export default function Messages({
         )}
 
         {!loading && streaming.status !== 'streaming' && !streaming.error && lastTurn.length > 0 && (
-          <TurnActions turn={lastTurn} onRegenerate={onRegenerate} onCompare={onCompare} />
+          <TurnActions turn={lastTurn} onRegenerate={onRegenerate} onCompare={onCompare} onFeedback={onFeedback} />
         )}
 
         {loading && streaming.status !== 'streaming' && (
