@@ -130,7 +130,6 @@ type IAiChatRepo interface {
 	Delete(ctx context.Context, chat *model.AiChat) error
 	AddMessage(ctx context.Context, m *model.AiChatMessage) error
 	UpdateMessageContent(ctx context.Context, id uint, oldContent, newContent string) (bool, error)
-	SetLastAnswerFeedback(ctx context.Context, chatID uint, feedback string) (bool, error)
 }
 
 type Repository struct {

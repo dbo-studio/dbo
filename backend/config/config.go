@@ -17,6 +17,7 @@ type App struct {
 	Version        string
 	ReleaseURLAPI  string
 	ReleaseURL     string
+	FeedbackURLAPI string
 	LogPath        string
 	Auth           Auth
 	// AllowedOrigins is a comma-separated list of extra origins allowed to make
@@ -64,6 +65,7 @@ func New() *Config {
 			DatabaseName:   "dbo.db",
 			ReleaseURLAPI:  "https://dbo-studio.com/api/config",
 			ReleaseURL:     "https://dbo-studio.com/releases",
+			FeedbackURLAPI: feedbackURL(),
 		},
 	}
 
@@ -119,4 +121,14 @@ func parseAllowedOrigins(raw string) []string {
 	}
 
 	return origins
+}
+
+// feedbackURL is where AI feedback is sent. APP_FEEDBACK_URL lets tests and
+// self-hosted setups point it elsewhere.
+func feedbackURL() string {
+	if url := strings.TrimSpace(os.Getenv("APP_FEEDBACK_URL")); url != "" {
+		return url
+	}
+
+	return "https://dbo-studio.com/api/feedback/ai"
 }

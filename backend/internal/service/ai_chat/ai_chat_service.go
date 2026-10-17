@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
@@ -25,12 +26,14 @@ type IAiChatService interface {
 type IAiChatServiceImpl struct {
 	aiChatRepo     repository.IAiChatRepo
 	connectionRepo repository.IConnectionRepo
+	cfg            *config.Config
 }
 
-func NewAiChatService(aiChatRepo repository.IAiChatRepo, connectionRepo repository.IConnectionRepo) IAiChatService {
+func NewAiChatService(aiChatRepo repository.IAiChatRepo, connectionRepo repository.IConnectionRepo, cfg *config.Config) IAiChatService {
 	return &IAiChatServiceImpl{
 		aiChatRepo:     aiChatRepo,
 		connectionRepo: connectionRepo,
+		cfg:            cfg,
 	}
 }
 
@@ -183,32 +186,4 @@ func (s IAiChatServiceImpl) Review(ctx context.Context, chatID uint, req *dto.Ai
 	}
 
 	return apperror.NotFound(apperror.ErrAiChatNotFound)
-}
-
-// Feedback rates the newest assistant answer of the chat; "none" clears it.
-func (s IAiChatServiceImpl) Feedback(ctx context.Context, chatID uint, req *dto.AiChatFeedbackRequest) error {
-	chat, err := s.aiChatRepo.Find(ctx, chatID, &dto.PaginationRequest{Page: lo.ToPtr(1), Count: lo.ToPtr(1)})
-	if err != nil {
-		return apperror.NotFound(apperror.ErrAiChatNotFound)
-	}
-
-	if err := s.requireConnection(ctx, int32(chat.ConnectionID)); err != nil {
-		return apperror.NotFound(apperror.ErrAiChatNotFound)
-	}
-
-	rating := req.Rating
-	if rating == dto.AiFeedbackNone {
-		rating = ""
-	}
-
-	found, err := s.aiChatRepo.SetLastAnswerFeedback(ctx, chatID, rating)
-	if err != nil {
-		return apperror.InternalServerError(err)
-	}
-
-	if !found {
-		return apperror.NotFound(apperror.ErrAiChatNotFound)
-	}
-
-	return nil
 }

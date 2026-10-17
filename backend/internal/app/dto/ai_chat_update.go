@@ -26,20 +26,21 @@ func (req AiChatUpdateRequest) Validate() error {
 const (
 	AiFeedbackUp   = "up"
 	AiFeedbackDown = "down"
-	// AiFeedbackNone clears an earlier rating.
-	AiFeedbackNone = "none"
 )
 
 type (
-	// AiChatFeedbackRequest rates the newest assistant answer of a chat.
+	// AiChatFeedbackRequest is the user's decision to send a rating of the
+	// newest answer, with the question and answer, to the DBO team.
 	AiChatFeedbackRequest struct {
-		Rating string `json:"rating"`
+		Rating  string `json:"rating"`
+		Comment string `json:"comment"`
 	}
 )
 
 func (req AiChatFeedbackRequest) Validate() error {
 	return validation.ValidateStruct(&req,
-		validation.Field(&req.Rating, validation.Required, validation.In(AiFeedbackUp, AiFeedbackDown, AiFeedbackNone)),
+		validation.Field(&req.Rating, validation.Required, validation.In(AiFeedbackUp, AiFeedbackDown)),
+		validation.Field(&req.Comment, validation.Length(0, 2000)),
 	)
 }
 

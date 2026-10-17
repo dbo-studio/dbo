@@ -17,7 +17,7 @@ export type AiMessageType = {
   createdAt: string;
   /** LLM that wrote an assistant message; absent for user messages and older chats. */
   model?: string;
-  /** User rating of an assistant answer; only the newest answer of a chat can be rated. */
+  /** Rating the user sent for this answer in this session; never stored or restored. */
   feedback?: 'up' | 'down';
   language: 'sql' | 'go' | 'js' | 'python' | 'json' | 'yaml' | 'text';
   /** tool / diagram_diff / permission carry a JSON payload (see agent trace types below). */
