@@ -125,6 +125,29 @@ func runRawQuery(ctx context.Context, r *BaseRepository, db *gorm.DB, req *dto.R
 		return nil, err
 	}
 
+	structures, columnMappedTypes := r.columnStructures(columns, columnTypes)
+
+	for i := range queryResults {
+		queryResults[i]["dbo_index"] = i
+		queryResults[i]["editable"] = false
+		queryResults[i] = SanitizeQueryResultsWithTypes(queryResults[i], columnMappedTypes)
+	}
+
+	page := 1
+	if req.Page != nil && *req.Page > 0 {
+		page = *req.Page
+	}
+
+	return &dto.RawQueryResponse{
+		Query:   req.Query,
+		Data:    queryResults,
+		Columns: structures,
+		Limit:   limit,
+		Page:    page,
+	}, nil
+}
+
+func (r *BaseRepository) columnStructures(columns []string, columnTypes []*sql.ColumnType) ([]dto.Column, map[string]string) {
 	structures := make([]dto.Column, 0, len(columns))
 	columnMappedTypes := make(map[string]string, len(columns))
 
@@ -145,22 +168,5 @@ func runRawQuery(ctx context.Context, r *BaseRepository, db *gorm.DB, req *dto.R
 		})
 	}
 
-	for i := range queryResults {
-		queryResults[i]["dbo_index"] = i
-		queryResults[i]["editable"] = false
-		queryResults[i] = SanitizeQueryResultsWithTypes(queryResults[i], columnMappedTypes)
-	}
-
-	page := 1
-	if req.Page != nil && *req.Page > 0 {
-		page = *req.Page
-	}
-
-	return &dto.RawQueryResponse{
-		Query:   req.Query,
-		Data:    queryResults,
-		Columns: structures,
-		Limit:   limit,
-		Page:    page,
-	}, nil
+	return structures, columnMappedTypes
 }
