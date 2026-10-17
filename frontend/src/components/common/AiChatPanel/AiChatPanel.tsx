@@ -26,6 +26,7 @@ export default function AiChatPanel() {
     handleSend,
     handleRetry,
     handleRegenerate,
+    handleCompare,
     handleChatDelete,
     handleChatRename
   } = useAiChatController();
@@ -91,6 +92,7 @@ export default function AiChatPanel() {
           onSelectPrompt={(prompt) => void handleSend(prompt)}
           onRetry={() => void handleRetry()}
           onRegenerate={() => void handleRegenerate()}
+          onCompare={(providerId, model) => void handleCompare(providerId, model)}
         />
       )}
       {connectionId && (

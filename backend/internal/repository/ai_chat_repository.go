@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -11,6 +12,8 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"gorm.io/gorm"
 )
+
+var likeEscaper = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
 
 type AiChatRepoImpl struct{ db *gorm.DB }
 
@@ -23,10 +26,18 @@ func NewAiChatRepo(db *gorm.DB) IAiChatRepo {
 func (r AiChatRepoImpl) List(ctx context.Context, req *dto.AiChatListRequest) ([]model.AiChat, error) {
 	var chats []model.AiChat
 
-	result := r.db.WithContext(ctx).Scopes(scope.Paginate(&req.PaginationRequest)).
-		Where("connection_id = ? AND owner_id = ?", req.ConnectionID, helper.CtxOwnerID(ctx)).
-		Order("pinned desc, updated_at desc").
-		Find(&chats)
+	query := r.db.WithContext(ctx).Scopes(scope.Paginate(&req.PaginationRequest)).
+		Where("connection_id = ? AND owner_id = ?", req.ConnectionID, helper.CtxOwnerID(ctx))
+
+	if term := strings.TrimSpace(req.Search); term != "" {
+		like := "%" + likeEscaper.Replace(term) + "%"
+		query = query.Where(
+			"(title LIKE ? ESCAPE '\\' OR id IN (SELECT chat_id FROM ai_chat_messages WHERE role IN (?, ?) AND content LIKE ? ESCAPE '\\'))",
+			like, model.AiChatMessageRoleUser, model.AiChatMessageRoleAssistant, like,
+		)
+	}
+
+	result := query.Order("pinned desc, updated_at desc").Find(&chats)
 
 	if result.Error != nil {
 		return nil, result.Error

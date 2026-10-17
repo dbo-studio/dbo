@@ -69,6 +69,22 @@ test.describe("AI chat history", () => {
         await expect(items).toHaveCount(3);
       });
 
+      await test.step("Server-side search filters by term and escapes LIKE wildcards", async () => {
+        const search = async (term: string): Promise<string[]> => {
+          const response = await page.request.get("/api/ai/chats", {
+            params: { connectionId, page: 1, count: 50, search: term },
+          });
+          expect(response.status()).toBe(200);
+          const body = (await response.json()) as { data: Array<{ title: string }> };
+          return body.data.map((chat) => chat.title);
+        };
+
+        expect(await search("ORDERS")).toEqual(["orders report"]);
+        expect(await search("%")).toEqual([]);
+        expect(await search("_")).toEqual([]);
+        expect(await search("")).toHaveLength(3);
+      });
+
       await test.step("Pin moves a chat to the top and persists", async () => {
         const target = items.filter({ hasText: "users cleanup" });
         await target.getByTestId("ai-history-pin").click();

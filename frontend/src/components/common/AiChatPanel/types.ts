@@ -64,6 +64,7 @@ export type MessagesProps = {
   onSelectPrompt?: (prompt: string) => void;
   onRetry?: () => void;
   onRegenerate?: () => void;
+  onCompare?: (providerId: number, model: string) => void;
 };
 
 export type CodeMessageProps = {
