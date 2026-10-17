@@ -18,6 +18,11 @@ export const streams = {
       });
     }
   },
+  files: {
+    onOpen: async (callback: () => void): Promise<UnlistenFn> => {
+      return listen(ServerEvent.OpenFiles, () => callback());
+    }
+  },
   sidecar: {
     onFailed: async (callback: (reason: string) => void): Promise<UnlistenFn> => {
       return listen<SidecarFailedPayload>(ServerEvent.SidecarFailed, (event) => {

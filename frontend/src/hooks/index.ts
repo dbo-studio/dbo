@@ -2,6 +2,7 @@ export * from './useConnectionTabs';
 export * from './useContextMenu';
 export * from './useCurrentConnection';
 export * from './useDesktopMenu';
+export * from './useDesktopOpenFiles';
 export * from './useEditorSessionContext';
 export * from './useJobPolling';
 export * from './useLayoutMode';

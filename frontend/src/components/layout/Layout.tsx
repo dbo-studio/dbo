@@ -4,6 +4,7 @@ import { shortcuts } from '@/core/utils';
 import { useCurrentConnection, useResponsiveSidebar, useShortcut } from '@/hooks';
 import { useAiBridge } from '@/hooks/useAiBridge';
 import { useDesktopMenu } from '@/hooks/useDesktopMenu';
+import { useDesktopOpenFiles } from '@/hooks/useDesktopOpenFiles';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -30,6 +31,7 @@ export default function Layout(): JSX.Element {
 
   useResponsiveSidebar();
   useDesktopMenu();
+  useDesktopOpenFiles();
 
   useShortcut(shortcuts.openAssistant, () => {
     const selectedTab = useTabStore.getState().selectedTab();

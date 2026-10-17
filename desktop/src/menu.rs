@@ -41,6 +41,7 @@ fn normalize_menu_action(id: &str) -> Option<&str> {
     match id {
         "newConnection" | "connectionNewConnection" => Some("newConnection"),
         "newTab" => Some("newTab"),
+        "openSqlFile" => Some("openSqlFile"),
         "closeTab" => Some("closeTab"),
         "openSettings" => Some("openSettings"),
         "openShortcuts" => Some("openShortcuts"),
@@ -85,6 +86,11 @@ fn build_menu<R: Runtime, M: Manager<R>>(manager: &M) -> tauri::Result<Menu<R>> 
             .item(
                 &MenuItemBuilder::with_id("newTab", "New Query Tab")
                     .accelerator("CmdOrCtrl+T")
+                    .build(manager)?,
+            )
+            .item(
+                &MenuItemBuilder::with_id("openSqlFile", "Open SQL File…")
+                    .accelerator("CmdOrCtrl+O")
                     .build(manager)?,
             )
             .item(

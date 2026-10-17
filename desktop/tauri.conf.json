@@ -9,6 +9,15 @@
   "bundle": {
     "active": true,
     "category": "DeveloperTool",
+    "fileAssociations": [
+      {
+        "ext": ["sql"],
+        "name": "SQL File",
+        "description": "SQL script",
+        "mimeType": "application/sql",
+        "role": "Editor"
+      }
+    ],
     "copyright": "",
     "publisher": "DBO Studio",
     "targets": [
