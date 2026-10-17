@@ -10,9 +10,7 @@ type AiChatMessage struct {
 	Type     AiChatMessageType
 	Language AiChatMessageLanguage
 	// Model is the LLM that wrote an assistant message; empty for user messages and older rows.
-	Model string `gorm:"size:128;not null;default:''"`
-	// Feedback is the user's rating of an assistant answer: "up", "down" or empty.
-	Feedback  string     `gorm:"size:8;not null;default:''"`
+	Model     string     `gorm:"size:128;not null;default:''"`
 	CreatedAt *time.Time `gorm:"autoCreateTime"`
 }
 

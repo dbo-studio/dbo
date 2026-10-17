@@ -94,7 +94,7 @@ export default function AiChatPanel() {
           onRetry={() => void handleRetry()}
           onRegenerate={() => void handleRegenerate()}
           onCompare={(providerId, model) => void handleCompare(providerId, model)}
-          onFeedback={(rating) => void handleFeedback(rating)}
+          onFeedback={handleFeedback}
         />
       )}
       {connectionId && (

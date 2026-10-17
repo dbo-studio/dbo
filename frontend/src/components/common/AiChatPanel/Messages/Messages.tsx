@@ -41,6 +41,10 @@ export default function Messages({
     const lastUserIndex = messages.map((message) => message.role).lastIndexOf('user');
     return messages.slice(lastUserIndex + 1);
   }, [messages]);
+  const lastPrompt = useMemo(
+    () => [...messages].reverse().find((message) => message.role === 'user')?.content ?? '',
+    [messages]
+  );
   // Earlier SQL answer in the chat; it is the diff baseline when nothing was selected, and after a reload.
   const previousSql = useMemo(() => {
     const result = new Map<AiMessageType, string>();
@@ -213,7 +217,13 @@ export default function Messages({
         )}
 
         {!loading && streaming.status !== 'streaming' && !streaming.error && lastTurn.length > 0 && (
-          <TurnActions turn={lastTurn} onRegenerate={onRegenerate} onCompare={onCompare} onFeedback={onFeedback} />
+          <TurnActions
+            turn={lastTurn}
+            prompt={lastPrompt}
+            onRegenerate={onRegenerate}
+            onCompare={onCompare}
+            onFeedback={onFeedback}
+          />
         )}
 
         {loading && streaming.status !== 'streaming' && (

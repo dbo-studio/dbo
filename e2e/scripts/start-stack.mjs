@@ -138,6 +138,8 @@ export async function startStack() {
     APP_LOG_PATH: logPath,
     // Pin login settings so backend/.env cannot change them (or fail Bootstrap on a
     // non-policy password) during e2e runs. godotenv does not override these.
+    // Never post feedback to the real website from tests; specs listen on this port.
+    APP_FEEDBACK_URL: 'http://127.0.0.1:4599/api/feedback/ai',
     APP_AUTH_MODE: localAuth || setupAuth ? 'local' : 'none',
     APP_ADMIN_EMAIL: '',
     APP_ADMIN_PASSWORD: '',
