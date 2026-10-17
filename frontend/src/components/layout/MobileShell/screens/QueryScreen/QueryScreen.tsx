@@ -1,4 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import EmptyState from '@/components/base/EmptyState/EmptyState';
 import ScreenHeader from '@/components/base/ScreenHeader/ScreenHeader';
 import MobileTableData from '@/components/common/MobileTableData/MobileTableData';
 import PanelItem from '@/components/common/Panels/PanelItem/PanelItem';
@@ -8,10 +9,9 @@ import { TabMode } from '@/core/enums';
 import { useConnectionTabs, useSelectedTab } from '@/hooks';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { Badge, IconButton } from '@mui/material';
+import { Badge, Button, IconButton } from '@mui/material';
 import { type JSX, useState } from 'react';
 import { ScreenBodyStyled } from '../../MobileShell.styled';
-import ScreenEmptyState from '../ScreenEmptyState/ScreenEmptyState';
 
 /** Data tabs get the card view; every other tab renders its own content under a mobile header instead of the desktop tab strip. */
 export default function QueryScreen(): JSX.Element {
@@ -25,11 +25,14 @@ export default function QueryScreen(): JSX.Element {
     return (
       <>
         <ScreenHeader title={locales.mobile_tab_query} />
-        <ScreenEmptyState
+        <EmptyState
           icon='code'
-          message={locales.mobile_query_empty}
-          actionLabel={locales.open_editor}
-          onAction={(): void => void addEditorTab()}
+          title={locales.mobile_query_empty}
+          action={
+            <Button variant='contained' onClick={(): void => void addEditorTab()}>
+              {locales.open_editor}
+            </Button>
+          }
         />
       </>
     );

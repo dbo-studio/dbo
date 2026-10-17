@@ -1,4 +1,3 @@
-import type { IconTypes } from '@/components/base/CustomIcon/types';
 import type { MobileScreen, MobileTab } from '@/store/mobileNavStore/types';
 import type { JSX } from 'react';
 
@@ -34,11 +33,4 @@ export type TabPaneStyledProps = {
 
 export type ScreenStackStyledProps = {
   animated: boolean;
-};
-
-export type ScreenEmptyStateProps = {
-  icon: keyof typeof IconTypes;
-  message: string;
-  actionLabel?: string;
-  onAction?: () => void;
 };

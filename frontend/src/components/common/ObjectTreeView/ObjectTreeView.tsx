@@ -27,6 +27,7 @@ import { useTreeKeyboard } from './useTreeKeyboard';
 import { useTreeSearch } from './useTreeSearch';
 
 const EMPTY_IDS: string[] = [];
+const EMPTY_SET: ReadonlySet<string> = new Set();
 const REVEAL_MS = 500;
 const FLASH_MS = 900;
 const prefersReducedMotion = (): boolean => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -73,6 +74,12 @@ export default function ObjectTreeView(): JSX.Element {
   const { addLoadedParentId, reloadTree, setFocusedNodeId } = useTreeStore.getState();
 
   const [searchTerm, setSearchTerm] = useState('');
+  // Folders the user collapsed while a search was auto-expanding them; forgotten when the term changes.
+  const [searchCollapsed, setSearchCollapsed] = useState<{ term: string; ids: ReadonlySet<string> }>(() => ({
+    term: '',
+    ids: new Set()
+  }));
+  const collapsedDuringSearch = searchCollapsed.term === searchTerm ? searchCollapsed.ids : EMPTY_SET;
   const [loadingIds, setLoadingIds] = useState<ReadonlySet<string>>(() => new Set());
   const [activeId, setActiveId] = useState<string | undefined>(undefined);
   const [hasFocus, setHasFocus] = useState(false);
@@ -103,8 +110,8 @@ export default function ObjectTreeView(): JSX.Element {
 
   const expandedIds = useMemo(() => new Set(expandedList ?? EMPTY_IDS), [expandedList]);
   const rows = useMemo(
-    () => flattenTree(displayTree, expandedIds, loadingIds, searchTerm),
-    [displayTree, expandedIds, loadingIds, searchTerm]
+    () => flattenTree(displayTree, expandedIds, loadingIds, searchTerm, collapsedDuringSearch),
+    [displayTree, expandedIds, loadingIds, searchTerm, collapsedDuringSearch]
   );
 
   const { virtualItems, totalSize, virtualizer } = useVirtualList({
@@ -178,15 +185,27 @@ export default function ObjectTreeView(): JSX.Element {
     (node: TreeNodeType, expand?: boolean): void => {
       if (!node.hasChildren) return;
       const { expandNode, collapseNode } = useTreeStore.getState();
-      const isOpen = expandedIds.has(node.id);
+      // Effective state: while searching, a folder can look open without being in the persisted expanded list.
+      const visibleRow = rows.find((row) => row.key === node.id);
+      const isOpen = visibleRow?.kind === 'node' ? visibleRow.isExpanded : expandedIds.has(node.id);
       const shouldOpen = expand ?? !isOpen;
       if (shouldOpen === isOpen) return;
 
+      const trackSearchCollapse = (collapsed: boolean): void =>
+        setSearchCollapsed((prev) => {
+          const ids = new Set(prev.term === searchTerm ? prev.ids : []);
+          if (collapsed) ids.add(node.id);
+          else ids.delete(node.id);
+          return { term: searchTerm, ids };
+        });
+
       if (!shouldOpen) {
         collapseNode(node.id);
+        if (searchTerm.trim()) trackSearchCollapse(true);
         return;
       }
 
+      if (searchTerm.trim()) trackSearchCollapse(false);
       expandNode(node.id);
       if ((node.children ?? []).length === 0) {
         void loadChildren(node, true);
@@ -194,7 +213,7 @@ export default function ObjectTreeView(): JSX.Element {
       }
       revealChildrenOf(node.id);
     },
-    [expandedIds, loadChildren]
+    [expandedIds, loadChildren, rows, searchTerm]
   );
 
   /** Shift+Right: open the node and every folder below it that is already loaded (never fetches a whole schema). */

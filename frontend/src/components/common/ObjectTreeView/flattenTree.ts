@@ -29,7 +29,8 @@ export function flattenTree(
   root: TreeNodeType | null,
   expandedIds: ReadonlySet<string>,
   loadingIds: ReadonlySet<string>,
-  searchTerm: string
+  searchTerm: string,
+  collapsedDuringSearch: ReadonlySet<string> = new Set()
 ): FlatRow[] {
   const term = searchTerm.trim().toLowerCase();
   const rows: FlatRow[] = [];
@@ -46,7 +47,7 @@ export function flattenTree(
     const visibleChildren =
       term && !matchesName(node, term) ? children.filter((c) => matchesSearch(c, term)) : children;
     const searchReveals = Boolean(term) && visibleChildren.length > 0 && children.some((c) => matchesSearch(c, term));
-    const isExpanded = expandedIds.has(node.id) || searchReveals;
+    const isExpanded = expandedIds.has(node.id) || (searchReveals && !collapsedDuringSearch.has(node.id));
 
     rows.push({ kind: 'node', key: node.id, node, level, posInSet, setSize, parentId, isExpanded });
 

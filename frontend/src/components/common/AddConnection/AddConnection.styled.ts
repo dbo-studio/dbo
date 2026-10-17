@@ -19,13 +19,6 @@ export const ConnectionFormBodyStyled = styled(Box)(({ theme }) => ({
   flexDirection: 'column'
 }));
 
-export const ConnectionFormFooterStyled = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  marginTop: theme.spacing(2),
-  justifyContent: 'space-between',
-  flexShrink: 0
-}));
-
 export const ConnectionFormCheckboxRowStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',

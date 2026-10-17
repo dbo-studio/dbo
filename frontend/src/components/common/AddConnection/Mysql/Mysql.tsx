@@ -1,3 +1,4 @@
+import ModalFooter from '@/components/base/Modal/ModalFooter/ModalFooter';
 import type { CreateConnectionRequestType, MysqlOptionsType } from '@/api/connection/types';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
@@ -11,8 +12,7 @@ import * as v from 'valibot';
 import {
   ConnectionFormBodyStyled,
   ConnectionFormCheckboxRowStyled,
-  ConnectionFormContainerStyled,
-  ConnectionFormFooterStyled
+  ConnectionFormContainerStyled
 } from '../AddConnection.styled';
 import ConnectionFormTabs from '../ConnectionFormTabs';
 import ConnectionSSLFields from '../ConnectionSSLFields';
@@ -440,26 +440,25 @@ export default function Mysql({
           }
         />
       </ConnectionFormBodyStyled>
-      <ConnectionFormFooterStyled>
-        <Button type='button' size='small' onClick={onClose}>
-          {locales.cancel}
+      <ModalFooter spread>
+        <Button
+          type='button'
+          data-testid='test-connection'
+          loadingPosition='start'
+          disabled={pingLoading}
+          loading={pingLoading}
+          onClick={(): void => {
+            form.state.values.isPing = true;
+            void form.handleSubmit().then();
+          }}
+          size='small'
+          variant='outlined'
+        >
+          {locales.test}
         </Button>
         <Stack spacing={1} direction={'row'}>
-          <Button
-            type='button'
-            data-testid='test-connection'
-            loadingPosition='start'
-            disabled={pingLoading}
-            loading={pingLoading}
-            onClick={(): void => {
-              form.state.values.isPing = true;
-              void form.handleSubmit().then();
-            }}
-            size='small'
-            variant='contained'
-            color='secondary'
-          >
-            {locales.test}
+          <Button type='button' size='small' onClick={onClose}>
+            {locales.cancel}
           </Button>
           <Button
             type='submit'
@@ -473,7 +472,7 @@ export default function Mysql({
             {submitLabel ?? (connection ? locales.update : locales.create)}
           </Button>
         </Stack>
-      </ConnectionFormFooterStyled>
+      </ModalFooter>
     </ConnectionFormContainerStyled>
   );
 }

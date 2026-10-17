@@ -1,3 +1,4 @@
+import ModalFooter from '@/components/base/Modal/ModalFooter/ModalFooter';
 import type { CreateConnectionRequestType, SQLiteOptionsType } from '@/api/connection/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
@@ -12,12 +13,7 @@ import * as v from 'valibot';
 
 import { tools } from '@/core/utils';
 import type { ConnectionSettingsProps } from '../types';
-import {
-  ConnectionFormBodyStyled,
-  ConnectionFormContainerStyled,
-  ConnectionFormFooterStyled,
-  SQLitePathRowStyled
-} from '../AddConnection.styled';
+import { ConnectionFormBodyStyled, ConnectionFormContainerStyled, SQLitePathRowStyled } from '../AddConnection.styled';
 const formSchema = v.object({
   isPing: v.boolean(),
   name: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
@@ -133,26 +129,25 @@ export default function SQLite({
           )}
         </form.Field>
       </ConnectionFormBodyStyled>
-      <ConnectionFormFooterStyled>
-        <Button type='button' size='small' onClick={onClose}>
-          {locales.cancel}
+      <ModalFooter spread>
+        <Button
+          type='button'
+          data-testid='test-connection'
+          loadingPosition='start'
+          disabled={pingLoading}
+          loading={pingLoading}
+          onClick={(): void => {
+            form.state.values.isPing = true;
+            void form.handleSubmit().then();
+          }}
+          size='small'
+          variant='outlined'
+        >
+          <span>{locales.test}</span>
         </Button>
         <Stack spacing={1} direction={'row'}>
-          <Button
-            type='button'
-            data-testid='test-connection'
-            loadingPosition='start'
-            disabled={pingLoading}
-            loading={pingLoading}
-            onClick={(): void => {
-              form.state.values.isPing = true;
-              void form.handleSubmit().then();
-            }}
-            size='small'
-            variant='contained'
-            color='secondary'
-          >
-            <span>{locales.test}</span>
+          <Button type='button' size='small' onClick={onClose}>
+            {locales.cancel}
           </Button>
           <Button
             type='submit'
@@ -166,7 +161,7 @@ export default function SQLite({
             <span>{submitLabel ?? (connection ? locales.update : locales.create)}</span>
           </Button>
         </Stack>
-      </ConnectionFormFooterStyled>
+      </ModalFooter>
     </ConnectionFormContainerStyled>
   );
 }
