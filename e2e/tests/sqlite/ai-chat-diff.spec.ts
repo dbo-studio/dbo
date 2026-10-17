@@ -33,18 +33,24 @@ test.describe("AI chat optimize diff", () => {
 
       await page.route("**/api/ai/chat/stream", async (route) => {
         streamBodies.push(route.request().postDataJSON());
+        // Follow-up turns answer with different SQL so earlier answers can be diffed against each other.
+        const sql = [optimized, "SELECT id FROM sqlite_master", "SELECT type FROM sqlite_master"][
+          Math.min(streamBodies.length, 3) - 1
+        ];
         const done = {
           type: "done",
           chatId: 0,
           title: "diff e2e",
+          // The backend splits an answer into prose and typed code messages.
           messages: [
             {
               role: "assistant",
               type: "explanation",
               language: "text",
-              content: `Select only the column you need:\n\n\`\`\`sql\n${optimized}\n\`\`\`\n`,
+              content: "Select only the column you need:",
               createdAt: new Date().toISOString(),
             },
+            { role: "assistant", type: "code", language: "sql", content: sql, createdAt: new Date().toISOString() },
           ],
         };
         await route.fulfill({
@@ -81,6 +87,22 @@ test.describe("AI chat optimize diff", () => {
 
         await page.getByTestId("ai-code-diff-toggle").click();
         await expect(diff).toHaveCount(0);
+      });
+
+      await test.step("Earlier answers diff against the previous SQL answer", async () => {
+        const composer = page.getByPlaceholder(/ask anything/i);
+        for (const text of ["use the id column", "use the type column"]) {
+          await composer.fill(text);
+          await composer.press("Enter");
+        }
+        await expect.poll(() => streamBodies.length).toBe(3);
+
+        // Turn 1 has nothing before it; turns 2 and 3 can be compared.
+        await expect(page.getByTestId("ai-code-diff-toggle")).toHaveCount(2, { timeout: 15000 });
+        await page.getByTestId("ai-code-diff-toggle").first().click();
+        const diff = page.getByTestId("ai-sql-diff");
+        await expect(diff.locator('[data-diff="del"]')).toContainText("SELECT name");
+        await expect(diff.locator('[data-diff="add"]')).toContainText("SELECT id");
       });
     });
   });

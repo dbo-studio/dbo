@@ -1,4 +1,4 @@
 import { createContext } from 'react';
 
-/** SQL the user selected before asking; assistant code blocks in the latest turn can be diffed against it. */
+/** SQL an assistant code block is diffed against: the user's selection (latest turn) or the previous SQL answer. */
 export const DiffBaselineContext = createContext<string | undefined>(undefined);

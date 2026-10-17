@@ -26,6 +26,7 @@ export default function ChatHistory({ variant = 'menu' }: ChatHistoryProps): JSX
 
   const queryClient = useQueryClient();
   const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
+  const connectionName = useConnectionStore((state) => state.currentConnection()?.name);
   const chats = useAiStore((state) => state.chats);
   const currentChat = useAiStore((state) => state.currentChat);
   const updateCurrentChat = useAiStore((state) => state.updateCurrentChat);
@@ -174,6 +175,17 @@ export default function ChatHistory({ variant = 'menu' }: ChatHistoryProps): JSX
 
   const content = (
     <>
+      {variant !== 'list' && connectionName && (
+        <Typography
+          variant='caption'
+          color='textSubdued'
+          noWrap
+          sx={{ px: 1, pb: 0.5 }}
+          data-testid='ai-history-connection'
+        >
+          {connectionName}
+        </Typography>
+      )}
       <InputBase
         // Phones open a bottom sheet; focusing straight away would raise the keyboard over it.
         autoFocus={variant === 'menu' && !isMobile}

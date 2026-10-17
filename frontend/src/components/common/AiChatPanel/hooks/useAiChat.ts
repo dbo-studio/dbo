@@ -46,7 +46,7 @@ const buildContextOpts = (): AiContextOptsType => {
   if (context.selectedQuery) {
     contextOpts.selectedQuery = context.selectedQuery;
     contextOpts.query = context.selectedQuery;
-  } else if (selectedTab?.mode === TabMode.Query) {
+  } else if (selectedTab?.mode === TabMode.Query && context.querySnippet !== '') {
     contextOpts.query = useTabStore.getState().getQuery(selectedTab?.id);
   }
 
@@ -304,7 +304,9 @@ export const useAiChat = (active = true): useAiChatReturnType => {
     if (!lastRequest || !currentChat) return;
 
     resetStreaming();
-    await executeChat(lastRequest.message, currentChat);
+    // A failed compare must retry on the model it was asked of, not the active one.
+    const { providerId, model } = lastRequest;
+    await executeChat(lastRequest.message, currentChat, providerId && model ? { providerId, model } : undefined);
   };
 
   const handleChatDelete = useCallback(

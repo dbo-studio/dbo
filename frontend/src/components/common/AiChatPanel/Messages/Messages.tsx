@@ -4,6 +4,7 @@ import { useAiStore } from '@/store/aiStore/ai.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Chip, CircularProgress, Typography } from '@mui/material';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { AiMessageType } from '@/types';
 import { MessagesProps } from '../types';
 import ChatEmptyState from './ChatEmptyState/ChatEmptyState';
 import ChatErrorMessage from './ChatErrorMessage/ChatErrorMessage';
@@ -39,6 +40,17 @@ export default function Messages({
   const lastTurn = useMemo(() => {
     const lastUserIndex = messages.map((message) => message.role).lastIndexOf('user');
     return messages.slice(lastUserIndex + 1);
+  }, [messages]);
+  // Earlier SQL answer in the chat; it is the diff baseline when nothing was selected, and after a reload.
+  const previousSql = useMemo(() => {
+    const result = new Map<AiMessageType, string>();
+    let previous: string | undefined;
+    for (const message of messages) {
+      if (message.role !== 'assistant' || message.type !== 'code' || message.language !== 'sql') continue;
+      if (previous !== undefined) result.set(message, previous);
+      previous = message.content;
+    }
+    return result;
   }, [messages]);
   // Only label answers once a chat holds more than one model; a single-model chat needs no chip.
   const showModelLabel = useMemo(
@@ -136,7 +148,8 @@ export default function Messages({
         {blocks.map((block) => {
           if (block.kind === 'message') {
             const { message } = block;
-            const baseline = message.role === 'assistant' && lastTurn.includes(message) ? selectedQuery : undefined;
+            const inLastTurn = message.role === 'assistant' && lastTurn.includes(message);
+            const baseline = (inLastTurn ? selectedQuery : undefined) ?? previousSql.get(message);
             return (
               <MessageGroupStyled key={block.key} title={formatMessageTime(message.createdAt)} data-testid='ai-message'>
                 {message.thinking?.content && (

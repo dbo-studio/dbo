@@ -76,6 +76,9 @@ test.describe("AI chat feedback", () => {
           await settingsPage.openRightSidebar();
           await page.getByRole("button", { name: "Chat history" }).click();
           await page.getByTestId("ai-history-item").filter({ hasText: "rate this answer" }).first().click();
+          // The history menu stays open after picking a chat and would cover the thumbs.
+          await composer.click({ force: true });
+          await expect(page.getByTestId("ai-history-item")).toHaveCount(0);
           await expect(page.getByText("ok", { exact: true }).first()).toBeVisible({ timeout: 15000 });
           await expect(down).toHaveAttribute("aria-pressed", "true");
 
