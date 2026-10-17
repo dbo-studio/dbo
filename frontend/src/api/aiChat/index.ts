@@ -43,9 +43,12 @@ export const reviewCard = async (chatId: string | number, data: { id: string; de
   await api.post(endpoint.review(chatId), data);
 };
 
-/** Rates the newest assistant answer of a chat; "none" clears the rating. */
-export const rateAnswer = async (chatId: string | number, rating: 'up' | 'down' | 'none'): Promise<void> => {
-  await api.post(endpoint.feedback(chatId), { rating });
+/** Sends a rating of the newest answer, with its question and answer, to the DBO team. Nothing is kept locally. */
+export const sendFeedback = async (
+  chatId: string | number,
+  data: { rating: 'up' | 'down'; comment?: string }
+): Promise<void> => {
+  await api.post(endpoint.feedback(chatId), data);
 };
 
 export const deleteChat = async (id: string | number): Promise<void> => {

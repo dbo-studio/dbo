@@ -26,7 +26,7 @@ type useAiChatReturnType = {
   handleChatRename: (chat: AiChatType, title: string) => Promise<void>;
   handleRegenerate: () => Promise<void>;
   handleCompare: (providerId: number, model: string) => Promise<void>;
-  handleFeedback: (rating: 'up' | 'down' | 'none') => Promise<void>;
+  handleFeedback: (rating: 'up' | 'down', comment: string) => Promise<void>;
 };
 
 /** Per-turn provider/model override used to compare answers; always runs in Ask mode so it cannot write. */
@@ -358,8 +358,8 @@ export const useAiChat = (active = true): useAiChatReturnType => {
     await executeChat(lastUser.content, currentChat, { providerId, model });
   };
 
-  /** Rates the newest assistant answer and mirrors the rating into the open chat. */
-  const handleFeedback = async (rating: 'up' | 'down' | 'none'): Promise<void> => {
+  /** Sends a rating of the newest answer to the DBO team and marks it as sent for this session only. */
+  const handleFeedback = async (rating: 'up' | 'down', comment: string): Promise<void> => {
     const currentChat = useAiStore.getState().currentChat;
     if (!currentChat) return;
 
@@ -369,10 +369,10 @@ export const useAiChat = (active = true): useAiChatReturnType => {
     const index = answers[answers.length - 1]?.position ?? -1;
     if (index < 0) return;
 
-    await api.aiChat.rateAnswer(currentChat.id, rating);
+    await api.aiChat.sendFeedback(currentChat.id, { rating, comment: comment.trim() || undefined });
 
     const messages = [...currentChat.messages];
-    messages[index] = { ...messages[index], feedback: rating === 'none' ? undefined : rating };
+    messages[index] = { ...messages[index], feedback: rating };
     updateCurrentChat({ ...currentChat, messages });
   };
 

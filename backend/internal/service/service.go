@@ -87,7 +87,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		JobManager:              jobManager,
 		AiService:               serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, cm, toolRegistry, deps.Logger, deps.Cache),
 		AiProviderService:       aiProviderService,
-		AiChatService:           serviceAiChat.NewAiChatService(repo.AiChatRepo, repo.ConnectionRepo),
+		AiChatService:           serviceAiChat.NewAiChatService(repo.AiChatRepo, repo.ConnectionRepo, deps.Config),
 		ConfigService:           serviceConfig.NewConfigService(repo.ConfigRepo, aiProviderService, authService, deps.Config, deps.Cache, deps.Logger),
 		McpService:              mcpService,
 		SchemaService:           serviceSchema.NewSchemaService(repo.ConnectionRepo, cm, deps.Cache),

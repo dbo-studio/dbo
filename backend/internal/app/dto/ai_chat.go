@@ -40,7 +40,6 @@ type (
 		Language  string `json:"language"`
 		CreatedAt string `json:"createdAt"`
 		Model     string `json:"model,omitempty"`
-		Feedback  string `json:"feedback,omitempty"`
 	}
 )
 

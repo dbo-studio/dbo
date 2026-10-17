@@ -9,22 +9,27 @@ import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
 import { useCopyToClipboard } from 'usehooks-ts';
 import { isTraceMessage } from '../../utils/agentTrace';
+import FeedbackDialog from '../FeedbackDialog/FeedbackDialog';
 
 /** Copy / Regenerate / Compare under the latest assistant turn. */
 export default function TurnActions({
   turn,
+  prompt,
   onRegenerate,
   onCompare,
   onFeedback
 }: {
   turn: AiMessageType[];
+  /** The question the turn answers; shown in the feedback dialog. */
+  prompt: string;
   onRegenerate?: () => void;
   onCompare?: (providerId: number, model: string) => void;
-  onFeedback?: (rating: 'up' | 'down' | 'none') => void;
+  onFeedback?: (rating: 'up' | 'down', comment: string) => Promise<void>;
 }): JSX.Element {
   const [, copy] = useCopyToClipboard();
   const providers = useAiStore((state) => state.providers);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [feedbackRating, setFeedbackRating] = useState<'up' | 'down' | null>(null);
   // Offer every ready model except the one that wrote this answer.
   const answeredBy = [...turn].reverse().find((message) => message.role === 'assistant' && message.model)?.model;
   const active = providers?.find((item) => item.isActive);
@@ -36,8 +41,7 @@ export default function TurnActions({
   const rating = [...turn]
     .reverse()
     .find((message) => message.role === 'assistant' && !isTraceMessage(message))?.feedback;
-  // Clicking the active rating clears it.
-  const rate = (next: 'up' | 'down'): void => onFeedback?.(rating === next ? 'none' : next);
+  const answers = turn.filter((message) => message.role === 'assistant' && !isTraceMessage(message));
   const text = turn
     .filter((message) => !isTraceMessage(message))
     .map((message) =>
@@ -62,26 +66,32 @@ export default function TurnActions({
       {onFeedback && (
         <>
           <Tooltip title={locales.ai_feedback_good}>
-            <IconButton
-              size='small'
-              color={rating === 'up' ? 'primary' : 'default'}
-              aria-pressed={rating === 'up'}
-              onClick={() => rate('up')}
-              data-testid='ai-feedback-up'
-            >
-              <CustomIcon type='thumbUp' size='xs' />
-            </IconButton>
+            <span>
+              <IconButton
+                size='small'
+                color={rating === 'up' ? 'primary' : 'default'}
+                aria-pressed={rating === 'up'}
+                disabled={rating !== undefined}
+                onClick={() => setFeedbackRating('up')}
+                data-testid='ai-feedback-up'
+              >
+                <CustomIcon type='thumbUp' size='xs' />
+              </IconButton>
+            </span>
           </Tooltip>
           <Tooltip title={locales.ai_feedback_bad}>
-            <IconButton
-              size='small'
-              color={rating === 'down' ? 'primary' : 'default'}
-              aria-pressed={rating === 'down'}
-              onClick={() => rate('down')}
-              data-testid='ai-feedback-down'
-            >
-              <CustomIcon type='thumbDown' size='xs' />
-            </IconButton>
+            <span>
+              <IconButton
+                size='small'
+                color={rating === 'down' ? 'primary' : 'default'}
+                aria-pressed={rating === 'down'}
+                disabled={rating !== undefined}
+                onClick={() => setFeedbackRating('down')}
+                data-testid='ai-feedback-down'
+              >
+                <CustomIcon type='thumbDown' size='xs' />
+              </IconButton>
+            </span>
           </Tooltip>
         </>
       )}
@@ -115,6 +125,15 @@ export default function TurnActions({
             ])}
           </Menu>
         </>
+      )}
+      {onFeedback && (
+        <FeedbackDialog
+          rating={feedbackRating}
+          prompt={prompt}
+          answer={answers.map((message) => message.content).join('\n\n')}
+          onSend={onFeedback}
+          onClose={() => setFeedbackRating(null)}
+        />
       )}
     </Stack>
   );
