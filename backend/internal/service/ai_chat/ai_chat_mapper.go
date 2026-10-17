@@ -33,6 +33,7 @@ func aiChatDetailToResponse(chat *model.AiChat) *dto.AiChatDetailResponse {
 			Type:      string(message.Type),
 			Language:  string(message.Language),
 			CreatedAt: message.CreatedAt.Format("2006-01-02 15:04:05"),
+			Model:     message.Model,
 		}
 	}
 

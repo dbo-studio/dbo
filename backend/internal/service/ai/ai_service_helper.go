@@ -3,6 +3,7 @@ package serviceAi
 import (
 	"context"
 	"errors"
+	"slices"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -12,8 +13,9 @@ import (
 	"github.com/samber/lo"
 )
 
-func (s *AiServiceImpl) createProvider(ctx context.Context) (aiProvider.IAiProvider, *model.AiProvider, error) {
-	dbProvider, err := s.resolveActiveProvider(ctx)
+// createProvider uses the active provider, or the provider/model named by req when it overrides them.
+func (s *AiServiceImpl) createProvider(ctx context.Context, req *dto.AiChatRequest) (aiProvider.IAiProvider, *model.AiProvider, error) {
+	dbProvider, err := s.resolveProvider(ctx, req)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -28,6 +30,44 @@ func (s *AiServiceImpl) createProvider(ctx context.Context) (aiProvider.IAiProvi
 	}
 
 	return client, dbProvider, nil
+}
+
+func (s *AiServiceImpl) resolveProvider(ctx context.Context, req *dto.AiChatRequest) (*model.AiProvider, error) {
+	if req == nil || (req.ProviderID == nil && req.Model == "") {
+		return s.resolveActiveProvider(ctx)
+	}
+
+	var (
+		dbProvider *model.AiProvider
+		err        error
+	)
+
+	if req.ProviderID != nil {
+		dbProvider, err = s.aiProviderRepo.Find(ctx, *req.ProviderID)
+	} else {
+		dbProvider, err = s.aiProviderRepo.FindActive(ctx)
+	}
+
+	if err != nil {
+		return nil, apperror.BadRequest(apperror.ErrAiNotConfigured)
+	}
+
+	if req.Model != "" && req.Model != dbProvider.Model {
+		if !slices.Contains(dbProvider.Models, req.Model) {
+			return nil, apperror.BadRequest(apperror.ErrAiMissingModel)
+		}
+
+		// Work on a copy: the override must never leak into the stored provider.
+		override := *dbProvider
+		override.Model = req.Model
+		dbProvider = &override
+	}
+
+	if err := providerReadinessError(dbProvider); err != nil {
+		return nil, err
+	}
+
+	return dbProvider, nil
 }
 
 func (s *AiServiceImpl) resolveActiveProvider(ctx context.Context) (*model.AiProvider, error) {
@@ -125,7 +165,7 @@ func conversationHistory(messages []model.AiChatMessage) []model.AiChatMessage {
 	return history
 }
 
-func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat, userMessage string, traces []model.AiChatMessage, aiMessage *aiProvider.ChatResponse) error {
+func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat, userMessage string, traces []model.AiChatMessage, aiMessage *aiProvider.ChatResponse, modelName string) error {
 	if err := s.aiChatRepo.AddMessage(ctx, &model.AiChatMessage{
 		ChatID:   chat.ID,
 		Role:     model.AiChatMessageRoleUser,
@@ -138,6 +178,8 @@ func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat
 
 	for i := range traces {
 		traces[i].ChatID = chat.ID
+		traces[i].Model = modelName
+
 		if err := s.aiChatRepo.AddMessage(ctx, &traces[i]); err != nil {
 			return err
 		}
@@ -155,6 +197,7 @@ func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat
 				Content:  content.Content,
 				Type:     content.Type,
 				Language: content.Language,
+				Model:    modelName,
 			}); err != nil {
 				return err
 			}
@@ -169,6 +212,7 @@ func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat
 		Content:  aiMessage.Content,
 		Type:     aiMessage.Type,
 		Language: aiMessage.Language,
+		Model:    modelName,
 	}); err != nil {
 		return err
 	}

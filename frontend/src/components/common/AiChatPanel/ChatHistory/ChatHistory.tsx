@@ -7,8 +7,8 @@ import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { AiChatType } from '@/types';
 import { Box, IconButton, InputBase, Tooltip, Typography } from '@mui/material';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { type JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { type JSX, useCallback, useEffect, useRef, useState } from 'react';
 import { ChatHistoryGroupStyled, ChatHistoryListStyled, ChatHistoryStyled } from './ChatHistory.styled';
 import ChatHistoryItem from './ChatHistoryItem/ChatHistoryItem';
 import locales from '@/locales';
@@ -32,11 +32,19 @@ export default function ChatHistory({ variant = 'menu' }: ChatHistoryProps): JSX
   const addChat = useAiStore((state) => state.addChat);
   const updateChats = useAiStore((state) => state.updateChats);
 
+  const [searchTerm, setSearchTerm] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setSearchTerm(search.trim()), 250);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const { data } = useQuery({
-    queryKey: ['aiChatHistory', currentConnectionId],
+    queryKey: ['aiChatHistory', currentConnectionId, searchTerm],
+    placeholderData: keepPreviousData,
     queryFn: () =>
       api.aiChat.getChats({
         connectionId: currentConnectionId ?? 0,
+        search: searchTerm || undefined,
         page: 1,
         count: 50
       }),
@@ -150,10 +158,7 @@ export default function ChatHistory({ variant = 'menu' }: ChatHistoryProps): JSX
     }
   }, []);
 
-  const visible = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return (data ?? []).filter((item) => !term || item.title.toLowerCase().includes(term));
-  }, [data, search]);
+  const visible = data ?? [];
 
   const items = visible.map((item) => (
     <ChatHistoryItem

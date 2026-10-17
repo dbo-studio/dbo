@@ -15,6 +15,8 @@ export type AiMessageType = {
   role: 'user' | 'assistant';
   content: string;
   createdAt: string;
+  /** LLM that wrote an assistant message; absent for user messages and older chats. */
+  model?: string;
   language: 'sql' | 'go' | 'js' | 'python' | 'json' | 'yaml' | 'text';
   /** tool / diagram_diff / permission carry a JSON payload (see agent trace types below). */
   type: 'code' | 'explanation' | AiTraceMessageKind;

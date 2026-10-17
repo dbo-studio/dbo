@@ -25,7 +25,11 @@ type useAiChatReturnType = {
   handleChatDelete: (chat: AiChatType) => Promise<void>;
   handleChatRename: (chat: AiChatType, title: string) => Promise<void>;
   handleRegenerate: () => Promise<void>;
+  handleCompare: (providerId: number, model: string) => Promise<void>;
 };
+
+/** Per-turn provider/model override used to compare answers; always runs in Ask mode so it cannot write. */
+type ModelOverride = { providerId: number; model: string };
 
 const buildContextOpts = (): AiContextOptsType => {
   const selectedTab = useTabStore.getState().selectedTab();
@@ -148,13 +152,14 @@ export const useAiChat = (active = true): useAiChatReturnType => {
   }, [cancelStream]);
 
   const executeChat = useCallback(
-    async (message: string, currentChat: AiChatType): Promise<void> => {
+    async (message: string, currentChat: AiChatType, override?: ModelOverride): Promise<void> => {
       const contextOpts = buildContextOpts();
       const request: AiChatRequest = {
         connectionId: Number(connectionId),
         chatId: Number(currentChat.id),
         message,
-        mode: resolveAiChatMode(),
+        mode: override ? 'ask' : resolveAiChatMode(),
+        ...override,
         contextOpts
       };
 
@@ -340,9 +345,20 @@ export const useAiChat = (active = true): useAiChatReturnType => {
     await executeChat(lastUser.content, currentChat);
   };
 
+  /** Re-runs the last user prompt on another model and appends its answer next to the first. */
+  const handleCompare = async (providerId: number, model: string): Promise<void> => {
+    const currentChat = useAiStore.getState().currentChat;
+    const lastUser = [...(currentChat?.messages ?? [])].reverse().find((message) => message.role === 'user');
+    if (!currentChat || !lastUser || chatPending) return;
+
+    resetStreaming();
+    await executeChat(lastUser.content, currentChat, { providerId, model });
+  };
+
   return {
     handleChatRename,
     handleRegenerate,
+    handleCompare,
     autocomplete,
     chatPending,
     handleCancel,
