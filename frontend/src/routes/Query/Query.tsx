@@ -11,7 +11,7 @@ import { useEditorSessionContext } from '@/hooks/useEditorSessionContext';
 import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useSyncEditorContext } from '@/hooks/useSyncEditorContext';
 import locales from '@/locales';
-import { useDataStore } from '@/store/dataStore/data.store';
+import { useDataStore, useDataStoreApi } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AutoCompleteType, ColumnType, EditorTabType, RowType } from '@/types';
 import { Tab, Tabs } from '@mui/material';
@@ -40,6 +40,7 @@ export default function Query(): JSX.Element {
 
   const getQuery = useTabStore((state) => state.getQuery);
   const updateQuery = useTabStore((state) => state.updateQuery);
+  const dataStoreApi = useDataStoreApi();
   const runRawQuery = useDataStore((state) => state.runRawQuery);
   const loadDataFromIndexedDB = useDataStore((state) => state.loadDataFromIndexedDB);
   const pendingEditorQueryRun = useDataStore((state) => state.pendingEditorQueryRun);
@@ -100,13 +101,13 @@ export default function Query(): JSX.Element {
       return;
     }
 
-    const pending = useDataStore.getState().pendingEditorQueryRun;
+    const pending = dataStoreApi.getState().pendingEditorQueryRun;
     if (pending?.tabId === selectedTab.id) {
       return;
     }
 
     void loadData().catch(() => undefined);
-  }, [selectedTab?.id, loadData]);
+  }, [selectedTab?.id, loadData, dataStoreApi]);
 
   const applyQueryResult = useCallback(
     (res: RunQueryResponseType | undefined): void => {
@@ -147,7 +148,7 @@ export default function Query(): JSX.Element {
 
     const runPending = async (): Promise<void> => {
       setValue(query);
-      updateQuery(query);
+      updateQuery(query, selectedTab?.id);
       const res = await executeRawQuery(query);
       if (res) {
         toast.success(locales.run_query);
@@ -159,7 +160,7 @@ export default function Query(): JSX.Element {
 
   const handleUpdateState = (query: string): void => {
     setValue(query);
-    updateQuery(query);
+    updateQuery(query, selectedTab?.id);
   };
 
   const runQuery = async (): Promise<void> => {

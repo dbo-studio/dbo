@@ -26,6 +26,8 @@ type BaseTab = {
   nodeId: string;
   action?: string;
   mode: TabMode;
+  /** Split view pane. Undefined = primary (left) pane. */
+  pane?: 1;
 };
 
 export type DataTabType = BaseTab & {

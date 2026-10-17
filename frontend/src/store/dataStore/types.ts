@@ -1,9 +1,12 @@
 import type { GridMetaType, RunQueryResponseType } from '@/api/query/types';
+import type { PaneId } from '@/store/tabStore/tabs';
 import type { EditedRow } from '@/types';
 import type { ColumnType, RowType } from '@/types/Data';
 import { FormFieldWithState } from '@/types/Tree';
 
 export type DataStore = {
+  /** Split-view pane this store belongs to. */
+  paneId: PaneId;
   loadDataFromIndexedDB: () => Promise<{ rows: RowType[]; columns: ColumnType[] } | null>;
 };
 

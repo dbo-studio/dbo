@@ -1,5 +1,5 @@
 import { handleRowChangeLog, valuesSemanticallyEqual } from '@/core/utils';
-import { useDataStore } from '@/store/dataStore/data.store';
+import { useDataStore, useDataStoreApi } from '@/store/dataStore/data.store';
 import type { RowType } from '@/types';
 import { useCallback, useRef } from 'react';
 import type { CellEditingReturn } from '../types';
@@ -7,13 +7,14 @@ import { coerceFkCellValue } from './fkColumn';
 
 export const useCellEditing = (row: RowType, columnId: string): CellEditingReturn => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const dataStoreApi = useDataStoreApi();
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
   const updateRow = useDataStore((state) => state.updateRow);
   const columns = useDataStore((state) => state.columns ?? []);
 
   const commitFields = useCallback(
     (updates: Record<string, unknown>): void => {
-      const store = useDataStore.getState();
+      const store = dataStoreApi.getState();
       const activeColumns = store.columns ?? columns;
       const foundRow = store.rows?.find((r) => r.dbo_index === row.dbo_index);
       const baseRow = foundRow ?? row;
@@ -46,7 +47,7 @@ export const useCellEditing = (row: RowType, columnId: string): CellEditingRetur
         })
         .catch(console.error);
     },
-    [row, columns, updateEditedRows, updateRow]
+    [row, columns, updateEditedRows, updateRow, dataStoreApi]
   );
 
   const commitValue = useCallback(

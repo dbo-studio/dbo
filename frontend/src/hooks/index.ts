@@ -7,6 +7,7 @@ export * from './useJobPolling';
 export * from './useLayoutMode';
 export * from './useResponsiveSidebar';
 export * from './useScopedSelectAll';
+export * from './usePane';
 export * from './useSelectedTab';
 export * from './useSetupDesktop';
 export * from './useShortcut';
