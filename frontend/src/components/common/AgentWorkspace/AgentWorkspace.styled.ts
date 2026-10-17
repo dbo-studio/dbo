@@ -1,6 +1,6 @@
 import { Box, styled } from '@mui/material';
 
-export const AgentWorkspaceStyled = styled(Box)(({ theme }) => ({
+export const AgentWorkspaceStyled = styled('section')(({ theme }) => ({
   position: 'fixed',
   inset: 0,
   // Above the app and its drawers, below dialogs, menus and tooltips.

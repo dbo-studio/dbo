@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import { Box, styled } from '@mui/material';
 
 export const SqlDiffViewStyled = styled(Box)(({ theme }) => ({
@@ -5,7 +6,7 @@ export const SqlDiffViewStyled = styled(Box)(({ theme }) => ({
   padding: theme.spacing(1, 0),
   overflowX: 'auto',
   fontFamily: theme.editorFontFamily,
-  fontSize: 12,
+  fontSize: variables.fontSize.sm,
   lineHeight: 1.6
 }));
 

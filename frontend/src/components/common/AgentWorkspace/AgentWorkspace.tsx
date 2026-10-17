@@ -30,7 +30,7 @@ export default function AgentWorkspace(): JSX.Element {
   const theme = useTheme();
   const isNarrow = useMediaQuery(theme.breakpoints.down('md'));
   const [showSessions, setShowSessions] = useState(!isNarrow);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLElement>(null);
 
   const {
     autocomplete,
@@ -76,12 +76,7 @@ export default function AgentWorkspace(): JSX.Element {
   }, [close, handleCancel]);
 
   return (
-    <AgentWorkspaceStyled
-      ref={rootRef}
-      component='section'
-      aria-label={locales.ai_expand_to_agent}
-      data-testid='ai-agent-workspace'
-    >
+    <AgentWorkspaceStyled ref={rootRef} aria-label={locales.ai_expand_to_agent} data-testid='ai-agent-workspace'>
       <WorkspaceTopBar onBack={close} onToggleSessions={() => setShowSessions((value) => !value)} />
       <WorkspaceBodyStyled>
         {showSessions && (

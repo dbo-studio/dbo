@@ -1,4 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { variables } from '@/core/theme/variables';
 import locales from '@/locales';
 import type { AiMessageType } from '@/types';
 import { isProviderReady } from '@/core/ai/aiStatus';
@@ -93,7 +94,7 @@ export default function TurnActions({
           </Tooltip>
           <Menu open={!!anchorEl} anchorEl={anchorEl} onClose={() => setAnchorEl(null)}>
             {options.flatMap(({ provider, models }) => [
-              <ListSubheader key={`h-${provider.id}`} sx={{ lineHeight: '28px', fontSize: '0.6875rem' }}>
+              <ListSubheader key={`h-${provider.id}`} sx={{ lineHeight: '28px', fontSize: variables.fontSize.xs }}>
                 {provider.type}
               </ListSubheader>,
               ...models.map((model) => (
