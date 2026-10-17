@@ -24,6 +24,26 @@ func (req AiChatUpdateRequest) Validate() error {
 }
 
 const (
+	AiFeedbackUp   = "up"
+	AiFeedbackDown = "down"
+	// AiFeedbackNone clears an earlier rating.
+	AiFeedbackNone = "none"
+)
+
+type (
+	// AiChatFeedbackRequest rates the newest assistant answer of a chat.
+	AiChatFeedbackRequest struct {
+		Rating string `json:"rating"`
+	}
+)
+
+func (req AiChatFeedbackRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.Rating, validation.Required, validation.In(AiFeedbackUp, AiFeedbackDown, AiFeedbackNone)),
+	)
+}
+
+const (
 	AiReviewApplied   = "applied"
 	AiReviewRejected  = "rejected"
 	AiReviewConfirmed = "confirmed"

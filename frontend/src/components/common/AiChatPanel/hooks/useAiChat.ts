@@ -9,7 +9,7 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import { AiChatType, AutoCompleteType } from '@/types';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
-import { agentItemToMessage } from '../utils/agentTrace';
+import { agentItemToMessage, isTraceMessage } from '../utils/agentTrace';
 import { resolveAiChatMode } from './useAiChatMode';
 import { useAiStream } from './useAiStream';
 
@@ -25,7 +25,12 @@ type useAiChatReturnType = {
   handleChatDelete: (chat: AiChatType) => Promise<void>;
   handleChatRename: (chat: AiChatType, title: string) => Promise<void>;
   handleRegenerate: () => Promise<void>;
+  handleCompare: (providerId: number, model: string) => Promise<void>;
+  handleFeedback: (rating: 'up' | 'down' | 'none') => Promise<void>;
 };
+
+/** Per-turn provider/model override used to compare answers; always runs in Ask mode so it cannot write. */
+type ModelOverride = { providerId: number; model: string };
 
 const buildContextOpts = (): AiContextOptsType => {
   const selectedTab = useTabStore.getState().selectedTab();
@@ -41,7 +46,7 @@ const buildContextOpts = (): AiContextOptsType => {
   if (context.selectedQuery) {
     contextOpts.selectedQuery = context.selectedQuery;
     contextOpts.query = context.selectedQuery;
-  } else if (selectedTab?.mode === TabMode.Query) {
+  } else if (selectedTab?.mode === TabMode.Query && context.querySnippet !== '') {
     contextOpts.query = useTabStore.getState().getQuery(selectedTab?.id);
   }
 
@@ -148,13 +153,14 @@ export const useAiChat = (active = true): useAiChatReturnType => {
   }, [cancelStream]);
 
   const executeChat = useCallback(
-    async (message: string, currentChat: AiChatType): Promise<void> => {
+    async (message: string, currentChat: AiChatType, override?: ModelOverride): Promise<void> => {
       const contextOpts = buildContextOpts();
       const request: AiChatRequest = {
         connectionId: Number(connectionId),
         chatId: Number(currentChat.id),
         message,
-        mode: resolveAiChatMode(),
+        mode: override ? 'ask' : resolveAiChatMode(),
+        ...override,
         contextOpts
       };
 
@@ -298,7 +304,9 @@ export const useAiChat = (active = true): useAiChatReturnType => {
     if (!lastRequest || !currentChat) return;
 
     resetStreaming();
-    await executeChat(lastRequest.message, currentChat);
+    // A failed compare must retry on the model it was asked of, not the active one.
+    const { providerId, model } = lastRequest;
+    await executeChat(lastRequest.message, currentChat, providerId && model ? { providerId, model } : undefined);
   };
 
   const handleChatDelete = useCallback(
@@ -340,9 +348,39 @@ export const useAiChat = (active = true): useAiChatReturnType => {
     await executeChat(lastUser.content, currentChat);
   };
 
+  /** Re-runs the last user prompt on another model and appends its answer next to the first. */
+  const handleCompare = async (providerId: number, model: string): Promise<void> => {
+    const currentChat = useAiStore.getState().currentChat;
+    const lastUser = [...(currentChat?.messages ?? [])].reverse().find((message) => message.role === 'user');
+    if (!currentChat || !lastUser || chatPending) return;
+
+    resetStreaming();
+    await executeChat(lastUser.content, currentChat, { providerId, model });
+  };
+
+  /** Rates the newest assistant answer and mirrors the rating into the open chat. */
+  const handleFeedback = async (rating: 'up' | 'down' | 'none'): Promise<void> => {
+    const currentChat = useAiStore.getState().currentChat;
+    if (!currentChat) return;
+
+    const answers = currentChat.messages
+      .map((message, position) => ({ message, position }))
+      .filter(({ message }) => message.role === 'assistant' && !isTraceMessage(message));
+    const index = answers[answers.length - 1]?.position ?? -1;
+    if (index < 0) return;
+
+    await api.aiChat.rateAnswer(currentChat.id, rating);
+
+    const messages = [...currentChat.messages];
+    messages[index] = { ...messages[index], feedback: rating === 'none' ? undefined : rating };
+    updateCurrentChat({ ...currentChat, messages });
+  };
+
   return {
+    handleFeedback,
     handleChatRename,
     handleRegenerate,
+    handleCompare,
     autocomplete,
     chatPending,
     handleCancel,

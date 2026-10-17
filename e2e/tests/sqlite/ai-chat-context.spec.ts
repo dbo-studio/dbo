@@ -47,7 +47,7 @@ test.describe("AI chat context chips", () => {
           await remove.dispatchEvent("click");
         };
 
-        const requests: Array<{ message: string; contextOpts?: { tables?: string[]; schema?: string } }> = [];
+        const requests: Array<{ message: string; contextOpts?: { tables?: string[]; schema?: string; query?: string } }> = [];
         await page.route("**/api/ai/chat/stream", async (route) => {
           requests.push(route.request().postDataJSON() as (typeof requests)[number]);
           await route.continue();
@@ -91,6 +91,27 @@ test.describe("AI chat context chips", () => {
 
         await test.step("Token budget meter is shown", async () => {
           await expect(page.getByTestId("ai-context-budget")).toContainText("tokens");
+        });
+
+        await test.step("Removing the query chip stops sending the editor query", async () => {
+          const queryChip = page.getByTestId("ai-context-chip").filter({ hasText: "SELECT 1 AS one" });
+          await expect(queryChip).toBeVisible();
+          await composer.fill("with the query");
+          await composer.press("Enter");
+          await expect.poll(() => requests.at(-1)?.message).toBe("with the query");
+          expect(requests.at(-1)?.contextOpts?.query).toContain("SELECT 1 AS one");
+
+          await queryChip.dispatchEvent("mouseenter");
+          await queryChip.getByTestId("ai-context-chip-remove").dispatchEvent("click");
+          await expect(queryChip).toHaveCount(0);
+
+          const before = requests.length;
+          await composer.fill("without the query");
+          await composer.press("Enter");
+          await expect.poll(() => requests.length).toBe(before + 1);
+          expect(requests.at(-1)?.contextOpts?.query).toBeUndefined();
+          // Leave the follow chip's tooltip so it cannot cover the chips below.
+          await page.mouse.move(0, 0);
         });
 
         await test.step("@ menu offers tables and the active query", async () => {
@@ -139,7 +160,7 @@ test.describe("AI chat context chips", () => {
           await expect(chip(ordersTable)).toHaveCount(0);
 
           await page.getByRole("button", { name: "Chat history" }).click();
-          await page.getByTestId("ai-history-item").filter({ hasText: "e2e_ctx" }).first().click();
+          await page.getByTestId("ai-history-item").filter({ hasText: "with the query" }).first().click();
           await expect(chip(ordersTable)).toBeVisible({ timeout: 15000 });
         });
 

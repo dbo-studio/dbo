@@ -18,6 +18,7 @@ type IAiChatService interface {
 	Create(ctx context.Context, chat *dto.AiChatCreateRequest) (*dto.AiChatDetailResponse, error)
 	Update(ctx context.Context, chatID uint, req *dto.AiChatUpdateRequest) (*dto.AiChatDetailResponse, error)
 	Review(ctx context.Context, chatID uint, req *dto.AiChatReviewRequest) error
+	Feedback(ctx context.Context, chatID uint, req *dto.AiChatFeedbackRequest) error
 	Delete(ctx context.Context, chatID uint) error
 }
 
@@ -182,4 +183,32 @@ func (s IAiChatServiceImpl) Review(ctx context.Context, chatID uint, req *dto.Ai
 	}
 
 	return apperror.NotFound(apperror.ErrAiChatNotFound)
+}
+
+// Feedback rates the newest assistant answer of the chat; "none" clears it.
+func (s IAiChatServiceImpl) Feedback(ctx context.Context, chatID uint, req *dto.AiChatFeedbackRequest) error {
+	chat, err := s.aiChatRepo.Find(ctx, chatID, &dto.PaginationRequest{Page: lo.ToPtr(1), Count: lo.ToPtr(1)})
+	if err != nil {
+		return apperror.NotFound(apperror.ErrAiChatNotFound)
+	}
+
+	if err := s.requireConnection(ctx, int32(chat.ConnectionID)); err != nil {
+		return apperror.NotFound(apperror.ErrAiChatNotFound)
+	}
+
+	rating := req.Rating
+	if rating == dto.AiFeedbackNone {
+		rating = ""
+	}
+
+	found, err := s.aiChatRepo.SetLastAnswerFeedback(ctx, chatID, rating)
+	if err != nil {
+		return apperror.InternalServerError(err)
+	}
+
+	if !found {
+		return apperror.NotFound(apperror.ErrAiChatNotFound)
+	}
+
+	return nil
 }

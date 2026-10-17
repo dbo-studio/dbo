@@ -9,6 +9,9 @@ type (
 		ChatID       *int32            `json:"chatId"`
 		ContextOpts  *AiContextOptions `json:"contextOpts"`
 		Mode         string            `json:"mode"`
+		// ProviderID and Model override the active provider for this turn only (compare with another model).
+		ProviderID *uint  `json:"providerId"`
+		Model      string `json:"model"`
 	}
 
 	AiContextOptions struct {
@@ -36,6 +39,8 @@ type (
 		Type      string `json:"type"`
 		Language  string `json:"language"`
 		CreatedAt string `json:"createdAt"`
+		Model     string `json:"model,omitempty"`
+		Feedback  string `json:"feedback,omitempty"`
 	}
 )
 

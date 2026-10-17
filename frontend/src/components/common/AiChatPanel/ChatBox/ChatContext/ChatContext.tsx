@@ -115,7 +115,8 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
             type='tables'
             key='query-snippet'
             name={`${locales.context_query}: ${context.querySnippet}`}
-            onClick={() => {}}
+            // An empty snippet means "removed": the editor query is not sent until it changes again.
+            onClick={() => updateContext({ ...context, querySnippet: '' })}
           />
         )}
 
@@ -124,7 +125,7 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
             type='tables'
             key='query-result'
             name={`${locales.context_result}: ${context.queryResultSummary}`}
-            onClick={() => {}}
+            onClick={() => updateContext({ ...context, queryResultSummary: undefined })}
           />
         )}
         <Tooltip title={locales.ai_context_budget_desc}>

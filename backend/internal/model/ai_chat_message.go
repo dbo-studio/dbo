@@ -3,12 +3,16 @@ package model
 import "time"
 
 type AiChatMessage struct {
-	ID        uint              `gorm:"primaryKey,autoIncrement"`
-	ChatID    uint              `gorm:"index;not null"`
-	Role      AiChatMessageRole `gorm:"size:32;not null"`
-	Content   string            `gorm:"type:text;not null"`
-	Type      AiChatMessageType
-	Language  AiChatMessageLanguage
+	ID       uint              `gorm:"primaryKey,autoIncrement"`
+	ChatID   uint              `gorm:"index;not null"`
+	Role     AiChatMessageRole `gorm:"size:32;not null"`
+	Content  string            `gorm:"type:text;not null"`
+	Type     AiChatMessageType
+	Language AiChatMessageLanguage
+	// Model is the LLM that wrote an assistant message; empty for user messages and older rows.
+	Model string `gorm:"size:128;not null;default:''"`
+	// Feedback is the user's rating of an assistant answer: "up", "down" or empty.
+	Feedback  string     `gorm:"size:8;not null;default:''"`
 	CreatedAt *time.Time `gorm:"autoCreateTime"`
 }
 

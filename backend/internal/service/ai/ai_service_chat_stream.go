@@ -24,7 +24,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 		return emit(data)
 	}
 
-	provider, dbProvider, err := s.createProvider(ctx)
+	provider, dbProvider, err := s.createProvider(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 
 	// Persist even when the user stopped the turn so the tool cards and any
 	// pending diagram proposal survive a reload.
-	if saveErr := s.saveChatMessages(context.WithoutCancel(ctx), chat, req.Message, traces, providerResp); saveErr != nil {
+	if saveErr := s.saveChatMessages(context.WithoutCancel(ctx), chat, req.Message, traces, providerResp, dbProvider.Model); saveErr != nil {
 		s.logger.Error(fmt.Sprintf("Failed to save chat messages: %v", saveErr))
 	}
 
@@ -102,6 +102,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 			Type:      string(trace.Type),
 			Language:  string(trace.Language),
 			CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+			Model:     dbProvider.Model,
 		})
 	}
 
@@ -112,6 +113,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 			Type:      string(providerResp.Type),
 			Language:  string(providerResp.Language),
 			CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+			Model:     dbProvider.Model,
 		})
 	}
 
@@ -122,6 +124,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 			Type:      string(content.Type),
 			Language:  string(content.Language),
 			CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+			Model:     dbProvider.Model,
 		})
 	}
 

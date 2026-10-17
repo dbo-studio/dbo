@@ -109,5 +109,8 @@ export const IconTypes = {
   calendar: 'Calendar',
   clock: 'Clock',
   bookmark: 'Bookmark',
-  layoutList: 'LayoutList'
+  layoutList: 'LayoutList',
+  compare: 'GitCompare',
+  thumbUp: 'ThumbsUp',
+  thumbDown: 'ThumbsDown'
 };

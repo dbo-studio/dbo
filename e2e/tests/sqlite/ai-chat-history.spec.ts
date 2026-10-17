@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { getDbConfig } from "../../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import { clearActiveAiProfile } from "../../helpers/aiSetup";
+import { FakeLlm, pointProviderAtFakeLlm } from "../../helpers/fakeLlm";
 import { ensureSqliteDbFile } from "../../helpers/objectFormSqliteLifecycle";
 import { withConnectionCleanup } from "../../helpers/safeCleanup";
 import { ConnectionPage, SettingsPage } from "../../pages";
@@ -52,6 +53,7 @@ test.describe("AI chat history", () => {
         await page.getByRole("button", { name: "Chat history" }).click();
         await expect(items).toHaveCount(3);
         await expect(items.first()).toContainText(/now|ago|min|sec/i);
+        await expect(page.getByTestId("ai-history-connection")).toHaveText(connectionName);
       });
 
       await test.step("Search finds a chat and reopens it", async () => {
@@ -67,6 +69,22 @@ test.describe("AI chat history", () => {
         await expect(page.getByTestId("ai-history-empty")).toBeVisible();
         await page.getByTestId("ai-history-search").fill("");
         await expect(items).toHaveCount(3);
+      });
+
+      await test.step("Server-side search filters by term and escapes LIKE wildcards", async () => {
+        const search = async (term: string): Promise<string[]> => {
+          const response = await page.request.get("/api/ai/chats", {
+            params: { connectionId, page: 1, count: 50, search: term },
+          });
+          expect(response.status()).toBe(200);
+          const body = (await response.json()) as { data: Array<{ title: string }> };
+          return body.data.map((chat) => chat.title);
+        };
+
+        expect(await search("ORDERS")).toEqual(["orders report"]);
+        expect(await search("%")).toEqual([]);
+        expect(await search("_")).toEqual([]);
+        expect(await search("")).toHaveLength(3);
       });
 
       await test.step("Pin moves a chat to the top and persists", async () => {
@@ -101,5 +119,51 @@ test.describe("AI chat history", () => {
         await expect(items.filter({ hasText: "orders report" })).toHaveCount(0);
       });
     });
+  });
+
+  test("search matches message bodies, not just titles", async ({ page }, testInfo) => {
+    const suffix = uniqueTestSuffix(testInfo);
+    const connectionName = `ai-history-body-${suffix}`;
+    const dbPath = `/tmp/dbo-e2e-ai-history-body-${suffix}.db`;
+    ensureSqliteDbFile(dbPath);
+
+    const llm = new FakeLlm();
+    const llmUrl = await llm.start();
+
+    try {
+      await withConnectionCleanup(page, connectionName, async () => {
+        const connectionPage = new ConnectionPage(page);
+
+        await clearActiveAiProfile(page);
+        await connectionPage.goto();
+        await connectionPage.waitForReady();
+        await connectionPage.setupConnection(getDbConfig("sqlite", connectionName, dbPath));
+        await pointProviderAtFakeLlm(page, llmUrl);
+        const connectionId = await connectionIdByName(page, connectionName);
+
+        // The title is the first 20 characters, so the keyword only appears in the message body.
+        const created = await page.request.post("/api/ai/chats", { data: { connectionId, title: "inventory" } });
+        const chatId = ((await created.json()) as { data: { id: number } }).data.id;
+        const sent = await page.request.post("/api/ai/chat/stream", {
+          data: { connectionId, chatId, message: "please summarize the quarterly zebra inventory", mode: "ask" },
+        });
+        expect(sent.status()).toBe(200);
+        expect(await sent.text()).toContain('"type":"done"');
+
+        const search = async (term: string): Promise<number[]> => {
+          const response = await page.request.get("/api/ai/chats", {
+            params: { connectionId, page: 1, count: 50, search: term },
+          });
+          expect(response.status()).toBe(200);
+          return ((await response.json()) as { data: Array<{ id: number }> }).data.map((chat) => chat.id);
+        };
+
+        expect(await search("zebra")).toEqual([chatId]);
+        expect(await search("ZEBRA")).toEqual([chatId]);
+        expect(await search("giraffe")).toEqual([]);
+      });
+    } finally {
+      await llm.stop();
+    }
   });
 });

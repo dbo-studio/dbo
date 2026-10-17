@@ -7,6 +7,7 @@ const endpoint = {
   detail: (chatID: string | number): string => `/ai/chats/${chatID}`,
   create: (): string => '/ai/chats',
   update: (chatID: string | number): string => `/ai/chats/${chatID}`,
+  feedback: (chatID: string | number): string => `/ai/chats/${chatID}/feedback`,
   review: (chatID: string | number): string => `/ai/chats/${chatID}/review`,
   delete: (chatID: string | number): string => `/ai/chats/${chatID}`
 };
@@ -40,6 +41,11 @@ export const updateChat = async (
 /** Persists the user's decision on a diagram_diff / permission card. */
 export const reviewCard = async (chatId: string | number, data: { id: string; decision: string }): Promise<void> => {
   await api.post(endpoint.review(chatId), data);
+};
+
+/** Rates the newest assistant answer of a chat; "none" clears the rating. */
+export const rateAnswer = async (chatId: string | number, rating: 'up' | 'down' | 'none'): Promise<void> => {
+  await api.post(endpoint.feedback(chatId), { rating });
 };
 
 export const deleteChat = async (id: string | number): Promise<void> => {

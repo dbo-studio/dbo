@@ -4,10 +4,12 @@ import { useAiStore } from '@/store/aiStore/ai.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Chip, CircularProgress, Typography } from '@mui/material';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { AiMessageType } from '@/types';
 import { MessagesProps } from '../types';
 import ChatEmptyState from './ChatEmptyState/ChatEmptyState';
 import ChatErrorMessage from './ChatErrorMessage/ChatErrorMessage';
 import CodeMessage from './CodeMessage/CodeMessage';
+import { DiffBaselineContext } from './DiffBaselineContext';
 import ExplanationMessage from './ExplanationMessage/ExplanationMessage';
 import { MessageGroupStyled, MessagesListStyled, MessagesStyled, ScrollToBottomButtonStyled } from './Messages.styled';
 import StreamingPreview from './StreamingPreview/StreamingPreview';
@@ -24,18 +26,38 @@ export default function Messages({
   onLoadMore,
   onSelectPrompt,
   onRetry,
-  onRegenerate
+  onRegenerate,
+  onCompare,
+  onFeedback
 }: MessagesProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const streaming = useAiStore((state) => state.streaming);
   const density = useSettingStore((state) => state.editor.aiChatDensity ?? 'comfortable');
   const agentItems = useAiStore((state) => state.agentItems);
+  const selectedQuery = useAiStore((state) => state.context.selectedQuery);
   const blocks = useMemo(() => toRenderBlocks(messages), [messages]);
   const liveBlocks = useMemo(() => groupLiveItems(agentItems), [agentItems]);
   const lastTurn = useMemo(() => {
     const lastUserIndex = messages.map((message) => message.role).lastIndexOf('user');
     return messages.slice(lastUserIndex + 1);
   }, [messages]);
+  // Earlier SQL answer in the chat; it is the diff baseline when nothing was selected, and after a reload.
+  const previousSql = useMemo(() => {
+    const result = new Map<AiMessageType, string>();
+    let previous: string | undefined;
+    for (const message of messages) {
+      if (message.role !== 'assistant' || message.type !== 'code' || message.language !== 'sql') continue;
+      if (previous !== undefined) result.set(message, previous);
+      previous = message.content;
+    }
+    return result;
+  }, [messages]);
+  // Only label answers once a chat holds more than one model; a single-model chat needs no chip.
+  const showModelLabel = useMemo(
+    () =>
+      new Set(messages.filter((message) => message.role === 'assistant' && message.model).map((m) => m.model)).size > 1,
+    [messages]
+  );
   const isNearBottomRef = useRef(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
 
@@ -126,6 +148,8 @@ export default function Messages({
         {blocks.map((block) => {
           if (block.kind === 'message') {
             const { message } = block;
+            const inLastTurn = message.role === 'assistant' && lastTurn.includes(message);
+            const baseline = (inLastTurn ? selectedQuery : undefined) ?? previousSql.get(message);
             return (
               <MessageGroupStyled key={block.key} title={formatMessageTime(message.createdAt)} data-testid='ai-message'>
                 {message.thinking?.content && (
@@ -135,7 +159,18 @@ export default function Messages({
                     defaultCollapsed
                   />
                 )}
-                {message.type === 'code' ? <CodeMessage message={message} /> : <ExplanationMessage message={message} />}
+                {showModelLabel && message.role === 'assistant' && message.model && (
+                  <Typography variant='caption' color='textSubdued' data-testid='ai-message-model'>
+                    {message.model}
+                  </Typography>
+                )}
+                <DiffBaselineContext value={baseline}>
+                  {message.type === 'code' ? (
+                    <CodeMessage message={message} />
+                  ) : (
+                    <ExplanationMessage message={message} />
+                  )}
+                </DiffBaselineContext>
               </MessageGroupStyled>
             );
           }
@@ -178,7 +213,7 @@ export default function Messages({
         )}
 
         {!loading && streaming.status !== 'streaming' && !streaming.error && lastTurn.length > 0 && (
-          <TurnActions turn={lastTurn} onRegenerate={onRegenerate} />
+          <TurnActions turn={lastTurn} onRegenerate={onRegenerate} onCompare={onCompare} onFeedback={onFeedback} />
         )}
 
         {loading && streaming.status !== 'streaming' && (
