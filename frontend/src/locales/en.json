@@ -95,6 +95,8 @@
   "close": "Close",
   "close_other_tabs": "Close other tabs",
   "close_all": "Close all",
+  "split_right": "Split right",
+  "move_to_left_pane": "Move to left pane",
   "restart_required": "Restart require!",
   "dark_mode_restart": "To apply a changing theme you need to restart the app!",
   "new_tab": "New tab",

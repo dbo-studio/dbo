@@ -1,15 +1,21 @@
 import type { TabMode } from '@/core/enums';
+import type { PaneId, SelectedByPane } from './tabs';
 import type { DiagramTabType, FilterType, SettingsTabType, SortType, TabType } from '@/types/Tab';
 
 export type TabStore = {
   tabs: TabType[];
   selectedTabId: string | undefined;
+  selectedByPane: SelectedByPane;
+  focusedPane: PaneId;
   selectedTab: <T extends TabType>() => T | undefined;
   reset: () => void;
   getTabs: () => TabType[];
   updateTabs: (tabs: TabType[]) => void;
   updateSelectedTab: (selectedTab: TabType | undefined) => void;
   reorderTabs: (activeId: string, overId: string) => void;
+  moveTabToPane: (tabId: string, pane: PaneId, overId?: string) => void;
+  splitRight: (tabId: string) => void;
+  focusPane: (pane: PaneId) => void;
 };
 
 export type TabFilterSlice = {
@@ -44,7 +50,7 @@ export type TabSettingSlice = {
 
 export type TabQuerySlice = {
   getQuery: (tabId?: string) => string;
-  updateQuery: (query: string) => void;
+  updateQuery: (query: string, tabId?: string) => void;
   removeQuery: (tabId: string) => void;
   clearStoredQueries: () => void;
 };

@@ -15,7 +15,7 @@ import { getEditorSessionContext } from '@/hooks/useEditorSessionContext';
 import { DataTabType, EditorTabType } from '@/types';
 import type { StateCreator } from 'zustand';
 import { toast } from 'sonner';
-import { useTabStore } from '../../tabStore/tab.store';
+import { selectPaneSelectedTab, selectPaneSelectedTabId, useTabStore } from '@/store/tabStore/tab.store';
 import type {
   DataColumnSlice,
   DataEditedRowsSlice,
@@ -103,7 +103,7 @@ export const createDataQuerySlice: StateCreator<
       set({ isDataFetching: loading ?? !get().isDataFetching }, undefined, 'toggleDataFetching');
     },
     updateGridMeta: async (meta: GridMetaType): Promise<void> => {
-      const selectedTabId = useTabStore.getState().selectedTabId;
+      const selectedTabId = selectPaneSelectedTabId(get().paneId);
       set(
         {
           gridEditable: meta.gridEditable,
@@ -124,7 +124,7 @@ export const createDataQuerySlice: StateCreator<
       get().updateSelectedRows([], true);
     },
     runQuery: async (abortController?: AbortController): Promise<RunQueryResponseType | undefined> => {
-      const tab = useTabStore.getState().selectedTab<DataTabType>();
+      const tab = selectPaneSelectedTab<DataTabType>(get().paneId);
       if (!tab) return;
 
       const filters = tab.filters ?? [];
@@ -172,7 +172,7 @@ export const createDataQuerySlice: StateCreator<
           return;
         }
 
-        useTabStore.getState().updateQuery(res.query);
+        useTabStore.getState().updateQuery(res.query, tab.id);
 
         await Promise.all([
           get().updateRows(res.data),
@@ -211,12 +211,12 @@ export const createDataQuerySlice: StateCreator<
       query?: string,
       abortController?: AbortController
     ): Promise<RunQueryResponseType | undefined> => {
-      const selectedTabId = useTabStore.getState().selectedTabId;
-      const selectedTab = useTabStore.getState().selectedTab<EditorTabType>();
+      const selectedTabId = selectPaneSelectedTabId(get().paneId);
+      const selectedTab = selectPaneSelectedTab<EditorTabType>(get().paneId);
       const currentConnectionId = useConnectionStore.getState().currentConnectionId;
       if (!currentConnectionId || !selectedTabId) return;
 
-      const requestQuery = query ? query : useTabStore.getState().getQuery();
+      const requestQuery = query ? query : useTabStore.getState().getQuery(selectedTabId);
       const controller = attachAbortController(abortController);
 
       const execute = async (confirmed: boolean): Promise<RunQueryResponseType> => {
@@ -249,7 +249,7 @@ export const createDataQuerySlice: StateCreator<
         }
 
         if (res.query) {
-          useTabStore.getState().updateQuery(res.query);
+          useTabStore.getState().updateQuery(res.query, selectedTabId);
         }
 
         const gridMeta: GridMetaType = {

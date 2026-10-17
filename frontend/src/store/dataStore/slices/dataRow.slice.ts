@@ -1,5 +1,5 @@
 import { debouncedSaveRows } from '@/core/utils/indexedDbHelper';
-import { useTabStore } from '@/store/tabStore/tab.store';
+import { selectPaneSelectedTabId } from '@/store/tabStore/tab.store';
 import type { RowType } from '@/types';
 import type { StateCreator } from 'zustand';
 import type { DataColumnSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
@@ -15,7 +15,7 @@ export const createDataRowSlice: StateCreator<
     return get().rows?.find((r) => r.dbo_index === row.dbo_index);
   },
   updateRows: async (rows: RowType[]): Promise<void> => {
-    const selectedTabId = useTabStore.getState().selectedTabId;
+    const selectedTabId = selectPaneSelectedTabId(get().paneId);
     if (!selectedTabId) return;
 
     set({ rows }, undefined, 'updateRows');
@@ -23,7 +23,7 @@ export const createDataRowSlice: StateCreator<
   },
   updateRow: async (row: RowType): Promise<void> => {
     const rows = get().rows;
-    const selectedTabId = useTabStore.getState().selectedTabId;
+    const selectedTabId = selectPaneSelectedTabId(get().paneId);
 
     if (!selectedTabId || !rows) return;
 
