@@ -45,6 +45,24 @@ export default function InlineSqlEditor({
       '!suggestWidgetVisible'
     );
 
+    // Single line only. A newline can still arrive (paste, Shift+Enter, or Enter
+    // when the command above does not fire): flatten it, and treat a typed newline
+    // as Enter.
+    editorInstance.onDidChangeModelContent((event) => {
+      const current = editorInstance.getValue();
+      if (!/\r?\n/.test(current)) {
+        return;
+      }
+
+      const typedEnter = event.changes.length === 1 && /^\r?\n\s*$/.test(event.changes[0].text);
+      const flat = typedEnter ? current.replace(/\r?\n[ \t]*/g, '') : current.replace(/\s*\r?\n\s*/g, ' ');
+      editorInstance.setValue(flat);
+      editorInstance.setPosition({ lineNumber: 1, column: flat.length + 1 });
+      if (typedEnter) {
+        onEnter?.(flat);
+      }
+    });
+
     editorInstance.onDidBlurEditorText(() => {
       const currentValue = editorInstance.getValue();
       if (currentValue && currentValue !== value.toString()) {
