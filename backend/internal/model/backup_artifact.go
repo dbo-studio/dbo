@@ -16,6 +16,9 @@ type BackupMethod string
 
 const (
 	BackupMethodBasic BackupMethod = "basic"
+	// BackupMethodNative is a dump made by pg_dump, mysqldump or SQLite's own
+	// VACUUM INTO.
+	BackupMethodNative BackupMethod = "native"
 )
 
 // BackupArtifact is one backup run and the file it produced. Rows exist for
@@ -29,6 +32,8 @@ type BackupArtifact struct {
 	Schema       string       `gorm:"not null;default:''"`
 	Driver       string       `gorm:"not null;default:''"`
 	Method       BackupMethod `gorm:"not null;default:'basic'"`
+	Tool         string       `gorm:"not null;default:''"`
+	ToolVersion  string       `gorm:"not null;default:''"`
 	Status       BackupStatus `gorm:"not null;default:'running'"`
 	Note         string       `gorm:"not null;default:''"`
 	FileName     string       `gorm:"not null;default:''"`

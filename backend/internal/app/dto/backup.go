@@ -56,6 +56,8 @@ type (
 		Schema       string     `json:"schema"`
 		Driver       string     `json:"driver"`
 		Method       string     `json:"method"`
+		Tool         string     `json:"tool"`
+		ToolVersion  string     `json:"toolVersion"`
 		Status       string     `json:"status"`
 		Note         string     `json:"note"`
 		FileName     string     `json:"fileName"`

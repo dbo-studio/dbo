@@ -3,6 +3,7 @@ package serviceBackup
 import (
 	"context"
 	"os"
+	"path/filepath"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -122,6 +123,8 @@ func (s IBackupServiceImpl) History(ctx context.Context, req *dto.BackupHistoryR
 			Schema:       a.Schema,
 			Driver:       a.Driver,
 			Method:       string(a.Method),
+			Tool:         a.Tool,
+			ToolVersion:  a.ToolVersion,
 			Status:       string(a.Status),
 			Note:         a.Note,
 			FileName:     a.FileName,
@@ -153,9 +156,14 @@ func (s IBackupServiceImpl) Download(ctx context.Context, req *dto.BackupDownloa
 		return nil, apperror.NotFound(apperror.ErrBackupNotFound)
 	}
 
+	contentType := "application/octet-stream"
+	if filepath.Ext(artifact.FileName) == ".sql" {
+		contentType = "application/sql"
+	}
+
 	return &response.FileDownload{
 		FileName:    artifact.FileName,
-		ContentType: "application/sql",
+		ContentType: contentType,
 		Content:     content,
 	}, nil
 }

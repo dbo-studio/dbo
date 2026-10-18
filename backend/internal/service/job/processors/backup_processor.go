@@ -4,10 +4,12 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -15,15 +17,17 @@ import (
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
+	serviceBackup "github.com/dbo-studio/dbo/internal/service/backup"
 	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
 	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 )
 
-// BackupProcessor writes a whole-database logical dump and records it as a
-// backup artifact. Until native tools are wired in it uses DBO's built-in dump
-// (method "basic").
+// BackupProcessor writes a whole-database dump and records it as a backup
+// artifact. It prefers the native route (pg_dump, mysqldump, SQLite VACUUM
+// INTO) and falls back to DBO's built-in dump (method "basic") only when no
+// tool is available. If a native tool runs and fails, the job fails.
 type BackupProcessor struct {
 	jobManager     serviceJob.IJobManager
 	cm             *databaseConnection.ConnectionManager
@@ -98,11 +102,14 @@ func (p *BackupProcessor) Process(ctx context.Context, job *model.Job) error {
 	}
 
 	p.finish(ctx, artifact, map[string]any{
-		"status":    model.BackupStatusCompleted,
-		"file_name": artifact.FileName,
-		"file_path": artifact.FilePath,
-		"size":      artifact.Size,
-		"checksum":  artifact.Checksum,
+		"status":       model.BackupStatusCompleted,
+		"method":       artifact.Method,
+		"tool":         artifact.Tool,
+		"tool_version": artifact.ToolVersion,
+		"file_name":    artifact.FileName,
+		"file_path":    artifact.FilePath,
+		"size":         artifact.Size,
+		"checksum":     artifact.Checksum,
 	})
 
 	job.Result = model.JobResult{
@@ -110,7 +117,7 @@ func (p *BackupProcessor) Process(ctx context.Context, job *model.Job) error {
 		FilePath:   artifact.FilePath,
 		Size:       artifact.Size,
 		ArtifactID: artifact.ID,
-		Format:     "sql",
+		Format:     strings.TrimPrefix(filepath.Ext(artifact.FileName), "."),
 	}
 
 	return nil
@@ -121,14 +128,38 @@ func (p *BackupProcessor) Process(ctx context.Context, job *model.Job) error {
 func (p *BackupProcessor) run(ctx context.Context, job *model.Job, connection *model.Connection, jobData *dto.BackupJob, artifact *model.BackupArtifact) (string, error) {
 	// Pin the password in memory for the whole job so reconnects don't depend
 	// on SecretStore TTL.
+	var password string
+
 	if connection.ConnectionType != "sqlite" {
 		pw, err := p.secrets.GetConnectionPassword(ctx, jobData.OwnerID, connection.ID)
 		if err != nil {
 			return "", err
 		}
 
+		password = pw
 		ctx = helper.CtxWithConnectionPassword(ctx, pw)
 	}
+
+	if err := os.MkdirAll(helper.BackupDir, 0o755); err != nil {
+		return "", fmt.Errorf("failed to create backup directory: %w", err)
+	}
+
+	label := lo.CoalesceOrEmpty(jobData.Database, jobData.Schema, "database")
+	stamp := time.Now().Format("20060102_150405")
+
+	setFile := func(ext string) {
+		artifact.FileName = fmt.Sprintf("backup_%s_%s.%s", label, stamp, ext)
+		artifact.FilePath = filepath.Join(helper.BackupDir, fmt.Sprintf("%d_%s", artifact.ID, artifact.FileName))
+	}
+
+	native, err := p.runNative(ctx, job, connection, jobData, artifact, password, setFile)
+	if err != nil || native {
+		return artifact.FilePath, err
+	}
+
+	setFile("sql")
+
+	artifact.Method = model.BackupMethodBasic
 
 	repo, err := database.NewDatabaseRepository(ctx, connection, p.cm)
 	if err != nil {
@@ -162,14 +193,6 @@ func (p *BackupProcessor) run(ctx context.Context, job *model.Job, connection *m
 		return "", err
 	}
 
-	if err := os.MkdirAll(helper.BackupDir, 0o755); err != nil {
-		return "", fmt.Errorf("failed to create backup directory: %w", err)
-	}
-
-	label := lo.CoalesceOrEmpty(jobData.Database, jobData.Schema, "database")
-	artifact.FileName = fmt.Sprintf("backup_%s_%s.sql", label, time.Now().Format("20060102_150405"))
-	artifact.FilePath = filepath.Join(helper.BackupDir, fmt.Sprintf("%d_%s", artifact.ID, artifact.FileName))
-
 	if err := p.jobManager.UpdateJobProgress(ctx, job, 20, fmt.Sprintf("Backing up %d table(s)", len(targets))); err != nil {
 		return artifact.FilePath, err
 	}
@@ -181,12 +204,76 @@ func (p *BackupProcessor) run(ctx context.Context, job *model.Job, connection *m
 		return artifact.FilePath, err
 	}
 
-	artifact.Size, artifact.Checksum, err = fileSizeAndChecksum(artifact.FilePath)
-	if err != nil {
-		return artifact.FilePath, err
+	return artifact.FilePath, p.completeFile(ctx, job, artifact)
+}
+
+// runNative produces the artifact with a native tool. It reports false, with no
+// error, when none is available so the caller can use the built-in dump.
+func (p *BackupProcessor) runNative(ctx context.Context, job *model.Job, connection *model.Connection, jobData *dto.BackupJob, artifact *model.BackupArtifact, password string, setFile func(ext string)) (bool, error) {
+	if connection.ConnectionType == "sqlite" {
+		return true, p.sqliteVacuumInto(ctx, job, connection, artifact, setFile)
 	}
 
-	return artifact.FilePath, p.jobManager.UpdateJobProgress(ctx, job, 100, "Backup completed successfully")
+	setFile("sql")
+
+	dump, err := serviceBackup.PlanNativeDump(ctx, connection, password, jobData.Database, jobData.Schema, artifact.FilePath)
+	if errors.Is(err, serviceBackup.ErrNativeUnavailable) {
+		return false, nil
+	}
+
+	if err != nil {
+		return true, err
+	}
+
+	artifact.Method = model.BackupMethodNative
+	artifact.Tool = dump.Tool
+	artifact.ToolVersion = dump.Version
+
+	if err := p.jobManager.UpdateJobProgress(ctx, job, 20, fmt.Sprintf("Running %s %s", dump.Tool, dump.Version)); err != nil {
+		return true, err
+	}
+
+	if err := dump.Run(ctx); err != nil {
+		return true, err
+	}
+
+	return true, p.completeFile(ctx, job, artifact)
+}
+
+// sqliteVacuumInto copies the database with SQLite's own consistent snapshot,
+// which is safe while DBO holds the file open.
+func (p *BackupProcessor) sqliteVacuumInto(ctx context.Context, job *model.Job, connection *model.Connection, artifact *model.BackupArtifact, setFile func(ext string)) error {
+	setFile("sqlite")
+
+	db, err := p.cm.GetConnection(ctx, connection, false)
+	if err != nil {
+		return err
+	}
+
+	artifact.Method = model.BackupMethodNative
+	artifact.Tool = "sqlite"
+	artifact.ToolVersion = "VACUUM INTO"
+
+	if err := p.jobManager.UpdateJobProgress(ctx, job, 20, "Copying SQLite database"); err != nil {
+		return err
+	}
+
+	if err := db.WithContext(ctx).Exec("VACUUM INTO ?", artifact.FilePath).Error; err != nil {
+		return err
+	}
+
+	return p.completeFile(ctx, job, artifact)
+}
+
+func (p *BackupProcessor) completeFile(ctx context.Context, job *model.Job, artifact *model.BackupArtifact) error {
+	var err error
+
+	artifact.Size, artifact.Checksum, err = fileSizeAndChecksum(artifact.FilePath)
+	if err != nil {
+		return err
+	}
+
+	return p.jobManager.UpdateJobProgress(ctx, job, 100, "Backup completed successfully")
 }
 
 func (p *BackupProcessor) finish(ctx context.Context, artifact *model.BackupArtifact, fields map[string]any) {
