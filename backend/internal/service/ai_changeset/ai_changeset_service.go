@@ -22,6 +22,8 @@ type IAiChangesetService interface {
 	Create(ctx context.Context, chatID uint, req *dto.SchemaChangeRequest) (*dto.AiChangesetResponse, error)
 	Index(ctx context.Context, chatID uint) ([]dto.AiChangesetResponse, error)
 	Review(ctx context.Context, chatID, changesetID uint, req *dto.AiChangesetReviewRequest) (*dto.AiChangesetResponse, error)
+	// EditOp replaces the definition of an op that was not applied yet and puts it back to pending.
+	EditOp(ctx context.Context, chatID, changesetID uint, position int, edited *dto.SchemaChangeOp) (*dto.AiChangesetResponse, error)
 	Preview(ctx context.Context, chatID, changesetID uint) ([]string, error)
 	Apply(ctx context.Context, chatID, changesetID uint, req *dto.AiChangesetApplyRequest) (*dto.AiChangesetResponse, error)
 	// Describe tells the agent how the user reviewed its earlier proposals.
@@ -174,6 +176,46 @@ func (s IAiChangesetServiceImpl) Review(ctx context.Context, chatID, changesetID
 	if err := s.aiChangesetRepo.SaveOps(ctx, lo.Map(targets, func(op *model.AiChangesetOp, _ int) model.AiChangesetOp { return *op })); err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
+
+	return s.response(ctx, changeset)
+}
+
+func (s IAiChangesetServiceImpl) EditOp(ctx context.Context, chatID, changesetID uint, position int, edited *dto.SchemaChangeOp) (*dto.AiChangesetResponse, error) {
+	changeset, err := s.find(ctx, chatID, changesetID)
+	if err != nil {
+		return nil, err
+	}
+
+	row, found := lo.Find(changeset.Ops, func(op model.AiChangesetOp) bool { return op.Position == position })
+	if !found {
+		return nil, apperror.BadRequest(errors.New("no matching change to edit"))
+	}
+
+	if row.Status == model.AiChangesetOpApplied {
+		return nil, apperror.Conflict(errors.New("this change was already applied"))
+	}
+
+	current, err := decodeOps([]*model.AiChangesetOp{&row})
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	if edited.Op != current[0].Op || edited.Table != current[0].Table {
+		return nil, apperror.BadRequest(errors.New("an edit cannot change the kind or table of a change"))
+	}
+
+	raw, err := json.Marshal(edited)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	row.OpJSON, row.Status, row.Error = string(raw), model.AiChangesetOpPending, ""
+
+	if err := s.aiChangesetRepo.SaveOps(ctx, []model.AiChangesetOp{row}); err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	changeset.Ops[position] = row
 
 	return s.response(ctx, changeset)
 }

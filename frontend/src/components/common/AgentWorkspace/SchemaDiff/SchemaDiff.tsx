@@ -4,9 +4,10 @@ import { TabMode } from '@/core/enums';
 import type { DiagramGraph } from '@/core/diagram/types';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { AiChangeset, AiChangesetOp } from '@/types';
+import type { AiChangeset, AiChangesetOp, SchemaChangeOp } from '@/types';
 import { Box, Button, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
-import { type JSX } from 'react';
+import { type JSX, useState } from 'react';
+import ColumnEditor from './ColumnEditor';
 import { DiffOpStyled, DiffRowStyled, DiffTableHeaderStyled, DiffTableStyled } from './SchemaDiff.styled';
 import { diffRows } from './schemaDiffRows';
 
@@ -14,10 +15,12 @@ type SchemaDiffProps = {
   changeset: AiChangeset;
   before: DiagramGraph | undefined;
   onReview: (status: 'accepted' | 'rejected', position: number) => void;
+  onEdit: (position: number, op: SchemaChangeOp) => void;
 };
 
 /** Per-table before/after of the proposal, with Accept/Reject per op. */
-export default function SchemaDiff({ changeset, before, onReview }: SchemaDiffProps): JSX.Element {
+export default function SchemaDiff({ changeset, before, onReview, onEdit }: SchemaDiffProps): JSX.Element {
+  const [editing, setEditing] = useState<number>();
   const tables = [
     ...changeset.ops.reduce(
       (groups, op) => groups.set(op.table, [...(groups.get(op.table) ?? []), op]),
@@ -52,11 +55,22 @@ export default function SchemaDiff({ changeset, before, onReview }: SchemaDiffPr
               data-status={op.status}
             >
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                {diffRows(op, before).map((row) => (
-                  <DiffRowStyled key={row.text} sign={row.sign}>
-                    {row.sign} {row.text}
-                  </DiffRowStyled>
-                ))}
+                {editing === op.position ? (
+                  <ColumnEditor
+                    op={op}
+                    onCancel={() => setEditing(undefined)}
+                    onSave={(edited) => {
+                      onEdit(op.position, edited);
+                      setEditing(undefined);
+                    }}
+                  />
+                ) : (
+                  diffRows(op, before).map((row) => (
+                    <DiffRowStyled key={row.text} sign={row.sign}>
+                      {row.sign} {row.text}
+                    </DiffRowStyled>
+                  ))
+                )}
                 {op.error && (
                   <Typography variant='caption' color='error'>
                     {op.error}
@@ -72,6 +86,13 @@ export default function SchemaDiff({ changeset, before, onReview }: SchemaDiffPr
               />
               {op.status !== 'applied' && (
                 <Stack direction='row'>
+                  {(op.op === 'add_column' || op.op === 'alter_column') && (
+                    <Tooltip title={locales.ai_changes_edit}>
+                      <IconButton size='small' onClick={() => setEditing(op.position)} data-testid='ai-diff-edit'>
+                        <CustomIcon type='pen' size='xs' />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                   <Tooltip title={locales.ai_changes_accept}>
                     <IconButton
                       size='small'

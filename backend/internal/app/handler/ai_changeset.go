@@ -50,6 +50,25 @@ func (h AiChangesetHandler) Review(c fiber.Ctx) error {
 	return response.SuccessBuilder().WithData(result).Send(c)
 }
 
+func (h AiChangesetHandler) EditOp(c fiber.Ctx) error {
+	req := new(dto.SchemaChangeOp)
+	if err := c.Bind().Body(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	result, err := h.aiChangesetService.EditOp(c, fiber.Params[uint](c, "id"), fiber.Params[uint](c, "changesetId"), fiber.Params[int](c, "position"), req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(result).Send(c)
+}
+
 func (h AiChangesetHandler) Preview(c fiber.Ctx) error {
 	queries, err := h.aiChangesetService.Preview(c, fiber.Params[uint](c, "id"), fiber.Params[uint](c, "changesetId"))
 	if err != nil {

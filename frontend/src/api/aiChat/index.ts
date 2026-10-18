@@ -1,5 +1,5 @@
 import { api } from '@/core/api';
-import type { AiChangeset, AiChangesetOpStatus, AiChatType } from '@/types';
+import type { AiChangeset, AiChangesetOpStatus, AiChatType, SchemaChangeOp } from '@/types';
 import type { AiChatDetailRequestType, AiChatRequestType, CreateChatRequestType } from './types';
 
 const endpoint = {
@@ -57,6 +57,17 @@ export const reviewChangeset = async (
 ): Promise<AiChangeset> => {
   return (
     await api.patch<{ data: AiChangeset }>(endpoint.changeset(changeset.chatId, changeset.id), { status, position })
+  ).data.data;
+};
+
+/** Replaces the definition of an op that was not applied yet; the op goes back to pending. */
+export const editChangesetOp = async (
+  changeset: AiChangeset,
+  position: number,
+  op: SchemaChangeOp
+): Promise<AiChangeset> => {
+  return (
+    await api.put<{ data: AiChangeset }>(`${endpoint.changeset(changeset.chatId, changeset.id)}/ops/${position}`, op)
   ).data.data;
 };
 

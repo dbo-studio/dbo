@@ -3,7 +3,7 @@ import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import locales from '@/locales';
 import { isOpen, useChangesetStore } from '@/store/changesetStore/changeset.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
-import type { AiChangeset, AiChangesetOpStatus } from '@/types';
+import type { AiChangeset, AiChangesetOpStatus, SchemaChangeOp } from '@/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -17,6 +17,8 @@ type ChangesetReview = {
   openPreview: () => Promise<void>;
   closePreview: () => void;
   apply: () => Promise<void>;
+  /** Replaces an op's definition; the op goes back to pending. */
+  edit: (position: number, op: SchemaChangeOp) => Promise<void>;
   /** Accepts, rejects or resets one op, or every open op when `position` is omitted. */
   review: (status: Exclude<AiChangesetOpStatus, 'applied' | 'failed'>, position?: number) => Promise<void>;
 };
@@ -36,6 +38,10 @@ export const useChangesetReview = (changesetId: number): ChangesetReview => {
 
   const review: ChangesetReview['review'] = async (status, position) => {
     if (changeset) upsert([await api.aiChat.reviewChangeset(changeset, status, position)]);
+  };
+
+  const edit: ChangesetReview['edit'] = async (position, op) => {
+    if (changeset) upsert([await api.aiChat.editChangesetOp(changeset, position, op)]);
   };
 
   const openPreview = async (): Promise<void> => {
@@ -85,6 +91,7 @@ export const useChangesetReview = (changesetId: number): ChangesetReview => {
     openPreview,
     closePreview: () => setPreviewQueries(undefined),
     apply,
+    edit,
     review
   };
 };

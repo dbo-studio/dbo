@@ -52,6 +52,7 @@ export default function ChangesetSurface({ review, onClose }: ChangesetSurfacePr
             changeset={changeset}
             before={before}
             onReview={(status, position) => void review.review(status, position)}
+            onEdit={(position, op) => void review.edit(position, op)}
           />
         ) : (
           <SqlPreview changeset={changeset} />

@@ -45,11 +45,11 @@ func (r AiChangesetRepoImpl) Create(ctx context.Context, changeset *model.AiChan
 	return r.db.WithContext(ctx).Create(changeset).Error
 }
 
-// SaveOps writes the status and error of the given ops in one transaction.
+// SaveOps writes the definition, status and error of the given ops in one transaction.
 func (r AiChangesetRepoImpl) SaveOps(ctx context.Context, ops []model.AiChangesetOp) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for i := range ops {
-			if err := tx.Model(&ops[i]).Select("status", "error").Updates(&ops[i]).Error; err != nil {
+			if err := tx.Model(&ops[i]).Select("op_json", "status", "error").Updates(&ops[i]).Error; err != nil {
 				return err
 			}
 		}

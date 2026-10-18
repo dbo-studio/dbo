@@ -133,6 +133,25 @@ test.describe("AI Agent Workspace changeset", () => {
           await page.getByTestId("ai-changes-tab-diff").click();
         });
 
+        await test.step("A pending column can be edited in place", async () => {
+          const op = table(users).getByTestId("ai-diff-op");
+          await op.getByTestId("ai-diff-accept").click();
+          await expect(op).toHaveAttribute("data-status", "accepted");
+
+          await op.getByTestId("ai-diff-edit").click();
+          await op.getByTestId("ai-diff-edit-type").fill("VARCHAR(20)");
+          await op.getByTestId("ai-diff-edit-save").click();
+
+          await expect(op).toContainText("phone VARCHAR(20)");
+          // An edited op needs a fresh review.
+          await expect(op).toHaveAttribute("data-status", "pending");
+          await page.getByTestId("ai-changes-tab-sql").click();
+          await expect(page.getByTestId("ai-sql-preview")).toContainText(
+            "VARCHAR(20)",
+          );
+          await page.getByTestId("ai-changes-tab-diff").click();
+        });
+
         await test.step("A rejected op is skipped and leaves the dock count", async () => {
           await table(users).getByTestId("ai-diff-reject").click();
           await expect(table(users).getByTestId("ai-diff-op")).toHaveAttribute(
