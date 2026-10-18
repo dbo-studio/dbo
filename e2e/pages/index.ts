@@ -4,6 +4,7 @@ export {
   type ConnectionConfig,
   type ConnectionSslConfig,
 } from "./ConnectionPage";
+export { BackupPage } from "./BackupPage";
 export { SqlEditorPage } from "./SqlEditorPage";
 export { DataGridPage } from "./DataGridPage";
 export { DataBrowserPage } from "./DataBrowserPage";

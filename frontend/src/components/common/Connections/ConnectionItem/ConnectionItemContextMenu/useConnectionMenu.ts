@@ -4,6 +4,7 @@ import { resumePasswordPromptForConnection, suppressPasswordPromptForConnection 
 import { canCreateConnection } from '@/core/auth/permissions';
 import locales from '@/locales';
 import { useAuthStore } from '@/store/authStore/auth.store';
+import { useBackupModalStore } from '@/store/backupModal/backup.store';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -35,6 +36,7 @@ export function useConnectionMenu(connection: ConnectionType): MenuType[] {
   const canLeave = connection.shared === true && access !== 'owner';
   const canDuplicate = canCreateConnection(mode, user);
 
+  const openBackup = useBackupModalStore((state) => state.open);
   const showModal = useConfirmModalStore((state) => state.danger);
   const showWarningModal = useConfirmModalStore((state) => state.warning);
   const resetTabs = useTabStore((state) => state.reset);
@@ -196,6 +198,12 @@ export function useConnectionMenu(connection: ConnectionType): MenuType[] {
           }
         ]
       : []),
+    {
+      name: locales.backup_restore,
+      icon: 'database' as const,
+      action: (): void => openBackup(connection.id),
+      closeBeforeAction: true
+    },
     {
       name: locales.close_connection,
       icon: 'close',
