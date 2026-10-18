@@ -89,6 +89,11 @@ func (p *ExportProcessor) Process(ctx context.Context, job *model.Job) error {
 		return err
 	}
 
+	// An empty database is a valid backup but nothing to export.
+	if len(targets) == 0 {
+		return fmt.Errorf("no tables to export")
+	}
+
 	zipped := jobData.IsMultiTable() && jobData.Format != "sql"
 
 	var dump *databaseContract.SchemaDump
@@ -183,10 +188,6 @@ func exportTargets(ctx context.Context, appCache cache.Cache, repo databaseContr
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	if len(names) == 0 {
-		return nil, fmt.Errorf("no tables to export")
 	}
 
 	targets := make([]exportTarget, 0, len(names))

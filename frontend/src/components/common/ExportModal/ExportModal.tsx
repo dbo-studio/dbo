@@ -140,7 +140,9 @@ export function ExportModal({ show, connectionId, query, table, nodeId, onClose 
                 options={[
                   { label: table, value: 'one' },
                   {
-                    label: location?.schema ? locales.export_all_tables_in_schema : locales.export_all_tables_in_database,
+                    label: location?.schema
+                      ? locales.export_all_tables_in_schema
+                      : locales.export_all_tables_in_database,
                     value: 'all'
                   }
                 ]}

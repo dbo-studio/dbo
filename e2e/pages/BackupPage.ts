@@ -31,7 +31,8 @@ export class BackupPage extends BasePage {
   }
 
   historyRows(): Locator {
-    return this.page.getByRole("button", { name: "Download", exact: true });
+    // One Restore button per completed backup; the tool list also has Download buttons.
+    return this.page.getByRole("button", { name: "Restore", exact: true });
   }
 
   async startBackup(note?: string): Promise<void> {
