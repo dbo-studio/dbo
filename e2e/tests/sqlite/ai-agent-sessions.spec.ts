@@ -81,6 +81,15 @@ test.describe("AI Agent Workspace sessions", () => {
         await page.getByTestId("ai-expand-to-agent").click();
         await expect(workspace).toBeVisible();
 
+        await test.step("Alt+Shift+B toggles the sessions list", async () => {
+          const sessions = page.getByTestId("ai-workspace-sessions");
+          await expect(sessions).toBeVisible();
+          await page.keyboard.press("Alt+Shift+B");
+          await expect(sessions).toHaveCount(0);
+          await page.keyboard.press("Alt+Shift+B");
+          await expect(sessions).toBeVisible();
+        });
+
         await test.step("The first chat starts a turn that keeps running", async () => {
           await send("hang");
           await expect(page.getByTestId("ai-chat-cancel")).toBeVisible({

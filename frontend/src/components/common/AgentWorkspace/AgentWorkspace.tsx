@@ -5,6 +5,8 @@ import { useAiChatController } from '@/components/common/AiChatPanel/hooks/useAi
 import Messages from '@/components/common/AiChatPanel/Messages/Messages';
 import { useChangesetReview } from '@/hooks';
 import locales from '@/locales';
+import { shortcuts } from '@/core/utils/shortcuts';
+import { useShortcut } from '@/hooks/useShortcut';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { isOpen, useChangesetStore } from '@/store/changesetStore/changeset.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -57,6 +59,9 @@ export default function AgentWorkspace(): JSX.Element {
   );
   const review = useChangesetReview(openChangesetId ?? 0);
   const updateUI = useSettingStore((state) => state.updateUI);
+
+  useShortcut(shortcuts.toggleWorkspaceSessions, () => setShowSessions((value) => !value));
+  useShortcut(shortcuts.toggleWorkspaceChanges, () => setShowChanges((value) => !value));
 
   const close = useCallback(() => updateUI({ agentWorkspaceOpen: false }), [updateUI]);
 

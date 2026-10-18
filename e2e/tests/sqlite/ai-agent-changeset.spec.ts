@@ -124,6 +124,13 @@ test.describe("AI Agent Workspace changeset", () => {
           ]);
         });
 
+        await test.step("Alt+Shift+G toggles the changes surface", async () => {
+          await page.keyboard.press("Alt+Shift+G");
+          await expect(surface).toHaveCount(0);
+          await page.keyboard.press("Alt+Shift+G");
+          await expect(surface).toBeVisible();
+        });
+
         await test.step("The SQL tab shows what would run", async () => {
           await page.getByTestId("ai-changes-tab-sql").click();
           const sql = page.getByTestId("ai-sql-preview");

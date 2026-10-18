@@ -712,6 +712,8 @@
   "ai_open_in_grid": "Open in Data Grid",
   "focus_assistant": "Focus assistant input",
   "toggle_agent_workspace": "Toggle agent workspace",
+  "toggle_workspace_sessions": "Toggle workspace sessions",
+  "toggle_workspace_changes": "Toggle workspace changes",
   "ai_expand_to_agent": "Expand to Agent",
   "ai_back_to_dbo": "Back to DBO",
   "ai_workspace_sessions": "Sessions",
