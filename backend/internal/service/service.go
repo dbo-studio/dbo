@@ -63,7 +63,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 
 	jobManager.RegisterProcessor(processors.NewImportProcessor(jobManager, cm, repo.ConnectionRepo, ss, deps.Cache))
 	jobManager.RegisterProcessor(processors.NewExportProcessor(jobManager, cm, repo.ConnectionRepo, ss, deps.Cache))
-	jobManager.RegisterProcessor(processors.NewBackupProcessor(jobManager, cm, repo.ConnectionRepo, repo.BackupArtifactRepo, ss))
+	jobManager.RegisterProcessor(processors.NewBackupProcessor(jobManager, cm, repo.ConnectionRepo, repo.BackupArtifactRepo, ss, deps.Cache))
 	jobManager.RegisterProcessor(processors.NewRestoreProcessor(jobManager, cm, repo.ConnectionRepo, repo.BackupArtifactRepo, ss))
 	jobManager.RegisterProcessor(processors.NewToolInstallProcessor(jobManager))
 
@@ -90,7 +90,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		ImportExportService:     serviceImportExport.NewImportExportService(jobManager, deps.Config, deps.Logger),
 		JobService:              serviceJob.NewJobService(repo.JobRepo, jobManager),
 		JobManager:              jobManager,
-		BackupService:           serviceBackup.NewBackupService(jobManager, repo.ConnectionRepo, repo.BackupArtifactRepo, deps.Cache),
+		BackupService:           serviceBackup.NewBackupService(jobManager, repo.ConnectionRepo, repo.ConnectionShareRepo, repo.BackupArtifactRepo, deps.Cache),
 		AiService:               serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, cm, toolRegistry, deps.Logger, deps.Cache),
 		AiProviderService:       aiProviderService,
 		AiChatService:           serviceAiChat.NewAiChatService(repo.AiChatRepo, repo.ConnectionRepo, deps.Config),

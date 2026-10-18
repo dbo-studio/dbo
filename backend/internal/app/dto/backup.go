@@ -2,6 +2,7 @@ package dto
 
 import (
 	"mime/multipart"
+	"regexp"
 	"time"
 
 	"github.com/invopop/validation"
@@ -126,10 +127,17 @@ type (
 	}
 )
 
+// objectName accepts plain database and schema names. It rejects a leading
+// dash (read as a command-line option by mysql) and "=", ":" and "/" (pg_dump
+// reads a --dbname holding them as a connection string, which could send the
+// password to another host).
+var objectName = regexp.MustCompile(`^[\p{L}\p{N}_][\p{L}\p{N}_.$ -]*$`)
+
 func (req BackupRequest) Validate() error {
 	return validation.ValidateStruct(&req,
 		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
-		validation.Field(&req.Database, validation.Length(0, 255)),
+		validation.Field(&req.Database, validation.Length(0, 255), validation.Match(objectName)),
+		validation.Field(&req.Schema, validation.Length(0, 255), validation.Match(objectName)),
 		validation.Field(&req.Note, validation.Length(0, 500)),
 	)
 }
@@ -137,7 +145,8 @@ func (req BackupRequest) Validate() error {
 func (req RestoreRequest) Validate() error {
 	return validation.ValidateStruct(&req,
 		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
-		validation.Field(&req.Database, validation.Required, validation.Length(1, 255)),
+		validation.Field(&req.Database, validation.Required, validation.Length(1, 255), validation.Match(objectName)),
+		validation.Field(&req.Schema, validation.Length(0, 255), validation.Match(objectName)),
 		validation.Field(&req.ArtifactID, validation.Required),
 		validation.Field(&req.ConfirmName, validation.Required),
 	)

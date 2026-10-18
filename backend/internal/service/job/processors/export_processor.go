@@ -84,7 +84,7 @@ func (p *ExportProcessor) Process(ctx context.Context, job *model.Job) error {
 		return err
 	}
 
-	targets, err := exportTargets(ctx, repo, connection.ConnectionType, &jobData)
+	targets, err := exportTargets(ctx, p.cache, repo, connection, &jobData)
 	if err != nil {
 		return err
 	}
@@ -150,7 +150,9 @@ type exportTarget struct {
 	Query string
 }
 
-func exportTargets(ctx context.Context, repo databaseContract.DatabaseRepository, connectionType string, req *dto.ExportJob) ([]exportTarget, error) {
+func exportTargets(ctx context.Context, appCache cache.Cache, repo databaseContract.DatabaseRepository, connection *model.Connection, req *dto.ExportJob) ([]exportTarget, error) {
+	connectionType := connection.ConnectionType
+
 	if !req.IsMultiTable() {
 		return []exportTarget{{Name: req.Table, Query: req.Query}}, nil
 	}
@@ -165,6 +167,14 @@ func exportTargets(ctx context.Context, repo databaseContract.DatabaseRepository
 		// every schema when none is given.
 		if databaseContract.IsPostgresFamily(connectionType) && schema == nil {
 			return nil, fmt.Errorf("schema is required to export a postgres %s", req.Scope)
+		}
+
+		// The table listing is cached, and a table created since it was cached
+		// would be silently left out of a whole-database export or backup.
+		for _, prefix := range []string{cache.PostgresQueryCachePrefix(connection.ID), cache.MySQLQueryCachePrefix(connection.ID)} {
+			if err := appCache.DeleteByPrefix(ctx, prefix); err != nil {
+				return nil, err
+			}
 		}
 
 		var err error

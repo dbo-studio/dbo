@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -20,6 +21,7 @@ import (
 	serviceBackup "github.com/dbo-studio/dbo/internal/service/backup"
 	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
 	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
+	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 )
@@ -34,15 +36,17 @@ type BackupProcessor struct {
 	connectionRepo repository.IConnectionRepo
 	artifactRepo   repository.IBackupArtifactRepo
 	secrets        serviceSecretStore.ISecretStore
+	cache          cache.Cache
 }
 
-func NewBackupProcessor(jobManager serviceJob.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, artifactRepo repository.IBackupArtifactRepo, secrets serviceSecretStore.ISecretStore) *BackupProcessor {
+func NewBackupProcessor(jobManager serviceJob.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, artifactRepo repository.IBackupArtifactRepo, secrets serviceSecretStore.ISecretStore, appCache cache.Cache) *BackupProcessor {
 	return &BackupProcessor{
 		jobManager:     jobManager,
 		cm:             cm,
 		connectionRepo: connectionRepo,
 		artifactRepo:   artifactRepo,
 		secrets:        secrets,
+		cache:          appCache,
 	}
 }
 
@@ -140,11 +144,11 @@ func (p *BackupProcessor) run(ctx context.Context, job *model.Job, connection *m
 		ctx = helper.CtxWithConnectionPassword(ctx, pw)
 	}
 
-	if err := os.MkdirAll(helper.BackupDir, 0o755); err != nil {
+	if err := helper.EnsureBackupDir(); err != nil {
 		return "", fmt.Errorf("failed to create backup directory: %w", err)
 	}
 
-	label := lo.CoalesceOrEmpty(jobData.Database, jobData.Schema, "database")
+	label := fileLabel(lo.CoalesceOrEmpty(jobData.Database, jobData.Schema, "database"))
 	stamp := time.Now().Format("20060102_150405")
 
 	setFile := func(ext string) {
@@ -183,7 +187,7 @@ func (p *BackupProcessor) run(ctx context.Context, job *model.Job, connection *m
 		},
 	}
 
-	targets, err := exportTargets(ctx, repo, connection.ConnectionType, &export)
+	targets, err := exportTargets(ctx, p.cache, repo, connection, &export)
 	if err != nil {
 		return "", err
 	}
@@ -299,4 +303,17 @@ func fileSizeAndChecksum(path string) (int64, string, error) {
 	}
 
 	return size, hex.EncodeToString(h.Sum(nil)), nil
+}
+
+var unsafeFileChars = regexp.MustCompile(`[^A-Za-z0-9._-]+`)
+
+// fileLabel keeps a database name usable in a file name; the name itself came
+// from the request.
+func fileLabel(name string) string {
+	label := strings.Trim(unsafeFileChars.ReplaceAllString(name, "_"), "._")
+	if label == "" {
+		return "database"
+	}
+
+	return label
 }

@@ -97,7 +97,7 @@ func (p *RestoreProcessor) restoreSQLite(ctx context.Context, job *model.Job, co
 		return err
 	}
 
-	if err := serviceBackup.RestoreSQLite(ctx, db, artifact.FilePath); err != nil {
+	if err := serviceBackup.RestoreSQLite(ctx, db, artifact.FilePath, artifact.Method == model.BackupMethodUploaded); err != nil {
 		return err
 	}
 

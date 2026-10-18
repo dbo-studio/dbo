@@ -2,6 +2,7 @@ package helper
 
 import (
 	"errors"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -120,4 +121,14 @@ func IsReadableBackupPath(filePath string) bool {
 	}
 
 	return pathWithinRoot(abs, root)
+}
+
+// EnsureBackupDir creates BackupDir readable by the DBO user only; backups hold
+// whole databases. An existing directory is tightened too.
+func EnsureBackupDir() error {
+	if err := os.MkdirAll(BackupDir, 0o700); err != nil {
+		return err
+	}
+
+	return os.Chmod(BackupDir, 0o700)
 }

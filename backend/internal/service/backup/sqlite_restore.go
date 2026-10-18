@@ -10,6 +10,10 @@ import (
 	"gorm.io/gorm"
 )
 
+// ErrUnsafeSQLiteUpload means an uploaded SQLite file holds schema SQL that is
+// more than one plain statement, which the replay would execute as written.
+var ErrUnsafeSQLiteUpload = errors.New("uploaded SQLite file holds schema SQL that is not allowed")
+
 var ErrSQLiteTargetNotEmpty = errors.New("target SQLite database is not empty")
 
 type sqliteObject struct {
@@ -21,7 +25,7 @@ type sqliteObject struct {
 // RestoreSQLite copies every object and row of a SQLite backup file into an
 // empty target. It uses ATTACH on one pinned connection, so no external tool is
 // needed and the target file stays open.
-func RestoreSQLite(ctx context.Context, db *gorm.DB, artifactPath string) error {
+func RestoreSQLite(ctx context.Context, db *gorm.DB, artifactPath string, untrusted bool) error {
 	pool, err := db.DB()
 	if err != nil {
 		return err
@@ -53,6 +57,12 @@ func RestoreSQLite(ctx context.Context, db *gorm.DB, artifactPath string) error 
 	objects, err := readSQLiteObjects(ctx, c)
 	if err != nil {
 		return err
+	}
+
+	if untrusted {
+		if err := checkUntrustedObjects(objects); err != nil {
+			return err
+		}
 	}
 
 	// Foreign keys stay off so rows load in any table order. The pragma is a
@@ -125,6 +135,24 @@ func replaySQLite(ctx context.Context, tx *sql.Tx, objects []sqliteObject) error
 
 		if _, err := tx.ExecContext(ctx, o.SQL); err != nil {
 			return fmt.Errorf("create %s: %w", o.Name, err)
+		}
+	}
+
+	return nil
+}
+
+// checkUntrustedObjects limits an uploaded file's stored schema SQL to single
+// statements: a crafted sqlite_master row could otherwise smuggle in ATTACH
+// or other statements. Triggers legitimately hold ";" inside their body, so
+// they are not accepted from uploads.
+func checkUntrustedObjects(objects []sqliteObject) error {
+	for _, o := range objects {
+		if o.Type == "trigger" {
+			return fmt.Errorf("%w: triggers cannot be restored from an uploaded file", ErrUnsafeSQLiteUpload)
+		}
+
+		if strings.Contains(strings.TrimRight(strings.TrimSpace(o.SQL), ";"), ";") {
+			return fmt.Errorf("%w: %s", ErrUnsafeSQLiteUpload, o.Name)
 		}
 	}
 

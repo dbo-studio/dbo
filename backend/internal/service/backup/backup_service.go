@@ -41,14 +41,16 @@ type IBackupService interface {
 type IBackupServiceImpl struct {
 	jobManager     serviceJob.IJobManager
 	connectionRepo repository.IConnectionRepo
+	shareRepo      repository.IConnectionShareRepo
 	artifactRepo   repository.IBackupArtifactRepo
 	unlockStore    *serviceSafemode.UnlockStore
 }
 
-func NewBackupService(jobManager serviceJob.IJobManager, connectionRepo repository.IConnectionRepo, artifactRepo repository.IBackupArtifactRepo, appCache cache.Cache) IBackupService {
+func NewBackupService(jobManager serviceJob.IJobManager, connectionRepo repository.IConnectionRepo, shareRepo repository.IConnectionShareRepo, artifactRepo repository.IBackupArtifactRepo, appCache cache.Cache) IBackupService {
 	return &IBackupServiceImpl{
 		jobManager:     jobManager,
 		connectionRepo: connectionRepo,
+		shareRepo:      shareRepo,
 		artifactRepo:   artifactRepo,
 		unlockStore:    serviceSafemode.NewUnlockStore(appCache),
 	}
@@ -83,6 +85,10 @@ func (s IBackupServiceImpl) Restore(ctx context.Context, req *dto.RestoreRequest
 	}
 
 	ownerID := helper.CtxOwnerID(ctx)
+
+	if !s.canWrite(ctx, connection, ownerID) {
+		return nil, apperror.Forbidden(apperror.ErrConnectionEditForbidden)
+	}
 
 	artifact, err := s.artifactRepo.FindByOwner(ctx, req.ArtifactID, ownerID)
 	if err != nil {
@@ -283,7 +289,7 @@ func (s IBackupServiceImpl) Upload(ctx context.Context, req *dto.BackupUploadReq
 	}
 
 	// The name on disk never comes from the client.
-	if err := os.MkdirAll(helper.BackupDir, 0o755); err != nil {
+	if err := helper.EnsureBackupDir(); err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
 
@@ -321,7 +327,7 @@ func saveUpload(header *multipart.FileHeader, dest string) (int64, string, error
 
 	defer func() { _ = in.Close() }()
 
-	out, err := os.Create(dest)
+	out, err := os.OpenFile(dest, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
 	if err != nil {
 		return 0, "", err
 	}
@@ -364,4 +370,16 @@ func artifactResponse(a model.BackupArtifact) dto.BackupArtifactResponse {
 		StartedAt:    a.StartedAt,
 		CompletedAt:  a.CompletedAt,
 	}
+}
+
+// canWrite reports whether the caller may overwrite data on the connection:
+// its owner or an editor share. Viewers can back up but not restore.
+func (s IBackupServiceImpl) canWrite(ctx context.Context, connection *model.Connection, ownerID string) bool {
+	if connection.OwnerID == ownerID {
+		return true
+	}
+
+	share, err := s.shareRepo.Find(ctx, connection.ID, ownerID)
+
+	return err == nil && share.Role == model.ConnectionShareEditor
 }
