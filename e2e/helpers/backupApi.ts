@@ -18,6 +18,7 @@ export interface Artifact {
   size: number;
   checksum: string;
   fileName: string;
+  note: string;
   error: string;
 }
 

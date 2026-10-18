@@ -130,6 +130,13 @@ func (r *Server) routing() {
 	backup.Get("/history", r.handlers.Backup.History)
 	backup.Get("/:id/download", r.handlers.Backup.Download)
 
+	schedules := api.Group("backup-schedules")
+	schedules.Get("/", r.handlers.BackupSchedule.List)
+	schedules.Post("/", r.handlers.BackupSchedule.Create)
+	schedules.Patch("/:id", r.handlers.BackupSchedule.Update)
+	schedules.Delete("/:id", r.handlers.BackupSchedule.Delete)
+	schedules.Post("/:id/run", r.handlers.BackupSchedule.Run)
+
 	job := api.Group("jobs")
 	job.Get("/:id", r.handlers.Job.Detail)
 	job.Delete("/:id", r.handlers.Job.Cancel)

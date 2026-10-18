@@ -51,3 +51,17 @@ func (r BackupArtifactRepository) ListByOwner(ctx context.Context, ownerID strin
 func (r BackupArtifactRepository) UpdateFields(ctx context.Context, id uint, fields map[string]any) error {
 	return r.db.WithContext(ctx).Model(&model.BackupArtifact{}).Where("id = ?", id).Updates(fields).Error
 }
+
+func (r BackupArtifactRepository) ListCompletedBySchedule(ctx context.Context, scheduleID uint) ([]model.BackupArtifact, error) {
+	var artifacts []model.BackupArtifact
+
+	err := r.db.WithContext(ctx).
+		Where("schedule_id = ? AND status = ?", scheduleID, model.BackupStatusCompleted).
+		Order("id DESC").Find(&artifacts).Error
+
+	return artifacts, err
+}
+
+func (r BackupArtifactRepository) Delete(ctx context.Context, id uint) error {
+	return r.db.WithContext(ctx).Delete(&model.BackupArtifact{}, id).Error
+}

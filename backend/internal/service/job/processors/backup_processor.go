@@ -35,16 +35,18 @@ type BackupProcessor struct {
 	cm             *databaseConnection.ConnectionManager
 	connectionRepo repository.IConnectionRepo
 	artifactRepo   repository.IBackupArtifactRepo
+	scheduleRepo   repository.IBackupScheduleRepo
 	secrets        serviceSecretStore.ISecretStore
 	cache          cache.Cache
 }
 
-func NewBackupProcessor(jobManager serviceJob.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, artifactRepo repository.IBackupArtifactRepo, secrets serviceSecretStore.ISecretStore, appCache cache.Cache) *BackupProcessor {
+func NewBackupProcessor(jobManager serviceJob.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, artifactRepo repository.IBackupArtifactRepo, scheduleRepo repository.IBackupScheduleRepo, secrets serviceSecretStore.ISecretStore, appCache cache.Cache) *BackupProcessor {
 	return &BackupProcessor{
 		jobManager:     jobManager,
 		cm:             cm,
 		connectionRepo: connectionRepo,
 		artifactRepo:   artifactRepo,
+		scheduleRepo:   scheduleRepo,
 		secrets:        secrets,
 		cache:          appCache,
 	}
@@ -76,6 +78,7 @@ func (p *BackupProcessor) Process(ctx context.Context, job *model.Job) error {
 		OwnerID:      ownerID,
 		ConnectionID: connection.ID,
 		JobID:        job.ID,
+		ScheduleID:   jobData.ScheduleID,
 		Database:     jobData.Database,
 		Schema:       jobData.Schema,
 		Driver:       connection.ConnectionType,
@@ -101,6 +104,7 @@ func (p *BackupProcessor) Process(ctx context.Context, job *model.Job) error {
 			"status": model.BackupStatusFailed,
 			"error":  runErr.Error(),
 		})
+		p.recordSchedule(context.WithoutCancel(ctx), &jobData, "failed", runErr.Error())
 
 		return runErr
 	}
@@ -115,6 +119,8 @@ func (p *BackupProcessor) Process(ctx context.Context, job *model.Job) error {
 		"size":         artifact.Size,
 		"checksum":     artifact.Checksum,
 	})
+
+	p.recordSchedule(ctx, &jobData, "completed", "")
 
 	job.Result = model.JobResult{
 		FileName:   artifact.FileName,
@@ -316,4 +322,23 @@ func fileLabel(name string) string {
 	}
 
 	return label
+}
+
+// recordSchedule stores a scheduled run's outcome on its schedule and, after a
+// good run, applies retention. Failures here never fail the backup itself.
+func (p *BackupProcessor) recordSchedule(ctx context.Context, jobData *dto.BackupJob, status, message string) {
+	if jobData.ScheduleID == 0 {
+		return
+	}
+
+	schedule, err := p.scheduleRepo.FindByOwner(ctx, jobData.ScheduleID, jobData.OwnerID)
+	if err != nil {
+		return
+	}
+
+	_ = p.scheduleRepo.UpdateFields(ctx, schedule.ID, map[string]any{"last_status": status, "last_error": message})
+
+	if status == "completed" {
+		_ = serviceBackup.ApplyRetention(ctx, p.artifactRepo, schedule, time.Now())
+	}
 }

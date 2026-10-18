@@ -25,6 +25,8 @@ type (
 	BackupJob struct {
 		OwnerID string `json:"ownerId"`
 		BackupRequest
+		// ScheduleID is set for runs started by a schedule.
+		ScheduleID uint `json:"scheduleId"`
 	}
 
 	RestoreRequest struct {

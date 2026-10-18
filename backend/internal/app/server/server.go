@@ -22,23 +22,24 @@ import (
 )
 
 type Handlers struct {
-	Config       *handler.ConfigHandler
-	Connection   *handler.ConnectionHandler
-	SavedQuery   *handler.SavedQueryHandler
-	History      *handler.HistoryHandler
-	TreeHandler  *handler.TreeHandler
-	QueryHandler *handler.QueryHandler
-	ImportExport *handler.ImportExportHandler
-	Job          *handler.JobHandler
-	Backup       *handler.BackupHandler
-	AI           *handler.AiHandler
-	AiProvider   *handler.AiProviderHandler
-	AiChat       *handler.AiChatHandler
-	Mcp          *handler.McpHandler
-	Schema       *handler.SchemaHandler
-	SafeMode     *handler.SafeModeHandler
-	Auth         *handler.AuthHandler
-	AdminUsers   *handler.AdminUsersHandler
+	Config         *handler.ConfigHandler
+	Connection     *handler.ConnectionHandler
+	SavedQuery     *handler.SavedQueryHandler
+	History        *handler.HistoryHandler
+	TreeHandler    *handler.TreeHandler
+	QueryHandler   *handler.QueryHandler
+	ImportExport   *handler.ImportExportHandler
+	Job            *handler.JobHandler
+	Backup         *handler.BackupHandler
+	BackupSchedule *handler.BackupScheduleHandler
+	AI             *handler.AiHandler
+	AiProvider     *handler.AiProviderHandler
+	AiChat         *handler.AiChatHandler
+	Mcp            *handler.McpHandler
+	Schema         *handler.SchemaHandler
+	SafeMode       *handler.SafeModeHandler
+	Auth           *handler.AuthHandler
+	AdminUsers     *handler.AdminUsersHandler
 }
 
 type Server struct {

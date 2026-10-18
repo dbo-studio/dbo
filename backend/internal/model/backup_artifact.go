@@ -30,6 +30,7 @@ type BackupArtifact struct {
 	OwnerID      string       `gorm:"not null;default:'';index"`
 	ConnectionID uint         `gorm:"not null;index"`
 	JobID        uint         `gorm:"not null;default:0"`
+	ScheduleID   uint         `gorm:"not null;default:0;index"`
 	Database     string       `gorm:"not null;default:''"`
 	Schema       string       `gorm:"not null;default:''"`
 	Driver       string       `gorm:"not null;default:''"`
