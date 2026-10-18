@@ -61,12 +61,14 @@ type (
 
 	BackupHistoryRequest struct {
 		ConnectionID *uint `query:"connectionId"`
+		ScheduleID   *uint `query:"scheduleId"`
 	}
 
 	BackupArtifactResponse struct {
 		ID           uint       `json:"id"`
 		ConnectionID uint       `json:"connectionId"`
 		JobID        uint       `json:"jobId"`
+		ScheduleID   uint       `json:"scheduleId"`
 		Database     string     `json:"database"`
 		Schema       string     `json:"schema"`
 		Driver       string     `json:"driver"`

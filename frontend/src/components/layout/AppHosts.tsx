@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
 import ConfirmModal from '../base/Modal/ConfirmModal/ConfirmModal.tsx';
+import BackupConsole from '../common/BackupConsole/BackupConsole';
 import BackupFailureWatcher from '../common/BackupModal/BackupFailureWatcher';
 import BackupModal from '../common/BackupModal/BackupModal';
 import SafeModePasswordHost from '../common/SafeModePasswordPrompt/SafeModePasswordHost';
@@ -12,6 +13,7 @@ export default function AppHosts(): JSX.Element {
       <ConfirmModal />
       <SafeModePasswordHost />
       <BackupModal />
+      <BackupConsole />
       <BackupFailureWatcher />
       <UpdateDialog />
     </>

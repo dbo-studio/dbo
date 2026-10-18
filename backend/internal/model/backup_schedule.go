@@ -25,14 +25,17 @@ type BackupSchedule struct {
 	Timezone string `gorm:"not null;default:'UTC'"`
 	Enabled  bool   `gorm:"not null;default:true"`
 	// KeepLast and KeepDays are retention limits; zero means no limit of that kind.
-	KeepLast   int `gorm:"not null;default:0"`
-	KeepDays   int `gorm:"not null;default:0"`
-	NextRunAt  *time.Time
-	LastRunAt  *time.Time
-	LastJobID  uint       `gorm:"not null;default:0"`
-	LastStatus string     `gorm:"not null;default:''"`
-	LastError  string     `gorm:"not null;default:''"`
-	CreatedAt  *time.Time `gorm:"autoCreateTime"`
+	KeepLast  int `gorm:"not null;default:0"`
+	KeepDays  int `gorm:"not null;default:0"`
+	NextRunAt *time.Time
+	LastRunAt *time.Time
+	// LastSuccessAt and LastSize describe the newest completed run.
+	LastSuccessAt *time.Time
+	LastSize      int64      `gorm:"not null;default:0"`
+	LastJobID     uint       `gorm:"not null;default:0"`
+	LastStatus    string     `gorm:"not null;default:''"`
+	LastError     string     `gorm:"not null;default:''"`
+	CreatedAt     *time.Time `gorm:"autoCreateTime"`
 }
 
 func (BackupSchedule) TableName() string { return "backup_schedules" }

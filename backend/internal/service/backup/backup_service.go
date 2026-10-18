@@ -155,6 +155,10 @@ func (s IBackupServiceImpl) History(ctx context.Context, req *dto.BackupHistoryR
 		return nil, apperror.InternalServerError(err)
 	}
 
+	if req.ScheduleID != nil {
+		artifacts = lo.Filter(artifacts, func(a model.BackupArtifact, _ int) bool { return a.ScheduleID == *req.ScheduleID })
+	}
+
 	return lo.Map(artifacts, func(a model.BackupArtifact, _ int) dto.BackupArtifactResponse {
 		return artifactResponse(a)
 	}), nil
@@ -355,6 +359,7 @@ func artifactResponse(a model.BackupArtifact) dto.BackupArtifactResponse {
 		ID:           a.ID,
 		ConnectionID: a.ConnectionID,
 		JobID:        a.JobID,
+		ScheduleID:   a.ScheduleID,
 		Database:     a.Database,
 		Schema:       a.Schema,
 		Driver:       a.Driver,

@@ -22,6 +22,7 @@ export type BackupArtifactType = {
   id: number;
   connectionId: number;
   jobId: number;
+  scheduleId: number;
   database: string;
   schema: string;
   driver: string;
@@ -80,6 +81,8 @@ export type BackupScheduleType = Omit<BackupScheduleRequestType, 'database' | 's
   enabled: boolean;
   nextRunAt?: string;
   lastRunAt?: string;
+  lastSuccessAt?: string;
+  lastSize: number;
   lastStatus: '' | 'running' | 'completed' | 'failed';
   lastError: string;
   /** False when a scheduled run cannot log in: the password is not stored persistently. */

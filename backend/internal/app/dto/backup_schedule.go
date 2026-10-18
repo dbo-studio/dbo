@@ -39,23 +39,25 @@ type (
 	}
 
 	BackupScheduleResponse struct {
-		ID           uint       `json:"id"`
-		ConnectionID uint       `json:"connectionId"`
-		Name         string     `json:"name"`
-		Database     string     `json:"database"`
-		Schema       string     `json:"schema"`
-		Cadence      string     `json:"cadence"`
-		Hour         int        `json:"hour"`
-		Minute       int        `json:"minute"`
-		Weekday      int        `json:"weekday"`
-		Timezone     string     `json:"timezone"`
-		Enabled      bool       `json:"enabled"`
-		KeepLast     int        `json:"keepLast"`
-		KeepDays     int        `json:"keepDays"`
-		NextRunAt    *time.Time `json:"nextRunAt"`
-		LastRunAt    *time.Time `json:"lastRunAt"`
-		LastStatus   string     `json:"lastStatus"`
-		LastError    string     `json:"lastError"`
+		ID            uint       `json:"id"`
+		ConnectionID  uint       `json:"connectionId"`
+		Name          string     `json:"name"`
+		Database      string     `json:"database"`
+		Schema        string     `json:"schema"`
+		Cadence       string     `json:"cadence"`
+		Hour          int        `json:"hour"`
+		Minute        int        `json:"minute"`
+		Weekday       int        `json:"weekday"`
+		Timezone      string     `json:"timezone"`
+		Enabled       bool       `json:"enabled"`
+		KeepLast      int        `json:"keepLast"`
+		KeepDays      int        `json:"keepDays"`
+		NextRunAt     *time.Time `json:"nextRunAt"`
+		LastRunAt     *time.Time `json:"lastRunAt"`
+		LastSuccessAt *time.Time `json:"lastSuccessAt"`
+		LastSize      int64      `json:"lastSize"`
+		LastStatus    string     `json:"lastStatus"`
+		LastError     string     `json:"lastError"`
 		// PasswordRemembered is false when a scheduled run could not log in:
 		// the connection password is only held temporarily or not at all.
 		PasswordRemembered bool `json:"passwordRemembered"`

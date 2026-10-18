@@ -104,7 +104,7 @@ func (p *BackupProcessor) Process(ctx context.Context, job *model.Job) error {
 			"status": model.BackupStatusFailed,
 			"error":  runErr.Error(),
 		})
-		p.recordSchedule(context.WithoutCancel(ctx), &jobData, "failed", runErr.Error())
+		p.recordSchedule(context.WithoutCancel(ctx), &jobData, "failed", runErr.Error(), 0)
 
 		return runErr
 	}
@@ -120,7 +120,7 @@ func (p *BackupProcessor) Process(ctx context.Context, job *model.Job) error {
 		"checksum":     artifact.Checksum,
 	})
 
-	p.recordSchedule(ctx, &jobData, "completed", "")
+	p.recordSchedule(ctx, &jobData, "completed", "", artifact.Size)
 
 	job.Result = model.JobResult{
 		FileName:   artifact.FileName,
@@ -330,7 +330,7 @@ func fileLabel(name string) string {
 
 // recordSchedule stores a scheduled run's outcome on its schedule and, after a
 // good run, applies retention. Failures here never fail the backup itself.
-func (p *BackupProcessor) recordSchedule(ctx context.Context, jobData *dto.BackupJob, status, message string) {
+func (p *BackupProcessor) recordSchedule(ctx context.Context, jobData *dto.BackupJob, status, message string, size int64) {
 	if jobData.ScheduleID == 0 {
 		return
 	}
@@ -340,7 +340,13 @@ func (p *BackupProcessor) recordSchedule(ctx context.Context, jobData *dto.Backu
 		return
 	}
 
-	_ = p.scheduleRepo.UpdateFields(ctx, schedule.ID, map[string]any{"last_status": status, "last_error": message})
+	fields := map[string]any{"last_status": status, "last_error": message}
+	if status == "completed" {
+		fields["last_success_at"] = time.Now()
+		fields["last_size"] = size
+	}
+
+	_ = p.scheduleRepo.UpdateFields(ctx, schedule.ID, fields)
 
 	if status == "completed" {
 		_ = serviceBackup.ApplyRetention(ctx, p.artifactRepo, schedule, time.Now())

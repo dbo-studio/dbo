@@ -242,7 +242,7 @@ func scheduleResponse(s model.BackupSchedule) dto.BackupScheduleResponse {
 		ID: s.ID, ConnectionID: s.ConnectionID, Name: s.Name, Database: s.Database, Schema: s.Schema,
 		Cadence: s.Cadence, Hour: s.Hour, Minute: s.Minute, Weekday: s.Weekday, Timezone: s.Timezone,
 		Enabled: s.Enabled, KeepLast: s.KeepLast, KeepDays: s.KeepDays,
-		NextRunAt: s.NextRunAt, LastRunAt: s.LastRunAt, LastStatus: s.LastStatus, LastError: s.LastError,
+		NextRunAt: s.NextRunAt, LastRunAt: s.LastRunAt, LastSuccessAt: s.LastSuccessAt, LastSize: s.LastSize, LastStatus: s.LastStatus, LastError: s.LastError,
 	}
 }
 
